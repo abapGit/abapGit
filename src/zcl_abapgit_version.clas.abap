@@ -103,13 +103,13 @@ CLASS zcl_abapgit_version IMPLEMENTATION.
           ls_version_b TYPE zif_abapgit_definitions=>ty_version.
 
     TRY.
-        IF is_a IS SUPPLIED.
+        IF is_a IS NOT INITIAL.
           ls_version_a = is_a.
         ELSE.
           ls_version_a = conv_str_to_version( iv_a ).
         ENDIF.
 
-        IF is_b IS SUPPLIED.
+        IF is_b IS NOT INITIAL.
           ls_version_b = is_b.
         ELSE.
           ls_version_b = conv_str_to_version( iv_b ).
