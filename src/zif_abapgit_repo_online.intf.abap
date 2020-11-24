@@ -1,6 +1,5 @@
 INTERFACE zif_abapgit_repo_online
   PUBLIC .
-  INTERFACES zif_abapgit_git_operations.
   METHODS get_url
     RETURNING
       VALUE(rv_url) TYPE zif_abapgit_persistence=>ty_repo-url .
