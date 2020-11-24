@@ -1197,9 +1197,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     rs_files_and_item-item-inactive = boolc( li_obj->is_active( ) = abap_false ).
 
     LOOP AT rs_files_and_item-files ASSIGNING <ls_file>.
-      <ls_file>-sha1 = zcl_abapgit_hash=>sha1(
-        iv_type = zif_abapgit_definitions=>c_type-blob
-        iv_data = <ls_file>-data ).
+      <ls_file>-sha1 = zcl_abapgit_hash=>sha1_blob( <ls_file>-data ).
     ENDLOOP.
 
   ENDMETHOD.
