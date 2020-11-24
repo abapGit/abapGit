@@ -309,7 +309,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ENDIF.
 
     ro_advanced_dropdown->add( iv_txt = 'Remove'
-                               iv_title = `Remove abapGit's records of the repository (SAP objects unaffected)`
+                               iv_title = `Remove abapGit's records of the repository (the system's development objects will remain unaffected)`
                                iv_act = |{ zif_abapgit_definitions=>c_action-repo_remove }?key={ mv_key }| ).
 
     CLEAR lv_crossout.
