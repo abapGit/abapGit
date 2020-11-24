@@ -5,7 +5,7 @@ CLASS zcl_abapgit_repo DEFINITION
 
   PUBLIC SECTION.
 
-    CONSTANTS c_new_repo_size TYPE i VALUE 3.
+    CONSTANTS c_new_repo_size TYPE i VALUE 10.
 
     METHODS bind_listener
       IMPORTING
@@ -81,8 +81,10 @@ CLASS zcl_abapgit_repo DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS find_remote_dot_abapgit
+      IMPORTING
+        !iv_check_size TYPE abap_bool DEFAULT abap_true
       RETURNING
-        VALUE(ro_dot) TYPE REF TO zcl_abapgit_dot_abapgit
+        VALUE(ro_dot)  TYPE REF TO zcl_abapgit_dot_abapgit
       RAISING
         zcx_abapgit_exception .
     METHODS find_remote_dot_apack
@@ -372,7 +374,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       ro_dot = zcl_abapgit_dot_abapgit=>deserialize( <ls_remote>-data ).
       set_dot_abapgit( ro_dot ).
       COMMIT WORK AND WAIT. " to release lock
-    ELSEIF lines( mt_remote ) > c_new_repo_size.
+    ELSEIF lines( mt_remote ) > c_new_repo_size AND iv_check_size = abap_true.
       " Less files means it's a new repo (with just readme and license, for example) which is ok
       zcx_abapgit_exception=>raise( |Cannot find .abapgit.xml - Is this an abapGit repo?| ).
     ENDIF.
