@@ -74,6 +74,8 @@
     "globalMacros": []
   },
   "rules": {
+    "intf_referencing_clas": false,
+    "method_implemented_twice": true,
     "parser_702_chaining": true,
     "sy_modification": false,
     "call_transaction_authority_check": true,
