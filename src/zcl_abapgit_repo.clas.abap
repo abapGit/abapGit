@@ -186,11 +186,6 @@ CLASS zcl_abapgit_repo DEFINITION
         !is_change_mask TYPE zif_abapgit_persistence=>ty_repo_meta_mask
       RAISING
         zcx_abapgit_exception .
-    METHODS build_apack_manifest_file
-      RETURNING
-        VALUE(rs_file) TYPE zif_abapgit_definitions=>ty_file
-      RAISING
-        zcx_abapgit_exception .
     METHODS update_last_deserialize
       RAISING
         zcx_abapgit_exception .
@@ -210,23 +205,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD bind_listener.
     mi_listener = ii_listener.
-  ENDMETHOD.
-
-
-  METHOD build_apack_manifest_file.
-    DATA: lo_manifest_reader TYPE REF TO zcl_abapgit_apack_reader,
-          ls_descriptor      TYPE zif_abapgit_apack_definitions=>ty_descriptor,
-          lo_manifest_writer TYPE REF TO zcl_abapgit_apack_writer.
-
-    lo_manifest_reader = zcl_abapgit_apack_reader=>create_instance( ms_data-package ).
-    IF lo_manifest_reader->has_manifest( ) = abap_true.
-      ls_descriptor = lo_manifest_reader->get_manifest_descriptor( ).
-      lo_manifest_writer = zcl_abapgit_apack_writer=>create_instance( ls_descriptor ).
-      rs_file-path     = zif_abapgit_definitions=>c_root_dir.
-      rs_file-filename = zif_abapgit_apack_definitions=>c_dot_apack_manifest.
-      rs_file-data     = zcl_abapgit_convert=>string_to_xstring_utf8( lo_manifest_writer->serialize( ) ).
-      rs_file-sha1     = zcl_abapgit_hash=>sha1_blob( rs_file-data ).
-    ENDIF.
   ENDMETHOD.
 
 
@@ -458,7 +436,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
     <ls_return>-file = get_dot_abapgit( )->to_file( ).
 
-    ls_apack_file = build_apack_manifest_file( ).
+    ls_apack_file = zcl_abapgit_apack_helper=>to_file( ms_data-package ).
     IF ls_apack_file IS NOT INITIAL.
       APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
       <ls_return>-file = ls_apack_file.
