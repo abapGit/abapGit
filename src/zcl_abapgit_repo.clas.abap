@@ -209,7 +209,7 @@ CLASS zcl_abapgit_repo DEFINITION
         it_remote_files TYPE zif_abapgit_definitions=>ty_files_tt
         is_local_file   TYPE zif_abapgit_definitions=>ty_file_item-file
       CHANGING
-        is_checksum     TYPE zif_abapgit_persistence=>ty_local_checksum.
+        cs_checksum     TYPE zif_abapgit_persistence=>ty_local_checksum.
 ENDCLASS.
 
 
@@ -609,7 +609,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
                                       it_remote_files = lt_remote
                                       is_local_file = <ls_local>-file
                                     CHANGING
-                                      is_checksum = <ls_checksum> ).
+                                      cs_checksum = <ls_checksum> ).
 
 
     ENDLOOP.
@@ -630,7 +630,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
   METHOD compare_with_remote_checksum.
     FIELD-SYMBOLS: <ls_remote_file> LIKE LINE OF it_remote_files,
-                   <ls_file_sig>    LIKE LINE OF is_checksum-files.
+                   <ls_file_sig>    LIKE LINE OF cs_checksum-files.
     READ TABLE it_remote_files ASSIGNING <ls_remote_file>
         WITH KEY path = is_local_file-path filename = is_local_file-filename
         BINARY SEARCH.
@@ -638,7 +638,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    APPEND INITIAL LINE TO is_checksum-files ASSIGNING <ls_file_sig>.
+    APPEND INITIAL LINE TO cs_checksum-files ASSIGNING <ls_file_sig>.
     MOVE-CORRESPONDING is_local_file TO <ls_file_sig>.
 
     " If hashes are equal -> local sha1 is OK
@@ -949,6 +949,5 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     set( it_checksums = lt_checksums ).
 
   ENDMETHOD.
-
 
 ENDCLASS.

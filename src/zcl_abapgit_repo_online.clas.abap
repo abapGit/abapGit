@@ -49,10 +49,7 @@ CLASS zcl_abapgit_repo_online DEFINITION
         zcx_abapgit_exception .
 ENDCLASS.
 
-
-
 CLASS zcl_abapgit_repo_online IMPLEMENTATION.
-
 
   METHOD fetch_remote.
 
@@ -171,10 +168,6 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     rv_yes = abap_true.
   ENDMETHOD.
 
-
-
-
-
   METHOD zif_abapgit_repo_online~select_branch.
 
     reset_remote( ).
@@ -183,7 +176,6 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD zif_abapgit_repo_online~select_commit.
 
     reset_remote( ).
@@ -191,11 +183,9 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD set_objects.
     mt_objects = it_objects.
   ENDMETHOD.
-
 
   METHOD zif_abapgit_repo_online~set_url.
 
@@ -203,7 +193,6 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     set( iv_url = iv_url ).
 
   ENDMETHOD.
-
 
   METHOD zif_abapgit_repo_online~switch_origin.
 
