@@ -1,4 +1,3 @@
-*"* use this source file for your ABAP unit test classes
 CLASS ltcl_sotr_handler DEFINITION FOR TESTING
   DURATION SHORT
   RISK LEVEL HARMLESS.
@@ -45,9 +44,9 @@ CLASS ltcl_sotr_handler IMPLEMENTATION.
               iv_obj_name = lc_wd_component_name
             IMPORTING
               et_sotr     = lt_sotr ).
-          cl_aunit_assert=>assert_not_initial( lt_sotr ).
+          cl_abap_unit_assert=>assert_not_initial( lt_sotr ).
         CATCH zcx_abapgit_exception.
-          cl_aunit_assert=>fail( quit = if_aunit_constants=>method ).
+          cl_abap_unit_assert=>fail( quit = if_aunit_constants=>method ).
       ENDTRY.
     ENDIF.
   ENDMETHOD.
@@ -63,9 +62,9 @@ CLASS ltcl_sotr_handler IMPLEMENTATION.
               iv_obj_name = lc_wd_not_exist_component_name
             IMPORTING
               et_sotr     = lt_sotr ).
-          cl_aunit_assert=>assert_initial( lt_sotr ).
+          cl_abap_unit_assert=>assert_initial( lt_sotr ).
         CATCH zcx_abapgit_exception.
-          cl_aunit_assert=>fail( quit = if_aunit_constants=>method ).
+          cl_abap_unit_assert=>fail( quit = if_aunit_constants=>method ).
       ENDTRY.
     ENDIF.
   ENDMETHOD.
@@ -82,10 +81,10 @@ CLASS ltcl_sotr_handler IMPLEMENTATION.
             IMPORTING
               et_sotr     = lt_sotr ).
           IF lines( lt_sotr ) < 50.
-            cl_aunit_assert=>fail( quit = if_aunit_constants=>method ).
+            cl_abap_unit_assert=>fail( quit = if_aunit_constants=>method ).
           ENDIF.
         CATCH zcx_abapgit_exception.
-          cl_aunit_assert=>fail( quit = if_aunit_constants=>method ).
+          cl_abap_unit_assert=>fail( quit = if_aunit_constants=>method ).
       ENDTRY.
     ENDIF.
   ENDMETHOD.
@@ -99,9 +98,9 @@ CLASS ltcl_sotr_handler IMPLEMENTATION.
             iv_obj_name = 'CX_ABAP_INVALID_NAME'
           IMPORTING
             et_sotr     = lt_sotr ).
-        cl_aunit_assert=>assert_not_initial( lt_sotr ).
+        cl_abap_unit_assert=>assert_not_initial( lt_sotr ).
       CATCH zcx_abapgit_exception.
-        cl_aunit_assert=>fail( quit = if_aunit_constants=>method ).
+        cl_abap_unit_assert=>fail( quit = if_aunit_constants=>method ).
     ENDTRY.
   ENDMETHOD.
 ENDCLASS.
