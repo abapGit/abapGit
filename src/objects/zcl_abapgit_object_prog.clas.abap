@@ -146,7 +146,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
           object                 = 'REPT'
           obj_name               = lv_obj_name
           immediate              = 'X'
-          actualize_working_area = 'X'.      
+          actualize_working_area = 'X'.
     ELSEIF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error from RS_DELETE_PROGRAM: { sy-subrc }| ).
     ENDIF.
