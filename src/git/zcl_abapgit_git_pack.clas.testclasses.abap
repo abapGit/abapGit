@@ -710,3 +710,85 @@ CLASS ltcl_tag IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+
+CLASS ltcl_get_length DEFINITION DEFERRED.
+CLASS zcl_abapgit_git_pack DEFINITION LOCAL FRIENDS ltcl_get_length.
+
+CLASS ltcl_get_length DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
+
+  PRIVATE SECTION.
+    METHODS:
+      test
+        IMPORTING
+          iv_data     TYPE xstring
+          iv_expected TYPE i,
+      length_0 FOR TESTING RAISING zcx_abapgit_exception,
+      length_1 FOR TESTING RAISING zcx_abapgit_exception,
+      length_15 FOR TESTING RAISING zcx_abapgit_exception,
+      length_31 FOR TESTING RAISING zcx_abapgit_exception,
+      length_22783 FOR TESTING RAISING zcx_abapgit_exception.
+
+ENDCLASS.
+
+CLASS ltcl_get_length IMPLEMENTATION.
+
+  METHOD test.
+
+    DATA lv_length TYPE i.
+    DATA lv_data TYPE xstring.
+
+    lv_data = iv_data.
+
+    zcl_abapgit_git_pack=>get_length(
+      IMPORTING
+        ev_length = lv_length
+      CHANGING
+        cv_data   = lv_data ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_length
+      exp = iv_expected ).
+
+  ENDMETHOD.
+
+  METHOD length_0.
+
+    test(
+      iv_data     = '00'
+      iv_expected = 0 ).
+
+  ENDMETHOD.
+
+  METHOD length_1.
+
+    test(
+      iv_data     = '01'
+      iv_expected = 1 ).
+
+  ENDMETHOD.
+
+  METHOD length_15.
+* four least significant bits set
+    test(
+      iv_data     = '0F'
+      iv_expected = 15 ).
+
+  ENDMETHOD.
+
+  METHOD length_31.
+
+    test(
+      iv_data     = '8F01'
+      iv_expected = 31 ).
+
+  ENDMETHOD.
+
+  METHOD length_22783.
+
+    test(
+      iv_data     = '8F8F0B'
+      iv_expected = 22783 ).
+
+  ENDMETHOD.
+
+ENDCLASS.
