@@ -5,11 +5,12 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_VERSION</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Version</DESCRIPT>
+    <DESCRIPT>abapGit - Version</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
     <UNICODE>X</UNICODE>
+    <WITH_UNIT_TESTS>X</WITH_UNIT_TESTS>
    </VSEOCLASS>
   </asx:values>
  </asx:abap>
