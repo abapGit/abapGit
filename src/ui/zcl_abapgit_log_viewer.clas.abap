@@ -7,8 +7,7 @@ CLASS zcl_abapgit_log_viewer DEFINITION
 
     CLASS-METHODS show_log
       IMPORTING
-        !iv_header_text TYPE csequence DEFAULT 'Log'
-        !ii_log         TYPE REF TO zif_abapgit_log .
+        !ii_log TYPE REF TO zif_abapgit_log .
     CLASS-METHODS to_html
       IMPORTING
         !ii_log        TYPE REF TO zif_abapgit_log
@@ -293,7 +292,7 @@ CLASS ZCL_ABAPGIT_LOG_VIEWER IMPLEMENTATION.
           lv_add_obj_col TYPE abap_bool,
           lo_event       TYPE REF TO cl_salv_events_table.
 
-    gt_log = prepare_log_for_display( ii_log = ii_log ).
+    gt_log = prepare_log_for_display( ii_log ).
 
     "check if log contains any object info
     LOOP AT gt_log REFERENCE INTO lr_log.
@@ -359,7 +358,7 @@ CLASS ZCL_ABAPGIT_LOG_VIEWER IMPLEMENTATION.
 
         CREATE OBJECT lo_form_header
           EXPORTING
-            text = iv_header_text.
+            text = ii_log->get_title( ).
 
         lo_alv->set_top_of_list( lo_form_header ).
 
