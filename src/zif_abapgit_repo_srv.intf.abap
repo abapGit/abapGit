@@ -4,7 +4,6 @@ INTERFACE zif_abapgit_repo_srv
 
   TYPES:
     ty_repo_list TYPE STANDARD TABLE OF REF TO zif_abapgit_repo WITH DEFAULT KEY.
-
   METHODS delete
     IMPORTING
       !io_repo TYPE REF TO zif_abapgit_repo
