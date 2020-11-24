@@ -314,7 +314,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     " check package restrictions, closed package, descriptive or
     " functional package
-    CALL METHOD cl_pak_object_types=>check_object_type
+    cl_pak_object_types=>check_object_type(
       EXPORTING
         i_working_mode         = 'I'
         i_package_name         = iv_package
@@ -324,7 +324,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         wrong_object_type      = 1
         package_not_extensible = 2
         package_not_loaded     = 3
-        OTHERS                 = 4.
+        OTHERS                 = 4 ).
     CASE sy-subrc.
       WHEN 0.
         RETURN.
