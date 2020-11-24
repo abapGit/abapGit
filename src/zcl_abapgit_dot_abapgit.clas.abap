@@ -22,6 +22,11 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
         VALUE(rv_xstr) TYPE xstring
       RAISING
         zcx_abapgit_exception .
+    METHODS to_file
+      RETURNING
+        VALUE(rs_file) TYPE zif_abapgit_definitions=>ty_file
+      RAISING
+        zcx_abapgit_exception.
     METHODS get_data
       RETURNING
         VALUE(rs_data) TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit .
@@ -192,8 +197,7 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
     rs_signature-path     = zif_abapgit_definitions=>c_root_dir.
     rs_signature-filename = zif_abapgit_definitions=>c_dot_abapgit.
-    rs_signature-sha1     = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob
-                                                    iv_data = serialize( ) ).
+    rs_signature-sha1     = zcl_abapgit_hash=>sha1_blob( serialize( ) ).
 
   ENDMETHOD.
 
@@ -284,6 +288,14 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
   METHOD set_starting_folder.
     ms_data-starting_folder = iv_path.
+  ENDMETHOD.
+
+
+  METHOD to_file.
+    rs_file-path     = zif_abapgit_definitions=>c_root_dir.
+    rs_file-filename = zif_abapgit_definitions=>c_dot_abapgit.
+    rs_file-data     = serialize( ).
+    rs_file-sha1     = zcl_abapgit_hash=>sha1_blob( rs_file-data ).
   ENDMETHOD.
 
 
