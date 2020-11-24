@@ -6,21 +6,31 @@ CLASS zcl_abapgit_serialize DEFINITION
 
     METHODS constructor
       IMPORTING
-        iv_serialize_master_lang_only TYPE abap_bool DEFAULT abap_false.
+        !iv_serialize_master_lang_only TYPE abap_bool DEFAULT abap_false .
     METHODS on_end_of_task
       IMPORTING
         !p_task TYPE clike .
     METHODS serialize
       IMPORTING
-        it_tadir            TYPE zif_abapgit_definitions=>ty_tadir_tt
-        iv_language         TYPE langu DEFAULT sy-langu
-        ii_log              TYPE REF TO zif_abapgit_log OPTIONAL
-        iv_force_sequential TYPE abap_bool DEFAULT abap_false
+        !it_tadir            TYPE zif_abapgit_definitions=>ty_tadir_tt
+        !iv_language         TYPE langu DEFAULT sy-langu
+        !ii_log              TYPE REF TO zif_abapgit_log OPTIONAL
+        !iv_force_sequential TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(rt_files)     TYPE zif_abapgit_definitions=>ty_files_item_tt
+        VALUE(rt_files)      TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
         zcx_abapgit_exception .
-
+    METHODS files_local
+      IMPORTING
+        !iv_package        TYPE devclass
+        !io_dot_abapgit    TYPE REF TO zcl_abapgit_dot_abapgit
+        !is_local_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings
+        !ii_log            TYPE REF TO zif_abapgit_log
+        !it_filter         TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
+      RETURNING
+        VALUE(rt_files)    TYPE zif_abapgit_definitions=>ty_files_item_tt
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
     TYPES: ty_char32 TYPE c LENGTH 32.
 
@@ -56,8 +66,6 @@ CLASS zcl_abapgit_serialize DEFINITION
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
-
-
 ENDCLASS.
 
 
@@ -158,7 +166,57 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD files_local.
+
+* serializes objects, including .abapgit.xml, apack, and takes into account local settings
+
+    DATA: ls_apack_file TYPE zif_abapgit_definitions=>ty_file,
+          lo_filter     TYPE REF TO zcl_abapgit_repo_filter,
+          lv_force      TYPE abap_bool,
+          lt_found      LIKE rt_files,
+          lt_tadir      TYPE zif_abapgit_definitions=>ty_tadir_tt.
+
+    FIELD-SYMBOLS: <ls_return> LIKE LINE OF rt_files.
+
+    APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
+    <ls_return>-file = io_dot_abapgit->to_file( ).
+
+    ls_apack_file = zcl_abapgit_apack_helper=>to_file( iv_package ).
+    IF ls_apack_file IS NOT INITIAL.
+      APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
+      <ls_return>-file = ls_apack_file.
+    ENDIF.
+
+    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
+      iv_package            = iv_package
+      iv_ignore_subpackages = is_local_settings-ignore_subpackages
+      iv_only_local_objects = is_local_settings-only_local_objects
+      io_dot                = io_dot_abapgit
+      ii_log                = ii_log ).
+
+    CREATE OBJECT lo_filter.
+
+    lo_filter->apply( EXPORTING it_filter = it_filter
+                      CHANGING  ct_tadir  = lt_tadir ).
+
+* if there are less than 10 objects run in single thread
+* this helps a lot when debugging, plus performance gain
+* with low number of objects does not matter much
+    lv_force = boolc( lines( lt_tadir ) < 10 ).
+
+    lt_found = serialize(
+      it_tadir            = lt_tadir
+      iv_language         = io_dot_abapgit->get_master_language( )
+      ii_log              = ii_log
+      iv_force_sequential = lv_force ).
+    APPEND LINES OF lt_found TO rt_files.
+
+  ENDMETHOD.
+
+
   METHOD on_end_of_task.
+
+* this method will be called from the parallel processing, thus it must be public
 
     DATA: lv_result    TYPE xstring,
           lv_path      TYPE string,
@@ -209,17 +267,17 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
         DESTINATION IN GROUP mv_group
         CALLING on_end_of_task ON END OF TASK
         EXPORTING
-          iv_obj_type           = is_tadir-object
-          iv_obj_name           = is_tadir-obj_name
-          iv_devclass           = is_tadir-devclass
-          iv_language           = iv_language
-          iv_path               = is_tadir-path
+          iv_obj_type                   = is_tadir-object
+          iv_obj_name                   = is_tadir-obj_name
+          iv_devclass                   = is_tadir-devclass
+          iv_language                   = iv_language
+          iv_path                       = is_tadir-path
           iv_serialize_master_lang_only = mv_serialize_master_lang_only
         EXCEPTIONS
-          system_failure        = 1 MESSAGE lv_msg
-          communication_failure = 2 MESSAGE lv_msg
-          resource_failure      = 3
-          OTHERS                = 4.
+          system_failure                = 1 MESSAGE lv_msg
+          communication_failure         = 2 MESSAGE lv_msg
+          resource_failure              = 3
+          OTHERS                        = 4.
       IF sy-subrc = 3.
         lv_free = mv_free.
         WAIT UNTIL mv_free <> lv_free UP TO 1 SECONDS.
