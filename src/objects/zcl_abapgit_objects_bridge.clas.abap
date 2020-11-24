@@ -176,7 +176,9 @@ CLASS zcl_abapgit_objects_bridge IMPLEMENTATION.
 
     DATA ls_meta TYPE ty_metadata.
 
-    ls_meta = zif_abapgit_object~get_metadata( ).
+    CALL METHOD mo_plugin->('ZIF_ABAPGITP_PLUGIN~GET_METADATA')
+      RECEIVING
+        rs_metadata = ls_meta.
 
     IF ls_meta-late_deser = abap_true.
       APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
