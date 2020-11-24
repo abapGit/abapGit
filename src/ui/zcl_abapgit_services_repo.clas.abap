@@ -359,9 +359,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     COMMIT WORK.
 
     IF ri_log IS BOUND AND ri_log->count( ) > 0.
-      zcl_abapgit_log_viewer=>show_log(
-        ii_log         = ri_log
-        iv_header_text = ri_log->get_title( ) ).
+      zcl_abapgit_log_viewer=>show_log( ri_log ).
       RETURN.
     ENDIF.
 
