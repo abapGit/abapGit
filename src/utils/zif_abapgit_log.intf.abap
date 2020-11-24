@@ -37,7 +37,7 @@ INTERFACE zif_abapgit_log
       !iv_type TYPE symsgty DEFAULT 'E'
       !iv_rc   TYPE balsort OPTIONAL
       !is_item TYPE zif_abapgit_definitions=>ty_item OPTIONAL
-      !ix_exc  TYPE REF TO cx_root OPTIONAL.
+      !ix_exc  TYPE REF TO cx_root OPTIONAL .
   METHODS add_error
     IMPORTING
       !iv_msg  TYPE csequence
@@ -71,7 +71,8 @@ INTERFACE zif_abapgit_log
     RETURNING
       VALUE(rt_msg) TYPE ty_log_outs .
   METHODS get_item_status
-    RETURNING VALUE(rt_item_status) TYPE ty_item_status_outs .
+    RETURNING
+      VALUE(rt_item_status) TYPE ty_item_status_outs .
   METHODS get_status
     RETURNING
       VALUE(rv_status) TYPE symsgty .
@@ -80,5 +81,5 @@ INTERFACE zif_abapgit_log
       VALUE(rv_title) TYPE string .
   METHODS set_title
     IMPORTING
-      !iv_title TYPE string .
+      !iv_title TYPE csequence .
 ENDINTERFACE.
