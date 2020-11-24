@@ -1351,11 +1351,11 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
   METHOD warning_package_find.
 
-    DATA: lv_package         TYPE devclass,
-          lt_overwrite_uniqe TYPE HASHED TABLE OF zif_abapgit_definitions=>ty_overwrite
+    DATA: lv_package          TYPE devclass,
+          lt_overwrite_unique TYPE HASHED TABLE OF zif_abapgit_definitions=>ty_overwrite
                                   WITH UNIQUE KEY obj_type obj_name devclass,
-          ls_overwrite       LIKE LINE OF rt_overwrite,
-          ls_tadir           TYPE zif_abapgit_definitions=>ty_tadir.
+          ls_overwrite        LIKE LINE OF rt_overwrite,
+          ls_tadir            TYPE zif_abapgit_definitions=>ty_tadir.
 
     DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
 
@@ -1379,12 +1379,12 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         ls_overwrite-obj_type = <ls_result>-obj_type.
         ls_overwrite-obj_name = <ls_result>-obj_name.
         ls_overwrite-devclass = ls_tadir-devclass.
-        INSERT ls_overwrite INTO TABLE lt_overwrite_uniqe.
+        INSERT ls_overwrite INTO TABLE lt_overwrite_unique.
       ENDIF.
 
     ENDLOOP.
 
-    rt_overwrite = lt_overwrite_uniqe.
+    rt_overwrite = lt_overwrite_unique.
 
   ENDMETHOD.
 ENDCLASS.
