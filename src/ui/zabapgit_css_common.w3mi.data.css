@@ -67,6 +67,7 @@ span.separator {
 .nodisplay    { display: none }
 .m-em5-sides  { margin-left: 0.5em; margin-right: 0.5em }
 .w600px       { width: 600px }
+.w1000px      { width: 1000px }
 .wmax600px    { max-width: 600px }
 .auto-center  { /* use with max-width */
   width: 100%;
@@ -1109,6 +1110,7 @@ settings_tab tr:first-child td { border-top: 0px; }
   width: 100%;
   box-sizing: border-box;
   padding: 10px;
+  font-family: Arial,Helvetica,sans-serif;
 }
 .dialog .radio-container input[type="radio"] {
   visibility: hidden;
@@ -1127,6 +1129,25 @@ settings_tab tr:first-child td { border-top: 0px; }
 }
 .dialog .radio-container input[type="radio"]:checked + label {
   border: 1px solid transparent;
+}
+.dialog table {
+  width: 100%;
+}
+.dialog table thead td {
+  font-size: 14px;
+  height: 2.5em;
+  background-color: #ddd;
+  border: 1px solid #ddd;
+  padding: 0px 10px;
+}
+.dialog table tbody td {
+  border: 1px solid #ccc;
+  background-color: white;
+}
+.dialog table td input {
+  margin: 0px 2px;
+  border: 0px;
+  background: none;
 }
 .dialog li.with-command div.input-container {
   display: table-cell;
