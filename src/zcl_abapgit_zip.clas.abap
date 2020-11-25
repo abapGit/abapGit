@@ -102,6 +102,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
 
     CREATE OBJECT li_log TYPE zcl_abapgit_log.
+    li_log->set_title( 'Zip Export Log' ).
 
     lv_package = io_repo->get_package( ).
 
@@ -113,8 +114,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
                                        it_filter = it_filter ).
 
     IF li_log->count( ) > 0 AND iv_show_log = abap_true.
-      zcl_abapgit_log_viewer=>show_log( iv_header_text = 'Zip Export Log'
-                                        ii_log         = li_log ).
+      zcl_abapgit_log_viewer=>show_log( li_log ).
     ENDIF.
 
     rv_xstr = encode_files( lt_zip ).
@@ -371,8 +371,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
       <ls_file>-data = lv_data.
 
-      <ls_file>-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob
-                                               iv_data = <ls_file>-data ).
+      <ls_file>-sha1 = zcl_abapgit_hash=>sha1_blob( <ls_file>-data ).
 
     ENDLOOP.
 

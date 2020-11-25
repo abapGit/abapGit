@@ -186,16 +186,6 @@ CLASS zcl_abapgit_repo DEFINITION
         !is_change_mask TYPE zif_abapgit_persistence=>ty_repo_meta_mask
       RAISING
         zcx_abapgit_exception .
-    METHODS build_dotabapgit_file
-      RETURNING
-        VALUE(rs_file) TYPE zif_abapgit_definitions=>ty_file
-      RAISING
-        zcx_abapgit_exception .
-    METHODS build_apack_manifest_file
-      RETURNING
-        VALUE(rs_file) TYPE zif_abapgit_definitions=>ty_file
-      RAISING
-        zcx_abapgit_exception .
     METHODS update_last_deserialize
       RAISING
         zcx_abapgit_exception .
@@ -210,40 +200,11 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 
   METHOD bind_listener.
     mi_listener = ii_listener.
-  ENDMETHOD.
-
-
-  METHOD build_apack_manifest_file.
-    DATA: lo_manifest_reader TYPE REF TO zcl_abapgit_apack_reader,
-          ls_descriptor      TYPE zif_abapgit_apack_definitions=>ty_descriptor,
-          lo_manifest_writer TYPE REF TO zcl_abapgit_apack_writer.
-
-    lo_manifest_reader = zcl_abapgit_apack_reader=>create_instance( ms_data-package ).
-    IF lo_manifest_reader->has_manifest( ) = abap_true.
-      ls_descriptor = lo_manifest_reader->get_manifest_descriptor( ).
-      lo_manifest_writer = zcl_abapgit_apack_writer=>create_instance( ls_descriptor ).
-      rs_file-path     = zif_abapgit_definitions=>c_root_dir.
-      rs_file-filename = zif_abapgit_apack_definitions=>c_dot_apack_manifest.
-      rs_file-data     = zcl_abapgit_convert=>string_to_xstring_utf8( lo_manifest_writer->serialize( ) ).
-      rs_file-sha1     = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob
-                                                 iv_data = rs_file-data ).
-    ENDIF.
-  ENDMETHOD.
-
-
-  METHOD build_dotabapgit_file.
-
-    rs_file-path     = zif_abapgit_definitions=>c_root_dir.
-    rs_file-filename = zif_abapgit_definitions=>c_dot_abapgit.
-    rs_file-data     = get_dot_abapgit( )->serialize( ).
-    rs_file-sha1     = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob
-                                               iv_data = rs_file-data ).
-
   ENDMETHOD.
 
 
@@ -456,15 +417,9 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
   METHOD get_files_local.
 
-    DATA: lo_filter     TYPE REF TO zcl_abapgit_repo_filter,
-          lt_tadir      TYPE zif_abapgit_definitions=>ty_tadir_tt,
-          lo_serialize  TYPE REF TO zcl_abapgit_serialize,
-          lt_found      LIKE rt_files,
-          lv_force      TYPE abap_bool,
-          ls_apack_file TYPE zif_abapgit_definitions=>ty_file.
+* todo, after refactoring is done, I think the IT_FILTER parameter can be removed
 
-    FIELD-SYMBOLS: <ls_return> LIKE LINE OF rt_files.
-
+    DATA: lo_serialize TYPE REF TO zcl_abapgit_serialize.
 
     " Serialization happened before and no refresh request
     IF lines( mt_local ) > 0 AND mv_request_local_refresh = abap_false.
@@ -472,42 +427,16 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
-    <ls_return>-file = build_dotabapgit_file( ).
-
-    ls_apack_file = build_apack_manifest_file( ).
-    IF ls_apack_file IS NOT INITIAL.
-      APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
-      <ls_return>-file = ls_apack_file.
-    ENDIF.
-
-    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
-      iv_package            = get_package( )
-      iv_ignore_subpackages = get_local_settings( )-ignore_subpackages
-      iv_only_local_objects = get_local_settings( )-only_local_objects
-      io_dot                = get_dot_abapgit( )
-      ii_log                = ii_log ).
-
-    CREATE OBJECT lo_filter.
-
-    lo_filter->apply( EXPORTING it_filter = it_filter
-                      CHANGING  ct_tadir  = lt_tadir ).
-
     CREATE OBJECT lo_serialize
       EXPORTING
         iv_serialize_master_lang_only = ms_data-local_settings-serialize_master_lang_only.
 
-* if there are less than 10 objects run in single thread
-* this helps a lot when debugging, plus performance gain
-* with low number of objects does not matter much
-    lv_force = boolc( lines( lt_tadir ) < 10 ).
-
-    lt_found = lo_serialize->serialize(
-      it_tadir            = lt_tadir
-      iv_language         = get_dot_abapgit( )->get_master_language( )
-      ii_log              = ii_log
-      iv_force_sequential = lv_force ).
-    APPEND LINES OF lt_found TO rt_files.
+    rt_files = lo_serialize->files_local(
+      iv_package        = get_package( )
+      io_dot_abapgit    = get_dot_abapgit( )
+      is_local_settings = get_local_settings( )
+      ii_log            = ii_log
+      it_filter         = it_filter ).
 
     mt_local                 = rt_files.
     mv_request_local_refresh = abap_false. " Fulfill refresh

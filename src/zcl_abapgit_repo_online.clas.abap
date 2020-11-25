@@ -6,11 +6,10 @@ CLASS zcl_abapgit_repo_online DEFINITION
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_repo_online.
-    INTERFACES zif_abapgit_git_operations .
 
     ALIASES:
-      create_branch FOR zif_abapgit_git_operations~create_branch,
-      push FOR zif_abapgit_git_operations~push,
+      create_branch FOR zif_abapgit_repo_online~create_branch,
+      push FOR zif_abapgit_repo_online~push,
       get_url FOR zif_abapgit_repo_online~get_url,
       get_selected_branch FOR zif_abapgit_repo_online~get_selected_branch,
       set_url FOR zif_abapgit_repo_online~set_url,
@@ -53,7 +52,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo_online IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
 
   METHOD fetch_remote.
@@ -85,12 +84,6 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_repo_online~get_current_remote.
-    fetch_remote( ).
-    rv_sha1 = mv_current_commit.
-  ENDMETHOD.
-
-
   METHOD get_files_remote.
     fetch_remote( ).
     rt_files = super->get_files_remote( ).
@@ -103,32 +96,6 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
       rv_name = zcl_abapgit_url=>name( ms_data-url ).
       rv_name = cl_http_utility=>if_http_utility~unescape_url( rv_name ).
     ENDIF.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_repo_online~get_objects.
-    fetch_remote( ).
-    rt_objects = mt_objects.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_repo_online~get_selected_branch.
-    rv_name = ms_data-branch_name.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_repo_online~get_selected_commit.
-    rv_selected_commit = ms_data-selected_commit.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_repo_online~get_switched_origin.
-    rv_url = ms_data-switched_origin.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_repo_online~get_url.
-    rv_url = ms_data-url.
   ENDMETHOD.
 
 
@@ -230,6 +197,115 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD set_objects.
+    mt_objects = it_objects.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_online~create_branch.
+
+    DATA: lv_sha1 TYPE zif_abapgit_definitions=>ty_sha1.
+
+    ASSERT iv_name CP zif_abapgit_definitions=>c_git_branch-heads.
+
+    IF iv_from IS INITIAL.
+      lv_sha1 = get_current_remote( ).
+    ELSE.
+      lv_sha1 = iv_from.
+    ENDIF.
+
+    zcl_abapgit_git_porcelain=>create_branch(
+      iv_url  = get_url( )
+      iv_name = iv_name
+      iv_from = lv_sha1 ).
+
+    " automatically switch to new branch
+    select_branch( iv_name ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_online~get_current_remote.
+    fetch_remote( ).
+    rv_sha1 = mv_current_commit.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_online~get_objects.
+    fetch_remote( ).
+    rt_objects = mt_objects.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_online~get_selected_branch.
+    rv_name = ms_data-branch_name.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_online~get_selected_commit.
+    rv_selected_commit = ms_data-selected_commit.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_online~get_switched_origin.
+    rv_url = ms_data-switched_origin.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_online~get_url.
+    rv_url = ms_data-url.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_online~push.
+
+* assumption: PUSH is done on top of the currently selected branch
+
+    DATA: ls_push   TYPE zcl_abapgit_git_porcelain=>ty_push_result,
+          lv_text   TYPE string,
+          lv_parent TYPE zif_abapgit_definitions=>ty_sha1.
+
+
+    IF ms_data-branch_name CP zif_abapgit_definitions=>c_git_branch-tags.
+      lv_text = |You're working on a tag. Currently it's not |
+             && |possible to push on tags. Consider creating a branch instead|.
+      zcx_abapgit_exception=>raise( lv_text ).
+    ENDIF.
+
+    IF ms_data-local_settings-block_commit = abap_true
+        AND zcl_abapgit_factory=>get_code_inspector( get_package( )
+          )->is_successful( ) = abap_false.
+      zcx_abapgit_exception=>raise( |A successful code inspection is required| ).
+    ENDIF.
+
+    handle_stage_ignore( io_stage ).
+
+    IF get_selected_commit( ) IS INITIAL.
+      lv_parent = get_current_remote( ).
+    ELSE.
+      lv_parent = get_selected_commit( ).
+    ENDIF.
+
+    ls_push = zcl_abapgit_git_porcelain=>push(
+      is_comment     = is_comment
+      io_stage       = io_stage
+      iv_branch_name = get_selected_branch( )
+      iv_url         = get_url( )
+      iv_parent      = lv_parent
+      it_old_objects = get_objects( ) ).
+
+    set_objects( ls_push-new_objects ).
+    set_files_remote( ls_push-new_files ).
+
+    mv_current_commit = ls_push-branch.
+
+    update_local_checksums( ls_push-updated_files ).
+
+    reset_status( ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_repo_online~select_branch.
 
     reset_remote( ).
@@ -244,11 +320,6 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     reset_remote( ).
     set( iv_selected_commit = iv_selected_commit ).
 
-  ENDMETHOD.
-
-
-  METHOD set_objects.
-    mt_objects = it_objects.
   ENDMETHOD.
 
 
@@ -294,78 +365,6 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     ELSE.
       zcx_abapgit_exception=>raise( 'Cannot switch origin twice' ).
     ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_git_operations~create_branch.
-
-    DATA: lv_sha1 TYPE zif_abapgit_definitions=>ty_sha1.
-
-    ASSERT iv_name CP zif_abapgit_definitions=>c_git_branch-heads.
-
-    IF iv_from IS INITIAL.
-      lv_sha1 = get_current_remote( ).
-    ELSE.
-      lv_sha1 = iv_from.
-    ENDIF.
-
-    zcl_abapgit_git_porcelain=>create_branch(
-      iv_url  = get_url( )
-      iv_name = iv_name
-      iv_from = lv_sha1 ).
-
-    " automatically switch to new branch
-    select_branch( iv_name ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_git_operations~push.
-
-* assumption: PUSH is done on top of the currently selected branch
-
-    DATA: ls_push   TYPE zcl_abapgit_git_porcelain=>ty_push_result,
-          lv_text   TYPE string,
-          lv_parent TYPE zif_abapgit_definitions=>ty_sha1.
-
-
-    IF ms_data-branch_name CP zif_abapgit_definitions=>c_git_branch-tags.
-      lv_text = |You're working on a tag. Currently it's not |
-             && |possible to push on tags. Consider creating a branch instead|.
-      zcx_abapgit_exception=>raise( lv_text ).
-    ENDIF.
-
-    IF ms_data-local_settings-block_commit = abap_true
-        AND zcl_abapgit_factory=>get_code_inspector( get_package( )
-          )->is_successful( ) = abap_false.
-      zcx_abapgit_exception=>raise( |A successful code inspection is required| ).
-    ENDIF.
-
-    handle_stage_ignore( io_stage ).
-
-    IF get_selected_commit( ) IS INITIAL.
-      lv_parent = get_current_remote( ).
-    ELSE.
-      lv_parent = get_selected_commit( ).
-    ENDIF.
-
-    ls_push = zcl_abapgit_git_porcelain=>push(
-      is_comment     = is_comment
-      io_stage       = io_stage
-      iv_branch_name = get_selected_branch( )
-      iv_url         = get_url( )
-      iv_parent      = lv_parent
-      it_old_objects = get_objects( ) ).
-
-    set_objects( ls_push-new_objects ).
-    set_files_remote( ls_push-new_files ).
-
-    mv_current_commit = ls_push-branch.
-
-    update_local_checksums( ls_push-updated_files ).
-
-    reset_status( ).
 
   ENDMETHOD.
 ENDCLASS.
