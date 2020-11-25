@@ -54,6 +54,8 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
   METHOD do_test.
 
     DATA: lt_matches_act TYPE zcl_abapgit_syntax_highlighter=>ty_match_tt,
+          ls_match       LIKE LINE OF lt_matches_act,
+          lv_offs        TYPE i,
           lo_syntax      TYPE REF TO zcl_abapgit_syntax_highlighter.
 
 
@@ -82,6 +84,17 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals( exp = mt_after_extend
                                         act = lt_matches_act
                                         msg = | Error during extending: { iv_line }| ).
+
+    " Check consistency
+    lv_offs = 0.
+    LOOP AT lt_matches_act INTO ls_match.
+      IF ls_match-offset <> lv_offs.
+        cl_abap_unit_assert=>assert_equals( exp = lv_offs
+                                            act = ls_match-offset
+                                            msg = | Error during consistency check: { sy-tabix }| ).
+      ENDIF.
+      lv_offs = lv_offs + ls_match-length.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -180,6 +193,9 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     generate_parse( iv_token  = 'K'
                     iv_offset = 18
                     iv_length = 4 ).
+    generate_parse( iv_token  = 'K'
+                    iv_offset = 23
+                    iv_length = 6 ).
 
     " Generate table with expected values after ordering
     generate_order( iv_token    = 'K'
@@ -189,6 +205,10 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     generate_order( iv_token    = 'K'
                     iv_offset   = 18
                     iv_length   = 4
+                    iv_text_tag = '' ).
+    generate_order( iv_token    = 'K'
+                    iv_offset   = 23
+                    iv_length   = 6
                     iv_text_tag = '' ).
 
     " Generate table with expected values after extending
@@ -206,7 +226,15 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_text_tag = '' ).
     generate_extend( iv_token    = '.'
                      iv_offset   = 22
-                     iv_length   = 8
+                     iv_length   = 1
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'K'
+                     iv_offset   = 23
+                     iv_length   = 6
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 29
+                     iv_length   = 1
                      iv_text_tag = '' ).
 
     do_test( iv_line = lv_line
@@ -311,6 +339,9 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                     iv_offset = 18
                     iv_length = 4 ).
     generate_parse( iv_token  = 'K'
+                    iv_offset = 23
+                    iv_length = 6 ).
+    generate_parse( iv_token  = 'K'
                     iv_offset = 30
                     iv_length = 5 ).
     generate_parse( iv_token  = 'T'
@@ -331,6 +362,10 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     generate_order( iv_token    = 'K'
                     iv_offset   = 18
                     iv_length   = 4
+                    iv_text_tag = '' ).
+    generate_order( iv_token    = 'K'
+                    iv_offset   = 23
+                    iv_length   = 6
                     iv_text_tag = '' ).
     generate_order( iv_token    = 'K'
                     iv_offset   = 30
@@ -356,7 +391,15 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_text_tag = '' ).
     generate_extend( iv_token    = '.'
                      iv_offset   = 22
-                     iv_length   = 8
+                     iv_length   = 1
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'K'
+                     iv_offset   = 23
+                     iv_length   = 6
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 29
+                     iv_length   = 1
                      iv_text_tag = '' ).
     generate_extend( iv_token    = 'K'
                      iv_offset   = 30
@@ -396,6 +439,9 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     generate_parse( iv_token  = 'T'
                     iv_offset = 5
                     iv_length = 1 ).
+    generate_parse( iv_token  = 'K'
+                    iv_offset = 7
+                    iv_length = 1 ).
     generate_parse( iv_token  = 'T'
                     iv_offset = 9
                     iv_length = 1 ).
@@ -417,6 +463,10 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                     iv_offset   = 4
                     iv_length   = 1
                     iv_text_tag = '|' ).
+    generate_order( iv_token    = 'K'
+                    iv_offset   = 7
+                    iv_length   = 1
+                    iv_text_tag = '' ).
     generate_order( iv_token    = 'T'
                     iv_offset   = 10
                     iv_length   = 1
@@ -441,7 +491,15 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_text_tag = '|' ).
     generate_extend( iv_token    = '.'
                      iv_offset   = 5
-                     iv_length   = 5
+                     iv_length   = 2
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'K'
+                     iv_offset   = 7
+                     iv_length   = 1
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 8
+                     iv_length   = 2
                      iv_text_tag = '' ).
     generate_extend( iv_token    = 'T'
                      iv_offset   = 10
