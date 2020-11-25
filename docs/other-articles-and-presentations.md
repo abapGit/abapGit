@@ -140,3 +140,5 @@ Michael Pang
 [CTS is beautiful](https://blogs.sap.com/2020/11/05/cts-is-beautiful/), Lars Hvam
 
 [abapGit and namespace](https://blogs.sap.com/2020/11/18/abapgit-and-namespace/), Michael Keller
+
+[Data exchange with your github repository using abapGit](https://blogs.sap.com/2020/11/24/data-exchange-with-your-github-repository-using-abapgit), Enno Wulff
