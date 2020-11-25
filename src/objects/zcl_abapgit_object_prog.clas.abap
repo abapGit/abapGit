@@ -166,6 +166,9 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
           ls_cua          TYPE ty_cua,
           lt_source       TYPE abaptxt255_tab.
 
+    " Add R3TR PROG to transport first, otherwise we get several LIMUs
+    corr_insert( iv_package ).
+
     lv_program_name = ms_item-obj_name.
 
     lt_source = mo_files->read_abap( ).
