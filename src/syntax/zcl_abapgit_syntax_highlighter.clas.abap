@@ -118,7 +118,7 @@ CLASS zcl_abapgit_syntax_highlighter IMPLEMENTATION.
     DATA lv_escaped TYPE string.
 
     lv_escaped = escape( val    = iv_line
-                         format = cl_abap_format=>e_html_text ).
+                         format = cl_abap_format=>e_html_attr ).
 
     lv_escaped = show_hidden_chars( lv_escaped ).
 
