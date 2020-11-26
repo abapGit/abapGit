@@ -71,7 +71,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -263,6 +263,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
     lo_persistence = zcl_abapgit_persist_settings=>get_instance( ).
     lo_persistence->modify( mo_settings ).
 
+    COMMIT WORK AND WAIT.
+
     MESSAGE 'Settings succesfully saved' TYPE 'S'.
 
   ENDMETHOD.
@@ -281,7 +283,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
 
     CASE ii_event->mv_action.
       WHEN c_event-go_back.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back_to_bookmark.
 
       WHEN c_event-save.
         " Validate all form entries
@@ -289,11 +291,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
 
         IF mo_validation_log->is_empty( ) = abap_true.
           save_settings( ).
-
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
-        ELSE.
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render. " Display errors
         ENDIF.
+
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
     ENDCASE.
 
