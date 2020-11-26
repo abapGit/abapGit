@@ -4,6 +4,13 @@ CLASS zcl_abapgit_zip DEFINITION
 
   PUBLIC SECTION.
 
+    CLASS-METHODS encode_files
+      IMPORTING
+        !it_files      TYPE zif_abapgit_definitions=>ty_files_item_tt
+      RETURNING
+        VALUE(rv_xstr) TYPE xstring
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS export
       IMPORTING
         !io_repo       TYPE REF TO zcl_abapgit_repo
@@ -30,22 +37,16 @@ CLASS zcl_abapgit_zip DEFINITION
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS save_binstring_to_localfile
-      IMPORTING iv_filename  TYPE string
-                iv_binstring TYPE xstring
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !iv_filename  TYPE string
+        !iv_binstring TYPE xstring
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
 
     CLASS-DATA gv_prev TYPE string .
   PRIVATE SECTION.
 
-    CLASS-METHODS encode_files
-      IMPORTING
-        !it_files      TYPE zif_abapgit_definitions=>ty_files_item_tt
-      RETURNING
-        VALUE(rv_xstr) TYPE xstring
-      RAISING
-        zcx_abapgit_exception .
     CLASS-METHODS filename
       IMPORTING
         !iv_str      TYPE string
@@ -58,7 +59,7 @@ CLASS zcl_abapgit_zip DEFINITION
       CHANGING
         !ct_files TYPE zif_abapgit_definitions=>ty_files_tt
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     CLASS-METHODS unzip_file
       IMPORTING
         !iv_xstr        TYPE xstring
