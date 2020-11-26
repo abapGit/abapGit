@@ -5,6 +5,7 @@ INTERFACE zif_abapgit_gui_event
   DATA mv_getdata  TYPE string READ-ONLY.
   DATA mt_postdata TYPE cnht_post_data_tab READ-ONLY.
   DATA mi_gui_services TYPE REF TO zif_abapgit_gui_services READ-ONLY.
+  DATA mv_current_page_name TYPE string.
 
   METHODS query
     RETURNING
