@@ -48,7 +48,10 @@ CLASS zcl_abapgit_repo_online DEFINITION
         zcx_abapgit_exception .
 ENDCLASS.
 
-CLASS zcl_abapgit_repo_online IMPLEMENTATION.
+
+
+CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
+
 
   METHOD fetch_remote.
 
@@ -135,61 +138,11 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     rv_yes = abap_true.
   ENDMETHOD.
 
-  METHOD zif_abapgit_repo_online~select_branch.
-
-    reset_remote( ).
-    set( iv_branch_name     = iv_branch_name
-         iv_selected_commit = space  ).
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_repo_online~select_commit.
-
-    reset_remote( ).
-    set( iv_selected_commit = iv_selected_commit ).
-
-  ENDMETHOD.
 
   METHOD set_objects.
     mt_objects = it_objects.
   ENDMETHOD.
 
-  METHOD zif_abapgit_repo_online~switch_origin.
-
-    DATA lv_offs TYPE i.
-
-    IF iv_overwrite = abap_true. " For repo settings page
-      set( iv_switched_origin = iv_url ).
-      RETURN.
-    ENDIF.
-
-    IF iv_url IS INITIAL.
-      IF ms_data-switched_origin IS INITIAL.
-        RETURN.
-      ELSE.
-        lv_offs = find(
-          val = reverse( ms_data-switched_origin )
-          sub = '@' ).
-        IF lv_offs = -1.
-          zcx_abapgit_exception=>raise( 'Incorrect format of switched origin' ).
-        ENDIF.
-        lv_offs = strlen( ms_data-switched_origin ) - lv_offs - 1.
-        set_url( substring(
-          val = ms_data-switched_origin
-          len = lv_offs ) ).
-        select_branch( substring(
-          val = ms_data-switched_origin
-          off = lv_offs + 1 ) ).
-        set( iv_switched_origin = '' ).
-      ENDIF.
-    ELSEIF ms_data-switched_origin IS INITIAL.
-      set( iv_switched_origin = ms_data-url && '@' && ms_data-branch_name ).
-      set_url( iv_url ).
-    ELSE.
-      zcx_abapgit_exception=>raise( 'Cannot switch origin twice' ).
-    ENDIF.
-
-  ENDMETHOD.
 
   METHOD zif_abapgit_repo_online~create_branch.
 
@@ -294,9 +247,66 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_repo_online~select_branch.
+
+    reset_remote( ).
+    set( iv_branch_name     = iv_branch_name
+         iv_selected_commit = space  ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_online~select_commit.
+
+    reset_remote( ).
+    set( iv_selected_commit = iv_selected_commit ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_repo_online~set_url.
 
     reset_remote( ).
     set( iv_url = iv_url ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_online~switch_origin.
+
+    DATA lv_offs TYPE i.
+
+    IF iv_overwrite = abap_true. " For repo settings page
+      set( iv_switched_origin = iv_url ).
+      RETURN.
+    ENDIF.
+
+    IF iv_url IS INITIAL.
+      IF ms_data-switched_origin IS INITIAL.
+        RETURN.
+      ELSE.
+        lv_offs = find(
+          val = reverse( ms_data-switched_origin )
+          sub = '@' ).
+        IF lv_offs = -1.
+          zcx_abapgit_exception=>raise( 'Incorrect format of switched origin' ).
+        ENDIF.
+        lv_offs = strlen( ms_data-switched_origin ) - lv_offs - 1.
+        set_url( substring(
+          val = ms_data-switched_origin
+          len = lv_offs ) ).
+        select_branch( substring(
+          val = ms_data-switched_origin
+          off = lv_offs + 1 ) ).
+        set( iv_switched_origin = '' ).
+      ENDIF.
+    ELSEIF ms_data-switched_origin IS INITIAL.
+      set( iv_switched_origin = ms_data-url && '@' && ms_data-branch_name ).
+      set_url( iv_url ).
+    ELSE.
+      zcx_abapgit_exception=>raise( 'Cannot switch origin twice' ).
+    ENDIF.
+
   ENDMETHOD.
 ENDCLASS.
