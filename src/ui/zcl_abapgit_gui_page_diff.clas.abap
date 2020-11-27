@@ -637,6 +637,8 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     register_deferred_script( render_scripts( ) ).
 
+    li_progress->off( ).
+
   ENDMETHOD.
 
 
