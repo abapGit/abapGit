@@ -38,7 +38,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
+CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
 
   METHOD build.
@@ -177,6 +177,8 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
         APPEND <ls_tadir> TO rt_tadir.
       ENDIF.
     ENDLOOP.
+
+    li_progress->off( ).
 
   ENDMETHOD.
 

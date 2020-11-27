@@ -578,6 +578,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Error during uninstall. Check the log.' ).
     ENDIF.
 
+    li_progress->off( ).
+
   ENDMETHOD.
 
 
@@ -760,6 +762,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     zcl_abapgit_default_transport=>get_instance( )->reset( ).
 
+    li_progress->off( ).
+
   ENDMETHOD.
 
 
@@ -835,6 +839,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         zcl_abapgit_objects_activation=>activate( abap_true ).
         zcl_abapgit_objects_activation=>activate( abap_false ).
     ENDCASE.
+
+    li_progress->off( ).
 
 *   Call postprocessing
     li_exit = zcl_abapgit_exit=>get_instance( ).

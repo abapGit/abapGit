@@ -9,4 +9,7 @@ CLASS lcl_dummy_progress IMPLEMENTATION.
 
   METHOD zif_abapgit_progress~show.
   ENDMETHOD.
+
+  METHOD zif_abapgit_progress~off.
+  ENDMETHOD.
 ENDCLASS.
