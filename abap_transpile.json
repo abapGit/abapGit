@@ -8,9 +8,24 @@
     "ignoreSyntaxCheck": false,
     "addFilenames": true,
     "addCommonJS": true,
-    "unknownTypes": "runtimeError"
-  },
-  "skip": [
-    {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_direct_text"}
-  ]
+    "unknownTypes": "runtimeError",
+    "skip": [
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_direct_text"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_t100_text1"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_t100_text2"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_t100_text3"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_t100_text4"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_t100_text5"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_t100_text6"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_t100_text7"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_t100_text8"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_no_text"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_get_t100_longtext", "method": "test01"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_b"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_c"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_d"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_e"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_z"}
+    ]
+  }
 }
