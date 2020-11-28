@@ -1,6 +1,6 @@
 {
   "input_folder": "src",
-  "input_filter": ["zif_abapgit_definitions", "zcl_abapgit_convert", "zcl_abapgit_path", "zcx_abapgit_exception", "zcl_abapgit_hash"],
+  "input_filter": ["zif_abapgit_definitions", "zcl_abapgit_convert", "zcl_abapgit_path", "zcx_abapgit_exception", "zcl_abapgit_hash", "zcl_abapgit_url"],
   "output_folder": "output",
   "lib": "https://github.com/open-abap/open-abap",
   "write_unit_tests": true,
@@ -26,7 +26,9 @@
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_d"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_e"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_z"},
-      {"object": "ZCL_ABAPGIT_HASH",      "class": "ltcl_test", "method": "sha1_raw_invalid"}
+      {"object": "ZCL_ABAPGIT_HASH",      "class": "ltcl_test", "method": "sha1_raw_invalid"},
+      {"object": "ZCL_ABAPGIT_URL",       "class": "ltcl_test", "method": "repo_error"},
+      {"object": "ZCL_ABAPGIT_URL",       "class": "ltcl_test", "method": "url_validate3"}
     ]
   }
 }
