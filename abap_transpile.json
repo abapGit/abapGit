@@ -26,7 +26,6 @@
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_d"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_e"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_z"},
-      {"object": "ZCL_ABAPGIT_HASH",      "class": "ltcl_test", "method": "adler32"},
       {"object": "ZCL_ABAPGIT_HASH",      "class": "ltcl_test", "method": "sha1_raw_invalid"}
     ]
   }
