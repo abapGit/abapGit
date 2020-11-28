@@ -9,5 +9,8 @@
     "addFilenames": true,
     "addCommonJS": true,
     "unknownTypes": "runtimeError"
-  }
+  },
+  "skip": [
+    {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_direct_text"}
+  ]
 }
