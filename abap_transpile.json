@@ -1,6 +1,6 @@
 {
   "input_folder": "src",
-  "input_filter": ["zif_abapgit_definitions", "zcl_abapgit_convert", "zcl_abapgit_path", "zcx_abapgit_exception"],
+  "input_filter": ["zif_abapgit_definitions", "zcl_abapgit_convert", "zcl_abapgit_path", "zcx_abapgit_exception", "zcl_abapgit_hash", "zcl_abapgit_url"],
   "output_folder": "output",
   "lib": "https://github.com/open-abap/open-abap",
   "write_unit_tests": true,
@@ -8,6 +8,27 @@
     "ignoreSyntaxCheck": false,
     "addFilenames": true,
     "addCommonJS": true,
-    "unknownTypes": "runtimeError"
+    "unknownTypes": "runtimeError",
+    "skip": [
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_direct_text"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_t100_text1"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_t100_text2"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_t100_text3"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_t100_text4"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_t100_text5"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_t100_text6"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_t100_text7"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_t100_text8"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_no_text"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_get_t100_longtext", "method": "test01"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_b"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_c"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_d"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_e"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_z"},
+      {"object": "ZCL_ABAPGIT_HASH",      "class": "ltcl_test", "method": "sha1_raw_invalid"},
+      {"object": "ZCL_ABAPGIT_URL",       "class": "ltcl_test", "method": "repo_error"},
+      {"object": "ZCL_ABAPGIT_URL",       "class": "ltcl_test", "method": "url_validate3"}
+    ]
   }
 }
