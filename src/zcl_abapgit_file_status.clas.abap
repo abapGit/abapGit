@@ -216,7 +216,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
     " Skip ignored files
     LOOP AT lt_remote ASSIGNING <ls_remote>.
       IF io_dot->is_ignored( iv_path     = <ls_remote>-path
-                             iv_filename = <ls_remote>-filename ).
+                             iv_filename = <ls_remote>-filename ) = abap_true.
         DELETE lt_remote.
       ENDIF.
     ENDLOOP.
