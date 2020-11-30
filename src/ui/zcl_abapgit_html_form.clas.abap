@@ -7,6 +7,13 @@ CLASS zcl_abapgit_html_form DEFINITION
 
     CONSTANTS c_rows TYPE string VALUE 'rows'.
 
+    METHODS is_empty
+      IMPORTING
+        !io_form_data   TYPE REF TO zcl_abapgit_string_map
+      RETURNING
+        VALUE(rv_empty) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
     CLASS-METHODS create
       IMPORTING
         !iv_form_id    TYPE csequence OPTIONAL
@@ -301,6 +308,49 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       GET TIME STAMP FIELD lv_ts.
       ro_form->mv_form_id = |form_{ lv_ts }|.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD is_empty.
+
+    DATA:
+      lv_value TYPE string,
+      lv_rows  TYPE i,
+      lv_row   TYPE i.
+
+    FIELD-SYMBOLS <ls_field> LIKE LINE OF mt_fields.
+
+    LOOP AT mt_fields ASSIGNING <ls_field> WHERE type <> c_field_type-field_group.
+      CLEAR lv_value.
+      lv_value = io_form_data->get( <ls_field>-name ).
+
+      IF <ls_field>-type = c_field_type-number.
+        rv_empty = boolc( lv_value IS INITIAL OR lv_value = '0' ).
+      ELSEIF <ls_field>-type = c_field_type-table.
+        lv_rows = io_form_data->get( |{ <ls_field>-name }-{ c_rows }| ).
+        DO lv_rows TIMES.
+          lv_row = sy-index.
+          DO lines( <ls_field>-subitems ) TIMES.
+            lv_value = io_form_data->get( |{ <ls_field>-name }-{ lv_row }-{ sy-index }| ).
+            rv_empty = boolc( lv_value IS INITIAL ).
+            IF rv_empty <> abap_true.
+              RETURN.
+            ENDIF.
+          ENDDO.
+        ENDDO.
+      ELSEIF <ls_field>-type = c_field_type-textarea.
+        REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>c_crlf IN lv_value WITH ''.
+        REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>c_newline IN lv_value WITH ''.
+        rv_empty = boolc( lv_value IS INITIAL ).
+      ELSE.
+        rv_empty = boolc( lv_value IS INITIAL ).
+      ENDIF.
+
+      IF rv_empty <> abap_true.
+        RETURN.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 
