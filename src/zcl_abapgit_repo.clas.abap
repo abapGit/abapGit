@@ -34,7 +34,6 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS get_files_local
       IMPORTING
         !ii_log         TYPE REF TO zif_abapgit_log OPTIONAL
-        !it_filter      TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
       RETURNING
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
@@ -107,7 +106,7 @@ CLASS zcl_abapgit_repo DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS has_remote_source
-          ABSTRACT
+      ABSTRACT
       RETURNING
         VALUE(rv_yes) TYPE abap_bool .
     METHODS status
@@ -196,11 +195,20 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS check_language
       RAISING
         zcx_abapgit_exception .
+    METHODS remove_non_code_related_files
+      CHANGING
+        ct_local_files TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    METHODS compare_with_remote_checksum
+      IMPORTING
+        it_remote_files TYPE zif_abapgit_definitions=>ty_files_tt
+        is_local_file   TYPE zif_abapgit_definitions=>ty_file_item-file
+      CHANGING
+        cs_checksum     TYPE zif_abapgit_persistence=>ty_local_checksum.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
   METHOD bind_listener.
@@ -417,7 +425,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD get_files_local.
 
-* todo, after refactoring is done, I think the IT_FILTER parameter can be removed
 
     DATA: lo_serialize TYPE REF TO zcl_abapgit_serialize.
 
@@ -435,8 +442,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       iv_package        = get_package( )
       io_dot_abapgit    = get_dot_abapgit( )
       is_local_settings = get_local_settings( )
-      ii_log            = ii_log
-      it_filter         = it_filter ).
+      ii_log            = ii_log ).
 
     mt_local                 = rt_files.
     mv_request_local_refresh = abap_false. " Fulfill refresh
@@ -517,6 +523,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   METHOD rebuild_local_checksums.
 
     DATA:
+      lt_remote    TYPE zif_abapgit_definitions=>ty_files_tt,
       lt_local     TYPE zif_abapgit_definitions=>ty_files_item_tt,
       ls_last_item TYPE zif_abapgit_definitions=>ty_item,
       lt_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
@@ -524,15 +531,15 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     FIELD-SYMBOLS:
       <ls_checksum> LIKE LINE OF lt_checksums,
       <ls_file_sig> LIKE LINE OF <ls_checksum>-files,
+      <ls_remote>   LIKE LINE OF lt_remote,
       <ls_local>    LIKE LINE OF lt_local.
 
-    lt_local = get_files_local( ).
+    lt_local  = get_files_local( ).
 
-    DELETE lt_local " Remove non-code related files except .abapgit
-      WHERE item IS INITIAL
-      AND NOT ( file-path = zif_abapgit_definitions=>c_root_dir
-      AND file-filename = zif_abapgit_definitions=>c_dot_abapgit ).
-    SORT lt_local BY item.
+    remove_non_code_related_files( CHANGING ct_local_files = lt_local ).
+
+    lt_remote = get_files_remote( ).
+    SORT lt_remote BY path filename.
 
     LOOP AT lt_local ASSIGNING <ls_local>.
       IF ls_last_item <> <ls_local>-item OR sy-tabix = 1. " First or New item reached ?
@@ -541,16 +548,50 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
         ls_last_item       = <ls_local>-item.
       ENDIF.
 
-      APPEND INITIAL LINE TO <ls_checksum>-files ASSIGNING <ls_file_sig>.
-      MOVE-CORRESPONDING <ls_local>-file TO <ls_file_sig>.
+      compare_with_remote_checksum( EXPORTING
+                                      it_remote_files = lt_remote
+                                      is_local_file = <ls_local>-file
+                                    CHANGING
+                                      cs_checksum = <ls_checksum> ).
+
 
     ENDLOOP.
-
     set( it_checksums = lt_checksums ).
     reset_status( ).
 
   ENDMETHOD.
 
+  METHOD remove_non_code_related_files.
+
+    DELETE ct_local_files
+          WHERE item IS INITIAL
+          AND NOT ( file-path = zif_abapgit_definitions=>c_root_dir
+          AND file-filename = zif_abapgit_definitions=>c_dot_abapgit ).
+    SORT ct_local_files BY item.
+
+  ENDMETHOD.
+
+  METHOD compare_with_remote_checksum.
+    FIELD-SYMBOLS: <ls_remote_file> LIKE LINE OF it_remote_files,
+                   <ls_file_sig>    LIKE LINE OF cs_checksum-files.
+    READ TABLE it_remote_files ASSIGNING <ls_remote_file>
+        WITH KEY path = is_local_file-path filename = is_local_file-filename
+        BINARY SEARCH.
+    IF sy-subrc <> 0.  " Ignore new local ones
+      RETURN.
+    ENDIF.
+
+    APPEND INITIAL LINE TO cs_checksum-files ASSIGNING <ls_file_sig>.
+    MOVE-CORRESPONDING is_local_file TO <ls_file_sig>.
+
+    " If hashes are equal -> local sha1 is OK
+    " Else if R-branch is ahead  -> assume changes were remote, state - local sha1
+    "      Else (branches equal) -> assume changes were local, state - remote sha1
+    IF is_local_file-sha1 <> <ls_remote_file>-sha1.
+      <ls_file_sig>-sha1 = <ls_remote_file>-sha1.
+    ENDIF.
+
+  ENDMETHOD.
 
   METHOD refresh.
 
@@ -851,4 +892,5 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     set( it_checksums = lt_checksums ).
 
   ENDMETHOD.
+
 ENDCLASS.
