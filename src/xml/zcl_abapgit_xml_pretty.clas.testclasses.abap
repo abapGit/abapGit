@@ -30,6 +30,7 @@ CLASS ltcl_test IMPLEMENTATION.
     DATA lv_result TYPE string.
 
     lv_result = mo_cut->print( '<foo></foo>' ).
+    lv_result = lv_result+1.
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_result
@@ -42,6 +43,7 @@ CLASS ltcl_test IMPLEMENTATION.
     DATA lv_result TYPE string.
 
     lv_result = mo_cut->print( '<foo>2</foo>' ).
+    lv_result = lv_result+1.
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_result
@@ -54,6 +56,7 @@ CLASS ltcl_test IMPLEMENTATION.
     DATA lv_result TYPE string.
 
     lv_result = mo_cut->print( '<foo><bar>2</bar></foo>' ).
+    lv_result = lv_result+1.
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_result
@@ -93,6 +96,8 @@ CLASS ltcl_test IMPLEMENTATION.
     lv_result = mo_cut->print(
       iv_xml      = |<foo>\n <bar>2</bar>\n</foo>|
       iv_unpretty = abap_true ).
+
+    lv_result = lv_result+1.
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_result
