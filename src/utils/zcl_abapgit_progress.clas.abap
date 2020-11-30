@@ -33,7 +33,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PROGRESS IMPLEMENTATION.
+CLASS zcl_abapgit_progress IMPLEMENTATION.
 
 
   METHOD calc_pct.
@@ -70,6 +70,14 @@ CLASS ZCL_ABAPGIT_PROGRESS IMPLEMENTATION.
   METHOD set_instance.
 
     gi_progress = ii_progress.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_progress~off.
+
+    " Clear the status bar
+    CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'.
 
   ENDMETHOD.
 
