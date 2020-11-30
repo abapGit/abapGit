@@ -33,7 +33,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_result
-      exp = |﻿<?xml version="1.0" encoding="utf-16"?>\n<foo/>\n| ).
+      exp = |<?xml version="1.0" encoding="utf-16"?>\n<foo/>\n| ).
 
   ENDMETHOD.
 
@@ -45,7 +45,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_result
-      exp = |﻿<?xml version="1.0" encoding="utf-16"?>\n<foo>2</foo>\n| ).
+      exp = |<?xml version="1.0" encoding="utf-16"?>\n<foo>2</foo>\n| ).
 
   ENDMETHOD.
 
@@ -57,7 +57,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_result
-      exp = |﻿<?xml version="1.0" encoding="utf-16"?>\n<foo>\n <bar>2</bar>\n</foo>\n| ).
+      exp = |<?xml version="1.0" encoding="utf-16"?>\n<foo>\n <bar>2</bar>\n</foo>\n| ).
 
   ENDMETHOD.
 
@@ -96,7 +96,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_result
-      exp = |﻿<?xml version="1.0" encoding="utf-16"?><foo><bar>2</bar></foo>| ).
+      exp = |<?xml version="1.0" encoding="utf-16"?><foo><bar>2</bar></foo>| ).
 
   ENDMETHOD.
 
