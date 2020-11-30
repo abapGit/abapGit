@@ -5,7 +5,7 @@ CLASS zcl_abapgit_html_form DEFINITION
 
   PUBLIC SECTION.
 
-    CONSTANTS c_rows TYPE string VALUE 'rows' ##NO_TEXT.
+    CONSTANTS c_rows TYPE string VALUE 'rows'.
 
     CLASS-METHODS create
       IMPORTING
@@ -96,6 +96,7 @@ CLASS zcl_abapgit_html_form DEFINITION
       IMPORTING
         !iv_label      TYPE csequence
         !iv_width      TYPE csequence OPTIONAL
+        !iv_readonly   TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
     METHODS start_group
@@ -124,8 +125,9 @@ CLASS zcl_abapgit_html_form DEFINITION
 
     TYPES:
       BEGIN OF ty_subitem,
-        label TYPE string,
-        value TYPE string,
+        label    TYPE string,
+        value    TYPE string,
+        readonly TYPE abap_bool,
       END OF ty_subitem.
     TYPES:
       ty_subitems TYPE STANDARD TABLE OF ty_subitem WITH DEFAULT KEY.
@@ -180,7 +182,7 @@ CLASS zcl_abapgit_html_form DEFINITION
       END OF c_field_type.
     DATA:
       mt_fields TYPE STANDARD TABLE OF ty_field
-          WITH UNIQUE SORTED KEY by_name COMPONENTS name.
+            WITH UNIQUE SORTED KEY by_name COMPONENTS name.
     DATA:
       mt_commands TYPE STANDARD TABLE OF ty_command.
     DATA mv_form_id TYPE string.
@@ -258,8 +260,9 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     ASSERT sy-subrc = 0.
     ASSERT <ls_last>-type = c_field_type-table.
 
-    ls_column-label = iv_label.
-    ls_column-value = iv_width.
+    ls_column-label    = iv_label.
+    ls_column-value    = iv_width.
+    ls_column-readonly = iv_readonly.
 
     APPEND ls_column TO <ls_last>-subitems.
 
@@ -304,14 +307,17 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
   METHOD normalize_form_data.
 
-    DATA lv_value TYPE string.
-    DATA lv_rows TYPE i.
-    DATA lv_row TYPE i.
+    DATA:
+      lv_value TYPE string,
+      lv_rows  TYPE i,
+      lv_row   TYPE i,
+      lv_len   TYPE i.
+
     FIELD-SYMBOLS <ls_field> LIKE LINE OF mt_fields.
 
     CREATE OBJECT ro_form_data.
 
-    LOOP AT mt_fields ASSIGNING <ls_field>.
+    LOOP AT mt_fields ASSIGNING <ls_field> WHERE type <> c_field_type-field_group.
       CLEAR lv_value.
       lv_value = io_form_data->get( <ls_field>-name ).
 
@@ -339,6 +345,23 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
               iv_val = lv_value ).
           ENDDO.
         ENDDO.
+        ro_form_data->set(
+          iv_key = |{ <ls_field>-name }-{ c_rows }|
+          iv_val = |{ lv_rows }| ).
+      ELSEIF <ls_field>-type = c_field_type-textarea.
+        REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>c_crlf IN lv_value
+          WITH zif_abapgit_definitions=>c_newline.
+
+        " Remove last line if empty (ie 2x newline)
+        lv_len = strlen( lv_value ) - 2.
+        IF lv_len >= 0 AND lv_value+lv_len(1) = zif_abapgit_definitions=>c_newline.
+          lv_len = lv_len + 1.
+          lv_value = lv_value(lv_len).
+        ENDIF.
+
+        ro_form_data->set(
+          iv_key = <ls_field>-name
+          iv_val = lv_value ).
       ELSE.
         ro_form_data->set(
           iv_key = <ls_field>-name
@@ -685,6 +708,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     DATA:
       lv_value     TYPE string,
+      lv_readonly  TYPE string,
       lv_rows      TYPE i,
       lv_cell_id   TYPE string,
       lv_opt_value TYPE string.
@@ -723,8 +747,12 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
         lv_cell_id = |{ is_field-name }-{ lv_rows }-{ sy-tabix }|.
         lv_value = escape( val    = io_values->get( lv_cell_id )
                            format = cl_abap_format=>e_html_attr ).
+        CLEAR lv_readonly.
+        IF <ls_subitem>-readonly = abap_true.
+          lv_readonly = | readonly|.
+        ENDIF.
         ii_html->add( |<td><input type="text" name="{ lv_cell_id }" id="{
-                      lv_cell_id }" value="{ lv_value }"></td>| ).
+                      lv_cell_id }" value="{ lv_value }"{ lv_readonly }></td>| ).
       ENDLOOP.
       ii_html->add( |</tr>| ).
     ENDDO.
@@ -788,7 +816,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       ii_html->add( is_attr-error ).
     ENDIF.
 
-    lv_rows = lines( zcl_abapgit_convert=>split_string( is_attr-value ) ) + 1. " one new row
+    lv_rows = lines( zcl_abapgit_convert=>split_string( is_attr-value ) ).
 
     ii_html->add( |<textarea name="{ is_field-name }" id="{
                   is_field-name }" rows="{ lv_rows }"{ is_attr-readonly }>| ).
