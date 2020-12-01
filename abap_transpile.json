@@ -11,7 +11,10 @@
     "zif_abapgit_dot_abapgit",
     "zif_abapgit_auth",
     "zif_abapgit_apack_definitions",
-    "zif_abapgit_environment"
+    "zif_abapgit_environment",
+    "zif_abapgit_cts_api",
+    "zif_abapgit_http_response",
+    "zif_abapgit_stage_logic"
   ],
   "output_folder": "output",
   "lib": "https://github.com/open-abap/open-abap",
