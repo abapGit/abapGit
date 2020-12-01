@@ -7,13 +7,13 @@ CLASS zcl_abapgit_html_form DEFINITION
 
     CONSTANTS c_rows TYPE string VALUE 'rows'.
 
-    METHODS is_empty
-      IMPORTING
-        !io_form_data   TYPE REF TO zcl_abapgit_string_map
-      RETURNING
-        VALUE(rv_empty) TYPE abap_bool
-      RAISING
-        zcx_abapgit_exception.
+    CONSTANTS:
+      BEGIN OF c_cmd_type,
+        input  TYPE i VALUE 1,
+        link   TYPE i VALUE 2,
+        button TYPE i VALUE 3,
+      END OF c_cmd_type.
+
     CLASS-METHODS create
       IMPORTING
         !iv_form_id    TYPE csequence OPTIONAL
@@ -32,7 +32,7 @@ CLASS zcl_abapgit_html_form DEFINITION
         !iv_label      TYPE csequence
         !iv_action     TYPE csequence
         !iv_is_main    TYPE abap_bool DEFAULT abap_false
-        !iv_as_a       TYPE abap_bool DEFAULT abap_false
+        !iv_cmd_type   TYPE i DEFAULT 1
       RETURNING
         VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
     METHODS text
@@ -127,6 +127,20 @@ CLASS zcl_abapgit_html_form DEFINITION
         VALUE(ro_validation_log) TYPE REF TO zcl_abapgit_string_map
       RAISING
         zcx_abapgit_exception.
+    METHODS is_empty
+      IMPORTING
+        !io_form_data   TYPE REF TO zcl_abapgit_string_map
+      RETURNING
+        VALUE(rv_empty) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
+    METHODS init.
+    METHODS hidden
+      IMPORTING
+        !iv_name       TYPE csequence
+      RETURNING
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -161,10 +175,10 @@ CLASS zcl_abapgit_html_form DEFINITION
       END OF ty_field.
     TYPES:
       BEGIN OF ty_command,
-        label   TYPE string,
-        action  TYPE string,
-        is_main TYPE abap_bool,
-        as_a    TYPE abap_bool,
+        label    TYPE string,
+        action   TYPE string,
+        is_main  TYPE abap_bool,
+        cmd_type TYPE i,
 *        onclick ???
       END OF ty_command.
     TYPES:
@@ -186,10 +200,11 @@ CLASS zcl_abapgit_html_form DEFINITION
         number      TYPE i VALUE 5,
         textarea    TYPE i VALUE 6,
         table       TYPE i VALUE 7,
+        hidden      TYPE i VALUE 8,
       END OF c_field_type.
     DATA:
       mt_fields TYPE STANDARD TABLE OF ty_field
-            WITH UNIQUE SORTED KEY by_name COMPONENTS name.
+          WITH UNIQUE SORTED KEY by_name COMPONENTS name.
     DATA:
       mt_commands TYPE STANDARD TABLE OF ty_command.
     DATA mv_form_id TYPE string.
@@ -231,6 +246,11 @@ CLASS zcl_abapgit_html_form DEFINITION
       IMPORTING
         !ii_html TYPE REF TO zif_abapgit_html
         !is_cmd  TYPE ty_command.
+    METHODS render_field_hidden
+      IMPORTING
+        !ii_html  TYPE REF TO zif_abapgit_html
+        !is_field TYPE ty_field
+        !is_attr  TYPE ty_attr.
 ENDCLASS.
 
 
@@ -282,12 +302,12 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     DATA ls_cmd LIKE LINE OF mt_commands.
 
-    ASSERT iv_as_a IS INITIAL OR iv_is_main IS INITIAL.
+    ASSERT iv_cmd_type BETWEEN 1 AND 3.
 
-    ls_cmd-label = iv_label.
-    ls_cmd-action = iv_action.
-    ls_cmd-is_main = iv_is_main.
-    ls_cmd-as_a = iv_as_a.
+    ls_cmd-label    = iv_label.
+    ls_cmd-action   = iv_action.
+    ls_cmd-is_main  = iv_is_main.
+    ls_cmd-cmd_type = iv_cmd_type.
 
     APPEND ls_cmd TO mt_commands.
 
@@ -312,6 +332,22 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD hidden.
+
+    DATA ls_field LIKE LINE OF mt_fields.
+
+    ls_field-type  = c_field_type-hidden.
+    ls_field-name  = iv_name.
+    APPEND ls_field TO mt_fields.
+
+  ENDMETHOD.
+
+
+  METHOD init.
+    CLEAR mt_fields.
+  ENDMETHOD.
+
+
   METHOD is_empty.
 
     DATA:
@@ -321,9 +357,11 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_field> LIKE LINE OF mt_fields.
 
+    rv_empty = abap_true.
     LOOP AT mt_fields ASSIGNING <ls_field> WHERE type <> c_field_type-field_group.
-      CLEAR lv_value.
-      lv_value = io_form_data->get( <ls_field>-name ).
+      lv_value = condense(
+        val = io_form_data->get( <ls_field>-name )
+        del = ` ` ).
 
       IF <ls_field>-type = c_field_type-number.
         rv_empty = boolc( lv_value IS INITIAL OR lv_value = '0' ).
@@ -577,20 +615,33 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     DATA lv_main_submit TYPE string.
 
-    IF is_cmd-as_a = abap_true.
-      ii_html->add_a(
-        iv_txt = is_cmd-label
-        iv_act = is_cmd-action
-        iv_class = 'dialog-commands' ).
-    ELSE.
-      IF is_cmd-is_main = abap_true.
-        lv_main_submit = ' class="main"'.
-      ELSE.
-        CLEAR lv_main_submit.
-      ENDIF.
-      ii_html->add( |<input type="submit" value="{
-        is_cmd-label }"{ lv_main_submit } formaction="sapevent:{ is_cmd-action }">| ).
-    ENDIF.
+    CASE is_cmd-cmd_type.
+      WHEN c_cmd_type-link.
+
+        ii_html->add_a(
+          iv_txt   = is_cmd-label
+          iv_act   = is_cmd-action
+          iv_class = 'dialog-commands' ).
+
+      WHEN c_cmd_type-button.
+
+        ii_html->add( |<button type="submit" name="action" value="{
+          is_cmd-action }" class="action-commands">{ is_cmd-label }</button>| ).
+
+      WHEN c_cmd_type-input.
+
+        IF is_cmd-is_main = abap_true.
+          lv_main_submit = ' class="main"'.
+        ELSE.
+          CLEAR lv_main_submit.
+        ENDIF.
+        ii_html->add( |<input type="submit" value="{
+          is_cmd-label }"{ lv_main_submit } formaction="sapevent:{ is_cmd-action }">| ).
+
+      WHEN OTHERS.
+        ASSERT 0 = 1.
+
+    ENDCASE.
 
   ENDMETHOD.
 
@@ -712,6 +763,14 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     ii_html->add( |<input type="checkbox" name="{ is_field-name }" id="{ is_field-name }"{ lv_checked }>| ).
     ii_html->add( |<label for="{ is_field-name }"{ is_attr-hint }>{ is_field-label }</label>| ).
+
+  ENDMETHOD.
+
+
+  METHOD render_field_hidden.
+
+    ii_html->add( |<input type="hidden" name="{ is_field-name }" id="{
+                  is_field-name }" value="{ is_attr-value }">| ).
 
   ENDMETHOD.
 
