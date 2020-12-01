@@ -8,6 +8,8 @@
     "zcl_abapgit_hash",
     "zcl_abapgit_url",
     "zif_abapgit_dot_abapgit",
+    "zif_abapgit_dot_abapgit",
+    "zif_abapgit_auth",
     "zif_abapgit_apack_definitions"],
   "output_folder": "output",
   "lib": "https://github.com/open-abap/open-abap",
