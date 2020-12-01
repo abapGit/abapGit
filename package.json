@@ -13,9 +13,9 @@
     "url": "git+https://github.com/abapGit/abapGit.git"
   },
   "devDependencies": {
-    "@abaplint/cli": "^2.61.5",
-    "@abaplint/transpiler-cli": "^0.8.10",
-    "@abaplint/runtime": "^0.8.11",
+    "@abaplint/cli": "^2.61.6",
+    "@abaplint/transpiler-cli": "^0.8.12",
+    "@abaplint/runtime": "^0.8.12",
     "abapmerge": "^0.14.2",
     "eslint": "^7.14.0"
   }
