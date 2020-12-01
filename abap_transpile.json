@@ -10,7 +10,9 @@
     "zif_abapgit_dot_abapgit",
     "zif_abapgit_dot_abapgit",
     "zif_abapgit_auth",
-    "zif_abapgit_apack_definitions"],
+    "zif_abapgit_apack_definitions",
+    "zif_abapgit_environment"
+  ],
   "output_folder": "output",
   "lib": "https://github.com/open-abap/open-abap",
   "write_unit_tests": true,
