@@ -36,7 +36,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
+CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
 
 
   METHOD deserialize_texts.
@@ -106,7 +106,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
 
     lv_name = ms_item-obj_name.
 
-    " Collect additional languages, skip master lang - it was serialized already
+    " Collect additional languages, skip main lang - it was serialized already
     SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
       FROM dd04v
       WHERE rollname = lv_name

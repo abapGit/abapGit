@@ -104,6 +104,11 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
     CLASS-METHODS help_submenu
       RETURNING
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
+    CLASS-METHODS settings_toolbar
+      IMPORTING
+        !iv_act        TYPE string
+      RETURNING
+        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
     CLASS-METHODS render_branch_name
       IMPORTING
         !iv_branch      TYPE string OPTIONAL
@@ -167,7 +172,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
+CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
 
   METHOD advanced_submenu.
@@ -975,6 +980,22 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     ri_html->add( '<div class="dummydiv warning">' ).
     ri_html->add( |{ ri_html->icon( 'exclamation-triangle/yellow' ) } { iv_text }| ).
     ri_html->add( '</div>' ).
+
+  ENDMETHOD.
+
+
+  METHOD settings_toolbar.
+
+    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-settings'.
+
+    ro_menu->add(
+      iv_txt = 'Global'
+      iv_act = zif_abapgit_definitions=>c_action-go_settings
+      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-go_settings )
+    )->add(
+      iv_txt = 'Personal'
+      iv_act = zif_abapgit_definitions=>c_action-go_settings_personal
+      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-go_settings_personal ) ).
 
   ENDMETHOD.
 ENDCLASS.

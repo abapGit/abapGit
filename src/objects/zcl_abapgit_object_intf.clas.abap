@@ -49,7 +49,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
   METHOD deserialize_abap.
     DATA: ls_vseointerf   TYPE vseointerf,
           lt_source       TYPE seop_source_string,
-          lt_descriptions TYPE zif_abapgit_definitions=>ty_seocompotx_tt,
+          lt_descriptions TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt,
           ls_clskey       TYPE seoclskey.
 
 
@@ -139,7 +139,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
   METHOD serialize_xml.
     DATA:
-      lt_descriptions TYPE zif_abapgit_definitions=>ty_seocompotx_tt,
+      lt_descriptions TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt,
       ls_vseointerf   TYPE vseointerf,
       ls_clskey       TYPE seoclskey,
       lt_lines        TYPE tlinetab,

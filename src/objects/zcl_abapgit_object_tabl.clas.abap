@@ -486,7 +486,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
     lv_name = ms_item-obj_name.
 
-    " Collect additional languages, skip master lang - it was serialized already
+    " Collect additional languages, skip main lang - it was serialized already
     SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
       FROM dd02v
       WHERE tabname = lv_name

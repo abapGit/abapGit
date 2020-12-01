@@ -2,21 +2,23 @@ CLASS zcl_abapgit_gui_page_addofflin DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_gui_component
   FINAL
-  CREATE PRIVATE .
+  CREATE PRIVATE.
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_gui_event_handler .
-    INTERFACES zif_abapgit_gui_renderable .
+
+    INTERFACES zif_abapgit_gui_event_handler.
+    INTERFACES zif_abapgit_gui_renderable.
 
     CLASS-METHODS create
-        " TODO importing prefilled form data
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+
     METHODS constructor
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -27,6 +29,7 @@ CLASS zcl_abapgit_gui_page_addofflin DEFINITION
         folder_logic     TYPE string VALUE 'folder_logic',
         master_lang_only TYPE string VALUE 'master_lang_only',
       END OF c_id .
+
     CONSTANTS:
       BEGIN OF c_event,
         go_back          TYPE string VALUE 'go-back',
@@ -34,6 +37,7 @@ CLASS zcl_abapgit_gui_page_addofflin DEFINITION
         create_package   TYPE string VALUE 'create-package',
         add_offline_repo TYPE string VALUE 'add-repo-offline',
       END OF c_event .
+
     DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map .
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map .
     DATA mo_form TYPE REF TO zcl_abapgit_html_form .
@@ -45,6 +49,7 @@ CLASS zcl_abapgit_gui_page_addofflin DEFINITION
         VALUE(ro_validation_log) TYPE REF TO zcl_abapgit_string_map
       RAISING
         zcx_abapgit_exception .
+
     METHODS get_form_schema
       RETURNING
         VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form .
@@ -70,7 +75,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDOFFLIN IMPLEMENTATION.
     CREATE OBJECT lo_component.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
-      iv_page_title = 'Create offline repository'
+      iv_page_title      = 'New Offline Repository'
       ii_child_component = lo_component ).
 
   ENDMETHOD.
@@ -78,12 +83,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDOFFLIN IMPLEMENTATION.
 
   METHOD get_form_schema.
 
-    ro_form = zcl_abapgit_html_form=>create( iv_form_id = 'add-repo-offline-form' ).
+    ro_form = zcl_abapgit_html_form=>create(
+                iv_form_id   = 'add-repo-offline-form'
+                iv_help_page = 'https://docs.abapgit.org/guide-offline-install.html' ).
 
     ro_form->text(
       iv_name        = c_id-url
       iv_required    = abap_true
-      iv_label       = 'Repository name'
+      iv_label       = 'Repository Name'
       iv_hint        = 'Unique name for repository'
     )->text(
       iv_name        = c_id-package
@@ -91,13 +98,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDOFFLIN IMPLEMENTATION.
       iv_required    = abap_true
       iv_upper_case  = abap_true
       iv_label       = 'Package'
-      iv_hint        = 'SAP package for the code (should be a dedicated one)'
+      iv_hint        = 'SAP package for repository (should be a dedicated one)'
       iv_placeholder = 'Z... / $...'
     )->radio(
       iv_name        = c_id-folder_logic
       iv_default_value = zif_abapgit_dot_abapgit=>c_folder_logic-prefix
-      iv_label       = 'Folder logic'
-      iv_hint        = 'Define how package folders are named in the repo (see https://docs.abapgit.org)'
+      iv_label       = 'Folder Logic'
+      iv_hint        = 'Define how package folders are named in repository'
     )->option(
       iv_label       = 'Prefix'
       iv_value       = zif_abapgit_dot_abapgit=>c_folder_logic-prefix
@@ -106,14 +113,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDOFFLIN IMPLEMENTATION.
       iv_value       = zif_abapgit_dot_abapgit=>c_folder_logic-full
     )->checkbox(
       iv_name        = c_id-master_lang_only
-      iv_label       = 'Serialize master language only'
-      iv_hint        = 'Ignore translations, serialize just master language'
+      iv_label       = 'Serialize Main Language Only'
+      iv_hint        = 'Ignore translations, serialize just main language'
     )->command(
-      iv_label       = 'Create offline repo'
+      iv_label       = 'Create Offline Repo'
       iv_is_main     = abap_true
       iv_action      = c_event-add_offline_repo
     )->command(
-      iv_label       = 'Create package'
+      iv_label       = 'Create Package'
       iv_action      = c_event-create_package
     )->command(
       iv_label       = 'Back'
@@ -156,7 +163,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDOFFLIN IMPLEMENTATION.
     DATA: ls_repo_params      TYPE zif_abapgit_services_repo=>ty_repo_params,
           lo_new_offline_repo TYPE REF TO zcl_abapgit_repo_offline.
 
-    " import data from html before re-render
     mo_form_data = mo_form->normalize_form_data( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.

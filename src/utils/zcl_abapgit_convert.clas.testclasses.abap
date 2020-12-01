@@ -13,8 +13,6 @@ CLASS ltcl_convert DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FIN
     METHODS xstring_to_string_utf8 FOR TESTING.
     METHODS base64_to_xstring FOR TESTING.
     METHODS conversion_exit_isola_output FOR TESTING.
-    METHODS alpha_output FOR TESTING.
-    METHODS bintab_to_xstring FOR TESTING.
     METHODS string_to_tab FOR TESTING.
     METHODS string_to_xstring FOR TESTING.
     METHODS xstring_to_bintab FOR TESTING.
@@ -87,25 +85,6 @@ CLASS ltcl_convert IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD bintab_to_xstring.
-
-    TYPES ty_hex TYPE x LENGTH 2.
-    DATA lt_bintab TYPE STANDARD TABLE OF ty_hex WITH DEFAULT KEY.
-    DATA lv_xstr TYPE xstring.
-
-    APPEND '1122' TO lt_bintab.
-    APPEND '33' TO lt_bintab.
-
-    lv_xstr = zcl_abapgit_convert=>bintab_to_xstring(
-      it_bintab = lt_bintab
-      iv_size   = 3 ).
-
-    cl_abap_unit_assert=>assert_equals(
-      act = lv_xstr
-      exp = '112233' ).
-
-  ENDMETHOD.
-
   METHOD conversion_exit_isola_output.
 
     DATA lv_laiso TYPE laiso.
@@ -151,21 +130,6 @@ CLASS ltcl_convert IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lv_result
       exp = 'abc' ).
-
-  ENDMETHOD.
-
-  METHOD alpha_output.
-
-    DATA lv_alpha TYPE c LENGTH 10 VALUE '0000001234'.
-    DATA lv_numc TYPE n LENGTH 6 VALUE '001234'.
-
-    cl_abap_unit_assert=>assert_equals(
-        act = zcl_abapgit_convert=>alpha_output( lv_alpha )
-        exp = '1234' ).
-
-    cl_abap_unit_assert=>assert_equals(
-        act = zcl_abapgit_convert=>alpha_output( lv_numc )
-        exp = '1234' ).
 
   ENDMETHOD.
 
@@ -239,7 +203,7 @@ CLASS ltcl_convert IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals( exp = lt_exp
                                         act = lt_act
-                                        msg = ' Error during string split: CRLF' ).
+                                        msg = 'Error during string split: CRLF' ).
 
     CLEAR: lt_act.
 
@@ -248,7 +212,7 @@ CLASS ltcl_convert IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals( exp = lt_exp
                                         act = lt_act
-                                        msg = ' Error during string split: LF' ).
+                                        msg = 'Error during string split: LF' ).
 
   ENDMETHOD.
 

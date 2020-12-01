@@ -304,11 +304,13 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     IF mo_repo->get_dot_abapgit( )->get_master_language( ) <> sy-langu.
       ro_advanced_dropdown->add(
-        iv_txt = 'Open in Master Language'
+        iv_txt = 'Open in Main Language'
         iv_act = |{ zif_abapgit_definitions=>c_action-repo_open_in_master_lang }?key={ mv_key }| ).
     ENDIF.
 
     ro_advanced_dropdown->add( iv_txt = 'Remove'
+                               iv_title = `Remove abapGit's records of the repository (the system's `
+                                       && `development objects will remain unaffected)`
                                iv_act = |{ zif_abapgit_definitions=>c_action-repo_remove }?key={ mv_key }| ).
 
     CLEAR lv_crossout.
@@ -317,6 +319,8 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
     ENDIF.
     ro_advanced_dropdown->add( iv_txt = 'Uninstall'
+                               iv_title = `Delete all development objects belonging to this package `
+                                       && `(and subpackages) from the system`
                                iv_act = |{ zif_abapgit_definitions=>c_action-repo_purge }?key={ mv_key }|
                                iv_opt = lv_crossout ).
 
@@ -513,7 +517,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                      iv_act = |{ zif_abapgit_definitions=>c_action-repo_settings }?key={ mv_key }|
                      iv_title = `Repository Settings` ).
 
-
   ENDMETHOD.
 
 
@@ -692,7 +695,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     lv_master_language = mo_repo->get_dot_abapgit( )->get_master_language( ).
 
     IF lv_master_language = sy-langu.
-      zcx_abapgit_exception=>raise( |Repo already opened in master language| ).
+      zcx_abapgit_exception=>raise( |Repo already opened in main language| ).
     ENDIF.
 
     ls_item-obj_name = lc_abapgit_tcode.
@@ -756,12 +759,12 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
     gui_services( )->register_event_handler( me ).
 
-    " Reinit, for the case of type change
-    mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
-
-    lo_news = zcl_abapgit_news=>create( mo_repo ).
-
     TRY.
+        " Reinit, for the case of type change
+        mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
+
+        lo_news = zcl_abapgit_news=>create( mo_repo ).
+
         CREATE OBJECT ri_html TYPE zcl_abapgit_html.
         ri_html->add( |<div class="repo" id="repo{ mv_key }">| ).
         ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
@@ -856,7 +859,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                         iv_act = c_actions-display_more )
             } more. (Set in Advanced > {
             ri_html->a( iv_txt = 'Settings'
-                        iv_act = zif_abapgit_definitions=>c_action-go_settings )
+                        iv_act = zif_abapgit_definitions=>c_action-go_settings_personal )
             } )| ).
           ri_html->add( '</div>' ).
         ENDIF.
@@ -948,11 +951,11 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ri_html->add( '</td>' ).
 
     " Command
+    ri_html->add( '<td class="cmd">' ).
     IF mo_repo->has_remote_source( ) = abap_true.
-      ri_html->add( '<td class="cmd">' ).
       ri_html->add( render_item_command( is_item ) ).
-      ri_html->add( '</td>' ).
     ENDIF.
+    ri_html->add( '</td>' ).
 
     ri_html->add( '</tr>' ).
 
@@ -1156,6 +1159,8 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       IF lines( lt_pulls ) = 0.
         RETURN. " false
       ENDIF.
+
+      SORT lt_pulls BY number DESCENDING.
 
       ls_pull = zcl_abapgit_ui_factory=>get_popups( )->choose_pr_popup( lt_pulls ).
       IF ls_pull IS INITIAL.

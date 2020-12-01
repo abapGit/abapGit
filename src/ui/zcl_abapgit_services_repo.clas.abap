@@ -24,7 +24,9 @@ CLASS zcl_abapgit_services_repo DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS purge
       IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
+        !iv_key       TYPE zif_abapgit_persistence=>ty_repo-key
+      RETURNING
+        VALUE(ri_log) TYPE REF TO zif_abapgit_log
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS new_offline
@@ -350,10 +352,16 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
                                         )->popup_transport_request( ls_checks-transport-type ).
     ENDIF.
 
-    zcl_abapgit_repo_srv=>get_instance( )->purge( io_repo   = lo_repo
-                                                  is_checks = ls_checks ).
+    ri_log = zcl_abapgit_repo_srv=>get_instance( )->purge(
+      io_repo   = lo_repo
+      is_checks = ls_checks ).
 
     COMMIT WORK.
+
+    IF ri_log IS BOUND AND ri_log->count( ) > 0.
+      zcl_abapgit_log_viewer=>show_log( ri_log ).
+      RETURN.
+    ENDIF.
 
     lv_message = |Repository { lv_repo_name } successfully uninstalled from Package { lv_package }. |.
     MESSAGE lv_message TYPE 'S'.

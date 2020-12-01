@@ -4,4 +4,6 @@ package-lock.json
 zabapgit.abap
 .vscode
 deps
+output
 ci/*.abap
+allure-report

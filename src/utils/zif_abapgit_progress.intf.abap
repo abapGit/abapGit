@@ -9,4 +9,5 @@ INTERFACE zif_abapgit_progress
   METHODS set_total
     IMPORTING
       !iv_total TYPE i .
+  METHODS off .
 ENDINTERFACE.

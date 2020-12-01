@@ -25,20 +25,23 @@ CLASS zcl_abapgit_html DEFINITION
         no_indent_jscss TYPE abap_bool,
         within_style    TYPE abap_bool,
         within_js       TYPE abap_bool,
+        within_textarea TYPE abap_bool,
         indent          TYPE i,
         indent_str      TYPE string,
       END OF ty_indent_context .
     TYPES:
       BEGIN OF ty_study_result,
-        style_open   TYPE abap_bool,
-        style_close  TYPE abap_bool,
-        script_open  TYPE abap_bool,
-        script_close TYPE abap_bool,
-        tag_close    TYPE abap_bool,
-        curly_close  TYPE abap_bool,
-        openings     TYPE i,
-        closings     TYPE i,
-        singles      TYPE i,
+        style_open     TYPE abap_bool,
+        style_close    TYPE abap_bool,
+        script_open    TYPE abap_bool,
+        script_close   TYPE abap_bool,
+        textarea_open  TYPE abap_bool,
+        textarea_close TYPE abap_bool,
+        tag_close      TYPE abap_bool,
+        curly_close    TYPE abap_bool,
+        openings       TYPE i,
+        closings       TYPE i,
+        singles        TYPE i,
       END OF ty_study_result .
 
     CLASS-DATA go_single_tags_re TYPE REF TO cl_abap_regex .
@@ -64,7 +67,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
+CLASS zcl_abapgit_html IMPLEMENTATION.
 
 
   METHOD checkbox.
@@ -133,6 +136,17 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     ls_study = study_line(
       is_context = cs_context
       iv_line    = cv_line ).
+
+    " No indent for textarea tags
+    IF ls_study-textarea_open = abap_true.
+      cs_context-within_textarea = abap_true.
+      RETURN.
+    ELSEIF ls_study-textarea_close = abap_true.
+      cs_context-within_textarea = abap_false.
+      RETURN.
+    ELSEIF cs_context-within_textarea = abap_true.
+      RETURN.
+    ENDIF.
 
     " First closing tag - shift back exceptionally
     IF ( ls_study-script_close = abap_true
@@ -230,6 +244,16 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       FIND ALL OCCURRENCES OF REGEX go_single_tags_re IN lv_line MATCH COUNT rs_result-singles.
       rs_result-openings = rs_result-openings - rs_result-closings - rs_result-singles.
 
+    ENDIF.
+
+    " Textarea (same assumptions as above)
+    IF is_context-within_textarea = abap_true AND lv_len >= 10 AND lv_line(10) = '</TEXTAREA'.
+      rs_result-textarea_close = abap_true.
+    ELSEIF is_context-within_textarea = abap_false AND lv_len >= 9 AND lv_line(9) = '<TEXTAREA'.
+      FIND FIRST OCCURRENCE OF '</TEXTAREA' IN lv_line.
+      IF sy-subrc > 0. " Not found
+        rs_result-textarea_open = abap_true.
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.

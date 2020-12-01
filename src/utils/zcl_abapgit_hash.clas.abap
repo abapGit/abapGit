@@ -17,6 +17,40 @@ CLASS zcl_abapgit_hash DEFINITION
         VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception .
+
+    CLASS-METHODS sha1_commit
+      IMPORTING
+        !iv_data       TYPE xstring
+      RETURNING
+        VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
+      RAISING
+        zcx_abapgit_exception .
+
+    CLASS-METHODS sha1_tree
+      IMPORTING
+        !iv_data       TYPE xstring
+      RETURNING
+        VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
+      RAISING
+        zcx_abapgit_exception .
+
+    CLASS-METHODS sha1_tag
+      IMPORTING
+        !iv_data       TYPE xstring
+      RETURNING
+        VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
+      RAISING
+        zcx_abapgit_exception .
+
+    CLASS-METHODS sha1_blob
+      IMPORTING
+        !iv_data       TYPE xstring
+      RETURNING
+        VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
+      RAISING
+        zcx_abapgit_exception .
+
+
     CLASS-METHODS sha1_raw
       IMPORTING
         !iv_data       TYPE xstring
@@ -24,11 +58,13 @@ CLASS zcl_abapgit_hash DEFINITION
         VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception .
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_hash IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_HASH IMPLEMENTATION.
 
 
   METHOD adler32.
@@ -102,6 +138,18 @@ CLASS zcl_abapgit_hash IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD sha1_blob.
+    rv_sha1 = sha1( iv_type = zif_abapgit_definitions=>c_type-blob
+                    iv_data = iv_data ).
+  ENDMETHOD.
+
+
+  METHOD sha1_commit.
+    rv_sha1 = sha1( iv_type = zif_abapgit_definitions=>c_type-commit
+                    iv_data = iv_data ).
+  ENDMETHOD.
+
+
   METHOD sha1_raw.
 
     DATA: lv_hash  TYPE string,
@@ -121,5 +169,17 @@ CLASS zcl_abapgit_hash IMPLEMENTATION.
     rv_sha1 = lv_hash.
     TRANSLATE rv_sha1 TO LOWER CASE.
 
+  ENDMETHOD.
+
+
+  METHOD sha1_tag.
+    rv_sha1 = sha1( iv_type = zif_abapgit_definitions=>c_type-tag
+                    iv_data = iv_data ).
+  ENDMETHOD.
+
+
+  METHOD sha1_tree.
+    rv_sha1 = sha1( iv_type = zif_abapgit_definitions=>c_type-tree
+                    iv_data = iv_data ).
   ENDMETHOD.
 ENDCLASS.

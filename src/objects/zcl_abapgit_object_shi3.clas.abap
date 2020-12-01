@@ -32,6 +32,9 @@ CLASS zcl_abapgit_object_shi3 DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS jump_se43
       RAISING zcx_abapgit_exception.
 
+    METHODS jump_sbach04
+      RAISING zcx_abapgit_exception.
+
     METHODS clear_fields
       CHANGING cs_head  TYPE ttree
                ct_nodes TYPE hier_iface_t.
@@ -145,6 +148,32 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, SHI3' ).
     ENDIF.
 
+  ENDMETHOD.
+
+  METHOD jump_sbach04.
+    DATA: ls_message      TYPE hier_mess,
+          lv_structure_id TYPE hier_treeg.
+
+    lv_structure_id = ms_item-obj_name.
+
+    CALL FUNCTION 'STREE_EXTERNAL_EDIT'
+      EXPORTING
+        structure_id   = lv_structure_id
+        language       = mv_language
+        edit_structure = abap_false
+        no_commit_work = abap_false
+        activity       = 'D'
+      IMPORTING
+        message        = ls_message.
+    IF ls_message IS NOT INITIAL.
+      zcx_abapgit_exception=>raise_t100(
+        iv_msgid = ls_message-msgid
+        iv_msgno = ls_message-msgno
+        iv_msgv1 = ls_message-msgv1
+        iv_msgv2 = ls_message-msgv2
+        iv_msgv3 = ls_message-msgv3
+        iv_msgv4 = ls_message-msgv4 ).
+    ENDIF.
   ENDMETHOD.
 
 
@@ -294,6 +323,8 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
     CASE ls_head-type.
       WHEN 'BMENU'.
         jump_se43( ).
+      WHEN 'GHIER'.
+        jump_sbach04( ).
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( |Jump for type { ls_head-type } not implemented| ).
     ENDCASE.
