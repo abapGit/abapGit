@@ -17,7 +17,6 @@ CLASS zcl_abapgit_repo_online DEFINITION
       get_selected_commit FOR zif_abapgit_repo_online~get_selected_commit,
       get_current_remote FOR zif_abapgit_repo_online~get_current_remote,
       select_commit FOR zif_abapgit_repo_online~select_commit,
-      get_objects FOR zif_abapgit_repo_online~get_objects,
       get_switched_origin FOR zif_abapgit_repo_online~get_switched_origin,
       switch_origin FOR zif_abapgit_repo_online~switch_origin.
 
@@ -44,6 +43,11 @@ CLASS zcl_abapgit_repo_online DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS fetch_remote
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_objects
+      RETURNING
+        VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
         zcx_abapgit_exception .
 ENDCLASS.
@@ -173,7 +177,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_repo_online~get_objects.
+  METHOD get_objects.
     fetch_remote( ).
     rt_objects = mt_objects.
   ENDMETHOD.

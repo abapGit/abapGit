@@ -34,7 +34,6 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS get_files_local
       IMPORTING
         !ii_log         TYPE REF TO zif_abapgit_log OPTIONAL
-        !it_filter      TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
       RETURNING
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
@@ -426,7 +425,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
   METHOD get_files_local.
 
-* todo, after refactoring is done, I think the IT_FILTER parameter can be removed
 
     DATA: lo_serialize TYPE REF TO zcl_abapgit_serialize.
 
@@ -444,8 +442,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       iv_package        = get_package( )
       io_dot_abapgit    = get_dot_abapgit( )
       is_local_settings = get_local_settings( )
-      ii_log            = ii_log
-      it_filter         = it_filter ).
+      ii_log            = ii_log ).
 
     mt_local                 = rt_files.
     mv_request_local_refresh = abap_false. " Fulfill refresh
