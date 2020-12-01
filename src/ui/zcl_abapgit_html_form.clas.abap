@@ -739,6 +739,13 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
           is_attr   = ls_attr
           io_values = io_values ).
 
+      WHEN c_field_type-hidden.
+
+        render_field_hidden(
+          ii_html  = ii_html
+          is_field = is_field
+          is_attr  = ls_attr ).
+
       WHEN OTHERS.
         ASSERT 1 = 0.
     ENDCASE.
