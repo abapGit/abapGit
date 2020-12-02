@@ -12,7 +12,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OO_INTERFACE IMPLEMENTATION.
+CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
 
 
   METHOD zif_abapgit_oo_object_fnc~create.
@@ -61,7 +61,7 @@ CLASS ZCL_ABAPGIT_OO_INTERFACE IMPLEMENTATION.
             OTHERS          = 7.
     ENDTRY.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from SEO_INTERFACE_CREATE_COMPLETE. Subrc = { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
   ENDMETHOD.
 
@@ -78,7 +78,7 @@ CLASS ZCL_ABAPGIT_OO_INTERFACE IMPLEMENTATION.
         other        = 5
         OTHERS       = 6.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from SEO_INTERFACE_DELETE_COMPLETE. Subrc = { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
   ENDMETHOD.
 
@@ -105,7 +105,7 @@ CLASS ZCL_ABAPGIT_OO_INTERFACE IMPLEMENTATION.
     IF sy-subrc = 1.
       RETURN. " in case only inactive version exists
     ELSEIF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from seo_clif_get. Subrc = { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
   ENDMETHOD.
 ENDCLASS.
