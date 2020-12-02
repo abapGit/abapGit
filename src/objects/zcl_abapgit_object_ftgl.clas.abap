@@ -223,4 +223,5 @@ CLASS zcl_abapgit_object_ftgl IMPLEMENTATION.
     CLEAR: <lg_field>.
 
   ENDMETHOD.
+
 ENDCLASS.
