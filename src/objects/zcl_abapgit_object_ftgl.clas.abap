@@ -31,21 +31,6 @@ ENDCLASS.
 CLASS zcl_abapgit_object_ftgl IMPLEMENTATION.
 
 
-  METHOD clear_field.
-
-    FIELD-SYMBOLS: <lg_field> TYPE data.
-
-    ASSIGN
-      COMPONENT iv_fieldname
-      OF STRUCTURE cg_header
-      TO <lg_field>.
-    ASSERT sy-subrc = 0.
-
-    CLEAR: <lg_field>.
-
-  ENDMETHOD.
-
-
   METHOD constructor.
 
     super->constructor(
@@ -221,6 +206,21 @@ CLASS zcl_abapgit_object_ftgl IMPLEMENTATION.
     io_xml->add(
         iv_name = 'FTGL'
         ig_data = <lg_toggle> ).
+
+  ENDMETHOD.
+
+
+  METHOD clear_field.
+
+    FIELD-SYMBOLS: <lg_field> TYPE data.
+
+    ASSIGN
+      COMPONENT iv_fieldname
+      OF STRUCTURE cg_header
+      TO <lg_field>.
+    ASSERT sy-subrc = 0.
+
+    CLEAR: <lg_field>.
 
   ENDMETHOD.
 ENDCLASS.
