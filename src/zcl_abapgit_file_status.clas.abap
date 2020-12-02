@@ -195,6 +195,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
   METHOD calculate_status.
 
     DATA: lt_remote       LIKE it_remote,
+          lv_index        TYPE i,
           lt_items        TYPE zif_abapgit_definitions=>ty_items_tt,
           ls_item         LIKE LINE OF lt_items,
           lv_is_xml       TYPE abap_bool,
@@ -215,9 +216,10 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
     " Skip ignored files
     LOOP AT lt_remote ASSIGNING <ls_remote>.
+      lv_index = sy-tabix.
       IF io_dot->is_ignored( iv_path     = <ls_remote>-path
                              iv_filename = <ls_remote>-filename ) = abap_true.
-        DELETE lt_remote.
+        DELETE lt_remote INDEX lv_index.
       ENDIF.
     ENDLOOP.
 
