@@ -1,17 +1,23 @@
-CLASS zcl_abapgit_object_ftgl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_objects_super FINAL.
+CLASS zcl_abapgit_object_ftgl DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_super
+  FINAL
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
-    METHODS:
-      constructor
-        IMPORTING
-          is_item     TYPE zif_abapgit_definitions=>ty_item
-          iv_language TYPE spras
-        RAISING
-          zcx_abapgit_exception.
+    INTERFACES zif_abapgit_object .
 
+    ALIASES mo_files
+      FOR zif_abapgit_object~mo_files .
+
+    METHODS constructor
+      IMPORTING
+        !is_item     TYPE zif_abapgit_definitions=>ty_item
+        !iv_language TYPE spras
+      RAISING
+        zcx_abapgit_exception .
+protected section.
   PRIVATE SECTION.
     DATA:
       mv_toggle_id TYPE c LENGTH 40, "sftgl_ft_id
@@ -29,6 +35,21 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_object_ftgl IMPLEMENTATION.
+
+
+  METHOD clear_field.
+
+    FIELD-SYMBOLS: <lg_field> TYPE data.
+
+    ASSIGN
+      COMPONENT iv_fieldname
+      OF STRUCTURE cg_header
+      TO <lg_field>.
+    ASSERT sy-subrc = 0.
+
+    CLEAR: <lg_field>.
+
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -208,20 +229,4 @@ CLASS zcl_abapgit_object_ftgl IMPLEMENTATION.
         ig_data = <lg_toggle> ).
 
   ENDMETHOD.
-
-
-  METHOD clear_field.
-
-    FIELD-SYMBOLS: <lg_field> TYPE data.
-
-    ASSIGN
-      COMPONENT iv_fieldname
-      OF STRUCTURE cg_header
-      TO <lg_field>.
-    ASSERT sy-subrc = 0.
-
-    CLEAR: <lg_field>.
-
-  ENDMETHOD.
-
 ENDCLASS.
