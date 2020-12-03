@@ -105,11 +105,11 @@ CLASS zcl_abapgit_object_tran DEFINITION
     METHODS clear_functiongroup_globals.
     METHODS is_variant_transaction IMPORTING is_tstcp                      TYPE tstcp
                                    RETURNING VALUE(rv_variant_transaction) TYPE abap_bool.
-endclass.
+ENDCLASS.
 
 
 
-class zcl_abapgit_object_tran implementation.
+CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
 
   METHOD add_data.
@@ -899,4 +899,4 @@ class zcl_abapgit_object_tran implementation.
     serialize_texts( io_xml ).
 
   ENDMETHOD.
-endclass.
+ENDCLASS.
