@@ -134,7 +134,6 @@ CLASS zcl_abapgit_html_form DEFINITION
         VALUE(rv_empty) TYPE abap_bool
       RAISING
         zcx_abapgit_exception.
-    METHODS init.
     METHODS hidden
       IMPORTING
         !iv_name       TYPE csequence
@@ -340,11 +339,6 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     ls_field-name  = iv_name.
     APPEND ls_field TO mt_fields.
 
-  ENDMETHOD.
-
-
-  METHOD init.
-    CLEAR mt_fields.
   ENDMETHOD.
 
 
