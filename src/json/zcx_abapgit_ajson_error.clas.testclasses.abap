@@ -25,7 +25,7 @@ class ltcl_error implementation.
     try.
       zcx_abapgit_ajson_error=>raise( lv_msg ).
       cl_abap_unit_assert=>fail( ).
-    catch zcx_ajson_error into lx.
+    catch zcx_abapgit_ajson_error into lx.
       cl_abap_unit_assert=>assert_equals(
         exp = lv_msg
         act = lx->get_text( ) ).
@@ -41,7 +41,7 @@ class ltcl_error implementation.
       zcx_abapgit_ajson_error=>raise( iv_msg = 'a'
                                       iv_location = 'b' ).
       cl_abap_unit_assert=>fail( ).
-    catch zcx_ajson_error into lx.
+    catch zcx_abapgit_ajson_error into lx.
       cl_abap_unit_assert=>assert_equals(
         exp = 'a @b'
         act = lx->get_text( ) ).
