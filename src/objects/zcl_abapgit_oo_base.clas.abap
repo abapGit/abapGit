@@ -113,7 +113,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
         class_not_existing = 1
         OTHERS             = 2.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from CL_OO_SOURCE. Subrc = { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     TRY.
@@ -153,7 +153,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
         ret_code      = 1
         OTHERS        = 2.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from DOCU_UPD. Subrc = { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
   ENDMETHOD.
 
