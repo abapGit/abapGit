@@ -10,6 +10,7 @@ INTERFACE zif_abapgit_ajson_writer
       iv_path TYPE string
       iv_val TYPE any
       iv_ignore_empty TYPE abap_bool DEFAULT abap_true
+      iv_node_type TYPE string OPTIONAL
     RAISING
       zcx_abapgit_ajson_error.
 
@@ -64,14 +65,6 @@ INTERFACE zif_abapgit_ajson_writer
     IMPORTING
       iv_path TYPE string
       iv_val TYPE any
-    RAISING
-      zcx_abapgit_ajson_error.
-
-  METHODS set_with_type
-    IMPORTING
-      iv_path TYPE string
-      iv_val TYPE any
-      iv_type TYPE string
     RAISING
       zcx_abapgit_ajson_error.
 

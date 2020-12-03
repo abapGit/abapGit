@@ -31,7 +31,6 @@ CLASS zcl_abapgit_ajson DEFINITION
       set_integer FOR zif_abapgit_ajson_writer~set_integer,
       set_date FOR zif_abapgit_ajson_writer~set_date,
       set_null FOR zif_abapgit_ajson_writer~set_null,
-      set_with_type FOR zif_abapgit_ajson_writer~set_with_type,
       delete FOR zif_abapgit_ajson_writer~delete,
       touch_array FOR zif_abapgit_ajson_writer~touch_array,
       push FOR zif_abapgit_ajson_writer~push.
@@ -531,15 +530,27 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
       zcx_abapgit_ajson_error=>raise( 'This json instance is read only' ).
     ENDIF.
 
-    IF iv_val IS INITIAL AND iv_ignore_empty = abap_true.
+    IF iv_val IS INITIAL AND iv_ignore_empty = abap_true AND iv_node_type IS INITIAL.
       RETURN. " nothing to assign
+    ENDIF.
+
+    IF iv_node_type IS NOT INITIAL
+      AND iv_node_type <> 'bool' AND iv_node_type <> 'null' AND iv_node_type <> 'num' AND iv_node_type <> 'str'.
+      zcx_abapgit_ajson_error=>raise( |Unexpected type { iv_node_type }| ).
     ENDIF.
 
     ls_split_path = lcl_utils=>split_path( iv_path ).
     IF ls_split_path IS INITIAL. " Assign root, exceptional processing
-      mt_json_tree = lcl_abap_to_json=>convert(
-        iv_data   = iv_val
-        is_prefix = ls_split_path ).
+      IF iv_node_type IS NOT INITIAL.
+        mt_json_tree = lcl_abap_to_json=>insert_with_type(
+          iv_data   = iv_val
+          iv_type   = iv_node_type
+          is_prefix = ls_split_path ).
+      ELSE.
+        mt_json_tree = lcl_abap_to_json=>convert(
+          iv_data   = iv_val
+          is_prefix = ls_split_path ).
+      ENDIF.
       RETURN.
     ENDIF.
 
@@ -563,10 +574,18 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
         iv_index = ls_split_path-name ).
     ENDIF.
 
-    lt_new_nodes = lcl_abap_to_json=>convert(
-      iv_data        = iv_val
-      iv_array_index = lv_array_index
-      is_prefix      = ls_split_path ).
+    IF iv_node_type IS NOT INITIAL.
+      lt_new_nodes = lcl_abap_to_json=>insert_with_type(
+        iv_data        = iv_val
+        iv_type        = iv_node_type
+        iv_array_index = lv_array_index
+        is_prefix      = ls_split_path ).
+    ELSE.
+      lt_new_nodes = lcl_abap_to_json=>convert(
+        iv_data        = iv_val
+        iv_array_index = lv_array_index
+        is_prefix      = ls_split_path ).
+    ENDIF.
 
     " update data
     lr_parent->children = lr_parent->children + 1.
@@ -632,64 +651,6 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
       iv_ignore_empty = abap_false
       iv_path = iv_path
       iv_val  = lv_val ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_ajson_writer~set_with_type.
-
-    DATA lt_path TYPE string_table.
-    DATA ls_split_path TYPE ty_path_name.
-    DATA lr_parent TYPE REF TO ty_node.
-    DATA lt_node_stack TYPE TABLE OF REF TO ty_node.
-    FIELD-SYMBOLS <topnode> TYPE ty_node.
-
-    IF mv_read_only = abap_true.
-      zcx_abapgit_ajson_error=>raise( 'This json instance is read only' ).
-    ENDIF.
-
-    IF iv_type <> 'bool' AND iv_type <> 'null' AND iv_type <> 'num' AND iv_type <> 'str'.
-      zcx_abapgit_ajson_error=>raise( |Unexpected type { iv_type }| ).
-    ENDIF.
-
-    ls_split_path = lcl_utils=>split_path( iv_path ).
-    IF ls_split_path IS INITIAL. " Assign root, exceptional processing
-      mt_json_tree = lcl_abap_to_json=>insert_with_type(
-        iv_data   = iv_val
-        iv_type   = iv_type
-        is_prefix = ls_split_path ).
-      RETURN.
-    ENDIF.
-
-    " Ensure whole path exists
-    lt_node_stack = prove_path_exists( ls_split_path-path ).
-    READ TABLE lt_node_stack INDEX 1 INTO lr_parent.
-    ASSERT sy-subrc = 0.
-
-    " delete if exists with subtree
-    delete_subtree(
-      iv_path = ls_split_path-path
-      iv_name = ls_split_path-name ).
-
-    " convert to json
-    DATA lt_new_nodes TYPE ty_nodes_tt.
-    DATA lv_array_index TYPE i.
-
-    IF lr_parent->type = 'array'.
-      lv_array_index = lcl_utils=>validate_array_index(
-        iv_path  = ls_split_path-path
-        iv_index = ls_split_path-name ).
-    ENDIF.
-
-    lt_new_nodes = lcl_abap_to_json=>insert_with_type(
-      iv_data        = iv_val
-      iv_type        = iv_type
-      iv_array_index = lv_array_index
-      is_prefix      = ls_split_path ).
-
-    " update data
-    lr_parent->children = lr_parent->children + 1.
-    INSERT LINES OF lt_new_nodes INTO TABLE mt_json_tree.
 
   ENDMETHOD.
 

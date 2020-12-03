@@ -775,8 +775,6 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
 
 ENDCLASS.
 
-CLASS zcl_abapgit_ajson DEFINITION LOCAL FRIENDS lcl_abap_to_json.
-
 CLASS lcl_abap_to_json IMPLEMENTATION.
 
   METHOD class_constructor.
