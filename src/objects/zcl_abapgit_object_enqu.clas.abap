@@ -1,8 +1,15 @@
-CLASS zcl_abapgit_object_enqu DEFINITION PUBLIC INHERITING FROM zcl_abapgit_objects_super FINAL.
+CLASS zcl_abapgit_object_enqu DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_super
+  FINAL
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
+
+    INTERFACES zif_abapgit_object .
+
+    ALIASES mo_files
+      FOR zif_abapgit_object~mo_files .
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: ty_dd27p TYPE STANDARD TABLE OF dd27p WITH DEFAULT KEY.
@@ -12,7 +19,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_ENQU IMPLEMENTATION.
+CLASS zcl_abapgit_object_enqu IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
