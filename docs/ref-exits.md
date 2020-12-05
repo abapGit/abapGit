@@ -54,8 +54,8 @@ Can be used for any postprocessing operation for deserialized objects. Since it 
 ### ADJUST_DISPLAY_COMMIT_URL
 Can be used to set the URL to display a commit. There are default implementations for some providers:
 
-| Provider  | Repo URL | Show Commit URL|
-|-----------|----------|----------------|
+| Provider  | Repo URL | Show Commit URL |
+|-----------|----------|-----------------|
 | github    | http(s):\/\/github.com/<user\>/\<repo\>.git    | http(s): //github.com/<user\>/\<repo\>/commit/17b6411cdb59cfb4478a8e6b3de1da3241fedd41      |
 | bitbucket | http(s):\/\/bitbucket.org/<user\>/\<repo\>.git | http(s):\/\/bitbucket.org/<user\>/\<repo\>/commits/17b6411cdb59cfb4478a8e6b3de1da3241fedd41 |
 | gitlab    | http(s):\/\/gitlab.com/<user\>/\<repo\>.git    | http(s):\/\/gitlab.com/\<user\>/\<repo\>/-/commit/17b6411cdb59cfb4478a8e6b3de1da3241fedd41  |
