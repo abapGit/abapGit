@@ -52,9 +52,10 @@ This [example implementation](https://gist.github.com/flaiker/999c8165b89131608b
 Can be used for any postprocessing operation for deserialized objects. Since it is a postprocessing step, only logs can be added to II_LOG and one should not terminate the process by raising exception, which may lead to inconsistencies.
 
 ### ADJUST_DISPLAY_COMMIT_URL
-Can be used to set the URL to display a commit. There is a default implementation for some provider:
-|  | Repo URL | Show Commit URL|
-|-- | -- | -- |
-|github | http(s):\/\/github.com/<user\>/\<repo\>.git | http(s): //github.com/<user\>/\<repo\>/commit/17b6411cdb59cfb4478a8e6b3de1da3241fedd41 |
-|bitbucket | http(s):\/\/bitbucket.org/<user\>/\<repo\>.git | http(s):\/\/bitbucket.org/<user\>/\<repo\>/commits/17b6411cdb59cfb4478a8e6b3de1da3241fedd41 |
-|gitlab | http(s):\/\/gitlab.com/<user\>/\<repo\>.git | http(s):\/\/gitlab.com/\<user\>/\<repo\>/-/commit/17b6411cdb59cfb4478a8e6b3de1da3241fedd41 |
+Can be used to set the URL to display a commit. There are default implementations for some providers:
+
+| Provider  | Repo URL | Show Commit URL |
+|-----------|----------|-----------------|
+| github    | http(s):\/\/github.com/<user\>/\<repo\>.git    | http(s): //github.com/<user\>/\<repo\>/commit/17b6411cdb59cfb4478a8e6b3de1da3241fedd41      |
+| bitbucket | http(s):\/\/bitbucket.org/<user\>/\<repo\>.git | http(s):\/\/bitbucket.org/<user\>/\<repo\>/commits/17b6411cdb59cfb4478a8e6b3de1da3241fedd41 |
+| gitlab    | http(s):\/\/gitlab.com/<user\>/\<repo\>.git    | http(s):\/\/gitlab.com/\<user\>/\<repo\>/-/commit/17b6411cdb59cfb4478a8e6b3de1da3241fedd41  |
