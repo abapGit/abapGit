@@ -17,10 +17,21 @@ ENDCLASS.
 CLASS ltcl_user_record IMPLEMENTATION.
 
   METHOD test_valid_user.
+    DATA: lv_uname TYPE sy-uname.
     DATA: lo_user_record TYPE REF TO zcl_abapgit_user_record.
 
+    " Find user id with an email address
+    SELECT SINGLE u~bname INTO lv_uname FROM usr21 AS u
+        INNER JOIN adrp AS p ON p~persnumber = u~persnumber
+        INNER JOIN adr6 AS a ON a~persnumber = u~persnumber AND a~addrnumber = u~addrnumber
+        WHERE p~date_from <= sy-datum AND p~date_to   >= sy-datum
+          AND a~date_from <= sy-datum AND a~smtp_addr LIKE '%@%'.
+    IF sy-subrc <> 0.
+      RETURN. " skip test
+    ENDIF.
+
     zcl_abapgit_user_record=>reset( ).
-    lo_user_record = zcl_abapgit_user_record=>get_instance( sy-uname ).
+    lo_user_record = zcl_abapgit_user_record=>get_instance( lv_uname ).
 
     cl_abap_unit_assert=>assert_equals(
       exp = 1
