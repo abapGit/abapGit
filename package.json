@@ -13,10 +13,10 @@
     "url": "git+https://github.com/abapGit/abapGit.git"
   },
   "devDependencies": {
-    "@abaplint/cli": "^2.61.4",
-    "@abaplint/transpiler-cli": "^0.8.8",
-    "@abaplint/runtime": "^0.8.8",
-    "abapmerge": "^0.14.1",
-    "eslint": "^7.14.0"
+    "@abaplint/cli": "^2.61.10",
+    "@abaplint/transpiler-cli": "^0.8.21",
+    "@abaplint/runtime": "^0.8.21",
+    "abapmerge": "^0.14.2",
+    "eslint": "^7.15.0"
   }
 }
