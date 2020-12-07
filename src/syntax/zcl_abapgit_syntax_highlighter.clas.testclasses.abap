@@ -59,7 +59,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
           lo_syntax      TYPE REF TO zcl_abapgit_syntax_highlighter.
 
 
-    lo_syntax = zcl_abapgit_syntax_highlighter=>create( iv_filename ).
+    lo_syntax = zcl_abapgit_syntax_factory=>create( iv_filename ).
     lt_matches_act = lo_syntax->parse_line( iv_line ).
 
     SORT lt_matches_act BY offset.
@@ -1290,7 +1290,7 @@ ENDCLASS.
 CLASS ltcl_syntax_basic_logic IMPLEMENTATION.
 
   METHOD setup.
-    mo_syntax_highlighter = zcl_abapgit_syntax_highlighter=>create( '*.abap' ).
+    mo_syntax_highlighter = zcl_abapgit_syntax_factory=>create( '*.abap' ).
   ENDMETHOD.
 
   METHOD format_line.
