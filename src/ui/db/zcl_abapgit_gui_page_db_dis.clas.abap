@@ -23,7 +23,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_DB_DIS IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_db_dis IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -50,7 +50,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_DIS IMPLEMENTATION.
     ENDTRY.
 
     " Create syntax highlighter
-    lo_highlighter  = zcl_abapgit_syntax_highlighter=>create( '*.xml' ).
+    lo_highlighter  = zcl_abapgit_syntax_factory=>create( '*.xml' ).
 
     ls_action-type  = ms_key-type.
     ls_action-value = ms_key-value.
