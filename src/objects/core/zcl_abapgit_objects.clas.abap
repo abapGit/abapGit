@@ -680,7 +680,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
       "error handling & logging added
       TRY.
-
+          " This will create the package if it does not exist
           lv_package = lo_folder_logic->path_to_package(
             iv_top  = io_repo->get_package( )
             io_dot  = io_repo->get_dot_abapgit( )
@@ -770,10 +770,18 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
   METHOD deserialize_checks.
 
     DATA: lt_results TYPE zif_abapgit_definitions=>ty_results_tt,
+          lv_package TYPE devclass,
           li_package TYPE REF TO zif_abapgit_sap_package.
 
 
     lt_results = files_to_deserialize( io_repo ).
+
+    " Local packages will be created automatically, others must be created first before deserialize will run
+    lv_package = io_repo->get_package( ).
+    IF zcl_abapgit_factory=>get_sap_package( lv_package )->exists( ) = abap_false AND lv_package(1) <> '$'.
+      rs_checks-create_package = abap_true.
+      RETURN.
+    ENDIF.
 
     rs_checks-overwrite = warning_overwrite_find( lt_results ).
 
@@ -781,7 +789,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       io_repo    = io_repo
       it_results = lt_results ).
 
-    IF lines( lt_results ) > 0.
+    IF lines( lt_results ) > 0 AND lv_package(1) <> '$'.
       li_package = zcl_abapgit_factory=>get_sap_package( io_repo->get_package( ) ).
       rs_checks-transport-required = li_package->are_changes_recorded_in_tr_req( ).
       IF NOT rs_checks-transport-required IS INITIAL.
@@ -830,6 +838,11 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDLOOP.
 
     CASE is_step-step_id.
+      WHEN zif_abapgit_object=>gc_step_id-lead.
+        " any errors during lead step will cancel rest of process
+        IF ii_log->get_status( ) = 'E'.
+          zcx_abapgit_exception=>raise( 'Error during lead phase' ).
+        ENDIF.
       WHEN zif_abapgit_object=>gc_step_id-ddic.
         zcl_abapgit_objects_activation=>activate( is_step-is_ddic ).
       WHEN zif_abapgit_object=>gc_step_id-abap.
@@ -968,6 +981,13 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
   METHOD get_deserialize_steps.
     FIELD-SYMBOLS: <ls_step>    TYPE LINE OF zif_abapgit_objects=>ty_step_data_tt.
+
+    APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
+    <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-lead.
+    <ls_step>-descr        = 'Import lead objects'.
+    <ls_step>-is_ddic      = abap_false.
+    <ls_step>-syntax_check = abap_false.
+    <ls_step>-order        = 0.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
     <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-ddic.
@@ -1121,6 +1141,11 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
 
+* NSPC first
+    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'NSPC'.
+      APPEND <ls_result> TO rt_results.
+    ENDLOOP.
+
 * WEBI has to be handled before SPRX.
     LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'WEBI'.
       APPEND <ls_result> TO rt_results.
@@ -1173,6 +1198,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     LOOP AT it_results ASSIGNING <ls_result>
         WHERE obj_type <> 'IASP'
+        AND obj_type <> 'NSPC'
         AND obj_type <> 'PROG'
         AND obj_type <> 'XSLT'
         AND obj_type <> 'PINF'
@@ -1410,7 +1436,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       lv_package = lo_folder_logic->path_to_package(
         iv_top  = io_repo->get_package( )
         io_dot  = io_repo->get_dot_abapgit( )
-        iv_path = <ls_result>-path ).
+        iv_path = <ls_result>-path
+        iv_create_if_not_exists = abap_false ).
 
       ls_tadir = zcl_abapgit_factory=>get_tadir( )->read_single(
         iv_object   = <ls_result>-obj_type

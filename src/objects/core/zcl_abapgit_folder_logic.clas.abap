@@ -50,7 +50,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
+CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
 
 
   METHOD get_instance.
@@ -149,10 +149,7 @@ CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
           lv_new                  TYPE string,
           lv_path                 TYPE string,
           lv_absolute_name        TYPE string,
-          lv_top                  TYPE devclass,
           lt_unique_package_names TYPE HASHED TABLE OF devclass WITH UNIQUE KEY table_line.
-
-    lv_top = iv_top.
 
     lv_length  = strlen( io_dot->get_starting_folder( ) ).
     IF lv_length > strlen( iv_path ).
@@ -160,8 +157,12 @@ CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
       RETURN.
     ENDIF.
     lv_path    = iv_path+lv_length.
-    lv_parent  = lv_top.
-    rv_package = lv_top.
+    lv_parent  = iv_top.
+    rv_package = iv_top.
+
+    IF iv_top(1) = '$' AND iv_create_if_not_exists = abap_true.
+      zcl_abapgit_factory=>get_sap_package( iv_top )->create_local( ).
+    ENDIF.
 
     INSERT iv_top INTO TABLE lt_unique_package_names.
 
