@@ -76,6 +76,7 @@ CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
 
 
   METHOD package_to_path.
+
     DATA: lv_len          TYPE i,
           lv_path         TYPE string,
           lv_message      TYPE string,
@@ -142,6 +143,7 @@ CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
 
 
   METHOD path_to_package.
+
     DATA: lv_length               TYPE i,
           lv_parent               TYPE devclass,
           lv_new                  TYPE string,
