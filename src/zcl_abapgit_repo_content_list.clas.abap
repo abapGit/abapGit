@@ -45,11 +45,15 @@ CLASS zcl_abapgit_repo_content_list DEFINITION
 
     METHODS filter_changes
       CHANGING ct_repo_items TYPE zif_abapgit_definitions=>ty_repo_item_tt.
+
+    METHODS check_repo_size
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
+CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
 
 
   METHOD build_folders.
@@ -190,6 +194,27 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD check_repo_size.
+
+    CONSTANTS lc_new_repo_size TYPE i VALUE 10.
+
+    DATA lt_remote TYPE zif_abapgit_definitions=>ty_files_tt.
+
+    lt_remote = mo_repo->get_files_remote( ).
+
+    IF lines( lt_remote ) > lc_new_repo_size.
+      " Less files means it's a new repo (with just readme and license, for example) which is ok
+      READ TABLE lt_remote TRANSPORTING NO FIELDS
+        WITH KEY path = zif_abapgit_definitions=>c_root_dir
+        filename = zif_abapgit_definitions=>c_dot_abapgit.
+      IF sy-subrc <> 0.
+        mi_log->add_warning( |Cannot find .abapgit.xml - Is this an abapGit repository?| ).
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD constructor.
     mo_repo = io_repo.
     CREATE OBJECT mi_log TYPE zcl_abapgit_log.
@@ -238,6 +263,7 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
 
     IF mo_repo->has_remote_source( ) = abap_true.
       rt_repo_items = build_repo_items_with_remote( ).
+      check_repo_size( ).
     ELSE.
       rt_repo_items = build_repo_items_local_only( ).
     ENDIF.
