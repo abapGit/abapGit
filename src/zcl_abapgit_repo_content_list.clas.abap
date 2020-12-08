@@ -46,7 +46,7 @@ CLASS zcl_abapgit_repo_content_list DEFINITION
     METHODS filter_changes
       CHANGING ct_repo_items TYPE zif_abapgit_definitions=>ty_repo_item_tt.
 
-    METHODS check_for_dot_abapgit
+    METHODS check_repo_size
       RAISING
         zcx_abapgit_exception .
 ENDCLASS.
@@ -194,7 +194,7 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD check_for_dot_abapgit.
+  METHOD check_repo_size.
 
     CONSTANTS lc_new_repo_size TYPE i VALUE 10.
 
@@ -263,7 +263,7 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
 
     IF mo_repo->has_remote_source( ) = abap_true.
       rt_repo_items = build_repo_items_with_remote( ).
-      check_for_dot_abapgit( ).
+      check_repo_size( ).
     ELSE.
       rt_repo_items = build_repo_items_local_only( ).
     ENDIF.
