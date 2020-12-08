@@ -76,7 +76,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
+CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
 
   METHOD add.
@@ -472,7 +472,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
     ro_repo->set_local_settings( ls_repo-local_settings ).
 
     ro_repo->refresh( ).
-    ro_repo->find_remote_dot_abapgit( iv_check_size = abap_false ).
+    ro_repo->find_remote_dot_abapgit( ).
 
   ENDMETHOD.
 
