@@ -2,7 +2,7 @@
 [![Slack](https://abapgit-slackinviter.herokuapp.com/badge.svg)](https://abapgit-slackinviter.herokuapp.com/)
 [![abap package version](https://img.shields.io/endpoint?url=https://shield.abap.space/version-shield-json/github/abapGit/abapGit/src/zif_abapgit_version.intf.abap/gc_abap_version&label=version)](https://github.com/abapGit/abapGit/blob/master/src/zif_abapgit_version.intf.abap)
 
-# <img src="https://docs.abapgit.org/img/logo.svg" height="40">
+# <img src="docs/img/logo.svg" height="40" alt="abapGit logo">
 
 Git client for ABAP
 
@@ -43,7 +43,7 @@ See [dotabap.org](https://dotabap.org) or [this page](https://docs.abapgit.org/o
 ## FAQ
 For questions/comments/bugs/feature requests/wishes please create an [issue](https://github.com/abapGit/abapGit/issues)
 
-![abapgit](https://docs.abapgit.org/img/abapgit_1_99_0.png)
+![abapgit](docs/img/abapgit_1_99_0.png)
 
 ## Credits and references
 
