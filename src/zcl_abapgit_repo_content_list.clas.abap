@@ -196,13 +196,13 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
 
   METHOD check_for_dot_abapgit.
 
-    CONSTANTS c_new_repo_size TYPE i VALUE 10.
+    CONSTANTS lc_new_repo_size TYPE i VALUE 10.
 
     DATA lt_remote TYPE zif_abapgit_definitions=>ty_files_tt.
 
     lt_remote = mo_repo->get_files_remote( ).
 
-    IF lines( lt_remote ) > c_new_repo_size.
+    IF lines( lt_remote ) > lc_new_repo_size.
       " Less files means it's a new repo (with just readme and license, for example) which is ok
       READ TABLE lt_remote TRANSPORTING NO FIELDS
         WITH KEY path = zif_abapgit_definitions=>c_root_dir

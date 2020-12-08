@@ -16,7 +16,6 @@ CLASS ltcl_find_remote_dot_abapgit DEFINITION FINAL FOR TESTING
       given_dot_abapgit_file,
       given_no_dot_abapgit_file,
       then_dot_abapgit_is_not_bound,
-      then_exception_is_raised,
       given_repo_has_files
         IMPORTING
           iv_number_of_files TYPE i.
@@ -131,11 +130,6 @@ CLASS ltcl_find_remote_dot_abapgit IMPLEMENTATION.
 
   METHOD then_dot_abapgit_is_not_bound.
     cl_abap_unit_assert=>assert_not_bound( mo_dot_abapgit ).
-  ENDMETHOD.
-
-
-  METHOD then_exception_is_raised.
-    cl_abap_unit_assert=>assert_bound( mx_error ).
   ENDMETHOD.
 
 
