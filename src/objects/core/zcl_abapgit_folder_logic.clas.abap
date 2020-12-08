@@ -50,7 +50,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
 
 
   METHOD get_instance.
@@ -76,7 +76,6 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
 
 
   METHOD package_to_path.
-
     DATA: lv_len          TYPE i,
           lv_path         TYPE string,
           lv_message      TYPE string,
