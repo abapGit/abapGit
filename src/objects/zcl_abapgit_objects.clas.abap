@@ -680,6 +680,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
       "error handling & logging added
       TRY.
+
           lv_package = lo_folder_logic->path_to_package(
             iv_top  = io_repo->get_package( )
             io_dot  = io_repo->get_dot_abapgit( )
