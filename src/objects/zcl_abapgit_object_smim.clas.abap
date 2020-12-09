@@ -29,7 +29,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_SMIM IMPLEMENTATION.
+CLASS zcl_abapgit_object_smim IMPLEMENTATION.
 
 
   METHOD build_filename.
@@ -160,7 +160,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SMIM IMPLEMENTATION.
         not_found          = 5
         OTHERS             = 6 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from delete' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -205,7 +205,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SMIM IMPLEMENTATION.
           folder_exists      = 5
           OTHERS             = 6 ).
       IF sy-subrc <> 5 AND sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'error frrom SMIM create_folder' ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
     ELSE.
       lv_filename = get_filename( lv_url ).
@@ -237,7 +237,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SMIM IMPLEMENTATION.
           is_folder               = 7
           OTHERS                  = 8 ).
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'error from SMIM put' ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
     ENDIF.
 
@@ -331,7 +331,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SMIM IMPLEMENTATION.
           permission_failure = 4
           OTHERS             = 5 ).
       IF sy-subrc <> 0 AND sy-subrc <> 2 AND sy-subrc <> 3.
-        zcx_abapgit_exception=>raise( 'error from mime api->get:' && sy-msgv1 ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
       lv_filename = get_filename( lv_url ).
