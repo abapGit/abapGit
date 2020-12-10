@@ -339,7 +339,8 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
           lt_titles TYPE TABLE OF ttreet,
           lt_nodes  TYPE TABLE OF hier_iface,
           lt_texts  TYPE TABLE OF hier_texts,
-          lt_refs   TYPE TABLE OF hier_ref.
+          lt_refs   TYPE TABLE OF hier_ref,
+          language  TYPE spras.
 
 
     CALL FUNCTION 'STREE_STRUCTURE_READ'
@@ -351,11 +352,21 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
       TABLES
         description      = lt_titles.
 
+    DATA(all_languages) = abap_false.
+
+    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_false.
+      all_languages = abap_true.
+    ELSE.
+      language = mv_language.
+      DELETE lt_titles WHERE spras <> language.
+    ENDIF.
+
     CALL FUNCTION 'STREE_HIERARCHY_READ'
       EXPORTING
         structure_id       = mv_tree_id
         read_also_texts    = 'X'
-        all_languages      = 'X'
+        all_languages      = all_languages
+        language           = language
       IMPORTING
         message            = ls_msg
       TABLES
