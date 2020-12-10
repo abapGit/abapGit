@@ -382,7 +382,7 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
     DELETE ADJACENT DUPLICATES FROM lt_titles COMPARING id.
 
     SORT lt_texts BY spras.
-    DELETE ADJACENT DUPLICATES FROM lt_texts COMPARING spras node_id.                       
+    DELETE ADJACENT DUPLICATES FROM lt_texts COMPARING spras node_id.
 
     io_xml->add( iv_name = 'TREE_HEAD'
                  ig_data = ls_head ).
