@@ -378,6 +378,12 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
     clear_fields( CHANGING cs_head  = ls_head
                            ct_nodes = lt_nodes ).
 
+    SORT lt_titles BY id.
+    DELETE ADJACENT DUPLICATES FROM lt_titles COMPARING id.
+
+    SORT lt_texts BY spras.
+    DELETE ADJACENT DUPLICATES FROM lt_texts COMPARING spras node_id.                       
+
     io_xml->add( iv_name = 'TREE_HEAD'
                  ig_data = ls_head ).
     io_xml->add( iv_name = 'TREE_TITLES'
