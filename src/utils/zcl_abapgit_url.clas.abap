@@ -139,14 +139,24 @@ CLASS zcl_abapgit_url IMPLEMENTATION.
   METHOD url_address.
 
     DATA:
-      lv_name TYPE string,
       lv_host TYPE string,
-      lv_path TYPE string.
+      lv_path TYPE string,
+      lv_name TYPE string,
+      lv_len  TYPE i.
 
     regex( EXPORTING iv_url  = iv_url
            IMPORTING ev_host = lv_host
                      ev_path = lv_path
                      ev_name = lv_name ).
+
+    IF lv_path IS INITIAL AND lv_name IS INITIAL.
+      zcx_abapgit_exception=>raise( 'Malformed URL' ).
+    ELSEIF lv_name IS INITIAL.
+      lv_len = strlen( lv_path ) - 1.
+      IF lv_path+lv_len(1) = '/'.
+        lv_path = lv_path(lv_len).
+      ENDIF.
+    ENDIF.
 
     rv_adress = |{ lv_host }{ lv_path }{ lv_name }|.
 
