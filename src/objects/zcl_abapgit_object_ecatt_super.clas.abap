@@ -414,7 +414,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ECATT_SUPER IMPLEMENTATION.
     DATA: ls_last_changed      TYPE ty_last_changed,
           ls_currently_changed TYPE ty_last_changed,
           lt_version_info      TYPE etversinfo_tabtype,
-          lx_error             TYPE REF TO cx_ecatt,
+          lx_error             TYPE REF TO cx_static_check,
           lv_text              TYPE string,
           lv_object_type       TYPE etobj_type.
 
@@ -441,19 +441,15 @@ CLASS ZCL_ABAPGIT_OBJECT_ECATT_SUPER IMPLEMENTATION.
 
         ENDLOOP.
 
-      CATCH cx_ecatt INTO lx_error.
+      CATCH cx_static_check INTO lx_error.
         lv_text = lx_error->get_text( ).
         MESSAGE lv_text TYPE 'S' DISPLAY LIKE 'E'.
     ENDTRY.
 
     IF ls_last_changed-luser IS NOT INITIAL.
-
       rv_user = ls_last_changed-luser.
-
     ELSE.
-
       rv_user = c_user_unknown.
-
     ENDIF.
 
   ENDMETHOD.
