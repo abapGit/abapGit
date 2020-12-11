@@ -50,7 +50,7 @@ CLASS zcl_abapgit_exception_viewer DEFINITION
           iv_column  TYPE lvc_fname
           iv_text    TYPE string
         RAISING
-          cx_salv_not_found,
+          cx_static_check,
 
       goto_source_code
         IMPORTING
@@ -74,7 +74,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_EXCEPTION_VIEWER IMPLEMENTATION.
 
 
   METHOD add_row.
@@ -88,14 +88,6 @@ CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
 
     lo_row->create_label( position = 2
                           text     = iv_col_2 ).
-
-  ENDMETHOD.
-
-
-  METHOD constructor.
-
-    mx_error = ix_error.
-    mt_callstack = mx_error->mt_callstack.
 
   ENDMETHOD.
 
@@ -121,6 +113,33 @@ CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
              iv_col_2 = |{ is_top_of_stack-line }| ).
 
     ro_form = lo_grid.
+
+  ENDMETHOD.
+
+
+  METHOD constructor.
+
+    mx_error = ix_error.
+    mt_callstack = mx_error->mt_callstack.
+
+  ENDMETHOD.
+
+
+  METHOD extract_classname.
+
+    rv_classname = substring_before( val   = iv_mainprogram
+                                     regex = '=*CP$' ).
+
+  ENDMETHOD.
+
+
+  METHOD get_top_of_callstack.
+
+    READ TABLE mt_callstack INDEX 1
+                            INTO rs_top_of_callstack.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Callstack is empty| ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -260,7 +279,7 @@ CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
 
   METHOD show_callstack.
 
-    DATA: lx_error   TYPE REF TO cx_salv_error,
+    DATA: lx_error   TYPE REF TO cx_static_check,
           lo_event   TYPE REF TO cl_salv_events_table,
           lo_columns TYPE REF TO cl_salv_columns_table,
           lo_alv     TYPE REF TO cl_salv_table.
@@ -309,29 +328,9 @@ CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
 
         lo_alv->display( ).
 
-      CATCH cx_salv_error INTO lx_error.
+      CATCH cx_static_check INTO lx_error.
         MESSAGE lx_error TYPE 'S' DISPLAY LIKE 'E'.
     ENDTRY.
 
   ENDMETHOD.
-
-
-  METHOD extract_classname.
-
-    rv_classname = substring_before( val   = iv_mainprogram
-                                     regex = '=*CP$' ).
-
-  ENDMETHOD.
-
-
-  METHOD get_top_of_callstack.
-
-    READ TABLE mt_callstack INDEX 1
-                            INTO rs_top_of_callstack.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Callstack is empty| ).
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.
