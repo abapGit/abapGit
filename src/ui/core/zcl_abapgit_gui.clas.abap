@@ -117,6 +117,12 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
     DATA: lv_index TYPE i,
           ls_stack LIKE LINE OF mt_stack.
 
+    " If viewer is showing Internet page, then use browser navigation
+    IF mi_html_viewer->get_url( ) CP 'http*'.
+      mi_html_viewer->back( ).
+      RETURN.
+    ENDIF.
+
     lv_index = lines( mt_stack ).
 
     IF lv_index = 0.
@@ -405,7 +411,9 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_services~cache_asset.
 
-    DATA: lt_xdata TYPE lvc_t_mime,
+    TYPES: ty_hex TYPE x LENGTH 200.
+
+    DATA: lt_xdata TYPE STANDARD TABLE OF ty_hex WITH DEFAULT KEY,
           lv_size  TYPE i,
           lt_html  TYPE w3htmltab.
 
@@ -460,8 +468,19 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_services~get_current_page_name.
 
+    DATA li_page_hoc TYPE REF TO zcl_abapgit_gui_page_hoc.
+
     IF mi_cur_page IS BOUND.
       rv_page_name = cl_abap_classdescr=>describe_by_object_ref( mi_cur_page )->get_relative_name( ).
+
+      " For HOC components return name of child component instead
+      IF rv_page_name = 'ZCL_ABAPGIT_GUI_PAGE_HOC'.
+        li_page_hoc ?= mi_cur_page.
+        IF li_page_hoc->get_child( ) IS BOUND.
+          rv_page_name = cl_abap_classdescr=>describe_by_object_ref(
+                           li_page_hoc->get_child( ) )->get_relative_name( ).
+        ENDIF.
+      ENDIF.
     ENDIF." ELSE - return is empty => initial page
 
   ENDMETHOD.

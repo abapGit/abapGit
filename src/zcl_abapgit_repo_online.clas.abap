@@ -5,81 +5,26 @@ CLASS zcl_abapgit_repo_online DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+    INTERFACES zif_abapgit_repo_online.
 
-    INTERFACES zif_abapgit_git_operations .
-
-    ALIASES create_branch
-      FOR zif_abapgit_git_operations~create_branch .
-    ALIASES push
-      FOR zif_abapgit_git_operations~push .
-
-    METHODS get_url
-      RETURNING
-        VALUE(rv_url) TYPE zif_abapgit_persistence=>ty_repo-url .
-    METHODS get_selected_branch
-      RETURNING
-        VALUE(rv_name) TYPE zif_abapgit_persistence=>ty_repo-branch_name .
-    METHODS set_url
-      IMPORTING
-        !iv_url TYPE zif_abapgit_persistence=>ty_repo-url
-      RAISING
-        zcx_abapgit_exception .
-    METHODS select_branch
-      IMPORTING
-        !iv_branch_name TYPE zif_abapgit_persistence=>ty_repo-branch_name
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_selected_commit
-      RETURNING
-        VALUE(rv_selected_commit) TYPE zif_abapgit_persistence=>ty_repo-selected_commit
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_current_remote
-      RETURNING
-        VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
-      RAISING
-        zcx_abapgit_exception .
-    METHODS select_commit
-      IMPORTING
-        iv_selected_commit TYPE zif_abapgit_persistence=>ty_repo-selected_commit
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_objects
-      RETURNING
-        VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_commit_display_url
-      IMPORTING
-        !iv_hash      TYPE zif_abapgit_definitions=>ty_sha1
-      RETURNING
-        VALUE(rv_url) TYPE zif_abapgit_persistence=>ty_repo-url
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_default_commit_display_url
-      IMPORTING
-        !iv_hash      TYPE zif_abapgit_definitions=>ty_sha1
-      RETURNING
-        VALUE(rv_url) TYPE zif_abapgit_persistence=>ty_repo-url
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_switched_origin
-      RETURNING
-        VALUE(rv_url) TYPE zif_abapgit_persistence=>ty_repo-switched_origin .
-    METHODS switch_origin
-      IMPORTING
-        !iv_url       TYPE zif_abapgit_persistence=>ty_repo-url
-        !iv_overwrite TYPE abap_bool DEFAULT abap_false
-      RAISING
-        zcx_abapgit_exception .
+    ALIASES:
+      create_branch FOR zif_abapgit_repo_online~create_branch,
+      push FOR zif_abapgit_repo_online~push,
+      get_url FOR zif_abapgit_repo_online~get_url,
+      get_selected_branch FOR zif_abapgit_repo_online~get_selected_branch,
+      set_url FOR zif_abapgit_repo_online~set_url,
+      select_branch FOR zif_abapgit_repo_online~select_branch,
+      get_selected_commit FOR zif_abapgit_repo_online~get_selected_commit,
+      get_current_remote FOR zif_abapgit_repo_online~get_current_remote,
+      select_commit FOR zif_abapgit_repo_online~select_commit,
+      get_switched_origin FOR zif_abapgit_repo_online~get_switched_origin,
+      switch_origin FOR zif_abapgit_repo_online~switch_origin.
 
     METHODS get_files_remote
         REDEFINITION .
     METHODS get_name
         REDEFINITION .
     METHODS has_remote_source
-        REDEFINITION .
-    METHODS rebuild_local_checksums
         REDEFINITION .
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -100,11 +45,16 @@ CLASS zcl_abapgit_repo_online DEFINITION
     METHODS fetch_remote
       RAISING
         zcx_abapgit_exception .
+    METHODS get_objects
+      RETURNING
+        VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo_online IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
 
   METHOD fetch_remote.
@@ -136,61 +86,6 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_commit_display_url.
-
-    DATA li_exit TYPE REF TO zif_abapgit_exit.
-
-    rv_url = get_default_commit_display_url( iv_hash ).
-
-    li_exit = zcl_abapgit_exit=>get_instance( ).
-    li_exit->adjust_display_commit_url(
-      EXPORTING
-        iv_repo_url           = get_url( )
-        iv_repo_name          = get_name( )
-        iv_repo_key           = get_key( )
-        iv_commit_hash        = iv_hash
-      CHANGING
-        cv_display_url        = rv_url ).
-
-    IF rv_url IS INITIAL.
-      zcx_abapgit_exception=>raise( |provider not yet supported| ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD get_current_remote.
-    fetch_remote( ).
-    rv_sha1 = mv_current_commit.
-  ENDMETHOD.
-
-
-  METHOD get_default_commit_display_url.
-
-    DATA ls_result TYPE match_result.
-    FIELD-SYMBOLS <ls_provider_match> TYPE submatch_result.
-
-    rv_url = get_url( ).
-
-    FIND REGEX '^http(?:s)?:\/\/(?:www\.)?(github\.com|bitbucket\.org|gitlab\.com)\/' IN rv_url RESULTS ls_result.
-    IF sy-subrc = 0.
-      READ TABLE ls_result-submatches INDEX 1 ASSIGNING <ls_provider_match>.
-      CASE rv_url+<ls_provider_match>-offset(<ls_provider_match>-length).
-        WHEN 'github.com'.
-          REPLACE REGEX '\.git$' IN rv_url WITH space.
-          rv_url = rv_url && |/commit/| && iv_hash.
-        WHEN 'bitbucket.org'.
-          REPLACE REGEX '\.git$' IN rv_url WITH space.
-          rv_url = rv_url && |/commits/| && iv_hash.
-        WHEN 'gitlab.com'.
-          REPLACE REGEX '\.git$' IN rv_url WITH space.
-          rv_url = rv_url && |/-/commit/| && iv_hash.
-      ENDCASE.
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD get_files_remote.
     fetch_remote( ).
     rt_files = super->get_files_remote( ).
@@ -203,32 +98,6 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
       rv_name = zcl_abapgit_url=>name( ms_data-url ).
       rv_name = cl_http_utility=>if_http_utility~unescape_url( rv_name ).
     ENDIF.
-  ENDMETHOD.
-
-
-  METHOD get_objects.
-    fetch_remote( ).
-    rt_objects = mt_objects.
-  ENDMETHOD.
-
-
-  METHOD get_selected_branch.
-    rv_name = ms_data-branch_name.
-  ENDMETHOD.
-
-
-  METHOD get_selected_commit.
-    rv_selected_commit = ms_data-selected_commit.
-  ENDMETHOD.
-
-
-  METHOD get_switched_origin.
-    rv_url = ms_data-switched_origin.
-  ENDMETHOD.
-
-
-  METHOD get_url.
-    rv_url = ms_data-url.
   ENDMETHOD.
 
 
@@ -274,131 +143,12 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD rebuild_local_checksums.
-
-    " TODO: method unify to base class !
-
-    DATA:
-      lt_remote    TYPE zif_abapgit_definitions=>ty_files_tt,
-      lt_local     TYPE zif_abapgit_definitions=>ty_files_item_tt,
-      ls_last_item TYPE zif_abapgit_definitions=>ty_item,
-      lt_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
-
-    FIELD-SYMBOLS:
-      <ls_checksum> LIKE LINE OF lt_checksums,
-      <ls_file_sig> LIKE LINE OF <ls_checksum>-files,
-      <ls_remote>   LIKE LINE OF lt_remote,
-      <ls_local>    LIKE LINE OF lt_local.
-
-    lt_local  = get_files_local( ).
-
-    DELETE lt_local " Remove non-code related files except .abapgit
-      WHERE item IS INITIAL
-      AND NOT ( file-path = zif_abapgit_definitions=>c_root_dir
-      AND file-filename = zif_abapgit_definitions=>c_dot_abapgit ).
-    SORT lt_local BY item.
-
-    lt_remote = get_files_remote( ).
-    SORT lt_remote BY path filename.
-
-    LOOP AT lt_local ASSIGNING <ls_local>.
-      IF ls_last_item <> <ls_local>-item OR sy-tabix = 1. " First or New item reached ?
-        APPEND INITIAL LINE TO lt_checksums ASSIGNING <ls_checksum>.
-        <ls_checksum>-item = <ls_local>-item.
-        ls_last_item       = <ls_local>-item.
-      ENDIF.
-
-      READ TABLE lt_remote ASSIGNING <ls_remote>
-        WITH KEY path = <ls_local>-file-path filename = <ls_local>-file-filename
-        BINARY SEARCH.
-      CHECK sy-subrc = 0.  " Ignore new local ones
-
-      APPEND INITIAL LINE TO <ls_checksum>-files ASSIGNING <ls_file_sig>.
-      MOVE-CORRESPONDING <ls_local>-file TO <ls_file_sig>.
-
-      " If hashes are equal -> local sha1 is OK
-      " Else if R-branch is ahead  -> assume changes were remote, state - local sha1
-      "      Else (branches equal) -> assume changes were local, state - remote sha1
-      IF <ls_local>-file-sha1 <> <ls_remote>-sha1.
-        <ls_file_sig>-sha1 = <ls_remote>-sha1.
-      ENDIF.
-    ENDLOOP.
-
-    set( it_checksums = lt_checksums ).
-    reset_status( ).
-
-  ENDMETHOD.
-
-
-  METHOD select_branch.
-
-    reset_remote( ).
-    set( iv_branch_name     = iv_branch_name
-         iv_selected_commit = space  ).
-
-  ENDMETHOD.
-
-
-  METHOD select_commit.
-
-    reset_remote( ).
-    set( iv_selected_commit = iv_selected_commit ).
-
-  ENDMETHOD.
-
-
   METHOD set_objects.
     mt_objects = it_objects.
   ENDMETHOD.
 
 
-  METHOD set_url.
-
-    reset_remote( ).
-    set( iv_url = iv_url ).
-
-  ENDMETHOD.
-
-
-  METHOD switch_origin.
-
-    DATA lv_offs TYPE i.
-
-    IF iv_overwrite = abap_true. " For repo settings page
-      set( iv_switched_origin = iv_url ).
-      RETURN.
-    ENDIF.
-
-    IF iv_url IS INITIAL.
-      IF ms_data-switched_origin IS INITIAL.
-        RETURN.
-      ELSE.
-        lv_offs = find(
-          val = reverse( ms_data-switched_origin )
-          sub = '@' ).
-        IF lv_offs = -1.
-          zcx_abapgit_exception=>raise( 'Incorrect format of switched origin' ).
-        ENDIF.
-        lv_offs = strlen( ms_data-switched_origin ) - lv_offs - 1.
-        set_url( substring(
-          val = ms_data-switched_origin
-          len = lv_offs ) ).
-        select_branch( substring(
-          val = ms_data-switched_origin
-          off = lv_offs + 1 ) ).
-        set( iv_switched_origin = '' ).
-      ENDIF.
-    ELSEIF ms_data-switched_origin IS INITIAL.
-      set( iv_switched_origin = ms_data-url && '@' && ms_data-branch_name ).
-      set_url( iv_url ).
-    ELSE.
-      zcx_abapgit_exception=>raise( 'Cannot switch origin twice' ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_git_operations~create_branch.
+  METHOD zif_abapgit_repo_online~create_branch.
 
     DATA: lv_sha1 TYPE zif_abapgit_definitions=>ty_sha1.
 
@@ -421,7 +171,39 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_git_operations~push.
+  METHOD zif_abapgit_repo_online~get_current_remote.
+    fetch_remote( ).
+    rv_sha1 = mv_current_commit.
+  ENDMETHOD.
+
+
+  METHOD get_objects.
+    fetch_remote( ).
+    rt_objects = mt_objects.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_online~get_selected_branch.
+    rv_name = ms_data-branch_name.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_online~get_selected_commit.
+    rv_selected_commit = ms_data-selected_commit.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_online~get_switched_origin.
+    rv_url = ms_data-switched_origin.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_online~get_url.
+    rv_url = ms_data-url.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_online~push.
 
 * assumption: PUSH is done on top of the currently selected branch
 
@@ -466,6 +248,69 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     update_local_checksums( ls_push-updated_files ).
 
     reset_status( ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_online~select_branch.
+
+    reset_remote( ).
+    set( iv_branch_name     = iv_branch_name
+         iv_selected_commit = space  ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_online~select_commit.
+
+    reset_remote( ).
+    set( iv_selected_commit = iv_selected_commit ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_online~set_url.
+
+    reset_remote( ).
+    set( iv_url = iv_url ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_online~switch_origin.
+
+    DATA lv_offs TYPE i.
+
+    IF iv_overwrite = abap_true. " For repo settings page
+      set( iv_switched_origin = iv_url ).
+      RETURN.
+    ENDIF.
+
+    IF iv_url IS INITIAL.
+      IF ms_data-switched_origin IS INITIAL.
+        RETURN.
+      ELSE.
+        lv_offs = find(
+          val = reverse( ms_data-switched_origin )
+          sub = '@' ).
+        IF lv_offs = -1.
+          zcx_abapgit_exception=>raise( 'Incorrect format of switched origin' ).
+        ENDIF.
+        lv_offs = strlen( ms_data-switched_origin ) - lv_offs - 1.
+        set_url( substring(
+          val = ms_data-switched_origin
+          len = lv_offs ) ).
+        select_branch( substring(
+          val = ms_data-switched_origin
+          off = lv_offs + 1 ) ).
+        set( iv_switched_origin = '' ).
+      ENDIF.
+    ELSEIF ms_data-switched_origin IS INITIAL.
+      set( iv_switched_origin = ms_data-url && '@' && ms_data-branch_name ).
+      set_url( iv_url ).
+    ELSE.
+      zcx_abapgit_exception=>raise( 'Cannot switch origin twice' ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

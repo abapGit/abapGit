@@ -4,20 +4,26 @@ CLASS zcl_abapgit_apack_helper DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+
     CLASS-METHODS are_dependencies_met
       IMPORTING
         !it_dependencies TYPE zif_abapgit_apack_definitions=>ty_dependencies
       RETURNING
         VALUE(rv_status) TYPE zif_abapgit_definitions=>ty_yes_no
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     CLASS-METHODS dependencies_popup
       IMPORTING
         !it_dependencies TYPE zif_abapgit_apack_definitions=>ty_dependencies
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
+    CLASS-METHODS to_file
+      IMPORTING
+        !iv_package    TYPE devclass
+      RETURNING
+        VALUE(rs_file) TYPE zif_abapgit_definitions=>ty_file
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -25,15 +31,16 @@ CLASS zcl_abapgit_apack_helper DEFINITION
       BEGIN OF ty_manifest_declaration,
         clsname  TYPE seometarel-clsname,
         devclass TYPE devclass,
-      END OF ty_manifest_declaration,
-      ty_manifest_declarations TYPE STANDARD TABLE OF ty_manifest_declaration WITH NON-UNIQUE DEFAULT KEY.
-
+      END OF ty_manifest_declaration .
+    TYPES:
+      ty_manifest_declarations TYPE STANDARD TABLE OF ty_manifest_declaration WITH NON-UNIQUE DEFAULT KEY .
     TYPES:
       BEGIN OF ty_dependency_status,
         met TYPE zif_abapgit_definitions=>ty_yes_no_partial.
         INCLUDE TYPE zif_abapgit_apack_definitions=>ty_dependency.
-    TYPES: END OF ty_dependency_status,
-      ty_dependency_statuses TYPE STANDARD TABLE OF ty_dependency_status WITH NON-UNIQUE DEFAULT KEY.
+    TYPES: END OF ty_dependency_status .
+    TYPES:
+      ty_dependency_statuses TYPE STANDARD TABLE OF ty_dependency_status WITH NON-UNIQUE DEFAULT KEY .
 
     CLASS-METHODS get_dependencies_met_status
       IMPORTING
@@ -41,19 +48,17 @@ CLASS zcl_abapgit_apack_helper DEFINITION
       RETURNING
         VALUE(rt_status) TYPE ty_dependency_statuses
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     CLASS-METHODS get_installed_packages
       RETURNING
         VALUE(rt_packages) TYPE zif_abapgit_apack_definitions=>ty_descriptors
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     CLASS-METHODS show_dependencies_popup
       IMPORTING
         !it_dependencies TYPE ty_dependency_statuses
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -185,8 +190,8 @@ CLASS ZCL_ABAPGIT_APACK_HELPER IMPLEMENTATION.
         exception(1) TYPE c,
         color        TYPE lvc_t_scol.
         INCLUDE TYPE ty_dependency_status.
-    TYPES: t_hyperlink  TYPE salv_t_int4_column,
-      END OF ty_color_line.
+    TYPES: t_hyperlink TYPE salv_t_int4_column,
+           END OF ty_color_line.
 
     TYPES: ty_color_tab TYPE STANDARD TABLE OF ty_color_line WITH DEFAULT KEY.
 
@@ -314,6 +319,25 @@ CLASS ZCL_ABAPGIT_APACK_HELPER IMPLEMENTATION.
       CATCH cx_salv_msg cx_salv_not_found cx_salv_data_error cx_salv_existing INTO lx_ex.
         zcx_abapgit_exception=>raise( lx_ex->get_text( ) ).
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD to_file.
+
+    DATA: lo_manifest_reader TYPE REF TO zcl_abapgit_apack_reader,
+          ls_descriptor      TYPE zif_abapgit_apack_definitions=>ty_descriptor,
+          lo_manifest_writer TYPE REF TO zcl_abapgit_apack_writer.
+
+    lo_manifest_reader = zcl_abapgit_apack_reader=>create_instance( iv_package ).
+    IF lo_manifest_reader->has_manifest( ) = abap_true.
+      ls_descriptor = lo_manifest_reader->get_manifest_descriptor( ).
+      lo_manifest_writer = zcl_abapgit_apack_writer=>create_instance( ls_descriptor ).
+      rs_file-path     = zif_abapgit_definitions=>c_root_dir.
+      rs_file-filename = zif_abapgit_apack_definitions=>c_dot_apack_manifest.
+      rs_file-data     = zcl_abapgit_convert=>string_to_xstring_utf8( lo_manifest_writer->serialize( ) ).
+      rs_file-sha1     = zcl_abapgit_hash=>sha1_blob( rs_file-data ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

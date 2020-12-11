@@ -30,7 +30,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
+CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
 
   METHOD deserialize_texts.
@@ -75,7 +75,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
 
     " Table d010tinf stores info. on languages in which program is maintained
     " Select all active translations of program texts
-    " Skip master language - it was already serialized
+    " Skip main language - it was already serialized
     SELECT DISTINCT language
       INTO CORRESPONDING FIELDS OF TABLE lt_tpool_i18n
       FROM d010tinf
@@ -111,7 +111,8 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_program LIKE sy-repid.
+    DATA: lv_program  LIKE sy-repid,
+          lv_obj_name TYPE e071-obj_name.
 
     lv_program = ms_item-obj_name.
 
@@ -129,6 +130,23 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
     IF sy-subrc = 2.
       " Drop also any inactive code that is left in REPOSRC
       DELETE REPORT lv_program ##SUBRC_OK.
+
+      " Remove inactive objects from work area
+      lv_obj_name = lv_program.
+
+      CALL FUNCTION 'RS_DELETE_FROM_WORKING_AREA'
+        EXPORTING
+          object                 = 'REPS'
+          obj_name               = lv_obj_name
+          immediate              = 'X'
+          actualize_working_area = 'X'.
+
+      CALL FUNCTION 'RS_DELETE_FROM_WORKING_AREA'
+        EXPORTING
+          object                 = 'REPT'
+          obj_name               = lv_obj_name
+          immediate              = 'X'
+          actualize_working_area = 'X'.
     ELSEIF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error from RS_DELETE_PROGRAM: { sy-subrc }| ).
     ENDIF.
@@ -147,6 +165,9 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
           lt_tpool_ext    TYPE zif_abapgit_definitions=>ty_tpool_tt,
           ls_cua          TYPE ty_cua,
           lt_source       TYPE abaptxt255_tab.
+
+    " Add R3TR PROG to transport first, otherwise we get several LIMUs
+    corr_insert( iv_package ).
 
     lv_program_name = ms_item-obj_name.
 

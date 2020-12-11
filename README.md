@@ -2,7 +2,7 @@
 [![Slack](https://abapgit-slackinviter.herokuapp.com/badge.svg)](https://abapgit-slackinviter.herokuapp.com/)
 [![abap package version](https://img.shields.io/endpoint?url=https://shield.abap.space/version-shield-json/github/abapGit/abapGit/src/zif_abapgit_version.intf.abap/gc_abap_version&label=version)](https://github.com/abapGit/abapGit/blob/master/src/zif_abapgit_version.intf.abap)
 
-# abapGit
+# <img src="docs/img/logo.svg" height="40" alt="abapGit logo">
 
 Git client for ABAP
 
@@ -18,9 +18,10 @@ Works with: [GitHub](https://github.com/),
 ABAP Version: 702 or higher
 
 Latest build: [zabapgit.abap](https://raw.githubusercontent.com/abapGit/build/master/zabapgit.abap)
-*NB: Some people reported that browsers have issues displaying the file with 75k lines. The easiest solution is to "Save as" the link above and then open it with any editor/viewer (notepad included) and copy from there.*
 
-Recommend using SAP GUI for Windows, there are multiple issues related to running abapGit and Java SAP GUI. Focus is on supporting [ADT](https://github.com/abapGit/ADT_Frontend) instead of supporting Java SAP GUI.
+*Notes: Some people reported that browsers have issues displaying the file with almost 100k lines. The easiest solution is to "Save as" the link above and then open it with any editor/viewer (notepad included) and copy from there. If your SAP GUI editor freezes when pasting the code, use Utilities > More Utilities > Upload/Download > Upload in the editor instead.*
+
+It is recommened to use SAP GUI for Windows, since there are known issues related to running abapGit and SAP GUI for Java. The focus of abapGit is on supporting [ADT](https://github.com/abapGit/ADT_Frontend) instead of supporting SAP GUI for Java. 
 
 ## Design Goals
 - Easy installation
@@ -42,7 +43,7 @@ See [dotabap.org](https://dotabap.org) or [this page](https://docs.abapgit.org/o
 ## FAQ
 For questions/comments/bugs/feature requests/wishes please create an [issue](https://github.com/abapGit/abapGit/issues)
 
-![abapgit](https://docs.abapgit.org/img/abapgit_1_99_0.png)
+![abapgit](docs/img/abapgit_1_99_0.png)
 
 ## Credits and references
 

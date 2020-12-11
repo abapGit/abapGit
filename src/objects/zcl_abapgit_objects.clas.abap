@@ -41,14 +41,15 @@ CLASS zcl_abapgit_objects DEFINITION
       IMPORTING
         !it_tadir  TYPE zif_abapgit_definitions=>ty_tadir_tt
         !is_checks TYPE zif_abapgit_definitions=>ty_delete_checks OPTIONAL
+        !ii_log    TYPE REF TO zif_abapgit_log OPTIONAL
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS jump
       IMPORTING
-        !is_item        TYPE zif_abapgit_definitions=>ty_item
-        !iv_line_number TYPE i OPTIONAL
-        iv_sub_obj_name TYPE zif_abapgit_definitions=>ty_item-obj_name OPTIONAL
-        iv_sub_obj_type TYPE zif_abapgit_definitions=>ty_item-obj_type OPTIONAL
+        !is_item         TYPE zif_abapgit_definitions=>ty_item
+        !iv_line_number  TYPE i OPTIONAL
+        !iv_sub_obj_name TYPE zif_abapgit_definitions=>ty_item-obj_name OPTIONAL
+        !iv_sub_obj_type TYPE zif_abapgit_definitions=>ty_item-obj_type OPTIONAL
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS changed_by
@@ -172,7 +173,7 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS deserialize_objects
       IMPORTING
-        !is_step  TYPE zif_abapgit_definitions=>ty_step_data
+        !is_step  TYPE zif_abapgit_objects=>ty_step_data
         !ii_log   TYPE REF TO zif_abapgit_log
       CHANGING
         !ct_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt
@@ -217,12 +218,18 @@ CLASS zcl_abapgit_objects DEFINITION
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt .
     CLASS-METHODS get_deserialize_steps
       RETURNING
-        VALUE(rt_steps) TYPE zif_abapgit_definitions=>ty_step_data_tt .
+        VALUE(rt_steps) TYPE zif_abapgit_objects=>ty_step_data_tt .
+    CLASS-METHODS check_main_package
+      IMPORTING
+        !iv_package  TYPE devclass
+        !iv_obj_type TYPE tadir-object
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
+CLASS zcl_abapgit_objects IMPLEMENTATION.
 
 
   METHOD adjust_namespaces.
@@ -299,6 +306,33 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       CONCATENATE LINES OF lt_duplicates INTO lv_all_duplicates SEPARATED BY `, `.
       zcx_abapgit_exception=>raise( |Duplicates: { lv_all_duplicates }| ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD check_main_package.
+
+    " check package restrictions, closed package, descriptive or
+    " functional package
+    cl_pak_object_types=>check_object_type(
+      EXPORTING
+        i_working_mode         = 'I'
+        i_package_name         = iv_package
+        i_pgmid                = 'R3TR'
+        i_object_type          = iv_obj_type
+      EXCEPTIONS
+        wrong_object_type      = 1
+        package_not_extensible = 2
+        package_not_loaded     = 3
+        OTHERS                 = 4 ).
+    CASE sy-subrc.
+      WHEN 0.
+        RETURN.
+      WHEN 2.
+        zcx_abapgit_exception=>raise( |Object type { iv_obj_type } not allowed for package { iv_package }| ).
+      WHEN OTHERS.
+        zcx_abapgit_exception=>raise_t100(  ).
+    ENDCASE.
 
   ENDMETHOD.
 
@@ -471,6 +505,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     DATA: ls_item     TYPE zif_abapgit_definitions=>ty_item,
           li_progress TYPE REF TO zif_abapgit_progress,
           lt_tadir    LIKE it_tadir,
+          lt_deleted  LIKE it_tadir,
           lt_items    TYPE zif_abapgit_definitions=>ty_items_tt,
           lx_error    TYPE REF TO zcx_abapgit_exception,
           lv_count    TYPE i.
@@ -499,7 +534,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     ENDTRY.
 
     lv_count = 1.
-    DO 3 TIMES.
+    DO.
+      CLEAR lt_deleted.
       LOOP AT lt_tadir ASSIGNING <ls_tadir>.
         li_progress->show( iv_current = lv_count
                            iv_text    = |Delete { <ls_tadir>-obj_name }| ).
@@ -513,23 +549,36 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
               iv_package = <ls_tadir>-devclass
               is_item    = ls_item ).
 
+            INSERT <ls_tadir> INTO TABLE lt_deleted.
             DELETE lt_tadir.
             lv_count = lv_count + 1.
 
             " make sure to save object deletions
             COMMIT WORK.
-          CATCH zcx_abapgit_exception INTO lx_error ##NO_HANDLER.
-            " ignore errors inside the loops and raise it later
+          CATCH zcx_abapgit_exception INTO lx_error.
+            IF ii_log IS BOUND.
+              ii_log->add_exception( ix_exc  = lx_error
+                                     is_item = ls_item ).
+              ii_log->add_error( iv_msg = |Deletion of object { ls_item-obj_name } failed|
+                                 is_item = ls_item ).
+            ENDIF.
         ENDTRY.
 
       ENDLOOP.
+
+      " Exit if done or nothing else was deleted
+      IF lines( lt_tadir ) = 0 OR lines( lt_deleted ) = 0.
+        EXIT.
+      ENDIF.
     ENDDO.
 
     zcl_abapgit_default_transport=>get_instance( )->reset( ).
 
     IF lx_error IS BOUND AND lines( lt_tadir ) > 0.
-      RAISE EXCEPTION lx_error.
+      zcx_abapgit_exception=>raise( 'Error during uninstall. Check the log.' ).
     ENDIF.
+
+    li_progress->off( ).
 
   ENDMETHOD.
 
@@ -582,14 +631,14 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           lv_path     TYPE string,
           lt_items    TYPE zif_abapgit_definitions=>ty_items_tt,
           lt_steps_id TYPE zif_abapgit_definitions=>ty_deserialization_step_tt,
-          lt_steps    TYPE zif_abapgit_definitions=>ty_step_data_tt,
+          lt_steps    TYPE zif_abapgit_objects=>ty_step_data_tt,
           lx_exc      TYPE REF TO zcx_abapgit_exception.
     DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
 
     FIELD-SYMBOLS: <ls_result>  TYPE zif_abapgit_definitions=>ty_result,
                    <lv_step_id> TYPE LINE OF zif_abapgit_definitions=>ty_deserialization_step_tt,
-                   <ls_step>    TYPE LINE OF zif_abapgit_definitions=>ty_step_data_tt,
-                   <ls_deser>   TYPE LINE OF zif_abapgit_definitions=>ty_deserialization_tt.
+                   <ls_step>    TYPE LINE OF zif_abapgit_objects=>ty_step_data_tt,
+                   <ls_deser>   TYPE LINE OF zif_abapgit_objects=>ty_deserialization_tt.
 
     lt_steps = get_deserialize_steps( ).
 
@@ -621,7 +670,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
                           it_items    = lt_items ).
 
     lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
-    LOOP AT lt_results ASSIGNING <ls_result>.
+    LOOP AT lt_results ASSIGNING <ls_result> WHERE rstate <> zif_abapgit_definitions=>c_state-deleted.
       li_progress->show( iv_current = sy-tabix
                          iv_text    = |Deserialize { <ls_result>-obj_name }| ).
 
@@ -636,6 +685,10 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
             iv_top  = io_repo->get_package( )
             io_dot  = io_repo->get_dot_abapgit( )
             iv_path = <ls_result>-path ).
+
+          check_main_package(
+            iv_package  = lv_package
+            iv_obj_type = ls_item-obj_type ).
 
           IF ls_item-obj_type = 'DEVC'.
             " Packages have the same filename across different folders. The path needs to be supplied
@@ -708,6 +761,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     DELETE ADJACENT DUPLICATES FROM rt_accessed_files. " Just in case
 
     zcl_abapgit_default_transport=>get_instance( )->reset( ).
+
+    li_progress->off( ).
 
   ENDMETHOD.
 
@@ -784,6 +839,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         zcl_abapgit_objects_activation=>activate( abap_true ).
         zcl_abapgit_objects_activation=>activate( abap_false ).
     ENDCASE.
+
+    li_progress->off( ).
 
 *   Call postprocessing
     li_exit = zcl_abapgit_exit=>get_instance( ).
@@ -910,7 +967,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 
   METHOD get_deserialize_steps.
-    FIELD-SYMBOLS: <ls_step>    TYPE LINE OF zif_abapgit_definitions=>ty_step_data_tt.
+    FIELD-SYMBOLS: <ls_step>    TYPE LINE OF zif_abapgit_objects=>ty_step_data_tt.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
     <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-ddic.
@@ -1183,9 +1240,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     rs_files_and_item-item-inactive = boolc( li_obj->is_active( ) = abap_false ).
 
     LOOP AT rs_files_and_item-files ASSIGNING <ls_file>.
-      <ls_file>-sha1 = zcl_abapgit_hash=>sha1(
-        iv_type = zif_abapgit_definitions=>c_type-blob
-        iv_data = <ls_file>-data ).
+      <ls_file>-sha1 = zcl_abapgit_hash=>sha1_blob( <ls_file>-data ).
     ENDLOOP.
 
   ENDMETHOD.
@@ -1339,11 +1394,11 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
   METHOD warning_package_find.
 
-    DATA: lv_package         TYPE devclass,
-          lt_overwrite_uniqe TYPE HASHED TABLE OF zif_abapgit_definitions=>ty_overwrite
+    DATA: lv_package          TYPE devclass,
+          lt_overwrite_unique TYPE HASHED TABLE OF zif_abapgit_definitions=>ty_overwrite
                                   WITH UNIQUE KEY obj_type obj_name devclass,
-          ls_overwrite       LIKE LINE OF rt_overwrite,
-          ls_tadir           TYPE zif_abapgit_definitions=>ty_tadir.
+          ls_overwrite        LIKE LINE OF rt_overwrite,
+          ls_tadir            TYPE zif_abapgit_definitions=>ty_tadir.
 
     DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
 
@@ -1367,12 +1422,12 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         ls_overwrite-obj_type = <ls_result>-obj_type.
         ls_overwrite-obj_name = <ls_result>-obj_name.
         ls_overwrite-devclass = ls_tadir-devclass.
-        INSERT ls_overwrite INTO TABLE lt_overwrite_uniqe.
+        INSERT ls_overwrite INTO TABLE lt_overwrite_unique.
       ENDIF.
 
     ENDLOOP.
 
-    rt_overwrite = lt_overwrite_uniqe.
+    rt_overwrite = lt_overwrite_unique.
 
   ENDMETHOD.
 ENDCLASS.

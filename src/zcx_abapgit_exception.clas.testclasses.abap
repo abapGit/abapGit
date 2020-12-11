@@ -292,10 +292,7 @@ CLASS ltcl_test IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD get_exc_text.
-    cl_message_helper=>set_msg_vars_for_if_msg( ix_ex ).
-    MESSAGE ID sy-msgid TYPE 'S' NUMBER sy-msgno
-            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4
-            INTO rv_text.
+    rv_text = ix_ex->get_text( ).
   ENDMETHOD.
 
   METHOD get_t100_text.

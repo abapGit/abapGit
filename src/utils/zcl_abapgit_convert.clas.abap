@@ -51,11 +51,6 @@ CLASS zcl_abapgit_convert DEFINITION
         !iv_spras       TYPE spras
       RETURNING
         VALUE(rv_spras) TYPE laiso .
-    CLASS-METHODS alpha_output
-      IMPORTING
-        !iv_val       TYPE clike
-      RETURNING
-        VALUE(rv_str) TYPE string .
     CLASS-METHODS string_to_xstring
       IMPORTING
         !iv_str        TYPE string
@@ -72,18 +67,12 @@ CLASS zcl_abapgit_convert DEFINITION
         !iv_base64     TYPE string
       RETURNING
         VALUE(rv_xstr) TYPE xstring .
-    CLASS-METHODS bintab_to_xstring
-      IMPORTING
-        !it_bintab     TYPE lvc_t_mime
-        !iv_size       TYPE i
-      RETURNING
-        VALUE(rv_xstr) TYPE xstring .
     CLASS-METHODS xstring_to_bintab
       IMPORTING
         !iv_xstr   TYPE xstring
       EXPORTING
         !ev_size   TYPE i
-        !et_bintab TYPE lvc_t_mime .
+        !et_bintab TYPE STANDARD TABLE .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -96,45 +85,9 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
 
 
-  METHOD alpha_output.
-
-    CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'
-      EXPORTING
-        input  = iv_val
-      IMPORTING
-        output = rv_str.
-
-    CONDENSE rv_str.
-
-  ENDMETHOD.
-
-
   METHOD base64_to_xstring.
 
-    CALL FUNCTION 'SSFC_BASE64_DECODE'
-      EXPORTING
-        b64data = iv_base64
-      IMPORTING
-        bindata = rv_xstr
-      EXCEPTIONS
-        OTHERS  = 1.
-    ASSERT sy-subrc = 0.
-
-  ENDMETHOD.
-
-
-  METHOD bintab_to_xstring.
-
-    CALL FUNCTION 'SCMS_BINARY_TO_XSTRING'
-      EXPORTING
-        input_length = iv_size
-      IMPORTING
-        buffer       = rv_xstr
-      TABLES
-        binary_tab   = it_bintab
-      EXCEPTIONS
-        failed       = 1 ##FM_SUBRC_OK.
-    ASSERT sy-subrc = 0.
+    rv_xstr = cl_http_utility=>decode_x_base64( iv_base64 ).
 
   ENDMETHOD.
 
@@ -171,11 +124,13 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
 
   METHOD conversion_exit_isola_output.
 
-    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_OUTPUT'
+    cl_gdt_conversion=>language_code_outbound(
       EXPORTING
-        input  = iv_spras
+        im_value = iv_spras
       IMPORTING
-        output = rv_spras.
+        ex_value = rv_spras ).
+
+    TRANSLATE rv_spras TO UPPER CASE.
 
   ENDMETHOD.
 
@@ -183,8 +138,7 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
   METHOD int_to_xstring4.
 * returns xstring of length 4 containing the integer value iv_i
 
-    DATA: lv_x TYPE x LENGTH 4.
-
+    DATA lv_x TYPE x LENGTH 4.
 
     lv_x = iv_i.
     rv_xstring = lv_x.
@@ -208,30 +162,33 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
 
   METHOD string_to_tab.
 
-    CALL FUNCTION 'SCMS_STRING_TO_FTEXT'
-      EXPORTING
-        text      = iv_str
-      IMPORTING
-        length    = ev_size
-      TABLES
-        ftext_tab = et_tab
-      EXCEPTIONS
-        OTHERS    = 1.
-    ASSERT sy-subrc = 0.
+    DATA lv_length TYPE i.
+    DATA lv_iterations TYPE i.
+    DATA lv_offset TYPE i.
+
+    FIELD-SYMBOLS <lg_line> TYPE any.
+
+
+    CLEAR et_tab.
+    ev_size = strlen( iv_str ).
+
+    APPEND INITIAL LINE TO et_tab ASSIGNING <lg_line>.
+    <lg_line> = iv_str.
+    DESCRIBE FIELD <lg_line> LENGTH lv_length IN CHARACTER MODE.
+    lv_iterations = ev_size DIV lv_length.
+
+    DO lv_iterations TIMES.
+      lv_offset = sy-index * lv_length.
+      APPEND INITIAL LINE TO et_tab ASSIGNING <lg_line>.
+      <lg_line> = iv_str+lv_offset.
+    ENDDO.
 
   ENDMETHOD.
 
 
   METHOD string_to_xstring.
 
-    CALL FUNCTION 'SCMS_STRING_TO_XSTRING'
-      EXPORTING
-        text   = iv_str
-      IMPORTING
-        buffer = rv_xstr
-      EXCEPTIONS
-        OTHERS = 1.
-    ASSERT sy-subrc = 0.
+    rv_xstr = string_to_xstring_utf8( iv_str ).
 
   ENDMETHOD.
 
@@ -280,29 +237,34 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
 
   METHOD xstring_to_bintab.
 
-    CALL FUNCTION 'SCMS_XSTRING_TO_BINARY'
-      EXPORTING
-        buffer        = iv_xstr
-      IMPORTING
-        output_length = ev_size
-      TABLES
-        binary_tab    = et_bintab.
+    DATA lv_length TYPE i.
+    DATA lv_iterations TYPE i.
+    DATA lv_offset TYPE i.
+
+    FIELD-SYMBOLS <lg_line> TYPE any.
+
+
+    CLEAR et_bintab.
+    ev_size = xstrlen( iv_xstr ).
+
+    APPEND INITIAL LINE TO et_bintab ASSIGNING <lg_line>.
+    <lg_line> = iv_xstr.
+    DESCRIBE FIELD <lg_line> LENGTH lv_length IN BYTE MODE.
+    lv_iterations = ev_size DIV lv_length.
+
+    DO lv_iterations TIMES.
+      lv_offset = sy-index * lv_length.
+      APPEND INITIAL LINE TO et_bintab ASSIGNING <lg_line>.
+      <lg_line> = iv_xstr+lv_offset.
+    ENDDO.
 
   ENDMETHOD.
 
 
   METHOD xstring_to_int.
 
-    DATA: lv_xstring TYPE xstring,
-          lv_x       TYPE x.
-
-
-    lv_xstring = iv_xstring.
-    WHILE xstrlen( lv_xstring ) > 0.
-      lv_x = lv_xstring(1).
-      rv_i = rv_i * 256 + lv_x.
-      lv_xstring = lv_xstring+1.
-    ENDWHILE.
+* use the built-in type conversion
+    rv_i = iv_xstring.
 
   ENDMETHOD.
 

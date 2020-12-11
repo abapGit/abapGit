@@ -182,6 +182,12 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
+    METHODS is_repo_lang_logon_lang
+      RETURNING
+        VALUE(rv_repo_lang_is_logon_lang) TYPE abap_bool.
+    METHODS get_abapgit_tcode
+      RETURNING
+        VALUE(rv_tcode) TYPE tcode.
 ENDCLASS.
 
 
@@ -302,13 +308,15 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                                iv_act = |{ zif_abapgit_definitions=>c_action-repo_refresh_checksums }?key={ mv_key }|
                                iv_opt = lv_crossout ).
 
-    IF mo_repo->get_dot_abapgit( )->get_master_language( ) <> sy-langu.
+    IF is_repo_lang_logon_lang( ) = abap_false AND get_abapgit_tcode( ) IS NOT INITIAL.
       ro_advanced_dropdown->add(
-        iv_txt = 'Open in Master Language'
+        iv_txt = 'Open in Main Language'
         iv_act = |{ zif_abapgit_definitions=>c_action-repo_open_in_master_lang }?key={ mv_key }| ).
     ENDIF.
 
     ro_advanced_dropdown->add( iv_txt = 'Remove'
+                               iv_title = `Remove abapGit's records of the repository (the system's `
+                                       && `development objects will remain unaffected)`
                                iv_act = |{ zif_abapgit_definitions=>c_action-repo_remove }?key={ mv_key }| ).
 
     CLEAR lv_crossout.
@@ -317,6 +325,8 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
     ENDIF.
     ro_advanced_dropdown->add( iv_txt = 'Uninstall'
+                               iv_title = `Delete all development objects belonging to this package `
+                                       && `(and subpackages) from the system`
                                iv_act = |{ zif_abapgit_definitions=>c_action-repo_purge }?key={ mv_key }|
                                iv_opt = lv_crossout ).
 
@@ -513,7 +523,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                      iv_act = |{ zif_abapgit_definitions=>c_action-repo_settings }?key={ mv_key }|
                      iv_title = `Repository Settings` ).
 
-
   ENDMETHOD.
 
 
@@ -676,26 +685,26 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
   METHOD open_in_master_language.
 
-    CONSTANTS:
-      lc_abapgit_tcode TYPE tcode VALUE `ZABAPGIT`.
-
     DATA:
       lv_master_language TYPE spras,
       lt_spagpa          TYPE STANDARD TABLE OF rfc_spagpa,
       ls_spagpa          LIKE LINE OF lt_spagpa,
       ls_item            TYPE zif_abapgit_definitions=>ty_item,
       lv_subrc           TYPE syst-subrc,
-      lv_save_sy_langu   TYPE sy-langu.
+      lv_save_sy_langu   TYPE sy-langu,
+      lv_tcode           TYPE tcode.
 
     " https://blogs.sap.com/2017/01/13/logon-language-sy-langu-and-rfc/
 
     lv_master_language = mo_repo->get_dot_abapgit( )->get_master_language( ).
+    lv_tcode = get_abapgit_tcode( ).
+    ASSERT lv_tcode IS NOT INITIAL.
 
     IF lv_master_language = sy-langu.
-      zcx_abapgit_exception=>raise( |Repo already opened in master language| ).
+      zcx_abapgit_exception=>raise( |Repo already opened in main language| ).
     ENDIF.
 
-    ls_item-obj_name = lc_abapgit_tcode.
+    ls_item-obj_name = lv_tcode.
     ls_item-obj_type = |TRAN|.
 
     IF zcl_abapgit_objects=>exists( ls_item ) = abap_false.
@@ -713,7 +722,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       DESTINATION 'NONE'
       STARTING NEW TASK 'ABAPGIT'
       EXPORTING
-        tcode                   = lc_abapgit_tcode
+        tcode                   = lv_tcode
       TABLES
         spagpa_tab              = lt_spagpa
       EXCEPTIONS
@@ -756,12 +765,12 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
     gui_services( )->register_event_handler( me ).
 
-    " Reinit, for the case of type change
-    mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
-
-    lo_news = zcl_abapgit_news=>create( mo_repo ).
-
     TRY.
+        " Reinit, for the case of type change
+        mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
+
+        lo_news = zcl_abapgit_news=>create( mo_repo ).
+
         CREATE OBJECT ri_html TYPE zcl_abapgit_html.
         ri_html->add( |<div class="repo" id="repo{ mv_key }">| ).
         ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
@@ -856,7 +865,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                         iv_act = c_actions-display_more )
             } more. (Set in Advanced > {
             ri_html->a( iv_txt = 'Settings'
-                        iv_act = zif_abapgit_definitions=>c_action-go_settings )
+                        iv_act = zif_abapgit_definitions=>c_action-go_settings_personal )
             } )| ).
           ri_html->add( '</div>' ).
         ENDIF.
@@ -948,11 +957,11 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ri_html->add( '</td>' ).
 
     " Command
+    ri_html->add( '<td class="cmd">' ).
     IF mo_repo->has_remote_source( ) = abap_true.
-      ri_html->add( '<td class="cmd">' ).
       ri_html->add( render_item_command( is_item ) ).
-      ri_html->add( '</td>' ).
     ENDIF.
+    ri_html->add( '</td>' ).
 
     ri_html->add( '</tr>' ).
 
@@ -1157,6 +1166,8 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         RETURN. " false
       ENDIF.
 
+      SORT lt_pulls BY number DESCENDING.
+
       ls_pull = zcl_abapgit_ui_factory=>get_popups( )->choose_pr_popup( lt_pulls ).
       IF ls_pull IS INITIAL.
         RETURN. " false
@@ -1303,5 +1314,24 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ls_hotkey_action-hotkey = |x|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
+  ENDMETHOD.
+
+  METHOD is_repo_lang_logon_lang.
+    rv_repo_lang_is_logon_lang = boolc( mo_repo->get_dot_abapgit( )->get_master_language( ) = sy-langu ).
+  ENDMETHOD.
+
+  METHOD get_abapgit_tcode.
+    CONSTANTS: lc_report_tcode_hex TYPE x VALUE '80'.
+    DATA: lt_tcodes TYPE STANDARD TABLE OF tcode.
+
+    SELECT tcode
+      FROM tstc
+      INTO TABLE lt_tcodes
+      WHERE pgmna = sy-cprog
+        AND cinfo = lc_report_tcode_hex.
+
+    IF lines( lt_tcodes ) = 1.
+      READ TABLE lt_tcodes INDEX 1 INTO rv_tcode.
+    ENDIF.
   ENDMETHOD.
 ENDCLASS.

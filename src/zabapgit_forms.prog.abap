@@ -46,7 +46,7 @@ ENDFORM.
 *      -->##CALLED       text
 *      -->##NEEDED       text
 *----------------------------------------------------------------------*
-FORM branch_popup TABLES   tt_fields TYPE zif_abapgit_definitions=>ty_sval_tt
+FORM branch_popup TABLES   tt_fields TYPE zif_abapgit_popups=>ty_sval_tt
                   USING    pv_code TYPE clike
                   CHANGING cs_error TYPE svale
                            cv_show_popup TYPE c
@@ -102,7 +102,7 @@ FORM exit RAISING zcx_abapgit_exception.
       IF zcl_abapgit_ui_factory=>get_gui( )->back( ) = abap_true. " end of stack
         zcl_abapgit_ui_factory=>get_gui( )->free( ). " Graceful shutdown
       ELSE.
-        CALL SELECTION-SCREEN 1001.
+        LEAVE TO SCREEN 1001.
       ENDIF.
   ENDCASE.
 ENDFORM.

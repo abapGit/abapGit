@@ -13,7 +13,9 @@ CLASS ltcl_convert DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FIN
     METHODS xstring_to_string_utf8 FOR TESTING.
     METHODS base64_to_xstring FOR TESTING.
     METHODS conversion_exit_isola_output FOR TESTING.
-    METHODS alpha_output FOR TESTING.
+    METHODS string_to_tab FOR TESTING.
+    METHODS string_to_xstring FOR TESTING.
+    METHODS xstring_to_bintab FOR TESTING.
 
 ENDCLASS.
 
@@ -23,6 +25,65 @@ ENDCLASS.
 *
 *----------------------------------------------------------------------*
 CLASS ltcl_convert IMPLEMENTATION.
+
+  METHOD xstring_to_bintab.
+
+    TYPES ty_hex TYPE x LENGTH 2.
+    DATA lt_bintab TYPE STANDARD TABLE OF ty_hex WITH DEFAULT KEY.
+    DATA lv_size TYPE i.
+    DATA lv_xstr TYPE xstring.
+
+    zcl_abapgit_convert=>xstring_to_bintab(
+      EXPORTING
+        iv_xstr   = '112233'
+      IMPORTING
+        ev_size   = lv_size
+        et_bintab = lt_bintab ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_size
+      exp = 3 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( lt_bintab )
+      exp = 2 ).
+
+  ENDMETHOD.
+
+  METHOD string_to_xstring.
+
+    DATA lv_xstr TYPE xstring.
+
+    lv_xstr = zcl_abapgit_convert=>string_to_xstring( 'hello world' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_xstr
+      exp = '68656C6C6F20776F726C64' ).
+
+  ENDMETHOD.
+
+  METHOD string_to_tab.
+
+    TYPES ty_char TYPE c LENGTH 2.
+    DATA lv_size TYPE i.
+    DATA lt_tab TYPE STANDARD TABLE OF ty_char WITH DEFAULT KEY.
+
+    zcl_abapgit_convert=>string_to_tab(
+      EXPORTING
+        iv_str  = 'hello world'
+      IMPORTING
+        ev_size = lv_size
+        et_tab  = lt_tab ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_size
+      exp = 11 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( lt_tab )
+      exp = 6 ).
+
+  ENDMETHOD.
 
   METHOD conversion_exit_isola_output.
 
@@ -69,21 +130,6 @@ CLASS ltcl_convert IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lv_result
       exp = 'abc' ).
-
-  ENDMETHOD.
-
-  METHOD alpha_output.
-
-    DATA lv_alpha TYPE c LENGTH 10 VALUE '0000001234'.
-    DATA lv_numc TYPE n LENGTH 6 VALUE '001234'.
-
-    cl_abap_unit_assert=>assert_equals(
-        act = zcl_abapgit_convert=>alpha_output( lv_alpha )
-        exp = '1234' ).
-
-    cl_abap_unit_assert=>assert_equals(
-        act = zcl_abapgit_convert=>alpha_output( lv_numc )
-        exp = '1234' ).
 
   ENDMETHOD.
 
@@ -157,7 +203,7 @@ CLASS ltcl_convert IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals( exp = lt_exp
                                         act = lt_act
-                                        msg = ' Error during string split: CRLF' ).
+                                        msg = 'Error during string split: CRLF' ).
 
     CLEAR: lt_act.
 
@@ -166,7 +212,7 @@ CLASS ltcl_convert IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals( exp = lt_exp
                                         act = lt_act
-                                        msg = ' Error during string split: LF' ).
+                                        msg = 'Error during string split: LF' ).
 
   ENDMETHOD.
 

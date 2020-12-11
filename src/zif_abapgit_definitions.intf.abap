@@ -32,8 +32,6 @@ INTERFACE zif_abapgit_definitions
     ty_files_tt TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY .
   TYPES:
     ty_string_tt TYPE STANDARD TABLE OF string WITH DEFAULT KEY .
-  TYPES:
-    ty_repo_ref_tt TYPE STANDARD TABLE OF REF TO zcl_abapgit_repo WITH DEFAULT KEY .
   TYPES ty_git_branch_type TYPE c LENGTH 2 .
   TYPES:
     BEGIN OF ty_git_branch,
@@ -147,7 +145,6 @@ INTERFACE zif_abapgit_definitions
     BEGIN OF ty_metadata,
       class        TYPE string,
       version      TYPE string,
-      late_deser   TYPE abap_bool, " refactor: can be removed later. replaced by steps
       delete_tadir TYPE abap_bool,
       ddic         TYPE abap_bool,
     END OF ty_metadata .
@@ -211,10 +208,6 @@ INTERFACE zif_abapgit_definitions
       remote TYPE ty_files_tt,
       status TYPE ty_results_ts_path,
     END OF ty_stage_files .
-  TYPES:
-    ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY .
-  TYPES:
-    ty_seocompotx_tt TYPE STANDARD TABLE OF seocompotx WITH DEFAULT KEY .
   TYPES:
     BEGIN OF ty_tpool.
       INCLUDE TYPE textpool.
@@ -304,32 +297,6 @@ INTERFACE zif_abapgit_definitions
       body   TYPE string,
     END OF ty_ancestor .
   TYPES:
-    BEGIN OF ty_merge,
-      repo     TYPE REF TO zcl_abapgit_repo_online,
-      source   TYPE ty_git_branch,
-      target   TYPE ty_git_branch,
-      common   TYPE ty_ancestor,
-      stree    TYPE ty_expanded_tt,
-      ttree    TYPE ty_expanded_tt,
-      ctree    TYPE ty_expanded_tt,
-      result   TYPE ty_expanded_tt,
-      stage    TYPE REF TO zcl_abapgit_stage,
-      conflict TYPE string,
-    END OF ty_merge .
-  TYPES:
-    BEGIN OF ty_merge_conflict,
-      path        TYPE string,
-      filename    TYPE string,
-      source_sha1 TYPE ty_sha1,
-      source_data TYPE xstring,
-      target_sha1 TYPE ty_sha1,
-      target_data TYPE xstring,
-      result_sha1 TYPE ty_sha1,
-      result_data TYPE xstring,
-    END OF ty_merge_conflict .
-  TYPES:
-    ty_merge_conflict_tt TYPE STANDARD TABLE OF ty_merge_conflict WITH DEFAULT KEY .
-  TYPES:
     BEGIN OF ty_repo_item,
       obj_type TYPE tadir-object,
       obj_name TYPE tadir-obj_name,
@@ -390,31 +357,10 @@ INTERFACE zif_abapgit_definitions
          END OF ty_alv_column,
          ty_alv_column_tt TYPE TABLE OF ty_alv_column WITH DEFAULT KEY.
   TYPES:
-    BEGIN OF ty_deserialization,
-      obj     TYPE REF TO zif_abapgit_object,
-      xml     TYPE REF TO zif_abapgit_xml_input,
-      package TYPE devclass,
-      item    TYPE ty_item,
-    END OF ty_deserialization .
-  TYPES:
-    ty_deserialization_tt TYPE STANDARD TABLE OF ty_deserialization WITH DEFAULT KEY .
-  TYPES:
     ty_deserialization_step TYPE string.
   TYPES:
     ty_deserialization_step_tt TYPE STANDARD TABLE OF ty_deserialization_step
                                           WITH DEFAULT KEY .
-  TYPES:
-    BEGIN OF ty_step_data,
-      step_id      TYPE ty_deserialization_step,
-      order        TYPE i,
-      descr        TYPE string,
-      is_ddic      TYPE abap_bool,
-      syntax_check TYPE abap_bool,
-      objects      TYPE ty_deserialization_tt,
-    END OF ty_step_data .
-  TYPES:
-    ty_step_data_tt TYPE STANDARD TABLE OF ty_step_data
-                                WITH DEFAULT KEY .
   TYPES:
     ty_object_type_range TYPE RANGE OF trobjtype,
     ty_object_name_range TYPE RANGE OF sobj_name.
@@ -522,6 +468,7 @@ INTERFACE zif_abapgit_definitions
       go_tag_overview               TYPE string VALUE 'go_tag_overview',
       go_debuginfo                  TYPE string VALUE 'go_debuginfo',
       go_settings                   TYPE string VALUE 'go_settings',
+      go_settings_personal          TYPE string VALUE 'go_settings_personal',
       go_tutorial                   TYPE string VALUE 'go_tutorial',
       go_patch                      TYPE string VALUE 'go_patch',
       jump                          TYPE string VALUE 'jump',

@@ -104,6 +104,11 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
     CLASS-METHODS help_submenu
       RETURNING
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
+    CLASS-METHODS settings_toolbar
+      IMPORTING
+        !iv_act        TYPE string
+      RETURNING
+        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
     CLASS-METHODS render_branch_name
       IMPORTING
         !iv_branch      TYPE string OPTIONAL
@@ -852,6 +857,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     DATA: lv_commit_hash       TYPE zif_abapgit_definitions=>ty_sha1,
           lv_commit_short_hash TYPE zif_abapgit_definitions=>ty_sha1,
           lv_display_url       TYPE zif_abapgit_persistence=>ty_repo-url,
+          lo_url               TYPE REF TO zcl_abapgit_git_url,
           lv_icon_commit       TYPE string.
 
     lv_commit_hash = io_repo_online->get_current_remote( ).
@@ -861,8 +867,10 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
                                     iv_class = 'pad-sides'
                                     iv_hint  = 'Commit' ).
 
+    CREATE OBJECT lo_url.
+
     TRY.
-        lv_display_url = io_repo_online->get_commit_display_url( lv_commit_hash ).
+        lv_display_url = lo_url->get_commit_display_url( io_repo_online ).
 
         ii_html->add_a( iv_txt   = |{ lv_icon_commit }{ lv_commit_short_hash }|
                         iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ lv_display_url }|
@@ -972,6 +980,22 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ri_html->add( '<div class="dummydiv warning">' ).
     ri_html->add( |{ ri_html->icon( 'exclamation-triangle/yellow' ) } { iv_text }| ).
     ri_html->add( '</div>' ).
+
+  ENDMETHOD.
+
+
+  METHOD settings_toolbar.
+
+    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-settings'.
+
+    ro_menu->add(
+      iv_txt = 'Global'
+      iv_act = zif_abapgit_definitions=>c_action-go_settings
+      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-go_settings )
+    )->add(
+      iv_txt = 'Personal'
+      iv_act = zif_abapgit_definitions=>c_action-go_settings_personal
+      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-go_settings_personal ) ).
 
   ENDMETHOD.
 ENDCLASS.

@@ -402,7 +402,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    " Skip master language - it was already serialized
+    " Skip main language - it was already serialized
     " Don't serialize t-code itself
     SELECT sprsl ttext
       INTO CORRESPONDING FIELDS OF TABLE lt_tpool_i18n
@@ -611,7 +611,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
     IF sy-subrc = 4 OR sy-subrc = 3.
       RETURN.
     ELSEIF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from RPY_TRANSACTION_READ' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     READ TABLE lt_tcodes INDEX 1 INTO es_transaction.
@@ -642,7 +642,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
         object_not_found = 0
         OTHERS           = 3.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from RPY_TRANSACTION_DELETE' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -750,7 +750,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
             db_access_error         = 8
             OTHERS                  = 9.
         IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise( 'Error from RPY_TRANSACTION_INSERT' ).
+          zcx_abapgit_exception=>raise_t100( ).
         ENDIF.
 
     ENDCASE.

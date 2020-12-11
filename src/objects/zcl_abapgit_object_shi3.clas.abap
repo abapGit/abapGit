@@ -32,6 +32,9 @@ CLASS zcl_abapgit_object_shi3 DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS jump_se43
       RAISING zcx_abapgit_exception.
 
+    METHODS jump_sbach04
+      RAISING zcx_abapgit_exception.
+
     METHODS clear_fields
       CHANGING cs_head  TYPE ttree
                ct_nodes TYPE hier_iface_t.
@@ -145,6 +148,32 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, SHI3' ).
     ENDIF.
 
+  ENDMETHOD.
+
+  METHOD jump_sbach04.
+    DATA: ls_message      TYPE hier_mess,
+          lv_structure_id TYPE hier_treeg.
+
+    lv_structure_id = ms_item-obj_name.
+
+    CALL FUNCTION 'STREE_EXTERNAL_EDIT'
+      EXPORTING
+        structure_id   = lv_structure_id
+        language       = mv_language
+        edit_structure = abap_false
+        no_commit_work = abap_false
+        activity       = 'D'
+      IMPORTING
+        message        = ls_message.
+    IF ls_message IS NOT INITIAL.
+      zcx_abapgit_exception=>raise_t100(
+        iv_msgid = ls_message-msgid
+        iv_msgno = ls_message-msgno
+        iv_msgv1 = ls_message-msgv1
+        iv_msgv2 = ls_message-msgv2
+        iv_msgv3 = ls_message-msgv3
+        iv_msgv4 = ls_message-msgv4 ).
+    ENDIF.
   ENDMETHOD.
 
 
@@ -294,6 +323,8 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
     CASE ls_head-type.
       WHEN 'BMENU'.
         jump_se43( ).
+      WHEN 'GHIER'.
+        jump_sbach04( ).
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( |Jump for type { ls_head-type } not implemented| ).
     ENDCASE.
@@ -303,12 +334,14 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: ls_msg    TYPE hier_mess,
-          ls_head   TYPE ttree,
-          lt_titles TYPE TABLE OF ttreet,
-          lt_nodes  TYPE TABLE OF hier_iface,
-          lt_texts  TYPE TABLE OF hier_texts,
-          lt_refs   TYPE TABLE OF hier_ref.
+    DATA: ls_msg           TYPE hier_mess,
+          ls_head          TYPE ttree,
+          lt_titles        TYPE TABLE OF ttreet,
+          lt_nodes         TYPE TABLE OF hier_iface,
+          lt_texts         TYPE TABLE OF hier_texts,
+          lt_refs          TYPE TABLE OF hier_ref,
+          lv_language      TYPE spras,
+          lv_all_languages TYPE abap_bool.
 
 
     CALL FUNCTION 'STREE_STRUCTURE_READ'
@@ -320,11 +353,21 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
       TABLES
         description      = lt_titles.
 
+    lv_all_languages = abap_false.
+
+    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_false.
+      lv_all_languages = abap_true.
+    ELSE.
+      lv_language = mv_language.
+      DELETE lt_titles WHERE spras <> lv_language.
+    ENDIF.
+
     CALL FUNCTION 'STREE_HIERARCHY_READ'
       EXPORTING
         structure_id       = mv_tree_id
         read_also_texts    = 'X'
-        all_languages      = 'X'
+        all_languages      = lv_all_languages
+        language           = lv_language
       IMPORTING
         message            = ls_msg
       TABLES
@@ -334,6 +377,12 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
 
     clear_fields( CHANGING cs_head  = ls_head
                            ct_nodes = lt_nodes ).
+
+    SORT lt_titles BY id.
+    DELETE ADJACENT DUPLICATES FROM lt_titles COMPARING id.
+
+    SORT lt_texts BY spras.
+    DELETE ADJACENT DUPLICATES FROM lt_texts COMPARING spras node_id.
 
     io_xml->add( iv_name = 'TREE_HEAD'
                  ig_data = ls_head ).

@@ -10,7 +10,7 @@ CLASS zcl_abapgit_gui_page_merge_res DEFINITION
       IMPORTING
         io_repo       TYPE REF TO zcl_abapgit_repo_online
         io_merge_page TYPE REF TO zcl_abapgit_gui_page_merge
-        io_merge      TYPE REF TO zcl_abapgit_merge
+        io_merge      TYPE REF TO zif_abapgit_merge
       RAISING
         zcx_abapgit_exception.
 
@@ -46,13 +46,13 @@ CLASS zcl_abapgit_gui_page_merge_res DEFINITION
         selection TYPE string VALUE 'selection' ##NO_TEXT,
         merge     TYPE string VALUE 'merge' ##NO_TEXT,
       END OF c_merge_mode .
-    DATA mo_merge TYPE REF TO zcl_abapgit_merge .
+    DATA mo_merge TYPE REF TO zif_abapgit_merge .
     DATA mo_merge_page TYPE REF TO zcl_abapgit_gui_page_merge .
     DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
     DATA ms_diff_file TYPE ty_file_diff .
     DATA mv_current_conflict_index TYPE sy-tabix .
     DATA mv_merge_mode TYPE string .
-    DATA mt_conflicts TYPE zif_abapgit_definitions=>ty_merge_conflict_tt .
+    DATA mt_conflicts TYPE zif_abapgit_merge=>ty_merge_conflict_tt .
 
     METHODS apply_merged_content
       IMPORTING
@@ -107,7 +107,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_merge_res IMPLEMENTATION.
 
 
   METHOD apply_merged_content.
@@ -117,7 +117,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
       lv_new_file_content TYPE xstring.
 
     FIELD-SYMBOLS:
-      <ls_conflict>      TYPE zif_abapgit_definitions=>ty_merge_conflict.
+      <ls_conflict> TYPE zif_abapgit_merge=>ty_merge_conflict.
 
     lv_merge_content = ii_event->form_data( )->get( 'MERGE_CONTENT' ).
 
@@ -127,9 +127,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
     lv_new_file_content = zcl_abapgit_convert=>string_to_xstring_utf8( lv_merge_content ).
 
     READ TABLE mt_conflicts ASSIGNING <ls_conflict> INDEX mv_current_conflict_index.
-    <ls_conflict>-result_sha1 = zcl_abapgit_hash=>sha1(
-      iv_type = zif_abapgit_definitions=>c_type-blob
-      iv_data = lv_new_file_content ).
+    <ls_conflict>-result_sha1 = zcl_abapgit_hash=>sha1_blob( lv_new_file_content ).
     <ls_conflict>-result_data = lv_new_file_content.
     mo_merge->resolve_conflict( <ls_conflict> ).
 
@@ -248,7 +246,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
   METHOD render_diff.
 
     DATA: lv_target_content TYPE string.
-    FIELD-SYMBOLS: <ls_conflict> TYPE zif_abapgit_definitions=>ty_merge_conflict.
+    FIELD-SYMBOLS: <ls_conflict> TYPE zif_abapgit_merge=>ty_merge_conflict.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -353,7 +351,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_diff>  LIKE LINE OF lt_diffs.
 
-    lo_highlighter = zcl_abapgit_syntax_highlighter=>create( is_diff-filename ).
+    lo_highlighter = zcl_abapgit_syntax_factory=>create( is_diff-filename ).
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     lt_diffs = is_diff-o_diff->get( ).
@@ -474,7 +472,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
   METHOD resolve_diff.
 
     DATA: lv_offs TYPE i.
-    FIELD-SYMBOLS: <ls_conflict> TYPE zif_abapgit_definitions=>ty_merge_conflict.
+    FIELD-SYMBOLS: <ls_conflict> TYPE zif_abapgit_merge=>ty_merge_conflict.
 
     CLEAR ms_diff_file.
 
@@ -523,7 +521,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    FIELD-SYMBOLS: <ls_conflict> TYPE zif_abapgit_definitions=>ty_merge_conflict.
+    FIELD-SYMBOLS: <ls_conflict> TYPE zif_abapgit_merge=>ty_merge_conflict.
 
     CASE ii_event->mv_action.
       WHEN c_actions-apply_merge
