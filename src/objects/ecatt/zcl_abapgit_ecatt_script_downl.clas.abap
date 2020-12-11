@@ -22,14 +22,14 @@ CLASS zcl_abapgit_ecatt_script_downl DEFINITION
     METHODS:
       set_script_to_template
         RAISING
-          cx_ecatt_apl_util,
+          cx_static_check,
 
       set_control_data_for_tcd
         IMPORTING
           is_param  TYPE etpar_gui
           io_params TYPE REF TO cl_apl_ecatt_params
         RAISING
-          cx_ecatt_apl,
+          cx_static_check,
 
       escape_control_data
         IMPORTING
@@ -37,15 +37,15 @@ CLASS zcl_abapgit_ecatt_script_downl DEFINITION
           iv_tabname TYPE string
           iv_node    TYPE string
         RAISING
-          cx_ecatt_apl_util,
+          cx_static_check,
 
       set_blob_to_template
         RAISING
-          cx_ecatt_apl_util,
+          cx_static_check,
 
       set_artmp_to_template
         RAISING
-          cx_ecatt_apl_util.
+          cx_static_check.
 
 ENDCLASS.
 

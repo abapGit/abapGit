@@ -87,7 +87,7 @@ CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
 
     "26.03.2013
 
-    DATA: lx_ecatt    TYPE REF TO cx_ecatt_apl,
+    DATA: lx_ecatt    TYPE REF TO cx_static_check,
           lv_exists   TYPE etonoff,
           lv_exc_occ  TYPE etonoff,
           ls_tadir    TYPE tadir,
@@ -112,7 +112,7 @@ CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
 
         upload_data_from_stream( ch_object-filename ).
 
-      CATCH cx_ecatt_apl INTO lx_ecatt.
+      CATCH cx_static_check INTO lx_ecatt.
         IF template_over_all IS INITIAL.
           RAISE EXCEPTION lx_ecatt.
         ELSE.

@@ -212,7 +212,7 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
 
     " downport from CL_APL_ECATT_VO_UPLOAD
 
-    DATA: lx_ex       TYPE REF TO cx_ecatt_apl,
+    DATA: lx_ex       TYPE REF TO cx_static_check,
           lv_exists   TYPE etonoff,
           lv_exc_occ  TYPE etonoff,
           ls_tadir    TYPE tadir,
@@ -238,7 +238,7 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
         super->upload( CHANGING ch_object = ch_object ).
 
         upload_data_from_stream( ch_object-filename ).
-      CATCH cx_ecatt_apl INTO lx_ex.
+      CATCH cx_static_check INTO lx_ex.
         IF template_over_all IS INITIAL.
           RAISE EXCEPTION lx_ex.
         ELSE.
@@ -250,7 +250,7 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
         CALL METHOD ('GET_ATTRIBUTES_FROM_DOM_NEW') " doesn't exit in 702
           CHANGING
             ch_object = ch_object.
-      CATCH cx_ecatt_apl INTO lx_ex.
+      CATCH cx_static_check INTO lx_ex.
         lv_exc_occ = 'X'.
     ENDTRY.
 

@@ -85,8 +85,7 @@ CLASS zcl_abapgit_object_ecatt_super DEFINITION
         RETURNING
           VALUE(rs_change_information) TYPE ty_last_changed
         RAISING
-          cx_ecatt_apl
-          zcx_abapgit_exception,
+          cx_static_check,
 
       clear_attributes
         CHANGING
