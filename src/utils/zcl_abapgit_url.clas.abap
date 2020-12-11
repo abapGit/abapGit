@@ -37,6 +37,13 @@ CLASS zcl_abapgit_url DEFINITION
         !iv_url           TYPE string
       RETURNING
         VALUE(rv_abapgit) TYPE abap_bool .
+    CLASS-METHODS url_address
+      IMPORTING
+        !iv_url          TYPE string
+      RETURNING
+        VALUE(rv_adress) TYPE string
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -53,7 +60,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_URL IMPLEMENTATION.
+CLASS zcl_abapgit_url IMPLEMENTATION.
 
 
   METHOD host.
@@ -127,4 +134,23 @@ CLASS ZCL_ABAPGIT_URL IMPLEMENTATION.
           iv_validate = abap_true ).
 
   ENDMETHOD.
+
+
+  METHOD url_address.
+
+    DATA:
+      lv_name TYPE string,
+      lv_host TYPE string,
+      lv_path TYPE string.
+
+    regex( EXPORTING iv_url  = iv_url
+           IMPORTING ev_host = lv_host
+                     ev_path = lv_path
+                     ev_name = lv_name ).
+
+    rv_adress = |{ lv_host }{ lv_path }{ lv_name }|.
+
+  ENDMETHOD.
+
+
 ENDCLASS.
