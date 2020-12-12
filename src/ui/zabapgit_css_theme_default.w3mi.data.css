@@ -475,14 +475,16 @@ table.settings_tab input:focus {
 .dialog input::placeholder { color: #ccc }
 .dialog input:-ms-input-placeholder { color: #ccc }
 .dialog {
-  border-color: #cbcbcb;
-  background-color: #f4f4f4;
+  border-color: #ccc;
+  background-color: #f0f0f0;
 }
 .dialog li.dialog-commands a {
   border-color: #ccc;
+  background-color: #ddd;
 }
 .dialog li.dialog-commands input[type="submit"] {
   border-color: #ccc;
+  background-color: #ddd;
 }
 .dialog li.dialog-commands input[type="submit"].main {
   background-color: #64a8ff;

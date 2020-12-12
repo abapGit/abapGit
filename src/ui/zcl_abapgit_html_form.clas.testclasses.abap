@@ -8,6 +8,7 @@ CLASS ltcl_test_form DEFINITION
 
     METHODS validate FOR TESTING RAISING zcx_abapgit_exception.
     METHODS normalize FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS is_empty FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -268,6 +269,94 @@ CLASS ltcl_test_form IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lo_normalized_act->mt_entries
       exp = lo_normalized_exp->mt_entries ).
+
+  ENDMETHOD.
+
+  METHOD is_empty.
+
+    DATA lo_cut TYPE REF TO zcl_abapgit_html_form.
+    DATA lo_form_data TYPE REF TO zcl_abapgit_string_map.
+
+    lo_cut       = zcl_abapgit_html_form=>create( ).
+    lo_form_data = zcl_abapgit_string_map=>create( ).
+
+    lo_cut->text(
+      iv_name        = 'field1'
+      iv_label       = 'Field name 1' ).
+    lo_cut->checkbox(
+      iv_name        = 'chk1'
+      iv_label       = 'Checkbox1' ).
+    lo_cut->number(
+      iv_name        = 'num1'
+      iv_label       = 'Number 1' ).
+    lo_cut->table(
+      iv_name        = 'tab1'
+      iv_label       = 'Table 1' ).
+    lo_cut->column( iv_label = 'Column 1' ).
+    lo_cut->column( iv_label = 'Column 2' ).
+    lo_cut->number(
+      iv_name        = |tab1-{ zcl_abapgit_html_form=>c_rows }|
+      iv_label       = 'Number of Rows' ). " simulate hidden form field
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->is_empty( lo_form_data )
+      exp = abap_true ).
+
+    lo_form_data->set(
+      iv_key = 'field1'
+      iv_val = 'val1' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->is_empty( lo_form_data )
+      exp = abap_false ).
+
+    lo_form_data = zcl_abapgit_string_map=>create( ).
+    lo_form_data->set(
+      iv_key = 'chk1'
+      iv_val = 'X' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->is_empty( lo_form_data )
+      exp = abap_false ).
+
+    lo_form_data = zcl_abapgit_string_map=>create( ).
+    lo_form_data->set(
+      iv_key = 'num1'
+      iv_val = '123' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->is_empty( lo_form_data )
+      exp = abap_false ).
+
+    lo_form_data = zcl_abapgit_string_map=>create( ).
+    lo_form_data->set(
+      iv_key = 'num1'
+      iv_val = '0' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->is_empty( lo_form_data )
+      exp = abap_true ).
+
+    lo_form_data = zcl_abapgit_string_map=>create( ).
+    lo_form_data->set(
+      iv_key = |tab1-{ zcl_abapgit_html_form=>c_rows }|
+      iv_val = '2' ).
+    lo_form_data->set(
+      iv_key = |tab1-1-1|
+      iv_val = '' ).
+    lo_form_data->set(
+      iv_key = |tab1-1-2|
+      iv_val = '' ).
+    lo_form_data->set(
+      iv_key = |tab1-2-1|
+      iv_val = '' ).
+    lo_form_data->set(
+      iv_key = |tab1-2-2|
+      iv_val = 'Hello' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->is_empty( lo_form_data )
+      exp = abap_false ).
 
   ENDMETHOD.
 
