@@ -9,6 +9,10 @@ CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
       repo_name3 FOR TESTING RAISING zcx_abapgit_exception,
       repo_name4 FOR TESTING RAISING zcx_abapgit_exception,
       repo_name5 FOR TESTING RAISING zcx_abapgit_exception,
+      repo_address1 FOR TESTING RAISING zcx_abapgit_exception,
+      repo_address2 FOR TESTING RAISING zcx_abapgit_exception,
+      repo_address3 FOR TESTING RAISING zcx_abapgit_exception,
+      repo_address4 FOR TESTING RAISING zcx_abapgit_exception,
       repo_error FOR TESTING,
       url_validate1 FOR TESTING,
       url_validate2 FOR TESTING,
@@ -98,6 +102,58 @@ CLASS ltcl_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
         exp = 'foo_bar'
         act = lv_name ).
+
+  ENDMETHOD.
+
+  METHOD repo_address1.
+
+    DATA:
+      lv_url_address TYPE string.
+
+    lv_url_address = zcl_abapgit_url=>url_address( 'https://github.com/abapGit/abapGit.git' ).
+
+    cl_abap_unit_assert=>assert_equals(
+        exp = 'https://github.com/abapGit/abapGit'
+        act = lv_url_address ).
+
+  ENDMETHOD.
+
+  METHOD repo_address2.
+
+    DATA:
+      lv_url_address TYPE string.
+
+    lv_url_address = zcl_abapgit_url=>url_address( 'https://git.hanatrial.ondemand.com/abapGit/abapGit.git' ).
+
+    cl_abap_unit_assert=>assert_equals(
+        exp = 'https://git.hanatrial.ondemand.com/abapGit/abapGit'
+        act = lv_url_address ).
+
+  ENDMETHOD.
+
+  METHOD repo_address3.
+
+    DATA:
+      lv_url_address TYPE string.
+
+    lv_url_address = zcl_abapgit_url=>url_address( 'https://github.com/abapGit/abapGit/' ).
+
+    cl_abap_unit_assert=>assert_equals(
+        exp = 'https://github.com/abapGit/abapGit'
+        act = lv_url_address ).
+
+  ENDMETHOD.
+
+  METHOD repo_address4.
+
+    DATA:
+      lv_url_address TYPE string.
+
+    lv_url_address = zcl_abapgit_url=>url_address( 'https://github.com/abapGit/abapGit' ).
+
+    cl_abap_unit_assert=>assert_equals(
+        exp = 'https://github.com/abapGit/abapGit'
+        act = lv_url_address ).
 
   ENDMETHOD.
 
