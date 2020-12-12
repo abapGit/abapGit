@@ -68,6 +68,12 @@ INTERFACE zif_abapgit_repo_srv
       !iv_chk_exists TYPE abap_bool DEFAULT abap_true
     RAISING
       zcx_abapgit_exception .
+  METHODS validate_url
+    IMPORTING
+      !iv_url        TYPE string
+      !iv_chk_exists TYPE abap_bool DEFAULT abap_true
+    RAISING
+      zcx_abapgit_exception .
   METHODS get_repo_from_package
     IMPORTING
       !iv_package    TYPE devclass
@@ -75,6 +81,14 @@ INTERFACE zif_abapgit_repo_srv
     EXPORTING
       VALUE(eo_repo) TYPE REF TO zcl_abapgit_repo
       !ev_reason     TYPE string
+    RAISING
+      zcx_abapgit_exception .
+  METHODS get_repo_from_url
+    IMPORTING
+      !iv_url    TYPE string
+    EXPORTING
+      !eo_repo   TYPE REF TO zcl_abapgit_repo
+      !ev_reason TYPE string
     RAISING
       zcx_abapgit_exception .
 ENDINTERFACE.

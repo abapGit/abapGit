@@ -1145,7 +1145,6 @@ settings_tab tr:first-child td { border-top: 0px; }
   background-color: white;
 }
 .dialog table td input {
-  margin: 0px 2px;
   border: 0px;
   background: none;
 }
