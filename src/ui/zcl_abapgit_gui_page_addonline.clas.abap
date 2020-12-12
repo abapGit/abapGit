@@ -156,7 +156,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
 
     IF io_form_data->get( c_id-url ) IS NOT INITIAL.
       TRY.
-          zcl_abapgit_url=>validate( io_form_data->get( c_id-url ) ).
+          zcl_abapgit_repo_srv=>get_instance( )->validate_url( io_form_data->get( c_id-url ) ).
         CATCH zcx_abapgit_exception INTO lx_err.
           ro_validation_log->set(
             iv_key = c_id-url

@@ -22,7 +22,7 @@ CLASS zcl_abapgit_ecatt_script_downl DEFINITION
     METHODS:
       set_script_to_template
         RAISING
-          cx_ecatt_apl_util,
+          cx_ecatt_apl,
 
       set_control_data_for_tcd
         IMPORTING
@@ -37,15 +37,15 @@ CLASS zcl_abapgit_ecatt_script_downl DEFINITION
           iv_tabname TYPE string
           iv_node    TYPE string
         RAISING
-          cx_ecatt_apl_util,
+          cx_ecatt_apl,
 
       set_blob_to_template
         RAISING
-          cx_ecatt_apl_util,
+          cx_ecatt_apl,
 
       set_artmp_to_template
         RAISING
-          cx_ecatt_apl_util.
+          cx_ecatt_apl.
 
 ENDCLASS.
 
