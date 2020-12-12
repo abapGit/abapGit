@@ -11,6 +11,9 @@ CLASS zcl_abapgit_repo_srv DEFINITION
     ALIASES get_repo_from_package
       FOR zif_abapgit_repo_srv~get_repo_from_package .
 
+    ALIASES get_repo_from_url
+      FOR zif_abapgit_repo_srv~get_repo_from_url .
+
     CLASS-METHODS get_instance
       RETURNING
         VALUE(ri_srv) TYPE REF TO zif_abapgit_repo_srv .
@@ -25,6 +28,8 @@ CLASS zcl_abapgit_repo_srv DEFINITION
       FOR zif_abapgit_repo_srv~list .
     ALIASES validate_package
       FOR zif_abapgit_repo_srv~validate_package .
+    ALIASES validate_url
+      FOR zif_abapgit_repo_srv~validate_url .
 
     CLASS-DATA gi_ref TYPE REF TO zif_abapgit_repo_srv .
     DATA mv_init TYPE abap_bool VALUE abap_false ##NO_TEXT.
@@ -76,7 +81,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
+CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
 
   METHOD add.
@@ -334,6 +339,44 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_repo_srv~get_repo_from_url.
+
+    DATA:
+      lt_repos                TYPE zif_abapgit_persistence=>ty_repos,
+      lv_current_repo_address TYPE string,
+      lv_check_repo_address   TYPE string,
+      lv_repo_path            TYPE string,
+      lv_name                 TYPE zif_abapgit_persistence=>ty_local_settings-display_name,
+      lv_owner                TYPE zif_abapgit_persistence=>ty_local_settings-display_name.
+
+    FIELD-SYMBOLS:
+      <ls_repo> LIKE LINE OF lt_repos.
+
+    CLEAR:
+      eo_repo, ev_reason.
+
+    lv_current_repo_address = zcl_abapgit_url=>url_address( iv_url ).
+
+    " check if url is already in use for a different package
+    lt_repos = zcl_abapgit_persist_factory=>get_repo( )->list( ).
+    LOOP AT lt_repos ASSIGNING <ls_repo>.
+
+      lv_check_repo_address = zcl_abapgit_url=>url_address( <ls_repo>-url ).
+
+      IF lv_current_repo_address = lv_check_repo_address.
+        eo_repo      = get_instance( )->get( <ls_repo>-key ).
+        lv_repo_path = zcl_abapgit_url=>path_name( iv_url ).
+        lv_name      = eo_repo->get_name( ).
+        lv_owner     = <ls_repo>-created_by.
+        ev_reason    = |Repository { lv_repo_path } already versioned as { lv_name } by { lv_owner }|.
+        RETURN.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_repo_srv~is_repo_installed.
 
     DATA: lt_repo        TYPE zif_abapgit_repo_srv=>ty_repo_list,
@@ -441,7 +484,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
     validate_package( iv_package    = iv_package
                       iv_ign_subpkg = iv_ign_subpkg ).
 
-    zcl_abapgit_url=>validate( lv_url ).
+    validate_url( lv_url ).
 
     lv_branch_name = determine_branch_name(
       iv_name = iv_branch_name
@@ -545,4 +588,29 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_srv~validate_url.
+
+    DATA:
+      lo_repo   TYPE REF TO zcl_abapgit_repo,
+      lv_reason TYPE string.
+
+    zcl_abapgit_url=>validate( iv_url ).
+
+    IF iv_chk_exists = abap_true.
+      get_repo_from_url(
+        EXPORTING
+          iv_url    = iv_url
+        IMPORTING
+          eo_repo   = lo_repo
+          ev_reason = lv_reason ).
+      IF lo_repo IS BOUND.
+        zcx_abapgit_exception=>raise( lv_reason ).
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
 ENDCLASS.
