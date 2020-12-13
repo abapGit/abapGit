@@ -59,7 +59,7 @@ CLASS ltcl_popups_mock DEFINITION FINAL FOR TESTING
       BEGIN OF ms_called,
         popup_to_create_package TYPE abap_bool,
       END OF ms_called,
-      mv_user_decision TYPE ltcl_popups_mock=>ty_user_decision.
+      mv_user_decision TYPE ty_user_decision.
 
 ENDCLASS.
 
@@ -84,13 +84,12 @@ CLASS ltcl_create_package DEFINITION FINAL FOR TESTING
 
       given_existing_package,
       given_non_existing_package,
+      given_user_cancels_popup,
 
       when_create_package,
 
       then_error_should_be_raised,
-      then_no_error_should_be_raised,
       then_popup_is_shown,
-      given_user_cancels_popup,
       then_no_package_is_created.
 
 ENDCLASS.
@@ -173,11 +172,7 @@ CLASS ltcl_create_package IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD then_no_error_should_be_raised.
 
-    cl_abap_unit_assert=>assert_not_bound( mx_error ).
-
-  ENDMETHOD.
 
 
   METHOD then_popup_is_shown.
