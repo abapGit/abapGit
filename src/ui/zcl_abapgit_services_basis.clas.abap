@@ -23,6 +23,11 @@ CLASS zcl_abapgit_services_basis DEFINITION
 
   PROTECTED SECTION.
   PRIVATE SECTION.
+    CLASS-METHODS raise_error_if_package_exists
+      IMPORTING
+        iv_devclass TYPE scompkdtln-devclass
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -37,6 +42,8 @@ CLASS ZCL_ABAPGIT_SERVICES_BASIS IMPLEMENTATION.
     DATA li_popup        TYPE REF TO zif_abapgit_popups.
 
     ls_package_data-devclass = to_upper( iv_prefill_package ).
+
+    raise_error_if_package_exists( ls_package_data-devclass ).
 
     li_popup = zcl_abapgit_ui_factory=>get_popups( ).
 
@@ -96,6 +103,21 @@ CLASS ZCL_ABAPGIT_SERVICES_BASIS IMPLEMENTATION.
       " IEChooser is only available on Windows 10
       zcx_abapgit_exception=>raise( |Error from EXECUTE sy-subrc: { sy-subrc }| ).
     ENDIF.
+  ENDMETHOD.
+
+
+  METHOD raise_error_if_package_exists.
+
+    IF iv_devclass IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    IF zcl_abapgit_factory=>get_sap_package( iv_devclass )->exists( ) = abap_true.
+      " Package &1 already exists
+      MESSAGE e042(pak) INTO sy-msgli WITH iv_devclass.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
   ENDMETHOD.
 
 
