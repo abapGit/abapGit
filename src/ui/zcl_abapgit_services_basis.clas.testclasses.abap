@@ -172,9 +172,6 @@ CLASS ltcl_create_package IMPLEMENTATION.
   ENDMETHOD.
 
 
-
-
-
   METHOD then_popup_is_shown.
 
     cl_abap_unit_assert=>assert_true( mo_popups_mock->was_create_package_popup_shown( )  ).
