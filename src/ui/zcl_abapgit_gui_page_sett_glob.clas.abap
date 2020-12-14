@@ -43,7 +43,6 @@ CLASS zcl_abapgit_gui_page_sett_glob DEFINITION
         proxy_bypass TYPE string VALUE 'proxy_bypass',
         save         TYPE string VALUE 'save',
       END OF c_event.
-    CONSTANTS c_abapgit_prog TYPE progname VALUE 'ZABAPGIT' ##NO_TEXT.
 
     DATA mo_form TYPE REF TO zcl_abapgit_html_form.
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
