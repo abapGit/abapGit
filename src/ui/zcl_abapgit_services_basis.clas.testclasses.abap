@@ -18,14 +18,17 @@ CLASS ltcl_sap_package_mock DEFINITION FINAL FOR TESTING
       constructor
         IMPORTING
           iv_package TYPE devclass,
-      get_created
+
+      was_create_called
         RETURNING
-          VALUE(rv_created) TYPE abap_bool.
+          VALUE(rv_create_called) TYPE abap_bool.
 
   PRIVATE SECTION.
     DATA:
       mv_package TYPE devclass,
-      mv_created TYPE abap_bool.
+      BEGIN OF ms_called,
+        create TYPE abap_bool,
+      END OF ms_called.
 
 ENDCLASS.
 
@@ -225,7 +228,7 @@ CLASS ltcl_create_package IMPLEMENTATION.
 
   METHOD then_no_package_is_created.
 
-    cl_abap_unit_assert=>assert_false( mo_sap_package_mock->get_created( ) ).
+    cl_abap_unit_assert=>assert_false( mo_sap_package_mock->was_create_called( ) ).
 
   ENDMETHOD.
 
@@ -239,7 +242,7 @@ CLASS ltcl_create_package IMPLEMENTATION.
 
   METHOD then_package_is_created.
 
-    cl_abap_unit_assert=>assert_true( mo_sap_package_mock->get_created( ) ).
+    cl_abap_unit_assert=>assert_true( mo_sap_package_mock->was_create_called( ) ).
     cl_abap_unit_assert=>assert_equals(
         exp = mv_package
         act = mv_created_package ).
@@ -277,7 +280,7 @@ CLASS ltcl_sap_package_mock IMPLEMENTATION.
 
   METHOD zif_abapgit_sap_package~create.
 
-    mv_created = abap_true.
+    ms_called-create = abap_true.
 
   ENDMETHOD.
 
@@ -312,9 +315,9 @@ CLASS ltcl_sap_package_mock IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_created.
+  METHOD was_create_called.
 
-    rv_created = mv_created.
+    rv_create_called = ms_called-create.
 
   ENDMETHOD.
 
