@@ -670,7 +670,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
                           it_items    = lt_items ).
 
     lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
-    LOOP AT lt_results ASSIGNING <ls_result>.
+    LOOP AT lt_results ASSIGNING <ls_result> WHERE rstate <> zif_abapgit_definitions=>c_state-deleted.
       li_progress->show( iv_current = sy-tabix
                          iv_text    = |Deserialize { <ls_result>-obj_name }| ).
 
@@ -1376,7 +1376,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
                               COMPONENTS obj_type = <ls_overwrite>-obj_type
                                          obj_name = <ls_overwrite>-obj_name.
       IF sy-subrc <> 0 OR ls_overwrite-decision IS INITIAL.
-        zcx_abapgit_exception=>raise( |Overwrite odd package { <ls_overwrite>-obj_type } {
+        zcx_abapgit_exception=>raise( |Overwrite of package { <ls_overwrite>-obj_type } {
           <ls_overwrite>-obj_name } undecided| ).
       ENDIF.
 
