@@ -11,127 +11,20 @@ CLASS zcl_abapgit_object_sush DEFINITION
 
   PROTECTED SECTION.
 
-  PRIVATE SECTION.
+private section.
 
-    METHODS check_exist_and_name_space
-      IMPORTING
-        !io_su22    TYPE REF TO cl_su22_adt_object OPTIONAL
-        !is_head    TYPE if_su22_adt_object=>ts_su2x_head
-        !iv_package TYPE devclass
-      RAISING
-        cx_su2n_raise_events .
-    METHODS allown_objects_for_sush
-      IMPORTING
-        !is_head                  TYPE if_su22_adt_object=>ts_su2x_head
-        !it_usobx_ext             TYPE if_su22_adt_object=>tt_su2x_x
-        !it_usobt_ext             TYPE if_su22_adt_object=>tt_su2x_t
-        !iv_package               TYPE devclass
-      EXPORTING
-        !et_messages              TYPE bapiret2_t
-        !et_object_not_to_be_used TYPE if_ars_abap_object_check=>ty_gts_object_not_to_be_used
-      RAISING
-        cx_su2n_raise_events .
+  methods CHECK_EXIST_AND_NAME_SPACE
+    importing
+      !IO_SU22 type ref to CL_SU22_ADT_OBJECT optional
+      !IS_HEAD type IF_SU22_ADT_OBJECT=>TS_SU2X_HEAD
+      !IV_PACKAGE type DEVCLASS
+    raising
+      CX_SU2N_RAISE_EVENTS .
 ENDCLASS.
 
 
 
 CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
-
-
-  METHOD allown_objects_for_sush.
-    DATA:
-      ls_data         TYPE cl_su22_data_model=>ty_object_data,
-      lv_value_string TYPE su22_value_string,
-      lv_item_string  TYPE su22_value_string.
-
-    IF cl_cos_utilities=>is_cloud( ) = abap_true.
-      TRY.
-          DATA(lv_language_version) = cl_abap_language_version=>get_instance( )->get_default_version( EXPORTING iv_object_type = 'SUSH'
-                                                                                                                iv_package     = iv_package ).
-          IF lv_language_version = if_abap_language_version=>gc_version-sap_cloud_platform.
-
-            ls_data-content       = CORRESPONDING #( is_head ).
-            ls_data-content-name  = is_head-name.
-            MOVE-CORRESPONDING it_usobx_ext TO ls_data-content-auth_objects.
-
-            LOOP AT ls_data-content-auth_objects ASSIGNING FIELD-SYMBOL(<ls_auth_object>).
-              IF <ls_auth_object>-okflag CA 'YI'.
-                TRY.
-                    cl_su21_adt_object=>create_instance( )->select(
-                      EXPORTING
-                        iv_objct      = <ls_auth_object>-object
-                      IMPORTING
-                        et_auth_field = DATA(lt_object_field) ).
-                  CATCH cx_su2n_raise_events.
-                    RAISE EXCEPTION TYPE cx_su2n_raise_events
-                      EXPORTING
-                        textid = cl_su2x=>convert_to_exception( ).
-                ENDTRY.
-              ENDIF.
-
-              LOOP AT lt_object_field ASSIGNING FIELD-SYMBOL(<ls_object_field>).
-                CLEAR lv_value_string.
-                APPEND INITIAL LINE TO <ls_auth_object>-auth_fields ASSIGNING FIELD-SYMBOL(<ls_auth_field>).
-
-                <ls_auth_field>-field_name = <ls_object_field>-name.
-                LOOP AT it_usobt_ext ASSIGNING FIELD-SYMBOL(<ls_auth_value>)
-                    WHERE object = <ls_auth_object>-object AND field = <ls_auth_field>-field_name
-                    AND NOT ( low IS INITIAL AND high IS INITIAL ).
-                  APPEND <ls_auth_value> TO <ls_auth_field>-field_values.
-                  CLEAR lv_item_string.
-                  IF <ls_auth_value>-low  IS NOT INITIAL.
-                    lv_item_string = lv_item_string && ` ` && <ls_auth_value>-low.
-                    IF <ls_auth_value>-high IS NOT INITIAL.
-                      lv_item_string = lv_item_string && |..| && <ls_auth_value>-high.
-                    ENDIF.
-                  ENDIF.
-
-                  IF lv_item_string IS NOT INITIAL.
-                    lv_value_string = lv_value_string && lv_item_string && |,|.
-                  ENDIF.
-
-                ENDLOOP.
-
-                IF lv_value_string CP '*,'.
-                  SHIFT lv_value_string RIGHT DELETING TRAILING space.
-                  SHIFT lv_value_string RIGHT BY 1 PLACES.
-                  SHIFT lv_value_string LEFT DELETING LEADING space.
-                  "condense lv_value_string.
-                ENDIF.
-
-                <ls_auth_field>-field_value_string = lv_value_string.
-              ENDLOOP.
-            ENDLOOP.
-
-            TRY.
-                cl_susr_wbo_util=>check_whitelisting_for_sush(
-                  EXPORTING
-                    is_data                  = ls_data
-                    iv_abap_language_version = lv_language_version
-                IMPORTING
-                  et_object_not_to_be_used = et_object_not_to_be_used
-              ).
-
-                LOOP AT et_object_not_to_be_used ASSIGNING FIELD-SYMBOL(<ls_object_not_to_be_used>).
-                  APPEND VALUE #( type = <ls_object_not_to_be_used>-message-msgty
-                                  id   = <ls_object_not_to_be_used>-message-msgid
-                                  number = <ls_object_not_to_be_used>-message-msgno
-                                  message_v1 = <ls_object_not_to_be_used>-message-msgv1
-                                  message_v2 = <ls_object_not_to_be_used>-message-msgv2
-                                  message_v3 = <ls_object_not_to_be_used>-message-msgv3
-                                  message_v4 = <ls_object_not_to_be_used>-message-msgv4 ) TO et_messages.
-                ENDLOOP.
-              CATCH cx_swb_exception.
-                RAISE EXCEPTION TYPE cx_su2n_raise_events
-                  EXPORTING
-                    textid = cl_su2x=>convert_to_exception( ).
-            ENDTRY.
-          ENDIF.
-        CATCH cx_abap_language_version.
-      ENDTRY.
-    ENDIF.
-
-  ENDMETHOD.
 
 
   METHOD check_exist_and_name_space.
@@ -297,31 +190,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
             ii_log->add_error( iv_msg = ltext is_item = ms_item ).
             rv_complete_status = if_abapgit_object=>c_complete_status-nothing.
             RETURN.
-        ENDTRY.
-
-        TRY.
-            allown_objects_for_sush( EXPORTING is_head                  = <ls_data_head>
-                                               it_usobx_ext             = <lt_data_usobx_ext>
-                                               it_usobt_ext             = <lt_data_usobt_ext>
-                                               iv_package               = lv_package
-                                     IMPORTING et_object_not_to_be_used = DATA(lt_object_not_to_be_used) ).
-
-            LOOP AT lt_object_not_to_be_used REFERENCE INTO DATA(lr_object_not_to_be_used).
-              DELETE lt_usobx  WHERE object = lr_object_not_to_be_used->object-name.
-              DELETE lt_usobt  WHERE object = lr_object_not_to_be_used->object-name.
-              MESSAGE ID lr_object_not_to_be_used->message-msgid
-               TYPE lr_object_not_to_be_used->message-msgty
-             NUMBER lr_object_not_to_be_used->message-msgno
-               WITH lr_object_not_to_be_used->message-msgv1 lr_object_not_to_be_used->message-msgv2 lr_object_not_to_be_used->message-msgv3 lr_object_not_to_be_used->message-msgv4
-               INTO DATA(lv_message).
-              ii_log->add_warning( iv_msg = lv_message is_item = ms_item ).
-              rv_complete_status = if_abapgit_object=>c_complete_status-partly.
-            ENDLOOP.
-
-          CATCH cx_su2n_raise_events INTO lr_err.
-            ltext = lr_err->get_text( ).
-            ii_log->add_error( iv_msg = ltext is_item = ms_item ).
-
         ENDTRY.
 
         TRY.
