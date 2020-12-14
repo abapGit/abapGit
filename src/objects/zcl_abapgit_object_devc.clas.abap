@@ -403,7 +403,7 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
               intern_err            = 4
               OTHERS                = 5.
 
-        CATCH cx_root.
+        CATCH cx_sy_dyn_call_param_not_found.
 
           li_package->delete(
             EXCEPTIONS
@@ -432,7 +432,7 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
               intern_err            = 6
               OTHERS                = 7.
 
-        CATCH cx_root.
+        CATCH cx_sy_dyn_call_param_not_found.
 
           li_package->save(
             EXCEPTIONS
@@ -782,7 +782,7 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
         object_invalid   = 1
         unexpected_error = 2
         OTHERS           = 3 ).
-    IF sy-subrc <> 0.
+    IF sy-subrc <> 0.'
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
