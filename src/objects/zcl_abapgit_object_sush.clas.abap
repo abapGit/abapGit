@@ -116,8 +116,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
         CREATE DATA lr_appl_head TYPE ('CL_SU2X=>TS_HEAD').
         ASSIGN lr_appl_head->* TO <ls_appl_head>.
 
-        CREATE OBJECT lo_appl
-            TYPE ('CL_SU22_APPL').
+        CREATE OBJECT lo_appl TYPE ('CL_SU22_APPL').
 
         CALL METHOD lo_appl->('GET_DATA')
           EXPORTING
@@ -126,9 +125,9 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
             es_head = <ls_appl_head>.
 
         ASSIGN COMPONENT 'DEVCLASS' OF STRUCTURE <ls_appl_head> TO <ls_devclass>.
-
         IF <ls_devclass> <> iv_package.
-          zcx_abapgit_exception=>raise( |Lead application of object { ms_item-obj_name } does not exist in package { <ls_devclass> }| ).
+          zcx_abapgit_exception=>raise(
+          |Lead application of object { ms_item-obj_name } does not exist in package { <ls_devclass> }| ).
         ENDIF.
 
         TRY.
@@ -195,7 +194,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
 
     ls_key-type = ms_item-obj_type.
     ls_key-name = ms_item-obj_name.
-
     CALL FUNCTION 'SU2X_DIALOG_SNGL'
       EXPORTING
         is_key       = ls_key
