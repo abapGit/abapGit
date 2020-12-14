@@ -65,21 +65,19 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
       lv_text2 = lv_text+50(50).
       MESSAGE s471(s#) WITH lv_text1 lv_text2 INTO ld_msg.
       RAISE EXCEPTION TYPE cx_su2n_raise_events EXPORTING textid = cl_su2x=>convert_to_exception( ).
-    ELSE.
-      IF cl_abapgit_factory=>get_environment( )->is_sap_cloud_platform( ). "[A4C_AGIT]
-        " Lock Objects
-        IF ls_head-obj_name(1) EQ 'Y' OR
-           ls_head-obj_name(1) EQ 'Z' OR
-           ls_head-obj_name(1) EQ '/' OR
-           ls_head-obj_name(1) EQ 'J'.
-        ELSE.
-          lv_text = 'Namespace of object &1 (type SUSH) not allowed in SAP Cloud Platform'(003).
-          REPLACE '&1' WITH is_head-name INTO lv_text.
-          lv_text1 = lv_text(50).
-          lv_text2 = lv_text+50(50).
-          MESSAGE s471(s#) WITH lv_text1 lv_text2 INTO ld_msg.
-          RAISE EXCEPTION TYPE cx_su2n_raise_events EXPORTING textid = cl_su2x=>convert_to_exception( ).
-        ENDIF.
+    ELSEIF cl_abapgit_factory=>get_environment( )->is_sap_cloud_platform( ). "[A4C_AGIT]
+      " Lock Objects
+      IF ls_head-obj_name(1) EQ 'Y' OR
+         ls_head-obj_name(1) EQ 'Z' OR
+         ls_head-obj_name(1) EQ '/' OR
+         ls_head-obj_name(1) EQ 'J'.
+      ELSE.
+        lv_text = 'Namespace of object &1 (type SUSH) not allowed in SAP Cloud Platform'(003).
+        REPLACE '&1' WITH is_head-name INTO lv_text.
+        lv_text1 = lv_text(50).
+        lv_text2 = lv_text+50(50).
+        MESSAGE s471(s#) WITH lv_text1 lv_text2 INTO ld_msg.
+        RAISE EXCEPTION TYPE cx_su2n_raise_events EXPORTING textid = cl_su2x=>convert_to_exception( ).
       ENDIF.
     ENDIF.
 
