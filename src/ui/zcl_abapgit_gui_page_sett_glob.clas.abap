@@ -2,21 +2,21 @@ CLASS zcl_abapgit_gui_page_sett_glob DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_gui_component
   FINAL
-  CREATE PRIVATE .
+  CREATE PRIVATE.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_gui_event_handler .
-    INTERFACES zif_abapgit_gui_renderable .
+    INTERFACES zif_abapgit_gui_event_handler.
+    INTERFACES zif_abapgit_gui_renderable.
 
     CLASS-METHODS create
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS constructor
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -36,21 +36,21 @@ CLASS zcl_abapgit_gui_page_sett_glob DEFINITION
         run_critical_tests       TYPE string VALUE 'run_critical_tests',
         experimental_features    TYPE string VALUE 'experimental_features',
         activate_wo_popup        TYPE string VALUE 'activate_wo_popup',
-      END OF c_id .
+      END OF c_id.
     CONSTANTS:
       BEGIN OF c_event,
         go_back      TYPE string VALUE 'go_back',
         proxy_bypass TYPE string VALUE 'proxy_bypass',
         save         TYPE string VALUE 'save',
-      END OF c_event .
+      END OF c_event.
     CONSTANTS c_abapgit_prog TYPE progname VALUE 'ZABAPGIT' ##NO_TEXT.
 
-    DATA mo_form TYPE REF TO zcl_abapgit_html_form .
-    DATA mo_form_data TYPE REF TO zcl_abapgit_string_map .
-    DATA mo_form_util TYPE REF TO zcl_abapgit_html_form_utils .
-    DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map .
+    DATA mo_form TYPE REF TO zcl_abapgit_html_form.
+    DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
+    DATA mo_form_util TYPE REF TO zcl_abapgit_html_form_utils.
+    DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
 
-    DATA mo_settings TYPE REF TO zcl_abapgit_settings .
+    DATA mo_settings TYPE REF TO zcl_abapgit_settings.
 
     METHODS validate_form
       IMPORTING
@@ -58,22 +58,22 @@ CLASS zcl_abapgit_gui_page_sett_glob DEFINITION
       RETURNING
         VALUE(ro_validation_log) TYPE REF TO zcl_abapgit_string_map
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS get_form_schema
       RETURNING
-        VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form .
+        VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form.
     METHODS read_settings
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS save_settings
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS read_proxy_bypass
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS save_proxy_bypass
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 ENDCLASS.
 
 

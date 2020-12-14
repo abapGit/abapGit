@@ -2,21 +2,21 @@ CLASS zcl_abapgit_gui_page_sett_pers DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_gui_component
   FINAL
-  CREATE PRIVATE .
+  CREATE PRIVATE.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_gui_event_handler .
-    INTERFACES zif_abapgit_gui_renderable .
+    INTERFACES zif_abapgit_gui_event_handler.
+    INTERFACES zif_abapgit_gui_renderable.
 
     CLASS-METHODS create
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS constructor
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -38,20 +38,20 @@ CLASS zcl_abapgit_gui_page_sett_pers DEFINITION
         parallel_proc_disabled TYPE string VALUE 'parallel_proc_disabled',
         hide_sapgui_hint       TYPE string VALUE 'hide_sapgui_hint',
         activate_wo_popup      TYPE string VALUE 'activate_wo_popup',
-      END OF c_id .
+      END OF c_id.
     CONSTANTS:
       BEGIN OF c_event,
         go_back TYPE string VALUE 'go_back',
         save    TYPE string VALUE 'save',
-      END OF c_event .
+      END OF c_event.
 
-    DATA mo_form TYPE REF TO zcl_abapgit_html_form .
-    DATA mo_form_data TYPE REF TO zcl_abapgit_string_map .
-    DATA mo_form_util TYPE REF TO zcl_abapgit_html_form_utils .
-    DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map .
+    DATA mo_form TYPE REF TO zcl_abapgit_html_form.
+    DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
+    DATA mo_form_util TYPE REF TO zcl_abapgit_html_form_utils.
+    DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
 
-    DATA mo_settings TYPE REF TO zcl_abapgit_settings .
-    DATA ms_settings TYPE zif_abapgit_definitions=>ty_s_user_settings .
+    DATA mo_settings TYPE REF TO zcl_abapgit_settings.
+    DATA ms_settings TYPE zif_abapgit_definitions=>ty_s_user_settings.
 
     METHODS validate_form
       IMPORTING
@@ -59,16 +59,16 @@ CLASS zcl_abapgit_gui_page_sett_pers DEFINITION
       RETURNING
         VALUE(ro_validation_log) TYPE REF TO zcl_abapgit_string_map
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS get_form_schema
       RETURNING
-        VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form .
+        VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form.
     METHODS read_settings
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS save_settings
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
