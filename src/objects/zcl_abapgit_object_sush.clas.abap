@@ -58,7 +58,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
       lr_data_usobt     TYPE REF TO data,
       lr_data_usobx_ext TYPE REF TO data,
       lr_data_usobt_ext TYPE REF TO data,
-      lr_err            TYPE REF TO cx_static_check.
+      lr_err            TYPE REF TO cx_static_check,
+      lv_text           TYPE string.
 
     FIELD-SYMBOLS: <ls_data_head>      TYPE any,
                    <ls_appl_head>      TYPE any,
@@ -109,7 +110,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
               CHANGING
                 cs_head = <ls_data_head>.
           CATCH cx_static_check INTO lr_err.
-            zcx_abapgit_exception=>raise( |Lead application of object { ms_item-obj_name } does not exist| ).
+            lv_text = |Lead application of object { ms_item-obj_name } does not exist|.
+            zcx_abapgit_exception=>raise( lv_text ).
         ENDTRY.
 
         MOVE-CORRESPONDING <ls_data_head> TO ls_key.
@@ -126,8 +128,9 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
 
         ASSIGN COMPONENT 'DEVCLASS' OF STRUCTURE <ls_appl_head> TO <ls_devclass>.
         IF <ls_devclass> <> iv_package.
-          zcx_abapgit_exception=>raise(
-          |Lead application of object { ms_item-obj_name } does not exist in package { <ls_devclass> }| ).
+          lv_text =
+          |Lead application of object { ms_item-obj_name } does not exist in package { <ls_devclass> }|.
+          zcx_abapgit_exception=>raise( lv_text ).
         ENDIF.
 
         TRY.
