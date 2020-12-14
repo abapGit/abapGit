@@ -11,15 +11,15 @@ CLASS zcl_abapgit_object_sush DEFINITION
 
   PROTECTED SECTION.
 
-private section.
+  PRIVATE SECTION.
 
-  methods CHECK_EXIST_AND_NAME_SPACE
-    importing
-      !IO_SU22 type ref to CL_SU22_ADT_OBJECT optional
-      !IS_HEAD type IF_SU22_ADT_OBJECT=>TS_SU2X_HEAD
-      !IV_PACKAGE type DEVCLASS
-    raising
-      CX_SU2N_RAISE_EVENTS .
+    METHODS check_exist_and_name_space
+      IMPORTING
+        !io_su22    TYPE REF TO cl_su22_adt_object OPTIONAL
+        !is_head    TYPE if_su22_adt_object=>ts_su2x_head
+        !iv_package TYPE devclass
+      RAISING
+        cx_su2n_raise_events .
 ENDCLASS.
 
 
@@ -36,10 +36,11 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
       lv_text1     TYPE symsgv,
       lv_text2     TYPE symsgv,
       ls_head      TYPE cl_su2x=>ts_head,
-      lo_su22      TYPE REF TO cl_su22_adt_object.
+      lo_su22      TYPE REF TO cl_su22_adt_object,
+      ls_su22_head TYPE if_su22_adt_object=>ts_su2x_head.
 
     CREATE OBJECT lo_su22.
-    DATA(ls_su22_head) = is_head.
+    ls_su22_head = is_head.
     TRY.
         lo_su22->if_su22_adt_object~check( EXPORTING id_mode   = '02'
                                            CHANGING  cs_head   = ls_su22_head ).
@@ -102,8 +103,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
     ls_key = ms_item-obj_name.
 
     TRY.
-        lo_su22->if_su22_adt_object~delete( EXPORTING iv_key       = ls_key
-                                                      iv_cleanup   = abap_true   ).
+        lo_su22->if_su22_adt_object~delete( iv_key       = ls_key
+                                            iv_cleanup   = abap_true   ).
       CATCH cx_su2n_raise_events INTO lx_msg.
     ENDTRY.
 
@@ -122,7 +123,10 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
       lr_data_usobt     TYPE REF TO data,
       lr_data_usobx_ext TYPE REF TO data,
       lr_data_usobt_ext TYPE REF TO data,
-      lv_package        TYPE devclass.
+      lv_package        TYPE devclass,
+      lr_err            TYPE REF TO cx_su2n_raise_events,
+      ltext             TYPE string,
+      lx_error          TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <lt_data_head>      TYPE ANY TABLE,
                    <ls_data_head>      TYPE any,
@@ -134,7 +138,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_head_source>      TYPE any,
                    <ls_usobx_ext_source> TYPE any,
-                   <ls_usobt_ext_source> TYPE any.
+                   <ls_usobt_ext_source> TYPE any,
+                   <ls_devclass>         TYPE any.
 
     ASSERT NOT ms_item-obj_name IS INITIAL.
 
@@ -174,7 +179,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
           TYPE ('CL_SU22_ADT_OBJECT').
 
         IF iv_package IS INITIAL.
-          ASSIGN COMPONENT 'DEVCLASS' OF STRUCTURE <ls_data_head> TO FIELD-SYMBOL(<ls_devclass>).
+          ASSIGN COMPONENT 'DEVCLASS' OF STRUCTURE <ls_data_head> TO <ls_devclass>.
           ASSERT sy-subrc = 0.
           lv_package = <ls_devclass>.
         ELSE.
@@ -185,9 +190,10 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
         TRY.
             check_exist_and_name_space( is_head    = <ls_data_head>
                                         iv_package = lv_package ).
-          CATCH cx_su2n_raise_events INTO DATA(lr_err).
-            DATA(ltext) = lr_err->get_text( ).
-            ii_log->add_error( iv_msg = ltext is_item = ms_item ).
+          CATCH cx_su2n_raise_events INTO lr_err.
+            ltext = lr_err->get_text( ).
+            ii_log->add_error( iv_msg = ltext
+                               is_item = ms_item ).
             rv_complete_status = if_abapgit_object=>c_complete_status-nothing.
             RETURN.
         ENDTRY.
@@ -200,7 +206,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
                 it_usobt = lt_usobt.
           CATCH cx_su2n_raise_events INTO lr_err.
             ltext = lr_err->get_text( ).
-            ii_log->add_error( iv_msg = ltext is_item = ms_item ).
+            ii_log->add_error( iv_msg = ltext
+                               is_item = ms_item ).
             rv_complete_status = if_abapgit_object=>c_complete_status-nothing.
         ENDTRY.
 
@@ -208,7 +215,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
           corr_insert( iv_package ).
         ENDIF.
 
-      CATCH cx_root INTO DATA(lx_error).
+      CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
                                       ix_previous = lx_error ).
     ENDTRY.
@@ -247,8 +254,10 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_locked.
-    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = CONV #( ms_item-obj_name )
-                                          iv_argument    = |{ ms_item-obj_type }{ ms_item-obj_name }| ).
+    DATA lv_lock_object TYPE string.
+    lv_lock_object = ms_item-obj_name.
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = lv_lock_object
+                                            iv_argument    = |{ ms_item-obj_type }{ ms_item-obj_name }| ).
   ENDMETHOD.
 
 
@@ -280,7 +289,10 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
       lr_data_usobx     TYPE REF TO data,
       lr_data_usobt     TYPE REF TO data,
       lr_data_usobx_ext TYPE REF TO data,
-      lr_data_usobt_ext TYPE REF TO data.
+      lr_data_usobt_ext TYPE REF TO data,
+      lr_err            TYPE REF TO cx_su2n_raise_events,
+      ltext             TYPE string,
+      lx_error          TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <ls_data_head>      TYPE any,
                    <lt_data_usobx_ext> TYPE ANY TABLE,
@@ -317,9 +329,10 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
                 et_usobt     = lt_usobt
                 et_usobx_ext = <lt_data_usobx_ext>
                 et_usobt_ext = <lt_data_usobt_ext>.
-          CATCH cx_su2n_raise_events INTO DATA(lr_err).
-            DATA(mtext) = lr_err->get_text( ).
-            ii_log->add_error( iv_msg = mtext is_item = ms_item ).
+          CATCH cx_su2n_raise_events INTO lr_err.
+            ltext = lr_err->get_text( ).
+            ii_log->add_error( iv_msg  = ltext
+                               is_item = ms_item ).
         ENDTRY.
 
         "HEAD
@@ -342,7 +355,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
         io_xml->add( iv_name = 'USOBT_EXT'
                      ig_data = <lt_data_usobt_ext> ).
 
-      CATCH cx_root INTO DATA(lx_error).
+      CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
                                       ix_previous = lx_error ).
     ENDTRY.
