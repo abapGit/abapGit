@@ -195,9 +195,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
             rv_complete_status = if_abapgit_object=>c_complete_status-nothing.
         ENDTRY.
 
-        IF iv_unittest IS INITIAL.
-          corr_insert( iv_package ).
-        ENDIF.
+        corr_insert( iv_package ).
 
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
