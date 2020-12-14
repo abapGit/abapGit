@@ -1376,7 +1376,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
                               COMPONENTS obj_type = <ls_overwrite>-obj_type
                                          obj_name = <ls_overwrite>-obj_name.
       IF sy-subrc <> 0 OR ls_overwrite-decision IS INITIAL.
-        zcx_abapgit_exception=>raise( |Overwrite odd package { <ls_overwrite>-obj_type } {
+        zcx_abapgit_exception=>raise( |Overwrite of package { <ls_overwrite>-obj_type } {
           <ls_overwrite>-obj_name } undecided| ).
       ENDIF.
 
