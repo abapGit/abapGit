@@ -11,6 +11,7 @@ CLASS ltcl_sap_package_mock DEFINITION FINAL FOR TESTING
       BEGIN OF c_package,
         existing     TYPE devclass VALUE '$EXISTING',
         non_existing TYPE devclass VALUE '$NON_EXISTING',
+        user         TYPE devclass VALUE '$USER',
       END OF c_package.
 
     METHODS:
@@ -35,11 +36,12 @@ CLASS ltcl_popups_mock DEFINITION FINAL FOR TESTING
 
   PUBLIC SECTION.
     TYPES:
-      ty_user_decision TYPE c LENGTH 1.
+      ty_user_decision TYPE string.
 
     CONSTANTS:
       BEGIN OF c_user_decision,
-        cancel TYPE ty_user_decision VALUE 'C',
+        cancel  TYPE ty_user_decision VALUE 'cancel',
+        confirm TYPE ty_user_decision VALUE 'confirm',
       END OF c_user_decision.
 
     INTERFACES:
@@ -52,14 +54,19 @@ CLASS ltcl_popups_mock DEFINITION FINAL FOR TESTING
 
       set_user_decision
         IMPORTING
-          iv_user_decision TYPE ty_user_decision.
+          iv_user_decision TYPE ty_user_decision,
+
+      set_package
+        IMPORTING
+          iv_package TYPE devclass.
 
   PRIVATE SECTION.
     DATA:
       BEGIN OF ms_called,
         popup_to_create_package TYPE abap_bool,
       END OF ms_called,
-      mv_user_decision TYPE ty_user_decision.
+      mv_user_decision TYPE ty_user_decision,
+      mv_package       TYPE devclass.
 
 ENDCLASS.
 
@@ -73,24 +80,31 @@ CLASS ltcl_create_package DEFINITION FINAL FOR TESTING
       mv_package          TYPE devclass,
       mx_error            TYPE REF TO zcx_abapgit_exception,
       mo_popups_mock      TYPE REF TO ltcl_popups_mock,
-      mo_sap_package_mock TYPE REF TO ltcl_sap_package_mock.
+      mo_sap_package_mock TYPE REF TO ltcl_sap_package_mock,
+      mv_created_package  TYPE devclass.
 
     METHODS:
       setup,
 
       raise_error_if_package_exists FOR TESTING RAISING cx_static_check,
-      popup_if_package_doesnt_exist FOR TESTING RAISING cx_static_check,
+      package_given_in_popup      FOR TESTING RAISING cx_static_check,
       package_not_created_when_canc FOR TESTING RAISING cx_static_check,
+      package_created_when_confirm  FOR TESTING RAISING cx_static_check,
 
       given_existing_package,
       given_non_existing_package,
       given_user_cancels_popup,
+      given_user_confirms_popup,
+      given_no_package,
+      given_package_by_user,
 
       when_create_package,
 
-      then_error_should_be_raised,
+      then_error_is_raised,
       then_popup_is_shown,
-      then_no_package_is_created.
+      then_no_package_is_created,
+      then_package_is_created,
+      then_no_error_is_raised.
 
 ENDCLASS.
 
@@ -109,16 +123,20 @@ CLASS ltcl_create_package IMPLEMENTATION.
 
     given_existing_package( ).
     when_create_package( ).
-    then_error_should_be_raised( ).
+    then_error_is_raised( ).
 
   ENDMETHOD.
 
 
-  METHOD popup_if_package_doesnt_exist.
+  METHOD package_given_in_popup.
 
-    given_non_existing_package( ).
+    given_no_package( ).
+    given_package_by_user( ).
+    given_user_confirms_popup( ).
     when_create_package( ).
+    then_no_error_is_raised( ).
     then_popup_is_shown( ).
+    then_package_is_created( ).
 
   ENDMETHOD.
 
@@ -128,7 +146,19 @@ CLASS ltcl_create_package IMPLEMENTATION.
     given_non_existing_package( ).
     given_user_cancels_popup( ).
     when_create_package( ).
+    then_popup_is_shown( ).
     then_no_package_is_created( ).
+
+  ENDMETHOD.
+
+
+  METHOD package_created_when_confirm.
+
+    given_non_existing_package( ).
+    given_user_confirms_popup( ).
+    when_create_package( ).
+    then_popup_is_shown( ).
+    then_package_is_created( ).
 
   ENDMETHOD.
 
@@ -144,7 +174,7 @@ CLASS ltcl_create_package IMPLEMENTATION.
         ii_sap_package = mo_sap_package_mock ).
 
     TRY.
-        zcl_abapgit_services_basis=>create_package( mv_package ).
+        mv_created_package = zcl_abapgit_services_basis=>create_package( mv_package ).
       CATCH zcx_abapgit_exception INTO mx_error.
     ENDTRY.
 
@@ -165,9 +195,16 @@ CLASS ltcl_create_package IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD then_error_should_be_raised.
+  METHOD then_error_is_raised.
 
     cl_abap_unit_assert=>assert_bound( mx_error ).
+
+  ENDMETHOD.
+
+
+  METHOD then_no_error_is_raised.
+
+    cl_abap_unit_assert=>assert_not_bound( mx_error ).
 
   ENDMETHOD.
 
@@ -189,6 +226,37 @@ CLASS ltcl_create_package IMPLEMENTATION.
   METHOD then_no_package_is_created.
 
     cl_abap_unit_assert=>assert_false( mo_sap_package_mock->get_created( ) ).
+
+  ENDMETHOD.
+
+
+  METHOD given_user_confirms_popup.
+
+    mo_popups_mock->set_user_decision( ltcl_popups_mock=>c_user_decision-confirm ).
+
+  ENDMETHOD.
+
+
+  METHOD then_package_is_created.
+
+    cl_abap_unit_assert=>assert_true( mo_sap_package_mock->get_created( ) ).
+    cl_abap_unit_assert=>assert_equals(
+        exp = mv_package
+        act = mv_created_package ).
+
+  ENDMETHOD.
+
+
+  METHOD given_no_package.
+
+    CLEAR: mv_package.
+
+  ENDMETHOD.
+
+
+  METHOD given_package_by_user.
+
+    mo_popups_mock->set_package( ltcl_sap_package_mock=>c_package-user ).
 
   ENDMETHOD.
 
@@ -303,9 +371,14 @@ CLASS ltcl_popups_mock IMPLEMENTATION.
 
     ms_called-popup_to_create_package = abap_true.
 
-    IF mv_user_decision = c_user_decision-cancel.
-      ev_create = abap_false.
-    ENDIF.
+    CASE mv_user_decision.
+      WHEN c_user_decision-cancel.
+        ev_create = abap_false.
+      WHEN c_user_decision-confirm.
+        ev_create = abap_true.
+      WHEN OTHERS.
+        cl_abap_unit_assert=>fail( ).
+    ENDCASE.
 
   ENDMETHOD.
 
@@ -342,6 +415,12 @@ CLASS ltcl_popups_mock IMPLEMENTATION.
   METHOD set_user_decision.
 
     mv_user_decision = iv_user_decision.
+
+  ENDMETHOD.
+
+  METHOD set_package.
+
+    mv_package = iv_package.
 
   ENDMETHOD.
 
