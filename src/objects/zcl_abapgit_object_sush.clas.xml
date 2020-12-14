@@ -11,26 +11,6 @@
     <FIXPT>X</FIXPT>
     <UNICODE>X</UNICODE>
    </VSEOCLASS>
-   <TPOOL>
-    <item>
-     <ID>I</ID>
-     <KEY>001</KEY>
-     <ENTRY>Führende Anwendung für das Objekt &amp;1 existiert nicht.</ENTRY>
-     <LENGTH>88</LENGTH>
-    </item>
-    <item>
-     <ID>I</ID>
-     <KEY>002</KEY>
-     <ENTRY>Führende Anwendung für das Objekt &amp;1 existiert nicht im Paket &amp;2.</ENTRY>
-     <LENGTH>110</LENGTH>
-    </item>
-    <item>
-     <ID>I</ID>
-     <KEY>003</KEY>
-     <ENTRY>Namensraum für das Objekt &amp;1 (Type SUSH) ist in einer SAP Cloud Platform nicht erlaubt.</ENTRY>
-     <LENGTH>132</LENGTH>
-    </item>
-   </TPOOL>
    <DESCRIPTIONS>
     <SEOCOMPOTX>
      <CLSNAME>ZCL_ABAPGIT_OBJECT_SUSH</CLSNAME>

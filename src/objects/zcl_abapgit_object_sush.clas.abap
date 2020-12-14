@@ -45,7 +45,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
         lo_su22->if_su22_adt_object~check( EXPORTING id_mode   = '02'
                                            CHANGING  cs_head   = ls_su22_head ).
       CATCH cx_su2n_raise_events.
-        lv_text = 'Lead application of object &1 does not exist'(001).
+        lv_text = 'Lead application of object &1 does not exist' ##NO_TEXT.
         REPLACE '&1' WITH is_head-name INTO lv_text.
         lv_text1 = lv_text(50).
         lv_text2 = lv_text+50(50).
@@ -58,7 +58,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
     lo_appl->get_data( EXPORTING is_key   = ls_key
                        IMPORTING es_head  = ls_head ).
     IF ls_head-devclass <> iv_package.
-      lv_text = 'Lead application of object &1 does not exist package &2'(002).
+      lv_text = 'Lead application of object &1 does not exist package &2' ##NO_TEXT.
       REPLACE '&1' WITH is_head-name INTO lv_text.
       REPLACE '&2' WITH iv_package INTO lv_text.
       lv_text1 = lv_text(50).
