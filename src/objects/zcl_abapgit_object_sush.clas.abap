@@ -183,8 +183,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
 
         " check the existence and name space for Cloud Platform ABAP Environment in customer system
         TRY.
-            check_exist_and_name_space( EXPORTING is_head    = <ls_data_head>
-                                                  iv_package = lv_package ).
+            check_exist_and_name_space( is_head    = <ls_data_head>
+                                        iv_package = lv_package ).
           CATCH cx_su2n_raise_events INTO DATA(lr_err).
             DATA(ltext) = lr_err->get_text( ).
             ii_log->add_error( iv_msg = ltext is_item = ms_item ).
