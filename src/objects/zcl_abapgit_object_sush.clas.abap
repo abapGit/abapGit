@@ -11,63 +11,12 @@ CLASS zcl_abapgit_object_sush DEFINITION
 
   PROTECTED SECTION.
 
-  PRIVATE SECTION.
-
-    METHODS check_exist_and_name_space
-      IMPORTING
-        !io_su22    TYPE REF TO cl_su22_adt_object OPTIONAL
-        !is_head    TYPE if_su22_adt_object=>ts_su2x_head
-        !iv_package TYPE devclass
-      RAISING
-        cx_su2n_raise_events .
+private section.
 ENDCLASS.
 
 
 
 CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
-
-
-  METHOD check_exist_and_name_space.
-    DATA:
-      lo_appl      TYPE REF TO cl_su22_appl,
-      ls_key       TYPE usobkey,
-      ld_msg       TYPE string,
-      lv_text(100) TYPE c,
-      lv_text1     TYPE symsgv,
-      lv_text2     TYPE symsgv,
-      ls_head      TYPE cl_su2x=>ts_head,
-      lo_su22      TYPE REF TO cl_su22_adt_object,
-      ls_su22_head TYPE if_su22_adt_object=>ts_su2x_head.
-
-    CREATE OBJECT lo_su22.
-    ls_su22_head = is_head.
-    TRY.
-        lo_su22->if_su22_adt_object~check( EXPORTING id_mode   = '02'
-                                           CHANGING  cs_head   = ls_su22_head ).
-      CATCH cx_su2n_raise_events.
-        lv_text = 'Lead application of object &1 does not exist'. "#EC *
-        REPLACE '&1' WITH is_head-name INTO lv_text.
-        lv_text1 = lv_text(50).
-        lv_text2 = lv_text+50(50).
-        MESSAGE s471(s#) WITH lv_text1 lv_text2 INTO ld_msg.
-        RAISE EXCEPTION TYPE cx_su2n_raise_events EXPORTING textid = cl_su2x=>convert_to_exception( ).
-    ENDTRY.
-
-    MOVE-CORRESPONDING is_head TO ls_key.
-    CREATE OBJECT lo_appl.
-    lo_appl->get_data( EXPORTING is_key   = ls_key
-                       IMPORTING es_head  = ls_head ).
-    IF ls_head-devclass <> iv_package.
-      lv_text = 'Lead application of object &1 does not exist package &2'. "#EC *
-      REPLACE '&1' WITH is_head-name INTO lv_text.
-      REPLACE '&2' WITH iv_package INTO lv_text.
-      lv_text1 = lv_text(50).
-      lv_text2 = lv_text+50(50).
-      MESSAGE s471(s#) WITH lv_text1 lv_text2 INTO ld_msg.
-      RAISE EXCEPTION TYPE cx_su2n_raise_events EXPORTING textid = cl_su2x=>convert_to_exception( ).
-    ENDIF.
-
-  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -100,30 +49,22 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
     DATA:
       ls_key            TYPE usobkey,
       lo_su22           TYPE REF TO object,
-      lr_data_head      TYPE REF TO data,
+      lo_appl           TYPE REF TO object,
       lt_usobx          TYPE usobx_t,
       lt_usobt          TYPE usobt_t,
+      lr_appl_head      TYPE REF TO data,
+      lr_data_head      TYPE REF TO data,
       lr_data_usobx     TYPE REF TO data,
       lr_data_usobt     TYPE REF TO data,
       lr_data_usobx_ext TYPE REF TO data,
       lr_data_usobt_ext TYPE REF TO data,
-      lv_package        TYPE devclass,
-      lr_err            TYPE REF TO cx_su2n_raise_events,
-      lv_text           TYPE string,
-      lx_error          TYPE REF TO cx_root.
+      lr_err            TYPE REF TO cx_static_check.
 
-    FIELD-SYMBOLS: <lt_data_head>      TYPE ANY TABLE,
-                   <ls_data_head>      TYPE any,
+    FIELD-SYMBOLS: <ls_data_head>      TYPE any,
+                   <ls_appl_head>      TYPE any,
                    <lt_data_usobx_ext> TYPE ANY TABLE,
-                   <ls_data_usobx_ext> TYPE any,
                    <lt_data_usobt_ext> TYPE ANY TABLE,
-                   <ls_data_usobt_ext> TYPE any,
-                   <lt_field>          TYPE any.
-
-    FIELD-SYMBOLS: <ls_head_source>      TYPE any,
-                   <ls_usobx_ext_source> TYPE any,
-                   <ls_usobt_ext_source> TYPE any,
-                   <ls_devclass>         TYPE any.
+                   <ls_devclass>       TYPE any.
 
     ASSERT NOT ms_item-obj_name IS INITIAL.
 
@@ -133,11 +74,9 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
 
         CREATE DATA lr_data_usobx_ext TYPE ('IF_SU22_ADT_OBJECT=>TT_SU2X_X').
         ASSIGN lr_data_usobx_ext->* TO <lt_data_usobx_ext>.
-        ASSIGN lr_data_usobx_ext->* TO <ls_data_usobx_ext>.
 
         CREATE DATA lr_data_usobt_ext TYPE ('IF_SU22_ADT_OBJECT=>TT_SU2X_T').
         ASSIGN lr_data_usobt_ext->* TO <lt_data_usobt_ext>.
-        ASSIGN lr_data_usobt_ext->* TO <ls_data_usobt_ext>.
 
         "HEAD
         io_xml->read( EXPORTING iv_name = 'HEAD'
@@ -162,25 +101,35 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
         CREATE OBJECT lo_su22
           TYPE ('CL_SU22_ADT_OBJECT').
 
-        IF iv_package IS INITIAL.
-          ASSIGN COMPONENT 'DEVCLASS' OF STRUCTURE <ls_data_head> TO <ls_devclass>.
-          ASSERT sy-subrc = 0.
-          lv_package = <ls_devclass>.
-        ELSE.
-          lv_package = iv_package.
-        ENDIF.
-
         " check if lead application exists
         TRY.
-            check_exist_and_name_space( is_head    = <ls_data_head>
-                                        iv_package = lv_package ).
-          CATCH cx_su2n_raise_events INTO lr_err.
-            lv_text = lr_err->get_text( ).
-            ii_log->add_error( iv_msg  = lv_text
-                               is_item = ms_item ).
-            rv_complete_status = if_abapgit_object=>c_complete_status-nothing.
-            RETURN.
+            CALL METHOD lo_su22->('IF_SU22_ADT_OBJECT~CHECK')
+              EXPORTING
+                id_mode = '02'
+              CHANGING
+                cs_head = <ls_data_head>.
+          CATCH cx_static_check INTO lr_err.
+            zcx_abapgit_exception=>raise( |Lead application of object { ms_item-obj_name } does not exist| ).
         ENDTRY.
+
+        MOVE-CORRESPONDING <ls_data_head> TO ls_key.
+        CREATE DATA lr_appl_head TYPE ('CL_SU2X=>TS_HEAD').
+        ASSIGN lr_appl_head->* TO <ls_appl_head>.
+
+        CREATE OBJECT lo_appl
+            TYPE ('CL_SU22_APPL').
+
+        CALL METHOD lo_appl->('GET_DATA')
+          EXPORTING
+            is_key  = ls_key
+          IMPORTING
+            es_head = <ls_appl_head>.
+
+        ASSIGN COMPONENT 'DEVCLASS' OF STRUCTURE <ls_appl_head> TO <ls_devclass>.
+
+        IF <ls_devclass> <> iv_package.
+          zcx_abapgit_exception=>raise( |Lead application of object { ms_item-obj_name } does not exist in package { <ls_devclass> }| ).
+        ENDIF.
 
         TRY.
             CALL METHOD lo_su22->('IF_SU22_ADT_OBJECT~UPDATE')
@@ -188,18 +137,16 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
                 is_head  = <ls_data_head>
                 it_usobx = lt_usobx
                 it_usobt = lt_usobt.
-          CATCH cx_su2n_raise_events INTO lr_err.
-            lv_text = lr_err->get_text( ).
-            ii_log->add_error( iv_msg  = lv_text
-                               is_item = ms_item ).
-            rv_complete_status = if_abapgit_object=>c_complete_status-nothing.
+          CATCH cx_static_check INTO lr_err.
+            zcx_abapgit_exception=>raise( iv_text     = lr_err->get_text( )
+                                          ix_previous = lr_err ).
         ENDTRY.
 
         corr_insert( iv_package ).
 
-      CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
-                                      ix_previous = lx_error ).
+      CATCH cx_static_check INTO lr_err.
+        zcx_abapgit_exception=>raise( iv_text     = lr_err->get_text( )
+                                      ix_previous = lr_err ).
     ENDTRY.
 
   ENDMETHOD.
@@ -272,15 +219,13 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
       lr_data_usobt     TYPE REF TO data,
       lr_data_usobx_ext TYPE REF TO data,
       lr_data_usobt_ext TYPE REF TO data,
-      lr_err            TYPE REF TO cx_su2n_raise_events,
+      lr_err            TYPE REF TO cx_static_check,
       lv_text           TYPE string,
       lx_error          TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <ls_data_head>      TYPE any,
                    <lt_data_usobx_ext> TYPE ANY TABLE,
-                   <ls_data_usobx_ext> TYPE any,
                    <lt_data_usobt_ext> TYPE ANY TABLE,
-                   <ls_data_usobt_ext> TYPE any,
                    <lt_field>          TYPE any,
                    <lv_comp>           LIKE LINE OF lt_clr_comps.
 
@@ -292,11 +237,9 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
 
         CREATE DATA lr_data_usobx_ext TYPE ('IF_SU22_ADT_OBJECT=>TT_SU2X_X').
         ASSIGN lr_data_usobx_ext->* TO <lt_data_usobx_ext>.
-        ASSIGN lr_data_usobx_ext->* TO <ls_data_usobx_ext>.
 
         CREATE DATA lr_data_usobt_ext TYPE ('IF_SU22_ADT_OBJECT=>TT_SU2X_T').
         ASSIGN lr_data_usobt_ext->* TO <lt_data_usobt_ext>.
-        ASSIGN lr_data_usobt_ext->* TO <ls_data_usobt_ext>.
 
         CREATE OBJECT lo_su22
           TYPE ('CL_SU22_ADT_OBJECT').
@@ -311,10 +254,9 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
                 et_usobt     = lt_usobt
                 et_usobx_ext = <lt_data_usobx_ext>
                 et_usobt_ext = <lt_data_usobt_ext>.
-          CATCH cx_su2n_raise_events INTO lr_err.
-            lv_text = lr_err->get_text( ).
-            ii_log->add_error( iv_msg  = lv_text
-                               is_item = ms_item ).
+          CATCH cx_static_check INTO lr_err.
+            zcx_abapgit_exception=>raise( iv_text     = lr_err->get_text( )
+                                          ix_previous = lr_err ).
         ENDTRY.
 
         "HEAD
