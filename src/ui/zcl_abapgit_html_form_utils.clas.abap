@@ -104,14 +104,16 @@ CLASS zcl_abapgit_html_form_utils IMPLEMENTATION.
   METHOD is_empty.
 
     DATA:
-      lv_value TYPE string,
-      lv_rows  TYPE i,
-      lv_row   TYPE i.
+      lt_fields TYPE zif_abapgit_html_form=>ty_fields,
+      lv_value  TYPE string,
+      lv_rows   TYPE i,
+      lv_row    TYPE i.
 
-    FIELD-SYMBOLS <ls_field> TYPE zif_abapgit_html_form=>ty_field.
+    FIELD-SYMBOLS <ls_field> LIKE LINE OF lt_fields.
 
     rv_empty = abap_true.
-    LOOP AT mo_form->get_fields( ) ASSIGNING <ls_field> WHERE type <> zif_abapgit_html_form=>c_field_type-field_group.
+    lt_fields = mo_form->get_fields( ).
+    LOOP AT lt_fields ASSIGNING <ls_field> WHERE type <> zif_abapgit_html_form=>c_field_type-field_group.
       lv_value = condense(
         val = io_form_data->get( <ls_field>-name )
         del = ` ` ).
@@ -149,20 +151,22 @@ CLASS zcl_abapgit_html_form_utils IMPLEMENTATION.
   METHOD normalize.
 
     DATA:
-      lv_value TYPE string,
-      lv_rows  TYPE i,
-      lv_row   TYPE i,
-      lv_len   TYPE i.
+      lt_fields TYPE zif_abapgit_html_form=>ty_fields,
+      lv_value  TYPE string,
+      lv_rows   TYPE i,
+      lv_row    TYPE i,
+      lv_len    TYPE i.
 
-    FIELD-SYMBOLS <ls_field> TYPE zif_abapgit_html_form=>ty_field.
+    FIELD-SYMBOLS <ls_field> LIKE LINE OF lt_fields.
 
     CREATE OBJECT ro_form_data.
 
-    IF io_form_data->is_empty( ).
+    IF io_form_data->is_empty( ) = abap_true.
       RETURN.
     ENDIF.
 
-    LOOP AT mo_form->get_fields( ) ASSIGNING <ls_field> WHERE type <> zif_abapgit_html_form=>c_field_type-field_group.
+    lt_fields = mo_form->get_fields( ).
+    LOOP AT lt_fields ASSIGNING <ls_field> WHERE type <> zif_abapgit_html_form=>c_field_type-field_group.
       CLEAR lv_value.
       lv_value = io_form_data->get( <ls_field>-name ).
 
@@ -225,13 +229,17 @@ CLASS zcl_abapgit_html_form_utils IMPLEMENTATION.
 
   METHOD validate.
 
-    DATA lv_value TYPE string.
-    DATA lv_number TYPE i.
-    FIELD-SYMBOLS <ls_field> TYPE zif_abapgit_html_form=>ty_field.
+    DATA:
+      lt_fields TYPE zif_abapgit_html_form=>ty_fields,
+      lv_value  TYPE string,
+      lv_number TYPE i.
+
+    FIELD-SYMBOLS <ls_field> LIKE LINE OF lt_fields.
 
     CREATE OBJECT ro_validation_log.
 
-    LOOP AT mo_form->get_fields( ) ASSIGNING <ls_field>.
+    lt_fields = mo_form->get_fields( ).
+    LOOP AT lt_fields ASSIGNING <ls_field>.
       lv_value = io_form_data->get( <ls_field>-name ).
       IF <ls_field>-required IS NOT INITIAL AND lv_value IS INITIAL.
         ro_validation_log->set(
