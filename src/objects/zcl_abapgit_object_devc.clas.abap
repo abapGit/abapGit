@@ -782,7 +782,7 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
         object_invalid   = 1
         unexpected_error = 2
         OTHERS           = 3 ).
-    IF sy-subrc <> 0.'
+    IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
