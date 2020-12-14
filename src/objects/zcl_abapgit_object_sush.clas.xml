@@ -16,7 +16,7 @@
      <CLSNAME>ZCL_ABAPGIT_OBJECT_SUSH</CLSNAME>
      <CMPNAME>CHECK_EXIST_AND_NAME_SPACE</CMPNAME>
      <LANGU>E</LANGU>
-     <DESCRIPT>check name space for Clound platform in customer system</DESCRIPT>
+     <DESCRIPT>check if lead application exists</DESCRIPT>
     </SEOCOMPOTX>
    </DESCRIPTIONS>
   </asx:values>

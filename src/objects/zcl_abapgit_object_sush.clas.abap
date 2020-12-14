@@ -45,7 +45,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
         lo_su22->if_su22_adt_object~check( EXPORTING id_mode   = '02'
                                            CHANGING  cs_head   = ls_su22_head ).
       CATCH cx_su2n_raise_events.
-        lv_text = 'Lead application of object &1 does not exist' ##NO_TEXT.
+        lv_text = 'Lead application of object &1 does not exist'. "#EC *
         REPLACE '&1' WITH is_head-name INTO lv_text.
         lv_text1 = lv_text(50).
         lv_text2 = lv_text+50(50).
@@ -58,7 +58,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
     lo_appl->get_data( EXPORTING is_key   = ls_key
                        IMPORTING es_head  = ls_head ).
     IF ls_head-devclass <> iv_package.
-      lv_text = 'Lead application of object &1 does not exist package &2' ##NO_TEXT.
+      lv_text = 'Lead application of object &1 does not exist package &2'. "#EC *
       REPLACE '&1' WITH is_head-name INTO lv_text.
       REPLACE '&2' WITH iv_package INTO lv_text.
       lv_text1 = lv_text(50).
@@ -109,7 +109,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
       lr_data_usobt_ext TYPE REF TO data,
       lv_package        TYPE devclass,
       lr_err            TYPE REF TO cx_su2n_raise_events,
-      ltext             TYPE string,
+      lv_text           TYPE string,
       lx_error          TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <lt_data_head>      TYPE ANY TABLE,
@@ -170,13 +170,13 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
           lv_package = iv_package.
         ENDIF.
 
-        " check the existence of lead application
+        " check if lead application exists
         TRY.
             check_exist_and_name_space( is_head    = <ls_data_head>
                                         iv_package = lv_package ).
           CATCH cx_su2n_raise_events INTO lr_err.
-            ltext = lr_err->get_text( ).
-            ii_log->add_error( iv_msg = ltext
+            lv_text = lr_err->get_text( ).
+            ii_log->add_error( iv_msg  = lv_text
                                is_item = ms_item ).
             rv_complete_status = if_abapgit_object=>c_complete_status-nothing.
             RETURN.
@@ -189,8 +189,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
                 it_usobx = lt_usobx
                 it_usobt = lt_usobt.
           CATCH cx_su2n_raise_events INTO lr_err.
-            ltext = lr_err->get_text( ).
-            ii_log->add_error( iv_msg = ltext
+            lv_text = lr_err->get_text( ).
+            ii_log->add_error( iv_msg  = lv_text
                                is_item = ms_item ).
             rv_complete_status = if_abapgit_object=>c_complete_status-nothing.
         ENDTRY.
@@ -273,7 +273,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
       lr_data_usobx_ext TYPE REF TO data,
       lr_data_usobt_ext TYPE REF TO data,
       lr_err            TYPE REF TO cx_su2n_raise_events,
-      ltext             TYPE string,
+      lv_text           TYPE string,
       lx_error          TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <ls_data_head>      TYPE any,
@@ -312,8 +312,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
                 et_usobx_ext = <lt_data_usobx_ext>
                 et_usobt_ext = <lt_data_usobt_ext>.
           CATCH cx_su2n_raise_events INTO lr_err.
-            ltext = lr_err->get_text( ).
-            ii_log->add_error( iv_msg  = ltext
+            lv_text = lr_err->get_text( ).
+            ii_log->add_error( iv_msg  = lv_text
                                is_item = ms_item ).
         ENDTRY.
 
