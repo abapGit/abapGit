@@ -11,7 +11,7 @@ CLASS zcl_abapgit_object_sush DEFINITION
 
   PROTECTED SECTION.
 
-private section.
+  PRIVATE SECTION.
 ENDCLASS.
 
 
