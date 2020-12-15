@@ -1,14 +1,15 @@
-CLASS zcl_abapgit_object_sush DEFINITION
-  PUBLIC
-  INHERITING FROM zcl_abapgit_objects_super
-  FINAL
-  CREATE PUBLIC .
+class ZCL_ABAPGIT_OBJECT_SUSH definition
+  public
+  inheriting from ZCL_ABAPGIT_OBJECTS_SUPER
+  final
+  create public .
 
-  PUBLIC SECTION.
+public section.
 
-    INTERFACES zif_abapgit_object .
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
+  interfaces ZIF_ABAPGIT_OBJECT .
 
+  aliases MO_FILES
+    for ZIF_ABAPGIT_OBJECT~MO_FILES .
   PROTECTED SECTION.
 
   PRIVATE SECTION.
@@ -20,7 +21,19 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown.
+    DATA ls_key TYPE usobkey.
+
+    ls_key = ms_item-obj_name.
+
+    SELECT SINGLE modifier FROM usob_sm INTO rv_user
+
+      WHERE name = ls_key-name AND type = ls_key-type.
+
+    IF sy-subrc <> 0.
+
+      rv_user = c_user_unknown.
+
+    ENDIF.
   ENDMETHOD.
 
 
