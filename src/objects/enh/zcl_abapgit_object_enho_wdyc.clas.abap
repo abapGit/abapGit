@@ -65,7 +65,6 @@ CLASS zcl_abapgit_object_enho_wdyc IMPLEMENTATION.
       CATCH cx_enh_root cx_static_check.
         zcx_abapgit_exception=>raise( 'error deserializing ENHO wdyconf' ).
     ENDTRY.
-    
   ENDMETHOD.
 
   METHOD zif_abapgit_object_enho~serialize.
