@@ -291,7 +291,19 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
           WITH KEY table_line = ls_item-devclass
           BINARY SEARCH.
         IF sy-subrc <> 0.
-          CLEAR ls_item-devclass.
+          IF ls_item-obj_type = 'DEVC'.
+            " If package already exist but is not included in the package hierarchy of
+            " the package assigned to the repository, then a manual change of the package
+            " is required i.e. setting a parent package to iv_devclass (or one of its
+            " subpackages). We don't this automatically since it's not clear where in the
+            " hierarchy the new package should be located. (#4108)
+            lv_msg = |Package { ls_item-devclass } is not a subpackage of { iv_devclass
+                     }. Assign { ls_item-devclass } to package hierarchy of { iv_devclass
+                     } and repeat process.|.
+            zcx_abapgit_exception=>raise( lv_msg ).
+          ELSE.
+            CLEAR ls_item-devclass.
+          ENDIF.
         ENDIF.
       ENDIF.
 
