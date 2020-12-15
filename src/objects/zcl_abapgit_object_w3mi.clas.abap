@@ -1,10 +1,14 @@
-CLASS zcl_abapgit_object_w3mi DEFINITION PUBLIC INHERITING FROM zcl_abapgit_object_w3super FINAL.
+CLASS zcl_abapgit_object_w3mi DEFINITION PUBLIC INHERITING FROM zcl_abapgit_object_w3xx_super FINAL.
 
   PROTECTED SECTION.
     METHODS: change_bdc_jump_data REDEFINITION.
+  PRIVATE SECTION.
 ENDCLASS.
 
+
+
 CLASS zcl_abapgit_object_w3mi IMPLEMENTATION.
+
 
   METHOD change_bdc_jump_data.
 
@@ -20,5 +24,4 @@ CLASS zcl_abapgit_object_w3mi IMPLEMENTATION.
     APPEND ls_bdcdata TO ct_bdcdata.
 
   ENDMETHOD.
-
 ENDCLASS.
