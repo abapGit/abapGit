@@ -26,13 +26,9 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
     ls_key = ms_item-obj_name.
 
     SELECT SINGLE modifier FROM usob_sm INTO rv_user
-
       WHERE name = ls_key-name AND type = ls_key-type.
-
     IF sy-subrc <> 0.
-
       rv_user = c_user_unknown.
-
     ENDIF.
   ENDMETHOD.
 
