@@ -3,9 +3,9 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOCLASS>
-    <CLSNAME>ZCL_ABAPGIT_OBJECTS_SAXX_SUPER</CLSNAME>
+    <CLSNAME>ZCL_ABAPGIT_OBJECT_W3XX_SUPER</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>SAXX - ABAP Channels</DESCRIPT>
+    <DESCRIPT>W3XX - Web Reporting/Internet Transaction Server</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
