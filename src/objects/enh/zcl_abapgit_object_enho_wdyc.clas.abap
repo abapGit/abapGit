@@ -49,13 +49,16 @@ CLASS zcl_abapgit_object_enho_wdyc IMPLEMENTATION.
 
         lo_wdyconf ?= li_tool.
 
-        CALL METHOD cl_wdr_cfg_persistence_utils=>comp_xml_to_tables
+        CALL METHOD cl_wdr_cfg_persistence_utils=>('COMP_XML_TO_TABLES')
           EXPORTING
             xml_content   = lv_xml
           IMPORTING
             expl_data_tab = lt_data.
 
-        lo_wdyconf->set_enhancement_data( lt_data ).
+* only works on new ABAP versions, parameters differ between versions
+        CALL METHOD lo_wdyconf->('SET_ENHANCEMENT_DATA')
+          EXPORTING
+            p_enh_data = lt_data.
 
         lo_wdyconf->if_enh_object~save( run_dark = abap_true ).
         lo_wdyconf->if_enh_object~unlock( ).
