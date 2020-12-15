@@ -201,6 +201,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
           lv_is_xml       TYPE abap_bool,
           lv_sub_fetched  TYPE abap_bool,
           lt_sub_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
+          lv_msg          TYPE string,
           lt_items_idx    TYPE zif_abapgit_definitions=>ty_items_ts,
           lt_state_idx    TYPE zif_abapgit_definitions=>ty_file_signatures_ts. " Sorted by path+filename
 
