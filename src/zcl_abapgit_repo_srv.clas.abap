@@ -359,7 +359,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     " check if url is already in use for a different package
     lt_repos = zcl_abapgit_persist_factory=>get_repo( )->list( ).
-    LOOP AT lt_repos ASSIGNING <ls_repo>.
+    LOOP AT lt_repos ASSIGNING <ls_repo> WHERE offline = abap_false.
 
       lv_check_repo_address = zcl_abapgit_url=>url_address( <ls_repo>-url ).
 
