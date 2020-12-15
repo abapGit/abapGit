@@ -26,19 +26,23 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
     DATA:
-      lo_su22 TYPE REF TO cl_su22_adt_object,
+      lo_su22 TYPE REF TO object,
       ls_key  TYPE        usobkey,
-      lx_msg  TYPE REF TO cx_su2n_raise_events.
+      lr_err  TYPE REF TO cx_static_check.
 
     ASSERT NOT ms_item-obj_name IS INITIAL.
-    CREATE OBJECT lo_su22.
 
     ls_key = ms_item-obj_name.
 
     TRY.
-        lo_su22->if_su22_adt_object~delete( iv_key       = ls_key
-                                            iv_cleanup   = abap_true   ).
-      CATCH cx_su2n_raise_events INTO lx_msg.
+        CREATE OBJECT lo_su22 TYPE ('CL_SU22_ADT_OBJECT').
+
+        CALL METHOD lo_su22->('IF_SU22_ADT_OBJECT~DELETE')
+          EXPORTING
+            iv_key     = ls_key
+            iv_cleanup = abap_true.
+      CATCH cx_static_check INTO lr_err.
+        zcx_abapgit_exception=>raise( iv_text = lr_err->get_text( ) ).
     ENDTRY.
 
   ENDMETHOD.
@@ -193,17 +197,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
-    DATA: ls_key          TYPE usobkey.
-
-    ls_key-type = ms_item-obj_type.
-    ls_key-name = ms_item-obj_name.
-    CALL FUNCTION 'SU2X_DIALOG_SNGL'
-      EXPORTING
-        is_key       = ls_key
-        id_area      = 'SU22'
-        id_actvt     = cl_suso=>gc_show
-        id_disp_only = abap_false.
-
   ENDMETHOD.
 
 
