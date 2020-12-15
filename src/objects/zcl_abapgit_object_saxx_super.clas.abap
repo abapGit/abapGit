@@ -1,4 +1,4 @@
-CLASS zcl_abapgit_objects_saxx_super DEFINITION
+CLASS zcl_abapgit_object_saxx_super DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_objects_super
   ABSTRACT
@@ -8,6 +8,7 @@ CLASS zcl_abapgit_objects_saxx_super DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_object .
+
   PROTECTED SECTION.
 
     METHODS get_persistence_class_name
@@ -22,6 +23,7 @@ CLASS zcl_abapgit_objects_saxx_super DEFINITION
           ABSTRACT
       RETURNING
         VALUE(rv_data_structure_name) TYPE string .
+
   PRIVATE SECTION.
 
     DATA mi_persistence TYPE REF TO if_wb_object_persist .
@@ -49,7 +51,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_saxx_super IMPLEMENTATION.
+CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
 
 
   METHOD create_channel_objects.
