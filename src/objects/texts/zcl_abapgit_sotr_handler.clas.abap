@@ -210,7 +210,7 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
     LOOP AT et_sotr_use ASSIGNING <ls_sotr_use> WHERE concept IS NOT INITIAL.
       lv_sotr = get_sotr_4_concept( <ls_sotr_use>-concept ).
 
-      IF io_xml IS BOUND AND 
+      IF io_xml IS BOUND AND
          io_xml->i18n_params( )-serialize_master_lang_only = abap_true AND 
          iv_language IS SUPPLIED.
         DELETE lv_sotr-entries WHERE langu <> iv_language.
