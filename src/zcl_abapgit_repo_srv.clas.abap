@@ -547,7 +547,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       CATCH zcx_abapgit_exception INTO lx_error.
         " If uninstall fails, repo needs a refresh to show which objects where deleted and which not
         io_repo->refresh( ).
-        zcx_abapgit_exception=>raise( lx_error->get_text( ) ).
+        RAISE EXCEPTION lx_error.
     ENDTRY.
 
     delete( io_repo ).
