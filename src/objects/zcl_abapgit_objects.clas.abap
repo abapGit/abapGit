@@ -1229,8 +1229,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       li_xml->i18n_params( iv_serialize_master_lang_only = abap_true ).
     ENDIF.
 
-    li_obj->serialize( io_xml      = li_xml
-                       iv_language = iv_language ).
+    li_obj->serialize( io_xml      = li_xml ).
     lo_files->add_xml( ii_xml      = li_xml
                        is_metadata = li_obj->get_metadata( ) ).
 

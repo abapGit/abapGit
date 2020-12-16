@@ -250,7 +250,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO IMPLEMENTATION.
       iv_object   = ms_item-obj_type
       iv_obj_name = ms_item-obj_name
       io_xml      = io_xml
-      iv_language = iv_language ).
+      iv_language = mv_language ).
 
   ENDMETHOD.
 ENDCLASS.

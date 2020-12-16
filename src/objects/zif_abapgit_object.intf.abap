@@ -16,7 +16,6 @@ INTERFACE zif_abapgit_object
   METHODS serialize
     IMPORTING
       !io_xml TYPE REF TO zif_abapgit_xml_output
-      !iv_language TYPE spras OPTIONAL
     RAISING
       zcx_abapgit_exception .
   METHODS deserialize
