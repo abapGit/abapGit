@@ -7,7 +7,7 @@ order: 220
 
 An abapGit Serializer is an ABAP class that supports create, read, update, and delete (CRUD) of objects of a given object type. In abapGit, read of an object is implemented in a 'serialize' method. Create and update are combined into a 'deserialize' method. There is a 'delete' method to remove an object from the system.
 
-All object serializers must implement interface `ZIF_ABAPGIT_OBJECT` and be named `ZCL_ABAPGIT_OBJECT_{type}`, where `{type}` is the corresponding SAP object type (`TADIR-OBJECT`). It's recommended to use `ZCL_ABAPGIT_OBJECTS_SUPER` as a super class since it provides several convenient methods.
+All object serializers must implement interface `ZIF_ABAPGIT_OBJECT` and be named `ZCL_ABAPGIT_OBJECT_{type}`, where `{type}` is the corresponding SAP object type (`TADIR-OBJECT`). As a description for the class, use `{type} - {description of type}` (for example, `TABL - Table`). It's recommended to use `ZCL_ABAPGIT_OBJECTS_SUPER` as a super class since it provides several convenient methods.
 
 In general, only SAP Standard APIs for retriving and updating object information shall be used. If that is not possible, try using `ZCL_ABAPGIT_OBJECTS_GENERIC` which handles any logical transport object.
 
@@ -138,6 +138,15 @@ Example: [`TABL`](https://github.com/abapGit/abapGit/blob/master/src/objects/zcl
 ## Testing
 
 When adding new serializers, add at least one test repository to organization [abapGit-tests](https://github.com/abapGit-tests) which the name of the object type in capitals (for example, [`TABL`](https://github.com/abapGit-tests/TABL). This test will be used by [abapGit Continuous Integration](https://github.com/abapGit/CI).
+
+Example (using `SUSH`):
+
+1. Go to https://github.com/abapGit-tests/SUSH and create a fork
+1. In your system (where you have the new `SUSH` class), start abapGit and create a new online repo for the URL of your fork (pick any local package like `$SUSH`).
+1. Add one `SUSH` object to this package (like `ZAG_UNIT_TEST`)
+1. Go back to abapGit and you should see the new object in the object list of the repo
+1. Stage everything and commit
+1. Go to your forked repo and create a pull request (at the top there's a section showing the delta to the original and a compare button which you can click to create the PR)
 
 ## Processing Order and Dependencies
 
