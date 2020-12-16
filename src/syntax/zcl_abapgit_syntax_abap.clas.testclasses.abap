@@ -23,9 +23,13 @@ CLASS ltcl_abapgit_syntax_abap IMPLEMENTATION.
 
   METHOD report_header.
 
+    DATA lv_act TYPE string.
+
+    lv_act = mo_cut->process_line( |REPORT zfoo.| ).
+
     cl_abap_unit_assert=>assert_equals(
       exp = |<span class="keyword">REPORT</span> zfoo.|
-      act = mo_cut->process_line( |REPORT zfoo.| ) ).
+      act = lv_act ).
 
   ENDMETHOD.
 
