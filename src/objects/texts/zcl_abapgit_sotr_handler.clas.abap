@@ -197,6 +197,10 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_sotr_use> TYPE sotr_use.
 
+    DATA lv_sotr TYPE zif_abapgit_definitions=>ty_sotr.
+
+    CHECK io_xml IS BOUND.
+
     " Known SOTR usage...
     " LIMU: CPUB, WAPP, WDYV
     " R3TR: ENHC, ENHO, ENHS, ENSC, SCGR, SMIF, WDYA, WEBI, WEBS
@@ -208,7 +212,8 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
     LOOP AT et_sotr_use ASSIGNING <ls_sotr_use> WHERE concept IS NOT INITIAL.
       lv_sotr = get_sotr_4_concept( <ls_sotr_use>-concept ).
 
-      IF io_xml IS BOUND AND io_xml->i18n_params( )-serialize_master_lang_only = abap_true AND iv_language IS NOT INITIAL.
+      IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true AND 
+         iv_language IS SUPPLIED.
         DELETE lv_sotr-entries WHERE langu <> iv_language.
         CHECK lv_sotr-entries IS NOT INITIAL.
       ENDIF.
@@ -216,12 +221,10 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
       INSERT lv_sotr INTO TABLE et_sotr.
     ENDLOOP.
 
-    IF io_xml IS BOUND.
-      io_xml->add( iv_name = 'SOTR'
-                   ig_data = et_sotr ).
-      io_xml->add( iv_name = 'SOTR_USE'
-                   ig_data = et_sotr_use ).
-    ENDIF.
+    io_xml->add( iv_name = 'SOTR'
+                  ig_data = et_sotr ).
+    io_xml->add( iv_name = 'SOTR_USE'
+                  ig_data = et_sotr_use ).
 
   ENDMETHOD.
 ENDCLASS.
