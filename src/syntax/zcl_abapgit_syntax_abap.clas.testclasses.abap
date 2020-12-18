@@ -86,7 +86,7 @@ CLASS ltcl_syntax_basic_logic IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals( exp = lv_line_exp
                                         act = lv_line_act
-                                        msg = | Error during formating: { lv_line }| ).
+                                        msg = |Error during formating: { lv_line }| ).
 
   ENDMETHOD.
 
