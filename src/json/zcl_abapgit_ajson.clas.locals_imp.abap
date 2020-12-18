@@ -7,18 +7,38 @@ CLASS lcl_utils DEFINITION FINAL.
 
     CLASS-METHODS normalize_path
       IMPORTING
-        iv_path        TYPE string
+        iv_path TYPE string
       RETURNING
         VALUE(rv_path) TYPE string.
     CLASS-METHODS split_path
       IMPORTING
-        iv_path             TYPE string
+        iv_path TYPE string
       RETURNING
         VALUE(rv_path_name) TYPE zcl_abapgit_ajson=>ty_path_name.
+    CLASS-METHODS validate_array_index
+      IMPORTING
+        iv_path TYPE string
+        iv_index TYPE string
+      RETURNING
+        VALUE(rv_index) TYPE i
+      RAISING
+        zcx_abapgit_ajson_error.
 
 ENDCLASS.
 
 CLASS lcl_utils IMPLEMENTATION.
+
+  METHOD validate_array_index.
+
+    IF NOT iv_index CO '0123456789'.
+      zcx_abapgit_ajson_error=>raise( |Cannot add non-numeric key [{ iv_index }] to array [{ iv_path }]| ).
+    ENDIF.
+    rv_index = iv_index.
+    IF rv_index = 0.
+      zcx_abapgit_ajson_error=>raise( |Cannot add zero key to array [{ iv_path }]| ).
+    ENDIF.
+
+  ENDMETHOD.
 
   METHOD normalize_path.
 
@@ -29,9 +49,8 @@ CLASS lcl_utils IMPLEMENTATION.
     IF rv_path+0(1) <> '/'.
       rv_path = '/' && rv_path.
     ENDIF.
-    IF substring(
-      val = rv_path
-      off = strlen( rv_path ) - 1 ) <> '/'.
+    IF substring( val = rv_path
+                  off = strlen( rv_path ) - 1 ) <> '/'.
       rv_path = rv_path && '/'.
     ENDIF.
 
@@ -48,28 +67,24 @@ CLASS lcl_utils IMPLEMENTATION.
       RETURN. " empty path is the alias for root item = '' + ''
     ENDIF.
 
-    IF substring(
-      val = iv_path
-      off = lv_len - 1 ) = '/'.
+    IF substring( val = iv_path
+                  off = lv_len - 1 ) = '/'.
       lv_trim_slash = 1. " ignore last '/'
     ENDIF.
 
-    lv_offs = find(
-      val = reverse( iv_path )
-      sub = '/'
-      off = lv_trim_slash ).
+    lv_offs = find( val = reverse( iv_path )
+                    sub = '/'
+                    off = lv_trim_slash ).
     IF lv_offs = -1.
       lv_offs  = lv_len. " treat whole string as the 'name' part
     ENDIF.
     lv_offs = lv_len - lv_offs.
 
-    rv_path_name-path = normalize_path( substring(
-      val = iv_path
-      len = lv_offs ) ).
-    rv_path_name-name = substring(
-      val = iv_path
-      off = lv_offs
-      len = lv_len - lv_offs - lv_trim_slash ).
+    rv_path_name-path = normalize_path( substring( val = iv_path
+                                                   len = lv_offs ) ).
+    rv_path_name-name = substring( val = iv_path
+                                   off = lv_offs
+                                   len = lv_len - lv_offs - lv_trim_slash ).
 
   ENDMETHOD.
 
@@ -85,7 +100,7 @@ CLASS lcl_json_parser DEFINITION FINAL.
 
     METHODS parse
       IMPORTING
-        iv_json             TYPE string
+        iv_json TYPE string
       RETURNING
         VALUE(rt_json_tree) TYPE zcl_abapgit_ajson=>ty_nodes_tt
       RAISING
@@ -100,7 +115,7 @@ CLASS lcl_json_parser DEFINITION FINAL.
 
     CLASS-METHODS join_path
       IMPORTING
-        it_stack       TYPE ty_stack_tt
+        it_stack TYPE ty_stack_tt
       RETURNING
         VALUE(rv_path) TYPE string.
 
@@ -110,23 +125,38 @@ CLASS lcl_json_parser DEFINITION FINAL.
       RAISING
         zcx_abapgit_ajson_error.
 
+    METHODS _parse
+      IMPORTING
+        iv_json TYPE string
+      RETURNING
+        VALUE(rt_json_tree) TYPE zcl_abapgit_ajson=>ty_nodes_tt
+      RAISING
+        zcx_abapgit_ajson_error cx_sxml_error.
+
 ENDCLASS.
 
 CLASS lcl_json_parser IMPLEMENTATION.
 
   METHOD parse.
+    DATA lx_sxml TYPE REF TO cx_sxml_error.
+    TRY.
+        rt_json_tree = _parse( iv_json ).
+      CATCH cx_sxml_error INTO lx_sxml.
+        zcx_abapgit_ajson_error=>raise( `SXML: ` && lx_sxml->get_text( ) ).
+    ENDTRY.
+  ENDMETHOD.
+
+  METHOD _parse.
 
     DATA lo_reader TYPE REF TO if_sxml_reader.
     DATA lr_stack_top LIKE LINE OF mt_stack.
     DATA lo_node TYPE REF TO if_sxml_node.
-    FIELD-SYMBOLS <ls_item> LIKE LINE OF rt_json_tree.
-    DATA lt_attributes TYPE if_sxml_attribute=>attributes.
-    DATA lo_attr LIKE LINE OF lt_attributes.
-    DATA lo_open TYPE REF TO if_sxml_open_element.
-    DATA lo_close TYPE REF TO if_sxml_close_element.
-    DATA lo_value TYPE REF TO if_sxml_value_node.
+    FIELD-SYMBOLS <item> LIKE LINE OF rt_json_tree.
 
     CLEAR mt_stack.
+    IF iv_json IS INITIAL.
+      RETURN.
+    ENDIF.
     lo_reader = cl_sxml_string_reader=>create( cl_abap_codepage=>convert_to( iv_json ) ).
 
     " TODO: self protection, check non-empty, check starting from object ...
@@ -140,34 +170,38 @@ CLASS lcl_json_parser IMPLEMENTATION.
 
       CASE lo_node->type.
         WHEN if_sxml_node=>co_nt_element_open.
+          DATA lt_attributes TYPE if_sxml_attribute=>attributes.
+          DATA lo_attr LIKE LINE OF lt_attributes.
+          DATA lo_open TYPE REF TO if_sxml_open_element.
           lo_open ?= lo_node.
 
-          APPEND INITIAL LINE TO rt_json_tree ASSIGNING <ls_item>.
+          APPEND INITIAL LINE TO rt_json_tree ASSIGNING <item>.
 
-          <ls_item>-type = to_lower( lo_open->qname-name ).
+          <item>-type = to_lower( lo_open->qname-name ).
 
           READ TABLE mt_stack INDEX 1 INTO lr_stack_top.
           IF sy-subrc = 0.
-            <ls_item>-path = join_path( mt_stack ).
+            <item>-path = join_path( mt_stack ).
             lr_stack_top->children = lr_stack_top->children + 1.
 
             IF lr_stack_top->type = 'array'.
-              <ls_item>-name = |{ lr_stack_top->children }|.
-              <ls_item>-index = lr_stack_top->children.
+              <item>-name = |{ lr_stack_top->children }|.
+              <item>-index = lr_stack_top->children.
             ELSE.
               lt_attributes = lo_open->get_attributes( ).
               LOOP AT lt_attributes INTO lo_attr.
                 IF lo_attr->qname-name = 'name' AND lo_attr->value_type = if_sxml_value=>co_vt_text.
-                  <ls_item>-name = lo_attr->get_value( ).
+                  <item>-name = lo_attr->get_value( ).
                 ENDIF.
               ENDLOOP.
             ENDIF.
           ENDIF.
 
-          GET REFERENCE OF <ls_item> INTO lr_stack_top.
+          GET REFERENCE OF <item> INTO lr_stack_top.
           INSERT lr_stack_top INTO mt_stack INDEX 1.
 
         WHEN if_sxml_node=>co_nt_element_close.
+          DATA lo_close TYPE REF TO if_sxml_close_element.
           lo_close ?= lo_node.
 
           READ TABLE mt_stack INDEX 1 INTO lr_stack_top.
@@ -177,9 +211,10 @@ CLASS lcl_json_parser IMPLEMENTATION.
           ENDIF.
 
         WHEN if_sxml_node=>co_nt_value.
+          DATA lo_value TYPE REF TO if_sxml_value_node.
           lo_value ?= lo_node.
 
-          <ls_item>-value = lo_value->get_value( ).
+          <item>-value = lo_value->get_value( ).
 
         WHEN OTHERS.
           raise( 'Unexpected node type' ).
@@ -194,19 +229,250 @@ CLASS lcl_json_parser IMPLEMENTATION.
 
   METHOD join_path.
 
-    FIELD-SYMBOLS <ls_ref> LIKE LINE OF it_stack.
+    FIELD-SYMBOLS <ref> LIKE LINE OF it_stack.
 
-    LOOP AT it_stack ASSIGNING <ls_ref>.
-      rv_path = <ls_ref>->name && '/' && rv_path.
+    LOOP AT it_stack ASSIGNING <ref>.
+      rv_path = <ref>->name && '/' && rv_path.
     ENDLOOP.
 
   ENDMETHOD.
 
   METHOD raise.
 
-    zcx_abapgit_ajson_error=>raise_json(
+    zcx_abapgit_ajson_error=>raise(
       iv_location = join_path( mt_stack )
       iv_msg      = |JSON PARSER: { iv_error } @ { join_path( mt_stack ) }| ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+**********************************************************************
+* SERIALIZER
+**********************************************************************
+
+CLASS lcl_json_serializer DEFINITION FINAL CREATE PRIVATE.
+  PUBLIC SECTION.
+
+    CLASS-METHODS stringify
+      IMPORTING
+        it_json_tree TYPE zcl_abapgit_ajson=>ty_nodes_ts
+        iv_indent TYPE i DEFAULT 0
+      RETURNING
+        VALUE(rv_json_string) TYPE string
+      RAISING
+        zcx_abapgit_ajson_error.
+
+    CLASS-METHODS class_constructor.
+
+  PRIVATE SECTION.
+
+    CLASS-DATA gv_comma_with_lf TYPE string.
+
+    DATA mt_json_tree TYPE zcl_abapgit_ajson=>ty_nodes_ts.
+    DATA mt_buffer TYPE string_table.
+    DATA mv_indent_step TYPE i.
+    DATA mv_level TYPE i.
+
+    CLASS-METHODS escape
+      IMPORTING
+        iv_unescaped TYPE string
+      RETURNING
+        VALUE(rv_escaped) TYPE string.
+
+    METHODS _stringify
+      RETURNING
+        VALUE(rv_json_string) TYPE string
+      RAISING
+        zcx_abapgit_ajson_error.
+
+    METHODS stringify_node
+      IMPORTING
+        is_node TYPE zcl_abapgit_ajson=>ty_node
+      RAISING
+        zcx_abapgit_ajson_error.
+
+    METHODS stringify_set
+      IMPORTING
+        iv_parent_path TYPE string
+        iv_array TYPE abap_bool
+      RAISING
+        zcx_abapgit_ajson_error.
+
+ENDCLASS.
+
+CLASS lcl_json_serializer IMPLEMENTATION.
+
+  METHOD class_constructor.
+    gv_comma_with_lf = ',' && cl_abap_char_utilities=>newline.
+  ENDMETHOD.
+
+  METHOD stringify.
+
+    DATA lo TYPE REF TO lcl_json_serializer.
+    CREATE OBJECT lo.
+    lo->mt_json_tree = it_json_tree.
+    lo->mv_indent_step = iv_indent.
+    rv_json_string = lo->_stringify( ).
+
+  ENDMETHOD.
+
+  METHOD _stringify.
+
+    FIELD-SYMBOLS <n> LIKE LINE OF mt_json_tree.
+    READ TABLE mt_json_tree ASSIGNING <n>
+      WITH KEY
+        path = ''
+        name = ''. " Root
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    stringify_node( <n> ).
+
+    rv_json_string = concat_lines_of( table = mt_buffer ).
+
+  ENDMETHOD.
+
+  METHOD stringify_node.
+
+    DATA lv_item TYPE string.
+    DATA lv_indent_prefix TYPE string.
+
+    IF mv_indent_step > 0.
+      lv_indent_prefix = repeat( val = ` `
+                                 occ = mv_indent_step * mv_level ).
+      lv_item = lv_indent_prefix.
+    ENDIF.
+
+    IF is_node-name IS NOT INITIAL AND is_node-index IS INITIAL. " Not root, not array item
+      IF mv_indent_step > 0.
+        lv_item = lv_item && |"{ is_node-name }": |.
+      ELSE.
+        lv_item = |"{ is_node-name }":|.
+      ENDIF.
+    ENDIF.
+
+    CASE is_node-type.
+      WHEN 'array'.
+        lv_item = lv_item && '['.
+      WHEN 'object'.
+        lv_item = lv_item && '{'.
+      WHEN 'str'.
+        lv_item = lv_item && |"{ escape( is_node-value ) }"|.
+      WHEN 'bool' OR 'num'.
+        lv_item = lv_item && is_node-value.
+      WHEN 'null'.
+        lv_item = lv_item && 'null'.
+      WHEN OTHERS.
+        zcx_abapgit_ajson_error=>raise(
+          iv_msg = |Unexpected type [{ is_node-type }]|
+          iv_location = is_node-path && is_node-name ).
+    ENDCASE.
+
+    IF mv_indent_step > 0 AND ( is_node-type = 'array' OR is_node-type = 'object' ) AND is_node-children > 0.
+      mv_level = mv_level + 1.
+      lv_item = lv_item && cl_abap_char_utilities=>newline.
+    ENDIF.
+
+    APPEND lv_item TO mt_buffer.
+
+    " finish complex item
+
+    IF is_node-type = 'array' OR is_node-type = 'object'.
+      DATA lv_children_path TYPE string.
+      DATA lv_tail TYPE string.
+
+      lv_children_path = is_node-path && is_node-name && '/'. " for root: path = '' and name = '', so result is '/'
+
+      CASE is_node-type.
+        WHEN 'array'.
+          IF is_node-children > 0.
+            stringify_set(
+              iv_parent_path = lv_children_path
+              iv_array       = abap_true ).
+          ENDIF.
+          lv_tail = ']'.
+        WHEN 'object'.
+          IF is_node-children > 0.
+            stringify_set(
+              iv_parent_path = lv_children_path
+              iv_array       = abap_false ).
+          ENDIF.
+          lv_tail = '}'.
+      ENDCASE.
+
+      IF mv_indent_step > 0 AND is_node-children > 0.
+        lv_tail = lv_indent_prefix && lv_tail.
+        mv_level = mv_level - 1.
+      ENDIF.
+      APPEND lv_tail TO mt_buffer.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD stringify_set.
+
+    DATA lv_tab_key TYPE string.
+    DATA lv_first_done TYPE abap_bool.
+    FIELD-SYMBOLS <n> LIKE LINE OF mt_json_tree.
+
+    IF iv_array = abap_true.
+      lv_tab_key = 'array_index'. " path + index
+    ELSE.
+      lv_tab_key = 'primary_key'. " path + name
+    ENDIF.
+
+    LOOP AT mt_json_tree ASSIGNING <n> USING KEY (lv_tab_key) WHERE path = iv_parent_path.
+      IF lv_first_done = abap_false.
+        lv_first_done = abap_true.
+      ELSEIF mv_indent_step > 0.
+        APPEND gv_comma_with_lf TO mt_buffer.
+      ELSE.
+        APPEND ',' TO mt_buffer.
+      ENDIF.
+      stringify_node( <n> ).
+    ENDLOOP.
+
+    IF mv_indent_step > 0 AND lv_first_done = abap_true. " only of items were in the list
+      APPEND cl_abap_char_utilities=>newline TO mt_buffer.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD escape.
+
+    rv_escaped = iv_unescaped.
+    IF rv_escaped CA |"\\\t\n\r|.
+      " TODO consider performance ...
+      " see also https://www.json.org/json-en.html
+      rv_escaped = replace(
+        val = rv_escaped
+        sub = '\'
+        with = '\\'
+        occ = 0 ).
+      rv_escaped = replace(
+        val = rv_escaped
+        sub = |\n|
+        with = '\n'
+        occ = 0 ).
+      rv_escaped = replace(
+        val = rv_escaped
+        sub = |\r|
+        with = '\r'
+        occ = 0 ).
+      rv_escaped = replace(
+        val = rv_escaped
+        sub = |\t|
+        with = '\t'
+        occ = 0 ).
+      rv_escaped = replace(
+        val = rv_escaped
+        sub = '"'
+        with = '\"'
+        occ = 0 ).
+
+    ENDIF.
 
   ENDMETHOD.
 
@@ -222,17 +488,17 @@ CLASS lcl_json_to_abap DEFINITION FINAL.
 
     METHODS find_loc
       IMPORTING
-        iv_path          TYPE string
-        iv_name          TYPE string OPTIONAL " not mandatory
+        iv_path TYPE string
+        iv_name TYPE string OPTIONAL " not mandatory
         iv_append_tables TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(rv_ref)    TYPE REF TO data
+        VALUE(r_ref) TYPE REF TO data
       RAISING
         zcx_abapgit_ajson_error.
 
     CLASS-METHODS bind
       CHANGING
-        cv_obj       TYPE any
+        c_obj TYPE any
         co_instance TYPE REF TO lcl_json_to_abap.
 
     METHODS to_abap
@@ -249,75 +515,75 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
 
   METHOD bind.
     CREATE OBJECT co_instance.
-    GET REFERENCE OF cv_obj INTO co_instance->mr_obj.
+    GET REFERENCE OF c_obj INTO co_instance->mr_obj.
   ENDMETHOD.
 
   METHOD to_abap.
 
-    DATA lv_ref TYPE REF TO data.
+    DATA lr_ref TYPE REF TO data.
     DATA lv_type TYPE c.
-    DATA lo_x TYPE REF TO cx_root.
-    DATA lv_y TYPE c LENGTH 4.
-    DATA lv_m TYPE c LENGTH 2.
-    DATA lv_d TYPE c LENGTH 2.
-
-    FIELD-SYMBOLS <ls_n> LIKE LINE OF it_nodes.
-    FIELD-SYMBOLS <lv_value> TYPE any.
+    DATA lx TYPE REF TO cx_root.
+    FIELD-SYMBOLS <n> LIKE LINE OF it_nodes.
+    FIELD-SYMBOLS <value> TYPE any.
 
     TRY.
-        LOOP AT it_nodes ASSIGNING <ls_n> USING KEY array_index.
-          lv_ref = find_loc(
-            iv_append_tables = abap_true
-            iv_path = <ls_n>-path
-            iv_name = <ls_n>-name ).
-          ASSIGN lv_ref->* TO <lv_value>.
+        LOOP AT it_nodes ASSIGNING <n> USING KEY array_index.
+          lr_ref = find_loc(
+          iv_append_tables = abap_true
+          iv_path = <n>-path
+          iv_name = <n>-name ).
+          ASSIGN lr_ref->* TO <value>.
           ASSERT sy-subrc = 0.
-          DESCRIBE FIELD <lv_value> TYPE lv_type.
+          DESCRIBE FIELD <value> TYPE lv_type.
 
-          CASE <ls_n>-type.
+          CASE <n>-type.
             WHEN 'null'.
-              " Do nothing
+            " Do nothing
             WHEN 'bool'.
-              <lv_value> = boolc( <ls_n>-value = 'true' ).
+              <value> = boolc( <n>-value = 'true' ).
             WHEN 'num'.
-              <lv_value> = <ls_n>-value.
+              <value> = <n>-value.
             WHEN 'str'.
-              IF lv_type = 'D' AND <ls_n>-value IS NOT INITIAL.
+              IF lv_type = 'D' AND <n>-value IS NOT INITIAL.
+                DATA lv_y TYPE c LENGTH 4.
+                DATA lv_m TYPE c LENGTH 2.
+                DATA lv_d TYPE c LENGTH 2.
+
                 FIND FIRST OCCURRENCE OF REGEX '^(\d{4})-(\d{2})-(\d{2})(T|$)'
-                  IN <ls_n>-value
-                  SUBMATCHES lv_y lv_m lv_d.
+                IN <n>-value
+                SUBMATCHES lv_y lv_m lv_d.
                 IF sy-subrc <> 0.
-                  zcx_abapgit_ajson_error=>raise_json(
-                    iv_msg      = 'Unexpected date format'
-                    iv_location = <ls_n>-path && <ls_n>-name ).
+                  zcx_abapgit_ajson_error=>raise(
+                  iv_msg      = 'Unexpected date format'
+                  iv_location = <n>-path && <n>-name ).
                 ENDIF.
-                CONCATENATE lv_y lv_m lv_d INTO <lv_value>.
+                CONCATENATE lv_y lv_m lv_d INTO <value>.
               ELSE.
-                <lv_value> = <ls_n>-value.
+                <value> = <n>-value.
               ENDIF.
             WHEN 'object'.
               IF NOT lv_type CO 'uv'.
-                zcx_abapgit_ajson_error=>raise_json(
-                  iv_msg      = 'Expected structure'
-                  iv_location = <ls_n>-path && <ls_n>-name ).
+                zcx_abapgit_ajson_error=>raise(
+                iv_msg      = 'Expected structure'
+                iv_location = <n>-path && <n>-name ).
               ENDIF.
             WHEN 'array'.
               IF NOT lv_type CO 'h'.
-                zcx_abapgit_ajson_error=>raise_json(
-                  iv_msg      = 'Expected table'
-                  iv_location = <ls_n>-path && <ls_n>-name ).
+                zcx_abapgit_ajson_error=>raise(
+                iv_msg      = 'Expected table'
+                iv_location = <n>-path && <n>-name ).
               ENDIF.
             WHEN OTHERS.
-              zcx_abapgit_ajson_error=>raise_json(
-                iv_msg      = |Unexpected JSON type [{ <ls_n>-type }]|
-                iv_location = <ls_n>-path && <ls_n>-name ).
+              zcx_abapgit_ajson_error=>raise(
+              iv_msg      = |Unexpected JSON type [{ <n>-type }]|
+              iv_location = <n>-path && <n>-name ).
           ENDCASE.
 
         ENDLOOP.
-      CATCH cx_sy_conversion_no_number INTO lo_x.
-        zcx_abapgit_ajson_error=>raise_json(
-          iv_msg      = |Source is not a number|
-          iv_location = <ls_n>-path && <ls_n>-name ).
+      CATCH cx_sy_conversion_no_number INTO lx.
+        zcx_abapgit_ajson_error=>raise(
+        iv_msg      = |Source is not a number|
+        iv_location = <n>-path && <n>-name ).
     ENDTRY.
 
   ENDMETHOD.
@@ -329,10 +595,10 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
     DATA lv_type TYPE c.
     DATA lv_size TYPE i.
     DATA lv_index TYPE i.
-    FIELD-SYMBOLS <ls_struc> TYPE any.
-    FIELD-SYMBOLS <lt_table> TYPE STANDARD TABLE.
-    FIELD-SYMBOLS <lv_value> TYPE any.
-    FIELD-SYMBOLS <lv_seg> LIKE LINE OF lt_path.
+    FIELD-SYMBOLS <struc> TYPE any.
+    FIELD-SYMBOLS <table> TYPE STANDARD TABLE.
+    FIELD-SYMBOLS <value> TYPE any.
+    FIELD-SYMBOLS <seg> LIKE LINE OF lt_path.
 
     SPLIT iv_path AT '/' INTO TABLE lt_path.
     DELETE lt_path WHERE table_line IS INITIAL.
@@ -340,58 +606,490 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
       APPEND iv_name TO lt_path.
     ENDIF.
 
-    rv_ref = mr_obj.
+    r_ref = mr_obj.
 
-    LOOP AT lt_path ASSIGNING <lv_seg>.
-      lv_trace = lv_trace && '/' && <lv_seg>.
-      <lv_seg> = to_upper( <lv_seg> ).
+    LOOP AT lt_path ASSIGNING <seg>.
+      lv_trace = lv_trace && '/' && <seg>.
+      <seg> = to_upper( <seg> ).
 
-      ASSIGN rv_ref->* TO <ls_struc>.
+      ASSIGN r_ref->* TO <struc>.
       ASSERT sy-subrc = 0.
-      DESCRIBE FIELD <ls_struc> TYPE lv_type.
+      DESCRIBE FIELD <struc> TYPE lv_type.
 
       IF lv_type CA 'lr'. " data/obj ref
         " TODO maybe in future
-        zcx_abapgit_ajson_error=>raise_json(
+        zcx_abapgit_ajson_error=>raise(
           iv_msg      = 'Cannot assign to ref'
           iv_location = lv_trace ).
 
       ELSEIF lv_type = 'h'. " table
-        IF NOT <lv_seg> CO '0123456789'.
-          zcx_abapgit_ajson_error=>raise_json(
+        IF NOT <seg> CO '0123456789'.
+          zcx_abapgit_ajson_error=>raise(
             iv_msg      = 'Need index to access tables'
             iv_location = lv_trace ).
         ENDIF.
-        lv_index = <lv_seg>.
-        ASSIGN rv_ref->* TO <lt_table>.
+        lv_index = <seg>.
+        ASSIGN r_ref->* TO <table>.
         ASSERT sy-subrc = 0.
 
-        lv_size = lines( <lt_table> ).
+        lv_size = lines( <table> ).
         IF iv_append_tables = abap_true AND lv_index = lv_size + 1.
-          APPEND INITIAL LINE TO <lt_table>.
+          APPEND INITIAL LINE TO <table>.
         ENDIF.
 
-        READ TABLE <lt_table> INDEX lv_index ASSIGNING <lv_value>.
+        READ TABLE <table> INDEX lv_index ASSIGNING <value>.
         IF sy-subrc <> 0.
-          zcx_abapgit_ajson_error=>raise_json(
+          zcx_abapgit_ajson_error=>raise(
             iv_msg      = 'Index not found in table'
             iv_location = lv_trace ).
         ENDIF.
 
       ELSEIF lv_type CA 'uv'. " structure
-        ASSIGN COMPONENT <lv_seg> OF STRUCTURE <ls_struc> TO <lv_value>.
+        ASSIGN COMPONENT <seg> OF STRUCTURE <struc> TO <value>.
         IF sy-subrc <> 0.
-          zcx_abapgit_ajson_error=>raise_json(
-            iv_msg      =  'Path not found'
+          zcx_abapgit_ajson_error=>raise(
+            iv_msg      = 'Path not found'
             iv_location = lv_trace ).
         ENDIF.
       ELSE.
-        zcx_abapgit_ajson_error=>raise_json(
+        zcx_abapgit_ajson_error=>raise(
           iv_msg = 'Target is not deep'
           iv_location = lv_trace ).
       ENDIF.
-      GET REFERENCE OF <lv_value> INTO rv_ref.
+      GET REFERENCE OF <value> INTO r_ref.
     ENDLOOP.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+**********************************************************************
+* ABAP_TO_JSON
+**********************************************************************
+
+CLASS lcl_abap_to_json DEFINITION FINAL.
+  PUBLIC SECTION.
+
+    CLASS-METHODS convert
+      IMPORTING
+        iv_data TYPE any
+        is_prefix TYPE zcl_abapgit_ajson=>ty_path_name OPTIONAL
+        iv_array_index TYPE i DEFAULT 0
+      RETURNING
+        VALUE(rt_nodes) TYPE zcl_abapgit_ajson=>ty_nodes_tt
+      RAISING
+        zcx_abapgit_ajson_error.
+
+    CLASS-METHODS insert_with_type
+      IMPORTING
+        iv_data TYPE any
+        iv_type TYPE string
+        is_prefix TYPE zcl_abapgit_ajson=>ty_path_name OPTIONAL
+        iv_array_index TYPE i DEFAULT 0
+      RETURNING
+        VALUE(rt_nodes) TYPE zcl_abapgit_ajson=>ty_nodes_tt
+      RAISING
+        zcx_abapgit_ajson_error.
+
+    CLASS-METHODS class_constructor.
+
+  PRIVATE SECTION.
+
+    CLASS-DATA gv_ajson_absolute_type_name TYPE string.
+
+    METHODS convert_any
+      IMPORTING
+        iv_data TYPE any
+        io_type TYPE REF TO cl_abap_typedescr
+        is_prefix TYPE zcl_abapgit_ajson=>ty_path_name
+        iv_index TYPE i DEFAULT 0
+      CHANGING
+        ct_nodes TYPE zcl_abapgit_ajson=>ty_nodes_tt
+      RAISING
+        zcx_abapgit_ajson_error.
+
+    METHODS convert_ajson
+      IMPORTING
+        io_json TYPE REF TO zcl_abapgit_ajson
+        is_prefix TYPE zcl_abapgit_ajson=>ty_path_name
+        iv_index TYPE i DEFAULT 0
+      CHANGING
+        ct_nodes TYPE zcl_abapgit_ajson=>ty_nodes_tt.
+
+    METHODS convert_value
+      IMPORTING
+        iv_data TYPE any
+        io_type TYPE REF TO cl_abap_typedescr
+        is_prefix TYPE zcl_abapgit_ajson=>ty_path_name
+        iv_index TYPE i DEFAULT 0
+      CHANGING
+        ct_nodes TYPE zcl_abapgit_ajson=>ty_nodes_tt
+      RAISING
+        zcx_abapgit_ajson_error.
+
+    METHODS convert_ref
+      IMPORTING
+        iv_data TYPE any
+        io_type TYPE REF TO cl_abap_typedescr
+        is_prefix TYPE zcl_abapgit_ajson=>ty_path_name
+        iv_index TYPE i DEFAULT 0
+      CHANGING
+        ct_nodes TYPE zcl_abapgit_ajson=>ty_nodes_tt
+      RAISING
+        zcx_abapgit_ajson_error.
+
+    METHODS convert_struc
+      IMPORTING
+        iv_data TYPE any
+        io_type TYPE REF TO cl_abap_typedescr
+        is_prefix TYPE zcl_abapgit_ajson=>ty_path_name
+        iv_index TYPE i DEFAULT 0
+      CHANGING
+        ct_nodes TYPE zcl_abapgit_ajson=>ty_nodes_tt
+        cs_root  TYPE zcl_abapgit_ajson=>ty_node OPTIONAL
+      RAISING
+        zcx_abapgit_ajson_error.
+
+    METHODS convert_table
+      IMPORTING
+        iv_data TYPE any
+        io_type TYPE REF TO cl_abap_typedescr
+        is_prefix TYPE zcl_abapgit_ajson=>ty_path_name
+        iv_index TYPE i DEFAULT 0
+      CHANGING
+        ct_nodes TYPE zcl_abapgit_ajson=>ty_nodes_tt
+      RAISING
+        zcx_abapgit_ajson_error.
+
+    METHODS insert_value_with_type
+      IMPORTING
+        iv_data TYPE any
+        iv_type TYPE string
+        io_type TYPE REF TO cl_abap_typedescr
+        is_prefix TYPE zcl_abapgit_ajson=>ty_path_name
+        iv_index TYPE i DEFAULT 0
+      CHANGING
+        ct_nodes TYPE zcl_abapgit_ajson=>ty_nodes_tt
+      RAISING
+        zcx_abapgit_ajson_error.
+
+ENDCLASS.
+
+CLASS lcl_abap_to_json IMPLEMENTATION.
+
+  METHOD class_constructor.
+
+    DATA lo_dummy TYPE REF TO zcl_abapgit_ajson.
+    DATA lo_type TYPE REF TO cl_abap_refdescr.
+    lo_type ?= cl_abap_typedescr=>describe_by_data( lo_dummy ).
+    gv_ajson_absolute_type_name = lo_type->get_referenced_type( )->absolute_name.
+
+  ENDMETHOD.
+
+  METHOD convert.
+
+    DATA lo_type TYPE REF TO cl_abap_typedescr.
+    DATA lo_converter TYPE REF TO lcl_abap_to_json.
+
+    lo_type = cl_abap_typedescr=>describe_by_data( iv_data ).
+    CREATE OBJECT lo_converter.
+
+    lo_converter->convert_any(
+      EXPORTING
+        iv_data   = iv_data
+        io_type   = lo_type
+        is_prefix = is_prefix
+        iv_index  = iv_array_index
+      CHANGING
+        ct_nodes = rt_nodes ).
+
+  ENDMETHOD.
+
+  METHOD convert_any.
+
+    CASE io_type->kind.
+      WHEN cl_abap_typedescr=>kind_elem.
+        convert_value(
+          EXPORTING
+            iv_data   = iv_data
+            io_type   = io_type
+            is_prefix = is_prefix
+            iv_index  = iv_index
+          CHANGING
+            ct_nodes = ct_nodes ).
+
+      WHEN cl_abap_typedescr=>kind_struct.
+        convert_struc(
+          EXPORTING
+            iv_data   = iv_data
+            io_type   = io_type
+            is_prefix = is_prefix
+            iv_index  = iv_index
+          CHANGING
+            ct_nodes = ct_nodes ).
+
+      WHEN cl_abap_typedescr=>kind_table.
+        convert_table(
+          EXPORTING
+            iv_data   = iv_data
+            io_type   = io_type
+            is_prefix = is_prefix
+            iv_index  = iv_index
+          CHANGING
+            ct_nodes = ct_nodes ).
+
+      WHEN OTHERS.
+
+        IF io_type->type_kind = cl_abap_typedescr=>typekind_dref.
+          convert_ref(
+            EXPORTING
+              iv_data   = iv_data
+              io_type   = io_type
+              is_prefix = is_prefix
+              iv_index  = iv_index
+            CHANGING
+              ct_nodes = ct_nodes ).
+
+        ELSEIF io_type->type_kind = cl_abap_typedescr=>typekind_oref
+          AND cl_abap_typedescr=>describe_by_object_ref( iv_data )->absolute_name = gv_ajson_absolute_type_name.
+          convert_ajson(
+            EXPORTING
+              io_json   = iv_data
+              is_prefix = is_prefix
+              iv_index  = iv_index
+            CHANGING
+              ct_nodes = ct_nodes ).
+        ELSE.
+          zcx_abapgit_ajson_error=>raise( |Unsupported type [{ io_type->type_kind
+            }] @{ is_prefix-path && is_prefix-name }| ).
+        ENDIF.
+
+    ENDCASE.
+
+  ENDMETHOD.
+
+  METHOD convert_ajson.
+
+    FIELD-SYMBOLS <n> LIKE LINE OF ct_nodes.
+
+    ct_nodes = io_json->mt_json_tree.
+
+    LOOP AT ct_nodes ASSIGNING <n>.
+      IF <n>-path IS INITIAL AND <n>-name IS INITIAL. " root node
+        <n>-path  = is_prefix-path.
+        <n>-name  = is_prefix-name.
+        <n>-index = iv_index.
+      ELSE.
+        <n>-path = is_prefix-path && is_prefix-name && <n>-path.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD convert_value.
+
+    FIELD-SYMBOLS <n> LIKE LINE OF ct_nodes.
+
+    APPEND INITIAL LINE TO ct_nodes ASSIGNING <n>.
+
+    <n>-path  = is_prefix-path.
+    <n>-name  = is_prefix-name.
+    <n>-index = iv_index.
+
+    IF io_type->absolute_name = '\TYPE-POOL=ABAP\TYPE=ABAP_BOOL' OR io_type->absolute_name = '\TYPE=XFELD'.
+      <n>-type = 'bool'.
+      IF iv_data IS NOT INITIAL.
+        <n>-value = 'true'.
+      ELSE.
+        <n>-value = 'false'.
+      ENDIF.
+    ELSEIF io_type->type_kind CO 'CNgXyDT'. " Char like, date/time, xstring
+      <n>-type = 'str'.
+      <n>-value = |{ iv_data }|.
+    ELSEIF io_type->type_kind CO 'bsI8PaeF'. " Numeric
+      <n>-type = 'num'.
+      <n>-value = |{ iv_data }|.
+    ELSE.
+      zcx_abapgit_ajson_error=>raise( |Unexpected elemetary type [{
+        io_type->type_kind }] @{ is_prefix-path && is_prefix-name }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD convert_ref.
+
+    FIELD-SYMBOLS <n> LIKE LINE OF ct_nodes.
+
+    APPEND INITIAL LINE TO ct_nodes ASSIGNING <n>.
+
+    <n>-path  = is_prefix-path.
+    <n>-name  = is_prefix-name.
+    <n>-index = iv_index.
+
+    IF iv_data IS INITIAL.
+      <n>-type  = 'null'.
+      <n>-value = 'null'.
+    ELSE.
+      " TODO support data references
+      zcx_abapgit_ajson_error=>raise( |Unexpected reference @{ is_prefix-path && is_prefix-name }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD convert_struc.
+
+    DATA lo_struc TYPE REF TO cl_abap_structdescr.
+    DATA lt_comps TYPE cl_abap_structdescr=>component_table.
+    DATA ls_next_prefix LIKE is_prefix.
+
+    FIELD-SYMBOLS <root> LIKE LINE OF ct_nodes.
+    FIELD-SYMBOLS <c> LIKE LINE OF lt_comps.
+    FIELD-SYMBOLS <val> TYPE any.
+
+    lo_struc ?= io_type.
+    lt_comps = lo_struc->get_components( ).
+    " get_components is potentially much slower than lo_struc->components
+    " but ! we still need it to identify booleans
+    " and rtti seems to cache type descriptions really well (https://github.com/sbcgua/benchmarks.git)
+    " the structures will be repeated in real life
+
+    IF cs_root IS SUPPLIED. " call for include structure
+      ASSIGN cs_root TO <root>.
+    ELSE. " First call
+      APPEND INITIAL LINE TO ct_nodes ASSIGNING <root>.
+      <root>-path  = is_prefix-path.
+      <root>-name  = is_prefix-name.
+      <root>-type  = 'object'.
+      <root>-index = iv_index.
+    ENDIF.
+
+    ls_next_prefix-path = is_prefix-path && is_prefix-name && '/'.
+
+    LOOP AT lt_comps ASSIGNING <c>.
+
+      IF <c>-as_include = abap_true.
+
+        convert_struc(
+          EXPORTING
+            iv_data   = iv_data
+            io_type   = <c>-type
+            is_prefix = is_prefix
+          CHANGING
+            cs_root  = <root>
+            ct_nodes = ct_nodes ).
+
+      ELSE.
+
+        <root>-children = <root>-children + 1.
+        ls_next_prefix-name = to_lower( <c>-name ).
+        ASSIGN COMPONENT <c>-name OF STRUCTURE iv_data TO <val>.
+        ASSERT sy-subrc = 0.
+
+        convert_any(
+          EXPORTING
+            iv_data   = <val>
+            io_type   = <c>-type
+            is_prefix = ls_next_prefix
+          CHANGING
+            ct_nodes = ct_nodes ).
+
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD convert_table.
+
+    DATA lo_table TYPE REF TO cl_abap_tabledescr.
+    DATA lo_ltype TYPE REF TO cl_abap_typedescr.
+    DATA ls_next_prefix LIKE is_prefix.
+
+    FIELD-SYMBOLS <root> LIKE LINE OF ct_nodes.
+    FIELD-SYMBOLS <tab> TYPE ANY TABLE.
+    FIELD-SYMBOLS <val> TYPE any.
+
+    lo_table ?= io_type.
+    lo_ltype = lo_table->get_table_line_type( ).
+
+    APPEND INITIAL LINE TO ct_nodes ASSIGNING <root>.
+    <root>-path  = is_prefix-path.
+    <root>-name  = is_prefix-name.
+    <root>-type  = 'array'.
+    <root>-index = iv_index.
+
+    ls_next_prefix-path = is_prefix-path && is_prefix-name && '/'.
+    ASSIGN iv_data TO <tab>.
+
+    LOOP AT <tab> ASSIGNING <val>.
+      ls_next_prefix-name = to_lower( |{ sy-tabix }| ).
+
+      convert_any(
+        EXPORTING
+          iv_data   = <val>
+          io_type   = lo_ltype
+          is_prefix = ls_next_prefix
+          iv_index  = <root>-children + 1
+        CHANGING
+          ct_nodes = ct_nodes ).
+
+      <root>-children = <root>-children + 1.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD insert_with_type.
+
+    DATA lo_type TYPE REF TO cl_abap_typedescr.
+    DATA lo_converter TYPE REF TO lcl_abap_to_json.
+
+    lo_type = cl_abap_typedescr=>describe_by_data( iv_data ).
+    CREATE OBJECT lo_converter.
+
+    lo_converter->insert_value_with_type(
+      EXPORTING
+        iv_data   = iv_data
+        iv_type   = iv_type
+        io_type   = lo_type
+        is_prefix = is_prefix
+        iv_index  = iv_array_index
+      CHANGING
+        ct_nodes = rt_nodes ).
+
+  ENDMETHOD.
+
+  METHOD insert_value_with_type.
+
+    DATA lv_prefix TYPE string.
+
+    FIELD-SYMBOLS <n> LIKE LINE OF ct_nodes.
+
+    lv_prefix = is_prefix-path && is_prefix-name.
+    IF io_type->type_kind CO 'CNgXyDT'. " Char like, date/time, xstring
+      IF iv_type = 'bool' AND iv_data <> 'true' AND iv_data <> 'false'.
+        zcx_abapgit_ajson_error=>raise( |Unexpected boolean value [{ iv_data }] @{ lv_prefix }| ).
+      ELSEIF iv_type = 'null' AND iv_data IS NOT INITIAL.
+        zcx_abapgit_ajson_error=>raise( |Unexpected null value [{ iv_data }] @{ lv_prefix }| ).
+      ELSEIF iv_type = 'num' AND iv_data CN '0123456789. E+-'.
+        zcx_abapgit_ajson_error=>raise( |Unexpected numeric value [{ iv_data }] @{ lv_prefix }| ).
+      ELSEIF iv_type <> 'str' AND iv_type <> 'bool' AND iv_type <> 'null' AND iv_type <> 'num'.
+        zcx_abapgit_ajson_error=>raise( |Unexpected type for value [{ iv_type },{ iv_data }] @{ lv_prefix }| ).
+      ENDIF.
+    ELSEIF io_type->type_kind CO 'bsI8PaeF'. " Numeric
+      IF iv_type <> 'num'.
+        zcx_abapgit_ajson_error=>raise( |Unexpected value for numeric [{ iv_data }] @{ lv_prefix }| ).
+      ENDIF.
+    ELSE.
+      zcx_abapgit_ajson_error=>raise( |Unexpected type [{ io_type->type_kind }] @{ lv_prefix }| ).
+    ENDIF.
+
+    APPEND INITIAL LINE TO ct_nodes ASSIGNING <n>.
+
+    <n>-path  = is_prefix-path.
+    <n>-name  = is_prefix-name.
+    <n>-index = iv_index.
+    <n>-value = iv_data.
+    <n>-type  = iv_type.
 
   ENDMETHOD.
 
