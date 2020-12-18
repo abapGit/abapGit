@@ -359,7 +359,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     " check if url is already in use for a different package
     lt_repos = zcl_abapgit_persist_factory=>get_repo( )->list( ).
-    LOOP AT lt_repos ASSIGNING <ls_repo>.
+    LOOP AT lt_repos ASSIGNING <ls_repo> WHERE offline = abap_false.
 
       lv_check_repo_address = zcl_abapgit_url=>url_address( <ls_repo>-url ).
 
@@ -527,6 +527,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 * todo, this should be a method on the repo instead?
 
     DATA: lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA: lx_error TYPE REF TO zcx_abapgit_exception.
 
     CREATE OBJECT ri_log TYPE zcl_abapgit_log.
     ri_log->set_title( 'Uninstall Log' ).
@@ -539,9 +540,15 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     lt_tadir = zcl_abapgit_factory=>get_tadir( )->read( io_repo->get_package( ) ).
 
-    zcl_abapgit_objects=>delete( it_tadir  = lt_tadir
-                                 is_checks = is_checks
-                                 ii_log    = ri_log ).
+    TRY.
+        zcl_abapgit_objects=>delete( it_tadir  = lt_tadir
+                                     is_checks = is_checks
+                                     ii_log    = ri_log ).
+      CATCH zcx_abapgit_exception INTO lx_error.
+        " If uninstall fails, repo needs a refresh to show which objects where deleted and which not
+        io_repo->refresh( ).
+        RAISE EXCEPTION lx_error.
+    ENDTRY.
 
     delete( io_repo ).
 
