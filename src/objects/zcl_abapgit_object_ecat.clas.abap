@@ -12,7 +12,7 @@ CLASS zcl_abapgit_object_ecat DEFINITION
       get_download REDEFINITION,
       get_lock_object REDEFINITION.
 
-private section.
+  PRIVATE SECTION.
 ENDCLASS.
 
 
