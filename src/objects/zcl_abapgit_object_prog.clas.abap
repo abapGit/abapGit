@@ -117,7 +117,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
       lv_corrnumber TYPE e071-trkorr.
 
     lv_program = ms_item-obj_name.
-    lv_corrnumber = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum .
+    lv_corrnumber = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
 
     CALL FUNCTION 'RS_DELETE_PROGRAM'
       EXPORTING
