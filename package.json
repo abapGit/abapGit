@@ -17,6 +17,6 @@
     "@abaplint/transpiler-cli": "^1.0.23",
     "@abaplint/runtime": "^1.0.22",
     "abapmerge": "^0.14.2",
-    "eslint": "^7.15.0"
+    "eslint": "^7.16.0"
   }
 }

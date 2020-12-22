@@ -43,8 +43,12 @@ activation key (default "f"), abapGit will uses a clever highlighting method to 
 
 ## System Resources
 
-By default and if sufficient system resources are available, abapGit will use parallel processing to serialize objects of a repository. You can disable parallel processing
-with this setting. Note: Use this setting in case you need to debug a serializer class.
+### Standalone Version
 
+The standalone version does not support any parallel processing. Objects of a repository are serialized sequentially.
 
+### Developer Version
 
+The developer version of abapGit will try to use parallel processing to serialize objects of a repository. As a prerequisite, logon group `parallel_generators` (lower case) must be configured in transaction `RZ12`. If sufficient system resources are available, abapGit will use multiple threads to serialize objects.
+
+You can disable parallel processing with this setting. Note: Use this setting in case you need to debug a serializer class.
