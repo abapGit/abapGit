@@ -255,7 +255,8 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
   METHOD zif_abapgit_repo_online~select_branch.
 
     reset_remote( ).
-    set( iv_branch_name     = iv_branch_name ).
+    set( iv_branch_name     = iv_branch_name
+         iv_selected_commit = space  ).
 
   ENDMETHOD.
 
