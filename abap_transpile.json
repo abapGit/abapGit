@@ -15,6 +15,7 @@
     "zif_abapgit_cts_api",
     "zif_abapgit_http_response",
     "zcl_abapgit_syntax_highlighter",
+    "zcl_abapgit_syntax_abap",
     "zcl_abapgit_syntax_xml",
     "zif_abapgit_stage_logic"
   ],
