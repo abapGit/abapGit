@@ -5,13 +5,6 @@ CLASS zcl_abapgit_object_ecat DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-
-    METHODS:
-      constructor
-        IMPORTING
-          !is_item     TYPE zif_abapgit_definitions=>ty_item
-          !iv_language TYPE spras.
-
   PROTECTED SECTION.
     METHODS:
       get_object_type REDEFINITION,
@@ -19,6 +12,7 @@ CLASS zcl_abapgit_object_ecat DEFINITION
       get_download REDEFINITION,
       get_lock_object REDEFINITION.
 
+  PRIVATE SECTION.
 ENDCLASS.
 
 
@@ -26,10 +20,16 @@ ENDCLASS.
 CLASS zcl_abapgit_object_ecat IMPLEMENTATION.
 
 
-  METHOD constructor.
+  METHOD get_download.
 
-    super->constructor( is_item     = is_item
-                        iv_language = iv_language ).
+    CREATE OBJECT ro_download TYPE zcl_abapgit_ecatt_script_downl.
+
+  ENDMETHOD.
+
+
+  METHOD get_lock_object.
+
+    rv_lock_object = 'E_ECATT'.
 
   ENDMETHOD.
 
@@ -40,22 +40,10 @@ CLASS zcl_abapgit_object_ecat IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD get_upload.
 
     CREATE OBJECT ro_upload TYPE zcl_abapgit_ecatt_script_upl.
 
   ENDMETHOD.
-
-  METHOD get_download.
-
-    CREATE OBJECT ro_download TYPE zcl_abapgit_ecatt_script_downl.
-
-  ENDMETHOD.
-
-  METHOD get_lock_object.
-
-    rv_lock_object = 'E_ECATT'.
-
-  ENDMETHOD.
-
 ENDCLASS.

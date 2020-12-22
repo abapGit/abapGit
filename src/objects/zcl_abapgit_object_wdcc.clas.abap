@@ -1,30 +1,21 @@
-CLASS zcl_abapgit_object_wdcc DEFINITION PUBLIC
-  INHERITING FROM zcl_abapgit_objects_super.
+CLASS zcl_abapgit_object_wdcc DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_super
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
-    METHODS constructor
-      IMPORTING
-        !is_item     TYPE zif_abapgit_definitions=>ty_item
-        !iv_language TYPE spras.
+    INTERFACES zif_abapgit_object .
 
+    ALIASES mo_files
+      FOR zif_abapgit_object~mo_files .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_WDCC IMPLEMENTATION.
-
-
-  METHOD constructor.
-
-    super->constructor( is_item     = is_item
-                        iv_language = iv_language ).
-
-  ENDMETHOD.
+CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
