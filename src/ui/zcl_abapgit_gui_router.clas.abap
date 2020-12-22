@@ -374,6 +374,8 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
       ri_page = lo_code_inspector_page.
 
+    ELSEIF lo_repo->get_selected_commit( ) IS NOT INITIAL.
+      zcx_abapgit_exception=>raise( |Cannot stage when a commit is checked out. Create a new branch from this commit.| ).
     ELSE.
 
       " force refresh on stage, to make sure the latest local and remote files are used
