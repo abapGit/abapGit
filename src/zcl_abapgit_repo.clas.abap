@@ -206,7 +206,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 
   METHOD bind_listener.
@@ -668,7 +668,8 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 * TODO: refactor, maybe use zcl_abapgit_string_map ?
 
-    DATA: ls_mask TYPE zif_abapgit_persistence=>ty_repo_meta_mask.
+    DATA: ls_mask TYPE zif_abapgit_persistence=>ty_repo_meta_mask,
+          lv_commit_short_sha TYPE string.
 
 
     ASSERT it_checksums IS SUPPLIED
