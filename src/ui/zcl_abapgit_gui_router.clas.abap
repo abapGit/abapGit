@@ -392,19 +392,19 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         iv_icon_button_2         = 'ICON_CANCEL'
         iv_default_button        = '2'
         iv_display_cancel_button = abap_false ).
-      IF lv_answer = 2.
-        RETURN.
-      ELSE.
+      IF lv_answer = 1.
+        TRY.
+            zcl_abapgit_services_git=>create_branch( iv_key = lo_repo->get_key( ) ).
+          CATCH zcx_abapgit_cancel.
+          "Continue processing so we can return to the correct page
+        ENDTRY.
+      ENDIF.
 
-        zcl_abapgit_services_git=>create_branch( iv_key = lo_repo->get_key( ) ).
-
-        CREATE OBJECT lo_page_repo TYPE zcl_abapgit_gui_page_repo_view
+      CREATE OBJECT lo_page_repo TYPE zcl_abapgit_gui_page_repo_view
          EXPORTING
            iv_key = lo_repo->get_key( ).
 
-        ri_page = lo_page_repo.
-      ENDIF.
-
+      ri_page = lo_page_repo.
     ELSE.
 
       " force refresh on stage, to make sure the latest local and remote files are used
