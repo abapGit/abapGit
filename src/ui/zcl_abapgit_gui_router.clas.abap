@@ -363,7 +363,8 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
           lo_code_inspector_page TYPE REF TO zcl_abapgit_gui_page_code_insp,
           lo_page_repo           TYPE REF TO zcl_abapgit_gui_page_repo_view,
           lv_answer              TYPE c LENGTH 1,
-          lv_branch_name         TYPE string.
+          lv_branch_name         TYPE string,
+          lv_text_question       TYPE string.
 
     lv_key   = ii_event->query( )->get( 'KEY' ).
     lv_seed  = ii_event->query( )->get( 'SEED' ).
@@ -378,9 +379,13 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
       ri_page = lo_code_inspector_page.
 
     ELSEIF lo_repo->get_selected_commit( ) IS NOT INITIAL.
+      lv_text_question = 'You are currently checked out in a commit.'.
+      lv_text_question = |{ lv_text_question } You must be on a branch to stage.|.
+      lv_text_question = |{ lv_text_question } Create new branch?|.
+
       lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
         iv_titlebar              = 'Staging on a checked out commit'
-        iv_text_question         = 'You are currently checked out in a commit. You must be on a branch to stage. Create new branch?'
+        iv_text_question         = lv_text_question
         iv_text_button_1         = 'New branch' "Ideally the button name would be Create branch, but it did not fit
         iv_icon_button_1         = 'ICON_OKAY'
         iv_text_button_2         = 'Cancel'
@@ -391,13 +396,13 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         RETURN.
       ELSE.
 
-       zcl_abapgit_services_git=>create_branch( iv_key = lo_repo->get_key( ) ).
+        zcl_abapgit_services_git=>create_branch( iv_key = lo_repo->get_key( ) ).
 
-      CREATE OBJECT lo_page_repo TYPE zcl_abapgit_gui_page_repo_view
+        CREATE OBJECT lo_page_repo TYPE zcl_abapgit_gui_page_repo_view
          EXPORTING
            iv_key = lo_repo->get_key( ).
 
-       ri_page = lo_page_repo.
+        ri_page = lo_page_repo.
       ENDIF.
 
     ELSE.
