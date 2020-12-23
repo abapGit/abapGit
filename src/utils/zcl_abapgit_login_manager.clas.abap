@@ -140,7 +140,7 @@ CLASS ZCL_ABAPGIT_LOGIN_MANAGER IMPLEMENTATION.
 
     CONCATENATE iv_username ':' iv_password INTO lv_concat.
 
-    rv_auth = cl_http_utility=>if_http_utility~encode_base64( lv_concat ).
+    rv_auth = cl_http_utility=>encode_base64( lv_concat ).
 
     CONCATENATE 'Basic' rv_auth INTO rv_auth
       SEPARATED BY space.
