@@ -373,6 +373,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
           io_repo = lo_repo.
 
       ri_page = lo_code_inspector_page.
+
     ELSE.
 
       " force refresh on stage, to make sure the latest local and remote files are used
