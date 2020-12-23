@@ -15,6 +15,7 @@
     "zif_abapgit_cts_api",
     "zif_abapgit_http_response",
     "zcl_abapgit_syntax_*",
+    "zcl_abapgit_string_map",
     "zif_abapgit_stage_logic"
   ],
   "output_folder": "output",
