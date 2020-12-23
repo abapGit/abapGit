@@ -13,9 +13,11 @@
     "zif_abapgit_environment",
     "zif_abapgit_cts_api",
     "zif_abapgit_http_response",
+    "zif_abapgit_html",
     "zcl_abapgit_syntax_*",
     "zcl_abapgit_string_map",
     "zcl_abapgit_login_manager",
+    "zif_abapgit_log",
     "zif_abapgit_stage_logic"
   ],
   "output_folder": "output",
