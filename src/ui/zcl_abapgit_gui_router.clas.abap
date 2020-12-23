@@ -360,11 +360,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
           lv_key                 TYPE zif_abapgit_persistence=>ty_repo-key,
           lv_seed                TYPE string,
           lo_stage_page          TYPE REF TO zcl_abapgit_gui_page_stage,
-          lo_code_inspector_page TYPE REF TO zcl_abapgit_gui_page_code_insp,
-          lo_page_repo           TYPE REF TO zcl_abapgit_gui_page_repo_view,
-          lv_answer              TYPE c LENGTH 1,
-          lv_branch_name         TYPE string,
-          lv_text_question       TYPE string.
+          lo_code_inspector_page TYPE REF TO zcl_abapgit_gui_page_code_insp.
 
     lv_key   = ii_event->query( )->get( 'KEY' ).
     lv_seed  = ii_event->query( )->get( 'SEED' ).
