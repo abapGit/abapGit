@@ -26,7 +26,6 @@
     "addCommonJS": true,
     "unknownTypes": "runtimeError",
     "skip": [
-      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_direct_text"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_t100_text1"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_t100_text2"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_t100_text3"},
