@@ -38,7 +38,7 @@ INTERFACE zif_abapgit_html PUBLIC.
     IMPORTING
       !iv_txt   TYPE string
       !iv_act   TYPE string
-      !iv_typ   TYPE char1 DEFAULT c_action_type-sapevent
+      !iv_typ   TYPE c DEFAULT c_action_type-sapevent
       !iv_opt   TYPE clike OPTIONAL
       !iv_class TYPE string OPTIONAL
       !iv_id    TYPE string OPTIONAL
@@ -52,7 +52,7 @@ INTERFACE zif_abapgit_html PUBLIC.
     IMPORTING
       !iv_txt       TYPE string
       !iv_act       TYPE string
-      !iv_typ       TYPE char1 DEFAULT zif_abapgit_html=>c_action_type-sapevent
+      !iv_typ       TYPE c DEFAULT zif_abapgit_html=>c_action_type-sapevent
       !iv_opt       TYPE clike OPTIONAL
       !iv_class     TYPE string OPTIONAL
       !iv_id        TYPE string OPTIONAL
