@@ -668,8 +668,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 * TODO: refactor, maybe use zcl_abapgit_string_map ?
 
-    DATA: ls_mask             TYPE zif_abapgit_persistence=>ty_repo_meta_mask,
-          lv_commit_short_sha TYPE string.
+    DATA: ls_mask TYPE zif_abapgit_persistence=>ty_repo_meta_mask.
 
 
     ASSERT it_checksums IS SUPPLIED
