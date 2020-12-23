@@ -377,34 +377,6 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
           io_repo = lo_repo.
 
       ri_page = lo_code_inspector_page.
-
-    ELSEIF lo_repo->get_selected_commit( ) IS NOT INITIAL.
-      lv_text_question = 'You are currently checked out in a commit.'.
-      lv_text_question = |{ lv_text_question } You must be on a branch to stage.|.
-      lv_text_question = |{ lv_text_question } Create new branch?|.
-
-      lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
-        iv_titlebar              = 'Staging on a checked out commit'
-        iv_text_question         = lv_text_question
-        iv_text_button_1         = 'New branch' "Ideally the button name would be Create branch, but it did not fit
-        iv_icon_button_1         = 'ICON_OKAY'
-        iv_text_button_2         = 'Cancel'
-        iv_icon_button_2         = 'ICON_CANCEL'
-        iv_default_button        = '2'
-        iv_display_cancel_button = abap_false ).
-      IF lv_answer = 1.
-        TRY.
-            zcl_abapgit_services_git=>create_branch( iv_key = lo_repo->get_key( ) ).
-          CATCH zcx_abapgit_cancel.
-          "Continue processing so we can return to the correct page
-        ENDTRY.
-      ENDIF.
-
-      CREATE OBJECT lo_page_repo TYPE zcl_abapgit_gui_page_repo_view
-         EXPORTING
-           iv_key = lo_repo->get_key( ).
-
-      ri_page = lo_page_repo.
     ELSE.
 
       " force refresh on stage, to make sure the latest local and remote files are used

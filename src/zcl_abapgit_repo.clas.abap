@@ -702,14 +702,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     IF iv_selected_commit IS SUPPLIED.
       ms_data-selected_commit = iv_selected_commit.
-
-      IF iv_selected_commit IS NOT INITIAL.
-        ls_mask-selected_commit = abap_true.
-        "Convert to short commit. Example: (ae623b9...)
-        lv_commit_short_sha = iv_selected_commit+0(7).
-        ms_data-branch_name = |({ lv_commit_short_sha }...)|.
-        ls_mask-branch_name = abap_true.
-      ENDIF.
+      ls_mask-selected_commit = abap_true.
     ENDIF.
 
     IF iv_head_branch IS SUPPLIED.
