@@ -5,18 +5,17 @@ CLASS zcl_abapgit_log DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_log .
-
   PROTECTED SECTION.
 
     TYPES:
       BEGIN OF ty_msg,
         text TYPE string,
-        type TYPE symsgty,
+        type TYPE sy-msgty,
       END OF ty_msg .
     TYPES:
       BEGIN OF ty_log, "in order of occurrence
         msg       TYPE ty_msg,
-        rc        TYPE balsort,
+        rc        TYPE sy-subrc,
         item      TYPE zif_abapgit_definitions=>ty_item,
         exception TYPE REF TO cx_root,
       END OF ty_log .
@@ -29,7 +28,7 @@ CLASS zcl_abapgit_log DEFINITION
       IMPORTING
         !it_msg          TYPE zif_abapgit_log=>ty_msgs
       RETURNING
-        VALUE(rv_status) TYPE symsgty .
+        VALUE(rv_status) TYPE sy-msgty .
   PRIVATE SECTION.
 ENDCLASS.
 
