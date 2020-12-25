@@ -190,14 +190,14 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals( exp = mt_after_parse
                                         act = lt_matches_act
-                                        msg = | Error during parsing: { iv_line }| ).
+                                        msg = |Error during parsing: { iv_line }| ).
 
     lo_syntax->order_matches( EXPORTING iv_line    = iv_line
                        CHANGING  ct_matches = lt_matches_act ).
 
     cl_abap_unit_assert=>assert_equals( exp = mt_after_order
                                         act = lt_matches_act
-                                        msg = | Error during ordering: { iv_line }| ).
+                                        msg = |Error during ordering: { iv_line }| ).
 
     lo_syntax->extend_matches(
       EXPORTING
@@ -207,7 +207,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals( exp = mt_after_extend
                                         act = lt_matches_act
-                                        msg = | Error during extending: { iv_line }| ).
+                                        msg = |Error during extending: { iv_line }| ).
 
     " Check consistency
     lv_offs = 0.
