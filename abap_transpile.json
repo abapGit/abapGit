@@ -28,6 +28,7 @@
     "zif_abapgit_gui_hotkey_ctl",
     "zif_abapgit_gui_hotkeys",
     "zif_abapgit_tag_popups",
+    "zcl_abapgit_html.clas",
     "zif_abapgit_stage_logic"
   ],
   "output_folder": "output",
