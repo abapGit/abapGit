@@ -23,6 +23,8 @@
     "zif_abapgit_dot_abapgit",
     "zif_abapgit_environment",
     "zif_abapgit_exit",
+    "zif_abapgit_ajson_writer",
+    "zif_abapgit_ajson_reader",
     "zif_abapgit_frontend_services",
     "zif_abapgit_gui_asset_manager",
     "zif_abapgit_gui_functions",
