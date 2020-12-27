@@ -31,8 +31,8 @@ CLASS ltcl_html IMPLEMENTATION.
     mo_html->add( 'hello world' ).
     mo_html->add( '</td>' ).
 
-    lv_exp = '<td>' && zif_abapgit_definitions=>c_newline &&
-             '  hello world' && zif_abapgit_definitions=>c_newline &&
+    lv_exp = '<td>' && cl_abap_char_utilities=>newline &&
+             '  hello world' && cl_abap_char_utilities=>newline &&
              '</td>'.
 
     cl_abap_unit_assert=>assert_equals(
@@ -49,8 +49,8 @@ CLASS ltcl_html IMPLEMENTATION.
     mo_html->add( '<input name="comment" type="text">' ).
     mo_html->add( '</td>' ).
 
-    lv_exp = '<td>' && zif_abapgit_definitions=>c_newline &&
-             '  <input name="comment" type="text">' && zif_abapgit_definitions=>c_newline &&
+    lv_exp = '<td>' && cl_abap_char_utilities=>newline &&
+             '  <input name="comment" type="text">' && cl_abap_char_utilities=>newline &&
              '</td>'.
 
     cl_abap_unit_assert=>assert_equals(
@@ -67,8 +67,8 @@ CLASS ltcl_html IMPLEMENTATION.
     mo_html->add( '<textarea name="body" rows="10" cols="72"></textarea>' ).
     mo_html->add( '</td>' ).
 
-    lv_exp = '<td>' && zif_abapgit_definitions=>c_newline &&
-             '  <textarea name="body" rows="10" cols="72"></textarea>' && zif_abapgit_definitions=>c_newline &&
+    lv_exp = '<td>' && cl_abap_char_utilities=>newline &&
+             '  <textarea name="body" rows="10" cols="72"></textarea>' && cl_abap_char_utilities=>newline &&
              '</td>'.
 
     cl_abap_unit_assert=>assert_equals(
@@ -85,8 +85,8 @@ CLASS ltcl_html IMPLEMENTATION.
     mo_html->add( 'foo<br>bar' ).
     mo_html->add( '</td>' ).
 
-    lv_exp = '<td>' && zif_abapgit_definitions=>c_newline &&
-             '  foo<br>bar' && zif_abapgit_definitions=>c_newline &&
+    lv_exp = '<td>' && cl_abap_char_utilities=>newline &&
+             '  foo<br>bar' && cl_abap_char_utilities=>newline &&
              '</td>'.
 
     cl_abap_unit_assert=>assert_equals(
@@ -106,11 +106,11 @@ CLASS ltcl_html IMPLEMENTATION.
     mo_html->add( '}' ).
     mo_html->add( '</style>' ).
 
-    lv_exp = '<style type="text/css">' && zif_abapgit_definitions=>c_newline &&
-             '  .class1 { color: red }' && zif_abapgit_definitions=>c_newline &&
-             '  .class2 {' && zif_abapgit_definitions=>c_newline &&
-             '    color: red' && zif_abapgit_definitions=>c_newline &&
-             '  }' && zif_abapgit_definitions=>c_newline &&
+    lv_exp = '<style type="text/css">' && cl_abap_char_utilities=>newline &&
+             '  .class1 { color: red }' && cl_abap_char_utilities=>newline &&
+             '  .class2 {' && cl_abap_char_utilities=>newline &&
+             '    color: red' && cl_abap_char_utilities=>newline &&
+             '  }' && cl_abap_char_utilities=>newline &&
              '</style>'.
 
     cl_abap_unit_assert=>assert_equals(

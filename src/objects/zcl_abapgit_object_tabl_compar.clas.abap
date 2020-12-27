@@ -151,6 +151,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_COMPAR IMPLEMENTATION.
           ls_item                  TYPE zif_abapgit_definitions=>ty_item,
           lv_inconsistent          TYPE abap_bool.
 
+    FIELD-SYMBOLS <lv_is_gtt> TYPE abap_bool.
+
     ii_remote_version->read(
       EXPORTING
         iv_name = 'DD02V'
@@ -159,6 +161,12 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_COMPAR IMPLEMENTATION.
 
     " We only want to compare transparent tables, or structures used in transparent tables
     IF ls_dd02v-tabclass <> 'TRANSP' AND is_structure_used_in_db_table( ls_dd02v-tabname ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    " No comparison for global temporary tables
+    ASSIGN COMPONENT 'IS_GTT' OF STRUCTURE ls_dd02v TO <lv_is_gtt>.
+    IF sy-subrc = 0 AND <lv_is_gtt> = abap_true.
       RETURN.
     ENDIF.
 

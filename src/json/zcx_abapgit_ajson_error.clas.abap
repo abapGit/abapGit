@@ -1,91 +1,107 @@
-class ZCX_ABAPGIT_AJSON_ERROR definition
+class zcx_abapgit_ajson_error definition
   public
-  inheriting from ZCX_ABAPGIT_EXCEPTION
+  inheriting from CX_STATIC_CHECK
   final
   create public .
 
 public section.
 
+  interfaces IF_T100_MESSAGE .
+
+  types:
+    ty_rc type c length 4 .
+
   constants:
-    begin of ZCX_ABAPGIT_AJSON_ERROR,
+    begin of ZCX_AJSON_ERROR,
       msgid type symsgid value '00',
       msgno type symsgno value '001',
-      attr1 type scx_attrname value 'MSGV1',
-      attr2 type scx_attrname value 'MSGV2',
-      attr3 type scx_attrname value 'MSGV3',
-      attr4 type scx_attrname value 'MSGV4',
-    end of ZCX_ABAPGIT_AJSON_ERROR .
+      attr1 type scx_attrname value 'A1',
+      attr2 type scx_attrname value 'A2',
+      attr3 type scx_attrname value 'A3',
+      attr4 type scx_attrname value 'A4',
+    end of ZCX_AJSON_ERROR .
+  data RC type TY_RC read-only .
   data MESSAGE type STRING read-only .
+  data LOCATION type STRING read-only .
+  data A1 type SYMSGV read-only .
+  data A2 type SYMSGV read-only .
+  data A3 type SYMSGV read-only .
+  data A4 type SYMSGV read-only .
 
   methods CONSTRUCTOR
     importing
       !TEXTID like IF_T100_MESSAGE=>T100KEY optional
       !PREVIOUS like PREVIOUS optional
-      !MSGV1 type SYMSGV optional
-      !MSGV2 type SYMSGV optional
-      !MSGV3 type SYMSGV optional
-      !MSGV4 type SYMSGV optional
-      !MESSAGE type STRING optional .
-  class-methods RAISE_JSON
+      !RC type TY_RC optional
+      !MESSAGE type STRING optional
+      !LOCATION type STRING optional
+      !A1 type SYMSGV optional
+      !A2 type SYMSGV optional
+      !A3 type SYMSGV optional
+      !A4 type SYMSGV optional .
+  class-methods RAISE
     importing
       !IV_MSG type STRING
       !IV_LOCATION type STRING optional
     raising
-      ZCX_ABAPGIT_AJSON_ERROR .
+      zcx_abapgit_ajson_error .
 protected section.
 private section.
 ENDCLASS.
 
 
 
-CLASS ZCX_ABAPGIT_AJSON_ERROR IMPLEMENTATION.
+CLASS zcx_abapgit_ajson_error IMPLEMENTATION.
 
 
-  method CONSTRUCTOR.
+method CONSTRUCTOR.
 CALL METHOD SUPER->CONSTRUCTOR
 EXPORTING
 PREVIOUS = PREVIOUS
-MSGV1 = MSGV1
-MSGV2 = MSGV2
-MSGV3 = MSGV3
-MSGV4 = MSGV4
 .
+me->RC = RC .
 me->MESSAGE = MESSAGE .
+me->LOCATION = LOCATION .
+me->A1 = A1 .
+me->A2 = A2 .
+me->A3 = A3 .
+me->A4 = A4 .
 clear me->textid.
 if textid is initial.
-  IF_T100_MESSAGE~T100KEY = ZCX_ABAPGIT_AJSON_ERROR .
+  IF_T100_MESSAGE~T100KEY = ZCX_AJSON_ERROR .
 else.
   IF_T100_MESSAGE~T100KEY = TEXTID.
 endif.
-  endmethod.
+endmethod.
 
 
-  METHOD raise_json.
+method raise.
 
-    DATA lv_tmp TYPE string.
-    DATA:
-      BEGIN OF ls_msg,
-        a1 LIKE msgv1,
-        a2 LIKE msgv1,
-        a3 LIKE msgv1,
-        a4 LIKE msgv1,
-      END OF ls_msg.
+  data:
+    begin of ls_msg,
+      a1 like a1,
+      a2 like a1,
+      a3 like a1,
+      a4 like a1,
+    end of ls_msg.
 
-    IF iv_location IS INITIAL.
-      ls_msg = iv_msg.
-    ELSE.
-      lv_tmp = iv_msg && | @{ iv_location }|.
-      ls_msg = lv_tmp.
-    ENDIF.
+  if iv_location is initial.
+    ls_msg = iv_msg.
+  else.
+    data lv_tmp type string.
+    lv_tmp = iv_msg && | @{ iv_location }|.
+    ls_msg = lv_tmp.
+  endif.
 
-    RAISE EXCEPTION TYPE zcx_abapgit_ajson_error
-      EXPORTING
-        textid = zcx_abapgit_ajson_error
-        message = iv_msg
-        msgv1  = ls_msg-a1
-        msgv2  = ls_msg-a2
-        msgv3  = ls_msg-a3
-        msgv4  = ls_msg-a4.
+  raise exception type zcx_abapgit_ajson_error
+    exporting
+      textid   = zcx_ajson_error
+      message  = iv_msg
+      location = iv_location
+      a1       = ls_msg-a1
+      a2       = ls_msg-a2
+      a3       = ls_msg-a3
+      a4       = ls_msg-a4.
 
-  ENDMETHOD.
+endmethod.
 ENDCLASS.
