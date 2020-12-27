@@ -30,6 +30,7 @@
     "zif_abapgit_xml_output",
     "zif_abapgit_xml_input",
     "zif_abapgit_gui_asset_manager",
+    "zcl_abapgit_version",
     "zif_abapgit_gui_functions",
     "zif_abapgit_gui_hotkey_ctl",
     "zif_abapgit_gui_hotkeys",
