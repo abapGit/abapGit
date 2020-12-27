@@ -121,14 +121,14 @@ CLASS ltcl_syntax_cases DEFINITION FINAL FOR TESTING RISK LEVEL HARMLESS
     METHODS:
       do_test IMPORTING iv_line     TYPE string
                         iv_filename TYPE string,
-      generate_parse IMPORTING iv_token  TYPE char01
+      generate_parse IMPORTING iv_token  TYPE c
                                iv_offset TYPE i
                                iv_length TYPE i,
-      generate_order IMPORTING iv_token    TYPE char01
+      generate_order IMPORTING iv_token    TYPE c
                                iv_offset   TYPE i
                                iv_length   TYPE i
                                iv_text_tag TYPE string,
-      generate_extend IMPORTING iv_token    TYPE char01
+      generate_extend IMPORTING iv_token    TYPE c
                                 iv_offset   TYPE i
                                 iv_length   TYPE i
                                 iv_text_tag TYPE string,
