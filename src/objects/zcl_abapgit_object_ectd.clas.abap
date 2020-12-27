@@ -5,13 +5,6 @@ CLASS zcl_abapgit_object_ectd DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-
-    METHODS:
-      constructor
-        IMPORTING
-          !is_item     TYPE zif_abapgit_definitions=>ty_item
-          !iv_language TYPE spras.
-
   PROTECTED SECTION.
     METHODS:
       get_object_type REDEFINITION,
@@ -19,16 +12,24 @@ CLASS zcl_abapgit_object_ectd DEFINITION
       get_download REDEFINITION,
       get_lock_object REDEFINITION.
 
+  PRIVATE SECTION.
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_object_ectd IMPLEMENTATION.
 
-  METHOD constructor.
 
-    super->constructor( is_item     = is_item
-                        iv_language = iv_language ).
+  METHOD get_download.
+
+    CREATE OBJECT ro_download TYPE zcl_abapgit_ecatt_data_downl.
+
+  ENDMETHOD.
+
+
+  METHOD get_lock_object.
+
+    rv_lock_object = 'E_ECATT_TD'.
 
   ENDMETHOD.
 
@@ -39,22 +40,10 @@ CLASS zcl_abapgit_object_ectd IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD get_upload.
 
     CREATE OBJECT ro_upload TYPE zcl_abapgit_ecatt_data_upload.
 
   ENDMETHOD.
-
-  METHOD get_download.
-
-    CREATE OBJECT ro_download TYPE zcl_abapgit_ecatt_data_downl.
-
-  ENDMETHOD.
-
-  METHOD get_lock_object.
-
-    rv_lock_object = 'E_ECATT_TD'.
-
-  ENDMETHOD.
-
 ENDCLASS.
