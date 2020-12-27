@@ -23,7 +23,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_CUS0 IMPLEMENTATION.
+CLASS zcl_abapgit_object_cus0 IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -146,12 +146,15 @@ CLASS ZCL_ABAPGIT_OBJECT_CUS0 IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
+    DATA: lv_img_activity TYPE cus_img_ac.
 
-    zcx_abapgit_exception=>raise( |TODO: Jump| ).
+    lv_img_activity = mv_img_activity.
 
-*   doesn't work...
-*    CALL FUNCTION 'S_CUS_IMG_ACTIVITY_MAINTAIN'
-
+    CALL FUNCTION 'S_CUS_IMG_ACTIVITY_MAINTAIN'
+      EXPORTING
+        i_display    = abap_true
+      CHANGING
+        img_activity = lv_img_activity.
   ENDMETHOD.
 
 
