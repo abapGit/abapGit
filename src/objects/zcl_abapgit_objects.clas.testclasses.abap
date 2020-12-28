@@ -445,6 +445,7 @@ CLASS ltcl_filter_files_to_deser DEFINITION FINAL FOR TESTING
       filter_duplicates_init_objtype FOR TESTING RAISING cx_static_check,
       filter_duplicates_changes_01 FOR TESTING RAISING cx_static_check,
       filter_duplicates_changes_02 FOR TESTING RAISING cx_static_check,
+      filter_duplicates_deleted FOR TESTING RAISING cx_static_check,
 
       given_result
         IMPORTING
@@ -593,6 +594,18 @@ CLASS ltcl_filter_files_to_deser IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = ls_exp
       act = ls_act ).
+
+  ENDMETHOD.
+
+  METHOD filter_duplicates_deleted.
+
+    given_result( |PROG;ZAG_UNIT_TEST;;/src/;zag_unit_test.prog.xml;;;;D| ).
+
+    when_filter_is_applied( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = lines( mt_result ) ).
 
   ENDMETHOD.
 
