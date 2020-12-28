@@ -8,6 +8,33 @@ Legend
 + : added
 - : removed
 
+2020-12-28 v1.104.0
+-------------------
++ ui, new pages for global and personal settings
++ ENHO: Implement missing deserialize for WDYC
++ Check objects when installing into main package
++ Checkout commit: additional user interface
+! log object refactoring
+* better abapGit package structure
+* CLIF, improve error message
+* PINF, missing transport entry
+* TRAN, improve error messages
+* DOMA, fix serialize for missing translations
+* Fix dump when using abapGit for more than 50 navigation steps
+* PROG: Fix transport and work area
+* SOTS: Get changed by
+* SMIM, improve error message
+* DSYS, get changed by
+* Fix master language only, duplicate entries for shi3 objects
+* WDYN, improve error message
+* VIEW: Fix deserialize of maintenance views
+* Serialise only main language for ENHS and ENHO objects
+* fix creation of TR entries for uninstalled PROGs
+* Fix sorting of objects in repo view
+* TABL: No structure comparison for global temp tables
+* Implement jump for CUS1
+* Implement jump for CUS0
+
 2020-11-22 v1.103.0
 -------------------
 ! DDLS file format changes, newline
