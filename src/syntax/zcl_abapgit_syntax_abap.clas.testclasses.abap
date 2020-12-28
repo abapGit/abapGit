@@ -149,14 +149,14 @@ CLASS ltcl_syntax_cases DEFINITION FINAL FOR TESTING RISK LEVEL HARMLESS
     METHODS:
       do_test IMPORTING iv_line     TYPE string
                         iv_filename TYPE string,
-      generate_parse IMPORTING iv_token  TYPE char01
+      generate_parse IMPORTING iv_token  TYPE c
                                iv_offset TYPE i
                                iv_length TYPE i,
-      generate_order IMPORTING iv_token    TYPE char01
+      generate_order IMPORTING iv_token    TYPE c
                                iv_offset   TYPE i
                                iv_length   TYPE i
                                iv_text_tag TYPE string,
-      generate_extend IMPORTING iv_token    TYPE char01
+      generate_extend IMPORTING iv_token    TYPE c
                                 iv_offset   TYPE i
                                 iv_length   TYPE i
                                 iv_text_tag TYPE string,
@@ -190,14 +190,14 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals( exp = mt_after_parse
                                         act = lt_matches_act
-                                        msg = | Error during parsing: { iv_line }| ).
+                                        msg = |Error during parsing: { iv_line }| ).
 
     lo_syntax->order_matches( EXPORTING iv_line    = iv_line
                        CHANGING  ct_matches = lt_matches_act ).
 
     cl_abap_unit_assert=>assert_equals( exp = mt_after_order
                                         act = lt_matches_act
-                                        msg = | Error during ordering: { iv_line }| ).
+                                        msg = |Error during ordering: { iv_line }| ).
 
     lo_syntax->extend_matches(
       EXPORTING
@@ -207,7 +207,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals( exp = mt_after_extend
                                         act = lt_matches_act
-                                        msg = | Error during extending: { iv_line }| ).
+                                        msg = |Error during extending: { iv_line }| ).
 
     " Check consistency
     lv_offs = 0.
