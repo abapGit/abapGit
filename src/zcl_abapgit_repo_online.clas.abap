@@ -218,6 +218,12 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
       zcx_abapgit_exception=>raise( lv_text ).
     ENDIF.
 
+    IF ms_data-selected_commit IS NOT INITIAL.
+      lv_text = 'You are currently checked out in a commit.'.
+      lv_text = |{ lv_text } You must be on a branch to push|.
+      zcx_abapgit_exception=>raise( lv_text ).
+    ENDIF.
+
     IF ms_data-local_settings-block_commit = abap_true
         AND zcl_abapgit_factory=>get_code_inspector( get_package( )
           )->is_successful( ) = abap_false.
