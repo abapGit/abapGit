@@ -76,6 +76,12 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
     METHODS set_requirements
       IMPORTING
         it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
+    METHODS get_packaging
+      RETURNING
+        VALUE(rt_packaging) TYPE zif_abapgit_dot_abapgit=>ty_packaging.
+    METHODS set_packaging
+      IMPORTING
+        !it_packaging TYPE zif_abapgit_dot_abapgit=>ty_packaging.
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: ms_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
@@ -93,7 +99,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
+CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
 
 
   METHOD add_ignore.
@@ -188,6 +194,11 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_packaging.
+    rt_packaging = ms_data-packaging.
+  ENDMETHOD.
+
+
   METHOD get_requirements.
     rt_requirements = ms_data-requirements.
   ENDMETHOD.
@@ -278,6 +289,11 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
   METHOD set_folder_logic.
     ms_data-folder_logic = iv_logic.
+  ENDMETHOD.
+
+
+  METHOD set_packaging.
+    ms_data-packaging = it_packaging.
   ENDMETHOD.
 
 
