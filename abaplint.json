@@ -74,6 +74,7 @@
     "globalMacros": []
   },
   "rules": {
+    "uncaught_exception": true,
     "intf_referencing_clas": false,
     "method_implemented_twice": true,
     "parser_702_chaining": true,
@@ -147,7 +148,8 @@
     "check_abstract": true,
     "check_text_elements": true,
     "types_naming": {
-      "pattern": "^TY_.+$"
+      "pattern": "^TY_.+$",
+      "exclude": ["/json/"]
     },
     "7bit_ascii": {
       "exclude": ["zcl_abapgit_utils.clas.testclasses.abap"]
@@ -198,7 +200,9 @@
     },
     "constructor_visibility_public": true,
     "contains_tab": true,
-    "definitions_top": true,
+    "definitions_top": {
+      "exclude": ["/json/"]
+    },
     "description_empty": true,
     "double_space": false,
     "empty_line_in_statement": {
@@ -260,7 +264,8 @@
     "local_variable_names": {
       "expectedData": "^L._.*$",
       "expectedConstant": "^LC_.*$",
-      "expectedFS": "^<L._.*>$"
+      "expectedFS": "^<L._.*>$",
+      "exclude": ["/json/"]
     },
     "main_file_contents": true,
     "max_one_statement": true,
@@ -278,7 +283,8 @@
       "exporting": "^E._.*$",
       "ignoreNames": [
         "P_TASK"
-      ]
+      ],
+      "exclude": ["/json/"]
     },
     "mix_returning": true,
     "msag_consistency": true,
@@ -337,7 +343,8 @@
     "release_idoc": true,
     "remove_descriptions": {
       "ignoreWorkflow": false,
-      "ignoreExceptions": false
+      "ignoreExceptions": false,
+      "exclude": ["/json/"]
     },
     "rfc_error_handling": false,
     "sequential_blank": {

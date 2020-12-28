@@ -122,7 +122,21 @@ CLASS zcl_abapgit_gui_router DEFINITION
         !iv_url TYPE csequence
       RAISING
         zcx_abapgit_exception.
-
+    METHODS get_state_settings
+      IMPORTING
+        !ii_event       TYPE REF TO zif_abapgit_gui_event
+      RETURNING
+        VALUE(rv_state) TYPE i.
+    METHODS get_state_diff
+      IMPORTING
+        !ii_event       TYPE REF TO zif_abapgit_gui_event
+      RETURNING
+        VALUE(rv_state) TYPE i.
+    METHODS get_state_db_edit
+      IMPORTING
+        !ii_event       TYPE REF TO zif_abapgit_gui_event
+      RETURNING
+        VALUE(rv_state) TYPE i.
 ENDCLASS.
 
 
@@ -181,10 +195,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_db_edit
           EXPORTING
             is_key = ls_db_key.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-        IF ii_event->mv_current_page_name = 'ZCL_ABAPGIT_GUI_PAGE_DB_DIS'.
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
-        ENDIF.
+        rs_handled-state = get_state_db_edit( ii_event ).
       WHEN zif_abapgit_definitions=>c_action-db_display.
         lo_query->to_abap( CHANGING cs_container = ls_db_key ).
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_db_dis
@@ -256,20 +267,10 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-go_settings.                    " Go global settings
         rs_handled-page  = zcl_abapgit_gui_page_sett_glob=>create( ).
-        IF ii_event->mv_current_page_name CP 'ZCL_ABAPGIT_GUI_PAGE_SETT_*'.
-          " Keep bookmark while jumping between setting pages
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-        ELSE.
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
-        ENDIF.
+        rs_handled-state = get_state_settings( ii_event ).
       WHEN zif_abapgit_definitions=>c_action-go_settings_personal.           " Go personal settings
         rs_handled-page  = zcl_abapgit_gui_page_sett_pers=>create( ).
-        IF ii_event->mv_current_page_name CP 'ZCL_ABAPGIT_GUI_PAGE_SETT_*'.
-          " Keep bookmark while jumping between setting pages
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-        ELSE.
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
-        ENDIF.
+        rs_handled-state = get_state_settings( ii_event ).
       WHEN zif_abapgit_definitions=>c_action-go_background_run.              " Go background run page
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_bkg_run.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
@@ -281,11 +282,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
       WHEN zif_abapgit_definitions=>c_action-go_stage.                        " Go Staging page
         rs_handled-page  = get_page_stage( ii_event ).
-        IF ii_event->mv_current_page_name = 'ZCL_ABAPGIT_GUI_PAGE_DIFF'.
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-        ELSE.
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
-        ENDIF.
+        rs_handled-state = get_state_diff( ii_event ).
       WHEN zif_abapgit_definitions=>c_action-go_branch_overview.              " Go repo branch overview
         rs_handled-page  = get_page_branch_overview( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
@@ -359,11 +356,17 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
   METHOD get_page_stage.
 
-    DATA: lo_repo                TYPE REF TO zcl_abapgit_repo_online,
-          lv_key                 TYPE zif_abapgit_persistence=>ty_repo-key,
-          lv_seed                TYPE string,
-          lo_stage_page          TYPE REF TO zcl_abapgit_gui_page_stage,
-          lo_code_inspector_page TYPE REF TO zcl_abapgit_gui_page_code_insp.
+    DATA: lo_repo                     TYPE REF TO zcl_abapgit_repo_online,
+          lv_key                      TYPE zif_abapgit_persistence=>ty_repo-key,
+          lv_seed                     TYPE string,
+          lo_stage_page               TYPE REF TO zcl_abapgit_gui_page_stage,
+          lo_code_inspector_page      TYPE REF TO zcl_abapgit_gui_page_code_insp,
+          lo_page_repo                TYPE REF TO zcl_abapgit_gui_page_repo_view,
+          lv_answer                   TYPE c LENGTH 1,
+          lv_branch_name              TYPE string,
+          lv_question_text            TYPE string,
+          lv_question_title           TYPE string,
+          lv_show_create_branch_popup TYPE c LENGTH 1.
 
     lv_key   = ii_event->query( )->get( 'KEY' ).
     lv_seed  = ii_event->query( )->get( 'SEED' ).
@@ -374,9 +377,19 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
       CREATE OBJECT lo_code_inspector_page
         EXPORTING
           io_repo = lo_repo.
-
       ri_page = lo_code_inspector_page.
-
+    ELSEIF lo_repo->get_selected_branch( ) CP zif_abapgit_definitions=>c_git_branch-tags.
+      lv_show_create_branch_popup = abap_true.
+      lv_question_title = 'Staging on a tag'.
+      lv_question_text = 'You are currently working on a tag.'.
+      lv_question_text = |{ lv_question_text } You must be on a branch to stage.|.
+      lv_question_text = |{ lv_question_text } Create new branch?|.
+    ELSEIF lo_repo->get_selected_commit( ) IS NOT INITIAL.
+      lv_show_create_branch_popup = abap_true.
+      lv_question_title = 'Staging on a checked out commit'.
+      lv_question_text = 'You are currently checked out in a commit.'.
+      lv_question_text = |{ lv_question_text } You must be on a branch to stage.|.
+      lv_question_text = |{ lv_question_text } Create new branch?|.
     ELSE.
 
       " force refresh on stage, to make sure the latest local and remote files are used
@@ -389,6 +402,70 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
       ri_page = lo_stage_page.
 
+    ENDIF.
+
+    IF lv_show_create_branch_popup = abap_true.
+
+
+      lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
+        iv_titlebar              = lv_question_title
+        iv_text_question         = lv_question_text
+        iv_text_button_1         = 'New branch' "Ideally the button name would be Create branch, but it did not fit
+        iv_icon_button_1         = 'ICON_OKAY'
+        iv_text_button_2         = 'Cancel'
+        iv_icon_button_2         = 'ICON_CANCEL'
+        iv_default_button        = '2'
+        iv_display_cancel_button = abap_false ).
+      IF lv_answer = 1.
+        TRY.
+            zcl_abapgit_services_git=>create_branch( iv_key = lo_repo->get_key( ) ).
+          CATCH zcx_abapgit_cancel.
+            "Continue processing so we can return to the correct page
+        ENDTRY.
+      ENDIF.
+
+      CREATE OBJECT lo_page_repo TYPE zcl_abapgit_gui_page_repo_view
+        EXPORTING
+          iv_key = lo_repo->get_key( ).
+
+      ri_page = lo_page_repo.
+    ENDIF.
+
+
+  ENDMETHOD.
+
+
+  METHOD get_state_db_edit.
+
+    " In display mode, replace the page
+    IF ii_event->mv_current_page_name = 'ZCL_ABAPGIT_GUI_PAGE_DB_DIS'.
+      rv_state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
+    ELSE.
+      rv_state = zcl_abapgit_gui=>c_event_state-new_page.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_state_diff.
+
+    " Bookmark current page before jumping to diff page
+    IF ii_event->mv_current_page_name CP 'ZCL_ABAPGIT_GUI_PAGE_DIFF'.
+      rv_state = zcl_abapgit_gui=>c_event_state-new_page.
+    ELSE.
+      rv_state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_state_settings.
+
+    " Bookmark current page before jumping to any settings page
+    IF ii_event->mv_current_page_name CP 'ZCL_ABAPGIT_GUI_PAGE_SETT_*'.
+      rv_state = zcl_abapgit_gui=>c_event_state-new_page.
+    ELSE.
+      rv_state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
     ENDIF.
 
   ENDMETHOD.
@@ -581,6 +658,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_repo_sett
           EXPORTING
             io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-repo_log.                        " Repo log
         li_log = lo_repo->get_log( ).
@@ -677,7 +755,6 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
           lv_path    TYPE string,
           lv_xstr    TYPE xstring.
 
-    " TODO refactor
     CONSTANTS:
       BEGIN OF lc_page,
         main_view TYPE string VALUE 'ZCL_ABAPGIT_GUI_PAGE_MAIN',
@@ -697,7 +774,6 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         lo_repo->set_files_remote( zcl_abapgit_zip=>load( lv_xstr ) ).
         zcl_abapgit_services_repo=>refresh( lv_key ).
 
-        " TODO refactor how current page name is determined
         CASE ii_event->mv_current_page_name.
           WHEN lc_page-repo_view.
             rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.

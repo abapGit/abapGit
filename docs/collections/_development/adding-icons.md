@@ -10,16 +10,13 @@ abapGit uses SIL and MIT licensed fonts, they are included in the distribution a
 
 To add an icon to the icon set follow the next procedure:
 
-1. You need `nodejs` installed (version 10 at the time of this doc creation)
-2. Fork/clone this repo [abapGit/icon-font](https://github.com/abapGit/icon-font)
-3. Run `npm install` inside
-4. Download [Font Awesome free version](https://fontawesome.com/download)
-5. Copy new SVGs to `svg` folder of the repo
-6. Run `npm run build`, this will generate `woff` and `css` files in the `build` dir
-7. Upload artifacts to the system via SMW0 to the respective objects
-8. Preferable commit the change in a separate commit
-9. Commit changes to `icon-font` repo too (newly included SVGs)
+1. Add the icon to repo [abapGit/icon-font](https://github.com/abapGit/icon-font) as documented [here](https://github.com/abapGit/icon-font/blob/master/README.md)
+2. Get the new abapGit font and icon files from the icon-font GitHub action 
+3. Go to transaction `SMW0` and display the abapGit MIME objects (Binary > Package $abapgit)
+4. Upload the new font file to ZABAPGIT_ICON_FONT
+5. Upload the new CSS file to ZABAPGIT_ICON_FONT_CSS
+6. Start abapGit and commit the changes the [abapGit/abapGit](https://github.com/abapGit/abapGit) repo (preferably in a separate commit)
 
-Please **mind the licensing** when adding icons not from Font Awesome
+Please **mind the licensing** when adding icons not from Font Awesome.
 
 P.S. Alternatively you can use [w3mipoller](https://github.com/sbcgua/abap_w3mi_poller) for upload step. See also [UI - CSS and assets](./developing-ui-css.html).

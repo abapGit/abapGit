@@ -32,3 +32,10 @@ jobs:
       env:
         GITHUB_API_KEY: ${{ secrets.GITHUB_TOKEN }}
       run: ./ci/deploy-release-tag.sh
+    - name: Upload build artifact
+      if: always()
+      uses: actions/upload-artifact@main
+      with:
+        name: zabapgit_standalone.abap
+        path: ./zabapgit.abap
+        retention-days: 7

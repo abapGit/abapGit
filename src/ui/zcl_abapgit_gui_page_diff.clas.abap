@@ -749,8 +749,8 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_diff> LIKE LINE OF lt_diffs.
 
-    lo_highlighter = zcl_abapgit_syntax_highlighter=>create( iv_filename     = is_diff-filename
-                                                             iv_hidden_chars = mv_hidden_chars ).
+    lo_highlighter = zcl_abapgit_syntax_factory=>create( iv_filename     = is_diff-filename
+                                                         iv_hidden_chars = mv_hidden_chars ).
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     lt_diffs = is_diff-o_diff->get( ).

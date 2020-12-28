@@ -44,7 +44,7 @@ CLASS zcl_abapgit_serialize DEFINITION
     METHODS add_to_return
       IMPORTING
         !iv_path      TYPE string
-        !is_fils_item TYPE zcl_abapgit_objects=>ty_serialization .
+        !is_file_item TYPE zif_abapgit_objects=>ty_serialization .
     METHODS run_parallel
       IMPORTING
         !is_tadir    TYPE zif_abapgit_definitions=>ty_tadir
@@ -70,20 +70,20 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
+CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
 
   METHOD add_to_return.
 
-    FIELD-SYMBOLS: <ls_file>   LIKE LINE OF is_fils_item-files,
+    FIELD-SYMBOLS: <ls_file>   LIKE LINE OF is_file_item-files,
                    <ls_return> LIKE LINE OF mt_files.
 
 
-    LOOP AT is_fils_item-files ASSIGNING <ls_file>.
+    LOOP AT is_file_item-files ASSIGNING <ls_file>.
       APPEND INITIAL LINE TO mt_files ASSIGNING <ls_return>.
       <ls_return>-file = <ls_file>.
       <ls_return>-file-path = iv_path.
-      <ls_return>-item = is_fils_item-item.
+      <ls_return>-item = is_file_item-item.
     ENDLOOP.
 
   ENDMETHOD.
@@ -221,7 +221,7 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
     DATA: lv_result    TYPE xstring,
           lv_path      TYPE string,
           lv_mess      TYPE c LENGTH 200,
-          ls_fils_item TYPE zcl_abapgit_objects=>ty_serialization.
+          ls_file_item TYPE zif_abapgit_objects=>ty_serialization.
 
 
     RECEIVE RESULTS FROM FUNCTION 'Z_ABAPGIT_SERIALIZE_PARALLEL'
@@ -242,9 +242,9 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
         ENDIF.
       ENDIF.
     ELSE.
-      IMPORT data = ls_fils_item FROM DATA BUFFER lv_result. "#EC CI_SUBRC
+      IMPORT data = ls_file_item FROM DATA BUFFER lv_result. "#EC CI_SUBRC
       ASSERT sy-subrc = 0.
-      add_to_return( is_fils_item = ls_fils_item
+      add_to_return( is_file_item = ls_file_item
                      iv_path      = lv_path ).
     ENDIF.
 
@@ -296,26 +296,26 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
   METHOD run_sequential.
 
     DATA: lx_error     TYPE REF TO zcx_abapgit_exception,
-          ls_fils_item TYPE zcl_abapgit_objects=>ty_serialization.
+          ls_file_item TYPE zif_abapgit_objects=>ty_serialization.
 
 
-    ls_fils_item-item-obj_type = is_tadir-object.
-    ls_fils_item-item-obj_name = is_tadir-obj_name.
-    ls_fils_item-item-devclass = is_tadir-devclass.
+    ls_file_item-item-obj_type = is_tadir-object.
+    ls_file_item-item-obj_name = is_tadir-obj_name.
+    ls_file_item-item-devclass = is_tadir-devclass.
 
     TRY.
-        ls_fils_item = zcl_abapgit_objects=>serialize(
-          is_item     = ls_fils_item-item
+        ls_file_item = zcl_abapgit_objects=>serialize(
+          is_item     = ls_file_item-item
           iv_serialize_master_lang_only = mv_serialize_master_lang_only
           iv_language = iv_language ).
 
-        add_to_return( is_fils_item = ls_fils_item
+        add_to_return( is_file_item = ls_file_item
                        iv_path      = is_tadir-path ).
       CATCH zcx_abapgit_exception INTO lx_error.
         IF NOT mi_log IS INITIAL.
           mi_log->add_exception(
               ix_exc  = lx_error
-              is_item = ls_fils_item-item ).
+              is_item = ls_file_item-item ).
         ENDIF.
     ENDTRY.
 

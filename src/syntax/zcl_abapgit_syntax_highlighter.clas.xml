@@ -5,12 +5,11 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Syntax highlighter</DESCRIPT>
+    <DESCRIPT>abapGit - Syntax Highlighter</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
     <UNICODE>X</UNICODE>
-    <WITH_UNIT_TESTS>X</WITH_UNIT_TESTS>
    </VSEOCLASS>
   </asx:values>
  </asx:abap>

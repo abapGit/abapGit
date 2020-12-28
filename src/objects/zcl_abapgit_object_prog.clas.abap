@@ -30,7 +30,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_prog IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
 
 
   METHOD deserialize_texts.
@@ -111,14 +111,21 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_program LIKE sy-repid.
+    DATA:
+      lv_program    LIKE sy-repid,
+      lv_obj_name   TYPE e071-obj_name,
+      lv_corrnumber TYPE e071-trkorr.
 
     lv_program = ms_item-obj_name.
+    lv_corrnumber = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
 
     CALL FUNCTION 'RS_DELETE_PROGRAM'
       EXPORTING
+        corrnumber                 = lv_corrnumber
         program                    = lv_program
         suppress_popup             = abap_true
+        mass_delete_call           = abap_true
+        tadir_devclass             = iv_package
         force_delete_used_includes = abap_true
       EXCEPTIONS
         enqueue_lock               = 1
@@ -129,6 +136,23 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
     IF sy-subrc = 2.
       " Drop also any inactive code that is left in REPOSRC
       DELETE REPORT lv_program ##SUBRC_OK.
+
+      " Remove inactive objects from work area
+      lv_obj_name = lv_program.
+
+      CALL FUNCTION 'RS_DELETE_FROM_WORKING_AREA'
+        EXPORTING
+          object                 = 'REPS'
+          obj_name               = lv_obj_name
+          immediate              = 'X'
+          actualize_working_area = 'X'.
+
+      CALL FUNCTION 'RS_DELETE_FROM_WORKING_AREA'
+        EXPORTING
+          object                 = 'REPT'
+          obj_name               = lv_obj_name
+          immediate              = 'X'
+          actualize_working_area = 'X'.
     ELSEIF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error from RS_DELETE_PROGRAM: { sy-subrc }| ).
     ENDIF.
@@ -147,6 +171,9 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
           lt_tpool_ext    TYPE zif_abapgit_definitions=>ty_tpool_tt,
           ls_cua          TYPE ty_cua,
           lt_source       TYPE abaptxt255_tab.
+
+    " Add R3TR PROG to transport first, otherwise we get several LIMUs
+    corr_insert( iv_package ).
 
     lv_program_name = ms_item-obj_name.
 

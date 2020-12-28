@@ -940,7 +940,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     "ignore objects that exists only local
     DELETE rt_results WHERE lstate = zif_abapgit_definitions=>c_state-added AND rstate IS INITIAL.
-    "log objects that exists only local
+    "ignore objects that where deleted remotely
+    DELETE rt_results WHERE rstate = zif_abapgit_definitions=>c_state-deleted.
+    "log objects that exists only local or where deleted remotely
     IF sy-subrc = 0 AND ii_log IS BOUND.
       SORT rt_results BY obj_type obj_name.
       LOOP AT lt_objects REFERENCE INTO lr_object.
@@ -1376,7 +1378,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
                               COMPONENTS obj_type = <ls_overwrite>-obj_type
                                          obj_name = <ls_overwrite>-obj_name.
       IF sy-subrc <> 0 OR ls_overwrite-decision IS INITIAL.
-        zcx_abapgit_exception=>raise( |Overwrite odd package { <ls_overwrite>-obj_type } {
+        zcx_abapgit_exception=>raise( |Overwrite of package { <ls_overwrite>-obj_type } {
           <ls_overwrite>-obj_name } undecided| ).
       ENDIF.
 

@@ -182,6 +182,12 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
+    METHODS is_repo_lang_logon_lang
+      RETURNING
+        VALUE(rv_repo_lang_is_logon_lang) TYPE abap_bool.
+    METHODS get_abapgit_tcode
+      RETURNING
+        VALUE(rv_tcode) TYPE tcode.
 ENDCLASS.
 
 
@@ -302,7 +308,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                                iv_act = |{ zif_abapgit_definitions=>c_action-repo_refresh_checksums }?key={ mv_key }|
                                iv_opt = lv_crossout ).
 
-    IF mo_repo->get_dot_abapgit( )->get_master_language( ) <> sy-langu.
+    IF is_repo_lang_logon_lang( ) = abap_false AND get_abapgit_tcode( ) IS NOT INITIAL.
       ro_advanced_dropdown->add(
         iv_txt = 'Open in Main Language'
         iv_act = |{ zif_abapgit_definitions=>c_action-repo_open_in_master_lang }?key={ mv_key }| ).
@@ -679,26 +685,26 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
   METHOD open_in_master_language.
 
-    CONSTANTS:
-      lc_abapgit_tcode TYPE tcode VALUE `ZABAPGIT`.
-
     DATA:
       lv_master_language TYPE spras,
       lt_spagpa          TYPE STANDARD TABLE OF rfc_spagpa,
       ls_spagpa          LIKE LINE OF lt_spagpa,
       ls_item            TYPE zif_abapgit_definitions=>ty_item,
       lv_subrc           TYPE syst-subrc,
-      lv_save_sy_langu   TYPE sy-langu.
+      lv_save_sy_langu   TYPE sy-langu,
+      lv_tcode           TYPE tcode.
 
     " https://blogs.sap.com/2017/01/13/logon-language-sy-langu-and-rfc/
 
     lv_master_language = mo_repo->get_dot_abapgit( )->get_master_language( ).
+    lv_tcode = get_abapgit_tcode( ).
+    ASSERT lv_tcode IS NOT INITIAL.
 
     IF lv_master_language = sy-langu.
       zcx_abapgit_exception=>raise( |Repo already opened in main language| ).
     ENDIF.
 
-    ls_item-obj_name = lc_abapgit_tcode.
+    ls_item-obj_name = lv_tcode.
     ls_item-obj_type = |TRAN|.
 
     IF zcl_abapgit_objects=>exists( ls_item ) = abap_false.
@@ -716,7 +722,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       DESTINATION 'NONE'
       STARTING NEW TASK 'ABAPGIT'
       EXPORTING
-        tcode                   = lc_abapgit_tcode
+        tcode                   = lv_tcode
       TABLES
         spagpa_tab              = lt_spagpa
       EXCEPTIONS
@@ -1080,14 +1086,17 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     ls_col_spec-tech_name = 'OBJ_TYPE'.
     ls_col_spec-display_name = 'Type'.
+    ls_col_spec-allow_order_by = abap_true.
     APPEND ls_col_spec TO lt_col_spec.
 
     ls_col_spec-tech_name = 'OBJ_NAME'.
     ls_col_spec-display_name = 'Name'.
+    ls_col_spec-allow_order_by = abap_true.
     APPEND ls_col_spec TO lt_col_spec.
 
     ls_col_spec-tech_name = 'PATH'.
     ls_col_spec-display_name = 'Path'.
+    ls_col_spec-allow_order_by = abap_true.
     APPEND ls_col_spec TO lt_col_spec.
 
     APPEND INITIAL LINE TO lt_col_spec.
@@ -1308,5 +1317,24 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ls_hotkey_action-hotkey = |x|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
+  ENDMETHOD.
+
+  METHOD is_repo_lang_logon_lang.
+    rv_repo_lang_is_logon_lang = boolc( mo_repo->get_dot_abapgit( )->get_master_language( ) = sy-langu ).
+  ENDMETHOD.
+
+  METHOD get_abapgit_tcode.
+    CONSTANTS: lc_report_tcode_hex TYPE x VALUE '80'.
+    DATA: lt_tcodes TYPE STANDARD TABLE OF tcode.
+
+    SELECT tcode
+      FROM tstc
+      INTO TABLE lt_tcodes
+      WHERE pgmna = sy-cprog
+        AND cinfo = lc_report_tcode_hex.
+
+    IF lines( lt_tcodes ) = 1.
+      READ TABLE lt_tcodes INDEX 1 INTO rv_tcode.
+    ENDIF.
   ENDMETHOD.
 ENDCLASS.
