@@ -75,7 +75,8 @@ CLASS zcl_abapgit_objects_files DEFINITION
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt .
     METHODS set_files
       IMPORTING
-        !it_files TYPE zif_abapgit_definitions=>ty_files_tt .
+        !it_files TYPE zif_abapgit_definitions=>ty_files_tt
+        !iv_path  TYPE string OPTIONAL .
     METHODS get_accessed_files
       RETURNING
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_file_signatures_tt .
@@ -84,7 +85,10 @@ CLASS zcl_abapgit_objects_files DEFINITION
         !iv_extra         TYPE clike OPTIONAL
         !iv_ext           TYPE string
       RETURNING
-        VALUE(rv_present) TYPE abap_bool.
+        VALUE(rv_present) TYPE abap_bool .
+    METHODS get_file_pattern
+      RETURNING
+        VALUE(rv_pattern) TYPE string .
   PROTECTED SECTION.
 
     METHODS read_file
@@ -273,6 +277,11 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_file_pattern.
+    rv_pattern = filename( iv_ext = '*' ).
+  ENDMETHOD.
+
+
   METHOD read_abap.
 
     DATA: lv_filename TYPE string,
@@ -381,6 +390,16 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
 
 
   METHOD set_files.
-    mt_files = it_files.
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files.
+
+    IF iv_path IS INITIAL.
+      mt_files = it_files.
+    ELSE.
+      " Only files in given path and matching pattern for this object
+      CLEAR mt_files.
+      LOOP AT it_files ASSIGNING <ls_file> WHERE path = iv_path AND filename CP get_file_pattern( ).
+        INSERT <ls_file> INTO TABLE mt_files.
+      ENDLOOP.
+    ENDIF.
   ENDMETHOD.
 ENDCLASS.
