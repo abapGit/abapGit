@@ -384,8 +384,23 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD deserialize_lxe_texts.
-    DATA: ls_lxe_item TYPE zcl_abapgit_object_prog=>ty_lxe_i18n.
+    DATA: ls_lxe_item       TYPE zcl_abapgit_object_prog=>ty_lxe_i18n,
+          lt_text_pairs_tmp LIKE ls_lxe_item-text_pairs.
+
     LOOP AT it_lxe_texts INTO ls_lxe_item.
+      " Call Read first for buffer prefill
+      CLEAR: lt_text_pairs_tmp.
+      CALL FUNCTION 'LXE_OBJ_TEXT_PAIR_READ'
+        EXPORTING
+          s_lang    = ls_lxe_item-source_lang
+          t_lang    = ls_lxe_item-target_lang
+          custmnr   = ls_lxe_item-custmnr
+          objtype   = ls_lxe_item-objtype
+          objname   = ls_lxe_item-objname
+        TABLES
+          lt_pcx_s1 = lt_text_pairs_tmp.
+
+      "Call actual Write FM
       CALL FUNCTION 'LXE_OBJ_TEXT_PAIR_WRITE'
         EXPORTING
           s_lang    = ls_lxe_item-source_lang
