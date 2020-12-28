@@ -10,7 +10,17 @@ CLASS zcl_abapgit_object_prog DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
              language TYPE langu,
              textpool TYPE zif_abapgit_definitions=>ty_tpool_tt,
            END OF ty_tpool_i18n,
-           ty_tpools_i18n TYPE STANDARD TABLE OF ty_tpool_i18n.
+           ty_tpools_i18n TYPE STANDARD TABLE OF ty_tpool_i18n,
+           BEGIN OF ty_lxe_i18n,
+             source_lang TYPE lxeisolang,
+             target_lang TYPE lxeisolang,
+             custmnr     TYPE lxecustmnr,
+             objtype     TYPE trobjtype,
+             objname     TYPE lxeobjname,
+             text_pairs  TYPE lxe_tt_pcx_s1,
+           END OF ty_lxe_i18n,
+           ty_tlxe_i18n TYPE STANDARD TABLE OF ty_lxe_i18n WITH DEFAULT KEY.
+
     CONSTANTS: c_longtext_id_prog TYPE dokil-id VALUE 'RE'.
 
     METHODS:
@@ -24,19 +34,36 @@ CLASS zcl_abapgit_object_prog DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RETURNING
           VALUE(rv_is_program_locked) TYPE abap_bool
         RAISING
-          zcx_abapgit_exception.
+          zcx_abapgit_exception,
+      get_lang_iso4
+        IMPORTING
+          iv_src         TYPE spras
+        RETURNING
+          VALUE(rv_iso4) TYPE lxeisolang ,
+      get_lxe_object_list
+        RETURNING
+          VALUE(rt_obj_list) TYPE lxe_tt_colob,
+      get_lxe_texts
+        IMPORTING
+                  it_tpool_i18n       TYPE ty_tpools_i18n
+        RETURNING VALUE(rt_lxe_texts) TYPE ty_tlxe_i18n,
+      deserialize_lxe_texts
+        IMPORTING
+          it_lxe_texts TYPE zcl_abapgit_object_prog=>ty_tlxe_i18n.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
+CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
 
   METHOD deserialize_texts.
 
-    DATA: lt_tpool_i18n TYPE ty_tpools_i18n,
-          lt_tpool      TYPE textpool_table.
+    DATA:
+      lt_tpool_i18n TYPE ty_tpools_i18n,
+      lt_tpool      TYPE textpool_table,
+      lt_lxe_texts  TYPE ty_tlxe_i18n.
 
     FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
 
@@ -50,7 +77,11 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
                             iv_language = <ls_tpool>-language
                             it_tpool    = lt_tpool ).
     ENDLOOP.
-
+* -->    https://github.com/abapGit/abapGit/issues/2424
+    ii_xml->read( EXPORTING iv_name = 'LXE_TEXTS'
+                  CHANGING  cg_data = lt_lxe_texts ).
+    deserialize_lxe_texts( lt_lxe_texts ).
+* <--    https://github.com/abapGit/abapGit/issues/2424
   ENDMETHOD.
 
 
@@ -65,9 +96,11 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
   METHOD serialize_texts.
 
     DATA: lt_tpool_i18n TYPE ty_tpools_i18n,
-          lt_tpool      TYPE textpool_table.
+          lt_tpool      TYPE textpool_table,
+          lt_lxe_texts  TYPE STANDARD TABLE OF ty_lxe_i18n.
 
-    FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
+    FIELD-SYMBOLS:
+      <ls_tpool>         LIKE LINE OF lt_tpool_i18n.
 
     IF ii_xml->i18n_params( )-serialize_master_lang_only = abap_true.
       RETURN.
@@ -96,6 +129,16 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
                    ig_data = lt_tpool_i18n ).
     ENDIF.
 
+* -->    https://github.com/abapGit/abapGit/issues/2424
+    lt_lxe_texts = get_lxe_texts( it_tpool_i18n = lt_tpool_i18n ).
+
+    IF lines( lt_lxe_texts ) > 0.
+      " Why is the child node not = 'item'?
+      " Seems to be the line type -> necessary to have a nice name?
+      ii_xml->add( iv_name = 'LXE_TEXTS'
+                   ig_data = lt_lxe_texts ).
+    ENDIF.
+* <--    https://github.com/abapGit/abapGit/issues/2424
   ENDMETHOD.
 
 
@@ -284,4 +327,75 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
                          iv_longtext_id = c_longtext_id_prog ).
 
   ENDMETHOD.
+  METHOD get_lang_iso4.
+    CALL FUNCTION 'LXE_T002_CONVERT_2_TO_4'
+      EXPORTING
+        old_r3_lang = iv_src
+      IMPORTING
+        new_lang    = rv_iso4.
+  ENDMETHOD.
+
+
+  METHOD get_lxe_object_list.
+
+    DATA lv_object_name TYPE trobj_name.
+
+    lv_object_name = ms_item-obj_name.
+    CALL FUNCTION 'LXE_OBJ_EXPAND_TRANSPORT_OBJ'
+      EXPORTING
+        pgmid    = 'R3TR'
+        object   = 'PROG'
+        obj_name = lv_object_name
+      TABLES
+        ex_colob = rt_obj_list.
+
+  ENDMETHOD.
+  METHOD get_lxe_texts.
+
+    DATA: lt_tpool_i18n TYPE ty_tpools_i18n,
+          lt_obj_list   TYPE lxe_tt_colob.
+
+    FIELD-SYMBOLS:
+      <ls_tpool>         LIKE LINE OF lt_tpool_i18n,
+      <lxe_object>       TYPE lxe_colob,
+      <ls_lxe_text_item> TYPE zcl_abapgit_object_prog=>ty_lxe_i18n.
+
+    lt_obj_list = get_lxe_object_list( ).
+
+    LOOP AT lt_obj_list ASSIGNING <lxe_object>.
+      LOOP AT it_tpool_i18n ASSIGNING <ls_tpool>.
+        APPEND INITIAL LINE TO rt_lxe_texts ASSIGNING <ls_lxe_text_item>.
+        <ls_lxe_text_item>-source_lang = me->get_lang_iso4( mv_language ).
+        <ls_lxe_text_item>-target_lang = me->get_lang_iso4( <ls_tpool>-language ).
+        <ls_lxe_text_item>-custmnr = <lxe_object>-custmnr.
+        <ls_lxe_text_item>-objtype = <lxe_object>-objtype.
+        <ls_lxe_text_item>-objname = <lxe_object>-objname.
+        CALL FUNCTION 'LXE_OBJ_TEXT_PAIR_READ'
+          EXPORTING
+            s_lang    = <ls_lxe_text_item>-source_lang
+            t_lang    = <ls_lxe_text_item>-target_lang
+            custmnr   = <ls_lxe_text_item>-custmnr
+            objtype   = <ls_lxe_text_item>-objtype
+            objname   = <ls_lxe_text_item>-objname
+          TABLES
+            lt_pcx_s1 = <ls_lxe_text_item>-text_pairs.
+      ENDLOOP.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD deserialize_lxe_texts.
+    DATA: ls_lxe_item TYPE zcl_abapgit_object_prog=>ty_lxe_i18n.
+    LOOP AT it_lxe_texts INTO ls_lxe_item.
+      CALL FUNCTION 'LXE_OBJ_TEXT_PAIR_WRITE'
+        EXPORTING
+          s_lang    = ls_lxe_item-source_lang
+          t_lang    = ls_lxe_item-target_lang
+          custmnr   = ls_lxe_item-custmnr
+          objtype   = ls_lxe_item-objtype
+          objname   = ls_lxe_item-objname
+        TABLES
+          lt_pcx_s1 = ls_lxe_item-text_pairs.
+    ENDLOOP.
+  ENDMETHOD.
+
 ENDCLASS.
