@@ -141,7 +141,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_router IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
 
   METHOD abapgit_services_actions.
@@ -356,11 +356,17 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
   METHOD get_page_stage.
 
-    DATA: lo_repo                TYPE REF TO zcl_abapgit_repo_online,
-          lv_key                 TYPE zif_abapgit_persistence=>ty_repo-key,
-          lv_seed                TYPE string,
-          lo_stage_page          TYPE REF TO zcl_abapgit_gui_page_stage,
-          lo_code_inspector_page TYPE REF TO zcl_abapgit_gui_page_code_insp.
+    DATA: lo_repo                     TYPE REF TO zcl_abapgit_repo_online,
+          lv_key                      TYPE zif_abapgit_persistence=>ty_repo-key,
+          lv_seed                     TYPE string,
+          lo_stage_page               TYPE REF TO zcl_abapgit_gui_page_stage,
+          lo_code_inspector_page      TYPE REF TO zcl_abapgit_gui_page_code_insp,
+          lo_page_repo                TYPE REF TO zcl_abapgit_gui_page_repo_view,
+          lv_answer                   TYPE c LENGTH 1,
+          lv_branch_name              TYPE string,
+          lv_question_text            TYPE string,
+          lv_question_title           TYPE string,
+          lv_show_create_branch_popup TYPE c LENGTH 1.
 
     lv_key   = ii_event->query( )->get( 'KEY' ).
     lv_seed  = ii_event->query( )->get( 'SEED' ).
@@ -371,9 +377,19 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       CREATE OBJECT lo_code_inspector_page
         EXPORTING
           io_repo = lo_repo.
-
       ri_page = lo_code_inspector_page.
-
+    ELSEIF lo_repo->get_selected_branch( ) CP zif_abapgit_definitions=>c_git_branch-tags.
+      lv_show_create_branch_popup = abap_true.
+      lv_question_title = 'Staging on a tag'.
+      lv_question_text = 'You are currently working on a tag.'.
+      lv_question_text = |{ lv_question_text } You must be on a branch to stage.|.
+      lv_question_text = |{ lv_question_text } Create new branch?|.
+    ELSEIF lo_repo->get_selected_commit( ) IS NOT INITIAL.
+      lv_show_create_branch_popup = abap_true.
+      lv_question_title = 'Staging on a checked out commit'.
+      lv_question_text = 'You are currently checked out in a commit.'.
+      lv_question_text = |{ lv_question_text } You must be on a branch to stage.|.
+      lv_question_text = |{ lv_question_text } Create new branch?|.
     ELSE.
 
       " force refresh on stage, to make sure the latest local and remote files are used
@@ -387,6 +403,34 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       ri_page = lo_stage_page.
 
     ENDIF.
+
+    IF lv_show_create_branch_popup = abap_true.
+
+
+      lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
+        iv_titlebar              = lv_question_title
+        iv_text_question         = lv_question_text
+        iv_text_button_1         = 'New branch' "Ideally the button name would be Create branch, but it did not fit
+        iv_icon_button_1         = 'ICON_OKAY'
+        iv_text_button_2         = 'Cancel'
+        iv_icon_button_2         = 'ICON_CANCEL'
+        iv_default_button        = '2'
+        iv_display_cancel_button = abap_false ).
+      IF lv_answer = 1.
+        TRY.
+            zcl_abapgit_services_git=>create_branch( iv_key = lo_repo->get_key( ) ).
+          CATCH zcx_abapgit_cancel.
+            "Continue processing so we can return to the correct page
+        ENDTRY.
+      ENDIF.
+
+      CREATE OBJECT lo_page_repo TYPE zcl_abapgit_gui_page_repo_view
+        EXPORTING
+          iv_key = lo_repo->get_key( ).
+
+      ri_page = lo_page_repo.
+    ENDIF.
+
 
   ENDMETHOD.
 
