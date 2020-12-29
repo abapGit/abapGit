@@ -125,7 +125,6 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
       <ls_repo_item>-obj_type = <ls_tadir>-object.
       <ls_repo_item>-obj_name = <ls_tadir>-obj_name.
       <ls_repo_item>-path     = <ls_tadir>-path.
-      <ls_repo_item>-srcsystem = <ls_tadir>-srcsystem.
       MOVE-CORRESPONDING <ls_repo_item> TO ls_item.
       <ls_repo_item>-inactive = boolc( zcl_abapgit_objects=>is_active( ls_item ) = abap_false ).
       IF <ls_repo_item>-inactive = abap_true.
