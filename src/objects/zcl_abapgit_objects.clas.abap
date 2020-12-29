@@ -700,10 +700,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
             EXPORTING
               is_item = ls_item
               iv_path = lv_path.
-
-          lo_files->set_files(
-            it_files = lt_remote
-            iv_path  = <ls_result>-path ).
+          lo_files->set_files( lt_remote ).
 
           "analyze XML in order to instantiate the proper serializer
           lo_xml = lo_files->read_xml( ).

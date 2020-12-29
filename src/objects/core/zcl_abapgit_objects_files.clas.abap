@@ -75,8 +75,7 @@ CLASS zcl_abapgit_objects_files DEFINITION
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt .
     METHODS set_files
       IMPORTING
-        !it_files TYPE zif_abapgit_definitions=>ty_files_tt
-        !iv_path  TYPE string OPTIONAL .
+        !it_files TYPE zif_abapgit_definitions=>ty_files_tt .
     METHODS get_accessed_files
       RETURNING
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_file_signatures_tt .
@@ -390,16 +389,21 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
 
 
   METHOD set_files.
+
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files.
 
-    IF iv_path IS INITIAL.
-      mt_files = it_files.
-    ELSE.
-      " Only files in given path and matching pattern for this object
-      CLEAR mt_files.
-      LOOP AT it_files ASSIGNING <ls_file> WHERE path = iv_path AND filename CP get_file_pattern( ).
+    CLEAR mt_files.
+
+    " Set only files matching the pattern for this object.
+    " If a path has been defined in the construtor (currently only for DEVC),
+    " then the path has to match, too
+    LOOP AT it_files ASSIGNING <ls_file> WHERE filename CP get_file_pattern( ).
+      IF mv_path IS INITIAL.
         INSERT <ls_file> INTO TABLE mt_files.
-      ENDLOOP.
-    ENDIF.
+      ELSEIF mv_path = <ls_file>-path.
+        INSERT <ls_file> INTO TABLE mt_files.
+      ENDIF.
+    ENDLOOP.
+
   ENDMETHOD.
 ENDCLASS.
