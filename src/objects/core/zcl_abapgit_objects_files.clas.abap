@@ -394,9 +394,8 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
 
     CLEAR mt_files.
 
-    " Set only files matching the pattern for this object.
-    " If a path has been defined in the construtor (currently only for DEVC),
-    " then the path has to match, too
+    " Set only files matching the pattern for this object
+    " If a path has been defined in the constructor, then the path has to match, too
     LOOP AT it_files ASSIGNING <ls_file> WHERE filename CP get_file_pattern( ).
       IF mv_path IS INITIAL.
         INSERT <ls_file> INTO TABLE mt_files.
