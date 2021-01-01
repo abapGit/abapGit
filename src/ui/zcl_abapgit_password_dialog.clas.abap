@@ -32,7 +32,7 @@ CLASS zcl_abapgit_password_dialog IMPLEMENTATION.
 
   METHOD popup.
 
-    DATA: lv_gui_is_available TYPE abap_bool.
+    DATA lv_gui_is_available TYPE abap_bool.
 
     lv_gui_is_available = zcl_abapgit_ui_factory=>get_gui_functions( )->gui_is_available( ).
 
@@ -87,7 +87,11 @@ CLASS zcl_abapgit_password_dialog IMPLEMENTATION.
           lv_result        TYPE string,
           lv_function_call TYPE string,
           lt_code          TYPE STANDARD TABLE OF string,
-          lv_vbscript      TYPE string.
+          lv_vbscript      TYPE string,
+          lt_lines         TYPE STANDARD TABLE OF string,
+          lv_key           TYPE string,
+          lv_value         TYPE string.
+    FIELD-SYMBOLS: <lv_line> TYPE string.
 
     CREATE OBJECT ls_control 'MSScriptControl.ScriptControl'.
 
@@ -138,9 +142,9 @@ CLASS zcl_abapgit_password_dialog IMPLEMENTATION.
         #1 = lv_function_call.
 
     IF sy-subrc = 0.
-      SPLIT lv_result AT cl_abap_char_utilities=>newline INTO TABLE DATA(lt_lines).
-      LOOP AT lt_lines ASSIGNING FIELD-SYMBOL(<lv_line>).
-        SPLIT <lv_line> AT '=' INTO DATA(lv_key) DATA(lv_value).
+      SPLIT lv_result AT cl_abap_char_utilities=>newline INTO TABLE lt_lines.
+      LOOP AT lt_lines ASSIGNING <lv_line>.
+        SPLIT <lv_line> AT '=' INTO lv_key lv_value.
         IF sy-subrc = 0.
           CASE lv_key.
             WHEN 'username'.
