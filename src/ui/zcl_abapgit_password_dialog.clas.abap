@@ -104,7 +104,6 @@ CLASS zcl_abapgit_password_dialog IMPLEMENTATION.
     APPEND `  Dim params` TO lt_code.
     APPEND `  Dim command` TO lt_code.
     APPEND `  Dim exec` TO lt_code.
-    APPEND `  Dim keyValue()` TO lt_code.
     APPEND `  Set shell = CreateObject("Wscript.Shell")` TO lt_code.
     APPEND `  params = "url=" & Url & vbCrLf & "username=" & User & vbCrLf` TO lt_code.
     APPEND `  command = "powershell.exe -Command ""echo '" & params & "' | git.exe credential fill"""` TO lt_code.
