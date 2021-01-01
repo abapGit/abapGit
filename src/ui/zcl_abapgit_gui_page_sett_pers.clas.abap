@@ -37,6 +37,7 @@ CLASS zcl_abapgit_gui_page_sett_pers DEFINITION
         parallel_proc_disabled TYPE string VALUE 'parallel_proc_disabled',
         hide_sapgui_hint       TYPE string VALUE 'hide_sapgui_hint',
         activate_wo_popup      TYPE string VALUE 'activate_wo_popup',
+        use_frontend_git_auth  TYPE string VALUE 'use_frontend_git_auth',
       END OF c_id.
 
     CONSTANTS:
@@ -170,6 +171,9 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
       iv_label         = 'Key to Activate Link Hints'
       iv_min           = 0
       iv_max           = 1
+    )->checkbox(
+      iv_name          = c_id-use_frontend_git_auth
+      iv_label         = 'Use git credential helper on frontend for authentication'
     )->start_group(
       iv_name          = c_id-resources
       iv_label         = 'System Resources'
@@ -227,6 +231,9 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
     mo_form_data->set(
       iv_key = c_id-link_hint_key
       iv_val = |{ ms_settings-link_hint_key }| ).
+    mo_form_data->set(
+      iv_key = c_id-use_frontend_git_auth
+      iv_val = |{ ms_settings-use_frontend_git_auth }| ).
 
     " Resources
     mo_form_data->set(
@@ -253,6 +260,7 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
     ms_settings-adt_jump_enabled = mo_form_data->get( c_id-adt_jump_enabled ).
     ms_settings-link_hints_enabled = mo_form_data->get( c_id-link_hints_enabled ).
     ms_settings-link_hint_key = mo_form_data->get( c_id-link_hint_key ).
+    ms_settings-use_frontend_git_auth = mo_form_data->get( c_id-use_frontend_git_auth ).
 
     " Resources
     ms_settings-parallel_proc_disabled = mo_form_data->get( c_id-parallel_proc_disabled ).
