@@ -1,5 +1,5 @@
 ---
-title: UI - HTML pages
+title: UI - HTML forms
 order: 94
 ---
 
