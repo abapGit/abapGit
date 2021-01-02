@@ -11,6 +11,7 @@ CLASS zcl_abapgit_data_config DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
+    CONSTANTS c_extension TYPE string VALUE '.config.json'.
     DATA mv_path TYPE string .
     DATA mt_config TYPE zif_abapgit_data_config=>ty_config_tt .
 
@@ -69,8 +70,26 @@ CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
 
 
   METHOD zif_abapgit_data_config~from_json.
-* todo
-    ASSERT 0 = 1.
+
+    DATA ls_file LIKE LINE OF it_files.
+    DATA ls_config TYPE zif_abapgit_data_config=>ty_config.
+    DATA lo_ajson TYPE REF TO zcl_abapgit_ajson.
+    DATA lx_ajson TYPE REF TO zcx_abapgit_ajson_error.
+
+    CLEAR mt_config.
+    LOOP AT it_files INTO ls_file WHERE path = mv_path AND filename CP |*{ c_extension }|.
+      TRY.
+          lo_ajson = zcl_abapgit_ajson=>parse( zcl_abapgit_convert=>xstring_to_string_utf8( ls_file-data ) ).
+          lo_ajson->zif_abapgit_ajson_reader~to_abap(
+            IMPORTING
+              ev_container = ls_config ).
+        CATCH zcx_abapgit_ajson_error INTO lx_ajson.
+          zcx_abapgit_exception=>raise( lx_ajson->get_text( ) ).
+      ENDTRY.
+
+      zif_abapgit_data_config~add_config( ls_config ).
+    ENDLOOP.
+
   ENDMETHOD.
 
 
@@ -87,8 +106,6 @@ CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
 
 
   METHOD zif_abapgit_data_config~remove_config.
-
-* todo, give exception if it does not exist
 
     DELETE mt_config WHERE name = is_config-name AND type = is_config-type.
     IF sy-subrc <> 0.
@@ -115,7 +132,7 @@ CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
     ls_file-path = mv_path.
 
     LOOP AT mt_config INTO ls_config.
-      ls_file-filename = to_lower( |{ ls_config-name }.config.json| ).
+      ls_file-filename = to_lower( |{ ls_config-name }{ c_extension }| ).
       ls_file-data = dump( ls_config ).
       ls_file-sha1 = zcl_abapgit_hash=>sha1_blob( ls_file-data ).
       APPEND ls_file TO rt_files.
