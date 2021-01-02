@@ -9,11 +9,35 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
     METHODS constructor
       RAISING
         zcx_abapgit_exception .
+
+    METHODS zif_abapgit_gui_event_handler~on_event
+        REDEFINITION .
   PROTECTED SECTION.
+
+    CONSTANTS:
+      BEGIN OF c_event,
+        add    TYPE string VALUE 'add',
+        update TYPE string VALUE 'update',
+        remove TYPE string VALUE 'remove',
+      END OF c_event .
+
+    CONSTANTS:
+      BEGIN OF c_id,
+        table TYPE string VALUE 'table',
+        where TYPE string VALUE 'where',
+      END OF c_id .
+
+    DATA mi_config TYPE REF TO zif_abapgit_data_config .
 
     METHODS render_content
         REDEFINITION .
   PRIVATE SECTION.
+
+    METHODS event_add
+      IMPORTING
+        !ii_event TYPE REF TO zif_abapgit_gui_event
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -27,6 +51,24 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
 
     ms_control-page_title = 'Data'.
 
+    CREATE OBJECT mi_config TYPE zcl_abapgit_data_config.
+
+  ENDMETHOD.
+
+
+  METHOD event_add.
+
+    DATA lo_map TYPE REF TO zcl_abapgit_string_map.
+    DATA ls_config TYPE zif_abapgit_data_config=>ty_config.
+
+    lo_map = ii_event->form_data( ).
+
+    ls_config-type = zif_abapgit_data_config=>c_data_type-tabu.
+    ls_config-name = to_upper( lo_map->get( c_id-table ) ).
+    SPLIT lo_map->get( c_id-where ) AT |\n| INTO TABLE ls_config-where.
+
+    mi_config->add_config( ls_config ).
+
   ENDMETHOD.
 
 
@@ -34,23 +76,73 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ri_html->add( 'hello world' ).
+
+    DATA lo_form TYPE REF TO zcl_abapgit_html_form.
+
+    DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
+    CREATE OBJECT mo_form_data.
+
+    lo_form = zcl_abapgit_html_form=>create(  ).
+    lo_form->text(
+      iv_label    = 'Table'
+      iv_name     = c_id-table
+      iv_required = abap_true ).
+    lo_form->textarea(
+      iv_label       = 'Where'
+      iv_placeholder = 'Conditions separated by newline'
+      iv_name        = c_id-where ).
+    lo_form->command(
+      iv_label       = 'Add'
+      iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
+      iv_action      = c_event-add ).
+    ri_html->add( lo_form->render(
+      iv_form_class = 'dialog w600px m-em5-sides margin-v1'
+      io_values     = mo_form_data ) ).
+
+************
+
+    DATA lt_configs TYPE zif_abapgit_data_config=>ty_config_tt.
+    DATA ls_config LIKE LINE OF lt_configs.
+    lt_configs = mi_config->get_configs( ).
+
+    LOOP AT lt_configs INTO ls_config.
+      lo_form = zcl_abapgit_html_form=>create(  ).
+      CREATE OBJECT mo_form_data.
+
+*      mo_form_data->set(
+*        iv_key = c_id-table
+*        iv_val = ls_config-name ).
+      lo_form->text(
+        iv_label    = 'Table'
+        iv_name     = c_id-table
+        iv_readonly = abap_true ).
+      lo_form->textarea(
+        iv_label       = 'Where'
+        iv_placeholder = 'Conditions separated by newline'
+        iv_name        = c_id-where ).
+      lo_form->command(
+        iv_label       = 'Update'
+        iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
+        iv_action      = c_event-update ).
+      lo_form->command(
+        iv_label       = 'Remove'
+        iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
+        iv_action      = c_event-remove ).
+      ri_html->add( lo_form->render(
+        iv_form_class = 'dialog w600px m-em5-sides margin-v1'
+        io_values     = mo_form_data ) ).
+    ENDLOOP.
+
+  ENDMETHOD.
 
 
+  METHOD zif_abapgit_gui_event_handler~on_event.
 
-*    DATA lo_form TYPE REF TO zcl_abapgit_html_form.
-*
-*    lo_form = zcl_abapgit_html_form=>create( iv_form_id = 'add-repo-online-form' ).
-*    lo_form->text(
-*      iv_label       = 'Table'
-*      iv_name        = 'table' ).
-*
-*
-*    ri_html->add( lo_form->render(
-*        iv_form_class     = 'dialog w600px m-em5-sides margin-v1'
-*        io_values         = mo_form_data
-*        io_validation_log = mo_validation_log ) ).
-
+    CASE ii_event->mv_action.
+      WHEN c_event-add.
+        event_add( ii_event ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+    ENDCASE.
 
   ENDMETHOD.
 ENDCLASS.

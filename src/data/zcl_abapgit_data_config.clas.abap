@@ -60,6 +60,7 @@ CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
 
     ASSERT NOT is_config-type IS INITIAL.
     ASSERT NOT is_config-name IS INITIAL.
+    ASSERT is_config-name = to_upper( is_config-name ).
 
     INSERT is_config INTO TABLE mt_config.
     IF sy-subrc <> 0.
