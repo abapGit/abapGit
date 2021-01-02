@@ -80,9 +80,7 @@ CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
     LOOP AT it_files INTO ls_file WHERE path = mv_path AND filename CP |*{ c_extension }|.
       TRY.
           lo_ajson = zcl_abapgit_ajson=>parse( zcl_abapgit_convert=>xstring_to_string_utf8( ls_file-data ) ).
-          lo_ajson->zif_abapgit_ajson_reader~to_abap(
-            IMPORTING
-              ev_container = ls_config ).
+          lo_ajson->zif_abapgit_ajson_reader~to_abap( IMPORTING ev_container = ls_config ).
         CATCH zcx_abapgit_ajson_error INTO lx_ajson.
           zcx_abapgit_exception=>raise( lx_ajson->get_text( ) ).
       ENDTRY.
