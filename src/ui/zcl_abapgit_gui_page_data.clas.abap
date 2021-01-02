@@ -163,13 +163,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
 
     DATA lo_form TYPE REF TO zcl_abapgit_html_form.
     DATA lo_form_data TYPE REF TO zcl_abapgit_string_map.
+    DATA lt_configs TYPE zif_abapgit_data_config=>ty_config_tt.
+    DATA ls_config LIKE LINE OF lt_configs.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     CREATE OBJECT lo_form_data.
 
-
-    DATA lt_configs TYPE zif_abapgit_data_config=>ty_config_tt.
-    DATA ls_config LIKE LINE OF lt_configs.
     lt_configs = mi_config->get_configs( ).
 
     LOOP AT lt_configs INTO ls_config.
