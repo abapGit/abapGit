@@ -33,6 +33,14 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
         REDEFINITION .
   PRIVATE SECTION.
 
+    METHODS render_add
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+    METHODS render_existing
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
     METHODS event_add
       IMPORTING
         !ii_event TYPE REF TO zif_abapgit_gui_event
@@ -72,17 +80,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_content.
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
+  METHOD render_add.
 
     DATA lo_form TYPE REF TO zcl_abapgit_html_form.
-
     DATA lo_form_data TYPE REF TO zcl_abapgit_string_map.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     CREATE OBJECT lo_form_data.
 
-    lo_form = zcl_abapgit_html_form=>create(  ).
+    lo_form = zcl_abapgit_html_form=>create( ).
     lo_form->text(
       iv_label    = 'Table'
       iv_name     = c_id-table
@@ -99,7 +105,28 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
       iv_form_class = 'dialog w600px m-em5-sides margin-v1'
       io_values     = lo_form_data ) ).
 
-************
+  ENDMETHOD.
+
+
+  METHOD render_content.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    ri_html->add( render_add( ) ).
+    ri_html->add( render_existing( ) ).
+
+
+  ENDMETHOD.
+
+
+  METHOD render_existing.
+
+    DATA lo_form TYPE REF TO zcl_abapgit_html_form.
+    DATA lo_form_data TYPE REF TO zcl_abapgit_string_map.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    CREATE OBJECT lo_form_data.
+
 
     DATA lt_configs TYPE zif_abapgit_data_config=>ty_config_tt.
     DATA ls_config LIKE LINE OF lt_configs.
@@ -109,9 +136,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
       lo_form = zcl_abapgit_html_form=>create(  ).
       CREATE OBJECT lo_form_data.
 
-*      mo_form_data->set(
-*        iv_key = c_id-table
-*        iv_val = ls_config-name ).
+      lo_form_data->set(
+        iv_key = c_id-table
+        iv_val = |{ ls_config-name }| ).
       lo_form->text(
         iv_label    = 'Table'
         iv_name     = c_id-table
@@ -132,6 +159,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
         iv_form_class = 'dialog w600px m-em5-sides margin-v1'
         io_values     = lo_form_data ) ).
     ENDLOOP.
+
 
   ENDMETHOD.
 
