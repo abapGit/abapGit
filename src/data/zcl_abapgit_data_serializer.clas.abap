@@ -12,7 +12,9 @@ CLASS zcl_abapgit_data_serializer DEFINITION
       IMPORTING
         !ir_data       TYPE REF TO data
       RETURNING
-        VALUE(rv_data) TYPE xstring .
+        VALUE(rv_data) TYPE xstring
+      RAISING
+        zcx_abapgit_exception .
     METHODS build_table_itab
       IMPORTING
         !iv_name       TYPE tadir-obj_name
@@ -47,26 +49,25 @@ CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
 
   METHOD dump_itab.
 
-* quick and dirty, will be json instead
-
-    DATA lt_data TYPE string_table.
-    DATA lv_str TYPE string.
+    DATA lo_ajson TYPE REF TO zcl_abapgit_ajson.
+    DATA lv_string TYPE string.
+    DATA lx_ajson TYPE REF TO zcx_abapgit_ajson_error.
     FIELD-SYMBOLS <lg_tab> TYPE ANY TABLE.
-    FIELD-SYMBOLS <ls_row> TYPE any.
 
 
     ASSIGN ir_data->* TO <lg_tab>.
-    LOOP AT <lg_tab> ASSIGNING <ls_row>.
-      cl_abap_container_utilities=>fill_container_c(
-        EXPORTING
-          im_value     = <ls_row>
-        IMPORTING
-          ex_container = lv_str ).
-      APPEND lv_str TO lt_data.
-    ENDLOOP.
 
-    rv_data = zcl_abapgit_convert=>string_to_xstring_utf8( concat_lines_of( table = lt_data
-                                                                            sep   = |\n| ) ).
+    TRY.
+        lo_ajson = zcl_abapgit_ajson=>create_empty( ).
+        lo_ajson->zif_abapgit_ajson_writer~set(
+          iv_path = '/'
+          iv_val = <lg_tab> ).
+        lv_string = lo_ajson->stringify( 2 ).
+      CATCH zcx_abapgit_ajson_error INTO lx_ajson.
+        zcx_abapgit_exception=>raise( lx_ajson->get_text( ) ).
+    ENDTRY.
+
+    rv_data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ).
 
   ENDMETHOD.
 
@@ -108,7 +109,7 @@ CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
         iv_name  = ls_config-name
         it_where = ls_config-where ).
 
-      ls_file-filename = to_lower( |{ ls_config-name }.{ ls_config-type }.todo| ).
+      ls_file-filename = to_lower( |{ ls_config-name }.{ ls_config-type }.json| ).
       ls_file-data = dump_itab( lr_data ).
       ls_file-sha1 = zcl_abapgit_hash=>sha1_blob( ls_file-data ).
       APPEND ls_file TO rt_files.

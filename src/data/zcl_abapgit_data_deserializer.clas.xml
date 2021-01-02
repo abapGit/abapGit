@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_DATA_DESERIALIZER</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - Data deserializer</DESCRIPT>
+    <DESCRIPT>abapGit - Data Deserializer</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
