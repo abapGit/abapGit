@@ -15,11 +15,6 @@ CLASS zcl_abapgit_data_serializer DEFINITION
         VALUE(rv_data) TYPE xstring
       RAISING
         zcx_abapgit_exception .
-    METHODS build_table_itab
-      IMPORTING
-        !iv_name       TYPE tadir-obj_name
-      RETURNING
-        VALUE(rr_data) TYPE REF TO data .
     METHODS read_database_table
       IMPORTING
         !iv_name       TYPE tadir-obj_name
@@ -32,19 +27,6 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
-
-
-  METHOD build_table_itab.
-
-    DATA lo_structure TYPE REF TO cl_abap_structdescr.
-    DATA lo_table TYPE REF TO cl_abap_tabledescr.
-
-    lo_structure ?= cl_abap_structdescr=>describe_by_name( iv_name ).
-* todo, also add unique key corresponding to the db table, so duplicates cannot be returned
-    lo_table = cl_abap_tabledescr=>create( lo_structure ).
-    CREATE DATA rr_data TYPE HANDLE lo_table.
-
-  ENDMETHOD.
 
 
   METHOD dump_itab.
@@ -77,7 +59,7 @@ CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
     DATA lv_where LIKE LINE OF it_where.
     FIELD-SYMBOLS: <lg_tab> TYPE ANY TABLE.
 
-    rr_data = build_table_itab( iv_name ).
+    rr_data = zcl_abapgit_data_utils=>build_table_itab( iv_name ).
     ASSIGN rr_data->* TO <lg_tab>.
 
     LOOP AT it_where INTO lv_where.
