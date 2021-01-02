@@ -6,7 +6,9 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
 
   PUBLIC SECTION.
 
-    METHODS constructor .
+    METHODS constructor
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
 
     METHODS render_content
