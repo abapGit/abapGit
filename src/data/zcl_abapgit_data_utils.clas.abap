@@ -8,6 +8,13 @@ CLASS zcl_abapgit_data_utils DEFINITION
         !iv_name       TYPE tadir-obj_name
       RETURNING
         VALUE(rr_data) TYPE REF TO data .
+
+    CLASS-METHODS build_filename
+      IMPORTING
+        is_config          TYPE zif_abapgit_data_config=>ty_config
+      RETURNING
+        VALUE(rv_filename) TYPE string.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -15,6 +22,13 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_DATA_UTILS IMPLEMENTATION.
+
+
+  METHOD build_filename.
+
+    rv_filename = to_lower( |{ is_config-name }.{ is_config-type }.json| ).
+
+  ENDMETHOD.
 
 
   METHOD build_table_itab.
