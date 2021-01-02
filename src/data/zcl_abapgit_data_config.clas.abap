@@ -13,6 +13,14 @@ CLASS zcl_abapgit_data_config DEFINITION
 
     DATA mv_path TYPE string .
     DATA mt_config TYPE zif_abapgit_data_config=>ty_config_tt .
+
+    METHODS dump
+      IMPORTING
+        !is_config     TYPE zif_abapgit_data_config=>ty_config
+      RETURNING
+        VALUE(rv_json) TYPE string
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -23,6 +31,26 @@ CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
   METHOD constructor.
 
     mv_path = zif_abapgit_data_config=>c_default_path.
+
+  ENDMETHOD.
+
+
+  METHOD dump.
+
+    DATA lo_ajson TYPE REF TO zcl_abapgit_ajson.
+    DATA lv_string TYPE string.
+    DATA lx_ajson TYPE REF TO zcx_abapgit_ajson_error.
+
+
+    TRY.
+        lo_ajson = zcl_abapgit_ajson=>create_empty( ).
+        lo_ajson->zif_abapgit_ajson_writer~set(
+          iv_path = '/'
+          iv_val = is_config ).
+        rv_json = zcl_abapgit_convert=>string_to_xstring_utf8( lo_ajson->stringify( 2 ) ).
+      CATCH zcx_abapgit_ajson_error INTO lx_ajson.
+        zcx_abapgit_exception=>raise( lx_ajson->get_text( ) ).
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -80,8 +108,19 @@ CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
 
 
   METHOD zif_abapgit_data_config~to_json.
-* todo
-    ASSERT 0 = 1.
+
+    DATA ls_config LIKE LINE OF mt_config.
+    DATA ls_file LIKE LINE OF rt_files.
+
+    ls_file-path = mv_path.
+
+    LOOP AT mt_config INTO ls_config.
+      ls_file-filename = to_lower( |{ ls_config-name }.config.json| ).
+      ls_file-data = dump( ls_config ).
+      ls_file-sha1 = zcl_abapgit_hash=>sha1_blob( ls_file-data ).
+      APPEND ls_file TO rt_files.
+    ENDLOOP.
+
   ENDMETHOD.
 
 
