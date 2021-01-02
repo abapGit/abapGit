@@ -59,7 +59,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_html_form_utils IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_HTML_FORM_UTILS IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -173,7 +173,7 @@ CLASS zcl_abapgit_html_form_utils IMPLEMENTATION.
       IF <ls_field>-type = zif_abapgit_html_form=>c_field_type-checkbox.
         ro_form_data->set(
           iv_key = <ls_field>-name
-          iv_val = boolc( lv_value = 'on' ) ).
+          iv_val = boolc( lv_value = 'on' ) ) ##TYPE.
       ELSEIF <ls_field>-type = zif_abapgit_html_form=>c_field_type-text AND <ls_field>-upper_case = abap_true.
         ro_form_data->set(
           iv_key = <ls_field>-name

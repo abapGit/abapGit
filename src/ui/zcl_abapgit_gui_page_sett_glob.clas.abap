@@ -77,7 +77,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_GLOB IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -215,7 +215,7 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
       iv_val = mo_settings->get_proxy_port( ) ).
     mo_form_data->set(
       iv_key = c_id-proxy_auth
-      iv_val = boolc( mo_settings->get_proxy_authentication( ) = abap_true ) ).
+      iv_val = boolc( mo_settings->get_proxy_authentication( ) = abap_true ) ) ##TYPE.
 
     read_proxy_bypass( ).
 
@@ -234,10 +234,10 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
     IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_false.
       mo_form_data->set(
         iv_key = c_id-run_critical_tests
-        iv_val = boolc( mo_settings->get_run_critical_tests( ) = abap_true ) ).
+        iv_val = boolc( mo_settings->get_run_critical_tests( ) = abap_true ) ) ##TYPE.
       mo_form_data->set(
         iv_key = c_id-experimental_features
-        iv_val = boolc( mo_settings->get_experimental_features( ) = abap_true ) ).
+        iv_val = boolc( mo_settings->get_experimental_features( ) = abap_true ) ) ##TYPE.
     ENDIF.
 
     " Set for is_dirty check

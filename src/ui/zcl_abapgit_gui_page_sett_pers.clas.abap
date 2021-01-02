@@ -73,7 +73,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -222,13 +222,13 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
     " Interaction
     mo_form_data->set(
       iv_key = c_id-activate_wo_popup
-      iv_val = boolc( ms_settings-activate_wo_popup = abap_true ) ).
+      iv_val = boolc( ms_settings-activate_wo_popup = abap_true ) ) ##TYPE.
     mo_form_data->set(
       iv_key = c_id-adt_jump_enabled
-      iv_val = boolc( ms_settings-adt_jump_enabled = abap_true ) ).
+      iv_val = boolc( ms_settings-adt_jump_enabled = abap_true ) ) ##TYPE.
     mo_form_data->set(
       iv_key = c_id-link_hints_enabled
-      iv_val = boolc( ms_settings-link_hints_enabled = abap_true ) ).
+      iv_val = boolc( ms_settings-link_hints_enabled = abap_true ) ) ##TYPE.
     mo_form_data->set(
       iv_key = c_id-link_hint_key
       iv_val = |{ ms_settings-link_hint_key }| ).
@@ -236,7 +236,7 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
     " Resources
     mo_form_data->set(
       iv_key = c_id-parallel_proc_disabled
-      iv_val = boolc( ms_settings-parallel_proc_disabled = abap_true ) ).
+      iv_val = boolc( ms_settings-parallel_proc_disabled = abap_true ) ) ##TYPE.
 
     " Set for is_dirty check
     mo_form_util->set_data( mo_form_data ).
