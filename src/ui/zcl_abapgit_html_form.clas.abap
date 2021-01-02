@@ -1,40 +1,32 @@
 CLASS zcl_abapgit_html_form DEFINITION
   PUBLIC
   FINAL
-  CREATE PRIVATE.
+  CREATE PRIVATE .
 
   PUBLIC SECTION.
 
-    CONSTANTS c_rows TYPE string VALUE 'rows'.
-
-    CONSTANTS:
-      BEGIN OF c_cmd_type,
-        input  TYPE i VALUE 1,
-        link   TYPE i VALUE 2,
-        button TYPE i VALUE 3,
-      END OF c_cmd_type.
+    INTERFACES zif_abapgit_html_form .
 
     CLASS-METHODS create
       IMPORTING
         !iv_form_id    TYPE csequence OPTIONAL
         !iv_help_page  TYPE csequence OPTIONAL
       RETURNING
-        VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form.
+        VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form .
     METHODS render
       IMPORTING
         !iv_form_class     TYPE csequence
         !io_values         TYPE REF TO zcl_abapgit_string_map
         !io_validation_log TYPE REF TO zcl_abapgit_string_map OPTIONAL
       RETURNING
-        VALUE(ri_html)     TYPE REF TO zif_abapgit_html.
+        VALUE(ri_html)     TYPE REF TO zif_abapgit_html .
     METHODS command
       IMPORTING
         !iv_label      TYPE csequence
         !iv_action     TYPE csequence
-        !iv_is_main    TYPE abap_bool DEFAULT abap_false
-        !iv_cmd_type   TYPE i DEFAULT 1
+        !iv_cmd_type   TYPE i DEFAULT zif_abapgit_html_form=>c_cmd_type-input
       RETURNING
-        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form .
     METHODS text
       IMPORTING
         !iv_label       TYPE csequence
@@ -49,7 +41,7 @@ CLASS zcl_abapgit_html_form DEFINITION
         !iv_min         TYPE i DEFAULT cl_abap_math=>min_int4
         !iv_max         TYPE i DEFAULT cl_abap_math=>max_int4
       RETURNING
-        VALUE(ro_self)  TYPE REF TO zcl_abapgit_html_form.
+        VALUE(ro_self)  TYPE REF TO zcl_abapgit_html_form .
     METHODS textarea
       IMPORTING
         !iv_label       TYPE csequence
@@ -59,7 +51,7 @@ CLASS zcl_abapgit_html_form DEFINITION
         !iv_readonly    TYPE abap_bool DEFAULT abap_false
         !iv_placeholder TYPE csequence OPTIONAL
       RETURNING
-        VALUE(ro_self)  TYPE REF TO zcl_abapgit_html_form.
+        VALUE(ro_self)  TYPE REF TO zcl_abapgit_html_form .
     METHODS number
       IMPORTING
         !iv_label      TYPE csequence
@@ -70,14 +62,14 @@ CLASS zcl_abapgit_html_form DEFINITION
         !iv_min        TYPE i DEFAULT cl_abap_math=>min_int4
         !iv_max        TYPE i DEFAULT cl_abap_math=>max_int4
       RETURNING
-        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form .
     METHODS checkbox
       IMPORTING
         !iv_label      TYPE csequence
         !iv_name       TYPE csequence
         !iv_hint       TYPE csequence OPTIONAL
       RETURNING
-        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form .
     METHODS radio
       IMPORTING
         !iv_label         TYPE csequence
@@ -85,101 +77,45 @@ CLASS zcl_abapgit_html_form DEFINITION
         !iv_default_value TYPE csequence OPTIONAL
         !iv_hint          TYPE csequence OPTIONAL
       RETURNING
-        VALUE(ro_self)    TYPE REF TO zcl_abapgit_html_form.
+        VALUE(ro_self)    TYPE REF TO zcl_abapgit_html_form .
     METHODS option
       IMPORTING
         !iv_label      TYPE csequence
         !iv_value      TYPE csequence
       RETURNING
-        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form .
     METHODS table
       IMPORTING
         !iv_label      TYPE csequence
         !iv_name       TYPE csequence
         !iv_hint       TYPE csequence OPTIONAL
       RETURNING
-        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form .
     METHODS column
       IMPORTING
         !iv_label      TYPE csequence
         !iv_width      TYPE csequence OPTIONAL
         !iv_readonly   TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form .
     METHODS start_group
       IMPORTING
         !iv_label      TYPE csequence
         !iv_name       TYPE csequence
         !iv_hint       TYPE csequence OPTIONAL
       RETURNING
-        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
-    METHODS normalize_form_data
-      IMPORTING
-        !io_form_data       TYPE REF TO zcl_abapgit_string_map
-      RETURNING
-        VALUE(ro_form_data) TYPE REF TO zcl_abapgit_string_map
-      RAISING
-        zcx_abapgit_exception.
-    METHODS validate_required_fields
-      IMPORTING
-        !io_form_data            TYPE REF TO zcl_abapgit_string_map
-      RETURNING
-        VALUE(ro_validation_log) TYPE REF TO zcl_abapgit_string_map
-      RAISING
-        zcx_abapgit_exception.
-    METHODS is_empty
-      IMPORTING
-        !io_form_data   TYPE REF TO zcl_abapgit_string_map
-      RETURNING
-        VALUE(rv_empty) TYPE abap_bool
-      RAISING
-        zcx_abapgit_exception.
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form .
     METHODS hidden
       IMPORTING
         !iv_name       TYPE csequence
       RETURNING
-        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
-
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form .
+    METHODS get_fields
+      RETURNING
+        VALUE(rt_fields) TYPE zif_abapgit_html_form=>ty_fields .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    TYPES:
-      BEGIN OF ty_subitem,
-        label    TYPE string,
-        value    TYPE string,
-        readonly TYPE abap_bool,
-      END OF ty_subitem.
-    TYPES:
-      ty_subitems TYPE STANDARD TABLE OF ty_subitem WITH DEFAULT KEY.
-    TYPES:
-      BEGIN OF ty_field,
-        type          TYPE i,
-        name          TYPE string,
-        label         TYPE string,
-        hint          TYPE string,
-        dblclick      TYPE string,
-        placeholder   TYPE string,
-        required      TYPE string,
-        upper_case    TYPE abap_bool,
-        item_class    TYPE string,
-        error         TYPE string,
-        default_value TYPE string,
-        side_action   TYPE string,
-        subitems      TYPE ty_subitems,
-        readonly      TYPE abap_bool,
-        password      TYPE abap_bool,
-        min           TYPE i,
-        max           TYPE i,
-*        onclick ???
-      END OF ty_field.
-    TYPES:
-      BEGIN OF ty_command,
-        label    TYPE string,
-        action   TYPE string,
-        is_main  TYPE abap_bool,
-        cmd_type TYPE i,
-*        onclick ???
-      END OF ty_command.
     TYPES:
       BEGIN OF ty_attr,
         value       TYPE string,
@@ -188,68 +124,56 @@ CLASS zcl_abapgit_html_form DEFINITION
         readonly    TYPE string,
         placeholder TYPE string,
         required    TYPE string,
-      END OF ty_attr.
+      END OF ty_attr .
 
-    CONSTANTS:
-      BEGIN OF c_field_type,
-        text        TYPE i VALUE 1,
-        radio       TYPE i VALUE 2,
-        checkbox    TYPE i VALUE 3,
-        field_group TYPE i VALUE 4,
-        number      TYPE i VALUE 5,
-        textarea    TYPE i VALUE 6,
-        table       TYPE i VALUE 7,
-        hidden      TYPE i VALUE 8,
-      END OF c_field_type.
     DATA:
-      mt_fields TYPE STANDARD TABLE OF ty_field
-          WITH UNIQUE SORTED KEY by_name COMPONENTS name.
+      mt_fields TYPE zif_abapgit_html_form=>ty_fields.
     DATA:
-      mt_commands TYPE STANDARD TABLE OF ty_command.
-    DATA mv_form_id TYPE string.
-    DATA mv_help_page TYPE string.
+      mt_commands TYPE STANDARD TABLE OF zif_abapgit_html_form=>ty_command .
+    DATA mv_form_id TYPE string .
+    DATA mv_help_page TYPE string .
 
     METHODS render_field
       IMPORTING
         !ii_html           TYPE REF TO zif_abapgit_html
         !io_values         TYPE REF TO zcl_abapgit_string_map
         !io_validation_log TYPE REF TO zcl_abapgit_string_map
-        !is_field          TYPE ty_field.
+        !is_field          TYPE zif_abapgit_html_form=>ty_field .
     METHODS render_field_text
       IMPORTING
         !ii_html  TYPE REF TO zif_abapgit_html
-        !is_field TYPE ty_field
-        !is_attr  TYPE ty_attr.
+        !is_field TYPE zif_abapgit_html_form=>ty_field
+        !is_attr  TYPE ty_attr .
     METHODS render_field_textarea
       IMPORTING
         !ii_html  TYPE REF TO zif_abapgit_html
-        !is_field TYPE ty_field
-        !is_attr  TYPE ty_attr.
+        !is_field TYPE zif_abapgit_html_form=>ty_field
+        !is_attr  TYPE ty_attr .
     METHODS render_field_checkbox
       IMPORTING
         !ii_html  TYPE REF TO zif_abapgit_html
-        !is_field TYPE ty_field
-        !is_attr  TYPE ty_attr.
+        !is_field TYPE zif_abapgit_html_form=>ty_field
+        !is_attr  TYPE ty_attr .
     METHODS render_field_radio
       IMPORTING
         !ii_html  TYPE REF TO zif_abapgit_html
-        !is_field TYPE ty_field
-        !is_attr  TYPE ty_attr.
+        !is_field TYPE zif_abapgit_html_form=>ty_field
+        !is_attr  TYPE ty_attr .
     METHODS render_field_table
       IMPORTING
         !ii_html   TYPE REF TO zif_abapgit_html
-        !is_field  TYPE ty_field
+        !is_field  TYPE zif_abapgit_html_form=>ty_field
         !is_attr   TYPE ty_attr
-        !io_values TYPE REF TO zcl_abapgit_string_map.
+        !io_values TYPE REF TO zcl_abapgit_string_map .
     METHODS render_command
       IMPORTING
         !ii_html TYPE REF TO zif_abapgit_html
-        !is_cmd  TYPE ty_command.
+        !is_cmd  TYPE zif_abapgit_html_form=>ty_command .
     METHODS render_field_hidden
       IMPORTING
         !ii_html  TYPE REF TO zif_abapgit_html
-        !is_field TYPE ty_field
-        !is_attr  TYPE ty_attr.
+        !is_field TYPE zif_abapgit_html_form=>ty_field
+        !is_attr  TYPE ty_attr .
 ENDCLASS.
 
 
@@ -261,7 +185,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     DATA ls_field LIKE LINE OF mt_fields.
 
-    ls_field-type  = c_field_type-checkbox.
+    ls_field-type  = zif_abapgit_html_form=>c_field_type-checkbox.
     ls_field-name  = iv_name.
     ls_field-label = iv_label.
     ls_field-hint  = iv_hint.
@@ -284,7 +208,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     READ TABLE mt_fields INDEX lv_size ASSIGNING <ls_last>.
     ASSERT sy-subrc = 0.
-    ASSERT <ls_last>-type = c_field_type-table.
+    ASSERT <ls_last>-type = zif_abapgit_html_form=>c_field_type-table.
 
     ls_column-label    = iv_label.
     ls_column-value    = iv_width.
@@ -301,11 +225,10 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     DATA ls_cmd LIKE LINE OF mt_commands.
 
-    ASSERT iv_cmd_type BETWEEN 1 AND 3.
+    ASSERT iv_cmd_type BETWEEN 1 AND 4.
 
     ls_cmd-label    = iv_label.
     ls_cmd-action   = iv_action.
-    ls_cmd-is_main  = iv_is_main.
     ls_cmd-cmd_type = iv_cmd_type.
 
     APPEND ls_cmd TO mt_commands.
@@ -331,126 +254,18 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_fields.
+    rt_fields = mt_fields.
+  ENDMETHOD.
+
+
   METHOD hidden.
 
     DATA ls_field LIKE LINE OF mt_fields.
 
-    ls_field-type  = c_field_type-hidden.
+    ls_field-type  = zif_abapgit_html_form=>c_field_type-hidden.
     ls_field-name  = iv_name.
     APPEND ls_field TO mt_fields.
-
-  ENDMETHOD.
-
-
-  METHOD is_empty.
-
-    DATA:
-      lv_value TYPE string,
-      lv_rows  TYPE i,
-      lv_row   TYPE i.
-
-    FIELD-SYMBOLS <ls_field> LIKE LINE OF mt_fields.
-
-    rv_empty = abap_true.
-    LOOP AT mt_fields ASSIGNING <ls_field> WHERE type <> c_field_type-field_group.
-      lv_value = condense(
-        val = io_form_data->get( <ls_field>-name )
-        del = ` ` ).
-
-      IF <ls_field>-type = c_field_type-number.
-        rv_empty = boolc( lv_value IS INITIAL OR lv_value = '0' ).
-      ELSEIF <ls_field>-type = c_field_type-table.
-        lv_rows = io_form_data->get( |{ <ls_field>-name }-{ c_rows }| ).
-        DO lv_rows TIMES.
-          lv_row = sy-index.
-          DO lines( <ls_field>-subitems ) TIMES.
-            lv_value = io_form_data->get( |{ <ls_field>-name }-{ lv_row }-{ sy-index }| ).
-            rv_empty = boolc( lv_value IS INITIAL ).
-            IF rv_empty <> abap_true.
-              RETURN.
-            ENDIF.
-          ENDDO.
-        ENDDO.
-      ELSEIF <ls_field>-type = c_field_type-textarea.
-        REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>c_crlf IN lv_value WITH ''.
-        REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>c_newline IN lv_value WITH ''.
-        rv_empty = boolc( lv_value IS INITIAL ).
-      ELSE.
-        rv_empty = boolc( lv_value IS INITIAL ).
-      ENDIF.
-
-      IF rv_empty <> abap_true.
-        RETURN.
-      ENDIF.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD normalize_form_data.
-
-    DATA:
-      lv_value TYPE string,
-      lv_rows  TYPE i,
-      lv_row   TYPE i,
-      lv_len   TYPE i.
-
-    FIELD-SYMBOLS <ls_field> LIKE LINE OF mt_fields.
-
-    CREATE OBJECT ro_form_data.
-
-    LOOP AT mt_fields ASSIGNING <ls_field> WHERE type <> c_field_type-field_group.
-      CLEAR lv_value.
-      lv_value = io_form_data->get( <ls_field>-name ).
-
-      IF <ls_field>-type = c_field_type-checkbox.
-        ro_form_data->set(
-          iv_key = <ls_field>-name
-          iv_val = boolc( lv_value = 'on' ) ).
-      ELSEIF <ls_field>-type = c_field_type-text AND <ls_field>-upper_case = abap_true.
-        ro_form_data->set(
-          iv_key = <ls_field>-name
-          iv_val = to_upper( lv_value ) ).
-      ELSEIF <ls_field>-type = c_field_type-number.
-        " Numeric value is checked in validation
-        ro_form_data->set(
-          iv_key = <ls_field>-name
-          iv_val = condense( val = lv_value del = ` ` ) ).
-      ELSEIF <ls_field>-type = c_field_type-table.
-        lv_rows = io_form_data->get( |{ <ls_field>-name }-{ c_rows }| ).
-        DO lv_rows TIMES.
-          lv_row = sy-index.
-          DO lines( <ls_field>-subitems ) TIMES.
-            lv_value = io_form_data->get( |{ <ls_field>-name }-{ lv_row }-{ sy-index }| ).
-            ro_form_data->set(
-              iv_key = |{ <ls_field>-name }-{ lv_row }-{ sy-index }|
-              iv_val = lv_value ).
-          ENDDO.
-        ENDDO.
-        ro_form_data->set(
-          iv_key = |{ <ls_field>-name }-{ c_rows }|
-          iv_val = |{ lv_rows }| ).
-      ELSEIF <ls_field>-type = c_field_type-textarea.
-        REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>c_crlf IN lv_value
-          WITH zif_abapgit_definitions=>c_newline.
-
-        " Remove last line if empty (ie 2x newline)
-        lv_len = strlen( lv_value ) - 2.
-        IF lv_len >= 0 AND lv_value+lv_len(1) = zif_abapgit_definitions=>c_newline.
-          lv_len = lv_len + 1.
-          lv_value = lv_value(lv_len).
-        ENDIF.
-
-        ro_form_data->set(
-          iv_key = <ls_field>-name
-          iv_val = lv_value ).
-      ELSE.
-        ro_form_data->set(
-          iv_key = <ls_field>-name
-          iv_val = lv_value ).
-      ENDIF.
-
-    ENDLOOP.
 
   ENDMETHOD.
 
@@ -459,7 +274,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     DATA ls_field LIKE LINE OF mt_fields.
 
-    ls_field-type     = c_field_type-number.
+    ls_field-type     = zif_abapgit_html_form=>c_field_type-number.
     ls_field-name     = iv_name.
     ls_field-label    = iv_label.
     ls_field-readonly = iv_readonly.
@@ -486,7 +301,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     READ TABLE mt_fields INDEX lv_size ASSIGNING <ls_last>.
     ASSERT sy-subrc = 0.
-    ASSERT <ls_last>-type = c_field_type-radio. " Or dropdown - TODO in future
+    ASSERT <ls_last>-type = zif_abapgit_html_form=>c_field_type-radio. " Or dropdown - TODO in future
 
     ls_option-label = iv_label.
     ls_option-value = iv_value.
@@ -502,7 +317,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     DATA ls_field LIKE LINE OF mt_fields.
 
-    ls_field-type  = c_field_type-radio.
+    ls_field-type  = zif_abapgit_html_form=>c_field_type-radio.
     ls_field-name  = iv_name.
     ls_field-label = iv_label.
     ls_field-default_value = iv_default_value.
@@ -534,7 +349,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     ri_html->add( |<form method="post"{ ls_form_id }>| ).
 
     " Add hidden button that triggers main command when pressing enter
-    LOOP AT mt_commands ASSIGNING <ls_cmd> WHERE is_main = abap_true.
+    LOOP AT mt_commands ASSIGNING <ls_cmd> WHERE cmd_type = zif_abapgit_html_form=>c_cmd_type-input_main.
       ri_html->add( |<button type="submit" formaction="sapevent:{ <ls_cmd>-action
                     }" class="hidden-submit" aria-hidden="true" tabindex="-1"></button>| ).
       EXIT.
@@ -542,12 +357,12 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     LOOP AT mt_fields ASSIGNING <ls_field>.
       AT FIRST.
-        IF <ls_field>-type <> c_field_type-field_group.
+        IF <ls_field>-type <> zif_abapgit_html_form=>c_field_type-field_group.
           ri_html->add( |<ul>| ).
         ENDIF.
       ENDAT.
 
-      IF <ls_field>-type = c_field_type-field_group.
+      IF <ls_field>-type = zif_abapgit_html_form=>c_field_type-field_group.
         IF lv_cur_group IS NOT INITIAL AND lv_cur_group <> <ls_field>-name.
           ri_html->add( |</ul>| ).
           ri_html->add( |</fieldset>| ).
@@ -607,30 +422,28 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
   METHOD render_command.
 
-    DATA lv_main_submit TYPE string.
-
     CASE is_cmd-cmd_type.
-      WHEN c_cmd_type-link.
+      WHEN zif_abapgit_html_form=>c_cmd_type-link.
 
         ii_html->add_a(
           iv_txt   = is_cmd-label
           iv_act   = is_cmd-action
           iv_class = 'dialog-commands' ).
 
-      WHEN c_cmd_type-button.
+      WHEN zif_abapgit_html_form=>c_cmd_type-button.
 
         ii_html->add( |<button type="submit" name="action" value="{
           is_cmd-action }" class="action-commands">{ is_cmd-label }</button>| ).
 
-      WHEN c_cmd_type-input.
+      WHEN zif_abapgit_html_form=>c_cmd_type-input.
 
-        IF is_cmd-is_main = abap_true.
-          lv_main_submit = ' class="main"'.
-        ELSE.
-          CLEAR lv_main_submit.
-        ENDIF.
         ii_html->add( |<input type="submit" value="{
-          is_cmd-label }"{ lv_main_submit } formaction="sapevent:{ is_cmd-action }">| ).
+          is_cmd-label }" formaction="sapevent:{ is_cmd-action }">| ).
+
+      WHEN zif_abapgit_html_form=>c_cmd_type-input_main.
+
+        ii_html->add( |<input type="submit" value="{
+          is_cmd-label }" class="main" formaction="sapevent:{ is_cmd-action }">| ).
 
       WHEN OTHERS.
         ASSERT 0 = 1.
@@ -685,7 +498,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     IF ls_attr-error IS NOT INITIAL.
       lv_item_class = condense( lv_item_class && ' error' ).
     ENDIF.
-    IF is_field-type = c_field_type-text AND is_field-max BETWEEN 1 AND 20.
+    IF is_field-type = zif_abapgit_html_form=>c_field_type-text AND is_field-max BETWEEN 1 AND 20.
       " Reduced width for short fields
       lv_item_class = lv_item_class && ' w40'.
     ENDIF.
@@ -697,35 +510,35 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     ii_html->add( |<li{ lv_item_class }>| ).
 
     CASE is_field-type.
-      WHEN c_field_type-text OR c_field_type-number.
+      WHEN zif_abapgit_html_form=>c_field_type-text OR zif_abapgit_html_form=>c_field_type-number.
 
         render_field_text(
           ii_html  = ii_html
           is_field = is_field
           is_attr  = ls_attr ).
 
-      WHEN c_field_type-textarea.
+      WHEN zif_abapgit_html_form=>c_field_type-textarea.
 
         render_field_textarea(
           ii_html  = ii_html
           is_field = is_field
           is_attr  = ls_attr ).
 
-      WHEN c_field_type-checkbox.
+      WHEN zif_abapgit_html_form=>c_field_type-checkbox.
 
         render_field_checkbox(
           ii_html  = ii_html
           is_field = is_field
           is_attr  = ls_attr ).
 
-      WHEN c_field_type-radio.
+      WHEN zif_abapgit_html_form=>c_field_type-radio.
 
         render_field_radio(
           ii_html  = ii_html
           is_field = is_field
           is_attr  = ls_attr ).
 
-      WHEN c_field_type-table.
+      WHEN zif_abapgit_html_form=>c_field_type-table.
 
         render_field_table(
           ii_html   = ii_html
@@ -733,7 +546,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
           is_attr   = ls_attr
           io_values = io_values ).
 
-      WHEN c_field_type-hidden.
+      WHEN zif_abapgit_html_form=>c_field_type-hidden.
 
         render_field_hidden(
           ii_html  = ii_html
@@ -847,7 +660,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     ii_html->add( |</tr>| ).
     ii_html->add( |</thead>| ).
 
-    lv_rows = io_values->get( |{ is_field-name }-{ c_rows }| ).
+    lv_rows = io_values->get( |{ is_field-name }-{ zif_abapgit_html_form=>c_rows }| ).
 
     ii_html->add( |<tbody>| ).
     DO lv_rows TIMES.
@@ -871,7 +684,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     ii_html->add( |</table>| ).
 
     " Hidden field with number of rows to simplify getting values from form
-    lv_value = |{ is_field-name }-{ c_rows }|.
+    lv_value = |{ is_field-name }-{ zif_abapgit_html_form=>c_rows }|.
     ii_html->add( |<input type="number" name="{ lv_value }" id="{
                   lv_value }" value="{ lv_rows }" style="display:none">| ).
 
@@ -893,7 +706,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       ii_html->add( '<div class="input-container">' ). " Ugly :(
     ENDIF.
 
-    IF is_field-type = c_field_type-number.
+    IF is_field-type = zif_abapgit_html_form=>c_field_type-number.
       lv_type = 'number'.
     ELSEIF is_field-password = abap_true.
       lv_type = 'password'.
@@ -941,7 +754,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     DATA ls_field LIKE LINE OF mt_fields.
 
-    ls_field-type  = c_field_type-field_group.
+    ls_field-type  = zif_abapgit_html_form=>c_field_type-field_group.
     ls_field-label = iv_label.
     ls_field-name  = iv_name.
     ls_field-hint  = iv_hint.
@@ -957,7 +770,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     DATA ls_field LIKE LINE OF mt_fields.
 
-    ls_field-type  = c_field_type-table.
+    ls_field-type  = zif_abapgit_html_form=>c_field_type-table.
     ls_field-name  = iv_name.
     ls_field-label = iv_label.
     ls_field-hint  = iv_hint.
@@ -973,7 +786,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     DATA ls_field LIKE LINE OF mt_fields.
 
-    ls_field-type       = c_field_type-text.
+    ls_field-type       = zif_abapgit_html_form=>c_field_type-text.
     ls_field-name       = iv_name.
     ls_field-label      = iv_label.
     ls_field-upper_case = iv_upper_case.
@@ -1005,7 +818,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     DATA ls_field LIKE LINE OF mt_fields.
 
-    ls_field-type        = c_field_type-textarea.
+    ls_field-type        = zif_abapgit_html_form=>c_field_type-textarea.
     ls_field-name        = iv_name.
     ls_field-label       = iv_label.
     ls_field-readonly    = iv_readonly.
@@ -1016,58 +829,6 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     APPEND ls_field TO mt_fields.
 
     ro_self = me.
-
-  ENDMETHOD.
-
-
-  METHOD validate_required_fields.
-
-    DATA lv_value TYPE string.
-    DATA lv_number TYPE i.
-    FIELD-SYMBOLS <ls_field> LIKE LINE OF mt_fields.
-
-    CREATE OBJECT ro_validation_log.
-
-    LOOP AT mt_fields ASSIGNING <ls_field>.
-      lv_value = io_form_data->get( <ls_field>-name ).
-      IF <ls_field>-required IS NOT INITIAL AND lv_value IS INITIAL.
-        ro_validation_log->set(
-          iv_key = <ls_field>-name
-          iv_val = |{ <ls_field>-label } cannot be empty| ).
-      ENDIF.
-      CASE <ls_field>-type.
-        WHEN c_field_type-text.
-          IF <ls_field>-min <> cl_abap_math=>min_int4 AND strlen( lv_value ) < <ls_field>-min.
-            ro_validation_log->set(
-              iv_key = <ls_field>-name
-              iv_val = |{ <ls_field>-label } must not be shorter than { <ls_field>-min } characters| ).
-          ENDIF.
-          IF <ls_field>-max <> cl_abap_math=>max_int4 AND strlen( lv_value ) > <ls_field>-max.
-            ro_validation_log->set(
-              iv_key = <ls_field>-name
-              iv_val = |{ <ls_field>-label } must not be longer than { <ls_field>-max } characters| ).
-          ENDIF.
-        WHEN c_field_type-number.
-          TRY.
-              lv_number = lv_value.
-            CATCH cx_root.
-              ro_validation_log->set(
-                iv_key = <ls_field>-name
-                iv_val = |{ <ls_field>-label } is not numeric| ).
-              CONTINUE.
-          ENDTRY.
-          IF <ls_field>-min <> cl_abap_math=>min_int4 AND lv_number < <ls_field>-min.
-            ro_validation_log->set(
-              iv_key = <ls_field>-name
-              iv_val = |{ <ls_field>-label } must not be lower than { <ls_field>-min }| ).
-          ENDIF.
-          IF <ls_field>-max <> cl_abap_math=>max_int4 AND lv_number > <ls_field>-max.
-            ro_validation_log->set(
-              iv_key = <ls_field>-name
-              iv_val = |{ <ls_field>-label } must not be higher than { <ls_field>-max }| ).
-          ENDIF.
-      ENDCASE.
-    ENDLOOP.
 
   ENDMETHOD.
 ENDCLASS.
