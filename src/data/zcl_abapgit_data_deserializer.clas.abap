@@ -41,7 +41,16 @@ CLASS ZCL_ABAPGIT_DATA_DESERIALIZER IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_data_deserializer~actualize.
+
+* todo, this method will update the database
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_data_deserializer~deserialize.
+
+* this method does not persist any changes to the database
 
     DATA lt_configs TYPE zif_abapgit_data_config=>ty_config_tt.
     DATA ls_config LIKE LINE OF lt_configs.
