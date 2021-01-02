@@ -79,8 +79,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
 
     DATA lo_form TYPE REF TO zcl_abapgit_html_form.
 
-    DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
-    CREATE OBJECT mo_form_data.
+    DATA lo_form_data TYPE REF TO zcl_abapgit_string_map.
+    CREATE OBJECT lo_form_data.
 
     lo_form = zcl_abapgit_html_form=>create(  ).
     lo_form->text(
@@ -97,7 +97,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
       iv_action      = c_event-add ).
     ri_html->add( lo_form->render(
       iv_form_class = 'dialog w600px m-em5-sides margin-v1'
-      io_values     = mo_form_data ) ).
+      io_values     = lo_form_data ) ).
 
 ************
 
@@ -107,7 +107,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
 
     LOOP AT lt_configs INTO ls_config.
       lo_form = zcl_abapgit_html_form=>create(  ).
-      CREATE OBJECT mo_form_data.
+      CREATE OBJECT lo_form_data.
 
 *      mo_form_data->set(
 *        iv_key = c_id-table
@@ -130,7 +130,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
         iv_action      = c_event-remove ).
       ri_html->add( lo_form->render(
         iv_form_class = 'dialog w600px m-em5-sides margin-v1'
-        io_values     = mo_form_data ) ).
+        io_values     = lo_form_data ) ).
     ENDLOOP.
 
   ENDMETHOD.
