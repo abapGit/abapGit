@@ -106,6 +106,10 @@ CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
 
   METHOD zif_abapgit_data_config~remove_config.
 
+    ASSERT NOT is_config-type IS INITIAL.
+    ASSERT NOT is_config-name IS INITIAL.
+    ASSERT is_config-name = to_upper( is_config-name ).
+
     DELETE mt_config WHERE name = is_config-name AND type = is_config-type.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'Not found' ).

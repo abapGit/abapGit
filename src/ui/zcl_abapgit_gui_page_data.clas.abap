@@ -46,6 +46,16 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
         !ii_event TYPE REF TO zif_abapgit_gui_event
       RAISING
         zcx_abapgit_exception .
+    METHODS event_remove
+      IMPORTING
+        !ii_event TYPE REF TO zif_abapgit_gui_event
+      RAISING
+        zcx_abapgit_exception .
+    METHODS event_update
+      IMPORTING
+        !ii_event TYPE REF TO zif_abapgit_gui_event
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -76,6 +86,37 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
     SPLIT lo_map->get( c_id-where ) AT |\n| INTO TABLE ls_config-where.
 
     mi_config->add_config( ls_config ).
+
+  ENDMETHOD.
+
+
+  METHOD event_remove.
+
+    DATA lo_map TYPE REF TO zcl_abapgit_string_map.
+    DATA ls_config TYPE zif_abapgit_data_config=>ty_config.
+
+    lo_map = ii_event->form_data( ).
+
+    ls_config-type = zif_abapgit_data_config=>c_data_type-tabu.
+    ls_config-name = to_upper( lo_map->get( c_id-table ) ).
+
+    mi_config->remove_config( ls_config ).
+
+  ENDMETHOD.
+
+
+  METHOD event_update.
+
+    DATA lo_map TYPE REF TO zcl_abapgit_string_map.
+    DATA ls_config TYPE zif_abapgit_data_config=>ty_config.
+
+    lo_map = ii_event->form_data( ).
+
+    ls_config-type = zif_abapgit_data_config=>c_data_type-tabu.
+    ls_config-name = to_upper( lo_map->get( c_id-table ) ).
+    SPLIT lo_map->get( c_id-where ) AT |\n| INTO TABLE ls_config-where.
+
+    mi_config->update_config( ls_config ).
 
   ENDMETHOD.
 
@@ -115,7 +156,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
     ri_html->add( render_add( ) ).
     ri_html->add( render_existing( ) ).
 
-
   ENDMETHOD.
 
 
@@ -143,10 +183,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
         iv_label    = 'Table'
         iv_name     = c_id-table
         iv_readonly = abap_true ).
+
+      lo_form_data->set(
+        iv_key = c_id-where
+        iv_val = concat_lines_of( table = ls_config-where sep = |\n| ) ).
       lo_form->textarea(
         iv_label       = 'Where'
         iv_placeholder = 'Conditions separated by newline'
         iv_name        = c_id-where ).
+
       lo_form->command(
         iv_label       = 'Update'
         iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
@@ -160,7 +205,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
         io_values     = lo_form_data ) ).
     ENDLOOP.
 
-
   ENDMETHOD.
 
 
@@ -169,6 +213,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN c_event-add.
         event_add( ii_event ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_event-update.
+        event_update( ii_event ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_event-remove.
+        event_remove( ii_event ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDCASE.
 
