@@ -80,7 +80,7 @@ CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
     DATA lr_data TYPE REF TO data.
 
 
-    ls_file-path = ii_config->get_path( ).
+    ls_file-path = zif_abapgit_data_config=>c_default_path.
     lt_configs = ii_config->get_configs( ).
 
     LOOP AT lt_configs INTO ls_config.
