@@ -485,6 +485,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       iv_package        = get_package( )
       io_dot_abapgit    = get_dot_abapgit( )
       is_local_settings = get_local_settings( )
+      ii_data_config    = get_data_config( )
       ii_log            = ii_log ).
 
     mt_local                 = rt_files.

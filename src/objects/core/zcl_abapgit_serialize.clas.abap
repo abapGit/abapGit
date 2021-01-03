@@ -27,6 +27,7 @@ CLASS zcl_abapgit_serialize DEFINITION
         !is_local_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings
         !ii_log            TYPE REF TO zif_abapgit_log
         !it_filter         TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
+        !ii_data_config    TYPE REF TO zif_abapgit_data_config OPTIONAL
       RETURNING
         VALUE(rt_files)    TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
@@ -48,6 +49,13 @@ CLASS zcl_abapgit_serialize DEFINITION
         !iv_package TYPE devclass
       CHANGING
         !ct_files   TYPE zif_abapgit_definitions=>ty_files_item_tt
+      RAISING
+        zcx_abapgit_exception .
+    METHODS add_data
+      IMPORTING
+        !ii_data_config TYPE REF TO zif_abapgit_data_config
+      CHANGING
+        !ct_files       TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
         zcx_abapgit_exception .
     METHODS add_dot_abapgit
@@ -112,6 +120,32 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
       APPEND INITIAL LINE TO ct_files ASSIGNING <ls_return>.
       <ls_return>-file = ls_apack_file.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD add_data.
+
+    DATA lt_files TYPE zif_abapgit_definitions=>ty_files_tt.
+    DATA ls_file LIKE LINE OF lt_files.
+
+    FIELD-SYMBOLS <ls_return> LIKE LINE OF ct_files.
+
+    IF ii_data_config IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    lt_files = ii_data_config->to_json( ).
+    LOOP AT lt_files INTO ls_file.
+      APPEND INITIAL LINE TO ct_files ASSIGNING <ls_return>.
+      <ls_return>-file = ls_file.
+    ENDLOOP.
+
+    lt_files = zcl_abapgit_data_factory=>get_serializer( )->serialize( ii_data_config ).
+    LOOP AT lt_files INTO ls_file.
+      APPEND INITIAL LINE TO ct_files ASSIGNING <ls_return>.
+      <ls_return>-file = ls_file.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -269,6 +303,12 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
         iv_package = iv_package
       CHANGING
         ct_files   = rt_files ).
+
+    add_data(
+      EXPORTING
+        ii_data_config = ii_data_config
+      CHANGING
+        ct_files       = rt_files ).
 
     add_objects(
       EXPORTING
