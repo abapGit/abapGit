@@ -184,7 +184,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
       iv_filename = 'CL_FOO.abap'
       iv_path     = '/path'
       iv_data     = 'data' ).
-    then_it_should_raise_exception( iv_with_text = 'Object CL_FOO not found in the local repository files' ).
+    then_it_should_raise_exception( 'Object CL_FOO not found in the local repository files' ).
   ENDMETHOD.
 
   METHOD cant_be_added_with_del_flag.
@@ -199,7 +199,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
       iv_lstate     = zif_abapgit_definitions=>c_state-added ).
 
     then_it_should_raise_exception(
-      iv_with_text = 'Object CL_FOO should be added/modified, but has deletion flag in transport' ).
+      'Object CL_FOO should be added/modified, but has deletion flag in transport' ).
   ENDMETHOD.
 
   METHOD cant_be_modified_with_del_flag.
@@ -214,8 +214,9 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
       iv_lstate     = zif_abapgit_definitions=>c_state-modified ).
 
     then_it_should_raise_exception(
-      iv_with_text = 'Object CL_FOO should be added/modified, but has deletion flag in transport' ).
+      'Object CL_FOO should be added/modified, but has deletion flag in transport' ).
   ENDMETHOD.
+
   METHOD deleted_to_removed_files.
     given_the_transport_object(
       iv_obj_name   = 'CL_FOO'
@@ -362,7 +363,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
       iv_lstate     = zif_abapgit_definitions=>c_state-deleted ).
 
     then_it_should_raise_exception(
-         iv_with_text = 'Object CL_FOO should be removed, but has NO deletion flag in transport' ).
+      'Object CL_FOO should be removed, but has NO deletion flag in transport' ).
   ENDMETHOD.
 
   METHOD given_the_transport_object.
