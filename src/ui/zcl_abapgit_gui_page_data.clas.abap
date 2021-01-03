@@ -7,6 +7,8 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
   PUBLIC SECTION.
 
     METHODS constructor
+      IMPORTING
+        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
         zcx_abapgit_exception .
 
@@ -32,6 +34,8 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
     METHODS render_content
         REDEFINITION .
   PRIVATE SECTION.
+
+    DATA mo_repo TYPE REF TO zcl_abapgit_repo .
 
     METHODS render_add
       RETURNING
@@ -68,6 +72,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
     super->constructor( ).
 
     ms_control-page_title = 'Data'.
+
+    mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
     CREATE OBJECT mi_config TYPE zcl_abapgit_data_config.
 
