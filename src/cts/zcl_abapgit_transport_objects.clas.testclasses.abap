@@ -198,8 +198,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
       iv_obj_type   = 'CLAS'
       iv_lstate     = zif_abapgit_definitions=>c_state-added ).
 
-    then_it_should_raise_exception(
-      'Object CL_FOO should be added/modified, but has deletion flag in transport' ).
+    then_it_should_raise_exception( 'Object CL_FOO should be added/modified, but has deletion flag in transport' ).
   ENDMETHOD.
 
   METHOD cant_be_modified_with_del_flag.
@@ -213,8 +212,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
       iv_obj_type   = 'CLAS'
       iv_lstate     = zif_abapgit_definitions=>c_state-modified ).
 
-    then_it_should_raise_exception(
-      'Object CL_FOO should be added/modified, but has deletion flag in transport' ).
+    then_it_should_raise_exception( 'Object CL_FOO should be added/modified, but has deletion flag in transport' ).
   ENDMETHOD.
 
   METHOD deleted_to_removed_files.
@@ -362,8 +360,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
       iv_path       = '/a_path'
       iv_lstate     = zif_abapgit_definitions=>c_state-deleted ).
 
-    then_it_should_raise_exception(
-      'Object CL_FOO should be removed, but has NO deletion flag in transport' ).
+    then_it_should_raise_exception( 'Object CL_FOO should be removed, but has NO deletion flag in transport' ).
   ENDMETHOD.
 
   METHOD given_the_transport_object.
