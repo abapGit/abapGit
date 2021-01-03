@@ -612,7 +612,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     reset_remote( ).
 
     CLEAR mi_log.
-    CLEAR mi_data_config.
 
     IF iv_drop_cache = abap_true.
       CLEAR mt_local.

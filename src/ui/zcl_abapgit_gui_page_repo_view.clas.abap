@@ -1226,7 +1226,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_data
           EXPORTING
             iv_key = |{ ii_event->query( )->get( 'KEY' ) }|.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN c_actions-toggle_hide_files. " Toggle file diplay
         mv_hide_files    = zcl_abapgit_persistence_user=>get_instance( )->toggle_hide_files( ).
