@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_DATA_INJECTOR</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - Data injector</DESCRIPT>
+    <DESCRIPT>abapGit - Data Injector</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

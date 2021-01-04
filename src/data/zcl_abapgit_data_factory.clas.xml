@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_DATA_FACTORY</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - Data factory</DESCRIPT>
+    <DESCRIPT>abapGit - Data Factory</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

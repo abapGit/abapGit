@@ -1,5 +1,5 @@
 ---
-title: UI - HTML pages
+title: UI - HTML forms
 order: 94
 ---
 
@@ -91,7 +91,7 @@ lo_form->text(
     iv_label       = 'Package' ).
 ...
 DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
-CREATE OBJECT mo_form_data
+CREATE OBJECT mo_form_data.
 mo_form_data->set(
     iv_key = c_id-package
     iv_val = 'XYZ' ).             " <<<<< VALUE
@@ -109,7 +109,7 @@ lo_form->text(
     iv_label       = 'Package' ).
 ...
 DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
-CREATE OBJECT mo_validation_log
+CREATE OBJECT mo_validation_log.
 mo_form_data->set(
     iv_key = c_id-package          " <<<<< SAME NAME
     iv_val = 'OMG! It crushed!' ). " <<<<< ERROR MESSAGE

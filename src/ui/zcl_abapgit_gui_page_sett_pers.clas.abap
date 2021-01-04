@@ -17,6 +17,7 @@ CLASS zcl_abapgit_gui_page_sett_pers DEFINITION
     METHODS constructor
       RAISING
         zcx_abapgit_exception.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -39,18 +40,19 @@ CLASS zcl_abapgit_gui_page_sett_pers DEFINITION
         activate_wo_popup      TYPE string VALUE 'activate_wo_popup',
         use_frontend_git_auth  TYPE string VALUE 'use_frontend_git_auth',
       END OF c_id.
-
     CONSTANTS:
       BEGIN OF c_event,
-        go_back TYPE string VALUE 'go-back',
+        go_back TYPE string VALUE 'go_back',
         save    TYPE string VALUE 'save',
       END OF c_event.
 
+    DATA mo_form TYPE REF TO zcl_abapgit_html_form.
+    DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
+    DATA mo_form_util TYPE REF TO zcl_abapgit_html_form_utils.
+    DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
+
     DATA mo_settings TYPE REF TO zcl_abapgit_settings.
     DATA ms_settings TYPE zif_abapgit_definitions=>ty_s_user_settings.
-    DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
-    DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
-    DATA mo_form TYPE REF TO zcl_abapgit_html_form.
 
     METHODS validate_form
       IMPORTING
@@ -72,7 +74,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -81,6 +83,9 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
     CREATE OBJECT mo_validation_log.
     CREATE OBJECT mo_form_data.
     mo_form = get_form_schema( ).
+    mo_form_util = zcl_abapgit_html_form_utils=>create( mo_form ).
+
+    read_settings( ).
 
   ENDMETHOD.
 
@@ -183,7 +188,7 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
       iv_hint          = 'If disabled, abapGit will use only a single thread to serialize objects'
     )->command(
       iv_label         = 'Save Settings'
-      iv_is_main       = abap_true
+      iv_cmd_type      = zif_abapgit_html_form=>c_cmd_type-input_main
       iv_action        = c_event-save
     )->command(
       iv_label         = 'Back'
@@ -221,13 +226,13 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
     " Interaction
     mo_form_data->set(
       iv_key = c_id-activate_wo_popup
-      iv_val = |{ ms_settings-activate_wo_popup }| ).
+      iv_val = boolc( ms_settings-activate_wo_popup = abap_true ) ) ##TYPE.
     mo_form_data->set(
       iv_key = c_id-adt_jump_enabled
-      iv_val = |{ ms_settings-adt_jump_enabled }| ).
+      iv_val = boolc( ms_settings-adt_jump_enabled = abap_true ) ) ##TYPE.
     mo_form_data->set(
       iv_key = c_id-link_hints_enabled
-      iv_val = |{ ms_settings-link_hints_enabled }| ).
+      iv_val = boolc( ms_settings-link_hints_enabled = abap_true ) ) ##TYPE.
     mo_form_data->set(
       iv_key = c_id-link_hint_key
       iv_val = |{ ms_settings-link_hint_key }| ).
@@ -238,7 +243,10 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
     " Resources
     mo_form_data->set(
       iv_key = c_id-parallel_proc_disabled
-      iv_val = |{ ms_settings-parallel_proc_disabled }| ).
+      iv_val = boolc( ms_settings-parallel_proc_disabled = abap_true ) ) ##TYPE.
+
+    " Set for is_dirty check
+    mo_form_util->set_data( mo_form_data ).
 
   ENDMETHOD.
 
@@ -275,26 +283,28 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
 
     MESSAGE 'Settings succesfully saved' TYPE 'S'.
 
+    read_settings( ).
+
   ENDMETHOD.
 
 
   METHOD validate_form.
 
-    ro_validation_log = mo_form->validate_required_fields( io_form_data ).
+    ro_validation_log = mo_form_util->validate( io_form_data ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    mo_form_data = mo_form->normalize_form_data( ii_event->form_data( ) ).
+    mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.
       WHEN c_event-go_back.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back_to_bookmark.
+        rs_handled-state = mo_form_util->exit( mo_form_data ).
 
       WHEN c_event-save.
-        " Validate all form entries
+        " Validate form entries before saving
         mo_validation_log = validate_form( mo_form_data ).
 
         IF mo_validation_log->is_empty( ) = abap_true.
@@ -312,7 +322,9 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
 
     gui_services( )->register_event_handler( me ).
 
-    read_settings( ).
+    IF mo_form_util->is_empty( mo_form_data ) = abap_true.
+      read_settings( ).
+    ENDIF.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
