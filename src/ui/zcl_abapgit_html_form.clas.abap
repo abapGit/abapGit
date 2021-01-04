@@ -731,6 +731,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
   METHOD render_field_textarea.
 
     DATA lv_rows TYPE i.
+    DATA lv_html TYPE string.
 
     ii_html->add( |<label for="{ is_field-name }"{ is_attr-hint }>{
                   is_field-label }{ is_attr-required }</label>| ).
@@ -741,11 +742,13 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     lv_rows = lines( zcl_abapgit_convert=>split_string( is_attr-value ) ).
 
-    ii_html->add( |<textarea name="{ is_field-name }" id="{
-                  is_field-name }" rows="{ lv_rows }"{ is_attr-readonly }>| ).
-    ii_html->add( escape( val    = is_attr-value
-                          format = cl_abap_format=>e_html_attr ) ).
-    ii_html->add( |</textarea>| ).
+    " Avoid adding line-breaks inside textarea tag (except for the actual value)
+    lv_html = |<textarea name="{ is_field-name }" id="{ is_field-name }" rows="{ lv_rows }"{ is_attr-readonly }>|.
+    lv_html = lv_html && escape( val    = is_attr-value
+                                 format = cl_abap_format=>e_html_attr ).
+    lv_html = lv_html && |</textarea>|.
+
+    ii_html->add( lv_html ).
 
   ENDMETHOD.
 
