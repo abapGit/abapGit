@@ -15,7 +15,7 @@ CLASS zcl_abapgit_html_form DEFINITION
         VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form .
     METHODS render
       IMPORTING
-        !iv_form_class     TYPE csequence DEFAULT 'dialog form'
+        !iv_form_class     TYPE csequence DEFAULT 'dialog-form'
         !io_values         TYPE REF TO zcl_abapgit_string_map
         !io_validation_log TYPE REF TO zcl_abapgit_string_map OPTIONAL
       RETURNING
@@ -345,7 +345,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ri_html->add( |<div class="{ iv_form_class }">| ). " to center use 'dialog form-center'
+    ri_html->add( |<div class="dialog { iv_form_class }">| ). " to center use 'dialog-form-center'
     ri_html->add( |<form method="post"{ ls_form_id }>| ).
 
     " Add hidden button that triggers main command when pressing enter
