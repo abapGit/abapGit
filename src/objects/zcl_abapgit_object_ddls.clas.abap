@@ -464,9 +464,15 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
     " Change for 750-
 
     lv_len = strlen( cv_string ) - 1.
+    IF lv_len < 0.
+      RETURN.
+    ENDIF.
     lv_lastchar1 = cv_string+lv_len(1).
 
     lv_len = strlen( cv_string ) - 2.
+    IF lv_len < 0.
+      RETURN.
+    ENDIF.
     lv_lastchar2 = cv_string+lv_len(1).
 
     " only add a line break, if the last character is unequal to cr_lf and newline !
