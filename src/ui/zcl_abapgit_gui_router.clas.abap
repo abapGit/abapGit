@@ -1,7 +1,7 @@
 CLASS zcl_abapgit_gui_router DEFINITION
   PUBLIC
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
@@ -137,11 +137,11 @@ CLASS zcl_abapgit_gui_router DEFINITION
         !ii_event       TYPE REF TO zif_abapgit_gui_event
       RETURNING
         VALUE(rv_state) TYPE i.
-endclass.
+ENDCLASS.
 
 
 
-class zcl_abapgit_gui_router implementation.
+CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
 
   METHOD abapgit_services_actions.
@@ -809,4 +809,4 @@ class zcl_abapgit_gui_router implementation.
     ENDCASE.
 
   ENDMETHOD.
-endclass.
+ENDCLASS.

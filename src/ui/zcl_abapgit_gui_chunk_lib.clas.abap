@@ -1,7 +1,7 @@
 CLASS zcl_abapgit_gui_chunk_lib DEFINITION
   PUBLIC
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
@@ -174,11 +174,11 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !iv_program_name                  TYPE sy-repid
       RETURNING
         VALUE(rv_normalized_program_name) TYPE string .
-endclass.
+ENDCLASS.
 
 
 
-class zcl_abapgit_gui_chunk_lib implementation.
+CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
 
   METHOD advanced_submenu.
@@ -1033,4 +1033,4 @@ class zcl_abapgit_gui_chunk_lib implementation.
       iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-go_settings_personal ) ).
 
   ENDMETHOD.
-endclass.
+ENDCLASS.
