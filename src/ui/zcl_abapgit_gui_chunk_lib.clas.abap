@@ -109,6 +109,12 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !iv_act        TYPE string
       RETURNING
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
+    CLASS-METHODS settings_repo_toolbar
+      IMPORTING
+        !iv_key        TYPE zif_abapgit_persistence=>ty_repo-key
+        !iv_act        TYPE string
+      RETURNING
+        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
     CLASS-METHODS render_branch_name
       IMPORTING
         !iv_branch      TYPE string OPTIONAL
@@ -168,11 +174,11 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !iv_program_name                  TYPE sy-repid
       RETURNING
         VALUE(rv_normalized_program_name) TYPE string .
-ENDCLASS.
+endclass.
 
 
 
-CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
+class zcl_abapgit_gui_chunk_lib implementation.
 
 
   METHOD advanced_submenu.
@@ -993,6 +999,26 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD settings_repo_toolbar.
+
+    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-repo-settings'.
+
+    ro_menu->add(
+      iv_txt = 'Repository'
+      iv_act = |{ zif_abapgit_definitions=>c_action-repo_settings }?key={ iv_key }|
+      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_settings )
+    )->add(
+      iv_txt = 'Local'
+      iv_act = |{ zif_abapgit_definitions=>c_action-repo_local_settings }?key={ iv_key }|
+      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_local_settings )
+    )->add(
+      iv_txt = 'Infos'
+      iv_act = |{ zif_abapgit_definitions=>c_action-repo_infos }?key={ iv_key }|
+      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_infos ) ).
+
+  ENDMETHOD.
+
+
   METHOD settings_toolbar.
 
     CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-settings'.
@@ -1007,4 +1033,4 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-go_settings_personal ) ).
 
   ENDMETHOD.
-ENDCLASS.
+endclass.

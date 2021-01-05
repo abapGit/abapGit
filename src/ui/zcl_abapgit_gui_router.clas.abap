@@ -137,11 +137,11 @@ CLASS zcl_abapgit_gui_router DEFINITION
         !ii_event       TYPE REF TO zif_abapgit_gui_event
       RETURNING
         VALUE(rv_state) TYPE i.
-ENDCLASS.
+endclass.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
+class zcl_abapgit_gui_router implementation.
 
 
   METHOD abapgit_services_actions.
@@ -377,6 +377,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
       CREATE OBJECT lo_code_inspector_page
         EXPORTING
           io_repo = lo_repo.
+
       ri_page = lo_code_inspector_page.
     ELSEIF lo_repo->get_selected_branch( ) CP zif_abapgit_definitions=>c_git_branch-tags.
       lv_show_create_branch_popup = abap_true.
@@ -406,7 +407,6 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
     IF lv_show_create_branch_popup = abap_true.
 
-
       lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
         iv_titlebar              = lv_question_title
         iv_text_question         = lv_question_text
@@ -416,7 +416,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         iv_icon_button_2         = 'ICON_CANCEL'
         iv_default_button        = '2'
         iv_display_cancel_button = abap_false ).
-      IF lv_answer = 1.
+      IF lv_answer = '1'.
         TRY.
             zcl_abapgit_services_git=>create_branch( iv_key = lo_repo->get_key( ) ).
           CATCH zcx_abapgit_cancel.
@@ -430,7 +430,6 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
       ri_page = lo_page_repo.
     ENDIF.
-
 
   ENDMETHOD.
 
@@ -655,11 +654,14 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         zcl_abapgit_services_repo=>transport_to_branch( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-repo_settings.                   " Repo settings
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_repo_sett
-          EXPORTING
-            io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
-
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+        rs_handled-page  = zcl_abapgit_gui_page_sett_repo=>create( lo_repo ).
+        rs_handled-state = get_state_settings( ii_event ).
+      WHEN zif_abapgit_definitions=>c_action-repo_local_settings.             " Local repo settings
+        rs_handled-page  = zcl_abapgit_gui_page_sett_locl=>create( lo_repo ).
+        rs_handled-state = get_state_settings( ii_event ).
+      WHEN zif_abapgit_definitions=>c_action-repo_infos.                      " Repo infos
+        rs_handled-page  = zcl_abapgit_gui_page_sett_info=>create( lo_repo ).
+        rs_handled-state = get_state_settings( ii_event ).
       WHEN zif_abapgit_definitions=>c_action-repo_log.                        " Repo log
         li_log = lo_repo->get_log( ).
         zcl_abapgit_log_viewer=>show_log( li_log ).
@@ -807,4 +809,4 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
-ENDCLASS.
+endclass.
