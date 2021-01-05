@@ -1043,6 +1043,15 @@ settings_tab tr:first-child td { border-top: 0px; }
   border-radius: 6px;
   text-align: left;
 }
+.dialog-form {
+  margin: 1em 1em 1em 1em; 
+  width: 600px;
+}
+.dialog-form-center {
+  margin: 1em auto 1em; 
+  max-width: 600px;
+  width: 100%;
+}
 .dialog ul {
   padding: 0;
   margin: 0;

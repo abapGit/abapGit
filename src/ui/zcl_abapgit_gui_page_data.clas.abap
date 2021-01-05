@@ -60,7 +60,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -142,9 +142,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
       iv_label       = 'Add'
       iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
       iv_action      = c_event-add ).
-    ri_html->add( lo_form->render(
-      iv_form_class = 'dialog w600px m-em5-sides margin-v1'
-      io_values     = lo_form_data ) ).
+    ri_html->add( lo_form->render( lo_form_data ) ).
 
   ENDMETHOD.
 
@@ -199,9 +197,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
         iv_label       = 'Remove'
         iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
         iv_action      = c_event-remove ).
-      ri_html->add( lo_form->render(
-        iv_form_class = 'dialog w600px m-em5-sides margin-v1'
-        io_values     = lo_form_data ) ).
+      ri_html->add( lo_form->render( lo_form_data ) ).
     ENDLOOP.
 
   ENDMETHOD.
