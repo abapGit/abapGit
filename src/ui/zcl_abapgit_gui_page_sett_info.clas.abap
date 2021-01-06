@@ -107,7 +107,7 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
         io_repo = io_repo.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
-      iv_page_title      = 'Repository Statistics'
+      iv_page_title      = 'Repository Stats'
       io_page_menu       = zcl_abapgit_gui_chunk_lib=>settings_repo_toolbar(
                              iv_key = io_repo->get_key( )
                              iv_act = zif_abapgit_definitions=>c_action-repo_infos )
@@ -198,7 +198,7 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
 
     ro_form->start_group(
       iv_name        = c_id-info
-      iv_label       = 'Infos'
+      iv_label       = 'Stats'
     )->text(
       iv_name        = c_id-created_by
       iv_label       = 'Created By'
