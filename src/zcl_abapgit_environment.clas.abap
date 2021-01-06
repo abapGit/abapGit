@@ -16,7 +16,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ENVIRONMENT IMPLEMENTATION.
+CLASS zcl_abapgit_environment IMPLEMENTATION.
 
 
   METHOD zif_abapgit_environment~compare_with_inactive.
@@ -85,5 +85,17 @@ CLASS ZCL_ABAPGIT_ENVIRONMENT IMPLEMENTATION.
       ENDTRY.
     ENDIF.
     rv_result = mv_cloud.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_environment~is_sap_object_allowed.
+
+    rv_allowed = cl_enh_badi_def_utility=>is_sap_system( ).
+    IF rv_allowed = abap_true.
+      RETURN.
+    ENDIF.
+
+    rv_allowed = zcl_abapgit_exit=>get_instance( )->allow_sap_objects( ).
+
   ENDMETHOD.
 ENDCLASS.
