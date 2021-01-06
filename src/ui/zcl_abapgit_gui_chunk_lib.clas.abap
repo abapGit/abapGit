@@ -1012,7 +1012,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       iv_act = |{ zif_abapgit_definitions=>c_action-repo_local_settings }?key={ iv_key }|
       iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_local_settings )
     )->add(
-      iv_txt = 'Infos'
+      iv_txt = 'Stats'
       iv_act = |{ zif_abapgit_definitions=>c_action-repo_infos }?key={ iv_key }|
       iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_infos ) ).
 
