@@ -397,6 +397,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
           custmnr   = ls_lxe_item-custmnr
           objtype   = ls_lxe_item-objtype
           objname   = ls_lxe_item-objname
+          read_only = abap_false
         TABLES
           lt_pcx_s1 = lt_text_pairs_tmp.
 
