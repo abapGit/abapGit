@@ -46,9 +46,6 @@ CLASS zcl_abapgit_repo_srv DEFINITION
     METHODS refresh
       RAISING
         zcx_abapgit_exception .
-    METHODS is_sap_object_allowed
-      RETURNING
-        VALUE(rv_allowed) TYPE abap_bool .
     METHODS instantiate_and_add
       IMPORTING
         !is_repo_meta  TYPE zif_abapgit_persistence=>ty_repo
@@ -143,18 +140,6 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
           is_data = is_repo_meta.
     ENDIF.
     add( ro_repo ).
-
-  ENDMETHOD.
-
-
-  METHOD is_sap_object_allowed.
-
-    rv_allowed = cl_enh_badi_def_utility=>is_sap_system( ).
-    IF rv_allowed = abap_true.
-      RETURN.
-    ENDIF.
-
-    rv_allowed = zcl_abapgit_exit=>get_instance( )->allow_sap_objects( ).
 
   ENDMETHOD.
 
@@ -576,7 +561,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Package { iv_package } not found| ).
     ENDIF.
 
-    IF is_sap_object_allowed( ) = abap_false AND lv_as4user = 'SAP'.
+    IF zcl_abapgit_factory=>get_environment( )->is_sap_object_allowed( ) = abap_false AND lv_as4user = 'SAP'.
       zcx_abapgit_exception=>raise( |Package { iv_package } not allowed, responsible user = 'SAP'| ).
     ENDIF.
 
@@ -618,6 +603,4 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
-
 ENDCLASS.
