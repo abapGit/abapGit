@@ -112,13 +112,13 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
     DATA ls_apack_file TYPE zif_abapgit_definitions=>ty_file.
 
-    FIELD-SYMBOLS <ls_return> LIKE LINE OF ct_files.
+    FIELD-SYMBOLS <ls_file> LIKE LINE OF ct_files.
 
 
     ls_apack_file = zcl_abapgit_apack_helper=>to_file( iv_package ).
     IF ls_apack_file IS NOT INITIAL.
-      APPEND INITIAL LINE TO ct_files ASSIGNING <ls_return>.
-      <ls_return>-file = ls_apack_file.
+      APPEND INITIAL LINE TO ct_files ASSIGNING <ls_file>.
+      <ls_file>-file = ls_apack_file.
     ENDIF.
 
   ENDMETHOD.
@@ -152,10 +152,10 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
   METHOD add_dot_abapgit.
 
-    FIELD-SYMBOLS: <ls_return> LIKE LINE OF ct_files.
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF ct_files.
 
-    APPEND INITIAL LINE TO ct_files ASSIGNING <ls_return>.
-    <ls_return>-file = io_dot_abapgit->to_file( ).
+    APPEND INITIAL LINE TO ct_files ASSIGNING <ls_file>.
+    <ls_file>-file = io_dot_abapgit->to_file( ).
 
   ENDMETHOD.
 
