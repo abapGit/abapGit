@@ -15,4 +15,7 @@ INTERFACE zif_abapgit_environment
   METHODS is_restart_required
     RETURNING
       VALUE(rv_result) TYPE abap_bool.
+  METHODS is_sap_object_allowed
+    RETURNING
+      VALUE(rv_allowed) TYPE abap_bool.
 ENDINTERFACE.

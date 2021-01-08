@@ -278,6 +278,9 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
 
   METHOD get_file_pattern.
     rv_pattern = filename( iv_ext = '*' ).
+    " Escape special characters for use with 'covers pattern' (CP)
+    REPLACE ALL OCCURRENCES OF '#' IN rv_pattern WITH '##'.
+    REPLACE ALL OCCURRENCES OF '+' IN rv_pattern WITH '#+'.
   ENDMETHOD.
 
 
