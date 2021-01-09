@@ -7,6 +7,8 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
   PUBLIC SECTION.
 
     METHODS constructor
+      IMPORTING
+        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
         zcx_abapgit_exception .
 
@@ -33,6 +35,13 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
         REDEFINITION .
   PRIVATE SECTION.
 
+    DATA mo_repo TYPE REF TO zcl_abapgit_repo .
+
+    METHODS build_where
+      IMPORTING
+        !io_map         TYPE REF TO zcl_abapgit_string_map
+      RETURNING
+        VALUE(rt_where) TYPE string_table .
     METHODS render_add
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
@@ -63,13 +72,31 @@ ENDCLASS.
 CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
 
 
+  METHOD build_where.
+
+    DATA lv_where LIKE LINE OF rt_where.
+
+    SPLIT io_map->get( c_id-where ) AT |\n| INTO TABLE rt_where.
+
+    DELETE rt_where WHERE table_line IS INITIAL.
+
+    LOOP AT rt_where INTO lv_where.
+      IF strlen( lv_where ) <= 2.
+        DELETE rt_where INDEX sy-tabix.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD constructor.
 
     super->constructor( ).
 
     ms_control-page_title = 'Data'.
 
-    CREATE OBJECT mi_config TYPE zcl_abapgit_data_config.
+    mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    mi_config = mo_repo->get_data_config( ).
 
   ENDMETHOD.
 
@@ -83,7 +110,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
 
     ls_config-type = zif_abapgit_data_config=>c_data_type-tabu.
     ls_config-name = to_upper( lo_map->get( c_id-table ) ).
-    SPLIT lo_map->get( c_id-where ) AT |\n| INTO TABLE ls_config-where.
+    ls_config-where = build_where( lo_map ).
 
     mi_config->add_config( ls_config ).
 
@@ -114,7 +141,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
 
     ls_config-type = zif_abapgit_data_config=>c_data_type-tabu.
     ls_config-name = to_upper( lo_map->get( c_id-table ) ).
-    SPLIT lo_map->get( c_id-where ) AT |\n| INTO TABLE ls_config-where.
+    ls_config-where = build_where( lo_map ).
 
     mi_config->update_config( ls_config ).
 

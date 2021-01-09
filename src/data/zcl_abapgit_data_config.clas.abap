@@ -7,12 +7,10 @@ CLASS zcl_abapgit_data_config DEFINITION
 
     INTERFACES zif_abapgit_data_config .
 
-    METHODS constructor .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
     CONSTANTS c_extension TYPE string VALUE '.config.json'.
-    DATA mv_path TYPE string .
     DATA mt_config TYPE zif_abapgit_data_config=>ty_config_tt .
 
     METHODS dump
@@ -27,13 +25,6 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
-
-
-  METHOD constructor.
-
-    mv_path = zif_abapgit_data_config=>c_default_path.
-
-  ENDMETHOD.
 
 
   METHOD dump.
@@ -78,7 +69,8 @@ CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
     DATA lx_ajson TYPE REF TO zcx_abapgit_ajson_error.
 
     CLEAR mt_config.
-    LOOP AT it_files INTO ls_file WHERE path = mv_path AND filename CP |*{ c_extension }|.
+    LOOP AT it_files INTO ls_file WHERE path = zif_abapgit_data_config=>c_default_path
+        AND filename CP |*{ c_extension }|.
       TRY.
           lo_ajson = zcl_abapgit_ajson=>parse( zcl_abapgit_convert=>xstring_to_string_utf8( ls_file-data ) ).
           lo_ajson->zif_abapgit_ajson_reader~to_abap( IMPORTING ev_container = ls_config ).
@@ -97,13 +89,6 @@ CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_data_config~get_path.
-
-    rv_path = mv_path.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_data_config~remove_config.
 
     ASSERT NOT is_config-type IS INITIAL.
@@ -118,21 +103,12 @@ CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_data_config~set_path.
-
-* todo, validate format
-
-    mv_path = iv_path.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_data_config~to_json.
 
     DATA ls_config LIKE LINE OF mt_config.
     DATA ls_file LIKE LINE OF rt_files.
 
-    ls_file-path = mv_path.
+    ls_file-path = zif_abapgit_data_config=>c_default_path.
 
     LOOP AT mt_config INTO ls_config.
       ls_file-filename = to_lower( |{ ls_config-name }{ c_extension }| ).
