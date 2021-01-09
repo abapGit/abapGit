@@ -1,7 +1,7 @@
 CLASS zcl_abapgit_data_deserializer DEFINITION
   PUBLIC
-  FINAL
-  CREATE PUBLIC .
+  CREATE PRIVATE
+  GLOBAL FRIENDS zcl_abapgit_data_factory .
 
   PUBLIC SECTION.
 
@@ -65,7 +65,7 @@ CLASS ZCL_ABAPGIT_DATA_DESERIALIZER IMPLEMENTATION.
       lr_data = zcl_abapgit_data_utils=>build_table_itab( ls_config-name ).
 
       READ TABLE it_files INTO ls_file WITH KEY
-        path = ii_config->get_path( )
+        path = zif_abapgit_data_config=>c_default_path
         filename = zcl_abapgit_data_utils=>build_filename( ls_config ).
       IF sy-subrc = 0.
         read_json(
@@ -74,7 +74,6 @@ CLASS ZCL_ABAPGIT_DATA_DESERIALIZER IMPLEMENTATION.
       ENDIF.
 
 * todo
-
 
     ENDLOOP.
 

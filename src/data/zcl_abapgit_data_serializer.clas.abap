@@ -1,7 +1,7 @@
 CLASS zcl_abapgit_data_serializer DEFINITION
   PUBLIC
-  FINAL
-  CREATE PUBLIC .
+  CREATE PRIVATE
+  GLOBAL FRIENDS zcl_abapgit_data_factory .
 
   PUBLIC SECTION.
 
@@ -63,7 +63,7 @@ CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
     ASSIGN rr_data->* TO <lg_tab>.
 
     LOOP AT it_where INTO lv_where.
-      SELECT * FROM (iv_name) INTO TABLE <lg_tab> WHERE (lv_where).
+      SELECT * FROM (iv_name) APPENDING TABLE <lg_tab> WHERE (lv_where).
     ENDLOOP.
     IF lines( it_where ) = 0.
       SELECT * FROM (iv_name) INTO TABLE <lg_tab>.
@@ -80,7 +80,7 @@ CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
     DATA lr_data TYPE REF TO data.
 
 
-    ls_file-path = ii_config->get_path( ).
+    ls_file-path = zif_abapgit_data_config=>c_default_path.
     lt_configs = ii_config->get_configs( ).
 
     LOOP AT lt_configs INTO ls_config.
