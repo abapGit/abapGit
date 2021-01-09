@@ -6,13 +6,13 @@
 CLASS lcl_nodes_helper DEFINITION FINAL.
   PUBLIC SECTION.
 
-    DATA mt_nodes TYPE zcl_abapgit_ajson=>ty_nodes_tt.
+    DATA mt_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt.
     METHODS add
       IMPORTING
         iv_str TYPE string.
     METHODS sorted
       RETURNING
-        VALUE(rt_nodes) TYPE zcl_abapgit_ajson=>ty_nodes_ts.
+        VALUE(rt_nodes) TYPE zif_abapgit_ajson=>ty_nodes_ts.
 
 ENDCLASS.
 
@@ -119,7 +119,7 @@ CLASS ltcl_parser_test IMPLEMENTATION.
   METHOD parse.
 
     DATA lo_cut TYPE REF TO lcl_json_parser.
-    DATA lt_act TYPE zcl_abapgit_ajson=>ty_nodes_tt.
+    DATA lt_act TYPE zif_abapgit_ajson=>ty_nodes_tt.
     DATA lo_nodes TYPE REF TO lcl_nodes_helper.
 
     CREATE OBJECT lo_nodes.
@@ -189,7 +189,7 @@ CLASS ltcl_serializer_test DEFINITION FINAL
         VALUE(rv_json) TYPE string.
     CLASS-METHODS sample_nodes
       RETURNING
-        VALUE(rt_nodes) TYPE zcl_abapgit_ajson=>ty_nodes_ts.
+        VALUE(rt_nodes) TYPE zif_abapgit_ajson=>ty_nodes_ts.
 
   PRIVATE SECTION.
 
@@ -554,7 +554,7 @@ CLASS ltcl_utils_test IMPLEMENTATION.
 
   METHOD split_path.
 
-    DATA ls_exp TYPE zcl_abapgit_ajson=>ty_path_name.
+    DATA ls_exp TYPE zif_abapgit_ajson=>ty_path_name.
     DATA lv_path TYPE string.
 
     lv_path     = ''. " alias to root
@@ -2294,7 +2294,7 @@ CLASS ltcl_writer_test IMPLEMENTATION.
 
     DATA lv_path TYPE string.
 
-    FIELD-SYMBOLS <node> TYPE zcl_abapgit_ajson=>ty_node.
+    FIELD-SYMBOLS <node> TYPE zif_abapgit_ajson=>ty_node.
 
     LOOP AT io_json_in->mt_json_tree ASSIGNING <node> WHERE path = iv_path.
       lv_path = <node>-path && <node>-name && '/'.
@@ -2601,7 +2601,7 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
     lo_nodes->add( '/a/b/   |c     |object |     ||0' ).
     lo_src->mt_json_tree = lo_nodes->mt_nodes.
 
-    DATA lt_nodes TYPE zcl_abapgit_ajson=>ty_nodes_tt.
+    DATA lt_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt.
     lt_nodes = lcl_abap_to_json=>convert( iv_data = lo_src ).
 
     cl_abap_unit_assert=>assert_equals(
@@ -2613,7 +2613,7 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
   METHOD set_value.
 
     DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
-    DATA lt_nodes TYPE zcl_abapgit_ajson=>ty_nodes_tt.
+    DATA lt_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt.
 
     " number
     CREATE OBJECT lo_nodes_exp.
@@ -2672,7 +2672,7 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
   METHOD set_null.
 
     DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
-    DATA lt_nodes TYPE zcl_abapgit_ajson=>ty_nodes_tt.
+    DATA lt_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt.
     DATA lv_null_ref TYPE REF TO data.
 
     " null
@@ -2690,8 +2690,8 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
   METHOD prefix.
 
     DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
-    DATA lt_nodes TYPE zcl_abapgit_ajson=>ty_nodes_tt.
-    DATA ls_prefix TYPE zcl_abapgit_ajson=>ty_path_name.
+    DATA lt_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt.
+    DATA ls_prefix TYPE zif_abapgit_ajson=>ty_path_name.
 
     ls_prefix-path = '/a/'.
     ls_prefix-name = 'b'.
@@ -2712,7 +2712,7 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
 
     DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
     DATA ls_struc TYPE ty_struc.
-    DATA lt_nodes TYPE zcl_abapgit_ajson=>ty_nodes_tt.
+    DATA lt_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt.
 
     ls_struc-a = 'abc'.
     ls_struc-b = 10.
@@ -2738,7 +2738,7 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
 
     DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
     DATA ls_struc TYPE ty_struc_complex.
-    DATA lt_nodes TYPE zcl_abapgit_ajson=>ty_nodes_tt.
+    DATA lt_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt.
     FIELD-SYMBOLS <i> LIKE LINE OF ls_struc-tab.
 
     ls_struc-a = 'abc'.
@@ -2798,7 +2798,7 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
   METHOD set_array.
 
     DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
-    DATA lt_nodes TYPE zcl_abapgit_ajson=>ty_nodes_tt.
+    DATA lt_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt.
 
     DATA lt_tab TYPE TABLE OF ty_struc.
     FIELD-SYMBOLS <s> LIKE LINE OF lt_tab.
