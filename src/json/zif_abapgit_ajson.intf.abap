@@ -4,8 +4,8 @@ INTERFACE zif_abapgit_ajson
   CONSTANTS version TYPE string VALUE 'v1.0.3'.
   CONSTANTS origin TYPE string VALUE 'https://github.com/sbcgua/ajson'.
 
-  INTERFACES zif_ajson_reader.
-  INTERFACES zif_ajson_writer.
+  INTERFACES zif_abapgit_ajson_reader.
+  INTERFACES zif_abapgit_ajson_writer.
 
   CONSTANTS:
     BEGIN OF node_type,
