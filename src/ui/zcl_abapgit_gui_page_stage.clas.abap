@@ -46,6 +46,11 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
     DATA mv_seed TYPE string .             " Unique page id to bind JS sessionStorage
     DATA mv_filter_value TYPE string .
 
+    METHODS check_selected
+      IMPORTING
+        !io_files TYPE REF TO zcl_abapgit_string_map
+      RAISING
+        zcx_abapgit_exception .
     METHODS find_changed_by
       IMPORTING
         !it_files            TYPE zif_abapgit_definitions=>ty_stage_files
@@ -131,7 +136,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -147,6 +152,43 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
                     iv_typ = zif_abapgit_html=>c_action_type-onclick
                     iv_id  = |patchBtn| ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD check_selected.
+
+    DATA:
+      ls_file    TYPE zif_abapgit_definitions=>ty_file,
+      lv_pattern TYPE string,
+      lv_msg     TYPE string.
+
+    FIELD-SYMBOLS:
+      <ls_item>     LIKE LINE OF io_files->mt_entries,
+      <ls_item_chk> LIKE LINE OF io_files->mt_entries.
+
+    " Check all added files if the exist in different paths (packages) without being removed
+    LOOP AT io_files->mt_entries ASSIGNING <ls_item> WHERE v = zif_abapgit_definitions=>c_method-add.
+
+      zcl_abapgit_path=>split_file_location(
+        EXPORTING
+          iv_fullpath = to_lower( <ls_item>-k )
+        IMPORTING
+          ev_path     = ls_file-path
+          ev_filename = ls_file-filename ).
+
+      lv_pattern = '*/' && to_upper( ls_file-filename ).
+      REPLACE ALL OCCURRENCES OF '#' IN lv_pattern WITH '##'. " for CP
+
+      LOOP AT io_files->mt_entries ASSIGNING <ls_item_chk>
+        WHERE k CP lv_pattern AND k <> <ls_item>-k AND v <> zif_abapgit_definitions=>c_method-rm.
+
+        lv_msg = |In order to add { to_lower( <ls_item>-k ) }, | &&
+                 |you have to remove { to_lower( <ls_item_chk>-k ) }|.
+        zcx_abapgit_exception=>raise( lv_msg ).
+
+      ENDLOOP.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -302,18 +344,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
         IF li_cts_api->is_chrec_possible_for_package( <ls_local>-item-devclass ) = abap_false.
           EXIT. " Assume all other objects are also in packages without change recording
+        ENDIF.
 
-        ELSEIF li_cts_api->is_object_type_lockable( <ls_local>-item-obj_type ) = abap_true AND
-               li_cts_api->is_object_locked_in_transport( iv_object_type = <ls_local>-item-obj_type
-                                                          iv_object_name = <ls_local>-item-obj_name ) = abap_true.
-
-          ls_new-item = <ls_local>-item.
-
-          ls_new-transport = li_cts_api->get_current_transport_for_obj(
-            iv_object_type             = <ls_local>-item-obj_type
-            iv_object_name             = <ls_local>-item-obj_name
-            iv_resolve_task_to_request = abap_false ).
-
+        ls_new-item      = <ls_local>-item.
+        ls_new-transport = li_cts_api->get_transport_for_object( <ls_local>-item ).
+        IF ls_new-transport IS NOT INITIAL.
           INSERT ls_new INTO TABLE ct_transports.
         ENDIF.
       ENDIF.
@@ -325,7 +360,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     DATA:
       ls_item        TYPE zif_abapgit_definitions=>ty_item,
-      lv_is_xml_file TYPE abap_bool,
       ls_new         LIKE LINE OF ct_transports,
       li_cts_api     TYPE REF TO zif_abapgit_cts_api.
 
@@ -341,22 +375,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
       zcl_abapgit_file_status=>identify_object(
         EXPORTING
           iv_filename = <ls_remote>-filename
-          iv_path = <ls_remote>-path
-          io_dot = mo_repo->get_dot_abapgit( )
+          iv_path     = <ls_remote>-path
+          io_dot      = mo_repo->get_dot_abapgit( )
         IMPORTING
-          es_item = ls_item
-          ev_is_xml = lv_is_xml_file ).
+          es_item     = ls_item ).
 
-      IF ls_item IS INITIAL.
-        CONTINUE.
-      ELSEIF li_cts_api->is_object_type_lockable( ls_item-obj_type ) = abap_true
-        AND li_cts_api->is_object_locked_in_transport( iv_object_type = ls_item-obj_type
-                                                       iv_object_name = ls_item-obj_name ) = abap_true.
-        ls_new-item = ls_item.
-        ls_new-transport = li_cts_api->get_current_transport_for_obj(
-          iv_object_type             = ls_item-obj_type
-          iv_object_name             = ls_item-obj_name
-          iv_resolve_task_to_request = abap_false ).
+      ls_new-item      = ls_item.
+      ls_new-transport = li_cts_api->get_transport_for_object( ls_item ).
+      IF ls_new-transport IS NOT INITIAL.
         INSERT ls_new INTO TABLE ct_transports.
       ENDIF.
 
@@ -738,6 +764,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     IF lo_files->size( ) = 0.
       zcx_abapgit_exception=>raise( 'process_stage_list: empty list' ).
     ENDIF.
+
+    check_selected( lo_files ).
 
     CREATE OBJECT ro_stage.
 
