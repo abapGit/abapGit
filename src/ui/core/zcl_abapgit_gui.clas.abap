@@ -109,7 +109,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
 
   METHOD back.
@@ -427,18 +427,20 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
            ev_size = lv_size
            et_tab  = lt_html ).
 
-      mi_html_viewer->load_data(
-        EXPORTING
-          iv_type         = iv_type
-          iv_subtype      = iv_subtype
-          iv_size         = lv_size
-          iv_url          = iv_url
-        IMPORTING
-          ev_assigned_url = rv_url
-        CHANGING
-          ct_data_table   = lt_html
-        EXCEPTIONS
-          OTHERS          = 1 ).
+      TRY.
+          mi_html_viewer->load_data(
+            EXPORTING
+              iv_type         = iv_type
+              iv_subtype      = iv_subtype
+              iv_size         = lv_size
+              iv_url          = iv_url
+            IMPORTING
+              ev_assigned_url = rv_url
+            CHANGING
+              ct_data_table   = lt_html ).
+        CATCH zcx_abapgit_exception.
+          ASSERT 1 = 2.
+      ENDTRY.
     ELSE. " Raw input
       zcl_abapgit_convert=>xstring_to_bintab(
         EXPORTING
@@ -447,18 +449,20 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
           ev_size   = lv_size
           et_bintab = lt_xdata ).
 
-      mi_html_viewer->load_data(
-        EXPORTING
-          iv_type         = iv_type
-          iv_subtype      = iv_subtype
-          iv_size         = lv_size
-          iv_url          = iv_url
-        IMPORTING
-          ev_assigned_url = rv_url
-        CHANGING
-          ct_data_table   = lt_xdata
-        EXCEPTIONS
-          OTHERS          = 1 ).
+      TRY.
+          mi_html_viewer->load_data(
+            EXPORTING
+              iv_type         = iv_type
+              iv_subtype      = iv_subtype
+              iv_size         = lv_size
+              iv_url          = iv_url
+            IMPORTING
+              ev_assigned_url = rv_url
+            CHANGING
+              ct_data_table   = lt_xdata ).
+        CATCH zcx_abapgit_exception.
+          ASSERT 1 = 2.
+      ENDTRY.
     ENDIF.
 
     ASSERT sy-subrc = 0. " Image data error
