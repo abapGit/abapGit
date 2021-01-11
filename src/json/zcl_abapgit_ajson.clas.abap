@@ -36,6 +36,7 @@ CLASS zcl_abapgit_ajson DEFINITION
 
     ALIASES:
       mt_json_tree FOR zif_abapgit_ajson~mt_json_tree,
+      keep_item_order FOR zif_abapgit_ajson~keep_item_order,
       freeze FOR zif_abapgit_ajson~freeze.
 
     CLASS-METHODS parse
@@ -59,6 +60,7 @@ CLASS zcl_abapgit_ajson DEFINITION
       tty_node_stack TYPE STANDARD TABLE OF REF TO zif_abapgit_ajson=>ty_node WITH DEFAULT KEY.
 
     DATA mv_read_only TYPE abap_bool.
+    DATA mv_keep_item_order TYPE abap_bool.
 
     METHODS get_item
       IMPORTING
@@ -127,11 +129,6 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-  ENDMETHOD.
-
-
-  METHOD freeze.
-    mv_read_only = abap_true.
   ENDMETHOD.
 
 
@@ -210,15 +207,6 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
     ENDDO.
 
     ASSERT lv_cur_path = iv_path. " Just in case
-
-  ENDMETHOD.
-
-
-  METHOD stringify.
-
-    rv_json = lcl_json_serializer=>stringify(
-      it_json_tree = mt_json_tree
-      iv_indent = iv_indent ).
 
   ENDMETHOD.
 
@@ -475,6 +463,7 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
     ls_new_path-name = |{ lr_parent->children + 1 }|.
 
     lt_new_nodes = lcl_abap_to_json=>convert(
+      iv_keep_item_order = mv_keep_item_order
       iv_data   = iv_val
       is_prefix = ls_new_path ).
     READ TABLE lt_new_nodes INDEX 1 REFERENCE INTO lr_new_node. " assume first record is the array item - not ideal !
@@ -514,11 +503,13 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
     IF ls_split_path IS INITIAL. " Assign root, exceptional processing
       IF iv_node_type IS NOT INITIAL.
         mt_json_tree = lcl_abap_to_json=>insert_with_type(
+          iv_keep_item_order = mv_keep_item_order
           iv_data   = iv_val
           iv_type   = iv_node_type
           is_prefix = ls_split_path ).
       ELSE.
         mt_json_tree = lcl_abap_to_json=>convert(
+          iv_keep_item_order = mv_keep_item_order
           iv_data   = iv_val
           is_prefix = ls_split_path ).
       ENDIF.
@@ -547,12 +538,14 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
 
     IF iv_node_type IS NOT INITIAL.
       lt_new_nodes = lcl_abap_to_json=>insert_with_type(
+        iv_keep_item_order = mv_keep_item_order
         iv_data        = iv_val
         iv_type        = iv_node_type
         iv_array_index = lv_array_index
         is_prefix      = ls_split_path ).
     ELSE.
       lt_new_nodes = lcl_abap_to_json=>convert(
+        iv_keep_item_order = mv_keep_item_order
         iv_data        = iv_val
         iv_array_index = lv_array_index
         is_prefix      = ls_split_path ).
@@ -626,6 +619,16 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_ajson_writer~stringify.
+
+    rv_json = lcl_json_serializer=>stringify(
+      it_json_tree       = mt_json_tree
+      iv_keep_item_order = mv_keep_item_order
+      iv_indent          = iv_indent ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_ajson_writer~touch_array.
 
     DATA lr_node TYPE REF TO zif_abapgit_ajson=>ty_node.
@@ -672,5 +675,15 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
       zcx_abapgit_ajson_error=>raise( |Path [{ iv_path }] already used and is not array| ).
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_ajson~freeze.
+    mv_read_only = abap_true.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_ajson~keep_item_order.
+    mv_keep_item_order = abap_true.
   ENDMETHOD.
 ENDCLASS.

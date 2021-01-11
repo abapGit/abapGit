@@ -24,6 +24,7 @@ INTERFACE zif_abapgit_ajson
       type TYPE string,
       value TYPE string,
       index TYPE i,
+      order TYPE i,
       children TYPE i,
     END OF ty_node .
   TYPES:
@@ -31,7 +32,8 @@ INTERFACE zif_abapgit_ajson
   TYPES:
     ty_nodes_ts TYPE SORTED TABLE OF ty_node
       WITH UNIQUE KEY path name
-      WITH NON-UNIQUE SORTED KEY array_index COMPONENTS path index .
+      WITH NON-UNIQUE SORTED KEY array_index COMPONENTS path index
+      WITH NON-UNIQUE SORTED KEY item_order COMPONENTS path order .
   TYPES:
     BEGIN OF ty_path_name,
       path TYPE string,
@@ -45,6 +47,7 @@ INTERFACE zif_abapgit_ajson
   " METHODS
 
   METHODS freeze.
+  METHODS keep_item_order.
 
   " METHODS (merged from reader/writer), maybe will completely move to this IF in future !
 

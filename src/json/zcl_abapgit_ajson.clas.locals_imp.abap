@@ -258,6 +258,7 @@ CLASS lcl_json_serializer DEFINITION FINAL CREATE PRIVATE.
       IMPORTING
         it_json_tree TYPE zif_abapgit_ajson=>ty_nodes_ts
         iv_indent TYPE i DEFAULT 0
+        iv_keep_item_order TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rv_json_string) TYPE string
       RAISING
@@ -270,6 +271,7 @@ CLASS lcl_json_serializer DEFINITION FINAL CREATE PRIVATE.
     CLASS-DATA gv_comma_with_lf TYPE string.
 
     DATA mt_json_tree TYPE zif_abapgit_ajson=>ty_nodes_ts.
+    DATA mv_keep_item_order TYPE abap_bool.
     DATA mt_buffer TYPE string_table.
     DATA mv_indent_step TYPE i.
     DATA mv_level TYPE i.
@@ -313,6 +315,7 @@ CLASS lcl_json_serializer IMPLEMENTATION.
     CREATE OBJECT lo.
     lo->mt_json_tree = it_json_tree.
     lo->mv_indent_step = iv_indent.
+    lo->mv_keep_item_order = iv_keep_item_order.
     rv_json_string = lo->_stringify( ).
 
   ENDMETHOD.
@@ -421,6 +424,8 @@ CLASS lcl_json_serializer IMPLEMENTATION.
 
     IF iv_array = abap_true.
       lv_tab_key = 'array_index'. " path + index
+    ELSEIF mv_keep_item_order = abap_true.
+      lv_tab_key = 'item_order'. " path + order
     ELSE.
       lv_tab_key = 'primary_key'. " path + name
     ENDIF.
@@ -677,6 +682,7 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
         iv_data TYPE any
         is_prefix TYPE zif_abapgit_ajson=>ty_path_name OPTIONAL
         iv_array_index TYPE i DEFAULT 0
+        iv_keep_item_order TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rt_nodes) TYPE zif_abapgit_ajson=>ty_nodes_tt
       RAISING
@@ -688,6 +694,7 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
         iv_type TYPE string
         is_prefix TYPE zif_abapgit_ajson=>ty_path_name OPTIONAL
         iv_array_index TYPE i DEFAULT 0
+        iv_keep_item_order TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rt_nodes) TYPE zif_abapgit_ajson=>ty_nodes_tt
       RAISING
@@ -698,6 +705,7 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
   PRIVATE SECTION.
 
     CLASS-DATA gv_ajson_absolute_type_name TYPE string.
+    DATA mv_keep_item_order TYPE abap_bool.
 
     METHODS convert_any
       IMPORTING
@@ -705,6 +713,7 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
         io_type TYPE REF TO cl_abap_typedescr
         is_prefix TYPE zif_abapgit_ajson=>ty_path_name
         iv_index TYPE i DEFAULT 0
+        iv_item_order TYPE i DEFAULT 0
       CHANGING
         ct_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt
       RAISING
@@ -724,6 +733,7 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
         io_type TYPE REF TO cl_abap_typedescr
         is_prefix TYPE zif_abapgit_ajson=>ty_path_name
         iv_index TYPE i DEFAULT 0
+        iv_item_order TYPE i DEFAULT 0
       CHANGING
         ct_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt
       RAISING
@@ -735,6 +745,7 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
         io_type TYPE REF TO cl_abap_typedescr
         is_prefix TYPE zif_abapgit_ajson=>ty_path_name
         iv_index TYPE i DEFAULT 0
+        iv_item_order TYPE i DEFAULT 0
       CHANGING
         ct_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt
       RAISING
@@ -746,6 +757,7 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
         io_type TYPE REF TO cl_abap_typedescr
         is_prefix TYPE zif_abapgit_ajson=>ty_path_name
         iv_index TYPE i DEFAULT 0
+        iv_item_order TYPE i DEFAULT 0
       CHANGING
         ct_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt
         cs_root  TYPE zif_abapgit_ajson=>ty_node OPTIONAL
@@ -758,6 +770,7 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
         io_type TYPE REF TO cl_abap_typedescr
         is_prefix TYPE zif_abapgit_ajson=>ty_path_name
         iv_index TYPE i DEFAULT 0
+        iv_item_order TYPE i DEFAULT 0
       CHANGING
         ct_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt
       RAISING
@@ -770,6 +783,7 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
         io_type TYPE REF TO cl_abap_typedescr
         is_prefix TYPE zif_abapgit_ajson=>ty_path_name
         iv_index TYPE i DEFAULT 0
+        iv_item_order TYPE i DEFAULT 0
       CHANGING
         ct_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt
       RAISING
@@ -795,6 +809,7 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
 
     lo_type = cl_abap_typedescr=>describe_by_data( iv_data ).
     CREATE OBJECT lo_converter.
+    lo_converter->mv_keep_item_order = iv_keep_item_order.
 
     lo_converter->convert_any(
       EXPORTING
@@ -817,6 +832,7 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
             io_type   = io_type
             is_prefix = is_prefix
             iv_index  = iv_index
+            iv_item_order = iv_item_order
           CHANGING
             ct_nodes = ct_nodes ).
 
@@ -827,6 +843,7 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
             io_type   = io_type
             is_prefix = is_prefix
             iv_index  = iv_index
+            iv_item_order = iv_item_order
           CHANGING
             ct_nodes = ct_nodes ).
 
@@ -837,6 +854,7 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
             io_type   = io_type
             is_prefix = is_prefix
             iv_index  = iv_index
+            iv_item_order = iv_item_order
           CHANGING
             ct_nodes = ct_nodes ).
 
@@ -849,6 +867,7 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
               io_type   = io_type
               is_prefix = is_prefix
               iv_index  = iv_index
+              iv_item_order = iv_item_order
             CHANGING
               ct_nodes = ct_nodes ).
 
@@ -897,6 +916,7 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
     <n>-path  = is_prefix-path.
     <n>-name  = is_prefix-name.
     <n>-index = iv_index.
+    <n>-order = iv_item_order.
 
     IF io_type->absolute_name = '\TYPE-POOL=ABAP\TYPE=ABAP_BOOL' OR io_type->absolute_name = '\TYPE=XFELD'.
       <n>-type = zif_abapgit_ajson=>node_type-boolean.
@@ -927,6 +947,7 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
     <n>-path  = is_prefix-path.
     <n>-name  = is_prefix-name.
     <n>-index = iv_index.
+    <n>-order = iv_item_order.
 
     IF iv_data IS INITIAL.
       <n>-type  = zif_abapgit_ajson=>node_type-null.
@@ -943,6 +964,7 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
     DATA lo_struc TYPE REF TO cl_abap_structdescr.
     DATA lt_comps TYPE cl_abap_structdescr=>component_table.
     DATA ls_next_prefix LIKE is_prefix.
+    DATA lv_item_order TYPE i.
 
     FIELD-SYMBOLS <root> LIKE LINE OF ct_nodes.
     FIELD-SYMBOLS <c> LIKE LINE OF lt_comps.
@@ -963,6 +985,7 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
       <root>-name  = is_prefix-name.
       <root>-type  = zif_abapgit_ajson=>node_type-object.
       <root>-index = iv_index.
+      <root>-order = iv_item_order.
     ENDIF.
 
     ls_next_prefix-path = is_prefix-path && is_prefix-name && '/'.
@@ -987,11 +1010,16 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
         ASSIGN COMPONENT <c>-name OF STRUCTURE iv_data TO <val>.
         ASSERT sy-subrc = 0.
 
+        IF mv_keep_item_order = abap_true.
+          lv_item_order = <root>-children.
+        ENDIF.
+
         convert_any(
           EXPORTING
             iv_data   = <val>
             io_type   = <c>-type
             is_prefix = ls_next_prefix
+            iv_item_order = lv_item_order
           CHANGING
             ct_nodes = ct_nodes ).
 
@@ -1019,6 +1047,7 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
     <root>-name  = is_prefix-name.
     <root>-type  = zif_abapgit_ajson=>node_type-array.
     <root>-index = iv_index.
+    <root>-order = iv_item_order.
 
     ls_next_prefix-path = is_prefix-path && is_prefix-name && '/'.
     ASSIGN iv_data TO <tab>.
@@ -1047,6 +1076,7 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
 
     lo_type = cl_abap_typedescr=>describe_by_data( iv_data ).
     CREATE OBJECT lo_converter.
+    lo_converter->mv_keep_item_order = iv_keep_item_order.
 
     lo_converter->insert_value_with_type(
       EXPORTING
@@ -1093,6 +1123,7 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
     <n>-index = iv_index.
     <n>-value = iv_data.
     <n>-type  = iv_type.
+    <n>-order = iv_item_order.
 
   ENDMETHOD.
 
