@@ -70,13 +70,13 @@ INTERFACE zif_abapgit_exit
     CHANGING
       !ct_ci_repos TYPE ty_ci_repos .
   METHODS adjust_display_commit_url
-    IMPORTING 
+    IMPORTING
       !iv_repo_url    TYPE csequence
       !iv_repo_name   TYPE csequence
       !iv_repo_key    TYPE csequence
       !iv_commit_hash TYPE zif_abapgit_definitions=>ty_sha1
-    CHANGING  
+    CHANGING
       !cv_display_url TYPE csequence
-    RAISING   
+    RAISING
       zcx_abapgit_exception .
 ENDINTERFACE.
