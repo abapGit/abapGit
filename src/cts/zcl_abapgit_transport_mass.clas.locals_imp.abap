@@ -145,7 +145,7 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
 
     CONCATENATE sy-datlo sy-timlo INTO mv_timestamp SEPARATED BY '_'.
 
-    mv_full_folder = get_full_folder( iv_folder = iv_folder ).
+    mv_full_folder = get_full_folder( iv_folder ).
 
     cl_gui_frontend_services=>get_file_separator(
       CHANGING
@@ -206,7 +206,7 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
                 mv_timestamp
            INTO rv_full_folder SEPARATED BY lv_sep.
 
-    IF does_folder_exist( iv_folder = rv_full_folder ) = abap_false.
+    IF does_folder_exist( rv_full_folder ) = abap_false.
 
       cl_gui_frontend_services=>directory_create(
         EXPORTING

@@ -5,10 +5,10 @@ CLASS zcl_abapgit_data_factory DEFINITION
 
   PUBLIC SECTION.
 
-    METHODS get_serializer
+    CLASS-METHODS get_serializer
       RETURNING
         VALUE(ri_serializer) TYPE REF TO zif_abapgit_data_serializer .
-    METHODS get_deserializer
+    CLASS-METHODS get_deserializer
       RETURNING
         VALUE(ri_deserializer) TYPE REF TO zif_abapgit_data_deserializer .
   PROTECTED SECTION.

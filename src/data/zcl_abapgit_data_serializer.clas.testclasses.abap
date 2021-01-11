@@ -1,3 +1,5 @@
+CLASS ltcl_test DEFINITION DEFERRED.
+CLASS zcl_abapgit_data_serializer DEFINITION LOCAL FRIENDS ltcl_test.
 
 CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
 
@@ -22,10 +24,12 @@ CLASS ltcl_test IMPLEMENTATION.
 
     DATA ls_config TYPE zif_abapgit_data_config=>ty_config.
     DATA lt_files TYPE zif_abapgit_definitions=>ty_files_tt.
+    DATA lv_where LIKE LINE OF ls_config-where.
 
     ls_config-type = 'TABU'.
     ls_config-name = 'T000'.
-    APPEND |MANDT = '{ sy-mandt }'| TO ls_config-where.
+    lv_where = |MANDT = '{ sy-mandt }'|.
+    APPEND lv_where TO ls_config-where.
 
     mi_config->add_config( ls_config ).
 
