@@ -171,7 +171,7 @@ CLASS ZCL_ABAPGIT_APACK_HELPER IMPLEMENTATION.
       ENDIF.
 
       lo_apack_reader = zcl_abapgit_apack_reader=>create_instance( ls_manifest_implementation-devclass ).
-      lo_apack_reader->copy_manifest_descriptor( io_manifest_provider = lo_manifest_provider ).
+      lo_apack_reader->copy_manifest_descriptor( lo_manifest_provider ).
       ls_descriptor = lo_apack_reader->get_manifest_descriptor( ).
 
       IF ls_descriptor IS NOT INITIAL.

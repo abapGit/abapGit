@@ -12,7 +12,7 @@ ENDCLASS.
 CLASS ltcl_apack_manifest_reader IMPLEMENTATION.
 
   METHOD manifest_descriptor.
-    verify_own_descriptor( is_manifest_descriptor = mo_manifest_reader->get_manifest_descriptor( ) ).
+    verify_own_descriptor( mo_manifest_reader->get_manifest_descriptor( ) ).
   ENDMETHOD.
 
   METHOD setup.

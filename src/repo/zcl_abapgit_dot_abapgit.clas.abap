@@ -242,6 +242,10 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
       rv_ignored = abap_true.
     ENDIF.
 
+    IF iv_path = zif_abapgit_data_config=>c_default_path.
+      rv_ignored = abap_false.
+    ENDIF.
+
   ENDMETHOD.
 
 

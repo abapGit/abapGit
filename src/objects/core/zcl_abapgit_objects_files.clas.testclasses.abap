@@ -8,14 +8,17 @@ CLASS ltcl_objects_files DEFINITION FOR TESTING
 
     METHODS get_program_data
       IMPORTING
-        iv_line_break TYPE clike
-      RETURNING VALUE(rv_result) TYPE xstring.
+        iv_line_break    TYPE clike
+      RETURNING
+        VALUE(rv_result) TYPE xstring.
 
     METHODS get_xml_data
-      RETURNING VALUE(rv_result) TYPE xstring.
+      RETURNING
+        VALUE(rv_result) TYPE xstring.
 
     METHODS get_expected_abap_source
-      RETURNING VALUE(rt_result) TYPE abaptxt255_tab.
+      RETURNING
+        VALUE(rt_result) TYPE abaptxt255_tab.
 
     METHODS read_abap FOR TESTING
       RAISING
@@ -25,13 +28,14 @@ CLASS ltcl_objects_files DEFINITION FOR TESTING
       RAISING
         cx_static_check.
 
+    METHODS get_file_pattern FOR TESTING.
 ENDCLASS.
 
 CLASS ltcl_objects_files IMPLEMENTATION.
 
   METHOD setup.
     DATA: lt_files TYPE zif_abapgit_definitions=>ty_files_tt,
-          ls_item TYPE zif_abapgit_definitions=>ty_item.
+          ls_item  TYPE zif_abapgit_definitions=>ty_item.
     FIELD-SYMBOLS: <ls_files> LIKE LINE OF lt_files.
 
     APPEND INITIAL LINE TO lt_files ASSIGNING <ls_files>.
@@ -96,15 +100,15 @@ CLASS ltcl_objects_files IMPLEMENTATION.
 
   METHOD read_xml.
     DATA: BEGIN OF ls_exp_prog_metadata,
-      name TYPE progname VALUE 'ZLF',
-      subc(1) TYPE c VALUE '1',
-      rload(1) TYPE c VALUE 'E',
-      fixpt(1) TYPE c VALUE 'X',
-      uccheck(1) TYPE c VALUE 'X',
-    END OF ls_exp_prog_metadata,
-    ls_act_prog_metadata LIKE ls_exp_prog_metadata,
-    ls_exp_metadata TYPE zif_abapgit_definitions=>ty_metadata,
-    li_xml TYPE REF TO zif_abapgit_xml_input.
+            name       TYPE progname VALUE 'ZLF',
+            subc(1)    TYPE c VALUE '1',
+            rload(1)   TYPE c VALUE 'E',
+            fixpt(1)   TYPE c VALUE 'X',
+            uccheck(1) TYPE c VALUE 'X',
+          END OF ls_exp_prog_metadata,
+          ls_act_prog_metadata LIKE ls_exp_prog_metadata,
+          ls_exp_metadata      TYPE zif_abapgit_definitions=>ty_metadata,
+          li_xml               TYPE REF TO zif_abapgit_xml_input.
 
     ls_exp_metadata-class = 'LCL_OBJECT_PROG'.
     ls_exp_metadata-version = 'v1.0.0'.
@@ -116,6 +120,27 @@ CLASS ltcl_objects_files IMPLEMENTATION.
       act = ls_act_prog_metadata ).
     cl_abap_unit_assert=>assert_equals( exp = ls_exp_metadata
       act = mo_cut->read_xml( )->get_metadata( ) ).
+
+  ENDMETHOD.
+
+  METHOD get_file_pattern.
+
+    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'zlf.prog.*'
+      act = mo_cut->get_file_pattern( ) ).
+
+    ls_item-obj_type = 'prog'.
+    ls_item-obj_name = '/test/zlf'.
+
+    CREATE OBJECT mo_cut
+      EXPORTING
+        is_item = ls_item.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = '##test##zlf.prog.*'
+      act = mo_cut->get_file_pattern( ) ).
 
   ENDMETHOD.
 

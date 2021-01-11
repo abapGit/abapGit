@@ -42,9 +42,10 @@ CLASS zcl_abapgit_gui_page_addonline DEFINITION
         add_online_repo TYPE string VALUE 'add-repo-online',
       END OF c_event.
 
-    DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
-    DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
-    DATA mo_form TYPE REF TO zcl_abapgit_html_form.
+    DATA mo_form TYPE REF TO zcl_abapgit_html_form .
+    DATA mo_form_data TYPE REF TO zcl_abapgit_string_map .
+    DATA mo_form_util TYPE REF TO zcl_abapgit_html_form_utils.
+    DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map .
 
     METHODS validate_form
       IMPORTING
@@ -61,7 +62,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -69,6 +70,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
     CREATE OBJECT mo_validation_log.
     CREATE OBJECT mo_form_data.
     mo_form = get_form_schema( ).
+    mo_form_util = zcl_abapgit_html_form_utils=>create( mo_form ).
   ENDMETHOD.
 
 
@@ -136,7 +138,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
       iv_hint        = 'Ignore translations, serialize just main language'
     )->command(
       iv_label       = 'Clone Online Repo'
-      iv_is_main     = abap_true
+      iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
       iv_action      = c_event-add_online_repo
     )->command(
       iv_label       = 'Create Package'
@@ -152,7 +154,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
 
     DATA lx_err TYPE REF TO zcx_abapgit_exception.
 
-    ro_validation_log = mo_form->validate_required_fields( io_form_data ).
+    ro_validation_log = mo_form_util->validate( io_form_data ).
 
     IF io_form_data->get( c_id-url ) IS NOT INITIAL.
       TRY.
@@ -193,7 +195,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
     DATA: ls_repo_params     TYPE zif_abapgit_services_repo=>ty_repo_params,
           lo_new_online_repo TYPE REF TO zcl_abapgit_repo_online.
 
-    mo_form_data = mo_form->normalize_form_data( ii_event->form_data( ) ).
+    mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.
       WHEN c_event-go_back.
@@ -277,7 +279,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( mo_form->render(
-      iv_form_class     = 'dialog w600px m-em5-sides margin-v1' " to center add wmax600px and auto-center instead
       io_values         = mo_form_data
       io_validation_log = mo_validation_log ) ).
 
