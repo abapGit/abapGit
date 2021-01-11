@@ -344,11 +344,18 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
         IF li_cts_api->is_chrec_possible_for_package( <ls_local>-item-devclass ) = abap_false.
           EXIT. " Assume all other objects are also in packages without change recording
-        ENDIF.
 
-        ls_new-item      = <ls_local>-item.
-        ls_new-transport = li_cts_api->get_transport_for_object( <ls_local>-item ).
-        IF ls_new-transport IS NOT INITIAL.
+        ELSEIF li_cts_api->is_object_type_lockable( <ls_local>-item-obj_type ) = abap_true AND
+               li_cts_api->is_object_locked_in_transport( iv_object_type = <ls_local>-item-obj_type
+                                                          iv_object_name = <ls_local>-item-obj_name ) = abap_true.
+
+          ls_new-item = <ls_local>-item.
+
+          ls_new-transport = li_cts_api->get_current_transport_for_obj(
+            iv_object_type             = <ls_local>-item-obj_type
+            iv_object_name             = <ls_local>-item-obj_name
+            iv_resolve_task_to_request = abap_false ).
+
           INSERT ls_new INTO TABLE ct_transports.
         ENDIF.
       ENDIF.
@@ -360,6 +367,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
     DATA:
       ls_item        TYPE zif_abapgit_definitions=>ty_item,
+      lv_is_xml_file TYPE abap_bool,
       ls_new         LIKE LINE OF ct_transports,
       li_cts_api     TYPE REF TO zif_abapgit_cts_api.
 
@@ -375,14 +383,22 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
       zcl_abapgit_file_status=>identify_object(
         EXPORTING
           iv_filename = <ls_remote>-filename
-          iv_path     = <ls_remote>-path
-          io_dot      = mo_repo->get_dot_abapgit( )
+          iv_path = <ls_remote>-path
+          io_dot = mo_repo->get_dot_abapgit( )
         IMPORTING
-          es_item     = ls_item ).
+          es_item = ls_item
+          ev_is_xml = lv_is_xml_file ).
 
-      ls_new-item      = ls_item.
-      ls_new-transport = li_cts_api->get_transport_for_object( ls_item ).
-      IF ls_new-transport IS NOT INITIAL.
+      IF ls_item IS INITIAL.
+        CONTINUE.
+      ELSEIF li_cts_api->is_object_type_lockable( ls_item-obj_type ) = abap_true
+        AND li_cts_api->is_object_locked_in_transport( iv_object_type = ls_item-obj_type
+                                                       iv_object_name = ls_item-obj_name ) = abap_true.
+        ls_new-item = ls_item.
+        ls_new-transport = li_cts_api->get_current_transport_for_obj(
+          iv_object_type             = ls_item-obj_type
+          iv_object_name             = ls_item-obj_name
+          iv_resolve_task_to_request = abap_false ).
         INSERT ls_new INTO TABLE ct_transports.
       ENDIF.
 
