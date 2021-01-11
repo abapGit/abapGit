@@ -329,6 +329,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
       IF sy-subrc = 0 AND <ls_local>-file-sha1 = <ls_remote>-sha1.
         <ls_result>-match = abap_false.
         <ls_result>-lstate = zif_abapgit_definitions=>c_state-deleted.
+        <ls_result>-rstate = zif_abapgit_definitions=>c_state-unchanged.
         <ls_result>-packmove = abap_true.
       ELSEIF sy-subrc = 4.
         " Check if file existed before and was deleted locally
