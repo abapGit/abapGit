@@ -74,6 +74,7 @@
     "globalMacros": []
   },
   "rules": {
+    "use_class_based_exceptions": true,
     "uncaught_exception": true,
     "intf_referencing_clas": false,
     "method_implemented_twice": true,
