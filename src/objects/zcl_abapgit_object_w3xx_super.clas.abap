@@ -182,6 +182,8 @@ CLASS zcl_abapgit_object_w3xx_super IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Cannot delete W3xx params' ).
     ENDIF.
 
+    corr_insert( iv_package ).
+
   ENDMETHOD.
 
 
