@@ -83,7 +83,9 @@ CLASS zcl_abapgit_gui DEFINITION
       IMPORTING
         !iv_text      TYPE string
       RETURNING
-        VALUE(rv_url) TYPE w3url .
+        VALUE(rv_url) TYPE w3url
+      RAISING
+        zcx_abapgit_exception .
     METHODS startup
       RAISING
         zcx_abapgit_exception .
