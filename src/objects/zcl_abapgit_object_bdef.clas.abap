@@ -271,7 +271,7 @@ CLASS ZCL_ABAPGIT_OBJECT_BDEF IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 
     DATA:
-      lo_object_data        TYPE REF TO object,
+      lo_object_data        TYPE REF TO if_wb_object_data_model,
       lo_object_data_merged TYPE REF TO if_wb_object_data_model,
       lo_wb_object_operator TYPE REF TO object,
       lx_error              TYPE REF TO cx_root,
