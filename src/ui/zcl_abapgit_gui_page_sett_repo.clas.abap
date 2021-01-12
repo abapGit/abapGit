@@ -209,7 +209,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
       iv_val = lv_ignore ).
 
     LOOP AT ls_dot-requirements INTO ls_requirements.
-      lv_row = sy-tabix.
+      lv_row = lv_row + 1.
       DO 3 TIMES.
         CASE sy-index.
           WHEN 1.
@@ -226,7 +226,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
     ENDLOOP.
 
     DO c_empty_rows TIMES.
-      lv_row = sy-index.
+      lv_row = lv_row + 1.
       DO 3 TIMES.
         mo_form_data->set(
           iv_key = |{ c_id-requirements }-{ lv_row }-{ sy-index }|
