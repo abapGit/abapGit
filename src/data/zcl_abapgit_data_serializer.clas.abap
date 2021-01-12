@@ -41,7 +41,8 @@ CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
 
     TRY.
         lo_ajson = zcl_abapgit_ajson=>create_empty( ).
-        lo_ajson->zif_abapgit_ajson_writer~set(
+        lo_ajson->keep_item_order( ).
+        lo_ajson->set(
           iv_path = '/'
           iv_val = <lg_tab> ).
         lv_string = lo_ajson->stringify( 2 ).
