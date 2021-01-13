@@ -226,6 +226,12 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
     " Process local files and new local files
     LOOP AT it_local ASSIGNING <ls_local>.
+      " Skip ignored files
+      IF io_dot->is_ignored( iv_path     = <ls_local>-file-path
+                             iv_filename = <ls_local>-file-filename ) = abap_true.
+        CONTINUE.
+      ENDIF.
+
       APPEND INITIAL LINE TO rt_results ASSIGNING <ls_result>.
       IF <ls_local>-item IS NOT INITIAL.
         APPEND <ls_local>-item TO lt_items. " Collect for item index
