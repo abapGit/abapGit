@@ -462,7 +462,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     " Bookmark current page before jumping to any settings page
     IF ii_event->mv_current_page_name CP 'ZCL_ABAPGIT_GUI_PAGE_SETT_*'.
-      rv_state = zcl_abapgit_gui=>c_event_state-new_page.
+      rv_state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
     ELSE.
       rv_state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
     ENDIF.
