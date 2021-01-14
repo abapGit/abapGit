@@ -31,7 +31,6 @@ CLASS ltcl_convert IMPLEMENTATION.
     TYPES ty_hex TYPE x LENGTH 2.
     DATA lt_bintab TYPE STANDARD TABLE OF ty_hex WITH DEFAULT KEY.
     DATA lv_size TYPE i.
-    DATA lv_xstr TYPE xstring.
 
     zcl_abapgit_convert=>xstring_to_bintab(
       EXPORTING

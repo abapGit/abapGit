@@ -264,9 +264,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
   METHOD find_transports.
 
-    FIELD-SYMBOLS: <ls_local> LIKE LINE OF it_files-local.
-    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF it_files-remote.
-
     TRY.
 
         find_transports_local(
