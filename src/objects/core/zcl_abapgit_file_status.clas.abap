@@ -65,7 +65,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_file_status IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
 
   METHOD build_existing.
@@ -512,12 +512,9 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
   METHOD status.
 
-    DATA: lv_index LIKE sy-tabix,
-          lt_local TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA lt_local TYPE zif_abapgit_definitions=>ty_files_item_tt.
 
-    FIELD-SYMBOLS: <ls_result> LIKE LINE OF rt_results.
-
-    lt_local = io_repo->get_files_local( ii_log = ii_log ).
+    lt_local = io_repo->get_files_local( ii_log ).
 
     IF lines( lt_local ) <= 2.
       " Less equal two means that we have only the .abapgit.xml and the package in
@@ -530,7 +527,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
     rt_results = calculate_status(
       iv_devclass  = io_repo->get_package( )
       io_dot       = io_repo->get_dot_abapgit( )
-      it_local     = io_repo->get_files_local( ii_log = ii_log )
+      it_local     = io_repo->get_files_local( ii_log )
       it_remote    = io_repo->get_files_remote( )
       it_cur_state = io_repo->get_local_checksums_per_file( ) ).
 
