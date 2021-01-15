@@ -49,10 +49,10 @@ CLASS zcl_abapgit_object_prog DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         IMPORTING
           it_lxe_texts TYPE ty_tlxe_i18n.
     TYPES:
-      tyt_languages TYPE STANDARD TABLE OF langu WITH DEFAULT KEY.
+      ty_languages TYPE STANDARD TABLE OF langu WITH DEFAULT KEY.
     METHODS get_installed_languages
       RETURNING
-        VALUE(rt_installed_languages) TYPE tyt_languages.
+        VALUE(rt_installed_languages) TYPE ty_languages.
 
 ENDCLASS.
 
@@ -360,21 +360,21 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
     FIELD-SYMBOLS:
       <lv_language>      TYPE langu,
-      <lxe_object>       TYPE lxe_colob.
+      <lv_lxe_object>       TYPE lxe_colob.
 
     lt_obj_list = get_lxe_object_list( ).
 
     lt_installed_languages = get_installed_languages( ).
 
-    LOOP AT lt_obj_list ASSIGNING <lxe_object>.
+    LOOP AT lt_obj_list ASSIGNING <lv_lxe_object>.
       CLEAR ls_lxe_text_item.
-      ls_lxe_text_item-custmnr = <lxe_object>-custmnr.
-      ls_lxe_text_item-objtype = <lxe_object>-objtype.
-      ls_lxe_text_item-objname = <lxe_object>-objname.
+      ls_lxe_text_item-custmnr = <lv_lxe_object>-custmnr.
+      ls_lxe_text_item-objtype = <lv_lxe_object>-objtype.
+      ls_lxe_text_item-objname = <lv_lxe_object>-objname.
 
       LOOP AT lt_installed_languages ASSIGNING <lv_language>.
-        ls_lxe_text_item-source_lang = me->get_lang_iso4( mv_language ).
-        ls_lxe_text_item-target_lang = me->get_lang_iso4( <lv_language> ).
+        ls_lxe_text_item-source_lang = get_lang_iso4( mv_language ).
+        ls_lxe_text_item-target_lang = get_lang_iso4( <lv_language> ).
         IF ls_lxe_text_item-source_lang = ls_lxe_text_item-target_lang.
           CONTINUE. " if source = target -> skip
         ENDIF.
@@ -430,9 +430,9 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
   ENDMETHOD.
   METHOD get_installed_languages.
 
-    DATA index TYPE i.
-    DATA length TYPE i.
-    DATA char TYPE c.
+    DATA lv_index TYPE i.
+    DATA lv_length TYPE i.
+    DATA lv_char TYPE c.
     DATA lv_installed_languages TYPE string.
 
     CALL FUNCTION 'SYSTEM_INSTALLED_LANGUAGES'
@@ -444,12 +444,12 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
     IF sy-subrc <> 0.
     ENDIF.
 
-    length = strlen( lv_installed_languages ).
-    index = 0.
-    WHILE index < length.
-      char = lv_installed_languages+index(1).
-      APPEND char TO rt_installed_languages.
-      ADD 1 TO index.
+    lv_length = strlen( lv_installed_languages ).
+    lv_index = 0.
+    WHILE lv_index < lv_length.
+      lv_char = lv_installed_languages+lv_index(1).
+      APPEND lv_char TO rt_installed_languages.
+      lv_index = lv_index + 1.
     ENDWHILE.
 
   ENDMETHOD.
