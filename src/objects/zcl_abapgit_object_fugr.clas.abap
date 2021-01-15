@@ -1256,7 +1256,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       ls_lxe_text_item-objname = <lxe_object>-objname.
 
       LOOP AT lt_installed_languages ASSIGNING <lv_language>.
-        ls_lxe_text_item-source_lang = me->get_lang_iso4( mv_language ).
+        ls_lxe_text_item-source_lang = get_lang_iso4( mv_language ).
         ls_lxe_text_item-target_lang = me->get_lang_iso4( <lv_language> ).
         IF ls_lxe_text_item-source_lang = ls_lxe_text_item-target_lang.
           CONTINUE. " if source = target -> skip
