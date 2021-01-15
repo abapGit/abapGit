@@ -363,7 +363,6 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
           lo_code_inspector_page      TYPE REF TO zcl_abapgit_gui_page_code_insp,
           lo_page_repo                TYPE REF TO zcl_abapgit_gui_page_repo_view,
           lv_answer                   TYPE c LENGTH 1,
-          lv_branch_name              TYPE string,
           lv_question_text            TYPE string,
           lv_question_title           TYPE string,
           lv_show_create_branch_popup TYPE c LENGTH 1.

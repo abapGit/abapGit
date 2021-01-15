@@ -1015,11 +1015,6 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
 
   METHOD deleted_remotely.
 
-    DATA:
-      ls_line TYPE zif_abapgit_definitions=>ty_result,
-      lv_act  TYPE c LENGTH 3,
-      lv_exp  TYPE c LENGTH 3.
-
     mo_helper->add_local(
       iv_path     = '/src/'
       iv_filename = 'ztest_deleted_remotely.prog.abap'

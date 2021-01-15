@@ -109,8 +109,7 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
           lt_dd28j TYPE TABLE OF dd28j,
           lt_dd28v TYPE TABLE OF dd28v.
 
-    FIELD-SYMBOLS: <ls_dd27p> LIKE LINE OF lt_dd27p,
-                   <ls_dd28j> LIKE LINE OF lt_dd28j.
+    FIELD-SYMBOLS: <ls_dd27p> LIKE LINE OF lt_dd27p.
 
     io_xml->read( EXPORTING iv_name = 'DD25V'
                   CHANGING cg_data = ls_dd25v ).
