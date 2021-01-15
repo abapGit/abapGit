@@ -293,7 +293,6 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
           lv_package        TYPE devclass,
           lo_dot_abapgit    TYPE REF TO zcl_abapgit_dot_abapgit,
           ls_local_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings,
-          lo_repo           TYPE REF TO zcl_abapgit_repo_offline,
           lt_trkorr         TYPE trwbo_request_headers.
 
 
