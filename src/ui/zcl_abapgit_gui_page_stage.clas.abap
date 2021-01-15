@@ -131,7 +131,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -167,7 +167,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
       mv_seed = |stage{ lv_ts }|.
     ENDIF.
 
-    ms_control-page_menu  = build_menu( ).
+    ms_control-page_menu = build_menu( ).
 
     IF lines( ms_files-local ) = 0 AND lines( ms_files-remote ) = 0.
       zcx_abapgit_exception=>raise( 'There are no changes that could be staged' ).
@@ -263,9 +263,6 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
 
   METHOD find_transports.
-
-    FIELD-SYMBOLS: <ls_local> LIKE LINE OF it_files-local.
-    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF it_files-remote.
 
     TRY.
 

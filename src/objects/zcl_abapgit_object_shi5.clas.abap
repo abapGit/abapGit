@@ -49,6 +49,8 @@ CLASS zcl_abapgit_object_shi5 IMPLEMENTATION.
     DATA: ls_message             TYPE hier_mess,
           lv_deletion_successful TYPE hier_yesno.
 
+    corr_insert( iv_package ).
+
     CALL FUNCTION 'STREE_EXTENSION_DELETE'
       EXPORTING
         extension           = mv_extension
@@ -85,6 +87,8 @@ CLASS zcl_abapgit_object_shi5 IMPLEMENTATION.
 
     DELETE FROM ttree_extt WHERE extension = ls_extension-header-extension.
     MODIFY ttree_extt FROM TABLE ls_extension-texts.
+
+    corr_insert( iv_package ).
 
     tadir_insert( iv_package ).
 

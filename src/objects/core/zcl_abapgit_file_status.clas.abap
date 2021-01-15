@@ -65,7 +65,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_file_status IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
 
   METHOD build_existing.
@@ -201,6 +201,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
           lv_is_xml       TYPE abap_bool,
           lv_sub_fetched  TYPE abap_bool,
           lt_sub_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
+          lv_msg          TYPE string,
           lt_items_idx    TYPE zif_abapgit_definitions=>ty_items_ts,
           lt_state_idx    TYPE zif_abapgit_definitions=>ty_file_signatures_ts. " Sorted by path+filename
 
@@ -225,6 +226,12 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
     " Process local files and new local files
     LOOP AT it_local ASSIGNING <ls_local>.
+      " Skip ignored files
+      IF io_dot->is_ignored( iv_path     = <ls_local>-file-path
+                             iv_filename = <ls_local>-file-filename ) = abap_true.
+        CONTINUE.
+      ENDIF.
+
       APPEND INITIAL LINE TO rt_results ASSIGNING <ls_result>.
       IF <ls_local>-item IS NOT INITIAL.
         APPEND <ls_local>-item TO lt_items. " Collect for item index
@@ -291,7 +298,19 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
           WITH KEY table_line = ls_item-devclass
           BINARY SEARCH.
         IF sy-subrc <> 0.
-          CLEAR ls_item-devclass.
+          IF ls_item-obj_type = 'DEVC'.
+            " If package already exist but is not included in the package hierarchy of
+            " the package assigned to the repository, then a manual change of the package
+            " is required i.e. setting a parent package to iv_devclass (or one of its
+            " subpackages). We don't this automatically since it's not clear where in the
+            " hierarchy the new package should be located. (#4108)
+            lv_msg = |Package { ls_item-devclass } is not a subpackage of { iv_devclass
+                     }. Assign { ls_item-devclass } to package hierarchy of { iv_devclass
+                     } and repeat process.|.
+            zcx_abapgit_exception=>raise( lv_msg ).
+          ELSE.
+            CLEAR ls_item-devclass.
+          ENDIF.
         ENDIF.
       ENDIF.
 
@@ -493,12 +512,9 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
   METHOD status.
 
-    DATA: lv_index LIKE sy-tabix,
-          lt_local TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA lt_local TYPE zif_abapgit_definitions=>ty_files_item_tt.
 
-    FIELD-SYMBOLS: <ls_result> LIKE LINE OF rt_results.
-
-    lt_local = io_repo->get_files_local( ii_log = ii_log ).
+    lt_local = io_repo->get_files_local( ii_log ).
 
     IF lines( lt_local ) <= 2.
       " Less equal two means that we have only the .abapgit.xml and the package in
@@ -511,7 +527,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
     rt_results = calculate_status(
       iv_devclass  = io_repo->get_package( )
       io_dot       = io_repo->get_dot_abapgit( )
-      it_local     = io_repo->get_files_local( ii_log = ii_log )
+      it_local     = io_repo->get_files_local( ii_log )
       it_remote    = io_repo->get_files_remote( )
       it_cur_state = io_repo->get_local_checksums_per_file( ) ).
 

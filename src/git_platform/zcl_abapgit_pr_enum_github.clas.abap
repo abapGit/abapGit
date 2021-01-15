@@ -49,7 +49,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
+CLASS zcl_abapgit_pr_enum_github IMPLEMENTATION.
 
 
   METHOD clean_url.
@@ -111,7 +111,10 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
     TRY.
         rs_info-repo_json = li_response->json( ).
         li_response->headers( ). " for debug
-        lv_pull_url   = clean_url( rs_info-repo_json->get( '/pulls_url' ) ).
+        lv_pull_url = clean_url( rs_info-repo_json->get( '/pulls_url' ) ).
+        IF lv_pull_url IS INITIAL OR rs_info-repo_json->get( '/message' ) = 'Not Found'.
+          RETURN.
+        ENDIF.
         li_pulls_json = mi_http_agent->request( lv_pull_url )->json( ).
       CATCH zcx_abapgit_ajson_error INTO lx_ajson.
         zcx_abapgit_exception=>raise(

@@ -58,6 +58,11 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS get_dot_apack
       RETURNING
         VALUE(ro_dot_apack) TYPE REF TO zcl_abapgit_apack_reader .
+    METHODS get_data_config
+      RETURNING
+        VALUE(ri_config) TYPE REF TO zif_abapgit_data_config
+      RAISING
+        zcx_abapgit_exception .
     METHODS deserialize
       IMPORTING
         !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
@@ -82,11 +87,6 @@ CLASS zcl_abapgit_repo DEFINITION
         VALUE(ro_dot) TYPE REF TO zcl_abapgit_dot_abapgit
       RAISING
         zcx_abapgit_exception .
-    METHODS find_remote_dot_apack
-      RETURNING
-        VALUE(ro_dot) TYPE REF TO zcl_abapgit_apack_reader
-      RAISING
-        zcx_abapgit_exception .
     METHODS is_offline
       RETURNING
         VALUE(rv_offline) TYPE abap_bool
@@ -104,7 +104,7 @@ CLASS zcl_abapgit_repo DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS has_remote_source
-      ABSTRACT
+          ABSTRACT
       RETURNING
         VALUE(rv_yes) TYPE abap_bool .
     METHODS status
@@ -127,7 +127,6 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS get_log
       RETURNING
         VALUE(ri_log) TYPE REF TO zif_abapgit_log .
-    METHODS reset_log .
     METHODS refresh_local_object
       IMPORTING
         !iv_obj_type TYPE tadir-object
@@ -147,7 +146,15 @@ CLASS zcl_abapgit_repo DEFINITION
     DATA mv_request_remote_refresh TYPE abap_bool .
     DATA mt_status TYPE zif_abapgit_definitions=>ty_results_tt .
     DATA mi_log TYPE REF TO zif_abapgit_log .
+    DATA mi_listener TYPE REF TO zif_abapgit_repo_listener .
+    DATA mo_apack_reader TYPE REF TO zcl_abapgit_apack_reader .
+    DATA mi_data_config TYPE REF TO zif_abapgit_data_config .
 
+    METHODS find_remote_dot_apack
+      RETURNING
+        VALUE(ro_dot) TYPE REF TO zcl_abapgit_apack_reader
+      RAISING
+        zcx_abapgit_exception .
     METHODS set_dot_apack
       IMPORTING
         !io_dot_apack TYPE REF TO zcl_abapgit_apack_reader
@@ -169,11 +176,7 @@ CLASS zcl_abapgit_repo DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS reset_remote .
-
   PRIVATE SECTION.
-
-    DATA mi_listener TYPE REF TO zif_abapgit_repo_listener .
-    DATA mo_apack_reader TYPE REF TO zcl_abapgit_apack_reader .
 
     METHODS get_local_checksums
       RETURNING
@@ -195,13 +198,13 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
     METHODS remove_non_code_related_files
       CHANGING
-        ct_local_files TYPE zif_abapgit_definitions=>ty_files_item_tt.
+        !ct_local_files TYPE zif_abapgit_definitions=>ty_files_item_tt .
     METHODS compare_with_remote_checksum
       IMPORTING
-        it_remote_files TYPE zif_abapgit_definitions=>ty_files_tt
-        is_local_file   TYPE zif_abapgit_definitions=>ty_file_item-file
+        !it_remote_files TYPE zif_abapgit_definitions=>ty_files_tt
+        !is_local_file   TYPE zif_abapgit_definitions=>ty_file_item-file
       CHANGING
-        cs_checksum     TYPE zif_abapgit_persistence=>ty_local_checksum.
+        !cs_checksum     TYPE zif_abapgit_persistence=>ty_local_checksum .
 ENDCLASS.
 
 
@@ -424,6 +427,29 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_data_config.
+
+    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF mt_remote.
+
+    IF mi_data_config IS BOUND.
+      ri_config = mi_data_config.
+      RETURN.
+    ENDIF.
+
+    get_files_remote( ).
+
+    CREATE OBJECT ri_config TYPE zcl_abapgit_data_config.
+    mi_data_config = ri_config.
+
+    READ TABLE mt_remote ASSIGNING <ls_remote>
+      WITH KEY path = zif_abapgit_data_config=>c_default_path.
+    IF sy-subrc = 0.
+      ri_config->from_json( mt_remote ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD get_dot_abapgit.
     CREATE OBJECT ro_dot_abapgit
       EXPORTING
@@ -443,8 +469,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD get_files_local.
 
-
-    DATA: lo_serialize TYPE REF TO zcl_abapgit_serialize.
+    DATA lo_serialize TYPE REF TO zcl_abapgit_serialize.
 
     " Serialization happened before and no refresh request
     IF lines( mt_local ) > 0 AND mv_request_local_refresh = abap_false.
@@ -460,6 +485,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       iv_package        = get_package( )
       io_dot_abapgit    = get_dot_abapgit( )
       is_local_settings = get_local_settings( )
+      ii_data_config    = get_data_config( )
       ii_log            = ii_log ).
 
     mt_local                 = rt_files.
@@ -588,7 +614,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     CLEAR mi_log.
 
     IF iv_drop_cache = abap_true.
-      CLEAR: mt_local.
+      CLEAR mt_local.
     ENDIF.
 
   ENDMETHOD.
@@ -644,11 +670,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
           AND file-filename = zif_abapgit_definitions=>c_dot_abapgit ).
     SORT ct_local_files BY item.
 
-  ENDMETHOD.
-
-
-  METHOD reset_log.
-    CLEAR mi_log.
   ENDMETHOD.
 
 

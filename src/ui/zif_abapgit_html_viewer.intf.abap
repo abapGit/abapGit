@@ -22,26 +22,18 @@ INTERFACE zif_abapgit_html_viewer
       !ev_assigned_url TYPE c
     CHANGING
       !ct_data_table   TYPE STANDARD TABLE
-    EXCEPTIONS
-      dp_invalid_parameter
-      dp_error_general
-      cntl_error
-      html_syntax_notcorrect .
+    RAISING
+      zcx_abapgit_exception.
   METHODS set_registered_events
     IMPORTING
       !it_events TYPE cntl_simple_events
-    EXCEPTIONS
-      cntl_error
-      cntl_system_error
-      illegal_event_combination .
+    RAISING
+      zcx_abapgit_exception.
   METHODS show_url
     IMPORTING
       !iv_url TYPE c
-    EXCEPTIONS
-      cntl_error
-      cnht_error_not_allowed
-      cnht_error_parameter
-      dp_error_general .
+    RAISING
+      zcx_abapgit_exception.
   METHODS free .
   METHODS close_document .
   METHODS get_url

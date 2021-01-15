@@ -19,6 +19,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         display_more             TYPE string VALUE 'display_more' ##NO_TEXT,
         repo_switch_origin_to_pr TYPE string VALUE 'repo_switch_origin_to_pr',
         repo_reset_origin        TYPE string VALUE 'repo_reset_origin',
+        go_data                  TYPE string VALUE 'go_data',
       END OF c_actions .
 
     METHODS constructor
@@ -192,7 +193,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -306,6 +307,10 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ENDIF.
     ro_advanced_dropdown->add( iv_txt = 'Update Local Checksums'
                                iv_act = |{ zif_abapgit_definitions=>c_action-repo_refresh_checksums }?key={ mv_key }|
+                               iv_opt = lv_crossout ).
+
+    ro_advanced_dropdown->add( iv_txt = 'Beta - Data'
+                               iv_act = |{ c_actions-go_data }?key={ mv_key }|
                                iv_opt = lv_crossout ).
 
     IF is_repo_lang_logon_lang( ) = abap_false AND get_abapgit_tcode( ) IS NOT INITIAL.
@@ -637,6 +642,22 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_abapgit_tcode.
+    CONSTANTS: lc_report_tcode_hex TYPE x VALUE '80'.
+    DATA: lt_tcodes TYPE STANDARD TABLE OF tcode.
+
+    SELECT tcode
+      FROM tstc
+      INTO TABLE lt_tcodes
+      WHERE pgmna = sy-cprog
+        AND cinfo = lc_report_tcode_hex.
+
+    IF lines( lt_tcodes ) = 1.
+      READ TABLE lt_tcodes INDEX 1 INTO rv_tcode.
+    ENDIF.
+  ENDMETHOD.
+
+
   METHOD get_item_class.
 
     DATA lt_class TYPE TABLE OF string.
@@ -680,6 +701,11 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                                         iv_hint = 'Folder' ).
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD is_repo_lang_logon_lang.
+    rv_repo_lang_is_logon_lang = boolc( mo_repo->get_dot_abapgit( )->get_master_language( ) = sy-langu ).
   ENDMETHOD.
 
 
@@ -1196,6 +1222,12 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
             iv_key = |{ ii_event->query( )->get( 'KEY' ) }|.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
 
+      WHEN c_actions-go_data.
+        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_data
+          EXPORTING
+            iv_key = |{ ii_event->query( )->get( 'KEY' ) }|.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+
       WHEN c_actions-toggle_hide_files. " Toggle file diplay
         mv_hide_files    = zcl_abapgit_persistence_user=>get_instance( )->toggle_hide_files( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
@@ -1317,24 +1349,5 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ls_hotkey_action-hotkey = |x|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-  ENDMETHOD.
-
-  METHOD is_repo_lang_logon_lang.
-    rv_repo_lang_is_logon_lang = boolc( mo_repo->get_dot_abapgit( )->get_master_language( ) = sy-langu ).
-  ENDMETHOD.
-
-  METHOD get_abapgit_tcode.
-    CONSTANTS: lc_report_tcode_hex TYPE x VALUE '80'.
-    DATA: lt_tcodes TYPE STANDARD TABLE OF tcode.
-
-    SELECT tcode
-      FROM tstc
-      INTO TABLE lt_tcodes
-      WHERE pgmna = sy-cprog
-        AND cinfo = lc_report_tcode_hex.
-
-    IF lines( lt_tcodes ) = 1.
-      READ TABLE lt_tcodes INDEX 1 INTO rv_tcode.
-    ENDIF.
   ENDMETHOD.
 ENDCLASS.

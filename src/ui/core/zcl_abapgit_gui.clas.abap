@@ -40,13 +40,13 @@ CLASS zcl_abapgit_gui DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS on_event
-          FOR EVENT sapevent OF zif_abapgit_html_viewer
+        FOR EVENT sapevent OF zif_abapgit_html_viewer
       IMPORTING
-          !action
-          !frame
-          !getdata
-          !postdata
-          !query_table .
+        !action
+        !frame
+        !getdata
+        !postdata
+        !query_table .
     METHODS constructor
       IMPORTING
         !io_component         TYPE REF TO object OPTIONAL
@@ -83,7 +83,9 @@ CLASS zcl_abapgit_gui DEFINITION
       IMPORTING
         !iv_text      TYPE string
       RETURNING
-        VALUE(rv_url) TYPE w3url .
+        VALUE(rv_url) TYPE w3url
+      RAISING
+        zcx_abapgit_exception .
     METHODS startup
       RAISING
         zcx_abapgit_exception .
@@ -436,9 +438,7 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
         IMPORTING
           ev_assigned_url = rv_url
         CHANGING
-          ct_data_table   = lt_html
-        EXCEPTIONS
-          OTHERS          = 1 ).
+          ct_data_table   = lt_html ).
     ELSE. " Raw input
       zcl_abapgit_convert=>xstring_to_bintab(
         EXPORTING
@@ -456,9 +456,7 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
         IMPORTING
           ev_assigned_url = rv_url
         CHANGING
-          ct_data_table   = lt_xdata
-        EXCEPTIONS
-          OTHERS          = 1 ).
+          ct_data_table   = lt_xdata ).
     ENDIF.
 
     ASSERT sy-subrc = 0. " Image data error

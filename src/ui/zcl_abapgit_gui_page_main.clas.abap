@@ -135,13 +135,6 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
             iv_key = lv_key.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
-      WHEN zif_abapgit_definitions=>c_action-repo_settings.
-
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_repo_sett
-          EXPORTING
-            io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-
       WHEN OTHERS.
 
         rs_handled = super->zif_abapgit_gui_event_handler~on_event( ii_event ).

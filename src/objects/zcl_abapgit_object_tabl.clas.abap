@@ -108,7 +108,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
 
   METHOD clear_dd03p_fields.
@@ -530,7 +530,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
   METHOD update_extras.
 
     IF is_tabl_extras-tddat IS INITIAL.
-      delete_extras( iv_tabname = iv_tabname ).
+      delete_extras( iv_tabname ).
     ELSE.
       MODIFY tddat FROM is_tabl_extras-tddat.
     ENDIF.
@@ -635,7 +635,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
       delete_longtexts( c_longtext_id_tabl ).
 
-      delete_extras( iv_tabname = lv_objname ).
+      delete_extras( lv_objname ).
 
     ENDIF.
 
@@ -1001,7 +1001,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
     serialize_idoc_segment( io_xml ).
 
-    ls_extras = read_extras( iv_tabname = lv_name ).
+    ls_extras = read_extras( lv_name ).
     io_xml->add( iv_name = c_s_dataname-tabl_extras
                  ig_data = ls_extras ).
 

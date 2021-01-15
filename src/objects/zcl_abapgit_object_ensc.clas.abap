@@ -9,7 +9,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_ENSC IMPLEMENTATION.
+CLASS zcl_abapgit_object_ensc IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -27,13 +27,13 @@ CLASS ZCL_ABAPGIT_OBJECT_ENSC IMPLEMENTATION.
 
     TRY.
         li_spot_ref = cl_enh_factory=>get_enhancement_spot_comp(
-          lock = 'X'
+          lock = abap_true
           name = lv_spot_name ).
 
         IF li_spot_ref IS BOUND.
           li_spot_ref->if_enh_object~delete(
-            nevertheless_delete = 'X'
-            run_dark            = 'X' ).
+            nevertheless_delete = abap_true
+            run_dark            = abap_true ).
         ENDIF.
         li_spot_ref->if_enh_object~unlock( ).
       CATCH cx_enh_root INTO lx_root.
