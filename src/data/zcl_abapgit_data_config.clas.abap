@@ -30,7 +30,6 @@ CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
   METHOD dump.
 
     DATA lo_ajson TYPE REF TO zcl_abapgit_ajson.
-    DATA lv_string TYPE string.
     DATA lx_ajson TYPE REF TO zcx_abapgit_ajson_error.
 
 
