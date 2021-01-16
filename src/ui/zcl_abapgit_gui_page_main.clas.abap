@@ -89,7 +89,6 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA: lv_key TYPE zif_abapgit_persistence=>ty_value.
-    DATA: lo_repo TYPE REF TO zcl_abapgit_repo.
 
     lv_key = ii_event->query( )->get( 'KEY' ).
 

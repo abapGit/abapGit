@@ -252,7 +252,6 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
       lo_dot          TYPE REF TO zcl_abapgit_dot_abapgit,
       lv_ignore       TYPE string,
       lt_ignore       TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
-      lv_rows         TYPE i,
       ls_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement,
       lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
 

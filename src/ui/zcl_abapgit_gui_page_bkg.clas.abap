@@ -139,9 +139,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
 
   METHOD read_persist.
 
-    DATA: lo_per TYPE REF TO zcl_abapgit_persist_background,
-          lt_per TYPE zcl_abapgit_persist_background=>ty_background_keys.
-
+    DATA lo_per TYPE REF TO zcl_abapgit_persist_background.
 
     CREATE OBJECT lo_per.
 

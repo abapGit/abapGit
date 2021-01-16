@@ -21,8 +21,7 @@ CLASS ltcl_is_patch_line_possible DEFINITION FINAL FOR TESTING
   PRIVATE SECTION.
     DATA:
       mv_is_patch_line_possible TYPE abap_bool,
-      ms_diff_line              TYPE zif_abapgit_definitions=>ty_diff,
-      mv_fstate                 TYPE char1.
+      ms_diff_line              TYPE zif_abapgit_definitions=>ty_diff.
 
     METHODS:
       initial_diff_line FOR TESTING RAISING cx_static_check,
