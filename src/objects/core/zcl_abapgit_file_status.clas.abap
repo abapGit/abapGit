@@ -65,7 +65,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
+CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
 
   METHOD build_existing.
@@ -418,6 +418,8 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
           lt_res_sort     LIKE it_results,
           lt_item_idx     LIKE it_results,
           lt_move_idx     LIKE it_results,
+          lv_namespace    TYPE namespace,
+          lt_namespace    TYPE TABLE OF namespace,
           lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
 
     FIELD-SYMBOLS: <ls_res1> LIKE LINE OF it_results,
@@ -508,6 +510,29 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       ENDIF.
 
       MOVE-CORRESPONDING <ls_res1> TO ls_file.
+    ENDLOOP.
+
+    " Check if namespaces exist already
+    LOOP AT it_results ASSIGNING <ls_res1>.
+      FIND REGEX '#(.*)#' IN <ls_res1>-filename SUBMATCHES lv_namespace.
+      IF sy-subrc = 0.
+        lv_namespace = '/' && to_upper( lv_namespace ) && '/'.
+        COLLECT lv_namespace INTO lt_namespace.
+      ENDIF.
+    ENDLOOP.
+
+    LOOP AT lt_namespace INTO lv_namespace.
+      CALL FUNCTION 'TR_CHECK_NAMESPACE'
+        EXPORTING
+          iv_namespace        = lv_namespace
+        EXCEPTIONS
+          namespace_not_valid = 1
+          OTHERS              = 2.
+      IF sy-subrc <> 0.
+        ii_log->add( iv_msg  = |Namespace { lv_namespace } does not exist. Create it in transaction SE03|
+                     iv_type = 'W'
+                     iv_rc   = '5' ).
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.
