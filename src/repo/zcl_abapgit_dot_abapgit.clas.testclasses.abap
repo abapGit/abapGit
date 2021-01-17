@@ -126,7 +126,7 @@ CLASS ltcl_dot_abapgit IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = lo_dot->get_i18n_langs( )
-      exp = 'DE,ES').
+      exp = 'DE,ES' ).
 
   ENDMETHOD.
 
