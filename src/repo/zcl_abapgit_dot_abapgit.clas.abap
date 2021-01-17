@@ -79,10 +79,10 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
 
     METHODS get_i18n_langs
       RETURNING
-        VALUE(rt_langs) TYPE zif_abapgit_dot_abapgit=>ty_langs_tt.
+        VALUE(rv_langs) TYPE string.
     METHODS set_i18n_langs
       IMPORTING
-        it_langs TYPE zif_abapgit_dot_abapgit=>ty_langs_tt.
+        iv_langs TYPE string.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -96,6 +96,13 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
       from_xml
         IMPORTING iv_xml         TYPE string
         RETURNING VALUE(rs_data) TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
+
+    CLASS-METHODS decode_i18n_langs_string
+      IMPORTING
+        iv_langs TYPE string
+        iv_skip_master_lang TYPE spras OPTIONAL
+      RETURNING
+        VALUE(rt_langs) TYPE zif_abapgit_dot_abapgit=>ty_langs_tt.
 
 ENDCLASS.
 
@@ -142,6 +149,35 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
   METHOD constructor.
     ms_data = is_data.
+  ENDMETHOD.
+
+
+  METHOD decode_i18n_langs_string.
+
+    " This should go as an util to TEXTS/i18n class
+
+    DATA lt_langs_str TYPE string_table.
+    DATA lv_master_lang_iso TYPE laiso.
+    FIELD-SYMBOLS <lv_str> LIKE LINE OF lt_langs_str.
+    FIELD-SYMBOLS <lv_lang> LIKE LINE OF rt_langs.
+
+    IF iv_skip_master_lang IS NOT INITIAL.
+      lv_master_lang_iso = cl_i18n_languages=>sap1_to_sap2( iv_skip_master_lang ).
+    ENDIF.
+
+    SPLIT iv_langs AT ',' INTO TABLE lt_langs_str.
+    LOOP AT lt_langs_str ASSIGNING <lv_str>.
+      CONDENSE <lv_str>.
+      <lv_str> = to_upper( <lv_str> ).
+      IF <lv_str> IS NOT INITIAL AND ( lv_master_lang_iso IS INITIAL OR <lv_str> <> lv_master_lang_iso ).
+        APPEND INITIAL LINE TO rt_langs ASSIGNING <lv_lang>.
+        <lv_lang> = <lv_str>.
+      ENDIF.
+    ENDLOOP.
+
+    " TODO: maybe validate language against table, but system may not have one?
+    " TODO: maybe through on lang > 2 symbols ?
+
   ENDMETHOD.
 
 
@@ -193,22 +229,12 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
   METHOD get_i18n_langs.
 
-    DATA lt_langs_str TYPE string_table.
-    DATA lv_master_lang_iso TYPE laiso.
-    FIELD-SYMBOLS <lv_str> LIKE LINE OF lt_langs_str.
-    FIELD-SYMBOLS <lv_lang> LIKE LINE OF rt_langs.
+    DATA lt_langs TYPE zif_abapgit_dot_abapgit=>ty_langs_tt.
 
-    lv_master_lang_iso = cl_i18n_languages=>sap1_to_sap2( ms_data-master_language ).
-
-    SPLIT ms_data-i18n_langs AT ',' INTO TABLE lt_langs_str.
-    LOOP AT lt_langs_str ASSIGNING <lv_str>.
-      CONDENSE <lv_str>.
-      <lv_str> = to_upper( <lv_str> ).
-      IF <lv_str> IS NOT INITIAL AND <lv_str> <> lv_master_lang_iso.
-        APPEND INITIAL LINE TO rt_langs ASSIGNING <lv_lang>.
-        <lv_lang> = <lv_str>.
-      ENDIF.
-    ENDLOOP.
+    lt_langs = decode_i18n_langs_string(
+      iv_langs            = ms_data-i18n_langs
+      iv_skip_master_lang = ms_data-master_language ).
+    CONCATENATE LINES OF lt_langs INTO rv_langs SEPARATED BY ','.
 
   ENDMETHOD.
 
@@ -317,20 +343,12 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
   METHOD set_i18n_langs.
 
-    DATA lt_langs_str TYPE string_table.
-    DATA lv_master_lang_iso TYPE laiso.
-    FIELD-SYMBOLS <lv_str> LIKE LINE OF lt_langs_str.
-    FIELD-SYMBOLS <lv_lang> LIKE LINE OF it_langs.
+    DATA lt_langs TYPE zif_abapgit_dot_abapgit=>ty_langs_tt.
 
-    lv_master_lang_iso = cl_i18n_languages=>sap1_to_sap2( ms_data-master_language ).
-
-    LOOP AT it_langs ASSIGNING <lv_lang> WHERE table_line IS NOT INITIAL.
-      IF to_upper( <lv_lang> ) <> lv_master_lang_iso.
-        APPEND INITIAL LINE TO lt_langs_str ASSIGNING <lv_str>.
-        <lv_str> = to_upper( <lv_lang> ).
-      ENDIF.
-    ENDLOOP.
-    CONCATENATE LINES OF lt_langs_str INTO ms_data-i18n_langs SEPARATED BY ','.
+    lt_langs = decode_i18n_langs_string(
+      iv_langs            = iv_langs
+      iv_skip_master_lang = ms_data-master_language ).
+    CONCATENATE LINES OF lt_langs INTO ms_data-i18n_langs SEPARATED BY ','.
 
   ENDMETHOD.
 
