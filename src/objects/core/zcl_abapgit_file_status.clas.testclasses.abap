@@ -783,13 +783,13 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
 
     DATA:
       ls_line TYPE zif_abapgit_definitions=>ty_result,
-      lv_act  TYPE c LENGTH 3,
-      lv_exp  TYPE c LENGTH 3.
+      lv_act  TYPE c LENGTH 4,
+      lv_exp  TYPE c LENGTH 4.
 
     mo_helper->add_local(
       iv_path     = '/'
       iv_filename = '.abapgit.xml'
-      iv_sha1     = '1017'  ).
+      iv_sha1     = '1017' ).
     mo_helper->add_local(
       iv_path     = '/src/'
       iv_filename = 'ztest_created_locally.prog.abap'
@@ -842,6 +842,14 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
       iv_path     = '/src/'
       iv_filename = 'package.devc.xml'
       iv_sha1     = '1027' ).
+    mo_helper->add_local(
+      iv_path     = '/src/sub/'
+      iv_filename = 'ztest_move_package.prog.xml'
+      iv_sha1     = '1040' ).
+    mo_helper->add_local(
+      iv_path     = '/src/sub/'
+      iv_filename = 'package.devc.xml'
+      iv_sha1     = '1041' ).
 
     mo_helper->add_remote(
       iv_path     = '/'
@@ -903,6 +911,14 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
       iv_path     = '/src/'
       iv_filename = 'ztest_modified_remotely.prog.xml'
       iv_sha1     = '1031' ).
+    mo_helper->add_remote(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_move_package.prog.xml'
+      iv_sha1     = '1040' ).
+    mo_helper->add_remote(
+      iv_path     = '/src/sub/'
+      iv_filename = 'package.devc.xml'
+      iv_sha1     = '1041' ).
 
     mo_helper->add_state(
       iv_path     = '/'
@@ -968,16 +984,25 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
       iv_path     = '/src/'
       iv_filename = 'ztest_mod_del.prog.xml'
       iv_sha1     = '1005' ).
+    mo_helper->add_state(
+      iv_path     = '/src/sub/'
+      iv_filename = 'ztest_move_package.prog.xml'
+      iv_sha1     = '1040' ).
+    mo_helper->add_state(
+      iv_path     = '/src/sub/'
+      iv_filename = 'package.devc.xml'
+      iv_sha1     = '1041' ).
 
     mo_result = mo_helper->run( ).
 
-    mo_result->assert_lines( 21 ).
+    mo_result->assert_lines( 24 ).
 
-    DO 21 TIMES.
+    DO 24 TIMES.
       ls_line = mo_result->get_line( sy-index ).
       lv_act+0(1) = ls_line-match.
       lv_act+1(1) = ls_line-lstate.
       lv_act+2(1) = ls_line-rstate.
+      lv_act+3(1) = ls_line-packmove.
       CASE sy-index.
         WHEN 1.
           lv_exp = 'X  '.
@@ -1003,6 +1028,12 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
           lv_exp = ' M '.
         WHEN 20 OR 21.
           lv_exp = '  M'.
+        WHEN 22.
+          lv_exp = ' D X'.
+        WHEN 23.
+          lv_exp = 'X   '.
+        WHEN 24.
+          lv_exp = ' A X'.
       ENDCASE.
 
       cl_abap_unit_assert=>assert_equals(
