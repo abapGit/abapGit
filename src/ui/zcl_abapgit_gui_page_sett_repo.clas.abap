@@ -124,8 +124,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
       iv_readonly    = abap_true
     )->text(
       iv_name        = c_id-i18n_langs
-      iv_label       = 'LXE langs (experimental)'
-      iv_hint        = 'Comma separate 2-letter iso lang codes e.g. "de,es,uk" - should not include master language'
+      iv_label       = 'Serialize translations (experimental LXE approach)'
+      iv_hint        = 'Comma separate 2-letter iso lang codes e.g. "de,es,..." - should not include main language'
     )->radio(
       iv_name        = c_id-folder_logic
       iv_default_value = zif_abapgit_dot_abapgit=>c_folder_logic-prefix
