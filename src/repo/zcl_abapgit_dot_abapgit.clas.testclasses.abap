@@ -7,10 +7,10 @@ CLASS ltcl_dot_abapgit DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS
     METHODS:
       identity FOR TESTING
         RAISING zcx_abapgit_exception,
-      ignore FOR TESTING.
+      ignore FOR TESTING,
+      i18n FOR TESTING.
 
 ENDCLASS.
-
 
 CLASS ltcl_dot_abapgit IMPLEMENTATION.
 
@@ -98,6 +98,45 @@ CLASS ltcl_dot_abapgit IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lv_ignored
       exp = abap_false ).
+
+  ENDMETHOD.
+
+  METHOD i18n.
+
+    DATA lo_dot TYPE REF TO zcl_abapgit_dot_abapgit.
+    DATA lt_langs_set TYPE zif_abapgit_dot_abapgit=>ty_langs_tt.
+    DATA lt_langs_act TYPE zif_abapgit_dot_abapgit=>ty_langs_tt.
+    DATA lt_langs_exp TYPE zif_abapgit_dot_abapgit=>ty_langs_tt.
+
+    lo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
+    lo_dot->ms_data-master_language = 'E'.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_dot->ms_data-i18n_langs
+      exp = '' ).
+
+    APPEND 'en' TO lt_langs_set.
+    APPEND 'de' TO lt_langs_set.
+    APPEND 'es' TO lt_langs_set.
+
+    lo_dot->set_i18n_langs( lt_langs_set ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_dot->ms_data-i18n_langs
+      exp = 'DE,ES' ).
+
+    APPEND 'DE' TO lt_langs_exp.
+    APPEND 'ES' TO lt_langs_exp.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_dot->get_i18n_langs( )
+      exp = lt_langs_exp ).
+
+    lo_dot->ms_data-i18n_langs = `en , DE, es  `.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_dot->get_i18n_langs( )
+      exp = lt_langs_exp ).
 
   ENDMETHOD.
 

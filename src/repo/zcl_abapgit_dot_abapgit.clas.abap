@@ -76,6 +76,14 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
     METHODS set_requirements
       IMPORTING
         it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
+
+    METHODS get_i18n_langs
+      RETURNING
+        VALUE(rt_langs) TYPE zif_abapgit_dot_abapgit=>ty_langs_tt.
+    METHODS set_i18n_langs
+      IMPORTING
+        it_langs TYPE zif_abapgit_dot_abapgit=>ty_langs_tt.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: ms_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
@@ -183,6 +191,28 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_i18n_langs.
+
+    DATA lt_langs_str TYPE string_table.
+    DATA lv_master_lang_iso TYPE laiso.
+    FIELD-SYMBOLS <lv_str> LIKE LINE OF lt_langs_str.
+    FIELD-SYMBOLS <lv_lang> LIKE LINE OF rt_langs.
+
+    lv_master_lang_iso = cl_i18n_languages=>sap1_to_sap2( ms_data-master_language ).
+
+    SPLIT ms_data-i18n_langs AT ',' INTO TABLE lt_langs_str.
+    LOOP AT lt_langs_str ASSIGNING <lv_str>.
+      CONDENSE <lv_str>.
+      <lv_str> = to_upper( <lv_str> ).
+      IF <lv_str> IS NOT INITIAL AND <lv_str> <> lv_master_lang_iso.
+        APPEND INITIAL LINE TO rt_langs ASSIGNING <lv_lang>.
+        <lv_lang> = <lv_str>.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD get_master_language.
     rv_language = ms_data-master_language.
   ENDMETHOD.
@@ -282,6 +312,26 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
   METHOD set_folder_logic.
     ms_data-folder_logic = iv_logic.
+  ENDMETHOD.
+
+
+  METHOD set_i18n_langs.
+
+    DATA lt_langs_str TYPE string_table.
+    DATA lv_master_lang_iso TYPE laiso.
+    FIELD-SYMBOLS <lv_str> LIKE LINE OF lt_langs_str.
+    FIELD-SYMBOLS <lv_lang> LIKE LINE OF it_langs.
+
+    lv_master_lang_iso = cl_i18n_languages=>sap1_to_sap2( ms_data-master_language ).
+
+    LOOP AT it_langs ASSIGNING <lv_lang> WHERE table_line IS NOT INITIAL.
+      IF to_upper( <lv_lang> ) <> lv_master_lang_iso.
+        APPEND INITIAL LINE TO lt_langs_str ASSIGNING <lv_str>.
+        <lv_str> = to_upper( <lv_lang> ).
+      ENDIF.
+    ENDLOOP.
+    CONCATENATE LINES OF lt_langs_str INTO ms_data-i18n_langs SEPARATED BY ','.
+
   ENDMETHOD.
 
 
