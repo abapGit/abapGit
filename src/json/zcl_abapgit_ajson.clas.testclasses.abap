@@ -1468,8 +1468,6 @@ CLASS ltcl_writer_test DEFINITION FINAL
 
   PRIVATE SECTION.
 
-    CLASS-DATA gv_sample TYPE string.
-
     METHODS set_ajson FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_value FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS ignore_empty FOR TESTING RAISING zcx_abapgit_ajson_error.
@@ -1907,7 +1905,6 @@ CLASS ltcl_writer_test IMPLEMENTATION.
   METHOD arrays_negative.
 
     DATA lo_cut TYPE REF TO zcl_abapgit_ajson.
-    DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
     DATA li_writer TYPE REF TO zif_abapgit_ajson_writer.
 
     lo_cut = zcl_abapgit_ajson=>create_empty( ).
