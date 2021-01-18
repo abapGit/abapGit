@@ -514,7 +514,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
     " Check if namespaces exist already
     LOOP AT it_results ASSIGNING <ls_res1>.
-      FIND REGEX '#(.*)#\..*\.xml' IN <ls_res1>-filename SUBMATCHES lv_namespace.
+      FIND REGEX '#(.*)#.*\..*\.xml' IN <ls_res1>-filename SUBMATCHES lv_namespace.
       IF sy-subrc = 0.
         lv_namespace = '/' && to_upper( lv_namespace ) && '/'.
         COLLECT lv_namespace INTO lt_namespace.
