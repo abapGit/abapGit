@@ -102,12 +102,12 @@ CLASS zcl_abapgit_object_otgr IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~deserialize.
-    DATA: ls_otgr       TYPE ty_otgr,
-          lo_otgr       TYPE REF TO cl_cls_object_type_group,
-          lx_pak_error  TYPE REF TO cx_root,
-          lv_text       TYPE string,
-          lv_masterlang TYPE sy-langu,
-          lo_parents    TYPE REF TO data.
+    DATA: ls_otgr      TYPE ty_otgr,
+          lo_otgr      TYPE REF TO cl_cls_object_type_group,
+          lx_pak_error TYPE REF TO cx_root,
+          lv_text      TYPE string,
+          lv_main_lang TYPE sy-langu,
+          lo_parents   TYPE REF TO data.
 
     FIELD-SYMBOLS: <ls_groupt>  LIKE LINE OF ls_otgr-texts,
                    <ls_element> LIKE LINE OF ls_otgr-elements,
@@ -168,8 +168,8 @@ CLASS zcl_abapgit_object_otgr IMPLEMENTATION.
               im_parent_groups = <lt_parents>.
         ENDIF.
 
-        lv_masterlang = lo_otgr->if_pak_wb_object~get_master_language( ).
-        READ TABLE ls_otgr-texts WITH KEY langu = lv_masterlang ASSIGNING <ls_groupt>.
+        lv_main_lang = lo_otgr->if_pak_wb_object~get_master_language( ).
+        READ TABLE ls_otgr-texts WITH KEY langu = lv_main_lang ASSIGNING <ls_groupt>.
         IF sy-subrc = 0.
           lo_otgr->set_description( <ls_groupt>-text ).
           " ELSE.
