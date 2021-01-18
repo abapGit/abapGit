@@ -407,7 +407,7 @@ CLASS ltcl_run_checks IMPLEMENTATION.
 
   METHOD check_namespace.
 
-    " 5 Missing namespace
+    " 6 Missing namespace
     append_result( iv_obj_type = 'CLAS'
                    iv_obj_name = '/NOTEXIST/ZCLASS1'
                    iv_match    = ' '
