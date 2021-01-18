@@ -105,7 +105,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_serialize IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
 
   METHOD add_apack.
@@ -448,8 +448,6 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     mi_log = ii_log.
 
     li_progress = zcl_abapgit_progress=>get_instance( lines( it_tadir ) ).
-
-    zcl_abapgit_serializer_cache=>get_instance( )->init_changed_today( it_tadir ).
 
     LOOP AT it_tadir ASSIGNING <ls_tadir>.
 
