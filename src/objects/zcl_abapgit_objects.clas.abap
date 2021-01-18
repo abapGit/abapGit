@@ -157,7 +157,7 @@ CLASS zcl_abapgit_objects DEFINITION
     CLASS-METHODS update_package_tree
       IMPORTING
         !iv_package TYPE devclass .
-    CLASS-METHODS delete_obj
+    CLASS-METHODS delete_object
       IMPORTING
         !iv_package TYPE devclass
         !is_item    TYPE zif_abapgit_definitions=>ty_item
@@ -545,7 +545,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         ls_item-obj_name = <ls_tadir>-obj_name.
 
         TRY.
-            delete_obj(
+            delete_object(
               iv_package = <ls_tadir>-devclass
               is_item    = ls_item ).
 
@@ -583,7 +583,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD delete_obj.
+  METHOD delete_object.
 
     DATA: li_obj TYPE REF TO zif_abapgit_object.
 
@@ -1228,16 +1228,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     li_obj->mo_files = lo_files.
     CREATE OBJECT li_xml TYPE zcl_abapgit_xml_output.
 
-    " todo, combine parameters into is_i18n_params
-    IF iv_language IS NOT INITIAL.
-      ls_i18n_params-main_language = iv_language.
-    ENDIF.
-    IF iv_serialize_master_lang_only IS NOT INITIAL.
-      ls_i18n_params-main_language_only = iv_serialize_master_lang_only.
-    ENDIF.
-    IF it_translation_langs IS NOT INITIAL.
-      ls_i18n_params-translation_languages = it_translation_langs.
-    ENDIF.
+    ls_i18n_params-main_language         = iv_language.
+    ls_i18n_params-main_language_only    = iv_serialize_master_lang_only.
+    ls_i18n_params-translation_languages = it_translation_langs.
 
     li_xml->i18n_params( ls_i18n_params ).
 
