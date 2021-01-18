@@ -193,7 +193,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -770,18 +770,17 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
   METHOD render_content.
 
-    DATA: lt_repo_items        TYPE zif_abapgit_definitions=>ty_repo_item_tt,
-          lo_browser           TYPE REF TO zcl_abapgit_repo_content_list,
-          lx_error             TYPE REF TO zcx_abapgit_exception,
-          lv_lstate            TYPE char1,
-          lv_rstate            TYPE char1,
-          lv_max               TYPE abap_bool,
-          lv_max_str           TYPE string,
-          lv_add_str           TYPE string,
-          li_log               TYPE REF TO zif_abapgit_log,
-          lv_render_transports TYPE abap_bool,
-          lv_msg               TYPE string,
-          lo_news              TYPE REF TO zcl_abapgit_news.
+    DATA: lt_repo_items TYPE zif_abapgit_definitions=>ty_repo_item_tt,
+          lo_browser    TYPE REF TO zcl_abapgit_repo_content_list,
+          lx_error      TYPE REF TO zcx_abapgit_exception,
+          lv_lstate     TYPE char1,
+          lv_rstate     TYPE char1,
+          lv_max        TYPE abap_bool,
+          lv_max_str    TYPE string,
+          lv_add_str    TYPE string,
+          li_log        TYPE REF TO zif_abapgit_log,
+          lv_msg        TYPE string,
+          lo_news       TYPE REF TO zcl_abapgit_news.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
 
@@ -883,13 +882,13 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
             lv_max_str = |first { mv_max_lines } objects|.
           ENDIF.
           lv_add_str = |+{ mv_max_setting }|.
-          ri_html->add( |Only { lv_max_str } shown in list. Display {
+          ri_html->add( |Only { lv_max_str } objects shown in list. Display {
             ri_html->a( iv_txt = lv_add_str
                         iv_act = c_actions-display_more )
-            } more. (Set in {
+            } more (change in Settings > {
             ri_html->a( iv_txt = 'Personal Settings'
                         iv_act = zif_abapgit_definitions=>c_action-go_settings_personal )
-            } )| ).
+            })| ).
           ri_html->add( '</div>' ).
         ENDIF.
 
@@ -1066,26 +1065,27 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
   METHOD render_item_lock_column.
 
     DATA:
-      ls_item      TYPE zif_abapgit_definitions=>ty_item,
+      li_cts_api   TYPE REF TO zif_abapgit_cts_api,
       lv_transport TYPE trkorr.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
+    li_cts_api = zcl_abapgit_factory=>get_cts_api( ).
+
     ri_html->add( '<td class="icon">' ).
 
-    ls_item-obj_type = is_item-obj_type.
-    ls_item-obj_name = is_item-obj_name.
+    IF is_item-obj_type IS NOT INITIAL AND is_item-obj_name IS NOT INITIAL AND
+       li_cts_api->is_object_type_lockable( is_item-obj_type ) = abap_true AND
+       li_cts_api->is_object_locked_in_transport( iv_object_type = is_item-obj_type
+                                                  iv_object_name = is_item-obj_name ) = abap_true.
 
-    TRY.
-        lv_transport = zcl_abapgit_factory=>get_cts_api( )->get_transport_for_object( ls_item ).
+      lv_transport = li_cts_api->get_current_transport_for_obj( iv_object_type             = is_item-obj_type
+                                                                iv_object_name             = is_item-obj_name
+                                                                iv_resolve_task_to_request = abap_false ).
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_transport( iv_transport = lv_transport
+                                                                 iv_icon_only = abap_true ) ).
 
-        IF lv_transport IS NOT INITIAL.
-          ri_html->add( zcl_abapgit_gui_chunk_lib=>render_transport( iv_transport = lv_transport
-                                                                     iv_icon_only = abap_true ) ).
-        ENDIF.
-      CATCH zcx_abapgit_exception ##NO_HANDLER.
-        " Ignore errors related to object check when trying to get transport
-    ENDTRY.
+    ENDIF.
 
     ri_html->add( '</td>' ).
 
