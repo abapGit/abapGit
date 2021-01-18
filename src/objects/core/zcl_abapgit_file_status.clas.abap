@@ -531,7 +531,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
       IF sy-subrc <> 0.
         ii_log->add( iv_msg  = |Namespace { lv_namespace } does not exist. Create it in transaction SE03|
                      iv_type = 'W'
-                     iv_rc   = '5' ).
+                     iv_rc   = '6' ).
       ENDIF.
     ENDLOOP.
 
