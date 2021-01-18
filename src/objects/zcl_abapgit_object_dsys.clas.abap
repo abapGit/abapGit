@@ -30,7 +30,7 @@ CLASS zcl_abapgit_object_dsys DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       RAISING
         zcx_abapgit_exception.
 
-    METHODS get_master_lang
+    METHODS get_main_lang
       RETURNING
         VALUE(rv_language) TYPE spras.
 
@@ -99,7 +99,7 @@ CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_master_lang.
+  METHOD get_main_lang.
 
     SELECT SINGLE langu FROM dokil INTO rv_language
       WHERE id = c_id
@@ -201,7 +201,7 @@ CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
 
     DATA lv_lang TYPE sy-langu.
 
-    lv_lang = get_master_lang( ).
+    lv_lang = get_main_lang( ).
 
     CALL FUNCTION 'DSYS_EDIT'
       EXPORTING
