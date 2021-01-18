@@ -434,7 +434,7 @@ INTERFACE zif_abapgit_definitions
       repo_transport_to_branch      TYPE string VALUE 'repo_transport_to_branch',
       repo_syntax_check             TYPE string VALUE 'repo_syntax_check',
       repo_code_inspector           TYPE string VALUE 'repo_code_inspector',
-      repo_open_in_main_lang        TYPE string VALUE 'repo_open_in_main_lang',
+      repo_open_in_master_lang      TYPE string VALUE 'repo_open_in_master_lang',
       repo_log                      TYPE string VALUE 'repo_log',
       abapgit_home                  TYPE string VALUE 'abapgit_home',
       abapgit_install               TYPE string VALUE 'abapgit_install',
