@@ -314,7 +314,7 @@ CLASS zcl_abapgit_object_otgr IMPLEMENTATION.
 * lt_lang_sel  TYPE RANGE OF langu,
 * ls_lang_sel  LIKE LINE OF lt_lang_sel,
 *
-*    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+*    IF io_xml->i18n_params( )-main_language_only = abap_true.
 *      ls_lang_sel-low = mv_language.
 *      ls_lang_sel-sign = 'I'.
 *      ls_lang_sel-option = 'EQ'.

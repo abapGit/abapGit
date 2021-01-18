@@ -38,7 +38,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_DSYS IMPLEMENTATION.
+CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -144,8 +144,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DSYS IMPLEMENTATION.
 
       WHEN 'v2.0.0'.
         zcl_abapgit_factory=>get_longtexts( )->deserialize(
-          ii_xml             = io_xml
-          iv_master_language = mv_language ).
+          ii_xml           = io_xml
+          iv_main_language = mv_language ).
 
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( 'unsupported DSYS version' ).

@@ -34,7 +34,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_CUS2 IMPLEMENTATION.
+CLASS zcl_abapgit_object_cus2 IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -163,7 +163,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CUS2 IMPLEMENTATION.
            ls_customizing_attribute-header-ldatetime,
            ls_customizing_attribute-header-luser.
 
-    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+    IF io_xml->i18n_params( )-main_language_only = abap_true.
       DELETE ls_customizing_attribute-titles WHERE spras <> mv_language.
     ENDIF.
 
