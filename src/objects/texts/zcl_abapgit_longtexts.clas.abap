@@ -161,8 +161,8 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
 
   METHOD zif_abapgit_longtexts~deserialize.
 
-    DATA: lt_longtexts     TYPE ty_longtexts,
-          lv_no_masterlang TYPE dokil-masterlang.
+    DATA: lt_longtexts    TYPE ty_longtexts,
+          lv_no_main_lang TYPE dokil-masterlang.
     FIELD-SYMBOLS: <ls_longtext> TYPE ty_longtext.
 
     ii_xml->read(
@@ -173,7 +173,7 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
 
     LOOP AT lt_longtexts ASSIGNING <ls_longtext>.
 
-      lv_no_masterlang = boolc( iv_main_language <> <ls_longtext>-dokil-langu ).
+      lv_no_main_lang = boolc( iv_main_language <> <ls_longtext>-dokil-langu ).
 
       CALL FUNCTION 'DOCU_UPDATE'
         EXPORTING
@@ -181,7 +181,7 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
           state         = c_docu_state_active
           typ           = <ls_longtext>-dokil-typ
           version       = <ls_longtext>-dokil-version
-          no_masterlang = lv_no_masterlang
+          no_masterlang = lv_no_main_lang
         TABLES
           line          = <ls_longtext>-lines.
 
