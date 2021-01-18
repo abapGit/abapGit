@@ -7,10 +7,10 @@ CLASS ltcl_dot_abapgit DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS
     METHODS:
       identity FOR TESTING
         RAISING zcx_abapgit_exception,
-      ignore FOR TESTING.
+      ignore FOR TESTING,
+      i18n FOR TESTING.
 
 ENDCLASS.
-
 
 CLASS ltcl_dot_abapgit IMPLEMENTATION.
 
@@ -98,6 +98,35 @@ CLASS ltcl_dot_abapgit IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lv_ignored
       exp = abap_false ).
+
+  ENDMETHOD.
+
+  METHOD i18n.
+
+    DATA lo_dot TYPE REF TO zcl_abapgit_dot_abapgit.
+
+    lo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
+    lo_dot->ms_data-master_language = 'E'.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_dot->ms_data-i18n_langs
+      exp = '' ).
+
+    lo_dot->set_i18n_langs( 'en , de, es' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_dot->ms_data-i18n_langs
+      exp = 'DE,ES' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_dot->get_i18n_langs( )
+      exp = 'DE,ES' ).
+
+    lo_dot->ms_data-i18n_langs = `en , DE, es  `.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_dot->get_i18n_langs( )
+      exp = 'DE,ES' ).
 
   ENDMETHOD.
 
