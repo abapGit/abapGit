@@ -504,9 +504,11 @@ CLASS lcl_json_to_abap DEFINITION FINAL.
         zcx_abapgit_ajson_error.
 
     CLASS-METHODS bind
+      IMPORTING
+        !ii_custom_mapping TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL
       CHANGING
-        c_obj TYPE any
-        co_instance TYPE REF TO lcl_json_to_abap.
+        c_obj              TYPE any
+        co_instance        TYPE REF TO lcl_json_to_abap.
 
     METHODS to_abap
       IMPORTING
@@ -516,6 +518,8 @@ CLASS lcl_json_to_abap DEFINITION FINAL.
 
   PRIVATE SECTION.
     DATA mr_obj TYPE REF TO data.
+    DATA mi_custom_mapping TYPE REF TO zif_abapgit_ajson_mapping.
+
 ENDCLASS.
 
 CLASS lcl_json_to_abap IMPLEMENTATION.
@@ -523,6 +527,7 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
   METHOD bind.
     CREATE OBJECT co_instance.
     GET REFERENCE OF c_obj INTO co_instance->mr_obj.
+    co_instance->mi_custom_mapping = ii_custom_mapping.
   ENDMETHOD.
 
   METHOD to_abap.
@@ -599,6 +604,7 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
 
     DATA lt_path TYPE string_table.
     DATA lv_trace TYPE string.
+    DATA lv_seg LIKE LINE OF lt_path.
     DATA lv_type TYPE c.
     DATA lv_size TYPE i.
     DATA lv_index TYPE i.
@@ -617,7 +623,19 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
 
     LOOP AT lt_path ASSIGNING <seg>.
       lv_trace = lv_trace && '/' && <seg>.
-      <seg> = to_upper( <seg> ).
+
+      IF mi_custom_mapping IS BOUND.
+        lv_seg = mi_custom_mapping->to_abap( iv_path = iv_path
+                                             iv_name = <seg> ).
+      ELSE.
+        CLEAR lv_seg.
+      ENDIF.
+
+      IF lv_seg IS INITIAL.
+        lv_seg = to_upper( <seg> ).
+      ELSE.
+        lv_seg = to_upper( lv_seg ).
+      ENDIF.
 
       ASSIGN r_ref->* TO <struc>.
       ASSERT sy-subrc = 0.
@@ -630,12 +648,12 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
           iv_location = lv_trace ).
 
       ELSEIF lv_type = 'h'. " table
-        IF NOT <seg> CO '0123456789'.
+        IF NOT lv_seg CO '0123456789'.
           zcx_abapgit_ajson_error=>raise(
             iv_msg      = 'Need index to access tables'
             iv_location = lv_trace ).
         ENDIF.
-        lv_index = <seg>.
+        lv_index = lv_seg.
         ASSIGN r_ref->* TO <table>.
         ASSERT sy-subrc = 0.
 
@@ -652,7 +670,7 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
         ENDIF.
 
       ELSEIF lv_type CA 'uv'. " structure
-        ASSIGN COMPONENT <seg> OF STRUCTURE <struc> TO <value>.
+        ASSIGN COMPONENT lv_seg OF STRUCTURE <struc> TO <value>.
         IF sy-subrc <> 0.
           zcx_abapgit_ajson_error=>raise(
             iv_msg      = 'Path not found'
@@ -679,24 +697,26 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
 
     CLASS-METHODS convert
       IMPORTING
-        iv_data TYPE any
-        is_prefix TYPE zif_abapgit_ajson=>ty_path_name OPTIONAL
-        iv_array_index TYPE i DEFAULT 0
+        iv_data            TYPE any
+        is_prefix          TYPE zif_abapgit_ajson=>ty_path_name OPTIONAL
+        iv_array_index     TYPE i DEFAULT 0
+        ii_custom_mapping  TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL
         iv_keep_item_order TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(rt_nodes) TYPE zif_abapgit_ajson=>ty_nodes_tt
+        VALUE(rt_nodes)   TYPE zif_abapgit_ajson=>ty_nodes_tt
       RAISING
         zcx_abapgit_ajson_error.
 
     CLASS-METHODS insert_with_type
       IMPORTING
-        iv_data TYPE any
-        iv_type TYPE string
-        is_prefix TYPE zif_abapgit_ajson=>ty_path_name OPTIONAL
-        iv_array_index TYPE i DEFAULT 0
+        iv_data            TYPE any
+        iv_type            TYPE string
+        is_prefix          TYPE zif_abapgit_ajson=>ty_path_name OPTIONAL
+        iv_array_index     TYPE i DEFAULT 0
+        ii_custom_mapping  TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL
         iv_keep_item_order TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(rt_nodes) TYPE zif_abapgit_ajson=>ty_nodes_tt
+        VALUE(rt_nodes)   TYPE zif_abapgit_ajson=>ty_nodes_tt
       RAISING
         zcx_abapgit_ajson_error.
 
@@ -705,6 +725,7 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
   PRIVATE SECTION.
 
     CLASS-DATA gv_ajson_absolute_type_name TYPE string.
+    DATA mi_custom_mapping TYPE REF TO zif_abapgit_ajson_mapping.
     DATA mv_keep_item_order TYPE abap_bool.
 
     METHODS convert_any
@@ -742,7 +763,6 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
     METHODS convert_ref
       IMPORTING
         iv_data TYPE any
-        io_type TYPE REF TO cl_abap_typedescr
         is_prefix TYPE zif_abapgit_ajson=>ty_path_name
         iv_index TYPE i DEFAULT 0
         iv_item_order TYPE i DEFAULT 0
@@ -808,7 +828,9 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
     DATA lo_converter TYPE REF TO lcl_abap_to_json.
 
     lo_type = cl_abap_typedescr=>describe_by_data( iv_data ).
+
     CREATE OBJECT lo_converter.
+    lo_converter->mi_custom_mapping = ii_custom_mapping.
     lo_converter->mv_keep_item_order = iv_keep_item_order.
 
     lo_converter->convert_any(
@@ -864,7 +886,6 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
           convert_ref(
             EXPORTING
               iv_data   = iv_data
-              io_type   = io_type
               is_prefix = is_prefix
               iv_index  = iv_index
               iv_item_order = iv_item_order
@@ -918,6 +939,15 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
     <n>-index = iv_index.
     <n>-order = iv_item_order.
 
+    IF mi_custom_mapping IS BOUND.
+      <n>-name = mi_custom_mapping->to_json( iv_path = is_prefix-path
+                                             iv_name = is_prefix-name ).
+    ENDIF.
+
+    IF <n>-name IS INITIAL.
+      <n>-name  = is_prefix-name.
+    ENDIF.
+
     IF io_type->absolute_name = '\TYPE-POOL=ABAP\TYPE=ABAP_BOOL' OR io_type->absolute_name = '\TYPE=XFELD'.
       <n>-type = zif_abapgit_ajson=>node_type-boolean.
       IF iv_data IS NOT INITIAL.
@@ -948,6 +978,15 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
     <n>-name  = is_prefix-name.
     <n>-index = iv_index.
     <n>-order = iv_item_order.
+
+    IF mi_custom_mapping IS BOUND.
+      <n>-name = mi_custom_mapping->to_json( iv_path = is_prefix-path
+                                             iv_name = is_prefix-name ).
+    ENDIF.
+
+    IF <n>-name IS INITIAL.
+      <n>-name  = is_prefix-name.
+    ENDIF.
 
     IF iv_data IS INITIAL.
       <n>-type  = zif_abapgit_ajson=>node_type-null.
@@ -985,6 +1024,16 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
       <root>-name  = is_prefix-name.
       <root>-type  = zif_abapgit_ajson=>node_type-object.
       <root>-index = iv_index.
+
+      IF mi_custom_mapping IS BOUND.
+        <root>-name = mi_custom_mapping->to_json( iv_path = is_prefix-path
+                                                  iv_name = is_prefix-name ).
+      ENDIF.
+
+      IF <root>-name IS INITIAL.
+        <root>-name  = is_prefix-name.
+      ENDIF.
+
       <root>-order = iv_item_order.
     ENDIF.
 
@@ -1049,6 +1098,15 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
     <root>-index = iv_index.
     <root>-order = iv_item_order.
 
+    IF mi_custom_mapping IS BOUND.
+      <root>-name = mi_custom_mapping->to_json( iv_path = is_prefix-path
+                                                iv_name = is_prefix-name ).
+    ENDIF.
+
+    IF <root>-name IS INITIAL.
+      <root>-name  = is_prefix-name.
+    ENDIF.
+
     ls_next_prefix-path = is_prefix-path && is_prefix-name && '/'.
     ASSIGN iv_data TO <tab>.
 
@@ -1075,7 +1133,9 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
     DATA lo_converter TYPE REF TO lcl_abap_to_json.
 
     lo_type = cl_abap_typedescr=>describe_by_data( iv_data ).
+
     CREATE OBJECT lo_converter.
+    lo_converter->mi_custom_mapping = ii_custom_mapping.
     lo_converter->mv_keep_item_order = iv_keep_item_order.
 
     lo_converter->insert_value_with_type(
@@ -1124,6 +1184,15 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
     <n>-value = iv_data.
     <n>-type  = iv_type.
     <n>-order = iv_item_order.
+
+    IF mi_custom_mapping IS BOUND.
+      <n>-name = mi_custom_mapping->to_json( iv_path = is_prefix-path
+                                             iv_name = is_prefix-name ).
+    ENDIF.
+
+    IF <n>-name IS INITIAL.
+      <n>-name  = is_prefix-name.
+    ENDIF.
 
   ENDMETHOD.
 
