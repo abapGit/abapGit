@@ -476,7 +476,9 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
 
     " Swap out repository package name with the local installation package name
     ls_package_data-devclass = mv_local_devclass.
-    ls_package_data-pdevclass = li_package->transport_layer.
+    IF li_package IS BOUND.
+      ls_package_data-pdevclass = li_package->transport_layer.
+    ENDIF.
 
     " Parent package is not changed. Assume the folder logic already created the package and set
     " the hierarchy before.
