@@ -32,7 +32,7 @@ CLASS zcl_abapgit_gui_page_sett_locl DEFINITION
         ignore_subpackages           TYPE string VALUE 'ignore_subpackages',
         write_protected              TYPE string VALUE 'write_protected',
         only_local_objects           TYPE string VALUE 'only_local_objects',
-        serialize_master_lang_only   TYPE string VALUE 'serialize_master_lang_only',
+        main_language_only           TYPE string VALUE 'main_language_only',
         checks                       TYPE string VALUE 'checks',
         code_inspector_check_variant TYPE string VALUE 'code_inspector_check_variant',
         block_commit                 TYPE string VALUE 'block_commit',
@@ -73,7 +73,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -135,7 +135,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
       iv_label       = 'Only Local Objects'
       iv_hint        = 'Ignore objects imported from other systems; serialize only objects created in this system'
     )->checkbox(
-      iv_name        = c_id-serialize_master_lang_only
+      iv_name        = c_id-main_language_only
       iv_label       = 'Only Serialize Main Language'
       iv_hint        = 'Ignore translations; serialize only main language of repository'
     )->start_group(
@@ -174,7 +174,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
       iv_key = c_id-ignore_subpackages
       iv_val = boolc( ms_settings-ignore_subpackages = abap_true ) ) ##TYPE.
     mo_form_data->set(
-      iv_key = c_id-serialize_master_lang_only
+      iv_key = c_id-main_language_only
       iv_val = boolc( ms_settings-serialize_master_lang_only = abap_true ) ) ##TYPE.
     mo_form_data->set(
       iv_key = c_id-write_protected
@@ -199,7 +199,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
 
     ms_settings-display_name                 = mo_form_data->get( c_id-display_name ).
     ms_settings-ignore_subpackages           = mo_form_data->get( c_id-ignore_subpackages ).
-    ms_settings-serialize_master_lang_only   = mo_form_data->get( c_id-serialize_master_lang_only ).
+    ms_settings-serialize_master_lang_only   = mo_form_data->get( c_id-main_language_only ).
     ms_settings-write_protected              = mo_form_data->get( c_id-write_protected ).
     ms_settings-only_local_objects           = mo_form_data->get( c_id-only_local_objects ).
     ms_settings-code_inspector_check_variant = mo_form_data->get( c_id-code_inspector_check_variant ).
