@@ -162,17 +162,10 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
     CALL FUNCTION 'TR_CHECK_TYPE'
       EXPORTING
-        wi_e071          = ls_object_key
+        wi_e071     = ls_object_key
       IMPORTING
-        pe_result        = lv_type_check_result
-        pe_name_too_long = lv_name_too_long
-        ev_objlen        = lv_objlen
-        we_lock_key      = ls_lock_key.
-
-    IF lv_name_too_long = abap_true.
-      lv_objlen = strlen( iv_object_name ) - lv_objlen.
-      zcx_abapgit_exception=>raise( |Object name { iv_object_type } { iv_object_name } too long by { lv_objlen }| ).
-    ENDIF.
+        pe_result   = lv_type_check_result
+        we_lock_key = ls_lock_key.
 
     IF lv_type_check_result <> 'L'.
       zcx_abapgit_exception=>raise( |Object type { iv_program_id }-{ iv_object_type } not lockable| ).
