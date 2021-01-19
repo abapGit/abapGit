@@ -1,9 +1,6 @@
 INTERFACE zif_abapgit_xml_output
   PUBLIC .
-  TYPES:
-    BEGIN OF ty_i18n_params,
-      serialize_master_lang_only TYPE abap_bool,
-    END OF ty_i18n_params.
+
 
   METHODS add
     IMPORTING
@@ -26,7 +23,7 @@ INTERFACE zif_abapgit_xml_output
       VALUE(rv_xml) TYPE string .
   METHODS i18n_params
     IMPORTING
-      iv_serialize_master_lang_only TYPE ty_i18n_params-serialize_master_lang_only OPTIONAL
+      !is_i18n_params       TYPE zif_abapgit_definitions=>ty_i18n_params OPTIONAL
     RETURNING
-      VALUE(rs_params)              TYPE ty_i18n_params.
+      VALUE(rs_i18n_params) TYPE zif_abapgit_definitions=>ty_i18n_params .
 ENDINTERFACE.

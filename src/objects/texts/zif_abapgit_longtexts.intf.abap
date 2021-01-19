@@ -22,9 +22,9 @@ INTERFACE zif_abapgit_longtexts
       zcx_abapgit_exception .
   METHODS deserialize
     IMPORTING
-      !iv_longtext_name   TYPE string DEFAULT 'LONGTEXTS'
-      !ii_xml             TYPE REF TO zif_abapgit_xml_input
-      !iv_master_language TYPE langu
+      !iv_longtext_name TYPE string DEFAULT 'LONGTEXTS'
+      !ii_xml           TYPE REF TO zif_abapgit_xml_input
+      !iv_main_language TYPE langu
     RAISING
       zcx_abapgit_exception .
   METHODS delete

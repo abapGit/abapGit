@@ -177,7 +177,7 @@ CLASS zcl_abapgit_object_cus0 IMPLEMENTATION.
            ls_img_activity-header-ldate,
            ls_img_activity-header-ltime.
 
-    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+    IF io_xml->i18n_params( )-main_language_only = abap_true.
       DELETE ls_img_activity-texts WHERE spras <> mv_language.
     ENDIF.
 

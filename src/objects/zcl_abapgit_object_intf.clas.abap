@@ -35,7 +35,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
+CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -171,7 +171,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
                    ig_data = lt_lines ).
     ENDIF.
 
-    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+    IF io_xml->i18n_params( )-main_language_only = abap_true.
       lv_language = mv_language.
     ENDIF.
 

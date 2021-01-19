@@ -25,7 +25,8 @@ CLASS ltcl_run_checks DEFINITION FOR TESTING RISK LEVEL HARMLESS
       neg_incorrect_path_vs_pack FOR TESTING RAISING zcx_abapgit_exception,
       neg_similar_filenames FOR TESTING RAISING zcx_abapgit_exception,
       neg_empty_filenames FOR TESTING RAISING zcx_abapgit_exception,
-      package_move FOR TESTING RAISING zcx_abapgit_exception.
+      package_move FOR TESTING RAISING zcx_abapgit_exception,
+      check_namespace FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -400,6 +401,34 @@ CLASS ltcl_run_checks IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = mi_log->has_rc( '5' )
+      exp = abap_true ).
+
+  ENDMETHOD.
+
+  METHOD check_namespace.
+
+    " 6 Missing namespace
+    append_result( iv_obj_type = 'CLAS'
+                   iv_obj_name = '/NOTEXIST/ZCLASS1'
+                   iv_match    = ' '
+                   iv_lstate   = ' '
+                   iv_rstate   = 'A'
+                   iv_package  = '/NOTEXIST/Z'
+                   iv_path     = '/'
+                   iv_filename = '#notexist#zclass1.clas.xml' ).
+
+    zcl_abapgit_file_status=>run_checks(
+      ii_log     = mi_log
+      it_results = mt_results
+      io_dot     = mo_dot
+      iv_top     = '/NOTEXIST/Z' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mi_log->count( )
+      exp = 1 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mi_log->has_rc( '6' )
       exp = abap_true ).
 
   ENDMETHOD.

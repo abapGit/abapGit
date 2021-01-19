@@ -89,7 +89,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
+CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -198,8 +198,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
   METHOD deserialize_longtexts.
 
     zcl_abapgit_factory=>get_longtexts( )->deserialize(
-        ii_xml             = ii_xml
-        iv_master_language = mv_language ).
+      ii_xml           = ii_xml
+      iv_main_language = mv_language ).
 
   ENDMETHOD.
 

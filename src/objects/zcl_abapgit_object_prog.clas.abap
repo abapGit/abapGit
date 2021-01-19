@@ -105,7 +105,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
     FIELD-SYMBOLS:
       <ls_tpool>         LIKE LINE OF lt_tpool_i18n.
 
-    IF ii_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+    IF ii_xml->i18n_params( )-main_language_only = abap_true.
       RETURN.
     ENDIF.
 
