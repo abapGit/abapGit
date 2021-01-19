@@ -123,7 +123,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         !is_item                     TYPE zif_abapgit_definitions=>ty_repo_item
       RETURNING
         VALUE(rv_inactive_html_code) TYPE string .
-    METHODS open_in_master_language
+    METHODS open_in_main_language
       RAISING
         zcx_abapgit_exception .
     METHODS render_order_by
@@ -706,24 +706,24 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD open_in_master_language.
+  METHOD open_in_main_language.
 
     DATA:
-      lv_master_language TYPE spras,
-      lt_spagpa          TYPE STANDARD TABLE OF rfc_spagpa,
-      ls_spagpa          LIKE LINE OF lt_spagpa,
-      ls_item            TYPE zif_abapgit_definitions=>ty_item,
-      lv_subrc           TYPE syst-subrc,
-      lv_save_sy_langu   TYPE sy-langu,
-      lv_tcode           TYPE tcode.
+      lv_main_language TYPE spras,
+      lt_spagpa        TYPE STANDARD TABLE OF rfc_spagpa,
+      ls_spagpa        LIKE LINE OF lt_spagpa,
+      ls_item          TYPE zif_abapgit_definitions=>ty_item,
+      lv_subrc         TYPE syst-subrc,
+      lv_save_sy_langu TYPE sy-langu,
+      lv_tcode         TYPE tcode.
 
     " https://blogs.sap.com/2017/01/13/logon-language-sy-langu-and-rfc/
 
-    lv_master_language = mo_repo->get_dot_abapgit( )->get_master_language( ).
+    lv_main_language = mo_repo->get_dot_abapgit( )->get_master_language( ).
     lv_tcode = get_abapgit_tcode( ).
     ASSERT lv_tcode IS NOT INITIAL.
 
-    IF lv_master_language = sy-langu.
+    IF lv_main_language = sy-langu.
       zcx_abapgit_exception=>raise( |Repo already opened in main language| ).
     ENDIF.
 
@@ -735,7 +735,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
     ENDIF.
 
     lv_save_sy_langu = sy-langu.
-    SET LOCALE LANGUAGE lv_master_language.
+    SET LOCALE LANGUAGE lv_main_language.
 
     ls_spagpa-parid  = zif_abapgit_definitions=>c_spagpa_param_repo_key.
     ls_spagpa-parval = mo_repo->get_key( ).
@@ -1261,7 +1261,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
         rs_handled-state    = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN zif_abapgit_definitions=>c_action-repo_open_in_master_lang.
-        open_in_master_language( ).
+        open_in_main_language( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-repo_switch_origin_to_pr.
