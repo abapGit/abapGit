@@ -51,9 +51,13 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
           ls_exclude      LIKE LINE OF lt_excludes,
           lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic,
           lv_last_package TYPE devclass VALUE cl_abap_char_utilities=>horizontal_tab,
+          lv_obj_name     TYPE sobj_name,
+          lv_name         TYPE progname,
+          lv_namespace    TYPE namespace,
           lt_packages     TYPE zif_abapgit_sap_package=>ty_devclass_tt.
 
     FIELD-SYMBOLS: <ls_tadir>   LIKE LINE OF rt_tadir,
+                   <ls_nspc>    LIKE LINE OF rt_tadir,
                    <lv_package> LIKE LINE OF lt_packages.
 
 
@@ -109,6 +113,31 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
         <ls_tadir>-object   = 'DEVC'.
         <ls_tadir>-obj_name = <lv_package>.
         <ls_tadir>-devclass = <lv_package>.
+      ENDIF.
+    ENDLOOP.
+
+    LOOP AT rt_tadir ASSIGNING <ls_tadir> WHERE obj_name(1) = '/'.
+      " Namespaces are not in TADIR, but are necessary for creating
+      " objects in transportable packages
+      lv_name = <ls_tadir>-obj_name.
+      CALL FUNCTION 'RS_NAME_SPLIT_NAMESPACE'
+        EXPORTING
+          name_with_namespace = lv_name
+        IMPORTING
+          namespace           = lv_namespace
+        EXCEPTIONS
+          delimiter_error     = 1
+          OTHERS              = 2.
+      IF sy-subrc = 0 AND lv_namespace IS NOT INITIAL.
+        READ TABLE rt_tadir TRANSPORTING NO FIELDS
+          WITH KEY pgmid = 'R3TR' object = 'NSPC' obj_name = lv_namespace.
+        IF sy-subrc <> 0.
+          APPEND INITIAL LINE TO rt_tadir ASSIGNING <ls_nspc>.
+          <ls_nspc>-pgmid    = 'R3TR'.
+          <ls_nspc>-object   = 'NSPC'.
+          <ls_nspc>-obj_name = lv_namespace.
+          <ls_nspc>-devclass = iv_package.
+        ENDIF.
       ENDIF.
     ENDLOOP.
 
