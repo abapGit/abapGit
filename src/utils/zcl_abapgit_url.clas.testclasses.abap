@@ -13,6 +13,8 @@ CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
       repo_address2 FOR TESTING RAISING zcx_abapgit_exception,
       repo_address3 FOR TESTING RAISING zcx_abapgit_exception,
       repo_address4 FOR TESTING RAISING zcx_abapgit_exception,
+      repo_address5_dots FOR TESTING RAISING zcx_abapgit_exception,
+      repo_address6_dots_and_git FOR TESTING RAISING zcx_abapgit_exception,
       repo_error FOR TESTING,
       url_validate1 FOR TESTING,
       url_validate2 FOR TESTING,
@@ -156,6 +158,33 @@ CLASS ltcl_test IMPLEMENTATION.
         act = lv_url_address ).
 
   ENDMETHOD.
+
+  METHOD repo_address5_dots.
+
+    DATA:
+      lv_url_address TYPE string.
+
+    lv_url_address = zcl_abapgit_url=>url_address( 'https://github.com/jfilak/abap.awesome.app1' ).
+
+    cl_abap_unit_assert=>assert_equals(
+        exp = 'https://github.com/jfilak/abap.awesome.app1'
+        act = lv_url_address ).
+
+  ENDMETHOD.
+
+  METHOD repo_address6_dots_and_git.
+
+    DATA:
+      lv_url_address TYPE string.
+
+    lv_url_address = zcl_abapgit_url=>url_address( 'https://github.com/jfilak/abap.awesome.app1.git' ).
+
+    cl_abap_unit_assert=>assert_equals(
+        exp = 'https://github.com/jfilak/abap.awesome.app1'
+        act = lv_url_address ).
+
+  ENDMETHOD.
+
 
   METHOD url_validate1.
 
