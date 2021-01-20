@@ -139,8 +139,7 @@ CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
 
     IF io_form_data->get( c_id-package ) IS NOT INITIAL.
       TRY.
-          zcl_abapgit_repo_srv=>get_instance( )->validate_package(
-            iv_package    = |{ io_form_data->get( c_id-package ) }| ).
+          zcl_abapgit_repo_srv=>get_instance( )->validate_package( |{ io_form_data->get( c_id-package ) }| ).
         CATCH zcx_abapgit_exception INTO lx_err.
           ro_validation_log->set(
             iv_key = c_id-package
@@ -223,7 +222,6 @@ CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( mo_form->render(
-      iv_form_class     = 'dialog w600px m-em5-sides margin-v1' " to center add wmax600px and auto-center instead
       io_values         = mo_form_data
       io_validation_log = mo_validation_log ) ).
 

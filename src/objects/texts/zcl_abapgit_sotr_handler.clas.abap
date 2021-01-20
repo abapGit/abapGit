@@ -45,7 +45,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
+CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
 
 
   METHOD create_sotr.
@@ -211,7 +211,7 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
       lv_sotr = get_sotr_4_concept( <ls_sotr_use>-concept ).
 
       IF io_xml IS BOUND AND
-         io_xml->i18n_params( )-serialize_master_lang_only = abap_true AND
+         io_xml->i18n_params( )-main_language_only = abap_true AND
          iv_language IS SUPPLIED.
         DELETE lv_sotr-entries WHERE langu <> iv_language.
         CHECK lv_sotr-entries IS NOT INITIAL.

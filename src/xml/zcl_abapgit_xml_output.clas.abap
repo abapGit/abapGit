@@ -11,7 +11,7 @@ CLASS zcl_abapgit_xml_output DEFINITION
   PRIVATE SECTION.
 
     DATA mi_raw TYPE REF TO if_ixml_element .
-    DATA ms_i18n_params TYPE zif_abapgit_xml_output~ty_i18n_params .
+    DATA ms_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params .
 
     METHODS build_asx_node
       RETURNING
@@ -21,6 +21,28 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_xml_output IMPLEMENTATION.
+
+
+  METHOD build_asx_node.
+
+    DATA: li_attr TYPE REF TO if_ixml_attribute.
+
+
+    ri_element = mi_xml_doc->create_element_ns(
+      name   = 'abap'
+      prefix = 'asx' ).
+
+    li_attr = mi_xml_doc->create_attribute_ns( 'version' ).
+    li_attr->if_ixml_node~set_value( '1.0' ).
+    ri_element->set_attribute_node_ns( li_attr ).
+
+    li_attr = mi_xml_doc->create_attribute_ns(
+      name   = 'asx'
+      prefix = 'xmlns' ).
+    li_attr->if_ixml_node~set_value( 'http://www.sap.com/abapxml' ).
+    ri_element->set_attribute_node_ns( li_attr ).
+
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_xml_output~add.
@@ -72,35 +94,13 @@ CLASS zcl_abapgit_xml_output IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD build_asx_node.
-
-    DATA: li_attr TYPE REF TO if_ixml_attribute.
-
-
-    ri_element = mi_xml_doc->create_element_ns(
-      name   = 'abap'
-      prefix = 'asx' ).
-
-    li_attr = mi_xml_doc->create_attribute_ns( 'version' ).
-    li_attr->if_ixml_node~set_value( '1.0' ).
-    ri_element->set_attribute_node_ns( li_attr ).
-
-    li_attr = mi_xml_doc->create_attribute_ns(
-      name   = 'asx'
-      prefix = 'xmlns' ).
-    li_attr->if_ixml_node~set_value( 'http://www.sap.com/abapxml' ).
-    ri_element->set_attribute_node_ns( li_attr ).
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_xml_output~i18n_params.
 
-    IF iv_serialize_master_lang_only IS SUPPLIED.
-      ms_i18n_params-serialize_master_lang_only = iv_serialize_master_lang_only.
+    IF is_i18n_params IS SUPPLIED.
+      ms_i18n_params = is_i18n_params.
     ENDIF.
 
-    rs_params = ms_i18n_params.
+    rs_i18n_params = ms_i18n_params.
 
   ENDMETHOD.
 

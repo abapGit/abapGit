@@ -421,6 +421,8 @@ INTERFACE zif_abapgit_definitions
       repo_refresh                  TYPE string VALUE 'repo_refresh',
       repo_remove                   TYPE string VALUE 'repo_remove',
       repo_settings                 TYPE string VALUE 'repo_settings',
+      repo_local_settings           TYPE string VALUE 'repo_local_settings',
+      repo_infos                    TYPE string VALUE 'repo_infos',
       repo_purge                    TYPE string VALUE 'repo_purge',
       repo_newonline                TYPE string VALUE 'repo_newonline',
       repo_newoffline               TYPE string VALUE 'repo_newoffline',
@@ -510,5 +512,14 @@ INTERFACE zif_abapgit_definitions
       ignore TYPE ty_method VALUE 'I',
       skip   TYPE ty_method VALUE '?',
     END OF c_method .
+
+  TYPES:
+    ty_languages TYPE STANDARD TABLE OF sy-langu WITH DEFAULT KEY.
+  TYPES:
+    BEGIN OF ty_i18n_params,
+      main_language         TYPE sy-langu,
+      main_language_only    TYPE abap_bool,
+      translation_languages TYPE ty_languages,
+    END OF ty_i18n_params .
 
 ENDINTERFACE.

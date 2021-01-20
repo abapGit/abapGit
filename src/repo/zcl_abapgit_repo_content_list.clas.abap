@@ -53,7 +53,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
 
 
   METHOD build_folders.
@@ -246,9 +246,9 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
       LOOP AT lt_repo_msg REFERENCE INTO lr_repo_msg WHERE type CA 'EW'.
         CASE lr_repo_msg->type.
           WHEN 'E'.
-            ri_log->add_error( iv_msg = lr_repo_msg->text ).
+            ri_log->add_error( lr_repo_msg->text ).
           WHEN 'W'.
-            ri_log->add_warning( iv_msg = lr_repo_msg->text ).
+            ri_log->add_warning( lr_repo_msg->text ).
           WHEN OTHERS.
             CONTINUE.
         ENDCASE.

@@ -118,7 +118,7 @@ STVI | Transaction Variants | Yes
 STYL | SAPscript style | Yes
 SUCU | Authorization Groups (TBRG_AUTH) | Yes
 SUSC | Authorization object class | Yes
-SUSH | Assignment: Service --> Authorization Objects | [#1582](https://github.com/abapGit/abapGit/issues/1582)
+SUSH | Assignment: Service --> Authorization Objects | Yes
 SUSO | Authorization object | Yes
 SXCI | Business Add-Ins - Implementations | Yes
 TABL | Table | Yes

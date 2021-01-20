@@ -46,6 +46,11 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
     DATA mv_seed TYPE string .             " Unique page id to bind JS sessionStorage
     DATA mv_filter_value TYPE string .
 
+    METHODS check_selected
+      IMPORTING
+        !io_files TYPE REF TO zcl_abapgit_string_map
+      RAISING
+        zcx_abapgit_exception .
     METHODS find_changed_by
       IMPORTING
         !it_files            TYPE zif_abapgit_definitions=>ty_stage_files
@@ -113,7 +118,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception .
-    METHODS render_master_language_warning
+    METHODS render_main_language_warning
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS count_default_files_to_commit
@@ -151,6 +156,43 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD check_selected.
+
+    DATA:
+      ls_file    TYPE zif_abapgit_definitions=>ty_file,
+      lv_pattern TYPE string,
+      lv_msg     TYPE string.
+
+    FIELD-SYMBOLS:
+      <ls_item>     LIKE LINE OF io_files->mt_entries,
+      <ls_item_chk> LIKE LINE OF io_files->mt_entries.
+
+    " Check all added files if the exist in different paths (packages) without being removed
+    LOOP AT io_files->mt_entries ASSIGNING <ls_item> WHERE v = zif_abapgit_definitions=>c_method-add.
+
+      zcl_abapgit_path=>split_file_location(
+        EXPORTING
+          iv_fullpath = to_lower( <ls_item>-k )
+        IMPORTING
+          ev_path     = ls_file-path
+          ev_filename = ls_file-filename ).
+
+      lv_pattern = '*/' && to_upper( ls_file-filename ).
+      REPLACE ALL OCCURRENCES OF '#' IN lv_pattern WITH '##'. " for CP
+
+      LOOP AT io_files->mt_entries ASSIGNING <ls_item_chk>
+        WHERE k CP lv_pattern AND k <> <ls_item>-k AND v <> zif_abapgit_definitions=>c_method-rm.
+
+        lv_msg = |In order to add { to_lower( <ls_item>-k ) }, | &&
+                 |you have to remove { to_lower( <ls_item_chk>-k ) }|.
+        zcx_abapgit_exception=>raise( lv_msg ).
+
+      ENDLOOP.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD constructor.
 
     DATA lv_ts TYPE timestamp.
@@ -167,7 +209,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
       mv_seed = |stage{ lv_ts }|.
     ENDIF.
 
-    ms_control-page_menu  = build_menu( ).
+    ms_control-page_menu = build_menu( ).
 
     IF lines( ms_files-local ) = 0 AND lines( ms_files-remote ) = 0.
       zcx_abapgit_exception=>raise( 'There are no changes that could be staged' ).
@@ -264,9 +306,6 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
   METHOD find_transports.
 
-    FIELD-SYMBOLS: <ls_local> LIKE LINE OF it_files-local.
-    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF it_files-remote.
-
     TRY.
 
         find_transports_local(
@@ -296,26 +335,18 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     li_cts_api = zcl_abapgit_factory=>get_cts_api( ).
 
     LOOP AT it_files ASSIGNING <ls_local> WHERE item IS NOT INITIAL.
-      IF <ls_local>-item-obj_type IS NOT INITIAL AND
-         <ls_local>-item-obj_name IS NOT INITIAL AND
-         <ls_local>-item-devclass IS NOT INITIAL.
+      IF li_cts_api->is_chrec_possible_for_package( <ls_local>-item-devclass ) = abap_false.
+        EXIT. " Assume all other objects are also in packages without change recording
+      ENDIF.
 
-        IF li_cts_api->is_chrec_possible_for_package( <ls_local>-item-devclass ) = abap_false.
-          EXIT. " Assume all other objects are also in packages without change recording
+      CLEAR ls_new.
+      ls_new-item      = <ls_local>-item.
+      ls_new-transport = li_cts_api->get_transport_for_object(
+        is_item                    = <ls_local>-item
+        iv_resolve_task_to_request = abap_false ).
 
-        ELSEIF li_cts_api->is_object_type_lockable( <ls_local>-item-obj_type ) = abap_true AND
-               li_cts_api->is_object_locked_in_transport( iv_object_type = <ls_local>-item-obj_type
-                                                          iv_object_name = <ls_local>-item-obj_name ) = abap_true.
-
-          ls_new-item = <ls_local>-item.
-
-          ls_new-transport = li_cts_api->get_current_transport_for_obj(
-            iv_object_type             = <ls_local>-item-obj_type
-            iv_object_name             = <ls_local>-item-obj_name
-            iv_resolve_task_to_request = abap_false ).
-
-          INSERT ls_new INTO TABLE ct_transports.
-        ENDIF.
+      IF ls_new-transport IS NOT INITIAL.
+        INSERT ls_new INTO TABLE ct_transports.
       ENDIF.
     ENDLOOP.
   ENDMETHOD.
@@ -349,15 +380,15 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
       IF ls_item IS INITIAL.
         CONTINUE.
-      ELSEIF li_cts_api->is_object_type_lockable( ls_item-obj_type ) = abap_true
-        AND li_cts_api->is_object_locked_in_transport( iv_object_type = ls_item-obj_type
-                                                       iv_object_name = ls_item-obj_name ) = abap_true.
-        ls_new-item = ls_item.
-        ls_new-transport = li_cts_api->get_current_transport_for_obj(
-          iv_object_type             = ls_item-obj_type
-          iv_object_name             = ls_item-obj_name
+      ELSE.
+        ls_new-item      = ls_item.
+        ls_new-transport = li_cts_api->get_transport_for_object(
+          is_item                    = ls_item
           iv_resolve_task_to_request = abap_false ).
-        INSERT ls_new INTO TABLE ct_transports.
+
+        IF ls_new-transport IS NOT INITIAL.
+          INSERT ls_new INTO TABLE ct_transports.
+        ENDIF.
       ENDIF.
 
     ENDLOOP.
@@ -441,7 +472,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     ri_html->add( '<div class="repo">' ).
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mo_repo ) ).
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_js_error_banner( ) ).
-    ri_html->add( render_master_language_warning( ) ).
+    ri_html->add( render_main_language_warning( ) ).
 
     ri_html->add( '<div class="stage-container">' ).
     ri_html->add( render_actions( ) ).
@@ -636,7 +667,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_master_language_warning.
+  METHOD render_main_language_warning.
 
     DATA: ls_dot_abapgit TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
 
@@ -738,6 +769,8 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     IF lo_files->size( ) = 0.
       zcx_abapgit_exception=>raise( 'process_stage_list: empty list' ).
     ENDIF.
+
+    check_selected( lo_files ).
 
     CREATE OBJECT ro_stage.
 

@@ -58,6 +58,11 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS get_dot_apack
       RETURNING
         VALUE(ro_dot_apack) TYPE REF TO zcl_abapgit_apack_reader .
+    METHODS get_data_config
+      RETURNING
+        VALUE(ri_config) TYPE REF TO zif_abapgit_data_config
+      RAISING
+        zcx_abapgit_exception .
     METHODS deserialize
       IMPORTING
         !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
@@ -141,6 +146,9 @@ CLASS zcl_abapgit_repo DEFINITION
     DATA mv_request_remote_refresh TYPE abap_bool .
     DATA mt_status TYPE zif_abapgit_definitions=>ty_results_tt .
     DATA mi_log TYPE REF TO zif_abapgit_log .
+    DATA mi_listener TYPE REF TO zif_abapgit_repo_listener .
+    DATA mo_apack_reader TYPE REF TO zcl_abapgit_apack_reader .
+    DATA mi_data_config TYPE REF TO zif_abapgit_data_config .
 
     METHODS find_remote_dot_apack
       RETURNING
@@ -168,11 +176,7 @@ CLASS zcl_abapgit_repo DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS reset_remote .
-
   PRIVATE SECTION.
-
-    DATA mi_listener TYPE REF TO zif_abapgit_repo_listener .
-    DATA mo_apack_reader TYPE REF TO zcl_abapgit_apack_reader .
 
     METHODS get_local_checksums
       RETURNING
@@ -194,13 +198,13 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
     METHODS remove_non_code_related_files
       CHANGING
-        ct_local_files TYPE zif_abapgit_definitions=>ty_files_item_tt.
+        !ct_local_files TYPE zif_abapgit_definitions=>ty_files_item_tt .
     METHODS compare_with_remote_checksum
       IMPORTING
-        it_remote_files TYPE zif_abapgit_definitions=>ty_files_tt
-        is_local_file   TYPE zif_abapgit_definitions=>ty_file_item-file
+        !it_remote_files TYPE zif_abapgit_definitions=>ty_files_tt
+        !is_local_file   TYPE zif_abapgit_definitions=>ty_file_item-file
       CHANGING
-        cs_checksum     TYPE zif_abapgit_persistence=>ty_local_checksum.
+        !cs_checksum     TYPE zif_abapgit_persistence=>ty_local_checksum .
 ENDCLASS.
 
 
@@ -423,6 +427,29 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_data_config.
+
+    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF mt_remote.
+
+    IF mi_data_config IS BOUND.
+      ri_config = mi_data_config.
+      RETURN.
+    ENDIF.
+
+    get_files_remote( ).
+
+    CREATE OBJECT ri_config TYPE zcl_abapgit_data_config.
+    mi_data_config = ri_config.
+
+    READ TABLE mt_remote ASSIGNING <ls_remote>
+      WITH KEY path = zif_abapgit_data_config=>c_default_path.
+    IF sy-subrc = 0.
+      ri_config->from_json( mt_remote ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD get_dot_abapgit.
     CREATE OBJECT ro_dot_abapgit
       EXPORTING
@@ -442,8 +469,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD get_files_local.
 
-
-    DATA: lo_serialize TYPE REF TO zcl_abapgit_serialize.
+    DATA lo_serialize TYPE REF TO zcl_abapgit_serialize.
 
     " Serialization happened before and no refresh request
     IF lines( mt_local ) > 0 AND mv_request_local_refresh = abap_false.
@@ -459,6 +485,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       iv_package        = get_package( )
       io_dot_abapgit    = get_dot_abapgit( )
       is_local_settings = get_local_settings( )
+      ii_data_config    = get_data_config( )
       ii_log            = ii_log ).
 
     mt_local                 = rt_files.
@@ -547,8 +574,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     FIELD-SYMBOLS:
       <ls_checksum> LIKE LINE OF lt_checksums,
-      <ls_file_sig> LIKE LINE OF <ls_checksum>-files,
-      <ls_remote>   LIKE LINE OF lt_remote,
       <ls_local>    LIKE LINE OF lt_local.
 
     lt_local  = get_files_local( ).
@@ -571,7 +596,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
                                     CHANGING
                                       cs_checksum = <ls_checksum> ).
 
-
     ENDLOOP.
     set( it_checksums = lt_checksums ).
     reset_status( ).
@@ -587,7 +611,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     CLEAR mi_log.
 
     IF iv_drop_cache = abap_true.
-      CLEAR: mt_local.
+      CLEAR mt_local.
     ENDIF.
 
   ENDMETHOD.
