@@ -676,7 +676,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       ASSIGN COMPONENT 'ROWORCOLST' OF STRUCTURE ls_dd09l TO <lg_roworcolst>.
       IF sy-subrc = 0 AND <lg_roworcolst> IS INITIAL.
         <lg_roworcolst> = 'C'. "Reverse fix from serialize
-      ENDIF.                    
+      ENDIF.
 
       " DDIC Step: Replace REF TO class/interface with generic reference to avoid cyclic dependency
       LOOP AT lt_dd03p ASSIGNING <ls_dd03p> WHERE datatype = 'REF'.
