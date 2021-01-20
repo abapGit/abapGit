@@ -673,7 +673,6 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
                     CHANGING cg_data = ls_dd09l ).
       io_xml->read( EXPORTING iv_name  = 'DD03P_TABLE'
                     CHANGING cg_data = lt_dd03p ).
-                    
       ASSIGN COMPONENT 'ROWORCOLST' OF STRUCTURE ls_dd09l TO <lg_roworcolst>.
       IF sy-subrc = 0 AND <lg_roworcolst> IS INITIAL.
         <lg_roworcolst> = 'C'. "Reverse fix from serialize
