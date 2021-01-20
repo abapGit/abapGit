@@ -185,15 +185,15 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         zcx_abapgit_exception .
     METHODS is_repo_lang_logon_lang
       RETURNING
-        VALUE(rv_repo_lang_is_logon_lang) TYPE abap_bool.
+        VALUE(rv_repo_lang_is_logon_lang) TYPE abap_bool .
     METHODS get_abapgit_tcode
       RETURNING
-        VALUE(rv_tcode) TYPE tcode.
+        VALUE(rv_tcode) TYPE tcode .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -1065,27 +1065,26 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
   METHOD render_item_lock_column.
 
     DATA:
-      li_cts_api   TYPE REF TO zif_abapgit_cts_api,
+      ls_item      TYPE zif_abapgit_definitions=>ty_item,
       lv_transport TYPE trkorr.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    li_cts_api = zcl_abapgit_factory=>get_cts_api( ).
-
     ri_html->add( '<td class="icon">' ).
 
-    IF is_item-obj_type IS NOT INITIAL AND is_item-obj_name IS NOT INITIAL AND
-       li_cts_api->is_object_type_lockable( is_item-obj_type ) = abap_true AND
-       li_cts_api->is_object_locked_in_transport( iv_object_type = is_item-obj_type
-                                                  iv_object_name = is_item-obj_name ) = abap_true.
+    ls_item-obj_type = is_item-obj_type.
+    ls_item-obj_name = is_item-obj_name.
 
-      lv_transport = li_cts_api->get_current_transport_for_obj( iv_object_type             = is_item-obj_type
-                                                                iv_object_name             = is_item-obj_name
-                                                                iv_resolve_task_to_request = abap_false ).
-      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_transport( iv_transport = lv_transport
-                                                                 iv_icon_only = abap_true ) ).
+    TRY.
+        lv_transport = zcl_abapgit_factory=>get_cts_api( )->get_transport_for_object( ls_item ).
 
-    ENDIF.
+        IF lv_transport IS NOT INITIAL.
+          ri_html->add( zcl_abapgit_gui_chunk_lib=>render_transport( iv_transport = lv_transport
+                                                                     iv_icon_only = abap_true ) ).
+        ENDIF.
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
+        " Ignore errors related to object check when trying to get transport
+    ENDTRY.
 
     ri_html->add( '</td>' ).
 
