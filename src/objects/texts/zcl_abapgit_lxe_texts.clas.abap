@@ -5,9 +5,10 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_lxe_texts.
-    ALIASES: ty_languages FOR zif_abapgit_lxe_texts~ty_languages,
-    ty_lxe_i18n FOR zif_abapgit_lxe_texts~ty_lxe_i18n,
-    ty_tlxe_i18n FOR zif_abapgit_lxe_texts~ty_tlxe_i18n.
+    ALIASES:
+        ty_languages FOR zif_abapgit_lxe_texts~ty_languages,
+        ty_lxe_i18n  FOR zif_abapgit_lxe_texts~ty_lxe_i18n,
+        ty_tlxe_i18n FOR zif_abapgit_lxe_texts~ty_tlxe_i18n.
 
     CLASS-METHODS:
       get_lang_iso4
@@ -18,12 +19,14 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
       get_lxe_object_list
         IMPORTING
           iv_obj_name        TYPE sobj_name
+          iv_object_type     TYPE trobjtype
         RETURNING
           VALUE(rt_obj_list) TYPE lxe_tt_colob,
       get_lxe_texts
         IMPORTING
                   iv_original_language TYPE spras
                   iv_obj_name          TYPE sobj_name
+                  iv_object_type       TYPE trobjtype
         RETURNING VALUE(rt_lxe_texts)  TYPE ty_tlxe_i18n,
       deserialize_lxe_texts
         IMPORTING
@@ -33,6 +36,7 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
           VALUE(rt_installed_languages) TYPE ty_languages.
   PROTECTED SECTION.
   PRIVATE SECTION.
+
 ENDCLASS.
 
 
@@ -49,13 +53,14 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
 
   METHOD get_lxe_object_list.
 
+
     DATA lv_object_name TYPE trobj_name.
 
     lv_object_name = iv_obj_name.
     CALL FUNCTION 'LXE_OBJ_EXPAND_TRANSPORT_OBJ'
       EXPORTING
         pgmid    = 'R3TR'
-        object   = 'PROG'
+        object   = iv_object_type
         obj_name = lv_object_name
       TABLES
         ex_colob = rt_obj_list.
@@ -72,7 +77,9 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
       <lv_language>   TYPE langu,
       <lv_lxe_object> TYPE lxe_colob.
 
-    lt_obj_list = get_lxe_object_list( iv_obj_name ).
+    lt_obj_list = get_lxe_object_list(
+                    iv_obj_name    = iv_obj_name
+                    iv_object_type = iv_object_type ).
 
     lt_installed_languages = get_installed_languages( ).
 

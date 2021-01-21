@@ -5,8 +5,9 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       zif_abapgit_object,
       zif_abapgit_lxe_texts.
     ALIASES:
-      mo_files     FOR zif_abapgit_object~mo_files,
-      ty_tlxe_i18n FOR zif_abapgit_lxe_texts~ty_tlxe_i18n.
+      mo_files                     FOR zif_abapgit_object~mo_files,
+      ty_tlxe_i18n                 FOR zif_abapgit_lxe_texts~ty_tlxe_i18n,
+      c_object_type_function_group FOR zif_abapgit_lxe_texts~c_object_type_function_group.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -892,6 +893,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     ENDIF.
 * -->    https://github.com/abapGit/abapGit/issues/2424
     lt_lxe_texts = zcl_abapgit_lxe_texts=>get_lxe_texts(
+                        iv_object_type       = c_object_type_function_group
                         iv_original_language = mv_language
                         iv_obj_name          = ms_item-obj_name ).
 
