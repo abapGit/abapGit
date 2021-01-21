@@ -15,7 +15,7 @@ CLASS zcl_abapgit_language DEFINITION
     CLASS-METHODS set_current_language
       IMPORTING
         !iv_language TYPE langu .
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CLASS-DATA gv_login_language TYPE langu .
