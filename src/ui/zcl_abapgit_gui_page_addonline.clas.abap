@@ -30,7 +30,7 @@ CLASS zcl_abapgit_gui_page_addonline DEFINITION
         display_name       TYPE string VALUE 'display_name',
         folder_logic       TYPE string VALUE 'folder_logic',
         ignore_subpackages TYPE string VALUE 'ignore_subpackages',
-        master_lang_only   TYPE string VALUE 'master_lang_only',
+        main_lang_only     TYPE string VALUE 'main_lang_only',
       END OF c_id.
 
     CONSTANTS:
@@ -133,7 +133,7 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
       iv_label       = 'Ignore Subpackages'
       iv_hint        = 'Synchronize root package only'
     )->checkbox(
-      iv_name        = c_id-master_lang_only
+      iv_name        = c_id-main_lang_only
       iv_label       = 'Serialize Main Language Only'
       iv_hint        = 'Ignore translations, serialize just main language'
     )->command(

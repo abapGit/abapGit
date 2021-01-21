@@ -89,7 +89,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
+CLASS zcl_abapgit_popups IMPLEMENTATION.
 
 
   METHOD add_field.
@@ -833,12 +833,12 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
     <ls_field>-value = cv_include_sub_packages.
 
     APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-    <ls_field>-name = 'MASTER_LANG_ONLY'.
+    <ls_field>-name = 'MAIN_LANG_ONLY'.
     <ls_field>-only_parameter = abap_true.
     <ls_field>-ddic_tabname = 'TVDIR'.
     <ls_field>-ddic_fieldname = 'FLAG'.
     <ls_field>-text = 'Main language only'.
-    <ls_field>-value = cv_serialize_master_lang_only.
+    <ls_field>-value = cv_main_language_only.
 
     popup_get_from_free_selections(
       EXPORTING
@@ -857,8 +857,8 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
           et_object_name_filter = <ls_field>-value_range.
         WHEN 'INCLUDE_SUB_PACKAGES'.
           cv_include_sub_packages = boolc( <ls_field>-value IS NOT INITIAL ).
-        WHEN 'MASTER_LANG_ONLY'.
-          cv_serialize_master_lang_only = boolc( <ls_field>-value IS NOT INITIAL ).
+        WHEN 'MAIN_LANG_ONLY'.
+          cv_main_language_only = boolc( <ls_field>-value IS NOT INITIAL ).
       ENDCASE.
     ENDLOOP.
   ENDMETHOD.

@@ -24,10 +24,10 @@ CLASS zcl_abapgit_gui_page_addofflin DEFINITION
 
     CONSTANTS:
       BEGIN OF c_id,
-        url              TYPE string VALUE 'url',
-        package          TYPE string VALUE 'package',
-        folder_logic     TYPE string VALUE 'folder_logic',
-        master_lang_only TYPE string VALUE 'master_lang_only',
+        url            TYPE string VALUE 'url',
+        package        TYPE string VALUE 'package',
+        folder_logic   TYPE string VALUE 'folder_logic',
+        main_lang_only TYPE string VALUE 'main_lang_only',
       END OF c_id .
 
     CONSTANTS:
@@ -114,7 +114,7 @@ CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
       iv_label       = 'Full'
       iv_value       = zif_abapgit_dot_abapgit=>c_folder_logic-full
     )->checkbox(
-      iv_name        = c_id-master_lang_only
+      iv_name        = c_id-main_lang_only
       iv_label       = 'Serialize Main Language Only'
       iv_hint        = 'Ignore translations, serialize just main language'
     )->command(
