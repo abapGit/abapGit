@@ -123,7 +123,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         !is_item                     TYPE zif_abapgit_definitions=>ty_repo_item
       RETURNING
         VALUE(rv_inactive_html_code) TYPE string .
-    METHODS open_in_master_language
+    METHODS open_in_main_language
       RAISING
         zcx_abapgit_exception .
     METHODS render_order_by
@@ -185,15 +185,15 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         zcx_abapgit_exception .
     METHODS is_repo_lang_logon_lang
       RETURNING
-        VALUE(rv_repo_lang_is_logon_lang) TYPE abap_bool.
+        VALUE(rv_repo_lang_is_logon_lang) TYPE abap_bool .
     METHODS get_abapgit_tcode
       RETURNING
-        VALUE(rv_tcode) TYPE tcode.
+        VALUE(rv_tcode) TYPE tcode .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -628,9 +628,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
         lv_package = mo_repo->get_package( ).
 
-        mv_are_changes_recorded_in_tr = zcl_abapgit_factory=>get_sap_package( lv_package
-          )->are_changes_recorded_in_tr_req( ).
-
       CATCH zcx_abapgit_exception INTO lx_error.
         " Reset 'last shown repo' so next start will go to repo overview
         " and allow troubleshooting of issue
@@ -709,24 +706,24 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD open_in_master_language.
+  METHOD open_in_main_language.
 
     DATA:
-      lv_master_language TYPE spras,
-      lt_spagpa          TYPE STANDARD TABLE OF rfc_spagpa,
-      ls_spagpa          LIKE LINE OF lt_spagpa,
-      ls_item            TYPE zif_abapgit_definitions=>ty_item,
-      lv_subrc           TYPE syst-subrc,
-      lv_save_sy_langu   TYPE sy-langu,
-      lv_tcode           TYPE tcode.
+      lv_main_language TYPE spras,
+      lt_spagpa        TYPE STANDARD TABLE OF rfc_spagpa,
+      ls_spagpa        LIKE LINE OF lt_spagpa,
+      ls_item          TYPE zif_abapgit_definitions=>ty_item,
+      lv_subrc         TYPE syst-subrc,
+      lv_save_sy_langu TYPE sy-langu,
+      lv_tcode         TYPE tcode.
 
     " https://blogs.sap.com/2017/01/13/logon-language-sy-langu-and-rfc/
 
-    lv_master_language = mo_repo->get_dot_abapgit( )->get_master_language( ).
+    lv_main_language = mo_repo->get_dot_abapgit( )->get_master_language( ).
     lv_tcode = get_abapgit_tcode( ).
     ASSERT lv_tcode IS NOT INITIAL.
 
-    IF lv_master_language = sy-langu.
+    IF lv_main_language = sy-langu.
       zcx_abapgit_exception=>raise( |Repo already opened in main language| ).
     ENDIF.
 
@@ -738,7 +735,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
     ENDIF.
 
     lv_save_sy_langu = sy-langu.
-    SET LOCALE LANGUAGE lv_master_language.
+    SET LOCALE LANGUAGE lv_main_language.
 
     ls_spagpa-parid  = zif_abapgit_definitions=>c_spagpa_param_repo_key.
     ls_spagpa-parval = mo_repo->get_key( ).
@@ -773,18 +770,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
   METHOD render_content.
 
-    DATA: lt_repo_items        TYPE zif_abapgit_definitions=>ty_repo_item_tt,
-          lo_browser           TYPE REF TO zcl_abapgit_repo_content_list,
-          lx_error             TYPE REF TO zcx_abapgit_exception,
-          lv_lstate            TYPE char1,
-          lv_rstate            TYPE char1,
-          lv_max               TYPE abap_bool,
-          lv_max_str           TYPE string,
-          lv_add_str           TYPE string,
-          li_log               TYPE REF TO zif_abapgit_log,
-          lv_render_transports TYPE abap_bool,
-          lv_msg               TYPE string,
-          lo_news              TYPE REF TO zcl_abapgit_news.
+    DATA: lt_repo_items TYPE zif_abapgit_definitions=>ty_repo_item_tt,
+          lo_browser    TYPE REF TO zcl_abapgit_repo_content_list,
+          lx_error      TYPE REF TO zcx_abapgit_exception,
+          lv_lstate     TYPE char1,
+          lv_rstate     TYPE char1,
+          lv_max        TYPE abap_bool,
+          lv_max_str    TYPE string,
+          lv_add_str    TYPE string,
+          li_log        TYPE REF TO zif_abapgit_log,
+          lv_msg        TYPE string,
+          lo_news       TYPE REF TO zcl_abapgit_news.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
 
@@ -794,6 +790,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
     TRY.
         " Reinit, for the case of type change
         mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
+
+        mv_are_changes_recorded_in_tr = zcl_abapgit_factory=>get_sap_package( mo_repo->get_package( )
+          )->are_changes_recorded_in_tr_req( ).
 
         lo_news = zcl_abapgit_news=>create( mo_repo ).
 
@@ -805,9 +804,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
           iv_interactive_branch = abap_true ) ).
 
         ri_html->add( zcl_abapgit_gui_chunk_lib=>render_news( io_news = lo_news ) ).
-
-        lv_render_transports = zcl_abapgit_factory=>get_cts_api(
-          )->is_chrec_possible_for_package( mo_repo->get_package( ) ).
 
         CREATE OBJECT lo_browser
           EXPORTING
@@ -868,7 +864,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
               EXIT. " current loop
             ENDIF.
             ri_html->add( render_item( is_item = <ls_item>
-                                       iv_render_transports = lv_render_transports ) ).
+                                       iv_render_transports = mv_are_changes_recorded_in_tr ) ).
           ENDLOOP.
 
           ri_html->add( '</table>' ).
@@ -886,13 +882,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
             lv_max_str = |first { mv_max_lines } objects|.
           ENDIF.
           lv_add_str = |+{ mv_max_setting }|.
-          ri_html->add( |Only { lv_max_str } shown in list. Display {
+          ri_html->add( |Only { lv_max_str } objects shown in list. Display {
             ri_html->a( iv_txt = lv_add_str
                         iv_act = c_actions-display_more )
-            } more. (Set in Advanced > {
-            ri_html->a( iv_txt = 'Settings'
+            } more (change in Settings > {
+            ri_html->a( iv_txt = 'Personal Settings'
                         iv_act = zif_abapgit_definitions=>c_action-go_settings_personal )
-            } )| ).
+            })| ).
           ri_html->add( '</div>' ).
         ENDIF.
 
@@ -1069,27 +1065,26 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
   METHOD render_item_lock_column.
 
     DATA:
-      li_cts_api   TYPE REF TO zif_abapgit_cts_api,
+      ls_item      TYPE zif_abapgit_definitions=>ty_item,
       lv_transport TYPE trkorr.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    li_cts_api = zcl_abapgit_factory=>get_cts_api( ).
-
     ri_html->add( '<td class="icon">' ).
 
-    IF is_item-obj_type IS NOT INITIAL AND is_item-obj_name IS NOT INITIAL AND
-       li_cts_api->is_object_type_lockable( is_item-obj_type ) = abap_true AND
-       li_cts_api->is_object_locked_in_transport( iv_object_type = is_item-obj_type
-                                                  iv_object_name = is_item-obj_name ) = abap_true.
+    ls_item-obj_type = is_item-obj_type.
+    ls_item-obj_name = is_item-obj_name.
 
-      lv_transport = li_cts_api->get_current_transport_for_obj( iv_object_type             = is_item-obj_type
-                                                                iv_object_name             = is_item-obj_name
-                                                                iv_resolve_task_to_request = abap_false ).
-      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_transport( iv_transport = lv_transport
-                                                                 iv_icon_only = abap_true ) ).
+    TRY.
+        lv_transport = zcl_abapgit_factory=>get_cts_api( )->get_transport_for_object( ls_item ).
 
-    ENDIF.
+        IF lv_transport IS NOT INITIAL.
+          ri_html->add( zcl_abapgit_gui_chunk_lib=>render_transport( iv_transport = lv_transport
+                                                                     iv_icon_only = abap_true ) ).
+        ENDIF.
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
+        " Ignore errors related to object check when trying to get transport
+    ENDTRY.
 
     ri_html->add( '</td>' ).
 
@@ -1265,7 +1260,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
         rs_handled-state    = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN zif_abapgit_definitions=>c_action-repo_open_in_master_lang.
-        open_in_master_language( ).
+        open_in_main_language( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-repo_switch_origin_to_pr.

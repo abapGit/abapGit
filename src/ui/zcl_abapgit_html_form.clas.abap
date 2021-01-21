@@ -592,7 +592,6 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
   METHOD render_field_radio.
 
     DATA:
-      lv_value     TYPE string,
       lv_checked   TYPE string,
       lv_opt_id    TYPE string,
       lv_opt_value TYPE string.
@@ -633,8 +632,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       lv_value     TYPE string,
       lv_readonly  TYPE string,
       lv_rows      TYPE i,
-      lv_cell_id   TYPE string,
-      lv_opt_value TYPE string.
+      lv_cell_id   TYPE string.
 
     FIELD-SYMBOLS <ls_subitem> LIKE LINE OF is_field-subitems.
 

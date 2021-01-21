@@ -512,4 +512,13 @@ INTERFACE zif_abapgit_definitions
       skip   TYPE ty_method VALUE '?',
     END OF c_method .
 
+  TYPES:
+    ty_languages TYPE STANDARD TABLE OF sy-langu WITH DEFAULT KEY.
+  TYPES:
+    BEGIN OF ty_i18n_params,
+      main_language         TYPE sy-langu,
+      main_language_only    TYPE abap_bool,
+      translation_languages TYPE ty_languages,
+    END OF ty_i18n_params .
+
 ENDINTERFACE.

@@ -67,8 +67,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
       lt_usobt          TYPE usobt_t,
       lr_appl_head      TYPE REF TO data,
       lr_data_head      TYPE REF TO data,
-      lr_data_usobx     TYPE REF TO data,
-      lr_data_usobt     TYPE REF TO data,
       lr_data_usobx_ext TYPE REF TO data,
       lr_data_usobt_ext TYPE REF TO data,
       lr_err            TYPE REF TO cx_static_check,
@@ -214,23 +212,17 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSH IMPLEMENTATION.
     DATA:
       ls_key            TYPE usobkey,
       lo_su22           TYPE REF TO object,
-      lt_clr_comps      TYPE STANDARD TABLE OF fieldname WITH DEFAULT KEY,
       lt_usobx          TYPE usobx_t,
       lt_usobt          TYPE usobt_t,
       lr_data_head      TYPE REF TO data,
-      lr_data_usobx     TYPE REF TO data,
-      lr_data_usobt     TYPE REF TO data,
       lr_data_usobx_ext TYPE REF TO data,
       lr_data_usobt_ext TYPE REF TO data,
       lr_err            TYPE REF TO cx_static_check,
-      lv_text           TYPE string,
       lx_error          TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <ls_data_head>      TYPE any,
                    <lt_data_usobx_ext> TYPE ANY TABLE,
-                   <lt_data_usobt_ext> TYPE ANY TABLE,
-                   <lt_field>          TYPE any,
-                   <lv_comp>           LIKE LINE OF lt_clr_comps.
+                   <lt_data_usobt_ext> TYPE ANY TABLE.
 
     ls_key = ms_item-obj_name.
 

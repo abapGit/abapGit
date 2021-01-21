@@ -68,4 +68,12 @@ INTERFACE zif_abapgit_ajson_writer
     RAISING
       zcx_abapgit_ajson_error.
 
+  METHODS stringify
+    IMPORTING
+      iv_indent TYPE i DEFAULT 0
+    RETURNING
+      VALUE(rv_json) TYPE string
+    RAISING
+      zcx_abapgit_ajson_error.
+
 ENDINTERFACE.

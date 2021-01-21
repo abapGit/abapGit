@@ -574,8 +574,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     FIELD-SYMBOLS:
       <ls_checksum> LIKE LINE OF lt_checksums,
-      <ls_file_sig> LIKE LINE OF <ls_checksum>-files,
-      <ls_remote>   LIKE LINE OF lt_remote,
       <ls_local>    LIKE LINE OF lt_local.
 
     lt_local  = get_files_local( ).
@@ -597,7 +595,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
                                       is_local_file = <ls_local>-file
                                     CHANGING
                                       cs_checksum = <ls_checksum> ).
-
 
     ENDLOOP.
     set( it_checksums = lt_checksums ).

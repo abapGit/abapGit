@@ -11,7 +11,7 @@ CLASS zcl_abapgit_xml_output DEFINITION
   PRIVATE SECTION.
 
     DATA mi_raw TYPE REF TO if_ixml_element .
-    DATA ms_i18n_params TYPE zif_abapgit_xml_output~ty_i18n_params .
+    DATA ms_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params .
 
     METHODS build_asx_node
       RETURNING
@@ -20,7 +20,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_XML_OUTPUT IMPLEMENTATION.
+CLASS zcl_abapgit_xml_output IMPLEMENTATION.
 
 
   METHOD build_asx_node.
@@ -96,11 +96,11 @@ CLASS ZCL_ABAPGIT_XML_OUTPUT IMPLEMENTATION.
 
   METHOD zif_abapgit_xml_output~i18n_params.
 
-    IF iv_serialize_master_lang_only IS SUPPLIED.
-      ms_i18n_params-serialize_master_lang_only = iv_serialize_master_lang_only.
+    IF is_i18n_params IS SUPPLIED.
+      ms_i18n_params = is_i18n_params.
     ENDIF.
 
-    rs_params = ms_i18n_params.
+    rs_i18n_params = ms_i18n_params.
 
   ENDMETHOD.
 

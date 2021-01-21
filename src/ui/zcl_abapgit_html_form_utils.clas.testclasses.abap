@@ -29,8 +29,7 @@ CLASS ltcl_popups_mock DEFINITION FINAL FOR TESTING
       BEGIN OF ms_called,
         popup_to_confirm TYPE abap_bool,
       END OF ms_called,
-      mv_user_decision TYPE ty_user_decision,
-      mv_package       TYPE devclass.
+      mv_user_decision TYPE ty_user_decision.
 
 ENDCLASS.
 
