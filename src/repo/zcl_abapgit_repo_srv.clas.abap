@@ -554,7 +554,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'not possible to use $TMP, create new (local) package' ).
     ENDIF.
 
-    " Check if package owned by SAP are allowed (new packages are ok, since they are created automatically)
+    " Check if package owned by SAP is allowed (new packages are ok, since they are created automatically)
     SELECT SINGLE as4user FROM tdevc
       INTO lv_as4user
       WHERE devclass = iv_package.                      "#EC CI_GENBUFF
