@@ -19,7 +19,7 @@ CLASS zcl_abapgit_performance_test DEFINITION
     METHODS:
       constructor IMPORTING iv_package                    TYPE devclass
                             iv_include_sub_packages       TYPE abap_bool DEFAULT abap_true
-                            iv_serialize_master_lang_only TYPE abap_bool DEFAULT abap_true,
+                            iv_main_language_only TYPE abap_bool DEFAULT abap_true,
       set_object_type_filter IMPORTING it_object_type_range TYPE zif_abapgit_definitions=>ty_object_type_range,
       set_object_name_filter IMPORTING it_object_name_range TYPE zif_abapgit_definitions=>ty_object_name_range,
       get_object_type_filter RETURNING VALUE(rt_object_type_range) TYPE zif_abapgit_definitions=>ty_object_type_range,
@@ -34,7 +34,7 @@ CLASS zcl_abapgit_performance_test DEFINITION
     DATA:
       mv_package                    TYPE devclass,
       mv_include_sub_packages       TYPE abap_bool,
-      mv_serialize_master_lang_only TYPE abap_bool,
+      mv_main_language_only TYPE abap_bool,
       BEGIN OF ms_filter_parameters,
         object_type_range TYPE zif_abapgit_definitions=>ty_object_type_range,
         object_name_range TYPE zif_abapgit_definitions=>ty_object_name_range,
@@ -44,13 +44,13 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PERFORMANCE_TEST IMPLEMENTATION.
+CLASS zcl_abapgit_performance_test IMPLEMENTATION.
 
 
   METHOD constructor.
     mv_package = iv_package.
     mv_include_sub_packages = iv_include_sub_packages.
-    mv_serialize_master_lang_only = iv_serialize_master_lang_only.
+    mv_main_language_only = iv_main_language_only.
   ENDMETHOD.
 
 
@@ -92,7 +92,7 @@ CLASS ZCL_ABAPGIT_PERFORMANCE_TEST IMPLEMENTATION.
 
         CREATE OBJECT lo_serializer
           EXPORTING
-            iv_serialize_master_lang_only = mv_serialize_master_lang_only.
+            iv_serialize_master_lang_only = mv_main_language_only.
 
         LOOP AT lt_tadir ASSIGNING <ls_tadir>.
           INSERT <ls_tadir> INTO TABLE lt_tadir_single.

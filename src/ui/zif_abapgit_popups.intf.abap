@@ -1,9 +1,9 @@
 INTERFACE zif_abapgit_popups
   PUBLIC .
 
-  TYPES:
-    ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY.
 
+  TYPES:
+    ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY .
   TYPES:
     BEGIN OF ty_popup, " TODO remove, use zif_abapgit_services_repo=>ty_repo_params instead
       url              TYPE string,
@@ -73,7 +73,7 @@ INTERFACE zif_abapgit_popups
     RETURNING
       VALUE(rs_popup)    TYPE ty_popup
     RAISING
-      zcx_abapgit_exception ##NO_TEXT.
+      zcx_abapgit_exception  ##NO_TEXT.
   METHODS popup_to_confirm
     IMPORTING
       !iv_titlebar              TYPE clike
@@ -160,12 +160,12 @@ INTERFACE zif_abapgit_popups
       zcx_abapgit_exception .
   METHODS popup_perf_test_parameters
     EXPORTING
-      !et_object_type_filter         TYPE zif_abapgit_definitions=>ty_object_type_range
-      !et_object_name_filter         TYPE zif_abapgit_definitions=>ty_object_name_range
+      !et_object_type_filter   TYPE zif_abapgit_definitions=>ty_object_type_range
+      !et_object_name_filter   TYPE zif_abapgit_definitions=>ty_object_name_range
     CHANGING
-      !cv_package                    TYPE devclass
-      !cv_include_sub_packages       TYPE abap_bool
-      !cv_serialize_master_lang_only TYPE abap_bool
+      !cv_package              TYPE devclass
+      !cv_include_sub_packages TYPE abap_bool
+      !cv_main_language_only   TYPE abap_bool
     RAISING
       zcx_abapgit_exception .
 ENDINTERFACE.
