@@ -1,27 +1,24 @@
 CLASS zcl_abapgit_object_prog DEFINITION PUBLIC INHERITING FROM zcl_abapgit_objects_program FINAL.
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
+    INTERFACES:
+      zif_abapgit_object,
+      zif_abapgit_lxe_texts.
+    ALIASES:
+      mo_files     FOR zif_abapgit_object~mo_files,
+      ty_tlxe_i18n FOR zif_abapgit_lxe_texts~ty_tlxe_i18n.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-    TYPES: BEGIN OF ty_tpool_i18n,
-             language TYPE langu,
-             textpool TYPE zif_abapgit_definitions=>ty_tpool_tt,
-           END OF ty_tpool_i18n,
-           ty_tpools_i18n TYPE STANDARD TABLE OF ty_tpool_i18n,
-           BEGIN OF ty_lxe_i18n,
-             source_lang TYPE lxeisolang,
-             target_lang TYPE lxeisolang,
-             custmnr     TYPE lxecustmnr,
-             objtype     TYPE trobjtype,
-             objname     TYPE lxeobjname,
-             text_pairs  TYPE lxe_tt_pcx_s1,
-           END OF ty_lxe_i18n,
-           ty_tlxe_i18n TYPE STANDARD TABLE OF ty_lxe_i18n WITH DEFAULT KEY.
+    TYPES:
+      BEGIN OF ty_tpool_i18n,
+        language TYPE langu,
+        textpool TYPE zif_abapgit_definitions=>ty_tpool_tt,
+      END OF ty_tpool_i18n,
+      ty_tpools_i18n TYPE STANDARD TABLE OF ty_tpool_i18n.
 
-    CONSTANTS: c_longtext_id_prog TYPE dokil-id VALUE 'RE'.
+    CONSTANTS:
+      c_longtext_id_prog TYPE dokil-id VALUE 'RE'.
 
     METHODS:
       serialize_texts
@@ -34,25 +31,8 @@ CLASS zcl_abapgit_object_prog DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RETURNING
           VALUE(rv_is_program_locked) TYPE abap_bool
         RAISING
-          zcx_abapgit_exception,
-      get_lang_iso4
-        IMPORTING
-          iv_src         TYPE spras
-        RETURNING
-          VALUE(rv_iso4) TYPE lxeisolang ,
-      get_lxe_object_list
-        RETURNING
-          VALUE(rt_obj_list) TYPE lxe_tt_colob,
-      get_lxe_texts
-        RETURNING VALUE(rt_lxe_texts) TYPE ty_tlxe_i18n,
-      deserialize_lxe_texts
-        IMPORTING
-          it_lxe_texts TYPE ty_tlxe_i18n.
-    TYPES:
-      ty_languages TYPE STANDARD TABLE OF langu WITH DEFAULT KEY.
-    METHODS get_installed_languages
-      RETURNING
-        VALUE(rt_installed_languages) TYPE ty_languages.
+          zcx_abapgit_exception.
+
 
 ENDCLASS.
 
@@ -83,7 +63,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 * -->    https://github.com/abapGit/abapGit/issues/2424
     ii_xml->read( EXPORTING iv_name = 'LXE_TEXTS'
                   CHANGING  cg_data = lt_lxe_texts ).
-    deserialize_lxe_texts( lt_lxe_texts ).
+    zcl_abapgit_lxe_texts=>deserialize_lxe_texts( lt_lxe_texts ).
 * <--    https://github.com/abapGit/abapGit/issues/2424
   ENDMETHOD.
 
@@ -100,7 +80,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
     DATA: lt_tpool_i18n TYPE ty_tpools_i18n,
           lt_tpool      TYPE textpool_table,
-          lt_lxe_texts  TYPE STANDARD TABLE OF ty_lxe_i18n.
+          lt_lxe_texts  TYPE zcl_abapgit_lxe_texts=>ty_tlxe_i18n.
 
     FIELD-SYMBOLS:
       <ls_tpool>         LIKE LINE OF lt_tpool_i18n.
@@ -133,7 +113,9 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
     ENDIF.
 
 * -->    https://github.com/abapGit/abapGit/issues/2424
-    lt_lxe_texts = get_lxe_texts(  ).
+    lt_lxe_texts = zcl_abapgit_lxe_texts=>get_lxe_texts(
+                        iv_original_language = mv_language
+                        iv_obj_name          = ms_item-obj_name ).
 
     IF lines( lt_lxe_texts ) > 0.
       ii_xml->add( iv_name = 'LXE_TEXTS'
@@ -328,129 +310,5 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
                          iv_longtext_id = c_longtext_id_prog ).
 
   ENDMETHOD.
-  METHOD get_lang_iso4.
-    CALL FUNCTION 'LXE_T002_CONVERT_2_TO_4'
-      EXPORTING
-        old_r3_lang = iv_src
-      IMPORTING
-        new_lang    = rv_iso4.
-  ENDMETHOD.
 
-
-  METHOD get_lxe_object_list.
-
-    DATA lv_object_name TYPE trobj_name.
-
-    lv_object_name = ms_item-obj_name.
-    CALL FUNCTION 'LXE_OBJ_EXPAND_TRANSPORT_OBJ'
-      EXPORTING
-        pgmid    = 'R3TR'
-        object   = 'PROG'
-        obj_name = lv_object_name
-      TABLES
-        ex_colob = rt_obj_list.
-
-  ENDMETHOD.
-  METHOD get_lxe_texts.
-    DATA:
-      lt_obj_list            TYPE lxe_tt_colob,
-      lt_installed_languages TYPE TABLE OF langu,
-
-      ls_lxe_text_item       TYPE ty_lxe_i18n.
-
-    FIELD-SYMBOLS:
-      <lv_language>      TYPE langu,
-      <lv_lxe_object>       TYPE lxe_colob.
-
-    lt_obj_list = get_lxe_object_list( ).
-
-    lt_installed_languages = get_installed_languages( ).
-
-    LOOP AT lt_obj_list ASSIGNING <lv_lxe_object>.
-      CLEAR ls_lxe_text_item.
-      ls_lxe_text_item-custmnr = <lv_lxe_object>-custmnr.
-      ls_lxe_text_item-objtype = <lv_lxe_object>-objtype.
-      ls_lxe_text_item-objname = <lv_lxe_object>-objname.
-
-      LOOP AT lt_installed_languages ASSIGNING <lv_language>.
-        ls_lxe_text_item-source_lang = get_lang_iso4( mv_language ).
-        ls_lxe_text_item-target_lang = get_lang_iso4( <lv_language> ).
-        IF ls_lxe_text_item-source_lang = ls_lxe_text_item-target_lang.
-          CONTINUE. " if source = target -> skip
-        ENDIF.
-
-        CLEAR ls_lxe_text_item-text_pairs.
-        CALL FUNCTION 'LXE_OBJ_TEXT_PAIR_READ'
-          EXPORTING
-            s_lang    = ls_lxe_text_item-source_lang
-            t_lang    = ls_lxe_text_item-target_lang
-            custmnr   = ls_lxe_text_item-custmnr
-            objtype   = ls_lxe_text_item-objtype
-            objname   = ls_lxe_text_item-objname
-          TABLES
-            lt_pcx_s1 = ls_lxe_text_item-text_pairs.
-
-        DELETE ls_lxe_text_item-text_pairs WHERE t_text IS INITIAL. " No Target Text, no translation to be transported
-        IF ls_lxe_text_item-text_pairs IS NOT INITIAL.
-          APPEND ls_lxe_text_item TO rt_lxe_texts.
-        ENDIF.
-      ENDLOOP.
-    ENDLOOP.
-  ENDMETHOD.
-
-  METHOD deserialize_lxe_texts.
-    DATA: ls_lxe_item       TYPE ty_lxe_i18n,
-          lt_text_pairs_tmp LIKE ls_lxe_item-text_pairs.
-
-    LOOP AT it_lxe_texts INTO ls_lxe_item.
-      " Call Read first for buffer prefill
-      CLEAR: lt_text_pairs_tmp.
-      CALL FUNCTION 'LXE_OBJ_TEXT_PAIR_READ'
-        EXPORTING
-          s_lang    = ls_lxe_item-source_lang
-          t_lang    = ls_lxe_item-target_lang
-          custmnr   = ls_lxe_item-custmnr
-          objtype   = ls_lxe_item-objtype
-          objname   = ls_lxe_item-objname
-          read_only = abap_false
-        TABLES
-          lt_pcx_s1 = lt_text_pairs_tmp.
-
-      "Call actual Write FM
-      CALL FUNCTION 'LXE_OBJ_TEXT_PAIR_WRITE'
-        EXPORTING
-          s_lang    = ls_lxe_item-source_lang
-          t_lang    = ls_lxe_item-target_lang
-          custmnr   = ls_lxe_item-custmnr
-          objtype   = ls_lxe_item-objtype
-          objname   = ls_lxe_item-objname
-        TABLES
-          lt_pcx_s1 = ls_lxe_item-text_pairs.
-    ENDLOOP.
-  ENDMETHOD.
-  METHOD get_installed_languages.
-
-    DATA lv_index TYPE i.
-    DATA lv_length TYPE i.
-    DATA lv_char TYPE c.
-    DATA lv_installed_languages TYPE string.
-
-    CALL FUNCTION 'SYSTEM_INSTALLED_LANGUAGES'
-      IMPORTING
-        languages       = lv_installed_languages
-      EXCEPTIONS
-        sapgparam_error = 1                " Error requesting profile parameter
-        OTHERS          = 2.
-    IF sy-subrc <> 0.
-    ENDIF.
-
-    lv_length = strlen( lv_installed_languages ).
-    lv_index = 0.
-    WHILE lv_index < lv_length.
-      lv_char = lv_installed_languages+lv_index(1).
-      APPEND lv_char TO rt_installed_languages.
-      lv_index = lv_index + 1.
-    ENDWHILE.
-
-  ENDMETHOD.
 ENDCLASS.
