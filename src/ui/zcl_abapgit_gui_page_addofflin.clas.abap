@@ -24,9 +24,9 @@ CLASS zcl_abapgit_gui_page_addofflin DEFINITION
 
     CONSTANTS:
       BEGIN OF c_id,
-        url              TYPE string VALUE 'url',
-        package          TYPE string VALUE 'package',
-        folder_logic     TYPE string VALUE 'folder_logic',
+        url            TYPE string VALUE 'url',
+        package        TYPE string VALUE 'package',
+        folder_logic   TYPE string VALUE 'folder_logic',
         master_lang_only TYPE string VALUE 'master_lang_only',
       END OF c_id .
 
@@ -58,7 +58,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_ADDOFFLIN IMPLEMENTATION.
 
 
   METHOD constructor.
