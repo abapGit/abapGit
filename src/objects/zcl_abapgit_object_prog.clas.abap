@@ -61,11 +61,9 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
                             iv_language = <ls_tpool>-language
                             it_tpool    = lt_tpool ).
     ENDLOOP.
-* -->    https://github.com/abapGit/abapGit/issues/2424
     ii_xml->read( EXPORTING iv_name = 'LXE_TEXTS'
                   CHANGING  cg_data = lt_lxe_texts ).
     zcl_abapgit_lxe_texts=>deserialize_lxe_texts( lt_lxe_texts ).
-* <--    https://github.com/abapGit/abapGit/issues/2424
   ENDMETHOD.
 
 
@@ -113,8 +111,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
                    ig_data = lt_tpool_i18n ).
     ENDIF.
 
-* -->    https://github.com/abapGit/abapGit/issues/2424
-    lt_lxe_texts = zcl_abapgit_lxe_texts=>get_lxe_texts(
+lt_lxe_texts = zcl_abapgit_lxe_texts=>get_lxe_texts(
                         iv_object_type       = c_object_type_program
                         iv_original_language = mv_language
                         iv_obj_name          = ms_item-obj_name ).
@@ -123,7 +120,6 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
       ii_xml->add( iv_name = 'LXE_TEXTS'
                    ig_data = lt_lxe_texts ).
     ENDIF.
-* <--    https://github.com/abapGit/abapGit/issues/2424
   ENDMETHOD.
 
 
