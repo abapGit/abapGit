@@ -62,7 +62,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
 
 
   METHOD constructor.
