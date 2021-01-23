@@ -32,7 +32,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERVICES_BASIS IMPLEMENTATION.
+CLASS zcl_abapgit_services_basis IMPLEMENTATION.
 
 
   METHOD create_package.
@@ -122,19 +122,19 @@ CLASS ZCL_ABAPGIT_SERVICES_BASIS IMPLEMENTATION.
 
 
   METHOD run_performance_test.
-    DATA: lo_performance                TYPE REF TO zcl_abapgit_performance_test,
-          lv_package                    TYPE devclass,
-          lv_include_sub_packages       TYPE abap_bool VALUE abap_true,
-          lv_serialize_master_lang_only TYPE abap_bool VALUE abap_true,
-          lt_object_type_filter         TYPE zif_abapgit_definitions=>ty_object_type_range,
-          lt_object_name_filter         TYPE zif_abapgit_definitions=>ty_object_name_range,
-          lt_result                     TYPE zcl_abapgit_performance_test=>ty_results,
-          lo_alv                        TYPE REF TO cl_salv_table,
-          lx_salv_error                 TYPE REF TO cx_salv_error,
-          lv_current_repo               TYPE zif_abapgit_persistence=>ty_value,
-          lo_runtime_column             TYPE REF TO cl_salv_column,
-          lo_seconds_column             TYPE REF TO cl_salv_column,
-          li_popups                     TYPE REF TO zif_abapgit_popups.
+    DATA: lo_performance          TYPE REF TO zcl_abapgit_performance_test,
+          lv_package              TYPE devclass,
+          lv_include_sub_packages TYPE abap_bool VALUE abap_true,
+          lv_main_language_only   TYPE abap_bool VALUE abap_true,
+          lt_object_type_filter   TYPE zif_abapgit_definitions=>ty_object_type_range,
+          lt_object_name_filter   TYPE zif_abapgit_definitions=>ty_object_name_range,
+          lt_result               TYPE zcl_abapgit_performance_test=>ty_results,
+          lo_alv                  TYPE REF TO cl_salv_table,
+          lx_salv_error           TYPE REF TO cx_salv_error,
+          lv_current_repo         TYPE zif_abapgit_persistence=>ty_value,
+          lo_runtime_column       TYPE REF TO cl_salv_column,
+          lo_seconds_column       TYPE REF TO cl_salv_column,
+          li_popups               TYPE REF TO zif_abapgit_popups.
 
     TRY.
         lv_current_repo = zcl_abapgit_persistence_user=>get_instance( )->get_repo_show( ).
@@ -147,18 +147,18 @@ CLASS ZCL_ABAPGIT_SERVICES_BASIS IMPLEMENTATION.
     li_popups = zcl_abapgit_ui_factory=>get_popups( ).
     li_popups->popup_perf_test_parameters(
       IMPORTING
-        et_object_type_filter         = lt_object_type_filter
-        et_object_name_filter         = lt_object_name_filter
+        et_object_type_filter   = lt_object_type_filter
+        et_object_name_filter   = lt_object_name_filter
       CHANGING
-        cv_package                    = lv_package
-        cv_include_sub_packages       = lv_include_sub_packages
-        cv_serialize_master_lang_only = lv_serialize_master_lang_only ).
+        cv_package              = lv_package
+        cv_include_sub_packages = lv_include_sub_packages
+        cv_main_language_only   = lv_main_language_only ).
 
     CREATE OBJECT lo_performance
       EXPORTING
-        iv_package                    = lv_package
-        iv_include_sub_packages       = lv_include_sub_packages
-        iv_serialize_master_lang_only = lv_serialize_master_lang_only.
+        iv_package              = lv_package
+        iv_include_sub_packages = lv_include_sub_packages
+        iv_main_language_only   = lv_main_language_only.
 
 
     lo_performance->set_object_type_filter( lt_object_type_filter ).
