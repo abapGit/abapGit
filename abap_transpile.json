@@ -57,6 +57,7 @@
     "zif_abapgit_tag_popups",
     "zif_abapgit_tadir",
     "zcl_abapgit_git_tag",
+    "zcl_abapgit_zlib",
     "zif_abapgit_sap_package"
   ],
   "output_folder": "output",
@@ -86,6 +87,8 @@
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "malformatted"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "dont_ignore_error"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "unpretty"},
+      {"object": "ZCL_ABAPGIT_ZLIB", "class": "ltcl_zlib", "method": "fixed"},
+      {"object": "ZCL_ABAPGIT_ZLIB", "class": "ltcl_zlib", "method": "dynamic"},
       {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_utils_test", "method": "extract_author_data"}
     ]
   }
