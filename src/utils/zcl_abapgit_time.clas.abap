@@ -29,7 +29,7 @@ CLASS ZCL_ABAPGIT_TIME IMPLEMENTATION.
 
 
   METHOD get_unix.
-* returns seconds since unix epoch
+* returns seconds since unix epoch, including timezone indicator
 
     CONSTANTS lc_epoch TYPE timestamp VALUE '19700101000000'.
     DATA lv_time TYPE timestamp.
@@ -41,7 +41,8 @@ CLASS ZCL_ABAPGIT_TIME IMPLEMENTATION.
       tstmp1 = lv_time
       tstmp2 = lc_epoch ).
 
-    rv_time = round( val = lv_seconds dec = 0 ).
+    rv_time = round( val = lv_seconds
+                     dec = 0 ).
     CONDENSE rv_time.
     rv_time+11 = '+000000'.
 
