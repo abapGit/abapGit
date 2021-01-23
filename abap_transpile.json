@@ -44,6 +44,7 @@
     "zif_abapgit_html",
     "zif_abapgit_http_agent",
     "zif_abapgit_http_response",
+    "zcl_abapgit_xml_pretty",
     "zif_abapgit_log",
     "zif_abapgit_merge",
     "zif_abapgit_persistence",
@@ -71,7 +72,13 @@
       {"object": "ZCL_ABAPGIT_HASH",      "class": "ltcl_test", "method": "sha1_raw_invalid"},
       {"object": "ZCL_ABAPGIT_URL",       "class": "ltcl_test", "method": "repo_error"},
       {"object": "ZCL_ABAPGIT_URL",       "class": "ltcl_test", "method": "url_validate3"},
-      {"object": "ZCL_ABAPGIT_HTML",      "class": "ltcl_html", "method": "style1"}
+      {"object": "ZCL_ABAPGIT_HTML",      "class": "ltcl_html", "method": "style1"},
+      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty1"},
+      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty2"},
+      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty3"},
+      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "malformatted"},
+      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "dont_ignore_error"},
+      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "unpretty"}
     ]
   }
 }
