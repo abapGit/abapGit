@@ -56,6 +56,7 @@
     "zif_abapgit_stage_logic",
     "zif_abapgit_tag_popups",
     "zif_abapgit_tadir",
+    "zcl_abapgit_git_tag",
     "zif_abapgit_sap_package"
   ],
   "output_folder": "output",
