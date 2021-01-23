@@ -5,10 +5,6 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_lxe_texts.
-    ALIASES:
-        ty_languages FOR zif_abapgit_lxe_texts~ty_languages,
-        ty_lxe_i18n  FOR zif_abapgit_lxe_texts~ty_lxe_i18n,
-        ty_tlxe_i18n FOR zif_abapgit_lxe_texts~ty_tlxe_i18n.
 
     CLASS-METHODS:
       get_lang_iso4
@@ -27,13 +23,13 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
                   iv_original_language TYPE spras
                   iv_obj_name          TYPE sobj_name
                   iv_object_type       TYPE trobjtype
-        RETURNING VALUE(rt_lxe_texts)  TYPE ty_tlxe_i18n,
+        RETURNING VALUE(rt_lxe_texts)  TYPE zif_abapgit_lxe_texts~ty_tlxe_i18n,
       deserialize_lxe_texts
         IMPORTING
-          it_lxe_texts TYPE ty_tlxe_i18n,
+          it_lxe_texts TYPE zif_abapgit_lxe_texts~ty_tlxe_i18n,
       get_installed_languages
         RETURNING
-          VALUE(rt_installed_languages) TYPE ty_languages.
+          VALUE(rt_installed_languages) TYPE zif_abapgit_lxe_texts~ty_languages.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -71,7 +67,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
       lt_obj_list            TYPE lxe_tt_colob,
       lt_installed_languages TYPE TABLE OF langu,
 
-      ls_lxe_text_item       TYPE ty_lxe_i18n.
+      ls_lxe_text_item       TYPE zif_abapgit_lxe_texts~ty_lxe_i18n.
 
     FIELD-SYMBOLS:
       <lv_language>   TYPE langu,
@@ -116,7 +112,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD deserialize_lxe_texts.
-    DATA: ls_lxe_item       TYPE ty_lxe_i18n,
+    DATA: ls_lxe_item       TYPE zif_abapgit_lxe_texts~ty_lxe_i18n,
           lt_text_pairs_tmp LIKE ls_lxe_item-text_pairs.
 
     LOOP AT it_lxe_texts INTO ls_lxe_item.

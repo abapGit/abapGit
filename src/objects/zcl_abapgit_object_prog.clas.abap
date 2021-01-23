@@ -5,9 +5,7 @@ CLASS zcl_abapgit_object_prog DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       zif_abapgit_object,
       zif_abapgit_lxe_texts.
     ALIASES:
-      mo_files              FOR zif_abapgit_object~mo_files,
-      ty_tlxe_i18n          FOR zif_abapgit_lxe_texts~ty_tlxe_i18n,
-      c_object_type_program FOR zif_abapgit_lxe_texts~c_object_type_program.
+      mo_files              FOR zif_abapgit_object~mo_files.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -47,7 +45,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
     DATA:
       lt_tpool_i18n TYPE ty_tpools_i18n,
       lt_tpool      TYPE textpool_table,
-      lt_lxe_texts  TYPE ty_tlxe_i18n.
+      lt_lxe_texts  TYPE zif_abapgit_lxe_texts~ty_tlxe_i18n.
 
     FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
 
@@ -79,7 +77,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
     DATA: lt_tpool_i18n TYPE ty_tpools_i18n,
           lt_tpool      TYPE textpool_table,
-          lt_lxe_texts  TYPE zcl_abapgit_lxe_texts=>ty_tlxe_i18n.
+          lt_lxe_texts  TYPE zif_abapgit_lxe_texts~ty_tlxe_i18n.
 
     FIELD-SYMBOLS:
       <ls_tpool>         LIKE LINE OF lt_tpool_i18n.
@@ -111,10 +109,10 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
                    ig_data = lt_tpool_i18n ).
     ENDIF.
 
-lt_lxe_texts = zcl_abapgit_lxe_texts=>get_lxe_texts(
-                        iv_object_type       = c_object_type_program
-                        iv_original_language = mv_language
-                        iv_obj_name          = ms_item-obj_name ).
+    lt_lxe_texts = zcl_abapgit_lxe_texts=>get_lxe_texts(
+                            iv_object_type       = zif_abapgit_lxe_texts~c_object_type_program
+                            iv_original_language = mv_language
+                            iv_obj_name          = ms_item-obj_name ).
 
     IF lines( lt_lxe_texts ) > 0.
       ii_xml->add( iv_name = 'LXE_TEXTS'
