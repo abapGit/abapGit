@@ -49,6 +49,8 @@
     "zif_abapgit_merge",
     "zif_abapgit_persistence",
     "zif_abapgit_progress",
+    "zif_abapgit_version",
+    "zif_abapgit_xml",
     "zif_abapgit_stage_logic",
     "zif_abapgit_tag_popups"
   ],
