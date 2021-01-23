@@ -54,7 +54,9 @@
     "zcl_abapgit_utils",
     "zif_abapgit_xml",
     "zif_abapgit_stage_logic",
-    "zif_abapgit_tag_popups"
+    "zif_abapgit_tag_popups",
+    "zif_abapgit_tadir",
+    "zif_abapgit_sap_package"
   ],
   "output_folder": "output",
   "lib": "https://github.com/open-abap/open-abap",
