@@ -51,6 +51,7 @@
     "zif_abapgit_progress",
     "zif_abapgit_version",
     "zif_abapgit_branch_overview",
+    "zcl_abapgit_utils",
     "zif_abapgit_xml",
     "zif_abapgit_stage_logic",
     "zif_abapgit_tag_popups"
@@ -81,7 +82,8 @@
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty3"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "malformatted"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "dont_ignore_error"},
-      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "unpretty"}
+      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "unpretty"},
+      {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_utils_test", "method": "extract_author_data"}
     ]
   }
 }
