@@ -554,25 +554,24 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'not possible to use $TMP, create new (local) package' ).
     ENDIF.
 
+    " Check if package owned by SAP is allowed (new packages are ok, since they are created automatically)
     SELECT SINGLE as4user FROM tdevc
       INTO lv_as4user
       WHERE devclass = iv_package.                      "#EC CI_GENBUFF
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Package { iv_package } not found| ).
-    ENDIF.
-
-    IF zcl_abapgit_factory=>get_environment( )->is_sap_object_allowed( ) = abap_false AND lv_as4user = 'SAP'.
+    IF sy-subrc = 0 AND lv_as4user = 'SAP' AND
+      zcl_abapgit_factory=>get_environment( )->is_sap_object_allowed( ) = abap_false.
       zcx_abapgit_exception=>raise( |Package { iv_package } not allowed, responsible user = 'SAP'| ).
     ENDIF.
 
+    " Check if package is already used in another repo
     IF iv_chk_exists = abap_true.
       get_repo_from_package(
         EXPORTING
-          iv_package = iv_package
+          iv_package    = iv_package
           iv_ign_subpkg = iv_ign_subpkg
         IMPORTING
-          eo_repo    = lo_repo
-          ev_reason  = lv_reason ).
+          eo_repo       = lo_repo
+          ev_reason     = lv_reason ).
 
       IF lo_repo IS BOUND.
         zcx_abapgit_exception=>raise( lv_reason ).

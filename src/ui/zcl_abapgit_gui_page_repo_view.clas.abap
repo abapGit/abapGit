@@ -605,8 +605,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
   METHOD constructor.
 
     DATA: lo_settings TYPE REF TO zcl_abapgit_settings,
-          lx_error    TYPE REF TO zcx_abapgit_exception,
-          lv_package  TYPE devclass.
+          lx_error    TYPE REF TO zcx_abapgit_exception.
 
     super->constructor( ).
 
@@ -625,8 +624,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         lo_settings     = zcl_abapgit_persist_settings=>get_instance( )->read( ).
         mv_max_lines    = lo_settings->get_max_lines( ).
         mv_max_setting  = mv_max_lines.
-
-        lv_package = mo_repo->get_package( ).
 
       CATCH zcx_abapgit_exception INTO lx_error.
         " Reset 'last shown repo' so next start will go to repo overview
