@@ -6,7 +6,11 @@
     "merge.ci": "cp zabapgit.abap ci/zabapgit_standalone.prog.abap && cd ci && abaplint && cd ..",
     "unit": "rm -rf output && abap_transpile && echo RUNNING && node output/index.js",
     "abaplint": "abaplint",
-    "eslint": "eslint src"
+    "eslint": "eslint src",
+    "docker-build": "docker-compose build",
+    "docker-up": "docker-compose up",
+    "docker-unit": "docker-compose run --workdir=\"/home/node/abapGit\" abapgit npm run-script unit",
+    "docker-down": "docker-compose down"
   },
   "repository": {
     "type": "git",
