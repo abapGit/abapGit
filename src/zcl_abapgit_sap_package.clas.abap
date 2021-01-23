@@ -17,7 +17,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
+CLASS zcl_abapgit_sap_package IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -42,11 +42,15 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
         object_locked_and_modified = 5
         OTHERS                     = 6 ).
 
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
-
-    rv_are_changes_rec_in_tr_req = li_package->wbo_korr_flag.
+    CASE sy-subrc.
+      WHEN 0.
+        rv_are_changes_rec_in_tr_req = li_package->wbo_korr_flag.
+      WHEN 1.
+        " For new packages, derive from package name
+        rv_are_changes_rec_in_tr_req = boolc( mv_package(1) <> '$' ).
+      WHEN OTHERS.
+        zcx_abapgit_exception=>raise_t100( ).
+    ENDCASE.
 
   ENDMETHOD.
 
@@ -81,6 +85,11 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
     " Otherwise SOFTWARE_COMPONENT_INVALID will be raised.
     IF ls_package-dlvunit IS INITIAL.
       ls_package-dlvunit = 'HOME'.
+    ENDIF.
+
+    " For transportable packages, get default transport and layer
+    IF ls_package-devclass(1) <> '$' AND ls_package-pdevclass IS INITIAL.
+      ls_package-pdevclass = zif_abapgit_sap_package~get_transport_layer( ).
     ENDIF.
 
     cl_package_factory=>create_new_package(
@@ -220,27 +229,80 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_sap_package~get_transport_layer.
+
+    " Get default transport layer
+    CALL FUNCTION 'TR_GET_TRANSPORT_TARGET'
+      EXPORTING
+        iv_use_default             = abap_true
+        iv_get_layer_only          = abap_true
+      IMPORTING
+        ev_layer                   = rv_transport_layer
+      EXCEPTIONS
+        wrong_call                 = 1
+        invalid_input              = 2
+        cts_initialization_failure = 3
+        OTHERS                     = 4.
+    IF sy-subrc <> 0.
+      " Return empty layer (i.e. "local workbench request" for the package)
+      CLEAR rv_transport_layer.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_sap_package~get_transport_type.
 
-    DATA lv_pkg_name TYPE e071-obj_name.
+    DATA:
+      lv_pkg_name TYPE e071-obj_name,
+      lv_obj_name TYPE tadir-obj_name,
+      lv_role     TYPE trnrole.
 
-    lv_pkg_name = mv_package.
+    lv_pkg_name = lv_obj_name = mv_package.
 
-    CALL FUNCTION 'TRINT_GET_REQUEST_TYPE'
+    CALL FUNCTION 'TR_GET_REQUEST_TYPE'
       EXPORTING
-        iv_pgmid                   = 'R3TR'
-        iv_object                  = 'DEVC'
-        iv_obj_name                = lv_pkg_name
+        iv_pgmid          = 'R3TR'
+        iv_object         = 'DEVC'
+        iv_obj_name       = lv_pkg_name
       IMPORTING
-        ev_request_type            = rs_transport_type-request
-        ev_task_type               = rs_transport_type-task
+        ev_request_type   = rs_transport_type-request
+        ev_task_type      = rs_transport_type-task
       EXCEPTIONS
-        no_request_needed          = 1
-        internal_error             = 2
-        cts_initialization_failure = 3.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
+        no_request_needed = 1
+        invalid_object    = 2
+        system_error      = 3
+        OTHERS            = 4.
+
+    CASE sy-subrc.
+      WHEN 0 OR 1.
+        RETURN.
+      WHEN 2.
+        " For new packages, set to workbench request
+        rs_transport_type-request = 'K'.
+
+        CALL FUNCTION 'TR_GET_NAMESPACE_AND_ROLE'
+          EXPORTING
+            iv_pgmid                   = 'R3TR'
+            iv_object                  = 'DEVC'
+            iv_objname                 = lv_obj_name
+          IMPORTING
+            ev_role                    = lv_role
+          EXCEPTIONS
+            namespace_not_existing     = 1
+            invalid_object             = 2
+            namespace_not_determinable = 3
+            OTHERS                     = 4.
+        IF sy-subrc = 0 AND lv_role = 'C'.
+          " Namespace with repair license requires repair task
+          rs_transport_type-task = 'R'.
+        ELSE.
+          " Otherweise use correction task
+          rs_transport_type-task = 'S'.
+        ENDIF.
+      WHEN OTHERS.
+        zcx_abapgit_exception=>raise_t100( ).
+    ENDCASE.
 
   ENDMETHOD.
 
