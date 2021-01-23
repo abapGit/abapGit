@@ -18,4 +18,4 @@ services:
   #     - httpEndpoint
   # httpEndpoint:
   #   image: hashicorp/http-echo
-  #   command: -text="Hello World"
+  #   command: -text="Hello World" -listen=:80
