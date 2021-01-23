@@ -6,6 +6,7 @@
     "zcl_abapgit_hash",
     "zcl_abapgit_html.clas",
     "zcl_abapgit_http_digest",
+    "zcl_abapgit_persistence_db",
     "zcl_abapgit_http_client",
     "zcl_abapgit_login_manager",
     "zcl_abapgit_path",
