@@ -6,19 +6,24 @@ CLASS zcl_abapgit_file_status DEFINITION
   PUBLIC SECTION.
 
     CLASS-METHODS status
-      IMPORTING io_repo           TYPE REF TO zcl_abapgit_repo
-                ii_log            TYPE REF TO zif_abapgit_log OPTIONAL
-      RETURNING VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
-      RAISING   zcx_abapgit_exception.
-    CLASS-METHODS: identify_object
-        IMPORTING iv_filename TYPE string
-                  iv_path     TYPE string
-                  iv_devclass TYPE devclass OPTIONAL
-                  io_dot      TYPE REF TO zcl_abapgit_dot_abapgit
-        EXPORTING es_item     TYPE zif_abapgit_definitions=>ty_item
-                  ev_is_xml   TYPE abap_bool
-        RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !io_repo          TYPE REF TO zcl_abapgit_repo
+        !ii_log           TYPE REF TO zif_abapgit_log OPTIONAL
+      RETURNING
+        VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS identify_object
+      IMPORTING
+        !iv_filename TYPE string
+        !iv_path     TYPE string
+        !iv_devclass TYPE devclass OPTIONAL
+        !io_dot      TYPE REF TO zcl_abapgit_dot_abapgit
+      EXPORTING
+        !es_item     TYPE zif_abapgit_definitions=>ty_item
+        !ev_is_xml   TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
