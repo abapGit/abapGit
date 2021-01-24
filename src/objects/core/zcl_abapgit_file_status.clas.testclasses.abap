@@ -879,6 +879,10 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
       iv_path     = '/src/sub/'
       iv_filename = 'package.devc.xml'
       iv_sha1     = '1041' ).
+    mo_helper->add_local(
+      iv_path     = '/src/sub/'
+      iv_filename = 'ztest_move_package_w_change.prog.xml'
+      iv_sha1     = '1042' ).
 
     mo_helper->add_remote(
       iv_path     = '/'
@@ -948,6 +952,10 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
       iv_path     = '/src/sub/'
       iv_filename = 'package.devc.xml'
       iv_sha1     = '1041' ).
+    mo_helper->add_remote(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_move_package_w_change.prog.xml'
+      iv_sha1     = '2042' ).
 
     mo_helper->add_state(
       iv_path     = '/'
@@ -1021,12 +1029,16 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
       iv_path     = '/src/sub/'
       iv_filename = 'package.devc.xml'
       iv_sha1     = '1041' ).
+    mo_helper->add_state(
+      iv_path     = '/src/sub/'
+      iv_filename = 'ztest_move_package_w_change.prog.xml'
+      iv_sha1     = '1042' ).
 
     mo_result = mo_helper->run( ).
 
-    mo_result->assert_lines( 24 ).
+    mo_result->assert_lines( 26 ).
 
-    DO 24 TIMES.
+    DO 26 TIMES.
       ls_line = mo_result->get_line( sy-index ).
       lv_act+0(1) = ls_line-match.
       lv_act+1(1) = ls_line-lstate.
@@ -1034,15 +1046,15 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
       lv_act+3(1) = ls_line-packmove.
       CASE sy-index.
         WHEN 1.
-          lv_exp = 'X  '.
+          lv_exp = 'X  '. " no changes
         WHEN 2.
-          lv_exp = '  A'.
+          lv_exp = '  A'. " add remotely
         WHEN 3.
-          lv_exp = 'X  '.
+          lv_exp = 'X  '. " no change
         WHEN 4 OR 5.
-          lv_exp = ' A '.
+          lv_exp = ' A '. " add locally
         WHEN 6 OR 7.
-          lv_exp = '  A'.
+          lv_exp = '  A'. " add remotely
         WHEN 8 OR 9.
           lv_exp = ' DM'.
         WHEN 10 OR 11.
@@ -1058,11 +1070,15 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
         WHEN 20 OR 21.
           lv_exp = '  M'.
         WHEN 22.
-          lv_exp = ' D X'.
+          lv_exp = ' D X'. " package move (no change)
         WHEN 23.
-          lv_exp = 'X   '.
+          lv_exp = ' D  '. " package move with change
         WHEN 24.
-          lv_exp = ' A X'.
+          lv_exp = 'X   '.
+        WHEN 25.
+          lv_exp = ' A X'. " package move (no change)
+        WHEN 26.
+          lv_exp = ' A  '. " package move with change
       ENDCASE.
 
       cl_abap_unit_assert=>assert_equals(
