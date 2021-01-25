@@ -7,10 +7,10 @@
     "unit": "rm -rf output && abap_transpile && echo RUNNING && node output/index.js",
     "abaplint": "abaplint",
     "eslint": "eslint src",
-    "docker-build": "docker-compose build",
-    "docker-up": "docker-compose up",
-    "docker-unit": "docker-compose run --workdir=\"/home/node/abapGit\" abapgit npm run-script unit",
-    "docker-down": "docker-compose down"
+    "docker-build": "docker-compose -f test/docker-compose.yml build",
+    "docker-up": "docker-compose -f test/docker-compose.yml up",
+    "docker-unit": "docker-compose -f test/docker-compose.yml run --workdir=\"/home/node/abapGit\" abapgit npm run-script unit",
+    "docker-down": "docker-compose -f test/docker-compose.yml down"
   },
   "repository": {
     "type": "git",

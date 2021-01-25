@@ -11,7 +11,7 @@ services:
     networks:
       default:
     volumes:
-      - .:/home/node/abapGit
+      - ..:/home/node/abapGit
   #   links:
   #     - httpEndpoint:httpbin.com
   #   depends_on:
