@@ -13,6 +13,7 @@ AREA | InfoArea | Yes
 ASFC | Field Catalog | Yes
 ASIS | Archiving Information Structure | [#1579](https://github.com/abapGit/abapGit/issues/1579)
 AUTH | Authorization Check Fields | Yes
+AVAR | Activation Variants for Assertions and Breakpoints | Yes
 AVAS | Classification | [#1360](https://github.com/abapGit/abapGit/issues/1360)
 BDEF | Behaviour Definition | Yes
 BMFR | Application Component | [#2108](https://github.com/abapGit/abapGit/issues/2108)
@@ -74,6 +75,7 @@ JOBD | Technical Job Definition | Yes
 LPDC | Launchpad short texts | [#107](https://github.com/abapGit/abapGit/issues/107)
 MSAG | Message Class | Yes
 NROB | Number Range Objects | Yes
+NSPC | Namespace in R/3 Repository | Yes
 OA2P | OAuth2 Profile | Yes
 ODSO | DataStore Object | Yes
 OTGR | Object type group | Yes
