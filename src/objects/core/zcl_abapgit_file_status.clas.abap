@@ -6,19 +6,24 @@ CLASS zcl_abapgit_file_status DEFINITION
   PUBLIC SECTION.
 
     CLASS-METHODS status
-      IMPORTING io_repo           TYPE REF TO zcl_abapgit_repo
-                ii_log            TYPE REF TO zif_abapgit_log OPTIONAL
-      RETURNING VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
-      RAISING   zcx_abapgit_exception.
-    CLASS-METHODS: identify_object
-        IMPORTING iv_filename TYPE string
-                  iv_path     TYPE string
-                  iv_devclass TYPE devclass OPTIONAL
-                  io_dot      TYPE REF TO zcl_abapgit_dot_abapgit
-        EXPORTING es_item     TYPE zif_abapgit_definitions=>ty_item
-                  ev_is_xml   TYPE abap_bool
-        RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !io_repo          TYPE REF TO zcl_abapgit_repo
+        !ii_log           TYPE REF TO zif_abapgit_log OPTIONAL
+      RETURNING
+        VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS identify_object
+      IMPORTING
+        !iv_filename TYPE string
+        !iv_path     TYPE string
+        !iv_devclass TYPE devclass OPTIONAL
+        !io_dot      TYPE REF TO zcl_abapgit_dot_abapgit
+      EXPORTING
+        !es_item     TYPE zif_abapgit_definitions=>ty_item
+        !ev_is_xml   TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -375,11 +380,13 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
       " Check if same file exists in different location
       READ TABLE it_local ASSIGNING <ls_local>
         WITH KEY file-filename = <ls_remote>-filename.
-      IF sy-subrc = 0 AND <ls_local>-file-sha1 = <ls_remote>-sha1.
+      IF sy-subrc = 0.
         <ls_result>-match = abap_false.
         <ls_result>-lstate = zif_abapgit_definitions=>c_state-deleted.
         <ls_result>-rstate = zif_abapgit_definitions=>c_state-unchanged.
-        <ls_result>-packmove = abap_true.
+        IF <ls_local>-file-sha1 = <ls_remote>-sha1.
+          <ls_result>-packmove = abap_true.
+        ENDIF.
       ELSEIF sy-subrc = 4.
         " Check if file existed before and was deleted locally
         READ TABLE lt_state_idx ASSIGNING <ls_state>
@@ -394,7 +401,8 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
     SORT rt_results BY
       obj_type ASCENDING
       obj_name ASCENDING
-      filename ASCENDING.
+      filename ASCENDING
+      path ASCENDING.
 
   ENDMETHOD.
 
