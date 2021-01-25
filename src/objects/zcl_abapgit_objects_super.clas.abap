@@ -358,7 +358,7 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
   METHOD serialize_translations.
 
-   IF ii_xml->i18n_params( )-main_language_only = abap_true.
+    IF ii_xml->i18n_params( )-main_language_only = abap_true.
       RETURN.
     ENDIF.
 

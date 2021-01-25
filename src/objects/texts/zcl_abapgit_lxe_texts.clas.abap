@@ -149,14 +149,32 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
 
   METHOD zif_abapgit_lxe_texts~deserialize.
 
-
+    " copy deserialize_lxe_texts from #4415 to here
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_lxe_texts~serialize.
 
+    DATA:
+      lt_obj_list      TYPE lxe_tt_colob,
+      lt_languages     TYPE zif_abapgit_definitions=>ty_languages,
+      ls_lxe_text_item TYPE zif_abapgit_lxe_texts~ty_lxe_i18n.
 
+    FIELD-SYMBOLS:
+      <lv_language>   TYPE langu,
+      <lv_lxe_object> TYPE lxe_colob.
+
+    lt_obj_list = get_lxe_object_list(
+                    iv_object_name = iv_object_name
+                    iv_object_type = iv_object_type ).
+
+    lt_languages = ii_xml->i18n_params( )-translation_languages.
+
+    "... copy get_lxe_texts from #4115 to here
+
+    " this is how you get the original language
+    ls_lxe_text_item-source_lang = get_lang_iso4( ii_xml->i18n_params( )-main_language ).
 
   ENDMETHOD.
 ENDCLASS.
