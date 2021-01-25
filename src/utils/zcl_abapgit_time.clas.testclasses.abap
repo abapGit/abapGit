@@ -15,9 +15,7 @@ CLASS ltcl_time_test IMPLEMENTATION.
 
     DATA: lv_time TYPE zcl_abapgit_time=>ty_unixtime.
 
-    lv_time = zcl_abapgit_time=>get_unix(
-      iv_date = sy-datum
-      iv_time = sy-uzeit ).
+    lv_time = zcl_abapgit_time=>get_unix( ).
 
     cl_abap_unit_assert=>assert_not_initial( lv_time ).
 
