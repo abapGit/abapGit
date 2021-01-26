@@ -12,7 +12,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
+CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
 
 
   METHOD zif_abapgit_frontend_services~file_download.
@@ -116,7 +116,7 @@ CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
       lv_rc         TYPE i.
 
     IF iv_extension = 'zip'.
-      lv_filter = 'ZIP Files (*.ZIP)|*.ZIP|' && cl_gui_frontend_services=>filetype_all.
+      lv_filter = 'ZIP Files (*.zip)|*.zip|' && cl_gui_frontend_services=>filetype_all.
     ENDIF.
 
     cl_gui_frontend_services=>file_open_dialog(
@@ -135,10 +135,10 @@ CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
         not_supported_by_gui    = 4
         OTHERS                  = 5 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from file_open_dialog' ).
+      zcx_abapgit_exception=>raise( 'Error from "File Open" dialog' ).
     ENDIF.
     IF lv_action = cl_gui_frontend_services=>action_cancel.
-      zcx_abapgit_exception=>raise( 'cancelled' ).
+      zcx_abapgit_exception=>raise( 'Cancelled' ).
     ENDIF.
 
     READ TABLE lt_file_table INDEX 1 INTO ls_file_table.
@@ -157,7 +157,7 @@ CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
       lv_path     TYPE string.
 
     IF iv_extension = 'zip'.
-      lv_filter = 'ZIP Files (*.ZIP)|*.ZIP|' && cl_gui_frontend_services=>filetype_all.
+      lv_filter = 'ZIP Files (*.zip)|*.zip|' && cl_gui_frontend_services=>filetype_all.
     ENDIF.
 
     cl_gui_frontend_services=>file_save_dialog(
@@ -177,10 +177,10 @@ CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
         not_supported_by_gui = 3
         OTHERS               = 4 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from file_save_dialog' ).
+      zcx_abapgit_exception=>raise( 'Error from "File Save" dialog' ).
     ENDIF.
     IF lv_action = cl_gui_frontend_services=>action_cancel.
-      zcx_abapgit_exception=>raise( 'cancelled' ).
+      zcx_abapgit_exception=>raise( 'Cancelled' ).
     ENDIF.
 
   ENDMETHOD.
