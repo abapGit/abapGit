@@ -178,15 +178,13 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
                     iv_object_name = iv_object_name
                     iv_object_type = iv_object_type ).
 
+    " Get list of languages that need to be serialized (already resolves * and installed languages)
     lt_languages = ii_xml->i18n_params( )-translation_languages.
 
     "... copy get_lxe_texts from #4415 to here
 
     " this is how you get the original language
-    ls_lxe_text_item-source_lang = get_lang_iso4( ii_xml->i18n_params( )-main_language ).
-
-
-
+    " ls_lxe_text_item-source_lang = get_lang_iso4( ii_xml->i18n_params( )-main_language ).
 
     ii_xml->add( iv_name = iv_lxe_text_name
                  ig_data = lt_lxe_texts ).
