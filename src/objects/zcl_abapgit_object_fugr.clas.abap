@@ -2,8 +2,7 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES:
-      zif_abapgit_object,
-      zif_abapgit_lxe_texts.
+      zif_abapgit_object.
     ALIASES:
       mo_files                     FOR zif_abapgit_object~mo_files.
 
@@ -374,7 +373,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
   METHOD deserialize_texts.
     DATA: lt_tpool_i18n TYPE ty_tpools_i18n,
           lt_tpool      TYPE textpool_table,
-          lt_lxe_texts  TYPE zif_abapgit_lxe_texts~ty_tlxe_i18n.
+          lt_lxe_texts  TYPE zif_abapgit_lxe_texts=>ty_tlxe_i18n.
 
     FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
     ii_xml->read( EXPORTING iv_name = 'I18N_TPOOL'
@@ -857,7 +856,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
   METHOD serialize_texts.
     DATA: lt_tpool_i18n TYPE ty_tpools_i18n,
           lt_tpool      TYPE textpool_table,
-          lt_lxe_texts  TYPE zif_abapgit_lxe_texts~ty_tlxe_i18n.
+          lt_lxe_texts  TYPE zif_abapgit_lxe_texts=>ty_tlxe_i18n.
 
     FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
 
@@ -888,7 +887,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
                    ig_data = lt_tpool_i18n ).
     ENDIF.
     lt_lxe_texts = zcl_abapgit_lxe_texts=>get_lxe_texts(
-                        iv_object_type       = zif_abapgit_lxe_texts~c_object_type_function_group
+                        iv_object_type       = zif_abapgit_lxe_texts=>c_object_type_function_group
                         iv_original_language = mv_language
                         iv_obj_name          = ms_item-obj_name ).
 

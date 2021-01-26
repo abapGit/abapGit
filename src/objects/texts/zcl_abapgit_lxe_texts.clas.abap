@@ -23,13 +23,13 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
                   iv_original_language TYPE spras
                   iv_obj_name          TYPE sobj_name
                   iv_object_type       TYPE trobjtype
-        RETURNING VALUE(rt_lxe_texts)  TYPE zif_abapgit_lxe_texts~ty_tlxe_i18n,
+        RETURNING VALUE(rt_lxe_texts)  TYPE zif_abapgit_lxe_texts=>ty_tlxe_i18n,
       deserialize_lxe_texts
         IMPORTING
-          it_lxe_texts TYPE zif_abapgit_lxe_texts~ty_tlxe_i18n,
+          it_lxe_texts TYPE zif_abapgit_lxe_texts=>ty_tlxe_i18n,
       get_installed_languages
         RETURNING
-          VALUE(rt_installed_languages) TYPE zif_abapgit_lxe_texts~ty_languages.
+          VALUE(rt_installed_languages) TYPE zif_abapgit_lxe_texts=>ty_languages.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -67,7 +67,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
       lt_obj_list            TYPE lxe_tt_colob,
       lt_installed_languages TYPE TABLE OF langu,
 
-      ls_lxe_text_item       TYPE zif_abapgit_lxe_texts~ty_lxe_i18n.
+      ls_lxe_text_item       TYPE zif_abapgit_lxe_texts=>ty_lxe_i18n.
 
     FIELD-SYMBOLS:
       <lv_language>   TYPE langu,
@@ -103,7 +103,6 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
           TABLES
             lt_pcx_s1 = ls_lxe_text_item-text_pairs.
 
-        DELETE ls_lxe_text_item-text_pairs WHERE t_text IS INITIAL. " No Target Text, no translation to be transported
         IF ls_lxe_text_item-text_pairs IS NOT INITIAL.
           APPEND ls_lxe_text_item TO rt_lxe_texts.
         ENDIF.
@@ -112,7 +111,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD deserialize_lxe_texts.
-    DATA: ls_lxe_item       TYPE zif_abapgit_lxe_texts~ty_lxe_i18n,
+    DATA: ls_lxe_item       TYPE zif_abapgit_lxe_texts=>ty_lxe_i18n,
           lt_text_pairs_tmp LIKE ls_lxe_item-text_pairs.
 
     LOOP AT it_lxe_texts INTO ls_lxe_item.
@@ -144,8 +143,6 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
   METHOD get_installed_languages.
 
     DATA lv_index TYPE i.
-    DATA lv_length TYPE i.
-    DATA lv_char TYPE c.
     DATA lv_installed_languages TYPE string.
 
     CALL FUNCTION 'SYSTEM_INSTALLED_LANGUAGES'
@@ -157,13 +154,10 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
     IF sy-subrc <> 0.
     ENDIF.
 
-    lv_length = strlen( lv_installed_languages ).
-    lv_index = 0.
-    WHILE lv_index < lv_length.
-      lv_char = lv_installed_languages+lv_index(1).
-      APPEND lv_char TO rt_installed_languages.
-      lv_index = lv_index + 1.
-    ENDWHILE.
+    DO strlen( lv_installed_languages ) TIMES.
+      lv_index = sy-index - 1.
+      APPEND lv_installed_languages+lv_index(1) TO rt_installed_languages.
+    ENDDO.
 
   ENDMETHOD.
 ENDCLASS.
