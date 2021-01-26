@@ -6,7 +6,8 @@ CLASS zcl_abapgit_serialize DEFINITION
 
     METHODS constructor
       IMPORTING
-        !iv_serialize_master_lang_only TYPE abap_bool DEFAULT abap_false .
+        !iv_serialize_master_lang_only TYPE abap_bool DEFAULT abap_false
+        !it_translation_langs          TYPE zif_abapgit_definitions=>ty_languages OPTIONAL.
     METHODS on_end_of_task
       IMPORTING
         !p_task TYPE clike .
@@ -43,6 +44,7 @@ CLASS zcl_abapgit_serialize DEFINITION
     DATA mi_log TYPE REF TO zif_abapgit_log .
     DATA mv_group TYPE rzlli_apcl .
     DATA mv_serialize_master_lang_only TYPE abap_bool .
+    DATA mt_translation_langs TYPE zif_abapgit_definitions=>ty_languages .
 
     METHODS add_apack
       IMPORTING
@@ -105,7 +107,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
+CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
 
   METHOD add_apack.
@@ -224,6 +226,7 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
     mv_group = 'parallel_generators'.
     mv_serialize_master_lang_only = iv_serialize_master_lang_only.
+    mt_translation_langs = it_translation_langs.
 
   ENDMETHOD.
 
@@ -335,13 +338,13 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
     RECEIVE RESULTS FROM FUNCTION 'Z_ABAPGIT_SERIALIZE_PARALLEL'
       IMPORTING
-        ev_result = lv_result
-        ev_path   = lv_path
+        ev_result             = lv_result
+        ev_path               = lv_path
       EXCEPTIONS
-        error     = 1
-        system_failure = 2 MESSAGE lv_mess
+        error                 = 1
+        system_failure        = 2 MESSAGE lv_mess
         communication_failure = 3 MESSAGE lv_mess
-        OTHERS = 4.
+        OTHERS                = 4.
     IF sy-subrc <> 0.
       IF NOT mi_log IS INITIAL.
         IF NOT lv_mess IS INITIAL.
@@ -414,9 +417,10 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
     TRY.
         ls_file_item = zcl_abapgit_objects=>serialize(
-          is_item     = ls_file_item-item
+          is_item                       = ls_file_item-item
           iv_serialize_master_lang_only = mv_serialize_master_lang_only
-          iv_language = iv_language ).
+          it_translation_langs          = mt_translation_langs
+          iv_language                   = iv_language ).
 
         add_to_return( is_file_item = ls_file_item
                        iv_path      = is_tadir-path ).

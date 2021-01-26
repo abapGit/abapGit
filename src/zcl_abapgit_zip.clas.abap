@@ -73,7 +73,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
+CLASS zcl_abapgit_zip IMPLEMENTATION.
 
 
   METHOD encode_files.
@@ -113,7 +113,8 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
     CREATE OBJECT lo_serialize
       EXPORTING
-        iv_serialize_master_lang_only = is_local_settings-serialize_master_lang_only.
+        iv_serialize_master_lang_only = is_local_settings-serialize_master_lang_only
+        it_translation_langs          = io_dot_abapgit->get_translation_languages( ).
 
     lt_zip = lo_serialize->files_local(
       iv_package        = iv_package
