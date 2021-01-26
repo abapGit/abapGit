@@ -316,7 +316,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     IF is_repo_lang_logon_lang( ) = abap_false AND get_abapgit_tcode( ) IS NOT INITIAL.
       ro_advanced_dropdown->add(
         iv_txt = 'Open in Main Language'
-        iv_act = |{ zif_abapgit_definitions=>c_action-repo_open_in_master_lang }?key={ mv_key }| ).
+        iv_act = |{ zif_abapgit_definitions=>c_action-repo_open_in_main_lang }?key={ mv_key }| ).
     ENDIF.
 
     ro_advanced_dropdown->add( iv_txt = 'Remove'
@@ -1256,7 +1256,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         mv_order_descending = boolc( ii_event->query( )->get( 'DIRECTION' ) = 'DESCENDING' ).
         rs_handled-state    = zcl_abapgit_gui=>c_event_state-re_render.
 
-      WHEN zif_abapgit_definitions=>c_action-repo_open_in_master_lang.
+      WHEN zif_abapgit_definitions=>c_action-repo_open_in_main_lang.
         open_in_main_language( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
