@@ -130,24 +130,32 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
 
 
   METHOD get_installed_languages.
+
+    "... copy get_installed_languages from #4415 to here
+
   ENDMETHOD.
 
 
   METHOD get_lang_iso4.
 
-
+    "... copy get_lang_iso4 from #4415 to here
 
   ENDMETHOD.
 
 
   METHOD get_lxe_object_list.
 
-
+    "... copy get_lxe_object_list from #4415 to here
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_lxe_texts~deserialize.
+
+    DATA: lt_lxe_texts TYPE zif_abapgit_lxe_texts=>ty_tlxe_i18n.
+
+    ii_xml->read( EXPORTING iv_name = iv_lxe_text_name
+                  CHANGING  cg_data = lt_lxe_texts ).
 
     " copy deserialize_lxe_texts from #4415 to here
 
@@ -159,7 +167,8 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
     DATA:
       lt_obj_list      TYPE lxe_tt_colob,
       lt_languages     TYPE zif_abapgit_definitions=>ty_languages,
-      ls_lxe_text_item TYPE zif_abapgit_lxe_texts~ty_lxe_i18n.
+      lt_lxe_texts     TYPE zif_abapgit_lxe_texts=>ty_tlxe_i18n,
+      ls_lxe_text_item TYPE zif_abapgit_lxe_texts=>ty_lxe_i18n.
 
     FIELD-SYMBOLS:
       <lv_language>   TYPE langu,
@@ -171,10 +180,16 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
 
     lt_languages = ii_xml->i18n_params( )-translation_languages.
 
-    "... copy get_lxe_texts from #4115 to here
+    "... copy get_lxe_texts from #4415 to here
 
     " this is how you get the original language
     ls_lxe_text_item-source_lang = get_lang_iso4( ii_xml->i18n_params( )-main_language ).
+
+
+
+
+    ii_xml->add( iv_name = iv_lxe_text_name
+                 ig_data = lt_lxe_texts ).
 
   ENDMETHOD.
 ENDCLASS.
