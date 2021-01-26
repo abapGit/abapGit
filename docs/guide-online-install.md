@@ -12,7 +12,7 @@ order: 10
 
 ![](img/clone1.png)
 
-* Enter the url for the Github project, eg https://github.com/larshp/Datamatrix.git along with a package name, eg. $DATAMATRIX. If the package does not exist yet, you can select "Create Package" to create it.
+* Enter the url for the Github project, eg https://github.com/larshp/Datamatrix along with a package name, eg. $DATAMATRIX. If the package does not exist yet, it will be created automatically when pulling. Alternatively, you can select "Create Package" to create the package manually with your own settings.
 
 ![](img/clone2.png)
 
