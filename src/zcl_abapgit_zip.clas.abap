@@ -73,7 +73,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
+CLASS zcl_abapgit_zip IMPLEMENTATION.
 
 
   METHOD encode_files.
@@ -102,7 +102,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
     DATA li_log       TYPE REF TO zif_abapgit_log.
     DATA lt_zip       TYPE zif_abapgit_definitions=>ty_files_item_tt.
     DATA lo_serialize TYPE REF TO zcl_abapgit_serialize.
-
+    DATA lt_languages TYPE zif_abapgit_definitions=>ty_languages.
 
     CREATE OBJECT li_log TYPE zcl_abapgit_log.
     li_log->set_title( 'Zip Export Log' ).
@@ -111,9 +111,14 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Package { iv_package } doesn't exist| ).
     ENDIF.
 
+    lt_languages = zcl_abapgit_lxe_texts=>get_translation_languages(
+      iv_main_language  = io_dot_abapgit->get_main_language( )
+      it_i18n_languages = io_dot_abapgit->get_i18n_languages( ) ).
+
     CREATE OBJECT lo_serialize
       EXPORTING
-        iv_serialize_master_lang_only = is_local_settings-serialize_master_lang_only.
+        iv_serialize_master_lang_only = is_local_settings-serialize_master_lang_only
+        it_translation_langs          = lt_languages.
 
     lt_zip = lo_serialize->files_local(
       iv_package        = iv_package

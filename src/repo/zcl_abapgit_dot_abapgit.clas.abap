@@ -62,13 +62,16 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
     METHODS get_main_language
       RETURNING
         VALUE(rv_language) TYPE spras .
-    METHODS get_translation_languages
+    METHODS get_i18n_languages
       RETURNING
         VALUE(rt_languages) TYPE zif_abapgit_definitions=>ty_languages
       RAISING
         zcx_abapgit_exception .
-*      set_master_language
-*        IMPORTING iv_language TYPE spras,
+    METHODS set_i18n_languages
+      IMPORTING
+        VALUE(it_languages) TYPE zif_abapgit_definitions=>ty_languages
+      RAISING
+        zcx_abapgit_exception .
     METHODS get_signature
       RETURNING
         VALUE(rs_signature) TYPE zif_abapgit_definitions=>ty_file_signature
@@ -202,9 +205,14 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
 
 
   METHOD get_i18n_langs.
-
+    " todo, replace with get_i18n_languages
     rv_langs = zcl_abapgit_lxe_texts=>convert_table_to_lang_string( ms_data-i18n_languages ).
 
+  ENDMETHOD.
+
+
+  METHOD get_i18n_languages.
+    rt_languages = ms_data-i18n_languages.
   ENDMETHOD.
 
 
@@ -235,30 +243,6 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
 
   METHOD get_starting_folder.
     rv_path = ms_data-starting_folder.
-  ENDMETHOD.
-
-
-  METHOD get_translation_languages.
-
-    " Returns a list of translation languages for serialization
-    " If the setting is initial, no translations shall be serialized
-    " If the setting is `*`, all all installed system languages shall be serialized
-    " Else, the setting shall contain all languages to be serialized
-
-    DATA lv_installed_languages TYPE string.
-
-    IF ms_data-i18n_languages IS NOT INITIAL.
-      READ TABLE ms_data-i18n_languages TRANSPORTING NO FIELDS WITH KEY table_line = '*'.
-      IF sy-subrc = 0.
-        rt_languages = zcl_abapgit_lxe_texts=>get_installed_languages( ).
-      ELSE.
-        rt_languages = ms_data-i18n_languages.
-      ENDIF.
-    ENDIF.
-
-    " Remove main language from translation languages
-    DELETE rt_languages WHERE table_line = ms_data-master_language.
-
   ENDMETHOD.
 
 
@@ -342,10 +326,16 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
 
   METHOD set_i18n_langs.
 
+    " todo, replace with set_i18n_languages
     ms_data-i18n_languages = zcl_abapgit_lxe_texts=>convert_lang_string_to_table(
                               iv_langs              = iv_langs
                               iv_skip_main_language = ms_data-master_language ).
 
+  ENDMETHOD.
+
+
+  METHOD set_i18n_languages.
+    ms_data-i18n_languages = it_languages.
   ENDMETHOD.
 
 

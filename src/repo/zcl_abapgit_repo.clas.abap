@@ -209,7 +209,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
   METHOD bind_listener.
@@ -252,7 +252,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
                                  && |'{ zcl_abapgit_convert=>conversion_exit_isola_output( sy-langu ) }'|
                                  && | does not match main language |
                                  && |'{ zcl_abapgit_convert=>conversion_exit_isola_output( lv_master_language ) }'.|
-                                 && | Run 'Advanced' > 'Open in main language'| ).
+                                 && | Select 'Advanced' > 'Open in Main Language'| ).
     ENDIF.
 
   ENDMETHOD.
@@ -470,6 +470,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   METHOD get_files_local.
 
     DATA lo_serialize TYPE REF TO zcl_abapgit_serialize.
+    DATA lt_languages TYPE zif_abapgit_definitions=>ty_languages.
 
     " Serialization happened before and no refresh request
     IF lines( mt_local ) > 0 AND mv_request_local_refresh = abap_false.
@@ -477,9 +478,14 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       RETURN.
     ENDIF.
 
+    lt_languages = zcl_abapgit_lxe_texts=>get_translation_languages(
+      iv_main_language  = get_dot_abapgit( )->get_main_language( )
+      it_i18n_languages = get_dot_abapgit( )->get_i18n_languages( ) ).
+
     CREATE OBJECT lo_serialize
       EXPORTING
-        iv_serialize_master_lang_only = ms_data-local_settings-serialize_master_lang_only.
+        iv_serialize_master_lang_only = ms_data-local_settings-serialize_master_lang_only
+        it_translation_langs          = lt_languages.
 
     rt_files = lo_serialize->files_local(
       iv_package        = get_package( )

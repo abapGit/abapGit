@@ -205,7 +205,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
     " Texts deserializing (translations)
     deserialize_texts( io_xml ).
-    deserialize_translations( io_xml ).
+    deserialize_lxe_texts( io_xml ).
 
     deserialize_longtexts( io_xml ).
 
@@ -284,7 +284,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
       serialize_texts( io_xml ).
     ELSE.
       " New LXE option
-      serialize_translations( io_xml ).
+      serialize_lxe_texts( io_xml ).
     ENDIF.
 
     serialize_longtexts( ii_xml         = io_xml

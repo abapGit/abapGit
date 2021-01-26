@@ -1072,7 +1072,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     deserialize_texts( iv_prog_name = lv_program_name
                        ii_xml       = io_xml ).
 
-    deserialize_translations( io_xml ).
+    deserialize_lxe_texts( io_xml ).
 
     io_xml->read( EXPORTING iv_name = 'DYNPROS'
                   CHANGING cg_data = lt_dynpros ).
@@ -1187,7 +1187,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
                        ii_xml       = io_xml ).
     ELSE.
       " New LXE option
-      serialize_translations( io_xml ).
+      serialize_lxe_texts( io_xml ).
     ENDIF.
 
     IF ls_progdir-subc = 'F'.

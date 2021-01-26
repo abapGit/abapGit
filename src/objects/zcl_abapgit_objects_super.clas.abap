@@ -2,20 +2,20 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
 
   PUBLIC SECTION.
 
-    METHODS:
-      constructor
-        IMPORTING
-          is_item     TYPE zif_abapgit_definitions=>ty_item
-          iv_language TYPE spras.
+    METHODS constructor
+      IMPORTING
+        is_item     TYPE zif_abapgit_definitions=>ty_item
+        iv_language TYPE spras.
 
-    CLASS-METHODS:
-      jump_adt
-        IMPORTING iv_obj_name     TYPE zif_abapgit_definitions=>ty_item-obj_name
-                  iv_obj_type     TYPE zif_abapgit_definitions=>ty_item-obj_type
-                  iv_sub_obj_name TYPE zif_abapgit_definitions=>ty_item-obj_name OPTIONAL
-                  iv_sub_obj_type TYPE zif_abapgit_definitions=>ty_item-obj_type OPTIONAL
-                  iv_line_number  TYPE i OPTIONAL
-        RAISING   zcx_abapgit_exception.
+    CLASS-METHODS jump_adt
+      IMPORTING
+        iv_obj_name     TYPE zif_abapgit_definitions=>ty_item-obj_name
+        iv_obj_type     TYPE zif_abapgit_definitions=>ty_item-obj_type
+        iv_sub_obj_name TYPE zif_abapgit_definitions=>ty_item-obj_name OPTIONAL
+        iv_sub_obj_type TYPE zif_abapgit_definitions=>ty_item-obj_type OPTIONAL
+        iv_line_number  TYPE i OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
 
     CONSTANTS: c_user_unknown TYPE xubname VALUE 'UNKNOWN'.
 
@@ -84,12 +84,12 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
         VALUE(iv_no_ask_delete_append) TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception .
-    METHODS serialize_translations
+    METHODS serialize_lxe_texts
       IMPORTING
         !ii_xml TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
-    METHODS deserialize_translations
+    METHODS deserialize_lxe_texts
       IMPORTING
         !ii_xml TYPE REF TO zif_abapgit_xml_input
       RAISING
@@ -214,7 +214,7 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD deserialize_translations.
+  METHOD deserialize_lxe_texts.
 
     zcl_abapgit_factory=>get_lxe_texts( )->deserialize(
       iv_object_type = ms_item-obj_type
@@ -356,7 +356,7 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD serialize_translations.
+  METHOD serialize_lxe_texts.
 
     IF ii_xml->i18n_params( )-main_language_only = abap_true.
       RETURN.

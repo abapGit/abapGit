@@ -9,7 +9,7 @@ INTERFACE zif_abapgit_lxe_texts
       custmnr     TYPE lxecustmnr,
       objtype     TYPE trobjtype,
       objname     TYPE lxeobjname,
-      text_pairs  TYPE lxe_tt_pcx_s1,
+      text_pairs  TYPE STANDARD TABLE OF lxe_pcx_s1 WITH DEFAULT KEY,
     END OF ty_lxe_i18n .
   TYPES:
     ty_tlxe_i18n TYPE STANDARD TABLE OF ty_lxe_i18n WITH DEFAULT KEY .
