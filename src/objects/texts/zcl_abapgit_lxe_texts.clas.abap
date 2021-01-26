@@ -203,7 +203,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
     IF it_i18n_languages IS NOT INITIAL.
       READ TABLE it_i18n_languages TRANSPORTING NO FIELDS WITH KEY table_line = '*'.
       IF sy-subrc = 0.
-        rt_languages = zcl_abapgit_lxe_texts=>get_installed_languages( ).
+        rt_languages = get_installed_languages( ).
       ELSE.
         rt_languages = it_i18n_languages.
       ENDIF.
