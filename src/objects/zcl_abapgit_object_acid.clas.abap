@@ -54,7 +54,7 @@ CLASS zcl_abapgit_object_acid IMPLEMENTATION.
         foreign_lock = 1
         system_error = 2
         cts_error    = 3
-        others       = 4 ).
+        OTHERS       = 4 ).
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
