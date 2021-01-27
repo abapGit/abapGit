@@ -8,6 +8,27 @@ Legend
 + : added
 - : removed
 
+2021-01-27 v1.105.0
+-------------------
+! handling of namespaces changed
+! BDEF handler adjustments
++ new handler for SUSH
++ Refresh button added to stage page
++ Automatic creation of top repository package
+* raise error if package is not part of package hierarchy
+* SHI5 add to transport
+* ENxx fix errors when uninstalling
+* reduce memory consumption during deserialize
+* DDLS fix dump during serialization
+* ENHC add last changed by
+* fix dump when switching to PR
+* W3xx add object to transport on uninstall
+* Uninstall ENQU before TABL
+* prevent staging of duplicate files
+* AVAR remove tadir on uninstall
+* allow repo names with dots
+* TABL, set default ROWORCOLST on deserialize
+
 2020-12-28 v1.104.0
 -------------------
 + ui, new pages for global and personal settings
