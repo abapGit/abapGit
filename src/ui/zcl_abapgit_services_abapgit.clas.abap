@@ -5,13 +5,13 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
 
   PUBLIC SECTION.
 
-    CONSTANTS: c_abapgit_repo     TYPE string   VALUE 'https://github.com/abapGit/abapGit'     ##NO_TEXT,
-               c_abapgit_homepage TYPE string   VALUE 'https://www.abapgit.org'                ##NO_TEXT,
-               c_abapgit_wikipage TYPE string   VALUE 'https://docs.abapgit.org'               ##NO_TEXT,
-               c_dotabap_homepage TYPE string   VALUE 'https://dotabap.org'               ##NO_TEXT,
-               c_abapgit_package  TYPE devclass VALUE '$ABAPGIT'                              ##NO_TEXT,
-               c_abapgit_url      TYPE string   VALUE 'https://github.com/abapGit/abapGit.git' ##NO_TEXT,
-               c_abapgit_class    TYPE tcode    VALUE `ZCL_ABAPGIT_REPO`                      ##NO_TEXT.
+    CONSTANTS c_abapgit_repo TYPE string VALUE 'https://github.com/abapGit/abapGit'.
+    CONSTANTS c_abapgit_homepage TYPE string VALUE 'https://www.abapgit.org'.
+    CONSTANTS c_abapgit_wikipage TYPE string VALUE 'https://docs.abapgit.org'.
+    CONSTANTS c_dotabap_homepage TYPE string VALUE 'https://dotabap.org'.
+    CONSTANTS c_abapgit_package TYPE devclass VALUE '$ABAPGIT'.
+    CONSTANTS c_abapgit_url TYPE string VALUE 'https://github.com/abapGit/abapGit.git'.
+    CONSTANTS c_abapgit_class TYPE seoclsname VALUE `ZCX_ABAPGIT_EXCEPTION`.
 
     CLASS-METHODS open_abapgit_homepage
       RAISING
@@ -205,7 +205,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
     DATA lv_text       TYPE c LENGTH 100.
 
     IF NOT is_installed( ) IS INITIAL.
-      lv_text = 'Seems like abapGit package is already installed. No changes to be done'.
+      lv_text = 'Seems like abapGit (developer version) is already installed. No changes to be done'.
       zcl_abapgit_ui_factory=>get_popups( )->popup_to_inform(
         iv_titlebar     = lc_title
         iv_text_message = lv_text ).

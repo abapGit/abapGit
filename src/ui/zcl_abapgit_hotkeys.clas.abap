@@ -1,37 +1,25 @@
 CLASS zcl_abapgit_hotkeys DEFINITION
   PUBLIC
-  FINAL
   INHERITING FROM zcl_abapgit_gui_component
+  FINAL
   CREATE PUBLIC .
 
   PUBLIC SECTION.
 
-    INTERFACES:
-      zif_abapgit_gui_hotkey_ctl,
-      zif_abapgit_gui_hotkeys,
-      zif_abapgit_gui_renderable.
+    INTERFACES zif_abapgit_gui_hotkey_ctl .
+    INTERFACES zif_abapgit_gui_hotkeys .
+    INTERFACES zif_abapgit_gui_renderable .
 
-    CONSTANTS:
-      c_showhotkeys_action TYPE string VALUE `showHotkeys` ##NO_TEXT.
+    CONSTANTS c_showhotkeys_action TYPE string VALUE `showHotkeys` ##NO_TEXT.
 
-    CLASS-METHODS:
-      get_all_default_hotkeys
-        RETURNING
-          VALUE(rt_hotkey_actions) TYPE zif_abapgit_gui_hotkeys=>ty_hotkeys_with_descr
-        RAISING
-          zcx_abapgit_exception,
-
-      merge_hotkeys_with_settings
-        CHANGING
-          ct_hotkey_actions TYPE zif_abapgit_gui_hotkeys=>ty_hotkeys_with_descr
-        RAISING
-          zcx_abapgit_exception.
-
-    CLASS-METHODS:
-      should_show_hint
-        RETURNING
-          VALUE(rv_yes) TYPE abap_bool.
-
+    CLASS-METHODS get_all_default_hotkeys
+      RETURNING
+        VALUE(rt_hotkey_actions) TYPE zif_abapgit_gui_hotkeys=>ty_hotkeys_with_descr
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS should_show_hint
+      RETURNING
+        VALUE(rv_yes) TYPE abap_bool .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -229,27 +217,6 @@ CLASS zcl_abapgit_hotkeys IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD merge_hotkeys_with_settings.
-
-    DATA lt_user_defined_hotkeys TYPE zif_abapgit_definitions=>ty_hotkey_tt.
-    FIELD-SYMBOLS <ls_hotkey> LIKE LINE OF ct_hotkey_actions.
-    FIELD-SYMBOLS <ls_user_defined_hotkey> LIKE LINE OF lt_user_defined_hotkeys.
-
-    lt_user_defined_hotkeys = zcl_abapgit_persist_settings=>get_instance( )->read( )->get_hotkeys( ).
-
-    LOOP AT ct_hotkey_actions ASSIGNING <ls_hotkey>.
-      READ TABLE lt_user_defined_hotkeys ASSIGNING <ls_user_defined_hotkey>
-        WITH TABLE KEY action COMPONENTS
-          ui_component = <ls_hotkey>-ui_component
-          action       = <ls_hotkey>-action.
-      IF sy-subrc = 0.
-        <ls_hotkey>-hotkey = <ls_user_defined_hotkey>-hotkey.
-      ENDIF.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
   METHOD render_scripts.
 
     DATA lv_json TYPE string.
@@ -307,8 +274,6 @@ CLASS zcl_abapgit_hotkeys IMPLEMENTATION.
     LOOP AT mt_hotkey_providers INTO li_hotkey_provider.
       APPEND LINES OF li_hotkey_provider->get_hotkey_actions( ) TO lt_hotkeys.
     ENDLOOP.
-
-    merge_hotkeys_with_settings( CHANGING ct_hotkey_actions = lt_hotkeys ).
 
     " Compress duplicates
     LOOP AT lt_hotkeys ASSIGNING <ls_hotkey>.

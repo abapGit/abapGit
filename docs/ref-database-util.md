@@ -1,10 +1,10 @@
 ---
-title: Database Util
+title: Database Utility
 category: reference
 order: 99
 ---
 
-`Database Util` is a tool for managing database entries created by abapGit. You can access the tool via the tools icon in the top right corner of the abapGit home page > choose first menu item `Database Util`.
+`Database Utility` is a tool for managing database entries created by abapGit. You can access the tool via the tools icon in the top right corner of the abapGit home page [](img/utilities.png). 
 
 It's possible to edit database entries of type
 
@@ -13,7 +13,7 @@ It's possible to edit database entries of type
 - `REPO`
 - `BACKGROUND`
 
-Be careful when you edit these entries from within abapGit. Corrupting the XML or setting invalid options might break your abapGit!
+Caution: Backup all abapGit database entries, first! Be careful when you edit these entries from within abapGit. Corrupting the XML or setting invalid options might break your abapGit!
 
 ![](img/db_util_1.png)
 
@@ -248,6 +248,13 @@ The respective XML file contains the method and optionally the credentials neede
 </asx:abap>
 ```
 
+## Backup & Restore
+
+You can backup the abapGit database entries using the menu. Entries are stored in a separate XML-file and combined into a single ZIP-archive named `abapGit_Backup_<date>_<time>.zip`. You can use this feature also to transfer all your settings to another system.
+
+Example:
+
+[](img/db_backup.png)
 
 ## Emergency Mode
 
@@ -264,3 +271,4 @@ How to start abapGit in "Emergency Mode":
 1. After exiting abapGit, go back to SU3 and remove parameter DBT
 
 ![](img/db_util_emergency_mode.png)
+

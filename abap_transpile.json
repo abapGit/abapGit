@@ -6,6 +6,7 @@
     "zcl_abapgit_hash",
     "zcl_abapgit_html.clas",
     "zcl_abapgit_http_digest",
+    "zcl_abapgit_persistence_db",
     "zcl_abapgit_http_client",
     "zcl_abapgit_login_manager",
     "zcl_abapgit_path",
@@ -18,6 +19,7 @@
     "zcl_abapgit_zlib_huffman",
     "zcl_abapgit_zlib_stream",
     "zif_abapgit_repo_srv",
+    "zif_abapgit_persist_user",
     "zcl_abapgit_git_branch_list",
     "zcx_abapgit_exception",
     "zcx_abapgit_not_found",
@@ -44,12 +46,21 @@
     "zif_abapgit_html",
     "zif_abapgit_http_agent",
     "zif_abapgit_http_response",
+    "zcl_abapgit_xml_pretty",
     "zif_abapgit_log",
     "zif_abapgit_merge",
     "zif_abapgit_persistence",
     "zif_abapgit_progress",
+    "zif_abapgit_version",
+    "zif_abapgit_branch_overview",
+    "zcl_abapgit_utils",
+    "zif_abapgit_xml",
     "zif_abapgit_stage_logic",
-    "zif_abapgit_tag_popups"
+    "zif_abapgit_tag_popups",
+    "zif_abapgit_tadir",
+    "zcl_abapgit_git_tag",
+    "zcl_abapgit_zlib",
+    "zif_abapgit_sap_package"
   ],
   "output_folder": "output",
   "lib": "https://github.com/open-abap/open-abap",
@@ -71,7 +82,16 @@
       {"object": "ZCL_ABAPGIT_HASH",      "class": "ltcl_test", "method": "sha1_raw_invalid"},
       {"object": "ZCL_ABAPGIT_URL",       "class": "ltcl_test", "method": "repo_error"},
       {"object": "ZCL_ABAPGIT_URL",       "class": "ltcl_test", "method": "url_validate3"},
-      {"object": "ZCL_ABAPGIT_HTML",      "class": "ltcl_html", "method": "style1"}
+      {"object": "ZCL_ABAPGIT_HTML",      "class": "ltcl_html", "method": "style1"},
+      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty1"},
+      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty2"},
+      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty3"},
+      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "malformatted"},
+      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "dont_ignore_error"},
+      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "unpretty"},
+      {"object": "ZCL_ABAPGIT_ZLIB", "class": "ltcl_zlib", "method": "fixed"},
+      {"object": "ZCL_ABAPGIT_ZLIB", "class": "ltcl_zlib", "method": "dynamic"},
+      {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_utils_test", "method": "extract_author_data"}
     ]
   }
 }

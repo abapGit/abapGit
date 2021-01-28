@@ -3,9 +3,7 @@ INTERFACE zif_abapgit_cts_api
 
 
   "! Returns the transport request / task the object is currently in
-  "! @parameter iv_program_id | Program ID
-  "! @parameter iv_object_type | Object type
-  "! @parameter iv_object_name | Object name
+  "! @parameter is_item | Object
   "! @parameter iv_resolve_task_to_request | Return the transport request number
   "! @parameter rv_transport | Transport request / task
   "! @raising zcx_abapgit_exception | Object is not in a transport

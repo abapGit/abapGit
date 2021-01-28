@@ -93,7 +93,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
 
   METHOD check_package.
@@ -172,7 +172,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       iv_url              = is_repo_params-url
       iv_package          = is_repo_params-package
       iv_folder_logic     = is_repo_params-folder_logic
-      iv_master_lang_only = is_repo_params-master_lang_only ).
+      iv_master_lang_only = is_repo_params-main_lang_only ).
 
     " Make sure there're no leftovers from previous repos
     ro_repo->rebuild_local_checksums( ).
@@ -199,7 +199,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       iv_display_name     = is_repo_params-display_name
       iv_folder_logic     = is_repo_params-folder_logic
       iv_ign_subpkg       = is_repo_params-ignore_subpackages
-      iv_master_lang_only = is_repo_params-master_lang_only ).
+      iv_master_lang_only = is_repo_params-main_lang_only ).
 
     " Make sure there're no leftovers from previous repos
     ro_repo->rebuild_local_checksums( ).
