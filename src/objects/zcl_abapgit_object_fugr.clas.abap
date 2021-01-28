@@ -1,10 +1,8 @@
 CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_objects_program FINAL.
 
   PUBLIC SECTION.
-    INTERFACES:
-      zif_abapgit_object.
-    ALIASES:
-      mo_files                     FOR zif_abapgit_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -134,7 +132,6 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         !ii_xml       TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception .
-
 ENDCLASS.
 
 
@@ -372,8 +369,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
   METHOD deserialize_texts.
     DATA: lt_tpool_i18n TYPE ty_tpools_i18n,
-          lt_tpool      TYPE textpool_table,
-          lt_lxe_texts  TYPE zif_abapgit_lxe_texts=>ty_tlxe_i18n.
+          lt_tpool      TYPE textpool_table.
 
     FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
     ii_xml->read( EXPORTING iv_name = 'I18N_TPOOL'
@@ -385,9 +381,6 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
                             iv_language = <ls_tpool>-language
                             it_tpool    = lt_tpool ).
     ENDLOOP.
-    ii_xml->read( EXPORTING iv_name = 'LXE_TEXTS'
-                  CHANGING  cg_data = lt_lxe_texts ).
-    zcl_abapgit_lxe_texts=>deserialize_lxe_texts( lt_lxe_texts ).
   ENDMETHOD.
 
 
@@ -855,8 +848,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
   METHOD serialize_texts.
     DATA: lt_tpool_i18n TYPE ty_tpools_i18n,
-          lt_tpool      TYPE textpool_table,
-          lt_lxe_texts  TYPE zif_abapgit_lxe_texts=>ty_tlxe_i18n.
+          lt_tpool      TYPE textpool_table.
 
     FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
 
@@ -885,15 +877,6 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     IF lines( lt_tpool_i18n ) > 0.
       ii_xml->add( iv_name = 'I18N_TPOOL'
                    ig_data = lt_tpool_i18n ).
-    ENDIF.
-    lt_lxe_texts = zcl_abapgit_lxe_texts=>get_lxe_texts(
-                        iv_object_type       = zif_abapgit_lxe_texts=>c_object_type_function_group
-                        iv_original_language = mv_language
-                        iv_obj_name          = ms_item-obj_name ).
-
-    IF lines( lt_lxe_texts ) > 0.
-      ii_xml->add( iv_name = 'LXE_TEXTS'
-                   ig_data = lt_lxe_texts ).
     ENDIF.
   ENDMETHOD.
 
@@ -1089,6 +1072,8 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     deserialize_texts( iv_prog_name = lv_program_name
                        ii_xml       = io_xml ).
 
+    deserialize_lxe_texts( io_xml ).
+
     io_xml->read( EXPORTING iv_name = 'DYNPROS'
                   CHANGING cg_data = lt_dynpros ).
     deserialize_dynpros( lt_dynpros ).
@@ -1196,8 +1181,14 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     lv_program_name = main_name( ).
     ls_progdir = read_progdir( lv_program_name ).
 
-    serialize_texts( iv_prog_name = lv_program_name
-                     ii_xml       = io_xml ).
+    IF io_xml->i18n_params( )-translation_languages IS INITIAL.
+      " Old I18N option
+      serialize_texts( iv_prog_name = lv_program_name
+                       ii_xml       = io_xml ).
+    ELSE.
+      " New LXE option
+      serialize_lxe_texts( io_xml ).
+    ENDIF.
 
     IF ls_progdir-subc = 'F'.
       lt_dynpros = serialize_dynpros( lv_program_name ).
@@ -1210,5 +1201,4 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
 ENDCLASS.

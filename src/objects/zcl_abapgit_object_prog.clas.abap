@@ -1,22 +1,17 @@
 CLASS zcl_abapgit_object_prog DEFINITION PUBLIC INHERITING FROM zcl_abapgit_objects_program FINAL.
 
   PUBLIC SECTION.
-    INTERFACES:
-      zif_abapgit_object.
-    ALIASES:
-      mo_files              FOR zif_abapgit_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-    TYPES:
-      BEGIN OF ty_tpool_i18n,
-        language TYPE langu,
-        textpool TYPE zif_abapgit_definitions=>ty_tpool_tt,
-      END OF ty_tpool_i18n,
-      ty_tpools_i18n TYPE STANDARD TABLE OF ty_tpool_i18n.
-
-    CONSTANTS:
-      c_longtext_id_prog TYPE dokil-id VALUE 'RE'.
+    TYPES: BEGIN OF ty_tpool_i18n,
+             language TYPE langu,
+             textpool TYPE zif_abapgit_definitions=>ty_tpool_tt,
+           END OF ty_tpool_i18n,
+           ty_tpools_i18n TYPE STANDARD TABLE OF ty_tpool_i18n.
+    CONSTANTS: c_longtext_id_prog TYPE dokil-id VALUE 'RE'.
 
     METHODS:
       serialize_texts
@@ -31,7 +26,6 @@ CLASS zcl_abapgit_object_prog DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RAISING
           zcx_abapgit_exception.
 
-
 ENDCLASS.
 
 
@@ -41,10 +35,8 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
   METHOD deserialize_texts.
 
-    DATA:
-      lt_tpool_i18n TYPE ty_tpools_i18n,
-      lt_tpool      TYPE textpool_table,
-      lt_lxe_texts  TYPE zif_abapgit_lxe_texts=>ty_tlxe_i18n.
+    DATA: lt_tpool_i18n TYPE ty_tpools_i18n,
+          lt_tpool      TYPE textpool_table.
 
     FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
 
@@ -58,9 +50,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
                             iv_language = <ls_tpool>-language
                             it_tpool    = lt_tpool ).
     ENDLOOP.
-    ii_xml->read( EXPORTING iv_name = 'LXE_TEXTS'
-                  CHANGING  cg_data = lt_lxe_texts ).
-    zcl_abapgit_lxe_texts=>deserialize_lxe_texts( lt_lxe_texts ).
+
   ENDMETHOD.
 
 
@@ -75,11 +65,9 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
   METHOD serialize_texts.
 
     DATA: lt_tpool_i18n TYPE ty_tpools_i18n,
-          lt_tpool      TYPE textpool_table,
-          lt_lxe_texts  TYPE zif_abapgit_lxe_texts=>ty_tlxe_i18n.
+          lt_tpool      TYPE textpool_table.
 
-    FIELD-SYMBOLS:
-      <ls_tpool>         LIKE LINE OF lt_tpool_i18n.
+    FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
 
     IF ii_xml->i18n_params( )-main_language_only = abap_true.
       RETURN.
@@ -108,15 +96,6 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
                    ig_data = lt_tpool_i18n ).
     ENDIF.
 
-    lt_lxe_texts = zcl_abapgit_lxe_texts=>get_lxe_texts(
-                            iv_object_type       = zif_abapgit_lxe_texts=>c_object_type_program
-                            iv_original_language = mv_language
-                            iv_obj_name          = ms_item-obj_name ).
-
-    IF lines( lt_lxe_texts ) > 0.
-      ii_xml->add( iv_name = 'LXE_TEXTS'
-                   ig_data = lt_lxe_texts ).
-    ENDIF.
   ENDMETHOD.
 
 
@@ -226,6 +205,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
     " Texts deserializing (translations)
     deserialize_texts( io_xml ).
+    deserialize_lxe_texts( io_xml ).
 
     deserialize_longtexts( io_xml ).
 
@@ -299,11 +279,16 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
                        io_files = mo_files ).
 
     " Texts serializing (translations)
-    serialize_texts( io_xml ).
+    IF io_xml->i18n_params( )-translation_languages IS INITIAL.
+      " Old I18N option
+      serialize_texts( io_xml ).
+    ELSE.
+      " New LXE option
+      serialize_lxe_texts( io_xml ).
+    ENDIF.
 
     serialize_longtexts( ii_xml         = io_xml
                          iv_longtext_id = c_longtext_id_prog ).
 
   ENDMETHOD.
-
 ENDCLASS.
