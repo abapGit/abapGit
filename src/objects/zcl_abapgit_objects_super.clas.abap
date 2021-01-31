@@ -84,6 +84,16 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
         VALUE(iv_no_ask_delete_append) TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception .
+    METHODS serialize_lxe_texts
+      IMPORTING
+        !ii_xml TYPE REF TO zif_abapgit_xml_output
+      RAISING
+        zcx_abapgit_exception .
+    METHODS deserialize_lxe_texts
+      IMPORTING
+        !ii_xml TYPE REF TO zif_abapgit_xml_input
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
 ENDCLASS.
 
@@ -200,6 +210,16 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
     zcl_abapgit_factory=>get_longtexts( )->deserialize(
       ii_xml           = ii_xml
       iv_main_language = mv_language ).
+
+  ENDMETHOD.
+
+
+  METHOD deserialize_lxe_texts.
+
+    zcl_abapgit_factory=>get_lxe_texts( )->deserialize(
+      iv_object_type = ms_item-obj_type
+      iv_object_name = ms_item-obj_name
+      ii_xml         = ii_xml ).
 
   ENDMETHOD.
 
@@ -332,6 +352,20 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
         iv_longtext_id = iv_longtext_id
         it_dokil       = it_dokil
         ii_xml         = ii_xml  ).
+
+  ENDMETHOD.
+
+
+  METHOD serialize_lxe_texts.
+
+    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+      RETURN.
+    ENDIF.
+
+    zcl_abapgit_factory=>get_lxe_texts( )->serialize(
+      iv_object_type = ms_item-obj_type
+      iv_object_name = ms_item-obj_name
+      ii_xml         = ii_xml ).
 
   ENDMETHOD.
 

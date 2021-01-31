@@ -359,6 +359,7 @@ CLASS zcl_abapgit_object_w3xx_super IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
+    rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.
 
 
