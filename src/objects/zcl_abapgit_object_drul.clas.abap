@@ -11,7 +11,7 @@ CLASS zcl_abapgit_object_drul DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RAISING
           zcx_abapgit_exception.
 
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     METHODS:
       clear_fields
