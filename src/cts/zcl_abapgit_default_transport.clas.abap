@@ -74,9 +74,8 @@ CLASS zcl_abapgit_default_transport IMPLEMENTATION.
         invalid_order    = 2
         invalid_task     = 3
         OTHERS           = 4.
-
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from TR_TASK_RESET. Subrc = { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -101,9 +100,8 @@ CLASS zcl_abapgit_default_transport IMPLEMENTATION.
         invalid_category = 2
         invalid_client   = 3
         OTHERS           = 4.
-
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from TR_TASK_GET. Subrc = { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     READ TABLE lt_e070use INTO rs_default_task
@@ -168,9 +166,8 @@ CLASS zcl_abapgit_default_transport IMPLEMENTATION.
         invalid_order     = 5
         invalid_task      = 6
         OTHERS            = 7.
-
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from TR_TASK_SET. Subrc = { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
