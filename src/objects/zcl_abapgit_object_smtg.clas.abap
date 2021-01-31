@@ -43,7 +43,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_SMTG IMPLEMENTATION.
+CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
 
 
   METHOD add_component.
@@ -310,7 +310,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SMTG IMPLEMENTATION.
         OTHERS              = 3.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |SMTG Jump Error. RS_TOOL_ACCESS subrc={ sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.

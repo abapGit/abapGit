@@ -215,7 +215,7 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
     IF sy-subrc = 1.
       zcx_abapgit_exception=>raise( 'Cancelled' ).
     ELSEIF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from RS_CORR_INSERT' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
   ENDMETHOD.
 

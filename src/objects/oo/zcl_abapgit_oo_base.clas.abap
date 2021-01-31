@@ -10,18 +10,25 @@ CLASS zcl_abapgit_oo_base DEFINITION PUBLIC ABSTRACT.
         RETURNING VALUE(rt_vseoattrib) TYPE seoo_attributes_r.
 
   PRIVATE SECTION.
-    DATA mv_skip_test_classes TYPE abap_bool.
 
+    DATA mv_skip_test_classes TYPE abap_bool .
+
+    METHODS repair_exp_class_constructor
+      IMPORTING
+        !is_clskey TYPE seoclskey .
     METHODS deserialize_abap_source_old
-      IMPORTING is_clskey TYPE seoclskey
-                it_source TYPE zif_abapgit_definitions=>ty_string_tt
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !is_clskey TYPE seoclskey
+        !it_source TYPE zif_abapgit_definitions=>ty_string_tt
+      RAISING
+        zcx_abapgit_exception .
     METHODS deserialize_abap_source_new
-      IMPORTING is_clskey TYPE seoclskey
-                it_source TYPE zif_abapgit_definitions=>ty_string_tt
-      RAISING   zcx_abapgit_exception
-                cx_sy_dyn_call_error.
+      IMPORTING
+        !is_clskey TYPE seoclskey
+        !it_source TYPE zif_abapgit_definitions=>ty_string_tt
+      RAISING
+        zcx_abapgit_exception
+        cx_sy_dyn_call_error .
 ENDCLASS.
 
 
@@ -126,6 +133,25 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
       CATCH cx_oo_source_save_failure.
         zcx_abapgit_exception=>raise( 'save failure' ).
     ENDTRY.
+
+    repair_exp_class_constructor( is_clskey ).
+
+  ENDMETHOD.
+
+
+  METHOD repair_exp_class_constructor.
+
+    DATA lo_helper TYPE REF TO cl_oo_exception_class.
+
+    " Old deserializer does not create the constructor of exception classes properly
+    " Same as SE24 > Utilities > Clean-up > Constructor
+    CREATE OBJECT lo_helper
+      EXPORTING
+        clskey = is_clskey.
+
+    IF lo_helper->is_t100_exception( ) = abap_true.
+      lo_helper->repair_subclasses( ).
+    ENDIF.
 
   ENDMETHOD.
 

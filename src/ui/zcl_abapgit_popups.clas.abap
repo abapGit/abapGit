@@ -1206,7 +1206,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     IF sy-subrc = 1.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ELSEIF sy-subrc > 1.
-      zcx_abapgit_exception=>raise( |Error from TRINT_ORDER_CHOICE { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.

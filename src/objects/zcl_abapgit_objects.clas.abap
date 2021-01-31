@@ -840,8 +840,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         zcl_abapgit_objects_activation=>activate( abap_false ).
     ENDCASE.
 
-    li_progress->off( ).
-
 *   Call postprocessing
     li_exit = zcl_abapgit_exit=>get_instance( ).
 

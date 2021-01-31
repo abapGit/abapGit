@@ -289,7 +289,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         OTHERS    = 2.
     IF sy-subrc <> 0.
 * if moving code from SAPlink, see https://github.com/abapGit/abapGit/issues/562
-      zcx_abapgit_exception=>raise( |Error from RS_CUA_INTERNAL_WRITE. Subrc = { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     zcl_abapgit_objects_activation=>add(
@@ -409,10 +409,8 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         permission_failure  = 2
         unknown_objectclass = 3
         OTHERS              = 4.
-    IF sy-subrc = 1.
-      zcx_abapgit_exception=>raise( |Error from RS_CORR_INSERT, Cancelled, { sy-msgid }, { sy-msgno }| ).
-    ELSEIF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from RS_CORR_INSERT, { sy-msgid }, { sy-msgno }| ).
+    IF sy-subrc <> 1.
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     READ TABLE it_tpool INTO ls_tpool WITH KEY id = 'R'.
@@ -739,7 +737,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         unknown_version = 2
         OTHERS          = 3.
     IF sy-subrc > 1.
-      zcx_abapgit_exception=>raise( |Error from RS_CUA_INTERNAL_FETCH, { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -777,7 +775,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         not_found = 1
         OTHERS    = 2.
     IF sy-subrc = 2.
-      zcx_abapgit_exception=>raise( |Error from RS_SCREEN_LIST. Subrc = { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     SORT lt_d020s BY dnum ASCENDING.
@@ -803,7 +801,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
           permission_error     = 3
           OTHERS               = 4.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Error while reading dynpro: { sy-subrc }| ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
       "#2746: we need the dynpro fields in internal format:
@@ -900,7 +898,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       RETURN.
     ELSEIF sy-subrc <> 0.
       zcl_abapgit_language=>restore_login_language( ).
-      zcx_abapgit_exception=>raise( |Error reading program with RPY_PROGRAM_READ. Subrc = { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     zcl_abapgit_language=>restore_login_language( ).

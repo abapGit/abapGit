@@ -60,7 +60,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
+CLASS zcl_abapgit_persist_migrate IMPLEMENTATION.
 
 
   METHOD distribute_settings_to_users.
@@ -171,7 +171,7 @@ CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
         put_refused       = 5
         OTHERS            = 6.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'migrate, error from DDIF_ENQU_PUT' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     lv_obj_name = zcl_abapgit_persistence_db=>c_lock.
@@ -186,7 +186,7 @@ CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
       EXCEPTIONS
         OTHERS            = 1.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'migrate, error from TR_TADIR_INTERFACE' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     CALL FUNCTION 'DDIF_ENQU_ACTIVATE'
@@ -362,7 +362,7 @@ CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
         put_refused       = 5
         OTHERS            = 6.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'migrate, error from DDIF_TABL_PUT' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     lv_obj_name = zcl_abapgit_persistence_db=>c_tabname.
@@ -377,7 +377,7 @@ CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
       EXCEPTIONS
         OTHERS            = 1.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'migrate, error from TR_TADIR_INTERFACE' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     CALL FUNCTION 'DDIF_TABL_ACTIVATE'

@@ -260,7 +260,7 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
         no_nodes_given           = 1
         OTHERS                   = 2.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from STREE_HIERARCHY_SAVE, SHI3' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.

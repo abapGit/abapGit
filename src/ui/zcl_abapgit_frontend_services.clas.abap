@@ -55,7 +55,7 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
         error_no_gui              = 23
         OTHERS                    = 24 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from gui_download' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -135,7 +135,7 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
         not_supported_by_gui    = 4
         OTHERS                  = 5 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from "File Open" dialog' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
     IF lv_action = cl_gui_frontend_services=>action_cancel.
       zcx_abapgit_exception=>raise( 'Cancelled' ).
@@ -177,7 +177,7 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
         not_supported_by_gui = 3
         OTHERS               = 4 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from "File Save" dialog' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
     IF lv_action = cl_gui_frontend_services=>action_cancel.
       zcx_abapgit_exception=>raise( 'Cancelled' ).

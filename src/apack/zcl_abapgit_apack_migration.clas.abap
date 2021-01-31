@@ -86,7 +86,7 @@ CLASS zcl_abapgit_apack_migration IMPLEMENTATION.
         class_not_existing = 1
         OTHERS             = 2.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from CL_OO_SOURCE' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     TRY.
@@ -100,6 +100,36 @@ CLASS zcl_abapgit_apack_migration IMPLEMENTATION.
       CATCH cx_oo_source_save_failure.
         zcx_abapgit_exception=>raise( 'save failure' ).
     ENDTRY.
+  ENDMETHOD.
+
+
+  METHOD add_intf_source_and_activate.
+
+    DATA: ls_clskey           TYPE seoclskey,
+          ls_inactive_object  TYPE dwinactiv,
+          lt_inactive_objects TYPE TABLE OF dwinactiv.
+
+    ls_clskey-clsname = c_interface_name.
+
+    add_interface_source( ls_clskey ).
+
+    ls_inactive_object-object   = 'INTF'.
+    ls_inactive_object-obj_name = c_interface_name.
+    INSERT ls_inactive_object INTO TABLE lt_inactive_objects.
+
+    CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
+      TABLES
+        objects                = lt_inactive_objects
+      EXCEPTIONS
+        excecution_error       = 1
+        cancelled              = 2
+        insert_into_corr_error = 3
+        OTHERS                 = 4.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -129,7 +159,7 @@ CLASS zcl_abapgit_apack_migration IMPLEMENTATION.
         other           = 6
         OTHERS          = 7.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from SEO_INTERFACE_CREATE_COMPLETE' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     add_intf_source_and_activate( ).
@@ -181,6 +211,17 @@ CLASS zcl_abapgit_apack_migration IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD interface_valid.
+
+    FIELD-SYMBOLS: <lv_interface_version> TYPE i.
+
+    ASSIGN ('ZIF_APACK_MANIFEST')=>('CO_INTERFACE_VERSION') TO <lv_interface_version>.
+    rv_interface_valid = boolc( <lv_interface_version> IS ASSIGNED
+      AND <lv_interface_version> >= c_apack_interface_version ).
+
+  ENDMETHOD.
+
+
   METHOD perform_migration.
 
     IF interface_exists( ) = abap_false.
@@ -200,45 +241,4 @@ CLASS zcl_abapgit_apack_migration IMPLEMENTATION.
     lo_apack_migration->perform_migration( ).
 
   ENDMETHOD.
-
-  METHOD interface_valid.
-
-    FIELD-SYMBOLS: <lv_interface_version> TYPE i.
-
-    ASSIGN ('ZIF_APACK_MANIFEST')=>('CO_INTERFACE_VERSION') TO <lv_interface_version>.
-    rv_interface_valid = boolc( <lv_interface_version> IS ASSIGNED
-      AND <lv_interface_version> >= c_apack_interface_version ).
-
-  ENDMETHOD.
-
-
-  METHOD add_intf_source_and_activate.
-
-    DATA: ls_clskey           TYPE seoclskey,
-          ls_inactive_object  TYPE dwinactiv,
-          lt_inactive_objects TYPE TABLE OF dwinactiv.
-
-    ls_clskey-clsname = c_interface_name.
-
-    add_interface_source( ls_clskey ).
-
-    ls_inactive_object-object   = 'INTF'.
-    ls_inactive_object-obj_name = c_interface_name.
-    INSERT ls_inactive_object INTO TABLE lt_inactive_objects.
-
-    CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
-      TABLES
-        objects                = lt_inactive_objects
-      EXCEPTIONS
-        excecution_error       = 1
-        cancelled              = 2
-        insert_into_corr_error = 3
-        OTHERS                 = 4.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_WORKING_OBJECTS_ACTIVATE' ).
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.
