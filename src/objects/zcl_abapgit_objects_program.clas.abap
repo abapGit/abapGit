@@ -409,7 +409,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         permission_failure  = 2
         unknown_objectclass = 3
         OTHERS              = 4.
-    IF sy-subrc <> 1.
+    IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
