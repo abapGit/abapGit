@@ -100,13 +100,26 @@ function debugOutput(text, dstID) {
 // Use a pre-created form or create a hidden form
 // and submit with sapevent
 function submitSapeventForm(params, action, method) {
+
+  function getSapeventPrefix() {
+    if (document.querySelector('a[href*="file:///SAPEVENT:"]'))  {
+      return "file:///"; //Prefix for chromium based browser control
+    } else {
+      return "";
+    }
+  }
+
   var stub_form_id = "form_" + action;
   var form = document.getElementById(stub_form_id);
 
   if (form === null) {
     form = document.createElement("form");
     form.setAttribute("method", method || "post");
-    form.setAttribute("action", "sapevent:" + action);
+    if (/sapevent/i.test(action)){
+      form.setAttribute("action", action);
+    } else {
+      form.setAttribute("action", getSapeventPrefix() + "SAPEVENT:" + action);
+    }
   }
 
   for(var key in params) {
@@ -1320,9 +1333,9 @@ function Hotkeys(oKeyMap){
       }
 
       // Or a SAP event
-      var sUiSapEvent = this.getSapEvent(action);
-      if (sUiSapEvent) {
-        submitSapeventForm({}, sUiSapEvent, "post");
+      var sUiSapEventHref = this.getSapEventHref(action);
+      if (sUiSapEventHref) {
+        submitSapeventForm({}, sUiSapEventHref, "post");
         oEvent.preventDefault();
         return;
       }
@@ -1341,27 +1354,19 @@ Hotkeys.prototype.showHotkeys = function() {
   }
 };
 
-Hotkeys.prototype.getSapEvent = function(sSapEvent) {
+Hotkeys.prototype.getSapEventHref = function(sSapEvent) {
 
-  var fnNormalizeSapEventHref = function(sSapEvent, oSapEvent) {
-    if (new RegExp(sSapEvent + "$" ).test(oSapEvent.href)
-    || (new RegExp(sSapEvent + "\\?" ).test(oSapEvent.href))) {
-      return oSapEvent.href.replace("sapevent:","");
-    }
-  };
+  var sapEvents = document.querySelectorAll('a[href*="sapevent:' + sSapEvent + '"], a[href*="SAPEVENT:' + sSapEvent + '"]');
 
-  var aSapEvents = document.querySelectorAll('a[href^="sapevent:' + sSapEvent + '"]');
-
-  var aFilteredAndNormalizedSapEvents =
-    [].map.call(aSapEvents, function(oSapEvent){
-      return fnNormalizeSapEventHref(sSapEvent, oSapEvent);
-    }).filter(function(elem){
-      // remove false positives
-      return (elem && !elem.includes("sapevent:"));
+  var sapEventsHref =
+    [].map.call(sapEvents, function(oSapEvent){
+      return oSapEvent.href;
+    }).filter(function(sapEventHref){
+      // eliminate false positives
+      return sapEventHref.match(new RegExp("\\b" + sSapEvent + "\\b"));
     });
 
-  return (aFilteredAndNormalizedSapEvents && aFilteredAndNormalizedSapEvents[0]);
-
+  return (sapEventsHref && sapEventsHref[0]);
 };
 
 Hotkeys.prototype.onkeydown = function(oEvent){
