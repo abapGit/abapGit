@@ -1303,7 +1303,7 @@ function Hotkeys(oKeyMap){
     var action = this.oKeyMap[sKey];
 
     // add a tooltip/title with the hotkey, currently only sapevents are supported
-    [].slice.call(document.querySelectorAll("a[href^='sapevent:" + action + "']")).forEach(function(elAnchor) {
+    this.getAllSapEventsForSapEventName(action).forEach(function(elAnchor) {
       elAnchor.title = elAnchor.title + " [" + sKey + "]";
     });
 
@@ -1354,19 +1354,22 @@ Hotkeys.prototype.showHotkeys = function() {
   }
 };
 
+Hotkeys.prototype.getAllSapEventsForSapEventName = function(sSapEvent) {
+  return [].slice.call(document.querySelectorAll('a[href*="sapevent:' + sSapEvent + '"], a[href*="SAPEVENT:' + sSapEvent + '"]'));
+}
+
 Hotkeys.prototype.getSapEventHref = function(sSapEvent) {
 
-  var sapEvents = document.querySelectorAll('a[href*="sapevent:' + sSapEvent + '"], a[href*="SAPEVENT:' + sSapEvent + '"]');
-
-  var sapEventsHref =
-    [].map.call(sapEvents, function(oSapEvent){
-      return oSapEvent.href;
-    }).filter(function(sapEventHref){
+  return this.getAllSapEventsForSapEventName(sSapEvent)
+    .map(function(oSapEvent){
+      return oSapEvent.href; 
+    })
+    .filter(function(sapEventHref){
       // eliminate false positives
-      return sapEventHref.match(new RegExp("\\b" + sSapEvent + "\\b"));
-    });
+      return sapEventHref.match(new RegExp("\\b" + sSapEvent + "\\b")); 
+    })
+    .pop();
 
-  return (sapEventsHref && sapEventsHref[0]);
 };
 
 Hotkeys.prototype.onkeydown = function(oEvent){
