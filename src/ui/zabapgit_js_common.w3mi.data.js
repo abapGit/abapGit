@@ -1356,17 +1356,17 @@ Hotkeys.prototype.showHotkeys = function() {
 
 Hotkeys.prototype.getAllSapEventsForSapEventName = function(sSapEvent) {
   return [].slice.call(document.querySelectorAll('a[href*="sapevent:' + sSapEvent + '"], a[href*="SAPEVENT:' + sSapEvent + '"]'));
-}
+};
 
 Hotkeys.prototype.getSapEventHref = function(sSapEvent) {
 
   return this.getAllSapEventsForSapEventName(sSapEvent)
     .map(function(oSapEvent){
-      return oSapEvent.href; 
+      return oSapEvent.href;
     })
     .filter(function(sapEventHref){
       // eliminate false positives
-      return sapEventHref.match(new RegExp("\\b" + sSapEvent + "\\b")); 
+      return sapEventHref.match(new RegExp("\\b" + sSapEvent + "\\b"));
     })
     .pop();
 
