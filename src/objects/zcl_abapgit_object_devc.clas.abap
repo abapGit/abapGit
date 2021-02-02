@@ -91,7 +91,7 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    " SOTR is linked to SAP packages (DEVC)
+    " Ignore the SOTR if is linked to the current SAP package (DEVC)
     SELECT SINGLE obj_name
            FROM tadir
            INTO lv_object_name
