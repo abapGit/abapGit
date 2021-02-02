@@ -289,18 +289,6 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
       <ls_tadir>-path = lv_path.
 
-      IF <ls_tadir>-object = 'SICF'.
-* replace the internal GUID with a hash of the path
-        TRY.
-            CALL METHOD ('ZCL_ABAPGIT_OBJECT_SICF')=>read_sicf_url
-              EXPORTING
-                iv_obj_name = <ls_tadir>-obj_name
-              RECEIVING
-                rv_hash     = <ls_tadir>-obj_name+15.
-          CATCH cx_sy_dyn_call_illegal_method ##NO_HANDLER.
-* SICF might not be supported in some systems, assume this code is not called
-        ENDTRY.
-      ENDIF.
     ENDLOOP.
   ENDMETHOD.
 
