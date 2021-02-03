@@ -17,7 +17,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_SXCI IMPLEMENTATION.
+CLASS zcl_abapgit_object_sxci IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -45,7 +45,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SXCI IMPLEMENTATION.
         OTHERS             = 5.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from SXO_IMPL_DELETE' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -78,7 +78,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SXCI IMPLEMENTATION.
         OTHERS       = 2.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from SXO_BADI_READ' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     lv_package = iv_package.
@@ -109,7 +109,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SXCI IMPLEMENTATION.
         OTHERS           = 3.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from SXO_IMPL_SAVE' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     CALL FUNCTION 'SXO_IMPL_ACTIVE'
@@ -127,7 +127,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SXCI IMPLEMENTATION.
         OTHERS                    = 8.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from SXO_IMPL_ACTIVE' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -193,7 +193,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SXCI IMPLEMENTATION.
         OTHERS              = 3.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_TOOL_ACCESS' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -223,7 +223,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SXCI IMPLEMENTATION.
         OTHERS             = 2.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from SXV_EXIT_FOR_IMP' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     CALL FUNCTION 'SXO_BADI_READ'
@@ -243,7 +243,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SXCI IMPLEMENTATION.
         OTHERS       = 2.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from SXO_BADI_READ' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     CALL FUNCTION 'SXO_IMPL_FOR_BADI_READ'
@@ -268,7 +268,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SXCI IMPLEMENTATION.
         OTHERS                      = 2.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from SXO_IMPL_FOR_BADI_READ' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     CLEAR: ls_classic_badi_implementation-implementation_data-aname,

@@ -82,7 +82,7 @@ CLASS zcl_abapgit_object_enqu IMPLEMENTATION.
         put_refused       = 5
         OTHERS            = 6.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from DDIF_ENQU_PUT' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
@@ -160,7 +160,7 @@ CLASS zcl_abapgit_object_enqu IMPLEMENTATION.
         illegal_input = 1
         OTHERS        = 2.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from DDIF_ENQU_GET' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
     IF ls_dd25v IS INITIAL.
       RETURN. " does not exist in system

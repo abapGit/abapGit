@@ -12,6 +12,7 @@ CLASS zcl_abapgit_object_ftgl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RAISING
           zcx_abapgit_exception.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA:
       mv_toggle_id TYPE c LENGTH 40, "sftgl_ft_id
@@ -29,6 +30,21 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_object_ftgl IMPLEMENTATION.
+
+
+  METHOD clear_field.
+
+    FIELD-SYMBOLS: <lg_field> TYPE data.
+
+    ASSIGN
+      COMPONENT iv_fieldname
+      OF STRUCTURE cg_header
+      TO <lg_field>.
+    ASSERT sy-subrc = 0.
+
+    CLEAR: <lg_field>.
+
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -162,7 +178,7 @@ CLASS zcl_abapgit_object_ftgl IMPLEMENTATION.
         OTHERS              = 3.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |FTGL Jump Error. RS_TOOL_ACCESS subrc={ sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -208,20 +224,4 @@ CLASS zcl_abapgit_object_ftgl IMPLEMENTATION.
         ig_data = <lg_toggle> ).
 
   ENDMETHOD.
-
-
-  METHOD clear_field.
-
-    FIELD-SYMBOLS: <lg_field> TYPE data.
-
-    ASSIGN
-      COMPONENT iv_fieldname
-      OF STRUCTURE cg_header
-      TO <lg_field>.
-    ASSERT sy-subrc = 0.
-
-    CLEAR: <lg_field>.
-
-  ENDMETHOD.
-
 ENDCLASS.

@@ -84,7 +84,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
+CLASS zcl_abapgit_oo_serializer IMPLEMENTATION.
 
 
   METHOD are_test_classes_skipped.
@@ -255,7 +255,7 @@ CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
         class_not_existing = 1
         OTHERS             = 2.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from CL_OO_SOURCE. Subrc = { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     lo_source->read( 'A' ).

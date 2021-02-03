@@ -74,7 +74,7 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
           object_not_found = 1
           OTHERS           = 2.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |error from SOTR_OBJECT_GET_OBJECTS. Subrc = { sy-subrc }| ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
       READ TABLE lt_objects INDEX 1 INTO lv_object.
@@ -111,7 +111,7 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
           no_entry_found                = 18
           OTHERS                        = 19.
       IF sy-subrc <> 0 AND sy-subrc <> 5.
-        zcx_abapgit_exception=>raise( |Error from SOTR_CREATE_CONCEPT. Subrc = { sy-subrc }| ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
     ENDLOOP.
 

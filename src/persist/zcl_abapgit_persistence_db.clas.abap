@@ -85,7 +85,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
+CLASS zcl_abapgit_persistence_db IMPLEMENTATION.
 
 
   METHOD add.
@@ -172,7 +172,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
         system_failure = 2
         OTHERS         = 3.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Could not aquire lock { iv_type } { iv_value }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     lv_dummy_update_function = get_update_function( ).

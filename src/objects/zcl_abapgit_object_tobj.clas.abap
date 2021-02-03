@@ -299,7 +299,7 @@ CLASS zcl_abapgit_object_tobj IMPLEMENTATION.
     IF sy-subrc = 1.
       RETURN.
     ELSEIF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from CTO_OBJECT_GET' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     CLEAR: ls_objh-luser,

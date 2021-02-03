@@ -41,7 +41,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_CHDO IMPLEMENTATION.
+CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
 
 
   METHOD after_import.
@@ -100,7 +100,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CHDO IMPLEMENTATION.
           tadir_entry_not_existing = 1
           OTHERS                   = 2.
       IF sy-subrc > 1.
-        zcx_abapgit_exception=>raise( |Error from TR_TADIR_INTERFACE (subrc={ sy-subrc } ).| ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
     ENDIF.
 
@@ -116,7 +116,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CHDO IMPLEMENTATION.
           tadir_entry_not_existing = 1
           OTHERS                   = 2.
       IF sy-subrc > 1.
-        zcx_abapgit_exception=>raise( |Error from TR_TADIR_INTERFACE (subrc={ sy-subrc } ).| ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
     ENDIF.
 
@@ -132,7 +132,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CHDO IMPLEMENTATION.
           tadir_entry_not_existing = 1
           OTHERS                   = 2.
       IF sy-subrc > 1.
-        zcx_abapgit_exception=>raise( |Error from TR_TADIR_INTERFACE (subrc={ sy-subrc } ).| ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
     ENDIF.
 
@@ -148,7 +148,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CHDO IMPLEMENTATION.
           tadir_entry_not_existing = 1
           OTHERS                   = 2.
       IF sy-subrc > 1.
-        zcx_abapgit_exception=>raise( |Error from TR_TADIR_INTERFACE (subrc={ sy-subrc } ).| ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
     ENDIF.
 
@@ -164,7 +164,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CHDO IMPLEMENTATION.
           tadir_entry_not_existing = 1
           OTHERS                   = 2.
       IF sy-subrc > 1.
-        zcx_abapgit_exception=>raise( |Error from TR_TADIR_INTERFACE (subrc={ sy-subrc } ).| ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
     ENDIF.
 

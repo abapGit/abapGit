@@ -15,7 +15,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_SSST IMPLEMENTATION.
+CLASS zcl_abapgit_object_ssst IMPLEMENTATION.
 
 
   METHOD validate_font.
@@ -64,7 +64,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SSST IMPLEMENTATION.
         illegal_language      = 6
         OTHERS                = 7.
     IF sy-subrc <> 0 AND sy-subrc <> 2.
-      zcx_abapgit_exception=>raise( 'error from SSF_DELETE_STYLE' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -131,7 +131,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SSST IMPLEMENTATION.
           illegal_language     = 5
           OTHERS               = 6.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'error from SSF_ACTIVATE_STYLE' ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
     ENDIF.
@@ -254,7 +254,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SSST IMPLEMENTATION.
     IF sy-subrc = 2.
       RETURN.
     ELSEIF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from SSF_READ_STYLE' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     CLEAR ls_header-version.

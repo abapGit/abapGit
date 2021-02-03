@@ -10,7 +10,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
+CLASS zcl_abapgit_object_para IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -89,7 +89,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
             type      = 'CR'.
       ENDIF.
     ELSE.
-      zcx_abapgit_exception=>raise( 'error from RS_CORR_INSERT' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     CALL FUNCTION 'RS_ACCESS_PERMISSION'
@@ -137,7 +137,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
         unknown_objectclass = 3
         OTHERS              = 4.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_CORR_INSERT, PARA' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     MODIFY tpara FROM ls_tpara.                           "#EC CI_SUBRC

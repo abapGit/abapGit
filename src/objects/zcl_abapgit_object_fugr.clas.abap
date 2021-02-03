@@ -417,7 +417,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         area_length_error            = 11
         OTHERS                       = 12.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from FUNCTION_INCLUDE_SPLIT' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     ii_xml->read( EXPORTING iv_name = 'AREAT'
@@ -456,7 +456,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         update_func_group_short_text( iv_group      = lv_group
                                       iv_short_text = lv_stext ).
       WHEN OTHERS.
-        zcx_abapgit_exception=>raise( |error from RS_FUNCTION_POOL_INSERT, code: { sy-subrc }| ).
+        zcx_abapgit_exception=>raise_t100( ).
     ENDCASE.
 
   ENDMETHOD.
@@ -479,7 +479,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         function_pool_not_found = 1
         OTHERS                  = 2.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from RS_FUNCTION_POOL_CONTENTS for { lv_area }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
 * The result can also contain function which are lowercase.
@@ -742,7 +742,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         area_length_error            = 11
         OTHERS                       = 12.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from FUNCTION_INCLUDE_SPLIT' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     CONCATENATE lv_namespace 'SAPL' lv_group INTO rv_program.
@@ -1037,7 +1037,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         cancelled              = 9
         OTHERS                 = 10.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_FUNCTION_POOL_DELETE' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     update_where_used( lt_includes ).

@@ -35,7 +35,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_UCSA IMPLEMENTATION.
+CLASS zcl_abapgit_object_ucsa IMPLEMENTATION.
 
 
   METHOD clear_dynamic_fields.
@@ -241,7 +241,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UCSA IMPLEMENTATION.
         OTHERS              = 3.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_TOOL_ACCESS' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
