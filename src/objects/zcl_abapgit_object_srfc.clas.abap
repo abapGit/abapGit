@@ -9,7 +9,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_SRFC IMPLEMENTATION.
+CLASS zcl_abapgit_object_srfc IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -167,7 +167,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRFC IMPLEMENTATION.
         OTHERS              = 3.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_TOOL_ACCESS' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.

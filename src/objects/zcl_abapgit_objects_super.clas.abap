@@ -403,7 +403,7 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
         OTHERS              = 1.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from TR_TADIR_INTERFACE (subrc={ sy-subrc } ).| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.

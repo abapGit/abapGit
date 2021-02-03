@@ -57,7 +57,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_BDEF IMPLEMENTATION.
+CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
 
 
   METHOD clear_field.
@@ -588,7 +588,7 @@ CLASS ZCL_ABAPGIT_OBJECT_BDEF IMPLEMENTATION.
         OTHERS              = 3.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |RC={ sy-subrc } from RS_TOOL_ACCESS| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.

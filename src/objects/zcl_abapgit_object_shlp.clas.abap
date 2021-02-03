@@ -10,7 +10,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_SHLP IMPLEMENTATION.
+CLASS zcl_abapgit_object_shlp IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -82,7 +82,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SHLP IMPLEMENTATION.
         put_refused       = 5
         OTHERS            = 6.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from DDIF_SHLP_PUT' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
@@ -164,7 +164,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SHLP IMPLEMENTATION.
         illegal_input = 1
         OTHERS        = 2.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from DDIF_SHLP_GET' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
     IF ls_dd30v IS INITIAL.
       RETURN. " does not exist in system

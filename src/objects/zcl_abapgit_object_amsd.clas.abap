@@ -11,6 +11,7 @@ CLASS zcl_abapgit_object_amsd DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RAISING
           zcx_abapgit_exception.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     METHODS:
       clear_fields
@@ -389,7 +390,7 @@ CLASS zcl_abapgit_object_amsd IMPLEMENTATION.
         OTHERS              = 3.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |RC={ sy-subrc } from RS_TOOL_ACCESS| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.

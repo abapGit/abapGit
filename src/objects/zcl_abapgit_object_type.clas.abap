@@ -23,7 +23,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_TYPE IMPLEMENTATION.
+CLASS zcl_abapgit_object_type IMPLEMENTATION.
 
 
   METHOD create.
@@ -50,7 +50,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TYPE IMPLEMENTATION.
         illegal_name         = 5
         OTHERS               = 6.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_DD_TYGR_INSERT_SOURCES' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     CONCATENATE c_prefix lv_typegroup INTO lv_progname.

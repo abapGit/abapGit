@@ -154,7 +154,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
           immediate              = 'X'
           actualize_working_area = 'X'.
     ELSEIF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from RS_DELETE_PROGRAM: { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     delete_longtexts( c_longtext_id_prog ).

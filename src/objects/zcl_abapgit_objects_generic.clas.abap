@@ -105,7 +105,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
+CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
 
 
   METHOD after_import.
@@ -230,7 +230,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
         unknown_objectclass = 3
         OTHERS              = 4.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_CORR_INSERT, CMPT' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.

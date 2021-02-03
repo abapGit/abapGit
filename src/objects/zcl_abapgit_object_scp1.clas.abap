@@ -55,7 +55,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
+CLASS zcl_abapgit_object_scp1 IMPLEMENTATION.
 
 
   METHOD adjust_inbound.
@@ -186,7 +186,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
         system_failure    = 2
         OTHERS            = 3.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |SCP1 locking error| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -269,7 +269,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
         database_error            = 4
         OTHERS                    = 5.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error saving SCP1, { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -319,7 +319,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
         error_in_transport_layer = 2
         OTHERS                   = 3.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error saving SCP1, { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.

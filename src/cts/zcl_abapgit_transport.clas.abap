@@ -60,7 +60,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
+CLASS zcl_abapgit_transport IMPLEMENTATION.
 
 
   METHOD add_all_objects_to_trans_req.
@@ -149,7 +149,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
           OTHERS            = 3.
 
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |FM TRINT_SELECT_OBJECTS subrc={ sy-subrc }| ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
       INSERT LINES OF lt_objects INTO TABLE lt_objects_all.
@@ -218,7 +218,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
           invalid_input = 1
           OTHERS        = 2.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'error from TR_READ_REQUEST_WITH_TASKS' ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
       APPEND LINES OF lt_requests TO rt_requests.

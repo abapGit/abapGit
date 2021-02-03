@@ -114,7 +114,7 @@ CLASS zcl_abapgit_object_cus1 IMPLEMENTATION.
         unknown_objectclass = 3
         OTHERS              = 4.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_CORR_INSERT, CUS0' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.

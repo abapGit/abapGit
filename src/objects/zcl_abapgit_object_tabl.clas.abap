@@ -319,7 +319,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       EXCEPTIONS
         OTHERS              = 1.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from TR_TADIR_INTERFACE' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
   ENDMETHOD.
 
@@ -366,7 +366,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
           put_refused       = 5
           OTHERS            = 6.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |error from DDIF_TABL_PUT @TEXTS, { sy-subrc }| ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
     ENDLOOP.
 
@@ -734,7 +734,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
           put_refused       = 5
           OTHERS            = 6.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'error from DDIF_TABL_PUT' ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
       zcl_abapgit_objects_activation=>add_item( ms_item ).
@@ -765,7 +765,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
             put_refused       = 5
             OTHERS            = 6.
         IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise( 'error from DDIF_INDX_PUT' ).
+          zcx_abapgit_exception=>raise_t100( ).
         ENDIF.
 
         CALL FUNCTION 'DD_DD_TO_E071'

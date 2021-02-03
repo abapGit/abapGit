@@ -113,7 +113,7 @@ CLASS zcl_abapgit_object_vcls IMPLEMENTATION.
     IF sy-subrc = 1.
       zcx_abapgit_exception=>raise( 'Cancelled' ).
     ELSEIF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_CORR_INSERT' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     lv_objectname = ls_vcldir_entry-vclname.
@@ -131,7 +131,7 @@ CLASS zcl_abapgit_object_vcls IMPLEMENTATION.
         object_enqueue_failed = 5
         OTHERS                = 6.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error in OBJ_GENERATE for VCLS' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -292,7 +292,7 @@ CLASS zcl_abapgit_object_vcls IMPLEMENTATION.
         incomplete_viewcluster = 2
         OTHERS                 = 3.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error in VIEWCLUSTER_GET_DEFINITION' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     SORT lt_vclstrudep BY vclname object objfield.

@@ -238,7 +238,7 @@ CLASS zcl_abapgit_object_otgr IMPLEMENTATION.
         OTHERS              = 3.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from RS_TOOL_ACCESS, CHAR| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
   ENDMETHOD.
 

@@ -31,7 +31,7 @@ CLASS zcl_abapgit_object_acid IMPLEMENTATION.
         name_not_allowed = 1
         OTHERS           = 2.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error creating CL_AAB_ID object' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
