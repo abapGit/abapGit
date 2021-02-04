@@ -185,17 +185,20 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
           ev_path     = ls_file-path
           ev_filename = ls_file-filename ).
 
-      lv_pattern = '*/' && to_upper( ls_file-filename ).
-      REPLACE ALL OCCURRENCES OF '#' IN lv_pattern WITH '##'. " for CP
+      " Skip packages since they all have identical filenames 
+      IF ls_file-filename <> 'package.devc.xml'.
+        lv_pattern = '*/' && to_upper( ls_file-filename ).
+        REPLACE ALL OCCURRENCES OF '#' IN lv_pattern WITH '##'. " for CP
 
-      LOOP AT io_files->mt_entries ASSIGNING <ls_item_chk>
-        WHERE k CP lv_pattern AND k <> <ls_item>-k AND v <> zif_abapgit_definitions=>c_method-rm.
+        LOOP AT io_files->mt_entries ASSIGNING <ls_item_chk>
+          WHERE k CP lv_pattern AND k <> <ls_item>-k AND v <> zif_abapgit_definitions=>c_method-rm.
 
-        lv_msg = |In order to add { to_lower( <ls_item>-k ) }, | &&
-                 |you have to remove { to_lower( <ls_item_chk>-k ) }|.
-        zcx_abapgit_exception=>raise( lv_msg ).
+          lv_msg = |In order to add { to_lower( <ls_item>-k ) }, | &&
+                   |you have to remove { to_lower( <ls_item_chk>-k ) }|.
+          zcx_abapgit_exception=>raise( lv_msg ).
 
-      ENDLOOP.
+        ENDLOOP.
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.
