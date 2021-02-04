@@ -185,7 +185,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
           ev_path     = ls_file-path
           ev_filename = ls_file-filename ).
 
-      " Skip packages since they all have identical filenames 
+      " Skip packages since they all have identical filenames
       IF ls_file-filename <> 'package.devc.xml'.
         lv_pattern = '*/' && to_upper( ls_file-filename ).
         REPLACE ALL OCCURRENCES OF '#' IN lv_pattern WITH '##'. " for CP
