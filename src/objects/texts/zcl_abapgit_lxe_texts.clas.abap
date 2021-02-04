@@ -184,11 +184,18 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
 
     CALL FUNCTION 'LXE_OBJ_EXPAND_TRANSPORT_OBJ'
       EXPORTING
-        pgmid    = 'R3TR'
-        object   = iv_object_type
-        obj_name = lv_object_name
+        pgmid           = 'R3TR'
+        object          = iv_object_type
+        obj_name        = lv_object_name
       TABLES
-        ex_colob = rt_obj_list.
+        ex_colob        = rt_obj_list
+      EXCEPTIONS
+        unknown_object  = 1
+        unknown_ta_type = 2
+        OTHERS          = 3.
+    IF sy-subrc <> 0.
+      RETURN. " Ignore error and return empty list
+    ENDIF.
 
   ENDMETHOD.
 
@@ -270,6 +277,10 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
     lt_obj_list = get_lxe_object_list(
                     iv_object_name = iv_object_name
                     iv_object_type = iv_object_type ).
+
+    IF lt_obj_list IS INITIAL.
+      RETURN.
+    ENDIF.
 
     " Get list of languages that need to be serialized (already resolves * and installed languages)
     lv_main_lang = get_lang_iso4( ii_xml->i18n_params( )-main_language ).
