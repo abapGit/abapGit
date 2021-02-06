@@ -198,7 +198,7 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
                 iv_help_page = 'https://docs.abapgit.org/guide-repo-infos.html' ).
 
     IF mo_repo->is_offline( ) = abap_true.
-      lv_label = 'ZIP'.
+      lv_label = 'ZIP File'.
     ELSE.
       lv_label = 'Remote'.
     ENDIF.
