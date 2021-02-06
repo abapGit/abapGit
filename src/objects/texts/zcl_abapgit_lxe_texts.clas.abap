@@ -216,8 +216,8 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
 
   METHOD get_lang_iso4.
 
-    DATA lv_lang_iso639	TYPE i18_a_langiso2.
-    DATA lv_country	TYPE land1.
+    DATA lv_lang_iso639 TYPE i18_a_langiso2.
+    DATA lv_country TYPE land1.
 
     cl_i18n_languages=>sap2_to_iso639_1(
       EXPORTING
