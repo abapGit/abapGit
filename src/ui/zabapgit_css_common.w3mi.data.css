@@ -209,7 +209,7 @@ span.transport-box {
 /* STATE BLOCK COMMON*/
 span.state-block {
   margin-left: 1em;
-  font-family: Consolas, Lucida Console, Courier, monospace;
+  font-family: Consolas, "Lucida Console", Courier, monospace;
   font-size: x-small;
   vertical-align: 13%;
   display: inline-block;
@@ -836,7 +836,7 @@ div.message-panel {
 }
 
 div.message-panel:hover .message-panel-commands {
-  display: block
+  display: block;
 }
 
 /* Tooltip text */
@@ -1146,7 +1146,7 @@ settings_tab tr:first-child td { border-top: 0px; }
   font-size: 14px;
   height: 2.5em;
   background-color: #ddd;
-  border: 1px solid #ddd;
+  border: 1px solid #ccc;
   padding: 0px 10px;
 }
 .dialog table tbody td {
@@ -1181,7 +1181,7 @@ settings_tab tr:first-child td { border-top: 0px; }
 }
 .dialog fieldset legend {
   font-size: large;
-  font-style: bold;
+  font-weight: bold;
   padding-left: 0.5em;
   padding-right: 0.5em;
 }
