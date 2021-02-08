@@ -194,10 +194,10 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       iv_txt = 'Database Utility'
       iv_act = zif_abapgit_definitions=>c_action-go_db
     )->add(
-      iv_txt = 'Package to Zip'
+      iv_txt = 'Package to ZIP'
       iv_act = zif_abapgit_definitions=>c_action-zip_package
     )->add(
-      iv_txt = 'Transport to Zip'
+      iv_txt = 'Transport to ZIP'
       iv_act = zif_abapgit_definitions=>c_action-zip_transport
     )->add(
       iv_txt = 'Object to Files'
