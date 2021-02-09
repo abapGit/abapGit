@@ -356,7 +356,7 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
 
     lv_all_languages = abap_false.
 
-    IF io_xml->i18n_params( )-main_language_only = abap_true.
+    IF io_xml->i18n_params( )-main_language_only = abap_false.
       lv_all_languages = abap_true.
     ELSE.
       lv_language = mv_language.
