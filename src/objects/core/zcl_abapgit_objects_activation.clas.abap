@@ -61,7 +61,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
 
 
   METHOD activate.
@@ -115,7 +115,9 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
 
       CALL FUNCTION 'DD_MASS_ACT_C3'
         EXPORTING
-          ddmode         = 'O'
+          ddmode         = 'T' "'O'
+          inactive       = abap_true
+          delall         = abap_true
           medium         = 'T' " transport order
           device         = 'T' " saves to table DDRPH?
           version        = 'M' " activate newest
