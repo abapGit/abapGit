@@ -267,6 +267,8 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     ls_field-name  = iv_name.
     APPEND ls_field TO mt_fields.
 
+    ro_self = me.
+
   ENDMETHOD.
 
 

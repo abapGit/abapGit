@@ -105,8 +105,6 @@ CLASS zcl_abapgit_object_nspc IMPLEMENTATION.
   METHOD serialize_texts.
 
     DATA:
-      lv_name       TYPE ddobjname,
-      lv_index      TYPE i,
       ls_trnspacett TYPE trnspacett,
       lt_nspc_texts TYPE ty_nspc_texts,
       lt_i18n_langs TYPE TABLE OF langu.
@@ -315,9 +313,7 @@ CLASS zcl_abapgit_object_nspc IMPLEMENTATION.
 
     DATA:
       ls_nspc       TYPE ty_nspc,
-      ls_nspc_text  TYPE ty_nspc_text,
-      ls_trnspacet  TYPE trnspacet,
-      ls_trnspacett TYPE trnspacett.
+      ls_nspc_text  TYPE ty_nspc_text.
 
     SELECT SINGLE * FROM trnspacet INTO CORRESPONDING FIELDS OF ls_nspc
       WHERE namespace = ms_item-obj_name.
