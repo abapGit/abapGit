@@ -40,9 +40,6 @@ CLASS zcl_abapgit_objects_super DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS jump_se11
-      IMPORTING
-        !iv_radio TYPE string
-        !iv_field TYPE string
       RAISING
         zcx_abapgit_exception .
     METHODS exists_a_lock_entry_for

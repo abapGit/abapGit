@@ -254,8 +254,7 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
 
       WHEN OTHERS.
 
-        jump_se11( iv_radio = 'RSRD1-VIMA'
-                   iv_field = 'RSRD1-VIMA_VAL' ).
+        jump_se11( ).
 
     ENDCASE.
 
