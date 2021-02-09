@@ -4,7 +4,7 @@ INTERFACE zif_abapgit_html_viewer
 
   CONSTANTS m_id_sapevent TYPE i VALUE 1 ##NO_TEXT.
 
-  TYPES ty_char256 TYPE c.
+  TYPES ty_char256 TYPE c LENGTH 256.
   TYPES ty_post_data TYPE STANDARD TABLE OF ty_char256 WITH DEFAULT KEY.
   TYPES: BEGIN OF ty_name_value,
            name  TYPE c LENGTH 30,
