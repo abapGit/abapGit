@@ -514,8 +514,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     DATA: lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
     DATA: lx_error TYPE REF TO zcx_abapgit_exception.
 
-    CREATE OBJECT ri_log TYPE zcl_abapgit_log.
-    ri_log->set_title( 'Uninstall Log' ).
+    ri_log = io_repo->create_new_log( 'Uninstall Log' ).
 
     IF io_repo->get_local_settings( )-write_protected = abap_true.
       zcx_abapgit_exception=>raise( 'Cannot purge. Local code is write-protected by repo config' ).
@@ -531,7 +530,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
                                      ii_log    = ri_log ).
       CATCH zcx_abapgit_exception INTO lx_error.
         " If uninstall fails, repo needs a refresh to show which objects where deleted and which not
-        io_repo->refresh( ).
+        io_repo->refresh( iv_drop_log = abap_false ).
         RAISE EXCEPTION lx_error.
     ENDTRY.
 
