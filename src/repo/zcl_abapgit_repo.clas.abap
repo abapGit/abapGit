@@ -72,6 +72,8 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS refresh
       IMPORTING
         !iv_drop_cache TYPE abap_bool DEFAULT abap_false
+        !iv_drop_log   TYPE abap_bool DEFAULT abap_true
+          PREFERRED PARAMETER iv_drop_cache
       RAISING
         zcx_abapgit_exception .
     METHODS update_local_checksums
@@ -614,7 +616,9 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     mv_request_local_refresh = abap_true.
     reset_remote( ).
 
-    CLEAR mi_log.
+    IF iv_drop_log = abap_true.
+      CLEAR mi_log.
+    ENDIF.
 
     IF iv_drop_cache = abap_true.
       CLEAR mt_local.

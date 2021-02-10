@@ -19,7 +19,7 @@ If your system is connected to the Internet, create an online repository for you
 
 ### Offline project
 
-If your system is not connected to the Internet, create an offline repository. To update abapGit download the zip file from [https://github.com/abapGit/abapGit/archive/master.zip](https://github.com/abapGit/abapGit/archive/master.zip), and select "Import Zip" in your abapGit repository.
+If your system is not connected to the Internet, create an offline repository. To update abapGit download the ZIP file from [https://github.com/abapGit/abapGit/archive/master.zip](https://github.com/abapGit/abapGit/archive/master.zip), and select "Import ZIP" in your abapGit repository.
 
 ### Troubleshooting
 
@@ -27,6 +27,6 @@ Updates to abapGit can on occasion be quite significant and cause issues like in
 1. Install and activate the latest standalone version (see above).
 2. Run the standalone version to update the abapGit developer version.
 3. If the update does not complete, delete any inactive objects or objects with diffs completely (like inactive classes in SE24).
-4. Restart the standalone version and perform a new "Pull" or "Import Zip".
+4. Restart the standalone version and perform a new "Pull" or "Import ZIP".
 5. If this does not resolve the problem, open an issue on [GitHub](https://github.com/abapGit/abapGit/issues).
 

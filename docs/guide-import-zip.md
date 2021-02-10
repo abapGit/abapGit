@@ -1,11 +1,11 @@
 ---
-title: Import zip
+title: Import ZIP
 category: offline projects
 order: 10
 ---
 
-## Download zip archive ## 
-An offline project is based on a zip archive that contains all the git files.
+## Download ZIP File ## 
+An offline project is based on a ZIP file that contains all files of a git repository.
 
 First, download the latest version of the project you want to import. 
 
@@ -14,21 +14,20 @@ First, download the latest version of the project you want to import.
    2. Select **Code** > **Download ZIP**
    3. Save file
 
-## Import zip archive ##
-1. Connect to SAP in language **EN**
+## Import ZIP File ##
+1. Connect to SAP in language English (**EN**)
 2. Run abapGit:
-  * If you have installed the standalone version : in transaction `SE38`, run the program you created  (`ZABAPGIT_STANDALONE` or `ZABAPGIT_FULL` or other)
-  * If you have installed the developer version : run transaction `ZABAPGIT`
+  * If you have installed the standalone version: in transaction `SE38`, run the program you created  (`ZABAPGIT_STANDALONE` or `ZABAPGIT_FULL` or other)
+  * If you have installed the developer version: run transaction `ZABAPGIT`
 3. Select **New Offline**
 4. Enter the project name and select an existing package or create a new package
 5. Select **Import <sup>zip</sup>**
-6. Select the zip archive file (eg. *abapGit-master.zip*)
+6. Select the ZIP file (eg. *abapGit-master.zip*)
 7. Select **Pull <sup>zip</sup>**
-8. Activate
 
 ## Hints ##
 abapGit can only import files with [`LF`](https://en.wikipedia.org/wiki/Newline) as line-terminator.
-If you clone a project on windows with git cli to pack into a zip-archive later on, configure git not replace `LF` by `CRLF`:
+If you clone a project on windows with git cli to pack into a ZIP file later on, configure git not replace `LF` by `CRLF`:
 ```
 git config [--global, --local, --system] core.autocrlf false
 ```

@@ -101,7 +101,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TUTORIAL IMPLEMENTATION.
     ri_html->add( ' from the top menu.' ).
     ri_html->add( '<li>abapGit will start tracking changes for the package ' ).
     ri_html->add( 'without linking it to an online git repository.</li>' ).
-    ri_html->add( '<li>You can link the package later or just export the package content as a zip file.</li>' ).
+    ri_html->add( '<li>You can link the package later or just export the package content as a ZIP file.</li>' ).
 
     ri_html->add( '</ul></p>' ).
 
