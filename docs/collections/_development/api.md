@@ -45,7 +45,7 @@ DATA(lt_repos) = zcl_abapgit_repo_srv=>get_instance( )->list( ).
 Get a structured list of all repositories with properties and local settings:
 
 ```abap
-DATA(lt_list) = NEW zcl_abapgit_persistence_repo( )->list( ).
+DATA(lt_list) = zcl_abapgit_persist_factory=>get_repo( )->list( ).
 ```
 
 ### Read ###
