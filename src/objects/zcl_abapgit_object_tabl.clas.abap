@@ -151,6 +151,11 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
     ENDLOOP.
 
+    " Clear position to avoid issues with include structures that contain different number of fields
+    LOOP AT ct_dd03p ASSIGNING <ls_dd03p>.
+      CLEAR <ls_dd03p>-position.
+    ENDLOOP.
+
   ENDMETHOD.
 
 
@@ -661,7 +666,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
           lv_refs      TYPE abap_bool,
           ls_extras    TYPE ty_tabl_extras.
 
-    FIELD-SYMBOLS: <ls_dd03p> TYPE dd03p,
+    FIELD-SYMBOLS: <ls_dd03p>      TYPE dd03p,
                    <lg_roworcolst> TYPE any.
 
     IF deserialize_idoc_segment( io_xml     = io_xml
@@ -685,6 +690,11 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
         ELSE.
           lv_refs = abap_true.
         ENDIF.
+      ENDLOOP.
+
+      " Number fields sequentially
+      LOOP AT lt_dd03p ASSIGNING <ls_dd03p>.
+        <ls_dd03p>-position = sy-tabix.
       ENDLOOP.
 
       io_xml->read( EXPORTING iv_name = 'DD05M_TABLE'
