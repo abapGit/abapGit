@@ -102,7 +102,6 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
 
   METHOD deserialize_abap.
-* same as in zcl_abapgit_object_clas, but without "mo_object_oriented_object_fct->add_to_activation_list"
 
     DATA: ls_vseoclass             TYPE vseoclass,
           lt_source                TYPE seop_source_string,
@@ -137,6 +136,11 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     ii_xml->read( EXPORTING iv_name = 'ATTRIBUTES'
                   CHANGING  cg_data = lt_attributes ).
 
+    " Remove code for test classes if they have been deleted
+    IF ls_vseoclass-with_unit_tests = abap_false.
+      CLEAR lt_test_classes.
+    ENDIF.
+
     mi_object_oriented_object_fct->create(
       EXPORTING
         iv_package    = iv_package
@@ -146,7 +150,6 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     mi_object_oriented_object_fct->generate_locals(
       is_key                   = ls_class_key
-      iv_force                 = abap_true
       it_local_definitions     = lt_local_definitions
       it_local_implementations = lt_local_implementations
       it_local_macros          = lt_local_macros
@@ -587,23 +590,6 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
                       iv_package = iv_package ).
 
     deserialize_docu( io_xml ).
-
-    " If a method was moved to an interface, abapGit does not remove the old
-    " method include and it's necessary to repair the class (#3833)
-    " TODO: Remove 2020-11 or replace with general solution
-    IF ms_item-obj_name = 'ZCX_ABAPGIT_EXCEPTION'.
-      ls_clskey-clsname = ms_item-obj_name.
-
-      CALL FUNCTION 'SEO_CLASS_REPAIR_CLASSPOOL'
-        EXPORTING
-          clskey       = ls_clskey
-        EXCEPTIONS
-          not_existing = 1
-          OTHERS       = 2.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Error repairing class { ms_item-obj_name }| ).
-      ENDIF.
-    ENDIF.
 
   ENDMETHOD.
 

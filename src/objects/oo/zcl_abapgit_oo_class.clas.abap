@@ -87,6 +87,9 @@ CLASS zcl_abapgit_oo_class DEFINITION
       IMPORTING
         !iv_classname              TYPE seoclsname
         !iv_number_of_impl_methods TYPE i .
+    CLASS-METHODS delete_report
+      IMPORTING
+        !iv_program TYPE programm .
 ENDCLASS.
 
 
@@ -97,6 +100,11 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
   METHOD create_report.
     INSERT REPORT iv_program FROM it_source EXTENSION TYPE iv_extension STATE iv_version PROGRAM TYPE iv_program_type.
     ASSERT sy-subrc = 0.
+  ENDMETHOD.
+
+
+  METHOD delete_report.
+    DELETE REPORT iv_program ##SUBRC_OK.
   ENDMETHOD.
 
 
@@ -595,6 +603,10 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
       lv_program = cl_oo_classname_service=>get_ccau_name( is_key-clsname ).
       update_report( iv_program = lv_program
                      it_source  = it_local_test_classes ).
+    ELSE.
+      " Drop the include to remove left-over test classes
+      lv_program = cl_oo_classname_service=>get_ccau_name( is_key-clsname ).
+      delete_report( lv_program ).
     ENDIF.
 
   ENDMETHOD.
