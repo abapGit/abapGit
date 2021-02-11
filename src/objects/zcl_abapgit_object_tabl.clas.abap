@@ -733,7 +733,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
                    <ls_dd36m>      TYPE dd36m,
                    <lg_roworcolst> TYPE any.
 
-      lv_name = ms_item-obj_name. " type conversion
+    lv_name = ms_item-obj_name. " type conversion
 
     IF deserialize_idoc_segment( io_xml     = io_xml
                                  iv_package = iv_package ) = abap_false.
