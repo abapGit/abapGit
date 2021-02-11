@@ -437,7 +437,6 @@ INTERFACE zif_abapgit_definitions
       repo_open_in_master_lang      TYPE string VALUE 'repo_open_in_master_lang',
       repo_log                      TYPE string VALUE 'repo_log',
       abapgit_home                  TYPE string VALUE 'abapgit_home',
-      abapgit_install               TYPE string VALUE 'abapgit_install',
       zip_import                    TYPE string VALUE 'zip_import',
       zip_export                    TYPE string VALUE 'zip_export',
       zip_package                   TYPE string VALUE 'zip_package',
