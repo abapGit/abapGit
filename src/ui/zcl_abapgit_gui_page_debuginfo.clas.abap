@@ -37,7 +37,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -116,8 +116,6 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
       ri_html->add( 'abapGit installed in package&nbsp;' ).
       ri_html->add( lv_devclass ).
     ELSE.
-      ri_html->add_a( iv_txt = 'Install abapGit repository'
-                      iv_act = zif_abapgit_definitions=>c_action-abapgit_install ).
       ri_html->add( ' - To keep abapGit up-to-date (or also to contribute) you need to' ).
       ri_html->add( 'install it as a repository.' ).
     ENDIF.
