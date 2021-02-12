@@ -60,7 +60,7 @@ CLASS zcl_abapgit_gui_page_tag DEFINITION PUBLIC FINAL
         zcx_abapgit_exception .
     METHODS parse_change_tag_type_request
       IMPORTING
-        !it_postdata TYPE cnht_post_data_tab .
+        !it_postdata TYPE zif_abapgit_html_viewer=>ty_post_data .
     METHODS render_scripts
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html

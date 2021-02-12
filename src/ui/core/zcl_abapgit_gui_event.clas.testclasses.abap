@@ -90,7 +90,7 @@ CLASS ltcl_event IMPLEMENTATION.
 
     DATA li_cut TYPE REF TO zif_abapgit_gui_event.
     DATA lo_map TYPE REF TO zcl_abapgit_string_map.
-    DATA lt_postdata TYPE cnht_post_data_tab.
+    DATA lt_postdata TYPE zif_abapgit_html_viewer=>ty_post_data.
 
     APPEND 'a=b&b=c' TO lt_postdata.
     CREATE OBJECT li_cut TYPE zcl_abapgit_gui_event
