@@ -938,9 +938,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     "ignore objects that exists only local
     DELETE rt_results WHERE lstate = zif_abapgit_definitions=>c_state-added AND rstate IS INITIAL.
-    "ignore objects that where deleted remotely
-    DELETE rt_results WHERE rstate = zif_abapgit_definitions=>c_state-deleted.
-    "log objects that exists only local or where deleted remotely
+    "log objects that exists only local
     IF sy-subrc = 0 AND ii_log IS BOUND.
       SORT rt_results BY obj_type obj_name.
       LOOP AT lt_objects REFERENCE INTO lr_object.
@@ -955,6 +953,15 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         ENDIF.
       ENDLOOP.
     ENDIF.
+
+    "ignore objects that where deleted remotely
+    "but not class includes with separate file which cleaned up during deserialize
+    LOOP AT rt_results REFERENCE INTO lr_object WHERE rstate = zif_abapgit_definitions=>c_state-deleted.
+      lv_tabix = sy-tabix.
+      IF zcl_abapgit_oo_base=>is_part_of_class( lr_object->filename ) = abap_false.
+        DELETE rt_results INDEX lv_tabix.
+      ENDIF.
+    ENDLOOP.
 
     SORT rt_results
       BY obj_type ASCENDING
@@ -1345,7 +1352,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     LOOP AT it_results ASSIGNING <ls_result> WHERE NOT obj_type IS INITIAL.
       IF <ls_result>-lstate IS NOT INITIAL
         AND NOT ( <ls_result>-lstate = zif_abapgit_definitions=>c_state-added
-        AND <ls_result>-rstate IS INITIAL ).
+        AND <ls_result>-rstate IS INITIAL )
+        OR ( <ls_result>-lstate IS INITIAL
+        AND <ls_result>-rstate = zif_abapgit_definitions=>c_state-deleted ).
         " current object has been modified or deleted locally, add to table
         CLEAR ls_overwrite.
         MOVE-CORRESPONDING <ls_result> TO ls_overwrite.

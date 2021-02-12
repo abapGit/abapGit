@@ -375,6 +375,11 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
                       WHERE lstate = zif_abapgit_definitions=>c_state-added
                          OR rstate = zif_abapgit_definitions=>c_state-deleted.
 
+      " Class includes with separate files are clean-up during deserialize
+      IF zcl_abapgit_oo_base=>is_part_of_class( <ls_status>-filename ) = abap_true.
+        CONTINUE.
+      ENDIF.
+
       READ TABLE lt_tadir ASSIGNING <ls_tadir>
                           WITH KEY pgmid    = 'R3TR'
                                    object   = <ls_status>-obj_type

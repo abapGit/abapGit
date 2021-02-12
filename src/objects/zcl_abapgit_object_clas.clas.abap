@@ -116,16 +116,16 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     lt_source = mo_files->read_abap( ).
 
-    lt_local_definitions = mo_files->read_abap( iv_extra = 'locals_def'
+    lt_local_definitions = mo_files->read_abap( iv_extra = zif_abapgit_oo_object_fnc=>c_parts-locals_def
                                                 iv_error = abap_false ).
 
-    lt_local_implementations = mo_files->read_abap( iv_extra = 'locals_imp'
+    lt_local_implementations = mo_files->read_abap( iv_extra = zif_abapgit_oo_object_fnc=>c_parts-locals_imp
                                                     iv_error = abap_false ).
 
-    lt_local_macros = mo_files->read_abap( iv_extra = 'macros'
+    lt_local_macros = mo_files->read_abap( iv_extra = zif_abapgit_oo_object_fnc=>c_parts-macros
                                            iv_error = abap_false ).
 
-    lt_test_classes = mo_files->read_abap( iv_extra = 'testclasses'
+    lt_test_classes = mo_files->read_abap( iv_extra = zif_abapgit_oo_object_fnc=>c_parts-testclasses
                                            iv_error = abap_false ).
 
     ls_class_key-clsname = ms_item-obj_name.
@@ -671,7 +671,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       is_class_key = ls_class_key
       iv_type      = seop_ext_class_locals_def ).
     IF lines( lt_source ) > 0.
-      mo_files->add_abap( iv_extra = 'locals_def'
+      mo_files->add_abap( iv_extra = zif_abapgit_oo_object_fnc=>c_parts-locals_def
                           it_abap  = lt_source ).
     ENDIF.
 
@@ -679,7 +679,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       is_class_key = ls_class_key
       iv_type      = seop_ext_class_locals_imp ).
     IF lines( lt_source ) > 0.
-      mo_files->add_abap( iv_extra = 'locals_imp'
+      mo_files->add_abap( iv_extra = zif_abapgit_oo_object_fnc=>c_parts-locals_imp
                           it_abap  = lt_source ).
     ENDIF.
 
@@ -689,7 +689,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     mv_skip_testclass = mi_object_oriented_object_fct->get_skip_test_classes( ).
     IF lines( lt_source ) > 0 AND mv_skip_testclass = abap_false.
-      mo_files->add_abap( iv_extra = 'testclasses'
+      mo_files->add_abap( iv_extra = zif_abapgit_oo_object_fnc=>c_parts-testclasses
                           it_abap  = lt_source ).
     ENDIF.
 
@@ -697,7 +697,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       is_class_key = ls_class_key
       iv_type      = seop_ext_class_macros ).
     IF lines( lt_source ) > 0.
-      mo_files->add_abap( iv_extra = 'macros'
+      mo_files->add_abap( iv_extra = zif_abapgit_oo_object_fnc=>c_parts-macros
                           it_abap  = lt_source ).
     ENDIF.
 
