@@ -79,12 +79,13 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
 
   METHOD activate_ddic.
 
-    DATA: lt_gentab     TYPE STANDARD TABLE OF dcgentb,
-          lv_rc         TYPE sy-subrc,
-          ls_gentab     LIKE LINE OF lt_gentab,
-          lt_deltab     TYPE STANDARD TABLE OF dcdeltb,
-          lt_action_tab TYPE STANDARD TABLE OF dctablres,
-          lv_logname    TYPE ddmass-logname.
+    DATA: lt_gentab       TYPE STANDARD TABLE OF dcgentb,
+          lv_rc           TYPE sy-subrc,
+          ls_gentab       LIKE LINE OF lt_gentab,
+          lt_deltab       TYPE STANDARD TABLE OF dcdeltb,
+          lt_action_tab   TYPE STANDARD TABLE OF dctablres,
+          lv_logname      TYPE ddmass-logname,
+          lv_logname_dist TYPE trbat-logname.
 
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF gt_objects.
 
@@ -115,9 +116,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
 
       CALL FUNCTION 'DD_MASS_ACT_C3'
         EXPORTING
-          ddmode         = 'T'         " mimic Activation during Transport
-          inactive       = abap_true   " write inactive Nametab
-          delall         = abap_true   " delete N and A versions
+          ddmode         = 'O'         " activate changes in Original System
+          frcact         = abap_true   " force Activation
           medium         = 'T'         " transport order
           device         = 'T'         " saves to table DDRPH?
           version        = 'M'         " activate newest version
