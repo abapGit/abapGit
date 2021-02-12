@@ -62,7 +62,7 @@ CLASS zcl_abapgit_http_client IMPLEMENTATION.
       WHEN 415.
         zcx_abapgit_exception=>raise( 'Unsupported media type (HTTP 415)' ).
       WHEN 422.
-        zcx_abapgit_exception=>raise( 'Unprocessable entity (HTTP 422). Check the URL (it might have to end with ".git")' ).
+        zcx_abapgit_exception=>raise( 'Unprocessable entity (HTTP 422). Check, if URL has to end with ".git"' ).
       WHEN OTHERS.
         lv_text = mi_client->response->get_cdata( ).
         zcx_abapgit_exception=>raise( |(HTTP { lv_code }) { lv_text }| ).
