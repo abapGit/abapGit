@@ -4,13 +4,21 @@ INTERFACE zif_abapgit_html_viewer
 
   CONSTANTS m_id_sapevent TYPE i VALUE 1 ##NO_TEXT.
 
+  TYPES ty_char256 TYPE c LENGTH 256.
+  TYPES ty_post_data TYPE STANDARD TABLE OF ty_char256 WITH DEFAULT KEY.
+  TYPES: BEGIN OF ty_name_value,
+           name  TYPE c LENGTH 30,
+           value TYPE c LENGTH 250,
+         END OF ty_name_value.
+  TYPES ty_query_table TYPE STANDARD TABLE OF ty_name_value WITH DEFAULT KEY.
+
   EVENTS sapevent
     EXPORTING
       VALUE(action) TYPE c OPTIONAL
       VALUE(frame) TYPE c OPTIONAL
       VALUE(getdata) TYPE c OPTIONAL
-      VALUE(postdata) TYPE cnht_post_data_tab OPTIONAL
-      VALUE(query_table) TYPE cnht_query_table OPTIONAL .
+      VALUE(postdata) TYPE ty_post_data OPTIONAL
+      VALUE(query_table) TYPE ty_query_table OPTIONAL .
 
   METHODS load_data
     IMPORTING
