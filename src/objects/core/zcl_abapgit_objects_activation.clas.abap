@@ -84,8 +84,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
           ls_gentab       LIKE LINE OF lt_gentab,
           lt_deltab       TYPE STANDARD TABLE OF dcdeltb,
           lt_action_tab   TYPE STANDARD TABLE OF dctablres,
-          lv_logname      TYPE ddmass-logname,
-          lv_logname_dist TYPE trbat-logname.
+          lv_logname      TYPE ddmass-logname.
 
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF gt_objects.
 
