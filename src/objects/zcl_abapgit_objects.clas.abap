@@ -955,7 +955,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDIF.
 
     "ignore objects that where deleted remotely
-    "but not class includes with separate file which cleaned up during deserialize
+    "but not class includes with separate file which are cleaned up during deserialize
     LOOP AT rt_results REFERENCE INTO lr_object WHERE rstate = zif_abapgit_definitions=>c_state-deleted.
       lv_tabix = sy-tabix.
       IF zcl_abapgit_oo_base=>is_part_of_class( lr_object->filename ) = abap_false.
