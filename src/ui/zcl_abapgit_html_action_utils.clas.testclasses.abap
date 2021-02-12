@@ -275,7 +275,7 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
 
   METHOD parse_post_form_data.
 
-    DATA lt_post_data TYPE cnht_post_data_tab.
+    DATA lt_post_data TYPE zif_abapgit_html_viewer=>ty_post_data.
     DATA lv_line LIKE LINE OF lt_post_data.
     DATA lv_long_name LIKE LINE OF lt_post_data.
     DATA lv_size TYPE i.

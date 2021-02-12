@@ -21,7 +21,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
         !iv_order_descending TYPE abap_bool .
     METHODS set_filter
       IMPORTING
-        !it_postdata TYPE cnht_post_data_tab .
+        !it_postdata TYPE zif_abapgit_html_viewer=>ty_post_data .
     METHODS has_favorites
       RETURNING
         VALUE(rv_has_favorites) TYPE abap_bool .

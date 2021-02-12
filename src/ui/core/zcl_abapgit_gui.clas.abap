@@ -103,7 +103,7 @@ CLASS zcl_abapgit_gui DEFINITION
       IMPORTING
         !iv_action   TYPE c
         !iv_getdata  TYPE c OPTIONAL
-        !it_postdata TYPE cnht_post_data_tab OPTIONAL .
+        !it_postdata TYPE zif_abapgit_html_viewer=>ty_post_data OPTIONAL .
     METHODS handle_error
       IMPORTING
         !ix_exception TYPE REF TO zcx_abapgit_exception .
