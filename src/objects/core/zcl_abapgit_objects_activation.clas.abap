@@ -79,12 +79,12 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
 
   METHOD activate_ddic.
 
-    DATA: lt_gentab       TYPE STANDARD TABLE OF dcgentb,
-          lv_rc           TYPE sy-subrc,
-          ls_gentab       LIKE LINE OF lt_gentab,
-          lt_deltab       TYPE STANDARD TABLE OF dcdeltb,
-          lt_action_tab   TYPE STANDARD TABLE OF dctablres,
-          lv_logname      TYPE ddmass-logname.
+    DATA: lt_gentab     TYPE STANDARD TABLE OF dcgentb,
+          lv_rc         TYPE sy-subrc,
+          ls_gentab     LIKE LINE OF lt_gentab,
+          lt_deltab     TYPE STANDARD TABLE OF dcdeltb,
+          lt_action_tab TYPE STANDARD TABLE OF dctablres,
+          lv_logname    TYPE ddmass-logname.
 
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF gt_objects.
 
