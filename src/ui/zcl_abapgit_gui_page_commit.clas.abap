@@ -91,7 +91,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -220,9 +220,9 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
         AND status-package  IS NOT INITIAL.
 
       TRY.
-          DATA(transport) = li_cts_api->get_current_transport_for_obj(
-                              iv_object_type             = ls_object-status-obj_type
-                              iv_object_name             = ls_object-status-obj_name
+          DATA(transport) = li_cts_api->get_transport_for_object(
+                              is_item = value #( obj_type = ls_object-status-obj_type
+                                                 obj_name = ls_object-status-obj_name )
                               iv_resolve_task_to_request = abap_false ).
           INSERT transport INTO TABLE lt_requests.
         CATCH zcx_abapgit_exception.
@@ -303,9 +303,9 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
         AND status-package  IS NOT INITIAL.
 
       TRY.
-          DATA(transport) = li_cts_api->get_current_transport_for_obj(
-                              iv_object_type             = ls_object-status-obj_type
-                              iv_object_name             = ls_object-status-obj_name
+          DATA(transport) = li_cts_api->get_transport_for_object(
+                              is_item = value #( obj_type = ls_object-status-obj_type
+                                                 obj_name = ls_object-status-obj_name )
                               iv_resolve_task_to_request = abap_false ).
           INSERT transport INTO TABLE lt_requests.
         CATCH zcx_abapgit_exception.
@@ -579,9 +579,9 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
         AND status-package  IS NOT INITIAL.
 
       TRY.
-          DATA(transport) = li_cts_api->get_current_transport_for_obj(
-                              iv_object_type             = ls_object-status-obj_type
-                              iv_object_name             = ls_object-status-obj_name
+          DATA(transport) = li_cts_api->get_transport_for_object(
+                              is_item = value #( obj_type = ls_object-status-obj_type
+                                                 obj_name = ls_object-status-obj_name )
                               iv_resolve_task_to_request = abap_false ).
           INSERT transport INTO TABLE lt_locks.
         CATCH zcx_abapgit_exception.
@@ -617,7 +617,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
         supplement_transport_locks(
           CHANGING cs_commit = ms_commit ).
-          
+
         ms_commit-repo_key = mo_repo->get_key( ).
 
         zcl_abapgit_services_git=>commit(
