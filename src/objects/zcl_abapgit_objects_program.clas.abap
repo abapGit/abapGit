@@ -388,6 +388,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
   METHOD deserialize_program.
 
     DATA: lv_exists      TYPE abap_bool,
+          lt_empty_src   LIKE it_source,
           lv_progname    TYPE reposrc-progname,
           ls_tpool       LIKE LINE OF it_tpool,
           lv_title       TYPE rglif-title,
@@ -457,14 +458,13 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 * to the current user which avoids the check
           zcx_abapgit_exception=>raise( |Delete function group and pull again, { is_progdir-name } (EU522)| ).
         ELSE.
-          zcx_abapgit_exception=>raise( |PROG { is_progdir-name }, updating error: { sy-msgid } { sy-msgno }| ).
+          zcx_abapgit_exception=>raise_t100( ).
         ENDIF.
       ENDIF.
 
       zcl_abapgit_language=>restore_login_language( ).
     ELSEIF strlen( is_progdir-name ) > 30.
 * function module RPY_PROGRAM_INSERT cannot handle function group includes
-
       " special treatment for extensions
       " if the program name exceeds 30 characters it is not a usual
       " ABAP program but might be some extension, which requires the internal
@@ -479,12 +479,24 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'error from INSERT REPORT .. EXTENSION TYPE' ).
       ENDIF.
     ELSE.
-      INSERT REPORT is_progdir-name
-        FROM it_source
-        STATE 'I'
-        PROGRAM TYPE is_progdir-subc.
+      CALL FUNCTION 'RPY_PROGRAM_INSERT'
+        EXPORTING
+          development_class = iv_package
+          program_name      = is_progdir-name
+          program_type      = is_progdir-subc
+          title_string      = lv_title
+          save_inactive     = 'I'
+          suppress_dialog   = abap_true
+        TABLES
+          source_extended   = it_source
+        EXCEPTIONS
+          already_exists    = 1
+          cancelled         = 2
+          name_not_allowed  = 3
+          permission_error  = 4
+          OTHERS            = 5.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'error from INSERT REPORT' ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
     ENDIF.
 
