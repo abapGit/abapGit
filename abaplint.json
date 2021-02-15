@@ -74,6 +74,7 @@
     "globalMacros": []
   },
   "rules": {
+    "max_one_method_parameter_per_line": true,
     "prefer_raise_exception_new": true,
     "use_class_based_exceptions": true,
     "uncaught_exception": true,
@@ -170,7 +171,7 @@
         "W3MI"
       ]
     },
-    "ambiguous_statement": false,
+    "ambiguous_statement": true,
     "avoid_use": {
       "define": true,
       "endselect": true,
@@ -328,7 +329,8 @@
       "requested": true,
       "setExtended": true,
       "withHeaderLine": true,
-      "occurs": true
+      "occurs": true,
+      "parameter": true
     },
     "parser_error": {},
     "preferred_compare_operator": {

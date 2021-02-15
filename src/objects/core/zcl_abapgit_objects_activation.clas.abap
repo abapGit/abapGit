@@ -66,6 +66,9 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
 
   METHOD activate.
 
+    " Make sure that all changes are committed since any activation error will lead to a rollback
+    COMMIT WORK AND WAIT.
+
     IF use_new_activation_logic( ) = abap_true.
       activate_new( iv_ddic ).
     ELSE.
