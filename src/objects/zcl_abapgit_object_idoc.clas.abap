@@ -20,7 +20,9 @@ CLASS zcl_abapgit_object_idoc DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     DATA: mv_idoctyp TYPE edi_iapi00-idoctyp.
 
-    CLASS-METHODS clear_idoc_segement_field  IMPORTING iv_fieldname TYPE csequence CHANGING cg_structure TYPE any.
+    CLASS-METHODS clear_idoc_segement_field
+      IMPORTING iv_fieldname TYPE csequence
+      CHANGING cg_structure TYPE any.
 
 ENDCLASS.
 
