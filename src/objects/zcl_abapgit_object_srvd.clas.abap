@@ -37,6 +37,79 @@ ENDCLASS.
 
 CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
 
+
+  METHOD clear_field.
+
+    FIELD-SYMBOLS: <lv_value> TYPE data.
+
+    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_service_definition
+           TO <lv_value>.
+    ASSERT sy-subrc = 0.
+
+    CLEAR: <lv_value>.
+
+  ENDMETHOD.
+
+
+  METHOD clear_fields.
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'CONTENT-SOURCE'
+      CHANGING
+        cs_service_definition = cs_service_definition ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'METADATA-CREATED_AT'
+      CHANGING
+        cs_service_definition = cs_service_definition ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'METADATA-CREATED_BY'
+      CHANGING
+        cs_service_definition = cs_service_definition ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'METADATA-CHANGED_AT'
+      CHANGING
+        cs_service_definition = cs_service_definition ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'METADATA-CHANGED_BY'
+      CHANGING
+        cs_service_definition = cs_service_definition ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'METADATA-MASTER_LANGUAGE'
+      CHANGING
+        cs_service_definition = cs_service_definition ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'METADATA-RESPONSIBLE'
+      CHANGING
+        cs_service_definition = cs_service_definition ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'METADATA-DT_UUID'
+      CHANGING
+        cs_service_definition = cs_service_definition ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'METADATA-PACKAGE_REF-NAME'
+      CHANGING
+        cs_service_definition = cs_service_definition ).
+
+  ENDMETHOD.
+
+
   METHOD constructor.
 
     super->constructor(
@@ -54,6 +127,7 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
+
 
   METHOD zif_abapgit_object~changed_by.
 
@@ -197,7 +271,7 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
         OTHERS              = 3.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |RC={ sy-subrc } from RS_TOOL_ACCESS| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -250,77 +324,4 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
         iv_string = lv_source ).
 
   ENDMETHOD.
-
-
-  METHOD clear_fields.
-
-    clear_field(
-      EXPORTING
-        iv_fieldname          = 'CONTENT-SOURCE'
-      CHANGING
-        cs_service_definition = cs_service_definition ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname          = 'METADATA-CREATED_AT'
-      CHANGING
-        cs_service_definition = cs_service_definition ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname          = 'METADATA-CREATED_BY'
-      CHANGING
-        cs_service_definition = cs_service_definition ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname          = 'METADATA-CHANGED_AT'
-      CHANGING
-        cs_service_definition = cs_service_definition ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname          = 'METADATA-CHANGED_BY'
-      CHANGING
-        cs_service_definition = cs_service_definition ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname          = 'METADATA-MASTER_LANGUAGE'
-      CHANGING
-        cs_service_definition = cs_service_definition ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname          = 'METADATA-RESPONSIBLE'
-      CHANGING
-        cs_service_definition = cs_service_definition ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname          = 'METADATA-DT_UUID'
-      CHANGING
-        cs_service_definition = cs_service_definition ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname          = 'METADATA-PACKAGE_REF-NAME'
-      CHANGING
-        cs_service_definition = cs_service_definition ).
-
-  ENDMETHOD.
-
-
-  METHOD clear_field.
-
-    FIELD-SYMBOLS: <lv_value> TYPE data.
-
-    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_service_definition
-           TO <lv_value>.
-    ASSERT sy-subrc = 0.
-
-    CLEAR: <lv_value>.
-
-  ENDMETHOD.
-
 ENDCLASS.

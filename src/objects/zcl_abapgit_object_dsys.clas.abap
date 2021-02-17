@@ -214,7 +214,7 @@ CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
         OTHERS           = 3.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from DSYS_EDIT' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.

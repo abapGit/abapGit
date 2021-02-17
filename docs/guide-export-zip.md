@@ -1,12 +1,12 @@
 ---
-title: Export zip
+title: Export ZIP
 category: offline projects
 order: 20
 ---
 
 Assuming the offline project has been created:
 
-a: Download zip file
+a: Download ZIP file
 
 b: Unzip file to appropiate folder
 

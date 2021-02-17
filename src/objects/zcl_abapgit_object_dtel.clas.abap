@@ -82,7 +82,7 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
           put_refused       = 5
           OTHERS            = 6.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |error from DDIF_DTEL_PUT @TEXTS, { sy-subrc }| ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
     ENDLOOP.
 
@@ -206,7 +206,7 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
         put_refused       = 5
         OTHERS            = 6.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |error from DDIF_DTEL_PUT, { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     deserialize_texts( ii_xml   = io_xml
@@ -272,8 +272,7 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
 
   METHOD zif_abapgit_object~jump.
 
-    jump_se11( iv_radio = 'RSRD1-DDTYPE'
-               iv_field = 'RSRD1-DDTYPE_VAL' ).
+    jump_se11( ).
 
   ENDMETHOD.
 

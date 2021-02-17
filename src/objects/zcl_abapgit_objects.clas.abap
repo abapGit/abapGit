@@ -840,8 +840,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         zcl_abapgit_objects_activation=>activate( abap_false ).
     ENDCASE.
 
-    li_progress->off( ).
-
 *   Call postprocessing
     li_exit = zcl_abapgit_exit=>get_instance( ).
 
@@ -1415,7 +1413,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       lv_package = lo_folder_logic->path_to_package(
         iv_top  = io_repo->get_package( )
         io_dot  = io_repo->get_dot_abapgit( )
-        iv_path = <ls_result>-path ).
+        iv_path = <ls_result>-path
+        iv_create_if_not_exists = abap_false ).
 
       ls_tadir = zcl_abapgit_factory=>get_tadir( )->read_single(
         iv_object   = <ls_result>-obj_type

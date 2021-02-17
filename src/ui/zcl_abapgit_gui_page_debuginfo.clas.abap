@@ -116,13 +116,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
       ri_html->add( 'abapGit installed in package&nbsp;' ).
       ri_html->add( lv_devclass ).
     ELSE.
-      ri_html->add_a( iv_txt = 'install abapGit repo'
-                      iv_act = zif_abapgit_definitions=>c_action-abapgit_install ).
       ri_html->add( ' - To keep abapGit up-to-date (or also to contribute) you need to' ).
       ri_html->add( 'install it as a repository.' ).
     ENDIF.
 
-    ri_html->add( |<br>| ).
+    ri_html->add( |<br><br>| ).
 
   ENDMETHOD.
 
@@ -141,6 +139,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
   METHOD render_supported_object_types.
 
     DATA: lv_list     TYPE string,
+          li_html     TYPE REF TO zif_abapgit_html,
           lt_types    TYPE zcl_abapgit_objects=>ty_types_tt,
           lv_type     LIKE LINE OF lt_types,
           lt_obj      TYPE STANDARD TABLE OF ko100 WITH DEFAULT KEY,
@@ -159,7 +158,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
 
     lt_types = zcl_abapgit_objects=>supported_list( ).
 
-    rv_html = |<p>Supported objects: { lv_list }</p>|.
+    CREATE OBJECT li_html TYPE zcl_abapgit_html.
+
+    rv_html = li_html->a(
+      iv_txt = 'Complete list of object types supported by abapGit'
+      iv_act = 'https://docs.abapgit.org/ref-supported.html'
+      iv_typ = zif_abapgit_html=>c_action_type-url ).
+
+    rv_html = rv_html && |<br><br>Supported object types in <strong>this</strong> system:<br><br>|.
 
     rv_html = rv_html && |<table border="1px"><thead><tr>|.
     rv_html = rv_html && |<td>Object</td><td>Description</td><td>Class</td><td>Version</td><td>DDIC</td>|.

@@ -1,0 +1,21 @@
+version: '3.4'
+
+services:
+  abapgit:
+    image: abapgit
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      NODE_ENV: development
+    networks:
+      default:
+    volumes:
+      - ..:/home/node/abapGit
+  #   links:
+  #     - httpEndpoint:httpbin.com
+  #   depends_on:
+  #     - httpEndpoint
+  # httpEndpoint:
+  #   image: hashicorp/http-echo
+  #   command: -text="Hello World" -listen=:80

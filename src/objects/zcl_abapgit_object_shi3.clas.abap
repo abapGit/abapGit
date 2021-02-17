@@ -260,7 +260,7 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
         no_nodes_given           = 1
         OTHERS                   = 2.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from STREE_HIERARCHY_SAVE, SHI3' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -356,7 +356,7 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
 
     lv_all_languages = abap_false.
 
-    IF io_xml->i18n_params( )-main_language_only = abap_true.
+    IF io_xml->i18n_params( )-main_language_only = abap_false.
       lv_all_languages = abap_true.
     ELSE.
       lv_language = mv_language.

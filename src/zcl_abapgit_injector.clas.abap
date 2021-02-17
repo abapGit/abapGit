@@ -30,13 +30,16 @@ CLASS zcl_abapgit_injector DEFINITION
     CLASS-METHODS set_http_agent
       IMPORTING
         !ii_http_agent TYPE REF TO zif_abapgit_http_agent .
+    CLASS-METHODS set_lxe_texts
+      IMPORTING
+        !ii_lxe_texts TYPE REF TO zif_abapgit_lxe_texts .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_INJECTOR IMPLEMENTATION.
+CLASS zcl_abapgit_injector IMPLEMENTATION.
 
 
   METHOD set_code_inspector.
@@ -79,6 +82,11 @@ CLASS ZCL_ABAPGIT_INJECTOR IMPLEMENTATION.
 
   METHOD set_longtexts.
     zcl_abapgit_factory=>gi_longtext = ii_longtexts.
+  ENDMETHOD.
+
+
+  METHOD set_lxe_texts.
+    zcl_abapgit_factory=>gi_lxe_texts = ii_lxe_texts.
   ENDMETHOD.
 
 

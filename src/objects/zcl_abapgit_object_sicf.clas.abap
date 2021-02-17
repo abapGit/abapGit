@@ -83,7 +83,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
+CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
 
 
   METHOD change_sicf.
@@ -147,7 +147,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
         no_authority              = 26
         OTHERS                    = 27 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |SICF - error from change_node. Subrc = { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -169,7 +169,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
         no_authority          = 5
         OTHERS                = 6 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |SICF - error from service_from_url. Subrc = { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -232,7 +232,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
         no_authority              = 26
         OTHERS                    = 27 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |SICF - error from insert_node: { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -270,7 +270,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
         no_authority      = 4
         OTHERS            = 5 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |SICF - error from get_info_from_serv. Subrc = { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     ASSERT lines( lt_serv_info ) = 1.
@@ -434,7 +434,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
         no_authority                = 11
         OTHERS                      = 12 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |SICF - error from delete_node. Subrc = { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.

@@ -301,7 +301,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
         OTHERS          = 1.
 
     IF sy-subrc <> 0 OR lv_frozen <> space.
-      zcx_abapgit_exception=>raise( 'Error from (copy of) RS_DELETE_MESSAGE_ID' )."can't access
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     lv_access_granted = abap_true.
@@ -321,7 +321,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
       IF lv_access_granted = abap_true.
         free_access_permission( lv_message_id ).
       ENDIF.
-      zcx_abapgit_exception=>raise( 'Error from (copy of) RS_DELETE_MESSAGE_ID' )."can't access
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     delete_msgid( lv_message_id ).

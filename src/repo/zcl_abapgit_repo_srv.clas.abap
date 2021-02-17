@@ -514,8 +514,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     DATA: lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
     DATA: lx_error TYPE REF TO zcx_abapgit_exception.
 
-    CREATE OBJECT ri_log TYPE zcl_abapgit_log.
-    ri_log->set_title( 'Uninstall Log' ).
+    ri_log = io_repo->create_new_log( 'Uninstall Log' ).
 
     IF io_repo->get_local_settings( )-write_protected = abap_true.
       zcx_abapgit_exception=>raise( 'Cannot purge. Local code is write-protected by repo config' ).
@@ -531,7 +530,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
                                      ii_log    = ri_log ).
       CATCH zcx_abapgit_exception INTO lx_error.
         " If uninstall fails, repo needs a refresh to show which objects where deleted and which not
-        io_repo->refresh( ).
+        io_repo->refresh( iv_drop_log = abap_false ).
         RAISE EXCEPTION lx_error.
     ENDTRY.
 
@@ -554,25 +553,24 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'not possible to use $TMP, create new (local) package' ).
     ENDIF.
 
+    " Check if package owned by SAP is allowed (new packages are ok, since they are created automatically)
     SELECT SINGLE as4user FROM tdevc
       INTO lv_as4user
       WHERE devclass = iv_package.                      "#EC CI_GENBUFF
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Package { iv_package } not found| ).
-    ENDIF.
-
-    IF zcl_abapgit_factory=>get_environment( )->is_sap_object_allowed( ) = abap_false AND lv_as4user = 'SAP'.
+    IF sy-subrc = 0 AND lv_as4user = 'SAP' AND
+      zcl_abapgit_factory=>get_environment( )->is_sap_object_allowed( ) = abap_false.
       zcx_abapgit_exception=>raise( |Package { iv_package } not allowed, responsible user = 'SAP'| ).
     ENDIF.
 
+    " Check if package is already used in another repo
     IF iv_chk_exists = abap_true.
       get_repo_from_package(
         EXPORTING
-          iv_package = iv_package
+          iv_package    = iv_package
           iv_ign_subpkg = iv_ign_subpkg
         IMPORTING
-          eo_repo    = lo_repo
-          ev_reason  = lv_reason ).
+          eo_repo       = lo_repo
+          ev_reason     = lv_reason ).
 
       IF lo_repo IS BOUND.
         zcx_abapgit_exception=>raise( lv_reason ).

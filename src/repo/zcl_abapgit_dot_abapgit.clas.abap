@@ -47,24 +47,31 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
     METHODS get_starting_folder
       RETURNING
         VALUE(rv_path) TYPE string .
-
     METHODS get_folder_logic
       RETURNING
         VALUE(rv_logic) TYPE string .
-
     METHODS set_folder_logic
       IMPORTING
         !iv_logic TYPE string .
-
     METHODS set_starting_folder
       IMPORTING
         !iv_path TYPE string .
-
     METHODS get_master_language
       RETURNING
         VALUE(rv_language) TYPE spras .
-*      set_master_language
-*        IMPORTING iv_language TYPE spras,
+    METHODS get_main_language
+      RETURNING
+        VALUE(rv_language) TYPE spras .
+    METHODS get_i18n_languages
+      RETURNING
+        VALUE(rt_languages) TYPE zif_abapgit_definitions=>ty_languages
+      RAISING
+        zcx_abapgit_exception .
+    METHODS set_i18n_languages
+      IMPORTING
+        VALUE(it_languages) TYPE zif_abapgit_definitions=>ty_languages
+      RAISING
+        zcx_abapgit_exception .
     METHODS get_signature
       RETURNING
         VALUE(rs_signature) TYPE zif_abapgit_definitions=>ty_file_signature
@@ -72,18 +79,20 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
         zcx_abapgit_exception .
     METHODS get_requirements
       RETURNING
-        VALUE(rt_requirements) TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
+        VALUE(rt_requirements) TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt .
     METHODS set_requirements
       IMPORTING
-        it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
-
+        !it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt .
     METHODS get_i18n_langs
       RETURNING
-        VALUE(rv_langs) TYPE string.
+        VALUE(rv_langs) TYPE string
+      RAISING
+        zcx_abapgit_exception .
     METHODS set_i18n_langs
       IMPORTING
-        iv_langs TYPE string.
-
+        !iv_langs TYPE string
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: ms_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
@@ -97,18 +106,11 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
         IMPORTING iv_xml         TYPE string
         RETURNING VALUE(rs_data) TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
 
-    CLASS-METHODS decode_i18n_langs_string
-      IMPORTING
-        iv_langs TYPE string
-        iv_skip_master_lang TYPE spras OPTIONAL
-      RETURNING
-        VALUE(rt_langs) TYPE zif_abapgit_dot_abapgit=>ty_langs_tt.
-
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
+CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
 
 
   METHOD add_ignore.
@@ -149,35 +151,6 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
   METHOD constructor.
     ms_data = is_data.
-  ENDMETHOD.
-
-
-  METHOD decode_i18n_langs_string.
-
-    " This should go as an util to TEXTS/i18n class
-
-    DATA lt_langs_str TYPE string_table.
-    DATA lv_master_lang_iso TYPE laiso.
-    FIELD-SYMBOLS <lv_str> LIKE LINE OF lt_langs_str.
-    FIELD-SYMBOLS <lv_lang> LIKE LINE OF rt_langs.
-
-    IF iv_skip_master_lang IS NOT INITIAL.
-      lv_master_lang_iso = cl_i18n_languages=>sap1_to_sap2( iv_skip_master_lang ).
-    ENDIF.
-
-    SPLIT iv_langs AT ',' INTO TABLE lt_langs_str.
-    LOOP AT lt_langs_str ASSIGNING <lv_str>.
-      CONDENSE <lv_str>.
-      <lv_str> = to_upper( <lv_str> ).
-      IF <lv_str> IS NOT INITIAL AND ( lv_master_lang_iso IS INITIAL OR <lv_str> <> lv_master_lang_iso ).
-        APPEND INITIAL LINE TO rt_langs ASSIGNING <lv_lang>.
-        <lv_lang> = <lv_str>.
-      ENDIF.
-    ENDLOOP.
-
-    " TODO: maybe validate language against table, but system may not have one?
-    " TODO: maybe through on lang > 2 symbols ?
-
   ENDMETHOD.
 
 
@@ -228,18 +201,24 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
 
   METHOD get_i18n_langs.
-
-    DATA lt_langs TYPE zif_abapgit_dot_abapgit=>ty_langs_tt.
-
-    lt_langs = decode_i18n_langs_string(
-      iv_langs            = ms_data-i18n_langs
-      iv_skip_master_lang = ms_data-master_language ).
-    CONCATENATE LINES OF lt_langs INTO rv_langs SEPARATED BY ','.
+    " todo, replace with get_i18n_languages
+    rv_langs = zcl_abapgit_lxe_texts=>convert_table_to_lang_string( ms_data-i18n_languages ).
 
   ENDMETHOD.
 
 
+  METHOD get_i18n_languages.
+    rt_languages = ms_data-i18n_languages.
+  ENDMETHOD.
+
+
+  METHOD get_main_language.
+    rv_language = ms_data-master_language.
+  ENDMETHOD.
+
+
   METHOD get_master_language.
+    " todo, transition to get_main_language()
     rv_language = ms_data-master_language.
   ENDMETHOD.
 
@@ -343,13 +322,16 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
   METHOD set_i18n_langs.
 
-    DATA lt_langs TYPE zif_abapgit_dot_abapgit=>ty_langs_tt.
+    " todo, replace with set_i18n_languages
+    ms_data-i18n_languages = zcl_abapgit_lxe_texts=>convert_lang_string_to_table(
+                              iv_langs              = iv_langs
+                              iv_skip_main_language = ms_data-master_language ).
 
-    lt_langs = decode_i18n_langs_string(
-      iv_langs            = iv_langs
-      iv_skip_master_lang = ms_data-master_language ).
-    CONCATENATE LINES OF lt_langs INTO ms_data-i18n_langs SEPARATED BY ','.
+  ENDMETHOD.
 
+
+  METHOD set_i18n_languages.
+    ms_data-i18n_languages = it_languages.
   ENDMETHOD.
 
 

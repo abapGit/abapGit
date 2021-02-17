@@ -28,7 +28,7 @@ CLASS zcl_abapgit_gui_page_sett_repo DEFINITION
     CONSTANTS:
       BEGIN OF c_id,
         dot             TYPE string VALUE 'dot',
-        master_language TYPE string VALUE 'master_language',
+        main_language   TYPE string VALUE 'main_language',
         i18n_langs      TYPE string VALUE 'i18n_langs',
         starting_folder TYPE string VALUE 'starting_folder',
         folder_logic    TYPE string VALUE 'folder_logic',
@@ -72,7 +72,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -118,14 +118,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
       iv_label       = 'Repository Settings (.abapgit.xml)'
       iv_hint        = 'Settings stored in root folder in .abapgit.xml file'
     )->text(
-      iv_name        = c_id-master_language
+      iv_name        = c_id-main_language
       iv_label       = 'Main Language'
       iv_hint        = 'Main language of repository (cannot be changed)'
       iv_readonly    = abap_true
     )->text(
       iv_name        = c_id-i18n_langs
-      iv_label       = 'Serialize translations (experimental LXE approach)'
-      iv_hint        = 'Comma separate 2-letter iso lang codes e.g. "de,es,..." - should not include main language'
+      iv_label       = 'Serialize Translations (experimental LXE approach)'
+      iv_hint        = 'Comma-separate 2-letter ISO language codes e.g. "DE,ES,..." - should not include main language'
     )->radio(
       iv_name        = c_id-folder_logic
       iv_default_value = zif_abapgit_dot_abapgit=>c_folder_logic-prefix
@@ -195,7 +195,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
     ENDIF.
 
     mo_form_data->set(
-      iv_key = c_id-master_language
+      iv_key = c_id-main_language
       iv_val = |{ ls_dot-master_language } ({ lv_language })| ).
     mo_form_data->set(
       iv_key = c_id-i18n_langs

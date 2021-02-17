@@ -11,6 +11,7 @@ CLASS zcl_abapgit_object_drul DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RAISING
           zcx_abapgit_exception.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     METHODS:
       clear_fields
@@ -52,7 +53,75 @@ CLASS zcl_abapgit_object_drul DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 ENDCLASS.
 
 
+
 CLASS zcl_abapgit_object_drul IMPLEMENTATION.
+
+
+  METHOD clear_field.
+
+    FIELD-SYMBOLS: <lv_value> TYPE data.
+
+    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_dependency_rule
+           TO <lv_value>.
+    ASSERT sy-subrc = 0.
+
+    CLEAR: <lv_value>.
+
+  ENDMETHOD.
+
+
+  METHOD clear_fields.
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'METADATA-CREATED_AT'
+      CHANGING
+        cs_dependency_rule = cs_dependency_rule ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'METADATA-CREATED_BY'
+      CHANGING
+        cs_dependency_rule = cs_dependency_rule ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'METADATA-CHANGED_AT'
+      CHANGING
+        cs_dependency_rule = cs_dependency_rule ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'METADATA-CHANGED_BY'
+      CHANGING
+        cs_dependency_rule = cs_dependency_rule ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'METADATA-MASTER_LANGUAGE'
+      CHANGING
+        cs_dependency_rule = cs_dependency_rule ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'METADATA-RESPONSIBLE'
+      CHANGING
+        cs_dependency_rule = cs_dependency_rule ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'METADATA-PACKAGE_REF'
+      CHANGING
+        cs_dependency_rule = cs_dependency_rule ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'CONTENT-SOURCE'
+      CHANGING
+        cs_dependency_rule = cs_dependency_rule ).
+
+  ENDMETHOD.
+
 
   METHOD constructor.
 
@@ -69,6 +138,96 @@ CLASS zcl_abapgit_object_drul IMPLEMENTATION.
       CATCH cx_sy_create_error.
         zcx_abapgit_exception=>raise( |DRUL not supported by your NW release| ).
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD fill_metadata_from_db.
+
+    DATA:
+      li_wb_object_operator  TYPE REF TO object,
+      lr_dependency_rule_old TYPE REF TO data.
+
+    FIELD-SYMBOLS:
+      <ls_dependency_rule_old> TYPE any,
+      <lv_created_at>          TYPE xsddatetime_z,
+      <lv_created_by>          TYPE syuname,
+      <lv_created_at_old>      TYPE xsddatetime_z,
+      <lv_created_by_old>      TYPE syuname.
+
+    li_wb_object_operator = get_wb_object_operator( ).
+
+    CREATE DATA lr_dependency_rule_old TYPE ('CL_DRUL_WB_OBJECT_DATA=>TY_OBJECT_DATA').
+    ASSIGN lr_dependency_rule_old->* TO <ls_dependency_rule_old>.
+    ASSERT sy-subrc = 0.
+
+    CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
+      IMPORTING
+        data = <ls_dependency_rule_old>.
+
+    ASSIGN COMPONENT 'METADATA-CREATED_BY' OF STRUCTURE cs_dependency_rule
+           TO <lv_created_by>.
+    ASSERT sy-subrc = 0.
+
+    ASSIGN COMPONENT 'METADATA-CREATED_AT' OF STRUCTURE cs_dependency_rule
+           TO <lv_created_at>.
+    ASSERT sy-subrc = 0.
+
+    ASSIGN COMPONENT 'METADATA-CREATED_BY' OF STRUCTURE <ls_dependency_rule_old>
+           TO <lv_created_by_old>.
+    ASSERT sy-subrc = 0.
+
+    ASSIGN COMPONENT 'METADATA-CREATED_AT' OF STRUCTURE <ls_dependency_rule_old>
+           TO <lv_created_at_old>.
+    ASSERT sy-subrc = 0.
+
+    <lv_created_at> = <lv_created_at_old>.
+    <lv_created_by> = <lv_created_by_old>.
+
+  ENDMETHOD.
+
+
+  METHOD get_transport_req_if_needed.
+
+    DATA: li_sap_package TYPE REF TO zif_abapgit_sap_package.
+
+    li_sap_package = zcl_abapgit_factory=>get_sap_package( iv_package ).
+
+    IF li_sap_package->are_changes_recorded_in_tr_req( ) = abap_true.
+      rv_transport_request = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_wb_object_operator.
+
+    DATA:
+      ls_object_type TYPE wbobjtype,
+      lx_error       TYPE REF TO cx_root.
+
+    IF mi_wb_object_operator IS BOUND.
+      ri_wb_object_operator = mi_wb_object_operator.
+    ENDIF.
+
+    ls_object_type-objtype_tr = 'DRUL'.
+    ls_object_type-subtype_wb = 'DRL'.
+
+    TRY.
+        CALL METHOD ('CL_WB_OBJECT_OPERATOR')=>('CREATE_INSTANCE')
+          EXPORTING
+            object_type = ls_object_type
+            object_key  = mv_dependency_rule_key
+          RECEIVING
+            result      = mi_wb_object_operator.
+
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise(
+            iv_text     = lx_error->get_text( )
+            ix_previous = lx_error ).
+    ENDTRY.
+
+    ri_wb_object_operator = mi_wb_object_operator.
 
   ENDMETHOD.
 
@@ -262,7 +421,7 @@ CLASS zcl_abapgit_object_drul IMPLEMENTATION.
         OTHERS              = 3.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |RC={ sy-subrc } from RS_TOOL_ACCESS| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -316,160 +475,4 @@ CLASS zcl_abapgit_object_drul IMPLEMENTATION.
         iv_string = lv_source ).
 
   ENDMETHOD.
-
-  METHOD fill_metadata_from_db.
-
-    DATA:
-      li_wb_object_operator  TYPE REF TO object,
-      lr_dependency_rule_old TYPE REF TO data.
-
-    FIELD-SYMBOLS:
-      <ls_dependency_rule_old> TYPE any,
-      <lv_created_at>          TYPE xsddatetime_z,
-      <lv_created_by>          TYPE syuname,
-      <lv_created_at_old>      TYPE xsddatetime_z,
-      <lv_created_by_old>      TYPE syuname.
-
-    li_wb_object_operator = get_wb_object_operator( ).
-
-    CREATE DATA lr_dependency_rule_old TYPE ('CL_DRUL_WB_OBJECT_DATA=>TY_OBJECT_DATA').
-    ASSIGN lr_dependency_rule_old->* TO <ls_dependency_rule_old>.
-    ASSERT sy-subrc = 0.
-
-    CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
-      IMPORTING
-        data = <ls_dependency_rule_old>.
-
-    ASSIGN COMPONENT 'METADATA-CREATED_BY' OF STRUCTURE cs_dependency_rule
-           TO <lv_created_by>.
-    ASSERT sy-subrc = 0.
-
-    ASSIGN COMPONENT 'METADATA-CREATED_AT' OF STRUCTURE cs_dependency_rule
-           TO <lv_created_at>.
-    ASSERT sy-subrc = 0.
-
-    ASSIGN COMPONENT 'METADATA-CREATED_BY' OF STRUCTURE <ls_dependency_rule_old>
-           TO <lv_created_by_old>.
-    ASSERT sy-subrc = 0.
-
-    ASSIGN COMPONENT 'METADATA-CREATED_AT' OF STRUCTURE <ls_dependency_rule_old>
-           TO <lv_created_at_old>.
-    ASSERT sy-subrc = 0.
-
-    <lv_created_at> = <lv_created_at_old>.
-    <lv_created_by> = <lv_created_by_old>.
-
-  ENDMETHOD.
-
-
-  METHOD get_transport_req_if_needed.
-
-    DATA: li_sap_package TYPE REF TO zif_abapgit_sap_package.
-
-    li_sap_package = zcl_abapgit_factory=>get_sap_package( iv_package ).
-
-    IF li_sap_package->are_changes_recorded_in_tr_req( ) = abap_true.
-      rv_transport_request = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD get_wb_object_operator.
-
-    DATA:
-      ls_object_type TYPE wbobjtype,
-      lx_error       TYPE REF TO cx_root.
-
-    IF mi_wb_object_operator IS BOUND.
-      ri_wb_object_operator = mi_wb_object_operator.
-    ENDIF.
-
-    ls_object_type-objtype_tr = 'DRUL'.
-    ls_object_type-subtype_wb = 'DRL'.
-
-    TRY.
-        CALL METHOD ('CL_WB_OBJECT_OPERATOR')=>('CREATE_INSTANCE')
-          EXPORTING
-            object_type = ls_object_type
-            object_key  = mv_dependency_rule_key
-          RECEIVING
-            result      = mi_wb_object_operator.
-
-      CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise(
-            iv_text     = lx_error->get_text( )
-            ix_previous = lx_error ).
-    ENDTRY.
-
-    ri_wb_object_operator = mi_wb_object_operator.
-
-  ENDMETHOD.
-
-
-  METHOD clear_field.
-
-    FIELD-SYMBOLS: <lv_value> TYPE data.
-
-    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_dependency_rule
-           TO <lv_value>.
-    ASSERT sy-subrc = 0.
-
-    CLEAR: <lv_value>.
-
-  ENDMETHOD.
-
-
-  METHOD clear_fields.
-
-    clear_field(
-      EXPORTING
-        iv_fieldname          = 'METADATA-CREATED_AT'
-      CHANGING
-        cs_dependency_rule = cs_dependency_rule ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname          = 'METADATA-CREATED_BY'
-      CHANGING
-        cs_dependency_rule = cs_dependency_rule ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname          = 'METADATA-CHANGED_AT'
-      CHANGING
-        cs_dependency_rule = cs_dependency_rule ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname          = 'METADATA-CHANGED_BY'
-      CHANGING
-        cs_dependency_rule = cs_dependency_rule ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname          = 'METADATA-MASTER_LANGUAGE'
-      CHANGING
-        cs_dependency_rule = cs_dependency_rule ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname          = 'METADATA-RESPONSIBLE'
-      CHANGING
-        cs_dependency_rule = cs_dependency_rule ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname          = 'METADATA-PACKAGE_REF'
-      CHANGING
-        cs_dependency_rule = cs_dependency_rule ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname          = 'CONTENT-SOURCE'
-      CHANGING
-        cs_dependency_rule = cs_dependency_rule ).
-
-  ENDMETHOD.
-
 ENDCLASS.

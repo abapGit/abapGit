@@ -129,7 +129,7 @@ CLASS zcl_abapgit_apack_migration IMPLEMENTATION.
         other           = 6
         OTHERS          = 7.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from SEO_INTERFACE_CREATE_COMPLETE' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     add_intf_source_and_activate( ).
@@ -236,7 +236,7 @@ CLASS zcl_abapgit_apack_migration IMPLEMENTATION.
         OTHERS                 = 4.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_WORKING_OBJECTS_ACTIVATE' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.

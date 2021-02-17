@@ -23,7 +23,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_DOCV IMPLEMENTATION.
+CLASS zcl_abapgit_object_docv IMPLEMENTATION.
 
 
   METHOD read.
@@ -78,7 +78,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DOCV IMPLEMENTATION.
         ret_code = 1
         OTHERS   = 2.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from DOCU_DEL' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.

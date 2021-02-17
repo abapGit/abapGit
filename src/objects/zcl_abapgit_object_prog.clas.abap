@@ -154,7 +154,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
           immediate              = 'X'
           actualize_working_area = 'X'.
     ELSEIF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from RS_DELETE_PROGRAM: { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     delete_longtexts( c_longtext_id_prog ).
@@ -205,6 +205,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
     " Texts deserializing (translations)
     deserialize_texts( io_xml ).
+    deserialize_lxe_texts( io_xml ).
 
     deserialize_longtexts( io_xml ).
 
@@ -278,7 +279,13 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
                        io_files = mo_files ).
 
     " Texts serializing (translations)
-    serialize_texts( io_xml ).
+    IF io_xml->i18n_params( )-translation_languages IS INITIAL.
+      " Old I18N option
+      serialize_texts( io_xml ).
+    ELSE.
+      " New LXE option
+      serialize_lxe_texts( io_xml ).
+    ENDIF.
 
     serialize_longtexts( ii_xml         = io_xml
                          iv_longtext_id = c_longtext_id_prog ).
