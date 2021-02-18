@@ -245,12 +245,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
           IMPORTING
             eo_object_data = lo_object_data
         ).
-
-        IF lo_object_data IS INITIAL OR lo_object_data->get_object_key( ) IS INITIAL.
-          rv_bool = abap_false.
-        ELSE.
-          rv_bool = abap_true.
-        ENDIF.
+        rv_bool = boolc( lo_object_data IS NOT INITIAL AND lo_object_data->get_object_key( ) IS NOT INITIAL ).
       CATCH cx_wb_object_operation_error.
         rv_bool = abap_false.
     ENDTRY.
@@ -272,7 +267,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
     rs_metadata              = get_metadata( ).
     rs_metadata-ddic         = is_ddic( ).
     rs_metadata-delete_tadir = is_delete_tadir( ).
-    "rs_metadata-version      = get_serializer_version( ).
   ENDMETHOD.
 
 
