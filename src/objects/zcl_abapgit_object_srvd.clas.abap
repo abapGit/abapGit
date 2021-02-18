@@ -308,12 +308,14 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
       ls_data            TYPE cl_srvd_wb_object_data=>ty_srvd_object_data,
       lo_object_operator TYPE REF TO if_wb_object_operator,
       lo_object_data     TYPE REF TO if_wb_object_data_model,
-      lx_error           TYPE REF TO cx_wb_object_operation_error.
+      lx_error           TYPE REF TO cx_wb_object_operation_error,
+      lv_object_key      TYPE seu_objkey.
 
     TRY.
+        lv_object_key = ms_item-obj_name.
         lo_object_operator = cl_wb_object_operator_factory=>create_object_operator(
                                object_type = if_srvd_types=>co_global_objtype
-                               object_key  = CONV #( ms_item-obj_name ) ).
+                               object_key  = lv_object_key ).
 
         lo_object_operator->read(
           EXPORTING
@@ -323,9 +325,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
             eo_object_data = lo_object_data ).
 
         IF lo_object_data IS BOUND.
-          lo_object_data->get_data(
-            IMPORTING
-              p_data = ls_data ).
+          lo_object_data->get_data( IMPORTING p_data = ls_data ).
 
           CLEAR ls_data-metadata-version.
           CLEAR ls_data-metadata-changed_at.
@@ -339,11 +339,13 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
           CLEAR ls_data-metadata-abap_language_version.
           CLEAR ls_data-metadata-links.
 
-          mo_files->add_string( iv_ext = mc_source_file iv_string = ls_data-content-source ).
+          mo_files->add_string( iv_ext = mc_source_file
+                                iv_string = ls_data-content-source ).
 
           CLEAR ls_data-content-source.
 
-          io_xml->add( iv_name = mc_xml_parent_name ig_data = ls_data-metadata ).
+          io_xml->add( iv_name = mc_xml_parent_name
+                       ig_data = ls_data-metadata ).
         ENDIF.
 
       CATCH cx_wb_object_operation_error INTO lx_error.
@@ -457,7 +459,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
     ls_old-metadata-description = ls_new-metadata-description.
     ls_old-content-source = ls_new-content-source.
 
-    ro_object_data = NEW cl_srvd_wb_object_data( ).
+    CREATE OBJECT ro_object_data TYPE cl_srvd_wb_object_data.
     ro_object_data->set_data( ls_old ).
   ENDMETHOD.
 
@@ -514,7 +516,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
     ls_data-metadata = deserialize_xml( io_xml ).
     ls_data-content-source = mo_files->read_string( mc_source_file ).
 
-    ro_object_data = NEW cl_srvd_wb_object_data( ).
+    CREATE OBJECT ro_object_data TYPE cl_srvd_wb_object_data.
     ro_object_data->set_data( ls_data ).
   ENDMETHOD.
 
