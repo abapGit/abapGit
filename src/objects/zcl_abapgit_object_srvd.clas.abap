@@ -45,7 +45,7 @@ CLASS zcl_abapgit_object_srvd DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     DATA mr_service_definition TYPE REF TO data .
     CONSTANTS mc_source_file TYPE string VALUE 'srvdsrv' ##NO_TEXT.
     CONSTANTS mc_xml_parent_name TYPE string VALUE 'SRVD' ##NO_TEXT.
-    DATA mo_object_operator TYPE REF TO if_wb_object_operator .
+    DATA mo_object_operator TYPE REF TO object .
 
     METHODS clear_fields
       CHANGING
@@ -173,7 +173,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
 
     DATA:
       lo_object_data        TYPE REF TO if_wb_object_data_model,
-      lx_error              TYPE REF TO cx_wb_object_operation_error,
+      lx_error              TYPE REF TO cx_root,
       lv_transport_request  TYPE trkorr,
       lo_wb_object_operator TYPE REF TO object,
       lo_merged_data_all    TYPE REF TO if_wb_object_data_model,
@@ -271,7 +271,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
 
         corr_insert( iv_package ).
 
-      CATCH cx_wb_object_operation_error INTO lx_error.
+      CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise(
             iv_text     = lx_error->get_text( )
             ix_previous = lx_error ).
@@ -581,7 +581,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
     ls_metadata = io_xml->get_metadata( ).
 
     IF ls_metadata-version = get_serializer_version( ).
-      CALL METHOD io_xml->read(
+      io_xml->read(
         EXPORTING
           iv_name = mc_xml_parent_name
         CHANGING
