@@ -473,7 +473,8 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       INSERT REPORT is_progdir-name
         FROM it_source
         STATE 'I'
-        EXTENSION TYPE is_progdir-name+30.
+        EXTENSION TYPE is_progdir-name+30
+        PROGRAM TYPE is_progdir-subc.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'Error from INSERT REPORT .. EXTENSION TYPE' ).
       ENDIF.
@@ -505,6 +506,11 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
           zcx_abapgit_exception=>raise_t100( ).
         ENDIF.
       ELSE.
+        " Save active and inactive version
+        INSERT REPORT is_progdir-name
+          FROM it_source
+          STATE 'A'
+          PROGRAM TYPE is_progdir-subc.
         INSERT REPORT is_progdir-name
           FROM it_source
           STATE 'I'
