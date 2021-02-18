@@ -14,90 +14,90 @@ CLASS zcl_abapgit_object_srvd DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PROTECTED SECTION.
 
 
-  PRIVATE SECTION.
+private section.
 
-    ALIASES c_abap_version_default
-      FOR zif_abapgit_object~c_abap_version_default .
-    ALIASES c_abap_version_sap_cp
-      FOR zif_abapgit_object~c_abap_version_sap_cp .
-    ALIASES gc_step_id
-      FOR zif_abapgit_object~gc_step_id .
-    ALIASES changed_by
-      FOR zif_abapgit_object~changed_by .
-    ALIASES delete
-      FOR zif_abapgit_object~delete .
-    ALIASES deserialize
-      FOR zif_abapgit_object~deserialize .
-    ALIASES exists
-      FOR zif_abapgit_object~exists .
-    ALIASES get_comparator
-      FOR zif_abapgit_object~get_comparator .
-    ALIASES get_deserialize_steps
-      FOR zif_abapgit_object~get_deserialize_steps .
-    ALIASES is_locked
-      FOR zif_abapgit_object~is_locked .
-    ALIASES jump
-      FOR zif_abapgit_object~jump .
-    ALIASES serialize
-      FOR zif_abapgit_object~serialize .
+  aliases C_ABAP_VERSION_DEFAULT
+    for ZIF_ABAPGIT_OBJECT~C_ABAP_VERSION_DEFAULT .
+  aliases C_ABAP_VERSION_SAP_CP
+    for ZIF_ABAPGIT_OBJECT~C_ABAP_VERSION_SAP_CP .
+  aliases GC_STEP_ID
+    for ZIF_ABAPGIT_OBJECT~GC_STEP_ID .
+  aliases CHANGED_BY
+    for ZIF_ABAPGIT_OBJECT~CHANGED_BY .
+  aliases DELETE
+    for ZIF_ABAPGIT_OBJECT~DELETE .
+  aliases DESERIALIZE
+    for ZIF_ABAPGIT_OBJECT~DESERIALIZE .
+  aliases EXISTS
+    for ZIF_ABAPGIT_OBJECT~EXISTS .
+  aliases GET_COMPARATOR
+    for ZIF_ABAPGIT_OBJECT~GET_COMPARATOR .
+  aliases GET_DESERIALIZE_STEPS
+    for ZIF_ABAPGIT_OBJECT~GET_DESERIALIZE_STEPS .
+  aliases IS_LOCKED
+    for ZIF_ABAPGIT_OBJECT~IS_LOCKED .
+  aliases JUMP
+    for ZIF_ABAPGIT_OBJECT~JUMP .
+  aliases SERIALIZE
+    for ZIF_ABAPGIT_OBJECT~SERIALIZE .
 
-    DATA mi_persistence TYPE REF TO if_wb_object_persist .
-    DATA mv_service_definition_key TYPE seu_objkey .
-    DATA mr_service_definition TYPE REF TO data .
-    CONSTANTS mc_source_file TYPE string VALUE 'srvdsrv' ##NO_TEXT.
-    CONSTANTS mc_xml_parent_name TYPE string VALUE 'SRVD' ##NO_TEXT.
-    DATA mo_object_operator TYPE REF TO if_wb_object_operator .
+  data MI_PERSISTENCE type ref to IF_WB_OBJECT_PERSIST .
+  data MV_SERVICE_DEFINITION_KEY type SEU_OBJKEY .
+  data MR_SERVICE_DEFINITION type ref to DATA .
+  constants MC_SOURCE_FILE type STRING value 'srvdsrv' ##NO_TEXT.
+  constants MC_XML_PARENT_NAME type STRING value 'SRVD' ##NO_TEXT.
+  data MO_OBJECT_OPERATOR type ref to IF_WB_OBJECT_OPERATOR .
 
-    METHODS clear_fields
-      CHANGING
-        !cs_metadata TYPE any .
-    METHODS clear_field
-      IMPORTING
-        !iv_fieldname TYPE csequence
-      CHANGING
-        !cs_metadata  TYPE any .
-    METHODS get_object_data
-      IMPORTING
-        !io_xml               TYPE REF TO zif_abapgit_xml_input
-      RETURNING
-        VALUE(ro_object_data) TYPE REF TO if_wb_object_data_model
-      RAISING
-        zcx_abapgit_exception .
-    METHODS deserialize_xml
-      IMPORTING
-        !io_xml        TYPE REF TO zif_abapgit_xml_input
-      RETURNING
-        VALUE(rs_data) TYPE cl_srvd_wb_object_data=>ty_srvd_object_data-metadata
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_serializer_version
-      RETURNING
-        VALUE(rv_version) TYPE string .
-    METHODS get_transport_req_if_needed
-      IMPORTING
-        !iv_package                 TYPE devclass
-      RETURNING
-        VALUE(rv_transport_request) TYPE trkorr
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_wb_object_operator
-      RETURNING
-        VALUE(ro_object_operator) TYPE REF TO if_wb_object_operator
-      RAISING
-        zcx_abapgit_exception .
-    METHODS merge_object_data
-      IMPORTING
-        !io_object_data              TYPE REF TO object
-      RETURNING
-        VALUE(ro_object_data_merged) TYPE REF TO if_wb_object_data_model
-      RAISING
-        zcx_abapgit_exception .
-    METHODS is_ddic
-      RETURNING
-        VALUE(rv_ddic) TYPE abap_bool .
-    METHODS is_delete_tadir
-      RETURNING
-        VALUE(rv_delete_tadir) TYPE abap_bool .
+  methods CLEAR_FIELDS
+    changing
+      !CS_METADATA type ANY .
+  methods CLEAR_FIELD
+    importing
+      !IV_FIELDNAME type CSEQUENCE
+    changing
+      !CS_METADATA type ANY .
+  methods GET_OBJECT_DATA
+    importing
+      !IO_XML type ref to ZIF_ABAPGIT_XML_INPUT
+    returning
+      value(RO_OBJECT_DATA) type ref to IF_WB_OBJECT_DATA_MODEL
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods DESERIALIZE_XML
+    importing
+      !IO_XML type ref to ZIF_ABAPGIT_XML_INPUT
+    returning
+      value(RS_DATA) type CL_SRVD_WB_OBJECT_DATA=>TY_SRVD_OBJECT_DATA-METADATA
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods GET_SERIALIZER_VERSION
+    returning
+      value(RV_VERSION) type STRING .
+  methods GET_TRANSPORT_REQ_IF_NEEDED
+    importing
+      !IV_PACKAGE type DEVCLASS
+    returning
+      value(RV_TRANSPORT_REQUEST) type TRKORR
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods GET_WB_OBJECT_OPERATOR
+    returning
+      value(RO_OBJECT_OPERATOR) type ref to OBJECT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods MERGE_OBJECT_DATA
+    importing
+      !IO_OBJECT_DATA type ref to OBJECT
+    returning
+      value(RO_OBJECT_DATA_MERGED) type ref to IF_WB_OBJECT_DATA_MODEL
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods IS_DDIC
+    returning
+      value(RV_DDIC) type ABAP_BOOL .
+  methods IS_DELETE_TADIR
+    returning
+      value(RV_DELETE_TADIR) type ABAP_BOOL .
 ENDCLASS.
 
 
@@ -286,17 +286,17 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
   METHOD zif_abapgit_object~exists.
 
     DATA lo_object_data TYPE REF TO if_wb_object_data_model.
-    DATA lo_wb_object_operator TYPE REF TO if_wb_object_operator.
+    DATA lo_wb_object_operator TYPE REF TO object.
 
     TRY.
         lo_wb_object_operator = get_wb_object_operator( ).
-        lo_wb_object_operator->read(
+        call method lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
           EXPORTING
-            data_selection = if_wb_object_data_selection_co=>c_properties
+            data_selection = 'P'
           IMPORTING
-            eo_object_data = lo_object_data ).
+            eo_object_data = lo_object_data.
         rv_bool = boolc( lo_object_data IS NOT INITIAL AND lo_object_data->get_object_key( ) IS NOT INITIAL ).
-      CATCH cx_wb_object_operation_error.
+      CATCH cx_root.
         rv_bool = abap_false.
     ENDTRY.
 
@@ -582,7 +582,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
     ls_metadata = io_xml->get_metadata( ).
 
     IF ls_metadata-version = get_serializer_version( ).
-      io_xml->read(
+      call METHOD io_xml->read(
         EXPORTING
           iv_name = mc_xml_parent_name
         CHANGING
