@@ -464,7 +464,6 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
       zcl_abapgit_language=>restore_login_language( ).
     ELSEIF strlen( is_progdir-name ) > 30.
-* function module RPY_PROGRAM_INSERT cannot handle function group includes
       " special treatment for extensions
       " if the program name exceeds 30 characters it is not a usual
       " ABAP program but might be some extension, which requires the internal
@@ -476,15 +475,43 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         STATE 'I'
         EXTENSION TYPE is_progdir-name+30.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'error from INSERT REPORT .. EXTENSION TYPE' ).
+        zcx_abapgit_exception=>raise( 'Error from INSERT REPORT .. EXTENSION TYPE' ).
       ENDIF.
     ELSE.
-      INSERT REPORT is_progdir-name
-        FROM it_source
-        STATE 'I'
-        PROGRAM TYPE is_progdir-subc.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise_t100( ).
+      " RPY_PROGRAM_INSERT cannot handle function group includes (and some other case)
+      CALL FUNCTION 'RS_PROGRAM_CHECK_NAME'
+        EXPORTING
+          progname = is_progdir-name
+        EXCEPTIONS
+          OTHERS   = 1.
+      IF sy-subrc = 0.
+        CALL FUNCTION 'RPY_PROGRAM_INSERT'
+          EXPORTING
+            development_class = iv_package
+            program_name      = is_progdir-name
+            program_type      = is_progdir-subc
+            title_string      = lv_title
+            save_inactive     = 'I'
+            suppress_dialog   = abap_true
+          TABLES
+            source_extended   = it_source
+          EXCEPTIONS
+            already_exists    = 1
+            cancelled         = 2
+            name_not_allowed  = 3
+            permission_error  = 4
+            OTHERS            = 5.
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise_t100( ).
+        ENDIF.
+      ELSE.
+        INSERT REPORT is_progdir-name
+          FROM it_source
+          STATE 'I'
+          PROGRAM TYPE is_progdir-subc.
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise( 'Error from INSERT REPORT .. PROGRAM TYPE' ).
+        ENDIF.
       ENDIF.
     ENDIF.
 
@@ -494,7 +521,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         LANGUAGE mv_language
         STATE 'I'.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'error from INSERT TEXTPOOL' ).
+        zcx_abapgit_exception=>raise( 'Error from INSERT TEXTPOOL' ).
       ENDIF.
     ENDIF.
 
@@ -508,7 +535,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         not_exists = 1
         OTHERS     = 2.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |not found in PROGDIR. Subrc = { sy-subrc }| ).
+      zcx_abapgit_exception=>raise( |Not found in PROGDIR. Subrc = { sy-subrc }| ).
     ENDIF.
 
 * todo, package?
@@ -534,7 +561,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         not_executed = 1
         OTHERS       = 2.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |PROG, error inserting. Subrc = { sy-subrc }| ).
+      zcx_abapgit_exception=>raise( 'Error updating program directory' ).
     ENDIF.
 
     SELECT SINGLE * FROM progdir INTO ls_progdir_new
