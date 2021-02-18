@@ -116,18 +116,18 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
   METHOD zif_abapgit_object~changed_by.
     DATA lo_object_data TYPE REF TO if_wb_object_data_model.
     DATA lo_wb_object_operator TYPE REF TO if_wb_object_operator.
+    DATA lx_error TYPE REF TO cx_wb_object_operation_error.
     TRY.
         lo_wb_object_operator = get_wb_object_operator( ).
         lo_wb_object_operator->read(
           EXPORTING
             data_selection = if_wb_object_data_selection_co=>c_properties
           IMPORTING
-            eo_object_data = lo_object_data
-        ).
+            eo_object_data = lo_object_data ).
 
         rv_user = lo_object_data->get_changed_by( ).
 
-      CATCH cx_wb_object_operation_error INTO DATA(lx_error).
+      CATCH cx_wb_object_operation_error INTO lx_error.
         zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
                                       ix_previous = lx_error->previous ).
     ENDTRY.
