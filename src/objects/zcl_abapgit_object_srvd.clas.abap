@@ -114,19 +114,21 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
+    DATA lo_object_data TYPE REF TO if_wb_object_data_model.
+
     TRY.
         get_wb_object_operator( )->read(
           EXPORTING
             data_selection = if_wb_object_data_selection_co=>c_properties
           IMPORTING
-            eo_object_data = DATA(lo_object_data)
+            eo_object_data = lo_object_data
         ).
 
         rv_user = lo_object_data->get_changed_by( ).
 
       CATCH cx_wb_object_operation_error INTO DATA(lx_error).
         zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
-                                     ix_previous = lx_error->previous ).
+                                      ix_previous = lx_error->previous ).
     ENDTRY.
 
     IF rv_user IS INITIAL.
@@ -136,9 +138,10 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~delete.
+    DATA lx_error TYPE REF TO cx_wb_object_operation_error.
     TRY.
         get_wb_object_operator( )->delete( ).
-      CATCH cx_wb_object_operation_error INTO DATA(lx_error).
+      CATCH cx_wb_object_operation_error INTO lx_error.
         zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
                                       ix_previous = lx_error->previous ).
     ENDTRY.
@@ -152,7 +155,10 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
       lx_error              TYPE REF TO cx_root,
       lv_transport_request  TYPE trkorr,
       lv_category           TYPE wbadt_resource_category,
-      lo_wb_object_operator TYPE REF TO if_wb_object_operator.
+      lo_wb_object_operator TYPE REF TO if_wb_object_operator,
+      lo_merged_data_all    TYPE REF TO if_wb_object_data_model,
+      lo_merged_data_prop   TYPE REF TO if_wb_object_data_model,
+      lo_merged_data_cont   TYPE REF TO if_wb_object_data_model.
 
     TRY.
         lo_object_data = get_object_data( io_xml ).
@@ -187,15 +193,15 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
         ELSE.
           CASE lv_category.
             WHEN if_wb_adt_plugin_resource_co=>co_sfs_res_category_atomic.
-              DATA(lo_merged_data_all) = merge_object_data( lo_object_data ).
+              lo_merged_data_all = merge_object_data( lo_object_data ).
               lo_wb_object_operator->update(
                   io_object_data    = lo_merged_data_all
                   data_selection    = if_wb_object_data_selection_co=>c_all_data
                   version           = swbm_version_inactive
                   transport_request = lv_transport_request ).
             WHEN if_wb_adt_plugin_resource_co=>co_sfs_res_category_compound_s.
-              DATA(lo_merged_data_prop) = merge_object_data( lo_object_data ).
-              DATA(lo_merged_data_cont) = merge_object_data( lo_object_data ).
+              lo_merged_data_prop = merge_object_data( lo_object_data ).
+              lo_merged_data_cont = merge_object_data( lo_object_data ).
               lo_wb_object_operator->update(
                   io_object_data    = lo_merged_data_prop
                   data_selection    = if_wb_object_data_selection_co=>c_properties
@@ -303,7 +309,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
     DATA:
       ls_data            TYPE cl_srvd_wb_object_data=>ty_srvd_object_data,
       lo_object_operator TYPE REF TO if_wb_object_operator,
-      lo_object_data     TYPE REF TO if_wb_object_data_model.
+      lo_object_data     TYPE REF TO if_wb_object_data_model,
+      lx_error           TYPE REF TO cx_wb_object_operation_error.
 
     TRY.
         lo_object_operator = cl_wb_object_operator_factory=>create_object_operator(
@@ -343,7 +350,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
           io_xml->add( iv_name = mc_xml_parent_name ig_data = ls_data-metadata ).
         ENDIF.
 
-      CATCH cx_wb_object_operation_error INTO DATA(lx_error).
+      CATCH cx_wb_object_operation_error INTO lx_error.
         zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
                                       ix_previous = lx_error->previous ).
     ENDTRY.
@@ -472,6 +479,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
 
 
   METHOD get_wb_object_operator.
+    DATA lx_error TYPE REF TO cx_wb_object_operation_error.
     IF mo_object_operator IS INITIAL.
       TRY.
           ro_object_operator = cl_wb_object_operator_factory=>create_object_operator(
@@ -479,7 +487,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
                        object_key  = CONV #( ms_item-obj_name )
                         ).
           mo_object_operator = ro_object_operator.
-        CATCH cx_wb_object_operation_error INTO DATA(lx_error).
+        CATCH cx_wb_object_operation_error INTO lx_error.
           zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
                                         ix_previous = lx_error->previous ).
       ENDTRY.
