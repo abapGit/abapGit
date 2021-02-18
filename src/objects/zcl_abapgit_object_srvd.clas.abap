@@ -191,7 +191,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
                   version               = swbm_version_inactive
                   transport_request     = lv_transport_request ).
             WHEN OTHERS.
-              cx_abapgit_exception=>raise( |Category '{ lv_category }' not supported| ).
+              zcx_abapgit_exception=>raise( |Category '{ lv_category }' not supported| ).
           ENDCASE.
         ELSE.
           CASE lv_category.
@@ -243,8 +243,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
           EXPORTING
             data_selection = if_wb_object_data_selection_co=>c_properties
           IMPORTING
-            eo_object_data = lo_object_data
-        ).
+            eo_object_data = lo_object_data ).
         rv_bool = boolc( lo_object_data IS NOT INITIAL AND lo_object_data->get_object_key( ) IS NOT INITIAL ).
       CATCH cx_wb_object_operation_error.
         rv_bool = abap_false.
@@ -314,8 +313,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
     TRY.
         lo_object_operator = cl_wb_object_operator_factory=>create_object_operator(
                                object_type = if_srvd_types=>co_global_objtype
-                               object_key  = CONV #( ms_item-obj_name )
-                                ).
+                               object_key  = CONV #( ms_item-obj_name ) ).
 
         lo_object_operator->read(
           EXPORTING
@@ -327,8 +325,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
         IF lo_object_data IS BOUND.
           lo_object_data->get_data(
             IMPORTING
-              p_data = ls_data
-          ).
+              p_data = ls_data ).
 
           CLEAR ls_data-metadata-version.
           CLEAR ls_data-metadata-changed_at.
@@ -440,8 +437,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
         p_metadata_only  = abap_false
         p_data_selection = if_wb_object_data_selection_co=>c_all_data
       IMPORTING
-        p_data           = ls_new
-    ).
+        p_data           = ls_new ).
 
     lo_wb_object_operator = get_wb_object_operator( ).
 
@@ -456,8 +452,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
         p_metadata_only  = abap_false
         p_data_selection = if_wb_object_data_selection_co=>c_all_data
       IMPORTING
-        p_data           = ls_old
-    ).
+        p_data           = ls_old ).
 
     ls_old-metadata-description = ls_new-metadata-description.
     ls_old-content-source = ls_new-content-source.
@@ -483,8 +478,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
       TRY.
           ro_object_operator = cl_wb_object_operator_factory=>create_object_operator(
                        object_type = if_srvd_types=>co_global_objtype
-                       object_key  = CONV #( ms_item-obj_name )
-                        ).
+                       object_key  = CONV #( ms_item-obj_name ) ).
           mo_object_operator = ro_object_operator.
         CATCH cx_wb_object_operation_error INTO lx_error.
           zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
