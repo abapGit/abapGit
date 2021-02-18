@@ -48,6 +48,15 @@ CLASS zcl_abapgit_object_srvd DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     CONSTANTS mc_xml_parent_name TYPE string VALUE 'SRVD' ##NO_TEXT.
     DATA mo_object_operator TYPE REF TO if_wb_object_operator .
 
+    METHODS clear_fields
+      CHANGING
+        !cs_metadata TYPE any .
+    METHODS clear_field
+      IMPORTING
+        !iv_fieldname TYPE csequence
+      CHANGING
+        !cs_metadata  TYPE any .
+
     METHODS get_object_data
       IMPORTING
         !io_xml               TYPE REF TO zif_abapgit_xml_input
@@ -102,43 +111,64 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
   METHOD constructor.
     super->constructor( is_item = is_item
                         iv_language = iv_language ).
+
+    mv_service_definition_key = ms_item-obj_name.
+
+    TRY.
+        CREATE DATA mr_service_definition TYPE ('CL_SRVD_WB_OBJECT_DATA=>TY_SRVD_OBJECT_DATA').
+        CREATE OBJECT mi_persistence TYPE ('CL_SRVD_OBJECT_PERSIST').
+
+      CATCH cx_sy_create_error.
+        zcx_abapgit_exception=>raise( |SRVD not supported by your NW release| ).
+    ENDTRY.
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
-    DATA lo_object_data TYPE REF TO if_wb_object_data_model.
-    DATA lo_wb_object_operator TYPE REF TO if_wb_object_operator.
-    DATA lx_error TYPE REF TO cx_wb_object_operation_error.
+
+    DATA:
+      li_object_data_model  TYPE REF TO if_wb_object_data_model,
+      li_wb_object_operator TYPE REF TO object,
+      lx_error              TYPE REF TO cx_root.
+
+    li_wb_object_operator = get_wb_object_operator( ).
+
     TRY.
-        lo_wb_object_operator = get_wb_object_operator( ).
-        lo_wb_object_operator->read(
-          EXPORTING
-            data_selection = if_wb_object_data_selection_co=>c_properties
+        CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
           IMPORTING
-            eo_object_data = lo_object_data ).
+            eo_object_data = li_object_data_model.
 
-        rv_user = lo_object_data->get_changed_by( ).
+        rv_user = li_object_data_model->get_changed_by( ).
 
-      CATCH cx_wb_object_operation_error INTO lx_error.
-        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
-                                      ix_previous = lx_error->previous ).
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise(
+            iv_text     = lx_error->get_text( )
+            ix_previous = lx_error ).
     ENDTRY.
 
-    IF rv_user IS INITIAL.
-      rv_user = c_user_unknown.
-    ENDIF.
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~delete.
-    DATA lx_error TYPE REF TO cx_wb_object_operation_error.
-    DATA lo_wb_object_operator TYPE REF TO if_wb_object_operator.
+    DATA:
+      lx_error              TYPE REF TO cx_root,
+      li_wb_object_operator TYPE REF TO object,
+      lv_transport_request  TYPE trkorr.
+
+    lv_transport_request = get_transport_req_if_needed( iv_package ).
+
+    li_wb_object_operator = get_wb_object_operator( ).
+
     TRY.
-        lo_wb_object_operator = get_wb_object_operator( ).
-        lo_wb_object_operator->delete( ).
-      CATCH cx_wb_object_operation_error INTO lx_error.
-        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
-                                      ix_previous = lx_error->previous ).
+        CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~DELETE')
+          EXPORTING
+            transport_request = lv_transport_request.
+
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise(
+            iv_text     = lx_error->get_text( )
+            ix_previous = lx_error ).
     ENDTRY.
   ENDMETHOD.
 
@@ -149,69 +179,101 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
       lo_object_data        TYPE REF TO if_wb_object_data_model,
       lx_error              TYPE REF TO cx_wb_object_operation_error,
       lv_transport_request  TYPE trkorr,
-      lv_category           TYPE wbadt_resource_category,
-      lo_wb_object_operator TYPE REF TO if_wb_object_operator,
+      lo_wb_object_operator TYPE REF TO object,
       lo_merged_data_all    TYPE REF TO if_wb_object_data_model,
       lo_merged_data_prop   TYPE REF TO if_wb_object_data_model,
-      lo_merged_data_cont   TYPE REF TO if_wb_object_data_model.
+      lo_merged_data_cont   TYPE REF TO if_wb_object_data_model,
+      lr_wbobjtype          TYPE REF TO data,
+      lr_category           TYPE REF TO data.
+
+    FIELD-SYMBOLS:
+      <ls_wbobjtype> TYPE any,
+      <lv_category>  TYPE any,
+      <lv_field>     TYPE any.
 
     TRY.
         lo_object_data = get_object_data( io_xml ).
         lv_transport_request = get_transport_req_if_needed( iv_package ).
-        lv_category = cl_blue_wb_utility=>get_resource_category( is_object_type = if_srvd_types=>co_global_objtype ).
         lo_wb_object_operator = get_wb_object_operator( ).
 
-        IF exists( ) = abap_false.
-          CASE lv_category.
-            WHEN if_wb_adt_plugin_resource_co=>co_sfs_res_category_atomic.
-              lo_wb_object_operator->create(
-                   io_object_data        = lo_object_data
-                   data_selection        = if_wb_object_data_selection_co=>c_all_data
-                   version               = swbm_version_inactive
-                   package               = iv_package
-                   transport_request     = lv_transport_request ).
-            WHEN if_wb_adt_plugin_resource_co=>co_sfs_res_category_compound_s.
-              lo_wb_object_operator->create(
-                  io_object_data        = lo_object_data
-                  data_selection        = if_wb_object_data_selection_co=>c_properties
-                  version               = swbm_version_inactive
-                  package               = iv_package
-                  transport_request     = lv_transport_request ).
-              lo_wb_object_operator->update(
-                  io_object_data        = lo_object_data
-                  data_selection        = if_wb_object_data_selection_co=>c_data_content
-                  version               = swbm_version_inactive
-                  transport_request     = lv_transport_request ).
+        CREATE DATA lr_wbobjtype TYPE ('WBOBJTYPE').
+        ASSIGN lr_wbobjtype->* TO <ls_wbobjtype>.
+        ASSIGN COMPONENT 'OBJTYPE_TR' OF STRUCTURE <ls_wbobjtype> TO <lv_field>.
+        <lv_field> = 'SRVD'.
+        ASSIGN COMPONENT 'SUBTYPE_WB' OF STRUCTURE <ls_wbobjtype> TO <lv_field>.
+        <lv_field> = 'SRV'.
+
+        CREATE DATA lr_category TYPE ('WBADT_RESOURCE_CATEGORY').
+        ASSIGN lr_category->* TO <lv_category>.
+
+        CALL METHOD ('CL_BLUE_WB_UTILITY')=>('GET_RESOURCE_CATEGORY')
+          EXPORTING
+            is_object_type = <ls_wbobjtype>
+          RECEIVING
+            result         = <lv_category>.
+
+        lo_wb_object_operator = get_wb_object_operator( ).
+
+        tadir_insert( iv_package ).
+
+        IF zif_abapgit_object~exists( ) = abap_false.
+          CASE <lv_category>.
+            WHEN '1'. "if_wb_adt_plugin_resource_co=>co_sfs_res_category_atomic.
+              CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~CREATE')
+                EXPORTING
+                  io_object_data    = lo_object_data
+                  data_selection    = 'AL' "if_wb_object_data_selection_co=>c_all_data
+                  version           = 'I' "swbm_version_inactive
+                  package           = iv_package
+                  transport_request = lv_transport_request.
+            WHEN '2'. "if_wb_adt_plugin_resource_co=>co_sfs_res_category_compound_s.
+              CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~CREATE')
+                EXPORTING
+                  io_object_data    = lo_object_data
+                  data_selection    = 'P' "if_wb_object_data_selection_co=>c_properties
+                  version           = 'I' "swbm_version_inactive
+                  package           = iv_package
+                  transport_request = lv_transport_request.
+              CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~UPDATE')
+                EXPORTING
+                  io_object_data    = lo_object_data
+                  data_selection    = 'D' "if_wb_object_data_selection_co=>c_data_content
+                  version           = 'I' "swbm_version_inactive
+                  transport_request = lv_transport_request.
             WHEN OTHERS.
-              zcx_abapgit_exception=>raise( |Category '{ lv_category }' not supported| ).
+              zcx_abapgit_exception=>raise( |Category '{ <lv_category> }' not supported| ).
           ENDCASE.
         ELSE.
-          CASE lv_category.
-            WHEN if_wb_adt_plugin_resource_co=>co_sfs_res_category_atomic.
+          CASE <lv_category>.
+            WHEN '1'. "if_wb_adt_plugin_resource_co=>co_sfs_res_category_atomic.
               lo_merged_data_all = merge_object_data( lo_object_data ).
-              lo_wb_object_operator->update(
+              CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~UPDATE')
+                EXPORTING
                   io_object_data    = lo_merged_data_all
-                  data_selection    = if_wb_object_data_selection_co=>c_all_data
-                  version           = swbm_version_inactive
-                  transport_request = lv_transport_request ).
-            WHEN if_wb_adt_plugin_resource_co=>co_sfs_res_category_compound_s.
+                  data_selection    = 'AL' "if_wb_object_data_selection_co=>c_all_data
+                  version           = 'I' "swbm_version_inactive
+                  transport_request = lv_transport_request.
+            WHEN '2'. "if_wb_adt_plugin_resource_co=>co_sfs_res_category_compound_s.
               lo_merged_data_prop = merge_object_data( lo_object_data ).
               lo_merged_data_cont = merge_object_data( lo_object_data ).
-              lo_wb_object_operator->update(
+              CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~UPDATE')
+                EXPORTING
                   io_object_data    = lo_merged_data_prop
-                  data_selection    = if_wb_object_data_selection_co=>c_properties
-                  version           = swbm_version_inactive
-                  transport_request = lv_transport_request ).
-              lo_wb_object_operator->update(
+                  data_selection    = 'P' "if_wb_object_data_selection_co=>c_properties
+                  version           = 'I' "swbm_version_inactive
+                  transport_request = lv_transport_request.
+              CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~UPDATE')
+                EXPORTING
                   io_object_data    = lo_merged_data_cont
-                  data_selection    = if_wb_object_data_selection_co=>c_data_content
-                  version           = swbm_version_inactive
-                  transport_request = lv_transport_request ).
+                  data_selection    = 'D' "if_wb_object_data_selection_co=>c_data_content
+                  version           = 'I' "swbm_version_inactive
+                  transport_request = lv_transport_request.
             WHEN OTHERS.
-              zcx_abapgit_exception=>raise( |Category '{ lv_category }' not supported| ).
+              zcx_abapgit_exception=>raise( |Category '{ <lv_category> }' not supported| ).
           ENDCASE.
-
         ENDIF.
+
+        corr_insert( iv_package ).
 
       CATCH cx_wb_object_operation_error INTO lx_error.
         zcx_abapgit_exception=>raise(
@@ -297,52 +359,55 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     DATA:
-      ls_data            TYPE cl_srvd_wb_object_data=>ty_srvd_object_data,
-      lo_object_operator TYPE REF TO if_wb_object_operator,
-      lo_object_data     TYPE REF TO if_wb_object_data_model,
-      lx_error           TYPE REF TO cx_wb_object_operation_error,
-      lv_object_key      TYPE seu_objkey.
+      li_object_data_model  TYPE REF TO if_wb_object_data_model,
+      li_wb_object_operator TYPE REF TO object,
+      lx_error              TYPE REF TO cx_root,
+      lv_source             TYPE string.
+
+    FIELD-SYMBOLS:
+      <ls_service_definition> TYPE any,
+      <lv_metadata>           TYPE any,
+      <lv_source>             TYPE string.
+
+    ASSIGN mr_service_definition->* TO <ls_service_definition>.
+    ASSERT sy-subrc = 0.
 
     TRY.
-        lv_object_key = ms_item-obj_name.
-        lo_object_operator = cl_wb_object_operator_factory=>create_object_operator(
-                               object_type = if_srvd_types=>co_global_objtype
-                               object_key  = lv_object_key ).
+        li_wb_object_operator = get_wb_object_operator( ).
 
-        lo_object_operator->read(
+        CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
           EXPORTING
-            version        = swbm_version_active
-            data_selection = if_wb_object_data_selection_co=>c_all_data
+            version        = 'A'
+            data_selection = 'AL'
           IMPORTING
-            eo_object_data = lo_object_data ).
+            "data           = <ls_service_definition>
+            eo_object_data = li_object_data_model.
 
-        IF lo_object_data IS BOUND.
-          lo_object_data->get_data( IMPORTING p_data = ls_data ).
+        CALL METHOD li_object_data_model->('GET_DATA')
+          IMPORTING
+            p_data = <ls_service_definition>.
 
-          CLEAR ls_data-metadata-version.
-          CLEAR ls_data-metadata-changed_at.
-          CLEAR ls_data-metadata-changed_by.
-          CLEAR ls_data-metadata-created_at.
-          CLEAR ls_data-metadata-created_by.
-          CLEAR ls_data-metadata-responsible.
-          CLEAR ls_data-metadata-package_ref.
-          CLEAR ls_data-metadata-master_system.
-          CLEAR ls_data-metadata-dt_uuid.
-          CLEAR ls_data-metadata-abap_language_version.
-          CLEAR ls_data-metadata-links.
+        ASSIGN COMPONENT 'METADATA' OF STRUCTURE <ls_service_definition> TO <lv_metadata>.
+        ASSERT sy-subrc = 0.
+        clear_fields( CHANGING cs_metadata = <lv_metadata> ).
 
-          mo_files->add_string( iv_ext = mc_source_file
-                                iv_string = ls_data-content-source ).
+        ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <ls_service_definition> TO <lv_source>.
+        ASSERT sy-subrc = 0.
+        lv_source = <lv_source>.
 
-          CLEAR ls_data-content-source.
+        io_xml->add(
+           iv_name = mc_xml_parent_name
+           ig_data = <lv_metadata> ).
 
-          io_xml->add( iv_name = mc_xml_parent_name
-                       ig_data = ls_data-metadata ).
-        ENDIF.
+        mo_files->add_string(
+            iv_ext    = mc_source_file
+            iv_string = lv_source ).
 
-      CATCH cx_wb_object_operation_error INTO lx_error.
-        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
-                                      ix_previous = lx_error->previous ).
+
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise(
+            iv_text     = lx_error->get_text( )
+            ix_previous = lx_error ).
     ENDTRY.
 
   ENDMETHOD.
@@ -395,22 +460,34 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
 
 
   METHOD get_wb_object_operator.
-    DATA lx_error TYPE REF TO cx_wb_object_operation_error.
-    DATA lv_object_key TYPE seu_objkey.
-    IF mo_object_operator IS INITIAL.
-      TRY.
-          lv_object_key = ms_item-obj_name.
-          ro_object_operator = cl_wb_object_operator_factory=>create_object_operator(
-                       object_type = if_srvd_types=>co_global_objtype
-                       object_key  = lv_object_key ).
-          mo_object_operator = ro_object_operator.
-        CATCH cx_wb_object_operation_error INTO lx_error.
-          zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
-                                        ix_previous = lx_error->previous ).
-      ENDTRY.
-    ELSE.
+
+    DATA:
+      ls_object_type TYPE wbobjtype,
+      lx_error       TYPE REF TO cx_root.
+
+    IF mo_object_operator IS BOUND.
       ro_object_operator = mo_object_operator.
     ENDIF.
+
+    ls_object_type-objtype_tr = 'SRVD'.
+    ls_object_type-subtype_wb = 'SRV'.
+
+    TRY.
+        CALL METHOD ('CL_WB_OBJECT_OPERATOR')=>('CREATE_INSTANCE')
+          EXPORTING
+            object_type = ls_object_type
+            object_key  = mv_service_definition_key
+          RECEIVING
+            result      = mo_object_operator.
+
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise(
+            iv_text     = lx_error->get_text( )
+            ix_previous = lx_error ).
+    ENDTRY.
+
+    ro_object_operator = mo_object_operator.
+
   ENDMETHOD.
 
 
@@ -456,5 +533,93 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
     ELSE.
       zcx_abapgit_exception=>raise( iv_text = |Unsupported serializer version { ls_metadata-version }| ).
     ENDIF.
+  ENDMETHOD.
+
+
+  METHOD clear_fields.
+
+    FIELD-SYMBOLS: <lv_links> TYPE ANY TABLE.
+    FIELD-SYMBOLS: <lv_value> TYPE data.
+    FIELD-SYMBOLS <ls_item> TYPE any.
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'VERSION'
+      CHANGING
+        cs_metadata = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'CREATED_AT'
+      CHANGING
+        cs_metadata = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'CREATED_BY'
+      CHANGING
+        cs_metadata = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'CHANGED_AT'
+      CHANGING
+        cs_metadata = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'CHANGED_BY'
+      CHANGING
+        cs_metadata = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'RESPONSIBLE'
+      CHANGING
+        cs_metadata = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+      iv_fieldname          = 'PACKAGE_REF'
+      CHANGING
+      cs_metadata = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+      iv_fieldname          = 'MASTER_SYSTEM'
+      CHANGING
+      cs_metadata = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+      iv_fieldname          = 'DT_UUID'
+      CHANGING
+      cs_metadata = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+      iv_fieldname          = 'ABAP_LANGUAGE_VERSION'
+      CHANGING
+      cs_metadata = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+      iv_fieldname          = 'LINKS'
+      CHANGING
+      cs_metadata = cs_metadata ).
+
+  ENDMETHOD.
+
+
+  METHOD clear_field.
+
+    FIELD-SYMBOLS: <lv_value> TYPE data.
+
+    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_metadata
+           TO <lv_value>.
+    ASSERT sy-subrc = 0.
+
+    CLEAR: <lv_value>.
+
   ENDMETHOD.
 ENDCLASS.
