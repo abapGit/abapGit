@@ -11,6 +11,14 @@
     <FIXPT>X</FIXPT>
     <UNICODE>X</UNICODE>
    </VSEOCLASS>
+   <DESCRIPTIONS>
+    <SEOCOMPOTX>
+     <CLSNAME>ZCL_ABAPGIT_OBJECT_SRVD</CLSNAME>
+     <CMPNAME>MO_OBJECT_OPERATOR</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>CRUD API / operator for WB repository object</DESCRIPT>
+    </SEOCOMPOTX>
+   </DESCRIPTIONS>
   </asx:values>
  </asx:abap>
 </abapGit>
