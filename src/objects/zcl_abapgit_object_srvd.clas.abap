@@ -526,7 +526,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
 
 
   METHOD deserialize_xml.
-    DATA(ls_metadata) = io_xml->get_metadata( ).
+    DATA ls_metadata TYPE zif_abapgit_definitions=>ty_metadata.
+    ls_metadata = io_xml->get_metadata( ).
 
     IF ls_metadata-version = get_serializer_version( ).
       io_xml->read(
