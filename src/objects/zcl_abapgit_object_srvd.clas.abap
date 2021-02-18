@@ -536,13 +536,44 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
 
 
   METHOD get_object_data.
-    DATA ls_data TYPE cl_srvd_wb_object_data=>ty_srvd_object_data.
 
-    ls_data-metadata = deserialize_xml( io_xml ).
-    ls_data-content-source = mo_files->read_string( mc_source_file ).
+    DATA:
+      lr_metadata TYPE REF TO data,
+      lr_data     TYPE REF TO data.
+
+    FIELD-SYMBOLS:
+      <lv_metadata_node> TYPE any,
+      <ls_metadata>      TYPE any,
+      <lv_source>        TYPE any,
+      <lg_data>          TYPE any.
+
+    CREATE DATA lr_data TYPE ('CL_BLUE_SOURCE_OBJECT_DATA=>TY_OBJECT_DATA').
+    ASSIGN lr_data->* TO <lg_data>.
+    ASSERT sy-subrc = 0.
+
+    ASSIGN COMPONENT 'METADATA' OF STRUCTURE <lg_data> TO <lv_metadata_node>.
+    ASSERT sy-subrc = 0.
+
+    CREATE DATA lr_metadata  TYPE ('IF_ADT_TOOLS_CORE_SOURCE_TYPES=>TY_ABAP_SOURCE_MAIN_OBJECT').
+    ASSIGN lr_metadata->* TO <ls_metadata>.
+    ASSERT sy-subrc = 0.
+
+    CALL METHOD deserialize_xml
+      EXPORTING
+        io_xml  = io_xml
+      RECEIVING
+        rs_data = <ls_metadata>.
+
+    <lv_metadata_node> = <ls_metadata>.
+
+    ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <lg_data> TO <lv_source>.
+    ASSERT sy-subrc = 0.
+
+    <lv_source> = mo_files->read_string( mc_source_file ).
 
     CREATE OBJECT ro_object_data TYPE ('CL_SRVD_WB_OBJECT_DATA').
-    ro_object_data->set_data( ls_data ).
+    ro_object_data->set_data(  p_data = <lg_data>  ).
+
   ENDMETHOD.
 
 
