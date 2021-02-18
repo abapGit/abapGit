@@ -479,22 +479,10 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'error from INSERT REPORT .. EXTENSION TYPE' ).
       ENDIF.
     ELSE.
-      CALL FUNCTION 'RPY_PROGRAM_INSERT'
-        EXPORTING
-          development_class = iv_package
-          program_name      = is_progdir-name
-          program_type      = is_progdir-subc
-          title_string      = lv_title
-          save_inactive     = 'I'
-          suppress_dialog   = abap_true
-        TABLES
-          source_extended   = it_source
-        EXCEPTIONS
-          already_exists    = 1
-          cancelled         = 2
-          name_not_allowed  = 3
-          permission_error  = 4
-          OTHERS            = 5.
+      INSERT REPORT is_progdir-name
+        FROM it_source
+        STATE 'I'
+        PROGRAM TYPE is_progdir-subc.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.

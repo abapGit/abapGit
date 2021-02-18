@@ -9,6 +9,7 @@
     "zcl_abapgit_persistence_db",
     "zcl_abapgit_http_client",
     "zcl_abapgit_login_manager",
+    "zif_abapgit_html_viewer",
     "zcl_abapgit_path",
     "zcl_abapgit_progress",
     "zcl_abapgit_string_map",
@@ -91,7 +92,9 @@
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "unpretty"},
       {"object": "ZCL_ABAPGIT_ZLIB", "class": "ltcl_zlib", "method": "fixed"},
       {"object": "ZCL_ABAPGIT_ZLIB", "class": "ltcl_zlib", "method": "dynamic"},
-      {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_utils_test", "method": "extract_author_data"}
+      {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_utils_test", "method": "extract_author_data1"},
+      {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_utils_test", "method": "extract_author_data2"},
+      {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_utils_test", "method": "extract_author_data9"}
     ]
   }
 }
