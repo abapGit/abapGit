@@ -399,7 +399,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
     DATA lv_object_key TYPE seu_objkey.
     IF mo_object_operator IS INITIAL.
       TRY.
-          lv_object_key = CONV #( ms_item-obj_name ).
+          lv_object_key = ms_item-obj_name.
           ro_object_operator = cl_wb_object_operator_factory=>create_object_operator(
                        object_type = if_srvd_types=>co_global_objtype
                        object_key  = lv_object_key ).
