@@ -4,7 +4,7 @@ category: other
 order: 10
 ---
 
-Editing Using abapGit and abapGitServer for regular backup
+Using abapGit and abapGitServer for regular backup. Instead of abapGitServer, github or similar can also be used.
 
 Steps:
 
