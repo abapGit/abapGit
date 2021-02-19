@@ -136,7 +136,7 @@ lo_repo->set_branch_name( lv_name ).
 
 ### Create Branch ###
 
-Create a new branch in an online repository:
+Create a new branch in an online repository, note that IV_FROM can also be set, if not the branch will be created from the current checked out SHA1 of the repo,
 
 ```abap
 lo_repo->create_branch( lv_name ).
