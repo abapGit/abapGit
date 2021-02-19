@@ -108,7 +108,7 @@ DATA(lt_result) = zcl_abapgit_file_status=>status( lo_repo ).
 
 The following tasks are supported for online repositories only (`lo_repo type ref to zcl_abapgit_repo_online`).
 
-**Note:** Certain tasks will require authentication (user/password or token). In such cases, you will have to provide the login details upfront (see [#1331](https://github.com/abapGit/abapGit/issues/1331) for details):
+**Note:** Certain tasks will require authentication (user/password or token). In such cases, you will have to provide the login details upfront (see [#1331](https://github.com/abapGit/abapGit/issues/1331) for details), authentication can also be set via user exit or configured in SM59,
 
 ```abap
 zcl_abapgit_login_manager=>set(
