@@ -122,7 +122,8 @@ zcl_abapgit_login_manager=>set(
 Get a list of all branches (including main branch):
 
 ```abap
-zcl_abapgit_git_transport=>branches( lo_repo->get_url( ) ).
+lo_branches = zcl_abapgit_git_transport=>branches( lo_repo->get_url( ) ).
+lt_list = lo_branches->get_branches_only( ).
 ```
 
 ### Switch Branch ###
