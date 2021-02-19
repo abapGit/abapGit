@@ -1,58 +1,66 @@
-CLASS zcl_abapgit_objects_program DEFINITION PUBLIC INHERITING FROM zcl_abapgit_objects_super.
+CLASS zcl_abapgit_objects_program DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_super
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    TYPES: BEGIN OF ty_progdir,
-             name    TYPE progdir-name,
-             state   TYPE progdir-state,
-             sqlx    TYPE progdir-sqlx,
-             edtx    TYPE progdir-edtx,
-             varcl   TYPE progdir-varcl,
-             dbapl   TYPE progdir-dbapl,
-             dbna    TYPE progdir-dbna,
-             clas    TYPE progdir-clas,
-             type    TYPE progdir-type,
-             occurs  TYPE progdir-occurs,
-             subc    TYPE progdir-subc,
-             appl    TYPE progdir-appl,
-             secu    TYPE progdir-secu,
-             cnam    TYPE progdir-cnam,
-             cdat    TYPE progdir-cdat,
-             unam    TYPE progdir-unam,
-             udat    TYPE progdir-udat,
-             vern    TYPE progdir-vern,
-             levl    TYPE progdir-levl,
-             rstat   TYPE progdir-rstat,
-             rmand   TYPE progdir-rmand,
-             rload   TYPE progdir-rload,
-             fixpt   TYPE progdir-fixpt,
-             sset    TYPE progdir-sset,
-             sdate   TYPE progdir-sdate,
-             stime   TYPE progdir-stime,
-             idate   TYPE progdir-idate,
-             itime   TYPE progdir-itime,
-             ldbname TYPE progdir-ldbname,
-             uccheck TYPE progdir-uccheck,
-           END OF ty_progdir.
+
+    TYPES:
+      BEGIN OF ty_progdir,
+        name    TYPE progdir-name,
+        state   TYPE progdir-state,
+        sqlx    TYPE progdir-sqlx,
+        edtx    TYPE progdir-edtx,
+        varcl   TYPE progdir-varcl,
+        dbapl   TYPE progdir-dbapl,
+        dbna    TYPE progdir-dbna,
+        clas    TYPE progdir-clas,
+        type    TYPE progdir-type,
+        occurs  TYPE progdir-occurs,
+        subc    TYPE progdir-subc,
+        appl    TYPE progdir-appl,
+        secu    TYPE progdir-secu,
+        cnam    TYPE progdir-cnam,
+        cdat    TYPE progdir-cdat,
+        unam    TYPE progdir-unam,
+        udat    TYPE progdir-udat,
+        vern    TYPE progdir-vern,
+        levl    TYPE progdir-levl,
+        rstat   TYPE progdir-rstat,
+        rmand   TYPE progdir-rmand,
+        rload   TYPE progdir-rload,
+        fixpt   TYPE progdir-fixpt,
+        sset    TYPE progdir-sset,
+        sdate   TYPE progdir-sdate,
+        stime   TYPE progdir-stime,
+        idate   TYPE progdir-idate,
+        itime   TYPE progdir-itime,
+        ldbname TYPE progdir-ldbname,
+        uccheck TYPE progdir-uccheck,
+      END OF ty_progdir .
 
     METHODS serialize_program
-      IMPORTING io_xml     TYPE REF TO zif_abapgit_xml_output OPTIONAL
-                is_item    TYPE zif_abapgit_definitions=>ty_item
-                io_files   TYPE REF TO zcl_abapgit_objects_files
-                iv_program TYPE programm OPTIONAL
-                iv_extra   TYPE clike OPTIONAL
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !io_xml     TYPE REF TO zif_abapgit_xml_output OPTIONAL
+        !is_item    TYPE zif_abapgit_definitions=>ty_item
+        !io_files   TYPE REF TO zcl_abapgit_objects_files
+        !iv_program TYPE programm OPTIONAL
+        !iv_extra   TYPE clike OPTIONAL
+      RAISING
+        zcx_abapgit_exception .
     METHODS read_progdir
-      IMPORTING iv_program        TYPE programm
-      RETURNING VALUE(rs_progdir) TYPE ty_progdir.
-
+      IMPORTING
+        !iv_program       TYPE programm
+      RETURNING
+        VALUE(rs_progdir) TYPE ty_progdir .
     METHODS deserialize_program
-      IMPORTING is_progdir TYPE ty_progdir
-                it_source  TYPE abaptxt255_tab
-                it_tpool   TYPE textpool_table
-                iv_package TYPE devclass
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !is_progdir TYPE ty_progdir
+        !it_source  TYPE abaptxt255_tab
+        !it_tpool   TYPE textpool_table
+        !iv_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
 
     TYPES:
@@ -148,19 +156,49 @@ CLASS zcl_abapgit_objects_program DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
       RETURNING
         VALUE(rt_tpool) TYPE zif_abapgit_definitions=>ty_tpool_tt .
   PRIVATE SECTION.
-    METHODS:
-      uncondense_flow
-        IMPORTING it_flow        TYPE swydyflow
-                  it_spaces      TYPE ty_spaces_tt
-        RETURNING VALUE(rt_flow) TYPE swydyflow.
 
+    METHODS uncondense_flow
+      IMPORTING
+        !it_flow       TYPE swydyflow
+        !it_spaces     TYPE ty_spaces_tt
+      RETURNING
+        VALUE(rt_flow) TYPE swydyflow .
     CLASS-METHODS auto_correct_cua_adm
       IMPORTING
-        is_cua TYPE ty_cua
+        !is_cua TYPE ty_cua
       CHANGING
-        cs_adm TYPE rsmpe_adm.
-
-
+        !cs_adm TYPE rsmpe_adm .
+    METHODS get_program_title
+      IMPORTING
+        !it_tpool       TYPE textpool_table
+      RETURNING
+        VALUE(rv_title) TYPE repti .
+    METHODS insert_program
+      IMPORTING
+        !is_progdir TYPE ty_progdir
+        !it_source  TYPE abaptxt255_tab
+        !iv_title   TYPE repti
+        !iv_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception .
+    METHODS update_program
+      IMPORTING
+        !is_progdir TYPE ty_progdir
+        !it_source  TYPE abaptxt255_tab
+        !iv_title   TYPE repti
+      RAISING
+        zcx_abapgit_exception .
+    METHODS update_progdir
+      IMPORTING
+        !is_progdir TYPE ty_progdir
+      RAISING
+        zcx_abapgit_exception .
+    METHODS insert_tpool
+      IMPORTING
+        !is_progdir TYPE ty_progdir
+        !it_tpool   TYPE textpool_table
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -387,15 +425,9 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
   METHOD deserialize_program.
 
-    DATA: lv_exists      TYPE abap_bool,
-          lt_empty_src   LIKE it_source,
-          lv_progname    TYPE reposrc-progname,
-          ls_tpool       LIKE LINE OF it_tpool,
-          lv_title       TYPE rglif-title,
-          ls_progdir_new TYPE progdir.
-
-    FIELD-SYMBOLS: <lg_any> TYPE any.
-
+    DATA:
+      lv_progname TYPE reposrc-progname,
+      lv_title    TYPE rglif-title.
 
     CALL FUNCTION 'RS_CORR_INSERT'
       EXPORTING
@@ -414,171 +446,31 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    READ TABLE it_tpool INTO ls_tpool WITH KEY id = 'R'.
-    IF sy-subrc = 0.
-* there is a bug in RPY_PROGRAM_UPDATE, the header line of TTAB is not
-* cleared, so the title length might be inherited from a different program.
-      ASSIGN ('(SAPLSIFP)TTAB') TO <lg_any>.
-      IF sy-subrc = 0.
-        CLEAR <lg_any>.
-      ENDIF.
+    lv_title = get_program_title( it_tpool ).
 
-      lv_title = ls_tpool-entry.
-    ENDIF.
-
+    " Check if program already exists
     SELECT SINGLE progname FROM reposrc INTO lv_progname
       WHERE progname = is_progdir-name
       AND r3state = 'A'.
-    lv_exists = boolc( sy-subrc = 0 ).
 
-    IF lv_exists = abap_true.
-      zcl_abapgit_language=>set_current_language( mv_language ).
-
-      CALL FUNCTION 'RPY_PROGRAM_UPDATE'
-        EXPORTING
-          program_name     = is_progdir-name
-          title_string     = lv_title
-          save_inactive    = 'I'
-        TABLES
-          source_extended  = it_source
-        EXCEPTIONS
-          cancelled        = 1
-          permission_error = 2
-          not_found        = 3
-          OTHERS           = 4.
-
-      IF sy-subrc <> 0.
-        zcl_abapgit_language=>restore_login_language( ).
-
-        IF sy-msgid = 'EU' AND sy-msgno = '510'.
-          zcx_abapgit_exception=>raise( 'User is currently editing program' ).
-        ELSEIF sy-msgid = 'EU' AND sy-msgno = '522'.
-* for generated table maintenance function groups, the author is set to SAP* instead of the user which
-* generates the function group. This hits some standard checks, pulling new code again sets the author
-* to the current user which avoids the check
-          zcx_abapgit_exception=>raise( |Delete function group and pull again, { is_progdir-name } (EU522)| ).
-        ELSE.
-          zcx_abapgit_exception=>raise_t100( ).
-        ENDIF.
-      ENDIF.
-
-      zcl_abapgit_language=>restore_login_language( ).
-    ELSEIF strlen( is_progdir-name ) > 30.
-      " special treatment for extensions
-      " if the program name exceeds 30 characters it is not a usual
-      " ABAP program but might be some extension, which requires the internal
-      " addition EXTENSION TYPE, see
-      " http://help.sap.com/abapdocu_751/en/abapinsert_report_internal.htm#!ABAP_ADDITION_1@1@
-      " This e.g. occurs in case of transportable Code Inspector variants (ending with ===VC)
-      INSERT REPORT is_progdir-name
-        FROM it_source
-        STATE 'I'
-        EXTENSION TYPE is_progdir-name+30
-        PROGRAM TYPE is_progdir-subc.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'Error from INSERT REPORT .. EXTENSION TYPE' ).
-      ENDIF.
+    IF sy-subrc = 0.
+      update_program(
+        is_progdir = is_progdir
+        it_source  = it_source
+        iv_title   = lv_title ).
     ELSE.
-      " RPY_PROGRAM_INSERT cannot handle function group includes (and some other case)
-      CALL FUNCTION 'RS_PROGRAM_CHECK_NAME'
-        EXPORTING
-          progname = is_progdir-name
-        EXCEPTIONS
-          OTHERS   = 1.
-      IF sy-subrc = 0.
-        CALL FUNCTION 'RPY_PROGRAM_INSERT'
-          EXPORTING
-            development_class = iv_package
-            program_name      = is_progdir-name
-            program_type      = is_progdir-subc
-            title_string      = lv_title
-            save_inactive     = 'I'
-            suppress_dialog   = abap_true
-          TABLES
-            source_extended   = it_source
-          EXCEPTIONS
-            already_exists    = 1
-            cancelled         = 2
-            name_not_allowed  = 3
-            permission_error  = 4
-            OTHERS            = 5.
-        IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise_t100( ).
-        ENDIF.
-      ELSE.
-        " Save active and inactive version
-        INSERT REPORT is_progdir-name
-          FROM it_source
-          STATE 'A'
-          PROGRAM TYPE is_progdir-subc.
-        INSERT REPORT is_progdir-name
-          FROM it_source
-          STATE 'I'
-          PROGRAM TYPE is_progdir-subc.
-        IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise( 'Error from INSERT REPORT .. PROGRAM TYPE' ).
-        ENDIF.
-      ENDIF.
+      insert_program(
+        is_progdir = is_progdir
+        it_source  = it_source
+        iv_title   = lv_title
+        iv_package = iv_package ).
     ENDIF.
 
-    IF NOT it_tpool[] IS INITIAL.
-      INSERT TEXTPOOL is_progdir-name
-        FROM it_tpool
-        LANGUAGE mv_language
-        STATE 'I'.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'Error from INSERT TEXTPOOL' ).
-      ENDIF.
-    ENDIF.
+    insert_tpool(
+      is_progdir = is_progdir
+      it_tpool   = it_tpool ).
 
-    CALL FUNCTION 'READ_PROGDIR'
-      EXPORTING
-        i_progname = is_progdir-name
-        i_state    = 'I'
-      IMPORTING
-        e_progdir  = ls_progdir_new
-      EXCEPTIONS
-        not_exists = 1
-        OTHERS     = 2.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Not found in PROGDIR. Subrc = { sy-subrc }| ).
-    ENDIF.
-
-* todo, package?
-
-    ls_progdir_new-ldbname = is_progdir-ldbname.
-    ls_progdir_new-dbna    = is_progdir-dbna.
-    ls_progdir_new-dbapl   = is_progdir-dbapl.
-    ls_progdir_new-rload   = is_progdir-rload.
-    ls_progdir_new-fixpt   = is_progdir-fixpt.
-    ls_progdir_new-varcl   = is_progdir-varcl.
-    ls_progdir_new-appl    = is_progdir-appl.
-    ls_progdir_new-rstat   = is_progdir-rstat.
-    ls_progdir_new-sqlx    = is_progdir-sqlx.
-    ls_progdir_new-uccheck = is_progdir-uccheck.
-    ls_progdir_new-clas    = is_progdir-clas.
-
-    CALL FUNCTION 'UPDATE_PROGDIR'
-      EXPORTING
-        i_progdir    = ls_progdir_new
-        i_progname   = ls_progdir_new-name
-        i_state      = ls_progdir_new-state
-      EXCEPTIONS
-        not_executed = 1
-        OTHERS       = 2.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error updating program directory' ).
-    ENDIF.
-
-    SELECT SINGLE * FROM progdir INTO ls_progdir_new
-      WHERE name = ls_progdir_new-name
-      AND state = ls_progdir_new-state.
-    IF sy-subrc = 0 AND is_progdir-varcl = space AND ls_progdir_new-varcl = abap_true.
-* function module UPDATE_PROGDIR does not update VARCL
-      UPDATE progdir SET varcl = is_progdir-varcl
-        WHERE name = ls_progdir_new-name
-        AND state = ls_progdir_new-state.                 "#EC CI_SUBRC
-    ENDIF.
+    update_progdir( is_progdir ).
 
     zcl_abapgit_objects_activation=>add(
       iv_type = 'REPS'
@@ -641,6 +533,101 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         iv_name   = iv_program
         iv_delete = lv_delete ).
     ENDIF.
+  ENDMETHOD.
+
+
+  METHOD get_program_title.
+
+    DATA ls_tpool LIKE LINE OF it_tpool.
+
+    FIELD-SYMBOLS <lg_any> TYPE any.
+
+    READ TABLE it_tpool INTO ls_tpool WITH KEY id = 'R'.
+    IF sy-subrc = 0.
+      " there is a bug in RPY_PROGRAM_UPDATE, the header line of TTAB is not
+      " cleared, so the title length might be inherited from a different program.
+      ASSIGN ('(SAPLSIFP)TTAB') TO <lg_any>.
+      IF sy-subrc = 0.
+        CLEAR <lg_any>.
+      ENDIF.
+
+      rv_title = ls_tpool-entry.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD insert_program.
+
+    CALL FUNCTION 'RPY_PROGRAM_INSERT'
+      EXPORTING
+        development_class = iv_package
+        program_name      = is_progdir-name
+        program_type      = is_progdir-subc
+        title_string      = iv_title
+        save_inactive     = 'I'
+        suppress_dialog   = abap_true
+      TABLES
+        source_extended   = it_source
+      EXCEPTIONS
+        already_exists    = 1
+        cancelled         = 2
+        name_not_allowed  = 3
+        permission_error  = 4
+        OTHERS            = 5.
+    IF sy-subrc = 3.
+
+      " Special cases that standard function does not handle
+      IF strlen( is_progdir-name ) > 30.
+        " Special treatment for extensions
+        " If the program name exceeds 30 characters it is not a usual ABAP program but might be
+        " some extension, which requires the internal addition EXTENSION TYPE
+        " https://help.sap.com/doc/abapdocu_755_index_htm/7.55/en-US/index.htm?file=abapinsert_report_internal.htm
+        " This e.g. occurs in case of transportable Code Inspector variants (ending with ===VC)
+        INSERT REPORT is_progdir-name
+          FROM it_source
+          STATE 'I'
+          EXTENSION TYPE is_progdir-name+30
+          PROGRAM TYPE is_progdir-subc.
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise( 'Error from INSERT REPORT .. EXTENSION TYPE' ).
+        ENDIF.
+      ELSE.
+        " For other special cases like function groups or logical databases,
+        " we save active and inactive version of source with the given PROGRAM TYPE.
+        " Without the active version, the code will not be visible in case of activation errors.
+        INSERT REPORT is_progdir-name
+          FROM it_source
+          STATE 'A'
+          PROGRAM TYPE is_progdir-subc.
+        INSERT REPORT is_progdir-name
+          FROM it_source
+          STATE 'I'
+          PROGRAM TYPE is_progdir-subc.
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise( 'Error from INSERT REPORT .. PROGRAM TYPE' ).
+        ENDIF.
+      ENDIF.
+
+    ELSEIF sy-subrc > 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD insert_tpool.
+
+    IF NOT it_tpool[] IS INITIAL.
+      INSERT TEXTPOOL is_progdir-name
+        FROM it_tpool
+        LANGUAGE mv_language
+        STATE 'I'.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'Error from INSERT TEXTPOOL' ).
+      ENDIF.
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -994,6 +981,97 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         SHIFT <ls_output>-line RIGHT BY lv_spaces PLACES IN CHARACTER MODE.
       ENDIF.
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD update_progdir.
+
+    DATA ls_progdir_new TYPE progdir.
+
+    CALL FUNCTION 'READ_PROGDIR'
+      EXPORTING
+        i_progname = is_progdir-name
+        i_state    = 'I'
+      IMPORTING
+        e_progdir  = ls_progdir_new
+      EXCEPTIONS
+        not_exists = 1
+        OTHERS     = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Error reading program directory' ).
+    ENDIF.
+
+    ls_progdir_new-ldbname = is_progdir-ldbname.
+    ls_progdir_new-dbna    = is_progdir-dbna.
+    ls_progdir_new-dbapl   = is_progdir-dbapl.
+    ls_progdir_new-rload   = is_progdir-rload.
+    ls_progdir_new-fixpt   = is_progdir-fixpt.
+    ls_progdir_new-varcl   = is_progdir-varcl.
+    ls_progdir_new-appl    = is_progdir-appl.
+    ls_progdir_new-rstat   = is_progdir-rstat.
+    ls_progdir_new-sqlx    = is_progdir-sqlx.
+    ls_progdir_new-uccheck = is_progdir-uccheck.
+    ls_progdir_new-clas    = is_progdir-clas.
+
+    CALL FUNCTION 'UPDATE_PROGDIR'
+      EXPORTING
+        i_progdir    = ls_progdir_new
+        i_progname   = ls_progdir_new-name
+        i_state      = ls_progdir_new-state
+      EXCEPTIONS
+        not_executed = 1
+        OTHERS       = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Error updating program directory' ).
+    ENDIF.
+
+    " function UPDATE_PROGDIR does not update VARCL, so we do it here
+    SELECT SINGLE * FROM progdir INTO ls_progdir_new
+      WHERE name  = ls_progdir_new-name
+        AND state = ls_progdir_new-state.
+    IF sy-subrc = 0 AND is_progdir-varcl <> ls_progdir_new-varcl.
+      UPDATE progdir SET varcl = is_progdir-varcl
+        WHERE name  = ls_progdir_new-name
+          AND state = ls_progdir_new-state.               "#EC CI_SUBRC
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD update_program.
+
+    zcl_abapgit_language=>set_current_language( mv_language ).
+
+    CALL FUNCTION 'RPY_PROGRAM_UPDATE'
+      EXPORTING
+        program_name     = is_progdir-name
+        title_string     = iv_title
+        save_inactive    = 'I'
+      TABLES
+        source_extended  = it_source
+      EXCEPTIONS
+        cancelled        = 1
+        permission_error = 2
+        not_found        = 3
+        OTHERS           = 4.
+
+    IF sy-subrc <> 0.
+      zcl_abapgit_language=>restore_login_language( ).
+
+      IF sy-msgid = 'EU' AND sy-msgno = '510'.
+        zcx_abapgit_exception=>raise( 'User is currently editing program' ).
+      ELSEIF sy-msgid = 'EU' AND sy-msgno = '522'.
+        " for generated table maintenance function groups, the author is set to SAP* instead of the user which
+        " generates the function group. This hits some standard checks, pulling new code again sets the author
+        " to the current user which avoids the check
+        zcx_abapgit_exception=>raise( |Delete function group and pull again, { is_progdir-name } (EU522)| ).
+      ELSE.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+    ENDIF.
+
+    zcl_abapgit_language=>restore_login_language( ).
 
   ENDMETHOD.
 ENDCLASS.
