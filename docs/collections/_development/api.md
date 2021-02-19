@@ -85,7 +85,7 @@ Delete all objects that are part of an abapGit repository (i.e. full uninstall):
 ```abap
 ls_checks = lo_repo->delete_checks( ).
 IF ls_checks-transport-required = abap_true.
-  ls_checks-transport-transport = 'SIDK900000'. "transport ewquest
+  ls_checks-transport-transport = 'SIDK900000'. "transport request
 ENDIF.
 
 zcl_abapgit_repo_srv=>get_instance( )->purge(  
