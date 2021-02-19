@@ -62,13 +62,6 @@ CLASS zcl_abapgit_object_srvd DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         VALUE(ro_object_data) TYPE REF TO if_wb_object_data_model
       RAISING
         zcx_abapgit_exception .
-    METHODS deserialize_xml
-      IMPORTING
-        !io_xml        TYPE REF TO zif_abapgit_xml_input
-      RETURNING
-        VALUE(rs_data) TYPE cl_srvd_wb_object_data=>ty_srvd_object_data-metadata
-      RAISING
-        zcx_abapgit_exception .
     METHODS get_serializer_version
       RETURNING
         VALUE(rv_version) TYPE string .
@@ -424,14 +417,14 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
       <lv_field_old> TYPE any,
       <lv_field_new> TYPE any.
 
-    CREATE OBJECT lo_object_data TYPE ('CL_BLUE_SOURCE_OBJECT_DATA').
+    CREATE OBJECT lo_object_data TYPE ('CL_SRVD_WB_OBJECT_DATA').
     lo_object_data = io_object_data.
 
-    CREATE DATA lr_new TYPE ('CL_BLUE_SOURCE_OBJECT_DATA=>TY_OBJECT_DATA').
+    CREATE DATA lr_new TYPE ('CL_SRVD_WB_OBJECT_DATA=>TY_SRVD_OBJECT_DATA').
     ASSIGN lr_new->* TO <ls_new>.
     ASSERT sy-subrc = 0.
 
-    CREATE DATA lr_old TYPE ('CL_BLUE_SOURCE_OBJECT_DATA=>TY_OBJECT_DATA').
+    CREATE DATA lr_old TYPE ('CL_SRVD_WB_OBJECT_DATA=>TY_SRVD_OBJECT_DATA').
     ASSIGN lr_old->* TO <ls_old>.
     ASSERT sy-subrc = 0.
 
@@ -465,7 +458,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
     ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <ls_new> TO <lv_field_new>.
     <lv_field_old> = <lv_field_new>.
 
-    CREATE OBJECT ro_object_data_merged TYPE ('CL_BLUE_SOURCE_OBJECT_DATA').
+    CREATE OBJECT ro_object_data_merged TYPE ('CL_SRVD_WB_OBJECT_DATA').
 
     CALL METHOD ro_object_data_merged->('SET_DATA')
       EXPORTING
@@ -546,49 +539,33 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
       <lv_source>        TYPE any,
       <lg_data>          TYPE any.
 
-    CREATE DATA lr_data TYPE ('CL_BLUE_SOURCE_OBJECT_DATA=>TY_OBJECT_DATA').
+    CREATE DATA lr_data TYPE ('CL_SRVD_WB_OBJECT_DATA=>TY_SRVD_OBJECT_DATA').
     ASSIGN lr_data->* TO <lg_data>.
     ASSERT sy-subrc = 0.
 
     ASSIGN COMPONENT 'METADATA' OF STRUCTURE <lg_data> TO <lv_metadata_node>.
     ASSERT sy-subrc = 0.
 
-    CREATE DATA lr_metadata  TYPE ('IF_ADT_TOOLS_CORE_SOURCE_TYPES=>TY_ABAP_SOURCE_MAIN_OBJECT').
+    CREATE DATA lr_metadata  TYPE ('CL_SRVD_WB_OBJECT_DATA=>TY_METADATA_EXTENDED').
     ASSIGN lr_metadata->* TO <ls_metadata>.
     ASSERT sy-subrc = 0.
 
-    CALL METHOD deserialize_xml
+    io_xml->read(
       EXPORTING
-        io_xml  = io_xml
-      RECEIVING
-        rs_data = <ls_metadata>.
+        iv_name = mc_xml_parent_name
+      CHANGING
+        cg_data = <ls_metadata> ).
 
     <lv_metadata_node> = <ls_metadata>.
 
     ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <lg_data> TO <lv_source>.
     ASSERT sy-subrc = 0.
 
-    <lv_source> = mo_files->read_string( mc_source_file ).
+    <lv_source> = mo_files->read_string( 'srvdsrv' ).
 
     CREATE OBJECT ro_object_data TYPE ('CL_SRVD_WB_OBJECT_DATA').
-    ro_object_data->set_data(  p_data = <lg_data>  ).
+    ro_object_data->set_data( EXPORTING p_data = <lg_data>  ).
 
-  ENDMETHOD.
-
-
-  METHOD deserialize_xml.
-    DATA ls_metadata TYPE zif_abapgit_definitions=>ty_metadata.
-    ls_metadata = io_xml->get_metadata( ).
-
-    IF ls_metadata-version = get_serializer_version( ).
-      io_xml->read(
-        EXPORTING
-          iv_name = mc_xml_parent_name
-        CHANGING
-          cg_data = rs_data ).
-    ELSE.
-      zcx_abapgit_exception=>raise( iv_text = |Unsupported serializer version { ls_metadata-version }| ).
-    ENDIF.
   ENDMETHOD.
 
 
