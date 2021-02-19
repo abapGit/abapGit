@@ -101,7 +101,7 @@ CLASS ZCL_ABAPGIT_PR_ENUMERATOR IMPLEMENTATION.
     rt_pulls = mi_enum_provider->list_pull_requests( ).
 
   ENDMETHOD.
-  
+
 
   METHOD new.
     CREATE OBJECT ro_instance EXPORTING io_repo = io_repo.
