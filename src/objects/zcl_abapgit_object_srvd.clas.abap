@@ -62,9 +62,6 @@ CLASS zcl_abapgit_object_srvd DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         VALUE(ro_object_data) TYPE REF TO if_wb_object_data_model
       RAISING
         zcx_abapgit_exception .
-    METHODS get_serializer_version
-      RETURNING
-        VALUE(rv_version) TYPE string .
     METHODS get_transport_req_if_needed
       IMPORTING
         !iv_package                 TYPE devclass
@@ -522,11 +519,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_serializer_version.
-    rv_version = 'v1.0.0'.
-  ENDMETHOD.
-
-
   METHOD get_object_data.
 
     DATA:
@@ -564,7 +556,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
     <lv_source> = mo_files->read_string( 'srvdsrv' ).
 
     CREATE OBJECT ro_object_data TYPE ('CL_SRVD_WB_OBJECT_DATA').
-    ro_object_data->set_data( EXPORTING p_data = <lg_data>  ).
+    ro_object_data->set_data( p_data = <lg_data>  ).
 
   ENDMETHOD.
 
