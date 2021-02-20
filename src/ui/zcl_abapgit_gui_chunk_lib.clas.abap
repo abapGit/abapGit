@@ -127,19 +127,21 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS render_package_name
       IMPORTING
-        !iv_package     TYPE devclass
-        !iv_interactive TYPE abap_bool DEFAULT abap_true
+        !iv_package        TYPE devclass
+        !iv_interactive    TYPE abap_bool DEFAULT abap_true
+        !iv_suppress_title TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(ri_html)  TYPE REF TO zif_abapgit_html
+        VALUE(ri_html)     TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS render_user_name
       IMPORTING
-        !iv_username    TYPE xubname
-        !iv_interactive TYPE abap_bool DEFAULT abap_true
-        !iv_icon_only   TYPE abap_bool DEFAULT abap_false
+        !iv_username       TYPE xubname
+        !iv_interactive    TYPE abap_bool DEFAULT abap_true
+        !iv_icon_only      TYPE abap_bool DEFAULT abap_false
+        !iv_suppress_title TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(ri_html)  TYPE REF TO zif_abapgit_html
+        VALUE(ri_html)     TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS render_transport
@@ -692,8 +694,10 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    SELECT SINGLE ctext FROM tdevct INTO lv_title
-      WHERE devclass = iv_package AND spras = sy-langu ##SUBRC_OK.
+    IF iv_suppress_title = abap_false.
+      SELECT SINGLE ctext FROM tdevct INTO lv_title
+        WHERE devclass = iv_package AND spras = sy-langu ##SUBRC_OK.
+    ENDIF.
 
     lv_obj_name = iv_package.
     lv_jump = zcl_abapgit_html_action_utils=>jump_encode(
@@ -950,7 +954,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    IF iv_username <> zcl_abapgit_objects_super=>c_user_unknown.
+    IF iv_username <> zcl_abapgit_objects_super=>c_user_unknown AND iv_suppress_title = abap_false.
       CALL FUNCTION 'SUSR_USER_ADDRESS_READ'
         EXPORTING
           user_name              = iv_username
