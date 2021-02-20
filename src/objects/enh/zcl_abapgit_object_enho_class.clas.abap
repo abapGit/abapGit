@@ -117,7 +117,6 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
           OTHERS           = 4.
       IF sy-subrc = 0.
         mo_files->add_abap( iv_extra = |EM_{ <ls_include>-cpdname }|
-*        mo_files->add_abap( iv_extra = |EM{ <ls_include>-includenr }|
                             it_abap  = lt_source ).
       ENDIF.
     ENDLOOP.
