@@ -11,12 +11,6 @@ CLASS zcl_abapgit_pr_enumerator DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-    METHODS has_pulls
-      RETURNING
-        VALUE(rv_yes) TYPE abap_bool
-      RAISING
-        zcx_abapgit_exception.
-
     METHODS get_pulls
       RETURNING
         VALUE(rt_pulls) TYPE zif_abapgit_pr_enum_provider=>ty_pull_requests
@@ -105,21 +99,6 @@ CLASS ZCL_ABAPGIT_PR_ENUMERATOR IMPLEMENTATION.
     ENDIF.
 
     rt_pulls = mi_enum_provider->list_pull_requests( ).
-
-    " TODO caching ?
-
-  ENDMETHOD.
-
-
-  METHOD has_pulls.
-
-    IF mi_enum_provider IS NOT BOUND.
-      RETURN. " false
-    ENDIF.
-
-    IF get_pulls( ) IS NOT INITIAL.
-      rv_yes = abap_true.
-    ENDIF.
 
   ENDMETHOD.
 
