@@ -350,8 +350,8 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
       ii_html->add( |<td>| ).
       ii_html->add( zcl_abapgit_gui_chunk_lib=>render_package_name(
-                      iv_package = <ls_overview>-package
-                      iv_suppress_title = lv_suppress_title ) ).
+        iv_package = <ls_overview>-package
+        iv_suppress_title = abap_true ) ).
       ii_html->add( |</td>| ).
 
       IF <ls_overview>-branch IS INITIAL.
@@ -367,13 +367,13 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       ii_html->add( |<td class="ro-detail">| ).
       ii_html->add( zcl_abapgit_gui_chunk_lib=>render_user_name(
         iv_username = <ls_overview>-deserialized_by
-        iv_suppress_title = lv_suppress_title ) ).
+        iv_suppress_title = abap_true ) ).
       ii_html->add( |</td>| ).
       ii_html->add( |<td class="ro-detail">{ <ls_overview>-deserialized_at }</td>| ).
       ii_html->add( |<td class="ro-detail">| ).
       ii_html->add( zcl_abapgit_gui_chunk_lib=>render_user_name(
         iv_username = <ls_overview>-created_by
-        iv_suppress_title = lv_suppress_title ) ).
+        iv_suppress_title = abap_true ) ).
       ii_html->add( |</td>| ).
       ii_html->add( |<td class="ro-detail">{ <ls_overview>-created_at }</td>| ).
       ii_html->add( |<td class="ro-detail">{ <ls_overview>-key }</td>| ).
