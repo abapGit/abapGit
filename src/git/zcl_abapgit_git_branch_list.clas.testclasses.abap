@@ -80,8 +80,10 @@ CLASS ltcl_parse IMPLEMENTATION.
 * https://github.com/abapGit/abapGit/issues/4523
 
     DATA lx_error TYPE REF TO zcx_abapgit_exception.
+    DATA lv_data TYPE string.
 
-    APPEND |00000230ERR CAPTCHA required\nYour Bitbucket account etc..| TO mt_data.
+    lv_data = |00000230ERR CAPTCHA required\nYour Bitbucket account etc..|.
+    APPEND lv_data TO mt_data.
 
     TRY.
         parse( ).
