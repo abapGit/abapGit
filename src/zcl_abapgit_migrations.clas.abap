@@ -22,17 +22,14 @@ CLASS zcl_abapgit_migrations IMPLEMENTATION.
 
   METHOD local_dot_abapgit.
 
-    DATA: lt_repos       TYPE zif_abapgit_repo_srv=>ty_repo_list,
-          lo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit.
+    DATA: lt_repos       TYPE zif_abapgit_repo_srv=>ty_repo_list.
 
     FIELD-SYMBOLS: <lo_repo> LIKE LINE OF lt_repos.
-
 
     lt_repos = zcl_abapgit_repo_srv=>get_instance( )->list( ).
 
     LOOP AT lt_repos ASSIGNING <lo_repo>.
-      lo_dot_abapgit = <lo_repo>->get_dot_abapgit( ).
-      IF lo_dot_abapgit->get_data( ) IS INITIAL.
+      IF <lo_repo>->ms_data-dot_abapgit IS INITIAL.
         CALL FUNCTION 'POPUP_TO_INFORM'
           EXPORTING
             titel = 'Migration'

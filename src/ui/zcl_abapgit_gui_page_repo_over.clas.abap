@@ -304,15 +304,15 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     CONSTANTS: lc_separator TYPE string VALUE `<span class="separator">|</span>`.
 
     DATA:
-      lv_type_icon         TYPE string,
-      lv_favorite_icon     TYPE string,
-      lv_favorite_class    TYPE string,
-      lv_stage_link        TYPE string,
-      lv_patch_link        TYPE string,
-      lv_zip_import_link   TYPE string,
-      lv_zip_export_link   TYPE string,
-      lv_check_link        TYPE string,
-      lv_settings_link     TYPE string.
+      lv_type_icon       TYPE string,
+      lv_favorite_icon   TYPE string,
+      lv_favorite_class  TYPE string,
+      lv_stage_link      TYPE string,
+      lv_patch_link      TYPE string,
+      lv_zip_import_link TYPE string,
+      lv_zip_export_link TYPE string,
+      lv_check_link      TYPE string,
+      lv_settings_link   TYPE string.
 
     FIELD-SYMBOLS: <ls_overview> LIKE LINE OF it_overview.
 
@@ -574,7 +574,17 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    mt_overview = map_repo_list_to_overview( zcl_abapgit_persist_factory=>get_repo( )->list( ) ).
+    DATA: lt_repo_obj_list TYPE zif_abapgit_repo_srv=>ty_repo_list,
+          lt_repo_list     TYPE zif_abapgit_persistence=>ty_repos.
+
+    FIELD-SYMBOLS: <ls_repo>     LIKE LINE OF lt_repo_list,
+                   <lr_repo_obj> LIKE LINE OF lt_repo_obj_list.
+
+    lt_repo_obj_list = zcl_abapgit_repo_srv=>get_instance( )->list( ).
+    LOOP AT lt_repo_obj_list ASSIGNING <lr_repo_obj>.
+      APPEND <lr_repo_obj>->ms_data TO lt_repo_list.
+    ENDLOOP.
+    mt_overview = map_repo_list_to_overview( lt_repo_list ).
     apply_order_by( CHANGING ct_overview = mt_overview ).
     apply_filter( CHANGING ct_overview = mt_overview ).
 
@@ -601,3 +611,4 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     <ls_col>-allow_order_by = iv_allow_order_by.
   ENDMETHOD.
 ENDCLASS.
+
