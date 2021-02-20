@@ -62,12 +62,14 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
       READ TABLE lt_tab_includes WITH KEY cpdname = <ls_method>-methkey-cmpname ASSIGNING <ls_include>.
       IF sy-subrc <> 0.
         " old way
-        lv_methinclnr = <ls_method>-meth_header-editorder.
+        lv_editorder = <ls_method>-meth_header-editorder.
+        lv_methname = <ls_method>-methkey-cmpname.
+        lt_abap = mo_files->read_abap( iv_extra = 'em' && lv_editorder ).
       ELSE.
         lv_methinclnr = <ls_include>-includenr.
+        lv_methname = <ls_method>-methkey-cmpname.
+        lt_abap = mo_files->read_abap( iv_extra = 'em_' && lv_methname ).
       ENDIF.
-      lv_methname = <ls_method>-methkey-cmpname.
-      lt_abap = mo_files->read_abap( iv_extra = 'em' && lv_methinclnr ).
 
       TRY.
           io_class->add_change_new_method_source(
@@ -113,7 +115,8 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
           permission_error = 3
           OTHERS           = 4.
       IF sy-subrc = 0.
-        mo_files->add_abap( iv_extra = |EM{ <ls_include>-includenr }|
+        mo_files->add_abap( iv_extra = |EM_{ <ls_include>-cpdname }|
+*        mo_files->add_abap( iv_extra = |EM{ <ls_include>-includenr }|
                             it_abap  = lt_source ).
       ENDIF.
     ENDLOOP.
@@ -195,6 +198,7 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
           lt_owr       TYPE enhmeth_tabkeys,
           lt_pre       TYPE enhmeth_tabkeys,
           lt_post      TYPE enhmeth_tabkeys,
+          lt_tab_includes TYPE enhnewmeth_tabincl_plus_enha,
           lt_source    TYPE rswsourcet,
           lv_class     TYPE seoclsname,
           lv_shorttext TYPE string.
@@ -206,6 +210,7 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
     lt_owr = lo_enh_class->get_owr_methods( ).
     lt_pre = lo_enh_class->get_pre_methods( ).
     lt_post = lo_enh_class->get_post_methods( ).
+    lt_tab_includes = lo_enh_class->get_enh_method_includes( ).
     lt_source = lo_enh_class->get_eimp_include( ).
     lo_enh_class->get_class( IMPORTING class_name = lv_class ).
 
@@ -228,6 +233,9 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
       io_xml   = ii_xml
       io_files = mo_files
       io_clif  = lo_enh_class ).
+
+    ii_xml->add( iv_name = 'TAB_INCLUDES'
+                 ig_data = lt_tab_includes ).
 
     serialize_includes( lo_enh_class ).
 

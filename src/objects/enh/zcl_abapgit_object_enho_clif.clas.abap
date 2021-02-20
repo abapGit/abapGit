@@ -125,8 +125,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO_CLIF IMPLEMENTATION.
     DATA: lt_tab_attributes TYPE enhclasstabattrib,
           lt_tab_types      TYPE enhtype_tab,
           lt_tab_methods    TYPE enhnewmeth_tab,
-          lt_tab_eventdata  TYPE enhevent_tab,
-          lt_tab_includes   TYPE enhnewmeth_tabincl_plus_enha.
+          lt_tab_eventdata  TYPE enhevent_tab.
 
     FIELD-SYMBOLS: <ls_attr>        LIKE LINE OF lt_tab_attributes,
                    <ls_type>        LIKE LINE OF lt_tab_types,
@@ -143,8 +142,6 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO_CLIF IMPLEMENTATION.
     io_clif->get_enh_new_methodes( IMPORTING tab_methodes = lt_tab_methods ).
 
     io_clif->get_enhevents( IMPORTING tab_eventdata = lt_tab_eventdata ).
-
-    lt_tab_includes = io_clif->get_enh_method_includes( ).
 
     LOOP AT lt_tab_attributes ASSIGNING <ls_attr>.
       CLEAR: <ls_attr>-author,
@@ -200,8 +197,6 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO_CLIF IMPLEMENTATION.
                  ig_data = lt_tab_methods ).
     io_xml->add( iv_name = 'TAB_EVENTDATA'
                  ig_data = lt_tab_eventdata ).
-    io_xml->add( iv_name = 'TAB_INCLUDES'
-                 ig_data = lt_tab_includes ).
 
   ENDMETHOD.
 ENDCLASS.
