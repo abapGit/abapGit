@@ -191,9 +191,9 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
   METHOD map_repo_list_to_overview.
 
-    DATA: ls_overview LIKE LINE OF rt_overview,
-          lv_date     TYPE d,
-          lv_time     TYPE t,
+    DATA: ls_overview   LIKE LINE OF rt_overview,
+          lv_date       TYPE d,
+          lv_time       TYPE t,
           repo_obj_list TYPE zif_abapgit_repo_srv=>ty_repo_list.
 
     repo_obj_list = zcl_abapgit_repo_srv=>get_instance( )->list( ).
@@ -309,7 +309,8 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       lv_zip_import_link TYPE string,
       lv_zip_export_link TYPE string,
       lv_check_link      TYPE string,
-      lv_settings_link   TYPE string.
+      lv_settings_link   TYPE string,
+      lv_suppress_title TYPE abap_bool.
 
     FIELD-SYMBOLS: <ls_overview> LIKE LINE OF it_overview.
 
@@ -327,6 +328,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
         lv_favorite_icon = 'star/blue'.
         lv_favorite_class = 'favorite'.
       ELSE.
+        lv_suppress_title = abap_true.
         lv_favorite_icon = 'star/grey'.
         lv_favorite_class = ''.
       ENDIF.
@@ -352,7 +354,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       ENDIF.
 
       ii_html->add( |<td>| ).
-      ii_html->add( zcl_abapgit_gui_chunk_lib=>render_package_name( iv_package = <ls_overview>-package iv_suppress_title = abap_true ) ).
+      ii_html->add( zcl_abapgit_gui_chunk_lib=>render_package_name( iv_package = <ls_overview>-package iv_suppress_title = lv_suppress_title ) ).
       ii_html->add( |</td>| ).
 
       IF <ls_overview>-branch IS INITIAL.
@@ -366,11 +368,15 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       ENDIF.
 
       ii_html->add( |<td class="ro-detail">| ).
-      ii_html->add( zcl_abapgit_gui_chunk_lib=>render_user_name( <ls_overview>-deserialized_by ) ).
+      ii_html->add( zcl_abapgit_gui_chunk_lib=>render_user_name(
+        iv_username = <ls_overview>-deserialized_by
+        iv_suppress_title = lv_suppress_title ) ).
       ii_html->add( |</td>| ).
       ii_html->add( |<td class="ro-detail">{ <ls_overview>-deserialized_at }</td>| ).
       ii_html->add( |<td class="ro-detail">| ).
-      ii_html->add( zcl_abapgit_gui_chunk_lib=>render_user_name( <ls_overview>-created_by ) ).
+      ii_html->add( zcl_abapgit_gui_chunk_lib=>render_user_name(
+        iv_username = <ls_overview>-created_by
+        iv_suppress_title = lv_suppress_title ) ).
       ii_html->add( |</td>| ).
       ii_html->add( |<td class="ro-detail">{ <ls_overview>-created_at }</td>| ).
       ii_html->add( |<td class="ro-detail">{ <ls_overview>-key }</td>| ).

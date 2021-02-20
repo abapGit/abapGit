@@ -136,11 +136,12 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS render_user_name
       IMPORTING
-        !iv_username    TYPE xubname
-        !iv_interactive TYPE abap_bool DEFAULT abap_true
-        !iv_icon_only   TYPE abap_bool DEFAULT abap_false
+        !iv_username       TYPE xubname
+        !iv_interactive    TYPE abap_bool DEFAULT abap_true
+        !iv_icon_only      TYPE abap_bool DEFAULT abap_false
+        !iv_suppress_title TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(ri_html)  TYPE REF TO zif_abapgit_html
+        VALUE(ri_html)     TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS render_transport
@@ -960,7 +961,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    IF iv_username <> zcl_abapgit_objects_super=>c_user_unknown.
+    IF iv_username <> zcl_abapgit_objects_super=>c_user_unknown AND iv_suppress_title = abap_false.
       CALL FUNCTION 'SUSR_USER_ADDRESS_READ'
         EXPORTING
           user_name              = iv_username
