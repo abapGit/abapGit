@@ -59,11 +59,12 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
 
     LOOP AT lt_tab_methods ASSIGNING <ls_method>.
 
-      READ TABLE lt_tab_includes WITH KEY cpdname = <ls_method>-methkey ASSIGNING <ls_include>.
+      READ TABLE lt_tab_includes WITH KEY cpdname = <ls_method>-methkey-cmpname ASSIGNING <ls_include>.
       IF sy-subrc <> 0.
-        lv_methinclnr = <ls_include>-includenr.
-      ELSE.
+        " old way
         lv_methinclnr = <ls_method>-meth_header-editorder.
+      ELSE.
+        lv_methinclnr = <ls_include>-includenr.
       ENDIF.
       lv_methname = <ls_method>-methkey-cmpname.
       lt_abap = mo_files->read_abap( iv_extra = 'em' && lv_methinclnr ).
