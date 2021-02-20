@@ -91,7 +91,7 @@ CLASS ltcl_parse IMPLEMENTATION.
       CATCH zcx_abapgit_exception INTO lx_error.
         cl_abap_unit_assert=>assert_char_cp(
           act = lx_error->get_text( )
-          exp = '*CAPTCHA*').
+          exp = '*CAPTCHA*' ).
     ENDTRY.
 
   ENDMETHOD.
