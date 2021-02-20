@@ -234,11 +234,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     DATA: lv_key           TYPE zif_abapgit_persistence=>ty_repo-key,
           lv_last_repo_key TYPE zif_abapgit_persistence=>ty_repo-key,
-          lt_repo_list     TYPE zif_abapgit_persistence=>ty_repos,
           lt_repo_obj_list TYPE zif_abapgit_repo_srv=>ty_repo_list.
-
-    FIELD-SYMBOLS: <ls_repo>     LIKE LINE OF lt_repo_list,
-                   <lr_repo_obj> LIKE LINE OF lt_repo_obj_list.
 
     lv_key = ii_event->query( )->get( 'KEY' ).
 
@@ -246,14 +242,11 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       WHEN zcl_abapgit_gui=>c_action-go_home.
         lv_last_repo_key = zcl_abapgit_persistence_user=>get_instance( )->get_repo_show( ).
         lt_repo_obj_list = zcl_abapgit_repo_srv=>get_instance( )->list( ).
-        LOOP AT lt_repo_obj_list ASSIGNING <lr_repo_obj>.
-          APPEND <lr_repo_obj>->ms_data TO lt_repo_list.
-        ENDLOOP.
         IF lv_last_repo_key IS NOT INITIAL.
           CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_repo_view
             EXPORTING
               iv_key = lv_last_repo_key.
-        ELSEIF lt_repo_list IS NOT INITIAL.
+        ELSEIF lt_repo_obj_list IS NOT INITIAL.
           CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_main.
         ELSE.
           rs_handled-page = zcl_abapgit_gui_page_tutorial=>create( ).
