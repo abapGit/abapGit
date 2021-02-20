@@ -42,33 +42,34 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
   METHOD deserialize_includes.
 
     DATA: lt_tab_methods TYPE enhnewmeth_tab,
-          lt_tab_includes TYPE enhnewmeth_tabincl_plus_enha,
           lv_editorder   TYPE n LENGTH 3,
           lv_methname    TYPE seocpdname,
           lt_abap        TYPE rswsourcet,
           lx_enh         TYPE REF TO cx_enh_root,
-          lv_methinclnr  TYPE enhnewmeth_include_plus_enha-includenr.
+          lv_new_em      TYPE abap_bool.
 
     FIELD-SYMBOLS: <ls_method> LIKE LINE OF lt_tab_methods,
-                   <ls_include> TYPE enhnewmeth_include_plus_enha.
+                   <ls_file>   TYPE zif_abapgit_definitions=>ty_file.
 
     ii_xml->read( EXPORTING iv_name = 'TAB_METHODS'
                   CHANGING cg_data = lt_tab_methods ).
-    ii_xml->read( EXPORTING iv_name = 'TAB_INCLUDES'
-                  CHANGING cg_data = lt_tab_includes ).
 
+    lv_new_em = abap_false.
+    LOOP AT mo_files->get_files( ) ASSIGNING <ls_file>
+        WHERE filename CS 'enho.em_'.
+      lv_new_em = abap_true.
+    ENDLOOP.
+
+    SORT lt_tab_methods BY meth_header-editorder.
     LOOP AT lt_tab_methods ASSIGNING <ls_method>.
 
-      READ TABLE lt_tab_includes WITH KEY cpdname = <ls_method>-methkey-cmpname ASSIGNING <ls_include>.
-      IF sy-subrc <> 0.
+      lv_methname = <ls_method>-methkey-cmpname.
+      IF lv_new_em = abap_true.
+        lt_abap = mo_files->read_abap( iv_extra = 'em_' && lv_methname ).
+      ELSE.
         " old way
         lv_editorder = <ls_method>-meth_header-editorder.
-        lv_methname = <ls_method>-methkey-cmpname.
         lt_abap = mo_files->read_abap( iv_extra = 'em' && lv_editorder ).
-      ELSE.
-        lv_methinclnr = <ls_include>-includenr.
-        lv_methname = <ls_method>-methkey-cmpname.
-        lt_abap = mo_files->read_abap( iv_extra = 'em_' && lv_methname ).
       ENDIF.
 
       TRY.
@@ -198,7 +199,6 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
           lt_owr       TYPE enhmeth_tabkeys,
           lt_pre       TYPE enhmeth_tabkeys,
           lt_post      TYPE enhmeth_tabkeys,
-          lt_tab_includes TYPE enhnewmeth_tabincl_plus_enha,
           lt_source    TYPE rswsourcet,
           lv_class     TYPE seoclsname,
           lv_shorttext TYPE string.
@@ -210,7 +210,6 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
     lt_owr = lo_enh_class->get_owr_methods( ).
     lt_pre = lo_enh_class->get_pre_methods( ).
     lt_post = lo_enh_class->get_post_methods( ).
-    lt_tab_includes = lo_enh_class->get_enh_method_includes( ).
     lt_source = lo_enh_class->get_eimp_include( ).
     lo_enh_class->get_class( IMPORTING class_name = lv_class ).
 
@@ -233,9 +232,6 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
       io_xml   = ii_xml
       io_files = mo_files
       io_clif  = lo_enh_class ).
-
-    ii_xml->add( iv_name = 'TAB_INCLUDES'
-                 ig_data = lt_tab_includes ).
 
     serialize_includes( lo_enh_class ).
 
