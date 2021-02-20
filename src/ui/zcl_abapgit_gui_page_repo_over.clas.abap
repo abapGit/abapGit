@@ -115,7 +115,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -299,7 +299,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       lv_zip_import_link TYPE string,
       lv_zip_export_link TYPE string,
       lv_check_link      TYPE string,
-      lv_suppress_title TYPE abap_bool.
+      lv_suppress_title  TYPE abap_bool,
       lv_text            TYPE string,
       lv_settings_link   TYPE string.
 
