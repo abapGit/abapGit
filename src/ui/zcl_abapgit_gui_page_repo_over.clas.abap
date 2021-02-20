@@ -194,12 +194,13 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     DATA: ls_overview   LIKE LINE OF rt_overview,
           lv_date       TYPE d,
           lv_time       TYPE t,
-          repo_obj_list TYPE zif_abapgit_repo_srv=>ty_repo_list.
+          lt_repo_obj_list TYPE zif_abapgit_repo_srv=>ty_repo_list.
 
-    repo_obj_list = zcl_abapgit_repo_srv=>get_instance( )->list( ).
-    FIELD-SYMBOLS: <ls_repo> LIKE LINE OF repo_obj_list.
+    FIELD-SYMBOLS <ls_repo> LIKE LINE OF lt_repo_obj_list.
 
-    LOOP AT repo_obj_list ASSIGNING <ls_repo>.
+    lt_repo_obj_list = zcl_abapgit_repo_srv=>get_instance( )->list( ).
+
+    LOOP AT lt_repo_obj_list ASSIGNING <ls_repo>.
 
       CLEAR: ls_overview.
 
@@ -354,7 +355,9 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       ENDIF.
 
       ii_html->add( |<td>| ).
-      ii_html->add( zcl_abapgit_gui_chunk_lib=>render_package_name( iv_package = <ls_overview>-package iv_suppress_title = lv_suppress_title ) ).
+      ii_html->add( zcl_abapgit_gui_chunk_lib=>render_package_name(
+                      iv_package = <ls_overview>-package
+                      iv_suppress_title = lv_suppress_title ) ).
       ii_html->add( |</td>| ).
 
       IF <ls_overview>-branch IS INITIAL.
@@ -603,4 +606,3 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     <ls_col>-allow_order_by = iv_allow_order_by.
   ENDMETHOD.
 ENDCLASS.
-
