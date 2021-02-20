@@ -46,7 +46,8 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
           lv_methname    TYPE seocpdname,
           lt_abap        TYPE rswsourcet,
           lx_enh         TYPE REF TO cx_enh_root,
-          lv_new_em      TYPE abap_bool.
+          lv_new_em      TYPE abap_bool,
+          lt_files       TYPE zif_abapgit_definitions=>ty_files_tt.
 
     FIELD-SYMBOLS: <ls_method> LIKE LINE OF lt_tab_methods,
                    <ls_file>   TYPE zif_abapgit_definitions=>ty_file.
@@ -55,9 +56,11 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
                   CHANGING cg_data = lt_tab_methods ).
 
     lv_new_em = abap_false.
-    LOOP AT mo_files->get_files( ) ASSIGNING <ls_file>
+    lt_files = mo_files->get_files( ).
+    LOOP AT lt_files ASSIGNING <ls_file>
         WHERE filename CS 'enho.em_'.
       lv_new_em = abap_true.
+      EXIT.
     ENDLOOP.
 
     SORT lt_tab_methods BY meth_header-editorder.

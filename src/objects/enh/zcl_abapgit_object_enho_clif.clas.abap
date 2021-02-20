@@ -168,7 +168,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO_CLIF IMPLEMENTATION.
              <ls_meth>-meth_header-changedby,
              <ls_meth>-meth_header-changedon,
              <ls_meth>-meth_header-descript_id.
-      ADD 1 TO lv_editorder.
+      lv_editorder = lv_editorder + 1.
       <ls_meth>-meth_header-editorder = lv_editorder.
       LOOP AT <ls_meth>-meth_param ASSIGNING <ls_param>.
         CLEAR: <ls_param>-author,
