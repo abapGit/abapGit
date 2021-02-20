@@ -340,9 +340,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
         lv_text = <ls_overview>-url.
         REPLACE FIRST OCCURRENCE OF 'https://' IN lv_text WITH ''.
         REPLACE FIRST OCCURRENCE OF 'http://' IN lv_text WITH ''.
-        ii_html->add( |<td>{ ii_html->a( iv_txt = lv_text
-                                         iv_act = |{ zif_abapgit_definitions=>c_action-url }?url=|
-                                               && |{ <ls_overview>-url }| ) }</td>| ).
+        ii_html->add( |<td>{ ii_html->a(
+          iv_txt   = lv_text
+          iv_title = <ls_overview>-url
+          iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ <ls_overview>-url }| ) }</td>| ).
       ELSE.
         ii_html->add( |<td></td>| ).
       ENDIF.
