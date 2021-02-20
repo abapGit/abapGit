@@ -65,7 +65,9 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
       IMPORTING
         !iv_data       TYPE string
       RETURNING
-        VALUE(rv_data) TYPE string .
+        VALUE(rv_data) TYPE string
+      RAISING
+        zcx_abapgit_exception .
     METHODS find_tag_by_name
       IMPORTING
         !iv_branch_name  TYPE string
@@ -90,7 +92,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
 
 
   METHOD complete_heads_branch_name.
@@ -310,12 +312,22 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
 
   METHOD skip_first_pkt.
 
-    DATA: lv_hex    TYPE x LENGTH 1,
-          lv_length TYPE i.
+    DATA: lv_hex     TYPE x LENGTH 1,
+          lt_strings TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+          lv_str     TYPE string,
+          lv_length  TYPE i.
 
 
 * channel
     ASSERT iv_data(2) = '00'.
+
+    IF iv_data(4) = '0000'.
+* flush package?
+      lv_str = iv_data+8.
+      SPLIT lv_str AT |\n| INTO TABLE lt_strings.
+      READ TABLE lt_strings INDEX 1 INTO lv_str.
+      zcx_abapgit_exception=>raise( lv_str ).
+    ENDIF.
 
     lv_hex = to_upper( iv_data+2(2) ).
     lv_length = lv_hex.
