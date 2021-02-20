@@ -352,7 +352,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       ENDIF.
 
       ii_html->add( |<td>| ).
-      ii_html->add( zcl_abapgit_gui_chunk_lib=>render_package_name( <ls_overview>-package ) ).
+      ii_html->add( zcl_abapgit_gui_chunk_lib=>render_package_name( iv_package = <ls_overview>-package iv_suppress_title = abap_true ) ).
       ii_html->add( |</td>| ).
 
       IF <ls_overview>-branch IS INITIAL.
