@@ -553,7 +553,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
     ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <lg_data> TO <lv_source>.
     ASSERT sy-subrc = 0.
 
-    <lv_source> = mo_files->read_string( 'srvdsrv' ).
+    <lv_source> = mo_files->read_string( mc_source_file ).
 
     CREATE OBJECT ro_object_data TYPE ('CL_SRVD_WB_OBJECT_DATA').
     ro_object_data->set_data( p_data = <lg_data>  ).
