@@ -299,7 +299,6 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       lv_zip_import_link TYPE string,
       lv_zip_export_link TYPE string,
       lv_check_link      TYPE string,
-      lv_suppress_title  TYPE abap_bool,
       lv_text            TYPE string,
       lv_settings_link   TYPE string.
 
@@ -319,7 +318,6 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
         lv_favorite_icon = 'star/blue'.
         lv_favorite_class = 'favorite'.
       ELSE.
-        lv_suppress_title = abap_true.
         lv_favorite_icon = 'star/grey'.
         lv_favorite_class = ''.
       ENDIF.
