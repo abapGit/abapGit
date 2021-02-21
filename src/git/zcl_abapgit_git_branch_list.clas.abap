@@ -263,7 +263,10 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
     LOOP AT lt_result INTO lv_data.
       lv_current_row_index = sy-tabix.
 
-      IF sy-tabix = 1 AND strlen( lv_data ) > 49.
+      IF sy-tabix = 1 AND strlen( lv_data ) > 12 AND lv_data(4) = '0000' AND lv_data+8(3) = 'ERR'.
+        lv_name = lv_data+8.
+        zcx_abapgit_exception=>raise( lv_name ).
+      ELSEIF sy-tabix = 1 AND strlen( lv_data ) > 49.
         lv_hash = lv_data+8.
         lv_name = lv_data+49.
         lv_char = zcl_abapgit_git_utils=>get_null( ).
@@ -320,14 +323,6 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
 
 * channel
     ASSERT iv_data(2) = '00'.
-
-    IF iv_data(4) = '0000'.
-* flush package?
-      lv_str = iv_data+8.
-      SPLIT lv_str AT |\n| INTO TABLE lt_strings.
-      READ TABLE lt_strings INDEX 1 INTO lv_str.
-      zcx_abapgit_exception=>raise( lv_str ).
-    ENDIF.
 
     lv_hex = to_upper( iv_data+2(2) ).
     lv_length = lv_hex.

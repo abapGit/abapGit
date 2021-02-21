@@ -82,7 +82,7 @@ CLASS ltcl_parse IMPLEMENTATION.
     DATA lx_error TYPE REF TO zcx_abapgit_exception.
     DATA lv_data TYPE string.
 
-    lv_data = |00000230ERR CAPTCHA required\nYour Bitbucket account etc..|.
+    lv_data = |001e\n service=git-upload-pack\n00000230ERR CAPTCHA required\nYour Bitbucket account etc..|.
     APPEND lv_data TO mt_data.
 
     TRY.
