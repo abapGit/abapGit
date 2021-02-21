@@ -85,7 +85,7 @@ Delete all objects that are part of an abapGit repository (i.e. full uninstall):
 ```abap
 ls_checks = lo_repo->delete_checks( ).
 IF ls_checks-transport-required = abap_true.
-  ls_checks-transport-transport = 'SIDK900000'. "transport ewquest
+  ls_checks-transport-transport = 'SIDK900000'. "transport request
 ENDIF.
 
 zcl_abapgit_repo_srv=>get_instance( )->purge(  
@@ -108,7 +108,7 @@ DATA(lt_result) = zcl_abapgit_file_status=>status( lo_repo ).
 
 The following tasks are supported for online repositories only (`lo_repo type ref to zcl_abapgit_repo_online`).
 
-**Note:** Certain tasks will require authentication (user/password or token). In such cases, you will have to provide the login details upfront (see [#1331](https://github.com/abapGit/abapGit/issues/1331) for details):
+**Note:** Certain tasks will require authentication (user/password or token). In such cases, you will have to provide the login details upfront (see [#1331](https://github.com/abapGit/abapGit/issues/1331) for details), authentication can also be set via user exit or configured in SM59,
 
 ```abap
 zcl_abapgit_login_manager=>set(
@@ -122,7 +122,8 @@ zcl_abapgit_login_manager=>set(
 Get a list of all branches (including main branch):
 
 ```abap
-zcl_abapgit_git_transport=>branches( lo_repo->get_url( ) ).
+lo_branches = zcl_abapgit_git_transport=>branches( lo_repo->get_url( ) ).
+lt_list = lo_branches->get_branches_only( ).
 ```
 
 ### Switch Branch ###
@@ -135,7 +136,7 @@ lo_repo->set_branch_name( lv_name ).
 
 ### Create Branch ###
 
-Create a new branch in an online repository:
+Create a new branch in an online repository, note that IV_FROM can also be set, if not the branch will be created from the current checked out SHA1 of the repo,
 
 ```abap
 lo_repo->create_branch( lv_name ).

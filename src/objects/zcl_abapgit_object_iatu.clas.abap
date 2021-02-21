@@ -12,7 +12,9 @@ CLASS zcl_abapgit_object_iatu DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
                   ev_source TYPE string
         RAISING   zcx_abapgit_exception,
       save
-        IMPORTING is_attr   TYPE w3tempattr iv_source TYPE string
+        IMPORTING
+          is_attr   TYPE w3tempattr
+          iv_source TYPE string
         RAISING   zcx_abapgit_exception,
       w3_api_load
         IMPORTING is_name     TYPE iacikeyt

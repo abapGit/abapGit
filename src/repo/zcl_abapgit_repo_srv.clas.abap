@@ -87,7 +87,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
 
     LOOP AT mt_list INTO lo_repo.
-      IF lo_repo->get_key( ) = io_repo->get_key( ).
+      IF lo_repo->ms_data-key = io_repo->ms_data-key.
         IF lo_repo = io_repo.
           RETURN.
         ENDIF.
@@ -279,7 +279,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
         refresh( ).
       ENDIF.
       LOOP AT mt_list ASSIGNING <lo_list>.
-        IF <lo_list>->get_key( ) = iv_key.
+        IF <lo_list>->ms_data-key = iv_key.
           ro_repo = <lo_list>.
           RETURN.
         ENDIF.

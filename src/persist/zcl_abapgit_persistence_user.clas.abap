@@ -268,6 +268,10 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
 
     rv_key = ms_user-repo_show.
 
+    IF rv_key IS INITIAL.
+      RETURN.
+    ENDIF.
+
     " Check if repo exists
     TRY.
         lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( rv_key ).

@@ -509,7 +509,10 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lo_repo->select_commit( space ).
+    IF lo_repo->get_selected_commit( ) IS NOT INITIAL.
+      lo_repo->select_commit( space ).
+    ENDIF.
+
     lo_repo->select_branch( ls_branch-name ).
     COMMIT WORK AND WAIT.
 
