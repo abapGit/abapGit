@@ -46,7 +46,7 @@ CLASS zcl_abapgit_html DEFINITION
 
     CLASS-DATA go_single_tags_re TYPE REF TO cl_abap_regex .
     DATA mt_buffer TYPE string_table .
-    CLASS-DATA mv_spaces TYPE string .
+    CLASS-DATA gv_spaces TYPE string .
 
     METHODS indent_line
       CHANGING
@@ -90,7 +90,8 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
         pattern     = '<(AREA|BASE|BR|COL|COMMAND|EMBED|HR|IMG|INPUT|LINK|META|PARAM|SOURCE|!)'
         ignore_case = abap_false.
 
-    mv_spaces = repeat( val = ` ` occ = 200 ).
+    gv_spaces = repeat( val = ` `
+                        occ = 200 ).
 
   ENDMETHOD.
 
@@ -159,7 +160,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
         OR ls_study-tag_close = abap_true )
         AND cs_context-indent > 0.
       lv_spaces = ( cs_context-indent - 1 ) * c_indent_size.
-      cv_line  = mv_spaces(lv_spaces) && cv_line.
+      cv_line  = gv_spaces(lv_spaces) && cv_line.
     ELSE.
       cv_line = cs_context-indent_str && cv_line.
     ENDIF.
@@ -185,8 +186,8 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       ELSEIF cs_context-indent > 0. " AND ls_study-openings < ls_study-closings
         cs_context-indent = cs_context-indent - 1.
       ENDIF.
-      lv_spaces = cs_context-indent * c_indent_size .
-      cs_context-indent_str = mv_spaces(lv_spaces).
+      lv_spaces = cs_context-indent * c_indent_size.
+      cs_context-indent_str = gv_spaces(lv_spaces).
     ENDIF.
 
   ENDMETHOD.
