@@ -14,6 +14,7 @@ ENDCLASS.
 
 CLASS zcl_abapgit_migrations IMPLEMENTATION.
 
+
   METHOD run.
 
     " Migrate STDTEXT to TABLE
