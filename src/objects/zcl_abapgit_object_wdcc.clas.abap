@@ -15,7 +15,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_WDCC IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -381,12 +381,15 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
                  ig_data =  ls_orig_config-relid ).
 
     lv_xml_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_data = lv_xml_xstring ).
-    TRY.
-        lv_xml_string = zcl_abapgit_xml_pretty=>print( iv_xml           = lv_xml_string
-                                                       iv_ignore_errors = abap_false ).
-      CATCH zcx_abapgit_exception.    "
-        zcx_abapgit_exception=>raise( 'Error Pretty Printing WDCC XML Content: ' && ms_item-obj_name ).
-    ENDTRY.
+    IF lv_xml_string IS NOT INITIAL.
+      TRY.
+          lv_xml_string = zcl_abapgit_xml_pretty=>print(
+            iv_xml           = lv_xml_string
+            iv_ignore_errors = abap_false ).
+        CATCH zcx_abapgit_exception.
+          zcx_abapgit_exception=>raise( 'Error Pretty Printing WDCC XML Content: ' && ms_item-obj_name ).
+      ENDTRY.
+    ENDIF.
 
     REPLACE FIRST OCCURRENCE
       OF REGEX '<\?xml version="1\.0" encoding="[\w-]+"\?>'
