@@ -779,6 +779,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       ENDLOOP.
       LOOP AT lt_dd08v ASSIGNING <ls_dd08v>.
         <ls_dd08v>-tabname = lv_name.
+        <ls_dd08v>-ddlanguage = mv_language.
       ENDLOOP.
       LOOP AT lt_dd35v ASSIGNING <ls_dd35v>.
         <ls_dd35v>-tabname = lv_name.
@@ -1015,7 +1016,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
     ENDLOOP.
 
     LOOP AT lt_dd08v ASSIGNING <ls_dd08v>.
-      CLEAR <ls_dd08v>-tabname.
+      CLEAR: <ls_dd08v>-tabname, <ls_dd08v>-ddlanguage.
     ENDLOOP.
     LOOP AT lt_dd35v ASSIGNING <ls_dd35v>.
       CLEAR <ls_dd35v>-tabname.
