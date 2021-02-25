@@ -141,6 +141,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AVAR IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error saving AVAR { ms_item-obj_name }| ).
     ENDIF.
+    lo_aab->dequeue( ).
 
   ENDMETHOD.
 
