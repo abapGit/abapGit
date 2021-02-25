@@ -354,45 +354,8 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
         RETURN.
       ENDIF.
 
-      TRY.
-          CALL METHOD li_package->('SET_CHANGEABLE')
-            EXPORTING
-              i_changeable                = abap_true
-              i_suppress_dialog           = abap_true " Parameter missing in 702
-            EXCEPTIONS
-              object_locked_by_other_user = 1
-              permission_failure          = 2
-              object_already_changeable   = 3
-              object_already_unlocked     = 4
-              object_just_created         = 5
-              object_deleted              = 6
-              object_modified             = 7
-              object_not_existing         = 8
-              object_invalid              = 9
-              unexpected_error            = 10
-              OTHERS                      = 11.
-
-        CATCH cx_root.
-          li_package->set_changeable(
-            EXPORTING
-              i_changeable                = abap_true
-            EXCEPTIONS
-              object_locked_by_other_user = 1
-              permission_failure          = 2
-              object_already_changeable   = 3
-              object_already_unlocked     = 4
-              object_just_created         = 5
-              object_deleted              = 6
-              object_modified             = 7
-              object_not_existing         = 8
-              object_invalid              = 9
-              unexpected_error            = 10
-              OTHERS                      = 11 ).
-      ENDTRY.
-
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise_t100( ).
-      ENDIF.
+      set_lock( ii_package = li_package
+                iv_lock    = abap_true ).
 
       TRY.
           CALL METHOD li_package->('DELETE')
@@ -418,6 +381,8 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
       ENDTRY.
 
       IF sy-subrc <> 0.
+        set_lock( ii_package = li_package
+                  iv_lock    = abap_false ).
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
@@ -448,6 +413,8 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
 
       ENDTRY.
       IF sy-subrc <> 0.
+        set_lock( ii_package = li_package
+                  iv_lock    = abap_false ).
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
@@ -519,7 +486,7 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
     IF li_package IS BOUND.
       " Package already exists, change it
       set_lock( ii_package = li_package
-                iv_lock = abap_true ).
+                iv_lock    = abap_true ).
 
       li_package->set_all_attributes(
         EXPORTING
@@ -545,6 +512,8 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
 *          superpackage_invalid       = 17  downport, does not exist in 7.30
           OTHERS                     = 18 ).
       IF sy-subrc <> 0.
+        set_lock( ii_package = li_package
+                  iv_lock    = abap_false ).
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
@@ -613,11 +582,14 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
         object_invalid        = 4
         OTHERS                = 5 ).
     IF sy-subrc <> 0.
+      set_lock( ii_package = li_package
+                iv_lock    = abap_false ).
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     set_lock( ii_package = li_package
-              iv_lock = abap_false ).
+              iv_lock    = abap_false ).
+
   ENDMETHOD.
 
 
