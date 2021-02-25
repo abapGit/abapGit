@@ -13,7 +13,8 @@ CLASS ltcl_parse DEFINITION FOR TESTING
 
     METHODS:
       test01 FOR TESTING RAISING zcx_abapgit_exception,
-      test02 FOR TESTING RAISING zcx_abapgit_exception.
+      test02 FOR TESTING RAISING zcx_abapgit_exception,
+      test03 FOR TESTING RAISING zcx_abapgit_exception.
 
     DATA: mt_data TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
 
@@ -71,6 +72,27 @@ CLASS ltcl_parse IMPLEMENTATION.
     APPEND '003f0e6fe6b311f789ccbac6c5122702d4f48a4f6bda refs/heads/master' TO mt_data.
 
     parse( ).
+
+  ENDMETHOD.
+
+  METHOD test03.
+
+* https://github.com/abapGit/abapGit/issues/4523
+
+    DATA lx_error TYPE REF TO zcx_abapgit_exception.
+    DATA lv_data TYPE string.
+
+    lv_data = |001e\n service=git-upload-pack\n00000230ERR CAPTCHA required\nYour Bitbucket account etc..|.
+    APPEND lv_data TO mt_data.
+
+    TRY.
+        parse( ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception INTO lx_error.
+        cl_abap_unit_assert=>assert_char_cp(
+          act = lx_error->get_text( )
+          exp = '*CAPTCHA*' ).
+    ENDTRY.
 
   ENDMETHOD.
 
