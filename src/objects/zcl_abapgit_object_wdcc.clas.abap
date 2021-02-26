@@ -389,14 +389,14 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCC IMPLEMENTATION.
         CATCH zcx_abapgit_exception.
           zcx_abapgit_exception=>raise( 'Error Pretty Printing WDCC XML Content: ' && ms_item-obj_name ).
       ENDTRY.
+
+      REPLACE FIRST OCCURRENCE
+        OF REGEX '<\?xml version="1\.0" encoding="[\w-]+"\?>'
+        IN lv_xml_string
+        WITH '<?xml version="1.0" encoding="utf-8"?>'.
+      ASSERT sy-subrc = 0.
     ENDIF.
-
-    REPLACE FIRST OCCURRENCE
-      OF REGEX '<\?xml version="1\.0" encoding="[\w-]+"\?>'
-      IN lv_xml_string
-      WITH '<?xml version="1.0" encoding="utf-8"?>'.
-    ASSERT sy-subrc = 0.
-
+    
     mo_files->add_string( iv_extra  = 'comp_config'
                           iv_ext    = 'xml'
                           iv_string = lv_xml_string ).
