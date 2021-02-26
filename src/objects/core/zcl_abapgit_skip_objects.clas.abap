@@ -1,22 +1,33 @@
-CLASS zcl_abapgit_skip_objects DEFINITION PUBLIC FINAL CREATE PUBLIC.
+CLASS zcl_abapgit_skip_objects DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    METHODS:
-      skip_sadl_generated_objects
-        IMPORTING
-          it_tadir        TYPE zif_abapgit_definitions=>ty_tadir_tt
-          ii_log          TYPE REF TO zif_abapgit_log OPTIONAL
-        RETURNING
-          VALUE(rt_tadir) TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    METHODS skip_sadl_generated_objects
+      IMPORTING
+        !it_tadir       TYPE zif_abapgit_definitions=>ty_tadir_tt
+        !ii_log         TYPE REF TO zif_abapgit_log OPTIONAL
+      RETURNING
+        VALUE(rt_tadir) TYPE zif_abapgit_definitions=>ty_tadir_tt .
+    METHODS skip_tabl_status_new_objects
+      IMPORTING
+        !ii_log   TYPE REF TO zif_abapgit_log OPTIONAL
+      CHANGING
+        !ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt .
   PROTECTED SECTION.
   PRIVATE SECTION.
-    METHODS:
-      has_sadl_superclass
-        IMPORTING
-          is_class         TYPE zif_abapgit_definitions=>ty_tadir
-        RETURNING
-          VALUE(rv_return) TYPE abap_bool.
 
+    METHODS has_sadl_superclass
+      IMPORTING
+        !is_class        TYPE zif_abapgit_definitions=>ty_tadir
+      RETURNING
+        VALUE(rv_return) TYPE abap_bool .
+    METHODS is_tabl_status_new
+      IMPORTING
+        !is_tadir     TYPE zif_abapgit_definitions=>ty_tadir
+      RETURNING
+        VALUE(rv_new) TYPE abap_bool .
 ENDCLASS.
 
 
@@ -36,6 +47,27 @@ CLASS ZCL_ABAPGIT_SKIP_OBJECTS IMPLEMENTATION.
     lv_superclass = li_oo_functions->read_superclass( lv_class_name ).
     IF lv_superclass = 'CL_SADL_GTK_EXPOSURE_MPC'.
       rv_return = abap_true.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD is_tabl_status_new.
+
+    DATA: lv_state   TYPE ddgotstate,
+          lv_tabname TYPE tabname.
+
+    lv_tabname = is_tadir-obj_name.
+    CALL FUNCTION 'DD_INT_TABL_GET'
+      EXPORTING
+        tabname        = lv_tabname
+      IMPORTING
+        gotstate       = lv_state
+      EXCEPTIONS
+        internal_error = 1
+        OTHERS         = 2.
+    IF sy-subrc = 0.
+      rv_new = boolc( lv_state = 'N' ).
     ENDIF.
 
   ENDMETHOD.
@@ -70,5 +102,21 @@ CLASS ZCL_ABAPGIT_SKIP_OBJECTS IMPLEMENTATION.
           iv_type = 'W' ).
       ENDIF.
     ENDLOOP.
+  ENDMETHOD.
+
+
+  METHOD skip_tabl_status_new_objects.
+
+    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF ct_tadir.
+
+    LOOP AT ct_tadir ASSIGNING <ls_tadir> WHERE object = 'TABL'.
+      IF is_tabl_status_new( <ls_tadir> ) = abap_true.
+        CLEAR: <ls_tadir>-object.
+        ii_log->add( iv_msg  = |{ <ls_tadir>-obj_name } skipped: New status|
+                     iv_type = 'W' ).
+      ENDIF.
+    ENDLOOP.
+    DELETE ct_tadir WHERE object IS INITIAL.
+
   ENDMETHOD.
 ENDCLASS.
