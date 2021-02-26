@@ -396,7 +396,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCC IMPLEMENTATION.
         WITH '<?xml version="1.0" encoding="utf-8"?>'.
       ASSERT sy-subrc = 0.
     ENDIF.
-    
+
     mo_files->add_string( iv_extra  = 'comp_config'
                           iv_ext    = 'xml'
                           iv_string = lv_xml_string ).
