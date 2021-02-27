@@ -86,7 +86,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
+CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
 
   METHOD add_local_packages.
@@ -370,9 +370,6 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
     ct_tadir = lo_skip_objects->skip_sadl_generated_objects(
       it_tadir = ct_tadir
       ii_log   = ii_log ).
-
-    lo_skip_objects->skip_tabl_status_new_objects( EXPORTING ii_log   = ii_log
-                                                   CHANGING  ct_tadir = ct_tadir ).
 
   ENDMETHOD.
 
