@@ -115,7 +115,8 @@ CLASS zcl_abapgit_xml_output IMPLEMENTATION.
       li_abap ?= mi_xml_doc->get_root( )->get_first_child( ).
       mi_xml_doc->get_root( )->remove_child( li_abap ).
       IF li_abap IS INITIAL.
-        li_abap = build_asx_node( ).
+        " Nothing was added to XML output so return an empty string
+        RETURN.
       ENDIF.
     ELSE.
       li_abap = mi_raw.
