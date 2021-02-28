@@ -28,5 +28,5 @@ This will overwrite the files in the repository to have the latest format, compa
 
 | abapGit       | Download | XML Serialization |
 | :------------- |:------------- |:-------------|
-| v1.0.0 to current | [Link](https://raw.githubusercontent.com/abapGit/build/master/zabapgit.abap) | v1.0.0 |
+| v1.0.0 to current | [Link](https://raw.githubusercontent.com/abapGit/build/main/zabapgit.abap) | v1.0.0 |
 | v0.0.0 to v0.113.0 | [Link](https://raw.githubusercontent.com/abapGit/abapGit/v0.113.0/zabapgit.prog.abap) | v0.2-alpha |
