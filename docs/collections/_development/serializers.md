@@ -11,7 +11,11 @@ All object serializers must implement interface `ZIF_ABAPGIT_OBJECT` and be name
 
 In general, only SAP Standard APIs for retriving and updating object information shall be used. If that is not possible, try using `ZCL_ABAPGIT_OBJECTS_GENERIC` which handles any logical transport object.
 
-As code is stored in git, no usernames, timestamps, states (e.g. active/inactive) or other system specific information should be part of the serialized object files. Only the active, most recent version of an object shall be serialized.
+As code is stored in git, no usernames, timestamps, states (e.g. active/inactive) or other system specific information should be part of the serialized object files. Only the active, most recent and consistent version of an object shall be serialized. 
+
+If an inactive version of an object exists, the class shall indicate so in the `is_active` method. abapGit displays such objects with a yellow bolt icon in the repo view. However, the inactive version must be ignored by the serializer. 
+
+As a result, a repo shall only contain the definition of active objects. Therefore, the deserializer can assume that the repo contains a consistent object definition and shall create an active version of the object (or update and activate it).
 
 ## Constructor
 
