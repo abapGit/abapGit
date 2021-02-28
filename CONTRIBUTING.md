@@ -4,7 +4,7 @@
 
 * Before starting any significant development, open an issue and propose your solution first. A discussion can save a lot of unnecessary work. It also helps others know that this is being worked on.
 
-* It is in your best interest to keep the commits/PRs as small as possible and solve one thing at a time. The smaller your change is, the easier it is to review and it will be more likely to get accepted. 
+* It is in your best interest to keep the commits/PRs as small as possible and solve one thing at a time. The smaller your change is, the easier it is to review and it will be more likely to get accepted.
 
 * Commit often, whenever something is working, and is a step in the right direction do a commit or PR. This way other contributors can see the changes, and it will minimize the risk of merge conflicts.
 
@@ -16,11 +16,9 @@ A bug is a _demonstrable problem_ that is caused by the code in the repository. 
 
 Guidelines for bug reports:
 
-1. **Use the GitHub issue search** &mdash; check if the issue has already been
-   reported.
+1. **Use the GitHub issue search** &mdash; check if the issue has already been reported.
 
-2. **Check if the issue has been fixed** &mdash; try to reproduce it using the
-   latest `master` or development branch in the repository.
+2. **Check if the issue has been fixed** &mdash; try to reproduce it using the latest version or development branch in the repository.
 
 3. **Demonstrate the problem** &mdash; provide clear steps that can be reproduced.
 
