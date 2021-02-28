@@ -5,7 +5,7 @@ order: 80
 
 *******************************
 
-This page describes how to execute various abapGit tasks using your own code. These classes and methods have existed for quite some time and are stable. However, they do **not** provide a guaranteed API. Future changes are a possibility. 
+This page describes how to execute various abapGit tasks using your own code. These classes and methods have existed for quite some time and are stable. However, they do **not** provide a guaranteed API. Future changes are a possibility.
 
 ## Repositories ##
 
@@ -88,8 +88,8 @@ IF ls_checks-transport-required = abap_true.
   ls_checks-transport-transport = 'SIDK900000'. "transport request
 ENDIF.
 
-zcl_abapgit_repo_srv=>get_instance( )->purge(  
-  io_repo  = lo_repo 
+zcl_abapgit_repo_srv=>get_instance( )->purge(
+  io_repo  = lo_repo
   is_check = ls_check ).
 ```
 
@@ -168,9 +168,9 @@ li_background->run(
   ii_log      = li_log
   it_settings = lt_settings ).
 ```
-        
+
 Alternatively, implement your own logic using interface `zif_abapgit_background` (see
-[Background Package](https://github.com/abapGit/abapGit/tree/master/src/background) for details).
+[Background Package](https://github.com/abapGit/abapGit/tree/main/src/background) for details).
 
 ### Pull Changes ##
 
@@ -187,7 +187,7 @@ li_background->run(
 ```
 
 Alternative 1: implement your own logic using interface `zif_abapgit_background` (see
-[Background Package](https://github.com/abapGit/abapGit/tree/master/src/background) for details).
+[Background Package](https://github.com/abapGit/abapGit/tree/main/src/background) for details).
 
 Alternative 2: Use the following code to trigger the pull.
 
@@ -262,8 +262,8 @@ Download ZIP file of an offline repository to frontend:
 ```abap
 lv_xstr = zcl_abapgit_zip=>export( lo_repo ).
 
-zcl_abapgit_ui_factory=>get_frontend_services( )->file_download( 
-  iv_path = lv_file_with_path 
+zcl_abapgit_ui_factory=>get_frontend_services( )->file_download(
+  iv_path = lv_file_with_path
   iv_xstr = lv_xstr ).
 ```
 
