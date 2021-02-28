@@ -14,12 +14,31 @@ CLASS zcl_abapgit_stage_logic DEFINITION
         CHANGING  cs_files TYPE zif_abapgit_definitions=>ty_stage_files,
       remove_identical
         CHANGING cs_files TYPE zif_abapgit_definitions=>ty_stage_files.
-
+    CLASS-METHODS remove_empty
+      CHANGING
+        !cs_files TYPE zif_abapgit_definitions=>ty_stage_files .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_STAGE_LOGIC IMPLEMENTATION.
+CLASS zcl_abapgit_stage_logic IMPLEMENTATION.
+
+
+  METHOD remove_empty.
+
+    DATA: lv_index TYPE i.
+
+    FIELD-SYMBOLS: <ls_local> LIKE LINE OF cs_files-local.
+
+    LOOP AT cs_files-local ASSIGNING <ls_local>.
+      lv_index = sy-tabix.
+
+      IF <ls_local>-file-data IS INITIAL.
+        DELETE cs_files-local INDEX lv_index.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
 
 
   METHOD remove_identical.
@@ -93,6 +112,7 @@ CLASS ZCL_ABAPGIT_STAGE_LOGIC IMPLEMENTATION.
     remove_identical( CHANGING cs_files = rs_files ).
     remove_ignored( EXPORTING io_repo  = io_repo
                     CHANGING  cs_files = rs_files ).
+    remove_empty( CHANGING cs_files = rs_files ).
 
   ENDMETHOD.
 ENDCLASS.
