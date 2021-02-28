@@ -23,12 +23,12 @@ jobs:
         npm run merge
         npm run merge.ci
     - name: deploy-merged-build
-      if: github.ref == 'refs/heads/master' && github.repository == 'abapGit/abapGit'
+      if: github.ref == 'refs/heads/main' && github.repository == 'abapGit/abapGit'
       env:
         GITHUB_API_KEY: ${{ secrets.MY_TOKEN }}
       run: ./ci/deploy-merged-build.sh
     - name: deploy-release-tag
-      if: github.ref == 'refs/heads/master' && github.repository == 'abapGit/abapGit'
+      if: github.ref == 'refs/heads/main' && github.repository == 'abapGit/abapGit'
       env:
         GITHUB_API_KEY: ${{ secrets.GITHUB_TOKEN }}
       run: ./ci/deploy-release-tag.sh
