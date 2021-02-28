@@ -61,22 +61,26 @@ CLASS zcl_abapgit_object_tabl DEFINITION
 
     TYPES:
       ty_dd03p_tt TYPE STANDARD TABLE OF dd03p .
-
     TYPES:
       BEGIN OF ty_dd02_text,
         ddlanguage TYPE dd02t-ddlanguage,
         ddtext     TYPE dd02t-ddtext,
-      END OF ty_dd02_text,
-      ty_dd02_texts TYPE STANDARD TABLE OF ty_dd02_text.
+      END OF ty_dd02_text .
+    TYPES:
+      ty_dd02_texts TYPE STANDARD TABLE OF ty_dd02_text .
 
     CONSTANTS c_longtext_id_tabl TYPE dokil-id VALUE 'TB' ##NO_TEXT.
     CONSTANTS:
       BEGIN OF c_s_dataname,
         segment_definition TYPE string VALUE 'SEGMENT_DEFINITION',
         tabl_extras        TYPE string VALUE 'TABL_EXTRAS',
-      END OF c_s_dataname.
+      END OF c_s_dataname .
 
-
+    METHODS deserialize_indexes
+      IMPORTING
+        !io_xml TYPE REF TO zif_abapgit_xml_input
+      RAISING
+        zcx_abapgit_exception .
     METHODS clear_dd03p_fields
       CHANGING
         !ct_dd03p TYPE ty_dd03p_tt .
@@ -84,26 +88,29 @@ CLASS zcl_abapgit_object_tabl DEFINITION
     "! @parameter rv_is_idoc_segment | It's an IDoc segment or not
     METHODS is_idoc_segment
       RETURNING
-        VALUE(rv_is_idoc_segment) TYPE abap_bool.
+        VALUE(rv_is_idoc_segment) TYPE abap_bool .
     METHODS clear_dd03p_fields_common
       CHANGING
         !cs_dd03p TYPE dd03p .
     METHODS clear_dd03p_fields_dataelement
       CHANGING
         !cs_dd03p TYPE dd03p .
-
-    METHODS:
-      serialize_texts
-        IMPORTING io_xml TYPE REF TO zif_abapgit_xml_output
-        RAISING   zcx_abapgit_exception,
-      deserialize_texts
-        IMPORTING io_xml   TYPE REF TO zif_abapgit_xml_input
-                  is_dd02v TYPE dd02v
-        RAISING   zcx_abapgit_exception,
-      is_db_table_category
-        IMPORTING iv_tabclass                TYPE dd02l-tabclass
-        RETURNING VALUE(rv_is_db_table_type) TYPE dd02l-tabclass.
-
+    METHODS serialize_texts
+      IMPORTING
+        !io_xml TYPE REF TO zif_abapgit_xml_output
+      RAISING
+        zcx_abapgit_exception .
+    METHODS deserialize_texts
+      IMPORTING
+        !io_xml   TYPE REF TO zif_abapgit_xml_input
+        !is_dd02v TYPE dd02v
+      RAISING
+        zcx_abapgit_exception .
+    METHODS is_db_table_category
+      IMPORTING
+        !iv_tabclass               TYPE dd02l-tabclass
+      RETURNING
+        VALUE(rv_is_db_table_type) TYPE dd02l-tabclass .
 ENDCLASS.
 
 
@@ -149,6 +156,11 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
         CLEAR <ls_dd03p>-routputlen.
       ENDIF.
 
+    ENDLOOP.
+
+    " Clear position to avoid issues with include structures that contain different number of fields
+    LOOP AT ct_dd03p ASSIGNING <ls_dd03p>.
+      CLEAR: <ls_dd03p>-position, <ls_dd03p>-tabname, <ls_dd03p>-ddlanguage.
     ENDLOOP.
 
   ENDMETHOD.
@@ -321,6 +333,65 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
+  ENDMETHOD.
+
+
+  METHOD deserialize_indexes.
+
+    DATA:
+      lv_tname     TYPE trobj_name,
+      lt_dd12v     TYPE dd12vtab,
+      ls_dd12v     LIKE LINE OF lt_dd12v,
+      lt_dd17v     TYPE dd17vtab,
+      ls_dd17v     LIKE LINE OF lt_dd17v,
+      lt_secondary LIKE lt_dd17v.
+
+    io_xml->read( EXPORTING iv_name = 'DD12V'
+                  CHANGING cg_data = lt_dd12v ).
+    io_xml->read( EXPORTING iv_name = 'DD17V'
+                  CHANGING cg_data = lt_dd17v ).
+
+    LOOP AT lt_dd12v INTO ls_dd12v.
+
+* todo, call corr_insert?
+
+      CLEAR lt_secondary.
+      LOOP AT lt_dd17v INTO ls_dd17v
+          WHERE sqltab = ls_dd12v-sqltab AND indexname = ls_dd12v-indexname.
+        APPEND ls_dd17v TO lt_secondary.
+      ENDLOOP.
+
+      CALL FUNCTION 'DDIF_INDX_PUT'
+        EXPORTING
+          name              = ls_dd12v-sqltab
+          id                = ls_dd12v-indexname
+          dd12v_wa          = ls_dd12v
+        TABLES
+          dd17v_tab         = lt_secondary
+        EXCEPTIONS
+          indx_not_found    = 1
+          name_inconsistent = 2
+          indx_inconsistent = 3
+          put_failure       = 4
+          put_refused       = 5
+          OTHERS            = 6.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+
+      CALL FUNCTION 'DD_DD_TO_E071'
+        EXPORTING
+          type     = 'INDX'
+          name     = ls_dd12v-sqltab
+          id       = ls_dd12v-indexname
+        IMPORTING
+          obj_name = lv_tname.
+
+      zcl_abapgit_objects_activation=>add( iv_type = 'INDX'
+                                           iv_name = lv_tname ).
+
+    ENDLOOP.
+
   ENDMETHOD.
 
 
@@ -644,25 +715,25 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: lv_name      TYPE ddobjname,
-          lv_tname     TYPE trobj_name,
-          ls_dd02v     TYPE dd02v,
-          ls_dd09l     TYPE dd09l,
-          lt_dd03p     TYPE TABLE OF dd03p,
-          lt_dd05m     TYPE TABLE OF dd05m,
-          lt_dd08v     TYPE TABLE OF dd08v,
-          lt_dd12v     TYPE dd12vtab,
-          lt_dd17v     TYPE dd17vtab,
-          ls_dd17v     LIKE LINE OF lt_dd17v,
-          lt_secondary LIKE lt_dd17v,
-          lt_dd35v     TYPE TABLE OF dd35v,
-          lt_dd36m     TYPE dd36mttyp,
-          ls_dd12v     LIKE LINE OF lt_dd12v,
-          lv_refs      TYPE abap_bool,
-          ls_extras    TYPE ty_tabl_extras.
+    DATA: lv_name   TYPE ddobjname,
+          ls_dd02v  TYPE dd02v,
+          ls_dd09l  TYPE dd09l,
+          lt_dd03p  TYPE TABLE OF dd03p,
+          lt_dd05m  TYPE TABLE OF dd05m,
+          lt_dd08v  TYPE TABLE OF dd08v,
+          lt_dd35v  TYPE TABLE OF dd35v,
+          lt_dd36m  TYPE dd36mttyp,
+          lv_refs   TYPE abap_bool,
+          ls_extras TYPE ty_tabl_extras.
 
-    FIELD-SYMBOLS: <ls_dd03p> TYPE dd03p,
+    FIELD-SYMBOLS: <ls_dd03p>      TYPE dd03p,
+                   <ls_dd05m>      TYPE dd05m,
+                   <ls_dd08v>      TYPE dd08v,
+                   <ls_dd35v>      TYPE dd35v,
+                   <ls_dd36m>      TYPE dd36m,
                    <lg_roworcolst> TYPE any.
+
+    lv_name = ms_item-obj_name. " type conversion
 
     IF deserialize_idoc_segment( io_xml     = io_xml
                                  iv_package = iv_package ) = abap_false.
@@ -687,18 +758,35 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
         ENDIF.
       ENDLOOP.
 
+      " Number fields sequentially and fill table name
+      LOOP AT lt_dd03p ASSIGNING <ls_dd03p>.
+        <ls_dd03p>-position   = sy-tabix.
+        <ls_dd03p>-tabname    = lv_name.
+        <ls_dd03p>-ddlanguage = mv_language.
+      ENDLOOP.
+
       io_xml->read( EXPORTING iv_name = 'DD05M_TABLE'
                     CHANGING cg_data = lt_dd05m ).
       io_xml->read( EXPORTING iv_name = 'DD08V_TABLE'
                     CHANGING cg_data = lt_dd08v ).
-      io_xml->read( EXPORTING iv_name = 'DD12V'
-                    CHANGING cg_data = lt_dd12v ).
-      io_xml->read( EXPORTING iv_name = 'DD17V'
-                    CHANGING cg_data = lt_dd17v ).
       io_xml->read( EXPORTING iv_name = 'DD35V_TALE'
                     CHANGING cg_data = lt_dd35v ).
       io_xml->read( EXPORTING iv_name = 'DD36M'
                     CHANGING cg_data = lt_dd36m ).
+
+      LOOP AT lt_dd05m ASSIGNING <ls_dd05m>.
+        <ls_dd05m>-tabname = lv_name.
+      ENDLOOP.
+      LOOP AT lt_dd08v ASSIGNING <ls_dd08v>.
+        <ls_dd08v>-tabname = lv_name.
+        <ls_dd08v>-ddlanguage = mv_language.
+      ENDLOOP.
+      LOOP AT lt_dd35v ASSIGNING <ls_dd35v>.
+        <ls_dd35v>-tabname = lv_name.
+      ENDLOOP.
+      LOOP AT lt_dd36m ASSIGNING <ls_dd36m>.
+        <ls_dd36m>-tabname = lv_name.
+      ENDLOOP.
 
       " DDIC Step: Remove references to search helps and foreign keys
       IF iv_step = zif_abapgit_object=>gc_step_id-ddic.
@@ -712,8 +800,6 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
       corr_insert( iv_package = iv_package
                    ig_object_class = 'DICT' ).
-
-      lv_name = ms_item-obj_name. " type conversion
 
       CALL FUNCTION 'DDIF_TABL_PUT'
         EXPORTING
@@ -739,47 +825,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
       zcl_abapgit_objects_activation=>add_item( ms_item ).
 
-* handle indexes
-      LOOP AT lt_dd12v INTO ls_dd12v.
-
-* todo, call corr_insert?
-
-        CLEAR lt_secondary.
-        LOOP AT lt_dd17v INTO ls_dd17v
-            WHERE sqltab = ls_dd12v-sqltab AND indexname = ls_dd12v-indexname.
-          APPEND ls_dd17v TO lt_secondary.
-        ENDLOOP.
-
-        CALL FUNCTION 'DDIF_INDX_PUT'
-          EXPORTING
-            name              = ls_dd12v-sqltab
-            id                = ls_dd12v-indexname
-            dd12v_wa          = ls_dd12v
-          TABLES
-            dd17v_tab         = lt_secondary
-          EXCEPTIONS
-            indx_not_found    = 1
-            name_inconsistent = 2
-            indx_inconsistent = 3
-            put_failure       = 4
-            put_refused       = 5
-            OTHERS            = 6.
-        IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise_t100( ).
-        ENDIF.
-
-        CALL FUNCTION 'DD_DD_TO_E071'
-          EXPORTING
-            type     = 'INDX'
-            name     = ls_dd12v-sqltab
-            id       = ls_dd12v-indexname
-          IMPORTING
-            obj_name = lv_tname.
-
-        zcl_abapgit_objects_activation=>add( iv_type = 'INDX'
-                                             iv_name = lv_tname ).
-
-      ENDLOOP.
+      deserialize_indexes( io_xml ).
 
       deserialize_texts( io_xml   = io_xml
                          is_dd02v = ls_dd02v ).
@@ -890,9 +936,10 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_dd12v>      LIKE LINE OF lt_dd12v,
                    <ls_dd05m>      LIKE LINE OF lt_dd05m,
+                   <ls_dd08v>      LIKE LINE OF lt_dd08v,
+                   <ls_dd35v>      LIKE LINE OF lt_dd35v,
                    <ls_dd36m>      LIKE LINE OF lt_dd36m,
                    <lg_roworcolst> TYPE any.
-
 
     lv_name = ms_item-obj_name.
 
@@ -960,6 +1007,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 * remove foreign keys inherited from .INCLUDEs
     DELETE lt_dd08v WHERE noinherit = 'N'.
     LOOP AT lt_dd05m ASSIGNING <ls_dd05m>.
+      CLEAR <ls_dd05m>-tabname.
       lv_index = sy-tabix.
       READ TABLE lt_dd08v WITH KEY fieldname = <ls_dd05m>-fieldname TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
@@ -967,9 +1015,17 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
+    LOOP AT lt_dd08v ASSIGNING <ls_dd08v>.
+      CLEAR: <ls_dd08v>-tabname, <ls_dd08v>-ddlanguage.
+    ENDLOOP.
+    LOOP AT lt_dd35v ASSIGNING <ls_dd35v>.
+      CLEAR <ls_dd35v>-tabname.
+    ENDLOOP.
+
 * remove inherited search helps
     DELETE lt_dd35v WHERE shlpinher = abap_true.
     LOOP AT lt_dd36m ASSIGNING <ls_dd36m>.
+      CLEAR <ls_dd36m>-tabname.
       lv_index = sy-tabix.
       READ TABLE lt_dd35v WITH KEY fieldname = <ls_dd36m>-fieldname TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
