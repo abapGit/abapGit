@@ -8,6 +8,26 @@ Legend
 + : added
 - : removed
 
+2021-02-28 v1.106.0
+-------------------
+! TABL, serialization changed, fields TABNAME, DDLANGUAGE, POSITION cleared
++ Overview page, performance optimizations
+- Install abapgit option removed from debug page
+* Parsing git branch list, throw errors
+* ACID, avoid "no changes found" popup
+* W3xx, remove TADIR entry on uninstall
+* DEVC, fix check if package is emtpy
+* SICF, fix regression
+* fix sapevents for chromium based browser control
+* SICF, regression fix
+* SHI3, serialize only main language
+* Fix display of log after uninstall
+* XSLT, unlock in case of errors
+* SUSH, raise error if not supported
+* PARA, unlock in case of errors
+* Background logic, continue in case of errors
+* WDCC, fix dump during serialization
+
 2021-01-27 v1.105.0
 -------------------
 ! handling of namespaces changed

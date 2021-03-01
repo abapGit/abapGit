@@ -7,7 +7,7 @@ order: 20
 
 ## Standalone Version
 
-To update to the current version, upload the code from [zabapgit.abap](https://raw.githubusercontent.com/abapGit/build/master/zabapgit.abap) into the ZABAPGIT_STANDALONE report (formerly ZABAPGIT_FULL) and activate the program.
+To update to the current version, upload the code from [zabapgit.abap](https://raw.githubusercontent.com/abapGit/build/main/zabapgit.abap) into the ZABAPGIT_STANDALONE report (formerly ZABAPGIT_FULL) and activate the program.
 
 ## Developer Version
 
@@ -15,11 +15,11 @@ If you have installed the abapGit developer version (in a separate package like 
 
 ### Online project
 
-If your system is connected to the Internet, create an online repository for your abapGit package. When you view the repository and update are available, a "Pull" link will appear in the menu. When you select "Pull", the system will download and install the latest version of the code. 
+If your system is connected to the Internet, create an online repository for your abapGit package. When you view the repository and update are available, a "Pull" link will appear in the menu. When you select "Pull", the system will download and install the latest version of the code.
 
 ### Offline project
 
-If your system is not connected to the Internet, create an offline repository. To update abapGit download the ZIP file from [https://github.com/abapGit/abapGit/archive/master.zip](https://github.com/abapGit/abapGit/archive/master.zip), and select "Import ZIP" in your abapGit repository.
+If your system is not connected to the Internet, create an offline repository. To update abapGit download the ZIP file from [https://github.com/abapGit/abapGit/archive/main.zip](https://github.com/abapGit/abapGit/archive/main.zip), and select "Import ZIP" in your abapGit repository.
 
 ### Troubleshooting
 
