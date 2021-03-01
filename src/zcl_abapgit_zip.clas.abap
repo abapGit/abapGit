@@ -107,8 +107,7 @@ CLASS zcl_abapgit_zip IMPLEMENTATION.
     DATA lo_serialize TYPE REF TO zcl_abapgit_serialize.
     DATA lt_languages TYPE zif_abapgit_definitions=>ty_languages.
 
-    CREATE OBJECT li_log TYPE zcl_abapgit_log.
-    li_log->set_title( 'Zip Export Log' ).
+    CREATE OBJECT li_log TYPE zcl_abapgit_log EXPORTING iv_title = 'Zip Export Log'.
 
     IF zcl_abapgit_factory=>get_sap_package( iv_package )->exists( ) = abap_false.
       zcx_abapgit_exception=>raise( |Package { iv_package } doesn't exist| ).

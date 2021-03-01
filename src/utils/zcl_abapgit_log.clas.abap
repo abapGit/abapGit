@@ -5,6 +5,11 @@ CLASS zcl_abapgit_log DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_log .
+
+    METHODS constructor
+      IMPORTING
+        iv_title TYPE string OPTIONAL.
+
   PROTECTED SECTION.
 
     TYPES:
@@ -30,6 +35,13 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
+
+
+  METHOD constructor.
+
+    zif_abapgit_log~set_title( iv_title ).
+
+  ENDMETHOD.
 
 
   METHOD get_messages_status.

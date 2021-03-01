@@ -61,7 +61,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
 
 
   METHOD activate.
@@ -335,8 +335,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
 
     DELETE lt_lines WHERE severity <> 'E'.
 
-    CREATE OBJECT li_log TYPE zcl_abapgit_log.
-    li_log->set_title( 'Activation Errors' ).
+    CREATE OBJECT li_log TYPE zcl_abapgit_log EXPORTING iv_title = 'Activation Errors'.
 
     LOOP AT lt_lines ASSIGNING <ls_line>.
       li_log->add( <ls_line>-line ).
