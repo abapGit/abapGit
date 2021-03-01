@@ -1,12 +1,9 @@
-CLASS zcl_abapgit_oo_base DEFINITION
-  PUBLIC
-  ABSTRACT
-  CREATE PUBLIC .
+CLASS zcl_abapgit_oo_base DEFINITION PUBLIC ABSTRACT.
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_oo_object_fnc .
+    INTERFACES: zif_abapgit_oo_object_fnc.
 
-PROTECTED SECTION.
+  PROTECTED SECTION.
     CLASS-METHODS:
       convert_attrib_to_vseoattrib
         IMPORTING iv_clsname           TYPE seoclsname
