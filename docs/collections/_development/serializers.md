@@ -11,7 +11,11 @@ All object serializers must implement interface `ZIF_ABAPGIT_OBJECT` and be name
 
 In general, only SAP Standard APIs for retriving and updating object information shall be used. If that is not possible, try using `ZCL_ABAPGIT_OBJECTS_GENERIC` which handles any logical transport object.
 
-As code is stored in git, no usernames, timestamps, states (e.g. active/inactive) or other system specific information should be part of the serialized object files. Only the active, most recent version of an object shall be serialized.
+As code is stored in git, no usernames, timestamps, states (e.g. active/inactive) or other system specific information should be part of the serialized object files. Only the active, most recent and consistent version of an object shall be serialized.
+
+If an inactive version of an object exists, the class shall indicate so in the `is_active` method. abapGit displays such objects with a yellow bolt icon in the repo view. However, the inactive version must be ignored by the serializer.
+
+As a result, a repo shall only contain the definition of active objects. Therefore, the deserializer can assume that the repo contains a consistent object definition and shall create an active version of the object (or update and activate it).
 
 ## Constructor
 
@@ -24,9 +28,9 @@ Parameter | Description
 
 These parameters are stored in attributes `MS_ITEM` and `MV_LANGUAGE` respectively.
 
-## Interface 
+## Interface
 
-Serializers must implement all methods of interface [`ZIF_ABAPGIT_OBJECT`](https://github.com/abapGit/abapGit/blob/master/src/objects/zif_abapgit_object.intf.abap):
+Serializers must implement all methods of interface [`ZIF_ABAPGIT_OBJECT`](https://github.com/abapGit/abapGit/blob/main/src/objects/zif_abapgit_object.intf.abap):
 
 Method | Description
 -------|------------
@@ -34,7 +38,7 @@ Method | Description
 `DESERIALIZE`           | Contains of all process steps to create or update an object based on one or more files
 `DELETE`                | Contains of all process steps to delete an object based on one or more files
 `EXISTS`                | Returns whether a given object already exists in any state (i.e. return `abap_true` for inactive objects)
-`IS_LOCKED`             | Returns whether a given object is currently locked 
+`IS_LOCKED`             | Returns whether a given object is currently locked
 `IS_ACTIVE`             | Returns whether a given object exists in active state
 `CHANGED_BY`            | Returns the name of the use who last changed a given object (if undetermined, return `c_user_unknown`)
 `JUMP`                  | Navigates to the corresponding object maintenance screen
@@ -42,7 +46,7 @@ Method | Description
 `GET_COMPARATOR`        | Triggered before deserialization to perform checks (for example, to warn the user that database tables are changed)
 `GET_DESERIALIZE_STEPS` | Defines the deserialzation step or steps used to build the processing sequence (see below)
 
-Example: [`DOMA`](https://github.com/abapGit/abapGit/blob/master/src/objects/zcl_abapgit_object_doma.clas.abap).
+Example: [`DOMA`](https://github.com/abapGit/abapGit/blob/main/src/objects/zcl_abapgit_object_doma.clas.abap).
 
 ### Metadata
 
@@ -56,7 +60,7 @@ Attribute | Description
 `DDIC`         | Set to `abap_true` if it is a DDIC object type (used for mass activation of DDIC objects)
 `LATE_DESER`   | Obsolete (to be removed)
 
-It's recommended to fill `CLASS` and `VERSION` metadata using `SUPER->GET_METADATA( )` and then changing settings as required. 
+It's recommended to fill `CLASS` and `VERSION` metadata using `SUPER->GET_METADATA( )` and then changing settings as required.
 
 ### Deserialization Step
 
@@ -64,13 +68,13 @@ It is mandatory to provide at least one deserialization step (see below).
 
 ## Super Class
 
-Serializers can take advantage of the following methods in [`ZCL_ABAPGIT_OBJECTS_SUPER`](https://github.com/abapGit/abapGit/blob/master/src/objects/zcl_abapgit_objects_super.clas.abap):
+Serializers can take advantage of the following methods in [`ZCL_ABAPGIT_OBJECTS_SUPER`](https://github.com/abapGit/abapGit/blob/main/src/objects/zcl_abapgit_objects_super.clas.abap):
 
 Method | Description
 -------|------------
-`GET_METADATA`             | Return default metadata for class and version 
+`GET_METADATA`             | Return default metadata for class and version
 `CORR_INSERT`              | Insert object into a transport (for transportable objects)
-`TADIR_INSERT`             | Insert object into TADIR 
+`TADIR_INSERT`             | Insert object into TADIR
 `EXISTS_A_LOCK_ENTRY_FOR`  | Check if an enqueue lock exists
 `SET_DEFAULT_PACKAGE`      | Set SAP package for it can't be supplied via APIs for RS_CORR_INSERT
 `IS_ACTIVE`                | Method to check if an ABAP Workbench object or it's parts are active
@@ -85,17 +89,17 @@ Method | Description
 -------|------------
 `SERIALIZE_LONGTEXTS`   | Serialize document including I18N handling
 `DESERIALIZE_LONGTEXTS` | Deserialize document including I18N handling
-`DELETE_LONGTEXTS`      | Delete document 
+`DELETE_LONGTEXTS`      | Delete document
 
 ## Generic Class
 
-If it's not possible to provide a native implementation for an object serializer, using generic class [`ZCL_ABAPGIT_OBJECTS_GENERIC`](https://github.com/abapGit/abapGit/blob/master/src/objects/zcl_abapgit_objects_generic.clas.abap) is possible for logical transport objects  (see table `OBJH`, object type `L`).
+If it's not possible to provide a native implementation for an object serializer, using generic class [`ZCL_ABAPGIT_OBJECTS_GENERIC`](https://github.com/abapGit/abapGit/blob/main/src/objects/zcl_abapgit_objects_generic.clas.abap) is possible for logical transport objects  (see table `OBJH`, object type `L`).
 
-Example: [`IWMO`](https://github.com/abapGit/abapGit/blob/master/src/objects/zcl_abapgit_object_iwmo.clas.abap).
+Example: [`IWMO`](https://github.com/abapGit/abapGit/blob/main/src/objects/zcl_abapgit_object_iwmo.clas.abap).
 
 ## Serialize Object
 
-The serialize method shall produce one or several files containing the data that represents a given object. There are a few methods available to define files and attach data using [`ZIF_ABAPGIT_OUTPUT_XML`](https://github.com/abapGit/abapGit/blob/master/src/xml/zif_abapgit_xml_output.intf.abap) (input parameter `IO_XML`).
+The serialize method shall produce one or several files containing the data that represents a given object. There are a few methods available to define files and attach data using [`ZIF_ABAPGIT_OUTPUT_XML`](https://github.com/abapGit/abapGit/blob/main/src/xml/zif_abapgit_xml_output.intf.abap) (input parameter `IO_XML`).
 
 Method | Description
 -------|------------
@@ -106,7 +110,7 @@ Method | Description
 
 ## Deserialize Object
 
-The deserialize method shall read the file or files representing a given object and create such object in the system. If such object already exist, it shall be updated according to the  definition in the file or files. There are a few methods available to process files using [`ZIF_ABAPGIT_INPUT_XML`](https://github.com/abapGit/abapGit/blob/master/src/xml/zif_abapgit_xml_input.intf.abap) (input parameter `IO_XML`).
+The deserialize method shall read the file or files representing a given object and create such object in the system. If such object already exist, it shall be updated according to the  definition in the file or files. There are a few methods available to process files using [`ZIF_ABAPGIT_INPUT_XML`](https://github.com/abapGit/abapGit/blob/main/src/xml/zif_abapgit_xml_input.intf.abap) (input parameter `IO_XML`).
 
 Method | Description
 -------|------------
@@ -129,11 +133,11 @@ The activation queue is built separately for each phase (see 'Deserialize Proces
 
 ## Internationalization (I18N)
 
-In general, the serializer class shall process texts of an object in all available languages i.e. the original language as well as any translations. It shall respect the "Serialize Main Language Only" setting of a repository and limit the texts to the language provided to the constructor (`MV_LANGUAGE`). 
+In general, the serializer class shall process texts of an object in all available languages i.e. the original language as well as any translations. It shall respect the "Serialize Main Language Only" setting of a repository and limit the texts to the language provided to the constructor (`MV_LANGUAGE`).
 
 The recommended approach is to check `io_xml->i18n_params( )-serialize_master_lang_only = abap_false` and then serialize the additional translations in the XML (typically using `I18N` prefix). During deserialize the translation languages can then be retrieved and processed accordingly (
 
-Example: [`TABL`](https://github.com/abapGit/abapGit/blob/master/src/objects/zcl_abapgit_object_tabl.clas.abap).
+Example: [`TABL`](https://github.com/abapGit/abapGit/blob/main/src/objects/zcl_abapgit_object_tabl.clas.abap).
 
 ## Testing
 
@@ -154,13 +158,13 @@ Example (using `SUSH`):
 
 abapGit determines which objects need to be serialized based on the SAP package assigned to a repository (including subpackages unless "Ignore subpackages" is selected in the repository settings). The list of objects is then sorted by package, object type, and object name.
 
-If a sufficient number of work processes is available, abapGit will activate objects in parallel (unless "Disable Parallel Processing" is selected in the repository settings). 
+If a sufficient number of work processes is available, abapGit will activate objects in parallel (unless "Disable Parallel Processing" is selected in the repository settings).
 
-For details, see [`ZCL_ABAPGIT_SERIALIZE`](https://github.com/abapGit/abapGit/blob/master/src/zcl_abapgit_serialize.clas.abap).
+For details, see [`ZCL_ABAPGIT_SERIALIZE`](https://github.com/abapGit/abapGit/blob/main/src/zcl_abapgit_serialize.clas.abap).
 
 ### Deserialize Process
 
-Objects are deserialized in three phases. After each phase all objects included in the phase will be activated. 
+Objects are deserialized in three phases. After each phase all objects included in the phase will be activated.
 
 Step | Description | Activation
 -----|-------------|-----------
@@ -168,10 +172,10 @@ Step | Description | Activation
 `ABAP` | Used for non-DDIC objects (code or mostly anything else) which might depend on DDIC objects   | Workbench Mass Activation
 `LATE` | Used for objects that depend on other objects processed in the previous two phases            | DDIC & Workbench Mass Activation
 
-Within each phase, the sequence of objects is determined by abapGit based on known object type dependencies. For details, see [`ZCL_ABAPGIT_OBJECTS->PRIORITIZE_DESER`](https://github.com/abapGit/abapGit/blob/master/src/objects/zcl_abapgit_objects.clas.abap#L1047).  
+Within each phase, the sequence of objects is determined by abapGit based on known object type dependencies. For details, see [`ZCL_ABAPGIT_OBJECTS->PRIORITIZE_DESER`](https://github.com/abapGit/abapGit/blob/main/src/objects/zcl_abapgit_objects.clas.abap#L1047).
 
 ### Uninstall Process
 
-During uninstallation of a repository, abapGit will determine the objects in the same fashion as the serialize process. The sequence of objects is determined by abapGit based on known object type dependencies. For details, see [`ZCL_ABAPGIT_DEPENDENCIES->RESOLVE`](https://github.com/abapGit/abapGit/blob/master/src/zcl_abapgit_dependencies.clas.abap#L69). 
+During uninstallation of a repository, abapGit will determine the objects in the same fashion as the serialize process. The sequence of objects is determined by abapGit based on known object type dependencies. For details, see [`ZCL_ABAPGIT_DEPENDENCIES->RESOLVE`](https://github.com/abapGit/abapGit/blob/main/src/zcl_abapgit_dependencies.clas.abap#L69).
 
-Note: There are suggestions to [refactor the logic to determine the processing order](https://github.com/abapGit/abapGit/issues/3536). 
+Note: There are suggestions to [refactor the logic to determine the processing order](https://github.com/abapGit/abapGit/issues/3536).
