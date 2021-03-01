@@ -1,7 +1,6 @@
 INTERFACE zif_abapgit_lxe_texts
   PUBLIC .
 
-
   TYPES:
     BEGIN OF ty_lxe_i18n,
       source_lang TYPE lxeisolang,
@@ -30,4 +29,5 @@ INTERFACE zif_abapgit_lxe_texts
       !ii_xml           TYPE REF TO zif_abapgit_xml_input
     RAISING
       zcx_abapgit_exception .
+
 ENDINTERFACE.

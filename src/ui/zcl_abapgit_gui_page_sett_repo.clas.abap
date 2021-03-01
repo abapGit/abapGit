@@ -72,7 +72,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -199,7 +199,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
       iv_val = |{ ls_dot-master_language } ({ lv_language })| ).
     mo_form_data->set(
       iv_key = c_id-i18n_langs
-      iv_val = lo_dot->get_i18n_langs( ) ).
+      iv_val = zcl_abapgit_lxe_texts=>convert_table_to_lang_string( lo_dot->get_i18n_languages( ) ) ).
     mo_form_data->set(
       iv_key = c_id-folder_logic
       iv_val = ls_dot-folder_logic ).
@@ -269,7 +269,11 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
 
     lo_dot->set_folder_logic( mo_form_data->get( c_id-folder_logic ) ).
     lo_dot->set_starting_folder( mo_form_data->get( c_id-starting_folder ) ).
-    lo_dot->set_i18n_langs( mo_form_data->get( c_id-i18n_langs ) ).
+
+    lo_dot->set_i18n_languages(
+      zcl_abapgit_lxe_texts=>convert_lang_string_to_table(
+        iv_langs              = mo_form_data->get( c_id-i18n_langs )
+        iv_skip_main_language = lo_dot->get_main_language( ) ) ).
 
     " Remove all ignores
     lt_ignore = lo_dot->get_data( )-ignore.
