@@ -165,8 +165,9 @@ CLASS zcl_abapgit_object_shlp IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
+
     IF ls_dd30v IS INITIAL.
-      RETURN. " does not exist in system
+      zcx_abapgit_exception=>raise( |No active version found for { ms_item-obj_type } { ms_item-obj_name }| ).
     ENDIF.
 
     CLEAR: ls_dd30v-as4user,
