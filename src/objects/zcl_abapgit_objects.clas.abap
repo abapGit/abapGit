@@ -940,7 +940,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     DELETE rt_results WHERE lstate = zif_abapgit_definitions=>c_state-added AND rstate IS INITIAL.
     "ignore objects that where deleted remotely
     DELETE rt_results WHERE rstate = zif_abapgit_definitions=>c_state-deleted.
-    "log objects that exists only local or where deleted remotely 
+    "log objects that exists only local or where deleted remotely
     IF sy-subrc = 0 AND ii_log IS BOUND.
       SORT rt_results BY obj_type obj_name.
       LOOP AT lt_objects REFERENCE INTO lr_object.
