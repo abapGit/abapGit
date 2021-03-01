@@ -1,6 +1,12 @@
 INTERFACE zif_abapgit_log
   PUBLIC .
 
+  CONSTANTS:
+    BEGIN OF c_status,
+      ok      TYPE sy-msgty VALUE 'S',
+      error   TYPE sy-msgty VALUE 'E',
+      warning TYPE sy-msgty VALUE 'W',
+    END OF c_status.
 
   TYPES:
     BEGIN OF ty_log_out,

@@ -8,13 +8,8 @@ CLASS zcl_abapgit_log DEFINITION
   PROTECTED SECTION.
 
     TYPES:
-      BEGIN OF ty_msg,
-        text TYPE string,
-        type TYPE sy-msgty,
-      END OF ty_msg .
-    TYPES:
       BEGIN OF ty_log, "in order of occurrence
-        msg       TYPE ty_msg,
+        msg       TYPE zif_abapgit_log=>ty_msg,
         rc        TYPE sy-subrc,
         item      TYPE zif_abapgit_definitions=>ty_item,
         exception TYPE REF TO cx_root,
@@ -90,7 +85,7 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
 
     DATA lx_exc TYPE REF TO cx_root.
     DATA lv_msg TYPE string.
-    lx_exc ?= ix_exc.
+    lx_exc = ix_exc.
     DO.
       lv_msg = lx_exc->get_text( ).
       zif_abapgit_log~add( iv_msg  = lv_msg
@@ -202,21 +197,22 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
   METHOD zif_abapgit_log~get_status.
 
     DATA lr_log TYPE REF TO ty_log.
-    rv_status = 'S'.
+    rv_status = zif_abapgit_log=>c_status-ok.
     LOOP AT mt_log REFERENCE INTO lr_log.
       CASE lr_log->msg-type.
         WHEN 'E' OR 'A' OR 'X'.
-          rv_status = 'E'. "not okay
+          rv_status = zif_abapgit_log=>c_status-error.
           EXIT.
         WHEN 'W'.
-          rv_status = 'W'. "maybe
+          rv_status = zif_abapgit_log=>c_status-warning.
           CONTINUE.
         WHEN 'S' OR 'I'.
-          IF rv_status <> 'W'.
-            rv_status = 'S'. "okay
+          IF rv_status <> zif_abapgit_log=>c_status-warning.
+            rv_status = zif_abapgit_log=>c_status-ok.
           ENDIF.
           CONTINUE.
         WHEN OTHERS. "unknown
+          rv_status = zif_abapgit_log=>c_status-error. " it is a bug probably, so not OK
           CONTINUE.
       ENDCASE.
     ENDLOOP.
