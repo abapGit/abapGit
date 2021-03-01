@@ -4,15 +4,9 @@ CLASS zcl_abapgit_oo_base DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-
     INTERFACES zif_abapgit_oo_object_fnc .
 
-    CLASS-METHODS is_part_of_class
-      IMPORTING
-        !iv_filename     TYPE string
-      RETURNING
-        VALUE(rv_result) TYPE abap_bool .
-  PROTECTED SECTION.
+PROTECTED SECTION.
     CLASS-METHODS:
       convert_attrib_to_vseoattrib
         IMPORTING iv_clsname           TYPE seoclsname
@@ -136,16 +130,6 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
       CATCH cx_oo_source_save_failure.
         zcx_abapgit_exception=>raise( 'save failure' ).
     ENDTRY.
-
-  ENDMETHOD.
-
-
-  METHOD is_part_of_class.
-
-    rv_result = boolc( iv_filename CS |.clas.{ zif_abapgit_oo_object_fnc=>c_parts-locals_def }.abap|
-                    OR iv_filename CS |.clas.{ zif_abapgit_oo_object_fnc=>c_parts-locals_imp }.abap|
-                    OR iv_filename CS |.clas.{ zif_abapgit_oo_object_fnc=>c_parts-macros }.abap|
-                    OR iv_filename CS |.clas.{ zif_abapgit_oo_object_fnc=>c_parts-testclasses }.abap| ).
 
   ENDMETHOD.
 
