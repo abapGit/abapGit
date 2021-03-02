@@ -345,7 +345,8 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
     lt_supported_types = zcl_abapgit_objects=>supported_list( ).
     LOOP AT ct_tadir ASSIGNING <ls_tadir>.
       CLEAR: ls_unsupported_count.
-      IF NOT line_exists( lt_supported_types[ table_line = <ls_tadir>-object ] ).
+      READ TABLE lt_supported_types WITH KEY table_line = <ls_tadir>-object TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
         ls_unsupported_count-obj_type = <ls_tadir>-object.
         ls_unsupported_count-count    = 1.
         COLLECT ls_unsupported_count INTO lt_unsupported_count.
