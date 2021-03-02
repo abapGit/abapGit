@@ -964,8 +964,9 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'error from DDIF_TABL_GET' ).
     ENDIF.
+
     IF ls_dd02v IS INITIAL.
-      RETURN. " object does not exits
+      zcx_abapgit_exception=>raise( |No active version found for { ms_item-obj_type } { ms_item-obj_name }| ).
     ENDIF.
 
     CLEAR: ls_dd02v-as4user,
