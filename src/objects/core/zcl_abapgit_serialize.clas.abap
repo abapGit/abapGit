@@ -377,7 +377,7 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
                                        <ls_unsupported_count>-obj_name } ignored| ).
         ELSE.
           mi_log->add_error( iv_msg  = |Object type { <ls_unsupported_count>-obj_type } not supported, {
-                                       <ls_unsupported_count>-count } object(s) ignored| ).
+                                       <ls_unsupported_count>-count } objects ignored| ).
         ENDIF.
       ENDLOOP.
     ENDIF.
