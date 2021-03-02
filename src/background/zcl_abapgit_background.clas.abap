@@ -112,14 +112,16 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
             iv_username = <ls_list>-username
             iv_password = <ls_list>-password ).
 
-          CREATE OBJECT li_log TYPE zcl_abapgit_log.
           CREATE OBJECT li_background TYPE (<ls_list>-method).
 
-          li_background->run(
+          li_log = li_background->run(
             io_repo     = lo_repo
-            ii_log      = li_log
             it_settings = <ls_list>-settings ).
+
         CATCH zcx_abapgit_exception INTO lx_error.
+          IF li_log IS NOT BOUND.
+            CREATE OBJECT li_log TYPE zcl_abapgit_log.
+          ENDIF.
           li_log->add_exception( lx_error ).
       ENDTRY.
 

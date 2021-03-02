@@ -19,8 +19,9 @@ INTERFACE zif_abapgit_background
   METHODS run
     IMPORTING
       !io_repo     TYPE REF TO zcl_abapgit_repo_online
-      !ii_log      TYPE REF TO zif_abapgit_log
       !it_settings TYPE ty_settings_tt OPTIONAL
+    RETURNING
+      VALUE(ri_log) TYPE REF TO zif_abapgit_log
     RAISING
       zcx_abapgit_exception .
 ENDINTERFACE.

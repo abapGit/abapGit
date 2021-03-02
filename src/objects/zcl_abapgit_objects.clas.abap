@@ -42,7 +42,6 @@ CLASS zcl_abapgit_objects DEFINITION
       IMPORTING
         !it_tadir  TYPE zif_abapgit_definitions=>ty_tadir_tt
         !is_checks TYPE zif_abapgit_definitions=>ty_delete_checks OPTIONAL
-        !ii_log    TYPE REF TO zif_abapgit_log OPTIONAL
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS jump
@@ -511,6 +510,10 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           lx_error    TYPE REF TO zcx_abapgit_exception,
           lv_count    TYPE i.
 
+    DATA li_log TYPE REF TO zif_abapgit_log.
+
+    CREATE OBJECT li_log TYPE zcl_abapgit_log EXPORTING iv_title = 'Object deletion log'.
+
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
 
     lt_tadir = it_tadir.
@@ -557,12 +560,12 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
             " make sure to save object deletions
             COMMIT WORK.
           CATCH zcx_abapgit_exception INTO lx_error.
-            IF ii_log IS BOUND.
-              ii_log->add_exception( ix_exc  = lx_error
-                                     is_item = ls_item ).
-              ii_log->add_error( iv_msg = |Deletion of object { ls_item-obj_name } failed|
-                                 is_item = ls_item ).
-            ENDIF.
+            li_log->add_exception(
+              ix_exc  = lx_error
+              is_item = ls_item ).
+            li_log->add_error(
+              iv_msg = |Deletion of object { ls_item-obj_name } failed|
+              is_item = ls_item ).
         ENDTRY.
 
       ENDLOOP.
@@ -576,7 +579,9 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     zcl_abapgit_default_transport=>get_instance( )->reset( ).
 
     IF lx_error IS BOUND AND lines( lt_tadir ) > 0.
-      zcx_abapgit_exception=>raise( 'Error during uninstall. Check the log.' ).
+      zcx_abapgit_exception=>raise(
+        iv_text = 'Error during uninstall. Check the log.'
+        ii_log  = li_log ).
     ENDIF.
 
     li_progress->off( ).

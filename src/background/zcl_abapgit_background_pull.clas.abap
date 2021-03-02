@@ -39,8 +39,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PULL IMPLEMENTATION.
       <ls_overwrite>-decision = zif_abapgit_definitions=>gc_yes.
     ENDLOOP.
 
-    io_repo->deserialize( is_checks = ls_checks
-                          ii_log    = ii_log ).
+    ri_log = io_repo->deserialize( is_checks = ls_checks ).
 
   ENDMETHOD.
 ENDCLASS.

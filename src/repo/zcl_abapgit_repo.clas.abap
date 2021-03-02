@@ -68,7 +68,8 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS deserialize
       IMPORTING
         !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
-        !ii_log    TYPE REF TO zif_abapgit_log
+      RETURNING
+        VALUE(ri_log) TYPE REF TO zcl_abapgit_log
       RAISING
         zcx_abapgit_exception .
     METHODS refresh
@@ -331,6 +332,8 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     DATA: lt_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
           lx_error         TYPE REF TO zcx_abapgit_exception.
 
+    CREATE OBJECT ri_log TYPE zcl_abapgit_log EXPORTING iv_title = 'Deserialization log'.
+
     find_remote_dot_abapgit( ).
     find_remote_dot_apack( ).
 
@@ -353,7 +356,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
         lt_updated_files = zcl_abapgit_objects=>deserialize(
             io_repo   = me
             is_checks = is_checks
-            ii_log    = ii_log ).
+            ii_log    = ri_log ).
       CATCH zcx_abapgit_exception INTO lx_error.
 * ensure to reset default transport request task
         zcl_abapgit_default_transport=>get_instance( )->reset( ).
@@ -362,7 +365,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     APPEND get_dot_abapgit( )->get_signature( ) TO lt_updated_files.
 
-    CLEAR: mt_local.
+    CLEAR mt_local.
 
     update_local_checksums( lt_updated_files ).
     update_last_deserialize( ).

@@ -141,11 +141,13 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_FI IMPLEMENTATION.
           lv_name    TYPE string,
           lv_email   TYPE string.
 
-    mi_log = ii_log.
+    CREATE OBJECT ri_log TYPE zcl_abapgit_log EXPORTING iv_title = 'Background push log'.
+    mi_log = ri_log.
+
     ls_files = zcl_abapgit_factory=>get_stage_logic( )->get( io_repo ).
 
     IF lines( ls_files-local ) = 0 AND lines( ls_files-remote ) = 0.
-      ii_log->add_info( 'Nothing to stage' ).
+      mi_log->add_info( 'Nothing to stage' ).
       RETURN.
     ENDIF.
 
