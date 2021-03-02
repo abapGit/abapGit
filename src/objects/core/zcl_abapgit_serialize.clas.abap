@@ -35,6 +35,11 @@ CLASS zcl_abapgit_serialize DEFINITION
         zcx_abapgit_exception .
   PROTECTED SECTION.
 
+    TYPES: BEGIN OF ty_unsupported_count,
+             obj_type TYPE tadir-object,
+             count    TYPE i,
+           END OF ty_unsupported_count,
+           ty_unsupported_count_tt TYPE HASHED TABLE OF ty_unsupported_count WITH UNIQUE KEY obj_type.
     TYPES:
       ty_char32 TYPE c LENGTH 32 .
 
@@ -102,12 +107,15 @@ CLASS zcl_abapgit_serialize DEFINITION
         VALUE(rv_threads)    TYPE i
       RAISING
         zcx_abapgit_exception .
+    METHODS filter_unsupported_objects
+      CHANGING
+        !ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_serialize IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
 
   METHOD add_apack.
@@ -326,6 +334,39 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD filter_unsupported_objects.
+
+    DATA: ls_unsupported_count TYPE ty_unsupported_count,
+          lt_supported_types   TYPE zcl_abapgit_objects=>ty_types_tt,
+          lt_unsupported_count TYPE ty_unsupported_count_tt.
+
+    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF ct_tadir.
+
+    lt_supported_types = zcl_abapgit_objects=>supported_list( ).
+    LOOP AT ct_tadir ASSIGNING <ls_tadir>.
+      CLEAR: ls_unsupported_count.
+      IF NOT line_exists( lt_supported_types[ table_line = <ls_tadir>-object ] ).
+        ls_unsupported_count-obj_type = <ls_tadir>-object.
+        ls_unsupported_count-count    = 1.
+        COLLECT ls_unsupported_count INTO lt_unsupported_count.
+        CLEAR: <ls_tadir>-object.
+      ENDIF.
+    ENDLOOP.
+    IF lt_unsupported_count IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    DELETE ct_tadir WHERE object IS INITIAL.
+    IF mi_log IS BOUND.
+      LOOP AT lt_unsupported_count INTO ls_unsupported_count.
+        mi_log->add_error( iv_msg  = |Object type { ls_unsupported_count-obj_type } not supported, {
+                                     ls_unsupported_count-count } object(s) ignored| ).
+      ENDLOOP.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD on_end_of_task.
 
 * this method will be called from the parallel processing, thus it must be public
@@ -440,7 +481,8 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 * serializes only objects
 
     DATA: lv_max      TYPE i,
-          li_progress TYPE REF TO zif_abapgit_progress.
+          li_progress TYPE REF TO zif_abapgit_progress,
+          lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
 
@@ -451,9 +493,11 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     mv_free = lv_max.
     mi_log = ii_log.
 
-    li_progress = zcl_abapgit_progress=>get_instance( lines( it_tadir ) ).
+    lt_tadir = it_tadir.
+    filter_unsupported_objects( CHANGING ct_tadir = lt_tadir ).
+    li_progress = zcl_abapgit_progress=>get_instance( lines( lt_tadir ) ).
 
-    LOOP AT it_tadir ASSIGNING <ls_tadir>.
+    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
 
       li_progress->show(
         iv_current = sy-tabix
