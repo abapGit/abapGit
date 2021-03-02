@@ -135,7 +135,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
     " Notmal exception
     TRY.
-      zcx_abapgit_exception=>raise( 'Error!' ).
+        zcx_abapgit_exception=>raise( 'Error!' ).
     CATCH zcx_abapgit_exception INTO lo_x.
       mi_cut = zcl_abapgit_log=>from_exception( lo_x ).
     ENDTRY.
