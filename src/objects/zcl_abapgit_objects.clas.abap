@@ -512,9 +512,9 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     DATA li_log TYPE REF TO zif_abapgit_log.
 
-    CREATE OBJECT li_log TYPE zcl_abapgit_log EXPORTING iv_title = 'Object deletion log'.
-
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
+
+    CREATE OBJECT li_log TYPE zcl_abapgit_log EXPORTING iv_title = 'Object deletion log'.
 
     lt_tadir = it_tadir.
 

@@ -303,12 +303,10 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
         IF li_gui_error_handler IS BOUND AND li_gui_error_handler->handle_error( ix_exception ) = abap_true.
           " We rerender the current page to display the error box
           render( ).
+        ELSEIF ix_exception->mi_log IS BOUND AND ix_exception->mi_log->count( ) > 0.
+          zcl_abapgit_log_viewer=>show_log( ix_exception->mi_log ).
         ELSE.
-          IF ix_exception->mi_log IS BOUND AND ix_exception->mi_log->count( ) > 0.
-            zcl_abapgit_log_viewer=>show_log( ix_exception->mi_log ).
-          ELSE.
-            MESSAGE ix_exception TYPE 'S' DISPLAY LIKE 'E'.
-          ENDIF.
+          MESSAGE ix_exception TYPE 'S' DISPLAY LIKE 'E'.
         ENDIF.
 
       CATCH zcx_abapgit_exception cx_sy_move_cast_error INTO lx_exception.

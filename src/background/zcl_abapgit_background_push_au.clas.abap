@@ -36,7 +36,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_background_push_au IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_AU IMPLEMENTATION.
 
 
   METHOD build_comment.
@@ -233,11 +233,13 @@ CLASS zcl_abapgit_background_push_au IMPLEMENTATION.
 
     DATA: ls_files TYPE zif_abapgit_definitions=>ty_stage_files.
 
-    mi_log = ii_log.
+    CREATE OBJECT ri_log TYPE zcl_abapgit_log EXPORTING iv_title = 'Background push log'.
+    mi_log = ri_log.
+
     ls_files = zcl_abapgit_factory=>get_stage_logic( )->get( io_repo ).
 
     IF lines( ls_files-local ) = 0 AND lines( ls_files-remote ) = 0.
-      ii_log->add_info( 'Nothing to stage' ).
+      mi_log->add_info( 'Nothing to stage' ).
       RETURN.
     ENDIF.
 
