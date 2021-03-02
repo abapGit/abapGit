@@ -241,8 +241,7 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
           ENDIF.
           CONTINUE.
         WHEN OTHERS. "unknown
-          rv_status = zif_abapgit_log=>c_status-error. " it is a bug probably, so not OK
-          CONTINUE.
+          ASSERT 0 = 1.
       ENDCASE.
     ENDLOOP.
 

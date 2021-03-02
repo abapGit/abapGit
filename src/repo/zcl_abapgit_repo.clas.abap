@@ -75,8 +75,6 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS refresh
       IMPORTING
         !iv_drop_cache TYPE abap_bool DEFAULT abap_false
-        !iv_drop_log   TYPE abap_bool DEFAULT abap_true
-          PREFERRED PARAMETER iv_drop_cache
       RAISING
         zcx_abapgit_exception .
     METHODS update_local_checksums
@@ -124,11 +122,6 @@ CLASS zcl_abapgit_repo DEFINITION
         !iv_offline TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
-    METHODS create_new_log
-      IMPORTING
-        !iv_title     TYPE string OPTIONAL
-      RETURNING
-        VALUE(ri_log) TYPE REF TO zif_abapgit_log .
     METHODS get_log
       RETURNING
         VALUE(ri_log) TYPE REF TO zif_abapgit_log .
@@ -305,14 +298,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     ms_data = is_data.
     mv_request_remote_refresh = abap_true.
-
-  ENDMETHOD.
-
-
-  METHOD create_new_log.
-
-    CREATE OBJECT mi_log TYPE zcl_abapgit_log EXPORTING iv_title = iv_title.
-    ri_log = mi_log.
 
   ENDMETHOD.
 
@@ -649,10 +634,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     mv_request_local_refresh = abap_true.
     reset_remote( ).
-
-    IF iv_drop_log = abap_true.
-      CLEAR mi_log.
-    ENDIF.
 
     IF iv_drop_cache = abap_true.
       CLEAR mt_local.
