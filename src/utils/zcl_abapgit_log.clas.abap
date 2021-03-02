@@ -10,6 +10,12 @@ CLASS zcl_abapgit_log DEFINITION
       IMPORTING
         iv_title TYPE string OPTIONAL.
 
+    CLASS-METHODS from_exception
+      IMPORTING
+        io_x TYPE REF TO cx_root
+      RETURNING
+        VALUE(ro_log) TYPE REF TO zcl_abapgit_log.
+
   PROTECTED SECTION.
 
     TYPES:
@@ -40,6 +46,17 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
   METHOD constructor.
 
     zif_abapgit_log~set_title( iv_title ).
+
+  ENDMETHOD.
+
+
+  METHOD from_exception.
+
+    CREATE OBJECT ro_log.
+
+    IF io_x IS BOUND.
+      ro_log->zif_abapgit_log~add_exception( io_x ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -248,7 +265,20 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_log~merge_with.
+
+    DATA lo_log TYPE REF TO zcl_abapgit_log.
+
+    IF ii_log IS BOUND.
+      lo_log ?= ii_log.
+      APPEND LINES OF lo_log->mt_log TO mt_log.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_log~set_title.
     mv_title = iv_title.
+    ri_log = me.
   ENDMETHOD.
 ENDCLASS.

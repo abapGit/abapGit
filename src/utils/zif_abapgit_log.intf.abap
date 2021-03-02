@@ -87,5 +87,10 @@ INTERFACE zif_abapgit_log
       VALUE(rv_title) TYPE string .
   METHODS set_title
     IMPORTING
-      !iv_title TYPE csequence .
+      !iv_title TYPE csequence
+    RETURNING
+      VALUE(ri_log) TYPE REF TO zif_abapgit_log.
+  METHODS merge_with
+    IMPORTING
+      ii_log TYPE REF TO zif_abapgit_log.
 ENDINTERFACE.
