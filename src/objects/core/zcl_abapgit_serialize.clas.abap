@@ -37,6 +37,7 @@ CLASS zcl_abapgit_serialize DEFINITION
 
     TYPES: BEGIN OF ty_unsupported_count,
              obj_type TYPE tadir-object,
+             obj_name TYPE tadir-obj_name,
              count    TYPE i,
            END OF ty_unsupported_count,
            ty_unsupported_count_tt TYPE HASHED TABLE OF ty_unsupported_count WITH UNIQUE KEY obj_type.
@@ -340,18 +341,29 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
           lt_supported_types   TYPE zcl_abapgit_objects=>ty_types_tt,
           lt_unsupported_count TYPE ty_unsupported_count_tt.
 
-    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF ct_tadir.
+    FIELD-SYMBOLS: <ls_tadir>             LIKE LINE OF ct_tadir,
+                   <ls_unsupported_count> TYPE ty_unsupported_count.
 
     lt_supported_types = zcl_abapgit_objects=>supported_list( ).
     LOOP AT ct_tadir ASSIGNING <ls_tadir>.
       CLEAR: ls_unsupported_count.
       READ TABLE lt_supported_types WITH KEY table_line = <ls_tadir>-object TRANSPORTING NO FIELDS.
+      IF sy-subrc = 0.
+        CONTINUE.
+      ENDIF.
+
+      READ TABLE lt_unsupported_count ASSIGNING <ls_unsupported_count>
+                                      WITH TABLE KEY obj_type = <ls_tadir>-object.
       IF sy-subrc <> 0.
         ls_unsupported_count-obj_type = <ls_tadir>-object.
         ls_unsupported_count-count    = 1.
-        COLLECT ls_unsupported_count INTO lt_unsupported_count.
-        CLEAR: <ls_tadir>-object.
+        ls_unsupported_count-obj_name = <ls_tadir>-obj_name.
+        INSERT ls_unsupported_count INTO TABLE lt_unsupported_count ASSIGNING <ls_unsupported_count>.
+      ELSE.
+        CLEAR: <ls_unsupported_count>-obj_name.
+        <ls_unsupported_count>-count = <ls_unsupported_count>-count + 1.
       ENDIF.
+      CLEAR: <ls_tadir>-object.
     ENDLOOP.
     IF lt_unsupported_count IS INITIAL.
       RETURN.
@@ -359,9 +371,14 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
     DELETE ct_tadir WHERE object IS INITIAL.
     IF mi_log IS BOUND.
-      LOOP AT lt_unsupported_count INTO ls_unsupported_count.
-        mi_log->add_error( iv_msg  = |Object type { ls_unsupported_count-obj_type } not supported, {
-                                     ls_unsupported_count-count } object(s) ignored| ).
+      LOOP AT lt_unsupported_count ASSIGNING <ls_unsupported_count>.
+        IF <ls_unsupported_count>-count = 1.
+          mi_log->add_error( iv_msg  = |Object type { <ls_unsupported_count>-obj_type } not supported, {
+                                       <ls_unsupported_count>-obj_name } ignored| ).
+        ELSE.
+          mi_log->add_error( iv_msg  = |Object type { <ls_unsupported_count>-obj_type } not supported, {
+                                       <ls_unsupported_count>-count } object(s) ignored| ).
+        ENDIF.
       ENDLOOP.
     ENDIF.
 
