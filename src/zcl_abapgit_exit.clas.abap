@@ -194,4 +194,16 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_exit~tespre_calculate_repo_status.
+
+    TRY.
+        gi_exit->tespre_calculate_repo_status(
+          CHANGING
+            ct_local  = ct_local
+            ct_remote = ct_remote ).
+      CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+    ENDTRY.
+
+  ENDMETHOD.
+
 ENDCLASS.
