@@ -146,13 +146,17 @@ CLASS ZCL_ABAPGIT_OBJECT_TYPE IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: ls_tadir TYPE tadir.
+    DATA: lv_progname TYPE progname,
+          lv_state    TYPE r3state.
 
-    SELECT SINGLE * FROM tadir INTO ls_tadir
-      WHERE pgmid    = 'R3TR'
-        AND object   = ms_item-obj_type
-        AND obj_name = ms_item-obj_name.
-    IF ls_tadir IS NOT INITIAL.
+    lv_progname = |%_C{ ms_item-obj_name }|.
+    SELECT state
+      FROM progdir
+      INTO lv_state
+      UP TO 1 ROWS
+      WHERE name = lv_progname.
+    ENDSELECT.
+    IF lv_state IS NOT INITIAL.
       rv_bool = abap_true.
     ENDIF.
 
