@@ -23,7 +23,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_type IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_TYPE IMPLEMENTATION.
 
 
   METHOD create.
@@ -91,22 +91,6 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
         version_not_found = 1
         reps_not_exist    = 2
         OTHERS            = 3.
-    IF sy-subrc <> 0.
-      " Inactive version
-      CALL FUNCTION 'TYPD_GET_OBJECT'
-        EXPORTING
-          typdname          = lv_typdname
-          r3state           = 'I'
-        TABLES
-          psmodisrc         = lt_psmodisrc
-          psmodilog         = lt_psmodilog
-          psource           = et_source
-          ptrdir            = lt_ptrdir
-        EXCEPTIONS
-          version_not_found = 1
-          reps_not_exist    = 2
-          OTHERS            = 3.
-    ENDIF.
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE zcx_abapgit_not_found.
     ENDIF.
