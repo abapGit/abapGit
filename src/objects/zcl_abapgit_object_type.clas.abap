@@ -11,7 +11,7 @@ CLASS zcl_abapgit_object_type DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS read
       EXPORTING ev_ddtext TYPE ddtypet-ddtext
                 et_source TYPE abaptxt255_tab
-      RAISING   zcx_abapgit_not_found.
+      RAISING   zcx_abapgit_exception.
 
     METHODS create
       IMPORTING iv_ddtext   TYPE ddtypet-ddtext
@@ -92,7 +92,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TYPE IMPLEMENTATION.
         reps_not_exist    = 2
         OTHERS            = 3.
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE zcx_abapgit_not_found.
+      zcx_abapgit_exception=>raise( |No active version found for { ms_item-obj_type } { ms_item-obj_name }| ).
     ENDIF.
 
   ENDMETHOD.
@@ -146,13 +146,15 @@ CLASS ZCL_ABAPGIT_OBJECT_TYPE IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    TRY.
-        read( ).
-        rv_bool = abap_true.
-      CATCH zcx_abapgit_not_found
-            zcx_abapgit_exception.
-        rv_bool = abap_false.
-    ENDTRY.
+    DATA: ls_tadir TYPE tadir.
+
+    SELECT SINGLE * FROM tadir INTO ls_tadir
+      WHERE pgmid    = 'R3TR'
+        AND object   = ms_item-obj_type
+        AND obj_name = ms_item-obj_name.
+    IF ls_tadir IS NOT INITIAL.
+      rv_bool = abap_true.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -193,13 +195,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TYPE IMPLEMENTATION.
           lt_source TYPE abaptxt255_tab.
 
 
-    TRY.
-        read( IMPORTING
-                ev_ddtext = lv_ddtext
-                et_source = lt_source ).
-      CATCH zcx_abapgit_not_found.
-        RETURN.
-    ENDTRY.
+    read( IMPORTING ev_ddtext = lv_ddtext
+                    et_source = lt_source ).
 
     io_xml->add( iv_name = 'DDTEXT'
                  ig_data = lv_ddtext ).
