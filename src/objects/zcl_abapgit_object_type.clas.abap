@@ -150,12 +150,10 @@ CLASS ZCL_ABAPGIT_OBJECT_TYPE IMPLEMENTATION.
           lv_state    TYPE r3state.
 
     lv_progname = |%_C{ ms_item-obj_name }|.
-    SELECT state
+    SELECT SINGLE state
       FROM progdir
       INTO lv_state
-      UP TO 1 ROWS
       WHERE name = lv_progname.
-    ENDSELECT.
     IF lv_state IS NOT INITIAL.
       rv_bool = abap_true.
     ENDIF.
