@@ -15,18 +15,17 @@ CLASS zcl_abapgit_longtexts DEFINITION
         lines TYPE tline_tab,
       END OF ty_longtext .
     TYPES:
-      ty_longtexts TYPE STANDARD TABLE OF ty_longtext
-                             WITH NON-UNIQUE DEFAULT KEY .
+      ty_longtexts TYPE STANDARD TABLE OF ty_longtext WITH NON-UNIQUE DEFAULT KEY .
 
     METHODS read
       IMPORTING
-        !iv_object_name      TYPE sobj_name
-        !iv_longtext_id      TYPE dokil-id
-        !it_dokil            TYPE zif_abapgit_definitions=>ty_dokil_tt
-        !iv_master_lang_only TYPE abap_bool DEFAULT abap_false
-        !iv_clear_fields     TYPE abap_bool DEFAULT abap_true
+        !iv_object_name     TYPE sobj_name
+        !iv_longtext_id     TYPE dokil-id
+        !it_dokil           TYPE zif_abapgit_definitions=>ty_dokil_tt
+        !iv_main_lang_only  TYPE abap_bool DEFAULT abap_false
+        !iv_clear_fields    TYPE abap_bool DEFAULT abap_true
       RETURNING
-        VALUE(rt_longtexts)  TYPE ty_longtexts
+        VALUE(rt_longtexts) TYPE ty_longtexts
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
@@ -51,7 +50,7 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
       lt_dokil = it_dokil.
 
     ELSEIF iv_longtext_id IS NOT INITIAL.
-      IF iv_master_lang_only = abap_true.
+      IF iv_main_lang_only = abap_true.
         SELECT * FROM dokil
                  INTO TABLE lt_dokil
                  WHERE id     = iv_longtext_id
@@ -162,8 +161,8 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
 
   METHOD zif_abapgit_longtexts~deserialize.
 
-    DATA: lt_longtexts     TYPE ty_longtexts,
-          lv_no_masterlang TYPE dokil-masterlang.
+    DATA: lt_longtexts    TYPE ty_longtexts,
+          lv_no_main_lang TYPE dokil-masterlang.
     FIELD-SYMBOLS: <ls_longtext> TYPE ty_longtext.
 
     ii_xml->read(
@@ -174,7 +173,7 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
 
     LOOP AT lt_longtexts ASSIGNING <ls_longtext>.
 
-      lv_no_masterlang = boolc( iv_master_language <> <ls_longtext>-dokil-langu ).
+      lv_no_main_lang = boolc( iv_main_language <> <ls_longtext>-dokil-langu ).
 
       CALL FUNCTION 'DOCU_UPDATE'
         EXPORTING
@@ -182,7 +181,7 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
           state         = c_docu_state_active
           typ           = <ls_longtext>-dokil-typ
           version       = <ls_longtext>-dokil-version
-          no_masterlang = lv_no_masterlang
+          no_masterlang = lv_no_main_lang
         TABLES
           line          = <ls_longtext>-lines.
 
@@ -195,18 +194,18 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
 
     DATA lt_longtexts TYPE ty_longtexts.
     DATA lt_dokil LIKE it_dokil.
-    DATA lv_master_lang_only TYPE abap_bool.
+    DATA lv_main_lang_only TYPE abap_bool.
 
     lt_dokil = it_dokil.
-    lv_master_lang_only = ii_xml->i18n_params( )-serialize_master_lang_only.
-    IF lv_master_lang_only = abap_true.
+    lv_main_lang_only = ii_xml->i18n_params( )-main_language_only.
+    IF lv_main_lang_only = abap_true.
       DELETE lt_dokil WHERE masterlang <> abap_true.
     ENDIF.
 
-    lt_longtexts = read( iv_object_name = iv_object_name
-                         iv_longtext_id = iv_longtext_id
-                         it_dokil       = lt_dokil
-                         iv_master_lang_only = lv_master_lang_only ).
+    lt_longtexts = read( iv_object_name    = iv_object_name
+                         iv_longtext_id    = iv_longtext_id
+                         it_dokil          = lt_dokil
+                         iv_main_lang_only = lv_main_lang_only ).
 
     ii_xml->add( iv_name = iv_longtext_name
                  ig_data = lt_longtexts ).

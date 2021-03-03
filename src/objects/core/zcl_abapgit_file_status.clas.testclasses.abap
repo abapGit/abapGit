@@ -25,7 +25,8 @@ CLASS ltcl_run_checks DEFINITION FOR TESTING RISK LEVEL HARMLESS
       neg_incorrect_path_vs_pack FOR TESTING RAISING zcx_abapgit_exception,
       neg_similar_filenames FOR TESTING RAISING zcx_abapgit_exception,
       neg_empty_filenames FOR TESTING RAISING zcx_abapgit_exception,
-      package_move FOR TESTING RAISING zcx_abapgit_exception.
+      package_move FOR TESTING RAISING zcx_abapgit_exception,
+      check_namespace FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -404,6 +405,34 @@ CLASS ltcl_run_checks IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD check_namespace.
+
+    " 6 Missing namespace
+    append_result( iv_obj_type = 'CLAS'
+                   iv_obj_name = '/NOTEXIST/ZCLASS1'
+                   iv_match    = ' '
+                   iv_lstate   = ' '
+                   iv_rstate   = 'A'
+                   iv_package  = '/NOTEXIST/Z'
+                   iv_path     = '/'
+                   iv_filename = '#notexist#zclass1.clas.xml' ).
+
+    zcl_abapgit_file_status=>run_checks(
+      ii_log     = mi_log
+      it_results = mt_results
+      io_dot     = mo_dot
+      iv_top     = '/NOTEXIST/Z' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mi_log->count( )
+      exp = 1 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mi_log->has_rc( '6' )
+      exp = abap_true ).
+
+  ENDMETHOD.
+
 ENDCLASS.
 
 CLASS lcl_status_result DEFINITION.
@@ -635,6 +664,9 @@ CLASS ltcl_calculate_status DEFINITION FOR TESTING RISK LEVEL HARMLESS
       moved FOR TESTING RAISING zcx_abapgit_exception,
       local_outside_main FOR TESTING RAISING zcx_abapgit_exception,
       complete FOR TESTING RAISING zcx_abapgit_exception,
+      complete_local,
+      complete_remote,
+      complete_state,
       deleted_remotely FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
@@ -779,17 +811,12 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD complete.
-
-    DATA:
-      ls_line TYPE zif_abapgit_definitions=>ty_result,
-      lv_act  TYPE c LENGTH 3,
-      lv_exp  TYPE c LENGTH 3.
+  METHOD complete_local.
 
     mo_helper->add_local(
       iv_path     = '/'
       iv_filename = '.abapgit.xml'
-      iv_sha1     = '1017'  ).
+      iv_sha1     = '1017' ).
     mo_helper->add_local(
       iv_path     = '/src/'
       iv_filename = 'ztest_created_locally.prog.abap'
@@ -842,6 +869,22 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
       iv_path     = '/src/'
       iv_filename = 'package.devc.xml'
       iv_sha1     = '1027' ).
+    mo_helper->add_local(
+      iv_path     = '/src/sub/'
+      iv_filename = 'ztest_move_package.prog.xml'
+      iv_sha1     = '1040' ).
+    mo_helper->add_local(
+      iv_path     = '/src/sub/'
+      iv_filename = 'package.devc.xml'
+      iv_sha1     = '1041' ).
+    mo_helper->add_local(
+      iv_path     = '/src/sub/'
+      iv_filename = 'ztest_move_package_w_change.prog.xml'
+      iv_sha1     = '1042' ).
+
+  ENDMETHOD.
+
+  METHOD complete_remote.
 
     mo_helper->add_remote(
       iv_path     = '/'
@@ -903,6 +946,22 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
       iv_path     = '/src/'
       iv_filename = 'ztest_modified_remotely.prog.xml'
       iv_sha1     = '1031' ).
+    mo_helper->add_remote(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_move_package.prog.xml'
+      iv_sha1     = '1040' ).
+    mo_helper->add_remote(
+      iv_path     = '/src/sub/'
+      iv_filename = 'package.devc.xml'
+      iv_sha1     = '1041' ).
+    mo_helper->add_remote(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_move_package_w_change.prog.xml'
+      iv_sha1     = '2042' ).
+
+  ENDMETHOD.
+
+  METHOD complete_state.
 
     mo_helper->add_state(
       iv_path     = '/'
@@ -968,41 +1027,77 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
       iv_path     = '/src/'
       iv_filename = 'ztest_mod_del.prog.xml'
       iv_sha1     = '1005' ).
+    mo_helper->add_state(
+      iv_path     = '/src/sub/'
+      iv_filename = 'ztest_move_package.prog.xml'
+      iv_sha1     = '1040' ).
+    mo_helper->add_state(
+      iv_path     = '/src/sub/'
+      iv_filename = 'package.devc.xml'
+      iv_sha1     = '1041' ).
+    mo_helper->add_state(
+      iv_path     = '/src/sub/'
+      iv_filename = 'ztest_move_package_w_change.prog.xml'
+      iv_sha1     = '1042' ).
+
+  ENDMETHOD.
+
+  METHOD complete.
+
+    DATA:
+      ls_line TYPE zif_abapgit_definitions=>ty_result,
+      lv_act  TYPE c LENGTH 4,
+      lv_exp  TYPE c LENGTH 4.
+
+    complete_local( ).
+    complete_remote( ).
+    complete_state( ).
 
     mo_result = mo_helper->run( ).
 
-    mo_result->assert_lines( 21 ).
+    mo_result->assert_lines( 26 ).
 
-    DO 21 TIMES.
+    DO 26 TIMES.
       ls_line = mo_result->get_line( sy-index ).
       lv_act+0(1) = ls_line-match.
       lv_act+1(1) = ls_line-lstate.
       lv_act+2(1) = ls_line-rstate.
+      lv_act+3(1) = ls_line-packmove.
       CASE sy-index.
         WHEN 1.
-          lv_exp = 'X  '.
+          lv_exp = 'X  '. " no changes
         WHEN 2.
-          lv_exp = '  A'.
+          lv_exp = '  A'. " add remote
         WHEN 3.
-          lv_exp = 'X  '.
+          lv_exp = 'X  '. " no change
         WHEN 4 OR 5.
-          lv_exp = ' A '.
+          lv_exp = ' A '. " add local
         WHEN 6 OR 7.
-          lv_exp = '  A'.
+          lv_exp = '  A'. " add remote
         WHEN 8 OR 9.
-          lv_exp = ' DM'.
+          lv_exp = ' DM'. " delete local, modify remote
         WHEN 10 OR 11.
-          lv_exp = ' D '.
+          lv_exp = ' D '. " delete local
         WHEN 12 OR 13.
-          lv_exp = '  D'.
+          lv_exp = '  D'. " delete remote
         WHEN 14 OR 15.
-          lv_exp = ' MD'.
+          lv_exp = ' MD'. " modify local, delete remote
         WHEN 16 OR 17.
-          lv_exp = ' MM'.
+          lv_exp = ' MM'. " modify both sides
         WHEN 18 OR 19.
-          lv_exp = ' M '.
+          lv_exp = ' M '. " modify local
         WHEN 20 OR 21.
-          lv_exp = '  M'.
+          lv_exp = '  M'. " modify remote
+        WHEN 22.
+          lv_exp = ' D X'. " package move (no change)
+        WHEN 23.
+          lv_exp = ' D  '. " package move with change
+        WHEN 24.
+          lv_exp = 'X   '. " no chagen
+        WHEN 25.
+          lv_exp = ' A X'. " package move (no change)
+        WHEN 26.
+          lv_exp = ' A  '. " package move with change
       ENDCASE.
 
       cl_abap_unit_assert=>assert_equals(
@@ -1014,11 +1109,6 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD deleted_remotely.
-
-    DATA:
-      ls_line TYPE zif_abapgit_definitions=>ty_result,
-      lv_act  TYPE c LENGTH 3,
-      lv_exp  TYPE c LENGTH 3.
 
     mo_helper->add_local(
       iv_path     = '/src/'

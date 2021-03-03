@@ -6,11 +6,26 @@ CLASS zcl_abapgit_object_para DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    METHODS unlock
+      IMPORTING
+        !iv_paramid TYPE memoryid .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
+CLASS zcl_abapgit_object_para IMPLEMENTATION.
+
+
+  METHOD unlock.
+
+    CALL FUNCTION 'RS_ACCESS_PERMISSION'
+      EXPORTING
+        mode         = 'FREE'
+        object       = iv_paramid
+        object_class = 'PARA'.
+
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -54,12 +69,14 @@ CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
     SELECT COUNT(*) FROM cross
       WHERE ( type = 'P' OR type = 'Q' ) AND name = lv_paramid.
     IF sy-subrc = 0.
+      unlock( lv_paramid ).
       zcx_abapgit_exception=>raise( 'PARA: Parameter is still used' ).
     ELSE.
       SELECT COUNT(*) FROM dd04l BYPASSING BUFFER
         WHERE memoryid = lv_paramid
         AND as4local = 'A'.
       IF sy-subrc = 0.
+        unlock( lv_paramid ).
         zcx_abapgit_exception=>raise( 'PARA: Parameter is still used' ).
       ENDIF.
     ENDIF.
@@ -89,14 +106,11 @@ CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
             type      = 'CR'.
       ENDIF.
     ELSE.
-      zcx_abapgit_exception=>raise( 'error from RS_CORR_INSERT' ).
+      unlock( lv_paramid ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    CALL FUNCTION 'RS_ACCESS_PERMISSION'
-      EXPORTING
-        mode         = 'FREE'
-        object       = lv_paramid
-        object_class = 'PARA'.
+    unlock( lv_paramid ).
 
   ENDMETHOD.
 
@@ -137,7 +151,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
         unknown_objectclass = 3
         OTHERS              = 4.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_CORR_INSERT, PARA' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     MODIFY tpara FROM ls_tpara.                           "#EC CI_SUBRC

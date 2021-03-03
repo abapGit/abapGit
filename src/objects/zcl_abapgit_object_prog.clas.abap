@@ -69,7 +69,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
 
-    IF ii_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+    IF ii_xml->i18n_params( )-main_language_only = abap_true.
       RETURN.
     ENDIF.
 
@@ -111,15 +111,21 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_program  LIKE sy-repid,
-          lv_obj_name TYPE e071-obj_name.
+    DATA:
+      lv_program    LIKE sy-repid,
+      lv_obj_name   TYPE e071-obj_name,
+      lv_corrnumber TYPE e071-trkorr.
 
     lv_program = ms_item-obj_name.
+    lv_corrnumber = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
 
     CALL FUNCTION 'RS_DELETE_PROGRAM'
       EXPORTING
+        corrnumber                 = lv_corrnumber
         program                    = lv_program
         suppress_popup             = abap_true
+        mass_delete_call           = abap_true
+        tadir_devclass             = iv_package
         force_delete_used_includes = abap_true
       EXCEPTIONS
         enqueue_lock               = 1
@@ -148,7 +154,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
           immediate              = 'X'
           actualize_working_area = 'X'.
     ELSEIF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from RS_DELETE_PROGRAM: { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     delete_longtexts( c_longtext_id_prog ).
@@ -199,6 +205,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
     " Texts deserializing (translations)
     deserialize_texts( io_xml ).
+    deserialize_lxe_texts( io_xml ).
 
     deserialize_longtexts( io_xml ).
 
@@ -272,7 +279,13 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
                        io_files = mo_files ).
 
     " Texts serializing (translations)
-    serialize_texts( io_xml ).
+    IF io_xml->i18n_params( )-translation_languages IS INITIAL.
+      " Old I18N option
+      serialize_texts( io_xml ).
+    ELSE.
+      " New LXE option
+      serialize_lxe_texts( io_xml ).
+    ENDIF.
 
     serialize_longtexts( ii_xml         = io_xml
                          iv_longtext_id = c_longtext_id_prog ).

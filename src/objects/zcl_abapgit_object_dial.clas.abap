@@ -20,7 +20,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_DIAL IMPLEMENTATION.
+CLASS zcl_abapgit_object_dial IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -180,7 +180,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DIAL IMPLEMENTATION.
         OTHERS           = 2.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from RS_DIALOG_SHOW, DIAL| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.

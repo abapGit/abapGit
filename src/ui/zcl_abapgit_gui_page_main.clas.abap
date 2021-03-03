@@ -89,7 +89,6 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA: lv_key TYPE zif_abapgit_persistence=>ty_value.
-    DATA: lo_repo TYPE REF TO zcl_abapgit_repo.
 
     lv_key = ii_event->query( )->get( 'KEY' ).
 
@@ -133,13 +132,6 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_patch
           EXPORTING
             iv_key = lv_key.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-
-      WHEN zif_abapgit_definitions=>c_action-repo_settings.
-
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_repo_sett
-          EXPORTING
-            io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN OTHERS.

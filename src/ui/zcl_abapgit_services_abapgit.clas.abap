@@ -5,13 +5,11 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
 
   PUBLIC SECTION.
 
-    CONSTANTS: c_abapgit_repo     TYPE string   VALUE 'https://github.com/abapGit/abapGit'     ##NO_TEXT,
-               c_abapgit_homepage TYPE string   VALUE 'https://www.abapgit.org'                ##NO_TEXT,
-               c_abapgit_wikipage TYPE string   VALUE 'https://docs.abapgit.org'               ##NO_TEXT,
-               c_dotabap_homepage TYPE string   VALUE 'https://dotabap.org'               ##NO_TEXT,
-               c_abapgit_package  TYPE devclass VALUE '$ABAPGIT'                              ##NO_TEXT,
-               c_abapgit_url      TYPE string   VALUE 'https://github.com/abapGit/abapGit.git' ##NO_TEXT,
-               c_abapgit_class    TYPE tcode    VALUE `ZCL_ABAPGIT_REPO`                      ##NO_TEXT.
+    CONSTANTS c_abapgit_repo TYPE string VALUE 'https://github.com/abapGit/abapGit' ##NO_TEXT.
+    CONSTANTS c_abapgit_homepage TYPE string VALUE 'https://www.abapgit.org' ##NO_TEXT.
+    CONSTANTS c_abapgit_wikipage TYPE string VALUE 'https://docs.abapgit.org' ##NO_TEXT.
+    CONSTANTS c_dotabap_homepage TYPE string VALUE 'https://dotabap.org' ##NO_TEXT.
+    CONSTANTS c_abapgit_class TYPE seoclsname VALUE `ZCX_ABAPGIT_EXCEPTION` ##NO_TEXT.
 
     CLASS-METHODS open_abapgit_homepage
       RAISING
@@ -25,9 +23,6 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
     CLASS-METHODS open_abapgit_changelog
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS install_abapgit
-      RAISING
-        zcx_abapgit_exception .
     CLASS-METHODS is_installed
       RETURNING
         VALUE(rv_devclass) TYPE tadir-devclass .
@@ -36,31 +31,23 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
         zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
-    CLASS-METHODS do_install
-      IMPORTING iv_title   TYPE c
-                iv_text    TYPE c
-                iv_url     TYPE string
-                iv_package TYPE devclass
-      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS set_start_repo_from_package
       IMPORTING
-        iv_package TYPE devclass
+        !iv_package TYPE devclass
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     CLASS-METHODS get_package_from_adt
       RETURNING
-        VALUE(rv_package) TYPE devclass.
+        VALUE(rv_package) TYPE devclass .
     CLASS-METHODS check_sapgui
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
 
 
   METHOD check_sapgui.
@@ -98,45 +85,6 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
       ls_settings-hide_sapgui_hint = abap_true.
       li_user_persistence->set_settings( ls_settings ).
     ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD do_install.
-
-    DATA: lo_repo   TYPE REF TO zcl_abapgit_repo_online,
-          lv_answer TYPE c LENGTH 1.
-
-
-    lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
-      iv_titlebar              = iv_title
-      iv_text_question         = iv_text
-      iv_text_button_1         = 'Continue'
-      iv_text_button_2         = 'Cancel'
-      iv_default_button        = '2'
-      iv_display_cancel_button = abap_false ).
-
-    IF lv_answer <> '1'.
-      RETURN.
-    ENDIF.
-
-    IF abap_false = zcl_abapgit_repo_srv=>get_instance( )->is_repo_installed(
-        iv_url              = iv_url
-        iv_target_package   = iv_package ).
-
-      zcl_abapgit_factory=>get_sap_package( iv_package )->create_local( ).
-
-      lo_repo = zcl_abapgit_repo_srv=>get_instance( )->new_online(
-        iv_url         = iv_url
-        iv_branch_name = zif_abapgit_definitions=>c_git_branch-master
-        iv_package     = iv_package ).
-
-      zcl_abapgit_services_repo=>gui_deserialize( lo_repo ).
-
-      zcl_abapgit_services_repo=>toggle_favorite( lo_repo->get_key( ) ).
-    ENDIF.
-
-    COMMIT WORK.
 
   ENDMETHOD.
 
@@ -195,29 +143,6 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
         " Some problems with dynamic ADT access.
         " Let's ignore it for now and fail silently
     ENDTRY.
-
-  ENDMETHOD.
-
-
-  METHOD install_abapgit.
-
-    CONSTANTS lc_title TYPE c LENGTH 40 VALUE 'Install abapGit'.
-    DATA lv_text       TYPE c LENGTH 100.
-
-    IF NOT is_installed( ) IS INITIAL.
-      lv_text = 'Seems like abapGit package is already installed. No changes to be done'.
-      zcl_abapgit_ui_factory=>get_popups( )->popup_to_inform(
-        iv_titlebar     = lc_title
-        iv_text_message = lv_text ).
-      RETURN.
-    ENDIF.
-
-    lv_text = |Confirm to install current version of abapGit to package { c_abapgit_package }|.
-
-    do_install( iv_title   = lc_title
-                iv_text    = lv_text
-                iv_url     = c_abapgit_url
-                iv_package = c_abapgit_package ).
 
   ENDMETHOD.
 

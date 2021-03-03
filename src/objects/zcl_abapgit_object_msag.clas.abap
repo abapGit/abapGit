@@ -164,8 +164,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
           lt_doku_object_names          TYPE STANDARD TABLE OF dokhl-object
                           WITH NON-UNIQUE DEFAULT KEY,
           lt_dokil            TYPE zif_abapgit_definitions=>ty_dokil_tt,
-          ls_dokil            LIKE LINE OF lt_dokil,
-          lv_master_lang_only TYPE abap_bool.
+          ls_dokil            LIKE LINE OF lt_dokil.
 
     FIELD-SYMBOLS: <ls_t100>  TYPE t100.
 
@@ -180,8 +179,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 
     ENDLOOP.
 
-    lv_master_lang_only = ii_xml->i18n_params( )-serialize_master_lang_only.
-    IF lv_master_lang_only = abap_true.
+    IF ii_xml->i18n_params( )-main_language_only = abap_true.
       SELECT * FROM dokil
         INTO TABLE lt_dokil
         FOR ALL ENTRIES IN lt_doku_object_names
@@ -218,7 +216,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 
     lv_msg_id = ms_item-obj_name.
 
-    IF ii_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+    IF ii_xml->i18n_params( )-main_language_only = abap_true.
       RETURN. " skip
     ENDIF.
 
@@ -303,7 +301,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
         OTHERS          = 1.
 
     IF sy-subrc <> 0 OR lv_frozen <> space.
-      zcx_abapgit_exception=>raise( 'Error from (copy of) RS_DELETE_MESSAGE_ID' )."can't access
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     lv_access_granted = abap_true.
@@ -323,7 +321,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
       IF lv_access_granted = abap_true.
         free_access_permission( lv_message_id ).
       ENDIF.
-      zcx_abapgit_exception=>raise( 'Error from (copy of) RS_DELETE_MESSAGE_ID' )."can't access
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     delete_msgid( lv_message_id ).

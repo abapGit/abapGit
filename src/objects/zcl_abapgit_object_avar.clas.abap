@@ -105,7 +105,8 @@ CLASS ZCL_ABAPGIT_OBJECT_AVAR IMPLEMENTATION.
       EXCEPTIONS
         no_authorization = 1 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |No authorization for { ls_is-object } { ls_is-name }| ).
+      lo_aab->dequeue( ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     LOOP AT lt_ids INTO ls_is.
@@ -117,15 +118,12 @@ CLASS ZCL_ABAPGIT_OBJECT_AVAR IMPLEMENTATION.
         EXCEPTIONS
           no_authorization     = 1
           id_not_exists        = 2
-          id_not_transportable = 3 ).
-      CASE sy-subrc.
-        WHEN 1.
-          zcx_abapgit_exception=>raise( |No authorization for { ls_is-object } { ls_is-name }| ).
-        WHEN 2.
-          zcx_abapgit_exception=>raise( |{ ls_is-object } { ls_is-name } does not exist| ).
-        WHEN 3.
-          zcx_abapgit_exception=>raise( |{ ls_is-object } { ls_is-name } must be transportable| ).
-      ENDCASE.
+          id_not_transportable = 3
+          OTHERS               = 4 ).
+      IF sy-subrc <> 0.
+        lo_aab->dequeue( ).
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
     ENDLOOP.
 
     tadir_insert( iv_package ).
@@ -139,8 +137,10 @@ CLASS ZCL_ABAPGIT_OBJECT_AVAR IMPLEMENTATION.
         no_changes_found      = 5
         cts_error             = 6 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error saving AVAR { ms_item-obj_name }| ).
+      lo_aab->dequeue( ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
+    lo_aab->dequeue( ).
 
   ENDMETHOD.
 
@@ -170,6 +170,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AVAR IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
+    rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.
 
 

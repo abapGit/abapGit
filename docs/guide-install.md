@@ -13,9 +13,9 @@ abapGit exists in 2 flavours: _standalone_ version or _developer_ version.
 ## Prerequisites ##
 abapGit requires SAP BASIS version 702 or higher.
 
-## Install standalone version ##
-1. Download the [ABAP code](https://raw.githubusercontent.com/abapGit/build/master/zabapgit.abap)(right click -> save-as) to a file.
-2. Via `SE38` or `SE80`, create a new report named `ZABAPGIT_STANDALONE` (formerly `ZABAPGIT_FULL`). NB: Don't use the name `ZABAPGIT` if you plan to install the developer version.
+## Install Standalone Version ##
+1. Download the [ABAP code](https://raw.githubusercontent.com/abapGit/build/main/zabapgit.abap) (right click -> save-as) to a file.
+2. Via `SE38` or `SE80`, create a new report named `ZABAPGIT_STANDALONE` (formerly `ZABAPGIT_FULL`). Note: Do *not* use the name `ZABAPGIT` if you plan to install the developer version.
 3. In source code change mode, upload the code from the file using Utilities -> More Utilities -> Upload/Download -> Upload
 4. Activate
 
@@ -23,21 +23,35 @@ Typically, abapGit will only be used in the development system, so it can be ins
 
 Now you can use abapGit by executing the report in transaction `SE38`.
 
-## Setup SSL ##
-To use the online feature, [SSL must be setup](guide-ssl-setup.html). Offline projects will work behind firewalls and without SSL.
+## Install Developer Version ##
 
-## Install developer version ##
-1. Download latest version
-   1. Go to https://github.com/abapGit/abapGit/
-   2. Select **Code** > **Download ZIP**
-   3. Save file
-2. Connect to SAP in language **EN**
-3. In transaction `SE38`, run program `ZABAPGIT_STANDALONE`
-4. Select **+ Offline**
-5. Select existing package or create new package (eg: a local `$` package)
-5. Select **Import <sup>zip</sup>**
-6. Select *abapGit-master.zip* file
-7. Select **Pull <sup>zip</sup>**
-8. Activate
+In order to contribute to the abapGit project, you install the developer version. First, logon to your SAP system in English (language **EN**) and install the standalone version (see above).
 
-Transaction `ZABAPGIT` is now available
+### Online (Recommended)
+
+Prerequisite to using the online feature is that [SSL must be setup](guide-ssl-setup.html). If your system is not connected to the Internet (e.g. behind a firewall) or doesn't allow proper SSL configuration, then you can use the offline scenario (see below).
+
+1. Run the standalone version of abapGit
+1. On the repository overview page, select "New Online"
+1. Enter `https://github.com/abapGit/abapGit/` for the URL
+1. Enter package name `$ABAPGIT` (or select an existing or create new package)
+1. Select "Clone Online Repo"
+1. Select "Pull"
+
+Transaction `ZABAPGIT` is now available to run the developer version.
+
+### Offline
+
+Download latest version of the abapGit developer version from https://github.com/abapGit/abapGit/. Select **Code** > **Download ZIP** and save the file locally.
+
+![](img/zip_download.png)
+
+1. Run the standalone version of abapGit
+1. On the repository overview page, select "New Offline"
+1. Enter repo name `abapGit` and package name `$ABAPGIT` (or select an existing or create new package)
+1. Select "Create Offline Repo"
+1. Select "Import <sup>zip</sup>"
+1. Select the *abapGit-master.zip* file
+1. Select "Pull <sup>zip</sup>"
+
+Transaction `ZABAPGIT` is now available to run the developer version.

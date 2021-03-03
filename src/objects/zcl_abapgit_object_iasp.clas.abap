@@ -69,7 +69,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_IASP IMPLEMENTATION.
+CLASS zcl_abapgit_object_iasp IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -364,7 +364,7 @@ CLASS ZCL_ABAPGIT_OBJECT_IASP IMPLEMENTATION.
         invalid_object_type = 2
         OTHERS              = 3.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |error from RS_TOOL_ACCESS. Subrc={ sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.

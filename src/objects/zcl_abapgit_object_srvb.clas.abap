@@ -11,6 +11,7 @@ CLASS zcl_abapgit_object_srvb DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RAISING
           zcx_abapgit_exception.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     METHODS:
       clear_fields
@@ -34,6 +35,43 @@ ENDCLASS.
 
 CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
 
+
+  METHOD clear_field.
+
+    FIELD-SYMBOLS: <lv_value> TYPE data.
+
+    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_service_binding
+           TO <lv_value>.
+    ASSERT sy-subrc = 0.
+
+    CLEAR: <lv_value>.
+
+  ENDMETHOD.
+
+
+  METHOD clear_fields.
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'METADATA-CHANGED_AT'
+      CHANGING
+        cs_service_binding = cs_service_binding ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'METADATA-CHANGED_BY'
+      CHANGING
+        cs_service_binding = cs_service_binding ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'METADATA-LANGUAGE'
+      CHANGING
+        cs_service_binding = cs_service_binding ).
+
+  ENDMETHOD.
+
+
   METHOD constructor.
 
     super->constructor(
@@ -51,6 +89,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
+
 
   METHOD zif_abapgit_object~changed_by.
 
@@ -206,7 +245,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
         OTHERS              = 3.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |RC={ sy-subrc } from RS_TOOL_ACCESS| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -247,41 +286,4 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
         ig_data = <ls_service_binding> ).
 
   ENDMETHOD.
-
-
-  METHOD clear_fields.
-
-    clear_field(
-      EXPORTING
-        iv_fieldname          = 'METADATA-CHANGED_AT'
-      CHANGING
-        cs_service_binding = cs_service_binding ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname          = 'METADATA-CHANGED_BY'
-      CHANGING
-        cs_service_binding = cs_service_binding ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname          = 'METADATA-LANGUAGE'
-      CHANGING
-        cs_service_binding = cs_service_binding ).
-
-  ENDMETHOD.
-
-
-  METHOD clear_field.
-
-    FIELD-SYMBOLS: <lv_value> TYPE data.
-
-    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_service_binding
-           TO <lv_value>.
-    ASSERT sy-subrc = 0.
-
-    CLEAR: <lv_value>.
-
-  ENDMETHOD.
-
 ENDCLASS.

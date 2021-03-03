@@ -12,7 +12,7 @@ CLASS zcl_abapgit_gui_event DEFINITION
         !ii_gui_services TYPE REF TO zif_abapgit_gui_services OPTIONAL
         !iv_action       TYPE clike
         !iv_getdata      TYPE clike OPTIONAL
-        !it_postdata     TYPE cnht_post_data_tab OPTIONAL .
+        !it_postdata     TYPE zif_abapgit_html_viewer=>ty_post_data OPTIONAL .
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA mo_query TYPE REF TO zcl_abapgit_string_map.

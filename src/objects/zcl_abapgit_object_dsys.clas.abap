@@ -30,7 +30,7 @@ CLASS zcl_abapgit_object_dsys DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       RAISING
         zcx_abapgit_exception.
 
-    METHODS get_master_lang
+    METHODS get_main_lang
       RETURNING
         VALUE(rv_language) TYPE spras.
 
@@ -38,7 +38,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_DSYS IMPLEMENTATION.
+CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -99,7 +99,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DSYS IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_master_lang.
+  METHOD get_main_lang.
 
     SELECT SINGLE langu FROM dokil INTO rv_language
       WHERE id = c_id
@@ -144,8 +144,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DSYS IMPLEMENTATION.
 
       WHEN 'v2.0.0'.
         zcl_abapgit_factory=>get_longtexts( )->deserialize(
-          ii_xml             = io_xml
-          iv_master_language = mv_language ).
+          ii_xml           = io_xml
+          iv_main_language = mv_language ).
 
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( 'unsupported DSYS version' ).
@@ -201,7 +201,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DSYS IMPLEMENTATION.
 
     DATA lv_lang TYPE sy-langu.
 
-    lv_lang = get_master_lang( ).
+    lv_lang = get_main_lang( ).
 
     CALL FUNCTION 'DSYS_EDIT'
       EXPORTING
@@ -214,7 +214,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DSYS IMPLEMENTATION.
         OTHERS           = 3.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from DSYS_EDIT' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.

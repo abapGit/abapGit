@@ -417,7 +417,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         area_length_error            = 11
         OTHERS                       = 12.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from FUNCTION_INCLUDE_SPLIT' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     ii_xml->read( EXPORTING iv_name = 'AREAT'
@@ -456,7 +456,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         update_func_group_short_text( iv_group      = lv_group
                                       iv_short_text = lv_stext ).
       WHEN OTHERS.
-        zcx_abapgit_exception=>raise( |error from RS_FUNCTION_POOL_INSERT, code: { sy-subrc }| ).
+        zcx_abapgit_exception=>raise_t100( ).
     ENDCASE.
 
   ENDMETHOD.
@@ -479,7 +479,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         function_pool_not_found = 1
         OTHERS                  = 2.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from RS_FUNCTION_POOL_CONTENTS for { lv_area }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
 * The result can also contain function which are lowercase.
@@ -742,7 +742,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         area_length_error            = 11
         OTHERS                       = 12.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from FUNCTION_INCLUDE_SPLIT' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     CONCATENATE lv_namespace 'SAPL' lv_group INTO rv_program.
@@ -852,7 +852,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
 
-    IF ii_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+    IF ii_xml->i18n_params( )-main_language_only = abap_true.
       RETURN.
     ENDIF.
 
@@ -1037,7 +1037,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         cancelled              = 9
         OTHERS                 = 10.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_FUNCTION_POOL_DELETE' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     update_where_used( lt_includes ).
@@ -1071,6 +1071,8 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
     deserialize_texts( iv_prog_name = lv_program_name
                        ii_xml       = io_xml ).
+
+    deserialize_lxe_texts( io_xml ).
 
     io_xml->read( EXPORTING iv_name = 'DYNPROS'
                   CHANGING cg_data = lt_dynpros ).
@@ -1179,8 +1181,14 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     lv_program_name = main_name( ).
     ls_progdir = read_progdir( lv_program_name ).
 
-    serialize_texts( iv_prog_name = lv_program_name
-                     ii_xml       = io_xml ).
+    IF io_xml->i18n_params( )-translation_languages IS INITIAL.
+      " Old I18N option
+      serialize_texts( iv_prog_name = lv_program_name
+                       ii_xml       = io_xml ).
+    ELSE.
+      " New LXE option
+      serialize_lxe_texts( io_xml ).
+    ENDIF.
 
     IF ls_progdir-subc = 'F'.
       lt_dynpros = serialize_dynpros( lv_program_name ).

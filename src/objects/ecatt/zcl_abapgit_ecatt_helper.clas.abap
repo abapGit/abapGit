@@ -27,7 +27,7 @@ CLASS zcl_abapgit_ecatt_helper DEFINITION
         RETURNING
           VALUE(ri_template_over_all) TYPE REF TO if_ixml_document
         RAISING
-          cx_ecatt_apl_xml.
+          cx_ecatt_apl.
 
   PROTECTED SECTION.
   PRIVATE SECTION.

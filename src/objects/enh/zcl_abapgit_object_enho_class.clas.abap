@@ -45,18 +45,35 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
           lv_editorder   TYPE n LENGTH 3,
           lv_methname    TYPE seocpdname,
           lt_abap        TYPE rswsourcet,
-          lx_enh         TYPE REF TO cx_enh_root.
+          lx_enh         TYPE REF TO cx_enh_root,
+          lv_new_em      TYPE abap_bool,
+          lt_files       TYPE zif_abapgit_definitions=>ty_files_tt.
 
-    FIELD-SYMBOLS: <ls_method> LIKE LINE OF lt_tab_methods.
+    FIELD-SYMBOLS: <ls_method> LIKE LINE OF lt_tab_methods,
+                   <ls_file>   TYPE zif_abapgit_definitions=>ty_file.
 
     ii_xml->read( EXPORTING iv_name = 'TAB_METHODS'
                   CHANGING cg_data = lt_tab_methods ).
 
+    lv_new_em = abap_false.
+    lt_files = mo_files->get_files( ).
+    LOOP AT lt_files ASSIGNING <ls_file>
+        WHERE filename CS 'enho.em_'.
+      lv_new_em = abap_true.
+      EXIT.
+    ENDLOOP.
+
+    SORT lt_tab_methods BY meth_header-editorder.
     LOOP AT lt_tab_methods ASSIGNING <ls_method>.
 
-      lv_editorder = <ls_method>-meth_header-editorder.
       lv_methname = <ls_method>-methkey-cmpname.
-      lt_abap = mo_files->read_abap( iv_extra = 'em' && lv_editorder ).
+      IF lv_new_em = abap_true.
+        lt_abap = mo_files->read_abap( iv_extra = 'em_' && lv_methname ).
+      ELSE.
+        " old way
+        lv_editorder = <ls_method>-meth_header-editorder.
+        lt_abap = mo_files->read_abap( iv_extra = 'em' && lv_editorder ).
+      ENDIF.
 
       TRY.
           io_class->add_change_new_method_source(
@@ -102,7 +119,7 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
           permission_error = 3
           OTHERS           = 4.
       IF sy-subrc = 0.
-        mo_files->add_abap( iv_extra = |EM{ <ls_include>-includenr }|
+        mo_files->add_abap( iv_extra = |EM_{ <ls_include>-cpdname }|
                             it_abap  = lt_source ).
       ENDIF.
     ENDLOOP.

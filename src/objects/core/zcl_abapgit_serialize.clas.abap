@@ -6,7 +6,8 @@ CLASS zcl_abapgit_serialize DEFINITION
 
     METHODS constructor
       IMPORTING
-        !iv_serialize_master_lang_only TYPE abap_bool DEFAULT abap_false .
+        !iv_serialize_master_lang_only TYPE abap_bool DEFAULT abap_false
+        !it_translation_langs          TYPE zif_abapgit_definitions=>ty_languages OPTIONAL.
     METHODS on_end_of_task
       IMPORTING
         !p_task TYPE clike .
@@ -27,20 +28,51 @@ CLASS zcl_abapgit_serialize DEFINITION
         !is_local_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings
         !ii_log            TYPE REF TO zif_abapgit_log
         !it_filter         TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
+        !ii_data_config    TYPE REF TO zif_abapgit_data_config OPTIONAL
       RETURNING
         VALUE(rt_files)    TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
         zcx_abapgit_exception .
   PROTECTED SECTION.
-    TYPES: ty_char32 TYPE c LENGTH 32.
+
+    TYPES: BEGIN OF ty_unsupported_count,
+             obj_type TYPE tadir-object,
+             obj_name TYPE tadir-obj_name,
+             count    TYPE i,
+           END OF ty_unsupported_count,
+           ty_unsupported_count_tt TYPE HASHED TABLE OF ty_unsupported_count WITH UNIQUE KEY obj_type.
+    TYPES:
+      ty_char32 TYPE c LENGTH 32 .
 
     CLASS-DATA gv_max_threads TYPE i .
     DATA mt_files TYPE zif_abapgit_definitions=>ty_files_item_tt .
     DATA mv_free TYPE i .
     DATA mi_log TYPE REF TO zif_abapgit_log .
     DATA mv_group TYPE rzlli_apcl .
-    DATA mv_serialize_master_lang_only TYPE abap_bool.
+    DATA mv_serialize_master_lang_only TYPE abap_bool .
+    DATA mt_translation_langs TYPE zif_abapgit_definitions=>ty_languages .
 
+    METHODS add_apack
+      IMPORTING
+        !iv_package TYPE devclass
+      CHANGING
+        !ct_files   TYPE zif_abapgit_definitions=>ty_files_item_tt
+      RAISING
+        zcx_abapgit_exception .
+    METHODS add_data
+      IMPORTING
+        !ii_data_config TYPE REF TO zif_abapgit_data_config
+      CHANGING
+        !ct_files       TYPE zif_abapgit_definitions=>ty_files_item_tt
+      RAISING
+        zcx_abapgit_exception .
+    METHODS add_dot_abapgit
+      IMPORTING
+        !io_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit
+      CHANGING
+        !ct_files       TYPE zif_abapgit_definitions=>ty_files_item_tt
+      RAISING
+        zcx_abapgit_exception .
     METHODS add_to_return
       IMPORTING
         !iv_path      TYPE string
@@ -58,6 +90,17 @@ CLASS zcl_abapgit_serialize DEFINITION
         !iv_language TYPE langu
       RAISING
         zcx_abapgit_exception .
+    METHODS add_objects
+      IMPORTING
+        !iv_package        TYPE devclass
+        !io_dot_abapgit    TYPE REF TO zcl_abapgit_dot_abapgit
+        !is_local_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings
+        !ii_log            TYPE REF TO zif_abapgit_log
+        !it_filter         TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
+      CHANGING
+        VALUE(ct_files)    TYPE zif_abapgit_definitions=>ty_files_item_tt
+      RAISING
+        zcx_abapgit_exception .
     METHODS determine_max_threads
       IMPORTING
         !iv_force_sequential TYPE abap_bool DEFAULT abap_false
@@ -65,12 +108,102 @@ CLASS zcl_abapgit_serialize DEFINITION
         VALUE(rv_threads)    TYPE i
       RAISING
         zcx_abapgit_exception .
+    METHODS filter_unsupported_objects
+      CHANGING
+        !ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_serialize IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
+
+
+  METHOD add_apack.
+
+    DATA ls_apack_file TYPE zif_abapgit_definitions=>ty_file.
+
+    FIELD-SYMBOLS <ls_file> LIKE LINE OF ct_files.
+
+
+    ls_apack_file = zcl_abapgit_apack_helper=>to_file( iv_package ).
+    IF ls_apack_file IS NOT INITIAL.
+      APPEND INITIAL LINE TO ct_files ASSIGNING <ls_file>.
+      <ls_file>-file = ls_apack_file.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD add_data.
+
+    DATA lt_files TYPE zif_abapgit_definitions=>ty_files_tt.
+    DATA ls_file LIKE LINE OF lt_files.
+
+    FIELD-SYMBOLS <ls_return> LIKE LINE OF ct_files.
+
+    IF ii_data_config IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    lt_files = ii_data_config->to_json( ).
+    LOOP AT lt_files INTO ls_file.
+      APPEND INITIAL LINE TO ct_files ASSIGNING <ls_return>.
+      <ls_return>-file = ls_file.
+    ENDLOOP.
+
+    lt_files = zcl_abapgit_data_factory=>get_serializer( )->serialize( ii_data_config ).
+    LOOP AT lt_files INTO ls_file.
+      APPEND INITIAL LINE TO ct_files ASSIGNING <ls_return>.
+      <ls_return>-file = ls_file.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD add_dot_abapgit.
+
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF ct_files.
+
+    APPEND INITIAL LINE TO ct_files ASSIGNING <ls_file>.
+    <ls_file>-file = io_dot_abapgit->to_file( ).
+
+  ENDMETHOD.
+
+
+  METHOD add_objects.
+
+    DATA: lo_filter TYPE REF TO zcl_abapgit_repo_filter,
+          lv_force  TYPE abap_bool,
+          lt_found  LIKE ct_files,
+          lt_tadir  TYPE zif_abapgit_definitions=>ty_tadir_tt.
+
+
+    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
+      iv_package            = iv_package
+      iv_ignore_subpackages = is_local_settings-ignore_subpackages
+      iv_only_local_objects = is_local_settings-only_local_objects
+      io_dot                = io_dot_abapgit
+      ii_log                = ii_log ).
+
+    CREATE OBJECT lo_filter.
+
+    lo_filter->apply( EXPORTING it_filter = it_filter
+                      CHANGING  ct_tadir  = lt_tadir ).
+
+* if there are less than 10 objects run in single thread
+* this helps a lot when debugging, plus performance gain
+* with low number of objects does not matter much
+    lv_force = boolc( lines( lt_tadir ) < 10 ).
+
+    lt_found = serialize(
+      it_tadir            = lt_tadir
+      iv_language         = io_dot_abapgit->get_master_language( )
+      ii_log              = ii_log
+      iv_force_sequential = lv_force ).
+    APPEND LINES OF lt_found TO ct_files.
+
+  ENDMETHOD.
 
 
   METHOD add_to_return.
@@ -102,6 +235,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     mv_group = 'parallel_generators'.
     mv_serialize_master_lang_only = iv_serialize_master_lang_only.
+    mt_translation_langs = it_translation_langs.
 
   ENDMETHOD.
 
@@ -170,46 +304,83 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
 * serializes objects, including .abapgit.xml, apack, and takes into account local settings
 
-    DATA: ls_apack_file TYPE zif_abapgit_definitions=>ty_file,
-          lo_filter     TYPE REF TO zcl_abapgit_repo_filter,
-          lv_force      TYPE abap_bool,
-          lt_found      LIKE rt_files,
-          lt_tadir      TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    add_dot_abapgit(
+      EXPORTING
+        io_dot_abapgit = io_dot_abapgit
+      CHANGING
+        ct_files       = rt_files ).
 
-    FIELD-SYMBOLS: <ls_return> LIKE LINE OF rt_files.
+    add_apack(
+      EXPORTING
+        iv_package = iv_package
+      CHANGING
+        ct_files   = rt_files ).
 
-    APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
-    <ls_return>-file = io_dot_abapgit->to_file( ).
+    add_data(
+      EXPORTING
+        ii_data_config = ii_data_config
+      CHANGING
+        ct_files       = rt_files ).
 
-    ls_apack_file = zcl_abapgit_apack_helper=>to_file( iv_package ).
-    IF ls_apack_file IS NOT INITIAL.
-      APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
-      <ls_return>-file = ls_apack_file.
+    add_objects(
+      EXPORTING
+        iv_package        = iv_package
+        io_dot_abapgit    = io_dot_abapgit
+        is_local_settings = is_local_settings
+        ii_log            = ii_log
+        it_filter         = it_filter
+      CHANGING
+        ct_files          = rt_files ).
+
+  ENDMETHOD.
+
+
+  METHOD filter_unsupported_objects.
+
+    DATA: ls_unsupported_count TYPE ty_unsupported_count,
+          lt_supported_types   TYPE zcl_abapgit_objects=>ty_types_tt,
+          lt_unsupported_count TYPE ty_unsupported_count_tt.
+
+    FIELD-SYMBOLS: <ls_tadir>             LIKE LINE OF ct_tadir,
+                   <ls_unsupported_count> TYPE ty_unsupported_count.
+
+    lt_supported_types = zcl_abapgit_objects=>supported_list( ).
+    LOOP AT ct_tadir ASSIGNING <ls_tadir>.
+      CLEAR: ls_unsupported_count.
+      READ TABLE lt_supported_types WITH KEY table_line = <ls_tadir>-object TRANSPORTING NO FIELDS.
+      IF sy-subrc = 0.
+        CONTINUE.
+      ENDIF.
+
+      READ TABLE lt_unsupported_count ASSIGNING <ls_unsupported_count>
+                                      WITH TABLE KEY obj_type = <ls_tadir>-object.
+      IF sy-subrc <> 0.
+        ls_unsupported_count-obj_type = <ls_tadir>-object.
+        ls_unsupported_count-count    = 1.
+        ls_unsupported_count-obj_name = <ls_tadir>-obj_name.
+        INSERT ls_unsupported_count INTO TABLE lt_unsupported_count ASSIGNING <ls_unsupported_count>.
+      ELSE.
+        CLEAR: <ls_unsupported_count>-obj_name.
+        <ls_unsupported_count>-count = <ls_unsupported_count>-count + 1.
+      ENDIF.
+      CLEAR: <ls_tadir>-object.
+    ENDLOOP.
+    IF lt_unsupported_count IS INITIAL.
+      RETURN.
     ENDIF.
 
-    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
-      iv_package            = iv_package
-      iv_ignore_subpackages = is_local_settings-ignore_subpackages
-      iv_only_local_objects = is_local_settings-only_local_objects
-      io_dot                = io_dot_abapgit
-      ii_log                = ii_log ).
-
-    CREATE OBJECT lo_filter.
-
-    lo_filter->apply( EXPORTING it_filter = it_filter
-                      CHANGING  ct_tadir  = lt_tadir ).
-
-* if there are less than 10 objects run in single thread
-* this helps a lot when debugging, plus performance gain
-* with low number of objects does not matter much
-    lv_force = boolc( lines( lt_tadir ) < 10 ).
-
-    lt_found = serialize(
-      it_tadir            = lt_tadir
-      iv_language         = io_dot_abapgit->get_master_language( )
-      ii_log              = ii_log
-      iv_force_sequential = lv_force ).
-    APPEND LINES OF lt_found TO rt_files.
+    DELETE ct_tadir WHERE object IS INITIAL.
+    IF mi_log IS BOUND.
+      LOOP AT lt_unsupported_count ASSIGNING <ls_unsupported_count>.
+        IF <ls_unsupported_count>-count = 1.
+          mi_log->add_error( iv_msg  = |Object type { <ls_unsupported_count>-obj_type } not supported, {
+                                       <ls_unsupported_count>-obj_name } ignored| ).
+        ELSE.
+          mi_log->add_error( iv_msg  = |Object type { <ls_unsupported_count>-obj_type } not supported, {
+                                       <ls_unsupported_count>-count } objects ignored| ).
+        ENDIF.
+      ENDLOOP.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -305,9 +476,10 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     TRY.
         ls_file_item = zcl_abapgit_objects=>serialize(
-          is_item     = ls_file_item-item
+          is_item                       = ls_file_item-item
           iv_serialize_master_lang_only = mv_serialize_master_lang_only
-          iv_language = iv_language ).
+          it_translation_langs          = mt_translation_langs
+          iv_language                   = iv_language ).
 
         add_to_return( is_file_item = ls_file_item
                        iv_path      = is_tadir-path ).
@@ -324,8 +496,11 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
   METHOD serialize.
 
+* serializes only objects
+
     DATA: lv_max      TYPE i,
-          li_progress TYPE REF TO zif_abapgit_progress.
+          li_progress TYPE REF TO zif_abapgit_progress,
+          lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
 
@@ -336,9 +511,11 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     mv_free = lv_max.
     mi_log = ii_log.
 
-    li_progress = zcl_abapgit_progress=>get_instance( lines( it_tadir ) ).
+    lt_tadir = it_tadir.
+    filter_unsupported_objects( CHANGING ct_tadir = lt_tadir ).
+    li_progress = zcl_abapgit_progress=>get_instance( lines( lt_tadir ) ).
 
-    LOOP AT it_tadir ASSIGNING <ls_tadir>.
+    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
 
       li_progress->show(
         iv_current = sy-tabix

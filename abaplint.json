@@ -37,7 +37,6 @@
       "seoc_exposure_private",
       "seoc_exposure_protected",
       "seoc_exposure_public",
-      "seoc_exposure_public",
       "seoc_version_active",
       "seoc_version_inactive",
       "seok_access_free",
@@ -74,6 +73,10 @@
     "globalMacros": []
   },
   "rules": {
+    "max_one_method_parameter_per_line": true,
+    "prefer_raise_exception_new": true,
+    "use_class_based_exceptions": true,
+    "uncaught_exception": true,
     "intf_referencing_clas": false,
     "method_implemented_twice": true,
     "parser_702_chaining": true,
@@ -115,7 +118,16 @@
       "check": ["^stringtab$", "^SYCHAR01$", "^char2$", "^char20$", "^int4$", "^SYREPID$",
         "^flag$", "^char12$", "^char10$", "^char70$", "^char4$", "^sydatum$", "^syuzeit$",
         "^syst_title$", "^sychar70$", "^char30$", "^char50$",
-        "^numc2$", "^sap_bool$", "^SYCHAR10$", "^sylangu$"]
+        "^numc2$", "^sap_bool$", "^SYCHAR10$", "^sylangu$",
+        "^cl_blue_wb_utility$",
+        "^cl_srvd_wb_object_data$",
+        "^cl_wb_object_operator_factory$",
+        "^cx_wb_object_operation_error$",
+        "^if_srvd_types$",
+        "^if_wb_adt_plugin_resource_co$",
+        "^if_wb_object_data_selection_co$",
+        "^if_wb_object_operator$"
+      ]
     },
     "forbidden_identifier": true,
     "try_without_catch": true,
@@ -147,7 +159,8 @@
     "check_abstract": true,
     "check_text_elements": true,
     "types_naming": {
-      "pattern": "^TY_.+$"
+      "pattern": "^TY_.+$",
+      "exclude": ["/json/"]
     },
     "7bit_ascii": {
       "exclude": ["zcl_abapgit_utils.clas.testclasses.abap"]
@@ -166,7 +179,7 @@
         "W3MI"
       ]
     },
-    "ambiguous_statement": false,
+    "ambiguous_statement": true,
     "avoid_use": {
       "define": true,
       "endselect": true,
@@ -198,7 +211,9 @@
     },
     "constructor_visibility_public": true,
     "contains_tab": true,
-    "definitions_top": true,
+    "definitions_top": {
+      "exclude": ["/json/"]
+    },
     "description_empty": true,
     "double_space": false,
     "empty_line_in_statement": {
@@ -260,7 +275,8 @@
     "local_variable_names": {
       "expectedData": "^L._.*$",
       "expectedConstant": "^LC_.*$",
-      "expectedFS": "^<L._.*>$"
+      "expectedFS": "^<L._.*>$",
+      "exclude": ["/json/"]
     },
     "main_file_contents": true,
     "max_one_statement": true,
@@ -278,7 +294,8 @@
       "exporting": "^E._.*$",
       "ignoreNames": [
         "P_TASK"
-      ]
+      ],
+      "exclude": ["/json/"]
     },
     "mix_returning": true,
     "msag_consistency": true,
@@ -310,6 +327,7 @@
       "refresh": true,
       "compute": true,
       "add": true,
+      "ranges": true,
       "subtract": true,
       "multiply": true,
       "typePools": true,
@@ -320,7 +338,8 @@
       "requested": true,
       "setExtended": true,
       "withHeaderLine": true,
-      "occurs": true
+      "occurs": true,
+      "parameter": true
     },
     "parser_error": {},
     "preferred_compare_operator": {
@@ -337,7 +356,8 @@
     "release_idoc": true,
     "remove_descriptions": {
       "ignoreWorkflow": false,
-      "ignoreExceptions": false
+      "ignoreExceptions": false,
+      "exclude": ["/json/"]
     },
     "rfc_error_handling": false,
     "sequential_blank": {

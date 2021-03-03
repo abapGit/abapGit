@@ -1,15 +1,14 @@
-CLASS zcl_abapgit_object_wdcc DEFINITION PUBLIC
-  INHERITING FROM zcl_abapgit_objects_super.
+CLASS zcl_abapgit_object_wdcc DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_super
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
-    METHODS constructor
-      IMPORTING
-        !is_item     TYPE zif_abapgit_definitions=>ty_item
-        !iv_language TYPE spras.
+    INTERFACES zif_abapgit_object .
 
+    ALIASES mo_files
+      FOR zif_abapgit_object~mo_files .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -17,14 +16,6 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_OBJECT_WDCC IMPLEMENTATION.
-
-
-  METHOD constructor.
-
-    super->constructor( is_item     = is_item
-                        iv_language = iv_language ).
-
-  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -390,18 +381,21 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCC IMPLEMENTATION.
                  ig_data =  ls_orig_config-relid ).
 
     lv_xml_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_data = lv_xml_xstring ).
-    TRY.
-        lv_xml_string = zcl_abapgit_xml_pretty=>print( iv_xml           = lv_xml_string
-                                                       iv_ignore_errors = abap_false ).
-      CATCH zcx_abapgit_exception.    "
-        zcx_abapgit_exception=>raise( 'Error Pretty Printing WDCC XML Content: ' && ms_item-obj_name ).
-    ENDTRY.
+    IF lv_xml_string IS NOT INITIAL.
+      TRY.
+          lv_xml_string = zcl_abapgit_xml_pretty=>print(
+            iv_xml           = lv_xml_string
+            iv_ignore_errors = abap_false ).
+        CATCH zcx_abapgit_exception.
+          zcx_abapgit_exception=>raise( 'Error Pretty Printing WDCC XML Content: ' && ms_item-obj_name ).
+      ENDTRY.
 
-    REPLACE FIRST OCCURRENCE
-      OF REGEX '<\?xml version="1\.0" encoding="[\w-]+"\?>'
-      IN lv_xml_string
-      WITH '<?xml version="1.0" encoding="utf-8"?>'.
-    ASSERT sy-subrc = 0.
+      REPLACE FIRST OCCURRENCE
+        OF REGEX '<\?xml version="1\.0" encoding="[\w-]+"\?>'
+        IN lv_xml_string
+        WITH '<?xml version="1.0" encoding="utf-8"?>'.
+      ASSERT sy-subrc = 0.
+    ENDIF.
 
     mo_files->add_string( iv_extra  = 'comp_config'
                           iv_ext    = 'xml'

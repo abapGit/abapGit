@@ -17,6 +17,7 @@ CLASS zcl_abapgit_gui_page_sett_glob DEFINITION
     METHODS constructor
       RAISING
         zcx_abapgit_exception.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -38,14 +39,17 @@ CLASS zcl_abapgit_gui_page_sett_glob DEFINITION
       END OF c_id.
     CONSTANTS:
       BEGIN OF c_event,
-        go_back      TYPE string VALUE 'go-back',
+        go_back      TYPE string VALUE 'go_back',
         proxy_bypass TYPE string VALUE 'proxy_bypass',
         save         TYPE string VALUE 'save',
       END OF c_event.
-    DATA mo_settings TYPE REF TO zcl_abapgit_settings.
-    DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
-    DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
+
     DATA mo_form TYPE REF TO zcl_abapgit_html_form.
+    DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
+    DATA mo_form_util TYPE REF TO zcl_abapgit_html_form_utils.
+    DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
+
+    DATA mo_settings TYPE REF TO zcl_abapgit_settings.
 
     METHODS validate_form
       IMPORTING
@@ -82,6 +86,9 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
     CREATE OBJECT mo_validation_log.
     CREATE OBJECT mo_form_data.
     mo_form = get_form_schema( ).
+    mo_form_util = zcl_abapgit_html_form_utils=>create( mo_form ).
+
+    read_settings( ).
 
   ENDMETHOD.
 
@@ -102,8 +109,6 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
 
 
   METHOD get_form_schema.
-
-    CONSTANTS lc_abapgit_prog TYPE progname VALUE `ZABAPGIT`.
 
     ro_form = zcl_abapgit_html_form=>create(
       iv_form_id   = 'global-setting-form'
@@ -151,7 +156,7 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
       iv_hint        = |At least { zcl_abapgit_settings=>c_commitmsg_body_size_dft } characters|
       iv_min         = zcl_abapgit_settings=>c_commitmsg_body_size_dft ).
 
-    IF zcl_abapgit_services_abapgit=>is_installed( ) = abap_true AND sy-cprog = lc_abapgit_prog.
+    IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_false.
       ro_form->start_group(
         iv_name        = c_id-devint_settings
         iv_label       = 'Development Internal Settings'
@@ -165,7 +170,7 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
 
     ro_form->command(
       iv_label       = 'Save Settings'
-      iv_is_main     = abap_true
+      iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
       iv_action      = c_event-save
     )->command(
       iv_label       = 'Back'
@@ -183,8 +188,11 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
 
     lt_proxy_bypass = mo_settings->get_proxy_bypass( ).
     LOOP AT lt_proxy_bypass INTO ls_proxy_bypass.
-      lv_val = lv_val && ls_proxy_bypass-low && zif_abapgit_definitions=>c_crlf.
+      lv_val = lv_val && ls_proxy_bypass-low && zif_abapgit_definitions=>c_newline.
     ENDLOOP.
+    IF sy-subrc <> 0.
+      lv_val = zif_abapgit_definitions=>c_newline.
+    ENDIF.
 
     mo_form_data->set(
       iv_key = c_id-proxy_bypass
@@ -207,7 +215,7 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
       iv_val = mo_settings->get_proxy_port( ) ).
     mo_form_data->set(
       iv_key = c_id-proxy_auth
-      iv_val = mo_settings->get_proxy_authentication( ) ).
+      iv_val = boolc( mo_settings->get_proxy_authentication( ) = abap_true ) ) ##TYPE.
 
     read_proxy_bypass( ).
 
@@ -223,12 +231,17 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
       iv_val = |{ mo_settings->get_commitmsg_body_size( ) }| ).
 
     " Dev Internal
-    mo_form_data->set(
-      iv_key = c_id-run_critical_tests
-      iv_val = |{ mo_settings->get_run_critical_tests( ) }| ).
-    mo_form_data->set(
-      iv_key = c_id-experimental_features
-      iv_val = |{ mo_settings->get_experimental_features( ) }| ).
+    IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_false.
+      mo_form_data->set(
+        iv_key = c_id-run_critical_tests
+        iv_val = boolc( mo_settings->get_run_critical_tests( ) = abap_true ) ) ##TYPE.
+      mo_form_data->set(
+        iv_key = c_id-experimental_features
+        iv_val = boolc( mo_settings->get_experimental_features( ) = abap_true ) ) ##TYPE.
+    ENDIF.
+
+    " Set for is_dirty check
+    mo_form_util->set_data( mo_form_data ).
 
   ENDMETHOD.
 
@@ -274,8 +287,10 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
     mo_settings->set_commitmsg_body_size( lv_value ).
 
     " Dev Internal
-    mo_settings->set_run_critical_tests( boolc( mo_form_data->get( c_id-run_critical_tests ) = abap_true ) ).
-    mo_settings->set_experimental_features( boolc( mo_form_data->get( c_id-experimental_features ) = abap_true ) ).
+    IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_false.
+      mo_settings->set_run_critical_tests( boolc( mo_form_data->get( c_id-run_critical_tests ) = abap_true ) ).
+      mo_settings->set_experimental_features( boolc( mo_form_data->get( c_id-experimental_features ) = abap_true ) ).
+    ENDIF.
 
     " Store in DB
     lo_persistence = zcl_abapgit_persist_settings=>get_instance( ).
@@ -285,12 +300,14 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
 
     MESSAGE 'Settings succesfully saved' TYPE 'S'.
 
+    read_settings( ).
+
   ENDMETHOD.
 
 
   METHOD validate_form.
 
-    ro_validation_log = mo_form->validate_required_fields( io_form_data ).
+    ro_validation_log = mo_form_util->validate( io_form_data ).
 
     IF io_form_data->get( c_id-proxy_url ) IS NOT INITIAL AND io_form_data->get( c_id-proxy_port ) IS INITIAL OR
        io_form_data->get( c_id-proxy_url ) IS INITIAL AND io_form_data->get( c_id-proxy_port ) IS NOT INITIAL.
@@ -311,14 +328,14 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    mo_form_data = mo_form->normalize_form_data( ii_event->form_data( ) ).
+    mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.
       WHEN c_event-go_back.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back_to_bookmark.
+        rs_handled-state = mo_form_util->exit( mo_form_data ).
 
       WHEN c_event-save.
-        " Validate all form entries
+        " Validate form entries before saving
         mo_validation_log = validate_form( mo_form_data ).
 
         IF mo_validation_log->is_empty( ) = abap_true.
@@ -336,12 +353,13 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
 
     gui_services( )->register_event_handler( me ).
 
-    read_settings( ).
+    IF mo_form_util->is_empty( mo_form_data ) = abap_true.
+      read_settings( ).
+    ENDIF.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( mo_form->render(
-      iv_form_class     = 'dialog w600px m-em5-sides margin-v1'
       io_values         = mo_form_data
       io_validation_log = mo_validation_log ) ).
 

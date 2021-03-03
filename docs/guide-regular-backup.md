@@ -4,7 +4,7 @@ category: other
 order: 10
 ---
 
-Editing Using abapGit and abapGitServer for regular backup
+Using abapGit and abapGitServer for regular backup. Instead of abapGitServer, github or similar can also be used.
 
 Steps:
 
@@ -16,7 +16,7 @@ Steps:
 
 4. Clone the repository using abapGit, into the package that should be backed up. abapGit will not delete any objects in the package
 
-5. [Enable write protection](ref-write-protect.html)
+5. Enable write protection
 
 6. Test backup by staging + commit + pushing from abapGit manually
 

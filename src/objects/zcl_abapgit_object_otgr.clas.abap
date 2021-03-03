@@ -102,12 +102,12 @@ CLASS zcl_abapgit_object_otgr IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~deserialize.
-    DATA: ls_otgr       TYPE ty_otgr,
-          lo_otgr       TYPE REF TO cl_cls_object_type_group,
-          lx_pak_error  TYPE REF TO cx_root,
-          lv_text       TYPE string,
-          lv_masterlang TYPE sy-langu,
-          lo_parents    TYPE REF TO data.
+    DATA: ls_otgr      TYPE ty_otgr,
+          lo_otgr      TYPE REF TO cl_cls_object_type_group,
+          lx_pak_error TYPE REF TO cx_root,
+          lv_text      TYPE string,
+          lv_main_lang TYPE sy-langu,
+          lo_parents   TYPE REF TO data.
 
     FIELD-SYMBOLS: <ls_groupt>  LIKE LINE OF ls_otgr-texts,
                    <ls_element> LIKE LINE OF ls_otgr-elements,
@@ -168,8 +168,8 @@ CLASS zcl_abapgit_object_otgr IMPLEMENTATION.
               im_parent_groups = <lt_parents>.
         ENDIF.
 
-        lv_masterlang = lo_otgr->if_pak_wb_object~get_master_language( ).
-        READ TABLE ls_otgr-texts WITH KEY langu = lv_masterlang ASSIGNING <ls_groupt>.
+        lv_main_lang = lo_otgr->if_pak_wb_object~get_master_language( ).
+        READ TABLE ls_otgr-texts WITH KEY langu = lv_main_lang ASSIGNING <ls_groupt>.
         IF sy-subrc = 0.
           lo_otgr->set_description( <ls_groupt>-text ).
           " ELSE.
@@ -238,7 +238,7 @@ CLASS zcl_abapgit_object_otgr IMPLEMENTATION.
         OTHERS              = 3.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from RS_TOOL_ACCESS, CHAR| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
   ENDMETHOD.
 
@@ -314,7 +314,7 @@ CLASS zcl_abapgit_object_otgr IMPLEMENTATION.
 * lt_lang_sel  TYPE RANGE OF langu,
 * ls_lang_sel  LIKE LINE OF lt_lang_sel,
 *
-*    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+*    IF io_xml->i18n_params( )-main_language_only = abap_true.
 *      ls_lang_sel-low = mv_language.
 *      ls_lang_sel-sign = 'I'.
 *      ls_lang_sel-option = 'EQ'.

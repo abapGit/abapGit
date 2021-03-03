@@ -5,7 +5,7 @@ order: 80
 
 *******************************
 
-This page describes how to execute various abapGit tasks using your own code. These classes and methods have existed for quite some time and are stable. However, they do **not** provide a guaranteed API. Future changes are a possibility. 
+This page describes how to execute various abapGit tasks using your own code. These classes and methods have existed for quite some time and are stable. However, they do **not** provide a guaranteed API. Future changes are a possibility.
 
 ## Repositories ##
 
@@ -45,7 +45,7 @@ DATA(lt_repos) = zcl_abapgit_repo_srv=>get_instance( )->list( ).
 Get a structured list of all repositories with properties and local settings:
 
 ```abap
-DATA(lt_list) = NEW zcl_abapgit_persistence_repo( )->list( ).
+DATA(lt_list) = zcl_abapgit_persist_factory=>get_repo( )->list( ).
 ```
 
 ### Read ###
@@ -85,11 +85,11 @@ Delete all objects that are part of an abapGit repository (i.e. full uninstall):
 ```abap
 ls_checks = lo_repo->delete_checks( ).
 IF ls_checks-transport-required = abap_true.
-  ls_checks-transport-transport = 'SIDK900000'. "transport ewquest
+  ls_checks-transport-transport = 'SIDK900000'. "transport request
 ENDIF.
 
-zcl_abapgit_repo_srv=>get_instance( )->purge(  
-  io_repo  = lo_repo 
+zcl_abapgit_repo_srv=>get_instance( )->purge(
+  io_repo  = lo_repo
   is_check = ls_check ).
 ```
 
@@ -108,7 +108,7 @@ DATA(lt_result) = zcl_abapgit_file_status=>status( lo_repo ).
 
 The following tasks are supported for online repositories only (`lo_repo type ref to zcl_abapgit_repo_online`).
 
-**Note:** Certain tasks will require authentication (user/password or token). In such cases, you will have to provide the login details upfront (see [#1331](https://github.com/abapGit/abapGit/issues/1331) for details):
+**Note:** Certain tasks will require authentication (user/password or token). In such cases, you will have to provide the login details upfront (see [#1331](https://github.com/abapGit/abapGit/issues/1331) for details), authentication can also be set via user exit or configured in SM59,
 
 ```abap
 zcl_abapgit_login_manager=>set(
@@ -122,7 +122,8 @@ zcl_abapgit_login_manager=>set(
 Get a list of all branches (including main branch):
 
 ```abap
-zcl_abapgit_git_transport=>branches( lo_repo->get_url( ) ).
+lo_branches = zcl_abapgit_git_transport=>branches( lo_repo->get_url( ) ).
+lt_list = lo_branches->get_branches_only( ).
 ```
 
 ### Switch Branch ###
@@ -135,7 +136,7 @@ lo_repo->set_branch_name( lv_name ).
 
 ### Create Branch ###
 
-Create a new branch in an online repository:
+Create a new branch in an online repository, note that IV_FROM can also be set, if not the branch will be created from the current checked out SHA1 of the repo,
 
 ```abap
 lo_repo->create_branch( lv_name ).
@@ -167,9 +168,9 @@ li_background->run(
   ii_log      = li_log
   it_settings = lt_settings ).
 ```
-        
+
 Alternatively, implement your own logic using interface `zif_abapgit_background` (see
-[Background Package](https://github.com/abapGit/abapGit/tree/master/src/background) for details).
+[Background Package](https://github.com/abapGit/abapGit/tree/main/src/background) for details).
 
 ### Pull Changes ##
 
@@ -186,7 +187,7 @@ li_background->run(
 ```
 
 Alternative 1: implement your own logic using interface `zif_abapgit_background` (see
-[Background Package](https://github.com/abapGit/abapGit/tree/master/src/background) for details).
+[Background Package](https://github.com/abapGit/abapGit/tree/main/src/background) for details).
 
 Alternative 2: Use the following code to trigger the pull.
 
@@ -261,8 +262,8 @@ Download ZIP file of an offline repository to frontend:
 ```abap
 lv_xstr = zcl_abapgit_zip=>export( lo_repo ).
 
-zcl_abapgit_ui_factory=>get_frontend_services( )->file_download( 
-  iv_path = lv_file_with_path 
+zcl_abapgit_ui_factory=>get_frontend_services( )->file_download(
+  iv_path = lv_file_with_path
   iv_xstr = lv_xstr ).
 ```
 

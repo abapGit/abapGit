@@ -43,7 +43,7 @@ CLASS zcl_abapgit_object_nrob IMPLEMENTATION.
         subobject_not_found        = 8
         OTHERS                     = 9.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from NUMBER_RANGE_INTERVAL_LIST' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     IF lines( lt_list ) = 0.
@@ -68,7 +68,7 @@ CLASS zcl_abapgit_object_nrob IMPLEMENTATION.
         object_not_found = 1
         OTHERS           = 2.
     IF sy-subrc <> 0 OR lv_error = abap_true.
-      zcx_abapgit_exception=>raise( 'error from NUMBER_RANGE_INTERVAL_UPDATE' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     CALL FUNCTION 'NUMBER_RANGE_UPDATE_CLOSE'
@@ -79,7 +79,7 @@ CLASS zcl_abapgit_object_nrob IMPLEMENTATION.
         object_not_initialized = 2
         OTHERS                 = 3.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from NUMBER_RANGE_UPDATE_CLOSE' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -140,7 +140,7 @@ CLASS zcl_abapgit_object_nrob IMPLEMENTATION.
         wrong_indicator    = 3
         OTHERS             = 4.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from NUMBER_RANGE_OBJECT_DELETE' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -173,7 +173,7 @@ CLASS zcl_abapgit_object_nrob IMPLEMENTATION.
         wrong_indicator           = 5
         OTHERS                    = 6.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from NUMBER_RANGE_OBJECT_UPDATE' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     tadir_insert( iv_package ).
@@ -185,7 +185,7 @@ CLASS zcl_abapgit_object_nrob IMPLEMENTATION.
       EXCEPTIONS
         object_not_initialized = 1.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from NUMBER_RANGE_OBJECT_CLOSE' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -287,7 +287,7 @@ CLASS zcl_abapgit_object_nrob IMPLEMENTATION.
     IF sy-subrc = 1.
       RETURN.
     ELSEIF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from NUMBER_RANGE_OBJECT_READ' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     io_xml->add( iv_name = 'ATTRIBUTES'

@@ -1,7 +1,7 @@
 CLASS zcl_abapgit_gui_chunk_lib DEFINITION
   PUBLIC
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
@@ -109,6 +109,12 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !iv_act        TYPE string
       RETURNING
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
+    CLASS-METHODS settings_repo_toolbar
+      IMPORTING
+        !iv_key        TYPE zif_abapgit_persistence=>ty_repo-key
+        !iv_act        TYPE string
+      RETURNING
+        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
     CLASS-METHODS render_branch_name
       IMPORTING
         !iv_branch      TYPE string OPTIONAL
@@ -121,19 +127,21 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS render_package_name
       IMPORTING
-        !iv_package     TYPE devclass
-        !iv_interactive TYPE abap_bool DEFAULT abap_true
+        !iv_package        TYPE devclass
+        !iv_interactive    TYPE abap_bool DEFAULT abap_true
+        !iv_suppress_title TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(ri_html)  TYPE REF TO zif_abapgit_html
+        VALUE(ri_html)     TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS render_user_name
       IMPORTING
-        !iv_username    TYPE xubname
-        !iv_interactive TYPE abap_bool DEFAULT abap_true
-        !iv_icon_only   TYPE abap_bool DEFAULT abap_false
+        !iv_username       TYPE xubname
+        !iv_interactive    TYPE abap_bool DEFAULT abap_true
+        !iv_icon_only      TYPE abap_bool DEFAULT abap_false
+        !iv_suppress_title TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(ri_html)  TYPE REF TO zif_abapgit_html
+        VALUE(ri_html)     TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS render_transport
@@ -188,10 +196,10 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       iv_txt = 'Database Utility'
       iv_act = zif_abapgit_definitions=>c_action-go_db
     )->add(
-      iv_txt = 'Package to Zip'
+      iv_txt = 'Package to ZIP'
       iv_act = zif_abapgit_definitions=>c_action-zip_package
     )->add(
-      iv_txt = 'Transport to Zip'
+      iv_txt = 'Transport to ZIP'
       iv_act = zif_abapgit_definitions=>c_action-zip_transport
     )->add(
       iv_txt = 'Object to Files'
@@ -273,10 +281,12 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
   METHOD render_branch_name.
 
     DATA:
-      lv_key    TYPE string,
-      lv_branch TYPE string,
-      lv_text   TYPE string,
-      lv_class  TYPE string.
+      lv_key              TYPE string,
+      lv_branch           TYPE string,
+      lv_selected_commit  TYPE string,
+      lv_commit_short_sha TYPE string,
+      lv_text             TYPE string,
+      lv_class            TYPE string.
 
     IF iv_repo_key IS NOT INITIAL.
       lv_key = iv_repo_key.
@@ -288,13 +298,20 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     IF iv_branch IS NOT INITIAL.
       lv_branch = iv_branch.
+      lv_text = zcl_abapgit_git_branch_list=>get_display_name( lv_branch ).
     ELSEIF io_repo IS BOUND.
-      lv_branch = io_repo->get_selected_branch( ).
+      lv_selected_commit = io_repo->get_selected_commit( ).
+      IF lv_selected_commit IS NOT INITIAL.
+        "Convert to short commit. Example: (ae623b9...)
+        lv_commit_short_sha = lv_selected_commit+0(7).
+        lv_text = |({ lv_commit_short_sha }...)|.
+      ELSE.
+        lv_branch = io_repo->get_selected_branch( ).
+        lv_text = zcl_abapgit_git_branch_list=>get_display_name( lv_branch ).
+      ENDIF.
     ELSE.
       zcx_abapgit_exception=>raise( 'Either iv_branch or io_repo must be supplied' ).
     ENDIF.
-
-    lv_text = zcl_abapgit_git_branch_list=>get_display_name( lv_branch ).
 
     IF zcl_abapgit_git_branch_list=>get_type( lv_branch ) = zif_abapgit_definitions=>c_git_branch_type-branch.
       lv_class = 'branch branch_branch'.
@@ -677,8 +694,10 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    SELECT SINGLE ctext FROM tdevct INTO lv_title
-      WHERE devclass = iv_package AND spras = sy-langu ##SUBRC_OK.
+    IF iv_suppress_title = abap_false.
+      SELECT SINGLE ctext FROM tdevct INTO lv_title
+        WHERE devclass = iv_package AND spras = sy-langu ##SUBRC_OK.
+    ENDIF.
 
     lv_obj_name = iv_package.
     lv_jump = zcl_abapgit_html_action_utils=>jump_encode(
@@ -702,23 +721,27 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
   METHOD render_repo_palette.
 
-    DATA li_repo_srv TYPE REF TO zif_abapgit_repo_srv.
+    DATA lt_repo_obj_list TYPE zif_abapgit_repo_srv=>ty_repo_list.
     DATA lt_repo_list TYPE zif_abapgit_persistence=>ty_repos.
     DATA lv_repo_json TYPE string.
     DATA lv_size TYPE i.
-    FIELD-SYMBOLS <ls_repo> LIKE LINE OF lt_repo_list.
+    DATA ls_repo_data LIKE LINE OF lt_repo_list.
 
-    li_repo_srv = zcl_abapgit_repo_srv=>get_instance( ).
-    lt_repo_list = zcl_abapgit_persist_factory=>get_repo( )->list( ).
+    FIELD-SYMBOLS:
+      <ls_repo>     LIKE LINE OF lt_repo_list,
+      <lr_repo_obj> LIKE LINE OF lt_repo_obj_list.
+
+    lt_repo_obj_list = zcl_abapgit_repo_srv=>get_instance( )->list( ).
+    LOOP AT lt_repo_obj_list ASSIGNING <lr_repo_obj>.
+      ls_repo_data = <lr_repo_obj>->ms_data.
+      ls_repo_data-local_settings-display_name = <lr_repo_obj>->get_name( ).
+      APPEND ls_repo_data TO lt_repo_list.
+    ENDLOOP.
+
     lv_size = lines( lt_repo_list ).
+    SORT lt_repo_list BY local_settings-display_name AS TEXT.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    " Sort list by display name
-    LOOP AT lt_repo_list ASSIGNING <ls_repo>.
-      <ls_repo>-local_settings-display_name = li_repo_srv->get( <ls_repo>-key )->get_name( ).
-    ENDLOOP.
-    SORT lt_repo_list BY local_settings-display_name AS TEXT.
 
     ri_html->add( 'var repoCatalog = [' ). " Maybe separate this into another method if needed in more places
     LOOP AT lt_repo_list ASSIGNING <ls_repo>.
@@ -935,7 +958,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    IF iv_username <> zcl_abapgit_objects_super=>c_user_unknown.
+    IF iv_username <> zcl_abapgit_objects_super=>c_user_unknown AND iv_suppress_title = abap_false.
       CALL FUNCTION 'SUSR_USER_ADDRESS_READ'
         EXPORTING
           user_name              = iv_username
@@ -980,6 +1003,26 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ri_html->add( '<div class="dummydiv warning">' ).
     ri_html->add( |{ ri_html->icon( 'exclamation-triangle/yellow' ) } { iv_text }| ).
     ri_html->add( '</div>' ).
+
+  ENDMETHOD.
+
+
+  METHOD settings_repo_toolbar.
+
+    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-repo-settings'.
+
+    ro_menu->add(
+      iv_txt = 'Repository'
+      iv_act = |{ zif_abapgit_definitions=>c_action-repo_settings }?key={ iv_key }|
+      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_settings )
+    )->add(
+      iv_txt = 'Local'
+      iv_act = |{ zif_abapgit_definitions=>c_action-repo_local_settings }?key={ iv_key }|
+      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_local_settings )
+    )->add(
+      iv_txt = 'Stats'
+      iv_act = |{ zif_abapgit_definitions=>c_action-repo_infos }?key={ iv_key }|
+      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_infos ) ).
 
   ENDMETHOD.
 

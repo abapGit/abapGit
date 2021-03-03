@@ -6,7 +6,7 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
 
     CLASS-METHODS parse_post_form_data
       IMPORTING
-        !it_post_data TYPE cnht_post_data_tab
+        !it_post_data TYPE zif_abapgit_html_viewer=>ty_post_data
         !iv_upper_cased TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rt_fields) TYPE tihttpnvp .
@@ -23,7 +23,7 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
         VALUE(rt_fields) TYPE tihttpnvp .
     CLASS-METHODS translate_postdata
       IMPORTING
-        !it_postdata TYPE cnht_post_data_tab
+        !it_postdata TYPE zif_abapgit_html_viewer=>ty_post_data
       RETURNING
         VALUE(rv_string) TYPE string .
 
@@ -122,7 +122,7 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
     add_field( EXPORTING iv_name = 'VALUE'
                          ig_field = is_key-value CHANGING ct_field = lt_fields ).
 
-    rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
+    rv_string = cl_http_utility=>fields_to_string( lt_fields ).
 
   ENDMETHOD.
 
@@ -132,7 +132,7 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
     DATA: lt_fields TYPE tihttpnvp.
     add_field( EXPORTING iv_name = 'PATH'
                          ig_field = iv_path CHANGING ct_field = lt_fields ).
-    rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
+    rv_string = cl_http_utility=>fields_to_string( lt_fields ).
 
   ENDMETHOD.
 
@@ -160,7 +160,7 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
     add_field( EXPORTING iv_name = 'FILENAME'
                          ig_field = ig_file CHANGING ct_field = lt_fields ).
 
-    rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
+    rv_string = cl_http_utility=>fields_to_string( lt_fields ).
 
   ENDMETHOD.
 
@@ -208,7 +208,7 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
     add_field( EXPORTING iv_name = 'NAME'
                          ig_field = iv_obj_name CHANGING ct_field = lt_fields ).
 
-    rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
+    rv_string = cl_http_utility=>fields_to_string( lt_fields ).
 
   ENDMETHOD.
 
@@ -225,7 +225,7 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
     add_field( EXPORTING iv_name = 'OBJ_NAME'
                          ig_field = ig_object CHANGING ct_field = lt_fields ).
 
-    rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
+    rv_string = cl_http_utility=>fields_to_string( lt_fields ).
 
   ENDMETHOD.
 
@@ -294,7 +294,7 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
 
   METHOD translate_postdata.
 
-    DATA: lt_post_data       TYPE cnht_post_data_tab,
+    DATA: lt_post_data       TYPE zif_abapgit_html_viewer=>ty_post_data,
           ls_last_line       TYPE cnht_post_data_line,
           lv_last_line_index TYPE i.
 
