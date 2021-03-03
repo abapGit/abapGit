@@ -674,6 +674,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
     DATA lt_local TYPE zif_abapgit_definitions=>ty_files_item_tt.
     DATA lt_remote TYPE zif_abapgit_definitions=>ty_files_tt.
+    DATA li_exit TYPE REF TO zif_abapgit_exit.
 
     lt_local = io_repo->get_files_local( ii_log ).
 
@@ -687,7 +688,8 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
     lt_remote = io_repo->get_files_remote( ).
 
-    zcl_abapgit_exit=>get_instance( )->pre_calculate_repo_status(
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+    li_exit->pre_calculate_repo_status(
       CHANGING
         ct_local  = lt_local
         ct_remote = lt_remote ).
