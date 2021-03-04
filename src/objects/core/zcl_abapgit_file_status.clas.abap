@@ -688,11 +688,13 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
     lt_remote = io_repo->get_files_remote( ).
 
-    li_exit = zcl_abapgit_exit=>get_instance( ).
-    li_exit->pre_calculate_repo_status(
-      CHANGING
-        ct_local  = lt_local
-        ct_remote = lt_remote ).
+    if io_repo->get_local_settings( )-enable_pre_status_exit = abap_true.
+      li_exit = zcl_abapgit_exit=>get_instance( ).
+      li_exit->pre_calculate_repo_status(
+        CHANGING
+          ct_local  = lt_local
+          ct_remote = lt_remote ).
+    endif.
 
     rt_results = calculate_status(
       iv_devclass  = io_repo->get_package( )
