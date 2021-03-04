@@ -480,7 +480,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       ENDIF.
       IF iv_rstate IS NOT INITIAL OR iv_lstate IS NOT INITIAL. " Any changes
         ro_toolbar->add( iv_txt = 'Diff'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?key={ mv_key }|
+                         iv_act = |{ zif_abapgit_definitions=>c_action-go_repo_diff }?key={ mv_key }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
       ENDIF.
       li_log = mo_repo->get_log( ).
@@ -498,7 +498,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                          iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?key={ mv_key }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
         ro_toolbar->add( iv_txt = 'Diff'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?key={ mv_key }|
+                         iv_act = |{ zif_abapgit_definitions=>c_action-go_repo_diff }?key={ mv_key }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
       ENDIF.
       ro_toolbar->add( iv_txt = 'Import <sup>zip</sup>'
@@ -1012,7 +1012,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
         ri_html->add( '<div>' ).
         ri_html->add_a( iv_txt = |diff ({ is_item-changes })|
-                        iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?{ lv_difflink }| ).
+                        iv_act = |{ zif_abapgit_definitions=>c_action-go_file_diff }?{ lv_difflink }| ).
         ri_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state( iv_lstate = is_item-lstate
                                                                     iv_rstate = is_item-rstate ) ).
         ri_html->add( '</div>' ).
@@ -1026,7 +1026,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
               iv_key  = mo_repo->get_key( )
               ig_file = ls_file ).
             ri_html->add_a( iv_txt = 'diff'
-                            iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?{ lv_difflink }| ).
+                            iv_act = |{ zif_abapgit_definitions=>c_action-go_file_diff }?{ lv_difflink }| ).
             ri_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state( iv_lstate = ls_file-lstate
                                                                         iv_rstate = ls_file-rstate ) ).
           ELSE.
@@ -1312,7 +1312,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
     ls_hotkey_action-description   = |Diff|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_diff.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_repo_diff.
     ls_hotkey_action-hotkey = |d|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
