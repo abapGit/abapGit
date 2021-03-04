@@ -60,3 +60,9 @@ Can be used to set the URL to display a commit. There are default implementation
 | github    | http(s):\/\/github.com/<user\>/\<repo\>.git    | http(s):\/\/github.com/<user\>/\<repo\>/commit/<sha1\>     |
 | bitbucket | http(s):\/\/bitbucket.org/<user\>/\<repo\>.git | http(s):\/\/bitbucket.org/<user\>/\<repo\>/commits/<sha1\> |
 | gitlab    | http(s):\/\/gitlab.com/<user\>/\<repo\>.git    | http(s):\/\/gitlab.com/\<user\>/\<repo\>/-/commit/<sha1\>  |
+
+### PRE_CALCULATE_REPO_STATUS
+
+Can be used to modify local and remote files before calculating diff status. Useful to remove diffs which are caused by deployment between different system version. See also: [abapgit xml stripper plugin](https://github.com/sbcgua/abapgit_xml_stripper_plugin)
+
+![diff sample](./img/deployment_diff_difference_sample.png)
