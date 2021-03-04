@@ -31,6 +31,7 @@ CLASS zcl_abapgit_gui_page_sett_locl DEFINITION
         display_name                 TYPE string VALUE 'display_name',
         ignore_subpackages           TYPE string VALUE 'ignore_subpackages',
         write_protected              TYPE string VALUE 'write_protected',
+        enable_pre_status_exit       TYPE string VALUE 'enable_pre_status_exit',
         only_local_objects           TYPE string VALUE 'only_local_objects',
         main_language_only           TYPE string VALUE 'main_language_only',
         checks                       TYPE string VALUE 'checks',
@@ -73,7 +74,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -138,6 +139,10 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
       iv_name        = c_id-main_language_only
       iv_label       = 'Only Serialize Main Language'
       iv_hint        = 'Ignore translations; serialize only main language of repository'
+    )->checkbox(
+      iv_name        = c_id-enable_pre_status_exit
+      iv_label       = 'Run pre-status exit'
+      iv_hint        = 'Enable the exit to modify local/remote files before calculating diffs fot this repo'
     )->start_group(
       iv_name        = c_id-checks
       iv_label       = 'Local Checks'
@@ -188,6 +193,9 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
     mo_form_data->set(
       iv_key = c_id-block_commit
       iv_val = boolc( ms_settings-block_commit = abap_true ) ) ##TYPE.
+    mo_form_data->set(
+      iv_key = c_id-enable_pre_status_exit
+      iv_val = boolc( ms_settings-enable_pre_status_exit = abap_true ) ) ##TYPE.
 
     " Set for is_dirty check
     mo_form_util->set_data( mo_form_data ).
@@ -204,6 +212,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
     ms_settings-only_local_objects           = mo_form_data->get( c_id-only_local_objects ).
     ms_settings-code_inspector_check_variant = mo_form_data->get( c_id-code_inspector_check_variant ).
     ms_settings-block_commit                 = mo_form_data->get( c_id-block_commit ).
+    ms_settings-enable_pre_status_exit       = mo_form_data->get( c_id-enable_pre_status_exit ).
 
     mo_repo->set_local_settings( ms_settings ).
 
