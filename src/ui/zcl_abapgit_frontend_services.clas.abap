@@ -18,7 +18,7 @@ CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
   METHOD zif_abapgit_frontend_services~file_download.
 
     TYPES ty_hex TYPE x LENGTH 200.
-    DATA lt_rawdata TYPE STANDARD TABLE OF ty_hex WITH EMPTY KEY.
+    DATA lt_rawdata TYPE STANDARD TABLE OF ty_hex WITH DEFAULT KEY.
 
     zcl_abapgit_convert=>xstring_to_bintab(
       EXPORTING iv_xstr   = iv_xstr
