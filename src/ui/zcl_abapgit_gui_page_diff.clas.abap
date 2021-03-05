@@ -425,13 +425,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     mo_repo->reset_status( ).
     lt_status = mo_repo->status( ).
 
-    IF mo_repo->get_local_settings( )-enable_pre_status_exit = abap_true.
-      li_exit = zcl_abapgit_exit=>get_instance( ).
-      li_exit->pre_calculate_repo_status(
-        CHANGING
-          ct_local  = lt_local
-          ct_remote = lt_remote ).
-    ENDIF.
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+    li_exit->pre_calculate_repo_status(
+      CHANGING
+        ct_local  = lt_local
+        ct_remote = lt_remote ).
 
     IF is_file IS NOT INITIAL.        " Diff for one file
 
