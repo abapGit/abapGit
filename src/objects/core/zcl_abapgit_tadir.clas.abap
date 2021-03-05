@@ -82,11 +82,15 @@ CLASS zcl_abapgit_tadir DEFINITION
         !ct_tadir   TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
+    METHODS determine_supported_indicator
+      CHANGING
+        !ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
+
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_tadir IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
 
 
   METHOD add_local_packages.
@@ -226,6 +230,10 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
       CHANGING
         ct_tadir   = rt_tadir ).
 
+    determine_supported_indicator(
+      CHANGING
+        ct_tadir   = rt_tadir ).
+
   ENDMETHOD.
 
 
@@ -290,6 +298,22 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
       <ls_tadir>-path = lv_path.
 
     ENDLOOP.
+  ENDMETHOD.
+
+
+  METHOD determine_supported_indicator.
+
+    DATA: lt_supported TYPE zcl_abapgit_objects=>ty_types_tt.
+    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF ct_tadir.
+
+    lt_supported = zcl_abapgit_objects=>supported_list( ).
+    LOOP AT ct_tadir ASSIGNING <ls_tadir>.
+      READ TABLE lt_supported WITH KEY table_line = <ls_tadir>-object TRANSPORTING NO FIELDS.
+      IF sy-subrc = 0.
+        <ls_tadir>-supported = abap_true.
+      ENDIF.
+    ENDLOOP.
+
   ENDMETHOD.
 
 

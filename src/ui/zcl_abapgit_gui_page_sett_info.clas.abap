@@ -84,7 +84,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_INFO IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -309,15 +309,18 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
   METHOD read_stats.
 
     DATA:
-      lt_local        TYPE zif_abapgit_definitions=>ty_files_item_tt,
-      lt_remote       TYPE zif_abapgit_definitions=>ty_files_tt,
-      ls_item         TYPE zif_abapgit_definitions=>ty_item,
-      lt_local_items  TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_item WITH DEFAULT KEY,
-      lt_remote_items TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_item WITH DEFAULT KEY,
-      lt_results      TYPE zif_abapgit_definitions=>ty_results_tt,
-      lv_ignored      TYPE abap_bool,
-      lv_state        TYPE c LENGTH 1,
-      ls_stats        TYPE ty_stats.
+      lt_local              TYPE zif_abapgit_definitions=>ty_files_item_tt,
+      lt_remote             TYPE zif_abapgit_definitions=>ty_files_tt,
+      ls_item               TYPE zif_abapgit_definitions=>ty_item,
+      lt_local_items        TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_item WITH DEFAULT KEY,
+      lt_remote_items       TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_item WITH DEFAULT KEY,
+      lt_results            TYPE zif_abapgit_definitions=>ty_results_tt,
+      lt_unsupported_local  TYPE zif_abapgit_definitions=>ty_items_tt,
+      lt_supported_types    TYPE zcl_abapgit_objects=>ty_types_tt,
+      lv_unsupported_remote TYPE i,
+      lv_ignored            TYPE abap_bool,
+      lv_state              TYPE c LENGTH 1,
+      ls_stats              TYPE ty_stats.
 
     FIELD-SYMBOLS:
       <ls_local>  LIKE LINE OF lt_local,
@@ -386,6 +389,7 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
       COLLECT <ls_local>-item INTO lt_local_items.
     ENDLOOP.
 
+    lt_supported_types = zcl_abapgit_objects=>supported_list( ).
     IF mo_repo->has_remote_source( ) = abap_true.
       LOOP AT lt_remote ASSIGNING <ls_remote>.
         ls_stats-remote = ls_stats-remote + xstrlen( <ls_remote>-data ).
@@ -405,6 +409,10 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
                 IMPORTING
                   es_item     = ls_item ).
 
+              READ TABLE lt_supported_types WITH KEY table_line = ls_item-obj_type TRANSPORTING NO FIELDS.
+              IF sy-subrc <> 0.
+                lv_unsupported_remote = lv_unsupported_remote + 1.
+              ENDIF.
               COLLECT ls_item INTO lt_remote_items.
             CATCH zcx_abapgit_exception ##NO_HANDLER.
           ENDTRY.
@@ -424,6 +432,13 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
     DELETE lt_remote_items WHERE obj_type IS INITIAL OR obj_name IS INITIAL.
     ls_stats-remote = lines( lt_remote_items ).
 
+    APPEND ls_stats TO mt_stats.
+
+    CLEAR ls_stats.
+    ls_stats-measure       = 'Number of Unsupported Objects'.
+    lt_unsupported_local   = mo_repo->get_unsupported_objects_local( ).
+    ls_stats-local         = lines( lt_unsupported_local ).
+    ls_stats-remote        = lv_unsupported_remote.
     APPEND ls_stats TO mt_stats.
 
   ENDMETHOD.
