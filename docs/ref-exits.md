@@ -66,3 +66,5 @@ Can be used to set the URL to display a commit. There are default implementation
 Can be used to modify local and remote files before calculating diff status. Useful to remove diffs which are caused by deployment between different system version. See also: [abapgit xml stripper plugin](https://github.com/sbcgua/abapgit_xml_stripper_plugin)
 
 ![diff sample](./img/deployment_diff_difference_sample.png)
+
+The exit also receives a repo meta data snapshot (`zif_abapgit_persistence=>ty_repo`) to identify the repo and it's attributes in the current system (e.g. package). This can be used to enable/disable the exit for specific repos.
