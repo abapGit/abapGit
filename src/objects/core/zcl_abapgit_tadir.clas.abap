@@ -230,9 +230,7 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
       CHANGING
         ct_tadir   = rt_tadir ).
 
-    determine_supported_indicator(
-      CHANGING
-        ct_tadir   = rt_tadir ).
+    determine_supported_indicator( CHANGING ct_tadir = rt_tadir ).
 
   ENDMETHOD.
 
