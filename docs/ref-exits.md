@@ -57,6 +57,6 @@ Can be used to set the URL to display a commit. There are default implementation
 
 | Provider  | Repo URL | Show Commit URL |
 |-----------|----------|-----------------|
-| github    | http(s):\/\/github.com/<user\>/\<repo\>.git    | http(s):\/\/github.com/<user\>/\<repo\>/commit/<sha1>     |
-| bitbucket | http(s):\/\/bitbucket.org/<user\>/\<repo\>.git | http(s):\/\/bitbucket.org/<user\>/\<repo\>/commits/<sha1> |
-| gitlab    | http(s):\/\/gitlab.com/<user\>/\<repo\>.git    | http(s):\/\/gitlab.com/\<user\>/\<repo\>/-/commit/<sha1>  |
+| github    | http(s):\/\/github.com/<user\>/\<repo\>.git    | http(s):\/\/github.com/<user\>/\<repo\>/commit/<sha1\>     |
+| bitbucket | http(s):\/\/bitbucket.org/<user\>/\<repo\>.git | http(s):\/\/bitbucket.org/<user\>/\<repo\>/commits/<sha1\> |
+| gitlab    | http(s):\/\/gitlab.com/<user\>/\<repo\>.git    | http(s):\/\/gitlab.com/\<user\>/\<repo\>/-/commit/<sha1\>  |
