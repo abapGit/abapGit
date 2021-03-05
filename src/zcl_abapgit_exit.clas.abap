@@ -199,6 +199,8 @@ CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
 
     TRY.
         gi_exit->pre_calculate_repo_status(
+          EXPORTING
+            is_repo_meta = is_repo_meta
           CHANGING
             ct_local  = ct_local
             ct_remote = ct_remote ).

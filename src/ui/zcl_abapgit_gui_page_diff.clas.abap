@@ -427,6 +427,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     li_exit = zcl_abapgit_exit=>get_instance( ).
     li_exit->pre_calculate_repo_status(
+      EXPORTING
+        is_repo_meta = mo_repo->ms_data
       CHANGING
         ct_local  = lt_local
         ct_remote = lt_remote ).
