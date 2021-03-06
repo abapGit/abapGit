@@ -133,8 +133,6 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
       CHANGING
         !ct_repo_items TYPE zif_abapgit_definitions=>ty_repo_item_tt .
     METHODS build_branch_dropdown
-      IMPORTING
-        !iv_wp_opt                LIKE zif_abapgit_html=>c_html_opt-crossout
       RETURNING
         VALUE(ro_branch_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
       RAISING
@@ -193,7 +191,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -351,8 +349,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ro_branch_dropdown->add( iv_txt = 'Overview'
                              iv_act = |{ zif_abapgit_definitions=>c_action-go_branch_overview }?key={ mv_key }| ).
     ro_branch_dropdown->add( iv_txt = 'Switch'
-                             iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?key={ mv_key }|
-                             iv_opt = iv_wp_opt ).
+                             iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?key={ mv_key }| ).
     ro_branch_dropdown->add( iv_txt = 'Create'
                              iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_create }?key={ mv_key }| ).
     ro_branch_dropdown->add( iv_txt = 'Delete'
@@ -406,7 +403,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       lv_pull_opt = zif_abapgit_html=>c_html_opt-strong.
     ENDIF.
 
-    lo_tb_branch = build_branch_dropdown( lv_wp_opt ).
+    lo_tb_branch = build_branch_dropdown( ).
 
     lo_tb_tag = build_tag_dropdown( lv_wp_opt ).
 
