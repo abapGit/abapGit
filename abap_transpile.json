@@ -62,6 +62,7 @@
     "zcl_abapgit_utils",
     "zif_abapgit_xml",
     "zif_abapgit_stage_logic",
+    "zif_abapgit_repo_online",
     "zif_abapgit_tag_popups",
     "zif_abapgit_tadir",
     "zcl_abapgit_git_tag",
