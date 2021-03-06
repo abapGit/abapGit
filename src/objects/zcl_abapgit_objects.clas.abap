@@ -94,6 +94,7 @@ CLASS zcl_abapgit_objects DEFINITION
       ty_obj_serializer_map TYPE SORTED TABLE OF ty_obj_serializer_item WITH UNIQUE KEY item .
 
     CLASS-DATA gt_obj_serializer_map TYPE ty_obj_serializer_map .
+    CLASS-DATA gt_supported_obj_types TYPE ty_types_tt .
 
     CLASS-METHODS files_to_deserialize
       IMPORTING
@@ -229,7 +230,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 
   METHOD adjust_namespaces.
@@ -1257,6 +1258,10 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_object> LIKE LINE OF lt_objects.
 
+    IF gt_supported_obj_types IS NOT INITIAL.
+      rt_types = gt_supported_obj_types.
+      RETURN.
+    ENDIF.
 
     CALL FUNCTION 'TR_OBJECT_TABLE'
       TABLES
@@ -1275,6 +1280,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         INSERT <ls_object>-object INTO TABLE rt_types.
       ENDIF.
     ENDLOOP.
+    gt_supported_obj_types = rt_types.
 
   ENDMETHOD.
 

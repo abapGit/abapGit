@@ -113,7 +113,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_file_status IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
 
   METHOD build_existing.
@@ -673,6 +673,8 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
   METHOD status.
 
     DATA lt_local TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA lt_remote TYPE zif_abapgit_definitions=>ty_files_tt.
+    DATA li_exit TYPE REF TO zif_abapgit_exit.
 
     lt_local = io_repo->get_files_local( ii_log ).
 
@@ -684,11 +686,21 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
       io_repo->find_remote_dot_abapgit( ).
     ENDIF.
 
+    lt_remote = io_repo->get_files_remote( ).
+
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+    li_exit->pre_calculate_repo_status(
+      EXPORTING
+        is_repo_meta = io_repo->ms_data
+      CHANGING
+        ct_local  = lt_local
+        ct_remote = lt_remote ).
+
     rt_results = calculate_status(
       iv_devclass  = io_repo->get_package( )
       io_dot       = io_repo->get_dot_abapgit( )
-      it_local     = io_repo->get_files_local( ii_log )
-      it_remote    = io_repo->get_files_remote( )
+      it_local     = lt_local
+      it_remote    = lt_remote
       it_cur_state = io_repo->get_local_checksums_per_file( ) ).
 
     run_checks(

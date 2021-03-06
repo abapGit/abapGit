@@ -154,7 +154,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
         iv_opt = zif_abapgit_html=>c_html_opt-strong
       )->add(
         iv_txt = |Diff|
-        iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?key={ mo_repo->get_key( ) }|
+        iv_act = |{ zif_abapgit_definitions=>c_action-go_repo_diff }?key={ mo_repo->get_key( ) }|
       )->add(
         iv_txt = |Patch|
         iv_typ = zif_abapgit_html=>c_action_type-onclick
@@ -535,7 +535,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
         lv_filename = ri_html->a(
           iv_txt = lv_filename
-          iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?{ lv_param }| ).
+          iv_act = |{ zif_abapgit_definitions=>c_action-go_file_diff }?{ lv_param }| ).
 
         ri_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
         ri_html->add( |<td class="name">{ lv_filename }</td>| ).
@@ -895,7 +895,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
     ls_hotkey_action-description  = |Diff|.
-    ls_hotkey_action-action       = zif_abapgit_definitions=>c_action-go_diff.
+    ls_hotkey_action-action       = zif_abapgit_definitions=>c_action-go_repo_diff.
     ls_hotkey_action-hotkey       = |d|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
