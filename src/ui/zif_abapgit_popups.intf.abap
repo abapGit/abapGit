@@ -138,13 +138,6 @@ INTERFACE zif_abapgit_popups
       VALUE(rv_transport) TYPE trkorr
     RAISING
       zcx_abapgit_exception .
-  METHODS popup_proxy_bypass
-    IMPORTING
-      !it_proxy_bypass       TYPE zif_abapgit_definitions=>ty_range_proxy_bypass_url
-    RETURNING
-      VALUE(rt_proxy_bypass) TYPE zif_abapgit_definitions=>ty_range_proxy_bypass_url
-    RAISING
-      zcx_abapgit_exception .
   METHODS choose_pr_popup
     IMPORTING
       !it_pulls      TYPE zif_abapgit_pr_enum_provider=>ty_pull_requests

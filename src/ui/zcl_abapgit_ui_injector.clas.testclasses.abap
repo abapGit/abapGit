@@ -80,10 +80,6 @@ CLASS ltcl_abapgit_popups_mock IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_popups~popup_proxy_bypass.
-
-  ENDMETHOD.
-
   METHOD zif_abapgit_popups~popup_search_help.
 
   ENDMETHOD.
