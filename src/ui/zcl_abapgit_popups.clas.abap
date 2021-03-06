@@ -89,7 +89,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_popups IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
 
   METHOD add_field.
@@ -1015,25 +1015,6 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
     rs_transport_branch-branch_name = lv_branch_name.
     rs_transport_branch-commit_text = lv_commit_text.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_popups~popup_to_inform.
-
-    DATA: lv_line1 TYPE c LENGTH 70,
-          lv_line2 TYPE c LENGTH 70.
-
-    lv_line1 = iv_text_message.
-    IF strlen( iv_text_message ) > 70.
-      lv_line2 = iv_text_message+70.
-    ENDIF.
-
-    CALL FUNCTION 'POPUP_TO_INFORM'
-      EXPORTING
-        titel = iv_titlebar
-        txt1  = lv_line1
-        txt2  = lv_line2.
 
   ENDMETHOD.
 
