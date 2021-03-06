@@ -12,15 +12,17 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
 
 
   METHOD zif_abapgit_frontend_services~file_download.
 
-    DATA:
-      lt_rawdata  TYPE solix_tab.
+    TYPES ty_hex TYPE x LENGTH 200.
+    DATA lt_rawdata TYPE STANDARD TABLE OF ty_hex WITH DEFAULT KEY.
 
-    lt_rawdata = cl_bcs_convert=>xstring_to_solix( iv_xstr ).
+    zcl_abapgit_convert=>xstring_to_bintab(
+      EXPORTING iv_xstr   = iv_xstr
+      IMPORTING et_bintab = lt_rawdata ).
 
     cl_gui_frontend_services=>gui_download(
       EXPORTING
