@@ -204,7 +204,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
 
   METHOD add_filter_sub_menu.
@@ -414,6 +414,8 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
           lt_local  TYPE zif_abapgit_definitions=>ty_files_item_tt,
           lt_status TYPE zif_abapgit_definitions=>ty_results_tt.
 
+    DATA li_exit TYPE REF TO zif_abapgit_exit.
+
     FIELD-SYMBOLS: <ls_status> LIKE LINE OF lt_status.
 
     CLEAR: mt_diff_files.
@@ -422,6 +424,14 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     lt_local  = mo_repo->get_files_local( ).
     mo_repo->reset_status( ).
     lt_status = mo_repo->status( ).
+
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+    li_exit->pre_calculate_repo_status(
+      EXPORTING
+        is_repo_meta = mo_repo->ms_data
+      CHANGING
+        ct_local  = lt_local
+        ct_remote = lt_remote ).
 
     IF is_file IS NOT INITIAL.        " Diff for one file
 
