@@ -33,6 +33,7 @@
     "zif_abapgit_environment",
     "zif_abapgit_exit",
     "zcl_abapgit_gui_buttons",
+    "zcl_abapgit_frontend_services",
     "zcx_abapgit_cancel",
     "zif_abapgit_gui_event_handler",
     "zif_abapgit_gui_error_handler",
