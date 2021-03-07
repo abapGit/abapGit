@@ -350,12 +350,12 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     ENDIF.
 
     TRY.
-      zcl_abapgit_repo_srv=>get_instance( )->purge(
-        io_repo   = lo_repo
-        is_checks = ls_checks ).
-    CATCH zcx_abapgit_exception INTO lo_error.
-      lo_repo->refresh( ). " To see the differences after update
-      raise exception lo_error.
+        zcl_abapgit_repo_srv=>get_instance( )->purge(
+          io_repo   = lo_repo
+          is_checks = ls_checks ).
+      CATCH zcx_abapgit_exception INTO lo_error.
+        lo_repo->refresh( ). " To see the differences after update
+        raise exception lo_error.
     ENDTRY.
 
     COMMIT WORK.
