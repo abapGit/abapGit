@@ -652,10 +652,6 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-repo_infos.                      " Repo infos
         rs_handled-page  = zcl_abapgit_gui_page_sett_info=>create( lo_repo ).
         rs_handled-state = get_state_settings( ii_event ).
-      WHEN zif_abapgit_definitions=>c_action-repo_log.                        " Repo log
-        li_log = lo_repo->get_log( ).
-        zcl_abapgit_log_viewer=>show_log( li_log ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
     ENDCASE.
 
   ENDMETHOD.

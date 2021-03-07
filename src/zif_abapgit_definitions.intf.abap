@@ -432,7 +432,6 @@ INTERFACE zif_abapgit_definitions
       repo_syntax_check             TYPE string VALUE 'repo_syntax_check',
       repo_code_inspector           TYPE string VALUE 'repo_code_inspector',
       repo_open_in_master_lang      TYPE string VALUE 'repo_open_in_master_lang',
-      repo_log                      TYPE string VALUE 'repo_log',
       abapgit_home                  TYPE string VALUE 'abapgit_home',
       zip_import                    TYPE string VALUE 'zip_import',
       zip_export                    TYPE string VALUE 'zip_export',

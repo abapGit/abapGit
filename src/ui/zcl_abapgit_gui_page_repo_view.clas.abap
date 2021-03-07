@@ -19,6 +19,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         display_more             TYPE string VALUE 'display_more' ##NO_TEXT,
         repo_switch_origin_to_pr TYPE string VALUE 'repo_switch_origin_to_pr',
         repo_reset_origin        TYPE string VALUE 'repo_reset_origin',
+        show_last_log            TYPE string VALUE 'show_last_log',
         go_data                  TYPE string VALUE 'go_data',
       END OF c_actions .
 
@@ -459,9 +460,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
   METHOD build_main_toolbar.
 
-    DATA:
-      li_log TYPE REF TO zif_abapgit_log.
-
     CREATE OBJECT ro_toolbar EXPORTING iv_id = 'toolbar-repo'.
 
     IF mo_repo->is_offline( ) = abap_false.
@@ -480,10 +478,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                          iv_act = |{ zif_abapgit_definitions=>c_action-go_repo_diff }?key={ mv_key }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
       ENDIF.
-      li_log = mo_repo->get_log( ).
-      IF li_log IS BOUND AND li_log->count( ) > 0.
+      IF mi_last_log IS BOUND AND mi_last_log->count( ) > 0.
         ro_toolbar->add( iv_txt = 'Log'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_log }?key={ mv_key }| ).
+                         iv_act = |{ c_actions-show_last_log }?key={ mv_key }| ).
       ENDIF.
       ro_toolbar->add( iv_txt = 'Branch'
                        io_sub = io_tb_branch ).
@@ -504,10 +501,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       ro_toolbar->add( iv_txt = 'Export <sup>zip</sup>'
                        iv_act = |{ zif_abapgit_definitions=>c_action-zip_export }?key={ mv_key }|
                        iv_opt = zif_abapgit_html=>c_html_opt-strong ).
-      li_log = mo_repo->get_log( ).
-      IF li_log IS BOUND AND li_log->count( ) > 0.
+      IF mi_last_log IS BOUND AND mi_last_log->count( ) > 0.
         ro_toolbar->add( iv_txt = 'Log'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_log }?key={ mv_key }| ).
+                         iv_act = |{ c_actions-show_last_log }?key={ mv_key }| ).
       ENDIF.
     ENDIF.
 
@@ -819,8 +815,10 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         ri_html->add( render_head_line( iv_lstate = lv_lstate
                                         iv_rstate = lv_rstate ) ).
 
-        li_log = lo_browser->get_log( ).
-        IF mo_repo->is_offline( ) = abap_false AND li_log->count( ) > 0.
+        li_log = lo_browser->get_log( )->clone( )->merge_with(
+          ii_log       = mi_last_log
+          iv_min_level = zif_abapgit_log=>c_log_level-warning ).
+        IF li_log->count( ) > 0.
           ri_html->add( '<div class="log">' ).
           ri_html->add( zcl_abapgit_log_viewer=>to_html( li_log ) ). " shows eg. list of unsupported objects
           ri_html->add( '</div>' ).
@@ -1269,6 +1267,14 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         switch_to_pr( iv_revert = abap_true ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
+      WHEN c_actions-show_last_log.
+        IF mi_last_log IS BOUND.
+          zcl_abapgit_log_viewer=>show_log( mi_last_log ).
+        ELSE.
+          zcx_abapgit_exception=>raise( 'Unexpected call to empty log' ).
+        ENDIF.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
       WHEN OTHERS.
 
         rs_handled = super->zif_abapgit_gui_event_handler~on_event( ii_event ). " TODO refactor, move to HOC components
@@ -1329,7 +1335,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
     ls_hotkey_action-description   = |Show log|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_log.
+    ls_hotkey_action-action = c_actions-show_last_log.
     ls_hotkey_action-hotkey = |l|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 

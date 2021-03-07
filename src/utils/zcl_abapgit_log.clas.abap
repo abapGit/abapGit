@@ -97,6 +97,17 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
     <ls_log>-item      = is_item.
     <ls_log>-exception = ix_exc.
 
+    CASE iv_type.
+      WHEN 'E' OR 'A' OR 'X'.
+        <ls_log>-msg-level = zif_abapgit_log=>c_log_level-error.
+      WHEN 'W'.
+        <ls_log>-msg-level = zif_abapgit_log=>c_log_level-warning.
+      WHEN 'S' OR 'I'.
+        <ls_log>-msg-level = zif_abapgit_log=>c_log_level-info.
+      WHEN OTHERS. "unknown
+        ASSERT 0 = 1.
+    ENDCASE.
+
   ENDMETHOD.
 
 
@@ -166,6 +177,17 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_log~clone.
+
+    DATA lo_log TYPE REF TO zcl_abapgit_log.
+
+    CREATE OBJECT lo_log EXPORTING iv_title = mv_title.
+    lo_log->mt_log = mt_log.
+    ri_log = lo_log.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_log~count.
     rv_count = lines( mt_log ).
   ENDMETHOD.
@@ -203,6 +225,24 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
         ls_msg-type = 'I'.
         ls_msg-text = 'No message'.
         INSERT ls_msg INTO TABLE lr_item_status->messages.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_log~get_log_level.
+
+    FIELD-SYMBOLS <ls_log> LIKE LINE OF mt_log.
+
+    rv_level = zif_abapgit_log=>c_log_level-empty.
+
+    LOOP AT mt_log ASSIGNING <ls_log>.
+      IF <ls_log>-msg-level = zif_abapgit_log=>c_log_level-error.
+        rv_level = zif_abapgit_log=>c_log_level-error.
+        EXIT.
+      ELSEIF <ls_log>-msg-level > rv_level.
+        rv_level = <ls_log>-msg-level.
       ENDIF.
     ENDLOOP.
 
@@ -267,11 +307,20 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
   METHOD zif_abapgit_log~merge_with.
 
     DATA lo_log TYPE REF TO zcl_abapgit_log.
+    DATA lt_log_temp LIKE lo_log->mt_log.
 
     IF ii_log IS BOUND.
       lo_log ?= ii_log.
-      APPEND LINES OF lo_log->mt_log TO mt_log.
+      IF iv_min_level > 0.
+        lt_log_temp = lo_log->mt_log.
+        DELETE lt_log_temp WHERE msg-level < iv_min_level.
+        APPEND LINES OF lt_log_temp TO mt_log.
+      ELSE.
+        APPEND LINES OF lo_log->mt_log TO mt_log.
+      ENDIF.
     ENDIF.
+
+    ri_log = me.
 
   ENDMETHOD.
 

@@ -20,6 +20,7 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
       END OF  ty_control .
 
     DATA ms_control TYPE ty_control .
+    DATA mi_last_log TYPE REF TO zif_abapgit_log.
 
     METHODS render_content
           ABSTRACT
@@ -269,6 +270,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
   METHOD zif_abapgit_gui_error_handler~handle_error.
 
     mx_error = ix_error.
+    mi_last_log = ix_error->mi_log.
     rv_handled = abap_true.
 
   ENDMETHOD.

@@ -307,6 +307,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
   METHOD purge.
 
     DATA: lt_tadir     TYPE zif_abapgit_definitions=>ty_tadir_tt,
+          lo_error     TYPE REF TO zcx_abapgit_exception,
           lv_answer    TYPE c LENGTH 1,
           lo_repo      TYPE REF TO zcl_abapgit_repo,
           lv_package   TYPE devclass,
@@ -348,9 +349,14 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
                                         )->popup_transport_request( ls_checks-transport-type ).
     ENDIF.
 
-    zcl_abapgit_repo_srv=>get_instance( )->purge(
-      io_repo   = lo_repo
-      is_checks = ls_checks ).
+    TRY.
+      zcl_abapgit_repo_srv=>get_instance( )->purge(
+        io_repo   = lo_repo
+        is_checks = ls_checks ).
+    CATCH zcx_abapgit_exception INTO lo_error.
+      lo_repo->refresh( ). " To see the differences after update
+      raise exception lo_error.
+    ENDTRY.
 
     COMMIT WORK.
 

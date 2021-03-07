@@ -122,9 +122,6 @@ CLASS zcl_abapgit_repo DEFINITION
         !iv_offline TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
-    METHODS get_log
-      RETURNING
-        VALUE(ri_log) TYPE REF TO zif_abapgit_log .
     METHODS refresh_local_object
       IMPORTING
         !iv_obj_type TYPE tadir-object
@@ -524,11 +521,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     rs_settings = ms_data-local_settings.
 
-  ENDMETHOD.
-
-
-  METHOD get_log.
-    ri_log = mi_log.
   ENDMETHOD.
 
 
