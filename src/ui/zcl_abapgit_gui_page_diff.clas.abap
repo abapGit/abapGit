@@ -1019,7 +1019,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    READ TABLE it_files WITH KEY file-filename = is_status-filename
+    READ TABLE it_files WITH KEY file-path     = is_status-path
+                                 file-filename = is_status-filename
                         TRANSPORTING NO FIELDS.
     rv_is_file_requested = boolc( sy-subrc = 0 ).
 
