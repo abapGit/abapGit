@@ -79,4 +79,12 @@ INTERFACE zif_abapgit_exit
       !cv_display_url TYPE csequence
     RAISING
       zcx_abapgit_exception .
+  METHODS pre_calculate_repo_status
+    IMPORTING
+      is_repo_meta TYPE zif_abapgit_persistence=>ty_repo
+    CHANGING
+      !ct_local  TYPE zif_abapgit_definitions=>ty_files_item_tt
+      !ct_remote TYPE zif_abapgit_definitions=>ty_files_tt
+    RAISING
+      zcx_abapgit_exception .
 ENDINTERFACE.
