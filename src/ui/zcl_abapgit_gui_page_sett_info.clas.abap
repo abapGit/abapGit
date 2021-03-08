@@ -389,7 +389,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_INFO IMPLEMENTATION.
       COLLECT <ls_local>-item INTO lt_local_items.
     ENDLOOP.
 
-    lt_supported_types = zcl_abapgit_objects=>supported_list( ).
     IF mo_repo->has_remote_source( ) = abap_true.
       LOOP AT lt_remote ASSIGNING <ls_remote>.
         ls_stats-remote = ls_stats-remote + xstrlen( <ls_remote>-data ).
@@ -408,11 +407,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_INFO IMPLEMENTATION.
                   io_dot      = mo_repo->get_dot_abapgit( )
                 IMPORTING
                   es_item     = ls_item ).
-
-              READ TABLE lt_supported_types WITH KEY table_line = ls_item-obj_type TRANSPORTING NO FIELDS.
-              IF sy-subrc <> 0.
-                lv_unsupported_remote = lv_unsupported_remote + 1.
-              ENDIF.
               COLLECT ls_item INTO lt_remote_items.
             CATCH zcx_abapgit_exception ##NO_HANDLER.
           ENDTRY.
@@ -435,9 +429,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_INFO IMPLEMENTATION.
     APPEND ls_stats TO mt_stats.
 
     CLEAR ls_stats.
-    ls_stats-measure       = 'Number of Unsupported Objects'.
-    lt_unsupported_local   = mo_repo->get_unsupported_objects_local( ).
-    ls_stats-local         = lines( lt_unsupported_local ).
+    lt_supported_types   = zcl_abapgit_objects=>supported_list( ).
+    ls_stats-measure     = 'Number of Unsupported Objects'.
+    lt_unsupported_local = mo_repo->get_unsupported_objects_local( ).
+    ls_stats-local       = lines( lt_unsupported_local ).
+
+    LOOP AT lt_remote_items INTO ls_item.
+      READ TABLE lt_supported_types WITH KEY table_line = ls_item-obj_type TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        lv_unsupported_remote = lv_unsupported_remote + 1.
+      ENDIF.
+    ENDLOOP.
     ls_stats-remote        = lv_unsupported_remote.
     APPEND ls_stats TO mt_stats.
 

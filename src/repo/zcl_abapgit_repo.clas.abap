@@ -560,7 +560,9 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD get_unsupported_objects_local.
 
-    DATA: lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA: lt_tadir           TYPE zif_abapgit_definitions=>ty_tadir_tt,
+          lt_supported_types TYPE zcl_abapgit_objects=>ty_types_tt.
+
     FIELD-SYMBOLS: <ls_tadir>  LIKE LINE OF lt_tadir,
                    <ls_object> LIKE LINE OF rt_objects.
 
@@ -570,11 +572,14 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
                       iv_only_local_objects = ms_data-local_settings-only_local_objects
                       io_dot                = get_dot_abapgit( ) ).
 
-    DELETE lt_tadir WHERE supported IS NOT INITIAL.
+    lt_supported_types = zcl_abapgit_objects=>supported_list( ).
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-      APPEND INITIAL LINE TO rt_objects ASSIGNING <ls_object>.
-      MOVE-CORRESPONDING <ls_tadir> TO <ls_object>.
-      <ls_object>-obj_type = <ls_tadir>-object.
+      READ TABLE lt_supported_types WITH KEY table_line = <ls_tadir>-object TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        APPEND INITIAL LINE TO rt_objects ASSIGNING <ls_object>.
+        MOVE-CORRESPONDING <ls_tadir> TO <ls_object>.
+        <ls_object>-obj_type = <ls_tadir>-object.
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.
