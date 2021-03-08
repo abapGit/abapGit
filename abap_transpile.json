@@ -19,6 +19,7 @@
     "zcl_abapgit_zlib_convert",
     "zcl_abapgit_zlib_huffman",
     "zcl_abapgit_zlib_stream",
+    "zcl_abapgit_html_action_utils",
     "zif_abapgit_repo_srv",
     "zif_abapgit_persist_user",
     "zcl_abapgit_git_branch_list",
