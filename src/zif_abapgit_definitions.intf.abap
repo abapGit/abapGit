@@ -174,15 +174,14 @@ INTERFACE zif_abapgit_definitions
       WITH NON-UNIQUE SORTED KEY type COMPONENTS type sha1 .
   TYPES:
     BEGIN OF ty_tadir,
-      pgmid     TYPE tadir-pgmid,
-      object    TYPE tadir-object,
-      obj_name  TYPE tadir-obj_name,
-      devclass  TYPE tadir-devclass,
-      korrnum   TYPE tadir-korrnum,
-      delflag   TYPE tadir-delflag,
-      genflag   TYPE tadir-genflag,
-      path      TYPE string,
-      supported TYPE abap_bool,
+      pgmid    TYPE tadir-pgmid,
+      object   TYPE tadir-object,
+      obj_name TYPE tadir-obj_name,
+      devclass TYPE tadir-devclass,
+      korrnum  TYPE tadir-korrnum,
+      delflag  TYPE tadir-delflag,
+      genflag  TYPE tadir-genflag,
+      path     TYPE string,
     END OF ty_tadir .
   TYPES:
     ty_tadir_tt TYPE STANDARD TABLE OF ty_tadir WITH DEFAULT KEY .
