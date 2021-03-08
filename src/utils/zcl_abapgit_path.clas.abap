@@ -27,6 +27,8 @@ CLASS zcl_abapgit_path DEFINITION
       IMPORTING iv_path            TYPE string
       RETURNING VALUE(rv_filename) TYPE string.
 
+protected section.
+private section.
 ENDCLASS.
 
 
@@ -124,6 +126,11 @@ CLASS ZCL_ABAPGIT_PATH IMPLEMENTATION.
       CLEAR ev_path.
       ev_filename = iv_fullpath.
     ENDIF.
+
+    "Replace No-Break Spaces, because the real filename may contain normal spaces
+    REPLACE ALL OCCURRENCES OF REGEX '[[:space:]]'
+      IN ev_filename WITH ` ` IN CHARACTER MODE
+      IGNORING CASE.
 
     ev_filename = cl_http_utility=>unescape_url( escaped = ev_filename ).
 
