@@ -94,6 +94,7 @@ CLASS zcl_abapgit_objects DEFINITION
       ty_obj_serializer_map TYPE SORTED TABLE OF ty_obj_serializer_item WITH UNIQUE KEY item .
 
     CLASS-DATA gt_obj_serializer_map TYPE ty_obj_serializer_map .
+    CLASS-DATA gt_supported_obj_types TYPE ty_types_tt .
 
     CLASS-METHODS files_to_deserialize
       IMPORTING
@@ -229,7 +230,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 
   METHOD adjust_namespaces.
@@ -1252,11 +1253,14 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
   METHOD supported_list.
 
     DATA: lt_objects   TYPE STANDARD TABLE OF ko100,
-          lv_supported TYPE abap_bool,
           ls_item      TYPE zif_abapgit_definitions=>ty_item.
 
     FIELD-SYMBOLS <ls_object> LIKE LINE OF lt_objects.
 
+    IF gt_supported_obj_types IS NOT INITIAL.
+      rt_types = gt_supported_obj_types.
+      RETURN.
+    ENDIF.
 
     CALL FUNCTION 'TR_OBJECT_TABLE'
       TABLES
@@ -1267,14 +1271,11 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     LOOP AT lt_objects ASSIGNING <ls_object> WHERE pgmid = 'R3TR'.
       ls_item-obj_type = <ls_object>-object.
 
-      lv_supported = is_supported(
-        is_item        = ls_item
-        iv_native_only = abap_true ).
-
-      IF lv_supported = abap_true.
+      IF is_supported( ls_item ) = abap_true.
         INSERT <ls_object>-object INTO TABLE rt_types.
       ENDIF.
     ENDLOOP.
+    gt_supported_obj_types = rt_types.
 
   ENDMETHOD.
 

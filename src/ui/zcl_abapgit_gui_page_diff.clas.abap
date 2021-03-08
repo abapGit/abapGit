@@ -195,16 +195,17 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
-    METHODS filter_diff_by_files
+    METHODS is_file_requested
       IMPORTING
-        !it_files      TYPE zif_abapgit_definitions=>ty_stage_tt
-      CHANGING
-        !ct_diff_files TYPE ty_file_diffs .
+        it_files                    TYPE zif_abapgit_definitions=>ty_stage_tt
+        is_status                   TYPE zif_abapgit_definitions=>ty_result
+      RETURNING
+        VALUE(rv_is_file_requested) TYPE abap_bool.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
 
   METHOD add_filter_sub_menu.
@@ -414,6 +415,8 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
           lt_local  TYPE zif_abapgit_definitions=>ty_files_item_tt,
           lt_status TYPE zif_abapgit_definitions=>ty_results_tt.
 
+    DATA li_exit TYPE REF TO zif_abapgit_exit.
+
     FIELD-SYMBOLS: <ls_status> LIKE LINE OF lt_status.
 
     CLEAR: mt_diff_files.
@@ -422,6 +425,14 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     lt_local  = mo_repo->get_files_local( ).
     mo_repo->reset_status( ).
     lt_status = mo_repo->status( ).
+
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+    li_exit->pre_calculate_repo_status(
+      EXPORTING
+        is_repo_meta = mo_repo->ms_data
+      CHANGING
+        ct_local  = lt_local
+        ct_remote = lt_remote ).
 
     IF is_file IS NOT INITIAL.        " Diff for one file
 
@@ -449,18 +460,19 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
         path ASCENDING
         filename ASCENDING.
       LOOP AT lt_status ASSIGNING <ls_status> WHERE match IS INITIAL.
-        append_diff( it_remote = lt_remote
-                     it_local  = lt_local
-                     is_status = <ls_status> ).
+
+        IF is_file_requested( it_files  = it_files
+                              is_status = <ls_status> ) = abap_true.
+
+          append_diff( it_remote = lt_remote
+                       it_local  = lt_local
+                       is_status = <ls_status> ).
+
+        ENDIF.
+
       ENDLOOP.
 
     ENDIF.
-
-    filter_diff_by_files(
-      EXPORTING
-        it_files      = it_files
-      CHANGING
-        ct_diff_files = mt_diff_files ).
 
   ENDMETHOD.
 
@@ -490,28 +502,6 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     ENDIF.
 
     ms_control-page_menu = build_menu( ).
-
-  ENDMETHOD.
-
-
-  METHOD filter_diff_by_files.
-
-    FIELD-SYMBOLS: <ls_diff_file> TYPE ty_file_diff.
-
-    IF lines( it_files ) = 0.
-      RETURN.
-    ENDIF.
-
-    " Diff only for specified files
-    LOOP AT ct_diff_files ASSIGNING <ls_diff_file>.
-
-      READ TABLE it_files TRANSPORTING NO FIELDS
-                          WITH KEY file-filename = <ls_diff_file>-filename.
-      IF sy-subrc <> 0.
-        DELETE TABLE ct_diff_files FROM <ls_diff_file>.
-      ENDIF.
-
-    ENDLOOP.
 
   ENDMETHOD.
 
@@ -1020,4 +1010,20 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
+
+
+  METHOD is_file_requested.
+
+    IF lines( it_files ) = 0.
+      rv_is_file_requested = abap_true.
+      RETURN.
+    ENDIF.
+
+    READ TABLE it_files WITH KEY file-path     = is_status-path
+                                 file-filename = is_status-filename
+                        TRANSPORTING NO FIELDS.
+    rv_is_file_requested = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.
+
 ENDCLASS.

@@ -35,6 +35,12 @@ CLASS zcl_abapgit_serialize DEFINITION
         zcx_abapgit_exception .
   PROTECTED SECTION.
 
+    TYPES: BEGIN OF ty_unsupported_count,
+             obj_type TYPE tadir-object,
+             obj_name TYPE tadir-obj_name,
+             count    TYPE i,
+           END OF ty_unsupported_count,
+           ty_unsupported_count_tt TYPE HASHED TABLE OF ty_unsupported_count WITH UNIQUE KEY obj_type.
     TYPES:
       ty_char32 TYPE c LENGTH 32 .
 
@@ -102,12 +108,15 @@ CLASS zcl_abapgit_serialize DEFINITION
         VALUE(rv_threads)    TYPE i
       RAISING
         zcx_abapgit_exception .
+    METHODS filter_unsupported_objects
+      CHANGING
+        !ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_serialize IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
 
   METHOD add_apack.
@@ -326,6 +335,56 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD filter_unsupported_objects.
+
+    DATA: ls_unsupported_count TYPE ty_unsupported_count,
+          lt_supported_types   TYPE zcl_abapgit_objects=>ty_types_tt,
+          lt_unsupported_count TYPE ty_unsupported_count_tt.
+
+    FIELD-SYMBOLS: <ls_tadir>             LIKE LINE OF ct_tadir,
+                   <ls_unsupported_count> TYPE ty_unsupported_count.
+
+    lt_supported_types = zcl_abapgit_objects=>supported_list( ).
+    LOOP AT ct_tadir ASSIGNING <ls_tadir>.
+      CLEAR: ls_unsupported_count.
+      READ TABLE lt_supported_types WITH KEY table_line = <ls_tadir>-object TRANSPORTING NO FIELDS.
+      IF sy-subrc = 0.
+        CONTINUE.
+      ENDIF.
+
+      READ TABLE lt_unsupported_count ASSIGNING <ls_unsupported_count>
+                                      WITH TABLE KEY obj_type = <ls_tadir>-object.
+      IF sy-subrc <> 0.
+        ls_unsupported_count-obj_type = <ls_tadir>-object.
+        ls_unsupported_count-count    = 1.
+        ls_unsupported_count-obj_name = <ls_tadir>-obj_name.
+        INSERT ls_unsupported_count INTO TABLE lt_unsupported_count ASSIGNING <ls_unsupported_count>.
+      ELSE.
+        CLEAR: <ls_unsupported_count>-obj_name.
+        <ls_unsupported_count>-count = <ls_unsupported_count>-count + 1.
+      ENDIF.
+      CLEAR: <ls_tadir>-object.
+    ENDLOOP.
+    IF lt_unsupported_count IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    DELETE ct_tadir WHERE object IS INITIAL.
+    IF mi_log IS BOUND.
+      LOOP AT lt_unsupported_count ASSIGNING <ls_unsupported_count>.
+        IF <ls_unsupported_count>-count = 1.
+          mi_log->add_error( iv_msg  = |Object type { <ls_unsupported_count>-obj_type } not supported, {
+                                       <ls_unsupported_count>-obj_name } ignored| ).
+        ELSE.
+          mi_log->add_error( iv_msg  = |Object type { <ls_unsupported_count>-obj_type } not supported, {
+                                       <ls_unsupported_count>-count } objects ignored| ).
+        ENDIF.
+      ENDLOOP.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD on_end_of_task.
 
 * this method will be called from the parallel processing, thus it must be public
@@ -440,7 +499,8 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 * serializes only objects
 
     DATA: lv_max      TYPE i,
-          li_progress TYPE REF TO zif_abapgit_progress.
+          li_progress TYPE REF TO zif_abapgit_progress,
+          lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
 
@@ -451,9 +511,11 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     mv_free = lv_max.
     mi_log = ii_log.
 
-    li_progress = zcl_abapgit_progress=>get_instance( lines( it_tadir ) ).
+    lt_tadir = it_tadir.
+    filter_unsupported_objects( CHANGING ct_tadir = lt_tadir ).
+    li_progress = zcl_abapgit_progress=>get_instance( lines( lt_tadir ) ).
 
-    LOOP AT it_tadir ASSIGNING <ls_tadir>.
+    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
 
       li_progress->show(
         iv_current = sy-tabix

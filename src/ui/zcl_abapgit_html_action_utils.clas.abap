@@ -295,7 +295,7 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
   METHOD translate_postdata.
 
     DATA: lt_post_data       TYPE zif_abapgit_html_viewer=>ty_post_data,
-          ls_last_line       TYPE cnht_post_data_line,
+          ls_last_line       LIKE LINE OF it_postdata,
           lv_last_line_index TYPE i.
 
     IF it_postdata IS INITIAL.
