@@ -17,6 +17,7 @@
     "zif_abapgit_ajson*",
     "zcl_abapgit_url",
     "zcl_abapgit_zlib_convert",
+    "zcl_abapgit_gui_event",
     "zcl_abapgit_zlib_huffman",
     "zcl_abapgit_zlib_stream",
     "zcl_abapgit_html_action_utils",
