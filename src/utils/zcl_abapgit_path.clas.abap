@@ -27,8 +27,8 @@ CLASS zcl_abapgit_path DEFINITION
       IMPORTING iv_path            TYPE string
       RETURNING VALUE(rv_filename) TYPE string.
 
-protected section.
-private section.
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 ENDCLASS.
 
 
