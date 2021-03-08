@@ -64,10 +64,6 @@ CLASS ltcl_abapgit_popups_mock IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_popups~popup_to_inform.
-
-  ENDMETHOD.
-
   METHOD zif_abapgit_popups~popup_to_select_from_list.
 
   ENDMETHOD.
@@ -81,10 +77,6 @@ CLASS ltcl_abapgit_popups_mock IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_popups~repo_popup.
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_popups~popup_proxy_bypass.
 
   ENDMETHOD.
 

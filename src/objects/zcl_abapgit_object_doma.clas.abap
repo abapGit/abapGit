@@ -362,8 +362,12 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
       EXCEPTIONS
         illegal_input = 1
         OTHERS        = 2.
-    IF sy-subrc <> 0 OR ls_dd01v IS INITIAL.
+    IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    IF ls_dd01v IS INITIAL.
+      zcx_abapgit_exception=>raise( |No active version found for { ms_item-obj_type } { ms_item-obj_name }| ).
     ENDIF.
 
     CLEAR: ls_dd01v-as4user,

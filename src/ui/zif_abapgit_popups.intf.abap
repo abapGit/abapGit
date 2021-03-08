@@ -73,7 +73,7 @@ INTERFACE zif_abapgit_popups
     RETURNING
       VALUE(rs_popup)    TYPE ty_popup
     RAISING
-      zcx_abapgit_exception  ##NO_TEXT.
+      zcx_abapgit_exception ##NO_TEXT.
   METHODS popup_to_confirm
     IMPORTING
       !iv_titlebar              TYPE clike
@@ -86,12 +86,6 @@ INTERFACE zif_abapgit_popups
       !iv_display_cancel_button TYPE char1 DEFAULT abap_true
     RETURNING
       VALUE(rv_answer)          TYPE char1
-    RAISING
-      zcx_abapgit_exception .
-  METHODS popup_to_inform
-    IMPORTING
-      !iv_titlebar     TYPE clike
-      !iv_text_message TYPE clike
     RAISING
       zcx_abapgit_exception .
   METHODS popup_to_create_package
@@ -142,13 +136,6 @@ INTERFACE zif_abapgit_popups
       !is_transport_type  TYPE zif_abapgit_definitions=>ty_transport_type
     RETURNING
       VALUE(rv_transport) TYPE trkorr
-    RAISING
-      zcx_abapgit_exception .
-  METHODS popup_proxy_bypass
-    IMPORTING
-      !it_proxy_bypass       TYPE zif_abapgit_definitions=>ty_range_proxy_bypass_url
-    RETURNING
-      VALUE(rt_proxy_bypass) TYPE zif_abapgit_definitions=>ty_range_proxy_bypass_url
     RAISING
       zcx_abapgit_exception .
   METHODS choose_pr_popup

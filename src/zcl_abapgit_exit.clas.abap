@@ -15,7 +15,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_exit IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
 
 
   METHOD get_instance.
@@ -28,6 +28,23 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
     ENDIF.
 
     CREATE OBJECT ri_exit TYPE zcl_abapgit_exit.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_exit~adjust_display_commit_url.
+
+    TRY.
+        gi_exit->adjust_display_commit_url(
+          EXPORTING
+            iv_repo_url           = iv_repo_url
+            iv_repo_name          = iv_repo_name
+            iv_repo_key           = iv_repo_key
+            iv_commit_hash        = iv_commit_hash
+          CHANGING
+            cv_display_url        = cv_display_url ).
+      CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -178,20 +195,17 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_exit~adjust_display_commit_url.
+  METHOD zif_abapgit_exit~pre_calculate_repo_status.
 
     TRY.
-        gi_exit->adjust_display_commit_url(
+        gi_exit->pre_calculate_repo_status(
           EXPORTING
-            iv_repo_url           = iv_repo_url
-            iv_repo_name          = iv_repo_name
-            iv_repo_key           = iv_repo_key
-            iv_commit_hash        = iv_commit_hash
+            is_repo_meta = is_repo_meta
           CHANGING
-            cv_display_url        = cv_display_url ).
+            ct_local  = ct_local
+            ct_remote = ct_remote ).
       CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
     ENDTRY.
 
   ENDMETHOD.
-
 ENDCLASS.
