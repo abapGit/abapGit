@@ -57,7 +57,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CH_REMOTE IMPLEMENTATION.
     lo_form->text(
       iv_name     = c_remote_field
       iv_required = abap_true
-      iv_label    = 'Remote' ).
+      iv_label = 'New GIT Repository URL'
+      iv_hint  = 'HTTPS address of the repository' ).
     lo_map->set(
       iv_key = c_remote_field
       iv_val = mo_repo->get_url( ) ).
@@ -84,8 +85,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CH_REMOTE IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
 
       WHEN c_event-save.
-        lv_url = ii_event->form_data( )->get( c_remote_field ).
+        lv_url = condense( ii_event->form_data( )->get( c_remote_field ) ).
         ASSERT NOT lv_url IS INITIAL.
+
+        zcl_abapgit_repo_srv=>get_instance( )->validate_url( lv_url ).
+
         mo_repo->set_url( lv_url ).
         COMMIT WORK.
 
