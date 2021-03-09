@@ -1,13 +1,19 @@
-CLASS zcl_abapgit_object_clas DEFINITION PUBLIC INHERITING FROM zcl_abapgit_objects_program.
+CLASS zcl_abapgit_object_clas DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_program
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
-    METHODS: constructor
-      IMPORTING
-        is_item     TYPE zif_abapgit_definitions=>ty_item
-        iv_language TYPE spras.
 
+    INTERFACES zif_abapgit_object .
+
+    ALIASES mo_files
+      FOR zif_abapgit_object~mo_files .
+
+    METHODS constructor
+      IMPORTING
+        !is_item     TYPE zif_abapgit_definitions=>ty_item
+        !iv_language TYPE spras .
   PROTECTED SECTION.
     DATA: mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc,
           mv_skip_testclass             TYPE abap_bool,
@@ -166,6 +172,8 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     mi_object_oriented_object_fct->update_descriptions(
       is_key          = ls_class_key
       it_descriptions = lt_descriptions ).
+
+    mi_object_oriented_object_fct->add_to_activation_list( ms_item ).
 
   ENDMETHOD.
 

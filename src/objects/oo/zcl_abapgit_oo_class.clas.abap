@@ -568,11 +568,6 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
       iv_clsname = is_key-clsname
       io_scanner = lo_scanner ).
 
-* TODO, perhaps move this call to somewhere else, to be done while cleaning up the CLAS deserialization
-    zcl_abapgit_objects_activation=>add(
-      iv_type = 'CLAS'
-      iv_name = is_key-clsname ).
-
   ENDMETHOD.
 
 
