@@ -11,17 +11,23 @@ CLASS zcl_abapgit_gui_page_ch_remote DEFINITION
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
         zcx_abapgit_exception .
+
+    METHODS zif_abapgit_gui_event_handler~on_event
+        REDEFINITION .
   PROTECTED SECTION.
 
     METHODS render_content
         REDEFINITION .
   PRIVATE SECTION.
+
+    CONSTANTS c_remote_field TYPE string VALUE 'REMOTE' ##NO_TEXT.
     CONSTANTS:
       BEGIN OF c_event,
         go_back TYPE string VALUE 'go_back',
         save    TYPE string VALUE 'save',
       END OF c_event .
     DATA mv_key TYPE zif_abapgit_persistence=>ty_repo-key .
+    DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
 ENDCLASS.
 
 
@@ -33,7 +39,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CH_REMOTE IMPLEMENTATION.
 
     super->constructor( ).
 
-    mv_key = iv_key.
+    mo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+
     ms_control-page_title = 'Change Remote'.
 
   ENDMETHOD.
@@ -51,15 +58,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CH_REMOTE IMPLEMENTATION.
     lo_form = zcl_abapgit_html_form=>create( ).
 
     lo_form->text(
-      iv_name     = 'REMOTE'
+      iv_name     = c_remote_field
       iv_required = abap_true
       iv_label    = 'Remote' ).
     lo_map->set(
-      iv_key = 'REMOTE'
-      iv_val = 'sdf' ).
+      iv_key = c_remote_field
+      iv_val = mo_repo->get_url( ) ).
 
     lo_form->command(
-      iv_label    = 'Save Settings'
+      iv_label    = 'Save'
       iv_cmd_type = zif_abapgit_html_form=>c_cmd_type-input_main
       iv_action   = c_event-save ).
 
@@ -68,6 +75,26 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CH_REMOTE IMPLEMENTATION.
       iv_action = c_event-go_back ).
 
     ri_html->add( lo_form->render( lo_map ) ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_event_handler~on_event.
+
+    DATA lv_url TYPE string.
+
+    CASE ii_event->mv_action.
+      WHEN c_event-go_back.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
+
+      WHEN c_event-save.
+        lv_url = ii_event->form_data( )->get( c_remote_field ).
+        ASSERT NOT lv_url IS INITIAL.
+        mo_repo->set_url( lv_url ).
+        COMMIT WORK.
+
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
+    ENDCASE.
 
   ENDMETHOD.
 ENDCLASS.
