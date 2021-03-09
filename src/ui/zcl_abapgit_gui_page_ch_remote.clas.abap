@@ -38,9 +38,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CH_REMOTE IMPLEMENTATION.
   METHOD constructor.
 
     super->constructor( ).
-
     mo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-
     ms_control-page_title = 'Change Remote'.
 
   ENDMETHOD.
@@ -53,7 +51,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CH_REMOTE IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     CREATE OBJECT lo_map.
-
 
     lo_form = zcl_abapgit_html_form=>create( ).
 
@@ -69,7 +66,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CH_REMOTE IMPLEMENTATION.
       iv_label    = 'Save'
       iv_cmd_type = zif_abapgit_html_form=>c_cmd_type-input_main
       iv_action   = c_event-save ).
-
     lo_form->command(
       iv_label  = 'Back'
       iv_action = c_event-go_back ).
