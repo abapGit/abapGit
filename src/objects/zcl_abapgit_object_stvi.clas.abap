@@ -194,9 +194,10 @@ CLASS ZCL_ABAPGIT_OBJECT_STVI IMPLEMENTATION.
            ls_transaction_variant-shdtvciu-chuser.
 
     SELECT *
-    FROM shdttciu
-    INTO TABLE ls_transaction_variant-shdttciu[]
-    WHERE tcvariant = ls_transaction_variant-shdtvciu-tcvariant.
+      FROM shdttciu
+      INTO TABLE ls_transaction_variant-shdttciu[]
+      WHERE tcvariant = ls_transaction_variant-shdtvciu-tcvariant
+      ORDER BY PRIMARY KEY.
 
     io_xml->add( iv_name = 'STVI'
                  ig_data = ls_transaction_variant ).
