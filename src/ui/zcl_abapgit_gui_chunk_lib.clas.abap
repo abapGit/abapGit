@@ -202,7 +202,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       iv_txt = 'Transport to ZIP'
       iv_act = zif_abapgit_definitions=>c_action-zip_transport
     )->add(
-      iv_txt = 'Object to ZIP'
+      iv_txt = 'Object to Files'
       iv_act = zif_abapgit_definitions=>c_action-zip_object
     )->add(
       iv_txt = 'Test Changed by'
