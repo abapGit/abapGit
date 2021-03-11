@@ -59,18 +59,15 @@ CLASS zcl_abapgit_gui_page_ex_object IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD create.
-
     DATA lo_component TYPE REF TO zcl_abapgit_gui_page_ex_object.
     CREATE OBJECT lo_component.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title      = 'Export Object to Files'
       ii_child_component = lo_component ).
-
   ENDMETHOD.
 
   METHOD get_form_schema.
-
     ro_form = zcl_abapgit_html_form=>create( iv_form_id = 'export-object-to-files' ).
 
     ro_form->text(
@@ -91,11 +88,11 @@ CLASS zcl_abapgit_gui_page_ex_object IMPLEMENTATION.
     )->command(
       iv_label       = 'Back'
       iv_action      = c_event-go_back ).
-
   ENDMETHOD.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
+
     CASE ii_event->mv_action.
       WHEN c_event-go_back.
 
@@ -106,6 +103,7 @@ CLASS zcl_abapgit_gui_page_ex_object IMPLEMENTATION.
         export_object( ).
         MESSAGE 'Object successfully exported' TYPE 'S'.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
+
       WHEN c_event-choose_object_type.
 
         mo_form_data->set(
@@ -117,7 +115,6 @@ CLASS zcl_abapgit_gui_page_ex_object IMPLEMENTATION.
         ELSE.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
         ENDIF.
-
     ENDCASE.
   ENDMETHOD.
 
@@ -132,7 +129,6 @@ CLASS zcl_abapgit_gui_page_ex_object IMPLEMENTATION.
     zcl_abapgit_zip=>export_object(
       iv_object_type = lv_object_type
       iv_object_name = lv_object_name ).
-
   ENDMETHOD.
 
   METHOD zif_abapgit_gui_renderable~render.
