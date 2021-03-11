@@ -191,7 +191,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -643,7 +643,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
       WHERE pgmna = sy-cprog
         AND cinfo = lc_report_tcode_hex.
 
-    IF lines( lt_tcodes ) = 1.
+    IF lines( lt_tcodes ) > 0.
       READ TABLE lt_tcodes INDEX 1 INTO rv_tcode.
     ENDIF.
   ENDMETHOD.
