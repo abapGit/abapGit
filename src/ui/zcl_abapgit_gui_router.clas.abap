@@ -802,7 +802,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         zcl_abapgit_transport_mass=>run( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
       WHEN zif_abapgit_definitions=>c_action-zip_object.                      " Export object as ZIP
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_ex_object.
+        rs_handled-page  = zcl_abapgit_gui_page_ex_object=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
     ENDCASE.
 
