@@ -275,13 +275,12 @@ CLASS ZCL_ABAPGIT_OBJECT_WAPA IMPLEMENTATION.
 
     lv_name = ms_item-obj_name.
 
-    SELECT * FROM o2pagdir INTO TABLE lt_pages WHERE applname = lv_name.
+    SELECT * FROM o2pagdir INTO TABLE lt_pages WHERE applname = lv_name
+      ORDER BY changedon DESCENDING changetime DESCENDING.
     IF sy-subrc <> 0.
       rv_user = c_user_unknown.
       RETURN.
     ENDIF.
-
-    SORT lt_pages BY changedon DESCENDING changetime DESCENDING.
 
     READ TABLE lt_pages INDEX 1 INTO ls_latest.
     ASSERT sy-subrc = 0.
