@@ -205,9 +205,6 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       iv_txt = 'Object to Files'
       iv_act = zif_abapgit_definitions=>c_action-zip_object
     )->add(
-      iv_txt = 'Test Changed by'
-      iv_act = zif_abapgit_definitions=>c_action-changed_by
-    )->add(
       iv_txt = 'Debug Info'
       iv_act = zif_abapgit_definitions=>c_action-go_debuginfo ).
 
