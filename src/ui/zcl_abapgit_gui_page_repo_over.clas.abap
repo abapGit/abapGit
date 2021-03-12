@@ -115,7 +115,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -338,6 +338,9 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
         lv_text = <ls_overview>-url.
         REPLACE FIRST OCCURRENCE OF 'https://' IN lv_text WITH ''.
         REPLACE FIRST OCCURRENCE OF 'http://' IN lv_text WITH ''.
+        IF lv_text CP '*.git'.
+          REPLACE REGEX '\.git$' IN lv_text WITH ''.
+        ENDIF.
         ii_html->add( |<td>{ ii_html->a(
           iv_txt   = lv_text
           iv_title = <ls_overview>-url
@@ -430,6 +433,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ii_html->add( |</tbody>| ).
 
   ENDMETHOD.
+
 
   METHOD render_table_header.
 
