@@ -115,19 +115,37 @@ CLASS zcl_abapgit_apack_migration IMPLEMENTATION.
     ls_interface_properties-state    = '1'.
     ls_interface_properties-unicode  = abap_true.
 
-    CALL FUNCTION 'SEO_INTERFACE_CREATE_COMPLETE'
-      EXPORTING
-        devclass        = '$TMP'
-      CHANGING
-        interface       = ls_interface_properties
-      EXCEPTIONS
-        existing        = 1
-        is_class        = 2
-        db_error        = 3
-        component_error = 4
-        no_access       = 5
-        other           = 6
-        OTHERS          = 7.
+    TRY.
+        CALL FUNCTION 'SEO_INTERFACE_CREATE_COMPLETE'
+          EXPORTING
+            devclass        = '$TMP'
+            suppress_dialog = abap_true " Parameter missing in 702
+          CHANGING
+            interface       = ls_interface_properties
+          EXCEPTIONS
+            existing        = 1
+            is_class        = 2
+            db_error        = 3
+            component_error = 4
+            no_access       = 5
+            other           = 6
+            OTHERS          = 7.
+      CATCH cx_sy_dyn_call_param_not_found.
+        CALL FUNCTION 'SEO_INTERFACE_CREATE_COMPLETE'
+          EXPORTING
+            devclass        = '$TMP'
+          CHANGING
+            interface       = ls_interface_properties
+          EXCEPTIONS
+            existing        = 1
+            is_class        = 2
+            db_error        = 3
+            component_error = 4
+            no_access       = 5
+            other           = 6
+            OTHERS          = 7.
+    ENDTRY.
+
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.

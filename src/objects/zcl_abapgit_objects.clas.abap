@@ -1346,7 +1346,9 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     LOOP AT it_results ASSIGNING <ls_result> WHERE NOT obj_type IS INITIAL.
       IF <ls_result>-lstate IS NOT INITIAL
         AND NOT ( <ls_result>-lstate = zif_abapgit_definitions=>c_state-added
-        AND <ls_result>-rstate IS INITIAL ).
+        AND <ls_result>-rstate IS INITIAL )
+        OR ( <ls_result>-lstate IS INITIAL
+        AND <ls_result>-rstate = zif_abapgit_definitions=>c_state-deleted ).
         " current object has been modified or deleted locally, add to table
         CLEAR ls_overwrite.
         MOVE-CORRESPONDING <ls_result> TO ls_overwrite.
