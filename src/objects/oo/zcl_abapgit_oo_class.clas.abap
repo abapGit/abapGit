@@ -87,6 +87,9 @@ CLASS zcl_abapgit_oo_class DEFINITION
       IMPORTING
         !iv_classname              TYPE seoclsname
         !iv_number_of_impl_methods TYPE i .
+    CLASS-METHODS delete_report
+      IMPORTING
+        !iv_program TYPE programm .
 ENDCLASS.
 
 
@@ -97,6 +100,11 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
   METHOD create_report.
     INSERT REPORT iv_program FROM it_source EXTENSION TYPE iv_extension STATE iv_version PROGRAM TYPE iv_program_type.
     ASSERT sy-subrc = 0.
+  ENDMETHOD.
+
+
+  METHOD delete_report.
+    DELETE REPORT iv_program ##SUBRC_OK.
   ENDMETHOD.
 
 
@@ -560,18 +568,12 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
       iv_clsname = is_key-clsname
       io_scanner = lo_scanner ).
 
-* TODO, perhaps move this call to somewhere else, to be done while cleaning up the CLAS deserialization
-    zcl_abapgit_objects_activation=>add(
-      iv_type = 'CLAS'
-      iv_name = is_key-clsname ).
-
   ENDMETHOD.
 
 
   METHOD zif_abapgit_oo_object_fnc~generate_locals.
 
     DATA: lv_program TYPE programm.
-
 
     IF lines( it_local_definitions ) > 0.
       lv_program = cl_oo_classname_service=>get_ccdef_name( is_key-clsname ).
@@ -591,10 +593,13 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
                      it_source  = it_local_macros ).
     ENDIF.
 
+    lv_program = cl_oo_classname_service=>get_ccau_name( is_key-clsname ).
     IF lines( it_local_test_classes ) > 0.
-      lv_program = cl_oo_classname_service=>get_ccau_name( is_key-clsname ).
       update_report( iv_program = lv_program
                      it_source  = it_local_test_classes ).
+    ELSE.
+      " Drop the include to remove left-over test classes
+      delete_report( lv_program ).
     ENDIF.
 
   ENDMETHOD.
