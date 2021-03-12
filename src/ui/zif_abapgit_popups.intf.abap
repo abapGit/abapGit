@@ -37,11 +37,6 @@ INTERFACE zif_abapgit_popups
       VALUE(rv_folder_logic) TYPE string
     RAISING
       zcx_abapgit_exception .
-  METHODS popup_object
-    RETURNING
-      VALUE(rs_tadir) TYPE zif_abapgit_definitions=>ty_tadir
-    RAISING
-      zcx_abapgit_exception .
   METHODS create_branch_popup
     IMPORTING
       !iv_source_branch_name TYPE string
