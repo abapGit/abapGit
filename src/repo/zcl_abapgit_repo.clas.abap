@@ -5,6 +5,8 @@ CLASS zcl_abapgit_repo DEFINITION
 
   PUBLIC SECTION.
 
+    DATA ms_data TYPE zif_abapgit_persistence=>ty_repo  READ-ONLY.
+
     METHODS bind_listener
       IMPORTING
         !ii_listener TYPE REF TO zif_abapgit_repo_listener .
@@ -139,12 +141,16 @@ CLASS zcl_abapgit_repo DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS reset_status .
+    METHODS get_unsupported_objects_local
+      RETURNING
+        VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_items_tt
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
 
     DATA mt_local TYPE zif_abapgit_definitions=>ty_files_item_tt .
     DATA mt_remote TYPE zif_abapgit_definitions=>ty_files_tt .
     DATA mv_request_local_refresh TYPE abap_bool .
-    DATA ms_data TYPE zif_abapgit_persistence=>ty_repo .
     DATA mv_request_remote_refresh TYPE abap_bool .
     DATA mt_status TYPE zif_abapgit_definitions=>ty_results_tt .
     DATA mi_log TYPE REF TO zif_abapgit_log .
@@ -211,7 +217,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 
   METHOD bind_listener.
@@ -549,6 +555,33 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
   METHOD get_package.
     rv_package = ms_data-package.
+  ENDMETHOD.
+
+
+  METHOD get_unsupported_objects_local.
+
+    DATA: lt_tadir           TYPE zif_abapgit_definitions=>ty_tadir_tt,
+          lt_supported_types TYPE zcl_abapgit_objects=>ty_types_tt.
+
+    FIELD-SYMBOLS: <ls_tadir>  LIKE LINE OF lt_tadir,
+                   <ls_object> LIKE LINE OF rt_objects.
+
+    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
+                      iv_package            = ms_data-package
+                      iv_ignore_subpackages = ms_data-local_settings-ignore_subpackages
+                      iv_only_local_objects = ms_data-local_settings-only_local_objects
+                      io_dot                = get_dot_abapgit( ) ).
+
+    lt_supported_types = zcl_abapgit_objects=>supported_list( ).
+    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+      READ TABLE lt_supported_types WITH KEY table_line = <ls_tadir>-object TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        APPEND INITIAL LINE TO rt_objects ASSIGNING <ls_object>.
+        MOVE-CORRESPONDING <ls_tadir> TO <ls_object>.
+        <ls_object>-obj_type = <ls_tadir>-object.
+      ENDIF.
+    ENDLOOP.
+
   ENDMETHOD.
 
 

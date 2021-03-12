@@ -127,19 +127,21 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS render_package_name
       IMPORTING
-        !iv_package     TYPE devclass
-        !iv_interactive TYPE abap_bool DEFAULT abap_true
+        !iv_package        TYPE devclass
+        !iv_interactive    TYPE abap_bool DEFAULT abap_true
+        !iv_suppress_title TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(ri_html)  TYPE REF TO zif_abapgit_html
+        VALUE(ri_html)     TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS render_user_name
       IMPORTING
-        !iv_username    TYPE xubname
-        !iv_interactive TYPE abap_bool DEFAULT abap_true
-        !iv_icon_only   TYPE abap_bool DEFAULT abap_false
+        !iv_username       TYPE xubname
+        !iv_interactive    TYPE abap_bool DEFAULT abap_true
+        !iv_icon_only      TYPE abap_bool DEFAULT abap_false
+        !iv_suppress_title TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(ri_html)  TYPE REF TO zif_abapgit_html
+        VALUE(ri_html)     TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS render_transport
@@ -202,9 +204,6 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     )->add(
       iv_txt = 'Object to Files'
       iv_act = zif_abapgit_definitions=>c_action-zip_object
-    )->add(
-      iv_txt = 'Test Changed by'
-      iv_act = zif_abapgit_definitions=>c_action-changed_by
     )->add(
       iv_txt = 'Debug Info'
       iv_act = zif_abapgit_definitions=>c_action-go_debuginfo ).
@@ -692,8 +691,10 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    SELECT SINGLE ctext FROM tdevct INTO lv_title
-      WHERE devclass = iv_package AND spras = sy-langu ##SUBRC_OK.
+    IF iv_suppress_title = abap_false.
+      SELECT SINGLE ctext FROM tdevct INTO lv_title
+        WHERE devclass = iv_package AND spras = sy-langu ##SUBRC_OK.
+    ENDIF.
 
     lv_obj_name = iv_package.
     lv_jump = zcl_abapgit_html_action_utils=>jump_encode(
@@ -717,23 +718,27 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
   METHOD render_repo_palette.
 
-    DATA li_repo_srv TYPE REF TO zif_abapgit_repo_srv.
+    DATA lt_repo_obj_list TYPE zif_abapgit_repo_srv=>ty_repo_list.
     DATA lt_repo_list TYPE zif_abapgit_persistence=>ty_repos.
     DATA lv_repo_json TYPE string.
     DATA lv_size TYPE i.
-    FIELD-SYMBOLS <ls_repo> LIKE LINE OF lt_repo_list.
+    DATA ls_repo_data LIKE LINE OF lt_repo_list.
 
-    li_repo_srv = zcl_abapgit_repo_srv=>get_instance( ).
-    lt_repo_list = zcl_abapgit_persist_factory=>get_repo( )->list( ).
+    FIELD-SYMBOLS:
+      <ls_repo>     LIKE LINE OF lt_repo_list,
+      <lr_repo_obj> LIKE LINE OF lt_repo_obj_list.
+
+    lt_repo_obj_list = zcl_abapgit_repo_srv=>get_instance( )->list( ).
+    LOOP AT lt_repo_obj_list ASSIGNING <lr_repo_obj>.
+      ls_repo_data = <lr_repo_obj>->ms_data.
+      ls_repo_data-local_settings-display_name = <lr_repo_obj>->get_name( ).
+      APPEND ls_repo_data TO lt_repo_list.
+    ENDLOOP.
+
     lv_size = lines( lt_repo_list ).
+    SORT lt_repo_list BY local_settings-display_name AS TEXT.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    " Sort list by display name
-    LOOP AT lt_repo_list ASSIGNING <ls_repo>.
-      <ls_repo>-local_settings-display_name = li_repo_srv->get( <ls_repo>-key )->get_name( ).
-    ENDLOOP.
-    SORT lt_repo_list BY local_settings-display_name AS TEXT.
 
     ri_html->add( 'var repoCatalog = [' ). " Maybe separate this into another method if needed in more places
     LOOP AT lt_repo_list ASSIGNING <ls_repo>.
@@ -950,7 +955,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    IF iv_username <> zcl_abapgit_objects_super=>c_user_unknown.
+    IF iv_username <> zcl_abapgit_objects_super=>c_user_unknown AND iv_suppress_title = abap_false.
       CALL FUNCTION 'SUSR_USER_ADDRESS_READ'
         EXPORTING
           user_name              = iv_username

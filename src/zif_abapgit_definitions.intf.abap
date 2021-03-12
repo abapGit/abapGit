@@ -462,7 +462,8 @@ INTERFACE zif_abapgit_definitions
       go_db                         TYPE string VALUE 'go_db',
       go_background                 TYPE string VALUE 'go_background',
       go_background_run             TYPE string VALUE 'go_background_run',
-      go_diff                       TYPE string VALUE 'go_diff',
+      go_repo_diff                  TYPE string VALUE 'go_repo_diff',
+      go_file_diff                  TYPE string VALUE 'go_fill_diff',
       go_stage                      TYPE string VALUE 'go_stage',
       go_commit                     TYPE string VALUE 'go_commit',
       go_branch_overview            TYPE string VALUE 'go_branch_overview',
@@ -481,7 +482,6 @@ INTERFACE zif_abapgit_definitions
       change_order_by               TYPE string VALUE 'change_order_by',
       goto_message                  TYPE string VALUE 'goto_message',
       direction                     TYPE string VALUE 'direction',
-      changed_by                    TYPE string VALUE 'changed_by',
       documentation                 TYPE string VALUE 'documentation',
       changelog                     TYPE string VALUE 'changelog',
     END OF c_action.
@@ -512,7 +512,7 @@ INTERFACE zif_abapgit_definitions
     END OF c_method .
 
   TYPES:
-    ty_languages TYPE STANDARD TABLE OF sy-langu WITH DEFAULT KEY.
+    ty_languages TYPE STANDARD TABLE OF laiso WITH DEFAULT KEY.
   TYPES:
     BEGIN OF ty_i18n_params,
       main_language         TYPE sy-langu,

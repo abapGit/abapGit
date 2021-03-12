@@ -125,7 +125,8 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO_CLIF IMPLEMENTATION.
     DATA: lt_tab_attributes TYPE enhclasstabattrib,
           lt_tab_types      TYPE enhtype_tab,
           lt_tab_methods    TYPE enhnewmeth_tab,
-          lt_tab_eventdata  TYPE enhevent_tab.
+          lt_tab_eventdata  TYPE enhevent_tab,
+          lv_editorder      TYPE i.
 
     FIELD-SYMBOLS: <ls_attr>        LIKE LINE OF lt_tab_attributes,
                    <ls_type>        LIKE LINE OF lt_tab_types,
@@ -159,12 +160,16 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO_CLIF IMPLEMENTATION.
              <ls_type>-descript_id.
     ENDLOOP.
 
+    lv_editorder = 0.
+    SORT lt_tab_methods BY meth_header-editorder.
     LOOP AT lt_tab_methods ASSIGNING <ls_meth>.
       CLEAR: <ls_meth>-meth_header-author,
              <ls_meth>-meth_header-createdon,
              <ls_meth>-meth_header-changedby,
              <ls_meth>-meth_header-changedon,
              <ls_meth>-meth_header-descript_id.
+      lv_editorder = lv_editorder + 1.
+      <ls_meth>-meth_header-editorder = lv_editorder.
       LOOP AT <ls_meth>-meth_param ASSIGNING <ls_param>.
         CLEAR: <ls_param>-author,
                <ls_param>-createdon,

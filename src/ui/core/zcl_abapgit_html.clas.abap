@@ -46,6 +46,7 @@ CLASS zcl_abapgit_html DEFINITION
 
     CLASS-DATA go_single_tags_re TYPE REF TO cl_abap_regex .
     DATA mt_buffer TYPE string_table .
+    CLASS-DATA gv_spaces TYPE string .
 
     METHODS indent_line
       CHANGING
@@ -67,7 +68,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_html IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
 
   METHOD checkbox.
@@ -88,6 +89,10 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
       EXPORTING
         pattern     = '<(AREA|BASE|BR|COL|COMMAND|EMBED|HR|IMG|INPUT|LINK|META|PARAM|SOURCE|!)'
         ignore_case = abap_false.
+
+    gv_spaces = repeat( val = ` `
+                        occ = 200 ).
+
   ENDMETHOD.
 
 
@@ -130,8 +135,8 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
 
   METHOD indent_line.
 
-    DATA: ls_study TYPE ty_study_result,
-          lv_x_str TYPE string.
+    DATA: ls_study  TYPE ty_study_result,
+          lv_spaces TYPE i.
 
     ls_study = study_line(
       is_context = cs_context
@@ -154,9 +159,8 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
         OR ls_study-curly_close = abap_true
         OR ls_study-tag_close = abap_true )
         AND cs_context-indent > 0.
-      lv_x_str = repeat( val = ` `
-                         occ = ( cs_context-indent - 1 ) * c_indent_size ).
-      cv_line  = lv_x_str && cv_line.
+      lv_spaces = ( cs_context-indent - 1 ) * c_indent_size.
+      cv_line  = gv_spaces(lv_spaces) && cv_line.
     ELSE.
       cv_line = cs_context-indent_str && cv_line.
     ENDIF.
@@ -182,8 +186,8 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
       ELSEIF cs_context-indent > 0. " AND ls_study-openings < ls_study-closings
         cs_context-indent = cs_context-indent - 1.
       ENDIF.
-      cs_context-indent_str = repeat( val = ` `
-                                      occ = cs_context-indent * c_indent_size ).
+      lv_spaces = cs_context-indent * c_indent_size.
+      cs_context-indent_str = gv_spaces(lv_spaces).
     ENDIF.
 
   ENDMETHOD.
@@ -241,7 +245,10 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
 
       FIND ALL OCCURRENCES OF '<'  IN lv_line MATCH COUNT rs_result-openings.
       FIND ALL OCCURRENCES OF '</' IN lv_line MATCH COUNT rs_result-closings.
-      FIND ALL OCCURRENCES OF REGEX go_single_tags_re IN lv_line MATCH COUNT rs_result-singles.
+      IF rs_result-closings <> rs_result-openings.
+* if everything is closings, there are no single tags
+        FIND ALL OCCURRENCES OF REGEX go_single_tags_re IN lv_line MATCH COUNT rs_result-singles.
+      ENDIF.
       rs_result-openings = rs_result-openings - rs_result-closings - rs_result-singles.
 
     ENDIF.

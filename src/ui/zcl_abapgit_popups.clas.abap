@@ -37,19 +37,19 @@ CLASS zcl_abapgit_popups DEFINITION
       EXPORTING
         !et_list TYPE INDEX TABLE .
     METHODS on_select_list_link_click
-          FOR EVENT link_click OF cl_salv_events_table
+        FOR EVENT link_click OF cl_salv_events_table
       IMPORTING
-          !row
-          !column .
+        !row
+        !column .
     METHODS on_select_list_function_click
-          FOR EVENT added_function OF cl_salv_events_table
+        FOR EVENT added_function OF cl_salv_events_table
       IMPORTING
-          !e_salv_function .
+        !e_salv_function .
     METHODS on_double_click
-          FOR EVENT double_click OF cl_salv_events_table
+        FOR EVENT double_click OF cl_salv_events_table
       IMPORTING
-          !row
-          !column .
+        !row
+        !column .
     METHODS extract_field_values
       IMPORTING
         it_fields           TYPE zif_abapgit_popups=>ty_sval_tt
@@ -721,38 +721,6 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
   ENDMETHOD.
 
-
-  METHOD zif_abapgit_popups~popup_object.
-
-    DATA: lt_fields      TYPE TABLE OF sval.
-    DATA: lv_object_type TYPE spo_value.
-    DATA: lv_object_name TYPE spo_value.
-
-    CLEAR: rs_tadir-object, rs_tadir-obj_name.
-
-    add_field( EXPORTING iv_tabname   = 'TADIR'
-                         iv_fieldname = 'OBJECT'
-                         iv_fieldtext = 'Type'
-               CHANGING ct_fields     = lt_fields ).
-
-    add_field( EXPORTING iv_tabname   = 'TADIR'
-                         iv_fieldname = 'OBJ_NAME'
-                         iv_fieldtext = 'Name'
-               CHANGING ct_fields     = lt_fields ).
-
-    _popup_3_get_values( EXPORTING iv_popup_title    = 'Object'
-                                   iv_no_value_check = abap_true
-                         IMPORTING ev_value_1        = lv_object_type
-                                   ev_value_2        = lv_object_name
-                         CHANGING  ct_fields         = lt_fields ).
-
-    rs_tadir = zcl_abapgit_factory=>get_tadir( )->read_single(
-      iv_object   = to_upper( lv_object_type )
-      iv_obj_name = to_upper( lv_object_name ) ).
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_popups~popup_package_export.
 
     DATA: lt_fields       TYPE TABLE OF sval.
@@ -864,32 +832,6 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_popups~popup_proxy_bypass.
-    rt_proxy_bypass = it_proxy_bypass.
-    CALL FUNCTION 'COMPLEX_SELECTIONS_DIALOG'
-      EXPORTING
-        title             = 'Bypass proxy settings for these Hosts & Domains'
-        signed            = abap_false
-        lower_case        = abap_true
-        no_interval_check = abap_true
-      TABLES
-        range             = rt_proxy_bypass
-      EXCEPTIONS
-        no_range_tab      = 1
-        cancelled         = 2
-        internal_error    = 3
-        invalid_fieldname = 4
-        OTHERS            = 5.
-    CASE sy-subrc.
-      WHEN 0.
-      WHEN 2.
-        RAISE EXCEPTION TYPE zcx_abapgit_cancel.
-      WHEN OTHERS.
-        zcx_abapgit_exception=>raise( 'Error from COMPLEX_SELECTIONS_DIALOG' ).
-    ENDCASE.
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_popups~popup_search_help.
 
     DATA lt_ret TYPE TABLE OF ddshretval.
@@ -915,9 +857,14 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     ENDIF.
 
     IF lines( lt_ret ) > 0.
-      READ TABLE lt_ret INDEX 1 INTO ls_ret.
-      ASSERT sy-subrc = 0.
-      rv_value = ls_ret-fieldval.
+      READ TABLE lt_ret WITH KEY fieldname = lv_fieldname INTO ls_ret.
+      IF sy-subrc = 0.
+        rv_value = ls_ret-fieldval.
+      ELSE.
+        READ TABLE lt_ret INDEX 1 INTO ls_ret.
+        ASSERT sy-subrc = 0.
+        rv_value = ls_ret-fieldval.
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.
@@ -1015,25 +962,6 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
     rs_transport_branch-branch_name = lv_branch_name.
     rs_transport_branch-commit_text = lv_commit_text.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_popups~popup_to_inform.
-
-    DATA: lv_line1 TYPE c LENGTH 70,
-          lv_line2 TYPE c LENGTH 70.
-
-    lv_line1 = iv_text_message.
-    IF strlen( iv_text_message ) > 70.
-      lv_line2 = iv_text_message+70.
-    ENDIF.
-
-    CALL FUNCTION 'POPUP_TO_INFORM'
-      EXPORTING
-        titel = iv_titlebar
-        txt1  = lv_line1
-        txt2  = lv_line2.
 
   ENDMETHOD.
 
