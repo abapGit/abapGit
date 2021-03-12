@@ -74,7 +74,7 @@
   },
   "rules": {
     "no_yoda_conditions": false,
-    "select_always_order_by": false,
+    "select_add_order_by": false,
     "dangerous_statement": false,
     "db_operation_in_loop": false,
     "select_performance": false,
