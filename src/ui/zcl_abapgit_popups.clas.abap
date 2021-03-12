@@ -37,19 +37,19 @@ CLASS zcl_abapgit_popups DEFINITION
       EXPORTING
         !et_list TYPE INDEX TABLE .
     METHODS on_select_list_link_click
-          FOR EVENT link_click OF cl_salv_events_table
+        FOR EVENT link_click OF cl_salv_events_table
       IMPORTING
-          !row
-          !column .
+        !row
+        !column .
     METHODS on_select_list_function_click
-          FOR EVENT added_function OF cl_salv_events_table
+        FOR EVENT added_function OF cl_salv_events_table
       IMPORTING
-          !e_salv_function .
+        !e_salv_function .
     METHODS on_double_click
-          FOR EVENT double_click OF cl_salv_events_table
+        FOR EVENT double_click OF cl_salv_events_table
       IMPORTING
-          !row
-          !column .
+        !row
+        !column .
     METHODS extract_field_values
       IMPORTING
         it_fields           TYPE zif_abapgit_popups=>ty_sval_tt
@@ -89,7 +89,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
+CLASS zcl_abapgit_popups IMPLEMENTATION.
 
 
   METHOD add_field.
@@ -889,9 +889,14 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
     ENDIF.
 
     IF lines( lt_ret ) > 0.
-      READ TABLE lt_ret INDEX 1 INTO ls_ret.
-      ASSERT sy-subrc = 0.
-      rv_value = ls_ret-fieldval.
+      READ TABLE lt_ret WITH KEY fieldname = lv_fieldname INTO ls_ret.
+      IF sy-subrc = 0.
+        rv_value = ls_ret-fieldval.
+      ELSE.
+        READ TABLE lt_ret INDEX 1 INTO ls_ret.
+        ASSERT sy-subrc = 0.
+        rv_value = ls_ret-fieldval.
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.

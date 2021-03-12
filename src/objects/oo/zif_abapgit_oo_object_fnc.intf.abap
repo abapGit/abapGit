@@ -1,5 +1,13 @@
 INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
 
+  CONSTANTS:
+    BEGIN OF c_parts,
+      locals_def  TYPE string VALUE 'locals_def',
+      locals_imp  TYPE string VALUE 'locals_imp',
+      macros      TYPE string VALUE 'macros',
+      testclasses TYPE string VALUE 'testclasses',
+    END OF c_parts.
+
   TYPES: BEGIN OF ty_includes,
            programm TYPE programm,
          END OF ty_includes,
@@ -21,7 +29,6 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
     generate_locals
       IMPORTING
         is_key                   TYPE seoclskey
-        iv_force                 TYPE abap_bool DEFAULT abap_true
         it_local_definitions     TYPE seop_source_string OPTIONAL
         it_local_implementations TYPE seop_source_string OPTIONAL
         it_local_macros          TYPE seop_source_string OPTIONAL
