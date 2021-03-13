@@ -10,28 +10,26 @@ CLASS zcl_abapgit_cts_api DEFINITION
       zif_abapgit_cts_api.
   PROTECTED SECTION.
   PRIVATE SECTION.
+
     "! Returns the transport request / task the object is currently locked in
     "! @parameter iv_program_id | Program ID
     "! @parameter iv_object_type | Object type
     "! @parameter iv_object_name | Object name
-    "! @parameter iv_resolve_task_to_request | Return the transport request number if the object is locked in a task
     "! @parameter rv_transport | Transport request / task
     "! @raising zcx_abapgit_exception | Object is not locked in a transport
     METHODS get_current_transport_for_obj
       IMPORTING
-        !iv_program_id              TYPE pgmid DEFAULT 'R3TR'
-        !iv_object_type             TYPE trobjtype
-        !iv_object_name             TYPE sobj_name
-        !iv_resolve_task_to_request TYPE abap_bool DEFAULT abap_true
+        !iv_program_id      TYPE pgmid DEFAULT 'R3TR'
+        !iv_object_type     TYPE trobjtype
+        !iv_object_name     TYPE sobj_name
       RETURNING
-        VALUE(rv_transport)         TYPE trkorr
+        VALUE(rv_transport) TYPE trkorr
       RAISING
         zcx_abapgit_exception .
     "! Returns the transport request / task that includes the object (even if not locked)
     "! @parameter iv_program_id | Program ID
     "! @parameter iv_object_type | Object type
     "! @parameter iv_object_name | Object name
-    "! @parameter iv_resolve_task_to_request | Return the transport request number if the object is in a task
     "! @parameter rv_transport | Transport request / task
     "! @raising zcx_abapgit_exception | Object is not locked in a transport
     METHODS get_current_transport_from_db
@@ -39,7 +37,6 @@ CLASS zcl_abapgit_cts_api DEFINITION
         !iv_program_id              TYPE pgmid DEFAULT 'R3TR'
         !iv_object_type             TYPE trobjtype
         !iv_object_name             TYPE sobj_name
-        !iv_resolve_task_to_request TYPE abap_bool DEFAULT abap_true
       RETURNING
         VALUE(rv_transport)         TYPE trkorr
       RAISING
@@ -83,7 +80,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_cts_api IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
 
 
   METHOD get_current_transport_for_obj.
@@ -123,27 +120,19 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Object type { iv_program_id }-{ iv_object_type } not lockable| ).
     ENDIF.
 
-    IF lv_task IS NOT INITIAL AND lv_task <> lv_transport_request AND iv_resolve_task_to_request = abap_false.
-      rv_transport = lv_task.
-    ELSE.
-      rv_transport = lv_transport_request.
-    ENDIF.
+    rv_transport = lv_transport_request.
+
   ENDMETHOD.
 
 
   METHOD get_current_transport_from_db.
 
-    DATA lv_strkorr TYPE e070-strkorr.
-
     " This method is used for objects that are included in transports but not locked
     " for example, namespaces (NSPC)
-    SELECT SINGLE a~trkorr a~strkorr FROM e070 AS a JOIN e071 AS b ON a~trkorr = b~trkorr
-      INTO (rv_transport, lv_strkorr)
+    SELECT SINGLE a~trkorr FROM e070 AS a JOIN e071 AS b ON a~trkorr = b~trkorr
+      INTO rv_transport
       WHERE ( a~trstatus = 'D' OR a~trstatus = 'L' )
       AND b~pgmid = iv_program_id AND b~object = iv_object_type AND b~obj_name = iv_object_name.
-    IF sy-subrc = 0 AND iv_resolve_task_to_request = abap_true.
-      rv_transport = lv_strkorr.
-    ENDIF.
 
   ENDMETHOD.
 
@@ -233,16 +222,14 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
            iv_object_name = is_item-obj_name ) = abap_true.
 
         rv_transport = get_current_transport_for_obj(
-                         iv_object_type             = is_item-obj_type
-                         iv_object_name             = is_item-obj_name
-                         iv_resolve_task_to_request = iv_resolve_task_to_request ).
+                         iv_object_type = is_item-obj_type
+                         iv_object_name = is_item-obj_name ).
 
       ELSEIF is_object_type_transportable( is_item-obj_type ) = abap_true.
 
         rv_transport = get_current_transport_from_db(
-                         iv_object_type             = is_item-obj_type
-                         iv_object_name             = is_item-obj_name
-                         iv_resolve_task_to_request = iv_resolve_task_to_request ).
+                         iv_object_type = is_item-obj_type
+                         iv_object_name = is_item-obj_name  ).
 
       ENDIF.
 
