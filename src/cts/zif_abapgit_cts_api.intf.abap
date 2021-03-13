@@ -4,15 +4,13 @@ INTERFACE zif_abapgit_cts_api
 
   "! Returns the transport request / task the object is currently in
   "! @parameter is_item | Object
-  "! @parameter iv_resolve_task_to_request | Return the transport request number
   "! @parameter rv_transport | Transport request / task
   "! @raising zcx_abapgit_exception | Object is not in a transport
   METHODS get_transport_for_object
     IMPORTING
-      !is_item                    TYPE zif_abapgit_definitions=>ty_item
-      !iv_resolve_task_to_request TYPE abap_bool DEFAULT abap_false
+      !is_item            TYPE zif_abapgit_definitions=>ty_item
     RETURNING
-      VALUE(rv_transport)         TYPE trkorr
+      VALUE(rv_transport) TYPE trkorr
     RAISING
       zcx_abapgit_exception .
   "! Check if change recording is possible for the given package
