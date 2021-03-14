@@ -217,17 +217,19 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
     DATA lv_object_lockable TYPE abap_bool.
     DATA lv_request TYPE trkorr.
     DATA ls_item LIKE LINE OF it_items.
-    DATA lt_tlock TYPE STANDARD TABLE OF tlock WITH DEFAULT KEY.
+    DATA lt_tlock TYPE SORTED TABLE OF tlock WITH NON-UNIQUE KEY object hikey.
     DATA lv_tr_object_name TYPE trobj_name.
-    DATA ls_object_key        TYPE e071.
+    DATA ls_object_key TYPE e071.
     DATA lv_type_check_result TYPE c LENGTH 1.
     DATA ls_lock_key TYPE tlock_int.
     DATA ls_tlock LIKE LINE OF lt_tlock.
     DATA lt_found LIKE lt_tlock.
 
 * Workarounds to improve performance, note that IT_ITEMS might
-* contain 1000s of rows
+* contain 1000s of rows, see standard logic in function module
+* TR_CHECK_OBJECT_LOCK
 
+* avoid database lookups in TLOCK for each item,
     SELECT * FROM tlock INTO TABLE lt_tlock.
     IF sy-subrc <> 0.
       RETURN.
@@ -237,7 +239,7 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
 
       ls_object_key-pgmid = 'R3TR'.
       ls_object_key-object = ls_item-obj_type.
-      ls_object_key-obj_name = '_'. " Dummy value #2071
+      ls_object_key-obj_name = ls_item-obj_name.
 
       CALL FUNCTION 'TR_CHECK_TYPE'
         EXPORTING
@@ -247,20 +249,14 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
           pe_result   = lv_type_check_result.
 
       IF lv_type_check_result = 'L'.
-
         CLEAR lt_found.
         LOOP AT lt_tlock INTO ls_tlock
-              WHERE object =  ls_lock_key-obj
-              AND   hikey  >= ls_lock_key-low
-              AND   lokey  <= ls_lock_key-hi.             "#EC PORTABLE
-          APPEND ls_tlock TO lt_found.
+            WHERE object =  ls_lock_key-obj
+            AND   hikey  >= ls_lock_key-low
+            AND   lokey  <= ls_lock_key-hi.               "#EC PORTABLE
+          lv_request = ls_tlock-trkorr.
           EXIT.
         ENDLOOP.
-
-        IF lines( lt_found ) = 1.
-          WRITE ls_tlock-trkorr.
-        ENDIF.
-
       ELSEIF is_object_type_transportable( ls_item-obj_type ) = abap_true.
         lv_request = get_current_transport_from_db(
           iv_object_type = ls_item-obj_type
