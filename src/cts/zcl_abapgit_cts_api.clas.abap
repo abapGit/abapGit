@@ -214,10 +214,11 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
 
   METHOD zif_abapgit_cts_api~get_transports_for_list.
 
-    DATA: lv_object_lockable TYPE abap_bool,
-          lv_request         TYPE trkorr.
+    DATA lv_object_lockable TYPE abap_bool.
+    DATA lv_request TYPE trkorr.
+    DATA ls_item LIKE LINE OF it_items.
 
-    LOOP AT it_items INTO DATA(ls_item).
+    LOOP AT it_items INTO ls_item.
 
       CALL FUNCTION 'TR_CHECK_OBJECT_LOCK'
         EXPORTING
