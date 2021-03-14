@@ -214,16 +214,14 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
 
   METHOD zif_abapgit_cts_api~get_transports_for_list.
 
-    DATA lv_object_lockable TYPE abap_bool.
     DATA lv_request TYPE trkorr.
-    DATA ls_item LIKE LINE OF it_items.
     DATA lt_tlock TYPE SORTED TABLE OF tlock WITH NON-UNIQUE KEY object hikey.
-    DATA lv_tr_object_name TYPE trobj_name.
     DATA ls_object_key TYPE e071.
     DATA lv_type_check_result TYPE c LENGTH 1.
     DATA ls_lock_key TYPE tlock_int.
-    DATA ls_tlock LIKE LINE OF lt_tlock.
-    DATA lt_found LIKE lt_tlock.
+
+    FIELD-SYMBOLS <ls_item> LIKE LINE OF it_items.
+    FIELD-SYMBOLS <ls_tlock> LIKE LINE OF lt_tlock.
 
 * Workarounds to improve performance, note that IT_ITEMS might
 * contain 1000s of rows, see standard logic in function module
@@ -235,11 +233,12 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    LOOP AT it_items INTO ls_item.
+    LOOP AT it_items ASSIGNING <ls_item>.
+      CLEAR lv_request.
 
       ls_object_key-pgmid = 'R3TR'.
-      ls_object_key-object = ls_item-obj_type.
-      ls_object_key-obj_name = ls_item-obj_name.
+      ls_object_key-object = <ls_item>-obj_type.
+      ls_object_key-obj_name = <ls_item>-obj_name.
 
       CALL FUNCTION 'TR_CHECK_TYPE'
         EXPORTING
@@ -249,18 +248,21 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
           pe_result   = lv_type_check_result.
 
       IF lv_type_check_result = 'L'.
-        CLEAR lt_found.
-        LOOP AT lt_tlock INTO ls_tlock
+        LOOP AT lt_tlock INTO <ls_tlock>
             WHERE object =  ls_lock_key-obj
             AND   hikey  >= ls_lock_key-low
             AND   lokey  <= ls_lock_key-hi.               "#EC PORTABLE
-          lv_request = ls_tlock-trkorr.
+          lv_request = <ls_tlock>-trkorr.
           EXIT.
         ENDLOOP.
-      ELSEIF is_object_type_transportable( ls_item-obj_type ) = abap_true.
+      ELSEIF is_object_type_transportable( <ls_item>-obj_type ) = abap_true.
         lv_request = get_current_transport_from_db(
-          iv_object_type = ls_item-obj_type
-          iv_object_name = ls_item-obj_name ).
+          iv_object_type = <ls_item>-obj_type
+          iv_object_name = <ls_item>-obj_name ).
+      ENDIF.
+
+      IF lv_request IS NOT INITIAL.
+* todo, append to output
       ENDIF.
 
     ENDLOOP.
