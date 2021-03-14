@@ -219,6 +219,7 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
     DATA ls_object_key TYPE e071.
     DATA lv_type_check_result TYPE c LENGTH 1.
     DATA ls_lock_key TYPE tlock_int.
+    DATA ls_transport LIKE LINE OF rt_transports.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF it_items.
     FIELD-SYMBOLS <ls_tlock> LIKE LINE OF lt_tlock.
@@ -262,7 +263,10 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
       ENDIF.
 
       IF lv_request IS NOT INITIAL.
-* todo, append to output
+        ls_transport-obj_type = <ls_item>-obj_type.
+        ls_transport-obj_name = <ls_item>-obj_name.
+        ls_transport-trkorr = lv_request.
+        INSERT ls_transport INTO TABLE rt_transports.
       ENDIF.
 
     ENDLOOP.
