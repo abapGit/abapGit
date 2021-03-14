@@ -217,6 +217,11 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
     DATA lv_object_lockable TYPE abap_bool.
     DATA lv_request TYPE trkorr.
     DATA ls_item LIKE LINE OF it_items.
+    DATA lt_tlock TYPE STANDARD TABLE OF tlock WITH DEFAULT KEY.
+
+    IF lines( it_items ) > 100.
+      SELECT * FROM tlock INTO TABLE lt_tlock.
+    ENDIF.
 
     LOOP AT it_items INTO ls_item.
 
@@ -225,6 +230,7 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
           wi_pgmid             = 'R3TR'
           wi_object            = ls_item-obj_type
           wi_objname           = ls_item-obj_name
+          it_tlock_entries     = lt_tlock
         IMPORTING
           we_lockable_object   = lv_object_lockable
           we_lock_order        = lv_request
