@@ -506,7 +506,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     DATA: lt_changed_by  TYPE ty_changed_by_tt,
           ls_changed_by  LIKE LINE OF lt_changed_by,
-          lt_transports  TYPE zif_abapgit_cts_api=>TY_TRANSPORT_LIST,
+          lt_transports  TYPE zif_abapgit_cts_api=>ty_transport_list,
           ls_transport   LIKE LINE OF lt_transports,
           ls_item_remote TYPE zif_abapgit_definitions=>ty_item.
 
