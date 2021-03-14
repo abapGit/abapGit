@@ -218,13 +218,14 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
     DATA lv_request TYPE trkorr.
     DATA ls_item LIKE LINE OF it_items.
     DATA lt_tlock TYPE STANDARD TABLE OF tlock WITH DEFAULT KEY.
+    DATA lv_tr_object_name TYPE trobj_name.
 
     IF lines( it_items ) > 100.
       SELECT * FROM tlock INTO TABLE lt_tlock.
     ENDIF.
 
     LOOP AT it_items INTO ls_item.
-
+      lv_tr_object_name = ls_item-obj_name.
       CALL FUNCTION 'TR_CHECK_OBJECT_LOCK'
         EXPORTING
           wi_pgmid             = 'R3TR'
