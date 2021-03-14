@@ -219,37 +219,52 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
     DATA ls_item LIKE LINE OF it_items.
     DATA lt_tlock TYPE STANDARD TABLE OF tlock WITH DEFAULT KEY.
     DATA lv_tr_object_name TYPE trobj_name.
+    DATA ls_object_key        TYPE e071.
+    DATA lv_type_check_result TYPE c LENGTH 1.
+    DATA ls_lock_key TYPE tlock_int.
+    DATA ls_tlock LIKE LINE OF lt_tlock.
+    DATA lt_found LIKE lt_tlock.
 
-    IF lines( it_items ) > 100.
-      SELECT * FROM tlock INTO TABLE lt_tlock.
+* Workarounds to improve performance, note that IT_ITEMS might
+* contain 1000s of rows
+
+    SELECT * FROM tlock INTO TABLE lt_tlock.
+    IF sy-subrc <> 0.
+      RETURN.
     ENDIF.
 
     LOOP AT it_items INTO ls_item.
-      lv_tr_object_name = ls_item-obj_name.
-      CALL FUNCTION 'TR_CHECK_OBJECT_LOCK'
-        EXPORTING
-          wi_pgmid             = 'R3TR'
-          wi_object            = ls_item-obj_type
-          wi_objname           = ls_item-obj_name
-          it_tlock_entries     = lt_tlock
-        IMPORTING
-          we_lockable_object   = lv_object_lockable
-          we_lock_order        = lv_request
-        EXCEPTIONS
-          empty_key            = 1
-          no_systemname        = 2
-          no_systemtype        = 3
-          unallowed_lock_order = 4
-          OTHERS               = 5.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise_t100( ).
-      ENDIF.
 
-      IF lv_object_lockable = abap_false
-          AND is_object_type_transportable( ls_item-obj_type ) = abap_true.
+      ls_object_key-pgmid = 'R3TR'.
+      ls_object_key-object = ls_item-obj_type.
+      ls_object_key-obj_name = '_'. " Dummy value #2071
+
+      CALL FUNCTION 'TR_CHECK_TYPE'
+        EXPORTING
+          wi_e071     = ls_object_key
+        IMPORTING
+          we_lock_key = ls_lock_key
+          pe_result   = lv_type_check_result.
+
+      IF lv_type_check_result = 'L'.
+
+        CLEAR lt_found.
+        LOOP AT lt_tlock INTO ls_tlock
+              WHERE object =  ls_lock_key-obj
+              AND   hikey  >= ls_lock_key-low
+              AND   lokey  <= ls_lock_key-hi.             "#EC PORTABLE
+          APPEND ls_tlock TO lt_found.
+          EXIT.
+        ENDLOOP.
+
+        IF lines( lt_found ) = 1.
+          WRITE ls_tlock-trkorr.
+        ENDIF.
+
+      ELSEIF is_object_type_transportable( ls_item-obj_type ) = abap_true.
         lv_request = get_current_transport_from_db(
           iv_object_type = ls_item-obj_type
-          iv_object_name = ls_item-obj_name  ).
+          iv_object_name = ls_item-obj_name ).
       ENDIF.
 
     ENDLOOP.
