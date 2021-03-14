@@ -248,7 +248,7 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
           pe_result   = lv_type_check_result.
 
       IF lv_type_check_result = 'L'.
-        LOOP AT lt_tlock INTO <ls_tlock>
+        LOOP AT lt_tlock ASSIGNING <ls_tlock>
             WHERE object =  ls_lock_key-obj
             AND   hikey  >= ls_lock_key-low
             AND   lokey  <= ls_lock_key-hi.               "#EC PORTABLE
