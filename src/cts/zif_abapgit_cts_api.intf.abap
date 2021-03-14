@@ -24,4 +24,9 @@ INTERFACE zif_abapgit_cts_api
       VALUE(rv_possible) TYPE abap_bool
     RAISING
       zcx_abapgit_exception .
+  METHODS get_transports_for_list
+    IMPORTING
+      !it_items TYPE zif_abapgit_definitions=>ty_items_tt
+    RAISING
+      zcx_abapgit_exception .
 ENDINTERFACE.

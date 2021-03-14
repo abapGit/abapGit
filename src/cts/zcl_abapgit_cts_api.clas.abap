@@ -34,11 +34,11 @@ CLASS zcl_abapgit_cts_api DEFINITION
     "! @raising zcx_abapgit_exception | Object is not locked in a transport
     METHODS get_current_transport_from_db
       IMPORTING
-        !iv_program_id              TYPE pgmid DEFAULT 'R3TR'
-        !iv_object_type             TYPE trobjtype
-        !iv_object_name             TYPE sobj_name
+        !iv_program_id      TYPE pgmid DEFAULT 'R3TR'
+        !iv_object_type     TYPE trobjtype
+        !iv_object_name     TYPE sobj_name
       RETURNING
-        VALUE(rv_transport)         TYPE trkorr
+        VALUE(rv_transport) TYPE trkorr
       RAISING
         zcx_abapgit_exception .
     "! Check if the object is currently locked in a transport
@@ -209,6 +209,43 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
         pe_result = lv_type_check_result.
 
     rv_transportable = boolc( lv_type_check_result CA 'RTL' ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_cts_api~get_transports_for_list.
+
+    DATA: lv_object_lockable TYPE abap_bool,
+          lv_request         TYPE trkorr.
+
+    LOOP AT it_items INTO DATA(ls_item).
+
+      CALL FUNCTION 'TR_CHECK_OBJECT_LOCK'
+        EXPORTING
+          wi_pgmid             = 'R3TR'
+          wi_object            = ls_item-obj_type
+          wi_objname           = ls_item-obj_name
+        IMPORTING
+          we_lockable_object   = lv_object_lockable
+          we_lock_order        = lv_request
+        EXCEPTIONS
+          empty_key            = 1
+          no_systemname        = 2
+          no_systemtype        = 3
+          unallowed_lock_order = 4
+          OTHERS               = 5.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+
+      IF lv_object_lockable = abap_false
+          AND is_object_type_transportable( ls_item-obj_type ) = abap_true.
+        lv_request = get_current_transport_from_db(
+          iv_object_type = ls_item-obj_type
+          iv_object_name = ls_item-obj_name  ).
+      ENDIF.
+
+    ENDLOOP.
+
   ENDMETHOD.
 
 
