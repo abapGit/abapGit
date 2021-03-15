@@ -37,7 +37,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_bridge IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS_BRIDGE IMPLEMENTATION.
 
 
   METHOD class_constructor.
@@ -53,7 +53,8 @@ CLASS zcl_abapgit_objects_bridge IMPLEMENTATION.
       FROM seometarel
       INTO TABLE lt_plugin_class
       WHERE refclsname LIKE 'ZCL_ABAPGITP_OBJECT%'
-      AND version = '1'.                                  "#EC CI_SUBRC
+      AND version = '1'
+      ORDER BY clsname.                                   "#EC CI_SUBRC
 
     CLEAR gt_objtype_map.
     LOOP AT lt_plugin_class INTO lv_plugin_class

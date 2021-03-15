@@ -31,7 +31,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_char IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_CHAR IMPLEMENTATION.
 
 
   METHOD instantiate_char_and_lock.
@@ -291,15 +291,18 @@ CLASS zcl_abapgit_object_char IMPLEMENTATION.
 
     SELECT * FROM cls_attributet INTO TABLE ls_char-cls_attributet
       WHERE name = ms_item-obj_name
-      AND activation_state = lc_active.
+      AND activation_state = lc_active
+      ORDER BY PRIMARY KEY.
 
     SELECT * FROM cls_attr_value INTO TABLE ls_char-cls_attr_value
       WHERE name = ms_item-obj_name
-      AND activation_state = lc_active.
+      AND activation_state = lc_active
+      ORDER BY PRIMARY KEY.
 
     SELECT * FROM cls_attr_valuet INTO TABLE ls_char-cls_attr_valuet
       WHERE name = ms_item-obj_name
-      AND activation_state = lc_active.
+      AND activation_state = lc_active
+      ORDER BY PRIMARY KEY.
 
     io_xml->add( iv_name = 'CHAR'
                  ig_data = ls_char ).
