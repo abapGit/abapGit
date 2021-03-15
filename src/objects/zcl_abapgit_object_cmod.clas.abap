@@ -172,19 +172,22 @@ CLASS ZCL_ABAPGIT_OBJECT_CMOD IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    SELECT * FROM modact INTO TABLE lt_modact WHERE name = ms_item-obj_name.
+    SELECT * FROM modact INTO TABLE lt_modact WHERE name = ms_item-obj_name
+      ORDER BY PRIMARY KEY.
     IF sy-subrc = 0.
       io_xml->add( iv_name = 'MODACT'
                    ig_data = lt_modact ).
     ENDIF.
 
-    SELECT * FROM modtext INTO TABLE lt_modtext WHERE name = ms_item-obj_name AND sprsl = mv_language.
+    SELECT * FROM modtext INTO TABLE lt_modtext WHERE name = ms_item-obj_name AND sprsl = mv_language
+      ORDER BY PRIMARY KEY.
     IF sy-subrc = 0.
       io_xml->add( iv_name = 'MODTEXT'
                    ig_data = lt_modtext ).
     ENDIF.
 
-    SELECT * FROM modattr INTO TABLE lt_modattr WHERE name = ms_item-obj_name.
+    SELECT * FROM modattr INTO TABLE lt_modattr WHERE name = ms_item-obj_name
+      ORDER BY PRIMARY KEY.
     IF sy-subrc = 0.
       LOOP AT lt_modattr ASSIGNING <ls_modattr>.
         CLEAR:
