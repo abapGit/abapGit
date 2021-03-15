@@ -301,6 +301,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       lv_check_link      TYPE string,
       lv_text            TYPE string,
       lv_settings_link   TYPE string.
+    DATA lv_new_length TYPE i.
 
     FIELD-SYMBOLS: <ls_overview> LIKE LINE OF it_overview.
 
@@ -339,7 +340,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
         REPLACE FIRST OCCURRENCE OF 'https://' IN lv_text WITH ''.
         REPLACE FIRST OCCURRENCE OF 'http://' IN lv_text WITH ''.
         IF lv_text CP '*.git'.
-          REPLACE REGEX '\.git$' IN lv_text WITH ''.
+          lv_new_length = strlen( lv_text ) - 4.
+          lv_text  = lv_text(lv_new_length).
         ENDIF.
         ii_html->add( |<td>{ ii_html->a(
           iv_txt   = lv_text
