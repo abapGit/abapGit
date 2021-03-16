@@ -274,8 +274,10 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
 
     " Check if repo exists
     TRY.
-        lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( rv_key ).
-      CATCH zcx_abapgit_exception.
+        zcl_abapgit_persistence_db=>get_instance( )->read(
+          iv_type  = zcl_abapgit_persistence_db=>c_type_repo
+          iv_value = rv_key ).
+      CATCH zcx_abapgit_not_found.
         " remove invalid key
         CLEAR rv_key.
         zif_abapgit_persist_user~set_repo_show( rv_key ).
