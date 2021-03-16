@@ -559,11 +559,10 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
   METHOD other_utilities.
 
-    CASE ii_event->mv_action.
-      WHEN zif_abapgit_definitions=>c_action-ie_devtools.
-        zcl_abapgit_services_basis=>open_ie_devtools( ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
-    ENDCASE.
+    IF ii_event->mv_action = zif_abapgit_definitions=>c_action-ie_devtools.
+      zcl_abapgit_services_basis=>open_ie_devtools( ).
+      rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
+    ENDIF.
 
   ENDMETHOD.
 
