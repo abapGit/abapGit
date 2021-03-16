@@ -11,9 +11,6 @@ CLASS zcl_abapgit_services_basis DEFINITION
         VALUE(rv_package)  TYPE devclass
       RAISING
         zcx_abapgit_exception.
-    CLASS-METHODS test_changed_by
-      RAISING
-        zcx_abapgit_exception.
     CLASS-METHODS run_performance_test
       RAISING
         zcx_abapgit_exception.
@@ -32,7 +29,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_services_basis IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERVICES_BASIS IMPLEMENTATION.
 
 
   METHOD create_package.
@@ -131,18 +128,10 @@ CLASS zcl_abapgit_services_basis IMPLEMENTATION.
           lt_result               TYPE zcl_abapgit_performance_test=>ty_results,
           lo_alv                  TYPE REF TO cl_salv_table,
           lx_salv_error           TYPE REF TO cx_salv_error,
-          lv_current_repo         TYPE zif_abapgit_persistence=>ty_value,
           lo_runtime_column       TYPE REF TO cl_salv_column,
           lo_seconds_column       TYPE REF TO cl_salv_column,
           li_popups               TYPE REF TO zif_abapgit_popups.
 
-    TRY.
-        lv_current_repo = zcl_abapgit_persistence_user=>get_instance( )->get_repo_show( ).
-        IF lv_current_repo IS NOT INITIAL.
-          lv_package = zcl_abapgit_repo_srv=>get_instance( )->get( lv_current_repo )->get_package( ).
-        ENDIF.
-      CATCH zcx_abapgit_exception ##NO_HANDLER.
-    ENDTRY.
 
     li_popups = zcl_abapgit_ui_factory=>get_popups( ).
     li_popups->popup_perf_test_parameters(
@@ -195,26 +184,5 @@ CLASS zcl_abapgit_services_basis IMPLEMENTATION.
           iv_text     = lx_salv_error->get_text( )
           ix_previous = lx_salv_error ).
     ENDTRY.
-  ENDMETHOD.
-
-
-  METHOD test_changed_by.
-
-    DATA ls_tadir TYPE zif_abapgit_definitions=>ty_tadir.
-    DATA ls_item  TYPE zif_abapgit_definitions=>ty_item.
-    DATA lv_user  TYPE xubname.
-
-    ls_tadir = zcl_abapgit_ui_factory=>get_popups( )->popup_object( ).
-    IF ls_tadir IS INITIAL.
-      RETURN.
-    ENDIF.
-
-    ls_item-obj_type = ls_tadir-object.
-    ls_item-obj_name = ls_tadir-obj_name.
-
-    lv_user = zcl_abapgit_objects=>changed_by( ls_item ).
-
-    MESSAGE lv_user TYPE 'S'.
-
   ENDMETHOD.
 ENDCLASS.

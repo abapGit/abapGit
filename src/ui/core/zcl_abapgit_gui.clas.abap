@@ -26,12 +26,6 @@ CLASS zcl_abapgit_gui DEFINITION
     METHODS go_home
       RAISING
         zcx_abapgit_exception .
-    METHODS go_page
-      IMPORTING
-        !ii_page        TYPE REF TO zif_abapgit_gui_renderable
-        !iv_clear_stack TYPE abap_bool DEFAULT abap_true
-      RAISING
-        zcx_abapgit_exception .
     METHODS back
       IMPORTING
         !iv_to_bookmark TYPE abap_bool DEFAULT abap_false
@@ -111,7 +105,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
 
   METHOD back.
@@ -235,18 +229,6 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
       ENDIF.
       render( ).
     ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD go_page.
-
-    IF iv_clear_stack = abap_true.
-      CLEAR mt_stack.
-    ENDIF.
-
-    mi_cur_page = ii_page.
-    render( ).
 
   ENDMETHOD.
 
