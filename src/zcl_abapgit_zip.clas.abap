@@ -23,8 +23,11 @@ CLASS zcl_abapgit_zip DEFINITION
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS export_object
+      IMPORTING
+        iv_object_type TYPE trobjtype
+        iv_object_name TYPE sobj_name
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     CLASS-METHODS export_package
       EXPORTING
         !ev_xstr    TYPE xstring
@@ -73,7 +76,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
+CLASS zcl_abapgit_zip IMPLEMENTATION.
 
 
   METHOD encode_files.
@@ -146,24 +149,22 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF ls_files_item-files.
 
-    WHILE ls_tadir IS INITIAL.
+    ls_tadir = zcl_abapgit_factory=>get_tadir( )->read_single(
+        iv_object   = iv_object_type
+        iv_obj_name = iv_object_name ).
 
-      ls_tadir = zcl_abapgit_ui_factory=>get_popups( )->popup_object( ).
-      IF ls_tadir IS INITIAL.
-        MESSAGE 'Object couldn''t be found' TYPE 'S' DISPLAY LIKE 'E'.
-      ENDIF.
-
-    ENDWHILE.
+    IF ls_tadir IS INITIAL.
+      zcx_abapgit_exception=>raise( 'Object could not be found' ).
+    ENDIF.
 
     ls_files_item-item-obj_type = ls_tadir-object.
     ls_files_item-item-obj_name = ls_tadir-obj_name.
 
-    ls_files_item = zcl_abapgit_objects=>serialize( is_item = ls_files_item-item
+    ls_files_item = zcl_abapgit_objects=>serialize( is_item     = ls_files_item-item
                                                     iv_language = sy-langu ).
 
     IF lines( ls_files_item-files ) = 0.
-      MESSAGE 'Empty' TYPE 'S'.
-      RETURN.
+      zcx_abapgit_exception=>raise( 'Empty' ).
     ENDIF.
 
     cl_gui_frontend_services=>directory_browse(
@@ -172,17 +173,15 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
       CHANGING
         selected_folder = lv_folder ).
     IF lv_folder IS INITIAL.
-      RETURN.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
     gv_prev = lv_folder.
-
     cl_gui_frontend_services=>get_file_separator( CHANGING file_separator = lv_sep ).
 
     LOOP AT ls_files_item-files ASSIGNING <ls_file>.
-      CONCATENATE lv_folder lv_sep <ls_file>-filename INTO lv_fullpath.
-
-      save_binstring_to_localfile( iv_filename = lv_fullpath
+      lv_fullpath = |{ lv_folder }{ lv_sep }{ <ls_file>-filename }|.
+      save_binstring_to_localfile( iv_filename  = lv_fullpath
                                    iv_binstring = <ls_file>-data ).
 
     ENDLOOP.

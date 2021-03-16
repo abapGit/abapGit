@@ -139,7 +139,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -348,9 +348,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
       CLEAR ls_new.
       ls_new-item      = <ls_local>-item.
-      ls_new-transport = li_cts_api->get_transport_for_object(
-        is_item                    = <ls_local>-item
-        iv_resolve_task_to_request = abap_false ).
+      ls_new-transport = li_cts_api->get_transport_for_object( <ls_local>-item ).
 
       IF ls_new-transport IS NOT INITIAL.
         INSERT ls_new INTO TABLE ct_transports.
@@ -389,9 +387,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
         CONTINUE.
       ELSE.
         ls_new-item      = ls_item.
-        ls_new-transport = li_cts_api->get_transport_for_object(
-          is_item                    = ls_item
-          iv_resolve_task_to_request = abap_false ).
+        ls_new-transport = li_cts_api->get_transport_for_object( ls_item ).
 
         IF ls_new-transport IS NOT INITIAL.
           INSERT ls_new INTO TABLE ct_transports.
@@ -422,6 +418,14 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
     ri_page = lo_page.
 
+  ENDMETHOD.
+
+
+  METHOD init_files.
+    ms_files = zcl_abapgit_factory=>get_stage_logic( )->get( mo_repo ).
+    IF lines( ms_files-local ) = 0 AND lines( ms_files-remote ) = 0.
+      zcx_abapgit_exception=>raise( 'There are no changes that could be staged' ).
+    ENDIF.
   ENDMETHOD.
 
 
@@ -905,12 +909,4 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
-
-  METHOD init_files.
-    ms_files = zcl_abapgit_factory=>get_stage_logic( )->get( mo_repo ).
-    IF lines( ms_files-local ) = 0 AND lines( ms_files-remote ) = 0.
-      zcx_abapgit_exception=>raise( 'There are no changes that could be staged' ).
-    ENDIF.
-  ENDMETHOD.
-
 ENDCLASS.
