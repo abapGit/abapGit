@@ -18,6 +18,7 @@
     "zcl_abapgit_url",
     "zcl_abapgit_zlib_convert",
     "zcl_abapgit_gui_event",
+    "zcl_abapgit_git_add_patch",
     "zcl_abapgit_zlib_huffman",
     "zcl_abapgit_zlib_stream",
     "zcl_abapgit_html_action_utils",
@@ -102,6 +103,8 @@
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "unpretty"},
       {"object": "ZCL_ABAPGIT_ZLIB", "class": "ltcl_zlib", "method": "fixed"},
       {"object": "ZCL_ABAPGIT_ZLIB", "class": "ltcl_zlib", "method": "dynamic"},
+      {"object": "ZCL_ABAPGIT_GIT_ADD_PATCH", "class": "ltcl_calculate_patch", "method": "multiple_non_adjacent_delete"},
+      {"object": "ZCL_ABAPGIT_GIT_ADD_PATCH", "class": "ltcl_calculate_patch", "method": "multiple_partial_delete"},
       {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_utils_test", "method": "extract_author_data1"},
       {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_utils_test", "method": "extract_author_data2"},
       {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_utils_test", "method": "extract_author_data9"}
