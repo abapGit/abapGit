@@ -140,14 +140,4 @@ INTERFACE zif_abapgit_popups
       VALUE(rs_pull) TYPE zif_abapgit_pr_enum_provider=>ty_pull_request
     RAISING
       zcx_abapgit_exception .
-  METHODS popup_perf_test_parameters
-    EXPORTING
-      !et_object_type_filter   TYPE zif_abapgit_definitions=>ty_object_type_range
-      !et_object_name_filter   TYPE zif_abapgit_definitions=>ty_object_name_range
-    CHANGING
-      !cv_package              TYPE devclass
-      !cv_include_sub_packages TYPE abap_bool
-      !cv_main_language_only   TYPE abap_bool
-    RAISING
-      zcx_abapgit_exception .
 ENDINTERFACE.

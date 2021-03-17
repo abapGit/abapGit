@@ -53,9 +53,6 @@ CLASS ltcl_popups_mock IMPLEMENTATION.
   METHOD zif_abapgit_popups~popup_package_export.
   ENDMETHOD.
 
-  METHOD zif_abapgit_popups~popup_perf_test_parameters.
-  ENDMETHOD.
-
   METHOD zif_abapgit_popups~popup_search_help.
   ENDMETHOD.
 

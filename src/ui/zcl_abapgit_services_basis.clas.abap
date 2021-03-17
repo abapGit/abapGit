@@ -4,20 +4,17 @@ CLASS zcl_abapgit_services_basis DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+
     CLASS-METHODS create_package
       IMPORTING
-        iv_prefill_package TYPE devclass OPTIONAL
+        !iv_prefill_package TYPE devclass OPTIONAL
       RETURNING
-        VALUE(rv_package)  TYPE devclass
+        VALUE(rv_package)   TYPE devclass
       RAISING
-        zcx_abapgit_exception.
-    CLASS-METHODS run_performance_test
-      RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     CLASS-METHODS open_ie_devtools
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-METHODS raise_error_if_package_exists
@@ -115,74 +112,5 @@ CLASS ZCL_ABAPGIT_SERVICES_BASIS IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-  ENDMETHOD.
-
-
-  METHOD run_performance_test.
-    DATA: lo_performance          TYPE REF TO zcl_abapgit_performance_test,
-          lv_package              TYPE devclass,
-          lv_include_sub_packages TYPE abap_bool VALUE abap_true,
-          lv_main_language_only   TYPE abap_bool VALUE abap_true,
-          lt_object_type_filter   TYPE zif_abapgit_definitions=>ty_object_type_range,
-          lt_object_name_filter   TYPE zif_abapgit_definitions=>ty_object_name_range,
-          lt_result               TYPE zcl_abapgit_performance_test=>ty_results,
-          lo_alv                  TYPE REF TO cl_salv_table,
-          lx_salv_error           TYPE REF TO cx_salv_error,
-          lo_runtime_column       TYPE REF TO cl_salv_column,
-          lo_seconds_column       TYPE REF TO cl_salv_column,
-          li_popups               TYPE REF TO zif_abapgit_popups.
-
-
-    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
-    li_popups->popup_perf_test_parameters(
-      IMPORTING
-        et_object_type_filter   = lt_object_type_filter
-        et_object_name_filter   = lt_object_name_filter
-      CHANGING
-        cv_package              = lv_package
-        cv_include_sub_packages = lv_include_sub_packages
-        cv_main_language_only   = lv_main_language_only ).
-
-    CREATE OBJECT lo_performance
-      EXPORTING
-        iv_package              = lv_package
-        iv_include_sub_packages = lv_include_sub_packages
-        iv_main_language_only   = lv_main_language_only.
-
-
-    lo_performance->set_object_type_filter( lt_object_type_filter ).
-    lo_performance->set_object_name_filter( lt_object_name_filter ).
-
-    lo_performance->run_measurement( ).
-
-    lt_result = lo_performance->get_result( ).
-
-    TRY.
-        cl_salv_table=>factory(
-          IMPORTING
-            r_salv_table = lo_alv
-          CHANGING
-            t_table      = lt_result ).
-        lo_alv->get_functions( )->set_all( ).
-        lo_alv->get_display_settings( )->set_list_header( 'Serialization Performance Test Results' ).
-        lo_runtime_column = lo_alv->get_columns( )->get_column( 'RUNTIME' ).
-        lo_runtime_column->set_medium_text( 'Runtime' ).
-        lo_runtime_column->set_visible( abap_false ).
-        lo_seconds_column = lo_alv->get_columns( )->get_column( 'SECONDS' ).
-        lo_seconds_column->set_medium_text( 'Seconds' ).
-        lo_alv->get_columns( )->set_count_column( 'COUNTER' ).
-        lo_alv->get_aggregations( )->add_aggregation( lo_runtime_column->get_columnname( ) ).
-        lo_alv->get_aggregations( )->add_aggregation( lo_seconds_column->get_columnname( ) ).
-        lo_alv->set_screen_popup(
-          start_column = 1
-          end_column   = 180
-          start_line   = 1
-          end_line     = 25 ).
-        lo_alv->display( ).
-      CATCH cx_salv_error INTO lx_salv_error.
-        zcx_abapgit_exception=>raise(
-          iv_text     = lx_salv_error->get_text( )
-          ix_previous = lx_salv_error ).
-    ENDTRY.
   ENDMETHOD.
 ENDCLASS.
