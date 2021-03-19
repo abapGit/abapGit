@@ -3,38 +3,40 @@ CLASS zcl_abapgit_data_utils DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+
     CLASS-METHODS build_table_itab
       IMPORTING
         !iv_name       TYPE tadir-obj_name
       RETURNING
         VALUE(rr_data) TYPE REF TO data .
-
     CLASS-METHODS build_filename
       IMPORTING
-        is_config          TYPE zif_abapgit_data_config=>ty_config
+        !is_config         TYPE zif_abapgit_data_config=>ty_config
       RETURNING
-        VALUE(rv_filename) TYPE string.
-
+        VALUE(rv_filename) TYPE string .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DATA_UTILS IMPLEMENTATION.
+CLASS zcl_abapgit_data_utils IMPLEMENTATION.
 
 
   METHOD build_filename.
 
-    rv_filename = to_lower( |{ is_config-name }.{ is_config-type }.json| ).
+    rv_filename = to_lower( |{ is_config-name }.{ is_config-type }.{ zif_abapgit_data_config=>c_default_format }| ).
+
+    REPLACE ALL OCCURRENCES OF '/' IN rv_filename WITH '#'.
 
   ENDMETHOD.
 
 
   METHOD build_table_itab.
 
-    DATA lo_structure TYPE REF TO cl_abap_structdescr.
-    DATA lo_table TYPE REF TO cl_abap_tabledescr.
+    DATA:
+      lo_structure TYPE REF TO cl_abap_structdescr,
+      lo_table     TYPE REF TO cl_abap_tabledescr.
 
     lo_structure ?= cl_abap_structdescr=>describe_by_name( iv_name ).
 * todo, also add unique key corresponding to the db table, so duplicates cannot be returned

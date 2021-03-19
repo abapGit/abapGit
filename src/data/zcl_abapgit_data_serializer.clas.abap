@@ -6,9 +6,12 @@ CLASS zcl_abapgit_data_serializer DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_data_serializer .
+
   PROTECTED SECTION.
 
-    METHODS dump_itab
+  PRIVATE SECTION.
+
+    METHODS convert_itab_to_json
       IMPORTING
         !ir_data       TYPE REF TO data
       RETURNING
@@ -21,21 +24,22 @@ CLASS zcl_abapgit_data_serializer DEFINITION
         !it_where      TYPE string_table
       RETURNING
         VALUE(rr_data) TYPE REF TO data .
-  PRIVATE SECTION.
+
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
+CLASS zcl_abapgit_data_serializer IMPLEMENTATION.
 
 
-  METHOD dump_itab.
+  METHOD convert_itab_to_json.
 
-    DATA lo_ajson TYPE REF TO zcl_abapgit_ajson.
-    DATA lv_string TYPE string.
-    DATA lx_ajson TYPE REF TO zcx_abapgit_ajson_error.
+    DATA:
+      lo_ajson  TYPE REF TO zcl_abapgit_ajson,
+      lv_string TYPE string,
+      lx_ajson  TYPE REF TO zcx_abapgit_ajson_error.
+
     FIELD-SYMBOLS <lg_tab> TYPE ANY TABLE.
-
 
     ASSIGN ir_data->* TO <lg_tab>.
 
@@ -58,7 +62,8 @@ CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
   METHOD read_database_table.
 
     DATA lv_where LIKE LINE OF it_where.
-    FIELD-SYMBOLS: <lg_tab> TYPE ANY TABLE.
+
+    FIELD-SYMBOLS <lg_tab> TYPE ANY TABLE.
 
     rr_data = zcl_abapgit_data_utils=>build_table_itab( iv_name ).
     ASSIGN rr_data->* TO <lg_tab>.
@@ -75,25 +80,25 @@ CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
 
   METHOD zif_abapgit_data_serializer~serialize.
 
-    DATA lt_configs TYPE zif_abapgit_data_config=>ty_config_tt.
-    DATA ls_config LIKE LINE OF lt_configs.
-    DATA ls_file LIKE LINE OF rt_files.
-    DATA lr_data TYPE REF TO data.
-
+    DATA:
+      lt_configs TYPE zif_abapgit_data_config=>ty_config_tt,
+      ls_config  LIKE LINE OF lt_configs,
+      ls_file    LIKE LINE OF rt_files,
+      lr_data    TYPE REF TO data.
 
     ls_file-path = zif_abapgit_data_config=>c_default_path.
     lt_configs = ii_config->get_configs( ).
 
     LOOP AT lt_configs INTO ls_config.
       ASSERT ls_config-type = zif_abapgit_data_config=>c_data_type-tabu. " todo
-      ASSERT NOT ls_config-name IS INITIAL.
+      ASSERT ls_config-name IS NOT INITIAL.
 
       lr_data = read_database_table(
         iv_name  = ls_config-name
         it_where = ls_config-where ).
 
       ls_file-filename = zcl_abapgit_data_utils=>build_filename( ls_config ).
-      ls_file-data = dump_itab( lr_data ).
+      ls_file-data = convert_itab_to_json( lr_data ).
       ls_file-sha1 = zcl_abapgit_hash=>sha1_blob( ls_file-data ).
       APPEND ls_file TO rt_files.
 

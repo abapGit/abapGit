@@ -217,7 +217,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
   METHOD bind_listener.
@@ -351,6 +351,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |No transport request was supplied| ).
     ENDIF.
 
+    " Deserialize objects
     TRY.
         lt_updated_files = zcl_abapgit_objects=>deserialize(
             io_repo   = me
@@ -364,9 +365,16 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     APPEND get_dot_abapgit( )->get_signature( ) TO lt_updated_files.
 
+    update_local_checksums( lt_updated_files ).
+
+    " Deserialize data
+    zcl_abapgit_data_factory=>get_deserializer( )->deserialize(
+      ii_config  = get_data_config( )
+      it_files   = get_files_remote( )
+      iv_persist = abap_false ). "<<no persisting, just test for now
+
     CLEAR: mt_local.
 
-    update_local_checksums( lt_updated_files ).
     update_last_deserialize( ).
     reset_status( ).
 
