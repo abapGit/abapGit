@@ -584,6 +584,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     render_header_bar( ri_html ).
+
+    zcl_abapgit_exit=>get_instance( )->wall_message_list( ri_html ).
+
     render_table( ii_html     = ri_html
                   it_overview = mt_overview ).
 
