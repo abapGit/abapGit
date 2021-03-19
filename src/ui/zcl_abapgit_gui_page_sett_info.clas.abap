@@ -30,7 +30,13 @@ CLASS zcl_abapgit_gui_page_sett_info DEFINITION
         measure TYPE string,
         local   TYPE i,
         remote  TYPE i,
-      END OF ty_stats.
+      END OF ty_stats .
+    TYPES:
+      BEGIN OF ty_infos,
+        size TYPE p LENGTH 16 DECIMALS 0,
+        line TYPE p LENGTH 16 DECIMALS 0,
+        sloc TYPE p LENGTH 16 DECIMALS 0,
+      END OF ty_infos .
 
     CONSTANTS:
       BEGIN OF c_id,
@@ -41,50 +47,78 @@ CLASS zcl_abapgit_gui_page_sett_info DEFINITION
         deserialized_at TYPE string VALUE 'deserialized_at',
         stats           TYPE string VALUE 'stats',
         stats_table     TYPE string VALUE 'stats_table',
-      END OF c_id.
+      END OF c_id .
     CONSTANTS:
       BEGIN OF c_event,
         go_back TYPE string VALUE 'go-back',
         save    TYPE string VALUE 'save',
-      END OF c_event.
-
+      END OF c_event .
     DATA mo_form TYPE REF TO zcl_abapgit_html_form .
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map .
-
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo.
-    DATA mt_stats TYPE STANDARD TABLE OF ty_stats WITH KEY measure.
+    DATA mo_repo TYPE REF TO zcl_abapgit_repo .
+    DATA:
+      mt_stats TYPE STANDARD TABLE OF ty_stats WITH KEY measure .
 
     METHODS get_form_schema
       RETURNING
         VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS read_settings
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS read_stats
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
+    METHODS read_stats_files
+      EXPORTING
+        !et_local  TYPE zif_abapgit_definitions=>ty_files_item_tt
+        !et_remote TYPE zif_abapgit_definitions=>ty_files_tt
+      RAISING
+        zcx_abapgit_exception .
+    METHODS read_stats_state
+      RAISING
+        zcx_abapgit_exception .
+    METHODS read_stats_size_lines_sloc
+      IMPORTING
+        !it_local        TYPE zif_abapgit_definitions=>ty_files_item_tt
+        !it_remote       TYPE zif_abapgit_definitions=>ty_files_tt
+      EXPORTING
+        !et_local_items  TYPE zif_abapgit_definitions=>ty_items_tt
+        !et_remote_items TYPE zif_abapgit_definitions=>ty_items_tt
+      RAISING
+        zcx_abapgit_exception .
+    METHODS read_stats_file
+      IMPORTING
+        !is_file       TYPE zif_abapgit_definitions=>ty_file
+      RETURNING
+        VALUE(rs_info) TYPE ty_infos .
+    METHODS read_stats_objects
+      CHANGING
+        !ct_local_items  TYPE zif_abapgit_definitions=>ty_items_tt
+        !ct_remote_items TYPE zif_abapgit_definitions=>ty_items_tt
+      RAISING
+        zcx_abapgit_exception .
     METHODS format_user
       IMPORTING
         !iv_username   TYPE xubname
       RETURNING
-        VALUE(rv_user) TYPE string.
+        VALUE(rv_user) TYPE string .
     METHODS format_timestamp
       IMPORTING
         !iv_timestamp       TYPE timestampl
       RETURNING
-        VALUE(rv_timestamp) TYPE string.
+        VALUE(rv_timestamp) TYPE string .
     METHODS format_size
       IMPORTING
         !iv_size       TYPE i
       RETURNING
-        VALUE(rv_size) TYPE string.
+        VALUE(rv_size) TYPE string .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_INFO IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -118,24 +152,20 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_INFO IMPLEMENTATION.
   METHOD format_size.
 
     DATA:
-      lv_size TYPE p LENGTH 16 DECIMALS 2,
-      lv_unit TYPE string.
+      lv_size TYPE p LENGTH 16 DECIMALS 2.
 
     IF iv_size > 1024 * 1024 * 1024.
       lv_size = iv_size / 1024 / 1024 / 1024.
-      lv_unit = 'GB'.
+      rv_size = |{ lv_size } GB|.
     ELSEIF iv_size > 1024 * 1024.
       lv_size = iv_size / 1024 / 1024.
-      lv_unit = 'MB'.
+      rv_size = |{ lv_size } MB|.
     ELSEIF iv_size > 1024.
       lv_size = iv_size / 1024.
-      lv_unit = 'KB'.
+      rv_size = |{ lv_size } KB|.
     ELSE.
-      lv_size = iv_size.
-      lv_unit = 'Bytes'.
+      rv_size = |{ iv_size } Bytes|.
     ENDIF.
-
-    rv_size = |{ lv_size } { lv_unit }|.
 
   ENDMETHOD.
 
@@ -309,39 +339,82 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_INFO IMPLEMENTATION.
   METHOD read_stats.
 
     DATA:
-      lt_local              TYPE zif_abapgit_definitions=>ty_files_item_tt,
-      lt_remote             TYPE zif_abapgit_definitions=>ty_files_tt,
-      ls_item               TYPE zif_abapgit_definitions=>ty_item,
-      lt_local_items        TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_item WITH DEFAULT KEY,
-      lt_remote_items       TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_item WITH DEFAULT KEY,
-      lt_results            TYPE zif_abapgit_definitions=>ty_results_tt,
-      lt_unsupported_local  TYPE zif_abapgit_definitions=>ty_items_tt,
-      lt_supported_types    TYPE zcl_abapgit_objects=>ty_types_tt,
-      lv_unsupported_remote TYPE i,
-      lv_ignored            TYPE abap_bool,
-      lv_state              TYPE c LENGTH 1,
-      ls_stats              TYPE ty_stats.
-
-    FIELD-SYMBOLS:
-      <ls_local>  LIKE LINE OF lt_local,
-      <ls_remote> LIKE LINE OF lt_remote,
-      <ls_result> LIKE LINE OF lt_results.
+      lt_local        TYPE zif_abapgit_definitions=>ty_files_item_tt,
+      lt_remote       TYPE zif_abapgit_definitions=>ty_files_tt,
+      lt_local_items  TYPE zif_abapgit_definitions=>ty_items_tt,
+      lt_remote_items TYPE zif_abapgit_definitions=>ty_items_tt.
 
     CLEAR mt_stats.
 
-    lt_local = mo_repo->get_files_local( ).
+    read_stats_files(
+      IMPORTING
+        et_local  = lt_local
+        et_remote = lt_remote ).
+
+    read_stats_state( ).
+
+    read_stats_size_lines_sloc(
+      EXPORTING
+        it_local        = lt_local
+        it_remote       = lt_remote
+      IMPORTING
+        et_local_items  = lt_local_items
+        et_remote_items = lt_remote_items ).
+
+    read_stats_objects(
+      CHANGING
+        ct_local_items  = lt_local_items
+        ct_remote_items = lt_remote_items ).
+
+  ENDMETHOD.
+
+
+  METHOD read_stats_file.
+
+    DATA:
+      lv_code TYPE string,
+      lt_code TYPE abaptxt255_tab.
+
+    FIELD-SYMBOLS:
+      <ls_code> LIKE LINE OF lt_code.
+
+    rs_info-size = xstrlen( is_file-data ).
+
+    IF is_file-filename CP '*.abap'.
+      lv_code = zcl_abapgit_convert=>xstring_to_string_utf8( is_file-data ).
+
+      SPLIT lv_code AT zif_abapgit_definitions=>c_newline INTO TABLE lt_code.
+
+      rs_info-line = lines( lt_code ).
+
+      LOOP AT lt_code ASSIGNING <ls_code> WHERE table_line IS NOT INITIAL AND table_line(1) <> '*'.
+        SHIFT <ls_code>-line LEFT DELETING LEADING space.
+        IF <ls_code>-line(1) <> '"'.
+          rs_info-sloc = rs_info-sloc + 1.
+        ENDIF.
+      ENDLOOP.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD read_stats_files.
+
+    DATA ls_stats TYPE ty_stats.
+
+    et_local = mo_repo->get_files_local( ).
 
     ls_stats-measure = 'Number of Files'.
-    ls_stats-local   = lines( lt_local ).
+    ls_stats-local   = lines( et_local ).
 
     IF mo_repo->has_remote_source( ) = abap_true.
-      lt_remote = mo_repo->get_files_remote( ).
-      ls_stats-remote = lines( lt_remote ).
+      et_remote = mo_repo->get_files_remote( ).
+      ls_stats-remote = lines( et_remote ).
     ENDIF.
 
     APPEND ls_stats TO mt_stats.
 
-    IF lt_remote IS NOT INITIAL.
+    IF et_remote IS NOT INITIAL.
       ls_stats-measure = 'Number of Ignored Files'.
       ls_stats-local  = ls_stats-remote - ls_stats-local.
       IF ls_stats-local < 0.
@@ -350,6 +423,124 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_INFO IMPLEMENTATION.
       ls_stats-remote = 0.
       APPEND ls_stats TO mt_stats.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD read_stats_objects.
+
+    DATA:
+      ls_stats           TYPE ty_stats,
+      ls_item            TYPE zif_abapgit_definitions=>ty_item,
+      lt_supported_types TYPE zcl_abapgit_objects=>ty_types_tt.
+
+    ls_stats-measure = 'Number of Objects'.
+
+    DELETE ct_local_items WHERE obj_type IS INITIAL OR obj_name IS INITIAL.
+    ls_stats-local = lines( ct_local_items ).
+
+    DELETE ct_remote_items WHERE obj_type IS INITIAL OR obj_name IS INITIAL.
+    ls_stats-remote = lines( ct_remote_items ).
+
+    APPEND ls_stats TO mt_stats.
+
+    CLEAR ls_stats.
+    ls_stats-measure = 'Number of Unsupported Objects'.
+    ls_stats-local   = lines( mo_repo->get_unsupported_objects_local( ) ).
+
+    lt_supported_types = zcl_abapgit_objects=>supported_list( ).
+
+    LOOP AT ct_remote_items INTO ls_item.
+      READ TABLE lt_supported_types WITH KEY table_line = ls_item-obj_type TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        ls_stats-remote = ls_stats-remote + 1.
+      ENDIF.
+    ENDLOOP.
+
+    APPEND ls_stats TO mt_stats.
+
+  ENDMETHOD.
+
+
+  METHOD read_stats_size_lines_sloc.
+
+    DATA:
+      ls_stats       TYPE ty_stats,
+      lv_ignored     TYPE abap_bool,
+      ls_info_file   TYPE ty_infos,
+      ls_info_local  TYPE ty_infos,
+      ls_info_remote TYPE ty_infos,
+      ls_item        TYPE zif_abapgit_definitions=>ty_item.
+
+    FIELD-SYMBOLS:
+      <ls_local>  LIKE LINE OF it_local,
+      <ls_remote> LIKE LINE OF it_remote.
+
+    LOOP AT it_local ASSIGNING <ls_local>.
+      ls_info_file = read_stats_file( <ls_local>-file ).
+
+      ls_info_local-size = ls_info_local-size + ls_info_file-size.
+      ls_info_local-line = ls_info_local-line + ls_info_file-line.
+      ls_info_local-sloc = ls_info_local-sloc + ls_info_file-sloc.
+
+      COLLECT <ls_local>-item INTO et_local_items.
+    ENDLOOP.
+
+    IF mo_repo->has_remote_source( ) = abap_true.
+      LOOP AT it_remote ASSIGNING <ls_remote>.
+        ls_info_file = read_stats_file( <ls_remote> ).
+
+        ls_info_remote-size = ls_info_remote-size + ls_info_file-size.
+        ls_info_remote-line = ls_info_remote-line + ls_info_file-line.
+        ls_info_remote-sloc = ls_info_remote-sloc + ls_info_file-sloc.
+
+        lv_ignored = mo_repo->get_dot_abapgit( )->is_ignored(
+                       iv_filename = <ls_remote>-filename
+                       iv_path     = <ls_remote>-path ).
+
+        IF <ls_remote>-filename IS NOT INITIAL AND lv_ignored = abap_false.
+          TRY.
+              zcl_abapgit_file_status=>identify_object(
+                EXPORTING
+                  iv_filename = <ls_remote>-filename
+                  iv_path     = <ls_remote>-path
+                  iv_devclass = mo_repo->get_package( )
+                  io_dot      = mo_repo->get_dot_abapgit( )
+                IMPORTING
+                  es_item     = ls_item ).
+              COLLECT ls_item INTO et_remote_items.
+            CATCH zcx_abapgit_exception ##NO_HANDLER.
+          ENDTRY.
+        ENDIF.
+
+      ENDLOOP.
+    ENDIF.
+
+    ls_stats-measure = 'Size of Files'.
+    ls_stats-local   = ls_info_local-size.
+    ls_stats-remote  = ls_info_remote-size.
+    APPEND ls_stats TO mt_stats.
+    ls_stats-measure = 'Lines in ABAP Files'.
+    ls_stats-local   = ls_info_local-line.
+    ls_stats-remote  = ls_info_remote-line.
+    APPEND ls_stats TO mt_stats.
+    ls_stats-measure = 'Lines of Code in ABAP Files'.
+    ls_stats-local   = ls_info_local-sloc.
+    ls_stats-remote  = ls_info_remote-sloc.
+    APPEND ls_stats TO mt_stats.
+
+  ENDMETHOD.
+
+
+  METHOD read_stats_state.
+
+    DATA:
+      lt_results TYPE zif_abapgit_definitions=>ty_results_tt,
+      lv_state   TYPE c LENGTH 1,
+      ls_stats   TYPE ty_stats.
+
+    FIELD-SYMBOLS:
+      <ls_result> LIKE LINE OF lt_results.
 
     lt_results = zcl_abapgit_file_status=>status( mo_repo ).
 
@@ -379,69 +570,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_INFO IMPLEMENTATION.
 
       APPEND ls_stats TO mt_stats.
     ENDDO.
-
-    CLEAR ls_stats.
-    ls_stats-measure = 'Size of Files'.
-
-    LOOP AT lt_local ASSIGNING <ls_local>.
-      ls_stats-local = ls_stats-local + xstrlen( <ls_local>-file-data ).
-
-      COLLECT <ls_local>-item INTO lt_local_items.
-    ENDLOOP.
-
-    IF mo_repo->has_remote_source( ) = abap_true.
-      LOOP AT lt_remote ASSIGNING <ls_remote>.
-        ls_stats-remote = ls_stats-remote + xstrlen( <ls_remote>-data ).
-
-        lv_ignored = mo_repo->get_dot_abapgit( )->is_ignored(
-                       iv_filename = <ls_remote>-filename
-                       iv_path     = <ls_remote>-path ).
-
-        IF <ls_remote>-filename IS NOT INITIAL AND lv_ignored = abap_false.
-          TRY.
-              zcl_abapgit_file_status=>identify_object(
-                EXPORTING
-                  iv_filename = <ls_remote>-filename
-                  iv_path     = <ls_remote>-path
-                  iv_devclass = mo_repo->get_package( )
-                  io_dot      = mo_repo->get_dot_abapgit( )
-                IMPORTING
-                  es_item     = ls_item ).
-              COLLECT ls_item INTO lt_remote_items.
-            CATCH zcx_abapgit_exception ##NO_HANDLER.
-          ENDTRY.
-        ENDIF.
-
-      ENDLOOP.
-    ENDIF.
-
-    APPEND ls_stats TO mt_stats.
-
-    CLEAR ls_stats.
-    ls_stats-measure = 'Number of Objects'.
-
-    DELETE lt_local_items WHERE obj_type IS INITIAL OR obj_name IS INITIAL.
-    ls_stats-local = lines( lt_local_items ).
-
-    DELETE lt_remote_items WHERE obj_type IS INITIAL OR obj_name IS INITIAL.
-    ls_stats-remote = lines( lt_remote_items ).
-
-    APPEND ls_stats TO mt_stats.
-
-    CLEAR ls_stats.
-    lt_supported_types   = zcl_abapgit_objects=>supported_list( ).
-    ls_stats-measure     = 'Number of Unsupported Objects'.
-    lt_unsupported_local = mo_repo->get_unsupported_objects_local( ).
-    ls_stats-local       = lines( lt_unsupported_local ).
-
-    LOOP AT lt_remote_items INTO ls_item.
-      READ TABLE lt_supported_types WITH KEY table_line = ls_item-obj_type TRANSPORTING NO FIELDS.
-      IF sy-subrc <> 0.
-        lv_unsupported_remote = lv_unsupported_remote + 1.
-      ENDIF.
-    ENDLOOP.
-    ls_stats-remote        = lv_unsupported_remote.
-    APPEND ls_stats TO mt_stats.
 
   ENDMETHOD.
 
