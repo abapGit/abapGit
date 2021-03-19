@@ -133,7 +133,7 @@ CLASS zcl_abapgit_gui_page_ex_pckage IMPLEMENTATION.
       WHEN c_event-export_package.
 
         mo_validation_log = mo_form_util->validate( mo_form_data ).
-        IF NOT mo_validation_log->is_empty( ).
+        IF mo_validation_log->is_empty( ) = abap_false.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
         ELSE.
           export_package( ).
