@@ -338,17 +338,22 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     FIELD-SYMBOLS <ls_cmd> LIKE LINE OF mt_commands.
     DATA lv_hint TYPE string.
     DATA ls_form_id TYPE string.
+    DATA ls_form_action TYPE string.
     DATA lv_cur_group TYPE string.
     DATA lv_url TYPE string.
 
     IF mv_form_id IS NOT INITIAL.
       ls_form_id = | id="{ mv_form_id }"|.
     ENDIF.
+    LOOP AT mt_commands ASSIGNING <ls_cmd> WHERE cmd_type = zif_abapgit_html_form=>c_cmd_type-input_main.
+      ls_form_action = | action="sapevent:{ <ls_cmd>-action }"|.
+      exit.
+    ENDLOOP.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( |<div class="dialog { iv_form_class }">| ). " to center use 'dialog-form-center'
-    ri_html->add( |<form method="post"{ ls_form_id }>| ).
+    ri_html->add( |<form method="post"{ ls_form_id }{ ls_form_action }>| ).
 
     " Add hidden button that triggers main command when pressing enter
     LOOP AT mt_commands ASSIGNING <ls_cmd> WHERE cmd_type = zif_abapgit_html_form=>c_cmd_type-input_main.
@@ -445,7 +450,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       WHEN zif_abapgit_html_form=>c_cmd_type-input_main.
 
         ii_html->add( |<input type="submit" value="{
-          is_cmd-label }" class="main" formaction="sapevent:{ is_cmd-action }">| ).
+          is_cmd-label }" class="main">| ).
 
       WHEN OTHERS.
         ASSERT 0 = 1.
