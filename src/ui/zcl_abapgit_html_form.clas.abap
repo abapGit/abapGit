@@ -347,7 +347,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     ENDIF.
     LOOP AT mt_commands ASSIGNING <ls_cmd> WHERE cmd_type = zif_abapgit_html_form=>c_cmd_type-input_main.
       ls_form_action = | action="sapevent:{ <ls_cmd>-action }"|.
-      exit.
+      EXIT.
     ENDLOOP.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
