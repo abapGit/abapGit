@@ -72,6 +72,7 @@ CLASS zcl_abapgit_gui DEFINITION
     DATA mi_html_processor TYPE REF TO zif_abapgit_gui_html_processor .
     DATA mi_html_viewer TYPE REF TO zif_abapgit_html_viewer .
     DATA mo_html_parts TYPE REF TO zcl_abapgit_html_parts .
+    DATA mi_common_log TYPE REF TO zif_abapgit_log .
 
     METHODS cache_html
       IMPORTING
@@ -303,9 +304,11 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
         IF li_gui_error_handler IS BOUND AND li_gui_error_handler->handle_error( ix_exception ) = abap_true.
           " We rerender the current page to display the error box
           render( ).
-        ELSEIF ix_exception->mi_log IS BOUND
-            AND ix_exception->mi_log->get_log_level( ) >= zif_abapgit_log=>c_log_level-warning.
-          zcl_abapgit_log_viewer=>show_log( ix_exception->mi_log ).
+        ELSEIF ix_exception->mi_log IS BOUND.
+          mi_common_log = ix_exception->mi_log.
+          IF mi_common_log->get_log_level( ) >= zif_abapgit_log=>c_log_level-warning.
+            zcl_abapgit_log_viewer=>show_log( mi_common_log ).
+          ENDIF.
         ELSE.
           MESSAGE ix_exception TYPE 'S' DISPLAY LIKE 'E'.
         ENDIF.
@@ -476,6 +479,17 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_services~get_html_parts.
     ro_parts = mo_html_parts.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_services~get_log.
+
+    IF iv_create_new = abap_true OR mi_common_log IS NOT BOUND.
+      CREATE OBJECT mi_common_log TYPE zcl_abapgit_log.
+    ENDIF.
+
+    ri_log = mi_common_log.
+
   ENDMETHOD.
 
 
