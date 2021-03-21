@@ -180,7 +180,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
 
   METHOD advanced_submenu.
@@ -213,10 +213,6 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
         iv_txt = 'Open IE DevTools'
         iv_act = zif_abapgit_definitions=>c_action-ie_devtools ).
     ENDIF.
-
-    ro_menu->add(
-      iv_txt = 'Performance Test'
-      iv_act = zif_abapgit_definitions=>c_action-performance_test ).
 
   ENDMETHOD.
 
