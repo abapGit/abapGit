@@ -439,18 +439,21 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
       WHEN zif_abapgit_html_form=>c_cmd_type-button.
 
-        ii_html->add( |<button type="submit" name="action" value="{
-          is_cmd-action }" class="action-commands">{ is_cmd-label }</button>| ).
+        ii_html->add( |<button type="submit"|
+                   && | name="action" value="{ is_cmd-action }"|
+                   && | class="action-commands">{ is_cmd-label }|
+                   && |</button>| ).
 
       WHEN zif_abapgit_html_form=>c_cmd_type-input.
 
-        ii_html->add( |<input type="submit" value="{
-          is_cmd-label }" formaction="sapevent:{ is_cmd-action }">| ).
+        ii_html->add( |<input type="submit"|
+                   && | value="{ is_cmd-label }"|
+                   && | formaction="sapevent:{ is_cmd-action }">| ).
 
       WHEN zif_abapgit_html_form=>c_cmd_type-input_main.
 
-        ii_html->add( |<input type="submit" value="{
-          is_cmd-label }" class="main">| ).
+        ii_html->add( |<input type="submit"|
+                   && | value="{ is_cmd-label }" class="main">| ).
 
       WHEN OTHERS.
         ASSERT 0 = 1.
@@ -582,7 +585,9 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       lv_checked = ' checked'.
     ENDIF.
 
-    ii_html->add( |<input type="checkbox" name="{ is_field-name }" id="{ is_field-name }"{ lv_checked }>| ).
+    ii_html->add( |<input type="checkbox"|
+               && | name="{ is_field-name }"|
+               && | id="{ is_field-name }"{ lv_checked }>| ).
     ii_html->add( |<label for="{ is_field-name }"{ is_attr-hint }>{ is_field-label }</label>| ).
 
   ENDMETHOD.
@@ -623,8 +628,10 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       ENDIF.
 
       lv_opt_id = |{ is_field-name }{ sy-tabix }|.
-      ii_html->add( |<input type="radio" name="{ is_field-name }" id="{
-                    lv_opt_id }" value="{ lv_opt_value }"{ lv_checked }>| ).
+      ii_html->add( |<input type="radio"|
+                 && | name="{ is_field-name }"|
+                 && | id="{ lv_opt_id }"|
+                 && | value="{ lv_opt_value }"{ lv_checked }>| ).
       ii_html->add( |<label for="{ lv_opt_id }">{ <ls_opt>-label }</label>| ).
     ENDLOOP.
 
@@ -679,8 +686,11 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
         IF <ls_subitem>-readonly = abap_true.
           lv_readonly = | readonly|.
         ENDIF.
-        ii_html->add( |<td><input type="text" name="{ lv_cell_id }" id="{
-                      lv_cell_id }" value="{ lv_value }"{ lv_readonly }></td>| ).
+        ii_html->add( |<td><input type="text"|
+                   && | name="{ lv_cell_id }"|
+                   && | id="{ lv_cell_id }"|
+                   && | value="{ lv_value }"|
+                   && |{ lv_readonly }></td>| ).
       ENDLOOP.
       ii_html->add( |</tr>| ).
     ENDDO.
@@ -690,8 +700,11 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     " Hidden field with number of rows to simplify getting values from form
     lv_value = |{ is_field-name }-{ zif_abapgit_html_form=>c_rows }|.
-    ii_html->add( |<input type="number" name="{ lv_value }" id="{
-                  lv_value }" value="{ lv_rows }" style="display:none">| ).
+    ii_html->add( |<input type="number"|
+               && | name="{ lv_value }"|
+               && | id="{ lv_value }"|
+               && | value="{ lv_rows }"|
+               && | style="display:none">| ).
 
   ENDMETHOD.
 
@@ -719,9 +732,11 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       lv_type = 'text'.
     ENDIF.
 
-    ii_html->add( |<input type="{ lv_type }" name="{ is_field-name }" id="{
-                  is_field-name }" value="{ is_attr-value }" { is_field-dblclick }{
-                  is_attr-placeholder }{ is_attr-readonly }>| ).
+    ii_html->add( |<input type="{ lv_type }"|
+               && | name="{ is_field-name }"|
+               && | id="{ is_field-name }"|
+               && | value="{ is_attr-value }"|
+               && | { is_field-dblclick }{ is_attr-placeholder }{ is_attr-readonly }>| ).
 
     IF is_field-side_action IS NOT INITIAL.
       ii_html->add( '</div>' ).
