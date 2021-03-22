@@ -631,10 +631,10 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
   METHOD render_field_table.
 
     DATA:
-      lv_value     TYPE string,
-      lv_readonly  TYPE string,
-      lv_rows      TYPE i,
-      lv_cell_id   TYPE string.
+      lv_value    TYPE string,
+      lv_readonly TYPE string,
+      lv_rows     TYPE i,
+      lv_cell_id  TYPE string.
 
     FIELD-SYMBOLS <ls_subitem> LIKE LINE OF is_field-subitems.
 
@@ -644,44 +644,52 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       ii_html->add( is_attr-error ).
     ENDIF.
 
-    ii_html->add( |<table name="{ is_field-name }" id="{ is_field-name }" class="table-container">| ).
-
-    ii_html->add( |<thead>| ).
-    ii_html->add( |<tr>| ).
-    LOOP AT is_field-subitems ASSIGNING <ls_subitem>.
-      CLEAR lv_value.
-      IF <ls_subitem>-value IS NOT INITIAL.
-        lv_value = escape( val    = <ls_subitem>-value
-                           format = cl_abap_format=>e_html_attr ).
-        lv_value = | width="{ lv_value }"|.
-      ENDIF.
-      ii_html->add( |<td{ lv_value }>{ <ls_subitem>-label }</td>| ).
-    ENDLOOP.
-    ii_html->add( |</tr>| ).
-    ii_html->add( |</thead>| ).
-
     lv_rows = io_values->get( |{ is_field-name }-{ zif_abapgit_html_form=>c_rows }| ).
 
-    ii_html->add( |<tbody>| ).
-    DO lv_rows TIMES.
-      lv_rows = sy-index.
+    " Render table only if there are some data rows
+    IF lv_rows > 0.
+
+      ii_html->add( |<table name="{ is_field-name }" id="{ is_field-name }" class="table-container">| ).
+
+      ii_html->add( |<thead>| ).
       ii_html->add( |<tr>| ).
       LOOP AT is_field-subitems ASSIGNING <ls_subitem>.
-        lv_cell_id = |{ is_field-name }-{ lv_rows }-{ sy-tabix }|.
-        lv_value = escape( val    = io_values->get( lv_cell_id )
-                           format = cl_abap_format=>e_html_attr ).
-        CLEAR lv_readonly.
-        IF <ls_subitem>-readonly = abap_true.
-          lv_readonly = | readonly|.
+        CLEAR lv_value.
+        IF <ls_subitem>-value IS NOT INITIAL.
+          lv_value = escape( val    = <ls_subitem>-value
+                             format = cl_abap_format=>e_html_attr ).
+          lv_value = | width="{ lv_value }"|.
         ENDIF.
-        ii_html->add( |<td><input type="text" name="{ lv_cell_id }" id="{
-                      lv_cell_id }" value="{ lv_value }"{ lv_readonly }></td>| ).
+        ii_html->add( |<td{ lv_value }>{ <ls_subitem>-label }</td>| ).
       ENDLOOP.
       ii_html->add( |</tr>| ).
-    ENDDO.
-    ii_html->add( |</tbody>| ).
+      ii_html->add( |</thead>| ).
 
-    ii_html->add( |</table>| ).
+      ii_html->add( |<tbody>| ).
+      DO lv_rows TIMES.
+        lv_rows = sy-index.
+        ii_html->add( |<tr>| ).
+        LOOP AT is_field-subitems ASSIGNING <ls_subitem>.
+          lv_cell_id = |{ is_field-name }-{ lv_rows }-{ sy-tabix }|.
+          lv_value = escape( val    = io_values->get( lv_cell_id )
+                             format = cl_abap_format=>e_html_attr ).
+          CLEAR lv_readonly.
+          IF <ls_subitem>-readonly = abap_true.
+            lv_readonly = | readonly|.
+          ENDIF.
+          ii_html->add( |<td><input type="text" name="{ lv_cell_id }" id="{
+                        lv_cell_id }" value="{ lv_value }"{ lv_readonly }></td>| ).
+        ENDLOOP.
+        ii_html->add( |</tr>| ).
+      ENDDO.
+      ii_html->add( |</tbody>| ).
+
+      ii_html->add( |</table>| ).
+
+    ELSE.
+      ii_html->add( |<input type="text" name="{ is_field-name }" id="{
+                    is_field-name }" value="Not available" readonly>| ).
+    ENDIF.
 
     " Hidden field with number of rows to simplify getting values from form
     lv_value = |{ is_field-name }-{ zif_abapgit_html_form=>c_rows }|.
