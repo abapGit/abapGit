@@ -87,7 +87,8 @@ CLASS zcl_abapgit_object_sots IMPLEMENTATION.
       WHEN 3.
         zcx_abapgit_exception=>raise( |Enter a permitted object type| ).
       WHEN 4.
-        zcx_abapgit_exception=>raise( |The concept will be created in the non-original system| ).
+        "The concept will be created in the non-original system (not an error)
+        RETURN.
       WHEN 5.
         zcx_abapgit_exception=>raise( |Invalid alias| ).
       WHEN 6.
