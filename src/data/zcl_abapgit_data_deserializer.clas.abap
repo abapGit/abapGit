@@ -91,6 +91,8 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
     ASSIGN ir_data->* TO <lg_new>.
 
     rs_result-table = iv_name.
+    rs_result-deletes = zcl_abapgit_data_utils=>build_table_itab( iv_name ).
+    rs_result-inserts = zcl_abapgit_data_utils=>build_table_itab( iv_name ).
     ASSIGN rs_result-deletes->* TO <lg_del>.
     ASSIGN rs_result-inserts->* TO <lg_ins>.
 
@@ -157,7 +159,7 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 
     IF lines( <lg_tab> ) > 0.
       INSERT (lv_tabname) FROM TABLE <lg_tab>.
-      IF sy-subrc = 0.
+      IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( |Error inserting { lines( <lg_tab> ) } records into table { lv_tabname }| ).
       ENDIF.
     ENDIF.
@@ -166,6 +168,9 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 
 
   METHOD zif_abapgit_data_deserializer~deserialize.
+
+* as a default, this method does NOT change any database tables.
+* you have to explicitly set iv_persist = abap_true to save the data
 
     DATA:
       lt_configs TYPE zif_abapgit_data_config=>ty_config_tt,

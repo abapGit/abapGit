@@ -11,6 +11,8 @@ CLASS zcl_abapgit_data_serializer DEFINITION
 
   PRIVATE SECTION.
 
+    CONSTANTS c_max_records TYPE i VALUE 10000 ##NO_TEXT.
+
     METHODS convert_itab_to_json
       IMPORTING
         !ir_data       TYPE REF TO data
@@ -23,8 +25,9 @@ CLASS zcl_abapgit_data_serializer DEFINITION
         !iv_name       TYPE tadir-obj_name
         !it_where      TYPE string_table
       RETURNING
-        VALUE(rr_data) TYPE REF TO data .
-
+        VALUE(rr_data) TYPE REF TO data
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -61,7 +64,9 @@ CLASS zcl_abapgit_data_serializer IMPLEMENTATION.
 
   METHOD read_database_table.
 
-    DATA lv_where LIKE LINE OF it_where.
+    DATA:
+      lv_records TYPE i,
+      lv_where   LIKE LINE OF it_where.
 
     FIELD-SYMBOLS <lg_tab> TYPE ANY TABLE.
 
@@ -73,6 +78,12 @@ CLASS zcl_abapgit_data_serializer IMPLEMENTATION.
     ENDLOOP.
     IF lines( it_where ) = 0.
       SELECT * FROM (iv_name) INTO TABLE <lg_tab>.
+    ENDIF.
+
+    lv_records = lines( <lg_tab> ).
+    IF lv_records > c_max_records.
+      zcx_abapgit_exception=>raise( |Too many records selected from table { iv_name
+        } (selected { lv_records }, max { c_max_records })| ).
     ENDIF.
 
   ENDMETHOD.
