@@ -208,4 +208,26 @@ CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_exit~wall_message_list.
+
+    TRY.
+        gi_exit->wall_message_list( ii_html ).
+      CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_exit~wall_message_repo.
+
+    TRY.
+        gi_exit->wall_message_repo(
+          is_repo_meta = is_repo_meta
+          ii_html      = ii_html ).
+      CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+    ENDTRY.
+
+  ENDMETHOD.
 ENDCLASS.
