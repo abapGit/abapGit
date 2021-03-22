@@ -568,7 +568,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         OTHERS            = 5.
     IF sy-subrc = 3.
 
-      " For cases that standard function does not handle (like FUGR).
+      " For cases that standard function does not handle (like FUGR),
       " we save active and inactive version of source with the given PROGRAM TYPE.
       " Without the active version, the code will not be visible in case of activation errors.
       INSERT REPORT is_progdir-name
