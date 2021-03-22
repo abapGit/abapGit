@@ -28,9 +28,9 @@ CLASS zcl_abapgit_data_deserializer DEFINITION
         zcx_abapgit_exception .
     METHODS write_database_table
       IMPORTING
-        !iv_name  TYPE tadir-obj_name
-        !it_where TYPE string_table
-        !ir_data  TYPE REF TO data
+        !iv_name TYPE tadir-obj_name
+        !ir_del  TYPE REF TO data
+        !ir_ins  TYPE REF TO data
       RAISING
         zcx_abapgit_exception .
     METHODS read_database_table
@@ -49,9 +49,8 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 
   METHOD convert_json_to_itab.
 
-    DATA:
-      lo_ajson TYPE REF TO zcl_abapgit_ajson,
-      lx_ajson TYPE REF TO zcx_abapgit_ajson_error.
+    DATA lo_ajson TYPE REF TO zcl_abapgit_ajson.
+    DATA lx_ajson TYPE REF TO zcx_abapgit_ajson_error.
 
     FIELD-SYMBOLS <lg_tab> TYPE ANY TABLE.
 
@@ -72,16 +71,14 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 * method currently distinguishes between records be deleted and inserted (comparison of complete record)
 * to-do: compare records based on database key of table to determine updates to existing records
 
-    DATA:
-      lr_data TYPE REF TO data.
+    DATA lr_data TYPE REF TO data.
 
-    FIELD-SYMBOLS:
-      <lg_old> TYPE ANY TABLE,
-      <lg_new> TYPE ANY TABLE,
-      <ls_del> TYPE any,
-      <ls_ins> TYPE any,
-      <lg_del> TYPE ANY TABLE,
-      <lg_ins> TYPE ANY TABLE.
+    FIELD-SYMBOLS <lg_old> TYPE ANY TABLE.
+    FIELD-SYMBOLS <lg_new> TYPE ANY TABLE.
+    FIELD-SYMBOLS <ls_del> TYPE any.
+    FIELD-SYMBOLS <ls_ins> TYPE any.
+    FIELD-SYMBOLS <lg_del> TYPE ANY TABLE.
+    FIELD-SYMBOLS <lg_ins> TYPE ANY TABLE.
 
     lr_data = read_database_table(
       iv_name  = iv_name
@@ -132,51 +129,54 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 
   METHOD write_database_table.
 
-    DATA:
-      lv_where   LIKE LINE OF it_where,
-      lv_tabname TYPE tabname,
-      lv_subrc   TYPE sy-subrc.
+    FIELD-SYMBOLS <lg_del> TYPE ANY TABLE.
+    FIELD-SYMBOLS <lg_ins> TYPE ANY TABLE.
 
-    FIELD-SYMBOLS <lg_tab> TYPE ANY TABLE.
+    ASSIGN ir_del->* TO <lg_del>.
+    ASSIGN ir_ins->* TO <lg_ins>.
 
-    lv_tabname = iv_name.
-
-    ASSIGN ir_data->* TO <lg_tab>.
-
-    LOOP AT it_where INTO lv_where.
-      DELETE FROM (lv_tabname) WHERE (lv_where) ##SUBRC_OK.
-    ENDLOOP.
-    IF lines( it_where ) = 0.
-      CALL FUNCTION 'DB_TRUNCATE_TABLE'
-        EXPORTING
-          tabname = lv_tabname
-        IMPORTING
-          subrc   = lv_subrc.
-      IF lv_subrc <> 0.
-        zcx_abapgit_exception=>raise( |Error truncating table { lv_tabname }| ).
+    IF lines( <lg_del> ) > 0.
+      DELETE (iv_name) FROM TABLE <lg_del>.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |Error deleting { lines( <lg_del> ) } records from table { iv_name }| ).
       ENDIF.
     ENDIF.
 
-    IF lines( <lg_tab> ) > 0.
-      INSERT (lv_tabname) FROM TABLE <lg_tab>.
+    IF lines( <lg_ins> ) > 0.
+      INSERT (iv_name) FROM TABLE <lg_ins>.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Error inserting { lines( <lg_tab> ) } records into table { lv_tabname }| ).
+        zcx_abapgit_exception=>raise( |Error inserting { lines( <lg_ins> ) } records into table { iv_name }| ).
       ENDIF.
     ENDIF.
 
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_data_deserializer~actualize.
+
+* this method updates the database
+
+    DATA ls_result LIKE LINE OF it_result.
+
+    LOOP AT it_result INTO ls_result.
+      write_database_table(
+        iv_name = ls_result-table
+        ir_del  = ls_result-deletes
+        ir_ins  = ls_result-inserts ).
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_data_deserializer~deserialize.
 
-* as a default, this method does NOT change any database tables.
-* you have to explicitly set iv_persist = abap_true to save the data
+* this method does not persist any changes to the database
 
-    DATA:
-      lt_configs TYPE zif_abapgit_data_config=>ty_config_tt,
-      ls_config  LIKE LINE OF lt_configs,
-      lr_data    TYPE REF TO data,
-      ls_file    LIKE LINE OF it_files.
+    DATA lt_configs TYPE zif_abapgit_data_config=>ty_config_tt.
+    DATA ls_config LIKE LINE OF lt_configs.
+    DATA lr_data  TYPE REF TO data.
+    DATA ls_file LIKE LINE OF it_files.
+    DATA ls_result LIKE LINE OF rt_result.
 
     lt_configs = ii_config->get_configs( ).
 
@@ -192,17 +192,12 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
           ir_data = lr_data
           is_file = ls_file ).
 
-        IF iv_persist = abap_true.
-          write_database_table(
-            iv_name  = ls_config-name
-            it_where = ls_config-where
-            ir_data  = lr_data ).
-        ELSE.
-          rs_result = preview_database_changes(
-            iv_name  = ls_config-name
-            it_where = ls_config-where
-            ir_data  = lr_data ).
-        ENDIF.
+        ls_result = preview_database_changes(
+          iv_name  = ls_config-name
+          it_where = ls_config-where
+          ir_data  = lr_data ).
+
+        INSERT ls_result INTO TABLE rt_result.
       ENDIF.
 
     ENDLOOP.

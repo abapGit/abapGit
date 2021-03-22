@@ -27,9 +27,8 @@ CLASS zcl_abapgit_data_config IMPLEMENTATION.
 
   METHOD dump.
 
-    DATA:
-      lo_ajson TYPE REF TO zcl_abapgit_ajson,
-      lx_ajson TYPE REF TO zcx_abapgit_ajson_error.
+    DATA lo_ajson TYPE REF TO zcl_abapgit_ajson.
+    DATA lx_ajson TYPE REF TO zcx_abapgit_ajson_error.
 
     TRY.
         lo_ajson = zcl_abapgit_ajson=>create_empty( ).
@@ -60,11 +59,10 @@ CLASS zcl_abapgit_data_config IMPLEMENTATION.
 
   METHOD zif_abapgit_data_config~from_json.
 
-    DATA:
-      ls_file   LIKE LINE OF it_files,
-      ls_config TYPE zif_abapgit_data_config=>ty_config,
-      lo_ajson  TYPE REF TO zcl_abapgit_ajson,
-      lx_ajson  TYPE REF TO zcx_abapgit_ajson_error.
+    DATA ls_file LIKE LINE OF it_files.
+    DATA ls_config TYPE zif_abapgit_data_config=>ty_config.
+    DATA lo_ajson TYPE REF TO zcl_abapgit_ajson.
+    DATA lx_ajson TYPE REF TO zcx_abapgit_ajson_error.
 
     CLEAR mt_config.
     LOOP AT it_files INTO ls_file WHERE path = zif_abapgit_data_config=>c_default_path
@@ -103,9 +101,8 @@ CLASS zcl_abapgit_data_config IMPLEMENTATION.
 
   METHOD zif_abapgit_data_config~to_json.
 
-    DATA:
-      ls_config LIKE LINE OF mt_config,
-      ls_file   LIKE LINE OF rt_files.
+    DATA ls_config LIKE LINE OF mt_config.
+    DATA ls_file LIKE LINE OF rt_files.
 
     ls_file-path = zif_abapgit_data_config=>c_default_path.
 

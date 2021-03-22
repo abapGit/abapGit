@@ -331,7 +331,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   METHOD deserialize.
 
     DATA: lt_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
-          ls_result        TYPE zif_abapgit_data_deserializer=>ty_result,
+          lt_result        TYPE zif_abapgit_data_deserializer=>ty_results,
           lx_error         TYPE REF TO zcx_abapgit_exception.
 
     find_remote_dot_abapgit( ).
@@ -368,11 +368,10 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     update_local_checksums( lt_updated_files ).
 
-    " Deserialize data
-    ls_result = zcl_abapgit_data_factory=>get_deserializer( )->deserialize(
+    " Deserialize data (no save to database, just test for now)
+    lt_result = zcl_abapgit_data_factory=>get_deserializer( )->deserialize(
       ii_config  = get_data_config( )
-      it_files   = get_files_remote( )
-      iv_persist = abap_false ). "<<no save to database, just test for now
+      it_files   = get_files_remote( ) ).
 
     CLEAR: mt_local.
 

@@ -37,10 +37,9 @@ CLASS zcl_abapgit_data_serializer IMPLEMENTATION.
 
   METHOD convert_itab_to_json.
 
-    DATA:
-      lo_ajson  TYPE REF TO zcl_abapgit_ajson,
-      lv_string TYPE string,
-      lx_ajson  TYPE REF TO zcx_abapgit_ajson_error.
+    DATA lo_ajson TYPE REF TO zcl_abapgit_ajson.
+    DATA lv_string TYPE string.
+    DATA lx_ajson TYPE REF TO zcx_abapgit_ajson_error.
 
     FIELD-SYMBOLS <lg_tab> TYPE ANY TABLE.
 
@@ -64,9 +63,8 @@ CLASS zcl_abapgit_data_serializer IMPLEMENTATION.
 
   METHOD read_database_table.
 
-    DATA:
-      lv_records TYPE i,
-      lv_where   LIKE LINE OF it_where.
+    DATA lv_records TYPE i.
+    DATA lv_where LIKE LINE OF it_where.
 
     FIELD-SYMBOLS <lg_tab> TYPE ANY TABLE.
 
@@ -91,11 +89,10 @@ CLASS zcl_abapgit_data_serializer IMPLEMENTATION.
 
   METHOD zif_abapgit_data_serializer~serialize.
 
-    DATA:
-      lt_configs TYPE zif_abapgit_data_config=>ty_config_tt,
-      ls_config  LIKE LINE OF lt_configs,
-      ls_file    LIKE LINE OF rt_files,
-      lr_data    TYPE REF TO data.
+    DATA lt_configs TYPE zif_abapgit_data_config=>ty_config_tt.
+    DATA ls_config LIKE LINE OF lt_configs.
+    DATA ls_file LIKE LINE OF rt_files.
+    DATA lr_data TYPE REF TO data.
 
     ls_file-path = zif_abapgit_data_config=>c_default_path.
     lt_configs = ii_config->get_configs( ).

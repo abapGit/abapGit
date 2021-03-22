@@ -34,9 +34,8 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
 
   METHOD build_table_itab.
 
-    DATA:
-      lo_structure TYPE REF TO cl_abap_structdescr,
-      lo_table     TYPE REF TO cl_abap_tabledescr.
+    DATA lo_structure TYPE REF TO cl_abap_structdescr.
+    DATA lo_table TYPE REF TO cl_abap_tabledescr.
 
     lo_structure ?= cl_abap_structdescr=>describe_by_name( iv_name ).
 * todo, also add unique key corresponding to the db table, so duplicates cannot be returned
