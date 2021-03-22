@@ -25,13 +25,6 @@ INTERFACE zif_abapgit_popups
       VALUE(rv_value) TYPE ddshretval-fieldval
     RAISING
       zcx_abapgit_exception .
-  METHODS popup_package_export
-    EXPORTING
-      !ev_package                    TYPE devclass
-      !ev_folder_logic               TYPE string
-      !ev_serialize_master_lang_only TYPE abap_bool
-    RAISING
-      zcx_abapgit_exception .
   METHODS popup_folder_logic
     RETURNING
       VALUE(rv_folder_logic) TYPE string
