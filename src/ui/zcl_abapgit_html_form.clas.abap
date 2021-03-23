@@ -667,8 +667,6 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       ii_html->add( |</tr>| ).
       ii_html->add( |</thead>| ).
 
-      lv_rows = io_values->get( |{ is_field-name }-{ zif_abapgit_html_form=>c_rows }| ).
-
       ii_html->add( |<tbody>| ).
       DO lv_rows TIMES.
         lv_rows = sy-index.
