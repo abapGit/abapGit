@@ -803,8 +803,8 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     IF iv_side_action IS NOT INITIAL AND mv_form_id IS NOT INITIAL.
       ls_field-item_class = 'with-command'.
       ls_field-side_action = iv_side_action.
-      ls_field-dblclick = | ondblclick="document.getElementById('{ mv_form_id }').action = 'sapevent:{ iv_side_action }'|
-                       && |; document.getElementById('{ mv_form_id }').submit()"|.
+      ls_field-dblclick = | ondblclick="document.getElementById('{ mv_form_id }').action = 'sapevent:|
+                       && |{ iv_side_action }'; document.getElementById('{ mv_form_id }').submit()"|.
     ENDIF.
 
     APPEND ls_field TO mt_fields.
