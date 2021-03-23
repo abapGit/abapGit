@@ -678,6 +678,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
         ENDIF.
         ii_html->add( |<td><input type="text" name="{ lv_cell_id }" id="{ lv_cell_id }"|
                    && | value="{ lv_value }"{ lv_readonly }></td>| ).
+        ii_html->add( |<td{ lv_value }>{ <ls_subitem>-label }</td>| ).
       ENDLOOP.
       ii_html->add( |</tr>| ).
     ENDDO.
