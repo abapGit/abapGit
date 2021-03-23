@@ -68,3 +68,11 @@ Can be used to modify local and remote files before calculating diff status. Use
 ![diff sample](./img/deployment_diff_difference_sample.png)
 
 The exit also receives a repo meta data snapshot (`zif_abapgit_persistence=>ty_repo`) to identify the repo and it's attributes in the current system (e.g. package). This can be used to enable/disable the exit for specific repos.
+
+### WALL_MESSAGE_LIST
+
+Can be used to add a message at list level
+
+### WALL_MESSAGE_REPO
+
+Can be used to add a message at repo level
