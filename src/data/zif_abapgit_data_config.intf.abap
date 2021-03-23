@@ -14,6 +14,8 @@ INTERFACE zif_abapgit_data_config
     ty_config_tt TYPE SORTED TABLE OF ty_config WITH UNIQUE KEY type name .
 
   CONSTANTS c_default_path TYPE string VALUE '/data/' ##NO_TEXT.
+  CONSTANTS c_default_format TYPE string VALUE 'json' ##NO_TEXT.
+  CONSTANTS c_config TYPE string VALUE 'conf' ##NO_TEXT.
   CONSTANTS:
     BEGIN OF c_data_type,
       tabu TYPE ty_data_type VALUE 'TABU',
