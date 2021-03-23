@@ -70,7 +70,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -136,14 +136,11 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
 
   METHOD parse_change_tag_type_request.
 
-    FIELD-SYMBOLS: <lv_postdata> TYPE cnht_post_data_line.
+    FIELD-SYMBOLS <lv_postdata> LIKE LINE OF it_postdata.
 
-    READ TABLE it_postdata ASSIGNING <lv_postdata>
-                           INDEX 1.
+    READ TABLE it_postdata ASSIGNING <lv_postdata> INDEX 1.
     IF sy-subrc = 0.
-      FIND FIRST OCCURRENCE OF REGEX `type=(.*)`
-           IN <lv_postdata>
-           SUBMATCHES mv_selected_type.
+      FIND FIRST OCCURRENCE OF REGEX `type=(.*)` IN <lv_postdata> SUBMATCHES mv_selected_type.
     ENDIF.
 
     mv_selected_type = condense( mv_selected_type ).

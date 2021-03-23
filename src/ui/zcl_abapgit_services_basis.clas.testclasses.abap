@@ -350,22 +350,6 @@ CLASS ltcl_popups_mock IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_popups~popup_object.
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_popups~popup_package_export.
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_popups~popup_perf_test_parameters.
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_popups~popup_proxy_bypass.
-
-  ENDMETHOD.
-
   METHOD zif_abapgit_popups~popup_search_help.
 
   ENDMETHOD.
@@ -390,10 +374,6 @@ CLASS ltcl_popups_mock IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_popups~popup_to_create_transp_branch.
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_popups~popup_to_inform.
 
   ENDMETHOD.
 

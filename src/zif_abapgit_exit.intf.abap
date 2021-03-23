@@ -12,27 +12,43 @@ INTERFACE zif_abapgit_exit
   TYPES:
     ty_ci_repos TYPE TABLE OF ty_ci_repo .
 
-  METHODS change_local_host
+  METHODS adjust_display_commit_url
+    IMPORTING
+      !iv_repo_url    TYPE csequence
+      !iv_repo_name   TYPE csequence
+      !iv_repo_key    TYPE csequence
+      !iv_commit_hash TYPE zif_abapgit_definitions=>ty_sha1
     CHANGING
-      !ct_hosts TYPE ty_icm_sinfo2_tt .
+      !cv_display_url TYPE csequence
+    RAISING
+      zcx_abapgit_exception .
   METHODS allow_sap_objects
     RETURNING
       VALUE(rv_allowed) TYPE abap_bool .
-  METHODS change_proxy_url
-    IMPORTING
-      !iv_repo_url  TYPE csequence
+  METHODS change_local_host
     CHANGING
-      !cv_proxy_url TYPE string .
-  METHODS change_proxy_port
-    IMPORTING
-      !iv_repo_url   TYPE csequence
-    CHANGING
-      !cv_proxy_port TYPE string .
+      !ct_hosts TYPE ty_icm_sinfo2_tt .
   METHODS change_proxy_authentication
     IMPORTING
       !iv_repo_url             TYPE csequence
     CHANGING
       !cv_proxy_authentication TYPE abap_bool .
+  METHODS change_proxy_port
+    IMPORTING
+      !iv_repo_url   TYPE csequence
+    CHANGING
+      !cv_proxy_port TYPE string .
+  METHODS change_proxy_url
+    IMPORTING
+      !iv_repo_url  TYPE csequence
+    CHANGING
+      !cv_proxy_url TYPE string .
+  METHODS change_tadir
+    IMPORTING
+      !iv_package TYPE devclass
+      !ii_log     TYPE REF TO zif_abapgit_log
+    CHANGING
+      !ct_tadir   TYPE zif_abapgit_definitions=>ty_tadir_tt .
   METHODS create_http_client
     IMPORTING
       !iv_url          TYPE string
@@ -40,19 +56,6 @@ INTERFACE zif_abapgit_exit
       VALUE(ri_client) TYPE REF TO if_http_client
     RAISING
       zcx_abapgit_exception .
-  METHODS http_client
-    IMPORTING
-      !iv_url    TYPE string
-      !ii_client TYPE REF TO if_http_client .
-  METHODS change_tadir
-    IMPORTING
-      !iv_package TYPE devclass
-      !ii_log     TYPE REF TO zif_abapgit_log
-    CHANGING
-      !ct_tadir   TYPE zif_abapgit_definitions=>ty_tadir_tt .
-  METHODS get_ssl_id
-    RETURNING
-      VALUE(rv_ssl_id) TYPE ssfapplssl .
   METHODS custom_serialize_abap_clif
     IMPORTING
       !is_class_key    TYPE seoclskey
@@ -69,14 +72,26 @@ INTERFACE zif_abapgit_exit
       !iv_object   TYPE tadir-object
     CHANGING
       !ct_ci_repos TYPE ty_ci_repos .
-  METHODS adjust_display_commit_url
+  METHODS get_ssl_id
+    RETURNING
+      VALUE(rv_ssl_id) TYPE ssfapplssl .
+  METHODS http_client
     IMPORTING
-      !iv_repo_url    TYPE csequence
-      !iv_repo_name   TYPE csequence
-      !iv_repo_key    TYPE csequence
-      !iv_commit_hash TYPE zif_abapgit_definitions=>ty_sha1
+      !iv_url    TYPE string
+      !ii_client TYPE REF TO if_http_client .
+  METHODS pre_calculate_repo_status
+    IMPORTING
+      !is_repo_meta TYPE zif_abapgit_persistence=>ty_repo
     CHANGING
-      !cv_display_url TYPE csequence
+      !ct_local     TYPE zif_abapgit_definitions=>ty_files_item_tt
+      !ct_remote    TYPE zif_abapgit_definitions=>ty_files_tt
     RAISING
       zcx_abapgit_exception .
+  METHODS wall_message_list
+    IMPORTING
+      ii_html TYPE REF TO zif_abapgit_html .
+  METHODS wall_message_repo
+    IMPORTING
+      is_repo_meta TYPE zif_abapgit_persistence=>ty_repo
+      ii_html      TYPE REF TO zif_abapgit_html .
 ENDINTERFACE.

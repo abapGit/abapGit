@@ -25,21 +25,9 @@ INTERFACE zif_abapgit_popups
       VALUE(rv_value) TYPE ddshretval-fieldval
     RAISING
       zcx_abapgit_exception .
-  METHODS popup_package_export
-    EXPORTING
-      !ev_package                    TYPE devclass
-      !ev_folder_logic               TYPE string
-      !ev_serialize_master_lang_only TYPE abap_bool
-    RAISING
-      zcx_abapgit_exception .
   METHODS popup_folder_logic
     RETURNING
       VALUE(rv_folder_logic) TYPE string
-    RAISING
-      zcx_abapgit_exception .
-  METHODS popup_object
-    RETURNING
-      VALUE(rs_tadir) TYPE zif_abapgit_definitions=>ty_tadir
     RAISING
       zcx_abapgit_exception .
   METHODS create_branch_popup
@@ -73,7 +61,7 @@ INTERFACE zif_abapgit_popups
     RETURNING
       VALUE(rs_popup)    TYPE ty_popup
     RAISING
-      zcx_abapgit_exception  ##NO_TEXT.
+      zcx_abapgit_exception ##NO_TEXT.
   METHODS popup_to_confirm
     IMPORTING
       !iv_titlebar              TYPE clike
@@ -86,12 +74,6 @@ INTERFACE zif_abapgit_popups
       !iv_display_cancel_button TYPE char1 DEFAULT abap_true
     RETURNING
       VALUE(rv_answer)          TYPE char1
-    RAISING
-      zcx_abapgit_exception .
-  METHODS popup_to_inform
-    IMPORTING
-      !iv_titlebar     TYPE clike
-      !iv_text_message TYPE clike
     RAISING
       zcx_abapgit_exception .
   METHODS popup_to_create_package
@@ -144,28 +126,11 @@ INTERFACE zif_abapgit_popups
       VALUE(rv_transport) TYPE trkorr
     RAISING
       zcx_abapgit_exception .
-  METHODS popup_proxy_bypass
-    IMPORTING
-      !it_proxy_bypass       TYPE zif_abapgit_definitions=>ty_range_proxy_bypass_url
-    RETURNING
-      VALUE(rt_proxy_bypass) TYPE zif_abapgit_definitions=>ty_range_proxy_bypass_url
-    RAISING
-      zcx_abapgit_exception .
   METHODS choose_pr_popup
     IMPORTING
       !it_pulls      TYPE zif_abapgit_pr_enum_provider=>ty_pull_requests
     RETURNING
       VALUE(rs_pull) TYPE zif_abapgit_pr_enum_provider=>ty_pull_request
-    RAISING
-      zcx_abapgit_exception .
-  METHODS popup_perf_test_parameters
-    EXPORTING
-      !et_object_type_filter   TYPE zif_abapgit_definitions=>ty_object_type_range
-      !et_object_name_filter   TYPE zif_abapgit_definitions=>ty_object_name_range
-    CHANGING
-      !cv_package              TYPE devclass
-      !cv_include_sub_packages TYPE abap_bool
-      !cv_main_language_only   TYPE abap_bool
     RAISING
       zcx_abapgit_exception .
 ENDINTERFACE.

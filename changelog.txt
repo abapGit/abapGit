@@ -8,6 +8,20 @@ Legend
 + : added
 - : removed
 
+2021-03-22 v1.107.0
+-------------------
+! Change DDIC activation mode
+! DDIC, error when no active vesion found
++ User exit: wall messages
++ User exit: Strip XML details
+* CLAS, fix several issues related to class includes
+* Respect wildcard characters in proxy bypass settings
+* AVAR, bugfix, unlock after deserialize
+* DEVC, bugfix, unlock after error
+* ENHO, bugfix "file emxxx not found"
+* allow switching branches in write protected repos
+* Popup refactoring to HTML
+
 2021-02-28 v1.106.0
 -------------------
 ! TABL, serialization changed, fields TABNAME, DDLANGUAGE, POSITION cleared

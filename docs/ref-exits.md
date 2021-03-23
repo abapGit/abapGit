@@ -36,10 +36,11 @@ Store username and password in RFC connection setup, see [https://github.com/aba
 
 ### HTTP_CLIENT
 Can be used for setting logon tickets eg. in connection with abapGitServer connections between SAP systems.
-[https://gist.github.com/larshp/71609852a79aa1e877f8c4020d18feac](https://gist.github.com/larshp/71609852a79aa1e877f8c4020d18feac)
+Example: [https://gist.github.com/larshp/71609852a79aa1e877f8c4020d18feac](https://gist.github.com/larshp/71609852a79aa1e877f8c4020d18feac)
 
 ### CHANGE_TADIR
 Can be used to skip certain objects, or force a different object setup than currently in TADIR.
+Example: [https://gist.github.com/larshp/cca0ce0ba65efcde5dfcae416b0484f7](https://gist.github.com/larshp/cca0ce0ba65efcde5dfcae416b0484f7)
 
 ### GET_SSL_ID
 Possibility to change the default `ANONYM` ssl id to something system specific
@@ -56,6 +57,22 @@ Can be used to set the URL to display a commit. There are default implementation
 
 | Provider  | Repo URL | Show Commit URL |
 |-----------|----------|-----------------|
-| github    | http(s):\/\/github.com/<user\>/\<repo\>.git    | http(s): //github.com/<user\>/\<repo\>/commit/17b6411cdb59cfb4478a8e6b3de1da3241fedd41      |
-| bitbucket | http(s):\/\/bitbucket.org/<user\>/\<repo\>.git | http(s):\/\/bitbucket.org/<user\>/\<repo\>/commits/17b6411cdb59cfb4478a8e6b3de1da3241fedd41 |
-| gitlab    | http(s):\/\/gitlab.com/<user\>/\<repo\>.git    | http(s):\/\/gitlab.com/\<user\>/\<repo\>/-/commit/17b6411cdb59cfb4478a8e6b3de1da3241fedd41  |
+| github    | http(s):\/\/github.com/<user\>/\<repo\>.git    | http(s):\/\/github.com/<user\>/\<repo\>/commit/<sha1\>     |
+| bitbucket | http(s):\/\/bitbucket.org/<user\>/\<repo\>.git | http(s):\/\/bitbucket.org/<user\>/\<repo\>/commits/<sha1\> |
+| gitlab    | http(s):\/\/gitlab.com/<user\>/\<repo\>.git    | http(s):\/\/gitlab.com/\<user\>/\<repo\>/-/commit/<sha1\>  |
+
+### PRE_CALCULATE_REPO_STATUS
+
+Can be used to modify local and remote files before calculating diff status. Useful to remove diffs which are caused by deployment between different system version. See also: [abapgit xml stripper plugin](https://github.com/sbcgua/abapgit_xml_stripper_plugin)
+
+![diff sample](./img/deployment_diff_difference_sample.png)
+
+The exit also receives a repo meta data snapshot (`zif_abapgit_persistence=>ty_repo`) to identify the repo and it's attributes in the current system (e.g. package). This can be used to enable/disable the exit for specific repos.
+
+### WALL_MESSAGE_LIST
+
+Can be used to add a message at list level
+
+### WALL_MESSAGE_REPO
+
+Can be used to add a message at repo level

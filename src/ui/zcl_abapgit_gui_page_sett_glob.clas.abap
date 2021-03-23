@@ -256,8 +256,12 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
     lt_textarea = zcl_abapgit_convert=>split_string( mo_form_data->get( c_id-proxy_bypass ) ).
 
     ls_proxy_bypass-sign = 'I'.
-    ls_proxy_bypass-option = 'EQ'.
     LOOP AT lt_textarea INTO ls_proxy_bypass-low WHERE table_line IS NOT INITIAL.
+      IF ls_proxy_bypass-low CA '*+'.
+        ls_proxy_bypass-option = 'CP'.
+      ELSE.
+        ls_proxy_bypass-option = 'EQ'.
+      ENDIF.
       APPEND ls_proxy_bypass TO lt_proxy_bypass.
     ENDLOOP.
 
