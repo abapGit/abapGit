@@ -679,8 +679,8 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
           IF <ls_subitem>-readonly = abap_true.
             lv_readonly = | readonly|.
           ENDIF.
-          ii_html->add( |<td><input type="text" name="{ lv_cell_id }" id="{ lv_cell_id }"|
-                     && | value="{ lv_value }"{ lv_readonly }></td>| ).
+          ii_html->add( |<td><input type="text" name="{ lv_cell_id }" id="{
+                        lv_cell_id }" value="{ lv_value }"{ lv_readonly }></td>| ).
         ENDLOOP.
         ii_html->add( |</tr>| ).
       ENDDO.
