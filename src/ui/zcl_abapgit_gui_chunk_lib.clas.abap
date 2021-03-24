@@ -1,7 +1,7 @@
 CLASS zcl_abapgit_gui_chunk_lib DEFINITION
   PUBLIC
   FINAL
-  CREATE PUBLIC.
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
 
@@ -104,6 +104,9 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
     CLASS-METHODS help_submenu
       RETURNING
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
+    CLASS-METHODS back_toolbar
+      RETURNING
+        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
     CLASS-METHODS settings_toolbar
       IMPORTING
         !iv_act        TYPE string
@@ -180,7 +183,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
+CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
 
   METHOD advanced_submenu.
@@ -213,6 +216,17 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
         iv_txt = 'Open IE DevTools'
         iv_act = zif_abapgit_definitions=>c_action-ie_devtools ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD back_toolbar.
+
+    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-back'.
+
+    ro_menu->add(
+      iv_txt = 'Back'
+      iv_act = zif_abapgit_definitions=>c_action-go_back ).
 
   ENDMETHOD.
 
@@ -1012,6 +1026,10 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
       iv_txt = 'Local'
       iv_act = |{ zif_abapgit_definitions=>c_action-repo_local_settings }?key={ iv_key }|
       iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_local_settings )
+    )->add(
+      iv_txt = 'Background'
+      iv_act = |{ zif_abapgit_definitions=>c_action-repo_background }?key={ iv_key }|
+      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_background )
     )->add(
       iv_txt = 'Stats'
       iv_act = |{ zif_abapgit_definitions=>c_action-repo_infos }?key={ iv_key }|
