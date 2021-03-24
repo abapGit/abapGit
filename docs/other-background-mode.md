@@ -7,9 +7,12 @@ order: 80
 abapGit can pull or push in background mode. This setting has to be activated on the repository-level.
 
 ### Activating Background Mode
-* Navigate to a repository and select "Advanced" -> "Background Mode"
+* Navigate to a repository, go to the repository settings and select "Background":
 
-![](img/background_setting.png)
+
+![](img/background_setting_1.png)
+
+![](img/background_setting_2.png)
 
 * Here you can define the action that will be executed in background mode, by default the setting is "Do Nothing". 
 
