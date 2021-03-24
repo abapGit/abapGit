@@ -67,6 +67,7 @@ span.separator {
 .nodisplay    { display: none }
 .m-em5-sides  { margin-left: 0.5em; margin-right: 0.5em }
 .w600px       { width: 600px }
+.w800px       { width: 800px }
 .w1000px      { width: 1000px }
 .wmax600px    { max-width: 600px }
 .auto-center  { /* use with max-width */
