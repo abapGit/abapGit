@@ -40,7 +40,7 @@ ENDCLASS.
 CLASS zcl_abapgit_file_deserialize IMPLEMENTATION.
 
 
-  METHOD ADJUST_NAMESPACES.
+  METHOD adjust_namespaces.
 
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF rt_results.
 
@@ -53,7 +53,7 @@ CLASS zcl_abapgit_file_deserialize IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD FILTER_FILES_TO_DESERIALIZE.
+  METHOD filter_files_to_deserialize.
 
     DATA lt_objects LIKE rt_results.
     DATA lr_object  TYPE REF TO zif_abapgit_definitions=>ty_result.
@@ -142,7 +142,7 @@ CLASS zcl_abapgit_file_deserialize IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD GET_RESULTS.
+  METHOD get_results.
 
     rt_results = adjust_namespaces(
                    prioritize_deser(
@@ -153,7 +153,7 @@ CLASS zcl_abapgit_file_deserialize IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD PRIORITIZE_DESER.
+  METHOD prioritize_deser.
 
 * todo, refactor this method
 
