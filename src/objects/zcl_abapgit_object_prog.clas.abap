@@ -6,26 +6,38 @@ CLASS zcl_abapgit_object_prog DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-    TYPES: BEGIN OF ty_tpool_i18n,
-             language TYPE langu,
-             textpool TYPE zif_abapgit_definitions=>ty_tpool_tt,
-           END OF ty_tpool_i18n,
-           ty_tpools_i18n TYPE STANDARD TABLE OF ty_tpool_i18n.
-    CONSTANTS: c_longtext_id_prog TYPE dokil-id VALUE 'RE'.
 
-    METHODS:
-      serialize_texts
-        IMPORTING ii_xml TYPE REF TO zif_abapgit_xml_output
-        RAISING   zcx_abapgit_exception,
-      deserialize_texts
-        IMPORTING ii_xml TYPE REF TO zif_abapgit_xml_input
-        RAISING   zcx_abapgit_exception,
-      is_program_locked
-        RETURNING
-          VALUE(rv_is_program_locked) TYPE abap_bool
-        RAISING
-          zcx_abapgit_exception.
+    TYPES:
+      BEGIN OF ty_tpool_i18n,
+        language TYPE langu,
+        textpool TYPE zif_abapgit_definitions=>ty_tpool_tt,
+      END OF ty_tpool_i18n .
+    TYPES:
+      ty_tpools_i18n TYPE STANDARD TABLE OF ty_tpool_i18n .
 
+    CONSTANTS c_longtext_id_prog TYPE dokil-id VALUE 'RE' ##NO_TEXT.
+
+    METHODS deserialize_with_ext
+      IMPORTING
+        !is_progdir TYPE ty_progdir
+        !it_source  TYPE abaptxt255_tab
+      RAISING
+        zcx_abapgit_exception .
+    METHODS serialize_texts
+      IMPORTING
+        !ii_xml TYPE REF TO zif_abapgit_xml_output
+      RAISING
+        zcx_abapgit_exception .
+    METHODS deserialize_texts
+      IMPORTING
+        !ii_xml TYPE REF TO zif_abapgit_xml_input
+      RAISING
+        zcx_abapgit_exception .
+    METHODS is_program_locked
+      RETURNING
+        VALUE(rv_is_program_locked) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -50,6 +62,42 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
                             iv_language = <ls_tpool>-language
                             it_tpool    = lt_tpool ).
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD deserialize_with_ext.
+
+    " Special treatment for extensions
+    " If the program name exceeds 30 characters it is not a usual ABAP program but might be
+    " some extension, which requires the internal addition EXTENSION TYPE
+    " https://help.sap.com/doc/abapdocu_755_index_htm/7.55/en-US/index.htm?file=abapinsert_report_internal.htm
+    " This e.g. occurs in case of transportable Code Inspector variants (ending with ===VC)
+
+    INSERT REPORT is_progdir-name
+      FROM it_source
+      STATE 'I'
+      EXTENSION TYPE is_progdir-name+30
+      PROGRAM TYPE is_progdir-subc.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Error from INSERT REPORT .. EXTENSION TYPE' ).
+    ENDIF.
+
+    CALL FUNCTION 'UPDATE_PROGDIR'
+      EXPORTING
+        i_progdir    = is_progdir
+        i_progname   = is_progdir-name
+        i_state      = 'I'
+      EXCEPTIONS
+        not_executed = 1
+        OTHERS       = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Error updating program directory' ).
+    ENDIF.
+
+    zcl_abapgit_objects_activation=>add(
+      iv_type = 'REPS'
+      iv_name = is_progdir-name ).
 
   ENDMETHOD.
 
@@ -185,29 +233,40 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
     io_xml->read( EXPORTING iv_name = 'PROGDIR'
                   CHANGING cg_data  = ls_progdir ).
-    deserialize_program( is_progdir = ls_progdir
-                         it_source  = lt_source
-                         it_tpool   = lt_tpool
-                         iv_package = iv_package ).
 
-    io_xml->read( EXPORTING iv_name = 'DYNPROS'
-                  CHANGING cg_data  = lt_dynpros ).
-    deserialize_dynpros( lt_dynpros ).
+    IF strlen( lv_program_name ) > 30.
 
-    io_xml->read( EXPORTING iv_name = 'CUA'
-                  CHANGING cg_data  = ls_cua ).
-    deserialize_cua( iv_program_name = lv_program_name
-                     is_cua = ls_cua ).
+      " Objects with extension for example transportable Code Inspector variants (ending with ===VC)
+      deserialize_with_ext( is_progdir = ls_progdir
+                            it_source  = lt_source ).
 
-    " Texts deserializing (English)
-    deserialize_textpool( iv_program = lv_program_name
-                          it_tpool   = lt_tpool ).
+    ELSE.
 
-    " Texts deserializing (translations)
-    deserialize_texts( io_xml ).
-    deserialize_lxe_texts( io_xml ).
+      deserialize_program( is_progdir = ls_progdir
+                           it_source  = lt_source
+                           it_tpool   = lt_tpool
+                           iv_package = iv_package ).
 
-    deserialize_longtexts( io_xml ).
+      io_xml->read( EXPORTING iv_name = 'DYNPROS'
+                    CHANGING cg_data  = lt_dynpros ).
+      deserialize_dynpros( lt_dynpros ).
+
+      io_xml->read( EXPORTING iv_name = 'CUA'
+                    CHANGING cg_data  = ls_cua ).
+      deserialize_cua( iv_program_name = lv_program_name
+                       is_cua = ls_cua ).
+
+      " Texts deserializing (English)
+      deserialize_textpool( iv_program = lv_program_name
+                            it_tpool   = lt_tpool ).
+
+      " Texts deserializing (translations)
+      deserialize_texts( io_xml ).
+      deserialize_lxe_texts( io_xml ).
+
+      deserialize_longtexts( io_xml ).
+
+    ENDIF.
 
   ENDMETHOD.
 
