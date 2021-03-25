@@ -511,14 +511,12 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
         EXCEPTIONS
           namespace_not_existing = 1
           OTHERS                 = 2.
-      IF sy-subrc = 0.
-        IF ls_trnspace-editflag <> 'X'.
-          ii_log->add( iv_msg  = |Namespace { lv_namespace } is not modifiable. Check it in transaction SE03|
-                       iv_type = 'W'
-                       iv_rc   = '6' ).
-        ENDIF.
-      ELSE.
+      IF sy-subrc <> 0.
         ii_log->add( iv_msg  = |Namespace { lv_namespace } does not exist. Create it in transaction SE03|
+                     iv_type = 'W'
+                     iv_rc   = '6' ).
+      ELSEIF ls_trnspace-editflag <> 'X'.
+        ii_log->add( iv_msg  = |Namespace { lv_namespace } is not modifiable. Check it in transaction SE03|
                      iv_type = 'W'
                      iv_rc   = '6' ).
       ENDIF.
