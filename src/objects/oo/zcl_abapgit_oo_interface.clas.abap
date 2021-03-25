@@ -16,8 +16,6 @@ CLASS zcl_abapgit_oo_interface DEFINITION
     METHODS zif_abapgit_oo_object_fnc~deserialize_source
         REDEFINITION .
   PROTECTED SECTION.
-    TYPES: ty_char1 TYPE c LENGTH 1,
-           ty_char2 TYPE c LENGTH 2.
   PRIVATE SECTION.
 
     CLASS-METHODS update_report
