@@ -9,14 +9,72 @@ CLASS zcl_abapgit_environment DEFINITION
     INTERFACES zif_abapgit_environment .
   PROTECTED SECTION.
   PRIVATE SECTION.
+
     DATA mv_cloud TYPE abap_bool VALUE abap_undefined ##NO_TEXT.
     DATA mv_is_merged TYPE abap_bool VALUE abap_undefined ##NO_TEXT.
-    DATA mv_client_modifiable TYPE abap_bool VALUE abap_undefined ##NO_TEXT.
+    DATA mv_modifiable TYPE abap_bool VALUE abap_undefined ##NO_TEXT.
+
+    METHODS is_system_changes_allowed
+      RETURNING
+        VALUE(rv_result) TYPE abap_bool .
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_environment IMPLEMENTATION.
+
+
+  METHOD is_system_changes_allowed.
+
+    DATA:
+      lv_systemedit         TYPE tadir-edtflag,
+      lv_sys_cliinddep_edit TYPE t000-ccnocliind,
+      lv_is_shadow          TYPE abap_bool,
+      lv_component          TYPE uvers-component,
+      ls_upginfo            TYPE uvers,
+      lv_is_upgrade         TYPE abap_bool.
+
+    CALL FUNCTION 'TR_SYS_PARAMS'
+      IMPORTING
+        systemedit         = lv_systemedit
+        sys_cliinddep_edit = lv_sys_cliinddep_edit
+      EXCEPTIONS
+        no_systemname      = 1
+        no_systemtype      = 2
+        OTHERS             = 3.
+    IF sy-subrc <> 0.
+      " Assume system can't be changed
+      RETURN.
+    ENDIF.
+
+    CALL FUNCTION 'UPG_IS_SHADOW_SYSTEM'
+      IMPORTING
+        ev_shadow = lv_is_shadow.
+
+    CALL FUNCTION 'UPG_GET_ACTIVE_COMP_UPGRADE'
+      EXPORTING
+        iv_component = 'SAP_BASIS'
+        iv_upgtype   = 'A'
+        iv_buffered  = abap_false
+      IMPORTING
+        ev_upginfo   = ls_upginfo
+      EXCEPTIONS
+        OTHERS       = 4.
+    IF sy-subrc = 0 AND ls_upginfo-putstatus NA 'ITU'.
+      lv_is_upgrade = abap_true.
+    ENDIF.
+
+    " SAP system has status 'not modifiable' (TK 102)
+    " Changes to repository objects are not permitted in this client (TK 729)
+    " Shadow system
+    " Running upgrade
+    rv_result = boolc(
+      lv_systemedit <> 'N' AND
+      lv_sys_cliinddep_edit NA '23' AND
+      lv_is_shadow <> abap_true AND
+      lv_is_upgrade <> abap_true ).
+
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_environment~compare_with_inactive.
@@ -42,19 +100,10 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
 
 
   METHOD zif_abapgit_environment~is_repo_object_changes_allowed.
-    DATA lv_ind TYPE t000-ccnocliind.
-
-    IF mv_client_modifiable = abap_undefined.
-      SELECT SINGLE ccnocliind FROM t000 INTO lv_ind
-             WHERE mandt = sy-mandt.
-      IF sy-subrc = 0
-          AND ( lv_ind = ' ' OR lv_ind = '1' ). "check changes allowed
-        mv_client_modifiable = abap_true.
-      ELSE.
-        mv_client_modifiable = abap_false.
-      ENDIF.
+    IF mv_modifiable = abap_undefined.
+      mv_modifiable = is_system_changes_allowed( ).
     ENDIF.
-    rv_result = mv_client_modifiable.
+    rv_result = mv_modifiable.
   ENDMETHOD.
 
 
