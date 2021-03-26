@@ -44,10 +44,6 @@ CLASS ltcl_abapgit_popups_mock IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_popups~popup_package_export.
-
-  ENDMETHOD.
-
   METHOD zif_abapgit_popups~popup_to_confirm.
 
   ENDMETHOD.

@@ -6,11 +6,9 @@ CLASS zcl_abapgit_data_config DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_data_config .
-
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CONSTANTS c_extension TYPE string VALUE '.config.json'.
     DATA mt_config TYPE zif_abapgit_data_config=>ty_config_tt .
 
     METHODS dump
@@ -24,7 +22,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
+CLASS zcl_abapgit_data_config IMPLEMENTATION.
 
 
   METHOD dump.
@@ -32,12 +30,11 @@ CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
     DATA lo_ajson TYPE REF TO zcl_abapgit_ajson.
     DATA lx_ajson TYPE REF TO zcx_abapgit_ajson_error.
 
-
     TRY.
         lo_ajson = zcl_abapgit_ajson=>create_empty( ).
         lo_ajson->zif_abapgit_ajson_writer~set(
           iv_path = '/'
-          iv_val = is_config ).
+          iv_val  = is_config ).
         rv_json = zcl_abapgit_convert=>string_to_xstring_utf8( lo_ajson->stringify( 2 ) ).
       CATCH zcx_abapgit_ajson_error INTO lx_ajson.
         zcx_abapgit_exception=>raise( lx_ajson->get_text( ) ).
@@ -48,8 +45,8 @@ CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
 
   METHOD zif_abapgit_data_config~add_config.
 
-    ASSERT NOT is_config-type IS INITIAL.
-    ASSERT NOT is_config-name IS INITIAL.
+    ASSERT is_config-type IS NOT INITIAL.
+    ASSERT is_config-name IS NOT INITIAL.
     ASSERT is_config-name = to_upper( is_config-name ).
 
     INSERT is_config INTO TABLE mt_config.
@@ -69,7 +66,7 @@ CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
 
     CLEAR mt_config.
     LOOP AT it_files INTO ls_file WHERE path = zif_abapgit_data_config=>c_default_path
-        AND filename CP |*{ c_extension }|.
+        AND filename CP |*.{ zif_abapgit_data_config=>c_config }.{ zif_abapgit_data_config=>c_default_format }|.
       TRY.
           lo_ajson = zcl_abapgit_ajson=>parse( zcl_abapgit_convert=>xstring_to_string_utf8( ls_file-data ) ).
           lo_ajson->zif_abapgit_ajson_reader~to_abap( IMPORTING ev_container = ls_config ).
@@ -90,8 +87,8 @@ CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
 
   METHOD zif_abapgit_data_config~remove_config.
 
-    ASSERT NOT is_config-type IS INITIAL.
-    ASSERT NOT is_config-name IS INITIAL.
+    ASSERT is_config-type IS NOT INITIAL.
+    ASSERT is_config-name IS NOT INITIAL.
     ASSERT is_config-name = to_upper( is_config-name ).
 
     DELETE mt_config WHERE name = is_config-name AND type = is_config-type.
@@ -110,9 +107,10 @@ CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
     ls_file-path = zif_abapgit_data_config=>c_default_path.
 
     LOOP AT mt_config INTO ls_config.
-      ls_file-filename = to_lower( |{ ls_config-name }{ c_extension }| ).
       ls_file-data = dump( ls_config ).
       ls_file-sha1 = zcl_abapgit_hash=>sha1_blob( ls_file-data ).
+      ls_config-type = zif_abapgit_data_config=>c_config.
+      ls_file-filename = zcl_abapgit_data_utils=>build_filename( ls_config ).
       APPEND ls_file TO rt_files.
     ENDLOOP.
 

@@ -107,10 +107,10 @@ CLASS zcl_abapgit_gui_page_ex_object IMPLEMENTATION.
       WHEN c_event-choose_object_type.
 
         mo_form_data->set(
-          iv_key = 'object_type'
+          iv_key = c_id-object_type
           iv_val = zcl_abapgit_ui_factory=>get_popups( )->popup_search_help( 'TADIR-OBJECT' ) ).
 
-        IF mo_form_data->get( 'object_type' ) IS NOT INITIAL.
+        IF mo_form_data->get( c_id-object_type ) IS NOT INITIAL.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
         ELSE.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.

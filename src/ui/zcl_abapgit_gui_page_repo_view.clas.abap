@@ -265,8 +265,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       ro_advanced_dropdown->add( iv_txt = 'Checkout commit'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-git_checkout_commit }?key={ mv_key }|
                                  iv_opt = iv_wp_opt ).
-      ro_advanced_dropdown->add( iv_txt = 'Background Mode'
-                                 iv_act = |{ zif_abapgit_definitions=>c_action-go_background }?key={ mv_key }| ).
       ro_advanced_dropdown->add( iv_txt = 'Change Remote'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_change }?key={ mv_key }| ).
       ro_advanced_dropdown->add( iv_txt = 'Make Off-line'
@@ -798,6 +796,10 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
           iv_interactive_branch = abap_true ) ).
 
         ri_html->add( zcl_abapgit_gui_chunk_lib=>render_news( io_news = lo_news ) ).
+
+        zcl_abapgit_exit=>get_instance( )->wall_message_repo(
+          is_repo_meta = mo_repo->ms_data
+          ii_html      = ri_html ).
 
         CREATE OBJECT lo_browser
           EXPORTING
