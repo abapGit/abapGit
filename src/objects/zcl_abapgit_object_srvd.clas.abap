@@ -40,7 +40,6 @@ CLASS zcl_abapgit_object_srvd DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     ALIASES serialize
       FOR zif_abapgit_object~serialize .
 
-    DATA mi_persistence TYPE REF TO if_wb_object_persist .
     DATA mv_service_definition_key TYPE seu_objkey .
     DATA mr_service_definition TYPE REF TO data .
     CONSTANTS mc_source_file TYPE string VALUE 'srvdsrv' ##NO_TEXT.
@@ -102,7 +101,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
 
     TRY.
         CREATE DATA mr_service_definition TYPE ('CL_SRVD_WB_OBJECT_DATA=>TY_SRVD_OBJECT_DATA').
-        CREATE OBJECT mi_persistence TYPE ('CL_SRVD_OBJECT_PERSIST').
 
       CATCH cx_sy_create_error.
         zcx_abapgit_exception=>raise( |SRVD not supported by your NW release| ).
