@@ -113,7 +113,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
+CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
 
   METHOD build_existing.
@@ -488,7 +488,8 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
     DATA:
       lv_namespace TYPE namespace,
-      lt_namespace TYPE TABLE OF namespace.
+      lt_namespace TYPE TABLE OF namespace,
+      ls_trnspace  TYPE trnspace.
 
     FIELD-SYMBOLS <ls_result> LIKE LINE OF it_results.
 
@@ -502,14 +503,20 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
     ENDLOOP.
 
     LOOP AT lt_namespace INTO lv_namespace.
-      CALL FUNCTION 'TR_CHECK_NAMESPACE'
+      CALL FUNCTION 'TR_READ_NAMESPACE'
         EXPORTING
-          iv_namespace        = lv_namespace
+          iv_namespace           = lv_namespace
+        IMPORTING
+          es_trnspace            = ls_trnspace
         EXCEPTIONS
-          namespace_not_valid = 1
-          OTHERS              = 2.
+          namespace_not_existing = 1
+          OTHERS                 = 2.
       IF sy-subrc <> 0.
         ii_log->add( iv_msg  = |Namespace { lv_namespace } does not exist. Create it in transaction SE03|
+                     iv_type = 'W'
+                     iv_rc   = '6' ).
+      ELSEIF ls_trnspace-editflag <> 'X'.
+        ii_log->add( iv_msg  = |Namespace { lv_namespace } is not modifiable. Check it in transaction SE03|
                      iv_type = 'W'
                      iv_rc   = '6' ).
       ENDIF.
