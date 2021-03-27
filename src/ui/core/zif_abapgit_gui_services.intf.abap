@@ -25,4 +25,9 @@ INTERFACE zif_abapgit_gui_services
   METHODS get_html_parts
     RETURNING
       VALUE(ro_parts) TYPE REF TO zcl_abapgit_html_parts .
+  METHODS get_log
+    IMPORTING
+      iv_create_new TYPE abap_bool DEFAULT abap_false
+    RETURNING
+      VALUE(ri_log) TYPE REF TO zif_abapgit_log.
 ENDINTERFACE.
