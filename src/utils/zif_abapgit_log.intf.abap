@@ -1,6 +1,20 @@
 INTERFACE zif_abapgit_log
   PUBLIC .
 
+  CONSTANTS:
+    BEGIN OF c_status,
+      ok      TYPE sy-msgty VALUE 'S',
+      error   TYPE sy-msgty VALUE 'E',
+      warning TYPE sy-msgty VALUE 'W',
+    END OF c_status.
+
+  CONSTANTS:
+    BEGIN OF c_log_level,
+      empty   TYPE i VALUE 0,
+      info    TYPE i VALUE 1,
+      warning TYPE i VALUE 2,
+      error   TYPE i VALUE 3,
+    END OF c_log_level.
 
   TYPES:
     BEGIN OF ty_log_out,
@@ -17,6 +31,7 @@ INTERFACE zif_abapgit_log
     BEGIN OF ty_msg,
       text TYPE string,
       type TYPE sy-msgty,
+      level TYPE i,
     END OF ty_msg .
   TYPES:
     ty_msgs TYPE STANDARD TABLE OF ty_msg
@@ -76,10 +91,25 @@ INTERFACE zif_abapgit_log
   METHODS get_status
     RETURNING
       VALUE(rv_status) TYPE sy-msgty .
+  METHODS get_log_level
+    RETURNING
+      VALUE(rv_level) TYPE i .
   METHODS get_title
     RETURNING
       VALUE(rv_title) TYPE string .
   METHODS set_title
     IMPORTING
-      !iv_title TYPE csequence .
+      !iv_title TYPE csequence
+    RETURNING
+      VALUE(ri_log) TYPE REF TO zif_abapgit_log.
+  METHODS merge_with
+    IMPORTING
+      ii_log TYPE REF TO zif_abapgit_log
+      iv_min_level TYPE i DEFAULT 0
+    RETURNING
+      VALUE(ri_log) TYPE REF TO zif_abapgit_log.
+  METHODS clone
+    RETURNING
+      VALUE(ri_log) TYPE REF TO zif_abapgit_log.
+
 ENDINTERFACE.

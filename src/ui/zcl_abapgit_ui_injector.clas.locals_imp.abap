@@ -20,4 +20,7 @@ CLASS lcl_gui_services_dummy IMPLEMENTATION.
   ENDMETHOD.
   METHOD zif_abapgit_gui_services~get_html_parts.
   ENDMETHOD.
+  METHOD zif_abapgit_gui_services~get_log.
+  ENDMETHOD.
+
 ENDCLASS.
