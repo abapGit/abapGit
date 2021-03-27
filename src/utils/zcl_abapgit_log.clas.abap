@@ -5,16 +5,22 @@ CLASS zcl_abapgit_log DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_log .
+
+    METHODS constructor
+      IMPORTING
+        iv_title TYPE string OPTIONAL.
+
+    CLASS-METHODS from_exception
+      IMPORTING
+        io_x TYPE REF TO cx_root
+      RETURNING
+        VALUE(ro_log) TYPE REF TO zcl_abapgit_log.
+
   PROTECTED SECTION.
 
     TYPES:
-      BEGIN OF ty_msg,
-        text TYPE string,
-        type TYPE sy-msgty,
-      END OF ty_msg .
-    TYPES:
       BEGIN OF ty_log, "in order of occurrence
-        msg       TYPE ty_msg,
+        msg       TYPE zif_abapgit_log=>ty_msg,
         rc        TYPE sy-subrc,
         item      TYPE zif_abapgit_definitions=>ty_item,
         exception TYPE REF TO cx_root,
@@ -35,6 +41,24 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
+
+
+  METHOD constructor.
+
+    zif_abapgit_log~set_title( iv_title ).
+
+  ENDMETHOD.
+
+
+  METHOD from_exception.
+
+    CREATE OBJECT ro_log.
+
+    IF io_x IS BOUND.
+      ro_log->zif_abapgit_log~add_exception( io_x ).
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD get_messages_status.
@@ -73,6 +97,17 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
     <ls_log>-item      = is_item.
     <ls_log>-exception = ix_exc.
 
+    CASE iv_type.
+      WHEN 'E' OR 'A' OR 'X'.
+        <ls_log>-msg-level = zif_abapgit_log=>c_log_level-error.
+      WHEN 'W'.
+        <ls_log>-msg-level = zif_abapgit_log=>c_log_level-warning.
+      WHEN 'S' OR 'I'.
+        <ls_log>-msg-level = zif_abapgit_log=>c_log_level-info.
+      WHEN OTHERS. "unknown
+        ASSERT 0 = 1.
+    ENDCASE.
+
   ENDMETHOD.
 
 
@@ -90,7 +125,7 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
 
     DATA lx_exc TYPE REF TO cx_root.
     DATA lv_msg TYPE string.
-    lx_exc ?= ix_exc.
+    lx_exc = ix_exc.
     DO.
       lv_msg = lx_exc->get_text( ).
       zif_abapgit_log~add( iv_msg  = lv_msg
@@ -142,6 +177,17 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_log~clone.
+
+    DATA lo_log TYPE REF TO zcl_abapgit_log.
+
+    CREATE OBJECT lo_log EXPORTING iv_title = mv_title.
+    lo_log->mt_log = mt_log.
+    ri_log = lo_log.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_log~count.
     rv_count = lines( mt_log ).
   ENDMETHOD.
@@ -185,6 +231,24 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_log~get_log_level.
+
+    FIELD-SYMBOLS <ls_log> LIKE LINE OF mt_log.
+
+    rv_level = zif_abapgit_log=>c_log_level-empty.
+
+    LOOP AT mt_log ASSIGNING <ls_log>.
+      IF <ls_log>-msg-level = zif_abapgit_log=>c_log_level-error.
+        rv_level = zif_abapgit_log=>c_log_level-error.
+        EXIT.
+      ELSEIF <ls_log>-msg-level > rv_level.
+        rv_level = <ls_log>-msg-level.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_log~get_messages.
     DATA ls_msg TYPE zif_abapgit_log~ty_log_out.
     FIELD-SYMBOLS <ls_log> TYPE ty_log.
@@ -202,22 +266,22 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
   METHOD zif_abapgit_log~get_status.
 
     DATA lr_log TYPE REF TO ty_log.
-    rv_status = 'S'.
+    rv_status = zif_abapgit_log=>c_status-ok.
     LOOP AT mt_log REFERENCE INTO lr_log.
       CASE lr_log->msg-type.
         WHEN 'E' OR 'A' OR 'X'.
-          rv_status = 'E'. "not okay
+          rv_status = zif_abapgit_log=>c_status-error.
           EXIT.
         WHEN 'W'.
-          rv_status = 'W'. "maybe
+          rv_status = zif_abapgit_log=>c_status-warning.
           CONTINUE.
         WHEN 'S' OR 'I'.
-          IF rv_status <> 'W'.
-            rv_status = 'S'. "okay
+          IF rv_status <> zif_abapgit_log=>c_status-warning.
+            rv_status = zif_abapgit_log=>c_status-ok.
           ENDIF.
           CONTINUE.
         WHEN OTHERS. "unknown
-          CONTINUE.
+          ASSERT 0 = 1.
       ENDCASE.
     ENDLOOP.
 
@@ -240,7 +304,29 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_log~merge_with.
+
+    DATA lo_log TYPE REF TO zcl_abapgit_log.
+    DATA lt_log_temp LIKE lo_log->mt_log.
+
+    IF ii_log IS BOUND.
+      lo_log ?= ii_log.
+      IF iv_min_level > 0.
+        lt_log_temp = lo_log->mt_log.
+        DELETE lt_log_temp WHERE msg-level < iv_min_level.
+        APPEND LINES OF lt_log_temp TO mt_log.
+      ELSE.
+        APPEND LINES OF lo_log->mt_log TO mt_log.
+      ENDIF.
+    ENDIF.
+
+    ri_log = me.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_log~set_title.
     mv_title = iv_title.
+    ri_log = me.
   ENDMETHOD.
 ENDCLASS.
