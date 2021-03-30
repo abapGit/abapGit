@@ -1116,7 +1116,11 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ls_col_spec-allow_order_by = abap_true.
     APPEND ls_col_spec TO lt_col_spec.
 
-    APPEND INITIAL LINE TO lt_col_spec.
+    ls_col_spec-tech_name = 'STATUS'.
+    ls_col_spec-display_name = 'Status'.
+    ls_col_spec-allow_order_by = abap_false.
+    ls_col_spec-css_class = 'cmd'.
+    APPEND ls_col_spec TO lt_col_spec.
 
     ri_html->add( |<thead>| ).
     ri_html->add( |<tr>| ).
