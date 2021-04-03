@@ -63,7 +63,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_APACK_HELPER IMPLEMENTATION.
+CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
 
 
   METHOD are_dependencies_met.
@@ -155,7 +155,8 @@ CLASS ZCL_ABAPGIT_APACK_HELPER IMPLEMENTATION.
        WHERE tadir~pgmid = 'R3TR'
          AND tadir~object = 'CLAS'
          AND seometarel~version = '1'
-         AND ( seometarel~refclsname = 'ZIF_APACK_MANIFEST' OR seometarel~refclsname = 'IF_APACK_MANIFEST' ).
+         AND ( seometarel~refclsname = zif_abapgit_apack_definitions=>c_apack_interface_cust
+            OR seometarel~refclsname = zif_abapgit_apack_definitions=>c_apack_interface_sap ).
 
     LOOP AT lt_manifest_implementation INTO ls_manifest_implementation.
       CLEAR: lo_manifest_provider, lo_apack_reader.
