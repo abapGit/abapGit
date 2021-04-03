@@ -1,4 +1,5 @@
-INTERFACE zif_abapgit_apack_definitions PUBLIC.
+INTERFACE zif_abapgit_apack_definitions PUBLIC .
+
 
   TYPES:
     BEGIN OF ty_dependency,
@@ -9,7 +10,6 @@ INTERFACE zif_abapgit_apack_definitions PUBLIC.
       git_url        TYPE string,
       target_package TYPE devclass,
     END OF ty_dependency,
-
     ty_dependencies    TYPE STANDARD TABLE OF ty_dependency
                     WITH NON-UNIQUE DEFAULT KEY,
 
@@ -34,5 +34,6 @@ INTERFACE zif_abapgit_apack_definitions PUBLIC.
 
   CONSTANTS c_dot_apack_manifest TYPE string VALUE '.apack-manifest.xml' ##NO_TEXT.
   CONSTANTS c_repository_type_abapgit TYPE ty_repository_type VALUE 'abapGit' ##NO_TEXT.
-
+  CONSTANTS c_apack_interface_sap TYPE seoclsname VALUE 'IF_APACK_MANIFEST' ##NO_TEXT.
+  CONSTANTS c_apack_interface_cust TYPE seoclsname VALUE 'ZIF_APACK_MANIFEST' ##NO_TEXT.
 ENDINTERFACE.

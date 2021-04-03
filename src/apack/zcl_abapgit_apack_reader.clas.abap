@@ -70,7 +70,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_APACK_READER IMPLEMENTATION.
+CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -82,15 +82,20 @@ CLASS ZCL_ABAPGIT_APACK_READER IMPLEMENTATION.
 
     DATA: ls_my_manifest_wo_deps TYPE zif_abapgit_apack_definitions=>ty_descriptor_wo_dependencies,
           ls_my_dependency       TYPE zif_abapgit_apack_definitions=>ty_dependency,
-          ls_descriptor          TYPE zif_abapgit_apack_definitions=>ty_descriptor.
+          ls_descriptor          TYPE zif_abapgit_apack_definitions=>ty_descriptor,
+          lv_descriptor_cust     TYPE string,
+          lv_descriptor_sap      TYPE string.
 
     FIELD-SYMBOLS: <lg_descriptor>   TYPE any,
                    <lt_dependencies> TYPE ANY TABLE,
                    <lg_dependency>   TYPE any.
 
-    ASSIGN io_manifest_provider->('ZIF_APACK_MANIFEST~DESCRIPTOR') TO <lg_descriptor>.
+    lv_descriptor_cust = zif_abapgit_apack_definitions=>c_apack_interface_cust && '~DESCRIPTOR'.
+    lv_descriptor_sap  = zif_abapgit_apack_definitions=>c_apack_interface_sap && '~DESCRIPTOR'.
+
+    ASSIGN io_manifest_provider->(lv_descriptor_cust) TO <lg_descriptor>.
     IF <lg_descriptor> IS NOT ASSIGNED.
-      ASSIGN io_manifest_provider->('IF_APACK_MANIFEST~DESCRIPTOR') TO <lg_descriptor>.
+      ASSIGN io_manifest_provider->(lv_descriptor_sap) TO <lg_descriptor>.
     ENDIF.
     IF <lg_descriptor> IS ASSIGNED.
       " A little more complex than a normal MOVE-CORRSPONDING
@@ -175,7 +180,7 @@ CLASS ZCL_ABAPGIT_APACK_READER IMPLEMENTATION.
          WHERE tadir~pgmid = 'R3TR' AND
                tadir~object = 'CLAS' AND
                seometarel~version = '1' AND
-               seometarel~refclsname = 'ZIF_APACK_MANIFEST' AND
+               seometarel~refclsname = zif_abapgit_apack_definitions=>c_apack_interface_cust AND
                tadir~devclass = mv_package_name.
       IF ls_manifest_implementation IS INITIAL.
         SELECT SINGLE seometarel~clsname tadir~devclass FROM seometarel "#EC CI_NOORDER
@@ -184,7 +189,7 @@ CLASS ZCL_ABAPGIT_APACK_READER IMPLEMENTATION.
            WHERE tadir~pgmid = 'R3TR' AND
                  tadir~object = 'CLAS' AND
                  seometarel~version = '1' AND
-                 seometarel~refclsname = 'IF_APACK_MANIFEST' AND
+                 seometarel~refclsname = zif_abapgit_apack_definitions=>c_apack_interface_sap AND
                  tadir~devclass = mv_package_name.
       ENDIF.
       IF ls_manifest_implementation IS NOT INITIAL.
