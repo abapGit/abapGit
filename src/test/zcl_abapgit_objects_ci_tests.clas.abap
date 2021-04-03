@@ -66,17 +66,13 @@ CLASS zcl_abapgit_objects_ci_tests IMPLEMENTATION.
     " Objects will be created and deleted, do not run in customer system!
     " These tests may fail if you are locking the entries (e.g. the ZABAPGIT transaction is open)
     IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_run_critical_tests( ) = abap_false.
-      cl_abap_unit_assert=>fail(
-        msg   = 'Cancelled. You can enable these tests in abapGit settings'
-        level = if_aunit_constants=>tolerable ).
+      RETURN.
     ENDIF.
 
     " Check if abapGit-CI is installed
     SELECT SINGLE clsname FROM seoclass INTO lv_check WHERE clsname = 'ZCL_ABAPGIT_CI_REPOS'.
     IF sy-subrc <> 0.
-      cl_abap_unit_assert=>fail(
-        msg   = 'Cancelled. abapGit-CI is not installed (https://github.com/abapGit/CI)'
-        level = if_aunit_constants=>tolerable ).
+      RETURN.
     ENDIF.
 
     TRY.
