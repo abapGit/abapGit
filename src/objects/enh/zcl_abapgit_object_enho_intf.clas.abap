@@ -8,44 +8,23 @@ CLASS zcl_abapgit_object_enho_intf DEFINITION PUBLIC.
           io_files TYPE REF TO zcl_abapgit_objects_files.
     INTERFACES: zif_abapgit_object_enho.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item,
           mo_files TYPE REF TO zcl_abapgit_objects_files.
 
 ENDCLASS.
 
+
+
 CLASS zcl_abapgit_object_enho_intf IMPLEMENTATION.
+
 
   METHOD constructor.
     ms_item  = is_item.
     mo_files = io_files.
   ENDMETHOD.
 
-  METHOD zif_abapgit_object_enho~serialize.
-
-    DATA: lo_enh_intf  TYPE REF TO cl_enh_tool_intf,
-          lv_class     TYPE seoclsname,
-          lv_shorttext TYPE string.
-
-
-    lo_enh_intf ?= ii_enh_tool.
-
-    lv_shorttext = lo_enh_intf->if_enh_object_docu~get_shorttext( ).
-    lo_enh_intf->get_class( IMPORTING class_name = lv_class ).
-
-    ii_xml->add( iv_name = 'TOOL'
-                 ig_data = ii_enh_tool->get_tool( ) ).
-    ii_xml->add( ig_data = lv_shorttext
-                 iv_name = 'SHORTTEXT' ).
-    ii_xml->add( iv_name = 'CLASS'
-                 ig_data = lv_class ).
-
-    zcl_abapgit_object_enho_clif=>serialize(
-      io_xml  = ii_xml
-      io_files = mo_files
-      io_clif = lo_enh_intf ).
-
-  ENDMETHOD.
 
   METHOD zif_abapgit_object_enho~deserialize.
 
@@ -54,8 +33,8 @@ CLASS zcl_abapgit_object_enho_intf IMPLEMENTATION.
           lv_shorttext TYPE string,
           lv_class     TYPE seoclsname,
           lv_enhname   TYPE enhname,
-          lv_package   TYPE devclass.
-
+          lv_package   TYPE devclass,
+          lx_enh_root  TYPE REF TO cx_enh_root.
 
     ii_xml->read( EXPORTING iv_name = 'SHORTTEXT'
                   CHANGING cg_data  = lv_shorttext ).
@@ -85,10 +64,36 @@ CLASS zcl_abapgit_object_enho_intf IMPLEMENTATION.
 
         lo_enh_intf->if_enh_object~save( run_dark = abap_true ).
         lo_enh_intf->if_enh_object~unlock( ).
-      CATCH cx_enh_root.
-        zcx_abapgit_exception=>raise( 'error deserializing ENHO interface' ).
+      CATCH cx_enh_root INTO lx_enh_root.
+        zcx_abapgit_exception=>raise_with_text( lx_enh_root ).
     ENDTRY.
 
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_object_enho~serialize.
+
+    DATA: lo_enh_intf  TYPE REF TO cl_enh_tool_intf,
+          lv_class     TYPE seoclsname,
+          lv_shorttext TYPE string.
+
+
+    lo_enh_intf ?= ii_enh_tool.
+
+    lv_shorttext = lo_enh_intf->if_enh_object_docu~get_shorttext( ).
+    lo_enh_intf->get_class( IMPORTING class_name = lv_class ).
+
+    ii_xml->add( iv_name = 'TOOL'
+                 ig_data = ii_enh_tool->get_tool( ) ).
+    ii_xml->add( ig_data = lv_shorttext
+                 iv_name = 'SHORTTEXT' ).
+    ii_xml->add( iv_name = 'CLASS'
+                 ig_data = lv_class ).
+
+    zcl_abapgit_object_enho_clif=>serialize(
+      io_xml  = ii_xml
+      io_files = mo_files
+      io_clif = lo_enh_intf ).
+
+  ENDMETHOD.
 ENDCLASS.

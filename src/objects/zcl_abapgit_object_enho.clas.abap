@@ -110,7 +110,8 @@ CLASS zcl_abapgit_object_enho IMPLEMENTATION.
   METHOD zif_abapgit_object~delete.
 
     DATA: lv_enh_id     TYPE enhname,
-          li_enh_object TYPE REF TO if_enh_object.
+          li_enh_object TYPE REF TO if_enh_object,
+          lx_enh_root   TYPE REF TO cx_enh_root.
 
     IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
@@ -124,8 +125,8 @@ CLASS zcl_abapgit_object_enho IMPLEMENTATION.
         li_enh_object->delete( nevertheless_delete = abap_true
                                run_dark            = abap_true ).
         li_enh_object->unlock( ).
-      CATCH cx_enh_root.
-        zcx_abapgit_exception=>raise( 'Error deleting ENHO' ).
+      CATCH cx_enh_root INTO lx_enh_root.
+        zcx_abapgit_exception=>raise_with_text( lx_enh_root ).
     ENDTRY.
 
   ENDMETHOD.
@@ -225,7 +226,8 @@ CLASS zcl_abapgit_object_enho IMPLEMENTATION.
 
     DATA: lv_enh_id   TYPE enhname,
           li_enho     TYPE REF TO zif_abapgit_object_enho,
-          li_enh_tool TYPE REF TO if_enh_tool.
+          li_enh_tool TYPE REF TO if_enh_tool,
+          lx_enh_root  TYPE REF TO cx_enh_root.
 
     IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
@@ -236,8 +238,8 @@ CLASS zcl_abapgit_object_enho IMPLEMENTATION.
         li_enh_tool = cl_enh_factory=>get_enhancement(
           enhancement_id   = lv_enh_id
           bypassing_buffer = abap_true ).
-      CATCH cx_enh_root.
-        zcx_abapgit_exception=>raise( 'Error from CL_ENH_FACTORY' ).
+      CATCH cx_enh_root INTO lx_enh_root.
+        zcx_abapgit_exception=>raise_with_text( lx_enh_root ).
     ENDTRY.
 
     li_enho = factory( li_enh_tool->get_tool( ) ).

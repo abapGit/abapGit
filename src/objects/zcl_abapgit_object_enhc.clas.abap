@@ -47,7 +47,7 @@ CLASS zcl_abapgit_object_enhc IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lx_error      TYPE REF TO cx_enh_root,
+    DATA: lx_enh_root   TYPE REF TO cx_enh_root,
           li_enh_object TYPE REF TO if_enh_object.
 
     TRY.
@@ -59,8 +59,8 @@ CLASS zcl_abapgit_object_enhc IMPLEMENTATION.
                                run_dark            = abap_true ).
         li_enh_object->unlock( ).
 
-      CATCH cx_enh_root INTO lx_error.
-        zcx_abapgit_exception=>raise( lx_error->get_text( ) ).
+      CATCH cx_enh_root INTO lx_enh_root.
+        zcx_abapgit_exception=>raise_with_text( lx_enh_root ).
     ENDTRY.
 
   ENDMETHOD.
@@ -68,7 +68,7 @@ CLASS zcl_abapgit_object_enhc IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: lx_error            TYPE REF TO cx_enh_root,
+    DATA: lx_enh_root         TYPE REF TO cx_enh_root,
           li_enh_composite    TYPE REF TO if_enh_composite,
           lv_package          TYPE devclass,
           lt_composite_childs TYPE enhcompositename_it,
@@ -140,8 +140,8 @@ CLASS zcl_abapgit_object_enhc IMPLEMENTATION.
           iv_package = iv_package
           io_xml     = io_xml ).
 
-      CATCH cx_enh_root INTO lx_error.
-        zcx_abapgit_exception=>raise( lx_error->get_text( ) ).
+      CATCH cx_enh_root INTO lx_enh_root.
+        zcx_abapgit_exception=>raise_with_text( lx_enh_root ).
     ENDTRY.
 
   ENDMETHOD.
@@ -215,7 +215,7 @@ CLASS zcl_abapgit_object_enhc IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: lx_error            TYPE REF TO cx_enh_root,
+    DATA: lx_enh_root         TYPE REF TO cx_enh_root,
           li_enh_composite    TYPE REF TO if_enh_composite,
           lt_composite_childs TYPE enhcompositename_it,
           lt_enh_childs       TYPE enhname_it,
@@ -248,8 +248,8 @@ CLASS zcl_abapgit_object_enhc IMPLEMENTATION.
           iv_obj_name = ms_item-obj_name
           io_xml      = io_xml ).
 
-      CATCH cx_enh_root INTO lx_error.
-        zcx_abapgit_exception=>raise( lx_error->get_text( ) ).
+      CATCH cx_enh_root INTO lx_enh_root.
+        zcx_abapgit_exception=>raise_with_text( lx_enh_root ).
     ENDTRY.
 
   ENDMETHOD.
