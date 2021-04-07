@@ -45,7 +45,7 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
           lv_editorder   TYPE n LENGTH 3,
           lv_methname    TYPE seocpdname,
           lt_abap        TYPE rswsourcet,
-          lx_enh         TYPE REF TO cx_enh_root,
+          lx_enh_root    TYPE REF TO cx_enh_root,
           lv_new_em      TYPE abap_bool,
           lt_files       TYPE zif_abapgit_definitions=>ty_files_tt.
 
@@ -80,9 +80,8 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
               clsname    = <ls_method>-methkey-clsname
               methname   = lv_methname
               methsource = lt_abap ).
-        CATCH cx_enh_mod_not_allowed cx_enh_is_not_enhanceable INTO lx_enh.
-          zcx_abapgit_exception=>raise( iv_text = 'Error deserializing ENHO method include'
-                                        ix_previous = lx_enh ).
+        CATCH cx_enh_root INTO lx_enh_root.
+          zcx_abapgit_exception=>raise_with_text( lx_enh_root ).
       ENDTRY.
 
     ENDLOOP.
@@ -138,8 +137,8 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
           lv_shorttext TYPE string,
           lv_class     TYPE seoclsname,
           lv_enhname   TYPE enhname,
-          lv_package   TYPE devclass.
-
+          lv_package   TYPE devclass,
+          lx_enh_root  TYPE REF TO cx_enh_root.
 
     ii_xml->read( EXPORTING iv_name = 'SHORTTEXT'
                   CHANGING cg_data  = lv_shorttext ).
@@ -188,8 +187,8 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
 
         lo_enh_class->if_enh_object~save( run_dark = abap_true ).
         lo_enh_class->if_enh_object~unlock( ).
-      CATCH cx_enh_root.
-        zcx_abapgit_exception=>raise( 'error deserializing ENHO class' ).
+      CATCH cx_enh_root INTO lx_enh_root.
+        zcx_abapgit_exception=>raise_with_text( lx_enh_root ).
     ENDTRY.
 
   ENDMETHOD.
