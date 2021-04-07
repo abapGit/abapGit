@@ -16,11 +16,6 @@ CLASS zcl_abapgit_data_utils DEFINITION
         !is_config         TYPE zif_abapgit_data_config=>ty_config
       RETURNING
         VALUE(rv_filename) TYPE string .
-    CLASS-METHODS get_item
-      IMPORTING
-        !is_config     TYPE zif_abapgit_data_config=>ty_config
-      RETURNING
-        VALUE(rs_item) TYPE zif_abapgit_definitions=>ty_item .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -64,17 +59,6 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
       CATCH cx_root.
         zcx_abapgit_exception=>raise( |Error creating internal table for data serialization| ).
     ENDTRY.
-
-  ENDMETHOD.
-
-
-  METHOD get_item.
-
-    rs_item-obj_type = is_config-type.
-    rs_item-obj_name = is_config-name.
-
-    SELECT SINGLE devclass FROM tadir INTO rs_item-devclass
-      WHERE pgmid = 'R3TR' AND object = 'TABL' AND obj_name = rs_item-obj_name ##SUBRC_OK.
 
   ENDMETHOD.
 ENDCLASS.
