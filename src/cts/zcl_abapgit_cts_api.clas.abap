@@ -34,11 +34,11 @@ CLASS zcl_abapgit_cts_api DEFINITION
     "! @raising zcx_abapgit_exception | Object is not locked in a transport
     METHODS get_current_transport_from_db
       IMPORTING
-        !iv_program_id              TYPE pgmid DEFAULT 'R3TR'
-        !iv_object_type             TYPE trobjtype
-        !iv_object_name             TYPE sobj_name
+        !iv_program_id      TYPE pgmid DEFAULT 'R3TR'
+        !iv_object_type     TYPE trobjtype
+        !iv_object_name     TYPE sobj_name
       RETURNING
-        VALUE(rv_transport)         TYPE trkorr
+        VALUE(rv_transport) TYPE trkorr
       RAISING
         zcx_abapgit_exception .
     "! Check if the object is currently locked in a transport
@@ -209,6 +209,68 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
         pe_result = lv_type_check_result.
 
     rv_transportable = boolc( lv_type_check_result CA 'RTL' ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_cts_api~get_transports_for_list.
+
+    DATA lv_request TYPE trkorr.
+    DATA lt_tlock TYPE SORTED TABLE OF tlock WITH NON-UNIQUE KEY object hikey.
+    DATA ls_object_key TYPE e071.
+    DATA lv_type_check_result TYPE c LENGTH 1.
+    DATA ls_lock_key TYPE tlock_int.
+    DATA ls_transport LIKE LINE OF rt_transports.
+
+    FIELD-SYMBOLS <ls_item> LIKE LINE OF it_items.
+    FIELD-SYMBOLS <ls_tlock> LIKE LINE OF lt_tlock.
+
+* Workarounds to improve performance, note that IT_ITEMS might
+* contain 1000s of rows, see standard logic in function module
+* TR_CHECK_OBJECT_LOCK
+
+* avoid database lookups in TLOCK for each item,
+    SELECT * FROM tlock INTO TABLE lt_tlock.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    LOOP AT it_items ASSIGNING <ls_item>.
+      CLEAR lv_request.
+
+      ls_object_key-pgmid = 'R3TR'.
+      ls_object_key-object = <ls_item>-obj_type.
+      ls_object_key-obj_name = <ls_item>-obj_name.
+
+      CALL FUNCTION 'TR_CHECK_TYPE'
+        EXPORTING
+          wi_e071     = ls_object_key
+        IMPORTING
+          we_lock_key = ls_lock_key
+          pe_result   = lv_type_check_result.
+
+      IF lv_type_check_result = 'L'.
+        LOOP AT lt_tlock ASSIGNING <ls_tlock>
+            WHERE object =  ls_lock_key-obj
+            AND   hikey  >= ls_lock_key-low
+            AND   lokey  <= ls_lock_key-hi.               "#EC PORTABLE
+          lv_request = <ls_tlock>-trkorr.
+          EXIT.
+        ENDLOOP.
+      ELSEIF is_object_type_transportable( <ls_item>-obj_type ) = abap_true.
+        lv_request = get_current_transport_from_db(
+          iv_object_type = <ls_item>-obj_type
+          iv_object_name = <ls_item>-obj_name ).
+      ENDIF.
+
+      IF lv_request IS NOT INITIAL.
+        ls_transport-obj_type = <ls_item>-obj_type.
+        ls_transport-obj_name = <ls_item>-obj_name.
+        ls_transport-trkorr = lv_request.
+        INSERT ls_transport INTO TABLE rt_transports.
+      ENDIF.
+
+    ENDLOOP.
+
   ENDMETHOD.
 
 
