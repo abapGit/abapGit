@@ -19,7 +19,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_ENHS_HOOK_D IMPLEMENTATION.
+CLASS zcl_abapgit_object_enhs_hook_d IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object_enhs~deserialize.
@@ -30,7 +30,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHS_HOOK_D IMPLEMENTATION.
           li_enh_object          TYPE REF TO if_enh_object,
           li_enh_object_docu     TYPE REF TO if_enh_object_docu,
           lo_hookdef_tool        TYPE REF TO cl_enh_tool_hook_def,
-          lx_error               TYPE REF TO cx_enh_root,
+          lx_enh_root            TYPE REF TO cx_enh_root,
           lv_text                TYPE string.
 
     FIELD-SYMBOLS: <ls_hook_definition> TYPE enh_hook_def_ext.
@@ -65,9 +65,8 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHS_HOOK_D IMPLEMENTATION.
         li_enh_object->activate( ).
         li_enh_object->unlock( ).
 
-      CATCH cx_enh_root INTO lx_error.
-        lv_text = lx_error->get_text( ).
-        zcx_abapgit_exception=>raise( lv_text ).
+      CATCH cx_enh_root INTO lx_enh_root.
+        zcx_abapgit_exception=>raise_with_text( lx_enh_root ).
     ENDTRY.
 
   ENDMETHOD.
