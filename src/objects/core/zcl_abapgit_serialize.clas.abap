@@ -154,7 +154,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       APPEND INITIAL LINE TO ct_files ASSIGNING <ls_return>.
       <ls_return>-file = ls_file.
 
-      " Derive object from config filename
+      " Derive object from config filename (namespace + escaping)
       zcl_abapgit_file_status=>identify_object(
         EXPORTING
           iv_filename = <ls_return>-file-filename
@@ -171,7 +171,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       APPEND INITIAL LINE TO ct_files ASSIGNING <ls_return>.
       <ls_return>-file = ls_file.
 
-      " Derive object from data filename 
+      " Derive object from data filename (namespace + escaping)
       zcl_abapgit_file_status=>identify_object(
         EXPORTING
           iv_filename = <ls_return>-file-filename
