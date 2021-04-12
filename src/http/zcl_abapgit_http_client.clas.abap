@@ -115,13 +115,22 @@ CLASS zcl_abapgit_http_client IMPLEMENTATION.
           lv_code    TYPE i,
           lv_message TYPE string.
 
-    mi_client->send( ).
-    mi_client->receive(
+    mi_client->send(
       EXCEPTIONS
         http_communication_failure = 1
         http_invalid_state         = 2
         http_processing_failed     = 3
-        OTHERS                     = 4 ).
+        http_invalid_timeout       = 4
+        OTHERS                     = 5 ).
+
+    IF sy-subrc = 0.
+      mi_client->receive(
+        EXCEPTIONS
+          http_communication_failure = 1
+          http_invalid_state         = 2
+          http_processing_failed     = 3
+          OTHERS                     = 4 ).
+    ENDIF.
 
     IF sy-subrc <> 0.
       " in case of HTTP_COMMUNICATION_FAILURE
