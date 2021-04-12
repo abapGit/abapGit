@@ -98,12 +98,6 @@ CLASS zcl_abapgit_objects_files DEFINITION
         VALUE(rv_data) TYPE xstring
       RAISING
         zcx_abapgit_exception .
-    METHODS filename
-      IMPORTING
-        !iv_extra          TYPE clike OPTIONAL
-        !iv_ext            TYPE string
-      RETURNING
-        VALUE(rv_filename) TYPE string .
   PRIVATE SECTION.
 
     DATA ms_item TYPE zif_abapgit_definitions=>ty_item .
@@ -133,8 +127,10 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
     lv_source = lv_source && zif_abapgit_definitions=>c_newline.
 
     ls_file-path = '/'.
-    ls_file-filename = filename( iv_extra = iv_extra
-                                 iv_ext   = 'abap' ).
+    ls_file-filename = zcl_abapgit_filename_logic=>object_to_file(
+      is_item  = ms_item
+      iv_extra = iv_extra
+      iv_ext   = 'abap' ).
     ls_file-data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_source ).
 
     APPEND ls_file TO mt_files.
@@ -148,8 +144,10 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
 
     ls_file-path     = '/'.
     ls_file-data     = iv_data.
-    ls_file-filename = filename( iv_extra = iv_extra
-                                 iv_ext   = iv_ext ).
+    ls_file-filename = zcl_abapgit_filename_logic=>object_to_file(
+      is_item  = ms_item
+      iv_extra = iv_extra
+      iv_ext   = iv_ext ).
 
     APPEND ls_file TO mt_files.
 
@@ -162,8 +160,10 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
 
 
     ls_file-path = '/'.
-    ls_file-filename = filename( iv_extra = iv_extra
-                                 iv_ext   = iv_ext ).
+    ls_file-filename = zcl_abapgit_filename_logic=>object_to_file(
+      is_item  = ms_item
+      iv_extra = iv_extra
+      iv_ext   = iv_ext ).
     ls_file-data = zcl_abapgit_convert=>string_to_xstring_utf8( iv_string ).
 
     APPEND ls_file TO mt_files.
@@ -180,8 +180,10 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
                              is_metadata = is_metadata ).
     ls_file-path = '/'.
 
-    ls_file-filename = filename( iv_extra = iv_extra
-                                 iv_ext   = 'xml' ).
+    ls_file-filename = zcl_abapgit_filename_logic=>object_to_file(
+      is_item  = ms_item
+      iv_extra = iv_extra
+      iv_ext   = 'xml' ).
 
     REPLACE FIRST OCCURRENCE
       OF REGEX '<\?xml version="1\.0" encoding="[\w-]+"\?>'
@@ -204,8 +206,10 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
   METHOD contains.
     DATA: lv_filename TYPE string.
 
-    lv_filename = filename( iv_extra = iv_extra
-                            iv_ext   = iv_ext ).
+    lv_filename = zcl_abapgit_filename_logic=>object_to_file(
+      is_item  = ms_item
+      iv_extra = iv_extra
+      iv_ext   = iv_ext ).
 
     IF mv_path IS NOT INITIAL.
       READ TABLE mt_files TRANSPORTING NO FIELDS WITH KEY path     = mv_path
@@ -220,52 +224,6 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD filename.
-
-    DATA: lv_obj_name TYPE string.
-
-
-    lv_obj_name = ms_item-obj_name.
-
-    " The counter part to this logic must be maintained in ZCL_ABAPGIT_FILE_STATUS->IDENTIFY_OBJECT
-    IF ms_item-obj_type = 'DEVC'.
-      " Packages have a fixed filename so that the repository can be installed to a different
-      " package(-hierarchy) on the client and not show up as a different package in the repo.
-      lv_obj_name = 'package'.
-    ELSE.
-      " Some characters in object names cause problems when identifying the object later
-      " -> we escape these characters here
-      " cl_http_utility=>escape_url doesn't do dots but escapes slash which we use for namespaces
-      " -> we escape just some selected characters
-      REPLACE ALL OCCURRENCES OF `%` IN lv_obj_name WITH '%25'.
-      REPLACE ALL OCCURRENCES OF `#` IN lv_obj_name WITH '%23'.
-      REPLACE ALL OCCURRENCES OF `.` IN lv_obj_name WITH '%2e'.
-      REPLACE ALL OCCURRENCES OF `=` IN lv_obj_name WITH '%3d'.
-      REPLACE ALL OCCURRENCES OF `?` IN lv_obj_name WITH '%3f'.
-      REPLACE ALL OCCURRENCES OF `<` IN lv_obj_name WITH '%3c'.
-      REPLACE ALL OCCURRENCES OF `>` IN lv_obj_name WITH '%3e'.
-    ENDIF.
-
-    IF iv_extra IS INITIAL.
-      CONCATENATE lv_obj_name '.' ms_item-obj_type
-        INTO rv_filename.
-    ELSE.
-      CONCATENATE lv_obj_name '.' ms_item-obj_type '.' iv_extra
-        INTO rv_filename.
-    ENDIF.
-
-    IF iv_ext IS NOT INITIAL.
-      CONCATENATE rv_filename '.' iv_ext
-        INTO rv_filename.
-    ENDIF.
-
-    " handle namespaces
-    REPLACE ALL OCCURRENCES OF '/' IN rv_filename WITH '#'.
-    TRANSLATE rv_filename TO LOWER CASE.
-
-  ENDMETHOD.
-
-
   METHOD get_accessed_files.
     rt_files = mt_accessed_files.
   ENDMETHOD.
@@ -277,7 +235,9 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
 
 
   METHOD get_file_pattern.
-    rv_pattern = filename( iv_ext = '*' ).
+    rv_pattern = zcl_abapgit_filename_logic=>object_to_file(
+      is_item  = ms_item
+      iv_ext   = '*' ).
     " Escape special characters for use with 'covers pattern' (CP)
     REPLACE ALL OCCURRENCES OF '#' IN rv_pattern WITH '##'.
     REPLACE ALL OCCURRENCES OF '+' IN rv_pattern WITH '#+'.
@@ -291,8 +251,10 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
           lv_abap     TYPE string.
 
 
-    lv_filename = filename( iv_extra = iv_extra
-                            iv_ext   = 'abap' ).
+    lv_filename = zcl_abapgit_filename_logic=>object_to_file(
+      is_item  = ms_item
+      iv_extra = iv_extra
+      iv_ext   = 'abap' ).
 
     lv_data = read_file( iv_filename = lv_filename
                          iv_error    = iv_error ).
@@ -346,8 +308,10 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
 
     DATA: lv_filename TYPE string.
 
-    lv_filename = filename( iv_extra = iv_extra
-                            iv_ext   = iv_ext ).
+    lv_filename = zcl_abapgit_filename_logic=>object_to_file(
+      is_item  = ms_item
+      iv_extra = iv_extra
+      iv_ext   = iv_ext ).
 
     rv_data = read_file( lv_filename ).
 
@@ -359,8 +323,10 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
     DATA: lv_filename TYPE string,
           lv_data     TYPE xstring.
 
-    lv_filename = filename( iv_extra = iv_extra
-                            iv_ext   = iv_ext ).
+    lv_filename = zcl_abapgit_filename_logic=>object_to_file(
+      is_item  = ms_item
+      iv_extra = iv_extra
+      iv_ext   = iv_ext ).
 
     lv_data = read_file( lv_filename ).
 
@@ -375,8 +341,10 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
           lv_data     TYPE xstring,
           lv_xml      TYPE string.
 
-    lv_filename = filename( iv_extra = iv_extra
-                            iv_ext   = 'xml' ).
+    lv_filename = zcl_abapgit_filename_logic=>object_to_file(
+      is_item  = ms_item
+      iv_extra = iv_extra
+      iv_ext   = 'xml' ).
 
     lv_data = read_file( lv_filename ).
 
