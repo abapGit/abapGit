@@ -821,21 +821,13 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
   METHOD jump.
 
     DATA: li_obj              TYPE REF TO zif_abapgit_object,
-          lv_package          TYPE devclass,
           lv_adt_jump_enabled TYPE abap_bool.
 
     li_obj = create_object( is_item     = is_item
                             iv_language = zif_abapgit_definitions=>c_english ).
 
     IF li_obj->exists( ) = abap_false.
-      IF is_item-obj_type = 'DEVC'.
-        lv_package = zcl_abapgit_services_basis=>create_package( |{ is_item-obj_name }| ).
-        IF lv_package IS INITIAL.
-          RETURN.
-        ENDIF.
-      ELSE.
-        zcx_abapgit_exception=>raise( |Object { is_item-obj_type } { is_item-obj_name } doesn't exist| ).
-      ENDIF.
+      zcx_abapgit_exception=>raise( |Object { is_item-obj_type } { is_item-obj_name } doesn't exist| ).
     ENDIF.
 
     lv_adt_jump_enabled = zcl_abapgit_persist_settings=>get_instance( )->read( )->get_adt_jump_enabled( ).
