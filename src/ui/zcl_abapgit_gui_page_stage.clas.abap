@@ -622,15 +622,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
   METHOD render_main_language_warning.
 
-    DATA: ls_dot_abapgit TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
+    DATA lv_main_language TYPE spras.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ls_dot_abapgit = mo_repo->get_dot_abapgit( )->get_data( ).
+    lv_main_language = mo_repo->get_dot_abapgit( )->get_main_language( ).
 
-    IF ls_dot_abapgit-master_language <> sy-langu.
+    IF lv_main_language <> sy-langu.
       ri_html->add( zcl_abapgit_gui_chunk_lib=>render_warning_banner(
-                        |Caution: Main language of the repo is '{ ls_dot_abapgit-master_language }', |
+                        |Caution: Main language of the repo is '{ lv_main_language }', |
                      && |but you're logged on in '{ sy-langu }'| ) ).
     ENDIF.
 
