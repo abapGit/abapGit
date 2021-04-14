@@ -185,6 +185,8 @@ CLASS zcl_abapgit_object_sots IMPLEMENTATION.
     lt_sots = read_sots( ).
 
     LOOP AT lt_sots ASSIGNING <ls_sots>.
+      " Remove any usage to ensure deletion, see function module BTFR_CHECK
+      DELETE FROM sotr_useu WHERE concept = <ls_sots>-header-concept.
 
       CALL FUNCTION 'BTFR_DELETE_SINGLE_TEXT'
         EXPORTING

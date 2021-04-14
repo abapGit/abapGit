@@ -59,6 +59,7 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
       RETURNING
         VALUE(rv_string) TYPE string .
 
+    CLASS-METHODS class_constructor.
     CLASS-METHODS dbkey_encode
       IMPORTING
         !is_key          TYPE zif_abapgit_persistence=>ty_content
@@ -67,6 +68,7 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
 
   PROTECTED SECTION.
   PRIVATE SECTION.
+    CLASS-DATA gv_non_breaking_space TYPE string.
 
     CLASS-METHODS field_keys_to_upper
       CHANGING
@@ -86,7 +88,15 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
+CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
+
+  METHOD class_constructor.
+
+    CONSTANTS lc_nbsp TYPE xstring VALUE 'C2A0'. " &nbsp;
+
+    gv_non_breaking_space = zcl_abapgit_convert=>xstring_to_string_utf8( lc_nbsp ).
+
+  ENDMETHOD.
 
 
   METHOD add_field.
@@ -320,12 +330,14 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
 
 
   METHOD unescape.
+
 * do not use cl_http_utility as it does strange things with the encoding
     rv_string = iv_string.
 
 * todo, more to be added here
     REPLACE ALL OCCURRENCES OF '%3F' IN rv_string WITH '?'.
     REPLACE ALL OCCURRENCES OF '%3D' IN rv_string WITH '='.
+    REPLACE ALL OCCURRENCES OF gv_non_breaking_space IN rv_string WITH ` `.
 
   ENDMETHOD.
 ENDCLASS.

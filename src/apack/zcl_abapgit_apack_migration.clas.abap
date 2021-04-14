@@ -10,18 +10,31 @@ CLASS zcl_abapgit_apack_migration DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CONSTANTS: c_interface_name TYPE seoclsname VALUE 'ZIF_APACK_MANIFEST' ##NO_TEXT.
-
-    METHODS:
-      interface_exists RETURNING VALUE(rv_interface_exists) TYPE abap_bool,
-      interface_valid RETURNING VALUE(rv_interface_valid) TYPE abap_bool,
-      create_interface RAISING zcx_abapgit_exception,
-      add_interface_source_classic IMPORTING is_clskey TYPE seoclskey
-                                   RAISING   zcx_abapgit_exception,
-      add_interface_source IMPORTING is_clskey TYPE seoclskey
-                           RAISING   zcx_abapgit_exception,
-      get_interface_source RETURNING VALUE(rt_source) TYPE zif_abapgit_definitions=>ty_string_tt,
-      add_intf_source_and_activate RAISING zcx_abapgit_exception.
+    METHODS interface_exists
+      RETURNING
+        VALUE(rv_interface_exists) TYPE abap_bool .
+    METHODS interface_valid
+      RETURNING
+        VALUE(rv_interface_valid) TYPE abap_bool .
+    METHODS create_interface
+      RAISING
+        zcx_abapgit_exception .
+    METHODS add_interface_source_classic
+      IMPORTING
+        !is_clskey TYPE seoclskey
+      RAISING
+        zcx_abapgit_exception .
+    METHODS add_interface_source
+      IMPORTING
+        !is_clskey TYPE seoclskey
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_interface_source
+      RETURNING
+        VALUE(rt_source) TYPE zif_abapgit_definitions=>ty_string_tt .
+    METHODS add_intf_source_and_activate
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -103,11 +116,41 @@ CLASS zcl_abapgit_apack_migration IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD add_intf_source_and_activate.
+
+    DATA: ls_clskey           TYPE seoclskey,
+          ls_inactive_object  TYPE dwinactiv,
+          lt_inactive_objects TYPE TABLE OF dwinactiv.
+
+    ls_clskey-clsname = zif_abapgit_apack_definitions=>c_apack_interface_cust.
+
+    add_interface_source( ls_clskey ).
+
+    ls_inactive_object-object   = 'INTF'.
+    ls_inactive_object-obj_name = zif_abapgit_apack_definitions=>c_apack_interface_cust.
+    INSERT ls_inactive_object INTO TABLE lt_inactive_objects.
+
+    CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
+      TABLES
+        objects                = lt_inactive_objects
+      EXCEPTIONS
+        excecution_error       = 1
+        cancelled              = 2
+        insert_into_corr_error = 3
+        OTHERS                 = 4.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD create_interface.
 
     DATA: ls_interface_properties TYPE vseointerf.
 
-    ls_interface_properties-clsname  = c_interface_name.
+    ls_interface_properties-clsname  = zif_abapgit_apack_definitions=>c_apack_interface_cust.
     ls_interface_properties-version  = '1'.
     ls_interface_properties-langu    = 'E'.
     ls_interface_properties-descript = 'APACK: Manifest interface'.
@@ -193,8 +236,20 @@ CLASS zcl_abapgit_apack_migration IMPLEMENTATION.
 
     DATA: lv_interface_name TYPE seoclsname.
 
-    SELECT SINGLE clsname FROM seoclass INTO lv_interface_name WHERE clsname = c_interface_name.
+    SELECT SINGLE clsname FROM seoclass INTO lv_interface_name
+      WHERE clsname = zif_abapgit_apack_definitions=>c_apack_interface_cust.
     rv_interface_exists = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.
+
+
+  METHOD interface_valid.
+
+    FIELD-SYMBOLS: <lv_interface_vers> TYPE i.
+
+    ASSIGN (zif_abapgit_apack_definitions=>c_apack_interface_cust)=>('CO_INTERFACE_VERSION') TO <lv_interface_vers>.
+    rv_interface_valid = boolc( <lv_interface_vers> IS ASSIGNED
+      AND <lv_interface_vers> >= c_apack_interface_version ).
 
   ENDMETHOD.
 
@@ -218,45 +273,4 @@ CLASS zcl_abapgit_apack_migration IMPLEMENTATION.
     lo_apack_migration->perform_migration( ).
 
   ENDMETHOD.
-
-  METHOD interface_valid.
-
-    FIELD-SYMBOLS: <lv_interface_version> TYPE i.
-
-    ASSIGN ('ZIF_APACK_MANIFEST')=>('CO_INTERFACE_VERSION') TO <lv_interface_version>.
-    rv_interface_valid = boolc( <lv_interface_version> IS ASSIGNED
-      AND <lv_interface_version> >= c_apack_interface_version ).
-
-  ENDMETHOD.
-
-
-  METHOD add_intf_source_and_activate.
-
-    DATA: ls_clskey           TYPE seoclskey,
-          ls_inactive_object  TYPE dwinactiv,
-          lt_inactive_objects TYPE TABLE OF dwinactiv.
-
-    ls_clskey-clsname = c_interface_name.
-
-    add_interface_source( ls_clskey ).
-
-    ls_inactive_object-object   = 'INTF'.
-    ls_inactive_object-obj_name = c_interface_name.
-    INSERT ls_inactive_object INTO TABLE lt_inactive_objects.
-
-    CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
-      TABLES
-        objects                = lt_inactive_objects
-      EXCEPTIONS
-        excecution_error       = 1
-        cancelled              = 2
-        insert_into_corr_error = 3
-        OTHERS                 = 4.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.

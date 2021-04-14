@@ -27,6 +27,7 @@ CLASS zcx_abapgit_exception DEFINITION
     DATA msgv3 TYPE symsgv READ-ONLY .
     DATA msgv4 TYPE symsgv READ-ONLY .
     DATA mt_callstack TYPE abap_callstack READ-ONLY .
+    DATA mi_log TYPE REF TO zif_abapgit_log READ-ONLY.
 
     "! Raise exception with text
     "! @parameter iv_text | Text
@@ -36,6 +37,7 @@ CLASS zcx_abapgit_exception DEFINITION
       IMPORTING
         !iv_text     TYPE clike
         !ix_previous TYPE REF TO cx_root OPTIONAL
+        !ii_log      TYPE REF TO zif_abapgit_log OPTIONAL
       RAISING
         zcx_abapgit_exception .
     "! Raise exception with T100 message
@@ -57,6 +59,7 @@ CLASS zcx_abapgit_exception DEFINITION
         VALUE(iv_msgv2) TYPE symsgv DEFAULT sy-msgv2
         VALUE(iv_msgv3) TYPE symsgv DEFAULT sy-msgv3
         VALUE(iv_msgv4) TYPE symsgv DEFAULT sy-msgv4
+        !ii_log         TYPE REF TO zif_abapgit_log OPTIONAL
         !ix_previous    TYPE REF TO cx_root OPTIONAL
       RAISING
         zcx_abapgit_exception .
@@ -69,6 +72,7 @@ CLASS zcx_abapgit_exception DEFINITION
       IMPORTING
         !textid   LIKE if_t100_message=>t100key OPTIONAL
         !previous LIKE previous OPTIONAL
+        !ii_log   TYPE REF TO zif_abapgit_log OPTIONAL
         !msgv1    TYPE symsgv OPTIONAL
         !msgv2    TYPE symsgv OPTIONAL
         !msgv3    TYPE symsgv OPTIONAL
@@ -110,7 +114,7 @@ ENDCLASS.
 
 
 
-CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
+CLASS zcx_abapgit_exception IMPLEMENTATION.
 
 
   METHOD constructor ##ADT_SUPPRESS_GENERATION.
@@ -121,6 +125,7 @@ CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
     me->msgv2 = msgv2.
     me->msgv3 = msgv3.
     me->msgv4 = msgv4.
+    me->mi_log = ii_log.
 
     CLEAR me->textid.
     IF textid IS INITIAL.
@@ -299,7 +304,9 @@ CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
 
     split_text_to_symsg( lv_text ).
 
-    raise_t100( ix_previous = ix_previous ).
+    raise_t100(
+      ii_log      = ii_log
+      ix_previous = ix_previous ).
 
   ENDMETHOD.
 
@@ -321,6 +328,7 @@ CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
     RAISE EXCEPTION TYPE zcx_abapgit_exception
       EXPORTING
         textid   = ls_t100_key
+        ii_log   = ii_log
         msgv1    = iv_msgv1
         msgv2    = iv_msgv2
         msgv3    = iv_msgv3

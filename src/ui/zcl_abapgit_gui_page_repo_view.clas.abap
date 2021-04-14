@@ -191,7 +191,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -234,12 +234,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
     CLEAR: ct_repo_items.
 
-    ls_sort-name       = mv_order_by.
     ls_sort-descending = mv_order_descending.
     ls_sort-astext     = abap_true.
+    ls_sort-name       = mv_order_by.
     INSERT ls_sort INTO TABLE lt_sort.
-    SORT lt_code_items BY (lt_sort).
-    SORT lt_diff_items BY (lt_sort).
+
+    " Combine state fields for order of 'Status' column
+    IF mv_order_by = 'LSTATE'.
+      ls_sort-name = 'RSTATE'.
+      INSERT ls_sort INTO TABLE lt_sort.
+    ENDIF.
+
+    SORT lt_code_items STABLE BY (lt_sort).
+    SORT lt_diff_items STABLE BY (lt_sort).
 
     INSERT LINES OF lt_non_code_and_metadata_items INTO TABLE ct_repo_items.
     INSERT LINES OF lt_diff_items INTO TABLE ct_repo_items.
@@ -265,8 +272,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
       ro_advanced_dropdown->add( iv_txt = 'Checkout commit'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-git_checkout_commit }?key={ mv_key }|
                                  iv_opt = iv_wp_opt ).
-      ro_advanced_dropdown->add( iv_txt = 'Background Mode'
-                                 iv_act = |{ zif_abapgit_definitions=>c_action-go_background }?key={ mv_key }| ).
       ro_advanced_dropdown->add( iv_txt = 'Change Remote'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_change }?key={ mv_key }| ).
       ro_advanced_dropdown->add( iv_txt = 'Make Off-line'
@@ -1118,7 +1123,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
     ls_col_spec-allow_order_by = abap_true.
     APPEND ls_col_spec TO lt_col_spec.
 
-    APPEND INITIAL LINE TO lt_col_spec.
+    ls_col_spec-tech_name = 'LSTATE'.
+    ls_col_spec-display_name = 'Status'.
+    ls_col_spec-allow_order_by = abap_true.
+    ls_col_spec-css_class = 'cmd'.
+    APPEND ls_col_spec TO lt_col_spec.
 
     ri_html->add( |<thead>| ).
     ri_html->add( |<tr>| ).

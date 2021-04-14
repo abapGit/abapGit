@@ -7,7 +7,10 @@ CLASS zcl_abapgit_html_viewer_gui DEFINITION
 
     INTERFACES zif_abapgit_html_viewer .
 
-    METHODS constructor .
+    METHODS constructor
+      IMPORTING
+        !io_container           TYPE REF TO cl_gui_container DEFAULT cl_gui_container=>screen0
+        !iv_disable_query_table TYPE abap_bool DEFAULT abap_true .
   PROTECTED SECTION.
 
     DATA mo_html_viewer TYPE REF TO cl_gui_html_viewer .
@@ -36,8 +39,8 @@ CLASS zcl_abapgit_html_viewer_gui IMPLEMENTATION.
 
     CREATE OBJECT mo_html_viewer
       EXPORTING
-        query_table_disabled = abap_true
-        parent               = cl_gui_container=>screen0.
+        query_table_disabled = iv_disable_query_table
+        parent               = io_container.
 
     ls_event-eventid    = zif_abapgit_html_viewer=>m_id_sapevent.
     ls_event-appl_event = abap_true.
