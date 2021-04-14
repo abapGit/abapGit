@@ -8,6 +8,7 @@ CLASS ltcl_html_action_utils DEFINITION FOR TESTING RISK LEVEL HARMLESS
     METHODS parse_fields_simple_case FOR TESTING.
     METHODS parse_fields_advanced_case FOR TESTING.
     METHODS parse_fields_unescape FOR TESTING.
+    METHODS parse_fields_unescape_nbsp FOR TESTING.
     METHODS parse_fields_german_umlauts FOR TESTING.
     METHODS parse_fields_wrong_format FOR TESTING.
     METHODS parse_post_form_data FOR TESTING.
@@ -32,6 +33,7 @@ CLASS ltcl_html_action_utils DEFINITION FOR TESTING RISK LEVEL HARMLESS
     METHODS _given_string_is
       IMPORTING
         iv_string TYPE string.
+    METHODS _when_fields_are_parsed_upper.
     METHODS _when_fields_are_parsed.
     METHODS _then_fields_should_be
       IMPORTING
@@ -49,6 +51,8 @@ CLASS ltcl_html_action_utils DEFINITION FOR TESTING RISK LEVEL HARMLESS
         VALUE(rv_s) TYPE string.
 
 ENDCLASS.
+
+CLASS zcl_abapgit_html_action_utils DEFINITION LOCAL FRIENDS ltcl_html_action_utils.
 
 CLASS ltcl_html_action_utils IMPLEMENTATION.
 
@@ -96,7 +100,7 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
 
     _given_string_is( `committer_name=Gustav Gans` ).
 
-    _when_fields_are_parsed( ).
+    _when_fields_are_parsed_upper( ).
 
     _then_fields_should_be( iv_index = 1
                             iv_name = `COMMITTER_NAME`
@@ -113,7 +117,7 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
                    && `author_name=Karl Klammer&`
                    && `author_email=karl@klammer.com` ).
 
-    _when_fields_are_parsed( ).
+    _when_fields_are_parsed_upper( ).
 
     _then_fields_should_be( iv_index = 1
                             iv_name  = `COMMITTER_NAME`
@@ -146,13 +150,37 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
     " file status = '?', used in staging page
     _given_string_is( '/SRC/ZFOOBAR.PROG.ABAP=%3F' ).
 
-    _when_fields_are_parsed( ).
+    _when_fields_are_parsed_upper( ).
     _then_field_count_should_be( 1 ).
 
     _then_fields_should_be(
       iv_index = 1
       iv_name  = '/SRC/ZFOOBAR.PROG.ABAP'
       iv_value = '?' ).
+
+  ENDMETHOD.
+
+  METHOD parse_fields_unescape_nbsp.
+
+    " non-breaking space (&nbsp;)
+    _given_string_is( '/src/ztest_rfc.fugr.xml=%3F&/src/ztest_rfc'
+                   && zcl_abapgit_html_action_utils=>gv_non_breaking_space
+                   && zcl_abapgit_html_action_utils=>gv_non_breaking_space
+                   && zcl_abapgit_html_action_utils=>gv_non_breaking_space
+                   && 'rf.sush.xml=A' ).
+
+    _when_fields_are_parsed( ).
+    _then_field_count_should_be( 2 ).
+
+    _then_fields_should_be(
+      iv_index = 1
+      iv_name  = '/src/ztest_rfc.fugr.xml'
+      iv_value = '?' ).
+
+    _then_fields_should_be(
+      iv_index = 2
+      iv_name  = '/src/ztest_rfc   rf.sush.xml'
+      iv_value = 'A' ).
 
   ENDMETHOD.
 
@@ -177,7 +205,7 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
                    && |author_name=Gerd Schr{ lv_oe }der&|
                    && |author_email=gerd@schroeder.com| ).
 
-    _when_fields_are_parsed( ).
+    _when_fields_are_parsed_upper( ).
 
     _then_fields_should_be( iv_index = 1
                             iv_name  = `COMMITTER_NAME`
@@ -211,9 +239,15 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD _when_fields_are_parsed.
+  METHOD _when_fields_are_parsed_upper.
 
     mt_parsed_fields = zcl_abapgit_html_action_utils=>parse_fields_upper_case_name( mv_given_parse_string ).
+
+  ENDMETHOD.
+
+  METHOD _when_fields_are_parsed.
+
+    mt_parsed_fields = zcl_abapgit_html_action_utils=>parse_fields( mv_given_parse_string ).
 
   ENDMETHOD.
 
@@ -260,11 +294,11 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
   METHOD parse_fields_wrong_format.
 
     _given_string_is( `some_query_string_without_param_structure` ).
-    _when_fields_are_parsed( ).
+    _when_fields_are_parsed_upper( ).
     _then_field_count_should_be( 0 ).
 
     _given_string_is( `some_query_string_without_param_structure&a=b` ).
-    _when_fields_are_parsed( ).
+    _when_fields_are_parsed_upper( ).
     _then_field_count_should_be( 1 ).
     _then_fields_should_be(
       iv_index = 1
