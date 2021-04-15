@@ -63,11 +63,6 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
       RAISING
         zcx_abapgit_exception .
-    METHODS build_select_menu
-      RETURNING
-        VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
-      RAISING
-        zcx_abapgit_exception .
     METHODS build_view_menu
       RETURNING
         VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
@@ -76,7 +71,6 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
     METHODS render_item
       IMPORTING
         !is_item              TYPE zif_abapgit_definitions=>ty_repo_item
-        !iv_count             TYPE i
         !iv_render_transports TYPE abap_bool
       RETURNING
         VALUE(ri_html)        TYPE REF TO zif_abapgit_html
@@ -85,12 +79,6 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
     METHODS render_item_files
       IMPORTING
         !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
-      RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
-    METHODS render_item_checkboxes
-      IMPORTING
-        !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
-        !iv_count      TYPE i
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS render_item_command
@@ -534,9 +522,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ro_toolbar->add( iv_txt = 'View'
                      io_sub = build_view_menu( ) ).
 
-    ro_toolbar->add( iv_txt = 'Select'
-                     io_sub = build_select_menu( ) ).
-
     ro_toolbar->add( iv_txt = 'Refresh'
                      iv_act = |{ zif_abapgit_definitions=>c_action-repo_refresh }?key={ mv_key }|
                      iv_opt = zif_abapgit_html=>c_html_opt-strong ).
@@ -562,33 +547,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     rv_html = li_html->a(
       iv_txt = |{ is_item-obj_name }|
       iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_encode }| ).
-
-  ENDMETHOD.
-
-
-  METHOD build_select_menu.
-
-    CREATE OBJECT ro_toolbar.
-
-    ro_toolbar->add(
-      iv_txt = 'All'
-      iv_typ = 'F'
-      iv_act = 'select_all' ).
-
-    ro_toolbar->add(
-      iv_txt = 'None'
-      iv_typ = 'F'
-      iv_act = 'select_none' ).
-
-    ro_toolbar->add(
-      iv_txt = 'Local Diffs'
-      iv_typ = 'F'
-      iv_act = 'select_local' ).
-
-    ro_toolbar->add(
-      iv_txt = 'Remote Diffs'
-      iv_typ = 'F'
-      iv_act = 'select_remote' ).
 
   ENDMETHOD.
 
@@ -816,7 +774,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
           lx_error      TYPE REF TO zcx_abapgit_exception,
           lv_lstate     TYPE char1,
           lv_rstate     TYPE char1,
-          lv_count      TYPE i,
           lv_max        TYPE abap_bool,
           lv_max_str    TYPE string,
           lv_add_str    TYPE string,
@@ -839,8 +796,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         lo_news = zcl_abapgit_news=>create( mo_repo ).
 
         CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-        ri_html->add( '<form id="repo_form" method="post" action="sapevent:repo_form">' ).
 
         ri_html->add( |<div class="repo" id="repo{ mv_key }">| ).
         ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
@@ -913,9 +868,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
               EXIT. " current loop
             ENDIF.
             ri_html->add( render_item( is_item = <ls_item>
-                                       iv_count = lv_count
                                        iv_render_transports = mv_are_changes_recorded_in_tr ) ).
-            lv_count = lv_count + 1.
           ENDLOOP.
 
           ri_html->add( '</table>' ).
@@ -946,7 +899,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         ri_html->add( '</div>' ).
         ri_html->add( '</div>' ).
 
-        ri_html->add( '</form>' ).
       CATCH zcx_abapgit_exception INTO lx_error.
         " Reset 'last shown repo' so next start will go to repo overview
         " and allow troubleshooting of issue
@@ -1038,44 +990,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ENDIF.
     ri_html->add( '</td>' ).
 
-    " Checkboxes
-    ri_html->add( '<td class="cmd">' ).
-    ri_html->add( render_item_checkboxes(
-      is_item  = is_item
-      iv_count = iv_count ) ).
-    ri_html->add( '</td>' ).
-
     ri_html->add( '</tr>' ).
-
-  ENDMETHOD.
-
-
-  METHOD render_item_checkboxes.
-
-    DATA: ls_file LIKE LINE OF is_item-files.
-    DATA lv_file_count TYPE i.
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    IF mv_hide_files = abap_true.
-      IF is_item-obj_type IS INITIAL AND is_item-obj_name IS INITIAL.
-        LOOP AT is_item-files INTO ls_file.
-          ri_html->add( |<div><input type="checkbox" name="selected-{ iv_count }-{ lv_file_count }" | &&
-                        |value="*,*,{ ls_file-path && ls_file-filename }"></div>| ).
-          lv_file_count = lv_file_count + 1.
-        ENDLOOP.
-      ELSE.
-        ri_html->add( |<div><input type="checkbox" name="selected-{ iv_count }-0" | &&
-                      |value="{ is_item-obj_type },{ is_item-obj_name },*"></div>| ).
-      ENDIF.
-    ELSE.
-      LOOP AT is_item-files INTO ls_file.
-        ri_html->add( |<div><input type="checkbox" name="selected-{ iv_count }-{ lv_file_count }" | &&
-                      |value="{ is_item-obj_type },{ is_item-obj_name },| &&
-                      |{ ls_file-path && ls_file-filename }"></div>| ).
-        lv_file_count = lv_file_count + 1.
-      ENDLOOP.
-    ENDIF.
 
   ENDMETHOD.
 
@@ -1216,12 +1131,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ls_col_spec-css_class = 'cmd'.
     APPEND ls_col_spec TO lt_col_spec.
 
-    ls_col_spec-tech_name = 'SELECTED'.
-    ls_col_spec-display_name = 'Selection'.
-    ls_col_spec-allow_order_by = abap_true.
-    ls_col_spec-css_class = 'cmd'.
-    APPEND ls_col_spec TO lt_col_spec.
-
     ri_html->add( |<thead>| ).
     ri_html->add( |<tr>| ).
 
@@ -1252,7 +1161,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     IF mo_repo->has_remote_source( ) = abap_true.
       ri_html->add( |<td colspan="1"></td>| ). " Dummy for online
     ENDIF.
-    ri_html->add( |<td colspan="1"></td>| ). " Dummy for checkbox column
     ri_html->add( '</tr>' ).
 
   ENDMETHOD.
