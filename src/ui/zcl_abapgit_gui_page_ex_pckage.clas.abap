@@ -72,7 +72,7 @@ CLASS zcl_abapgit_gui_page_ex_pckage IMPLEMENTATION.
 
 
   METHOD get_form_schema.
-    ro_form = zcl_abapgit_html_form=>create( iv_form_id = 'export-object-to-files' ).
+    ro_form = zcl_abapgit_html_form=>create( iv_form_id = 'export-package-to-files' ).
 
     ro_form->text(
       iv_name          = c_id-package
