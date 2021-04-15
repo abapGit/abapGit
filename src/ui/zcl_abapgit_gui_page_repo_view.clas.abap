@@ -796,7 +796,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         lo_news = zcl_abapgit_news=>create( mo_repo ).
 
         CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
         ri_html->add( |<div class="repo" id="repo{ mv_key }">| ).
         ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
           io_repo               = mo_repo
@@ -898,7 +897,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
         ri_html->add( '</div>' ).
         ri_html->add( '</div>' ).
-
       CATCH zcx_abapgit_exception INTO lx_error.
         " Reset 'last shown repo' so next start will go to repo overview
         " and allow troubleshooting of issue
