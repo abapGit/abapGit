@@ -633,9 +633,6 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-repo_switch.                     " Repo switch
         rs_handled-page  = zcl_abapgit_gui_page_sett_swch=>create( lo_repo ).
         rs_handled-state = get_state_settings( ii_event ).
-      WHEN zif_abapgit_definitions=>c_action-repo_packaging.                  " Repo packaging
-        rs_handled-page  = zcl_abapgit_gui_page_sett_pack=>create( lo_repo ).
-        rs_handled-state = get_state_settings( ii_event ).
       WHEN zif_abapgit_definitions=>c_action-repo_background.                 " Repo background mode
         rs_handled-page  = zcl_abapgit_gui_page_sett_bckg=>create( lo_repo ).
         rs_handled-state = get_state_settings( ii_event ).
