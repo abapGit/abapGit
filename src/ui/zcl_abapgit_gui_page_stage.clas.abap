@@ -119,7 +119,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -247,7 +247,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     LOOP AT it_files-remote INTO ls_remote WHERE filename IS NOT INITIAL.
       TRY.
-          zcl_abapgit_file_status=>identify_object(
+          zcl_abapgit_filename_logic=>file_to_object(
             EXPORTING
               iv_filename = ls_remote-filename
               iv_path     = ls_remote-path
@@ -313,7 +313,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
         lo_dot = mo_repo->get_dot_abapgit( ).
         LOOP AT it_files-remote ASSIGNING <ls_remote> WHERE filename IS NOT INITIAL.
-          zcl_abapgit_file_status=>identify_object(
+          zcl_abapgit_filename_logic=>file_to_object(
             EXPORTING
               iv_filename = <ls_remote>-filename
               iv_path     = <ls_remote>-path
@@ -587,7 +587,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
       ASSERT sy-subrc = 0.
 
       TRY.
-          zcl_abapgit_file_status=>identify_object(
+          zcl_abapgit_filename_logic=>file_to_object(
             EXPORTING
               iv_filename = <ls_remote>-filename
               iv_path     = <ls_remote>-path

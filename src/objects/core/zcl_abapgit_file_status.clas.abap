@@ -13,17 +13,6 @@ CLASS zcl_abapgit_file_status DEFINITION
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS identify_object
-      IMPORTING
-        !iv_filename TYPE string
-        !iv_path     TYPE string
-        !iv_devclass TYPE devclass OPTIONAL
-        !io_dot      TYPE REF TO zcl_abapgit_dot_abapgit
-      EXPORTING
-        !es_item     TYPE zif_abapgit_definitions=>ty_item
-        !ev_is_xml   TYPE abap_bool
-      RAISING
-        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -235,11 +224,14 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
     rs_result-match    = abap_false.
     rs_result-rstate   = zif_abapgit_definitions=>c_state-added.
 
-    identify_object( EXPORTING iv_filename = is_remote-filename
-                               iv_path     = is_remote-path
-                               iv_devclass = iv_devclass
-                               io_dot      = io_dot
-                     IMPORTING es_item     = ls_item ).
+    zcl_abapgit_filename_logic=>file_to_object(
+      EXPORTING
+        iv_filename = is_remote-filename
+        iv_path     = is_remote-path
+        iv_devclass = iv_devclass
+        io_dot      = io_dot
+      IMPORTING
+        es_item     = ls_item ).
 
     " Check if in item index + get package
     READ TABLE it_items INTO ls_item
@@ -539,42 +531,6 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD identify_object.
-
-    DATA: lv_name TYPE string,
-          lv_type TYPE string,
-          lv_ext  TYPE string.
-
-    " Guess object type and name
-    SPLIT to_upper( iv_filename ) AT '.' INTO lv_name lv_type lv_ext.
-
-    " Handle namespaces
-    REPLACE ALL OCCURRENCES OF '#' IN lv_name WITH '/'.
-    REPLACE ALL OCCURRENCES OF '#' IN lv_type WITH '/'.
-    REPLACE ALL OCCURRENCES OF '#' IN lv_ext WITH '/'.
-
-    " The counter part to this logic must be maintained in ZCL_ABAPGIT_OBJECTS_FILES->FILENAME
-    IF lv_type = 'DEVC'.
-      " Try to get a unique package name for DEVC by using the path
-      ASSERT lv_name = 'PACKAGE'.
-      lv_name = zcl_abapgit_folder_logic=>get_instance( )->path_to_package(
-        iv_top                  = iv_devclass
-        io_dot                  = io_dot
-        iv_create_if_not_exists = abap_false
-        iv_path                 = iv_path ).
-    ELSE.
-      " Get original object name
-      lv_name = cl_http_utility=>unescape_url( lv_name ).
-    ENDIF.
-
-    CLEAR es_item.
-    es_item-obj_type = lv_type.
-    es_item-obj_name = lv_name.
-    ev_is_xml        = boolc( lv_ext = 'XML' AND strlen( lv_type ) = 4 ).
-
-  ENDMETHOD.
-
-
   METHOD prepare_remote.
 
     DATA lv_index TYPE sy-index.
@@ -608,7 +564,8 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
     FIELD-SYMBOLS <ls_remote> LIKE LINE OF it_remote.
 
     LOOP AT it_remote ASSIGNING <ls_remote> WHERE sha1 IS NOT INITIAL.
-      identify_object(
+
+      zcl_abapgit_filename_logic=>file_to_object(
         EXPORTING
           iv_filename = <ls_remote>-filename
           iv_path     = <ls_remote>-path
