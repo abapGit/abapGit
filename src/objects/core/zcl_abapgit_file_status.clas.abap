@@ -648,7 +648,16 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
           is_local  = <ls_local>
           is_remote = <ls_remote>
           it_state  = it_state_idx ).
-        ASSERT <ls_remote>-sha1 IS NOT INITIAL.
+        IF <ls_remote>-sha1 IS INITIAL.
+          IF <ls_local>-file-filename = zcl_abapgit_filename_logic=>c_package_file.
+            lv_msg = |Package name conflict { <ls_local>-item-obj_type } { <ls_local>-item-obj_name }. | &&
+              |Rename package or use FULL folder logic|.
+          ELSE.
+            lv_msg = |Checksum conflict { <ls_local>-item-obj_type } { <ls_local>-item-obj_name }. | &&
+              |Please create an issue on Github|.
+          ENDIF.
+          zcx_abapgit_exception=>raise( lv_msg ).
+        ENDIF.
         CLEAR <ls_remote>-sha1. " Mark as processed
       ELSE.             " Only L exists
         <ls_result> = build_new_local( <ls_local> ).
