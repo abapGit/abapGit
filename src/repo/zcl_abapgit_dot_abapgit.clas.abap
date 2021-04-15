@@ -56,9 +56,6 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
     METHODS set_starting_folder
       IMPORTING
         !iv_path TYPE string .
-    METHODS get_master_language
-      RETURNING
-        VALUE(rv_language) TYPE spras .
     METHODS get_main_language
       RETURNING
         VALUE(rv_language) TYPE spras .
@@ -101,7 +98,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
+CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
 
 
   METHOD add_ignore.
@@ -197,12 +194,6 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
 
   METHOD get_main_language.
-    rv_language = ms_data-master_language.
-  ENDMETHOD.
-
-
-  METHOD get_master_language.
-    " todo, transition to get_main_language()
     rv_language = ms_data-master_language.
   ENDMETHOD.
 

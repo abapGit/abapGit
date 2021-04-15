@@ -7,6 +7,7 @@ CLASS zcl_abapgit_object_enho_fugr DEFINITION PUBLIC.
         io_files TYPE REF TO zcl_abapgit_objects_files.
     INTERFACES: zif_abapgit_object_enho.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item,
           mo_files TYPE REF TO zcl_abapgit_objects_files.
@@ -30,7 +31,8 @@ CLASS zcl_abapgit_object_enho_fugr IMPLEMENTATION.
           ls_enha_data TYPE enhfugrdata,
           li_tool      TYPE REF TO if_enh_tool,
           lv_tool      TYPE enhtooltype,
-          lv_package   TYPE devclass.
+          lv_package   TYPE devclass,
+          lx_enh_root  TYPE REF TO cx_enh_root.
 
     FIELD-SYMBOLS: <ls_fuba> TYPE enhfugrfuncdata.
 
@@ -72,9 +74,8 @@ CLASS zcl_abapgit_object_enho_fugr IMPLEMENTATION.
 
         lo_fugrdata->if_enh_object~save( run_dark = abap_true ).
         lo_fugrdata->if_enh_object~unlock( ).
-
-      CATCH cx_enh_root.
-        zcx_abapgit_exception=>raise( |error deserializing ENHO fugrdata { ms_item-obj_name }| ).
+      CATCH cx_enh_root INTO lx_enh_root.
+        zcx_abapgit_exception=>raise_with_text( lx_enh_root ).
     ENDTRY.
 
   ENDMETHOD.

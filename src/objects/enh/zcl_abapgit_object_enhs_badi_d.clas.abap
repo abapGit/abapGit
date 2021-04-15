@@ -9,7 +9,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_ENHS_BADI_D IMPLEMENTATION.
+CLASS zcl_abapgit_object_enhs_badi_d IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object_enhs~deserialize.
@@ -21,7 +21,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHS_BADI_D IMPLEMENTATION.
           li_enh_object      TYPE REF TO if_enh_object,
           li_enh_object_docu TYPE REF TO if_enh_object_docu,
           lv_text            TYPE string,
-          lx_error           TYPE REF TO cx_enh_root.
+          lx_enh_root        TYPE REF TO cx_enh_root.
 
     FIELD-SYMBOLS: <ls_enh_badi> LIKE LINE OF lt_enh_badi.
 
@@ -50,9 +50,8 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHS_BADI_D IMPLEMENTATION.
         li_enh_object->activate( ).
         li_enh_object->unlock( ).
 
-      CATCH cx_enh_root INTO lx_error.
-        lv_text = lx_error->get_text( ).
-        zcx_abapgit_exception=>raise( lv_text ).
+      CATCH cx_enh_root INTO lx_enh_root.
+        zcx_abapgit_exception=>raise_with_text( lx_enh_root ).
     ENDTRY.
 
   ENDMETHOD.

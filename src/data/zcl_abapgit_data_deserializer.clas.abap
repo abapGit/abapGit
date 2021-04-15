@@ -38,8 +38,9 @@ CLASS zcl_abapgit_data_deserializer DEFINITION
         !iv_name       TYPE tadir-obj_name
         !it_where      TYPE string_table
       RETURNING
-        VALUE(rr_data) TYPE REF TO data .
-
+        VALUE(rr_data) TYPE REF TO data
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 

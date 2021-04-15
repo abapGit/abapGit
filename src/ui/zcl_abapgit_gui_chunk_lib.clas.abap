@@ -580,6 +580,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     DATA: lv_text TYPE string,
           lv_hint TYPE string,
+          lv_ul   TYPE abap_bool,
           lt_log  TYPE zcl_abapgit_news=>ty_logs.
 
     FIELD-SYMBOLS: <ls_line> LIKE LINE OF lt_log.
@@ -602,13 +603,21 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
         ELSE. " < 0
           lv_text = <ls_line>-text.
         ENDIF.
+        IF lv_ul = abap_true.
+          ri_html->add( |</ul>| ).
+        ENDIF.
         ri_html->add( |<h1>{ lv_text }</h1>| ).
+        ri_html->add( |<ul>| ).
+        lv_ul = abap_true.
       ELSE.
         <ls_line>-text = escape( val    = <ls_line>-text
                                  format = cl_abap_format=>e_html_text ).
         ri_html->add( |<li>{ <ls_line>-text }</li>| ).
       ENDIF.
     ENDLOOP.
+    IF lv_ul = abap_true.
+      ri_html->add( |</ul>| ).
+    ENDIF.
 
     " Wrap
     IF io_news->has_important( ) = abap_true.
