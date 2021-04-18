@@ -766,6 +766,7 @@ CLASS ltcl_reader_test DEFINITION FINAL
     METHODS slice FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS array_to_string_table FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS get_date FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS get_timestamp FOR TESTING RAISING zcx_abapgit_ajson_error.
 
 ENDCLASS.
 
@@ -955,6 +956,25 @@ CLASS ltcl_reader_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lo_cut->zif_abapgit_ajson_reader~get_date( '/date1' )
       exp = '' ).
+
+  ENDMETHOD.
+
+  METHOD get_timestamp.
+
+    DATA lo_cut TYPE REF TO zcl_abapgit_ajson.
+    DATA lo_nodes TYPE REF TO lcl_nodes_helper.
+    DATA lv_exp TYPE timestamp VALUE `20200728000000`.
+
+    CREATE OBJECT lo_cut.
+
+    CREATE OBJECT lo_nodes.
+    lo_nodes->add( '  |         |object |                        | |1' ).
+    lo_nodes->add( '/ |timestamp|str    |2020-07-28T00:00:00Z    | |0' ).
+    lo_cut->mt_json_tree = lo_nodes->mt_nodes.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->zif_abapgit_ajson_reader~get_timestamp( '/timestamp' )
+      exp = lv_exp ).
 
   ENDMETHOD.
 
@@ -1201,6 +1221,9 @@ CLASS ltcl_json_to_abap DEFINITION
         oref  TYPE REF TO object,
         date1 TYPE d,
         date2 TYPE d,
+        timestamp1 TYPE timestamp,
+        timestamp2 TYPE timestamp,
+        timestamp3 TYPE timestamp,
       END OF ty_complex.
 
     METHODS find_loc FOR TESTING RAISING zcx_abapgit_ajson_error.
@@ -1420,6 +1443,7 @@ CLASS ltcl_json_to_abap IMPLEMENTATION.
     DATA lo_cut TYPE REF TO lcl_json_to_abap.
     DATA ls_mock TYPE ty_complex.
     DATA lv_exp_date TYPE d VALUE '20200728'.
+    DATA lv_exp_timestamp TYPE timestamp VALUE '20200728000000'.
     lcl_json_to_abap=>bind(
       CHANGING
         c_obj = ls_mock
@@ -1427,20 +1451,23 @@ CLASS ltcl_json_to_abap IMPLEMENTATION.
 
     DATA lo_nodes TYPE REF TO lcl_nodes_helper.
     CREATE OBJECT lo_nodes.
-    lo_nodes->add( '/      |      |object |       | ' ).
-    lo_nodes->add( '/      |str   |str    |hello  | ' ).
-    lo_nodes->add( '/      |int   |num    |5      | ' ).
-    lo_nodes->add( '/      |float |num    |5.5    | ' ).
-    lo_nodes->add( '/      |bool  |bool   |true   | ' ).
-    lo_nodes->add( '/      |obj   |object |       | ' ).
-    lo_nodes->add( '/obj   |a     |str    |world  | ' ).
-    lo_nodes->add( '/      |tab   |array  |       | ' ).
-    lo_nodes->add( '/tab   |1     |object |       |1' ).
-    lo_nodes->add( '/tab/1 |a     |str    | One   | ' ).
-    lo_nodes->add( '/tab   |2     |object |       |2' ).
-    lo_nodes->add( '/tab/2 |a     |str    | Two   | ' ).
-    lo_nodes->add( '/      |date1 |str    |2020-07-28 | ' ).
-    lo_nodes->add( '/      |date2 |str    |2020-07-28T00:00:00Z | ' ).
+    lo_nodes->add( '/      |           |object |                          | ' ).
+    lo_nodes->add( '/      |str        |str    |hello                     | ' ).
+    lo_nodes->add( '/      |int        |num    |5                         | ' ).
+    lo_nodes->add( '/      |float      |num    |5.5                       | ' ).
+    lo_nodes->add( '/      |bool       |bool   |true                      | ' ).
+    lo_nodes->add( '/      |obj        |object |                          | ' ).
+    lo_nodes->add( '/obj   |a          |str    |world                     | ' ).
+    lo_nodes->add( '/      |tab        |array  |                          | ' ).
+    lo_nodes->add( '/tab   |1          |object |                          |1' ).
+    lo_nodes->add( '/tab/1 |a          |str    | One                      | ' ).
+    lo_nodes->add( '/tab   |2          |object |                          |2' ).
+    lo_nodes->add( '/tab/2 |a          |str    | Two                      | ' ).
+    lo_nodes->add( '/      |date1      |str    |2020-07-28                | ' ).
+    lo_nodes->add( '/      |date2      |str    |2020-07-28T00:00:00Z      | ' ).
+    lo_nodes->add( '/      |timestamp1 |str    |2020-07-28T00:00:00       | ' ).
+    lo_nodes->add( '/      |timestamp2 |str    |2020-07-28T00:00:00Z      | ' ).
+    lo_nodes->add( '/      |timestamp3 |str    |2020-07-28T01:00:00+01:00 | ' ).
 
     lo_cut->to_abap( lo_nodes->sorted( ) ).
 
@@ -1465,6 +1492,15 @@ CLASS ltcl_json_to_abap IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = ls_mock-date2
       exp = lv_exp_date ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_mock-timestamp1
+      exp = lv_exp_timestamp ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_mock-timestamp2
+      exp = lv_exp_timestamp ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_mock-timestamp3
+      exp = lv_exp_timestamp ).
 
     DATA ls_elem LIKE LINE OF ls_mock-tab.
     cl_abap_unit_assert=>assert_equals(
