@@ -2,9 +2,8 @@ name: ajson mirror
 
 on:
   workflow_dispatch:
-  push:
-#  schedule:
-#    - cron: '0 0 * * 0'
+  schedule:
+    - cron: '0 0 * * 1'
 
 jobs:
   run:
@@ -23,7 +22,10 @@ jobs:
         cp ajson_mirror/src/* src/json/
         rm -rf ajson_mirror
         git status
-#    - name: Open PR
-#      uses: peter-evans/create-pull-request@v3
-#      with:
-#        title: ajson, Automatic Update
+    - name: Open PR
+      uses: peter-evans/create-pull-request@v3
+      with:
+        title: ajson, Automatic Update
+        body: |
+          Automatic update from mirror
+          https://github.com/abapGit/ajson_mirror
