@@ -101,7 +101,7 @@ CLASS ltcl_parse IMPLEMENTATION.
   METHOD use_refs_if_head_is_missing.
 
     " https://github.com/abapGit/abapGit/issues/4703
-    " In case HEAD is missing, it should use refs/head/xxxxx as the default branch
+    " In case HEAD is missing, it should use refs/heads/xxxxx as the default branch
 
     APPEND '001e# service=git-upload-pack' TO mt_data.
     APPEND '000000f7e6e5b066fb4177bf0780bf343ab2de06368dd973 refs/heads/master' TO mt_data.
