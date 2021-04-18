@@ -53,7 +53,6 @@ INTERFACE zif_abapgit_popups
     IMPORTING
       !iv_url            TYPE string
       !iv_package        TYPE devclass OPTIONAL
-      !iv_branch         TYPE string DEFAULT zif_abapgit_definitions=>c_git_branch-master
       !iv_freeze_package TYPE abap_bool OPTIONAL
       !iv_freeze_url     TYPE abap_bool OPTIONAL
       !iv_title          TYPE clike DEFAULT 'New Online Project'
