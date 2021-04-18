@@ -1,0 +1,24 @@
+name: ajson mirror
+
+on:
+  workflow_dispatch:
+#  schedule:
+#    - cron: '0 0 * * 0'
+
+jobs:
+  run:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js
+      uses: actions/setup-node@v2
+    - name: run
+      run: |
+        git clone https://github.com/abapGit/ajson_mirror.git
+        ls -l
+#    - name: Open PR
+#      uses: peter-evans/create-pull-request@v3
+#      with:
+#        title: ajson, Automatic Update
