@@ -19,6 +19,10 @@ jobs:
       run: |
         git clone https://github.com/abapGit/ajson_mirror.git
         ls -l
+        rm src/ajson/*
+        cp ajson_mirro/src/* src/ajson/
+        rm -rf ajson_mirror
+        git status
 #    - name: Open PR
 #      uses: peter-evans/create-pull-request@v3
 #      with:
