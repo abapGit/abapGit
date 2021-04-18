@@ -516,6 +516,14 @@ CLASS lcl_json_to_abap DEFINITION FINAL.
       RAISING
         zcx_abapgit_ajson_error.
 
+    METHODS to_timestamp
+      IMPORTING
+        is_path          TYPE zif_abapgit_ajson=>ty_node
+      RETURNING
+        VALUE(rv_result) TYPE timestamp
+      RAISING
+        zcx_abapgit_ajson_error.
+
   PRIVATE SECTION.
     DATA mr_obj TYPE REF TO data.
     DATA mi_custom_mapping TYPE REF TO zif_abapgit_ajson_mapping.
@@ -570,6 +578,8 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
                   iv_location = <n>-path && <n>-name ).
                 ENDIF.
                 CONCATENATE lv_y lv_m lv_d INTO <value>.
+              ELSEIF lv_type = 'P' AND <n>-value IS NOT INITIAL.
+                <value> = to_timestamp( is_path = <n> ).
               ELSE.
                 <value> = <n>-value.
               ENDIF.
@@ -683,6 +693,82 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
       ENDIF.
       GET REFERENCE OF <value> INTO r_ref.
     ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD to_timestamp.
+
+    CONSTANTS lc_tzone_utc TYPE tznzone VALUE `UTC`.
+    CONSTANTS lc_regex_ts_with_hour TYPE string
+        VALUE `^(\d{4})-(\d{2})-(\d{2})(T)(\d{2}):(\d{2}):(\d{2})(\+)(\d{2}):(\d{2})`.
+    CONSTANTS lc_regex_ts_utc TYPE string
+        VALUE `^(\d{4})-(\d{2})-(\d{2})(T)(\d{2}):(\d{2}):(\d{2})(Z|$)`.
+
+    DATA:
+      BEGIN OF ls_timestamp,
+        year         TYPE c LENGTH 4,
+        month        TYPE c LENGTH 2,
+        day          TYPE c LENGTH 2,
+        t            TYPE c LENGTH 1,
+        hour         TYPE c LENGTH 2,
+        minute       TYPE c LENGTH 2,
+        second       TYPE c LENGTH 2,
+        local_sign   TYPE c LENGTH 1,
+        local_hour   TYPE c LENGTH 2,
+        local_minute TYPE c LENGTH 2,
+      END OF ls_timestamp.
+
+    DATA lv_date TYPE d.
+    DATA lv_time TYPE t.
+    DATA lv_seconds_conv TYPE i.
+    DATA lv_timestamp TYPE timestamp.
+
+    FIND FIRST OCCURRENCE OF REGEX lc_regex_ts_with_hour
+      IN is_path-value SUBMATCHES ls_timestamp-year ls_timestamp-month ls_timestamp-day ls_timestamp-t
+                                  ls_timestamp-hour ls_timestamp-minute ls_timestamp-second
+                                  ls_timestamp-local_sign ls_timestamp-local_hour ls_timestamp-local_minute.
+
+    IF sy-subrc = 0.
+
+      lv_seconds_conv = ( ls_timestamp-local_hour * 3600 ) + ( ls_timestamp-local_minute * 60 ).
+
+    ELSE.
+
+      FIND FIRST OCCURRENCE OF REGEX lc_regex_ts_utc
+        IN is_path-value SUBMATCHES ls_timestamp-year ls_timestamp-month ls_timestamp-day ls_timestamp-t
+                                    ls_timestamp-hour ls_timestamp-minute ls_timestamp-second.
+
+      IF sy-subrc <> 0.
+        zcx_abapgit_ajson_error=>raise(
+          iv_msg      = 'Unexpected timestamp format'
+          iv_location = is_path-path && is_path-name ).
+      ENDIF.
+
+    ENDIF.
+
+    CONCATENATE ls_timestamp-year ls_timestamp-month ls_timestamp-day INTO lv_date.
+    CONCATENATE ls_timestamp-hour ls_timestamp-minute ls_timestamp-second INTO lv_time.
+
+    CONVERT DATE lv_date TIME lv_time INTO TIME STAMP lv_timestamp TIME ZONE lc_tzone_utc.
+
+    TRY.
+
+        CASE ls_timestamp-local_sign.
+          WHEN '-'.
+            lv_timestamp = cl_abap_tstmp=>add( tstmp = lv_timestamp
+                                               secs = lv_seconds_conv ).
+          WHEN '+'.
+            lv_timestamp = cl_abap_tstmp=>subtractsecs( tstmp = lv_timestamp
+                                                        secs = lv_seconds_conv ).
+        ENDCASE.
+
+      CATCH cx_parameter_invalid_range cx_parameter_invalid_type.
+        zcx_abapgit_ajson_error=>raise(
+        iv_msg      = 'Unexpected error calculating timestamp'
+        iv_location = is_path-path && is_path-name ).
+    ENDTRY.
+
+    rv_result = lv_timestamp.
 
   ENDMETHOD.
 

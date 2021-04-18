@@ -1,0 +1,33 @@
+name: ajson mirror
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 1'
+
+jobs:
+  run:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js
+      uses: actions/setup-node@v2
+    - name: run
+      run: |
+        git clone https://github.com/abapGit/ajson_mirror.git
+        ls -l
+        rm src/json/*
+        cp ajson_mirror/src/* src/json/
+        rm -rf ajson_mirror
+        git status
+    - name: Open PR
+      uses: peter-evans/create-pull-request@v3
+      with:
+        title: ajson, Automatic Update
+        body: |
+          Automatic update from mirror
+          https://github.com/abapGit/ajson_mirror
+          
+          Manually close and reopen the pull request to trigger CI
