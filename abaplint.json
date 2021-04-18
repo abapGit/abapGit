@@ -332,7 +332,6 @@
       "ranges": true,
       "subtract": true,
       "multiply": true,
-      "selectWithoutInto": true,
       "communication": true,
       "typePools": true,
       "load": true,
