@@ -371,7 +371,7 @@ INTERFACE zif_abapgit_definitions
   CONSTANTS c_head_name TYPE string VALUE 'HEAD' ##NO_TEXT.
   CONSTANTS:
     BEGIN OF c_git_branch,
-      master       TYPE string VALUE 'refs/heads/master',
+      main         TYPE string VALUE 'refs/heads/main',
       prefix       TYPE string VALUE 'refs/',
       heads_prefix TYPE string VALUE 'refs/heads/',
       heads        TYPE string VALUE 'refs/heads/*',
