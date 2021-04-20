@@ -777,8 +777,12 @@ div.info-panel div.info-list {
   padding: 0.8em 0.7em 1em;
 }
 
-div.info-panel li {
+div.info-panel ul {
   padding-left: 10px;
+}
+
+div.info-panel li {
+  padding-left: 0px;
   list-style-type: none;
 }
 

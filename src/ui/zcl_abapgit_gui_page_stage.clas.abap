@@ -119,7 +119,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -247,7 +247,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     LOOP AT it_files-remote INTO ls_remote WHERE filename IS NOT INITIAL.
       TRY.
-          zcl_abapgit_file_status=>identify_object(
+          zcl_abapgit_filename_logic=>file_to_object(
             EXPORTING
               iv_filename = ls_remote-filename
               iv_path     = ls_remote-path
@@ -313,7 +313,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
         lo_dot = mo_repo->get_dot_abapgit( ).
         LOOP AT it_files-remote ASSIGNING <ls_remote> WHERE filename IS NOT INITIAL.
-          zcl_abapgit_file_status=>identify_object(
+          zcl_abapgit_filename_logic=>file_to_object(
             EXPORTING
               iv_filename = <ls_remote>-filename
               iv_path     = <ls_remote>-path
@@ -587,7 +587,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
       ASSERT sy-subrc = 0.
 
       TRY.
-          zcl_abapgit_file_status=>identify_object(
+          zcl_abapgit_filename_logic=>file_to_object(
             EXPORTING
               iv_filename = <ls_remote>-filename
               iv_path     = <ls_remote>-path
@@ -622,15 +622,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
   METHOD render_main_language_warning.
 
-    DATA: ls_dot_abapgit TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
+    DATA lv_main_language TYPE spras.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ls_dot_abapgit = mo_repo->get_dot_abapgit( )->get_data( ).
+    lv_main_language = mo_repo->get_dot_abapgit( )->get_main_language( ).
 
-    IF ls_dot_abapgit-master_language <> sy-langu.
+    IF lv_main_language <> sy-langu.
       ri_html->add( zcl_abapgit_gui_chunk_lib=>render_warning_banner(
-                        |Caution: Main language of the repo is '{ ls_dot_abapgit-master_language }', |
+                        |Caution: Main language of the repo is '{ lv_main_language }', |
                      && |but you're logged on in '{ sy-langu }'| ) ).
     ENDIF.
 

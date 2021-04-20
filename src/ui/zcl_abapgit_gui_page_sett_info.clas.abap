@@ -500,7 +500,7 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
 
         IF <ls_remote>-filename IS NOT INITIAL AND lv_ignored = abap_false.
           TRY.
-              zcl_abapgit_file_status=>identify_object(
+              zcl_abapgit_filename_logic=>file_to_object(
                 EXPORTING
                   iv_filename = <ls_remote>-filename
                   iv_path     = <ls_remote>-path

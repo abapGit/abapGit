@@ -155,7 +155,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       <ls_return>-file = ls_file.
 
       " Derive object from config filename (namespace + escaping)
-      zcl_abapgit_file_status=>identify_object(
+      zcl_abapgit_filename_logic=>file_to_object(
         EXPORTING
           iv_filename = <ls_return>-file-filename
           iv_path     = <ls_return>-file-path
@@ -172,7 +172,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       <ls_return>-file = ls_file.
 
       " Derive object from data filename (namespace + escaping)
-      zcl_abapgit_file_status=>identify_object(
+      zcl_abapgit_filename_logic=>file_to_object(
         EXPORTING
           iv_filename = <ls_return>-file-filename
           iv_path     = <ls_return>-file-path
@@ -221,7 +221,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     lt_found = serialize(
       it_tadir            = lt_tadir
-      iv_language         = io_dot_abapgit->get_master_language( )
+      iv_language         = io_dot_abapgit->get_main_language( )
       ii_log              = ii_log
       iv_force_sequential = lv_force ).
     APPEND LINES OF lt_found TO ct_files.
