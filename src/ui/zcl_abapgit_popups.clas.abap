@@ -429,9 +429,9 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
     IF lt_branches IS INITIAL.
       IF iv_hide_head IS NOT INITIAL.
-        lv_text = 'master'.
+        lv_text = 'main'.
       ENDIF.
-      IF iv_hide_branch IS NOT INITIAL AND iv_hide_branch <> zif_abapgit_definitions=>c_git_branch-master.
+      IF iv_hide_branch IS NOT INITIAL AND iv_hide_branch <> zif_abapgit_definitions=>c_git_branch-main.
         IF lv_text IS INITIAL.
           lv_text = iv_hide_branch && ' is'.
         ELSE.
@@ -1044,7 +1044,6 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
     lv_display_name = iv_display_name.
     lv_package = iv_package.
     lv_url     = iv_url.
-    lv_branch  = iv_branch.
 
     WHILE lv_finished = abap_false.
 
