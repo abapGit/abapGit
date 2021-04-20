@@ -1,4 +1,4 @@
-CLASS zcl_abapgit_gui_page_sett_swch DEFINITION
+CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_gui_component
   FINAL
@@ -21,7 +21,6 @@ CLASS zcl_abapgit_gui_page_sett_swch DEFINITION
         !io_repo TYPE REF TO zcl_abapgit_repo
       RAISING
         zcx_abapgit_exception .
-
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -169,7 +168,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_sett_swch IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
 
   METHOD checkout_commit_build_list.
@@ -276,7 +275,7 @@ CLASS zcl_abapgit_gui_page_sett_swch IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Unexpected switch for offline repo' ).
     ENDIF.
     IF mo_repo->get_local_settings( )-write_protected = abap_true.
-      zcx_abapgit_exception=>raise( 'Cannot switch. Local code is write-protected by repo config' ).
+      zcx_abapgit_exception=>raise( 'Cannot switch. Repository is write-protected in local settings' ).
     ENDIF.
 
   ENDMETHOD.
@@ -341,9 +340,9 @@ CLASS zcl_abapgit_gui_page_sett_swch IMPLEMENTATION.
   METHOD choose_pull_req.
 
     DATA:
-      lo_repo TYPE REF TO zcl_abapgit_repo_online,
-      lt_pulls       TYPE zif_abapgit_pr_enum_provider=>ty_pull_requests,
-      ls_pull        LIKE LINE OF lt_pulls.
+      lo_repo  TYPE REF TO zcl_abapgit_repo_online,
+      lt_pulls TYPE zif_abapgit_pr_enum_provider=>ty_pull_requests,
+      ls_pull  LIKE LINE OF lt_pulls.
 
     IF mo_repo->is_offline( ) = abap_true.
       RETURN.
@@ -413,17 +412,17 @@ CLASS zcl_abapgit_gui_page_sett_swch IMPLEMENTATION.
 
   METHOD create.
 
-    DATA lo_component TYPE REF TO zcl_abapgit_gui_page_sett_swch.
+    DATA lo_component TYPE REF TO zcl_abapgit_gui_page_sett_remo.
 
     CREATE OBJECT lo_component
       EXPORTING
         io_repo = io_repo.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
-      iv_page_title      = 'Repository Switch'
+      iv_page_title      = 'Remote Settings'
       io_page_menu       = zcl_abapgit_gui_chunk_lib=>settings_repo_toolbar(
                              iv_key = io_repo->get_key( )
-                             iv_act = zif_abapgit_definitions=>c_action-repo_switch )
+                             iv_act = zif_abapgit_definitions=>c_action-repo_remote_settings )
       ii_child_component = lo_component ).
 
   ENDMETHOD.
@@ -439,7 +438,7 @@ CLASS zcl_abapgit_gui_page_sett_swch IMPLEMENTATION.
       lv_placeholder TYPE string.
 
     ro_form = zcl_abapgit_html_form=>create(
-                iv_form_id   = 'repo-settings-form'
+                iv_form_id   = 'repo-remote-settings-form'
                 iv_help_page = 'https://docs.abapgit.org/ref-dot-abapgit.html' ).
 
     IF mv_mode = c_mode-offline.
@@ -876,6 +875,7 @@ CLASS zcl_abapgit_gui_page_sett_swch IMPLEMENTATION.
           ENDIF.
 
           mv_mode = get_mode( ms_repo_new ).
+          save_settings( ).
         ENDIF.
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
