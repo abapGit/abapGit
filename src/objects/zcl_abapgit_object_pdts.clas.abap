@@ -1,6 +1,6 @@
 CLASS zcl_abapgit_object_pdts DEFINITION
   PUBLIC
-  INHERITING FROM zcl_abapgit_objects_super
+  INHERITING FROM zcl_abapgit_objects_pdxx_super
   FINAL
   CREATE PUBLIC.
 
@@ -14,7 +14,6 @@ CLASS zcl_abapgit_object_pdts DEFINITION
 
   PRIVATE SECTION.
 
-    DATA ms_objkey TYPE hrsobject.
     DATA mv_objid TYPE hrobjid.
 
     METHODS check_subrc_for IMPORTING iv_call TYPE clike OPTIONAL
