@@ -665,6 +665,8 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
         CATCH zcx_abapgit_exception.
           lv_branch = lo_branch_list->get_head_symref( ).
       ENDTRY.
+
+      mv_original_url = lv_url.
     ENDIF.
 
     CASE mv_mode.
