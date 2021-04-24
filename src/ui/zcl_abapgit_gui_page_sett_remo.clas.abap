@@ -73,6 +73,7 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
     DATA mo_dot TYPE REF TO zcl_abapgit_dot_abapgit .
     DATA mv_pull_req TYPE string .
     DATA mv_mode TYPE i .
+    DATA mv_original_url TYPE string .
 
     METHODS init
       IMPORTING
@@ -557,6 +558,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     ENDIF.
 
     ms_repo_new = ms_repo_current.
+    mv_original_url = ms_repo_current-url.
 
   ENDMETHOD.
 
@@ -700,16 +702,14 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     lv_url = mo_form_data->get( c_id-url ).
 
-    IF mv_mode = c_mode-offline.
-      IF lv_url CP 'http*'.
-        " Switch from URL to name
-        lv_url = zcl_abapgit_url=>name( lv_url ).
-      ENDIF.
-    ELSE.
-      IF lv_url NP 'http*' AND ms_repo_current-url CP 'http*'.
-        " Switch back to original URL
-        lv_url = ms_repo_current-url.
-      ENDIF.
+    IF mv_mode = c_mode-offline AND lv_url CP 'http*'.
+      " Switch from URL to name
+      lv_url = zcl_abapgit_url=>name( lv_url ).
+    ENDIF.
+
+    IF mv_mode <> c_mode-offline AND lv_url NP 'http*' AND mv_original_url CP 'http*'.
+      " Switch back to original URL
+      lv_url = mv_original_url.
     ENDIF.
 
     mo_form_data->set(
@@ -782,28 +782,26 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     lv_url = mo_form_data->get( c_id-url ).
 
-    IF ms_repo_new-offline = abap_true.
-      IF lv_url IS INITIAL.
-        ro_validation_log->set(
-          iv_key = c_id-url
-          iv_val = 'Enter a name of the repository and save' ).
-      ENDIF.
-    ELSE.
-      IF lv_url NP 'http*'.
-        ro_validation_log->set(
-          iv_key = c_id-url
-          iv_val = 'Enter the URL of the repository and save' ).
-      ELSE.
-        TRY.
-            zcl_abapgit_url=>name(
-              iv_url      = lv_url
-              iv_validate = abap_true ).
-          CATCH zcx_abapgit_exception INTO lx_error.
-            ro_validation_log->set(
-              iv_key = c_id-url
-              iv_val = lx_error->get_text( ) ).
-        ENDTRY.
-      ENDIF.
+    IF mv_mode = c_mode-offline AND lv_url IS INITIAL.
+      ro_validation_log->set(
+        iv_key = c_id-url
+        iv_val = 'Enter a name of the repository and save' ).
+    ENDIF.
+
+    IF mv_mode <> c_mode-offline AND lv_url NP 'http*'.
+      ro_validation_log->set(
+        iv_key = c_id-url
+        iv_val = 'Enter the URL of the repository and save' ).
+    ELSEIF mv_mode <> c_mode-offline.
+      TRY.
+          zcl_abapgit_url=>name(
+            iv_url      = lv_url
+            iv_validate = abap_true ).
+        CATCH zcx_abapgit_exception INTO lx_error.
+          ro_validation_log->set(
+            iv_key = c_id-url
+            iv_val = lx_error->get_text( ) ).
+      ENDTRY.
     ENDIF.
 
   ENDMETHOD.
