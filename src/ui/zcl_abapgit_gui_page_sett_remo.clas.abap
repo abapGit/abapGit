@@ -787,7 +787,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     IF mv_mode = c_mode-offline AND lv_url IS INITIAL.
       ro_validation_log->set(
         iv_key = c_id-url
-        iv_val = 'Enter a name of the repository and save' ).
+        iv_val = 'Enter a name for the repository and save' ).
     ENDIF.
 
     IF mv_mode <> c_mode-offline AND lv_url NP 'http*'.
