@@ -107,6 +107,9 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
     METHODS check_protection
       RAISING
         zcx_abapgit_exception .
+    METHODS switch_online_offline
+      RAISING
+        zcx_abapgit_exception .
     METHODS switch_to_branch_tag
       IMPORTING
         !iv_name TYPE string OPTIONAL
@@ -127,7 +130,6 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
     METHODS validate_form
       IMPORTING
         !io_form_data            TYPE REF TO zcl_abapgit_string_map
-        !iv_empty_url_allowed    TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(ro_validation_log) TYPE REF TO zcl_abapgit_string_map
       RAISING
@@ -689,6 +691,34 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD switch_online_offline.
+
+    DATA lv_url TYPE string.
+
+    ms_repo_new-offline = boolc( ms_repo_new-offline = abap_false ).
+    mv_mode = get_mode( ms_repo_new ).
+
+    lv_url = mo_form_data->get( c_id-url ).
+
+    IF mv_mode = c_mode-offline.
+      IF lv_url CP 'http*'.
+        " Switch from URL to name
+        lv_url = zcl_abapgit_url=>name( lv_url ).
+      ENDIF.
+    ELSE.
+      IF lv_url NP 'http*' AND ms_repo_current-url CP 'http*'.
+        " Switch back to original URL
+        lv_url = ms_repo_current-url.
+      ENDIF.
+    ENDIF.
+
+    mo_form_data->set(
+      iv_key = c_id-url
+      iv_val = lv_url ).
+
+  ENDMETHOD.
+
+
   METHOD switch_to_branch_tag.
 
     DATA lo_repo TYPE REF TO zcl_abapgit_repo_online.
@@ -752,20 +782,28 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     lv_url = mo_form_data->get( c_id-url ).
 
-    IF lv_url IS INITIAL AND iv_empty_url_allowed = abap_true.
-      RETURN.
-    ENDIF.
-
-    IF ms_repo_new-offline = abap_false.
-      TRY.
-          zcl_abapgit_url=>name(
-            iv_url      = lv_url
-            iv_validate = abap_true ).
-        CATCH zcx_abapgit_exception INTO lx_error.
-          ro_validation_log->set(
-            iv_key = c_id-url
-            iv_val = lx_error->get_text( ) ).
-      ENDTRY.
+    IF ms_repo_new-offline = abap_true.
+      IF lv_url IS INITIAL.
+        ro_validation_log->set(
+          iv_key = c_id-url
+          iv_val = 'Enter a name of the repository and save' ).
+      ENDIF.
+    ELSE.
+      IF lv_url NP 'http*'.
+        ro_validation_log->set(
+          iv_key = c_id-url
+          iv_val = 'Enter the URL of the repository and save' ).
+      ELSE.
+        TRY.
+            zcl_abapgit_url=>name(
+              iv_url      = lv_url
+              iv_validate = abap_true ).
+          CATCH zcx_abapgit_exception INTO lx_error.
+            ro_validation_log->set(
+              iv_key = c_id-url
+              iv_val = lx_error->get_text( ) ).
+        ENDTRY.
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.
@@ -850,38 +888,12 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
         ENDIF.
 
-      WHEN c_event-switch.
-        " Validate all form entries
-        mo_validation_log = validate_form(
-          io_form_data         = mo_form_data
-          iv_empty_url_allowed = abap_true ).
+      WHEN c_event-switch OR c_event-save.
 
-        IF mo_validation_log->is_empty( ) = abap_true.
-          ms_repo_new-offline = boolc( ms_repo_new-offline = abap_false ).
-
-          IF ms_repo_new-offline = abap_true.
-            IF ms_repo_new-url IS NOT INITIAL.
-              " Shorten URL to name
-              ms_repo_new-url = zcl_abapgit_url=>name( ms_repo_new-url ).
-            ELSE.
-              " Go back to original name
-              ms_repo_new-url = ms_repo_current-url.
-            ENDIF.
-          ELSEIF ms_repo_current-url CP 'http*'.
-            " Go back to original URL
-            ms_repo_new-url = ms_repo_current-url.
-          ELSE.
-            ms_repo_new-url = ''.
-          ENDIF.
-
-          mv_mode = get_mode( ms_repo_new ).
-          save_settings( ).
+        IF ii_event->mv_action = c_event-switch.
+          switch_online_offline( ).
         ENDIF.
 
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-
-      WHEN c_event-save.
-        " Validate all form entries
         mo_validation_log = validate_form( mo_form_data ).
 
         IF mo_validation_log->is_empty( ) = abap_true.
