@@ -8,13 +8,16 @@ CLASS ltcl_parse DEFINITION FOR TESTING
   PRIVATE SECTION.
     METHODS:
       parse
+        IMPORTING
+          iv_expected_lines TYPE i DEFAULT 2
         RAISING
           zcx_abapgit_exception.
 
     METHODS:
-      test01 FOR TESTING RAISING zcx_abapgit_exception,
-      test02 FOR TESTING RAISING zcx_abapgit_exception,
-      test03 FOR TESTING RAISING zcx_abapgit_exception.
+      parse_ok_without_first_lf FOR TESTING RAISING zcx_abapgit_exception,
+      parse_works FOR TESTING RAISING zcx_abapgit_exception,
+      captcha_response_is_caught FOR TESTING RAISING zcx_abapgit_exception,
+      use_refs_if_head_is_missing FOR TESTING RAISING cx_static_check.
 
     DATA: mt_data TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
 
@@ -28,7 +31,6 @@ CLASS ltcl_parse IMPLEMENTATION.
     DATA: lv_data TYPE string,
           lt_list TYPE zif_abapgit_definitions=>ty_git_branch_list_tt.
 
-
     CONCATENATE LINES OF mt_data INTO lv_data SEPARATED BY zif_abapgit_definitions=>c_newline.
 
     zcl_abapgit_git_branch_list=>parse_branch_list(
@@ -41,14 +43,14 @@ CLASS ltcl_parse IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = lines( lt_list )
-      exp = 2 ).
+      exp = iv_expected_lines ).
 
-    READ TABLE lt_list WITH KEY name = zif_abapgit_definitions=>c_git_branch-master TRANSPORTING NO FIELDS.
+    READ TABLE lt_list WITH KEY name = zif_abapgit_definitions=>c_git_branch-main TRANSPORTING NO FIELDS.
     cl_abap_unit_assert=>assert_subrc( ).
 
   ENDMETHOD.
 
-  METHOD test01.
+  METHOD parse_ok_without_first_lf.
 
 * without linefeed after first pkt-line
 *
@@ -58,24 +60,24 @@ CLASS ltcl_parse IMPLEMENTATION.
 * LF, but the receiver MUST NOT complain if it is not present"
 
     APPEND '001d# service=git-upload-pack000000d2b5d5f1f84ebcaeb8a299edd14c959518e9d81bb5 HEAD#asdf' TO mt_data.
-    APPEND '003fb5d5f1f84ebcaeb8a299edd14c959518e9d81bb5 refs/heads/master' TO mt_data.
+    APPEND '003fb5d5f1f84ebcaeb8a299edd14c959518e9d81bb5 refs/heads/main' TO mt_data.
     APPEND '0000' TO mt_data.
 
     parse( ).
 
   ENDMETHOD.
 
-  METHOD test02.
+  METHOD parse_works.
 
     APPEND '001e# service=git-upload-pack' TO mt_data.
     APPEND '000001080e6fe6b311f789ccbac6c5122702d4f48a4f6bda HEAD#asdf' TO mt_data.
-    APPEND '003f0e6fe6b311f789ccbac6c5122702d4f48a4f6bda refs/heads/master' TO mt_data.
+    APPEND '003f0e6fe6b311f789ccbac6c5122702d4f48a4f6bda refs/heads/main' TO mt_data.
 
     parse( ).
 
   ENDMETHOD.
 
-  METHOD test03.
+  METHOD captcha_response_is_caught.
 
 * https://github.com/abapGit/abapGit/issues/4523
 
@@ -93,6 +95,19 @@ CLASS ltcl_parse IMPLEMENTATION.
           act = lx_error->get_text( )
           exp = '*CAPTCHA*' ).
     ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD use_refs_if_head_is_missing.
+
+    " https://github.com/abapGit/abapGit/issues/4703
+    " In case HEAD is missing, it should use refs/heads/xxxxx as the default branch
+
+    APPEND '001e# service=git-upload-pack' TO mt_data.
+    APPEND '000000f7e6e5b066fb4177bf0780bf343ab2de06368dd973 refs/heads/main' TO mt_data.
+    APPEND '0000' TO mt_data.
+
+    parse( iv_expected_lines = 1 ).
 
   ENDMETHOD.
 

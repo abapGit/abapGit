@@ -14,7 +14,37 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown.
+    DATA: lr_data  TYPE REF TO data,
+          lo_dcl   TYPE REF TO object,
+          lx_error TYPE REF TO cx_root.
+
+    FIELD-SYMBOLS: <lg_data>  TYPE any,
+                   <lg_field> TYPE any.
+
+    CREATE DATA lr_data TYPE ('ACM_S_DCLSRC').
+    ASSIGN lr_data->* TO <lg_data>.
+
+    TRY.
+        CALL METHOD ('CL_ACM_DCL_HANDLER_FACTORY')=>('CREATE')
+          RECEIVING
+            ro_handler = lo_dcl.
+
+        CALL METHOD lo_dcl->('READ')
+          EXPORTING
+            iv_dclname = ms_item-obj_name
+          IMPORTING
+            es_dclsrc  = <lg_data>.
+
+        ASSIGN COMPONENT 'AS4USER' OF STRUCTURE <lg_data> TO <lg_field>.
+        IF sy-subrc = 0.
+          rv_user = <lg_field>.
+        ELSE.
+          rv_user = c_user_unknown.
+        ENDIF.
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
+                                      ix_previous = lx_error ).
+    ENDTRY.
   ENDMETHOD.
 
 

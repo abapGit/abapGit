@@ -45,15 +45,18 @@ CLASS ltcl_xml_output IMPLEMENTATION.
       exp = ls_result ).
 
   ENDMETHOD.
+
   METHOD render_xml_string.
 
-    DATA: ls_input          TYPE ty_old,
-          lv_value          TYPE string,
-          lv_xml            TYPE string,
-          lo_output         TYPE REF TO zcl_abapgit_xml_output,
-          lo_conv_in_string TYPE REF TO cl_abap_conv_in_ce,
-          lv_encoding       TYPE abap_encoding,
-          lv_xstring        TYPE xstring.
+    DATA: ls_input           TYPE ty_old,
+          lv_value           TYPE string,
+          lv_xml             TYPE string,
+          lo_output          TYPE REF TO zcl_abapgit_xml_output,
+          lo_conv_in_string  TYPE REF TO cl_abap_conv_in_ce,
+          lo_conv_out_string TYPE REF TO cl_abap_conv_out_ce,
+          lv_encoding        TYPE abap_encoding,
+          lv_xstring         TYPE xstring,
+          lv_bom             TYPE xstring.
 
     ls_input-foo = '2'.
     ls_input-bar = 'A'.
@@ -72,19 +75,22 @@ CLASS ltcl_xml_output IMPLEMENTATION.
 
     lv_xml = lo_output->zif_abapgit_xml_output~render( ).
 
-    lv_encoding = cl_abap_codepage=>sap_codepage( `UTF-16LE` ).
+    lv_encoding = cl_abap_codepage=>sap_codepage( `UTF-16LE` ). "4103
 
-    TRY.
-        lv_xstring = cl_bcs_convert=>string_to_xstring(
-                       iv_string     = lv_value
-                       iv_codepage   = lv_encoding
-                       iv_add_bom    = 'X' ).
-      CATCH cx_bcs.
-    ENDTRY.
+    lo_conv_out_string = cl_abap_conv_out_ce=>create(
+      encoding    = lv_encoding
+      ignore_cerr = 'X' ).
+
+    lo_conv_out_string->write( data = lv_value ).
+
+    lv_xstring = lo_conv_out_string->get_buffer( ).
+
+    lv_bom = cl_abap_char_utilities=>byte_order_mark_little. "UTF-16LE, 4103
+    CONCATENATE lv_bom lv_xstring INTO lv_xstring IN BYTE MODE.
 
     lo_conv_in_string = cl_abap_conv_in_ce=>create(
-                          encoding = lv_encoding
-                          input = lv_xstring ).
+      encoding = lv_encoding
+      input    = lv_xstring ).
 
     lo_conv_in_string->read( IMPORTING data = lv_value ).
 

@@ -35,12 +35,14 @@ CLASS zcl_abapgit_serialize DEFINITION
         zcx_abapgit_exception .
   PROTECTED SECTION.
 
-    TYPES: BEGIN OF ty_unsupported_count,
-             obj_type TYPE tadir-object,
-             obj_name TYPE tadir-obj_name,
-             count    TYPE i,
-           END OF ty_unsupported_count,
-           ty_unsupported_count_tt TYPE HASHED TABLE OF ty_unsupported_count WITH UNIQUE KEY obj_type.
+    TYPES:
+      BEGIN OF ty_unsupported_count,
+        obj_type TYPE tadir-object,
+        obj_name TYPE tadir-obj_name,
+        count    TYPE i,
+      END OF ty_unsupported_count .
+    TYPES:
+      ty_unsupported_count_tt TYPE HASHED TABLE OF ty_unsupported_count WITH UNIQUE KEY obj_type .
     TYPES:
       ty_char32 TYPE c LENGTH 32 .
 
@@ -62,6 +64,7 @@ CLASS zcl_abapgit_serialize DEFINITION
     METHODS add_data
       IMPORTING
         !ii_data_config TYPE REF TO zif_abapgit_data_config
+        !io_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit
       CHANGING
         !ct_files       TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
@@ -110,13 +113,13 @@ CLASS zcl_abapgit_serialize DEFINITION
         zcx_abapgit_exception .
     METHODS filter_unsupported_objects
       CHANGING
-        !ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
+        !ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt .
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
+CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
 
   METHOD add_apack.
@@ -150,12 +153,32 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
     LOOP AT lt_files INTO ls_file.
       APPEND INITIAL LINE TO ct_files ASSIGNING <ls_return>.
       <ls_return>-file = ls_file.
+
+      " Derive object from config filename (namespace + escaping)
+      zcl_abapgit_filename_logic=>file_to_object(
+        EXPORTING
+          iv_filename = <ls_return>-file-filename
+          iv_path     = <ls_return>-file-path
+          io_dot      = io_dot_abapgit
+        IMPORTING
+          es_item     = <ls_return>-item ).
+
+      <ls_return>-item-obj_type = 'TABU'.
     ENDLOOP.
 
     lt_files = zcl_abapgit_data_factory=>get_serializer( )->serialize( ii_data_config ).
     LOOP AT lt_files INTO ls_file.
       APPEND INITIAL LINE TO ct_files ASSIGNING <ls_return>.
       <ls_return>-file = ls_file.
+
+      " Derive object from data filename (namespace + escaping)
+      zcl_abapgit_filename_logic=>file_to_object(
+        EXPORTING
+          iv_filename = <ls_return>-file-filename
+          iv_path     = <ls_return>-file-path
+          io_dot      = io_dot_abapgit
+        IMPORTING
+          es_item     = <ls_return>-item ).
     ENDLOOP.
 
   ENDMETHOD.
@@ -198,7 +221,7 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
     lt_found = serialize(
       it_tadir            = lt_tadir
-      iv_language         = io_dot_abapgit->get_master_language( )
+      iv_language         = io_dot_abapgit->get_main_language( )
       ii_log              = ii_log
       iv_force_sequential = lv_force ).
     APPEND LINES OF lt_found TO ct_files.
@@ -319,6 +342,7 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
     add_data(
       EXPORTING
         ii_data_config = ii_data_config
+        io_dot_abapgit = io_dot_abapgit
       CHANGING
         ct_files       = rt_files ).
 

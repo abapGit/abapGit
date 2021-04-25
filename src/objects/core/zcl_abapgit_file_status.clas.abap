@@ -13,17 +13,6 @@ CLASS zcl_abapgit_file_status DEFINITION
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS identify_object
-      IMPORTING
-        !iv_filename TYPE string
-        !iv_path     TYPE string
-        !iv_devclass TYPE devclass OPTIONAL
-        !io_dot      TYPE REF TO zcl_abapgit_dot_abapgit
-      EXPORTING
-        !es_item     TYPE zif_abapgit_definitions=>ty_item
-        !ev_is_xml   TYPE abap_bool
-      RAISING
-        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -36,6 +25,48 @@ CLASS zcl_abapgit_file_status DEFINITION
         !it_cur_state     TYPE zif_abapgit_definitions=>ty_file_signatures_tt
       RETURNING
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS prepare_remote
+      IMPORTING
+        !io_dot          TYPE REF TO zcl_abapgit_dot_abapgit
+        !it_remote       TYPE zif_abapgit_definitions=>ty_files_tt
+      RETURNING
+        VALUE(rt_remote) TYPE zif_abapgit_definitions=>ty_files_tt
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS process_local
+      IMPORTING
+        !iv_devclass  TYPE devclass
+        !io_dot       TYPE REF TO zcl_abapgit_dot_abapgit
+        !it_local     TYPE zif_abapgit_definitions=>ty_files_item_tt
+        !it_state_idx TYPE zif_abapgit_definitions=>ty_file_signatures_ts
+      CHANGING
+        !ct_remote    TYPE zif_abapgit_definitions=>ty_files_tt
+        !ct_items     TYPE zif_abapgit_definitions=>ty_items_tt
+        !ct_results   TYPE zif_abapgit_definitions=>ty_results_tt
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS process_items
+      IMPORTING
+        !iv_devclass TYPE devclass
+        !io_dot      TYPE REF TO zcl_abapgit_dot_abapgit
+        !it_local    TYPE zif_abapgit_definitions=>ty_files_item_tt
+        !it_remote   TYPE zif_abapgit_definitions=>ty_files_tt
+      CHANGING
+        !ct_items    TYPE zif_abapgit_definitions=>ty_items_tt
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS process_remote
+      IMPORTING
+        !iv_devclass  TYPE devclass
+        !io_dot       TYPE REF TO zcl_abapgit_dot_abapgit
+        !it_local     TYPE zif_abapgit_definitions=>ty_files_item_tt
+        !it_remote    TYPE zif_abapgit_definitions=>ty_files_tt
+        !it_state_idx TYPE zif_abapgit_definitions=>ty_file_signatures_ts
+        !it_items_idx TYPE zif_abapgit_definitions=>ty_items_ts
+      CHANGING
+        !ct_results   TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS run_checks
@@ -193,11 +224,14 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
     rs_result-match    = abap_false.
     rs_result-rstate   = zif_abapgit_definitions=>c_state-added.
 
-    identify_object( EXPORTING iv_filename = is_remote-filename
-                               iv_path     = is_remote-path
-                               iv_devclass = iv_devclass
-                               io_dot      = io_dot
-                     IMPORTING es_item     = ls_item ).
+    zcl_abapgit_filename_logic=>file_to_object(
+      EXPORTING
+        iv_filename = is_remote-filename
+        iv_path     = is_remote-path
+        iv_devclass = iv_devclass
+        io_dot      = io_dot
+      IMPORTING
+        es_item     = ls_item ).
 
     " Check if in item index + get package
     READ TABLE it_items INTO ls_item
@@ -242,161 +276,54 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
   METHOD calculate_status.
 
-    DATA: lt_remote       LIKE it_remote,
-          lv_index        TYPE i,
-          lt_items        TYPE zif_abapgit_definitions=>ty_items_tt,
-          ls_item         LIKE LINE OF lt_items,
-          lv_is_xml       TYPE abap_bool,
-          lv_sub_fetched  TYPE abap_bool,
-          lt_sub_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
-          lv_msg          TYPE string,
-          lt_items_idx    TYPE zif_abapgit_definitions=>ty_items_ts,
-          lt_state_idx    TYPE zif_abapgit_definitions=>ty_file_signatures_ts. " Sorted by path+filename
-
-    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF it_remote,
-                   <ls_result> LIKE LINE OF rt_results,
-                   <ls_state>  LIKE LINE OF it_cur_state,
-                   <ls_local>  LIKE LINE OF it_local.
-
+    DATA:
+      lt_remote    LIKE it_remote,
+      lt_items     TYPE zif_abapgit_definitions=>ty_items_tt,
+      lt_items_idx TYPE zif_abapgit_definitions=>ty_items_ts, " Sorted by obj_type+obj_name
+      lt_state_idx TYPE zif_abapgit_definitions=>ty_file_signatures_ts. " Sorted by path+filename
 
     lt_state_idx = it_cur_state. " Force sort it
-    lt_remote    = it_remote.
-    SORT lt_remote BY path filename.
 
-    " Skip ignored files
-    LOOP AT lt_remote ASSIGNING <ls_remote>.
-      lv_index = sy-tabix.
-      IF io_dot->is_ignored( iv_path     = <ls_remote>-path
-                             iv_filename = <ls_remote>-filename ) = abap_true.
-        DELETE lt_remote INDEX lv_index.
-      ENDIF.
-    ENDLOOP.
+    " Prepare remote files
+    lt_remote = prepare_remote(
+      io_dot    = io_dot
+      it_remote = it_remote ).
 
     " Process local files and new local files
-    LOOP AT it_local ASSIGNING <ls_local>.
-      " Skip ignored files
-      IF io_dot->is_ignored( iv_path     = <ls_local>-file-path
-                             iv_filename = <ls_local>-file-filename ) = abap_true.
-        CONTINUE.
-      ENDIF.
-
-      APPEND INITIAL LINE TO rt_results ASSIGNING <ls_result>.
-      IF <ls_local>-item IS NOT INITIAL.
-        APPEND <ls_local>-item TO lt_items. " Collect for item index
-      ENDIF.
-
-      READ TABLE lt_remote ASSIGNING <ls_remote>
-        WITH KEY path = <ls_local>-file-path filename = <ls_local>-file-filename
-        BINARY SEARCH.
-      IF sy-subrc = 0.  " Exist local and remote
-        <ls_result> = build_existing(
-          is_local  = <ls_local>
-          is_remote = <ls_remote>
-          it_state  = lt_state_idx ).
-        ASSERT <ls_remote>-sha1 IS NOT INITIAL.
-        CLEAR <ls_remote>-sha1. " Mark as processed
-      ELSE.             " Only L exists
-        <ls_result> = build_new_local( <ls_local> ).
-        " Check if same file exists in different location
-        READ TABLE lt_remote ASSIGNING <ls_remote>
-          WITH KEY filename = <ls_local>-file-filename.
-        IF sy-subrc = 0 AND <ls_local>-file-sha1 = <ls_remote>-sha1.
-          <ls_result>-packmove = abap_true.
-        ELSEIF sy-subrc = 4.
-          " Check if file existed before and was deleted remotely
-          READ TABLE lt_state_idx ASSIGNING <ls_state>
-            WITH KEY path = <ls_local>-file-path filename = <ls_local>-file-filename
-            BINARY SEARCH.
-          IF sy-subrc = 0.
-            IF <ls_local>-file-sha1 = <ls_state>-sha1.
-              <ls_result>-lstate = zif_abapgit_definitions=>c_state-unchanged.
-            ELSE.
-              <ls_result>-lstate = zif_abapgit_definitions=>c_state-modified.
-            ENDIF.
-            <ls_result>-rstate = zif_abapgit_definitions=>c_state-deleted.
-          ENDIF.
-        ENDIF.
-      ENDIF.
-      <ls_result>-inactive = <ls_local>-item-inactive.
-    ENDLOOP.
+    process_local(
+      EXPORTING
+        iv_devclass  = iv_devclass
+        io_dot       = io_dot
+        it_local     = it_local
+        it_state_idx = lt_state_idx
+      CHANGING
+        ct_remote    = lt_remote
+        ct_items     = lt_items
+        ct_results   = rt_results ).
 
     " Complete item index for unmarked remote files
-    LOOP AT lt_remote ASSIGNING <ls_remote> WHERE sha1 IS NOT INITIAL.
-      identify_object( EXPORTING iv_filename = <ls_remote>-filename
-                                 iv_path     = <ls_remote>-path
-                                 io_dot      = io_dot
-                                 iv_devclass = iv_devclass
-                       IMPORTING es_item     = ls_item
-                                 ev_is_xml   = lv_is_xml ).
+    process_items(
+      EXPORTING
+        iv_devclass = iv_devclass
+        io_dot      = io_dot
+        it_local    = it_local
+        it_remote   = lt_remote
+      CHANGING
+        ct_items    = lt_items ).
 
-      CHECK lv_is_xml = abap_true. " only object definitions
-
-      ls_item-devclass = get_object_package(
-        iv_object   = ls_item-obj_type
-        iv_obj_name = ls_item-obj_name ).
-
-      IF NOT ls_item-devclass IS INITIAL AND iv_devclass <> ls_item-devclass.
-        IF lv_sub_fetched = abap_false.
-          lt_sub_packages = zcl_abapgit_factory=>get_sap_package( iv_devclass )->list_subpackages( ).
-          lv_sub_fetched = abap_true.
-          SORT lt_sub_packages BY table_line. "Optimize Read Access
-        ENDIF.
-        " Make sure the package is under the repo main package
-        READ TABLE lt_sub_packages TRANSPORTING NO FIELDS
-          WITH KEY table_line = ls_item-devclass
-          BINARY SEARCH.
-        IF sy-subrc <> 0.
-          IF ls_item-obj_type = 'DEVC'.
-            " If package already exist but is not included in the package hierarchy of
-            " the package assigned to the repository, then a manual change of the package
-            " is required i.e. setting a parent package to iv_devclass (or one of its
-            " subpackages). We don't this automatically since it's not clear where in the
-            " hierarchy the new package should be located. (#4108)
-            lv_msg = |Package { ls_item-devclass } is not a subpackage of { iv_devclass
-                     }. Assign { ls_item-devclass } to package hierarchy of { iv_devclass
-                     } and repeat process.|.
-            zcx_abapgit_exception=>raise( lv_msg ).
-          ELSE.
-            CLEAR ls_item-devclass.
-          ENDIF.
-        ENDIF.
-      ENDIF.
-
-      APPEND ls_item TO lt_items.
-    ENDLOOP.
-
-    SORT lt_items DESCENDING. " Default key - type, name, pkg, inactive
-    DELETE ADJACENT DUPLICATES FROM lt_items COMPARING obj_type obj_name devclass.
     lt_items_idx = lt_items. " Self protection + UNIQUE records assertion
 
     " Process new remote files (marked above with empty SHA1)
-    LOOP AT lt_remote ASSIGNING <ls_remote> WHERE sha1 IS NOT INITIAL.
-      APPEND INITIAL LINE TO rt_results ASSIGNING <ls_result>.
-      <ls_result> = build_new_remote( iv_devclass = iv_devclass
-                                      io_dot      = io_dot
-                                      is_remote   = <ls_remote>
-                                      it_items    = lt_items_idx
-                                      it_state    = lt_state_idx ).
-      " Check if same file exists in different location
-      READ TABLE it_local ASSIGNING <ls_local>
-        WITH KEY file-filename = <ls_remote>-filename.
-      IF sy-subrc = 0.
-        <ls_result>-match = abap_false.
-        <ls_result>-lstate = zif_abapgit_definitions=>c_state-deleted.
-        <ls_result>-rstate = zif_abapgit_definitions=>c_state-unchanged.
-        IF <ls_local>-file-sha1 = <ls_remote>-sha1.
-          <ls_result>-packmove = abap_true.
-        ENDIF.
-      ELSEIF sy-subrc = 4.
-        " Check if file existed before and was deleted locally
-        READ TABLE lt_state_idx ASSIGNING <ls_state>
-          WITH KEY path = <ls_remote>-path filename = <ls_remote>-filename
-          BINARY SEARCH.
-        IF sy-subrc = 0.
-          <ls_result>-lstate = zif_abapgit_definitions=>c_state-deleted.
-        ENDIF.
-      ENDIF.
-    ENDLOOP.
+    process_remote(
+      EXPORTING
+        iv_devclass  = iv_devclass
+        io_dot       = io_dot
+        it_local     = it_local
+        it_remote    = lt_remote
+        it_state_idx = lt_state_idx
+        it_items_idx = lt_items_idx
+      CHANGING
+        ct_results   = rt_results ).
 
     SORT rt_results BY
       obj_type ASCENDING
@@ -604,38 +531,199 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD identify_object.
+  METHOD prepare_remote.
 
-    DATA: lv_name TYPE string,
-          lv_type TYPE string,
-          lv_ext  TYPE string.
+    DATA lv_index TYPE sy-index.
 
-    " Guess object type and name
-    SPLIT to_upper( iv_filename ) AT '.' INTO lv_name lv_type lv_ext.
+    FIELD-SYMBOLS <ls_remote> LIKE LINE OF it_remote.
 
-    " Handle namespaces
-    REPLACE ALL OCCURRENCES OF '#' IN lv_name WITH '/'.
-    REPLACE ALL OCCURRENCES OF '#' IN lv_type WITH '/'.
-    REPLACE ALL OCCURRENCES OF '#' IN lv_ext WITH '/'.
+    rt_remote = it_remote.
+    SORT rt_remote BY path filename.
 
-    " The counter part to this logic must be maintained in ZCL_ABAPGIT_OBJECTS_FILES->FILENAME
-    IF lv_type = 'DEVC'.
-      " Try to get a unique package name for DEVC by using the path
-      ASSERT lv_name = 'PACKAGE'.
-      lv_name = zcl_abapgit_folder_logic=>get_instance( )->path_to_package(
-        iv_top                  = iv_devclass
-        io_dot                  = io_dot
-        iv_create_if_not_exists = abap_false
-        iv_path                 = iv_path ).
-    ELSE.
-      " Get original object name
-      lv_name = cl_http_utility=>unescape_url( lv_name ).
-    ENDIF.
+    " Skip ignored files
+    LOOP AT rt_remote ASSIGNING <ls_remote>.
+      lv_index = sy-tabix.
+      IF io_dot->is_ignored( iv_path     = <ls_remote>-path
+                             iv_filename = <ls_remote>-filename ) = abap_true.
+        DELETE rt_remote INDEX lv_index.
+      ENDIF.
+    ENDLOOP.
 
-    CLEAR es_item.
-    es_item-obj_type = lv_type.
-    es_item-obj_name = lv_name.
-    ev_is_xml        = boolc( lv_ext = 'XML' AND strlen( lv_type ) = 4 ).
+  ENDMETHOD.
+
+
+  METHOD process_items.
+
+    DATA:
+      ls_item         LIKE LINE OF ct_items,
+      lv_is_xml       TYPE abap_bool,
+      lv_sub_fetched  TYPE abap_bool,
+      lt_sub_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
+      lv_msg          TYPE string.
+
+    FIELD-SYMBOLS <ls_remote> LIKE LINE OF it_remote.
+
+    LOOP AT it_remote ASSIGNING <ls_remote> WHERE sha1 IS NOT INITIAL.
+
+      zcl_abapgit_filename_logic=>file_to_object(
+        EXPORTING
+          iv_filename = <ls_remote>-filename
+          iv_path     = <ls_remote>-path
+          io_dot      = io_dot
+          iv_devclass = iv_devclass
+        IMPORTING
+          es_item     = ls_item
+          ev_is_xml   = lv_is_xml ).
+
+      CHECK lv_is_xml = abap_true. " only object definitions
+
+      ls_item-devclass = get_object_package(
+        iv_object   = ls_item-obj_type
+        iv_obj_name = ls_item-obj_name ).
+
+      IF NOT ls_item-devclass IS INITIAL AND iv_devclass <> ls_item-devclass.
+        IF lv_sub_fetched = abap_false.
+          lt_sub_packages = zcl_abapgit_factory=>get_sap_package( iv_devclass )->list_subpackages( ).
+          lv_sub_fetched = abap_true.
+          SORT lt_sub_packages BY table_line. "Optimize Read Access
+        ENDIF.
+
+        " Make sure the package is under the repo main package
+        READ TABLE lt_sub_packages TRANSPORTING NO FIELDS
+          WITH KEY table_line = ls_item-devclass
+          BINARY SEARCH.
+        IF sy-subrc <> 0.
+          IF ls_item-obj_type = 'DEVC'.
+            " If package already exist but is not included in the package hierarchy of
+            " the package assigned to the repository, then a manual change of the package
+            " is required i.e. setting a parent package to iv_devclass (or one of its
+            " subpackages). We don't this automatically since it's not clear where in the
+            " hierarchy the new package should be located. (#4108)
+            lv_msg = |Package { ls_item-devclass } is not a subpackage of { iv_devclass
+                     }. Assign { ls_item-devclass } to package hierarchy of { iv_devclass
+                     } and repeat process.|.
+            zcx_abapgit_exception=>raise( lv_msg ).
+          ELSE.
+            CLEAR ls_item-devclass.
+          ENDIF.
+        ENDIF.
+      ENDIF.
+
+      APPEND ls_item TO ct_items.
+    ENDLOOP.
+
+    SORT ct_items DESCENDING. " Default key - type, name, pkg, inactive
+    DELETE ADJACENT DUPLICATES FROM ct_items COMPARING obj_type obj_name devclass.
+
+  ENDMETHOD.
+
+
+  METHOD process_local.
+
+    DATA lv_msg TYPE string.
+
+    FIELD-SYMBOLS:
+      <ls_remote> LIKE LINE OF ct_remote,
+      <ls_result> LIKE LINE OF ct_results,
+      <ls_state>  LIKE LINE OF it_state_idx,
+      <ls_local>  LIKE LINE OF it_local.
+
+    LOOP AT it_local ASSIGNING <ls_local>.
+      " Skip ignored files
+      IF io_dot->is_ignored( iv_path     = <ls_local>-file-path
+                             iv_filename = <ls_local>-file-filename ) = abap_true.
+        CONTINUE.
+      ENDIF.
+
+      APPEND INITIAL LINE TO ct_results ASSIGNING <ls_result>.
+      IF <ls_local>-item IS NOT INITIAL.
+        APPEND <ls_local>-item TO ct_items. " Collect for item index
+      ENDIF.
+
+      READ TABLE ct_remote ASSIGNING <ls_remote>
+        WITH KEY path = <ls_local>-file-path filename = <ls_local>-file-filename
+        BINARY SEARCH.
+      IF sy-subrc = 0.  " Exist local and remote
+        <ls_result> = build_existing(
+          is_local  = <ls_local>
+          is_remote = <ls_remote>
+          it_state  = it_state_idx ).
+        IF <ls_remote>-sha1 IS INITIAL.
+          IF <ls_local>-file-filename = zcl_abapgit_filename_logic=>c_package_file.
+            lv_msg = |Package name conflict { <ls_local>-item-obj_type } { <ls_local>-item-obj_name }. | &&
+              |Rename package or use FULL folder logic|.
+          ELSE.
+            lv_msg = |Checksum conflict { <ls_local>-item-obj_type } { <ls_local>-item-obj_name }. | &&
+              |Please create an issue on Github|.
+          ENDIF.
+          zcx_abapgit_exception=>raise( lv_msg ).
+        ENDIF.
+        CLEAR <ls_remote>-sha1. " Mark as processed
+      ELSE.             " Only L exists
+        <ls_result> = build_new_local( <ls_local> ).
+        " Check if same file exists in different location
+        READ TABLE ct_remote ASSIGNING <ls_remote>
+          WITH KEY filename = <ls_local>-file-filename.
+        IF sy-subrc = 0 AND <ls_local>-file-sha1 = <ls_remote>-sha1.
+          <ls_result>-packmove = abap_true.
+        ELSEIF sy-subrc = 4.
+          " Check if file existed before and was deleted remotely
+          READ TABLE it_state_idx ASSIGNING <ls_state>
+            WITH KEY path = <ls_local>-file-path filename = <ls_local>-file-filename
+            BINARY SEARCH.
+          IF sy-subrc = 0.
+            IF <ls_local>-file-sha1 = <ls_state>-sha1.
+              <ls_result>-lstate = zif_abapgit_definitions=>c_state-unchanged.
+            ELSE.
+              <ls_result>-lstate = zif_abapgit_definitions=>c_state-modified.
+            ENDIF.
+            <ls_result>-rstate = zif_abapgit_definitions=>c_state-deleted.
+          ENDIF.
+        ENDIF.
+      ENDIF.
+      <ls_result>-inactive = <ls_local>-item-inactive.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD process_remote.
+
+    FIELD-SYMBOLS:
+      <ls_remote> LIKE LINE OF it_remote,
+      <ls_result> LIKE LINE OF ct_results,
+      <ls_local>  LIKE LINE OF it_local.
+
+    LOOP AT it_remote ASSIGNING <ls_remote> WHERE sha1 IS NOT INITIAL.
+      APPEND INITIAL LINE TO ct_results ASSIGNING <ls_result>.
+
+      <ls_result> = build_new_remote(
+        iv_devclass = iv_devclass
+        io_dot      = io_dot
+        is_remote   = <ls_remote>
+        it_items    = it_items_idx
+        it_state    = it_state_idx ).
+
+      " Check if same file exists in different location
+      READ TABLE it_local ASSIGNING <ls_local>
+        WITH KEY file-filename = <ls_remote>-filename.
+      IF sy-subrc = 0.
+        <ls_result>-match = abap_false.
+        <ls_result>-lstate = zif_abapgit_definitions=>c_state-deleted.
+        <ls_result>-rstate = zif_abapgit_definitions=>c_state-unchanged.
+        IF <ls_local>-file-sha1 = <ls_remote>-sha1.
+          <ls_result>-packmove = abap_true.
+        ENDIF.
+      ELSEIF sy-subrc = 4.
+        " Check if file existed before and was deleted locally
+        READ TABLE it_state_idx TRANSPORTING NO FIELDS
+          WITH KEY path = <ls_remote>-path filename = <ls_remote>-filename
+          BINARY SEARCH.
+        IF sy-subrc = 0.
+          <ls_result>-lstate = zif_abapgit_definitions=>c_state-deleted.
+        ENDIF.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 

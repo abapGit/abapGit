@@ -701,7 +701,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
 
   METHOD is_repo_lang_logon_lang.
-    rv_repo_lang_is_logon_lang = boolc( mo_repo->get_dot_abapgit( )->get_master_language( ) = sy-langu ).
+    rv_repo_lang_is_logon_lang = boolc( mo_repo->get_dot_abapgit( )->get_main_language( ) = sy-langu ).
   ENDMETHOD.
 
 
@@ -718,7 +718,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     " https://blogs.sap.com/2017/01/13/logon-language-sy-langu-and-rfc/
 
-    lv_main_language = mo_repo->get_dot_abapgit( )->get_master_language( ).
+    lv_main_language = mo_repo->get_dot_abapgit( )->get_main_language( ).
     lv_tcode = get_abapgit_tcode( ).
     ASSERT lv_tcode IS NOT INITIAL.
 
@@ -1204,8 +1204,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         RETURN. " false
       ENDIF.
 
-      lo_repo_online->switch_origin( ls_pull-head_url ).
-      lo_repo_online->select_branch( |refs/heads/{ ls_pull-head_branch }| ). " TODO refactor
+      lo_repo_online->switch_origin(
+        iv_url    = ls_pull-head_url
+        iv_branch = ls_pull-head_branch ).
       rv_switched = abap_true.
     ENDIF.
 

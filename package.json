@@ -3,9 +3,9 @@
   "scripts": {
     "test": "npm run eslint && npm run abaplint",
     "merge": "abapmerge -f src/zabapgit.prog.abap -c zabapgit_standalone > zabapgit.abap",
-    "merge.ci": "cp zabapgit.abap ci/zabapgit_standalone.prog.abap && cd ci && abaplint && cd ..",
+    "merge.ci": "cp zabapgit.abap ci/zabapgit_standalone.prog.abap && cd ci && abaplint --format codeframe && cd ..",
     "unit": "rm -rf output && abap_transpile && echo RUNNING && node output/index.js",
-    "abaplint": "abaplint",
+    "abaplint": "abaplint --format codeframe",
     "eslint": "eslint src",
     "docker-build": "docker-compose -f test/docker-compose.yml build",
     "docker-up": "docker-compose -f test/docker-compose.yml up",
@@ -17,10 +17,10 @@
     "url": "git+https://github.com/abapGit/abapGit.git"
   },
   "devDependencies": {
-    "@abaplint/cli": "^2.73.1",
-    "@abaplint/transpiler-cli": "^1.2.24",
-    "@abaplint/runtime": "^1.2.24",
+    "@abaplint/cli": "^2.74.7",
+    "@abaplint/transpiler-cli": "^1.2.26",
+    "@abaplint/runtime": "^1.2.26",
     "abapmerge": "^0.14.3",
-    "eslint": "^7.22.0"
+    "eslint": "^7.24.0"
   }
 }

@@ -579,7 +579,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     lt_items = map_results_to_items( lt_results ).
 
-    check_objects_locked( iv_language = io_repo->get_dot_abapgit( )->get_master_language( )
+    check_objects_locked( iv_language = io_repo->get_dot_abapgit( )->get_main_language( )
                           it_items    = lt_items ).
 
     lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
@@ -619,7 +619,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           lo_xml = lo_files->read_xml( ).
 
           li_obj = create_object( is_item     = ls_item
-                                  iv_language = io_repo->get_dot_abapgit( )->get_master_language( )
+                                  iv_language = io_repo->get_dot_abapgit( )->get_main_language( )
                                   is_metadata = lo_xml->get_metadata( ) ).
 
           compare_remote_to_local(
