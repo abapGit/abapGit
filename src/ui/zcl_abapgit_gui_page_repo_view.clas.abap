@@ -1204,8 +1204,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         RETURN. " false
       ENDIF.
 
-      lo_repo_online->switch_origin( ls_pull-head_url ).
-      lo_repo_online->select_branch( |refs/heads/{ ls_pull-head_branch }| ). " TODO refactor
+      lo_repo_online->switch_origin(
+        iv_url    = ls_pull-head_url
+        iv_branch = ls_pull-head_branch ).
       rv_switched = abap_true.
     ENDIF.
 

@@ -675,10 +675,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
             iv_act   = |{ zif_abapgit_definitions=>c_action-change_order_by }?orderBy={ <ls_col>-tech_name }|
             iv_title = <ls_col>-title ).
         ELSE.
-          lv_tmp = lv_tmp && ri_html->a(
-              iv_txt   = lv_disp_name
-              iv_act   = ``
-              iv_title = <ls_col>-title ).
+          lv_tmp = lv_tmp && lv_disp_name.
         ENDIF.
       ENDIF.
       IF <ls_col>-tech_name = iv_order_by
@@ -1035,6 +1032,10 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       iv_txt = 'Local'
       iv_act = |{ zif_abapgit_definitions=>c_action-repo_local_settings }?key={ iv_key }|
       iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_local_settings )
+    )->add(
+      iv_txt = 'Remote'
+      iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_settings }?key={ iv_key }|
+      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_remote_settings )
     )->add(
       iv_txt = 'Background'
       iv_act = |{ zif_abapgit_definitions=>c_action-repo_background }?key={ iv_key }|
