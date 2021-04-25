@@ -54,7 +54,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
+CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
 
   METHOD fetch_remote.
@@ -98,6 +98,12 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
       rv_name = zcl_abapgit_url=>name( ms_data-url ).
       rv_name = cl_http_utility=>if_http_utility~unescape_url( rv_name ).
     ENDIF.
+  ENDMETHOD.
+
+
+  METHOD get_objects.
+    fetch_remote( ).
+    rt_objects = mt_objects.
   ENDMETHOD.
 
 
@@ -174,12 +180,6 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
   METHOD zif_abapgit_repo_online~get_current_remote.
     fetch_remote( ).
     rv_sha1 = mv_current_commit.
-  ENDMETHOD.
-
-
-  METHOD get_objects.
-    fetch_remote( ).
-    rt_objects = mt_objects.
   ENDMETHOD.
 
 
@@ -314,6 +314,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     ELSEIF ms_data-switched_origin IS INITIAL.
       set( iv_switched_origin = ms_data-url && '@' && ms_data-branch_name ).
       set_url( iv_url ).
+      select_branch( iv_branch ).
     ELSE.
       zcx_abapgit_exception=>raise( 'Cannot switch origin twice' ).
     ENDIF.

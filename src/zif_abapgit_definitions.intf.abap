@@ -418,6 +418,7 @@ INTERFACE zif_abapgit_definitions
       repo_remove                   TYPE string VALUE 'repo_remove',
       repo_settings                 TYPE string VALUE 'repo_settings',
       repo_local_settings           TYPE string VALUE 'repo_local_settings',
+      repo_remote_settings          TYPE string VALUE 'repo_remote_settings',
       repo_background               TYPE string VALUE 'repo_background',
       repo_infos                    TYPE string VALUE 'repo_infos',
       repo_purge                    TYPE string VALUE 'repo_purge',
