@@ -6,6 +6,12 @@ CLASS zcl_abapgit_repo_offline DEFINITION
 
   PUBLIC SECTION.
 
+    METHODS set_name
+      IMPORTING
+        !iv_url TYPE string
+      RAISING
+        zcx_abapgit_exception .
+
     METHODS get_name
         REDEFINITION .
     METHODS has_remote_source
@@ -19,7 +25,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_OFFLINE IMPLEMENTATION.
+CLASS zcl_abapgit_repo_offline IMPLEMENTATION.
 
 
   METHOD get_name.
@@ -51,5 +57,10 @@ CLASS ZCL_ABAPGIT_REPO_OFFLINE IMPLEMENTATION.
     super->reset_remote( ).
     set_files_remote( lt_backup ).
 
+  ENDMETHOD.
+
+
+  METHOD set_name.
+    set( iv_url = iv_url ).
   ENDMETHOD.
 ENDCLASS.

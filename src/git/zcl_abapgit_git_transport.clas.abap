@@ -248,7 +248,9 @@ CLASS ZCL_ABAPGIT_GIT_TRANSPORT IMPLEMENTATION.
 * todo, this part should be changed, instead of looking at texts
 * parse the reply and look for the "ng" not good indicator
     lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( lv_xstring ).
-    IF NOT lv_string CP '*unpack ok*'.
+    IF lv_string = ''.
+      zcx_abapgit_exception=>raise( 'git, unexpected empty reply' ).
+    ELSEIF NOT lv_string CP '*unpack ok*'.
       zcx_abapgit_exception=>raise( 'unpack not ok' ).
     ELSEIF lv_string CP '*pre-receive hook declined*'.
       zcx_abapgit_exception=>raise( 'pre-receive hook declined' ).
