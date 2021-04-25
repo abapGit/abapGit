@@ -145,14 +145,16 @@ CLASS ltc_parent_handling IMPLEMENTATION.
     given_commit( iv_sha1 = 'F00'
                   iv_parent1 = 'BA5' ).
     zcl_abapgit_git_commit=>clear_missing_parents( CHANGING ct_commits = mt_commits ).
-    cl_abap_unit_assert=>assert_initial(  act = mt_commits[ 1 ]-parent1 ).
+    cl_abap_unit_assert=>assert_equals( act = mt_commits[ 1 ]-parent1
+                                        exp = '' ).
   ENDMETHOD.
 
   METHOD missing_parent2_cleared.
     given_commit( iv_sha1 = 'F00'
                   iv_parent2 = 'BA5' ).
     zcl_abapgit_git_commit=>clear_missing_parents( CHANGING ct_commits = mt_commits ).
-    cl_abap_unit_assert=>assert_initial(  act = mt_commits[ 1 ]-parent2 ).
+    cl_abap_unit_assert=>assert_equals( act = mt_commits[ 1 ]-parent2
+                                        exp = '' ).
   ENDMETHOD.
 
   METHOD matched_parent1_remains.
@@ -195,6 +197,5 @@ CLASS ltc_parent_handling IMPLEMENTATION.
     <ls_commit>-parent1 = iv_parent1.
     <ls_commit>-parent2 = iv_parent2.
   ENDMETHOD.
-
 
 ENDCLASS.

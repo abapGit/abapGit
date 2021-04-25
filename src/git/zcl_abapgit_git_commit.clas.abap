@@ -238,8 +238,10 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_initial_commit> TYPE zif_abapgit_definitions=>ty_commit.
 
     " find initial commit
-    READ TABLE ct_commits ASSIGNING <ls_initial_commit> WITH KEY parent1 = space.
-    IF sy-subrc = 0.
+*    SORT ct_commits BY parent1 ASCENDING time ASCENDING.
+*    READ TABLE ct_commits index 1 ASSIGNING <ls_initial_commit>. " WITH KEY parent1 = space.
+    LOOP AT ct_commits ASSIGNING <ls_initial_commit> WHERE parent1 = space.
+*    IF <ls_initial_commit>-parent1 = space.
 
       ls_parent-sign   = 'I'.
       ls_parent-option = 'EQ'.
@@ -263,8 +265,9 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
         INSERT ls_next_commit INTO TABLE lt_sorted_commits.
       ENDDO.
 
-      ct_commits = lt_sorted_commits.
-    ENDIF.
+    ENDLOOP.
+*    ENDIF.
+    ct_commits = lt_sorted_commits.
 
   ENDMETHOD.
 
@@ -275,12 +278,12 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
     LOOP AT ct_commits ASSIGNING <ls_commit>.
 
       IF is_missing( it_commits = ct_commits
-                     iv_sha1  = <ls_commit>-parent1 ).
+                     iv_sha1  = <ls_commit>-parent1 ) = abap_true.
         CLEAR <ls_commit>-parent1.
       ENDIF.
 
       IF is_missing( it_commits = ct_commits
-                     iv_sha1  = <ls_commit>-parent2 ).
+                     iv_sha1  = <ls_commit>-parent2 ) = abap_true.
         CLEAR <ls_commit>-parent2.
       ENDIF.
 

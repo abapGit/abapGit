@@ -181,7 +181,7 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
         ELSE.
           READ TABLE mt_commits ASSIGNING <ls_commit>
               WITH KEY sha1 = <ls_commit>-parent1.
-*          ASSERT sy-subrc = 0.
+          ASSERT sy-subrc = 0.
         ENDIF.
       ENDDO.
 
@@ -453,7 +453,7 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
 
   METHOD get_deepen_level.
 
-    DATA: lv_deepen_level TYPE char10.
+    DATA: lv_deepen_level(10) TYPE c.
 
     "WIP: Use STVARV to get a locally configured value
     SELECT SINGLE low
