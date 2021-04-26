@@ -11,9 +11,9 @@ CLASS ltc_ci IMPLEMENTATION.
 
   METHOD run_ci.
 
-    DATA lv_repo_url TYPE string.
-
     CHECK zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true.
+
+    DATA lv_repo_url TYPE string.
 
     "Use STVARV to optionally override repo in local system
     SELECT SINGLE low
@@ -49,9 +49,9 @@ CLASS ltc_smoke_test IMPLEMENTATION.
 
   METHOD setup.
 
-    DATA  ls_item   TYPE zif_abapgit_definitions=>ty_item.
-
     CHECK zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true.
+
+    DATA  ls_item   TYPE zif_abapgit_definitions=>ty_item.
 
     ls_item-obj_type = 'PDTS'.
     ls_item-obj_name = '99999999'.
