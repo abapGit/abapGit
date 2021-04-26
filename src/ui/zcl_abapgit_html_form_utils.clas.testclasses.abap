@@ -83,9 +83,6 @@ CLASS ltcl_popups_mock IMPLEMENTATION.
   METHOD zif_abapgit_popups~popup_transport_request.
   ENDMETHOD.
 
-  METHOD zif_abapgit_popups~repo_popup.
-  ENDMETHOD.
-
   METHOD was_confirm_popup_shown.
     rv_popup_shown = ms_called-popup_to_confirm.
   ENDMETHOD.

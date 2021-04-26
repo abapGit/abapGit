@@ -269,13 +269,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ENDIF.
 
     IF mo_repo->is_offline( ) = abap_false. " Online ?
-      ro_advanced_dropdown->add( iv_txt = 'Checkout commit'
-                                 iv_act = |{ zif_abapgit_definitions=>c_action-git_checkout_commit }?key={ mv_key }|
-                                 iv_opt = iv_wp_opt ).
-      ro_advanced_dropdown->add( iv_txt = 'Change Remote'
-                                 iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_change }?key={ mv_key }| ).
-      ro_advanced_dropdown->add( iv_txt = 'Make Off-line'
-                                 iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_detach }?key={ mv_key }| ).
       ro_advanced_dropdown->add( iv_txt = 'Force Stage'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?key={ mv_key }| ).
 
@@ -287,10 +280,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         iv_txt = 'Transport to Branch'
         iv_act = |{ zif_abapgit_definitions=>c_action-repo_transport_to_branch }?key={ mv_key }|
         iv_opt = lv_crossout ).
-
-    ELSE.
-      ro_advanced_dropdown->add( iv_txt = 'Make On-line'
-                                 iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_attach }?key={ mv_key }| ).
     ENDIF.
 
     IF mv_are_changes_recorded_in_tr = abap_true.
@@ -359,17 +348,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                              iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_create }?key={ mv_key }| ).
     ro_branch_dropdown->add( iv_txt = 'Delete'
                              iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_delete }?key={ mv_key }| ).
-
-    lo_repo_online ?= mo_repo. " TODO refactor this disaster
-    IF lo_repo_online->get_switched_origin( ) IS NOT INITIAL.
-      ro_branch_dropdown->add(
-        iv_txt = 'Revert to Previous Branch'
-        iv_act = |{ c_actions-repo_reset_origin }| ).
-    ELSE.
-      ro_branch_dropdown->add(
-        iv_txt = 'Switch to PR Branch'
-        iv_act = |{ c_actions-repo_switch_origin_to_pr }| ).
-    ENDIF.
 
   ENDMETHOD.
 
@@ -800,6 +778,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
           io_repo               = mo_repo
           io_news               = lo_news
+          iv_show_edit          = abap_true
           iv_interactive_branch = abap_true ) ).
 
         ri_html->add( zcl_abapgit_gui_chunk_lib=>render_news( io_news = lo_news ) ).

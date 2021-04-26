@@ -25,6 +25,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !iv_show_package       TYPE abap_bool DEFAULT abap_true
         !iv_show_branch        TYPE abap_bool DEFAULT abap_true
         !iv_show_commit        TYPE abap_bool DEFAULT abap_true
+        !iv_show_edit          TYPE abap_bool DEFAULT abap_false
         !iv_interactive_branch TYPE abap_bool DEFAULT abap_false
         !io_news               TYPE REF TO zcl_abapgit_news OPTIONAL
       RETURNING
@@ -811,6 +812,15 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
                       iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url=|
                               && |{ lo_repo_online->get_url( ) }|
                       iv_class = |url| ).
+
+      IF iv_show_edit = abap_true.
+        ri_html->add_a( iv_txt   = ri_html->icon( iv_name  = 'edit-solid'
+                                                  iv_class = 'pad-sides'
+                                                  iv_hint  = 'Change remote' )
+                        iv_act   = |{ zif_abapgit_definitions=>c_action-repo_remote_settings }?| &&
+                                   |key={ io_repo->get_key( ) }|
+                        iv_class = |url| ).
+      ENDIF.
 
       IF iv_show_commit = abap_true.
 

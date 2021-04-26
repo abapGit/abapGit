@@ -49,18 +49,6 @@ INTERFACE zif_abapgit_popups
       VALUE(rs_branch)    TYPE zif_abapgit_definitions=>ty_git_branch
     RAISING
       zcx_abapgit_exception .
-  METHODS repo_popup
-    IMPORTING
-      !iv_url            TYPE string
-      !iv_package        TYPE devclass OPTIONAL
-      !iv_freeze_package TYPE abap_bool OPTIONAL
-      !iv_freeze_url     TYPE abap_bool OPTIONAL
-      !iv_title          TYPE clike DEFAULT 'New Online Project'
-      !iv_display_name   TYPE string OPTIONAL
-    RETURNING
-      VALUE(rs_popup)    TYPE ty_popup
-    RAISING
-      zcx_abapgit_exception ##NO_TEXT.
   METHODS popup_to_confirm
     IMPORTING
       !iv_titlebar              TYPE clike
