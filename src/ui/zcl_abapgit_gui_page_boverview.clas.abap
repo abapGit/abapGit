@@ -138,7 +138,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
 
     LOOP AT mt_commits ASSIGNING <ls_commit>.
 
-      IF sy-tabix = 1. "not line_exists( mt_commits[ sha1 = <ls_commit>-parent1 ] ). " sy-tabix = 1.
+      IF sy-tabix = 1.
         " assumption: all branches are created from master, todo
         ri_html->add( |var {
           escape_branch( <ls_commit>-branch ) } = gitgraph.branch("{

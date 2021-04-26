@@ -238,10 +238,8 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_initial_commit> TYPE zif_abapgit_definitions=>ty_commit.
 
     " find initial commit
-*    SORT ct_commits BY parent1 ASCENDING time ASCENDING.
-*    READ TABLE ct_commits index 1 ASSIGNING <ls_initial_commit>. " WITH KEY parent1 = space.
-    LOOP AT ct_commits ASSIGNING <ls_initial_commit> WHERE parent1 = space.
-*    IF <ls_initial_commit>-parent1 = space.
+    READ TABLE ct_commits ASSIGNING <ls_initial_commit> WITH KEY parent1 = space.
+    IF sy-subrc = 0.
 
       ls_parent-sign   = 'I'.
       ls_parent-option = 'EQ'.
@@ -265,13 +263,14 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
         INSERT ls_next_commit INTO TABLE lt_sorted_commits.
       ENDDO.
 
-    ENDLOOP.
-*    ENDIF.
+    ENDIF.
     ct_commits = lt_sorted_commits.
 
   ENDMETHOD.
 
   METHOD clear_missing_parents.
+
+    "Part of #4719 to handle cut commit sequences, todo
 
     FIELD-SYMBOLS: <ls_commit> TYPE zif_abapgit_definitions=>ty_commit.
 

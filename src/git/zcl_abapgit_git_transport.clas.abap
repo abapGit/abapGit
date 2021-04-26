@@ -294,7 +294,6 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
         lv_capa = 'side-band-64k no-progress multi_ack'.
         lv_line = 'want' && ` ` && <lv_hash>
           && ` ` && lv_capa && zif_abapgit_definitions=>c_newline.
-
       ELSE.
         lv_line = 'want' && ` ` && <lv_hash>
           && zif_abapgit_definitions=>c_newline.

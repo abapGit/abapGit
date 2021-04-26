@@ -94,7 +94,9 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
     lt_objects = get_git_objects( io_repo ).
 
     mt_commits = zcl_abapgit_git_commit=>parse_commits( lt_objects ).
-    zcl_abapgit_git_commit=>clear_missing_parents( CHANGING ct_commits = mt_commits ).
+    IF lines( mt_commits ) > 2000.
+      zcx_abapgit_exception=>raise( 'Too many commits to display overview' ).
+    ENDIF.
     zcl_abapgit_git_commit=>sort_commits( CHANGING ct_commits = mt_commits ).
 
     parse_annotated_tags( lt_objects ).
@@ -455,7 +457,7 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
 
     DATA: lv_deepen_level(10) TYPE c.
 
-    "WIP: Use STVARV to get a locally configured value
+    "Experimental: Use STVARV to get a locally configured value
     SELECT SINGLE low
       INTO lv_deepen_level
       FROM tvarvc
