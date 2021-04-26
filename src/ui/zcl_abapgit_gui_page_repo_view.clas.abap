@@ -17,8 +17,6 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         toggle_changes           TYPE string VALUE 'toggle_changes' ##NO_TEXT,
         toggle_diff_first        TYPE string VALUE 'toggle_diff_first ' ##NO_TEXT,
         display_more             TYPE string VALUE 'display_more' ##NO_TEXT,
-        repo_switch_origin_to_pr TYPE string VALUE 'repo_switch_origin_to_pr',
-        repo_reset_origin        TYPE string VALUE 'repo_reset_origin',
         go_data                  TYPE string VALUE 'go_data',
       END OF c_actions .
 
@@ -163,14 +161,6 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         !io_tb_advanced   TYPE REF TO zcl_abapgit_html_toolbar
       RETURNING
         VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
-      RAISING
-        zcx_abapgit_exception .
-    METHODS switch_to_pr
-      IMPORTING
-        !it_fields         TYPE tihttpnvp OPTIONAL
-        !iv_revert         TYPE abap_bool OPTIONAL
-      RETURNING
-        VALUE(rv_switched) TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
     METHODS build_main_menu
@@ -1153,45 +1143,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD switch_to_pr.
-
-    DATA lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
-    DATA lt_pulls TYPE zif_abapgit_pr_enum_provider=>ty_pull_requests.
-    DATA ls_pull LIKE LINE OF lt_pulls.
-
-    IF mo_repo->is_offline( ) = abap_true.
-      zcx_abapgit_exception=>raise( 'Unexpected PR switch for offline repo' ).
-    ENDIF.
-    IF mo_repo->get_local_settings( )-write_protected = abap_true.
-      zcx_abapgit_exception=>raise( 'Cannot switch branch. Local code is write-protected by repo config' ).
-    ENDIF.
-
-    lo_repo_online ?= mo_repo.
-
-    IF iv_revert = abap_true.
-      lo_repo_online->switch_origin( '' ).
-    ELSE.
-      lt_pulls = zcl_abapgit_pr_enumerator=>new( lo_repo_online )->get_pulls( ).
-      IF lines( lt_pulls ) = 0.
-        RETURN. " false
-      ENDIF.
-
-      SORT lt_pulls BY number DESCENDING.
-
-      ls_pull = zcl_abapgit_ui_factory=>get_popups( )->choose_pr_popup( lt_pulls ).
-      IF ls_pull IS INITIAL.
-        RETURN. " false
-      ENDIF.
-
-      lo_repo_online->switch_origin(
-        iv_url    = ls_pull-head_url
-        iv_branch = ls_pull-head_branch ).
-      rv_switched = abap_true.
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA lv_path TYPE string.
@@ -1248,18 +1199,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
       WHEN zif_abapgit_definitions=>c_action-repo_open_in_master_lang.
         open_in_main_language( ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-
-      WHEN c_actions-repo_switch_origin_to_pr.
-        lv_switched = switch_to_pr( ).
-        IF lv_switched = abap_true.
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-        ELSE.
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
-        ENDIF.
-
-      WHEN c_actions-repo_reset_origin.
-        switch_to_pr( iv_revert = abap_true ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN OTHERS.
