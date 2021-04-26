@@ -1,10 +1,3 @@
-CLASS lth_object_pdxx DEFINITION INHERITING FROM zcl_abapgit_object_pdxx_super
-  FINAL
-  FOR TESTING
-  DURATION SHORT
-  RISK LEVEL HARMLESS.
-ENDCLASS.
-
 CLASS ltc_ci DEFINITION FINAL FOR TESTING
   DURATION MEDIUM
   RISK LEVEL CRITICAL.
@@ -18,9 +11,9 @@ CLASS ltc_ci IMPLEMENTATION.
 
   METHOD run_ci.
 
-    CHECK zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true.
-
     DATA lv_repo_url TYPE string.
+
+    CHECK zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true.
 
     "Use STVARV to optionally override repo in local system
     SELECT SINGLE low
@@ -56,9 +49,9 @@ CLASS ltc_smoke_test IMPLEMENTATION.
 
   METHOD setup.
 
-    CHECK zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true.
-
     DATA  ls_item   TYPE zif_abapgit_definitions=>ty_item.
+
+    CHECK zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true.
 
     ls_item-obj_type = 'PDTS'.
     ls_item-obj_name = '99999999'.
