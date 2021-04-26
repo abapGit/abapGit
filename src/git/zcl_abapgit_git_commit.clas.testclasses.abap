@@ -142,29 +142,44 @@ CLASS ltc_parent_handling IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD missing_parent1_cleared.
+
+    DATA ls_commit TYPE zif_abapgit_definitions=>ty_commit.
+
     given_commit( iv_sha1 = 'F00'
                   iv_parent1 = 'BA5' ).
     zcl_abapgit_git_commit=>clear_missing_parents( CHANGING ct_commits = mt_commits ).
-    cl_abap_unit_assert=>assert_equals( act = mt_commits[ 1 ]-parent1
+
+    READ TABLE mt_commits INDEX 1 INTO ls_commit.
+    cl_abap_unit_assert=>assert_equals( act = ls_commit-parent1
                                         exp = '' ).
   ENDMETHOD.
 
   METHOD missing_parent2_cleared.
+
+    DATA ls_commit TYPE zif_abapgit_definitions=>ty_commit.
+
     given_commit( iv_sha1 = 'F00'
                   iv_parent2 = 'BA5' ).
     zcl_abapgit_git_commit=>clear_missing_parents( CHANGING ct_commits = mt_commits ).
-    cl_abap_unit_assert=>assert_equals( act = mt_commits[ 1 ]-parent2
+
+    READ TABLE mt_commits INDEX 1 INTO ls_commit.
+    cl_abap_unit_assert=>assert_equals( act = ls_commit-parent2
                                         exp = '' ).
+
   ENDMETHOD.
 
   METHOD matched_parent1_remains.
+
+    DATA ls_commit TYPE zif_abapgit_definitions=>ty_commit.
 
     given_commit( iv_sha1 = 'F00' ).
     given_commit( iv_sha1 = 'BA5'
                   iv_parent1 = 'F00' ).
 
     zcl_abapgit_git_commit=>clear_missing_parents( CHANGING ct_commits = mt_commits ).
-    cl_abap_unit_assert=>assert_equals( act = mt_commits[ 2 ]-parent1
+
+    READ TABLE mt_commits INDEX 2 INTO ls_commit.
+    cl_abap_unit_assert=>assert_equals( act = ls_commit-parent1
                                         exp = 'F00' ).
 
   ENDMETHOD.
