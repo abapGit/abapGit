@@ -389,10 +389,6 @@ CLASS ltcl_popups_mock IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_popups~repo_popup.
-
-  ENDMETHOD.
-
   METHOD was_create_package_popup_shown.
 
     rv_popup_shown = ms_called-popup_to_create_package.

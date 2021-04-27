@@ -33,9 +33,6 @@ INTERFACE zif_abapgit_repo_online
       !iv_selected_commit TYPE zif_abapgit_persistence=>ty_repo-selected_commit
     RAISING
       zcx_abapgit_exception .
-  METHODS get_switched_origin
-    RETURNING
-      VALUE(rv_url) TYPE zif_abapgit_persistence=>ty_repo-switched_origin .
   METHODS switch_origin
     IMPORTING
       !iv_url       TYPE zif_abapgit_persistence=>ty_repo-url

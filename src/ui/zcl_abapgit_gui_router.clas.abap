@@ -44,13 +44,6 @@ CLASS zcl_abapgit_gui_router DEFINITION
         VALUE(rs_handled) TYPE zif_abapgit_gui_event_handler=>ty_handling_result
       RAISING
         zcx_abapgit_exception .
-    METHODS remote_origin_manipulations
-      IMPORTING
-        !ii_event         TYPE REF TO zif_abapgit_gui_event
-      RETURNING
-        VALUE(rs_handled) TYPE zif_abapgit_gui_event_handler=>ty_handling_result
-      RAISING
-        zcx_abapgit_exception .
     METHODS sap_gui_actions
       IMPORTING
         !ii_event         TYPE REF TO zif_abapgit_gui_event
@@ -459,9 +452,6 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-git_reset.                     " GIT Reset
         zcl_abapgit_services_git=>reset( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN zif_abapgit_definitions=>c_action-git_checkout_commit.           " GIT Checkout commit
-        zcl_abapgit_services_git=>checkout_commit( lv_key ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-git_branch_create.             " GIT Create new branch
         zcl_abapgit_services_git=>create_branch( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
@@ -544,30 +534,6 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       zcl_abapgit_services_basis=>open_ie_devtools( ).
       rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
     ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD remote_origin_manipulations.
-
-    DATA lv_key TYPE zif_abapgit_persistence=>ty_repo-key.
-
-
-    lv_key = ii_event->query( )->get( 'KEY' ).
-
-    CASE ii_event->mv_action.
-      WHEN zif_abapgit_definitions=>c_action-repo_remote_attach.
-        zcl_abapgit_services_repo=>remote_attach( lv_key ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN zif_abapgit_definitions=>c_action-repo_remote_detach.
-        zcl_abapgit_services_repo=>remote_detach( lv_key ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN zif_abapgit_definitions=>c_action-repo_remote_change.
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_ch_remote
-          EXPORTING
-            iv_key = lv_key.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-    ENDCASE.
 
   ENDMETHOD.
 
@@ -709,9 +675,6 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     ENDIF.
     IF rs_handled-state IS INITIAL.
       rs_handled = abapgit_services_actions( ii_event ).
-    ENDIF.
-    IF rs_handled-state IS INITIAL.
-      rs_handled = remote_origin_manipulations( ii_event ).
     ENDIF.
     IF rs_handled-state IS INITIAL.
       rs_handled = sap_gui_actions( ii_event ).

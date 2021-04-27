@@ -404,6 +404,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     CREATE OBJECT mo_form_data.
 
     init( io_repo ).
+    mv_original_url = ms_repo_current-url.
 
     mo_form = get_form_schema( ).
     mo_form_util = zcl_abapgit_html_form_utils=>create( mo_form ).
@@ -468,8 +469,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       iv_name        = c_id-url
       iv_label       = lv_label
       iv_hint        = lv_hint
-      iv_placeholder = lv_placeholder
-      iv_side_action = c_event-choose_url ).
+      iv_placeholder = lv_placeholder ).
 
     IF mv_mode <> c_mode-offline.
 
@@ -558,7 +558,6 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     ENDIF.
 
     ms_repo_new = ms_repo_current.
-    mv_original_url = ms_repo_current-url.
 
   ENDMETHOD.
 
