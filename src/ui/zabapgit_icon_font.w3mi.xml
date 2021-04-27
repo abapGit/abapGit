@@ -21,7 +21,7 @@
      <RELID>MI</RELID>
      <OBJID>ZABAPGIT_ICON_FONT</OBJID>
      <NAME>mimetype</NAME>
-     <VALUE>font/woff</VALUE>
+     <VALUE>application/x-font-woff</VALUE>
     </WWWPARAMS>
    </PARAMS>
   </asx:values>
