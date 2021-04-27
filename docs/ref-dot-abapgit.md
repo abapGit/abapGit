@@ -102,6 +102,10 @@ files as well as repository configuration related to workflows like build or lin
 
 Assuming that default starting folder /src/ is used, any files in root / or any other folder than the starting folder are ignored automatically. Therefore it will not be necessary to list files of the root folder into the ignore list (and as a consequence, the default ignore list is empty).
 
+The ignore logic is based on "covers pattern" operator (not regex). A file is ignored, if path & file covers at least one of the patterns listed in this setting.
+
+Example: `/src/hr/zcl_confidential*` will ignore all classes in the /src/hr package that begin with `zcl_confidential`. 
+
 ### Requirements
 
 In this section, you can specify the minimum requirements that should be fulfilled to allow installation of the repository. Listed software components should exist in the target system and be at the given release or higher. If the target system matches the minimum release, then it must also be at the given patch level or higher.
