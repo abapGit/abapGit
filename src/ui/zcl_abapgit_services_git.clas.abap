@@ -51,20 +51,8 @@ CLASS zcl_abapgit_services_git DEFINITION
         !io_stage  TYPE REF TO zcl_abapgit_stage
       RAISING
         zcx_abapgit_exception.
-    CLASS-METHODS checkout_commit
-      IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING
-        zcx_abapgit_exception.
 
   PROTECTED SECTION.
-    TYPES: BEGIN OF ty_commit_value_tab,
-             sha1     TYPE zif_abapgit_definitions=>ty_sha1,
-             message  TYPE c LENGTH 50,
-             datetime TYPE c LENGTH 20,
-           END OF ty_commit_value_tab.
-    TYPES: ty_commit_value_tab_tt TYPE STANDARD TABLE OF ty_commit_value_tab WITH DEFAULT KEY .
-
     CLASS-METHODS get_unnecessary_local_objs
       IMPORTING
         !io_repo                            TYPE REF TO zcl_abapgit_repo
@@ -74,155 +62,12 @@ CLASS zcl_abapgit_services_git DEFINITION
         zcx_abapgit_exception .
 
   PRIVATE SECTION.
-    CLASS-METHODS checkout_commit_build_list
-      IMPORTING
-        !io_repo     TYPE REF TO zcl_abapgit_repo_online
-      EXPORTING
-        et_value_tab TYPE ty_commit_value_tab_tt
-        et_commits   TYPE zif_abapgit_definitions=>ty_commit_tt
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS checkout_commit_build_popup
-      IMPORTING
-        !it_commits               TYPE zif_abapgit_definitions=>ty_commit_tt
-        !it_value_tab             TYPE ty_commit_value_tab_tt
-      RETURNING
-        VALUE(rs_selected_commit) TYPE zif_abapgit_definitions=>ty_commit
-      RAISING
-        zcx_abapgit_exception .
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
-
-
-  METHOD checkout_commit.
-
-    DATA: lo_repo            TYPE REF TO zcl_abapgit_repo_online,
-          lt_value_tab       TYPE ty_commit_value_tab_tt,
-          lt_commits         TYPE zif_abapgit_definitions=>ty_commit_tt,
-          ls_selected_commit TYPE zif_abapgit_definitions=>ty_commit.
-
-    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-
-    IF lo_repo->get_local_settings( )-write_protected = abap_true.
-      zcx_abapgit_exception=>raise( 'Cannot checkout. Local code is write-protected by repo config.' ).
-    ENDIF.
-
-    checkout_commit_build_list(
-      EXPORTING
-        io_repo        = lo_repo
-      IMPORTING
-        et_value_tab   = lt_value_tab
-        et_commits     = lt_commits ).
-
-    ls_selected_commit = checkout_commit_build_popup( it_commits   = lt_commits
-                                                      it_value_tab = lt_value_tab ).
-
-    lo_repo->select_commit( ls_selected_commit-sha1 ).
-    COMMIT WORK AND WAIT.
-
-  ENDMETHOD.
-
-
-  METHOD checkout_commit_build_list.
-
-    DATA: lv_unix_time   TYPE zcl_abapgit_time=>ty_unixtime,
-          lv_date        TYPE sy-datum,
-          lv_date_string TYPE c LENGTH 12,
-          lv_time        TYPE sy-uzeit,
-          lv_time_string TYPE c LENGTH 10.
-
-    FIELD-SYMBOLS: <ls_commit>    TYPE zif_abapgit_definitions=>ty_commit,
-                   <ls_value_tab> TYPE ty_commit_value_tab.
-
-    CLEAR: et_commits, et_value_tab.
-
-    et_commits = zcl_abapgit_git_commit=>get_by_branch( iv_branch_name  = io_repo->get_selected_branch( )
-                                                        iv_repo_url     = io_repo->get_url( )
-                                                        iv_deepen_level = 99 )-commits.
-
-    DELETE et_commits WHERE sha1 = io_repo->get_selected_commit( ).
-    SORT et_commits BY time DESCENDING.
-
-    IF et_commits IS INITIAL.
-      zcx_abapgit_exception=>raise( |No commits are available in this branch.| ).
-    ENDIF.
-
-    LOOP AT et_commits ASSIGNING <ls_commit>.
-
-      APPEND INITIAL LINE TO et_value_tab ASSIGNING <ls_value_tab>.
-      <ls_value_tab>-sha1    = <ls_commit>-sha1.
-      <ls_value_tab>-message = <ls_commit>-message.
-      lv_unix_time = <ls_commit>-time.
-      zcl_abapgit_time=>get_utc(
-        EXPORTING
-          iv_unix = lv_unix_time
-        IMPORTING
-          ev_time = lv_time
-          ev_date = lv_date ).
-      WRITE: lv_date TO lv_date_string,
-             lv_time TO lv_time_string.
-      <ls_value_tab>-datetime = |{ lv_date_string }, | &&
-                                |{ lv_time_string }|.
-
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD checkout_commit_build_popup.
-
-    DATA: lt_columns         TYPE zif_abapgit_definitions=>ty_alv_column_tt,
-          li_popups          TYPE REF TO zif_abapgit_popups,
-          lt_selected_values TYPE ty_commit_value_tab_tt.
-
-    FIELD-SYMBOLS: <ls_value_tab> TYPE ty_commit_value_tab,
-                   <ls_column>    TYPE zif_abapgit_definitions=>ty_alv_column.
-
-    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
-    <ls_column>-name   = 'SHA1'.
-    <ls_column>-text   = 'Hash'.
-    <ls_column>-length = 8.
-    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
-    <ls_column>-name = 'MESSAGE'.
-    <ls_column>-text = 'Message'.
-    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
-    <ls_column>-name = 'DATETIME'.
-    <ls_column>-text = 'Datetime'.
-
-    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
-    li_popups->popup_to_select_from_list(
-      EXPORTING
-        it_list               = it_value_tab
-        iv_title              = |Checkout Commit|
-        iv_end_column         = 83
-        iv_striped_pattern    = abap_true
-        iv_optimize_col_width = abap_false
-        iv_selection_mode     = if_salv_c_selection_mode=>single
-        it_columns_to_display = lt_columns
-      IMPORTING
-        et_list              = lt_selected_values ).
-
-    IF lt_selected_values IS INITIAL.
-      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
-    ENDIF.
-
-    READ TABLE lt_selected_values
-      ASSIGNING <ls_value_tab>
-      INDEX 1.
-
-    IF <ls_value_tab> IS NOT ASSIGNED.
-      zcx_abapgit_exception=>raise( |Though result set of popup wasn't empty selected value couldn't retrieved.| ).
-    ENDIF.
-
-    READ TABLE it_commits
-      INTO rs_selected_commit
-      WITH KEY sha1 = <ls_value_tab>-sha1.
-
-  ENDMETHOD.
+CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
 
   METHOD commit.

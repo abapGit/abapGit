@@ -4,17 +4,6 @@ INTERFACE zif_abapgit_popups
 
   TYPES:
     ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY .
-  TYPES:
-    BEGIN OF ty_popup, " TODO remove, use zif_abapgit_services_repo=>ty_repo_params instead
-      url              TYPE string,
-      package          TYPE devclass,
-      branch_name      TYPE string,
-      display_name     TYPE string,
-      folder_logic     TYPE string,
-      ign_subpkg       TYPE abap_bool,
-      master_lang_only TYPE abap_bool,
-      cancel           TYPE abap_bool,
-    END OF ty_popup .
 
   CONSTANTS c_new_branch_label TYPE string VALUE '+ create new ...' ##NO_TEXT.
 
@@ -49,18 +38,6 @@ INTERFACE zif_abapgit_popups
       VALUE(rs_branch)    TYPE zif_abapgit_definitions=>ty_git_branch
     RAISING
       zcx_abapgit_exception .
-  METHODS repo_popup
-    IMPORTING
-      !iv_url            TYPE string
-      !iv_package        TYPE devclass OPTIONAL
-      !iv_freeze_package TYPE abap_bool OPTIONAL
-      !iv_freeze_url     TYPE abap_bool OPTIONAL
-      !iv_title          TYPE clike DEFAULT 'New Online Project'
-      !iv_display_name   TYPE string OPTIONAL
-    RETURNING
-      VALUE(rs_popup)    TYPE ty_popup
-    RAISING
-      zcx_abapgit_exception ##NO_TEXT.
   METHODS popup_to_confirm
     IMPORTING
       !iv_titlebar              TYPE clike
