@@ -36,16 +36,6 @@ CLASS zcl_abapgit_services_repo DEFINITION
         VALUE(ro_repo)  TYPE REF TO zcl_abapgit_repo_offline
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS remote_attach
-      IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS remote_detach
-      IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING
-        zcx_abapgit_exception .
     CLASS-METHODS refresh_local_checksums
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
@@ -88,7 +78,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
 
   METHOD check_package.
@@ -412,63 +402,6 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     lo_repo->rebuild_local_checksums( ).
 
     COMMIT WORK AND WAIT.
-
-  ENDMETHOD.
-
-
-  METHOD remote_attach.
-
-    DATA: ls_popup TYPE zif_abapgit_popups=>ty_popup,
-          ls_loc   TYPE zif_abapgit_persistence=>ty_repo-local_settings,
-          lo_repo  TYPE REF TO zcl_abapgit_repo_online.
-
-    ls_loc = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key )->get_local_settings( ).
-
-    ls_popup = zcl_abapgit_ui_factory=>get_popups( )->repo_popup(
-      iv_title          = 'Attach repo to remote ...'
-      iv_url            = ''
-      iv_display_name   = ls_loc-display_name
-      iv_package        = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key )->get_package( )
-      iv_freeze_package = abap_true ).
-    IF ls_popup-cancel = abap_true.
-      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
-    ENDIF.
-
-    zcl_abapgit_repo_srv=>get_instance( )->get( iv_key )->switch_repo_type( iv_offline = abap_false ).
-    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-    lo_repo->set_url( ls_popup-url ).
-    lo_repo->select_branch( ls_popup-branch_name ).
-
-    ls_loc = lo_repo->get_local_settings( ). " Just in case ... if switch affects LS state
-    ls_loc-display_name = ls_popup-display_name.
-    lo_repo->set_local_settings( ls_loc ).
-
-    COMMIT WORK.
-
-  ENDMETHOD.
-
-
-  METHOD remote_detach.
-
-    DATA: lv_answer TYPE c LENGTH 1.
-
-    lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
-      iv_titlebar              = 'Make repository OFF-line'
-      iv_text_question         = 'This will detach the repo from remote and make it OFF-line'
-      iv_text_button_1         = 'Make OFF-line'
-      iv_icon_button_1         = 'ICON_WF_UNLINK'
-      iv_text_button_2         = 'Cancel'
-      iv_icon_button_2         = 'ICON_CANCEL'
-      iv_default_button        = '2'
-      iv_display_cancel_button = abap_false ).
-
-    IF lv_answer = '2'.
-      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
-    ENDIF.
-
-    zcl_abapgit_repo_srv=>get_instance( )->get( iv_key )->switch_repo_type( iv_offline = abap_true ).
-
-    COMMIT WORK.
 
   ENDMETHOD.
 
