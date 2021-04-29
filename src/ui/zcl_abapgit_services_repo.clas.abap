@@ -53,7 +53,8 @@ CLASS zcl_abapgit_services_repo DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS gui_deserialize
       IMPORTING
-        !io_repo TYPE REF TO zcl_abapgit_repo
+        !io_repo      TYPE REF TO zcl_abapgit_repo
+        !iv_reset_all TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception .
   PROTECTED SECTION.
@@ -114,7 +115,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
 
 * find troublesome objects
-    ls_checks = io_repo->deserialize_checks( ).
+    ls_checks = io_repo->deserialize_checks( iv_reset_all ).
 
 * and let the user decide what to do
     TRY.

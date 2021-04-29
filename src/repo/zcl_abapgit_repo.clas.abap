@@ -5,12 +5,14 @@ CLASS zcl_abapgit_repo DEFINITION
 
   PUBLIC SECTION.
 
-    DATA ms_data TYPE zif_abapgit_persistence=>ty_repo  READ-ONLY.
+    DATA ms_data TYPE zif_abapgit_persistence=>ty_repo READ-ONLY.
 
     METHODS bind_listener
       IMPORTING
         !ii_listener TYPE REF TO zif_abapgit_repo_listener .
     METHODS deserialize_checks
+      IMPORTING
+        !iv_reset_all    TYPE abap_bool OPTIONAL
       RETURNING
         VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RAISING
@@ -396,7 +398,9 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     check_write_protect( ).
     check_language( ).
 
-    rs_checks = zcl_abapgit_objects=>deserialize_checks( me ).
+    rs_checks = zcl_abapgit_objects=>deserialize_checks(
+      io_repo      = me
+      iv_reset_all = iv_reset_all ).
 
     lt_requirements = get_dot_abapgit( )->get_data( )-requirements.
     rs_checks-requirements-met = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements ).

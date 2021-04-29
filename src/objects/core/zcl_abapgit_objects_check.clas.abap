@@ -7,6 +7,7 @@ CLASS zcl_abapgit_objects_check DEFINITION
     CLASS-METHODS deserialize_checks
       IMPORTING
         !io_repo         TYPE REF TO zcl_abapgit_repo
+        !iv_reset_all    TYPE abap_bool OPTIONAL
       RETURNING
         VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RAISING
@@ -26,11 +27,17 @@ CLASS zcl_abapgit_objects_check DEFINITION
     CLASS-METHODS warning_overwrite_adjust
       IMPORTING
         !it_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
+        !iv_reset_all TYPE abap_bool
       CHANGING
         !ct_results   TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
         zcx_abapgit_exception.
     CLASS-METHODS warning_overwrite_find
+      IMPORTING
+        !it_results         TYPE zif_abapgit_definitions=>ty_results_tt
+      RETURNING
+        VALUE(rt_overwrite) TYPE zif_abapgit_definitions=>ty_overwrite_tt.
+    CLASS-METHODS warning_overwrite_find_all
       IMPORTING
         !it_results         TYPE zif_abapgit_definitions=>ty_results_tt
       RETURNING
@@ -61,8 +68,11 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
   METHOD checks_adjust.
 
     warning_overwrite_adjust(
-      EXPORTING it_overwrite = is_checks-overwrite
-      CHANGING ct_results = ct_results ).
+      EXPORTING
+        it_overwrite = is_checks-overwrite
+        iv_reset_all = is_checks-reset_all
+      CHANGING
+        ct_results = ct_results ).
 
     warning_package_adjust(
       EXPORTING
@@ -82,7 +92,12 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
 
     lt_results = zcl_abapgit_file_deserialize=>get_results( io_repo ).
 
-    rs_checks-overwrite = warning_overwrite_find( lt_results ).
+    rs_checks-reset_all = iv_reset_all.
+    IF rs_checks-reset_all IS INITIAL.
+      rs_checks-overwrite = warning_overwrite_find( lt_results ).
+    ELSE.
+      rs_checks-overwrite = warning_overwrite_find_all( lt_results ).
+    ENDIF.
 
     rs_checks-warning_package = warning_package_find(
       io_repo    = io_repo
@@ -108,7 +123,11 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
 
 
 * make sure to get the current status, as something might have changed in the meanwhile
-    lt_overwrite = warning_overwrite_find( ct_results ).
+    IF iv_reset_all IS INITIAL.
+      lt_overwrite = warning_overwrite_find( ct_results ).
+    ELSE.
+      lt_overwrite = warning_overwrite_find_all( ct_results ).
+    ENDIF.
 
     LOOP AT lt_overwrite ASSIGNING <ls_overwrite>.
 
@@ -150,6 +169,33 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
         MOVE-CORRESPONDING <ls_result> TO ls_overwrite.
         APPEND ls_overwrite TO rt_overwrite.
       ENDIF.
+    ENDLOOP.
+
+    SORT rt_overwrite.
+    DELETE ADJACENT DUPLICATES FROM rt_overwrite.
+
+  ENDMETHOD.
+
+
+  METHOD warning_overwrite_find_all.
+
+    DATA: ls_overwrite LIKE LINE OF rt_overwrite.
+
+    FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
+
+    LOOP AT it_results ASSIGNING <ls_result> WHERE NOT obj_type IS INITIAL
+      AND NOT ( lstate IS INITIAL AND rstate IS INITIAL ).
+
+      IF NOT ( <ls_result>-lstate = zif_abapgit_definitions=>c_state-added
+        AND <ls_result>-rstate IS INITIAL )
+        OR ( <ls_result>-lstate IS INITIAL
+        AND <ls_result>-rstate = zif_abapgit_definitions=>c_state-deleted ).
+        " current object has been modified or deleted locally, add to table
+        CLEAR ls_overwrite.
+        MOVE-CORRESPONDING <ls_result> TO ls_overwrite.
+        APPEND ls_overwrite TO rt_overwrite.
+      ENDIF.
+
     ENDLOOP.
 
     SORT rt_overwrite.

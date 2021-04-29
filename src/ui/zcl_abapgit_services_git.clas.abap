@@ -1,9 +1,10 @@
 CLASS zcl_abapgit_services_git DEFINITION
   PUBLIC
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
+
     CLASS-METHODS pull
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
@@ -51,7 +52,6 @@ CLASS zcl_abapgit_services_git DEFINITION
         !io_stage  TYPE REF TO zcl_abapgit_stage
       RAISING
         zcx_abapgit_exception.
-
   PROTECTED SECTION.
     CLASS-METHODS get_unnecessary_local_objs
       IMPORTING
@@ -59,7 +59,7 @@ CLASS zcl_abapgit_services_git DEFINITION
       RETURNING
         VALUE(rt_unnecessary_local_objects) TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 
   PRIVATE SECTION.
 
@@ -324,7 +324,9 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     ENDIF.
 
-    zcl_abapgit_services_repo=>gui_deserialize( lo_repo ).
+    zcl_abapgit_services_repo=>gui_deserialize(
+      io_repo      = lo_repo
+      iv_reset_all = abap_true ).
 
   ENDMETHOD.
 
