@@ -1,0 +1,25 @@
+version: 2
+updates:
+- package-ecosystem: npm
+  directory: "/"
+  schedule:
+    interval: monthly
+  open-pull-requests-limit: 10
+  versioning-strategy: increase
+  ignore:
+  - dependency-name: "@abaplint/transpiler-cli"
+    versions:
+    - 1.2.14
+    - 1.2.7
+  - dependency-name: eslint
+    versions:
+    - 7.19.0
+    - 7.21.0
+  - dependency-name: "@abaplint/runtime"
+    versions:
+    - 1.2.14
+    - 1.2.7
+  - dependency-name: "@abaplint/cli"
+    versions:
+    - 2.66.2
+    - 2.69.7
