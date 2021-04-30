@@ -105,8 +105,7 @@ CLASS zcl_abapgit_gui_page_sett_bckg IMPLEMENTATION.
     DATA:
       lt_methods TYPE zcl_abapgit_background=>ty_methods,
       ls_method  LIKE LINE OF lt_methods,
-      lv_hint    TYPE string,
-      lv_checked TYPE string.
+      lv_hint    TYPE string.
 
     lt_methods = zcl_abapgit_background=>list_methods( ).
 
