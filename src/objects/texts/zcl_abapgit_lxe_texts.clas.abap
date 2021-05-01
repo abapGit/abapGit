@@ -112,7 +112,6 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
     DATA:
       lt_langs_str TYPE string_table,
       lv_laiso     TYPE laiso,
-      lv_langu     TYPE spras,
       lv_skip_main_lang_iso TYPE laiso.
 
     FIELD-SYMBOLS:
