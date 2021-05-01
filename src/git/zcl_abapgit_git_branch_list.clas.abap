@@ -319,10 +319,7 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
   METHOD skip_first_pkt.
 
     DATA: lv_hex     TYPE x LENGTH 1,
-          lt_strings TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
-          lv_str     TYPE string,
           lv_length  TYPE i.
-
 
 * channel
     ASSERT iv_data(2) = '00'.
