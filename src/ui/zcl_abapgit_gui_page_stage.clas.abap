@@ -323,7 +323,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
           IF ls_item IS INITIAL.
             CONTINUE.
           ENDIF.
-          APPEND <ls_local>-item TO lt_items.
+          APPEND ls_item TO lt_items.
         ENDLOOP.
 
         SORT lt_items BY obj_type obj_name.
