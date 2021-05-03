@@ -20,7 +20,6 @@ CLASS zcl_abapgit_object_enhs_badi_d IMPLEMENTATION.
           lv_enh_shorttext   TYPE string,
           li_enh_object      TYPE REF TO if_enh_object,
           li_enh_object_docu TYPE REF TO if_enh_object_docu,
-          lv_text            TYPE string,
           lx_enh_root        TYPE REF TO cx_enh_root.
 
     FIELD-SYMBOLS: <ls_enh_badi> LIKE LINE OF lt_enh_badi.
