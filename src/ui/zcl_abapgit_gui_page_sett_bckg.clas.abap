@@ -105,8 +105,7 @@ CLASS zcl_abapgit_gui_page_sett_bckg IMPLEMENTATION.
     DATA:
       lt_methods TYPE zcl_abapgit_background=>ty_methods,
       ls_method  LIKE LINE OF lt_methods,
-      lv_hint    TYPE string,
-      lv_checked TYPE string.
+      lv_hint    TYPE string.
 
     lt_methods = zcl_abapgit_background=>list_methods( ).
 
@@ -336,15 +335,17 @@ CLASS zcl_abapgit_gui_page_sett_bckg IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( `<div class="repo">` ).
+
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
                     io_repo               = mo_repo
                     iv_show_commit        = abap_false
                     iv_interactive_branch = abap_true ) ).
-    ri_html->add( `</div>` ).
 
     ri_html->add( mo_form->render(
       iv_form_class = 'w800px'
       io_values     = mo_form_data ) ).
+
+    ri_html->add( `</div>` ).
 
   ENDMETHOD.
 ENDCLASS.

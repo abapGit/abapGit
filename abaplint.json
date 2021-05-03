@@ -73,6 +73,7 @@
     "globalMacros": []
   },
   "rules": {
+    "unsecure_fae": false,
     "identical_descriptions": false,
     "modify_only_own_db_tables": false,
     "no_yoda_conditions": false,
@@ -331,6 +332,7 @@
       "add": true,
       "ranges": true,
       "subtract": true,
+      "freeMemory": true,
       "multiply": true,
       "communication": true,
       "typePools": true,

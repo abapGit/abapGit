@@ -46,7 +46,6 @@ CLASS ltcl_lxe_texts IMPLEMENTATION.
 
   METHOD lang_string_to_table.
 
-    DATA lv_langu TYPE string.
     DATA lt_act TYPE zif_abapgit_definitions=>ty_languages.
     DATA lt_exp TYPE zif_abapgit_definitions=>ty_languages.
 
