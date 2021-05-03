@@ -545,7 +545,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
       READ TABLE lt_changed_by INTO ls_changed_by WITH KEY item = <ls_local>-item. "#EC CI_SUBRC
       READ TABLE lt_transports INTO ls_transport WITH KEY
         obj_type = <ls_local>-item-obj_type
-        obj_name = <ls_local>-item-obj_name.              "#EC CI_SUBRC
+        obj_name = <ls_local>-item-obj_name. "#EC CI_SUBRC
       READ TABLE ms_files-status ASSIGNING <ls_status>
         WITH TABLE KEY
           path     = <ls_local>-file-path
