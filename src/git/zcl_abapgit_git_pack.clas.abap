@@ -244,7 +244,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
         ENDIF.
 
       ELSEIF lv_zlib = c_zlib_hmm.
-* cl_abap_gzip copmression works for header '789C', but does not work for
+* cl_abap_gzip compression works for header '789C', but does not work for
 * '7801', call custom implementation of DEFLATE algorithm.
 * The custom implementation could handle both, but most likely the kernel
 * implementation runs faster than the custom ABAP.
