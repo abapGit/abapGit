@@ -419,7 +419,9 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( '<div class="repo">' ).
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mo_repo ) ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
+      io_repo = mo_repo
+      iv_interactive_branch = abap_true ) ).
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_js_error_banner( ) ).
     ri_html->add( render_main_language_warning( ) ).
 
@@ -543,7 +545,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
       READ TABLE lt_changed_by INTO ls_changed_by WITH KEY item = <ls_local>-item. "#EC CI_SUBRC
       READ TABLE lt_transports INTO ls_transport WITH KEY
         obj_type = <ls_local>-item-obj_type
-        obj_name = <ls_local>-item-obj_name. "#EC CI_SUBRC
+        obj_name = <ls_local>-item-obj_name.              "#EC CI_SUBRC
       READ TABLE ms_files-status ASSIGNING <ls_status>
         WITH TABLE KEY
           path     = <ls_local>-file-path
@@ -822,7 +824,11 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
         mo_repo->refresh( abap_true ).
         init_files( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-
+      WHEN zif_abapgit_definitions=>c_action-git_branch_switch.
+        zcl_abapgit_services_git=>switch_branch( |{ ii_event->query( )->get( 'KEY' ) }| ).
+        mo_repo->refresh( abap_true ).
+        init_files( ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN OTHERS.
         rs_handled = super->zif_abapgit_gui_event_handler~on_event( ii_event ).
     ENDCASE.
