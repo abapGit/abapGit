@@ -587,8 +587,6 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: ls_clskey TYPE seoclskey.
-
     deserialize_abap( ii_xml     = io_xml
                       iv_package = iv_package ).
 

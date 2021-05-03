@@ -30,7 +30,6 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
       lv_systemedit         TYPE tadir-edtflag,
       lv_sys_cliinddep_edit TYPE t000-ccnocliind,
       lv_is_shadow          TYPE abap_bool,
-      lv_component          TYPE uvers-component,
       ls_upginfo            TYPE uvers,
       lv_is_upgrade         TYPE abap_bool.
 
