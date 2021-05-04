@@ -205,7 +205,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
 
   METHOD add_filter_sub_menu.
@@ -231,6 +231,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     IF lines( lt_types ) > 1 OR lines( lt_users ) > 1.
       CREATE OBJECT lo_sub_filter EXPORTING iv_id = 'diff-filter'.
+
+      IF lines( lt_users ) > 1.
+        lo_sub_filter->add( iv_txt = 'Only my changes'
+                            iv_typ = zif_abapgit_html=>c_action_type-onclick
+                            iv_aux = |{ sy-uname }|
+                            iv_chk = abap_false ).
+      ENDIF.
 
       " File types
       IF lines( lt_types ) > 1.
