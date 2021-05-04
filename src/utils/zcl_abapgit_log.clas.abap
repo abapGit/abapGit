@@ -21,7 +21,6 @@ CLASS zcl_abapgit_log DEFINITION
     TYPES:
       BEGIN OF ty_log, "in order of occurrence
         msg       TYPE zif_abapgit_log=>ty_msg,
-        rc        TYPE sy-subrc,
         item      TYPE zif_abapgit_definitions=>ty_item,
         exception TYPE REF TO cx_root,
       END OF ty_log .
@@ -93,7 +92,6 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
     APPEND INITIAL LINE TO mt_log ASSIGNING <ls_log>.
     <ls_log>-msg-text  = iv_msg.
     <ls_log>-msg-type  = iv_type.
-    <ls_log>-rc        = iv_rc.
     <ls_log>-item      = is_item.
     <ls_log>-exception = ix_exc.
 
@@ -293,14 +291,6 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
     IF rv_title IS INITIAL.
       rv_title = 'Log'.
     ENDIF.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_log~has_rc.
-* todo, this method is only used in unit tests
-
-    READ TABLE mt_log WITH KEY rc = iv_rc TRANSPORTING NO FIELDS.
-    rv_yes = boolc( sy-subrc = 0 ).
   ENDMETHOD.
 
 

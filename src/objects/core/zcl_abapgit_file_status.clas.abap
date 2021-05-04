@@ -144,7 +144,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_file_status IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
 
   METHOD build_existing.
@@ -372,8 +372,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
       IF sy-subrc <> 0 OR <ls_result>-path <> <ls_result_idx>-path. " All paths are same
         ii_log->add( iv_msg = |Files for object { <ls_result>-obj_type } {
                               <ls_result>-obj_name } are not placed in the same folder|
-                     iv_type = 'W'
-                     iv_rc   = '1' ).
+                     iv_type = 'W' ).
       ENDIF.
 
     ENDLOOP.
@@ -395,14 +394,12 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
     LOOP AT lt_res_sort ASSIGNING <ls_result> WHERE obj_type <> 'DEVC' AND packmove = abap_false.
       IF <ls_result>-filename IS NOT INITIAL AND <ls_result>-filename = ls_file-filename.
         ii_log->add( iv_msg  = |Multiple files with same filename, { <ls_result>-filename }|
-                     iv_type = 'W'
-                     iv_rc   = '3' ).
+                     iv_type = 'W' ).
       ENDIF.
 
       IF <ls_result>-filename IS INITIAL.
         ii_log->add( iv_msg  = |Filename is empty for object { <ls_result>-obj_type } { <ls_result>-obj_name }|
-                     iv_type = 'W'
-                     iv_rc   = '4' ).
+                     iv_type = 'W' ).
       ENDIF.
 
       MOVE-CORRESPONDING <ls_result> TO ls_file.
@@ -440,12 +437,10 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
           OTHERS                 = 2.
       IF sy-subrc <> 0.
         ii_log->add( iv_msg  = |Namespace { lv_namespace } does not exist. Create it in transaction SE03|
-                     iv_type = 'W'
-                     iv_rc   = '6' ).
+                     iv_type = 'W' ).
       ELSEIF ls_trnspace-editflag <> 'X'.
         ii_log->add( iv_msg  = |Namespace { lv_namespace } is not modifiable. Check it in transaction SE03|
-                     iv_type = 'W'
-                     iv_rc   = '6' ).
+                     iv_type = 'W' ).
       ENDIF.
     ENDLOOP.
 
@@ -473,8 +468,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
       IF lv_path <> <ls_result>-path.
         ii_log->add( iv_msg = |Package and path does not match for object, {
                        <ls_result>-obj_type } { <ls_result>-obj_name }|
-                     iv_type = 'W'
-                     iv_rc   = '2' ).
+                     iv_type = 'W' ).
       ENDIF.
 
     ENDLOOP.
@@ -500,8 +494,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
       IF sy-subrc <> 0.
         ii_log->add( iv_msg  = |Changed package assignment for object {
                                <ls_result>-obj_type } { <ls_result>-obj_name }|
-                     iv_type = 'W'
-                     iv_rc   = '5' ).
+                     iv_type = 'W' ).
         APPEND INITIAL LINE TO lt_move_idx ASSIGNING <ls_result_move>.
         <ls_result_move>-obj_type = <ls_result>-obj_type.
         <ls_result_move>-obj_name = <ls_result>-obj_name.
