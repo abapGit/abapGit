@@ -335,14 +335,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       ii_html->add( |</td>| ).
       CLEAR lv_lock.
       IF <ls_overview>-write_protected = abap_true.
-        lv_lock = ii_html->icon( iv_name = 'lock/grey70'
-                                 iv_hint = 'Locked from pulls' ).
+        lv_lock = ii_html->icon( iv_name  = 'lock/grey70'
+                                 iv_class = 'm-em5-sides'
+                                 iv_hint  = 'Locked from pulls' ).
       ENDIF.
 
-      ii_html->add( |<td class="wmin">{ ii_html->icon( lv_type_icon ) }{ lv_lock }</td>| ).
+      ii_html->add( |<td class="wmin">{ ii_html->icon( lv_type_icon ) }</td>| ).
 
       ii_html->add( |<td>{ ii_html->a( iv_txt = <ls_overview>-name
-                                       iv_act = |{ c_action-select }?key={ <ls_overview>-key }| ) }</td>| ).
+                                       iv_act = |{ c_action-select }?key={ <ls_overview>-key }| ) }{ lv_lock }</td>| ).
 
       IF <ls_overview>-type = abap_false.
         lv_text = <ls_overview>-url.
