@@ -40,6 +40,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
         created_at      TYPE string,
         deserialized_by TYPE xubname,
         deserialized_at TYPE string,
+        write_protected TYPE abap_bool,
       END OF ty_overview,
       ty_overviews TYPE STANDARD TABLE OF ty_overview
                    WITH NON-UNIQUE DEFAULT KEY.
@@ -202,6 +203,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       ls_overview-package    = <ls_repo>->ms_data-package.
       ls_overview-branch     = <ls_repo>->ms_data-branch_name.
       ls_overview-created_by = <ls_repo>->ms_data-created_by.
+      ls_overview-write_protected = <ls_repo>->ms_data-local_settings-write_protected.
 
       IF <ls_repo>->ms_data-created_at IS NOT INITIAL.
         CONVERT TIME STAMP <ls_repo>->ms_data-created_at
@@ -300,6 +302,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       lv_zip_export_link TYPE string,
       lv_check_link      TYPE string,
       lv_text            TYPE string,
+      lv_lock            TYPE string,
       lv_settings_link   TYPE string.
     DATA lv_new_length TYPE i.
 
@@ -330,10 +333,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
                                               iv_class = 'pad-sides'
                                               iv_hint  = 'Click to toggle favorite' ) ).
       ii_html->add( |</td>| ).
+      CLEAR lv_lock.
+      IF <ls_overview>-write_protected = abap_true.
+        lv_lock = ii_html->icon( iv_name  = 'lock/grey70'
+                                 iv_class = 'm-em5-sides'
+                                 iv_hint  = 'Locked from pulls' ).
+      ENDIF.
+
       ii_html->add( |<td class="wmin">{ ii_html->icon( lv_type_icon ) }</td>| ).
 
       ii_html->add( |<td>{ ii_html->a( iv_txt = <ls_overview>-name
-                                       iv_act = |{ c_action-select }?key={ <ls_overview>-key }| ) }</td>| ).
+                                       iv_act = |{ c_action-select }?key={ <ls_overview>-key }| ) }{ lv_lock }</td>| ).
 
       IF <ls_overview>-type = abap_false.
         lv_text = <ls_overview>-url.
