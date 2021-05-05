@@ -30,8 +30,7 @@ CLASS zcl_abapgit_object_enhs_hook_d IMPLEMENTATION.
           li_enh_object          TYPE REF TO if_enh_object,
           li_enh_object_docu     TYPE REF TO if_enh_object_docu,
           lo_hookdef_tool        TYPE REF TO cl_enh_tool_hook_def,
-          lx_enh_root            TYPE REF TO cx_enh_root,
-          lv_text                TYPE string.
+          lx_enh_root            TYPE REF TO cx_enh_root.
 
     FIELD-SYMBOLS: <ls_hook_definition> TYPE enh_hook_def_ext.
 

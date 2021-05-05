@@ -322,8 +322,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
   METHOD build_branch_dropdown.
 
-    DATA lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
-
     CREATE OBJECT ro_branch_dropdown.
 
     IF mo_repo->is_offline( ) = abap_true.
@@ -1146,7 +1144,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA lv_path TYPE string.
-    DATA lv_switched TYPE abap_bool.
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-go_repo. " Switch to another repo
