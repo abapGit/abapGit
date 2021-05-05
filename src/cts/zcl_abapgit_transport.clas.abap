@@ -240,20 +240,17 @@ CLASS zcl_abapgit_transport IMPLEMENTATION.
       LOOP AT <ls_request>-objects ASSIGNING <ls_object>.
         " VARX, see https://github.com/abapGit/abapGit/issues/3107
         IF <ls_object>-pgmid = 'LIMU' AND <ls_object>-object <> 'VARX'.
-          CALL FUNCTION 'GET_R3TR_OBJECT_FROM_LIMU_OBJ'
+          CALL FUNCTION 'TR_CHECK_TYPE'
             EXPORTING
-              p_limu_objtype = <ls_object>-object
-              p_limu_objname = <ls_object>-obj_name
+              wi_e071   = <ls_object>
             IMPORTING
-              p_r3tr_objtype = lv_object
-              p_r3tr_objname = lv_trobj_name
-            EXCEPTIONS
-              no_mapping     = 1
-              OTHERS         = 2.
-          IF sy-subrc <> 0.
-            zcx_abapgit_exception=>raise( 'error from GET_R3TR_OBJECT_FROM_LIMU_OBJ' ).
+              we_tadir  = ls_tadir_sap
+              pe_result = lv_result.
+          IF 'TL' NS lv_result OR ls_tadir_sap IS INITIAL.
+            zcx_abapgit_exception=>raise( 'error from TR_CHECK_TYPE' ).
           ENDIF.
-          lv_obj_name = lv_trobj_name.
+          lv_object   = ls_tadir_sap-object.
+          lv_obj_name = ls_tadir_sap-obj_name.
         ELSE.
           lv_object   = <ls_object>-object.
           lv_obj_name = <ls_object>-obj_name.
