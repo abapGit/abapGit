@@ -552,6 +552,9 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
     ASSERT sy-subrc = 0.
 
     <lv_source> = mo_files->read_string( mc_source_file ).
+    ID <lv_source> is initial.
+      <lv_source> = mo_files->read_string( 'assrvd' ).
+    ENDIF.
 
     CREATE OBJECT ro_object_data TYPE ('CL_SRVD_WB_OBJECT_DATA').
     ro_object_data->set_data( p_data = <lg_data>  ).
