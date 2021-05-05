@@ -552,7 +552,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
     ASSERT sy-subrc = 0.
 
     <lv_source> = mo_files->read_string( mc_source_file ).
-    ID <lv_source> is initial.
+    IF <lv_source> IS INITIAL.
       <lv_source> = mo_files->read_string( 'assrvd' ).
     ENDIF.
 
