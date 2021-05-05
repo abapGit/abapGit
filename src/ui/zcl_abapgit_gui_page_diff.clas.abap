@@ -104,6 +104,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
     METHODS build_menu
       RETURNING
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
+    METHODS set_layout.
 
     METHODS render_content
         REDEFINITION .
@@ -201,7 +202,6 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         is_status                   TYPE zif_abapgit_definitions=>ty_result
       RETURNING
         VALUE(rv_is_file_requested) TYPE abap_bool.
-    METHODS set_layout.
 ENDCLASS.
 
 
