@@ -41,6 +41,7 @@ CLASS zcl_abapgit_git_commit DEFINITION
     CLASS-METHODS reverse_sort_order
       CHANGING
         !ct_commits TYPE zif_abapgit_definitions=>ty_commit_tt .
+    CLASS-METHODS clear_missing_parents CHANGING ct_commits TYPE zif_abapgit_definitions=>ty_commit_tt .
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -54,6 +55,13 @@ CLASS zcl_abapgit_git_commit DEFINITION
         es_1st_commit   TYPE zif_abapgit_definitions=>ty_commit
       CHANGING
         ct_commits      TYPE zif_abapgit_definitions=>ty_commit_tt .
+
+    CLASS-METHODS is_missing
+      IMPORTING
+        it_commits       TYPE zif_abapgit_definitions=>ty_commit_tt
+        iv_sha1          TYPE zif_abapgit_definitions=>ty_sha1
+      RETURNING
+        VALUE(rv_result) TYPE abap_bool.
 
 
 ENDCLASS.
@@ -255,8 +263,45 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
         INSERT ls_next_commit INTO TABLE lt_sorted_commits.
       ENDDO.
 
-      ct_commits = lt_sorted_commits.
+    ENDIF.
+    ct_commits = lt_sorted_commits.
+
+  ENDMETHOD.
+
+  METHOD clear_missing_parents.
+
+    "Part of #4719 to handle cut commit sequences, todo
+
+    FIELD-SYMBOLS: <ls_commit> TYPE zif_abapgit_definitions=>ty_commit.
+
+    LOOP AT ct_commits ASSIGNING <ls_commit>.
+
+      IF is_missing( it_commits = ct_commits
+                     iv_sha1  = <ls_commit>-parent1 ) = abap_true.
+        CLEAR <ls_commit>-parent1.
+      ENDIF.
+
+      IF is_missing( it_commits = ct_commits
+                     iv_sha1  = <ls_commit>-parent2 ) = abap_true.
+        CLEAR <ls_commit>-parent2.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD is_missing.
+
+    IF iv_sha1 IS NOT INITIAL.
+
+      READ TABLE it_commits
+        TRANSPORTING NO FIELDS
+        WITH KEY sha1 = iv_sha1.
+      rv_result = boolc( sy-subrc <> 0 ).
+
     ENDIF.
 
   ENDMETHOD.
+
 ENDCLASS.
