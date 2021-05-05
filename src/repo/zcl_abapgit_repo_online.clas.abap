@@ -5,20 +5,29 @@ CLASS zcl_abapgit_repo_online DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_repo_online.
 
-    ALIASES:
-      create_branch FOR zif_abapgit_repo_online~create_branch,
-      push FOR zif_abapgit_repo_online~push,
-      get_url FOR zif_abapgit_repo_online~get_url,
-      get_selected_branch FOR zif_abapgit_repo_online~get_selected_branch,
-      set_url FOR zif_abapgit_repo_online~set_url,
-      select_branch FOR zif_abapgit_repo_online~select_branch,
-      get_selected_commit FOR zif_abapgit_repo_online~get_selected_commit,
-      get_current_remote FOR zif_abapgit_repo_online~get_current_remote,
-      select_commit FOR zif_abapgit_repo_online~select_commit,
-      get_switched_origin FOR zif_abapgit_repo_online~get_switched_origin,
-      switch_origin FOR zif_abapgit_repo_online~switch_origin.
+    INTERFACES zif_abapgit_repo_online .
+
+    ALIASES create_branch
+      FOR zif_abapgit_repo_online~create_branch .
+    ALIASES get_current_remote
+      FOR zif_abapgit_repo_online~get_current_remote .
+    ALIASES get_selected_branch
+      FOR zif_abapgit_repo_online~get_selected_branch .
+    ALIASES get_selected_commit
+      FOR zif_abapgit_repo_online~get_selected_commit .
+    ALIASES get_url
+      FOR zif_abapgit_repo_online~get_url .
+    ALIASES push
+      FOR zif_abapgit_repo_online~push .
+    ALIASES select_branch
+      FOR zif_abapgit_repo_online~select_branch .
+    ALIASES select_commit
+      FOR zif_abapgit_repo_online~select_commit .
+    ALIASES set_url
+      FOR zif_abapgit_repo_online~set_url .
+    ALIASES switch_origin
+      FOR zif_abapgit_repo_online~switch_origin .
 
     METHODS get_files_remote
         REDEFINITION .
@@ -54,7 +63,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
+CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
 
   METHOD fetch_remote.
@@ -98,6 +107,12 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
       rv_name = zcl_abapgit_url=>name( ms_data-url ).
       rv_name = cl_http_utility=>if_http_utility~unescape_url( rv_name ).
     ENDIF.
+  ENDMETHOD.
+
+
+  METHOD get_objects.
+    fetch_remote( ).
+    rt_objects = mt_objects.
   ENDMETHOD.
 
 
@@ -177,12 +192,6 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_objects.
-    fetch_remote( ).
-    rt_objects = mt_objects.
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_repo_online~get_selected_branch.
     rv_name = ms_data-branch_name.
   ENDMETHOD.
@@ -190,11 +199,6 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
   METHOD zif_abapgit_repo_online~get_selected_commit.
     rv_selected_commit = ms_data-selected_commit.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_repo_online~get_switched_origin.
-    rv_url = ms_data-switched_origin.
   ENDMETHOD.
 
 
@@ -314,6 +318,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     ELSEIF ms_data-switched_origin IS INITIAL.
       set( iv_switched_origin = ms_data-url && '@' && ms_data-branch_name ).
       set_url( iv_url ).
+      select_branch( iv_branch ).
     ELSE.
       zcx_abapgit_exception=>raise( 'Cannot switch origin twice' ).
     ENDIF.

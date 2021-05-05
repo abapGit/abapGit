@@ -25,6 +25,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !iv_show_package       TYPE abap_bool DEFAULT abap_true
         !iv_show_branch        TYPE abap_bool DEFAULT abap_true
         !iv_show_commit        TYPE abap_bool DEFAULT abap_true
+        !iv_show_edit          TYPE abap_bool DEFAULT abap_false
         !iv_interactive_branch TYPE abap_bool DEFAULT abap_false
         !io_news               TYPE REF TO zcl_abapgit_news OPTIONAL
       RETURNING
@@ -675,10 +676,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
             iv_act   = |{ zif_abapgit_definitions=>c_action-change_order_by }?orderBy={ <ls_col>-tech_name }|
             iv_title = <ls_col>-title ).
         ELSE.
-          lv_tmp = lv_tmp && ri_html->a(
-              iv_txt   = lv_disp_name
-              iv_act   = ``
-              iv_title = <ls_col>-title ).
+          lv_tmp = lv_tmp && lv_disp_name.
         ENDIF.
       ENDIF.
       IF <ls_col>-tech_name = iv_order_by
@@ -814,22 +812,28 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
                       iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url=|
                               && |{ lo_repo_online->get_url( ) }|
                       iv_class = |url| ).
+    ENDIF.
 
-      IF iv_show_commit = abap_true.
+    IF iv_show_edit = abap_true.
+      ri_html->add_a( iv_txt   = ri_html->icon( iv_name  = 'edit-solid'
+                                                iv_class = 'pad-sides'
+                                                iv_hint  = 'Change remote' )
+                      iv_act   = |{ zif_abapgit_definitions=>c_action-repo_remote_settings }?| &&
+                                 |key={ io_repo->get_key( ) }|
+                      iv_class = |url| ).
+    ENDIF.
 
-        TRY.
-            render_repo_top_commit_hash( ii_html        = ri_html
-                                         io_repo_online = lo_repo_online ).
-          CATCH zcx_abapgit_exception INTO lx_error.
-            " In case of missing or wrong credentials, show message in status bar
-            lv_hint = lx_error->get_text( ).
-            IF lv_hint CS 'credentials'.
-              MESSAGE lv_hint TYPE 'S' DISPLAY LIKE 'E'.
-            ENDIF.
-        ENDTRY.
-
-      ENDIF.
-
+    IF io_repo->is_offline( ) = abap_false AND iv_show_commit = abap_true.
+      TRY.
+          render_repo_top_commit_hash( ii_html        = ri_html
+                                       io_repo_online = lo_repo_online ).
+        CATCH zcx_abapgit_exception INTO lx_error.
+          " In case of missing or wrong credentials, show message in status bar
+          lv_hint = lx_error->get_text( ).
+          IF lv_hint CS 'credentials'.
+            MESSAGE lv_hint TYPE 'S' DISPLAY LIKE 'E'.
+          ENDIF.
+      ENDTRY.
     ENDIF.
 
     " News
@@ -1035,6 +1039,10 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       iv_txt = 'Local'
       iv_act = |{ zif_abapgit_definitions=>c_action-repo_local_settings }?key={ iv_key }|
       iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_local_settings )
+    )->add(
+      iv_txt = 'Remote'
+      iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_settings }?key={ iv_key }|
+      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_remote_settings )
     )->add(
       iv_txt = 'Background'
       iv_act = |{ zif_abapgit_definitions=>c_action-repo_background }?key={ iv_key }|

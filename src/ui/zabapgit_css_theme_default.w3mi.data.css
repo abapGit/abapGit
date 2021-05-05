@@ -101,6 +101,7 @@ div.repo { background-color: var(--theme-container-background-color); }
 .repo_name span.name { color: #333; }
 .repo_name span.url  { color: var(--theme-primary-font-color-reduced); }
 .repo_name a.url { color: var(--theme-primary-font-color-reduced); }
+.repo_name a.url:hover { color: var(--theme-link-color); }
 .repo_attr       { color: grey; }
 
 .repo_attr span.bg_marker {
