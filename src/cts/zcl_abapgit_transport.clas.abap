@@ -230,7 +230,9 @@ CLASS zcl_abapgit_transport IMPLEMENTATION.
     DATA: lv_object     TYPE tadir-object,
           lv_obj_name   TYPE tadir-obj_name,
           lv_trobj_name TYPE trobj_name,
-          ls_tadir      TYPE zif_abapgit_definitions=>ty_tadir.
+          ls_tadir      TYPE zif_abapgit_definitions=>ty_tadir,
+          lv_result     TYPE trpari-s_checked,
+          ls_tadir_sap  TYPE tadir.
 
     FIELD-SYMBOLS: <ls_request> LIKE LINE OF it_requests,
                    <ls_object>  LIKE LINE OF <ls_request>-objects.
