@@ -262,7 +262,7 @@ RepoOverViewHelper.prototype.toggleRepoListDetail = function (forceDisplay) {
 RepoOverViewHelper.prototype.toggleItemsDetail = function(forceDisplay){
   if (this.detailCssClass) {
     this.isDetailsDisplayed = forceDisplay || !this.isDetailsDisplayed;
-    
+
     // change layout to wide if details are displayed
     if (this.isDetailsDisplayed) {
       document.body.classList.remove("centered");
