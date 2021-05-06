@@ -4,7 +4,7 @@
     "test": "npm run eslint && npm run abaplint",
     "merge": "abapmerge -f src/zabapgit.prog.abap -c zabapgit_standalone > zabapgit.abap",
     "merge.ci": "cp zabapgit.abap ci/zabapgit_standalone.prog.abap && cd ci && abaplint --format codeframe && cd ..",
-    "unit": "rm -rf output && abap_transpile && echo RUNNING && node output/index.js",
+    "unit": "rm -rf output && abap_transpile && echo RUNNING && node output/index.mjs",
     "abaplint": "abaplint --format codeframe",
     "eslint": "eslint src",
     "docker-build": "docker-compose -f test/docker-compose.yml build",
