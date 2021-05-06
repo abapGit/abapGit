@@ -248,7 +248,7 @@ CLASS zcl_abapgit_transport IMPLEMENTATION.
             IMPORTING
               we_tadir  = ls_tadir_sap
               pe_result = lv_result.
-          IF lv_result NA 'TL' OR ls_tadir_sap IS INITIAL.    
+          IF lv_result NA 'TL' OR ls_tadir_sap IS INITIAL.
             zcx_abapgit_exception=>raise( 'error from TR_CHECK_TYPE' ).
           ENDIF.
           lv_object   = ls_tadir_sap-object.
