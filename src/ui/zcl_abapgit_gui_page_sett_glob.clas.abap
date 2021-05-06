@@ -190,9 +190,6 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
     LOOP AT lt_proxy_bypass INTO ls_proxy_bypass.
       lv_val = lv_val && ls_proxy_bypass-low && zif_abapgit_definitions=>c_newline.
     ENDLOOP.
-    IF sy-subrc <> 0.
-      lv_val = zif_abapgit_definitions=>c_newline.
-    ENDIF.
 
     mo_form_data->set(
       iv_key = c_id-proxy_bypass
