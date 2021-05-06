@@ -248,7 +248,7 @@ CLASS zcl_abapgit_transport IMPLEMENTATION.
             IMPORTING
               we_tadir  = ls_tadir_sap
               pe_result = lv_result.
-          IF 'TL' NS lv_result OR ls_tadir_sap IS INITIAL.
+          IF lv_result NA 'TL' OR ls_tadir_sap IS INITIAL.    
             zcx_abapgit_exception=>raise( 'error from TR_CHECK_TYPE' ).
           ENDIF.
           lv_object   = ls_tadir_sap-object.
@@ -262,7 +262,9 @@ CLASS zcl_abapgit_transport IMPLEMENTATION.
           iv_object   = lv_object
           iv_obj_name = lv_obj_name ).
 
-        APPEND ls_tadir TO rt_tadir.
+        IF ls_tadir-delflag IS INITIAL.
+          APPEND ls_tadir TO rt_tadir.
+        ENDIF.
       ENDLOOP.
     ENDLOOP.
 
