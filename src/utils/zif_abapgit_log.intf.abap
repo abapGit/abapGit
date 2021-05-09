@@ -50,7 +50,6 @@ INTERFACE zif_abapgit_log
     IMPORTING
       !iv_msg  TYPE csequence
       !iv_type TYPE sy-msgty DEFAULT 'E'
-      !iv_rc   TYPE sy-subrc OPTIONAL
       !is_item TYPE zif_abapgit_definitions=>ty_item OPTIONAL
       !ix_exc  TYPE REF TO cx_root OPTIONAL .
   METHODS add_error
@@ -77,11 +76,6 @@ INTERFACE zif_abapgit_log
   METHODS count
     RETURNING
       VALUE(rv_count) TYPE i .
-  METHODS has_rc
-    IMPORTING
-      !iv_rc        TYPE sy-subrc
-    RETURNING
-      VALUE(rv_yes) TYPE abap_bool .
   METHODS get_messages
     RETURNING
       VALUE(rt_msg) TYPE ty_log_outs .
