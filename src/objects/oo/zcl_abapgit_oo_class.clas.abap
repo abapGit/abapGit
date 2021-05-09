@@ -11,6 +11,8 @@ CLASS zcl_abapgit_oo_class DEFINITION
         REDEFINITION .
     METHODS zif_abapgit_oo_object_fnc~delete
         REDEFINITION .
+    METHODS zif_abapgit_oo_object_fnc~deserialize_source
+        REDEFINITION .
     METHODS zif_abapgit_oo_object_fnc~generate_locals
         REDEFINITION .
     METHODS zif_abapgit_oo_object_fnc~get_class_properties
@@ -23,12 +25,14 @@ CLASS zcl_abapgit_oo_class DEFINITION
         REDEFINITION .
     METHODS zif_abapgit_oo_object_fnc~read_text_pool
         REDEFINITION .
-    METHODS zif_abapgit_oo_object_fnc~deserialize_source
+    METHODS zif_abapgit_oo_object_fnc~exists
         REDEFINITION .
   PROTECTED SECTION.
-    TYPES: ty_char1 TYPE c LENGTH 1,
-           ty_char2 TYPE c LENGTH 2.
 
+    TYPES:
+      ty_char1 TYPE c LENGTH 1 .
+    TYPES:
+      ty_char2 TYPE c LENGTH 2 .
   PRIVATE SECTION.
 
     CLASS-METHODS update_source_index
@@ -568,6 +572,21 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
       iv_clsname = is_key-clsname
       io_scanner = lo_scanner ).
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_oo_object_fnc~exists.
+    CALL FUNCTION 'SEO_CLASS_EXISTENCE_CHECK'
+      EXPORTING
+        clskey        = is_object_name
+      EXCEPTIONS
+        not_specified = 1
+        not_existing  = 2
+        is_interface  = 3
+        no_text       = 4
+        inconsistent  = 5
+        OTHERS        = 6.
+    rv_exists = boolc( sy-subrc = 0 OR sy-subrc = 4 ).
   ENDMETHOD.
 
 
