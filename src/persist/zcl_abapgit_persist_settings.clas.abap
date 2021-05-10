@@ -24,7 +24,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PERSIST_SETTINGS IMPLEMENTATION.
+CLASS zcl_abapgit_persist_settings IMPLEMENTATION.
 
 
   METHOD get_instance.
