@@ -34,7 +34,6 @@ CLASS zcl_abapgit_objects DEFINITION
     CLASS-METHODS deserialize_checks
       IMPORTING
         !io_repo         TYPE REF TO zcl_abapgit_repo
-        !iv_reset_all    TYPE abap_bool OPTIONAL
       RETURNING
         VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RAISING
@@ -683,9 +682,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
   METHOD deserialize_checks.
 
-    rs_checks = zcl_abapgit_objects_check=>deserialize_checks(
-      io_repo      = io_repo
-      iv_reset_all = iv_reset_all ).
+    rs_checks = zcl_abapgit_objects_check=>deserialize_checks( io_repo ).
 
   ENDMETHOD.
 

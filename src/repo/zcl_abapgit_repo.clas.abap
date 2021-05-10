@@ -11,8 +11,6 @@ CLASS zcl_abapgit_repo DEFINITION
       IMPORTING
         !ii_listener TYPE REF TO zif_abapgit_repo_listener .
     METHODS deserialize_checks
-      IMPORTING
-        !iv_reset_all    TYPE abap_bool OPTIONAL
       RETURNING
         VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RAISING
@@ -398,9 +396,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     check_write_protect( ).
     check_language( ).
 
-    rs_checks = zcl_abapgit_objects=>deserialize_checks(
-      io_repo      = me
-      iv_reset_all = iv_reset_all ).
+    rs_checks = zcl_abapgit_objects=>deserialize_checks( me ).
 
     lt_requirements = get_dot_abapgit( )->get_data( )-requirements.
     rs_checks-requirements-met = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements ).
