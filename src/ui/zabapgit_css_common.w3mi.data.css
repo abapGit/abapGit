@@ -1059,7 +1059,9 @@ settings_tab tr:first-child td { border-top: 0px; }
   text-align: left;
 }
 .dialog-form {
-  margin: 1em 1em 1em 1em;
+  margin: 0 auto;
+  margin-top: 1em;
+  margin-bottom: 1em;
   width: 600px;
 }
 .dialog-form-center {
