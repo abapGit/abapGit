@@ -1053,15 +1053,15 @@ settings_tab tr:first-child td { border-top: 0px; }
 /* DIALOGS */
 
 .dialog {
+  margin: 0 auto;
+  margin-top: 1em;
+  margin-bottom: 1em;
   border: 1px solid;
   padding: 1em 1em;
   border-radius: 6px;
   text-align: left;
 }
 .dialog-form {
-  margin: 0 auto;
-  margin-top: 1em;
-  margin-bottom: 1em;
   width: 600px;
 }
 .dialog-form-center {
