@@ -301,12 +301,16 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
         <ls_overwrite>-decision = <ls_decision>-decision.
       ELSE.
         " If user was not asked (regular pull), deny deletions and confirm other changes (add and update)
-        IF <ls_overwrite>-action = zif_abapgit_objects=>c_deserialize_action-delete OR
-           <ls_overwrite>-action = zif_abapgit_objects=>c_deserialize_action-delete_add.
-          <ls_overwrite>-decision = zif_abapgit_definitions=>gc_no.
-        ELSE.
-          <ls_overwrite>-decision = zif_abapgit_definitions=>gc_yes.
-        ENDIF.
+        CASE <ls_overwrite>-action.
+          WHEN zif_abapgit_objects=>c_deserialize_action-delete
+            OR zif_abapgit_objects=>c_deserialize_action-delete_add.
+            <ls_overwrite>-decision = zif_abapgit_definitions=>gc_no.
+          WHEN zif_abapgit_objects=>c_deserialize_action-add
+            OR zif_abapgit_objects=>c_deserialize_action-update.
+            <ls_overwrite>-decision = zif_abapgit_definitions=>gc_yes.
+          WHEN OTHERS.
+            ASSERT 0 = 1.
+        ENDCASE.
       ENDIF.
     ENDLOOP.
 
