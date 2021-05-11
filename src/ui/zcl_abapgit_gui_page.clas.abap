@@ -323,7 +323,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     ri_html->add( '<!DOCTYPE html>' ).
     ri_html->add( '<html lang="en">' ).
     ri_html->add( html_head( ) ).
-    ri_html->add( |<body class={ ms_control-page_layout }>| ).
+    ri_html->add( |<body class="{ ms_control-page_layout }">| ).
     ri_html->add( title( ) ).
 
     ri_html->add( render_content( ) ). " TODO -> render child
