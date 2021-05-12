@@ -104,6 +104,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
     METHODS build_menu
       RETURNING
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
+    METHODS set_layout.
 
     METHODS render_content
         REDEFINITION .
@@ -205,7 +206,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
 
   METHOD add_filter_sub_menu.
@@ -231,6 +232,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     IF lines( lt_types ) > 1 OR lines( lt_users ) > 1.
       CREATE OBJECT lo_sub_filter EXPORTING iv_id = 'diff-filter'.
+
+      IF lines( lt_users ) > 1.
+        lo_sub_filter->add( iv_txt = 'Only my changes'
+                            iv_typ = zif_abapgit_html=>c_action_type-onclick
+                            iv_aux = |{ sy-uname }|
+                            iv_chk = abap_false ).
+      ENDIF.
 
       " File types
       IF lines( lt_types ) > 1.
@@ -484,6 +492,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     super->constructor( ).
     ms_control-page_title = 'Diff'.
     mv_unified            = zcl_abapgit_persistence_user=>get_instance( )->get_diff_unified( ).
+    set_layout( ).
     mv_repo_key           = iv_key.
     mo_repo              ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
@@ -502,6 +511,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     ENDIF.
 
     ms_control-page_menu = build_menu( ).
+
+  ENDMETHOD.
+
+  METHOD set_layout.
+
+    IF mv_unified = abap_true.
+      ms_control-page_layout = c_page_layout-centered.
+    ELSE.
+      ms_control-page_layout = c_page_layout-full_width.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -601,7 +620,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     DATA: ls_diff_file LIKE LINE OF mt_diff_files,
           li_progress  TYPE REF TO zif_abapgit_progress.
-
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -996,6 +1014,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       WHEN c_actions-toggle_unified. " Toggle file diplay
 
         mv_unified = zcl_abapgit_persistence_user=>get_instance( )->toggle_diff_unified( ).
+        set_layout( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-toggle_hidden_chars. " Toggle display of hidden characters
