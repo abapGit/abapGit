@@ -262,6 +262,16 @@ RepoOverViewHelper.prototype.toggleRepoListDetail = function (forceDisplay) {
 RepoOverViewHelper.prototype.toggleItemsDetail = function(forceDisplay){
   if (this.detailCssClass) {
     this.isDetailsDisplayed = forceDisplay || !this.isDetailsDisplayed;
+
+    // change layout to wide if details are displayed
+    if (this.isDetailsDisplayed) {
+      document.body.classList.remove("centered");
+      document.body.classList.add("full_width");
+    } else {
+      document.body.classList.add("centered");
+      document.body.classList.remove("full_width");
+    }
+
     this.detailCssClass.style.display = this.isDetailsDisplayed ? "" : "none";
     this.actionCssClass.style.display = this.isDetailsDisplayed ? "none" : "";
     var icon = document.getElementById("icon-filter-detail");
@@ -688,9 +698,10 @@ StageHelper.prototype.iterateStageTab = function (changeMode, cb /*, ...*/) {
  * Check list wrapper
  **********************************************************/
 
-function CheckListWrapper(id, cbAction) {
+function CheckListWrapper(id, cbAction, cbActionOnlyMyChanges) {
   this.id         = document.getElementById(id);
   this.cbAction   = cbAction;
+  this.cbActionOnlyMyChanges = cbActionOnlyMyChanges;
   this.id.onclick = this.onClick.bind(this);
 }
 
@@ -723,8 +734,14 @@ CheckListWrapper.prototype.onClick = function(e) { // eslint-disable-line no-unu
     nodeLi.setAttribute("data-check", "");
   }
 
-  // Action callback
-  this.cbAction(nodeLi.getAttribute("data-aux"), option, newState);
+  // Action callback, special handling for "Only My Changes"
+  if(option === "Only my changes") {
+    this.cbActionOnlyMyChanges(nodeLi.getAttribute("data-aux"), newState);
+
+    // hide "Changed By" menu
+  } else {
+    this.cbAction(nodeLi.getAttribute("data-aux"), option, newState);
+  }
 };
 
 /**********************************************************
@@ -751,7 +768,7 @@ function DiffHelper(params) {
 
   // Checklist wrapper
   if (document.getElementById(params.ids.filterMenu)) {
-    this.checkList = new CheckListWrapper(params.ids.filterMenu, this.onFilter.bind(this));
+    this.checkList = new CheckListWrapper(params.ids.filterMenu, this.onFilter.bind(this), this.onFilterOnlyMyChanges.bind(this));
     this.dom.filterButton = document.getElementById(params.ids.filterMenu).parentNode;
   }
 
@@ -779,6 +796,71 @@ DiffHelper.prototype.onJump = function(e){
 DiffHelper.prototype.onFilter = function(attr, target, state) {
   this.applyFilter(attr, target, state);
   this.highlightButton(state);
+};
+
+DiffHelper.prototype.onFilterOnlyMyChanges = function(username, state) {
+  this.applyOnlyMyChangesFilter(username, state);
+  this.counter = 0;
+
+  if(state) {
+    this.dom.filterButton.classList.add("bgorange");
+  } else {
+    this.dom.filterButton.classList.remove("bgorange");
+  }
+
+  // apply logic on Changed By list items
+  var changedByListItems = Array.prototype.slice.call(document.querySelectorAll("[data-aux*=changed-by]"));
+
+  changedByListItems
+    .map(function(item) {
+      var nodeIcon = item.children[0].children[0];
+
+      if (state === true) {
+        if(item.innerText === username) { // current user
+          item.style.display = "";
+          item.setAttribute("data-check", "X");
+
+          if(nodeIcon) {
+            nodeIcon.classList.remove("grey");
+            nodeIcon.classList.add("blue");
+          }
+        } else { // other users
+          item.style.display = "none";
+          item.setAttribute("data-check", "");
+        }
+      } else {
+        item.style.display = "";
+        item.setAttribute("data-check", "X");
+
+        if(nodeIcon) {
+          nodeIcon.classList.remove("grey");
+          nodeIcon.classList.add("blue");
+        }
+      }
+    });
+};
+
+DiffHelper.prototype.applyOnlyMyChangesFilter = function (username, state) {
+
+  var jumpListItems = Array.prototype.slice.call(document.querySelectorAll("[id*=li_jump]"));
+
+  this.iterateDiffList(function(div) {
+    if (state === true) { // switching on "Only my changes" filter
+      if (div.getAttribute("data-changed-by") === username) {
+        div.style.display = state ? "" : "none";
+      } else {
+        div.style.display = state ? "none" : "";
+      }
+    } else { // disabling
+      div.style.display = "";
+    }
+
+    // hide the file in the jump list
+    var dataFile = div.getAttribute("data-file");
+    jumpListItems
+      .filter(function(item){ return dataFile.includes(item.text) })
+      .map(function(item){ item.style.display = div.style.display });
+  });
 };
 
 // Hide/show diff based on params
