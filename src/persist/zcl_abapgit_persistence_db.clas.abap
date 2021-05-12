@@ -3,8 +3,8 @@ CLASS zcl_abapgit_persistence_db DEFINITION
   CREATE PRIVATE .
 
   PUBLIC SECTION.
-    CONSTANTS c_tabname TYPE tabname VALUE 'ZABAPGIT' ##NO_TEXT.
-    CONSTANTS c_lock TYPE viewname VALUE 'EZABAPGIT' ##NO_TEXT.
+    CONSTANTS c_tabname TYPE c LENGTH 30 VALUE 'ZABAPGIT' ##NO_TEXT.
+    CONSTANTS c_lock TYPE c LENGTH 30 VALUE 'EZABAPGIT' ##NO_TEXT.
 
     CONSTANTS:
       c_type_settings   TYPE zif_abapgit_persistence=>ty_type VALUE 'SETTINGS' ##NO_TEXT,
