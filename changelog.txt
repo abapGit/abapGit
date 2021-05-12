@@ -8,6 +8,33 @@ Legend
 + : added
 - : removed
 
+2021-05-09 v1.108.0
+-------------------
+! INTF deserialization changed
+! SRVD file format changed
+! limit size of branch overview
++ write protected icon in repository overview added
++ enable switching from stage screen
++ hover highlight in toolbar
++ new remote tab in repo settings
+* Fix for Java GUI so new repo can be defined
+* bugfix, saving proxy bypass
+* PDTS refactoring
+* Background mode refactored to HTML form
+* git transport: error on empty git reply
+* DCLS changed_by implemented
+* accept remote without HEAD
+* fix dump in case of package name conflicts
+* Fix processing for files with &nbsp;
+* ENHx change order for deserialize
+* show table data in overview(experimental)
+* catch send errors in HTTP client
+* SOTS uninstall with usage reference
+* TLOCK performance fixes, when finding transport numbers
+* warning added if namespace is not modifiable
+* ENHC fix error when updating object
+* PROG deserialization refactored and inactive code fixed
+
 2021-03-22 v1.107.0
 -------------------
 ! Change DDIC activation mode
@@ -146,7 +173,7 @@ Legend
 + PDTS support
 + WDCA support
 + AVAR support
-+ Add option to synchronize theme with frontend 
++ Add option to synchronize theme with frontend
 * documentation fixes
 * downport
 * Fix error from CL_PACKAGE_FACTORY=>LOAD_PACKAGE3
@@ -789,7 +816,7 @@ Legend
 * fix error messages
 * more downport
 * INTF clear more fields
-+ user exit to modify http client, eg SSO between SAP systems 
++ user exit to modify http client, eg SSO between SAP systems
 
 2018-03-14 v1.60.1
 ------------------
@@ -1077,7 +1104,7 @@ Legend
 ------------------
 + WAPA support
 + display abapGit changelog in abapGit
-* bugfix nested namespace folders 
+* bugfix nested namespace folders
 
 2017-03-24 v1.33.3
 ------------------
