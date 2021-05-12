@@ -32,7 +32,7 @@ todo
 todo
 
 ### CREATE_HTTP_CLIENT
-Store username and password in RFC connection setup, see [https://github.com/abapGit/abapGit/issues/1841](https://github.com/abapGit/abapGit/issues/1841)
+Store username and password in RFC connection setup, see [#1841](https://github.com/abapGit/abapGit/issues/1841)
 
 ### HTTP_CLIENT
 Can be used for setting logon tickets eg. in connection with abapGitServer connections between SAP systems.
@@ -57,9 +57,9 @@ Can be used to set the URL to display a commit. There are default implementation
 
 | Provider  | Repo URL | Show Commit URL |
 |-----------|----------|-----------------|
-| github    | http(s):\/\/github.com/<user\>/\<repo\>.git    | http(s):\/\/github.com/<user\>/\<repo\>/commit/<sha1\>     |
-| bitbucket | http(s):\/\/bitbucket.org/<user\>/\<repo\>.git | http(s):\/\/bitbucket.org/<user\>/\<repo\>/commits/<sha1\> |
-| gitlab    | http(s):\/\/gitlab.com/<user\>/\<repo\>.git    | http(s):\/\/gitlab.com/\<user\>/\<repo\>/-/commit/<sha1\>  |
+| github    | http(s)://github.com/<user\>/\<repo\>.git    | http(s)://github.com/<user\>/\<repo\>/commit/<sha1\>     |
+| bitbucket | http(s)://bitbucket.org/<user\>/\<repo\>.git | http(s)://bitbucket.org/<user\>/\<repo\>/commits/<sha1\> |
+| gitlab    | http(s)://gitlab.com/<user\>/\<repo\>.git    | http(s)://gitlab.com/\<user\>/\<repo\>/-/commit/<sha1\>  |
 
 ### PRE_CALCULATE_REPO_STATUS
 
@@ -71,8 +71,12 @@ The exit also receives a repo meta data snapshot (`zif_abapgit_persistence=>ty_r
 
 ### WALL_MESSAGE_LIST
 
-Can be used to add a message at list level
+Can be used to add a message at list level (repository overview, see [#4653](https://github.com/abapGit/abapGit/issues/4653)).
 
 ### WALL_MESSAGE_REPO
 
-Can be used to add a message at repo level
+Can be used to add a message at repo level (repository view, see [#4653](https://github.com/abapGit/abapGit/issues/4653)).
+
+### ON_EVENT
+
+This exit allows you to extend abapGit with new features that are not suitable for abapGit itself. For example, you can link to a new page from a wall message. Another use case is redirecting menu items to a custom page rather than standard abapGit, for example using a company-specific solution to replace "Advanced > Run Code Inspector" (see [#4722](https://github.com/abapGit/abapGit/issues/4722)).
