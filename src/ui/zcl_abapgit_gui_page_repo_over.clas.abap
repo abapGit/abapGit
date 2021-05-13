@@ -181,9 +181,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
   METHOD map_repo_list_to_overview.
 
-    DATA: ls_overview   LIKE LINE OF rt_overview,
-          lv_date       TYPE d,
-          lv_time       TYPE t,
+    DATA: ls_overview      LIKE LINE OF rt_overview,
+          lv_date          TYPE d,
+          lv_time          TYPE t,
           lt_repo_obj_list TYPE zif_abapgit_repo_srv=>ty_repo_list.
 
     FIELD-SYMBOLS <ls_repo> LIKE LINE OF lt_repo_obj_list.
@@ -303,10 +303,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       lv_check_link      TYPE string,
       lv_text            TYPE string,
       lv_lock            TYPE string,
-      lv_settings_link   TYPE string.
-    DATA lv_new_length TYPE i.
+      lv_settings_link   TYPE string,
+      lv_new_length      TYPE i,
+      lv_offset          TYPE i,
+      lt_results         TYPE match_result_tab.
 
-    FIELD-SYMBOLS: <ls_overview> LIKE LINE OF it_overview.
+    FIELD-SYMBOLS: <ls_overview> LIKE LINE OF it_overview,
+                   <ls_match_result>   TYPE match_result.
 
     ii_html->add( '<tbody>' ).
 
@@ -343,7 +346,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       ii_html->add( |<td class="wmin">{ ii_html->icon( lv_type_icon ) }</td>| ).
 
       ii_html->add( |<td>{ ii_html->a( iv_txt = <ls_overview>-name
-                                       iv_act = |{ c_action-select }?key={ <ls_overview>-key }| ) }{ lv_lock }</td>| ).
+                                       iv_act = |{ c_action-select }?key={ <ls_overview>-key }| ) }</td>| ).
+
+      ii_html->add( |<td>| ).
+      ii_html->add( zcl_abapgit_gui_chunk_lib=>render_package_name(
+        iv_package = <ls_overview>-package
+        iv_suppress_title = abap_true ) ).
+      ii_html->add( |</td>| ).
 
       IF <ls_overview>-type = abap_false.
         lv_text = <ls_overview>-url.
@@ -353,6 +362,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
           lv_new_length = strlen( lv_text ) - 4.
           lv_text  = lv_text(lv_new_length).
         ENDIF.
+        FIND ALL OCCURRENCES OF '/' IN lv_text RESULTS lt_results.
+        IF sy-subrc = 0.
+          IF lines( lt_results ) >= 2.
+            " host.domain/org_or_user/repo/...
+            READ TABLE lt_results INDEX 2 ASSIGNING <ls_match_result>.
+            IF sy-subrc = 0.
+              lv_text = lv_text(<ls_match_result>-offset).
+            ENDIF.
+          ENDIF.
+        ENDIF.
+
         ii_html->add( |<td>{ ii_html->a(
           iv_txt   = lv_text
           iv_title = <ls_overview>-url
@@ -360,12 +380,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       ELSE.
         ii_html->add( |<td></td>| ).
       ENDIF.
-
-      ii_html->add( |<td>| ).
-      ii_html->add( zcl_abapgit_gui_chunk_lib=>render_package_name(
-        iv_package = <ls_overview>-package
-        iv_suppress_title = abap_true ) ).
-      ii_html->add( |</td>| ).
 
       IF <ls_overview>-branch IS INITIAL.
         ii_html->add( |<td>&nbsp;</td>| ).
@@ -467,13 +481,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       iv_allow_order_by = abap_true ).
 
     _add_column(
-      iv_tech_name = 'URL'
-      iv_display_name = 'Url'
+      iv_tech_name = 'PACKAGE'
+      iv_display_name = 'Package'
       iv_allow_order_by = abap_true ).
 
     _add_column(
-      iv_tech_name = 'PACKAGE'
-      iv_display_name = 'Package'
+      iv_tech_name = 'URL'
+      iv_display_name = 'Remote'
       iv_allow_order_by = abap_true ).
 
     _add_column(
