@@ -457,13 +457,11 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       rv_shortened  = rv_shortened(lv_new_length).
     ENDIF.
     FIND ALL OCCURRENCES OF '/' IN rv_shortened RESULTS lt_results.
-    IF sy-subrc = 0.
-      IF lines( lt_results ) >= 2.
-        " host.domain/org_or_user/repo/...
-        READ TABLE lt_results INDEX 2 ASSIGNING <ls_match_result>.
-        IF sy-subrc = 0.
-          rv_shortened = rv_shortened(<ls_match_result>-offset).
-        ENDIF.
+    IF sy-subrc = 0 AND lines( lt_results ) >= 2.
+      " host.domain/org_or_user/repo/...
+      READ TABLE lt_results INDEX 2 ASSIGNING <ls_match_result>.
+      IF sy-subrc = 0.
+        rv_shortened = rv_shortened(<ls_match_result>-offset).
       ENDIF.
     ENDIF.
 
