@@ -112,11 +112,15 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception.
+
+    METHODS shorten_repo_url
+      IMPORTING iv_full_url         TYPE string
+      RETURNING VALUE(rv_shortened) TYPE string.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -303,13 +307,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       lv_check_link      TYPE string,
       lv_text            TYPE string,
       lv_lock            TYPE string,
-      lv_settings_link   TYPE string,
-      lv_new_length      TYPE i,
-      lv_offset          TYPE i,
-      lt_results         TYPE match_result_tab.
+      lv_settings_link   TYPE string.
 
-    FIELD-SYMBOLS: <ls_overview> LIKE LINE OF it_overview,
-                   <ls_match_result>   TYPE match_result.
+    FIELD-SYMBOLS: <ls_overview>     LIKE LINE OF it_overview.
 
     ii_html->add( '<tbody>' ).
 
@@ -355,24 +355,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       ii_html->add( |</td>| ).
 
       IF <ls_overview>-type = abap_false.
-        lv_text = <ls_overview>-url.
-        REPLACE FIRST OCCURRENCE OF 'https://' IN lv_text WITH ''.
-        REPLACE FIRST OCCURRENCE OF 'http://' IN lv_text WITH ''.
-        IF lv_text CP '*.git'.
-          lv_new_length = strlen( lv_text ) - 4.
-          lv_text  = lv_text(lv_new_length).
-        ENDIF.
-        FIND ALL OCCURRENCES OF '/' IN lv_text RESULTS lt_results.
-        IF sy-subrc = 0.
-          IF lines( lt_results ) >= 2.
-            " host.domain/org_or_user/repo/...
-            READ TABLE lt_results INDEX 2 ASSIGNING <ls_match_result>.
-            IF sy-subrc = 0.
-              lv_text = lv_text(<ls_match_result>-offset).
-            ENDIF.
-          ENDIF.
-        ENDIF.
-
+        lv_text = shorten_repo_url( <ls_overview>-url ).
         ii_html->add( |<td>{ ii_html->a(
           iv_txt   = lv_text
           iv_title = <ls_overview>-url
@@ -460,6 +443,32 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD shorten_repo_url.
+  
+    FIELD-SYMBOLS <ls_match_result> TYPE match_result.
+    DATA lt_results TYPE match_result_tab.
+    DATA lv_new_length TYPE i.
+
+    rv_shortened = iv_full_url.
+
+    REPLACE FIRST OCCURRENCE OF 'https://' IN rv_shortened WITH ''.
+    REPLACE FIRST OCCURRENCE OF 'http://' IN rv_shortened WITH ''.
+    IF rv_shortened CP '*.git'.
+      lv_new_length = strlen( rv_shortened ) - 4.
+      rv_shortened  = rv_shortened(lv_new_length).
+    ENDIF.
+    FIND ALL OCCURRENCES OF '/' IN rv_shortened RESULTS lt_results.
+    IF sy-subrc = 0.
+      IF lines( lt_results ) >= 2.
+        " host.domain/org_or_user/repo/...
+        READ TABLE lt_results INDEX 2 ASSIGNING <ls_match_result>.
+        IF sy-subrc = 0.
+          rv_shortened = rv_shortened(<ls_match_result>-offset).
+        ENDIF.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
 
   METHOD render_table_header.
 
