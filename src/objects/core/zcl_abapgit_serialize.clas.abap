@@ -200,7 +200,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
           lv_force  TYPE abap_bool,
           lt_found  LIKE ct_files,
           lt_tadir  TYPE zif_abapgit_definitions=>ty_tadir_tt,
-          lv_index  type i.
+          lv_index  TYPE i.
 
     FIELD-SYMBOLS: <ls_found> LIKE LINE OF lt_found.
 
