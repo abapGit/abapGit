@@ -560,6 +560,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     WAIT UNTIL mv_free = lv_max UP TO 120 SECONDS.
     rt_files = mt_files.
+    FREE mt_files.
 
   ENDMETHOD.
 ENDCLASS.
