@@ -199,8 +199,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     DATA: lo_filter TYPE REF TO zcl_abapgit_repo_filter,
           lv_force  TYPE abap_bool,
           lt_found  LIKE ct_files,
-          lt_tadir  TYPE zif_abapgit_definitions=>ty_tadir_tt,
-          lv_index  TYPE i.
+          lt_tadir  TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
     FIELD-SYMBOLS: <ls_found> LIKE LINE OF lt_found.
 
@@ -230,9 +229,8 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 * leads to doubling memory usage during execution of statement which
 * could result in SYSTEM_NO_ROLL dump
     LOOP AT lt_found ASSIGNING <ls_found>.
-      lv_index = sy-tabix.
       APPEND <ls_found> TO ct_files.
-      DELETE lt_found INDEX lv_index.
+      DELETE lt_found INDEX 1.
     ENDLOOP.
 
   ENDMETHOD.
