@@ -40,15 +40,15 @@ Force allowing serialization of SAP objects.
 
 ### CHANGE_PROXY_URL
 
-Deterime the proxy URL from the repository URL.
+Determine the proxy URL from the repository URL.
 
 ### CHANGE_PROXY_PORT
 
-Deterime the proxy port from the repository URL.
+Determine the proxy port from the repository URL.
 
 ### CHANGE_PROXY_AUTHENTICATION
 
-Deterime based on the repository URL if authentication is required when accessing the proxy.
+Determine based on the repository URL if authentication is required when accessing the proxy.
 
 ### CREATE_HTTP_CLIENT
 
