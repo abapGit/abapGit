@@ -201,6 +201,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
           lt_found  LIKE ct_files,
           lt_tadir  TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
+    FIELD-SYMBOLS: <ls_found> LIKE LINE OF lt_found.
 
     lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
       iv_package            = iv_package
