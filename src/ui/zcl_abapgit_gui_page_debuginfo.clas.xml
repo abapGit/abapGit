@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>GUI - Debug information page</DESCRIPT>
+    <DESCRIPT>abapGit - Debug Information</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

@@ -27,30 +27,12 @@ CLASS zcl_abapgit_file_deserialize DEFINITION
         !it_results       TYPE zif_abapgit_definitions=>ty_results_tt
       RETURNING
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt.
-    CLASS-METHODS adjust_namespaces
-      IMPORTING
-        !it_results       TYPE zif_abapgit_definitions=>ty_results_tt
-      RETURNING
-        VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt.
 
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_file_deserialize IMPLEMENTATION.
-
-
-  METHOD adjust_namespaces.
-
-    FIELD-SYMBOLS: <ls_result> LIKE LINE OF rt_results.
-
-    rt_results = it_results.
-
-    LOOP AT rt_results ASSIGNING <ls_result>.
-      REPLACE ALL OCCURRENCES OF '#' IN <ls_result>-obj_name WITH '/'.
-    ENDLOOP.
-
-  ENDMETHOD.
 
 
   METHOD filter_files_to_deserialize.
@@ -144,18 +126,17 @@ CLASS zcl_abapgit_file_deserialize IMPLEMENTATION.
 
   METHOD get_results.
 
-    rt_results = adjust_namespaces(
-                   prioritize_deser(
-                     filter_files_to_deserialize(
-                       it_results = zcl_abapgit_file_status=>status( io_repo )
-                       ii_log     = ii_log ) ) ).
+    rt_results = prioritize_deser(
+                   filter_files_to_deserialize(
+                     it_results = zcl_abapgit_file_status=>status( io_repo )
+                     ii_log     = ii_log ) ).
 
   ENDMETHOD.
 
 
   METHOD prioritize_deser.
 
-* todo, refactor this method
+* todo, refactor this method #3536
 
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
 
