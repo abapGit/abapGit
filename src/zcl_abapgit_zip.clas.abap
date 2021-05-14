@@ -131,6 +131,8 @@ CLASS zcl_abapgit_zip IMPLEMENTATION.
       ii_log            = li_log
       it_filter         = it_filter ).
 
+    FREE lo_serialize.
+
     IF li_log->count( ) > 0 AND iv_show_log = abap_true.
       zcl_abapgit_log_viewer=>show_log( li_log ).
     ENDIF.
