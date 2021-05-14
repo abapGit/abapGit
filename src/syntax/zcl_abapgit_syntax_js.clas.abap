@@ -36,10 +36,11 @@ CLASS zcl_abapgit_syntax_js DEFINITION
     CLASS-METHODS class_constructor .
     METHODS constructor .
   PROTECTED SECTION.
+    TYPES: ty_token TYPE c LENGTH 1.
 
     TYPES: BEGIN OF ty_keyword,
              keyword TYPE string,
-             token   TYPE char1,
+             token   TYPE ty_token,
            END OF ty_keyword.
 
     CLASS-DATA gt_keywords TYPE HASHED TABLE OF ty_keyword WITH UNIQUE KEY keyword.
@@ -49,7 +50,7 @@ CLASS zcl_abapgit_syntax_js DEFINITION
     CLASS-METHODS insert_keywords
       IMPORTING
         iv_keywords TYPE string
-        iv_token    TYPE char1.
+        iv_token    TYPE ty_token.
     CLASS-METHODS is_keyword
       IMPORTING iv_chunk      TYPE string
       RETURNING VALUE(rv_yes) TYPE abap_bool.

@@ -21,7 +21,7 @@ BOBF | BOPF: Business Object Model | [#165](https://github.com/abapGit/abapGit/i
 CHAR | Object characteristic | Yes
 CHDO | Change Document Object | Yes
 CLAS | Class (ABAP Objects) | Yes
-CMOD | Customer enhancement projects | [#151](https://github.com/abapGit/abapGit/issues/151)
+CMOD | Customer enhancement projects | Yes
 CMPT | Code Composer Template | Yes
 CUS0 | Customizing IMG Activity | Yes
 CUS1 | Customizing Transactions | Yes
@@ -82,7 +82,7 @@ OTGR | Object type group | Yes
 PARA | SPA/GPA Parameters | Yes
 PDAC | Standard Rule | [#3914](https://github.com/abapGit/abapGit/issues/3914)
 PDTG | Task Group | [#3915](https://github.com/abapGit/abapGit/issues/3915)
-PDTS | Standard Task | [#153](https://github.com/abapGit/abapGit/issues/153)
+PDTS | Standard Task | partial - [#4164](https://github.com/abapGit/abapGit/issues/4164)
 PDWS | Workflow templates | [#154](https://github.com/abapGit/abapGit/issues/154)
 PERS | Personalization object | Yes
 PINF | Package interface | Yes
@@ -136,7 +136,7 @@ VIEW | View | Yes
 W3HT | Web Reporting/Internet Transaction Server HTML Templates | Yes
 W3MI | Web Reporting/Internet Transaction Server MIME Types(binary | Yes
 WAPA | BSP (Business Server Pages) Application | Yes
-WDCA | Web Dynpro Application Configuration | [#79](https://github.com/abapGit/abapGit/issues/79)
+WDCA | Web Dynpro Application Configuration | Yes
 WDCC | Web Dynpro Component Configuration | Yes
 WDYA | Web Dynpro Application | Yes
 WDYN | Web Dynpro Component | Yes

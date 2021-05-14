@@ -363,6 +363,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
 
     " While patching we always want to be in split mode
     CLEAR: mv_unified.
+    set_layout( ).
     CREATE OBJECT mo_stage.
 
     ms_control-page_title = 'Patch'.

@@ -7,6 +7,16 @@
 body {
   overflow-x: hidden;
 }
+
+body.centered {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+body.full_width {
+  width:100%;
+}
+
 a, a:visited {
   text-decoration:  none;
 }
@@ -1043,17 +1053,19 @@ settings_tab tr:first-child td { border-top: 0px; }
 /* DIALOGS */
 
 .dialog {
+  margin: 0 auto;
+  margin-top: 1em;
+  margin-bottom: 1em;
   border: 1px solid;
   padding: 1em 1em;
   border-radius: 6px;
   text-align: left;
 }
 .dialog-form {
-  margin: 1em 1em 1em 1em; 
   width: 600px;
 }
 .dialog-form-center {
-  margin: 1em auto 1em; 
+  margin: 1em auto 1em;
   max-width: 600px;
   width: 100%;
 }

@@ -77,7 +77,7 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
 
     lt_dependencies_status = get_dependencies_met_status( it_dependencies ).
 
-    LOOP AT lt_dependencies_status TRANSPORTING NO FIELDS WHERE met <> 'Y'.
+    LOOP AT lt_dependencies_status TRANSPORTING NO FIELDS WHERE met <> zif_abapgit_definitions=>gc_yes.
       EXIT.
     ENDLOOP.
 
