@@ -280,7 +280,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
   METHOD render_table.
 
     ii_html->add( |<div class="db_list repo-overview">| ).
-    ii_html->add( |<table class="db_tab w100">| ).
+    ii_html->add( |<table class="db_tab">| ).
 
     render_table_header( ii_html ).
     render_table_body( ii_html     = ii_html
@@ -345,14 +345,14 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
       ii_html->add( |<td class="wmin">{ ii_html->icon( lv_type_icon ) }</td>| ).
 
-      ii_html->add( |<td>{ ii_html->a( iv_txt = <ls_overview>-name
-                                       iv_act = |{ c_action-select }?key={ <ls_overview>-key }| ) }</td>| ).
-
       ii_html->add( |<td>| ).
       ii_html->add( zcl_abapgit_gui_chunk_lib=>render_package_name(
         iv_package = <ls_overview>-package
         iv_suppress_title = abap_true ) ).
       ii_html->add( |</td>| ).
+
+      ii_html->add( |<td>{ ii_html->a( iv_txt = <ls_overview>-name
+                                       iv_act = |{ c_action-select }?key={ <ls_overview>-key }| ) }</td>| ).
 
       IF <ls_overview>-type = abap_false.
         lv_text = shorten_repo_url( <ls_overview>-url ).
@@ -456,14 +456,6 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       lv_new_length = strlen( rv_shortened ) - 4.
       rv_shortened  = rv_shortened(lv_new_length).
     ENDIF.
-    FIND ALL OCCURRENCES OF '/' IN rv_shortened RESULTS lt_results.
-    IF sy-subrc = 0 AND lines( lt_results ) >= 2.
-      " host.domain/org_or_user/repo/...
-      READ TABLE lt_results INDEX 2 ASSIGNING <ls_match_result>.
-      IF sy-subrc = 0.
-        rv_shortened = rv_shortened(<ls_match_result>-offset).
-      ENDIF.
-    ENDIF.
 
   ENDMETHOD.
 
@@ -482,13 +474,13 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_allow_order_by = abap_false ).
 
     _add_column(
-      iv_tech_name = 'NAME'
-      iv_display_name = 'Name'
+      iv_tech_name = 'PACKAGE'
+      iv_display_name = 'Package'
       iv_allow_order_by = abap_true ).
 
     _add_column(
-      iv_tech_name = 'PACKAGE'
-      iv_display_name = 'Package'
+      iv_tech_name = 'NAME'
+      iv_display_name = 'Name'
       iv_allow_order_by = abap_true ).
 
     _add_column(
