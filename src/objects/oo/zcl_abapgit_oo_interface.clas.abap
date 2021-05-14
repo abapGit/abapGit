@@ -15,6 +15,8 @@ CLASS zcl_abapgit_oo_interface DEFINITION
         REDEFINITION .
     METHODS zif_abapgit_oo_object_fnc~deserialize_source
         REDEFINITION .
+    METHODS zif_abapgit_oo_object_fnc~exists
+        REDEFINITION .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -254,6 +256,21 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_oo_object_fnc~exists.
+    CALL FUNCTION 'SEO_INTERFACE_EXISTENCE_CHECK'
+      EXPORTING
+        intkey        = is_object_name
+      EXCEPTIONS
+        not_specified = 1
+        not_existing  = 2
+        is_class      = 3
+        no_text       = 4
+        inconsistent  = 5
+        OTHERS        = 6.
+    rv_exists = boolc( sy-subrc = 0 OR sy-subrc = 4 ).
   ENDMETHOD.
 
 

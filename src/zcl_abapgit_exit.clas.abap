@@ -15,7 +15,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
+CLASS zcl_abapgit_exit IMPLEMENTATION.
 
 
   METHOD get_instance.
@@ -189,6 +189,16 @@ CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
         gi_exit->http_client(
           iv_url    = iv_url
           ii_client = ii_client ).
+      CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_exit~on_event.
+
+    TRY.
+        rs_handled = gi_exit->on_event( ii_event ).
       CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
     ENDTRY.
 
