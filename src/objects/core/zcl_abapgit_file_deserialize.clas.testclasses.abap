@@ -1,9 +1,7 @@
 CLASS ltcl_filter_files_to_deser DEFINITION DEFERRED.
-CLASS ltcl_adjust_namespaces DEFINITION DEFERRED.
 CLASS ltcl_prio_deserialization DEFINITION DEFERRED.
 
 CLASS zcl_abapgit_file_deserialize DEFINITION LOCAL FRIENDS ltcl_filter_files_to_deser.
-CLASS zcl_abapgit_file_deserialize DEFINITION LOCAL FRIENDS ltcl_adjust_namespaces.
 CLASS zcl_abapgit_file_deserialize DEFINITION LOCAL FRIENDS ltcl_prio_deserialization.
 
 CLASS ltcl_filter_files_to_deser DEFINITION FINAL FOR TESTING
@@ -210,58 +208,6 @@ CLASS ltcl_filter_files_to_deser IMPLEMENTATION.
   METHOD when_filter_is_applied.
 
     mt_result = mo_objects->filter_files_to_deserialize( mt_result ).
-
-  ENDMETHOD.
-
-ENDCLASS.
-
-CLASS ltcl_adjust_namespaces DEFINITION FINAL FOR TESTING
-  DURATION SHORT
-  RISK LEVEL HARMLESS.
-
-  PRIVATE SECTION.
-    METHODS:
-      setup,
-      adjust_namespaces FOR TESTING RAISING cx_static_check.
-
-    DATA:
-      mo_objects TYPE REF TO zcl_abapgit_file_deserialize.
-
-ENDCLASS.
-
-CLASS ltcl_adjust_namespaces IMPLEMENTATION.
-
-  METHOD setup.
-
-    CREATE OBJECT mo_objects.
-
-  ENDMETHOD.
-
-  METHOD adjust_namespaces.
-
-    DATA: lt_input  TYPE zif_abapgit_definitions=>ty_results_tt,
-          lt_ouptut TYPE zif_abapgit_definitions=>ty_results_tt,
-          ls_result LIKE LINE OF lt_input.
-
-    ls_result-obj_name = |#SAP#ZTEST|.
-    INSERT ls_result INTO TABLE lt_input.
-
-    ls_result-obj_name = |ZTEST|.
-    INSERT ls_result INTO TABLE lt_input.
-
-    lt_ouptut = mo_objects->adjust_namespaces( lt_input ).
-
-    READ TABLE lt_ouptut INTO ls_result INDEX 1.
-
-    cl_abap_unit_assert=>assert_equals(
-      exp = |/SAP/ZTEST|
-      act = ls_result-obj_name ).
-
-    READ TABLE lt_ouptut INTO ls_result INDEX 2.
-
-    cl_abap_unit_assert=>assert_equals(
-      exp = |ZTEST|
-      act = ls_result-obj_name ).
 
   ENDMETHOD.
 
