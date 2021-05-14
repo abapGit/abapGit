@@ -224,7 +224,6 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       iv_language         = io_dot_abapgit->get_main_language( )
       ii_log              = ii_log
       iv_force_sequential = lv_force ).
-      
 * transfer one by one and delete from original table as APPEND LINES OF
 * leads to doubling memory usage during execution of statement which
 * could result in SYSTEM_NO_ROLL dump
