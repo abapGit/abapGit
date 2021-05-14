@@ -82,7 +82,7 @@ OTGR | Object type group | Yes
 PARA | SPA/GPA Parameters | Yes
 PDAC | Standard Rule | [#3914](https://github.com/abapGit/abapGit/issues/3914)
 PDTG | Task Group | [#3915](https://github.com/abapGit/abapGit/issues/3915)
-PDTS | Standard Task | [#4164](https://github.com/abapGit/abapGit/issues/4164)
+PDTS | Standard Task | partial - [#4164](https://github.com/abapGit/abapGit/issues/4164)
 PDWS | Workflow templates | [#154](https://github.com/abapGit/abapGit/issues/154)
 PERS | Personalization object | Yes
 PINF | Package interface | Yes
