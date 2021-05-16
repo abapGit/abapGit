@@ -121,12 +121,12 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
       IMPORTING ii_html TYPE REF TO zif_abapgit_html.
 
     METHODS column
-      IMPORTING content     TYPE string OPTIONAL
-                css_class   TYPE string OPTIONAL
+      IMPORTING iv_content     TYPE string OPTIONAL
+                iv_css_class   TYPE string OPTIONAL
       RETURNING VALUE(rv_html) TYPE string.
 
     METHODS action_link
-      IMPORTING content     TYPE string
+      IMPORTING iv_content     TYPE string
       RETURNING VALUE(rv_html) TYPE string.
 ENDCLASS.
 
@@ -351,12 +351,12 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
         iv_hint  = 'Click to toggle favorite' ) ).
 
       ii_html->add(
-        column( content = zcl_abapgit_html=>checkbox( iv_id = |select_{ <ls_repo>-key }| )
-                css_class = 'wmin' ) ).
+        column( iv_content = zcl_abapgit_html=>checkbox( iv_id = |select_{ <ls_repo>-key }| )
+                iv_css_class = 'wmin' ) ).
 
       ii_html->add(
-        column( content = lv_toggle_favorite_link
-                css_class = 'wmin' ) ).
+        column( iv_content = lv_toggle_favorite_link
+                iv_css_class = 'wmin' ) ).
 
       CLEAR lv_lock.
       IF <ls_repo>-write_protected = abap_true.
@@ -366,21 +366,21 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       ENDIF.
 
       ii_html->add(
-        column( content = ii_html->icon( lv_type_icon )
-                css_class = 'wmin' ) ).
+        column( iv_content = ii_html->icon( lv_type_icon )
+                iv_css_class = 'wmin' ) ).
 
       ii_html->add(
-        column( content = zcl_abapgit_gui_chunk_lib=>render_package_name(
+        column( iv_content = zcl_abapgit_gui_chunk_lib=>render_package_name(
                             iv_package = <ls_repo>-package
                             iv_suppress_title = abap_true )->render( ) ) ).
 
       ii_html->add(
-        column( content = ii_html->a( iv_txt = <ls_repo>-name
+        column( iv_content = ii_html->a( iv_txt = <ls_repo>-name
                                       iv_act = |{ c_action-select }?key={ <ls_repo>-key }| ) ) ).
 
       IF <ls_repo>-type = abap_false.
         lv_text = shorten_repo_url( <ls_repo>-url ).
-        ii_html->add( column( content = |{ ii_html->a(
+        ii_html->add( column( iv_content = |{ ii_html->a(
           iv_txt   = lv_text
           iv_title = <ls_repo>-url
           iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ <ls_repo>-url }| ) }| ) ).
@@ -389,41 +389,41 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       ENDIF.
 
       IF <ls_repo>-branch IS INITIAL.
-        ii_html->add( column( content = |&nbsp;| ) ).
+        ii_html->add( column( iv_content = |&nbsp;| ) ).
       ELSE.
         ii_html->add(
-          column( content = zcl_abapgit_gui_chunk_lib=>render_branch_name(
+          column( iv_content = zcl_abapgit_gui_chunk_lib=>render_branch_name(
                               iv_branch   = <ls_repo>-branch
                               iv_repo_key = <ls_repo>-key )->render( ) ) ).
       ENDIF.
 
       ii_html->add(
-        column( content = zcl_abapgit_gui_chunk_lib=>render_user_name(
+        column( iv_content = zcl_abapgit_gui_chunk_lib=>render_user_name(
                             iv_username = <ls_repo>-deserialized_by
                             iv_suppress_title = abap_true )->render( )
-                css_class = 'ro-detail' ) ).
+                iv_css_class = 'ro-detail' ) ).
 
       ii_html->add(
-        column( content = <ls_repo>-deserialized_at
-                css_class = 'ro-detail' ) ).
+        column( iv_content = <ls_repo>-deserialized_at
+                iv_css_class = 'ro-detail' ) ).
 
       ii_html->add(
-        column( content = zcl_abapgit_gui_chunk_lib=>render_user_name(
+        column( iv_content = zcl_abapgit_gui_chunk_lib=>render_user_name(
                     iv_username = <ls_repo>-created_by
                     iv_suppress_title = abap_true )->render( )
-                css_class = 'ro-detail' ) ).
+                iv_css_class = 'ro-detail' ) ).
 
       ii_html->add(
-        column( content = <ls_repo>-created_at
-                css_class = 'ro-detail' ) ).
+        column( iv_content = <ls_repo>-created_at
+                iv_css_class = 'ro-detail' ) ).
 
       ii_html->add(
-        column( content = |{ <ls_repo>-key }|
-                css_class = 'ro-detail' ) ).
+        column( iv_content = |{ <ls_repo>-key }|
+                iv_css_class = 'ro-detail' ) ).
 
       ii_html->add(
-        column( content = |<span>{ ii_html->a( iv_txt = `&rsaquo;` iv_act = |{ c_action-select }| ) }</span>|
-                css_class = 'ro-go' ) ).
+        column( iv_content = |<span>{ ii_html->a( iv_txt = `&rsaquo;` iv_act = |{ c_action-select }| ) }</span>|
+                iv_css_class = 'ro-go' ) ).
 
     ENDLOOP.
 
@@ -683,15 +683,15 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD column.
-    IF css_class IS NOT INITIAL.
-      rv_html = |<td class="{ css_class }">| && content && |</td>|.
+    IF iv_css_class IS NOT INITIAL.
+      rv_html = |<td class="{ iv_css_class }">| && iv_content && |</td>|.
     ELSE.
-      rv_html = |<td>| && content && |</td>|.
+      rv_html = |<td>| && iv_content && |</td>|.
     ENDIF.
   ENDMETHOD.
 
   METHOD action_link.
-    rv_html = |<span class="action_link">| && content && |</span>|.
+    rv_html = |<span class="action_link">| && iv_content && |</span>|.
   ENDMETHOD.
 
 ENDCLASS.
