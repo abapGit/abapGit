@@ -86,6 +86,12 @@ if (!String.prototype.startsWith) {
   });
 }
 
+// forEach polyfill, taken from https://developer.mozilla.org
+// used for querySelectorAll results 
+if (window.NodeList && !NodeList.prototype.forEach) {
+  NodeList.prototype.forEach = Array.prototype.forEach;
+}
+
 /**********************************************************
  * Common functions
  **********************************************************/
@@ -250,7 +256,60 @@ function RepoOverViewHelper() {
   this.toggleFilterIcon(icon, this.isDetailsDisplayed);
   icon = document.getElementById("icon-filter-favorite");
   this.toggleFilterIcon(icon, this.isOnlyFavoritesDisplayed);
+  this.registerRowSelection();
 }
+
+RepoOverViewHelper.prototype.registerRowSelection = function () {
+  document.querySelectorAll("tr[data-key] td").forEach(function (repoListRowCell) {
+
+    repoListRowCell.addEventListener("click", function (event) {
+      const everyCheckbox = document.querySelectorAll("input[type='checkbox']");
+      everyCheckbox.forEach(function (x) {
+        x.checked = false;
+
+        // input->td->tr.selected
+        x.parentElement.parentElement.classList.remove("selected")
+      });
+
+      // td->tr
+      const selectedRow = event.target.parentElement;
+      selectedRow.classList.add("selected");
+      const selectedRowCheckbox = selectedRow.querySelector("input[type='checkbox']");
+      selectedRowCheckbox.checked = true;
+
+      // now we have a repo selected, determine which action buttons are relevant
+      const selectedRepoKey = selectedRow.dataset.key;
+      const selectedRepoIsOffline = selectedRow.dataset.offline === "X";
+
+      const actionLinks = document.querySelectorAll("a.action_link");
+      actionLinks.forEach(function (link) {
+        // adjust repo key in urls
+        link.href = link.href.replace(/\?key=(#|\d+)/, "?key=" + selectedRepoKey);
+
+        // toggle button visibility
+        if (link.classList.contains("action_offline_repo")) {
+          if(selectedRepoIsOffline){
+            link.parentElement.classList.add("enabled");
+          }else{
+            link.parentElement.classList.remove("enabled");
+          }
+        }
+        else if (link.classList.contains("action_online_repo")) {
+          if(!selectedRepoIsOffline){
+            link.parentElement.classList.add("enabled");
+          }else{
+            link.parentElement.classList.remove("enabled");
+          }
+        }
+        else{
+          // if the action is for both repository types, it will only have the .action_link class
+          // it still needs to be toggled as we want to hide everything if no repo is selected
+          link.parentElement.classList.add("enabled");
+        }
+      });
+    })
+  })
+};
 
 RepoOverViewHelper.prototype.toggleRepoListDetail = function (forceDisplay) {
   if (this.detailCssClass) {
@@ -259,7 +318,7 @@ RepoOverViewHelper.prototype.toggleRepoListDetail = function (forceDisplay) {
   }
 };
 
-RepoOverViewHelper.prototype.toggleItemsDetail = function(forceDisplay){
+RepoOverViewHelper.prototype.toggleItemsDetail = function (forceDisplay) {
   if (this.detailCssClass) {
     this.isDetailsDisplayed = forceDisplay || !this.isDetailsDisplayed;
 
@@ -273,7 +332,6 @@ RepoOverViewHelper.prototype.toggleItemsDetail = function(forceDisplay){
     }
 
     this.detailCssClass.style.display = this.isDetailsDisplayed ? "" : "none";
-    this.actionCssClass.style.display = this.isDetailsDisplayed ? "none" : "";
     var icon = document.getElementById("icon-filter-detail");
     this.toggleFilterIcon(icon, this.isDetailsDisplayed);
   }
