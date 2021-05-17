@@ -257,52 +257,125 @@ function RepoOverViewHelper() {
   icon = document.getElementById("icon-filter-favorite");
   this.toggleFilterIcon(icon, this.isOnlyFavoritesDisplayed);
   this.registerRowSelection();
+  this.registerKeyboardShortcuts();
+}
+
+RepoOverViewHelper.prototype.setHooks = function () {
+  window.onload = this.onPageLoad.bind(this);
+};
+
+RepoOverViewHelper.prototype.onPageLoad = function () {
+  var data = window.localStorage && JSON.parse(window.localStorage.getItem(this.pageId));
+  if (data) {
+    if (data.isDetailsDisplayed) {
+      this.toggleItemsDetail(true);
+    }
+    if (data.isOnlyFavoritesDisplayed) {
+      this.toggleItemsFavorites(true);
+    }
+    if (data.selectedRepoKey) {
+      this.selectRepo(data.selectedRepoKey);
+    } else {
+      this.selectRowByIndex(0);
+    }
+  }
+};
+
+RepoOverViewHelper.prototype.registerKeyboardShortcuts = function () {
+  const self = this;
+  document.addEventListener("keypress", function (event) {
+    if (document.activeElement.id === "filter") {
+      return;
+    }
+    const keycode = event.keyCode;
+    console.log("pressed " + keycode);
+    const rows = Array.prototype.slice.call(self.getVisibleRows());
+    const selected = document.querySelector(".repo.selected");
+    const indexOfSelected = rows.indexOf(selected);
+
+    if (keycode == 13) {
+      // "enter" to open
+      self.openSelectedRepo();
+    }
+    else if (keycode == 44 && indexOfSelected > 0) {
+      // "<" for previous
+      self.selectRowByIndex(indexOfSelected - 1);
+    } else if (keycode == 46 && indexOfSelected < rows.length - 1) {
+      // ">" for next
+      self.selectRowByIndex(indexOfSelected + 1);
+    }
+  });
+}
+
+RepoOverViewHelper.prototype.openSelectedRepo = function () {
+  document.querySelector(".repo.selected td.ro-go a").click();
+}
+
+RepoOverViewHelper.prototype.selectRowByIndex = function (index) {
+  const rows = this.getVisibleRows();
+  if (rows.length >= index) {
+    this.deselectAllRows();
+    rows[index].classList.add("selected");
+    this.updateActionLinks(rows[index]);
+  }
+}
+
+RepoOverViewHelper.prototype.updateActionLinks = function (selectedRow) {
+  // now we have a repo selected, determine which action buttons are relevant
+  const selectedRepoKey = selectedRow.dataset.key;
+  const selectedRepoIsOffline = selectedRow.dataset.offline === "X";
+
+  const actionLinks = document.querySelectorAll("a.action_link");
+  actionLinks.forEach(function (link) {
+    // adjust repo key in urls
+    link.href = link.href.replace(/\?key=(#|\d+)/, "?key=" + selectedRepoKey);
+
+    // toggle button visibility
+    if (link.classList.contains("action_offline_repo")) {
+      if (selectedRepoIsOffline) {
+        link.parentElement.classList.add("enabled");
+      } else {
+        link.parentElement.classList.remove("enabled");
+      }
+    }
+    else if (link.classList.contains("action_online_repo")) {
+      if (!selectedRepoIsOffline) {
+        link.parentElement.classList.add("enabled");
+      } else {
+        link.parentElement.classList.remove("enabled");
+      }
+    }
+    else {
+      // if the action is for both repository types, it will only have the .action_link class
+      // it still needs to be toggled as we want to hide everything if no repo is selected
+      link.parentElement.classList.add("enabled");
+    }
+  });
+}
+
+RepoOverViewHelper.prototype.deselectAllRows = function () {
+  document.querySelectorAll(".repo").forEach(function (x) {
+    x.classList.remove("selected")
+  });
+}
+
+RepoOverViewHelper.prototype.getVisibleRows = function(){
+  return document.querySelectorAll(".repo:not(.nodisplay)");
 }
 
 RepoOverViewHelper.prototype.registerRowSelection = function () {
-  document.querySelectorAll("tr[data-key] td").forEach(function (repoListRowCell) {
+  const self = this;
+  document.querySelectorAll(".repo td").forEach(function (repoListRowCell) {
 
     repoListRowCell.addEventListener("click", function (event) {
-      
-      // clear selected rows
-      document.querySelectorAll("tr[data-key]").forEach(function (x) {
-        x.classList.remove("selected")
-      });
+
+      self.deselectAllRows();
 
       // td->tr
       const selectedRow = event.target.parentElement;
       selectedRow.classList.add("selected");
 
-      // now we have a repo selected, determine which action buttons are relevant
-      const selectedRepoKey = selectedRow.dataset.key;
-      const selectedRepoIsOffline = selectedRow.dataset.offline === "X";
-
-      const actionLinks = document.querySelectorAll("a.action_link");
-      actionLinks.forEach(function (link) {
-        // adjust repo key in urls
-        link.href = link.href.replace(/\?key=(#|\d+)/, "?key=" + selectedRepoKey);
-
-        // toggle button visibility
-        if (link.classList.contains("action_offline_repo")) {
-          if(selectedRepoIsOffline){
-            link.parentElement.classList.add("enabled");
-          }else{
-            link.parentElement.classList.remove("enabled");
-          }
-        }
-        else if (link.classList.contains("action_online_repo")) {
-          if(!selectedRepoIsOffline){
-            link.parentElement.classList.add("enabled");
-          }else{
-            link.parentElement.classList.remove("enabled");
-          }
-        }
-        else{
-          // if the action is for both repository types, it will only have the .action_link class
-          // it still needs to be toggled as we want to hide everything if no repo is selected
-          link.parentElement.classList.add("enabled");
-        }
-      });
+      self.updateActionLinks(selectedRow);
     })
   })
 };
@@ -348,7 +421,7 @@ RepoOverViewHelper.prototype.toggleRepoListFavorites = function (forceDisplay) {
   this.saveFilter();
 };
 
-RepoOverViewHelper.prototype.toggleItemsFavorites = function(forceDisplay){
+RepoOverViewHelper.prototype.toggleItemsFavorites = function (forceDisplay) {
   this.isOnlyFavoritesDisplayed = forceDisplay || !this.isOnlyFavoritesDisplayed;
   var repositories = document.getElementsByClassName("repo");
   var icon = document.getElementById("icon-filter-favorite");
@@ -357,16 +430,12 @@ RepoOverViewHelper.prototype.toggleItemsFavorites = function(forceDisplay){
     var repo = repositories[i];
     if (this.isOnlyFavoritesDisplayed) {
       if (!repo.classList.contains("favorite")) {
-        repo.style.display = "none";
+        repo.classList.add("nodisplay");
       }
     } else {
-      repo.style.display = "";
+      repo.classList.remove("nodisplay");
     }
   }
-};
-
-RepoOverViewHelper.prototype.setHooks = function () {
-  window.onload = this.onPageLoad.bind(this);
 };
 
 RepoOverViewHelper.prototype.saveFilter = function () {
@@ -378,17 +447,6 @@ RepoOverViewHelper.prototype.saveFilter = function () {
   window.localStorage.setItem(this.pageId, JSON.stringify(data));
 };
 
-RepoOverViewHelper.prototype.onPageLoad = function () {
-  var data = window.localStorage && JSON.parse(window.localStorage.getItem(this.pageId));
-  if (data) {
-    if (data.isDetailsDisplayed) {
-      this.toggleItemsDetail(true);
-    }
-    if (data.isOnlyFavoritesDisplayed) {
-      this.toggleItemsFavorites(true);
-    }
-  }
-};
 
 /**********************************************************
  * STAGE PAGE Logic
