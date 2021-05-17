@@ -57,3 +57,8 @@ ssl/client_ciphersuites = 150:PFS:HIGH::EC_P256:EC_HIGH
 ssl/ciphersuites = 135:PFS:HIGH::EC_P256:EC_HIGH
 icm/HTTPS/client_sni_enabled = TRUE
 ```
+
+- for NPL minisap - add profile parameters to following file:
+  ```
+  /sapmnt/NPL/profile/DEFAULT.PFL
+  ```
