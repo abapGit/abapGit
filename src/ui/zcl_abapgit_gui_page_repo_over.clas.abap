@@ -351,10 +351,6 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
         iv_hint  = 'Click to toggle favorite' ) ).
 
       ii_html->add(
-        column( iv_content = zcl_abapgit_html=>checkbox( iv_id = |select_{ <ls_repo>-key }| )
-                iv_css_class = 'wmin' ) ).
-
-      ii_html->add(
         column( iv_content = lv_toggle_favorite_link
                 iv_css_class = 'wmin' ) ).
 
@@ -370,13 +366,13 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
                 iv_css_class = 'wmin' ) ).
 
       ii_html->add(
+        column( iv_content = ii_html->a( iv_txt = <ls_repo>-name
+                                      iv_act = |{ c_action-select }?key={ <ls_repo>-key }| ) ) ).
+
+      ii_html->add(
         column( iv_content = zcl_abapgit_gui_chunk_lib=>render_package_name(
                             iv_package = <ls_repo>-package
                             iv_suppress_title = abap_true )->render( ) ) ).
-
-      ii_html->add(
-        column( iv_content = ii_html->a( iv_txt = <ls_repo>-name
-                                      iv_act = |{ c_action-select }?key={ <ls_repo>-key }| ) ) ).
 
       IF <ls_repo>-type = abap_false.
         lv_text = shorten_repo_url( <ls_repo>-url ).
@@ -422,7 +418,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
                 iv_css_class = 'ro-detail' ) ).
 
       ii_html->add(
-        column( iv_content = |<span>{ ii_html->a( iv_txt = `&rsaquo;` iv_act = |{ c_action-select }| ) }</span>|
+        column( iv_content = |<span>{ ii_html->a( iv_txt = `&rsaquo;` iv_act = |{ c_action-select }?key={ <ls_repo>-key }| ) }</span>|
                 iv_css_class = 'ro-go' ) ).
 
     ENDLOOP.
@@ -518,11 +514,6 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     CLEAR mt_col_spec.
 
     _add_column(
-      iv_tech_name = 'CHECKBOX'
-      iv_css_class = 'wmin'
-      iv_allow_order_by = abap_false ).
-
-    _add_column(
       iv_tech_name = 'FAVORITE'
       iv_css_class = 'wmin'
       iv_allow_order_by = abap_false ).
@@ -533,13 +524,13 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_allow_order_by = abap_false ).
 
     _add_column(
-      iv_tech_name = 'PACKAGE'
-      iv_display_name = 'Package'
+      iv_tech_name = 'NAME'
+      iv_display_name = 'Name'
       iv_allow_order_by = abap_true ).
 
     _add_column(
-      iv_tech_name = 'NAME'
-      iv_display_name = 'Name'
+      iv_tech_name = 'PACKAGE'
+      iv_display_name = 'Package'
       iv_allow_order_by = abap_true ).
 
     _add_column(
@@ -569,7 +560,6 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_display_name = 'Created by'
       iv_css_class = 'ro-detail'
       iv_allow_order_by = abap_true ).
-
 
     _add_column(
       iv_tech_name = 'CREATED_AT'

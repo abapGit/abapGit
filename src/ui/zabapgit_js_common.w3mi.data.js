@@ -263,19 +263,15 @@ RepoOverViewHelper.prototype.registerRowSelection = function () {
   document.querySelectorAll("tr[data-key] td").forEach(function (repoListRowCell) {
 
     repoListRowCell.addEventListener("click", function (event) {
-      const everyCheckbox = document.querySelectorAll("input[type='checkbox']");
-      everyCheckbox.forEach(function (x) {
-        x.checked = false;
-
-        // input->td->tr.selected
-        x.parentElement.parentElement.classList.remove("selected")
+      
+      // clear selected rows
+      document.querySelectorAll("tr[data-key]").forEach(function (x) {
+        x.classList.remove("selected")
       });
 
       // td->tr
       const selectedRow = event.target.parentElement;
       selectedRow.classList.add("selected");
-      const selectedRowCheckbox = selectedRow.querySelector("input[type='checkbox']");
-      selectedRowCheckbox.checked = true;
 
       // now we have a repo selected, determine which action buttons are relevant
       const selectedRepoKey = selectedRow.dataset.key;
