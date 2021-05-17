@@ -336,9 +336,9 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
     <ls_column>-name = 'OBJ_NAME'.
     APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
-    <ls_column>-name = 'ICON'.
+    <ls_column>-name = 'SHOW_ICON'.
     <ls_column>-text = 'Action'.
-    <ls_column>-icon = abap_true.
+    <ls_column>-show_icon = abap_true.
     <ls_column>-length = 5.
     APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
     <ls_column>-name = 'TEXT'.

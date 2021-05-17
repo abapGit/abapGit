@@ -859,7 +859,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
                 lo_column->set_output_length( <ls_column_to_display>-length ).
               ENDIF.
 
-              IF <ls_column_to_display>-icon = abap_true.
+              IF <ls_column_to_display>-show_icon = abap_true.
                 lo_column->set_icon( abap_true ).
               ENDIF.
 
