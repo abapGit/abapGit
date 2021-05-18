@@ -18,8 +18,8 @@
   },
   "devDependencies": {
     "@abaplint/cli": "^2.74.21",
-    "@abaplint/transpiler-cli": "^1.3.18",
-    "@abaplint/runtime": "^1.3.18",
+    "@abaplint/transpiler-cli": "^1.3.19",
+    "@abaplint/runtime": "^1.3.19",
     "abapmerge": "^0.14.3",
     "eslint": "^7.26.0"
   }
