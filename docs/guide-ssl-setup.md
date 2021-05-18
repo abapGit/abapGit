@@ -58,7 +58,6 @@ ssl/ciphersuites = 135:PFS:HIGH::EC_P256:EC_HIGH
 icm/HTTPS/client_sni_enabled = TRUE
 ```
 
-- for NPL minisap - add profile parameters to following file:
-  ```
-  /sapmnt/NPL/profile/DEFAULT.PFL
-  ```
+To add profile parameters use transaction RZ10 or update contents of file DEFAULT.PFL directly. For preview, evaluation and developer versions of SAP NetWeaver refer to following locations, depending on your system name:
+- "NPL - SAP NetWeaver 7.x" - /sapmnt/NPL/profile/DEFAULT.PFL
+- "A4H - SAP NetWeaver AS ABAP 7.4 and above (Linux / SAP HANA)" - /usr/sap/A4H/sys/profile/DEFAULT.PFL
