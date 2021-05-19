@@ -201,8 +201,6 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
           lt_found  LIKE ct_files,
           lt_tadir  TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
-    FIELD-SYMBOLS: <ls_found> LIKE LINE OF lt_found.
-
     lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
       iv_package            = iv_package
       iv_ignore_subpackages = is_local_settings-ignore_subpackages
@@ -225,13 +223,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       iv_language         = io_dot_abapgit->get_main_language( )
       ii_log              = ii_log
       iv_force_sequential = lv_force ).
-* transfer one by one and delete from original table as APPEND LINES OF
-* leads to doubling memory usage during execution of statement which
-* could result in SYSTEM_NO_ROLL dump
-    LOOP AT lt_found ASSIGNING <ls_found>.
-      APPEND <ls_found> TO ct_files.
-      DELETE lt_found INDEX 1.
-    ENDLOOP.
+    APPEND LINES OF lt_found TO ct_files.
 
   ENDMETHOD.
 
