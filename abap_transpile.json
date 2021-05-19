@@ -15,6 +15,7 @@
     "zcl_abapgit_string_map",
     "zcl_abapgit_syntax_*",
     "zif_abapgit_ajson*",
+    "zcl_abapgit_gui_functions",
     "zcl_abapgit_ajson*",
     "zcl_abapgit_url",
     "zcl_abapgit_zlib_convert",
