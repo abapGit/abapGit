@@ -61,6 +61,7 @@
     "zif_abapgit_log",
     "zif_abapgit_merge",
     "zif_abapgit_persistence",
+    "zcl_abapgit_persistence_user",
     "zif_abapgit_progress",
     "zif_abapgit_version",
     "zif_abapgit_branch_overview",
@@ -109,6 +110,11 @@
       {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_utils_test", "method": "extract_author_data1", "note": "ASSERT failed, ??"},
       {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_utils_test", "method": "extract_author_data2"},
       {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_utils_test", "method": "extract_author_data9"},
+
+      {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_git_user", "note": "skip, this changes database"},
+      {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_repo_show", "note": "skip, this changes database"},
+      {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_settings", "note": "skip, this changes database"},
+      {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_repo_login", "note": "skip, this changes database"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_condensed"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_indented"},
