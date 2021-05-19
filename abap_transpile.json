@@ -115,7 +115,6 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "item_order",      "note": "fix 'array_index' first"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "simple_indented", "note": "fix 'array_index' first"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "escape",          "note": "ASSERT failed, ??"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_utils_test", "method": "split_path",           "note": "substring, only val and len supplied"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "get_value",           "note": "substring, only val and len supplied"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "get_node_type",       "note": "field mt_json_tree aliased from interface not working"},
