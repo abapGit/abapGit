@@ -107,6 +107,7 @@
       {"object": "ZCL_ABAPGIT_GIT_ADD_PATCH", "class": "ltcl_calculate_patch", "method": "multiple_partial_delete"},
       {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_utils_test", "method": "extract_author_data1", "note": "ASSERT failed, ??"},
       {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_utils_test", "method": "extract_author_data2"},
+      {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_utils_test", "method": "extract_author_data9"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_condensed"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_indented"},
@@ -178,9 +179,7 @@
 
       {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "json_diff"},
       {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "json_diff_types"},
-      {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "json_sort"},
-
-      {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_utils_test", "method": "extract_author_data9"}
+      {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "json_sort"}
     ]
   }
 }
