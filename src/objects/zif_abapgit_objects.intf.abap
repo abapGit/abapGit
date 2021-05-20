@@ -28,4 +28,15 @@ INTERFACE zif_abapgit_objects
     ty_step_data_tt TYPE STANDARD TABLE OF ty_step_data
                                 WITH DEFAULT KEY .
 
+  CONSTANTS:
+    BEGIN OF c_deserialize_action,
+      " also used to determine priority if object has multiple changes, so don't change order
+      none       TYPE i VALUE 0,
+      add        TYPE i VALUE 1,
+      update     TYPE i VALUE 2,
+      overwrite  TYPE i VALUE 3,
+      delete     TYPE i VALUE 4,
+      delete_add TYPE i VALUE 5,
+    END OF c_deserialize_action.
+
 ENDINTERFACE.
