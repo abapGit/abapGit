@@ -3,9 +3,9 @@ CLASS zcl_abapgit_exit DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    CLASS-METHODS: get_instance RETURNING VALUE(ri_exit) TYPE REF TO zif_abapgit_exit.
+    CLASS-METHODS get_instance RETURNING VALUE(ri_exit) TYPE REF TO zif_abapgit_exit .
 
-    INTERFACES: zif_abapgit_exit.
+    INTERFACES zif_abapgit_exit .
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -23,7 +23,8 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
     IF gi_exit IS INITIAL.
       TRY.
           CREATE OBJECT gi_exit TYPE ('ZCL_ABAPGIT_USER_EXIT').
-        CATCH cx_sy_create_object_error ##NO_HANDLER.
+        CATCH cx_sy_create_object_error.
+          gi_exit = lcl_exit_deinterface_proxy=>get_instance( 'ZCL_ABAPGIT_STANDALONE_EXIT' ).
       ENDTRY.
     ENDIF.
 
