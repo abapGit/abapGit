@@ -125,6 +125,7 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
 
     DATA: lt_ver_tab     TYPE filetable,
           lv_rc          TYPE i,
+          lo_env         TYPE REF TO zif_abapgit_environment,
           lv_release     TYPE string,
           lv_sp          TYPE string,
           lv_gui_version TYPE string,
@@ -163,7 +164,8 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
       iv_typ = zif_abapgit_html=>c_action_type-url ).
     ri_html->add( '</div>' ).
 
-    zcl_abapgit_factory=>get_environment( )->get_basis_release(
+    lo_env = zcl_abapgit_factory=>get_environment( ).
+    lo_env->get_basis_release(
       IMPORTING
         ev_release = lv_release
         ev_sp      = lv_sp ).
