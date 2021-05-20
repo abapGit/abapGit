@@ -116,7 +116,6 @@
       {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_settings",   "note": "skip, this changes database"},
       {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_repo_login", "note": "skip, this changes database"},
 
-      {"object": "ZCL_ABAPGIT_GIT_PACK", "class": "ltcl_pack", "method": "pack_short",                "note": "??? todo"},
       {"object": "ZCL_ABAPGIT_GIT_PACK", "class": "ltcl_pack", "method": "pack_long",                 "note": "??? todo"},
       {"object": "ZCL_ABAPGIT_GIT_PACK", "class": "ltcl_pack", "method": "pack_multiple",             "note": "??? todo"},
 
