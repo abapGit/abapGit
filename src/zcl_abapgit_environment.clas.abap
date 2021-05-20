@@ -83,7 +83,7 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
 
   METHOD zif_abapgit_environment~get_basis_release.
 
-    SELECT SINGLE release extrelease FROM cvers INTO (ev_release, ev_sp)
+    SELECT SINGLE release extrelease FROM cvers INTO (rs_result-release, rs_result-sp)
       WHERE component = 'SAP_BASIS' ##SUBRC_OK.
 
   ENDMETHOD.
