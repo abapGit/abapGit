@@ -103,7 +103,11 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     BEGIN OF ty_overwrite.
       INCLUDE TYPE ty_item.
-  TYPES: decision TYPE ty_yes_no,
+  TYPES:
+      action   TYPE i,
+      icon     TYPE icon_d,
+      text     TYPE string,
+      decision TYPE ty_yes_no,
     END OF ty_overwrite .
   TYPES:
     ty_overwrite_tt TYPE STANDARD TABLE OF ty_overwrite WITH DEFAULT KEY
@@ -350,12 +354,14 @@ INTERFACE zif_abapgit_definitions
       prerelase       TYPE string,
       prerelase_patch TYPE i,
     END OF ty_version.
-  TYPES: BEGIN OF ty_alv_column,
-           name   TYPE string,
-           text   TYPE string,
-           length TYPE lvc_outlen,
-         END OF ty_alv_column,
-         ty_alv_column_tt TYPE TABLE OF ty_alv_column WITH DEFAULT KEY.
+  TYPES:
+    BEGIN OF ty_alv_column,
+      name      TYPE string,
+      text      TYPE string,
+      length    TYPE lvc_outlen,
+      show_icon TYPE abap_bool,
+    END OF ty_alv_column,
+    ty_alv_column_tt TYPE TABLE OF ty_alv_column WITH DEFAULT KEY.
   TYPES:
     ty_deserialization_step TYPE string.
   TYPES:
