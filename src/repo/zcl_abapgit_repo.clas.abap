@@ -5,7 +5,7 @@ CLASS zcl_abapgit_repo DEFINITION
 
   PUBLIC SECTION.
 
-    DATA ms_data TYPE zif_abapgit_persistence=>ty_repo  READ-ONLY.
+    DATA ms_data TYPE zif_abapgit_persistence=>ty_repo READ-ONLY.
 
     METHODS bind_listener
       IMPORTING

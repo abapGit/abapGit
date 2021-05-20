@@ -6,14 +6,17 @@ CLASS ltcl_warning_overwrite_find DEFINITION FINAL FOR TESTING
     DATA:
       mo_objects   TYPE REF TO zcl_abapgit_objects_check,
       mt_result    TYPE zif_abapgit_definitions=>ty_results_tt,
+      ms_overwrite TYPE zif_abapgit_definitions=>ty_overwrite,
       mt_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt.
 
     METHODS:
       setup,
+      warning_overwrite_find_00 FOR TESTING RAISING cx_static_check,
       warning_overwrite_find_01 FOR TESTING RAISING cx_static_check,
       warning_overwrite_find_02 FOR TESTING RAISING cx_static_check,
       warning_overwrite_find_03 FOR TESTING RAISING cx_static_check,
       warning_overwrite_find_04 FOR TESTING RAISING cx_static_check,
+      warning_overwrite_find_05 FOR TESTING RAISING cx_static_check,
 
       given_result
         IMPORTING
@@ -33,16 +36,36 @@ CLASS ltcl_warning_overwrite_find IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD warning_overwrite_find_01.
+  METHOD warning_overwrite_find_00.
 
-    " change remote but not local -> no overwrite
-    given_result( |CLAS;ZAG_UNIT_TEST;;/src/;zag_unit_test.clas.abap;;;;M| ).
+    " no changes -> nothing to do
+    given_result( |CLAS;ZAG_UNIT_TEST;;/src/;zag_unit_test.clas.abap;;;;| ).
 
     when_warning_overwrite_find( ).
 
     cl_abap_unit_assert=>assert_equals(
       exp = 0
       act = lines( mt_overwrite ) ).
+
+  ENDMETHOD.
+
+  METHOD warning_overwrite_find_01.
+
+    " change remote but not local -> update
+    given_result( |CLAS;ZAG_UNIT_TEST;;/src/;zag_unit_test.clas.abap;;;;M| ).
+
+    when_warning_overwrite_find( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 1
+      act = lines( mt_overwrite ) ).
+
+    READ TABLE mt_overwrite INTO ms_overwrite INDEX 1.
+    ASSERT sy-subrc = 0.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = zif_abapgit_objects=>c_deserialize_action-update
+      act = ms_overwrite-action ).
 
   ENDMETHOD.
 
@@ -57,11 +80,18 @@ CLASS ltcl_warning_overwrite_find IMPLEMENTATION.
       exp = 1
       act = lines( mt_overwrite ) ).
 
+    READ TABLE mt_overwrite INTO ms_overwrite INDEX 1.
+    ASSERT sy-subrc = 0.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = zif_abapgit_objects=>c_deserialize_action-overwrite
+      act = ms_overwrite-action ).
+
   ENDMETHOD.
 
   METHOD warning_overwrite_find_03.
 
-    " delete local -> overwrite (since object will be created again from remote)
+    " delete local -> add (since object will be created again from remote)
     given_result( |CLAS;ZAG_UNIT_TEST;;/src/;zag_unit_test.clas.abap;;;D;| ).
 
     when_warning_overwrite_find( ).
@@ -70,19 +100,54 @@ CLASS ltcl_warning_overwrite_find IMPLEMENTATION.
       exp = 1
       act = lines( mt_overwrite ) ).
 
+    READ TABLE mt_overwrite INTO ms_overwrite INDEX 1.
+    ASSERT sy-subrc = 0.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = zif_abapgit_objects=>c_deserialize_action-add
+      act = ms_overwrite-action ).
+
   ENDMETHOD.
 
   METHOD warning_overwrite_find_04.
 
-    " exists local but not remote -> no overwrite
-    " (object will be in delete confirmation popup: see ZCL_ABAPGIT_SERVICES_GIT->GET_UNNECESSARY_LOCAL_OBJS)
+    " exists local but not remote -> delete
+    " (object will be in confirmation popup: see zcl_abapgit_services_repo=>gui_deserialize)
     given_result( |CLAS;ZAG_UNIT_TEST;;/src/;zag_unit_test.clas.abap;;;A;| ).
 
     when_warning_overwrite_find( ).
 
     cl_abap_unit_assert=>assert_equals(
-      exp = 0
+      exp = 1
       act = lines( mt_overwrite ) ).
+
+    READ TABLE mt_overwrite INTO ms_overwrite INDEX 1.
+    ASSERT sy-subrc = 0.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = zif_abapgit_objects=>c_deserialize_action-delete
+      act = ms_overwrite-action ).
+
+  ENDMETHOD.
+
+  METHOD warning_overwrite_find_05.
+
+    " some part of object deleted remotely -> delete and recreate
+    given_result( |CLAS;ZAG_UNIT_TEST;;/src/;zag_unit_test.clas.abap;;;;| ).
+    given_result( |CLAS;ZAG_UNIT_TEST;;/src/;zag_unit_test.testclass.clas.abap;;;;D| ).
+
+    when_warning_overwrite_find( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 1
+      act = lines( mt_overwrite ) ).
+
+    READ TABLE mt_overwrite INTO ms_overwrite INDEX 1.
+    ASSERT sy-subrc = 0.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = zif_abapgit_objects=>c_deserialize_action-delete_add
+      act = ms_overwrite-action ).
 
   ENDMETHOD.
 
