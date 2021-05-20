@@ -117,14 +117,14 @@
       {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_settings",   "note": "skip, this changes database"},
       {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_repo_login", "note": "skip, this changes database"},
 
-      {"object": "ZCL_ABAPGIT_GIT_PACK", "class": "ltcl_pack", "method": "signed_commit",             "note": "the regex or something with codepages?"},
+      {"object": "ZCL_ABAPGIT_GIT_PACK", "class": "ltcl_pack", "method": "signed_commit",             "note": "zif_abapgit_defintions=>newline constant problem ?? the regex or something with codepages?"},
       {"object": "ZCL_ABAPGIT_GIT_PACK", "class": "ltcl_pack", "method": "pack_short",                "note": "bug, hex constant, fixed in next transpiler release"},
       {"object": "ZCL_ABAPGIT_GIT_PACK", "class": "ltcl_pack", "method": "pack_long",                 "note": "??? todo"},
       {"object": "ZCL_ABAPGIT_GIT_PACK", "class": "ltcl_pack", "method": "pack_multiple",             "note": "??? todo"},
       {"object": "ZCL_ABAPGIT_GIT_PACK", "class": "ltcl_git_pack_decode_commit", "method": "decode1", "note": "??? todo"},
       {"object": "ZCL_ABAPGIT_GIT_PACK", "class": "ltcl_git_pack_decode_commit", "method": "decode2", "note": "??? todo"},
       {"object": "ZCL_ABAPGIT_GIT_PACK", "class": "ltcl_git_pack_decode_commit", "method": "decode3", "note": "??? todo"},
-      {"object": "ZCL_ABAPGIT_GIT_PACK", "class": "ltcl_tag", "method": "decode_tag sdf",              "note": "zif_abapgit_defintions=>newline constant problem"},
+      {"object": "ZCL_ABAPGIT_GIT_PACK", "class": "ltcl_tag", "method": "decode_tag",                 "note": "zif_abapgit_defintions=>newline constant problem"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_condensed"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_indented"},
