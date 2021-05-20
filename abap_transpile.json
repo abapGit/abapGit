@@ -120,10 +120,10 @@
       {"object": "ZCL_ABAPGIT_GIT_PACK", "class": "ltcl_pack", "method": "pack_short",                "note": "gives exception: Todo, unknown git pack type"},
       {"object": "ZCL_ABAPGIT_GIT_PACK", "class": "ltcl_pack", "method": "pack_long",                 "note": "gives exception: Todo, unknown git pack type"},
       {"object": "ZCL_ABAPGIT_GIT_PACK", "class": "ltcl_pack", "method": "pack_multiple",             "note": "??? todo"},
-      {"object": "ZCL_ABAPGIT_GIT_PACK", "class": "ltcl_git_pack_decode_commit", "method": "decode1", "note": "??? todo"},
+      {"object": "ZCL_ABAPGIT_GIT_PACK", "class": "ltcl_git_pack_decode_commit", "method": "decode1", "note": "CP problem, fixed in next release"},
       {"object": "ZCL_ABAPGIT_GIT_PACK", "class": "ltcl_git_pack_decode_commit", "method": "decode2", "note": "??? todo"},
       {"object": "ZCL_ABAPGIT_GIT_PACK", "class": "ltcl_git_pack_decode_commit", "method": "decode3", "note": "??? todo"},
-      {"object": "ZCL_ABAPGIT_GIT_PACK", "class": "ltcl_tag", "method": "decode_tag",                 "note": "tagger name and tagger email problem"},
+      {"object": "ZCL_ABAPGIT_GIT_PACK", "class": "ltcl_tag", "method": "decode_tag",                 "note": "SPLIT problem, fixed in next release"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_condensed"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_indented"},
