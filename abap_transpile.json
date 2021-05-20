@@ -120,7 +120,6 @@
       {"object": "ZCL_ABAPGIT_GIT_PACK", "class": "ltcl_pack", "method": "pack_short",                "note": "??? todo"},
       {"object": "ZCL_ABAPGIT_GIT_PACK", "class": "ltcl_pack", "method": "pack_long",                 "note": "??? todo"},
       {"object": "ZCL_ABAPGIT_GIT_PACK", "class": "ltcl_pack", "method": "pack_multiple",             "note": "??? todo"},
-      {"object": "ZCL_ABAPGIT_GIT_PACK", "class": "ltcl_tag", "method": "decode_tag",                 "note": "SPLIT problem, fixed in next release"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_condensed"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_indented"},
