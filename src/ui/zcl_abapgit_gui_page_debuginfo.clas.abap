@@ -125,6 +125,7 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
 
     DATA: lt_ver_tab     TYPE filetable,
           lv_rc          TYPE i,
+          ls_release     TYPE zif_abapgit_environment=>ty_release_sp,
           lv_gui_version TYPE string,
           ls_version     LIKE LINE OF lt_ver_tab,
           lv_devclass    TYPE devclass.
@@ -161,6 +162,8 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
       iv_typ = zif_abapgit_html=>c_action_type-url ).
     ri_html->add( '</div>' ).
 
+    ls_release = zcl_abapgit_factory=>get_environment( )->get_basis_release( ).
+
     ri_html->add( '<h2>Environment</h2>' ).
 
     ri_html->add( |<table>| ).
@@ -171,7 +174,7 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
                   zcl_abapgit_apack_migration=>c_apack_interface_version }</td></tr>| ).
     ri_html->add( |<tr><td>LCL_TIME:       </td><td>{ zcl_abapgit_time=>get_unix( ) }</td></tr>| ).
     ri_html->add( |<tr><td>SY time:        </td><td>{ sy-datum } { sy-uzeit } { sy-tzone }</td></tr>| ).
-    ri_html->add( |<tr><td>SY release:     </td><td>{ sy-saprl }</td></tr>| ).
+    ri_html->add( |<tr><td>SY release:     </td><td>{ ls_release-release } SP { ls_release-sp }</td></tr>| ).
     ri_html->add( |</table>| ).
     ri_html->add( |<br>| ).
 
