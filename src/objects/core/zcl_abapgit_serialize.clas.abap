@@ -201,7 +201,6 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
           lt_found  LIKE ct_files,
           lt_tadir  TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
-
     lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
       iv_package            = iv_package
       iv_ignore_subpackages = is_local_settings-ignore_subpackages
@@ -560,6 +559,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     WAIT UNTIL mv_free = lv_max UP TO 120 SECONDS.
     rt_files = mt_files.
+    FREE mt_files.
 
   ENDMETHOD.
 ENDCLASS.
