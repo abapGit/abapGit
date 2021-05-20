@@ -81,6 +81,14 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_environment~get_basis_release.
+
+    SELECT SINGLE release extrelease FROM cvers INTO (ev_release, ev_sp)
+      WHERE component = 'SAP_BASIS' ##SUBRC_OK.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_environment~is_merged.
     DATA lr_marker TYPE REF TO data ##NEEDED.
 

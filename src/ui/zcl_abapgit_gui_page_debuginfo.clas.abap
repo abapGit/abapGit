@@ -125,6 +125,7 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
 
     DATA: lt_ver_tab     TYPE filetable,
           lv_rc          TYPE i,
+          lv_release     TYPE string,
           lv_sp          TYPE string,
           lv_gui_version TYPE string,
           ls_version     LIKE LINE OF lt_ver_tab,
@@ -162,7 +163,10 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
       iv_typ = zif_abapgit_html=>c_action_type-url ).
     ri_html->add( '</div>' ).
 
-    SELECT SINGLE extrelease FROM cvers INTO lv_sp WHERE component = 'SAP_BASIS' ##SUBRC_OK.
+    zcl_abapgit_factory=>get_environment( )->get_basis_release(
+      IMPORTING
+        ev_release = lv_release
+        ev_sp      = lv_sp ).
 
     ri_html->add( '<h2>Environment</h2>' ).
 
@@ -174,7 +178,7 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
                   zcl_abapgit_apack_migration=>c_apack_interface_version }</td></tr>| ).
     ri_html->add( |<tr><td>LCL_TIME:       </td><td>{ zcl_abapgit_time=>get_unix( ) }</td></tr>| ).
     ri_html->add( |<tr><td>SY time:        </td><td>{ sy-datum } { sy-uzeit } { sy-tzone }</td></tr>| ).
-    ri_html->add( |<tr><td>SY release:     </td><td>{ sy-saprl } SP { lv_sp }</td></tr>| ).
+    ri_html->add( |<tr><td>SY release:     </td><td>{ lv_release } SP { lv_sp }</td></tr>| ).
     ri_html->add( |</table>| ).
     ri_html->add( |<br>| ).
 

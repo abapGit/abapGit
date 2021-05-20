@@ -18,4 +18,8 @@ INTERFACE zif_abapgit_environment
   METHODS is_sap_object_allowed
     RETURNING
       VALUE(rv_allowed) TYPE abap_bool.
+  METHODS get_basis_release
+    EXPORTING
+      ev_release TYPE string
+      ev_sp      TYPE string.
 ENDINTERFACE.
