@@ -1,4 +1,4 @@
-CLASS lcl_exit_deinterface_proxy DEFINITION CREATE PUBLIC.
+CLASS lcl_exit_interface_proxy DEFINITION CREATE PUBLIC.
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_exit.
@@ -6,22 +6,20 @@ CLASS lcl_exit_deinterface_proxy DEFINITION CREATE PUBLIC.
     CLASS-METHODS get_instance IMPORTING iv_classname     TYPE seoclsname
                                RETURNING VALUE(ri_result) TYPE REF TO zif_abapgit_exit.
 
-
-
-
   PROTECTED SECTION.
+
   PRIVATE SECTION.
     DATA mo_obj TYPE REF TO object.
-    DATA lx_error TYPE REF TO cx_static_check.
+    DATA mo_exception TYPE REF TO cx_static_check.
 
 ENDCLASS.
 
-CLASS lcl_exit_deinterface_proxy IMPLEMENTATION.
+CLASS lcl_exit_interface_proxy IMPLEMENTATION.
 
 
   METHOD get_instance.
 
-    DATA lo_proxy TYPE REF TO lcl_exit_deinterface_proxy.
+    DATA lo_proxy TYPE REF TO lcl_exit_interface_proxy.
 
     CREATE OBJECT lo_proxy.
     TRY.
@@ -36,8 +34,6 @@ CLASS lcl_exit_deinterface_proxy IMPLEMENTATION.
 
   METHOD zif_abapgit_exit~adjust_display_commit_url.
 
-    CHECK mo_obj IS BOUND.
-
     TRY.
         CALL METHOD mo_obj->('ADJUST_DISPLAY_COMMIT_URL')
           EXPORTING
@@ -50,7 +46,7 @@ CLASS lcl_exit_deinterface_proxy IMPLEMENTATION.
 
       CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method  ##NO_HANDLER.
 
-      CATCH cx_static_check INTO lx_error.
+      CATCH cx_static_check INTO mo_exception.
         RAISE EXCEPTION TYPE zcx_abapgit_exception.
     ENDTRY.
 
@@ -58,8 +54,6 @@ CLASS lcl_exit_deinterface_proxy IMPLEMENTATION.
 
 
   METHOD zif_abapgit_exit~allow_sap_objects.
-
-    CHECK mo_obj IS BOUND.
 
     TRY.
         CALL METHOD mo_obj->('ALLOW_SAP_OBJECTS')
@@ -74,8 +68,6 @@ CLASS lcl_exit_deinterface_proxy IMPLEMENTATION.
 
   METHOD zif_abapgit_exit~change_local_host.
 
-    CHECK mo_obj IS BOUND.
-
     TRY.
         CALL METHOD mo_obj->('CHANGE_LOCAL_HOST')
           CHANGING
@@ -88,8 +80,6 @@ CLASS lcl_exit_deinterface_proxy IMPLEMENTATION.
 
 
   METHOD zif_abapgit_exit~change_proxy_authentication.
-
-    CHECK mo_obj IS BOUND.
 
     TRY.
         CALL METHOD mo_obj->('CHANGE_PROXY_AUTHENTICATION')
@@ -106,8 +96,6 @@ CLASS lcl_exit_deinterface_proxy IMPLEMENTATION.
 
   METHOD zif_abapgit_exit~change_proxy_port.
 
-    CHECK mo_obj IS BOUND.
-
     TRY.
         CALL METHOD mo_obj->('CHANGE_PROXY_PORT')
           EXPORTING
@@ -123,8 +111,6 @@ CLASS lcl_exit_deinterface_proxy IMPLEMENTATION.
 
   METHOD zif_abapgit_exit~change_proxy_url.
 
-    CHECK mo_obj IS BOUND.
-
     TRY.
         CALL METHOD mo_obj->('CHANGE_PROXY_URL')
           EXPORTING
@@ -139,8 +125,6 @@ CLASS lcl_exit_deinterface_proxy IMPLEMENTATION.
 
 
   METHOD zif_abapgit_exit~change_tadir.
-
-    CHECK mo_obj IS BOUND.
 
     TRY.
         CALL METHOD mo_obj->('CHANGE_TADIR')
@@ -158,8 +142,6 @@ CLASS lcl_exit_deinterface_proxy IMPLEMENTATION.
 
   METHOD zif_abapgit_exit~create_http_client.
 
-    CHECK mo_obj IS BOUND.
-
     TRY.
         CALL METHOD mo_obj->('CREATE_HTTP_CLIENT')
           EXPORTING
@@ -169,7 +151,7 @@ CLASS lcl_exit_deinterface_proxy IMPLEMENTATION.
 
       CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method  ##NO_HANDLER.
 
-      CATCH cx_static_check INTO lx_error.
+      CATCH cx_static_check INTO mo_exception.
         RAISE EXCEPTION TYPE zcx_abapgit_exception.
     ENDTRY.
 
@@ -177,8 +159,6 @@ CLASS lcl_exit_deinterface_proxy IMPLEMENTATION.
 
 
   METHOD zif_abapgit_exit~custom_serialize_abap_clif.
-
-    CHECK mo_obj IS BOUND.
 
     TRY.
         CALL METHOD mo_obj->('CUSTOM_SERIALIZE_ABAP_CLIF')
@@ -189,7 +169,7 @@ CLASS lcl_exit_deinterface_proxy IMPLEMENTATION.
 
       CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method  ##NO_HANDLER.
 
-      CATCH cx_static_check INTO lx_error.
+      CATCH cx_static_check INTO mo_exception.
         RAISE EXCEPTION TYPE zcx_abapgit_exception.
     ENDTRY.
 
@@ -197,8 +177,6 @@ CLASS lcl_exit_deinterface_proxy IMPLEMENTATION.
 
 
   METHOD zif_abapgit_exit~deserialize_postprocess.
-
-    CHECK mo_obj IS BOUND.
 
     TRY.
         CALL METHOD mo_obj->('DESERIALIZE_POSTPROCESS')
@@ -213,8 +191,6 @@ CLASS lcl_exit_deinterface_proxy IMPLEMENTATION.
 
 
   METHOD zif_abapgit_exit~get_ci_tests.
-
-    CHECK mo_obj IS BOUND.
 
     TRY.
         CALL METHOD mo_obj->('GET_CI_TESTS')
@@ -231,8 +207,6 @@ CLASS lcl_exit_deinterface_proxy IMPLEMENTATION.
 
   METHOD zif_abapgit_exit~get_ssl_id.
 
-    CHECK mo_obj IS BOUND.
-
     TRY.
         CALL METHOD mo_obj->('GET_SSL_ID')
           RECEIVING
@@ -245,8 +219,6 @@ CLASS lcl_exit_deinterface_proxy IMPLEMENTATION.
 
 
   METHOD zif_abapgit_exit~http_client.
-
-    CHECK mo_obj IS BOUND.
 
     TRY.
         CALL METHOD mo_obj->('HTTP_CLIENT')
@@ -262,8 +234,6 @@ CLASS lcl_exit_deinterface_proxy IMPLEMENTATION.
 
   METHOD zif_abapgit_exit~on_event.
 
-    CHECK mo_obj IS BOUND.
-
     TRY.
         CALL METHOD mo_obj->('ON_EVENT')
           EXPORTING
@@ -273,7 +243,7 @@ CLASS lcl_exit_deinterface_proxy IMPLEMENTATION.
 
       CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method  ##NO_HANDLER.
 
-      CATCH cx_static_check INTO lx_error.
+      CATCH cx_static_check INTO mo_exception.
         RAISE EXCEPTION TYPE zcx_abapgit_exception.
     ENDTRY.
 
@@ -281,8 +251,6 @@ CLASS lcl_exit_deinterface_proxy IMPLEMENTATION.
 
 
   METHOD zif_abapgit_exit~pre_calculate_repo_status.
-
-    CHECK mo_obj IS BOUND.
 
     TRY.
         CALL METHOD mo_obj->('PRE_CALCULATE_REPO_STATUS')
@@ -294,7 +262,7 @@ CLASS lcl_exit_deinterface_proxy IMPLEMENTATION.
 
       CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method  ##NO_HANDLER.
 
-      CATCH cx_static_check INTO lx_error.
+      CATCH cx_static_check INTO mo_exception.
         RAISE EXCEPTION TYPE zcx_abapgit_exception.
     ENDTRY.
 
@@ -302,8 +270,6 @@ CLASS lcl_exit_deinterface_proxy IMPLEMENTATION.
 
 
   METHOD zif_abapgit_exit~wall_message_list.
-
-    CHECK mo_obj IS BOUND.
 
     TRY.
         CALL METHOD mo_obj->('WALL_MESSAGE_LIST')
@@ -317,8 +283,6 @@ CLASS lcl_exit_deinterface_proxy IMPLEMENTATION.
 
 
   METHOD zif_abapgit_exit~wall_message_repo.
-
-    CHECK mo_obj IS BOUND.
 
     TRY.
         CALL METHOD mo_obj->('WALL_MESSAGE_REPO')
