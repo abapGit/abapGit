@@ -61,15 +61,17 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
   METHOD checks_adjust.
 
     warning_overwrite_adjust(
-      EXPORTING it_overwrite = is_checks-overwrite
-      CHANGING ct_results = ct_results ).
+      EXPORTING
+        it_overwrite = is_checks-overwrite
+      CHANGING
+        ct_results   = ct_results ).
 
     warning_package_adjust(
       EXPORTING
-        io_repo = io_repo
+        io_repo      = io_repo
         it_overwrite = is_checks-warning_package
       CHANGING
-        ct_results = ct_results ).
+        ct_results   = ct_results ).
 
   ENDMETHOD.
 
@@ -79,8 +81,8 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
     DATA: lt_results TYPE zif_abapgit_definitions=>ty_results_tt,
           li_package TYPE REF TO zif_abapgit_sap_package.
 
-
-    lt_results = zcl_abapgit_file_deserialize=>get_results( io_repo ).
+    " get unfiltered status to evaluate properly which warnings are required
+    lt_results = zcl_abapgit_file_status=>status( io_repo ).
 
     rs_checks-overwrite = warning_overwrite_find( lt_results ).
 
@@ -121,7 +123,7 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
           <ls_overwrite>-obj_name } undecided| ).
       ENDIF.
 
-      IF ls_overwrite-decision = 'N'.
+      IF ls_overwrite-decision = zif_abapgit_definitions=>gc_no.
         DELETE ct_results WHERE
           obj_type = <ls_overwrite>-obj_type AND
           obj_name = <ls_overwrite>-obj_name.
@@ -135,25 +137,75 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
 
   METHOD warning_overwrite_find.
 
-    DATA: ls_overwrite LIKE LINE OF rt_overwrite.
+    DATA:
+      lv_status  TYPE c LENGTH 2,
+      lt_changes TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_overwrite WITH DEFAULT KEY.
 
-    FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
+    FIELD-SYMBOLS:
+      <ls_result>  LIKE LINE OF it_results,
+      <ls_changes> LIKE LINE OF lt_changes.
 
+    " collect all actions for object that have been changed
     LOOP AT it_results ASSIGNING <ls_result> WHERE NOT obj_type IS INITIAL.
-      IF <ls_result>-lstate IS NOT INITIAL
-        AND NOT ( <ls_result>-lstate = zif_abapgit_definitions=>c_state-added
-        AND <ls_result>-rstate IS INITIAL )
-        OR ( <ls_result>-lstate IS INITIAL
-        AND <ls_result>-rstate = zif_abapgit_definitions=>c_state-deleted ).
-        " current object has been modified or deleted locally, add to table
-        CLEAR ls_overwrite.
-        MOVE-CORRESPONDING <ls_result> TO ls_overwrite.
-        APPEND ls_overwrite TO rt_overwrite.
-      ENDIF.
+
+      APPEND INITIAL LINE TO lt_changes ASSIGNING <ls_changes>.
+      MOVE-CORRESPONDING <ls_result> TO <ls_changes>.
+
+      CONCATENATE <ls_result>-lstate <ls_result>-rstate INTO lv_status RESPECTING BLANKS.
+
+      CASE lv_status.
+        WHEN '  '. " no changes
+          <ls_changes>-action = zif_abapgit_objects=>c_deserialize_action-none.
+        WHEN ' A' OR 'D ' OR 'DM'. " added remotely or deleted locally
+          <ls_changes>-action = zif_abapgit_objects=>c_deserialize_action-add.
+          <ls_changes>-icon   = icon_create.
+          <ls_changes>-text   = 'Add local object'.
+        WHEN 'A ' OR ' D' OR 'MD'. " added locally or deleted remotely
+          <ls_changes>-action = zif_abapgit_objects=>c_deserialize_action-delete.
+          <ls_changes>-icon   = icon_delete.
+          <ls_changes>-text   = 'Delete local object'.
+        WHEN 'M ' OR 'MM'. " modified locally
+          <ls_changes>-action = zif_abapgit_objects=>c_deserialize_action-overwrite.
+          <ls_changes>-icon   = icon_change.
+          <ls_changes>-text   = 'Overwrite local object'.
+        WHEN ' M'. " modified only remotely
+          <ls_changes>-action = zif_abapgit_objects=>c_deserialize_action-update.
+          <ls_changes>-icon   = icon_change.
+          <ls_changes>-text   = 'Update local object'.
+        WHEN OTHERS.
+          ASSERT 0 = 1.
+      ENDCASE.
+
     ENDLOOP.
 
-    SORT rt_overwrite.
-    DELETE ADJACENT DUPLICATES FROM rt_overwrite.
+    " Remove duplicate actions
+    SORT lt_changes.
+    DELETE ADJACENT DUPLICATES FROM lt_changes.
+
+    " Check if deletions are for complete object or just a part
+    LOOP AT lt_changes ASSIGNING <ls_changes> WHERE action = zif_abapgit_objects=>c_deserialize_action-delete.
+
+      LOOP AT lt_changes TRANSPORTING NO FIELDS
+        WHERE obj_type = <ls_changes>-obj_type AND obj_name = <ls_changes>-obj_name
+          AND action <> zif_abapgit_objects=>c_deserialize_action-delete.
+        EXIT.
+      ENDLOOP.
+      IF sy-subrc = 0.
+        " There's some other action, so object will be recreated after deletion
+        <ls_changes>-action = zif_abapgit_objects=>c_deserialize_action-delete_add.
+        <ls_changes>-icon   = icon_adopt.
+        <ls_changes>-text   = 'Delete and recreate local object'.
+      ENDIF.
+
+    ENDLOOP.
+
+    DELETE lt_changes WHERE action = zif_abapgit_objects=>c_deserialize_action-none.
+
+    " If there are multiple changes in an object, keep highest priority action
+    SORT lt_changes BY obj_type obj_name action DESCENDING.
+    DELETE ADJACENT DUPLICATES FROM lt_changes COMPARING obj_type obj_name.
+
+    rt_overwrite = lt_changes.
 
   ENDMETHOD.
 
@@ -182,7 +234,7 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
           <ls_overwrite>-obj_name } undecided| ).
       ENDIF.
 
-      IF ls_overwrite-decision = 'N'.
+      IF ls_overwrite-decision = zif_abapgit_definitions=>gc_no.
         DELETE ct_results WHERE
           obj_type = <ls_overwrite>-obj_type AND
           obj_name = <ls_overwrite>-obj_name.
@@ -207,7 +259,7 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
 
     lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
-    LOOP AT it_results ASSIGNING <ls_result>.
+    LOOP AT it_results ASSIGNING <ls_result> WHERE match IS INITIAL.
 
       lv_package = lo_folder_logic->path_to_package(
         iv_top  = io_repo->get_package( )
