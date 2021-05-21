@@ -126,11 +126,7 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "simple_indented", "note": "fix 'array_index' first"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "escape",          "note": "ASSERT failed, ??"},
 
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "exists sdf"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "value_integer"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "value_number"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "value_boolean"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "value_string"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "members"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "slice"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "array_to_string_table"},
