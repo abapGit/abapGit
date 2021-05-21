@@ -45,6 +45,7 @@
     "zif_abapgit_gui_event",
     "zcl_abapgit_git_pack",
     "zcl_abapgit_exit",
+    "zcl_abapgit_auth",
     "zif_abapgit_frontend_services",
     "zif_abapgit_xml_output",
     "zif_abapgit_xml_input",
@@ -110,6 +111,8 @@
       {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_utils_test", "method": "extract_author_data1", "note": "ASSERT failed, ??"},
       {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_utils_test", "method": "extract_author_data2"},
       {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_utils_test", "method": "extract_author_data9"},
+
+      {"object": "ZCL_ABAPGIT_AUTH", "class": "ltcl_test", "method": "default_is_allow",               "note": "dynamic instance creation started in transpiler"},
 
       {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_git_user",   "note": "skip, this changes database"},
       {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_repo_show",  "note": "skip, this changes database"},
