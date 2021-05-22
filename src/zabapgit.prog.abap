@@ -48,7 +48,7 @@ INCLUDE zabapgit_gui_pages_userexit IF FOUND.
 
 INCLUDE zabapgit_forms.
 
-DATA barsdf TYPE voided.
+DATA basdfrsdf TYPE voided.
 
 **********************************************************************
 INITIALIZATION.
