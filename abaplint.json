@@ -334,6 +334,7 @@
       "refresh": true,
       "compute": true,
       "add": true,
+      "selectWithoutInto": true,
       "ranges": true,
       "subtract": true,
       "freeMemory": true,
