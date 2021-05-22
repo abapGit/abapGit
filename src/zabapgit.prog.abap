@@ -48,8 +48,6 @@ INCLUDE zabapgit_gui_pages_userexit IF FOUND.
 
 INCLUDE zabapgit_forms.
 
-DATA bardf TYPE voided.
-
 **********************************************************************
 INITIALIZATION.
   PERFORM remove_toolbar USING '1001'. " Remove toolbar on html screen
