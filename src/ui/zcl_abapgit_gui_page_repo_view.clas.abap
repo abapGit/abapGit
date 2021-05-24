@@ -472,6 +472,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       ro_toolbar->add( iv_txt = 'Import <sup>zip</sup>'
                        iv_act = |{ zif_abapgit_definitions=>c_action-zip_import }?key={ mv_key }|
                        iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+      ro_toolbar->add( iv_txt = 'Import <sup>rfc</sup>'
+                       iv_act = |{ zif_abapgit_definitions=>c_action-rfc_import }?key={ mv_key }|
+                       iv_opt = zif_abapgit_html=>c_html_opt-strong ).
       ro_toolbar->add( iv_txt = 'Export <sup>zip</sup>'
                        iv_act = |{ zif_abapgit_definitions=>c_action-zip_export }?key={ mv_key }|
                        iv_opt = zif_abapgit_html=>c_html_opt-strong ).
