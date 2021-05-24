@@ -42,6 +42,13 @@ INTERFACE zif_abapgit_ajson_writer
     RAISING
       zcx_abapgit_ajson_error.
 
+  METHODS set_timestamp
+    IMPORTING
+      iv_path TYPE string
+      iv_val TYPE timestamp
+    RAISING
+      zcx_abapgit_ajson_error.
+
   METHODS set_null
     IMPORTING
       iv_path TYPE string
