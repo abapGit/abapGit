@@ -1602,6 +1602,7 @@ CLASS ltcl_writer_test DEFINITION FINAL
     METHODS ignore_empty FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_obj FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_tab FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS set_tab_hashed FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS prove_path_exists FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS delete_subtree FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS delete FOR TESTING RAISING zcx_abapgit_ajson_error.
@@ -1612,6 +1613,7 @@ CLASS ltcl_writer_test DEFINITION FINAL
     METHODS set_str FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_int FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_date FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS set_timestamp FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS read_only FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_array_obj FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_with_type FOR TESTING RAISING zcx_abapgit_ajson_error.
@@ -1918,6 +1920,35 @@ CLASS ltcl_writer_test IMPLEMENTATION.
 
     APPEND 'hello' TO lt_tab.
     APPEND 'world' TO lt_tab.
+
+    " Prepare source
+    CREATE OBJECT lo_nodes.
+    lo_nodes->add( '        |      |object |     | |1' ).
+    lo_nodes->add( '/       |x     |array  |     | |2' ).
+    lo_nodes->add( '/x/     |1     |str    |hello|1|0' ).
+    lo_nodes->add( '/x/     |2     |str    |world|2|0' ).
+
+    li_writer->set(
+      iv_path = '/x'
+      iv_val  = lt_tab ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->mt_json_tree
+      exp = lo_nodes->sorted( ) ).
+
+  ENDMETHOD.
+
+  METHOD set_tab_hashed.
+
+    DATA lo_nodes TYPE REF TO lcl_nodes_helper.
+    DATA lo_cut TYPE REF TO zcl_abapgit_ajson.
+    DATA li_writer TYPE REF TO zif_abapgit_ajson_writer.
+    DATA lt_tab TYPE HASHED TABLE OF string WITH UNIQUE DEFAULT KEY.
+
+    lo_cut = zcl_abapgit_ajson=>create_empty( ).
+    li_writer = lo_cut.
+
+    INSERT `hello` INTO TABLE lt_tab.
+    INSERT `world` INTO TABLE lt_tab.
 
     " Prepare source
     CREATE OBJECT lo_nodes.
@@ -2326,6 +2357,30 @@ CLASS ltcl_writer_test IMPLEMENTATION.
     li_writer->set_date(
       iv_path = '/a'
       iv_val  = lv_date ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->mt_json_tree
+      exp = lo_nodes_exp->sorted( ) ).
+
+  ENDMETHOD.
+
+  METHOD set_timestamp.
+
+    DATA lo_cut TYPE REF TO zcl_abapgit_ajson.
+    DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
+    DATA li_writer TYPE REF TO zif_abapgit_ajson_writer.
+    DATA lv_timestamp TYPE timestamp.
+
+    lo_cut = zcl_abapgit_ajson=>create_empty( ).
+    li_writer = lo_cut.
+    CREATE OBJECT lo_nodes_exp.
+    lo_nodes_exp->add( '        |      |object |                     ||1' ).
+    lo_nodes_exp->add( '/       |a     |str    |2021-05-05T12-00-00Z ||0' ).
+
+    lv_timestamp = '20210505120000'.
+    li_writer->set_timestamp(
+      iv_path = '/a'
+      iv_val  = lv_timestamp ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lo_cut->mt_json_tree

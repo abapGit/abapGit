@@ -4,8 +4,6 @@ CLASS zcl_abapgit_ajson DEFINITION
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_ajson_reader .
-    INTERFACES zif_abapgit_ajson_writer .
     INTERFACES zif_abapgit_ajson .
 
     ALIASES:
@@ -29,6 +27,7 @@ CLASS zcl_abapgit_ajson DEFINITION
       set_string FOR zif_abapgit_ajson_writer~set_string,
       set_integer FOR zif_abapgit_ajson_writer~set_integer,
       set_date FOR zif_abapgit_ajson_writer~set_date,
+      set_timestamp FOR zif_abapgit_ajson_writer~set_timestamp,
       set_null FOR zif_abapgit_ajson_writer~set_null,
       delete FOR zif_abapgit_ajson_writer~delete,
       touch_array FOR zif_abapgit_ajson_writer~touch_array,
@@ -648,6 +647,39 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
       iv_ignore_empty = abap_false
       iv_path = iv_path
       iv_val  = lv_val ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_ajson_writer~set_timestamp.
+
+    DATA:
+      lv_tz            TYPE tznzone,
+      lv_date          TYPE d,
+      lv_time          TYPE t,
+      lv_timestamp_iso TYPE string.
+
+    IF iv_val IS INITIAL.
+      " The zero value is January 1, year 1, 00:00:00.000000000 UTC.
+      lv_date = '00010101'.
+    ELSE.
+
+      lv_tz = 'UTC'.
+      CONVERT TIME STAMP iv_val TIME ZONE lv_tz
+        INTO DATE lv_date TIME lv_time.
+
+    ENDIF.
+
+    lv_timestamp_iso =
+        lv_date+0(4) && '-' && lv_date+4(2) && '-' && lv_date+6(2) &&
+        'T' &&
+        lv_time+0(2) && '-' && lv_time+2(2) && '-' && lv_time+4(2) &&
+        'Z'.
+
+    zif_abapgit_ajson_writer~set(
+      iv_ignore_empty = abap_false
+      iv_path = iv_path
+      iv_val  = lv_timestamp_iso ).
 
   ENDMETHOD.
 
