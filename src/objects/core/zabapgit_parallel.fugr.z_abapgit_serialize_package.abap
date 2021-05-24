@@ -1,4 +1,4 @@
-FUNCTION z_abapgit_serialize_package .
+FUNCTION z_abapgit_serialize_package.
 *"----------------------------------------------------------------------
 *"*"Local Interface:
 *"  IMPORTING
