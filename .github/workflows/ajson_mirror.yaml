@@ -26,6 +26,7 @@ jobs:
         git status
     - name: Open PR
       uses: peter-evans/create-pull-request@v3
+      if: github.repository == 'abapGit/abapGit'
       with:
         title: ajson, Automatic Update
         body: |
