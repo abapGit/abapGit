@@ -14,7 +14,7 @@ ASFC | Field Catalog | Yes
 ASIS | Archiving Information Structure | [#1579](https://github.com/abapGit/abapGit/issues/1579)
 AUTH | Authorization Check Fields | Yes
 AVAR | Activation Variants for Assertions and Breakpoints | Yes
-AVAS | Classification | [#1360](https://github.com/abapGit/abapGit/issues/1360)
+AVAS | Classification | Yes
 BDEF | Behaviour Definition | Yes
 BMFR | Application Component | [#2108](https://github.com/abapGit/abapGit/issues/2108)
 BOBF | BOPF: Business Object Model | [#165](https://github.com/abapGit/abapGit/issues/165)
@@ -49,6 +49,8 @@ ENHO | Enhancement Implementation | Yes
 ENHS | Enhancement Spot | Yes
 ENQU | Lock Object | Yes
 ENSC | Composite Enhancement Spot | Yes
+FDT0 | FDT/BRFplus: System Application | [#33](https://github.com/abapGit/abapGit/issues/33)
+FDT1 | FDT/BRFplus: Customizing Application | [#33](https://github.com/abapGit/abapGit/issues/33)
 FORM | SAPscript form | Yes
 FTGL | Feature Toggle | Yes
 FUGR | Function Group | Yes
@@ -92,7 +94,7 @@ SAJC | Application job catalog entry | [#1580](https://github.com/abapGit/abapGi
 SAJT | Application job template | [1581](https://github.com/abapGit/abapGit/issues/1581)
 SAMC | ABAP Messaging Channels | Yes
 SAPC | ABAP Push Channels | Yes
-SCP1 | BC Set or Customizing Profile | [#1004](https://github.com/abapGit/abapGit/issues/1004)
+SCP1 | BC Set or Customizing Profile | Yes
 SCVI | Screen Variants | Yes
 SFBF | Business Function + Assignment | Yes
 SFBS | Business Function Set + Assignment | Yes
