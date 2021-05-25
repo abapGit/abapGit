@@ -500,8 +500,8 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     CREATE OBJECT lo_serialize
       EXPORTING
-        iv_serialize_master_lang_only = ms_data-local_settings-serialize_master_lang_only
-        it_translation_langs          = lt_languages.
+        iv_main_language_only = ms_data-local_settings-main_language_only
+        it_translation_langs  = lt_languages.
 
     rt_files = lo_serialize->files_local(
       iv_package        = get_package( )

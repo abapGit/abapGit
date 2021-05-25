@@ -26,7 +26,7 @@ INTERFACE zif_abapgit_persistence PUBLIC.
       only_local_objects           TYPE abap_bool,
       code_inspector_check_variant TYPE sci_chkv,
       block_commit                 TYPE abap_bool,
-      serialize_master_lang_only   TYPE abap_bool,
+      main_language_only           TYPE abap_bool,
     END OF ty_local_settings.
 
   TYPES: ty_local_checksum_tt TYPE STANDARD TABLE OF ty_local_checksum WITH DEFAULT KEY.

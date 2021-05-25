@@ -442,7 +442,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     ro_repo ?= instantiate_and_add( ls_repo ).
 
-    ls_repo-local_settings-serialize_master_lang_only = iv_master_lang_only.
+    ls_repo-local_settings-main_language_only = iv_main_lang_only.
     ro_repo->set_local_settings( ls_repo-local_settings ).
 
   ENDMETHOD.
@@ -496,7 +496,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     IF ls_repo-local_settings-ignore_subpackages <> iv_ign_subpkg.
       ls_repo-local_settings-ignore_subpackages = iv_ign_subpkg.
     ENDIF.
-    ls_repo-local_settings-serialize_master_lang_only = iv_master_lang_only.
+    ls_repo-local_settings-main_language_only = iv_main_lang_only.
     ro_repo->set_local_settings( ls_repo-local_settings ).
 
     ro_repo->refresh( ).

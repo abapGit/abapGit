@@ -34,7 +34,7 @@
        <TYP>STRING</TYP>
       </RSIMP>
       <RSIMP>
-       <PARAMETER>IV_SERIALIZE_MASTER_LANG_ONLY</PARAMETER>
+       <PARAMETER>IV_MAIN_LANGUAGE_ONLY</PARAMETER>
        <TYP>CHAR1</TYP>
       </RSIMP>
      </IMPORT>
@@ -79,7 +79,7 @@
        <KIND>P</KIND>
       </RSFDO>
       <RSFDO>
-       <PARAMETER>IV_SERIALIZE_MASTER_LANG_ONLY</PARAMETER>
+       <PARAMETER>IV_MAIN_LANGUAGE_ONLY</PARAMETER>
        <KIND>P</KIND>
        <STEXT>Single-Character Indicator</STEXT>
       </RSFDO>
