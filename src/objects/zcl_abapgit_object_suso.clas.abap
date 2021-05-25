@@ -22,7 +22,9 @@ CLASS zcl_abapgit_object_suso DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
       pre_check
         RAISING
-          zcx_abapgit_exception.
+          zcx_abapgit_exception,
+
+      regenerate_sap_all.
 
 ENDCLASS.
 
@@ -154,6 +156,24 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSO IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD regenerate_sap_all.
+
+    DATA: lt_e071  TYPE STANDARD TABLE OF e071,
+          lt_e071k TYPE STANDARD TABLE OF e071k.
+
+    lt_e071 = VALUE #( ( pgmid = 'R3TR' object = 'SUSO' ) ).
+
+    CALL FUNCTION 'PRGN_AFTER_IMP_SUSO_SAP_ALL'
+      EXPORTING
+        iv_tarclient  = '000'
+        iv_is_upgrade = space
+      TABLES
+        tt_e071       = lt_e071
+        tt_e071k      = lt_e071k.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown. " todo
   ENDMETHOD.
@@ -233,6 +253,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSO IMPLEMENTATION.
     INSERT tobjvordat FROM TABLE lt_tobjvordat.           "#EC CI_SUBRC
     DELETE FROM tobjvor WHERE objct = ms_item-obj_name.   "#EC CI_SUBRC
     INSERT tobjvor FROM TABLE lt_tobjvor.                 "#EC CI_SUBRC
+
+    regenerate_sap_all( ).
 
   ENDMETHOD.
 
