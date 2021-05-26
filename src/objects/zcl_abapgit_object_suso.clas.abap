@@ -158,10 +158,14 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSO IMPLEMENTATION.
 
   METHOD regenerate_sap_all.
 
-    DATA: lt_e071  TYPE STANDARD TABLE OF e071,
+    DATA: ls_e071  TYPE e071,
+          lt_e071  TYPE STANDARD TABLE OF e071,
           lt_e071k TYPE STANDARD TABLE OF e071k.
 
-    lt_e071 = VALUE #( ( pgmid = 'R3TR' object = 'SUSO' ) ).
+    ls_e071-pgmid = 'R3TR'.
+    ls_e071-object = ms_item-obj_type.
+    ls_e071-obj_name = ms_item-obj_name.
+    INSERT ls_e071 INTO TABLE lt_e071.
 
     CALL FUNCTION 'PRGN_AFTER_IMP_SUSO_SAP_ALL'
       EXPORTING
@@ -203,6 +207,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSO IMPLEMENTATION.
         object    = mv_objectname
         type      = 'SUSO'
         operation = 'DELETE'.
+
+    regenerate_sap_all( ).
 
   ENDMETHOD.
 
