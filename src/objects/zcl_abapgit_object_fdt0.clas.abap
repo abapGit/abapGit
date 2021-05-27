@@ -86,14 +86,12 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA ls_transpkey TYPE trkey.
     DATA lv_is_local TYPE boole_d.
     DATA ls_request TYPE e070.
-    DATA lt_application_id TYPE if_fdt_types=>t_object_id.
-    DATA lv_application_id TYPE fdt_admn_0000s-application_id.
     DATA lt_application_sel TYPE if_fdt_query=>ts_selection.
     DATA ls_application_sel TYPE if_fdt_query=>s_selection.
     DATA ls_object_category_sel TYPE if_fdt_query=>s_object_category_sel.
+    DATA lv_failure TYPE abap_bool.
 
     IF zif_abapgit_object~exists( ) = abap_false.
       " Proxies e.g. delete on its own, nothing todo here then.
@@ -118,27 +116,39 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
         IF lv_is_local = abap_true. "Local Object
 
           cl_fdt_delete_handling=>delete_logical_via_job(
-                ita_application_id         = lt_application_id
+            EXPORTING
+                its_application_selection         = lt_application_sel
                 iv_retention_time = 0
                 iv_background = abap_true
                 iv_local_option = '1'
                 iv_appl_transported_option = '2'
                 iv_obj_transported_option = '2'
-                is_object_category_sel = ls_object_category_sel ).
+                iv_marked_option = '3'
+                is_object_category_sel = ls_object_category_sel
+            IMPORTING
+                ev_failure = lv_failure ).
 
 
         ELSE. "Transportable Object
 
           cl_fdt_delete_handling=>delete_logical_via_job(
-                ita_application_id = lt_application_id
+          EXPORTING
+                its_application_selection         = lt_application_sel
                 iv_retention_time = 0
                 iv_background = abap_true
                 iv_local_option = '2'
                 iv_appl_transported_option = '1'
                 iv_obj_transported_option = '1'
+                iv_marked_option = '3'
                 is_object_category_sel = ls_object_category_sel
-                iv_transport_request_w  = ls_request-trkorr ).
+                iv_transport_request_w  = ls_request-trkorr
+          IMPORTING
+                ev_failure = lv_failure ).
 
+        ENDIF.
+
+        IF lv_failure = abap_true.
+          zcx_abapgit_exception=>raise( |Error deleting { ms_item-obj_type } { ms_item-obj_name }| ).
         ENDIF.
 
       CATCH cx_fdt_input.    "
@@ -152,16 +162,9 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
     DATA lo_dexc TYPE REF TO if_fdt_data_exchange.
     DATA lv_application_id TYPE fdt_admn_0000s-application_id.
     DATA lx_root TYPE REF TO cx_root.
-    DATA lv_xml_fdt0_application TYPE string.
-    DATA lo_xml_document TYPE REF TO if_ixml_document.
     DATA lo_dom_tree TYPE REF TO if_ixml_document.
-    DATA lo_xml_element TYPE REF TO if_ixml_element.
     DATA lv_is_local TYPE boole_d.
-    DATA lv_object TYPE string.
-    DATA lv_objectclass TYPE string.
     DATA ls_request TYPE e070.
-    DATA lt_success TYPE if_fdt_types=>ts_object_id.
-    DATA lt_failure TYPE if_fdt_types=>ts_object_id.
     DATA lt_message TYPE if_fdt_types=>t_message.
     DATA lv_package_xml_value TYPE string.
     DATA lo_node_local TYPE REF TO if_ixml_element.
@@ -173,39 +176,27 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
 
     lo_dom_tree = io_xml->get_raw( ).
 
-    lo_dexc = cl_fdt_factory=>get_instance( )->get_data_exchange( ).
+    lo_dexc = cl_fdt_factory=>if_fdt_factory~get_instance( )->get_data_exchange( ).
 
-    lo_dom_tree->find_from_name(
-      EXPORTING
+    lo_node_local = lo_dom_tree->find_from_name(
         name      = 'Local'
-        namespace = 'FDTNS'
-      RECEIVING
-        rval      = lo_node_local
-    ).
+        namespace = 'FDTNS' ).
 
     IF lo_node_local IS BOUND.
       lv_is_local = lo_node_local->get_value( ).
     ENDIF.
 
-    lo_dom_tree->find_from_name(
-      EXPORTING
+    lo_node_package = lo_dom_tree->find_from_name(
         name      = 'DevelopmentPackage'
-        namespace = 'FDTNS'
-      RECEIVING
-        rval      = lo_node_package
-    ).
+        namespace = 'FDTNS' ).
     IF lo_node_package IS BOUND.
-      MOVE iv_package TO lv_package_xml_value.
+      lv_package_xml_value = iv_package.
       lo_node_package->set_value( value = lv_package_xml_value ).
     ENDIF.
 
-    lo_dom_tree->find_from_name(
-      EXPORTING
+    lo_node_id = lo_dom_tree->find_from_name(
         name      = 'ApplicationId'
-        namespace = 'FDTNS'
-      RECEIVING
-        rval      = lo_node_id
-    ).
+        namespace = 'FDTNS' ).
     IF lo_node_id IS BOUND.
       lv_application_id = lo_node_id->get_value( ).
       SELECT COUNT( * ) FROM fdt_admn_0000s INTO lv_count
@@ -220,43 +211,39 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
         IF lv_is_local = abap_true. "Local Object
 
           lo_dexc->import_xml(
-              EXPORTING
+            EXPORTING
               io_dom_tree              = lo_dom_tree
               iv_create                = lv_create
               iv_activate              = abap_true
               iv_simulate              = abap_false
-              IMPORTING
-              ets_success              = lt_success
-              ets_failure              = lt_failure
-              et_message               = lt_message                 ).
+              iv_import_type           = if_fdt_data_exchange=>gc_xml_import_type_standard
+              iv_import_scope          = if_fdt_data_exchange=>gc_xml_import_scope_normal
+            IMPORTING
+              et_message = lt_message   ).
 
         ELSE. "Transportable Object
 
           ls_request = wb_request_choice( ).
 
           lo_dexc->import_xml(
-          EXPORTING
+            EXPORTING
               io_dom_tree              = lo_dom_tree
               iv_create                = lv_create
               iv_activate              = abap_true
               iv_simulate              = abap_false
               iv_workbench_trrequest   = ls_request-trkorr
-         IMPORTING
-              ets_success              = lt_success
-              ets_failure              = lt_failure
-              et_message               = lt_message                 ).
+              iv_import_type           = if_fdt_data_exchange=>gc_xml_import_type_standard
+              iv_import_scope          = if_fdt_data_exchange=>gc_xml_import_scope_normal
+            IMPORTING
+              et_message = lt_message ).
 
         ENDIF.
 
-        IF lt_message IS NOT INITIAL.
-          LOOP AT lt_message ASSIGNING <ls_message>.
-            ii_log->add(
-              EXPORTING
-                iv_msg  = <ls_message>-text
-                iv_type = <ls_message>-msgty
-            ).
-          ENDLOOP.
-        ENDIF.
+        LOOP AT lt_message ASSIGNING <ls_message>.
+          ii_log->add(
+              iv_msg  = <ls_message>-text
+              iv_type = <ls_message>-msgty ).
+        ENDLOOP.
 
       CATCH cx_fdt_input INTO lx_root.    "
         zcx_abapgit_exception=>raise( lx_root->get_text( ) ).
@@ -374,12 +361,13 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
 
     lv_application_id = get_application_id( ).
 
-    lo_dexc = cl_fdt_factory=>get_instance( )->get_data_exchange( ).
+    lo_dexc = cl_fdt_factory=>if_fdt_factory~get_instance( )->get_data_exchange( ).
     TRY.
         lo_dexc->export_xml_application(
           EXPORTING
             iv_application_id = lv_application_id
             iv_schema  = if_fdt_data_exchange=>gc_xml_schema_type_external
+            iv_xml_version = if_fdt_data_exchange=>gc_xml_version
             iv_incl_deleted = abap_false
           IMPORTING
             ev_string         = lv_xml_fdt0_application ).
