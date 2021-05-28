@@ -59,6 +59,11 @@ CLASS zcl_abapgit_repo_online DEFINITION
         VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
         zcx_abapgit_exception .
+    METHODS raise_error_if_branch_exists
+      IMPORTING
+        iv_name TYPE string
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -174,6 +179,8 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     ELSE.
       lv_sha1 = iv_from.
     ENDIF.
+
+    raise_error_if_branch_exists( iv_name ).
 
     zcl_abapgit_git_porcelain=>create_branch(
       iv_url  = get_url( )
@@ -324,4 +331,23 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
+  METHOD raise_error_if_branch_exists.
+
+    DATA:
+      lt_branches     TYPE zif_abapgit_definitions=>ty_git_branch_list_tt,
+      lv_display_name TYPE string.
+
+    lt_branches = zcl_abapgit_git_transport=>branches( get_url( ) )->get_branches_only( ).
+
+    READ TABLE lt_branches WITH TABLE KEY name_key
+                           COMPONENTS name = iv_name
+                           TRANSPORTING NO FIELDS.
+    IF sy-subrc = 0.
+      lv_display_name = zcl_abapgit_git_branch_list=>get_display_name( iv_name ).
+      zcx_abapgit_exception=>raise( |Branch '{ lv_display_name }' already exists| ).
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.
