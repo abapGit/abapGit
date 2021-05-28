@@ -42,7 +42,9 @@ INTERFACE zif_abapgit_definitions
       display_name TYPE string,
     END OF ty_git_branch .
   TYPES:
-    ty_git_branch_list_tt TYPE STANDARD TABLE OF ty_git_branch WITH DEFAULT KEY .
+    ty_git_branch_list_tt TYPE STANDARD TABLE OF ty_git_branch WITH DEFAULT KEY
+                               WITH NON-UNIQUE SORTED KEY name_key
+                               COMPONENTS name.
   TYPES:
     BEGIN OF ty_git_tag,
       sha1         TYPE ty_sha1,
