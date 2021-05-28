@@ -75,6 +75,7 @@ CLASS zcl_abapgit_persistence_repo IMPLEMENTATION.
       RESULT repo = rs_repo.
 
 * automatic migration of old fields
+* todo, keep for transition period until 2022-12-31, then remove all of these
     FIND FIRST OCCURRENCE OF '</HEAD_BRANCH><WRITE_PROTECT>X</WRITE_PROTECT>' IN lv_xml.
     IF sy-subrc = 0.
       rs_repo-local_settings-write_protected = abap_true.
