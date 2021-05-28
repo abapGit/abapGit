@@ -8,7 +8,8 @@ CLASS ltcl_git_transport DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHO
       all_ok FOR TESTING,
       unpack_error FOR TESTING,
       command_error FOR TESTING,
-      flush_error FOR TESTING.
+      flush_error FOR TESTING,
+      gitlab_flush_all_ok FOR TESTING.
 
 ENDCLASS.
 
@@ -95,6 +96,27 @@ CLASS ltcl_git_transport IMPLEMENTATION.
         cl_abap_unit_assert=>assert_equals(
           act = lx_error->get_text( )
           exp = 'Git protocol error: Unexpected end of status (flush-pkt)' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD gitlab_flush_all_ok.
+
+    " GitLab and Bitbucket use 0000 opposed to GitHub which uses 00000000
+
+    DATA lv_status TYPE string.
+    DATA lx_error TYPE REF TO zcx_abapgit_exception.
+
+    lv_status = `000eunpack ok` &&
+      zif_abapgit_definitions=>c_newline &&
+      `0019ok refs/heads/master` &&
+      zif_abapgit_definitions=>c_newline &&
+      `0000`.
+
+    TRY.
+        zcl_abapgit_git_transport=>check_report_status( lv_status ).
+      CATCH zcx_abapgit_exception.
+        cl_abap_unit_assert=>fail( ).
     ENDTRY.
 
   ENDMETHOD.
