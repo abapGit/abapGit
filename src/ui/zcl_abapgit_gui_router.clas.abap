@@ -244,7 +244,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_db.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-go_debuginfo.                   " Go debug info
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_debuginfo.
+        rs_handled-page  = zcl_abapgit_gui_page_debuginfo=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-go_settings.                    " Go global settings
         rs_handled-page  = zcl_abapgit_gui_page_sett_glob=>create( ).
@@ -659,8 +659,11 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
+    rs_handled = zcl_abapgit_exit=>get_instance( )->on_event( ii_event ).
 
-    rs_handled = general_page_routing( ii_event ).
+    IF rs_handled-state IS INITIAL.
+      rs_handled = general_page_routing( ii_event ).
+    ENDIF.
     IF rs_handled-state IS INITIAL.
       rs_handled = repository_services( ii_event ).
     ENDIF.

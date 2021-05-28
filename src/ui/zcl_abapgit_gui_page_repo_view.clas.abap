@@ -274,7 +274,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     IF mv_are_changes_recorded_in_tr = abap_true.
       ro_advanced_dropdown->add(
-          iv_txt  = 'Add all objects to transport request'
+          iv_txt  = 'Add All Objects to Transport'
           iv_act = |{ zif_abapgit_definitions=>c_action-repo_add_all_obj_to_trans_req }?key={ mv_key }| ).
     ENDIF.
 
@@ -321,8 +321,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
 
   METHOD build_branch_dropdown.
-
-    DATA lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
 
     CREATE OBJECT ro_branch_dropdown.
 
@@ -1146,7 +1144,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA lv_path TYPE string.
-    DATA lv_switched TYPE abap_bool.
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-go_repo. " Switch to another repo

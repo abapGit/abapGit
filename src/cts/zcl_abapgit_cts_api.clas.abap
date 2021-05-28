@@ -140,8 +140,6 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
   METHOD is_object_locked_in_transport.
     DATA: ls_object_key        TYPE e071,
           lv_type_check_result TYPE c LENGTH 1,
-          lv_name_too_long     TYPE c LENGTH 1,
-          lv_objlen            TYPE tlock-len,
           ls_lock_key          TYPE tlock_int,
           lv_lock_flag         TYPE c LENGTH 1.
 

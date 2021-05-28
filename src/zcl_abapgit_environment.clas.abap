@@ -30,7 +30,6 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
       lv_systemedit         TYPE tadir-edtflag,
       lv_sys_cliinddep_edit TYPE t000-ccnocliind,
       lv_is_shadow          TYPE abap_bool,
-      lv_component          TYPE uvers-component,
       ls_upginfo            TYPE uvers,
       lv_is_upgrade         TYPE abap_bool.
 
@@ -79,6 +78,14 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
 
   METHOD zif_abapgit_environment~compare_with_inactive.
     rv_result = zif_abapgit_environment~is_sap_cloud_platform( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_environment~get_basis_release.
+
+    SELECT SINGLE release extrelease FROM cvers INTO (rs_result-release, rs_result-sp)
+      WHERE component = 'SAP_BASIS' ##SUBRC_OK.
+
   ENDMETHOD.
 
 

@@ -14,6 +14,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: Use Node.js
       uses: actions/setup-node@v2
+      with:
+        node-version: '14'
     - name: run
       run: |
         git clone https://github.com/abapGit/ajson_mirror.git
@@ -24,10 +26,11 @@ jobs:
         git status
     - name: Open PR
       uses: peter-evans/create-pull-request@v3
+      if: github.repository == 'abapGit/abapGit'
       with:
         title: ajson, Automatic Update
         body: |
           Automatic update from mirror
           https://github.com/abapGit/ajson_mirror
-          
+
           Manually close and reopen the pull request to trigger CI

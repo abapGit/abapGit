@@ -264,8 +264,6 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
 
   METHOD zif_abapgit_persist_user~get_repo_show.
 
-    DATA lo_repo TYPE REF TO zcl_abapgit_repo.
-
     rv_key = ms_user-repo_show.
 
     IF rv_key IS INITIAL.
