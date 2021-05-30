@@ -121,8 +121,8 @@ CLASS zcl_abapgit_zip IMPLEMENTATION.
 
     CREATE OBJECT lo_serialize
       EXPORTING
-        iv_serialize_master_lang_only = is_local_settings-serialize_master_lang_only
-        it_translation_langs          = lt_languages.
+        iv_main_language_only = is_local_settings-main_language_only
+        it_translation_langs  = lt_languages.
 
     lt_zip = lo_serialize->files_local(
       iv_package        = iv_package
@@ -202,7 +202,7 @@ CLASS zcl_abapgit_zip IMPLEMENTATION.
           lv_path            TYPE string,
           lv_zip_xstring     TYPE xstring.
 
-    ls_local_settings-serialize_master_lang_only = iv_main_lang_only.
+    ls_local_settings-main_language_only = iv_main_lang_only.
 
     lo_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( ).
     lo_dot_abapgit->set_folder_logic( iv_folder_logic ).

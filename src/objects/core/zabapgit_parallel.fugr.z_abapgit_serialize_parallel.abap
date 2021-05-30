@@ -7,7 +7,7 @@ FUNCTION z_abapgit_serialize_parallel.
 *"     VALUE(IV_DEVCLASS) TYPE  TADIR-DEVCLASS
 *"     VALUE(IV_LANGUAGE) TYPE  SY-LANGU
 *"     VALUE(IV_PATH) TYPE  STRING
-*"     VALUE(IV_SERIALIZE_MASTER_LANG_ONLY) TYPE  CHAR1
+*"     VALUE(IV_MAIN_LANGUAGE_ONLY) TYPE  CHAR1
 *"  EXPORTING
 *"     VALUE(EV_RESULT) TYPE  XSTRING
 *"     VALUE(EV_PATH) TYPE  STRING
@@ -26,9 +26,9 @@ FUNCTION z_abapgit_serialize_parallel.
       ls_item-devclass = iv_devclass.
 
       ls_files = zcl_abapgit_objects=>serialize(
-        is_item     = ls_item
-        iv_serialize_master_lang_only = iv_serialize_master_lang_only
-        iv_language = iv_language ).
+        is_item               = ls_item
+        iv_main_language_only = iv_main_language_only
+        iv_language           = iv_language ).
 
       EXPORT data = ls_files TO DATA BUFFER ev_result.
       ev_path = iv_path.

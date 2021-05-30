@@ -36,7 +36,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_persistence_repo IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -75,6 +75,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
       RESULT repo = rs_repo.
 
 * automatic migration of old fields
+* todo, keep for transition period until 2022-12-31, then remove all of these
     FIND FIRST OCCURRENCE OF '</HEAD_BRANCH><WRITE_PROTECT>X</WRITE_PROTECT>' IN lv_xml.
     IF sy-subrc = 0.
       rs_repo-local_settings-write_protected = abap_true.
@@ -82,6 +83,10 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
     FIND FIRST OCCURRENCE OF '<IGNORE_SUBPACKAGES>X</IGNORE_SUBPACKAGES></REPO>' IN lv_xml.
     IF sy-subrc = 0.
       rs_repo-local_settings-ignore_subpackages = abap_true.
+    ENDIF.
+    FIND FIRST OCCURRENCE OF '<SERIALIZE_MASTER_LANG_ONLY>X</SERIALIZE_MASTER_LANG_ONLY>' IN lv_xml.
+    IF sy-subrc = 0.
+      rs_repo-local_settings-main_language_only = abap_true.
     ENDIF.
 
     IF rs_repo IS INITIAL.
