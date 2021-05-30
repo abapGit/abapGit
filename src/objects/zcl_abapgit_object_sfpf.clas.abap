@@ -194,15 +194,19 @@ CLASS ZCL_ABAPGIT_OBJECT_SFPF IMPLEMENTATION.
   METHOD zif_abapgit_object~delete.
 
     DATA: lv_name    TYPE fpname,
-          lo_wb_form TYPE REF TO cl_fp_wb_form.
+          lo_wb_form TYPE REF TO cl_fp_wb_form,
+          lv_corrnum TYPE e070use-ordernum.
 
 
     lo_wb_form ?= load( ).
 
     lv_name = ms_item-obj_name.
+    lv_corrnum = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
 
     TRY.
-        lo_wb_form->delete( lv_name ).
+        lo_wb_form->delete( i_name = lv_name
+                            i_ordernum = lv_corrnum
+                            i_dark = 'X' ).
       CATCH cx_fp_api.
         zcx_abapgit_exception=>raise( 'SFPI error, delete' ).
     ENDTRY.
@@ -217,11 +221,14 @@ CLASS ZCL_ABAPGIT_OBJECT_SFPF IMPLEMENTATION.
           lv_name      TYPE fpname,
           li_wb_object TYPE REF TO if_fp_wb_form,
           li_form      TYPE REF TO if_fp_form,
-          lx_fp_err    TYPE REF TO cx_fp_api.
+          lx_fp_err    TYPE REF TO cx_fp_api,
+          lv_corrnum   TYPE e070use-ordernum.
 
 
     lv_name = ms_item-obj_name.
     lv_xstr = cl_ixml_80_20=>render_to_xstring( io_xml->get_raw( ) ).
+
+    lv_corrnum = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
 
     TRY.
         li_form = cl_fp_helper=>convert_xstring_to_form( lv_xstr ).
@@ -232,12 +239,16 @@ CLASS ZCL_ABAPGIT_OBJECT_SFPF IMPLEMENTATION.
         ENDIF.
 
         IF zif_abapgit_object~exists( ) = abap_true.
-          cl_fp_wb_form=>delete( lv_name ).
+          cl_fp_wb_form=>delete( i_name = lv_name
+                                 i_ordernum = lv_corrnum
+                                 i_dark = 'X' ).
         ENDIF.
 
         tadir_insert( iv_package ).
         li_wb_object = cl_fp_wb_form=>create( i_name = lv_name
-                                              i_form = li_form ).
+                                              i_form = li_form
+                                              i_ordernum = lv_corrnum
+                                              i_dark = 'X' ).
         li_wb_object->save( ).
         li_wb_object->free( ).
       CATCH cx_fp_api INTO lx_fp_err.
