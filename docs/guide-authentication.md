@@ -4,9 +4,11 @@ category: online projects
 order: 70
 ---
 
-Online projects may require authentication to create branches or commits on the remote or even fetch the content in case of private repositories. Since abapGit uses git over HTTP the authentication mechanism is Basic Authentication (RFC 7617) using username and password. If the remote requires authentication for an action a popup will appear to enable the user to provide the necessary data. Once authentication is successful the session remains intact until abapGit is restarted.
+Online projects may require authentication to create branches or commits on the remote or even fetch the content in case of private repositories. Since abapGit uses git over HTTP the authentication mechanism is Basic Authentication (RFC 2617) using username and password. If the remote requires authentication for an action a popup will appear to enable the user to provide the necessary data. Once authentication is successful the session remains intact until abapGit is restarted.
 
 ![Authentication dialog](img/auth_dialog.png)
+
+Note: Apparently, SAP ABAP supports only RFC 2617 for Basic Authentication and *not* RFC 7617. Therefore, you have to use ASCII characters only for your repository passwords (including extended ASCII, hex 20 to FF, https://en.wikipedia.org/wiki/ISO/IEC_8859-1). The Euro symbol, for example, is not included since it's Unicode U+20AC (which would require RFC 7617 and UTF-8 encoding of passwords). SAP has documented this limitation in SAP Notes [1240796](https://launchpad.support.sap.com/#/notes/1240796).
 
 ## Two factor authentication
 
