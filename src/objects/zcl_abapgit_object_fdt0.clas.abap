@@ -9,33 +9,34 @@ CLASS zcl_abapgit_object_fdt0 DEFINITION
       FOR zif_abapgit_object~mo_files .
   PROTECTED SECTION.
 
-private section.
+  PRIVATE SECTION.
 
-  methods CHECK_IS_LOCAL
-    returning
-      value(RV_IS_LOCAL) type ABAP_BOOL .
-  methods GET_APPLICATION_ID
-    returning
-      value(RV_APPLICATION_ID) type FDT_ADMN_0000S-APPLICATION_ID .
-  methods WB_REQUEST_CHOICE
-    returning
-      value(RS_REQUEST) type E070
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods BEFORE_XML_DESERIALIZE
-    importing
-      !IV_PACKAGE type DEVCLASS
-    exporting
-      !EV_CREATE type ABAP_BOOL
-    changing
-      !CO_DOM_TREE type ref to IF_IXML_DOCUMENT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods FILTER_XML_SERIALIZE
-    changing
-      !CO_IXML_ELEMENT type ref to IF_IXML_ELEMENT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
+    METHODS check_is_local
+      RETURNING
+        VALUE(rv_is_local) TYPE abap_bool .
+    METHODS get_application_id
+      RETURNING
+        VALUE(rv_application_id) TYPE fdt_admn_0000s-application_id .
+    METHODS wb_request_choice
+      RETURNING
+        VALUE(rs_request) TYPE e070
+      RAISING
+        zcx_abapgit_exception .
+    METHODS before_xml_deserialize
+      IMPORTING
+        !iv_package  TYPE devclass
+      EXPORTING
+        !ev_create   TYPE abap_bool
+        !ev_is_local TYPE abap_bool
+      CHANGING
+        !co_dom_tree TYPE REF TO if_ixml_document
+      RAISING
+        zcx_abapgit_exception .
+    METHODS filter_xml_serialize
+      CHANGING
+        !co_ixml_element TYPE REF TO if_ixml_element
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -45,19 +46,18 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
 
   METHOD before_xml_deserialize.
     DATA lv_application_id TYPE fdt_admn_0000s-application_id.
-    DATA lv_is_local TYPE abap_bool.
     DATA lv_package_xml_value TYPE string.
     DATA lo_node_local TYPE REF TO if_ixml_element.
     DATA lo_node_package TYPE REF TO if_ixml_element.
     DATA lo_node_id TYPE REF TO if_ixml_element.
     DATA lv_count TYPE i.
-    DATA lv_create TYPE abap_bool.
+
     lo_node_local = co_dom_tree->find_from_name(
     name      = 'Local'
     namespace = 'FDTNS' ).
 
     IF lo_node_local IS BOUND.
-      lv_is_local = lo_node_local->get_value( ).
+      ev_is_local = lo_node_local->get_value( ).
     ENDIF.
 
     lo_node_package = co_dom_tree->find_from_name(
@@ -77,7 +77,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
         WHERE object_type = 'AP'
         AND id = lv_application_id
         AND deleted = ''.
-      lv_create = boolc( lv_count = 0 ).
+      ev_create = boolc( lv_count = 0 ).
     ENDIF.
 
   ENDMETHOD.
@@ -92,8 +92,17 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
   ENDMETHOD.
 
 
-  method FILTER_XML_SERIALIZE.
-  endmethod.
+  METHOD filter_xml_serialize.
+    DATA lo_components_node TYPE REF TO if_ixml_element.
+
+    lo_components_node = co_ixml_element->find_from_name(
+        name      = 'ComponentReleases'
+        namespace = 'FDTNS' ).
+    IF lo_components_node IS BOUND.
+      co_ixml_element->remove_child( old_child = lo_components_node ).
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD get_application_id.
@@ -227,13 +236,14 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
 
     lo_dom_tree = io_xml->get_raw( ).
 
-    CALL METHOD me->before_xml_deserialize
+    before_xml_deserialize(
       EXPORTING
         iv_package  = iv_package
       IMPORTING
         ev_create   = lv_create
+        ev_is_local = lv_is_local
       CHANGING
-        co_dom_tree = lo_dom_tree.
+        co_dom_tree = lo_dom_tree ).
 
     lo_dexc = cl_fdt_factory=>if_fdt_factory~get_instance( )->get_data_exchange( ).
 
@@ -402,10 +412,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
         lo_xml_document = cl_ixml_80_20=>parse_to_document( stream_string = lv_xml_fdt0_application ).
         lo_xml_element = lo_xml_document->get_root_element( ).
 
-        filter_xml_serialize(
-          CHANGING
-            co_ixml_element = lo_xml_element                 " Element of an XML Document
-        ).
+        filter_xml_serialize( CHANGING co_ixml_element = lo_xml_element ).
 
         io_xml->set_raw( lo_xml_element ).
 
