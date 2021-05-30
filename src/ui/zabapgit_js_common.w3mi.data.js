@@ -1229,7 +1229,7 @@ LinkHints.prototype.getHintStartValue = function(targetsCount){
 
 LinkHints.prototype.deployHintContainers = function() {
 
-  var hintTargets = document.querySelectorAll("a, input[type='checkbox']");
+  var hintTargets = document.querySelectorAll("a, input[type='checkbox'], input[type='submit'], input[type='text']");
   var codeCounter = this.getHintStartValue(hintTargets.length);
   var hintsMap    = { first: codeCounter };
 
@@ -1281,11 +1281,11 @@ LinkHints.prototype.handleKey = function(event){
     return;
   }
 
-  var activeElementType = (document.activeElement && document.activeElement.nodeName) || "";
+  var activeElement = (document.activeElement && document.activeElement) || {};
 
   // link hints are disabled for input and textareas for obvious reasons.
   // Maybe we must add other types here in the future
-  if (event.key === this.linkHintHotKey && activeElementType !== "INPUT" && activeElementType !== "TEXTAREA") {
+  if (event.key === this.linkHintHotKey && activeElement.type !== "text" && activeElement.nodeName !== "TEXTAREA") {
 
     // on user hide hints, close an opened dropdown too
     if (this.areHintsDisplayed && this.activatedDropdown) this.closeActivatedDropdown();
@@ -1301,6 +1301,7 @@ LinkHints.prototype.handleKey = function(event){
 
     if (hint) { // we are there, we have a fully specified tooltip. Let's activate it
       this.displayHints(false);
+      event.preventDefault();
       this.hintActivate(hint);
     } else {
       // we are not there yet, but let's filter the link so that only
@@ -1344,6 +1345,8 @@ LinkHints.prototype.hintActivate = function (hint) {
     // probably it is a dropdown ...
     this.activatedDropdown = hint.parent.parentElement;
     this.activatedDropdown.classList.toggle("force-nav-hover");
+    hint.parent.focus();
+  } else if (hint.parent.type === "text") {
     hint.parent.focus();
   } else {
     hint.parent.click();
