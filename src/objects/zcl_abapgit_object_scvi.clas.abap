@@ -109,13 +109,13 @@ CLASS zcl_abapgit_object_scvi IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    CALL FUNCTION 'RS_HDSYS_READ_SC_VARIANT_DB'
+    DATA: lo_screen_variant TYPE REF TO zcl_abapgit_objects_generic.
+
+    CREATE OBJECT lo_screen_variant
       EXPORTING
-        scvariant  = |{ ms_item-obj_name }|
-      EXCEPTIONS
-        no_variant = 1
-        OTHERS     = 2.
-    rv_bool = boolc( sy-subrc = 0 ).
+        is_item = ms_item.
+
+    rv_bool = lo_screen_variant->exists( ).
 
   ENDMETHOD.
 
