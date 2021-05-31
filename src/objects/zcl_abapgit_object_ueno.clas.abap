@@ -18,89 +18,82 @@ CLASS zcl_abapgit_object_ueno DEFINITION
 
   PRIVATE SECTION.
 
-    TYPES BEGIN OF ty_docu.
+    TYPES:
+      BEGIN OF ty_docu.
     TYPES language TYPE dm40t-sprache.
     TYPES header   TYPE thead.
     TYPES content TYPE xstring.
     TYPES itf     TYPE tsftext.
-    TYPES END OF ty_docu.
+    TYPES END OF ty_docu .
+    TYPES:
+      ty_docu_lines TYPE STANDARD TABLE OF ty_docu WITH DEFAULT KEY .
 
-    TYPES ty_docu_lines TYPE STANDARD TABLE OF ty_docu WITH DEFAULT KEY.
-
-    DATA mv_entity_id TYPE udentity.
-
+    DATA mv_entity_id TYPE udentity .
     CONSTANTS c_text_object_type TYPE lxeobjtype VALUE 'IM' ##NO_TEXT.
     CONSTANTS c_active_state TYPE as4local VALUE 'A' ##NO_TEXT.
 
-
     METHODS build_text_name
-      IMPORTING VALUE(iv_id)     TYPE tdid
-      RETURNING VALUE(rv_result) TYPE doku_obj.
-
+      IMPORTING
+        VALUE(iv_id)     TYPE tdid
+      RETURNING
+        VALUE(rv_result) TYPE doku_obj .
     METHODS is_name_permitted
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     METHODS delete_docu_uen
-      RAISING zcx_abapgit_exception.
-
+      RAISING
+        zcx_abapgit_exception .
     METHODS delete_docu_url
-      RAISING zcx_abapgit_exception.
-
+      RAISING
+        zcx_abapgit_exception .
     METHODS delete_docu_usp
-      RAISING zcx_abapgit_exception.
-
-
-
+      RAISING
+        zcx_abapgit_exception .
     METHODS deserialize_docu_uen
       IMPORTING
-        io_xml TYPE REF TO zif_abapgit_xml_input
+        !io_xml TYPE REF TO zif_abapgit_xml_input
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     METHODS deserialize_docu_url
       IMPORTING
-        io_xml TYPE REF TO zif_abapgit_xml_input
+        !io_xml TYPE REF TO zif_abapgit_xml_input
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     METHODS deserialize_docu_usp
       IMPORTING
-        io_xml TYPE REF TO zif_abapgit_xml_input
+        !io_xml TYPE REF TO zif_abapgit_xml_input
       RAISING
-        zcx_abapgit_exception.
-
-
-
+        zcx_abapgit_exception .
     METHODS serialize_docu_uen
       IMPORTING
-        io_xml TYPE REF TO zif_abapgit_xml_output
+        !io_xml TYPE REF TO zif_abapgit_xml_output
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     METHODS serialize_docu_url
       IMPORTING
-        io_xml TYPE REF TO zif_abapgit_xml_output
+        !io_xml TYPE REF TO zif_abapgit_xml_output
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     METHODS serialize_docu_xxxx
-      IMPORTING VALUE(iv_id)     TYPE tdid
-      RETURNING VALUE(rt_result) TYPE ty_docu_lines.
-
+      IMPORTING
+        VALUE(iv_id)     TYPE tdid
+      RETURNING
+        VALUE(rt_result) TYPE ty_docu_lines .
     METHODS serialize_docu_usp
       IMPORTING
-        io_xml TYPE REF TO zif_abapgit_xml_output
+        !io_xml TYPE REF TO zif_abapgit_xml_output
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     METHODS deserialize_docu_xxxx
       IMPORTING
-        it_docu TYPE ty_docu_lines
+        !it_docu TYPE ty_docu_lines
       RAISING
-        zcx_abapgit_exception.
-
-
+        zcx_abapgit_exception .
+    METHODS get_generic
+      RETURNING
+        VALUE(ro_generic) TYPE REF TO zcl_abapgit_objects_generic
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -359,6 +352,16 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_generic.
+
+    CREATE OBJECT ro_generic
+      EXPORTING
+        is_item     = ms_item
+        iv_language = mv_language.
+
+  ENDMETHOD.
+
+
   METHOD is_name_permitted.
 
     " It is unlikely that a serialized entity will have a name that is not permitted. However
@@ -504,12 +507,6 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA lo_generic TYPE REF TO zcl_abapgit_objects_generic.
-
-    CREATE OBJECT lo_generic
-      EXPORTING
-        is_item = ms_item.
-
     " The deletion of the documentation occurs before the deletion of
     " the associated tables - otherwise we don't know what
     " documentation needs deletion
@@ -518,24 +515,18 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
     delete_docu_usp( ).
 
     " the deletion of the tables of the entity
-    lo_generic->delete( ).
+    get_generic( )->delete( ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA lo_generic TYPE REF TO zcl_abapgit_objects_generic.
-
-    CREATE OBJECT lo_generic
-      EXPORTING
-        is_item = ms_item.
-
     " Is the entity type name compliant with naming conventions?
     " Entity Type have their own conventions.
     is_name_permitted( ).
 
-    lo_generic->deserialize(
+    get_generic( )->deserialize(
       iv_package = iv_package
       io_xml     = io_xml ).
 
@@ -550,13 +541,7 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: lo_generic TYPE REF TO zcl_abapgit_objects_generic.
-
-    CREATE OBJECT lo_generic
-      EXPORTING
-        is_item = ms_item.
-
-    rv_bool = lo_generic->exists( ).
+    rv_bool = get_generic( )->exists( ).
 
   ENDMETHOD.
 
@@ -636,13 +621,7 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: lo_generic TYPE REF TO zcl_abapgit_objects_generic.
-
-    CREATE OBJECT lo_generic
-      EXPORTING
-        is_item = ms_item.
-
-    lo_generic->serialize( io_xml ).
+    get_generic( )->serialize( io_xml ).
 
     serialize_docu_uen( io_xml ).
     serialize_docu_url( io_xml ).

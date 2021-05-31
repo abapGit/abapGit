@@ -6,7 +6,8 @@ CLASS zcl_abapgit_objects_generic DEFINITION
 
     METHODS constructor
       IMPORTING
-        !is_item TYPE zif_abapgit_definitions=>ty_item
+        !is_item     TYPE zif_abapgit_definitions=>ty_item
+        !iv_language TYPE spras DEFAULT sy-langu
       RAISING
         zcx_abapgit_exception .
     METHODS delete
@@ -40,10 +41,11 @@ CLASS zcl_abapgit_objects_generic DEFINITION
 
     DATA ms_object_header TYPE objh .
     DATA:
-      mt_object_table                TYPE STANDARD TABLE OF objsl WITH DEFAULT KEY .
+      mt_object_table TYPE STANDARD TABLE OF objsl WITH DEFAULT KEY .
     DATA:
-      mt_object_method               TYPE STANDARD TABLE OF objm WITH DEFAULT KEY .
+      mt_object_method TYPE STANDARD TABLE OF objm WITH DEFAULT KEY .
     DATA ms_item TYPE zif_abapgit_definitions=>ty_item .
+    DATA mv_language TYPE spras .
 
     METHODS after_import .
     METHODS before_export .
@@ -208,6 +210,7 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
       ORDER BY PRIMARY KEY.
 
     ms_item = is_item.
+    mv_language = iv_language.
 
   ENDMETHOD.
 
@@ -222,7 +225,7 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
         mode                = 'I'
         global_lock         = abap_true
         devclass            = iv_package
-        master_language     = sy-langu
+        master_language     = mv_language
         suppress_dialog     = abap_true
       EXCEPTIONS
         cancelled           = 1
@@ -505,7 +508,7 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
           lv_objkey_pos = lv_objkey_pos + 1.
 *       language
         ELSEIF <ls_object_table>-tobjkey+lv_next_objkey_pos(1) = 'L'.
-          ls_objkey-value = sy-langu.
+          ls_objkey-value = mv_language.
           INSERT ls_objkey INTO TABLE lt_objkey.
           CLEAR ls_objkey.
           lv_non_value_pos = lv_non_value_pos + 1.

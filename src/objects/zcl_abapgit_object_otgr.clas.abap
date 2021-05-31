@@ -106,7 +106,7 @@ CLASS zcl_abapgit_object_otgr IMPLEMENTATION.
           lo_otgr      TYPE REF TO cl_cls_object_type_group,
           lx_pak_error TYPE REF TO cx_root,
           lv_text      TYPE string,
-          lv_main_lang TYPE sy-langu,
+          lv_main_lang TYPE langu,
           lo_parents   TYPE REF TO data.
 
     FIELD-SYMBOLS: <ls_groupt>  LIKE LINE OF ls_otgr-texts,
