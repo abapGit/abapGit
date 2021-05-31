@@ -22,7 +22,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_scvi IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_SCVI IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
