@@ -22,7 +22,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_SCVI IMPLEMENTATION.
+CLASS zcl_abapgit_object_scvi IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -45,13 +45,9 @@ CLASS ZCL_ABAPGIT_OBJECT_SCVI IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_screen_variant TYPE scvariant.
-
-    lv_screen_variant = ms_item-obj_name.
-
     CALL FUNCTION 'RS_HDSYS_DELETE_SC_VARIANT'
       EXPORTING
-        scvariant        = lv_screen_variant
+        scvariant        = |{ ms_item-obj_name }|
       EXCEPTIONS
         variant_enqueued = 1
         no_correction    = 2
@@ -109,13 +105,13 @@ CLASS ZCL_ABAPGIT_OBJECT_SCVI IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: lo_screen_variant TYPE REF TO zcl_abapgit_objects_generic.
-
-    CREATE OBJECT lo_screen_variant
+    CALL FUNCTION 'RS_HDSYS_READ_SC_VARIANT_DB'
       EXPORTING
-        is_item = ms_item.
-
-    rv_bool = lo_screen_variant->exists( ).
+        scvariant  = |{ ms_item-obj_name }|
+      EXCEPTIONS
+        no_variant = 1
+        OTHERS     = 2.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
