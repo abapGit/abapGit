@@ -14,7 +14,7 @@ CLASS zcl_abapgit_serialize DEFINITION
     METHODS serialize
       IMPORTING
         !it_tadir            TYPE zif_abapgit_definitions=>ty_tadir_tt
-        !iv_language         TYPE langu DEFAULT sy-langu
+        !iv_language         TYPE sy-langu DEFAULT sy-langu
         !ii_log              TYPE REF TO zif_abapgit_log OPTIONAL
         !iv_force_sequential TYPE abap_bool DEFAULT abap_false
       RETURNING
@@ -83,14 +83,14 @@ CLASS zcl_abapgit_serialize DEFINITION
     METHODS run_parallel
       IMPORTING
         !is_tadir    TYPE zif_abapgit_definitions=>ty_tadir
-        !iv_language TYPE langu
+        !iv_language TYPE sy-langu
         !iv_task     TYPE ty_char32
       RAISING
         zcx_abapgit_exception .
     METHODS run_sequential
       IMPORTING
         !is_tadir    TYPE zif_abapgit_definitions=>ty_tadir
-        !iv_language TYPE langu
+        !iv_language TYPE sy-langu
       RAISING
         zcx_abapgit_exception .
     METHODS add_objects
