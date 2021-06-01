@@ -274,7 +274,7 @@ RepoOverViewHelper.prototype.onPageLoad = function () {
       this.toggleItemsFavorites(true);
     }
     if (data.selectedRepoKey) {
-      this.selectRepo(data.selectedRepoKey);
+      this.selectRowByRepoKey(data.selectedRepoKey);
     } else {
       this.selectRowByIndex(0);
     }
