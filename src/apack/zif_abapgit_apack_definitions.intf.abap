@@ -12,7 +12,7 @@ INTERFACE zif_abapgit_apack_definitions
       target_package TYPE devclass,
     END OF ty_dependency.
   TYPES:
-    ty_dependencies    TYPE STANDARD TABLE OF ty_dependency
+    ty_dependencies TYPE STANDARD TABLE OF ty_dependency
                     WITH NON-UNIQUE DEFAULT KEY.
   TYPES ty_repository_type TYPE string.
   TYPES:
@@ -27,7 +27,7 @@ INTERFACE zif_abapgit_apack_definitions
   TYPES:
     BEGIN OF ty_descriptor.
       INCLUDE TYPE ty_descriptor_wo_dependencies.
-    TYPES:
+  TYPES:
       dependencies TYPE ty_dependencies,
     END OF ty_descriptor.
   TYPES:
