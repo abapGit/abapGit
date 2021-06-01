@@ -16,7 +16,9 @@ CLASS zcl_abapgit_object_area DEFINITION
 ENDCLASS.
 
 
+
 CLASS zcl_abapgit_object_area IMPLEMENTATION.
+
 
   METHOD zif_abapgit_object~changed_by.
 
@@ -199,7 +201,7 @@ CLASS zcl_abapgit_object_area IMPLEMENTATION.
     CALL METHOD lr_area->('IF_RSAWBN_FOLDER_TREE~GET_TREE')
       EXPORTING
         i_objvers = 'A'
-        i_langu   = sy-langu
+        i_langu   = mv_language
       IMPORTING
         e_t_tree  = <lt_tree>.
 
@@ -257,7 +259,7 @@ CLASS zcl_abapgit_object_area IMPLEMENTATION.
     CALL METHOD lr_area->('IF_RSAWBN_FOLDER_TREE~GET_TREE')
       EXPORTING
         i_objvers = 'A'
-        i_langu   = sy-langu
+        i_langu   = mv_language
       IMPORTING
         e_t_tree  = <lt_tree>.
 

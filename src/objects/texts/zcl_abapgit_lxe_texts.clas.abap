@@ -79,12 +79,11 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
         EXPORTING
           et_intersection TYPE zif_abapgit_definitions=>ty_languages
           et_missfits TYPE zif_abapgit_definitions=>ty_languages.
-
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
+CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
 
 
   METHOD check_langs_versus_installed.
