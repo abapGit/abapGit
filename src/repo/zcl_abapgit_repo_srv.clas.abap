@@ -501,6 +501,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     ro_repo->refresh( ).
     ro_repo->find_remote_dot_abapgit( ).
+    ro_repo->check_and_create_package( iv_package ).
 
   ENDMETHOD.
 
