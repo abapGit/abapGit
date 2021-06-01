@@ -169,7 +169,7 @@ table.db_tab th {
 }
 
 table.db_tab tr.selected {
-  background: rgba(92, 92, 92, 1);
+  background: rgba(92, 92, 92, 1) !important;
 }
 
 /* ERROR LOGS */

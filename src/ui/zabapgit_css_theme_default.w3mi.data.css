@@ -362,7 +362,7 @@ table.db_tab th {
 }
 
 table.db_tab tr.selected {
-  background-color: rgba(191, 191, 191, 1);
+  background-color: rgba(191, 191, 191, 1) !important;
 }
 
 /* DB ENTRY DISPLAY */
