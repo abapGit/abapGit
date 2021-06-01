@@ -502,7 +502,6 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD shorten_repo_url.
-    FIELD-SYMBOLS <ls_match_result> TYPE match_result.
     DATA lt_results TYPE match_result_tab.
     DATA lv_new_length TYPE i.
     DATA: lv_length_to_truncate_to TYPE i.
