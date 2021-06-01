@@ -1229,7 +1229,7 @@ LinkHints.prototype.getHintStartValue = function(targetsCount){
 
 LinkHints.prototype.deployHintContainers = function() {
 
-  var hintTargets = document.querySelectorAll("a, input[type='checkbox'], input[type='submit'], input[type='text']");
+  var hintTargets = document.querySelectorAll("a, input, textarea");
   var codeCounter = this.getHintStartValue(hintTargets.length);
   var hintsMap    = { first: codeCounter };
 
@@ -1249,7 +1249,7 @@ LinkHints.prototype.deployHintContainers = function() {
 
     hint.pendingSpan.classList.add("pending");
     hint.container.classList.add("link-hint");
-    if (hint.parent.nodeName === "INPUT"){
+    if (hint.parent.nodeName === "INPUT" || hint.parent.nodeName === "TEXTAREA"){
       hint.container.classList.add("link-hint-input");
     } else {
       hint.container.classList.add("link-hint-a");
@@ -1258,7 +1258,7 @@ LinkHints.prototype.deployHintContainers = function() {
     hint.container.classList.add("nodisplay");            // hide by default
     hint.container.dataset.code = codeCounter.toString(); // not really needed, more for debug
 
-    if (hintTargets[i].nodeName === "INPUT") {
+    if (hintTargets[i].nodeName === "INPUT" || hintTargets[i].nodeName === "TEXTAREA") {
       // does not work if inside the input, so appending right after
       hintTargets[i].insertAdjacentElement("afterend", hint.container);
     } else {
@@ -1346,7 +1346,11 @@ LinkHints.prototype.hintActivate = function (hint) {
     this.activatedDropdown = hint.parent.parentElement;
     this.activatedDropdown.classList.toggle("force-nav-hover");
     hint.parent.focus();
-  } else if (hint.parent.type === "text") {
+  } else if (hint.parent.type === "checkbox") {
+    hint.parent.checked = !hint.parent.checked;
+  } else if (hint.parent.type === "submit") {
+    hint.parent.click();
+  } else if (hint.parent.nodeName === "INPUT" || hint.parent.nodeName === "TEXTAREA") {
     hint.parent.focus();
   } else {
     hint.parent.click();
