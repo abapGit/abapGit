@@ -199,7 +199,7 @@ CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
 
   METHOD zif_abapgit_object~jump.
 
-    DATA lv_lang TYPE langu.
+    DATA lv_lang TYPE sy-langu.
 
     lv_lang = get_main_lang( ).
 
