@@ -282,16 +282,15 @@ RepoOverViewHelper.prototype.onPageLoad = function () {
 };
 
 RepoOverViewHelper.prototype.registerKeyboardShortcuts = function () {
-  const self = this;
+  var self = this;
   document.addEventListener("keypress", function (event) {
     if (document.activeElement.id === "filter") {
       return;
     }
-    const keycode = event.keyCode;
-    console.log("pressed " + keycode);
-    const rows = Array.prototype.slice.call(self.getVisibleRows());
-    const selected = document.querySelector(".repo.selected");
-    const indexOfSelected = rows.indexOf(selected);
+    var keycode = event.keyCode;
+    var rows = Array.prototype.slice.call(self.getVisibleRows());
+    var selected = document.querySelector(".repo.selected");
+    var indexOfSelected = rows.indexOf(selected);
 
     if (keycode == 13) {
       // "enter" to open
@@ -314,9 +313,9 @@ RepoOverViewHelper.prototype.openSelectedRepo = function () {
 }
 
 RepoOverViewHelper.prototype.selectRowByIndex = function (index) {
-  const rows = this.getVisibleRows();
+  var rows = this.getVisibleRows();
   if (rows.length >= index) {
-    const selectedRow = rows[index];
+    var selectedRow = rows[index];
     if (selectedRow.classList.contains("selected")) {
       return;
     }
@@ -330,8 +329,8 @@ RepoOverViewHelper.prototype.selectRowByIndex = function (index) {
 }
 
 RepoOverViewHelper.prototype.selectRowByRepoKey = function (key) {
-  const attributeQuery = "[data-key='" + key + "']";
-  const row = document.querySelector(".repo" + attributeQuery);
+  var attributeQuery = "[data-key='" + key + "']";
+  var row = document.querySelector(".repo" + attributeQuery);
   // navigation to already selected repo
   if (row.dataset.key === key && row.classList.contains("selected")) {
     return;
@@ -346,10 +345,10 @@ RepoOverViewHelper.prototype.selectRowByRepoKey = function (key) {
 
 RepoOverViewHelper.prototype.updateActionLinks = function (selectedRow) {
   // now we have a repo selected, determine which action buttons are relevant
-  const selectedRepoKey = selectedRow.dataset.key;
-  const selectedRepoIsOffline = selectedRow.dataset.offline === "X";
+  var selectedRepoKey = selectedRow.dataset.key;
+  var selectedRepoIsOffline = selectedRow.dataset.offline === "X";
 
-  const actionLinks = document.querySelectorAll("a.action_link");
+  var actionLinks = document.querySelectorAll("a.action_link");
   actionLinks.forEach(function (link) {
     // adjust repo key in urls
     link.href = link.href.replace(/\?key=(#|\d+)/, "?key=" + selectedRepoKey);
@@ -388,7 +387,7 @@ RepoOverViewHelper.prototype.getVisibleRows = function () {
 }
 
 RepoOverViewHelper.prototype.registerRowSelection = function () {
-  const self = this;
+  var self = this;
   document.querySelectorAll(".repo td:not(.ro-go)").forEach(function (repoListRowCell) {
     repoListRowCell.addEventListener("click", function (event) {
       self.selectRowByRepoKey(event.target.parentElement.dataset.key)
@@ -397,7 +396,7 @@ RepoOverViewHelper.prototype.registerRowSelection = function () {
 
   document.querySelectorAll(".repo td.ro-go").forEach(function (openRepoIcon) {
     openRepoIcon.addEventListener("click", function (event) {
-      const selectedRow = this.parentElement;
+      var selectedRow = this.parentElement;
       self.selectRowByRepoKey(selectedRow.dataset.key);
       self.openSelectedRepo();
     })
