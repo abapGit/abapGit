@@ -62,6 +62,7 @@ AT SELECTION-SCREEN OUTPUT.
     lcl_password_dialog=>on_screen_output( ).
   ELSE.
     PERFORM output.
+    cl_gui_control=>set_focus( zcl_abapgit_ui_factory=>get_gui( )->get_viewer( ) ).
   ENDIF.
 
 * SAP back command re-direction

@@ -51,6 +51,9 @@ CLASS zcl_abapgit_gui DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS free .
+    METHODS get_viewer
+      RETURNING
+        VALUE(ro_result) TYPE REF TO cl_gui_html_viewer .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -106,7 +109,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
+CLASS zcl_abapgit_gui IMPLEMENTATION.
 
 
   METHOD back.
@@ -204,6 +207,11 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     mi_html_viewer->free( ).
     FREE mi_html_viewer.
 
+  ENDMETHOD.
+
+
+  METHOD get_viewer.
+    ro_result = mi_html_viewer->get_viewer( ).
   ENDMETHOD.
 
 
