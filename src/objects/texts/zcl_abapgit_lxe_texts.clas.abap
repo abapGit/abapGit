@@ -66,7 +66,7 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
     CLASS-METHODS
       langu_to_laiso_safe
         IMPORTING
-          iv_langu TYPE langu
+          iv_langu TYPE sy-langu
         RETURNING
           VALUE(rv_laiso) TYPE laiso
         RAISING
@@ -184,7 +184,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
 
     DATA:
       lv_index               TYPE i,
-      lv_langu               TYPE langu,
+      lv_langu               TYPE sy-langu,
       lv_laiso               TYPE laiso,
       lv_installed_languages TYPE string.
 
