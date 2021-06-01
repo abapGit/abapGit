@@ -90,7 +90,7 @@ if (!String.prototype.startsWith) {
 // used for querySelectorAll results 
 if (window.NodeList && !NodeList.prototype.forEach) {
   NodeList.prototype.forEach = Array.prototype.forEach;
-}
+};
 
 /**********************************************************
  * Common functions
@@ -304,13 +304,13 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function () {
       self.selectRowByIndex(indexOfSelected + 1);
     }
   });
-}
+};
 
 RepoOverViewHelper.prototype.openSelectedRepo = function () {
   this.selectedRepoKey = document.querySelector(".repo.selected").dataset.key;
   this.saveLocalStorage();
   document.querySelector(".repo.selected td.ro-go a").click();
-}
+};
 
 RepoOverViewHelper.prototype.selectRowByIndex = function (index) {
   var rows = this.getVisibleRows();
@@ -326,7 +326,7 @@ RepoOverViewHelper.prototype.selectRowByIndex = function (index) {
     this.updateActionLinks(selectedRow);
     this.saveLocalStorage();
   }
-}
+};
 
 RepoOverViewHelper.prototype.selectRowByRepoKey = function (key) {
   var attributeQuery = "[data-key='" + key + "']";
@@ -341,7 +341,7 @@ RepoOverViewHelper.prototype.selectRowByRepoKey = function (key) {
   this.selectedRepoKey = key;
   this.updateActionLinks(row);
   this.saveLocalStorage();
-}
+};
 
 RepoOverViewHelper.prototype.updateActionLinks = function (selectedRow) {
   // now we have a repo selected, determine which action buttons are relevant
@@ -374,33 +374,33 @@ RepoOverViewHelper.prototype.updateActionLinks = function (selectedRow) {
       link.parentElement.classList.add("enabled");
     }
   });
-}
+};
 
 RepoOverViewHelper.prototype.deselectAllRows = function () {
   document.querySelectorAll(".repo").forEach(function (x) {
-    x.classList.remove("selected")
+    x.classList.remove("selected");
   });
-}
+};
 
 RepoOverViewHelper.prototype.getVisibleRows = function () {
   return document.querySelectorAll(".repo:not(.nodisplay)");
-}
+};
 
 RepoOverViewHelper.prototype.registerRowSelection = function () {
   var self = this;
   document.querySelectorAll(".repo td:not(.ro-go)").forEach(function (repoListRowCell) {
-    repoListRowCell.addEventListener("click", function (event) {
-      self.selectRowByRepoKey(event.target.parentElement.dataset.key)
-    })
-  })
+    repoListRowCell.addEventListener("click", function () {
+      self.selectRowByRepoKey(this.parentElement.dataset.key);
+    });
+  });
 
   document.querySelectorAll(".repo td.ro-go").forEach(function (openRepoIcon) {
-    openRepoIcon.addEventListener("click", function (event) {
+    openRepoIcon.addEventListener("click", function () {
       var selectedRow = this.parentElement;
       self.selectRowByRepoKey(selectedRow.dataset.key);
       self.openSelectedRepo();
-    })
-  })
+    });
+  });
 };
 
 RepoOverViewHelper.prototype.toggleRepoListDetail = function (forceDisplay) {
