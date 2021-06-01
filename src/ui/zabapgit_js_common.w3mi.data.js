@@ -1285,7 +1285,7 @@ LinkHints.prototype.handleKey = function(event){
 
   // link hints are disabled for input and textareas for obvious reasons.
   // Maybe we must add other types here in the future
-  if (event.key === this.linkHintHotKey && activeElement.type !== "text" && activeElement.nodeName !== "TEXTAREA") {
+  if (event.key === this.linkHintHotKey && activeElement.type !== "text" && activeElement.type !== "number" && activeElement.nodeName !== "TEXTAREA") {
 
     // on user hide hints, close an opened dropdown too
     if (this.areHintsDisplayed && this.activatedDropdown) this.closeActivatedDropdown();
