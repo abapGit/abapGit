@@ -320,7 +320,8 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       lv_check_link           TYPE string,
       lv_text                 TYPE string,
       lv_lock                 TYPE string,
-      lv_toggle_favorite_link TYPE string.
+      lv_toggle_favorite_link TYPE string,
+      lv_repo_go_link TYPE string.
 
     FIELD-SYMBOLS: <ls_repo>     LIKE LINE OF it_repo_list.
 
@@ -418,9 +419,9 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
         column( iv_content = |{ <ls_repo>-key }|
                 iv_css_class = 'ro-detail' ) ).
 
-      ii_html->add(
-        column( iv_content = |<span>{ ii_html->a( iv_txt = `&rsaquo;` iv_act = |{ c_action-select }?key={ <ls_repo>-key }| ) }</span>|
-                iv_css_class = 'ro-go' ) ).
+      " the link is clicked in javascript
+      lv_repo_go_link = ii_html->a(  iv_txt = `` iv_act = |{ c_action-select }?key={ <ls_repo>-key }| iv_class = 'hidden' ).
+      ii_html->add( column( iv_content = |<span class="link" title="Open">&rsaquo;{ lv_repo_go_link }</span>| iv_css_class = 'ro-go' ) ).
 
     ENDLOOP.
 

@@ -308,16 +308,40 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function () {
 }
 
 RepoOverViewHelper.prototype.openSelectedRepo = function () {
+  this.selectedRepoKey = document.querySelector(".repo.selected").dataset.key;
+  this.saveLocalStorage();
   document.querySelector(".repo.selected td.ro-go a").click();
 }
 
 RepoOverViewHelper.prototype.selectRowByIndex = function (index) {
   const rows = this.getVisibleRows();
   if (rows.length >= index) {
+    const selectedRow = rows[index];
+    if (selectedRow.classList.contains("selected")) {
+      return;
+    }
+
     this.deselectAllRows();
     rows[index].classList.add("selected");
-    this.updateActionLinks(rows[index]);
+    this.selectedRepoKey = selectedRow.dataset.key;
+    this.updateActionLinks(selectedRow);
+    this.saveLocalStorage();
   }
+}
+
+RepoOverViewHelper.prototype.selectRowByRepoKey = function (key) {
+  const attributeQuery = "[data-key='" + key + "']";
+  const row = document.querySelector(".repo" + attributeQuery);
+  // navigation to already selected repo
+  if (row.dataset.key === key && row.classList.contains("selected")) {
+    return;
+  }
+
+  this.deselectAllRows();
+  row.classList.add("selected");
+  this.selectedRepoKey = key;
+  this.updateActionLinks(row);
+  this.saveLocalStorage();
 }
 
 RepoOverViewHelper.prototype.updateActionLinks = function (selectedRow) {
@@ -359,23 +383,23 @@ RepoOverViewHelper.prototype.deselectAllRows = function () {
   });
 }
 
-RepoOverViewHelper.prototype.getVisibleRows = function(){
+RepoOverViewHelper.prototype.getVisibleRows = function () {
   return document.querySelectorAll(".repo:not(.nodisplay)");
 }
 
 RepoOverViewHelper.prototype.registerRowSelection = function () {
   const self = this;
-  document.querySelectorAll(".repo td").forEach(function (repoListRowCell) {
-
+  document.querySelectorAll(".repo td:not(.ro-go)").forEach(function (repoListRowCell) {
     repoListRowCell.addEventListener("click", function (event) {
+      self.selectRowByRepoKey(event.target.parentElement.dataset.key)
+    })
+  })
 
-      self.deselectAllRows();
-
-      // td->tr
-      const selectedRow = event.target.parentElement;
-      selectedRow.classList.add("selected");
-
-      self.updateActionLinks(selectedRow);
+  document.querySelectorAll(".repo td.ro-go").forEach(function (openRepoIcon) {
+    openRepoIcon.addEventListener("click", function (event) {
+      const selectedRow = this.parentElement;
+      self.selectRowByRepoKey(selectedRow.dataset.key);
+      self.openSelectedRepo();
     })
   })
 };
@@ -383,7 +407,7 @@ RepoOverViewHelper.prototype.registerRowSelection = function () {
 RepoOverViewHelper.prototype.toggleRepoListDetail = function (forceDisplay) {
   if (this.detailCssClass) {
     this.toggleItemsDetail(forceDisplay);
-    this.saveFilter();
+    this.saveLocalStorage();
   }
 };
 
@@ -418,7 +442,7 @@ RepoOverViewHelper.prototype.toggleFilterIcon = function (icon, isEnabled) {
 
 RepoOverViewHelper.prototype.toggleRepoListFavorites = function (forceDisplay) {
   this.toggleItemsFavorites(forceDisplay);
-  this.saveFilter();
+  this.saveLocalStorage();
 };
 
 RepoOverViewHelper.prototype.toggleItemsFavorites = function (forceDisplay) {
@@ -438,11 +462,12 @@ RepoOverViewHelper.prototype.toggleItemsFavorites = function (forceDisplay) {
   }
 };
 
-RepoOverViewHelper.prototype.saveFilter = function () {
+RepoOverViewHelper.prototype.saveLocalStorage = function () {
   if (!window.localStorage) return;
   var data = {
     isDetailsDisplayed: this.isDetailsDisplayed,
-    isOnlyFavoritesDisplayed: this.isOnlyFavoritesDisplayed
+    isOnlyFavoritesDisplayed: this.isOnlyFavoritesDisplayed,
+    selectedRepoKey: this.selectedRepoKey,
   };
   window.localStorage.setItem(this.pageId, JSON.stringify(data));
 };

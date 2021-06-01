@@ -588,11 +588,6 @@ table.db_tab td.data {
   font-style: italic;
 }
 
-table.db_tab tr.selected {
-  /* todo: this must be based on theme */
-  background-color: rgb(219, 219, 219) !important;
-}
-
 span.action_link.enabled{
   visibility: visible;
   position: relative;
