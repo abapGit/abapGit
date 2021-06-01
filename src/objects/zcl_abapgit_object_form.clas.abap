@@ -18,7 +18,7 @@ CLASS zcl_abapgit_object_form DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     TYPES: BEGIN OF ty_s_form_data,
              form_header   TYPE itcta,
              text_header   TYPE thead,
-             orig_language TYPE langu,
+             orig_language TYPE sy-langu,
              pages         TYPE STANDARD TABLE OF itctg WITH DEFAULT KEY,
              page_windows  TYPE STANDARD TABLE OF itcth WITH DEFAULT KEY,
              paragraphs    TYPE STANDARD TABLE OF itcdp WITH DEFAULT KEY,
