@@ -2,19 +2,15 @@ INTERFACE zif_abapgit_html_viewer
   PUBLIC .
 
 
-  TYPES:
-    ty_char256 TYPE c LENGTH 256 .
-  TYPES:
-    ty_post_data TYPE STANDARD TABLE OF ty_char256 WITH DEFAULT KEY .
-  TYPES:
-    BEGIN OF ty_name_value,
-      name  TYPE c LENGTH 30,
-      value TYPE c LENGTH 250,
-    END OF ty_name_value .
-  TYPES:
-    ty_query_table TYPE STANDARD TABLE OF ty_name_value WITH DEFAULT KEY .
-
   CONSTANTS m_id_sapevent TYPE i VALUE 1 ##NO_TEXT.
+
+  TYPES ty_char256 TYPE c LENGTH 256.
+  TYPES ty_post_data TYPE STANDARD TABLE OF ty_char256 WITH DEFAULT KEY.
+  TYPES: BEGIN OF ty_name_value,
+           name  TYPE c LENGTH 30,
+           value TYPE c LENGTH 250,
+         END OF ty_name_value.
+  TYPES ty_query_table TYPE STANDARD TABLE OF ty_name_value WITH DEFAULT KEY.
 
   EVENTS sapevent
     EXPORTING
@@ -35,26 +31,24 @@ INTERFACE zif_abapgit_html_viewer
     CHANGING
       !ct_data_table   TYPE STANDARD TABLE
     RAISING
-      zcx_abapgit_exception .
+      zcx_abapgit_exception.
   METHODS set_registered_events
     IMPORTING
       !it_events TYPE cntl_simple_events
     RAISING
-      zcx_abapgit_exception .
+      zcx_abapgit_exception.
   METHODS show_url
     IMPORTING
       !iv_url TYPE c
     RAISING
-      zcx_abapgit_exception .
+      zcx_abapgit_exception.
   METHODS free .
   METHODS close_document .
   METHODS get_url
     RETURNING
-      VALUE(rv_url) TYPE w3url .
+      VALUE(rv_url) TYPE w3url.
   METHODS back .
-  METHODS set_visiblity
-    IMPORTING
-      !iv_visible TYPE abap_bool .
+  METHODS set_visiblity IMPORTING iv_visible TYPE abap_bool.
   METHODS get_viewer
     RETURNING
       VALUE(ro_result) TYPE REF TO cl_gui_html_viewer .
