@@ -132,7 +132,8 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
 
 
 * Exchange HEAD, and make sure the branch determination starts with the HEAD branch
-    READ TABLE mt_branches ASSIGNING <ls_head> WITH KEY name = lc_head.
+    READ TABLE mt_branches ASSIGNING <ls_head>
+                           WITH TABLE KEY name_key COMPONENTS name = lc_head.
     ASSERT sy-subrc = 0.
     LOOP AT mt_branches ASSIGNING <ls_branch>
         WHERE sha1 = <ls_head>-sha1 AND name <> lc_head.

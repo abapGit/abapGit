@@ -13,6 +13,7 @@ order: 50
 * bonprix Handelsgesellschaft mbH, Germany
 * [CHS Inc.](https://www.chsinc.com)
 * [TRR, Sweden](https://www.trr.se)
+* [Linde Engineering](https://www.linde-engineering.com/en/index.html)
 
 ### SAP
 * [SAP IBSO](https://www.sap.com/services/application-development.html)

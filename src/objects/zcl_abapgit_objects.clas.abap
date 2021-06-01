@@ -14,12 +14,12 @@ CLASS zcl_abapgit_objects DEFINITION
 
     CLASS-METHODS serialize
       IMPORTING
-        !is_item                       TYPE zif_abapgit_definitions=>ty_item
-        !iv_language                   TYPE spras
-        !iv_serialize_master_lang_only TYPE abap_bool DEFAULT abap_false
-        !it_translation_langs          TYPE zif_abapgit_definitions=>ty_languages OPTIONAL
+        !is_item                 TYPE zif_abapgit_definitions=>ty_item
+        !iv_language             TYPE spras
+        !iv_main_language_only   TYPE abap_bool DEFAULT abap_false
+        !it_translation_langs    TYPE zif_abapgit_definitions=>ty_languages OPTIONAL
       RETURNING
-        VALUE(rs_files_and_item)       TYPE ty_serialization
+        VALUE(rs_files_and_item) TYPE ty_serialization
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS deserialize
@@ -937,7 +937,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     CREATE OBJECT li_xml TYPE zcl_abapgit_xml_output.
 
     ls_i18n_params-main_language         = iv_language.
-    ls_i18n_params-main_language_only    = iv_serialize_master_lang_only.
+    ls_i18n_params-main_language_only    = iv_main_language_only.
     ls_i18n_params-translation_languages = it_translation_langs.
 
     li_xml->i18n_params( ls_i18n_params ).

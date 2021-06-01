@@ -101,6 +101,11 @@ CLASS zcl_abapgit_object_ueno DEFINITION
         zcx_abapgit_exception.
 
 
+    METHODS get_generic
+      RETURNING
+        VALUE(ro_generic) TYPE REF TO zcl_abapgit_objects_generic
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -359,6 +364,16 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_generic.
+
+    CREATE OBJECT ro_generic
+      EXPORTING
+        is_item     = ms_item
+        iv_language = mv_language.
+
+  ENDMETHOD.
+
+
   METHOD is_name_permitted.
 
     " It is unlikely that a serialized entity will have a name that is not permitted. However
@@ -504,12 +519,6 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA lo_generic TYPE REF TO zcl_abapgit_objects_generic.
-
-    CREATE OBJECT lo_generic
-      EXPORTING
-        is_item = ms_item.
-
     " The deletion of the documentation occurs before the deletion of
     " the associated tables - otherwise we don't know what
     " documentation needs deletion
@@ -518,24 +527,18 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
     delete_docu_usp( ).
 
     " the deletion of the tables of the entity
-    lo_generic->delete( ).
+    get_generic( )->delete( ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA lo_generic TYPE REF TO zcl_abapgit_objects_generic.
-
-    CREATE OBJECT lo_generic
-      EXPORTING
-        is_item = ms_item.
-
     " Is the entity type name compliant with naming conventions?
     " Entity Type have their own conventions.
     is_name_permitted( ).
 
-    lo_generic->deserialize(
+    get_generic( )->deserialize(
       iv_package = iv_package
       io_xml     = io_xml ).
 
@@ -550,13 +553,7 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: lo_generic TYPE REF TO zcl_abapgit_objects_generic.
-
-    CREATE OBJECT lo_generic
-      EXPORTING
-        is_item = ms_item.
-
-    rv_bool = lo_generic->exists( ).
+    rv_bool = get_generic( )->exists( ).
 
   ENDMETHOD.
 
@@ -636,13 +633,7 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: lo_generic TYPE REF TO zcl_abapgit_objects_generic.
-
-    CREATE OBJECT lo_generic
-      EXPORTING
-        is_item = ms_item.
-
-    lo_generic->serialize( io_xml ).
+    get_generic( )->serialize( io_xml ).
 
     serialize_docu_uen( io_xml ).
     serialize_docu_url( io_xml ).
