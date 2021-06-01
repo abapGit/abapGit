@@ -13,6 +13,6 @@ INTERFACE zif_abapgit_lang_definitions
          END OF ty_i18n_line,
          ty_i18n_lines TYPE STANDARD TABLE OF ty_i18n_line.
 
-  TYPES: ty_langus TYPE STANDARD TABLE OF langu.
+  TYPES: ty_langus TYPE STANDARD TABLE OF sy-langu.
 
 ENDINTERFACE.
