@@ -420,8 +420,14 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
                 iv_css_class = 'ro-detail' ) ).
 
       " the link is clicked in javascript
-      lv_repo_go_link = ii_html->a(  iv_txt = `` iv_act = |{ c_action-select }?key={ <ls_repo>-key }| iv_class = 'hidden' ).
-      ii_html->add( column( iv_content = |<span class="link" title="Open">&rsaquo;{ lv_repo_go_link }</span>| iv_css_class = 'ro-go' ) ).
+      lv_repo_go_link = ii_html->a(
+        iv_txt = ``
+        iv_act = |{ c_action-select }?key={ <ls_repo>-key }|
+        iv_class = 'hidden' ).
+
+      ii_html->add( column(
+        iv_content = |<span class="link" title="Open">&rsaquo;{ lv_repo_go_link }</span>|
+        iv_css_class = 'ro-go' ) ).
 
     ENDLOOP.
 
