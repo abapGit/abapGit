@@ -115,6 +115,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
 
     METHODS shorten_repo_url
       IMPORTING iv_full_url         TYPE string
+                iv_max_length       TYPE i DEFAULT 50
       RETURNING VALUE(rv_shortened) TYPE string.
 
     METHODS render_actions
@@ -497,6 +498,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     FIELD-SYMBOLS <ls_match_result> TYPE match_result.
     DATA lt_results TYPE match_result_tab.
     DATA lv_new_length TYPE i.
+    DATA: lv_length_to_truncate_to TYPE i.
 
     rv_shortened = iv_full_url.
 
@@ -507,6 +509,10 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       rv_shortened  = rv_shortened(lv_new_length).
     ENDIF.
 
+    IF strlen( rv_shortened ) > iv_max_length.
+      lv_length_to_truncate_to = iv_max_length - 3.
+      rv_shortened = rv_shortened(lv_length_to_truncate_to) && `...`.
+    ENDIF.
   ENDMETHOD.
 
   METHOD render_table_header.

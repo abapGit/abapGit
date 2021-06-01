@@ -297,7 +297,7 @@ table.repo_tab {
 .repo_tab tr:first-child td { border-top: 0px; }
 
 .repo_tab tr:hover {
-  background-color: rgb(245, 245, 245) !important;
+  background-color: var(--theme-greyscale-dark) !important;
 }
 
 
