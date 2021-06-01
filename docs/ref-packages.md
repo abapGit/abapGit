@@ -16,7 +16,9 @@ If the repository contains sub packages, abapGit will create them automatically 
 
 ### Automatic Creation of Package
 
-Just enter the name of the SAP package in the "New Online" or "New Offline" dialogs. The package does not have to exist. Then select "Clone Online Repo" or "Create Offline Repo".
+Just enter the name of the SAP package in the "New Online" or "New Offline" dialogs. The package does not have to exist. Then select "Create Online Repo" or "Create Offline Repo".
+
+If the online repo does not include any SAP packages, then abapGit will prompt you for the package attributes when you select "Create Online Repo".
 
 ### Manually Creation of Package
 
