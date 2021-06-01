@@ -87,10 +87,10 @@ if (!String.prototype.startsWith) {
 }
 
 // forEach polyfill, taken from https://developer.mozilla.org
-// used for querySelectorAll results 
+// used for querySelectorAll results
 if (window.NodeList && !NodeList.prototype.forEach) {
   NodeList.prototype.forEach = Array.prototype.forEach;
-};
+}
 
 /**********************************************************
  * Common functions
