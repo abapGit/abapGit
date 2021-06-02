@@ -360,7 +360,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
   METHOD serialize_docu.
 
     DATA: lt_lines      TYPE tlinetab,
-          lv_langu      TYPE langu,
+          lv_langu      TYPE sy-langu,
           lt_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_lines,
           ls_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_line.
 
@@ -407,7 +407,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
   METHOD serialize_tpool.
 
     DATA: lt_tpool      TYPE textpool_table,
-          lv_langu      TYPE langu,
+          lv_langu      TYPE sy-langu,
           lt_i18n_tpool TYPE zif_abapgit_lang_definitions=>ty_i18n_tpools,
           ls_i18n_tpool TYPE zif_abapgit_lang_definitions=>ty_i18n_tpool.
 
