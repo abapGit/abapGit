@@ -51,9 +51,7 @@ CLASS zcl_abapgit_gui DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS free .
-    METHODS get_viewer
-      RETURNING
-        VALUE(ro_result) TYPE REF TO cl_gui_html_viewer .
+    METHODS set_focus .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -207,11 +205,6 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
     mi_html_viewer->free( ).
     FREE mi_html_viewer.
 
-  ENDMETHOD.
-
-
-  METHOD get_viewer.
-    ro_result = mi_html_viewer->get_viewer( ).
   ENDMETHOD.
 
 
@@ -372,6 +365,11 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
     lv_url = cache_html( lv_html ).
     mi_html_viewer->show_url( lv_url ).
 
+  ENDMETHOD.
+
+
+  METHOD set_focus.
+    cl_gui_control=>set_focus( mi_html_viewer->get_viewer( ) ).
   ENDMETHOD.
 
 
