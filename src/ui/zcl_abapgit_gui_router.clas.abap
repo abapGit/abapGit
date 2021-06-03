@@ -712,7 +712,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-zip_import                       " Import repo from ZIP
-        OR zif_abapgit_definitions=>c_action-rfc_import.                      " Import repo from RFC dest
+        OR zif_abapgit_definitions=>c_action-rfc_compare.                     " Compare repo via RFC
 
         lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
 
