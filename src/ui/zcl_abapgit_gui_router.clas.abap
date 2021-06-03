@@ -735,7 +735,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
             EXPORTING
               iv_package            = lo_repo->get_package( )
               iv_folder_logic       = lo_repo->get_dot_abapgit( )->get_folder_logic( )
-              iv_main_lang_only     = lo_repo->get_local_settings( )-serialize_master_lang_only
+              iv_main_lang_only     = lo_repo->get_local_settings( )-main_language_only
             IMPORTING
               ev_xstring            = lv_xstr
             EXCEPTIONS
