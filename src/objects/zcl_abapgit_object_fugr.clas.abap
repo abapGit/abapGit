@@ -31,7 +31,7 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       ty_sobj_name_tt TYPE STANDARD TABLE OF sobj_name  WITH DEFAULT KEY .
     TYPES:
       BEGIN OF ty_tpool_i18n,
-        language TYPE langu,
+        language TYPE sy-langu,
         textpool TYPE zif_abapgit_definitions=>ty_tpool_tt,
       END OF ty_tpool_i18n .
     TYPES:

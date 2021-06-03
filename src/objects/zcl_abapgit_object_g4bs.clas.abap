@@ -8,11 +8,27 @@ CLASS zcl_abapgit_object_g4bs DEFINITION
     INTERFACES zif_abapgit_object .
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    METHODS get_generic
+      RETURNING
+        VALUE(ro_generic) TYPE REF TO zcl_abapgit_objects_generic
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_G4BS IMPLEMENTATION.
+CLASS zcl_abapgit_object_g4bs IMPLEMENTATION.
+
+
+  METHOD get_generic.
+
+    CREATE OBJECT ro_generic
+      EXPORTING
+        is_item     = ms_item
+        iv_language = mv_language.
+
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -22,26 +38,14 @@ CLASS ZCL_ABAPGIT_OBJECT_G4BS IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lo_generic TYPE REF TO zcl_abapgit_objects_generic.
-
-    CREATE OBJECT lo_generic
-      EXPORTING
-        is_item = ms_item.
-
-    lo_generic->delete( ).
+    get_generic( )->delete( ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: lo_generic TYPE REF TO zcl_abapgit_objects_generic.
-
-    CREATE OBJECT lo_generic
-      EXPORTING
-        is_item = ms_item.
-
-    lo_generic->deserialize(
+    get_generic( )->deserialize(
       iv_package = iv_package
       io_xml     = io_xml ).
 
@@ -50,13 +54,7 @@ CLASS ZCL_ABAPGIT_OBJECT_G4BS IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: lo_generic TYPE REF TO zcl_abapgit_objects_generic.
-
-    CREATE OBJECT lo_generic
-      EXPORTING
-        is_item = ms_item.
-
-    rv_bool = lo_generic->exists( ).
+    rv_bool = get_generic( )->exists( ).
 
   ENDMETHOD.
 
@@ -100,13 +98,7 @@ CLASS ZCL_ABAPGIT_OBJECT_G4BS IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: lo_generic TYPE REF TO zcl_abapgit_objects_generic.
-
-    CREATE OBJECT lo_generic
-      EXPORTING
-        is_item = ms_item.
-
-    lo_generic->serialize( io_xml ).
+    get_generic( )->serialize( io_xml ).
 
   ENDMETHOD.
 ENDCLASS.

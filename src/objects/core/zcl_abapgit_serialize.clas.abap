@@ -6,15 +6,15 @@ CLASS zcl_abapgit_serialize DEFINITION
 
     METHODS constructor
       IMPORTING
-        !iv_serialize_master_lang_only TYPE abap_bool DEFAULT abap_false
-        !it_translation_langs          TYPE zif_abapgit_definitions=>ty_languages OPTIONAL.
+        !iv_main_language_only TYPE abap_bool DEFAULT abap_false
+        !it_translation_langs  TYPE zif_abapgit_definitions=>ty_languages OPTIONAL.
     METHODS on_end_of_task
       IMPORTING
         !p_task TYPE clike .
     METHODS serialize
       IMPORTING
         !it_tadir            TYPE zif_abapgit_definitions=>ty_tadir_tt
-        !iv_language         TYPE langu DEFAULT sy-langu
+        !iv_language         TYPE sy-langu DEFAULT sy-langu
         !ii_log              TYPE REF TO zif_abapgit_log OPTIONAL
         !iv_force_sequential TYPE abap_bool DEFAULT abap_false
       RETURNING
@@ -51,7 +51,7 @@ CLASS zcl_abapgit_serialize DEFINITION
     DATA mv_free TYPE i .
     DATA mi_log TYPE REF TO zif_abapgit_log .
     DATA mv_group TYPE rzlli_apcl .
-    DATA mv_serialize_master_lang_only TYPE abap_bool .
+    DATA mv_main_language_only TYPE abap_bool .
     DATA mt_translation_langs TYPE zif_abapgit_definitions=>ty_languages .
 
     METHODS add_apack
@@ -83,14 +83,14 @@ CLASS zcl_abapgit_serialize DEFINITION
     METHODS run_parallel
       IMPORTING
         !is_tadir    TYPE zif_abapgit_definitions=>ty_tadir
-        !iv_language TYPE langu
+        !iv_language TYPE sy-langu
         !iv_task     TYPE ty_char32
       RAISING
         zcx_abapgit_exception .
     METHODS run_sequential
       IMPORTING
         !is_tadir    TYPE zif_abapgit_definitions=>ty_tadir
-        !iv_language TYPE langu
+        !iv_language TYPE sy-langu
       RAISING
         zcx_abapgit_exception .
     METHODS add_objects
@@ -256,7 +256,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     ENDIF.
 
     mv_group = 'parallel_generators'.
-    mv_serialize_master_lang_only = iv_serialize_master_lang_only.
+    mv_main_language_only = iv_main_language_only.
     mt_translation_langs = it_translation_langs.
 
   ENDMETHOD.
@@ -461,17 +461,17 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
         DESTINATION IN GROUP mv_group
         CALLING on_end_of_task ON END OF TASK
         EXPORTING
-          iv_obj_type                   = is_tadir-object
-          iv_obj_name                   = is_tadir-obj_name
-          iv_devclass                   = is_tadir-devclass
-          iv_language                   = iv_language
-          iv_path                       = is_tadir-path
-          iv_serialize_master_lang_only = mv_serialize_master_lang_only
+          iv_obj_type           = is_tadir-object
+          iv_obj_name           = is_tadir-obj_name
+          iv_devclass           = is_tadir-devclass
+          iv_language           = iv_language
+          iv_path               = is_tadir-path
+          iv_main_language_only = mv_main_language_only
         EXCEPTIONS
-          system_failure                = 1 MESSAGE lv_msg
-          communication_failure         = 2 MESSAGE lv_msg
-          resource_failure              = 3
-          OTHERS                        = 4.
+          system_failure        = 1 MESSAGE lv_msg
+          communication_failure = 2 MESSAGE lv_msg
+          resource_failure      = 3
+          OTHERS                = 4.
       IF sy-subrc = 3.
         lv_free = mv_free.
         WAIT UNTIL mv_free <> lv_free UP TO 1 SECONDS.
@@ -499,10 +499,10 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     TRY.
         ls_file_item = zcl_abapgit_objects=>serialize(
-          is_item                       = ls_file_item-item
-          iv_serialize_master_lang_only = mv_serialize_master_lang_only
-          it_translation_langs          = mt_translation_langs
-          iv_language                   = iv_language ).
+          is_item               = ls_file_item-item
+          iv_main_language_only = mv_main_language_only
+          it_translation_langs  = mt_translation_langs
+          iv_language           = iv_language ).
 
         add_to_return( is_file_item = ls_file_item
                        iv_path      = is_tadir-path ).

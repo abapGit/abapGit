@@ -37,7 +37,9 @@ CLASS zcl_abapgit_git_commit DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS sort_commits
       CHANGING
-        !ct_commits TYPE zif_abapgit_definitions=>ty_commit_tt .
+        !ct_commits TYPE zif_abapgit_definitions=>ty_commit_tt
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS reverse_sort_order
       CHANGING
         !ct_commits TYPE zif_abapgit_definitions=>ty_commit_tt .
@@ -239,31 +241,32 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
 
     " find initial commit
     READ TABLE ct_commits ASSIGNING <ls_initial_commit> WITH KEY parent1 = space.
-    IF sy-subrc = 0.
-
-      ls_parent-sign   = 'I'.
-      ls_parent-option = 'EQ'.
-      ls_parent-low    = <ls_initial_commit>-sha1.
-      INSERT ls_parent INTO TABLE lt_parents.
-
-      " first commit
-      INSERT <ls_initial_commit> INTO TABLE lt_sorted_commits.
-
-      " remove from available commits
-      DELETE ct_commits WHERE sha1 = <ls_initial_commit>-sha1.
-
-      DO.
-        get_1st_child_commit( EXPORTING it_commit_sha1s = lt_parents
-                              IMPORTING et_commit_sha1s = lt_parents
-                                        es_1st_commit   = ls_next_commit
-                              CHANGING  ct_commits      = ct_commits ).
-        IF ls_next_commit IS INITIAL.
-          EXIT. "DO
-        ENDIF.
-        INSERT ls_next_commit INTO TABLE lt_sorted_commits.
-      ENDDO.
-
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Cannot find initial commit. Too many commits. Action not possible.| ).
     ENDIF.
+
+    ls_parent-sign   = 'I'.
+    ls_parent-option = 'EQ'.
+    ls_parent-low    = <ls_initial_commit>-sha1.
+    INSERT ls_parent INTO TABLE lt_parents.
+
+    " first commit
+    INSERT <ls_initial_commit> INTO TABLE lt_sorted_commits.
+
+    " remove from available commits
+    DELETE ct_commits WHERE sha1 = <ls_initial_commit>-sha1.
+
+    DO.
+      get_1st_child_commit( EXPORTING it_commit_sha1s = lt_parents
+                            IMPORTING et_commit_sha1s = lt_parents
+                                      es_1st_commit   = ls_next_commit
+                            CHANGING  ct_commits      = ct_commits ).
+      IF ls_next_commit IS INITIAL.
+        EXIT. "DO
+      ENDIF.
+      INSERT ls_next_commit INTO TABLE lt_sorted_commits.
+    ENDDO.
+
     ct_commits = lt_sorted_commits.
 
   ENDMETHOD.
