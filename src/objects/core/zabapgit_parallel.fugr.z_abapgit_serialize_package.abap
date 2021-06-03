@@ -19,7 +19,7 @@ FUNCTION z_abapgit_serialize_package.
     lo_dot_abapgit    TYPE REF TO zcl_abapgit_dot_abapgit.
 
   TRY.
-      ls_local_settings-serialize_master_lang_only = iv_main_lang_only.
+      ls_local_settings-main_language_only = iv_main_lang_only.
 
       lo_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( ).
       lo_dot_abapgit->set_folder_logic( iv_folder_logic ).
