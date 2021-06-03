@@ -473,8 +473,8 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                        iv_act = |{ zif_abapgit_definitions=>c_action-zip_import }?key={ mv_key }|
                        iv_opt = zif_abapgit_html=>c_html_opt-strong ).
       IF mo_repo->get_local_settings( )-write_protected = abap_true.
-        ro_toolbar->add( iv_txt = 'Import <sup>rfc</sup>'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-rfc_import }?key={ mv_key }|
+        ro_toolbar->add( iv_txt = 'Compare <sup>rfc</sup>'
+                         iv_act = |{ zif_abapgit_definitions=>c_action-rfc_compare }?key={ mv_key }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
       ENDIF.
       ro_toolbar->add( iv_txt = 'Export <sup>zip</sup>'
