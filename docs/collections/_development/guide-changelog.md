@@ -11,12 +11,14 @@ A file named as pattern `CHANGELOG*` or `changelog*`
 Changelog file should have a specific format:
 
 Header with the title
+
 ```
 abapGit changelog
 =================
 ```
 
 A legend
+
 ```
 Legend
 ------
@@ -27,14 +29,14 @@ Legend
 ```
 
 Notes section using header format:
-* Date in format YYYY-MM-DD
-* [Semantic version](https://semver.org/)
+* Date in format YYYY-MM-DD followed by [Semantic version](https://semver.org/)
 * Separator: ------------------
-* Version notes
+* Version notes using a prefix as described in the legend
+
 ```
 2020-06-29 v1.97.0
 ------------------
 + Notes.....
 ```
 
-Check [abapGit changelog](https://github.com/abapGit/abapGit/blob/main/changelog.txt) as an example
+Check [abapGit changelog](https://github.com/abapGit/abapGit/blob/main/changelog.txt) as an example.
