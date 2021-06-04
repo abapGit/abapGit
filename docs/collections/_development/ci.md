@@ -40,7 +40,7 @@ Result list:
 
 `POST /sap/zabapgit_ci/run`
 
-[response.json](/docs/examples/response.json)
+[response.json](/docs/example/response.json)
 
 **3) Schedule job sequence with report `ZABAPGIT_CI_JOB_SCHEDULER`**
 
