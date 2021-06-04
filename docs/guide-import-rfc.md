@@ -15,4 +15,4 @@ Pre-requisites:
 
 Note:
 
-The general recommendation is to use **online** repositories and a Git server for comparing and synchronizing systems. We do not recommend to create RFC destinations between systems within the transport path bypass a Git repository or create RFC users with wide authorizations. 
+The general recommendation is to use **online** repositories and a Git server for comparing and synchronizing systems. We do not recommend to create RFC destinations between different tier systems or creating RFC users with wide authorizations. 
