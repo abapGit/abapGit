@@ -113,7 +113,7 @@
       "check": ["^stringtab$", "^SYCHAR01$", "^char2$", "^char20$", "^int4$", "^SYREPID$",
         "^flag$", "^char12$", "^char10$", "^char70$", "^char4$", "^sydatum$", "^syuzeit$",
         "^syst_title$", "^sychar70$", "^char30$", "^char50$",
-        "^numc2$", "^sap_bool$", "^SYCHAR10$", "^sylangu$",
+        "^numc2$", "^sap_bool$", "^SYCHAR10$", "^sylangu$", "^langu$",
         "^cl_blue_wb_utility$", "^boole_d$",
         "^cl_srvd_wb_object_data$",
         "^cl_wb_object_operator_factory$",
