@@ -17,11 +17,6 @@ CLASS zcl_abapgit_object_fdt0 DEFINITION
     METHODS get_application_id
       RETURNING
         VALUE(rv_application_id) TYPE fdt_admn_0000s-application_id .
-    METHODS wb_request_choice
-      RETURNING
-        VALUE(rs_request) TYPE e070
-      RAISING
-        zcx_abapgit_exception .
     METHODS before_xml_deserialize
       IMPORTING
         !iv_package  TYPE devclass
@@ -45,6 +40,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
 
 
   METHOD before_xml_deserialize.
+
     DATA lv_application_id TYPE fdt_admn_0000s-application_id.
     DATA lv_package_xml_value TYPE string.
     DATA lo_node_local TYPE REF TO if_ixml_element.
@@ -52,9 +48,8 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
     DATA lo_node_id TYPE REF TO if_ixml_element.
     DATA lv_count TYPE i.
 
-    lo_node_local = co_dom_tree->find_from_name(
-    name      = 'Local'
-    namespace = 'FDTNS' ).
+    lo_node_local = co_dom_tree->find_from_name( name      = 'Local'
+                                                 namespace = 'FDTNS' ).
 
     IF lo_node_local IS BOUND.
       ev_is_local = lo_node_local->get_value( ).
@@ -93,11 +88,11 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
 
 
   METHOD filter_xml_serialize.
+
     DATA lo_components_node TYPE REF TO if_ixml_element.
 
-    lo_components_node = co_ixml_element->find_from_name(
-        name      = 'ComponentReleases'
-        namespace = 'FDTNS' ).
+    lo_components_node = co_ixml_element->find_from_name( name      = 'ComponentReleases'
+                                                          namespace = 'FDTNS' ).
     IF lo_components_node IS BOUND.
       co_ixml_element->remove_child( old_child = lo_components_node ).
     ENDIF.
@@ -114,32 +109,9 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD wb_request_choice.
-
-    "Transport Request
-    CALL FUNCTION 'OXT_REQUEST_CHOICE'
-      EXPORTING
-        iv_request_types     = 'K'    "Workbench-Request
-      IMPORTING
-        es_request           = rs_request
-      EXCEPTIONS
-        invalid_request      = 1
-        invalid_request_type = 2
-        user_not_owner       = 3
-        no_objects_appended  = 4
-        enqueue_error        = 5
-        cancelled_by_user    = 6
-        recursive_call       = 7
-        OTHERS               = 8.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~changed_by.
-    DATA: lv_ch_user TYPE fdt_admn_0000s-ch_user.
+
+    DATA lv_ch_user TYPE fdt_admn_0000s-ch_user.
 
     SELECT SINGLE ch_user FROM fdt_admn_0000s INTO lv_ch_user
        WHERE object_type = 'AP'
@@ -153,20 +125,19 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
   METHOD zif_abapgit_object~delete.
 
     DATA lv_is_local TYPE abap_bool.
-    DATA ls_request TYPE e070.
+    DATA lv_ordernum TYPE trkorr.
     DATA lt_application_sel TYPE if_fdt_query=>ts_selection.
     DATA ls_application_sel TYPE if_fdt_query=>s_selection.
     DATA ls_object_category_sel TYPE if_fdt_query=>s_object_category_sel.
     DATA lv_failure TYPE abap_bool.
 
     IF zif_abapgit_object~exists( ) = abap_false.
-      " Proxies e.g. delete on its own, nothing todo here then.
       RETURN.
     ENDIF.
 
     lv_is_local = check_is_local( ).
     IF lv_is_local = abap_false.
-      ls_request = wb_request_choice( ).
+      lv_ordernum = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
     ENDIF.
 
     ls_application_sel-queryfield = 'NAME'.
@@ -183,13 +154,12 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
 
           cl_fdt_delete_handling=>delete_logical_via_job(
             EXPORTING
-                its_application_selection         = lt_application_sel
+                its_application_selection = lt_application_sel
                 iv_retention_time = 0
                 iv_background = abap_true
                 iv_local_option = '1'
                 iv_appl_transported_option = '2'
                 iv_obj_transported_option = '2'
-                "iv_marked_option = '3'
                 is_object_category_sel = ls_object_category_sel
             IMPORTING
                 ev_failure = lv_failure ).
@@ -199,15 +169,14 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
 
           cl_fdt_delete_handling=>delete_logical_via_job(
           EXPORTING
-                its_application_selection         = lt_application_sel
+                its_application_selection = lt_application_sel
                 iv_retention_time = 0
                 iv_background = abap_true
                 iv_local_option = '2'
                 iv_appl_transported_option = '1'
                 iv_obj_transported_option = '1'
-                iv_marked_option = '3'
                 is_object_category_sel = ls_object_category_sel
-                iv_transport_request_w  = ls_request-trkorr
+                iv_transport_request_w  = lv_ordernum
           IMPORTING
                 ev_failure = lv_failure ).
 
@@ -229,7 +198,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
     DATA lx_root TYPE REF TO cx_root.
     DATA lo_dom_tree TYPE REF TO if_ixml_document.
     DATA lv_is_local TYPE abap_bool.
-    DATA ls_request TYPE e070.
+    DATA lv_ordernum TYPE trkorr.
     DATA lt_message TYPE if_fdt_types=>t_message.
     DATA lv_create TYPE abap_bool.
     FIELD-SYMBOLS <ls_message> TYPE if_fdt_types=>s_message.
@@ -253,24 +222,24 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
 
           lo_dexc->import_xml(
             EXPORTING
-              io_dom_tree              = lo_dom_tree
-              iv_create                = lv_create
-              iv_activate              = abap_true
-              iv_simulate              = abap_false
+              io_dom_tree = lo_dom_tree
+              iv_create = lv_create
+              iv_activate = abap_true
+              iv_simulate = abap_false
             IMPORTING
               et_message = lt_message   ).
 
         ELSE. "Transportable Object
 
-          ls_request = wb_request_choice( ).
+          lv_ordernum = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
 
           lo_dexc->import_xml(
             EXPORTING
-              io_dom_tree              = lo_dom_tree
-              iv_create                = lv_create
-              iv_activate              = abap_true
-              iv_simulate              = abap_false
-              iv_workbench_trrequest   = ls_request-trkorr
+              io_dom_tree = lo_dom_tree
+              iv_create = lv_create
+              iv_activate = abap_true
+              iv_simulate = abap_false
+              iv_workbench_trrequest = lv_ordernum
             IMPORTING
               et_message = lt_message ).
 
@@ -290,6 +259,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~exists.
+
     DATA lv_count TYPE i.
 
     SELECT COUNT( * ) FROM fdt_admn_0000s INTO lv_count
@@ -304,9 +274,8 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_comparator.
 
-    DATA: lo_local_version_output TYPE REF TO zcl_abapgit_xml_output,
-          lo_local_version_input  TYPE REF TO zcl_abapgit_xml_input.
-
+    DATA lo_local_version_output TYPE REF TO zcl_abapgit_xml_output.
+    DATA lo_local_version_input  TYPE REF TO zcl_abapgit_xml_input.
 
     CREATE OBJECT lo_local_version_output.
     zif_abapgit_object~serialize( lo_local_version_output ).
@@ -323,16 +292,21 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_deserialize_steps.
+
     APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
+
     rs_metadata = get_metadata( ).
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~is_active.
+
     DATA lv_application_id TYPE fdt_admn_0000s-application_id.
     DATA lx_fdt_input TYPE REF TO cx_fdt_input.
     DATA lo_instance TYPE REF TO if_fdt_admin_data.
@@ -344,7 +318,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
 
     TRY.
         cl_fdt_factory=>get_instance_generic( EXPORTING iv_id         = lv_application_id
-                                            IMPORTING eo_instance   = lo_instance ).
+                                              IMPORTING eo_instance   = lo_instance ).
       CATCH cx_fdt_input INTO lx_fdt_input.    "
         zcx_abapgit_exception=>raise( lx_fdt_input->get_text( ) ).
     ENDTRY.
@@ -371,13 +345,14 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
 
     DATA lv_application_id TYPE fdt_admn_0000s-application_id.
     DATA lx_root TYPE REF TO cx_root.
+    DATA lo_fdt_wd TYPE REF TO if_fdt_wd_factory.
 
     lv_application_id = get_application_id( ).
 
     IF lv_application_id IS NOT INITIAL.
       TRY.
-          cl_fdt_wd_factory=>if_fdt_wd_factory~get_instance( )->get_ui_execution( )->execute_workbench(
-              iv_id           = lv_application_id ).
+          lo_fdt_wd = cl_fdt_wd_factory=>if_fdt_wd_factory~get_instance( ).
+          lo_fdt_wd->get_ui_execution( )->execute_workbench( iv_id = lv_application_id ).
         CATCH cx_root INTO lx_root.
           zcx_abapgit_exception=>raise( lx_root->get_text( ) ).
       ENDTRY.
@@ -407,7 +382,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
             iv_schema  = if_fdt_data_exchange=>gc_xml_schema_type_external
             iv_xml_version = if_fdt_data_exchange=>gc_xml_version
           IMPORTING
-            ev_string         = lv_xml_fdt0_application ).
+            ev_string = lv_xml_fdt0_application ).
 
         lo_xml_document = cl_ixml_80_20=>parse_to_document( stream_string = lv_xml_fdt0_application ).
         lo_xml_element = lo_xml_document->get_root_element( ).
@@ -419,7 +394,6 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
       CATCH cx_fdt_input INTO lx_root.    "
         zcx_abapgit_exception=>raise( lx_root->get_text( ) ).
     ENDTRY.
-
 
   ENDMETHOD.
 ENDCLASS.
