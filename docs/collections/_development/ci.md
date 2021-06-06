@@ -30,17 +30,17 @@ There are currently three possibilities to run abapGit CI:
 
 Selection screen:
 
-![abapGit CI selection screen](/docs/img/ZABAPGIT_CI_selection_screen.png)
+![abapGit CI selection screen](/img/ZABAPGIT_CI_selection_screen.png)
 
 Result list:
 
-![abapGit CI results](/docs/img/ZABAPGIT_CI_result.png)
+![abapGit CI results](/img/ZABAPGIT_CI_result.png)
 
 **2) REST API**
 
 `POST /sap/zabapgit_ci/run`
 
-[response.json](/docs/example/response.json)
+[response.json](example/response.json)
 
 **3) Schedule job sequence with report `ZABAPGIT_CI_JOB_SCHEDULER`**
 
@@ -52,7 +52,7 @@ A job sequence is created with
 
 3) Run abapGit CI
 
-![abapGit CI job scheduler](/docs/img/ZABAPGIT_CI_JOB_SCHEDULER.png)
+![abapGit CI job scheduler](/img/ZABAPGIT_CI_JOB_SCHEDULER.png)
 
 **Check transportable packages**
 
@@ -60,7 +60,7 @@ Optionally you can also let abapGit CI create the repositories in transportable 
 
 To set up a suitable transport landscape on the AS ABAP Developer Edition you need to create a new virtual system in STMS (for example `EXP`, `Virtual export system`). This serves as a dummy export target for transport requests. Next you need create a new transport layer (for example `ZEXP`) and connect the current system and the virtual system with it. Then save and activate the configuration.
 
-![STMS transports landscape](/docs/img/STMS.png)
+![STMS transports landscape](/img/STMS.png)
 
 **Prerequisites:**
 
