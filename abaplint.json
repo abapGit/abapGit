@@ -322,6 +322,7 @@
       "ranges": true,
       "subtract": true,
       "freeMemory": true,
+      "exitFromSQL": true,
       "multiply": true,
       "communication": true,
       "typePools": true,
