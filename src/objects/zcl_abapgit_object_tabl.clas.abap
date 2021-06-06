@@ -399,7 +399,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
     DATA: lv_name       TYPE ddobjname,
           ls_dd02v_tmp  TYPE dd02v,
-          lt_i18n_langs TYPE TABLE OF langu,
+          lt_i18n_langs TYPE TABLE OF sy-langu,
           lt_dd02_texts TYPE ty_dd02_texts.
 
     FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
@@ -546,7 +546,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
           lv_index      TYPE i,
           ls_dd02v      TYPE dd02v,
           lt_dd02_texts TYPE ty_dd02_texts,
-          lt_i18n_langs TYPE TABLE OF langu.
+          lt_i18n_langs TYPE TABLE OF sy-langu.
 
     FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
                    <ls_dd02_text> LIKE LINE OF lt_dd02_texts.

@@ -212,7 +212,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
     DATA: lv_msg_id     TYPE rglif-message_id,
           lt_t100_texts TYPE ty_t100_texts,
           lt_t100t      TYPE TABLE OF t100t,
-          lt_i18n_langs TYPE TABLE OF langu.
+          lt_i18n_langs TYPE TABLE OF sy-langu.
 
     lv_msg_id = ms_item-obj_name.
 
