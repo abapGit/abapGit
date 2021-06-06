@@ -7,7 +7,6 @@ order: 75
 
 Latest build: https://ci.abapgit.org
 
-
 Repo [abapGit CI](https://github.com/abapGit/CI) provides basic continuous integration capabilities for abapGit. The repository aims to test the serialization and deserialization of object types, as these cannot be unit tested properly.
 
 The CI process fetches abapGit test repos from https://github.com/abapGit-tests. Then for each repo the following steps are executed:
