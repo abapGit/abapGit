@@ -9,7 +9,7 @@ CLASS zcl_abapgit_object_prog DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     TYPES:
       BEGIN OF ty_tpool_i18n,
-        language TYPE sy-langu,
+        language TYPE langu,
         textpool TYPE zif_abapgit_definitions=>ty_tpool_tt,
       END OF ty_tpool_i18n .
     TYPES:
@@ -42,7 +42,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_prog IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
 
 
   METHOD deserialize_texts.

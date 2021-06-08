@@ -36,14 +36,14 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
 
 
   METHOD deserialize_texts.
 
     DATA: lv_name       TYPE ddobjname,
           ls_dd04v_tmp  TYPE dd04v,
-          lt_i18n_langs TYPE TABLE OF sy-langu,
+          lt_i18n_langs TYPE TABLE OF langu,
           lt_dd04_texts TYPE ty_dd04_texts.
 
     FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
@@ -95,7 +95,7 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
           lv_index      TYPE i,
           ls_dd04v      TYPE dd04v,
           lt_dd04_texts TYPE ty_dd04_texts,
-          lt_i18n_langs TYPE TABLE OF sy-langu.
+          lt_i18n_langs TYPE TABLE OF langu.
 
     FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
                    <ls_dd04_text> LIKE LINE OF lt_dd04_texts.
