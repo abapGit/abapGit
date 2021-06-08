@@ -46,7 +46,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_doma IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
 
 
   METHOD deserialize_texts.
@@ -55,7 +55,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
           lv_valpos     TYPE valpos,
           ls_dd01v_tmp  TYPE dd01v,
           lt_dd07v_tmp  TYPE TABLE OF dd07v,
-          lt_i18n_langs TYPE TABLE OF sy-langu,
+          lt_i18n_langs TYPE TABLE OF langu,
           lt_dd01_texts TYPE ty_dd01_texts,
           lt_dd07_texts TYPE ty_dd07_texts.
 
@@ -133,7 +133,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
           lv_index      TYPE i,
           ls_dd01v      TYPE dd01v,
           lt_dd07v      TYPE TABLE OF dd07v,
-          lt_i18n_langs TYPE TABLE OF sy-langu,
+          lt_i18n_langs TYPE TABLE OF langu,
           lt_dd01_texts TYPE ty_dd01_texts,
           lt_dd07_texts TYPE ty_dd07_texts.
 
