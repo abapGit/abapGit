@@ -46,7 +46,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_nspc IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_NSPC IMPLEMENTATION.
 
 
   METHOD add_to_transport.
@@ -66,7 +66,7 @@ CLASS zcl_abapgit_object_nspc IMPLEMENTATION.
 
     DATA:
       ls_trnspacett TYPE trnspacett,
-      lt_i18n_langs TYPE TABLE OF sy-langu,
+      lt_i18n_langs TYPE TABLE OF langu,
       lt_nspc_texts TYPE ty_nspc_texts.
 
     FIELD-SYMBOLS:
@@ -107,7 +107,7 @@ CLASS zcl_abapgit_object_nspc IMPLEMENTATION.
     DATA:
       ls_trnspacett TYPE trnspacett,
       lt_nspc_texts TYPE ty_nspc_texts,
-      lt_i18n_langs TYPE TABLE OF sy-langu.
+      lt_i18n_langs TYPE TABLE OF langu.
 
     FIELD-SYMBOLS:
       <lv_lang>      LIKE LINE OF lt_i18n_langs,

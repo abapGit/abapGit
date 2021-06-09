@@ -184,7 +184,7 @@ INTERFACE zif_abapgit_definitions
       object   TYPE tadir-object,
       obj_name TYPE tadir-obj_name,
       devclass TYPE tadir-devclass,
-      korrnum  TYPE tadir-korrnum,
+      korrnum  TYPE tadir-korrnum, " todo, I think this field can be removed after #2464 -Hvam
       delflag  TYPE tadir-delflag,
       genflag  TYPE tadir-genflag,
       path     TYPE string,
