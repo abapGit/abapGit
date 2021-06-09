@@ -51,6 +51,7 @@ CLASS zcl_abapgit_gui DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS free .
+    METHODS set_focus .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -106,7 +107,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
+CLASS zcl_abapgit_gui IMPLEMENTATION.
 
 
   METHOD back.
@@ -364,6 +365,11 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     lv_url = cache_html( lv_html ).
     mi_html_viewer->show_url( lv_url ).
 
+  ENDMETHOD.
+
+
+  METHOD set_focus.
+    cl_gui_control=>set_focus( mi_html_viewer->get_viewer( ) ).
   ENDMETHOD.
 
 

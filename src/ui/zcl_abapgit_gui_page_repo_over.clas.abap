@@ -61,6 +61,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
                 iv_label       TYPE string
                 iv_value       TYPE string OPTIONAL
                 iv_max_length  TYPE string OPTIONAL
+                !iv_autofocus  TYPE abap_bool DEFAULT abap_false
       RETURNING VALUE(ri_html) TYPE REF TO zif_abapgit_html,
 
       apply_filter
@@ -256,9 +257,10 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ii_html->add( |<form class="inline" method="post" action="sapevent:{ c_action-apply_filter }">| ).
 
     ii_html->add( render_text_input(
-      iv_name  = |filter|
-      iv_label = |Filter: |
-      iv_value = mv_filter ) ).
+      iv_name      = |filter|
+      iv_label     = |Filter: |
+      iv_value     = mv_filter
+      iv_autofocus = abap_true ) ).
     ii_html->add( |<input type="submit" class="hidden-submit">| ).
     ii_html->add( |</form>| ).
 
@@ -616,7 +618,11 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ENDIF.
 
     IF iv_max_length IS NOT INITIAL.
-      lv_attrs = | maxlength="{ iv_max_length }"|.
+      lv_attrs = lv_attrs && | maxlength="{ iv_max_length }"|.
+    ENDIF.
+
+    IF iv_autofocus = abap_true.
+      lv_attrs = lv_attrs && | autofocus|.
     ENDIF.
 
     ri_html->add( |<label for="{ iv_name }">{ iv_label }</label>| ).
