@@ -49,4 +49,7 @@ INTERFACE zif_abapgit_html_viewer
       VALUE(rv_url) TYPE w3url.
   METHODS back .
   METHODS set_visiblity IMPORTING iv_visible TYPE abap_bool.
+  METHODS get_viewer
+    RETURNING
+      VALUE(ro_result) TYPE REF TO cl_gui_html_viewer .
 ENDINTERFACE.

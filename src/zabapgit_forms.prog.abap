@@ -86,6 +86,7 @@ FORM output.
     TABLES
       p_exclude = lt_ucomm.
 
+  zcl_abapgit_ui_factory=>get_gui( )->set_focus( ).
 ENDFORM.
 
 FORM exit RAISING zcx_abapgit_exception.
