@@ -40,6 +40,8 @@ CLASS zcl_abapgit_gui_event IMPLEMENTATION.
     zif_abapgit_gui_event~mv_getdata      = iv_getdata.
     zif_abapgit_gui_event~mt_postdata     = it_postdata.
 
+    TRANSLATE zif_abapgit_gui_event~mv_action TO LOWER CASE.
+
     IF ii_gui_services IS BOUND.
       zif_abapgit_gui_event~mv_current_page_name = ii_gui_services->get_current_page_name( ).
     ENDIF.
