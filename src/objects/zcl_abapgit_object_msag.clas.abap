@@ -48,7 +48,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_msag IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
 
 
   METHOD delete_documentation.

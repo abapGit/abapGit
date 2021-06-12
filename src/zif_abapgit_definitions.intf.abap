@@ -42,7 +42,9 @@ INTERFACE zif_abapgit_definitions
       display_name TYPE string,
     END OF ty_git_branch .
   TYPES:
-    ty_git_branch_list_tt TYPE STANDARD TABLE OF ty_git_branch WITH DEFAULT KEY .
+    ty_git_branch_list_tt TYPE STANDARD TABLE OF ty_git_branch WITH DEFAULT KEY
+                               WITH NON-UNIQUE SORTED KEY name_key
+                               COMPONENTS name.
   TYPES:
     BEGIN OF ty_git_tag,
       sha1         TYPE ty_sha1,
@@ -103,7 +105,11 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     BEGIN OF ty_overwrite.
       INCLUDE TYPE ty_item.
-  TYPES: decision TYPE ty_yes_no,
+  TYPES:
+      action   TYPE i,
+      icon     TYPE icon_d,
+      text     TYPE string,
+      decision TYPE ty_yes_no,
     END OF ty_overwrite .
   TYPES:
     ty_overwrite_tt TYPE STANDARD TABLE OF ty_overwrite WITH DEFAULT KEY
@@ -178,7 +184,7 @@ INTERFACE zif_abapgit_definitions
       object   TYPE tadir-object,
       obj_name TYPE tadir-obj_name,
       devclass TYPE tadir-devclass,
-      korrnum  TYPE tadir-korrnum,
+      korrnum  TYPE tadir-korrnum, " todo, I think this field can be removed after #2464 -Hvam
       delflag  TYPE tadir-delflag,
       genflag  TYPE tadir-genflag,
       path     TYPE string,
@@ -350,20 +356,19 @@ INTERFACE zif_abapgit_definitions
       prerelase       TYPE string,
       prerelase_patch TYPE i,
     END OF ty_version.
-  TYPES: BEGIN OF ty_alv_column,
-           name   TYPE string,
-           text   TYPE string,
-           length TYPE lvc_outlen,
-         END OF ty_alv_column,
-         ty_alv_column_tt TYPE TABLE OF ty_alv_column WITH DEFAULT KEY.
+  TYPES:
+    BEGIN OF ty_alv_column,
+      name      TYPE string,
+      text      TYPE string,
+      length    TYPE lvc_outlen,
+      show_icon TYPE abap_bool,
+    END OF ty_alv_column,
+    ty_alv_column_tt TYPE TABLE OF ty_alv_column WITH DEFAULT KEY.
   TYPES:
     ty_deserialization_step TYPE string.
   TYPES:
     ty_deserialization_step_tt TYPE STANDARD TABLE OF ty_deserialization_step
                                           WITH DEFAULT KEY .
-  TYPES:
-    ty_object_type_range TYPE RANGE OF trobjtype,
-    ty_object_name_range TYPE RANGE OF sobj_name.
   CONSTANTS:
     BEGIN OF c_git_branch_type,
       branch          TYPE ty_git_branch_type VALUE 'HD',
@@ -374,7 +379,7 @@ INTERFACE zif_abapgit_definitions
   CONSTANTS c_head_name TYPE string VALUE 'HEAD' ##NO_TEXT.
   CONSTANTS:
     BEGIN OF c_git_branch,
-      master       TYPE string VALUE 'refs/heads/master',
+      main         TYPE string VALUE 'refs/heads/main',
       prefix       TYPE string VALUE 'refs/',
       heads_prefix TYPE string VALUE 'refs/heads/',
       heads        TYPE string VALUE 'refs/heads/*',
@@ -421,14 +426,13 @@ INTERFACE zif_abapgit_definitions
       repo_remove                   TYPE string VALUE 'repo_remove',
       repo_settings                 TYPE string VALUE 'repo_settings',
       repo_local_settings           TYPE string VALUE 'repo_local_settings',
+      repo_remote_settings          TYPE string VALUE 'repo_remote_settings',
+      repo_background               TYPE string VALUE 'repo_background',
       repo_infos                    TYPE string VALUE 'repo_infos',
       repo_purge                    TYPE string VALUE 'repo_purge',
       repo_newonline                TYPE string VALUE 'repo_newonline',
       repo_newoffline               TYPE string VALUE 'repo_newoffline',
       repo_add_all_obj_to_trans_req TYPE string VALUE 'repo_add_all_obj_to_trans_req',
-      repo_remote_attach            TYPE string VALUE 'repo_remote_attach',
-      repo_remote_detach            TYPE string VALUE 'repo_remote_detach',
-      repo_remote_change            TYPE string VALUE 'repo_remote_change',
       repo_refresh_checksums        TYPE string VALUE 'repo_refresh_checksums',
       repo_toggle_fav               TYPE string VALUE 'repo_toggle_fav',
       repo_transport_to_branch      TYPE string VALUE 'repo_transport_to_branch',
@@ -442,11 +446,11 @@ INTERFACE zif_abapgit_definitions
       zip_package                   TYPE string VALUE 'zip_package',
       zip_transport                 TYPE string VALUE 'zip_transport',
       zip_object                    TYPE string VALUE 'zip_object',
+      rfc_compare                   TYPE string VALUE 'rfc_compare',
       performance_test              TYPE string VALUE 'performance_test',
       ie_devtools                   TYPE string VALUE 'ie_devtools',
       git_pull                      TYPE string VALUE 'git_pull',
       git_reset                     TYPE string VALUE 'git_reset',
-      git_checkout_commit           TYPE string VALUE 'git_checkout_commit',
       git_branch_create             TYPE string VALUE 'git_branch_create',
       git_branch_switch             TYPE string VALUE 'git_branch_switch',
       git_branch_delete             TYPE string VALUE 'git_branch_delete',
@@ -457,6 +461,7 @@ INTERFACE zif_abapgit_definitions
       db_display                    TYPE string VALUE 'db_display',
       db_edit                       TYPE string VALUE 'db_edit',
       bg_update                     TYPE string VALUE 'bg_update',
+      go_back                       TYPE string VALUE 'go_back',
       go_explore                    TYPE string VALUE 'go_explore',
       go_repo                       TYPE string VALUE 'go_repo',
       go_db                         TYPE string VALUE 'go_db',
@@ -482,7 +487,6 @@ INTERFACE zif_abapgit_definitions
       change_order_by               TYPE string VALUE 'change_order_by',
       goto_message                  TYPE string VALUE 'goto_message',
       direction                     TYPE string VALUE 'direction',
-      changed_by                    TYPE string VALUE 'changed_by',
       documentation                 TYPE string VALUE 'documentation',
       changelog                     TYPE string VALUE 'changelog',
     END OF c_action.

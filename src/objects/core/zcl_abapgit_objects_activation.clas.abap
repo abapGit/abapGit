@@ -25,8 +25,14 @@ CLASS zcl_abapgit_objects_activation DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
+    TYPES:
+      BEGIN OF ty_classes,
+        object  TYPE trobjtype,
+        clsname TYPE seoclsname,
+      END OF ty_classes.
+
     CLASS-DATA:
-      gt_classes TYPE STANDARD TABLE OF seoclsname WITH DEFAULT KEY .
+      gt_classes TYPE STANDARD TABLE OF ty_classes WITH DEFAULT KEY .
     CLASS-DATA:
       gt_objects TYPE TABLE OF dwinactiv .
 
@@ -118,10 +124,11 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
 
       CALL FUNCTION 'DD_MASS_ACT_C3'
         EXPORTING
-          ddmode         = 'O'
-          medium         = 'T' " transport order
-          device         = 'T' " saves to table DDRPH?
-          version        = 'M' " activate newest
+          ddmode         = 'O'         " activate changes in Original System
+          frcact         = abap_true   " force Activation
+          medium         = 'T'         " transport order
+          device         = 'T'         " saves to table DDRPH?
+          version        = 'M'         " activate newest version
           logname        = lv_logname
           write_log      = abap_true
           log_head_tail  = abap_true
@@ -251,10 +258,13 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
 * function module RS_INSERT_INTO_WORKING_AREA
 * class CL_WB_ACTIVATION_WORK_AREA
 
-    FIELD-SYMBOLS: <ls_object> TYPE dwinactiv.
+    FIELD-SYMBOLS: <ls_object>  TYPE dwinactiv,
+                   <ls_classes> LIKE LINE OF gt_classes.
 
-    IF iv_type = 'CLAS'.
-      APPEND iv_name TO gt_classes.
+    IF iv_type = 'CLAS' OR iv_type = 'INTF'.
+      APPEND INITIAL LINE TO gt_classes ASSIGNING <ls_classes>.
+      <ls_classes>-object  = iv_type.
+      <ls_classes>-clsname = iv_name.
     ELSE.
       APPEND INITIAL LINE TO gt_objects ASSIGNING <ls_object>.
       <ls_object>-object     = iv_type.
@@ -351,7 +361,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
 
   METHOD update_where_used.
 
-    DATA: lv_class    LIKE LINE OF gt_classes,
+    DATA: ls_class    LIKE LINE OF gt_classes,
           lo_cross    TYPE REF TO cl_wb_crossreference,
           lv_include  TYPE programm,
           li_progress TYPE REF TO zif_abapgit_progress.
@@ -359,14 +369,19 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
 
     li_progress = zcl_abapgit_progress=>get_instance( lines( gt_classes ) ).
 
-    LOOP AT gt_classes INTO lv_class.
+    LOOP AT gt_classes INTO ls_class.
       IF sy-tabix MOD 20 = 0.
         li_progress->show(
           iv_current = sy-tabix
           iv_text    = 'Updating where-used lists' ).
       ENDIF.
 
-      lv_include = cl_oo_classname_service=>get_classpool_name( lv_class ).
+      CASE ls_class-object.
+        WHEN 'CLAS'.
+          lv_include = cl_oo_classname_service=>get_classpool_name( ls_class-clsname ).
+        WHEN 'INTF'.
+          lv_include = cl_oo_classname_service=>get_interfacepool_name( ls_class-clsname ).
+      ENDCASE.
 
       CREATE OBJECT lo_cross
         EXPORTING

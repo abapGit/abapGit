@@ -14,11 +14,11 @@ CLASS zcl_abapgit_language DEFINITION
     CLASS-METHODS restore_login_language .
     CLASS-METHODS set_current_language
       IMPORTING
-        !iv_language TYPE langu .
+        !iv_language TYPE sy-langu .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CLASS-DATA gv_login_language TYPE langu .
+    CLASS-DATA gv_login_language TYPE sy-langu .
 ENDCLASS.
 
 

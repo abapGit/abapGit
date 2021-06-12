@@ -17,8 +17,6 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         toggle_changes           TYPE string VALUE 'toggle_changes' ##NO_TEXT,
         toggle_diff_first        TYPE string VALUE 'toggle_diff_first ' ##NO_TEXT,
         display_more             TYPE string VALUE 'display_more' ##NO_TEXT,
-        repo_switch_origin_to_pr TYPE string VALUE 'repo_switch_origin_to_pr',
-        repo_reset_origin        TYPE string VALUE 'repo_reset_origin',
         go_data                  TYPE string VALUE 'go_data',
       END OF c_actions .
 
@@ -133,8 +131,6 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
       CHANGING
         !ct_repo_items TYPE zif_abapgit_definitions=>ty_repo_item_tt .
     METHODS build_branch_dropdown
-      IMPORTING
-        !iv_wp_opt                LIKE zif_abapgit_html=>c_html_opt-crossout
       RETURNING
         VALUE(ro_branch_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
       RAISING
@@ -165,14 +161,6 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         !io_tb_advanced   TYPE REF TO zcl_abapgit_html_toolbar
       RETURNING
         VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
-      RAISING
-        zcx_abapgit_exception .
-    METHODS switch_to_pr
-      IMPORTING
-        !it_fields         TYPE tihttpnvp OPTIONAL
-        !iv_revert         TYPE abap_bool OPTIONAL
-      RETURNING
-        VALUE(rv_switched) TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
     METHODS build_main_menu
@@ -236,12 +224,19 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     CLEAR: ct_repo_items.
 
-    ls_sort-name       = mv_order_by.
     ls_sort-descending = mv_order_descending.
     ls_sort-astext     = abap_true.
+    ls_sort-name       = mv_order_by.
     INSERT ls_sort INTO TABLE lt_sort.
-    SORT lt_code_items BY (lt_sort).
-    SORT lt_diff_items BY (lt_sort).
+
+    " Combine state fields for order of 'Status' column
+    IF mv_order_by = 'LSTATE'.
+      ls_sort-name = 'RSTATE'.
+      INSERT ls_sort INTO TABLE lt_sort.
+    ENDIF.
+
+    SORT lt_code_items STABLE BY (lt_sort).
+    SORT lt_diff_items STABLE BY (lt_sort).
 
     INSERT LINES OF lt_non_code_and_metadata_items INTO TABLE ct_repo_items.
     INSERT LINES OF lt_diff_items INTO TABLE ct_repo_items.
@@ -264,15 +259,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ENDIF.
 
     IF mo_repo->is_offline( ) = abap_false. " Online ?
-      ro_advanced_dropdown->add( iv_txt = 'Checkout commit'
-                                 iv_act = |{ zif_abapgit_definitions=>c_action-git_checkout_commit }?key={ mv_key }|
-                                 iv_opt = iv_wp_opt ).
-      ro_advanced_dropdown->add( iv_txt = 'Background Mode'
-                                 iv_act = |{ zif_abapgit_definitions=>c_action-go_background }?key={ mv_key }| ).
-      ro_advanced_dropdown->add( iv_txt = 'Change Remote'
-                                 iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_change }?key={ mv_key }| ).
-      ro_advanced_dropdown->add( iv_txt = 'Make Off-line'
-                                 iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_detach }?key={ mv_key }| ).
       ro_advanced_dropdown->add( iv_txt = 'Force Stage'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?key={ mv_key }| ).
 
@@ -284,15 +270,11 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         iv_txt = 'Transport to Branch'
         iv_act = |{ zif_abapgit_definitions=>c_action-repo_transport_to_branch }?key={ mv_key }|
         iv_opt = lv_crossout ).
-
-    ELSE.
-      ro_advanced_dropdown->add( iv_txt = 'Make On-line'
-                                 iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_attach }?key={ mv_key }| ).
     ENDIF.
 
     IF mv_are_changes_recorded_in_tr = abap_true.
       ro_advanced_dropdown->add(
-          iv_txt  = 'Add all objects to transport request'
+          iv_txt  = 'Add All Objects to Transport'
           iv_act = |{ zif_abapgit_definitions=>c_action-repo_add_all_obj_to_trans_req }?key={ mv_key }| ).
     ENDIF.
 
@@ -340,8 +322,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
   METHOD build_branch_dropdown.
 
-    DATA lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
-
     CREATE OBJECT ro_branch_dropdown.
 
     IF mo_repo->is_offline( ) = abap_true.
@@ -351,23 +331,11 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ro_branch_dropdown->add( iv_txt = 'Overview'
                              iv_act = |{ zif_abapgit_definitions=>c_action-go_branch_overview }?key={ mv_key }| ).
     ro_branch_dropdown->add( iv_txt = 'Switch'
-                             iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?key={ mv_key }|
-                             iv_opt = iv_wp_opt ).
+                             iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?key={ mv_key }| ).
     ro_branch_dropdown->add( iv_txt = 'Create'
                              iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_create }?key={ mv_key }| ).
     ro_branch_dropdown->add( iv_txt = 'Delete'
                              iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_delete }?key={ mv_key }| ).
-
-    lo_repo_online ?= mo_repo. " TODO refactor this disaster
-    IF lo_repo_online->get_switched_origin( ) IS NOT INITIAL.
-      ro_branch_dropdown->add(
-        iv_txt = 'Revert to Previous Branch'
-        iv_act = |{ c_actions-repo_reset_origin }| ).
-    ELSE.
-      ro_branch_dropdown->add(
-        iv_txt = 'Switch to PR Branch'
-        iv_act = |{ c_actions-repo_switch_origin_to_pr }| ).
-    ENDIF.
 
   ENDMETHOD.
 
@@ -406,7 +374,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       lv_pull_opt = zif_abapgit_html=>c_html_opt-strong.
     ENDIF.
 
-    lo_tb_branch = build_branch_dropdown( lv_wp_opt ).
+    lo_tb_branch = build_branch_dropdown( ).
 
     lo_tb_tag = build_tag_dropdown( lv_wp_opt ).
 
@@ -504,6 +472,11 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       ro_toolbar->add( iv_txt = 'Import <sup>zip</sup>'
                        iv_act = |{ zif_abapgit_definitions=>c_action-zip_import }?key={ mv_key }|
                        iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+      IF mo_repo->get_local_settings( )-write_protected = abap_true.
+        ro_toolbar->add( iv_txt = 'Compare <sup>rfc</sup>'
+                         iv_act = |{ zif_abapgit_definitions=>c_action-rfc_compare }?key={ mv_key }|
+                         iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+      ENDIF.
       ro_toolbar->add( iv_txt = 'Export <sup>zip</sup>'
                        iv_act = |{ zif_abapgit_definitions=>c_action-zip_export }?key={ mv_key }|
                        iv_opt = zif_abapgit_html=>c_html_opt-strong ).
@@ -646,7 +619,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       WHERE pgmna = sy-cprog
         AND cinfo = lc_report_tcode_hex.
 
-    IF lines( lt_tcodes ) = 1.
+    IF lines( lt_tcodes ) > 0.
       READ TABLE lt_tcodes INDEX 1 INTO rv_tcode.
     ENDIF.
   ENDMETHOD.
@@ -699,7 +672,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
 
   METHOD is_repo_lang_logon_lang.
-    rv_repo_lang_is_logon_lang = boolc( mo_repo->get_dot_abapgit( )->get_master_language( ) = sy-langu ).
+    rv_repo_lang_is_logon_lang = boolc( mo_repo->get_dot_abapgit( )->get_main_language( ) = sy-langu ).
   ENDMETHOD.
 
 
@@ -716,7 +689,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     " https://blogs.sap.com/2017/01/13/logon-language-sy-langu-and-rfc/
 
-    lv_main_language = mo_repo->get_dot_abapgit( )->get_master_language( ).
+    lv_main_language = mo_repo->get_dot_abapgit( )->get_main_language( ).
     lv_tcode = get_abapgit_tcode( ).
     ASSERT lv_tcode IS NOT INITIAL.
 
@@ -798,9 +771,14 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
           io_repo               = mo_repo
           io_news               = lo_news
+          iv_show_edit          = abap_true
           iv_interactive_branch = abap_true ) ).
 
         ri_html->add( zcl_abapgit_gui_chunk_lib=>render_news( io_news = lo_news ) ).
+
+        zcl_abapgit_exit=>get_instance( )->wall_message_repo(
+          is_repo_meta = mo_repo->ms_data
+          ii_html      = ri_html ).
 
         CREATE OBJECT lo_browser
           EXPORTING
@@ -1117,7 +1095,11 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ls_col_spec-allow_order_by = abap_true.
     APPEND ls_col_spec TO lt_col_spec.
 
-    APPEND INITIAL LINE TO lt_col_spec.
+    ls_col_spec-tech_name = 'LSTATE'.
+    ls_col_spec-display_name = 'Status'.
+    ls_col_spec-allow_order_by = abap_true.
+    ls_col_spec-css_class = 'cmd'.
+    APPEND ls_col_spec TO lt_col_spec.
 
     ri_html->add( |<thead>| ).
     ri_html->add( |<tr>| ).
@@ -1164,48 +1146,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD switch_to_pr.
-
-    DATA lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
-    DATA lt_pulls TYPE zif_abapgit_pr_enum_provider=>ty_pull_requests.
-    DATA ls_pull LIKE LINE OF lt_pulls.
-
-    IF mo_repo->is_offline( ) = abap_true.
-      zcx_abapgit_exception=>raise( 'Unexpected PR switch for offline repo' ).
-    ENDIF.
-    IF mo_repo->get_local_settings( )-write_protected = abap_true.
-      zcx_abapgit_exception=>raise( 'Cannot switch branch. Local code is write-protected by repo config' ).
-    ENDIF.
-
-    lo_repo_online ?= mo_repo.
-
-    IF iv_revert = abap_true.
-      lo_repo_online->switch_origin( '' ).
-    ELSE.
-      lt_pulls = zcl_abapgit_pr_enumerator=>new( lo_repo_online )->get_pulls( ).
-      IF lines( lt_pulls ) = 0.
-        RETURN. " false
-      ENDIF.
-
-      SORT lt_pulls BY number DESCENDING.
-
-      ls_pull = zcl_abapgit_ui_factory=>get_popups( )->choose_pr_popup( lt_pulls ).
-      IF ls_pull IS INITIAL.
-        RETURN. " false
-      ENDIF.
-
-      lo_repo_online->switch_origin( ls_pull-head_url ).
-      lo_repo_online->select_branch( |refs/heads/{ ls_pull-head_branch }| ). " TODO refactor
-      rv_switched = abap_true.
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA lv_path TYPE string.
-    DATA lv_switched TYPE abap_bool.
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-go_repo. " Switch to another repo
@@ -1258,18 +1201,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
       WHEN zif_abapgit_definitions=>c_action-repo_open_in_master_lang.
         open_in_main_language( ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-
-      WHEN c_actions-repo_switch_origin_to_pr.
-        lv_switched = switch_to_pr( ).
-        IF lv_switched = abap_true.
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-        ELSE.
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
-        ENDIF.
-
-      WHEN c_actions-repo_reset_origin.
-        switch_to_pr( iv_revert = abap_true ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN OTHERS.

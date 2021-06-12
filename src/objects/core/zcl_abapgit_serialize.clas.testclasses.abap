@@ -123,11 +123,11 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_char_cp(
       act = zcl_abapgit_log_viewer=>to_html( li_log1 )->render( )
-      exp = '*Object type ignored, not supported*' ).
+      exp = '*Object type ABCD not supported*' ).
 
     cl_abap_unit_assert=>assert_char_cp(
       act = zcl_abapgit_log_viewer=>to_html( li_log2 )->render( )
-      exp = '*Object type ignored, not supported*' ).
+      exp = '*Object type ABCD not supported*' ).
 
   ENDMETHOD.
 

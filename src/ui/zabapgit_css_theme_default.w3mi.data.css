@@ -101,6 +101,7 @@ div.repo { background-color: var(--theme-container-background-color); }
 .repo_name span.name { color: #333; }
 .repo_name span.url  { color: var(--theme-primary-font-color-reduced); }
 .repo_name a.url { color: var(--theme-primary-font-color-reduced); }
+.repo_name a.url:hover { color: var(--theme-link-color); }
 .repo_attr       { color: grey; }
 
 .repo_attr span.bg_marker {
@@ -130,7 +131,7 @@ table.repo_tab {
   background-color: #fff;
 }
 .repo_tab th {
-  color: #888888;
+  color: var(--theme-link-color);
   border-bottom-color: #ddd;
 }
 .repo_tab td {
@@ -351,7 +352,7 @@ table.db_tab td      { color: #333; }
 table.db_tab td.data { color: #888; }
 table.db_tab tbody tr:hover, tr:active { background-color: #f4f4f4; }
 table.db_tab th {
-  color: #888888;
+  color: var(--theme-link-color);
   border-bottom-color: #ddd;
 }
 
@@ -375,6 +376,7 @@ div.tutorial hr { border-color: var(--theme-greyscale-light); }
 div.tutorial h1, h2 { color: #404040; }
 
 /* MENU */
+.nav-container ul li:hover { background-color: #fff; }
 .nav-container ul ul li:hover { background-color: #f6f6f6; }
 .nav-container > ul > li:hover > a { background-color: #ffffff80; }
 .nav-container ul ul { background-color: #fff; }

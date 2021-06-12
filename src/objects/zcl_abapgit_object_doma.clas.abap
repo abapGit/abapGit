@@ -46,7 +46,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_doma IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
 
 
   METHOD deserialize_texts.

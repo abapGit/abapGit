@@ -1,7 +1,11 @@
-CLASS zcl_abapgit_oo_base DEFINITION PUBLIC ABSTRACT.
-  PUBLIC SECTION.
-    INTERFACES: zif_abapgit_oo_object_fnc.
+CLASS zcl_abapgit_oo_base DEFINITION
+  PUBLIC
+  ABSTRACT
+  CREATE PUBLIC .
 
+  PUBLIC SECTION.
+
+    INTERFACES zif_abapgit_oo_object_fnc .
   PROTECTED SECTION.
     CLASS-METHODS:
       convert_attrib_to_vseoattrib
@@ -10,18 +14,8 @@ CLASS zcl_abapgit_oo_base DEFINITION PUBLIC ABSTRACT.
         RETURNING VALUE(rt_vseoattrib) TYPE seoo_attributes_r.
 
   PRIVATE SECTION.
-    DATA mv_skip_test_classes TYPE abap_bool.
 
-    METHODS deserialize_abap_source_old
-      IMPORTING is_clskey TYPE seoclskey
-                it_source TYPE zif_abapgit_definitions=>ty_string_tt
-      RAISING   zcx_abapgit_exception.
-
-    METHODS deserialize_abap_source_new
-      IMPORTING is_clskey TYPE seoclskey
-                it_source TYPE zif_abapgit_definitions=>ty_string_tt
-      RAISING   zcx_abapgit_exception
-                cx_sy_dyn_call_error.
+    DATA mv_skip_test_classes TYPE abap_bool .
 ENDCLASS.
 
 
@@ -40,93 +34,6 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
       UNASSIGN <ls_vseoattrib>.
     ENDLOOP.
     UNASSIGN <ls_attribute>.
-  ENDMETHOD.
-
-
-  METHOD deserialize_abap_source_new.
-    DATA: lo_factory  TYPE REF TO object,
-          lo_source   TYPE REF TO object,
-          lo_settings TYPE REF TO object,
-          lr_settings TYPE REF TO data.
-
-    FIELD-SYMBOLS <lg_settings> TYPE any.
-
-
-    "Buffer needs to be refreshed,
-    "otherwise standard SAP CLIF_SOURCE reorder methods alphabetically
-    CALL FUNCTION 'SEO_BUFFER_INIT'.
-    CALL FUNCTION 'SEO_BUFFER_REFRESH'
-      EXPORTING
-        cifkey  = is_clskey
-        version = seoc_version_inactive.
-
-    CALL METHOD ('CL_OO_FACTORY')=>('CREATE_INSTANCE')
-      RECEIVING
-        result = lo_factory.
-
-    "Enable modification mode to avoid exception CX_OO_ACCESS_PERMISSON when
-    "dealing with objects in foreign namespaces (namespace role = C)
-    CALL METHOD lo_factory->('CREATE_SETTINGS')
-      EXPORTING
-        modification_mode_enabled = abap_true
-      RECEIVING
-        result                    = lo_settings.
-
-    CREATE DATA lr_settings TYPE REF TO ('IF_OO_CLIF_SOURCE_SETTINGS').
-    ASSIGN lr_settings->* TO <lg_settings>.
-
-    <lg_settings> ?= lo_settings.
-
-    CALL METHOD lo_factory->('CREATE_CLIF_SOURCE')
-      EXPORTING
-        clif_name = is_clskey-clsname
-        settings  = <lg_settings>
-      RECEIVING
-        result    = lo_source.
-
-    TRY.
-        CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~LOCK').
-      CATCH cx_oo_access_permission.
-        zcx_abapgit_exception=>raise( 'source_new, access permission exception' ).
-    ENDTRY.
-
-    CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~SET_SOURCE')
-      EXPORTING
-        source = it_source.
-
-    CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~SAVE').
-
-    CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~UNLOCK').
-
-  ENDMETHOD.
-
-
-  METHOD deserialize_abap_source_old.
-    "for backwards compatability down to 702
-
-    DATA: lo_source TYPE REF TO cl_oo_source.
-
-    CREATE OBJECT lo_source
-      EXPORTING
-        clskey             = is_clskey
-      EXCEPTIONS
-        class_not_existing = 1
-        OTHERS             = 2.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
-
-    TRY.
-        lo_source->access_permission( seok_access_modify ).
-        lo_source->set_source( it_source ).
-        lo_source->save( ).
-        lo_source->access_permission( seok_access_free ).
-      CATCH cx_oo_access_permission.
-        zcx_abapgit_exception=>raise( 'permission error' ).
-      CATCH cx_oo_source_save_failure.
-        zcx_abapgit_exception=>raise( 'save failure' ).
-    ENDTRY.
-
   ENDMETHOD.
 
 
@@ -169,30 +76,12 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
 
 
   METHOD zif_abapgit_oo_object_fnc~deserialize_source.
-    TRY.
-        deserialize_abap_source_new(
-          is_clskey = is_key
-          it_source = it_source ).
-      CATCH cx_sy_dyn_call_error.
-        deserialize_abap_source_old(
-          is_clskey = is_key
-          it_source = it_source ).
-    ENDTRY.
+    ASSERT 0 = 1. "Subclass responsibility
   ENDMETHOD.
 
 
   METHOD zif_abapgit_oo_object_fnc~exists.
-    CALL FUNCTION 'SEO_CLASS_EXISTENCE_CHECK'
-      EXPORTING
-        clskey        = is_object_name
-      EXCEPTIONS
-        not_specified = 1
-        not_existing  = 2
-        is_interface  = 3
-        no_text       = 4
-        inconsistent  = 5
-        OTHERS        = 6.
-    rv_exists = boolc( sy-subrc <> 2 ).
+    ASSERT 0 = 1. "Subclass responsibility
   ENDMETHOD.
 
 

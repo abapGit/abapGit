@@ -46,7 +46,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_nspc IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_NSPC IMPLEMENTATION.
 
 
   METHOD add_to_transport.

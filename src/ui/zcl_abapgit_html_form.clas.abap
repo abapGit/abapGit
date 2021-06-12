@@ -338,22 +338,27 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     FIELD-SYMBOLS <ls_cmd> LIKE LINE OF mt_commands.
     DATA lv_hint TYPE string.
     DATA ls_form_id TYPE string.
+    DATA ls_form_action TYPE string.
     DATA lv_cur_group TYPE string.
     DATA lv_url TYPE string.
 
     IF mv_form_id IS NOT INITIAL.
       ls_form_id = | id="{ mv_form_id }"|.
     ENDIF.
+    LOOP AT mt_commands ASSIGNING <ls_cmd> WHERE cmd_type = zif_abapgit_html_form=>c_cmd_type-input_main.
+      ls_form_action = | action="sapevent:{ <ls_cmd>-action }"|.
+      EXIT.
+    ENDLOOP.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( |<div class="dialog { iv_form_class }">| ). " to center use 'dialog-form-center'
-    ri_html->add( |<form method="post"{ ls_form_id }>| ).
+    ri_html->add( |<form method="post"{ ls_form_id }{ ls_form_action }>| ).
 
     " Add hidden button that triggers main command when pressing enter
     LOOP AT mt_commands ASSIGNING <ls_cmd> WHERE cmd_type = zif_abapgit_html_form=>c_cmd_type-input_main.
-      ri_html->add( |<button type="submit" formaction="sapevent:{ <ls_cmd>-action
-                    }" class="hidden-submit" aria-hidden="true" tabindex="-1"></button>| ).
+      ri_html->add( |<button type="submit" formaction="sapevent:{ <ls_cmd>-action }" class="hidden-submit"|
+                 && | aria-hidden="true" tabindex="-1"></button>| ).
       EXIT.
     ENDLOOP.
 
@@ -434,18 +439,16 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
       WHEN zif_abapgit_html_form=>c_cmd_type-button.
 
-        ii_html->add( |<button type="submit" name="action" value="{
-          is_cmd-action }" class="action-commands">{ is_cmd-label }</button>| ).
+        ii_html->add( |<button type="submit" name="action" value="{ is_cmd-action }"|
+                   && | class="action-commands">{ is_cmd-label }</button>| ).
 
       WHEN zif_abapgit_html_form=>c_cmd_type-input.
 
-        ii_html->add( |<input type="submit" value="{
-          is_cmd-label }" formaction="sapevent:{ is_cmd-action }">| ).
+        ii_html->add( |<input type="submit" value="{ is_cmd-label }" formaction="sapevent:{ is_cmd-action }">| ).
 
       WHEN zif_abapgit_html_form=>c_cmd_type-input_main.
 
-        ii_html->add( |<input type="submit" value="{
-          is_cmd-label }" class="main" formaction="sapevent:{ is_cmd-action }">| ).
+        ii_html->add( |<input type="submit" value="{ is_cmd-label }" class="main">| ).
 
       WHEN OTHERS.
         ASSERT 0 = 1.
@@ -585,8 +588,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
   METHOD render_field_hidden.
 
-    ii_html->add( |<input type="hidden" name="{ is_field-name }" id="{
-                  is_field-name }" value="{ is_attr-value }">| ).
+    ii_html->add( |<input type="hidden" name="{ is_field-name }" id="{ is_field-name }" value="{ is_attr-value }">| ).
 
   ENDMETHOD.
 
@@ -618,8 +620,8 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       ENDIF.
 
       lv_opt_id = |{ is_field-name }{ sy-tabix }|.
-      ii_html->add( |<input type="radio" name="{ is_field-name }" id="{
-                    lv_opt_id }" value="{ lv_opt_value }"{ lv_checked }>| ).
+      ii_html->add( |<input type="radio" name="{ is_field-name }" id="{ lv_opt_id }"|
+                 && | value="{ lv_opt_value }"{ lv_checked }>| ).
       ii_html->add( |<label for="{ lv_opt_id }">{ <ls_opt>-label }</label>| ).
     ENDLOOP.
 
@@ -631,10 +633,10 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
   METHOD render_field_table.
 
     DATA:
-      lv_value     TYPE string,
-      lv_readonly  TYPE string,
-      lv_rows      TYPE i,
-      lv_cell_id   TYPE string.
+      lv_value    TYPE string,
+      lv_readonly TYPE string,
+      lv_rows     TYPE i,
+      lv_cell_id  TYPE string.
 
     FIELD-SYMBOLS <ls_subitem> LIKE LINE OF is_field-subitems.
 
@@ -644,49 +646,57 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       ii_html->add( is_attr-error ).
     ENDIF.
 
-    ii_html->add( |<table name="{ is_field-name }" id="{ is_field-name }" class="table-container">| ).
-
-    ii_html->add( |<thead>| ).
-    ii_html->add( |<tr>| ).
-    LOOP AT is_field-subitems ASSIGNING <ls_subitem>.
-      CLEAR lv_value.
-      IF <ls_subitem>-value IS NOT INITIAL.
-        lv_value = escape( val    = <ls_subitem>-value
-                           format = cl_abap_format=>e_html_attr ).
-        lv_value = | width="{ lv_value }"|.
-      ENDIF.
-      ii_html->add( |<td{ lv_value }>{ <ls_subitem>-label }</td>| ).
-    ENDLOOP.
-    ii_html->add( |</tr>| ).
-    ii_html->add( |</thead>| ).
-
     lv_rows = io_values->get( |{ is_field-name }-{ zif_abapgit_html_form=>c_rows }| ).
 
-    ii_html->add( |<tbody>| ).
-    DO lv_rows TIMES.
-      lv_rows = sy-index.
+    " Render table only if there are some data rows
+    IF lv_rows > 0.
+
+      ii_html->add( |<table name="{ is_field-name }" id="{ is_field-name }" class="table-container">| ).
+
+      ii_html->add( |<thead>| ).
       ii_html->add( |<tr>| ).
       LOOP AT is_field-subitems ASSIGNING <ls_subitem>.
-        lv_cell_id = |{ is_field-name }-{ lv_rows }-{ sy-tabix }|.
-        lv_value = escape( val    = io_values->get( lv_cell_id )
-                           format = cl_abap_format=>e_html_attr ).
-        CLEAR lv_readonly.
-        IF <ls_subitem>-readonly = abap_true.
-          lv_readonly = | readonly|.
+        CLEAR lv_value.
+        IF <ls_subitem>-value IS NOT INITIAL.
+          lv_value = escape( val    = <ls_subitem>-value
+                             format = cl_abap_format=>e_html_attr ).
+          lv_value = | width="{ lv_value }"|.
         ENDIF.
-        ii_html->add( |<td><input type="text" name="{ lv_cell_id }" id="{
-                      lv_cell_id }" value="{ lv_value }"{ lv_readonly }></td>| ).
+        ii_html->add( |<td{ lv_value }>{ <ls_subitem>-label }</td>| ).
       ENDLOOP.
       ii_html->add( |</tr>| ).
-    ENDDO.
-    ii_html->add( |</tbody>| ).
+      ii_html->add( |</thead>| ).
 
-    ii_html->add( |</table>| ).
+      ii_html->add( |<tbody>| ).
+      DO lv_rows TIMES.
+        lv_rows = sy-index.
+        ii_html->add( |<tr>| ).
+        LOOP AT is_field-subitems ASSIGNING <ls_subitem>.
+          lv_cell_id = |{ is_field-name }-{ lv_rows }-{ sy-tabix }|.
+          lv_value = escape( val    = io_values->get( lv_cell_id )
+                             format = cl_abap_format=>e_html_attr ).
+          CLEAR lv_readonly.
+          IF <ls_subitem>-readonly = abap_true.
+            lv_readonly = | readonly|.
+          ENDIF.
+          ii_html->add( |<td><input type="text" name="{ lv_cell_id }" id="{
+                        lv_cell_id }" value="{ lv_value }"{ lv_readonly }></td>| ).
+        ENDLOOP.
+        ii_html->add( |</tr>| ).
+      ENDDO.
+      ii_html->add( |</tbody>| ).
+
+      ii_html->add( |</table>| ).
+
+    ELSE.
+      ii_html->add( |<input type="text" name="{ is_field-name }" id="{
+                    is_field-name }" value="Not available" readonly>| ).
+    ENDIF.
 
     " Hidden field with number of rows to simplify getting values from form
     lv_value = |{ is_field-name }-{ zif_abapgit_html_form=>c_rows }|.
-    ii_html->add( |<input type="number" name="{ lv_value }" id="{
-                  lv_value }" value="{ lv_rows }" style="display:none">| ).
+    ii_html->add( |<input type="number" name="{ lv_value }" id="{ lv_value }"|
+               && | value="{ lv_rows }" style="display:none">| ).
 
   ENDMETHOD.
 
@@ -695,8 +705,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     DATA lv_type TYPE string.
 
-    ii_html->add( |<label for="{ is_field-name }"{ is_attr-hint }>{
-                  is_field-label }{ is_attr-required }</label>| ).
+    ii_html->add( |<label for="{ is_field-name }"{ is_attr-hint }>{ is_field-label }{ is_attr-required }</label>| ).
 
     IF is_attr-error IS NOT INITIAL.
       ii_html->add( is_attr-error ).
@@ -714,9 +723,8 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       lv_type = 'text'.
     ENDIF.
 
-    ii_html->add( |<input type="{ lv_type }" name="{ is_field-name }" id="{
-                  is_field-name }" value="{ is_attr-value }" { is_field-dblclick }{
-                  is_attr-placeholder }{ is_attr-readonly }>| ).
+    ii_html->add( |<input type="{ lv_type }" name="{ is_field-name }" id="{ is_field-name }"|
+               && | value="{ is_attr-value }" { is_field-dblclick }{ is_attr-placeholder }{ is_attr-readonly }>| ).
 
     IF is_field-side_action IS NOT INITIAL.
       ii_html->add( '</div>' ).
@@ -733,8 +741,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     DATA lv_rows TYPE i.
     DATA lv_html TYPE string.
 
-    ii_html->add( |<label for="{ is_field-name }"{ is_attr-hint }>{
-                  is_field-label }{ is_attr-required }</label>| ).
+    ii_html->add( |<label for="{ is_field-name }"{ is_attr-hint }>{ is_field-label }{ is_attr-required }</label>| ).
 
     IF is_attr-error IS NOT INITIAL.
       ii_html->add( is_attr-error ).
@@ -804,10 +811,8 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     IF iv_side_action IS NOT INITIAL AND mv_form_id IS NOT INITIAL.
       ls_field-item_class = 'with-command'.
       ls_field-side_action = iv_side_action.
-      ls_field-dblclick = | ondblclick="document.getElementById('{ mv_form_id
-        }').action = 'sapevent:{ iv_side_action
-        }'; document.getElementById('{ mv_form_id
-        }').submit()"|.
+      ls_field-dblclick = | ondblclick="document.getElementById('{ mv_form_id }').action = 'sapevent:|
+                       && |{ iv_side_action }'; document.getElementById('{ mv_form_id }').submit()"|.
     ENDIF.
 
     APPEND ls_field TO mt_fields.

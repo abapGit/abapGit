@@ -401,18 +401,21 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCC IMPLEMENTATION.
                           iv_ext    = 'xml'
                           iv_string = lv_xml_string ).
 
-    SELECT * FROM wdy_config_compt INTO TABLE lt_otr_texts WHERE config_id   = ls_orig_config-config_id
-                                                             AND config_type = ls_orig_config-config_type
-                                                             AND config_var  = ls_orig_config-config_var.
-
+    SELECT * FROM wdy_config_compt INTO TABLE lt_otr_texts
+      WHERE config_id   = ls_orig_config-config_id
+      AND config_type = ls_orig_config-config_type
+      AND config_var  = ls_orig_config-config_var
+      ORDER BY PRIMARY KEY.
     IF lt_otr_texts IS NOT INITIAL.
       io_xml->add( iv_name = 'OTR_TEXT'
                    ig_data = lt_otr_texts ).
     ENDIF.
 
-    SELECT * FROM wdy_config_datt INTO TABLE lt_cc_text WHERE config_id   = ls_orig_config-config_id
-                                                          AND config_type = ls_orig_config-config_type
-                                                          AND config_var  = ls_orig_config-config_var.
+    SELECT * FROM wdy_config_datt INTO TABLE lt_cc_text
+      WHERE config_id   = ls_orig_config-config_id
+      AND config_type = ls_orig_config-config_type
+      AND config_var  = ls_orig_config-config_var
+      ORDER BY PRIMARY KEY.
     IF lt_cc_text IS NOT INITIAL.
       io_xml->add( iv_name = 'DESCR_LANG'
                    ig_data = lt_cc_text ).

@@ -339,7 +339,7 @@ CLASS lcl_task_definition IMPLEMENTATION.
         no_changes_allowed = 1
         OTHERS             = 2 ).                         "#EC SUBRC_OK
 
-    check_subrc_for( `CHANGE_TEXT` ).
+    check_subrc_for( `CHANGE_TERM_EVENTS_COMPLETE` ).
 
     mo_taskdef->change_term_evt_bind_complete(
       EXPORTING
@@ -348,7 +348,7 @@ CLASS lcl_task_definition IMPLEMENTATION.
         no_changes_allowed = 1
         OTHERS             = 2 ).                         "#EC SUBRC_OK
 
-    check_subrc_for( `CHANGE_TERM_EVENTS_COMPLETE` ).
+    check_subrc_for( `CHANGE_TERM_EVT_BIND_COMPLETE` ).
 
   ENDMETHOD.
 

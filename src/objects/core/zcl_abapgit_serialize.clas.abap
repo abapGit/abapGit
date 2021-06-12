@@ -6,15 +6,15 @@ CLASS zcl_abapgit_serialize DEFINITION
 
     METHODS constructor
       IMPORTING
-        !iv_serialize_master_lang_only TYPE abap_bool DEFAULT abap_false
-        !it_translation_langs          TYPE zif_abapgit_definitions=>ty_languages OPTIONAL.
+        !iv_main_language_only TYPE abap_bool DEFAULT abap_false
+        !it_translation_langs  TYPE zif_abapgit_definitions=>ty_languages OPTIONAL.
     METHODS on_end_of_task
       IMPORTING
         !p_task TYPE clike .
     METHODS serialize
       IMPORTING
         !it_tadir            TYPE zif_abapgit_definitions=>ty_tadir_tt
-        !iv_language         TYPE langu DEFAULT sy-langu
+        !iv_language         TYPE sy-langu DEFAULT sy-langu
         !ii_log              TYPE REF TO zif_abapgit_log OPTIONAL
         !iv_force_sequential TYPE abap_bool DEFAULT abap_false
       RETURNING
@@ -35,12 +35,14 @@ CLASS zcl_abapgit_serialize DEFINITION
         zcx_abapgit_exception .
   PROTECTED SECTION.
 
-    TYPES: BEGIN OF ty_unsupported_count,
-             obj_type TYPE tadir-object,
-             obj_name TYPE tadir-obj_name,
-             count    TYPE i,
-           END OF ty_unsupported_count,
-           ty_unsupported_count_tt TYPE HASHED TABLE OF ty_unsupported_count WITH UNIQUE KEY obj_type.
+    TYPES:
+      BEGIN OF ty_unsupported_count,
+        obj_type TYPE tadir-object,
+        obj_name TYPE tadir-obj_name,
+        count    TYPE i,
+      END OF ty_unsupported_count .
+    TYPES:
+      ty_unsupported_count_tt TYPE HASHED TABLE OF ty_unsupported_count WITH UNIQUE KEY obj_type .
     TYPES:
       ty_char32 TYPE c LENGTH 32 .
 
@@ -49,7 +51,7 @@ CLASS zcl_abapgit_serialize DEFINITION
     DATA mv_free TYPE i .
     DATA mi_log TYPE REF TO zif_abapgit_log .
     DATA mv_group TYPE rzlli_apcl .
-    DATA mv_serialize_master_lang_only TYPE abap_bool .
+    DATA mv_main_language_only TYPE abap_bool .
     DATA mt_translation_langs TYPE zif_abapgit_definitions=>ty_languages .
 
     METHODS add_apack
@@ -62,6 +64,7 @@ CLASS zcl_abapgit_serialize DEFINITION
     METHODS add_data
       IMPORTING
         !ii_data_config TYPE REF TO zif_abapgit_data_config
+        !io_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit
       CHANGING
         !ct_files       TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
@@ -80,14 +83,14 @@ CLASS zcl_abapgit_serialize DEFINITION
     METHODS run_parallel
       IMPORTING
         !is_tadir    TYPE zif_abapgit_definitions=>ty_tadir
-        !iv_language TYPE langu
+        !iv_language TYPE sy-langu
         !iv_task     TYPE ty_char32
       RAISING
         zcx_abapgit_exception .
     METHODS run_sequential
       IMPORTING
         !is_tadir    TYPE zif_abapgit_definitions=>ty_tadir
-        !iv_language TYPE langu
+        !iv_language TYPE sy-langu
       RAISING
         zcx_abapgit_exception .
     METHODS add_objects
@@ -110,13 +113,13 @@ CLASS zcl_abapgit_serialize DEFINITION
         zcx_abapgit_exception .
     METHODS filter_unsupported_objects
       CHANGING
-        !ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
+        !ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt .
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
+CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
 
   METHOD add_apack.
@@ -150,12 +153,32 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
     LOOP AT lt_files INTO ls_file.
       APPEND INITIAL LINE TO ct_files ASSIGNING <ls_return>.
       <ls_return>-file = ls_file.
+
+      " Derive object from config filename (namespace + escaping)
+      zcl_abapgit_filename_logic=>file_to_object(
+        EXPORTING
+          iv_filename = <ls_return>-file-filename
+          iv_path     = <ls_return>-file-path
+          io_dot      = io_dot_abapgit
+        IMPORTING
+          es_item     = <ls_return>-item ).
+
+      <ls_return>-item-obj_type = 'TABU'.
     ENDLOOP.
 
     lt_files = zcl_abapgit_data_factory=>get_serializer( )->serialize( ii_data_config ).
     LOOP AT lt_files INTO ls_file.
       APPEND INITIAL LINE TO ct_files ASSIGNING <ls_return>.
       <ls_return>-file = ls_file.
+
+      " Derive object from data filename (namespace + escaping)
+      zcl_abapgit_filename_logic=>file_to_object(
+        EXPORTING
+          iv_filename = <ls_return>-file-filename
+          iv_path     = <ls_return>-file-path
+          io_dot      = io_dot_abapgit
+        IMPORTING
+          es_item     = <ls_return>-item ).
     ENDLOOP.
 
   ENDMETHOD.
@@ -178,7 +201,6 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
           lt_found  LIKE ct_files,
           lt_tadir  TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
-
     lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
       iv_package            = iv_package
       iv_ignore_subpackages = is_local_settings-ignore_subpackages
@@ -198,7 +220,7 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
     lt_found = serialize(
       it_tadir            = lt_tadir
-      iv_language         = io_dot_abapgit->get_master_language( )
+      iv_language         = io_dot_abapgit->get_main_language( )
       ii_log              = ii_log
       iv_force_sequential = lv_force ).
     APPEND LINES OF lt_found TO ct_files.
@@ -234,7 +256,7 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
     ENDIF.
 
     mv_group = 'parallel_generators'.
-    mv_serialize_master_lang_only = iv_serialize_master_lang_only.
+    mv_main_language_only = iv_main_language_only.
     mt_translation_langs = it_translation_langs.
 
   ENDMETHOD.
@@ -319,6 +341,7 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
     add_data(
       EXPORTING
         ii_data_config = ii_data_config
+        io_dot_abapgit = io_dot_abapgit
       CHANGING
         ct_files       = rt_files ).
 
@@ -397,11 +420,11 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
     RECEIVE RESULTS FROM FUNCTION 'Z_ABAPGIT_SERIALIZE_PARALLEL'
       IMPORTING
-        ev_result = lv_result
-        ev_path   = lv_path
+        ev_result             = lv_result
+        ev_path               = lv_path
       EXCEPTIONS
-        error     = 1
-        system_failure = 2 MESSAGE lv_mess
+        error                 = 1
+        system_failure        = 2 MESSAGE lv_mess
         communication_failure = 3 MESSAGE lv_mess
         OTHERS = 4.
     IF sy-subrc <> 0.
@@ -409,7 +432,7 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
         IF NOT lv_mess IS INITIAL.
           mi_log->add_error( lv_mess ).
         ELSE.
-          mi_log->add_error( |{ sy-msgv1 }{ sy-msgv2 }{ sy-msgv3 }{ sy-msgv3 }, { sy-subrc }| ).
+          mi_log->add_error( |{ sy-msgv1 }{ sy-msgv2 }{ sy-msgv3 }{ sy-msgv3 }| ).
         ENDIF.
       ENDIF.
     ELSE.
@@ -438,17 +461,17 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
         DESTINATION IN GROUP mv_group
         CALLING on_end_of_task ON END OF TASK
         EXPORTING
-          iv_obj_type                   = is_tadir-object
-          iv_obj_name                   = is_tadir-obj_name
-          iv_devclass                   = is_tadir-devclass
-          iv_language                   = iv_language
-          iv_path                       = is_tadir-path
-          iv_serialize_master_lang_only = mv_serialize_master_lang_only
+          iv_obj_type           = is_tadir-object
+          iv_obj_name           = is_tadir-obj_name
+          iv_devclass           = is_tadir-devclass
+          iv_language           = iv_language
+          iv_path               = is_tadir-path
+          iv_main_language_only = mv_main_language_only
         EXCEPTIONS
-          system_failure                = 1 MESSAGE lv_msg
-          communication_failure         = 2 MESSAGE lv_msg
-          resource_failure              = 3
-          OTHERS                        = 4.
+          system_failure        = 1 MESSAGE lv_msg
+          communication_failure = 2 MESSAGE lv_msg
+          resource_failure      = 3
+          OTHERS                = 4.
       IF sy-subrc = 3.
         lv_free = mv_free.
         WAIT UNTIL mv_free <> lv_free UP TO 1 SECONDS.
@@ -476,10 +499,10 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
     TRY.
         ls_file_item = zcl_abapgit_objects=>serialize(
-          is_item                       = ls_file_item-item
-          iv_serialize_master_lang_only = mv_serialize_master_lang_only
-          it_translation_langs          = mt_translation_langs
-          iv_language                   = iv_language ).
+          is_item               = ls_file_item-item
+          iv_main_language_only = mv_main_language_only
+          it_translation_langs  = mt_translation_langs
+          iv_language           = iv_language ).
 
         add_to_return( is_file_item = ls_file_item
                        iv_path      = is_tadir-path ).
@@ -536,6 +559,7 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
     WAIT UNTIL mv_free = lv_max UP TO 120 SECONDS.
     rt_files = mt_files.
+    FREE mt_files.
 
   ENDMETHOD.
 ENDCLASS.

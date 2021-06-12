@@ -4,8 +4,6 @@ CLASS zcl_abapgit_ajson DEFINITION
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_ajson_reader .
-    INTERFACES zif_abapgit_ajson_writer .
     INTERFACES zif_abapgit_ajson .
 
     ALIASES:
@@ -16,6 +14,7 @@ CLASS zcl_abapgit_ajson DEFINITION
       get_integer FOR zif_abapgit_ajson_reader~get_integer,
       get_number FOR zif_abapgit_ajson_reader~get_number,
       get_date FOR zif_abapgit_ajson_reader~get_date,
+      get_timestamp FOR zif_abapgit_ajson_reader~get_timestamp,
       get_string FOR zif_abapgit_ajson_reader~get_string,
       slice FOR zif_abapgit_ajson_reader~slice,
       to_abap FOR zif_abapgit_ajson_reader~to_abap,
@@ -28,6 +27,7 @@ CLASS zcl_abapgit_ajson DEFINITION
       set_string FOR zif_abapgit_ajson_writer~set_string,
       set_integer FOR zif_abapgit_ajson_writer~set_integer,
       set_date FOR zif_abapgit_ajson_writer~set_date,
+      set_timestamp FOR zif_abapgit_ajson_writer~set_timestamp,
       set_null FOR zif_abapgit_ajson_writer~set_null,
       delete FOR zif_abapgit_ajson_writer~delete,
       touch_array FOR zif_abapgit_ajson_writer~touch_array,
@@ -356,6 +356,28 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_ajson_reader~get_timestamp.
+
+    DATA lo_to_abap TYPE REF TO lcl_json_to_abap.
+    DATA lr_item TYPE REF TO zif_abapgit_ajson=>ty_node.
+
+    lr_item = get_item( iv_path ).
+
+    IF lr_item IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    CREATE OBJECT lo_to_abap.
+
+    TRY.
+        rv_value = lo_to_abap->to_timestamp( is_path = lr_item->* ).
+      CATCH zcx_abapgit_ajson_error.
+        RETURN.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_ajson_reader~members.
 
     DATA lv_normalized_path TYPE string.
@@ -625,6 +647,39 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
       iv_ignore_empty = abap_false
       iv_path = iv_path
       iv_val  = lv_val ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_ajson_writer~set_timestamp.
+
+    DATA:
+      lv_tz            TYPE tznzone,
+      lv_date          TYPE d,
+      lv_time          TYPE t,
+      lv_timestamp_iso TYPE string.
+
+    IF iv_val IS INITIAL.
+      " The zero value is January 1, year 1, 00:00:00.000000000 UTC.
+      lv_date = '00010101'.
+    ELSE.
+
+      lv_tz = 'UTC'.
+      CONVERT TIME STAMP iv_val TIME ZONE lv_tz
+        INTO DATE lv_date TIME lv_time.
+
+    ENDIF.
+
+    lv_timestamp_iso =
+        lv_date+0(4) && '-' && lv_date+4(2) && '-' && lv_date+6(2) &&
+        'T' &&
+        lv_time+0(2) && '-' && lv_time+2(2) && '-' && lv_time+4(2) &&
+        'Z'.
+
+    zif_abapgit_ajson_writer~set(
+      iv_ignore_empty = abap_false
+      iv_path = iv_path
+      iv_val  = lv_timestamp_iso ).
 
   ENDMETHOD.
 

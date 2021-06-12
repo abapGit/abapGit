@@ -22,7 +22,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_tobj IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_TOBJ IMPLEMENTATION.
 
 
   METHOD delete_extra.
@@ -41,7 +41,8 @@ CLASS zcl_abapgit_object_tobj IMPLEMENTATION.
     SELECT SINGLE * FROM tvdir INTO rs_tobj-tvdir WHERE tabname = iv_tabname.
     CLEAR: rs_tobj-tvdir-gendate, rs_tobj-tvdir-gentime, rs_tobj-tvdir-devclass.
 
-    SELECT * FROM tvimf INTO TABLE rs_tobj-tvimf WHERE tabname = iv_tabname.
+    SELECT * FROM tvimf INTO TABLE rs_tobj-tvimf WHERE tabname = iv_tabname
+      ORDER BY PRIMARY KEY.
 
   ENDMETHOD.
 

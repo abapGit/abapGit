@@ -5,20 +5,29 @@ CLASS zcl_abapgit_repo_online DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_repo_online.
 
-    ALIASES:
-      create_branch FOR zif_abapgit_repo_online~create_branch,
-      push FOR zif_abapgit_repo_online~push,
-      get_url FOR zif_abapgit_repo_online~get_url,
-      get_selected_branch FOR zif_abapgit_repo_online~get_selected_branch,
-      set_url FOR zif_abapgit_repo_online~set_url,
-      select_branch FOR zif_abapgit_repo_online~select_branch,
-      get_selected_commit FOR zif_abapgit_repo_online~get_selected_commit,
-      get_current_remote FOR zif_abapgit_repo_online~get_current_remote,
-      select_commit FOR zif_abapgit_repo_online~select_commit,
-      get_switched_origin FOR zif_abapgit_repo_online~get_switched_origin,
-      switch_origin FOR zif_abapgit_repo_online~switch_origin.
+    INTERFACES zif_abapgit_repo_online .
+
+    ALIASES create_branch
+      FOR zif_abapgit_repo_online~create_branch .
+    ALIASES get_current_remote
+      FOR zif_abapgit_repo_online~get_current_remote .
+    ALIASES get_selected_branch
+      FOR zif_abapgit_repo_online~get_selected_branch .
+    ALIASES get_selected_commit
+      FOR zif_abapgit_repo_online~get_selected_commit .
+    ALIASES get_url
+      FOR zif_abapgit_repo_online~get_url .
+    ALIASES push
+      FOR zif_abapgit_repo_online~push .
+    ALIASES select_branch
+      FOR zif_abapgit_repo_online~select_branch .
+    ALIASES select_commit
+      FOR zif_abapgit_repo_online~select_commit .
+    ALIASES set_url
+      FOR zif_abapgit_repo_online~set_url .
+    ALIASES switch_origin
+      FOR zif_abapgit_repo_online~switch_origin .
 
     METHODS get_files_remote
         REDEFINITION .
@@ -50,11 +59,16 @@ CLASS zcl_abapgit_repo_online DEFINITION
         VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
         zcx_abapgit_exception .
+    METHODS raise_error_if_branch_exists
+      IMPORTING
+        iv_name TYPE string
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
+CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
 
   METHOD fetch_remote.
@@ -98,6 +112,12 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
       rv_name = zcl_abapgit_url=>name( ms_data-url ).
       rv_name = cl_http_utility=>if_http_utility~unescape_url( rv_name ).
     ENDIF.
+  ENDMETHOD.
+
+
+  METHOD get_objects.
+    fetch_remote( ).
+    rt_objects = mt_objects.
   ENDMETHOD.
 
 
@@ -160,6 +180,8 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
       lv_sha1 = iv_from.
     ENDIF.
 
+    raise_error_if_branch_exists( iv_name ).
+
     zcl_abapgit_git_porcelain=>create_branch(
       iv_url  = get_url( )
       iv_name = iv_name
@@ -177,12 +199,6 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_objects.
-    fetch_remote( ).
-    rt_objects = mt_objects.
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_repo_online~get_selected_branch.
     rv_name = ms_data-branch_name.
   ENDMETHOD.
@@ -190,11 +206,6 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
   METHOD zif_abapgit_repo_online~get_selected_commit.
     rv_selected_commit = ms_data-selected_commit.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_repo_online~get_switched_origin.
-    rv_url = ms_data-switched_origin.
   ENDMETHOD.
 
 
@@ -314,9 +325,29 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     ELSEIF ms_data-switched_origin IS INITIAL.
       set( iv_switched_origin = ms_data-url && '@' && ms_data-branch_name ).
       set_url( iv_url ).
+      select_branch( iv_branch ).
     ELSE.
       zcx_abapgit_exception=>raise( 'Cannot switch origin twice' ).
     ENDIF.
 
   ENDMETHOD.
+
+  METHOD raise_error_if_branch_exists.
+
+    DATA:
+      lt_branches     TYPE zif_abapgit_definitions=>ty_git_branch_list_tt,
+      lv_display_name TYPE string.
+
+    lt_branches = zcl_abapgit_git_transport=>branches( get_url( ) )->get_branches_only( ).
+
+    READ TABLE lt_branches WITH TABLE KEY name_key
+                           COMPONENTS name = iv_name
+                           TRANSPORTING NO FIELDS.
+    IF sy-subrc = 0.
+      lv_display_name = zcl_abapgit_git_branch_list=>get_display_name( iv_name ).
+      zcx_abapgit_exception=>raise( |Branch '{ lv_display_name }' already exists| ).
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.

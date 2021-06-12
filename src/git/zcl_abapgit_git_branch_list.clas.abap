@@ -92,7 +92,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
+CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
 
 
   METHOD complete_heads_branch_name.
@@ -127,7 +127,8 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
     ELSE.
 
       READ TABLE mt_branches INTO rs_branch
-        WITH KEY name = iv_branch_name.
+        WITH TABLE KEY name_key
+        COMPONENTS name = iv_branch_name.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( |Branch { get_display_name( iv_branch_name )
           } not found. Use 'Branch' > 'Switch' to select a different branch| ).
@@ -145,11 +146,13 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
     lv_branch_name = iv_branch_name && '^{}'.
 
     READ TABLE mt_branches INTO rs_branch
-        WITH KEY name = lv_branch_name.
+        WITH TABLE KEY name_key
+        COMPONENTS name = lv_branch_name.
     IF sy-subrc <> 0.
 
       READ TABLE mt_branches INTO rs_branch
-        WITH KEY name = iv_branch_name.
+        WITH TABLE KEY name_key
+        COMPONENTS name = iv_branch_name.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'Branch not found' ).
       ENDIF.
@@ -273,6 +276,9 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
 
         SPLIT lv_name AT lv_char INTO lv_name lv_head_params.
         ev_head_symref = parse_head_params( lv_head_params ).
+        IF ev_head_symref IS INITIAL AND lv_name CS 'refs/heads/'.
+          ev_head_symref = lv_name.
+        ENDIF.
       ELSEIF sy-tabix > 1 AND strlen( lv_data ) > 45.
         lv_hash = lv_data+4.
         lv_name = lv_data+45.
@@ -316,10 +322,7 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
   METHOD skip_first_pkt.
 
     DATA: lv_hex     TYPE x LENGTH 1,
-          lt_strings TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
-          lv_str     TYPE string,
           lv_length  TYPE i.
-
 
 * channel
     ASSERT iv_data(2) = '00'.

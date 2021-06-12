@@ -26,6 +26,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
 
 
   PRIVATE SECTION.
+
     TYPES:
       BEGIN OF ty_overview,
         favorite        TYPE string,
@@ -40,77 +41,74 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
         created_at      TYPE string,
         deserialized_by TYPE xubname,
         deserialized_at TYPE string,
-      END OF ty_overview,
+        write_protected TYPE abap_bool,
+      END OF ty_overview .
+    TYPES:
       ty_overviews TYPE STANDARD TABLE OF ty_overview
-                   WITH NON-UNIQUE DEFAULT KEY.
+                     WITH NON-UNIQUE DEFAULT KEY .
+
     CONSTANTS:
       BEGIN OF c_action,
         select       TYPE string VALUE 'select',
         apply_filter TYPE string VALUE 'apply_filter',
       END OF c_action .
+    DATA mv_order_descending TYPE abap_bool .
+    DATA mv_filter TYPE string .
+    DATA mv_time_zone TYPE timezone .
+    DATA mt_col_spec TYPE zif_abapgit_definitions=>ty_col_spec_tt .
+    DATA mt_overview TYPE ty_overviews .
 
-    DATA: mv_order_descending TYPE abap_bool,
-          mv_filter           TYPE string,
-          mv_time_zone        TYPE timezone,
-          mt_col_spec         TYPE zif_abapgit_definitions=>ty_col_spec_tt,
-          mt_overview         TYPE ty_overviews.
-
-    METHODS: render_text_input
-      IMPORTING iv_name        TYPE string
-                iv_label       TYPE string
-                iv_value       TYPE string OPTIONAL
-                iv_max_length  TYPE string OPTIONAL
-      RETURNING VALUE(ri_html) TYPE REF TO zif_abapgit_html,
-
-      apply_filter
-        CHANGING
-          ct_overview TYPE ty_overviews,
-
-      map_repo_list_to_overview
-        RETURNING
-          VALUE(rt_overview) TYPE ty_overviews
-        RAISING
-          zcx_abapgit_exception,
-
-      render_table_header
-        IMPORTING
-          ii_html TYPE REF TO zif_abapgit_html,
-
-      render_table
-        IMPORTING
-          ii_html     TYPE REF TO zif_abapgit_html
-          it_overview TYPE ty_overviews
-        RAISING
-          zcx_abapgit_exception,
-
-      render_table_body
-        IMPORTING
-          ii_html     TYPE REF TO zif_abapgit_html
-          it_overview TYPE ty_overviews
-        RAISING
-          zcx_abapgit_exception,
-
-      render_header_bar
-        IMPORTING
-          ii_html TYPE REF TO zif_abapgit_html,
-
-      apply_order_by
-        CHANGING ct_overview TYPE ty_overviews,
-
-      _add_column
-        IMPORTING
-          iv_tech_name      TYPE string OPTIONAL
-          iv_display_name   TYPE string OPTIONAL
-          iv_css_class      TYPE string OPTIONAL
-          iv_add_tz         TYPE abap_bool OPTIONAL
-          iv_title          TYPE string OPTIONAL
-          iv_allow_order_by TYPE any OPTIONAL.
-
+    METHODS render_text_input
+      IMPORTING
+        !iv_name       TYPE string
+        !iv_label      TYPE string
+        !iv_value      TYPE string OPTIONAL
+        !iv_max_length TYPE string OPTIONAL
+        !iv_autofocus  TYPE abap_bool DEFAULT abap_false
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+    METHODS apply_filter
+      CHANGING
+        !ct_overview TYPE ty_overviews .
+    METHODS map_repo_list_to_overview
+      RETURNING
+        VALUE(rt_overview) TYPE ty_overviews
+      RAISING
+        zcx_abapgit_exception .
+    METHODS render_table_header
+      IMPORTING
+        !ii_html TYPE REF TO zif_abapgit_html .
+    METHODS render_table
+      IMPORTING
+        !ii_html     TYPE REF TO zif_abapgit_html
+        !it_overview TYPE ty_overviews
+      RAISING
+        zcx_abapgit_exception .
+    METHODS render_table_body
+      IMPORTING
+        !ii_html     TYPE REF TO zif_abapgit_html
+        !it_overview TYPE ty_overviews
+      RAISING
+        zcx_abapgit_exception .
+    METHODS render_header_bar
+      IMPORTING
+        !ii_html TYPE REF TO zif_abapgit_html .
+    METHODS apply_order_by
+      CHANGING
+        !ct_overview TYPE ty_overviews .
+    METHODS _add_column
+      IMPORTING
+        !iv_tech_name      TYPE string OPTIONAL
+        !iv_display_name   TYPE string OPTIONAL
+        !iv_css_class      TYPE string OPTIONAL
+        !iv_add_tz         TYPE abap_bool OPTIONAL
+        !iv_title          TYPE string OPTIONAL
+        !iv_allow_order_by TYPE any OPTIONAL .
     METHODS render_scripts
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -202,6 +200,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       ls_overview-package    = <ls_repo>->ms_data-package.
       ls_overview-branch     = <ls_repo>->ms_data-branch_name.
       ls_overview-created_by = <ls_repo>->ms_data-created_by.
+      ls_overview-write_protected = <ls_repo>->ms_data-local_settings-write_protected.
 
       IF <ls_repo>->ms_data-created_at IS NOT INITIAL.
         CONVERT TIME STAMP <ls_repo>->ms_data-created_at
@@ -237,9 +236,10 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ii_html->add( |<form class="inline" method="post" action="sapevent:{ c_action-apply_filter }">| ).
 
     ii_html->add( render_text_input(
-      iv_name  = |filter|
-      iv_label = |Filter: |
-      iv_value = mv_filter ) ).
+      iv_name      = |filter|
+      iv_label     = |Filter: |
+      iv_value     = mv_filter
+      iv_autofocus = abap_true ) ).
     ii_html->add( |<input type="submit" class="hidden-submit">| ).
     ii_html->add( |</form>| ).
 
@@ -300,7 +300,9 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       lv_zip_export_link TYPE string,
       lv_check_link      TYPE string,
       lv_text            TYPE string,
+      lv_lock            TYPE string,
       lv_settings_link   TYPE string.
+    DATA lv_new_length TYPE i.
 
     FIELD-SYMBOLS: <ls_overview> LIKE LINE OF it_overview.
 
@@ -329,15 +331,26 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
                                               iv_class = 'pad-sides'
                                               iv_hint  = 'Click to toggle favorite' ) ).
       ii_html->add( |</td>| ).
+      CLEAR lv_lock.
+      IF <ls_overview>-write_protected = abap_true.
+        lv_lock = ii_html->icon( iv_name  = 'lock/grey70'
+                                 iv_class = 'm-em5-sides'
+                                 iv_hint  = 'Locked from pulls' ).
+      ENDIF.
+
       ii_html->add( |<td class="wmin">{ ii_html->icon( lv_type_icon ) }</td>| ).
 
       ii_html->add( |<td>{ ii_html->a( iv_txt = <ls_overview>-name
-                                       iv_act = |{ c_action-select }?key={ <ls_overview>-key }| ) }</td>| ).
+                                       iv_act = |{ c_action-select }?key={ <ls_overview>-key }| ) }{ lv_lock }</td>| ).
 
       IF <ls_overview>-type = abap_false.
         lv_text = <ls_overview>-url.
         REPLACE FIRST OCCURRENCE OF 'https://' IN lv_text WITH ''.
         REPLACE FIRST OCCURRENCE OF 'http://' IN lv_text WITH ''.
+        IF lv_text CP '*.git'.
+          lv_new_length = strlen( lv_text ) - 4.
+          lv_text  = lv_text(lv_new_length).
+        ENDIF.
         ii_html->add( |<td>{ ii_html->a(
           iv_txt   = lv_text
           iv_title = <ls_overview>-url
@@ -430,6 +443,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ii_html->add( |</tbody>| ).
 
   ENDMETHOD.
+
 
   METHOD render_table_header.
 
@@ -533,7 +547,11 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ENDIF.
 
     IF iv_max_length IS NOT INITIAL.
-      lv_attrs = | maxlength="{ iv_max_length }"|.
+      lv_attrs = lv_attrs && | maxlength="{ iv_max_length }"|.
+    ENDIF.
+
+    IF iv_autofocus = abap_true.
+      lv_attrs = lv_attrs && | autofocus|.
     ENDIF.
 
     ri_html->add( |<label for="{ iv_name }">{ iv_label }</label>| ).
@@ -578,6 +596,9 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     render_header_bar( ri_html ).
+
+    zcl_abapgit_exit=>get_instance( )->wall_message_list( ri_html ).
+
     render_table( ii_html     = ri_html
                   it_overview = mt_overview ).
 

@@ -50,11 +50,14 @@ CLASS zcl_abapgit_branch_overview DEFINITION
     METHODS determine_tags
       RAISING
         zcx_abapgit_exception .
+    METHODS get_deepen_level
+      RETURNING
+        VALUE(rv_result) TYPE i.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
+CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
 
 
   METHOD compress_internal.
@@ -91,6 +94,9 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
     lt_objects = get_git_objects( io_repo ).
 
     mt_commits = zcl_abapgit_git_commit=>parse_commits( lt_objects ).
+    IF lines( mt_commits ) > 2000.
+      zcx_abapgit_exception=>raise( 'Too many commits to display overview' ).
+    ENDIF.
     zcl_abapgit_git_commit=>sort_commits( CHANGING ct_commits = mt_commits ).
 
     parse_annotated_tags( lt_objects ).
@@ -126,7 +132,8 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
 
 
 * Exchange HEAD, and make sure the branch determination starts with the HEAD branch
-    READ TABLE mt_branches ASSIGNING <ls_head> WITH KEY name = lc_head.
+    READ TABLE mt_branches ASSIGNING <ls_head>
+                           WITH TABLE KEY name_key COMPONENTS name = lc_head.
     ASSERT sy-subrc = 0.
     LOOP AT mt_branches ASSIGNING <ls_branch>
         WHERE sha1 = <ls_head>-sha1 AND name <> lc_head.
@@ -335,7 +342,7 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
       EXPORTING
         iv_url          = io_repo->get_url( )
         iv_branch_name  = io_repo->get_selected_branch( )
-        iv_deepen_level = 0
+        iv_deepen_level = get_deepen_level( )
         it_branches     = lt_branches_and_tags
       IMPORTING
         et_objects      = rt_objects ).
@@ -446,4 +453,19 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
     rt_tags = mt_tags.
 
   ENDMETHOD.
+
+  METHOD get_deepen_level.
+
+    DATA: lv_deepen_level(10) TYPE c.
+
+    "Experimental: Use STVARV to get a locally configured value
+    SELECT SINGLE low
+      INTO lv_deepen_level
+      FROM tvarvc
+      WHERE name = 'ABAPGIT_TEST_LOG_LENGTH'  ##WARN_OK.
+
+    rv_result = lv_deepen_level.
+
+  ENDMETHOD.
+
 ENDCLASS.

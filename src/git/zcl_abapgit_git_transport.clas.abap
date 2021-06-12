@@ -49,8 +49,8 @@ CLASS zcl_abapgit_git_transport DEFINITION
 
     CONSTANTS:
       BEGIN OF c_service,
-        receive TYPE string VALUE 'receive',                "#EC NOTEXT
-        upload  TYPE string VALUE 'upload',                 "#EC NOTEXT
+        receive TYPE string VALUE 'receive',                  "#EC NOTEXT
+        upload  TYPE string VALUE 'upload',                   "#EC NOTEXT
       END OF c_service .
     CONSTANTS:
       BEGIN OF c_smart_response_check,
@@ -60,6 +60,11 @@ CLASS zcl_abapgit_git_transport DEFINITION
         END OF get_refs,
       END OF c_smart_response_check .
 
+    CLASS-METHODS check_report_status
+      IMPORTING
+        !iv_string TYPE string
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS branch_list
       IMPORTING
         !iv_url         TYPE string
@@ -96,12 +101,12 @@ CLASS zcl_abapgit_git_transport DEFINITION
       RETURNING
         VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GIT_TRANSPORT IMPLEMENTATION.
+CLASS zcl_abapgit_git_transport IMPLEMENTATION.
 
 
   METHOD branches.
@@ -143,6 +148,85 @@ CLASS ZCL_ABAPGIT_GIT_TRANSPORT IMPLEMENTATION.
     CREATE OBJECT eo_branch_list
       EXPORTING
         iv_data = lv_data.
+
+  ENDMETHOD.
+
+
+  METHOD check_report_status.
+
+    DATA:
+      lv_string        TYPE string,
+      lv_error         TYPE string,
+      lv_unpack_status TYPE string,
+      lv_unpack_code   TYPE string,
+      lv_unpack_text   TYPE string,
+      lv_commnd_status TYPE string,
+      lv_commnd_code   TYPE string,
+      lv_commnd_text   TYPE string.
+
+    " Based on https://git-scm.com/docs/pack-protocol/2.2.3#_report_status
+    lv_string = iv_string.
+
+    IF lv_string = ''.
+      lv_error = 'Unexpected empty reply'.
+    ELSEIF strlen( lv_string ) < 4.
+      lv_error = 'Missing pkt length for unpack status'.
+    ELSE.
+      lv_string = lv_string+4.
+      SPLIT lv_string AT zif_abapgit_definitions=>c_newline INTO lv_unpack_status lv_string.
+      SPLIT lv_unpack_status AT space INTO lv_unpack_text lv_unpack_code.
+
+      IF lv_unpack_text <> 'unpack'.
+        lv_error = 'Unexpected unpack status'.
+      ELSEIF lv_unpack_code <> 'ok'.
+        lv_error = |Unpack not ok ({ lv_unpack_code })|.
+      ELSEIF lv_string = ''.
+        lv_error = 'Unexpected command status'.
+      ELSEIF strlen( lv_string ) < 4.
+        lv_error = 'Missing pkt length for command status'.
+      ELSE.
+        lv_string = lv_string+4.
+        SPLIT lv_string AT zif_abapgit_definitions=>c_newline INTO lv_commnd_status lv_string.
+        SPLIT lv_commnd_status AT space INTO lv_commnd_code lv_commnd_text.
+
+        IF lv_commnd_code <> 'ok'. "=ng
+          " Some pre-defined error messages
+          IF lv_commnd_text CP '*pre-receive hook declined*'.
+            lv_error = 'Pre-receive hook declined'.
+          ELSEIF lv_commnd_text CP '*protected branch hook declined*'.
+            lv_error = 'Protected branch hook declined'.
+          ELSEIF lv_commnd_text CP '*push declined due to email privacy*'.
+            lv_error = 'Push declined due to email privacy'.
+          ELSEIF lv_commnd_text CP '*funny refname*'.
+            lv_error = 'Funny refname'.
+          ELSEIF lv_commnd_text CP '*failed to update ref*'.
+            lv_error = 'Failed to update ref'.
+          ELSEIF lv_commnd_text CP '*missing necessary objects*'.
+            lv_error = 'Missing necessary objects'.
+          ELSEIF lv_commnd_text CP '*refusing to delete the current branch*'.
+            lv_error = 'Branch delete not allowed'.
+          ELSEIF lv_commnd_text CP '*cannot lock ref*reference already exists*'.
+            lv_error = 'Branch already exists'.
+          ELSEIF lv_commnd_text CP '*cannot lock ref*but expected*'.
+            lv_error = 'Branch cannot be locked'.
+          ELSEIF lv_commnd_text CP '*invalid committer*'.
+            lv_error = 'Invalid committer'.
+          ELSE.
+            " Otherwise return full error message
+            lv_error = lv_commnd_text.
+          ENDIF.
+        ELSEIF strlen( lv_string ) < 4.
+          lv_error = 'Missing flush-pkt'.
+        ELSEIF lv_string <> '0000' AND lv_string <> '00000000'.
+          " We update only one reference at a time so this should be the end
+          lv_error = 'Unexpected end of status (flush-pkt)'.
+        ENDIF.
+      ENDIF.
+    ENDIF.
+
+    IF lv_error IS NOT INITIAL.
+      zcx_abapgit_exception=>raise( |Git protocol error: { lv_error }| ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -245,30 +329,9 @@ CLASS ZCL_ABAPGIT_GIT_TRANSPORT IMPLEMENTATION.
 
     lv_xstring = lo_client->send_receive_close( lv_xstring ).
 
-* todo, this part should be changed, instead of looking at texts
-* parse the reply and look for the "ng" not good indicator
     lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( lv_xstring ).
-    IF NOT lv_string CP '*unpack ok*'.
-      zcx_abapgit_exception=>raise( 'unpack not ok' ).
-    ELSEIF lv_string CP '*pre-receive hook declined*'.
-      zcx_abapgit_exception=>raise( 'pre-receive hook declined' ).
-    ELSEIF lv_string CP '*protected branch hook declined*'.
-      zcx_abapgit_exception=>raise( 'protected branch hook declined' ).
-    ELSEIF lv_string CP '*push declined due to email privacy*'.
-      zcx_abapgit_exception=>raise( 'push declined due to email privacy' ).
-    ELSEIF lv_string CP '*funny refname*'.
-      zcx_abapgit_exception=>raise( 'funny refname' ).
-    ELSEIF lv_string CP '*failed to update ref*'.
-      zcx_abapgit_exception=>raise( 'failed to update ref' ).
-    ELSEIF lv_string CP '*missing necessary objects*'.
-      zcx_abapgit_exception=>raise( 'missing necessary objects' ).
-    ELSEIF lv_string CP '*refusing to delete the current branch*'.
-      zcx_abapgit_exception=>raise( 'branch delete not allowed' ).
-    ELSEIF lv_string CP '*cannot lock ref*reference already exists*'.
-      zcx_abapgit_exception=>raise( 'branch already exists' ).
-    ELSEIF lv_string CP '*invalid committer*'.
-      zcx_abapgit_exception=>raise( 'invalid committer' ).
-    ENDIF.
+
+    check_report_status( lv_string ).
 
   ENDMETHOD.
 
@@ -324,8 +387,8 @@ CLASS ZCL_ABAPGIT_GIT_TRANSPORT IMPLEMENTATION.
 
   METHOD upload_pack_by_branch.
 
-    DATA: lo_client  TYPE REF TO zcl_abapgit_http_client,
-          lt_hashes  TYPE zif_abapgit_definitions=>ty_sha1_tt.
+    DATA: lo_client TYPE REF TO zcl_abapgit_http_client,
+          lt_hashes TYPE zif_abapgit_definitions=>ty_sha1_tt.
 
     FIELD-SYMBOLS: <ls_branch> LIKE LINE OF it_branches.
 

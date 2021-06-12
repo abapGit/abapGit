@@ -11,7 +11,7 @@ CLASS zcl_abapgit_object_type DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS read
       EXPORTING ev_ddtext TYPE ddtypet-ddtext
                 et_source TYPE abaptxt255_tab
-      RAISING   zcx_abapgit_not_found.
+      RAISING   zcx_abapgit_exception.
 
     METHODS create
       IMPORTING iv_ddtext   TYPE ddtypet-ddtext
@@ -23,7 +23,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_type IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_TYPE IMPLEMENTATION.
 
 
   METHOD create.
@@ -92,23 +92,7 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
         reps_not_exist    = 2
         OTHERS            = 3.
     IF sy-subrc <> 0.
-      " Inactive version
-      CALL FUNCTION 'TYPD_GET_OBJECT'
-        EXPORTING
-          typdname          = lv_typdname
-          r3state           = 'I'
-        TABLES
-          psmodisrc         = lt_psmodisrc
-          psmodilog         = lt_psmodilog
-          psource           = et_source
-          ptrdir            = lt_ptrdir
-        EXCEPTIONS
-          version_not_found = 1
-          reps_not_exist    = 2
-          OTHERS            = 3.
-    ENDIF.
-    IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE zcx_abapgit_not_found.
+      zcx_abapgit_exception=>raise( |No active version found for { ms_item-obj_type } { ms_item-obj_name }| ).
     ENDIF.
 
   ENDMETHOD.
@@ -162,13 +146,17 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    TRY.
-        read( ).
-        rv_bool = abap_true.
-      CATCH zcx_abapgit_not_found
-            zcx_abapgit_exception.
-        rv_bool = abap_false.
-    ENDTRY.
+    DATA: lv_progname TYPE progname,
+          lv_state    TYPE r3state.
+
+    lv_progname = |%_C{ ms_item-obj_name }|.
+    SELECT SINGLE state
+      FROM progdir
+      INTO lv_state
+      WHERE name = lv_progname.
+    IF lv_state IS NOT INITIAL.
+      rv_bool = abap_true.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -209,13 +197,8 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
           lt_source TYPE abaptxt255_tab.
 
 
-    TRY.
-        read( IMPORTING
-                ev_ddtext = lv_ddtext
-                et_source = lt_source ).
-      CATCH zcx_abapgit_not_found.
-        RETURN.
-    ENDTRY.
+    read( IMPORTING ev_ddtext = lv_ddtext
+                    et_source = lt_source ).
 
     io_xml->add( iv_name = 'DDTEXT'
                  ig_data = lv_ddtext ).

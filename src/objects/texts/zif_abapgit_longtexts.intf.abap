@@ -24,7 +24,7 @@ INTERFACE zif_abapgit_longtexts
     IMPORTING
       !iv_longtext_name TYPE string DEFAULT 'LONGTEXTS'
       !ii_xml           TYPE REF TO zif_abapgit_xml_input
-      !iv_main_language TYPE langu
+      !iv_main_language TYPE sy-langu
     RAISING
       zcx_abapgit_exception .
   METHODS delete

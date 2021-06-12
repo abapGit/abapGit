@@ -1,26 +1,51 @@
 CLASS zcl_abapgit_gui_page_debuginfo DEFINITION
   PUBLIC
-  INHERITING FROM zcl_abapgit_gui_page
+  INHERITING FROM zcl_abapgit_gui_component
   FINAL
-  CREATE PUBLIC .
+  CREATE PRIVATE .
 
   PUBLIC SECTION.
 
+    INTERFACES zif_abapgit_gui_event_handler .
+    INTERFACES zif_abapgit_gui_renderable .
+
+    CLASS-METHODS create
+      RETURNING
+        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
+      RAISING
+        zcx_abapgit_exception .
     METHODS constructor
-      RAISING zcx_abapgit_exception.
-
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
-    METHODS:
-      render_content REDEFINITION.
-
   PRIVATE SECTION.
 
-    METHODS get_jump_class
-      IMPORTING
-        !iv_class      TYPE seoclsname
+    CONSTANTS c_exit_standalone TYPE progname VALUE 'ZABAPGIT_USER_EXIT' ##NO_TEXT.
+    CONSTANTS c_exit_class TYPE seoclsname VALUE 'ZCL_ABAPGIT_USER_EXIT' ##NO_TEXT.
+    CONSTANTS c_exit_interface TYPE seoclsname VALUE 'ZIF_ABAPGIT_EXIT' ##NO_TEXT.
+    CONSTANTS:
+      BEGIN OF c_action,
+        save TYPE string VALUE 'save',
+        back TYPE string VALUE 'back',
+      END OF c_action.
+    DATA mv_html TYPE string .
+
+    CLASS-METHODS build_toolbar
       RETURNING
-        VALUE(rv_html) TYPE string .
+        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
     METHODS render_debug_info
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
+    METHODS render_exit_info
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
+    METHODS render_exit_info_methods
+      IMPORTING
+        !it_source     TYPE string_table
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
@@ -33,49 +58,65 @@ CLASS zcl_abapgit_gui_page_debuginfo DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
+    METHODS get_jump_object
+      IMPORTING
+        !iv_obj_type   TYPE csequence DEFAULT 'CLAS'
+        !iv_obj_name   TYPE csequence
+      RETURNING
+        VALUE(rv_html) TYPE string .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
+
+
+  METHOD build_toolbar.
+
+    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-debug'.
+
+    ro_menu->add(
+      iv_txt = 'Save'
+      iv_act = c_action-save ).
+    ro_menu->add(
+      iv_txt = 'Back'
+      iv_act = c_action-back ).
+
+  ENDMETHOD.
 
 
   METHOD constructor.
     super->constructor( ).
-    ms_control-page_title = 'Debug Info'.
   ENDMETHOD.
 
 
-  METHOD get_jump_class.
+  METHOD create.
+
+    DATA lo_component TYPE REF TO zcl_abapgit_gui_page_debuginfo.
+
+    CREATE OBJECT lo_component.
+
+    ri_page = zcl_abapgit_gui_page_hoc=>create(
+      iv_page_title      = 'Debug Info'
+      io_page_menu       = build_toolbar( )
+      ii_child_component = lo_component ).
+
+  ENDMETHOD.
+
+
+  METHOD get_jump_object.
 
     DATA lv_encode TYPE string.
     DATA li_html TYPE REF TO zif_abapgit_html.
 
     CREATE OBJECT li_html TYPE zcl_abapgit_html.
 
-    lv_encode = zcl_abapgit_html_action_utils=>jump_encode( iv_obj_type = 'CLAS'
-                                                            iv_obj_name = |{ iv_class }| ).
+    lv_encode = zcl_abapgit_html_action_utils=>jump_encode( iv_obj_type = |{ iv_obj_type }|
+                                                            iv_obj_name = |{ iv_obj_name }| ).
 
     rv_html = li_html->a(
-      iv_txt = |{ iv_class }|
+      iv_txt = |{ iv_obj_name }|
       iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_encode }| ).
-
-  ENDMETHOD.
-
-
-  METHOD render_content.
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    ri_html->add( '<div id="debug_info" class="debug_container">' ).
-    ri_html->add( render_debug_info( ) ).
-    ri_html->add( '</div>' ).
-
-    ri_html->add( '<div id="supported_objects" class="debug_container">' ).
-    ri_html->add( render_supported_object_types( ) ).
-    ri_html->add( '</div>' ).
-
-    register_deferred_script( render_scripts( ) ).
 
   ENDMETHOD.
 
@@ -84,6 +125,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
 
     DATA: lt_ver_tab     TYPE filetable,
           lv_rc          TYPE i,
+          ls_release     TYPE zif_abapgit_environment=>ty_release_sp,
           lv_gui_version TYPE string,
           ls_version     LIKE LINE OF lt_ver_tab,
           lv_devclass    TYPE devclass.
@@ -100,6 +142,30 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
+    IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true.
+      ri_html->add( '<h2>abapGit - Standalone Version</h2>' ).
+      ri_html->add( '<div>To keep abapGit up-to-date (or also to contribute) you need to' ).
+      ri_html->add( |install it as a repository ({ ri_html->a(
+        iv_txt = 'Developer Version'
+        iv_act = 'https://github.com/abapGit/abapGit'
+        iv_typ = zif_abapgit_html=>c_action_type-url ) }).</div>| ).
+    ELSE.
+      lv_devclass = zcl_abapgit_services_abapgit=>is_installed( ).
+      ri_html->add( '<h2>abapGit - Developer Version</h2>' ).
+      ri_html->add( |<div>abapGit is installed in package { lv_devclass }</div>| ).
+    ENDIF.
+
+    ri_html->add( '<br><div>' ).
+    ri_html->add_a(
+      iv_txt = 'Contribution guidelines for abapGit'
+      iv_act = 'https://github.com/abapGit/abapGit/blob/main/CONTRIBUTING.md'
+      iv_typ = zif_abapgit_html=>c_action_type-url ).
+    ri_html->add( '</div>' ).
+
+    ls_release = zcl_abapgit_factory=>get_environment( )->get_basis_release( ).
+
+    ri_html->add( '<h2>Environment</h2>' ).
+
     ri_html->add( |<table>| ).
     ri_html->add( |<tr><td>abapGit version:</td><td>{ zif_abapgit_version=>gc_abap_version }</td></tr>| ).
     ri_html->add( |<tr><td>XML version:    </td><td>{ zif_abapgit_version=>gc_xml_version }</td></tr>| ).
@@ -108,19 +174,99 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
                   zcl_abapgit_apack_migration=>c_apack_interface_version }</td></tr>| ).
     ri_html->add( |<tr><td>LCL_TIME:       </td><td>{ zcl_abapgit_time=>get_unix( ) }</td></tr>| ).
     ri_html->add( |<tr><td>SY time:        </td><td>{ sy-datum } { sy-uzeit } { sy-tzone }</td></tr>| ).
+    ri_html->add( |<tr><td>SY release:     </td><td>{ ls_release-release } SP { ls_release-sp }</td></tr>| ).
     ri_html->add( |</table>| ).
     ri_html->add( |<br>| ).
 
-    lv_devclass = zcl_abapgit_services_abapgit=>is_installed( ).
-    IF NOT lv_devclass IS INITIAL.
-      ri_html->add( 'abapGit installed in package&nbsp;' ).
-      ri_html->add( lv_devclass ).
+  ENDMETHOD.
+
+
+  METHOD render_exit_info.
+
+    DATA lt_source TYPE string_table.
+    DATA ls_class_key TYPE seoclskey.
+    DATA lo_oo_serializer TYPE REF TO zcl_abapgit_oo_serializer.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    ri_html->add( '<h2>User Exits</h2>' ).
+
+    IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true.
+      " Standalone version
+      READ REPORT c_exit_standalone INTO lt_source.
+      IF sy-subrc = 0.
+        ri_html->add( |<div>User exits are active (include { get_jump_object(
+          iv_obj_type = 'PROG'
+          iv_obj_name = c_exit_standalone ) } found)</div><br>| ).
+        ri_html->add( render_exit_info_methods( lt_source ) ).
+      ELSE.
+        ri_html->add( |<div>No user exits implemented (include { c_exit_standalone } not found)</div><br>| ).
+      ENDIF.
     ELSE.
-      ri_html->add( ' - To keep abapGit up-to-date (or also to contribute) you need to' ).
-      ri_html->add( 'install it as a repository.' ).
+      " Developer version
+      TRY.
+          ls_class_key-clsname = c_exit_class.
+          CREATE OBJECT lo_oo_serializer.
+          lt_source = lo_oo_serializer->serialize_abap_clif_source( ls_class_key ).
+
+          ri_html->add( |<div>User exits are active (class { get_jump_object( c_exit_class ) } found)</div><br>| ).
+          ri_html->add( render_exit_info_methods( lt_source ) ).
+        CATCH cx_root.
+          ri_html->add( |<div>No user exits implemented (class { c_exit_class } not found)</div><br>| ).
+      ENDTRY.
     ENDIF.
 
-    ri_html->add( |<br><br>| ).
+  ENDMETHOD.
+
+
+  METHOD render_exit_info_methods.
+
+    DATA:
+      lo_scanner TYPE REF TO cl_oo_source_scanner_class,
+      lx_exc     TYPE REF TO cx_root,
+      lt_methods TYPE cl_oo_source_scanner_class=>type_method_implementations,
+      lv_method  LIKE LINE OF lt_methods,
+      lt_source  TYPE seop_source_string,
+      lv_source  TYPE string,
+      lv_rest    TYPE string.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    ri_html->add( '<table border="1px"><thead><tr>' ).
+    ri_html->add( '<td>Exit</td><td class="center">Implemented?</td>' ).
+    ri_html->add( '</tr></thead><tbody>' ).
+
+    TRY.
+        lo_scanner = cl_oo_source_scanner_class=>create_class_scanner(
+          clif_name = c_exit_class
+          source    = it_source ).
+        lo_scanner->scan( ).
+
+        lt_methods = lo_scanner->get_method_implementations( ).
+
+        LOOP AT lt_methods INTO lv_method WHERE table_line CS c_exit_interface.
+          lt_source = lo_scanner->get_method_impl_source( lv_method ).
+          DELETE lt_source INDEX 1.
+          DELETE lt_source INDEX lines( lt_source ).
+          CONCATENATE LINES OF lt_source INTO lv_source.
+          lv_source = to_upper( condense(
+            val = lv_source
+            del = ` ` ) ).
+          SPLIT lv_method AT '~' INTO lv_rest lv_method.
+          ri_html->add( |<tr><td>{ lv_method }</td><td class="center">|  ).
+          IF lv_source IS INITIAL OR lv_source = 'RETURN.' OR lv_source = 'EXIT.'.
+            ri_html->add( 'No' ).
+          ELSE.
+            ri_html->add( '<strong>Yes</strong>' ).
+          ENDIF.
+          ri_html->add( |</td></tr>| ).
+        ENDLOOP.
+
+      CATCH cx_root INTO lx_exc.
+        ri_html->add( |<tr><td colspan="2">{ lx_exc->get_text( ) }</td></tr>| ).
+    ENDTRY.
+
+    ri_html->add( '</tbody></table>' ).
 
   ENDMETHOD.
 
@@ -160,7 +306,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
 
     CREATE OBJECT li_html TYPE zcl_abapgit_html.
 
-    rv_html = li_html->a(
+    rv_html = '<h2>Object Types</h2>'.
+
+    rv_html = rv_html && li_html->a(
       iv_txt = 'Complete list of object types supported by abapGit'
       iv_act = 'https://docs.abapgit.org/ref-supported.html'
       iv_typ = zif_abapgit_html=>c_action_type-url ).
@@ -168,8 +316,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
     rv_html = rv_html && |<br><br>Supported object types in <strong>this</strong> system:<br><br>|.
 
     rv_html = rv_html && |<table border="1px"><thead><tr>|.
-    rv_html = rv_html && |<td>Object</td><td>Description</td><td>Class</td><td>Version</td><td>DDIC</td>|.
-    rv_html = rv_html && |<td>Delete TADIR</td><td>Steps</td>|.
+    rv_html = rv_html && |<td>Object</td><td>Description</td><td>Class</td><td>Version</td>|.
+    rv_html = rv_html && |<td class="center">DDIC</td>|.
+    rv_html = rv_html && |<td class="center">Delete TADIR</td><td>Steps</td>|.
     rv_html = rv_html && |</tr></thead><tbody>|.
 
     LOOP AT lt_types INTO lv_type.
@@ -183,7 +332,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
       IF sy-subrc = 0.
         rv_html = rv_html && |<td>{ <ls_obj>-text }</td>|.
       ELSE.
-        rv_html = rv_html && |<td class="warning">>No description</td>|.
+        rv_html = rv_html && |<td class="warning">No description</td>|.
       ENDIF.
 
 
@@ -196,7 +345,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
               is_item     = ls_item
               iv_language = sy-langu.
 
-          rv_html = rv_html && |<td>{ get_jump_class( lv_class ) }</td>|.
+          rv_html = rv_html && |<td>{ get_jump_object( lv_class ) }</td>|.
 
         CATCH cx_sy_create_object_error.
           TRY. " 2nd step, try looking for plugins
@@ -208,14 +357,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
               CONTINUE.
           ENDTRY.
 
-          rv_html = rv_html && |<td>{ get_jump_class( lv_class ) } (Plug-in)</td>|.
+          rv_html = rv_html && |<td>{ get_jump_object( lv_class ) } (Plug-in)</td>|.
       ENDTRY.
 
       ls_metadata = li_object->get_metadata( ).
 
       rv_html = rv_html && |<td>{ ls_metadata-version }</td>|.
-      rv_html = rv_html && |<td>{ ls_metadata-ddic }</td>|.
-      rv_html = rv_html && |<td>{ ls_metadata-delete_tadir }</td>|.
+      rv_html = rv_html && |<td class="center">{ ls_metadata-ddic }</td>|.
+      rv_html = rv_html && |<td class="center">{ ls_metadata-delete_tadir }</td>|.
 
       lt_steps = li_object->get_deserialize_steps( ).
 
@@ -236,6 +385,65 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
 
     rv_html = rv_html && |</tbody></table>|.
     rv_html = rv_html && |<br>|.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_event_handler~on_event.
+
+    DATA:
+      lv_path     TYPE string,
+      lv_filename TYPE string,
+      li_fe_serv  TYPE REF TO zif_abapgit_frontend_services.
+
+    CASE ii_event->mv_action.
+      WHEN c_action-save.
+
+        CONCATENATE 'abapGit_Debug_Info_' sy-datlo '_' sy-timlo '.html' INTO lv_filename.
+
+        li_fe_serv = zcl_abapgit_ui_factory=>get_frontend_services( ).
+
+        lv_path = li_fe_serv->show_file_save_dialog(
+          iv_title            = 'abapGit - Debug Info'
+          iv_extension        = 'html'
+          iv_default_filename = lv_filename ).
+
+        li_fe_serv->file_download(
+          iv_path = lv_path
+          iv_xstr = zcl_abapgit_convert=>string_to_xstring_utf8( mv_html ) ).
+
+        MESSAGE 'abapGit Debug Info successfully saved' TYPE 'S'.
+
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_action-back.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
+    ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_renderable~render.
+
+    gui_services( )->register_event_handler( me ).
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    ri_html->add( '<div id="debug_info" class="debug_container">' ).
+    ri_html->add( render_debug_info( ) ).
+    ri_html->add( '</div>' ).
+
+    ri_html->add( '<div id="exit_info" class="debug_container">' ).
+    ri_html->add( render_exit_info( ) ).
+    ri_html->add( '</div>' ).
+
+    ri_html->add( '<div id="supported_objects" class="debug_container">' ).
+    ri_html->add( render_supported_object_types( ) ).
+    ri_html->add( '</div>' ).
+
+    mv_html = '<!DOCTYPE html><html lang="en"><title>abapGit Debug Info</title></head>'.
+    mv_html = |<body>{ ri_html->render( ) }</body></html>|.
+
+    register_deferred_script( render_scripts( ) ).
 
   ENDMETHOD.
 ENDCLASS.

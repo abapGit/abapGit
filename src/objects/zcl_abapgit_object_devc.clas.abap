@@ -391,6 +391,10 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
         RETURN.
       ENDIF.
 
+      IF lv_package(1) = '$'.
+        zcl_abapgit_persist_packages=>get_instance( )->modify( lv_package ).
+      ENDIF.
+
       set_lock( ii_package = li_package
                 iv_lock    = abap_true ).
 
@@ -484,6 +488,14 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
     ls_package_data-devclass = mv_local_devclass.
     IF li_package IS BOUND.
       ls_package_data-pdevclass = li_package->transport_layer.
+    ENDIF.
+
+    " For local packages store application component
+    IF ls_package_data-devclass(1) = '$'.
+      zcl_abapgit_persist_packages=>get_instance( )->modify(
+        iv_package    = ls_package_data-devclass
+        iv_component  = ls_package_data-component
+        iv_comp_posid = ls_package_data-comp_posid ).
     ENDIF.
 
     " Parent package is not changed. Assume the folder logic already created the package and set
@@ -703,6 +715,7 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
     DATA: ls_package_data TYPE scompkdtln,
+          ls_package_comp TYPE zcl_abapgit_persist_packages=>ty_package,
           li_package      TYPE REF TO if_package,
           lt_intf_usages  TYPE tpak_permission_to_use_list,
           lt_usage_data   TYPE scomppdata,
@@ -727,6 +740,13 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
         OTHERS          = 4 ).
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    " For local packages get application component
+    IF is_local( ls_package_data-devclass ) = abap_true.
+      ls_package_comp = zcl_abapgit_persist_packages=>get_instance( )->read( ls_package_data-devclass ).
+      ls_package_data-component  = ls_package_comp-component.
+      ls_package_data-comp_posid = ls_package_comp-comp_posid.
     ENDIF.
 
     CLEAR: ls_package_data-devclass,

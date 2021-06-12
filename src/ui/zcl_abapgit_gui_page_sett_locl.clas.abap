@@ -175,7 +175,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
       iv_val = boolc( ms_settings-ignore_subpackages = abap_true ) ) ##TYPE.
     mo_form_data->set(
       iv_key = c_id-main_language_only
-      iv_val = boolc( ms_settings-serialize_master_lang_only = abap_true ) ) ##TYPE.
+      iv_val = boolc( ms_settings-main_language_only = abap_true ) ) ##TYPE.
     mo_form_data->set(
       iv_key = c_id-write_protected
       iv_val = boolc( ms_settings-write_protected = abap_true ) ) ##TYPE.
@@ -199,7 +199,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
 
     ms_settings-display_name                 = mo_form_data->get( c_id-display_name ).
     ms_settings-ignore_subpackages           = mo_form_data->get( c_id-ignore_subpackages ).
-    ms_settings-serialize_master_lang_only   = mo_form_data->get( c_id-main_language_only ).
+    ms_settings-main_language_only           = mo_form_data->get( c_id-main_language_only ).
     ms_settings-write_protected              = mo_form_data->get( c_id-write_protected ).
     ms_settings-only_local_objects           = mo_form_data->get( c_id-only_local_objects ).
     ms_settings-code_inspector_check_variant = mo_form_data->get( c_id-code_inspector_check_variant ).
@@ -278,15 +278,17 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( `<div class="repo">` ).
+
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
                     io_repo               = mo_repo
                     iv_show_commit        = abap_false
                     iv_interactive_branch = abap_true ) ).
-    ri_html->add( `</div>` ).
 
     ri_html->add( mo_form->render(
       io_values         = mo_form_data
       io_validation_log = mo_validation_log ) ).
+
+    ri_html->add( `</div>` ).
 
   ENDMETHOD.
 ENDCLASS.

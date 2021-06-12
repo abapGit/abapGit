@@ -86,7 +86,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_tadir IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
 
 
   METHOD add_local_packages.
@@ -174,6 +174,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
         ENDTRY.
       ENDIF.
 
+      CLEAR <ls_tadir>-korrnum.
     ENDLOOP.
 
   ENDMETHOD.
@@ -428,12 +429,11 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
   METHOD zif_abapgit_tadir~read_single.
 
-* note that SICF has special handling, the obj_name is different in the system than serialized
-
     SELECT SINGLE * FROM tadir INTO CORRESPONDING FIELDS OF rs_tadir
       WHERE pgmid = iv_pgmid
       AND object = iv_object
       AND obj_name = iv_obj_name.                         "#EC CI_SUBRC
+    CLEAR rs_tadir-korrnum.
 
   ENDMETHOD.
 ENDCLASS.

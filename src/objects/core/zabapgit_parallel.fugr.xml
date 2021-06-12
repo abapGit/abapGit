@@ -9,6 +9,77 @@
    </INCLUDES>
    <FUNCTIONS>
     <item>
+     <FUNCNAME>Z_ABAPGIT_SERIALIZE_PACKAGE</FUNCNAME>
+     <REMOTE_CALL>R</REMOTE_CALL>
+     <SHORT_TEXT>abapGit - Serialize Package to ZIP</SHORT_TEXT>
+     <IMPORT>
+      <RSIMP>
+       <PARAMETER>IV_PACKAGE</PARAMETER>
+       <TYP>DEVCLASS</TYP>
+      </RSIMP>
+      <RSIMP>
+       <PARAMETER>IV_FOLDER_LOGIC</PARAMETER>
+       <DEFAULT>&apos;PREFIX&apos;</DEFAULT>
+       <OPTIONAL>X</OPTIONAL>
+       <TYP>STRING</TYP>
+      </RSIMP>
+      <RSIMP>
+       <PARAMETER>IV_MAIN_LANG_ONLY</PARAMETER>
+       <DEFAULT>&apos;&apos;</DEFAULT>
+       <OPTIONAL>X</OPTIONAL>
+       <TYP>FLAG</TYP>
+      </RSIMP>
+      <RSIMP>
+       <PARAMETER>IV_SHOW_LOG</PARAMETER>
+       <DEFAULT>&apos;&apos;</DEFAULT>
+       <OPTIONAL>X</OPTIONAL>
+       <TYP>FLAG</TYP>
+      </RSIMP>
+     </IMPORT>
+     <EXPORT>
+      <RSEXP>
+       <PARAMETER>EV_XSTRING</PARAMETER>
+       <TYP>XSTRING</TYP>
+      </RSEXP>
+     </EXPORT>
+     <EXCEPTION>
+      <RSEXC>
+       <EXCEPTION>ERROR</EXCEPTION>
+      </RSEXC>
+     </EXCEPTION>
+     <DOCUMENTATION>
+      <RSFDO>
+       <PARAMETER>IV_PACKAGE</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>Package</STEXT>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>IV_FOLDER_LOGIC</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>Folder logic</STEXT>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>IV_MAIN_LANG_ONLY</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>Serialize main language only</STEXT>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>IV_SHOW_LOG</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>Display log</STEXT>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>EV_XSTRING</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>ZIP data</STEXT>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>ERROR</PARAMETER>
+       <KIND>X</KIND>
+      </RSFDO>
+     </DOCUMENTATION>
+    </item>
+    <item>
      <FUNCNAME>Z_ABAPGIT_SERIALIZE_PARALLEL</FUNCNAME>
      <REMOTE_CALL>R</REMOTE_CALL>
      <SHORT_TEXT>Serialize object</SHORT_TEXT>
@@ -34,7 +105,7 @@
        <TYP>STRING</TYP>
       </RSIMP>
       <RSIMP>
-       <PARAMETER>IV_SERIALIZE_MASTER_LANG_ONLY</PARAMETER>
+       <PARAMETER>IV_MAIN_LANGUAGE_ONLY</PARAMETER>
        <TYP>CHAR1</TYP>
       </RSIMP>
      </IMPORT>
@@ -79,7 +150,7 @@
        <KIND>P</KIND>
       </RSFDO>
       <RSFDO>
-       <PARAMETER>IV_SERIALIZE_MASTER_LANG_ONLY</PARAMETER>
+       <PARAMETER>IV_MAIN_LANGUAGE_ONLY</PARAMETER>
        <KIND>P</KIND>
        <STEXT>Single-Character Indicator</STEXT>
       </RSFDO>

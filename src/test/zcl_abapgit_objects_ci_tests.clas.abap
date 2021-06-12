@@ -7,12 +7,11 @@ CLASS zcl_abapgit_objects_ci_tests DEFINITION
   RISK LEVEL CRITICAL .
 
   PUBLIC SECTION.
-    CLASS-METHODS:
-      run
-        IMPORTING
-          iv_object TYPE tadir-object
-          iv_url    TYPE string OPTIONAL.
 
+    CLASS-METHODS run
+      IMPORTING
+        !iv_object TYPE string
+        !iv_url    TYPE string OPTIONAL .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -56,7 +55,7 @@ CLASS zcl_abapgit_objects_ci_tests IMPLEMENTATION.
     li_exit = zcl_abapgit_exit=>get_instance( ).
     li_exit->get_ci_tests(
       EXPORTING
-        iv_object    = iv_object
+        iv_object    = |{ iv_object }|
       CHANGING
         ct_ci_repos  = lt_repos ).
 
@@ -67,17 +66,13 @@ CLASS zcl_abapgit_objects_ci_tests IMPLEMENTATION.
     " Objects will be created and deleted, do not run in customer system!
     " These tests may fail if you are locking the entries (e.g. the ZABAPGIT transaction is open)
     IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_run_critical_tests( ) = abap_false.
-      cl_abap_unit_assert=>fail(
-        msg   = 'Cancelled. You can enable these tests in abapGit settings'
-        level = if_aunit_constants=>tolerable ).
+      RETURN.
     ENDIF.
 
     " Check if abapGit-CI is installed
     SELECT SINGLE clsname FROM seoclass INTO lv_check WHERE clsname = 'ZCL_ABAPGIT_CI_REPOS'.
     IF sy-subrc <> 0.
-      cl_abap_unit_assert=>fail(
-        msg   = 'Cancelled. abapGit-CI is not installed (https://github.com/abapGit/CI)'
-        level = if_aunit_constants=>tolerable ).
+      RETURN.
     ENDIF.
 
     TRY.
@@ -127,20 +122,11 @@ CLASS zcl_abapgit_objects_ci_tests IMPLEMENTATION.
             ENDCASE.
             ASSIGN COMPONENT lv_check OF STRUCTURE <ls_repo_result> TO <lv_result>.
             ASSERT sy-subrc = 0.
-            IF <lv_result> <> 'OK'.
-              IF lv_msg IS INITIAL.
-                lv_msg = |{ lv_check }:{ <lv_result> }|.
-              ELSE.
-                lv_msg = |{ lv_msg } { lv_check }:{ <lv_result> }|.
-              ENDIF.
-            ENDIF.
+            cl_abap_unit_assert=>assert_equals(
+              exp = 'OK'
+              act = <lv_result>
+              msg = |{ <lv_repo> }: { lv_check } = { <lv_result> }| ).
           ENDDO.
-
-          cl_abap_unit_assert=>assert_equals(
-            exp = ''
-            act = lv_msg
-            msg = |{ <lv_repo> } { lv_msg }| ).
-
         ENDLOOP.
 
       CATCH zcx_abapgit_exception INTO lx_error.
