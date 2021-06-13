@@ -36,14 +36,6 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
     super->constructor( is_item     = is_item
                         iv_language = iv_language ).
 
-    IF is_experimental( ) = abap_false.
-      "Alpha version, known issues:
-      "- Container texts not de/serialized properly (functionally OK)
-      "- Container handling still a bad hack, needs refactoring with lots of debugging time
-      "- Probably has a few more bugs, more testing needed
-      zcx_abapgit_exception=>raise( 'PDTS not fully implemented, enable experimental features to test it' ).
-    ENDIF.
-
     ms_objkey-otype = 'TS'.
     ms_objkey-objid = ms_item-obj_name.
 
@@ -88,7 +80,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
         include_initial_values     = abap_true
         include_typenames          = abap_true
         include_change_data        = abap_true
-        include_texts              = abap_false  "Todo: Get texts to work properly
+        include_texts              = abap_false  "Todo: Get texts to work properly #4164
         include_extension_elements = abap_true
         save_delta_handling_info   = abap_true
         use_xslt                   = abap_false
