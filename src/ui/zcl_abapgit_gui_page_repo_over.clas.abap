@@ -116,7 +116,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
 
     METHODS shorten_repo_url
       IMPORTING iv_full_url         TYPE string
-                iv_max_length       TYPE i DEFAULT 50
+                iv_max_length       TYPE i DEFAULT 60
       RETURNING VALUE(rv_shortened) TYPE string.
 
     METHODS render_actions
@@ -371,7 +371,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
       ii_html->add(
         column( iv_content = ii_html->a( iv_txt = <ls_repo>-name
-                                      iv_act = |{ c_action-select }?key={ <ls_repo>-key }| ) ) ).
+                                         iv_act = |{ c_action-select }?key={ <ls_repo>-key }| ) && lv_lock ) ).
 
       ii_html->add(
         column( iv_content = zcl_abapgit_gui_chunk_lib=>render_package_name(
@@ -545,6 +545,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     _add_column(
       iv_tech_name = 'PACKAGE'
       iv_display_name = 'Package'
+      iv_css_class = 'package'
       iv_allow_order_by = abap_true ).
 
     _add_column(

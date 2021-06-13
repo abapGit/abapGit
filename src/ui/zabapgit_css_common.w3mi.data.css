@@ -584,6 +584,11 @@ table.db_tab td {
   word-break: break-all;
   max-width: 250px;
 }
+
+table.db_tab th.package {
+    width: 45ch;
+}
+
 table.db_tab td.data {
   font-style: italic;
 }
