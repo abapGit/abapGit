@@ -430,7 +430,6 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       ii_html->add( column(
         iv_content = |<span class="link" title="Open">&rsaquo;{ lv_repo_go_link }</span>|
         iv_css_class = 'ro-go' ) ).
-        
       ii_html->add( `</tr>` ).
     ENDLOOP.
 
