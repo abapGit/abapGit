@@ -342,7 +342,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     lv_seed  = ii_event->query( )->get( 'SEED' ).
     TRY.
         lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
-      CATCH cx_sy_move_cast_error into lx_error.
+      CATCH cx_sy_move_cast_error INTO lx_error.
         zcx_abapgit_exception=>raise( `Staging is only possible for online repositories.` ).
     ENDTRY.
 
