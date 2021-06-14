@@ -73,7 +73,8 @@ FORM branch_popup TABLES   tt_fields TYPE zif_abapgit_popups=>ty_sval_tt
 ENDFORM.                    "branch_popup
 
 FORM output.
-  DATA: lt_ucomm TYPE TABLE OF sy-ucomm.
+  DATA: lx_error TYPE REF TO zcx_abapgit_exception,
+        lt_ucomm TYPE TABLE OF sy-ucomm.
 
   PERFORM set_pf_status IN PROGRAM rsdbrunt IF FOUND.
 
@@ -86,7 +87,11 @@ FORM output.
     TABLES
       p_exclude = lt_ucomm.
 
-  zcl_abapgit_ui_factory=>get_gui( )->set_focus( ).
+  TRY.
+      zcl_abapgit_ui_factory=>get_gui( )->set_focus( ).
+    CATCH zcx_abapgit_exception INTO lx_error.
+      MESSAGE lx_error TYPE 'S' DISPLAY LIKE 'E'.
+  ENDTRY.
 ENDFORM.
 
 FORM exit RAISING zcx_abapgit_exception.
