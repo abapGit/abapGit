@@ -297,7 +297,7 @@ table.repo_tab {
 .repo_tab tr:first-child td { border-top: 0px; }
 
 .repo_tab tr:hover {
-  background-color: rgb(245, 245, 245) !important;
+  background-color: var(--theme-greyscale-dark) !important;
 }
 
 
@@ -560,6 +560,9 @@ div.db_list {
   overflow-x: auto;
 }
 
+table.db_tab{
+  table-layout: fixed;
+}
 table.db_tab pre {
   display: inline-block;
   overflow: hidden;
@@ -578,10 +581,28 @@ table.db_tab th {
 table.db_tab td {
   padding: 4px 8px;
   vertical-align: middle;
+  word-break: break-all;
+  max-width: 250px;
 }
+
+table.db_tab th.package {
+    width: 45ch;
+}
+
 table.db_tab td.data {
   font-style: italic;
 }
+
+span.action_link.enabled{
+  visibility: visible;
+  position: relative;
+}
+
+span.action_link:not(enabled){
+  visibility: hidden;
+  position: fixed; /* so it does not take up space when hidden */
+}
+
 
 /* DB ENTRY DISPLAY */
 div.db_entry {
@@ -933,7 +954,6 @@ table.commit tr .title {
 .repo-overview { font-size: smaller; }
 .repo-overview tbody td { height: 2em; }
 .ro-detail { display: none; }
-.ro-action { width: 260px; }
 .ro-go { font-size: 150%; }
 
 /* Branch Overview Page */
