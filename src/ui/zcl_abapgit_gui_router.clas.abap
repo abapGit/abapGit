@@ -335,11 +335,16 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
           lv_answer                   TYPE c LENGTH 1,
           lv_question_text            TYPE string,
           lv_question_title           TYPE string,
-          lv_show_create_branch_popup TYPE c LENGTH 1.
+          lv_show_create_branch_popup TYPE c LENGTH 1,
+          lx_error                    TYPE REF TO cx_sy_move_cast_error.
 
     lv_key   = ii_event->query( )->get( 'KEY' ).
     lv_seed  = ii_event->query( )->get( 'SEED' ).
-    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+    TRY.
+        lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+      CATCH cx_sy_move_cast_error into lx_error.
+        zcx_abapgit_exception=>raise( `Staging is only possible for online repositories.` ).
+    ENDTRY.
 
     IF lo_repo->get_local_settings( )-code_inspector_check_variant IS NOT INITIAL.
 
