@@ -61,7 +61,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
+CLASS zcl_abapgit_object_webi IMPLEMENTATION.
 
 
   METHOD handle_endpoint.
@@ -395,7 +395,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
             mi_vi->if_ws_md_lockable_object~unlock( ).
           CATCH cx_ws_md_exception ##no_handler.
         ENDTRY.
-        zcx_abapgit_exception=>raise_with_text( lx_root ).
+        zcx_abapgit_exception=>raise( lx_root->if_message~get_text( ) ).
     ENDTRY.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
@@ -461,7 +461,6 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     DATA: ls_webi    TYPE ty_webi,
-          lx_error   TYPE REF TO cx_ws_md_exception,
           lt_modilog TYPE STANDARD TABLE OF smodilog WITH DEFAULT KEY,
           li_vi      TYPE REF TO if_ws_md_vif,
           lv_name    TYPE vepname.
@@ -498,7 +497,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
         webi_not_exist    = 2
         OTHERS            = 3.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
+      zcx_abapgit_exception=>raise( 'error from WEBI_GET_OBJECT' ).
     ENDIF.
 
     SORT ls_webi-pveptype BY
@@ -510,8 +509,8 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
     TRY.
         li_vi = cl_ws_md_factory=>get_vif_root( )->get_virtual_interface( lv_name ).
         ls_webi-veptext = li_vi->get_short_text( sews_c_vif_version-active ).
-      CATCH cx_ws_md_exception INTO lx_error.
-        zcx_abapgit_exception=>raise_with_text( lx_error ).
+      CATCH cx_ws_md_exception.
+        zcx_abapgit_exception=>raise( 'error serializing WEBI' ).
     ENDTRY.
 
     LOOP AT ls_webi-pvepheader ASSIGNING <ls_vepheader>.
