@@ -168,6 +168,10 @@ table.db_tab th {
   border-bottom-color: #333;
 }
 
+table.db_tab tr.selected {
+  background: rgba(92, 92, 92, 1) !important;
+}
+
 /* ERROR LOGS */
 div.log { color: var(--theme-greyscale-dark); }
 .close-btn, .message-panel, .message-panel-commands a { color: var(--theme-greyscale-dark); }

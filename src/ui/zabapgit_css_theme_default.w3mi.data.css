@@ -28,6 +28,11 @@ body {
   font-size: var(--theme-font-size);
 }
 a, a:visited  { color: var(--theme-link-color); }
+.link  {
+  color: var(--theme-link-color);
+  cursor: pointer;
+}
+
 input, textarea, select     { border-color: #ddd; }
 input:focus, textarea:focus { border-color: #8cadd9; }
 
@@ -341,8 +346,8 @@ table.diff_tab td.patch, th.patch {
 .syntax-hl span.variables    { color:purple; }
 
 /* DEBUG INFO STYLES */
-div.debug_container { 
-  color: #444; 
+div.debug_container {
+  color: #444;
   background-color: var(--theme-container-background-color);
 }
 
@@ -354,6 +359,10 @@ table.db_tab tbody tr:hover, tr:active { background-color: #f4f4f4; }
 table.db_tab th {
   color: var(--theme-link-color);
   border-bottom-color: #ddd;
+}
+
+table.db_tab tr.selected {
+  background-color: rgba(191, 191, 191, 1) !important;
 }
 
 /* DB ENTRY DISPLAY */
