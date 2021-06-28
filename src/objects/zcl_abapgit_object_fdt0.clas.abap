@@ -364,7 +364,10 @@ CLASS ZCL_ABAPGIT_OBJECT_FDT0 IMPLEMENTATION.
       lo_node            TYPE REF TO if_ixml_node,
       lv_index           TYPE i.
 
-    lo_node_collection = co_ixml_element->get_elements_by_tag_name( namespace = 'FDTNS' name = iv_name ).
+    lo_node_collection = co_ixml_element->get_elements_by_tag_name(
+      namespace = 'FDTNS'
+      name      = iv_name ).
+
     lv_index = 0.
     WHILE lv_index < lo_node_collection->get_length( ).
       lo_node = lo_node_collection->get_item( lv_index ).
