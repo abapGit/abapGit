@@ -1000,7 +1000,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
     LOOP AT lt_dd12v ASSIGNING <ls_dd12v>.
       CLEAR: <ls_dd12v>-as4user,
              <ls_dd12v>-as4date,
-             <ls_dd12v>-as4time.
+             <ls_dd12v>-as4time,
+             <ls_dd12v>-dbindex.
     ENDLOOP.
 
     clear_dd03p_fields( CHANGING ct_dd03p = lt_dd03p ).
