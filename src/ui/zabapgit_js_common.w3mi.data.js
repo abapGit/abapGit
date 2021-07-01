@@ -296,10 +296,10 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
           // "enter" to open
           self.openSelectedRepo();
       } else if ((keycode == 52 || keycode == 100) && indexOfSelected > 0) {
-          // "<" for previous
+          // "4" for previous
           self.selectRowByIndex(indexOfSelected - 1);
       } else if ((keycode == 54 || keycode == 102) && indexOfSelected < rows.length - 1) {
-          // ">" for next
+          // "6" for next
           self.selectRowByIndex(indexOfSelected + 1);
       }
   });
