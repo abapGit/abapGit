@@ -182,12 +182,12 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     " registered/handled in js
     ls_hotkey_action-description = |Previous repository|.
     ls_hotkey_action-action = `#`.
-    ls_hotkey_action-hotkey = |<|.
+    ls_hotkey_action-hotkey = |4|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
     ls_hotkey_action-description = |Next repository|.
     ls_hotkey_action-action = `##`.
-    ls_hotkey_action-hotkey = |>|.
+    ls_hotkey_action-hotkey = |6|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
     ls_hotkey_action-description = |Open repository|.
