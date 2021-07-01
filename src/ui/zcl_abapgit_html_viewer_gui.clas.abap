@@ -94,6 +94,11 @@ CLASS zcl_abapgit_html_viewer_gui IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_html_viewer~get_viewer.
+    ro_result = mo_html_viewer.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_html_viewer~load_data.
 
     mo_html_viewer->load_data(
