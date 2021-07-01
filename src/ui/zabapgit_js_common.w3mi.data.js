@@ -282,40 +282,26 @@ RepoOverViewHelper.prototype.onPageLoad = function () {
 };
 
 RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
-    var self = this;
-    document.addEventListener("keypress", function(event) {
-        if (document.activeElement.id === "filter") {
-            return;
-        }
-        var keycode = event.keyCode;
-        var rows = Array.prototype.slice.call(self.getVisibleRows());
-        var selected = document.querySelector(".repo.selected");
-        var indexOfSelected = rows.indexOf(selected);
+  var self = this;
+  document.addEventListener("keypress", function(event) {
+      if (document.activeElement.id === "filter") {
+          return;
+      }
+      var keycode = event.keyCode;
+      var rows = Array.prototype.slice.call(self.getVisibleRows());
+      var selected = document.querySelector(".repo.selected");
+      var indexOfSelected = rows.indexOf(selected);
 
-        if (keycode == 13) {
-            // "enter" to open
-            self.openSelectedRepo();
-        } else if ((keycode == 52 || keycode == 100) && indexOfSelected > 0) {
-            // "<" for previous
-            self.selectRowByIndex(indexOfSelected - 1);
-        } else if ((keycode == 54 || keycode == 102) && indexOfSelected < rows.length - 1) {
-            // ">" for next
-            self.selectRowByIndex(indexOfSelected + 1);
-        }
-    });
-};
-
-    if (keycode == 13) {
-      // "enter" to open
-      self.openSelectedRepo();
-    }
-    else if (keycode == 44 && indexOfSelected > 0) {
-      // "<" for previous
-      self.selectRowByIndex(indexOfSelected - 1);
-    } else if (keycode == 46 && indexOfSelected < rows.length - 1) {
-      // ">" for next
-      self.selectRowByIndex(indexOfSelected + 1);
-    }
+      if (keycode == 13) {
+          // "enter" to open
+          self.openSelectedRepo();
+      } else if ((keycode == 52 || keycode == 100) && indexOfSelected > 0) {
+          // "<" for previous
+          self.selectRowByIndex(indexOfSelected - 1);
+      } else if ((keycode == 54 || keycode == 102) && indexOfSelected < rows.length - 1) {
+          // ">" for next
+          self.selectRowByIndex(indexOfSelected + 1);
+      }
   });
 };
 
