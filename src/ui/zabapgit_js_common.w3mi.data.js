@@ -285,7 +285,7 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
   var self = this;
   document.addEventListener("keypress", function(event) {
     if (document.activeElement.id === "filter") {
-        return;
+      return;
     }
     var keycode = event.keyCode;
     var rows = Array.prototype.slice.call(self.getVisibleRows());
