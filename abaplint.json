@@ -235,6 +235,7 @@
     "indentation": {
       "ignoreExceptions": true,
       "alignTryCatch": false,
+      "selectionScreenBlockIndentation": false,
       "globalClassSkipFirst": false,
       "ignoreGlobalClassDefinition": false,
       "ignoreGlobalInterface": false
