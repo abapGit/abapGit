@@ -49,7 +49,7 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
 
     FIELD-SYMBOLS: <lg_ecatt_vo> TYPE any.
 
-    li_section = template_over_all->find_from_name_ns( 'ty_MSG' ).
+    li_section = template_over_all->find_from_name_ns( 'ETVO_MSG' ).
 
     IF NOT li_section IS INITIAL.
       CALL FUNCTION 'SDIXML_DOM_TO_DATA'
