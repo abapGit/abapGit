@@ -130,7 +130,7 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_DOWN IMPLEMENTATION.
 
     CALL FUNCTION 'SDIXML_DATA_TO_DOM'
       EXPORTING
-        name         = 'ty_MSG'
+        name         = 'ETVO_MSG'
         dataobject   = lt_buss_msg_ref
       IMPORTING
         data_as_dom  = li_element

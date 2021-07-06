@@ -25,7 +25,7 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
 
     CLASS-METHODS parse_commit_request
       IMPORTING
-        !ii_event TYPE REF TO zif_abapgit_gui_event
+        !ii_event        TYPE REF TO zif_abapgit_gui_event
       RETURNING
         VALUE(rs_commit) TYPE zif_abapgit_services_git=>ty_commit_fields
       RAISING
@@ -58,6 +58,7 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
         !iv_label      TYPE string
         !iv_value      TYPE string OPTIONAL
         !iv_max_length TYPE string OPTIONAL
+        !iv_autofocus  TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS get_comment_default
@@ -283,7 +284,8 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     ri_html->add( render_text_input( iv_name       = 'comment'
                                      iv_label      = 'Comment'
                                      iv_value      = lv_comment
-                                     iv_max_length = lv_s_param ) ).
+                                     iv_max_length = lv_s_param
+                                     iv_autofocus  = abap_true ) ).
 
     ri_html->add( '<div class="row">' ).
     ri_html->add( '<label for="c-body">Body</label>' ).
@@ -406,6 +408,10 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
     ELSEIF iv_max_length IS NOT INITIAL.
       lv_attrs = | maxlength="{ iv_max_length }"|.
+    ENDIF.
+
+    IF iv_autofocus = abap_true.
+      lv_attrs = lv_attrs && ' autofocus'.
     ENDIF.
 
     ri_html->add( '<div class="row">' ).
