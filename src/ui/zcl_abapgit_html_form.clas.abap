@@ -124,10 +124,10 @@ CLASS zcl_abapgit_html_form DEFINITION
         readonly    TYPE string,
         placeholder TYPE string,
         required    TYPE string,
+        autofocus   TYPE string,
       END OF ty_attr .
 
-    DATA:
-      mt_fields TYPE zif_abapgit_html_form=>ty_fields.
+    DATA mt_fields TYPE zif_abapgit_html_form=>ty_fields .
     DATA:
       mt_commands TYPE STANDARD TABLE OF zif_abapgit_html_form=>ty_command .
     DATA mv_form_id TYPE string .
@@ -138,7 +138,8 @@ CLASS zcl_abapgit_html_form DEFINITION
         !ii_html           TYPE REF TO zif_abapgit_html
         !io_values         TYPE REF TO zcl_abapgit_string_map
         !io_validation_log TYPE REF TO zcl_abapgit_string_map
-        !is_field          TYPE zif_abapgit_html_form=>ty_field .
+        !is_field          TYPE zif_abapgit_html_form=>ty_field
+        !iv_autofocus      TYPE abap_bool .
     METHODS render_field_text
       IMPORTING
         !ii_html  TYPE REF TO zif_abapgit_html
@@ -341,6 +342,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     DATA ls_form_action TYPE string.
     DATA lv_cur_group TYPE string.
     DATA lv_url TYPE string.
+    DATA lv_autofocus TYPE abap_bool.
 
     IF mv_form_id IS NOT INITIAL.
       ls_form_id = | id="{ mv_form_id }"|.
@@ -362,6 +364,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       EXIT.
     ENDLOOP.
 
+    lv_autofocus = abap_true.
     LOOP AT mt_fields ASSIGNING <ls_field>.
       AT FIRST.
         IF <ls_field>-type <> zif_abapgit_html_form=>c_field_type-field_group.
@@ -390,7 +393,10 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
         ii_html           = ri_html
         io_values         = io_values
         io_validation_log = io_validation_log
-        is_field          = <ls_field> ).
+        is_field          = <ls_field>
+        iv_autofocus      = lv_autofocus ).
+
+      lv_autofocus = abap_false.
 
       AT LAST.
         ri_html->add( |</ul>| ).
@@ -498,6 +504,10 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       ls_attr-readonly = ' readonly'.
     ENDIF.
 
+    IF iv_autofocus = abap_true.
+      ls_attr-autofocus = ' autofocus'.
+    ENDIF.
+
     " Prepare item class
     lv_item_class = is_field-item_class.
     IF ls_attr-error IS NOT INITIAL.
@@ -580,7 +590,8 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       lv_checked = ' checked'.
     ENDIF.
 
-    ii_html->add( |<input type="checkbox" name="{ is_field-name }" id="{ is_field-name }"{ lv_checked }>| ).
+    ii_html->add( |<input type="checkbox" name="{ is_field-name }" id="{ is_field-name }"| &&
+                  |{ lv_checked }{ is_attr-readonly }{ is_attr-autofocus }>| ).
     ii_html->add( |<label for="{ is_field-name }"{ is_attr-hint }>{ is_field-label }</label>| ).
 
   ENDMETHOD.
@@ -621,7 +632,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
       lv_opt_id = |{ is_field-name }{ sy-tabix }|.
       ii_html->add( |<input type="radio" name="{ is_field-name }" id="{ lv_opt_id }"|
-                 && | value="{ lv_opt_value }"{ lv_checked }>| ).
+                 && | value="{ lv_opt_value }"{ lv_checked }{ is_attr-autofocus }>| ).
       ii_html->add( |<label for="{ lv_opt_id }">{ <ls_opt>-label }</label>| ).
     ENDLOOP.
 
@@ -724,7 +735,8 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     ENDIF.
 
     ii_html->add( |<input type="{ lv_type }" name="{ is_field-name }" id="{ is_field-name }"|
-               && | value="{ is_attr-value }" { is_field-dblclick }{ is_attr-placeholder }{ is_attr-readonly }>| ).
+               && | value="{ is_attr-value }" { is_field-dblclick }{ is_attr-placeholder }|
+               && |{ is_attr-readonly }{ is_attr-autofocus }>| ).
 
     IF is_field-side_action IS NOT INITIAL.
       ii_html->add( '</div>' ).
@@ -750,7 +762,8 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     lv_rows = lines( zcl_abapgit_convert=>split_string( is_attr-value ) ).
 
     " Avoid adding line-breaks inside textarea tag (except for the actual value)
-    lv_html = |<textarea name="{ is_field-name }" id="{ is_field-name }" rows="{ lv_rows }"{ is_attr-readonly }>|.
+    lv_html = |<textarea name="{ is_field-name }" id="{ is_field-name }" rows="{ lv_rows }"|
+           && |{ is_attr-readonly }{ is_attr-autofocus }>|.
     lv_html = lv_html && escape( val    = is_attr-value
                                  format = cl_abap_format=>e_html_attr ).
     lv_html = lv_html && |</textarea>|.
