@@ -281,9 +281,9 @@ RepoOverViewHelper.prototype.onPageLoad = function () {
   }
 };
 
-RepoOverViewHelper.prototype.registerKeyboardShortcuts = function () {
+RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
   var self = this;
-  document.addEventListener("keypress", function (event) {
+  document.addEventListener("keypress", function(event) {
     if (document.activeElement.id === "filter") {
       return;
     }
@@ -295,12 +295,11 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function () {
     if (keycode == 13) {
       // "enter" to open
       self.openSelectedRepo();
-    }
-    else if (keycode == 44 && indexOfSelected > 0) {
-      // "<" for previous
+    } else if ((keycode == 52 || keycode == 100) && indexOfSelected > 0) {
+      // "4" for previous
       self.selectRowByIndex(indexOfSelected - 1);
-    } else if (keycode == 46 && indexOfSelected < rows.length - 1) {
-      // ">" for next
+    } else if ((keycode == 54 || keycode == 102) && indexOfSelected < rows.length - 1) {
+      // "6" for next
       self.selectRowByIndex(indexOfSelected + 1);
     }
   });

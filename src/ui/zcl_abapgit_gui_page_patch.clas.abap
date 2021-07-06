@@ -356,7 +356,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
       it_files  = it_files ).
 
     IF mo_repo->is_offline( ) = abap_true.
-      zcx_abapgit_exception=>raise( |Can't patch offline repos| ).
+      zcx_abapgit_exception=>raise( |Patching is only possible for online repositories.| ).
     ENDIF.
 
     mo_repo_online ?= mo_repo.
