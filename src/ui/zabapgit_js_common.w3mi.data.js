@@ -292,8 +292,8 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
     var selected = document.querySelector(".repo.selected");
     var indexOfSelected = rows.indexOf(selected);
 
-    if (keycode == 13) {
-      // "enter" to open
+    if (keycode == 13 && // "enter" to open
+       document.activeElement.tagName.toLowerCase() != "input") { // prevent opening if command field has focus
       self.openSelectedRepo();
     } else if ((keycode == 52 || keycode == 100) && indexOfSelected > 0) {
       // "4" for previous

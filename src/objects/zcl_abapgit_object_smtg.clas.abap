@@ -38,7 +38,14 @@ CLASS zcl_abapgit_object_smtg DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         CHANGING
           ct_components     TYPE abap_component_tab
         RAISING
+          zcx_abapgit_exception,
+
+      get_template
+        EXPORTING
+          es_template TYPE any
+        RAISING
           zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -129,8 +136,95 @@ CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_template.
+
+    DATA:
+      lr_template TYPE REF TO data,
+      lx_error    TYPE REF TO cx_root,
+      lo_template TYPE REF TO object.
+
+    FIELD-SYMBOLS:
+      <lg_template> TYPE data,
+      <lg_header>   TYPE data,
+      <lt_header>   TYPE INDEX TABLE,
+      <lt_content>  TYPE INDEX TABLE.
+
+
+    CREATE DATA lr_template TYPE HANDLE mo_structdescr.
+    ASSIGN lr_template->* TO <lg_template>.
+    ASSERT sy-subrc = 0.
+
+    ASSIGN
+      COMPONENT 'HEADER'
+      OF STRUCTURE <lg_template>
+      TO <lg_header>.
+    ASSERT sy-subrc = 0.
+
+    ASSIGN
+      COMPONENT 'HEADER_T'
+      OF STRUCTURE <lg_template>
+      TO <lt_header>.
+    ASSERT sy-subrc = 0.
+
+    ASSIGN
+      COMPONENT 'CONTENT'
+      OF STRUCTURE <lg_template>
+      TO <lt_content>.
+    ASSERT sy-subrc = 0.
+
+    TRY.
+        CALL METHOD ('CL_SMTG_EMAIL_TEMPLATE')=>get
+          EXPORTING
+            iv_id       = mv_template_id
+          RECEIVING
+            ro_instance = lo_template.
+
+        CALL METHOD lo_template->('IF_SMTG_EMAIL_TEMPLATE~GET_TMPL_HDR')
+          RECEIVING
+            rs_tmpl_hdr = <lg_header>.
+
+        CALL METHOD lo_template->('IF_SMTG_EMAIL_TEMPLATE~GET_TMPL_HDR_T_ALL')
+          RECEIVING
+            rt_tmpl_hdr_t = <lt_header>.
+
+        CALL METHOD lo_template->('IF_SMTG_EMAIL_TEMPLATE~GET_TMPL_CONT_ALL')
+          RECEIVING
+            rt_tmpl_cont = <lt_content>.
+
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise(
+            iv_text     = lx_error->get_text( )
+            ix_previous = lx_error ).
+    ENDTRY.
+
+    es_template = <lg_template>.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown.
+
+    DATA:
+      lr_template TYPE REF TO data.
+
+    FIELD-SYMBOLS:
+      <lg_template>          TYPE data,
+      <lv_last_changed_user> TYPE data.
+
+    CREATE DATA lr_template TYPE HANDLE mo_structdescr.
+    ASSIGN lr_template->* TO <lg_template>.
+    ASSERT sy-subrc = 0.
+
+    get_template( IMPORTING es_template = <lg_template> ).
+
+    ASSIGN
+      COMPONENT 'HEADER-LST_CH_USER_ACCT'
+      OF STRUCTURE <lg_template>
+      TO <lv_last_changed_user>.
+    ASSERT sy-subrc = 0.
+
+    rv_user = <lv_last_changed_user>.
+
   ENDMETHOD.
 
 
@@ -165,8 +259,6 @@ CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
       <lg_name>        TYPE data,
       <lg_description> TYPE data,
       <lg_header_text> TYPE data.
-
-    mo_structdescr = get_structure( ).
 
     CREATE DATA lr_template TYPE HANDLE mo_structdescr.
     ASSIGN lr_template->* TO <lg_template>.
@@ -320,20 +412,17 @@ CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
 
     DATA:
       lr_template TYPE REF TO data,
-      lx_error    TYPE REF TO cx_root,
-      lo_template TYPE REF TO object.
+      lx_error    TYPE REF TO cx_root.
 
     FIELD-SYMBOLS:
       <lg_template> TYPE data,
-      <lg_header>   TYPE data,
-      <lt_header>   TYPE INDEX TABLE,
-      <lt_content>  TYPE INDEX TABLE.
-
-    mo_structdescr = get_structure( ).
+      <lg_header>   TYPE data.
 
     CREATE DATA lr_template TYPE HANDLE mo_structdescr.
     ASSIGN lr_template->* TO <lg_template>.
     ASSERT sy-subrc = 0.
+
+    get_template( IMPORTING es_template = <lg_template> ).
 
     ASSIGN
       COMPONENT 'HEADER'
@@ -341,37 +430,7 @@ CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
       TO <lg_header>.
     ASSERT sy-subrc = 0.
 
-    ASSIGN
-      COMPONENT 'HEADER_T'
-      OF STRUCTURE <lg_template>
-      TO <lt_header>.
-    ASSERT sy-subrc = 0.
-
-    ASSIGN
-      COMPONENT 'CONTENT'
-      OF STRUCTURE <lg_template>
-      TO <lt_content>.
-    ASSERT sy-subrc = 0.
-
     TRY.
-        CALL METHOD ('CL_SMTG_EMAIL_TEMPLATE')=>get
-          EXPORTING
-            iv_id       = mv_template_id
-          RECEIVING
-            ro_instance = lo_template.
-
-        CALL METHOD lo_template->('IF_SMTG_EMAIL_TEMPLATE~GET_TMPL_HDR')
-          RECEIVING
-            rs_tmpl_hdr = <lg_header>.
-
-        CALL METHOD lo_template->('IF_SMTG_EMAIL_TEMPLATE~GET_TMPL_HDR_T_ALL')
-          RECEIVING
-            rt_tmpl_hdr_t = <lt_header>.
-
-        CALL METHOD lo_template->('IF_SMTG_EMAIL_TEMPLATE~GET_TMPL_CONT_ALL')
-          RECEIVING
-            rt_tmpl_cont = <lt_content>.
-
         clear_field( EXPORTING iv_fieldname = 'CREA_DATE_TIME'   CHANGING cg_header = <lg_header> ).
         clear_field( EXPORTING iv_fieldname = 'CREA_USER_ACCT'   CHANGING cg_header = <lg_header> ).
         clear_field( EXPORTING iv_fieldname = 'LST_CH_DATE_TIME' CHANGING cg_header = <lg_header> ).
@@ -388,4 +447,5 @@ CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
+
 ENDCLASS.
