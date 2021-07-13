@@ -121,9 +121,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
         mi_persistence->delete( mv_service_binding_key ).
 
       CATCH cx_swb_exception INTO lx_error.
-        zcx_abapgit_exception=>raise(
-            iv_text     = lx_error->get_text( )
-            ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
   ENDMETHOD.
@@ -175,9 +173,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
         corr_insert( iv_package ).
 
       CATCH cx_swb_exception INTO lx_error.
-        zcx_abapgit_exception=>raise(
-            iv_text     = lx_error->get_text( )
-            ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
   ENDMETHOD.
@@ -276,9 +272,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
         clear_fields( CHANGING cs_service_binding = <ls_service_binding> ).
 
       CATCH cx_swb_exception INTO lx_error.
-        zcx_abapgit_exception=>raise(
-            iv_text     = lx_error->get_text( )
-            ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
     io_xml->add(

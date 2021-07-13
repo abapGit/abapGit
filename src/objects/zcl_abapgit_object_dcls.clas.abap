@@ -42,8 +42,7 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
           rv_user = c_user_unknown.
         ENDIF.
       CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
-                                      ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
   ENDMETHOD.
 
@@ -63,8 +62,7 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
             iv_dclname = ms_item-obj_name.
 
       CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
-                                      ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
   ENDMETHOD.
@@ -109,8 +107,7 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
             iv_access_mode = 'INSERT'.
 
       CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
-                                      ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
@@ -135,8 +132,7 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
             rv_exists     = rv_bool.
 
       CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
-                                      ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
   ENDMETHOD.
@@ -250,8 +246,7 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
                      ig_data = <lg_data> ).
 
       CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
-                                      ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
   ENDMETHOD.

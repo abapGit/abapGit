@@ -3,6 +3,7 @@ CLASS zcl_abapgit_object_ddlx DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA mi_persistence TYPE REF TO if_wb_object_persist .
     METHODS get_persistence
@@ -94,8 +95,7 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
         ENDIF.
 
       CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
-                                      ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
     ri_persistence = mi_persistence.
