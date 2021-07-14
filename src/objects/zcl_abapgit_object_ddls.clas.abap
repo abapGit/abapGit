@@ -96,8 +96,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
         ENDIF.
 
       CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
-                                      ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
   ENDMETHOD.
@@ -148,8 +147,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
           rv_user = <lg_field>.
         ENDIF.
       CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
-                                      ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
     IF rv_user IS INITIAL.
@@ -269,8 +267,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
             name = ms_item-obj_name
             prid = 0.
 
-        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
-                                      ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
@@ -419,8 +416,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
         ENDIF.
 
       CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
-                                      ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
     APPEND 'AS4USER' TO lt_clr_comps.

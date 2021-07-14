@@ -68,8 +68,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SPRX IMPLEMENTATION.
             repair  = abap_true ).
 
       CATCH cx_proxy_gen_error INTO lx_error.
-        zcx_abapgit_exception=>raise( iv_text     = |{ lx_error->get_text( ) }|
-                                      ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
   ENDMETHOD.
