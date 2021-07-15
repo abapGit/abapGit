@@ -175,15 +175,13 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
                 it_usobx = lt_usobx
                 it_usobt = lt_usobt.
           CATCH cx_static_check INTO lr_err.
-            zcx_abapgit_exception=>raise( iv_text     = lr_err->get_text( )
-                                          ix_previous = lr_err ).
+            zcx_abapgit_exception=>raise_with_text( lr_err ).
         ENDTRY.
 
         corr_insert( iv_package ).
 
       CATCH cx_static_check INTO lr_err.
-        zcx_abapgit_exception=>raise( iv_text     = lr_err->get_text( )
-                                      ix_previous = lr_err ).
+        zcx_abapgit_exception=>raise_with_text( lr_err ).
     ENDTRY.
 
   ENDMETHOD.
@@ -274,8 +272,7 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
                 et_usobx_ext = <lt_data_usobx_ext>
                 et_usobt_ext = <lt_data_usobt_ext>.
           CATCH cx_static_check INTO lr_err.
-            zcx_abapgit_exception=>raise( iv_text     = lr_err->get_text( )
-                                          ix_previous = lr_err ).
+            zcx_abapgit_exception=>raise_with_text( lr_err ).
         ENDTRY.
 
         "HEAD
@@ -299,8 +296,7 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
                      ig_data = <lt_data_usobt_ext> ).
 
       CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
-                                      ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
   ENDMETHOD.

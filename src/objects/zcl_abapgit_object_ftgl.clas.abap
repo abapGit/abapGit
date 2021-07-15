@@ -120,9 +120,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FTGL IMPLEMENTATION.
         corr_insert( iv_package ).
 
       CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise(
-            iv_text     = lx_error->get_text( )
-            ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
   ENDMETHOD.
@@ -205,9 +203,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FTGL IMPLEMENTATION.
             ro_toggle    = lo_toggle.
 
       CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise(
-            iv_text     = lx_error->get_text( )
-            ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
     CALL METHOD lo_toggle->('GET_CONTENT')

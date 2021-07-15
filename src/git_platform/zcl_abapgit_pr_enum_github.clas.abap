@@ -117,9 +117,7 @@ CLASS zcl_abapgit_pr_enum_github IMPLEMENTATION.
         ENDIF.
         li_pulls_json = mi_http_agent->request( lv_pull_url )->json( ).
       CATCH zcx_abapgit_ajson_error INTO lx_ajson.
-        zcx_abapgit_exception=>raise(
-          iv_text     = lx_ajson->get_text( )
-          ix_previous = lx_ajson ).
+        zcx_abapgit_exception=>raise_with_text( lx_ajson ).
     ENDTRY.
 
     rs_info-pulls = convert_list( li_pulls_json ).

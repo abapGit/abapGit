@@ -196,16 +196,15 @@ CLASS lcl_task_definition IMPLEMENTATION.
   METHOD lif_task_definition~import_container.
 
     DATA lt_exception_list TYPE swf_cx_tab.
-    DATA: lo_exception TYPE REF TO cx_swf_ifs_exception.
+    DATA lx_exception TYPE REF TO cx_swf_ifs_exception.
 
     mo_taskdef->container->import_from_xml(
             EXPORTING xml_stream     = iv_xml_string
             IMPORTING exception_list = lt_exception_list ).
 
     IF lt_exception_list IS NOT INITIAL.
-      READ TABLE lt_exception_list INDEX 1 INTO lo_exception.
-      zcx_abapgit_exception=>raise( iv_text     = lo_exception->get_text( )
-                                    ix_previous = lo_exception ).
+      READ TABLE lt_exception_list INDEX 1 INTO lx_exception.
+      zcx_abapgit_exception=>raise_with_text( lx_exception ).
     ENDIF.
 
   ENDMETHOD.

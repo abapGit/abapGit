@@ -237,8 +237,7 @@ CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
           EXPORTING
             iv_id = mv_template_id.
       CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
-                                      ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
   ENDMETHOD.
@@ -338,8 +337,7 @@ CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
             iv_wait   = abap_true.
 
       CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
-                                      ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
   ENDMETHOD.
@@ -441,9 +439,7 @@ CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
             ig_data = <lg_template> ).
 
       CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise(
-            iv_text     = lx_error->get_text( )
-            ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
   ENDMETHOD.
