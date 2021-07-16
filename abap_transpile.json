@@ -35,6 +35,8 @@
     "zif_abapgit_cts_api",
     "zif_abapgit_definitions",
     "zif_abapgit_dot_abapgit",
+    "zif_abapgit_apack_definitions",
+    "zcl_abapgit_dot_abapgit",
     "zif_abapgit_environment",
     "zif_abapgit_exit",
     "zcl_abapgit_gui_buttons",
@@ -183,7 +185,10 @@
 
       {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "json_diff"},
       {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "json_diff_types"},
-      {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "json_sort"}
+      {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "json_sort"},
+
+      {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "ignore"},
+      {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "identity"}
     ]
   }
 }
