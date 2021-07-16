@@ -131,6 +131,7 @@
     "prefix_is_current_class": true,
     "allowed_object_naming": true,
     "check_comments": false,
+    "cyclic_oo": false,
     "fully_type_constants": true,
     "keep_single_parameter_on_one_line": true,
     "prefer_returning_to_exporting": true,
