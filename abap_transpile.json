@@ -128,7 +128,7 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "simple_indented", "note": "fix 'array_index' first"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "escape",          "note": "ASSERT failed, ??"},
 
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "value_number"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "value_number", "note": "https://github.com/abaplint/transpiler/issues/451"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "members"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "slice"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "array_to_string_table"},
