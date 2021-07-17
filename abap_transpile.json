@@ -15,6 +15,7 @@
     "zcl_abapgit_string_map",
     "zcl_abapgit_gui_utils",
     "zcl_abapgit_syntax_*",
+    "zcl_abapgit_html_parts",
     "zcl_abapgit_gui_asset_manager",
     "zif_abapgit_ajson*",
     "zcl_abapgit_gui_functions",
