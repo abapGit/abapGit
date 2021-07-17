@@ -14,6 +14,9 @@
     "zcl_abapgit_progress",
     "zcl_abapgit_string_map",
     "zcl_abapgit_gui_utils",
+    "zcl_abapgit_gui_html_processor",
+    "zcl_abapgit_gui_css_processor",
+    "zif_abapgit_gui_html_processor",
     "zcl_abapgit_syntax_*",
     "zcl_abapgit_html_parts",
     "zcl_abapgit_gui_asset_manager",
@@ -197,6 +200,21 @@
       {"object": "ZCL_ABAPGIT_GUI_ASSET_MANAGER", "class": "ltcl_abapgit_gui_asset_manager", "method": "get_mime_asset"},
       {"object": "ZCL_ABAPGIT_GUI_ASSET_MANAGER", "class": "ltcl_abapgit_gui_asset_manager", "method": "get_base64_asset"},
       {"object": "ZCL_ABAPGIT_GUI_ASSET_MANAGER", "class": "ltcl_abapgit_gui_asset_manager", "method": "get_all"},
+
+      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_file_exists", "note": "something wrong with the inheritance?"},
+      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_file_does_not_exist"},
+      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_empty_file"},
+      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_no_variables"},
+      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_simple_variables"},
+      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_complex_variables"},
+      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_overwrite"},
+      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_multiple_files", "method": "test_overwrite"},
+
+      {"object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR", "class": "ltcl_html_processor_test", "method": "process_typical"},
+      {"object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR", "class": "ltcl_html_processor_test", "method": "process_with_preserve"},
+      {"object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR", "class": "ltcl_html_processor_test", "method": "process_no_css"},
+      {"object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR", "class": "ltcl_html_processor_test", "method": "process_fails"},
+      {"object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR", "class": "ltcl_html_processor_test", "method": "find_head_closing_tag"},
 
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "ignore"},
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "identity"}
