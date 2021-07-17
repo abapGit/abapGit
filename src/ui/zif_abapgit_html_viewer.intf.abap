@@ -46,7 +46,7 @@ INTERFACE zif_abapgit_html_viewer
   METHODS close_document .
   METHODS get_url
     RETURNING
-      VALUE(rv_url) TYPE w3url.
+      VALUE(rv_url) TYPE string.
   METHODS back .
   METHODS set_visiblity IMPORTING iv_visible TYPE abap_bool.
   METHODS get_viewer
