@@ -106,6 +106,7 @@ CLASS ZCL_ABAPGIT_HTML_VIEWER_GUI IMPLEMENTATION.
     DATA lv_url TYPE c LENGTH 250.
     DATA lv_assigned TYPE c LENGTH 250.
 
+    ASSERT strlen( iv_url ) <= 250.
     lv_url = iv_url.
     mo_html_viewer->load_data(
       EXPORTING
