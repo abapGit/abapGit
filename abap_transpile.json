@@ -208,10 +208,7 @@
       {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_event_handler"},
 
       {"object": "ZCL_ABAPGIT_GUI_ASSET_MANAGER", "class": "ltcl_abapgit_gui_asset_manager", "method": "get_inline_asset"},
-      {"object": "ZCL_ABAPGIT_GUI_ASSET_MANAGER", "class": "ltcl_abapgit_gui_asset_manager", "method": "get_text_asset"},
       {"object": "ZCL_ABAPGIT_GUI_ASSET_MANAGER", "class": "ltcl_abapgit_gui_asset_manager", "method": "get_mime_asset"},
-      {"object": "ZCL_ABAPGIT_GUI_ASSET_MANAGER", "class": "ltcl_abapgit_gui_asset_manager", "method": "get_base64_asset"},
-      {"object": "ZCL_ABAPGIT_GUI_ASSET_MANAGER", "class": "ltcl_abapgit_gui_asset_manager", "method": "get_all"},
 
       {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_file_exists", "note": "something wrong with the inheritance?"},
       {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_file_does_not_exist"},
