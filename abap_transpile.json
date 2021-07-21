@@ -11,6 +11,7 @@
     "zcl_abapgit_git_branch_list",
     "zcl_abapgit_git_pack",
     "zcl_abapgit_git_tag",
+    "zcl_abapgit_git_commit",
     "zcl_abapgit_git_utils",
     "zcl_abapgit_gui_asset_manager",
     "zcl_abapgit_gui_buttons",
@@ -230,6 +231,9 @@
 
       {"object": "ZCL_ABAPGIT_XML_OUTPUT", "class": "ltcl_xml_output", "method": "render_xml_string"},
       {"object": "ZCL_ABAPGIT_XML_OUTPUT", "class": "ltcl_xml_output", "method": "add_simple_object"},
+
+      {"object": "ZCL_ABAPGIT_GIT_COMMIT", "class": "ltcl_test", "method": "parse_commits"},
+      {"object": "ZCL_ABAPGIT_GIT_COMMIT", "class": "ltcl_test", "method": "check_author_regex"},
 
       {"object": "ZCL_ABAPGIT_LOG", "class": "ltcl_test", "method": "merge_with_min_level", "note": "https://github.com/abaplint/transpiler/issues/464"},
 
