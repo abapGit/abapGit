@@ -86,6 +86,7 @@
     "zif_abapgit_tag_popups",
     "zif_abapgit_version",
     "zcl_abapgit_xml_output",
+    "zcl_abapgit_xml_input",
     "zif_abapgit_xml_input",
     "zif_abapgit_xml_output",
     "zif_abapgit_xml"
@@ -225,6 +226,10 @@
 
       {"object": "ZCL_ABAPGIT_XML_OUTPUT", "class": "ltcl_xml_output", "method": "render_xml_string"},
       {"object": "ZCL_ABAPGIT_XML_OUTPUT", "class": "ltcl_xml_output", "method": "add_simple_object"},
+
+      {"object": "ZCL_ABAPGIT_XML_INPUT", "class": "ltcl_xml", "method": "up"},
+      {"object": "ZCL_ABAPGIT_XML_INPUT", "class": "ltcl_xml", "method": "empty"},
+      {"object": "ZCL_ABAPGIT_XML_INPUT", "class": "ltcl_xml", "method": "down"},
 
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "ignore"},
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "identity"}
