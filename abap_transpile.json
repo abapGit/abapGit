@@ -76,6 +76,7 @@
     "zif_abapgit_html",
     "zif_abapgit_http_agent",
     "zif_abapgit_http_response",
+    "zcl_abapgit_log.clas",
     "zif_abapgit_log",
     "zif_abapgit_merge",
     "zif_abapgit_persist_repo",
@@ -228,6 +229,8 @@
 
       {"object": "ZCL_ABAPGIT_XML_OUTPUT", "class": "ltcl_xml_output", "method": "render_xml_string"},
       {"object": "ZCL_ABAPGIT_XML_OUTPUT", "class": "ltcl_xml_output", "method": "add_simple_object"},
+
+      {"object": "ZCL_ABAPGIT_LOG", "class": "ltcl_test", "method": "merge_with_min_level"},
 
       {"object": "ZCL_ABAPGIT_XML_INPUT", "class": "ltcl_xml", "method": "up"},
       {"object": "ZCL_ABAPGIT_XML_INPUT", "class": "ltcl_xml", "method": "empty"},
