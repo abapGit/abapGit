@@ -234,7 +234,7 @@
       {"object": "ZCL_ABAPGIT_XML_OUTPUT", "class": "ltcl_xml_output", "method": "render_xml_string"},
       {"object": "ZCL_ABAPGIT_XML_OUTPUT", "class": "ltcl_xml_output", "method": "add_simple_object"},
 
-      {"object": "ZCL_ABAPGIT_LOG", "class": "ltcl_test", "method": "merge_with_min_level"},
+      {"object": "ZCL_ABAPGIT_LOG", "class": "ltcl_test", "method": "merge_with_min_level", "note": "https://github.com/abaplint/transpiler/issues/464"},
 
       {"object": "ZCL_ABAPGIT_XML_INPUT", "class": "ltcl_xml", "method": "up"},
       {"object": "ZCL_ABAPGIT_XML_INPUT", "class": "ltcl_xml", "method": "empty"},
