@@ -18,7 +18,7 @@ CLASS ltcl_xml DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
     METHODS:
       space_leading_trailing FOR TESTING
         RAISING zcx_abapgit_exception,
-      bad_xml_without_gui_raises_exc FOR TESTING RAISING cx_static_check.
+      bad_xml_raises_exc FOR TESTING RAISING cx_static_check.
 
     METHODS:
       parse_xml
@@ -90,14 +90,11 @@ CLASS ltcl_xml IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD bad_xml_without_gui_raises_exc.
+  METHOD bad_xml_raises_exc.
     DATA: lv_xml TYPE string,
           lo_error TYPE REF TO zcx_abapgit_exception,
           lv_text TYPE string.
 
-    IF zcl_abapgit_ui_factory=>get_gui_functions( )->gui_is_available( ) = abap_true.
-      RETURN. "Can only test with ADT or in background
-    ENDIF.
 
     lv_xml = |<?xml version="1.0"?>|
           && |<{ mo_xml->c_abapgit_tag } { mo_xml->c_attr_version }="{ zif_abapgit_version=>gc_xml_version }">|
