@@ -13,6 +13,7 @@
     "zcl_abapgit_path",
     "zcl_abapgit_progress",
     "zcl_abapgit_string_map",
+    "zcl_abapgit_xml.clas",
     "zcl_abapgit_gui_utils",
     "zcl_abapgit_gui_html_processor",
     "zcl_abapgit_gui_css_processor",
@@ -215,6 +216,9 @@
       {"object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR", "class": "ltcl_html_processor_test", "method": "process_no_css"},
       {"object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR", "class": "ltcl_html_processor_test", "method": "process_fails"},
       {"object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR", "class": "ltcl_html_processor_test", "method": "find_head_closing_tag"},
+
+      {"object": "ZCL_ABAPGIT_XML", "class": "ltcl_xml", "method": "space_leading_trailing"},
+      {"object": "ZCL_ABAPGIT_XML", "class": "ltcl_xml", "method": "bad_xml_raises_exc"},
 
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "ignore"},
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "identity"}
