@@ -253,9 +253,6 @@
       {"object": "ZCL_ABAPGIT_GIT_URL", "class": "ltcl_repo_online", "method": "get_default_commit_display_url"},
       {"object": "ZCL_ABAPGIT_GIT_URL", "class": "ltcl_repo_online", "method": "test_repo_commit_show_urls"},
 
-      {"object": "ZCL_ABAPGIT_GUI_CHUNK_LIB", "class": "ltcl_normalize_program_name", "method": "class_", "note": "https://github.com/abaplint/abaplint/pull/2065"},
-      {"object": "ZCL_ABAPGIT_GUI_CHUNK_LIB", "class": "ltcl_normalize_program_name", "method": "program", "note": "https://github.com/abaplint/abaplint/pull/2065"},
-
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "ignore"},
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "identity"}
     ]
