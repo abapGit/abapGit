@@ -17,6 +17,8 @@
     "zcl_abapgit_gui_asset_manager",
     "zcl_abapgit_gui_buttons",
     "zcl_abapgit_gui_component",
+    "zcl_abapgit_gui_chunk_lib",
+    "zcl_abapgit_git_url",
     "zcl_abapgit_gui_css_processor",
     "zcl_abapgit_gui_event",
     "zcl_abapgit_gui_functions",
@@ -247,6 +249,12 @@
       {"object": "ZCL_ABAPGIT_XML_INPUT", "class": "ltcl_xml", "method": "down"},
 
       {"object": "ZCL_ABAPGIT_GIT_TRANSPORT", "class": "ltcl_git_transport", "method": "flush_error"},
+
+      {"object": "ZCL_ABAPGIT_GIT_URL", "class": "ltcl_repo_online", "method": "get_default_commit_display_url"},
+      {"object": "ZCL_ABAPGIT_GIT_URL", "class": "ltcl_repo_online", "method": "test_repo_commit_show_urls"},
+
+      {"object": "ZCL_ABAPGIT_GUI_CHUNK_LIB", "class": "ltcl_normalize_program_name", "method": "class_", "note": "https://github.com/abaplint/abaplint/pull/2065"},
+      {"object": "ZCL_ABAPGIT_GUI_CHUNK_LIB", "class": "ltcl_normalize_program_name", "method": "program", "note": "https://github.com/abaplint/abaplint/pull/2065"},
 
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "ignore"},
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "identity"}
