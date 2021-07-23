@@ -244,8 +244,6 @@
       {"object": "ZCL_ABAPGIT_GIT_COMMIT", "class": "ltcl_test", "method": "parse_commits"},
       {"object": "ZCL_ABAPGIT_GIT_COMMIT", "class": "ltcl_test", "method": "check_author_regex"},
 
-      {"object": "ZCL_ABAPGIT_LOG", "class": "ltcl_test", "method": "merge_with_min_level", "note": "https://github.com/abaplint/transpiler/issues/464"},
-
       {"object": "ZCL_ABAPGIT_XML_INPUT", "class": "ltcl_xml", "method": "up"},
       {"object": "ZCL_ABAPGIT_XML_INPUT", "class": "ltcl_xml", "method": "empty"},
       {"object": "ZCL_ABAPGIT_XML_INPUT", "class": "ltcl_xml", "method": "down"},
