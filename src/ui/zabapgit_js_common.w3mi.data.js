@@ -283,9 +283,9 @@ RepoOverViewHelper.prototype.onPageLoad = function () {
   }
 };
 
-RepoOverViewHelper.prototype.registerKeyboardShortcuts = function () {
+RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
   var self = this;
-  document.addEventListener("keypress", function (event) {
+  document.addEventListener("keypress", function(event) {
     if (document.activeElement.id === "filter") {
       return;
     }
@@ -294,15 +294,14 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function () {
     var selected = document.querySelector(".repo.selected");
     var indexOfSelected = rows.indexOf(selected);
 
-    if (keycode == 13) {
-      // "enter" to open
+    if (keycode == 13 && // "enter" to open
+       document.activeElement.tagName.toLowerCase() != "input") { // prevent opening if command field has focus
       self.openSelectedRepo();
-    }
-    else if (keycode == 44 && indexOfSelected > 0) {
-      // "<" for previous
+    } else if ((keycode == 52 || keycode == 100) && indexOfSelected > 0) {
+      // "4" for previous
       self.selectRowByIndex(indexOfSelected - 1);
-    } else if (keycode == 46 && indexOfSelected < rows.length - 1) {
-      // ">" for next
+    } else if ((keycode == 54 || keycode == 102) && indexOfSelected < rows.length - 1) {
+      // "6" for next
       self.selectRowByIndex(indexOfSelected + 1);
     }
   });
@@ -1485,7 +1484,7 @@ LinkHints.prototype.hintActivate = function (hint) {
     this.activatedDropdown.classList.toggle("force-nav-hover");
     hint.parent.focus();
   } else if (hint.parent.type === "checkbox") {
-    hint.parent.checked = !hint.parent.checked;
+    this.toggleCheckbox(hint);
   } else if (hint.parent.type === "submit") {
     hint.parent.click();
   } else if (hint.parent.nodeName === "INPUT" || hint.parent.nodeName === "TEXTAREA") {
@@ -1493,6 +1492,19 @@ LinkHints.prototype.hintActivate = function (hint) {
   } else {
     hint.parent.click();
     if (this.activatedDropdown) this.closeActivatedDropdown();
+  }
+};
+
+LinkHints.prototype.toggleCheckbox = function (hint) {
+  // ensures that onclick handler is executed
+  // https://stackoverflow.com/questions/41981509/trigger-an-event-when-a-checkbox-is-changed-programmatically-via-javascript
+  var event = document.createEvent("HTMLEvents");
+  var checked = hint.parent.checked;
+  event.initEvent("click", false, true);
+  hint.parent.parentElement.dispatchEvent(event);
+  if (checked === hint.parent.checked) {
+    // fallback if no handler is registered
+    hint.parent.checked = !hint.parent.checked;
   }
 };
 

@@ -126,9 +126,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
         rv_user = li_object_data_model->get_changed_by( ).
 
       CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise(
-            iv_text     = lx_error->get_text( )
-            ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
   ENDMETHOD.
@@ -150,9 +148,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
             transport_request = lv_transport_request.
 
       CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise(
-            iv_text     = lx_error->get_text( )
-            ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
   ENDMETHOD.
 
@@ -260,9 +256,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
         corr_insert( iv_package ).
 
       CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise(
-            iv_text     = lx_error->get_text( )
-            ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
@@ -389,9 +383,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
 
 
       CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise(
-            iv_text     = lx_error->get_text( )
-            ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
   ENDMETHOD.
@@ -494,9 +486,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
             result      = mo_object_operator.
 
       CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise(
-            iv_text     = lx_error->get_text( )
-            ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
     ro_object_operator = mo_object_operator.

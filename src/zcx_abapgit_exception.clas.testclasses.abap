@@ -51,8 +51,7 @@ CLASS ltcl_test IMPLEMENTATION.
             classname  = 'CLASS'
             methodname = 'METHOD'.
 
-        zcx_abapgit_exception=>raise( iv_text     = lx_previous->get_text( )
-                                      ix_previous = lx_previous ).
+        zcx_abapgit_exception=>raise_with_text( lx_previous ).
         cl_abap_unit_assert=>fail( ).
 
       CATCH zcx_abapgit_exception INTO lx_ex.

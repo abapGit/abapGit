@@ -130,8 +130,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
         li_proxy_object->dequeue( ).
 
       CATCH cx_proxy_fault INTO lx_proxy_fault.
-        zcx_abapgit_exception=>raise( iv_text     = |{ lx_proxy_fault->get_text( ) }|
-                                      ix_previous = lx_proxy_fault ).
+        zcx_abapgit_exception=>raise_with_text( lx_proxy_fault ).
     ENDTRY.
 
   ENDMETHOD.
