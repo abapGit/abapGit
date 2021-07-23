@@ -4,9 +4,7 @@ on: [push]
 
 jobs:
   unit:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
       with:
@@ -18,3 +16,17 @@ jobs:
       run: |
         npm install
         npm run unit
+  integration:
+    needs: unit
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 2
+    - uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+    - name: npm run integration
+      run: |
+        npm install
+        npm run integration
