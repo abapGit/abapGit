@@ -1,23 +1,5 @@
-CLASS zcl_abapgit_integration_git DEFINITION PUBLIC FINAL CREATE PUBLIC
-  FOR TESTING DURATION LONG RISK LEVEL HARMLESS.
-
-  PUBLIC SECTION.
-    METHODS test FOR TESTING.
-
+CLASS zcl_abapgit_integration_git DEFINITION PUBLIC FINAL CREATE PUBLIC.
 ENDCLASS.
 
 CLASS zcl_abapgit_integration_git IMPLEMENTATION.
-
-  METHOD test.
-
-    DATA lv_bar TYPE i.
-
-    lv_bar = 2.
-
-    cl_abap_unit_assert=>assert_equals(
-      act = lv_bar
-      exp = 2 ).
-
-  ENDMETHOD.
-  
 ENDCLASS.
