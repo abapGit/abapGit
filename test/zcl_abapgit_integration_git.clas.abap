@@ -1,4 +1,4 @@
-CLASS zcl_abapgit_integration_test DEFINITION PUBLIC FINAL CREATE PUBLIC
+CLASS zcl_abapgit_integration_git DEFINITION PUBLIC FINAL CREATE PUBLIC
   FOR TESTING DURATION LONG RISK LEVEL HARMLESS.
 
   PUBLIC SECTION.
@@ -6,7 +6,7 @@ CLASS zcl_abapgit_integration_test DEFINITION PUBLIC FINAL CREATE PUBLIC
 
 ENDCLASS.
 
-CLASS zcl_abapgit_integration_test IMPLEMENTATION.
+CLASS zcl_abapgit_integration_git IMPLEMENTATION.
 
   METHOD test.
 
