@@ -12,6 +12,7 @@
     "zcl_abapgit_git_commit",
     "zcl_abapgit_git_pack",
     "zcl_abapgit_git_tag",
+    "zcl_abapgit_gui.clas",
     "zcl_abapgit_git_transport",
     "zcl_abapgit_git_url",
     "zcl_abapgit_git_utils",
