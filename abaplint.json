@@ -1,6 +1,6 @@
 {
   "global": {
-    "files": "/src/**/*.*",
+    "files": "/{test,src}/**/*.*",
     "skipGeneratedGatewayClasses": true,
     "skipGeneratedPersistentClasses": true,
     "skipGeneratedFunctionGroups": true
@@ -207,7 +207,9 @@
     "definitions_top": {
       "exclude": ["/json/"]
     },
-    "description_empty": true,
+    "description_empty": {
+      "exclude": ["/test/"]
+    },
     "double_space": false,
     "empty_line_in_statement": {
       "allowChained": true

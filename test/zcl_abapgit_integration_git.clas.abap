@@ -1,0 +1,5 @@
+CLASS zcl_abapgit_integration_git DEFINITION PUBLIC FINAL CREATE PUBLIC.
+ENDCLASS.
+
+CLASS zcl_abapgit_integration_git IMPLEMENTATION.
+ENDCLASS.

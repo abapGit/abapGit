@@ -4,7 +4,8 @@
     "test": "npm run eslint && npm run abaplint",
     "merge": "abapmerge -f src/zabapgit.prog.abap -c zabapgit_standalone > zabapgit.abap",
     "merge.ci": "cp zabapgit.abap ci/zabapgit_standalone.prog.abap && cd ci && abaplint --format codeframe && cd ..",
-    "unit": "rm -rf output && abap_transpile && echo RUNNING && node output/index.mjs",
+    "unit": "rm -rf output && abap_transpile test/abap_transpile.json && echo RUNNING && node output/index.mjs",
+    "integration": "rm -rf output && cp test/abap_transpile.json test/abap_transpile_int.json && sed -i 's/zcl_abapgit_auth/zcl_abapgit_integration_git/g' test/abap_transpile_int.json && abap_transpile test/abap_transpile_int.json && echo RUNNING && node output/index.mjs",
     "abaplint": "abaplint --format codeframe",
     "eslint": "eslint src",
     "docker-build": "docker-compose -f test/docker-compose.yml build",
@@ -17,9 +18,9 @@
     "url": "git+https://github.com/abapGit/abapGit.git"
   },
   "devDependencies": {
-    "@abaplint/cli": "^2.76.3",
-    "@abaplint/transpiler-cli": "^1.4.0",
-    "@abaplint/runtime": "^1.4.0",
+    "@abaplint/cli": "^2.76.5",
+    "@abaplint/transpiler-cli": "^1.4.8",
+    "@abaplint/runtime": "^1.4.8",
     "abapmerge": "^0.14.3",
     "eslint": "^7.31.0"
   }
