@@ -12,7 +12,7 @@ Run locally on Node.js 14+ via `npm run unit`
 
 Runs automatically for every push, not a required status check
 
-## Integration Testing - Git
+## Integration Testing - Git Protocol
 
 `ZCL_ABAPGIT_INTEGRATION_GIT`
 
