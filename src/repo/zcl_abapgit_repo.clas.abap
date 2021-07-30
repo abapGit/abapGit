@@ -217,7 +217,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 
   METHOD bind_listener.
@@ -237,7 +237,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
        sy-batch = abap_false AND
        sy-cprog = lc_abapgit_prog.
 
-      IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_show_default_repo( ) = abap_false.
+      IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_show_default_repo( ) = abap_false.
         MESSAGE 'abapGit was updated and will restart itself' TYPE 'I'.
       ENDIF.
 

@@ -119,7 +119,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_serialize IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
 
   METHOD add_apack.
@@ -248,7 +248,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     DATA lo_settings TYPE REF TO zcl_abapgit_settings.
 
-    lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
+    lo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
 
     IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true
         OR lo_settings->get_parallel_proc_disabled( ) = abap_true.

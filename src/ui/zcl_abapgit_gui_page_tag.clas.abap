@@ -263,7 +263,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
                                        iv_label = 'tagger e-mail'
                                        iv_value = lv_email ) ).
 
-      lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
+      lo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
 
       lv_s_param = lo_settings->get_commitmsg_comment_length( ).
 

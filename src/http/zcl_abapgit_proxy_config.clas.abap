@@ -22,6 +22,7 @@ CLASS zcl_abapgit_proxy_config DEFINITION PUBLIC FINAL CREATE PUBLIC.
         RETURNING
           VALUE(rv_auth) TYPE abap_bool.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: mo_settings TYPE REF TO zcl_abapgit_settings,
           mi_exit     TYPE REF TO zif_abapgit_exit.
@@ -37,12 +38,26 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_proxy_config IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_PROXY_CONFIG IMPLEMENTATION.
+
+
+  METHOD bypass_proxy.
+
+    DATA lt_proxy_bypass TYPE zif_abapgit_definitions=>ty_range_proxy_bypass_url.
+
+    lt_proxy_bypass = mo_settings->get_proxy_bypass( ).
+
+    IF lt_proxy_bypass IS NOT INITIAL
+    AND iv_repo_url IN lt_proxy_bypass.
+      rv_bypass_proxy = abap_true.
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD constructor.
 
-    mo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
+    mo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
 
     mi_exit = zcl_abapgit_exit=>get_instance( ).
 
@@ -94,19 +109,4 @@ CLASS zcl_abapgit_proxy_config IMPLEMENTATION.
         cv_proxy_url = rv_proxy_url ).
 
   ENDMETHOD.
-
-
-  METHOD bypass_proxy.
-
-    DATA lt_proxy_bypass TYPE zif_abapgit_definitions=>ty_range_proxy_bypass_url.
-
-    lt_proxy_bypass = mo_settings->get_proxy_bypass( ).
-
-    IF lt_proxy_bypass IS NOT INITIAL
-    AND iv_repo_url IN lt_proxy_bypass.
-      rv_bypass_proxy = abap_true.
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.

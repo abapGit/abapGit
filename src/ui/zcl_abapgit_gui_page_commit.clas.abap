@@ -83,7 +83,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -102,7 +102,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
           lt_stage    TYPE zif_abapgit_definitions=>ty_stage_tt.
 
     " Get setting for default comment text
-    lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
+    lo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
 
     rv_text = lo_settings->get_commitmsg_comment_default( ).
 
@@ -277,7 +277,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
                                      iv_label = 'Committer E-mail'
                                      iv_value = lv_email ) ).
 
-    lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
+    lo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
 
     lv_s_param = lo_settings->get_commitmsg_comment_length( ).
 

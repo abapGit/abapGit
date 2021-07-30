@@ -77,7 +77,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_GLOB IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -201,7 +201,7 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
   METHOD read_settings.
 
     " Get settings from DB
-    mo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
+    mo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
 
     " Proxy
     mo_form_data->set(
@@ -270,7 +270,7 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
   METHOD save_settings.
 
     DATA:
-      lo_persistence TYPE REF TO zcl_abapgit_persist_settings,
+      li_persistence TYPE REF TO zif_abapgit_persist_settings,
       lv_value       TYPE i.
 
     " Proxy
@@ -294,8 +294,8 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
     ENDIF.
 
     " Store in DB
-    lo_persistence = zcl_abapgit_persist_settings=>get_instance( ).
-    lo_persistence->modify( mo_settings ).
+    li_persistence = zcl_abapgit_persist_factory=>get_settings( ).
+    li_persistence->modify( mo_settings ).
 
     COMMIT WORK AND WAIT.
 

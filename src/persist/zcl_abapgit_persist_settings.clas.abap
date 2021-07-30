@@ -1,43 +1,25 @@
 CLASS zcl_abapgit_persist_settings DEFINITION
   PUBLIC
-  CREATE PRIVATE .
+  CREATE PRIVATE
+
+  GLOBAL FRIENDS zcl_abapgit_persist_factory .
 
   PUBLIC SECTION.
 
-    METHODS modify
-      IMPORTING
-        !io_settings TYPE REF TO zcl_abapgit_settings
-      RAISING
-        zcx_abapgit_exception .
-    METHODS read
-      RETURNING
-        VALUE(ro_settings) TYPE REF TO zcl_abapgit_settings .
-    CLASS-METHODS get_instance
-      RETURNING
-        VALUE(ro_settings) TYPE REF TO zcl_abapgit_persist_settings .
+    INTERFACES zif_abapgit_persist_settings .
   PROTECTED SECTION.
   PRIVATE SECTION.
-
     DATA mo_settings TYPE REF TO zcl_abapgit_settings .
-    CLASS-DATA go_persist TYPE REF TO zcl_abapgit_persist_settings .
+
+    CLASS-DATA gi_persist TYPE REF TO zif_abapgit_persist_settings .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_persist_settings IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_PERSIST_SETTINGS IMPLEMENTATION.
 
 
-  METHOD get_instance.
-
-    IF go_persist IS NOT BOUND.
-      CREATE OBJECT go_persist.
-    ENDIF.
-    ro_settings = go_persist.
-
-  ENDMETHOD.
-
-
-  METHOD modify.
+  METHOD zif_abapgit_persist_settings~modify.
 
     DATA: lv_settings      TYPE string,
           ls_user_settings TYPE zif_abapgit_definitions=>ty_s_user_settings.
@@ -63,7 +45,7 @@ CLASS zcl_abapgit_persist_settings IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD read.
+  METHOD zif_abapgit_persist_settings~read.
 
     IF mo_settings IS BOUND.
       " Return Buffered Settings
