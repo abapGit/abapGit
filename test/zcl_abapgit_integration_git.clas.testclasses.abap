@@ -1,9 +1,9 @@
-CLASS ltcl_memory_settings DEFINITION.
+CLASS lcl_memory_settings DEFINITION.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_persist_settings.
 ENDCLASS.
 
-CLASS ltcl_memory_settings IMPLEMENTATION.
+CLASS lcl_memory_settings IMPLEMENTATION.
   METHOD zif_abapgit_persist_settings~modify.
     RETURN.
   ENDMETHOD.
@@ -27,7 +27,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
     CONSTANTS lc_url TYPE string VALUE 'https://github.com/abapGit/abapGit.git'.
     DATA lv_ref TYPE string.
-    DATA li_memory TYPE REF TO ltcl_memory_settings.
+    DATA li_memory TYPE REF TO lcl_memory_settings.
 
     CREATE OBJECT li_memory.
     zcl_abapgit_persist_injector=>set_settings( li_memory ).
