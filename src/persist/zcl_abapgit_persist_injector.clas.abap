@@ -9,7 +9,7 @@ CLASS zcl_abapgit_persist_injector DEFINITION
       IMPORTING
         !ii_repo TYPE REF TO zif_abapgit_persist_repo .
 
-    METHODS set_setttings
+    METHODS set_settings
       IMPORTING
         !ii_settings TYPE REF TO zif_abapgit_persist_settings .
 
@@ -31,7 +31,7 @@ CLASS ZCL_ABAPGIT_PERSIST_INJECTOR IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD set_setttings.
+  METHOD set_settings.
 
     zcl_abapgit_persist_factory=>gi_settings = ii_settings.
 
