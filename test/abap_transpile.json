@@ -42,6 +42,8 @@
     "zcl_abapgit_password_dialog",
     "zcl_abapgit_path",
     "zcl_abapgit_persist_background",
+    "zcl_abapgit_persist_factory",
+    "zcl_abapgit_persist_injector",
     "zcl_abapgit_persist_settings",
     "zcl_abapgit_persistence_db",
     "zcl_abapgit_persistence_user",
