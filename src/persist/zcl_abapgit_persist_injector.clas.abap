@@ -9,7 +9,7 @@ CLASS zcl_abapgit_persist_injector DEFINITION
       IMPORTING
         !ii_repo TYPE REF TO zif_abapgit_persist_repo .
 
-    METHODS set_settings
+    CLASS-METHODS set_settings
       IMPORTING
         !ii_settings TYPE REF TO zif_abapgit_persist_settings .
 
