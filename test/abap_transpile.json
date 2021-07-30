@@ -95,6 +95,7 @@
     "zif_abapgit_log",
     "zif_abapgit_merge",
     "zif_abapgit_persist_repo",
+    "zif_abapgit_persist_settings",
     "zif_abapgit_persist_user",
     "zif_abapgit_persistence",
     "zif_abapgit_popups",
