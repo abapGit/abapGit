@@ -1,7 +1,6 @@
 CLASS zcl_abapgit_persist_settings DEFINITION
   PUBLIC
   CREATE PRIVATE
-
   GLOBAL FRIENDS zcl_abapgit_persist_factory .
 
   PUBLIC SECTION.
