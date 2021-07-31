@@ -252,6 +252,8 @@
 
       {"object": "ZCL_ABAPGIT_GIT_TRANSPORT", "class": "ltcl_git_transport", "method": "flush_error"},
 
+      {"object": "ZCL_ABAPGIT_GIT_BRANCH_LIST", "class": "ltcl_parse", "method": "parse_raw"},
+
       {"object": "ZCL_ABAPGIT_GIT_URL", "class": "ltcl_repo_online", "method": "get_default_commit_display_url"},
       {"object": "ZCL_ABAPGIT_GIT_URL", "class": "ltcl_repo_online", "method": "test_repo_commit_show_urls"},
 
