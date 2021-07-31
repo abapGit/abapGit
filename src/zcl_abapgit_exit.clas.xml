@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_EXIT</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Default exit</DESCRIPT>
+    <DESCRIPT>abapGit - Default exit</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
