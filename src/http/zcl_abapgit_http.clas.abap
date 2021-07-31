@@ -48,7 +48,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
+CLASS zcl_abapgit_http IMPLEMENTATION.
 
 
   METHOD acquire_login_details.
@@ -231,7 +231,7 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
 
 
-    lv_host = cl_http_server=>get_location( IMPORTING host = lv_host ).
+    cl_http_server=>get_location( IMPORTING host = lv_host ).
     APPEND lv_host TO lt_list.
 
     APPEND 'localhost' TO lt_list.
