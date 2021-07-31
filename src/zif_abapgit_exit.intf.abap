@@ -3,8 +3,6 @@ INTERFACE zif_abapgit_exit
 
 
   TYPES:
-    ty_icm_sinfo2_tt TYPE STANDARD TABLE OF icm_sinfo2 WITH DEFAULT KEY .
-  TYPES:
     BEGIN OF ty_ci_repo,
       name      TYPE string,
       clone_url TYPE string,
@@ -27,7 +25,7 @@ INTERFACE zif_abapgit_exit
       VALUE(rv_allowed) TYPE abap_bool .
   METHODS change_local_host
     CHANGING
-      !ct_hosts TYPE ty_icm_sinfo2_tt .
+      !ct_hosts TYPE zif_abapgit_definitions=>ty_string_tt .
   METHODS change_proxy_authentication
     IMPORTING
       !iv_repo_url             TYPE csequence

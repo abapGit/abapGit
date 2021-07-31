@@ -225,33 +225,23 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
   METHOD is_local_system.
 
     DATA: lv_host TYPE string,
-          lt_list TYPE zif_abapgit_exit=>ty_icm_sinfo2_tt,
+          lt_list TYPE zif_abapgit_definitions=>ty_string_tt,
           li_exit TYPE REF TO zif_abapgit_exit.
 
     FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
 
 
-    CALL FUNCTION 'ICM_GET_INFO2'
-      TABLES
-        servlist    = lt_list
-      EXCEPTIONS
-        icm_error   = 1
-        icm_timeout = 2
-        OTHERS      = 3.
-    IF sy-subrc <> 0.
-      RETURN.
-    ENDIF.
+    lv_host = cl_http_server=>get_location( IMPORTING host = lv_host ).
+    APPEND lv_host TO lt_list.
 
-    APPEND INITIAL LINE TO lt_list ASSIGNING <ls_list>.
-    <ls_list>-hostname = 'localhost'.
+    APPEND 'localhost' TO lt_list.
 
     li_exit = zcl_abapgit_exit=>get_instance( ).
     li_exit->change_local_host( CHANGING ct_hosts = lt_list ).
 
-    FIND REGEX 'https?://([^/^:]*)' IN iv_url
-      SUBMATCHES lv_host.
+    FIND REGEX 'https?://([^/^:]*)' IN iv_url SUBMATCHES lv_host.
 
-    READ TABLE lt_list WITH KEY hostname = lv_host TRANSPORTING NO FIELDS.
+    READ TABLE lt_list WITH KEY table_line = lv_host TRANSPORTING NO FIELDS.
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
