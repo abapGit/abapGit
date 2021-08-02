@@ -143,7 +143,7 @@ CLASS lcl_json_parser IMPLEMENTATION.
         rt_json_tree = _parse( iv_json ).
       CATCH cx_sxml_error INTO lx_sxml.
         zcx_abapgit_ajson_error=>raise(
-        iv_msg      = |Json parsing error (SXML): { lx_sxml->get_text( ) }|
+         iv_msg      = |Json parsing error (SXML): { lx_sxml->get_text( ) }|
         iv_location = '@PARSER' ).
     ENDTRY.
   ENDMETHOD.
