@@ -10,6 +10,7 @@ CLASS lcl_nodes_helper DEFINITION FINAL.
     METHODS add
       IMPORTING
         iv_str TYPE string.
+    METHODS clear.
     METHODS sorted
       RETURNING
         VALUE(rt_nodes) TYPE zif_abapgit_ajson=>ty_nodes_ts.
@@ -47,6 +48,10 @@ CLASS lcl_nodes_helper IMPLEMENTATION.
   METHOD sorted.
     rt_nodes = mt_nodes.
   ENDMETHOD.
+
+  METHOD clear.
+    CLEAR mt_nodes.
+  ENDMETHOD.
 ENDCLASS.
 
 **********************************************************************
@@ -79,6 +84,7 @@ CLASS ltcl_parser_test DEFINITION FINAL
     METHODS parse_false FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS parse_null FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS parse_date FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS parse_bare_values FOR TESTING RAISING zcx_abapgit_ajson_error.
 
 ENDCLASS.
 
@@ -87,6 +93,59 @@ CLASS ltcl_parser_test IMPLEMENTATION.
   METHOD setup.
     CREATE OBJECT mo_cut.
     CREATE OBJECT mo_nodes.
+  ENDMETHOD.
+
+  METHOD parse_bare_values.
+
+    DATA lt_act TYPE zif_abapgit_ajson=>ty_nodes_tt.
+
+    mo_nodes->add( ' | |str |abc | |0' ).
+    lt_act = mo_cut->parse( '"abc"' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_act
+      exp = mo_nodes->mt_nodes ).
+
+    mo_nodes->clear( ).
+    mo_nodes->add( ' | |num |-123 | |0' ).
+    lt_act = mo_cut->parse( '-123' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_act
+      exp = mo_nodes->mt_nodes ).
+
+    mo_nodes->clear( ).
+    mo_nodes->add( ' | |bool |true | |0' ).
+    lt_act = mo_cut->parse( 'true' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_act
+      exp = mo_nodes->mt_nodes ).
+
+    mo_nodes->clear( ).
+    mo_nodes->add( ' | |bool |false | |0' ).
+    lt_act = mo_cut->parse( 'false' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_act
+      exp = mo_nodes->mt_nodes ).
+
+    mo_nodes->clear( ).
+    mo_nodes->add( ' | |null | | |0' ).
+    lt_act = mo_cut->parse( 'null' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_act
+      exp = mo_nodes->mt_nodes ).
+
+    DATA lx_err TYPE REF TO zcx_abapgit_ajson_error.
+    TRY.
+        lt_act = mo_cut->parse( 'abc' ).
+        cl_abap_unit_assert=>fail( 'Parsing of string w/o quotes must fail (spec)' ).
+      CATCH zcx_abapgit_ajson_error INTO lx_err.
+        cl_abap_unit_assert=>assert_char_cp(
+        act = lx_err->get_text( )
+        exp = '*parsing error*' ).
+        cl_abap_unit_assert=>assert_char_cp(
+        act = lx_err->location
+        exp = '@PARSER' ).
+    ENDTRY.
+
   ENDMETHOD.
 
   METHOD parse_string.

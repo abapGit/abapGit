@@ -33,4 +33,4 @@ jobs:
           Automatic update from mirror
           https://github.com/abapGit/ajson_mirror
 
-          Manually close and reopen the pull request to trigger CI
+          Make manual change to trigger CI
