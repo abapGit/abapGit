@@ -35,7 +35,8 @@ CLASS ZCL_ABAPGIT_GIT_UTILS IMPLEMENTATION.
 
   METHOD get_null.
 
-    DATA: lv_x TYPE x LENGTH 2 VALUE '0000'.
+* must be length 4, or it gives a syntax error on lower versions
+    DATA: lv_x TYPE x LENGTH 4 VALUE '00000000'.
     FIELD-SYMBOLS <lv_y> TYPE c.
 
     ASSIGN lv_x TO <lv_y> CASTING.
