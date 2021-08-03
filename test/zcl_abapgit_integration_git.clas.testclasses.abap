@@ -28,6 +28,8 @@ CLASS ltcl_test IMPLEMENTATION.
     CONSTANTS lc_url TYPE string VALUE 'https://github.com/abapGit/abapGit.git'.
     DATA lv_ref TYPE string.
     DATA li_memory TYPE REF TO lcl_memory_settings.
+* todo    DATA ls_pull TYPE zcl_abapgit_git_porcelain=>ty_pull_result.
+
 
     CREATE OBJECT li_memory.
     zcl_abapgit_persist_injector=>set_settings( li_memory ).
@@ -38,14 +40,9 @@ CLASS ltcl_test IMPLEMENTATION.
        act = lv_ref
        exp = 'refs/heads/main' ).
 
-**    TRY.
-*    zcl_abapgit_git_porcelain=>pull_by_branch(
-*        iv_url          =
-*        iv_branch_name  = 'refs/head/main'
-**        iv_deepen_level = 1
-*           ).
-**      CATCH zcx_abapgit_exception.
-**    ENDTRY.
+* todo   ls_pull = zcl_abapgit_git_porcelain=>pull_by_branch(
+*      iv_url          = lc_url
+*      iv_branch_name  = lv_ref ).
 
   ENDMETHOD.
 
