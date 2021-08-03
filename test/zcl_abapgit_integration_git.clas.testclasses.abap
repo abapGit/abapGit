@@ -37,8 +37,8 @@ CLASS ltcl_test IMPLEMENTATION.
     lv_ref = zcl_abapgit_git_transport=>branches( lc_url )->get_head_symref( ).
 
     cl_abap_unit_assert=>assert_equals(
-       act = lv_ref
-       exp = 'refs/heads/main' ).
+      act = lv_ref
+      exp = 'refs/heads/main' ).
 
     ls_pull = zcl_abapgit_git_porcelain=>pull_by_branch(
       iv_url          = lc_url
