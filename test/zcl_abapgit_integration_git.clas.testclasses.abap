@@ -32,11 +32,11 @@ CLASS ltcl_test IMPLEMENTATION.
     CREATE OBJECT li_memory.
     zcl_abapgit_persist_injector=>set_settings( li_memory ).
 
-    " abc lv_ref = zcl_abapgit_git_transport=>branches( lc_url )->get_head_symref( ).
+    lv_ref = zcl_abapgit_git_transport=>branches( lc_url )->get_head_symref( ).
 
-    " abc cl_abap_unit_assert=>assert_equals(
-    "   act = lv_ref
-    "   exp = 'refs/heads/main' ).
+    cl_abap_unit_assert=>assert_equals(
+       act = lv_ref
+       exp = 'refs/heads/main' ).
 
 **    TRY.
 *    zcl_abapgit_git_porcelain=>pull_by_branch(
