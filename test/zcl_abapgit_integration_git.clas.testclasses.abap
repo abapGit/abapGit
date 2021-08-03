@@ -25,10 +25,10 @@ CLASS ltcl_test IMPLEMENTATION.
 
   METHOD test01.
 
-    CONSTANTS lc_url TYPE string VALUE 'https://github.com/abapGit/abapGit.git'.
+    CONSTANTS lc_url TYPE string VALUE 'https://github.com/larshp/Empty.git'.
     DATA lv_ref TYPE string.
     DATA li_memory TYPE REF TO lcl_memory_settings.
-* todo    DATA ls_pull TYPE zcl_abapgit_git_porcelain=>ty_pull_result.
+    DATA ls_pull TYPE zcl_abapgit_git_porcelain=>ty_pull_result.
 
 
     CREATE OBJECT li_memory.
@@ -40,9 +40,13 @@ CLASS ltcl_test IMPLEMENTATION.
        act = lv_ref
        exp = 'refs/heads/main' ).
 
-* todo   ls_pull = zcl_abapgit_git_porcelain=>pull_by_branch(
-*      iv_url          = lc_url
-*      iv_branch_name  = lv_ref ).
+    ls_pull = zcl_abapgit_git_porcelain=>pull_by_branch(
+      iv_url          = lc_url
+      iv_branch_name  = lv_ref ).
+         
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( ls_pull-files )
+      exp = 3 ).
 
   ENDMETHOD.
 
