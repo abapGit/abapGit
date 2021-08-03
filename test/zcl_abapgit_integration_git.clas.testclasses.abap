@@ -43,7 +43,7 @@ CLASS ltcl_test IMPLEMENTATION.
     ls_pull = zcl_abapgit_git_porcelain=>pull_by_branch(
       iv_url          = lc_url
       iv_branch_name  = lv_ref ).
-         
+
     cl_abap_unit_assert=>assert_equals(
       act = lines( ls_pull-files )
       exp = 3 ).
