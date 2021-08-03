@@ -130,7 +130,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
 
     " see SCI_LCL_DYNP_530 / HANDLE_DOUBLE_CLICK
 
-    lv_adt_jump_enabled = zcl_abapgit_persist_settings=>get_instance( )->read( )->get_adt_jump_enabled( ).
+    lv_adt_jump_enabled = zcl_abapgit_persist_factory=>get_settings( )->read( )->get_adt_jump_enabled( ).
 
     TRY.
         IF lv_adt_jump_enabled = abap_true.

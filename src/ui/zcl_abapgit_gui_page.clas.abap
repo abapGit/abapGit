@@ -84,13 +84,13 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
 
   METHOD constructor.
 
     super->constructor( ).
-    mo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
+    mo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
     ms_control-page_layout = c_page_layout-centered.
 
   ENDMETHOD.

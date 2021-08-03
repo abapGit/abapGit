@@ -18,7 +18,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_ci_tests IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS_CI_TESTS IMPLEMENTATION.
 
 
   METHOD run.
@@ -65,7 +65,7 @@ CLASS zcl_abapgit_objects_ci_tests IMPLEMENTATION.
 
     " Objects will be created and deleted, do not run in customer system!
     " These tests may fail if you are locking the entries (e.g. the ZABAPGIT transaction is open)
-    IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_run_critical_tests( ) = abap_false.
+    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_run_critical_tests( ) = abap_false.
       RETURN.
     ENDIF.
 

@@ -67,7 +67,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
 
 
   METHOD activate.
@@ -203,7 +203,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
     IF gt_objects IS NOT INITIAL.
 
       IF zcl_abapgit_ui_factory=>get_gui_functions( )->gui_is_available( ) = abap_true.
-        IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_activate_wo_popup( ) = abap_true.
+        IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_activate_wo_popup( ) = abap_true.
           lv_popup = abap_false.
         ELSE.
           lv_popup = abap_true.

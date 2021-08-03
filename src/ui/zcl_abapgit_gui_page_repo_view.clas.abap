@@ -181,7 +181,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -594,7 +594,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         ms_control-page_menu = build_main_menu( ).
 
         " Read global settings to get max # of objects to be listed
-        lo_settings     = zcl_abapgit_persist_settings=>get_instance( )->read( ).
+        lo_settings     = zcl_abapgit_persist_factory=>get_settings( )->read( ).
         mv_max_lines    = lo_settings->get_max_lines( ).
         mv_max_setting  = mv_max_lines.
 

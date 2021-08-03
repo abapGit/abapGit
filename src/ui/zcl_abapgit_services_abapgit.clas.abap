@@ -213,7 +213,7 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
 
     check_sapgui( ).
 
-    IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_show_default_repo( ) = abap_false.
+    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_show_default_repo( ) = abap_false.
       " Don't show the last seen repo at startup
       zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( || ).
     ENDIF.
