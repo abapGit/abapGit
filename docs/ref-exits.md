@@ -60,7 +60,7 @@ Can be used for setting logon tickets eg. in connection with abapGitServer conne
 
 ### CHANGE_TADIR
 
-Can be used to skip certain objects, or force a different object setup than currently in TADIR ([Example](https://gist.github.com/larshp/cca0ce0ba65efcde5dfcae416b0484f7).
+Can be used to skip certain objects, or force a different object setup than currently in TADIR ([Example](https://gist.github.com/larshp/cca0ce0ba65efcde5dfcae416b0484f7)).
 
 ### GET_SSL_ID
 
