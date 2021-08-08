@@ -5,6 +5,8 @@
       "name": "All Unit Tests",
       "type": "pwa-node",
       "request": "launch",
+      "pauseForSourceMap": true,
+      "trace": false,
       "skipFiles": [
         "<node_internals>/**",
         "${workspaceFolder}/output/cl_*",
