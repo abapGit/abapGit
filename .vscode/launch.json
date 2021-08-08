@@ -8,6 +8,7 @@
       "skipFiles": [
         "<node_internals>/**",
         "${workspaceFolder}/output/cl_*",
+        "${workspaceFolder}/output/index.mjs",
         "${workspaceFolder}/node_modules/@abaplint/runtime/**"
       ],
       "program": "${workspaceFolder}/output/index.mjs",
