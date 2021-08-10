@@ -132,7 +132,6 @@
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_d"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_e"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_z"},
-      {"object": "ZCL_ABAPGIT_HASH",      "class": "ltcl_test", "method": "sha1_raw_invalid"},
       {"object": "ZCL_ABAPGIT_URL",       "class": "ltcl_test", "method": "repo_error"},
       {"object": "ZCL_ABAPGIT_URL",       "class": "ltcl_test", "method": "url_validate3"},
       {"object": "ZCL_ABAPGIT_HTML",      "class": "ltcl_html", "method": "style1",     "note": "ASSERT failed, ??"},
