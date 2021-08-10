@@ -151,7 +151,7 @@
       {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_settings",   "note": "skip, this changes database"},
       {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_repo_login", "note": "skip, this changes database"},
 
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_condensed"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_condensed", "note": "field sorting is wrong, probably sorted internal tables needed"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_indented"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "array_index",     "note": "sorted internal tables/arrays are required"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "item_order",      "note": "fix 'array_index' first"},
@@ -160,7 +160,6 @@
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "members",         "note": "sorted internal tables/arrays are required"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "slice"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "array_to_string_table"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "get_timestamp"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "find_loc",          "note": "exception: Target is not deep @/str"},
