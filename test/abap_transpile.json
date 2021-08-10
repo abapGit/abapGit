@@ -183,8 +183,8 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_parser_test", "method": "parse_bare_values"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "reader"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_index"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_simple"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_index", "note": "fs_table_.appendInitial is not a function"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_simple", "note": "fs_table_.appendInitial is not a function"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "stringify"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "item_order_integrated"},
 
@@ -216,7 +216,7 @@
 
       {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_file_exists", "note": "something wrong with the inheritance?"},
       {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_file_does_not_exist"},
-      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_empty_file"},
+      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_empty_file", "note": "Cannot read property 'register_asset' of undefined"},
       {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_no_variables"},
       {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_simple_variables"},
       {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_complex_variables"},
@@ -244,7 +244,6 @@
 
       {"object": "ZCL_ABAPGIT_GIT_TRANSPORT", "class": "ltcl_git_transport", "method": "flush_error"},
 
-      {"object": "ZCL_ABAPGIT_GIT_URL", "class": "ltcl_repo_online", "method": "get_default_commit_display_url"},
       {"object": "ZCL_ABAPGIT_GIT_URL", "class": "ltcl_repo_online", "method": "test_repo_commit_show_urls"},
 
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "ignore"},
