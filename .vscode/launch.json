@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "All Unit Tests",
+      "type": "pwa-node",
+      "request": "launch",
+      "pauseForSourceMap": true,
+      "trace": false,
+      "skipFiles": [
+        "<node_internals>/**",
+        "${workspaceFolder}/output/cl_*",
+        "${workspaceFolder}/output/index.mjs",
+        "${workspaceFolder}/node_modules/@abaplint/runtime/**"
+      ],
+      "program": "${workspaceFolder}/output/index.mjs",
+    }
+  ]
+}

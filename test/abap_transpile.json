@@ -117,6 +117,7 @@
   "output_folder": "output",
   "lib": "https://github.com/open-abap/open-abap",
   "write_unit_tests": true,
+  "write_source_map": true,
   "options": {
     "ignoreSyntaxCheck": false,
     "addFilenames": true,
@@ -131,11 +132,8 @@
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_d"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_e"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_z"},
-      {"object": "ZCL_ABAPGIT_HASH",      "class": "ltcl_test", "method": "sha1_raw_invalid"},
-      {"object": "ZCL_ABAPGIT_URL",       "class": "ltcl_test", "method": "repo_error"},
-      {"object": "ZCL_ABAPGIT_URL",       "class": "ltcl_test", "method": "url_validate3"},
       {"object": "ZCL_ABAPGIT_HTML",      "class": "ltcl_html", "method": "style1",     "note": "ASSERT failed, ??"},
-      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty1",   "note": "ASSERT failed, ??"},
+      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty1",   "note": "create_istream_string() implementation missing in open-abap"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty2"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty3"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "malformatted"},
@@ -148,14 +146,12 @@
       {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_utils_test", "method": "extract_author_data2"},
       {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_utils_test", "method": "extract_author_data9"},
 
-      {"object": "ZCL_ABAPGIT_AUTH", "class": "ltcl_test", "method": "default_is_allow",               "note": "dynamic instance creation started in transpiler"},
-
       {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_git_user",   "note": "skip, this changes database"},
       {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_repo_show",  "note": "skip, this changes database"},
       {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_settings",   "note": "skip, this changes database"},
       {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_repo_login", "note": "skip, this changes database"},
 
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_condensed"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_condensed", "note": "field sorting is wrong, probably sorted internal tables needed"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_indented"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "array_index",     "note": "sorted internal tables/arrays are required"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "item_order",      "note": "fix 'array_index' first"},
@@ -163,9 +159,7 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "escape",          "note": "ASSERT failed, ??"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "members",         "note": "sorted internal tables/arrays are required"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "slice"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "array_to_string_table"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "get_timestamp"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "get_timestamp",   "note": "https://github.com/sbcgua/ajson/pull/64"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "find_loc",          "note": "exception: Target is not deep @/str"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "find_loc_negative", "note": "ASSERT failed, ??"},
@@ -174,31 +168,23 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_negative"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_ajson"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_value"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "ignore_empty"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_obj"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_tab"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_tab_hashed"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "prove_path_exists"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "delete_subtree"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "delete"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "arrays"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "arrays_negative"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "root_assignment"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_bool"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_str"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_int"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_date"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_timestamp"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "read_only"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_array_obj"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_with_type"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_with_type", "note": "https://github.com/abaplint/transpiler/issues/495"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_parser_test", "method": "parse_bare_values"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "reader"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_index"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_simple"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_index", "note": "fs_table_.appendInitial is not a function"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_simple", "note": "fs_table_.appendInitial is not a function"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "stringify"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "item_order_integrated"},
 
@@ -230,7 +216,7 @@
 
       {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_file_exists", "note": "something wrong with the inheritance?"},
       {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_file_does_not_exist"},
-      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_empty_file"},
+      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_empty_file", "note": "Cannot read property 'register_asset' of undefined"},
       {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_no_variables"},
       {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_simple_variables"},
       {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_complex_variables"},
@@ -258,7 +244,6 @@
 
       {"object": "ZCL_ABAPGIT_GIT_TRANSPORT", "class": "ltcl_git_transport", "method": "flush_error"},
 
-      {"object": "ZCL_ABAPGIT_GIT_URL", "class": "ltcl_repo_online", "method": "get_default_commit_display_url"},
       {"object": "ZCL_ABAPGIT_GIT_URL", "class": "ltcl_repo_online", "method": "test_repo_commit_show_urls"},
 
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "ignore"},
