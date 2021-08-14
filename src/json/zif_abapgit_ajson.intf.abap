@@ -1,11 +1,9 @@
 INTERFACE zif_abapgit_ajson
-  PUBLIC .
+  PUBLIC.
 
-  CONSTANTS version TYPE string VALUE 'v1.0.4'.
-  CONSTANTS origin TYPE string VALUE 'https://github.com/sbcgua/ajson'.
-
-  INTERFACES zif_abapgit_ajson_reader.
-  INTERFACES zif_abapgit_ajson_writer.
+  CONSTANTS version TYPE string VALUE 'v1.1.0-pre1'. "#EC NOTEXT
+  CONSTANTS origin TYPE string VALUE 'https://github.com/sbcgua/ajson'. "#EC NOTEXT
+  CONSTANTS license TYPE string VALUE 'MIT'. "#EC NOTEXT
 
   CONSTANTS:
     BEGIN OF node_type,
@@ -47,34 +45,194 @@ INTERFACE zif_abapgit_ajson
   " METHODS
 
   METHODS freeze.
-  METHODS keep_item_order.
+  METHODS keep_item_order
+    RETURNING
+      VALUE(ri_json) TYPE REF TO zif_abapgit_ajson.
 
-  " METHODS (merged from reader/writer), maybe will completely move to this IF in future !
+  " METHODS ex.reader
 
-  ALIASES:
-    exists FOR zif_abapgit_ajson_reader~exists,
-    members FOR zif_abapgit_ajson_reader~members,
-    get FOR zif_abapgit_ajson_reader~get,
-    get_boolean FOR zif_abapgit_ajson_reader~get_boolean,
-    get_integer FOR zif_abapgit_ajson_reader~get_integer,
-    get_number FOR zif_abapgit_ajson_reader~get_number,
-    get_date FOR zif_abapgit_ajson_reader~get_date,
-    get_string FOR zif_abapgit_ajson_reader~get_string,
-    slice FOR zif_abapgit_ajson_reader~slice,
-    to_abap FOR zif_abapgit_ajson_reader~to_abap,
-    array_to_string_table FOR zif_abapgit_ajson_reader~array_to_string_table.
+  METHODS exists
+    IMPORTING
+      iv_path TYPE string
+    RETURNING
+      VALUE(rv_exists) TYPE abap_bool.
 
-  ALIASES:
-    clear FOR zif_abapgit_ajson_writer~clear,
-    set FOR zif_abapgit_ajson_writer~set,
-    set_boolean FOR zif_abapgit_ajson_writer~set_boolean,
-    set_string FOR zif_abapgit_ajson_writer~set_string,
-    set_integer FOR zif_abapgit_ajson_writer~set_integer,
-    set_date FOR zif_abapgit_ajson_writer~set_date,
-    set_null FOR zif_abapgit_ajson_writer~set_null,
-    delete FOR zif_abapgit_ajson_writer~delete,
-    touch_array FOR zif_abapgit_ajson_writer~touch_array,
-    push FOR zif_abapgit_ajson_writer~push,
-    stringify FOR zif_abapgit_ajson_writer~stringify.
+  METHODS members
+    IMPORTING
+      iv_path TYPE string
+    RETURNING
+      VALUE(rt_members) TYPE string_table.
+
+  METHODS get
+    IMPORTING
+      iv_path TYPE string
+    RETURNING
+      VALUE(rv_value) TYPE string.
+
+  METHODS get_node_type
+    IMPORTING
+      iv_path TYPE string
+    RETURNING
+      VALUE(rv_node_type) TYPE string.
+
+  METHODS get_boolean
+    IMPORTING
+      iv_path TYPE string
+    RETURNING
+      VALUE(rv_value) TYPE abap_bool.
+
+  METHODS get_integer
+    IMPORTING
+      iv_path TYPE string
+    RETURNING
+      VALUE(rv_value) TYPE i.
+
+  METHODS get_number
+    IMPORTING
+      iv_path TYPE string
+    RETURNING
+      VALUE(rv_value) TYPE f.
+
+  METHODS get_date
+    IMPORTING
+      iv_path TYPE string
+    RETURNING
+      VALUE(rv_value) TYPE d.
+
+  METHODS get_timestamp
+    IMPORTING
+      iv_path TYPE string
+    RETURNING
+      VALUE(rv_value) TYPE timestamp.
+
+  METHODS get_string
+    IMPORTING
+      iv_path TYPE string
+    RETURNING
+      VALUE(rv_value) TYPE string.
+
+  METHODS slice
+    IMPORTING
+      iv_path TYPE string
+    RETURNING
+      VALUE(ri_json) TYPE REF TO zif_abapgit_ajson.
+
+  METHODS to_abap
+    EXPORTING
+      ev_container TYPE any
+    RAISING
+      zcx_abapgit_ajson_error.
+
+  METHODS array_to_string_table
+    IMPORTING
+      iv_path TYPE string
+    RETURNING
+      VALUE(rt_string_table) TYPE string_table
+    RAISING
+      zcx_abapgit_ajson_error.
+
+  " METHODS ex.writer
+
+  METHODS clear
+    RAISING
+      zcx_abapgit_ajson_error.
+
+  METHODS set
+    IMPORTING
+      iv_path TYPE string
+      iv_val TYPE any
+      iv_ignore_empty TYPE abap_bool DEFAULT abap_true
+      iv_node_type TYPE string OPTIONAL
+    RETURNING
+      VALUE(ri_json) TYPE REF TO zif_abapgit_ajson
+    RAISING
+      zcx_abapgit_ajson_error.
+
+  METHODS set_boolean
+    IMPORTING
+      iv_path TYPE string
+      iv_val TYPE any
+    RETURNING
+      VALUE(ri_json) TYPE REF TO zif_abapgit_ajson
+    RAISING
+      zcx_abapgit_ajson_error.
+
+  METHODS set_string
+    IMPORTING
+      iv_path TYPE string
+      iv_val TYPE clike
+    RETURNING
+      VALUE(ri_json) TYPE REF TO zif_abapgit_ajson
+    RAISING
+      zcx_abapgit_ajson_error.
+
+  METHODS set_integer
+    IMPORTING
+      iv_path TYPE string
+      iv_val TYPE i
+    RETURNING
+      VALUE(ri_json) TYPE REF TO zif_abapgit_ajson
+    RAISING
+      zcx_abapgit_ajson_error.
+
+  METHODS set_date
+    IMPORTING
+      iv_path TYPE string
+      iv_val TYPE d
+    RETURNING
+      VALUE(ri_json) TYPE REF TO zif_abapgit_ajson
+    RAISING
+      zcx_abapgit_ajson_error.
+
+  METHODS set_timestamp
+    IMPORTING
+      iv_path TYPE string
+      iv_val TYPE timestamp
+    RETURNING
+      VALUE(ri_json) TYPE REF TO zif_abapgit_ajson
+    RAISING
+      zcx_abapgit_ajson_error.
+
+  METHODS set_null
+    IMPORTING
+      iv_path TYPE string
+    RETURNING
+      VALUE(ri_json) TYPE REF TO zif_abapgit_ajson
+    RAISING
+      zcx_abapgit_ajson_error.
+
+  METHODS delete
+    IMPORTING
+      iv_path TYPE string
+    RETURNING
+      VALUE(ri_json) TYPE REF TO zif_abapgit_ajson
+    RAISING
+      zcx_abapgit_ajson_error.
+
+  METHODS touch_array
+    IMPORTING
+      iv_path TYPE string
+      iv_clear TYPE abap_bool DEFAULT abap_false
+    RETURNING
+      VALUE(ri_json) TYPE REF TO zif_abapgit_ajson
+    RAISING
+      zcx_abapgit_ajson_error.
+
+  METHODS push
+    IMPORTING
+      iv_path TYPE string
+      iv_val TYPE any
+    RETURNING
+      VALUE(ri_json) TYPE REF TO zif_abapgit_ajson
+    RAISING
+      zcx_abapgit_ajson_error.
+
+  METHODS stringify
+    IMPORTING
+      iv_indent TYPE i DEFAULT 0
+    RETURNING
+      VALUE(rv_json) TYPE string
+    RAISING
+      zcx_abapgit_ajson_error.
 
 ENDINTERFACE.
