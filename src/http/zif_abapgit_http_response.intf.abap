@@ -10,7 +10,7 @@ INTERFACE zif_abapgit_http_response
       VALUE(rv_data) TYPE string .
   METHODS json
     RETURNING
-      VALUE(ri_json) TYPE REF TO zif_abapgit_ajson_reader
+      VALUE(ri_json) TYPE REF TO zif_abapgit_ajson
     RAISING
       zcx_abapgit_ajson_error .
   METHODS is_ok

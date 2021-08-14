@@ -22,7 +22,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_data_config IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
 
 
   METHOD dump.
@@ -32,7 +32,7 @@ CLASS zcl_abapgit_data_config IMPLEMENTATION.
 
     TRY.
         lo_ajson = zcl_abapgit_ajson=>create_empty( ).
-        lo_ajson->zif_abapgit_ajson_writer~set(
+        lo_ajson->zif_abapgit_ajson~set(
           iv_path = '/'
           iv_val  = is_config ).
         rv_json = zcl_abapgit_convert=>string_to_xstring_utf8( lo_ajson->stringify( 2 ) ).
@@ -69,7 +69,7 @@ CLASS zcl_abapgit_data_config IMPLEMENTATION.
         AND filename CP |*.{ zif_abapgit_data_config=>c_config }.{ zif_abapgit_data_config=>c_default_format }|.
       TRY.
           lo_ajson = zcl_abapgit_ajson=>parse( zcl_abapgit_convert=>xstring_to_string_utf8( ls_file-data ) ).
-          lo_ajson->zif_abapgit_ajson_reader~to_abap( IMPORTING ev_container = ls_config ).
+          lo_ajson->zif_abapgit_ajson~to_abap( IMPORTING ev_container = ls_config ).
         CATCH zcx_abapgit_ajson_error INTO lx_ajson.
           zcx_abapgit_exception=>raise( lx_ajson->get_text( ) ).
       ENDTRY.
