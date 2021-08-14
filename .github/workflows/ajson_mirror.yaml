@@ -29,6 +29,7 @@ jobs:
       if: github.repository == 'abapGit/abapGit'
       with:
         title: ajson, Automatic Update
+        branch: automatic/ajson
         body: |
           Automatic update from mirror
           https://github.com/abapGit/ajson_mirror
