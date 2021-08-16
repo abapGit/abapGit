@@ -35,3 +35,5 @@ jobs:
           https://github.com/abapGit/ajson_mirror
 
           Make manual change to trigger CI
+
+          Note: manual changes might be overwritten when the branch updates, so keep changes small, and merge fast
