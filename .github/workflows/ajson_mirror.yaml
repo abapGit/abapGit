@@ -29,8 +29,11 @@ jobs:
       if: github.repository == 'abapGit/abapGit'
       with:
         title: ajson, Automatic Update
+        branch: automatic/ajson
         body: |
           Automatic update from mirror
           https://github.com/abapGit/ajson_mirror
 
           Make manual change to trigger CI
+
+          Note: manual changes might be overwritten when the branch updates, so keep changes small, and merge fast

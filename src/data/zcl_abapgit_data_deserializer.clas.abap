@@ -45,7 +45,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_DATA_DESERIALIZER IMPLEMENTATION.
 
 
   METHOD convert_json_to_itab.
@@ -59,7 +59,7 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 
     TRY.
         lo_ajson = zcl_abapgit_ajson=>parse( zcl_abapgit_convert=>xstring_to_string_utf8( is_file-data ) ).
-        lo_ajson->zif_abapgit_ajson_reader~to_abap( IMPORTING ev_container = <lg_tab> ).
+        lo_ajson->zif_abapgit_ajson~to_abap( IMPORTING ev_container = <lg_tab> ).
       CATCH zcx_abapgit_ajson_error INTO lx_ajson.
         zcx_abapgit_exception=>raise( lx_ajson->get_text( ) ).
     ENDTRY.
