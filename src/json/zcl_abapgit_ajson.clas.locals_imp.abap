@@ -700,11 +700,11 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
 
   METHOD to_timestamp.
 
-    CONSTANTS lc_tzone_utc TYPE tznzone VALUE `UTC`.
+    CONSTANTS lc_utc TYPE c LENGTH 6 VALUE 'UTC'.
     CONSTANTS lc_regex_ts_with_hour TYPE string
-        VALUE `^(\d{4})-(\d{2})-(\d{2})(T)(\d{2}):(\d{2}):(\d{2})(\+)(\d{2}):(\d{2})`.
+      VALUE `^(\d{4})-(\d{2})-(\d{2})(T)(\d{2}):(\d{2}):(\d{2})(\+)(\d{2}):(\d{2})`.
     CONSTANTS lc_regex_ts_utc TYPE string
-        VALUE `^(\d{4})-(\d{2})-(\d{2})(T)(\d{2}):(\d{2}):(\d{2})(Z|$)`.
+      VALUE `^(\d{4})-(\d{2})-(\d{2})(T)(\d{2}):(\d{2}):(\d{2})(Z|$)`.
 
     DATA:
       BEGIN OF ls_timestamp,
@@ -751,7 +751,7 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
     CONCATENATE ls_timestamp-year ls_timestamp-month ls_timestamp-day INTO lv_date.
     CONCATENATE ls_timestamp-hour ls_timestamp-minute ls_timestamp-second INTO lv_time.
 
-    CONVERT DATE lv_date TIME lv_time INTO TIME STAMP lv_timestamp TIME ZONE lc_tzone_utc.
+    CONVERT DATE lv_date TIME lv_time INTO TIME STAMP lv_timestamp TIME ZONE lc_utc.
 
     TRY.
 
