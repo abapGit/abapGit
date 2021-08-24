@@ -28,3 +28,9 @@ Steps:
 8. On the background mode page: click "Run background logic" to test the setup works
 
 9. Configure ZABAPGIT to run as a background job(SM36/SM37). Note: a dummy variant has to be created for the program, use SE38 to create the variant, values in the variant are not used for anything in background mode.
+
+To restore only some objects:
+
+Use Advanced / Reset Local (Force Pull)
+
+(available since April 2021)
