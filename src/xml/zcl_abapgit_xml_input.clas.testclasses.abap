@@ -49,7 +49,7 @@ CLASS ltcl_xml IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = ls_data-foo
-      exp = 1 ).
+      exp = 2 ).
 
   ENDMETHOD.
 
