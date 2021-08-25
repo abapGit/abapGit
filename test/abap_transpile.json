@@ -153,13 +153,12 @@
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_condensed", "note": "field sorting is wrong, probably sorted internal tables needed"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_indented"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "array_index",     "note": "sorted internal tables/arrays are required"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "item_order",      "note": "fix 'array_index' first"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "simple_indented", "note": "fix 'array_index' first"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "array_index",     "note": "uses secondary index array_index?"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "item_order",      "note": "uses secondary index item_order?"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "simple_indented", "note": "??"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "escape",          "note": "ASSERT failed, ??"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "slice",           "note": "??"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "members",         "note": "sorted internal tables/arrays are required"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "find_loc",          "note": "exception: Target is not deep @/str"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "find_loc_negative", "note": "ASSERT failed, ??"},
