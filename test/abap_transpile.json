@@ -158,6 +158,7 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "simple_indented", "note": "fix 'array_index' first"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "escape",          "note": "ASSERT failed, ??"},
 
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "slice",           "note": "??"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "members",         "note": "sorted internal tables/arrays are required"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "get_timestamp",   "note": "https://github.com/sbcgua/ajson/pull/64"},
 
