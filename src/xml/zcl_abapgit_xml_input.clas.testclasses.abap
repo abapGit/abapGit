@@ -2,12 +2,10 @@ CLASS ltcl_xml DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
 
   PUBLIC SECTION.
     METHODS:
-      up FOR TESTING
-        RAISING zcx_abapgit_exception,
-      empty FOR TESTING
-        RAISING zcx_abapgit_exception,
-      down FOR TESTING
-        RAISING zcx_abapgit_exception.
+      up FOR TESTING RAISING zcx_abapgit_exception,
+      empty FOR TESTING RAISING zcx_abapgit_exception,
+      input FOR TESTING RAISING zcx_abapgit_exception,
+      down FOR TESTING RAISING zcx_abapgit_exception.
 
     TYPES: BEGIN OF ty_old,
              foo TYPE i,
@@ -24,6 +22,36 @@ ENDCLASS.
 
 
 CLASS ltcl_xml IMPLEMENTATION.
+
+  METHOD input.
+
+    DATA lv_xml   TYPE string.
+    DATA lo_input TYPE REF TO zcl_abapgit_xml_input.
+    DATA ls_data  TYPE ty_old.
+
+    lv_xml = |<?xml version="1.0" encoding="utf-16"?>\n| &&
+      |<abapGit version="v1.0.0">\n| &&
+      | <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">\n| &&
+      |  <asx:values>\n| &&
+      |   <DATA>\n| &&
+      |    <FOO>2</FOO>\n| &&
+      |   </DATA>\n| &&
+      |  </asx:values>\n| &&
+      | </asx:abap>\n| &&
+      |</abapGit>|.
+
+    CREATE OBJECT lo_input
+      EXPORTING
+        iv_xml = lv_xml.
+
+    lo_input->zif_abapgit_xml_input~read( EXPORTING iv_name = 'DATA'
+                                          CHANGING cg_data = ls_data ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_data-foo
+      exp = 2 ).
+
+  ENDMETHOD.
 
   METHOD empty.
 
