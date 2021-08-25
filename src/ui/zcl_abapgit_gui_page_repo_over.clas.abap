@@ -323,7 +323,8 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       lv_text                 TYPE string,
       lv_lock                 TYPE string,
       lv_toggle_favorite_link TYPE string,
-      lv_repo_go_link         TYPE string.
+      lv_repo_go_link         TYPE string,
+      lv_remote_icon_link     TYPE string.
 
     FIELD-SYMBOLS: <ls_repo>     LIKE LINE OF it_repo_list.
 
@@ -379,7 +380,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
                             iv_suppress_title = abap_true )->render( ) ) ).
 
       IF <ls_repo>-type = abap_false.
-        DATA(lv_remote_icon_link) = ii_html->a(
+        lv_remote_icon_link = ii_html->a(
           iv_txt   = ii_html->icon( iv_name  = 'edit-solid'
                                     iv_class = 'pad-sides'
                                     iv_hint  = 'Change remote' )
