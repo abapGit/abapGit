@@ -176,10 +176,10 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_array_obj"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_with_type", "note": "https://github.com/abaplint/transpiler/issues/495"},
 
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_parser_test", "method": "parse_bare_values"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_parser_test", "method": "parse_bare_values", "note": "https://github.com/sbcgua/ajson/pull/69"},
 
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "reader"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_index", "note": "fs_table_.appendInitial is not a function"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "reader",       "note": "Target is not deep @/boolean"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_index",  "note": "fs_table_.appendInitial is not a function"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_simple", "note": "fs_table_.appendInitial is not a function"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "stringify"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "item_order_integrated"},
