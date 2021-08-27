@@ -202,8 +202,8 @@
       {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "json_diff_types"},
       {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "json_sort"},
 
-      {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_renderable", "note": "https://github.com/abaplint/transpiler/issues/465"},
-      {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_event_handler", "note": "https://github.com/abaplint/transpiler/issues/465"},
+      {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_renderable", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
+      {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_event_handler", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
 
       {"object": "ZCL_ABAPGIT_GUI_ASSET_MANAGER", "class": "ltcl_abapgit_gui_asset_manager", "method": "get_inline_asset"},
       {"object": "ZCL_ABAPGIT_GUI_ASSET_MANAGER", "class": "ltcl_abapgit_gui_asset_manager", "method": "get_mime_asset"},
