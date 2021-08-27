@@ -379,6 +379,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
                             iv_package = <ls_repo>-package
                             iv_suppress_title = abap_true )->render( ) ) ).
 
+
       IF <ls_repo>-type = abap_false.
         lv_remote_icon_link = ii_html->a(
           iv_txt   = ii_html->icon( iv_name  = 'edit-solid'
