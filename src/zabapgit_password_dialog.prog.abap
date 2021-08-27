@@ -2,6 +2,8 @@
 *&  Include           ZABAPGIT_PASSWORD_DIALOG
 *&---------------------------------------------------------------------*
 
+* Todo, remove comment about Github token usage by 2021-12-31
+
 SELECTION-SCREEN BEGIN OF SCREEN 1002 TITLE s_title.
 SELECTION-SCREEN BEGIN OF LINE.
 SELECTION-SCREEN COMMENT 1(18) s_url FOR FIELD p_url.
@@ -14,6 +16,11 @@ SELECTION-SCREEN END OF LINE.
 SELECTION-SCREEN BEGIN OF LINE.
 SELECTION-SCREEN COMMENT 1(18) s_pass FOR FIELD p_pass.
 PARAMETERS: p_pass TYPE c LENGTH 255 LOWER CASE VISIBLE LENGTH 60 ##SEL_WRONG.
+SELECTION-SCREEN END OF LINE.
+SELECTION-SCREEN SKIP.
+SELECTION-SCREEN BEGIN OF LINE.
+SELECTION-SCREEN COMMENT 1(18) s_cmnt FOR FIELD p_cmnt.
+PARAMETERS: p_cmnt TYPE c LENGTH 255 LOWER CASE VISIBLE LENGTH 60 ##SEL_WRONG.
 SELECTION-SCREEN END OF LINE.
 SELECTION-SCREEN END OF SCREEN 1002.
 
@@ -57,6 +64,7 @@ CLASS lcl_password_dialog IMPLEMENTATION.
     CLEAR p_pass.
     p_url      = iv_repo_url.
     p_user     = cv_user.
+    p_cmnt     = 'GitHub requires using tokens (since August 2021)'.
     gv_confirm = abap_false.
 
 
@@ -80,6 +88,7 @@ CLASS lcl_password_dialog IMPLEMENTATION.
     s_url   = 'Repo URL'.
     s_user  = 'User'.
     s_pass  = 'Password or Token'.
+    s_cmnt  = 'Note'.
   ENDMETHOD.
 
   METHOD on_screen_output.
@@ -88,7 +97,7 @@ CLASS lcl_password_dialog IMPLEMENTATION.
     ASSERT sy-dynnr = c_dynnr.
 
     LOOP AT SCREEN.
-      IF screen-name = 'P_URL'.
+      IF screen-name = 'P_URL' OR screen-name = 'P_CMNT'.
         screen-input       = '0'.
         screen-intensified = '1'.
         screen-display_3d  = '0'.
