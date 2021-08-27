@@ -13,7 +13,7 @@ CLASS zcl_abapgit_object_srfc DEFINITION
         !is_item     TYPE zif_abapgit_definitions=>ty_item
         !iv_language TYPE spras
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
