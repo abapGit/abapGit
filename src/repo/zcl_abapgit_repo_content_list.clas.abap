@@ -53,7 +53,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
+CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
 
 
   METHOD build_folders.
@@ -141,7 +141,8 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
 
     DATA:
       ls_file   TYPE zif_abapgit_definitions=>ty_repo_file,
-      lt_status TYPE zif_abapgit_definitions=>ty_results_tt.
+      lt_status TYPE zif_abapgit_definitions=>ty_results_tt,
+      ls_item   TYPE zif_abapgit_definitions=>ty_item.
 
     FIELD-SYMBOLS: <ls_status>    LIKE LINE OF lt_status,
                    <ls_repo_item> LIKE LINE OF rt_repo_items.
@@ -182,6 +183,12 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
           zcl_abapgit_state=>reduce( EXPORTING iv_cur = ls_file-rstate
                                      CHANGING cv_prev = <ls_repo_item>-rstate ).
         ENDIF.
+      ENDIF.
+
+      IF <ls_repo_item>-changes > 0 AND <ls_repo_item>-obj_type IS NOT INITIAL.
+        MOVE-CORRESPONDING <ls_repo_item> TO ls_item.
+        <ls_repo_item>-changed_by = zcl_abapgit_objects=>changed_by( ls_item ).
+        CLEAR ls_item.
       ENDIF.
 
       AT END OF obj_name. "obj_type + obj_name
