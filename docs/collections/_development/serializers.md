@@ -28,6 +28,31 @@ Parameter | Description
 
 These parameters are stored in attributes `MS_ITEM` and `MV_LANGUAGE` respectively.
 
+Requirements that are necessary to support an object type should be checked in the constructor using the following logic. This is typical if object types are not supported in lower releases. 
+
+```abap
+  METHOD constructor.
+
+    DATA ...
+
+    super->constructor(
+      is_item     = is_item
+      iv_language = iv_language ).
+
+    TRY.
+        " Check requirements...
+      CATCH cx_root.
+        " Raise exception if not supported
+        zcx_abapgit_exception=>raise( 'Object type DDLS not supported' ).
+    ENDTRY.
+
+  ENDMETHOD.
+```
+
+This will ensure that none of the other class methods are called, even if objects of the given type exist in a repo. 
+
+Example: [`SRFC`](https://github.com/abapGit/abapGit/blob/main/src/objects/zcl_abapgit_object_srfc.clas.abap).
+
 ## Interface
 
 Serializers must implement all methods of interface [`ZIF_ABAPGIT_OBJECT`](https://github.com/abapGit/abapGit/blob/main/src/objects/zif_abapgit_object.intf.abap):

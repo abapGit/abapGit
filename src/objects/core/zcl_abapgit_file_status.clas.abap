@@ -144,7 +144,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
+CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
 
   METHOD build_existing.
@@ -592,9 +592,9 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
             " is required i.e. setting a parent package to iv_devclass (or one of its
             " subpackages). We don't this automatically since it's not clear where in the
             " hierarchy the new package should be located. (#4108)
-            lv_msg = |Package { ls_item-devclass } is not a subpackage of { iv_devclass
-                     }. Assign { ls_item-devclass } to package hierarchy of { iv_devclass
-                     } and repeat process.|.
+            lv_msg = |Package { ls_item-devclass } already exists but is not a subpackage of { iv_devclass
+                     }. Check your package and folder logic or assign { ls_item-devclass
+                     } to package hierarchy of { iv_devclass } to match the repository.|.
             zcx_abapgit_exception=>raise( lv_msg ).
           ELSE.
             CLEAR ls_item-devclass.
