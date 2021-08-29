@@ -5,10 +5,18 @@ root = true
 
 # 1 space indentation for xml files
 [*.xml]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
 indent_style = space
 indent_size = 1
 
 # match the format used by abapGit
-[*.abap]
+[*.{abap,js,json,html,css}]
 charset = utf-8
 end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_size = 2
+indent_style = space
