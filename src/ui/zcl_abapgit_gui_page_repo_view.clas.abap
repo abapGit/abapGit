@@ -560,19 +560,15 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         iv_chk = mv_diff_first
         iv_act = c_actions-toggle_diff_first ).
 
-    IF mo_repo->has_remote_source( ) = abap_true.
+    ro_toolbar->add(
+      iv_txt = 'Changes Only'
+      iv_chk = mv_changes_only
+      iv_act = c_actions-toggle_changes ).
 
-      ro_toolbar->add(
-        iv_txt = 'Changes Only'
-        iv_chk = mv_changes_only
-        iv_act = c_actions-toggle_changes ).
-
-      ro_toolbar->add(
-        iv_txt = 'File Paths'
-        iv_chk = boolc( NOT mv_hide_files = abap_true )
-        iv_act = c_actions-toggle_hide_files ).
-
-    ENDIF.
+    ro_toolbar->add(
+      iv_txt = 'File Paths'
+      iv_chk = boolc( NOT mv_hide_files = abap_true )
+      iv_act = c_actions-toggle_hide_files ).
 
     ro_toolbar->add(
       iv_txt = 'Folders'
@@ -960,11 +956,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ri_html->add( render_item_files( is_item ) ).
     ri_html->add( '</td>' ).
 
-    IF mo_repo->has_remote_source( ) = abap_true.
-      ri_html->add( '<td class="user">' ).
-      ri_html->add( render_item_changed_by( is_item ) ).
-      ri_html->add( '</td>' ).
-    ENDIF.
+    ri_html->add( '<td class="user">' ).
+    ri_html->add( render_item_changed_by( is_item ) ).
+    ri_html->add( '</td>' ).
 
     " Command
     ri_html->add( '<td class="cmd">' ).
@@ -1108,12 +1102,10 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ls_col_spec-allow_order_by = abap_true.
     APPEND ls_col_spec TO lt_col_spec.
 
-    IF mo_repo->has_remote_source( ) = abap_true.
-      ls_col_spec-tech_name = 'CHANGED_BY'.
-      ls_col_spec-display_name = 'Changed by'.
-      ls_col_spec-allow_order_by = abap_true.
-      APPEND ls_col_spec TO lt_col_spec.
-    ENDIF.
+    ls_col_spec-tech_name = 'CHANGED_BY'.
+    ls_col_spec-display_name = 'Changed by'.
+    ls_col_spec-allow_order_by = abap_true.
+    APPEND ls_col_spec TO lt_col_spec.
 
     ls_col_spec-tech_name = 'LSTATE'.
     ls_col_spec-display_name = 'Status'.

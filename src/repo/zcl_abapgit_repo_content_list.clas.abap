@@ -132,6 +132,12 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
       ELSE.
         <ls_repo_item>-sortkey  = c_sortkey-default.      " Default sort key
       ENDIF.
+
+      IF <ls_repo_item>-obj_type IS NOT INITIAL.
+        MOVE-CORRESPONDING <ls_repo_item> TO ls_item.
+        <ls_repo_item>-changed_by = zcl_abapgit_objects=>changed_by( ls_item ).
+        CLEAR ls_item.
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.
