@@ -5,19 +5,18 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-
     INTERFACES zif_abapgit_gui_hotkeys .
 
     CONSTANTS:
       BEGIN OF c_actions,
-        repo_list                TYPE string VALUE 'abapgit_home' ##NO_TEXT,
-        change_dir               TYPE string VALUE 'change_dir' ##NO_TEXT,
-        toggle_hide_files        TYPE string VALUE 'toggle_hide_files' ##NO_TEXT,
-        toggle_folders           TYPE string VALUE 'toggle_folders' ##NO_TEXT,
-        toggle_changes           TYPE string VALUE 'toggle_changes' ##NO_TEXT,
-        toggle_diff_first        TYPE string VALUE 'toggle_diff_first ' ##NO_TEXT,
-        display_more             TYPE string VALUE 'display_more' ##NO_TEXT,
-        go_data                  TYPE string VALUE 'go_data',
+        repo_list         TYPE string VALUE 'abapgit_home' ##NO_TEXT,
+        change_dir        TYPE string VALUE 'change_dir' ##NO_TEXT,
+        toggle_hide_files TYPE string VALUE 'toggle_hide_files' ##NO_TEXT,
+        toggle_folders    TYPE string VALUE 'toggle_folders' ##NO_TEXT,
+        toggle_changes    TYPE string VALUE 'toggle_changes' ##NO_TEXT,
+        toggle_diff_first TYPE string VALUE 'toggle_diff_first ' ##NO_TEXT,
+        display_more      TYPE string VALUE 'display_more' ##NO_TEXT,
+        go_data           TYPE string VALUE 'go_data',
       END OF c_actions .
 
     METHODS constructor
@@ -177,11 +176,19 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
     METHODS get_abapgit_tcode
       RETURNING
         VALUE(rv_tcode) TYPE tcode .
+    METHODS render_item_changed_by
+      IMPORTING
+        !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -553,19 +560,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
         iv_chk = mv_diff_first
         iv_act = c_actions-toggle_diff_first ).
 
-    IF mo_repo->has_remote_source( ) = abap_true.
+    ro_toolbar->add(
+      iv_txt = 'Changes Only'
+      iv_chk = mv_changes_only
+      iv_act = c_actions-toggle_changes ).
 
-      ro_toolbar->add(
-        iv_txt = 'Changes Only'
-        iv_chk = mv_changes_only
-        iv_act = c_actions-toggle_changes ).
-
-      ro_toolbar->add(
-        iv_txt = 'File Paths'
-        iv_chk = boolc( NOT mv_hide_files = abap_true )
-        iv_act = c_actions-toggle_hide_files ).
-
-    ENDIF.
+    ro_toolbar->add(
+      iv_txt = 'File Paths'
+      iv_chk = boolc( NOT mv_hide_files = abap_true )
+      iv_act = c_actions-toggle_hide_files ).
 
     ro_toolbar->add(
       iv_txt = 'Folders'
@@ -953,6 +956,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
     ri_html->add( render_item_files( is_item ) ).
     ri_html->add( '</td>' ).
 
+    ri_html->add( '<td class="user">' ).
+    ri_html->add( render_item_changed_by( is_item ) ).
+    ri_html->add( '</td>' ).
+
     " Command
     ri_html->add( '<td class="cmd">' ).
     IF mo_repo->has_remote_source( ) = abap_true.
@@ -1092,6 +1099,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
     ls_col_spec-tech_name = 'PATH'.
     ls_col_spec-display_name = 'Path'.
+    ls_col_spec-allow_order_by = abap_true.
+    APPEND ls_col_spec TO lt_col_spec.
+
+    ls_col_spec-tech_name = 'CHANGED_BY'.
+    ls_col_spec-display_name = 'Changed by'.
     ls_col_spec-allow_order_by = abap_true.
     APPEND ls_col_spec TO lt_col_spec.
 
@@ -1271,6 +1283,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_settings.
     ls_hotkey_action-hotkey = |x|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+  ENDMETHOD.
+
+  METHOD render_item_changed_by.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    IF is_item-changes = 0 OR is_item-changed_by IS INITIAL.
+      ri_html->add( '&nbsp;' ).
+    ELSE.
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_user_name( is_item-changed_by ) ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

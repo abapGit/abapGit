@@ -304,16 +304,17 @@ INTERFACE zif_abapgit_definitions
     END OF ty_ancestor .
   TYPES:
     BEGIN OF ty_repo_item,
-      obj_type TYPE tadir-object,
-      obj_name TYPE tadir-obj_name,
-      inactive TYPE abap_bool,
-      sortkey  TYPE i,
-      path     TYPE string,
-      is_dir   TYPE abap_bool,
-      changes  TYPE i,
-      lstate   TYPE c LENGTH 1,
-      rstate   TYPE c LENGTH 1,
-      files    TYPE ty_repo_file_tt,
+      obj_type   TYPE tadir-object,
+      obj_name   TYPE tadir-obj_name,
+      inactive   TYPE abap_bool,
+      sortkey    TYPE i,
+      path       TYPE string,
+      is_dir     TYPE abap_bool,
+      changes    TYPE i,
+      lstate     TYPE c LENGTH 1,
+      rstate     TYPE c LENGTH 1,
+      files      TYPE ty_repo_file_tt,
+      changed_by TYPE xubname,
     END OF ty_repo_item .
   TYPES:
     ty_repo_item_tt TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY .
