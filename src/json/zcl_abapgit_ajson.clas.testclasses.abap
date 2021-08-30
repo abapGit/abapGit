@@ -84,6 +84,7 @@ CLASS ltcl_parser_test DEFINITION FINAL
     METHODS parse_date FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS parse_bare_values FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS parse_error FOR TESTING RAISING zcx_abapgit_ajson_error.
+
 ENDCLASS.
 
 CLASS ltcl_parser_test IMPLEMENTATION.
