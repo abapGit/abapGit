@@ -83,6 +83,7 @@ CLASS ltcl_parser_test DEFINITION FINAL
     METHODS parse_null FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS parse_date FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS parse_bare_values FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS parse_error FOR TESTING RAISING zcx_abapgit_ajson_error.
 
 ENDCLASS.
 
@@ -131,6 +132,11 @@ CLASS ltcl_parser_test IMPLEMENTATION.
       act = lt_act
       exp = mo_nodes->mt_nodes ).
 
+  ENDMETHOD.
+
+  METHOD parse_error.
+
+    DATA lt_act TYPE zif_abapgit_ajson=>ty_nodes_tt.
     DATA lx_err TYPE REF TO zcx_abapgit_ajson_error.
     TRY.
         lt_act = mo_cut->parse( 'abc' ).

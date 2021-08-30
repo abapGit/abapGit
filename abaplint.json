@@ -84,7 +84,7 @@
     "omit_receiving": true,
     "unused_methods": true,
     "identical_contents": false,
-    "many_parenthesis": true,
+    "many_parentheses": true,
     "prefer_xsdbool": true,
     "prefer_is_not": false,
     "use_bool_expression": true,
@@ -279,6 +279,7 @@
     "message_exists": false,
     "method_length": {
       "statements": 100,
+      "checkForms": true,
       "ignoreTestClasses": false,
       "errorWhenEmpty": false
     },
@@ -325,6 +326,8 @@
       "add": true,
       "selectWithoutInto": true,
       "ranges": true,
+      "callTransformation": true,
+      "sortByFS": true,
       "subtract": true,
       "freeMemory": true,
       "exitFromSQL": true,
