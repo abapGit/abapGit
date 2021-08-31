@@ -6,8 +6,10 @@ on:
     - cron: '0 0 * * 1'
 
 jobs:
-  run:
-
+  pr_ajson_changes:
+    # Origin repo only
+    if: github.repository == 'abapGit/abapGit'
+    
     runs-on: ubuntu-latest
 
     steps:
@@ -26,7 +28,6 @@ jobs:
         git status
     - name: Open PR
       uses: peter-evans/create-pull-request@v3
-      if: github.repository == 'abapGit/abapGit'
       with:
         title: ajson, Automatic Update
         branch: automatic/ajson

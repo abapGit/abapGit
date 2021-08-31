@@ -761,9 +761,10 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     lo_repo ?= mo_repo.
 
-    IF iv_revert = abap_true.
-      lo_repo->switch_origin( '' ).
-    ELSE.
+    " Switching twice does not work so reset to original repo first
+    lo_repo->switch_origin( '' ).
+
+    IF iv_revert = abap_false.
       SPLIT iv_pull AT '@' INTO lv_url lv_branch.
       lo_repo->switch_origin(
         iv_url    = lv_url
