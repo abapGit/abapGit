@@ -170,9 +170,9 @@
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_parser_test", "method": "parse_error"},
 
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "reader",       "note": "Path not found @/boolean"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_index",  "note": "_a.array is not a function"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_simple", "note": "_a.array is not a function"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "reader",       "note": "Path not found @/false"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_index",  "note": "Index not found in table @/10"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_simple", "note": "Index not found in table @/10"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "stringify", "note": "open-abap, describe_by_data DataReference"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "item_order_integrated"},
 
