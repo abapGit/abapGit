@@ -187,7 +187,6 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_abap_to_json", "method": "set_complex_obj"},
 
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_camel_case", "method": "to_abap", "note": "Target is not deep @/FieldData"},
-      {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_camel_case", "method": "to_json", "note": "transpiler: handling of field symbols? TRANSLATE <token>(1) TO UPPER CASE."},
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_camel_case", "method": "to_json_first_lower", "note": "transpiler: handling of field symbols? TRANSLATE <token>(1) TO UPPER CASE."},
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_fields", "method": "to_abap", "note": "Target is not deep @/field"},
 
