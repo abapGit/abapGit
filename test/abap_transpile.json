@@ -187,9 +187,9 @@
 
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_camel_case", "method": "to_abap", "note": "Path not found @/FieldData"},
 
-      {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "json_diff"},
-      {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "json_diff_types"},
-      {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "json_sort"},
+      {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "json_diff", "note": "Either supply JSON string or instance, but not both"},
+      {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "json_diff_types", "note": "Either supply JSON string or instance, but not both"},
+      {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "json_sort", "note": "Either supply JSON string or instance, but not both"},
 
       {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_renderable", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
       {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_event_handler", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
