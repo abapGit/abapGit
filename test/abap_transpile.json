@@ -161,10 +161,10 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "find_loc",          "note": "exception: Target is not deep @/str"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "find_loc_negative", "note": "ASSERT failed, ??"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "find_loc_append",   "note": "exception: Target is not deep @/str"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap",           "note": "Target is not deep @/bool"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_negative"},
 
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_ajson"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_ajson", "note": "describe_by_object_ref implementation missing in open-abap"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_obj"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_tab", "note": "table.startLoop is not a function"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_tab_hashed"},
