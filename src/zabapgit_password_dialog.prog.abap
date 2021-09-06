@@ -64,7 +64,7 @@ CLASS lcl_password_dialog IMPLEMENTATION.
     CLEAR p_pass.
     p_url      = iv_repo_url.
     p_user     = cv_user.
-    p_cmnt     = 'GitHub requires using tokens (since August 2021)'.
+    p_cmnt     = 'GitHub requires using personal tokens (since 8/2021)'.
     gv_confirm = abap_false.
 
 
