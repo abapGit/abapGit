@@ -1,6 +1,7 @@
 {
   "input_folder": "{test,src,deps}",
   "input_filter": [
+
     "vseointerf",
     "zcl_abapgit_ajson*",
     "zcl_abapgit_auth",
