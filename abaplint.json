@@ -7,8 +7,12 @@
   },
   "dependencies": [
     {
-      "url": "https://github.com/abaplint/deps",
       "folder": "/deps",
+      "files": "/**/*.*"
+    },
+    {
+      "url": "https://github.com/abaplint/deps",
+      "folder": "/lint_deps",
       "files": "/src/**/*.*"
     }
   ],
