@@ -151,4 +151,4 @@ Michael Pang
 
 [ABAP Code Review Guideline is out](https://blogs.sap.com/2021/04/06/abap-code-review-guideline-is-out/), Christoph Pohl
 
-[Automagic standalone renaming of ABAP objects](https://blogs.sap.com/2021/04/20/automagic-standalone-renaming-of-abap-objects/]), Lars Hvam
+[Automagic standalone renaming of ABAP objects](https://blogs.sap.com/2021/04/20/automagic-standalone-renaming-of-abap-objects/), Lars Hvam
