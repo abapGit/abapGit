@@ -34,7 +34,7 @@ CLASS zcl_abapgit_object_srfc IMPLEMENTATION.
     TRY.
         CREATE OBJECT li_srfc_persist TYPE ('CL_UCONRFC_OBJECT_PERSIST').
       CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'Object type SRFC not supported' ).
+        zcx_abapgit_exception=>raise( 'Object type SRFC is not supported by this system' ).
     ENDTRY.
 
   ENDMETHOD.
