@@ -2,11 +2,28 @@ CLASS ltcl_object_types DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHOR
 
   PRIVATE SECTION.
     METHODS:
+      type_supported FOR TESTING RAISING zcx_abapgit_exception,
       not_exist FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
 CLASS ltcl_object_types IMPLEMENTATION.
+
+  METHOD type_supported.
+
+    cl_abap_unit_assert=>assert_equals(
+      act  = zcl_abapgit_objects=>is_type_supported( 'PROG' )
+      exp  = abap_true ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act  = zcl_abapgit_objects=>is_type_supported( 'ZXYZ' )
+      exp  = abap_false ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act  = zcl_abapgit_objects=>is_type_supported( '' )
+      exp  = abap_false ).
+
+  ENDMETHOD.
 
   METHOD not_exist.
 
@@ -56,6 +73,7 @@ CLASS ltcl_serialize DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT F
       serialize_view FOR TESTING RAISING zcx_abapgit_exception,
       serialize_auth FOR TESTING RAISING zcx_abapgit_exception,
       serialize_clas FOR TESTING RAISING zcx_abapgit_exception,
+      serialize_intf FOR TESTING RAISING zcx_abapgit_exception,
       serialize_doma FOR TESTING RAISING zcx_abapgit_exception,
       serialize_dtel FOR TESTING RAISING zcx_abapgit_exception,
       serialize_fugr FOR TESTING RAISING zcx_abapgit_exception,
@@ -128,6 +146,17 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     ls_item-obj_type = 'CLAS'.
     ls_item-obj_name = 'CL_GUI_FRONTEND_SERVICES'.
+
+    check( ls_item ).
+
+  ENDMETHOD.
+
+  METHOD serialize_intf.
+
+    DATA: ls_item  TYPE zif_abapgit_definitions=>ty_item.
+
+    ls_item-obj_type = 'INTF'.
+    ls_item-obj_name = 'IF_BADI_TADIR_CHANGED'.
 
     check( ls_item ).
 

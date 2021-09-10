@@ -66,6 +66,11 @@ CLASS zcl_abapgit_objects DEFINITION
         !iv_native_only TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rv_bool)  TYPE abap_bool .
+    CLASS-METHODS is_type_supported
+      IMPORTING
+        !iv_obj_type   TYPE zif_abapgit_definitions=>ty_item-obj_type
+      RETURNING
+        VALUE(rv_bool) TYPE abap_bool .
     CLASS-METHODS exists
       IMPORTING
         !is_item       TYPE zif_abapgit_definitions=>ty_item
@@ -170,21 +175,30 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
+CLASS zcl_abapgit_objects IMPLEMENTATION.
 
 
   METHOD changed_by.
 
     DATA: li_obj TYPE REF TO zif_abapgit_object.
 
-    IF is_item IS NOT INITIAL.
-      li_obj = create_object( is_item     = is_item
-                              iv_language = zif_abapgit_definitions=>c_english ).
-      rv_user = li_obj->changed_by( ).
+    " For unsupported objects, return "unknown user"
+    IF is_type_supported( is_item-obj_type ) = abap_false.
+      rv_user = zcl_abapgit_objects_super=>c_user_unknown.
+      RETURN.
     ENDIF.
 
+    TRY.
+        li_obj = create_object( is_item     = is_item
+                                iv_language = zif_abapgit_definitions=>c_english ).
+
+        rv_user = li_obj->changed_by( ).
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
+        " Ignore errors
+    ENDTRY.
+
     IF rv_user IS INITIAL.
-* eg. ".abapgit.xml" file
+      " Eg. ".abapgit.xml" file
       rv_user = zcl_abapgit_objects_super=>c_user_unknown.
     ENDIF.
 
@@ -259,7 +273,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
       " You should remember that we ignore not supported objects here,
       " because otherwise the process aborts which is not desired
-      IF is_supported( <ls_item> ) = abap_false.
+      IF is_type_supported( <ls_item>-obj_type ) = abap_false.
         CONTINUE.
       ENDIF.
 
@@ -375,8 +389,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     IF sy-subrc = 0.
       lv_class_name = ls_obj_serializer_map-metadata-class.
     ELSEIF is_metadata IS NOT INITIAL.
-*        Metadata is provided only on serialization
-*        Once this has been triggered, the same serializer shall be used
+*        Metadata is provided only on deserialization
+*        Once this has been triggered, the same deserializer shall be used
 *        for subsequent processes.
 *        Thus, buffer the metadata afterwards
       ls_obj_serializer_map-item      = is_item.
@@ -499,32 +513,35 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     DATA: li_obj TYPE REF TO zif_abapgit_object.
 
+    " Nothing to do for unsupported objects
+    IF is_type_supported( is_item-obj_type ) = abap_false.
+      RETURN.
+    ENDIF.
 
-    IF is_supported( is_item ) = abap_true.
-      li_obj = create_object( is_item     = is_item
-                              iv_language = zif_abapgit_definitions=>c_english ).
+    li_obj = create_object( is_item     = is_item
+                            iv_language = zif_abapgit_definitions=>c_english ).
 
-      li_obj->delete( iv_package ).
+    li_obj->delete( iv_package ).
 
-      IF li_obj->get_metadata( )-delete_tadir = abap_true.
-        CALL FUNCTION 'TR_TADIR_INTERFACE'
-          EXPORTING
-            wi_delete_tadir_entry = abap_true
-            wi_tadir_pgmid        = 'R3TR'
-            wi_tadir_object       = is_item-obj_type
-            wi_tadir_obj_name     = is_item-obj_name
-            wi_test_modus         = abap_false
-          EXCEPTIONS
-            OTHERS                = 1 ##FM_SUBRC_OK.
+    IF li_obj->get_metadata( )-delete_tadir = abap_true.
 
-        " We deliberately ignore the subrc, because throwing an exception would
-        " break the deletion of lots of object types. On the other hand we have
-        " to catch the exceptions because otherwise messages would directly be issued
-        " by the function module and change the control flow. Thus breaking the
-        " deletion of TOBJ and other object types.
-        " TODO: This is not very clean and has to be improved in the future. See PR 2741.
+      CALL FUNCTION 'TR_TADIR_INTERFACE'
+        EXPORTING
+          wi_delete_tadir_entry = abap_true
+          wi_tadir_pgmid        = 'R3TR'
+          wi_tadir_object       = is_item-obj_type
+          wi_tadir_obj_name     = is_item-obj_name
+          wi_test_modus         = abap_false
+        EXCEPTIONS
+          OTHERS                = 1 ##FM_SUBRC_OK.
 
-      ENDIF.
+      " We deliberately ignore the subrc, because throwing an exception would
+      " break the deletion of lots of object types. On the other hand we have
+      " to catch the exceptions because otherwise messages would directly be issued
+      " by the function module and change the control flow. Thus breaking the
+      " deletion of TOBJ and other object types.
+      " TODO: This is not very clean and has to be improved in the future. See PR 2741.
+
     ENDIF.
 
   ENDMETHOD.
@@ -748,13 +765,19 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     DATA: li_obj TYPE REF TO zif_abapgit_object.
 
+    " For unsupported objects, assume object exists
+    IF is_type_supported( is_item-obj_type ) = abap_false.
+      rv_bool = abap_true.
+      RETURN.
+    ENDIF.
 
     TRY.
-        li_obj = create_object( is_item = is_item
+        li_obj = create_object( is_item     = is_item
                                 iv_language = zif_abapgit_definitions=>c_english ).
+
         rv_bool = li_obj->exists( ).
       CATCH zcx_abapgit_exception.
-* ignore all errors and assume the object exists
+        " Ignore errors and assume the object exists
         rv_bool = abap_true.
     ENDTRY.
 
@@ -789,18 +812,26 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
   METHOD is_active.
 
-    DATA: li_object TYPE REF TO zif_abapgit_object.
+    DATA: li_obj TYPE REF TO zif_abapgit_object.
+
+    " For unsupported objects, assume active state
+    IF is_type_supported( is_item-obj_type ) = abap_false.
+      rv_active = abap_true.
+      RETURN.
+    ENDIF.
 
     TRY.
-        li_object = create_object( is_item     = is_item
-                                   iv_language = sy-langu ).
+        li_obj = create_object( is_item     = is_item
+                                iv_language = zif_abapgit_definitions=>c_english ).
 
-        rv_active = li_object->is_active( ).
+        rv_active = li_obj->is_active( ).
       CATCH cx_sy_dyn_call_illegal_method
             cx_sy_ref_is_initial
             zcx_abapgit_exception.
+        " Ignore errors and assume active state
         rv_active = abap_true.
     ENDTRY.
+
   ENDMETHOD.
 
 
@@ -818,10 +849,28 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD is_type_supported.
+
+    " If necessary, initialize list
+    IF gt_supported_obj_types IS INITIAL.
+      supported_list( ).
+    ENDIF.
+
+    READ TABLE gt_supported_obj_types TRANSPORTING NO FIELDS WITH TABLE KEY table_line = iv_obj_type.
+    rv_bool = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.
+
+
   METHOD jump.
 
     DATA: li_obj              TYPE REF TO zif_abapgit_object,
           lv_adt_jump_enabled TYPE abap_bool.
+
+    " Nothing to do for unsupported objects
+    IF is_type_supported( is_item-obj_type ) = abap_false.
+      zcx_abapgit_exception=>raise( |Object type { is_item-obj_type } is not supported by this system| ).
+    ENDIF.
 
     li_obj = create_object( is_item     = is_item
                             iv_language = zif_abapgit_definitions=>c_english ).
@@ -921,7 +970,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     rs_files_and_item-item = is_item.
 
-    IF is_supported( rs_files_and_item-item ) = abap_false.
+    IF is_type_supported( rs_files_and_item-item-obj_type ) = abap_false.
       zcx_abapgit_exception=>raise( |Object type ignored, not supported: {
         rs_files_and_item-item-obj_type }-{
         rs_files_and_item-item-obj_name }| ).
@@ -933,7 +982,9 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     li_obj = create_object( is_item     = rs_files_and_item-item
                             iv_language = iv_language ).
+
     li_obj->mo_files = lo_files.
+
     CREATE OBJECT li_xml TYPE zcl_abapgit_xml_output.
 
     ls_i18n_params-main_language         = iv_language.
@@ -943,6 +994,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     li_xml->i18n_params( ls_i18n_params ).
 
     li_obj->serialize( li_xml ).
+
     lo_files->add_xml( ii_xml      = li_xml
                        is_metadata = li_obj->get_metadata( ) ).
 
