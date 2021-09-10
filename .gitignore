@@ -2,7 +2,7 @@
 node_modules/
 package-lock.json
 zabapgit.abap
-deps
+lint_deps
 output
 ci/*.abap
 allure-report
