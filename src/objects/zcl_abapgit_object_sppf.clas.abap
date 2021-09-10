@@ -1,11 +1,11 @@
-class ZCL_ABAPGIT_OBJECT_SPPF definition
-  public
-  inheriting from ZCL_ABAPGIT_OBJECTS_SUPER
-  create public .
+CLASS zcl_abapgit_object_sppf DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_super
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  interfaces ZIF_ABAPGIT_OBJECT .
+    INTERFACES zif_abapgit_object .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
