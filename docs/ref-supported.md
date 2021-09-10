@@ -111,6 +111,7 @@ SMIM | Info Object from the MIME Repository | Yes
 SMTG | OM: Email Template | Yes
 SOTS | All Concepts (OTR) of a Package - Long Texts | Yes
 SPLO | Format Types | Yes
+SPPF | Page Format | Yes
 SPRX | Proxy Object | Yes
 SQSC | Database Procedure Proxy | Yes
 SRFC | RFC Service | Yes
