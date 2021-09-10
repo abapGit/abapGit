@@ -7,8 +7,12 @@
   },
   "dependencies": [
     {
-      "url": "https://github.com/abaplint/deps",
       "folder": "/deps",
+      "files": "/**/*.*"
+    },
+    {
+      "url": "https://github.com/abaplint/deps",
+      "folder": "/lint_deps",
       "files": "/src/**/*.*"
     }
   ],
@@ -60,6 +64,7 @@
     "globalMacros": []
   },
   "rules": {
+    "pragma_placement": true,
     "unsecure_fae": false,
     "identical_descriptions": false,
     "modify_only_own_db_tables": false,
