@@ -47,7 +47,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
           RECEIVING
             handler = lo_ddl.
       CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'Object type DDLS not supported' ).
+        zcx_abapgit_exception=>raise( 'Object type DDLS is not supported by this system' ).
     ENDTRY.
 
   ENDMETHOD.
