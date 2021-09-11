@@ -127,7 +127,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_router IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
 
   METHOD abapgit_services_actions.
@@ -606,9 +606,6 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         rs_handled-state = get_state_settings( ii_event ).
       WHEN zif_abapgit_definitions=>c_action-repo_background.                 " Repo background mode
         rs_handled-page  = zcl_abapgit_gui_page_sett_bckg=>create( lo_repo ).
-        rs_handled-state = get_state_settings( ii_event ).
-      WHEN 'repo_pack'.                  " Repo packaging
-        rs_handled-page  = zcl_abapgit_gui_page_sett_pack=>create( lo_repo ).
         rs_handled-state = get_state_settings( ii_event ).
       WHEN zif_abapgit_definitions=>c_action-repo_infos.                      " Repo infos
         rs_handled-page  = zcl_abapgit_gui_page_sett_info=>create( lo_repo ).
