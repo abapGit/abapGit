@@ -39,10 +39,10 @@ CLASS zcl_abapgit_code_inspector DEFINITION
         VALUE(rv_skip) TYPE abap_bool.
   PRIVATE SECTION.
 
-    TYPES:
-      ty_run_mode TYPE c LENGTH 1 .
-
     DATA mv_success TYPE abap_bool .
+
+    TYPES: ty_run_mode TYPE c LENGTH 1.
+
     CONSTANTS:
       BEGIN OF co_run_mode,
         run_with_popup   TYPE ty_run_mode VALUE 'P',
@@ -54,8 +54,7 @@ CLASS zcl_abapgit_code_inspector DEFINITION
       END OF co_run_mode .
     DATA mo_inspection TYPE REF TO cl_ci_inspection .
     DATA mv_name TYPE sci_objs .
-    DATA:
-      mv_run_mode TYPE c LENGTH 1 .
+    DATA mv_run_mode TYPE c LENGTH 1 .
 
     METHODS create_objectset
       RETURNING
