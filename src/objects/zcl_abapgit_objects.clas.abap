@@ -182,9 +182,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     DATA: li_obj TYPE REF TO zif_abapgit_object.
 
-    " For unsupported objects, return "unknown user"
+    " For unsupported objects, return empty string
     IF is_type_supported( is_item-obj_type ) = abap_false.
-      rv_user = zcl_abapgit_objects_super=>c_user_unknown.
       RETURN.
     ENDIF.
 
