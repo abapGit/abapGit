@@ -71,20 +71,20 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
     DATA: lt_dependencies_status TYPE ty_dependency_statuses.
 
     IF it_dependencies IS INITIAL.
-      rv_status = zif_abapgit_definitions=>gc_yes.
+      rv_status = zif_abapgit_definitions=>c_yes.
       RETURN.
     ENDIF.
 
     lt_dependencies_status = get_dependencies_met_status( it_dependencies ).
 
-    LOOP AT lt_dependencies_status TRANSPORTING NO FIELDS WHERE met <> zif_abapgit_definitions=>gc_yes.
+    LOOP AT lt_dependencies_status TRANSPORTING NO FIELDS WHERE met <> zif_abapgit_definitions=>c_yes.
       EXIT.
     ENDLOOP.
 
     IF sy-subrc = 0.
-      rv_status = zif_abapgit_definitions=>gc_no.
+      rv_status = zif_abapgit_definitions=>c_no.
     ELSE.
-      rv_status = zif_abapgit_definitions=>gc_yes.
+      rv_status = zif_abapgit_definitions=>c_yes.
     ENDIF.
 
   ENDMETHOD.
@@ -123,14 +123,14 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
         WITH KEY group_id    = ls_dependecy-group_id
                  artifact_id = ls_dependecy-artifact_id.
       IF sy-subrc <> 0.
-        ls_dependecy_popup-met = zif_abapgit_definitions=>gc_no.
+        ls_dependecy_popup-met = zif_abapgit_definitions=>c_no.
       ELSE.
         TRY.
             zcl_abapgit_version=>check_dependant_version( is_current   = ls_installed_package-sem_version
                                                           is_dependant = ls_dependecy-sem_version ).
-            ls_dependecy_popup-met = zif_abapgit_definitions=>gc_yes.
+            ls_dependecy_popup-met = zif_abapgit_definitions=>c_yes.
           CATCH zcx_abapgit_exception.
-            ls_dependecy_popup-met = zif_abapgit_definitions=>gc_partial.
+            ls_dependecy_popup-met = zif_abapgit_definitions=>c_partial.
         ENDTRY.
       ENDIF.
 
@@ -286,13 +286,13 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
           MOVE-CORRESPONDING <ls_dependency> TO <ls_line>.
 
           CASE <ls_line>-met.
-            WHEN zif_abapgit_definitions=>gc_yes.
+            WHEN zif_abapgit_definitions=>c_yes.
               <ls_line>-color     = lt_color_positive.
               <ls_line>-exception = '3'.
-            WHEN zif_abapgit_definitions=>gc_partial.
+            WHEN zif_abapgit_definitions=>c_partial.
               <ls_line>-color     = lt_color_normal.
               <ls_line>-exception = '2'.
-            WHEN zif_abapgit_definitions=>gc_no.
+            WHEN zif_abapgit_definitions=>c_no.
               <ls_line>-color     = lt_color_negative.
               <ls_line>-exception = '1'.
           ENDCASE.
