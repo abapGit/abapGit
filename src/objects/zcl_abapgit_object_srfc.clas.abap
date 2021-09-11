@@ -263,7 +263,7 @@ CLASS zcl_abapgit_object_srfc IMPLEMENTATION.
         ENDIF.
 
       CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise( lx_error->get_text( ) ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
     io_xml->add( iv_name = 'SRFC'
