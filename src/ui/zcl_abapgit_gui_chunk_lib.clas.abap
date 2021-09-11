@@ -1036,10 +1036,6 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       iv_act = |{ zif_abapgit_definitions=>c_action-repo_settings }?key={ iv_key }|
       iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_settings )
     )->add(
-      iv_txt = 'Packaging'
-      iv_act = |repo_pack?key={ iv_key }|
-      iv_cur = boolc( iv_act = 'repo_pack' )
-    )->add(
       iv_txt = 'Local'
       iv_act = |{ zif_abapgit_definitions=>c_action-repo_local_settings }?key={ iv_key }|
       iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_local_settings )
