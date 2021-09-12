@@ -1036,7 +1036,11 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
       <n>-name  = is_prefix-name.
     ENDIF.
 
-    IF io_type->absolute_name = '\TYPE-POOL=ABAP\TYPE=ABAP_BOOL' OR io_type->absolute_name = '\TYPE=XFELD'.
+    IF io_type->absolute_name = '\TYPE-POOL=ABAP\TYPE=ABAP_BOOL'
+        OR io_type->absolute_name = '\TYPE=ABAP_BOOLEAN'
+        OR io_type->absolute_name = '\TYPE=XSDBOOLEAN'
+        OR io_type->absolute_name = '\TYPE=FLAG'
+        OR io_type->absolute_name = '\TYPE=XFELD'.
       <n>-type = zif_abapgit_ajson=>node_type-boolean.
       IF iv_data IS NOT INITIAL.
         <n>-value = 'true'.
