@@ -2925,7 +2925,11 @@ CLASS ltcl_abap_to_json DEFINITION
       END OF ty_struc_complex.
 
     METHODS set_ajson FOR TESTING RAISING zcx_abapgit_ajson_error.
-    METHODS set_value FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS set_value_number FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS set_value_string FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS set_value_true FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS set_value_false FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS set_value_xfeld FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_null FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_obj FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_array FOR TESTING RAISING zcx_abapgit_ajson_error.
@@ -2960,7 +2964,7 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD set_value.
+  METHOD set_value_number.
 
     DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
     DATA lt_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt.
@@ -2975,6 +2979,13 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
       act = lt_nodes
       exp = lo_nodes_exp->mt_nodes ).
 
+  ENDMETHOD.
+
+  METHOD set_value_string.
+
+    DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
+    DATA lt_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt.
+
     " string
     CREATE OBJECT lo_nodes_exp.
     lo_nodes_exp->add( '        |      |str |abc     ||' ).
@@ -2984,6 +2995,13 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lt_nodes
       exp = lo_nodes_exp->mt_nodes ).
+
+  ENDMETHOD.
+
+  METHOD set_value_true.
+
+    DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
+    DATA lt_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt.
 
     " true
     CREATE OBJECT lo_nodes_exp.
@@ -2995,6 +3013,13 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
       act = lt_nodes
       exp = lo_nodes_exp->mt_nodes ).
 
+  ENDMETHOD.
+
+  METHOD set_value_false.
+
+    DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
+    DATA lt_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt.
+
     " false
     CREATE OBJECT lo_nodes_exp.
     lo_nodes_exp->add( '        |      |bool |false    ||' ).
@@ -3004,6 +3029,13 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lt_nodes
       exp = lo_nodes_exp->mt_nodes ).
+
+  ENDMETHOD.
+
+  METHOD set_value_xfeld.
+
+    DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
+    DATA lt_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt.
 
     " xfeld
     DATA lv_xfeld TYPE xfeld.
