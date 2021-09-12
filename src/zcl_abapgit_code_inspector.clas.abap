@@ -42,6 +42,7 @@ CLASS zcl_abapgit_code_inspector DEFINITION
     DATA mv_success TYPE abap_bool .
 
     TYPES: ty_run_mode TYPE c LENGTH 1.
+
     CONSTANTS:
       BEGIN OF co_run_mode,
         run_with_popup   TYPE ty_run_mode VALUE 'P',
@@ -55,7 +56,6 @@ CLASS zcl_abapgit_code_inspector DEFINITION
     DATA mv_name TYPE sci_objs .
     DATA mv_run_mode TYPE c LENGTH 1 .
 
-
     METHODS create_objectset
       RETURNING
         VALUE(ro_set) TYPE REF TO cl_ci_objectset .
@@ -68,21 +68,23 @@ CLASS zcl_abapgit_code_inspector DEFINITION
         zcx_abapgit_exception .
     METHODS create_inspection
       IMPORTING
-        io_set               TYPE REF TO cl_ci_objectset
-        io_variant           TYPE REF TO cl_ci_checkvariant
+        !io_set              TYPE REF TO cl_ci_objectset
+        !io_variant          TYPE REF TO cl_ci_checkvariant
       RETURNING
         VALUE(ro_inspection) TYPE REF TO cl_ci_inspection
       RAISING
         zcx_abapgit_exception .
-
     METHODS decide_run_mode
       RETURNING
-        VALUE(rv_run_mode) TYPE ty_run_mode.
+        VALUE(rv_run_mode) TYPE ty_run_mode .
+    METHODS filter_inspection
+      CHANGING
+        !ct_list TYPE scit_alvlist .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
+CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
 
 
   METHOD cleanup.
@@ -259,6 +261,14 @@ CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD filter_inspection.
+
+    " Remove findings in LSVIM* includes which are part of generated maintenance screens
+    DELETE ct_list WHERE sobjtype = 'PROG' AND sobjname CP 'LSVIM*'.
+
+  ENDMETHOD.
+
+
   METHOD run_inspection.
 
     io_inspection->run(
@@ -273,6 +283,8 @@ CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
     ENDIF.
 
     io_inspection->plain_list( IMPORTING p_list = rt_list ).
+
+    filter_inspection( CHANGING ct_list = rt_list ).
 
     SORT rt_list BY objtype objname test code sobjtype sobjname line col.
 
