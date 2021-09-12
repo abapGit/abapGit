@@ -4,6 +4,12 @@ CLASS zcl_abapgit_object_ddls DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
+    METHODS constructor
+      IMPORTING
+        !is_item     TYPE zif_abapgit_definitions=>ty_item
+        !iv_language TYPE spras
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
     METHODS open_adt_stob
       IMPORTING
@@ -26,6 +32,58 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
+
+
+  METHOD constructor.
+
+    DATA lo_ddl TYPE REF TO object.
+
+    super->constructor(
+      is_item     = is_item
+      iv_language = iv_language ).
+
+    TRY.
+        CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
+          RECEIVING
+            handler = lo_ddl.
+      CATCH cx_root.
+        zcx_abapgit_exception=>raise( 'Object type DDLS is not supported by this system' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD format_source_before_serialize.
+
+    DATA:
+      lv_len       TYPE i,
+      lv_lastchar1 TYPE c,
+      lv_lastchar2 TYPE c.
+
+    " New line included in 751+ by CL_DD_DDL_HANDLER=>ADD_BASEOBJS_INFO_TO_DDLS
+    " Change for 750-
+
+    lv_len = strlen( cv_string ) - 1.
+    IF lv_len < 0.
+      RETURN.
+    ENDIF.
+    lv_lastchar1 = cv_string+lv_len(1).
+
+    lv_len = strlen( cv_string ) - 2.
+    IF lv_len < 0.
+      RETURN.
+    ENDIF.
+    lv_lastchar2 = cv_string+lv_len(1).
+
+    " only add a line break, if the last character is unequal to cr_lf and newline !
+    IF lv_lastchar1 <> cl_abap_char_utilities=>cr_lf AND lv_lastchar1 <> cl_abap_char_utilities=>newline AND
+        lv_lastchar1 <> space OR
+        ( lv_lastchar1 = space AND
+          ( lv_lastchar2 <> cl_abap_char_utilities=>cr_lf AND lv_lastchar2 <> cl_abap_char_utilities=>newline ) ).
+      cv_string = |{ cv_string }{ cl_abap_char_utilities=>cr_lf }|.
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD is_baseinfo_supported.
@@ -126,15 +184,14 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
                    <lg_field> TYPE any.
 
 
-    CREATE DATA lr_data TYPE ('DDDDLSRCV').
-    ASSIGN lr_data->* TO <lg_data>.
-
-
-    CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
-      RECEIVING
-        handler = lo_ddl.
-
     TRY.
+        CREATE DATA lr_data TYPE ('DDDDLSRCV').
+        ASSIGN lr_data->* TO <lg_data>.
+
+        CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
+          RECEIVING
+            handler = lo_ddl.
+
         CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~READ')
           EXPORTING
             name         = ms_item-obj_name
@@ -262,10 +319,12 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
         corr_insert( iv_package ).
 
       CATCH cx_root INTO lx_error.
-        CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~DELETE')
-          EXPORTING
-            name = ms_item-obj_name
-            prid = 0.
+        IF lo_ddl IS NOT INITIAL.
+          CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~DELETE')
+            EXPORTING
+              name = ms_item-obj_name
+              prid = 0.
+        ENDIF.
 
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
@@ -280,12 +339,11 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
     DATA: lv_state TYPE objstate,
           lo_ddl   TYPE REF TO object.
 
-
-    CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
-      RECEIVING
-        handler = lo_ddl.
-
     TRY.
+        CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
+          RECEIVING
+            handler = lo_ddl.
+
         CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~READ')
           EXPORTING
             name      = ms_item-obj_name
@@ -447,39 +505,4 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
                  ig_data = <lg_data> ).
 
   ENDMETHOD.
-
-
-  METHOD format_source_before_serialize.
-
-    DATA:
-      lv_len       TYPE i,
-      lv_lastchar1 TYPE c,
-      lv_lastchar2 TYPE c.
-
-    " New line included in 751+ by CL_DD_DDL_HANDLER=>ADD_BASEOBJS_INFO_TO_DDLS
-    " Change for 750-
-
-    lv_len = strlen( cv_string ) - 1.
-    IF lv_len < 0.
-      RETURN.
-    ENDIF.
-    lv_lastchar1 = cv_string+lv_len(1).
-
-    lv_len = strlen( cv_string ) - 2.
-    IF lv_len < 0.
-      RETURN.
-    ENDIF.
-    lv_lastchar2 = cv_string+lv_len(1).
-
-    " only add a line break, if the last character is unequal to cr_lf and newline !
-    IF lv_lastchar1 <> cl_abap_char_utilities=>cr_lf AND lv_lastchar1 <> cl_abap_char_utilities=>newline AND
-        lv_lastchar1 <> space OR
-        ( lv_lastchar1 = space AND
-          ( lv_lastchar2 <> cl_abap_char_utilities=>cr_lf AND lv_lastchar2 <> cl_abap_char_utilities=>newline ) ).
-      cv_string = |{ cv_string }{ cl_abap_char_utilities=>cr_lf }|.
-    ENDIF.
-
-  ENDMETHOD.
-
-
 ENDCLASS.
