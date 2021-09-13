@@ -394,7 +394,6 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
 
     LOOP AT lt_dd07v ASSIGNING <ls_dd07v>.
       CLEAR <ls_dd07v>-domname.
-      CLEAR <ls_dd07v>-valpos.
     ENDLOOP.
 
     io_xml->add( iv_name = 'DD01V'
