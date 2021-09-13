@@ -1,8 +1,19 @@
-CLASS zcl_abapgit_object_srfc DEFINITION PUBLIC INHERITING FROM zcl_abapgit_objects_super FINAL.
+CLASS zcl_abapgit_object_srfc DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_super
+  FINAL
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_object.
 
+    INTERFACES zif_abapgit_object .
+
+    METHODS constructor
+      IMPORTING
+        !is_item     TYPE zif_abapgit_definitions=>ty_item
+        !iv_language TYPE spras
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -12,9 +23,59 @@ ENDCLASS.
 CLASS zcl_abapgit_object_srfc IMPLEMENTATION.
 
 
+  METHOD constructor.
+
+    DATA li_srfc_persist TYPE REF TO if_wb_object_persist.
+
+    super->constructor(
+      is_item     = is_item
+      iv_language = iv_language ).
+
+    TRY.
+        CREATE OBJECT li_srfc_persist TYPE ('CL_UCONRFC_OBJECT_PERSIST').
+      CATCH cx_root.
+        zcx_abapgit_exception=>raise( 'Object type SRFC is not supported by this system' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~changed_by.
 
-    rv_user = c_user_unknown.
+    DATA: li_object_data  TYPE REF TO if_wb_object_data_model,
+          li_srfc_persist TYPE REF TO if_wb_object_persist,
+          lr_srfc_data    TYPE REF TO data,
+          lx_error        TYPE REF TO cx_root.
+
+    FIELD-SYMBOLS: <lg_srfc_data> TYPE any,
+                   <lg_any>       TYPE any.
+
+    TRY.
+        CREATE DATA lr_srfc_data TYPE ('UCONRFCSERV_COMPLETE').
+        ASSIGN lr_srfc_data->* TO <lg_srfc_data>.
+        ASSERT sy-subrc = 0.
+
+        CREATE OBJECT li_srfc_persist TYPE ('CL_UCONRFC_OBJECT_PERSIST').
+
+        li_srfc_persist->get(
+          EXPORTING
+            p_object_key  = |{ ms_item-obj_name }|
+            p_version     = 'A'
+          CHANGING
+            p_object_data = li_object_data ).
+
+        li_object_data->get_data( IMPORTING p_data = <lg_srfc_data> ).
+
+        ASSIGN COMPONENT 'HEADER-CHANGEDBY' OF STRUCTURE <lg_srfc_data> TO <lg_any>.
+        IF sy-subrc = 0 AND <lg_any> IS NOT INITIAL.
+          rv_user = <lg_any>.
+        ELSE.
+          rv_user = c_user_unknown.
+        ENDIF.
+
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -22,14 +83,7 @@ CLASS zcl_abapgit_object_srfc IMPLEMENTATION.
   METHOD zif_abapgit_object~delete.
 
     DATA: li_srfc_persist TYPE REF TO if_wb_object_persist,
-          lx_error        TYPE REF TO cx_root,
-          lv_text         TYPE string.
-
-
-    IF zif_abapgit_object~exists( ) = abap_false.
-* the SRFC might already have been deleted with the function module
-      RETURN.
-    ENDIF.
+          lx_error        TYPE REF TO cx_root.
 
     TRY.
         CREATE OBJECT li_srfc_persist TYPE ('CL_UCONRFC_OBJECT_PERSIST').
@@ -38,8 +92,7 @@ CLASS zcl_abapgit_object_srfc IMPLEMENTATION.
                                  p_version    = 'A' ).
 
       CATCH cx_root INTO lx_error.
-        lv_text = lx_error->get_text( ).
-        zcx_abapgit_exception=>raise( lv_text ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
   ENDMETHOD.
@@ -49,13 +102,11 @@ CLASS zcl_abapgit_object_srfc IMPLEMENTATION.
 
     DATA: li_srfc_persist TYPE REF TO if_wb_object_persist,
           li_object_data  TYPE REF TO if_wb_object_data_model,
-          lv_text         TYPE string,
           lr_srfc_data    TYPE REF TO data,
           lx_error        TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <lg_srfc_data> TYPE any,
                    <lg_any>       TYPE any.
-
 
     TRY.
         CREATE DATA lr_srfc_data TYPE ('UCONRFCSERV_COMPLETE').
@@ -93,8 +144,7 @@ CLASS zcl_abapgit_object_srfc IMPLEMENTATION.
         tadir_insert( iv_package ).
 
       CATCH cx_root INTO lx_error.
-        lv_text = lx_error->get_text( ).
-        zcx_abapgit_exception=>raise( lv_text ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
   ENDMETHOD.
@@ -136,10 +186,8 @@ CLASS zcl_abapgit_object_srfc IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_metadata.
-
     rs_metadata = get_metadata( ).
     rs_metadata-delete_tadir = abap_true.
-
   ENDMETHOD.
 
 
@@ -178,12 +226,10 @@ CLASS zcl_abapgit_object_srfc IMPLEMENTATION.
     DATA: li_object_data  TYPE REF TO if_wb_object_data_model,
           li_srfc_persist TYPE REF TO if_wb_object_persist,
           lr_srfc_data    TYPE REF TO data,
-          lx_error        TYPE REF TO cx_root,
-          lv_text         TYPE string.
+          lx_error        TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <lg_srfc_data> TYPE any,
                    <lg_any>       TYPE any.
-
 
     TRY.
         CREATE DATA lr_srfc_data TYPE ('UCONRFCSERV_COMPLETE').
@@ -201,7 +247,6 @@ CLASS zcl_abapgit_object_srfc IMPLEMENTATION.
 
         li_object_data->get_data( IMPORTING p_data = <lg_srfc_data> ).
 
-
         ASSIGN COMPONENT 'HEADER-CREATEDBY' OF STRUCTURE <lg_srfc_data> TO <lg_any>.
         IF sy-subrc = 0.
           CLEAR <lg_any>.
@@ -218,8 +263,7 @@ CLASS zcl_abapgit_object_srfc IMPLEMENTATION.
         ENDIF.
 
       CATCH cx_root INTO lx_error.
-        lv_text = lx_error->get_text( ).
-        zcx_abapgit_exception=>raise( lv_text ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
     io_xml->add( iv_name = 'SRFC'
