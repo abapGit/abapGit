@@ -110,7 +110,7 @@ CLASS lcl_transport_zipper DEFINITION FINAL.
     TYPES ty_filename TYPE string.
 
 * File extension
-    CONSTANTS gc_zip_ext TYPE string VALUE '.zip'.
+    CONSTANTS c_zip_ext TYPE string VALUE '.zip'.
 
     METHODS constructor  IMPORTING iv_folder TYPE ty_folder
                          RAISING   zcx_abapgit_exception.
@@ -235,7 +235,7 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
   METHOD get_filename.
 
 * Generate filename
-    CONCATENATE is_trkorr-trkorr '_' is_trkorr-as4text '_' mv_timestamp gc_zip_ext
+    CONCATENATE is_trkorr-trkorr '_' is_trkorr-as4text '_' mv_timestamp c_zip_ext
       INTO rv_filename.
 
 * Remove reserved characters (for Windows based systems)

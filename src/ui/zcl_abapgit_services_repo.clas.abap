@@ -136,7 +136,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     LOOP AT is_checks-overwrite ASSIGNING <ls_overwrite>
       WHERE ( action = zif_abapgit_objects=>c_deserialize_action-delete
       OR action = zif_abapgit_objects=>c_deserialize_action-delete_add )
-      AND decision = zif_abapgit_definitions=>gc_yes.
+      AND decision = zif_abapgit_definitions=>c_yes.
 
       ls_tadir-pgmid    = 'R3TR'.
       ls_tadir-object   = <ls_overwrite>-obj_type.
@@ -276,13 +276,13 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     popup_overwrite( CHANGING ct_overwrite = lt_decision ).
     popup_package_overwrite( CHANGING ct_overwrite = cs_checks-warning_package ).
 
-    IF cs_checks-requirements-met = zif_abapgit_definitions=>gc_no.
+    IF cs_checks-requirements-met = zif_abapgit_definitions=>c_no.
       lt_requirements = io_repo->get_dot_abapgit( )->get_data( )-requirements.
       zcl_abapgit_requirement_helper=>requirements_popup( lt_requirements ).
-      cs_checks-requirements-decision = zif_abapgit_definitions=>gc_yes.
+      cs_checks-requirements-decision = zif_abapgit_definitions=>c_yes.
     ENDIF.
 
-    IF cs_checks-dependencies-met = zif_abapgit_definitions=>gc_no.
+    IF cs_checks-dependencies-met = zif_abapgit_definitions=>c_no.
       lt_dependencies = io_repo->get_dot_apack( )->get_manifest_descriptor( )-dependencies.
       zcl_abapgit_apack_helper=>dependencies_popup( lt_dependencies ).
     ENDIF.
@@ -304,10 +304,10 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
         CASE <ls_overwrite>-action.
           WHEN zif_abapgit_objects=>c_deserialize_action-delete
             OR zif_abapgit_objects=>c_deserialize_action-delete_add.
-            <ls_overwrite>-decision = zif_abapgit_definitions=>gc_no.
+            <ls_overwrite>-decision = zif_abapgit_definitions=>c_no.
           WHEN zif_abapgit_objects=>c_deserialize_action-add
             OR zif_abapgit_objects=>c_deserialize_action-update.
-            <ls_overwrite>-decision = zif_abapgit_definitions=>gc_yes.
+            <ls_overwrite>-decision = zif_abapgit_definitions=>c_yes.
           WHEN OTHERS.
             ASSERT 0 = 1.
         ENDCASE.
@@ -361,9 +361,9 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
                                         obj_name = <ls_overwrite>-obj_name
                              TRANSPORTING NO FIELDS.
       IF sy-subrc = 0.
-        <ls_overwrite>-decision = zif_abapgit_definitions=>gc_yes.
+        <ls_overwrite>-decision = zif_abapgit_definitions=>c_yes.
       ELSE.
-        <ls_overwrite>-decision = zif_abapgit_definitions=>gc_no.
+        <ls_overwrite>-decision = zif_abapgit_definitions=>c_no.
       ENDIF.
     ENDLOOP.
 
@@ -408,9 +408,9 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
                                         obj_name = <ls_overwrite>-obj_name
                              TRANSPORTING NO FIELDS.
       IF sy-subrc = 0.
-        <ls_overwrite>-decision = zif_abapgit_definitions=>gc_yes.
+        <ls_overwrite>-decision = zif_abapgit_definitions=>c_yes.
       ELSE.
-        <ls_overwrite>-decision = zif_abapgit_definitions=>gc_no.
+        <ls_overwrite>-decision = zif_abapgit_definitions=>c_no.
       ENDIF.
 
     ENDLOOP.
@@ -494,7 +494,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
           lo_repo     TYPE REF TO zcl_abapgit_repo.
 
 
-    IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-update_local_checksum ) = abap_false.
+    IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>c_authorization-update_local_checksum ) = abap_false.
       zcx_abapgit_exception=>raise( 'Not authorized' ).
     ENDIF.
 
@@ -589,7 +589,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       ls_transport_to_branch TYPE zif_abapgit_definitions=>ty_transport_to_branch.
 
 
-    IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-transport_to_branch ) = abap_false.
+    IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>c_authorization-transport_to_branch ) = abap_false.
       zcx_abapgit_exception=>raise( 'Not authorized' ).
     ENDIF.
 
