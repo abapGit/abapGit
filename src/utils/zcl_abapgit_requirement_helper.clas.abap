@@ -54,7 +54,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
+CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
 
 
   METHOD get_requirement_met_status.
@@ -111,9 +111,9 @@ CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
 
     READ TABLE lt_met_status TRANSPORTING NO FIELDS WITH KEY met = abap_false.
     IF sy-subrc = 0.
-      rv_status = zif_abapgit_definitions=>gc_no.
+      rv_status = zif_abapgit_definitions=>c_no.
     ELSE.
-      rv_status = zif_abapgit_definitions=>gc_yes.
+      rv_status = zif_abapgit_definitions=>c_yes.
     ENDIF.
 
   ENDMETHOD.

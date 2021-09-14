@@ -270,7 +270,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                                  iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?key={ mv_key }| ).
 
       CLEAR lv_crossout.
-      IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-transport_to_branch ) = abap_false.
+      IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>c_authorization-transport_to_branch ) = abap_false.
         lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
       ENDIF.
       ro_advanced_dropdown->add(
@@ -291,7 +291,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                                iv_act = |{ zif_abapgit_definitions=>c_action-repo_code_inspector }?key={ mv_key }| ).
 
     CLEAR lv_crossout.
-    IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-update_local_checksum ) = abap_false.
+    IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>c_authorization-update_local_checksum ) = abap_false.
       lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
     ENDIF.
     ro_advanced_dropdown->add( iv_txt = 'Update Local Checksums'
@@ -315,7 +315,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     CLEAR lv_crossout.
     IF mo_repo->get_local_settings( )-write_protected = abap_true
-        OR zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-uninstall ) = abap_false.
+        OR zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>c_authorization-uninstall ) = abap_false.
       lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
     ENDIF.
     ro_advanced_dropdown->add( iv_txt = 'Uninstall'
@@ -972,6 +972,18 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_item_changed_by.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    IF is_item-changes = 0 OR is_item-changed_by IS INITIAL.
+      ri_html->add( '&nbsp;' ).
+    ELSE.
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_user_name( is_item-changed_by ) ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD render_item_command.
 
     DATA: lv_difflink TYPE string,
@@ -1283,17 +1295,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_settings.
     ls_hotkey_action-hotkey = |x|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-  ENDMETHOD.
-
-  METHOD render_item_changed_by.
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    IF is_item-changes = 0 OR is_item-changed_by IS INITIAL.
-      ri_html->add( '&nbsp;' ).
-    ELSE.
-      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_user_name( is_item-changed_by ) ).
-    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
