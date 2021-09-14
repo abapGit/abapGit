@@ -85,7 +85,7 @@ CLASS zcx_abapgit_exception DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CONSTANTS gc_generic_error_msg TYPE string VALUE `An error occured (ZCX_ABAPGIT_EXCEPTION)` ##NO_TEXT.
+    CONSTANTS c_generic_error_msg TYPE string VALUE `An error occured (ZCX_ABAPGIT_EXCEPTION)` ##NO_TEXT.
 
     CLASS-METHODS split_text_to_symsg
       IMPORTING
@@ -297,7 +297,7 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
     DATA lv_text TYPE string.
 
     IF iv_text IS INITIAL.
-      lv_text = gc_generic_error_msg.
+      lv_text = c_generic_error_msg.
     ELSE.
       lv_text = iv_text.
     ENDIF.

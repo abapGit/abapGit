@@ -123,7 +123,7 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
           <ls_overwrite>-obj_name } undecided| ).
       ENDIF.
 
-      IF ls_overwrite-decision = zif_abapgit_definitions=>gc_no.
+      IF ls_overwrite-decision = zif_abapgit_definitions=>c_no.
         DELETE ct_results WHERE
           obj_type = <ls_overwrite>-obj_type AND
           obj_name = <ls_overwrite>-obj_name.
@@ -234,7 +234,7 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
           <ls_overwrite>-obj_name } undecided| ).
       ENDIF.
 
-      IF ls_overwrite-decision = zif_abapgit_definitions=>gc_no.
+      IF ls_overwrite-decision = zif_abapgit_definitions=>c_no.
         DELETE ct_results WHERE
           obj_type = <ls_overwrite>-obj_type AND
           obj_name = <ls_overwrite>-obj_name.

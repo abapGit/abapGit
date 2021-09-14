@@ -79,7 +79,7 @@ CLASS ltcl_test IMPLEMENTATION.
       CATCH zcx_abapgit_exception INTO lx_ex.
         cl_abap_unit_assert=>assert_equals(
           act = get_exc_text( lx_ex )
-          exp = zcx_abapgit_exception=>gc_generic_error_msg ).
+          exp = zcx_abapgit_exception=>c_generic_error_msg ).
     ENDTRY.
 
     FREE lx_ex.
@@ -94,7 +94,7 @@ CLASS ltcl_test IMPLEMENTATION.
       CATCH zcx_abapgit_exception INTO lx_ex.
         cl_abap_unit_assert=>assert_equals(
           act = get_exc_text( lx_ex )
-          exp = zcx_abapgit_exception=>gc_generic_error_msg ).
+          exp = zcx_abapgit_exception=>c_generic_error_msg ).
     ENDTRY.
   ENDMETHOD.
 
