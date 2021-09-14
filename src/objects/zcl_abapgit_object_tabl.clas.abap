@@ -1010,6 +1010,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
     DELETE lt_dd08v WHERE noinherit = 'N'.
     LOOP AT lt_dd05m ASSIGNING <ls_dd05m>.
       CLEAR <ls_dd05m>-tabname.
+	  CLEAR <ls_dd05m>-leng.
       lv_index = sy-tabix.
       READ TABLE lt_dd08v WITH KEY fieldname = <ls_dd05m>-fieldname TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
