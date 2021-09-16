@@ -203,35 +203,12 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
   METHOD reset.
 
-    DATA: lo_repo                   TYPE REF TO zcl_abapgit_repo,
-          lv_answer                 TYPE c LENGTH 1,
-          lt_unnecessary_local_objs TYPE zif_abapgit_definitions=>ty_tadir_tt,
-          lt_selected               LIKE lt_unnecessary_local_objs,
-          lt_columns                TYPE zif_abapgit_definitions=>ty_alv_column_tt,
-          ls_checks                 TYPE zif_abapgit_definitions=>ty_delete_checks,
-          li_popups                 TYPE REF TO zif_abapgit_popups.
-
-    FIELD-SYMBOLS: <ls_column> TYPE zif_abapgit_definitions=>ty_alv_column.
+    DATA lo_repo TYPE REF TO zcl_abapgit_repo.
 
     lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
     IF lo_repo->get_local_settings( )-write_protected = abap_true.
-      zcx_abapgit_exception=>raise( 'Cannot reset. Local code is write-protected by repo config' ).
-    ENDIF.
-
-* todo, separate UI and logic
-    lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
-      iv_titlebar              = 'Warning'
-      iv_text_question         = 'Reset local objects?'
-      iv_text_button_1         = 'Ok'
-      iv_icon_button_1         = 'ICON_OKAY'
-      iv_text_button_2         = 'Cancel'
-      iv_icon_button_2         = 'ICON_CANCEL'
-      iv_default_button        = '2'
-      iv_display_cancel_button = abap_false ).
-
-    IF lv_answer = '2'.
-      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
+      zcx_abapgit_exception=>raise( 'Cannot pull. Local code is write-protected in repo settings' ).
     ENDIF.
 
     zcl_abapgit_services_repo=>gui_deserialize(
