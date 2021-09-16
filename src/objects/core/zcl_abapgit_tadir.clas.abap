@@ -10,11 +10,6 @@ CLASS zcl_abapgit_tadir DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    METHODS exists
-      IMPORTING
-        !is_item         TYPE zif_abapgit_definitions=>ty_item
-      RETURNING
-        VALUE(rv_exists) TYPE abap_bool .
     METHODS check_exists
       IMPORTING
         !it_tadir       TYPE zif_abapgit_definitions=>ty_tadir_tt
@@ -86,7 +81,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
+CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
 
   METHOD add_local_packages.
@@ -253,7 +248,7 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
       ls_item-obj_name = <ls_tadir>-obj_name.
       ls_item-devclass = <ls_tadir>-devclass.
 
-      IF exists( ls_item ) = abap_true.
+      IF zcl_abapgit_objects=>exists( ls_item ) = abap_true.
         APPEND <ls_tadir> TO rt_tadir.
       ENDIF.
     ENDLOOP.
@@ -291,22 +286,6 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
       <ls_tadir>-path = lv_path.
 
     ENDLOOP.
-  ENDMETHOD.
-
-
-  METHOD exists.
-
-    IF is_item IS INITIAL.
-      RETURN.
-    ENDIF.
-
-    IF zcl_abapgit_objects=>is_supported( is_item ) = abap_false.
-      rv_exists = abap_true.
-      RETURN.
-    ENDIF.
-
-    rv_exists = zcl_abapgit_objects=>exists( is_item ).
-
   ENDMETHOD.
 
 
@@ -392,7 +371,7 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
     ls_item-obj_type = ls_tadir-object.
     ls_item-obj_name = ls_tadir-obj_name.
     ls_item-devclass = ls_tadir-devclass.
-    IF exists( ls_item ) = abap_false.
+    IF zcl_abapgit_objects=>exists( ls_item ) = abap_false.
       RETURN.
     ENDIF.
 

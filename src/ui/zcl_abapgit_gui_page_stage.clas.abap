@@ -261,29 +261,26 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     ENDLOOP.
 
     LOOP AT rt_changed_by ASSIGNING <ls_changed_by>.
-      TRY.
-          <ls_changed_by>-name = zcl_abapgit_objects=>changed_by( <ls_changed_by>-item ).
-        CATCH zcx_abapgit_exception.
-      ENDTRY.
+      <ls_changed_by>-name = zcl_abapgit_objects=>changed_by( <ls_changed_by>-item ).
     ENDLOOP.
 
     LOOP AT lt_changed_by_remote ASSIGNING <ls_changed_by>.
-      TRY.
-          " deleted files might still be in a transport
-          CLEAR lv_transport.
-          READ TABLE it_transports WITH KEY
-            obj_type = <ls_changed_by>-item-obj_type
-            obj_name = <ls_changed_by>-item-obj_name
-            INTO lv_transport.
-          IF sy-subrc = 0.
-            SELECT SINGLE as4user FROM e070 INTO lv_user
-              WHERE trkorr = lv_transport-trkorr.
-            <ls_changed_by>-name = lv_user.
-          ELSE.
-            <ls_changed_by>-name = zcl_abapgit_objects_super=>c_user_unknown.
-          ENDIF.
-        CATCH zcx_abapgit_exception.
-      ENDTRY.
+      " deleted files might still be in a transport
+      CLEAR lv_transport.
+      READ TABLE it_transports WITH KEY
+        obj_type = <ls_changed_by>-item-obj_type
+        obj_name = <ls_changed_by>-item-obj_name
+        INTO lv_transport.
+      IF sy-subrc = 0.
+        SELECT SINGLE as4user FROM e070 INTO lv_user
+          WHERE trkorr = lv_transport-trkorr.
+        IF sy-subrc = 0.
+          <ls_changed_by>-name = lv_user.
+        ENDIF.
+      ENDIF.
+      IF <ls_changed_by>-name IS INITIAL.
+        <ls_changed_by>-name = zcl_abapgit_objects_super=>c_user_unknown.
+      ENDIF.
     ENDLOOP.
 
     INSERT LINES OF lt_changed_by_remote INTO TABLE rt_changed_by.
