@@ -260,7 +260,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     CREATE OBJECT ro_advanced_dropdown.
 
     IF iv_rstate IS NOT INITIAL OR iv_lstate IS NOT INITIAL. " In case of asyncronicities
-      ro_advanced_dropdown->add( iv_txt = 'Reset Local (Force Pull)'
+      ro_advanced_dropdown->add( iv_txt = 'Selective Pull'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-git_reset }?key={ mv_key }|
                                  iv_opt = iv_wp_opt ).
     ENDIF.
