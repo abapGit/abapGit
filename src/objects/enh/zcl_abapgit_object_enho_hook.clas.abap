@@ -10,7 +10,7 @@ CLASS zcl_abapgit_object_enho_hook DEFINITION PUBLIC.
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_spaces,
-        full_name TYPE string.
+             full_name TYPE string.
     TYPES: spaces TYPE STANDARD TABLE OF i WITH DEFAULT KEY,
            END OF ty_spaces.
 
