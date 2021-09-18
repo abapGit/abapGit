@@ -147,7 +147,22 @@ CLASS ltcl_parser_test IMPLEMENTATION.
         exp = '*parsing error*' ).
         cl_abap_unit_assert=>assert_char_cp(
         act = lx_err->location
-        exp = '@PARSER' ).
+        exp = 'Line 1, Offset 1' ).
+    ENDTRY.
+
+    TRY.
+        lt_act = mo_cut->parse( '{' && cl_abap_char_utilities=>newline
+        && '"ok": "abc",' && cl_abap_char_utilities=>newline
+        && '"error"' && cl_abap_char_utilities=>newline
+        && '}' ).
+        cl_abap_unit_assert=>fail( 'Parsing of invalid JSON must fail (spec)' ).
+      CATCH zcx_abapgit_ajson_error INTO lx_err.
+        cl_abap_unit_assert=>assert_char_cp(
+        act = lx_err->get_text( )
+        exp = '*parsing error*' ).
+        cl_abap_unit_assert=>assert_char_cp(
+        act = lx_err->location
+        exp = 'Line 3, Offset 8' ).
     ENDTRY.
 
   ENDMETHOD.
@@ -2912,7 +2927,7 @@ CLASS ltcl_abap_to_json DEFINITION
         a TYPE string,
         b TYPE i,
         c TYPE abap_bool,
-        d TYPE xfeld,
+        d TYPE xsdboolean,
       END OF ty_struc,
       tt_struc TYPE STANDARD TABLE OF ty_struc WITH DEFAULT KEY,
       BEGIN OF ty_struc_complex.
@@ -2929,7 +2944,7 @@ CLASS ltcl_abap_to_json DEFINITION
     METHODS set_value_string FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_value_true FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_value_false FOR TESTING RAISING zcx_abapgit_ajson_error.
-    METHODS set_value_xfeld FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS set_value_xsdboolean FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_null FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_obj FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_array FOR TESTING RAISING zcx_abapgit_ajson_error.
@@ -3032,18 +3047,17 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD set_value_xfeld.
+  METHOD set_value_xsdboolean.
 
     DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
     DATA lt_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt.
 
-    " xfeld
-    DATA lv_xfeld TYPE xfeld.
+    DATA lv_xsdboolean TYPE xsdboolean.
     CREATE OBJECT lo_nodes_exp.
     lo_nodes_exp->add( '        |      |bool |true     ||' ).
 
-    lv_xfeld = 'X'.
-    lt_nodes = lcl_abap_to_json=>convert( iv_data = lv_xfeld ).
+    lv_xsdboolean = 'X'.
+    lt_nodes = lcl_abap_to_json=>convert( iv_data = lv_xsdboolean ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lt_nodes
