@@ -174,7 +174,7 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_simple", "note": "Index not found in table @/10"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "item_order_integrated"},
 
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_abap_to_json", "method": "set_value_xfeld", "note": "https://github.com/sbcgua/ajson/issues/75"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_abap_to_json", "method": "set_value_xsdboolean", "note": "https://github.com/sbcgua/ajson/issues/75"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_abap_to_json", "method": "set_obj",         "note": "https://github.com/sbcgua/ajson/issues/75"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_abap_to_json", "method": "set_array",       "note": "https://github.com/sbcgua/ajson/issues/75"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_abap_to_json", "method": "set_complex_obj", "note": "https://github.com/sbcgua/ajson/issues/75"},
