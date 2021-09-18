@@ -17,7 +17,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
+CLASS zcl_abapgit_exit IMPLEMENTATION.
 
 
   METHOD get_instance.
@@ -156,9 +156,20 @@ CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
 
   METHOD zif_abapgit_exit~custom_serialize_abap_clif.
 
+    " This exit might be called twice per object
+    " 1st call: it_source = initial
+    "    Can be used for serializing complete source
+    "    If source is returned, there will be no second call
+    " 2nd call: it_source = code as serialized by abapGit
+    "    Can be used for post-processing of source
     IF gi_exit IS NOT INITIAL.
       TRY.
-          rt_source = gi_exit->custom_serialize_abap_clif( is_class_key ).
+          rt_source = gi_exit->custom_serialize_abap_clif(
+            is_class_key = is_class_key
+            it_source    = it_source ).
+          IF rt_source IS INITIAL.
+            rt_source = it_source.
+          ENDIF.
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.
