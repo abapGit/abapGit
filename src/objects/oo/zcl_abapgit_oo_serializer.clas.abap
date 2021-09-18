@@ -216,6 +216,11 @@ CLASS zcl_abapgit_oo_serializer IMPLEMENTATION.
       CATCH cx_sy_dyn_call_error.
         rt_source = serialize_abap_old( is_class_key ).
     ENDTRY.
+
+    " Call exit again for optional post-processing
+    rt_source = zcl_abapgit_exit=>get_instance( )->custom_serialize_abap_clif(
+      is_class_key = is_class_key
+      it_source    = rt_source ).
   ENDMETHOD.
 
 
