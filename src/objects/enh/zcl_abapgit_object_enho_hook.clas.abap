@@ -51,12 +51,13 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
   METHOD add_sources.
 
     DATA lv_source TYPE string.
-    DATA lv_file TYPE n LENGTH 4.
+    DATA lv_file TYPE string.
 
     FIELD-SYMBOLS <ls_enhancement> LIKE LINE OF ct_enhancements.
 
     LOOP AT ct_enhancements ASSIGNING <ls_enhancement>.
-      lv_file = sy-tabix.
+      lv_file = zcl_abapgit_hash=>sha1_string( <ls_enhancement>-full_name ).
+      lv_file = lv_file(8).
 
       " Add full name as comment and enhancement statements
       lv_source = c_enhancement.
