@@ -10,14 +10,19 @@ CLASS zcl_abapgit_object_enho_hook DEFINITION PUBLIC.
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_spaces,
-             full_name TYPE string.
-    TYPES: spaces TYPE STANDARD TABLE OF i WITH DEFAULT KEY,
+             full_name TYPE string,
+             spaces    TYPE STANDARD TABLE OF i WITH DEFAULT KEY,
            END OF ty_spaces.
 
     TYPES: ty_spaces_tt TYPE STANDARD TABLE OF ty_spaces WITH DEFAULT KEY.
 
-    CONSTANTS c_tag_file TYPE string VALUE 'FILE:*' ##NO_TEXT.
-    CONSTANTS c_tag_name TYPE string VALUE '"NAME:*' ##NO_TEXT.
+    TYPES: BEGIN OF ty_file,
+             name TYPE string,
+             file TYPE string,
+           END OF ty_file.
+
+    TYPES: ty_files TYPE HASHED TABLE OF ty_file WITH UNIQUE KEY name.
+
     CONSTANTS c_enhancement TYPE string VALUE 'ENHANCEMENT 0 *.' ##NO_TEXT.
     CONSTANTS c_endenhancement TYPE string VALUE 'ENDENHANCEMENT.' ##NO_TEXT.
 
@@ -27,11 +32,13 @@ CLASS zcl_abapgit_object_enho_hook DEFINITION PUBLIC.
     METHODS add_sources
       CHANGING
         !ct_enhancements TYPE enh_hook_impl_it
+        !ct_files        TYPE ty_files
       RAISING
         zcx_abapgit_exception .
     METHODS read_sources
       CHANGING
         !ct_enhancements TYPE enh_hook_impl_it
+        !ct_files        TYPE ty_files
       RAISING
         zcx_abapgit_exception .
     METHODS hook_impl_deserialize
@@ -51,33 +58,30 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
   METHOD add_sources.
 
     DATA lv_source TYPE string.
-    DATA lv_file TYPE string.
+    DATA ls_file LIKE LINE OF ct_files.
 
     FIELD-SYMBOLS <ls_enhancement> LIKE LINE OF ct_enhancements.
 
     LOOP AT ct_enhancements ASSIGNING <ls_enhancement>.
-      lv_file = zcl_abapgit_hash=>sha1_string( <ls_enhancement>-full_name ).
-      lv_file = lv_file(8).
+      CLEAR ls_file.
+      ls_file-name = <ls_enhancement>-full_name.
+      ls_file-file = substring( val = zcl_abapgit_hash=>sha1_string( <ls_enhancement>-full_name ) len = 8 ).
+      INSERT ls_file INTO TABLE ct_files.
 
-      " Add full name as comment and enhancement statements
+      " Add full name as comment and put code between enhancement statements
       lv_source = c_enhancement.
       REPLACE '*' IN lv_source WITH ms_item-obj_name.
       INSERT lv_source INTO <ls_enhancement>-source INDEX 1.
 
-      lv_source = c_tag_name.
-      REPLACE '*' IN lv_source WITH <ls_enhancement>-full_name.
+      lv_source = |"Name: { <ls_enhancement>-full_name }|.
       INSERT lv_source INTO <ls_enhancement>-source INDEX 1.
 
       APPEND c_endenhancement TO <ls_enhancement>-source.
 
-      mo_files->add_abap( iv_extra = lv_file
+      mo_files->add_abap( iv_extra = ls_file-file
                           it_abap  = <ls_enhancement>-source ).
 
-      " Store file name in source field
       CLEAR <ls_enhancement>-source.
-      lv_source = c_tag_file.
-      REPLACE '*' IN lv_source WITH lv_file.
-      INSERT lv_source INTO TABLE <ls_enhancement>-source.
     ENDLOOP.
 
   ENDMETHOD.
@@ -117,21 +121,27 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
   METHOD read_sources.
 
     DATA lv_source TYPE string.
-    DATA lv_file TYPE string.
+    DATA ls_file LIKE LINE OF ct_files.
+    DATA lv_from TYPE i.
+    DATA lv_to TYPE i.
 
     FIELD-SYMBOLS <ls_enhancement> LIKE LINE OF ct_enhancements.
 
     LOOP AT ct_enhancements ASSIGNING <ls_enhancement>.
-      READ TABLE <ls_enhancement>-source INTO lv_source INDEX 1.
-      IF sy-subrc = 0 AND lv_source CP c_tag_file.
-        SPLIT lv_source AT ':' INTO lv_source lv_file.
-        <ls_enhancement>-source = mo_files->read_abap( iv_extra = lv_file ).
-        READ TABLE <ls_enhancement>-source INTO lv_source INDEX 1.
-        IF sy-subrc = 0 AND lv_source CP c_tag_name.
-          " Remove enhancement statements and comment with name
-          DELETE <ls_enhancement>-source FROM 1 TO 2.
-          DELETE <ls_enhancement>-source INDEX lines( <ls_enhancement>-source ).
-        ENDIF.
+      READ TABLE ct_files INTO ls_file WITH TABLE KEY name = <ls_enhancement>-full_name.
+      IF sy-subrc = 0.
+        <ls_enhancement>-source = mo_files->read_abap( iv_extra = ls_file-file ).
+        " Get code between enhancement statements
+        LOOP AT <ls_enhancement>-source INTO lv_source.
+          IF lv_source CP c_enhancement.
+            lv_from = sy-tabix.
+          ENDIF.
+          IF lv_source CP c_endenhancement.
+            lv_to = sy-tabix.
+          ENDIF.
+        ENDLOOP.
+        DELETE <ls_enhancement>-source FROM lv_to.
+        DELETE <ls_enhancement>-source TO lv_from.
       ENDIF.
     ENDLOOP.
 
@@ -147,6 +157,7 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
           lv_package         TYPE devclass,
           ls_original_object TYPE enh_hook_admin,
           lt_spaces          TYPE ty_spaces_tt,
+          lt_files           TYPE ty_files,
           lt_enhancements    TYPE enh_hook_impl_it,
           lx_enh_root        TYPE REF TO cx_enh_root.
 
@@ -159,6 +170,8 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
                   CHANGING cg_data  = ls_original_object ).
     ii_xml->read( EXPORTING iv_name = 'ENHANCEMENTS'
                   CHANGING cg_data  = lt_enhancements ).
+    ii_xml->read( EXPORTING iv_name = 'FILES'
+                  CHANGING cg_data  = lt_files ).
     ii_xml->read( EXPORTING iv_name = 'SPACES'
                   CHANGING cg_data  = lt_spaces ).
 
@@ -166,7 +179,8 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
     hook_impl_deserialize( EXPORTING it_spaces = lt_spaces
                            CHANGING ct_impl    = lt_enhancements ).
 
-    read_sources( CHANGING ct_enhancements = lt_enhancements ).
+    read_sources( CHANGING ct_enhancements = lt_enhancements
+                           ct_files        = lt_files ).
 
     lv_enhname = ms_item-obj_name.
     lv_package = iv_package.
@@ -217,10 +231,10 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
           lo_hook_impl       TYPE REF TO cl_enh_tool_hook_impl,
           ls_original_object TYPE enh_hook_admin,
           lt_spaces          TYPE ty_spaces_tt,
+          lt_files           TYPE ty_files,
           lt_enhancements    TYPE enh_hook_impl_it.
 
     FIELD-SYMBOLS: <ls_enhancement> LIKE LINE OF lt_enhancements.
-
 
     lo_hook_impl ?= ii_enh_tool.
 
@@ -241,16 +255,19 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
              <ls_enhancement>-id.
     ENDLOOP.
 
-    add_sources( CHANGING ct_enhancements = lt_enhancements ).
+    add_sources( CHANGING ct_enhancements = lt_enhancements
+                          ct_files        = lt_files ).
 
     ii_xml->add( iv_name = 'TOOL'
                  ig_data = ii_enh_tool->get_tool( ) ).
-    ii_xml->add( ig_data = lv_shorttext
-                 iv_name = 'SHORTTEXT' ).
-    ii_xml->add( ig_data = ls_original_object
-                 iv_name = 'ORIGINAL_OBJECT' ).
+    ii_xml->add( iv_name = 'SHORTTEXT'
+                 ig_data = lv_shorttext ).
+    ii_xml->add( iv_name = 'ORIGINAL_OBJECT'
+                 ig_data = ls_original_object ).
     ii_xml->add( iv_name = 'ENHANCEMENTS'
                  ig_data = lt_enhancements ).
+    ii_xml->add( iv_name = 'FILES'
+                 ig_data = lt_files ).
     ii_xml->add( iv_name = 'SPACES'
                  ig_data = lt_spaces ).
 
