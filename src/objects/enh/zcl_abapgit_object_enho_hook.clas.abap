@@ -63,9 +63,12 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
     FIELD-SYMBOLS <ls_enhancement> LIKE LINE OF ct_enhancements.
 
     LOOP AT ct_enhancements ASSIGNING <ls_enhancement>.
+      " Use hash as filename since full_name is very long
       CLEAR ls_file.
       ls_file-name = <ls_enhancement>-full_name.
-      ls_file-file = substring( val = zcl_abapgit_hash=>sha1_string( <ls_enhancement>-full_name ) len = 8 ).
+      ls_file-file = substring(
+        val = zcl_abapgit_hash=>sha1_string( <ls_enhancement>-full_name )
+        len = 8 ).
       INSERT ls_file INTO TABLE ct_files.
 
       " Add full name as comment and put code between enhancement statements
