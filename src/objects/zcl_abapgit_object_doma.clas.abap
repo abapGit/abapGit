@@ -46,7 +46,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
+CLASS zcl_abapgit_object_doma IMPLEMENTATION.
 
 
   METHOD deserialize_texts.
@@ -254,11 +254,11 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
     FIELD-SYMBOLS <ls_dd07v> TYPE dd07v.
 
     io_xml->read( EXPORTING iv_name = 'DD01V'
-                  CHANGING cg_data = ls_dd01v ).
+                  CHANGING  cg_data = ls_dd01v ).
     io_xml->read( EXPORTING iv_name = 'DD07V_TAB'
-                  CHANGING cg_data = lt_dd07v ).
+                  CHANGING  cg_data = lt_dd07v ).
 
-    corr_insert( iv_package = iv_package
+    corr_insert( iv_package      = iv_package
                  ig_object_class = 'DICT' ).
 
     lv_name = ms_item-obj_name. " type conversion
@@ -298,7 +298,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: lv_domname TYPE dd01l-domname.
+    DATA lv_domname TYPE dd01l-domname.
 
     SELECT SINGLE domname FROM dd01l INTO lv_domname
       WHERE domname = ms_item-obj_name.
@@ -348,6 +348,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
           lv_masklen TYPE c LENGTH 4,
           lt_dd07v   TYPE TABLE OF dd07v.
 
+    FIELD-SYMBOLS <ls_dd07v> TYPE dd07v.
 
     lv_name = ms_item-obj_name.
 
@@ -390,6 +391,10 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
     SORT lt_dd07v BY
       valpos ASCENDING
       ddlanguage ASCENDING.
+
+    LOOP AT lt_dd07v ASSIGNING <ls_dd07v>.
+      CLEAR <ls_dd07v>-domname.
+    ENDLOOP.
 
     io_xml->add( iv_name = 'DD01V'
                  ig_data = ls_dd01v ).

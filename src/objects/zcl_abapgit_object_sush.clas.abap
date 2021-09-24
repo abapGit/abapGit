@@ -20,6 +20,14 @@ CLASS zcl_abapgit_object_sush DEFINITION
   PROTECTED SECTION.
 
   PRIVATE SECTION.
+    METHODS clear_metadata
+      CHANGING
+        cs_data_head TYPE any
+        ct_usobx     TYPE table
+        ct_usobt     TYPE table
+        ct_usobx_ext TYPE table
+        ct_usobt_ext TYPE table.
+
 ENDCLASS.
 
 
@@ -232,31 +240,32 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     DATA:
-      ls_key            TYPE usobkey,
-      lo_su22           TYPE REF TO object,
-      lt_usobx          TYPE usobx_t,
-      lt_usobt          TYPE usobt_t,
-      lr_data_head      TYPE REF TO data,
-      lr_data_usobx_ext TYPE REF TO data,
-      lr_data_usobt_ext TYPE REF TO data,
-      lr_err            TYPE REF TO cx_static_check,
-      lx_error          TYPE REF TO cx_root.
+      ls_key       TYPE usobkey,
+      lo_su22      TYPE REF TO object,
+      lt_usobx     TYPE usobx_t,
+      lt_usobt     TYPE usobt_t,
+      lr_head      TYPE REF TO data,
+      lr_usobx_ext TYPE REF TO data,
+      lr_usobt_ext TYPE REF TO data,
+      lr_err       TYPE REF TO cx_static_check,
+      lx_error     TYPE REF TO cx_root.
 
-    FIELD-SYMBOLS: <ls_data_head>      TYPE any,
-                   <lt_data_usobx_ext> TYPE ANY TABLE,
-                   <lt_data_usobt_ext> TYPE ANY TABLE.
+
+    FIELD-SYMBOLS: <ls_head>      TYPE any,
+                   <lt_usobx_ext> TYPE ANY TABLE,
+                   <lt_usobt_ext> TYPE ANY TABLE.
 
     ls_key = ms_item-obj_name.
 
     TRY.
-        CREATE DATA lr_data_head TYPE ('IF_SU22_ADT_OBJECT=>TS_SU2X_HEAD').
-        ASSIGN lr_data_head->* TO <ls_data_head>.
+        CREATE DATA lr_head TYPE ('IF_SU22_ADT_OBJECT=>TS_SU2X_HEAD').
+        ASSIGN lr_head->* TO <ls_head>.
 
-        CREATE DATA lr_data_usobx_ext TYPE ('IF_SU22_ADT_OBJECT=>TT_SU2X_X').
-        ASSIGN lr_data_usobx_ext->* TO <lt_data_usobx_ext>.
+        CREATE DATA lr_usobx_ext TYPE ('IF_SU22_ADT_OBJECT=>TT_SU2X_X').
+        ASSIGN lr_usobx_ext->* TO <lt_usobx_ext>.
 
-        CREATE DATA lr_data_usobt_ext TYPE ('IF_SU22_ADT_OBJECT=>TT_SU2X_T').
-        ASSIGN lr_data_usobt_ext->* TO <lt_data_usobt_ext>.
+        CREATE DATA lr_usobt_ext TYPE ('IF_SU22_ADT_OBJECT=>TT_SU2X_T').
+        ASSIGN lr_usobt_ext->* TO <lt_usobt_ext>.
 
         CREATE OBJECT lo_su22
           TYPE ('CL_SU22_ADT_OBJECT').
@@ -266,18 +275,26 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
               EXPORTING
                 iv_key       = ls_key
               IMPORTING
-                es_head      = <ls_data_head>
+                es_head      = <ls_head>
                 et_usobx     = lt_usobx
                 et_usobt     = lt_usobt
-                et_usobx_ext = <lt_data_usobx_ext>
-                et_usobt_ext = <lt_data_usobt_ext>.
+                et_usobx_ext = <lt_usobx_ext>
+                et_usobt_ext = <lt_usobt_ext>.
           CATCH cx_static_check INTO lr_err.
             zcx_abapgit_exception=>raise_with_text( lr_err ).
         ENDTRY.
 
+        clear_metadata(
+          CHANGING
+            cs_data_head = <ls_head>
+            ct_usobx     = lt_usobx
+            ct_usobt     = lt_usobt
+            ct_usobx_ext = <lt_usobx_ext>
+            ct_usobt_ext = <lt_usobt_ext> ).
+
         "HEAD
         io_xml->add( iv_name = 'HEAD'
-                     ig_data = <ls_data_head> ).
+                     ig_data = <ls_head> ).
 
         "USOBX
         io_xml->add( iv_name = 'USOBX'
@@ -289,15 +306,55 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
 
         "USOBX_EXT
         io_xml->add( iv_name = 'USOBX_EXT'
-                     ig_data = <lt_data_usobx_ext> ).
+                     ig_data = <lt_usobx_ext> ).
 
         "USOBT_EXT
         io_xml->add( iv_name = 'USOBT_EXT'
-                     ig_data = <lt_data_usobt_ext> ).
+                     ig_data = <lt_usobt_ext> ).
 
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
   ENDMETHOD.
+
+
+  METHOD clear_metadata.
+
+    DATA:
+      BEGIN OF ls_empty_metadata,
+        modifier  TYPE c LENGTH 12, " usob_sm-modifier
+        moddate   TYPE d, " usob_sm-moddate,
+        modtime   TYPE t, " usob_sm-modtime,
+        srcsystem TYPE tadir-srcsystem,
+        author    TYPE tadir-author,
+        devclass  TYPE tadir-devclass,
+      END OF ls_empty_metadata.
+
+    FIELD-SYMBOLS:
+      <ls_usobx>     TYPE any,
+      <ls_usbot>     TYPE any,
+      <ls_usobt_ext> TYPE any,
+      <ls_usobx_ext> TYPE any.
+
+    MOVE-CORRESPONDING ls_empty_metadata TO cs_data_head.
+
+    LOOP AT ct_usobx ASSIGNING <ls_usobx>.
+      MOVE-CORRESPONDING ls_empty_metadata TO <ls_usobx>.
+    ENDLOOP.
+
+    LOOP AT ct_usobt ASSIGNING <ls_usbot>.
+      MOVE-CORRESPONDING ls_empty_metadata TO <ls_usbot>.
+    ENDLOOP.
+
+    LOOP AT ct_usobt_ext ASSIGNING <ls_usobt_ext>.
+      MOVE-CORRESPONDING ls_empty_metadata TO <ls_usobt_ext>.
+    ENDLOOP.
+
+    LOOP AT ct_usobx_ext ASSIGNING <ls_usobx_ext>.
+      MOVE-CORRESPONDING ls_empty_metadata TO <ls_usobx_ext>.
+    ENDLOOP.
+
+  ENDMETHOD.
+
 ENDCLASS.
