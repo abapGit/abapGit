@@ -225,7 +225,7 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
 
     ro_form = zcl_abapgit_html_form=>create(
                 iv_form_id   = 'repo-infos-form'
-                iv_help_page = 'https://docs.abapgit.org/guide-repo-infos.html' ).
+                iv_help_page = 'https://docs.abapgit.org/ref-settings-stats.html' ).
 
     IF mo_repo->is_offline( ) = abap_true.
       lv_label = 'ZIP File'.

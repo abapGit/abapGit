@@ -277,6 +277,10 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
       REPLACE ALL OCCURRENCES OF iv_from_interface && '~descriptor' IN TABLE ct_source
                             WITH iv_to_interface && '~descriptor' IGNORING CASE.
+      REPLACE ALL OCCURRENCES OF iv_from_interface && '=>' IN TABLE ct_source
+                            WITH iv_to_interface && '=>' IGNORING CASE.
+      REPLACE ALL OCCURRENCES OF iv_from_interface && '->' IN TABLE ct_source
+                            WITH iv_to_interface && '->' IGNORING CASE.
     ENDIF.
 
   ENDMETHOD.
