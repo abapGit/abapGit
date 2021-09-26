@@ -8,6 +8,24 @@ Legend
 + : added
 - : removed
 
+2021-09-24 v1.110.0
+-------------------
+! DOMA: Clear DOMNAME from fixed values
+! TABL: Clear DD05M-LENG
+! ENHO: split abap code into separate files
+! SUSH: Clear metadata
++ add icon for changing remote repo in list
++ add "last changed by" to repo page
++ SPPF support
+* password popup: add comment regarding github tokens
+* javaGUI, workaround for trailing null values
+* fix "cannot switch origin twice" in repo settings
+* filter code inspector/syntax check, skip generated maintenance screens
+* DDLS: fix dump in lower releases
+* SRFC: improvements
+* Rename "Reset Local" to "Selective Pull"
+* user exit: Post processing option for custom class serializer
+
 2021-08-16 v1.109.0
 -------------------
 ! Default width changed

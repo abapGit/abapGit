@@ -493,9 +493,9 @@ INTERFACE zif_abapgit_definitions
     END OF c_action.
   CONSTANTS c_spagpa_param_repo_key TYPE c LENGTH 20 VALUE 'REPO_KEY' ##NO_TEXT.
   CONSTANTS c_spagpa_param_package TYPE c LENGTH 20 VALUE 'PACKAGE' ##NO_TEXT.
-  CONSTANTS gc_yes TYPE ty_yes_no VALUE 'Y'.
-  CONSTANTS gc_no TYPE ty_yes_no VALUE 'N'.
-  CONSTANTS gc_partial TYPE ty_yes_no_partial VALUE 'P'.
+  CONSTANTS c_yes TYPE ty_yes_no VALUE 'Y'.
+  CONSTANTS c_no TYPE ty_yes_no VALUE 'N'.
+  CONSTANTS c_partial TYPE ty_yes_no_partial VALUE 'P'.
 
   TYPES:
     ty_method TYPE c LENGTH 1 .

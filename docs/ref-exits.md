@@ -71,6 +71,18 @@ Possibility to change the default `ANONYM` ssl id to something system specific.
 Allows for a custom serializer to be used for global classes' CLIF sources. See [#2321](https://github.com/abapGit/abapGit/issues/2321) and [#2491](https://github.com/abapGit/abapGit/pull/2491) for use cases.
 This [example implementation](https://gist.github.com/flaiker/999c8165b89131608b05cd371529fef5) forces the old class serializer to be used for specific packages.
 
+As of [#4953](https://github.com/abapGit/abapGit/pull/4953), the exit offers a post-processing option. First, the exit is called with the optional parameter
+`it_source` set to initial. If you do not return any serialization (`rt_source` is initial), then abapGit will serialize the object as usual and call the
+exit a second time. This time `it_source` contains the complete source and can be modified in the exit as required. To use this option, use following code 
+at the beginning of the exit:
+
+```abap
+" Ignore first call of exit
+IF it_source IS INITIAL.
+  RETURN.
+ENDIF.
+```
+
 ### DESERIALIZE_POSTPROCESS
 
 Can be used for any postprocessing operation for deserialized objects. Since it is a postprocessing step, only logs can be added to II_LOG and one should not terminate the process by raising exception, which may lead to inconsistencies.

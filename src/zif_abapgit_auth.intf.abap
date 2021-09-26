@@ -2,12 +2,12 @@ INTERFACE zif_abapgit_auth PUBLIC.
 
   TYPES: ty_authorization TYPE string.
 
-  CONSTANTS: BEGIN OF gc_authorization,
+  CONSTANTS: BEGIN OF c_authorization,
                uninstall             TYPE ty_authorization VALUE 'UNINSTALL',
                create_repo           TYPE ty_authorization VALUE 'CREATE_REPO',
                transport_to_branch   TYPE ty_authorization VALUE 'TRANSPORT_TO_BRANCH',
                update_local_checksum TYPE ty_authorization VALUE 'UPDATE_LOCAL_CHECKSUM',
-             END OF gc_authorization.
+             END OF c_authorization.
 
   METHODS:
     is_allowed
