@@ -628,7 +628,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       lv_commit       TYPE string,
       lv_pull         TYPE string.
 
-    lv_url    = mo_form_data->get( c_id-url ).
+    lv_url    = condense( val = mo_form_data->get( c_id-url ) del = ` ` ).
     lv_branch = mo_form_data->get( c_id-branch ).
     lv_tag    = mo_form_data->get( c_id-tag ).
     lv_commit = mo_form_data->get( c_id-commit ).
@@ -782,7 +782,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     ro_validation_log = mo_form_util->validate( io_form_data ).
 
-    lv_url = mo_form_data->get( c_id-url ).
+    lv_url = condense( val = mo_form_data->get( c_id-url ) del = ` ` ).
 
     IF mv_mode = c_mode-offline AND lv_url IS INITIAL.
       ro_validation_log->set(
