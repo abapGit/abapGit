@@ -393,7 +393,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
 
     lo_wb_object_operator = get_wb_object_operator( ).
     TRY.
-        IF mv_is_inactive_supported EQ abap_true.
+        IF mv_is_inactive_supported = abap_true.
           TRY.
               CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
                 EXPORTING
@@ -498,7 +498,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
 
     TRY.
         li_wb_object_operator = get_wb_object_operator( ).
-        IF  mv_is_inactive_supported EQ abap_true.
+        IF  mv_is_inactive_supported = abap_true.
 
           TRY.
               CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
