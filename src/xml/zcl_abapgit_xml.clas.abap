@@ -44,7 +44,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_XML IMPLEMENTATION.
+CLASS zcl_abapgit_xml IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -59,7 +59,7 @@ CLASS ZCL_ABAPGIT_XML IMPLEMENTATION.
     DATA: lv_version TYPE string.
     DATA: lv_file    TYPE string.
 
-    lv_version = |abapGit version: { zif_abapgit_version=>gc_abap_version }|.
+    lv_version = |abapGit version: { zif_abapgit_version=>c_abap_version }|.
     IF mv_filename IS NOT INITIAL.
       lv_file = |File: { mv_filename }|.
     ENDIF.
@@ -124,7 +124,7 @@ CLASS ZCL_ABAPGIT_XML IMPLEMENTATION.
                                                 name = c_abapgit_tag ).
     li_version = li_element->if_ixml_node~get_attributes(
       )->get_named_item_ns( c_attr_version ).
-    IF li_version->get_value( ) <> zif_abapgit_version=>gc_xml_version.
+    IF li_version->get_value( ) <> zif_abapgit_version=>c_xml_version.
       display_version_mismatch( ).
     ENDIF.
 
