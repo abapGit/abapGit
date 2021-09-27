@@ -304,16 +304,17 @@ INTERFACE zif_abapgit_definitions
     END OF ty_ancestor .
   TYPES:
     BEGIN OF ty_repo_item,
-      obj_type TYPE tadir-object,
-      obj_name TYPE tadir-obj_name,
-      inactive TYPE abap_bool,
-      sortkey  TYPE i,
-      path     TYPE string,
-      is_dir   TYPE abap_bool,
-      changes  TYPE i,
-      lstate   TYPE c LENGTH 1,
-      rstate   TYPE c LENGTH 1,
-      files    TYPE ty_repo_file_tt,
+      obj_type   TYPE tadir-object,
+      obj_name   TYPE tadir-obj_name,
+      inactive   TYPE abap_bool,
+      sortkey    TYPE i,
+      path       TYPE string,
+      is_dir     TYPE abap_bool,
+      changes    TYPE i,
+      lstate     TYPE c LENGTH 1,
+      rstate     TYPE c LENGTH 1,
+      files      TYPE ty_repo_file_tt,
+      changed_by TYPE xubname,
     END OF ty_repo_item .
   TYPES:
     ty_repo_item_tt TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY .
@@ -492,9 +493,9 @@ INTERFACE zif_abapgit_definitions
     END OF c_action.
   CONSTANTS c_spagpa_param_repo_key TYPE c LENGTH 20 VALUE 'REPO_KEY' ##NO_TEXT.
   CONSTANTS c_spagpa_param_package TYPE c LENGTH 20 VALUE 'PACKAGE' ##NO_TEXT.
-  CONSTANTS gc_yes TYPE ty_yes_no VALUE 'Y'.
-  CONSTANTS gc_no TYPE ty_yes_no VALUE 'N'.
-  CONSTANTS gc_partial TYPE ty_yes_no_partial VALUE 'P'.
+  CONSTANTS c_yes TYPE ty_yes_no VALUE 'Y'.
+  CONSTANTS c_no TYPE ty_yes_no VALUE 'N'.
+  CONSTANTS c_partial TYPE ty_yes_no_partial VALUE 'P'.
 
   TYPES:
     ty_method TYPE c LENGTH 1 .

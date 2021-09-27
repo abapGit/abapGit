@@ -50,9 +50,9 @@ CLASS zcl_abapgit_ajson_mapping IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD create_upper_case.
+  METHOD create_field_mapping.
 
-    CREATE OBJECT ri_mapping TYPE lcl_mapping_to_upper
+    CREATE OBJECT ri_mapping TYPE lcl_mapping_fields
       EXPORTING
         it_mapping_fields = it_mapping_fields.
 
@@ -68,13 +68,11 @@ CLASS zcl_abapgit_ajson_mapping IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD create_field_mapping.
+  METHOD create_upper_case.
 
-    CREATE OBJECT ri_mapping TYPE lcl_mapping_fields
+    CREATE OBJECT ri_mapping TYPE lcl_mapping_to_upper
       EXPORTING
         it_mapping_fields = it_mapping_fields.
 
   ENDMETHOD.
-
-
 ENDCLASS.

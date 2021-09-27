@@ -8,6 +8,48 @@ Legend
 + : added
 - : removed
 
+2021-09-24 v1.110.0
+-------------------
+! DOMA: Clear DOMNAME from fixed values
+! TABL: Clear DD05M-LENG
+! ENHO: split abap code into separate files
+! SUSH: Clear metadata
++ add icon for changing remote repo in list
++ add "last changed by" to repo page
++ SPPF support
+* password popup: add comment regarding github tokens
+* javaGUI, workaround for trailing null values
+* fix "cannot switch origin twice" in repo settings
+* filter code inspector/syntax check, skip generated maintenance screens
+* DDLS: fix dump in lower releases
+* SRFC: improvements
+* Rename "Reset Local" to "Selective Pull"
+* user exit: Post processing option for custom class serializer
+
+2021-08-16 v1.109.0
+-------------------
+! Default width changed
+! Enhance "Force Pull" to become "Selective Pull"
++ "only my changes" option added to diff page
++ Add user exit for event handlers
++ Offline Repo: Compare via RFC feature
+* Avoid duplicates in data serialize
+* Enhanced error handling for git transport protocol
+* Release serialization resources, less memory usage
+* Regenerate profile SAP_ALL after import of SUSO
+* DEVC: application component for local interfaces
+* Create branch: add existence check
+* Git transport: fix status report for GitLab and Bitbucket
+* FTGL: update transport when deleting
+* Focus HTML control on abapGit startup
+* WDCA: clear parameter descriptions
+* TABL: Clear DB indexname
+* EVCO: fix empty XML error
+* More keyboard shortcusts for main page
+* WEBI: Improve error handling
+* SMTG: Implement changed_by
+* Auto creation of package during new online
+
 2021-05-09 v1.108.0
 -------------------
 ! INTF deserialization changed

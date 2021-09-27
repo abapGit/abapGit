@@ -364,6 +364,10 @@ table.db_tab th {
 table.db_tab tr.selected {
   background-color: rgba(191, 191, 191, 1) !important;
 }
+table.db_tab a.remote_repo {
+  color: var(--theme-primary-font-color-reduced);
+}
+table.db_tab a.remote_repo:hover { color: var(--theme-link-color); }
 
 /* DB ENTRY DISPLAY */
 div.db_entry {

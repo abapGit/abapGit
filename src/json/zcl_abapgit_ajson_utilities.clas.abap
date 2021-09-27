@@ -30,9 +30,9 @@ CLASS zcl_abapgit_ajson_utilities DEFINITION
 
     DATA mo_json_a TYPE REF TO zif_abapgit_ajson .
     DATA mo_json_b TYPE REF TO zif_abapgit_ajson .
-    DATA mo_insert TYPE REF TO zif_abapgit_ajson_writer .
-    DATA mo_delete TYPE REF TO zif_abapgit_ajson_writer .
-    DATA mo_change TYPE REF TO zif_abapgit_ajson_writer .
+    DATA mo_insert TYPE REF TO zif_abapgit_ajson .
+    DATA mo_delete TYPE REF TO zif_abapgit_ajson .
+    DATA mo_change TYPE REF TO zif_abapgit_ajson .
 
     METHODS diff_a_b
       IMPORTING
