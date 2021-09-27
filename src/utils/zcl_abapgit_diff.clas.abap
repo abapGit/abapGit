@@ -169,6 +169,34 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD create_regex_set.
+
+    DATA: lo_regex TYPE REF TO cl_abap_regex,
+          lt_regex TYPE zif_abapgit_definitions=>ty_string_tt,
+          lv_regex LIKE LINE OF lt_regex.
+
+*    APPEND '^\s*(CLASS|FORM|MODULE|REPORT|METHOD)\s' TO lt_regex.
+*    APPEND '^\s*START-OF-' TO lt_regex.
+*    APPEND '^\s*INITIALIZATION(\s|\.)' TO lt_regex.
+
+    APPEND '^\s*(CLASS|FORM|MODULE|REPORT|METHOD|INTERFACE|FUNCTION)\s' TO lt_regex.
+    APPEND '^\s*(CLASS|INTERFACE|FUNCTION|TYPE)-POOL\s' TO lt_regex.
+    APPEND '^\s*(START|END)-OF-SELECTION(\s|\.)' TO lt_regex.
+    APPEND '^\s*INITIALIZATION(\s|\.)' TO lt_regex.
+    APPEND '^\s*(TOP-OF-PAGE|END-OF-PAGE)(\s|\.)' TO lt_regex.
+    APPEND '^\s*AT\s*(SELECTION-SCREEN|LINE-SELECTION|USER-COMMAND|PF\d+)(\s|\.)' TO lt_regex.
+
+    LOOP AT lt_regex INTO lv_regex.
+      CREATE OBJECT lo_regex
+        EXPORTING
+          pattern     = lv_regex
+          ignore_case = abap_true.
+      APPEND lo_regex TO rt_regex_set.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD get.
     rt_diff = mt_diff.
   ENDMETHOD.
@@ -176,6 +204,21 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
 
   METHOD get_beacons.
     rt_beacons = mt_beacons.
+  ENDMETHOD.
+
+
+  METHOD is_line_patched.
+
+    FIELD-SYMBOLS: <ls_diff> TYPE zif_abapgit_definitions=>ty_diff.
+
+    READ TABLE mt_diff INDEX iv_index
+                       ASSIGNING <ls_diff>.
+    IF sy-subrc = 0.
+      rv_patched = <ls_diff>-patch_flag.
+    ELSE.
+      zcx_abapgit_exception=>raise( |Diff line not found { iv_index }| ).
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -212,6 +255,8 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
           IF lv_offs > 0.
             lv_beacon_str = lv_beacon_str(lv_offs).
           ENDIF.
+          lv_beacon_str = condense( val = lv_beacon_str
+                                    del = ` ` ).
 
           IF lv_submatch = 'CLASS'.
             lv_beacon_2lev = lv_beacon_str.
@@ -295,6 +340,24 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
         EXIT.
       ENDIF.
     ENDDO.
+
+  ENDMETHOD.
+
+
+  METHOD set_patch_by_old_diff.
+
+    FIELD-SYMBOLS: <ls_diff> TYPE zif_abapgit_definitions=>ty_diff.
+
+    LOOP AT mt_diff ASSIGNING <ls_diff>
+                    WHERE old     = is_diff_old-old
+                    AND   new     = is_diff_old-new
+                    AND   new_num = is_diff_old-new_num
+                    AND   old_num = is_diff_old-old_num.
+
+      <ls_diff>-patch_flag = iv_patch_flag.
+      EXIT.
+
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -403,58 +466,4 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
     SPLIT lv_old AT zif_abapgit_definitions=>c_newline INTO TABLE et_old.
 
   ENDMETHOD.
-
-  METHOD create_regex_set.
-
-    DATA: lo_regex TYPE REF TO cl_abap_regex,
-          lt_regex TYPE zif_abapgit_definitions=>ty_string_tt,
-          lv_regex LIKE LINE OF lt_regex.
-
-    APPEND '^\s*(CLASS|FORM|MODULE|REPORT|METHOD)\s' TO lt_regex.
-    APPEND '^\s*START-OF-' TO lt_regex.
-    APPEND '^\s*INITIALIZATION(\s|\.)' TO lt_regex.
-
-    LOOP AT lt_regex INTO lv_regex.
-      CREATE OBJECT lo_regex
-        EXPORTING
-          pattern     = lv_regex
-          ignore_case = abap_true.
-      APPEND lo_regex TO rt_regex_set.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD is_line_patched.
-
-    FIELD-SYMBOLS: <ls_diff> TYPE zif_abapgit_definitions=>ty_diff.
-
-    READ TABLE mt_diff INDEX iv_index
-                       ASSIGNING <ls_diff>.
-    IF sy-subrc = 0.
-      rv_patched = <ls_diff>-patch_flag.
-    ELSE.
-      zcx_abapgit_exception=>raise( |Diff line not found { iv_index }| ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD set_patch_by_old_diff.
-
-    FIELD-SYMBOLS: <ls_diff> TYPE zif_abapgit_definitions=>ty_diff.
-
-    LOOP AT mt_diff ASSIGNING <ls_diff>
-                    WHERE old     = is_diff_old-old
-                    AND   new     = is_diff_old-new
-                    AND   new_num = is_diff_old-new_num
-                    AND   old_num = is_diff_old-old_num.
-
-      <ls_diff>-patch_flag = iv_patch_flag.
-      EXIT.
-
-    ENDLOOP.
-
-  ENDMETHOD.
-
 ENDCLASS.
