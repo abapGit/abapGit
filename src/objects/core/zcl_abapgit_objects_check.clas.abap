@@ -153,7 +153,7 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
 
       IF <ls_result>-packmove = abap_true.
         <ls_changes>-action = zif_abapgit_objects=>c_deserialize_action-packmove.
-        <ls_changes>-icon   = icon_change.
+        <ls_changes>-icon   = icon_package_standard.
         <ls_changes>-text   = 'Change package assignment'.
       ELSE.
         CONCATENATE <ls_result>-lstate <ls_result>-rstate INTO lv_status RESPECTING BLANKS.
