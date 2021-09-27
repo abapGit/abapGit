@@ -402,7 +402,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
                 IMPORTING
                   eo_object_data = lo_object_data.
 
-            CATCH cx_wb_object_operation_error.
+            CATCH cx_root.
               CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
                 EXPORTING
                   data_selection = 'P'
@@ -418,15 +418,10 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
               data_selection = 'P'
             IMPORTING
               eo_object_data = lo_object_data.
-          rv_bool = boolc( lo_object_data IS NOT INITIAL AND lo_object_data->get_object_key( ) IS NOT INITIAL ).
 
         ENDIF.
-        IF lo_object_data IS INITIAL OR lo_object_data->get_object_key( ) IS INITIAL.
-          rv_bool = abap_false.
-        ELSE.
-          rv_bool = abap_true.
-        ENDIF.
-      CATCH cx_wb_object_operation_error.
+        rv_bool = boolc( lo_object_data IS NOT INITIAL AND lo_object_data->get_object_key( ) IS NOT INITIAL ).
+      CATCH cx_root.
         rv_bool = abap_false.
     ENDTRY.
   ENDMETHOD.
@@ -507,7 +502,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
                   data_selection = 'AL'
                 IMPORTING
                   eo_object_data = li_object_data_model.
-            CATCH cx_wb_object_operation_error.
+            CATCH cx_root.
 
               CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
                 EXPORTING
