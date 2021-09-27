@@ -96,6 +96,7 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
     ro_form->text(
       iv_name        = c_id-url
       iv_required    = abap_true
+      iv_condense    = abap_true
       iv_label       = 'Git Repository URL'
       iv_hint        = 'HTTPS address of the repository'
       iv_placeholder = 'https://github.com/...git'
@@ -257,7 +258,6 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
         mo_validation_log = validate_form( mo_form_data ).
 
         IF mo_validation_log->is_empty( ) = abap_true.
-          ls_repo_params-url = condense( val = ls_repo_params-url del = ` ` ).
           mo_form_data->to_abap( CHANGING cs_container = ls_repo_params ).
           lo_new_online_repo = zcl_abapgit_services_repo=>new_online( ls_repo_params ).
           CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_repo_view

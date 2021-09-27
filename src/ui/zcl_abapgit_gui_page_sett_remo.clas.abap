@@ -467,6 +467,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       iv_readonly    = abap_true
     )->text(
       iv_name        = c_id-url
+      iv_condense    = abap_true
       iv_label       = lv_label
       iv_hint        = lv_hint
       iv_placeholder = lv_placeholder ).
@@ -628,7 +629,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       lv_commit       TYPE string,
       lv_pull         TYPE string.
 
-    lv_url    = condense( val = mo_form_data->get( c_id-url ) del = ` ` ).
+    lv_url    = mo_form_data->get( c_id-url ).
     lv_branch = mo_form_data->get( c_id-branch ).
     lv_tag    = mo_form_data->get( c_id-tag ).
     lv_commit = mo_form_data->get( c_id-commit ).
@@ -782,7 +783,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     ro_validation_log = mo_form_util->validate( io_form_data ).
 
-    lv_url = condense( val = mo_form_data->get( c_id-url ) del = ` ` ).
+    lv_url = mo_form_data->get( c_id-url ).
 
     IF mv_mode = c_mode-offline AND lv_url IS INITIAL.
       ro_validation_log->set(
