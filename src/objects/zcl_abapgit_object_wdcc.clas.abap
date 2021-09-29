@@ -148,7 +148,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCC IMPLEMENTATION.
     SELECT SINGLE author createdon FROM wdy_config_data INTO ( ls_orig_config-author, ls_orig_config-createdon )
       WHERE config_id = lv_config_id AND
     config_type = lv_config_type AND
-    config_var = lv_config_var .
+    config_var = lv_config_var.
 
     IF ls_orig_config-author IS INITIAL.
       ls_orig_config-author = sy-uname.
