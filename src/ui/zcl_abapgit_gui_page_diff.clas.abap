@@ -136,7 +136,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         VALUE(rv_is_refrseh) TYPE abap_bool.
     METHODS modify_files_before_diff_calc
       IMPORTING
-        it_diff_files_old TYPE zcl_abapgit_gui_page_diff=>ty_file_diffs
+        it_diff_files_old TYPE ty_file_diffs
       CHANGING
         ct_files          TYPE zif_abapgit_definitions=>ty_stage_tt.
 
