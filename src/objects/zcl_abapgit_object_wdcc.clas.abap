@@ -47,7 +47,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCC IMPLEMENTATION.
           lv_subrc      TYPE sysubrc.
 
     ls_config_key-config_id = ms_item-obj_name+0(32).
-    ls_config_key-config_type = ms_item-obj_name+32(2) .
+    ls_config_key-config_type = ms_item-obj_name+32(2).
 
     TRY.
         " does not exist in 702
