@@ -338,7 +338,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCC IMPLEMENTATION.
                  ig_data =  ms_item-obj_name ).
 
     ls_config_key-config_id = ms_item-obj_name+0(32).
-    ls_config_key-config_type = ms_item-obj_name+32(2) .
+    ls_config_key-config_type = ms_item-obj_name+32(2).
 
     TRY.
         " original_config_data does not exist in 702
