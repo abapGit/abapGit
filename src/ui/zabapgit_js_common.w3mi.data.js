@@ -1564,7 +1564,7 @@ function Hotkeys(oKeyMap){
       }
 
       // Or a global function
-      if (window[action]) {
+      if (window[action] && typeof(window[action]) === "function") {
         window[action].call(this);
         return;
       }
@@ -1753,7 +1753,7 @@ Patch.prototype.ID = {
 
 Patch.prototype.ACTION = {
   PATCH_STAGE: "patch_stage",
-  PATCH_REFRESH_LOCAL: "patch_refresh_local"
+  REFRESH_LOCAL: "diff_refresh_local"
 };
 
 Patch.prototype.escape = function(sFileName){
@@ -1884,7 +1884,7 @@ Patch.prototype.registerStagePatch = function registerStagePatch(){
   var elStage = document.querySelector("#" + this.ID.STAGE);
   elStage.addEventListener("click", this.submitPatch.bind(this, this.ACTION.PATCH_STAGE));
 
-  var aRefresh = document.querySelectorAll("[id*=patch_refresh]");
+  var aRefresh = document.querySelectorAll("[id*=diff_refresh]");
   [].forEach.call( aRefresh, function(el) {
     el.addEventListener("click", memoizeScrollPosition(this.submitPatch.bind(this, el.id)).bind(this));
   }.bind(this));
@@ -1895,7 +1895,7 @@ Patch.prototype.registerStagePatch = function registerStagePatch(){
   }.bind(this);
 
   window.refreshLocal = memoizeScrollPosition(function(){
-    this.submitPatch(this.ACTION.PATCH_REFRESH_LOCAL);
+    this.submitPatch(this.ACTION.REFRESH_LOCAL);
   }.bind(this));
 
 };
