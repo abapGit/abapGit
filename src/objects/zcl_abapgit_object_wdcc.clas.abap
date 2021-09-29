@@ -25,7 +25,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCC IMPLEMENTATION.
           ls_config_key TYPE wdy_config_key.
 
     ls_config_key-config_id = ms_item-obj_name+0(32).
-    ls_config_key-config_type = ms_item-obj_name+32(2) .
+    ls_config_key-config_type = ms_item-obj_name+32(2).
 
     TRY.
         cl_wdr_cfg_persistence_utils=>read_comp_config_from_db(
