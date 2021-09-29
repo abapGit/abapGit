@@ -90,7 +90,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCC IMPLEMENTATION.
 
     lv_config_id = ls_orig_config-config_id.
     lv_config_type = ls_orig_config-config_type.
-    lv_config_var = ls_orig_config-config_var .
+    lv_config_var = ls_orig_config-config_var.
 
     ASSIGN COMPONENT 'CONFIG_IDPAR' OF STRUCTURE ls_orig_config TO <lv_data>.
     IF sy-subrc = 0.
