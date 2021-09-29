@@ -26,6 +26,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCC IMPLEMENTATION.
 
     ls_config_key-config_id = ms_item-obj_name+0(32).
     ls_config_key-config_type = ms_item-obj_name+32(2).
+    ls_config_key-config_var = ms_item-obj_name+34(6).
 
     TRY.
         cl_wdr_cfg_persistence_utils=>read_comp_config_from_db(
@@ -48,6 +49,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCC IMPLEMENTATION.
 
     ls_config_key-config_id = ms_item-obj_name+0(32).
     ls_config_key-config_type = ms_item-obj_name+32(2).
+    ls_config_key-config_var = ms_item-obj_name+34(6).
 
     TRY.
         " does not exist in 702
@@ -237,6 +239,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCC IMPLEMENTATION.
 
     ls_config_key-config_id = ms_item-obj_name+0(32).
     ls_config_key-config_type = ms_item-obj_name+32(2).
+    ls_config_key-config_var = ms_item-obj_name+34(6).
 
     TRY.
         cl_wdr_cfg_persistence_utils=>read_comp_config_from_db(
@@ -339,6 +342,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCC IMPLEMENTATION.
 
     ls_config_key-config_id = ms_item-obj_name+0(32).
     ls_config_key-config_type = ms_item-obj_name+32(2).
+    ls_config_key-config_var = ms_item-obj_name+34(6).
 
     TRY.
         " original_config_data does not exist in 702
