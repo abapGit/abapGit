@@ -6,7 +6,6 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_gui_hotkeys.
-
     METHODS:
       constructor
         IMPORTING
@@ -33,26 +32,24 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
   PROTECTED SECTION.
     METHODS:
       render_content REDEFINITION,
-      add_menu_end REDEFINITION,
       add_menu_begin REDEFINITION,
+      add_menu_end REDEFINITION,
       render_table_head_non_unified REDEFINITION,
       render_beacon_begin_of_row REDEFINITION,
       render_diff_head_after_state REDEFINITION,
       insert_nav REDEFINITION,
-      render_line_split_row REDEFINITION.
-
+      render_line_split_row REDEFINITION,
+      refresh REDEFINITION,
+      modify_files_before_diff_calc REDEFINITION.
 
   PRIVATE SECTION.
 
     TYPES ty_patch_action TYPE string .
 
     CONSTANTS:
-      BEGIN OF c_actions,
-        stage                TYPE string VALUE 'patch_stage',
-        refresh              TYPE string VALUE 'patch_refresh',
-        refresh_local        TYPE string VALUE 'patch_refresh_local',
-        refresh_local_object TYPE string VALUE 'patch_refresh_local_object',
-      END OF c_actions .
+      BEGIN OF c_patch_actions,
+        stage TYPE string VALUE 'patch_stage',
+      END OF c_patch_actions .
     CONSTANTS:
       BEGIN OF c_patch_action,
         add    TYPE ty_patch_action VALUE 'add',
@@ -93,22 +90,10 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
     METHODS add_to_stage
       RAISING
         zcx_abapgit_exception .
-    METHODS refresh
-      IMPORTING
-        !iv_action TYPE clike
-      RAISING
-        zcx_abapgit_exception .
-    METHODS refresh_full
-      RAISING
-        zcx_abapgit_exception .
-    METHODS refresh_local
-      RAISING
-        zcx_abapgit_exception .
-    METHODS refresh_local_object
-      IMPORTING
-        !iv_action TYPE clike
-      RAISING
-        zcx_abapgit_exception .
+
+
+
+
     METHODS apply_patch_all
       IMPORTING
         !iv_patch      TYPE string
@@ -156,24 +141,23 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
+  METHOD zif_abapgit_gui_hotkeys~get_hotkey_actions.
 
-  METHOD add_menu_begin.
+    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
 
-    io_menu->add(
-        iv_txt   = |Refresh Local|
-        iv_typ   = zif_abapgit_html=>c_action_type-dummy
-        iv_act   = c_actions-refresh_local
-        iv_id    = c_actions-refresh_local
-        iv_title = |Refresh all local objects, without refreshing the remote| ).
+    ls_hotkey_action-ui_component = 'Patch'.
 
-    io_menu->add(
-        iv_txt   = |Refresh|
-        iv_typ   = zif_abapgit_html=>c_action_type-dummy
-        iv_act   = c_actions-refresh
-        iv_id    = c_actions-refresh
-        iv_title = |Complete refresh of all objects, local and remote| ).
+    ls_hotkey_action-description = |Stage changes|.
+    ls_hotkey_action-action      = |stagePatch|.
+    ls_hotkey_action-hotkey      = |s|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description = |Refresh local|.
+    ls_hotkey_action-action      = |refreshLocal|.
+    ls_hotkey_action-hotkey      = |r|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
 
@@ -181,7 +165,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
   METHOD add_menu_end.
 
     io_menu->add( iv_txt = 'Stage'
-                  iv_act = c_actions-stage
+                  iv_act = c_patch_actions-stage
                   iv_id  = 'stage'
                   iv_typ = zif_abapgit_html=>c_action_type-dummy ).
 
@@ -443,77 +427,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD refresh.
-
-    DATA:
-      lt_diff_files_old TYPE ty_file_diffs,
-      lt_files          TYPE zif_abapgit_definitions=>ty_stage_tt,
-      ls_file           LIKE LINE OF lt_files.
-
-    FIELD-SYMBOLS: <ls_diff_file_old> TYPE zcl_abapgit_gui_page_diff=>ty_file_diff.
-
-
-    lt_diff_files_old = mt_diff_files.
-
-    CASE iv_action.
-      WHEN c_actions-refresh.
-        refresh_full( ).
-      WHEN c_actions-refresh_local.
-        refresh_local( ).
-      WHEN OTHERS.
-        refresh_local_object( iv_action ).
-    ENDCASE.
-
-    " We need to supply files again in calculate_diff. Because
-    " we only want to refresh the visible files. Otherwise all
-    " diff files would appear.
-    " Which is not wanted when we previously only selected particular files.
-    LOOP AT lt_diff_files_old ASSIGNING <ls_diff_file_old>.
-      CLEAR: ls_file.
-      MOVE-CORRESPONDING <ls_diff_file_old> TO ls_file-file.
-      INSERT ls_file INTO TABLE lt_files.
-    ENDLOOP.
-
-    calculate_diff( it_files = lt_files ).
-    restore_patch_flags( lt_diff_files_old ).
-
-  ENDMETHOD.
-
-
-  METHOD refresh_full.
-    mo_repo->refresh( abap_true ).
-  ENDMETHOD.
-
-
-  METHOD refresh_local.
-    mo_repo->refresh_local_objects( ).
-  ENDMETHOD.
-
-
-  METHOD refresh_local_object.
-
-    DATA:
-      lv_regex    TYPE string,
-      lv_obj_type TYPE tadir-object,
-      lv_obj_name TYPE tadir-obj_name.
-
-    lv_regex = c_actions-refresh_local_object && `_(\w{4})_(.*)`.
-
-    FIND FIRST OCCURRENCE OF REGEX lv_regex
-      IN iv_action
-      SUBMATCHES lv_obj_type lv_obj_name.
-
-    IF sy-subrc = 0.
-      mo_repo->refresh_local_object(
-          iv_obj_type = lv_obj_type
-          iv_obj_name = lv_obj_name ).
-    ELSE.
-      zcx_abapgit_exception=>raise( |Invalid refresh action { iv_action }| ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD render_beacon_begin_of_row.
 
     mv_section_count = mv_section_count + 1.
@@ -559,10 +472,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
           iv_title = |Local refresh of this object| ).
 
     ENDIF.
-
-    super->render_diff_head_after_state(
-        ii_html = ii_html
-        is_diff = is_diff ).
 
   ENDMETHOD.
 
@@ -701,7 +610,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     CASE ii_event->mv_action.
-      WHEN c_actions-stage.
+      WHEN c_patch_actions-stage.
 
         start_staging( ii_event ).
 
@@ -713,8 +622,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
 
       WHEN OTHERS.
 
-        FIND FIRST OCCURRENCE OF REGEX |^{ c_actions-refresh }| IN ii_event->mv_action.
-        IF sy-subrc = 0.
+        IF is_refresh( ii_event->mv_action ) = abap_true.
 
           apply_patch_from_form_fields( ii_event ).
           refresh( ii_event->mv_action ).
@@ -731,21 +639,55 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_hotkeys~get_hotkey_actions.
+  METHOD refresh.
 
-    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
+    DATA: lt_diff_files_old TYPE ty_file_diffs.
 
-    ls_hotkey_action-ui_component = 'Patch'.
+    lt_diff_files_old = mt_diff_files.
 
-    ls_hotkey_action-description = |Stage changes|.
-    ls_hotkey_action-action      = |stagePatch|.
-    ls_hotkey_action-hotkey      = |s|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+    super->refresh( iv_action ).
 
-    ls_hotkey_action-description = |Refresh local|.
-    ls_hotkey_action-action      = |refreshLocal|.
-    ls_hotkey_action-hotkey      = |r|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+    restore_patch_flags( lt_diff_files_old ).
 
   ENDMETHOD.
+
+
+  METHOD add_menu_begin.
+
+    io_menu->add(
+        iv_txt   = |Refresh Local|
+        iv_typ   = zif_abapgit_html=>c_action_type-dummy
+        iv_act   = c_actions-refresh_local
+        iv_id    = c_actions-refresh_local
+        iv_title = |Refresh all local objects, without refreshing the remote| ).
+
+    io_menu->add(
+        iv_txt   = |Refresh|
+        iv_typ   = zif_abapgit_html=>c_action_type-dummy
+        iv_act   = c_actions-refresh
+        iv_id    = c_actions-refresh
+        iv_title = |Complete refresh of all objects, local and remote| ).
+
+  ENDMETHOD.
+
+
+  METHOD modify_files_before_diff_calc.
+
+    DATA: ls_file LIKE LINE OF ct_files.
+
+    FIELD-SYMBOLS: <ls_diff_file_old> TYPE zcl_abapgit_gui_page_diff=>ty_file_diff.
+
+    " We need to supply files again in calculate_diff. Because
+    " we only want to refresh the visible files. Otherwise all
+    " diff files would appear.
+    " Which is not wanted when we previously only selected particular files.
+
+    LOOP AT it_diff_files_old ASSIGNING <ls_diff_file_old>.
+      CLEAR: ls_file.
+      MOVE-CORRESPONDING <ls_diff_file_old> TO ls_file-file.
+      INSERT ls_file INTO TABLE ct_files.
+    ENDLOOP.
+
+  ENDMETHOD.
+
 ENDCLASS.
