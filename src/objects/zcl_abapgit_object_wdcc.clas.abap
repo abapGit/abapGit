@@ -88,7 +88,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCC IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'CONFIG_VAR'
                   CHANGING  cg_data = ls_orig_config-config_var ).
 
-    lv_config_id = ls_orig_config-config_id  .
+    lv_config_id = ls_orig_config-config_id.
     lv_config_type = ls_orig_config-config_type .
     lv_config_var = ls_orig_config-config_var .
 
