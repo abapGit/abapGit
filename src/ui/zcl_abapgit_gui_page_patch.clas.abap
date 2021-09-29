@@ -90,10 +90,6 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
     METHODS add_to_stage
       RAISING
         zcx_abapgit_exception .
-
-
-
-
     METHODS apply_patch_all
       IMPORTING
         !iv_patch      TYPE string
