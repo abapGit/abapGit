@@ -15,31 +15,6 @@ CLASS zcl_abapgit_object_srvd DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PRIVATE SECTION.
 
-    ALIASES c_abap_version_default
-      FOR zif_abapgit_object~c_abap_version_default .
-    ALIASES c_abap_version_sap_cp
-      FOR zif_abapgit_object~c_abap_version_sap_cp .
-    ALIASES gc_step_id
-      FOR zif_abapgit_object~gc_step_id .
-    ALIASES changed_by
-      FOR zif_abapgit_object~changed_by .
-    ALIASES delete
-      FOR zif_abapgit_object~delete .
-    ALIASES deserialize
-      FOR zif_abapgit_object~deserialize .
-    ALIASES exists
-      FOR zif_abapgit_object~exists .
-    ALIASES get_comparator
-      FOR zif_abapgit_object~get_comparator .
-    ALIASES get_deserialize_steps
-      FOR zif_abapgit_object~get_deserialize_steps .
-    ALIASES is_locked
-      FOR zif_abapgit_object~is_locked .
-    ALIASES jump
-      FOR zif_abapgit_object~jump .
-    ALIASES serialize
-      FOR zif_abapgit_object~serialize .
-
     DATA mv_service_definition_key TYPE seu_objkey .
     DATA mr_service_definition TYPE REF TO data .
     CONSTANTS mc_source_file TYPE string VALUE 'srvdsrv' ##NO_TEXT.
