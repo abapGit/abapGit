@@ -156,7 +156,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
 
   METHOD add_menu_begin.
@@ -535,7 +535,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
       CLEAR: mv_pushed.
     ENDIF.
 
-    gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
+    gui_services( )->get_hotkeys_ctl( )->register_hotkeys( zif_abapgit_gui_hotkeys~get_hotkey_actions( ) ).
+
     ri_html = super->render_content( ).
 
     register_deferred_script( render_scripts( ) ).
