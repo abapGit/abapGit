@@ -582,7 +582,6 @@ table.db_tab td {
   padding: 4px 8px;
   vertical-align: middle;
   word-break: break-all;
-  max-width: 250px;
 }
 
 table.db_tab th.package {
