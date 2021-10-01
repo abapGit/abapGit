@@ -48,7 +48,7 @@ CLASS ltcl_xml IMPLEMENTATION.
     DATA lv_xml TYPE string.
 
     lv_xml = |<?xml version="1.0"?>|
-          && |<{ mo_xml->c_abapgit_tag } { mo_xml->c_attr_version }="{ zif_abapgit_version=>gc_xml_version }">|
+          && |<{ mo_xml->c_abapgit_tag } { mo_xml->c_attr_version }="{ zif_abapgit_version=>c_xml_version }">|
           && iv_xml
           && |</{ mo_xml->c_abapgit_tag }>|.
 
@@ -97,7 +97,7 @@ CLASS ltcl_xml IMPLEMENTATION.
 
 
     lv_xml = |<?xml version="1.0"?>|
-          && |<{ mo_xml->c_abapgit_tag } { mo_xml->c_attr_version }="{ zif_abapgit_version=>gc_xml_version }">|
+          && |<{ mo_xml->c_abapgit_tag } { mo_xml->c_attr_version }="{ zif_abapgit_version=>c_xml_version }">|
           && |<open_tag>|
           && |</{ mo_xml->c_abapgit_tag }>|.
 

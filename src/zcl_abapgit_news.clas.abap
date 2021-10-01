@@ -124,7 +124,7 @@ CLASS zcl_abapgit_news IMPLEMENTATION.
     lv_url          = lo_repo_online->get_url( ).
 
     IF zcl_abapgit_url=>is_abapgit_repo( lv_url ) = abap_true.
-      lv_version = zif_abapgit_version=>gc_abap_version. " TODO refactor
+      lv_version = zif_abapgit_version=>c_abap_version. " TODO refactor
     ELSE.
 
       lo_apack = io_repo->get_dot_apack( ).

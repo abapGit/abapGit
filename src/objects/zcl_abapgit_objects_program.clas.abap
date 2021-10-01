@@ -831,6 +831,11 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
             CLEAR <ls_field>-foreignkey.
           ENDIF.
         ENDIF.
+
+        IF <ls_field>-from_dict = abap_true AND
+           <ls_field>-modific   <> 'F'.
+          CLEAR <ls_field>-text.
+        ENDIF.
       ENDLOOP.
 
       LOOP AT lt_containers ASSIGNING <ls_container>.
