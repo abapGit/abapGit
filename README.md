@@ -1,6 +1,6 @@
 ![CI](https://github.com/abapGit/abapGit/workflows/CI/badge.svg)
 [![Slack](https://abapgit-slackinviter.herokuapp.com/badge.svg)](https://abapgit-slackinviter.herokuapp.com/)
-[![abap package version](https://img.shields.io/endpoint?url=https://shield.abap.space/version-shield-json/github/abapGit/abapGit/src/zif_abapgit_version.intf.abap/gc_abap_version&label=version)](https://github.com/abapGit/abapGit/blob/main/src/zif_abapgit_version.intf.abap)
+[![abap package version](https://img.shields.io/endpoint?url=https://shield.abap.space/version-shield-json/github/abapGit/abapGit/src/zif_abapgit_version.intf.abap/c_abap_version&label=version)](https://github.com/abapGit/abapGit/blob/main/src/zif_abapgit_version.intf.abap)
 
 # <img src="docs/img/logo.svg" height="40" alt="abapGit logo">
 
