@@ -166,7 +166,7 @@ CLASS zcl_abapgit_persistence_db IMPLEMENTATION.
   METHOD list_by_keys.
     FIELD-SYMBOLS: <ls_key> LIKE LINE OF it_keys.
     LOOP AT it_keys ASSIGNING <ls_key>.
-      SELECT * FROM (c_tabname) WHERE value = <ls_key> APPENDING TABLE rt_contents.
+      SELECT * FROM (c_tabname) WHERE value = @<ls_key> APPENDING TABLE @rt_contents.
     ENDLOOP.
   ENDMETHOD.
 
