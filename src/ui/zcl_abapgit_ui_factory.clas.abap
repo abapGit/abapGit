@@ -148,7 +148,7 @@ CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
       lo_html_preprocessor->preserve_css( 'css/common.css' ).
 
       CREATE OBJECT li_router TYPE zcl_abapgit_gui_router.
-      CREATE OBJECT li_hotkey_ctl TYPE zcl_abapgit_hotkeys.
+      CREATE OBJECT li_hotkey_ctl TYPE zcl_abapgit_gui_hotkey_ctl.
 
       CREATE OBJECT go_gui
         EXPORTING
