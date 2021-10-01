@@ -8,6 +8,13 @@ Legend
 + : added
 - : removed
 
+2021-10-01 v1.111.0
+-------------------
++ WDCC: Support all object types
+! SICF: clear counter in xml
+! FUGR/PROG: dynpro, clear TEXT when referring to dictionary
+* diff view: improve beacons
+
 2021-09-24 v1.110.0
 -------------------
 ! DOMA: Clear DOMNAME from fixed values
