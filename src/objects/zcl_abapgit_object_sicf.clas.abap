@@ -588,6 +588,7 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
     CLEAR ls_icfservice-icf_mandt.
     CLEAR ls_icfservice-icfnodguid.
     CLEAR ls_icfservice-icfparguid.
+    CLEAR ls_icfservice-icfchildno.
     CLEAR ls_icfservice-icf_user.
     CLEAR ls_icfservice-icf_cclnt.
     CLEAR ls_icfservice-icf_mclnt.

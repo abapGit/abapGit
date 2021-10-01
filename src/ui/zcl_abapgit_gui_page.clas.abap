@@ -84,7 +84,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -110,7 +110,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ri_html->add( ri_html->icon( 'git-alt' ) ).
     ri_html->add( ri_html->icon( 'abapgit' ) ).
     ri_html->add( '</div>' ).
-    ri_html->add( |<div class="version">{ zif_abapgit_version=>gc_abap_version }</div>| ).
+    ri_html->add( |<div class="version">{ zif_abapgit_version=>c_abap_version }</div>| ).
     ri_html->add( '</td>' ).
 
     ri_html->add( '<td id="debug-output" class="w40"></td>' ).
