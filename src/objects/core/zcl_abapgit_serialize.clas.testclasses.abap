@@ -18,7 +18,11 @@ ENDCLASS.
 CLASS ltcl_determine_max_threads IMPLEMENTATION.
 
   METHOD setup.
-    CREATE OBJECT mo_cut.
+    TRY.
+        CREATE OBJECT mo_cut.
+      CATCH zcx_abapgit_exception.
+        cl_abap_unit_assert=>fail( 'Error creating serializer' ).
+    ENDTRY.
   ENDMETHOD.
 
   METHOD determine_max_threads.
@@ -64,7 +68,11 @@ ENDCLASS.
 CLASS ltcl_serialize IMPLEMENTATION.
 
   METHOD setup.
-    CREATE OBJECT mo_cut.
+    TRY.
+        CREATE OBJECT mo_cut.
+      CATCH zcx_abapgit_exception.
+        cl_abap_unit_assert=>fail( 'Error creating serializer' ).
+    ENDTRY.
   ENDMETHOD.
 
   METHOD test.
