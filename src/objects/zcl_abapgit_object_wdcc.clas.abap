@@ -1,6 +1,7 @@
 CLASS zcl_abapgit_object_wdcc DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_objects_super
+  FINAL
   CREATE PUBLIC .
 
   PUBLIC SECTION.
@@ -24,7 +25,8 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCC IMPLEMENTATION.
           ls_config_key TYPE wdy_config_key.
 
     ls_config_key-config_id = ms_item-obj_name+0(32).
-    ls_config_key-config_type = '00'.
+    ls_config_key-config_type = ms_item-obj_name+32(2).
+    ls_config_key-config_var = ms_item-obj_name+34(6).
 
     TRY.
         cl_wdr_cfg_persistence_utils=>read_comp_config_from_db(
@@ -46,7 +48,8 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCC IMPLEMENTATION.
           lv_subrc      TYPE sysubrc.
 
     ls_config_key-config_id = ms_item-obj_name+0(32).
-    ls_config_key-config_type = '00'.
+    ls_config_key-config_type = ms_item-obj_name+32(2).
+    ls_config_key-config_var = ms_item-obj_name+34(6).
 
     TRY.
         " does not exist in 702
@@ -86,6 +89,10 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCC IMPLEMENTATION.
 
     io_xml->read( EXPORTING iv_name = 'CONFIG_VAR'
                   CHANGING  cg_data = ls_orig_config-config_var ).
+
+    lv_config_id = ls_orig_config-config_id.
+    lv_config_type = ls_orig_config-config_type.
+    lv_config_var = ls_orig_config-config_var.
 
     ASSIGN COMPONENT 'CONFIG_IDPAR' OF STRUCTURE ls_orig_config TO <lv_data>.
     IF sy-subrc = 0.
@@ -140,10 +147,20 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCC IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'RELID'
                   CHANGING  cg_data = ls_orig_config-relid ).
 
-    ls_orig_config-author = sy-uname.
+    SELECT SINGLE author createdon FROM wdy_config_data INTO ( ls_orig_config-author, ls_orig_config-createdon )
+      WHERE config_id = lv_config_id AND
+    config_type = lv_config_type AND
+    config_var = lv_config_var.
+
+    IF ls_orig_config-author IS INITIAL.
+      ls_orig_config-author = sy-uname.
+    ENDIF.
     ls_orig_config-changedby = sy-uname.
     ls_orig_config-changedon = sy-datum.
-    ls_orig_config-createdon = sy-datum.
+
+    IF ls_orig_config-createdon IS INITIAL.
+      ls_orig_config-createdon = sy-datum.
+    ENDIF.
 
     CALL FUNCTION 'ENQUEUE_E_WDY_CONFCOMP'
       EXPORTING
@@ -221,7 +238,8 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCC IMPLEMENTATION.
           ls_config_key TYPE wdy_config_key.
 
     ls_config_key-config_id = ms_item-obj_name+0(32).
-    ls_config_key-config_type = '00'.
+    ls_config_key-config_type = ms_item-obj_name+32(2).
+    ls_config_key-config_var = ms_item-obj_name+34(6).
 
     TRY.
         cl_wdr_cfg_persistence_utils=>read_comp_config_from_db(
@@ -323,7 +341,8 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCC IMPLEMENTATION.
                  ig_data =  ms_item-obj_name ).
 
     ls_config_key-config_id = ms_item-obj_name+0(32).
-    ls_config_key-config_type = '00'.
+    ls_config_key-config_type = ms_item-obj_name+32(2).
+    ls_config_key-config_var = ms_item-obj_name+34(6).
 
     TRY.
         " original_config_data does not exist in 702
