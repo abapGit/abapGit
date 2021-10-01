@@ -60,17 +60,6 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     ty_git_tag_list_tt TYPE STANDARD TABLE OF ty_git_tag WITH DEFAULT KEY .
   TYPES:
-    BEGIN OF ty_hotkey,
-      ui_component TYPE string,
-      action       TYPE string,
-      hotkey       TYPE string,
-    END OF ty_hotkey .
-  TYPES:
-    ty_hotkey_tt TYPE STANDARD TABLE OF ty_hotkey
-                    WITH NON-UNIQUE DEFAULT KEY
-                    WITH NON-UNIQUE SORTED KEY action
-                         COMPONENTS ui_component action.
-  TYPES:
     BEGIN OF ty_git_user,
       name  TYPE string,
       email TYPE string,
@@ -325,7 +314,6 @@ INTERFACE zif_abapgit_definitions
       show_default_repo      TYPE abap_bool,
       link_hints_enabled     TYPE abap_bool,
       link_hint_key          TYPE c LENGTH 1,
-      hotkeys                TYPE ty_hotkey_tt,
       parallel_proc_disabled TYPE abap_bool,
       icon_scaling           TYPE c LENGTH 1,
       ui_theme               TYPE string,

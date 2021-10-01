@@ -757,7 +757,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
 
-    gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
+    gui_services( )->get_hotkeys_ctl( )->register_hotkeys( zif_abapgit_gui_hotkeys~get_hotkey_actions( ) ).
     gui_services( )->register_event_handler( me ).
 
     TRY.
