@@ -9,19 +9,19 @@ CLASS zcx_abapgit_exception DEFINITION
     INTERFACES if_t100_message .
 
     CONSTANTS:
-      BEGIN OF gc_section_text,
+      BEGIN OF c_section_text,
         cause           TYPE string VALUE `Cause`,
         system_response TYPE string VALUE `System response`,
         what_to_do      TYPE string VALUE `Procedure`,
         sys_admin       TYPE string VALUE `System administration`,
-      END OF gc_section_text .
+      END OF c_section_text .
     CONSTANTS:
-      BEGIN OF gc_section_token,
+      BEGIN OF c_section_token,
         cause           TYPE string VALUE `&CAUSE&`,
         system_response TYPE string VALUE `&SYSTEM_RESPONSE&`,
         what_to_do      TYPE string VALUE `&WHAT_TO_DO&`,
         sys_admin       TYPE string VALUE `&SYS_ADMIN&`,
-      END OF gc_section_token .
+      END OF c_section_token .
     DATA msgv1 TYPE symsgv READ-ONLY .
     DATA msgv2 TYPE symsgv READ-ONLY .
     DATA msgv3 TYPE symsgv READ-ONLY .
@@ -356,14 +356,14 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
   METHOD replace_section_head_with_text.
 
     CASE cs_itf-tdline.
-      WHEN gc_section_token-cause.
-        cs_itf-tdline = gc_section_text-cause.
-      WHEN gc_section_token-system_response.
-        cs_itf-tdline = gc_section_text-system_response.
-      WHEN gc_section_token-what_to_do.
-        cs_itf-tdline = gc_section_text-what_to_do.
-      WHEN gc_section_token-sys_admin.
-        cs_itf-tdline = gc_section_text-sys_admin.
+      WHEN c_section_token-cause.
+        cs_itf-tdline = c_section_text-cause.
+      WHEN c_section_token-system_response.
+        cs_itf-tdline = c_section_text-system_response.
+      WHEN c_section_token-what_to_do.
+        cs_itf-tdline = c_section_text-what_to_do.
+      WHEN c_section_token-sys_admin.
+        cs_itf-tdline = c_section_text-sys_admin.
     ENDCASE.
 
   ENDMETHOD.
