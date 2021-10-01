@@ -253,11 +253,13 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     ms_local_settings = is_local_settings.
 
     " Determine I18N parameters
-    ms_i18n_params-main_language         = io_dot_abapgit->get_main_language( ).
-    ms_i18n_params-main_language_only    = is_local_settings-main_language_only.
-    ms_i18n_params-translation_languages = zcl_abapgit_lxe_texts=>get_translation_languages(
-      iv_main_language  = io_dot_abapgit->get_main_language( )
-      it_i18n_languages = io_dot_abapgit->get_i18n_languages( ) ).
+    IF io_dot_abapgit IS NOT INITIAL.
+      ms_i18n_params-main_language         = io_dot_abapgit->get_main_language( ).
+      ms_i18n_params-main_language_only    = is_local_settings-main_language_only.
+      ms_i18n_params-translation_languages = zcl_abapgit_lxe_texts=>get_translation_languages(
+        iv_main_language  = io_dot_abapgit->get_main_language( )
+        it_i18n_languages = io_dot_abapgit->get_i18n_languages( ) ).
+    ENDIF.
 
     IF ms_i18n_params-main_language IS INITIAL.
       ms_i18n_params-main_language = sy-langu.
