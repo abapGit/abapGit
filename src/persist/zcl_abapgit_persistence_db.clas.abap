@@ -37,6 +37,9 @@ CLASS zcl_abapgit_persistence_db DEFINITION
         !iv_type          TYPE zif_abapgit_persistence=>ty_type
       RETURNING
         VALUE(rt_content) TYPE zif_abapgit_persistence=>ty_contents .
+    METHODS list_by_keys
+      IMPORTING it_keys            TYPE zif_abapgit_persistence=>ty_repo_keys
+      RETURNING VALUE(rt_contents) TYPE zif_abapgit_persistence=>ty_contents.
     METHODS lock
       IMPORTING
         !iv_mode  TYPE enqmode DEFAULT 'E'
@@ -160,6 +163,13 @@ CLASS zcl_abapgit_persistence_db IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD list_by_keys.
+    LOOP AT it_keys ASSIGNING FIELD-SYMBOL(<key>).
+      SELECT * FROM zabapgit WHERE value = @<key> APPENDING TABLE @rt_contents.
+    ENDLOOP.
+  ENDMETHOD.
+
+
   METHOD lock.
     DATA: lv_dummy_update_function TYPE funcname.
 
@@ -243,4 +253,6 @@ CLASS zcl_abapgit_persistence_db IMPLEMENTATION.
       iv_ignore_errors = abap_false ).
 
   ENDMETHOD.
+
+
 ENDCLASS.
