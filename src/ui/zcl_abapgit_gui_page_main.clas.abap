@@ -73,7 +73,8 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
   METHOD render_content.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-    gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
+
+    gui_services( )->get_hotkeys_ctl( )->register_hotkeys( zif_abapgit_gui_hotkeys~get_hotkey_actions( ) ).
 
     IF mo_repo_overview IS INITIAL.
       CREATE OBJECT mo_repo_overview.
