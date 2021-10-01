@@ -5,7 +5,6 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
 
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_gui_hotkeys.
     METHODS:
       constructor
         IMPORTING
@@ -17,7 +16,8 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
         RAISING
           zcx_abapgit_exception,
 
-      zif_abapgit_gui_event_handler~on_event REDEFINITION.
+      zif_abapgit_gui_event_handler~on_event REDEFINITION,
+      zif_abapgit_gui_hotkeys~get_hotkey_actions REDEFINITION.
 
     CLASS-METHODS:
       get_patch_data

@@ -4,6 +4,9 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
   CREATE PUBLIC.
 
   PUBLIC SECTION.
+    INTERFACES:
+      zif_abapgit_gui_hotkeys.
+
     TYPES:
       BEGIN OF ty_file_diff,
         path       TYPE string,
@@ -771,6 +774,8 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     li_progress->off( ).
 
+    gui_services( )->get_hotkeys_ctl( )->register_hotkeys( zif_abapgit_gui_hotkeys~get_hotkey_actions( ) ).
+
   ENDMETHOD.
 
 
@@ -1188,4 +1193,19 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_hotkeys~get_hotkey_actions.
+
+    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
+
+    ls_hotkey_action-ui_component = 'Diff'.
+
+    ls_hotkey_action-description = |Refresh local|.
+    ls_hotkey_action-action      = c_actions-refresh_local.
+    ls_hotkey_action-hotkey      = |r|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+  ENDMETHOD.
+
 ENDCLASS.
