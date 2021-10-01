@@ -264,6 +264,9 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
   METHOD render_header_bar.
 
+    DATA: lv_new_toggle_favorites TYPE abap_bool,
+          lv_icon_class TYPE string.
+
     ii_html->add( |<div class="form-container">| ).
 
     ii_html->add( |<form class="inline" method="post" action="sapevent:{ c_action-apply_filter }">| ).
@@ -276,14 +279,17 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ii_html->add( |<input type="submit" class="hidden-submit">| ).
     ii_html->add( |</form>| ).
 
-
-    DATA: new_toggle_favorites TYPE abap_bool.
-    new_toggle_favorites = boolc( NOT mv_only_favorites = abap_true ).
+    lv_new_toggle_favorites = boolc( NOT mv_only_favorites = abap_true ).
     " render icon for current state but filter value for new state
-    DATA(icon) = COND #( WHEN mv_only_favorites = abap_true THEN `blue` ELSE `grey` ).
+    IF mv_only_favorites = abap_true.
+      lv_icon_class =`blue`.
+    ELSE.
+      lv_icon_class = `grey`.
+    ENDIF.
+
     ii_html->add( ii_html->a(
-      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { icon }"></i> Only Favorites|
-      iv_act   = |{ zif_abapgit_definitions=>c_action-toggle_favorites }?favorites={ new_toggle_favorites }| ) ).
+      iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Only Favorites|
+      iv_act   = |{ zif_abapgit_definitions=>c_action-toggle_favorites }?favorites={ lv_new_toggle_favorites }| ) ).
 
     ii_html->add( `<span class="separator">|</span>` ).
 

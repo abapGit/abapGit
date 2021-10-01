@@ -146,11 +146,12 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
   METHOD zif_abapgit_repo_srv~list_favorites.
 
-    IF mv_init = abap_false OR mv_only_favorites = abap_false.
-      DATA: lt_list           TYPE zif_abapgit_persistence=>ty_repos,
-            lt_user_favorites TYPE zif_abapgit_persist_user=>ty_favorites.
+    DATA: lt_list           TYPE zif_abapgit_persistence=>ty_repos,
+          lt_user_favorites TYPE zif_abapgit_persist_user=>ty_favorites.
 
-      FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
+    FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
+
+    IF mv_init = abap_false OR mv_only_favorites = abap_false.
 
       CLEAR mt_list.
 
