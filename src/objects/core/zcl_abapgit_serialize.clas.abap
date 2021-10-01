@@ -330,9 +330,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
 * serializes objects, including .abapgit.xml, apack, and takes into account local settings
 
-    add_dot_abapgit(
-      CHANGING
-        ct_files = rt_files ).
+    add_dot_abapgit( CHANGING ct_files = rt_files ).
 
     add_apack(
       EXPORTING
