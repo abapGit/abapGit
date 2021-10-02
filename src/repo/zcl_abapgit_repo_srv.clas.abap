@@ -150,7 +150,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
   METHOD zif_abapgit_repo_srv~list_favorites.
 
     IF mv_init = abap_false OR mv_only_favorites = abap_false.
-     refresh_favorites( ).
+      refresh_favorites( ).
     ENDIF.
 
     rt_list = mt_list.
