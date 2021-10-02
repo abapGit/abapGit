@@ -185,7 +185,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     CLEAR mt_list.
 
-      lt_user_favorites = zcl_abapgit_persistence_user=>get_instance( )->get_favorites( ).
+    lt_user_favorites = zcl_abapgit_persistence_user=>get_instance( )->get_favorites( ).
       lt_list = zcl_abapgit_persist_factory=>get_repo( )->list_favorites( lt_user_favorites ).
       LOOP AT lt_list ASSIGNING <ls_list>.
         instantiate_and_add( <ls_list> ).
