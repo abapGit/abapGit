@@ -183,7 +183,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
 
-     CLEAR mt_list.
+    CLEAR mt_list.
 
       lt_user_favorites = zcl_abapgit_persistence_user=>get_instance( )->get_favorites( ).
       lt_list = zcl_abapgit_persist_factory=>get_repo( )->list_favorites( lt_user_favorites ).
