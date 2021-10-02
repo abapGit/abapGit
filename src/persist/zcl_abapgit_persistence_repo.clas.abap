@@ -34,7 +34,7 @@ CLASS zcl_abapgit_persistence_repo DEFINITION
         zcx_abapgit_exception .
     METHODS get_repo_from_content
       IMPORTING
-        ls_content    TYPE zif_abapgit_persistence=>ty_content
+        is_content    TYPE zif_abapgit_persistence=>ty_content
       RETURNING
         VALUE(rs_result) TYPE zif_abapgit_persistence=>ty_repo
       RAISING
@@ -283,12 +283,12 @@ CLASS zcl_abapgit_persistence_repo IMPLEMENTATION.
 
 
   METHOD get_repo_from_content.
-    MOVE-CORRESPONDING from_xml( ls_content-data_str ) TO rs_result.
+    MOVE-CORRESPONDING from_xml( is_content-data_str ) TO rs_result.
     IF rs_result-local_settings-write_protected = abap_false AND
        zcl_abapgit_factory=>get_environment( )->is_repo_object_changes_allowed( ) = abap_false.
       rs_result-local_settings-write_protected = abap_true.
     ENDIF.
-    rs_result-key = ls_content-value.
+    rs_result-key = is_content-value.
   ENDMETHOD.
 
 ENDCLASS.
