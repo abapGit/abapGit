@@ -47,6 +47,9 @@ CLASS zcl_abapgit_repo_srv DEFINITION
     METHODS refresh_all
       RAISING
         zcx_abapgit_exception .
+    METHODS refresh_favorites
+      RAISING
+        zcx_abapgit_exception .
     METHODS instantiate_and_add
       IMPORTING
         !is_repo_meta  TYPE zif_abapgit_persistence=>ty_repo
@@ -146,23 +149,8 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
   METHOD zif_abapgit_repo_srv~list_favorites.
 
-    DATA: lt_list           TYPE zif_abapgit_persistence=>ty_repos,
-          lt_user_favorites TYPE zif_abapgit_persist_user=>ty_favorites.
-
-    FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
-
     IF mv_init = abap_false OR mv_only_favorites = abap_false.
-
-      CLEAR mt_list.
-
-      lt_user_favorites = zcl_abapgit_persistence_user=>get_instance( )->get_favorites( ).
-      lt_list = zcl_abapgit_persist_factory=>get_repo( )->list_favorites( lt_user_favorites ).
-      LOOP AT lt_list ASSIGNING <ls_list>.
-        instantiate_and_add( <ls_list> ).
-      ENDLOOP.
-
-      mv_init = abap_true.
-      mv_only_favorites = abap_true.
+     refresh_favorites( ).
     ENDIF.
 
     rt_list = mt_list.
@@ -185,6 +173,26 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     mv_init = abap_true.
     mv_only_favorites = abap_false.
+
+  ENDMETHOD.
+
+  METHOD refresh_favorites.
+
+    DATA: lt_list           TYPE zif_abapgit_persistence=>ty_repos,
+          lt_user_favorites TYPE zif_abapgit_persist_user=>ty_favorites.
+
+    FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
+
+     CLEAR mt_list.
+
+      lt_user_favorites = zcl_abapgit_persistence_user=>get_instance( )->get_favorites( ).
+      lt_list = zcl_abapgit_persist_factory=>get_repo( )->list_favorites( lt_user_favorites ).
+      LOOP AT lt_list ASSIGNING <ls_list>.
+        instantiate_and_add( <ls_list> ).
+      ENDLOOP.
+
+      mv_init = abap_true.
+      mv_only_favorites = abap_true.
 
   ENDMETHOD.
 
