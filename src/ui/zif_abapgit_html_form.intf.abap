@@ -26,6 +26,7 @@ INTERFACE zif_abapgit_html_form
       subitems      TYPE ty_subitems,
       readonly      TYPE abap_bool,
       password      TYPE abap_bool,
+      condense      TYPE abap_bool,
       min           TYPE i,
       max           TYPE i,
     END OF ty_field .

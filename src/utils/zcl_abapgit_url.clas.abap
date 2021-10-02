@@ -119,23 +119,15 @@ CLASS zcl_abapgit_url IMPLEMENTATION.
 
   METHOD regex.
 
-    FIND REGEX '(https?://[^/]*)(.*/)(.*)\.git$' IN iv_url
+    FIND REGEX '^(https?://[^/]*)(.*/)(.*)\.git$' IN iv_url
       SUBMATCHES ev_host ev_path ev_name.
     IF sy-subrc <> 0.
-      FIND REGEX '(https?://[^/]*)(.*/)(.*)$' IN iv_url
+      FIND REGEX '^(https?://[^/]*)(.*/)(.*)$' IN iv_url
         SUBMATCHES ev_host ev_path ev_name.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'Malformed URL' ).
       ENDIF.
     ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD validate.
-
-    name( iv_url      = iv_url
-          iv_validate = abap_true ).
 
   ENDMETHOD.
 
@@ -167,4 +159,10 @@ CLASS zcl_abapgit_url IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD validate.
+
+    name( iv_url      = iv_url
+          iv_validate = abap_true ).
+
+  ENDMETHOD.
 ENDCLASS.
