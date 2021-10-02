@@ -742,7 +742,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD get_only_favorites.
-    rv_result = me->mv_only_favorites.
+    rv_result = mv_only_favorites.
   ENDMETHOD.
 
 ENDCLASS.
