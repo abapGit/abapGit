@@ -467,6 +467,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       iv_readonly    = abap_true
     )->text(
       iv_name        = c_id-url
+      iv_condense    = abap_true
       iv_label       = lv_label
       iv_hint        = lv_hint
       iv_placeholder = lv_placeholder ).
