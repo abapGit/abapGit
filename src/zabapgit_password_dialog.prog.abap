@@ -111,9 +111,11 @@ CLASS lcl_password_dialog IMPLEMENTATION.
       ENDIF.
       IF screen-name = 'P_CMNT' OR screen-name = 'S_CMNT'.
         IF gv_show_note = abap_true.
-          screen-output = '1'.
+          screen-active    = '1'.
+          screen-invisible = '0'.
         ELSE.
-          screen-output = '0'.
+          screen-active    = '0'.
+          screen-invisible = '1'.
         ENDIF.
         MODIFY SCREEN.
       ENDIF.
