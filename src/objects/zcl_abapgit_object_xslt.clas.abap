@@ -105,7 +105,7 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
     " We attempt to activate it in late step
     IF iv_step = zif_abapgit_object=>gc_step_id-late.
       zcl_abapgit_objects_activation=>add_item( ms_item ).
-      RETURN.      
+      RETURN.
     ENDIF.
 
     IF zif_abapgit_object~exists( ) = abap_true.
