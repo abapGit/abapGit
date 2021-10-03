@@ -13,13 +13,15 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
                  stage_filter  TYPE string VALUE 'stage_filter',
                END OF c_action.
 
-    METHODS:
-      constructor
-        IMPORTING
-                  io_repo TYPE REF TO zcl_abapgit_repo_online
-                  iv_seed TYPE string OPTIONAL
-        RAISING   zcx_abapgit_exception,
-      zif_abapgit_gui_event_handler~on_event REDEFINITION.
+    METHODS constructor
+      IMPORTING
+        io_repo TYPE REF TO zcl_abapgit_repo_online
+        iv_seed TYPE string OPTIONAL
+        iv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS zif_abapgit_gui_event_handler~on_event REDEFINITION.
 
   PROTECTED SECTION.
     METHODS:
@@ -39,6 +41,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
     DATA ms_files TYPE zif_abapgit_definitions=>ty_stage_files .
     DATA mv_seed TYPE string .               " Unique page id to bind JS sessionStorage
     DATA mv_filter_value TYPE string .
+    DATA mv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result.
 
     METHODS check_selected
       IMPORTING
@@ -119,7 +122,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -193,6 +196,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     ms_control-page_title = 'Stage'.
     mo_repo               = io_repo.
     mv_seed               = iv_seed.
+    mv_sci_result         = iv_sci_result.
 
     IF mv_seed IS INITIAL. " Generate based on time unless obtained from diff page
       GET TIME STAMP FIELD lv_ts.
@@ -403,6 +407,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     ri_html->add( '<input class="stage-filter" id="objectSearch"' &&
                   ' type="search" placeholder="Filter Objects"' &&
                   | value="{ mv_filter_value }">| ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_sci_result( mv_sci_result ) ).
     ri_html->add( '</td>' ).
 
     ri_html->add( '</tr>' ).
@@ -791,7 +796,8 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_commit
           EXPORTING
             io_repo  = mo_repo
-            io_stage = lo_stage.
+            io_stage = lo_stage
+            iv_sci_result = mv_sci_result.
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
@@ -802,7 +808,8 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_commit
           EXPORTING
             io_repo  = mo_repo
-            io_stage = lo_stage.
+            io_stage = lo_stage
+            iv_sci_result = mv_sci_result.
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 

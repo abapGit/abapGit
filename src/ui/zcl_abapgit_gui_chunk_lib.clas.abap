@@ -157,6 +157,13 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         VALUE(ri_html)  TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS render_sci_result
+      IMPORTING
+        iv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result
+      RETURNING
+        VALUE(rv_str) TYPE string.
+
+
   PROTECTED SECTION.
 
     CLASS-METHODS render_repo_top_commit_hash
@@ -184,7 +191,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
 
   METHOD advanced_submenu.
@@ -921,6 +928,22 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       CATCH zcx_abapgit_exception.
         ii_html->add( |<span class="url">{ lv_icon_commit }{ lv_commit_short_hash }</span>| ).
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD render_sci_result.
+
+    CASE iv_sci_result.
+      WHEN zif_abapgit_definitions=>c_sci_result-passed.
+        rv_str = '<span class="boxed green-filled-set">SCI: PASSED</span>'.
+      WHEN zif_abapgit_definitions=>c_sci_result-failed.
+        rv_str = '<span class="boxed red-filled-set">SCI: FAILED</span>'.
+      WHEN zif_abapgit_definitions=>c_sci_result-warning.
+        rv_str = '<span class="boxed yellow-filled-set">SCI: WARN</span>'.
+      WHEN OTHERS. " Including NO_RUN
+        RETURN.
+    ENDCASE.
 
   ENDMETHOD.
 

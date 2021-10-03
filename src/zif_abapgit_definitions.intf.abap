@@ -358,6 +358,14 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     ty_deserialization_step_tt TYPE STANDARD TABLE OF ty_deserialization_step
                                           WITH DEFAULT KEY .
+  TYPES ty_sci_result TYPE c LENGTH 1.
+  CONSTANTS:
+    BEGIN OF c_sci_result,
+      no_run  TYPE ty_sci_result VALUE '',
+      failed  TYPE ty_sci_result VALUE 'F',
+      warning TYPE ty_sci_result VALUE 'W',
+      passed  TYPE ty_sci_result VALUE 'P',
+    END OF c_sci_result.
   CONSTANTS:
     BEGIN OF c_git_branch_type,
       branch          TYPE ty_git_branch_type VALUE 'HD',
