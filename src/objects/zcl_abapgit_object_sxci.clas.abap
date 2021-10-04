@@ -171,6 +171,11 @@ CLASS zcl_abapgit_object_sxci IMPLEMENTATION.
 
   METHOD zif_abapgit_object~is_active.
     rv_active = is_active( ).
+
+    " SAP does not list classic BAdIs properly as inactive object
+    IF rv_active = abap_true.
+      SELECT SINGLE active FROM sxc_attr INTO rv_active WHERE imp_name = ms_item-obj_name.
+    ENDIF.
   ENDMETHOD.
 
 
