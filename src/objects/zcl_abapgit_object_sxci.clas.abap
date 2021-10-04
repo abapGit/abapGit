@@ -172,7 +172,7 @@ CLASS zcl_abapgit_object_sxci IMPLEMENTATION.
   METHOD zif_abapgit_object~is_active.
     rv_active = is_active( ).
 
-    "Note: SAP does not show inactive classic BAdIs as "Inactive objects" in SE80 
+    "Note: SAP does not show inactive classic BAdIs as "Inactive objects" in SE80
     "Therefore, rv_active will always be true. The implementation state (runtime
     "behaviour of the BAdI) will be serialized as part of the XML
   ENDMETHOD.
