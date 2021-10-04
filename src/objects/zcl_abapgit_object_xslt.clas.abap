@@ -101,6 +101,12 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
           lv_len        TYPE i,
           ls_attributes TYPE o2xsltattr.
 
+    " Transformation might depend on other objects like a class
+    " We attempt to activate it in late step
+    IF iv_step = zif_abapgit_object=>gc_step_id-late.
+      zcl_abapgit_objects_activation=>add_item( ms_item ).
+      RETURN.
+    ENDIF.
 
     IF zif_abapgit_object~exists( ) = abap_true.
       zif_abapgit_object~delete( iv_package ).
@@ -186,6 +192,7 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
   ENDMETHOD.
 
 
