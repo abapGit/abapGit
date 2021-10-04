@@ -1,7 +1,7 @@
 ---
 title: Background Mode
 category: repo settings
-order: 80
+order: 40
 ---
 
 ## Background Mode
