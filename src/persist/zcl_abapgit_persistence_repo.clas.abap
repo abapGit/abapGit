@@ -204,7 +204,9 @@ CLASS zcl_abapgit_persistence_repo IMPLEMENTATION.
           ls_content LIKE LINE OF lt_content,
           ls_repo    LIKE LINE OF rt_repos.
 
-    lt_content = mo_db->list_by_keys( it_keys = it_keys iv_type = zcl_abapgit_persistence_db=>c_type_repo ).
+    lt_content = mo_db->list_by_keys(
+      it_keys = it_keys
+      iv_type = zcl_abapgit_persistence_db=>c_type_repo ).
 
     LOOP AT lt_content INTO ls_content.
       ls_repo = get_repo_from_content( ls_content ).
