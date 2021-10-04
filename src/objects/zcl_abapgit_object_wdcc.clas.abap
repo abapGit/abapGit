@@ -147,7 +147,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCC IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'RELID'
                   CHANGING  cg_data = ls_orig_config-relid ).
 
-    SELECT SINGLE author createdon FROM wdy_config_data INTO ( ls_orig_config-author, ls_orig_config-createdon )
+    SELECT SINGLE author createdon FROM wdy_config_data INTO (ls_orig_config-author, ls_orig_config-createdon)
       WHERE config_id = lv_config_id AND
     config_type = lv_config_type AND
     config_var = lv_config_var.
