@@ -22,7 +22,10 @@ CLASS zcl_abapgit_object_sxci IMPLEMENTATION.
 
   METHOD zif_abapgit_object~changed_by.
 
-    rv_user = c_user_unknown.
+    SELECT SINGLE uname FROM sxc_attr INTO rv_user WHERE imp_name = ms_item-obj_name.
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ENDIF.
 
   ENDMETHOD.
 
