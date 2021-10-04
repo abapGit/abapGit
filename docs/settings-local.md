@@ -1,5 +1,5 @@
 ---
-title: Local Settings
+title: Local
 category: repo settings
 order: 20
 ---
