@@ -96,6 +96,7 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
     ro_form->text(
       iv_name        = c_id-url
       iv_required    = abap_true
+      iv_condense    = abap_true
       iv_label       = 'Git Repository URL'
       iv_hint        = 'HTTPS address of the repository'
       iv_placeholder = 'https://github.com/...git'
