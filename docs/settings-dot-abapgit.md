@@ -1,6 +1,6 @@
 ---
-title: Repo Settings (.abapgit.xml)
-category: reference
+title: Repository (.abapgit.xml)
+category: repo settings
 order: 10
 ---
 
