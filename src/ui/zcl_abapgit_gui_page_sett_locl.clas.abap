@@ -112,7 +112,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
 
     ro_form = zcl_abapgit_html_form=>create(
                 iv_form_id   = 'repo-local-settings-form'
-                iv_help_page = 'https://docs.abapgit.org/settings-local.html' ).
+                iv_help_page = 'https://docs.abapgit.org/guide-repo-local.html' ).
 
     ro_form->start_group(
       iv_name        = c_id-local
