@@ -111,7 +111,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
 
     ro_form = zcl_abapgit_html_form=>create(
                 iv_form_id   = 'repo-settings-form'
-                iv_help_page = 'https://docs.abapgit.org/ref-dot-abapgit.html' ).
+                iv_help_page = 'https://docs.abapgit.org/settings-dot-abapgit.html' ).
 
     ro_form->start_group(
       iv_name        = c_id-dot
