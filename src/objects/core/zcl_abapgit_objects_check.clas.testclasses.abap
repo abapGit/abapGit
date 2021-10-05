@@ -17,6 +17,7 @@ CLASS ltcl_warning_overwrite_find DEFINITION FINAL FOR TESTING
       warning_overwrite_find_03 FOR TESTING RAISING cx_static_check,
       warning_overwrite_find_04 FOR TESTING RAISING cx_static_check,
       warning_overwrite_find_05 FOR TESTING RAISING cx_static_check,
+      warning_overwrite_find_06 FOR TESTING RAISING cx_static_check,
 
       given_result
         IMPORTING
@@ -151,6 +152,27 @@ CLASS ltcl_warning_overwrite_find IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD warning_overwrite_find_06.
+
+    " changed package assignment
+    given_result( |CLAS;ZAG_UNIT_TEST;;/src/;zag_unit_test.clas.abap;;;D;;X| ).
+    given_result( |CLAS;ZAG_UNIT_TEST;;/src/sub;zag_unit_test.clas.abap;;;A;;X| ).
+
+    when_warning_overwrite_find( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 1
+      act = lines( mt_overwrite ) ).
+
+    READ TABLE mt_overwrite INTO ms_overwrite INDEX 1.
+    ASSERT sy-subrc = 0.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = zif_abapgit_objects=>c_deserialize_action-packmove
+      act = ms_overwrite-action ).
+
+  ENDMETHOD.
+
   METHOD given_result.
 
     DATA: ls_result LIKE LINE OF mt_result.
@@ -165,7 +187,8 @@ CLASS ltcl_warning_overwrite_find IMPLEMENTATION.
            ls_result-package
            ls_result-match
            ls_result-lstate
-           ls_result-rstate.
+           ls_result-rstate
+           ls_result-packmove.
 
     INSERT ls_result INTO TABLE mt_result.
 
