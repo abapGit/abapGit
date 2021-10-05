@@ -37,6 +37,7 @@ INTERFACE zif_abapgit_objects
       overwrite  TYPE i VALUE 3,
       delete     TYPE i VALUE 4,
       delete_add TYPE i VALUE 5,
+      packmove   TYPE i VALUE 6,
     END OF c_deserialize_action.
 
 ENDINTERFACE.
