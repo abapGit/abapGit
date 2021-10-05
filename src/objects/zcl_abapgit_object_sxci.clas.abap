@@ -22,7 +22,10 @@ CLASS zcl_abapgit_object_sxci IMPLEMENTATION.
 
   METHOD zif_abapgit_object~changed_by.
 
-    rv_user = c_user_unknown.
+    SELECT SINGLE uname FROM sxc_attr INTO rv_user WHERE imp_name = ms_item-obj_name.
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -171,6 +174,10 @@ CLASS zcl_abapgit_object_sxci IMPLEMENTATION.
 
   METHOD zif_abapgit_object~is_active.
     rv_active = is_active( ).
+
+    "Note: SAP does not show inactive classic BAdIs as "Inactive objects" in SE80
+    "Therefore, rv_active will always be true. The implementation state (runtime
+    "behaviour of the BAdI) will be serialized as part of the XML
   ENDMETHOD.
 
 
@@ -276,8 +283,7 @@ CLASS zcl_abapgit_object_sxci IMPLEMENTATION.
            ls_classic_badi_implementation-implementation_data-atime,
            ls_classic_badi_implementation-implementation_data-uname,
            ls_classic_badi_implementation-implementation_data-udate,
-           ls_classic_badi_implementation-implementation_data-utime,
-           ls_classic_badi_implementation-implementation_data-active.
+           ls_classic_badi_implementation-implementation_data-utime.
 
     io_xml->add( iv_name = 'SXCI'
                  ig_data = ls_classic_badi_implementation ).
