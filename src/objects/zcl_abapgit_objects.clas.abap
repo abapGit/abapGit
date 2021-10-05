@@ -169,6 +169,10 @@ CLASS zcl_abapgit_objects DEFINITION
         !iv_obj_type TYPE tadir-object
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS change_package_assignments
+      IMPORTING
+        !is_item TYPE zif_abapgit_definitions=>ty_item
+        !ii_log  TYPE REF TO zif_abapgit_log.
 ENDCLASS.
 
 
@@ -197,6 +201,28 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     IF rv_user IS INITIAL.
       " Eg. ".abapgit.xml" file
       rv_user = zcl_abapgit_objects_super=>c_user_unknown.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD change_package_assignments.
+
+    CALL FUNCTION 'TR_TADIR_INTERFACE'
+      EXPORTING
+        wi_tadir_pgmid    = 'R3TR'
+        wi_tadir_object   = is_item-obj_type
+        wi_tadir_obj_name = is_item-obj_name
+        wi_tadir_devclass = is_item-devclass
+        wi_test_modus     = abap_false
+      EXCEPTIONS
+        OTHERS            = 1.
+    IF sy-subrc = 0.
+      ii_log->add_success( iv_msg  = |Object { is_item-obj_name } assigned to package { is_item-devclass }|
+                           is_item = is_item ).
+    ELSE.
+      ii_log->add_error( iv_msg  = |Package change of object { is_item-obj_name } failed|
+                         is_item = is_item ).
     ENDIF.
 
   ENDMETHOD.
@@ -623,6 +649,16 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
             lv_path = <ls_result>-path.
           ENDIF.
 
+          IF <ls_result>-packmove = abap_true.
+            " Move object to new package
+            ls_item-devclass = lv_package.
+            change_package_assignments( is_item = ls_item
+                                        ii_log  = ii_log ).
+            " No other changes required
+            CONTINUE.
+          ENDIF.
+
+          " Create or update object
           CREATE OBJECT lo_files
             EXPORTING
               is_item = ls_item

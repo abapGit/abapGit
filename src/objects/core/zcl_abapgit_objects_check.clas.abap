@@ -151,30 +151,36 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
       APPEND INITIAL LINE TO lt_changes ASSIGNING <ls_changes>.
       MOVE-CORRESPONDING <ls_result> TO <ls_changes>.
 
-      CONCATENATE <ls_result>-lstate <ls_result>-rstate INTO lv_status RESPECTING BLANKS.
+      IF <ls_result>-packmove = abap_true.
+        <ls_changes>-action = zif_abapgit_objects=>c_deserialize_action-packmove.
+        <ls_changes>-icon   = icon_package_standard.
+        <ls_changes>-text   = 'Change package assignment'.
+      ELSE.
+        CONCATENATE <ls_result>-lstate <ls_result>-rstate INTO lv_status RESPECTING BLANKS.
 
-      CASE lv_status.
-        WHEN '  '. " no changes
-          <ls_changes>-action = zif_abapgit_objects=>c_deserialize_action-none.
-        WHEN ' A' OR 'D ' OR 'DM'. " added remotely or deleted locally
-          <ls_changes>-action = zif_abapgit_objects=>c_deserialize_action-add.
-          <ls_changes>-icon   = icon_create.
-          <ls_changes>-text   = 'Add local object'.
-        WHEN 'A ' OR ' D' OR 'MD'. " added locally or deleted remotely
-          <ls_changes>-action = zif_abapgit_objects=>c_deserialize_action-delete.
-          <ls_changes>-icon   = icon_delete.
-          <ls_changes>-text   = 'Delete local object'.
-        WHEN 'M ' OR 'MM'. " modified locally
-          <ls_changes>-action = zif_abapgit_objects=>c_deserialize_action-overwrite.
-          <ls_changes>-icon   = icon_change.
-          <ls_changes>-text   = 'Overwrite local object'.
-        WHEN ' M'. " modified only remotely
-          <ls_changes>-action = zif_abapgit_objects=>c_deserialize_action-update.
-          <ls_changes>-icon   = icon_change.
-          <ls_changes>-text   = 'Update local object'.
-        WHEN OTHERS.
-          ASSERT 0 = 1.
-      ENDCASE.
+        CASE lv_status.
+          WHEN '  '. " no changes
+            <ls_changes>-action = zif_abapgit_objects=>c_deserialize_action-none.
+          WHEN ' A' OR 'D ' OR 'DM'. " added remotely or deleted locally
+            <ls_changes>-action = zif_abapgit_objects=>c_deserialize_action-add.
+            <ls_changes>-icon   = icon_create.
+            <ls_changes>-text   = 'Add local object'.
+          WHEN 'A ' OR ' D' OR 'MD'. " added locally or deleted remotely
+            <ls_changes>-action = zif_abapgit_objects=>c_deserialize_action-delete.
+            <ls_changes>-icon   = icon_delete.
+            <ls_changes>-text   = 'Delete local object'.
+          WHEN 'M ' OR 'MM'. " modified locally
+            <ls_changes>-action = zif_abapgit_objects=>c_deserialize_action-overwrite.
+            <ls_changes>-icon   = icon_change.
+            <ls_changes>-text   = 'Overwrite local object'.
+          WHEN ' M'. " modified only remotely
+            <ls_changes>-action = zif_abapgit_objects=>c_deserialize_action-update.
+            <ls_changes>-icon   = icon_change.
+            <ls_changes>-text   = 'Update local object'.
+          WHEN OTHERS.
+            ASSERT 0 = 1.
+        ENDCASE.
+      ENDIF.
 
     ENDLOOP.
 
@@ -259,7 +265,7 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
 
     lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
-    LOOP AT it_results ASSIGNING <ls_result> WHERE match IS INITIAL.
+    LOOP AT it_results ASSIGNING <ls_result> WHERE match IS INITIAL AND packmove IS INITIAL.
 
       lv_package = lo_folder_logic->path_to_package(
         iv_top  = io_repo->get_package( )
