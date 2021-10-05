@@ -265,7 +265,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
   METHOD render_header_bar.
 
     DATA: lv_new_toggle_favorites TYPE abap_bool,
-          lv_icon_class TYPE string.
+          lv_icon_class           TYPE string.
 
     ii_html->add( |<div class="form-container">| ).
 
@@ -282,7 +282,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     lv_new_toggle_favorites = boolc( NOT mv_only_favorites = abap_true ).
     " render icon for current state but filter value for new state
     IF mv_only_favorites = abap_true.
-      lv_icon_class =`blue`.
+      lv_icon_class = `blue`.
     ELSE.
       lv_icon_class = `grey`.
     ENDIF.
@@ -467,6 +467,15 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ENDLOOP.
 
     ii_html->add( |</tbody>| ).
+
+    IF mv_only_favorites = abap_true.
+      ii_html->add( `<tfoot><tr><td colspan="5">` ).
+      ii_html->add( `(Only favorites are shown. ` ).
+      ii_html->add( ii_html->a(
+        iv_txt   = |Show All|
+        iv_act   = |{ zif_abapgit_definitions=>c_action-toggle_favorites }?favorites={ abap_false }| ) ).
+      ii_html->add( `)</td></tr></tfoot>` ).
+    ENDIF.
 
   ENDMETHOD.
 
