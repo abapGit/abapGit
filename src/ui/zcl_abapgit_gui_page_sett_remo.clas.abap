@@ -443,7 +443,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     ro_form = zcl_abapgit_html_form=>create(
                 iv_form_id   = 'repo-remote-settings-form'
-                iv_help_page = 'https://docs.abapgit.org/ref-dot-abapgit.html' ).
+                iv_help_page = 'https://docs.abapgit.org/settings-remote.html' ).
 
     IF mv_mode = c_mode-offline.
       lv_button      = 'Switch to Online'.
