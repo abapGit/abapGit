@@ -62,7 +62,7 @@ Cast to online or offline repository:
 DATA lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
 lo_repo_online ?= lo_repo.
 
-DATA lo_repo_offline TYPE REF TO zcl_abapgit_repo_online.
+DATA lo_repo_offline TYPE REF TO zcl_abapgit_repo_offline.
 lo_repo_offline ?= lo_repo.
 ```
 
