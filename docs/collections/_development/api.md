@@ -56,10 +56,20 @@ Get an instance of a repository:
 DATA(lo_repo) = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 ```
 
+Cast to online or offline repository:
+
+```abap
+DATA lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
+lo_repo_online ?= lo_repo.
+
+DATA lo_repo_offline TYPE REF TO zcl_abapgit_repo_offline.
+lo_repo_offline ?= lo_repo.
+```
+
 Get a structure containing all properties and local settings of a repository:
 
 ```abap
-DATA(ls_repo) = NEW zcl_abapgit_persistence_repo( )->read( iv_key ).
+DATA(ls_repo) = NEW zcl_abapgit_persist_factory=>get_repo( )->read( iv_key ).
 ```
 
 ### Find ###
