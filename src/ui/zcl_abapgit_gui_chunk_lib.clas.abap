@@ -960,7 +960,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       IF iv_interactive = abap_true.
         ri_html->add_a( iv_act   = lv_jump
                         iv_title = lv_title
-                        iv_txt   = iv_transport ).
+                        iv_txt   = |{ iv_transport }| ).
       ELSE.
         ri_html->add( iv_transport ).
       ENDIF.
