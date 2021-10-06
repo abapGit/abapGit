@@ -171,7 +171,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     ls_checks = io_repo->deserialize_checks( ).
 
     IF ls_checks-overwrite IS INITIAL.
-      zcx_abapgit_exception=>raise( 'There is nothing to pull. The local state completely matches the remote repository.' ).
+      zcx_abapgit_exception=>raise(
+        'There is nothing to pull. The local state completely matches the remote repository.' ).
     ENDIF.
 
     " let the user decide what to do
