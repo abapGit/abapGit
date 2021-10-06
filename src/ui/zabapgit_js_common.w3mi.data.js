@@ -658,9 +658,9 @@ StageHelper.prototype.applyFilterToRow = function (row, filter) {
   for (var i = targets.length - 1; i >= 0; i--) {
     var target = targets[i];
     // Ignore case of filter
-    var regFilter = new RegExp('('+filter+')', 'gi');
+    var regFilter = new RegExp("("+filter+")", "gi");
     target.newHtml = (filter)
-      ? target.plainText.replace(regFilter, '<mark>$1</mark>')
+      ? target.plainText.replace(regFilter, "<mark>$1</mark>")
       : target.plainText;
     target.isChanged = target.newHtml !== target.curHtml;
     isVisible        = isVisible || !filter || target.newHtml !== target.plainText;
