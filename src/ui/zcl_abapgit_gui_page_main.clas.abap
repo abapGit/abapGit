@@ -7,7 +7,8 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
     INTERFACES: zif_abapgit_gui_hotkeys.
     METHODS:
       constructor
-        RAISING zcx_abapgit_exception,
+        IMPORTING iv_only_favorites TYPE abap_bool
+        RAISING   zcx_abapgit_exception,
       zif_abapgit_gui_event_handler~on_event REDEFINITION.
 
 
@@ -25,8 +26,9 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
         abapgit_home TYPE string VALUE 'abapgit_home',
       END OF c_actions.
 
-    DATA: mo_repo_overview TYPE REF TO zcl_abapgit_gui_page_repo_over,
-          mv_repo_key      TYPE zif_abapgit_persistence=>ty_value.
+    DATA: mo_repo_overview  TYPE REF TO zcl_abapgit_gui_page_repo_over,
+          mv_repo_key       TYPE zif_abapgit_persistence=>ty_value,
+          mv_only_favorites TYPE abap_bool.
 
     METHODS build_main_menu
       RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
@@ -67,6 +69,7 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     super->constructor( ).
     ms_control-page_menu  = build_main_menu( ).
     ms_control-page_title = 'Repository List'.
+    mv_only_favorites = iv_only_favorites.
   ENDMETHOD.
 
 
@@ -76,13 +79,15 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
 
     gui_services( )->get_hotkeys_ctl( )->register_hotkeys( zif_abapgit_gui_hotkeys~get_hotkey_actions( ) ).
 
-    IF mo_repo_overview IS INITIAL.
-      CREATE OBJECT mo_repo_overview.
+    IF mo_repo_overview IS INITIAL OR mo_repo_overview->mv_only_favorites <> mv_only_favorites.
+      CREATE OBJECT mo_repo_overview EXPORTING iv_only_favorites = mv_only_favorites.
     ENDIF.
 
     ri_html->add( mo_repo_overview->zif_abapgit_gui_renderable~render( ) ).
 
-    register_deferred_script( zcl_abapgit_gui_chunk_lib=>render_repo_palette( c_actions-select ) ).
+    register_deferred_script( zcl_abapgit_gui_chunk_lib=>render_repo_palette(
+      iv_action = c_actions-select
+      iv_only_favorites = mv_only_favorites ) ).
 
   ENDMETHOD.
 
@@ -115,6 +120,11 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-change_order_by.
 
         mo_repo_overview->set_order_by( ii_event->query( )->get( 'ORDERBY' ) ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+
+      WHEN zif_abapgit_definitions=>c_action-toggle_favorites.
+
+        mv_only_favorites = ii_event->query( )->get( 'FAVORITES' ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN zif_abapgit_definitions=>c_action-direction.

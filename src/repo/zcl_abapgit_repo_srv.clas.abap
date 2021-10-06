@@ -32,7 +32,8 @@ CLASS zcl_abapgit_repo_srv DEFINITION
       FOR zif_abapgit_repo_srv~validate_url .
 
     CLASS-DATA gi_ref TYPE REF TO zif_abapgit_repo_srv .
-    DATA mv_init TYPE abap_bool VALUE abap_false ##NO_TEXT.
+    DATA mv_init TYPE abap_bool.
+    DATA mv_only_favorites TYPE abap_bool.
     DATA mt_list TYPE zif_abapgit_repo_srv=>ty_repo_list .
 
     METHODS determine_branch_name
@@ -43,7 +44,10 @@ CLASS zcl_abapgit_repo_srv DEFINITION
         VALUE(rv_name) TYPE string
       RAISING
         zcx_abapgit_exception .
-    METHODS refresh
+    METHODS refresh_all
+      RAISING
+        zcx_abapgit_exception .
+    METHODS refresh_favorites
       RAISING
         zcx_abapgit_exception .
     METHODS instantiate_and_add
@@ -143,13 +147,22 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_repo_srv~list_favorites.
 
-  METHOD refresh.
+    IF mv_init = abap_false OR mv_only_favorites = abap_false.
+      refresh_favorites( ).
+    ENDIF.
+
+    rt_list = mt_list.
+
+  ENDMETHOD.
+
+
+  METHOD refresh_all.
 
     DATA: lt_list TYPE zif_abapgit_persistence=>ty_repos.
 
     FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
-
 
     CLEAR mt_list.
 
@@ -159,6 +172,27 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     ENDLOOP.
 
     mv_init = abap_true.
+    mv_only_favorites = abap_false.
+
+  ENDMETHOD.
+
+  METHOD refresh_favorites.
+
+    DATA: lt_list           TYPE zif_abapgit_persistence=>ty_repos,
+          lt_user_favorites TYPE zif_abapgit_persist_user=>ty_favorites.
+
+    FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
+
+    CLEAR mt_list.
+
+    lt_user_favorites = zcl_abapgit_persistence_user=>get_instance( )->get_favorites( ).
+    lt_list = zcl_abapgit_persist_factory=>get_repo( )->list_favorites( lt_user_favorites ).
+    LOOP AT lt_list ASSIGNING <ls_list>.
+      instantiate_and_add( <ls_list> ).
+    ENDLOOP.
+
+    mv_init = abap_true.
+    mv_only_favorites = abap_true.
 
   ENDMETHOD.
 
@@ -270,13 +304,13 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     FIELD-SYMBOLS: <lo_list> LIKE LINE OF mt_list.
 
     IF mv_init = abap_false.
-      refresh( ).
+      refresh_all( ).
     ENDIF.
 
     DO 2 TIMES.
       " Repo might have been created in another session. Try again after refresh
       IF sy-index = 2.
-        refresh( ).
+        refresh_all( ).
       ENDIF.
       LOOP AT mt_list ASSIGNING <lo_list>.
         IF <lo_list>->ms_data-key = iv_key.
@@ -398,8 +432,8 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
   METHOD zif_abapgit_repo_srv~list.
 
-    IF mv_init = abap_false.
-      refresh( ).
+    IF mv_init = abap_false OR mv_only_favorites = abap_true.
+      refresh_all( ).
     ENDIF.
 
     rt_list = mt_list.
@@ -602,4 +636,5 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
 ENDCLASS.
