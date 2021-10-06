@@ -26,10 +26,11 @@ INTERFACE zif_abapgit_repo_srv
     RAISING
       zcx_abapgit_exception .
   METHODS list
-    RETURNING
-      VALUE(rt_list) TYPE ty_repo_list
-    RAISING
-      zcx_abapgit_exception .
+    RETURNING VALUE(rt_list) TYPE ty_repo_list
+    RAISING zcx_abapgit_exception .
+  METHODS list_favorites
+    RETURNING VALUE(rt_list) TYPE ty_repo_list
+    RAISING zcx_abapgit_exception .
   METHODS new_offline
     IMPORTING
       !iv_url            TYPE string

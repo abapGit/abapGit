@@ -25,6 +25,11 @@ INTERFACE zif_abapgit_persist_repo
       VALUE(rt_repos) TYPE zif_abapgit_persistence=>ty_repos
     RAISING
       zcx_abapgit_exception .
+  METHODS list_favorites
+    IMPORTING it_keys         TYPE zif_abapgit_persistence=>ty_repo_keys
+    RETURNING VALUE(rt_repos) TYPE zif_abapgit_persistence=>ty_repos
+    RAISING
+              zcx_abapgit_exception .
   METHODS lock
     IMPORTING
       !iv_mode TYPE enqmode

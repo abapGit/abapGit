@@ -179,8 +179,41 @@ li_background->run(
   it_settings = lt_settings ).
 ```
 
-Alternatively, implement your own logic using interface `zif_abapgit_background` (see
+Alternative 1: implement your own logic using interface `zif_abapgit_background` (see
 [Background Package](https://github.com/abapGit/abapGit/tree/main/src/background) for details).
+
+Alternative 2: Use the following code to add files to staging and push them to the repository.
+
+```abap
+METHOD stage_and_push.
+
+  DATA: lo_repo  TYPE REF TO zcl_abapgit_repo_online,
+        lo_stage TYPE REF TO zcl_abapgit_stage.
+
+  lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+
+  CREATE OBJECT lo_stage.
+  
+  DATA(ls_files) = zcl_abapgit_factory=>get_stage_logic( )->get( lo_repo ).
+
+  LOOP AT ls_files-local ASSIGNING FIELD-SYMBOL(<ls_local>).
+    lo_stage->add(
+      iv_path     = <ls_local>-file-path
+      iv_filename = <ls_local>-file-filename
+      iv_data     = <ls_local>-file-data ).
+  ENDLOOP.  
+
+  DATA(lo_user) = zcl_abapgit_user_record=>get_instance( sy-uname ).
+
+  ls_comment-committer-name  = lo_user->get_name( ).
+  ls_comment-committer-email = lo_user->get_email( ).
+  ls_comment-comment         = 'My Commit'.
+  
+  lo_repo->push( is_comment = ls_comment
+                 io_stage   = lo_stage ).
+  
+ENDMETHOD.
+```
 
 ### Pull Changes ##
 
