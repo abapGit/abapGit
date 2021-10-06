@@ -399,7 +399,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       ii_html->add(
         column( iv_content = zcl_abapgit_gui_chunk_lib=>render_package_name(
                             iv_package = <ls_repo>-package
-                            iv_suppress_title = abap_true )->render( ) ) ).
+                            iv_suppress_title = boolc( NOT mv_only_favorites = abap_true ) )->render( ) ) ).
 
 
       IF <ls_repo>-type = abap_false.
@@ -433,7 +433,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       ii_html->add(
         column( iv_content = zcl_abapgit_gui_chunk_lib=>render_user_name(
                             iv_username = <ls_repo>-deserialized_by
-                            iv_suppress_title = abap_true )->render( )
+                            iv_suppress_title = boolc( NOT mv_only_favorites = abap_true ) )->render( )
                 iv_css_class = 'ro-detail' ) ).
 
       ii_html->add(
@@ -443,7 +443,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       ii_html->add(
         column( iv_content = zcl_abapgit_gui_chunk_lib=>render_user_name(
                     iv_username = <ls_repo>-created_by
-                    iv_suppress_title = abap_true )->render( )
+                    iv_suppress_title = boolc( NOT mv_only_favorites = abap_true ) )->render( )
                 iv_css_class = 'ro-detail' ) ).
 
       ii_html->add(
