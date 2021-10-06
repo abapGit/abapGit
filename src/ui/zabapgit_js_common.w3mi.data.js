@@ -662,7 +662,7 @@ StageHelper.prototype.applyFilterToRow = function (row, filter) {
     target.newHtml = (filter)
       ? target.plainText.replace(regFilter, '<mark>$1</mark>')
       : target.plainText;
-    target.isChanged = target.newHtml !== target.plainText;
+    target.isChanged = target.newHtml !== target.curHtml;
     isVisible        = isVisible || !filter || target.newHtml !== target.plainText;
   }
 
