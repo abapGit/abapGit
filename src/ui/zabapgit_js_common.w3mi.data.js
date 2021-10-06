@@ -639,10 +639,13 @@ StageHelper.prototype.applyFilterValue = function(sFilterValue) {
 StageHelper.prototype.applyFilterToRow = function (row, filter) {
   // Collect data cells
   var targets = this.filterTargets.map(function(attr) {
+    // Get the innermost tag with the text we want to filter
+    // <td>text</td>: elem = td-tag
+    // <td><span><i></i><a>text</a></span></td>: elem = a-tag
     var elem = row.cells[this.colIndex[attr]];
     if (elem.firstChild && elem.firstChild.tagName === "SPAN") elem = elem.firstChild;
     if (elem.firstChild && elem.firstChild.tagName === "I") elem = elem.nextChild;
-    if (elem.firstChild && elem.firstChild.tagName === "A") elem = elem.firstChild;
+    //if (elem.firstChild && elem.firstChild.tagName === "A") elem = elem.firstChild;
     return {
       elem:      elem,
       plainText: elem.innerText.replace(/ /g, "\u00a0"), // without tags, with encoded spaces
@@ -655,17 +658,19 @@ StageHelper.prototype.applyFilterToRow = function (row, filter) {
   // Apply filter to cells, mark filtered text
   for (var i = targets.length - 1; i >= 0; i--) {
     var target = targets[i];
+    // Ignore case of filter 
+    var reg = new RegExp('('+filter+')', 'gi');
     target.newHtml = (filter)
-      ? target.plainText.replace(filter, "<mark>"+filter+"</mark>")
+      ? target.plainText.replace(reg, '<mark>$1</mark>')
       : target.plainText;
-    target.isChanged = target.newHtml !== target.curHtml;
+    target.isChanged = target.newHtml !== target.plainText;
     isVisible        = isVisible || !filter || target.newHtml !== target.plainText;
   }
 
   // Update DOM
   row.style.display = isVisible ? "" : "none";
   for (var j = targets.length - 1; j >= 0; j--) {
-    if (targets[j].isChanged) targets[j].elem.innerHTML = targets[j].newHtml;
+    if (targets[j].isChanged) targets[j].elem.innerText = targets[j].newHtml;
   }
   return isVisible ? 1 : 0;
 };
