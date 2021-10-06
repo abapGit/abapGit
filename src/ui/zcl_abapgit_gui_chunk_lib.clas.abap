@@ -94,9 +94,10 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     CLASS-METHODS render_repo_palette
       IMPORTING
-        !iv_action     TYPE string
+        iv_action         TYPE string
+        iv_only_favorites TYPE abap_bool
       RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+        VALUE(ri_html)    TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS advanced_submenu
@@ -280,8 +281,8 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
   METHOD normalize_program_name.
 
     rv_normalized_program_name = substring_before(
-                                     val   = iv_program_name
-                                     regex = `(=+CP)?$` ).
+      val   = iv_program_name
+      regex = `(=+CP)?$` ).
 
   ENDMETHOD.
 
@@ -420,10 +421,10 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ri_html->add( |<div class="float-right">| ).
 
     ri_html->add_a(
-        iv_txt   = `&#x274c;`
-        iv_act   = `toggleDisplay('message')`
-        iv_class = `close-btn`
-        iv_typ   = zif_abapgit_html=>c_action_type-onclick ).
+      iv_txt   = `&#x274c;`
+      iv_act   = `toggleDisplay('message')`
+      iv_class = `close-btn`
+      iv_typ   = zif_abapgit_html=>c_action_type-onclick ).
 
     ri_html->add( |</div>| ).
 
@@ -432,17 +433,17 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     IF ix_error->if_t100_message~t100key-msgid IS NOT INITIAL.
 
       lv_title = get_t100_text(
-                    iv_msgid = ix_error->if_t100_message~t100key-msgid
-                    iv_msgno = ix_error->if_t100_message~t100key-msgno ).
+        iv_msgid = ix_error->if_t100_message~t100key-msgid
+        iv_msgno = ix_error->if_t100_message~t100key-msgno ).
 
       lv_text = |Message ({ ix_error->if_t100_message~t100key-msgid }/{ ix_error->if_t100_message~t100key-msgno })|.
 
       ri_html->add_a(
-          iv_txt   = lv_text
-          iv_typ   = zif_abapgit_html=>c_action_type-sapevent
-          iv_act   = zif_abapgit_definitions=>c_action-goto_message
-          iv_title = lv_title
-          iv_id    = `a_goto_message` ).
+        iv_txt   = lv_text
+        iv_typ   = zif_abapgit_html=>c_action_type-sapevent
+        iv_act   = zif_abapgit_definitions=>c_action-goto_message
+        iv_title = lv_title
+        iv_id    = `a_goto_message` ).
 
     ENDIF.
 
@@ -451,17 +452,17 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     lv_title = normalize_program_name( lv_program_name ).
 
     ri_html->add_a(
-        iv_txt   = `Goto source`
-        iv_act   = zif_abapgit_definitions=>c_action-goto_source
-        iv_typ   = zif_abapgit_html=>c_action_type-sapevent
-        iv_title = lv_title
-        iv_id    = `a_goto_source` ).
+      iv_txt   = `Goto source`
+      iv_act   = zif_abapgit_definitions=>c_action-goto_source
+      iv_typ   = zif_abapgit_html=>c_action_type-sapevent
+      iv_title = lv_title
+      iv_id    = `a_goto_source` ).
 
     ri_html->add_a(
-        iv_txt = `Callstack`
-        iv_act = zif_abapgit_definitions=>c_action-show_callstack
-        iv_typ = zif_abapgit_html=>c_action_type-sapevent
-        iv_id  = `a_callstack` ).
+      iv_txt = `Callstack`
+      iv_act = zif_abapgit_definitions=>c_action-show_callstack
+      iv_typ = zif_abapgit_html=>c_action_type-sapevent
+      iv_id  = `a_callstack` ).
 
     ri_html->add( |</div>| ).
     ri_html->add( |<div class="message-panel-commands">| ).
@@ -715,8 +716,8 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     lv_obj_name = iv_package.
     lv_jump = zcl_abapgit_html_action_utils=>jump_encode(
-                iv_obj_type = 'DEVC'
-                iv_obj_name = lv_obj_name ).
+      iv_obj_type = 'DEVC'
+      iv_obj_name = lv_obj_name ).
 
     ri_html->add( |<span class="package-box">| ).
     ri_html->add_icon( iv_name = 'box/grey70'
@@ -745,7 +746,12 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       <ls_repo>     LIKE LINE OF lt_repo_list,
       <lr_repo_obj> LIKE LINE OF lt_repo_obj_list.
 
-    lt_repo_obj_list = zcl_abapgit_repo_srv=>get_instance( )->list( ).
+    IF iv_only_favorites = abap_true.
+      lt_repo_obj_list = zcl_abapgit_repo_srv=>get_instance( )->list_favorites( ).
+    ELSE.
+      lt_repo_obj_list = zcl_abapgit_repo_srv=>get_instance( )->list( ).
+    ENDIF.
+
     LOOP AT lt_repo_obj_list ASSIGNING <lr_repo_obj>.
       ls_repo_data = <lr_repo_obj>->ms_data.
       ls_repo_data-local_settings-display_name = <lr_repo_obj>->get_name( ).

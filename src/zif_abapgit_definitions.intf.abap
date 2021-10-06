@@ -474,6 +474,7 @@ INTERFACE zif_abapgit_definitions
       goto_source                   TYPE string VALUE 'goto_source',
       show_callstack                TYPE string VALUE 'show_callstack',
       change_order_by               TYPE string VALUE 'change_order_by',
+      toggle_favorites              TYPE string VALUE 'toggle_favorites',
       goto_message                  TYPE string VALUE 'goto_message',
       direction                     TYPE string VALUE 'direction',
       documentation                 TYPE string VALUE 'documentation',

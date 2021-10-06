@@ -254,8 +254,6 @@ function RepoOverViewHelper() {
   this.actionCssClass = findStyleSheetByName(".ro-action");
   var icon = document.getElementById("icon-filter-detail");
   this.toggleFilterIcon(icon, this.isDetailsDisplayed);
-  icon = document.getElementById("icon-filter-favorite");
-  this.toggleFilterIcon(icon, this.isOnlyFavoritesDisplayed);
   this.registerRowSelection();
   this.registerKeyboardShortcuts();
 }
@@ -269,9 +267,6 @@ RepoOverViewHelper.prototype.onPageLoad = function () {
   if (data) {
     if (data.isDetailsDisplayed) {
       this.toggleItemsDetail(true);
-    }
-    if (data.isOnlyFavoritesDisplayed) {
-      this.toggleItemsFavorites(true);
     }
     if (data.selectedRepoKey) {
       this.selectRowByRepoKey(data.selectedRepoKey);
@@ -435,28 +430,6 @@ RepoOverViewHelper.prototype.toggleFilterIcon = function (icon, isEnabled) {
   } else {
     icon.classList.remove("blue");
     icon.classList.add("grey");
-  }
-};
-
-RepoOverViewHelper.prototype.toggleRepoListFavorites = function (forceDisplay) {
-  this.toggleItemsFavorites(forceDisplay);
-  this.saveLocalStorage();
-};
-
-RepoOverViewHelper.prototype.toggleItemsFavorites = function (forceDisplay) {
-  this.isOnlyFavoritesDisplayed = forceDisplay || !this.isOnlyFavoritesDisplayed;
-  var repositories = document.getElementsByClassName("repo");
-  var icon = document.getElementById("icon-filter-favorite");
-  this.toggleFilterIcon(icon, this.isOnlyFavoritesDisplayed);
-  for (var i = 0; i < repositories.length; i++) {
-    var repo = repositories[i];
-    if (this.isOnlyFavoritesDisplayed) {
-      if (!repo.classList.contains("favorite")) {
-        repo.classList.add("nodisplay");
-      }
-    } else {
-      repo.classList.remove("nodisplay");
-    }
   }
 };
 
