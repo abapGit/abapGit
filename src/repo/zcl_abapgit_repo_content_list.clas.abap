@@ -148,9 +148,11 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
   METHOD build_repo_items_with_remote.
 
     DATA:
-      ls_file   TYPE zif_abapgit_definitions=>ty_repo_file,
-      lt_status TYPE zif_abapgit_definitions=>ty_results_tt,
-      ls_item   TYPE zif_abapgit_definitions=>ty_item.
+      ls_file       TYPE zif_abapgit_definitions=>ty_repo_file,
+      lt_status     TYPE zif_abapgit_definitions=>ty_results_tt,
+      ls_item       TYPE zif_abapgit_definitions=>ty_item,
+      ls_previous   LIKE ls_item,
+      lv_changed_by TYPE string.
 
     FIELD-SYMBOLS: <ls_status>    LIKE LINE OF lt_status,
                    <ls_repo_item> LIKE LINE OF rt_repo_items.
@@ -195,8 +197,12 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
 
       IF <ls_repo_item>-changes > 0 AND <ls_repo_item>-obj_type IS NOT INITIAL.
         MOVE-CORRESPONDING <ls_repo_item> TO ls_item.
-        IF zcl_abapgit_objects=>exists( ls_item ) = abap_true.
+        IF ls_previous = ls_item.
+          <ls_repo_item>-changed_by = lv_changed_by.
+        ELSEIF zcl_abapgit_objects=>exists( ls_item ) = abap_true.
           <ls_repo_item>-changed_by = zcl_abapgit_objects=>changed_by( ls_item ).
+          ls_previous = ls_item.
+          lv_changed_by = <ls_repo_item>-changed_by.
         ENDIF.
         CLEAR ls_item.
       ENDIF.
