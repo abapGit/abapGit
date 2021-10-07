@@ -6,7 +6,7 @@
   --theme-background-color: #E8E8E8;
   --theme-container-background-color: #f2f2f2;
   --theme-container-border-color: lightgrey;
-  --theme-primary-font: Arial,Helvetica,sans-serif;
+  --theme-primary-font: "72", Arial, Helvetica, sans-serif;
   --theme-primary-font-color: #333333;
   --theme-primary-font-color-reduced: #ccc;
   --theme-font-size: 12pt;
