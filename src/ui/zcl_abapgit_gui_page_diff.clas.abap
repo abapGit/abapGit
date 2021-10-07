@@ -507,7 +507,8 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
         it_files  = it_files ).
 
     IF lines( mt_diff_files ) = 0.
-      zcx_abapgit_exception=>raise( 'PAGE_DIFF ERROR: No diff files found' ).
+      zcx_abapgit_exception=>raise(
+        'There are no differences to show. The local state completely matches the remote repository.' ).
     ENDIF.
 
     ms_control-page_menu = build_menu( ).
