@@ -399,7 +399,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       ii_html->add(
         column( iv_content = zcl_abapgit_gui_chunk_lib=>render_package_name(
                             iv_package = <ls_repo>-package
-                            iv_suppress_title = abap_true )->render( ) ) ).
+                            iv_suppress_title = boolc( NOT mv_only_favorites = abap_true ) )->render( ) ) ).
 
 
       IF <ls_repo>-type = abap_false.
@@ -433,7 +433,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       ii_html->add(
         column( iv_content = zcl_abapgit_gui_chunk_lib=>render_user_name(
                             iv_username = <ls_repo>-deserialized_by
-                            iv_suppress_title = abap_true )->render( )
+                            iv_suppress_title = boolc( NOT mv_only_favorites = abap_true ) )->render( )
                 iv_css_class = 'ro-detail' ) ).
 
       ii_html->add(
@@ -443,7 +443,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       ii_html->add(
         column( iv_content = zcl_abapgit_gui_chunk_lib=>render_user_name(
                     iv_username = <ls_repo>-created_by
-                    iv_suppress_title = abap_true )->render( )
+                    iv_suppress_title = boolc( NOT mv_only_favorites = abap_true ) )->render( )
                 iv_css_class = 'ro-detail' ) ).
 
       ii_html->add(
@@ -492,7 +492,9 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       lv_settings_link TYPE string,
       lv_check_link    TYPE string,
       lv_stage_link    TYPE string,
-      lv_patch_link    TYPE string.
+      lv_patch_link    TYPE string,
+      lv_diff_link     TYPE string,
+      lv_pull_link     TYPE string.
 
     DATA:
       lv_zip_import_link TYPE string,
@@ -500,12 +502,12 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     ii_html->add( |<div class="float-right">| ).
 
-    lv_check_link = ii_html->a(
-      iv_txt   = |Check|
-      iv_act   = |{ zif_abapgit_definitions=>c_action-repo_code_inspector }{ lc_dummy_key }|
-      iv_class = |{ lc_action_class }| ).
+    lv_pull_link = ii_html->a(
+      iv_txt   = |Pull|
+      iv_act   = |{ zif_abapgit_definitions=>c_action-git_reset }{ lc_dummy_key }|
+      iv_class = |{ lc_action_class } { lc_online_class }| ).
 
-    ii_html->add( action_link( lv_check_link && lc_separator ) ).
+    ii_html->add( action_link( lv_pull_link && lc_separator ) ).
 
     lv_stage_link = ii_html->a(
       iv_txt   = |Stage|
@@ -520,6 +522,20 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_class = |{ lc_action_class } { lc_online_class } | ).
 
     ii_html->add( action_link( lv_patch_link && lc_separator ) ).
+
+    lv_diff_link = ii_html->a(
+      iv_txt   = |Diff|
+      iv_act   = |{ zif_abapgit_definitions=>c_action-go_repo_diff }{ lc_dummy_key }|
+      iv_class = |{ lc_action_class } { lc_online_class }| ).
+
+    ii_html->add( action_link( lv_diff_link && lc_separator ) ).
+
+    lv_check_link = ii_html->a(
+      iv_txt   = |Check|
+      iv_act   = |{ zif_abapgit_definitions=>c_action-repo_code_inspector }{ lc_dummy_key }|
+      iv_class = |{ lc_action_class }| ).
+
+    ii_html->add( action_link( lv_check_link && lc_separator ) ).
 
     lv_zip_import_link = ii_html->a(
       iv_txt   = |Import|
