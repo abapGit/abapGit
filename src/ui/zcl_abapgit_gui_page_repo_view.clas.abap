@@ -845,6 +845,15 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                                        iv_render_transports = mv_are_changes_recorded_in_tr ) ).
           ENDLOOP.
 
+          IF mv_changes_only = abap_true.
+            ri_html->add( `<tfoot><tr><td colspan="5">` ).
+            ri_html->add( `(Only changes are shown. ` ).
+            ri_html->add( ri_html->a(
+              iv_txt   = |Show All|
+              iv_act   = |{ c_actions-toggle_changes }| ) ).
+            ri_html->add( `)</td></tr></tfoot>` ).
+          ENDIF.
+
           ri_html->add( '</table>' ).
         ENDIF.
 
@@ -1165,7 +1174,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_palette( zif_abapgit_definitions=>c_action-go_repo ) ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_palette(
+      iv_action = zif_abapgit_definitions=>c_action-go_repo
+      iv_only_favorites = abap_true ) ).
 
   ENDMETHOD.
 
