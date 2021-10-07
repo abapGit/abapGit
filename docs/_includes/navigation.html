@@ -39,6 +39,16 @@
     {% endfor %}
 </ul>
 
+<h3>Repo Settings</h3>
+<ul>
+    {% assign pages = site.pages | sort: 'order' %}
+    {% for doc in pages %}
+      {% if doc.category == "repo settings" %}
+        <li><a href=".{{ doc.url }}">{{ doc.title }}</a></li>
+      {% endif %}
+    {% endfor %}
+</ul>
+
 <h3>Reference</h3>
 <ul>
     {% assign pages = site.pages | sort: 'order' %}

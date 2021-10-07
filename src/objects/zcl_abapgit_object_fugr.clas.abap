@@ -38,6 +38,7 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       ty_tpools_i18n TYPE STANDARD TABLE OF ty_tpool_i18n .
 
     DATA mt_includes_cache TYPE ty_sobj_name_tt .
+    DATA mt_includes_all TYPE ty_sobj_name_tt .
 
     METHODS check_rfc_parameters
       IMPORTING
@@ -136,7 +137,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
+CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
 
   METHOD check_rfc_parameters.
@@ -947,27 +948,28 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
              time TYPE t,
            END OF ty_stamps.
 
-    DATA: lt_stamps   TYPE STANDARD TABLE OF ty_stamps WITH DEFAULT KEY,
-          lv_program  TYPE program,
-          lt_includes TYPE ty_sobj_name_tt.
+    DATA: lt_stamps  TYPE STANDARD TABLE OF ty_stamps WITH DEFAULT KEY,
+          lv_program TYPE program.
 
     FIELD-SYMBOLS: <ls_stamp>   LIKE LINE OF lt_stamps,
-                   <lv_include> LIKE LINE OF lt_includes.
+                   <lv_include> LIKE LINE OF mt_includes_all.
 
 
     lv_program = main_name( ).
 
-    CALL FUNCTION 'RS_GET_ALL_INCLUDES'
-      EXPORTING
-        program      = lv_program
-      TABLES
-        includetab   = lt_includes
-      EXCEPTIONS
-        not_existent = 1
-        no_program   = 2
-        OTHERS       = 3.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from RS_GET_ALL_INCLUDES' ).
+    IF mt_includes_all IS INITIAL.
+      CALL FUNCTION 'RS_GET_ALL_INCLUDES'
+        EXPORTING
+          program      = lv_program
+        TABLES
+          includetab   = mt_includes_all
+        EXCEPTIONS
+          not_existent = 1
+          no_program   = 2
+          OTHERS       = 3.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'Error from RS_GET_ALL_INCLUDES' ).
+      ENDIF.
     ENDIF.
 
     SELECT unam AS user udat AS date utime AS time FROM reposrc
@@ -975,12 +977,13 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
       WHERE progname = lv_program
       AND   r3state = 'A'.                                "#EC CI_SUBRC
 
-    LOOP AT lt_includes ASSIGNING <lv_include>.
+    IF mt_includes_all IS NOT INITIAL.
       SELECT unam AS user udat AS date utime AS time FROM reposrc
         APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
-        WHERE progname = <lv_include>
+        FOR ALL ENTRIES IN mt_includes_all
+        WHERE progname = mt_includes_all-table_line
         AND   r3state = 'A'.                              "#EC CI_SUBRC
-    ENDLOOP.
+    ENDIF.
 
     SELECT unam AS user udat AS date utime AS time FROM repotext " Program text pool
       APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps

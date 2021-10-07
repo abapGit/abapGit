@@ -254,8 +254,6 @@ function RepoOverViewHelper() {
   this.actionCssClass = findStyleSheetByName(".ro-action");
   var icon = document.getElementById("icon-filter-detail");
   this.toggleFilterIcon(icon, this.isDetailsDisplayed);
-  icon = document.getElementById("icon-filter-favorite");
-  this.toggleFilterIcon(icon, this.isOnlyFavoritesDisplayed);
   this.registerRowSelection();
   this.registerKeyboardShortcuts();
 }
@@ -269,9 +267,6 @@ RepoOverViewHelper.prototype.onPageLoad = function () {
   if (data) {
     if (data.isDetailsDisplayed) {
       this.toggleItemsDetail(true);
-    }
-    if (data.isOnlyFavoritesDisplayed) {
-      this.toggleItemsFavorites(true);
     }
     if (data.selectedRepoKey) {
       this.selectRowByRepoKey(data.selectedRepoKey);
@@ -435,28 +430,6 @@ RepoOverViewHelper.prototype.toggleFilterIcon = function (icon, isEnabled) {
   } else {
     icon.classList.remove("blue");
     icon.classList.add("grey");
-  }
-};
-
-RepoOverViewHelper.prototype.toggleRepoListFavorites = function (forceDisplay) {
-  this.toggleItemsFavorites(forceDisplay);
-  this.saveLocalStorage();
-};
-
-RepoOverViewHelper.prototype.toggleItemsFavorites = function (forceDisplay) {
-  this.isOnlyFavoritesDisplayed = forceDisplay || !this.isOnlyFavoritesDisplayed;
-  var repositories = document.getElementsByClassName("repo");
-  var icon = document.getElementById("icon-filter-favorite");
-  this.toggleFilterIcon(icon, this.isOnlyFavoritesDisplayed);
-  for (var i = 0; i < repositories.length; i++) {
-    var repo = repositories[i];
-    if (this.isOnlyFavoritesDisplayed) {
-      if (!repo.classList.contains("favorite")) {
-        repo.classList.add("nodisplay");
-      }
-    } else {
-      repo.classList.remove("nodisplay");
-    }
   }
 };
 
@@ -666,10 +639,12 @@ StageHelper.prototype.applyFilterValue = function(sFilterValue) {
 StageHelper.prototype.applyFilterToRow = function (row, filter) {
   // Collect data cells
   var targets = this.filterTargets.map(function(attr) {
+    // Get the innermost tag with the text we want to filter
+    // <td>text</td>: elem = td-tag
+    // <td><span><i></i><a>text</a></span></td>: elem = a-tag
     var elem = row.cells[this.colIndex[attr]];
-    if (elem.firstChild && elem.firstChild.tagName === "SPAN") elem = elem.firstChild;
-    if (elem.firstChild && elem.firstChild.tagName === "I") elem = elem.nextChild;
-    if (elem.firstChild && elem.firstChild.tagName === "A") elem = elem.firstChild;
+    var elemA = elem.getElementsByTagName("A")[0];
+    if (elemA) elem = elemA;
     return {
       elem:      elem,
       plainText: elem.innerText.replace(/ /g, "\u00a0"), // without tags, with encoded spaces
@@ -682,8 +657,10 @@ StageHelper.prototype.applyFilterToRow = function (row, filter) {
   // Apply filter to cells, mark filtered text
   for (var i = targets.length - 1; i >= 0; i--) {
     var target = targets[i];
+    // Ignore case of filter
+    var regFilter = new RegExp("("+filter+")", "gi");
     target.newHtml = (filter)
-      ? target.plainText.replace(filter, "<mark>"+filter+"</mark>")
+      ? target.plainText.replace(regFilter, "<mark>$1</mark>")
       : target.plainText;
     target.isChanged = target.newHtml !== target.curHtml;
     isVisible        = isVisible || !filter || target.newHtml !== target.plainText;
