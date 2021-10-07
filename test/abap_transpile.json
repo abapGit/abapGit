@@ -183,7 +183,6 @@
 
       {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_file_exists", "note": "something wrong with the inheritance?"},
       {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_file_does_not_exist"},
-      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_empty_file",       "note": "Cannot read property 'register_asset' of undefined"},
       {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_no_variables",     "note": "Cannot read property 'register_asset' of undefined"},
       {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_simple_variables", "note": "Cannot read property 'register_asset' of undefined"},
       {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_complex_variables"},
