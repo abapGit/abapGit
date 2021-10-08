@@ -332,6 +332,7 @@
       "selectWithoutInto": true,
       "ranges": true,
       "callTransformation": true,
+      "regex": true,
       "sortByFS": true,
       "subtract": true,
       "freeMemory": true,
