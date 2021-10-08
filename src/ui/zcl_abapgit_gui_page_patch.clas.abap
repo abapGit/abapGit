@@ -652,18 +652,18 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
   METHOD add_menu_begin.
 
     io_menu->add(
-        iv_txt   = |Refresh Local|
+        iv_txt   = c_action_texts-refresh_local
         iv_typ   = zif_abapgit_html=>c_action_type-dummy
         iv_act   = c_actions-refresh_local
         iv_id    = c_actions-refresh_local
-        iv_title = |Refresh all local objects, without refreshing the remote| ).
+        iv_title = c_action_titles-refresh_local ).
 
     io_menu->add(
-        iv_txt   = |Refresh|
+        iv_txt   = c_action_texts-refresh_all
         iv_typ   = zif_abapgit_html=>c_action_type-dummy
-        iv_act   = c_actions-refresh
-        iv_id    = c_actions-refresh
-        iv_title = |Complete refresh of all objects, local and remote| ).
+        iv_act   = c_actions-refresh_all
+        iv_id    = c_actions-refresh_all
+        iv_title = c_action_titles-refresh_all ).
 
   ENDMETHOD.
 

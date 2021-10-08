@@ -1730,7 +1730,7 @@ Patch.prototype.ID = {
 
 Patch.prototype.ACTION = {
   PATCH_STAGE: "patch_stage",
-  REFRESH_LOCAL: "diff_refresh_local"
+  REFRESH_LOCAL: "refresh_local"
 };
 
 Patch.prototype.escape = function(sFileName){
@@ -1859,9 +1859,11 @@ Patch.prototype.clickAllLineCheckboxesInSection = function(oSection, bChecked){
 Patch.prototype.registerStagePatch = function registerStagePatch(){
 
   var elStage = document.querySelector("#" + this.ID.STAGE);
+  var REFRESH_PREFIX = "refresh";
+
   elStage.addEventListener("click", this.submitPatch.bind(this, this.ACTION.PATCH_STAGE));
 
-  var aRefresh = document.querySelectorAll("[id*=diff_refresh]");
+  var aRefresh = document.querySelectorAll("[id*=" + REFRESH_PREFIX + "]");
   [].forEach.call( aRefresh, function(el) {
     el.addEventListener("click", memoizeScrollPosition(this.submitPatch.bind(this, el.id)).bind(this));
   }.bind(this));

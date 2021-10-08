@@ -49,10 +49,19 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
       BEGIN OF c_actions,
         toggle_unified       TYPE string VALUE 'toggle_unified',
         toggle_hidden_chars  TYPE string VALUE 'toggle_hidden_chars',
-        refresh              TYPE string VALUE 'diff_refresh',
-        refresh_local        TYPE string VALUE 'diff_refresh_local',
-        refresh_local_object TYPE string VALUE 'diff_refresh_local_object',
-      END OF c_actions .
+        refresh_prefix       TYPE string VALUE 'refresh',
+        refresh_all          TYPE string VALUE 'refresh_all',
+        refresh_local        TYPE string VALUE 'refresh_local',
+        refresh_local_object TYPE string VALUE 'refresh_local_object',
+      END OF c_actions ,
+      BEGIN OF c_action_texts,
+        refresh_all   TYPE string VALUE `Refresh All`,
+        refresh_local TYPE string VALUE `Refresh Local`,
+      END OF c_action_texts,
+      BEGIN OF c_action_titles,
+        refresh_all   TYPE string VALUE `Refresh all local objects, without refreshing the remote`,
+        refresh_local TYPE string VALUE `Complete refresh of all objects, local and remote`,
+      END OF c_action_titles.
 
     DATA mv_unified TYPE abap_bool VALUE abap_true ##NO_TEXT.
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
@@ -331,18 +340,18 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
   METHOD add_menu_begin.
 
     io_menu->add(
-        iv_txt   = |Refresh Local|
+        iv_txt   = c_action_texts-refresh_local
         iv_typ   = zif_abapgit_html=>c_action_type-sapevent
         iv_act   = c_actions-refresh_local
         iv_id    = c_actions-refresh_local
-        iv_title = |Refresh all local objects, without refreshing the remote| ).
+        iv_title = c_action_titles-refresh_local ).
 
     io_menu->add(
-        iv_txt   = |Refresh|
+        iv_txt   = c_action_texts-refresh_all
         iv_typ   = zif_abapgit_html=>c_action_type-sapevent
-        iv_act   = c_actions-refresh
-        iv_id    = c_actions-refresh
-        iv_title = |Complete refresh of all objects, local and remote| ).
+        iv_act   = c_actions-refresh_all
+        iv_id    = c_actions-refresh_all
+        iv_title = c_action_titles-refresh_all ).
 
   ENDMETHOD.
 
@@ -608,7 +617,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
   METHOD is_refresh.
 
-    FIND FIRST OCCURRENCE OF REGEX |^{ c_actions-refresh }| IN iv_action.
+    FIND FIRST OCCURRENCE OF REGEX |^{ c_actions-refresh_prefix }| IN iv_action.
     rv_is_refrseh = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
@@ -649,7 +658,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     lt_diff_files_old = mt_diff_files.
 
     CASE iv_action.
-      WHEN c_actions-refresh.
+      WHEN c_actions-refresh_all.
         refresh_full( ).
       WHEN c_actions-refresh_local.
         refresh_local( ).
