@@ -88,9 +88,13 @@ span.separator {
 
 span.boxed {
   border-radius: 3px;
-  padding: 3px 6px;
+  padding: 4px 7px;
   margin-left: 0.2em;
   margin-right: 0.2em;
+  font-size: smaller;
+}
+span.boxed i.icon {
+  padding-right: 5px;
 }
 .red-filled-set {
   border-width: 0px;

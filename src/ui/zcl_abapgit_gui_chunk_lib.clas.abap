@@ -160,9 +160,8 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS render_sci_result
       IMPORTING
-        iv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result
-      RETURNING
-        VALUE(rv_str) TYPE string.
+        ii_html TYPE REF TO zif_abapgit_html
+        iv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result.
 
 
   PROTECTED SECTION.
@@ -940,13 +939,19 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
   METHOD render_sci_result.
 
+    DATA lv_icon TYPE string.
+
+    lv_icon = ii_html->icon(
+      iv_name = 'bug-solid'
+      iv_hint = 'Code inspector result' ).
+
     CASE iv_sci_result.
       WHEN zif_abapgit_definitions=>c_sci_result-passed.
-        rv_str = '<span class="boxed green-filled-set">SCI: PASSED</span>'.
+        ii_html->add( |<span class="boxed green-filled-set">{ lv_icon }PASSED</span>| ).
       WHEN zif_abapgit_definitions=>c_sci_result-failed.
-        rv_str = '<span class="boxed red-filled-set">SCI: FAILED</span>'.
+        ii_html->add( |<span class="boxed red-filled-set">{ lv_icon }FAILED</span>| ).
       WHEN zif_abapgit_definitions=>c_sci_result-warning.
-        rv_str = '<span class="boxed yellow-filled-set">SCI: WARN</span>'.
+        ii_html->add( |<span class="boxed yellow-filled-set">{ lv_icon }WARN</span>| ).
       WHEN OTHERS. " Including NO_RUN
         RETURN.
     ENDCASE.

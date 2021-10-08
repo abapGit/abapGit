@@ -407,7 +407,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     ri_html->add( '<input class="stage-filter" id="objectSearch"' &&
                   ' type="search" placeholder="Filter Objects"' &&
                   | value="{ mv_filter_value }">| ).
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_sci_result( mv_sci_result ) ).
+    zcl_abapgit_gui_chunk_lib=>render_sci_result(
+      ii_html       = ri_html
+      iv_sci_result = mv_sci_result ).
     ri_html->add( '</td>' ).
 
     ri_html->add( '</tr>' ).

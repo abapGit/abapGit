@@ -343,7 +343,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
     IF mv_sci_result <> zif_abapgit_definitions=>c_sci_result-no_run.
       ri_html->add( '<span class="float-right">' ).
-      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_sci_result( mv_sci_result ) ).
+      zcl_abapgit_gui_chunk_lib=>render_sci_result(
+        ii_html       = ri_html
+        iv_sci_result = mv_sci_result ).
       ri_html->add( '</span>' ).
     ENDIF.
 
