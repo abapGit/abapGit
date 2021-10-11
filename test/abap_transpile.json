@@ -141,6 +141,7 @@
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "dont_ignore_error"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "unpretty"},
       {"object": "ZCL_ABAPGIT_ZLIB",       "class": "ltcl_zlib", "method": "dynamic"},
+      {"object": "ZCL_ABAPGIT_ZLIB",       "class": "ltcl_zlib", "method": "fixed"},
       {"object": "ZCL_ABAPGIT_GIT_ADD_PATCH", "class": "ltcl_calculate_patch", "method": "multiple_non_adjacent_delete"},
       {"object": "ZCL_ABAPGIT_GIT_ADD_PATCH", "class": "ltcl_calculate_patch", "method": "multiple_partial_delete"},
       {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_utils_test", "method": "extract_author_data1", "note": "ASSERT failed, ??"},
