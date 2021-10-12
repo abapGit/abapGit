@@ -86,6 +86,32 @@ span.separator {
   margin-right: auto;
 }
 
+span.boxed {
+  border-radius: 3px;
+  padding: 4px 7px;
+  margin-left: 0.2em;
+  margin-right: 0.2em;
+  font-size: smaller;
+}
+span.boxed i.icon {
+  padding-right: 5px;
+}
+.red-filled-set {
+  border-width: 0px;
+  color: hsl(0, 78%, 93%);
+  background-color: hsl(0, 78%, 65%);
+}
+.green-filled-set {
+  border-width: 0px;
+  color: hsl(120, 45%, 90%);
+  background-color: hsl(120, 27%, 60%);
+}
+.yellow-filled-set {
+  border-width: 0px;
+  color: hsl(45, 99%, 90%);
+  background-color: hsl(45, 100%, 46%);
+}
+
 /* PANELS */
 div.panel {
   border-radius: 3px;

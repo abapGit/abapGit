@@ -12,6 +12,10 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION PUBLIC FINAL CREATE PUBLIC
         RAISING
           zcx_abapgit_exception,
 
+      is_nothing_to_display
+        RETURNING
+          VALUE(rv_yes) TYPE abap_bool,
+
       zif_abapgit_gui_event_handler~on_event
         REDEFINITION,
 
@@ -60,7 +64,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
 
   METHOD ask_user_for_check_variant.
@@ -163,6 +167,11 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD is_nothing_to_display.
+    rv_yes = boolc( lines( mt_result ) = 0 ).
+  ENDMETHOD.
+
+
   METHOD is_stage_allowed.
 
     rv_is_stage_allowed = boolc( NOT ( mo_repo->get_local_settings( )-block_commit = abap_true
@@ -220,7 +229,8 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    DATA: lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
+    DATA lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
+    DATA lv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result.
 
     CASE ii_event->mv_action.
       WHEN c_actions-stage.
@@ -231,9 +241,22 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
           " we need to refresh as the source might have changed
           lo_repo_online->refresh( ).
 
+          READ TABLE mt_result TRANSPORTING NO FIELDS WITH KEY kind = 'E'.
+          IF sy-subrc = 0.
+            lv_sci_result = zif_abapgit_definitions=>c_sci_result-failed.
+          ELSE.
+            READ TABLE mt_result TRANSPORTING NO FIELDS WITH KEY kind = 'W'.
+            IF sy-subrc = 0.
+              lv_sci_result = zif_abapgit_definitions=>c_sci_result-warning.
+            ELSE.
+              lv_sci_result = zif_abapgit_definitions=>c_sci_result-passed.
+            ENDIF.
+          ENDIF.
+
           CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_stage
             EXPORTING
-              io_repo = lo_repo_online.
+              io_repo = lo_repo_online
+              iv_sci_result = lv_sci_result.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
         ELSE.

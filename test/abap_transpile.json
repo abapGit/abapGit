@@ -141,6 +141,7 @@
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "dont_ignore_error"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "unpretty"},
       {"object": "ZCL_ABAPGIT_ZLIB",       "class": "ltcl_zlib", "method": "dynamic"},
+      {"object": "ZCL_ABAPGIT_ZLIB",       "class": "ltcl_zlib", "method": "fixed"},
       {"object": "ZCL_ABAPGIT_GIT_ADD_PATCH", "class": "ltcl_calculate_patch", "method": "multiple_non_adjacent_delete"},
       {"object": "ZCL_ABAPGIT_GIT_ADD_PATCH", "class": "ltcl_calculate_patch", "method": "multiple_partial_delete"},
       {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_utils_test", "method": "extract_author_data1", "note": "ASSERT failed, ??"},
@@ -178,15 +179,12 @@
 
       {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_renderable", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
       {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_event_handler", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
-      {"object": "ZCL_ABAPGIT_GUI_ASSET_MANAGER", "class": "ltcl_abapgit_gui_asset_manager", "method": "get_inline_asset"},
-      {"object": "ZCL_ABAPGIT_GUI_ASSET_MANAGER", "class": "ltcl_abapgit_gui_asset_manager", "method": "get_mime_asset"},
-      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_file_exists", "note": "something wrong with the inheritance?"},
-      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_file_does_not_exist"},
-      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_empty_file", "note": "Cannot read property 'register_asset' of undefined"},
-      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_no_variables", "note": "Cannot read property 'register_asset' of undefined"},
-      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_simple_variables"},
+
+      {"object": "ZCL_ABAPGIT_GUI_ASSET_MANAGER", "class": "ltcl_abapgit_gui_asset_manager", "method": "get_mime_asset", "note": "failed to load GUI asset: css/common.css"},
+
+      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_simple_variables", "note": "Cannot read property 'get' of undefined in CS"},
       {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_complex_variables"},
-      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_overwrite"},
+      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_overwrite", "note": "MODIFY FROM with table unique key not working"},
       {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_multiple_files", "method": "test_overwrite"},
 
       {"object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR", "class": "ltcl_html_processor_test", "method": "process_typical"},
@@ -208,7 +206,7 @@
       {"object": "ZCL_ABAPGIT_GIT_COMMIT", "class": "ltcl_test", "method": "check_author_regex"},
       {"object": "ZCL_ABAPGIT_GIT_URL", "class": "ltcl_repo_online", "method": "test_repo_commit_show_urls"},
 
-      {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "ignore"},
+      {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "ignore", "note": "Void type: DLVUNIT"},
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "identity"}
     ]
   }
