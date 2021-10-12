@@ -7,6 +7,8 @@ CLASS zcl_abapgit_object_wdca DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_object .
+    aliases MO_FILES
+	  for ZIF_ABAPGIT_OBJECT~MO_FILES .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -263,8 +265,11 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCA IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: ls_outline TYPE wdy_cfg_outline_data,
-          lt_data    TYPE wdy_cfg_persist_data_appl_tab.
+    DATA: ls_outline     TYPE wdy_cfg_outline_data,
+          lt_data        TYPE wdy_cfg_persist_data_appl_tab,
+          lt_config_appt TYPE TABLE OF wdy_config_appt,
+          lv_xml_string  TYPE string,
+          lv_xml_xstring TYPE xstring.
 
     io_xml->read( EXPORTING iv_name = 'OUTLINE'
                   CHANGING  cg_data = ls_outline ).
@@ -274,6 +279,45 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCA IMPLEMENTATION.
     save( is_outline = ls_outline
           it_data    = lt_data
           iv_package = iv_package ).
+
+
+    lv_xml_string = mo_files->read_string( iv_extra = 'appl_config'
+                                           iv_ext   = 'xml' ).
+    TRY.
+        lv_xml_string = zcl_abapgit_xml_pretty=>print( iv_xml           = lv_xml_string
+                                                       iv_ignore_errors = abap_false
+                                                       iv_unpretty      = abap_true ).
+      CATCH zcx_abapgit_exception.
+        zcx_abapgit_exception=>raise( 'Error Un-Pretty Printing WDCA XML Content: ' && ms_item-obj_name ).
+    ENDTRY.
+
+    REPLACE FIRST OCCURRENCE
+      OF REGEX '<\?xml version="1\.0" encoding="[\w-]+"\?>'
+      IN lv_xml_string
+      WITH '<?xml version="1.0"?>'.
+    ASSERT sy-subrc = 0.
+
+    lv_xml_xstring = zcl_abapgit_convert=>string_to_xstring( iv_str = lv_xml_string ).
+    UPDATE wdy_config_appl
+      SET xcontent = lv_xml_xstring
+      WHERE config_id   = ls_outline-config_id
+        AND config_type = ls_outline-config_type
+        AND config_var  = ls_outline-config_var.
+
+
+    io_xml->read( EXPORTING iv_name = 'DESCR_LANG'
+                  CHANGING  cg_data = lt_config_appt ).
+
+    IF lt_config_appt IS NOT INITIAL.
+      DELETE FROM wdy_config_appt
+        WHERE config_id   = ls_outline-config_id
+          AND config_type = ls_outline-config_type
+          AND config_var  = ls_outline-config_var.
+      MODIFY wdy_config_appt FROM TABLE lt_config_appt.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'Error Updating WDY_CONFIG_APPT for Component Config ' && ms_item-obj_name ).
+      ENDIF.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -331,8 +375,11 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCA IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: ls_outline TYPE wdy_cfg_outline_data,
-          lt_data    TYPE wdy_cfg_persist_data_appl_tab.
+    DATA: ls_outline     TYPE wdy_cfg_outline_data,
+          lt_data        TYPE wdy_cfg_persist_data_appl_tab,
+          lt_cc_text     TYPE TABLE OF wdy_config_appt,
+          lv_xml_xstring TYPE xstring,
+          lv_xml_string  TYPE string.
 
     read( IMPORTING es_outline = ls_outline
                     et_data    = lt_data ).
@@ -345,6 +392,45 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCA IMPLEMENTATION.
                  ig_data = ls_outline ).
     io_xml->add( iv_name = 'DATA'
                  ig_data = lt_data ).
+
+
+    SELECT SINGLE xcontent
+      INTO lv_xml_xstring
+      FROM wdy_config_appl
+      WHERE config_id = ls_outline-config_id
+        AND config_type = ls_outline-config_type
+        AND config_var = ls_outline-config_var.
+    lv_xml_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_data = lv_xml_xstring ).
+    IF lv_xml_string IS NOT INITIAL.
+      TRY.
+          lv_xml_string = zcl_abapgit_xml_pretty=>print(
+            iv_xml           = lv_xml_string
+            iv_ignore_errors = abap_false ).
+        CATCH zcx_abapgit_exception.
+          zcx_abapgit_exception=>raise( 'Error Pretty Printing WDCA XML Content: ' && ms_item-obj_name ).
+      ENDTRY.
+
+      REPLACE FIRST OCCURRENCE
+        OF REGEX '<\?xml version="1\.0" encoding="[\w-]+"\?>'
+        IN lv_xml_string
+        WITH '<?xml version="1.0" encoding="utf-8"?>'.
+      ASSERT sy-subrc = 0.
+    ENDIF.
+
+    mo_files->add_string( iv_extra  = 'appl_config'
+                          iv_ext    = 'xml'
+                          iv_string = lv_xml_string ).
+
+
+    SELECT * FROM wdy_config_appt INTO TABLE lt_cc_text
+      WHERE config_id   = ls_outline-config_id
+      AND config_type = ls_outline-config_type
+      AND config_var  = ls_outline-config_var
+      ORDER BY PRIMARY KEY.
+    IF lt_cc_text IS NOT INITIAL.
+      io_xml->add( iv_name = 'DESCR_LANG'
+                   ig_data = lt_cc_text ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
