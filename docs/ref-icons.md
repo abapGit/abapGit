@@ -4,9 +4,12 @@ category: reference
 order: 25
 ---
 
-The following list provides a quick reference to icons used in abapGit.
+The following list provides a quick reference to icons **used** in abapGit.
 
+The icons are part of a font generated for abapGit (We don't use a complete FontAwesome set to keep the file size small). 
 See also [abapGit Icon Font](https://github.com/abapGit/icon-font).
+
+All available icons of this font are listed at [icons.abapgit.org](https://icons.abapgit.org/).
 
 Icon   | Description   | Code
 :----- | :------------ | :------------
@@ -41,9 +44,3 @@ Icon   | Description   | Code
 <img src="https://raw.githubusercontent.com/abapGit/icon-font/main/svg/tools-solid.svg" width="30" height="30"> | Utilities | (tools-solid)
 <img src="https://raw.githubusercontent.com/abapGit/icon-font/main/svg/user-solid.svg" width="30" height="30"> | User | (user-solid)
 <img src="https://raw.githubusercontent.com/abapGit/icon-font/main/svg/edit-solid.svg" width="30" height="30"> | Edit | (edit-solid)
-<img src="https://raw.githubusercontent.com/abapGit/icon-font/main/svg/fire-alt.svg" width="30" height="30"> | (currently not used) | (fire-alt)
-<img src="https://raw.githubusercontent.com/abapGit/icon-font/main/svg/sliders-h.svg" width="30" height="30"> | (currently not used) | (sliders-h)
-<img src="https://raw.githubusercontent.com/abapGit/icon-font/main/svg/snowflake.svg" width="30" height="30"> | (currently not used) | (snowflake)
-<img src="https://raw.githubusercontent.com/abapGit/icon-font/main/svg/briefcase.svg" width="30" height="30"> | (currently not used) | (briefcase)
-<img src="https://raw.githubusercontent.com/abapGit/icon-font/main/svg/cloud-commit.svg" width="30" height="30"> | (currently not used) | (cloud-commit)
-<img src="https://raw.githubusercontent.com/abapGit/icon-font/main/svg/cloud-solid.svg" width="30" height="30"> | (currently not used) | (cloud-solid)
