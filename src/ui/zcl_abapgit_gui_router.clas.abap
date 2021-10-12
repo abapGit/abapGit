@@ -376,7 +376,19 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         EXPORTING
           io_repo = lo_repo.
 
-      ri_page = lo_code_inspector_page.
+      IF lo_code_inspector_page->is_nothing_to_display( ) = abap_true.
+        " force refresh on stage, to make sure the latest local and remote files are used
+        lo_repo->refresh( ).
+        CREATE OBJECT lo_stage_page
+          EXPORTING
+            io_repo = lo_repo
+            iv_seed = lv_seed
+            iv_sci_result = zif_abapgit_definitions=>c_sci_result-passed.
+        ri_page = lo_stage_page.
+      ELSE.
+        ri_page = lo_code_inspector_page.
+      ENDIF.
+
     ELSEIF lo_repo->get_selected_branch( ) CP zif_abapgit_definitions=>c_git_branch-tags.
       lv_show_create_branch_popup = abap_true.
       lv_question_title = 'Staging on a tag'.
