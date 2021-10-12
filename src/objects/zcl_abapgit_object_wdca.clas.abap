@@ -7,7 +7,7 @@ CLASS zcl_abapgit_object_wdca DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_object .
-    aliases MO_FILES
+    ALIASES mo_files
       for ZIF_ABAPGIT_OBJECT~MO_FILES .
   PROTECTED SECTION.
   PRIVATE SECTION.
