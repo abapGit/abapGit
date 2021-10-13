@@ -11,6 +11,7 @@ INTERFACE zif_abapgit_definitions
   TYPES: ty_sha1_tt TYPE STANDARD TABLE OF ty_sha1 WITH DEFAULT KEY .
   TYPES:
     ty_adler32 TYPE x LENGTH 4 .
+  TYPES ty_item_state TYPE c LENGTH 1.
   TYPES:
     BEGIN OF ty_file_signature,
       path     TYPE string,
@@ -148,8 +149,8 @@ INTERFACE zif_abapgit_definitions
       path       TYPE string,
       filename   TYPE string,
       is_changed TYPE abap_bool,
-      rstate     TYPE c LENGTH 1,
-      lstate     TYPE c LENGTH 1,
+      rstate     TYPE ty_item_state,
+      lstate     TYPE ty_item_state,
     END OF ty_repo_file .
   TYPES:
     ty_repo_file_tt TYPE STANDARD TABLE OF ty_repo_file WITH DEFAULT KEY .
@@ -189,8 +190,8 @@ INTERFACE zif_abapgit_definitions
       filename TYPE string,
       package  TYPE devclass,
       match    TYPE abap_bool,
-      lstate   TYPE c LENGTH 1,
-      rstate   TYPE c LENGTH 1,
+      lstate   TYPE ty_item_state,
+      rstate   TYPE ty_item_state,
       packmove TYPE abap_bool,
     END OF ty_result .
   TYPES:
@@ -300,10 +301,11 @@ INTERFACE zif_abapgit_definitions
       path       TYPE string,
       is_dir     TYPE abap_bool,
       changes    TYPE i,
-      lstate     TYPE c LENGTH 1,
-      rstate     TYPE c LENGTH 1,
+      lstate     TYPE ty_item_state,
+      rstate     TYPE ty_item_state,
       files      TYPE ty_repo_file_tt,
       changed_by TYPE xubname,
+      packmove   TYPE abap_bool,
     END OF ty_repo_item .
   TYPES:
     ty_repo_item_tt TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY .
@@ -399,11 +401,11 @@ INTERFACE zif_abapgit_definitions
     END OF c_type .
   CONSTANTS:
     BEGIN OF c_state, " https://git-scm.com/docs/git-status
-      unchanged TYPE c LENGTH 1 VALUE '',
-      added     TYPE c LENGTH 1 VALUE 'A',
-      modified  TYPE c LENGTH 1 VALUE 'M',
-      deleted   TYPE c LENGTH 1 VALUE 'D',
-      mixed     TYPE c LENGTH 1 VALUE '*',
+      unchanged TYPE ty_item_state VALUE '',
+      added     TYPE ty_item_state VALUE 'A',
+      modified  TYPE ty_item_state VALUE 'M',
+      deleted   TYPE ty_item_state VALUE 'D',
+      mixed     TYPE ty_item_state VALUE '*',
     END OF c_state .
   CONSTANTS:
     BEGIN OF c_chmod,
