@@ -385,7 +385,7 @@ CLASS ZCL_ABAPGIT_LOG_VIEWER IMPLEMENTATION.
         ENDIF.
 
         lo_alv->set_screen_popup( start_column = 10
-                                  end_column   = 120
+                                  end_column   = 140
                                   start_line   = 4
                                   end_line     = 25 ).
 
