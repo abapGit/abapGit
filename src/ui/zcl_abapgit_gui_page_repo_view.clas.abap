@@ -32,6 +32,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
   PRIVATE SECTION.
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
+    DATA mo_repo_aggregated_state TYPE REF TO zcl_abapgit_item_state.
     DATA mv_cur_dir TYPE string .
     DATA mv_hide_files TYPE abap_bool .
     DATA mv_max_lines TYPE i .
@@ -45,17 +46,11 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
     DATA mv_are_changes_recorded_in_tr TYPE abap_bool .
 
     METHODS render_head_line
-      IMPORTING
-        !iv_lstate     TYPE char1
-        !iv_rstate     TYPE char1
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
     METHODS build_head_menu
-      IMPORTING
-        !iv_lstate        TYPE char1
-        !iv_rstate        TYPE char1
       RETURNING
         VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
       RAISING
@@ -144,8 +139,6 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
     METHODS build_advanced_dropdown
       IMPORTING
         !iv_wp_opt                  LIKE zif_abapgit_html=>c_html_opt-crossout
-        !iv_lstate                  TYPE char1
-        !iv_rstate                  TYPE char1
       RETURNING
         VALUE(ro_advanced_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
       RAISING
@@ -153,8 +146,6 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
     METHODS build_main_toolbar
       IMPORTING
         !iv_pull_opt      LIKE zif_abapgit_html=>c_html_opt-crossout
-        !iv_lstate        TYPE char1
-        !iv_rstate        TYPE char1
         !io_tb_branch     TYPE REF TO zcl_abapgit_html_toolbar
         !io_tb_tag        TYPE REF TO zcl_abapgit_html_toolbar
         !io_tb_advanced   TYPE REF TO zcl_abapgit_html_toolbar
@@ -188,7 +179,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -259,7 +250,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     CREATE OBJECT ro_advanced_dropdown.
 
-    IF iv_rstate IS NOT INITIAL OR iv_lstate IS NOT INITIAL. " In case of asyncronicities
+    IF mo_repo_aggregated_state->is_unchanged( ) = abap_false. " In case of asyncronicities
       ro_advanced_dropdown->add( iv_txt = 'Selective Pull'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-git_reset }?key={ mv_key }|
                                  iv_opt = iv_wp_opt ).
@@ -385,18 +376,13 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     lo_tb_tag = build_tag_dropdown( lv_wp_opt ).
 
-    lo_tb_advanced = build_advanced_dropdown(
-                         iv_wp_opt = lv_wp_opt
-                         iv_rstate = iv_rstate
-                         iv_lstate = iv_lstate ).
+    lo_tb_advanced = build_advanced_dropdown( iv_wp_opt = lv_wp_opt ).
 
     ro_toolbar = build_main_toolbar(
-                     iv_pull_opt    = lv_pull_opt
-                     iv_rstate      = iv_rstate
-                     iv_lstate      = iv_lstate
-                     io_tb_branch   = lo_tb_branch
-                     io_tb_tag      = lo_tb_tag
-                     io_tb_advanced = lo_tb_advanced ).
+      iv_pull_opt    = lv_pull_opt
+      io_tb_branch   = lo_tb_branch
+      io_tb_tag      = lo_tb_tag
+      io_tb_advanced = lo_tb_advanced ).
 
   ENDMETHOD.
 
@@ -443,17 +429,18 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     CREATE OBJECT ro_toolbar EXPORTING iv_id = 'toolbar-repo'.
 
     IF mo_repo->is_offline( ) = abap_false.
-      IF iv_rstate IS NOT INITIAL. " Something new at remote
+      IF mo_repo_aggregated_state->remote( ) IS NOT INITIAL
+         OR mo_repo_aggregated_state->is_reassigned( ) = abap_true. " Something new at remote
         ro_toolbar->add( iv_txt = 'Pull'
                          iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?key={ mv_key }|
                          iv_opt = iv_pull_opt ).
       ENDIF.
-      IF iv_lstate IS NOT INITIAL. " Something new at local
+      IF mo_repo_aggregated_state->local( ) IS NOT INITIAL. " Something new at local
         ro_toolbar->add( iv_txt = 'Stage'
                          iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?key={ mv_key }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
       ENDIF.
-      IF iv_rstate IS NOT INITIAL OR iv_lstate IS NOT INITIAL. " Any changes
+      IF mo_repo_aggregated_state->is_unchanged( ) = abap_false. " Any changes
         ro_toolbar->add( iv_txt = 'Diff'
                          iv_act = |{ zif_abapgit_definitions=>c_action-go_repo_diff }?key={ mv_key }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
@@ -468,7 +455,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       ro_toolbar->add( iv_txt = 'Tag'
                        io_sub = io_tb_tag ).
     ELSE.
-      IF mo_repo->has_remote_source( ) = abap_true AND iv_rstate IS NOT INITIAL.
+      IF mo_repo->has_remote_source( ) = abap_true AND mo_repo_aggregated_state->remote( ) IS NOT INITIAL.
         ro_toolbar->add( iv_txt = 'Pull <sup>zip</sup>'
                          iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?key={ mv_key }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
@@ -746,8 +733,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     DATA: lt_repo_items TYPE zif_abapgit_definitions=>ty_repo_item_tt,
           lo_browser    TYPE REF TO zcl_abapgit_repo_content_list,
           lx_error      TYPE REF TO zcx_abapgit_exception,
-          lv_lstate     TYPE char1,
-          lv_rstate     TYPE char1,
           lv_max        TYPE abap_bool,
           lv_max_str    TYPE string,
           lv_add_str    TYPE string,
@@ -759,6 +744,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     gui_services( )->get_hotkeys_ctl( )->register_hotkeys( zif_abapgit_gui_hotkeys~get_hotkey_actions( ) ).
     gui_services( )->register_event_handler( me ).
+    CREATE OBJECT mo_repo_aggregated_state.
 
     TRY.
         " Reinit, for the case of type change
@@ -794,14 +780,10 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         apply_order_by( CHANGING ct_repo_items = lt_repo_items ).
 
         LOOP AT lt_repo_items ASSIGNING <ls_item>.
-          zcl_abapgit_state=>reduce( EXPORTING iv_cur = <ls_item>-lstate
-                                     CHANGING cv_prev = lv_lstate ).
-          zcl_abapgit_state=>reduce( EXPORTING iv_cur = <ls_item>-rstate
-                                     CHANGING cv_prev = lv_rstate ).
+          mo_repo_aggregated_state->sum_with_repo_item( <ls_item> ).
         ENDLOOP.
 
-        ri_html->add( render_head_line( iv_lstate = lv_lstate
-                                        iv_rstate = lv_rstate ) ).
+        ri_html->add( render_head_line( ) ).
 
         li_log = lo_browser->get_log( ).
         IF mo_repo->is_offline( ) = abap_false AND li_log->count( ) > 0.
@@ -816,7 +798,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
         IF mo_repo->is_offline( ) = abap_true
             AND mo_repo->has_remote_source( ) = abap_true
-            AND lv_lstate IS INITIAL AND lv_rstate IS INITIAL.
+            AND mo_repo_aggregated_state->is_unchanged( ) = abap_true.
           " Offline match banner
           lv_msg = 'ZIP source is attached and completely <b>matches</b> the local state'.
         ELSEIF lines( lt_repo_items ) = 0.
@@ -886,10 +868,8 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         " and allow troubleshooting of issue
         zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( || ).
 
-        ri_html->add(
-          render_head_line(
-            iv_lstate = lv_lstate
-            iv_rstate = lv_rstate ) ).
+        ri_html->add( render_head_line( ) ).
+
         ri_html->add( zcl_abapgit_gui_chunk_lib=>render_error(
           iv_extra_style = 'repo_banner'
           ix_error = lx_error ) ).
@@ -905,8 +885,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     DATA lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-    lo_toolbar = build_head_menu( iv_lstate = iv_lstate
-                                  iv_rstate = iv_rstate ).
+    lo_toolbar = build_head_menu( ).
 
     ri_html->add( '<div class="paddings">' ).
     ri_html->add( '<table class="w100"><tr>' ).
