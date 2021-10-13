@@ -281,28 +281,32 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCA IMPLEMENTATION.
           iv_package = iv_package ).
 
 
-    lv_xml_string = mo_files->read_string( iv_extra = 'appl_config'
-                                           iv_ext   = 'xml' ).
     TRY.
-        lv_xml_string = zcl_abapgit_xml_pretty=>print( iv_xml           = lv_xml_string
-                                                       iv_ignore_errors = abap_false
-                                                       iv_unpretty      = abap_true ).
+        lv_xml_string = mo_files->read_string( iv_extra = 'appl_config'
+                                               iv_ext   = 'xml' ).
+        TRY.
+            lv_xml_string = zcl_abapgit_xml_pretty=>print( iv_xml           = lv_xml_string
+                                                           iv_ignore_errors = abap_false
+                                                           iv_unpretty      = abap_true ).
+          CATCH zcx_abapgit_exception.
+            zcx_abapgit_exception=>raise( 'Error Un-Pretty Printing WDCA XML Content: ' && ms_item-obj_name ).
+        ENDTRY.
+
+        REPLACE FIRST OCCURRENCE
+          OF REGEX '<\?xml version="1\.0" encoding="[\w-]+"\?>'
+          IN lv_xml_string
+          WITH '<?xml version="1.0"?>'.
+        ASSERT sy-subrc = 0.
+
+        lv_xml_xstring = zcl_abapgit_convert=>string_to_xstring( iv_str = lv_xml_string ).
+        UPDATE wdy_config_appl
+          SET xcontent = lv_xml_xstring
+          WHERE config_id   = ls_outline-config_id
+            AND config_type = ls_outline-config_type
+            AND config_var  = ls_outline-config_var.
       CATCH zcx_abapgit_exception.
-        zcx_abapgit_exception=>raise( 'Error Un-Pretty Printing WDCA XML Content: ' && ms_item-obj_name ).
+        " File not found
     ENDTRY.
-
-    REPLACE FIRST OCCURRENCE
-      OF REGEX '<\?xml version="1\.0" encoding="[\w-]+"\?>'
-      IN lv_xml_string
-      WITH '<?xml version="1.0"?>'.
-    ASSERT sy-subrc = 0.
-
-    lv_xml_xstring = zcl_abapgit_convert=>string_to_xstring( iv_str = lv_xml_string ).
-    UPDATE wdy_config_appl
-      SET xcontent = lv_xml_xstring
-      WHERE config_id   = ls_outline-config_id
-        AND config_type = ls_outline-config_type
-        AND config_var  = ls_outline-config_var.
 
 
     io_xml->read( EXPORTING iv_name = 'DESCR_LANG'
