@@ -56,6 +56,10 @@ CLASS zcl_abapgit_transport DEFINITION
         VALUE(rt_objects) TYPE tr_objects
       RAISING
         zcx_abapgit_exception.
+    CLASS-METHODS show_log
+      IMPORTING
+        it_log   TYPE sprot_u_tab
+        iv_title TYPE string.
 ENDCLASS.
 
 
@@ -70,7 +74,8 @@ CLASS zcl_abapgit_transport IMPLEMENTATION.
       lt_e071         TYPE tr_objects,
       lv_text         TYPE string,
       lv_answer       TYPE c LENGTH 1,
-      lv_lock_objects TYPE trparflag.
+      lv_lock_objects TYPE trparflag,
+      lt_log          TYPE sprot_u_tab.
 
     lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
                     iv_titlebar              = `Lock objects?`
@@ -88,12 +93,20 @@ CLASS zcl_abapgit_transport IMPLEMENTATION.
 
     lt_e071 = collect_all_objects( iv_key ).
 
-    CALL FUNCTION 'TR_REQUEST_CHOICE'
+    " We used TR_REQUEST_CHOICE before, but it issues its error log with
+    " write lists which are not compatible with abapGit.
+    " There we user TRINT_REQUEST_CHOICE which returns the error log
+    " and display the log ourselve.
+    CALL FUNCTION 'TRINT_REQUEST_CHOICE'
       EXPORTING
-        it_e071              = lt_e071
+        iv_request_types     = 'FTCOK'
         iv_lock_objects      = lv_lock_objects
+        iv_with_error_log    = abap_false
       IMPORTING
         es_request           = ls_request
+        et_log               = lt_log
+      TABLES
+        it_e071              = lt_e071
       EXCEPTIONS
         invalid_request      = 1
         invalid_request_type = 2
@@ -103,13 +116,19 @@ CLASS zcl_abapgit_transport IMPLEMENTATION.
         cancelled_by_user    = 6
         recursive_call       = 7
         OTHERS               = 8.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
+    IF sy-subrc = 0.
+      lv_text = |Objects successfully added to { ls_request-trkorr }|.
+      MESSAGE lv_text TYPE 'S'.
+      RETURN.
     ENDIF.
 
-    lv_text = |Objects successfully added to { ls_request-trkorr }|.
-    MESSAGE lv_text TYPE 'S'.
+    IF lines( lt_log ) > 0.
+      show_log(
+          it_log   = lt_log
+          iv_title = `Error log` ).
+    ELSE.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -227,12 +246,11 @@ CLASS zcl_abapgit_transport IMPLEMENTATION.
 
 
   METHOD resolve.
-    DATA: lv_object     TYPE tadir-object,
-          lv_obj_name   TYPE tadir-obj_name,
-          lv_trobj_name TYPE trobj_name,
-          ls_tadir      TYPE zif_abapgit_definitions=>ty_tadir,
-          lv_result     TYPE trpari-s_checked,
-          ls_tadir_sap  TYPE tadir.
+    DATA: lv_object    TYPE tadir-object,
+          lv_obj_name  TYPE tadir-obj_name,
+          ls_tadir     TYPE zif_abapgit_definitions=>ty_tadir,
+          lv_result    TYPE trpari-s_checked,
+          ls_tadir_sap TYPE tadir.
 
     FIELD-SYMBOLS: <ls_request> LIKE LINE OF it_requests,
                    <ls_object>  LIKE LINE OF <ls_request>-objects.
@@ -333,4 +351,32 @@ CLASS zcl_abapgit_transport IMPLEMENTATION.
       iv_show_log       = iv_show_log_popup ).
 
   ENDMETHOD.
+
+
+  METHOD show_log.
+
+    DATA: li_log     TYPE REF TO zif_abapgit_log,
+          lv_message TYPE string.
+    FIELD-SYMBOLS: <ls_log> TYPE sprot_u.
+
+    CREATE OBJECT li_log TYPE zcl_abapgit_log
+      EXPORTING
+        iv_title = iv_title.
+
+    LOOP AT it_log ASSIGNING <ls_log>.
+
+      MESSAGE ID <ls_log>-ag TYPE <ls_log>-severity NUMBER <ls_log>-msgnr
+       WITH <ls_log>-var1 <ls_log>-var2 <ls_log>-var3 <ls_log>-var4
+       INTO lv_message.
+
+      li_log->add(
+          iv_msg  = lv_message
+          iv_type = <ls_log>-severity ).
+
+    ENDLOOP.
+
+    zcl_abapgit_log_viewer=>show_log( li_log ).
+
+  ENDMETHOD.
+
 ENDCLASS.
