@@ -842,7 +842,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
                                               iv_class = 'pad-sides'
                                               iv_hint  = 'Copy URL to Clipboard' )
                       iv_act   = |{ zif_abapgit_definitions=>c_action-clipboard }| &&
-                                 |?clipboard={ lo_repo_online->get_url( ) }| 
+                                 |?clipboard={ lo_repo_online->get_url( ) }|
                       iv_class = |url| ).
     ENDIF.
 
