@@ -838,11 +838,12 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     IF io_repo->is_offline( ) = abap_false.
       lo_repo_online ?= io_repo.
 
-      ri_html->add_a( iv_txt = ri_html->icon( iv_name  = 'copy-solid'
+      ri_html->add_a( iv_txt   = ri_html->icon( iv_name  = 'copy-solid'
                                               iv_class = 'pad-sides'
                                               iv_hint  = 'Copy URL to Clipboard' )
-                      iv_act = |{ zif_abapgit_definitions=>c_action-clipboard }| &&
-                               |?clipboard={ lo_repo_online->get_url( ) }| ).
+                      iv_act   = |{ zif_abapgit_definitions=>c_action-clipboard }| &&
+                                 |?clipboard={ lo_repo_online->get_url( ) }| 
+                      iv_class = |url| ).
     ENDIF.
 
     IF io_repo->is_offline( ) = abap_false AND iv_show_commit = abap_true.
