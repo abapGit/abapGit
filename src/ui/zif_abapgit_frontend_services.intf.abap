@@ -30,4 +30,11 @@ INTERFACE zif_abapgit_frontend_services PUBLIC.
       VALUE(rv_path)       TYPE string
     RAISING
       zcx_abapgit_exception .
+
+  METHODS clipboard_export
+    IMPORTING
+      iv_no_auth_check TYPE abap_bool DEFAULT abap_false
+      VALUE(it_data)   TYPE STANDARD TABLE
+    RAISING
+      zcx_abapgit_exception.
 ENDINTERFACE.

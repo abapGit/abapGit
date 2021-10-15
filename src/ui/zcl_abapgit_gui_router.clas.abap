@@ -570,11 +570,21 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
 
   METHOD other_utilities.
+    TYPES ty_char600 TYPE c LENGTH 600.
+    DATA lv_clip_content TYPE string.
+    DATA lt_clipboard TYPE STANDARD TABLE OF ty_char600.
 
-    IF ii_event->mv_action = zif_abapgit_definitions=>c_action-ie_devtools.
-      zcl_abapgit_services_basis=>open_ie_devtools( ).
-      rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
-    ENDIF.
+    CASE ii_event->mv_action.
+      WHEN zif_abapgit_definitions=>c_action-ie_devtools.
+        zcl_abapgit_services_basis=>open_ie_devtools( ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
+      WHEN zif_abapgit_definitions=>c_action-clipboard.
+        lv_clip_content = ii_event->query( )->get( 'CLIPBOARD' ).
+        APPEND lv_clip_content TO lt_clipboard.
+        zcl_abapgit_ui_factory=>get_frontend_services( )->clipboard_export( lt_clipboard ).
+        MESSAGE 'Successfully exported URL to Clipboard.' TYPE 'S'.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
+    ENDCASE.
 
   ENDMETHOD.
 
