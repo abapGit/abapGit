@@ -1006,7 +1006,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
           && |<td class="code{ lv_bg } diff_right">{ is_diff_line-old }</td>|.
 
     " render line, inverse sides if remote is newer
-    ri_html->add( '<tr>' ).
+    ri_html->add( '<tr class="diff_line_split">' ).
 
     render_line_split_row(
         ii_html                = ri_html
