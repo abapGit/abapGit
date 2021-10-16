@@ -462,7 +462,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
   METHOD build_menu.
 
-    CREATE OBJECT ro_menu.
+    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-main'.
 
     add_menu_begin( ro_menu ).
     add_jump_sub_menu( ro_menu ).
