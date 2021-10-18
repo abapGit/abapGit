@@ -127,7 +127,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
   METHOD build_menu.
 
-    CREATE OBJECT ro_menu.
+    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-main'.
 
     IF lines( ms_files-local ) > 0
     OR lines( ms_files-remote ) > 0.
