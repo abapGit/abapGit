@@ -1006,7 +1006,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
           && |<td class="code{ lv_bg } diff_right">{ is_diff_line-old }</td>|.
 
     " render line, inverse sides if remote is newer
-    ri_html->add( '<tr class="diff_line_split">' ).
+    ri_html->add( '<tr class="diff_line">' ).
 
     render_line_split_row(
         ii_html                = ri_html
@@ -1062,7 +1062,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
       CLEAR mt_delayed_lines.
     ENDIF.
 
-    ri_html->add( '<tr>' ).
+    ri_html->add( '<tr class="diff_line">' ).
     CASE is_diff_line-result.
       WHEN zif_abapgit_definitions=>c_diff-update.
         APPEND is_diff_line TO mt_delayed_lines. " Delay output of subsequent updates
