@@ -63,6 +63,8 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
           ls_subitem  LIKE LINE OF ct_repo_items,
           ls_folder   LIKE LINE OF ct_repo_items.
 
+    DATA lo_state TYPE REF TO zcl_abapgit_item_state.
+
     FIELD-SYMBOLS <ls_item> LIKE LINE OF ct_repo_items.
 
 
@@ -90,16 +92,15 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
         ls_folder-path    = <ls_item>-path.
         ls_folder-sortkey = c_sortkey-dir. " Directory
         ls_folder-is_dir  = abap_true.
+        CREATE OBJECT lo_state.
       ENDAT.
 
       ls_folder-changes = ls_folder-changes + <ls_item>-changes.
-
-      zcl_abapgit_state=>reduce( EXPORTING iv_cur = <ls_item>-lstate
-                                 CHANGING cv_prev = ls_folder-lstate ).
-      zcl_abapgit_state=>reduce( EXPORTING iv_cur = <ls_item>-rstate
-                                 CHANGING cv_prev = ls_folder-rstate ).
+      lo_state->sum_with_repo_item( <ls_item> ).
 
       AT END OF path.
+        ls_folder-lstate = lo_state->local( ).
+        ls_folder-rstate = lo_state->remote( ).
         APPEND ls_folder TO ct_repo_items.
       ENDAT.
     ENDLOOP.
@@ -148,6 +149,7 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
   METHOD build_repo_items_with_remote.
 
     DATA:
+      lo_state  TYPE REF TO zcl_abapgit_item_state,
       ls_file       TYPE zif_abapgit_definitions=>ty_repo_file,
       lt_status     TYPE zif_abapgit_definitions=>ty_results_tt,
       ls_item       TYPE zif_abapgit_definitions=>ty_item,
@@ -169,29 +171,22 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
         <ls_repo_item>-sortkey  = c_sortkey-default. " Default sort key
         <ls_repo_item>-changes  = 0.
         <ls_repo_item>-path     = <ls_status>-path.
+        CREATE OBJECT lo_state.
       ENDAT.
 
       IF <ls_status>-filename IS NOT INITIAL.
-        ls_file-path       = <ls_status>-path.
-        ls_file-filename   = <ls_status>-filename.
+        MOVE-CORRESPONDING <ls_status> TO ls_file.
         ls_file-is_changed = boolc( <ls_status>-match = abap_false ). " TODO refactor
-        ls_file-rstate     = <ls_status>-rstate.
-        ls_file-lstate     = <ls_status>-lstate.
         APPEND ls_file TO <ls_repo_item>-files.
 
-        IF <ls_status>-inactive = abap_true
-            AND <ls_repo_item>-sortkey > c_sortkey-changed.
+        IF <ls_status>-inactive = abap_true AND <ls_repo_item>-sortkey > c_sortkey-changed.
           <ls_repo_item>-sortkey = c_sortkey-inactive.
         ENDIF.
 
         IF ls_file-is_changed = abap_true.
           <ls_repo_item>-sortkey = c_sortkey-changed. " Changed files
           <ls_repo_item>-changes = <ls_repo_item>-changes + 1.
-
-          zcl_abapgit_state=>reduce( EXPORTING iv_cur = ls_file-lstate
-                                     CHANGING cv_prev = <ls_repo_item>-lstate ).
-          zcl_abapgit_state=>reduce( EXPORTING iv_cur = ls_file-rstate
-                                     CHANGING cv_prev = <ls_repo_item>-rstate ).
+          lo_state->sum_with_status_item( <ls_status> ).
         ENDIF.
       ENDIF.
 
@@ -211,6 +206,9 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
         IF <ls_repo_item>-obj_type IS INITIAL.
           <ls_repo_item>-sortkey = c_sortkey-orphan. "Virtual objects
         ENDIF.
+        <ls_repo_item>-lstate = lo_state->local( ).
+        <ls_repo_item>-rstate = lo_state->remote( ).
+        <ls_repo_item>-packmove = lo_state->is_reassigned( ).
       ENDAT.
     ENDLOOP.
 

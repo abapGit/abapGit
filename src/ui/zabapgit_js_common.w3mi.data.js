@@ -2268,10 +2268,18 @@ function enumerateToolbarActions() {
   if (items.length === 0) return;
 
   items = items.map(function(item) {
+    var action = "";
     var anchor = item[0];
+    if (anchor.href.includes("#")) {
+      action = function(){
+        anchor.click();
+      };
+    } else {
+      action = anchor.href.replace("sapevent:", "");
+    }
     var prefix = item[1];
     return {
-      action:    anchor.href.replace("sapevent:", ""),
+      action:    action,
       title:     (prefix ? prefix + ": " : "") + anchor.innerText.trim()
     };
   });

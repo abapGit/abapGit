@@ -489,6 +489,8 @@ table.settings_tab input:focus {
 
 .dialog input::placeholder { color: #ccc }
 .dialog input:-ms-input-placeholder { color: #ccc }
+.dialog textarea::placeholder { color: #ccc }
+.dialog textarea:-ms-input-placeholder { color: #ccc }
 .dialog {
   border-color: #ccc;
   background-color: #f0f0f0;
