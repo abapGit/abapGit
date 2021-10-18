@@ -501,6 +501,11 @@ table.diff_tab td.patch, th.patch {
   user-select: none;
   cursor: pointer;
 }
+
+table.diff_tab tr.diff_line:hover td {
+  background-image: linear-gradient(rgba(0, 0, 0, 0.075), rgba(0, 0, 0, 0.075));
+}
+
 table.diff_tab td.num::before {
   content: attr(line-num);
 }
