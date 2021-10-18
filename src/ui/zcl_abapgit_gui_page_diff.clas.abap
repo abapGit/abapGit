@@ -1044,7 +1044,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     " Release delayed subsequent update lines
     IF is_diff_line-result <> zif_abapgit_definitions=>c_diff-update.
       LOOP AT mt_delayed_lines ASSIGNING <ls_diff_line>.
-        ri_html->add( '<tr>' ).
+        ri_html->add( '<tr class="diff_line">' ).
         ri_html->add( |<td class="num diff_others" line-num="{ <ls_diff_line>-old_num }"></td>|
                    && |<td class="num diff_others" line-num=""></td>|
                    && |<td class="mark diff_others">-</td>|
@@ -1052,7 +1052,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
         ri_html->add( '</tr>' ).
       ENDLOOP.
       LOOP AT mt_delayed_lines ASSIGNING <ls_diff_line>.
-        ri_html->add( '<tr>' ).
+        ri_html->add( '<tr class="diff_line">' ).
         ri_html->add( |<td class="num diff_others" line-num=""></td>|
                    && |<td class="num diff_others" line-num="{ <ls_diff_line>-new_num }"></td>|
                    && |<td class="mark diff_others">+</td>|
