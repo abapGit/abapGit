@@ -64,7 +64,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
 
   METHOD ask_user_for_check_variant.
@@ -255,8 +255,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
           CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_stage
             EXPORTING
-              io_repo = lo_repo_online
+              io_repo       = lo_repo_online
               iv_sci_result = lv_sci_result.
+
           rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
         ELSE.
@@ -271,10 +272,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
         IF is_stage_allowed( ) = abap_true.
 
-          CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_commit
-            EXPORTING
-              io_repo  = lo_repo_online
-              io_stage = mo_stage.
+          rs_handled-page = zcl_abapgit_gui_page_commit=>create(
+            io_repo  = lo_repo_online
+            io_stage = mo_stage ).
+
           rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
         ELSE.

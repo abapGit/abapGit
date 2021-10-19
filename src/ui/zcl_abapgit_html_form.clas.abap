@@ -51,6 +51,8 @@ CLASS zcl_abapgit_html_form DEFINITION
         !iv_required    TYPE abap_bool DEFAULT abap_false
         !iv_readonly    TYPE abap_bool DEFAULT abap_false
         !iv_placeholder TYPE csequence OPTIONAL
+        !iv_rows        TYPE i OPTIONAL
+        !iv_cols        TYPE i OPTIONAL
       RETURNING
         VALUE(ro_self)  TYPE REF TO zcl_abapgit_html_form .
     METHODS number
@@ -751,7 +753,8 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
   METHOD render_field_textarea.
 
-    DATA lv_rows TYPE i.
+    DATA lv_rows TYPE string.
+    DATA lv_cols TYPE string.
     DATA lv_html TYPE string.
 
     ii_html->add( |<label for="{ is_field-name }"{ is_attr-hint }>{ is_field-label }{ is_attr-required }</label>| ).
@@ -760,11 +763,19 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       ii_html->add( is_attr-error ).
     ENDIF.
 
-    lv_rows = lines( zcl_abapgit_convert=>split_string( is_attr-value ) ).
+    IF is_field-rows > 0.
+      lv_rows = | rows="{ is_field-rows }"|.
+    ELSE.
+      lv_rows = lines( zcl_abapgit_convert=>split_string( is_attr-value ) ).
+    ENDIF.
+
+    IF is_field-cols > 0.
+      lv_cols = | cols="{ is_field-cols }"|.
+    ENDIF.
 
     " Avoid adding line-breaks inside textarea tag (except for the actual value)
-    lv_html = |<textarea name="{ is_field-name }" id="{ is_field-name }" rows="{ lv_rows }"|
-           && |{ is_attr-readonly }{ is_attr-autofocus }>|.
+    lv_html = |<textarea name="{ is_field-name }" id="{ is_field-name }"{ lv_rows }{ lv_cols }|
+           && |{ is_attr-readonly }{ is_attr-autofocus }{ is_attr-placeholder }>|.
     lv_html = lv_html && escape( val    = is_attr-value
                                  format = cl_abap_format=>e_html_attr ).
     lv_html = lv_html && |</textarea>|.
@@ -848,6 +859,8 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     ls_field-hint        = iv_hint.
     ls_field-required    = iv_required.
     ls_field-placeholder = iv_placeholder.
+    ls_field-rows        = iv_rows.
+    ls_field-cols        = iv_cols.
 
     APPEND ls_field TO mt_fields.
 
