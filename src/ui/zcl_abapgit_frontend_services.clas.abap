@@ -212,14 +212,14 @@ CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
   METHOD zif_abapgit_frontend_services~execute.
     cl_gui_frontend_services=>execute(
       EXPORTING
-        document               = document
-        application            = application
-        parameter              = parameter
-        default_directory      = default_directory
-        maximized              = maximized
-        minimized              = minimized
-        synchronous            = synchronous
-        operation              = operation
+        document               = iv_document
+        application            = iv_application
+        parameter              = iv_parameter
+        default_directory      = iv_default_directory
+        maximized              = iv_maximized
+        minimized              = iv_minimized
+        synchronous            = iv_synchronous
+        operation              = iv_operation
       EXCEPTIONS
         cntl_error             = 1
         error_no_gui           = 2
@@ -239,7 +239,7 @@ CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
   METHOD zif_abapgit_frontend_services~get_system_directory.
     cl_gui_frontend_services=>get_system_directory(
       CHANGING
-        system_directory     = system_directory
+        system_directory     = cv_system_directory
       EXCEPTIONS
         cntl_error           = 1
         error_no_gui         = 2
@@ -253,10 +253,10 @@ CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
   METHOD zif_abapgit_frontend_services~directory_browse.
     cl_gui_frontend_services=>directory_browse(
       EXPORTING
-        window_title         = window_title
-        initial_folder       = initial_folder
+        window_title         = iv_window_title
+        initial_folder       = iv_initial_folder
       CHANGING
-        selected_folder      = selected_folder
+        selected_folder      = cv_selected_folder
       EXCEPTIONS
         cntl_error           = 1
         error_no_gui         = 2
@@ -270,7 +270,7 @@ CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
   METHOD zif_abapgit_frontend_services~get_file_separator.
     cl_gui_frontend_services=>get_file_separator(
       CHANGING
-        file_separator       = file_separator
+        file_separator       = cv_file_separator
       EXCEPTIONS
         not_supported_by_gui = 1
         error_no_gui         = 2
@@ -284,8 +284,8 @@ CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
   METHOD zif_abapgit_frontend_services~get_gui_version.
     cl_gui_frontend_services=>get_gui_version(
       CHANGING
-        version_table            = version_table
-        rc                       = rc
+        version_table            = ct_version_table
+        rc                       = cv_rc
       EXCEPTIONS
         get_gui_version_failed   = 1
         cant_write_version_table = 2

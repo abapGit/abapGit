@@ -43,42 +43,42 @@ INTERFACE zif_abapgit_frontend_services PUBLIC.
 
   METHODS execute
     IMPORTING
-      document          TYPE string OPTIONAL
-      application       TYPE string OPTIONAL
-      parameter         TYPE string OPTIONAL
-      default_directory TYPE string OPTIONAL
-      maximized         TYPE string OPTIONAL
-      minimized         TYPE string OPTIONAL
-      synchronous       TYPE string OPTIONAL
-      operation         TYPE string DEFAULT 'OPEN'
+      !iv_document          TYPE string OPTIONAL
+      !iv_application       TYPE string OPTIONAL
+      !iv_parameter         TYPE string OPTIONAL
+      !iv_default_directory TYPE string OPTIONAL
+      !iv_maximized         TYPE string OPTIONAL
+      !iv_minimized         TYPE string OPTIONAL
+      !iv_synchronous       TYPE string OPTIONAL
+      !iv_operation         TYPE string DEFAULT 'OPEN'
     RAISING
       zcx_abapgit_exception.
 
   METHODS get_system_directory
     CHANGING
-      system_directory TYPE string
+      !cv_system_directory TYPE string
     RAISING
       zcx_abapgit_exception.
 
   METHODS directory_browse
     IMPORTING
-      window_title    TYPE string OPTIONAL
-      initial_folder  TYPE string OPTIONAL
+      iv_window_title    TYPE string OPTIONAL
+      iv_initial_folder  TYPE string OPTIONAL
     CHANGING
-      selected_folder TYPE string
+      cv_selected_folder TYPE string
     RAISING
       zcx_abapgit_exception.
 
   METHODS get_file_separator
     CHANGING
-      file_separator TYPE ty_char1
+      cv_file_separator TYPE ty_char1
     RAISING
       zcx_abapgit_exception.
 
   METHODS get_gui_version
     CHANGING
-      version_table TYPE filetable
-      rc            TYPE i
+      ct_version_table TYPE filetable
+      cv_rc            TYPE i
     RAISING
       zcx_abapgit_exception.
 
