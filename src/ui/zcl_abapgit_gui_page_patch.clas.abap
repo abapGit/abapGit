@@ -645,9 +645,9 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
         start_staging( ii_event ).
 
-          rs_handled-page = zcl_abapgit_gui_page_commit=>create(
-            io_repo  = mo_repo_online
-            io_stage = mo_stage ).
+        rs_handled-page = zcl_abapgit_gui_page_commit=>create(
+          io_repo  = mo_repo_online
+          io_stage = mo_stage ).
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
