@@ -193,9 +193,9 @@ CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
     " Note: do not use a string table for 'it_data'!
     cl_gui_frontend_services=>clipboard_export(
       EXPORTING
-        no_auth_check       = iv_no_auth_check
+        no_auth_check        = iv_no_auth_check
       IMPORTING
-        data                = it_data
+        data                 = it_data
       CHANGING
         rc                   = lv_rc
       EXCEPTIONS
