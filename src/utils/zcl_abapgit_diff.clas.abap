@@ -106,6 +106,7 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
   METHOD compute_and_render.
 
     DATA:
+      lv_i     TYPE i,
       ls_diff  LIKE LINE OF rt_diff,
       lt_delta TYPE STANDARD TABLE OF rsedcresul WITH DEFAULT KEY.
 
@@ -132,11 +133,11 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
       LOOP AT lt_delta ASSIGNING <ls_delta>.
         CLEAR ls_diff.
         IF <ls_delta>-line1 > 0.
-          ls_diff-old_num = CONV i( <ls_delta>-line1 ).
+          ls_diff-old_num = lv_i = <ls_delta>-line1.
           ls_diff-old     = <ls_delta>-text1.
         ENDIF.
         IF <ls_delta>-line2 > 0.
-          ls_diff-new_num = CONV i( <ls_delta>-line2 ).
+          ls_diff-new_num = lv_i = <ls_delta>-line2.
           ls_diff-new     = <ls_delta>-text2.
         ENDIF.
         IF <ls_delta>-flag1 = 'D'.
