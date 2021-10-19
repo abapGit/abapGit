@@ -39,3 +39,6 @@ When you select "Commit", your git repository will be updated.
 
 abapGit will update the local state of the objects and return to the repository view. Objects that were committed are now listed as unchanged (i.e. identical 
 to the definition in git).
+
+![](img/committing_done.png)
+
