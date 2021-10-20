@@ -776,7 +776,7 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
     DATA lv_date TYPE d.
     DATA lv_time TYPE t.
     DATA lv_seconds_conv TYPE i.
-    DATA lv_timestamp TYPE timestamp.
+    DATA lv_timestamp TYPE timestampl.
 
     FIND FIRST OCCURRENCE OF REGEX lc_regex_ts_with_hour
       IN is_path-value SUBMATCHES ls_timestamp-year ls_timestamp-month ls_timestamp-day ls_timestamp-t
@@ -823,7 +823,8 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
         iv_location = is_path-path && is_path-name ).
     ENDTRY.
 
-    rv_result = lv_timestamp.
+    cl_abap_tstmp=>move( EXPORTING tstmp_src = lv_timestamp
+                         IMPORTING tstmp_tgt = rv_result ).
 
   ENDMETHOD.
 
@@ -887,7 +888,9 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
         is_prefix TYPE zif_abapgit_ajson=>ty_path_name
         iv_index TYPE i DEFAULT 0
       CHANGING
-        ct_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt.
+        ct_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt
+      RAISING
+        zcx_abapgit_ajson_error.
 
     METHODS convert_value
       IMPORTING
@@ -971,7 +974,7 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
     lo_type = cl_abap_typedescr=>describe_by_data( iv_data ).
 
     CREATE OBJECT lo_converter.
-    lo_converter->mi_custom_mapping = ii_custom_mapping.
+    lo_converter->mi_custom_mapping  = ii_custom_mapping.
     lo_converter->mv_keep_item_order = iv_keep_item_order.
 
     lo_converter->convert_any(
@@ -1053,17 +1056,22 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
 
   METHOD convert_ajson.
 
-    FIELD-SYMBOLS <n> LIKE LINE OF ct_nodes.
+    FIELD-SYMBOLS <src> LIKE LINE OF ct_nodes.
+    FIELD-SYMBOLS <dst> LIKE LINE OF ct_nodes.
 
-    ct_nodes = io_json->mt_json_tree.
+    IF io_json IS NOT BOUND.
+      RETURN.
+    ENDIF.
 
-    LOOP AT ct_nodes ASSIGNING <n>.
-      IF <n>-path IS INITIAL AND <n>-name IS INITIAL. " root node
-        <n>-path  = is_prefix-path.
-        <n>-name  = is_prefix-name.
-        <n>-index = iv_index.
+    LOOP AT io_json->mt_json_tree ASSIGNING <src>.
+      APPEND <src> TO ct_nodes ASSIGNING <dst>.
+
+      IF <dst>-path IS INITIAL AND <dst>-name IS INITIAL. " root node
+        <dst>-path  = is_prefix-path.
+        <dst>-name  = is_prefix-name.
+        <dst>-index = iv_index.
       ELSE.
-        <n>-path = is_prefix-path && is_prefix-name && <n>-path.
+        <dst>-path = is_prefix-path && is_prefix-name && <dst>-path.
       ENDIF.
     ENDLOOP.
 
@@ -1071,22 +1079,21 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
 
   METHOD convert_value.
 
-    FIELD-SYMBOLS <n> LIKE LINE OF ct_nodes.
+    DATA ls_node LIKE LINE OF ct_nodes.
 
-    APPEND INITIAL LINE TO ct_nodes ASSIGNING <n>.
-
-    <n>-path  = is_prefix-path.
-    <n>-name  = is_prefix-name.
-    <n>-index = iv_index.
-    <n>-order = iv_item_order.
+    ls_node-path  = is_prefix-path.
+    ls_node-name  = is_prefix-name.
+    ls_node-index = iv_index.
+    ls_node-order = iv_item_order.
 
     IF mi_custom_mapping IS BOUND.
-      <n>-name = mi_custom_mapping->to_json( iv_path = is_prefix-path
-                                             iv_name = is_prefix-name ).
+      ls_node-name = mi_custom_mapping->to_json(
+        iv_path = is_prefix-path
+        iv_name = is_prefix-name ).
     ENDIF.
 
-    IF <n>-name IS INITIAL.
-      <n>-name  = is_prefix-name.
+    IF ls_node-name IS INITIAL.
+      ls_node-name  = is_prefix-name.
     ENDIF.
 
     IF io_type->absolute_name = '\TYPE-POOL=ABAP\TYPE=ABAP_BOOL'
@@ -1094,52 +1101,55 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
         OR io_type->absolute_name = '\TYPE=XSDBOOLEAN'
         OR io_type->absolute_name = '\TYPE=FLAG'
         OR io_type->absolute_name = '\TYPE=XFELD'.
-      <n>-type = zif_abapgit_ajson=>node_type-boolean.
+      ls_node-type = zif_abapgit_ajson=>node_type-boolean.
       IF iv_data IS NOT INITIAL.
-        <n>-value = 'true'.
+        ls_node-value = 'true'.
       ELSE.
-        <n>-value = 'false'.
+        ls_node-value = 'false'.
       ENDIF.
     ELSEIF io_type->type_kind CO 'CNgXyDT'. " Char like, date/time, xstring
-      <n>-type = zif_abapgit_ajson=>node_type-string.
-      <n>-value = |{ iv_data }|.
+      ls_node-type = zif_abapgit_ajson=>node_type-string.
+      ls_node-value = |{ iv_data }|.
     ELSEIF io_type->type_kind CO 'bsI8PaeF'. " Numeric
-      <n>-type = zif_abapgit_ajson=>node_type-number.
-      <n>-value = |{ iv_data }|.
+      ls_node-type = zif_abapgit_ajson=>node_type-number.
+      ls_node-value = |{ iv_data }|.
     ELSE.
       zcx_abapgit_ajson_error=>raise( |Unexpected elementary type [{
         io_type->type_kind }] @{ is_prefix-path && is_prefix-name }| ).
     ENDIF.
 
+    APPEND ls_node TO ct_nodes.
+
   ENDMETHOD.
 
   METHOD convert_ref.
 
-    FIELD-SYMBOLS <n> LIKE LINE OF ct_nodes.
+    DATA ls_node LIKE LINE OF ct_nodes.
 
-    APPEND INITIAL LINE TO ct_nodes ASSIGNING <n>.
-
-    <n>-path  = is_prefix-path.
-    <n>-name  = is_prefix-name.
-    <n>-index = iv_index.
-    <n>-order = iv_item_order.
+    ls_node-path  = is_prefix-path.
+    ls_node-name  = is_prefix-name.
+    ls_node-index = iv_index.
+    ls_node-order = iv_item_order.
 
     IF mi_custom_mapping IS BOUND.
-      <n>-name = mi_custom_mapping->to_json( iv_path = is_prefix-path
-                                             iv_name = is_prefix-name ).
+      ls_node-name = mi_custom_mapping->to_json(
+        iv_path = is_prefix-path
+        iv_name = is_prefix-name ).
     ENDIF.
 
-    IF <n>-name IS INITIAL.
-      <n>-name  = is_prefix-name.
+    IF ls_node-name IS INITIAL.
+      ls_node-name  = is_prefix-name.
     ENDIF.
 
     IF iv_data IS INITIAL.
-      <n>-type  = zif_abapgit_ajson=>node_type-null.
-      <n>-value = 'null'.
+      ls_node-type  = zif_abapgit_ajson=>node_type-null.
+      ls_node-value = 'null'.
     ELSE.
       " TODO support data references
       zcx_abapgit_ajson_error=>raise( |Unexpected reference @{ is_prefix-path && is_prefix-name }| ).
     ENDIF.
+
+    APPEND ls_node TO ct_nodes.
 
   ENDMETHOD.
 
@@ -1149,10 +1159,39 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
     DATA lt_comps TYPE cl_abap_structdescr=>component_table.
     DATA ls_next_prefix LIKE is_prefix.
     DATA lv_item_order TYPE i.
+    DATA ls_root LIKE LINE OF ct_nodes.
 
-    FIELD-SYMBOLS <root> LIKE LINE OF ct_nodes.
+    FIELD-SYMBOLS <root> LIKE ls_root.
     FIELD-SYMBOLS <c> LIKE LINE OF lt_comps.
     FIELD-SYMBOLS <val> TYPE any.
+
+    " Object root
+
+    IF cs_root IS SUPPLIED. " call for include structure
+      ASSIGN cs_root TO <root>.
+    ELSE. " First call
+      ls_root-path  = is_prefix-path.
+      ls_root-name  = is_prefix-name.
+      ls_root-type  = zif_abapgit_ajson=>node_type-object.
+      ls_root-index = iv_index.
+
+      IF mi_custom_mapping IS BOUND.
+        ls_root-name = mi_custom_mapping->to_json(
+          iv_path = is_prefix-path
+          iv_name = is_prefix-name ).
+      ENDIF.
+
+      IF ls_root-name IS INITIAL.
+        ls_root-name  = is_prefix-name.
+      ENDIF.
+
+      ls_root-order = iv_item_order.
+
+      APPEND ls_root TO ct_nodes ASSIGNING <root>.
+
+    ENDIF.
+
+    " Object attributes
 
     lo_struc ?= io_type.
     lt_comps = lo_struc->get_components( ).
@@ -1160,27 +1199,6 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
     " but ! we still need it to identify booleans
     " and rtti seems to cache type descriptions really well (https://github.com/sbcgua/benchmarks.git)
     " the structures will be repeated in real life
-
-    IF cs_root IS SUPPLIED. " call for include structure
-      ASSIGN cs_root TO <root>.
-    ELSE. " First call
-      APPEND INITIAL LINE TO ct_nodes ASSIGNING <root>.
-      <root>-path  = is_prefix-path.
-      <root>-name  = is_prefix-name.
-      <root>-type  = zif_abapgit_ajson=>node_type-object.
-      <root>-index = iv_index.
-
-      IF mi_custom_mapping IS BOUND.
-        <root>-name = mi_custom_mapping->to_json( iv_path = is_prefix-path
-                                                  iv_name = is_prefix-name ).
-      ENDIF.
-
-      IF <root>-name IS INITIAL.
-        <root>-name  = is_prefix-name.
-      ENDIF.
-
-      <root>-order = iv_item_order.
-    ENDIF.
 
     ls_next_prefix-path = is_prefix-path && is_prefix-name && '/'.
 
@@ -1229,29 +1247,36 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
     DATA lo_ltype TYPE REF TO cl_abap_typedescr.
     DATA ls_next_prefix LIKE is_prefix.
     DATA lv_tabix TYPE sy-tabix.
+    DATA ls_root LIKE LINE OF ct_nodes.
 
-    FIELD-SYMBOLS <root> LIKE LINE OF ct_nodes.
+    FIELD-SYMBOLS <root> LIKE ls_root.
     FIELD-SYMBOLS <tab> TYPE ANY TABLE.
     FIELD-SYMBOLS <val> TYPE any.
 
-    lo_table ?= io_type.
-    lo_ltype = lo_table->get_table_line_type( ).
+    " Array root
 
-    APPEND INITIAL LINE TO ct_nodes ASSIGNING <root>.
-    <root>-path  = is_prefix-path.
-    <root>-name  = is_prefix-name.
-    <root>-type  = zif_abapgit_ajson=>node_type-array.
-    <root>-index = iv_index.
-    <root>-order = iv_item_order.
+    ls_root-path  = is_prefix-path.
+    ls_root-name  = is_prefix-name.
+    ls_root-type  = zif_abapgit_ajson=>node_type-array.
+    ls_root-index = iv_index.
+    ls_root-order = iv_item_order.
 
     IF mi_custom_mapping IS BOUND.
-      <root>-name = mi_custom_mapping->to_json( iv_path = is_prefix-path
-                                                iv_name = is_prefix-name ).
+      ls_root-name = mi_custom_mapping->to_json(
+        iv_path = is_prefix-path
+        iv_name = is_prefix-name ).
     ENDIF.
 
-    IF <root>-name IS INITIAL.
-      <root>-name  = is_prefix-name.
+    IF ls_root-name IS INITIAL.
+      ls_root-name  = is_prefix-name.
     ENDIF.
+
+    APPEND ls_root TO ct_nodes ASSIGNING <root>.
+
+    " Array items
+
+    lo_table ?= io_type.
+    lo_ltype  = lo_table->get_table_line_type( ).
 
     ls_next_prefix-path = is_prefix-path && is_prefix-name && '/'.
     ASSIGN iv_data TO <tab>.
@@ -1283,7 +1308,7 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
     lo_type = cl_abap_typedescr=>describe_by_data( iv_data ).
 
     CREATE OBJECT lo_converter.
-    lo_converter->mi_custom_mapping = ii_custom_mapping.
+    lo_converter->mi_custom_mapping  = ii_custom_mapping.
     lo_converter->mv_keep_item_order = iv_keep_item_order.
 
     lo_converter->insert_value_with_type(
@@ -1301,8 +1326,7 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
   METHOD insert_value_with_type.
 
     DATA lv_prefix TYPE string.
-
-    FIELD-SYMBOLS <n> LIKE LINE OF ct_nodes.
+    DATA ls_node LIKE LINE OF ct_nodes.
 
     lv_prefix = is_prefix-path && is_prefix-name.
     IF io_type->type_kind CO 'CNgXyDT'. " Char like, date/time, xstring
@@ -1324,23 +1348,124 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
       zcx_abapgit_ajson_error=>raise( |Unexpected type [{ io_type->type_kind }] @{ lv_prefix }| ).
     ENDIF.
 
-    APPEND INITIAL LINE TO ct_nodes ASSIGNING <n>.
-
-    <n>-path  = is_prefix-path.
-    <n>-name  = is_prefix-name.
-    <n>-index = iv_index.
-    <n>-value = iv_data.
-    <n>-type  = iv_type.
-    <n>-order = iv_item_order.
+    ls_node-path  = is_prefix-path.
+    ls_node-name  = is_prefix-name.
+    ls_node-index = iv_index.
+    ls_node-value = iv_data.
+    ls_node-type  = iv_type.
+    ls_node-order = iv_item_order.
 
     IF mi_custom_mapping IS BOUND.
-      <n>-name = mi_custom_mapping->to_json( iv_path = is_prefix-path
-                                             iv_name = is_prefix-name ).
+      ls_node-name = mi_custom_mapping->to_json(
+        iv_path = is_prefix-path
+        iv_name = is_prefix-name ).
     ENDIF.
 
-    IF <n>-name IS INITIAL.
-      <n>-name  = is_prefix-name.
+    IF ls_node-name IS INITIAL.
+      ls_node-name  = is_prefix-name.
     ENDIF.
+
+    APPEND ls_node TO ct_nodes.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+**********************************************************************
+* FILTER RUNNER
+**********************************************************************
+
+CLASS lcl_filter_runner DEFINITION FINAL.
+  PUBLIC SECTION.
+    METHODS run
+      IMPORTING
+        ii_filter TYPE REF TO zif_abapgit_ajson_filter
+        it_source_tree TYPE zif_abapgit_ajson=>ty_nodes_ts
+      CHANGING
+        ct_dest_tree TYPE zif_abapgit_ajson=>ty_nodes_ts
+      RAISING
+        zcx_abapgit_ajson_error.
+
+  PRIVATE SECTION.
+    DATA mi_filter TYPE REF TO zif_abapgit_ajson_filter.
+    DATA mr_source_tree TYPE REF TO zif_abapgit_ajson=>ty_nodes_ts.
+    DATA mr_dest_tree TYPE REF TO zif_abapgit_ajson=>ty_nodes_ts.
+
+    METHODS walk
+      IMPORTING
+        iv_path TYPE string
+      CHANGING
+        cs_parent TYPE zif_abapgit_ajson=>ty_node OPTIONAL
+      RAISING
+        zcx_abapgit_ajson_error.
+
+ENDCLASS.
+
+CLASS lcl_filter_runner IMPLEMENTATION.
+
+  METHOD run.
+
+    ASSERT ii_filter IS BOUND.
+    mi_filter = ii_filter.
+    CLEAR ct_dest_tree.
+
+    GET REFERENCE OF it_source_tree INTO mr_source_tree.
+    GET REFERENCE OF ct_dest_tree INTO mr_dest_tree.
+
+    walk( iv_path = '' ).
+
+  ENDMETHOD.
+
+  METHOD walk.
+
+    DATA ls_node TYPE zif_abapgit_ajson=>ty_node.
+
+    LOOP AT mr_source_tree->* INTO ls_node WHERE path = iv_path.
+      CASE ls_node-type.
+        WHEN zif_abapgit_ajson=>node_type-boolean OR zif_abapgit_ajson=>node_type-null
+          OR zif_abapgit_ajson=>node_type-number OR zif_abapgit_ajson=>node_type-string.
+
+          IF mi_filter->keep_node( ls_node ) = abap_false.
+            CONTINUE.
+          ENDIF.
+
+        WHEN zif_abapgit_ajson=>node_type-array OR zif_abapgit_ajson=>node_type-object.
+
+          IF mi_filter->keep_node(
+              is_node  = ls_node
+              iv_visit = zif_abapgit_ajson_filter=>visit_type-open ) = abap_false.
+            CONTINUE.
+          ENDIF.
+
+          " Intentionally clear AFTER "open"
+          CLEAR ls_node-children.
+
+          walk(
+            EXPORTING
+              iv_path = iv_path && ls_node-name && `/`
+            CHANGING
+              cs_parent    = ls_node ).
+
+          IF mi_filter->keep_node(
+              is_node  = ls_node
+              iv_visit = zif_abapgit_ajson_filter=>visit_type-close ) = abap_false.
+            CONTINUE.
+          ENDIF.
+
+        WHEN OTHERS.
+          zcx_abapgit_ajson_error=>raise( |Unexpected node type { ls_node-type }| ).
+      ENDCASE.
+
+      IF cs_parent IS SUPPLIED.
+        cs_parent-children = cs_parent-children + 1.
+        IF cs_parent-type = zif_abapgit_ajson=>node_type-array.
+          ls_node-name  = |{ cs_parent-children }|.
+          ls_node-index = cs_parent-children.
+        ENDIF.
+      ENDIF.
+      INSERT ls_node INTO TABLE mr_dest_tree->*.
+
+    ENDLOOP.
 
   ENDMETHOD.
 

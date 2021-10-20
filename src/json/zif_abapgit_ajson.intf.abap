@@ -1,7 +1,7 @@
 INTERFACE zif_abapgit_ajson
   PUBLIC.
 
-  CONSTANTS version TYPE string VALUE 'v1.1.0'. "#EC NOTEXT
+  CONSTANTS version TYPE string VALUE 'v1.1.1-beta'. "#EC NOTEXT
   CONSTANTS origin TYPE string VALUE 'https://github.com/sbcgua/ajson'. "#EC NOTEXT
   CONSTANTS license TYPE string VALUE 'MIT'. "#EC NOTEXT
 
