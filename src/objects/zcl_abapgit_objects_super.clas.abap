@@ -306,13 +306,7 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
           iv_sub_obj_name = iv_sub_obj_name
           iv_line_number  = iv_line_number ).
 
-        cl_gui_frontend_services=>execute(
-          EXPORTING  document = lv_adt_link
-          EXCEPTIONS OTHERS   = 1 ).
-
-        IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise( |ADT Jump Error - failed to open link { lv_adt_link }. Subrc={ sy-subrc }| ).
-        ENDIF.
+        zcl_abapgit_ui_factory=>get_frontend_services( )->execute( iv_document = lv_adt_link ).
 
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise( iv_text = 'ADT Jump Error'

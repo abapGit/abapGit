@@ -1,11 +1,11 @@
 CLASS zcl_abapgit_frontend_services DEFINITION
   PUBLIC
   CREATE PRIVATE
-  GLOBAL FRIENDS zcl_abapgit_ui_factory .
+  GLOBAL FRIENDS zcl_abapgit_ui_factory.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_frontend_services .
+    INTERFACES zif_abapgit_frontend_services.
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -193,9 +193,9 @@ CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
     " Note: do not use a string table for 'it_data'!
     cl_gui_frontend_services=>clipboard_export(
       EXPORTING
-        no_auth_check       = iv_no_auth_check
+        no_auth_check        = iv_no_auth_check
       IMPORTING
-        data                = it_data
+        data                 = it_data
       CHANGING
         rc                   = lv_rc
       EXCEPTIONS
@@ -208,4 +208,95 @@ CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
   ENDMETHOD.
+
+  METHOD zif_abapgit_frontend_services~execute.
+    cl_gui_frontend_services=>execute(
+      EXPORTING
+        document               = iv_document
+        application            = iv_application
+        parameter              = iv_parameter
+        default_directory      = iv_default_directory
+        maximized              = iv_maximized
+        minimized              = iv_minimized
+        synchronous            = iv_synchronous
+        operation              = iv_operation
+      EXCEPTIONS
+        cntl_error             = 1
+        error_no_gui           = 2
+        bad_parameter          = 3
+        file_not_found         = 4
+        path_not_found         = 5
+        file_extension_unknown = 6
+        error_execute_failed   = 7
+        synchronous_failed     = 8
+        not_supported_by_gui   = 9
+        OTHERS                 = 10 ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_frontend_services~get_system_directory.
+    cl_gui_frontend_services=>get_system_directory(
+      CHANGING
+        system_directory     = cv_system_directory
+      EXCEPTIONS
+        cntl_error           = 1
+        error_no_gui         = 2
+        not_supported_by_gui = 3
+        OTHERS               = 4 ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_frontend_services~directory_browse.
+    cl_gui_frontend_services=>directory_browse(
+      EXPORTING
+        window_title         = iv_window_title
+        initial_folder       = iv_initial_folder
+      CHANGING
+        selected_folder      = cv_selected_folder
+      EXCEPTIONS
+        cntl_error           = 1
+        error_no_gui         = 2
+        not_supported_by_gui = 3
+        OTHERS               = 4 ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_frontend_services~get_file_separator.
+    cl_gui_frontend_services=>get_file_separator(
+      CHANGING
+        file_separator       = cv_file_separator
+      EXCEPTIONS
+        not_supported_by_gui = 1
+        error_no_gui         = 2
+        cntl_error           = 3
+        OTHERS               = 4 ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_frontend_services~get_gui_version.
+    cl_gui_frontend_services=>get_gui_version(
+      CHANGING
+        version_table            = ct_version_table
+        rc                       = cv_rc
+      EXCEPTIONS
+        get_gui_version_failed   = 1
+        cant_write_version_table = 2
+        gui_no_version           = 3
+        cntl_error               = 4
+        error_no_gui             = 5
+        not_supported_by_gui     = 6
+        OTHERS                   = 7 ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+  ENDMETHOD.
+
 ENDCLASS.
