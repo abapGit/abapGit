@@ -55,6 +55,16 @@ CLASS zcl_abapgit_ajson DEFINITION
       RETURNING
         VALUE(ro_instance) TYPE REF TO zcl_abapgit_ajson.
 
+    " Experimental ! May change
+    CLASS-METHODS create_from
+      IMPORTING
+        !ii_source_json TYPE REF TO zif_abapgit_ajson
+        !ii_filter TYPE REF TO zif_abapgit_ajson_filter OPTIONAL
+      RETURNING
+        VALUE(ro_instance) TYPE REF TO zcl_abapgit_ajson
+      RAISING
+        zcx_abapgit_ajson_error .
+
   PROTECTED SECTION.
 
   PRIVATE SECTION.
@@ -84,7 +94,6 @@ CLASS zcl_abapgit_ajson DEFINITION
         iv_name           TYPE string
       RETURNING
         VALUE(rv_deleted) TYPE abap_bool.
-
 ENDCLASS.
 
 
@@ -95,6 +104,32 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
   METHOD create_empty.
     CREATE OBJECT ro_instance.
     ro_instance->mi_custom_mapping = ii_custom_mapping.
+  ENDMETHOD.
+
+
+  METHOD create_from.
+
+    DATA lo_filter_runner TYPE REF TO lcl_filter_runner.
+
+    IF ii_source_json IS NOT BOUND.
+      zcx_abapgit_ajson_error=>raise( 'Source not bound' ).
+    ENDIF.
+
+    CREATE OBJECT ro_instance.
+
+    IF ii_filter IS BOUND.
+      CREATE OBJECT lo_filter_runner.
+      lo_filter_runner->run(
+        EXPORTING
+          ii_filter = ii_filter
+          it_source_tree = ii_source_json->mt_json_tree
+        CHANGING
+          ct_dest_tree = ro_instance->mt_json_tree ).
+    ELSE.
+      ro_instance->mt_json_tree = ii_source_json->mt_json_tree.
+      " Copy keep order and custom mapping ???
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -453,9 +488,11 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
 
     DATA lt_new_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt.
     DATA ls_new_path TYPE zif_abapgit_ajson=>ty_path_name.
+    DATA lv_new_index TYPE i.
 
+    lv_new_index     = lr_parent->children + 1.
     ls_new_path-path = lcl_utils=>normalize_path( iv_path ).
-    ls_new_path-name = |{ lr_parent->children + 1 }|.
+    ls_new_path-name = |{ lv_new_index }|.
 
     lt_new_nodes = lcl_abap_to_json=>convert(
       iv_keep_item_order = mv_keep_item_order
@@ -463,10 +500,10 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
       is_prefix = ls_new_path ).
     READ TABLE lt_new_nodes INDEX 1 REFERENCE INTO lr_new_node. " assume first record is the array item - not ideal !
     ASSERT sy-subrc = 0.
-    lr_new_node->index = lr_parent->children + 1.
+    lr_new_node->index = lv_new_index.
 
     " update data
-    lr_parent->children = lr_parent->children + 1.
+    lr_parent->children = lv_new_index.
     INSERT LINES OF lt_new_nodes INTO TABLE mt_json_tree.
 
     ri_json = me.
@@ -553,8 +590,10 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
     ENDIF.
 
     " update data
-    lr_parent->children = lr_parent->children + 1.
-    INSERT LINES OF lt_new_nodes INTO TABLE mt_json_tree.
+    IF lines( lt_new_nodes ) > 0.
+      lr_parent->children = lr_parent->children + 1.
+      INSERT LINES OF lt_new_nodes INTO TABLE mt_json_tree.
+    ENDIF.
 
   ENDMETHOD.
 

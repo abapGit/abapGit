@@ -144,11 +144,12 @@ CLASS zcl_abapgit_zip IMPLEMENTATION.
 
   METHOD export_object.
 
-    DATA: ls_tadir      TYPE zif_abapgit_definitions=>ty_tadir,
-          lv_folder     TYPE string,
-          lv_fullpath   TYPE string,
-          lv_sep        TYPE c LENGTH 1,
-          ls_files_item TYPE zcl_abapgit_objects=>ty_serialization.
+    DATA: ls_tadir         TYPE zif_abapgit_definitions=>ty_tadir,
+          lv_folder        TYPE string,
+          lv_fullpath      TYPE string,
+          lv_sep           TYPE c LENGTH 1,
+          ls_files_item    TYPE zcl_abapgit_objects=>ty_serialization,
+          lo_frontend_serv TYPE REF TO zif_abapgit_frontend_services.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF ls_files_item-files.
 
@@ -170,17 +171,18 @@ CLASS zcl_abapgit_zip IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Empty' ).
     ENDIF.
 
-    cl_gui_frontend_services=>directory_browse(
+    lo_frontend_serv = zcl_abapgit_ui_factory=>get_frontend_services( ).
+    lo_frontend_serv->directory_browse(
       EXPORTING
-        initial_folder  = gv_prev
+        iv_initial_folder  = gv_prev
       CHANGING
-        selected_folder = lv_folder ).
+        cv_selected_folder = lv_folder ).
     IF lv_folder IS INITIAL.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
     gv_prev = lv_folder.
-    cl_gui_frontend_services=>get_file_separator( CHANGING file_separator = lv_sep ).
+    lo_frontend_serv->get_file_separator( CHANGING cv_file_separator = lv_sep ).
 
     LOOP AT ls_files_item-files ASSIGNING <ls_file>.
       lv_fullpath = |{ lv_folder }{ lv_sep }{ <ls_file>-filename }|.
