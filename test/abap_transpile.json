@@ -162,11 +162,15 @@
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "find_loc",          "note": "assert failed"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_negative"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap", "note": "Void type: TIMESTAMPL"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_obj"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_ajson"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_tab"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_tab_hashed", "note": "runtime error, SortByLengthZero"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "arrays"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "root_assignment"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "get_timestamp", "note": "Void type: TIMESTAMPL"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_parser_test", "method": "parse_error"},
 
@@ -174,8 +178,29 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_index",  "note": "Index not found in table @/10"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_simple", "note": "Index not found in table @/10"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "item_order_integrated"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "stringify"},
+
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_abap_to_json", "method": "set_obj"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_abap_to_json", "method": "set_array"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_abap_to_json", "method": "set_complex_obj"},
+
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_filter_test", "method": "simple_test"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_filter_test", "method": "array_test"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_filter_test", "method": "visit_types"},
+
+      {"object": "ZCL_ABAPGIT_AJSON_FILTER_LIB", "class": "ltcl_filters_test", "method": "empty_filter_simple"},
+      {"object": "ZCL_ABAPGIT_AJSON_FILTER_LIB", "class": "ltcl_filters_test", "method": "empty_filter_deep"},
+      {"object": "ZCL_ABAPGIT_AJSON_FILTER_LIB", "class": "ltcl_filters_test", "method": "path_filter"},
+      {"object": "ZCL_ABAPGIT_AJSON_FILTER_LIB", "class": "ltcl_filters_test", "method": "path_filter_deep"},
+      {"object": "ZCL_ABAPGIT_AJSON_FILTER_LIB", "class": "ltcl_filters_test", "method": "and_filter"},
 
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_camel_case", "method": "to_abap", "note": "secondary key fields? READ WITH KEY, Path not found @/FieldData"},
+      {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_camel_case", "method": "to_json"},
+      {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_camel_case", "method": "to_json_first_lower"},
+
+      {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_fields", "method": "to_json"},
+      {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_to_lower", "method": "to_json"},
+      {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_to_upper", "method": "to_json"},
 
       {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_renderable", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
       {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_event_handler", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
