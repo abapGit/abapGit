@@ -1695,6 +1695,7 @@ CLASS ltcl_writer_test DEFINITION FINAL
     METHODS read_only FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_array_obj FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_with_type FOR TESTING RAISING zcx_abapgit_ajson_error.
+
     METHODS set_with_type_slice
       IMPORTING
         io_json_in TYPE REF TO zcl_abapgit_ajson
@@ -1920,24 +1921,22 @@ CLASS ltcl_writer_test IMPLEMENTATION.
   METHOD ignore_empty.
 
     DATA lo_nodes TYPE REF TO lcl_nodes_helper.
-    DATA lo_cut TYPE REF TO zcl_abapgit_ajson.
-    DATA li_writer TYPE REF TO zif_abapgit_ajson.
+    DATA li_cut TYPE REF TO zif_abapgit_ajson.
 
-    lo_cut = zcl_abapgit_ajson=>create_empty( ).
-    li_writer = lo_cut.
+    li_cut = zcl_abapgit_ajson=>create_empty( ).
 
     CREATE OBJECT lo_nodes.
     lo_nodes->add( '        |      |object |     ||1' ).
     lo_nodes->add( '/       |a     |num    |1    ||0' ).
 
-    li_writer->set(
+    li_cut->set(
       iv_path = '/a'
       iv_val  = 1 ).
-    li_writer->set( " ignore empty
+    li_cut->set( " ignore empty
       iv_path = '/b'
       iv_val  = 0 ).
     cl_abap_unit_assert=>assert_equals(
-      act = lo_cut->mt_json_tree
+      act = li_cut->mt_json_tree
       exp = lo_nodes->sorted( ) ).
 
     CREATE OBJECT lo_nodes.
@@ -1945,12 +1944,12 @@ CLASS ltcl_writer_test IMPLEMENTATION.
     lo_nodes->add( '/       |a     |num    |1    ||0' ).
     lo_nodes->add( '/       |b     |num    |0    ||0' ).
 
-    li_writer->set(
+    li_cut->set(
       iv_ignore_empty = abap_false
       iv_path = '/b'
       iv_val  = 0 ).
     cl_abap_unit_assert=>assert_equals(
-      act = lo_cut->mt_json_tree
+      act = li_cut->mt_json_tree
       exp = lo_nodes->sorted( ) ).
 
   ENDMETHOD.
@@ -2610,6 +2609,7 @@ CLASS ltcl_writer_test IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
+
 ENDCLASS.
 
 
@@ -3239,6 +3239,177 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lt_nodes
       exp = lo_nodes_exp->mt_nodes ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+**********************************************************************
+* FILTER TEST
+**********************************************************************
+
+CLASS ltcl_filter_test DEFINITION FINAL
+  FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
+
+  PUBLIC SECTION.
+    INTERFACES zif_abapgit_ajson_filter.
+
+  PRIVATE SECTION.
+
+    TYPES:
+      BEGIN OF ty_visit_history,
+        path TYPE string,
+        type TYPE zif_abapgit_ajson_filter=>ty_visit_type,
+      END OF ty_visit_history.
+
+    DATA mt_visit_history TYPE TABLE OF ty_visit_history.
+
+    METHODS simple_test FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS array_test FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS visit_types FOR TESTING RAISING zcx_abapgit_ajson_error.
+
+
+ENDCLASS.
+
+CLASS ltcl_filter_test IMPLEMENTATION.
+
+  METHOD zif_abapgit_ajson_filter~keep_node.
+
+    DATA ls_visit_history LIKE LINE OF mt_visit_history.
+
+    IF iv_visit > 0.
+      ls_visit_history-type = iv_visit.
+      ls_visit_history-path = is_node-path && is_node-name && '/'.
+      APPEND ls_visit_history TO mt_visit_history.
+    ENDIF.
+
+    rv_keep = boolc( NOT is_node-name CA 'xX' AND NOT is_node-value CA 'xX' ).
+
+  ENDMETHOD.
+
+  METHOD simple_test.
+
+    DATA lo_json TYPE REF TO zcl_abapgit_ajson.
+    DATA lo_json_filtered TYPE REF TO zcl_abapgit_ajson.
+    DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
+
+    lo_json = zcl_abapgit_ajson=>create_empty( ).
+    lo_json->set(
+      iv_path = '/a'
+      iv_val  = 1 ).
+    lo_json->set(
+      iv_path = '/b'
+      iv_val  = 1 ).
+    lo_json->set(
+      iv_path = '/x'
+      iv_val  = 1 ).
+    lo_json->set(
+      iv_path = '/c/x'
+      iv_val  = 1 ).
+    lo_json->set(
+      iv_path = '/c/y'
+      iv_val  = 1 ).
+
+    lo_json_filtered = zcl_abapgit_ajson=>create_from(
+      ii_source_json = lo_json
+      ii_filter      = me ).
+
+    CREATE OBJECT lo_nodes_exp.
+    lo_nodes_exp->add( '       |      |object |     | |3' ).
+    lo_nodes_exp->add( '/      |a     |num    |1    | |0' ).
+    lo_nodes_exp->add( '/      |b     |num    |1    | |0' ).
+    lo_nodes_exp->add( '/      |c     |object |     | |1' ).
+    lo_nodes_exp->add( '/c/    |y     |num    |1    | |0' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_json_filtered->mt_json_tree
+      exp = lo_nodes_exp->sorted( ) ).
+
+  ENDMETHOD.
+
+  METHOD array_test.
+
+    DATA lo_json TYPE REF TO zcl_abapgit_ajson.
+    DATA lo_json_filtered TYPE REF TO zcl_abapgit_ajson.
+    DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
+
+    lo_json = zcl_abapgit_ajson=>create_empty( ).
+    lo_json->touch_array( '/' ).
+    lo_json->push(
+      iv_path = '/'
+      iv_val  = 'a' ).
+    lo_json->push(
+      iv_path = '/'
+      iv_val  = 'x' ).
+    lo_json->push(
+      iv_path = '/'
+      iv_val  = 'b' ).
+
+    lo_json_filtered = zcl_abapgit_ajson=>create_from(
+      ii_source_json = lo_json
+      ii_filter      = me ).
+
+    CREATE OBJECT lo_nodes_exp.
+    lo_nodes_exp->add( '       |      |array  |     | |2' ).
+    lo_nodes_exp->add( '/      |1     |str    |a    |1|0' ).
+    lo_nodes_exp->add( '/      |2     |str    |b    |2|0' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_json_filtered->mt_json_tree
+      exp = lo_nodes_exp->sorted( ) ).
+
+  ENDMETHOD.
+
+  METHOD visit_types.
+
+    DATA lo_json TYPE REF TO zcl_abapgit_ajson.
+    DATA lo_json_filtered TYPE REF TO zcl_abapgit_ajson.
+
+    DATA lt_visits_exp LIKE mt_visit_history.
+    FIELD-SYMBOLS <v> LIKE LINE OF lt_visits_exp.
+
+    DATA:
+      BEGIN OF ls_dummy,
+        d TYPE i VALUE 10,
+        e TYPE i VALUE 20,
+      END OF ls_dummy.
+
+    CLEAR mt_visit_history.
+
+    lo_json = zcl_abapgit_ajson=>create_empty( ).
+    lo_json->touch_array( '/' ).
+    lo_json->push(
+      iv_path = '/'
+      iv_val  = 'a' ).
+    lo_json->push(
+      iv_path = '/'
+      iv_val  = 'b' ).
+    lo_json->push(
+      iv_path = '/'
+      iv_val  = ls_dummy ).
+
+    lo_json_filtered = zcl_abapgit_ajson=>create_from(
+      ii_source_json = lo_json
+      ii_filter      = me ).
+
+    APPEND INITIAL LINE TO lt_visits_exp ASSIGNING <v>.
+    <v>-path = '/'.
+    <v>-type = zif_abapgit_ajson_filter=>visit_type-open.
+    APPEND INITIAL LINE TO lt_visits_exp ASSIGNING <v>.
+    <v>-path = '/3/'.
+    <v>-type = zif_abapgit_ajson_filter=>visit_type-open.
+    APPEND INITIAL LINE TO lt_visits_exp ASSIGNING <v>.
+    <v>-path = '/3/'.
+    <v>-type = zif_abapgit_ajson_filter=>visit_type-close.
+    APPEND INITIAL LINE TO lt_visits_exp ASSIGNING <v>.
+    <v>-path = '/'.
+    <v>-type = zif_abapgit_ajson_filter=>visit_type-close.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mt_visit_history
+      exp = lt_visits_exp ).
 
   ENDMETHOD.
 
