@@ -10,6 +10,7 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
     CONSTANTS c_abapgit_wikipage TYPE string VALUE 'https://docs.abapgit.org' ##NO_TEXT.
     CONSTANTS c_dotabap_homepage TYPE string VALUE 'https://dotabap.org' ##NO_TEXT.
     CONSTANTS c_abapgit_class TYPE seoclsname VALUE `ZCX_ABAPGIT_EXCEPTION` ##NO_TEXT.
+    CONSTANTS c_changelog_path TYPE string VALUE '/blob/main/changelog.txt' ##NO_TEXT.
 
     CLASS-METHODS open_abapgit_homepage
       RAISING
@@ -43,6 +44,11 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
     CLASS-METHODS check_sapgui
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS open_url_in_browser
+      IMPORTING
+        !iv_url TYPE string
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -158,50 +164,22 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
 
 
   METHOD open_abapgit_changelog.
-
-    cl_gui_frontend_services=>execute(
-      EXPORTING document = c_abapgit_repo && '/blob/main/changelog.txt'
-      EXCEPTIONS OTHERS = 1 ).
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Opening page in external browser failed.' ).
-    ENDIF.
-
+    open_url_in_browser( |{ c_abapgit_repo }{ c_changelog_path }| ).
   ENDMETHOD.
 
 
   METHOD open_abapgit_homepage.
-
-    cl_gui_frontend_services=>execute(
-      EXPORTING document = c_abapgit_homepage
-      EXCEPTIONS OTHERS = 1 ).
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Opening page in external browser failed.' ).
-    ENDIF.
-
+    open_url_in_browser( c_abapgit_homepage ).
   ENDMETHOD.
 
 
   METHOD open_abapgit_wikipage.
-
-    cl_gui_frontend_services=>execute(
-      EXPORTING document = c_abapgit_wikipage
-      EXCEPTIONS OTHERS = 1 ).
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Opening page in external browser failed.' ).
-    ENDIF.
-
+    open_url_in_browser( c_abapgit_wikipage ).
   ENDMETHOD.
 
 
   METHOD open_dotabap_homepage.
-
-    cl_gui_frontend_services=>execute(
-      EXPORTING document = c_dotabap_homepage
-      EXCEPTIONS OTHERS = 1 ).
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Opening page in external browser failed.' ).
-    ENDIF.
-
+    open_url_in_browser( c_dotabap_homepage ).
   ENDMETHOD.
 
 
@@ -294,4 +272,16 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
+  METHOD open_url_in_browser.
+    DATA lx_error TYPE REF TO zcx_abapgit_exception.
+
+    TRY.
+        zcl_abapgit_ui_factory=>get_frontend_services( )->execute( iv_document = iv_url ).
+      CATCH zcx_abapgit_exception INTO lx_error.
+        zcx_abapgit_exception=>raise( iv_text     = 'Opening page in external browser failed.'
+                                      ix_previous = lx_error ).
+    ENDTRY.
+  ENDMETHOD.
+
 ENDCLASS.
