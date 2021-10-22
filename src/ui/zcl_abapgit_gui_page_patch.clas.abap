@@ -39,8 +39,7 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
       render_diff_head_after_state REDEFINITION,
       insert_nav REDEFINITION,
       render_line_split_row REDEFINITION,
-      refresh REDEFINITION,
-      modify_files_before_diff_calc REDEFINITION.
+      refresh REDEFINITION.
 
   PRIVATE SECTION.
 
@@ -664,26 +663,6 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
         iv_act   = c_actions-refresh_all
         iv_id    = c_actions-refresh_all
         iv_title = c_action_titles-refresh_all ).
-
-  ENDMETHOD.
-
-
-  METHOD modify_files_before_diff_calc.
-
-    DATA: ls_file LIKE LINE OF ct_files.
-
-    FIELD-SYMBOLS: <ls_diff_file_old> TYPE zcl_abapgit_gui_page_diff=>ty_file_diff.
-
-    " We need to supply files again in calculate_diff. Because
-    " we only want to refresh the visible files. Otherwise all
-    " diff files would appear.
-    " Which is not wanted when we previously only selected particular files.
-
-    LOOP AT it_diff_files_old ASSIGNING <ls_diff_file_old>.
-      CLEAR: ls_file.
-      MOVE-CORRESPONDING <ls_diff_file_old> TO ls_file-file.
-      INSERT ls_file INTO TABLE ct_files.
-    ENDLOOP.
 
   ENDMETHOD.
 
