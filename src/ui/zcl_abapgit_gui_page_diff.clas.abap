@@ -148,9 +148,9 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         VALUE(rv_is_refrseh) TYPE abap_bool.
     METHODS modify_files_before_diff_calc
       IMPORTING
-        it_diff_files_old TYPE ty_file_diffs
-      CHANGING
-        ct_files          TYPE zif_abapgit_definitions=>ty_stage_tt.
+        !it_diff_files_old TYPE ty_file_diffs
+      RETURNING
+        VALUE(rt_files)    TYPE zif_abapgit_definitions=>ty_stage_tt.
 
     METHODS render_content
         REDEFINITION .
@@ -625,6 +625,20 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
   METHOD modify_files_before_diff_calc.
 
+    DATA ls_file LIKE LINE OF rt_files.
+
+    FIELD-SYMBOLS <ls_diff_file_old> TYPE zcl_abapgit_gui_page_diff=>ty_file_diff.
+
+    " We need to supply files again in calculate_diff. Because
+    " we only want to refresh the visible files. Otherwise all
+    " diff files would appear.
+    " Which is not wanted when we previously only selected particular files.
+    LOOP AT it_diff_files_old ASSIGNING <ls_diff_file_old>.
+      CLEAR ls_file.
+      MOVE-CORRESPONDING <ls_diff_file_old> TO ls_file-file.
+      INSERT ls_file INTO TABLE rt_files.
+    ENDLOOP.
+
   ENDMETHOD.
 
 
@@ -666,11 +680,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
         refresh_local_object( iv_action ).
     ENDCASE.
 
-    modify_files_before_diff_calc(
-      EXPORTING
-        it_diff_files_old = lt_diff_files_old
-      CHANGING
-        ct_files          = lt_files ).
+    lt_files = modify_files_before_diff_calc( lt_diff_files_old ).
 
     calculate_diff( it_files = lt_files ).
 
@@ -879,24 +889,19 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
   METHOD render_diff_head_after_state.
 
-    DATA: lv_act_id TYPE string.
-
     IF is_diff-fstate = c_fstate-both AND mv_unified = abap_true.
       ii_html->add( '<span class="attention pad-sides">Attention: Unified mode'
                  && ' highlighting for MM assumes local file is newer ! </span>' ).
     ENDIF.
 
     IF is_diff-obj_type IS NOT INITIAL AND is_diff-obj_name IS NOT INITIAL.
-
-      lv_act_id = |{ c_actions-refresh_local_object }_{ is_diff-obj_type }_{ is_diff-obj_name }|.
-
-      ii_html->add_a(
-          iv_txt   = |Refresh|
-          iv_typ   = zif_abapgit_html=>c_action_type-sapevent
-          iv_act   = lv_act_id
-          iv_id    = lv_act_id
-          iv_title = |Local refresh of this object| ).
-
+      ii_html->add( '<span class="repo_name">' ).
+      ii_html->add_a( iv_txt   = ii_html->icon( iv_name  = 'redo-alt-solid'
+                                                iv_class = 'pad-sides'
+                                                iv_hint  = 'Local refresh of this object' )
+                      iv_act   = |{ c_actions-refresh_local_object }_{ is_diff-obj_type }_{ is_diff-obj_name }|
+                      iv_class = |url| ).
+      ii_html->add( '</span>' ).
     ENDIF.
 
   ENDMETHOD.
@@ -1214,6 +1219,21 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     ls_hotkey_action-description = |Refresh local|.
     ls_hotkey_action-action      = c_actions-refresh_local.
     ls_hotkey_action-hotkey      = |r|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description = |Refresh all|.
+    ls_hotkey_action-action      = c_actions-refresh_all.
+    ls_hotkey_action-hotkey      = |a|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description = |Toogle split/unified|.
+    ls_hotkey_action-action      = c_actions-toggle_unified.
+    ls_hotkey_action-hotkey      = |u|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description = |Toogle hidden characters|.
+    ls_hotkey_action-action      = c_actions-toggle_hidden_chars.
+    ls_hotkey_action-hotkey      = |h|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
