@@ -158,7 +158,6 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
     ls_hotkey_action-action      = |refreshAll|.
     ls_hotkey_action-hotkey      = |a|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-    
   ENDMETHOD.
 
 
