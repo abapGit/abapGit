@@ -627,7 +627,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     DATA ls_file LIKE LINE OF rt_files.
 
-    FIELD-SYMBOLS <ls_diff_file_old> TYPE zcl_abapgit_gui_page_diff=>ty_file_diff.
+    FIELD-SYMBOLS <ls_diff_file_old> TYPE ty_file_diff.
 
     " We need to supply files again in calculate_diff. Because
     " we only want to refresh the visible files. Otherwise all
