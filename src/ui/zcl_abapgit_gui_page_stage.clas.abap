@@ -361,7 +361,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
 
   METHOD init_files.
+     "Call Repo Pre-Filter Dialog
+    zcl_abapgit_repo_pre_filter=>get_instance( )->init( ).
+    zcl_abapgit_repo_pre_filter=>set_filter_values_via_dialog( ).
+
     ms_files = zcl_abapgit_factory=>get_stage_logic( )->get( mo_repo ).
+
+    "Init the Repo Pre Filter againg, so that it will not hinder other functions
+    zcl_abapgit_repo_pre_filter=>get_instance( )->init( ).
     IF lines( ms_files-local ) = 0 AND lines( ms_files-remote ) = 0.
       zcx_abapgit_exception=>raise( 'There are no changes that could be staged' ).
     ENDIF.

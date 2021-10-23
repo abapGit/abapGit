@@ -1,47 +1,49 @@
-CLASS zcl_abapgit_repo_online DEFINITION
-  PUBLIC
-  INHERITING FROM zcl_abapgit_repo
-  FINAL
-  CREATE PUBLIC .
+class ZCL_ABAPGIT_REPO_ONLINE definition
+  public
+  inheriting from ZCL_ABAPGIT_REPO
+  final
+  create public .
 
-  PUBLIC SECTION.
+public section.
 
-    INTERFACES zif_abapgit_repo_online .
+  interfaces ZIF_ABAPGIT_REPO_ONLINE .
 
-    ALIASES create_branch
-      FOR zif_abapgit_repo_online~create_branch .
-    ALIASES get_current_remote
-      FOR zif_abapgit_repo_online~get_current_remote .
-    ALIASES get_selected_branch
-      FOR zif_abapgit_repo_online~get_selected_branch .
-    ALIASES get_selected_commit
-      FOR zif_abapgit_repo_online~get_selected_commit .
-    ALIASES get_url
-      FOR zif_abapgit_repo_online~get_url .
-    ALIASES push
-      FOR zif_abapgit_repo_online~push .
-    ALIASES select_branch
-      FOR zif_abapgit_repo_online~select_branch .
-    ALIASES select_commit
-      FOR zif_abapgit_repo_online~select_commit .
-    ALIASES set_url
-      FOR zif_abapgit_repo_online~set_url .
-    ALIASES switch_origin
-      FOR zif_abapgit_repo_online~switch_origin .
+  aliases CREATE_BRANCH
+    for ZIF_ABAPGIT_REPO_ONLINE~CREATE_BRANCH .
+  aliases GET_CURRENT_REMOTE
+    for ZIF_ABAPGIT_REPO_ONLINE~GET_CURRENT_REMOTE .
+  aliases GET_SELECTED_BRANCH
+    for ZIF_ABAPGIT_REPO_ONLINE~GET_SELECTED_BRANCH .
+  aliases GET_SELECTED_COMMIT
+    for ZIF_ABAPGIT_REPO_ONLINE~GET_SELECTED_COMMIT .
+  aliases GET_URL
+    for ZIF_ABAPGIT_REPO_ONLINE~GET_URL .
+  aliases PUSH
+    for ZIF_ABAPGIT_REPO_ONLINE~PUSH .
+  aliases SELECT_BRANCH
+    for ZIF_ABAPGIT_REPO_ONLINE~SELECT_BRANCH .
+  aliases SELECT_COMMIT
+    for ZIF_ABAPGIT_REPO_ONLINE~SELECT_COMMIT .
+  aliases SET_URL
+    for ZIF_ABAPGIT_REPO_ONLINE~SET_URL .
+  aliases SWITCH_ORIGIN
+    for ZIF_ABAPGIT_REPO_ONLINE~SWITCH_ORIGIN .
 
-    METHODS check_and_create_package
-      IMPORTING
-        !iv_package TYPE devclass
-      RAISING
-        zcx_abapgit_exception .
+  methods CHECK_AND_CREATE_PACKAGE
+    importing
+      !IV_PACKAGE type DEVCLASS
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
 
-    METHODS get_files_remote
-        REDEFINITION .
-    METHODS get_name
-        REDEFINITION .
-    METHODS has_remote_source
-        REDEFINITION .
-  PROTECTED SECTION.
+  methods GET_FILES_REMOTE
+    redefinition .
+  methods GET_NAME
+    redefinition .
+  methods HAS_REMOTE_SOURCE
+    redefinition .
+  methods GET_FILES_LOCAL
+    redefinition .
+protected section.
   PRIVATE SECTION.
 
     DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt .
@@ -74,7 +76,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo_online IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
 
   METHOD check_and_create_package.
@@ -130,9 +132,44 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
   ENDMETHOD.
 
 
+  method GET_FILES_LOCAL.
+    DATA lo_serialize TYPE REF TO zcl_abapgit_serialize.
+    DATA lt_languages TYPE zif_abapgit_definitions=>ty_languages.
+
+    " Serialization happened before and no refresh request
+    IF lines( mt_local ) > 0 AND mv_request_local_refresh = abap_false.
+      rt_files = mt_local.
+      RETURN.
+    ENDIF.
+
+    lt_languages = zcl_abapgit_lxe_texts=>get_translation_languages(
+      iv_main_language  = get_dot_abapgit( )->get_main_language( )
+      it_i18n_languages = get_dot_abapgit( )->get_i18n_languages( ) ).
+
+    CREATE OBJECT lo_serialize
+      EXPORTING
+        iv_main_language_only = ms_data-local_settings-main_language_only
+        it_translation_langs  = lt_languages.
+
+    rt_files = lo_serialize->files_local(
+      iv_package        = get_package( )
+      io_dot_abapgit    = get_dot_abapgit( )
+      is_local_settings = get_local_settings( )
+      ii_data_config    = get_data_config( )
+      ii_log            = ii_log
+      IT_FILTER         = ZCL_ABAPGIT_REPO_PRE_FILTER=>get_instance( )->get_local_filter( )
+      ).
+
+    mt_local                 = rt_files.
+    mv_request_local_refresh = abap_false. " Fulfill refresh
+
+  endmethod.
+
+
   METHOD get_files_remote.
     fetch_remote( ).
     rt_files = super->get_files_remote( ).
+    zcl_abapgit_repo_pre_filter=>get_instance( )->filter_files( CHANGING ct_files = rt_files ).
   ENDMETHOD.
 
 
