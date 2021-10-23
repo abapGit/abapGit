@@ -152,16 +152,16 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
     ENDIF.
 
     LOOP AT lt_filter REFERENCE INTO lr_filter.
-      IF lr_filter->pgmid <> 'LIMU' AND lr_filter->pgmid <> 'R3T3'.
-        "TODO:
-        "I don't know how to determine the R3T3 Object for other PGMID (like LANGU)
-        "Workaround: I add filter R3TR and try also with LIMU to get the R3TR Object
+      IF lr_filter->pgmid <> 'LIMU' AND lr_filter->pgmid <> 'R3TR'.
+
+        "I don't know how to determine the R3TR Object for other PGMID (like LANGU)
+        "Workaround: I add also filter R3TR and try also with LIMU to get the R3TR Object
         ls_filter = lr_filter->*.
         ls_filter-pgmid = 'R3TR'.
         INSERT ls_filter INTO TABLE mt_filter.
-        ls_filter-pgmid = 'R3TR'.
         "Try with LIMU to get R3TR Object
-        lr_filter->pgmid = 'LIMU'.
+        ls_filter-pgmid = 'LIMU'.
+        INSERT ls_filter INTO TABLE lt_filter.
       ENDIF.
 
       IF lr_filter->pgmid = 'LIMU'.
