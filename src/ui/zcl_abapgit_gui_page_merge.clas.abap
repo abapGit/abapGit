@@ -44,7 +44,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_merge IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -218,10 +218,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE IMPLEMENTATION.
 
         ELSE.
 
-          CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_commit
-            EXPORTING
-              io_repo  = mo_repo
-              io_stage = mi_merge->get_result( )-stage.
+          rs_handled-page = zcl_abapgit_gui_page_commit=>create(
+            io_repo  = mo_repo
+            io_stage = mi_merge->get_result( )-stage ).
 
         ENDIF.
 

@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_GUI_PAGE_CODE_INSP</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>GUI - Syntax check page</DESCRIPT>
+    <DESCRIPT>abapGit - GUI - Code Inspector Page</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
