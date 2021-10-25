@@ -137,6 +137,7 @@ table.repo_tab {
 }
 .repo_tab th {
   color: var(--theme-link-color);
+  background-color: #edf2f9;
   border-bottom-color: #ddd;
 }
 .repo_tab td {
@@ -180,22 +181,21 @@ table.repo_tab {
   border-color: #ddd;
   background-color: #fff;
 }
-.stage_tab td {
-  color: #333;
-  border-top-color: var(--theme-table-border-color);
-}
 .stage_tab th {
-  color: var(--theme-greyscale-medium);
+  color: var(--theme-greyscale-dark);
   background-color: #edf2f9;
+  border-bottom-color: #ddd;
+}
+.stage_tab td {
+  color: var(--theme-greyscale-medium);
+  border-top-color: var(--theme-table-border-color);
 }
 .stage_tab td.status {
   color: var(--theme-primary-font-color-reduced);
   background-color: #fafafa;
 }
 .stage_tab td.highlight { color: #444 !important; }
-.stage_tab td.method { color: var(--theme-primary-font-color-reduced); }
-.stage_tab td.user   { color: var(--theme-greyscale-medium); }
-.stage_tab td.type   { color: var(--theme-greyscale-medium); }
+.stage_tab td.method { font-weight: bold; }
 .stage_tab mark {
   color: white;
   background-color: #79a0d2;
@@ -355,7 +355,12 @@ div.debug_container {
 div.db_list { background-color: #fff; }
 table.db_tab td      { color: #333; }
 table.db_tab td.data { color: #888; }
-table.db_tab tbody tr:hover, tr:active { background-color: #f4f4f4; }
+table.db_tab tbody tr:hover td {
+  background-image: linear-gradient(rgba(0, 0, 0, 0.075), rgba(0, 0, 0, 0.075));
+}
+table.db_tab tbody tr:active td {
+  background-color: #f4f4f4;
+}
 table.db_tab th {
   color: var(--theme-link-color);
   border-bottom-color: #ddd;
@@ -488,8 +493,8 @@ table.settings_tab input:focus {
 /* HTML FORMS */
 
 .dialog input::placeholder { color: #ccc }
-.dialog input:-ms-input-placeholder { color: #ccc }
 .dialog textarea::placeholder { color: #ccc }
+.dialog input:-ms-input-placeholder { color: #ccc }
 .dialog textarea:-ms-input-placeholder { color: #ccc }
 .dialog {
   border-color: #ccc;
