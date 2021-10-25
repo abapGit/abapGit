@@ -138,26 +138,23 @@ ENDCLASS.
 
 CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
-  METHOD zif_abapgit_gui_hotkeys~get_hotkey_actions.
 
-    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
+  METHOD add_menu_begin.
 
-    ls_hotkey_action-ui_component = 'Patch'.
+    io_menu->add(
+        iv_txt   = c_action_texts-refresh_local
+        iv_typ   = zif_abapgit_html=>c_action_type-dummy
+        iv_act   = c_actions-refresh_local
+        iv_id    = c_actions-refresh_local
+        iv_title = c_action_titles-refresh_local ).
 
-    ls_hotkey_action-description = |Stage changes|.
-    ls_hotkey_action-action      = |stagePatch|.
-    ls_hotkey_action-hotkey      = |s|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+    io_menu->add(
+        iv_txt   = c_action_texts-refresh_all
+        iv_typ   = zif_abapgit_html=>c_action_type-dummy
+        iv_act   = c_actions-refresh_all
+        iv_id    = c_actions-refresh_all
+        iv_title = c_action_titles-refresh_all ).
 
-    ls_hotkey_action-description = |Refresh local|.
-    ls_hotkey_action-action      = |refreshLocal|.
-    ls_hotkey_action-hotkey      = |r|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-    ls_hotkey_action-description = |Refresh all|.
-    ls_hotkey_action-action      = |refreshAll|.
-    ls_hotkey_action-hotkey      = |a|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
   ENDMETHOD.
 
 
@@ -426,6 +423,19 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD refresh.
+
+    DATA: lt_diff_files_old TYPE ty_file_diffs.
+
+    lt_diff_files_old = mt_diff_files.
+
+    super->refresh( iv_action ).
+
+    restore_patch_flags( lt_diff_files_old ).
+
+  ENDMETHOD.
+
+
   METHOD render_beacon_begin_of_row.
 
     mv_section_count = mv_section_count + 1.
@@ -614,10 +624,10 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
         start_staging( ii_event ).
 
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_commit
-          EXPORTING
-            io_repo  = mo_repo_online
-            io_stage = mo_stage.
+        rs_handled-page = zcl_abapgit_gui_page_commit=>create(
+          io_repo  = mo_repo_online
+          io_stage = mo_stage ).
+
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN OTHERS.
@@ -639,35 +649,26 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD refresh.
+  METHOD zif_abapgit_gui_hotkeys~get_hotkey_actions.
 
-    DATA: lt_diff_files_old TYPE ty_file_diffs.
+    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
 
-    lt_diff_files_old = mt_diff_files.
+    ls_hotkey_action-ui_component = 'Patch'.
 
-    super->refresh( iv_action ).
+    ls_hotkey_action-description = |Stage changes|.
+    ls_hotkey_action-action      = |stagePatch|.
+    ls_hotkey_action-hotkey      = |s|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    restore_patch_flags( lt_diff_files_old ).
+    ls_hotkey_action-description = |Refresh local|.
+    ls_hotkey_action-action      = |refreshLocal|.
+    ls_hotkey_action-hotkey      = |r|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-  ENDMETHOD.
-
-
-  METHOD add_menu_begin.
-
-    io_menu->add(
-        iv_txt   = c_action_texts-refresh_local
-        iv_typ   = zif_abapgit_html=>c_action_type-dummy
-        iv_act   = c_actions-refresh_local
-        iv_id    = c_actions-refresh_local
-        iv_title = c_action_titles-refresh_local ).
-
-    io_menu->add(
-        iv_txt   = c_action_texts-refresh_all
-        iv_typ   = zif_abapgit_html=>c_action_type-dummy
-        iv_act   = c_actions-refresh_all
-        iv_id    = c_actions-refresh_all
-        iv_title = c_action_titles-refresh_all ).
+    ls_hotkey_action-description = |Refresh all|.
+    ls_hotkey_action-action      = |refreshAll|.
+    ls_hotkey_action-hotkey      = |a|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
-
 ENDCLASS.

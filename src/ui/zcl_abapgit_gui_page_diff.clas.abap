@@ -1237,5 +1237,4 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
-
 ENDCLASS.
