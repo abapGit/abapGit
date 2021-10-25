@@ -6,15 +6,16 @@ CLASS zcl_abapgit_serialize DEFINITION
 
     METHODS constructor
       IMPORTING
-        !iv_main_language_only TYPE abap_bool DEFAULT abap_false
-        !it_translation_langs  TYPE zif_abapgit_definitions=>ty_languages OPTIONAL.
+        !io_dot_abapgit    TYPE REF TO zcl_abapgit_dot_abapgit OPTIONAL
+        !is_local_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings OPTIONAL
+      RAISING
+        zcx_abapgit_exception .
     METHODS on_end_of_task
       IMPORTING
         !p_task TYPE clike .
     METHODS serialize
       IMPORTING
         !it_tadir            TYPE zif_abapgit_definitions=>ty_tadir_tt
-        !iv_language         TYPE sy-langu DEFAULT sy-langu
         !ii_log              TYPE REF TO zif_abapgit_log OPTIONAL
         !iv_force_sequential TYPE abap_bool DEFAULT abap_false
       RETURNING
@@ -23,14 +24,12 @@ CLASS zcl_abapgit_serialize DEFINITION
         zcx_abapgit_exception .
     METHODS files_local
       IMPORTING
-        !iv_package        TYPE devclass
-        !io_dot_abapgit    TYPE REF TO zcl_abapgit_dot_abapgit
-        !is_local_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings
-        !ii_log            TYPE REF TO zif_abapgit_log
-        !it_filter         TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
-        !ii_data_config    TYPE REF TO zif_abapgit_data_config OPTIONAL
+        !iv_package     TYPE devclass
+        !ii_log         TYPE REF TO zif_abapgit_log
+        !it_filter      TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
+        !ii_data_config TYPE REF TO zif_abapgit_data_config OPTIONAL
       RETURNING
-        VALUE(rt_files)    TYPE zif_abapgit_definitions=>ty_files_item_tt
+        VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
         zcx_abapgit_exception .
   PROTECTED SECTION.
@@ -51,8 +50,9 @@ CLASS zcl_abapgit_serialize DEFINITION
     DATA mv_free TYPE i .
     DATA mi_log TYPE REF TO zif_abapgit_log .
     DATA mv_group TYPE rzlli_apcl .
-    DATA mv_main_language_only TYPE abap_bool .
-    DATA mt_translation_langs TYPE zif_abapgit_definitions=>ty_languages .
+    DATA mo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit.
+    DATA ms_local_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings.
+    DATA ms_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params.
 
     METHODS add_apack
       IMPORTING
@@ -64,16 +64,13 @@ CLASS zcl_abapgit_serialize DEFINITION
     METHODS add_data
       IMPORTING
         !ii_data_config TYPE REF TO zif_abapgit_data_config
-        !io_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit
       CHANGING
         !ct_files       TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
         zcx_abapgit_exception .
     METHODS add_dot_abapgit
-      IMPORTING
-        !io_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit
       CHANGING
-        !ct_files       TYPE zif_abapgit_definitions=>ty_files_item_tt
+        !ct_files TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
         zcx_abapgit_exception .
     METHODS add_to_return
@@ -82,26 +79,22 @@ CLASS zcl_abapgit_serialize DEFINITION
         !is_file_item TYPE zif_abapgit_objects=>ty_serialization .
     METHODS run_parallel
       IMPORTING
-        !is_tadir    TYPE zif_abapgit_definitions=>ty_tadir
-        !iv_language TYPE sy-langu
-        !iv_task     TYPE ty_char32
+        !is_tadir TYPE zif_abapgit_definitions=>ty_tadir
+        !iv_task  TYPE ty_char32
       RAISING
         zcx_abapgit_exception .
     METHODS run_sequential
       IMPORTING
-        !is_tadir    TYPE zif_abapgit_definitions=>ty_tadir
-        !iv_language TYPE sy-langu
+        !is_tadir TYPE zif_abapgit_definitions=>ty_tadir
       RAISING
         zcx_abapgit_exception .
     METHODS add_objects
       IMPORTING
-        !iv_package        TYPE devclass
-        !io_dot_abapgit    TYPE REF TO zcl_abapgit_dot_abapgit
-        !is_local_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings
-        !ii_log            TYPE REF TO zif_abapgit_log
-        !it_filter         TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
+        !iv_package     TYPE devclass
+        !ii_log         TYPE REF TO zif_abapgit_log
+        !it_filter      TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
       CHANGING
-        VALUE(ct_files)    TYPE zif_abapgit_definitions=>ty_files_item_tt
+        VALUE(ct_files) TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
         zcx_abapgit_exception .
     METHODS determine_max_threads
@@ -119,7 +112,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
+CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
 
   METHOD add_apack.
@@ -159,7 +152,7 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
         EXPORTING
           iv_filename = <ls_return>-file-filename
           iv_path     = <ls_return>-file-path
-          io_dot      = io_dot_abapgit
+          io_dot      = mo_dot_abapgit
         IMPORTING
           es_item     = <ls_return>-item ).
 
@@ -176,7 +169,7 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
         EXPORTING
           iv_filename = <ls_return>-file-filename
           iv_path     = <ls_return>-file-path
-          io_dot      = io_dot_abapgit
+          io_dot      = mo_dot_abapgit
         IMPORTING
           es_item     = <ls_return>-item ).
     ENDLOOP.
@@ -189,7 +182,7 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF ct_files.
 
     APPEND INITIAL LINE TO ct_files ASSIGNING <ls_file>.
-    <ls_file>-file = io_dot_abapgit->to_file( ).
+    <ls_file>-file = mo_dot_abapgit->to_file( ).
 
   ENDMETHOD.
 
@@ -203,9 +196,9 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
     lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
       iv_package            = iv_package
-      iv_ignore_subpackages = is_local_settings-ignore_subpackages
-      iv_only_local_objects = is_local_settings-only_local_objects
-      io_dot                = io_dot_abapgit
+      iv_ignore_subpackages = ms_local_settings-ignore_subpackages
+      iv_only_local_objects = ms_local_settings-only_local_objects
+      io_dot                = mo_dot_abapgit
       ii_log                = ii_log ).
 
     CREATE OBJECT lo_filter.
@@ -220,7 +213,6 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
     lt_found = serialize(
       it_tadir            = lt_tadir
-      iv_language         = io_dot_abapgit->get_main_language( )
       ii_log              = ii_log
       iv_force_sequential = lv_force ).
     APPEND LINES OF lt_found TO ct_files.
@@ -256,8 +248,22 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
     ENDIF.
 
     mv_group = 'parallel_generators'.
-    mv_main_language_only = iv_main_language_only.
-    mt_translation_langs = it_translation_langs.
+
+    mo_dot_abapgit = io_dot_abapgit.
+    ms_local_settings = is_local_settings.
+
+    " Determine I18N parameters
+    IF io_dot_abapgit IS NOT INITIAL.
+      ms_i18n_params-main_language         = io_dot_abapgit->get_main_language( ).
+      ms_i18n_params-main_language_only    = is_local_settings-main_language_only.
+      ms_i18n_params-translation_languages = zcl_abapgit_lxe_texts=>get_translation_languages(
+        iv_main_language  = io_dot_abapgit->get_main_language( )
+        it_i18n_languages = io_dot_abapgit->get_i18n_languages( ) ).
+    ENDIF.
+
+    IF ms_i18n_params-main_language IS INITIAL.
+      ms_i18n_params-main_language = sy-langu.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -326,11 +332,7 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
 * serializes objects, including .abapgit.xml, apack, and takes into account local settings
 
-    add_dot_abapgit(
-      EXPORTING
-        io_dot_abapgit = io_dot_abapgit
-      CHANGING
-        ct_files       = rt_files ).
+    add_dot_abapgit( CHANGING ct_files = rt_files ).
 
     add_apack(
       EXPORTING
@@ -341,19 +343,16 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
     add_data(
       EXPORTING
         ii_data_config = ii_data_config
-        io_dot_abapgit = io_dot_abapgit
       CHANGING
         ct_files       = rt_files ).
 
     add_objects(
       EXPORTING
-        iv_package        = iv_package
-        io_dot_abapgit    = io_dot_abapgit
-        is_local_settings = is_local_settings
-        ii_log            = ii_log
-        it_filter         = it_filter
+        iv_package = iv_package
+        ii_log     = ii_log
+        it_filter  = it_filter
       CHANGING
-        ct_files          = rt_files ).
+        ct_files   = rt_files ).
 
   ENDMETHOD.
 
@@ -464,9 +463,10 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
           iv_obj_type           = is_tadir-object
           iv_obj_name           = is_tadir-obj_name
           iv_devclass           = is_tadir-devclass
-          iv_language           = iv_language
           iv_path               = is_tadir-path
-          iv_main_language_only = mv_main_language_only
+          iv_language           = ms_i18n_params-main_language
+          iv_main_language_only = ms_i18n_params-main_language_only
+          it_translation_langs  = ms_i18n_params-translation_languages
         EXCEPTIONS
           system_failure        = 1 MESSAGE lv_msg
           communication_failure = 2 MESSAGE lv_msg
@@ -500,9 +500,9 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
     TRY.
         ls_file_item = zcl_abapgit_objects=>serialize(
           is_item               = ls_file_item-item
-          iv_main_language_only = mv_main_language_only
-          it_translation_langs  = mt_translation_langs
-          iv_language           = iv_language ).
+          iv_language           = ms_i18n_params-main_language
+          iv_main_language_only = ms_i18n_params-main_language_only
+          it_translation_langs  = ms_i18n_params-translation_languages ).
 
         add_to_return( is_file_item = ls_file_item
                        iv_path      = is_tadir-path ).
@@ -545,14 +545,11 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
         iv_text    = |Serialize { <ls_tadir>-obj_name }, { lv_max } threads| ).
 
       IF lv_max = 1.
-        run_sequential(
-          is_tadir    = <ls_tadir>
-          iv_language = iv_language ).
+        run_sequential( <ls_tadir> ).
       ELSE.
         run_parallel(
-          is_tadir    = <ls_tadir>
-          iv_task     = |{ sy-tabix }|
-          iv_language = iv_language ).
+          is_tadir = <ls_tadir>
+          iv_task  = |{ sy-tabix }| ).
         WAIT UNTIL mv_free > 0 UP TO 120 SECONDS.
       ENDIF.
     ENDLOOP.
