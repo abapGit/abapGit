@@ -1,6 +1,6 @@
 CLASS zcl_abapgit_zlib_convert DEFINITION
-  PUBLIC
-  CREATE PUBLIC .
+  PUBLIC FINAL
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
@@ -8,17 +8,20 @@ CLASS zcl_abapgit_zlib_convert DEFINITION
       IMPORTING
         !iv_hex        TYPE xsequence
       RETURNING
-        VALUE(rv_bits) TYPE string .
+        VALUE(rv_bits) TYPE string.
+
     CLASS-METHODS bits_to_int
       IMPORTING
         !iv_bits      TYPE clike
       RETURNING
-        VALUE(rv_int) TYPE i .
+        VALUE(rv_int) TYPE i.
+
     CLASS-METHODS int_to_hex
       IMPORTING
         !iv_int       TYPE i
       RETURNING
-        VALUE(rv_hex) TYPE xstring .
+        VALUE(rv_hex) TYPE xstring.
+
 ENDCLASS.
 
 
