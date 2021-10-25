@@ -1,6 +1,6 @@
 CLASS zcl_abapgit_zlib_convert DEFINITION
-  PUBLIC
-  CREATE PUBLIC .
+  PUBLIC FINAL
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
@@ -21,8 +21,6 @@ CLASS zcl_abapgit_zlib_convert DEFINITION
         !iv_int       TYPE i
       RETURNING
         VALUE(rv_hex) TYPE xstring.
-
-  PRIVATE SECTION.
 
 ENDCLASS.
 

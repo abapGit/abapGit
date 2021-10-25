@@ -1,6 +1,6 @@
 CLASS zcl_abapgit_path DEFINITION
-  PUBLIC
-  CREATE PUBLIC .
+  PUBLIC FINAL
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
@@ -26,8 +26,6 @@ CLASS zcl_abapgit_path DEFINITION
     CLASS-METHODS get_filename_from_syspath
       IMPORTING iv_path            TYPE string
       RETURNING VALUE(rv_filename) TYPE string.
-
-  PRIVATE SECTION.
 
 ENDCLASS.
 
