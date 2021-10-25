@@ -18,7 +18,11 @@ CLASS ltcl_diff DEFINITION FOR TESTING
                              iv_old     TYPE zif_abapgit_definitions=>ty_diff-old.
 
     METHODS: setup.
-    METHODS: test.
+    METHODS: test
+      IMPORTING
+        !iv_ignore_indentation TYPE abap_bool DEFAULT abap_false
+        !iv_ignore_comments    TYPE abap_bool DEFAULT abap_false
+        !iv_ignore_case        TYPE abap_bool DEFAULT abap_false.
 
     METHODS:
       diff01 FOR TESTING,
@@ -26,7 +30,10 @@ CLASS ltcl_diff DEFINITION FOR TESTING
       diff03 FOR TESTING,
       diff04 FOR TESTING,
       diff05 FOR TESTING,
-      diff06 FOR TESTING.
+      diff06 FOR TESTING,
+      diff07 FOR TESTING,
+      diff08 FOR TESTING,
+      diff09 FOR TESTING.
 
 ENDCLASS.
 
@@ -85,8 +92,12 @@ CLASS ltcl_diff IMPLEMENTATION.
 
     CREATE OBJECT lo_diff
       EXPORTING
-        iv_new = lv_xnew
-        iv_old = lv_xold.
+        iv_new                = lv_xnew
+        iv_old                = lv_xold
+        iv_ignore_indentation = iv_ignore_indentation
+        iv_ignore_comments    = iv_ignore_comments
+        iv_ignore_case        = iv_ignore_case.
+
 
     lt_diff = lo_diff->get( ).
 
@@ -183,7 +194,7 @@ CLASS ltcl_diff IMPLEMENTATION.
 
   METHOD diff06.
 
-
+    " mixed
     add_new( iv_new = 'A' ).
     add_new( iv_new = 'B' ).
     add_new( iv_new = 'inserted' ).
@@ -222,6 +233,120 @@ CLASS ltcl_diff IMPLEMENTATION.
                   iv_old     = 'D' ).
 
     test( ).
+
+  ENDMETHOD.
+
+  METHOD diff07.
+
+    " ignore indentation
+    add_new( iv_new = 'A' ).
+    add_new( iv_new = ' B' ). " changed indent
+    add_new( iv_new = 'C' ).
+    add_new( iv_new = '    D' ). " changed indent
+
+    add_old( iv_old = 'A' ).
+    add_old( iv_old = 'B' ).
+    add_old( iv_old = 'C' ).
+    add_old( iv_old = 'D' ).
+
+    add_expected( iv_new_num = '    1'
+                  iv_new     = 'A'
+                  iv_result  = ''
+                  iv_old_num = '    1'
+                  iv_old     = 'A' ).
+    add_expected( iv_new_num = '    2'
+                  iv_new     = ' B'
+                  iv_result  = '' " no diff!
+                  iv_old_num = '    2'
+                  iv_old     = 'B' ).
+    add_expected( iv_new_num = '    3'
+                  iv_new     = 'C'
+                  iv_result  = ''
+                  iv_old_num = '    3'
+                  iv_old     = 'C' ).
+    add_expected( iv_new_num = '    4'
+                  iv_new     = '    D'
+                  iv_result  = '' " no diff!
+                  iv_old_num = '    4'
+                  iv_old     = 'D' ).
+
+    test( iv_ignore_indentation = abap_true ).
+
+  ENDMETHOD.
+
+  METHOD diff08.
+
+    " ignore comments
+    add_new( iv_new = 'A' ).
+    add_new( iv_new = '* X' ). " changed comment
+    add_new( iv_new = 'C' ).
+    add_new( iv_new = 'D " new' ). " changed comment
+
+    add_old( iv_old = 'A' ).
+    add_old( iv_old = '* B' ).
+    add_old( iv_old = 'C' ).
+    add_old( iv_old = 'D " old' ).
+
+    add_expected( iv_new_num = '    1'
+                  iv_new     = 'A'
+                  iv_result  = ''
+                  iv_old_num = '    1'
+                  iv_old     = 'A' ).
+    add_expected( iv_new_num = '    2'
+                  iv_new     = '* X'
+                  iv_result  = '' " no diff!
+                  iv_old_num = '    2'
+                  iv_old     = '* B' ).
+    add_expected( iv_new_num = '    3'
+                  iv_new     = 'C'
+                  iv_result  = ''
+                  iv_old_num = '    3'
+                  iv_old     = 'C' ).
+    add_expected( iv_new_num = '    4'
+                  iv_new     = 'D " new'
+                  iv_result  = '' " no diff!
+                  iv_old_num = '    4'
+                  iv_old     = 'D " old' ).
+
+    test( iv_ignore_comments = abap_true ).
+
+  ENDMETHOD.
+
+  METHOD diff09.
+
+    " ignore case
+    add_new( iv_new = 'A' ).
+    add_new( iv_new = 'b' ). " changed case
+    add_new( iv_new = 'c' ).
+    add_new( iv_new = 'D' ). " changed case
+
+    add_old( iv_old = 'A' ).
+    add_old( iv_old = 'B' ).
+    add_old( iv_old = 'c' ).
+    add_old( iv_old = 'd' ).
+
+    add_expected( iv_new_num = '    1'
+                  iv_new     = 'A'
+                  iv_result  = ''
+                  iv_old_num = '    1'
+                  iv_old     = 'A' ).
+    add_expected( iv_new_num = '    2'
+                  iv_new     = 'b'
+                  iv_result  = '' " no diff!
+                  iv_old_num = '    2'
+                  iv_old     = 'B' ).
+    add_expected( iv_new_num = '    3'
+                  iv_new     = 'c'
+                  iv_result  = ''
+                  iv_old_num = '    3'
+                  iv_old     = 'c' ).
+    add_expected( iv_new_num = '    4'
+                  iv_new     = 'D'
+                  iv_result  = '' " no diff!
+                  iv_old_num = '    4'
+                  iv_old     = 'd' ).
+
+    test( iv_ignore_case = abap_true ).
 
   ENDMETHOD.
 
