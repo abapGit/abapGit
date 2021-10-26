@@ -5,6 +5,7 @@
     "zcl_abapgit_ajson*",
     "zcl_abapgit_auth",
     "zcl_abapgit_convert",
+    "zcl_abapgit_data_injector",
     "zcl_abapgit_dot_abapgit",
     "zcl_abapgit_exit",
     "zcl_abapgit_frontend_services",
