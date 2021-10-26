@@ -154,7 +154,7 @@ CLASS zcl_abapgit_serializer_cache IMPLEMENTATION.
         lv_pattern = lv_progname(30).
         CONCATENATE lv_pattern '%' INTO lv_pattern.
         IF lv_pattern CA '_'.
-          REPLACE ALL OCCURRENCES OF '_' IN lv_pattern WITH '#_' .
+          REPLACE ALL OCCURRENCES OF '_' IN lv_pattern WITH '#_'.
         ENDIF.
 
         SELECT SINGLE progname INTO lv_name FROM reposrc
