@@ -1009,37 +1009,49 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         rs_files_and_item-item-obj_name }| ).
     ENDIF.
 
-    CREATE OBJECT lo_files
-      EXPORTING
-        is_item = rs_files_and_item-item.
+    " Check cache and serialize object if not found
+    rs_files_and_item-files = zcl_abapgit_serializer_cache=>get_instance( )->get_files( is_item ).
 
     li_obj = create_object( is_item     = rs_files_and_item-item
                             iv_language = iv_language ).
 
-    li_obj->mo_files = lo_files.
+    IF rs_files_and_item-files IS INITIAL.
 
-    CREATE OBJECT li_xml TYPE zcl_abapgit_xml_output.
+      CREATE OBJECT lo_files
+        EXPORTING
+          is_item = rs_files_and_item-item.
 
-    ls_i18n_params-main_language         = iv_language.
-    ls_i18n_params-main_language_only    = iv_main_language_only.
-    ls_i18n_params-translation_languages = it_translation_langs.
+      li_obj->mo_files = lo_files.
 
-    li_xml->i18n_params( ls_i18n_params ).
+      CREATE OBJECT li_xml TYPE zcl_abapgit_xml_output.
 
-    li_obj->serialize( li_xml ).
+      ls_i18n_params-main_language         = iv_language.
+      ls_i18n_params-main_language_only    = iv_main_language_only.
+      ls_i18n_params-translation_languages = it_translation_langs.
 
-    lo_files->add_xml( ii_xml      = li_xml
-                       is_metadata = li_obj->get_metadata( ) ).
+      li_xml->i18n_params( ls_i18n_params ).
 
-    rs_files_and_item-files = lo_files->get_files( ).
+      li_obj->serialize( li_xml ).
 
-    check_duplicates( rs_files_and_item-files ).
+      lo_files->add_xml( ii_xml      = li_xml
+                         is_metadata = li_obj->get_metadata( ) ).
+
+      rs_files_and_item-files = lo_files->get_files( ).
+
+      check_duplicates( rs_files_and_item-files ).
+
+      LOOP AT rs_files_and_item-files ASSIGNING <ls_file>.
+        <ls_file>-sha1 = zcl_abapgit_hash=>sha1_blob( <ls_file>-data ).
+      ENDLOOP.
+
+      " Update cache
+      zcl_abapgit_serializer_cache=>get_instance( )->set_files(
+        is_item  = rs_files_and_item-item
+        it_files = rs_files_and_item-files ).
+
+    ENDIF.
 
     rs_files_and_item-item-inactive = boolc( li_obj->is_active( ) = abap_false ).
-
-    LOOP AT rs_files_and_item-files ASSIGNING <ls_file>.
-      <ls_file>-sha1 = zcl_abapgit_hash=>sha1_blob( <ls_file>-data ).
-    ENDLOOP.
 
   ENDMETHOD.
 

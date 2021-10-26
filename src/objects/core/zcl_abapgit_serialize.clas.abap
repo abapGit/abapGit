@@ -527,6 +527,8 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
 
+    " Initialize cache
+    zcl_abapgit_serializer_cache=>get_instance( )->init_changed_today( it_tadir ).
 
     CLEAR mt_files.
 
