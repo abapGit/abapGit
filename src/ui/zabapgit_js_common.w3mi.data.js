@@ -2325,3 +2325,31 @@ function memoizeScrollPosition(fn){
     return fn.call(this, fn.args);
   }.bind(this);
 }
+
+/* STICKY HEADERS */
+
+/* https://www.w3schools.com/howto/howto_js_navbar_sticky.asp */
+/* Note: We have to use JS since IE does not support CSS position:sticky */
+
+// When the user scrolls the page, execute toggleSticky
+window.onscroll = function() { toggleSticky() };
+
+// Add the sticky class to the navbar when you reach its scroll position.
+// Remove "sticky" when you leave the scroll position
+function toggleSticky() {
+  // todo: check if page is full width or centered
+  var body = document.getElementsByTagName("body")[0];
+  var header = document.getElementById("header");
+  var sticky = header.offsetTop;
+
+  var stickyClass = "sticky";
+  if (body.classList.contains("full_width")) {
+    stickyClass = "sticky_full_width";
+  }
+
+  if (window.pageYOffset >= sticky) {
+    header.classList.add( stickyClass );
+  } else {
+    header.classList.remove( stickyClass );
+  }
+}
