@@ -468,12 +468,19 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
   METHOD render_diff_head_after_state.
 
+    DATA: lv_act_id TYPE string.
+
+    lv_act_id = |{ c_actions-refresh_local_object }_{ is_diff-obj_type }_{ is_diff-obj_name }|.
+
     IF is_diff-obj_type IS NOT INITIAL AND is_diff-obj_name IS NOT INITIAL.
+      " Dummy link is handled in JS (based on ID)
       ii_html->add( '<span class="repo_name">' ).
       ii_html->add_a( iv_txt   = ii_html->icon( iv_name  = 'redo-alt-solid'
                                                 iv_class = 'pad-sides'
                                                 iv_hint  = 'Local refresh of this object' )
-                      iv_act   = |{ c_actions-refresh_local_object }_{ is_diff-obj_type }_{ is_diff-obj_name }|
+                      iv_id    = lv_act_id
+                      iv_act   = lv_act_id
+                      iv_typ   = zif_abapgit_html=>c_action_type-dummy
                       iv_class = |url| ).
       ii_html->add( '</span>' ).
     ENDIF.
