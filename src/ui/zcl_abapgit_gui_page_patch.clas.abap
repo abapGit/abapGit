@@ -39,8 +39,7 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
       render_diff_head_after_state REDEFINITION,
       insert_nav REDEFINITION,
       render_line_split_row REDEFINITION,
-      refresh REDEFINITION,
-      modify_files_before_diff_calc REDEFINITION.
+      refresh REDEFINITION.
 
   PRIVATE SECTION.
 
@@ -424,26 +423,6 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD modify_files_before_diff_calc.
-
-    DATA: ls_file LIKE LINE OF ct_files.
-
-    FIELD-SYMBOLS: <ls_diff_file_old> TYPE zcl_abapgit_gui_page_diff=>ty_file_diff.
-
-    " We need to supply files again in calculate_diff. Because
-    " we only want to refresh the visible files. Otherwise all
-    " diff files would appear.
-    " Which is not wanted when we previously only selected particular files.
-
-    LOOP AT it_diff_files_old ASSIGNING <ls_diff_file_old>.
-      CLEAR: ls_file.
-      MOVE-CORRESPONDING <ls_diff_file_old> TO ls_file-file.
-      INSERT ls_file INTO TABLE ct_files.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
   METHOD refresh.
 
     DATA: lt_diff_files_old TYPE ty_file_diffs.
@@ -491,17 +470,19 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
     DATA: lv_act_id TYPE string.
 
+    lv_act_id = |{ c_actions-refresh_local_object }_{ is_diff-obj_type }_{ is_diff-obj_name }|.
+
     IF is_diff-obj_type IS NOT INITIAL AND is_diff-obj_name IS NOT INITIAL.
-
-      lv_act_id = |{ c_actions-refresh_local_object }_{ is_diff-obj_type }_{ is_diff-obj_name }|.
-
-      ii_html->add_a(
-          iv_txt   = |Refresh|
-          iv_typ   = zif_abapgit_html=>c_action_type-dummy
-          iv_act   = lv_act_id
-          iv_id    = lv_act_id
-          iv_title = |Local refresh of this object| ).
-
+      " Dummy link is handled in JS (based on ID)
+      ii_html->add( '<span class="repo_name">' ).
+      ii_html->add_a( iv_txt   = ii_html->icon( iv_name  = 'redo-alt-solid'
+                                                iv_class = 'pad-sides'
+                                                iv_hint  = 'Local refresh of this object' )
+                      iv_id    = lv_act_id
+                      iv_act   = lv_act_id
+                      iv_typ   = zif_abapgit_html=>c_action_type-dummy
+                      iv_class = |url| ).
+      ii_html->add( '</span>' ).
     ENDIF.
 
   ENDMETHOD.
@@ -684,6 +665,11 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
     ls_hotkey_action-description = |Refresh local|.
     ls_hotkey_action-action      = |refreshLocal|.
     ls_hotkey_action-hotkey      = |r|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description = |Refresh all|.
+    ls_hotkey_action-action      = |refreshAll|.
+    ls_hotkey_action-hotkey      = |a|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
