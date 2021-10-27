@@ -77,7 +77,11 @@ DATA(ls_repo) = NEW zcl_abapgit_persist_factory=>get_repo( )->read( iv_key ).
 Find the repository for a given SAP package:
 
 ```abap
-DATA(lo_repo) = zcl_abapgit_repo_srv=>get_instance( )->get_repo_from_package( iv_package ).
+zcl_abapgit_repo_srv=>get_instance( )->get_repo_from_package(
+  EXPORTING
+    iv_package = '$ABAPGIT'
+  IMPORTING
+    eo_repo    = DATA(lo_repo) ).
 ```
 
 ### Delete ###
