@@ -1730,7 +1730,8 @@ Patch.prototype.ID = {
 
 Patch.prototype.ACTION = {
   PATCH_STAGE: "patch_stage",
-  REFRESH_LOCAL: "refresh_local"
+  REFRESH_LOCAL: "refresh_local",
+  REFRESH_ALL: "refresh_all"
 };
 
 Patch.prototype.escape = function(sFileName){
@@ -1875,6 +1876,10 @@ Patch.prototype.registerStagePatch = function registerStagePatch(){
 
   window.refreshLocal = memoizeScrollPosition(function(){
     this.submitPatch(this.ACTION.REFRESH_LOCAL);
+  }.bind(this));
+
+  window.refreshAll = memoizeScrollPosition(function(){
+    this.submitPatch(this.ACTION.REFRESH_ALL);
   }.bind(this));
 
 };
