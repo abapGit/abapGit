@@ -53,7 +53,9 @@ CLASS ZCL_ABAPGIT_UTILS IMPLEMENTATION.
     " RSWATCH0 / GUESS_FILE_TYPE
     " We count non-printable characters if there are more than XX% it's binary.
 
-    CONSTANTS lc_binary_threshold TYPE i VALUE 10.
+    CONSTANTS:
+      lc_binary_threshold TYPE i VALUE 10,
+      lc_bytes_to_check   TYPE i VALUE 1000.
 
     DATA: lv_string_data           TYPE string,
           lv_printable_chars_count TYPE i,
@@ -66,7 +68,10 @@ CLASS ZCL_ABAPGIT_UTILS IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lv_xlen = nmin( val1 = lv_xlen val2 = 1000 ).
+    lv_xlen = nmin(
+                val1 = lv_xlen
+                val2 = lc_bytes_to_check ).
+
     lv_data = iv_data(lv_xlen).
 
     lv_string_data = zcl_abapgit_convert=>xstring_to_string_utf8( lv_data ).
