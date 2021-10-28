@@ -26,3 +26,13 @@ jobs:
       run: |
         npm install
         npm run integration
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2
+    - name: npm run coverage
+      run: |
+        npm install
+        npm run coverage

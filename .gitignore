@@ -6,3 +6,4 @@ lint_deps
 output
 ci/*.abap
 allure-report
+coverage
