@@ -5,7 +5,9 @@
     "zcl_abapgit_ajson*",
     "zcl_abapgit_auth",
     "zcl_abapgit_convert",
+    "zcl_abapgit_data_config",
     "zcl_abapgit_data_injector",
+    "zcl_abapgit_data_utils",
     "zcl_abapgit_dot_abapgit",
     "zcl_abapgit_exit",
     "zcl_abapgit_frontend_services",
@@ -160,6 +162,9 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "item_order",      "note": "uses secondary index item_order?"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "simple_indented", "note": "??"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "escape",          "note": "ASSERT failed, ??"},
+
+      {"object": "ZCL_ABAPGIT_DATA_CONFIG", "class": "ltcl_test", "method": "to_json"},
+      {"object": "ZCL_ABAPGIT_DATA_CONFIG", "class": "ltcl_test", "method": "from_json"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "find_loc",          "note": "assert failed"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_negative"},
