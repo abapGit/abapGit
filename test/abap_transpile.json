@@ -55,6 +55,7 @@
     "zcl_abapgit_pr_enum_github",
     "zcl_abapgit_pr_enumerator",
     "zcl_abapgit_progress",
+    "zcl_abapgit_proxy_auth",
     "zcl_abapgit_proxy_config",
     "zcl_abapgit_settings",
     "zcl_abapgit_string_map",
