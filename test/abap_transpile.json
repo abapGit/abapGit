@@ -8,6 +8,7 @@
     "zcl_abapgit_data_config",
     "zcl_abapgit_data_injector",
     "zcl_abapgit_data_utils",
+    "zif_abapgit_data_deserializer",
     "zcl_abapgit_dot_abapgit",
     "zcl_abapgit_exit",
     "zcl_abapgit_frontend_services",
