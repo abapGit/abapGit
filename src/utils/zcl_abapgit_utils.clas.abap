@@ -57,13 +57,19 @@ CLASS ZCL_ABAPGIT_UTILS IMPLEMENTATION.
 
     DATA: lv_string_data           TYPE string,
           lv_printable_chars_count TYPE i,
-          lv_percentage            TYPE i.
+          lv_percentage            TYPE i,
+          lv_data                  TYPE xstring,
+          lv_xlen                  TYPE i.
 
-    IF xstrlen( iv_data ) = 0.
+    lv_xlen = xstrlen( iv_data ).
+    IF lv_xlen = 0.
       RETURN.
     ENDIF.
 
-    lv_string_data = zcl_abapgit_convert=>xstring_to_string_utf8( iv_data ).
+    lv_xlen = nmin( val1 = lv_xlen val2 = 1000 ).
+    lv_data = iv_data(lv_xlen).
+
+    lv_string_data = zcl_abapgit_convert=>xstring_to_string_utf8( lv_data ).
 
     REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>newline IN lv_string_data WITH space.
     REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>cr_lf IN lv_string_data WITH space.
