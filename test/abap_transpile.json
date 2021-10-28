@@ -111,6 +111,7 @@
     "zif_abapgit_persist_user",
     "zif_abapgit_persistence",
     "zif_abapgit_popups",
+    "zcl_abapgit_repo_filter",
     "zif_abapgit_pr_enum_provider",
     "zif_abapgit_progress",
     "zif_abapgit_repo_listener",
