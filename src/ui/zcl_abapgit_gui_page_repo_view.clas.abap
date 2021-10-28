@@ -179,7 +179,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -939,13 +939,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
+    " Changed by
+    ri_html->add( '<td class="user">' ).
+    ri_html->add( render_item_changed_by( is_item ) ).
+    ri_html->add( '</td>' ).
+
     " Files
     ri_html->add( '<td class="files">' ).
     ri_html->add( render_item_files( is_item ) ).
-    ri_html->add( '</td>' ).
-
-    ri_html->add( '<td class="user">' ).
-    ri_html->add( render_item_changed_by( is_item ) ).
     ri_html->add( '</td>' ).
 
     " Command
@@ -1097,13 +1098,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
     ls_col_spec-allow_order_by = abap_true.
     APPEND ls_col_spec TO lt_col_spec.
 
-    ls_col_spec-tech_name = 'PATH'.
-    ls_col_spec-display_name = 'Path'.
+    ls_col_spec-tech_name = 'CHANGED_BY'.
+    ls_col_spec-display_name = 'Changed by'.
     ls_col_spec-allow_order_by = abap_true.
     APPEND ls_col_spec TO lt_col_spec.
 
-    ls_col_spec-tech_name = 'CHANGED_BY'.
-    ls_col_spec-display_name = 'Changed by'.
+    ls_col_spec-tech_name = 'PATH'.
+    ls_col_spec-display_name = 'Path'.
     ls_col_spec-allow_order_by = abap_true.
     APPEND ls_col_spec TO lt_col_spec.
 
