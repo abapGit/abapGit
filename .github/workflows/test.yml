@@ -15,26 +15,8 @@ jobs:
       run: |
         npm install
         npm run unit
-  integration:
-    needs: unit
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v2
-    - name: npm run integration
-      run: |
-        npm install
-        npm run integration
-  coverage:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v2
     - name: npm run coverage
       run: |
-        npm install
         npm run coverage
     - name: Update coverage.abapgit.org
       uses: peaceiris/actions-gh-pages@v3
@@ -48,3 +30,14 @@ jobs:
         cname: coverage.abapgit.org
         force_orphan: true
         publish_dir: ./coverage
+  integration:
+    needs: unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2
+    - name: npm run integration
+      run: |
+        npm install
+        npm run integration
