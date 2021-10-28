@@ -595,6 +595,10 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
         CONTINUE. " e.g. new objects
       ENDIF.
 
+      IF <ls_diff_file_old>-o_diff IS NOT BOUND.
+        CONTINUE. " e.g. binary files
+      ENDIF.
+
       lt_diff_old = <ls_diff_file_old>-o_diff->get( ).
 
       LOOP AT lt_diff_old ASSIGNING <ls_diff_old>
