@@ -93,7 +93,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_clas IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -411,9 +411,14 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
   METHOD serialize_tpool.
 
     DATA: lt_tpool      TYPE textpool_table,
+          lv_index      TYPE i,
           lv_langu      TYPE sy-langu,
           lt_i18n_tpool TYPE zif_abapgit_lang_definitions=>ty_i18n_tpools,
           ls_i18n_tpool TYPE zif_abapgit_lang_definitions=>ty_i18n_tpool.
+
+    FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool.
+
+    DATA lt_tpool_main LIKE SORTED TABLE OF <ls_tpool> WITH UNIQUE KEY id key.
 
     lt_tpool = mi_object_oriented_object_fct->read_text_pool(
       iv_class_name = iv_clsname
@@ -421,20 +426,33 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     ii_xml->add( iv_name = 'TPOOL'
                  ig_data = add_tpool( lt_tpool ) ).
 
-    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+    IF ii_xml->i18n_params( )-main_language_only = abap_true OR lines( lt_tpool ) = 0.
       RETURN.
     ENDIF.
 
+    lt_tpool_main = lt_tpool.
+
     LOOP AT it_langu_additional INTO lv_langu.
-      CLEAR: ls_i18n_tpool.
 
       lt_tpool = mi_object_oriented_object_fct->read_text_pool(
-            iv_class_name = iv_clsname
-            iv_language   = lv_langu ).
+        iv_class_name = iv_clsname
+        iv_language   = lv_langu ).
 
-      ls_i18n_tpool-language = lv_langu.
-      ls_i18n_tpool-textpool = add_tpool( lt_tpool ).
-      INSERT ls_i18n_tpool INTO TABLE lt_i18n_tpool.
+      LOOP AT lt_tpool ASSIGNING <ls_tpool>.
+        lv_index = sy-tabix.
+        READ TABLE lt_tpool_main WITH KEY id = <ls_tpool>-id key = <ls_tpool>-key
+          TRANSPORTING NO FIELDS.
+        IF sy-subrc <> 0.
+          DELETE lt_tpool INDEX lv_index.
+        ENDIF.
+      ENDLOOP.
+
+      IF lines( lt_tpool ) > 0.
+        CLEAR ls_i18n_tpool.
+        ls_i18n_tpool-language = lv_langu.
+        ls_i18n_tpool-textpool = add_tpool( lt_tpool ).
+        INSERT ls_i18n_tpool INTO TABLE lt_i18n_tpool.
+      ENDIF.
 
     ENDLOOP.
 
