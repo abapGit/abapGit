@@ -836,7 +836,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
         ENDIF.
 
         IF <ls_field>-from_dict = abap_true AND
-           <ls_field>-modific   <> 'F'.
+           <ls_field>-modific   <> 'F' AND
+           <ls_field>-modific   <> 'X'.
           CLEAR <ls_field>-text.
         ENDIF.
       ENDLOOP.
