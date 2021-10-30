@@ -1,5 +1,5 @@
 # newlines
-* text=auto
+* text=auto eol=lf
 
 *.xml   text eol=lf
 *.abap  text eol=lf
