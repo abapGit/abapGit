@@ -443,10 +443,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
         EXPORTING
           dynnr    = ls_d020s-dnum
           progname = ms_item-obj_name
-*          suppress_checks default ' '
           with_popup = abap_false
-*        CHANGING
-*           VALUE(CORRNUM) TYPE  TRKORR DEFAULT ' '
         EXCEPTIONS
           enqueued_by_user = 1
           enqueue_system_failure = 2
