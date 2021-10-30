@@ -381,15 +381,17 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
     ENDIF.
 
     LOOP AT it_langu_additional INTO lv_langu.
-      CLEAR: ls_i18n_lines.
 
       lt_lines = mi_object_oriented_object_fct->read_documentation(
         iv_class_name = iv_clsname
         iv_language   = lv_langu ).
 
-      ls_i18n_lines-language = lv_langu.
-      ls_i18n_lines-lines    = lt_lines.
-      INSERT ls_i18n_lines INTO TABLE lt_i18n_lines.
+      IF lines( lt_lines ) > 0.
+        CLEAR ls_i18n_lines.
+        ls_i18n_lines-language = lv_langu.
+        ls_i18n_lines-lines    = lt_lines.
+        INSERT ls_i18n_lines INTO TABLE lt_i18n_lines.
+      ENDIF.
 
     ENDLOOP.
 
