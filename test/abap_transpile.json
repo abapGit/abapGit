@@ -38,8 +38,7 @@
     "zcl_abapgit_string_map",
     "zcl_abapgit_syntax_*",
     "zcl_abapgit_time",
-    "zcl_abapgit_ui_factory",
-    "zcl_abapgit_ui_injector",
+    "zcl_abapgit_ui*",
     "zcl_abapgit_url",
     "zcl_abapgit_utils",
     "zcl_abapgit_version",
@@ -218,6 +217,8 @@
       {"object": "ZCL_ABAPGIT_GIT_COMMIT", "class": "ltcl_test", "method": "parse_commits"},
       {"object": "ZCL_ABAPGIT_GIT_COMMIT", "class": "ltcl_test", "method": "check_author_regex"},
       {"object": "ZCL_ABAPGIT_GIT_URL", "class": "ltcl_repo_online", "method": "test_repo_commit_show_urls"},
+
+      {"object": "ZCL_ABAPGIT_USER_RECORD", "class": "ltcl_user_record", "method": "test_invalid_user", "note": "Void type: BAPIADDR3"},
 
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "ignore", "note": "Void type: DLVUNIT"},
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "identity"}
