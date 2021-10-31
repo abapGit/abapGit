@@ -1546,10 +1546,18 @@ function Hotkeys(oKeyMap){
         return;
       }
 
-      // Or a SAP event
+      // Or a SAP event link
       var sUiSapEventHref = this.getSapEventHref(action);
       if (sUiSapEventHref) {
         submitSapeventForm({}, sUiSapEventHref, "post");
+        oEvent.preventDefault();
+        return;
+      }
+
+      // Or a SAP event input
+      var sUiSapEventFormAction = this.getSapEventFormAction(action);
+      if (sUiSapEventFormAction) {
+        submitSapeventForm({}, sUiSapEventFormAction, "post");
         oEvent.preventDefault();
         return;
       }
@@ -1569,21 +1577,46 @@ Hotkeys.prototype.showHotkeys = function() {
 };
 
 Hotkeys.prototype.getAllSapEventsForSapEventName = function(sSapEvent) {
-  return [].slice.call(document.querySelectorAll('a[href*="sapevent:' + sSapEvent + '"], a[href*="SAPEVENT:' + sSapEvent + '"]'));
+  return [].slice.call(
+    document.querySelectorAll('a[href*="sapevent:' + sSapEvent + '"],'
+                            + 'a[href*="SAPEVENT:' + sSapEvent + '"],'
+                            + 'input[formaction*="sapevent:' + sSapEvent + '"]'));
 };
 
 Hotkeys.prototype.getSapEventHref = function(sSapEvent) {
 
   return this.getAllSapEventsForSapEventName(sSapEvent)
+    .filter(function(el){
+      // only anchors
+      return (!!el.href);
+    })
     .map(function(oSapEvent){
       return oSapEvent.href;
     })
-    .filter(function(sapEventHref){
-      // eliminate false positives
-      return sapEventHref.match(new RegExp("\\b" + sSapEvent + "\\b"));
-    })
+    .filter(this.eliminateSapEventFalsePositives(sSapEvent))
     .pop();
 
+};
+
+Hotkeys.prototype.getSapEventFormAction = function(sSapEvent) {
+
+  return this.getAllSapEventsForSapEventName(sSapEvent)
+    .filter(function(el){
+      // input forms
+      return (el.type === "submit");
+    })
+    .map(function(oSapEvent){
+      return oSapEvent.formAction;
+    })
+    .filter(this.eliminateSapEventFalsePositives(sSapEvent))
+    .pop();
+
+};
+
+Hotkeys.prototype.eliminateSapEventFalsePositives = function(sapEvent){
+  return function(sapEventAttr) {
+    return sapEventAttr.match(new RegExp("\\b" + sapEvent + "\\b"));
+  };
 };
 
 Hotkeys.prototype.onkeydown = function(oEvent){
