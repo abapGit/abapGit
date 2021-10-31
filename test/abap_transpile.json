@@ -11,6 +11,7 @@
     "zcl_abapgit_frontend_services",
     "zcl_abapgit_git*",
     "zcl_abapgit_adt_link",
+    "zcl_abapgit_diff",
     "zcl_abapgit_gui*",
     "zcl_abapgit_hash",
     "zcl_abapgit_html*",
@@ -158,6 +159,16 @@
 
       {"object": "ZCL_ABAPGIT_DATA_DESERIALIZER", "class": "ltcl_test", "method": "test1"},
       {"object": "ZCL_ABAPGIT_DATA_SERIALIZER", "class": "ltcl_test", "method": "serialize"},
+
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff01", "note": "Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff02", "note": "Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff03", "note": "Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff04", "note": "Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff05", "note": "Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff06", "note": "Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff07", "note": "Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff08", "note": "Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff09", "note": "Void type: RSWSOURCET"},
 
       {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_renderable", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
       {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_event_handler", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
