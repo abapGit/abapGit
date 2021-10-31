@@ -65,6 +65,7 @@
     "zif_abapgit_sap_package",
     "zif_abapgit_stage_logic",
     "zif_abapgit_tadir",
+    "zif_abapgit_longtexts",
     "zif_abapgit_tag_popups",
     "zif_abapgit_version",
     "zif_abapgit_xml*"
