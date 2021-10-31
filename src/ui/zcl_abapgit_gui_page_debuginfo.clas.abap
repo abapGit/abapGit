@@ -20,9 +20,9 @@ CLASS zcl_abapgit_gui_page_debuginfo DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CONSTANTS c_exit_standalone TYPE progname VALUE 'ZABAPGIT_USER_EXIT' ##NO_TEXT.
-    CONSTANTS c_exit_class TYPE seoclsname VALUE 'ZCL_ABAPGIT_USER_EXIT' ##NO_TEXT.
-    CONSTANTS c_exit_interface TYPE seoclsname VALUE 'ZIF_ABAPGIT_EXIT' ##NO_TEXT.
+    CONSTANTS c_exit_standalone TYPE string VALUE 'ZABAPGIT_USER_EXIT' ##NO_TEXT.
+    CONSTANTS c_exit_class TYPE string VALUE 'ZCL_ABAPGIT_USER_EXIT' ##NO_TEXT.
+    CONSTANTS c_exit_interface TYPE string VALUE 'ZIF_ABAPGIT_EXIT' ##NO_TEXT.
     CONSTANTS:
       BEGIN OF c_action,
         save TYPE string VALUE 'save',
