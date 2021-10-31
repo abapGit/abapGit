@@ -57,6 +57,7 @@
     "zif_abapgit_html*",
     "zif_abapgit_http*",
     "zif_abapgit_log",
+    "zif_abapgit_longtexts",
     "zif_abapgit_merge",
     "zif_abapgit_persist*",
     "zif_abapgit_popups",
@@ -65,7 +66,6 @@
     "zif_abapgit_sap_package",
     "zif_abapgit_stage_logic",
     "zif_abapgit_tadir",
-    "zif_abapgit_longtexts",
     "zif_abapgit_tag_popups",
     "zif_abapgit_version",
     "zif_abapgit_xml*"
