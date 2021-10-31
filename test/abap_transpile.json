@@ -5,9 +5,7 @@
     "zcl_abapgit_ajson*",
     "zcl_abapgit_auth",
     "zcl_abapgit_convert",
-    "zcl_abapgit_data_config",
-    "zcl_abapgit_data_injector",
-    "zcl_abapgit_data_utils",
+    "zcl_abapgit_data*",
     "zcl_abapgit_dot_abapgit",
     "zcl_abapgit_exit",
     "zcl_abapgit_frontend_services",
@@ -211,6 +209,9 @@
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_fields", "method": "to_json"},
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_to_lower", "method": "to_json"},
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_to_upper", "method": "to_json"},
+
+      {"object": "ZCL_ABAPGIT_DATA_DESERIALIZER", "class": "ltcl_test", "method": "test1"},
+      {"object": "ZCL_ABAPGIT_DATA_SERIALIZER", "class": "ltcl_test", "method": "serialize"},
 
       {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_renderable", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
       {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_event_handler", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
