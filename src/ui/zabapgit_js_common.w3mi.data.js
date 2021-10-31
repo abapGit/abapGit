@@ -1580,7 +1580,8 @@ Hotkeys.prototype.getAllSapEventsForSapEventName = function(sSapEvent) {
   return [].slice.call(
     document.querySelectorAll('a[href*="sapevent:' + sSapEvent + '"],'
                             + 'a[href*="SAPEVENT:' + sSapEvent + '"],'
-                            + 'input[formaction*="sapevent:' + sSapEvent + '"]'));
+                            + 'input[formaction*="sapevent:' + sSapEvent + '"],'
+                            + 'input[formaction*="SAPEVENT:' + sSapEvent + '"]'));
 };
 
 Hotkeys.prototype.getSapEventHref = function(sSapEvent) {
