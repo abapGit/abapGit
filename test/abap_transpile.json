@@ -76,9 +76,7 @@
     "zif_abapgit_tadir",
     "zif_abapgit_tag_popups",
     "zif_abapgit_version",
-    "zif_abapgit_xml_input",
-    "zif_abapgit_xml_output",
-    "zif_abapgit_xml"
+    "zif_abapgit_xml*"
   ],
   "output_folder": "output",
   "lib": "https://github.com/open-abap/open-abap",
