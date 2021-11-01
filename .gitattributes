@@ -12,6 +12,7 @@
 *.html  text eol=lf
 *.css   text eol=lf
 *.svg   text eol=lf
+*.sh    text eol=lf
 
 *.jpg  binary
 *.gif  binary
