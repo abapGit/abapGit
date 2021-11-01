@@ -368,17 +368,9 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
         iv_lstate = <ls_stage>-status-lstate
         iv_rstate = <ls_stage>-status-rstate ) ).
       ri_html->add( '</td>' ).
-      ri_html->add( '<td>' ).
-      CASE <ls_stage>-method.
-        WHEN zif_abapgit_definitions=>c_method-add.
-          ri_html->add( '<span class="diff_banner diff_ins">' ).
-        WHEN zif_abapgit_definitions=>c_method-rm.
-          ri_html->add( '<span class="diff_banner diff_del">' ).
-        WHEN zif_abapgit_definitions=>c_method-ignore.
-          ri_html->add( '<span class="diff_banner diff_upd">' ).
-      ENDCASE.
+      ri_html->add( '<td class="method">' ).
       ri_html->add( zcl_abapgit_stage=>method_description( <ls_stage>-method ) ).
-      ri_html->add( '</span></td>' ).
+      ri_html->add( '</td>' ).
       ri_html->add( '<td>' ).
       ri_html->add( <ls_stage>-file-path && <ls_stage>-file-filename ).
       ri_html->add( '</td>' ).
