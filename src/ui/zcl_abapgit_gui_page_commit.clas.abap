@@ -356,7 +356,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     ri_html->add( '<table class="stage_tab">' ).
     ri_html->add( '<thead>' ).
     ri_html->add( '<tr>' ).
-    ri_html->add( '<th colspan="3">Staged Files (<a href="#header">Summary</a>)</th>' ).
+    ri_html->add( '<th colspan="3">Staged Files (<a href="#top">Summary</a>)</th>' ).
     ri_html->add( '</tr>' ).
     ri_html->add( '</thead>' ).
 
@@ -368,9 +368,17 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
         iv_lstate = <ls_stage>-status-lstate
         iv_rstate = <ls_stage>-status-rstate ) ).
       ri_html->add( '</td>' ).
-      ri_html->add( '<td class="method">' ).
+      ri_html->add( '<td>' ).
+      CASE <ls_stage>-method.
+        WHEN zif_abapgit_definitions=>c_method-add.
+          ri_html->add( '<span class="diff_banner diff_ins">' ).
+        WHEN zif_abapgit_definitions=>c_method-rm.
+          ri_html->add( '<span class="diff_banner diff_del">' ).
+        WHEN zif_abapgit_definitions=>c_method-ignore.
+          ri_html->add( '<span class="diff_banner diff_upd">' ).
+      ENDCASE.
       ri_html->add( zcl_abapgit_stage=>method_description( <ls_stage>-method ) ).
-      ri_html->add( '</td>' ).
+      ri_html->add( '</span></td>' ).
       ri_html->add( '<td>' ).
       ri_html->add( <ls_stage>-file-path && <ls_stage>-file-filename ).
       ri_html->add( '</td>' ).
@@ -386,6 +394,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
   METHOD render_stage_summary.
 
     DATA:
+      lv_total TYPE i,
       BEGIN OF ls_sum,
         method TYPE string,
         count  TYPE i,
@@ -397,36 +406,33 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     LOOP AT mt_stage ASSIGNING <ls_stage>.
-      ls_sum-method = zcl_abapgit_stage=>method_description( <ls_stage>-method ).
+      ls_sum-method = <ls_stage>-method.
       ls_sum-count  = 1.
       COLLECT ls_sum INTO lt_sum.
     ENDLOOP.
 
-    ri_html->add( '<table class="stage_tab">' ).
-    ri_html->add( '<thead>' ).
-    ri_html->add( '<tr>' ).
-    ri_html->add( '<th colspan="2">Stage Summary (<a href="#stage-details">Details</a>)</th>' ).
-    ri_html->add( '</tr>' ).
-    ri_html->add( '</thead>' ).
+    ri_html->add( 'Stage Summary: ' ).
 
-    ri_html->add( '<tbody>' ).
-    LOOP AT lt_sum INTO ls_sum.
-      ri_html->add( '<tr>' ).
-      ri_html->add( '<td class="method" width="20%">' ).
-      ri_html->add( ls_sum-method ).
-      ri_html->add( '</td>' ).
-      ri_html->add( '<td>' ).
-      IF ls_sum-count = 1.
-        ri_html->add( |{ ls_sum-count } file| ).
-      ELSE.
-        ri_html->add( |{ ls_sum-count } files| ).
-      ENDIF.
-      ri_html->add( '</td>' ).
-      ri_html->add( '</tr>' ).
-    ENDLOOP.
-    ri_html->add( '</tbody>' ).
+    READ TABLE lt_sum INTO ls_sum WITH TABLE KEY method = zif_abapgit_definitions=>c_method-add.
+    IF sy-subrc = 0.
+      ri_html->add( |<span class="diff_banner diff_ins" title="add">+ { ls_sum-count }</span>| ).
+    ENDIF.
+    READ TABLE lt_sum INTO ls_sum WITH TABLE KEY method = zif_abapgit_definitions=>c_method-rm.
+    IF sy-subrc = 0.
+      ri_html->add( |<span class="diff_banner diff_del" title="remove">- { ls_sum-count }</span>| ).
+    ENDIF.
+    READ TABLE lt_sum INTO ls_sum WITH TABLE KEY method = zif_abapgit_definitions=>c_method-ignore.
+    IF sy-subrc = 0.
+      ri_html->add( |<span class="diff_banner diff_upd" title="ignore">~ { ls_sum-count }</span>| ).
+    ENDIF.
 
-    ri_html->add( '</table>' ).
+    IF lines( mt_stage ) = 1.
+      ri_html->add( 'file' ).
+    ELSE.
+      ri_html->add( 'files' ).
+    ENDIF.
+
+    ri_html->add( '(<a href="#stage-details">Details</a>)' ).
 
   ENDMETHOD.
 
@@ -496,7 +502,11 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ri_html->add( '<div id="stage-summary" class="dialog w800px">' ).
+    ri_html->add( '<div id="top" class="paddings">' ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mo_repo ) ).
+    ri_html->add( '</div>' ).
+
+    ri_html->add( '<div id="stage-summary" class="dialog w800px paddings">' ).
     ri_html->add( render_stage_summary( ) ).
     ri_html->add( '</div>' ).
 
