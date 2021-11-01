@@ -394,7 +394,6 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
   METHOD render_stage_summary.
 
     DATA:
-      lv_total TYPE i,
       BEGIN OF ls_sum,
         method TYPE string,
         count  TYPE i,
