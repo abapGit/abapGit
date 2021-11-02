@@ -195,7 +195,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_program IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 
 
   METHOD add_tpool.
@@ -333,13 +333,38 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     CONSTANTS lc_rpyty_force_off TYPE c LENGTH 1 VALUE '/'.
 
     DATA: lv_name   TYPE dwinactiv-obj_name,
+          lt_d020s_to_delete TYPE TABLE OF d020s,
+          ls_d020s  LIKE LINE OF lt_d020s_to_delete,
           ls_dynpro LIKE LINE OF it_dynpros.
 
     FIELD-SYMBOLS: <ls_field> TYPE rpy_dyfatc.
 
+    " Delete DYNPROs which are not in the list
+    CALL FUNCTION 'RS_SCREEN_LIST'
+      EXPORTING
+        dynnr     = ''
+        progname  = ms_item-obj_name
+      TABLES
+        dynpros   = lt_d020s_to_delete
+      EXCEPTIONS
+        not_found = 1
+        OTHERS    = 2.
+    IF sy-subrc = 2.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    SORT lt_d020s_to_delete BY dnum ASCENDING.
+
 * ls_dynpro is changed by the function module, a field-symbol will cause
 * the program to dump since it_dynpros cannot be changed
     LOOP AT it_dynpros INTO ls_dynpro.
+
+      READ TABLE lt_d020s_to_delete WITH KEY dnum = ls_dynpro-header-screen
+        TRANSPORTING NO FIELDS
+        BINARY SEARCH.
+      IF sy-subrc = 0.
+        DELETE lt_d020s_to_delete INDEX sy-tabix.
+      ENDIF.
 
       " todo: kept for compatibility, remove after grace period #3680
       ls_dynpro-flow_logic = uncondense_flow(
@@ -408,6 +433,27 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       zcl_abapgit_objects_activation=>add(
         iv_type = 'DYNP'
         iv_name = lv_name ).
+
+    ENDLOOP.
+
+    " Delete obsolete screens
+    LOOP AT lt_d020s_to_delete INTO ls_d020s.
+
+      CALL FUNCTION 'RS_SCRP_DELETE'
+        EXPORTING
+          dynnr      = ls_d020s-dnum
+          progname   = ms_item-obj_name
+          with_popup = abap_false
+        EXCEPTIONS
+          enqueued_by_user       = 1
+          enqueue_system_failure = 2
+          not_executed           = 3
+          not_exists             = 4
+          no_modify_permission   = 5
+          popup_canceled         = 6.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
 
     ENDLOOP.
 
