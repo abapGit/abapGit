@@ -1,0 +1,20 @@
+# newlines
+* text=auto eol=lf
+
+*.xml   text eol=lf
+*.abap  text eol=lf
+*.md    text eol=lf
+*.txt   text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.js    text eol=lf
+*.json  text eol=lf
+*.html  text eol=lf
+*.css   text eol=lf
+*.svg   text eol=lf
+*.sh    text eol=lf
+
+*.jpg  binary
+*.gif  binary
+*.png  binary
+*.jpeg binary
