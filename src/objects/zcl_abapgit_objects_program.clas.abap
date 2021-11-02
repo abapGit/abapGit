@@ -83,6 +83,9 @@ CLASS zcl_abapgit_objects_program DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
         biv TYPE STANDARD TABLE OF rsmpe_buts WITH DEFAULT KEY,
       END OF ty_cua .
 
+    METHODS strip_generation_comments
+      CHANGING
+        ct_source TYPE abaptxt255_tab.
     METHODS serialize_dynpros
       IMPORTING
         !iv_program_name TYPE programm
@@ -195,7 +198,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_program IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 
 
   METHOD add_tpool.
@@ -333,13 +336,38 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     CONSTANTS lc_rpyty_force_off TYPE c LENGTH 1 VALUE '/'.
 
     DATA: lv_name   TYPE dwinactiv-obj_name,
+          lt_d020s_to_delete TYPE TABLE OF d020s,
+          ls_d020s  LIKE LINE OF lt_d020s_to_delete,
           ls_dynpro LIKE LINE OF it_dynpros.
 
     FIELD-SYMBOLS: <ls_field> TYPE rpy_dyfatc.
 
+    " Delete DYNPROs which are not in the list
+    CALL FUNCTION 'RS_SCREEN_LIST'
+      EXPORTING
+        dynnr     = ''
+        progname  = ms_item-obj_name
+      TABLES
+        dynpros   = lt_d020s_to_delete
+      EXCEPTIONS
+        not_found = 1
+        OTHERS    = 2.
+    IF sy-subrc = 2.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    SORT lt_d020s_to_delete BY dnum ASCENDING.
+
 * ls_dynpro is changed by the function module, a field-symbol will cause
 * the program to dump since it_dynpros cannot be changed
     LOOP AT it_dynpros INTO ls_dynpro.
+
+      READ TABLE lt_d020s_to_delete WITH KEY dnum = ls_dynpro-header-screen
+        TRANSPORTING NO FIELDS
+        BINARY SEARCH.
+      IF sy-subrc = 0.
+        DELETE lt_d020s_to_delete INDEX sy-tabix.
+      ENDIF.
 
       " todo: kept for compatibility, remove after grace period #3680
       ls_dynpro-flow_logic = uncondense_flow(
@@ -408,6 +436,27 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       zcl_abapgit_objects_activation=>add(
         iv_type = 'DYNP'
         iv_name = lv_name ).
+
+    ENDLOOP.
+
+    " Delete obsolete screens
+    LOOP AT lt_d020s_to_delete INTO ls_d020s.
+
+      CALL FUNCTION 'RS_SCRP_DELETE'
+        EXPORTING
+          dynnr      = ls_d020s-dnum
+          progname   = ms_item-obj_name
+          with_popup = abap_false
+        EXCEPTIONS
+          enqueued_by_user       = 1
+          enqueue_system_failure = 2
+          not_executed           = 3
+          not_exists             = 4
+          no_modify_permission   = 5
+          popup_canceled         = 6.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
 
     ENDLOOP.
 
@@ -938,8 +987,58 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
                          ii_xml   = li_xml ).
     ENDIF.
 
+    strip_generation_comments( CHANGING ct_source = lt_source ).
+
     io_files->add_abap( iv_extra = iv_extra
                         it_abap  = lt_source ).
+
+  ENDMETHOD.
+
+
+  METHOD strip_generation_comments.
+
+    FIELD-SYMBOLS <lv_line> LIKE LINE OF ct_source.
+
+    IF ms_item-obj_type <> 'FUGR'.
+      RETURN.
+    ENDIF.
+
+    IF lines( ct_source ) < 5. " Generation header length
+      RETURN.
+    ENDIF.
+
+    READ TABLE ct_source INDEX 1 ASSIGNING <lv_line>.
+    ASSERT sy-subrc = 0.
+    IF NOT <lv_line> CP '#*---*'.
+      RETURN.
+    ENDIF.
+
+    READ TABLE ct_source INDEX 2 ASSIGNING <lv_line>.
+    ASSERT sy-subrc = 0.
+    IF NOT <lv_line> CP '#**'.
+      RETURN.
+    ENDIF.
+
+    READ TABLE ct_source INDEX 3 ASSIGNING <lv_line>.
+    ASSERT sy-subrc = 0.
+    IF NOT <lv_line> CP '#**generation date:*'.
+      RETURN.
+    ENDIF.
+
+    READ TABLE ct_source INDEX 4 ASSIGNING <lv_line>.
+    ASSERT sy-subrc = 0.
+    IF NOT <lv_line> CP '#**generator version:*'.
+      RETURN.
+    ENDIF.
+
+    READ TABLE ct_source INDEX 5 ASSIGNING <lv_line>.
+    ASSERT sy-subrc = 0.
+    IF NOT <lv_line> CP '#*---*'.
+      RETURN.
+    ENDIF.
+
+    DELETE ct_source INDEX 4.
+    DELETE ct_source INDEX 3.
 
   ENDMETHOD.
 
