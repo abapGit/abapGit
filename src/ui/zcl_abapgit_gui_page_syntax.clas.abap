@@ -17,7 +17,7 @@ CLASS zcl_abapgit_gui_page_syntax DEFINITION PUBLIC FINAL CREATE PUBLIC
         REDEFINITION.
 
   PROTECTED SECTION.
-    CONSTANTS: c_variant TYPE sci_chkv VALUE 'SYNTAX_CHECK'.
+    CONSTANTS: c_variant TYPE c LENGTH 30 VALUE 'SYNTAX_CHECK'.
 
     METHODS:
       render_content REDEFINITION.
