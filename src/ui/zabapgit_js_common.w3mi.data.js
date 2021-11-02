@@ -1626,9 +1626,7 @@ Hotkeys.prototype.onkeydown = function(oEvent){
     return;
   }
 
-  var activeElementType = ((document.activeElement && document.activeElement.nodeName) || "");
-
-  if (activeElementType === "INPUT" || activeElementType === "TEXTAREA") {
+  if (!this.isHotkeyCallPossible()){
     return;
   }
 
@@ -1639,6 +1637,14 @@ Hotkeys.prototype.onkeydown = function(oEvent){
   if (fnHotkey) {
     fnHotkey.call(this, oEvent);
   }
+};
+
+Hotkeys.prototype.isHotkeyCallPossible = function(){
+
+  var activeElementType = ((document.activeElement && document.activeElement.nodeName) || "");
+  var activeElementReadOnly = ((document.activeElement && document.activeElement.readOnly) || false);
+
+  return (activeElementReadOnly || ( activeElementType !== "INPUT" && activeElementType !== "TEXTAREA" ));
 };
 
 Hotkeys.addHotkeyToHelpSheet = function(key, description) {
