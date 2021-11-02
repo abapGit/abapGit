@@ -13,9 +13,9 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         filename   TYPE string,
         obj_type   TYPE string,
         obj_name   TYPE string,
-        lstate     TYPE char1,
-        rstate     TYPE char1,
-        fstate     TYPE char1, " FILE state - Abstraction for shorter ifs
+        lstate     TYPE c LENGTH 1,
+        rstate     TYPE c LENGTH 1,
+        fstate     TYPE c LENGTH 1, " FILE state - Abstraction for shorter ifs
         o_diff     TYPE REF TO zcl_abapgit_diff,
         changed_by TYPE xubname,
         type       TYPE string,
@@ -28,9 +28,9 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
 
     CONSTANTS:
       BEGIN OF c_fstate,
-        local  TYPE char1 VALUE 'L',
-        remote TYPE char1 VALUE 'R',
-        both   TYPE char1 VALUE 'B',
+        local  TYPE c LENGTH 1 VALUE 'L',
+        remote TYPE c LENGTH 1 VALUE 'R',
+        both   TYPE c LENGTH 1 VALUE 'B',
       END OF c_fstate.
 
     METHODS constructor
