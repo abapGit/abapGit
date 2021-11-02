@@ -226,9 +226,7 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_locked.
-    DATA lv_lock_object TYPE string.
-    lv_lock_object = ms_item-obj_name.
-    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = lv_lock_object
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'E_USOBX'
                                             iv_argument    = |{ ms_item-obj_type }{ ms_item-obj_name }| ).
   ENDMETHOD.
 
