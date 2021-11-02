@@ -441,16 +441,16 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 
       CALL FUNCTION 'RS_SCRP_DELETE'
         EXPORTING
-          dynnr    = ls_d020s-dnum
-          progname = ms_item-obj_name
+          dynnr      = ls_d020s-dnum
+          progname   = ms_item-obj_name
           with_popup = abap_false
         EXCEPTIONS
-          enqueued_by_user = 1
+          enqueued_by_user       = 1
           enqueue_system_failure = 2
-          not_executed = 3
-          not_exists = 4
-          no_modify_permission = 5
-          popup_canceled = 6.
+          not_executed           = 3
+          not_exists             = 4
+          no_modify_permission   = 5
+          popup_canceled         = 6.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
