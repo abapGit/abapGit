@@ -1554,6 +1554,14 @@ function Hotkeys(oKeyMap){
         return;
       }
 
+      // Or a SAP event input
+      var sUiSapEventFormAction = this.getSapEventFormAction(action);
+      if (sUiSapEventFormAction) {
+        submitSapeventForm({}, sUiSapEventFormAction, "post");
+        oEvent.preventDefault();
+        return;
+      }
+
     };
 
   }.bind(this));
