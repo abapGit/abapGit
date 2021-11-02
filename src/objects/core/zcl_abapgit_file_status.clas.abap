@@ -419,7 +419,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
     " Collect all namespaces based on name of xml-files
     LOOP AT it_results ASSIGNING <ls_result>.
-      FIND REGEX '#([a-zA-Z0-9]+)#.*\..*\.xml' IN <ls_result>-filename SUBMATCHES lv_namespace.
+      FIND REGEX '^#([a-zA-Z0-9]+)#.*\..*\.xml$' IN <ls_result>-filename SUBMATCHES lv_namespace.
       IF sy-subrc = 0.
         lv_namespace = '/' && to_upper( lv_namespace ) && '/'.
         COLLECT lv_namespace INTO lt_namespace.
