@@ -335,7 +335,10 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     ri_html->add( '<html lang="en">' ).
     ri_html->add( html_head( ) ).
     ri_html->add( |<body class="{ ms_control-page_layout }">| ).
+
     ri_html->add( title( ) ).
+
+    ri_html->add( '<div class="not_sticky">' ).
 
     ri_html->add( render_content( ) ). " TODO -> render child
 
@@ -350,6 +353,8 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     lv_total = ( lv_end - lv_start ) / 1000 / 1000.
 
     ri_html->add( footer( lv_total ) ).
+
+    ri_html->add( '</div>' ).
 
     li_script = scripts( ).
 
