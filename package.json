@@ -5,6 +5,7 @@
     "merge": "abapmerge -f src/zabapgit.prog.abap -c zabapgit_standalone > zabapgit.abap",
     "merge.ci": "cp zabapgit.abap ci/zabapgit_standalone.prog.abap && cd ci && abaplint --format codeframe && cd ..",
     "unit": "rm -rf output && abap_transpile test/abap_transpile.json && echo RUNNING && node output/index.mjs",
+    "coverage": "npm run unit && c8 node output/index.mjs && c8 report --reporter=html",
     "integration": "rm -rf output && cp test/abap_transpile.json test/abap_transpile_int.json && sed -i 's/zcl_abapgit_auth/zcl_abapgit_integration_git/g' test/abap_transpile_int.json && abap_transpile test/abap_transpile_int.json && echo RUNNING && node output/index.mjs",
     "abaplint": "abaplint --format codeframe",
     "eslint": "eslint src",
@@ -17,11 +18,18 @@
     "type": "git",
     "url": "git+https://github.com/abapGit/abapGit.git"
   },
+  "c8": {
+    "all": true,
+    "src": [
+      "src"
+    ]
+  },
   "devDependencies": {
-    "@abaplint/cli": "^2.79.32",
-    "@abaplint/transpiler-cli": "^1.6.53",
-    "@abaplint/runtime": "^1.6.53",
+    "@abaplint/cli": "^2.79.35",
+    "@abaplint/runtime": "^1.6.62",
+    "@abaplint/transpiler-cli": "^1.6.62",
     "abapmerge": "^0.14.3",
-    "eslint": "^8.0.1"
+    "c8": "^7.10.0",
+    "eslint": "^8.1.0"
   }
 }

@@ -108,6 +108,10 @@
        <PARAMETER>IV_MAIN_LANGUAGE_ONLY</PARAMETER>
        <TYP>CHAR1</TYP>
       </RSIMP>
+      <RSIMP>
+       <PARAMETER>IT_TRANSLATION_LANGS</PARAMETER>
+       <TYP>TFPLAISO</TYP>
+      </RSIMP>
      </IMPORT>
      <EXPORT>
       <RSEXP>
@@ -153,6 +157,11 @@
        <PARAMETER>IV_MAIN_LANGUAGE_ONLY</PARAMETER>
        <KIND>P</KIND>
        <STEXT>Single-Character Indicator</STEXT>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>IT_TRANSLATION_LANGS</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>Language Table in ISO Format</STEXT>
       </RSFDO>
       <RSFDO>
        <PARAMETER>EV_RESULT</PARAMETER>

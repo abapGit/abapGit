@@ -20,9 +20,9 @@ CLASS zcl_abapgit_gui_page_debuginfo DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CONSTANTS c_exit_standalone TYPE progname VALUE 'ZABAPGIT_USER_EXIT' ##NO_TEXT.
-    CONSTANTS c_exit_class TYPE seoclsname VALUE 'ZCL_ABAPGIT_USER_EXIT' ##NO_TEXT.
-    CONSTANTS c_exit_interface TYPE seoclsname VALUE 'ZIF_ABAPGIT_EXIT' ##NO_TEXT.
+    CONSTANTS c_exit_standalone TYPE c LENGTH 30 VALUE 'ZABAPGIT_USER_EXIT' ##NO_TEXT.
+    CONSTANTS c_exit_class TYPE c LENGTH 30 VALUE 'ZCL_ABAPGIT_USER_EXIT' ##NO_TEXT.
+    CONSTANTS c_exit_interface TYPE c LENGTH 30 VALUE 'ZIF_ABAPGIT_EXIT' ##NO_TEXT.
     CONSTANTS:
       BEGIN OF c_action,
         save TYPE string VALUE 'save',
@@ -68,7 +68,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
 
 
   METHOD build_toolbar.

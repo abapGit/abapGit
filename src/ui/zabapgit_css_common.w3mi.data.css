@@ -1258,3 +1258,43 @@ settings_tab tr:first-child td { border-top: 0px; }
 .dialog .dialog-help {
   float: left;
 }
+
+/* STICKY HEADERS */
+
+/* https://www.w3schools.com/howto/howto_js_navbar_sticky.asp */
+/* Note: We have to use JS since IE does not support CSS position:sticky */
+
+/* The sticky class is added to the navbar with JS when it reaches its scroll position */
+.sticky {
+  position: fixed;
+  top: 0;
+  z-index: 10;
+  width: 100%;
+  padding: 0.5em;
+  margin-bottom: 3px;
+  max-height: 47px;
+  max-width: 1265px; /* if set to 1280px, then actual width will be 1296px (strange) */
+}
+
+.sticky_full_width {
+  position: fixed;
+  top: 0;
+  z-index: 10;
+  width: 100%;
+  padding: 0.5em 0.5em;
+  margin-bottom: 3px;
+  max-height: 47px;
+}
+.sticky_full_width .nav-container {
+  margin-right: 18px;
+}
+
+/* Add some top padding to the page content to prevent sudden quick movement
+   as the navigation bar gets a new position at the top of the page */
+.sticky + .not_sticky {
+  padding-top: 50px;
+}
+
+.sticky_full_width + .not_sticky {
+  padding-top: 50px;
+}

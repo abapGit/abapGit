@@ -47,13 +47,13 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION PUBLIC ABSTRACT INHERITING FROM 
       RETURNING
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
   PRIVATE SECTION.
-    CONSTANTS c_object_separator TYPE char1 VALUE '|'.
+    CONSTANTS c_object_separator TYPE c LENGTH 1 VALUE '|'.
     CONSTANTS c_ci_sig TYPE string VALUE 'cinav:'.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
 
 
   METHOD build_base_menu.
@@ -221,13 +221,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
          ( is_result-objtype = 'PROG' AND NOT is_result-sobjname+30(*) IS INITIAL ).
       TRY.
           CASE is_result-sobjname+30(*).
-            WHEN seop_incextapp_definition.
+            WHEN 'CCDEF'.
               lv_obj_txt = |CLAS { is_result-objname } : Local Definitions|.
-            WHEN seop_incextapp_implementation.
+            WHEN 'CCIMP'.
               lv_obj_txt = |CLAS { is_result-objname } : Local Implementations|.
-            WHEN seop_incextapp_macros.
+            WHEN 'CCMAC'.
               lv_obj_txt = |CLAS { is_result-objname } : Macros|.
-            WHEN seop_incextapp_testclasses.
+            WHEN 'CCAU'.
               lv_obj_txt = |CLAS { is_result-objname } : Test Classes|.
             WHEN 'CU'.
               lv_obj_txt = |CLAS { is_result-objname } : Public Section|.
