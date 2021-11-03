@@ -226,8 +226,9 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
     IF lines( lt_remote ) > lc_new_repo_size.
       " Less files means it's a new repo (with just readme and license, for example) which is ok
       READ TABLE lt_remote TRANSPORTING NO FIELDS
-        WITH KEY path = zif_abapgit_definitions=>c_root_dir
-        filename = zif_abapgit_definitions=>c_dot_abapgit.
+        WITH KEY file_path
+        COMPONENTS path     = zif_abapgit_definitions=>c_root_dir
+                   filename = zif_abapgit_definitions=>c_dot_abapgit.
       IF sy-subrc <> 0.
         mi_log->add_warning( |Cannot find .abapgit.xml - Is this an abapGit repository?| ).
       ENDIF.

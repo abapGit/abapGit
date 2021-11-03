@@ -341,7 +341,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         RETURN.
       ENDIF.
 
-      READ TABLE it_remote WITH KEY filename = is_result-filename INTO ls_remote_file.
+      READ TABLE it_remote WITH KEY file
+        COMPONENTS filename = is_result-filename INTO ls_remote_file.
       IF sy-subrc <> 0. "if file does not exist in remote, we don't need to validate
         RETURN.
       ENDIF.

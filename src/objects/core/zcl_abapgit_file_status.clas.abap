@@ -656,7 +656,8 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
         <ls_result> = build_new_local( <ls_local> ).
         " Check if same file exists in different location
         READ TABLE ct_remote ASSIGNING <ls_remote>
-          WITH KEY filename = <ls_local>-file-filename.
+          WITH KEY file
+          COMPONENTS filename = <ls_local>-file-filename.
         IF sy-subrc = 0 AND <ls_local>-file-sha1 = <ls_remote>-sha1.
           <ls_result>-packmove = abap_true.
         ELSEIF sy-subrc = 4.

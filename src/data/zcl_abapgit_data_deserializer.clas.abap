@@ -185,9 +185,10 @@ CLASS ZCL_ABAPGIT_DATA_DESERIALIZER IMPLEMENTATION.
 
       lr_data = zcl_abapgit_data_utils=>build_table_itab( ls_config-name ).
 
-      READ TABLE it_files INTO ls_file WITH KEY
-        path = zif_abapgit_data_config=>c_default_path
-        filename = zcl_abapgit_data_utils=>build_filename( ls_config ).
+      READ TABLE it_files INTO ls_file
+        WITH KEY file_path
+        COMPONENTS path     = zif_abapgit_data_config=>c_default_path
+                   filename = zcl_abapgit_data_utils=>build_filename( ls_config ).
       IF sy-subrc = 0.
         convert_json_to_itab(
           ir_data = lr_data

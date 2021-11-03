@@ -381,8 +381,9 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
 
     READ TABLE it_remote ASSIGNING <ls_remote>
-      WITH KEY filename = is_status-filename
-               path     = is_status-path.
+      WITH KEY file_path
+       COMPONENTS path     = is_status-path
+                  filename = is_status-filename.
     IF sy-subrc <> 0.
       ASSIGN ls_r_dummy TO <ls_remote>.
     ENDIF.

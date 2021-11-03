@@ -153,6 +153,7 @@ CLASS zcl_abapgit_background_push_au IMPLEMENTATION.
           APPEND <ls_local> TO ls_user_files-local.
 
           LOOP AT ls_files-remote ASSIGNING <ls_remote>
+              USING KEY file
               WHERE filename = <ls_local>-file-filename
               AND path <> <ls_local>-file-path
               AND filename <> 'package.devc.xml'.
