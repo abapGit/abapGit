@@ -121,7 +121,7 @@
         "^syst_title$", "^sychar70$", "^char30$", "^char50$",
         "^numc2$", "^sap_bool$", "^SYCHAR10$", "^sylangu$",
         "^cl_blue_wb_utility$", "^boole_d$",
-        "^cl_srvd_wb_object_data$",
+        "^cl_srvd_wb_object_data$", "^cx_aff_", "^cl_aff_", "^if_aff_",
         "^cl_wb_object_operator_factory$",
         "^cx_wb_object_operation_error$",
         "^if_srvd_types$",
