@@ -202,7 +202,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CHKO IMPLEMENTATION.
             data     = properties ).
 
 
-        hex = new zcl_abapgit_aff_handler( )->serialize( data = properties ).
+        hex = new zcl_abapgit_ajson_cnt_handler( )->serialize( data = properties ).
         mo_files->add_raw( iv_ext = 'json' iv_data = hex ).
 
       catch cx_aff_root into data(exception).

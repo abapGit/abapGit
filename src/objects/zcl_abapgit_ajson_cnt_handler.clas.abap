@@ -1,4 +1,4 @@
-CLASS zcl_abapgit_aff_handler DEFINITION
+CLASS zcl_abapgit_ajson_cnt_handler DEFINITION
   public
   final
   create public .
@@ -37,7 +37,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_aff_handler IMPLEMENTATION.
+CLASS zcl_abapgit_ajson_cnt_handler IMPLEMENTATION.
 method handle_exception.
     raise exception type cx_aff_without_message
       exporting

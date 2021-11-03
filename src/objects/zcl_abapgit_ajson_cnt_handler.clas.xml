@@ -3,7 +3,7 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOCLASS>
-    <CLSNAME>ZCL_ABAPGIT_AFF_HANDLER</CLSNAME>
+    <CLSNAME>ZCL_ABAPGIT_AJSON_CNT_HANDLER</CLSNAME>
     <LANGU>E</LANGU>
     <DESCRIPT>the content handler that understands json via ajson</DESCRIPT>
     <STATE>1</STATE>
