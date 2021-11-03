@@ -77,29 +77,29 @@ CLASS ZCL_ABAPGIT_OBJECT_CHKO IMPLEMENTATION.
 * +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD zif_abapgit_object~deserialize.
 
-    DATA properties TYPE ty_chko.
-
-    TRY.
-        DATA(json_as_xstring) = mo_files->read_raw( iv_ext = 'json' ) ##NO_TEXT.
-        DATA(content_handler_json) = cl_aff_content_handler_factory=>get_handler_for_json( simple_transformation = 'ZSATC_CHKO_JSON' ). "TODO replace SATC_CHKO_JSON
-        content_handler_json->deserialize(
-          EXPORTING
-            content = json_as_xstring
-          IMPORTING
-            data    = properties ).
-
-        properties-header-abap_langu_version = if_abap_language_version=>gc_version-sap_cloud_platform.
-
-        DATA(persistence) = NEW zcl_chko_aff_persistence( ).
-        persistence->save_content(
-          data     = properties
-          object   = NEW cl_aff_obj( package = ms_item-devclass name = CONV #( ms_item-obj_name ) type = ms_item-obj_type )
-          language = mv_language
-          version  = 'I'
-          saved_by = sy-uname ).
-      CATCH cx_aff_root INTO DATA(exception).
-
-    ENDTRY.
+*    DATA properties TYPE ty_chko.
+*
+*    TRY.
+*        DATA(json_as_xstring) = mo_files->read_raw( iv_ext = 'json' ) ##NO_TEXT.
+*        DATA(content_handler_json) = cl_aff_content_handler_factory=>get_handler_for_json( simple_transformation = 'ZSATC_CHKO_JSON' ). "TODO replace SATC_CHKO_JSON
+*        content_handler_json->deserialize(
+*          EXPORTING
+*            content = json_as_xstring
+*          IMPORTING
+*            data    = properties ).
+*
+*        properties-header-abap_langu_version = if_abap_language_version=>gc_version-sap_cloud_platform.
+*
+*        DATA(persistence) = NEW zcl_chko_aff_persistence( ).
+*        persistence->save_content(
+*          data     = properties
+*          object   = NEW cl_aff_obj( package = ms_item-devclass name = CONV #( ms_item-obj_name ) type = ms_item-obj_type )
+*          language = mv_language
+*          version  = 'I'
+*          saved_by = sy-uname ).
+*      CATCH cx_aff_root INTO DATA(exception).
+*
+*    ENDTRY.
 
   ENDMETHOD.
 
@@ -132,7 +132,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CHKO IMPLEMENTATION.
 * | [<-()] RT_STEPS                       TYPE        TY_DESERIALIZATION_STEP_TT
 * +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD zif_abapgit_object~get_deserialize_steps.
-    APPEND if_abapgit_object=>gc_step_id-abap TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
 
 
@@ -188,42 +188,30 @@ CLASS ZCL_ABAPGIT_OBJECT_CHKO IMPLEMENTATION.
 * | [!CX!] ZCX_ABAPGIT_EXCEPTION
 * +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD zif_abapgit_object~serialize.
-    TRY.
+    data hex type xstring.
 
-        DATA(db_api) = NEW cl_chko_db_api( ).
+    try.
+        data properties type if_aff_chko_v1=>ty_main.
+        data(persistence) = new lcl_chko_aff_persistence( ).
+        persistence->get_content(
+          exporting
+            object   = new cl_aff_obj( package = ms_item-devclass name = conv #( ms_item-obj_name ) type = ms_item-obj_type )
+            language = mv_language
+            version  = 'A'
+          importing
+            data     = properties ).
 
-        DATA object TYPE REF TO if_aff_obj.
-        object = NEW cl_aff_obj( package = ms_item-devclass name = CONV #( ms_item-obj_name ) type = ms_item-obj_type ).
-        DATA(chko_name) = object->get_name( ).
-        DATA(master_language) = cl_aff_object_utility=>get_master_language_from_tadir( object ).
 
-        DATA(chko_header) = db_api->get_header( name     = CONV #( chko_name )
-                                                version  = 'A'
-                                                language = mv_language ).
-        DATA(chko_content) = db_api->get_content( name     = CONV #( chko_name )
-                                                  version  = 'A'
-                                                  language = mv_language ).
+        hex = new zcl_abapgit_aff_handler( )->serialize( data = properties ).
+        mo_files->add_raw( iv_ext = 'json' iv_data = hex ).
 
-        DATA(properties) = VALUE ty_chko(
-          header-schema              = `http://sap.com/schema/chko.json` ##NO_TEXT
-          header-description         = chko_header-description
-          header-master_language     = master_language
-          header-abap_langu_version  = chko_header-abap_language_version
-          content-category           = chko_content-category-name
-          content-implementing_class = chko_content-implementing_class-name
-          content-parameters         = chko_content-parameters
-          content-remote_enabled     = chko_content-remote_enabled ).
-
-        DATA json_as_xstring TYPE xstring.
-
-        "todo: ajson parser
-
-        mo_files->add_raw( iv_ext = 'json' iv_data = json_as_xstring ).
-
-      CATCH cx_aff_root INTO DATA(exception).
-        ii_log->add_exception(
-          ix_exc  = exception
-          is_item = ms_item ).
-    ENDTRY.
-  ENDMETHOD.
+      catch cx_aff_root into data(exception).
+*        ii_log->add_exception(
+*          ix_exc  = exception
+*          is_item = ms_item ).
+      catch zcx_abapgit_ajson_error into data(exception_ajson).
+*        ii_log->add_exception(
+*         ix_exc  = exception_ajson
+*         is_item = ms_item ).
+    endtry.  ENDMETHOD.
 ENDCLASS.
