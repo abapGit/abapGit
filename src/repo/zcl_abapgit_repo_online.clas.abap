@@ -142,26 +142,21 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lt_languages = zcl_abapgit_lxe_texts=>get_translation_languages(
-      iv_main_language  = get_dot_abapgit( )->get_main_language( )
-      it_i18n_languages = get_dot_abapgit( )->get_i18n_languages( ) ).
-
     CREATE OBJECT lo_serialize
       EXPORTING
-        iv_main_language_only = ms_data-local_settings-main_language_only
-        it_translation_langs  = lt_languages.
+        io_dot_abapgit    = get_dot_abapgit( )
+        is_local_settings = get_local_settings( ).
 
     rt_files = lo_serialize->files_local(
-      iv_package        = get_package( )
-      io_dot_abapgit    = get_dot_abapgit( )
-      is_local_settings = get_local_settings( )
-      ii_data_config    = get_data_config( )
-      ii_log            = ii_log
-      IT_FILTER         = ZCL_ABAPGIT_REPO_PRE_FILTER=>get_instance( )->get_local_filter( )
-      ).
+      iv_package     = get_package( )
+      ii_data_config = get_data_config( )
+      ii_log         = ii_log
+      IT_FILTER      = ZCL_ABAPGIT_REPO_PRE_FILTER=>get_instance( )->get_local_filter( )
+       ).
 
     mt_local                 = rt_files.
     mv_request_local_refresh = abap_false. " Fulfill refresh
+
 
   endmethod.
 
