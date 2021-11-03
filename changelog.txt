@@ -8,6 +8,35 @@ Legend
 + : added
 - : removed
 
+2021-11-03 v1.112.0
+-------------------
+! Only show favorites on startup
+! UI: sticky top
+! Commit Page refactored
+* FUGR: strip generator comments
+* SUSH: Fix check for lock
+* PROG: remove obsolete screens
+* New hot keys for remote settings page
+* Better multi language handling for text pools
+* Bugfix, checking namespace
+* FUGR/PROG: Dynpro keep text in case of masking
+* Bugfix, binary file detection
+* Repo View: switch "path" and "Changed by" columns
+* Measure backend render time
+* XSLT: Fix activation error
+* Enable command palette for diff/patch/stage
+* WDCA: add support for appl. config content
+* Online repo: copy URL to clipboard
+* Log viewer - hide empty columns
+* Fix pull on package reassign
+* Default font changed to "72"
+* Add pull and diff buttons to main page
+* FUGR, better serialization performance
+* SXCI: inactive classic Badis bugfix
+* SMIM: implement last changed by
+* WDCC: bugfix lower releases
+* XSLT: change to late activation
+
 2021-10-01 v1.111.0
 -------------------
 + WDCC: Support all object types
