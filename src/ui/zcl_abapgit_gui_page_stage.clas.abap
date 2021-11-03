@@ -122,7 +122,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -802,11 +802,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
         lo_stage = stage_all( ).
 
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_commit
-          EXPORTING
-            io_repo  = mo_repo
-            io_stage = lo_stage
-            iv_sci_result = mv_sci_result.
+        rs_handled-page = zcl_abapgit_gui_page_commit=>create(
+          io_repo       = mo_repo
+          io_stage      = lo_stage
+          iv_sci_result = mv_sci_result ).
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
@@ -814,11 +813,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
         lo_stage = stage_selected( ii_event ).
 
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_commit
-          EXPORTING
-            io_repo  = mo_repo
-            io_stage = lo_stage
-            iv_sci_result = mv_sci_result.
+        rs_handled-page = zcl_abapgit_gui_page_commit=>create(
+          io_repo       = mo_repo
+          io_stage      = lo_stage
+          iv_sci_result = mv_sci_result ).
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
