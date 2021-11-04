@@ -37,7 +37,9 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_ajson_cnt_handler IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_AJSON_CNT_HANDLER IMPLEMENTATION.
+
+
 method handle_exception.
     raise exception type cx_aff_without_message
       exporting
@@ -51,6 +53,7 @@ method handle_exception.
 
     try.
         data(lo_ajson) = zcl_abapgit_ajson=>parse( zcl_abapgit_convert=>xstring_to_string_utf8( content ) ).
+
         lo_ajson->zif_abapgit_ajson~to_abap( importing ev_container = data ).
 
       catch zcx_abapgit_ajson_error  into data(ajson_error) .
@@ -75,7 +78,8 @@ method handle_exception.
           iv_val  = data ).
         data(json) = li_ajson->stringify( 2 ).
 
-        result =  cl_abap_conv_codepage=>create_out(  )->convert( json ).
+*        result =  cl_abap_conv_codepage=>create_out(  )->convert( json ).
+        result = zcl_abapgit_convert=>string_to_xstring_utf8( iv_string = json ).
 
       catch zcx_abapgit_ajson_error  into data(ajson_error) .
         me->handle_exception( ajson_error ).

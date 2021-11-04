@@ -64,7 +64,7 @@ class ltcl_chko implementation.
 
   method deserialize.
     data(json) = get_chko_as_json( ).
-    data(json_as_xstring) = cl_aff_content_handler_factory=>get_handler_for_plain_text( )->serialize( json ).
+    data(json_as_xstring) = new zcl_abapgit_ajson_cnt_handler( )->serialize( data = json ).
     cut->mo_files->add_raw( iv_ext = 'json' iv_data = json_as_xstring ).
 
     cut->deserialize(
