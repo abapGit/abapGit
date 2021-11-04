@@ -317,7 +317,13 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown. " todo
+
+    SELECT SINGLE changedby FROM vepheader INTO rv_user
+      WHERE vepname = ms_item-obj_name AND version = 'A'.
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ENDIF.
+
   ENDMETHOD.
 
 
