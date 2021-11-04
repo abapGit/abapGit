@@ -325,7 +325,6 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
 
   METHOD set_patch_new.
 
-    DATA: lv_new_num TYPE i.
     FIELD-SYMBOLS: <ls_diff> TYPE zif_abapgit_definitions=>ty_diff.
 
     READ TABLE mt_diff WITH TABLE KEY new_num
@@ -342,7 +341,6 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
 
   METHOD set_patch_old.
 
-    DATA: lv_old_num TYPE i.
     FIELD-SYMBOLS: <ls_diff> TYPE zif_abapgit_definitions=>ty_diff.
 
     READ TABLE mt_diff WITH TABLE KEY old_num
