@@ -422,7 +422,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
 
     rv_bool = cl_ws_md_vif_root=>check_existence_by_vif_name(
       name      = lv_name
-      i_version = sews_c_vif_version-active ).
+      i_version = sews_c_vif_version-all ).
 
   ENDMETHOD.
 
@@ -503,7 +503,10 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
         version_not_found = 1
         webi_not_exist    = 2
         OTHERS            = 3.
-    IF sy-subrc <> 0.
+    IF sy-subrc = 1.
+      " no active version
+      RETURN.
+    ELSEIF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
