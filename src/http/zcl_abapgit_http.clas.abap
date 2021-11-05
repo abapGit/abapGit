@@ -228,8 +228,6 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
           lt_list TYPE zif_abapgit_definitions=>ty_string_tt,
           li_exit TYPE REF TO zif_abapgit_exit.
 
-    FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
-
 
     cl_http_server=>get_location( IMPORTING host = lv_host ).
     APPEND lv_host TO lt_list.
