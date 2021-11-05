@@ -65,7 +65,9 @@ CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
     DATA lx_ajson TYPE REF TO zcx_abapgit_ajson_error.
 
     CLEAR mt_config.
-    LOOP AT it_files INTO ls_file WHERE path = zif_abapgit_data_config=>c_default_path
+    LOOP AT it_files INTO ls_file
+        USING KEY file_path
+        WHERE path = zif_abapgit_data_config=>c_default_path
         AND filename CP |*.{ zif_abapgit_data_config=>c_config }.{ zif_abapgit_data_config=>c_default_format }|.
       TRY.
           lo_ajson = zcl_abapgit_ajson=>parse( zcl_abapgit_convert=>xstring_to_string_utf8( ls_file-data ) ).

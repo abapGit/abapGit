@@ -212,10 +212,14 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
       iv_ext   = iv_ext ).
 
     IF mv_path IS NOT INITIAL.
-      READ TABLE mt_files TRANSPORTING NO FIELDS WITH KEY path     = mv_path
-                                                          filename = lv_filename.
+      READ TABLE mt_files TRANSPORTING NO FIELDS
+          WITH KEY file_path
+          COMPONENTS path     = mv_path
+                     filename = lv_filename.
     ELSE.
-      READ TABLE mt_files TRANSPORTING NO FIELDS WITH KEY filename = lv_filename.
+      READ TABLE mt_files TRANSPORTING NO FIELDS
+          WITH KEY file
+          COMPONENTS filename = lv_filename.
     ENDIF.
 
     IF sy-subrc = 0.
@@ -277,10 +281,14 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
 
 
     IF mv_path IS NOT INITIAL.
-      READ TABLE mt_files ASSIGNING <ls_file> WITH KEY path     = mv_path
-                                                       filename = iv_filename.
+      READ TABLE mt_files ASSIGNING <ls_file>
+          WITH KEY file_path
+          COMPONENTS path     = mv_path
+                     filename = iv_filename.
     ELSE.
-      READ TABLE mt_files ASSIGNING <ls_file> WITH KEY filename = iv_filename.
+      READ TABLE mt_files ASSIGNING <ls_file>
+          WITH KEY file
+          COMPONENTS filename = iv_filename.
     ENDIF.
 
     IF sy-subrc <> 0.
