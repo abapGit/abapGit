@@ -1,9 +1,20 @@
 CLASS zcl_abapgit_adt_link DEFINITION
   PUBLIC
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
+
+    CLASS-METHODS jump
+      IMPORTING
+        !iv_obj_name     TYPE zif_abapgit_definitions=>ty_item-obj_name
+        !iv_obj_type     TYPE zif_abapgit_definitions=>ty_item-obj_type
+        !iv_sub_obj_name TYPE zif_abapgit_definitions=>ty_item-obj_name OPTIONAL
+        !iv_line_number  TYPE i OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
+
+  PROTECTED SECTION.
 
     CLASS-METHODS generate
       IMPORTING
@@ -14,54 +25,58 @@ CLASS zcl_abapgit_adt_link DEFINITION
       RETURNING
         VALUE(rv_result) TYPE string
       RAISING
-        zcx_abapgit_exception .
-  PROTECTED SECTION.
-  PRIVATE SECTION.
-    CLASS-METHODS:
-      get_adt_objects_and_names
-        IMPORTING
-          iv_obj_name       TYPE zif_abapgit_definitions=>ty_item-obj_name
-          iv_obj_type       TYPE zif_abapgit_definitions=>ty_item-obj_type
-        EXPORTING
-          eo_adt_uri_mapper TYPE REF TO object
-          eo_adt_objectref  TYPE REF TO object
-          ev_program        TYPE progname
-          ev_include        TYPE progname
-        RAISING
-          zcx_abapgit_exception.
+        zcx_abapgit_exception.
 
-    CLASS-METHODS:
-      is_adt_jump_possible
-        IMPORTING io_object                      TYPE REF TO cl_wb_object
-                  io_adt                         TYPE REF TO object
-        RETURNING VALUE(rv_is_adt_jump_possible) TYPE abap_bool
-        RAISING   zcx_abapgit_exception.
+  PRIVATE SECTION.
+
+    CLASS-METHODS get_adt_objects_and_names
+      IMPORTING
+        iv_obj_name       TYPE zif_abapgit_definitions=>ty_item-obj_name
+        iv_obj_type       TYPE zif_abapgit_definitions=>ty_item-obj_type
+      EXPORTING
+        eo_adt_uri_mapper TYPE REF TO object
+        eo_adt_objectref  TYPE REF TO object
+        ev_program        TYPE progname
+        ev_include        TYPE progname
+      RAISING
+        zcx_abapgit_exception.
+
+    CLASS-METHODS is_adt_jump_possible
+      IMPORTING
+        io_object                      TYPE REF TO cl_wb_object
+        io_adt                         TYPE REF TO object
+      RETURNING
+        VALUE(rv_is_adt_jump_possible) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ADT_LINK IMPLEMENTATION.
+CLASS zcl_abapgit_adt_link IMPLEMENTATION.
 
 
   METHOD generate.
 
     DATA: lv_adt_link       TYPE string.
-    DATA: lo_adt_uri_mapper TYPE REF TO object ##needed.
-    DATA: lo_adt_objref     TYPE REF TO object ##needed.
-    DATA: lo_adt_sub_objref TYPE REF TO object ##needed.
+    DATA: lo_adt_uri_mapper TYPE REF TO object.
+    DATA: lo_adt_objref     TYPE REF TO object.
+    DATA: lo_adt_sub_objref TYPE REF TO object.
     DATA: lv_program        TYPE progname.
     DATA: lv_include        TYPE progname.
+
     FIELD-SYMBOLS: <lv_uri> TYPE string.
 
     get_adt_objects_and_names(
-          EXPORTING
-            iv_obj_name       = iv_obj_name
-            iv_obj_type       = iv_obj_type
-          IMPORTING
-            eo_adt_uri_mapper = lo_adt_uri_mapper
-            eo_adt_objectref  = lo_adt_objref
-            ev_program        = lv_program
-            ev_include        = lv_include ).
+      EXPORTING
+        iv_obj_name       = iv_obj_name
+        iv_obj_type       = iv_obj_type
+      IMPORTING
+        eo_adt_uri_mapper = lo_adt_uri_mapper
+        eo_adt_objectref  = lo_adt_objref
+        ev_program        = lv_program
+        ev_include        = lv_include ).
 
     TRY.
         IF iv_sub_obj_name IS NOT INITIAL.
@@ -93,9 +108,11 @@ CLASS ZCL_ABAPGIT_ADT_LINK IMPLEMENTATION.
         CONCATENATE 'adt://' sy-sysid <lv_uri> INTO lv_adt_link.
 
         rv_result = lv_adt_link.
+
       CATCH cx_root.
         zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
     ENDTRY.
+
   ENDMETHOD.
 
 
@@ -105,6 +122,7 @@ CLASS ZCL_ABAPGIT_ADT_LINK IMPLEMENTATION.
     DATA lv_obj_name       TYPE trobj_name.
     DATA lo_object         TYPE REF TO cl_wb_object.
     DATA lo_adt            TYPE REF TO object.
+
     FIELD-SYMBOLS <lv_uri> TYPE string.
 
     lv_obj_name = iv_obj_name.
@@ -191,6 +209,26 @@ CLASS ZCL_ABAPGIT_ADT_LINK IMPLEMENTATION.
             result     = lv_vit_wb_request.
 
         rv_is_adt_jump_possible = boolc( NOT lv_vit_wb_request = abap_true ).
+
+      CATCH cx_root.
+        zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD jump.
+
+    DATA lv_adt_link TYPE string.
+
+    TRY.
+        lv_adt_link = generate(
+          iv_obj_name     = iv_obj_name
+          iv_obj_type     = iv_obj_type
+          iv_sub_obj_name = iv_sub_obj_name
+          iv_line_number  = iv_line_number ).
+
+        zcl_abapgit_ui_factory=>get_frontend_services( )->execute( iv_document = lv_adt_link ).
 
       CATCH cx_root.
         zcx_abapgit_exception=>raise( 'ADT Jump Error' ).

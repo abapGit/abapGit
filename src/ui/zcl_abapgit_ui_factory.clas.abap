@@ -38,6 +38,9 @@ CLASS zcl_abapgit_ui_factory DEFINITION
         !iv_disable_query_table TYPE abap_bool DEFAULT abap_true
       RETURNING
         VALUE(ri_viewer)        TYPE REF TO zif_abapgit_html_viewer .
+    CLASS-METHODS get_gui_jumper
+      RETURNING
+        VALUE(ri_gui_jumper) TYPE REF TO zif_abapgit_gui_jumper .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -48,6 +51,7 @@ CLASS zcl_abapgit_ui_factory DEFINITION
     CLASS-DATA go_gui TYPE REF TO zcl_abapgit_gui .
     CLASS-DATA gi_fe_services TYPE REF TO zif_abapgit_frontend_services .
     CLASS-DATA gi_gui_services TYPE REF TO zif_abapgit_gui_services .
+    CLASS-DATA gi_gui_jumper TYPE REF TO zif_abapgit_gui_jumper .
 ENDCLASS.
 
 
@@ -169,6 +173,17 @@ CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
     ENDIF.
 
     ri_gui_functions = gi_gui_functions.
+
+  ENDMETHOD.
+
+
+  METHOD get_gui_jumper.
+
+   IF gi_gui_jumper IS INITIAL.
+      CREATE OBJECT gi_gui_jumper TYPE zcl_abapgit_gui_jumper.
+    ENDIF.
+
+    ri_gui_jumper = gi_gui_jumper.
 
   ENDMETHOD.
 
