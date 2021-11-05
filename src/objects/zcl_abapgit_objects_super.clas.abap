@@ -16,7 +16,6 @@ CLASS zcl_abapgit_objects_super DEFINITION
         !iv_obj_name     TYPE zif_abapgit_definitions=>ty_item-obj_name
         !iv_obj_type     TYPE zif_abapgit_definitions=>ty_item-obj_type
         !iv_sub_obj_name TYPE zif_abapgit_definitions=>ty_item-obj_name OPTIONAL
-        !iv_sub_obj_type TYPE zif_abapgit_definitions=>ty_item-obj_type OPTIONAL
         !iv_line_number  TYPE i OPTIONAL
       RAISING
         zcx_abapgit_exception .
