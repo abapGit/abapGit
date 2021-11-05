@@ -19,11 +19,9 @@ ENDCLASS.
 CLASS zcx_abapgit_not_found IMPLEMENTATION.
 
 
-  method CONSTRUCTOR.
-CALL METHOD SUPER->CONSTRUCTOR
-EXPORTING
-TEXTID = TEXTID
-PREVIOUS = PREVIOUS
-.
-  endmethod.
+  METHOD constructor ##ADT_SUPPRESS_GENERATION.
+    super->constructor(
+      textid   = textid
+      previous = previous ).
+  ENDMETHOD.
 ENDCLASS.

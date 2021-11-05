@@ -24,21 +24,20 @@ ENDCLASS.
 CLASS zcx_abapgit_cancel IMPLEMENTATION.
 
 
-  method CONSTRUCTOR.
-CALL METHOD SUPER->CONSTRUCTOR
-EXPORTING
-PREVIOUS = PREVIOUS
-II_LOG = II_LOG
-MSGV1 = MSGV1
-MSGV2 = MSGV2
-MSGV3 = MSGV3
-MSGV4 = MSGV4
-.
-clear me->textid.
-if textid is initial.
-  IF_T100_MESSAGE~T100KEY = IF_T100_MESSAGE=>DEFAULT_TEXTID.
-else.
-  IF_T100_MESSAGE~T100KEY = TEXTID.
-endif.
-  endmethod.
+  METHOD constructor ##ADT_SUPPRESS_GENERATION.
+    super->constructor(
+      previous = previous
+      ii_log   = ii_log
+      msgv1    = msgv1
+      msgv2    = msgv2
+      msgv3    = msgv3
+      msgv4    = msgv4 ).
+
+    CLEAR me->textid.
+    IF textid IS INITIAL.
+      if_t100_message~t100key = if_t100_message=>default_textid.
+    ELSE.
+      if_t100_message~t100key = textid.
+    ENDIF.
+  ENDMETHOD.
 ENDCLASS.
