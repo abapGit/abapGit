@@ -269,7 +269,10 @@ INTERFACE zif_abapgit_definitions
       beacon     TYPE i,
     END OF ty_diff .
   TYPES:
-    ty_diffs_tt TYPE STANDARD TABLE OF ty_diff WITH DEFAULT KEY .
+    ty_diffs_tt TYPE STANDARD TABLE OF ty_diff
+                     WITH DEFAULT KEY
+                     WITH NON-UNIQUE SORTED KEY new_num COMPONENTS new_num
+                     WITH NON-UNIQUE SORTED KEY old_num COMPONENTS old_num.
   TYPES:
     BEGIN OF ty_count,
       insert TYPE i,
