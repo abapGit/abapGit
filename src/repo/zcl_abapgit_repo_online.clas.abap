@@ -88,7 +88,8 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     IF zcl_abapgit_objects=>exists( ls_item ) = abap_false.
       " Check if any package is included in remote
       READ TABLE mt_remote TRANSPORTING NO FIELDS
-        WITH KEY filename = zcl_abapgit_filename_logic=>c_package_file.
+        WITH KEY file
+        COMPONENTS filename = zcl_abapgit_filename_logic=>c_package_file.
       IF sy-subrc <> 0.
         " If not, prompt to create it
         lv_package = zcl_abapgit_services_basis=>create_package( iv_package ).

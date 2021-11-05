@@ -414,8 +414,9 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     get_files_remote( ).
 
     READ TABLE mt_remote ASSIGNING <ls_remote>
-      WITH KEY path = zif_abapgit_definitions=>c_root_dir
-      filename = zif_abapgit_definitions=>c_dot_abapgit.
+      WITH KEY file_path
+      COMPONENTS path     = zif_abapgit_definitions=>c_root_dir
+                 filename = zif_abapgit_definitions=>c_dot_abapgit.
     IF sy-subrc = 0.
       ro_dot = zcl_abapgit_dot_abapgit=>deserialize( <ls_remote>-data ).
       set_dot_abapgit( ro_dot ).
@@ -432,8 +433,9 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     get_files_remote( ).
 
     READ TABLE mt_remote ASSIGNING <ls_remote>
-      WITH KEY path     = zif_abapgit_definitions=>c_root_dir
-               filename = zif_abapgit_apack_definitions=>c_dot_apack_manifest.
+      WITH KEY file_path
+      COMPONENTS path     = zif_abapgit_definitions=>c_root_dir
+                 filename = zif_abapgit_apack_definitions=>c_dot_apack_manifest.
     IF sy-subrc = 0.
       ro_dot = zcl_abapgit_apack_reader=>deserialize( iv_package_name = ms_data-package
                                                       iv_xstr         = <ls_remote>-data ).
@@ -458,7 +460,8 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     mi_data_config = ri_config.
 
     READ TABLE mt_remote ASSIGNING <ls_remote>
-      WITH KEY path = zif_abapgit_data_config=>c_default_path.
+      WITH KEY file_path
+      COMPONENTS path = zif_abapgit_data_config=>c_default_path.
     IF sy-subrc = 0.
       ri_config->from_json( mt_remote ).
     ENDIF.
