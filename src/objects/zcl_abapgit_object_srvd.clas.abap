@@ -529,75 +529,71 @@ CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
 
   METHOD clear_fields.
 
-    FIELD-SYMBOLS: <lv_links> TYPE ANY TABLE.
-    FIELD-SYMBOLS: <lv_value> TYPE data.
-    FIELD-SYMBOLS <ls_item> TYPE any.
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'VERSION'
+      CHANGING
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'VERSION'
+        iv_fieldname = 'CREATED_AT'
       CHANGING
-        cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'CREATED_AT'
+        iv_fieldname = 'CREATED_BY'
       CHANGING
-        cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'CREATED_BY'
+        iv_fieldname = 'CHANGED_AT'
       CHANGING
-        cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'CHANGED_AT'
+        iv_fieldname = 'CHANGED_BY'
       CHANGING
-        cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'CHANGED_BY'
+        iv_fieldname = 'RESPONSIBLE'
       CHANGING
-        cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'RESPONSIBLE'
+        iv_fieldname = 'PACKAGE_REF'
       CHANGING
-        cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-      iv_fieldname          = 'PACKAGE_REF'
+        iv_fieldname = 'MASTER_SYSTEM'
       CHANGING
-      cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-      iv_fieldname          = 'MASTER_SYSTEM'
+        iv_fieldname = 'DT_UUID'
       CHANGING
-      cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-      iv_fieldname          = 'DT_UUID'
+        iv_fieldname = 'ABAP_LANGUAGE_VERSION'
       CHANGING
-      cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
     clear_field(
       EXPORTING
-      iv_fieldname          = 'ABAP_LANGUAGE_VERSION'
+        iv_fieldname = 'LINKS'
       CHANGING
-      cs_metadata = cs_metadata ).
-
-    clear_field(
-      EXPORTING
-      iv_fieldname          = 'LINKS'
-      CHANGING
-      cs_metadata = cs_metadata ).
+        cs_metadata  = cs_metadata ).
 
   ENDMETHOD.
 
