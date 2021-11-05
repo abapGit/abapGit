@@ -1217,22 +1217,22 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     ls_hotkey_action-ui_component = 'Diff'.
 
-    ls_hotkey_action-description = |Refresh local|.
+    ls_hotkey_action-description = |Refresh Local|.
     ls_hotkey_action-action      = c_actions-refresh_local.
     ls_hotkey_action-hotkey      = |r|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-description = |Refresh all|.
+    ls_hotkey_action-description = |Refresh All|.
     ls_hotkey_action-action      = c_actions-refresh_all.
     ls_hotkey_action-hotkey      = |a|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-description = |Toogle split/unified|.
+    ls_hotkey_action-description = |Toogle Split/Unified|.
     ls_hotkey_action-action      = c_actions-toggle_unified.
     ls_hotkey_action-hotkey      = |u|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-description = |Toogle hidden characters|.
+    ls_hotkey_action-description = |Toogle Hidden Characters|.
     ls_hotkey_action-action      = c_actions-toggle_hidden_chars.
     ls_hotkey_action-hotkey      = |h|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
