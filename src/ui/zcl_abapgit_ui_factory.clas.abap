@@ -179,7 +179,7 @@ CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
 
   METHOD get_gui_jumper.
 
-   IF gi_gui_jumper IS INITIAL.
+    IF gi_gui_jumper IS INITIAL.
       CREATE OBJECT gi_gui_jumper TYPE zcl_abapgit_gui_jumper.
     ENDIF.
 
