@@ -922,7 +922,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
             iv_obj_name     = is_item-obj_name
             iv_obj_type     = is_item-obj_type
             iv_sub_obj_name = iv_sub_obj_name
-            iv_sub_obj_type = iv_sub_obj_type
             iv_line_number  = iv_line_number ).
         CATCH zcx_abapgit_exception.
           li_obj->jump( ).
