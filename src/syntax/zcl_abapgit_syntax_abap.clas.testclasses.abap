@@ -147,8 +147,7 @@ CLASS ltcl_syntax_cases DEFINITION FINAL FOR TESTING RISK LEVEL HARMLESS
       mt_after_extend TYPE zcl_abapgit_syntax_abap=>ty_match_tt.
 
     METHODS:
-      do_test IMPORTING iv_line     TYPE string
-                        iv_filename TYPE string,
+      do_test IMPORTING iv_line TYPE string,
       generate_parse IMPORTING iv_token  TYPE c
                                iv_offset TYPE i
                                iv_length TYPE i,
