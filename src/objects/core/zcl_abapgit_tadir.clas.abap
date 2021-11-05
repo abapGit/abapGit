@@ -40,8 +40,8 @@ CLASS zcl_abapgit_tadir DEFINITION
         zcx_abapgit_exception .
     METHODS skip_objects
       IMPORTING
-        !iv_package TYPE tadir-devclass
-        !io_dot     TYPE REF TO zcl_abapgit_dot_abapgit
+        !iv_package TYPE tadir-devclass ##NEEDED
+        !io_dot     TYPE REF TO zcl_abapgit_dot_abapgit ##NEEDED
         !ii_log     TYPE REF TO zif_abapgit_log OPTIONAL
       CHANGING
         !ct_tadir   TYPE zif_abapgit_definitions=>ty_tadir_tt
@@ -71,8 +71,8 @@ CLASS zcl_abapgit_tadir DEFINITION
         zcx_abapgit_exception .
     METHODS adjust_objects
       IMPORTING
-        !iv_package TYPE tadir-devclass
-        !io_dot     TYPE REF TO zcl_abapgit_dot_abapgit
+        !iv_package TYPE tadir-devclass ##NEEDED
+        !io_dot     TYPE REF TO zcl_abapgit_dot_abapgit ##NEEDED
       CHANGING
         !ct_tadir   TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
