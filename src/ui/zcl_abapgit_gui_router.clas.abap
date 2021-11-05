@@ -205,9 +205,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
   METHOD general_page_routing.
 
     DATA: lv_key           TYPE zif_abapgit_persistence=>ty_repo-key,
-          lv_last_repo_key TYPE zif_abapgit_persistence=>ty_repo-key,
-          lt_repo_fav_list TYPE zif_abapgit_repo_srv=>ty_repo_list,
-          lt_repo_all_list TYPE zif_abapgit_repo_srv=>ty_repo_list.
+          lv_last_repo_key TYPE zif_abapgit_persistence=>ty_repo-key.
 
     lv_key = ii_event->query( )->get( 'KEY' ).
 

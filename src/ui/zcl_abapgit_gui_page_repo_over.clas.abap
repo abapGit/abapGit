@@ -337,11 +337,6 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       lv_type_icon            TYPE string,
       lv_favorite_icon        TYPE string,
       lv_favorite_class       TYPE string,
-      lv_stage_link           TYPE string,
-      lv_patch_link           TYPE string,
-      lv_zip_import_link      TYPE string,
-      lv_zip_export_link      TYPE string,
-      lv_check_link           TYPE string,
       lv_text                 TYPE string,
       lv_lock                 TYPE string,
       lv_toggle_favorite_link TYPE string,
@@ -562,9 +557,8 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD shorten_repo_url.
-    DATA lt_results TYPE match_result_tab.
     DATA lv_new_length TYPE i.
-    DATA: lv_length_to_truncate_to TYPE i.
+    DATA lv_length_to_truncate_to TYPE i.
 
     rv_shortened = iv_full_url.
 
