@@ -164,10 +164,6 @@ CLASS zcl_abapgit_gui_page_merge_res IMPLEMENTATION.
 
   METHOD is_binary.
 
-    DATA: lv_len TYPE i,
-          lv_idx TYPE i,
-          lv_x   TYPE x.
-
     FIELD-SYMBOLS <lv_data> LIKE iv_d1.
 
 
