@@ -15,8 +15,10 @@ class ltcl_chko definition final for testing
       setup,
       insert_chko_in_db importing name type wb_object_name,
       get_chko_as_json returning value(result) type rswsourcet,
+      get_chko_as_json_no_params returning value(result) type rswsourcet,
       serialize for testing raising cx_static_check,
-      deserialize for testing raising cx_static_check.
+*      deserialize_chko_w_params for testing raising cx_static_check,
+      deserialize_chko_wo_params for testing raising cx_static_check.
 endclass.
 
 
@@ -62,9 +64,11 @@ class ltcl_chko implementation.
     data(json) = cl_abap_codepage=>convert_from( act_files[ 1 ]-data ).
   endmethod.
 
-  method deserialize.
-    data(json) = get_chko_as_json( ).
-    data(json_as_xstring) = new zcl_abapgit_ajson_cnt_handler( )->serialize( data = json ).
+  method deserialize_chko_wo_params.
+    data(json_table) = get_chko_as_json_no_params( ).
+    concatenate lines of json_table into data(json).
+    data(json_as_xstring) = zcl_abapgit_convert=>string_to_xstring_utf8( json ).
+
     cut->mo_files->add_raw( iv_ext = 'json' iv_data = json_as_xstring ).
 
     cut->deserialize(
@@ -74,7 +78,25 @@ class ltcl_chko implementation.
       ii_log     = new zcl_abapgit_log( ) ).
 
     select from chko_header fields * into table @data(header).
+    break-point.
   endmethod.
+
+*  method deserialize_chko_w_params.
+*    data(json_table) = get_chko_as_json( ).
+*    concatenate lines of json_table into data(json).
+*    data(json_as_xstring) = zcl_abapgit_convert=>string_to_xstring_utf8( json ).
+*
+*    cut->mo_files->add_raw( iv_ext = 'json' iv_data = json_as_xstring ).
+*
+*    cut->deserialize(
+*      iv_package = '$TMP'
+*      io_xml     = value #( )
+*      iv_step    = zif_abapgit_object=>gc_step_id-abap
+*      ii_log     = new zcl_abapgit_log( ) ).
+*
+*    select from chko_header fields * into table @data(header).
+*    break-point.
+*  endmethod.
 
   method insert_chko_in_db.
     data chko_header type table of chko_header.
@@ -117,25 +139,34 @@ class ltcl_chko implementation.
   method get_chko_as_json.
     result = value #(
 ( `{` )
+( `  "formatVersion": "1",` )
 ( `  "header": {` )
-( `    "formatVersion": "1",` )
 ( `    "description": "Test description",` )
-( `    "masterLanguage": "EN",` )
-( `    "abapLanguageVersion": "standard"` )
+( `    "originalLanguage": "EN"` )
 ( `  },` )
-( `  "content": {` )
-( `    "category": "TEST_CATEGORY",` )
-( `    "implementingClass": "TEST_CLASS",` )
-( `    "remoteEnabled": true,` )
-( `    "parameters": [` )
-( `      {` )
-( `        "technicalId": "1",` )
-( `        "name": "parameter",` )
-( `        "description": "Parameter description",` )
-( `        "modifiable": true` )
-( `      }` )
-( `    ]` )
-( `  }` )
+( `  "category": "TEST_CATEGORY",` )
+( `  "implementingClass": "TEST_CLASS",` )
+( `  "parameters": [` )
+( `    {` )
+( `      "technicalId": "1",` )
+( `      "name": "parameter",` )
+( `      "description": "Parameter description",` )
+( `      "hidden": true` )
+( `    }` )
+( `  ]` )
+( `}` ) ).
+  endmethod.
+
+  method get_chko_as_json_no_params.
+    result = value #(
+( `{` )
+( `  "formatVersion": "1",` )
+( `  "header": {` )
+( `    "description": "Test description",` )
+( `    "originalLanguage": "EN"` )
+( `  },` )
+( `  "category": "TEST_CATEGORY",` )
+( `  "implementingClass": "TEST_CLASS"` )
 ( `}` ) ).
   endmethod.
 

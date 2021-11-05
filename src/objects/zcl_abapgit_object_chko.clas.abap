@@ -8,7 +8,7 @@ CLASS zcl_abapgit_object_chko DEFINITION
 
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     TYPES:
@@ -28,7 +28,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_CHKO IMPLEMENTATION.
+CLASS zcl_abapgit_object_chko IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -56,31 +56,42 @@ CLASS ZCL_ABAPGIT_OBJECT_CHKO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  method zif_abapgit_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
+    " test with simple type
+types:
+      BEGIN OF ty_main,
+      format_version     TYPE if_aff_types_v1=>ty_format_version,
+      header             TYPE if_aff_types_v1=>ty_header_60,
+      category           TYPE if_aff_types_v1=>ty_object_name_30,
+      implementing_class TYPE if_aff_types_v1=>ty_object_name_30,
+      remote_enabled     TYPE abap_bool,
+*      parameters         TYPE ty_parameters,
+      END OF ty_main.
 
-    data properties type if_aff_chko_v1=>ty_main.
+    data properties type ty_main.
 
-    try.
-        data(json_as_xstring) = mo_files->read_raw( iv_ext = 'json' ) ##NO_TEXT.
+*    data properties type if_aff_chko_v1=>ty_main.
 
-        new zcl_abapgit_ajson_cnt_handler( )->deserialize( exporting content = json_as_xstring importing data = properties ).
+    DATA(json_as_xstring) = mo_files->read_raw( iv_ext = 'json' ) ##NO_TEXT.
 
+    TRY.
+        NEW zcl_abapgit_ajson_cnt_handler( )->deserialize( EXPORTING content = json_as_xstring IMPORTING data = properties ).
         properties-header-abap_language_version = if_abap_language_version=>gc_version-sap_cloud_platform.
 
-        data(persistence) = new lcl_chko_aff_persistence( ).
+        DATA(persistence) = NEW lcl_chko_aff_persistence( ).
         persistence->save_content(
           data     = properties
-          object   = new cl_aff_obj( package = ms_item-devclass name = conv #( ms_item-obj_name ) type = ms_item-obj_type )
+          object   = NEW cl_aff_obj( package = ms_item-devclass name = CONV #( ms_item-obj_name ) type = ms_item-obj_type )
           language = mv_language
           version  = 'I'
           saved_by = sy-uname ).
-      catch cx_aff_root into data(exception).
+      CATCH cx_aff_root INTO DATA(exception).
         ii_log->add_exception(
             ix_exc  = exception
             is_item = ms_item ).
-    endtry.
+    ENDTRY.
 
-  endmethod.
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
@@ -120,33 +131,33 @@ CLASS ZCL_ABAPGIT_OBJECT_CHKO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  method zif_abapgit_object~serialize.
-    data hex type xstring.
+  METHOD zif_abapgit_object~serialize.
+    DATA hex TYPE xstring.
 
-    try.
-        data properties type if_aff_chko_v1=>ty_main.
-        data(persistence) = new lcl_chko_aff_persistence( ).
+    TRY.
+        DATA properties TYPE if_aff_chko_v1=>ty_main.
+        DATA(persistence) = NEW lcl_chko_aff_persistence( ).
         persistence->get_content(
-          exporting
-            object   = new cl_aff_obj( package = ms_item-devclass name = conv #( ms_item-obj_name ) type = ms_item-obj_type )
+          EXPORTING
+            object   = NEW cl_aff_obj( package = ms_item-devclass name = CONV #( ms_item-obj_name ) type = ms_item-obj_type )
             language = mv_language
             version  = 'A'
-          importing
+          IMPORTING
             data     = properties ).
 
 
-        hex = new zcl_abapgit_ajson_cnt_handler( )->serialize( data = properties ).
+        hex = NEW zcl_abapgit_ajson_cnt_handler( )->serialize( data = properties ).
         mo_files->add_raw( iv_ext = 'json' iv_data = hex ).
 
-      catch cx_aff_root into data(exception).
+      CATCH cx_aff_root INTO DATA(exception).
 *        ii_log->add_exception(
 *          ix_exc  = exception
 *          is_item = ms_item ).
-      catch zcx_abapgit_ajson_error into data(exception_ajson).
+      CATCH zcx_abapgit_ajson_error INTO DATA(exception_ajson).
 *        ii_log->add_exception(
 *         ix_exc  = exception_ajson
 *         is_item = ms_item ).
-    endtry.
+    ENDTRY.
 
-  endmethod.
+  ENDMETHOD.
 ENDCLASS.

@@ -52,8 +52,8 @@ method handle_exception.
     clear data.
 
     try.
-        data(lo_ajson) = zcl_abapgit_ajson=>parse( zcl_abapgit_convert=>xstring_to_string_utf8( content ) ).
-
+        data(json) = zcl_abapgit_convert=>xstring_to_string_utf8( content ).
+        data(lo_ajson) = zcl_abapgit_ajson=>parse( iv_json = json ii_custom_mapping = zcl_abapgit_ajson_mapping=>create_camel_case( ) ).
         lo_ajson->zif_abapgit_ajson~to_abap( importing ev_container = data ).
 
       catch zcx_abapgit_ajson_error  into data(ajson_error) .
