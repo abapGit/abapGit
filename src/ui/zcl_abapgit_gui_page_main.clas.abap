@@ -160,17 +160,17 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
 
     ls_hotkey_action-ui_component = 'Main'.
 
-    ls_hotkey_action-description   = |abapGit settings|.
+    ls_hotkey_action-description   = |abapGit Settings|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_settings.
     ls_hotkey_action-hotkey = |x|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-description   = |New online repository|.
+    ls_hotkey_action-description   = |New Online Repository|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_newonline.
     ls_hotkey_action-hotkey = |n|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-description   = |New offline repository|.
+    ls_hotkey_action-description   = |New Offline Repository|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_newoffline.
     ls_hotkey_action-hotkey = |o|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
@@ -201,17 +201,17 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
     " registered/handled in js
-    ls_hotkey_action-description = |Previous repository|.
+    ls_hotkey_action-description = |Previous Repository|.
     ls_hotkey_action-action = `#`.
     ls_hotkey_action-hotkey = |4|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-description = |Next repository|.
+    ls_hotkey_action-description = |Next Repository|.
     ls_hotkey_action-action = `##`.
     ls_hotkey_action-hotkey = |6|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-description = |Open repository|.
+    ls_hotkey_action-description = |Open Repository|.
     ls_hotkey_action-action = `###`.
     ls_hotkey_action-hotkey = |Enter|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
