@@ -136,7 +136,7 @@ private section.
       !IV_CONTENT type STRING
     returning
       value(RV_HTML) type STRING .
-  methods GET_STAGE_SUB_MENU
+  methods RENDER_STAGE_SUB_MENU
     importing
       value(II_HTML) type ref to ZIF_ABAPGIT_HTML
       !IV_DUMMY_KEY type STRING
@@ -227,45 +227,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
   METHOD get_only_favorites.
     rv_result = mv_only_favorites.
-  ENDMETHOD.
-
-
-  METHOD get_stage_sub_menu.
-    DATA lv_stage_link TYPE string.
-
-    DATA lv_top_entry TYPE string.
-
-    " Sub Menu Header
-    CONCATENATE '<a class = "' iv_action_class ' ' iv_online_class ' "'
-                ' href="#" title="Staging"> Staging </a>'
-                iv_separator INTO lv_top_entry RESPECTING BLANKS.
-
-    ii_html->add( action_link( lv_top_entry ) ).
-
-    ii_html->add( '<ul>' ).
-
-    "Normal Stage
-    ii_html->add( '<li>' ).
-    lv_stage_link = ii_html->a(
-         iv_txt   = |Stage|
-         iv_act   = |{ zif_abapgit_definitions=>c_action-go_stage }{ iv_dummy_key }|
-         iv_class = |{ iv_action_class } { iv_online_class } | ).
-
-    ii_html->add( action_link( lv_stage_link ) ).
-
-    ii_html->add( '</li>' ).
-
-    "Stage Transport / Task
-    ii_html->add( '<li>' ).
-
-    lv_stage_link = ii_html->a(
-          iv_txt   = |Stage by Transport / Task|
-          iv_act   = |{ zif_abapgit_definitions=>c_action-go_stage_transport }{ iv_dummy_key }|
-          iv_class = |{ iv_action_class } { iv_online_class } | ).
-
-    ii_html->add( action_link( lv_stage_link ) ).
-    ii_html->add( '</li>' ).
-    ii_html->add( '</ul>' ).
   ENDMETHOD.
 
 
@@ -364,7 +325,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 *    ii_html->add( action_link( lv_stage_link && lc_separator ) ).
 
     "Stage sub menu
-    get_stage_sub_menu(
+    render_stage_sub_menu(
       EXPORTING
         ii_html         = ii_html         " HTML
         iv_dummy_key    = lc_dummy_key
@@ -470,6 +431,45 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     ri_html->add( 'setInitialFocus("filter");' ).
     ri_html->add( 'var gHelper = new RepoOverViewHelper();' ).
 
+  ENDMETHOD.
+
+
+  METHOD RENDER_STAGE_SUB_MENU.
+    DATA lv_stage_link TYPE string.
+
+    DATA lv_top_entry TYPE string.
+
+    " Sub Menu Header
+    CONCATENATE '<a class = "' iv_action_class ' ' iv_online_class ' "'
+                ' href="#" title="Staging"> Staging </a>'
+                iv_separator INTO lv_top_entry RESPECTING BLANKS.
+
+    ii_html->add( action_link( lv_top_entry ) ).
+
+    ii_html->add( '<ul>' ).
+
+    "Normal Stage
+    ii_html->add( '<li>' ).
+    lv_stage_link = ii_html->a(
+         iv_txt   = |Stage|
+         iv_act   = |{ zif_abapgit_definitions=>c_action-go_stage }{ iv_dummy_key }|
+         iv_class = |{ iv_action_class } { iv_online_class } | ).
+
+    ii_html->add( action_link( lv_stage_link ) ).
+
+    ii_html->add( '</li>' ).
+
+    "Stage Transport / Task
+    ii_html->add( '<li>' ).
+
+    lv_stage_link = ii_html->a(
+          iv_txt   = |Stage by Transport / Task|
+          iv_act   = |{ zif_abapgit_definitions=>c_action-go_stage_transport }{ iv_dummy_key }|
+          iv_class = |{ iv_action_class } { iv_online_class } | ).
+
+    ii_html->add( action_link( lv_stage_link ) ).
+    ii_html->add( '</li>' ).
+    ii_html->add( '</ul>' ).
   ENDMETHOD.
 
 
