@@ -830,8 +830,8 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
   METHOD render_diff_head.
 
-    DATA: ls_stats    TYPE zif_abapgit_definitions=>ty_count,
-          lv_adt_link TYPE string.
+    DATA: ls_stats TYPE zif_abapgit_definitions=>ty_count,
+          lv_link  TYPE string.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -859,14 +859,14 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     IF NOT ( is_diff-lstate = zif_abapgit_definitions=>c_state-unchanged AND
              is_diff-rstate = zif_abapgit_definitions=>c_state-added ) AND
          NOT is_diff-lstate = zif_abapgit_definitions=>c_state-deleted.
-      lv_adt_link = ri_html->a(
+      lv_link = ri_html->a(
         iv_txt = |{ is_diff-path }{ is_diff-filename }|
         iv_typ = zif_abapgit_html=>c_action_type-sapevent
         iv_act = |jump?TYPE={ is_diff-obj_type }&NAME={ is_diff-obj_name }| ).
     ENDIF.
 
-    IF lv_adt_link IS NOT INITIAL.
-      ri_html->add( |<span class="diff_name">{ lv_adt_link }</span>| ).
+    IF lv_link IS NOT INITIAL.
+      ri_html->add( |<span class="diff_name">{ lv_link }</span>| ).
     ELSE.
       ri_html->add( |<span class="diff_name">{ is_diff-path }{ is_diff-filename }</span>| ).
     ENDIF.
@@ -1217,22 +1217,22 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     ls_hotkey_action-ui_component = 'Diff'.
 
-    ls_hotkey_action-description = |Refresh local|.
+    ls_hotkey_action-description = |Refresh Local|.
     ls_hotkey_action-action      = c_actions-refresh_local.
     ls_hotkey_action-hotkey      = |r|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-description = |Refresh all|.
+    ls_hotkey_action-description = |Refresh All|.
     ls_hotkey_action-action      = c_actions-refresh_all.
     ls_hotkey_action-hotkey      = |a|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-description = |Toogle split/unified|.
+    ls_hotkey_action-description = |Toogle Split/Unified|.
     ls_hotkey_action-action      = c_actions-toggle_unified.
     ls_hotkey_action-hotkey      = |u|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-description = |Toogle hidden characters|.
+    ls_hotkey_action-description = |Toogle Hidden Characters|.
     ls_hotkey_action-action      = c_actions-toggle_hidden_chars.
     ls_hotkey_action-hotkey      = |h|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
