@@ -168,7 +168,7 @@ CLASS zcl_abapgit_gui_jumper IMPLEMENTATION.
             iv_line_number  = iv_line_number ).
 
           rv_exit = abap_true.
-        CATCH EXCEPTION zcx_abapgit_exception #NO_HANDLER.
+        CATCH zcx_abapgit_exception ##NO_HANDLER.
           " Use fallback
       ENDTRY.
     ENDIF.
