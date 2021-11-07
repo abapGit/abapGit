@@ -474,6 +474,7 @@ INTERFACE zif_abapgit_definitions
       go_repo_diff                  TYPE string VALUE 'go_repo_diff',
       go_file_diff                  TYPE string VALUE 'go_fill_diff',
       go_stage                      TYPE string VALUE 'go_stage',
+      go_stage_transport            TYPE string VALUE 'go_stage_transport',
       go_commit                     TYPE string VALUE 'go_commit',
       go_branch_overview            TYPE string VALUE 'go_branch_overview',
       go_tag_overview               TYPE string VALUE 'go_tag_overview',

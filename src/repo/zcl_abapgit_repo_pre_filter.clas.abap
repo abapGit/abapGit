@@ -1,85 +1,91 @@
-CLASS zcl_abapgit_repo_pre_filter DEFINITION
-  PUBLIC
-  FINAL
-  CREATE PRIVATE .
+class ZCL_ABAPGIT_REPO_PRE_FILTER definition
+  public
+  final
+  create private .
 
-  PUBLIC SECTION.
+public section.
 
-    TYPES:
-      ty_file_filter_tt TYPE RANGE OF string .
-    TYPES:
-      ty_file_filter TYPE LINE OF ty_file_filter_tt .
+  types:
+    ty_file_filter_tt TYPE RANGE OF string .
+  types:
+    ty_file_filter TYPE LINE OF ty_file_filter_tt .
 
     "! <p class="shorttext synchronized" lang="en">Get Instance (Singleton)</p>
     "!
     "! @parameter RR_FILTER | <p class="shorttext synchronized" lang="en">Repository Pre Filter</p>
-    CLASS-METHODS get_instance
-      RETURNING
-        VALUE(rr_filter) TYPE REF TO zcl_abapgit_repo_pre_filter .
+  class-methods GET_INSTANCE
+    returning
+      value(RR_FILTER) type ref to ZCL_ABAPGIT_REPO_PRE_FILTER .
     "! <p class="shorttext synchronized" lang="en">Set Filter Values</p>
     "!
     "! @parameter IT_R_TRKORR | <p class="shorttext synchronized" lang="en">Table of Range Structures for E070/E071-TRKORR</p>
-    METHODS set_filter_values
-      IMPORTING
-        !it_r_trkorr TYPE trrngtrkor_tab
-      RAISING
-        zcx_abapgit_exception .
+  methods SET_FILTER_VALUES
+    importing
+      !IT_R_TRKORR type TRRNGTRKOR_TAB
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
     "! <p class="shorttext synchronized" lang="en">Get Filter Values</p>
     "!
     "! @parameter ET_R_TRKORR | <p class="shorttext synchronized" lang="en">Table of Range Structures for E070/E071-TRKORR</p>
-    METHODS get_filter_values
-      EXPORTING
-        !et_r_trkorr TYPE trrngtrkor_tab .
+  methods GET_FILTER_VALUES
+    exporting
+      !ET_R_TRKORR type TRRNGTRKOR_TAB .
     "! <p class="shorttext synchronized" lang="en">Get Local Filter of the ABAP Repository</p>
     "!
     "! @parameter RT_FILTER | <p class="shorttext synchronized" lang="en">Repository Filter</p>
-    METHODS get_local_filter
-      RETURNING
-        VALUE(rt_filter) TYPE zif_abapgit_definitions=>ty_tadir_tt .
+  methods GET_LOCAL_FILTER
+    returning
+      value(RT_FILTER) type ZIF_ABAPGIT_DEFINITIONS=>TY_TADIR_TT .
     "! <p class="shorttext synchronized" lang="en">Get the file filter for the Git Repository</p>
     "!
     "! @parameter RT_R_FILE_FILTER | <p class="shorttext synchronized" lang="en">File Filter</p>
-    METHODS get_file_filter
-      RETURNING
-        VALUE(rt_r_file_filter) TYPE ty_file_filter_tt .
+  methods GET_FILE_FILTER
+    returning
+      value(RT_R_FILE_FILTER) type TY_FILE_FILTER_TT .
     "! <p class="shorttext synchronized" lang="en">Filter the files</p>
     "!
     "! @parameter CT_FILES | <p class="shorttext synchronized" lang="en">File</p>
-    METHODS filter_files
-      CHANGING
-        !ct_files TYPE zif_abapgit_definitions=>ty_files_tt .
+  methods FILTER_FILES
+    changing
+      !CT_FILES type ZIF_ABAPGIT_DEFINITIONS=>TY_FILES_TT .
     "! <p class="shorttext synchronized" lang="en">Init the class</p>
     "!
-    METHODS init .
-    CLASS-METHODS set_filter_values_via_dialog
-      RAISING
-        zcx_abapgit_exception .
+  methods INIT .
+  methods SET_FILTER_VALUES_VIA_DIALOG
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods SET_LATEST_ACTION
+    importing
+      !IV_ACTION type STRING .
+  methods IS_FILTER_REQUIRED
+    returning
+      value(RV_REQUIRED) type ABAP_BOOL .
   PROTECTED SECTION.
 
 
-  PRIVATE SECTION.
-    CLASS-DATA sr_filter TYPE REF TO zcl_abapgit_repo_pre_filter .
-    DATA mt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt .
-    DATA mt_r_trkorr TYPE trrngtrkor_tab .
-    DATA mt_r_file_filter TYPE ty_file_filter_tt .
+private section.
+
+  class-data SR_FILTER type ref to ZCL_ABAPGIT_REPO_PRE_FILTER .
+  data MT_FILTER type ZIF_ABAPGIT_DEFINITIONS=>TY_TADIR_TT .
+  data MT_R_TRKORR type TRRNGTRKOR_TAB .
+  data MT_R_FILE_FILTER type TY_FILE_FILTER_TT .
+  data MV_LATEST_ACTION type STRING .
 
     "! <p class="shorttext synchronized" lang="en">Generates the filter for the local ABAP Repository</p>
     "!
-    METHODS generate_local_filter
-      RAISING
-        zcx_abapgit_exception .
-
-
+  methods GENERATE_LOCAL_FILTER
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
     "! <p class="shorttext synchronized" lang="en">Generates the file filter for the Git Repository</p>
     "!
-    METHODS generate_file_filter
-      RAISING
-        zcx_abapgit_exception .
+  methods GENERATE_FILE_FILTER
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO_PRE_FILTER IMPLEMENTATION.
 
 
   METHOD filter_files.
@@ -202,7 +208,7 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
 
     IF mt_filter IS INITIAL.
 
-      zcx_abapgit_exception=>raise( |No objects found for transport filter| ).
+      zcx_abapgit_exception=>raise( 'No objects found for transport filter'(004) ).
 
     ENDIF.
   ENDMETHOD.
@@ -241,6 +247,14 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD is_filter_required.
+    CLEAR rv_required.
+    IF mv_latest_action = zif_abapgit_definitions=>c_action-go_stage_transport.
+      rv_required = abap_true.
+    ENDIF.
+  ENDMETHOD.
+
+
   METHOD set_filter_values.
 
     init( ).
@@ -254,13 +268,57 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
 
   METHOD set_filter_values_via_dialog.
 
-    "Pre-Filter is currently only with GUI supported
-    IF zcl_abapgit_ui_factory=>get_gui_functions( )->gui_is_available( ) = abap_false.
-      RETURN.
+    DATA: ls_selection  TYPE trwbo_selection.
+    DATA lt_r_trkorr  TYPE trrngtrkor_tab.
+    DATA ls_r_trkorr  TYPE trrngtrkor.
+    DATA lr_request TYPE REF TO trwbo_request_header.
+    DATA lt_request TYPE trwbo_request_headers.
+
+    ls_selection-trkorrpattern = space.
+    ls_selection-connect_req_task_conditions = 'X'.
+    ls_selection-reqfunctions = 'KTRXS'.
+    ls_selection-reqstatus = 'RNODL'.
+    ls_selection-taskstatus = 'RNODL'.
+    CONDENSE ls_selection-reqfunctions NO-GAPS.
+    ls_selection-taskfunctions      = sctsc_types_tasks.
+    CONCATENATE sy-sysid '*' INTO ls_selection-trkorrpattern.
+
+    CALL FUNCTION 'TRINT_SELECT_REQUESTS'
+      EXPORTING
+        iv_username_pattern    = '*'
+        is_selection           = ls_selection
+        IV_COMPLETE_PROJECTS   = abap_false
+        iv_via_selscreen       = 'X'
+*       IS_POPUP               =
+        iv_title               = 'Select Transports / Tasks'(001)
+      IMPORTING
+        et_requests            = lt_request
+* CHANGING
+*       CS_RANGES              =
+      EXCEPTIONS
+        action_aborted_by_user = 1
+        OTHERS                 = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Pre-Filter Canceled'(002) ).
     ENDIF.
 
-    "Call Pre-Filter Selection Screen
-    CALL FUNCTION 'ZABAPGIT_REPO_SET_PRE_FILTER_D'.
+    IF lt_request IS INITIAL.
+      zcx_abapgit_exception=>raise( 'No Request Found'(003) ).
+    ENDIF.
 
+    LOOP AT lt_request REFERENCE INTO lr_request.
+      ls_r_trkorr-sign = 'I'.
+      ls_r_trkorr-option = 'EQ'.
+      ls_r_trkorr-low = lr_request->trkorr.
+      INSERT ls_r_trkorr INTO TABLE lt_r_trkorr.
+    ENDLOOP.
+
+    set_filter_values( it_r_trkorr = lt_r_trkorr[]  ).
+  ENDMETHOD.
+
+
+  METHOD set_latest_action.
+    "Set latest action
+    mv_latest_action = iv_action.
   ENDMETHOD.
 ENDCLASS.

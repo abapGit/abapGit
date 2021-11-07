@@ -130,7 +130,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_router IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
 
   METHOD abapgit_services_actions.
@@ -241,7 +241,9 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         OR zif_abapgit_definitions=>c_action-go_file_diff.
         rs_handled-page  = get_page_diff( ii_event ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
-      WHEN zif_abapgit_definitions=>c_action-go_stage.                        " Go Staging page
+      WHEN zif_abapgit_definitions=>c_action-go_stage                         " Go Staging page
+        or zif_abapgit_definitions=>c_action-go_stage_transport.              " Go Staging page by Transport
+        ZCL_ABAPGIT_REPO_PRE_FILTER=>get_instance( )->SET_LATEST_ACTION( ii_event->mv_action ).
         rs_handled-page  = get_page_stage( ii_event ).
         rs_handled-state = get_state_diff( ii_event ).
       WHEN zif_abapgit_definitions=>c_action-go_branch_overview.              " Go repo branch overview
@@ -261,29 +263,6 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
     ENDCASE.
-
-  ENDMETHOD.
-
-  METHOD main_page.
-
-    DATA lt_repo_fav_list TYPE zif_abapgit_repo_srv=>ty_repo_list.
-    DATA lt_repo_all_list TYPE zif_abapgit_repo_srv=>ty_repo_list.
-
-    " for performance reasons, only load favorites
-    lt_repo_fav_list = zcl_abapgit_repo_srv=>get_instance( )->list_favorites( ).
-    IF lt_repo_fav_list IS INITIAL.
-      " if there are no favorites, check if there are any repositories at all
-      " if not, go to tutorial where the user can create the first repository
-      lt_repo_all_list = zcl_abapgit_repo_srv=>get_instance( )->list( ).
-      IF lt_repo_all_list IS NOT INITIAL.
-        CREATE OBJECT ri_page TYPE zcl_abapgit_gui_page_main EXPORTING iv_only_favorites = abap_false.
-      ELSE.
-        ri_page = zcl_abapgit_gui_page_tutorial=>create( ).
-      ENDIF.
-
-    ELSE.
-      CREATE OBJECT ri_page TYPE zcl_abapgit_gui_page_main EXPORTING iv_only_favorites = abap_true.
-    ENDIF.
 
   ENDMETHOD.
 
@@ -543,6 +522,30 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     CALL FUNCTION 'BAPI_USER_DISPLAY'
       EXPORTING
         username = iv_username.
+
+  ENDMETHOD.
+
+
+  METHOD main_page.
+
+    DATA lt_repo_fav_list TYPE zif_abapgit_repo_srv=>ty_repo_list.
+    DATA lt_repo_all_list TYPE zif_abapgit_repo_srv=>ty_repo_list.
+
+    " for performance reasons, only load favorites
+    lt_repo_fav_list = zcl_abapgit_repo_srv=>get_instance( )->list_favorites( ).
+    IF lt_repo_fav_list IS INITIAL.
+      " if there are no favorites, check if there are any repositories at all
+      " if not, go to tutorial where the user can create the first repository
+      lt_repo_all_list = zcl_abapgit_repo_srv=>get_instance( )->list( ).
+      IF lt_repo_all_list IS NOT INITIAL.
+        CREATE OBJECT ri_page TYPE zcl_abapgit_gui_page_main EXPORTING iv_only_favorites = abap_false.
+      ELSE.
+        ri_page = zcl_abapgit_gui_page_tutorial=>create( ).
+      ENDIF.
+
+    ELSE.
+      CREATE OBJECT ri_page TYPE zcl_abapgit_gui_page_main EXPORTING iv_only_favorites = abap_true.
+    ENDIF.
 
   ENDMETHOD.
 

@@ -122,7 +122,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -361,14 +361,17 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
 
   METHOD init_files.
-     "Call Repo Pre-Filter Dialog
-    zcl_abapgit_repo_pre_filter=>get_instance( )->init( ).
-    zcl_abapgit_repo_pre_filter=>set_filter_values_via_dialog( ).
-
+    "Call Repo Pre-Filter Dialog
+    DATA lr_pre_filter TYPE REF TO zcl_abapgit_repo_pre_filter.
+    lr_pre_filter = zcl_abapgit_repo_pre_filter=>get_instance( ).
+    lr_pre_filter->init( ).
+    IF lr_pre_filter->is_filter_required( ) = abap_true.
+      lr_pre_filter->set_filter_values_via_dialog( ).
+    ENDIF.
     ms_files = zcl_abapgit_factory=>get_stage_logic( )->get( mo_repo ).
 
     "Init the Repo Pre Filter againg, so that it will not hinder other functions
-    zcl_abapgit_repo_pre_filter=>get_instance( )->init( ).
+    lr_pre_filter->init( ).
     IF lines( ms_files-local ) = 0 AND lines( ms_files-remote ) = 0.
       zcx_abapgit_exception=>raise( 'There are no changes that could be staged' ).
     ENDIF.
