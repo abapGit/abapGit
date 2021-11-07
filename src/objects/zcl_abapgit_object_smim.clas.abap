@@ -55,7 +55,9 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
 
     lt_files = mo_files->get_files( ).
 
-    READ TABLE lt_files ASSIGNING <ls_file> WITH KEY filename = lv_filename.
+    READ TABLE lt_files ASSIGNING <ls_file>
+        WITH KEY file
+        COMPONENTS filename = lv_filename.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'SMIM, file not found' ).
     ENDIF.

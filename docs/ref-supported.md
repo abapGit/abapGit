@@ -49,7 +49,7 @@ ENHO | Enhancement Implementation | Yes
 ENHS | Enhancement Spot | Yes
 ENQU | Lock Object | Yes
 ENSC | Composite Enhancement Spot | Yes
-FDT0 | FDT/BRFplus: System Application | [#33](https://github.com/abapGit/abapGit/issues/33)
+FDT0 | FDT/BRFplus: System Application | Yes
 FDT1 | FDT/BRFplus: Customizing Application | [#33](https://github.com/abapGit/abapGit/issues/33)
 FORM | SAPscript form | Yes
 FTGL | Feature Toggle | Yes

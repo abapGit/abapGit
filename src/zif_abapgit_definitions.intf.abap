@@ -30,7 +30,9 @@ INTERFACE zif_abapgit_definitions
   TYPES: data TYPE xstring,
     END OF ty_file .
   TYPES:
-    ty_files_tt TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY .
+    ty_files_tt TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY
+                     WITH UNIQUE SORTED KEY file_path COMPONENTS path filename
+                     WITH NON-UNIQUE SORTED KEY file COMPONENTS filename.
   TYPES:
     ty_string_tt TYPE STANDARD TABLE OF string WITH DEFAULT KEY .
   TYPES ty_git_branch_type TYPE c LENGTH 2 .
@@ -269,7 +271,10 @@ INTERFACE zif_abapgit_definitions
       beacon     TYPE i,
     END OF ty_diff .
   TYPES:
-    ty_diffs_tt TYPE STANDARD TABLE OF ty_diff WITH DEFAULT KEY .
+    ty_diffs_tt TYPE STANDARD TABLE OF ty_diff
+                     WITH DEFAULT KEY
+                     WITH NON-UNIQUE SORTED KEY new_num COMPONENTS new_num
+                     WITH NON-UNIQUE SORTED KEY old_num COMPONENTS old_num.
   TYPES:
     BEGIN OF ty_count,
       insert TYPE i,
