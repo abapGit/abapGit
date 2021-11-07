@@ -295,23 +295,11 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
   METHOD jump_adt.
 
-    DATA: lv_adt_link TYPE string,
-          lx_error    TYPE REF TO cx_root.
-
-    TRY.
-
-        lv_adt_link = zcl_abapgit_adt_link=>generate(
-          iv_obj_name     = iv_obj_name
-          iv_obj_type     = iv_obj_type
-          iv_sub_obj_name = iv_sub_obj_name
-          iv_line_number  = iv_line_number ).
-
-        zcl_abapgit_ui_factory=>get_frontend_services( )->execute( iv_document = lv_adt_link ).
-
-      CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise( iv_text = 'ADT Jump Error'
-                                      ix_previous = lx_error ).
-    ENDTRY.
+    zcl_abapgit_adt_link=>jump(
+      iv_obj_name     = iv_obj_name
+      iv_obj_type     = iv_obj_type
+      iv_sub_obj_name = iv_sub_obj_name
+      iv_line_number  = iv_line_number ).
 
   ENDMETHOD.
 

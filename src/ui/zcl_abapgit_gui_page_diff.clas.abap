@@ -830,8 +830,8 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
   METHOD render_diff_head.
 
-    DATA: ls_stats    TYPE zif_abapgit_definitions=>ty_count,
-          lv_adt_link TYPE string.
+    DATA: ls_stats TYPE zif_abapgit_definitions=>ty_count,
+          lv_link  TYPE string.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -859,14 +859,14 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     IF NOT ( is_diff-lstate = zif_abapgit_definitions=>c_state-unchanged AND
              is_diff-rstate = zif_abapgit_definitions=>c_state-added ) AND
          NOT is_diff-lstate = zif_abapgit_definitions=>c_state-deleted.
-      lv_adt_link = ri_html->a(
+      lv_link = ri_html->a(
         iv_txt = |{ is_diff-path }{ is_diff-filename }|
         iv_typ = zif_abapgit_html=>c_action_type-sapevent
         iv_act = |jump?TYPE={ is_diff-obj_type }&NAME={ is_diff-obj_name }| ).
     ENDIF.
 
-    IF lv_adt_link IS NOT INITIAL.
-      ri_html->add( |<span class="diff_name">{ lv_adt_link }</span>| ).
+    IF lv_link IS NOT INITIAL.
+      ri_html->add( |<span class="diff_name">{ lv_link }</span>| ).
     ELSE.
       ri_html->add( |<span class="diff_name">{ is_diff-path }{ is_diff-filename }</span>| ).
     ENDIF.
