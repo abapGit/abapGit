@@ -152,8 +152,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
       iv_package     = get_package( )
       ii_data_config = get_data_config( )
       ii_log         = ii_log
-      it_filter      = zcl_abapgit_repo_pre_filter=>get_instance( )->get_local_filter( )
-       ).
+      it_filter      = zcl_abapgit_repo_pre_filter=>get_instance( )->get_local_filter( ) ).
 
     mt_local                 = rt_files.
     mv_request_local_refresh = abap_false. " Fulfill refresh
@@ -163,9 +162,11 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
 
   METHOD get_files_remote.
+    DATA lr_pre_filter TYPE REF TO zcl_abapgit_repo_pre_filter.
     fetch_remote( ).
     rt_files = super->get_files_remote( ).
-    zcl_abapgit_repo_pre_filter=>get_instance( )->filter_files( CHANGING ct_files = rt_files ).
+    lr_pre_filter = zcl_abapgit_repo_pre_filter=>get_instance( ).
+    lr_pre_filter->filter_files( CHANGING ct_files = rt_files ).
   ENDMETHOD.
 
 

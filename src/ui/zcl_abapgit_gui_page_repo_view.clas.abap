@@ -32,7 +32,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
   PRIVATE SECTION.
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
-    DATA mo_repo_aggregated_state TYPE REF TO zcl_abapgit_item_state.
+    DATA mo_repo_aggregated_state TYPE REF TO zcl_abapgit_item_state .
     DATA mv_cur_dir TYPE string .
     DATA mv_hide_files TYPE abap_bool .
     DATA mv_max_lines TYPE i .
@@ -149,6 +149,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         !io_tb_branch     TYPE REF TO zcl_abapgit_html_toolbar
         !io_tb_tag        TYPE REF TO zcl_abapgit_html_toolbar
         !io_tb_advanced   TYPE REF TO zcl_abapgit_html_toolbar
+        !io_tb_stage      TYPE REF TO zcl_abapgit_html_toolbar
       RETURNING
         VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
       RAISING
@@ -173,8 +174,12 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
+    METHODS build_stage_dropdown
+      RETURNING
+        VALUE(ro_stage_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -362,6 +367,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
     DATA: lo_tb_advanced TYPE REF TO zcl_abapgit_html_toolbar,
           lo_tb_branch   TYPE REF TO zcl_abapgit_html_toolbar,
           lo_tb_tag      TYPE REF TO zcl_abapgit_html_toolbar,
+          lo_tb_stage    TYPE REF TO zcl_abapgit_html_toolbar,
           lv_wp_opt      LIKE zif_abapgit_html=>c_html_opt-crossout,
           lv_pull_opt    LIKE zif_abapgit_html=>c_html_opt-crossout.
 
@@ -378,11 +384,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
     lo_tb_advanced = build_advanced_dropdown( iv_wp_opt = lv_wp_opt ).
 
+    lo_tb_stage = build_stage_dropdown( ).
+
+
     ro_toolbar = build_main_toolbar(
       iv_pull_opt    = lv_pull_opt
       io_tb_branch   = lo_tb_branch
       io_tb_tag      = lo_tb_tag
-      io_tb_advanced = lo_tb_advanced ).
+      io_tb_advanced = lo_tb_advanced
+      io_tb_stage    = lo_tb_stage ).
 
   ENDMETHOD.
 
@@ -437,8 +447,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
       ENDIF.
       IF mo_repo_aggregated_state->local( ) IS NOT INITIAL. " Something new at local
         ro_toolbar->add( iv_txt = 'Stage'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?key={ mv_key }|
-                         iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+                         iv_opt = zif_abapgit_html=>c_html_opt-strong
+                         io_sub = io_tb_stage ).
+
+*        ro_toolbar->add( iv_txt = 'Stage'
+*                         iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?key={ mv_key }|
+*                         iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+
       ENDIF.
       IF mo_repo_aggregated_state->is_unchanged( ) = abap_false. " Any changes
         ro_toolbar->add( iv_txt = 'Diff'
@@ -512,6 +527,18 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
     rv_html = li_html->a(
       iv_txt = |{ is_item-obj_name }|
       iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_encode }| ).
+
+  ENDMETHOD.
+
+
+  METHOD build_stage_dropdown.
+
+    CREATE OBJECT ro_stage_dropdown.
+
+    ro_stage_dropdown->add( iv_txt = 'Stage'
+                     iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?key={ mv_key }| ).
+    ro_stage_dropdown->add( iv_txt = 'Stage Transport/Task'
+                      iv_act = |{ zif_abapgit_definitions=>c_action-go_stage_transport }?key={ mv_key }| ).
 
   ENDMETHOD.
 

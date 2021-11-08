@@ -21,36 +21,36 @@ CLASS zcl_abapgit_repo_pre_filter DEFINITION
     "! @parameter IT_R_TRKORR | <p class="shorttext synchronized" lang="en">Tab of Range Struct for E070/E071-TRKORR</p>
     METHODS set_filter_values
       IMPORTING
-      !it_r_trkorr TYPE trrngtrkor_tab
+        !it_r_trkorr TYPE trrngtrkor_tab
       RAISING
-      zcx_abapgit_exception .
+        zcx_abapgit_exception .
     "! <p class="shorttext synchronized" lang="en">Get Filter Values</p>
     "!
-    "! @parameter ET_R_TRKORR | <p class="shorttext synchronized" lang="en">Tab of Range Struct for E070/E071-TRKORR</p>
+    "! @parameter RT_R_TRKORR | <p class="shorttext synchronized" lang="en">Tab of Range Struct for E070/E071-TRKORR</p>
     METHODS get_filter_values
-      EXPORTING
-      !et_r_trkorr TYPE trrngtrkor_tab .
+      RETURNING
+        VALUE(rt_r_trkorr) TYPE trrngtrkor_tab .
     "! <p class="shorttext synchronized" lang="en">Get Local Filter of the ABAP Repository</p>
     "!
     "! @parameter RT_FILTER | <p class="shorttext synchronized" lang="en">Repository Filter</p>
     METHODS get_local_filter
       RETURNING
-      VALUE(rt_filter) TYPE zif_abapgit_definitions=>ty_tadir_tt .
+        VALUE(rt_filter) TYPE zif_abapgit_definitions=>ty_tadir_tt .
     "! <p class="shorttext synchronized" lang="en">Get the file filter for the Git Repository</p>
     "!
     "! @parameter RT_R_FILE_FILTER | <p class="shorttext synchronized" lang="en">File Filter</p>
     METHODS get_file_filter
       RETURNING
-      VALUE(rt_r_file_filter) TYPE ty_file_filter_tt .
+        VALUE(rt_r_file_filter) TYPE ty_file_filter_tt .
     "! <p class="shorttext synchronized" lang="en">Filter the files</p>
     "!
-    "! @parameter CT_FILES | <p class="shorttext synchronized" lang="en">File</p>
+    "! @parameter CT_FILES | <p class="shorttext synchronized" lang="en">Files</p>
     METHODS filter_files
       CHANGING
-      !ct_files TYPE zif_abapgit_definitions=>ty_files_tt .
-   "! <p class="shorttext synchronized" lang="en">Init the class</p>
+        !ct_files TYPE zif_abapgit_definitions=>ty_files_tt .
+    "! <p class="shorttext synchronized" lang="en">Init the class</p>
     METHODS init .
-   "! <p class="shorttext synchronized" lang="en">Set Filter Values Via Dialog</p>
+    "! <p class="shorttext synchronized" lang="en">Set Filter Values Via Dialog</p>
     METHODS set_filter_values_via_dialog
       RAISING
         zcx_abapgit_exception .
@@ -59,19 +59,19 @@ CLASS zcl_abapgit_repo_pre_filter DEFINITION
     "! @parameter iv_action | <p class="shorttext synchronized" lang="en">Action</p>
     METHODS set_latest_action
       IMPORTING
-      !iv_action TYPE string .
+        !iv_action TYPE string .
     "! <p class="shorttext synchronized" lang="en">Is Filter Required</p>
     "!
     "! @parameter rv_required | <p class="shorttext synchronized" lang="en">Required</p>
     METHODS is_filter_required
       RETURNING
-      VALUE(rv_required) TYPE abap_bool .
+        VALUE(rv_required) TYPE abap_bool .
   PROTECTED SECTION.
 
 
   PRIVATE SECTION.
 
-    CLASS-DATA sr_filter TYPE REF TO zcl_abapgit_repo_pre_filter .
+    CLASS-DATA gr_filter TYPE REF TO zcl_abapgit_repo_pre_filter .
     DATA mt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt .
     DATA mt_r_trkorr TYPE trrngtrkor_tab .
     DATA mt_r_file_filter TYPE ty_file_filter_tt .
@@ -81,12 +81,12 @@ CLASS zcl_abapgit_repo_pre_filter DEFINITION
     "!
     METHODS generate_local_filter
       RAISING
-      zcx_abapgit_exception .
+        zcx_abapgit_exception .
     "! <p class="shorttext synchronized" lang="en">Generates the file filter for the Git Repository</p>
     "!
     METHODS generate_file_filter
       RAISING
-      zcx_abapgit_exception .
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -226,16 +226,16 @@ CLASS ZCL_ABAPGIT_REPO_PRE_FILTER IMPLEMENTATION.
 
 
   METHOD get_filter_values.
-    et_r_trkorr = mt_r_trkorr.
+    rt_r_trkorr = mt_r_trkorr.
   ENDMETHOD.
 
 
   METHOD get_instance.
     "Singleton
-    IF sr_filter IS INITIAL.
-      CREATE OBJECT sr_filter.
+    IF gr_filter IS INITIAL.
+      CREATE OBJECT gr_filter.
     ENDIF.
-    rr_filter = sr_filter.
+    rr_filter = gr_filter.
   ENDMETHOD.
 
 
@@ -286,7 +286,7 @@ CLASS ZCL_ABAPGIT_REPO_PRE_FILTER IMPLEMENTATION.
     ls_selection-reqstatus = 'RNODL'.
     ls_selection-taskstatus = 'RNODL'.
     CONDENSE ls_selection-reqfunctions NO-GAPS.
-    ls_selection-taskfunctions      = sctsc_types_tasks.
+    ls_selection-taskfunctions = 'QRSX'.
     CONCATENATE sy-sysid '*' INTO ls_selection-trkorrpattern.
 
     CALL FUNCTION 'TRINT_SELECT_REQUESTS'

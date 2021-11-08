@@ -124,8 +124,10 @@ CLASS zcl_abapgit_gui_router DEFINITION
       RETURNING
         VALUE(rv_state) TYPE i .
     METHODS main_page
-      RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
-      RAISING   zcx_abapgit_exception.
+      RETURNING
+        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
