@@ -1,92 +1,92 @@
-CLASS zcl_abapgit_repo_pre_filter DEFINITION
-  PUBLIC
-  FINAL
-  CREATE PRIVATE .
+class ZCL_ABAPGIT_REPO_PRE_FILTER definition
+  public
+  final
+  create private .
 
-  PUBLIC SECTION.
+public section.
 
-    TYPES:
-      ty_file_filter_tt TYPE RANGE OF string .
-    TYPES:
-      ty_file_filter TYPE LINE OF ty_file_filter_tt .
+  types:
+    ty_file_filter_tt TYPE RANGE OF string .
+  types:
+    ty_file_filter TYPE LINE OF ty_file_filter_tt .
 
-    "! <p class="shorttext synchronized" lang="en">Get Instance (Singleton)</p>
+    "! <p class="shorttext synchronized" lang="en"></p>
     "!
     "! @parameter RR_FILTER | <p class="shorttext synchronized" lang="en">Repository Pre Filter</p>
-    CLASS-METHODS get_instance
-      RETURNING
-        VALUE(rr_filter) TYPE REF TO zcl_abapgit_repo_pre_filter .
-    "! <p class="shorttext synchronized" lang="en">Set Filter Values</p>
+  class-methods GET_INSTANCE
+    returning
+      value(RR_FILTER) type ref to ZCL_ABAPGIT_REPO_PRE_FILTER .
+    "! <p class="shorttext synchronized" lang="en"></p>
     "!
     "! @parameter IT_R_TRKORR | <p class="shorttext synchronized" lang="en">Tab of Range Struct for E070/E071-TRKORR</p>
-    METHODS set_filter_values
-      IMPORTING
-        !it_r_trkorr TYPE trrngtrkor_tab
-      RAISING
-        zcx_abapgit_exception .
-    "! <p class="shorttext synchronized" lang="en">Get Filter Values</p>
+  methods SET_FILTER_VALUES
+    importing
+      !IT_R_TRKORR type TRRNGTRKOR_TAB
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+    "! <p class="shorttext synchronized" lang="en"></p>
     "!
     "! @parameter RT_R_TRKORR | <p class="shorttext synchronized" lang="en">Tab of Range Struct for E070/E071-TRKORR</p>
-    METHODS get_filter_values
-      RETURNING
-        VALUE(rt_r_trkorr) TYPE trrngtrkor_tab .
-    "! <p class="shorttext synchronized" lang="en">Get Local Filter of the ABAP Repository</p>
+  methods GET_FILTER_VALUES
+    returning
+      value(RT_R_TRKORR) type TRRNGTRKOR_TAB .
+    "! <p class="shorttext synchronized" lang="en"></p>
     "!
     "! @parameter RT_FILTER | <p class="shorttext synchronized" lang="en">Repository Filter</p>
-    METHODS get_local_filter
-      RETURNING
-        VALUE(rt_filter) TYPE zif_abapgit_definitions=>ty_tadir_tt .
-    "! <p class="shorttext synchronized" lang="en">Get the file filter for the Git Repository</p>
+  methods GET_LOCAL_FILTER
+    returning
+      value(RT_FILTER) type ZIF_ABAPGIT_DEFINITIONS=>TY_TADIR_TT .
+    "! <p class="shorttext synchronized" lang="en"></p>
     "!
     "! @parameter RT_R_FILE_FILTER | <p class="shorttext synchronized" lang="en">File Filter</p>
-    METHODS get_file_filter
-      RETURNING
-        VALUE(rt_r_file_filter) TYPE ty_file_filter_tt .
-    "! <p class="shorttext synchronized" lang="en">Filter the files</p>
+  methods GET_FILE_FILTER
+    returning
+      value(RT_R_FILE_FILTER) type TY_FILE_FILTER_TT .
+    "! <p class="shorttext synchronized" lang="en"></p>
     "!
     "! @parameter CT_FILES | <p class="shorttext synchronized" lang="en">Files</p>
-    METHODS filter_files
-      CHANGING
-        !ct_files TYPE zif_abapgit_definitions=>ty_files_tt .
-    "! <p class="shorttext synchronized" lang="en">Init the class</p>
-    METHODS init .
-    "! <p class="shorttext synchronized" lang="en">Set Filter Values Via Dialog</p>
-    METHODS set_filter_values_via_dialog
-      RAISING
-        zcx_abapgit_exception .
-    "! <p class="shorttext synchronized" lang="en">Set Latest Action</p>
+  methods FILTER_FILES
+    changing
+      !CT_FILES type ZIF_ABAPGIT_DEFINITIONS=>TY_FILES_TT .
+    "! <p class="shorttext synchronized" lang="en"></p>
+  methods INIT .
+    "! <p class="shorttext synchronized" lang="en"></p>
+  methods SET_FILTER_VALUES_VIA_DIALOG
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+    "! <p class="shorttext synchronized" lang="en"></p>
     "!
     "! @parameter iv_action | <p class="shorttext synchronized" lang="en">Action</p>
-    METHODS set_latest_action
-      IMPORTING
-        !iv_action TYPE string .
-    "! <p class="shorttext synchronized" lang="en">Is Filter Required</p>
+  methods SET_LATEST_ACTION
+    importing
+      !IV_ACTION type STRING .
+    "! <p class="shorttext synchronized" lang="en"></p>
     "!
     "! @parameter rv_required | <p class="shorttext synchronized" lang="en">Required</p>
-    METHODS is_filter_required
-      RETURNING
-        VALUE(rv_required) TYPE abap_bool .
+  methods IS_FILTER_REQUIRED
+    returning
+      value(RV_REQUIRED) type ABAP_BOOL .
   PROTECTED SECTION.
 
 
-  PRIVATE SECTION.
+private section.
 
-    CLASS-DATA gr_filter TYPE REF TO zcl_abapgit_repo_pre_filter .
-    DATA mt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt .
-    DATA mt_r_trkorr TYPE trrngtrkor_tab .
-    DATA mt_r_file_filter TYPE ty_file_filter_tt .
-    DATA mv_latest_action TYPE string .
+  class-data GR_FILTER type ref to ZCL_ABAPGIT_REPO_PRE_FILTER .
+  data MT_FILTER type ZIF_ABAPGIT_DEFINITIONS=>TY_TADIR_TT .
+  data MT_R_TRKORR type TRRNGTRKOR_TAB .
+  data MT_R_FILE_FILTER type TY_FILE_FILTER_TT .
+  data MV_LATEST_ACTION type STRING .
 
-    "! <p class="shorttext synchronized" lang="en">Generates the filter for the local ABAP Repository</p>
+    "! <p class="shorttext synchronized" lang="en"></p>
     "!
-    METHODS generate_local_filter
-      RAISING
-        zcx_abapgit_exception .
-    "! <p class="shorttext synchronized" lang="en">Generates the file filter for the Git Repository</p>
+  methods GENERATE_LOCAL_FILTER
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+    "! <p class="shorttext synchronized" lang="en"></p>
     "!
-    METHODS generate_file_filter
-      RAISING
-        zcx_abapgit_exception .
+  methods GENERATE_FILE_FILTER
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
 ENDCLASS.
 
 

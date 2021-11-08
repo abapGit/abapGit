@@ -449,11 +449,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
         ro_toolbar->add( iv_txt = 'Stage'
                          iv_opt = zif_abapgit_html=>c_html_opt-strong
                          io_sub = io_tb_stage ).
-
-*        ro_toolbar->add( iv_txt = 'Stage'
-*                         iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?key={ mv_key }|
-*                         iv_opt = zif_abapgit_html=>c_html_opt-strong ).
-
       ENDIF.
       IF mo_repo_aggregated_state->is_unchanged( ) = abap_false. " Any changes
         ro_toolbar->add( iv_txt = 'Diff'
