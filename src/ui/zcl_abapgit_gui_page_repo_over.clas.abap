@@ -32,10 +32,10 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
   PROTECTED SECTION.
 
 
-private section.
+  PRIVATE SECTION.
 
-  types:
-    BEGIN OF ty_overview,
+    TYPES:
+      BEGIN OF ty_overview,
         favorite        TYPE string,
         "! True for offline, false for online repo
         type            TYPE string,
@@ -50,99 +50,99 @@ private section.
         deserialized_at TYPE string,
         write_protected TYPE abap_bool,
       END OF ty_overview .
-  types:
-    ty_overviews TYPE STANDARD TABLE OF ty_overview
-                   WITH NON-UNIQUE DEFAULT KEY .
+    TYPES:
+      ty_overviews TYPE STANDARD TABLE OF ty_overview
+                     WITH NON-UNIQUE DEFAULT KEY .
 
-  constants:
-    BEGIN OF c_action,
+    CONSTANTS:
+      BEGIN OF c_action,
         select       TYPE string VALUE 'select',
         apply_filter TYPE string VALUE 'apply_filter',
       END OF c_action .
-  data MV_ORDER_DESCENDING type ABAP_BOOL .
-  data MV_FILTER type STRING .
-  data MV_TIME_ZONE type TIMEZONE .
-  data MT_COL_SPEC type ZIF_ABAPGIT_DEFINITIONS=>TY_COL_SPEC_TT .
-  data MT_OVERVIEW type TY_OVERVIEWS .
+    DATA mv_order_descending TYPE abap_bool .
+    DATA mv_filter TYPE string .
+    DATA mv_time_zone TYPE timezone .
+    DATA mt_col_spec TYPE zif_abapgit_definitions=>ty_col_spec_tt .
+    DATA mt_overview TYPE ty_overviews .
 
-  methods RENDER_TEXT_INPUT
-    importing
-      !IV_NAME type STRING
-      !IV_LABEL type STRING
-      !IV_VALUE type STRING optional
-      !IV_MAX_LENGTH type STRING optional
-      !IV_AUTOFOCUS type ABAP_BOOL default ABAP_FALSE
-    returning
-      value(RI_HTML) type ref to ZIF_ABAPGIT_HTML .
-  methods APPLY_FILTER
-    changing
-      !CT_OVERVIEW type TY_OVERVIEWS .
-  methods MAP_REPO_LIST_TO_OVERVIEW
-    returning
-      value(RT_OVERVIEW) type TY_OVERVIEWS
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods RENDER_TABLE_HEADER
-    importing
-      !II_HTML type ref to ZIF_ABAPGIT_HTML .
-  methods RENDER_TABLE
-    importing
-      !II_HTML type ref to ZIF_ABAPGIT_HTML
-      !IT_OVERVIEW type TY_OVERVIEWS
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods RENDER_TABLE_BODY
-    importing
-      !II_HTML type ref to ZIF_ABAPGIT_HTML
-      !IT_REPO_LIST type TY_OVERVIEWS
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods RENDER_HEADER_BAR
-    importing
-      !II_HTML type ref to ZIF_ABAPGIT_HTML .
-  methods APPLY_ORDER_BY
-    changing
-      !CT_OVERVIEW type TY_OVERVIEWS .
-  methods _ADD_COLUMN
-    importing
-      !IV_TECH_NAME type STRING optional
-      !IV_DISPLAY_NAME type STRING optional
-      !IV_CSS_CLASS type STRING optional
-      !IV_ADD_TZ type ABAP_BOOL optional
-      !IV_TITLE type STRING optional
-      !IV_ALLOW_ORDER_BY type ANY optional .
-  methods RENDER_SCRIPTS
-    returning
-      value(RI_HTML) type ref to ZIF_ABAPGIT_HTML
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods SHORTEN_REPO_URL
-    importing
-      !IV_FULL_URL type STRING
-      !IV_MAX_LENGTH type I default 60
-    returning
-      value(RV_SHORTENED) type STRING .
-  methods RENDER_ACTIONS
-    importing
-      !II_HTML type ref to ZIF_ABAPGIT_HTML .
-  methods COLUMN
-    importing
-      !IV_CONTENT type STRING optional
-      !IV_CSS_CLASS type STRING optional
-    returning
-      value(RV_HTML) type STRING .
-  methods ACTION_LINK
-    importing
-      !IV_CONTENT type STRING
-    returning
-      value(RV_HTML) type STRING .
-  methods RENDER_STAGE_SUB_MENU
-    importing
-      value(II_HTML) type ref to ZIF_ABAPGIT_HTML
-      !IV_DUMMY_KEY type STRING
-      !IV_ACTION_CLASS type STRING
-      !IV_ONLINE_CLASS type STRING
-      !IV_SEPARATOR type STRING .
+    METHODS render_text_input
+      IMPORTING
+        !iv_name       TYPE string
+        !iv_label      TYPE string
+        !iv_value      TYPE string OPTIONAL
+        !iv_max_length TYPE string OPTIONAL
+        !iv_autofocus  TYPE abap_bool DEFAULT abap_false
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+    METHODS apply_filter
+      CHANGING
+        !ct_overview TYPE ty_overviews .
+    METHODS map_repo_list_to_overview
+      RETURNING
+        VALUE(rt_overview) TYPE ty_overviews
+      RAISING
+        zcx_abapgit_exception .
+    METHODS render_table_header
+      IMPORTING
+        !ii_html TYPE REF TO zif_abapgit_html .
+    METHODS render_table
+      IMPORTING
+        !ii_html     TYPE REF TO zif_abapgit_html
+        !it_overview TYPE ty_overviews
+      RAISING
+        zcx_abapgit_exception .
+    METHODS render_table_body
+      IMPORTING
+        !ii_html      TYPE REF TO zif_abapgit_html
+        !it_repo_list TYPE ty_overviews
+      RAISING
+        zcx_abapgit_exception .
+    METHODS render_header_bar
+      IMPORTING
+        !ii_html TYPE REF TO zif_abapgit_html .
+    METHODS apply_order_by
+      CHANGING
+        !ct_overview TYPE ty_overviews .
+    METHODS _add_column
+      IMPORTING
+        !iv_tech_name      TYPE string OPTIONAL
+        !iv_display_name   TYPE string OPTIONAL
+        !iv_css_class      TYPE string OPTIONAL
+        !iv_add_tz         TYPE abap_bool OPTIONAL
+        !iv_title          TYPE string OPTIONAL
+        !iv_allow_order_by TYPE any OPTIONAL .
+    METHODS render_scripts
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
+    METHODS shorten_repo_url
+      IMPORTING
+        !iv_full_url        TYPE string
+        !iv_max_length      TYPE i DEFAULT 60
+      RETURNING
+        VALUE(rv_shortened) TYPE string .
+    METHODS render_actions
+      IMPORTING
+        !ii_html TYPE REF TO zif_abapgit_html .
+    METHODS column
+      IMPORTING
+        !iv_content    TYPE string OPTIONAL
+        !iv_css_class  TYPE string OPTIONAL
+      RETURNING
+        VALUE(rv_html) TYPE string .
+    METHODS action_link
+      IMPORTING
+        !iv_content    TYPE string
+      RETURNING
+        VALUE(rv_html) TYPE string .
+    METHODS render_stage_sub_menu
+      IMPORTING
+        VALUE(ii_html)   TYPE REF TO zif_abapgit_html
+        !iv_dummy_key    TYPE string
+        !iv_action_class TYPE string
+        !iv_online_class TYPE string
+        !iv_separator    TYPE string .
 ENDCLASS.
 
 
@@ -434,7 +434,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD RENDER_STAGE_SUB_MENU.
+  METHOD render_stage_sub_menu.
     DATA lv_stage_link TYPE string.
 
     DATA lv_top_entry TYPE string.
