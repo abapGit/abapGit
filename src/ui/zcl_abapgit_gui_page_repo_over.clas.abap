@@ -317,22 +317,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     ii_html->add( action_link( lv_pull_link && lc_separator ) ).
 
-*    lv_stage_link = ii_html->a(
-*      iv_txt   = |Stage|
-*      iv_act   = |{ zif_abapgit_definitions=>c_action-go_stage }{ lc_dummy_key }|
-*      iv_class = |{ lc_action_class } { lc_online_class } | ).
-*
-*    ii_html->add( action_link( lv_stage_link && lc_separator ) ).
-
     "Stage sub menu
     render_stage_sub_menu(
-      EXPORTING
         ii_html         = ii_html         " HTML
         iv_dummy_key    = lc_dummy_key
         iv_action_class = lc_action_class
         iv_online_class = lc_online_class
-        iv_separator    = lc_separator
-    ).
+        iv_separator    = lc_separator ).
 
     lv_patch_link = ii_html->a(
       iv_txt   = |Patch|
@@ -451,40 +442,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     ii_html->add( action_link( lv_stage_link && iv_separator ) ).
 
-
-*    DATA lv_top_entry TYPE string.
-*
-*    " Sub Menu Header
-*    CONCATENATE '<a class = "' iv_action_class ' ' iv_online_class ' "'
-*                ' href="#" title="Staging"> Staging </a>'
-*                iv_separator INTO lv_top_entry RESPECTING BLANKS.
-*
-*    ii_html->add( action_link( lv_top_entry ) ).
-*
-*    ii_html->add( '<ul>' ).
-*
-*    "Normal Stage
-*    ii_html->add( '<li>' ).
-*    lv_stage_link = ii_html->a(
-*         iv_txt   = |Stage|
-*         iv_act   = |{ zif_abapgit_definitions=>c_action-go_stage }{ iv_dummy_key }|
-*         iv_class = |{ iv_action_class } { iv_online_class } | ).
-*
-*    ii_html->add( action_link( lv_stage_link ) ).
-*
-*    ii_html->add( '</li>' ).
-*
-*    "Stage Transport / Task
-*    ii_html->add( '<li>' ).
-*
-*    lv_stage_link = ii_html->a(
-*          iv_txt   = |Stage by Transport / Task|
-*          iv_act   = |{ zif_abapgit_definitions=>c_action-go_stage_transport }{ iv_dummy_key }|
-*          iv_class = |{ iv_action_class } { iv_online_class } | ).
-*
-*    ii_html->add( action_link( lv_stage_link ) ).
-*    ii_html->add( '</li>' ).
-*    ii_html->add( '</ul>' ).
   ENDMETHOD.
 
 
