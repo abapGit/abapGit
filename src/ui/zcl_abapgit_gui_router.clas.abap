@@ -125,7 +125,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
         VALUE(rv_state) TYPE i .
     METHODS main_page
       RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
-      RAISING zcx_abapgit_exception.
+      RAISING   zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -242,8 +242,8 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         rs_handled-page  = get_page_diff( ii_event ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
       WHEN zif_abapgit_definitions=>c_action-go_stage                         " Go Staging page
-        or zif_abapgit_definitions=>c_action-go_stage_transport.              " Go Staging page by Transport
-        ZCL_ABAPGIT_REPO_PRE_FILTER=>get_instance( )->SET_LATEST_ACTION( ii_event->mv_action ).
+        OR zif_abapgit_definitions=>c_action-go_stage_transport.              " Go Staging page by Transport
+        zcl_abapgit_repo_pre_filter=>get_instance( )->set_latest_action( ii_event->mv_action ).
         rs_handled-page  = get_page_stage( ii_event ).
         rs_handled-state = get_state_diff( ii_event ).
       WHEN zif_abapgit_definitions=>c_action-go_branch_overview.              " Go repo branch overview
@@ -341,8 +341,8 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         lo_repo->refresh( ).
         CREATE OBJECT lo_stage_page
           EXPORTING
-            io_repo = lo_repo
-            iv_seed = lv_seed
+            io_repo       = lo_repo
+            iv_seed       = lv_seed
             iv_sci_result = zif_abapgit_definitions=>c_sci_result-passed.
         ri_page = lo_stage_page.
       ELSE.
