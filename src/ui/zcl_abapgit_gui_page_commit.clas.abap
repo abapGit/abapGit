@@ -108,9 +108,14 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
         VALUE(rv_text) TYPE string.
     METHODS is_valid_email
       IMPORTING
-        !iv_email       TYPE string
+        iv_email        TYPE string
       RETURNING
         VALUE(rv_valid) TYPE abap_bool.
+    METHODS branch_name_to_internal
+      IMPORTING
+        iv_branch_name            TYPE string
+      RETURNING
+        VALUE(rv_new_branch_name) TYPE string.
 ENDCLASS.
 
 
@@ -442,6 +447,9 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
   METHOD validate_form.
 
+    DATA: lt_branches        TYPE zif_abapgit_definitions=>ty_git_branch_list_tt,
+          lv_new_branch_name TYPE string.
+
     ro_validation_log = mo_form_util->validate( io_form_data ).
 
     IF is_valid_email( io_form_data->get( c_id-committer_email ) ) = abap_false.
@@ -454,6 +462,19 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
       ro_validation_log->set(
         iv_key = c_id-author_email
         iv_val = |Invalid email address| ).
+    ENDIF.
+
+    lv_new_branch_name = io_form_data->get( c_id-new_branch_name ).
+    IF lv_new_branch_name IS NOT INITIAL.
+      " check if branch already exists
+      lt_branches = zcl_abapgit_git_transport=>branches( mo_repo->get_url( ) )->get_branches_only( ).
+      READ TABLE lt_branches TRANSPORTING NO FIELDS WITH TABLE KEY name_key
+        COMPONENTS name = branch_name_to_internal( lv_new_branch_name ).
+      IF sy-subrc = 0.
+        ro_validation_log->set(
+          iv_key = c_id-new_branch_name
+          iv_val = |Branch already exists| ).
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.
@@ -487,8 +508,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
           lv_new_branch_name = mo_form_data->get( c_id-new_branch_name ).
           " create new branch and commit to it if branch name is not empty
           IF lv_new_branch_name IS NOT INITIAL.
-            lv_new_branch_name = zcl_abapgit_git_branch_list=>complete_heads_branch_name(
-              zcl_abapgit_git_branch_list=>normalize_branch_name( lv_new_branch_name ) ).
+            lv_new_branch_name = branch_name_to_internal( lv_new_branch_name ).
             " creates a new branch and automatically switches to it
             mo_repo->create_branch( lv_new_branch_name ).
           ENDIF.
@@ -538,4 +558,10 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     ri_html->add( '</div>' ).
 
   ENDMETHOD.
+
+  METHOD branch_name_to_internal.
+    rv_new_branch_name = zcl_abapgit_git_branch_list=>complete_heads_branch_name(
+      zcl_abapgit_git_branch_list=>normalize_branch_name( iv_branch_name ) ).
+  ENDMETHOD.
+
 ENDCLASS.
