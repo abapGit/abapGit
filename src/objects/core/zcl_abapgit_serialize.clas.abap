@@ -12,7 +12,7 @@ CLASS zcl_abapgit_serialize DEFINITION
         zcx_abapgit_exception .
     METHODS on_end_of_task
       IMPORTING
-        !p_task TYPE clike .
+        !p_task TYPE clike ##NEEDED.
     METHODS serialize
       IMPORTING
         !it_tadir            TYPE zif_abapgit_definitions=>ty_tadir_tt

@@ -46,7 +46,7 @@ CLASS zcl_abapgit_tadir DEFINITION
       CHANGING
         !ct_tadir   TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception ##NEEDED.
     METHODS add_local_packages
       IMPORTING
         !it_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt
@@ -76,7 +76,7 @@ CLASS zcl_abapgit_tadir DEFINITION
       CHANGING
         !ct_tadir   TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception ##NEEDED.
 ENDCLASS.
 
 

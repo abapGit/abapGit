@@ -140,7 +140,6 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
           zcl_abapgit_objects_super=>jump_adt( iv_obj_name     = ls_item-obj_name
                                                iv_obj_type     = ls_item-obj_type
                                                iv_sub_obj_name = ls_sub_item-obj_name
-                                               iv_sub_obj_type = ls_sub_item-obj_type
                                                iv_line_number  = lv_line_number ).
           RETURN.
 

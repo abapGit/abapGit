@@ -119,8 +119,7 @@ CLASS ltcl_syntax_cases DEFINITION FINAL FOR TESTING RISK LEVEL HARMLESS
       mt_after_extend TYPE zcl_abapgit_syntax_xml=>ty_match_tt.
 
     METHODS:
-      do_test IMPORTING iv_line     TYPE string
-                        iv_filename TYPE string,
+      do_test IMPORTING iv_line TYPE string,
       generate_parse IMPORTING iv_token  TYPE c
                                iv_offset TYPE i
                                iv_length TYPE i,
@@ -271,8 +270,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 6
                      iv_text_tag = '<' ).
 
-    do_test( iv_line = lv_line
-             iv_filename = '*.xml' ).
+    do_test( lv_line ).
 
   ENDMETHOD.
 
@@ -301,8 +299,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 6
                      iv_text_tag = '<' ).
 
-    do_test( iv_line = lv_line
-             iv_filename = '*.xml' ).
+    do_test( lv_line ).
 
   ENDMETHOD.
 
@@ -366,8 +363,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 2
                      iv_text_tag = '>' ).
 
-    do_test( iv_line = lv_line
-             iv_filename = '*.xml' ).
+    do_test( lv_line ).
 
   ENDMETHOD.
 
@@ -431,8 +427,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 2
                      iv_text_tag = '>' ).
 
-    do_test( iv_line = lv_line
-             iv_filename = '*.xml' ).
+    do_test( lv_line ).
 
   ENDMETHOD.
 
@@ -543,8 +538,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 9
                      iv_text_tag = '<' ).
 
-    do_test( iv_line = lv_line
-             iv_filename = '*.xml' ).
+    do_test( lv_line ).
 
   ENDMETHOD.
 
@@ -597,8 +591,8 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 4
                      iv_text_tag = '' ).
 
-    do_test( iv_line = lv_line
-             iv_filename = '*.xml' ).
+    do_test( lv_line ).
+
   ENDMETHOD.
 
   METHOD test_xml_07.
@@ -662,9 +656,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 2
                      iv_text_tag = '>' ).
 
-    do_test( iv_line = lv_line
-             iv_filename = '*.xml' ).
-
+    do_test( lv_line ).
 
   ENDMETHOD.
 
@@ -708,8 +700,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 5
                      iv_text_tag = '' ).
 
-    do_test( iv_line = lv_line
-             iv_filename = '*.xml' ).
+    do_test( lv_line ).
 
   ENDMETHOD.
 
