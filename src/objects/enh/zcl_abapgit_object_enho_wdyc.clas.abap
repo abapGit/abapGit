@@ -3,20 +3,24 @@ CLASS zcl_abapgit_object_enho_wdyc DEFINITION PUBLIC.
   PUBLIC SECTION.
     METHODS: constructor
       IMPORTING
-        is_item  TYPE zif_abapgit_definitions=>ty_item
-        io_files TYPE REF TO zcl_abapgit_objects_files.
+        is_item TYPE zif_abapgit_definitions=>ty_item.
     INTERFACES: zif_abapgit_object_enho.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item.
 
 ENDCLASS.
 
+
+
 CLASS zcl_abapgit_object_enho_wdyc IMPLEMENTATION.
+
 
   METHOD constructor.
     ms_item = is_item.
   ENDMETHOD.
+
 
   METHOD zif_abapgit_object_enho~deserialize.
 
@@ -67,6 +71,7 @@ CLASS zcl_abapgit_object_enho_wdyc IMPLEMENTATION.
     ENDTRY.
   ENDMETHOD.
 
+
   METHOD zif_abapgit_object_enho~serialize.
 
     DATA: lo_wdyconf  TYPE REF TO cl_wdr_cfg_enhancement,
@@ -105,5 +110,4 @@ CLASS zcl_abapgit_object_enho_wdyc IMPLEMENTATION.
                      ii_xml = li_element ).
 
   ENDMETHOD.
-
 ENDCLASS.
