@@ -31,17 +31,16 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
 
     CONSTANTS:
       BEGIN OF c_id,
-        committer           TYPE string VALUE 'committer',
-        committer_name      TYPE string VALUE 'committer_name',
-        committer_email     TYPE string VALUE 'committer_email',
-        message             TYPE string VALUE 'message',
-        comment             TYPE string VALUE 'comment',
-        body                TYPE string VALUE 'body',
-        author              TYPE string VALUE 'author',
-        author_name         TYPE string VALUE 'author_name',
-        author_email        TYPE string VALUE 'author_email',
-        new_branch_checkbox TYPE string VALUE 'new_branch_checkbox',
-        new_branch_name     TYPE string VALUE 'new_branch_name',
+        committer       TYPE string VALUE 'committer',
+        committer_name  TYPE string VALUE 'committer_name',
+        committer_email TYPE string VALUE 'committer_email',
+        message         TYPE string VALUE 'message',
+        comment         TYPE string VALUE 'comment',
+        body            TYPE string VALUE 'body',
+        author          TYPE string VALUE 'author',
+        author_name     TYPE string VALUE 'author_name',
+        author_email    TYPE string VALUE 'author_email',
+        new_branch_name TYPE string VALUE 'new_branch_name',
       END OF c_id.
 
     CONSTANTS:
@@ -325,13 +324,11 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     )->text(
       iv_name        = c_id-author_email
       iv_label       = 'Author Email'
-    )->checkbox(
-      iv_name        = c_id-new_branch_checkbox
-      iv_label       = 'Create New Branch for this Commit'
     )->text(
       iv_name        = c_id-new_branch_name
       iv_label       = 'New Branch Name'
-      iv_placeholder = 'new_branch_name' ).
+      iv_placeholder = 'Optionally, enter a new branch name for this commit'
+      iv_condense    = abap_true ).
 
 
     ro_form->command(
@@ -459,19 +456,11 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
         iv_val = |Invalid email address| ).
     ENDIF.
 
-    IF io_form_data->get( c_id-new_branch_checkbox ) = abap_true
-        AND io_form_data->get( c_id-new_branch_name ) IS INITIAL.
-      ro_validation_log->set(
-        iv_key = c_id-new_branch_name
-        iv_val = |Branch name cannot be empty| ).
-    ENDIF.
-
   ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_event_handler~on_event.
-    DATA: lv_create_new_branch TYPE abap_bool,
-          lv_new_branch_name   TYPE string.
+    DATA lv_new_branch_name   TYPE string.
 
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
@@ -495,9 +484,9 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
             IN ms_commit-body
             WITH zif_abapgit_definitions=>c_newline.
 
-          lv_create_new_branch = mo_form_data->get( c_id-new_branch_checkbox ).
-          IF lv_create_new_branch = abap_true.
-            lv_new_branch_name = mo_form_data->get( c_id-new_branch_name ).
+          lv_new_branch_name = mo_form_data->get( c_id-new_branch_name ).
+          " create new branch and commit to it if branch name is not empty
+          IF lv_new_branch_name IS NOT INITIAL.
             lv_new_branch_name = zcl_abapgit_git_branch_list=>complete_heads_branch_name(
               zcl_abapgit_git_branch_list=>normalize_branch_name( lv_new_branch_name ) ).
             " creates a new branch and automatically switches to it
