@@ -951,9 +951,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     DATA: lt_stamps  TYPE STANDARD TABLE OF ty_stamps WITH DEFAULT KEY,
           lv_program TYPE program.
 
-    FIELD-SYMBOLS: <ls_stamp>   LIKE LINE OF lt_stamps,
-                   <lv_include> LIKE LINE OF mt_includes_all.
-
+    FIELD-SYMBOLS: <ls_stamp> LIKE LINE OF lt_stamps.
 
     lv_program = main_name( ).
 
