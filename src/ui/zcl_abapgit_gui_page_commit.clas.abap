@@ -459,6 +459,13 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
         iv_val = |Invalid email address| ).
     ENDIF.
 
+    IF io_form_data->get( c_id-new_branch_checkbox ) = abap_true
+        AND io_form_data->get( c_id-new_branch_name ) IS INITIAL.
+      ro_validation_log->set(
+        iv_key = c_id-new_branch_name
+        iv_val = |Branch name cannot be empty| ).
+    ENDIF.
+
   ENDMETHOD.
 
 
