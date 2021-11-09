@@ -331,7 +331,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     )->text(
       iv_name        = c_id-new_branch_name
       iv_label       = 'New Branch Name'
-      iv_placeholder = 'new_branch' ).
+      iv_placeholder = 'new_branch_name' ).
 
 
     ro_form->command(
@@ -478,7 +478,9 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
         IF mo_validation_log->is_empty( ) = abap_true.
 
+          " new branch fields not needed in commit data
           mo_form_data->strict( abap_false ).
+
           mo_form_data->to_abap( CHANGING cs_container = ms_commit ).
 
           REPLACE ALL OCCURRENCES
@@ -491,6 +493,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
             lv_new_branch_name = mo_form_data->get( c_id-new_branch_name ).
             lv_new_branch_name = zcl_abapgit_git_branch_list=>complete_heads_branch_name(
               zcl_abapgit_git_branch_list=>normalize_branch_name( lv_new_branch_name ) ).
+            " creates a new branch and automatically switches to it
             mo_repo->create_branch( lv_new_branch_name ).
           ENDIF.
 
