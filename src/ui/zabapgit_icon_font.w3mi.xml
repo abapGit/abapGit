@@ -3,7 +3,7 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <NAME>ZABAPGIT_ICON_FONT</NAME>
-   <TEXT>Icon set for abapgit</TEXT>
+   <TEXT>abapGit - Icon Set</TEXT>
    <PARAMS>
     <WWWPARAMS>
      <RELID>MI</RELID>
