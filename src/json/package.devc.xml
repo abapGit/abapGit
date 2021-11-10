@@ -3,7 +3,7 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <DEVC>
-    <CTEXT>Yet another json parser/serializer for ABAP</CTEXT>
+    <CTEXT>abapGit - AJSON (mirrored)</CTEXT>
    </DEVC>
   </asx:values>
  </asx:abap>
