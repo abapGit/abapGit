@@ -215,13 +215,6 @@
       {"object": "ZCL_ABAPGIT_INJECTOR", "class": "ltcl_no_dependency_injection", "method": "no_injection"},
       {"object": "ZCL_ABAPGIT_INJECTOR", "class": "ltcl_simple_dependency_inject", "method": "simple_injection"},
 
-      {"object": "ZCL_ABAPGIT_SYNTAX_XML", "class": "ltcl_abapgit_syntax_xml", "method": "sole_closing_xml_tag", "note": "#5128"},
-      {"object": "ZCL_ABAPGIT_SYNTAX_XML", "class": "ltcl_abapgit_syntax_xml", "method": "complete_xml_tag", "note": "#5128"},
-      {"object": "ZCL_ABAPGIT_SYNTAX_XML", "class": "ltcl_abapgit_syntax_xml", "method": "complete_xml_tag_with_closing", "note": "#5128"},
-      {"object": "ZCL_ABAPGIT_SYNTAX_XML", "class": "ltcl_abapgit_syntax_xml", "method": "empty_attributes", "note": "#5128"},
-      {"object": "ZCL_ABAPGIT_SYNTAX_XML", "class": "ltcl_abapgit_syntax_xml", "method": "open_tags", "note": "#5128"},
-      {"object": "ZCL_ABAPGIT_SYNTAX_XML", "class": "ltcl_abapgit_syntax_xml", "method": "attributes_only", "note": "#5128"},
-
       {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "validate", "note": "Void type: TIMESTAMPL"},
       {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "normalize", "note": "Void type: TIMESTAMPL"},
       {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "is_empty", "note": "Void type: TIMESTAMPL"},
