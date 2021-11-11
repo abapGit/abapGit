@@ -3,7 +3,7 @@ title: Changelog
 order: 150
 ---
 
-abapGit allows to show a changelog notes, based on changelog file in the repository base
+abapGit allows to show a changelog notes, based on changelog file in the repository base, and on [APACK](ref-apack.html) class containing the current version.
 
 ## File format ##
 A file named as pattern `CHANGELOG*` or `changelog*`
