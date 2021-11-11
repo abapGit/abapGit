@@ -8,6 +8,7 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
 
     INTERFACES zif_abapgit_gui_event_handler .
     INTERFACES zif_abapgit_gui_renderable .
+    INTERFACES zif_abapgit_gui_hotkeys.
 
     CLASS-METHODS create
       IMPORTING
@@ -20,7 +21,7 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
       IMPORTING
         !io_repo TYPE REF TO zcl_abapgit_repo
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -70,7 +71,6 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
     DATA ms_repo_current TYPE zif_abapgit_persistence=>ty_repo .
     DATA ms_repo_new TYPE zif_abapgit_persistence=>ty_repo .
-    DATA mo_dot TYPE REF TO zcl_abapgit_dot_abapgit .
     DATA mv_pull_req TYPE string .
     DATA mv_mode TYPE i .
     DATA mv_original_url TYPE string .
@@ -171,7 +171,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
 
   METHOD checkout_commit_build_list.
@@ -287,10 +287,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
   METHOD choose_branch.
 
     DATA:
-      lo_repo   TYPE REF TO zcl_abapgit_repo_online,
-      lv_url    LIKE lo_repo->ms_data-url,
+      lo_repo        TYPE REF TO zcl_abapgit_repo_online,
+      lv_url         LIKE lo_repo->ms_data-url,
       lv_branch_name LIKE lo_repo->ms_data-branch_name,
-      ls_branch TYPE zif_abapgit_definitions=>ty_git_branch.
+      ls_branch      TYPE zif_abapgit_definitions=>ty_git_branch.
 
     IF mo_repo->is_offline( ) = abap_true.
       RETURN.
@@ -402,6 +402,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
   METHOD choose_url.
 
     " todo, get url history from DB and show selection popup #3639
+    rv_url = ''.
 
   ENDMETHOD.
 
@@ -923,6 +924,40 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_gui_hotkeys~get_hotkey_actions.
+
+    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
+
+    ls_hotkey_action-ui_component = 'Remote'.
+
+    ls_hotkey_action-description = |Choose Branch|.
+    ls_hotkey_action-action      = c_event-choose_branch.
+    ls_hotkey_action-hotkey      = |b|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description = |Choose Commit|.
+    ls_hotkey_action-action      = c_event-choose_commit.
+    ls_hotkey_action-hotkey      = |c|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description = |Choose Pull Request|.
+    ls_hotkey_action-action      = c_event-choose_pull_req.
+    ls_hotkey_action-hotkey      = |p|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description = |Choose Tag|.
+    ls_hotkey_action-action      = c_event-choose_tag.
+    ls_hotkey_action-hotkey      = |t|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description = |Choose URL|.
+    ls_hotkey_action-action      = c_event-choose_url.
+    ls_hotkey_action-hotkey      = |u|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_renderable~render.
 
     gui_services( )->register_event_handler( me ).
@@ -946,5 +981,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
 
     ri_html->add( `</div>` ).
 
+    gui_services( )->get_hotkeys_ctl( )->register_hotkeys( zif_abapgit_gui_hotkeys~get_hotkey_actions( ) ).
+
   ENDMETHOD.
+
 ENDCLASS.

@@ -37,7 +37,6 @@ CLASS zcl_abapgit_file_status DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS process_local
       IMPORTING
-        !iv_devclass  TYPE devclass
         !io_dot       TYPE REF TO zcl_abapgit_dot_abapgit
         !it_local     TYPE zif_abapgit_definitions=>ty_files_item_tt
         !it_state_idx TYPE zif_abapgit_definitions=>ty_file_signatures_ts
@@ -51,7 +50,6 @@ CLASS zcl_abapgit_file_status DEFINITION
       IMPORTING
         !iv_devclass TYPE devclass
         !io_dot      TYPE REF TO zcl_abapgit_dot_abapgit
-        !it_local    TYPE zif_abapgit_definitions=>ty_files_item_tt
         !it_remote   TYPE zif_abapgit_definitions=>ty_files_tt
       CHANGING
         !ct_items    TYPE zif_abapgit_definitions=>ty_items_tt
@@ -292,7 +290,6 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
     " Process local files and new local files
     process_local(
       EXPORTING
-        iv_devclass  = iv_devclass
         io_dot       = io_dot
         it_local     = it_local
         it_state_idx = lt_state_idx
@@ -306,7 +303,6 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
       EXPORTING
         iv_devclass = iv_devclass
         io_dot      = io_dot
-        it_local    = it_local
         it_remote   = lt_remote
       CHANGING
         ct_items    = lt_items ).
@@ -419,7 +415,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
     " Collect all namespaces based on name of xml-files
     LOOP AT it_results ASSIGNING <ls_result>.
-      FIND REGEX '#([a-zA-Z0-9]+)#.*\..*\.xml' IN <ls_result>-filename SUBMATCHES lv_namespace.
+      FIND REGEX '^#([a-zA-Z0-9]+)#.*\..*\.xml$' IN <ls_result>-filename SUBMATCHES lv_namespace.
       IF sy-subrc = 0.
         lv_namespace = '/' && to_upper( lv_namespace ) && '/'.
         COLLECT lv_namespace INTO lt_namespace.
@@ -656,7 +652,8 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
         <ls_result> = build_new_local( <ls_local> ).
         " Check if same file exists in different location
         READ TABLE ct_remote ASSIGNING <ls_remote>
-          WITH KEY filename = <ls_local>-file-filename.
+          WITH KEY file
+          COMPONENTS filename = <ls_local>-file-filename.
         IF sy-subrc = 0 AND <ls_local>-file-sha1 = <ls_remote>-sha1.
           <ls_result>-packmove = abap_true.
         ELSEIF sy-subrc = 4.

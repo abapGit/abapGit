@@ -69,7 +69,7 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
     DATA:
       lo_su22 TYPE REF TO object,
       ls_key  TYPE        usobkey,
-      lr_err  TYPE REF TO cx_static_check.
+      lx_err  TYPE REF TO cx_static_check.
 
     ASSERT NOT ms_item-obj_name IS INITIAL.
 
@@ -82,8 +82,8 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
           EXPORTING
             iv_key     = ls_key
             iv_cleanup = abap_true.
-      CATCH cx_static_check INTO lr_err.
-        zcx_abapgit_exception=>raise( iv_text = lr_err->get_text( ) ).
+      CATCH cx_static_check INTO lx_err.
+        zcx_abapgit_exception=>raise_with_text( lx_err ).
     ENDTRY.
 
   ENDMETHOD.
@@ -101,7 +101,7 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
       lr_data_head      TYPE REF TO data,
       lr_data_usobx_ext TYPE REF TO data,
       lr_data_usobt_ext TYPE REF TO data,
-      lr_err            TYPE REF TO cx_static_check,
+      lx_err            TYPE REF TO cx_static_check,
       lv_text           TYPE string.
 
     FIELD-SYMBOLS: <ls_data_head>      TYPE any,
@@ -152,7 +152,7 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
                 id_mode = '02'
               CHANGING
                 cs_head = <ls_data_head>.
-          CATCH cx_static_check INTO lr_err.
+          CATCH cx_static_check INTO lx_err.
             lv_text = |Lead application of object { ms_item-obj_name } does not exist|.
             zcx_abapgit_exception=>raise( lv_text ).
         ENDTRY.
@@ -182,14 +182,14 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
                 is_head  = <ls_data_head>
                 it_usobx = lt_usobx
                 it_usobt = lt_usobt.
-          CATCH cx_static_check INTO lr_err.
-            zcx_abapgit_exception=>raise_with_text( lr_err ).
+          CATCH cx_static_check INTO lx_err.
+            zcx_abapgit_exception=>raise_with_text( lx_err ).
         ENDTRY.
 
         corr_insert( iv_package ).
 
-      CATCH cx_static_check INTO lr_err.
-        zcx_abapgit_exception=>raise_with_text( lr_err ).
+      CATCH cx_static_check INTO lx_err.
+        zcx_abapgit_exception=>raise_with_text( lx_err ).
     ENDTRY.
 
   ENDMETHOD.
@@ -226,9 +226,7 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_locked.
-    DATA lv_lock_object TYPE string.
-    lv_lock_object = ms_item-obj_name.
-    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = lv_lock_object
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'E_USOBX'
                                             iv_argument    = |{ ms_item-obj_type }{ ms_item-obj_name }| ).
   ENDMETHOD.
 
@@ -247,8 +245,7 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
       lr_head      TYPE REF TO data,
       lr_usobx_ext TYPE REF TO data,
       lr_usobt_ext TYPE REF TO data,
-      lr_err       TYPE REF TO cx_static_check,
-      lx_error     TYPE REF TO cx_root.
+      lx_err       TYPE REF TO cx_static_check.
 
 
     FIELD-SYMBOLS: <ls_head>      TYPE any,
@@ -280,8 +277,8 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
                 et_usobt     = lt_usobt
                 et_usobx_ext = <lt_usobx_ext>
                 et_usobt_ext = <lt_usobt_ext>.
-          CATCH cx_static_check INTO lr_err.
-            zcx_abapgit_exception=>raise_with_text( lr_err ).
+          CATCH cx_static_check INTO lx_err.
+            zcx_abapgit_exception=>raise_with_text( lx_err ).
         ENDTRY.
 
         clear_metadata(
@@ -312,8 +309,8 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
         io_xml->add( iv_name = 'USOBT_EXT'
                      ig_data = <lt_usobt_ext> ).
 
-      CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise_with_text( lx_error ).
+      CATCH cx_static_check INTO lx_err.
+        zcx_abapgit_exception=>raise_with_text( lx_err ).
     ENDTRY.
 
   ENDMETHOD.

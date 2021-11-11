@@ -12,7 +12,6 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
           is_file       TYPE zif_abapgit_definitions=>ty_file OPTIONAL
           is_object     TYPE zif_abapgit_definitions=>ty_item OPTIONAL
           it_files      TYPE zif_abapgit_definitions=>ty_stage_tt OPTIONAL
-          iv_patch_mode TYPE abap_bool OPTIONAL
         RAISING
           zcx_abapgit_exception,
 
@@ -39,8 +38,7 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
       render_diff_head_after_state REDEFINITION,
       insert_nav REDEFINITION,
       render_line_split_row REDEFINITION,
-      refresh REDEFINITION,
-      modify_files_before_diff_calc REDEFINITION.
+      refresh REDEFINITION.
 
   PRIVATE SECTION.
 
@@ -139,21 +137,22 @@ ENDCLASS.
 
 CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
-  METHOD zif_abapgit_gui_hotkeys~get_hotkey_actions.
 
-    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
+  METHOD add_menu_begin.
 
-    ls_hotkey_action-ui_component = 'Patch'.
+    io_menu->add(
+        iv_txt   = c_action_texts-refresh_local
+        iv_typ   = zif_abapgit_html=>c_action_type-dummy
+        iv_act   = c_actions-refresh_local
+        iv_id    = c_actions-refresh_local
+        iv_title = c_action_titles-refresh_local ).
 
-    ls_hotkey_action-description = |Stage changes|.
-    ls_hotkey_action-action      = |stagePatch|.
-    ls_hotkey_action-hotkey      = |s|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-    ls_hotkey_action-description = |Refresh local|.
-    ls_hotkey_action-action      = |refreshLocal|.
-    ls_hotkey_action-hotkey      = |r|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+    io_menu->add(
+        iv_txt   = c_action_texts-refresh_all
+        iv_typ   = zif_abapgit_html=>c_action_type-dummy
+        iv_act   = c_actions-refresh_all
+        iv_id    = c_actions-refresh_all
+        iv_title = c_action_titles-refresh_all ).
 
   ENDMETHOD.
 
@@ -423,6 +422,19 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD refresh.
+
+    DATA: lt_diff_files_old TYPE ty_file_diffs.
+
+    lt_diff_files_old = mt_diff_files.
+
+    super->refresh( iv_action ).
+
+    restore_patch_flags( lt_diff_files_old ).
+
+  ENDMETHOD.
+
+
   METHOD render_beacon_begin_of_row.
 
     mv_section_count = mv_section_count + 1.
@@ -457,17 +469,19 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
     DATA: lv_act_id TYPE string.
 
+    lv_act_id = |{ c_actions-refresh_local_object }_{ is_diff-obj_type }_{ is_diff-obj_name }|.
+
     IF is_diff-obj_type IS NOT INITIAL AND is_diff-obj_name IS NOT INITIAL.
-
-      lv_act_id = |{ c_actions-refresh_local_object }_{ is_diff-obj_type }_{ is_diff-obj_name }|.
-
-      ii_html->add_a(
-          iv_txt   = |Refresh|
-          iv_typ   = zif_abapgit_html=>c_action_type-dummy
-          iv_act   = lv_act_id
-          iv_id    = lv_act_id
-          iv_title = |Local refresh of this object| ).
-
+      " Dummy link is handled in JS (based on ID)
+      ii_html->add( '<span class="repo_name">' ).
+      ii_html->add_a( iv_txt   = ii_html->icon( iv_name  = 'redo-alt-solid'
+                                                iv_class = 'pad-sides'
+                                                iv_hint  = 'Local refresh of this object' )
+                      iv_id    = lv_act_id
+                      iv_act   = lv_act_id
+                      iv_typ   = zif_abapgit_html=>c_action_type-dummy
+                      iv_class = |url| ).
+      ii_html->add( '</span>' ).
     ENDIF.
 
   ENDMETHOD.
@@ -580,6 +594,10 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
         CONTINUE. " e.g. new objects
       ENDIF.
 
+      IF <ls_diff_file_old>-o_diff IS NOT BOUND.
+        CONTINUE. " e.g. binary files
+      ENDIF.
+
       lt_diff_old = <ls_diff_file_old>-o_diff->get( ).
 
       LOOP AT lt_diff_old ASSIGNING <ls_diff_old>
@@ -611,10 +629,10 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
         start_staging( ii_event ).
 
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_commit
-          EXPORTING
-            io_repo  = mo_repo_online
-            io_stage = mo_stage.
+        rs_handled-page = zcl_abapgit_gui_page_commit=>create(
+          io_repo  = mo_repo_online
+          io_stage = mo_stage ).
+
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN OTHERS.
@@ -636,55 +654,26 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD refresh.
+  METHOD zif_abapgit_gui_hotkeys~get_hotkey_actions.
 
-    DATA: lt_diff_files_old TYPE ty_file_diffs.
+    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
 
-    lt_diff_files_old = mt_diff_files.
+    ls_hotkey_action-ui_component = 'Patch'.
 
-    super->refresh( iv_action ).
+    ls_hotkey_action-description = |Stage Changes|.
+    ls_hotkey_action-action      = |stagePatch|.
+    ls_hotkey_action-hotkey      = |s|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    restore_patch_flags( lt_diff_files_old ).
+    ls_hotkey_action-description = |Refresh Local|.
+    ls_hotkey_action-action      = |refreshLocal|.
+    ls_hotkey_action-hotkey      = |r|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-  ENDMETHOD.
-
-
-  METHOD add_menu_begin.
-
-    io_menu->add(
-        iv_txt   = c_action_texts-refresh_local
-        iv_typ   = zif_abapgit_html=>c_action_type-dummy
-        iv_act   = c_actions-refresh_local
-        iv_id    = c_actions-refresh_local
-        iv_title = c_action_titles-refresh_local ).
-
-    io_menu->add(
-        iv_txt   = c_action_texts-refresh_all
-        iv_typ   = zif_abapgit_html=>c_action_type-dummy
-        iv_act   = c_actions-refresh_all
-        iv_id    = c_actions-refresh_all
-        iv_title = c_action_titles-refresh_all ).
+    ls_hotkey_action-description = |Refresh All|.
+    ls_hotkey_action-action      = |refreshAll|.
+    ls_hotkey_action-hotkey      = |a|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
-
-
-  METHOD modify_files_before_diff_calc.
-
-    DATA: ls_file LIKE LINE OF ct_files.
-
-    FIELD-SYMBOLS: <ls_diff_file_old> TYPE zcl_abapgit_gui_page_diff=>ty_file_diff.
-
-    " We need to supply files again in calculate_diff. Because
-    " we only want to refresh the visible files. Otherwise all
-    " diff files would appear.
-    " Which is not wanted when we previously only selected particular files.
-
-    LOOP AT it_diff_files_old ASSIGNING <ls_diff_file_old>.
-      CLEAR: ls_file.
-      MOVE-CORRESPONDING <ls_diff_file_old> TO ls_file-file.
-      INSERT ls_file INTO TABLE ct_files.
-    ENDLOOP.
-
-  ENDMETHOD.
-
 ENDCLASS.

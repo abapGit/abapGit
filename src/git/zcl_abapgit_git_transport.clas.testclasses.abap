@@ -162,7 +162,6 @@ CLASS ltcl_git_transport IMPLEMENTATION.
     " GitLab and Bitbucket use 0000 opposed to GitHub which uses 00000000
 
     DATA lv_status TYPE string.
-    DATA lx_error TYPE REF TO zcx_abapgit_exception.
 
     lv_status = `000eunpack ok` &&
       zif_abapgit_definitions=>c_newline &&

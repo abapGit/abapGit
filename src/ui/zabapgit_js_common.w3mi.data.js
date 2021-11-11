@@ -1393,11 +1393,7 @@ LinkHints.prototype.handleKey = function(event){
     return;
   }
 
-  var activeElement = (document.activeElement && document.activeElement) || {};
-
-  // link hints are disabled for input and textareas for obvious reasons.
-  // Maybe we must add other types here in the future
-  if (event.key === this.linkHintHotKey && activeElement.type !== "text" && activeElement.type !== "number" && activeElement.nodeName !== "TEXTAREA") {
+  if (event.key === this.linkHintHotKey && Hotkeys.isHotkeyCallPossible()) {
 
     // on user hide hints, close an opened dropdown too
     if (this.areHintsDisplayed && this.activatedDropdown) this.closeActivatedDropdown();
@@ -1546,10 +1542,18 @@ function Hotkeys(oKeyMap){
         return;
       }
 
-      // Or a SAP event
+      // Or a SAP event link
       var sUiSapEventHref = this.getSapEventHref(action);
       if (sUiSapEventHref) {
         submitSapeventForm({}, sUiSapEventHref, "post");
+        oEvent.preventDefault();
+        return;
+      }
+
+      // Or a SAP event input
+      var sUiSapEventFormAction = this.getSapEventFormAction(action);
+      if (sUiSapEventFormAction) {
+        submitSapeventForm({}, sUiSapEventFormAction, "post");
         oEvent.preventDefault();
         return;
       }
@@ -1569,21 +1573,47 @@ Hotkeys.prototype.showHotkeys = function() {
 };
 
 Hotkeys.prototype.getAllSapEventsForSapEventName = function(sSapEvent) {
-  return [].slice.call(document.querySelectorAll('a[href*="sapevent:' + sSapEvent + '"], a[href*="SAPEVENT:' + sSapEvent + '"]'));
+  return [].slice.call(
+    document.querySelectorAll('a[href*="sapevent:' + sSapEvent + '"],'
+                            + 'a[href*="SAPEVENT:' + sSapEvent + '"],'
+                            + 'input[formaction*="sapevent:' + sSapEvent + '"],'
+                            + 'input[formaction*="SAPEVENT:' + sSapEvent + '"]'));
 };
 
 Hotkeys.prototype.getSapEventHref = function(sSapEvent) {
 
   return this.getAllSapEventsForSapEventName(sSapEvent)
+    .filter(function(el){
+      // only anchors
+      return (!!el.href);
+    })
     .map(function(oSapEvent){
       return oSapEvent.href;
     })
-    .filter(function(sapEventHref){
-      // eliminate false positives
-      return sapEventHref.match(new RegExp("\\b" + sSapEvent + "\\b"));
-    })
+    .filter(this.eliminateSapEventFalsePositives(sSapEvent))
     .pop();
 
+};
+
+Hotkeys.prototype.getSapEventFormAction = function(sSapEvent) {
+
+  return this.getAllSapEventsForSapEventName(sSapEvent)
+    .filter(function(el){
+      // input forms
+      return (el.type === "submit");
+    })
+    .map(function(oSapEvent){
+      return oSapEvent.formAction;
+    })
+    .filter(this.eliminateSapEventFalsePositives(sSapEvent))
+    .pop();
+
+};
+
+Hotkeys.prototype.eliminateSapEventFalsePositives = function(sapEvent){
+  return function(sapEventAttr) {
+    return sapEventAttr.match(new RegExp("\\b" + sapEvent + "\\b"));
+  };
 };
 
 Hotkeys.prototype.onkeydown = function(oEvent){
@@ -1592,9 +1622,7 @@ Hotkeys.prototype.onkeydown = function(oEvent){
     return;
   }
 
-  var activeElementType = ((document.activeElement && document.activeElement.nodeName) || "");
-
-  if (activeElementType === "INPUT" || activeElementType === "TEXTAREA") {
+  if (!Hotkeys.isHotkeyCallPossible()){
     return;
   }
 
@@ -1605,6 +1633,14 @@ Hotkeys.prototype.onkeydown = function(oEvent){
   if (fnHotkey) {
     fnHotkey.call(this, oEvent);
   }
+};
+
+Hotkeys.isHotkeyCallPossible = function(){
+
+  var activeElementType = ((document.activeElement && document.activeElement.nodeName) || "");
+  var activeElementReadOnly = ((document.activeElement && document.activeElement.readOnly) || false);
+
+  return (activeElementReadOnly || ( activeElementType !== "INPUT" && activeElementType !== "TEXTAREA" ));
 };
 
 Hotkeys.addHotkeyToHelpSheet = function(key, description) {
@@ -1730,7 +1766,8 @@ Patch.prototype.ID = {
 
 Patch.prototype.ACTION = {
   PATCH_STAGE: "patch_stage",
-  REFRESH_LOCAL: "refresh_local"
+  REFRESH_LOCAL: "refresh_local",
+  REFRESH_ALL: "refresh_all"
 };
 
 Patch.prototype.escape = function(sFileName){
@@ -1875,6 +1912,10 @@ Patch.prototype.registerStagePatch = function registerStagePatch(){
 
   window.refreshLocal = memoizeScrollPosition(function(){
     this.submitPatch(this.ACTION.REFRESH_LOCAL);
+  }.bind(this));
+
+  window.refreshAll = memoizeScrollPosition(function(){
+    this.submitPatch(this.ACTION.REFRESH_ALL);
   }.bind(this));
 
 };
@@ -2268,10 +2309,18 @@ function enumerateToolbarActions() {
   if (items.length === 0) return;
 
   items = items.map(function(item) {
+    var action = "";
     var anchor = item[0];
+    if (anchor.href.includes("#")) {
+      action = function(){
+        anchor.click();
+      };
+    } else {
+      action = anchor.href.replace("sapevent:", "");
+    }
     var prefix = item[1];
     return {
-      action:    anchor.href.replace("sapevent:", ""),
+      action:    action,
       title:     (prefix ? prefix + ": " : "") + anchor.innerText.trim()
     };
   });
@@ -2316,4 +2365,31 @@ function memoizeScrollPosition(fn){
     saveScrollPosition();
     return fn.call(this, fn.args);
   }.bind(this);
+}
+
+/* STICKY HEADERS */
+
+/* https://www.w3schools.com/howto/howto_js_navbar_sticky.asp */
+/* Note: We have to use JS since IE does not support CSS position:sticky */
+
+// When the user scrolls the page, execute toggleSticky
+window.onscroll = function() { toggleSticky() };
+
+// Add the sticky class to the navbar when you reach its scroll position.
+// Remove "sticky" when you leave the scroll position
+function toggleSticky() {
+  var body = document.getElementsByTagName("body")[0];
+  var header = document.getElementById("header");
+  var sticky = header.offsetTop;
+
+  var stickyClass = "sticky";
+  if (body.classList.contains("full_width")) {
+    stickyClass = "sticky_full_width";
+  }
+
+  if (window.pageYOffset >= sticky) {
+    header.classList.add( stickyClass );
+  } else {
+    header.classList.remove( stickyClass );
+  }
 }

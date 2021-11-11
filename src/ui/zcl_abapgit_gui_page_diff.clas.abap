@@ -13,9 +13,9 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         filename   TYPE string,
         obj_type   TYPE string,
         obj_name   TYPE string,
-        lstate     TYPE char1,
-        rstate     TYPE char1,
-        fstate     TYPE char1, " FILE state - Abstraction for shorter ifs
+        lstate     TYPE c LENGTH 1,
+        rstate     TYPE c LENGTH 1,
+        fstate     TYPE c LENGTH 1, " FILE state - Abstraction for shorter ifs
         o_diff     TYPE REF TO zcl_abapgit_diff,
         changed_by TYPE xubname,
         type       TYPE string,
@@ -28,9 +28,9 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
 
     CONSTANTS:
       BEGIN OF c_fstate,
-        local  TYPE char1 VALUE 'L',
-        remote TYPE char1 VALUE 'R',
-        both   TYPE char1 VALUE 'B',
+        local  TYPE c LENGTH 1 VALUE 'L',
+        remote TYPE c LENGTH 1 VALUE 'R',
+        both   TYPE c LENGTH 1 VALUE 'B',
       END OF c_fstate.
 
     METHODS constructor
@@ -59,8 +59,8 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         refresh_local TYPE string VALUE `Refresh Local`,
       END OF c_action_texts,
       BEGIN OF c_action_titles,
-        refresh_all   TYPE string VALUE `Refresh all local objects, without refreshing the remote`,
-        refresh_local TYPE string VALUE `Complete refresh of all objects, local and remote`,
+        refresh_local TYPE string VALUE `Refresh all local objects, without refreshing the remote`,
+        refresh_all   TYPE string VALUE `Complete refresh of all objects, local and remote`,
       END OF c_action_titles.
 
     DATA mv_unified TYPE abap_bool VALUE abap_true ##NO_TEXT.
@@ -148,9 +148,9 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         VALUE(rv_is_refrseh) TYPE abap_bool.
     METHODS modify_files_before_diff_calc
       IMPORTING
-        it_diff_files_old TYPE ty_file_diffs
-      CHANGING
-        ct_files          TYPE zif_abapgit_definitions=>ty_stage_tt.
+        !it_diff_files_old TYPE ty_file_diffs
+      RETURNING
+        VALUE(rt_files)    TYPE zif_abapgit_definitions=>ty_stage_tt.
 
     METHODS render_content
         REDEFINITION .
@@ -381,8 +381,9 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
 
     READ TABLE it_remote ASSIGNING <ls_remote>
-      WITH KEY filename = is_status-filename
-               path     = is_status-path.
+      WITH KEY file_path
+       COMPONENTS path     = is_status-path
+                  filename = is_status-filename.
     IF sy-subrc <> 0.
       ASSIGN ls_r_dummy TO <ls_remote>.
     ENDIF.
@@ -462,7 +463,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
   METHOD build_menu.
 
-    CREATE OBJECT ro_menu.
+    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-main'.
 
     add_menu_begin( ro_menu ).
     add_jump_sub_menu( ro_menu ).
@@ -625,6 +626,20 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
   METHOD modify_files_before_diff_calc.
 
+    DATA ls_file LIKE LINE OF rt_files.
+
+    FIELD-SYMBOLS <ls_diff_file_old> TYPE ty_file_diff.
+
+    " We need to supply files again in calculate_diff. Because
+    " we only want to refresh the visible files. Otherwise all
+    " diff files would appear.
+    " Which is not wanted when we previously only selected particular files.
+    LOOP AT it_diff_files_old ASSIGNING <ls_diff_file_old>.
+      CLEAR ls_file.
+      MOVE-CORRESPONDING <ls_diff_file_old> TO ls_file-file.
+      INSERT ls_file INTO TABLE rt_files.
+    ENDLOOP.
+
   ENDMETHOD.
 
 
@@ -666,11 +681,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
         refresh_local_object( iv_action ).
     ENDCASE.
 
-    modify_files_before_diff_calc(
-      EXPORTING
-        it_diff_files_old = lt_diff_files_old
-      CHANGING
-        ct_files          = lt_files ).
+    lt_files = modify_files_before_diff_calc( lt_diff_files_old ).
 
     calculate_diff( it_files = lt_files ).
 
@@ -819,8 +830,8 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
   METHOD render_diff_head.
 
-    DATA: ls_stats    TYPE zif_abapgit_definitions=>ty_count,
-          lv_adt_link TYPE string.
+    DATA: ls_stats TYPE zif_abapgit_definitions=>ty_count,
+          lv_link  TYPE string.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -848,14 +859,14 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     IF NOT ( is_diff-lstate = zif_abapgit_definitions=>c_state-unchanged AND
              is_diff-rstate = zif_abapgit_definitions=>c_state-added ) AND
          NOT is_diff-lstate = zif_abapgit_definitions=>c_state-deleted.
-      lv_adt_link = ri_html->a(
+      lv_link = ri_html->a(
         iv_txt = |{ is_diff-path }{ is_diff-filename }|
         iv_typ = zif_abapgit_html=>c_action_type-sapevent
         iv_act = |jump?TYPE={ is_diff-obj_type }&NAME={ is_diff-obj_name }| ).
     ENDIF.
 
-    IF lv_adt_link IS NOT INITIAL.
-      ri_html->add( |<span class="diff_name">{ lv_adt_link }</span>| ).
+    IF lv_link IS NOT INITIAL.
+      ri_html->add( |<span class="diff_name">{ lv_link }</span>| ).
     ELSE.
       ri_html->add( |<span class="diff_name">{ is_diff-path }{ is_diff-filename }</span>| ).
     ENDIF.
@@ -879,24 +890,19 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
   METHOD render_diff_head_after_state.
 
-    DATA: lv_act_id TYPE string.
-
     IF is_diff-fstate = c_fstate-both AND mv_unified = abap_true.
       ii_html->add( '<span class="attention pad-sides">Attention: Unified mode'
                  && ' highlighting for MM assumes local file is newer ! </span>' ).
     ENDIF.
 
     IF is_diff-obj_type IS NOT INITIAL AND is_diff-obj_name IS NOT INITIAL.
-
-      lv_act_id = |{ c_actions-refresh_local_object }_{ is_diff-obj_type }_{ is_diff-obj_name }|.
-
-      ii_html->add_a(
-          iv_txt   = |Refresh|
-          iv_typ   = zif_abapgit_html=>c_action_type-sapevent
-          iv_act   = lv_act_id
-          iv_id    = lv_act_id
-          iv_title = |Local refresh of this object| ).
-
+      ii_html->add( '<span class="repo_name">' ).
+      ii_html->add_a( iv_txt   = ii_html->icon( iv_name  = 'redo-alt-solid'
+                                                iv_class = 'pad-sides'
+                                                iv_hint  = 'Local refresh of this object' )
+                      iv_act   = |{ c_actions-refresh_local_object }_{ is_diff-obj_type }_{ is_diff-obj_name }|
+                      iv_class = |url| ).
+      ii_html->add( '</span>' ).
     ENDIF.
 
   ENDMETHOD.
@@ -1006,7 +1012,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
           && |<td class="code{ lv_bg } diff_right">{ is_diff_line-old }</td>|.
 
     " render line, inverse sides if remote is newer
-    ri_html->add( '<tr>' ).
+    ri_html->add( '<tr class="diff_line">' ).
 
     render_line_split_row(
         ii_html                = ri_html
@@ -1044,7 +1050,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     " Release delayed subsequent update lines
     IF is_diff_line-result <> zif_abapgit_definitions=>c_diff-update.
       LOOP AT mt_delayed_lines ASSIGNING <ls_diff_line>.
-        ri_html->add( '<tr>' ).
+        ri_html->add( '<tr class="diff_line">' ).
         ri_html->add( |<td class="num diff_others" line-num="{ <ls_diff_line>-old_num }"></td>|
                    && |<td class="num diff_others" line-num=""></td>|
                    && |<td class="mark diff_others">-</td>|
@@ -1052,7 +1058,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
         ri_html->add( '</tr>' ).
       ENDLOOP.
       LOOP AT mt_delayed_lines ASSIGNING <ls_diff_line>.
-        ri_html->add( '<tr>' ).
+        ri_html->add( '<tr class="diff_line">' ).
         ri_html->add( |<td class="num diff_others" line-num=""></td>|
                    && |<td class="num diff_others" line-num="{ <ls_diff_line>-new_num }"></td>|
                    && |<td class="mark diff_others">+</td>|
@@ -1062,7 +1068,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
       CLEAR mt_delayed_lines.
     ENDIF.
 
-    ri_html->add( '<tr>' ).
+    ri_html->add( '<tr class="diff_line">' ).
     CASE is_diff_line-result.
       WHEN zif_abapgit_definitions=>c_diff-update.
         APPEND is_diff_line TO mt_delayed_lines. " Delay output of subsequent updates
@@ -1211,11 +1217,25 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     ls_hotkey_action-ui_component = 'Diff'.
 
-    ls_hotkey_action-description = |Refresh local|.
+    ls_hotkey_action-description = |Refresh Local|.
     ls_hotkey_action-action      = c_actions-refresh_local.
     ls_hotkey_action-hotkey      = |r|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-  ENDMETHOD.
+    ls_hotkey_action-description = |Refresh All|.
+    ls_hotkey_action-action      = c_actions-refresh_all.
+    ls_hotkey_action-hotkey      = |a|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
+    ls_hotkey_action-description = |Toogle Split/Unified|.
+    ls_hotkey_action-action      = c_actions-toggle_unified.
+    ls_hotkey_action-hotkey      = |u|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description = |Toogle Hidden Characters|.
+    ls_hotkey_action-action      = c_actions-toggle_hidden_chars.
+    ls_hotkey_action-hotkey      = |h|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+  ENDMETHOD.
 ENDCLASS.

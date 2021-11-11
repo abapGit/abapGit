@@ -20,9 +20,9 @@ CLASS zcl_abapgit_gui_page_debuginfo DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CONSTANTS c_exit_standalone TYPE progname VALUE 'ZABAPGIT_USER_EXIT' ##NO_TEXT.
-    CONSTANTS c_exit_class TYPE seoclsname VALUE 'ZCL_ABAPGIT_USER_EXIT' ##NO_TEXT.
-    CONSTANTS c_exit_interface TYPE seoclsname VALUE 'ZIF_ABAPGIT_EXIT' ##NO_TEXT.
+    CONSTANTS c_exit_standalone TYPE c LENGTH 30 VALUE 'ZABAPGIT_USER_EXIT' ##NO_TEXT.
+    CONSTANTS c_exit_class TYPE c LENGTH 30 VALUE 'ZCL_ABAPGIT_USER_EXIT' ##NO_TEXT.
+    CONSTANTS c_exit_interface TYPE c LENGTH 30 VALUE 'ZIF_ABAPGIT_EXIT' ##NO_TEXT.
     CONSTANTS:
       BEGIN OF c_action,
         save TYPE string VALUE 'save',
@@ -68,7 +68,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
 
 
   METHOD build_toolbar.
@@ -123,16 +123,21 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
 
   METHOD render_debug_info.
 
-    DATA: lt_ver_tab     TYPE filetable,
-          lv_rc          TYPE i,
-          ls_release     TYPE zif_abapgit_environment=>ty_release_sp,
-          lv_gui_version TYPE string,
-          ls_version     LIKE LINE OF lt_ver_tab,
-          lv_devclass    TYPE devclass.
+    DATA: lt_ver_tab       TYPE filetable,
+          lv_rc            TYPE i,
+          ls_release       TYPE zif_abapgit_environment=>ty_release_sp,
+          lv_gui_version   TYPE string,
+          ls_version       LIKE LINE OF lt_ver_tab,
+          lv_devclass      TYPE devclass,
+          lo_frontend_serv TYPE REF TO zif_abapgit_frontend_services.
 
-    cl_gui_frontend_services=>get_gui_version(
-      CHANGING version_table = lt_ver_tab rc = lv_rc
-      EXCEPTIONS OTHERS = 1 ).
+    lo_frontend_serv = zcl_abapgit_ui_factory=>get_frontend_services( ).
+    TRY.
+        lo_frontend_serv->get_gui_version( CHANGING ct_version_table = lt_ver_tab cv_rc = lv_rc ).
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
+        " Continue rendering even if this fails
+    ENDTRY.
+
     READ TABLE lt_ver_tab INTO ls_version INDEX 1. " gui release
     lv_gui_version = ls_version-filename.
     READ TABLE lt_ver_tab INTO ls_version INDEX 2. " gui sp

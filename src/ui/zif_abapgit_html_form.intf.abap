@@ -29,6 +29,8 @@ INTERFACE zif_abapgit_html_form
       condense      TYPE abap_bool,
       min           TYPE i,
       max           TYPE i,
+      rows          TYPE i,
+      cols          TYPE i,
     END OF ty_field .
   TYPES:
     ty_fields TYPE STANDARD TABLE OF ty_field

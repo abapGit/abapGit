@@ -414,8 +414,9 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     get_files_remote( ).
 
     READ TABLE mt_remote ASSIGNING <ls_remote>
-      WITH KEY path = zif_abapgit_definitions=>c_root_dir
-      filename = zif_abapgit_definitions=>c_dot_abapgit.
+      WITH KEY file_path
+      COMPONENTS path     = zif_abapgit_definitions=>c_root_dir
+                 filename = zif_abapgit_definitions=>c_dot_abapgit.
     IF sy-subrc = 0.
       ro_dot = zcl_abapgit_dot_abapgit=>deserialize( <ls_remote>-data ).
       set_dot_abapgit( ro_dot ).
@@ -432,8 +433,9 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     get_files_remote( ).
 
     READ TABLE mt_remote ASSIGNING <ls_remote>
-      WITH KEY path     = zif_abapgit_definitions=>c_root_dir
-               filename = zif_abapgit_apack_definitions=>c_dot_apack_manifest.
+      WITH KEY file_path
+      COMPONENTS path     = zif_abapgit_definitions=>c_root_dir
+                 filename = zif_abapgit_apack_definitions=>c_dot_apack_manifest.
     IF sy-subrc = 0.
       ro_dot = zcl_abapgit_apack_reader=>deserialize( iv_package_name = ms_data-package
                                                       iv_xstr         = <ls_remote>-data ).
@@ -458,7 +460,8 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     mi_data_config = ri_config.
 
     READ TABLE mt_remote ASSIGNING <ls_remote>
-      WITH KEY path = zif_abapgit_data_config=>c_default_path.
+      WITH KEY file_path
+      COMPONENTS path = zif_abapgit_data_config=>c_default_path.
     IF sy-subrc = 0.
       ri_config->from_json( mt_remote ).
     ENDIF.
@@ -486,7 +489,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   METHOD get_files_local.
 
     DATA lo_serialize TYPE REF TO zcl_abapgit_serialize.
-    DATA lt_languages TYPE zif_abapgit_definitions=>ty_languages.
 
     " Serialization happened before and no refresh request
     IF lines( mt_local ) > 0 AND mv_request_local_refresh = abap_false.
@@ -494,21 +496,15 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lt_languages = zcl_abapgit_lxe_texts=>get_translation_languages(
-      iv_main_language  = get_dot_abapgit( )->get_main_language( )
-      it_i18n_languages = get_dot_abapgit( )->get_i18n_languages( ) ).
-
     CREATE OBJECT lo_serialize
       EXPORTING
-        iv_main_language_only = ms_data-local_settings-main_language_only
-        it_translation_langs  = lt_languages.
+        io_dot_abapgit    = get_dot_abapgit( )
+        is_local_settings = get_local_settings( ).
 
     rt_files = lo_serialize->files_local(
-      iv_package        = get_package( )
-      io_dot_abapgit    = get_dot_abapgit( )
-      is_local_settings = get_local_settings( )
-      ii_data_config    = get_data_config( )
-      ii_log            = ii_log ).
+      iv_package     = get_package( )
+      ii_data_config = get_data_config( )
+      ii_log         = ii_log ).
 
     mt_local                 = rt_files.
     mv_request_local_refresh = abap_false. " Fulfill refresh

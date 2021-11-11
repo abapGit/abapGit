@@ -69,7 +69,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_STAGE IMPLEMENTATION.
+CLASS zcl_abapgit_stage IMPLEMENTATION.
 
 
   METHOD add.
@@ -142,7 +142,7 @@ CLASS ZCL_ABAPGIT_STAGE IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_method-add.
         rv_description = 'add'.
       WHEN zif_abapgit_definitions=>c_method-rm.
-        rv_description = 'rm'.
+        rv_description = 'remove'.
       WHEN zif_abapgit_definitions=>c_method-ignore.
         rv_description = 'ignore'.
       WHEN OTHERS.
