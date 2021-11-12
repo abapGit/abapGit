@@ -1,40 +1,40 @@
 CLASS zcl_abapgit_ajson_cnt_handler DEFINITION
-  public
-  final
-  create public .
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
 
-  public section.
+  PUBLIC SECTION.
 
     "! Serializes data to xstring. Type of data is specified in the
     "! implementing class.
     "!
     "! @parameter data | data to be serialized
     "! @parameter result | serialized data
-    methods serialize
-      importing data          type data
-      returning value(result) type xstring
-      raising   cx_root.
+    METHODS serialize
+      IMPORTING data          TYPE data
+      RETURNING VALUE(result) TYPE xstring
+      RAISING   cx_root.
 
     "! Deserializes xstring into data. The type of data is specified in
     "! the implementing class
     "!
     "! @parameter content | xstring to be deserialized
     "! @parameter data | data of the xstring
-    methods deserialize
-      importing content type xstring
-      exporting data    type data
-      raising   cx_root.
+    METHODS deserialize
+      IMPORTING content TYPE xstring
+      EXPORTING data    TYPE data
+      RAISING   cx_root.
 
-  protected section.
+  PROTECTED SECTION.
 
-  private section.
+  PRIVATE SECTION.
 
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_AJSON_CNT_HANDLER IMPLEMENTATION.
+CLASS zcl_abapgit_ajson_cnt_handler IMPLEMENTATION.
 
 
   METHOD deserialize.

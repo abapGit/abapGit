@@ -1,29 +1,29 @@
 *"* use this source file for the definition and implementation of
 *"* local helper classes, interface definitions and type
 *"* declarations
-class lcl_mapping definition.
-  public section.
-    interfaces zif_abapgit_ajson_mapping.
-endclass.
+CLASS lcl_mapping DEFINITION.
+  PUBLIC SECTION.
+    INTERFACES zif_abapgit_ajson_mapping.
+ENDCLASS.
 
-class lcl_mapping implementation.
-  method zif_abapgit_ajson_mapping~to_abap.
-  endmethod.
+CLASS lcl_mapping IMPLEMENTATION.
+  METHOD zif_abapgit_ajson_mapping~to_abap.
+  ENDMETHOD.
 
-  method zif_abapgit_ajson_mapping~to_json.
-    types ty_token type c length 255.
-    data lt_tokens type standard table of ty_token.
-    field-symbols <token> like line of lt_tokens.
+  METHOD zif_abapgit_ajson_mapping~to_json.
+    TYPES ty_token TYPE c LENGTH 255.
+    DATA lt_tokens TYPE STANDARD TABLE OF ty_token.
+    FIELD-SYMBOLS <token> LIKE LINE OF lt_tokens.
 
     rv_result = iv_name.
-    if iv_path = '/' and iv_name = 'schema'.
+    IF iv_path = '/' AND iv_name = 'schema'.
       rv_result = '$schema'.
-    else.
-      split rv_result at `_` into table lt_tokens.
-      loop at lt_tokens assigning <token> from 2.
-        translate <token>(1) to upper case.
-      endloop.
-      concatenate lines of lt_tokens into rv_result.
-    endif.
-  endmethod.
-endclass.
+    ELSE.
+      SPLIT rv_result AT `_` INTO TABLE lt_tokens.
+      LOOP AT lt_tokens ASSIGNING <token> FROM 2.
+        TRANSLATE <token>(1) TO UPPER CASE.
+      ENDLOOP.
+      CONCATENATE LINES OF lt_tokens INTO rv_result.
+    ENDIF.
+  ENDMETHOD.
+ENDCLASS.

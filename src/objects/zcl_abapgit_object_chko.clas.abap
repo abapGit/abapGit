@@ -15,7 +15,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_CHKO IMPLEMENTATION.
+CLASS zcl_abapgit_object_chko IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
