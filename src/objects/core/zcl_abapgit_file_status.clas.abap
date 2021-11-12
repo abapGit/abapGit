@@ -37,7 +37,6 @@ CLASS zcl_abapgit_file_status DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS process_local
       IMPORTING
-        !iv_devclass  TYPE devclass
         !io_dot       TYPE REF TO zcl_abapgit_dot_abapgit
         !it_local     TYPE zif_abapgit_definitions=>ty_files_item_tt
         !it_state_idx TYPE zif_abapgit_definitions=>ty_file_signatures_ts
@@ -51,7 +50,6 @@ CLASS zcl_abapgit_file_status DEFINITION
       IMPORTING
         !iv_devclass TYPE devclass
         !io_dot      TYPE REF TO zcl_abapgit_dot_abapgit
-        !it_local    TYPE zif_abapgit_definitions=>ty_files_item_tt
         !it_remote   TYPE zif_abapgit_definitions=>ty_files_tt
       CHANGING
         !ct_items    TYPE zif_abapgit_definitions=>ty_items_tt
@@ -292,7 +290,6 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
     " Process local files and new local files
     process_local(
       EXPORTING
-        iv_devclass  = iv_devclass
         io_dot       = io_dot
         it_local     = it_local
         it_state_idx = lt_state_idx
@@ -306,7 +303,6 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
       EXPORTING
         iv_devclass = iv_devclass
         io_dot      = io_dot
-        it_local    = it_local
         it_remote   = lt_remote
       CHANGING
         ct_items    = lt_items ).

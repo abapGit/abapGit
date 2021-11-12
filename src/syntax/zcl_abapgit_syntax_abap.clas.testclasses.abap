@@ -79,8 +79,8 @@ CLASS ltcl_syntax_basic_logic IMPLEMENTATION.
     lv_line_exp =
       '<span class="keyword">call</span>' &&
       ' <span class="keyword">function</span>' &&
-      ' <span class="text">&#39;FM_NAME&#39;</span>.' &&
-      ' <span class="comment">&quot; Commented</span>'.
+      | <span class="text">'FM_NAME'</span>.| &&
+      ' <span class="comment">" Commented</span>'.
 
     lv_line_act = mo_syntax_highlighter->process_line( lv_line ).
 
@@ -147,8 +147,7 @@ CLASS ltcl_syntax_cases DEFINITION FINAL FOR TESTING RISK LEVEL HARMLESS
       mt_after_extend TYPE zcl_abapgit_syntax_abap=>ty_match_tt.
 
     METHODS:
-      do_test IMPORTING iv_line     TYPE string
-                        iv_filename TYPE string,
+      do_test IMPORTING iv_line TYPE string,
       generate_parse IMPORTING iv_token  TYPE c
                                iv_offset TYPE i
                                iv_length TYPE i,
@@ -296,8 +295,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 39
                      iv_text_tag = '' ).
 
-    do_test( iv_line = lv_line
-             iv_filename = '*.abap' ).
+    do_test( lv_line ).
 
   ENDMETHOD.
 
@@ -361,8 +359,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 1
                      iv_text_tag = '' ).
 
-    do_test( iv_line = lv_line
-             iv_filename = '*.abap' ).
+    do_test( lv_line ).
 
   ENDMETHOD.
 
@@ -441,8 +438,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 11
                      iv_text_tag = '' ).
 
-    do_test( iv_line = lv_line
-             iv_filename = '*.abap' ).
+    do_test( lv_line ).
 
   ENDMETHOD.
 
@@ -542,8 +538,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 1
                      iv_text_tag = '' ).
 
-    do_test( iv_line = lv_line
-             iv_filename = '*.abap' ).
+    do_test( lv_line ).
 
   ENDMETHOD.
 
@@ -650,8 +645,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 1
                      iv_text_tag = '' ).
 
-    do_test( iv_line = lv_line
-             iv_filename = '*.abap' ).
+    do_test( lv_line ).
 
   ENDMETHOD.
 
@@ -808,8 +802,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 1
                      iv_text_tag = '}' ).
 
-    do_test( iv_line = lv_line
-             iv_filename = '*.abap' ).
+    do_test( lv_line ).
 
   ENDMETHOD.
 
@@ -859,8 +852,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 4
                      iv_text_tag = '' ).
 
-    do_test( iv_line = lv_line
-             iv_filename = '*.abap' ).
+    do_test( lv_line ).
 
   ENDMETHOD.
 
@@ -887,8 +879,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 27
                      iv_text_tag = '' ).
 
-    do_test( iv_line = lv_line
-             iv_filename = '*.abap' ).
+    do_test( lv_line ).
 
   ENDMETHOD.
 
