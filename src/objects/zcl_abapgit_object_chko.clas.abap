@@ -11,24 +11,11 @@ CLASS zcl_abapgit_object_chko DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    TYPES:
-      BEGIN OF ty_content,
-        category           TYPE string,
-        implementing_class TYPE string,
-        remote_enabled     TYPE flag,
-        parameters         TYPE cl_chko_db_api=>ty_parameters,
-      END OF ty_content .
-    TYPES:
-      BEGIN OF ty_chko.
-        INCLUDE TYPE if_aff_types=>ty_aff_header.
-    TYPES:
-        content TYPE ty_content,
-      END OF ty_chko .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_chko IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_CHKO IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -57,35 +44,29 @@ CLASS zcl_abapgit_object_chko IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~deserialize.
-    " test with simple type
-types:
-      BEGIN OF ty_main,
-      format_version     TYPE if_aff_types_v1=>ty_format_version,
-      header             TYPE if_aff_types_v1=>ty_header_60,
-      category           TYPE if_aff_types_v1=>ty_object_name_30,
-      implementing_class TYPE if_aff_types_v1=>ty_object_name_30,
-      remote_enabled     TYPE abap_bool,
-*      parameters         TYPE ty_parameters,
-      END OF ty_main.
 
-    data properties type ty_main.
-
-*    data properties type if_aff_chko_v1=>ty_main.
+    DATA properties_aff TYPE zif_abagit_aff_chko_v1=>ty_main.
+    DATA object TYPE trkey.
 
     DATA(json_as_xstring) = mo_files->read_raw( iv_ext = 'json' ) ##NO_TEXT.
 
-    TRY.
-        NEW zcl_abapgit_ajson_cnt_handler( )->deserialize( EXPORTING content = json_as_xstring IMPORTING data = properties ).
-        properties-header-abap_language_version = if_abap_language_version=>gc_version-sap_cloud_platform.
+    object-devclass = ms_item-devclass.
+    object-obj_type = ms_item-obj_type.
+    object-obj_name = ms_item-obj_name.
 
-        DATA(persistence) = NEW lcl_chko_aff_persistence( ).
+    TRY.
+        NEW zcl_abapgit_ajson_cnt_handler( )->deserialize( EXPORTING content = json_as_xstring IMPORTING data = properties_aff ).
+
+        properties_aff-header-abap_language_version = if_abap_language_version=>gc_version-sap_cloud_platform.
+
+        DATA(persistence) = NEW lcl_chko_persistence( ).
         persistence->save_content(
-          data     = properties
-          object   = NEW cl_aff_obj( package = ms_item-devclass name = CONV #( ms_item-obj_name ) type = ms_item-obj_type )
+          data     = properties_aff
+          object   = object
           language = mv_language
           version  = 'I'
           saved_by = sy-uname ).
-      CATCH cx_aff_root INTO DATA(exception).
+      CATCH cx_static_check INTO DATA(exception).
         ii_log->add_exception(
             ix_exc  = exception
             is_item = ms_item ).
@@ -132,31 +113,34 @@ types:
 
 
   METHOD zif_abapgit_object~serialize.
-    DATA hex TYPE xstring.
+    DATA json_xstring TYPE xstring.
+    DATA object TYPE trkey.
+    DATA properties TYPE zif_abagit_aff_chko_v1=>ty_main.
+
+    object-devclass = ms_item-devclass.
+    object-obj_type = ms_item-obj_type.
+    object-obj_name = ms_item-obj_name.
 
     TRY.
-        DATA properties TYPE if_aff_chko_v1=>ty_main.
-        DATA(persistence) = NEW lcl_chko_aff_persistence( ).
+
+        DATA(persistence) = NEW lcl_chko_persistence( ).
         persistence->get_content(
           EXPORTING
-            object   = NEW cl_aff_obj( package = ms_item-devclass name = CONV #( ms_item-obj_name ) type = ms_item-obj_type )
+            object   = object
             language = mv_language
             version  = 'A'
           IMPORTING
             data     = properties ).
 
 
-        hex = NEW zcl_abapgit_ajson_cnt_handler( )->serialize( data = properties ).
-        mo_files->add_raw( iv_ext = 'json' iv_data = hex ).
+        json_xstring = NEW zcl_abapgit_ajson_cnt_handler( )->serialize( data = properties ).
+        mo_files->add_raw( iv_ext = 'json' iv_data = json_xstring ).
 
-      CATCH cx_aff_root INTO DATA(exception).
+      CATCH cx_static_check INTO DATA(exception).
 *        ii_log->add_exception(
 *          ix_exc  = exception
 *          is_item = ms_item ).
-      CATCH zcx_abapgit_ajson_error INTO DATA(exception_ajson).
-*        ii_log->add_exception(
-*         ix_exc  = exception_ajson
-*         is_item = ms_item ).
+
     ENDTRY.
 
   ENDMETHOD.

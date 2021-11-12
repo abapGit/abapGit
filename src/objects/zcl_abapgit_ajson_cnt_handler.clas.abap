@@ -13,7 +13,7 @@ CLASS zcl_abapgit_ajson_cnt_handler DEFINITION
     methods serialize
       importing data          type data
       returning value(result) type xstring
-      raising   cx_aff_root.
+      raising   cx_root.
 
     "! Deserializes xstring into data. The type of data is specified in
     "! the implementing class
@@ -23,15 +23,12 @@ CLASS zcl_abapgit_ajson_cnt_handler DEFINITION
     methods deserialize
       importing content type xstring
       exporting data    type data
-      raising   cx_aff_root.
+      raising   cx_root.
 
   protected section.
 
   private section.
 
-    methods handle_exception
-      importing exception type ref to cx_root
-      raising   cx_aff_root.
 
 ENDCLASS.
 
@@ -40,49 +37,33 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_AJSON_CNT_HANDLER IMPLEMENTATION.
 
 
-method handle_exception.
-    raise exception type cx_aff_without_message
-      exporting
-        previous = exception.
-  endmethod.
+  METHOD deserialize.
+
+    CLEAR data.
+
+    DATA(json) = zcl_abapgit_convert=>xstring_to_string_utf8( content ).
+    DATA(lo_ajson) = zcl_abapgit_ajson=>parse( iv_json = json ii_custom_mapping = zcl_abapgit_ajson_mapping=>create_camel_case( ) ).
+    lo_ajson->zif_abapgit_ajson~to_abap( IMPORTING ev_container = data ).
+
+  ENDMETHOD.
 
 
-  method deserialize.
+  METHOD serialize.
+    DATA st_source TYPE abap_trans_srcbind_tab.
+    FIELD-SYMBOLS: <st_source> LIKE LINE OF st_source.
 
-    clear data.
+    APPEND INITIAL LINE TO st_source ASSIGNING <st_source>.
+    GET REFERENCE OF data INTO <st_source>-value.
 
-    try.
-        data(json) = zcl_abapgit_convert=>xstring_to_string_utf8( content ).
-        data(lo_ajson) = zcl_abapgit_ajson=>parse( iv_json = json ii_custom_mapping = zcl_abapgit_ajson_mapping=>create_camel_case( ) ).
-        lo_ajson->zif_abapgit_ajson~to_abap( importing ev_container = data ).
+    DATA(li_ajson) = zcl_abapgit_ajson=>create_empty( ii_custom_mapping = NEW lcl_mapping( ) ).
+    li_ajson->keep_item_order( ).
+    li_ajson->set(
+      iv_path = '/'
+      iv_val  = data ).
 
-      catch zcx_abapgit_ajson_error  into data(ajson_error) .
-        me->handle_exception( ajson_error ).
-    endtry.
+    DATA(json) = li_ajson->stringify( 2 ).
 
-  endmethod.
+    result = zcl_abapgit_convert=>string_to_xstring_utf8( iv_string = json ).
 
-
-  method serialize.
-    data st_source type abap_trans_srcbind_tab.
-    field-symbols: <st_source> like line of st_source.
-
-    append initial line to st_source assigning <st_source>.
-    get reference of data into <st_source>-value.
-
-    try.
-        data(li_ajson) = zcl_abapgit_ajson=>create_empty( ii_custom_mapping = new lcl_mapping( ) ).
-        li_ajson->keep_item_order( ).
-        li_ajson->set(
-          iv_path = '/'
-          iv_val  = data ).
-        data(json) = li_ajson->stringify( 2 ).
-
-*        result =  cl_abap_conv_codepage=>create_out(  )->convert( json ).
-        result = zcl_abapgit_convert=>string_to_xstring_utf8( iv_string = json ).
-
-      catch zcx_abapgit_ajson_error  into data(ajson_error) .
-        me->handle_exception( ajson_error ).
-    endtry.
-  endmethod.
+  ENDMETHOD.
 ENDCLASS.

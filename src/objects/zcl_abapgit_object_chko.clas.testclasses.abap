@@ -1,31 +1,31 @@
-class ltcl_chko definition final for testing
-  duration short
-  risk level harmless.
+CLASS ltcl_chko DEFINITION FINAL FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
 
-  private section.
-    class-data:
-      environment type ref to if_osql_test_environment.
-    class-methods:
+  PRIVATE SECTION.
+    CLASS-DATA:
+      environment TYPE REF TO if_osql_test_environment.
+    CLASS-METHODS:
       class_setup,
       class_teardown.
 
-    data:
-      cut type ref to zif_abapgit_object.
-    methods:
+    DATA:
+      cut TYPE REF TO zif_abapgit_object.
+    METHODS:
       setup,
-      insert_chko_in_db importing name type wb_object_name,
-      get_chko_as_json returning value(result) type rswsourcet,
-      get_chko_as_json_no_params returning value(result) type rswsourcet,
-      serialize for testing raising cx_static_check,
-*      deserialize_chko_w_params for testing raising cx_static_check,
-      deserialize_chko_wo_params for testing raising cx_static_check.
-endclass.
+      insert_chko_in_db IMPORTING name TYPE wb_object_name,
+      get_chko_as_json RETURNING VALUE(result) TYPE rswsourcet,
+      get_chko_as_json_no_params RETURNING VALUE(result) TYPE rswsourcet,
+      serialize FOR TESTING RAISING cx_static_check,
+      deserialize_chko_w_params FOR TESTING RAISING cx_static_check,
+      deserialize_chko_wo_params FOR TESTING RAISING cx_static_check.
+ENDCLASS.
 
 
-class ltcl_chko implementation.
+CLASS ltcl_chko IMPLEMENTATION.
 
-  method class_setup.
-    environment = cl_osql_test_environment=>create( i_dependency_list = value #(
+  METHOD class_setup.
+    environment = cl_osql_test_environment=>create( i_dependency_list = VALUE #(
       ( 'TADIR' )
       ( 'CHKO_HEADER' )
       ( 'CHKO_HEADERT' )
@@ -33,111 +33,112 @@ class ltcl_chko implementation.
       ( 'CHKO_PARAMETER' )
       ( 'CHKO_PARAMETERST' )
      ) ).
-  endmethod.
+  ENDMETHOD.
 
-  method class_teardown.
-    if environment is bound.
+  METHOD class_teardown.
+    IF environment IS BOUND.
       environment->destroy( ).
-    endif.
-  endmethod.
+    ENDIF.
+  ENDMETHOD.
 
-  method setup.
-    data(item) = value zif_abapgit_definitions=>ty_item(
+  METHOD setup.
+    DATA(item) = VALUE zif_abapgit_definitions=>ty_item(
       obj_name = 'CHKO_TEST'
       obj_type = 'CHKO'
       devclass = '$TMP' ).
-    cut = new zcl_abapgit_object_chko( iv_language = sy-langu
+    cut = NEW zcl_abapgit_object_chko( iv_language = sy-langu
                                       is_item = item ).
-    cut->mo_files = new zcl_abapgit_objects_files( is_item = item ).
+    cut->mo_files = NEW zcl_abapgit_objects_files( is_item = item ).
     environment->clear_doubles( ).
-  endmethod.
+  ENDMETHOD.
 
-  method serialize.
+  METHOD serialize.
     insert_chko_in_db( 'CHKO_TEST' ).
     cut->serialize(
-      io_xml = new zcl_abapgit_xml_output( ) ).
+      io_xml = NEW zcl_abapgit_xml_output( ) ).
 *      ii_log = new zcl_abapgit_log( ) ).
 
-    data(act_files) = cut->mo_files->get_files( ).
+    DATA(act_files) = cut->mo_files->get_files( ).
 
     cl_abap_unit_assert=>assert_equals( exp = 1 act = lines( act_files ) ).
-    data(json) = cl_abap_codepage=>convert_from( act_files[ 1 ]-data ).
-  endmethod.
+    DATA(json) = cl_abap_codepage=>convert_from( act_files[ 1 ]-data ).
+  ENDMETHOD.
 
-  method deserialize_chko_wo_params.
-    data(json_table) = get_chko_as_json_no_params( ).
-    concatenate lines of json_table into data(json).
-    data(json_as_xstring) = zcl_abapgit_convert=>string_to_xstring_utf8( json ).
+  METHOD deserialize_chko_wo_params.
+    DATA(json_table) = get_chko_as_json_no_params( ).
+    CONCATENATE LINES OF json_table INTO DATA(json).
+    DATA(json_as_xstring) = zcl_abapgit_convert=>string_to_xstring_utf8( json ).
 
     cut->mo_files->add_raw( iv_ext = 'json' iv_data = json_as_xstring ).
 
     cut->deserialize(
       iv_package = '$TMP'
-      io_xml     = value #( )
+      io_xml     = VALUE #( )
       iv_step    = zif_abapgit_object=>gc_step_id-abap
-      ii_log     = new zcl_abapgit_log( ) ).
+      ii_log     = NEW zcl_abapgit_log( ) ).
 
-    select from chko_header fields * into table @data(header).
-    break-point.
-  endmethod.
+    SELECT FROM chko_header FIELDS * INTO TABLE @DATA(header).
+    cl_abap_unit_assert=>assert_subrc( act = sy-subrc ).
 
-*  method deserialize_chko_w_params.
-*    data(json_table) = get_chko_as_json( ).
-*    concatenate lines of json_table into data(json).
-*    data(json_as_xstring) = zcl_abapgit_convert=>string_to_xstring_utf8( json ).
-*
-*    cut->mo_files->add_raw( iv_ext = 'json' iv_data = json_as_xstring ).
-*
-*    cut->deserialize(
-*      iv_package = '$TMP'
-*      io_xml     = value #( )
-*      iv_step    = zif_abapgit_object=>gc_step_id-abap
-*      ii_log     = new zcl_abapgit_log( ) ).
-*
-*    select from chko_header fields * into table @data(header).
-*    break-point.
-*  endmethod.
+  ENDMETHOD.
 
-  method insert_chko_in_db.
-    data chko_header type table of chko_header.
-    chko_header = value #(
+  METHOD deserialize_chko_w_params.
+    DATA(json_table) = get_chko_as_json( ).
+    CONCATENATE LINES OF json_table INTO DATA(json).
+    DATA(json_as_xstring) = zcl_abapgit_convert=>string_to_xstring_utf8( json ).
+
+    cut->mo_files->add_raw( iv_ext = 'json' iv_data = json_as_xstring ).
+
+    cut->deserialize(
+      iv_package = '$TMP'
+      io_xml     = VALUE #( )
+      iv_step    = zif_abapgit_object=>gc_step_id-abap
+      ii_log     = NEW zcl_abapgit_log( ) ).
+
+    SELECT FROM chko_header FIELDS * INTO TABLE @DATA(header).
+    cl_abap_unit_assert=>assert_subrc( act = sy-subrc ).
+  ENDMETHOD.
+
+  METHOD insert_chko_in_db.
+    DATA chko_header TYPE TABLE OF chko_header.
+    chko_header = VALUE #(
       ( name = name version = 'A' abap_language_version = if_abap_language_version=>gc_version-sap_cloud_platform )
     ).
     environment->insert_test_data( chko_header ).
 
-    data chko_headert type table of chko_headert.
-    chko_headert = value #(
+    DATA chko_headert TYPE TABLE OF chko_headert.
+    chko_headert = VALUE #(
       ( name = name version = 'A' spras = sy-langu description = 'Test description' )
     ).
     environment->insert_test_data( chko_headert ).
 
-    data chko_content type table of chko_content.
-    chko_content = value #(
+    DATA chko_content TYPE TABLE OF chko_content.
+    chko_content = VALUE #(
       ( name = name version = 'A' category = 'TEST_CATEGORY' implementing_class = 'TEST_CLASS' remote_enabled = abap_true )
     ).
     environment->insert_test_data( chko_content ).
 
-    data chko_parameter type table of chko_parameter.
-    chko_parameter = value #(
+    DATA chko_parameter TYPE TABLE OF chko_parameter.
+    chko_parameter = VALUE #(
       ( chko_name = name version = 'A' technical_id = 1 name = 'parameter' modifiable = abap_true )
     ).
     environment->insert_test_data( chko_parameter ).
 
-    data chko_parameterst type table of chko_parameterst.
-    chko_parameterst = value #(
+    DATA chko_parameterst TYPE TABLE OF chko_parameterst.
+    chko_parameterst = VALUE #(
       ( chko_name = name version = 'A' technical_id = 1 spras = sy-langu description = 'Parameter description' )
     ).
     environment->insert_test_data( chko_parameterst ).
 
-    data tadir type table of tadir.
-    tadir = value #(
+    DATA tadir TYPE TABLE OF tadir.
+    tadir = VALUE #(
       ( pgmid = 'R3TR' object = 'CHKO' obj_name = name masterlang = 'E' )
     ).
     environment->insert_test_data( tadir ).
-  endmethod.
+  ENDMETHOD.
 
-  method get_chko_as_json.
-    result = value #(
+  METHOD get_chko_as_json.
+    result = VALUE #(
 ( `{` )
 ( `  "formatVersion": "1",` )
 ( `  "header": {` )
@@ -155,10 +156,10 @@ class ltcl_chko implementation.
 ( `    }` )
 ( `  ]` )
 ( `}` ) ).
-  endmethod.
+  ENDMETHOD.
 
-  method get_chko_as_json_no_params.
-    result = value #(
+  METHOD get_chko_as_json_no_params.
+    result = VALUE #(
 ( `{` )
 ( `  "formatVersion": "1",` )
 ( `  "header": {` )
@@ -168,6 +169,6 @@ class ltcl_chko implementation.
 ( `  "category": "TEST_CATEGORY",` )
 ( `  "implementingClass": "TEST_CLASS"` )
 ( `}` ) ).
-  endmethod.
+  ENDMETHOD.
 
-endclass.
+ENDCLASS.
