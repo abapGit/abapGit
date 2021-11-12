@@ -1,4 +1,4 @@
-INTERFACE zif_abagit_aff_chko_v1
+INTERFACE zif_abapgit_aff_chko_v1
   PUBLIC.
 
   TYPES:

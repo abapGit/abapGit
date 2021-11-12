@@ -3,7 +3,7 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOINTERF>
-    <CLSNAME>ZIF_ABAGIT_AFF_CHKO_V1</CLSNAME>
+    <CLSNAME>ZIF_ABAPGIT_AFF_CHKO_V1</CLSNAME>
     <LANGU>E</LANGU>
     <DESCRIPT>CHKO AFF Types</DESCRIPT>
     <EXPOSURE>2</EXPOSURE>

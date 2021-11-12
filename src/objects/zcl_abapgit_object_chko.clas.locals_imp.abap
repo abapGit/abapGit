@@ -7,7 +7,7 @@ CLASS lcl_chko_persistence DEFINITION
 
   PUBLIC SECTION.
 
-    TYPES: ty_chko TYPE zif_abagit_aff_chko_v1=>ty_main.
+    TYPES: ty_chko TYPE zif_abapgit_aff_chko_v1=>ty_main.
 
     METHODS:
       get_content

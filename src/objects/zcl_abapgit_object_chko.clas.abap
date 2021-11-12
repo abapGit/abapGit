@@ -45,7 +45,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CHKO IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA properties_aff TYPE zif_abagit_aff_chko_v1=>ty_main.
+    DATA properties_aff TYPE zif_abapgit_aff_chko_v1=>ty_main.
     DATA object TYPE trkey.
 
     DATA(json_as_xstring) = mo_files->read_raw( iv_ext = 'json' ) ##NO_TEXT.
@@ -115,7 +115,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CHKO IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
     DATA json_xstring TYPE xstring.
     DATA object TYPE trkey.
-    DATA properties TYPE zif_abagit_aff_chko_v1=>ty_main.
+    DATA properties TYPE zif_abapgit_aff_chko_v1=>ty_main.
 
     object-devclass = ms_item-devclass.
     object-obj_type = ms_item-obj_type.
