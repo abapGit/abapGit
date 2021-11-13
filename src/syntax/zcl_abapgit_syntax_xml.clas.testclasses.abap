@@ -55,11 +55,11 @@ CLASS ltcl_abapgit_syntax_xml IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = |<span class="xml_tag">&lt;ECTD</span>|
          && |<span class="attr"> SAPRL</span>=|
-         && |<span class="attr_val">&quot;751&quot;</span>|
+         && |<span class="attr_val">"751"</span>|
          && |<span class="attr"> VERSION</span>=|
-         && |<span class="attr_val">&quot;1.5&quot;</span>|
-         && |<span class="attr"> DOWNLOADDATE</span>=<span class="attr_val">&quot;&quot;</span>|
-         && |<span class="attr"> DOWNLOADTIME</span>=<span class="attr_val">&quot;&quot;</span>|
+         && |<span class="attr_val">"1.5"</span>|
+         && |<span class="attr"> DOWNLOADDATE</span>=<span class="attr_val">""</span>|
+         && |<span class="attr"> DOWNLOADTIME</span>=<span class="attr_val">""</span>|
          && |<span class="xml_tag">&gt;</span>|
       act = mo_cut->process_line( |<ECTD SAPRL="751" VERSION="1.5" DOWNLOADDATE="" DOWNLOADTIME="">| ) ).
 
@@ -69,16 +69,16 @@ CLASS ltcl_abapgit_syntax_xml IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       exp = |<span class="attr"> SAPRL</span>=|
-         && |<span class="attr_val">&quot;751&quot;</span>|
+         && |<span class="attr_val">"751"</span>|
          && |<span class="attr"> VERSION</span>=|
-         && |<span class="attr_val">&quot;&gt;1.5&quot;</span>|
+         && |<span class="attr_val">"&gt;1.5"</span>|
       act = mo_cut->process_line( | SAPRL="751" VERSION=">1.5"| ) ).
 
     cl_abap_unit_assert=>assert_equals(
       exp = |<span class="attr">SAPRL</span>=|
-         && |<span class="attr_val">&quot;751&quot;</span>|
+         && |<span class="attr_val">"751"</span>|
          && |<span class="attr"> VERSION</span>=|
-         && |<span class="attr_val">&#39;&gt;1.5&#39;</span>|
+         && |<span class="attr_val">'&gt;1.5'</span>|
       act = mo_cut->process_line( |SAPRL="751" VERSION='>1.5'| ) ).
 
   ENDMETHOD.
@@ -92,9 +92,9 @@ CLASS ltcl_abapgit_syntax_xml IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = |<span class="xml_tag">&lt;ECTD</span>|
          && |<span class="attr"> SAPRL</span>=|
-         && |<span class="attr_val">&quot;751&quot;</span>|
+         && |<span class="attr_val">"751"</span>|
          && |<span class="attr"> VERSION</span>=|
-         && |<span class="attr_val">&quot;1.5&quot;</span>|
+         && |<span class="attr_val">"1.5"</span>|
       act = mo_cut->process_line( |<ECTD SAPRL="751" VERSION="1.5"| ) ).
 
 
@@ -119,8 +119,7 @@ CLASS ltcl_syntax_cases DEFINITION FINAL FOR TESTING RISK LEVEL HARMLESS
       mt_after_extend TYPE zcl_abapgit_syntax_xml=>ty_match_tt.
 
     METHODS:
-      do_test IMPORTING iv_line     TYPE string
-                        iv_filename TYPE string,
+      do_test IMPORTING iv_line TYPE string,
       generate_parse IMPORTING iv_token  TYPE c
                                iv_offset TYPE i
                                iv_length TYPE i,
@@ -271,8 +270,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 6
                      iv_text_tag = '<' ).
 
-    do_test( iv_line = lv_line
-             iv_filename = '*.xml' ).
+    do_test( lv_line ).
 
   ENDMETHOD.
 
@@ -301,8 +299,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 6
                      iv_text_tag = '<' ).
 
-    do_test( iv_line = lv_line
-             iv_filename = '*.xml' ).
+    do_test( lv_line ).
 
   ENDMETHOD.
 
@@ -366,8 +363,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 2
                      iv_text_tag = '>' ).
 
-    do_test( iv_line = lv_line
-             iv_filename = '*.xml' ).
+    do_test( lv_line ).
 
   ENDMETHOD.
 
@@ -431,8 +427,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 2
                      iv_text_tag = '>' ).
 
-    do_test( iv_line = lv_line
-             iv_filename = '*.xml' ).
+    do_test( lv_line ).
 
   ENDMETHOD.
 
@@ -543,8 +538,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 9
                      iv_text_tag = '<' ).
 
-    do_test( iv_line = lv_line
-             iv_filename = '*.xml' ).
+    do_test( lv_line ).
 
   ENDMETHOD.
 
@@ -597,8 +591,8 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 4
                      iv_text_tag = '' ).
 
-    do_test( iv_line = lv_line
-             iv_filename = '*.xml' ).
+    do_test( lv_line ).
+
   ENDMETHOD.
 
   METHOD test_xml_07.
@@ -662,9 +656,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 2
                      iv_text_tag = '>' ).
 
-    do_test( iv_line = lv_line
-             iv_filename = '*.xml' ).
-
+    do_test( lv_line ).
 
   ENDMETHOD.
 
@@ -708,8 +700,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 5
                      iv_text_tag = '' ).
 
-    do_test( iv_line = lv_line
-             iv_filename = '*.xml' ).
+    do_test( lv_line ).
 
   ENDMETHOD.
 

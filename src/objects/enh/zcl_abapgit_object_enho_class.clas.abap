@@ -230,9 +230,8 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
     mo_files->add_abap( lt_source ).
 
     zcl_abapgit_object_enho_clif=>serialize(
-      io_xml   = ii_xml
-      io_files = mo_files
-      io_clif  = lo_enh_class ).
+      io_xml  = ii_xml
+      io_clif = lo_enh_class ).
 
     serialize_includes( lo_enh_class ).
 
