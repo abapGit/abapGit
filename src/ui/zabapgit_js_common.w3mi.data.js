@@ -1551,9 +1551,17 @@ function Hotkeys(oKeyMap){
       }
 
       // Or a SAP event input
-      var sUiSapEventFormAction = this.getSapEventFormAction(action);
-      if (sUiSapEventFormAction) {
-        submitSapeventForm({}, sUiSapEventFormAction, "post");
+      var sUiSapEventInputAction = this.getSapEventInputAction(action);
+      if (sUiSapEventInputAction) {
+        submitSapeventForm({}, sUiSapEventInputAction, "post");
+        oEvent.preventDefault();
+        return;
+      }
+
+      // Or a SAP event main form
+      var elForm = this.getSapEventForm(action);
+      if (elForm) {
+        elForm.submit();
         oEvent.preventDefault();
         return;
       }
@@ -1577,7 +1585,9 @@ Hotkeys.prototype.getAllSapEventsForSapEventName = function(sSapEvent) {
     document.querySelectorAll('a[href*="sapevent:' + sSapEvent + '"],'
                             + 'a[href*="SAPEVENT:' + sSapEvent + '"],'
                             + 'input[formaction*="sapevent:' + sSapEvent + '"],'
-                            + 'input[formaction*="SAPEVENT:' + sSapEvent + '"]'));
+                            + 'input[formaction*="SAPEVENT:' + sSapEvent + '"],'
+                            + 'form[action*="sapevent:' + sSapEvent + '"] input[type="submit"].main,'
+                            + 'form[action*="SAPEVENT:' + sSapEvent + '"] input[type="submit"].main'));
 };
 
 Hotkeys.prototype.getSapEventHref = function(sSapEvent) {
@@ -1595,7 +1605,7 @@ Hotkeys.prototype.getSapEventHref = function(sSapEvent) {
 
 };
 
-Hotkeys.prototype.getSapEventFormAction = function(sSapEvent) {
+Hotkeys.prototype.getSapEventInputAction = function(sSapEvent) {
 
   return this.getAllSapEventsForSapEventName(sSapEvent)
     .filter(function(el){
@@ -1606,6 +1616,21 @@ Hotkeys.prototype.getSapEventFormAction = function(sSapEvent) {
       return oSapEvent.formAction;
     })
     .filter(this.eliminateSapEventFalsePositives(sSapEvent))
+    .pop();
+
+};
+
+Hotkeys.prototype.getSapEventForm = function(sSapEvent) {
+
+  return this.getAllSapEventsForSapEventName(sSapEvent)
+    .filter(function(el){
+      // forms
+      var parentForm = el.parentNode.parentNode.parentNode;
+      return (el.type === "submit" && parentForm.nodeName === "FORM");
+    })
+    .map(function(oSapEvent){
+      return oSapEvent.parentNode.parentNode.parentNode;
+    })
     .pop();
 
 };
