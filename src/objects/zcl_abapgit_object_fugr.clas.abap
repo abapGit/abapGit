@@ -645,13 +645,13 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         WITH KEY progname = <lv_include> BINARY SEARCH.
       IF sy-subrc <> 0.
         DELETE rt_includes INDEX lv_tabix.
-      ELSE.
-        "Make sure that the include does not belong to another function group
-        IF belongs_incl_to_other_fugr( iv_include = <lv_include> ) = abap_true.
-          DELETE rt_includes.
-        ENDIF.
+        CONTINUE.
       ENDIF.
 
+      "Make sure that the include does not belong to another function group
+      IF belongs_incl_to_other_fugr( iv_include = <lv_include> ) = abap_true.
+        DELETE rt_includes.
+      ENDIF.
     ENDLOOP.
 
     APPEND lv_program TO rt_includes.
@@ -1223,7 +1223,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     DATA lv_include TYPE rs38l-include.
 
     rv_belongs_to_other_fugr = abap_false.
-    IF iv_include(1) ='L' OR iv_include+1 CS '/L' .
+    IF iv_include(1) = 'L' OR iv_include+1 CS '/L'.
       lv_include = iv_include.
       ls_tadir-object = 'FUGR'.
 
