@@ -45,8 +45,7 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
 
     CONSTANTS:
       BEGIN OF c_event,
-        go_back TYPE string VALUE 'go_back',
-        commit  TYPE string VALUE 'commit',
+        commit TYPE string VALUE 'commit',
       END OF c_event.
 
     DATA mo_form TYPE REF TO zcl_abapgit_html_form.
@@ -342,7 +341,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
       iv_action      = c_event-commit
     )->command(
       iv_label       = 'Back'
-      iv_action      = c_event-go_back ).
+      iv_action      = zif_abapgit_definitions=>c_action-go_back ).
 
   ENDMETHOD.
 
@@ -486,7 +485,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.
-      WHEN c_event-go_back.
+      WHEN zif_abapgit_definitions=>c_action-go_back.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
 
       WHEN c_event-commit.
