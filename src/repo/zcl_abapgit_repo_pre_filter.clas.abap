@@ -255,9 +255,11 @@ CLASS ZCL_ABAPGIT_REPO_PRE_FILTER IMPLEMENTATION.
 
   METHOD is_filter_required.
     CLEAR rv_required.
-    IF mv_latest_action = zif_abapgit_definitions=>c_action-go_stage_transport.
+    case mv_latest_action .
+    when zif_abapgit_definitions=>c_action-go_stage_transport
+      or zif_abapgit_definitions=>c_action-zip_export_transport.
       rv_required = abap_true.
-    ENDIF.
+    ENDCASE.
   ENDMETHOD.
 
 

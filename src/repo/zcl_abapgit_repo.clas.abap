@@ -504,7 +504,8 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     rt_files = lo_serialize->files_local(
       iv_package     = get_package( )
       ii_data_config = get_data_config( )
-      ii_log         = ii_log ).
+      ii_log         = ii_log
+      it_filter      = zcl_abapgit_repo_pre_filter=>get_instance( )->get_local_filter( ) ).
 
     mt_local                 = rt_files.
     mv_request_local_refresh = abap_false. " Fulfill refresh

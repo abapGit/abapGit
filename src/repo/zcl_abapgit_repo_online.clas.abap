@@ -41,8 +41,7 @@ CLASS zcl_abapgit_repo_online DEFINITION
         REDEFINITION .
     METHODS has_remote_source
         REDEFINITION .
-    METHODS get_files_local
-        REDEFINITION .
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -133,32 +132,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_files_local.
-    DATA lo_serialize TYPE REF TO zcl_abapgit_serialize.
-    DATA lt_languages TYPE zif_abapgit_definitions=>ty_languages.
 
-    " Serialization happened before and no refresh request
-    IF lines( mt_local ) > 0 AND mv_request_local_refresh = abap_false.
-      rt_files = mt_local.
-      RETURN.
-    ENDIF.
-
-    CREATE OBJECT lo_serialize
-      EXPORTING
-        io_dot_abapgit    = get_dot_abapgit( )
-        is_local_settings = get_local_settings( ).
-
-    rt_files = lo_serialize->files_local(
-      iv_package     = get_package( )
-      ii_data_config = get_data_config( )
-      ii_log         = ii_log
-      it_filter      = zcl_abapgit_repo_pre_filter=>get_instance( )->get_local_filter( ) ).
-
-    mt_local                 = rt_files.
-    mv_request_local_refresh = abap_false. " Fulfill refresh
-
-
-  ENDMETHOD.
 
 
   METHOD get_files_remote.

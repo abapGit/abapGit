@@ -132,7 +132,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
+CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
 
   METHOD abapgit_services_actions.
@@ -737,7 +737,8 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
           lv_xstr           TYPE xstring,
           lv_package        TYPE zif_abapgit_persistence=>ty_repo-package,
           lv_folder_logic   TYPE string,
-          lv_main_lang_only TYPE zif_abapgit_persistence=>ty_local_settings-main_language_only.
+          lv_main_lang_only TYPE zif_abapgit_persistence=>ty_local_settings-main_language_only,
+          lr_pre_filter     TYPE REF TO zcl_abapgit_repo_pre_filter.
 
     CONSTANTS:
       BEGIN OF lc_page,
@@ -802,9 +803,17 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
           WHEN OTHERS.
             rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
         ENDCASE.
-      WHEN zif_abapgit_definitions=>c_action-zip_export.                      " Export repo as ZIP
+      WHEN zif_abapgit_definitions=>c_action-zip_export
+        OR zif_abapgit_definitions=>c_action-zip_export_transport.                      " Export repo as ZIP
+        lr_pre_filter = zcl_abapgit_repo_pre_filter=>get_instance( ).
+        lr_pre_filter->init(  ).
+        lr_pre_filter->set_latest_action( ii_event->mv_action ).
+        IF lr_pre_filter->is_filter_required( ) = abap_true.
+          lr_pre_filter->set_filter_values_via_dialog( ).
+        ENDIF.
         lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
         lv_xstr = zcl_abapgit_zip=>encode_files( lo_repo->get_files_local( ) ).
+        lr_pre_filter->init(  ).
         file_download( iv_package = lo_repo->get_package( )
                        iv_xstr    = lv_xstr ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.

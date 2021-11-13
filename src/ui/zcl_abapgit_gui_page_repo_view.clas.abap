@@ -150,6 +150,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         !io_tb_tag        TYPE REF TO zcl_abapgit_html_toolbar
         !io_tb_advanced   TYPE REF TO zcl_abapgit_html_toolbar
         !io_tb_stage      TYPE REF TO zcl_abapgit_html_toolbar
+        !io_tb_export     TYPE REF TO zcl_abapgit_html_toolbar
       RETURNING
         VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
       RAISING
@@ -180,11 +181,17 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         VALUE(ro_stage_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
       RAISING
         zcx_abapgit_exception .
+
+    METHODS build_export_dropdown
+      RETURNING
+        VALUE(ro_export_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -368,6 +375,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
           lo_tb_branch   TYPE REF TO zcl_abapgit_html_toolbar,
           lo_tb_tag      TYPE REF TO zcl_abapgit_html_toolbar,
           lo_tb_stage    TYPE REF TO zcl_abapgit_html_toolbar,
+          lo_tb_export   TYPE REF TO zcl_abapgit_html_toolbar,
           lv_wp_opt      LIKE zif_abapgit_html=>c_html_opt-crossout,
           lv_pull_opt    LIKE zif_abapgit_html=>c_html_opt-crossout.
 
@@ -386,13 +394,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
     lo_tb_stage = build_stage_dropdown( ).
 
+    lo_tb_export = build_export_dropdown(  ).
 
     ro_toolbar = build_main_toolbar(
       iv_pull_opt    = lv_pull_opt
       io_tb_branch   = lo_tb_branch
       io_tb_tag      = lo_tb_tag
       io_tb_advanced = lo_tb_advanced
-      io_tb_stage    = lo_tb_stage ).
+      io_tb_stage    = lo_tb_stage
+      io_tb_export   = lo_tb_export ).
 
   ENDMETHOD.
 
@@ -481,9 +491,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
                          iv_act = |{ zif_abapgit_definitions=>c_action-rfc_compare }?key={ mv_key }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
       ENDIF.
-      ro_toolbar->add( iv_txt = 'Export <sup>zip</sup>'
-                       iv_act = |{ zif_abapgit_definitions=>c_action-zip_export }?key={ mv_key }|
-                       iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+
+      ro_toolbar->add( iv_txt = 'Export'
+                              iv_opt = zif_abapgit_html=>c_html_opt-strong
+                              io_sub = io_tb_export ).
+
       li_log = mo_repo->get_log( ).
       IF li_log IS BOUND AND li_log->count( ) > 0.
         ro_toolbar->add( iv_txt = 'Log'
@@ -1310,4 +1322,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
+  METHOD build_export_dropdown.
+
+    CREATE OBJECT ro_export_dropdown.
+
+    ro_export_dropdown->add( iv_txt = 'zip'
+                     iv_act = |{ zif_abapgit_definitions=>c_action-zip_export }?key={ mv_key }| ).
+    ro_export_dropdown->add( iv_txt = 'zip Transport/Task'
+                      iv_act = |{ zif_abapgit_definitions=>c_action-zip_export_transport }?key={ mv_key }| ).
+
+  ENDMETHOD.
+
 ENDCLASS.
