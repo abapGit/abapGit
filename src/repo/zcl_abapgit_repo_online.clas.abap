@@ -75,7 +75,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
+CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
 
   METHOD check_and_create_package.
@@ -130,9 +130,6 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     mv_current_commit = ls_pull-commit.
 
   ENDMETHOD.
-
-
-
 
 
   METHOD get_files_remote.
