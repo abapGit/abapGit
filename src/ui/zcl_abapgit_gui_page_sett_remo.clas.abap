@@ -55,7 +55,6 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
       END OF c_id .
     CONSTANTS:
       BEGIN OF c_event,
-        go_back         TYPE string VALUE 'go-back',
         save            TYPE string VALUE 'save',
         switch          TYPE string VALUE 'switch',
         choose_url      TYPE string VALUE 'choose_url',
@@ -523,7 +522,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       iv_action      = c_event-switch
     )->command(
       iv_label       = 'Back'
-      iv_action      = c_event-go_back ).
+      iv_action      = zif_abapgit_definitions=>c_action-go_back ).
 
   ENDMETHOD.
 
@@ -832,7 +831,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.
-      WHEN c_event-go_back.
+      WHEN zif_abapgit_definitions=>c_action-go_back.
         IF ms_repo_new <> ms_repo_current.
           mo_repo->refresh( ).
         ENDIF.
@@ -954,6 +953,18 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     ls_hotkey_action-action      = c_event-choose_url.
     ls_hotkey_action-hotkey      = |u|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    IF mo_repo->is_offline( ) = abap_true.
+      ls_hotkey_action-description = |Switch to Online|.
+      ls_hotkey_action-action      = c_event-switch.
+      ls_hotkey_action-hotkey      = |o|.
+      INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+    ELSE.
+      ls_hotkey_action-description = |Switch to Offline|.
+      ls_hotkey_action-action      = c_event-switch.
+      ls_hotkey_action-hotkey      = |o|.
+      INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+    ENDIF.
 
   ENDMETHOD.
 
