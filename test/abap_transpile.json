@@ -42,6 +42,7 @@
     "zcl_abapgit_string_map",
     "zcl_abapgit_syntax_*",
     "zcl_abapgit_time",
+    "zcl_abapgit_ui_factory",
     "zcl_abapgit_ui*",
     "zcl_abapgit_url",
     "zcl_abapgit_utils",
