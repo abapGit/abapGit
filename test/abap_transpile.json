@@ -6,6 +6,7 @@
     "zcl_abapgit_ajson*",
     "zcl_abapgit_auth",
     "zcl_abapgit_convert",
+    "zcl_abapgit_cts_api",
     "zcl_abapgit_data*",
     "zcl_abapgit_diff",
     "zcl_abapgit_dot_abapgit",
