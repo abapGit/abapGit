@@ -35,7 +35,7 @@
     "zcl_abapgit_progress",
     "zcl_abapgit_proxy_auth",
     "zcl_abapgit_proxy_config",
-    "zcl_abapgit_repo_filter",
+    "zcl_abapgit_repo*",
     "zcl_abapgit_services_*",
     "zcl_abapgit_settings",
     "zcl_abapgit_string_map",
@@ -164,6 +164,9 @@
 
       {"object": "ZCL_ABAPGIT_DATA_DESERIALIZER", "class": "ltcl_test", "method": "test1"},
       {"object": "ZCL_ABAPGIT_DATA_SERIALIZER", "class": "ltcl_test", "method": "serialize"},
+
+      {"object": "ZCL_ABAPGIT_REPO", "class": "ltcl_find_remote_dot_abapgit", "method": "positive"},
+      {"object": "ZCL_ABAPGIT_REPO", "class": "ltcl_find_remote_dot_abapgit", "method": "new_repo_needs_no_dot_abapgit"},
 
       {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff01", "note": "Void type: RSWSOURCET"},
       {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff02", "note": "Void type: RSWSOURCET"},
