@@ -954,6 +954,18 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     ls_hotkey_action-hotkey      = |u|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
+    IF mo_repo->is_offline( ) = abap_true.
+      ls_hotkey_action-description = |Switch to Online|.
+      ls_hotkey_action-action      = c_event-switch.
+      ls_hotkey_action-hotkey      = |o|.
+      INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+    ELSE.
+      ls_hotkey_action-description = |Switch to Offline|.
+      ls_hotkey_action-action      = c_event-switch.
+      ls_hotkey_action-hotkey      = |o|.
+      INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+    ENDIF.
+
   ENDMETHOD.
 
 
