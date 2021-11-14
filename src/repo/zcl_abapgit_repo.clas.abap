@@ -93,9 +93,7 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
     METHODS is_offline
       RETURNING
-        VALUE(rv_offline) TYPE abap_bool
-      RAISING
-        zcx_abapgit_exception .
+        VALUE(rv_offline) TYPE abap_bool .
     METHODS set_files_remote
       IMPORTING
         !it_files TYPE zif_abapgit_definitions=>ty_files_tt .

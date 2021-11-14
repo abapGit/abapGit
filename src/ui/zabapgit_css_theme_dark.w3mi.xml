@@ -3,7 +3,7 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <NAME>ZABAPGIT_CSS_THEME_DARK</NAME>
-   <TEXT>abapGit dark theme</TEXT>
+   <TEXT>abapGit - Dark Theme</TEXT>
    <PARAMS>
     <WWWPARAMS>
      <RELID>MI</RELID>

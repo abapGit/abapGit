@@ -79,8 +79,8 @@ CLASS ltcl_syntax_basic_logic IMPLEMENTATION.
     lv_line_exp =
       '<span class="keyword">call</span>' &&
       ' <span class="keyword">function</span>' &&
-      ' <span class="text">&#39;FM_NAME&#39;</span>.' &&
-      ' <span class="comment">&quot; Commented</span>'.
+      | <span class="text">'FM_NAME'</span>.| &&
+      ' <span class="comment">" Commented</span>'.
 
     lv_line_act = mo_syntax_highlighter->process_line( lv_line ).
 
