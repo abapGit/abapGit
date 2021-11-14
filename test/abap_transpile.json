@@ -8,6 +8,7 @@
     "zcl_abapgit_convert",
     "zcl_abapgit_cts_api",
     "zcl_abapgit_data*",
+    "zcl_abapgit_default_transport",
     "zcl_abapgit_diff",
     "zcl_abapgit_dot_abapgit",
     "zcl_abapgit_exit",
