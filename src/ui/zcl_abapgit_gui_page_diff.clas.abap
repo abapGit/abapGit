@@ -265,9 +265,9 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     " Get unique filter values
     LOOP AT mt_diff_files ASSIGNING <ls_diff>.
       lv_user = <ls_diff>-changed_by.
-      COLLECT <ls_diff>-type INTO lt_extensions.
-      COLLECT <ls_diff>-obj_type INTO lt_obj_types.
-      COLLECT lv_user INTO lt_users.
+      INSERT <ls_diff>-type INTO TABLE lt_extensions.
+      INSERT <ls_diff>-obj_type INTO TABLE lt_obj_types.
+      INSERT lv_user INTO TABLE lt_users.
     ENDLOOP.
 
     IF lines( lt_extensions ) > 1 OR lines( lt_obj_types ) > 1 OR lines( lt_users ) > 1.
