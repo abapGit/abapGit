@@ -133,6 +133,11 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         !ii_xml       TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception .
+    METHODS belongs_incl_to_other_fugr
+      IMPORTING
+        !iv_include                     TYPE sobj_name
+      RETURNING
+        VALUE(rv_belongs_to_other_fugr) TYPE abap_bool.
 ENDCLASS.
 
 
@@ -640,8 +645,13 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         WITH KEY progname = <lv_include> BINARY SEARCH.
       IF sy-subrc <> 0.
         DELETE rt_includes INDEX lv_tabix.
+        CONTINUE.
       ENDIF.
 
+      "Make sure that the include does not belong to another function group
+      IF belongs_incl_to_other_fugr( iv_include = <lv_include> ) = abap_true.
+        DELETE rt_includes.
+      ENDIF.
     ENDLOOP.
 
     APPEND lv_program TO rt_includes.
@@ -1201,5 +1211,39 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
                    ig_data = ls_cua ).
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD belongs_incl_to_other_fugr.
+    " make sure that the include belongs to the function group
+    " like in LSEAPFAP Form TADIR_MAINTENANCE
+    DATA ls_tadir TYPE tadir.
+    DATA lv_namespace TYPE rs38l-namespace.
+    DATA lv_area TYPE rs38l-area.
+    DATA lv_include TYPE rs38l-include.
+
+    rv_belongs_to_other_fugr = abap_false.
+    IF iv_include(1) = 'L' OR iv_include+1 CS '/L'.
+      lv_include = iv_include.
+      ls_tadir-object = 'FUGR'.
+
+      CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
+        IMPORTING
+          namespace = lv_namespace
+          group     = lv_area
+        CHANGING
+          include   = lv_include
+        EXCEPTIONS
+          OTHERS    = 1.
+      IF lv_area(1) = 'X'.    " "EXIT"-function-module
+        ls_tadir-object = 'FUGS'.
+      ENDIF.
+      IF sy-subrc = 0.
+        CONCATENATE lv_namespace lv_area INTO ls_tadir-obj_name.
+        IF ls_tadir-obj_name <> ms_item-obj_name.
+          rv_belongs_to_other_fugr = abap_true.
+        ENDIF.
+      ENDIF.
+    ENDIF.
   ENDMETHOD.
 ENDCLASS.
