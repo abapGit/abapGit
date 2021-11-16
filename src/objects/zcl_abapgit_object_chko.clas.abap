@@ -15,58 +15,116 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_chko IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_CHKO IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    DATA(chko_db_api) = NEW cl_chko_db_api( ).
-    DATA(chko_header) = chko_db_api->get_header( name     = CONV #( ms_item-obj_name )
-                                                 version  = 'I' ).
-    IF chko_header IS INITIAL.
-      chko_header = chko_db_api->get_header( name     = CONV #( ms_item-obj_name )
-                                                   version  = 'A' ).
+
+    DATA  lr_data     TYPE REF TO data.
+    DATA  chko_db_api TYPE REF TO object.
+    DATA  name        TYPE c LENGTH 30.
+
+    FIELD-SYMBOLS <chko_header> TYPE any.
+    FIELD-SYMBOLS <chko_user>   TYPE any.
+
+    CREATE OBJECT chko_db_api TYPE ('CL_CHKO_DB_API').
+
+    CREATE DATA lr_data TYPE ('CL_CHKO_DB_API=>TY_HEADER').
+    ASSIGN lr_data->* TO <chko_header>.
+
+    IF <chko_header> IS NOT ASSIGNED OR chko_db_api IS NOT BOUND.
+      RETURN.
     ENDIF.
-    rv_user = chko_header-changed_by.
+
+    name = ms_item-obj_name.
+
+    CALL METHOD chko_db_api->('GET_HEADER')
+      EXPORTING
+        name    = name
+        version = 'I'
+      RECEIVING
+        header  = <chko_header>.
+
+    IF <chko_header> IS INITIAL.
+      CALL METHOD chko_db_api->('GET_HEADER')
+        EXPORTING
+          name    = name
+          version = 'A'
+        RECEIVING
+          header  = <chko_header>.
+    ENDIF.
+
+    ASSIGN COMPONENT 'CHANGED_BY' OF STRUCTURE <chko_header> TO <chko_user>.
+    rv_user = <chko_user>.
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~delete.
-    DATA(chko_db_api) = NEW cl_chko_db_api( ).
-    chko_db_api->delete(
-      name    = CONV #( ms_item-obj_name )
-      version = 'I'
-    ).
-    chko_db_api->delete(
-      name    = CONV #( ms_item-obj_name )
-      version = 'A'
-    ).
+
+    DATA  chko_db_api TYPE REF TO object.
+    DATA  name TYPE c LENGTH 30.
+
+    name = ms_item-obj_name.
+
+    CREATE OBJECT chko_db_api TYPE ('CL_CHKO_DB_API').
+    CHECK chko_db_api IS BOUND.
+
+    CALL METHOD chko_db_api->('DELETE')
+      EXPORTING
+        name    = name
+        version = 'I'.
+
+    CALL METHOD chko_db_api->('DELETE')
+      EXPORTING
+        name    = name
+        version = 'A'.
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA properties_aff TYPE zif_abapgit_aff_chko_v1=>ty_main.
-    DATA object TYPE trkey.
+    DATA object       TYPE trkey.
+    DATA json_xstring TYPE xstring.
+    DATA object_chko  TYPE trkey.
+    DATA lr_chko      TYPE REF TO data.
 
-    DATA(json_as_xstring) = mo_files->read_raw( iv_ext = 'json' ) ##NO_TEXT.
+    DATA object_ajson    TYPE REF TO object.
+    DATA persistence     TYPE REF TO lcl_chko_persistence.
+    DATA json_as_xstring TYPE xstring.
+    DATA exception       TYPE REF TO cx_static_check.
+
+    FIELD-SYMBOLS <chko_agit> TYPE any.
+
+    CREATE DATA lr_chko TYPE ('ZIF_ABAPGIT_AFF_CHKO_V1=>TY_MAIN').
+    ASSIGN lr_chko->* TO <chko_agit>.
+
+    CHECK  <chko_agit> IS ASSIGNED.
+
+    CREATE OBJECT object_ajson TYPE ('ZCL_ABAPGIT_AJSON_CNT_HANDLER').
+
+    json_as_xstring = mo_files->read_raw( iv_ext = 'json' ) ##NO_TEXT.
 
     object-devclass = ms_item-devclass.
     object-obj_type = ms_item-obj_type.
     object-obj_name = ms_item-obj_name.
 
     TRY.
-        NEW zcl_abapgit_ajson_cnt_handler( )->deserialize( EXPORTING content = json_as_xstring IMPORTING data = properties_aff ).
+        CALL METHOD object_ajson->('DESERIALIZE')
+          EXPORTING
+            content = json_as_xstring
+          IMPORTING
+            data    = <chko_agit>.
 
-        properties_aff-header-abap_language_version = if_abap_language_version=>gc_version-sap_cloud_platform.
-
-        DATA(persistence) = NEW lcl_chko_persistence( ).
+        CREATE OBJECT persistence.
         persistence->save_content(
-          data     = properties_aff
-          object   = object
-          language = mv_language
-          version  = 'I'
-          saved_by = sy-uname ).
-      CATCH cx_static_check INTO DATA(exception).
+           data     = <chko_agit>
+           object   = object
+           language = mv_language
+           version  = 'I'
+           saved_by = sy-uname ).
+      CATCH cx_static_check INTO exception.
+        " to do: is this the right exc. handling?
         ii_log->add_exception(
             ix_exc  = exception
             is_item = ms_item ).
@@ -76,7 +134,21 @@ CLASS zcl_abapgit_object_chko IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~exists.
-    rv_bool = NEW cl_chko_db_api( )->exists( name = CONV #( ms_item-obj_name ) ).
+
+    DATA chko_db_api TYPE REF TO object.
+    DATA name TYPE c LENGTH 30.
+
+    name = ms_item-obj_name .
+    CREATE OBJECT chko_db_api TYPE ('CL_CHKO_DB_API').
+
+    CHECK chko_db_api IS BOUND.
+
+    CALL METHOD chko_db_api->('EXISTS')
+      EXPORTING
+        name   = name
+      RECEIVING
+        exists = rv_bool.
+
   ENDMETHOD.
 
 
@@ -101,10 +173,14 @@ CLASS zcl_abapgit_object_chko IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_locked.
-    DATA(lock_object) = |{ ms_item-obj_type }{ ms_item-obj_name }*|.
+    DATA lock_object TYPE string.
+    DATA argument    TYPE seqg3-garg.
+
+    lock_object = |{ ms_item-obj_type }{ ms_item-obj_name }*|.
+    argument = lock_object.
 
     rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESWB_EO'
-                                            iv_argument    = CONV #( lock_object ) ).
+                                            iv_argument    = argument  ).
   ENDMETHOD.
 
 
@@ -114,33 +190,49 @@ CLASS zcl_abapgit_object_chko IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
     DATA json_xstring TYPE xstring.
-    DATA object TYPE trkey.
-    DATA properties TYPE zif_abapgit_aff_chko_v1=>ty_main.
+    DATA object_chko  TYPE trkey.
+    DATA lr_chko      TYPE REF TO data.
 
-    object-devclass = ms_item-devclass.
-    object-obj_type = ms_item-obj_type.
-    object-obj_name = ms_item-obj_name.
+    DATA object_ajson TYPE REF TO object.
+    DATA persistence  TYPE REF TO lcl_chko_persistence.
+    DATA exception    TYPE REF TO cx_root.
+
+    FIELD-SYMBOLS <chko_agit> TYPE any.
+
+    CREATE DATA lr_chko TYPE ('ZIF_ABAPGIT_AFF_CHKO_V1=>TY_MAIN').
+    ASSIGN lr_chko->* TO <chko_agit>.
+
+    IF <chko_agit> IS NOT ASSIGNED.
+      RETURN.
+    ENDIF.
+
+    CREATE OBJECT object_ajson TYPE ('ZCL_ABAPGIT_AJSON_CNT_HANDLER').
+
+    object_chko-devclass = ms_item-devclass.
+    object_chko-obj_type = ms_item-obj_type.
+    object_chko-obj_name = ms_item-obj_name.
 
     TRY.
-
-        DATA(persistence) = NEW lcl_chko_persistence( ).
+        CREATE OBJECT persistence.
         persistence->get_content(
           EXPORTING
-            object   = object
+            object   = object_chko
             language = mv_language
             version  = 'A'
           IMPORTING
-            data     = properties ).
+            data     = <chko_agit> ).
 
+        CALL METHOD object_ajson->('SERIALIZE')
+          EXPORTING
+            data   = <chko_agit>
+          RECEIVING
+            result = json_xstring.
 
-        json_xstring = NEW zcl_abapgit_ajson_cnt_handler( )->serialize( data = properties ).
         mo_files->add_raw( iv_ext = 'json' iv_data = json_xstring ).
 
-      CATCH cx_static_check INTO DATA(exception).
-*        ii_log->add_exception(
-*          ix_exc  = exception
-*          is_item = ms_item ).
 
+      CATCH cx_root INTO exception.
+        zcx_abapgit_exception=>raise_with_text( exception ).
     ENDTRY.
 
   ENDMETHOD.

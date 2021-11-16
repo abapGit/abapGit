@@ -34,34 +34,44 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_ajson_cnt_handler IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_AJSON_CNT_HANDLER IMPLEMENTATION.
 
 
   METHOD deserialize.
+    DATA json        TYPE string.
+    DATA lo_ajson    TYPE REF TO zcl_abapgit_ajson.
+    DATA obj_mapping TYPE REF TO zif_abapgit_ajson_mapping.
 
     CLEAR data.
 
-    DATA(json) = zcl_abapgit_convert=>xstring_to_string_utf8( content ).
-    DATA(lo_ajson) = zcl_abapgit_ajson=>parse( iv_json = json ii_custom_mapping = zcl_abapgit_ajson_mapping=>create_camel_case( ) ).
+    json = zcl_abapgit_convert=>xstring_to_string_utf8( content ).
+    obj_mapping = zcl_abapgit_ajson_mapping=>create_camel_case( ).
+
+    lo_ajson = zcl_abapgit_ajson=>parse( iv_json = json ii_custom_mapping = obj_mapping ).
     lo_ajson->zif_abapgit_ajson~to_abap( IMPORTING ev_container = data ).
 
   ENDMETHOD.
 
 
   METHOD serialize.
-    DATA st_source TYPE abap_trans_srcbind_tab.
+    DATA st_source   TYPE abap_trans_srcbind_tab.
+    DATA obj_mapping TYPE REF TO lcl_mapping.
+    DATA json        TYPE string.
+    DATA li_ajson    TYPE REF TO zcl_abapgit_ajson.
+
     FIELD-SYMBOLS: <st_source> LIKE LINE OF st_source.
 
     APPEND INITIAL LINE TO st_source ASSIGNING <st_source>.
     GET REFERENCE OF data INTO <st_source>-value.
+    CREATE OBJECT obj_mapping.
 
-    DATA(li_ajson) = zcl_abapgit_ajson=>create_empty( ii_custom_mapping = NEW lcl_mapping( ) ).
+    li_ajson = zcl_abapgit_ajson=>create_empty( ii_custom_mapping = obj_mapping ).
     li_ajson->keep_item_order( ).
     li_ajson->set(
       iv_path = '/'
       iv_val  = data ).
 
-    DATA(json) = li_ajson->stringify( 2 ).
+    json = li_ajson->stringify( 2 ).
 
     result = zcl_abapgit_convert=>string_to_xstring_utf8( iv_string = json ).
 
