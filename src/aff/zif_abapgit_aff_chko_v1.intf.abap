@@ -22,7 +22,7 @@ INTERFACE zif_abapgit_aff_chko_v1
   TYPES:
     "! <p class="shorttext">Parameters</p>
     "! List of parameters
-    ty_parameters TYPE STANDARD TABLE OF if_aff_chko_v1=>ty_parameter WITH KEY technical_id
+    ty_parameters TYPE STANDARD TABLE OF zif_abapgit_aff_chko_v1=>ty_parameter WITH KEY technical_id
                                 WITH UNIQUE HASHED KEY xml_name COMPONENTS name.
 
   TYPES:
@@ -30,19 +30,19 @@ INTERFACE zif_abapgit_aff_chko_v1
     "! ATC check object properties
     BEGIN OF ty_main,
       "! $required
-      format_version     TYPE if_aff_types_v1=>ty_format_version,
+      format_version     TYPE zif_abapgit_aff_types_v1=>ty_format_version,
       "! <p class="shorttext">Header</p>
       "! Header
       "! $required
-      header             TYPE if_aff_types_v1=>ty_header_60,
+      header             TYPE zif_abapgit_aff_types_v1=>ty_header_60,
       "! <p class="shorttext">Category</p>
       "! The parent category of an ATC check object
       "! $required
-      category           TYPE if_aff_types_v1=>ty_object_name_30,
+      category           TYPE zif_abapgit_aff_types_v1=>ty_object_name_30,
       "! <p class="shorttext">Implementing Class</p>
       "! The implementing class of the ATC check object
       "! $required
-      implementing_class TYPE if_aff_types_v1=>ty_object_name_30,
+      implementing_class TYPE zif_abapgit_aff_types_v1=>ty_object_name_30,
       "! <p class="shorttext">Remote-enabled flag</p>
       "! The ATC check object is remote-enabled
       remote_enabled     TYPE abap_bool,
