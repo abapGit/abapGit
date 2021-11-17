@@ -258,7 +258,8 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
       lv_obj_name TYPE tadir-obj_name,
       lv_role     TYPE trnrole.
 
-    lv_pkg_name = lv_obj_name = mv_package.
+    lv_pkg_name = mv_package.
+    lv_obj_name = mv_package.
 
     CALL FUNCTION 'TR_GET_REQUEST_TYPE'
       EXPORTING

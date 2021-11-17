@@ -133,11 +133,13 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
       LOOP AT lt_delta ASSIGNING <ls_delta>.
         CLEAR ls_diff.
         IF <ls_delta>-line1 > 0.
-          ls_diff-old_num = lv_i = <ls_delta>-line1.
+          ls_diff-old_num = <ls_delta>-line1.
+          lv_i = <ls_delta>-line1.
           ls_diff-old     = <ls_delta>-text1.
         ENDIF.
         IF <ls_delta>-line2 > 0.
-          ls_diff-new_num = lv_i = <ls_delta>-line2.
+          ls_diff-new_num = <ls_delta>-line2.
+          lv_i = <ls_delta>-line2.
           ls_diff-new     = <ls_delta>-text2.
         ENDIF.
         IF <ls_delta>-flag1 = 'D'.

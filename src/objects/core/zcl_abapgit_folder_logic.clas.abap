@@ -167,7 +167,8 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
       IF iv_top(1) = '$'.
         zcl_abapgit_factory=>get_sap_package( iv_top )->create_local( ).
       ELSE.
-        ls_package-devclass = ls_package-ctext = iv_top.
+        ls_package-devclass = iv_top.
+        ls_package-ctext = iv_top.
         ls_package-as4user = cl_abap_syst=>get_user_name( ).
         zcl_abapgit_factory=>get_sap_package( iv_top )->create( ls_package ).
       ENDIF.
