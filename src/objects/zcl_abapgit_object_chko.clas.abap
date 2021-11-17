@@ -99,7 +99,9 @@ CLASS ZCL_ABAPGIT_OBJECT_CHKO IMPLEMENTATION.
     CREATE DATA lr_chko TYPE ('ZIF_ABAPGIT_AFF_CHKO_V1=>TY_MAIN').
     ASSIGN lr_chko->* TO <chko_agit>.
 
-    CHECK  <chko_agit> IS ASSIGNED.
+    IF <chko_agit> IS NOT ASSIGNED.
+      RETURN.
+    ENDIF.
 
     CREATE OBJECT object_ajson TYPE ('ZCL_ABAPGIT_AJSON_CNT_HANDLER').
 
@@ -124,7 +126,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CHKO IMPLEMENTATION.
            version  = 'I'
            saved_by = sy-uname ).
       CATCH cx_static_check INTO exception.
-        " to do: is this the right exc. handling?
+        " to do: is this the right exception handling?
         ii_log->add_exception(
             ix_exc  = exception
             is_item = ms_item ).

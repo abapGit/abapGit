@@ -61,25 +61,25 @@ CLASS lcl_chko_persistence IMPLEMENTATION.
     FIELD-SYMBOLS <fs_format_vers>       TYPE string.
     FIELD-SYMBOLS <fs_orig_langu>        TYPE sy-langu.
 
-    FIELD-SYMBOLS <fs_category>     TYPE any.
+    FIELD-SYMBOLS <fs_category>      TYPE any.
     FIELD-SYMBOLS <fs_category_agit> TYPE any.
 
-    FIELD-SYMBOLS <fs_impl_class>   TYPE any.
+    FIELD-SYMBOLS <fs_impl_class>      TYPE any.
     FIELD-SYMBOLS <fs_impl_class_agit> TYPE any.
 
     FIELD-SYMBOLS <fs_remote>       TYPE flag.
-    FIELD-SYMBOLS <fs_remote_agit>       TYPE flag.
+    FIELD-SYMBOLS <fs_remote_agit>  TYPE flag.
 
     FIELD-SYMBOLS <fs_tech_id>      TYPE any.
     FIELD-SYMBOLS <fs_tech_id_agit> TYPE any.
 
-    FIELD-SYMBOLS <fs_modifiable_param> TYPE abap_bool.
+    FIELD-SYMBOLS <fs_modifiable_param>  TYPE abap_bool.
     FIELD-SYMBOLS <fs_hidden_param_agit> TYPE abap_bool.
 
-    FIELD-SYMBOLS <fs_name_param>   TYPE any.
+    FIELD-SYMBOLS <fs_name_param>        TYPE any.
     FIELD-SYMBOLS <fs_name_param_agit>   TYPE any.
 
-    FIELD-SYMBOLS <fs_descr_param>  TYPE any.
+    FIELD-SYMBOLS <fs_descr_param>       TYPE any.
     FIELD-SYMBOLS <fs_descr_param_agit>  TYPE any.
 
     FIELD-SYMBOLS <fs_params_chko> TYPE ANY TABLE.
@@ -136,7 +136,7 @@ CLASS lcl_chko_persistence IMPLEMENTATION.
     ASSIGN COMPONENT 'FORMAT_VERSION' OF STRUCTURE <chko_agit> TO <fs_format_vers>.
     <fs_format_vers> = '1'.
 
-    CREATE DATA lr_header_agit TYPE ('IF_AFF_TYPES_V1=>TY_HEADER_60').
+    CREATE DATA lr_header_agit TYPE ('ZIF_ABAPGIT_AFF_TYPES_V1=>TY_HEADER_60').
     ASSIGN lr_header_agit->* TO <chko_header_agit>.
     ASSERT sy-subrc = 0.
 
@@ -235,25 +235,25 @@ CLASS lcl_chko_persistence IMPLEMENTATION.
     FIELD-SYMBOLS <fs_format_vers>       TYPE string.
     FIELD-SYMBOLS <fs_orig_langu>        TYPE sy-langu.
 
-    FIELD-SYMBOLS <fs_category>     TYPE any.
+    FIELD-SYMBOLS <fs_category>      TYPE any.
     FIELD-SYMBOLS <fs_category_agit> TYPE any.
 
-    FIELD-SYMBOLS <fs_impl_class>   TYPE any.
+    FIELD-SYMBOLS <fs_impl_class>      TYPE any.
     FIELD-SYMBOLS <fs_impl_class_agit> TYPE any.
 
     FIELD-SYMBOLS <fs_remote>       TYPE flag.
-    FIELD-SYMBOLS <fs_remote_agit>       TYPE flag.
+    FIELD-SYMBOLS <fs_remote_agit>  TYPE flag.
 
     FIELD-SYMBOLS <fs_tech_id>      TYPE any.
     FIELD-SYMBOLS <fs_tech_id_agit> TYPE any.
 
-    FIELD-SYMBOLS <fs_modifiable_param> TYPE abap_bool.
+    FIELD-SYMBOLS <fs_modifiable_param>  TYPE abap_bool.
     FIELD-SYMBOLS <fs_hidden_param_agit> TYPE abap_bool.
 
-    FIELD-SYMBOLS <fs_name_param>   TYPE any.
+    FIELD-SYMBOLS <fs_name_param>      TYPE any.
     FIELD-SYMBOLS <fs_name_param_agit> TYPE any.
 
-    FIELD-SYMBOLS <fs_descr_param>  TYPE any.
+    FIELD-SYMBOLS <fs_descr_param>       TYPE any.
     FIELD-SYMBOLS <fs_descr_param_agit>  TYPE any.
 
     FIELD-SYMBOLS <fs_params_chko> TYPE ANY TABLE.
@@ -314,7 +314,7 @@ CLASS lcl_chko_persistence IMPLEMENTATION.
       GET TIME STAMP FIELD <chko_created_at>.
     ENDIF.
 
-    CREATE DATA lr_header_agit TYPE ('IF_AFF_TYPES_V1=>TY_HEADER_60').
+    CREATE DATA lr_header_agit TYPE ('ZIF_ABAPGIT_AFF_TYPES_V1=>TY_HEADER_60').
     ASSIGN lr_header_agit->* TO <chko_header_agit>.
     ASSERT sy-subrc = 0.
 
