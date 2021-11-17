@@ -105,7 +105,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CHKO IMPLEMENTATION.
 
     CREATE OBJECT object_ajson TYPE ('ZCL_ABAPGIT_AJSON_CNT_HANDLER').
 
-    json_as_xstring = mo_files->read_raw( iv_ext = 'json' ) ##NO_TEXT.
+    json_as_xstring = mo_files->read_raw( iv_ext = 'json' ).
 
     object-devclass = ms_item-devclass.
     object-obj_type = ms_item-obj_type.

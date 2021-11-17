@@ -110,7 +110,8 @@ CLASS lcl_chko_persistence IMPLEMENTATION.
 
     chko_name = object-obj_name.
 
-    SELECT SINGLE masterlang FROM tadir INTO @master_language WHERE pgmid = 'R3TR' AND object = 'CHKO' AND obj_name = @chko_name.
+    SELECT SINGLE masterlang FROM tadir INTO @master_language
+      WHERE pgmid = 'R3TR' AND object = 'CHKO' AND obj_name = @chko_name.
 
     CALL METHOD chko_db_api->('GET_HEADER')
       EXPORTING
