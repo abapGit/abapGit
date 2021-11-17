@@ -140,7 +140,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CHKO IMPLEMENTATION.
     DATA lobj_chko_db_api TYPE REF TO object.
     DATA l_name           TYPE c LENGTH 30.
 
-    l_name = ms_item-obj_name .
+    l_name = ms_item-obj_name.
     CREATE OBJECT lobj_chko_db_api TYPE ('CL_CHKO_DB_API').
 
     IF lobj_chko_db_api IS NOT BOUND.
