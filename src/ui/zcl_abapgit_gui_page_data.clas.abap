@@ -44,7 +44,9 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
         VALUE(rt_where) TYPE string_table .
     METHODS render_add
       RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
     METHODS render_existing
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
