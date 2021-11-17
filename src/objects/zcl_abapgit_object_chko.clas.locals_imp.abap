@@ -8,18 +8,18 @@ CLASS lcl_chko_persistence DEFINITION
   PUBLIC SECTION.
     METHODS:
       get_content
-        IMPORTING object   TYPE trkey
-                  language TYPE spras
-                  version  TYPE r3state
-        EXPORTING data     TYPE data
+        IMPORTING i_object   TYPE trkey
+                  i_language TYPE spras
+                  i_version  TYPE r3state
+        EXPORTING e_data     TYPE data
         RAISING   cx_static_check,
 
       save_content
-        IMPORTING data     TYPE data
-                  object   TYPE trkey
-                  language TYPE spras
-                  version  TYPE r3state
-                  saved_by TYPE as4user
+        IMPORTING i_data     TYPE data
+                  i_object   TYPE trkey
+                  i_language TYPE spras
+                  i_version  TYPE r3state
+                  i_saved_by TYPE as4user
         RAISING   cx_static_check.
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -30,21 +30,19 @@ ENDCLASS.
 CLASS lcl_chko_persistence IMPLEMENTATION.
 
   METHOD get_content.
-    DATA master_language TYPE tadir-masterlang.
-
-    DATA  lr_chko         TYPE REF TO data.
-    DATA  lr_header       TYPE REF TO data.
-    DATA  lr_header_agit  TYPE REF TO data.
-    DATA  lr_content      TYPE REF TO data.
-    DATA  lr_content_agit TYPE REF TO data.
-    DATA  chko_db_api     TYPE REF TO object.
+    DATA  l_master_language TYPE tadir-masterlang.
+    DATA  lr_chko          TYPE REF TO data.
+    DATA  lr_header        TYPE REF TO data.
+    DATA  lr_header_agit   TYPE REF TO data.
+    DATA  lr_content       TYPE REF TO data.
+    DATA  lr_content_agit  TYPE REF TO data.
+    DATA  lobj_chko_db_api TYPE REF TO object.
 
     DATA  lr_chko_params  TYPE REF TO data.
     DATA  lr_chko_param   TYPE REF TO data.
     DATA  lr_chko_params_agit TYPE REF TO data.
     DATA  lr_chko_param_agit  TYPE REF TO data.
-    DATA  chko_name TYPE c LENGTH 30.
-
+    DATA  l_chko_name         TYPE c LENGTH 30.
 
     FIELD-SYMBOLS <chko_agit>    TYPE any.
 
@@ -67,8 +65,8 @@ CLASS lcl_chko_persistence IMPLEMENTATION.
     FIELD-SYMBOLS <fs_impl_class>      TYPE any.
     FIELD-SYMBOLS <fs_impl_class_agit> TYPE any.
 
-    FIELD-SYMBOLS <fs_remote>       TYPE flag.
-    FIELD-SYMBOLS <fs_remote_agit>  TYPE flag.
+    FIELD-SYMBOLS <fs_remote>       TYPE any.
+    FIELD-SYMBOLS <fs_remote_agit>  TYPE any.
 
     FIELD-SYMBOLS <fs_tech_id>      TYPE any.
     FIELD-SYMBOLS <fs_tech_id_agit> TYPE any.
@@ -88,9 +86,11 @@ CLASS lcl_chko_persistence IMPLEMENTATION.
     FIELD-SYMBOLS <fs_params_agit> TYPE ANY TABLE.
     FIELD-SYMBOLS <fs_param_agit>  TYPE any.
 
-    CLEAR data.
+    CLEAR e_data.
 
-    CHECK object-obj_type = 'CHKO'.
+    IF i_object-obj_type <> 'CHKO'.
+      RETURN.
+    ENDIF.
 
     CREATE DATA lr_chko TYPE ('ZIF_ABAPGIT_AFF_CHKO_V1=>TY_MAIN').
     ASSIGN lr_chko->* TO <chko_agit>.
@@ -98,9 +98,9 @@ CLASS lcl_chko_persistence IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    CREATE OBJECT chko_db_api TYPE ('CL_CHKO_DB_API').
+    CREATE OBJECT lobj_chko_db_api TYPE ('CL_CHKO_DB_API').
 
-    IF chko_db_api IS NOT BOUND.
+    IF lobj_chko_db_api IS NOT BOUND.
       RETURN.  " chko object does not exist here
     ENDIF.
 
@@ -108,16 +108,16 @@ CLASS lcl_chko_persistence IMPLEMENTATION.
     ASSIGN lr_header->* TO <chko_header>.
     ASSERT sy-subrc = 0.
 
-    chko_name = object-obj_name.
+    l_chko_name = i_object-obj_name.
 
-    SELECT SINGLE masterlang FROM tadir INTO master_language
-      WHERE pgmid = 'R3TR' AND object = 'CHKO' AND obj_name = chko_name.
+    SELECT SINGLE masterlang FROM tadir INTO l_master_language
+      WHERE pgmid = 'R3TR' AND object = 'CHKO' AND obj_name = l_chko_name.
 
-    CALL METHOD chko_db_api->('GET_HEADER')
+    CALL METHOD lobj_chko_db_api->('GET_HEADER')
       EXPORTING
-        name     = chko_name
-        version  = version
-        language = language
+        name     = l_chko_name
+        version  = i_version
+        language = i_language
       RECEIVING
         header   = <chko_header>.
 
@@ -125,11 +125,11 @@ CLASS lcl_chko_persistence IMPLEMENTATION.
     ASSIGN lr_content->* TO <chko_content>.
     ASSERT sy-subrc = 0.
 
-    CALL METHOD chko_db_api->('GET_CONTENT')
+    CALL METHOD lobj_chko_db_api->('GET_CONTENT')
       EXPORTING
-        name     = chko_name
-        version  = version
-        language = language
+        name     = l_chko_name
+        version  = i_version
+        language = i_language
       RECEIVING
         content  = <chko_content>.
 
@@ -144,7 +144,7 @@ CLASS lcl_chko_persistence IMPLEMENTATION.
     ASSIGN COMPONENT 'HEADER' OF STRUCTURE <chko_agit> TO <chko_header_agit>.
 
     ASSIGN COMPONENT 'ORIGINAL_LANGUAGE' OF STRUCTURE <chko_header_agit> TO <fs_orig_langu>.
-    <fs_orig_langu> = master_language.
+    <fs_orig_langu> = l_master_language.
 
     MOVE-CORRESPONDING <chko_header> TO <chko_header_agit>.
 
@@ -196,7 +196,7 @@ CLASS lcl_chko_persistence IMPLEMENTATION.
       INSERT <fs_param_agit> INTO TABLE <fs_params_agit>.
     ENDLOOP.
 
-    data = <chko_agit>.
+    e_data = <chko_agit>.
   ENDMETHOD.
 
   METHOD save_content.
@@ -242,8 +242,8 @@ CLASS lcl_chko_persistence IMPLEMENTATION.
     FIELD-SYMBOLS <fs_impl_class>      TYPE any.
     FIELD-SYMBOLS <fs_impl_class_agit> TYPE any.
 
-    FIELD-SYMBOLS <fs_remote>       TYPE flag.
-    FIELD-SYMBOLS <fs_remote_agit>  TYPE flag.
+    FIELD-SYMBOLS <fs_remote>       TYPE any.
+    FIELD-SYMBOLS <fs_remote_agit>  TYPE any.
 
     FIELD-SYMBOLS <fs_tech_id>      TYPE any.
     FIELD-SYMBOLS <fs_tech_id_agit> TYPE any.
@@ -263,7 +263,9 @@ CLASS lcl_chko_persistence IMPLEMENTATION.
     FIELD-SYMBOLS <fs_params_agit> TYPE ANY TABLE.
     FIELD-SYMBOLS <fs_param_agit>  TYPE any.
 
-    CHECK object-obj_type = 'CHKO'.
+    IF i_object-obj_type <> 'CHKO'.
+      RETURN.
+    ENDIF.
 
     CREATE DATA lr_chko TYPE ('ZIF_ABAPGIT_AFF_CHKO_V1=>TY_MAIN').
     ASSIGN lr_chko->* TO <chko_agit>.
@@ -285,23 +287,24 @@ CLASS lcl_chko_persistence IMPLEMENTATION.
     ASSIGN lr_content->* TO <chko_content>.
     ASSERT sy-subrc = 0.
 
-    chko_name = object-obj_name.
+    chko_name = i_object-obj_name.
 
-    <chko_agit> = data.
+    <chko_agit> = i_data.
 
     CALL METHOD chko_db_api->('GET_HEADER')
       EXPORTING
         name     = chko_name
-        version  = version
-        language = language
+        version  = i_version
+        language = i_language
       RECEIVING
         header   = <chko_header>.
-    IF <chko_header> IS INITIAL AND version = 'I'.
+
+    IF <chko_header> IS INITIAL AND i_version = 'I'.
       CALL METHOD chko_db_api->('GET_HEADER')
         EXPORTING
           name     = chko_name
           version  = 'A'
-          language = language
+          language = i_language
         RECEIVING
           header   = <chko_header>.
     ENDIF.
@@ -310,7 +313,7 @@ CLASS lcl_chko_persistence IMPLEMENTATION.
       ASSIGN COMPONENT 'NAME' OF STRUCTURE <chko_header> TO <chko_name>.
       <chko_name> = chko_name.
       ASSIGN COMPONENT 'CREATED_BY' OF STRUCTURE <chko_header> TO <chko_created_by>.
-      <chko_created_by> = saved_by.
+      <chko_created_by> = i_saved_by.
       ASSIGN COMPONENT 'CREATED_AT' OF STRUCTURE <chko_header> TO <chko_created_at>.
       GET TIME STAMP FIELD <chko_created_at>.
     ENDIF.
@@ -325,9 +328,9 @@ CLASS lcl_chko_persistence IMPLEMENTATION.
     ENDIF.
 
     ASSIGN COMPONENT 'VERSION' OF STRUCTURE <chko_header> TO <chko_version>.
-    <chko_version> = version.
+    <chko_version> = i_version.
     ASSIGN COMPONENT 'CHANGED_BY' OF STRUCTURE <chko_header> TO <chko_changed_by>.
-    <chko_changed_by> = saved_by.
+    <chko_changed_by> = i_saved_by.
     ASSIGN COMPONENT 'CHANGED_AT' OF STRUCTURE <chko_header> TO <chko_changed_at>.
     GET TIME STAMP FIELD <chko_changed_at>.
 

@@ -105,7 +105,7 @@
 *    DATA chko_header TYPE TABLE OF chko_header.
 *    chko_header = VALUE #(
 *      ( name = name version = 'A' abap_language_version = if_abap_language_version=>gc_version-sap_cloud_platform )
-*    ).
+*      ).
 *    environment->insert_test_data( chko_header ).
 *
 *    DATA chko_headert TYPE TABLE OF chko_headert.
@@ -116,7 +116,8 @@
 *
 *    DATA chko_content TYPE TABLE OF chko_content.
 *    chko_content = VALUE #(
-*      ( name = name version = 'A' category = 'TEST_CATEGORY' implementing_class = 'TEST_CLASS' remote_enabled = abap_true )
+*      ( name = name version = 'A' category = 'TEST_CATEGORY' implementing_class = 'TEST_CLASS'
+*        remote_enabled = abap_true )
 *    ).
 *    environment->insert_test_data( chko_content ).
 *
