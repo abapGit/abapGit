@@ -759,7 +759,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       ii_html->add( '</div>' ).
       ii_html->add( '<div class="command-container">' ).
       ii_html->add( |<input type="submit" value="&#x2026;" formaction="sapevent:{ is_field-side_action }"|
-                 && |title="{ is_field-label }">| ).
+                 && | title="{ is_field-label }">| ).
       ii_html->add( '</div>' ).
     ENDIF.
 
