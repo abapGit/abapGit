@@ -13,7 +13,7 @@ CLASS zcl_abapgit_ajson_cnt_handler DEFINITION
     METHODS serialize
       IMPORTING data          TYPE data
       RETURNING VALUE(result) TYPE xstring
-      RAISING   cx_root.
+      RAISING   cx_static_check.
 
     "! Deserializes xstring into data. The type of data is specified in
     "! the implementing class
@@ -23,7 +23,7 @@ CLASS zcl_abapgit_ajson_cnt_handler DEFINITION
     METHODS deserialize
       IMPORTING content TYPE xstring
       EXPORTING data    TYPE data
-      RAISING   cx_root.
+      RAISING   cx_static_check.
 
   PROTECTED SECTION.
 

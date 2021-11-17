@@ -12,7 +12,7 @@ CLASS lcl_chko_persistence DEFINITION
                   language TYPE spras
                   version  TYPE r3state
         EXPORTING data     TYPE data
-        RAISING   cx_root,
+        RAISING   cx_static_check,
 
       save_content
         IMPORTING data     TYPE data
@@ -20,7 +20,7 @@ CLASS lcl_chko_persistence DEFINITION
                   language TYPE spras
                   version  TYPE r3state
                   saved_by TYPE as4user
-        RAISING   cx_root.
+        RAISING   cx_static_check.
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -110,8 +110,8 @@ CLASS lcl_chko_persistence IMPLEMENTATION.
 
     chko_name = object-obj_name.
 
-    SELECT SINGLE masterlang FROM tadir INTO @master_language
-      WHERE pgmid = 'R3TR' AND object = 'CHKO' AND obj_name = @chko_name.
+    SELECT SINGLE masterlang FROM tadir INTO master_language
+      WHERE pgmid = 'R3TR' AND object = 'CHKO' AND obj_name = chko_name.
 
     CALL METHOD chko_db_api->('GET_HEADER')
       EXPORTING
