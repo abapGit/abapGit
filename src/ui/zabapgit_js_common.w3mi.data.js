@@ -2326,11 +2326,13 @@ function enumerateToolbarActions() {
     }
   }
 
-  var toolbarRoot = document.getElementById("toolbar-main");
-  if (toolbarRoot && toolbarRoot.nodeName === "UL") processUL(toolbarRoot);
-  toolbarRoot = document.getElementById("toolbar-repo");
-  if (toolbarRoot && toolbarRoot.nodeName === "UL") processUL(toolbarRoot);
-  // Add more toolbars ?
+  [].slice.call(document.querySelectorAll("[id*=toolbar]"))
+    .filter(function(toolbar){
+      return (toolbar && toolbar.nodeName === "UL");
+    }).forEach(function(toolbar){
+      processUL(toolbar);
+    });
+
   if (items.length === 0) return;
 
   items = items.map(function(item) {
