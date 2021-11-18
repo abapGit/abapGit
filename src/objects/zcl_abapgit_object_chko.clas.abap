@@ -114,7 +114,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CHKO IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    CREATE OBJECT lo_ajson TYPE ('ZCL_ABAPGIT_AJSON_CNT_HANDLER').
+    CREATE OBJECT lo_ajson TYPE ('ZCL_ABAPGIT_JSON_CNT_HANDLER').
 
     lv_json_as_xstring = mo_files->read_raw( iv_ext = 'json' ).
 
@@ -228,7 +228,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CHKO IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    CREATE OBJECT lo_ajson TYPE ('ZCL_ABAPGIT_AJSON_CNT_HANDLER').
+    CREATE OBJECT lo_ajson TYPE ('ZCL_ABAPGIT_JSON_CNT_HANDLER').
 
     lv_object_chko-devclass = ms_item-devclass.
     lv_object_chko-obj_type = ms_item-obj_type.
