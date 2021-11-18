@@ -108,7 +108,7 @@
       "pseudo": ["#EC NOTEXT"]
     },
     "unused_types": {
-      "exclude": ["zif_abapgit_aff_types_v1"]
+      "exclude": ["zif_abapgit_aff_types_v1", "zif_abapgit_aff_chko_v1"]
     },
     "begin_single_include": true,
     "names_no_dash": true,
