@@ -106,7 +106,9 @@
       "pragmas": ["##NO_TEXT"],
       "pseudo": ["#EC NOTEXT"]
     },
-    "unused_types": true,
+    "unused_types": {
+      "exclude": ["zif_abapgit_aff_types_v1"]
+    },
     "begin_single_include": true,
     "names_no_dash": true,
     "parser_missing_space": true,
