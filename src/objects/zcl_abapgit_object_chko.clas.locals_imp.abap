@@ -8,18 +8,18 @@ CLASS lcl_chko_persistence DEFINITION
   PUBLIC SECTION.
     METHODS:
       get_content
-        IMPORTING i_object   TYPE trkey
-                  i_language TYPE spras
-                  i_version  TYPE r3state
-        EXPORTING e_data     TYPE data
+        IMPORTING iv_object   TYPE trkey
+                  iv_language TYPE spras
+                  iv_version  TYPE r3state
+        EXPORTING ev_data     TYPE data
         RAISING   cx_static_check,
 
       save_content
-        IMPORTING i_data     TYPE data
-                  i_object   TYPE trkey
-                  i_language TYPE spras
-                  i_version  TYPE r3state
-                  i_saved_by TYPE as4user
+        IMPORTING iv_data     TYPE data
+                  iv_object   TYPE trkey
+                  iv_language TYPE spras
+                  iv_version  TYPE r3state
+                  iv_saved_by TYPE as4user
         RAISING   cx_static_check.
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -30,362 +30,351 @@ ENDCLASS.
 CLASS lcl_chko_persistence IMPLEMENTATION.
 
   METHOD get_content.
-    DATA  l_master_language TYPE tadir-masterlang.
-    DATA  lr_chko          TYPE REF TO data.
-    DATA  lr_header        TYPE REF TO data.
-    DATA  lr_header_agit   TYPE REF TO data.
-    DATA  lr_content       TYPE REF TO data.
-    DATA  lr_content_agit  TYPE REF TO data.
-    DATA  lobj_chko_db_api TYPE REF TO object.
+    DATA  lv_master_language TYPE tadir-masterlang.
+    DATA  lr_chko            TYPE REF TO data.
+    DATA  lr_header          TYPE REF TO data.
+    DATA  lr_header_agit     TYPE REF TO data.
+    DATA  lr_content         TYPE REF TO data.
+    DATA  lr_content_agit    TYPE REF TO data.
+    DATA  lo_chko_db_api     TYPE REF TO object.
+    DATA  lr_chko_params     TYPE REF TO data.
+    DATA  lr_chko_param      TYPE REF TO data.
 
-    DATA  lr_chko_params  TYPE REF TO data.
-    DATA  lr_chko_param   TYPE REF TO data.
     DATA  lr_chko_params_agit TYPE REF TO data.
     DATA  lr_chko_param_agit  TYPE REF TO data.
-    DATA  l_chko_name         TYPE c LENGTH 30.
+    DATA  lv_chko_name        TYPE c LENGTH 30.
 
-    FIELD-SYMBOLS <chko_agit>    TYPE any.
+    FIELD-SYMBOLS <lg_chko_agit>    TYPE any.
+    FIELD-SYMBOLS <lg_chko_header>  TYPE any.
+    FIELD-SYMBOLS <lg_chko_content> TYPE any.
 
-    FIELD-SYMBOLS <chko_header>  TYPE any.
-    FIELD-SYMBOLS <chko_content> TYPE any.
+    FIELD-SYMBOLS <lg_chko_header_agit>  TYPE any.
+    FIELD-SYMBOLS <lg_chko_content_agit> TYPE any.
 
-    FIELD-SYMBOLS <chko_header_agit>  TYPE any.
-    FIELD-SYMBOLS <chko_content_agit> TYPE any.
+    FIELD-SYMBOLS <lg_struct_categ>      TYPE any.
+    FIELD-SYMBOLS <lg_struct_impl_class> TYPE any.
+    FIELD-SYMBOLS <lg_descr>             TYPE any.
+    FIELD-SYMBOLS <lg_format_vers>       TYPE string.
+    FIELD-SYMBOLS <lg_orig_langu>        TYPE sy-langu.
 
-    FIELD-SYMBOLS <fs_struct_categ>      TYPE any.
-    FIELD-SYMBOLS <fs_struct_impl_class> TYPE any.
-    FIELD-SYMBOLS <fs_descr>             TYPE any.
+    FIELD-SYMBOLS <lg_category>      TYPE any.
+    FIELD-SYMBOLS <lg_category_agit> TYPE any.
 
-    FIELD-SYMBOLS <fs_format_vers>       TYPE string.
-    FIELD-SYMBOLS <fs_orig_langu>        TYPE sy-langu.
+    FIELD-SYMBOLS <lg_impl_class>      TYPE any.
+    FIELD-SYMBOLS <lg_impl_class_agit> TYPE any.
 
-    FIELD-SYMBOLS <fs_category>      TYPE any.
-    FIELD-SYMBOLS <fs_category_agit> TYPE any.
+    FIELD-SYMBOLS <lg_remote>       TYPE any.
+    FIELD-SYMBOLS <lg_remote_agit>  TYPE any.
 
-    FIELD-SYMBOLS <fs_impl_class>      TYPE any.
-    FIELD-SYMBOLS <fs_impl_class_agit> TYPE any.
+    FIELD-SYMBOLS <lg_tech_id>      TYPE any.
+    FIELD-SYMBOLS <lg_tech_id_agit> TYPE any.
 
-    FIELD-SYMBOLS <fs_remote>       TYPE any.
-    FIELD-SYMBOLS <fs_remote_agit>  TYPE any.
+    FIELD-SYMBOLS <lg_modifiable_param>  TYPE abap_bool.
+    FIELD-SYMBOLS <lg_hidden_param_agit> TYPE abap_bool.
 
-    FIELD-SYMBOLS <fs_tech_id>      TYPE any.
-    FIELD-SYMBOLS <fs_tech_id_agit> TYPE any.
+    FIELD-SYMBOLS <lg_name_param>        TYPE any.
+    FIELD-SYMBOLS <lg_name_param_agit>   TYPE any.
 
-    FIELD-SYMBOLS <fs_modifiable_param>  TYPE abap_bool.
-    FIELD-SYMBOLS <fs_hidden_param_agit> TYPE abap_bool.
+    FIELD-SYMBOLS <lg_descr_param>       TYPE any.
+    FIELD-SYMBOLS <lg_descr_param_agit>  TYPE any.
 
-    FIELD-SYMBOLS <fs_name_param>        TYPE any.
-    FIELD-SYMBOLS <fs_name_param_agit>   TYPE any.
+    FIELD-SYMBOLS <lt_params_chko> TYPE ANY TABLE.
+    FIELD-SYMBOLS <lg_param_chko>  TYPE any.
 
-    FIELD-SYMBOLS <fs_descr_param>       TYPE any.
-    FIELD-SYMBOLS <fs_descr_param_agit>  TYPE any.
+    FIELD-SYMBOLS <lt_params_agit> TYPE ANY TABLE.
+    FIELD-SYMBOLS <lg_param_agit>  TYPE any.
 
-    FIELD-SYMBOLS <fs_params_chko> TYPE ANY TABLE.
-    FIELD-SYMBOLS <fs_param_chko>  TYPE any.
-
-    FIELD-SYMBOLS <fs_params_agit> TYPE ANY TABLE.
-    FIELD-SYMBOLS <fs_param_agit>  TYPE any.
-
-    CLEAR e_data.
-
-    IF i_object-obj_type <> 'CHKO'.
-      RETURN.
-    ENDIF.
+    CLEAR ev_data.
 
     CREATE DATA lr_chko TYPE ('ZIF_ABAPGIT_AFF_CHKO_V1=>TY_MAIN').
-    ASSIGN lr_chko->* TO <chko_agit>.
+    ASSIGN lr_chko->* TO <lg_chko_agit>.
     IF sy-subrc <> 0.
       RETURN.
     ENDIF.
 
-    CREATE OBJECT lobj_chko_db_api TYPE ('CL_CHKO_DB_API').
+    CREATE OBJECT lo_chko_db_api TYPE ('CL_CHKO_DB_API').
 
-    IF lobj_chko_db_api IS NOT BOUND.
+    IF lo_chko_db_api IS NOT BOUND.
       RETURN.  " chko object does not exist here
     ENDIF.
 
     CREATE DATA lr_header TYPE ('CL_CHKO_DB_API=>TY_HEADER').
-    ASSIGN lr_header->* TO <chko_header>.
+    ASSIGN lr_header->* TO <lg_chko_header>.
     ASSERT sy-subrc = 0.
 
-    l_chko_name = i_object-obj_name.
+    lv_chko_name = iv_object-obj_name.
 
-    SELECT SINGLE masterlang FROM tadir INTO l_master_language
-      WHERE pgmid = 'R3TR' AND object = 'CHKO' AND obj_name = l_chko_name.
+    SELECT SINGLE masterlang FROM tadir INTO lv_master_language
+      WHERE pgmid = 'R3TR' AND object = 'CHKO' AND obj_name = lv_chko_name.
 
-    CALL METHOD lobj_chko_db_api->('GET_HEADER')
+    CALL METHOD lo_chko_db_api->('GET_HEADER')
       EXPORTING
-        name     = l_chko_name
-        version  = i_version
-        language = i_language
+        name     = lv_chko_name
+        version  = iv_version
+        language = iv_language
       RECEIVING
-        header   = <chko_header>.
+        header   = <lg_chko_header>.
 
     CREATE DATA lr_content TYPE ('CL_CHKO_DB_API=>TY_CONTENT').
-    ASSIGN lr_content->* TO <chko_content>.
+    ASSIGN lr_content->* TO <lg_chko_content>.
     ASSERT sy-subrc = 0.
 
-    CALL METHOD lobj_chko_db_api->('GET_CONTENT')
+    CALL METHOD lo_chko_db_api->('GET_CONTENT')
       EXPORTING
-        name     = l_chko_name
-        version  = i_version
-        language = i_language
+        name     = lv_chko_name
+        version  = iv_version
+        language = iv_language
       RECEIVING
-        content  = <chko_content>.
+        content  = <lg_chko_content>.
 
 
-    ASSIGN COMPONENT 'FORMAT_VERSION' OF STRUCTURE <chko_agit> TO <fs_format_vers>.
-    <fs_format_vers> = '1'.
+    ASSIGN COMPONENT 'FORMAT_VERSION' OF STRUCTURE <lg_chko_agit> TO <lg_format_vers>.
+    <lg_format_vers> = '1'.
 
     CREATE DATA lr_header_agit TYPE ('ZIF_ABAPGIT_AFF_TYPES_V1=>TY_HEADER_60').
-    ASSIGN lr_header_agit->* TO <chko_header_agit>.
+    ASSIGN lr_header_agit->* TO <lg_chko_header_agit>.
     ASSERT sy-subrc = 0.
 
-    ASSIGN COMPONENT 'HEADER' OF STRUCTURE <chko_agit> TO <chko_header_agit>.
+    ASSIGN COMPONENT 'HEADER' OF STRUCTURE <lg_chko_agit> TO <lg_chko_header_agit>.
 
-    ASSIGN COMPONENT 'ORIGINAL_LANGUAGE' OF STRUCTURE <chko_header_agit> TO <fs_orig_langu>.
-    <fs_orig_langu> = l_master_language.
+    ASSIGN COMPONENT 'ORIGINAL_LANGUAGE' OF STRUCTURE <lg_chko_header_agit> TO <lg_orig_langu>.
+    <lg_orig_langu> = lv_master_language.
 
-    MOVE-CORRESPONDING <chko_header> TO <chko_header_agit>.
+    MOVE-CORRESPONDING <lg_chko_header> TO <lg_chko_header_agit>.
 
-    ASSIGN COMPONENT 'CATEGORY' OF STRUCTURE <chko_agit>    TO <fs_category_agit>.
-    ASSIGN COMPONENT 'CATEGORY' OF STRUCTURE <chko_content> TO <fs_struct_categ>.
-    ASSIGN COMPONENT 'NAME'     OF STRUCTURE <fs_struct_categ> TO <fs_category>.
-    <fs_category_agit> = <fs_category>.
+    ASSIGN COMPONENT 'CATEGORY' OF STRUCTURE <lg_chko_agit>    TO <lg_category_agit>.
+    ASSIGN COMPONENT 'CATEGORY' OF STRUCTURE <lg_chko_content> TO <lg_struct_categ>.
+    ASSIGN COMPONENT 'NAME'     OF STRUCTURE <lg_struct_categ> TO <lg_category>.
+    <lg_category_agit> = <lg_category>.
 
-    ASSIGN COMPONENT 'IMPLEMENTING_CLASS' OF STRUCTURE <chko_agit>    TO <fs_impl_class_agit>.
-    ASSIGN COMPONENT 'IMPLEMENTING_CLASS' OF STRUCTURE <chko_content> TO <fs_struct_impl_class>.
-    ASSIGN COMPONENT 'NAME' OF STRUCTURE <fs_struct_impl_class>       TO <fs_impl_class>.
-    <fs_impl_class_agit> = <fs_impl_class>.
+    ASSIGN COMPONENT 'IMPLEMENTING_CLASS' OF STRUCTURE <lg_chko_agit>    TO <lg_impl_class_agit>.
+    ASSIGN COMPONENT 'IMPLEMENTING_CLASS' OF STRUCTURE <lg_chko_content> TO <lg_struct_impl_class>.
+    ASSIGN COMPONENT 'NAME' OF STRUCTURE <lg_struct_impl_class>       TO <lg_impl_class>.
+    <lg_impl_class_agit> = <lg_impl_class>.
 
-    ASSIGN COMPONENT 'REMOTE_ENABLED' OF STRUCTURE <chko_agit>    TO <fs_remote_agit>.
-    ASSIGN COMPONENT 'REMOTE_ENABLED' OF STRUCTURE <chko_content> TO <fs_remote>.
-    <fs_remote_agit> = <fs_remote>.
+    ASSIGN COMPONENT 'REMOTE_ENABLED' OF STRUCTURE <lg_chko_agit>    TO <lg_remote_agit>.
+    ASSIGN COMPONENT 'REMOTE_ENABLED' OF STRUCTURE <lg_chko_content> TO <lg_remote>.
+    <lg_remote_agit> = <lg_remote>.
 
     CREATE DATA lr_chko_params TYPE ('CL_CHKO_DB_API=>TY_PARAMETERS').
-    ASSIGN lr_chko_params->* TO <fs_params_chko>.
+    ASSIGN lr_chko_params->* TO <lt_params_chko>.
     CREATE DATA lr_chko_param TYPE ('CL_CHKO_DB_API=>TY_PARAMETER').
-    ASSIGN lr_chko_param->* TO <fs_param_chko>.
+    ASSIGN lr_chko_param->* TO <lg_param_chko>.
 
     CREATE DATA lr_chko_params_agit TYPE ('ZIF_ABAPGIT_AFF_CHKO_V1=>TY_PARAMETERS').
-    ASSIGN lr_chko_params_agit->* TO <fs_params_agit>.
+    ASSIGN lr_chko_params_agit->* TO <lt_params_agit>.
 
     CREATE DATA lr_chko_param_agit TYPE ('ZIF_ABAPGIT_AFF_CHKO_V1=>TY_PARAMETER').
-    ASSIGN lr_chko_param_agit->* TO <fs_param_agit>.
+    ASSIGN lr_chko_param_agit->* TO <lg_param_agit>.
 
-    ASSIGN COMPONENT 'PARAMETERS' OF STRUCTURE <chko_content> TO <fs_params_chko>.
-    ASSIGN COMPONENT 'PARAMETERS' OF STRUCTURE <chko_agit>    TO <fs_params_agit>.
+    ASSIGN COMPONENT 'PARAMETERS' OF STRUCTURE <lg_chko_content> TO <lt_params_chko>.
+    ASSIGN COMPONENT 'PARAMETERS' OF STRUCTURE <lg_chko_agit>    TO <lt_params_agit>.
 
-    LOOP AT <fs_params_chko> ASSIGNING <fs_param_chko>.
-      ASSIGN COMPONENT 'TECHNICAL_ID' OF STRUCTURE <fs_param_agit> TO <fs_tech_id_agit>.
-      ASSIGN COMPONENT 'TECHNICAL_ID' OF STRUCTURE <fs_param_chko> TO <fs_tech_id>.
-      <fs_tech_id_agit> = <fs_tech_id>.
+    LOOP AT <lt_params_chko> ASSIGNING <lg_param_chko>.
+      ASSIGN COMPONENT 'TECHNICAL_ID' OF STRUCTURE <lg_param_agit> TO <lg_tech_id_agit>.
+      ASSIGN COMPONENT 'TECHNICAL_ID' OF STRUCTURE <lg_param_chko> TO <lg_tech_id>.
+      <lg_tech_id_agit> = <lg_tech_id>.
 
-      ASSIGN COMPONENT 'NAME' OF STRUCTURE <fs_param_agit> TO <fs_name_param_agit>.
-      ASSIGN COMPONENT 'NAME' OF STRUCTURE <fs_param_chko> TO <fs_name_param>.
-      <fs_name_param_agit> = <fs_name_param>.
+      ASSIGN COMPONENT 'NAME' OF STRUCTURE <lg_param_agit> TO <lg_name_param_agit>.
+      ASSIGN COMPONENT 'NAME' OF STRUCTURE <lg_param_chko> TO <lg_name_param>.
+      <lg_name_param_agit> = <lg_name_param>.
 
-      ASSIGN COMPONENT 'DESCRIPTION' OF STRUCTURE <fs_param_agit> TO <fs_descr_param_agit>.
-      ASSIGN COMPONENT 'DESCRIPTION' OF STRUCTURE <fs_param_chko> TO <fs_descr_param>.
-      <fs_descr_param_agit> = <fs_descr_param>.
+      ASSIGN COMPONENT 'DESCRIPTION' OF STRUCTURE <lg_param_agit> TO <lg_descr_param_agit>.
+      ASSIGN COMPONENT 'DESCRIPTION' OF STRUCTURE <lg_param_chko> TO <lg_descr_param>.
+      <lg_descr_param_agit> = <lg_descr_param>.
 
-      ASSIGN COMPONENT 'HIDDEN'     OF STRUCTURE <fs_param_agit> TO <fs_hidden_param_agit>.
-      ASSIGN COMPONENT 'MODIFIABLE' OF STRUCTURE <fs_param_chko> TO <fs_modifiable_param>.
-      <fs_hidden_param_agit> = <fs_modifiable_param>.
+      ASSIGN COMPONENT 'HIDDEN'     OF STRUCTURE <lg_param_agit> TO <lg_hidden_param_agit>.
+      ASSIGN COMPONENT 'MODIFIABLE' OF STRUCTURE <lg_param_chko> TO <lg_modifiable_param>.
+      <lg_hidden_param_agit> = <lg_modifiable_param>.
 
-      INSERT <fs_param_agit> INTO TABLE <fs_params_agit>.
+      INSERT <lg_param_agit> INTO TABLE <lt_params_agit>.
     ENDLOOP.
 
-    e_data = <chko_agit>.
+    ev_data = <lg_chko_agit>.
   ENDMETHOD.
 
   METHOD save_content.
-
-    DATA master_language TYPE tadir-masterlang.
 
     DATA  lr_chko         TYPE REF TO data.
     DATA  lr_header       TYPE REF TO data.
     DATA  lr_header_agit  TYPE REF TO data.
     DATA  lr_content      TYPE REF TO data.
     DATA  lr_content_agit TYPE REF TO data.
-    DATA  chko_db_api     TYPE REF TO object.
+    DATA  lo_chko_db_api  TYPE REF TO object.
 
-    DATA  lr_chko_params  TYPE REF TO data.
-    DATA  lr_chko_param   TYPE REF TO data.
+    DATA  lr_chko_params      TYPE REF TO data.
+    DATA  lr_chko_param       TYPE REF TO data.
     DATA  lr_chko_params_agit TYPE REF TO data.
     DATA  lr_chko_param_agit  TYPE REF TO data.
-    DATA  chko_name TYPE c LENGTH 30.
+    DATA  lv_chko_name        TYPE c LENGTH 30.
 
-    FIELD-SYMBOLS <chko_agit>    TYPE any.
-    FIELD-SYMBOLS <chko_name>    TYPE any.
-    FIELD-SYMBOLS <chko_created_by>    TYPE any.
-    FIELD-SYMBOLS <chko_changed_by>    TYPE any.
-    FIELD-SYMBOLS <chko_created_at>    TYPE any.
-    FIELD-SYMBOLS <chko_changed_at>    TYPE any.
-    FIELD-SYMBOLS <chko_version>       TYPE any.
-    FIELD-SYMBOLS <chko_header>  TYPE any.
-    FIELD-SYMBOLS <chko_content> TYPE any.
+    FIELD-SYMBOLS <lg_chko_agit>          TYPE any.
+    FIELD-SYMBOLS <lg_chko_name>          TYPE any.
+    FIELD-SYMBOLS <lg_chko_created_by>    TYPE any.
+    FIELD-SYMBOLS <lg_chko_changed_by>    TYPE any.
+    FIELD-SYMBOLS <lg_chko_created_at>    TYPE any.
+    FIELD-SYMBOLS <lg_chko_changed_at>    TYPE any.
+    FIELD-SYMBOLS <lg_chko_version>       TYPE any.
+    FIELD-SYMBOLS <lg_chko_header>        TYPE any.
+    FIELD-SYMBOLS <lg_chko_content>       TYPE any.
 
-    FIELD-SYMBOLS <chko_header_agit>  TYPE any.
-    FIELD-SYMBOLS <chko_content_agit> TYPE any.
+    FIELD-SYMBOLS <lg_chko_header_agit>  TYPE any.
+    FIELD-SYMBOLS <lg_chko_content_agit> TYPE any.
 
-    FIELD-SYMBOLS <fs_struct_categ>      TYPE any.
-    FIELD-SYMBOLS <fs_struct_impl_class> TYPE any.
-    FIELD-SYMBOLS <fs_descr>             TYPE any.
+    FIELD-SYMBOLS <lg_struct_categ>      TYPE any.
+    FIELD-SYMBOLS <lg_struct_impl_class> TYPE any.
+    FIELD-SYMBOLS <lg_descr>             TYPE any.
 
-    FIELD-SYMBOLS <fs_format_vers>       TYPE string.
-    FIELD-SYMBOLS <fs_orig_langu>        TYPE sy-langu.
+    FIELD-SYMBOLS <lg_format_vers>       TYPE string.
+    FIELD-SYMBOLS <lg_orig_langu>        TYPE sy-langu.
 
-    FIELD-SYMBOLS <fs_category>      TYPE any.
-    FIELD-SYMBOLS <fs_category_agit> TYPE any.
+    FIELD-SYMBOLS <lg_category>      TYPE any.
+    FIELD-SYMBOLS <lg_category_agit> TYPE any.
 
-    FIELD-SYMBOLS <fs_impl_class>      TYPE any.
-    FIELD-SYMBOLS <fs_impl_class_agit> TYPE any.
+    FIELD-SYMBOLS <lg_impl_class>      TYPE any.
+    FIELD-SYMBOLS <lg_impl_class_agit> TYPE any.
 
-    FIELD-SYMBOLS <fs_remote>       TYPE any.
-    FIELD-SYMBOLS <fs_remote_agit>  TYPE any.
+    FIELD-SYMBOLS <lg_remote>       TYPE any.
+    FIELD-SYMBOLS <lg_remote_agit>  TYPE any.
 
-    FIELD-SYMBOLS <fs_tech_id>      TYPE any.
-    FIELD-SYMBOLS <fs_tech_id_agit> TYPE any.
+    FIELD-SYMBOLS <lg_tech_id>      TYPE any.
+    FIELD-SYMBOLS <lg_tech_id_agit> TYPE any.
 
-    FIELD-SYMBOLS <fs_modifiable_param>  TYPE abap_bool.
-    FIELD-SYMBOLS <fs_hidden_param_agit> TYPE abap_bool.
+    FIELD-SYMBOLS <lg_modifiable_param>  TYPE abap_bool.
+    FIELD-SYMBOLS <lg_hidden_param_agit> TYPE abap_bool.
 
-    FIELD-SYMBOLS <fs_name_param>      TYPE any.
-    FIELD-SYMBOLS <fs_name_param_agit> TYPE any.
+    FIELD-SYMBOLS <lg_name_param>      TYPE any.
+    FIELD-SYMBOLS <lg_name_param_agit> TYPE any.
 
-    FIELD-SYMBOLS <fs_descr_param>       TYPE any.
-    FIELD-SYMBOLS <fs_descr_param_agit>  TYPE any.
+    FIELD-SYMBOLS <lg_descr_param>       TYPE any.
+    FIELD-SYMBOLS <lg_descr_param_agit>  TYPE any.
 
-    FIELD-SYMBOLS <fs_params_chko> TYPE ANY TABLE.
-    FIELD-SYMBOLS <fs_param_chko>  TYPE any.
+    FIELD-SYMBOLS <lt_params_chko> TYPE ANY TABLE.
+    FIELD-SYMBOLS <lg_param_chko>  TYPE any.
 
-    FIELD-SYMBOLS <fs_params_agit> TYPE ANY TABLE.
-    FIELD-SYMBOLS <fs_param_agit>  TYPE any.
+    FIELD-SYMBOLS <lt_params_agit> TYPE ANY TABLE.
+    FIELD-SYMBOLS <lg_param_agit>  TYPE any.
 
-    IF i_object-obj_type <> 'CHKO'.
-      RETURN.
-    ENDIF.
 
     CREATE DATA lr_chko TYPE ('ZIF_ABAPGIT_AFF_CHKO_V1=>TY_MAIN').
-    ASSIGN lr_chko->* TO <chko_agit>.
+    ASSIGN lr_chko->* TO <lg_chko_agit>.
     IF sy-subrc <> 0.
       RETURN.
     ENDIF.
 
-    CREATE OBJECT chko_db_api TYPE ('CL_CHKO_DB_API').
+    CREATE OBJECT lo_chko_db_api TYPE ('CL_CHKO_DB_API').
 
-    IF chko_db_api IS NOT BOUND.
+    IF lo_chko_db_api IS NOT BOUND.
       RETURN.  " chko object does not exist here
     ENDIF.
 
     CREATE DATA lr_header TYPE ('CL_CHKO_DB_API=>TY_HEADER').
-    ASSIGN lr_header->* TO <chko_header>.
+    ASSIGN lr_header->* TO <lg_chko_header>.
     ASSERT sy-subrc = 0.
 
     CREATE DATA lr_content TYPE ('CL_CHKO_DB_API=>TY_CONTENT').
-    ASSIGN lr_content->* TO <chko_content>.
+    ASSIGN lr_content->* TO <lg_chko_content>.
     ASSERT sy-subrc = 0.
 
-    chko_name = i_object-obj_name.
+    lv_chko_name = iv_object-obj_name.
 
-    <chko_agit> = i_data.
+    <lg_chko_agit> = iv_data.
 
-    CALL METHOD chko_db_api->('GET_HEADER')
+    CALL METHOD lo_chko_db_api->('GET_HEADER')
       EXPORTING
-        name     = chko_name
-        version  = i_version
-        language = i_language
+        name     = lv_chko_name
+        version  = iv_version
+        language = iv_language
       RECEIVING
-        header   = <chko_header>.
+        header   = <lg_chko_header>.
 
-    IF <chko_header> IS INITIAL AND i_version = 'I'.
-      CALL METHOD chko_db_api->('GET_HEADER')
+    IF <lg_chko_header> IS INITIAL AND iv_version = 'I'.
+      CALL METHOD lo_chko_db_api->('GET_HEADER')
         EXPORTING
-          name     = chko_name
+          name     = lv_chko_name
           version  = 'A'
-          language = i_language
+          language = iv_language
         RECEIVING
-          header   = <chko_header>.
+          header   = <lg_chko_header>.
     ENDIF.
 
-    IF <chko_header> IS INITIAL.
-      ASSIGN COMPONENT 'NAME' OF STRUCTURE <chko_header> TO <chko_name>.
-      <chko_name> = chko_name.
-      ASSIGN COMPONENT 'CREATED_BY' OF STRUCTURE <chko_header> TO <chko_created_by>.
-      <chko_created_by> = i_saved_by.
-      ASSIGN COMPONENT 'CREATED_AT' OF STRUCTURE <chko_header> TO <chko_created_at>.
-      GET TIME STAMP FIELD <chko_created_at>.
+    IF <lg_chko_header> IS INITIAL.
+      ASSIGN COMPONENT 'NAME' OF STRUCTURE <lg_chko_header> TO <lg_chko_name>.
+      <lg_chko_name> = lv_chko_name.
+      ASSIGN COMPONENT 'CREATED_BY' OF STRUCTURE <lg_chko_header> TO <lg_chko_created_by>.
+      <lg_chko_created_by> = iv_saved_by.
+      ASSIGN COMPONENT 'CREATED_AT' OF STRUCTURE <lg_chko_header> TO <lg_chko_created_at>.
+      GET TIME STAMP FIELD <lg_chko_created_at>.
     ENDIF.
 
     CREATE DATA lr_header_agit TYPE ('ZIF_ABAPGIT_AFF_TYPES_V1=>TY_HEADER_60').
-    ASSIGN lr_header_agit->* TO <chko_header_agit>.
+    ASSIGN lr_header_agit->* TO <lg_chko_header_agit>.
     ASSERT sy-subrc = 0.
 
-    ASSIGN COMPONENT 'HEADER' OF STRUCTURE <chko_agit> TO <chko_header_agit>.
-    IF <chko_header_agit> IS NOT INITIAL.
-      MOVE-CORRESPONDING <chko_header_agit> TO <chko_header>.
+    ASSIGN COMPONENT 'HEADER' OF STRUCTURE <lg_chko_agit> TO <lg_chko_header_agit>.
+    IF <lg_chko_header_agit> IS NOT INITIAL.
+      MOVE-CORRESPONDING <lg_chko_header_agit> TO <lg_chko_header>.
     ENDIF.
 
-    ASSIGN COMPONENT 'VERSION' OF STRUCTURE <chko_header> TO <chko_version>.
-    <chko_version> = i_version.
-    ASSIGN COMPONENT 'CHANGED_BY' OF STRUCTURE <chko_header> TO <chko_changed_by>.
-    <chko_changed_by> = i_saved_by.
-    ASSIGN COMPONENT 'CHANGED_AT' OF STRUCTURE <chko_header> TO <chko_changed_at>.
-    GET TIME STAMP FIELD <chko_changed_at>.
+    ASSIGN COMPONENT 'VERSION' OF STRUCTURE <lg_chko_header> TO <lg_chko_version>.
+    <lg_chko_version> = iv_version.
+    ASSIGN COMPONENT 'CHANGED_BY' OF STRUCTURE <lg_chko_header> TO <lg_chko_changed_by>.
+    <lg_chko_changed_by> = iv_saved_by.
+    ASSIGN COMPONENT 'CHANGED_AT' OF STRUCTURE <lg_chko_header> TO <lg_chko_changed_at>.
+    GET TIME STAMP FIELD <lg_chko_changed_at>.
 
-    ASSIGN COMPONENT 'CATEGORY' OF STRUCTURE <chko_agit>    TO <fs_category_agit>.
-    ASSIGN COMPONENT 'CATEGORY' OF STRUCTURE <chko_content> TO <fs_struct_categ>.
-    ASSIGN COMPONENT 'NAME'     OF STRUCTURE <fs_struct_categ> TO <fs_category>.
-    <fs_category> = <fs_category_agit>.
+    ASSIGN COMPONENT 'CATEGORY' OF STRUCTURE <lg_chko_agit>    TO <lg_category_agit>.
+    ASSIGN COMPONENT 'CATEGORY' OF STRUCTURE <lg_chko_content> TO <lg_struct_categ>.
+    ASSIGN COMPONENT 'NAME'     OF STRUCTURE <lg_struct_categ> TO <lg_category>.
+    <lg_category> = <lg_category_agit>.
 
-    ASSIGN COMPONENT 'IMPLEMENTING_CLASS' OF STRUCTURE <chko_agit>    TO <fs_impl_class_agit>.
-    ASSIGN COMPONENT 'IMPLEMENTING_CLASS' OF STRUCTURE <chko_content> TO <fs_struct_impl_class>.
-    ASSIGN COMPONENT 'NAME' OF STRUCTURE <fs_struct_impl_class>       TO <fs_impl_class>.
-    <fs_impl_class> = <fs_impl_class_agit>.
+    ASSIGN COMPONENT 'IMPLEMENTING_CLASS' OF STRUCTURE <lg_chko_agit>    TO <lg_impl_class_agit>.
+    ASSIGN COMPONENT 'IMPLEMENTING_CLASS' OF STRUCTURE <lg_chko_content> TO <lg_struct_impl_class>.
+    ASSIGN COMPONENT 'NAME' OF STRUCTURE <lg_struct_impl_class>       TO <lg_impl_class>.
+    <lg_impl_class> = <lg_impl_class_agit>.
 
-    ASSIGN COMPONENT 'REMOTE_ENABLED' OF STRUCTURE <chko_agit>    TO <fs_remote_agit>.
-    ASSIGN COMPONENT 'REMOTE_ENABLED' OF STRUCTURE <chko_content> TO <fs_remote>.
-    <fs_remote> =  <fs_remote_agit>.
+    ASSIGN COMPONENT 'REMOTE_ENABLED' OF STRUCTURE <lg_chko_agit>    TO <lg_remote_agit>.
+    ASSIGN COMPONENT 'REMOTE_ENABLED' OF STRUCTURE <lg_chko_content> TO <lg_remote>.
+    <lg_remote> =  <lg_remote_agit>.
 
     CREATE DATA lr_chko_params TYPE ('CL_CHKO_DB_API=>TY_PARAMETERS').
-    ASSIGN lr_chko_params->* TO <fs_params_chko>.
+    ASSIGN lr_chko_params->* TO <lt_params_chko>.
     CREATE DATA lr_chko_param TYPE ('CL_CHKO_DB_API=>TY_PARAMETER').
-    ASSIGN lr_chko_param->* TO <fs_param_chko>.
+    ASSIGN lr_chko_param->* TO <lg_param_chko>.
 
     CREATE DATA lr_chko_params_agit TYPE ('ZIF_ABAPGIT_AFF_CHKO_V1=>TY_PARAMETERS').
-    ASSIGN lr_chko_params_agit->* TO <fs_params_agit>.
+    ASSIGN lr_chko_params_agit->* TO <lt_params_agit>.
 
     CREATE DATA lr_chko_param_agit TYPE ('ZIF_ABAPGIT_AFF_CHKO_V1=>TY_PARAMETER').
-    ASSIGN lr_chko_param_agit->* TO <fs_param_agit>.
+    ASSIGN lr_chko_param_agit->* TO <lg_param_agit>.
 
-    ASSIGN COMPONENT 'PARAMETERS' OF STRUCTURE <chko_content> TO <fs_params_chko>.
-    ASSIGN COMPONENT 'PARAMETERS' OF STRUCTURE <chko_agit>    TO <fs_params_agit>.
+    ASSIGN COMPONENT 'PARAMETERS' OF STRUCTURE <lg_chko_content> TO <lt_params_chko>.
+    ASSIGN COMPONENT 'PARAMETERS' OF STRUCTURE <lg_chko_agit>    TO <lt_params_agit>.
 
-    LOOP AT <fs_params_agit> ASSIGNING <fs_param_agit>.
-      ASSIGN COMPONENT 'TECHNICAL_ID' OF STRUCTURE <fs_param_agit> TO <fs_tech_id_agit>.
-      ASSIGN COMPONENT 'TECHNICAL_ID' OF STRUCTURE <fs_param_chko> TO <fs_tech_id>.
-      <fs_tech_id> = <fs_tech_id_agit>.
+    LOOP AT <lt_params_agit> ASSIGNING <lg_param_agit>.
+      ASSIGN COMPONENT 'TECHNICAL_ID' OF STRUCTURE <lg_param_agit> TO <lg_tech_id_agit>.
+      ASSIGN COMPONENT 'TECHNICAL_ID' OF STRUCTURE <lg_param_chko> TO <lg_tech_id>.
+      <lg_tech_id> = <lg_tech_id_agit>.
 
-      ASSIGN COMPONENT 'NAME' OF STRUCTURE <fs_param_agit> TO <fs_name_param_agit>.
-      ASSIGN COMPONENT 'NAME' OF STRUCTURE <fs_param_chko> TO <fs_name_param>.
-      <fs_name_param> = <fs_name_param_agit>.
+      ASSIGN COMPONENT 'NAME' OF STRUCTURE <lg_param_agit> TO <lg_name_param_agit>.
+      ASSIGN COMPONENT 'NAME' OF STRUCTURE <lg_param_chko> TO <lg_name_param>.
+      <lg_name_param> = <lg_name_param_agit>.
 
-      ASSIGN COMPONENT 'DESCRIPTION' OF STRUCTURE <fs_param_agit> TO <fs_descr_param_agit>.
-      ASSIGN COMPONENT 'DESCRIPTION' OF STRUCTURE <fs_param_chko> TO <fs_descr_param>.
-      <fs_descr_param> = <fs_descr_param_agit>.
+      ASSIGN COMPONENT 'DESCRIPTION' OF STRUCTURE <lg_param_agit> TO <lg_descr_param_agit>.
+      ASSIGN COMPONENT 'DESCRIPTION' OF STRUCTURE <lg_param_chko> TO <lg_descr_param>.
+      <lg_descr_param> = <lg_descr_param_agit>.
 
-      ASSIGN COMPONENT 'HIDDEN'     OF STRUCTURE <fs_param_agit> TO <fs_hidden_param_agit>.
-      ASSIGN COMPONENT 'MODIFIABLE' OF STRUCTURE <fs_param_chko> TO <fs_modifiable_param>.
-      <fs_modifiable_param> = <fs_hidden_param_agit>.
+      ASSIGN COMPONENT 'HIDDEN'     OF STRUCTURE <lg_param_agit> TO <lg_hidden_param_agit>.
+      ASSIGN COMPONENT 'MODIFIABLE' OF STRUCTURE <lg_param_chko> TO <lg_modifiable_param>.
+      <lg_modifiable_param> = <lg_hidden_param_agit>.
 
-      INSERT <fs_param_chko> INTO TABLE <fs_params_chko>.
+      INSERT <lg_param_chko> INTO TABLE <lt_params_chko>.
     ENDLOOP.
 
-    CALL METHOD chko_db_api->('UPDATE')
+    CALL METHOD lo_chko_db_api->('UPDATE')
       EXPORTING
-        header  = <chko_header>
-        content = <chko_content>.
+        header  = <lg_chko_header>
+        content = <lg_chko_content>.
 
   ENDMETHOD.
 
