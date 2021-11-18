@@ -2369,6 +2369,19 @@ function enumerateUiActions() {
       });
     });
 
+  // links inside forms
+  [].slice.call(document.querySelectorAll("form a"))
+    .filter(function(anchor){
+      return !!anchor.title;
+    }).forEach(function(anchor){
+      items.push({
+        action: function(){
+          anchor.click();
+        },
+        title: anchor.title
+      });
+    });
+
   return items;
 }
 
