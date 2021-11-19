@@ -82,4 +82,20 @@ INTERFACE zif_abapgit_frontend_services PUBLIC.
     RAISING
       zcx_abapgit_exception.
 
+  METHODS directory_exist
+    IMPORTING
+      iv_directory     TYPE string
+    RETURNING
+      VALUE(rv_exists) TYPE abap_bool
+    RAISING
+      zcx_abapgit_exception.
+
+  METHODS directory_create
+    IMPORTING
+      iv_directory TYPE string
+    CHANGING
+      cv_rc        TYPE i
+    RAISING
+      zcx_abapgit_exception.
+
 ENDINTERFACE.
