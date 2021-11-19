@@ -18,6 +18,7 @@ CLASS ltcl_diff DEFINITION FOR TESTING
                              iv_old     TYPE zif_abapgit_definitions=>ty_diff-old.
 
     METHODS: setup.
+    " Trigger actions
     METHODS: test
       IMPORTING
         !iv_ignore_indentation TYPE abap_bool DEFAULT abap_false
