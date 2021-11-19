@@ -27,48 +27,24 @@ CLASS lcl_gui IMPLEMENTATION.
 
     lv_title = 'Choose the destination folder for the ZIP files'.
 
-    cl_gui_frontend_services=>directory_browse(
+    zcl_abapgit_ui_factory=>get_frontend_services( )->directory_browse(
       EXPORTING
-        window_title         = lv_title
-        initial_folder       = gv_last_folder
+         iv_window_title   = lv_title
+         iv_initial_folder = gv_last_folder
       CHANGING
-        selected_folder      = rv_folder
-      EXCEPTIONS
-        cntl_error           = 1
-        error_no_gui         = 2
-        not_supported_by_gui = 3
-        OTHERS               = 4 ).
+        cv_selected_folder = rv_folder ).
 
-    IF sy-subrc = 0.
-      gv_last_folder = rv_folder. "Store the last directory for user friendly UI
-    ELSE.
-      zcx_abapgit_exception=>raise( 'Folder matchcode exception' ).
-    ENDIF.
+    "Store the last directory for user friendly UI
+    gv_last_folder = rv_folder.
 
   ENDMETHOD.
 
   METHOD open_folder_frontend.
-
-    IF NOT iv_folder IS INITIAL.
-
-      cl_gui_frontend_services=>execute(
-        EXPORTING
-          document               = iv_folder
-        EXCEPTIONS
-          cntl_error             = 1
-          error_no_gui           = 2
-          bad_parameter          = 3
-          file_not_found         = 4
-          path_not_found         = 5
-          file_extension_unknown = 6
-          error_execute_failed   = 7
-          OTHERS                 = 8 ).
-      IF sy-subrc <> 0.
-        MESSAGE 'Problem when opening output folder' TYPE 'S' DISPLAY LIKE 'E'.
-      ENDIF.
-
+    IF iv_folder IS INITIAL.
+      RETURN.
     ENDIF.
 
+    zcl_abapgit_ui_factory=>get_frontend_services( )->execute( iv_document = iv_folder ).
   ENDMETHOD.
 
   METHOD select_tr_requests.
@@ -167,23 +143,17 @@ ENDCLASS.
 CLASS lcl_transport_zipper IMPLEMENTATION.
 
   METHOD constructor.
-
-    CONCATENATE sy-datlo sy-timlo INTO mv_timestamp SEPARATED BY '_'.
-
+    mv_timestamp = |{ sy-datlo }_{ sy-timlo }|.
     mv_full_folder = get_full_folder( iv_folder ).
 
-    cl_gui_frontend_services=>get_file_separator(
-      CHANGING
-        file_separator       = mv_separator
-      EXCEPTIONS
-        cntl_error           = 1
-        error_no_gui         = 2
-        not_supported_by_gui = 3
-        OTHERS               = 4 ).
-    IF sy-subrc <> 0.
-      mv_separator = '\'. "Default MS Windows separator
-    ENDIF.
-
+    TRY.
+        zcl_abapgit_ui_factory=>get_frontend_services( )->get_file_separator(
+          CHANGING
+            cv_file_separator = mv_separator ).
+      CATCH zcx_abapgit_exception.
+        "Default MS Windows separator
+        mv_separator = '\'.
+    ENDTRY.
   ENDMETHOD.
 
   METHOD get_folder.
@@ -191,70 +161,27 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD does_folder_exist.
-
-    cl_gui_frontend_services=>directory_exist(
-      EXPORTING
-        directory            = iv_folder
-      RECEIVING
-        result               = rv_folder_exist
-      EXCEPTIONS
-        cntl_error           = 1
-        error_no_gui         = 2
-        wrong_parameter      = 3
-        not_supported_by_gui = 4
-        OTHERS               = 5 ).
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from cl_gui_frontend_services=>directory_exist' ).
-    ENDIF.
-
+    rv_folder_exist = zcl_abapgit_ui_factory=>get_frontend_services( )->directory_exist( iv_directory = iv_folder ).
   ENDMETHOD.
 
   METHOD get_full_folder.
 
-    DATA: lv_sep TYPE c,
-          lv_rc  TYPE i.
+    DATA: lv_sep     TYPE c,
+          lv_rc      TYPE i,
+          lo_fe_serv TYPE REF TO zif_abapgit_frontend_services.
 
-*-obtain file separator character---------------------------------------
-    cl_gui_frontend_services=>get_file_separator(
-      CHANGING
-        file_separator       = lv_sep
-      EXCEPTIONS
-        cntl_error           = 1
-        error_no_gui         = 2
-        not_supported_by_gui = 3
-        OTHERS               = 4 ).
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Internal error getting file separator' ).
-    ENDIF.
+    lo_fe_serv = zcl_abapgit_ui_factory=>get_frontend_services( ).
 
-    CONCATENATE iv_folder
-                mv_timestamp
-           INTO rv_full_folder SEPARATED BY lv_sep.
+    lo_fe_serv->get_file_separator( CHANGING cv_file_separator = lv_sep ).
+    rv_full_folder = |{ iv_folder }{ lv_sep }{ mv_timestamp }|.
 
     IF does_folder_exist( rv_full_folder ) = abap_false.
-
-      cl_gui_frontend_services=>directory_create(
+      lo_fe_serv->directory_create(
         EXPORTING
-          directory                = rv_full_folder
+          iv_directory = rv_full_folder
         CHANGING
-          rc                       = lv_rc    " Return Code
-        EXCEPTIONS
-          directory_create_failed  = 1
-          cntl_error               = 2
-          error_no_gui             = 3
-          directory_access_denied  = 4
-          directory_already_exists = 5
-          path_not_found           = 6
-          unknown_error            = 7
-          not_supported_by_gui     = 8
-          wrong_parameter          = 9
-          OTHERS                   = 10 ).
-      IF sy-subrc <> 0 AND sy-subrc <> 5.
-        zcx_abapgit_exception=>raise( 'Error from cl_gui_frontend_services=>directory_create' ).
-      ENDIF.
-
+          cv_rc        = lv_rc ).
     ENDIF.
-
   ENDMETHOD.
 
   METHOD get_filename.
