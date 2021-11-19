@@ -13,15 +13,15 @@ CLASS lcl_mapping IMPLEMENTATION.
   METHOD zif_abapgit_ajson_mapping~to_json.
     TYPES ty_token TYPE c LENGTH 255.
     DATA lt_tokens TYPE STANDARD TABLE OF ty_token.
-    FIELD-SYMBOLS <token> LIKE LINE OF lt_tokens.
+    FIELD-SYMBOLS <lg_token> LIKE LINE OF lt_tokens.
 
     rv_result = iv_name.
     IF iv_path = '/' AND iv_name = 'schema'.
       rv_result = '$schema'.
     ELSE.
       SPLIT rv_result AT `_` INTO TABLE lt_tokens.
-      LOOP AT lt_tokens ASSIGNING <token> FROM 2.
-        TRANSLATE <token>(1) TO UPPER CASE.
+      LOOP AT lt_tokens ASSIGNING <lg_token> FROM 2.
+        TRANSLATE <lg_token>(1) TO UPPER CASE.
       ENDLOOP.
       CONCATENATE LINES OF lt_tokens INTO rv_result.
     ENDIF.
