@@ -24,7 +24,7 @@
 /* exported addMarginBottom */
 /* exported enumerateJumpAllFiles */
 /* exported createRepoCatalogEnumerator */
-/* exported enumerateToolbarActions */
+/* exported enumerateUiActions */
 /* exported onDiffCollapse */
 /* exported restoreScrollPosition */
 
@@ -2304,7 +2304,7 @@ function createRepoCatalogEnumerator(catalog, action) {
   };
 }
 
-function enumerateToolbarActions() {
+function enumerateUiActions() {
 
   var items = [];
   function processUL(ulNode, prefix) {
@@ -2326,14 +2326,13 @@ function enumerateToolbarActions() {
     }
   }
 
+  // toolbars
   [].slice.call(document.querySelectorAll("[id*=toolbar]"))
     .filter(function(toolbar){
       return (toolbar && toolbar.nodeName === "UL");
     }).forEach(function(toolbar){
       processUL(toolbar);
     });
-
-  if (items.length === 0) return;
 
   items = items.map(function(item) {
     var action = "";
@@ -2351,6 +2350,37 @@ function enumerateToolbarActions() {
       title:     (prefix ? prefix + ": " : "") + anchor.innerText.trim()
     };
   });
+
+  // forms
+  [].slice.call(document.querySelectorAll("input[type='submit']"))
+    .forEach(function(input){
+      items.push({
+        action: function(){
+          if ([].slice.call(input.classList).indexOf("main") !== -1){
+            var parentForm = input.parentNode.parentNode.parentNode;
+            if (parentForm.nodeName === "FORM"){
+              parentForm.submit();
+            }
+          } else {
+            submitSapeventForm({}, input.formAction, "post");
+          }
+        },
+        title: input.value + " " + input.title.replace(/\[.*\]/,"")
+      });
+    });
+
+  // links inside forms
+  [].slice.call(document.querySelectorAll("form a"))
+    .filter(function(anchor){
+      return !!anchor.title;
+    }).forEach(function(anchor){
+      items.push({
+        action: function(){
+          anchor.click();
+        },
+        title: anchor.title
+      });
+    });
 
   return items;
 }
