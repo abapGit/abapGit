@@ -33,7 +33,9 @@ CLASS ltcl_diff DEFINITION FOR TESTING
       diff06 FOR TESTING,
       diff07 FOR TESTING,
       diff08 FOR TESTING,
-      diff09 FOR TESTING.
+      diff09 FOR TESTING,
+      diff10 FOR TESTING,
+      diff11 FOR TESTING.
 
 ENDCLASS.
 
@@ -345,6 +347,47 @@ CLASS ltcl_diff IMPLEMENTATION.
                   iv_result  = '' " no diff!
                   iv_old_num = '    4'
                   iv_old     = 'd' ).
+
+    test( iv_ignore_case = abap_true ).
+
+  ENDMETHOD.
+
+  METHOD diff10.
+
+    " ignore case should NOT ignore changed literals
+    add_new( iv_new = `WRITE 'TEST'` ).
+
+    add_old( iv_old = `WRITE 'test'` ).
+
+    add_expected( iv_new_num = '    1'
+                  iv_new     = `WRITE 'TEST'`
+                  iv_result  = 'U'
+                  iv_old_num = '    1'
+                  iv_old     = `WRITE 'test'` ).
+
+    test( iv_ignore_case = abap_true ).
+
+  ENDMETHOD.
+
+  METHOD diff11.
+
+    " ignore case should ignore changed keywords, variables, types
+    add_new( iv_new = `write 'test'` ).
+    add_new( iv_new = `DATA FOO TYPE I.` ).
+
+    add_old( iv_old = `WRITE 'test'` ).
+    add_old( iv_old = `DATA foo TYPE i.` ).
+
+    add_expected( iv_new_num = '    1'
+                  iv_new     = `write 'test'`
+                  iv_result  = '' " no diff!
+                  iv_old_num = '    1'
+                  iv_old     = `WRITE 'test'` ).
+    add_expected( iv_new_num = '    2'
+                  iv_new     = `DATA FOO TYPE I.`
+                  iv_result  = '' " no diff!
+                  iv_old_num = '    2'
+                  iv_old     = `DATA foo TYPE i.` ).
 
     test( iv_ignore_case = abap_true ).
 
