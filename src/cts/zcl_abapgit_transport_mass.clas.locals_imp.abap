@@ -153,9 +153,7 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
     mv_full_folder = get_full_folder( iv_folder ).
 
     TRY.
-        lo_fe_serv->get_file_separator(
-          CHANGING
-            cv_file_separator = mv_separator ).
+        lo_fe_serv->get_file_separator( CHANGING cv_file_separator = mv_separator ).
       CATCH zcx_abapgit_exception.
         "Default MS Windows separator
         mv_separator = '\'.
