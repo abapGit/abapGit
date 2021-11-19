@@ -23,11 +23,13 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD f4_folder.
 
-    DATA lv_title TYPE string.
+    DATA: lv_title   TYPE string,
+          lo_fe_serv TYPE REF TO zif_abapgit_frontend_services.
 
+    lo_fe_serv = zcl_abapgit_ui_factory=>get_frontend_services( ).
     lv_title = 'Choose the destination folder for the ZIP files'.
 
-    zcl_abapgit_ui_factory=>get_frontend_services( )->directory_browse(
+    lo_fe_serv->directory_browse(
       EXPORTING
          iv_window_title   = lv_title
          iv_initial_folder = gv_last_folder
@@ -143,11 +145,15 @@ ENDCLASS.
 CLASS lcl_transport_zipper IMPLEMENTATION.
 
   METHOD constructor.
+    DATA lo_fe_serv TYPE REF TO zif_abapgit_frontend_services.
+
+    lo_fe_serv = zcl_abapgit_ui_factory=>get_frontend_services( ).
+
     mv_timestamp = |{ sy-datlo }_{ sy-timlo }|.
     mv_full_folder = get_full_folder( iv_folder ).
 
     TRY.
-        zcl_abapgit_ui_factory=>get_frontend_services( )->get_file_separator(
+        lo_fe_serv->get_file_separator(
           CHANGING
             cv_file_separator = mv_separator ).
       CATCH zcx_abapgit_exception.
@@ -187,13 +193,12 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
   METHOD get_filename.
 
     " Generate filename
-    CONCATENATE is_trkorr-trkorr '_' is_trkorr-as4text '_' mv_timestamp c_zip_ext
-      INTO rv_filename.
+    rv_filename = |{ is_trkorr-trkorr }_{ is_trkorr-as4text }_{ mv_timestamp }{ c_zip_ext }|.
 
     " Remove reserved characters (for Windows based systems)
     TRANSLATE rv_filename USING '/ \ : " * > < ? | '.
 
-    CONCATENATE mv_full_folder rv_filename INTO rv_filename SEPARATED BY mv_separator.
+    rv_filename = |{ mv_full_folder }{ mv_separator }{ rv_filename }|.
 
   ENDMETHOD.
 
