@@ -24,7 +24,7 @@
 /* exported addMarginBottom */
 /* exported enumerateJumpAllFiles */
 /* exported createRepoCatalogEnumerator */
-/* exported enumerateToolbarActions */
+/* exported enumerateUiActions */
 /* exported onDiffCollapse */
 /* exported restoreScrollPosition */
 
@@ -1551,9 +1551,17 @@ function Hotkeys(oKeyMap){
       }
 
       // Or a SAP event input
-      var sUiSapEventFormAction = this.getSapEventFormAction(action);
-      if (sUiSapEventFormAction) {
-        submitSapeventForm({}, sUiSapEventFormAction, "post");
+      var sUiSapEventInputAction = this.getSapEventInputAction(action);
+      if (sUiSapEventInputAction) {
+        submitSapeventForm({}, sUiSapEventInputAction, "post");
+        oEvent.preventDefault();
+        return;
+      }
+
+      // Or a SAP event main form
+      var elForm = this.getSapEventForm(action);
+      if (elForm) {
+        elForm.submit();
         oEvent.preventDefault();
         return;
       }
@@ -1577,7 +1585,9 @@ Hotkeys.prototype.getAllSapEventsForSapEventName = function(sSapEvent) {
     document.querySelectorAll('a[href*="sapevent:' + sSapEvent + '"],'
                             + 'a[href*="SAPEVENT:' + sSapEvent + '"],'
                             + 'input[formaction*="sapevent:' + sSapEvent + '"],'
-                            + 'input[formaction*="SAPEVENT:' + sSapEvent + '"]'));
+                            + 'input[formaction*="SAPEVENT:' + sSapEvent + '"],'
+                            + 'form[action*="sapevent:' + sSapEvent + '"] input[type="submit"].main,'
+                            + 'form[action*="SAPEVENT:' + sSapEvent + '"] input[type="submit"].main'));
 };
 
 Hotkeys.prototype.getSapEventHref = function(sSapEvent) {
@@ -1595,7 +1605,7 @@ Hotkeys.prototype.getSapEventHref = function(sSapEvent) {
 
 };
 
-Hotkeys.prototype.getSapEventFormAction = function(sSapEvent) {
+Hotkeys.prototype.getSapEventInputAction = function(sSapEvent) {
 
   return this.getAllSapEventsForSapEventName(sSapEvent)
     .filter(function(el){
@@ -1606,6 +1616,21 @@ Hotkeys.prototype.getSapEventFormAction = function(sSapEvent) {
       return oSapEvent.formAction;
     })
     .filter(this.eliminateSapEventFalsePositives(sSapEvent))
+    .pop();
+
+};
+
+Hotkeys.prototype.getSapEventForm = function(sSapEvent) {
+
+  return this.getAllSapEventsForSapEventName(sSapEvent)
+    .filter(function(el){
+      // forms
+      var parentForm = el.parentNode.parentNode.parentNode;
+      return (el.type === "submit" && parentForm.nodeName === "FORM");
+    })
+    .map(function(oSapEvent){
+      return oSapEvent.parentNode.parentNode.parentNode;
+    })
     .pop();
 
 };
@@ -2279,7 +2304,7 @@ function createRepoCatalogEnumerator(catalog, action) {
   };
 }
 
-function enumerateToolbarActions() {
+function enumerateUiActions() {
 
   var items = [];
   function processUL(ulNode, prefix) {
@@ -2301,12 +2326,13 @@ function enumerateToolbarActions() {
     }
   }
 
-  var toolbarRoot = document.getElementById("toolbar-main");
-  if (toolbarRoot && toolbarRoot.nodeName === "UL") processUL(toolbarRoot);
-  toolbarRoot = document.getElementById("toolbar-repo");
-  if (toolbarRoot && toolbarRoot.nodeName === "UL") processUL(toolbarRoot);
-  // Add more toolbars ?
-  if (items.length === 0) return;
+  // toolbars
+  [].slice.call(document.querySelectorAll("[id*=toolbar]"))
+    .filter(function(toolbar){
+      return (toolbar && toolbar.nodeName === "UL");
+    }).forEach(function(toolbar){
+      processUL(toolbar);
+    });
 
   items = items.map(function(item) {
     var action = "";
@@ -2324,6 +2350,37 @@ function enumerateToolbarActions() {
       title:     (prefix ? prefix + ": " : "") + anchor.innerText.trim()
     };
   });
+
+  // forms
+  [].slice.call(document.querySelectorAll("input[type='submit']"))
+    .forEach(function(input){
+      items.push({
+        action: function(){
+          if ([].slice.call(input.classList).indexOf("main") !== -1){
+            var parentForm = input.parentNode.parentNode.parentNode;
+            if (parentForm.nodeName === "FORM"){
+              parentForm.submit();
+            }
+          } else {
+            submitSapeventForm({}, input.formAction, "post");
+          }
+        },
+        title: input.value + " " + input.title.replace(/\[.*\]/,"")
+      });
+    });
+
+  // links inside forms
+  [].slice.call(document.querySelectorAll("form a"))
+    .filter(function(anchor){
+      return !!anchor.title;
+    }).forEach(function(anchor){
+      items.push({
+        action: function(){
+          anchor.click();
+        },
+        title: anchor.title
+      });
+    });
 
   return items;
 }

@@ -254,24 +254,23 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     DATA:
       lo_sub_filter TYPE REF TO zcl_abapgit_html_toolbar,
-      lt_types      TYPE string_table,
-      lt_users      TYPE string_table.
+      lv_user       TYPE string,
+      lt_extensions TYPE SORTED TABLE OF string WITH UNIQUE DEFAULT KEY,
+      lt_obj_types  TYPE SORTED TABLE OF string WITH UNIQUE DEFAULT KEY,
+      lt_users      TYPE SORTED TABLE OF string WITH UNIQUE DEFAULT KEY.
 
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff_files,
                    <lv_i>    TYPE string.
-    " Get unique
+
+    " Get unique filter values
     LOOP AT mt_diff_files ASSIGNING <ls_diff>.
-      APPEND <ls_diff>-type TO lt_types.
-      APPEND <ls_diff>-changed_by TO lt_users.
+      lv_user = <ls_diff>-changed_by.
+      INSERT <ls_diff>-type INTO TABLE lt_extensions.
+      INSERT <ls_diff>-obj_type INTO TABLE lt_obj_types.
+      INSERT lv_user INTO TABLE lt_users.
     ENDLOOP.
 
-    SORT lt_types.
-    DELETE ADJACENT DUPLICATES FROM lt_types.
-
-    SORT lt_users.
-    DELETE ADJACENT DUPLICATES FROM lt_users.
-
-    IF lines( lt_types ) > 1 OR lines( lt_users ) > 1.
+    IF lines( lt_extensions ) > 1 OR lines( lt_obj_types ) > 1 OR lines( lt_users ) > 1.
       CREATE OBJECT lo_sub_filter EXPORTING iv_id = 'diff-filter'.
 
       IF lines( lt_users ) > 1.
@@ -281,21 +280,33 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
                             iv_chk = abap_false ).
       ENDIF.
 
-      " File types
-      IF lines( lt_types ) > 1.
-        lo_sub_filter->add( iv_txt = 'TYPE'
+      " File extensions
+      IF lines( lt_extensions ) > 1.
+        lo_sub_filter->add( iv_txt = 'Extension'
                             iv_typ = zif_abapgit_html=>c_action_type-separator ).
-        LOOP AT lt_types ASSIGNING <lv_i>.
+        LOOP AT lt_extensions ASSIGNING <lv_i>.
           lo_sub_filter->add( iv_txt = <lv_i>
                        iv_typ = zif_abapgit_html=>c_action_type-onclick
-                       iv_aux = 'type'
+                       iv_aux = 'extension'
+                       iv_chk = abap_true ).
+        ENDLOOP.
+      ENDIF.
+
+      " Object types
+      IF lines( lt_obj_types ) > 1.
+        lo_sub_filter->add( iv_txt = 'Object Type'
+                            iv_typ = zif_abapgit_html=>c_action_type-separator ).
+        LOOP AT lt_obj_types ASSIGNING <lv_i>.
+          lo_sub_filter->add( iv_txt = <lv_i>
+                       iv_typ = zif_abapgit_html=>c_action_type-onclick
+                       iv_aux = 'object-type'
                        iv_chk = abap_true ).
         ENDLOOP.
       ENDIF.
 
       " Changed by
       IF lines( lt_users ) > 1.
-        lo_sub_filter->add( iv_txt = 'CHANGED BY'
+        lo_sub_filter->add( iv_txt = 'Changed By'
                             iv_typ = zif_abapgit_html=>c_action_type-separator ).
         LOOP AT lt_users ASSIGNING <lv_i>.
           lo_sub_filter->add( iv_txt = <lv_i>
@@ -804,7 +815,8 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ri_html->add( |<div class="diff" data-type="{ is_diff-type
+    ri_html->add( |<div class="diff" data-extension="{ is_diff-type
+      }" data-object-type="{ is_diff-obj_type
       }" data-changed-by="{ is_diff-changed_by
       }" data-file="{ is_diff-path && is_diff-filename }">| ).
     ri_html->add( render_diff_head( is_diff ) ).
