@@ -620,7 +620,10 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
     update_pinf_usages( ii_package    = li_package
                         it_usage_data = lt_usage_data ).
 
-    ls_save_sign-pack = ls_save_sign-permis = ls_save_sign-elems = ls_save_sign-interf = abap_true.
+    ls_save_sign-pack = abap_true.
+    ls_save_sign-permis = abap_true.
+    ls_save_sign-elems = abap_true.
+    ls_save_sign-interf = abap_true.
     li_package->save_generic(
       EXPORTING
         i_save_sign           = ls_save_sign
