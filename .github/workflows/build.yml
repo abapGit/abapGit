@@ -5,19 +5,7 @@ on:
   pull_request:
 
 jobs:
-  skip_check_job:
-    runs-on: ubuntu-latest
-    outputs:
-      should_skip: ${{ steps.skip_check.outputs.should_skip }}
-    steps:
-      - id: skip_check
-        uses: fkirc/skip-duplicate-actions@v3.4.1
-        with:
-          concurrent_skipping: 'same_content'
-
   build:
-    needs: skip_check_job
-    if: ${{ needs.skip_check_job.outputs.should_skip != 'true' }}
 
     runs-on: ubuntu-latest
 
