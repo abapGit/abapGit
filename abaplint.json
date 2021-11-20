@@ -69,6 +69,7 @@
     "identical_descriptions": false,
     "modify_only_own_db_tables": false,
     "no_yoda_conditions": false,
+    "no_chained_assignment": true,
     "select_add_order_by": false,
     "dangerous_statement": false,
     "db_operation_in_loop": false,
