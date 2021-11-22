@@ -300,7 +300,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
       lc_sqsc       TYPE c LENGTH 4  VALUE 'SQSC',
       lc_stob       TYPE c LENGTH 4  VALUE 'STOB',
       lc_ntab       TYPE c LENGTH 14 VALUE 'NTTT NTTB NTDT',
-      lc_ddls       TYPE c LENGTH 4  VALUE 'DDLS',
+      lc_ddls       TYPE c LENGTH 4  VALUE 'DDLS DRUL DTDC',
       lc_switches   TYPE c LENGTH 24 VALUE 'SF01 SF02 SFSW SFBS SFBF',
       lc_enhd       TYPE c LENGTH 4  VALUE 'ENHD'.
 
