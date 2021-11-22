@@ -62,10 +62,7 @@ CLASS zcl_abapgit_object_srvb DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
 ENDCLASS.
 
-
-
 CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
-
 
   METHOD clear_field.
 
@@ -325,6 +322,10 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
         mi_persistence->delete( mv_service_binding_key ).
 
       CATCH cx_swb_exception INTO lx_error.
+        CALL FUNCTION 'DEQUEUE_ESWB_EO'
+          EXPORTING
+            objtype = ms_item-obj_type
+            objname = ms_item-obj_name.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
@@ -352,7 +353,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
         ELSE.
           lv_version = 'A'.
         ENDIF.
-        data(files) = mo_files->get_files(  ).
+        DATA(files) = mo_files->get_files(  ).
         tadir_insert( iv_package ).
 
         IF zif_abapgit_object~exists( ) = abap_false.
@@ -380,9 +381,14 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
         corr_insert( iv_package ).
 
       CATCH cx_swb_exception INTO lx_error.
+        CALL FUNCTION 'DEQUEUE_ESWB_EO'
+          EXPORTING
+            objtype = ms_item-obj_type
+            objname = ms_item-obj_name.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
+    zcl_abapgit_objects_activation=>add_item( ms_item ).
   ENDMETHOD.
 
 
@@ -394,11 +400,11 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
     lo_wb_object_operator = get_wb_object_operator( ).
 
     TRY.
-    CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~CHECK_EXISTENCE')
-        RECEIVING
-        r_result = rv_bool.
+        CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~CHECK_EXISTENCE')
+          RECEIVING
+            r_result = rv_bool.
 
-      CATCH cx_wb_object_operation_error.
+      CATCH cx_swb_exception.
         rv_bool = abap_false.
     ENDTRY.
 
@@ -472,34 +478,15 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
 
     TRY.
         li_wb_object_operator = get_wb_object_operator( ).
-        IF  mv_is_inactive_supported EQ abap_true.
 
-          TRY.
-              CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
-                EXPORTING
-                  version        = 'I'
-                  data_selection = 'AL'
-                IMPORTING
-                  eo_object_data = li_object_data_model.
-            CATCH cx_wb_object_operation_error.
 
-              CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
-                EXPORTING
-                  version        = 'A'
-                  data_selection = 'AL'
-                IMPORTING
-                  eo_object_data = li_object_data_model.
-          ENDTRY.
-        ELSE.
+        CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
+          EXPORTING
+            version        = 'A'
+            data_selection = 'AL'
+          IMPORTING
+            eo_object_data = li_object_data_model.
 
-          CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
-            EXPORTING
-              version        = 'A'
-              data_selection = 'AL'
-            IMPORTING
-              "data           = <ls_service_definition>
-              eo_object_data = li_object_data_model.
-        ENDIF.
         li_object_data_model->get_data( IMPORTING p_data = <ls_service_binding> ).
 
         clear_fields( CHANGING cs_service_binding = <ls_service_binding> ).
