@@ -22,9 +22,7 @@ CLASS zcl_abapgit_object_pdxx_super DEFINITION
 ENDCLASS.
 
 
-
 CLASS zcl_abapgit_object_pdxx_super IMPLEMENTATION.
-
 
   METHOD check_subrc_for.
     IF sy-subrc <> 0.
@@ -33,16 +31,25 @@ CLASS zcl_abapgit_object_pdxx_super IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD constructor.
+  METHOD zif_abapgit_object~exists.
 
-    super->constructor( is_item     = is_item
-                        iv_language = iv_language ).
+    CALL FUNCTION 'RH_READ_OBJECT'
+      EXPORTING
+        plvar     = '01'
+        otype     = ms_objkey-otype
+        objid     = ms_objkey-objid
+        istat     = '1'
+        begda     = sy-datum
+        endda     = '99991231'
+        ointerval = 'X'
+        read_db   = 'X'
+      EXCEPTIONS
+        not_found = 1
+        OTHERS    = 2.
 
-    ms_objkey-otype = is_item-obj_type+2(2).
-    ms_objkey-objid = ms_item-obj_name.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
-
 
   METHOD zif_abapgit_object~changed_by.
 
@@ -82,27 +89,6 @@ CLASS zcl_abapgit_object_pdxx_super IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~exists.
-
-    CALL FUNCTION 'RH_READ_OBJECT'
-      EXPORTING
-        plvar     = '01'
-        otype     = ms_objkey-otype
-        objid     = ms_objkey-objid
-        istat     = '1'
-        begda     = sy-datum
-        endda     = '99991231'
-        ointerval = 'X'
-        read_db   = 'X'
-      EXCEPTIONS
-        not_found = 1
-        OTHERS    = 2.
-
-    rv_bool = boolc( sy-subrc = 0 ).
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~get_comparator.
     RETURN.
   ENDMETHOD.
@@ -137,4 +123,16 @@ CLASS zcl_abapgit_object_pdxx_super IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
     ASSERT 1 = 2. "Must be redefined
   ENDMETHOD.
+
+
+  METHOD constructor.
+
+    super->constructor( is_item     = is_item
+                        iv_language = iv_language ).
+
+    ms_objkey-otype = is_item-obj_type+2(2).
+    ms_objkey-objid = ms_item-obj_name.
+
+  ENDMETHOD.
+
 ENDCLASS.
