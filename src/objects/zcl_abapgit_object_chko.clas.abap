@@ -20,46 +20,47 @@ CLASS ZCL_ABAPGIT_OBJECT_CHKO IMPLEMENTATION.
 
   METHOD zif_abapgit_object~changed_by.
 
-    DATA  lr_data          TYPE REF TO data.
-    DATA  lo_chko_db_api   TYPE REF TO object.
-    DATA  lv_name          TYPE c LENGTH 30.
+    DATA: lr_data        TYPE REF TO data,
+          lo_chko_db_api TYPE REF TO object,
+          lv_name        TYPE c LENGTH 30,
+          lx_error       TYPE REF TO cx_root.
 
-    FIELD-SYMBOLS <lg_chko_header> TYPE any.
-    FIELD-SYMBOLS <lg_chko_user>   TYPE any.
+    FIELD-SYMBOLS: <lg_chko_header> TYPE any,
+                   <lg_chko_user>   TYPE any.
 
     IF ms_item-obj_type <> 'CHKO'.
       RETURN.
     ENDIF.
 
-    CREATE OBJECT lo_chko_db_api TYPE ('CL_CHKO_DB_API').
+    TRY.
+        CREATE OBJECT lo_chko_db_api TYPE ('CL_CHKO_DB_API').
+        CREATE DATA lr_data TYPE ('CL_CHKO_DB_API=>TY_HEADER').
+        ASSIGN lr_data->* TO <lg_chko_header>.
 
-    CREATE DATA lr_data TYPE ('CL_CHKO_DB_API=>TY_HEADER').
-    ASSIGN lr_data->* TO <lg_chko_header>.
+        lv_name = ms_item-obj_name.
 
-    IF <lg_chko_header> IS NOT ASSIGNED OR lo_chko_db_api IS NOT BOUND.
-      RETURN.
-    ENDIF.
+        CALL METHOD lo_chko_db_api->('GET_HEADER')
+          EXPORTING
+            name    = lv_name
+            version = 'I'
+          RECEIVING
+            header  = <lg_chko_header>.
 
-    lv_name = ms_item-obj_name.
+        IF <lg_chko_header> IS INITIAL.
+          CALL METHOD lo_chko_db_api->('GET_HEADER')
+            EXPORTING
+              name    = lv_name
+              version = 'A'
+            RECEIVING
+              header  = <lg_chko_header>.
+        ENDIF.
 
-    CALL METHOD lo_chko_db_api->('GET_HEADER')
-      EXPORTING
-        name    = lv_name
-        version = 'I'
-      RECEIVING
-        header  = <lg_chko_header>.
+        ASSIGN COMPONENT 'CHANGED_BY' OF STRUCTURE <lg_chko_header> TO <lg_chko_user>.
+        rv_user = <lg_chko_user>.
 
-    IF <lg_chko_header> IS INITIAL.
-      CALL METHOD lo_chko_db_api->('GET_HEADER')
-        EXPORTING
-          name    = lv_name
-          version = 'A'
-        RECEIVING
-          header  = <lg_chko_header>.
-    ENDIF.
-
-    ASSIGN COMPONENT 'CHANGED_BY' OF STRUCTURE <lg_chko_header> TO <lg_chko_user>.
-    rv_user = <lg_chko_user>.
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -68,27 +69,31 @@ CLASS ZCL_ABAPGIT_OBJECT_CHKO IMPLEMENTATION.
 
     DATA  lo_chko_db_api TYPE REF TO object.
     DATA  lv_name        TYPE c LENGTH 30.
+    DATA  lx_error       TYPE REF TO cx_root.
 
     IF ms_item-obj_type <> 'CHKO'.
       RETURN.
     ENDIF.
 
     lv_name = ms_item-obj_name.
+    TRY.
+        CREATE OBJECT lo_chko_db_api TYPE ('CL_CHKO_DB_API').
+        IF lo_chko_db_api IS NOT BOUND.
+          RETURN.
+        ENDIF.
 
-    CREATE OBJECT lo_chko_db_api TYPE ('CL_CHKO_DB_API').
-    IF lo_chko_db_api IS NOT BOUND.
-      RETURN.
-    ENDIF.
+        CALL METHOD lo_chko_db_api->('DELETE')
+          EXPORTING
+            name    = lv_name
+            version = 'I'.
 
-    CALL METHOD lo_chko_db_api->('DELETE')
-      EXPORTING
-        name    = lv_name
-        version = 'I'.
-
-    CALL METHOD lo_chko_db_api->('DELETE')
-      EXPORTING
-        name    = lv_name
-        version = 'A'.
+        CALL METHOD lo_chko_db_api->('DELETE')
+          EXPORTING
+            name    = lv_name
+            version = 'A'.
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
+    ENDTRY.
   ENDMETHOD.
 
 
@@ -150,23 +155,24 @@ CLASS ZCL_ABAPGIT_OBJECT_CHKO IMPLEMENTATION.
 
     DATA lo_chko_db_api TYPE REF TO object.
     DATA lv_name        TYPE c LENGTH 30.
+    DATA lx_error       TYPE REF TO cx_root.
 
     IF ms_item-obj_type <> 'CHKO'.
       RETURN.
     ENDIF.
 
     lv_name = ms_item-obj_name.
-    CREATE OBJECT lo_chko_db_api TYPE ('CL_CHKO_DB_API').
 
-    IF lo_chko_db_api IS NOT BOUND.
-      RETURN.
-    ENDIF.
-
-    CALL METHOD lo_chko_db_api->('EXISTS')
-      EXPORTING
-        name   = lv_name
-      RECEIVING
-        exists = rv_bool.
+    TRY.
+        CREATE OBJECT lo_chko_db_api TYPE ('CL_CHKO_DB_API').
+        CALL METHOD lo_chko_db_api->('EXISTS')
+          EXPORTING
+            name   = lv_name
+          RECEIVING
+            exists = rv_bool.
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -223,10 +229,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CHKO IMPLEMENTATION.
 
     CREATE DATA lr_chko TYPE ('ZIF_ABAPGIT_AFF_CHKO_V1=>TY_MAIN').
     ASSIGN lr_chko->* TO <lg_chko_agit>.
-
-    IF <lg_chko_agit> IS NOT ASSIGNED.
-      RETURN.
-    ENDIF.
 
     CREATE OBJECT lo_ajson TYPE ('ZCL_ABAPGIT_JSON_CNT_HANDLER').
 
