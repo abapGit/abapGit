@@ -398,17 +398,39 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
     DATA lo_wb_object_operator TYPE REF TO object.
 
     lo_wb_object_operator = get_wb_object_operator( ).
-
     TRY.
-        CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~CHECK_EXISTENCE')
-          RECEIVING
-            r_result = rv_bool.
+        IF mv_is_inactive_supported = abap_true.
+          TRY.
+              CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
+                EXPORTING
+                  data_selection = 'ST'
+                  version        = 'I'
+                IMPORTING
+                  eo_object_data = lo_object_data.
 
-      CATCH cx_swb_exception.
+            CATCH cx_root.
+              CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
+                EXPORTING
+                  data_selection = 'ST'
+                  version        = 'A'
+                IMPORTING
+                  eo_object_data = lo_object_data.
+
+          ENDTRY.
+        ELSE.
+
+          CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
+            EXPORTING
+              data_selection = 'ST'
+              version        = 'A'
+            IMPORTING
+              eo_object_data = lo_object_data.
+
+        ENDIF.
+        rv_bool = boolc( lo_object_data IS NOT INITIAL AND lo_object_data->get_object_key( ) IS NOT INITIAL ).
+      CATCH cx_root.
         rv_bool = abap_false.
     ENDTRY.
-
-
   ENDMETHOD.
 
 
@@ -418,14 +440,12 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_deserialize_steps.
-    APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-
-    rs_metadata-ddic         = abap_true.
     rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.
 
