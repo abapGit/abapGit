@@ -352,7 +352,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
         ELSE.
           lv_version = 'A'.
         ENDIF.
-
+        data(files) = mo_files->get_files(  ).
         tadir_insert( iv_package ).
 
         IF zif_abapgit_object~exists( ) = abap_false.
@@ -392,38 +392,17 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
     DATA lo_wb_object_operator TYPE REF TO object.
 
     lo_wb_object_operator = get_wb_object_operator( ).
+
     TRY.
-        IF mv_is_inactive_supported = abap_true.
-          TRY.
-              CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
-                EXPORTING
-                  data_selection = 'P'
-                  version        = 'I'
-                IMPORTING
-                  eo_object_data = lo_object_data.
+    CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~CHECK_EXISTENCE')
+        RECEIVING
+        r_result = rv_bool.
 
-            CATCH cx_root.
-              CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
-                EXPORTING
-                  data_selection = 'P'
-                  version        = 'A'
-                IMPORTING
-                  eo_object_data = lo_object_data.
-
-          ENDTRY.
-        ELSE.
-
-          CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
-            EXPORTING
-              data_selection = 'P'
-            IMPORTING
-              eo_object_data = lo_object_data.
-
-        ENDIF.
-        rv_bool = boolc( lo_object_data IS NOT INITIAL AND lo_object_data->get_object_key( ) IS NOT INITIAL ).
-      CATCH cx_root.
+      CATCH cx_wb_object_operation_error.
         rv_bool = abap_false.
     ENDTRY.
+
+
   ENDMETHOD.
 
 
@@ -493,7 +472,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
 
     TRY.
         li_wb_object_operator = get_wb_object_operator( ).
-        IF  mv_is_inactive_supported = abap_true.
+        IF  mv_is_inactive_supported EQ abap_true.
 
           TRY.
               CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
@@ -502,7 +481,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
                   data_selection = 'AL'
                 IMPORTING
                   eo_object_data = li_object_data_model.
-            CATCH cx_root.
+            CATCH cx_wb_object_operation_error.
 
               CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
                 EXPORTING
