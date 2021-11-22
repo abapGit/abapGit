@@ -353,7 +353,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
         ELSE.
           lv_version = 'A'.
         ENDIF.
-        DATA(files) = mo_files->get_files(  ).
+
         tadir_insert( iv_package ).
 
         IF zif_abapgit_object~exists( ) = abap_false.
