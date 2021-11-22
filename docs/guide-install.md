@@ -15,7 +15,7 @@ abapGit requires SAP BASIS version 702 or higher.
 
 ## Install Standalone Version ##
 1. Download the [ABAP code](https://raw.githubusercontent.com/abapGit/build/main/zabapgit.abap) (right click -> save-as) to a file.
-2. Via `SE38` or `SE80`, create a new report named `ZABAPGIT_STANDALONE` (formerly `ZABAPGIT_FULL`). Note: Do *not* use the name `ZABAPGIT` if you plan to install the developer version.
+2. Via `SE38`, `SE80`, or [ADT](https://tools.eu1.hana.ondemand.com/#abap), create a new report named `ZABAPGIT_STANDALONE` (formerly `ZABAPGIT_FULL`). Note: Do *not* use the name `ZABAPGIT` if you plan to install the developer version.
 3. In source code change mode, upload the code from the file using Utilities -> More Utilities -> Upload/Download -> Upload
 4. Activate
 

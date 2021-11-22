@@ -115,7 +115,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
+CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
 
   METHOD clear_dd03p_fields.
@@ -269,8 +269,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
     lv_package = iv_package.
 
     LOOP AT lt_segment_definitions ASSIGNING <ls_segment_definition>.
-      <ls_segment_definition>-segmentheader-presp =
-        <ls_segment_definition>-segmentheader-pwork = cl_abap_syst=>get_user_name( ).
+      <ls_segment_definition>-segmentheader-presp = cl_abap_syst=>get_user_name( ).
+      <ls_segment_definition>-segmentheader-pwork = cl_abap_syst=>get_user_name( ).
 
       CALL FUNCTION 'SEGMENT_READ'
         EXPORTING
@@ -800,6 +800,22 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
       corr_insert( iv_package = iv_package
                    ig_object_class = 'DICT' ).
+
+      CALL FUNCTION 'DD_TABL_EXPAND'
+        EXPORTING
+          dd02v_wa          = ls_dd02v
+        TABLES
+          dd03p_tab         = lt_dd03p
+          dd05m_tab         = lt_dd05m
+          dd08v_tab         = lt_dd08v
+          dd35v_tab         = lt_dd35v
+          dd36m_tab         = lt_dd36m
+        EXCEPTIONS
+          illegal_parameter = 1
+          OTHERS            = 2.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
 
       CALL FUNCTION 'DDIF_TABL_PUT'
         EXPORTING

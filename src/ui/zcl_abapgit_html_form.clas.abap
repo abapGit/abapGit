@@ -6,6 +6,7 @@ CLASS zcl_abapgit_html_form DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_html_form .
+    INTERFACES zif_abapgit_gui_hotkeys .
 
     CLASS-METHODS create
       IMPORTING
@@ -19,7 +20,9 @@ CLASS zcl_abapgit_html_form DEFINITION
         !io_values         TYPE REF TO zcl_abapgit_string_map
         !io_validation_log TYPE REF TO zcl_abapgit_string_map OPTIONAL
       RETURNING
-        VALUE(ri_html)     TYPE REF TO zif_abapgit_html .
+        VALUE(ri_html)     TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
     METHODS command
       IMPORTING
         !iv_label      TYPE csequence
@@ -433,6 +436,10 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     ri_html->add( |</form>| ).
     ri_html->add( |</div>| ).
 
+    zcl_abapgit_ui_factory=>get_gui_services(
+      )->get_hotkeys_ctl(
+      )->register_hotkeys( zif_abapgit_gui_hotkeys~get_hotkey_actions( ) ).
+
   ENDMETHOD.
 
 
@@ -751,7 +758,8 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     IF is_field-side_action IS NOT INITIAL.
       ii_html->add( '</div>' ).
       ii_html->add( '<div class="command-container">' ).
-      ii_html->add( |<input type="submit" value="&#x2026;" formaction="sapevent:{ is_field-side_action }">| ).
+      ii_html->add( |<input type="submit" value="&#x2026;" formaction="sapevent:{ is_field-side_action }"|
+                 && | title="{ is_field-label }">| ).
       ii_html->add( '</div>' ).
     ENDIF.
 
@@ -872,6 +880,34 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     APPEND ls_field TO mt_fields.
 
     ro_self = me.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_hotkeys~get_hotkey_actions.
+
+    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
+    FIELD-SYMBOLS: <ls_command> TYPE zif_abapgit_html_form=>ty_command.
+
+    ls_hotkey_action-ui_component = 'Form'.
+
+    READ TABLE mt_commands WITH KEY cmd_type = zif_abapgit_html_form=>c_cmd_type-input_main
+                           ASSIGNING <ls_command>.
+    IF sy-subrc = 0.
+      ls_hotkey_action-description = <ls_command>-label.
+      ls_hotkey_action-action      = <ls_command>-action.
+      ls_hotkey_action-hotkey      = |Enter|.
+      INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+    ENDIF.
+
+    READ TABLE mt_commands WITH KEY action = zif_abapgit_definitions=>c_action-go_back
+                           ASSIGNING <ls_command>.
+    IF sy-subrc = 0.
+      ls_hotkey_action-description = <ls_command>-label.
+      ls_hotkey_action-action      = <ls_command>-action.
+      ls_hotkey_action-hotkey      = |F3|.
+      INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
