@@ -67,14 +67,14 @@ CLASS ZCL_ABAPGIT_JSON_CNT_HANDLER IMPLEMENTATION.
     GET REFERENCE OF iv_data INTO <lg_source>-value.
     CREATE OBJECT lo_mapping.
 
-    lo_ajson = zcl_abapgit_ajson=>create_empty( ii_custom_mapping = lo_mapping ).
+    lo_ajson = zcl_abapgit_ajson=>create_empty( lo_mapping ).
     lo_ajson->keep_item_order( ).
     lo_ajson->set( iv_path = '/'
                    iv_val  = iv_data ).
 
     lv_json = lo_ajson->stringify( c_json_indent ).
 
-    rv_result = zcl_abapgit_convert=>string_to_xstring_utf8( iv_string = lv_json ).
+    rv_result = zcl_abapgit_convert=>string_to_xstring_utf8( lv_json ).
 
   ENDMETHOD.
 ENDCLASS.
