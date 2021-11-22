@@ -78,15 +78,9 @@ CLASS lcl_chko_persistence IMPLEMENTATION.
 
     CREATE DATA lr_chko TYPE ('ZIF_ABAPGIT_AFF_CHKO_V1=>TY_MAIN').
     ASSIGN lr_chko->* TO <lg_chko_agit>.
-    IF sy-subrc <> 0.
-      RETURN.
-    ENDIF.
+    ASSERT sy-subrc = 0.
 
     CREATE OBJECT lo_chko_db_api TYPE ('CL_CHKO_DB_API').
-
-    IF lo_chko_db_api IS NOT BOUND.
-      RETURN.  " chko object does not exist here
-    ENDIF.
 
     CREATE DATA lr_header TYPE ('CL_CHKO_DB_API=>TY_HEADER').
     ASSIGN lr_header->* TO <lg_chko_header>.
@@ -204,15 +198,9 @@ CLASS lcl_chko_persistence IMPLEMENTATION.
 
     CREATE DATA lr_chko TYPE ('ZIF_ABAPGIT_AFF_CHKO_V1=>TY_MAIN').
     ASSIGN lr_chko->* TO <lg_chko_agit>.
-    IF sy-subrc <> 0.
-      RETURN.
-    ENDIF.
+    ASSERT sy-subrc = 0.
 
     CREATE OBJECT lo_chko_db_api TYPE ('CL_CHKO_DB_API').
-
-    IF lo_chko_db_api IS NOT BOUND.
-      RETURN.  " chko object does not exist here
-    ENDIF.
 
     CREATE DATA lr_header TYPE ('CL_CHKO_DB_API=>TY_HEADER').
     ASSIGN lr_header->* TO <lg_chko_header>.
