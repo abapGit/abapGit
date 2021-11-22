@@ -73,6 +73,7 @@ CLASS ZCL_ABAPGIT_JSON_CNT_HANDLER IMPLEMENTATION.
                    iv_val  = iv_data ).
 
     lv_json = lo_ajson->stringify( c_json_indent ).
+    lv_json = lv_json && zif_abapgit_definitions=>c_newline.
 
     rv_result = zcl_abapgit_convert=>string_to_xstring_utf8( lv_json ).
 
