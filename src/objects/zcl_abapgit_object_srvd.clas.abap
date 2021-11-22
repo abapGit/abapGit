@@ -65,91 +65,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
-
-
-  METHOD clear_field.
-
-    FIELD-SYMBOLS: <lv_value> TYPE data.
-
-    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_metadata
-           TO <lv_value>.
-    ASSERT sy-subrc = 0.
-
-    CLEAR: <lv_value>.
-
-  ENDMETHOD.
-
-
-  METHOD clear_fields.
-
-    clear_field(
-      EXPORTING
-        iv_fieldname = 'VERSION'
-      CHANGING
-        cs_metadata  = cs_metadata ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname = 'CREATED_AT'
-      CHANGING
-        cs_metadata  = cs_metadata ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname = 'CREATED_BY'
-      CHANGING
-        cs_metadata  = cs_metadata ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname = 'CHANGED_AT'
-      CHANGING
-        cs_metadata  = cs_metadata ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname = 'CHANGED_BY'
-      CHANGING
-        cs_metadata  = cs_metadata ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname = 'RESPONSIBLE'
-      CHANGING
-        cs_metadata  = cs_metadata ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname = 'PACKAGE_REF'
-      CHANGING
-        cs_metadata  = cs_metadata ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname = 'MASTER_SYSTEM'
-      CHANGING
-        cs_metadata  = cs_metadata ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname = 'DT_UUID'
-      CHANGING
-        cs_metadata  = cs_metadata ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname = 'ABAP_LANGUAGE_VERSION'
-      CHANGING
-        cs_metadata  = cs_metadata ).
-
-    clear_field(
-      EXPORTING
-        iv_fieldname = 'LINKS'
-      CHANGING
-        cs_metadata  = cs_metadata ).
-
-  ENDMETHOD.
+CLASS ZCL_ABAPGIT_OBJECT_SRVD IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -164,169 +80,6 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
       CATCH cx_sy_create_error.
         zcx_abapgit_exception=>raise( |SRVD not supported by your NW release| ).
     ENDTRY.
-
-  ENDMETHOD.
-
-
-  METHOD get_object_data.
-
-    DATA:
-      lr_metadata TYPE REF TO data,
-      lr_data     TYPE REF TO data.
-
-    FIELD-SYMBOLS:
-      <lv_metadata_node> TYPE any,
-      <ls_metadata>      TYPE any,
-      <lv_source>        TYPE any,
-      <lg_data>          TYPE any.
-
-    CREATE DATA lr_data TYPE ('CL_SRVD_WB_OBJECT_DATA=>TY_SRVD_OBJECT_DATA').
-    ASSIGN lr_data->* TO <lg_data>.
-    ASSERT sy-subrc = 0.
-
-    ASSIGN COMPONENT 'METADATA' OF STRUCTURE <lg_data> TO <lv_metadata_node>.
-    ASSERT sy-subrc = 0.
-
-    CREATE DATA lr_metadata  TYPE ('CL_SRVD_WB_OBJECT_DATA=>TY_METADATA_EXTENDED').
-    ASSIGN lr_metadata->* TO <ls_metadata>.
-    ASSERT sy-subrc = 0.
-
-    io_xml->read(
-      EXPORTING
-        iv_name = mc_xml_parent_name
-      CHANGING
-        cg_data = <ls_metadata> ).
-
-    <lv_metadata_node> = <ls_metadata>.
-
-    ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <lg_data> TO <lv_source>.
-    ASSERT sy-subrc = 0.
-
-    <lv_source> = mo_files->read_string( mc_source_file ).
-    IF <lv_source> IS INITIAL.
-      <lv_source> = mo_files->read_string( 'assrvd' ).
-    ENDIF.
-
-    CREATE OBJECT ro_object_data TYPE ('CL_SRVD_WB_OBJECT_DATA').
-    ro_object_data->set_data( p_data = <lg_data>  ).
-
-  ENDMETHOD.
-
-
-  METHOD get_transport_req_if_needed.
-
-    DATA: li_sap_package TYPE REF TO zif_abapgit_sap_package.
-
-    li_sap_package = zcl_abapgit_factory=>get_sap_package( iv_package ).
-
-    IF li_sap_package->are_changes_recorded_in_tr_req( ) = abap_true.
-      rv_transport_request = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD get_wb_object_operator.
-
-    DATA:
-      ls_object_type TYPE wbobjtype,
-      lx_error       TYPE REF TO cx_root.
-
-    IF mo_object_operator IS BOUND.
-      ro_object_operator = mo_object_operator.
-    ENDIF.
-
-    ls_object_type-objtype_tr = 'SRVD'.
-    ls_object_type-subtype_wb = 'SRV'.
-
-    TRY.
-        CALL METHOD ('CL_WB_OBJECT_OPERATOR')=>('CREATE_INSTANCE')
-          EXPORTING
-            object_type = ls_object_type
-            object_key  = mv_service_definition_key
-          RECEIVING
-            result      = mo_object_operator.
-
-      CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise_with_text( lx_error ).
-    ENDTRY.
-
-    ro_object_operator = mo_object_operator.
-
-  ENDMETHOD.
-
-
-  METHOD is_ddic.
-    rv_ddic = abap_false.
-  ENDMETHOD.
-
-
-  METHOD is_delete_tadir.
-    rv_delete_tadir = abap_true.
-  ENDMETHOD.
-
-
-  METHOD merge_object_data.
-
-    DATA:
-      lo_object_data        TYPE REF TO object,
-      lo_object_data_old    TYPE REF TO if_wb_object_data_model,
-      lr_new                TYPE REF TO data,
-      lr_old                TYPE REF TO data,
-      lo_wb_object_operator TYPE REF TO object.
-
-    FIELD-SYMBOLS:
-      <ls_new>       TYPE any,
-      <ls_old>       TYPE any,
-      <lv_field_old> TYPE any,
-      <lv_field_new> TYPE any.
-
-    CREATE OBJECT lo_object_data TYPE ('CL_SRVD_WB_OBJECT_DATA').
-    lo_object_data = io_object_data.
-
-    CREATE DATA lr_new TYPE ('CL_SRVD_WB_OBJECT_DATA=>TY_SRVD_OBJECT_DATA').
-    ASSIGN lr_new->* TO <ls_new>.
-    ASSERT sy-subrc = 0.
-
-    CREATE DATA lr_old TYPE ('CL_SRVD_WB_OBJECT_DATA=>TY_SRVD_OBJECT_DATA').
-    ASSIGN lr_old->* TO <ls_old>.
-    ASSERT sy-subrc = 0.
-
-    CALL METHOD lo_object_data->('IF_WB_OBJECT_DATA_MODEL~GET_DATA')
-      EXPORTING
-        p_metadata_only  = abap_false
-        p_data_selection = 'AL'
-      IMPORTING
-        p_data           = <ls_new>.
-
-    lo_wb_object_operator = get_wb_object_operator( ).
-
-    CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
-      EXPORTING
-        data_selection = 'AL' " if_wb_object_data_selection_co=>c_all_data
-      IMPORTING
-        eo_object_data = lo_object_data_old.
-
-    CALL METHOD lo_object_data_old->('GET_DATA')
-      EXPORTING
-        p_metadata_only  = abap_false
-        p_data_selection = 'AL' " if_wb_object_data_selection_co=>c_all_data
-      IMPORTING
-        p_data           = <ls_old>.
-
-    ASSIGN COMPONENT 'METADATA-DESCRIPTION' OF STRUCTURE <ls_old> TO <lv_field_old>.
-    ASSIGN COMPONENT 'METADATA-DESCRIPTION' OF STRUCTURE <ls_new> TO <lv_field_new>.
-    <lv_field_old> = <lv_field_new>.
-
-    ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <ls_old> TO <lv_field_old>.
-    ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <ls_new> TO <lv_field_new>.
-    <lv_field_old> = <lv_field_new>.
-
-    CREATE OBJECT ro_object_data_merged TYPE ('CL_SRVD_WB_OBJECT_DATA').
-
-    CALL METHOD ro_object_data_merged->('SET_DATA')
-      EXPORTING
-        p_data = <ls_old>.
 
   ENDMETHOD.
 
@@ -592,6 +345,253 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD merge_object_data.
+
+    DATA:
+      lo_object_data        TYPE REF TO object,
+      lo_object_data_old    TYPE REF TO if_wb_object_data_model,
+      lr_new                TYPE REF TO data,
+      lr_old                TYPE REF TO data,
+      lo_wb_object_operator TYPE REF TO object.
+
+    FIELD-SYMBOLS:
+      <ls_new>       TYPE any,
+      <ls_old>       TYPE any,
+      <lv_field_old> TYPE any,
+      <lv_field_new> TYPE any.
+
+    CREATE OBJECT lo_object_data TYPE ('CL_SRVD_WB_OBJECT_DATA').
+    lo_object_data = io_object_data.
+
+    CREATE DATA lr_new TYPE ('CL_SRVD_WB_OBJECT_DATA=>TY_SRVD_OBJECT_DATA').
+    ASSIGN lr_new->* TO <ls_new>.
+    ASSERT sy-subrc = 0.
+
+    CREATE DATA lr_old TYPE ('CL_SRVD_WB_OBJECT_DATA=>TY_SRVD_OBJECT_DATA').
+    ASSIGN lr_old->* TO <ls_old>.
+    ASSERT sy-subrc = 0.
+
+    CALL METHOD lo_object_data->('IF_WB_OBJECT_DATA_MODEL~GET_DATA')
+      EXPORTING
+        p_metadata_only  = abap_false
+        p_data_selection = 'AL'
+      IMPORTING
+        p_data           = <ls_new>.
+
+    lo_wb_object_operator = get_wb_object_operator( ).
+
+    CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
+      EXPORTING
+        data_selection = 'AL' " if_wb_object_data_selection_co=>c_all_data
+      IMPORTING
+        eo_object_data = lo_object_data_old.
+
+    CALL METHOD lo_object_data_old->('GET_DATA')
+      EXPORTING
+        p_metadata_only  = abap_false
+        p_data_selection = 'AL' " if_wb_object_data_selection_co=>c_all_data
+      IMPORTING
+        p_data           = <ls_old>.
+
+    ASSIGN COMPONENT 'METADATA-DESCRIPTION' OF STRUCTURE <ls_old> TO <lv_field_old>.
+    ASSIGN COMPONENT 'METADATA-DESCRIPTION' OF STRUCTURE <ls_new> TO <lv_field_new>.
+    <lv_field_old> = <lv_field_new>.
+
+    ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <ls_old> TO <lv_field_old>.
+    ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <ls_new> TO <lv_field_new>.
+    <lv_field_old> = <lv_field_new>.
+
+    CREATE OBJECT ro_object_data_merged TYPE ('CL_SRVD_WB_OBJECT_DATA').
+
+    CALL METHOD ro_object_data_merged->('SET_DATA')
+      EXPORTING
+        p_data = <ls_old>.
+
+  ENDMETHOD.
+
+
+  METHOD is_delete_tadir.
+    rv_delete_tadir = abap_true.
+  ENDMETHOD.
+
+
+  METHOD is_ddic.
+    rv_ddic = abap_false.
+  ENDMETHOD.
+
+
+  METHOD get_wb_object_operator.
+
+    DATA:
+      ls_object_type TYPE wbobjtype,
+      lx_error       TYPE REF TO cx_root.
+
+    IF mo_object_operator IS BOUND.
+      ro_object_operator = mo_object_operator.
+    ENDIF.
+
+    ls_object_type-objtype_tr = 'SRVD'.
+    ls_object_type-subtype_wb = 'SRV'.
+
+    TRY.
+        CALL METHOD ('CL_WB_OBJECT_OPERATOR')=>('CREATE_INSTANCE')
+          EXPORTING
+            object_type = ls_object_type
+            object_key  = mv_service_definition_key
+          RECEIVING
+            result      = mo_object_operator.
+
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
+    ENDTRY.
+
+    ro_object_operator = mo_object_operator.
+
+  ENDMETHOD.
+
+
+  METHOD get_transport_req_if_needed.
+
+    DATA: li_sap_package TYPE REF TO zif_abapgit_sap_package.
+
+    li_sap_package = zcl_abapgit_factory=>get_sap_package( iv_package ).
+
+    IF li_sap_package->are_changes_recorded_in_tr_req( ) = abap_true.
+      rv_transport_request = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_object_data.
+
+    DATA:
+      lr_metadata TYPE REF TO data,
+      lr_data     TYPE REF TO data.
+
+    FIELD-SYMBOLS:
+      <lv_metadata_node> TYPE any,
+      <ls_metadata>      TYPE any,
+      <lv_source>        TYPE any,
+      <lg_data>          TYPE any.
+
+    CREATE DATA lr_data TYPE ('CL_SRVD_WB_OBJECT_DATA=>TY_SRVD_OBJECT_DATA').
+    ASSIGN lr_data->* TO <lg_data>.
+    ASSERT sy-subrc = 0.
+
+    ASSIGN COMPONENT 'METADATA' OF STRUCTURE <lg_data> TO <lv_metadata_node>.
+    ASSERT sy-subrc = 0.
+
+    CREATE DATA lr_metadata  TYPE ('CL_SRVD_WB_OBJECT_DATA=>TY_METADATA_EXTENDED').
+    ASSIGN lr_metadata->* TO <ls_metadata>.
+    ASSERT sy-subrc = 0.
+
+    io_xml->read(
+      EXPORTING
+        iv_name = mc_xml_parent_name
+      CHANGING
+        cg_data = <ls_metadata> ).
+
+    <lv_metadata_node> = <ls_metadata>.
+
+    ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <lg_data> TO <lv_source>.
+    ASSERT sy-subrc = 0.
+
+    <lv_source> = mo_files->read_string( mc_source_file ).
+    IF <lv_source> IS INITIAL.
+      <lv_source> = mo_files->read_string( 'assrvd' ).
+    ENDIF.
+
+    CREATE OBJECT ro_object_data TYPE ('CL_SRVD_WB_OBJECT_DATA').
+    ro_object_data->set_data( p_data = <lg_data>  ).
+
+  ENDMETHOD.
+
+
+  METHOD clear_fields.
+
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'VERSION'
+      CHANGING
+        cs_metadata  = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'CREATED_AT'
+      CHANGING
+        cs_metadata  = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'CREATED_BY'
+      CHANGING
+        cs_metadata  = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'CHANGED_AT'
+      CHANGING
+        cs_metadata  = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'CHANGED_BY'
+      CHANGING
+        cs_metadata  = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'RESPONSIBLE'
+      CHANGING
+        cs_metadata  = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'PACKAGE_REF'
+      CHANGING
+        cs_metadata  = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'MASTER_SYSTEM'
+      CHANGING
+        cs_metadata  = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'DT_UUID'
+      CHANGING
+        cs_metadata  = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'ABAP_LANGUAGE_VERSION'
+      CHANGING
+        cs_metadata  = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'LINKS'
+      CHANGING
+        cs_metadata  = cs_metadata ).
+
+  ENDMETHOD.
+
+
+  METHOD clear_field.
+
+    FIELD-SYMBOLS: <lv_value> TYPE data.
+
+    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_metadata
+           TO <lv_value>.
+    ASSERT sy-subrc = 0.
+
+    CLEAR: <lv_value>.
 
   ENDMETHOD.
 ENDCLASS.
