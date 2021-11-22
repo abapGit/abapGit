@@ -145,40 +145,6 @@ ENDCLASS.
 CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
 
-  METHOD belongs_incl_to_other_fugr.
-    " make sure that the include belongs to the function group
-    " like in LSEAPFAP Form TADIR_MAINTENANCE
-    DATA ls_tadir TYPE tadir.
-    DATA lv_namespace TYPE rs38l-namespace.
-    DATA lv_area TYPE rs38l-area.
-    DATA lv_include TYPE rs38l-include.
-
-    rv_belongs_to_other_fugr = abap_false.
-    IF iv_include(1) = 'L' OR iv_include+1 CS '/L'.
-      lv_include = iv_include.
-      ls_tadir-object = 'FUGR'.
-
-      CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
-        IMPORTING
-          namespace = lv_namespace
-          group     = lv_area
-        CHANGING
-          include   = lv_include
-        EXCEPTIONS
-          OTHERS    = 1.
-      IF lv_area(1) = 'X'.    " "EXIT"-function-module
-        ls_tadir-object = 'FUGS'.
-      ENDIF.
-      IF sy-subrc = 0.
-        CONCATENATE lv_namespace lv_area INTO ls_tadir-obj_name.
-        IF ls_tadir-obj_name <> ms_item-obj_name.
-          rv_belongs_to_other_fugr = abap_true.
-        ENDIF.
-      ENDIF.
-    ENDIF.
-  ENDMETHOD.
-
-
   METHOD check_rfc_parameters.
 
 * function module RS_FUNCTIONMODULE_INSERT does the same deep down, but the right error
@@ -1238,5 +1204,39 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
                    ig_data = ls_cua ).
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD belongs_incl_to_other_fugr.
+    " make sure that the include belongs to the function group
+    " like in LSEAPFAP Form TADIR_MAINTENANCE
+    DATA ls_tadir TYPE tadir.
+    DATA lv_namespace TYPE rs38l-namespace.
+    DATA lv_area TYPE rs38l-area.
+    DATA lv_include TYPE rs38l-include.
+
+    rv_belongs_to_other_fugr = abap_false.
+    IF iv_include(1) = 'L' OR iv_include+1 CS '/L'.
+      lv_include = iv_include.
+      ls_tadir-object = 'FUGR'.
+
+      CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
+        IMPORTING
+          namespace = lv_namespace
+          group     = lv_area
+        CHANGING
+          include   = lv_include
+        EXCEPTIONS
+          OTHERS    = 1.
+      IF lv_area(1) = 'X'.    " "EXIT"-function-module
+        ls_tadir-object = 'FUGS'.
+      ENDIF.
+      IF sy-subrc = 0.
+        CONCATENATE lv_namespace lv_area INTO ls_tadir-obj_name.
+        IF ls_tadir-obj_name <> ms_item-obj_name.
+          rv_belongs_to_other_fugr = abap_true.
+        ENDIF.
+      ENDIF.
+    ENDIF.
   ENDMETHOD.
 ENDCLASS.
