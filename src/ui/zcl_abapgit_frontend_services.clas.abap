@@ -299,4 +299,43 @@ CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
+  METHOD zif_abapgit_frontend_services~directory_exist.
+    cl_gui_frontend_services=>directory_exist(
+      EXPORTING
+        directory            = iv_directory
+      RECEIVING
+        result               = rv_exists
+      EXCEPTIONS
+        cntl_error           = 1
+        error_no_gui         = 2
+        wrong_parameter      = 3
+        not_supported_by_gui = 4
+        OTHERS               = 5 ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_frontend_services~directory_create.
+    cl_gui_frontend_services=>directory_create(
+      EXPORTING
+        directory                = iv_directory
+      CHANGING
+        rc                       = cv_rc
+      EXCEPTIONS
+        directory_create_failed  = 1
+        cntl_error               = 2
+        error_no_gui             = 3
+        directory_access_denied  = 4
+        directory_already_exists = 5
+        path_not_found           = 6
+        unknown_error            = 7
+        not_supported_by_gui     = 8
+        wrong_parameter          = 9
+        OTHERS                   = 10 ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+  ENDMETHOD.
+
 ENDCLASS.
