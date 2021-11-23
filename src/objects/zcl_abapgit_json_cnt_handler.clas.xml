@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_JSON_CNT_HANDLER</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>the content handler that understands json via ajson</DESCRIPT>
+    <DESCRIPT>abapGit - a content handler that understands json via ajson</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
