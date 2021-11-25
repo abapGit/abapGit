@@ -45,14 +45,18 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
     METHODS zif_abapgit_gui_event_handler~on_event
         REDEFINITION.
   PROTECTED SECTION.
+
     CONSTANTS:
       BEGIN OF c_actions,
-        toggle_unified       TYPE string VALUE 'toggle_unified',
-        toggle_hidden_chars  TYPE string VALUE 'toggle_hidden_chars',
-        refresh_prefix       TYPE string VALUE 'refresh',
-        refresh_all          TYPE string VALUE 'refresh_all',
-        refresh_local        TYPE string VALUE 'refresh_local',
-        refresh_local_object TYPE string VALUE 'refresh_local_object',
+        toggle_unified         TYPE string VALUE 'toggle_unified',
+        toggle_hidden_chars    TYPE string VALUE 'toggle_hidden_chars',
+        toggle_ignore_indent   TYPE string VALUE 'toggle_ignore_indent',
+        toggle_ignore_comments TYPE string VALUE 'toggle_ignore_comments',
+        toggle_ignore_case     TYPE string VALUE 'toggle_ignore_case',
+        refresh_prefix         TYPE string VALUE 'refresh',
+        refresh_all            TYPE string VALUE 'refresh_all',
+        refresh_local          TYPE string VALUE 'refresh_local',
+        refresh_local_object   TYPE string VALUE 'refresh_local_object',
       END OF c_actions ,
       BEGIN OF c_action_texts,
         refresh_all   TYPE string VALUE `Refresh All`,
@@ -155,10 +159,17 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
     METHODS render_content
         REDEFINITION .
   PRIVATE SECTION.
+    TYPES:
+      BEGIN OF ty_view,
+        hidden_chars    TYPE abap_bool,
+        ignore_indent   TYPE abap_bool,
+        ignore_comments TYPE abap_bool,
+        ignore_case     TYPE abap_bool,
+      END OF ty_view.
     DATA mt_delayed_lines TYPE zif_abapgit_definitions=>ty_diffs_tt .
     DATA mv_repo_key TYPE zif_abapgit_persistence=>ty_repo-key .
     DATA mv_seed TYPE string .                    " Unique page id to bind JS sessionStorage
-    DATA mv_hidden_chars TYPE abap_bool .
+    DATA ms_view TYPE ty_view.
 
     METHODS render_diff
       IMPORTING
@@ -219,6 +230,9 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
       IMPORTING
         !io_menu TYPE REF TO zcl_abapgit_html_toolbar .
     METHODS add_filter_sub_menu
+      IMPORTING
+        !io_menu TYPE REF TO zcl_abapgit_html_toolbar .
+    METHODS add_view_sub_menu
       IMPORTING
         !io_menu TYPE REF TO zcl_abapgit_html_toolbar .
     METHODS render_lines
@@ -372,9 +386,35 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     io_menu->add( iv_txt = 'Split/Unified'
                   iv_act = c_actions-toggle_unified ).
 
-    io_menu->add( iv_txt   = '&para;'
-                  iv_title = 'Toggle Hidden Characters'
-                  iv_act   = c_actions-toggle_hidden_chars ).
+    add_view_sub_menu( io_menu ).
+
+  ENDMETHOD.
+
+
+  METHOD add_view_sub_menu.
+
+    DATA lo_sub_view TYPE REF TO zcl_abapgit_html_toolbar.
+
+    CREATE OBJECT lo_sub_view EXPORTING iv_id = 'diff-view'.
+
+    lo_sub_view->add( iv_txt = 'Show Hidden Characters'
+                      iv_act = c_actions-toggle_hidden_chars
+                      iv_chk = ms_view-hidden_chars ).
+
+    lo_sub_view->add( iv_txt = 'Ignore Indentation'
+                      iv_act = c_actions-toggle_ignore_indent
+                      iv_chk = ms_view-ignore_indent ).
+
+    lo_sub_view->add( iv_txt = 'Ignore Comments'
+                      iv_act = c_actions-toggle_ignore_comments
+                      iv_chk = ms_view-ignore_comments ).
+
+    lo_sub_view->add( iv_txt = 'Ignore Pretty-Print Case'
+                      iv_act = c_actions-toggle_ignore_case
+                      iv_chk = ms_view-ignore_case ).
+
+    io_menu->add( iv_txt = 'View'
+                  io_sub = lo_sub_view ).
 
   ENDMETHOD.
 
@@ -459,13 +499,19 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
       IF <ls_diff>-fstate = c_fstate-remote. " Remote file leading changes
         CREATE OBJECT <ls_diff>-o_diff
           EXPORTING
-            iv_new = <ls_remote>-data
-            iv_old = <ls_local>-file-data.
+            iv_new                = <ls_remote>-data
+            iv_old                = <ls_local>-file-data
+            iv_ignore_indentation = ms_view-ignore_indent
+            iv_ignore_comments    = ms_view-ignore_comments
+            iv_ignore_case        = ms_view-ignore_case.
       ELSE.             " Local leading changes or both were modified
         CREATE OBJECT <ls_diff>-o_diff
           EXPORTING
-            iv_new = <ls_local>-file-data
-            iv_old = <ls_remote>-data.
+            iv_new                = <ls_local>-file-data
+            iv_old                = <ls_remote>-data
+            iv_ignore_indentation = ms_view-ignore_indent
+            iv_ignore_comments    = ms_view-ignore_comments
+            iv_ignore_case        = ms_view-ignore_case.
       ENDIF.
     ENDIF.
 
@@ -930,7 +976,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     FIELD-SYMBOLS <ls_diff> LIKE LINE OF lt_diffs.
 
     lo_highlighter = zcl_abapgit_syntax_factory=>create( iv_filename     = is_diff-filename
-                                                         iv_hidden_chars = mv_hidden_chars ).
+                                                         iv_hidden_chars = ms_view-hidden_chars ).
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     lt_diffs = is_diff-o_diff->get( ).
@@ -1193,6 +1239,10 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
+    DATA ls_view LIKE ms_view.
+
+    ls_view = ms_view.
+
     CASE ii_event->mv_action.
       WHEN c_actions-toggle_unified. " Toggle file diplay
 
@@ -1202,8 +1252,19 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
       WHEN c_actions-toggle_hidden_chars. " Toggle display of hidden characters
 
-        mv_hidden_chars = boolc( mv_hidden_chars = abap_false ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+        ms_view-hidden_chars = boolc( ms_view-hidden_chars = abap_false ).
+
+      WHEN c_actions-toggle_ignore_indent. " Toggle ignore indentation
+
+        ms_view-ignore_indent = boolc( ms_view-ignore_indent = abap_false ).
+
+      WHEN c_actions-toggle_ignore_comments. " Toggle ignore comments
+
+        ms_view-ignore_comments = boolc( ms_view-ignore_comments = abap_false ).
+
+      WHEN c_actions-toggle_ignore_case. " Toggle case sensitivity
+
+        ms_view-ignore_case = boolc( ms_view-ignore_case = abap_false ).
 
       WHEN OTHERS.
 
@@ -1219,6 +1280,13 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
         ENDIF.
 
     ENDCASE.
+
+    " If view has changed, refresh local files recalculating diff, and update menu
+    IF ms_view <> ls_view.
+      refresh( c_actions-refresh_local ).
+      ms_control-page_menu = build_menu( ).
+      rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+    ENDIF.
 
   ENDMETHOD.
 
