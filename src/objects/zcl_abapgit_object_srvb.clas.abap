@@ -23,18 +23,46 @@ CLASS zcl_abapgit_object_srvb DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
           iv_fieldname       TYPE csequence
         CHANGING
           cs_service_binding TYPE any.
+    METHODS get_transport_req_if_needed
+      IMPORTING
+        !iv_package                 TYPE devclass
+      RETURNING
+        VALUE(rv_transport_request) TYPE trkorr
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_wb_object_operator
+      RETURNING
+        VALUE(ro_object_operator) TYPE REF TO object
+      RAISING
+        zcx_abapgit_exception .
+    METHODS merge_object_data
+      IMPORTING
+        !io_object_data              TYPE REF TO object
+      RETURNING
+        VALUE(ro_object_data_merged) TYPE REF TO if_wb_object_data_model
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_object_data
+      IMPORTING
+        !io_xml               TYPE REF TO zif_abapgit_xml_input
+      RETURNING
+        VALUE(ro_object_data) TYPE REF TO if_wb_object_data_model
+      RAISING
+        zcx_abapgit_exception .
+    METHODS      is_ai_supported
+      RETURNING VALUE(rv_ai_supported) TYPE abap_bool.
 
     DATA:
-      mi_persistence         TYPE REF TO if_wb_object_persist,
-      mv_service_binding_key TYPE seu_objkey,
-      mr_service_binding     TYPE REF TO data.
+      mi_persistence           TYPE REF TO if_wb_object_persist,
+      mv_is_inactive_supported TYPE abap_bool,
+      mv_service_binding_key   TYPE seu_objkey,
+      mr_service_binding       TYPE REF TO data,
+      mr_srvb_svrs_config      TYPE REF TO object,
+      mo_object_operator       TYPE REF TO object.
 
 ENDCLASS.
 
-
-
 CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
-
 
   METHOD clear_field.
 
@@ -50,6 +78,24 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
 
 
   METHOD clear_fields.
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'METADATA-VERSION'
+      CHANGING
+        cs_service_binding = cs_service_binding ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'METADATA-CREATED_AT'
+      CHANGING
+        cs_service_binding = cs_service_binding ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'METADATA-CREATED_BY'
+      CHANGING
+        cs_service_binding = cs_service_binding ).
 
     clear_field(
       EXPORTING
@@ -69,8 +115,162 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
       CHANGING
         cs_service_binding = cs_service_binding ).
 
+    clear_field(
+      EXPORTING
+      iv_fieldname          = 'METADATA-PACKAGE_REF'
+      CHANGING
+      cs_service_binding = cs_service_binding ).
+
+    clear_field(
+      EXPORTING
+      iv_fieldname          = 'METADATA-MASTER_SYSTEM'
+      CHANGING
+      cs_service_binding = cs_service_binding ).
+
+
   ENDMETHOD.
 
+  METHOD get_transport_req_if_needed.
+
+    DATA: li_sap_package TYPE REF TO zif_abapgit_sap_package.
+
+    li_sap_package = zcl_abapgit_factory=>get_sap_package( iv_package ).
+
+    IF li_sap_package->are_changes_recorded_in_tr_req( ) = abap_true.
+      rv_transport_request = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD get_wb_object_operator.
+
+    DATA:
+      ls_object_type TYPE wbobjtype,
+      lx_error       TYPE REF TO cx_root.
+
+    IF mo_object_operator IS BOUND.
+      ro_object_operator = mo_object_operator.
+    ENDIF.
+
+    ls_object_type-objtype_tr = 'SRVB'.
+    ls_object_type-subtype_wb = 'SVB'.
+
+    TRY.
+        CALL METHOD ('CL_WB_OBJECT_OPERATOR')=>('CREATE_INSTANCE')
+          EXPORTING
+            object_type = ls_object_type
+            object_key  = mv_service_binding_key
+          RECEIVING
+            result      = mo_object_operator.
+
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
+    ENDTRY.
+
+    ro_object_operator = mo_object_operator.
+
+  ENDMETHOD.
+
+  METHOD get_object_data.
+
+    FIELD-SYMBOLS:
+      <ls_service_binding> TYPE any,
+      <lv_language>        TYPE data.
+
+    ASSIGN mr_service_binding->* TO <ls_service_binding>.
+    ASSERT sy-subrc = 0.
+
+    io_xml->read(
+      EXPORTING
+        iv_name = 'SRVB'
+      CHANGING
+        cg_data = <ls_service_binding> ).
+
+
+    " We have to set the language explicitly,
+    " because otherwise the description isn't stored
+    ASSIGN COMPONENT 'METADATA-LANGUAGE' OF STRUCTURE <ls_service_binding>
+           TO <lv_language>.
+    ASSERT sy-subrc = 0.
+    <lv_language> = mv_language.
+
+    CREATE OBJECT ro_object_data TYPE ('CL_SRVB_OBJECT_DATA').
+    ro_object_data->set_data( p_data = <ls_service_binding>  ).
+
+  ENDMETHOD.
+
+  METHOD merge_object_data.
+
+    DATA:
+      lo_object_data        TYPE REF TO object,
+      lo_object_data_old    TYPE REF TO if_wb_object_data_model,
+      lr_new                TYPE REF TO data,
+      lr_old                TYPE REF TO data,
+      lo_wb_object_operator TYPE REF TO object.
+
+    FIELD-SYMBOLS:
+      <ls_new>       TYPE any,
+      <ls_old>       TYPE any,
+      <lv_field_old> TYPE any,
+      <lv_field_new> TYPE any.
+
+    CREATE OBJECT lo_object_data TYPE ('CL_SRVB_OBJECT_DATA').
+    lo_object_data = io_object_data.
+
+    CREATE DATA lr_new TYPE ('CL_SRVB_OBJECT_DATA=>TY_OBJECT_DATA').
+    ASSIGN lr_new->* TO <ls_new>.
+    ASSERT sy-subrc = 0.
+
+    CREATE DATA lr_old TYPE ('CL_SRVB_OBJECT_DATA=>TY_OBJECT_DATA').
+    ASSIGN lr_old->* TO <ls_old>.
+    ASSERT sy-subrc = 0.
+
+    CALL METHOD lo_object_data->('IF_WB_OBJECT_DATA_MODEL~GET_DATA')
+      EXPORTING
+        p_metadata_only  = abap_false
+        p_data_selection = 'AL'
+      IMPORTING
+        p_data           = <ls_new>.
+
+    lo_wb_object_operator = get_wb_object_operator( ).
+
+    CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
+      EXPORTING
+        data_selection = 'AL' " if_wb_object_data_selection_co=>c_all_data
+      IMPORTING
+        eo_object_data = lo_object_data_old.
+
+    CALL METHOD lo_object_data_old->('GET_DATA')
+      EXPORTING
+        p_metadata_only  = abap_false
+        p_data_selection = 'AL' " if_wb_object_data_selection_co=>c_all_data
+      IMPORTING
+        p_data           = <ls_old>.
+
+    ASSIGN COMPONENT 'METADATA-DESCRIPTION' OF STRUCTURE <ls_old> TO <lv_field_old>.
+    ASSIGN COMPONENT 'METADATA-DESCRIPTION' OF STRUCTURE <ls_new> TO <lv_field_new>.
+    <lv_field_old> = <lv_field_new>.
+
+    CREATE OBJECT ro_object_data_merged TYPE ('CL_SRVB_OBJECT_DATA').
+
+    CALL METHOD ro_object_data_merged->('SET_DATA')
+      EXPORTING
+        p_data = <ls_old>.
+
+  ENDMETHOD.
+
+  METHOD is_ai_supported.
+    TRY.
+        CREATE OBJECT mr_srvb_svrs_config TYPE ('CL_SRVB_SVRS_CONFIG')
+            EXPORTING iv_objtype = 'SRVB'.
+      CATCH cx_sy_create_error.
+        rv_ai_supported = abap_false.
+    ENDTRY.
+    CALL METHOD mr_srvb_svrs_config->('HAS_INACTIVE_VERSION')
+      RECEIVING
+        rv_has_inactive = rv_ai_supported.
+
+  ENDMETHOD.
 
   METHOD constructor.
 
@@ -88,8 +288,9 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |SRVB not supported by your NW release| ).
     ENDTRY.
 
-  ENDMETHOD.
+    mv_is_inactive_supported = is_ai_supported(  ).
 
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~changed_by.
 
@@ -121,6 +322,10 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
         mi_persistence->delete( mv_service_binding_key ).
 
       CATCH cx_swb_exception INTO lx_error.
+        CALL FUNCTION 'DEQUEUE_ESWB_EO'
+          EXPORTING
+            objtype = ms_item-obj_type
+            objname = ms_item-obj_name.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
@@ -129,70 +334,103 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
+
     DATA:
-      li_object_data_model TYPE REF TO if_wb_object_data_model,
-      lx_error             TYPE REF TO cx_swb_exception,
-      lv_access_mode       TYPE c LENGTH 8. " if_wb_adt_rest_resource_co=>ty_access_mode
-
-    FIELD-SYMBOLS:
-      <ls_service_binding> TYPE any,
-      <lv_language>        TYPE data.
-
-    ASSIGN mr_service_binding->* TO <ls_service_binding>.
-    ASSERT sy-subrc = 0.
-
-    io_xml->read(
-      EXPORTING
-        iv_name = 'SRVB'
-      CHANGING
-        cg_data = <ls_service_binding> ).
+      lo_object_data        TYPE REF TO if_wb_object_data_model,
+      lx_error              TYPE REF TO cx_root,
+      lv_transport_request  TYPE trkorr,
+      lo_wb_object_operator TYPE REF TO object,
+      lo_merged_data_all    TYPE REF TO if_wb_object_data_model,
+      lv_version            TYPE r3state.
 
     TRY.
-        IF zif_abapgit_object~exists( ) = abap_true.
-          lv_access_mode = 'MODIFY'. " cl_wb_adt_rest_resource=>co_access_mode_modify
+        lo_object_data = get_object_data( io_xml ).
+        lv_transport_request = get_transport_req_if_needed( iv_package ).
+        lo_wb_object_operator = get_wb_object_operator( ).
+
+        IF mv_is_inactive_supported = abap_true.
+          lv_version = 'I'.
         ELSE.
-          lv_access_mode = 'INSERT'. " cl_wb_adt_rest_resource=>co_access_mode_insert.
-          tadir_insert( iv_package ).
+          lv_version = 'A'.
         ENDIF.
 
-        " We have to set the language explicitly,
-        " because otherwise the description isn't stored
-        ASSIGN COMPONENT 'METADATA-LANGUAGE' OF STRUCTURE <ls_service_binding>
-               TO <lv_language>.
-        ASSERT sy-subrc = 0.
-        <lv_language> = mv_language.
+        tadir_insert( iv_package ).
 
-        CREATE OBJECT li_object_data_model TYPE ('CL_SRVB_OBJECT_DATA').
-        li_object_data_model->set_data( <ls_service_binding> ).
+        IF zif_abapgit_object~exists( ) = abap_false.
+          "if_wb_adt_plugin_resource_co=>co_sfs_res_category_atomic.
+          CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~CREATE')
+            EXPORTING
+              io_object_data    = lo_object_data
+              data_selection    = 'AL' "if_wb_object_data_selection_co=>c_all_data
+              version           = lv_version
+              package           = iv_package
+              transport_request = lv_transport_request.
 
-        CALL METHOD mi_persistence->('SAVE')
-          EXPORTING
-            p_object_data = li_object_data_model
-            p_access_mode = lv_access_mode. " does not exist in 702
+        ELSE.
+
+          lo_merged_data_all = merge_object_data( lo_object_data ).
+          CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~UPDATE')
+            EXPORTING
+              io_object_data    = lo_merged_data_all
+              data_selection    = 'AL' "if_wb_object_data_selection_co=>c_all_data
+              version           = lv_version
+              transport_request = lv_transport_request.
+
+        ENDIF.
 
         corr_insert( iv_package ).
 
       CATCH cx_swb_exception INTO lx_error.
+        CALL FUNCTION 'DEQUEUE_ESWB_EO'
+          EXPORTING
+            objtype = ms_item-obj_type
+            objname = ms_item-obj_name.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
+    zcl_abapgit_objects_activation=>add_item( ms_item ).
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
 
+    DATA lo_object_data TYPE REF TO if_wb_object_data_model.
+    DATA lo_wb_object_operator TYPE REF TO object.
+
+    lo_wb_object_operator = get_wb_object_operator( ).
     TRY.
-        mi_persistence->get(
-            p_object_key           = mv_service_binding_key
-            p_version              = 'A'
-            p_existence_check_only = abap_true ).
+        IF mv_is_inactive_supported = abap_true.
+          TRY.
+              CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
+                EXPORTING
+                  data_selection = 'ST'
+                  version        = 'I'
+                IMPORTING
+                  eo_object_data = lo_object_data.
 
-        rv_bool = abap_true.
+            CATCH cx_root.
+              CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
+                EXPORTING
+                  data_selection = 'ST'
+                  version        = 'A'
+                IMPORTING
+                  eo_object_data = lo_object_data.
 
-      CATCH cx_swb_object_does_not_exist cx_swb_exception.
+          ENDTRY.
+        ELSE.
+
+          CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
+            EXPORTING
+              data_selection = 'ST'
+              version        = 'A'
+            IMPORTING
+              eo_object_data = lo_object_data.
+
+        ENDIF.
+        rv_bool = boolc( lo_object_data IS NOT INITIAL AND lo_object_data->get_object_key( ) IS NOT INITIAL ).
+      CATCH cx_root.
         rv_bool = abap_false.
     ENDTRY.
-
   ENDMETHOD.
 
 
@@ -202,14 +440,12 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_deserialize_steps.
-    APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-
-    rs_metadata-ddic         = abap_true.
     rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.
 
@@ -250,8 +486,9 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     DATA:
-      li_object_data_model TYPE REF TO if_wb_object_data_model,
-      lx_error             TYPE REF TO cx_swb_exception.
+      li_object_data_model  TYPE REF TO if_wb_object_data_model,
+      li_wb_object_operator TYPE REF TO object,
+      lx_error              TYPE REF TO cx_swb_exception.
 
     FIELD-SYMBOLS:
       <ls_service_binding> TYPE any.
@@ -260,12 +497,15 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
     ASSERT sy-subrc = 0.
 
     TRY.
-        mi_persistence->get(
+        li_wb_object_operator = get_wb_object_operator( ).
+
+
+        CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
           EXPORTING
-            p_object_key  = mv_service_binding_key
-            p_version     = 'A'
-          CHANGING
-            p_object_data = li_object_data_model ).
+            version        = 'A'
+            data_selection = 'AL'
+          IMPORTING
+            eo_object_data = li_object_data_model.
 
         li_object_data_model->get_data( IMPORTING p_data = <ls_service_binding> ).
 
