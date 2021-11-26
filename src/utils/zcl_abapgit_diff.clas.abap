@@ -150,7 +150,7 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
         ELSEIF <ls_delta>-flag1 = 'M' AND <ls_delta>-flag2 = 'M'.
           ls_diff-result = zif_abapgit_definitions=>c_diff-update.
         ELSEIF <ls_delta>-flag1 = '' AND <ls_delta>-flag2 = ''.
-          ls_diff-result = ''.
+          ls_diff-result = zif_abapgit_definitions=>c_diff-unchanged.
         ELSE.
           ASSERT 0 = 1. " unknown comparison result
         ENDIF.
