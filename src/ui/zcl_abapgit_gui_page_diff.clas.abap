@@ -152,9 +152,12 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         VALUE(rv_is_refrseh) TYPE abap_bool.
     METHODS modify_files_before_diff_calc
       IMPORTING
-        !it_diff_files_old TYPE ty_file_diffs
+         it_diff_files_old TYPE ty_file_diffs
       RETURNING
         VALUE(rt_files)    TYPE zif_abapgit_definitions=>ty_stage_tt.
+    METHODS add_view_sub_menu
+      IMPORTING
+         io_menu TYPE REF TO zcl_abapgit_html_toolbar .
 
     METHODS render_content
         REDEFINITION .
@@ -230,9 +233,6 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
       IMPORTING
         !io_menu TYPE REF TO zcl_abapgit_html_toolbar .
     METHODS add_filter_sub_menu
-      IMPORTING
-        !io_menu TYPE REF TO zcl_abapgit_html_toolbar .
-    METHODS add_view_sub_menu
       IMPORTING
         !io_menu TYPE REF TO zcl_abapgit_html_toolbar .
     METHODS render_lines
