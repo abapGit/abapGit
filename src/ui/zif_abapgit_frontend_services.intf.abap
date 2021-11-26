@@ -8,7 +8,7 @@ INTERFACE zif_abapgit_frontend_services PUBLIC.
     RETURNING
       VALUE(rv_xstr) TYPE xstring
     RAISING
-      zcx_abapgit_exception .
+      zcx_abapgit_exception.
   METHODS file_download
     IMPORTING
       !iv_path TYPE string
@@ -23,7 +23,7 @@ INTERFACE zif_abapgit_frontend_services PUBLIC.
     RETURNING
       VALUE(rv_path)       TYPE string
     RAISING
-      zcx_abapgit_exception .
+      zcx_abapgit_exception.
   METHODS show_file_open_dialog
     IMPORTING
       !iv_title            TYPE string
@@ -32,7 +32,7 @@ INTERFACE zif_abapgit_frontend_services PUBLIC.
     RETURNING
       VALUE(rv_path)       TYPE string
     RAISING
-      zcx_abapgit_exception .
+      zcx_abapgit_exception.
 
   METHODS clipboard_export
     IMPORTING
@@ -79,6 +79,22 @@ INTERFACE zif_abapgit_frontend_services PUBLIC.
     CHANGING
       ct_version_table TYPE filetable
       cv_rc            TYPE i
+    RAISING
+      zcx_abapgit_exception.
+
+  METHODS directory_exist
+    IMPORTING
+      iv_directory     TYPE string
+    RETURNING
+      VALUE(rv_exists) TYPE abap_bool
+    RAISING
+      zcx_abapgit_exception.
+
+  METHODS directory_create
+    IMPORTING
+      iv_directory TYPE string
+    CHANGING
+      cv_rc        TYPE i
     RAISING
       zcx_abapgit_exception.
 

@@ -164,6 +164,8 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
                   iv_id  = 'stage'
                   iv_typ = zif_abapgit_html=>c_action_type-dummy ).
 
+    add_view_sub_menu( io_menu ).
+
   ENDMETHOD.
 
 

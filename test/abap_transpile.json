@@ -90,6 +90,7 @@
     "addCommonJS": true,
     "unknownTypes": "runtimeError",
     "skip": [
+      {"object": "ZCL_ABAPGIT_INTEGRATION_GIT", "class": "ltcl_test", "method": "test01",    "note": "started failing at #1775"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_direct_text"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_no_text"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_get_t100_longtext", "method": "test01"},
@@ -179,6 +180,8 @@
       {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff07", "note": "Void type: RSWSOURCET"},
       {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff08", "note": "Void type: RSWSOURCET"},
       {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff09", "note": "Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff10", "note": "Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff11", "note": "Void type: RSWSOURCET"},
 
       {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_renderable", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
       {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_event_handler", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},

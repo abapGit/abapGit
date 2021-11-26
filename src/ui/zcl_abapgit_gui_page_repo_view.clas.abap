@@ -1073,7 +1073,11 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ENDIF.
 
     LOOP AT is_item-files INTO ls_file.
-      ri_html->add( |<div>{ ls_file-path && ls_file-filename }</div>| ).
+      IF mv_show_folders = abap_true.
+        ri_html->add( |<div>{ ls_file-filename }</div>| ).
+      ELSE.
+        ri_html->add( |<div>{ ls_file-path && ls_file-filename }</div>| ).
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.

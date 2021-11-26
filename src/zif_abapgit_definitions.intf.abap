@@ -392,9 +392,10 @@ INTERFACE zif_abapgit_definitions
     END OF c_git_branch.
   CONSTANTS:
     BEGIN OF c_diff,
-      insert TYPE c LENGTH 1 VALUE 'I',
-      delete TYPE c LENGTH 1 VALUE 'D',
-      update TYPE c LENGTH 1 VALUE 'U',
+      unchanged TYPE c LENGTH 1 VALUE ' ',
+      insert    TYPE c LENGTH 1 VALUE 'I',
+      delete    TYPE c LENGTH 1 VALUE 'D',
+      update    TYPE c LENGTH 1 VALUE 'U',
     END OF c_diff .
   CONSTANTS:
     BEGIN OF c_type,
