@@ -8,6 +8,24 @@ Legend
 + : added
 - : removed
 
+2021-11-26 v1.113.0
+-------------------
+! SRVB serialization changes
+! Commit page: limit comment input length
+! Repo View: remove file pathin folder view
+! TABL: Expand before PUT
+! FUGR: check the serialized include belongs to the same FUGR
++ Patch/Diff page, new view options
++ Patch/diff: add "filter by object type"
++ Create new branch for commit
+* Add DRUL and DTDC to mass activation
+* add form actions to command palette
+* fix icon hover in repo bar
+* Zip import, show error log
+* SHI3, deserialization set buffer mode field
+* Performance optimization with namespaced objects
+* WEBI: fix changed_by, is_active, exists
+
 2021-11-03 v1.112.0
 -------------------
 ! Only show favorites on startup
