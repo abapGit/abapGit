@@ -47,9 +47,9 @@ CLASS ZCL_ABAPGIT_GIT_ADD_PATCH IMPLEMENTATION.
     LOOP AT mt_diff ASSIGNING <ls_diff>.
 
       CASE <ls_diff>-result.
-        WHEN ' '.
+        WHEN zif_abapgit_definitions=>c_diff-unchanged.
 
-          INSERT <ls_diff>-new INTO TABLE rt_patch.
+          INSERT <ls_diff>-old INTO TABLE rt_patch.
 
         WHEN zif_abapgit_definitions=>c_diff-insert.
 

@@ -82,7 +82,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
+CLASS zcl_abapgit_diff IMPLEMENTATION.
 
 
   METHOD calculate_stats.
@@ -115,6 +115,7 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
       <ls_new>   LIKE LINE OF it_new,
       <ls_delta> LIKE LINE OF lt_delta.
 
+    " Note: Ignore case is for keywords, variables, types etc, but not for literals
     CALL FUNCTION 'RS_CMP_COMPUTE_DELTA'
       EXPORTING
         compare_mode            = mv_compare_mode
@@ -149,7 +150,7 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
         ELSEIF <ls_delta>-flag1 = 'M' AND <ls_delta>-flag2 = 'M'.
           ls_diff-result = zif_abapgit_definitions=>c_diff-update.
         ELSEIF <ls_delta>-flag1 = '' AND <ls_delta>-flag2 = ''.
-          ls_diff-result = ''.
+          ls_diff-result = zif_abapgit_definitions=>c_diff-unchanged.
         ELSE.
           ASSERT 0 = 1. " unknown comparison result
         ENDIF.
