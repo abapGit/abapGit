@@ -229,35 +229,7 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
-
-    DATA: ls_dd25v TYPE dd25v.
-
-    read_view( IMPORTING es_dd25v = ls_dd25v ).
-
-    CASE ls_dd25v-viewclass.
-      WHEN co_viewclass-view_variant.
-
-        CALL FUNCTION 'RS_TOOL_ACCESS'
-          EXPORTING
-            operation           = 'SHOW'
-            object_name         = ms_item-obj_name
-            object_type         = ms_item-obj_type
-            in_new_window       = abap_true
-          EXCEPTIONS
-            not_executed        = 1
-            invalid_object_type = 2
-            OTHERS              = 3.
-
-        IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise_t100( ).
-        ENDIF.
-
-      WHEN OTHERS.
-
-        jump_se11( ).
-
-    ENDCASE.
-
+    " Covered by ZCL_ABAPGIT_OBJECT=>JUMP
   ENDMETHOD.
 
 
