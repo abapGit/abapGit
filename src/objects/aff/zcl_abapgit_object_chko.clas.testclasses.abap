@@ -18,7 +18,8 @@
 *      get_chko_as_json_no_params RETURNING VALUE(result) TYPE rswsourcet,
 *      serialize FOR TESTING RAISING cx_static_check,
 *      deserialize_chko_w_params FOR TESTING RAISING cx_static_check,
-*      deserialize_chko_wo_params FOR TESTING RAISING cx_static_check.
+*      deserialize_chko_wo_params FOR TESTING RAISING cx_static_check,
+*      delete FOR TESTING RAISING cx_static_check.
 *ENDCLASS.
 *
 *
@@ -46,7 +47,7 @@
 *      obj_name = 'CHKO_TEST'
 *      obj_type = 'CHKO'
 *      devclass = '$TMP' ).
-*    cut = NEW zcl_abapgit_object_chko_aff_ec( iv_language = sy-langu
+*    cut = NEW zcl_abapgit_object_chko( iv_language = sy-langu
 *                                          is_item = item ).
 *    cut->mo_files = NEW zcl_abapgit_objects_files( is_item = item ).
 *    environment->clear_doubles( ).
@@ -82,6 +83,8 @@
 *    SELECT FROM chko_header FIELDS * INTO TABLE @DATA(header).
 *    cl_abap_unit_assert=>assert_subrc( act = sy-subrc ).
 *
+*    cl_abap_unit_assert=>assert_true( cut->exists( ) ).
+*
 *  ENDMETHOD.
 *
 *  METHOD deserialize_chko_w_params.
@@ -99,6 +102,16 @@
 *
 *    SELECT FROM chko_header FIELDS * INTO TABLE @DATA(header).
 *    cl_abap_unit_assert=>assert_subrc( act = sy-subrc ).
+*
+*    cl_abap_unit_assert=>assert_true( cut->exists( ) ).
+*  ENDMETHOD.
+*
+*  METHOD delete.
+*    insert_chko_in_db( 'CHKO_TEST' ).
+*
+*    cut->delete( iv_package = '$TMP' ).
+*
+*    cl_abap_unit_assert=>assert_false( cut->exists( ) ).
 *  ENDMETHOD.
 *
 *  METHOD insert_chko_in_db.
