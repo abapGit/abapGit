@@ -127,6 +127,8 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
             lv_parentcl }, child: { iv_package }| ).
         ENDIF.
 
+        " Map hidden dot-folders and namespaces
+        TRANSLATE lv_path USING '$.'.
         TRANSLATE lv_path USING '/#'.
         TRANSLATE lv_path TO LOWER CASE.
         CONCATENATE lv_path '/' INTO lv_path.
@@ -178,6 +180,8 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
 
     WHILE lv_path CA '/'.
       SPLIT lv_path AT '/' INTO lv_new lv_path.
+      " Map hidden dot-folders
+      TRANSLATE lv_new USING '.$'.
 
       CASE io_dot->get_folder_logic( ).
         WHEN zif_abapgit_dot_abapgit=>c_folder_logic-full.

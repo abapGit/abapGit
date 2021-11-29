@@ -285,3 +285,105 @@ CLASS ltcl_folder_logic_namespaces IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+
+CLASS ltcl_folder_logic_hidden DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
+
+  PUBLIC SECTION.
+    INTERFACES: zif_abapgit_sap_package.
+
+  PRIVATE SECTION.
+    CONSTANTS: c_top TYPE devclass VALUE '$EXERCISM',
+               c_src TYPE string VALUE '/exercises/practice/'.
+
+    METHODS:
+      setup,
+      prefix1 FOR TESTING RAISING zcx_abapgit_exception,
+      prefix2 FOR TESTING RAISING zcx_abapgit_exception,
+      prefix3 FOR TESTING RAISING zcx_abapgit_exception.
+
+ENDCLASS.
+
+CLASS ltcl_folder_logic_hidden IMPLEMENTATION.
+
+  METHOD zif_abapgit_sap_package~list_subpackages.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~list_superpackages.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~are_changes_recorded_in_tr_req.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~read_parent.
+    rv_parentcl = c_top.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~create_child.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~exists.
+    rv_bool = abap_true.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~get_transport_type.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~get_transport_layer.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~create.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~create_local.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD setup.
+
+    zcl_abapgit_injector=>set_sap_package( iv_package     = c_top
+                                           ii_sap_package = me ).
+
+    zcl_abapgit_injector=>set_sap_package( iv_package     = c_top && '_CLOCK'
+                                           ii_sap_package = me ).
+
+    zcl_abapgit_injector=>set_sap_package( iv_package     = c_top && '_$META'
+                                           ii_sap_package = me ).
+
+  ENDMETHOD.
+
+  METHOD prefix1.
+    ltcl_folder_logic_helper=>test(
+      iv_starting = c_src
+      iv_top      = c_top
+      iv_logic    = zif_abapgit_dot_abapgit=>c_folder_logic-prefix
+      iv_package  = c_top
+      iv_path     = c_src ).
+  ENDMETHOD.
+
+  METHOD prefix2.
+    ltcl_folder_logic_helper=>test(
+      iv_starting = c_src
+      iv_top      = c_top
+      iv_logic    = zif_abapgit_dot_abapgit=>c_folder_logic-prefix
+      iv_package  = c_top && '_CLOCK'
+      iv_path     = c_src && 'clock/' ).
+  ENDMETHOD.
+
+  METHOD prefix3.
+    " Hidden dot-folders map to "$package"
+    ltcl_folder_logic_helper=>test(
+      iv_starting = c_src
+      iv_top      = c_top
+      iv_logic    = zif_abapgit_dot_abapgit=>c_folder_logic-prefix
+      iv_package  = c_top && '_$META'
+      iv_path     = c_src && '.meta/' ).
+  ENDMETHOD.
+
+ENDCLASS.
