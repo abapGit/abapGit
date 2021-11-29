@@ -39,6 +39,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
     DATA mv_max_setting TYPE i .
     DATA mv_show_folders TYPE abap_bool .
     DATA mv_changes_only TYPE abap_bool .
+    DATA mv_starting_folder TYPE string .
     DATA mv_order_by TYPE string .
     DATA mv_order_descending TYPE abap_bool .
     DATA mv_diff_first TYPE abap_bool .
@@ -174,7 +175,11 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception.
-
+    METHODS shorten_path
+      IMPORTING
+        !iv_path       TYPE string
+      RETURNING
+        VALUE(rv_path) TYPE string.
 ENDCLASS.
 
 
@@ -587,6 +592,8 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         lo_settings     = zcl_abapgit_persist_factory=>get_settings( )->read( ).
         mv_max_lines    = lo_settings->get_max_lines( ).
         mv_max_setting  = mv_max_lines.
+
+        mv_starting_folder = mo_repo->get_dot_abapgit( )->get_starting_folder( ).
 
       CATCH zcx_abapgit_exception INTO lx_error.
         " Reset 'last shown repo' so next start will go to repo overview
@@ -1042,7 +1049,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       IF mv_show_folders = abap_true.
         ri_html->add( |<div>{ ls_file-filename }</div>| ).
       ELSE.
-        ri_html->add( |<div>{ ls_file-path && ls_file-filename }</div>| ).
+        ri_html->add( |<div>{ shorten_path( ls_file-path ) && ls_file-filename }</div>| ).
       ENDIF.
     ENDLOOP.
 
@@ -1161,6 +1168,22 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_palette(
       iv_action = zif_abapgit_definitions=>c_action-go_repo
       iv_only_favorites = abap_true ) ).
+
+  ENDMETHOD.
+
+
+  METHOD shorten_path.
+
+    DATA lv_folders TYPE i.
+
+    rv_path = iv_path.
+
+    " If starting folder is at least two levels deep, replace it with /.../
+    FIND ALL OCCURRENCES OF '/' IN mv_starting_folder MATCH COUNT lv_folders.
+    IF lv_folders > 2.
+      REPLACE mv_starting_folder IN rv_path WITH
+        |<span title="{ mv_starting_folder }">/.../</span>|.
+    ENDIF.
 
   ENDMETHOD.
 
