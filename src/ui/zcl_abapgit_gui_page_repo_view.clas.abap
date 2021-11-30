@@ -1178,11 +1178,11 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     rv_path = iv_path.
 
-    " If starting folder is at least two levels deep, replace it with /.../
+    " If starting folder is at least two levels deep, replace it with ~
     FIND ALL OCCURRENCES OF '/' IN mv_starting_folder MATCH COUNT lv_folders.
     IF lv_folders > 2.
       REPLACE mv_starting_folder IN rv_path WITH
-        |<span title="{ mv_starting_folder }">/.../</span>|.
+        |<span title="{ mv_starting_folder }">~/</span>|.
     ENDIF.
 
   ENDMETHOD.
