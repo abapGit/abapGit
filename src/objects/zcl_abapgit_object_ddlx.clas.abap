@@ -243,15 +243,7 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
-
-    TRY.
-        jump_adt( iv_obj_name = ms_item-obj_name
-                  iv_obj_type = ms_item-obj_type ).
-
-      CATCH zcx_abapgit_exception.
-        zcx_abapgit_exception=>raise( 'DDLX Jump Error' ).
-    ENDTRY.
-
+    " Covered by ZCL_ABAPGIT_ADT_LINK=>JUMP
   ENDMETHOD.
 
 

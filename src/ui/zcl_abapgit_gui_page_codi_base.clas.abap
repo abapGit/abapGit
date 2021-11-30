@@ -137,10 +137,10 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
 
           lv_line_number = <ls_result>-line.
 
-          zcl_abapgit_objects_super=>jump_adt( iv_obj_name     = ls_item-obj_name
-                                               iv_obj_type     = ls_item-obj_type
-                                               iv_sub_obj_name = ls_sub_item-obj_name
-                                               iv_line_number  = lv_line_number ).
+          zcl_abapgit_objects=>jump(
+            is_item         = ls_item
+            iv_sub_obj_name = ls_sub_item-obj_name
+            iv_line_number  = lv_line_number ).
           RETURN.
 
         ENDIF.
