@@ -122,6 +122,12 @@ ENDCLASS.
 CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
 
+  METHOD branch_name_to_internal.
+    rv_new_branch_name = zcl_abapgit_git_branch_list=>complete_heads_branch_name(
+      zcl_abapgit_git_branch_list=>normalize_branch_name( iv_branch_name ) ).
+  ENDMETHOD.
+
+
   METHOD constructor.
 
     super->constructor( ).
@@ -320,15 +326,19 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     )->text(
       iv_name        = c_id-committer_email
       iv_label       = 'Committer Email'
-      iv_required    = abap_true
-    )->text(
-      iv_name        = c_id-author_name
-      iv_label       = 'Author Name'
-      iv_placeholder = 'Optionally, specify an author (same as committer by default)'
-    )->text(
-      iv_name        = c_id-author_email
-      iv_label       = 'Author Email'
-    )->text(
+      iv_required    = abap_true ).
+
+    IF mo_settings->get_commitmsg_hide_author( ) IS INITIAL.
+      ro_form->text(
+        iv_name        = c_id-author_name
+        iv_label       = 'Author Name'
+        iv_placeholder = 'Optionally, specify an author (same as committer by default)'
+      )->text(
+        iv_name        = c_id-author_email
+        iv_label       = 'Author Email' ).
+    ENDIF.
+
+    ro_form->text(
       iv_name        = c_id-new_branch_name
       iv_label       = 'New Branch Name'
       iv_placeholder = 'Optionally, enter a new branch name for this commit'
@@ -557,10 +567,4 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     ri_html->add( '</div>' ).
 
   ENDMETHOD.
-
-  METHOD branch_name_to_internal.
-    rv_new_branch_name = zcl_abapgit_git_branch_list=>complete_heads_branch_name(
-      zcl_abapgit_git_branch_list=>normalize_branch_name( iv_branch_name ) ).
-  ENDMETHOD.
-
 ENDCLASS.
