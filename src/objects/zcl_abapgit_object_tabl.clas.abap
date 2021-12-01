@@ -929,9 +929,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
-
-    jump_se11( ).
-
+    " Covered by ZCL_ABAPGIT_OBJECT=>JUMP
   ENDMETHOD.
 
 

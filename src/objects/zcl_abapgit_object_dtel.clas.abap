@@ -36,7 +36,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
+CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
 
 
   METHOD deserialize_texts.
@@ -271,9 +271,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
-
-    jump_se11( ).
-
+    " Covered by ZCL_ABAPGIT_OBJECT=>JUMP
   ENDMETHOD.
 
 
