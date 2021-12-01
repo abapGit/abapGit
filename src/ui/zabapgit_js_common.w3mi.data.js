@@ -1918,7 +1918,7 @@ Patch.prototype.clickAllLineCheckboxesInSection = function(oSection, bChecked){
 
 };
 
-Patch.prototype.registerStagePatch = function registerStagePatch(){
+Patch.prototype.registerStagePatch = function (){
 
   var elStage = document.querySelector("#" + this.ID.STAGE);
   var REFRESH_PREFIX = "refresh";
