@@ -32,6 +32,7 @@ CLASS zcl_abapgit_gui_page_sett_glob DEFINITION
         commitmsg_comment_length TYPE string VALUE 'commitmsg_comment_length',
         commitmsg_comment_deflt  TYPE string VALUE 'commitmsg_comment_deflt',
         commitmsg_body_size      TYPE string VALUE 'commitmsg_body_size',
+        commitmsg_hide_author    TYPE string VALUE 'commitmsg_hide_author',
         devint_settings          TYPE string VALUE 'devint_settings',
         run_critical_tests       TYPE string VALUE 'run_critical_tests',
         experimental_features    TYPE string VALUE 'experimental_features',
@@ -76,7 +77,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_GLOB IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -153,7 +154,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_GLOB IMPLEMENTATION.
       iv_required    = abap_true
       iv_label       = 'Maximum Line Size of Body'
       iv_hint        = |At least { zcl_abapgit_settings=>c_commitmsg_body_size_dft } characters|
-      iv_min         = zcl_abapgit_settings=>c_commitmsg_body_size_dft ).
+      iv_min         = zcl_abapgit_settings=>c_commitmsg_body_size_dft
+    )->checkbox(
+      iv_name        = c_id-commitmsg_hide_author
+      iv_label       = 'Hide Author Fields' ).
 
     IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_false.
       ro_form->start_group(
@@ -225,6 +229,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_GLOB IMPLEMENTATION.
     mo_form_data->set(
       iv_key = c_id-commitmsg_body_size
       iv_val = |{ mo_settings->get_commitmsg_body_size( ) }| ).
+    mo_form_data->set(
+      iv_key = c_id-commitmsg_hide_author
+      iv_val = boolc( mo_settings->get_commitmsg_hide_author( ) = abap_true ) ) ##TYPE.
 
     " Dev Internal
     IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_false.
@@ -285,6 +292,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_GLOB IMPLEMENTATION.
     mo_settings->set_commitmsg_comment_default( mo_form_data->get( c_id-commitmsg_comment_deflt ) ).
     lv_value = mo_form_data->get( c_id-commitmsg_body_size ).
     mo_settings->set_commitmsg_body_size( lv_value ).
+    mo_settings->set_commitmsg_hide_author( boolc( mo_form_data->get( c_id-commitmsg_hide_author ) = abap_true ) ).
 
     " Dev Internal
     IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_false.
