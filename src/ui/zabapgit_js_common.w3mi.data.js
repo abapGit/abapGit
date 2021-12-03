@@ -1378,11 +1378,12 @@ LinkHints.prototype.deployHintContainers = function() {
     if (hintTargets[i].nodeName === "INPUT" || hintTargets[i].nodeName === "TEXTAREA") {
       // does not work if inside the input node
       if (hintTargets[i].type === "checkbox" || hintTargets[i].type === "radio") {
-        if (hintTargets[i].nextElementSibling.nodeName === "LABEL" ) {
+        if (hintTargets[i].nextElementSibling && hintTargets[i].nextElementSibling.nodeName === "LABEL" ) {
           // insert at end of label
           hintTargets[i].nextElementSibling.appendChild(hint.container);
         } else {
-          // skip because something changed in ZCL_ABAPGIT_HTML_FORM
+          // inserting right after
+          hintTargets[i].insertAdjacentElement("afterend", hint.container);
         }
       } else {
         // inserting right after
