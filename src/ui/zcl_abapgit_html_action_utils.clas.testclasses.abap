@@ -12,6 +12,7 @@ CLASS ltcl_html_action_utils DEFINITION FOR TESTING RISK LEVEL HARMLESS
     METHODS parse_fields_german_umlauts FOR TESTING.
     METHODS parse_fields_wrong_format FOR TESTING.
     METHODS parse_post_form_data FOR TESTING.
+    METHODS parse_fields_webgui FOR TESTING.
 
   PRIVATE SECTION.
 
@@ -346,6 +347,30 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
       iv_index = 2
       iv_name  = |{ to_upper( lv_long_name ) }|
       iv_value = 'y' ).
+
+  ENDMETHOD.
+
+
+  METHOD parse_fields_webgui.
+
+    _given_string_is( `KEY=000000000019&PATH=%2fsrc%2f&FILENAME=%2fnsp%2ftest_ddls_bug2.ddls.asddls` ).
+    _when_fields_are_parsed( ).
+    _then_field_count_should_be( 3 ).
+
+    _then_fields_should_be(
+      iv_index = 1
+      iv_name  = 'KEY'
+      iv_value = '000000000019' ).
+
+    _then_fields_should_be(
+      iv_index = 2
+      iv_name  = 'PATH'
+      iv_value = '/src/' ).
+
+    _then_fields_should_be(
+      iv_index = 3
+      iv_name  = 'FILENAME'
+      iv_value = '/nsp/test_ddls_bug2.ddls.asddls' ).
 
   ENDMETHOD.
 
