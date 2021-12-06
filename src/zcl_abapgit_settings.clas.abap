@@ -85,6 +85,12 @@ CLASS zcl_abapgit_settings DEFINITION
     METHODS get_commitmsg_body_size
       RETURNING
         VALUE(rv_length) TYPE i .
+    METHODS set_commitmsg_hide_author
+      IMPORTING
+        !iv_hide_author TYPE abap_bool.
+    METHODS get_commitmsg_hide_author
+      RETURNING
+        VALUE(rv_hide_author) TYPE abap_bool.
     METHODS get_settings_xml
       RETURNING
         VALUE(rv_settings_xml) TYPE string
@@ -162,6 +168,7 @@ CLASS zcl_abapgit_settings DEFINITION
              commitmsg_comment_length TYPE i,
              commitmsg_comment_deflt  TYPE string,
              commitmsg_body_size      TYPE i,
+             commitmsg_hide_author    TYPE abap_bool,
            END OF ty_s_settings.
 
     DATA: ms_settings      TYPE ty_s_settings,
@@ -199,6 +206,11 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
 
   METHOD get_commitmsg_comment_length.
     rv_length = ms_settings-commitmsg_comment_length.
+  ENDMETHOD.
+
+
+  METHOD get_commitmsg_hide_author.
+    rv_hide_author = ms_settings-commitmsg_hide_author.
   ENDMETHOD.
 
 
@@ -336,6 +348,11 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
 
   METHOD set_commitmsg_comment_length.
     ms_settings-commitmsg_comment_length = iv_length.
+  ENDMETHOD.
+
+
+  METHOD set_commitmsg_hide_author.
+    ms_settings-commitmsg_hide_author = iv_hide_author.
   ENDMETHOD.
 
 

@@ -1349,6 +1349,11 @@ LinkHints.prototype.deployHintContainers = function() {
   //   <span class="pending">12</span><span>3</span>
   // </span>
   for (var i = 0, N = hintTargets.length; i < N; i++) {
+    // skip hidden fields
+    if (hintTargets[i].type === "HIDDEN") {
+      continue;
+    }
+
     var hint = {};
     hint.container     = document.createElement("span");
     hint.pendingSpan   = document.createElement("span");
@@ -1371,8 +1376,19 @@ LinkHints.prototype.deployHintContainers = function() {
     hint.container.dataset.code = codeCounter.toString(); // not really needed, more for debug
 
     if (hintTargets[i].nodeName === "INPUT" || hintTargets[i].nodeName === "TEXTAREA") {
-      // does not work if inside the input, so appending right after
-      hintTargets[i].insertAdjacentElement("afterend", hint.container);
+      // does not work if inside the input node
+      if (hintTargets[i].type === "checkbox" || hintTargets[i].type === "radio") {
+        if (hintTargets[i].nextElementSibling && hintTargets[i].nextElementSibling.nodeName === "LABEL" ) {
+          // insert at end of label
+          hintTargets[i].nextElementSibling.appendChild(hint.container);
+        } else {
+          // inserting right after
+          hintTargets[i].insertAdjacentElement("afterend", hint.container);
+        }
+      } else {
+        // inserting right after
+        hintTargets[i].insertAdjacentElement("afterend", hint.container);
+      }
     } else {
       hintTargets[i].appendChild(hint.container);
     }
@@ -1454,7 +1470,7 @@ LinkHints.prototype.hintActivate = function (hint) {
     this.activatedDropdown = hint.parent.parentElement;
     this.activatedDropdown.classList.toggle("force-nav-hover");
     hint.parent.focus();
-  } else if (hint.parent.type === "checkbox") {
+  } else if (hint.parent.type === "checkbox" || hint.parent.type === "radio") {
     this.toggleCheckbox(hint);
   } else if (hint.parent.type === "submit") {
     hint.parent.click();
@@ -1918,7 +1934,7 @@ Patch.prototype.clickAllLineCheckboxesInSection = function(oSection, bChecked){
 
 };
 
-Patch.prototype.registerStagePatch = function registerStagePatch(){
+Patch.prototype.registerStagePatch = function (){
 
   var elStage = document.querySelector("#" + this.ID.STAGE);
   var REFRESH_PREFIX = "refresh";

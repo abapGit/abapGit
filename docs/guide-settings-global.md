@@ -30,6 +30,8 @@ to 50/72 according to the "[Rule of Well Formed Git Commit Messages](https://www
 
 You can also maintain a default for the comment. Variables $OBJECT and $FILE will be replaced by the number of objects or files contained in the commit.
 
+By default, the [commit page](https://docs.abapgit.org/guide-stage-commit.html#commit) contains fields for "Author Name" and "Author Email" which you can enter in case they are different from the committer. If the author is always the same as the committer, these fields are not required and you can use the "Hide Author Fields" option to remove them from on the commit page.
+
 ## Development Internal Settings
 
 Note: These settings are only available when using the [Development Version](https://docs.abapgit.org/guide-development-version.html) of abapGit.
