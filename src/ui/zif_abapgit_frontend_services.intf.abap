@@ -98,4 +98,8 @@ INTERFACE zif_abapgit_frontend_services PUBLIC.
     RAISING
       zcx_abapgit_exception.
 
+  METHODS is_webgui
+    RETURNING
+      VALUE(rv_is_webgui) TYPE abap_bool.
+
 ENDINTERFACE.

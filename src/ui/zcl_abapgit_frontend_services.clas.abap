@@ -12,7 +12,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
+CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
 
 
   METHOD zif_abapgit_frontend_services~file_download.
@@ -336,6 +336,15 @@ CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_frontend_services~is_webgui.
+
+    CALL FUNCTION 'GUI_IS_ITS'
+      IMPORTING
+        return = rv_is_webgui.
+
   ENDMETHOD.
 
 ENDCLASS.
