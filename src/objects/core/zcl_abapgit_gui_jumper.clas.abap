@@ -112,6 +112,11 @@ CLASS zcl_abapgit_gui_jumper IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_jumper~jump.
 
+    " WebGUI cannot open windows or ADT
+    IF zcl_abapgit_ui_factory=>get_frontend_services( )->is_webgui( ) = abap_true.
+      zcx_abapgit_exception=>raise( |Jump not possible in WebGUI| ).
+    ENDIF.
+
     " Try all generic jump options
 
     " 1) ADT Jump
