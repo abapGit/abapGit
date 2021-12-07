@@ -706,6 +706,5 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 *        ii_log->add_exception( ix_exc = lr_root
 *                               is_item = ms_item ).
     ENDTRY.
-
   ENDMETHOD.
 ENDCLASS.
