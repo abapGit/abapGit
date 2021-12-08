@@ -1062,7 +1062,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    " delete content because it might ne filled already by method IS_TYPE_SUPPORTED
+    " delete content because it might be filled already by method IS_TYPE_SUPPORTED
     CLEAR gt_supported_obj_types.
 
     CALL FUNCTION 'TR_OBJECT_TABLE'
