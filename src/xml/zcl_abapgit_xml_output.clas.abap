@@ -6,6 +6,12 @@ CLASS zcl_abapgit_xml_output DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_xml_output.
+    
+    ALIASES add FOR zif_abapgit_xml_output~add .
+    ALIASES add_xml FOR zif_abapgit_xml_output~add_xml .
+    ALIASES i18n_params FOR zif_abapgit_xml_output~i18n_params .
+    ALIASES render FOR zif_abapgit_xml_output~render .
+    ALIASES set_raw FOR zif_abapgit_xml_output~set_raw .
 
   PROTECTED SECTION.
   PRIVATE SECTION.
