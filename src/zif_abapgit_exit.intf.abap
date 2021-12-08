@@ -100,4 +100,9 @@ INTERFACE zif_abapgit_exit
       VALUE(rs_handled) TYPE zif_abapgit_gui_event_handler=>ty_handling_result
     RAISING
       zcx_abapgit_exception .
+  METHODS adjust_display_filename
+    IMPORTING
+      !iv_filename       TYPE string
+    RETURNING
+      VALUE(rv_filename) TYPE string.
 ENDINTERFACE.
