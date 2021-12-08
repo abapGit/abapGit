@@ -5,14 +5,6 @@ CLASS zcl_abapgit_objects DEFINITION
   PUBLIC SECTION.
 
     TYPES:
-      BEGIN OF ty_supported_types,
-        obj_type  TYPE tadir-object,
-        supported TYPE abap_bool,
-      END OF ty_supported_types.
-
-    TYPES: ty_supported_types_tt TYPE SORTED TABLE OF ty_supported_types WITH UNIQUE KEY obj_type.
-
-    TYPES:
       ty_types_tt TYPE SORTED TABLE OF tadir-object WITH UNIQUE KEY table_line .
     TYPES:
       BEGIN OF ty_serialization,
@@ -95,6 +87,14 @@ CLASS zcl_abapgit_objects DEFINITION
   PROTECTED SECTION.
 
   PRIVATE SECTION.
+
+    TYPES:
+      BEGIN OF ty_supported_types,
+        obj_type  TYPE tadir-object,
+        supported TYPE abap_bool,
+      END OF ty_supported_types.
+
+    TYPES: ty_supported_types_tt TYPE SORTED TABLE OF ty_supported_types WITH UNIQUE KEY obj_type.
 
     TYPES:
       BEGIN OF ty_obj_serializer_item,
