@@ -1031,6 +1031,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
   METHOD render_item_files.
 
     DATA: ls_file LIKE LINE OF is_item-files.
+    DATA li_exit TYPE REF TO zif_abapgit_exit.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -1038,11 +1039,13 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       RETURN.
     ENDIF.
 
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+
     LOOP AT is_item-files INTO ls_file.
       IF mv_show_folders = abap_true.
-        ri_html->add( |<div>{ ls_file-filename }</div>| ).
+        ri_html->add( |<div>{ li_exit->adjust_display_filename( ls_file-filename ) }</div>| ).
       ELSE.
-        ri_html->add( |<div>{ ls_file-path && ls_file-filename }</div>| ).
+        ri_html->add( |<div>{ li_exit->adjust_display_filename( ls_file-path && ls_file-filename ) }</div>| ).
       ENDIF.
     ENDLOOP.
 
