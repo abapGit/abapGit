@@ -221,6 +221,10 @@ CLASS ltcl_prio_deserialization DEFINITION FINAL FOR TESTING
     METHODS:
       setup,
       ddls_before_dcls FOR TESTING RAISING cx_static_check,
+      webi_before_sprx FOR TESTING RAISING cx_static_check,
+      iasp_before_isrp FOR TESTING RAISING cx_static_check,
+      iobj_before_odso FOR TESTING RAISING cx_static_check,
+      xslt_before_clas_and_prog FOR TESTING RAISING cx_static_check,
 
       given
         IMPORTING
@@ -241,28 +245,55 @@ ENDCLASS.
 CLASS ltcl_prio_deserialization IMPLEMENTATION.
 
   METHOD setup.
-
     CREATE OBJECT mo_objects.
     mv_exp_output_tabix = 0.
+  ENDMETHOD.
 
+  METHOD iobj_before_odso.
+    given( 'ODSO' ).
+    given( 'IOBJ' ).
+    when_deser_is_priorized( ).
+    then( 'IOBJ' ).
+    then( 'ODSO' ).
+  ENDMETHOD.
+
+  METHOD iasp_before_isrp.
+    given( 'ISRP' ).
+    given( 'IASP' ).
+    when_deser_is_priorized( ).
+    then( 'IASP' ).
+    then( 'ISRP' ).
+  ENDMETHOD.
+
+  METHOD webi_before_sprx.
+    given( 'SPRX' ).
+    given( 'WEBI' ).
+    when_deser_is_priorized( ).
+    then( 'WEBI' ).
+    then( 'SPRX' ).
+  ENDMETHOD.
+
+  METHOD xslt_before_clas_and_prog.
+    given( 'XSLT' ).
+    given( 'INTF' ).
+    given( 'CLAS' ).
+    when_deser_is_priorized( ).
+    then( 'XSLT' ).
+    then( 'INTF' ).
+    then( 'CLAS' ).
   ENDMETHOD.
 
   METHOD ddls_before_dcls.
-
     given( 'DCLS' ).
     given( 'DDLS' ).
     given( 'DCLS' ).
     given( 'DDLS' ).
-
     when_deser_is_priorized( ).
-
     then( 'DDLS' ).
     then( 'DDLS' ).
     then( 'DCLS' ).
     then( 'DCLS' ).
-
   ENDMETHOD.
-
 
   METHOD given.
 
