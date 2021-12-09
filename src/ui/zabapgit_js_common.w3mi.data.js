@@ -2130,6 +2130,11 @@ function CommandPalette(commandEnumerator, opts) {
   this.renderAndBindElements();
   this.hookEvents();
   Hotkeys.addHotkeyToHelpSheet(opts.toggleKey, opts.hotkeyDescription);
+
+  if (!CommandPalette.instances) {
+    CommandPalette.instances = [];
+  }
+  CommandPalette.instances.push(this);
 }
 
 CommandPalette.prototype.hookEvents = function(){
@@ -2269,6 +2274,14 @@ CommandPalette.prototype.adjustScrollPosition = function(itemElement){
 CommandPalette.prototype.toggleDisplay = function(forceState) {
   var isDisplayed = (this.elements.palette.style.display !== "none");
   var tobeDisplayed = (forceState !== undefined) ? forceState : !isDisplayed;
+
+  if (tobeDisplayed) {
+    // auto close other command palettes
+    CommandPalette.instances.forEach(function(instance){
+      instance.elements.palette.style.display = "none";
+    });
+  }
+
   this.elements.palette.style.display = tobeDisplayed ? "" : "none";
   if (tobeDisplayed) {
     this.elements.input.value = "";
@@ -2276,6 +2289,7 @@ CommandPalette.prototype.toggleDisplay = function(forceState) {
     this.applyFilter();
     this.selectFirst();
   }
+
 };
 
 CommandPalette.prototype.getCommandByElement = function(element) {
