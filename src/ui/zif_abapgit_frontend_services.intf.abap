@@ -9,12 +9,14 @@ INTERFACE zif_abapgit_frontend_services PUBLIC.
       VALUE(rv_xstr) TYPE xstring
     RAISING
       zcx_abapgit_exception.
+
   METHODS file_download
     IMPORTING
       !iv_path TYPE string
       !iv_xstr TYPE xstring
     RAISING
       zcx_abapgit_exception .
+
   METHODS show_file_save_dialog
     IMPORTING
       !iv_title            TYPE string
@@ -24,6 +26,7 @@ INTERFACE zif_abapgit_frontend_services PUBLIC.
       VALUE(rv_path)       TYPE string
     RAISING
       zcx_abapgit_exception.
+
   METHODS show_file_open_dialog
     IMPORTING
       !iv_title            TYPE string
@@ -97,6 +100,18 @@ INTERFACE zif_abapgit_frontend_services PUBLIC.
       cv_rc        TYPE i
     RAISING
       zcx_abapgit_exception.
+
+  METHODS gui_is_available
+    RETURNING
+      VALUE(rv_gui_is_available) TYPE abap_bool.
+
+  METHODS is_sapgui_for_java
+    RETURNING
+      VALUE(rv_result) TYPE abap_bool.
+
+  METHODS is_sapgui_for_windows
+    RETURNING
+      VALUE(rv_result) TYPE abap_bool.
 
   METHODS is_webgui
     RETURNING
