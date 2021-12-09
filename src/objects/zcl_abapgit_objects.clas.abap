@@ -340,7 +340,6 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           ls_result           TYPE zif_abapgit_comparator=>ty_result,
           lv_answer           TYPE string,
           li_comparator       TYPE REF TO zif_abapgit_comparator,
-          lv_gui_is_available TYPE abap_bool,
           ls_item             TYPE zif_abapgit_definitions=>ty_item.
 
     FIND ALL OCCURRENCES OF '.' IN is_result-filename MATCH COUNT lv_count.
@@ -380,8 +379,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
                            is_item = ls_item ).
 
       "continue or abort?
-      lv_gui_is_available = zcl_abapgit_ui_factory=>get_gui_functions( )->gui_is_available( ).
-      IF lv_gui_is_available = abap_true.
+      IF zcl_abapgit_ui_factory=>get_frontend_services( )->gui_is_available( ) = abap_true.
         CALL FUNCTION 'POPUP_TO_CONFIRM'
           EXPORTING
             titlebar              = 'Warning'
