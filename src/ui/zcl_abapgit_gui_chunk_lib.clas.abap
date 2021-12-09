@@ -195,11 +195,10 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
 
   METHOD advanced_submenu.
-    DATA: li_gui_functions        TYPE REF TO zif_abapgit_gui_functions,
-          lv_supports_ie_devtools TYPE abap_bool.
 
-    li_gui_functions = zcl_abapgit_ui_factory=>get_gui_functions( ).
-    lv_supports_ie_devtools = li_gui_functions->is_sapgui_for_windows( ).
+    DATA lv_supports_ie_devtools TYPE abap_bool.
+
+    lv_supports_ie_devtools = zcl_abapgit_ui_factory=>get_frontend_services( )->is_sapgui_for_windows( ).
 
     CREATE OBJECT ro_menu.
 

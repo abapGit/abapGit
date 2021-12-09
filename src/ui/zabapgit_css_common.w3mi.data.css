@@ -316,6 +316,7 @@ table.repo_tab {
   text-align: right;
   padding-left: 0.5em;
   padding-right: 0.7em;
+  min-width: 70px;
 }
 .repo_tab th.cmd .icon{
   padding-right: 8px;
