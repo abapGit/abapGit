@@ -799,6 +799,11 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     DATA: li_obj TYPE REF TO zif_abapgit_object.
 
+    " Might be called for objects without tadir entry
+    IF is_item IS INITIAL.
+      RETURN.
+    ENDIF.
+
     " For unsupported objects, assume object exists
     IF is_type_supported( is_item-obj_type ) = abap_false.
       rv_bool = abap_true.
