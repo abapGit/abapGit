@@ -238,11 +238,11 @@ CLASS ltcl_prio_deserialization DEFINITION FINAL FOR TESTING
 
       given
         IMPORTING
-          iv_object_type TYPE trobjtype,
+          iv_object_type TYPE string,
       when_deser_is_priorized,
       then
         IMPORTING
-          iv_exp_object_type TYPE trobjtype.
+          iv_exp_object_type TYPE string.
 
     DATA:
       mo_objects          TYPE REF TO zcl_abapgit_file_deserialize,
