@@ -689,7 +689,9 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     INSERT ls_tadir INTO TABLE lt_tadir.
 
     CREATE OBJECT lo_serialize.
-    lt_new_local_files = lo_serialize->serialize( lt_tadir ).
+    lt_new_local_files = lo_serialize->serialize(
+      iv_package = ms_data-package
+      it_tadir   = lt_tadir ).
 
     INSERT LINES OF lt_new_local_files INTO TABLE mt_local.
 
