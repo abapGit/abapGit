@@ -89,6 +89,14 @@ CLASS zcl_abapgit_objects DEFINITION
   PRIVATE SECTION.
 
     TYPES:
+      BEGIN OF ty_supported_types,
+        obj_type  TYPE tadir-object,
+        supported TYPE abap_bool,
+      END OF ty_supported_types.
+
+    TYPES: ty_supported_types_tt TYPE SORTED TABLE OF ty_supported_types WITH UNIQUE KEY obj_type.
+
+    TYPES:
       BEGIN OF ty_obj_serializer_item,
         item     TYPE zif_abapgit_definitions=>ty_item,
         metadata TYPE zif_abapgit_definitions=>ty_metadata,
@@ -97,7 +105,8 @@ CLASS zcl_abapgit_objects DEFINITION
       ty_obj_serializer_map TYPE SORTED TABLE OF ty_obj_serializer_item WITH UNIQUE KEY item .
 
     CLASS-DATA gt_obj_serializer_map TYPE ty_obj_serializer_map .
-    CLASS-DATA gt_supported_obj_types TYPE ty_types_tt .
+    CLASS-DATA gt_supported_obj_types TYPE ty_supported_types_tt .
+    CLASS-DATA gv_supported_obj_types_loaded TYPE abap_bool .
 
     CLASS-METHODS check_duplicates
       IMPORTING
@@ -172,12 +181,12 @@ CLASS zcl_abapgit_objects DEFINITION
     CLASS-METHODS change_package_assignments
       IMPORTING
         !is_item TYPE zif_abapgit_definitions=>ty_item
-        !ii_log  TYPE REF TO zif_abapgit_log.
+        !ii_log  TYPE REF TO zif_abapgit_log .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -331,7 +340,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           ls_result           TYPE zif_abapgit_comparator=>ty_result,
           lv_answer           TYPE string,
           li_comparator       TYPE REF TO zif_abapgit_comparator,
-          lv_gui_is_available TYPE abap_bool,
           ls_item             TYPE zif_abapgit_definitions=>ty_item.
 
     FIND ALL OCCURRENCES OF '.' IN is_result-filename MATCH COUNT lv_count.
@@ -371,8 +379,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
                            is_item = ls_item ).
 
       "continue or abort?
-      lv_gui_is_available = zcl_abapgit_ui_factory=>get_gui_functions( )->gui_is_available( ).
-      IF lv_gui_is_available = abap_true.
+      IF zcl_abapgit_ui_factory=>get_frontend_services( )->gui_is_available( ) = abap_true.
         CALL FUNCTION 'POPUP_TO_CONFIRM'
           EXPORTING
             titlebar              = 'Warning'
@@ -799,6 +806,11 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     DATA: li_obj TYPE REF TO zif_abapgit_object.
 
+    " Might be called for objects without tadir entry
+    IF is_item IS INITIAL.
+      RETURN.
+    ENDIF.
+
     " For unsupported objects, assume object exists
     IF is_type_supported( is_item-obj_type ) = abap_false.
       rv_bool = abap_true.
@@ -885,13 +897,35 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
   METHOD is_type_supported.
 
-    " If necessary, initialize list
-    IF gt_supported_obj_types IS INITIAL.
-      supported_list( ).
+    DATA: ls_item               TYPE zif_abapgit_definitions=>ty_item,
+          ls_supported_obj_type TYPE ty_supported_types.
+
+    FIELD-SYMBOLS <ls_supported_obj_type> TYPE ty_supported_types.
+
+    IF iv_obj_type IS INITIAL.
+      " empty object type should never exist
+      RETURN.
     ENDIF.
 
-    READ TABLE gt_supported_obj_types TRANSPORTING NO FIELDS WITH TABLE KEY table_line = iv_obj_type.
-    rv_bool = boolc( sy-subrc = 0 ).
+    READ TABLE gt_supported_obj_types
+      ASSIGNING <ls_supported_obj_type>
+      WITH KEY obj_type = iv_obj_type.
+
+    IF sy-subrc <> 0.
+
+      ls_item-obj_type = iv_obj_type.
+
+      ls_supported_obj_type-obj_type  = iv_obj_type.
+      ls_supported_obj_type-supported = is_supported( ls_item ).
+
+      INSERT ls_supported_obj_type INTO TABLE gt_supported_obj_types.
+
+      rv_bool = ls_supported_obj_type-supported.
+      RETURN.
+
+    ENDIF.
+
+    rv_bool = <ls_supported_obj_type>-supported.
 
   ENDMETHOD.
 
@@ -1017,15 +1051,22 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
   METHOD supported_list.
 
-    DATA: lt_objects TYPE STANDARD TABLE OF ko100,
-          ls_item    TYPE zif_abapgit_definitions=>ty_item.
+    DATA: lt_objects            TYPE STANDARD TABLE OF ko100,
+          ls_item               TYPE zif_abapgit_definitions=>ty_item,
+          ls_supported_obj_type TYPE ty_supported_types.
 
     FIELD-SYMBOLS <ls_object> LIKE LINE OF lt_objects.
+    FIELD-SYMBOLS <ls_supported_obj_type> TYPE ty_supported_types.
 
-    IF gt_supported_obj_types IS NOT INITIAL.
-      rt_types = gt_supported_obj_types.
+    IF gv_supported_obj_types_loaded = abap_true.
+      LOOP AT gt_supported_obj_types ASSIGNING <ls_supported_obj_type> WHERE supported = abap_true.
+        INSERT <ls_supported_obj_type>-obj_type INTO TABLE rt_types.
+      ENDLOOP.
       RETURN.
     ENDIF.
+
+    " delete content because it might be filled already by method IS_TYPE_SUPPORTED
+    CLEAR gt_supported_obj_types.
 
     CALL FUNCTION 'TR_OBJECT_TABLE'
       TABLES
@@ -1034,13 +1075,21 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         OTHERS         = 1 ##FM_SUBRC_OK.
 
     LOOP AT lt_objects ASSIGNING <ls_object> WHERE pgmid = 'R3TR'.
+
       ls_item-obj_type = <ls_object>-object.
 
-      IF is_supported( ls_item ) = abap_true.
-        INSERT <ls_object>-object INTO TABLE rt_types.
+      ls_supported_obj_type-obj_type  = <ls_object>-object.
+      ls_supported_obj_type-supported = is_supported( ls_item ).
+
+      INSERT ls_supported_obj_type INTO TABLE gt_supported_obj_types.
+
+      IF ls_supported_obj_type-supported = abap_true.
+        INSERT ls_supported_obj_type-obj_type INTO TABLE rt_types.
       ENDIF.
+
     ENDLOOP.
-    gt_supported_obj_types = rt_types.
+
+    gv_supported_obj_types_loaded = abap_true.
 
   ENDMETHOD.
 
