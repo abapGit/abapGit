@@ -224,6 +224,16 @@ CLASS ltcl_prio_deserialization DEFINITION FINAL FOR TESTING
       webi_before_sprx FOR TESTING RAISING cx_static_check,
       iasp_before_isrp FOR TESTING RAISING cx_static_check,
       iobj_before_odso FOR TESTING RAISING cx_static_check,
+      tobj_before_scp1 FOR TESTING RAISING cx_static_check,
+      otgr_before_char FOR TESTING RAISING cx_static_check,
+      sprx_before_clas FOR TESTING RAISING cx_static_check,
+      sprx_before_intf FOR TESTING RAISING cx_static_check,
+      sprx_before_tabl FOR TESTING RAISING cx_static_check,
+      pinf_before_devc FOR TESTING RAISING cx_static_check,
+      clas_before_pinf FOR TESTING RAISING cx_static_check,
+      enhs_before_ensc FOR TESTING RAISING cx_static_check,
+      ensc_before_enho FOR TESTING RAISING cx_static_check,
+      enho_before_enhc FOR TESTING RAISING cx_static_check,
       xslt_before_clas_and_prog FOR TESTING RAISING cx_static_check,
 
       given
@@ -249,6 +259,78 @@ CLASS ltcl_prio_deserialization IMPLEMENTATION.
     mv_exp_output_tabix = 0.
   ENDMETHOD.
 
+  METHOD enhs_before_ensc.
+    given( 'ENSC' ).
+    given( 'ENHS' ).
+    when_deser_is_priorized( ).
+    then( 'ENHS' ).
+    then( 'ENSC' ).
+  ENDMETHOD.
+
+  METHOD ensc_before_enho.
+    given( 'ENHO' ).
+    given( 'ENSC' ).
+    when_deser_is_priorized( ).
+    then( 'ENSC' ).
+    then( 'ENHO' ).
+  ENDMETHOD.
+
+  METHOD enho_before_enhc.
+    given( 'ENHC' ).
+    given( 'ENHO' ).
+    when_deser_is_priorized( ).
+    then( 'ENHO' ).
+    then( 'ENHC' ).
+  ENDMETHOD.
+
+  METHOD sprx_before_clas.
+    given( 'CLAS' ).
+    given( 'SPRX' ).
+    when_deser_is_priorized( ).
+    then( 'SPRX' ).
+    then( 'CLAS' ).
+  ENDMETHOD.
+
+  METHOD sprx_before_intf.
+    given( 'INTF' ).
+    given( 'SPRX' ).
+    when_deser_is_priorized( ).
+    then( 'SPRX' ).
+    then( 'INTF' ).
+  ENDMETHOD.
+
+  METHOD sprx_before_tabl.
+    given( 'TABL' ).
+    given( 'SPRX' ).
+    when_deser_is_priorized( ).
+    then( 'SPRX' ).
+    then( 'TABL' ).
+  ENDMETHOD.
+
+  METHOD otgr_before_char.
+    given( 'CHAR' ).
+    given( 'OTGR' ).
+    when_deser_is_priorized( ).
+    then( 'OTGR' ).
+    then( 'CHAR' ).
+  ENDMETHOD.
+
+  METHOD pinf_before_devc.
+    given( 'DEVC' ).
+    given( 'PINF' ).
+    when_deser_is_priorized( ).
+    then( 'PINF' ).
+    then( 'DEVC' ).
+  ENDMETHOD.
+
+  METHOD tobj_before_scp1.
+    given( 'SCP1' ).
+    given( 'TOBJ' ).
+    when_deser_is_priorized( ).
+    then( 'TOBJ' ).
+    then( 'SCP1' ).
+  ENDMETHOD.
+
   METHOD iobj_before_odso.
     given( 'ODSO' ).
     given( 'IOBJ' ).
@@ -271,6 +353,14 @@ CLASS ltcl_prio_deserialization IMPLEMENTATION.
     when_deser_is_priorized( ).
     then( 'WEBI' ).
     then( 'SPRX' ).
+  ENDMETHOD.
+
+  METHOD clas_before_pinf.
+    given( 'PINF' ).
+    given( 'CLAS' ).
+    when_deser_is_priorized( ).
+    then( 'CLAS' ).
+    then( 'PINF' ).
   ENDMETHOD.
 
   METHOD xslt_before_clas_and_prog.
