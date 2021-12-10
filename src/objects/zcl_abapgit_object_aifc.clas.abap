@@ -22,39 +22,39 @@ CLASS zcl_abapgit_object_aifc DEFINITION
   PROTECTED SECTION.
 
     TYPES:
-      BEGIN OF mty_aif_key_s,
+      BEGIN OF ty_aif_key_s,
         ns     TYPE c LENGTH 6,
         ifname TYPE c LENGTH 10,
         ifver  TYPE c LENGTH 5,
-      END OF mty_aif_key_s .
+      END OF ty_aif_key_s .
     TYPES:
 ******************************************************************
-      BEGIN OF mty_icd_data_key_s,
+      BEGIN OF ty_icd_data_key_s,
         depl_scenario TYPE c LENGTH 20,
         ns            TYPE c LENGTH 6,
         ifname        TYPE c LENGTH 10,
         ifver2        TYPE c LENGTH 4,
-      END OF mty_icd_data_key_s .
+      END OF ty_icd_data_key_s .
     TYPES:
 ****************************************************************
-      BEGIN OF mty_icd_data_key,
+      BEGIN OF ty_icd_data_key,
         depl_scenario TYPE c LENGTH 20,
         ns            TYPE c LENGTH 6,
         ifname        TYPE c LENGTH 10,
         ifver2        TYPE c LENGTH 4,
         ifver         TYPE c LENGTH 5,
-      END OF mty_icd_data_key .
+      END OF ty_icd_data_key .
     TYPES:
 *****************************************************************
-      BEGIN OF mty_table_data_s,
+      BEGIN OF ty_table_data_s,
         tabname    TYPE tabname,
         table_data TYPE REF TO data,
-      END OF mty_table_data_s .
+      END OF ty_table_data_s .
     TYPES:
-      mty_table_data_t TYPE SORTED TABLE OF
-         mty_table_data_s WITH UNIQUE KEY tabname .
+      ty_table_data_t TYPE SORTED TABLE OF
+         ty_table_data_s WITH UNIQUE KEY tabname .
 
-    DATA ms_icd_data_key TYPE mty_icd_data_key_s .
+    DATA ms_icd_data_key TYPE ty_icd_data_key_s .
 
     METHODS handle_table_data
       IMPORTING
@@ -72,20 +72,20 @@ CLASS zcl_abapgit_object_aifc DEFINITION
     METHODS get_content_compress
       IMPORTING
         !ir_log     TYPE REF TO zif_abapgit_log
-        !is_ifkeys  TYPE mty_aif_key_s
+        !is_ifkeys  TYPE ty_aif_key_s
         !iv_package TYPE devclass
       RAISING
         zcx_abapgit_exception .
     METHODS validate_interface
       IMPORTING
-        !is_ifkeys        TYPE mty_aif_key_s
+        !is_ifkeys        TYPE ty_aif_key_s
       RETURNING
         VALUE(rv_success) TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
     METHODS compress_interface
       IMPORTING
-        !is_ifkeys        TYPE mty_aif_key_s
+        !is_ifkeys        TYPE ty_aif_key_s
         !ir_log           TYPE REF TO zif_abapgit_log
       RETURNING
         VALUE(rv_success) TYPE abap_bool
@@ -344,7 +344,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
     DATA  lr_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
 
-    DATA ls_icd_data_key TYPE mty_icd_data_key.
+    DATA ls_icd_data_key TYPE ty_icd_data_key.
     ls_icd_data_key-depl_scenario = ms_icd_data_key-depl_scenario.
     ls_icd_data_key-ns = ms_icd_data_key-ns.
     ls_icd_data_key-ifname = ms_icd_data_key-ifname.
@@ -394,7 +394,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
     FIELD-SYMBOLS <ls_entry> TYPE any.
     FIELD-SYMBOLS <lv_spras> TYPE any.
 
-    DATA ls_ifkey TYPE mty_aif_key_s.
+    DATA ls_ifkey TYPE ty_aif_key_s.
     DATA lr_content TYPE REF TO ty_content_s.
 
     DATA lv_tablename TYPE string.
@@ -501,7 +501,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
     DATA: lr_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
 
-    DATA ls_icd_data_key TYPE mty_icd_data_key.
+    DATA ls_icd_data_key TYPE ty_icd_data_key.
 
     ls_icd_data_key-depl_scenario = ms_icd_data_key-depl_scenario.
     ls_icd_data_key-ns = ms_icd_data_key-ns.
@@ -599,15 +599,15 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
     DATA: lr_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
 
-    DATA ls_icd_data_key TYPE mty_icd_data_key.
-    DATA lt_ifdata TYPE mty_table_data_t.
+    DATA ls_icd_data_key TYPE ty_icd_data_key.
+    DATA lt_ifdata TYPE ty_table_data_t.
 
     DATA lr_data TYPE REF TO data.
     FIELD-SYMBOLS <ls_data> TYPE any.
 
     DATA lt_content TYPE ty_content_t.
     DATA ls_content TYPE ty_content_s.
-    DATA lr_ifdata TYPE REF TO mty_table_data_s.
+    DATA lr_ifdata TYPE REF TO ty_table_data_s.
     FIELD-SYMBOLS <lt_table> TYPE ANY TABLE.
 
     IF zif_abapgit_object~exists( ) = abap_false.
@@ -617,7 +617,9 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
     TRY.
 
         ASSIGN  lr_data TO <ls_data>.
-        CHECK <ls_data> IS ASSIGNED.
+        IF NOT <ls_data> IS ASSIGNED.
+          RETURN.
+        ENDIF.
 
         ls_icd_data_key-depl_scenario = ms_icd_data_key-depl_scenario.
         ls_icd_data_key-ns = ms_icd_data_key-ns.
