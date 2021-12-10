@@ -26,7 +26,7 @@ CLASS zcl_abapgit_object_aifc DEFINITION
         ns     TYPE c LENGTH 6,
         ifname TYPE c LENGTH 10,
         ifver  TYPE c LENGTH 5,
-      END OF mty_aif_key_s.
+      END OF mty_aif_key_s .
     TYPES:
 ******************************************************************
       BEGIN OF mty_icd_data_key_s,
@@ -34,7 +34,7 @@ CLASS zcl_abapgit_object_aifc DEFINITION
         ns            TYPE c LENGTH 6,
         ifname        TYPE c LENGTH 10,
         ifver2        TYPE c LENGTH 4,
-      END OF mty_icd_data_key_s.
+      END OF mty_icd_data_key_s .
     TYPES:
 ****************************************************************
       BEGIN OF mty_icd_data_key,
@@ -43,59 +43,46 @@ CLASS zcl_abapgit_object_aifc DEFINITION
         ifname        TYPE c LENGTH 10,
         ifver2        TYPE c LENGTH 4,
         ifver         TYPE c LENGTH 5,
-      END OF mty_icd_data_key.
+      END OF mty_icd_data_key .
     TYPES:
 *****************************************************************
       BEGIN OF mty_table_data_s,
         tabname    TYPE tabname,
         table_data TYPE REF TO data,
-      END OF mty_table_data_s.
+      END OF mty_table_data_s .
     TYPES:
       mty_table_data_t TYPE SORTED TABLE OF
-       mty_table_data_s WITH UNIQUE KEY tabname.
+         mty_table_data_s WITH UNIQUE KEY tabname .
 
     DATA ms_icd_data_key TYPE mty_icd_data_key_s .
-    CONSTANTS mc_technical_language_1q TYPE spras VALUE '늑'.
-    CONSTANTS mc_technical_language_2q TYPE spras VALUE '닱'.
 
     METHODS handle_table_data
       IMPORTING
         !iv_tabname TYPE tabname
         !it_data    TYPE STANDARD TABLE
       RAISING
-        zcx_abapgit_exception.
-    METHODS raise_t100_abapgit
-      IMPORTING
-        !iv_msgid    TYPE symsgid
-        !iv_msgno    TYPE symsgno
-        !iv_msgv1    TYPE symsgv
-        !iv_msgv2    TYPE symsgv
-        !iv_msgv3    TYPE symsgv
-        !iv_msgv4    TYPE symsgv
-        !ir_previous TYPE REF TO cx_root
-      RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS authorization_check
       IMPORTING
         !ir_log           TYPE REF TO zif_abapgit_log
       RETURNING
         VALUE(rv_success) TYPE abap_bool
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS get_content_compress
       IMPORTING
         !ir_log     TYPE REF TO zif_abapgit_log
         !is_ifkeys  TYPE mty_aif_key_s
         !iv_package TYPE devclass
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS validate_interface
       IMPORTING
         !is_ifkeys        TYPE mty_aif_key_s
       RETURNING
         VALUE(rv_success) TYPE abap_bool
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS compress_interface
       IMPORTING
         !is_ifkeys        TYPE mty_aif_key_s
@@ -103,7 +90,7 @@ CLASS zcl_abapgit_object_aifc DEFINITION
       RETURNING
         VALUE(rv_success) TYPE abap_bool
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
   PRIVATE SECTION.
 
     DATA mr_abapgit_util TYPE REF TO object.
@@ -193,7 +180,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
           ls_parameter  TYPE abap_parmbind,
           lt_parameters TYPE abap_parmbind_tab.
 
-    DATA: exc_ref TYPE REF TO cx_sy_dyn_call_error.
+    DATA: lcx_exc_ref TYPE REF TO cx_sy_dyn_call_error.
 
     super->constructor( is_item     = is_item
                         iv_language = iv_language ).
@@ -214,7 +201,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
         CALL METHOD (lv_class)=>(lv_meth)
           PARAMETER-TABLE
           lt_parameters.
-      CATCH cx_sy_dyn_call_error INTO exc_ref.
+      CATCH cx_sy_dyn_call_error INTO lcx_exc_ref.
     ENDTRY.
 
   ENDMETHOD.
@@ -312,22 +299,15 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD raise_t100_abapgit.
-    zcx_abapgit_exception=>raise( iv_text = TEXT-002
-                                  ix_previous = ir_previous ).
-  ENDMETHOD.
-
-
   METHOD validate_interface.
-
-    rv_success = abap_false.
-
     DATA: lv_meth       TYPE string,
           ls_parameter  TYPE abap_parmbind,
           lt_parameters TYPE abap_parmbind_tab.
 
     DATA: lr_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
     DATA: lr_root TYPE REF TO cx_root.
+
+    rv_success = abap_false.
 
     TRY.
 
@@ -358,9 +338,6 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-
-    CLEAR rv_user.
-
     DATA: lv_meth       TYPE string,
           ls_parameter  TYPE abap_parmbind,
           lt_parameters TYPE abap_parmbind_tab.
@@ -372,6 +349,8 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
     ls_icd_data_key-ns = ms_icd_data_key-ns.
     ls_icd_data_key-ifname = ms_icd_data_key-ifname.
     ls_icd_data_key-ifver2 = ms_icd_data_key-ifver2.
+
+    CLEAR rv_user.
 
     TRY.
         lv_meth     = '/AIF/IF_ABAPGIT_AIFC_UTIL~CHANGED_BY'.
@@ -456,21 +435,6 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
                           iv_name = lr_content->tabname
                         CHANGING
                           cg_data = <lt_table> ).
-
-*   this is for wrongly delivered texts with a technical language
-          IF lr_content->tabname = '/AIF/T_NST' OR
-             lr_content->tabname = '/AIF/T_NS_LBLT' OR
-             lr_content->tabname = '/AIF/T_FINFT'.
-
-            LOOP AT <lt_table> ASSIGNING <ls_entry>.
-              ASSIGN COMPONENT 'SPRAS' OF STRUCTURE <ls_entry> TO <lv_spras>.
-              IF sy-subrc <> 0. CONTINUE. ENDIF.
-
-              IF <lv_spras> = mc_technical_language_1q OR <lv_spras> = mc_technical_language_2q.
-                DELETE TABLE <lt_table> FROM  <ls_entry>.
-              ENDIF.
-            ENDLOOP.
-          ENDIF.
 
           handle_table_data( iv_tabname = lr_content->tabname
                              it_data = <lt_table> ).

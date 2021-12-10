@@ -31,14 +31,6 @@
      <LENGTH>100</LENGTH>
     </item>
    </TPOOL>
-   <DESCRIPTIONS>
-    <SEOCOMPOTX>
-     <CLSNAME>ZCL_ABAPGIT_OBJECT_AIFC</CLSNAME>
-     <CMPNAME>MC_TECHNICAL_LANGUAGE_2Q</CMPNAME>
-     <LANGU>E</LANGU>
-     <DESCRIPT>Language Key</DESCRIPT>
-    </SEOCOMPOTX>
-   </DESCRIPTIONS>
   </asx:values>
  </asx:abap>
 </abapGit>
