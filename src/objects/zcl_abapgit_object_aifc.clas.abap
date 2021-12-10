@@ -55,8 +55,8 @@ CLASS zcl_abapgit_object_aifc DEFINITION
        mty_table_data_s WITH UNIQUE KEY tabname .
 
     DATA ms_icd_data_key TYPE mty_icd_data_key_s .
-    CONSTANTS mc_technical_language_1q TYPE spras VALUE '늑' ##NO_TEXT.
-    CONSTANTS mc_technical_language_2q TYPE spras VALUE '닱' ##NO_TEXT.
+    CONSTANTS mc_technical_language_1q TYPE spras VALUE '늑'.
+    CONSTANTS mc_technical_language_2q TYPE spras VALUE '닱'.
 
     METHODS handle_table_data
       IMPORTING
@@ -115,15 +115,14 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
 
   METHOD authorization_check.
-
-    rv_success = abap_false.
-
     DATA: lv_meth       TYPE string,
           ls_parameter  TYPE abap_parmbind,
           lt_parameters TYPE abap_parmbind_tab.
 
     DATA: lr_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
     DATA: lr_root TYPE REF TO cx_root.
+
+    rv_success = abap_false.
 
     TRY.
         lv_meth     = '/AIF/IF_ABAPGIT_AIFC_UTIL~AUTHORIZATION_CHECK'.
@@ -187,18 +186,18 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
   METHOD constructor.
 
-    super->constructor( is_item     = is_item
-                    iv_language = iv_language ).
-
-    CLEAR ms_icd_data_key.
-    ms_icd_data_key = is_item-obj_name.
-
     DATA: lv_meth       TYPE string,
           lv_class      TYPE string,
           ls_parameter  TYPE abap_parmbind,
           lt_parameters TYPE abap_parmbind_tab.
 
     DATA: exc_ref TYPE REF TO cx_sy_dyn_call_error.
+
+    super->constructor( is_item     = is_item
+                    iv_language = iv_language ).
+
+    CLEAR ms_icd_data_key.
+    ms_icd_data_key = is_item-obj_name.
 
     TRY.
 
@@ -399,34 +398,36 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
     DATA: lr_root TYPE REF TO cx_root.
+    DATA: lt_content TYPE mty_content_t.
+
+    DATA lr_tabledescr TYPE REF TO cl_abap_tabledescr.
+    DATA lr_structdescr TYPE REF TO cl_abap_structdescr.
+    DATA lr_table TYPE REF TO data.
+    FIELD-SYMBOLS <lt_table> TYPE STANDARD TABLE.
+    FIELD-SYMBOLS <ls_table> TYPE any.
+    FIELD-SYMBOLS <ls_entry> TYPE any.
+    FIELD-SYMBOLS <lv_spras> TYPE any .
+
+    DATA ls_ifkey TYPE mty_aif_key_s.
+    DATA lr_content TYPE REF TO mty_content_s.
+
+    DATA lv_tablename TYPE string.
+
+    FIELD-SYMBOLS: <lv_value> TYPE any.
 
     IF iv_step <> zif_abapgit_object=>gc_step_id-abap.
       RETURN.
     ENDIF.
 
-
     TRY.
-
-        DATA: lt_content TYPE mty_content_t.
         io_xml->read( EXPORTING
-                        iv_name = `Content_table`  ##no_text
+                        iv_name = `Content_table`
                       CHANGING
                         cg_data = lt_content ).
 
-        DATA lr_tabledescr TYPE REF TO cl_abap_tabledescr.
-        DATA lr_structdescr TYPE REF TO cl_abap_structdescr.
-        DATA lr_table TYPE REF TO data.
-        FIELD-SYMBOLS <lt_table> TYPE STANDARD TABLE.
-        FIELD-SYMBOLS <ls_table> TYPE any.
-        FIELD-SYMBOLS <ls_entry> TYPE any.
-        FIELD-SYMBOLS <lv_spras> TYPE any .
 
-        DATA ls_ifkey TYPE mty_aif_key_s.
-        DATA lr_content TYPE REF TO mty_content_s.
         LOOP AT lt_content REFERENCE INTO lr_content.
-
           TRY.
-              DATA lv_tablename TYPE string.
               lv_tablename = cl_abap_dyn_prg=>check_table_name_str( val = lr_content->tabname packages = '' ).
             CATCH cx_abap_not_a_table.
               RAISE EXCEPTION TYPE zcx_abapgit_exception.
@@ -455,7 +456,6 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
              lr_content->tabname = '/AIF/T_FINFT'.
 
             LOOP AT <lt_table> ASSIGNING <ls_entry>.
-
               ASSIGN COMPONENT 'SPRAS' OF STRUCTURE <ls_entry> TO <lv_spras>.
               IF sy-subrc <> 0. CONTINUE. ENDIF.
 
@@ -469,8 +469,6 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
                              it_data = <lt_table> ).
 
           IF lr_content->tabname = '/AIF/T_FINF'.
-            FIELD-SYMBOLS: <lv_value> TYPE any.
-
             READ TABLE <lt_table> ASSIGNING <ls_table> INDEX 1.
 
             ASSIGN COMPONENT 'NS' OF STRUCTURE <ls_table> TO <lv_value>.
@@ -498,7 +496,6 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
           RETURN.
         ENDIF.
 
-
         get_content_compress( ir_log = ii_log
                               is_ifkeys = ls_ifkey
                               iv_package = iv_package ).
@@ -525,9 +522,6 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~exists.
-
-    rv_bool = abap_false.
-
     DATA: lv_meth       TYPE string,
           ls_parameter  TYPE abap_parmbind,
           lt_parameters TYPE abap_parmbind_tab.
@@ -535,10 +529,13 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
     DATA: lr_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
 
     DATA ls_icd_data_key TYPE mty_icd_data_key.
+
     ls_icd_data_key-depl_scenario = ms_icd_data_key-depl_scenario.
     ls_icd_data_key-ns = ms_icd_data_key-ns.
     ls_icd_data_key-ifname = ms_icd_data_key-ifname.
     ls_icd_data_key-ifver2 = ms_icd_data_key-ifver2.
+
+    rv_bool = abap_false.
 
     TRY.
         lv_meth     = '/AIF/IF_ABAPGIT_AIFC_UTIL~EXISTS'.
@@ -622,24 +619,28 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
     DATA: lr_root TYPE REF TO cx_root.
 
+    DATA: lv_meth       TYPE string,
+          ls_parameter  TYPE abap_parmbind,
+          lt_parameters TYPE abap_parmbind_tab.
+
+    DATA: lr_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
+
+    DATA ls_icd_data_key TYPE mty_icd_data_key.
+    DATA lt_ifdata TYPE mty_table_data_t.
+
+    DATA lr_data TYPE REF TO data.
+    FIELD-SYMBOLS <ls_data> TYPE any.
+
+    DATA lt_content TYPE mty_content_t.
+    DATA ls_content TYPE mty_content_s.
+    DATA lr_ifdata TYPE REF TO mty_table_data_s.
+    FIELD-SYMBOLS <lt_table> TYPE ANY TABLE.
+
     IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
     ENDIF.
 
     TRY.
-
-        DATA: lv_meth       TYPE string,
-              ls_parameter  TYPE abap_parmbind,
-              lt_parameters TYPE abap_parmbind_tab.
-
-        DATA: lr_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
-
-        DATA ls_icd_data_key TYPE mty_icd_data_key.
-        DATA lt_ifdata TYPE mty_table_data_t.
-
-        DATA lr_data TYPE REF TO data.
-        FIELD-SYMBOLS <ls_data> TYPE any.
-
 
         ASSIGN  lr_data TO <ls_data>.
         CHECK <ls_data> IS ASSIGNED.
@@ -670,11 +671,6 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
             zcx_abapgit_exception=>raise( iv_text = TEXT-003 ix_previous = lr_dyn_call_error ).
         ENDTRY.
 
-        DATA lt_content TYPE mty_content_t.
-        DATA ls_content TYPE mty_content_s.
-        DATA lr_ifdata TYPE REF TO mty_table_data_s.
-        FIELD-SYMBOLS <lt_table> TYPE ANY TABLE.
-
         LOOP AT lt_ifdata REFERENCE INTO lr_ifdata.
 
           UNASSIGN <lt_table>.
@@ -691,7 +687,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
         ENDLOOP.
 
-        io_xml->add( iv_name = `Content_table` ##no_text
+        io_xml->add( iv_name = `Content_table`
                      ig_data = lt_content ).
 
       CATCH cx_root INTO lr_root.
