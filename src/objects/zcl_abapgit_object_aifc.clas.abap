@@ -2,16 +2,16 @@ CLASS zcl_abapgit_object_aifc DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_objects_super
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_object .
+    INTERFACES zif_abapgit_object.
 
     TYPES:
       BEGIN OF mty_content_s,
         tabname TYPE tabname,
-      END OF mty_content_s .
+      END OF mty_content_s.
     TYPES:
       mty_content_t TYPE STANDARD TABLE OF mty_content_s WITH NON-UNIQUE DEFAULT KEY .
 
@@ -26,7 +26,7 @@ CLASS zcl_abapgit_object_aifc DEFINITION
         ns     TYPE c LENGTH 6,
         ifname TYPE c LENGTH 10,
         ifver  TYPE c LENGTH 5,
-      END OF mty_aif_key_s .
+      END OF mty_aif_key_s.
     TYPES:
 ******************************************************************
       BEGIN OF mty_icd_data_key_s,
@@ -34,7 +34,7 @@ CLASS zcl_abapgit_object_aifc DEFINITION
         ns            TYPE c LENGTH 6,
         ifname        TYPE c LENGTH 10,
         ifver2        TYPE c LENGTH 4,
-      END OF mty_icd_data_key_s .
+      END OF mty_icd_data_key_s.
     TYPES:
 ****************************************************************
       BEGIN OF mty_icd_data_key,
@@ -43,16 +43,16 @@ CLASS zcl_abapgit_object_aifc DEFINITION
         ifname        TYPE c LENGTH 10,
         ifver2        TYPE c LENGTH 4,
         ifver         TYPE c LENGTH 5,
-      END OF mty_icd_data_key .
+      END OF mty_icd_data_key.
     TYPES:
 *****************************************************************
       BEGIN OF mty_table_data_s,
         tabname    TYPE tabname,
         table_data TYPE REF TO data,
-      END OF mty_table_data_s .
+      END OF mty_table_data_s.
     TYPES:
       mty_table_data_t TYPE SORTED TABLE OF
-       mty_table_data_s WITH UNIQUE KEY tabname .
+       mty_table_data_s WITH UNIQUE KEY tabname.
 
     DATA ms_icd_data_key TYPE mty_icd_data_key_s .
     CONSTANTS mc_technical_language_1q TYPE spras VALUE '늑'.
@@ -63,7 +63,7 @@ CLASS zcl_abapgit_object_aifc DEFINITION
         !iv_tabname TYPE tabname
         !it_data    TYPE STANDARD TABLE
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS raise_t100_abapgit
       IMPORTING
         !iv_msgid    TYPE symsgid
@@ -74,28 +74,28 @@ CLASS zcl_abapgit_object_aifc DEFINITION
         !iv_msgv4    TYPE symsgv
         !ir_previous TYPE REF TO cx_root
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS authorization_check
       IMPORTING
         !ir_log           TYPE REF TO zif_abapgit_log
       RETURNING
         VALUE(rv_success) TYPE abap_bool
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS get_content_compress
       IMPORTING
         !ir_log     TYPE REF TO zif_abapgit_log
         !is_ifkeys  TYPE mty_aif_key_s
         !iv_package TYPE devclass
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS validate_interface
       IMPORTING
         !is_ifkeys        TYPE mty_aif_key_s
       RETURNING
         VALUE(rv_success) TYPE abap_bool
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS compress_interface
       IMPORTING
         !is_ifkeys        TYPE mty_aif_key_s
@@ -103,7 +103,7 @@ CLASS zcl_abapgit_object_aifc DEFINITION
       RETURNING
         VALUE(rv_success) TYPE abap_bool
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
   PRIVATE SECTION.
 
     DATA mr_abapgit_util TYPE REF TO object.
@@ -137,7 +137,8 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
           lt_parameters.
 
       CATCH cx_sy_dyn_call_error INTO lr_dyn_call_error.
-        zcx_abapgit_exception=>raise( iv_text = TEXT-003 ix_previous = lr_dyn_call_error ).
+        zcx_abapgit_exception=>raise( iv_text = TEXT-003
+                                      ix_previous = lr_dyn_call_error ).
       CATCH cx_root INTO lr_root.
         ir_log->add_exception( ix_exc  = lr_root
                                is_item = ms_item ).
@@ -148,14 +149,14 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
 
   METHOD compress_interface.
+    DATA: lv_meth       TYPE string,
+          ls_parameter  TYPE abap_parmbind,
+          lt_parameters TYPE abap_parmbind_tab.
+
+    DATA: lr_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
+    DATA: lr_root TYPE REF TO cx_root.
+
     TRY.
-        DATA: lv_meth       TYPE string,
-              ls_parameter  TYPE abap_parmbind,
-              lt_parameters TYPE abap_parmbind_tab.
-
-        DATA: lr_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
-        DATA: lr_root TYPE REF TO cx_root.
-
         lv_meth     = '/AIF/IF_ABAPGIT_AIFC_UTIL~COMPRESS_INTERFACE'.
 
         ls_parameter-name = 'IS_IFKEYS'.
@@ -173,7 +174,8 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
           lt_parameters.
 
       CATCH cx_sy_dyn_call_error INTO lr_dyn_call_error.
-        zcx_abapgit_exception=>raise( iv_text = TEXT-003 ix_previous = lr_dyn_call_error ).
+        zcx_abapgit_exception=>raise( iv_text = TEXT-003
+                                      ix_previous = lr_dyn_call_error ).
 
       CATCH cx_root INTO lr_root.
         ir_log->add_exception( ix_exc  = lr_root
@@ -194,7 +196,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
     DATA: exc_ref TYPE REF TO cx_sy_dyn_call_error.
 
     super->constructor( is_item     = is_item
-                    iv_language = iv_language ).
+                        iv_language = iv_language ).
 
     CLEAR ms_icd_data_key.
     ms_icd_data_key = is_item-obj_name.
@@ -232,7 +234,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
         CREATE OBJECT lr_log TYPE ('/AIF/CL_ABAPGIT_BAL_LOG')
           EXPORTING ir_git_log = ir_log
-                    is_item = ms_item .
+                    is_item = ms_item.
 
         lv_meth     = '/AIF/IF_ABAPGIT_AIFC_UTIL~INITIALIZE_CONTENT_COMPRESS'.
 
@@ -262,7 +264,8 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
           lt_parameters.
 
       CATCH cx_sy_dyn_call_error INTO lr_dyn_call_error.
-        zcx_abapgit_exception=>raise( iv_text = TEXT-003 ix_previous = lr_dyn_call_error ).
+        zcx_abapgit_exception=>raise( iv_text = TEXT-003
+                                      ix_previous = lr_dyn_call_error ).
       CATCH cx_root INTO lr_root.
         ir_log->add_exception( ix_exc  = lr_root
                                is_item = ms_item ).
@@ -298,7 +301,8 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
           lt_parameters.
 
       CATCH cx_sy_dyn_call_error INTO lr_dyn_call_error.
-        zcx_abapgit_exception=>raise( iv_text = TEXT-003 ix_previous = lr_dyn_call_error ).
+        zcx_abapgit_exception=>raise( iv_text = TEXT-003
+                                      ix_previous = lr_dyn_call_error ).
       CATCH cx_root INTO lr_root.
         RAISE EXCEPTION TYPE zcx_abapgit_exception
           EXPORTING
@@ -309,7 +313,8 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
 
   METHOD raise_t100_abapgit.
-    zcx_abapgit_exception=>raise( iv_text = TEXT-002 ix_previous = ir_previous ).
+    zcx_abapgit_exception=>raise( iv_text = TEXT-002
+                                  ix_previous = ir_previous ).
   ENDMETHOD.
 
 
@@ -343,7 +348,8 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
           lt_parameters.
 
       CATCH cx_sy_dyn_call_error INTO lr_dyn_call_error.
-        zcx_abapgit_exception=>raise( iv_text = TEXT-003 ix_previous = lr_dyn_call_error ).
+        zcx_abapgit_exception=>raise( iv_text = TEXT-003
+                                      ix_previous = lr_dyn_call_error ).
       CATCH cx_root INTO lr_root.
         RETURN.
     ENDTRY.
@@ -385,7 +391,8 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
           lt_parameters.
 
       CATCH cx_sy_dyn_call_error INTO lr_dyn_call_error.
-        zcx_abapgit_exception=>raise( iv_text = TEXT-003 ix_previous = lr_dyn_call_error ).
+        zcx_abapgit_exception=>raise( iv_text = TEXT-003
+                                      ix_previous = lr_dyn_call_error ).
     ENDTRY.
 
   ENDMETHOD.
@@ -406,7 +413,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
     FIELD-SYMBOLS <lt_table> TYPE STANDARD TABLE.
     FIELD-SYMBOLS <ls_table> TYPE any.
     FIELD-SYMBOLS <ls_entry> TYPE any.
-    FIELD-SYMBOLS <lv_spras> TYPE any .
+    FIELD-SYMBOLS <lv_spras> TYPE any.
 
     DATA ls_ifkey TYPE mty_aif_key_s.
     DATA lr_content TYPE REF TO mty_content_s.
@@ -555,7 +562,8 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
           lt_parameters.
 
       CATCH cx_sy_dyn_call_error INTO lr_dyn_call_error.
-        zcx_abapgit_exception=>raise( iv_text = TEXT-003 ix_previous = lr_dyn_call_error ).
+        zcx_abapgit_exception=>raise( iv_text = TEXT-003
+                                      ix_previous = lr_dyn_call_error ).
     ENDTRY.
 
   ENDMETHOD.
@@ -668,7 +676,8 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
               lt_parameters.
 
           CATCH cx_sy_dyn_call_error INTO lr_dyn_call_error.
-            zcx_abapgit_exception=>raise( iv_text = TEXT-003 ix_previous = lr_dyn_call_error ).
+            zcx_abapgit_exception=>raise( iv_text = TEXT-003
+                                          ix_previous = lr_dyn_call_error ).
         ENDTRY.
 
         LOOP AT lt_ifdata REFERENCE INTO lr_ifdata.
