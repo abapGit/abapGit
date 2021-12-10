@@ -508,7 +508,6 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
           RETURN.
         ENDIF.
 
-        "mr_content_compress->content_select( ).
         IF validate_interface( is_ifkeys = ls_ifkey ) = abap_false.
           RETURN.
         ENDIF.
