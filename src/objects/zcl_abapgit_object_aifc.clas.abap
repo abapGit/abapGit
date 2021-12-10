@@ -106,7 +106,7 @@ CLASS zcl_abapgit_object_aifc DEFINITION
         zcx_abapgit_exception .
   PRIVATE SECTION.
 
-    DATA mr_abapgit_util TYPE REF TO object .
+    DATA mr_abapgit_util TYPE REF TO object.
 ENDCLASS.
 
 
@@ -120,7 +120,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
     DATA: lv_meth       TYPE string,
           ls_parameter  TYPE abap_parmbind,
-          lt_parameters TYPE abap_parmbind_tab..
+          lt_parameters TYPE abap_parmbind_tab.
 
     DATA: lr_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
     DATA: lr_root TYPE REF TO cx_root.
