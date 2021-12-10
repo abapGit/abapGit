@@ -230,7 +230,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     " If abapGit was used to update itself, then restart to avoid LOAD_PROGRAM_&_MISMATCH dumps
     " because abapGit code was changed at runtime
-    IF zcl_abapgit_ui_factory=>get_gui_functions( )->gui_is_available( ) = abap_true AND
+    IF zcl_abapgit_ui_factory=>get_frontend_services( )->gui_is_available( ) = abap_true AND
        zcl_abapgit_url=>is_abapgit_repo( ms_data-url ) = abap_true AND
        sy-batch = abap_false AND
        sy-cprog = lc_abapgit_prog.

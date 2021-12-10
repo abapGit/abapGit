@@ -53,7 +53,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
+CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
 
 
   METHOD check_sapgui.
@@ -74,7 +74,7 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    IF zcl_abapgit_ui_factory=>get_gui_functions( )->is_sapgui_for_java( ) = abap_false.
+    IF zcl_abapgit_ui_factory=>get_frontend_services( )->is_sapgui_for_java( ) = abap_false.
       RETURN.
     ENDIF.
 
@@ -183,6 +183,18 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD open_url_in_browser.
+    DATA lx_error TYPE REF TO zcx_abapgit_exception.
+
+    TRY.
+        zcl_abapgit_ui_factory=>get_frontend_services( )->execute( iv_document = iv_url ).
+      CATCH zcx_abapgit_exception INTO lx_error.
+        zcx_abapgit_exception=>raise( iv_text     = 'Opening page in external browser failed.'
+                                      ix_previous = lx_error ).
+    ENDTRY.
+  ENDMETHOD.
+
+
   METHOD prepare_gui_startup.
 
     DATA: lv_repo_key    TYPE zif_abapgit_persistence=>ty_value,
@@ -272,16 +284,4 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
-  METHOD open_url_in_browser.
-    DATA lx_error TYPE REF TO zcx_abapgit_exception.
-
-    TRY.
-        zcl_abapgit_ui_factory=>get_frontend_services( )->execute( iv_document = iv_url ).
-      CATCH zcx_abapgit_exception INTO lx_error.
-        zcx_abapgit_exception=>raise( iv_text     = 'Opening page in external browser failed.'
-                                      ix_previous = lx_error ).
-    ENDTRY.
-  ENDMETHOD.
-
 ENDCLASS.
