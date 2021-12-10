@@ -574,8 +574,8 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
     DATA lv_report TYPE progname VALUE '/AIF/CONTENT_DISPLAY'.
 
-    TYPES: lty_rsparamsl_255_t TYPE STANDARD TABLE OF rsparamsl_255 WITH NON-UNIQUE DEFAULT KEY.
-    DATA lt_params TYPE lty_rsparamsl_255_t.
+    TYPES: ty_rsparamsl_255_t TYPE STANDARD TABLE OF rsparamsl_255 WITH NON-UNIQUE DEFAULT KEY.
+    DATA lt_params TYPE ty_rsparamsl_255_t.
     DATA ls_param LIKE LINE OF lt_params.
 
     ls_param-selname = 'P_DEPL'.
