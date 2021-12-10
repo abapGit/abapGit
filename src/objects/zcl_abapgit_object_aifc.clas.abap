@@ -9,11 +9,11 @@ CLASS zcl_abapgit_object_aifc DEFINITION
     INTERFACES zif_abapgit_object.
 
     TYPES:
-      BEGIN OF mty_content_s,
+      BEGIN OF ty_content_s,
         tabname TYPE tabname,
-      END OF mty_content_s.
+      END OF ty_content_s.
     TYPES:
-      mty_content_t TYPE STANDARD TABLE OF mty_content_s WITH NON-UNIQUE DEFAULT KEY .
+      ty_content_t TYPE STANDARD TABLE OF ty_content_s WITH NON-UNIQUE DEFAULT KEY .
 
     METHODS constructor
       IMPORTING
@@ -180,7 +180,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
           ls_parameter  TYPE abap_parmbind,
           lt_parameters TYPE abap_parmbind_tab.
 
-    DATA: lcx_exc_ref TYPE REF TO cx_sy_dyn_call_error.
+    DATA: lr_exc_ref TYPE REF TO cx_sy_dyn_call_error.
 
     super->constructor( is_item     = is_item
                         iv_language = iv_language ).
@@ -201,7 +201,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
         CALL METHOD (lv_class)=>(lv_meth)
           PARAMETER-TABLE
           lt_parameters.
-      CATCH cx_sy_dyn_call_error INTO lcx_exc_ref.
+      CATCH cx_sy_dyn_call_error INTO lr_exc_ref.
     ENDTRY.
 
   ENDMETHOD.
@@ -384,7 +384,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
     DATA: lr_root TYPE REF TO cx_root.
-    DATA: lt_content TYPE mty_content_t.
+    DATA: lt_content TYPE ty_content_t.
 
     DATA lr_tabledescr TYPE REF TO cl_abap_tabledescr.
     DATA lr_structdescr TYPE REF TO cl_abap_structdescr.
@@ -395,7 +395,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
     FIELD-SYMBOLS <lv_spras> TYPE any.
 
     DATA ls_ifkey TYPE mty_aif_key_s.
-    DATA lr_content TYPE REF TO mty_content_s.
+    DATA lr_content TYPE REF TO ty_content_s.
 
     DATA lv_tablename TYPE string.
 
@@ -414,7 +414,8 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
         LOOP AT lt_content REFERENCE INTO lr_content.
           TRY.
-              lv_tablename = cl_abap_dyn_prg=>check_table_name_str( val = lr_content->tabname packages = '' ).
+              lv_tablename = cl_abap_dyn_prg=>check_table_name_str( val = lr_content->tabname
+                                                                    packages = '' ).
             CATCH cx_abap_not_a_table.
               RAISE EXCEPTION TYPE zcx_abapgit_exception.
             CATCH cx_abap_not_in_package.
@@ -486,7 +487,8 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
         ENDIF.
 
       CATCH cx_root INTO lr_root.
-        ii_log->add_exception( ix_exc = lr_root is_item = ms_item ).
+        ii_log->add_exception( ix_exc = lr_root
+                               is_item = ms_item ).
     ENDTRY.
 
   ENDMETHOD.
@@ -603,8 +605,8 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
     DATA lr_data TYPE REF TO data.
     FIELD-SYMBOLS <ls_data> TYPE any.
 
-    DATA lt_content TYPE mty_content_t.
-    DATA ls_content TYPE mty_content_s.
+    DATA lt_content TYPE ty_content_t.
+    DATA ls_content TYPE ty_content_s.
     DATA lr_ifdata TYPE REF TO mty_table_data_s.
     FIELD-SYMBOLS <lt_table> TYPE ANY TABLE.
 
