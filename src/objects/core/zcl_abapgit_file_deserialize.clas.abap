@@ -14,25 +14,29 @@ CLASS zcl_abapgit_file_deserialize DEFINITION
         zcx_abapgit_exception .
   PROTECTED SECTION.
 
-  PRIVATE SECTION.
+private section.
 
-    CLASS-METHODS filter_files_to_deserialize
-      IMPORTING
-        !it_results       TYPE zif_abapgit_definitions=>ty_results_tt
-        !ii_log           TYPE REF TO zif_abapgit_log OPTIONAL
-      RETURNING
-        VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt.
-    CLASS-METHODS prioritize_deser
-      IMPORTING
-        !it_results       TYPE zif_abapgit_definitions=>ty_results_tt
-      RETURNING
-        VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt.
-
+  class-methods FILTER_FILES_TO_DESERIALIZE
+    importing
+      !IT_RESULTS type ZIF_ABAPGIT_DEFINITIONS=>TY_RESULTS_TT
+      !II_LOG type ref to ZIF_ABAPGIT_LOG optional
+    returning
+      value(RT_RESULTS) type ZIF_ABAPGIT_DEFINITIONS=>TY_RESULTS_TT .
+  class-methods PRIORITIZE_DESER
+    importing
+      !IT_RESULTS type ZIF_ABAPGIT_DEFINITIONS=>TY_RESULTS_TT
+    returning
+      value(RT_RESULTS) type ZIF_ABAPGIT_DEFINITIONS=>TY_RESULTS_TT .
+  class-methods MAP_RESULTS_TO_ITEMS
+    importing
+      !IT_RESULTS type ZIF_ABAPGIT_DEFINITIONS=>TY_RESULTS_TT
+    returning
+      value(RT_ITEMS) type ZIF_ABAPGIT_DEFINITIONS=>TY_ITEMS_TT .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_file_deserialize IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_FILE_DESERIALIZE IMPLEMENTATION.
 
 
   METHOD filter_files_to_deserialize.
@@ -130,6 +134,23 @@ CLASS zcl_abapgit_file_deserialize IMPLEMENTATION.
                    filter_files_to_deserialize(
                      it_results = zcl_abapgit_file_status=>status( io_repo )
                      ii_log     = ii_log ) ).
+
+  ENDMETHOD.
+
+
+  METHOD MAP_RESULTS_TO_ITEMS.
+
+    DATA: ls_item LIKE LINE OF rt_items.
+    FIELD-SYMBOLS: <ls_result> TYPE zif_abapgit_definitions=>ty_result.
+
+    LOOP AT it_results ASSIGNING <ls_result>.
+
+      ls_item-devclass = <ls_result>-package.
+      ls_item-obj_type = <ls_result>-obj_type.
+      ls_item-obj_name = <ls_result>-obj_name.
+      INSERT ls_item INTO TABLE rt_items.
+
+    ENDLOOP.
 
   ENDMETHOD.
 
