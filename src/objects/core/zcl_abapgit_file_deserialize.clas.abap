@@ -171,7 +171,13 @@ CLASS ZCL_ABAPGIT_FILE_DESERIALIZE IMPLEMENTATION.
     LOOP AT lt_items INTO ls_item.
       CLEAR lt_requires.
 
-* BEGIN extract to object handler method
+* TODO: BEGIN extract to object handler method in ZIF_ABAPGIT_OBJECT:
+*    METHODS get_deserialize_order
+*      IMPORTING
+*        it_items TYPE ty_items_tt
+*      RETURNING
+*        VALUE(rt_requries) TYPE ty_items_tt.
+
       CASE ls_item-obj_type.
         WHEN 'SPRX'.
           lt_requires = lt_items.
@@ -224,7 +230,7 @@ CLASS ZCL_ABAPGIT_FILE_DESERIALIZE IMPLEMENTATION.
           lt_requires = lt_items.
           DELETE lt_requires WHERE obj_type <> 'ENHS'.
       ENDCASE.
-* END extract to object handler method
+* TODO: END extract to object handler method
 
       LOOP AT lt_requires INTO ls_require.
         lo_graph->add_edge(
