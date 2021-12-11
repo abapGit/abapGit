@@ -14,24 +14,24 @@ CLASS zcl_abapgit_file_deserialize DEFINITION
         zcx_abapgit_exception .
   PROTECTED SECTION.
 
-private section.
+  PRIVATE SECTION.
 
-  class-methods FILTER_FILES_TO_DESERIALIZE
-    importing
-      !IT_RESULTS type ZIF_ABAPGIT_DEFINITIONS=>TY_RESULTS_TT
-      !II_LOG type ref to ZIF_ABAPGIT_LOG optional
-    returning
-      value(RT_RESULTS) type ZIF_ABAPGIT_DEFINITIONS=>TY_RESULTS_TT .
-  class-methods PRIORITIZE_DESER
-    importing
-      !IT_RESULTS type ZIF_ABAPGIT_DEFINITIONS=>TY_RESULTS_TT
-    returning
-      value(RT_RESULTS) type ZIF_ABAPGIT_DEFINITIONS=>TY_RESULTS_TT .
-  class-methods MAP_RESULTS_TO_ITEMS
-    importing
-      !IT_RESULTS type ZIF_ABAPGIT_DEFINITIONS=>TY_RESULTS_TT
-    returning
-      value(RT_ITEMS) type ZIF_ABAPGIT_DEFINITIONS=>TY_ITEMS_TT .
+    CLASS-METHODS filter_files_to_deserialize
+      IMPORTING
+        !it_results       TYPE zif_abapgit_definitions=>ty_results_tt
+        !ii_log           TYPE REF TO zif_abapgit_log OPTIONAL
+      RETURNING
+        VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt .
+    CLASS-METHODS prioritize_deser
+      IMPORTING
+        !it_results       TYPE zif_abapgit_definitions=>ty_results_tt
+      RETURNING
+        VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt .
+    CLASS-METHODS map_results_to_items
+      IMPORTING
+        !it_results     TYPE zif_abapgit_definitions=>ty_results_tt
+      RETURNING
+        VALUE(rt_items) TYPE zif_abapgit_definitions=>ty_items_tt .
 ENDCLASS.
 
 
@@ -138,7 +138,7 @@ CLASS ZCL_ABAPGIT_FILE_DESERIALIZE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD MAP_RESULTS_TO_ITEMS.
+  METHOD map_results_to_items.
 
     DATA: ls_item LIKE LINE OF rt_items.
     FIELD-SYMBOLS: <ls_result> TYPE zif_abapgit_definitions=>ty_result.
