@@ -176,7 +176,7 @@ CLASS ZCL_ABAPGIT_FILE_DESERIALIZE IMPLEMENTATION.
 *      IMPORTING
 *        it_items TYPE ty_items_tt
 *      RETURNING
-*        VALUE(rt_requries) TYPE ty_items_tt.
+*        VALUE(rt_requries) TYPE ty_items_tt
 
       CASE ls_item-obj_type.
         WHEN 'SPRX'.
