@@ -401,7 +401,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
                       iv_act = c_actions-toggle_hidden_chars
                       iv_chk = ms_view-hidden_chars ).
 
-    lo_sub_view->add( iv_txt = 'Ignore Indentation'
+    lo_sub_view->add( iv_txt = 'Ignore Whitespace'
                       iv_act = c_actions-toggle_ignore_indent
                       iv_chk = ms_view-ignore_indent ).
 
@@ -559,6 +559,9 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
       READ TABLE lt_status ASSIGNING <ls_status>
         WITH KEY path = is_file-path filename = is_file-filename.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |File { is_file-path }{ is_file-filename } not found| ).
+      ENDIF.
 
       append_diff( it_remote = lt_remote
                    it_local  = lt_local

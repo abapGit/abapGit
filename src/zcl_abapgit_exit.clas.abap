@@ -17,7 +17,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
+CLASS zcl_abapgit_exit IMPLEMENTATION.
 
 
   METHOD get_instance.
@@ -46,6 +46,21 @@ CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
               iv_commit_hash        = iv_commit_hash
             CHANGING
               cv_display_url        = cv_display_url ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_exit~adjust_display_filename.
+
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          rv_filename = gi_exit->adjust_display_filename( iv_filename ).
+          IF rv_filename IS INITIAL.
+            rv_filename = iv_filename.
+          ENDIF.
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.
@@ -259,6 +274,23 @@ CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
             CHANGING
               ct_local  = ct_local
               ct_remote = ct_remote ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_exit~serialize_postprocess.
+
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          gi_exit->serialize_postprocess(
+            EXPORTING
+              iv_package = iv_package
+              ii_log     = ii_log
+            CHANGING
+              ct_files   = ct_files ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.

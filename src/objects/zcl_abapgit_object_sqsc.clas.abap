@@ -112,7 +112,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_SQSC IMPLEMENTATION.
+CLASS zcl_abapgit_object_sqsc IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -277,11 +277,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SQSC IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
-
-    zcl_abapgit_objects_super=>jump_adt(
-        iv_obj_name = ms_item-obj_name
-        iv_obj_type = ms_item-obj_type ).
-
+    " Covered by ZCL_ABAPGIT_ADT_LINK=>JUMP
   ENDMETHOD.
 
 

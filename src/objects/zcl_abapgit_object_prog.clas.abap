@@ -42,7 +42,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
+CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
 
   METHOD deserialize_texts.
@@ -317,14 +317,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
-
-    CALL FUNCTION 'RS_TOOL_ACCESS'
-      EXPORTING
-        operation     = 'SHOW'
-        object_name   = ms_item-obj_name
-        object_type   = 'PROG'
-        in_new_window = abap_true.
-
+    " Covered by ZCL_ABAPGIT_OBJECTS=>JUMP
   ENDMETHOD.
 
 

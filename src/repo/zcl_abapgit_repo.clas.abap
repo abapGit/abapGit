@@ -230,7 +230,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     " If abapGit was used to update itself, then restart to avoid LOAD_PROGRAM_&_MISMATCH dumps
     " because abapGit code was changed at runtime
-    IF zcl_abapgit_ui_factory=>get_gui_functions( )->gui_is_available( ) = abap_true AND
+    IF zcl_abapgit_ui_factory=>get_frontend_services( )->gui_is_available( ) = abap_true AND
        zcl_abapgit_url=>is_abapgit_repo( ms_data-url ) = abap_true AND
        sy-batch = abap_false AND
        sy-cprog = lc_abapgit_prog.
@@ -690,7 +690,9 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     INSERT ls_tadir INTO TABLE lt_tadir.
 
     CREATE OBJECT lo_serialize.
-    lt_new_local_files = lo_serialize->serialize( lt_tadir ).
+    lt_new_local_files = lo_serialize->serialize(
+      iv_package = ms_data-package
+      it_tadir   = lt_tadir ).
 
     INSERT LINES OF lt_new_local_files INTO TABLE mt_local.
 
