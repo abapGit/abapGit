@@ -14,8 +14,9 @@ CLASS zcl_abapgit_oo_base DEFINITION
         RETURNING VALUE(rt_vseoattrib) TYPE seoo_attributes_r.
 
   PRIVATE SECTION.
-
+    CONSTANTS c_docu_state_active TYPE dokstate VALUE 'A'. " See include SDOC_CONSTANTS
     DATA mv_skip_test_classes TYPE abap_bool .
+
 ENDCLASS.
 
 
@@ -54,6 +55,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
         langu         = iv_language
         object        = iv_object_name
         no_masterlang = iv_no_masterlang
+        state         = c_docu_state_active
       TABLES
         line          = it_lines
       EXCEPTIONS
@@ -153,20 +155,21 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
 
     CALL FUNCTION 'DOCU_GET'
       EXPORTING
-        id                = 'CL'
-        langu             = iv_language
-        object            = lv_object
+        id                     = 'CL'
+        langu                  = iv_language
+        object                 = lv_object
+        version_active_or_last = space " retrieve active version
       IMPORTING
-        dokstate          = lv_state
+        dokstate               = lv_state
       TABLES
-        line              = lt_lines
+        line                   = lt_lines
       EXCEPTIONS
-        no_docu_on_screen = 1
-        no_docu_self_def  = 2
-        no_docu_temp      = 3
-        ret_code          = 4
-        OTHERS            = 5.
-    IF sy-subrc = 0 AND lv_state = 'R'.
+        no_docu_on_screen      = 1
+        no_docu_self_def       = 2
+        no_docu_temp           = 3
+        ret_code               = 4
+        OTHERS                 = 5.
+    IF sy-subrc = 0 AND lv_state = c_docu_state_active.
       rt_lines = lt_lines.
     ELSE.
       CLEAR rt_lines.
