@@ -66,6 +66,21 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
+  METHOD zif_abapgit_oo_object_fnc~delete_documentation.
+    CALL FUNCTION 'DOCU_DEL'
+      EXPORTING
+        id       = 'CL'
+        langu    = iv_language
+        object   = iv_object_name
+        typ      = 'E'
+      EXCEPTIONS
+        ret_code = 1
+        OTHERS   = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Error from DOCU_DEL' ).
+    ENDIF.
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_oo_object_fnc~create_sotr.
     ASSERT 0 = 1. "Subclass responsibility
