@@ -100,6 +100,12 @@ INTERFACE zif_abapgit_exit
       VALUE(rs_handled) TYPE zif_abapgit_gui_event_handler=>ty_handling_result
     RAISING
       zcx_abapgit_exception .
+  METHODS serialize_postprocess
+    IMPORTING
+      !iv_package TYPE devclass
+      !ii_log     TYPE REF TO zif_abapgit_log
+    CHANGING
+      !ct_files   TYPE zif_abapgit_definitions=>ty_files_item_tt.
   METHODS adjust_display_filename
     IMPORTING
       !iv_filename       TYPE string
