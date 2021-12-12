@@ -281,6 +281,23 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_exit~serialize_postprocess.
+
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          gi_exit->serialize_postprocess(
+            EXPORTING
+              iv_package = iv_package
+              ii_log     = ii_log
+            CHANGING
+              ct_files   = ct_files ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_exit~wall_message_list.
 
     IF gi_exit IS NOT INITIAL.
