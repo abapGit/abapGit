@@ -177,7 +177,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -968,7 +968,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     DATA: li_obj         TYPE REF TO zif_abapgit_object,
           li_xml         TYPE REF TO zif_abapgit_xml_output,
           lo_files       TYPE REF TO zcl_abapgit_objects_files,
-          ls_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params.
+          ls_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params,
+          lv_json_found  TYPE abap_bool VALUE abap_false.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF rs_files_and_item-files.
 
@@ -999,10 +1000,18 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     li_obj->serialize( li_xml ).
 
-    lo_files->add_xml( ii_xml      = li_xml
-                       is_metadata = li_obj->get_metadata( ) ).
-
     rs_files_and_item-files = lo_files->get_files( ).
+
+    LOOP AT rs_files_and_item-files TRANSPORTING NO FIELDS WHERE filename CP '*.json'.
+      lv_json_found = abap_true.  " means it can deal with json format
+      EXIT.
+    ENDLOOP.
+
+    IF lv_json_found = abap_false.
+      lo_files->add_xml( ii_xml      = li_xml
+                         is_metadata = li_obj->get_metadata( ) ).
+      rs_files_and_item-files = lo_files->get_files( ).
+    ENDIF.
 
     check_duplicates( rs_files_and_item-files ).
 
