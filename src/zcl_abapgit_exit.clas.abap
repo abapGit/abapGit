@@ -58,11 +58,12 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
     IF gi_exit IS NOT INITIAL.
       TRY.
           rv_filename = gi_exit->adjust_display_filename( iv_filename ).
-          IF rv_filename IS INITIAL.
-            rv_filename = iv_filename.
-          ENDIF.
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
+    ENDIF.
+
+    IF rv_filename IS INITIAL.
+      rv_filename = iv_filename.
     ENDIF.
 
   ENDMETHOD.
