@@ -23,6 +23,8 @@ CLASS ltcl_calculate_patch DEFINITION FINAL FOR TESTING
 
       mixed FOR TESTING RAISING cx_static_check,
 
+      no_diff FOR TESTING RAISING cx_static_check,
+
       unknown_result_type FOR TESTING RAISING cx_static_check.
 
     METHODS:
@@ -611,6 +613,23 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
       |write: `newline`.\n| ).
 
   ENDMETHOD.
+
+
+  METHOD no_diff.
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    1'
+                iv_new        = '" new'
+                iv_result     = ' '
+                iv_old_num    = '    1'
+                iv_old        = '" old' ).
+
+    when_patch_is_calculated( ).
+
+    then_patch_should_be( |" old| ).
+
+  ENDMETHOD.
+
 
   METHOD unknown_result_type.
 

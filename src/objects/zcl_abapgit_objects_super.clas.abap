@@ -11,14 +11,6 @@ CLASS zcl_abapgit_objects_super DEFINITION
       IMPORTING
         !is_item     TYPE zif_abapgit_definitions=>ty_item
         !iv_language TYPE spras .
-    CLASS-METHODS jump_adt
-      IMPORTING
-        !iv_obj_name     TYPE zif_abapgit_definitions=>ty_item-obj_name
-        !iv_obj_type     TYPE zif_abapgit_definitions=>ty_item-obj_type
-        !iv_sub_obj_name TYPE zif_abapgit_definitions=>ty_item-obj_name OPTIONAL
-        !iv_line_number  TYPE i OPTIONAL
-      RAISING
-        zcx_abapgit_exception .
   PROTECTED SECTION.
 
     DATA ms_item TYPE zif_abapgit_definitions=>ty_item .
@@ -36,9 +28,6 @@ CLASS zcl_abapgit_objects_super DEFINITION
     METHODS tadir_insert
       IMPORTING
         !iv_package TYPE devclass
-      RAISING
-        zcx_abapgit_exception .
-    METHODS jump_se11
       RAISING
         zcx_abapgit_exception .
     METHODS exists_a_lock_entry_for
@@ -289,38 +278,6 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
     ENDIF.
 
     rv_active = boolc( ms_item-inactive = abap_false ).
-  ENDMETHOD.
-
-
-  METHOD jump_adt.
-
-    zcl_abapgit_adt_link=>jump(
-      iv_obj_name     = iv_obj_name
-      iv_obj_type     = iv_obj_type
-      iv_sub_obj_name = iv_sub_obj_name
-      iv_line_number  = iv_line_number ).
-
-  ENDMETHOD.
-
-
-  METHOD jump_se11.
-
-    CALL FUNCTION 'RS_TOOL_ACCESS'
-      EXPORTING
-        operation           = 'SHOW'
-        object_name         = ms_item-obj_name
-        object_type         = ms_item-obj_type
-        devclass            = ms_item-devclass
-        in_new_window       = abap_true
-      EXCEPTIONS
-        not_executed        = 1
-        invalid_object_type = 2
-        OTHERS              = 3.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Jump to SE11 failed (subrc={ sy-subrc } ).| ).
-    ENDIF.
-
   ENDMETHOD.
 
 

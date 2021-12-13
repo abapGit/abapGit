@@ -152,9 +152,12 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         VALUE(rv_is_refrseh) TYPE abap_bool.
     METHODS modify_files_before_diff_calc
       IMPORTING
-        !it_diff_files_old TYPE ty_file_diffs
+         it_diff_files_old TYPE ty_file_diffs
       RETURNING
         VALUE(rt_files)    TYPE zif_abapgit_definitions=>ty_stage_tt.
+    METHODS add_view_sub_menu
+      IMPORTING
+         io_menu TYPE REF TO zcl_abapgit_html_toolbar .
 
     METHODS render_content
         REDEFINITION .
@@ -230,9 +233,6 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
       IMPORTING
         !io_menu TYPE REF TO zcl_abapgit_html_toolbar .
     METHODS add_filter_sub_menu
-      IMPORTING
-        !io_menu TYPE REF TO zcl_abapgit_html_toolbar .
-    METHODS add_view_sub_menu
       IMPORTING
         !io_menu TYPE REF TO zcl_abapgit_html_toolbar .
     METHODS render_lines
@@ -401,7 +401,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
                       iv_act = c_actions-toggle_hidden_chars
                       iv_chk = ms_view-hidden_chars ).
 
-    lo_sub_view->add( iv_txt = 'Ignore Indentation'
+    lo_sub_view->add( iv_txt = 'Ignore Whitespace'
                       iv_act = c_actions-toggle_ignore_indent
                       iv_chk = ms_view-ignore_indent ).
 
@@ -559,6 +559,9 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
       READ TABLE lt_status ASSIGNING <ls_status>
         WITH KEY path = is_file-path filename = is_file-filename.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |File { is_file-path }{ is_file-filename } not found| ).
+      ENDIF.
 
       append_diff( it_remote = lt_remote
                    it_local  = lt_local

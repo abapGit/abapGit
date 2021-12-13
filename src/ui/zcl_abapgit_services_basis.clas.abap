@@ -26,7 +26,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERVICES_BASIS IMPLEMENTATION.
+CLASS zcl_abapgit_services_basis IMPLEMENTATION.
 
 
   METHOD create_package.
@@ -60,11 +60,12 @@ CLASS ZCL_ABAPGIT_SERVICES_BASIS IMPLEMENTATION.
           lv_exe_full_path    TYPE string,
           lo_frontend_serv    TYPE REF TO zif_abapgit_frontend_services.
 
-    IF zcl_abapgit_ui_factory=>get_gui_functions( )->is_sapgui_for_windows( ) = abap_false.
+    lo_frontend_serv = zcl_abapgit_ui_factory=>get_frontend_services( ).
+
+    IF lo_frontend_serv->is_sapgui_for_windows( ) = abap_false.
       zcx_abapgit_exception=>raise( |IE DevTools not supported on frontend OS| ).
     ENDIF.
 
-    lo_frontend_serv = zcl_abapgit_ui_factory=>get_frontend_services( ).
     lo_frontend_serv->get_system_directory( CHANGING cv_system_directory = lv_system_directory ).
 
     cl_gui_cfw=>flush( ).
