@@ -2,7 +2,6 @@
   "input_folder": "{test,src,deps}",
   "input_filter": [
     "vseointerf",
-    "cl_gui_frontend_services",
     "zcl_abapgit_adt_link",
     "zcl_abapgit_ajson*",
     "zcl_abapgit_auth",
