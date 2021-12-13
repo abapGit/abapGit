@@ -238,7 +238,8 @@
 *    cl_abap_unit_assert=>assert_equals( exp = user act = chkc_header-created_by ).
 *    cl_abap_unit_assert=>assert_equals( exp = '5' act = chkc_header-abap_language_version ).
 *
-*    SELECT SINGLE FROM chkc_headert FIELDS * WHERE name = @chkc-obj_name AND version = 'A' AND spras = 'E' INTO @DATA(chkc_headert).
+*    SELECT SINGLE FROM chkc_headert FIELDS * WHERE name = @chkc-obj_name AND version = 'A'
+*                                               AND spras = 'E' INTO @DATA(chkc_headert).
 *    cl_abap_unit_assert=>assert_equals( exp = 'Test description' act = chkc_headert-description ).
 *
 *    SELECT SINGLE FROM chkc_content FIELDS * WHERE name = @chkc-obj_name AND version = 'A' INTO @DATA(chkc_content).

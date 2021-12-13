@@ -6,8 +6,8 @@ CLASS zcl_abapgit_object_chkv DEFINITION
 
   PUBLIC SECTION.
     METHODS zif_abapgit_object~changed_by REDEFINITION.
-    METHODS zif_abapgit_object~serialize REDEFINITION.
     METHODS zif_abapgit_object~deserialize REDEFINITION.
+    METHODS zif_abapgit_object~serialize REDEFINITION.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -15,7 +15,8 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_chkv IMPLEMENTATION.
+class zcl_abapgit_object_chkv IMPLEMENTATION.
+
 
   METHOD zif_abapgit_object~changed_by.
 
@@ -24,8 +25,8 @@ CLASS zcl_abapgit_object_chkv IMPLEMENTATION.
           lv_name        TYPE c LENGTH 120,
           lx_error       TYPE REF TO cx_root.
 
-    FIELD-SYMBOLS: <lg_chkv_header> TYPE any,
-                   <lg_chkv_user>   TYPE any.
+    FIELD-SYMBOLS: <ls_chkv_header> TYPE any,
+                   <ls_chkv_user>   TYPE any.
 
     IF ms_item-obj_type <> 'CHKV'.
       RETURN.
@@ -34,7 +35,7 @@ CLASS zcl_abapgit_object_chkv IMPLEMENTATION.
     TRY.
         CREATE OBJECT lo_chkv_db_api TYPE ('CL_CHKV_DB_API').
         CREATE DATA lr_data TYPE ('CL_CHKV_DB_API=>TY_HEADER').
-        ASSIGN lr_data->* TO <lg_chkv_header>.
+        ASSIGN lr_data->* TO <ls_chkv_header>.
 
         lv_name = ms_item-obj_name.
 
@@ -43,19 +44,19 @@ CLASS zcl_abapgit_object_chkv IMPLEMENTATION.
             name    = lv_name
             version = 'I'
           RECEIVING
-            header  = <lg_chkv_header>.
+            header  = <ls_chkv_header>.
 
-        IF <lg_chkv_header> IS INITIAL.
+        IF <ls_chkv_header> IS INITIAL.
           CALL METHOD lo_chkv_db_api->('GET_HEADER')
             EXPORTING
               name    = lv_name
               version = 'A'
             RECEIVING
-              header  = <lg_chkv_header>.
+              header  = <ls_chkv_header>.
         ENDIF.
 
-        ASSIGN COMPONENT 'CHANGED_BY' OF STRUCTURE <lg_chkv_header> TO <lg_chkv_user>.
-        rv_user = <lg_chkv_user>.
+        ASSIGN COMPONENT 'CHANGED_BY' OF STRUCTURE <ls_chkv_header> TO <ls_chkv_user>.
+        rv_user = <ls_chkv_user>.
 
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
@@ -64,24 +65,22 @@ CLASS zcl_abapgit_object_chkv IMPLEMENTATION.
   ENDMETHOD.
 
 
-
   METHOD zif_abapgit_object~deserialize.
 
     DATA lr_chkv TYPE REF TO data.
 
-    FIELD-SYMBOLS <lg_chkv_agit> TYPE any.
+    FIELD-SYMBOLS <ls_chkv_agit> TYPE any.
 
     IF ms_item-obj_type <> 'CHKV'.
       RETURN.
     ENDIF.
 
     CREATE DATA lr_chkv TYPE ('ZIF_ABAPGIT_AFF_CHKV_V1=>TY_MAIN').
-    ASSIGN lr_chkv->* TO <lg_chkv_agit>.
+    ASSIGN lr_chkv->* TO <ls_chkv_agit>.
 
-    ASSERT <lg_chkv_agit> IS ASSIGNED.
+    ASSERT <ls_chkv_agit> IS ASSIGNED.
 
     super->zif_abapgit_object~deserialize(
-      EXPORTING
         iv_package = iv_package
         io_xml     = io_xml
         iv_step    = iv_step
@@ -90,19 +89,18 @@ CLASS zcl_abapgit_object_chkv IMPLEMENTATION.
   ENDMETHOD.
 
 
-
   METHOD zif_abapgit_object~serialize.
 
     DATA lr_chkv TYPE REF TO data.
 
-    FIELD-SYMBOLS  <lg_chkv_agit>  TYPE any.
+    FIELD-SYMBOLS  <ls_chkv_agit>  TYPE any.
 
     IF ms_item-obj_type <> 'CHKV'.
       RETURN.
     ENDIF.
 
     CREATE DATA lr_chkv TYPE ('ZIF_ABAPGIT_AFF_CHKV_V1=>TY_MAIN').
-    ASSIGN lr_chkv->* TO <lg_chkv_agit>.
+    ASSIGN lr_chkv->* TO <ls_chkv_agit>.
     ASSERT sy-subrc = 0.
 
     super->zif_abapgit_object~serialize( io_xml = io_xml ).

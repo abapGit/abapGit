@@ -332,7 +332,8 @@
 *    cl_abap_unit_assert=>assert_equals( exp = user act = chkv_header-created_by ).
 *    cl_abap_unit_assert=>assert_equals( exp = '5' act = chkv_header-abap_language_version ).
 *
-*    SELECT SINGLE FROM chkv_headert FIELDS * WHERE name = @chkv-obj_name AND version = 'A' AND spras = 'E' INTO @DATA(chkv_headert).
+*    SELECT SINGLE FROM chkv_headert FIELDS * WHERE name = @chkv-obj_name AND version = 'A'
+*                                              AND spras = 'E' INTO @DATA(chkv_headert).
 *    cl_abap_unit_assert=>assert_equals( exp = 'Example CHKV for ABAP file formats' act = chkv_headert-description ).
 *
 *  ENDMETHOD.
