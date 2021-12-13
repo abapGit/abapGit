@@ -102,26 +102,15 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
 
   METHOD authorization_check.
-    DATA: lv_meth       TYPE string,
-          ls_parameter  TYPE abap_parmbind,
-          lt_parameters TYPE abap_parmbind_tab.
-
     DATA: lr_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
     DATA: lr_root TYPE REF TO cx_root.
 
     rv_success = abap_false.
 
     TRY.
-        lv_meth     = '/AIF/IF_ABAPGIT_AIFC_UTIL~AUTHORIZATION_CHECK'.
-
-        ls_parameter-name = 'RV_SUCCESS'.
-        ls_parameter-kind = cl_abap_objectdescr=>returning.
-        GET REFERENCE OF rv_success INTO ls_parameter-value.
-        INSERT ls_parameter INTO TABLE lt_parameters.
-
-        CALL METHOD mr_abapgit_util->(lv_meth)
-          PARAMETER-TABLE
-          lt_parameters.
+        CALL METHOD mr_abapgit_util->('/AIF/IF_ABAPGIT_AIFC_UTIL~AUTHORIZATION_CHECK')
+          RECEIVING
+            rv_success = rv_success.
 
       CATCH cx_sy_dyn_call_error INTO lr_dyn_call_error.
         zcx_abapgit_exception=>raise( iv_text = TEXT-003
@@ -136,29 +125,15 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
 
   METHOD compress_interface.
-    DATA: lv_meth       TYPE string,
-          ls_parameter  TYPE abap_parmbind,
-          lt_parameters TYPE abap_parmbind_tab.
-
     DATA: lr_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
     DATA: lr_root TYPE REF TO cx_root.
 
     TRY.
-        lv_meth     = '/AIF/IF_ABAPGIT_AIFC_UTIL~COMPRESS_INTERFACE'.
-
-        ls_parameter-name = 'IS_IFKEYS'.
-        ls_parameter-kind = cl_abap_objectdescr=>exporting.
-        GET REFERENCE OF is_ifkeys INTO ls_parameter-value.
-        INSERT ls_parameter INTO TABLE lt_parameters.
-
-        ls_parameter-name = 'RV_SUCCESS'.
-        ls_parameter-kind = cl_abap_objectdescr=>returning.
-        GET REFERENCE OF rv_success INTO ls_parameter-value.
-        INSERT ls_parameter INTO TABLE lt_parameters.
-
-        CALL METHOD mr_abapgit_util->(lv_meth)
-          PARAMETER-TABLE
-          lt_parameters.
+        CALL METHOD mr_abapgit_util->('/AIF/IF_ABAPGIT_AIFC_UTIL~COMPRESS_INTERFACE')
+          EXPORTING
+            is_ifkeys  = is_ifkeys
+          RECEIVING
+            rv_success = rv_success.
 
       CATCH cx_sy_dyn_call_error INTO lr_dyn_call_error.
         zcx_abapgit_exception=>raise( iv_text = TEXT-003
@@ -174,12 +149,6 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
 
   METHOD constructor.
-
-    DATA: lv_meth       TYPE string,
-          lv_class      TYPE string,
-          ls_parameter  TYPE abap_parmbind,
-          lt_parameters TYPE abap_parmbind_tab.
-
     DATA: lr_exc_ref TYPE REF TO cx_sy_dyn_call_error.
 
     super->constructor( is_item     = is_item
@@ -189,18 +158,10 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
     ms_icd_data_key = is_item-obj_name.
 
     TRY.
+        CALL METHOD ('/AIF/CL_ABAPGIT_AIFC_UTIL')=>('GET_INSTANCE')
+          RECEIVING
+            rr_abapgit_aifc_util = mr_abapgit_util.
 
-        lv_class    =  '/AIF/CL_ABAPGIT_AIFC_UTIL'.
-        lv_meth     = 'GET_INSTANCE'.
-
-        ls_parameter-name = 'RR_ABAPGIT_AIFC_UTIL'.
-        ls_parameter-kind = cl_abap_objectdescr=>returning.
-        GET REFERENCE OF mr_abapgit_util INTO ls_parameter-value.
-        INSERT ls_parameter INTO TABLE lt_parameters.
-
-        CALL METHOD (lv_class)=>(lv_meth)
-          PARAMETER-TABLE
-          lt_parameters.
       CATCH cx_sy_dyn_call_error INTO lr_exc_ref.
     ENDTRY.
 
@@ -208,47 +169,21 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
 
   METHOD get_content_compress.
-
-    DATA: lv_meth       TYPE string,
-          ls_parameter  TYPE abap_parmbind,
-          lt_parameters TYPE abap_parmbind_tab.
-
     DATA: lr_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
     DATA: lr_root TYPE REF TO cx_root.
     DATA: lr_log TYPE REF TO object.
 
     TRY.
-
         CREATE OBJECT lr_log TYPE ('/AIF/CL_ABAPGIT_BAL_LOG')
           EXPORTING ir_git_log = ir_log
                     is_item = ms_item.
 
-        lv_meth     = '/AIF/IF_ABAPGIT_AIFC_UTIL~INITIALIZE_CONTENT_COMPRESS'.
-
-        ls_parameter-name = 'IR_BAL'.
-        ls_parameter-kind = cl_abap_objectdescr=>exporting.
-        GET REFERENCE OF lr_log INTO ls_parameter-value.
-        INSERT ls_parameter INTO TABLE lt_parameters.
-
-        ls_parameter-name = 'IS_IFKEY'.
-        ls_parameter-kind = cl_abap_objectdescr=>exporting.
-        GET REFERENCE OF is_ifkeys INTO ls_parameter-value.
-        INSERT ls_parameter INTO TABLE lt_parameters.
-
-        ls_parameter-name = 'IV_PACKAGE'.
-        ls_parameter-kind = cl_abap_objectdescr=>exporting.
-        GET REFERENCE OF iv_package INTO ls_parameter-value.
-        INSERT ls_parameter INTO TABLE lt_parameters.
-
-        ls_parameter-name = 'IV_DEPL_ID'.
-        ls_parameter-kind = cl_abap_objectdescr=>exporting.
-        GET REFERENCE OF ms_icd_data_key-depl_scenario INTO ls_parameter-value.
-        INSERT ls_parameter INTO TABLE lt_parameters.
-
-
-        CALL METHOD mr_abapgit_util->(lv_meth)
-          PARAMETER-TABLE
-          lt_parameters.
+        CALL METHOD mr_abapgit_util->('/AIF/IF_ABAPGIT_AIFC_UTIL~INITIALIZE_CONTENT_COMPRESS')
+          EXPORTING
+            ir_bal     = lr_log
+            is_ifkey   = is_ifkeys
+            iv_package = iv_package
+            iv_depl_id = ms_icd_data_key-depl_scenario.
 
       CATCH cx_sy_dyn_call_error INTO lr_dyn_call_error.
         zcx_abapgit_exception=>raise( iv_text = TEXT-003
@@ -263,29 +198,14 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
 
   METHOD handle_table_data.
-    DATA: lv_meth       TYPE string,
-          ls_parameter  TYPE abap_parmbind,
-          lt_parameters TYPE abap_parmbind_tab.
-
     DATA: lr_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
     DATA: lr_root TYPE REF TO cx_root.
 
     TRY.
-        lv_meth     = '/AIF/IF_ABAPGIT_AIFC_UTIL~HANDLE_TABLE_DATA'.
-
-        ls_parameter-name = 'IV_TABNAME'.
-        ls_parameter-kind = cl_abap_objectdescr=>exporting.
-        GET REFERENCE OF iv_tabname INTO ls_parameter-value.
-        INSERT ls_parameter INTO TABLE lt_parameters.
-
-        ls_parameter-name = 'IT_DATA'.
-        ls_parameter-kind = cl_abap_objectdescr=>exporting.
-        GET REFERENCE OF it_data INTO ls_parameter-value.
-        INSERT ls_parameter INTO TABLE lt_parameters.
-
-        CALL METHOD mr_abapgit_util->(lv_meth)
-          PARAMETER-TABLE
-          lt_parameters.
+        CALL METHOD mr_abapgit_util->('/AIF/IF_ABAPGIT_AIFC_UTIL~HANDLE_TABLE_DATA')
+          EXPORTING
+            iv_tabname = iv_tabname
+            it_data    = it_data.
 
       CATCH cx_sy_dyn_call_error INTO lr_dyn_call_error.
         zcx_abapgit_exception=>raise( iv_text = TEXT-003
@@ -300,32 +220,17 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
 
   METHOD validate_interface.
-    DATA: lv_meth       TYPE string,
-          ls_parameter  TYPE abap_parmbind,
-          lt_parameters TYPE abap_parmbind_tab.
-
     DATA: lr_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
     DATA: lr_root TYPE REF TO cx_root.
 
     rv_success = abap_false.
 
     TRY.
-
-        lv_meth     = '/AIF/IF_ABAPGIT_AIFC_UTIL~VALIDATE_INTERFACE'.
-
-        ls_parameter-name = 'IS_IFKEYS'.
-        ls_parameter-kind = cl_abap_objectdescr=>exporting.
-        GET REFERENCE OF is_ifkeys INTO ls_parameter-value.
-        INSERT ls_parameter INTO TABLE lt_parameters.
-
-        ls_parameter-name = 'RV_SUCCESS'.
-        ls_parameter-kind = cl_abap_objectdescr=>returning.
-        GET REFERENCE OF rv_success INTO ls_parameter-value.
-        INSERT ls_parameter INTO TABLE lt_parameters.
-
-        CALL METHOD mr_abapgit_util->(lv_meth)
-          PARAMETER-TABLE
-          lt_parameters.
+        CALL METHOD mr_abapgit_util->('/AIF/IF_ABAPGIT_AIFC_UTIL~VALIDATE_INTERFACE')
+          EXPORTING
+            is_ifkeys  = is_ifkeys
+          RECEIVING
+            rv_success = rv_success.
 
       CATCH cx_sy_dyn_call_error INTO lr_dyn_call_error.
         zcx_abapgit_exception=>raise( iv_text = TEXT-003
@@ -338,10 +243,6 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    DATA: lv_meth       TYPE string,
-          ls_parameter  TYPE abap_parmbind,
-          lt_parameters TYPE abap_parmbind_tab.
-
     DATA  lr_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
 
     DATA ls_icd_data_key TYPE ty_icd_data_key.
@@ -353,21 +254,11 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
     CLEAR rv_user.
 
     TRY.
-        lv_meth     = '/AIF/IF_ABAPGIT_AIFC_UTIL~CHANGED_BY'.
-
-        ls_parameter-name = 'IS_KEY'.
-        ls_parameter-kind = cl_abap_objectdescr=>exporting.
-        GET REFERENCE OF ls_icd_data_key INTO ls_parameter-value.
-        INSERT ls_parameter INTO TABLE lt_parameters.
-
-        ls_parameter-name = 'RV_USER'.
-        ls_parameter-kind = cl_abap_objectdescr=>returning.
-        GET REFERENCE OF rv_user INTO ls_parameter-value.
-        INSERT ls_parameter INTO TABLE lt_parameters.
-
-        CALL METHOD mr_abapgit_util->(lv_meth)
-          PARAMETER-TABLE
-          lt_parameters.
+        CALL METHOD mr_abapgit_util->('/AIF/IF_ABAPGIT_AIFC_UTIL~CHANGED_BY')
+          EXPORTING
+            is_key  = ls_icd_data_key
+          RECEIVING
+            rv_user = rv_user.
 
       CATCH cx_sy_dyn_call_error INTO lr_dyn_call_error.
         zcx_abapgit_exception=>raise( iv_text = TEXT-003
@@ -495,10 +386,6 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~exists.
-    DATA: lv_meth       TYPE string,
-          ls_parameter  TYPE abap_parmbind,
-          lt_parameters TYPE abap_parmbind_tab.
-
     DATA: lr_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
 
     DATA ls_icd_data_key TYPE ty_icd_data_key.
@@ -511,21 +398,11 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
     rv_bool = abap_false.
 
     TRY.
-        lv_meth     = '/AIF/IF_ABAPGIT_AIFC_UTIL~EXISTS'.
-
-        ls_parameter-name = 'IS_KEY'.
-        ls_parameter-kind = cl_abap_objectdescr=>exporting.
-        GET REFERENCE OF ls_icd_data_key INTO ls_parameter-value.
-        INSERT ls_parameter INTO TABLE lt_parameters.
-
-        ls_parameter-name = 'RV_BOOL'.
-        ls_parameter-kind = cl_abap_objectdescr=>returning.
-        GET REFERENCE OF rv_bool INTO ls_parameter-value.
-        INSERT ls_parameter INTO TABLE lt_parameters.
-
-        CALL METHOD mr_abapgit_util->(lv_meth)
-          PARAMETER-TABLE
-          lt_parameters.
+        CALL METHOD mr_abapgit_util->('/AIF/IF_ABAPGIT_AIFC_UTIL~EXISTS')
+          EXPORTING
+            is_key  = ls_icd_data_key
+          RECEIVING
+            rv_bool = rv_bool.
 
       CATCH cx_sy_dyn_call_error INTO lr_dyn_call_error.
         zcx_abapgit_exception=>raise( iv_text = TEXT-003
@@ -593,10 +470,6 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
     DATA: lr_root TYPE REF TO cx_root.
 
-    DATA: lv_meth       TYPE string,
-          ls_parameter  TYPE abap_parmbind,
-          lt_parameters TYPE abap_parmbind_tab.
-
     DATA: lr_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
 
     DATA ls_icd_data_key TYPE ty_icd_data_key.
@@ -627,21 +500,11 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
         ls_icd_data_key-ifver2 = ms_icd_data_key-ifver2.
 
         TRY.
-            lv_meth     = '/AIF/IF_ABAPGIT_AIFC_UTIL~GET_IF_DATA'.
-
-            ls_parameter-name = 'IS_KEY'.
-            ls_parameter-kind = cl_abap_objectdescr=>exporting.
-            GET REFERENCE OF ls_icd_data_key INTO ls_parameter-value.
-            INSERT ls_parameter INTO TABLE lt_parameters.
-
-            ls_parameter-name = 'RT_IFDATA'.
-            ls_parameter-kind = cl_abap_objectdescr=>returning.
-            GET REFERENCE OF lt_ifdata INTO ls_parameter-value.
-            INSERT ls_parameter INTO TABLE lt_parameters.
-
-            CALL METHOD mr_abapgit_util->(lv_meth)
-              PARAMETER-TABLE
-              lt_parameters.
+            CALL METHOD mr_abapgit_util->('/AIF/IF_ABAPGIT_AIFC_UTIL~GET_IF_DATA')
+              EXPORTING
+                is_key    = ls_icd_data_key
+              RECEIVING
+                rt_ifdata = lt_ifdata.
 
           CATCH cx_sy_dyn_call_error INTO lr_dyn_call_error.
             zcx_abapgit_exception=>raise( iv_text = TEXT-003
