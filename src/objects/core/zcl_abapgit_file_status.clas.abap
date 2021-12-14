@@ -142,7 +142,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_file_status IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
 
   METHOD build_existing.
@@ -710,6 +710,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
           WITH KEY path = <ls_remote>-path filename = <ls_remote>-filename
           BINARY SEARCH.
         IF sy-subrc = 0.
+          <ls_result>-match = abap_false.
           <ls_result>-lstate = zif_abapgit_definitions=>c_state-deleted.
         ENDIF.
       ENDIF.
