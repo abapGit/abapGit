@@ -74,6 +74,12 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
         iv_no_masterlang TYPE abap_bool OPTIONAL
       RAISING
         zcx_abapgit_exception,
+    delete_documentation
+      IMPORTING
+        iv_object_name TYPE dokhl-object
+        iv_language    TYPE spras
+      RAISING
+        zcx_abapgit_exception,
     get_includes
       IMPORTING
         iv_object_name     TYPE sobj_name
