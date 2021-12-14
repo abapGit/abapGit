@@ -160,7 +160,7 @@ CLASS ZCL_ABAPGIT_FILE_DESERIALIZE IMPLEMENTATION.
     DATA lt_requires TYPE zif_abapgit_definitions=>ty_items_tt.
     DATA ls_require  LIKE LINE OF lt_requires.
     DATA ls_result   LIKE LINE OF it_results.
-    DATA lo_graph    TYPE REF TO lcl_graph.
+    DATA lo_graph    TYPE REF TO zcl_abapgit_item_graph.
 
     lt_items = map_results_to_items( it_results ).
 

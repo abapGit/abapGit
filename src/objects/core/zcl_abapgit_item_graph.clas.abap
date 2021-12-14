@@ -1,9 +1,7 @@
-*"* use this source file for the definition and implementation of
-*"* local helper classes, interface definitions and type
-*"* declarations
+CLASS zcl_abapgit_item_graph DEFINITION
+  PUBLIC
+  CREATE PUBLIC .
 
-
-CLASS lcl_graph DEFINITION.
   PUBLIC SECTION.
     METHODS constructor
       IMPORTING
@@ -29,10 +27,10 @@ CLASS lcl_graph DEFINITION.
     METHODS remove_vertex IMPORTING iv_index TYPE i.
 ENDCLASS.
 
-CLASS lcl_graph IMPLEMENTATION.
-  METHOD constructor.
-    INSERT LINES OF it_items INTO TABLE mt_vertices.
-  ENDMETHOD.
+
+
+CLASS ZCL_ABAPGIT_ITEM_GRAPH IMPLEMENTATION.
+
 
   METHOD add_edge.
     DATA ls_edge LIKE LINE OF mt_edges.
@@ -43,21 +41,11 @@ CLASS lcl_graph IMPLEMENTATION.
     APPEND ls_edge TO mt_edges.
   ENDMETHOD.
 
-  METHOD has_vertices.
-    rv_bool = boolc( lines( mt_vertices ) > 0 ).
+
+  METHOD constructor.
+    INSERT LINES OF it_items INTO TABLE mt_vertices.
   ENDMETHOD.
 
-  METHOD remove_vertex.
-    DATA ls_vertex LIKE LINE OF mt_vertices.
-
-    READ TABLE mt_vertices INDEX iv_index INTO ls_vertex.
-    ASSERT sy-subrc = 0.
-
-    DELETE mt_vertices INDEX iv_index.
-    DELETE mt_edges WHERE
-      from-obj_type = ls_vertex-obj_type AND
-      from-obj_name = ls_vertex-obj_name.
-  ENDMETHOD.
 
   METHOD get_next.
 * find a vertex with no inbound edges, if it does not exist pick anything
@@ -82,5 +70,23 @@ CLASS lcl_graph IMPLEMENTATION.
     ASSERT sy-subrc = 0.
     remove_vertex( 1 ).
 
+  ENDMETHOD.
+
+
+  METHOD has_vertices.
+    rv_bool = boolc( lines( mt_vertices ) > 0 ).
+  ENDMETHOD.
+
+
+  METHOD remove_vertex.
+    DATA ls_vertex LIKE LINE OF mt_vertices.
+
+    READ TABLE mt_vertices INDEX iv_index INTO ls_vertex.
+    ASSERT sy-subrc = 0.
+
+    DELETE mt_vertices INDEX iv_index.
+    DELETE mt_edges WHERE
+      from-obj_type = ls_vertex-obj_type AND
+      from-obj_name = ls_vertex-obj_name.
   ENDMETHOD.
 ENDCLASS.
