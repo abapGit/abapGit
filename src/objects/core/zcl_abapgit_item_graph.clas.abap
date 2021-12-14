@@ -3,28 +3,34 @@ CLASS zcl_abapgit_item_graph DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+
     METHODS constructor
       IMPORTING
-        it_items TYPE zif_abapgit_definitions=>ty_items_tt.
+        !it_items TYPE zif_abapgit_definitions=>ty_items_tt .
     METHODS add_edge
       IMPORTING
-        is_from TYPE zif_abapgit_definitions=>ty_item
-        is_to   TYPE zif_abapgit_definitions=>ty_item.
+        !is_from TYPE zif_abapgit_definitions=>ty_item
+        !is_to   TYPE zif_abapgit_definitions=>ty_item .
     METHODS has_vertices
       RETURNING
-        VALUE(rv_bool) TYPE abap_bool.
+        VALUE(rv_bool) TYPE abap_bool .
     METHODS get_next
+      IMPORTING
+        !ii_log        TYPE REF TO zif_abapgit_log
       RETURNING
-        VALUE(rs_item) TYPE zif_abapgit_definitions=>ty_item.
+        VALUE(rs_item) TYPE zif_abapgit_definitions=>ty_item .
   PRIVATE SECTION.
-    DATA mt_vertices TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_item WITH DEFAULT KEY.
     TYPES: BEGIN OF ty_edge,
              from TYPE zif_abapgit_definitions=>ty_item,
              to   TYPE zif_abapgit_definitions=>ty_item,
            END OF ty_edge.
+
+    DATA mt_vertices TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_item WITH DEFAULT KEY.
     DATA mt_edges TYPE STANDARD TABLE OF ty_edge WITH DEFAULT KEY.
+    DATA mv_warning TYPE abap_bool.
 
     METHODS remove_vertex IMPORTING iv_index TYPE i.
+
 ENDCLASS.
 
 
@@ -65,6 +71,12 @@ CLASS ZCL_ABAPGIT_ITEM_GRAPH IMPLEMENTATION.
         RETURN.
       ENDIF.
     ENDLOOP.
+
+    IF mv_warning = abap_false.
+* only issue the warning once per graph
+      ii_log->add_warning( |Cycle detected in item graph| ).
+      mv_warning = abap_true.
+    ENDIF.
 
     READ TABLE mt_vertices INTO rs_item INDEX 1.
     ASSERT sy-subrc = 0.

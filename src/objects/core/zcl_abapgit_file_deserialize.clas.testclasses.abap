@@ -399,7 +399,13 @@ CLASS ltcl_prio_deserialization IMPLEMENTATION.
 
   METHOD when_deser_is_priorized.
 
-    mt_output = mo_objects->prioritize_deser( mt_input ).
+    DATA lo_log TYPE REF TO zcl_abapgit_log.
+
+    CREATE OBJECT lo_log.
+
+    mt_output = mo_objects->prioritize_deser(
+      ii_log     = lo_log
+      it_results = mt_input ).
 
   ENDMETHOD.
 

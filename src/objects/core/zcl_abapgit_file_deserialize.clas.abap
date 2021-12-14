@@ -24,6 +24,7 @@ CLASS zcl_abapgit_file_deserialize DEFINITION
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt .
     CLASS-METHODS prioritize_deser
       IMPORTING
+        !ii_log           TYPE REF TO zif_abapgit_log
         !it_results       TYPE zif_abapgit_definitions=>ty_results_tt
       RETURNING
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt .
@@ -130,10 +131,15 @@ CLASS ZCL_ABAPGIT_FILE_DESERIALIZE IMPLEMENTATION.
 
   METHOD get_results.
 
+    DATA lt_results TYPE zif_abapgit_definitions=>ty_results_tt.
+
+    lt_results = filter_files_to_deserialize(
+      it_results = zcl_abapgit_file_status=>status( io_repo )
+      ii_log     = ii_log ).
+
     rt_results = prioritize_deser(
-                   filter_files_to_deserialize(
-                     it_results = zcl_abapgit_file_status=>status( io_repo )
-                     ii_log     = ii_log ) ).
+      ii_log     = ii_log
+      it_results = lt_results ).
 
   ENDMETHOD.
 
@@ -238,7 +244,7 @@ CLASS ZCL_ABAPGIT_FILE_DESERIALIZE IMPLEMENTATION.
     ENDLOOP.
 
     WHILE lo_graph->has_vertices( ) = abap_true.
-      ls_item = lo_graph->get_next( ).
+      ls_item = lo_graph->get_next( ii_log ).
       READ TABLE it_results INTO ls_result WITH KEY
         obj_name = ls_item-obj_name
         obj_type = ls_item-obj_type.
