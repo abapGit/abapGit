@@ -210,7 +210,6 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           ASSIGN COMPONENT 'TEXT' OF STRUCTURE <ls_message> TO <ls_text>.
           ASSIGN COMPONENT 'TYPE' OF STRUCTURE <ls_message> TO <ls_type>.
           ii_log->add(
-            EXPORTING
               iv_msg  = <ls_text>
               iv_type = <ls_type>
               is_item = ms_item ).
