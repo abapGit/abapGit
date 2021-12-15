@@ -66,18 +66,9 @@ CLASS zcl_abapgit_object_chkc IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA lr_chkc TYPE REF TO data.
-
-    FIELD-SYMBOLS <ls_chkc_agit> TYPE any.
-
     IF ms_item-obj_type <> 'CHKC'.
       RETURN.
     ENDIF.
-
-    CREATE DATA lr_chkc TYPE ('ZIF_ABAPGIT_AFF_CHKC_V1=>TY_MAIN').
-    ASSIGN lr_chkc->* TO <ls_chkc_agit>.
-
-    ASSERT <ls_chkc_agit> IS ASSIGNED.
 
     super->zif_abapgit_object~deserialize(
         iv_package = iv_package
@@ -90,17 +81,9 @@ CLASS zcl_abapgit_object_chkc IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA lr_chkc TYPE REF TO data.
-
-    FIELD-SYMBOLS  <ls_chkc_agit>  TYPE any.
-
     IF ms_item-obj_type <> 'CHKC'.
       RETURN.
     ENDIF.
-
-    CREATE DATA lr_chkc TYPE ('ZIF_ABAPGIT_AFF_CHKC_V1=>TY_MAIN').
-    ASSIGN lr_chkc->* TO <ls_chkc_agit>.
-    ASSERT sy-subrc = 0.
 
     super->zif_abapgit_object~serialize( io_xml = io_xml ).
 

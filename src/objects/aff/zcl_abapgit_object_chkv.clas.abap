@@ -67,18 +67,9 @@ CLASS zcl_abapgit_object_chkv IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA lr_chkv TYPE REF TO data.
-
-    FIELD-SYMBOLS <ls_chkv_agit> TYPE any.
-
     IF ms_item-obj_type <> 'CHKV'.
       RETURN.
     ENDIF.
-
-    CREATE DATA lr_chkv TYPE ('ZIF_ABAPGIT_AFF_CHKV_V1=>TY_MAIN').
-    ASSIGN lr_chkv->* TO <ls_chkv_agit>.
-
-    ASSERT <ls_chkv_agit> IS ASSIGNED.
 
     super->zif_abapgit_object~deserialize(
         iv_package = iv_package
@@ -91,17 +82,9 @@ CLASS zcl_abapgit_object_chkv IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA lr_chkv TYPE REF TO data.
-
-    FIELD-SYMBOLS  <ls_chkv_agit>  TYPE any.
-
     IF ms_item-obj_type <> 'CHKV'.
       RETURN.
     ENDIF.
-
-    CREATE DATA lr_chkv TYPE ('ZIF_ABAPGIT_AFF_CHKV_V1=>TY_MAIN').
-    ASSIGN lr_chkv->* TO <ls_chkv_agit>.
-    ASSERT sy-subrc = 0.
 
     super->zif_abapgit_object~serialize( io_xml = io_xml ).
 

@@ -67,18 +67,9 @@ CLASS zcl_abapgit_object_chko IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA lr_chko TYPE REF TO data.
-
-    FIELD-SYMBOLS <lg_chko_agit> TYPE any.
-
     IF ms_item-obj_type <> 'CHKO'.
       RETURN.
     ENDIF.
-
-    CREATE DATA lr_chko TYPE ('ZIF_ABAPGIT_AFF_CHKO_V1=>TY_MAIN').
-    ASSIGN lr_chko->* TO <lg_chko_agit>.
-
-    ASSERT <lg_chko_agit> IS ASSIGNED.
 
     super->zif_abapgit_object~deserialize(
         iv_package = iv_package
@@ -91,17 +82,9 @@ CLASS zcl_abapgit_object_chko IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA lr_chko TYPE REF TO data.
-
-    FIELD-SYMBOLS  <ls_chko_agit>  TYPE any.
-
     IF ms_item-obj_type <> 'CHKO'.
       RETURN.
     ENDIF.
-
-    CREATE DATA lr_chko TYPE ('ZIF_ABAPGIT_AFF_CHKO_V1=>TY_MAIN').
-    ASSIGN lr_chko->* TO <ls_chko_agit>.
-    ASSERT sy-subrc = 0.
 
     super->zif_abapgit_object~serialize( io_xml = io_xml ).
 
