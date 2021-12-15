@@ -407,6 +407,10 @@ CLASS ltcl_formats DEFINITION FINAL
       RAISING
         zcx_abapgit_exception.
 
+    METHODS higher_patch FOR TESTING
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -426,6 +430,33 @@ CLASS ltcl_formats IMPLEMENTATION.
     ls_requirement-min_release = ls_component-release.
 
     CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'
+      EXPORTING
+        input  = ls_component-extrelease
+      IMPORTING
+        output = ls_requirement-min_patch.
+
+    APPEND ls_requirement TO lt_requirements.
+
+    cl_abap_unit_assert=>assert_equals(
+        act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
+        exp = zif_abapgit_definitions=>c_yes ).
+
+  ENDMETHOD.
+
+
+  METHOD higher_patch.
+
+    DATA:
+      ls_component    TYPE cvers_sdu,
+      lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
+      ls_requirement  LIKE LINE OF lt_requirements.
+
+    ls_component = lcl_helper=>get_sap_basis_component( ).
+
+    ls_requirement-component   = ls_component-component.
+    ls_requirement-min_release = ls_component-release.
+
+    CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
       EXPORTING
         input  = ls_component-extrelease
       IMPORTING
