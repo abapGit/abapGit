@@ -5,13 +5,15 @@ CLASS zcl_abapgit_object_aifc DEFINITION
   CREATE PUBLIC.
 
   PUBLIC SECTION.
+
     INTERFACES zif_abapgit_object.
 
     METHODS constructor
       IMPORTING
         !iv_language TYPE spras
-        !is_item     TYPE zif_abapgit_definitions=>ty_item.
-
+        !is_item     TYPE zif_abapgit_definitions=>ty_item
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
     TYPES:
       BEGIN OF ty_aif_key_s,
@@ -108,12 +110,12 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
             rv_success = rv_success.
 
       CATCH cx_sy_dyn_call_error INTO lx_dyn_call_error.
-        zcx_abapgit_exception=>raise( iv_text = TEXT-003
+        zcx_abapgit_exception=>raise( iv_text = 'AIFC not supported'
                                       ix_previous = lx_dyn_call_error ).
       CATCH cx_root INTO lx_root.
-        io_log->add_exception( ix_exc  = lx_root
-                               is_item = ms_item ).
-        RETURN.
+        RAISE EXCEPTION TYPE zcx_abapgit_exception
+          EXPORTING
+            previous = lx_root.
     ENDTRY.
   ENDMETHOD.
 
@@ -130,13 +132,12 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
             rv_success = rv_success.
 
       CATCH cx_sy_dyn_call_error INTO lx_dyn_call_error.
-        zcx_abapgit_exception=>raise( iv_text = TEXT-003
+        zcx_abapgit_exception=>raise( iv_text = 'AIFC not supported'
                                       ix_previous = lx_dyn_call_error ).
-
       CATCH cx_root INTO lx_root.
-        io_log->add_exception( ix_exc  = lx_root
-                               is_item = ms_item ).
-        RETURN.
+        RAISE EXCEPTION TYPE zcx_abapgit_exception
+          EXPORTING
+            previous = lx_root.
     ENDTRY.
   ENDMETHOD.
 
@@ -147,7 +148,6 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
     super->constructor( is_item     = is_item
                         iv_language = iv_language ).
 
-    CLEAR ms_icd_data_key.
     ms_icd_data_key = is_item-obj_name.
 
     TRY.
@@ -156,6 +156,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
             rr_abapgit_aifc_util = mo_abapgit_util.
 
       CATCH cx_sy_dyn_call_error INTO lx_exc_ref.
+        zcx_abapgit_exception=>raise( 'AIFC not supported' ).
     ENDTRY.
   ENDMETHOD.
 
@@ -178,12 +179,12 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
             iv_depl_id = ms_icd_data_key-depl_scenario.
 
       CATCH cx_sy_dyn_call_error INTO lx_dyn_call_error.
-        zcx_abapgit_exception=>raise( iv_text = TEXT-003
+        zcx_abapgit_exception=>raise( iv_text = 'AIFC not supported'
                                       ix_previous = lx_dyn_call_error ).
       CATCH cx_root INTO lx_root.
-        io_log->add_exception( ix_exc  = lx_root
-                               is_item = ms_item ).
-        RETURN.
+        RAISE EXCEPTION TYPE zcx_abapgit_exception
+          EXPORTING
+            previous = lx_root.
     ENDTRY.
   ENDMETHOD.
 
@@ -199,7 +200,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
             it_data    = it_data.
 
       CATCH cx_sy_dyn_call_error INTO lx_dyn_call_error.
-        zcx_abapgit_exception=>raise( iv_text = TEXT-003
+        zcx_abapgit_exception=>raise( iv_text = 'AIFC not supported'
                                       ix_previous = lx_dyn_call_error ).
       CATCH cx_root INTO lx_root.
         RAISE EXCEPTION TYPE zcx_abapgit_exception
@@ -222,10 +223,12 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
             rv_success = rv_success.
 
       CATCH cx_sy_dyn_call_error INTO lx_dyn_call_error.
-        zcx_abapgit_exception=>raise( iv_text = TEXT-003
+        zcx_abapgit_exception=>raise( iv_text = 'AIFC not supported'
                                       ix_previous = lx_dyn_call_error ).
       CATCH cx_root INTO lx_root.
-        RETURN.
+        RAISE EXCEPTION TYPE zcx_abapgit_exception
+          EXPORTING
+            previous = lx_root.
     ENDTRY.
   ENDMETHOD.
 
@@ -249,14 +252,14 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
             rv_user = rv_user.
 
       CATCH cx_sy_dyn_call_error INTO lx_dyn_call_error.
-        zcx_abapgit_exception=>raise( iv_text = TEXT-003
+        zcx_abapgit_exception=>raise( iv_text = 'AIFC not supported'
                                       ix_previous = lx_dyn_call_error ).
     ENDTRY.
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~delete.
-    zcx_abapgit_exception=>raise( 'Delete not supported.'(001) ).
+    zcx_abapgit_exception=>raise( 'Delete not supported.' ).
   ENDMETHOD.
 
 
@@ -272,6 +275,8 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
     DATA ls_ifkey TYPE ty_aif_key_s.
     DATA lr_content TYPE REF TO ty_content_s.
+
+    DATA lx_abap_not_a_table TYPE REF TO cx_abap_not_a_table.
 
     DATA lv_tablename TYPE string.
     FIELD-SYMBOLS: <lv_value> TYPE any.
@@ -291,8 +296,10 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
           TRY.
               lv_tablename = cl_abap_dyn_prg=>check_table_name_str( val = lr_content->tabname
                                                                     packages = '' ).
-            CATCH cx_abap_not_a_table.
-              RAISE EXCEPTION TYPE zcx_abapgit_exception.
+            CATCH cx_abap_not_a_table INTO lx_abap_not_a_table.
+              RAISE EXCEPTION TYPE zcx_abapgit_exception
+                EXPORTING
+                  previous = lx_abap_not_a_table.
             CATCH cx_abap_not_in_package.
               "thats fine
           ENDTRY.
@@ -304,7 +311,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
           CREATE DATA lr_table TYPE HANDLE lr_tabledescr.
           ASSIGN lr_table->* TO <lt_table>.
           IF sy-subrc <> 0.
-            RAISE EXCEPTION TYPE zcx_abapgit_exception.
+            zcx_abapgit_exception=>raise( iv_text = 'Fieldsymbol not assigned').
           ENDIF.
 
           io_xml->read( EXPORTING
@@ -388,7 +395,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
             rv_bool = rv_bool.
 
       CATCH cx_sy_dyn_call_error INTO lx_dyn_call_error.
-        zcx_abapgit_exception=>raise( iv_text = TEXT-003
+        zcx_abapgit_exception=>raise( iv_text = 'AIFC not supported'
                                       ix_previous = lx_dyn_call_error ).
     ENDTRY.
   ENDMETHOD.
@@ -456,10 +463,6 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
     DATA lr_ifdata TYPE REF TO ty_table_data_s.
     FIELD-SYMBOLS <lt_table> TYPE ANY TABLE.
 
-    IF zif_abapgit_object~exists( ) = abap_false.
-      RETURN.
-    ENDIF.
-
     TRY.
 
         ASSIGN  lr_data TO <ls_data>.
@@ -480,7 +483,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
                 rt_ifdata = lt_ifdata.
 
           CATCH cx_sy_dyn_call_error INTO lx_dyn_call_error.
-            zcx_abapgit_exception=>raise( iv_text = TEXT-003
+            zcx_abapgit_exception=>raise( iv_text = 'AIFC not supported'
                                           ix_previous = lx_dyn_call_error ).
         ENDTRY.
 
@@ -504,6 +507,8 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
                      ig_data = lt_content ).
 
       CATCH cx_root INTO lx_root.
+        zcx_abapgit_exception=>raise( iv_text = 'Serialize not possible'
+                                      ix_previous = lx_dyn_call_error ).
     ENDTRY.
   ENDMETHOD.
 ENDCLASS.
