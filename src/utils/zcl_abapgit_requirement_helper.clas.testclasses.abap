@@ -86,7 +86,6 @@ CLASS ltcl_lower_release IMPLEMENTATION.
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-      EXPORTING
         act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_yes ).
 
@@ -108,7 +107,6 @@ CLASS ltcl_lower_release IMPLEMENTATION.
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-      EXPORTING
         act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_yes ).
 
@@ -130,7 +128,6 @@ CLASS ltcl_lower_release IMPLEMENTATION.
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-      EXPORTING
         act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_yes ).
 
@@ -152,7 +149,6 @@ CLASS ltcl_lower_release IMPLEMENTATION.
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-      EXPORTING
         act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_yes ).
 
@@ -208,7 +204,6 @@ CLASS ltcl_same_release IMPLEMENTATION.
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-      EXPORTING
         act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_yes ).
 
@@ -230,7 +225,6 @@ CLASS ltcl_same_release IMPLEMENTATION.
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-      EXPORTING
         act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_yes ).
 
@@ -252,7 +246,6 @@ CLASS ltcl_same_release IMPLEMENTATION.
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-      EXPORTING
         act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_yes ).
 
@@ -274,7 +267,6 @@ CLASS ltcl_same_release IMPLEMENTATION.
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-      EXPORTING
         act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_no ).
 
@@ -330,7 +322,6 @@ CLASS ltcl_higher_release IMPLEMENTATION.
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-      EXPORTING
         act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_no ).
 
@@ -352,7 +343,6 @@ CLASS ltcl_higher_release IMPLEMENTATION.
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-      EXPORTING
         act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_no ).
 
@@ -374,7 +364,6 @@ CLASS ltcl_higher_release IMPLEMENTATION.
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-      EXPORTING
         act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_no ).
 
@@ -396,7 +385,6 @@ CLASS ltcl_higher_release IMPLEMENTATION.
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-      EXPORTING
         act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_no ).
 
@@ -446,7 +434,6 @@ CLASS ltcl_formats IMPLEMENTATION.
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-      EXPORTING
         act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_yes ).
 
