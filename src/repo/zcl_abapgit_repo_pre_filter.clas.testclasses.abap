@@ -23,9 +23,6 @@ ENDCLASS.
 
 CLASS ltcl_adjust_filter IMPLEMENTATION.
 
-
-
-
   METHOD setup.
     CREATE OBJECT mo_cut.
   ENDMETHOD.
