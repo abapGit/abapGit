@@ -20,22 +20,43 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
     DATA lv_rc TYPE i.
 
     " Note: do not use a string table for 'it_data'!
-    cl_gui_frontend_services=>clipboard_export(
-      EXPORTING
-        no_auth_check        = iv_no_auth_check
-      IMPORTING
-        data                 = it_data
-      CHANGING
-        rc                   = lv_rc
-      EXCEPTIONS
-        cntl_error           = 1
-        error_no_gui         = 2
-        not_supported_by_gui = 3
-        no_authority         = 4
-        OTHERS               = 5 ).
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
+
+    TRY.
+        CALL METHOD cl_gui_frontend_services=>('CLIPBOARD_EXPORT')
+          EXPORTING
+            no_auth_check        = iv_no_auth_check " >= 740
+          IMPORTING
+            data                 = it_data
+          CHANGING
+            rc                   = lv_rc
+          EXCEPTIONS
+            cntl_error           = 1
+            error_no_gui         = 2
+            not_supported_by_gui = 3
+            no_authority         = 4
+            OTHERS               = 5.
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise_t100( ).
+        ENDIF.
+
+      CATCH cx_sy_dyn_call_param_missing.
+
+        cl_gui_frontend_services=>clipboard_export(
+          IMPORTING
+            data                 = it_data
+          CHANGING
+            rc                   = lv_rc
+          EXCEPTIONS
+            cntl_error           = 1
+            error_no_gui         = 2
+            not_supported_by_gui = 3
+            no_authority         = 4
+          OTHERS               = 5 ).
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise_t100( ).
+        ENDIF.
+
+    ENDTRY.
 
   ENDMETHOD.
 

@@ -214,7 +214,7 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
 
     IF is_result-sobjname IS INITIAL OR
        ( is_result-sobjname = is_result-objname AND
-         is_result-sobjtype = is_result-sobjtype ).
+         is_result-sobjtype = is_result-objtype ).
       lv_obj_txt = |{ is_result-objtype } { is_result-objname }|.
     ELSEIF is_result-objtype = 'CLAS' OR
          ( is_result-objtype = 'PROG' AND NOT is_result-sobjname+30(*) IS INITIAL ).
