@@ -369,8 +369,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     ENDIF.
     ms_files = zcl_abapgit_factory=>get_stage_logic( )->get(
                                                        io_repo       = mo_repo
-                                                       ii_pre_filter = mi_pre_filter
-                                                     ).
+                                                       ii_pre_filter = mi_pre_filter ).
 
     IF lines( ms_files-local ) = 0 AND lines( ms_files-remote ) = 0.
       zcx_abapgit_exception=>raise( 'There are no changes that could be staged' ).

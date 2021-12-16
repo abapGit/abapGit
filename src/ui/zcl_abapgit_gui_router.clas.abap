@@ -826,10 +826,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         li_pre_filter->set_filter_values_via_dialog( ).
 
         lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
-        lv_xstr = zcl_abapgit_zip=>encode_files( lo_repo->get_files_local(
-                                                   ii_pre_filter = li_pre_filter
-                                                 )
-                                               ).
+        lv_xstr = zcl_abapgit_zip=>encode_files( lo_repo->get_files_local( ii_pre_filter = li_pre_filter ) ).
 
         file_download( iv_package = lo_repo->get_package( )
                        iv_xstr    = lv_xstr ).

@@ -36,7 +36,7 @@ CLASS ltcl_adjust_filter IMPLEMENTATION.
 
   METHOD adjust_local_filter.
 
-    data lt_e071_filter TYPE zcl_abapgit_repo_pre_filter=>ty_e071_filter_tt.
+    DATA lt_e071_filter TYPE zcl_abapgit_repo_pre_filter=>ty_e071_filter_tt.
     DATA lt_filter_adj TYPE zif_abapgit_definitions=>ty_tadir_tt.
     DATA lr_filter_adj TYPE REF TO zif_abapgit_definitions=>ty_tadir.
     DATA lr_ex TYPE REF TO zcx_abapgit_exception.
@@ -52,22 +52,19 @@ CLASS ltcl_adjust_filter IMPLEMENTATION.
             EXPORTING
               exp                  = is_filter_adj-obj_name
               act                  = lr_filter_adj->obj_name
-              msg                  = iv_msg
-          ).
+              msg                  = iv_msg ).
 
           cl_aunit_assert=>assert_equals(
           EXPORTING
             exp                  = is_filter_adj-object
             act                  = lr_filter_adj->object
-            msg                  = iv_msg
-        ).
+            msg                  = iv_msg ).
 
           cl_aunit_assert=>assert_equals(
           EXPORTING
             exp                  = is_filter_adj-pgmid
             act                  = lr_filter_adj->pgmid
-            msg                  = iv_msg
-        ).
+            msg                  = iv_msg ).
         ELSE.
           cl_aunit_assert=>fail( msg = iv_msg ).
         ENDIF.
@@ -99,8 +96,7 @@ CLASS ltcl_adjust_filter IMPLEMENTATION.
       EXPORTING
         is_e071_filter     = ls_e071_filter
         is_filter_adj = ls_filter_adj
-        iv_msg        = lv_msg
-    ).
+        iv_msg        = lv_msg ).
 
   ENDMETHOD.
   METHOD adjust_local_filter_limu_meth.
@@ -120,8 +116,7 @@ CLASS ltcl_adjust_filter IMPLEMENTATION.
       EXPORTING
         is_e071_filter = ls_e071_filter
         is_filter_adj = ls_filter_adj
-        iv_msg        = lv_msg
-    ).
+        iv_msg        = lv_msg ).
 
   ENDMETHOD.
 
@@ -142,8 +137,7 @@ CLASS ltcl_adjust_filter IMPLEMENTATION.
       EXPORTING
         is_e071_filter = ls_e071_filter
         is_filter_adj = ls_filter_adj
-        iv_msg        = lv_msg
-    ).
+        iv_msg        = lv_msg ).
 
   ENDMETHOD.
 
@@ -187,8 +181,7 @@ CLASS ltcl_adjust_filter IMPLEMENTATION.
                  EXPORTING
                    exp                  = lt_filter_adj
                    act                  = lt_filter_adj_res
-                   msg                  = lv_msg
-               ).
+                   msg                  = lv_msg ).
 
       CATCH zcx_abapgit_exception INTO lr_ex.
         cl_aunit_assert=>fail( msg = lr_ex->get_text( ) ).

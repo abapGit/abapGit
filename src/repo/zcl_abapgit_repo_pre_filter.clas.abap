@@ -199,8 +199,8 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
   METHOD adjust_local_filter.
 
     DATA lt_e071_filter TYPE ty_e071_filter_tt.
-    data lr_e071_filter type ref to ty_e071_filter.
-    data ls_e071_filter type ty_e071_filter.
+    DATA lr_e071_filter TYPE REF TO ty_e071_filter.
+    DATA ls_e071_filter TYPE ty_e071_filter.
     DATA ls_filter TYPE zif_abapgit_definitions=>ty_tadir.
     DATA lv_trobj_name_new TYPE trobj_name.
     DATA lv_trobj_type_new TYPE trobjtype.
@@ -232,7 +232,7 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
         CALL FUNCTION 'GET_R3TR_OBJECT_FROM_LIMU_OBJ'
           EXPORTING
             p_limu_objtype = lr_e071_filter->object
-            p_limu_objname = lr_e071_filter->OBJ_NAME
+            p_limu_objname = lr_e071_filter->obj_name
           IMPORTING
             p_r3tr_objtype = lv_trobj_type_new
             p_r3tr_objname = lv_trobj_name_new
@@ -247,12 +247,12 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
           CONTINUE.
         ENDIF.
 
-        clear ls_filter.
+        CLEAR ls_filter.
         ls_filter-pgmid = 'R3TR'.
         ls_filter-object = lv_trobj_type_new.
         ls_filter-obj_name = lv_trobj_name_new.
         INSERT ls_filter INTO TABLE rt_filter.
-      else.
+      ELSE.
         ls_filter-pgmid = lr_e071_filter->pgmid.
         ls_filter-object = lr_e071_filter->object.
         ls_filter-obj_name = lr_e071_filter->obj_name.

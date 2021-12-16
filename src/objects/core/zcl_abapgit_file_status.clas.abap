@@ -9,7 +9,7 @@ CLASS zcl_abapgit_file_status DEFINITION
       IMPORTING
         !io_repo          TYPE REF TO zcl_abapgit_repo
         !ii_log           TYPE REF TO zif_abapgit_log OPTIONAL
-        !ii_pre_filter   TYPE REF TO zif_abapgit_repo_pre_filter OPTIONAL
+        !ii_pre_filter    TYPE REF TO zif_abapgit_repo_pre_filter OPTIONAL
       RETURNING
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
@@ -763,7 +763,8 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
     DATA lt_remote TYPE zif_abapgit_definitions=>ty_files_tt.
     DATA li_exit TYPE REF TO zif_abapgit_exit.
 
-    lt_local = io_repo->get_files_local( ii_log = ii_log ii_pre_filter = ii_pre_filter ).
+    lt_local = io_repo->get_files_local( ii_log = ii_log
+                                         ii_pre_filter = ii_pre_filter ).
 
     IF lines( lt_local ) <= 2.
       " Less equal two means that we have only the .abapgit.xml and the package in
