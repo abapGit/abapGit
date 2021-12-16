@@ -53,6 +53,11 @@ CLASS zcl_abapgit_object_aifc DEFINITION
         !it_data    TYPE STANDARD TABLE
       RAISING
         zcx_abapgit_exception.
+    METHODS clear_client
+      CHANGING
+        !ct_data TYPE STANDARD TABLE
+      RAISING
+        zcx_abapgit_exception.
     METHODS authorization_check
       IMPORTING
         !io_log           TYPE REF TO zif_abapgit_log
@@ -113,9 +118,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
         zcx_abapgit_exception=>raise( iv_text = 'AIFC not supported'
                                       ix_previous = lx_dyn_call_error ).
       CATCH cx_root INTO lx_root.
-        RAISE EXCEPTION TYPE zcx_abapgit_exception
-          EXPORTING
-            previous = lx_root.
+        zcx_abapgit_exception=>raise_with_text( lx_root ).
     ENDTRY.
   ENDMETHOD.
 
@@ -135,9 +138,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
         zcx_abapgit_exception=>raise( iv_text = 'AIFC not supported'
                                       ix_previous = lx_dyn_call_error ).
       CATCH cx_root INTO lx_root.
-        RAISE EXCEPTION TYPE zcx_abapgit_exception
-          EXPORTING
-            previous = lx_root.
+        zcx_abapgit_exception=>raise_with_text( lx_root ).
     ENDTRY.
   ENDMETHOD.
 
@@ -182,9 +183,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
         zcx_abapgit_exception=>raise( iv_text = 'AIFC not supported'
                                       ix_previous = lx_dyn_call_error ).
       CATCH cx_root INTO lx_root.
-        RAISE EXCEPTION TYPE zcx_abapgit_exception
-          EXPORTING
-            previous = lx_root.
+        zcx_abapgit_exception=>raise_with_text( lx_root ).
     ENDTRY.
   ENDMETHOD.
 
@@ -203,9 +202,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
         zcx_abapgit_exception=>raise( iv_text = 'AIFC not supported'
                                       ix_previous = lx_dyn_call_error ).
       CATCH cx_root INTO lx_root.
-        RAISE EXCEPTION TYPE zcx_abapgit_exception
-          EXPORTING
-            previous = lx_root.
+        zcx_abapgit_exception=>raise_with_text( lx_root ).
     ENDTRY.
   ENDMETHOD.
 
@@ -226,9 +223,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
         zcx_abapgit_exception=>raise( iv_text = 'AIFC not supported'
                                       ix_previous = lx_dyn_call_error ).
       CATCH cx_root INTO lx_root.
-        RAISE EXCEPTION TYPE zcx_abapgit_exception
-          EXPORTING
-            previous = lx_root.
+        zcx_abapgit_exception=>raise_with_text( lx_root ).
     ENDTRY.
   ENDMETHOD.
 
@@ -297,9 +292,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
               lv_tablename = cl_abap_dyn_prg=>check_table_name_str( val = lr_content->tabname
                                                                     packages = '' ).
             CATCH cx_abap_not_a_table INTO lx_abap_not_a_table.
-              RAISE EXCEPTION TYPE zcx_abapgit_exception
-                EXPORTING
-                  previous = lx_abap_not_a_table.
+              zcx_abapgit_exception=>raise_with_text( lx_abap_not_a_table ).
             CATCH cx_abap_not_in_package.
               "thats fine
           ENDTRY.
@@ -495,6 +488,8 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
             CONTINUE.
           ENDIF.
 
+          clear_client( CHANGING ct_data = <lt_table> ).
+
           io_xml->add( iv_name = lr_ifdata->tabname
                        ig_data = <lt_table> ).
 
@@ -509,6 +504,44 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
       CATCH cx_root INTO lx_root.
         zcx_abapgit_exception=>raise( iv_text = 'Serialize not possible'
                                       ix_previous = lx_dyn_call_error ).
+    ENDTRY.
+  ENDMETHOD.
+
+
+  METHOD clear_client.
+    DATA lx_root TYPE REF TO cx_root.
+    DATA lr_structdescr TYPE REF TO cl_abap_structdescr.
+    DATA lr_tabledescr TYPE REF TO cl_abap_tabledescr.
+    DATA lr_typedescr TYPE REF TO cl_abap_typedescr.
+    DATA lv_type TYPE string.
+    DATA lv_name TYPE c LENGTH 30.
+    DATA lt_components TYPE cl_abap_structdescr=>component_table.
+    FIELD-SYMBOLS: <ls_components> LIKE LINE OF lt_components.
+    FIELD-SYMBOLS <ls_table> TYPE any.
+    FIELD-SYMBOLS <lv_value> TYPE any.
+
+    TRY.
+        lr_tabledescr ?= cl_abap_typedescr=>describe_by_data( p_data = ct_data  ).
+        lr_structdescr ?= lr_tabledescr->get_table_line_type( ).
+
+        lt_components = lr_structdescr->get_components( ).
+        LOOP AT lt_components ASSIGNING <ls_components>.
+          CHECK <ls_components>-type IS ASSIGNED.
+          lr_typedescr ?= <ls_components>-type.
+          lv_type = lr_typedescr->get_relative_name( ).
+          IF lv_type = 'MANDT'.
+            lv_name = <ls_components>-name.
+            EXIT.
+          ENDIF.
+        ENDLOOP.
+
+        LOOP AT ct_data ASSIGNING <ls_table>.
+          ASSIGN COMPONENT lv_name OF STRUCTURE <ls_table> TO <lv_value>.
+          CHECK <lv_value> IS ASSIGNED.
+          CLEAR <lv_value>.
+        ENDLOOP.
+      CATCH cx_root INTO lx_root.
+        zcx_abapgit_exception=>raise_with_text( lx_root ).
     ENDTRY.
   ENDMETHOD.
 ENDCLASS.
