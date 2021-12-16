@@ -1,100 +1,67 @@
 CLASS zcl_abapgit_repo_pre_filter DEFINITION
   PUBLIC
   FINAL
-  CREATE PRIVATE .
+  CREATE PUBLIC.
+
 
   PUBLIC SECTION.
-
+    INTERFACES zif_abapgit_repo_pre_filter.
+    ALIASES: filter_files FOR zif_abapgit_repo_pre_filter~filter_files,
+             get_local_filter FOR zif_abapgit_repo_pre_filter~get_local_filter,
+             set_filter_values_via_dialog FOR zif_abapgit_repo_pre_filter~set_filter_values_via_dialog,
+             set_filter_values FOR zif_abapgit_repo_pre_filter~set_filter_values,
+             get_filter_values FOR zif_abapgit_repo_pre_filter~get_filter_values.
     TYPES:
       ty_file_filter_tt TYPE RANGE OF string .
     TYPES:
       ty_file_filter TYPE LINE OF ty_file_filter_tt .
 
-    "! <p class="shorttext synchronized" lang="en"></p>
-    "!
-    "! @parameter RR_FILTER | <p class="shorttext synchronized" lang="en">Repository Pre Filter</p>
-    CLASS-METHODS get_instance
-      RETURNING
-        VALUE(rr_filter) TYPE REF TO zcl_abapgit_repo_pre_filter .
-    "! <p class="shorttext synchronized" lang="en"></p>
-    "!
-    "! @parameter IT_R_TRKORR | <p class="shorttext synchronized" lang="en">Tab of Range Struct for E070/E071-TRKORR</p>
-    METHODS set_filter_values
-      IMPORTING
-        !it_r_trkorr TYPE trrngtrkor_tab
-      RAISING
-        zcx_abapgit_exception .
-    "! <p class="shorttext synchronized" lang="en"></p>
-    "!
-    "! @parameter RT_R_TRKORR | <p class="shorttext synchronized" lang="en">Tab of Range Struct for E070/E071-TRKORR</p>
-    METHODS get_filter_values
-      RETURNING
-        VALUE(rt_r_trkorr) TYPE trrngtrkor_tab .
-    "! <p class="shorttext synchronized" lang="en"></p>
-    "!
-    "! @parameter RT_FILTER | <p class="shorttext synchronized" lang="en">Repository Filter</p>
-    METHODS get_local_filter
-      RETURNING
-        VALUE(rt_filter) TYPE zif_abapgit_definitions=>ty_tadir_tt .
-    "! <p class="shorttext synchronized" lang="en"></p>
-    "!
-    "! @parameter RT_R_FILE_FILTER | <p class="shorttext synchronized" lang="en">File Filter</p>
-    METHODS get_file_filter
-      RETURNING
-        VALUE(rt_r_file_filter) TYPE ty_file_filter_tt .
-    "! <p class="shorttext synchronized" lang="en"></p>
-    "!
-    "! @parameter CT_FILES | <p class="shorttext synchronized" lang="en">Files</p>
-    METHODS filter_files
-      CHANGING
-        !ct_files TYPE zif_abapgit_definitions=>ty_files_tt .
-    "! <p class="shorttext synchronized" lang="en"></p>
-    METHODS init .
-    "! <p class="shorttext synchronized" lang="en"></p>
-    METHODS set_filter_values_via_dialog
-      RAISING
-        zcx_abapgit_exception .
-    "! <p class="shorttext synchronized" lang="en"></p>
-    "!
-    "! @parameter iv_action | <p class="shorttext synchronized" lang="en">Action</p>
-    METHODS set_latest_action
-      IMPORTING
-        !iv_action TYPE string .
-    "! <p class="shorttext synchronized" lang="en"></p>
-    "!
-    "! @parameter rv_required | <p class="shorttext synchronized" lang="en">Required</p>
-    METHODS is_filter_required
-      RETURNING
-        VALUE(rv_required) TYPE abap_bool .
+    TYPES:
+      BEGIN OF ty_e071_filter,
+        pgmid    TYPE pgmid,
+        object   TYPE  trobjtype,
+        obj_name TYPE trobj_name,
+      END OF ty_e071_filter.
+    TYPES ty_e071_filter_tt TYPE STANDARD TABLE OF ty_e071_filter.
+
   PROTECTED SECTION.
 
 
   PRIVATE SECTION.
 
-    CLASS-DATA gr_filter TYPE REF TO zcl_abapgit_repo_pre_filter .
     DATA mt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt .
     DATA mt_r_trkorr TYPE trrngtrkor_tab .
     DATA mt_r_file_filter TYPE ty_file_filter_tt .
-    DATA mv_latest_action TYPE string .
 
-    "! <p class="shorttext synchronized" lang="en"></p>
-    "!
     METHODS generate_local_filter
+      IMPORTING
+        it_r_trkorr      TYPE trrngtrkor_tab
+      RETURNING
+        VALUE(rt_filter) TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
-    "! <p class="shorttext synchronized" lang="en"></p>
-    "!
+
     METHODS generate_file_filter
+      IMPORTING
+        it_filter               TYPE zif_abapgit_definitions=>ty_tadir_tt
+      RETURNING
+        VALUE(rt_r_file_filter) TYPE ty_file_filter_tt
       RAISING
         zcx_abapgit_exception .
+
+    METHODS init .
+
+    METHODS adjust_local_filter
+      IMPORTING
+                it_e071_filter   TYPE ty_e071_filter_tt
+      RETURNING VALUE(rt_filter) TYPE zif_abapgit_definitions=>ty_tadir_tt
+      RAISING
+                zcx_abapgit_exception.
 ENDCLASS.
-
-
 
 CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
 
-
-  METHOD filter_files.
+  METHOD zif_abapgit_repo_pre_filter~filter_files.
     IF mt_r_file_filter IS INITIAL.
       RETURN.
     ENDIF.
@@ -102,26 +69,24 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
     DELETE ct_files WHERE filename NOT IN mt_r_file_filter.
   ENDMETHOD.
 
-
   METHOD generate_file_filter.
     DATA lr_filter TYPE REF TO zif_abapgit_definitions=>ty_tadir.
     DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
     DATA lv_pattern TYPE string.
     DATA ls_r_file_filter TYPE ty_file_filter.
 
-    CLEAR mt_r_file_filter.
+    CLEAR rt_r_file_filter.
 
-    IF mt_filter IS INITIAL.
+    IF it_filter IS INITIAL.
       RETURN.
     ENDIF.
 
     ls_r_file_filter-sign = 'I'.
     ls_r_file_filter-option = 'EQ'.
     ls_r_file_filter-low = zif_abapgit_definitions=>c_dot_abapgit.
-    INSERT ls_r_file_filter INTO TABLE mt_r_file_filter.
+    INSERT ls_r_file_filter INTO TABLE rt_r_file_filter.
 
-
-    LOOP AT mt_filter REFERENCE INTO lr_filter.
+    LOOP AT it_filter REFERENCE INTO lr_filter.
       CLEAR ls_item.
       CLEAR ls_r_file_filter.
       ls_item-obj_type = lr_filter->object.
@@ -138,113 +103,32 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
       ls_r_file_filter-sign = 'I'.
       ls_r_file_filter-option = 'CP'.
       ls_r_file_filter-low = lv_pattern.
-      INSERT ls_r_file_filter INTO TABLE mt_r_file_filter.
+      INSERT ls_r_file_filter INTO TABLE rt_r_file_filter.
     ENDLOOP.
 
   ENDMETHOD.
 
 
   METHOD generate_local_filter.
-    DATA lr_filter TYPE REF TO zif_abapgit_definitions=>ty_tadir.
-    DATA ls_filter TYPE zif_abapgit_definitions=>ty_tadir.
-    DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA lv_trobj_name TYPE trobj_name.
-    DATA lv_trobj_name_new TYPE trobj_name.
-    DATA lv_trobj_type_new TYPE trobjtype.
+    DATA lt_e071_filter TYPE ty_e071_filter_tt.
 
+    SELECT DISTINCT pgmid
+                object
+                obj_name
+           INTO CORRESPONDING FIELDS OF TABLE lt_e071_filter
+           FROM e071
+     WHERE trkorr IN it_r_trkorr.
 
-    IF mt_r_trkorr IS NOT INITIAL.
-
-      SELECT DISTINCT pgmid
-                      object
-                      obj_name
-                 INTO CORRESPONDING FIELDS OF TABLE lt_filter
-                 FROM e071
-           WHERE trkorr IN mt_r_trkorr.
-    ENDIF.
-
-    LOOP AT lt_filter REFERENCE INTO lr_filter.
-      IF lr_filter->pgmid <> 'LIMU' AND lr_filter->pgmid <> 'R3TR'.
-
-        "I don't know how to determine the R3TR Object for other PGMID (like LANGU)
-        "Workaround: I add also filter R3TR and try also with LIMU to get the R3TR Object
-        ls_filter = lr_filter->*.
-        ls_filter-pgmid = 'R3TR'.
-        INSERT ls_filter INTO TABLE mt_filter.
-        "Try with LIMU to get R3TR Object
-        ls_filter-pgmid = 'LIMU'.
-        INSERT ls_filter INTO TABLE lt_filter.
-      ENDIF.
-
-      IF lr_filter->pgmid = 'LIMU'.
-        "Get Main Object from LIMU Object (Example the Class (R3TR) of a Method (LIMU))
-        "Could also work for example for LANGU
-
-        lv_trobj_name = lr_filter->obj_name.
-        CLEAR lv_trobj_type_new.
-        CLEAR lv_trobj_name_new.
-
-        CALL FUNCTION 'GET_R3TR_OBJECT_FROM_LIMU_OBJ'
-          EXPORTING
-            p_limu_objtype = lr_filter->object
-            p_limu_objname = lv_trobj_name
-          IMPORTING
-            p_r3tr_objtype = lv_trobj_type_new
-            p_r3tr_objname = lv_trobj_name_new
-          EXCEPTIONS
-            no_mapping     = 1
-            OTHERS         = 2.
-        IF sy-subrc <> 0.
-          CONTINUE.
-        ENDIF.
-
-        IF lv_trobj_type_new IS INITIAL.
-          CONTINUE.
-        ENDIF.
-
-        lr_filter->object = lv_trobj_type_new.
-        lr_filter->obj_name = lv_trobj_name_new.
-
-      ENDIF.
-      INSERT lr_filter->* INTO TABLE mt_filter.
-    ENDLOOP.
-
-    SORT mt_filter.
-    DELETE ADJACENT DUPLICATES FROM mt_filter.
-
-    IF mt_filter IS INITIAL.
-
-      zcx_abapgit_exception=>raise( 'No objects found for transport filter'(004) ).
-
-    ENDIF.
+    rt_filter = adjust_local_filter( lt_e071_filter ).
   ENDMETHOD.
 
-
-  METHOD get_file_filter.
-    rt_r_file_filter = mt_r_file_filter.
-  ENDMETHOD.
-
-
-  METHOD get_filter_values.
+  METHOD zif_abapgit_repo_pre_filter~get_filter_values.
     rt_r_trkorr = mt_r_trkorr.
   ENDMETHOD.
 
-
-  METHOD get_instance.
-    "Singleton
-    IF gr_filter IS INITIAL.
-      CREATE OBJECT gr_filter.
-    ENDIF.
-    rr_filter = gr_filter.
-  ENDMETHOD.
-
-
-  METHOD get_local_filter.
-
+  METHOD zif_abapgit_repo_pre_filter~get_local_filter.
     rt_filter = mt_filter.
-
   ENDMETHOD.
-
 
   METHOD init.
     CLEAR mt_filter.
@@ -252,31 +136,18 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
     CLEAR mt_r_trkorr.
   ENDMETHOD.
 
-
-  METHOD is_filter_required.
-    CLEAR rv_required.
-    CASE mv_latest_action.
-      WHEN zif_abapgit_definitions=>c_action-go_stage_transport
-      OR zif_abapgit_definitions=>c_action-zip_export_transport.
-        rv_required = abap_true.
-    ENDCASE.
-  ENDMETHOD.
-
-
-  METHOD set_filter_values.
+  METHOD zif_abapgit_repo_pre_filter~set_filter_values.
 
     init( ).
     IF it_r_trkorr IS NOT INITIAL.
-      mt_r_trkorr = it_r_trkorr.
-      generate_local_filter( ).
-      generate_file_filter( ).
+      mt_filter = generate_local_filter( it_r_trkorr ).
+      mt_r_file_filter = generate_file_filter( mt_filter ).
     ENDIF.
   ENDMETHOD.
 
+  METHOD zif_abapgit_repo_pre_filter~set_filter_values_via_dialog.
 
-  METHOD set_filter_values_via_dialog.
-
-    DATA: ls_selection  TYPE trwbo_selection.
+    DATA ls_selection  TYPE trwbo_selection.
     DATA lt_r_trkorr  TYPE trrngtrkor_tab.
     DATA ls_r_trkorr  TYPE trrngtrkor.
     DATA lr_request TYPE REF TO trwbo_request_header.
@@ -325,8 +196,80 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD set_latest_action.
-    "Set latest action
-    mv_latest_action = iv_action.
+  METHOD adjust_local_filter.
+
+    DATA lt_e071_filter TYPE ty_e071_filter_tt.
+    data lr_e071_filter type ref to ty_e071_filter.
+    data ls_e071_filter type ty_e071_filter.
+    DATA ls_filter TYPE zif_abapgit_definitions=>ty_tadir.
+    DATA lv_trobj_name_new TYPE trobj_name.
+    DATA lv_trobj_type_new TYPE trobjtype.
+
+    lt_e071_filter = it_e071_filter.
+
+    LOOP AT lt_e071_filter REFERENCE INTO lr_e071_filter.
+      IF lr_e071_filter->pgmid <> 'LIMU' AND lr_e071_filter->pgmid <> 'R3TR'.
+
+        "I don't know how to determine the R3TR Object for other PGMID (like LANG)
+        "Workaround: I add also filter R3TR and try also with LIMU to get the R3TR Object
+        ls_filter-object = lr_e071_filter->object.
+        ls_filter-obj_name = lr_e071_filter->obj_name.
+        ls_filter-pgmid = 'R3TR'.
+        INSERT ls_filter INTO TABLE rt_filter.
+        ls_e071_filter = lr_e071_filter->*.
+        "Try with LIMU to get R3TR Object
+        ls_e071_filter-pgmid = 'LIMU'.
+        INSERT ls_e071_filter INTO TABLE lt_e071_filter.
+      ENDIF.
+
+      IF lr_e071_filter->pgmid = 'LIMU'.
+        "Get Main Object from LIMU Object (Example the Class (R3TR) of a Method (LIMU))
+        "Could also work for example for LANGU
+
+        CLEAR lv_trobj_type_new.
+        CLEAR lv_trobj_name_new.
+
+        CALL FUNCTION 'GET_R3TR_OBJECT_FROM_LIMU_OBJ'
+          EXPORTING
+            p_limu_objtype = lr_e071_filter->object
+            p_limu_objname = lr_e071_filter->OBJ_NAME
+          IMPORTING
+            p_r3tr_objtype = lv_trobj_type_new
+            p_r3tr_objname = lv_trobj_name_new
+          EXCEPTIONS
+            no_mapping     = 1
+            OTHERS         = 2.
+        IF sy-subrc <> 0.
+          CONTINUE.
+        ENDIF.
+
+        IF lv_trobj_type_new IS INITIAL.
+          CONTINUE.
+        ENDIF.
+
+        clear ls_filter.
+        ls_filter-pgmid = 'R3TR'.
+        ls_filter-object = lv_trobj_type_new.
+        ls_filter-obj_name = lv_trobj_name_new.
+        INSERT ls_filter INTO TABLE rt_filter.
+      else.
+        ls_filter-pgmid = lr_e071_filter->pgmid.
+        ls_filter-object = lr_e071_filter->object.
+        ls_filter-obj_name = lr_e071_filter->obj_name.
+        INSERT ls_filter INTO TABLE rt_filter.
+      ENDIF.
+
+    ENDLOOP.
+
+    SORT rt_filter.
+    DELETE ADJACENT DUPLICATES FROM rt_filter.
+
+    IF rt_filter IS INITIAL.
+
+      zcx_abapgit_exception=>raise( 'No objects found for transport filter'(004) ).
+
+    ENDIF.
+
   ENDMETHOD.
+
 ENDCLASS.

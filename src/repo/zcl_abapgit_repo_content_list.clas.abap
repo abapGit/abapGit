@@ -160,7 +160,7 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
                    <ls_repo_item> LIKE LINE OF rt_repo_items.
 
 
-    lt_status = mo_repo->status( mi_log ).
+    lt_status = mo_repo->status( ii_log = mi_log ).
 
     LOOP AT lt_status ASSIGNING <ls_status>.
       AT NEW obj_name. "obj_type + obj_name

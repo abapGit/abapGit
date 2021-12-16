@@ -133,11 +133,11 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
 
   METHOD get_files_remote.
-    DATA lr_pre_filter TYPE REF TO zcl_abapgit_repo_pre_filter.
     fetch_remote( ).
     rt_files = super->get_files_remote( ).
-    lr_pre_filter = zcl_abapgit_repo_pre_filter=>get_instance( ).
-    lr_pre_filter->filter_files( CHANGING ct_files = rt_files ).
+    if not ii_pre_filter is INITIAL.
+        ii_pre_filter->filter_files( CHANGING ct_files = rt_files ).
+    ENDIF.
   ENDMETHOD.
 
 

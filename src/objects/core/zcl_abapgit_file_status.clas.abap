@@ -9,6 +9,7 @@ CLASS zcl_abapgit_file_status DEFINITION
       IMPORTING
         !io_repo          TYPE REF TO zcl_abapgit_repo
         !ii_log           TYPE REF TO zif_abapgit_log OPTIONAL
+        !ii_pre_filter   TYPE REF TO zif_abapgit_repo_pre_filter OPTIONAL
       RETURNING
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
@@ -142,7 +143,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
+CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
 
   METHOD build_existing.
@@ -762,17 +763,17 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
     DATA lt_remote TYPE zif_abapgit_definitions=>ty_files_tt.
     DATA li_exit TYPE REF TO zif_abapgit_exit.
 
-    lt_local = io_repo->get_files_local( ii_log ).
+    lt_local = io_repo->get_files_local( ii_log = ii_log ii_pre_filter = ii_pre_filter ).
 
     IF lines( lt_local ) <= 2.
       " Less equal two means that we have only the .abapgit.xml and the package in
       " our local repository. In this case we have to update our local .abapgit.xml
       " from the remote one. Otherwise we get errors when e.g. the folder starting
       " folder is different.
-      io_repo->find_remote_dot_abapgit( ).
+      io_repo->find_remote_dot_abapgit( ii_pre_filter = ii_pre_filter ).
     ENDIF.
 
-    lt_remote = io_repo->get_files_remote( ).
+    lt_remote = io_repo->get_files_remote( ii_pre_filter = ii_pre_filter ).
 
     li_exit = zcl_abapgit_exit=>get_instance( ).
     li_exit->pre_calculate_repo_status(

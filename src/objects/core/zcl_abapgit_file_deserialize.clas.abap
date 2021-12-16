@@ -128,7 +128,7 @@ CLASS zcl_abapgit_file_deserialize IMPLEMENTATION.
 
     rt_results = prioritize_deser(
                    filter_files_to_deserialize(
-                     it_results = zcl_abapgit_file_status=>status( io_repo )
+                     it_results = zcl_abapgit_file_status=>status( io_repo = io_repo )
                      ii_log     = ii_log ) ).
 
   ENDMETHOD.
