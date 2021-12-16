@@ -32,7 +32,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
   PRIVATE SECTION.
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
-    DATA mo_repo_aggregated_state TYPE REF TO zcl_abapgit_item_state .
+    DATA mo_repo_aggregated_state TYPE REF TO zcl_abapgit_item_state.
     DATA mv_cur_dir TYPE string .
     DATA mv_hide_files TYPE abap_bool .
     DATA mv_max_lines TYPE i .
@@ -175,7 +175,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS build_stage_dropdown
       RETURNING
         VALUE(ro_stage_dropdown) TYPE REF TO zcl_abapgit_html_toolbar

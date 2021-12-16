@@ -35,7 +35,6 @@ CLASS zcl_abapgit_repo DEFINITION
       IMPORTING
         !ii_log         TYPE REF TO zif_abapgit_log OPTIONAL
         !ii_pre_filter  TYPE REF TO zif_abapgit_repo_pre_filter OPTIONAL
-
       RETURNING
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING

@@ -49,19 +49,16 @@ CLASS ltcl_adjust_filter IMPLEMENTATION.
         READ TABLE lt_filter_adj REFERENCE INTO lr_filter_adj INDEX 1.
         IF sy-subrc = 0.
           cl_aunit_assert=>assert_equals(
-            EXPORTING
               exp                  = is_filter_adj-obj_name
               act                  = lr_filter_adj->obj_name
               msg                  = iv_msg ).
 
           cl_aunit_assert=>assert_equals(
-          EXPORTING
             exp                  = is_filter_adj-object
             act                  = lr_filter_adj->object
             msg                  = iv_msg ).
 
           cl_aunit_assert=>assert_equals(
-          EXPORTING
             exp                  = is_filter_adj-pgmid
             act                  = lr_filter_adj->pgmid
             msg                  = iv_msg ).
@@ -93,7 +90,6 @@ CLASS ltcl_adjust_filter IMPLEMENTATION.
     lv_msg = 'Object (R3TR FUGR SEWB) for FM GET_R3TR_OBJECT_FROM_LIMU_OBJ not found'.
 
     adjust_local_filter(
-      EXPORTING
         is_e071_filter     = ls_e071_filter
         is_filter_adj = ls_filter_adj
         iv_msg        = lv_msg ).
@@ -113,7 +109,6 @@ CLASS ltcl_adjust_filter IMPLEMENTATION.
     lv_msg = 'Object (R3TR CLAS CL_GUI_ALV_GRID) for Meth CL_GUI_ALV_GRID->CONSTRUCTOR not found'.
 
     adjust_local_filter(
-      EXPORTING
         is_e071_filter = ls_e071_filter
         is_filter_adj = ls_filter_adj
         iv_msg        = lv_msg ).
@@ -134,7 +129,6 @@ CLASS ltcl_adjust_filter IMPLEMENTATION.
     lv_msg = 'Object (R3TR CLAS CL_GUI_ALV_GRID) for CLAS CL_GUI_ALV_GRID not found'.
 
     adjust_local_filter(
-      EXPORTING
         is_e071_filter = ls_e071_filter
         is_filter_adj = ls_filter_adj
         iv_msg        = lv_msg ).
@@ -178,7 +172,6 @@ CLASS ltcl_adjust_filter IMPLEMENTATION.
         lt_filter_adj_res =  mo_cut->adjust_local_filter( it_e071_filter = lt_e071_filter  ).
 
         cl_aunit_assert=>assert_equals(
-                 EXPORTING
                    exp                  = lt_filter_adj
                    act                  = lt_filter_adj_res
                    msg                  = lv_msg ).

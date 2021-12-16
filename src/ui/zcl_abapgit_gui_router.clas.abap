@@ -252,8 +252,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         CREATE OBJECT li_pre_filter TYPE zcl_abapgit_repo_pre_filter.
         rs_handled-page  = get_page_stage(
                              ii_event      = ii_event
-                             ii_pre_filter = li_pre_filter
-                           ).
+                             ii_pre_filter = li_pre_filter ).
         rs_handled-state = get_state_diff( ii_event ).
       WHEN zif_abapgit_definitions=>c_action-go_branch_overview.              " Go repo branch overview
         rs_handled-page  = get_page_branch_overview( lv_key ).
