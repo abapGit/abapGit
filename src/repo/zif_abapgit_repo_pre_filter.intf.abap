@@ -4,9 +4,9 @@ INTERFACE zif_abapgit_repo_pre_filter
   TYPES ty_trrngtrkor_tt TYPE RANGE OF trkorr.
   TYPES ty_trrngtrkor TYPE LINE OF ty_trrngtrkor_tt.
   TYPES: BEGIN OF ty_e071_filter,
-           pgmid    TYPE e071-pgmid,
-           object   TYPE e071-object,
-           obj_name TYPE e071-obj_name,
+           pgmid    TYPE tadir-pgmid,
+           object   TYPE tadir-object,
+           obj_name TYPE TROBJ_NAME,
          END OF ty_e071_filter,
          ty_e071_filter_tt TYPE STANDARD TABLE OF ty_e071_filter,
          ty_file_filter_tt TYPE RANGE OF string,
