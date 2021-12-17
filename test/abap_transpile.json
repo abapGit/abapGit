@@ -249,6 +249,7 @@
       {"object": "ZCL_ABAPGIT_REPO_PRE_FILTER", "class": "ltcl_adjust_filter", "method": "adjust_local_filter_r3tr_clas", "note": "?"},
       {"object": "ZCL_ABAPGIT_REPO_PRE_FILTER", "class": "ltcl_adjust_filter", "method": "adjust_local_filter_limu_fm", "note": "?"},
       {"object": "ZCL_ABAPGIT_REPO_PRE_FILTER", "class": "ltcl_adjust_filter", "method": "adjust_local_filter_limu_meth", "note": "?"},
+      {"object": "ZCL_ABAPGIT_REPO_PRE_FILTER", "class": "ltcl_adjust_filter", "method": "adjust_local_filter_lang", "note": "?"},
       
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "ignore", "note": "Void type: DLVUNIT"},
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "identity"}
