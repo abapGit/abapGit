@@ -80,7 +80,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
+CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
 
   METHOD get_current_transport_for_obj.
@@ -303,4 +303,27 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
       rv_possible = zcl_abapgit_factory=>get_sap_package( iv_package )->are_changes_recorded_in_tr_req( ).
     ENDIF.
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_cts_api~get_r3tr_obj_for_limu_obj.
+
+    CLEAR ev_object.
+    CLEAR ev_obj_name.
+
+    CALL FUNCTION 'GET_R3TR_OBJECT_FROM_LIMU_OBJ'
+      EXPORTING
+        p_limu_objtype = iv_object
+        p_limu_objname = iv_obj_name
+      IMPORTING
+        p_r3tr_objtype = ev_object
+        p_r3tr_objname = ev_obj_name
+      EXCEPTIONS
+        no_mapping     = 1
+        OTHERS         = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.

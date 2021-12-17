@@ -9,6 +9,8 @@ INTERFACE zif_abapgit_cts_api
 
   TYPES ty_transport_list TYPE SORTED TABLE OF ty_transport WITH NON-UNIQUE KEY obj_type obj_name.
 
+  TYPES ty_trobj_name TYPE c LENGTH 120.    "Standard TROBJ_NAME
+
   "! Returns the transport request / task the object is currently in
   "! @parameter is_item | Object
   "! @parameter rv_transport | Transport request / task
@@ -38,4 +40,14 @@ INTERFACE zif_abapgit_cts_api
       VALUE(rt_transports) TYPE ty_transport_list
     RAISING
       zcx_abapgit_exception .
+  METHODS get_r3tr_obj_for_limu_obj
+    IMPORTING
+      iv_object   TYPE tadir-object
+      iv_obj_name TYPE ty_trobj_name
+    EXPORTING
+      ev_object   TYPE tadir-object
+      ev_obj_name TYPE ty_trobj_name
+    RAISING
+      zcx_abapgit_exception .
+
 ENDINTERFACE.

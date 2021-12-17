@@ -62,6 +62,7 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
     DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
     DATA lv_pattern TYPE string.
     DATA ls_r_file_filter TYPE zif_abapgit_repo_pre_filter=>ty_file_filter.
+    DATA lo_obj_files TYPE REF TO zcl_abapgit_objects_files.
 
     CLEAR rt_r_file_filter.
 
@@ -80,12 +81,12 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
       ls_item-obj_type = lr_filter->object.
       ls_item-obj_name = lr_filter->obj_name.
 
-      lv_pattern = zcl_abapgit_filename_logic=>object_to_file( is_item = ls_item
-                                                                iv_ext = '' ).
-      CONCATENATE lv_pattern '*' INTO lv_pattern.
-      " Escape special characters for use with 'covers pattern' (CP)
-      REPLACE ALL OCCURRENCES OF '#' IN lv_pattern WITH '##'.
-      REPLACE ALL OCCURRENCES OF '+' IN lv_pattern WITH '#+'.
+
+      CREATE OBJECT lo_obj_files
+        EXPORTING
+          is_item = ls_item.
+
+      lv_pattern = lo_obj_files->get_file_pattern( ).
 
       ls_r_file_filter-sign = 'I'.
       ls_r_file_filter-option = 'CP'.
@@ -192,53 +193,33 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
 
     DATA lt_e071_filter TYPE zif_abapgit_repo_pre_filter=>ty_e071_filter_tt.
     DATA lr_e071_filter TYPE REF TO zif_abapgit_repo_pre_filter=>ty_e071_filter.
-    DATA ls_e071_filter TYPE zif_abapgit_repo_pre_filter=>ty_e071_filter.
     DATA ls_filter TYPE zif_abapgit_definitions=>ty_tadir.
     DATA lv_trobj_name_new TYPE zif_abapgit_repo_pre_filter=>ty_trobj_name.
     DATA lv_trobj_type_new TYPE tadir-object.
     DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lr_cts_api TYPE REF TO zif_abapgit_cts_api.
 
     lt_e071_filter = it_e071_filter.
 
     LOOP AT lt_e071_filter REFERENCE INTO lr_e071_filter.
-      IF lr_e071_filter->pgmid <> 'LIMU' AND lr_e071_filter->pgmid <> 'R3TR'.
-
-        "I don't know how to determine the R3TR Object for other PGMID (like LANG)
-        "Workaround: I add also filter R3TR and try also with LIMU to get the R3TR Object
-        ls_filter-object = lr_e071_filter->object.
-        ls_filter-obj_name = lr_e071_filter->obj_name.
-        ls_filter-pgmid = 'R3TR'.
-        INSERT ls_filter INTO TABLE rt_filter.
-        ls_e071_filter = lr_e071_filter->*.
-        "Try with LIMU to get R3TR Object
-        ls_e071_filter-pgmid = 'LIMU'.
-        INSERT ls_e071_filter INTO TABLE lt_e071_filter.
-      ENDIF.
 
       IF lr_e071_filter->pgmid = 'LIMU'.
         "Get Main Object from LIMU Object (Example the Class (R3TR) of a Method (LIMU))
-        "Could also work for example for LANGU
 
-        CLEAR lv_trobj_type_new.
-        CLEAR lv_trobj_name_new.
+        lr_cts_api = zcl_abapgit_factory=>get_cts_api( ).
 
-        CALL FUNCTION 'GET_R3TR_OBJECT_FROM_LIMU_OBJ'
-          EXPORTING
-            p_limu_objtype = lr_e071_filter->object
-            p_limu_objname = lr_e071_filter->obj_name
-          IMPORTING
-            p_r3tr_objtype = lv_trobj_type_new
-            p_r3tr_objname = lv_trobj_name_new
-          EXCEPTIONS
-            no_mapping     = 1
-            OTHERS         = 2.
-        IF sy-subrc <> 0.
-          CONTINUE.
-        ENDIF.
-
-        IF lv_trobj_type_new IS INITIAL.
-          CONTINUE.
-        ENDIF.
+        TRY.
+            lr_cts_api->get_r3tr_obj_for_limu_obj(
+              EXPORTING
+                iv_object   = lr_e071_filter->object
+                iv_obj_name =  lr_e071_filter->obj_name
+              IMPORTING
+                ev_object   = lv_trobj_type_new
+                ev_obj_name = lv_trobj_name_new
+            ).
+          CATCH zcx_abapgit_exception.
+            CONTINUE.
+        ENDTRY.
 
         CLEAR ls_filter.
         ls_filter-pgmid = 'R3TR'.
@@ -275,39 +256,21 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD get_all_sub_packages.
+
+    DATA li_package TYPE REF TO zif_abapgit_sap_package.
+    DATA lt_list TYPE  zif_abapgit_sap_package=>ty_devclass_tt.
+    DATA lr_list TYPE REF TO devclass.
     DATA ls_filter TYPE zif_abapgit_definitions=>ty_tadir.
-    DATA: BEGIN OF ls_devclass,
-            devclass TYPE tadir-devclass,
-          END OF ls_devclass.
-    DATA lt_devclass LIKE STANDARD TABLE OF ls_devclass.
-    DATA lt_devclass_sel LIKE STANDARD TABLE OF ls_devclass.
-    DATA lr_devclass LIKE REF TO ls_devclass.
 
-    ls_devclass-devclass = iv_package.
-    INSERT ls_devclass INTO TABLE lt_devclass_sel.
+    li_package = zcl_abapgit_factory=>get_sap_package( iv_package = iv_package ).
+    lt_list = li_package->list_subpackages( ).
+    LOOP AT lt_list REFERENCE INTO lr_list.
+      ls_filter-pgmid = 'R3TR'.
+      ls_filter-object = 'DEVC'.
+      ls_filter-obj_name = lr_list->*.
+      INSERT ls_filter INTO TABLE rt_filter.
+    ENDLOOP.
 
-    WHILE lt_devclass_sel IS NOT INITIAL.
-
-      CLEAR lt_devclass.
-
-      SELECT devclass
-             INTO CORRESPONDING FIELDS OF TABLE lt_devclass
-             FROM tdevc
-             FOR ALL ENTRIES IN lt_devclass_sel
-             WHERE parentcl = lt_devclass_sel-devclass.
-
-      IF sy-subrc = 0.
-        LOOP AT lt_devclass REFERENCE INTO lr_devclass.
-          ls_filter-pgmid = 'R3TR'.
-          ls_filter-object = 'DEVC'.
-          ls_filter-obj_name = lr_devclass->devclass.
-          INSERT ls_filter INTO TABLE rt_filter.
-        ENDLOOP.
-      ENDIF.
-
-      lt_devclass_sel = lt_devclass.
-
-    ENDWHILE.
   ENDMETHOD.
 
 ENDCLASS.
