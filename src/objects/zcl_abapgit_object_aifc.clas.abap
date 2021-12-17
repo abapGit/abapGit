@@ -514,10 +514,10 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
       END OF ls_data_to_clear.
 
     FIELD-SYMBOLS:
-      <data> TYPE any.
+      <ls_data> TYPE any.
 
-    LOOP AT ct_data ASSIGNING <data>.
-      MOVE-CORRESPONDING ls_data_to_clear TO <data>.
+    LOOP AT ct_data ASSIGNING <ls_data>.
+      MOVE-CORRESPONDING ls_data_to_clear TO <ls_data>.
     ENDLOOP.
   ENDMETHOD.
 ENDCLASS.
