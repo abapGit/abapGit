@@ -6,7 +6,7 @@ INTERFACE zif_abapgit_repo_pre_filter
   TYPES: BEGIN OF ty_e071_filter,
            pgmid    TYPE tadir-pgmid,
            object   TYPE tadir-object,
-           obj_name TYPE TROBJ_NAME,
+           obj_name TYPE c LENGTH 120,               "TROBJ_NAME
          END OF ty_e071_filter,
          ty_e071_filter_tt TYPE STANDARD TABLE OF ty_e071_filter,
          ty_file_filter_tt TYPE RANGE OF string,
