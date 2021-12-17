@@ -90,8 +90,6 @@ CLASS zcl_abapgit_repo DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS find_remote_dot_abapgit
-      IMPORTING
-        !ii_pre_filter  TYPE REF TO zif_abapgit_repo_pre_filter OPTIONAL
       RETURNING
         VALUE(ro_dot) TYPE REF TO zcl_abapgit_dot_abapgit
       RAISING
@@ -117,7 +115,6 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS status
       IMPORTING
         !ii_log           TYPE REF TO zif_abapgit_log OPTIONAL
-        !ii_pre_filter   TYPE REF TO zif_abapgit_repo_pre_filter OPTIONAL
       RETURNING
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
@@ -415,7 +412,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF mt_remote.
 
-    get_files_remote( ii_pre_filter ).
+    get_files_remote( ).
 
     READ TABLE mt_remote ASSIGNING <ls_remote>
       WITH KEY file_path

@@ -12,32 +12,6 @@
     <UNICODE>X</UNICODE>
     <WITH_UNIT_TESTS>X</WITH_UNIT_TESTS>
    </VSEOCLASS>
-   <TPOOL>
-    <item>
-     <ID>I</ID>
-     <KEY>001</KEY>
-     <ENTRY>Select Transports / Tasks</ENTRY>
-     <LENGTH>50</LENGTH>
-    </item>
-    <item>
-     <ID>I</ID>
-     <KEY>002</KEY>
-     <ENTRY>Pre-Filter Canceled</ENTRY>
-     <LENGTH>30</LENGTH>
-    </item>
-    <item>
-     <ID>I</ID>
-     <KEY>003</KEY>
-     <ENTRY>No Request Found</ENTRY>
-     <LENGTH>30</LENGTH>
-    </item>
-    <item>
-     <ID>I</ID>
-     <KEY>004</KEY>
-     <ENTRY>No objects found for transport filter</ENTRY>
-     <LENGTH>80</LENGTH>
-    </item>
-   </TPOOL>
   </asx:values>
  </asx:abap>
 </abapGit>

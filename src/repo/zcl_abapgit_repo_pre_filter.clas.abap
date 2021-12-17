@@ -5,11 +5,6 @@ CLASS zcl_abapgit_repo_pre_filter DEFINITION
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_repo_pre_filter.
-    ALIASES: filter_files FOR zif_abapgit_repo_pre_filter~filter_files,
-             get_local_filter FOR zif_abapgit_repo_pre_filter~get_local_filter,
-             set_filter_values_via_dialog FOR zif_abapgit_repo_pre_filter~set_filter_values_via_dialog,
-             set_filter_values FOR zif_abapgit_repo_pre_filter~set_filter_values,
-             get_filter_values FOR zif_abapgit_repo_pre_filter~get_filter_values.
 
   PROTECTED SECTION.
     METHODS adjust_local_filter
@@ -163,21 +158,18 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
         is_selection           = ls_selection
         iv_complete_projects   = abap_false
         iv_via_selscreen       = 'X'
-*       IS_POPUP               =
-        iv_title               = 'Select Transports / Tasks'(001)
+        iv_title               = 'Select Transports / Tasks'
       IMPORTING
         et_requests            = lt_request
-* CHANGING
-*       CS_RANGES              =
       EXCEPTIONS
         action_aborted_by_user = 1
         OTHERS                 = 2.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Pre-Filter Canceled'(002) ).
+      zcx_abapgit_exception=>raise( 'Pre-Filter Canceled' ).
     ENDIF.
 
     IF lt_request IS INITIAL.
-      zcx_abapgit_exception=>raise( 'No Request Found'(003) ).
+      zcx_abapgit_exception=>raise( 'No Request Found' ).
     ENDIF.
 
     LOOP AT lt_request REFERENCE INTO lr_request.
@@ -187,7 +179,7 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
       INSERT ls_r_trkorr INTO TABLE lt_r_trkorr.
     ENDLOOP.
 
-    set_filter_values( iv_package = iv_package
+    zif_abapgit_repo_pre_filter~set_filter_values( iv_package = iv_package
                        it_r_trkorr = lt_r_trkorr[] ).
   ENDMETHOD.
 
