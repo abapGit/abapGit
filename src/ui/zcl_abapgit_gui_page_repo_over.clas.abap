@@ -795,7 +795,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ii_html->add( action_link( lv_stage_link ) ).
 
     lv_stage_link = ii_html->a(
-      iv_txt   = |<sup>Transport/Task</sup>|
+      iv_txt   = |<sup>filtered by, Transport/Task</sup>|
       iv_act   = |{ zif_abapgit_definitions=>c_action-zip_export_transport }{ iv_dummy_key }|
       iv_class = |{ iv_action_class } { iv_offline_class } | ).
 
@@ -814,7 +814,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ii_html->add( action_link( lv_stage_link ) ).
 
     lv_stage_link = ii_html->a(
-      iv_txt   = |<sup>Transport/Task</sup>|
+      iv_txt   = |<sup>filtered by, Transport/Task</sup>|
       iv_act   = |{ zif_abapgit_definitions=>c_action-go_stage_transport }{ iv_dummy_key }|
       iv_class = |{ iv_action_class } { iv_online_class } | ).
 

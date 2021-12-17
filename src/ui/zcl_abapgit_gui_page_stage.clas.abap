@@ -15,9 +15,10 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
 
     METHODS constructor
       IMPORTING
-        io_repo TYPE REF TO zcl_abapgit_repo_online
-        iv_seed TYPE string OPTIONAL
+        io_repo       TYPE REF TO zcl_abapgit_repo_online
+        iv_seed       TYPE string OPTIONAL
         iv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result DEFAULT zif_abapgit_definitions=>c_sci_result-no_run
+        ii_pre_filter TYPE REF TO zif_abapgit_repo_pre_filter OPTIONAL
       RAISING
         zcx_abapgit_exception.
 
@@ -42,6 +43,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
     DATA mv_seed TYPE string .               " Unique page id to bind JS sessionStorage
     DATA mv_filter_value TYPE string .
     DATA mv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result.
+    DATA mi_pre_filter TYPE REF TO zif_abapgit_repo_pre_filter.
 
     METHODS check_selected
       IMPORTING
@@ -197,6 +199,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     mo_repo               = io_repo.
     mv_seed               = iv_seed.
     mv_sci_result         = iv_sci_result.
+    mi_pre_filter         = ii_pre_filter.
 
     IF mv_seed IS INITIAL. " Generate based on time unless obtained from diff page
       GET TIME STAMP FIELD lv_ts.
@@ -361,7 +364,12 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
 
   METHOD init_files.
-    ms_files = zcl_abapgit_factory=>get_stage_logic( )->get( mo_repo ).
+    IF NOT mi_pre_filter IS INITIAL.
+      mi_pre_filter->set_filter_values_via_dialog( mo_repo->get_package( ) ).
+    ENDIF.
+    ms_files = zcl_abapgit_factory=>get_stage_logic( )->get( io_repo = mo_repo
+                                                             ii_pre_filter = mi_pre_filter ).
+
     IF lines( ms_files-local ) = 0 AND lines( ms_files-remote ) = 0.
       zcx_abapgit_exception=>raise( 'There are no changes that could be staged' ).
     ENDIF.
@@ -549,7 +557,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
       READ TABLE lt_changed_by INTO ls_changed_by WITH KEY item = <ls_local>-item. "#EC CI_SUBRC
       READ TABLE lt_transports INTO ls_transport WITH KEY
         obj_type = <ls_local>-item-obj_type
-        obj_name = <ls_local>-item-obj_name. "#EC CI_SUBRC
+        obj_name = <ls_local>-item-obj_name.              "#EC CI_SUBRC
       READ TABLE ms_files-status ASSIGNING <ls_status>
         WITH TABLE KEY
           path     = <ls_local>-file-path
