@@ -34,6 +34,7 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS get_files_local
       IMPORTING
         !ii_log         TYPE REF TO zif_abapgit_log OPTIONAL
+        !ii_pre_filter  TYPE REF TO zif_abapgit_repo_pre_filter OPTIONAL
       RETURNING
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
@@ -42,6 +43,8 @@ CLASS zcl_abapgit_repo DEFINITION
       RETURNING
         VALUE(rt_checksums) TYPE zif_abapgit_definitions=>ty_file_signatures_tt .
     METHODS get_files_remote
+      IMPORTING
+        ii_pre_filter   TYPE REF TO zif_abapgit_repo_pre_filter OPTIONAL
       RETURNING
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
       RAISING
@@ -87,6 +90,8 @@ CLASS zcl_abapgit_repo DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS find_remote_dot_abapgit
+      IMPORTING
+        !ii_pre_filter  TYPE REF TO zif_abapgit_repo_pre_filter OPTIONAL
       RETURNING
         VALUE(ro_dot) TYPE REF TO zcl_abapgit_dot_abapgit
       RAISING
@@ -106,12 +111,13 @@ CLASS zcl_abapgit_repo DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS has_remote_source
-          ABSTRACT
+      ABSTRACT
       RETURNING
         VALUE(rv_yes) TYPE abap_bool .
     METHODS status
       IMPORTING
         !ii_log           TYPE REF TO zif_abapgit_log OPTIONAL
+        !ii_pre_filter   TYPE REF TO zif_abapgit_repo_pre_filter OPTIONAL
       RETURNING
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
@@ -409,7 +415,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF mt_remote.
 
-    get_files_remote( ).
+    get_files_remote( ii_pre_filter ).
 
     READ TABLE mt_remote ASSIGNING <ls_remote>
       WITH KEY file_path
@@ -487,7 +493,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   METHOD get_files_local.
 
     DATA lo_serialize TYPE REF TO zcl_abapgit_serialize.
-
+    DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
     " Serialization happened before and no refresh request
     IF lines( mt_local ) > 0 AND mv_request_local_refresh = abap_false.
       rt_files = mt_local.
@@ -499,10 +505,15 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
         io_dot_abapgit    = get_dot_abapgit( )
         is_local_settings = get_local_settings( ).
 
+    IF NOT ii_pre_filter IS INITIAL.
+      lt_filter = ii_pre_filter->get_local_filter(  ).
+    ENDIF.
+
     rt_files = lo_serialize->files_local(
       iv_package     = get_package( )
       ii_data_config = get_data_config( )
-      ii_log         = ii_log ).
+      ii_log         = ii_log
+      it_filter      = lt_filter ).
 
     mt_local                 = rt_files.
     mv_request_local_refresh = abap_false. " Fulfill refresh
@@ -835,9 +846,9 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   METHOD status.
 
     IF lines( mt_status ) = 0.
-      mt_status = zcl_abapgit_file_status=>status(
-        io_repo = me
-        ii_log  = ii_log ).
+      mt_status = zcl_abapgit_file_status=>status( io_repo = me
+                                                   ii_log  = ii_log ).
+
     ENDIF.
 
     rt_results = mt_status.

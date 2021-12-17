@@ -41,6 +41,7 @@ CLASS zcl_abapgit_repo_online DEFINITION
         REDEFINITION .
     METHODS has_remote_source
         REDEFINITION .
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -58,6 +59,8 @@ CLASS zcl_abapgit_repo_online DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS fetch_remote
+      IMPORTING
+        ii_pre_filter TYPE REF TO zif_abapgit_repo_pre_filter OPTIONAL
       RAISING
         zcx_abapgit_exception .
     METHODS get_objects
@@ -124,6 +127,10 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
                                                            iv_commit_hash = get_selected_commit( ) ).
     ENDIF.
 
+    IF NOT ii_pre_filter IS INITIAL.
+      ii_pre_filter->filter_files( CHANGING ct_files = ls_pull-files ).
+    ENDIF.
+
     set_files_remote( ls_pull-files ).
     set_objects( ls_pull-objects ).
     mv_current_commit = ls_pull-commit.
@@ -132,7 +139,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
 
   METHOD get_files_remote.
-    fetch_remote( ).
+    fetch_remote( ii_pre_filter ).
     rt_files = super->get_files_remote( ).
   ENDMETHOD.
 
