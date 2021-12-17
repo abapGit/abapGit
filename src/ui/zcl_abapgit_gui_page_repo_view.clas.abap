@@ -543,9 +543,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     CREATE OBJECT ro_stage_dropdown.
 
     ro_stage_dropdown->add( iv_txt = 'Stage'
-                     iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?key={ mv_key }| ).
+                            iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?key={ mv_key }| ).
     ro_stage_dropdown->add( iv_txt = 'Stage, filtered by Transport/Task'
-                      iv_act = |{ zif_abapgit_definitions=>c_action-go_stage_transport }?key={ mv_key }| ).
+                            iv_act = |{ zif_abapgit_definitions=>c_action-go_stage_transport }?key={ mv_key }| ).
 
   ENDMETHOD.
 
@@ -1329,14 +1329,15 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
+
   METHOD build_export_dropdown.
 
     CREATE OBJECT ro_export_dropdown.
 
     ro_export_dropdown->add( iv_txt = 'zip'
-                     iv_act = |{ zif_abapgit_definitions=>c_action-zip_export }?key={ mv_key }| ).
+                             iv_act = |{ zif_abapgit_definitions=>c_action-zip_export }?key={ mv_key }| ).
     ro_export_dropdown->add( iv_txt = 'zip, filtered by Transport/Task'
-                      iv_act = |{ zif_abapgit_definitions=>c_action-zip_export_transport }?key={ mv_key }| ).
+                             iv_act = |{ zif_abapgit_definitions=>c_action-zip_export_transport }?key={ mv_key }| ).
 
   ENDMETHOD.
 

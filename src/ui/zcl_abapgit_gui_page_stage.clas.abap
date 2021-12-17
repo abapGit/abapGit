@@ -364,10 +364,10 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
 
   METHOD init_files.
-    IF NOT mi_pre_filter IS INITIAL.
+    IF mi_pre_filter IS NOT INITIAL.
       mi_pre_filter->set_filter_values_via_dialog( mo_repo->get_package( ) ).
     ENDIF.
-    ms_files = zcl_abapgit_factory=>get_stage_logic( )->get( io_repo = mo_repo
+    ms_files = zcl_abapgit_factory=>get_stage_logic( )->get( io_repo       = mo_repo
                                                              ii_pre_filter = mi_pre_filter ).
 
     IF lines( ms_files-local ) = 0 AND lines( ms_files-remote ) = 0.

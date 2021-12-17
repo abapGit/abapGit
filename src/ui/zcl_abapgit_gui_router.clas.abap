@@ -248,7 +248,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         rs_handled-state = get_state_diff( ii_event ).
       WHEN zif_abapgit_definitions=>c_action-go_stage_transport.              " Go Staging page by Transport
         CREATE OBJECT li_pre_filter TYPE zcl_abapgit_repo_pre_filter.
-        rs_handled-page  = get_page_stage( ii_event = ii_event
+        rs_handled-page  = get_page_stage( ii_event      = ii_event
                                            ii_pre_filter = li_pre_filter ).
         rs_handled-state = get_state_diff( ii_event ).
       WHEN zif_abapgit_definitions=>c_action-go_branch_overview.              " Go repo branch overview
@@ -837,4 +837,3 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
   ENDMETHOD.
 ENDCLASS.
-
