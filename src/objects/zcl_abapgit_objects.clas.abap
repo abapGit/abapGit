@@ -1003,7 +1003,9 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           li_xml         TYPE REF TO zif_abapgit_xml_output,
           lo_files       TYPE REF TO zcl_abapgit_objects_files,
           ls_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params,
-          lv_json_found  TYPE abap_bool VALUE abap_false.
+          lv_regex       TYPE c LENGTH 100,
+          lv_json_found  TYPE abap_bool VALUE abap_false,
+          lv_obj_type    TYPE tadir-object.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF rs_files_and_item-files.
 
@@ -1036,9 +1038,17 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     rs_files_and_item-files = lo_files->get_files( ).
 
-    LOOP AT rs_files_and_item-files TRANSPORTING NO FIELDS WHERE filename CP '*.json'.
-      lv_json_found = abap_true.  " means it can deal with json format
-      EXIT.
+    lv_obj_type = rs_files_and_item-item-obj_type.
+    TRANSLATE lv_obj_type TO LOWER CASE.
+
+    lv_regex = '^[^\.]+\.' && lv_obj_type && '\.json$'.
+
+    LOOP AT rs_files_and_item-files ASSIGNING <ls_file>.
+      FIND REGEX lv_regex IN  <ls_file>-filename.
+      IF sy-subrc = 0.
+        lv_json_found = abap_true.  " means it can deal with json format
+        EXIT.
+      ENDIF.
     ENDLOOP.
 
     IF lv_json_found = abap_false.
