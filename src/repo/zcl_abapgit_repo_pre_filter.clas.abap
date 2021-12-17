@@ -19,7 +19,6 @@ CLASS zcl_abapgit_repo_pre_filter DEFINITION
       RAISING
                 zcx_abapgit_exception.
 
-
   PRIVATE SECTION.
 
     DATA mt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt .
@@ -137,7 +136,7 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
 
     DATA ls_selection  TYPE trwbo_selection.
     DATA lt_r_trkorr  TYPE zif_abapgit_repo_pre_filter=>ty_trrngtrkor_tt.
-    DATA ls_r_trkorr  TYPE trrngtrkor.
+    DATA ls_r_trkorr  TYPE zif_abapgit_repo_pre_filter=>ty_trrngtrkor.
     DATA lr_request TYPE REF TO trwbo_request_header.
     DATA lt_request TYPE trwbo_request_headers.
 

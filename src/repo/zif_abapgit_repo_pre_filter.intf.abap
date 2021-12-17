@@ -1,6 +1,8 @@
 INTERFACE zif_abapgit_repo_pre_filter
   PUBLIC .
-  TYPES ty_trrngtrkor_tt TYPE STANDARD TABLE OF trrngtrkor with NON-UNIQUE DEFAULT KEY.
+
+  TYPES ty_trrngtrkor_tt TYPE range of trkorr.
+  types ty_trrngtrkor type line of ty_trrngtrkor_tt.
   TYPES: BEGIN OF ty_e071_filter,
       pgmid    TYPE pgmid,
       object   TYPE  trobjtype,
