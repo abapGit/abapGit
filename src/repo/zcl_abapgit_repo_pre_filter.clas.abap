@@ -9,17 +9,12 @@ CLASS zcl_abapgit_repo_pre_filter DEFINITION
              get_local_filter FOR zif_abapgit_repo_pre_filter~get_local_filter,
              set_filter_values_via_dialog FOR zif_abapgit_repo_pre_filter~set_filter_values_via_dialog,
              set_filter_values FOR zif_abapgit_repo_pre_filter~set_filter_values,
-             get_filter_values FOR zif_abapgit_repo_pre_filter~get_filter_values,
-             ty_trrngtrkor_tt FOR zif_abapgit_repo_pre_filter~ty_trrngtrkor_tt,
-             ty_e071_filter FOR zif_abapgit_repo_pre_filter~ty_e071_filter,
-             ty_e071_filter_tt FOR zif_abapgit_repo_pre_filter~ty_e071_filter_tt,
-             ty_file_filter_tt FOR zif_abapgit_repo_pre_filter~ty_file_filter_tt,
-             ty_file_filter FOR zif_abapgit_repo_pre_filter~ty_file_filter.
+             get_filter_values FOR zif_abapgit_repo_pre_filter~get_filter_values.
 
   PROTECTED SECTION.
     METHODS adjust_local_filter
       IMPORTING
-                it_e071_filter   TYPE ty_e071_filter_tt
+                it_e071_filter   TYPE zif_abapgit_repo_pre_filter=>ty_e071_filter_tt
       RETURNING VALUE(rt_filter) TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
                 zcx_abapgit_exception.
@@ -29,7 +24,7 @@ CLASS zcl_abapgit_repo_pre_filter DEFINITION
 
     DATA mt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt .
     DATA mt_r_trkorr TYPE zif_abapgit_repo_pre_filter=>ty_trrngtrkor_tt .
-    DATA mt_r_file_filter TYPE ty_file_filter_tt .
+    DATA mt_r_file_filter TYPE zif_abapgit_repo_pre_filter=>ty_file_filter_tt .
 
     METHODS generate_local_filter
       IMPORTING
@@ -43,7 +38,7 @@ CLASS zcl_abapgit_repo_pre_filter DEFINITION
       IMPORTING
         it_filter               TYPE zif_abapgit_definitions=>ty_tadir_tt
       RETURNING
-        VALUE(rt_r_file_filter) TYPE ty_file_filter_tt
+        VALUE(rt_r_file_filter) TYPE zif_abapgit_repo_pre_filter=>ty_file_filter_tt
       RAISING
         zcx_abapgit_exception .
 
@@ -66,7 +61,7 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
     DATA lr_filter TYPE REF TO zif_abapgit_definitions=>ty_tadir.
     DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
     DATA lv_pattern TYPE string.
-    DATA ls_r_file_filter TYPE ty_file_filter.
+    DATA ls_r_file_filter TYPE zif_abapgit_repo_pre_filter=>ty_file_filter.
 
     CLEAR rt_r_file_filter.
 
@@ -103,7 +98,7 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
 
 
   METHOD generate_local_filter.
-    DATA lt_e071_filter TYPE ty_e071_filter_tt.
+    DATA lt_e071_filter TYPE zif_abapgit_repo_pre_filter=>ty_e071_filter_tt.
 
     SELECT DISTINCT pgmid
                 object
@@ -141,7 +136,7 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
   METHOD zif_abapgit_repo_pre_filter~set_filter_values_via_dialog.
 
     DATA ls_selection  TYPE trwbo_selection.
-    DATA lt_r_trkorr  TYPE ty_trrngtrkor_tt.
+    DATA lt_r_trkorr  TYPE zif_abapgit_repo_pre_filter=>ty_trrngtrkor_tt.
     DATA ls_r_trkorr  TYPE trrngtrkor.
     DATA lr_request TYPE REF TO trwbo_request_header.
     DATA lt_request TYPE trwbo_request_headers.
@@ -191,9 +186,9 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
 
   METHOD adjust_local_filter.
 
-    DATA lt_e071_filter TYPE ty_e071_filter_tt.
-    DATA lr_e071_filter TYPE REF TO ty_e071_filter.
-    DATA ls_e071_filter TYPE ty_e071_filter.
+    DATA lt_e071_filter TYPE zif_abapgit_repo_pre_filter=>ty_e071_filter_tt.
+    DATA lr_e071_filter TYPE REF TO zif_abapgit_repo_pre_filter=>ty_e071_filter.
+    DATA ls_e071_filter TYPE zif_abapgit_repo_pre_filter=>ty_e071_filter.
     DATA ls_filter TYPE zif_abapgit_definitions=>ty_tadir.
     DATA lv_trobj_name_new TYPE trobj_name.
     DATA lv_trobj_type_new TYPE trobjtype.
