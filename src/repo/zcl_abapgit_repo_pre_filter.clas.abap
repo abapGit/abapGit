@@ -9,19 +9,12 @@ CLASS zcl_abapgit_repo_pre_filter DEFINITION
              get_local_filter FOR zif_abapgit_repo_pre_filter~get_local_filter,
              set_filter_values_via_dialog FOR zif_abapgit_repo_pre_filter~set_filter_values_via_dialog,
              set_filter_values FOR zif_abapgit_repo_pre_filter~set_filter_values,
-             get_filter_values FOR zif_abapgit_repo_pre_filter~get_filter_values.
-    TYPES:
-      ty_file_filter_tt TYPE RANGE OF string .
-    TYPES:
-      ty_file_filter TYPE LINE OF ty_file_filter_tt .
-
-    TYPES:
-      BEGIN OF ty_e071_filter,
-        pgmid    TYPE pgmid,
-        object   TYPE  trobjtype,
-        obj_name TYPE trobj_name,
-      END OF ty_e071_filter.
-    TYPES ty_e071_filter_tt TYPE STANDARD TABLE OF ty_e071_filter.
+             get_filter_values FOR zif_abapgit_repo_pre_filter~get_filter_values,
+             ty_trrngtrkor_tt FOR zif_abapgit_repo_pre_filter~ty_trrngtrkor_tt,
+             ty_e071_filter FOR zif_abapgit_repo_pre_filter~ty_e071_filter,
+             ty_e071_filter_tt FOR zif_abapgit_repo_pre_filter~ty_e071_filter_tt,
+             ty_file_filter_tt FOR zif_abapgit_repo_pre_filter~ty_file_filter_tt,
+             ty_file_filter FOR zif_abapgit_repo_pre_filter~ty_file_filter.
 
   PROTECTED SECTION.
     METHODS adjust_local_filter
@@ -35,12 +28,12 @@ CLASS zcl_abapgit_repo_pre_filter DEFINITION
   PRIVATE SECTION.
 
     DATA mt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt .
-    DATA mt_r_trkorr TYPE trrngtrkor_tab .
+    DATA mt_r_trkorr TYPE zif_abapgit_repo_pre_filter=>ty_trrngtrkor_tt .
     DATA mt_r_file_filter TYPE ty_file_filter_tt .
 
     METHODS generate_local_filter
       IMPORTING
-        it_r_trkorr      TYPE trrngtrkor_tab
+        it_r_trkorr      TYPE zif_abapgit_repo_pre_filter=>ty_trrngtrkor_tt
       RETURNING
         VALUE(rt_filter) TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
@@ -148,7 +141,7 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
   METHOD zif_abapgit_repo_pre_filter~set_filter_values_via_dialog.
 
     DATA ls_selection  TYPE trwbo_selection.
-    DATA lt_r_trkorr  TYPE trrngtrkor_tab.
+    DATA lt_r_trkorr  TYPE ty_trrngtrkor_tt.
     DATA ls_r_trkorr  TYPE trrngtrkor.
     DATA lr_request TYPE REF TO trwbo_request_header.
     DATA lt_request TYPE trwbo_request_headers.

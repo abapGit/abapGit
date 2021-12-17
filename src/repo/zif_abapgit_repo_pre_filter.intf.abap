@@ -1,5 +1,14 @@
 INTERFACE zif_abapgit_repo_pre_filter
   PUBLIC .
+  TYPES ty_trrngtrkor_tt TYPE STANDARD TABLE OF trrngtrkor with NON-UNIQUE DEFAULT KEY.
+  TYPES: BEGIN OF ty_e071_filter,
+      pgmid    TYPE pgmid,
+      object   TYPE  trobjtype,
+      obj_name TYPE trobj_name,
+    END OF ty_e071_filter,
+         ty_e071_filter_tt TYPE STANDARD TABLE OF ty_e071_filter,
+         ty_file_filter_tt TYPE RANGE OF string ,
+         ty_file_filter TYPE LINE OF ty_file_filter_tt .
   "! <p class="shorttext synchronized" lang="en"></p>
   "!
   "! @parameter CT_FILES | <p class="shorttext synchronized" lang="en">Files</p>
@@ -21,7 +30,7 @@ INTERFACE zif_abapgit_repo_pre_filter
   "! @parameter IT_R_TRKORR | <p class="shorttext synchronized" lang="en">Tab of Range Struct for E070/E071-TRKORR</p>
   METHODS set_filter_values
     IMPORTING
-      it_r_trkorr TYPE trrngtrkor_tab
+      it_r_trkorr TYPE ty_trrngtrkor_tt
     RAISING
       zcx_abapgit_exception .
   "! <p class="shorttext synchronized" lang="en"></p>
@@ -29,6 +38,6 @@ INTERFACE zif_abapgit_repo_pre_filter
   "! @parameter RT_R_TRKORR | <p class="shorttext synchronized" lang="en">Tab of Range Struct for E070/E071-TRKORR</p>
   METHODS get_filter_values
     RETURNING
-      VALUE(rt_r_trkorr) TYPE trrngtrkor_tab .
+      VALUE(rt_r_trkorr) TYPE zif_abapgit_repo_pre_filter=>ty_trrngtrkor_tt .
 
 ENDINTERFACE.
