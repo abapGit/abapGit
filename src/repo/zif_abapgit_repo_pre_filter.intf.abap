@@ -40,6 +40,6 @@ INTERFACE zif_abapgit_repo_pre_filter
   "! @parameter RT_R_TRKORR | <p class="shorttext synchronized" lang="en">Tab of Range Struct for E070/E071-TRKORR</p>
   METHODS get_filter_values
     RETURNING
-      VALUE(rt_r_trkorr) TYPE zif_abapgit_repo_pre_filter=>ty_trrngtrkor_tt .
+      VALUE(rt_r_trkorr) TYPE ty_trrngtrkor_tt .
 
 ENDINTERFACE.
