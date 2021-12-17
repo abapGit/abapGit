@@ -80,9 +80,8 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
       ls_item-obj_type = lr_filter->object.
       ls_item-obj_name = lr_filter->obj_name.
 
-      lv_pattern = zcl_abapgit_filename_logic=>object_to_file(
-        is_item  = ls_item
-        iv_ext   = '' ).
+      lv_pattern = zcl_abapgit_filename_logic=>object_to_file( is_item = ls_item
+                                                                iv_ext = '' ).
       CONCATENATE lv_pattern '*' INTO lv_pattern.
       " Escape special characters for use with 'covers pattern' (CP)
       REPLACE ALL OCCURRENCES OF '#' IN lv_pattern WITH '##'.
@@ -105,10 +104,13 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
                 obj_name
            INTO CORRESPONDING FIELDS OF TABLE lt_e071_filter
            FROM e071
-     WHERE trkorr IN it_r_trkorr.
-
-    rt_filter = adjust_local_filter( iv_package = iv_package
-                                     it_e071_filter = lt_e071_filter ).
+      WHERE trkorr IN it_r_trkorr.
+    IF sy-subrc <> 0.
+      CLEAR lt_e071_filter.
+    ENDIF.
+    rt_filter = adjust_local_filter(
+      iv_package     = iv_package
+      it_e071_filter = lt_e071_filter ).
   ENDMETHOD.
 
   METHOD zif_abapgit_repo_pre_filter~get_filter_values.
@@ -129,8 +131,9 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
 
     init( ).
     IF it_r_trkorr IS NOT INITIAL.
-      mt_filter = generate_local_filter( iv_package = iv_package
-                                         it_r_trkorr = it_r_trkorr ).
+      mt_filter = generate_local_filter(
+        iv_package  = iv_package
+        it_r_trkorr = it_r_trkorr ).
       mt_r_file_filter = generate_file_filter( mt_filter ).
     ENDIF.
   ENDMETHOD.
@@ -179,8 +182,9 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
       INSERT ls_r_trkorr INTO TABLE lt_r_trkorr.
     ENDLOOP.
 
-    zif_abapgit_repo_pre_filter~set_filter_values( iv_package = iv_package
-                                                   it_r_trkorr = lt_r_trkorr[] ).
+    zif_abapgit_repo_pre_filter~set_filter_values(
+      iv_package  = iv_package
+      it_r_trkorr = lt_r_trkorr[] ).
   ENDMETHOD.
 
 
@@ -240,23 +244,21 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
         ls_filter-pgmid = 'R3TR'.
         ls_filter-object = lv_trobj_type_new.
         ls_filter-obj_name = lv_trobj_name_new.
-        INSERT ls_filter INTO TABLE rt_filter.
       ELSE.
         ls_filter-pgmid = lr_e071_filter->pgmid.
         ls_filter-object = lr_e071_filter->object.
         ls_filter-obj_name = lr_e071_filter->obj_name.
-        INSERT ls_filter INTO TABLE rt_filter.
       ENDIF.
-
+      INSERT ls_filter INTO TABLE rt_filter.
     ENDLOOP.
 
-    IF NOT iv_package IS INITIAL.
+    IF iv_package IS NOT INITIAL.
       ls_filter-pgmid = 'R3TR'.
       ls_filter-object = 'DEVC'.
       ls_filter-obj_name = iv_package.
       INSERT ls_filter INTO TABLE rt_filter.
 
-      lt_filter =  get_all_sub_packages( iv_package = iv_package ).
+      lt_filter = get_all_sub_packages( iv_package ).
       INSERT LINES OF lt_filter INTO TABLE rt_filter.
 
     ENDIF.
@@ -266,7 +268,7 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
 
     IF rt_filter IS INITIAL.
 
-      zcx_abapgit_exception=>raise( 'No objects found for transport filter'(004) ).
+      zcx_abapgit_exception=>raise( 'No objects found for transport filter' ).
 
     ENDIF.
 
@@ -284,14 +286,16 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
     ls_devclass-devclass = iv_package.
     INSERT ls_devclass INTO TABLE lt_devclass_sel.
 
-    WHILE NOT lt_devclass_sel IS INITIAL.
+    WHILE lt_devclass_sel IS NOT INITIAL.
 
       CLEAR lt_devclass.
+
       SELECT devclass
              INTO CORRESPONDING FIELDS OF TABLE lt_devclass
              FROM tdevc
              FOR ALL ENTRIES IN lt_devclass_sel
              WHERE parentcl = lt_devclass_sel-devclass.
+
       IF sy-subrc = 0.
         LOOP AT lt_devclass REFERENCE INTO lr_devclass.
           ls_filter-pgmid = 'R3TR'.
@@ -300,6 +304,7 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
           INSERT ls_filter INTO TABLE rt_filter.
         ENDLOOP.
       ENDIF.
+
       lt_devclass_sel = lt_devclass.
 
     ENDWHILE.
