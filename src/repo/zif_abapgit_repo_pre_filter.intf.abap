@@ -1,16 +1,16 @@
 INTERFACE zif_abapgit_repo_pre_filter
   PUBLIC .
 
-  TYPES ty_trrngtrkor_tt TYPE range of trkorr.
-  types ty_trrngtrkor type line of ty_trrngtrkor_tt.
+  TYPES ty_trrngtrkor_tt TYPE RANGE OF trkorr.
+  TYPES ty_trrngtrkor TYPE LINE OF ty_trrngtrkor_tt.
   TYPES: BEGIN OF ty_e071_filter,
-      pgmid    TYPE pgmid,
-      object   TYPE  trobjtype,
-      obj_name TYPE trobj_name,
-    END OF ty_e071_filter,
+           pgmid    TYPE e071-pgmid,
+           object   TYPE e071-object,
+           obj_name TYPE e071-obj_name,
+         END OF ty_e071_filter,
          ty_e071_filter_tt TYPE STANDARD TABLE OF ty_e071_filter,
-         ty_file_filter_tt TYPE RANGE OF string ,
-         ty_file_filter TYPE LINE OF ty_file_filter_tt .
+         ty_file_filter_tt TYPE RANGE OF string,
+         ty_file_filter    TYPE LINE OF ty_file_filter_tt.
   "! <p class="shorttext synchronized" lang="en"></p>
   "!
   "! @parameter CT_FILES | <p class="shorttext synchronized" lang="en">Files</p>
