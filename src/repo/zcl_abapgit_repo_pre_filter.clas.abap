@@ -180,7 +180,7 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
     ENDLOOP.
 
     zif_abapgit_repo_pre_filter~set_filter_values( iv_package = iv_package
-                       it_r_trkorr = lt_r_trkorr[] ).
+                                                   it_r_trkorr = lt_r_trkorr[] ).
   ENDMETHOD.
 
 
