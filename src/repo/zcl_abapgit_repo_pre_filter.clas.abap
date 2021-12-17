@@ -189,7 +189,7 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
     DATA lr_e071_filter TYPE REF TO zif_abapgit_repo_pre_filter=>ty_e071_filter.
     DATA ls_e071_filter TYPE zif_abapgit_repo_pre_filter=>ty_e071_filter.
     DATA ls_filter TYPE zif_abapgit_definitions=>ty_tadir.
-    DATA lv_trobj_name_new TYPE trobj_name.
+    DATA lv_trobj_name_new TYPE zif_abapgit_repo_pre_filter=>ty_trobj_name.
     DATA lv_trobj_type_new TYPE trobjtype.
 
     lt_e071_filter = it_e071_filter.
