@@ -106,6 +106,7 @@ CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
 
     DATA: lt_met_status TYPE ty_requirement_status_tt.
 
+
     lt_met_status = get_requirement_met_status( it_requirements ).
 
     READ TABLE lt_met_status TRANSPORTING NO FIELDS WITH KEY met = abap_false.
@@ -215,17 +216,13 @@ CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
 
   METHOD version_greater_or_equal.
 
-    DATA:
-      lv_installed_release TYPE n LENGTH 4,
-      lv_installed_patch   TYPE n LENGTH 4,
-      lv_required_release  TYPE n LENGTH 4,
-      lv_required_patch    TYPE n LENGTH 4.
+    DATA: lv_number TYPE n LENGTH 4 ##NEEDED.
 
     TRY.
-        MOVE EXACT: is_status-installed_release TO lv_installed_release,
-                    is_status-installed_patch   TO lv_installed_patch,
-                    is_status-required_release  TO lv_required_release,
-                    is_status-required_patch    TO lv_required_patch.
+        MOVE EXACT: is_status-installed_release TO lv_number,
+                    is_status-installed_patch   TO lv_number,
+                    is_status-required_release  TO lv_number,
+                    is_status-required_patch    TO lv_number.
       CATCH cx_sy_conversion_error.
         " Cannot compare by number, assume requirement not fullfilled (user can force install
         " anyways if this was an error)
@@ -234,13 +231,12 @@ CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
     ENDTRY.
 
     " Versions are comparable by number, compare release and if necessary patch level
-    IF lv_installed_release > lv_required_release
-        OR ( lv_installed_release = lv_required_release
-         AND ( lv_required_patch = 0
-            OR lv_installed_patch >= lv_required_patch ) ).
+    IF is_status-installed_release > is_status-required_release
+        OR ( is_status-installed_release = is_status-required_release
+        AND ( is_status-required_patch IS INITIAL OR
+        is_status-installed_patch >= is_status-required_patch ) ).
 
       rv_true = abap_true.
-
     ENDIF.
 
   ENDMETHOD.

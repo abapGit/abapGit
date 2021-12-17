@@ -822,7 +822,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
       WHEN zif_abapgit_definitions=>c_action-zip_export_transport.                      " Export repo as ZIP
         CREATE OBJECT li_pre_filter TYPE zcl_abapgit_repo_pre_filter.
-        li_pre_filter->set_filter_values_via_dialog( ).
+        li_pre_filter->set_filter_values_via_dialog( lo_repo->get_package( ) ).
 
         lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
         lv_xstr = zcl_abapgit_zip=>encode_files( lo_repo->get_files_local( ii_pre_filter = li_pre_filter ) ).

@@ -15,6 +15,7 @@ CLASS zcl_abapgit_repo_pre_filter DEFINITION
     METHODS adjust_local_filter
       IMPORTING
                 it_e071_filter   TYPE zif_abapgit_repo_pre_filter=>ty_e071_filter_tt
+                iv_package       TYPE tadir-devclass
       RETURNING VALUE(rt_filter) TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
                 zcx_abapgit_exception.
@@ -27,6 +28,7 @@ CLASS zcl_abapgit_repo_pre_filter DEFINITION
 
     METHODS generate_local_filter
       IMPORTING
+        iv_package       TYPE tadir-devclass
         it_r_trkorr      TYPE zif_abapgit_repo_pre_filter=>ty_trrngtrkor_tt
       RETURNING
         VALUE(rt_filter) TYPE zif_abapgit_definitions=>ty_tadir_tt
@@ -43,7 +45,11 @@ CLASS zcl_abapgit_repo_pre_filter DEFINITION
 
     METHODS init .
 
-
+    METHODS get_all_sub_packages
+      IMPORTING
+        iv_package       TYPE tadir-devclass
+      RETURNING
+        VALUE(rt_filter) TYPE zif_abapgit_definitions=>ty_tadir_tt.
 ENDCLASS.
 
 CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
@@ -106,7 +112,8 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
            FROM e071
      WHERE trkorr IN it_r_trkorr.
 
-    rt_filter = adjust_local_filter( lt_e071_filter ).
+    rt_filter = adjust_local_filter( iv_package = iv_package
+                                     it_e071_filter = lt_e071_filter ).
   ENDMETHOD.
 
   METHOD zif_abapgit_repo_pre_filter~get_filter_values.
@@ -127,7 +134,8 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
 
     init( ).
     IF it_r_trkorr IS NOT INITIAL.
-      mt_filter = generate_local_filter( it_r_trkorr ).
+      mt_filter = generate_local_filter( iv_package = iv_package
+                                         it_r_trkorr = it_r_trkorr ).
       mt_r_file_filter = generate_file_filter( mt_filter ).
     ENDIF.
   ENDMETHOD.
@@ -179,7 +187,8 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
       INSERT ls_r_trkorr INTO TABLE lt_r_trkorr.
     ENDLOOP.
 
-    set_filter_values( lt_r_trkorr[] ).
+    set_filter_values( iv_package = iv_package
+                       it_r_trkorr = lt_r_trkorr[] ).
   ENDMETHOD.
 
 
@@ -191,6 +200,7 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
     DATA ls_filter TYPE zif_abapgit_definitions=>ty_tadir.
     DATA lv_trobj_name_new TYPE zif_abapgit_repo_pre_filter=>ty_trobj_name.
     DATA lv_trobj_type_new TYPE tadir-object.
+    DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
     lt_e071_filter = it_e071_filter.
 
@@ -248,6 +258,17 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
 
     ENDLOOP.
 
+    IF NOT iv_package IS INITIAL.
+      ls_filter-pgmid = 'R3TR'.
+      ls_filter-object = 'DEVC'.
+      ls_filter-obj_name = iv_package.
+      INSERT ls_filter INTO TABLE rt_filter.
+
+      lt_filter =  get_all_sub_packages( iv_package = iv_package ).
+      INSERT LINES OF lt_filter INTO TABLE rt_filter.
+
+    ENDIF.
+
     SORT rt_filter.
     DELETE ADJACENT DUPLICATES FROM rt_filter.
 
@@ -257,6 +278,39 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
 
     ENDIF.
 
+  ENDMETHOD.
+
+  METHOD get_all_sub_packages.
+    DATA ls_filter TYPE zif_abapgit_definitions=>ty_tadir.
+    DATA: BEGIN OF ls_devclass,
+            devclass TYPE tadir-devclass,
+          END OF ls_devclass.
+    DATA lt_devclass LIKE STANDARD TABLE OF ls_devclass.
+    DATA lt_devclass_sel LIKE STANDARD TABLE OF ls_devclass.
+    DATA lr_devclass LIKE REF TO ls_devclass.
+
+    ls_devclass-devclass = iv_package.
+    INSERT ls_devclass INTO TABLE lt_devclass_sel.
+
+    WHILE NOT lt_devclass_sel IS INITIAL.
+
+      CLEAR lt_devclass.
+      SELECT devclass
+             INTO CORRESPONDING FIELDS OF TABLE lt_devclass
+             FROM tdevc
+             FOR ALL ENTRIES IN lt_devclass_sel
+             WHERE parentcl = lt_devclass_sel-devclass.
+      IF sy-subrc = 0.
+        LOOP AT lt_devclass REFERENCE INTO lr_devclass.
+          ls_filter-pgmid = 'R3TR'.
+          ls_filter-object = 'DEVC'.
+          ls_filter-obj_name = lr_devclass->devclass.
+          INSERT ls_filter INTO TABLE rt_filter.
+        ENDLOOP.
+      ENDIF.
+      lt_devclass_sel = lt_devclass.
+
+    ENDWHILE.
   ENDMETHOD.
 
 ENDCLASS.

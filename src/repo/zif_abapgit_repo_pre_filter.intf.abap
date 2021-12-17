@@ -23,11 +23,14 @@ INTERFACE zif_abapgit_repo_pre_filter
       VALUE(rt_filter) TYPE zif_abapgit_definitions=>ty_tadir_tt .
 
   METHODS set_filter_values_via_dialog
+    IMPORTING
+      iv_package TYPE tadir-devclass
     RAISING
       zcx_abapgit_exception .
 
   METHODS set_filter_values
     IMPORTING
+      iv_package type tadir-DEVCLASS
       it_r_trkorr TYPE ty_trrngtrkor_tt
     RAISING
       zcx_abapgit_exception .
