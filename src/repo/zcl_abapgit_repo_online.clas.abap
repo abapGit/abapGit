@@ -127,7 +127,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
                                                            iv_commit_hash = get_selected_commit( ) ).
     ENDIF.
 
-    IF NOT ii_pre_filter IS INITIAL.
+    IF ii_pre_filter IS NOT INITIAL.
       ii_pre_filter->filter_files( CHANGING ct_files = ls_pull-files ).
     ENDIF.
 
@@ -330,7 +330,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
     reset_remote( ).
     set( iv_branch_name     = iv_branch_name
-         iv_selected_commit = space  ).
+         iv_selected_commit = space ).
 
   ENDMETHOD.
 
@@ -355,7 +355,8 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
     DATA lv_offs TYPE i.
 
-    IF iv_overwrite = abap_true. " For repo settings page
+    " For repo settings page
+    IF iv_overwrite = abap_true.
       set( iv_switched_origin = iv_url ).
       RETURN.
     ENDIF.

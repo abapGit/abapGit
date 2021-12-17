@@ -502,8 +502,8 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
         io_dot_abapgit    = get_dot_abapgit( )
         is_local_settings = get_local_settings( ).
 
-    IF NOT ii_pre_filter IS INITIAL.
-      lt_filter = ii_pre_filter->get_local_filter(  ).
+    IF ii_pre_filter IS NOT INITIAL.
+      lt_filter = ii_pre_filter->get_local_filter( ).
     ENDIF.
 
     rt_files = lo_serialize->files_local(

@@ -88,7 +88,7 @@ CLASS zcl_abapgit_stage_logic IMPLEMENTATION.
   METHOD zif_abapgit_stage_logic~get.
 
     rs_files-local  = io_repo->get_files_local( ii_pre_filter = ii_pre_filter ).
-    rs_files-remote = io_repo->get_files_remote( ii_pre_filter = ii_pre_filter ).
+    rs_files-remote = io_repo->get_files_remote( ii_pre_filter ).
     rs_files-status = io_repo->status( ).
     remove_identical( CHANGING cs_files = rs_files ).
     remove_ignored( EXPORTING io_repo  = io_repo
