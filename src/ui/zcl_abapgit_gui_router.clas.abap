@@ -89,6 +89,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
     METHODS get_page_stage
       IMPORTING
         !ii_event      TYPE REF TO zif_abapgit_gui_event
+        ii_pre_filter  TYPE REF TO zif_abapgit_repo_pre_filter OPTIONAL
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
@@ -125,7 +126,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
         VALUE(rv_state) TYPE i .
     METHODS main_page
       RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
-      RAISING zcx_abapgit_exception.
+      RAISING   zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -205,7 +206,8 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
   METHOD general_page_routing.
 
     DATA: lv_key           TYPE zif_abapgit_persistence=>ty_repo-key,
-          lv_last_repo_key TYPE zif_abapgit_persistence=>ty_repo-key.
+          lv_last_repo_key TYPE zif_abapgit_persistence=>ty_repo-key,
+          li_pre_filter    TYPE REF TO zif_abapgit_repo_pre_filter.
 
     lv_key = ii_event->query( )->get( 'KEY' ).
 
@@ -243,6 +245,11 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
       WHEN zif_abapgit_definitions=>c_action-go_stage.                        " Go Staging page
         rs_handled-page  = get_page_stage( ii_event ).
+        rs_handled-state = get_state_diff( ii_event ).
+      WHEN zif_abapgit_definitions=>c_action-go_stage_transport.              " Go Staging page by Transport
+        CREATE OBJECT li_pre_filter TYPE zcl_abapgit_repo_pre_filter.
+        rs_handled-page  = get_page_stage( ii_event = ii_event
+                                           ii_pre_filter = li_pre_filter ).
         rs_handled-state = get_state_diff( ii_event ).
       WHEN zif_abapgit_definitions=>c_action-go_branch_overview.              " Go repo branch overview
         rs_handled-page  = get_page_branch_overview( lv_key ).
@@ -362,9 +369,11 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         lo_repo->refresh( ).
         CREATE OBJECT lo_stage_page
           EXPORTING
-            io_repo = lo_repo
-            iv_seed = lv_seed
-            iv_sci_result = zif_abapgit_definitions=>c_sci_result-passed.
+            io_repo       = lo_repo
+            iv_seed       = lv_seed
+            iv_sci_result = zif_abapgit_definitions=>c_sci_result-passed
+            ii_pre_filter = ii_pre_filter.
+
         ri_page = lo_stage_page.
       ELSE.
         ri_page = lo_code_inspector_page.
@@ -389,8 +398,9 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
       CREATE OBJECT lo_stage_page
         EXPORTING
-          io_repo = lo_repo
-          iv_seed = lv_seed.
+          io_repo       = lo_repo
+          iv_seed       = lv_seed
+          ii_pre_filter = ii_pre_filter.
 
       ri_page = lo_stage_page.
 
@@ -732,7 +742,8 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
           lv_xstr           TYPE xstring,
           lv_package        TYPE zif_abapgit_persistence=>ty_repo-package,
           lv_folder_logic   TYPE string,
-          lv_main_lang_only TYPE zif_abapgit_persistence=>ty_local_settings-main_language_only.
+          lv_main_lang_only TYPE zif_abapgit_persistence=>ty_local_settings-main_language_only,
+          li_pre_filter     TYPE REF TO zif_abapgit_repo_pre_filter.
 
     CONSTANTS:
       BEGIN OF lc_page,
@@ -803,6 +814,16 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         file_download( iv_package = lo_repo->get_package( )
                        iv_xstr    = lv_xstr ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
+      WHEN zif_abapgit_definitions=>c_action-zip_export_transport.                      " Export repo as ZIP
+        lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+
+        CREATE OBJECT li_pre_filter TYPE zcl_abapgit_repo_pre_filter.
+        li_pre_filter->set_filter_values_via_dialog( lo_repo->get_package( ) ).
+        lv_xstr = zcl_abapgit_zip=>encode_files( lo_repo->get_files_local( ii_pre_filter = li_pre_filter ) ).
+
+        file_download( iv_package = lo_repo->get_package( )
+                       iv_xstr    = lv_xstr ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
       WHEN zif_abapgit_definitions=>c_action-zip_package.                     " Export package as ZIP
         rs_handled-page  = zcl_abapgit_gui_page_ex_pckage=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
@@ -816,3 +837,4 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
   ENDMETHOD.
 ENDCLASS.
+
