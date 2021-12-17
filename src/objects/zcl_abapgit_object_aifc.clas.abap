@@ -237,8 +237,6 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
     ls_icd_data_key-ifname = ms_icd_data_key-ifname.
     ls_icd_data_key-ifver2 = ms_icd_data_key-ifver2.
 
-    CLEAR rv_user.
-
     TRY.
         CALL METHOD mo_abapgit_util->('/AIF/IF_ABAPGIT_AIFC_UTIL~CHANGED_BY')
           EXPORTING
@@ -509,39 +507,17 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
 
   METHOD clear_client.
-    DATA lx_root TYPE REF TO cx_root.
-    DATA lr_structdescr TYPE REF TO cl_abap_structdescr.
-    DATA lr_tabledescr TYPE REF TO cl_abap_tabledescr.
-    DATA lr_typedescr TYPE REF TO cl_abap_typedescr.
-    DATA lv_type TYPE string.
-    DATA lv_name TYPE c LENGTH 30.
-    DATA lt_components TYPE cl_abap_structdescr=>component_table.
-    FIELD-SYMBOLS: <ls_components> LIKE LINE OF lt_components.
-    FIELD-SYMBOLS <ls_table> TYPE any.
-    FIELD-SYMBOLS <lv_value> TYPE any.
+    DATA:
+      BEGIN OF ls_data_to_clear,
+        mandt  TYPE sy-mandt,
+        client TYPE sy-mandt,
+      END OF ls_data_to_clear.
 
-    TRY.
-        lr_tabledescr ?= cl_abap_typedescr=>describe_by_data( p_data = ct_data  ).
-        lr_structdescr ?= lr_tabledescr->get_table_line_type( ).
+    FIELD-SYMBOLS:
+      <data> TYPE any.
 
-        lt_components = lr_structdescr->get_components( ).
-        LOOP AT lt_components ASSIGNING <ls_components>.
-          CHECK <ls_components>-type IS ASSIGNED.
-          lr_typedescr ?= <ls_components>-type.
-          lv_type = lr_typedescr->get_relative_name( ).
-          IF lv_type = 'MANDT'.
-            lv_name = <ls_components>-name.
-            EXIT.
-          ENDIF.
-        ENDLOOP.
-
-        LOOP AT ct_data ASSIGNING <ls_table>.
-          ASSIGN COMPONENT lv_name OF STRUCTURE <ls_table> TO <lv_value>.
-          CHECK <lv_value> IS ASSIGNED.
-          CLEAR <lv_value>.
-        ENDLOOP.
-      CATCH cx_root INTO lx_root.
-        zcx_abapgit_exception=>raise_with_text( lx_root ).
-    ENDTRY.
+    LOOP AT ct_data ASSIGNING <data>.
+      MOVE-CORRESPONDING ls_data_to_clear TO <data>.
+    ENDLOOP.
   ENDMETHOD.
 ENDCLASS.
