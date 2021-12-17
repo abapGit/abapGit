@@ -76,7 +76,7 @@ CLASS ltcl_adjust_filter IMPLEMENTATION.
   METHOD adjust_local_filter_limu_fm.
     DATA ls_e071_filter TYPE zif_abapgit_repo_pre_filter=>ty_e071_filter.
     DATA ls_filter_adj TYPE zif_abapgit_definitions=>ty_tadir.
-    DATA lv_msg TYPE string.
+    DATA lv_msg TYPE zif_abapgit_repo_pre_filter=>ty_msg.
     ls_e071_filter-pgmid = 'LIMU'.
     ls_e071_filter-object = 'FUNC'.
     ls_e071_filter-obj_name = 'GET_R3TR_OBJECT_FROM_LIMU_OBJ'.
@@ -95,7 +95,7 @@ CLASS ltcl_adjust_filter IMPLEMENTATION.
   METHOD adjust_local_filter_limu_meth.
     DATA ls_e071_filter TYPE zif_abapgit_repo_pre_filter=>ty_e071_filter.
     DATA ls_filter_adj TYPE zif_abapgit_definitions=>ty_tadir.
-    DATA lv_msg TYPE string.
+    DATA lv_msg TYPE zif_abapgit_repo_pre_filter=>ty_msg.
     ls_e071_filter-pgmid = 'LIMU'.
     ls_e071_filter-object = 'METH'.
     ls_e071_filter-obj_name = 'CL_GUI_ALV_GRID               CONSTRUCTOR'.
@@ -115,7 +115,7 @@ CLASS ltcl_adjust_filter IMPLEMENTATION.
   METHOD adjust_local_filter_r3tr_clas.
     DATA ls_e071_filter TYPE zif_abapgit_repo_pre_filter=>ty_e071_filter.
     DATA ls_filter_adj TYPE zif_abapgit_definitions=>ty_tadir.
-    DATA lv_msg TYPE string.
+    DATA lv_msg TYPE zif_abapgit_repo_pre_filter=>ty_msg.
     ls_e071_filter-pgmid = 'R3TR'.
     ls_e071_filter-object = 'CLAS'.
     ls_e071_filter-obj_name = 'CL_GUI_ALV_GRID'.
@@ -140,7 +140,7 @@ CLASS ltcl_adjust_filter IMPLEMENTATION.
     DATA lt_filter_adj_res TYPE zif_abapgit_definitions=>ty_tadir_tt.
     DATA lr_filter_adj TYPE REF TO zif_abapgit_definitions=>ty_tadir.
     DATA lr_ex TYPE REF TO zcx_abapgit_exception.
-    DATA lv_msg TYPE string.
+    DATA lv_msg TYPE zif_abapgit_repo_pre_filter=>ty_msg.
     ls_e071_filter-pgmid = 'LANG'.
     ls_e071_filter-object = 'METH'.
     ls_e071_filter-obj_name = 'CL_GUI_ALV_GRID               CONSTRUCTOR'.

@@ -4,6 +4,7 @@ INTERFACE zif_abapgit_repo_pre_filter
   TYPES ty_trobj_name TYPE c LENGTH 120.    "Standard TROBJ_NAME
   TYPES ty_trrngtrkor_tt TYPE RANGE OF trkorr.
   TYPES ty_trrngtrkor TYPE LINE OF ty_trrngtrkor_tt.
+  TYPES ty_msg TYPE c LENGTH 100.
   TYPES: BEGIN OF ty_e071_filter,
            pgmid    TYPE tadir-pgmid,
            object   TYPE tadir-object,
