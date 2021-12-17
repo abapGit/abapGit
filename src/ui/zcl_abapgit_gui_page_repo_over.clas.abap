@@ -29,6 +29,23 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
         iv_only_favorites TYPE abap_bool.
     METHODS
       get_only_favorites RETURNING VALUE(rv_result) TYPE abap_bool.
+
+    METHODS render_stage_sub_menu
+      IMPORTING
+        VALUE(ii_html)   TYPE REF TO zif_abapgit_html
+        !iv_dummy_key    TYPE string
+        !iv_action_class TYPE string
+        !iv_online_class TYPE string
+        !iv_separator    TYPE string .
+
+    METHODS render_export_sub_menu
+      IMPORTING
+        VALUE(ii_html)    TYPE REF TO zif_abapgit_html
+        !iv_dummy_key     TYPE string
+        !iv_action_class  TYPE string
+        !iv_offline_class TYPE string
+        !iv_separator     TYPE string .
+
   PROTECTED SECTION.
 
 
@@ -504,12 +521,13 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     ii_html->add( action_link( lv_pull_link && lc_separator ) ).
 
-    lv_stage_link = ii_html->a(
-      iv_txt   = |Stage|
-      iv_act   = |{ zif_abapgit_definitions=>c_action-go_stage }{ lc_dummy_key }|
-      iv_class = |{ lc_action_class } { lc_online_class } | ).
-
-    ii_html->add( action_link( lv_stage_link && lc_separator ) ).
+    "Stage sub menu
+    render_stage_sub_menu(
+        ii_html         = ii_html         " HTML
+        iv_dummy_key    = lc_dummy_key
+        iv_action_class = lc_action_class
+        iv_online_class = lc_online_class
+        iv_separator    = lc_separator ).
 
     lv_patch_link = ii_html->a(
       iv_txt   = |Patch|
@@ -539,12 +557,13 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     ii_html->add( action_link( lv_zip_import_link && lc_separator ) ).
 
-    lv_zip_export_link = ii_html->a(
-      iv_txt   = |Export|
-      iv_act   = |{ zif_abapgit_definitions=>c_action-zip_export }{ lc_dummy_key }|
-      iv_class = |{ lc_action_class } { lc_offline_class }| ).
-
-    ii_html->add( action_link( lv_zip_export_link && lc_separator ) ).
+    "Export sub menu
+    render_export_sub_menu(
+        ii_html         = ii_html         " HTML
+        iv_dummy_key    = lc_dummy_key
+        iv_action_class = lc_action_class
+        iv_offline_class = lc_offline_class
+        iv_separator    = lc_separator ).
 
     lv_settings_link = ii_html->a(
       iv_txt   = |Settings|
@@ -762,6 +781,45 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
   METHOD get_only_favorites.
     rv_result = mv_only_favorites.
+  ENDMETHOD.
+
+  METHOD render_export_sub_menu.
+
+    DATA lv_stage_link TYPE string.
+
+    lv_stage_link = ii_html->a(
+      iv_txt   = |Export|
+      iv_act   = |{ zif_abapgit_definitions=>c_action-zip_export }{ iv_dummy_key }|
+      iv_class = |{ iv_action_class } { iv_offline_class } | ).
+
+    ii_html->add( action_link( lv_stage_link ) ).
+
+    lv_stage_link = ii_html->a(
+      iv_txt   = |<sup>Transport/Task</sup>|
+      iv_act   = |{ zif_abapgit_definitions=>c_action-zip_export_transport }{ iv_dummy_key }|
+      iv_class = |{ iv_action_class } { iv_offline_class } | ).
+
+    ii_html->add( action_link( lv_stage_link && iv_separator ) ).
+
+  ENDMETHOD.
+
+  METHOD render_stage_sub_menu.
+    DATA lv_stage_link TYPE string.
+
+    lv_stage_link = ii_html->a(
+      iv_txt   = |Stage|
+      iv_act   = |{ zif_abapgit_definitions=>c_action-go_stage }{ iv_dummy_key }|
+      iv_class = |{ iv_action_class } { iv_online_class } | ).
+
+    ii_html->add( action_link( lv_stage_link ) ).
+
+    lv_stage_link = ii_html->a(
+      iv_txt   = |<sup>Transport/Task</sup>|
+      iv_act   = |{ zif_abapgit_definitions=>c_action-go_stage_transport }{ iv_dummy_key }|
+      iv_class = |{ iv_action_class } { iv_online_class } | ).
+
+    ii_html->add( action_link( lv_stage_link && iv_separator ) ).
+
   ENDMETHOD.
 
 ENDCLASS.
