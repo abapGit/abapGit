@@ -1,6 +1,5 @@
 CLASS zcl_abapgit_repo_pre_filter DEFINITION
   PUBLIC
-  FINAL
   CREATE PUBLIC.
 
 
@@ -25,6 +24,12 @@ CLASS zcl_abapgit_repo_pre_filter DEFINITION
     TYPES ty_e071_filter_tt TYPE STANDARD TABLE OF ty_e071_filter.
 
   PROTECTED SECTION.
+    METHODS adjust_local_filter
+      IMPORTING
+                it_e071_filter   TYPE ty_e071_filter_tt
+      RETURNING VALUE(rt_filter) TYPE zif_abapgit_definitions=>ty_tadir_tt
+      RAISING
+                zcx_abapgit_exception.
 
 
   PRIVATE SECTION.
@@ -51,12 +56,7 @@ CLASS zcl_abapgit_repo_pre_filter DEFINITION
 
     METHODS init .
 
-    METHODS adjust_local_filter
-      IMPORTING
-                it_e071_filter   TYPE ty_e071_filter_tt
-      RETURNING VALUE(rt_filter) TYPE zif_abapgit_definitions=>ty_tadir_tt
-      RAISING
-                zcx_abapgit_exception.
+
 ENDCLASS.
 
 CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.

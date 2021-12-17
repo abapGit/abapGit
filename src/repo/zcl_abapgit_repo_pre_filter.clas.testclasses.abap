@@ -1,12 +1,12 @@
 *"* use this source file for your ABAP unit test classes
 
-CLASS ltcl_adjust_filter DEFINITION FINAL FOR TESTING
+CLASS ltcl_adjust_filter DEFINITION FINAL FOR TESTING INHERITING FROM zcl_abapgit_repo_pre_filter
   DURATION SHORT
   RISK LEVEL HARMLESS.
 
 
   PRIVATE SECTION.
-    DATA mo_cut TYPE REF TO zcl_abapgit_repo_pre_filter.
+    DATA mo_cut TYPE REF TO ltcl_adjust_filter.
     METHODS setup.
     METHODS teardown.
     METHODS adjust_local_filter_r3tr_clas FOR TESTING RAISING cx_static_check.
@@ -14,7 +14,7 @@ CLASS ltcl_adjust_filter DEFINITION FINAL FOR TESTING
     METHODS adjust_local_filter_limu_meth FOR TESTING RAISING cx_static_check.
     METHODS adjust_local_filter_lang FOR TESTING RAISING cx_static_check.
 
-    METHODS adjust_local_filter
+    METHODS adjust_local_filter_test
       IMPORTING is_e071_filter TYPE zcl_abapgit_repo_pre_filter=>ty_e071_filter
                 is_filter_adj  TYPE zif_abapgit_definitions=>ty_tadir
                 iv_msg         TYPE csequence.
@@ -31,7 +31,7 @@ CLASS ltcl_adjust_filter IMPLEMENTATION.
     CLEAR mo_cut.
   ENDMETHOD.
 
-  METHOD adjust_local_filter.
+  METHOD adjust_local_filter_test.
 
     DATA lt_e071_filter TYPE zcl_abapgit_repo_pre_filter=>ty_e071_filter_tt.
     DATA lt_filter_adj TYPE zif_abapgit_definitions=>ty_tadir_tt.
@@ -86,7 +86,7 @@ CLASS ltcl_adjust_filter IMPLEMENTATION.
     ls_filter_adj-obj_name = 'SEWB'.
     lv_msg = 'Object (R3TR FUGR SEWB) for FM GET_R3TR_OBJECT_FROM_LIMU_OBJ not found'.
 
-    adjust_local_filter(
+    adjust_local_filter_test(
         is_e071_filter     = ls_e071_filter
         is_filter_adj = ls_filter_adj
         iv_msg        = lv_msg ).
@@ -105,7 +105,7 @@ CLASS ltcl_adjust_filter IMPLEMENTATION.
     ls_filter_adj-obj_name = 'CL_GUI_ALV_GRID'.
     lv_msg = 'Object (R3TR CLAS CL_GUI_ALV_GRID) for Meth CL_GUI_ALV_GRID->CONSTRUCTOR not found'.
 
-    adjust_local_filter(
+    adjust_local_filter_test(
         is_e071_filter = ls_e071_filter
         is_filter_adj = ls_filter_adj
         iv_msg        = lv_msg ).
@@ -125,7 +125,7 @@ CLASS ltcl_adjust_filter IMPLEMENTATION.
     ls_filter_adj-obj_name = 'CL_GUI_ALV_GRID'.
     lv_msg = 'Object (R3TR CLAS CL_GUI_ALV_GRID) for CLAS CL_GUI_ALV_GRID not found'.
 
-    adjust_local_filter(
+    adjust_local_filter_test(
         is_e071_filter = ls_e071_filter
         is_filter_adj = ls_filter_adj
         iv_msg        = lv_msg ).
