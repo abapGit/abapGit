@@ -30,7 +30,7 @@ INTERFACE zif_abapgit_repo_pre_filter
 
   METHODS set_filter_values
     IMPORTING
-      iv_package type tadir-DEVCLASS
+      iv_package  TYPE tadir-devclass
       it_r_trkorr TYPE ty_trrngtrkor_tt
     RAISING
       zcx_abapgit_exception .
