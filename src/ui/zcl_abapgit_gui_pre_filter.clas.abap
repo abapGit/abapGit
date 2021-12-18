@@ -21,7 +21,7 @@ CLASS zcl_abapgit_gui_pre_filter IMPLEMENTATION.
   METHOD get_transports.
     DATA ls_selection  TYPE trwbo_selection.
 
-    DATA ls_r_trkorr  TYPE zif_abapgit_repo_pre_filter=>ty_trrngtrkor.
+    DATA ls_r_trkorr TYPE line of zif_abapgit_repo_pre_filter=>ty_trrngtrkor_tt.
     DATA lr_request TYPE REF TO trwbo_request_header.
     DATA lt_request TYPE trwbo_request_headers.
 

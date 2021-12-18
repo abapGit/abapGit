@@ -148,7 +148,7 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
     DATA lt_e071_filter TYPE zif_abapgit_repo_pre_filter=>ty_e071_filter_tt.
     DATA lr_e071_filter TYPE REF TO zif_abapgit_repo_pre_filter=>ty_e071_filter.
     DATA ls_filter TYPE zif_abapgit_definitions=>ty_tadir.
-    DATA lv_trobj_name_new TYPE zif_abapgit_repo_pre_filter=>ty_trobj_name.
+    DATA lv_trobj_name_new TYPE trobj_name.
     DATA lv_trobj_type_new TYPE tadir-object.
     DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
     DATA lr_cts_api TYPE REF TO zif_abapgit_cts_api.
@@ -169,8 +169,7 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
                 iv_obj_name = lr_e071_filter->obj_name
               IMPORTING
                 ev_object   = lv_trobj_type_new
-                ev_obj_name = lv_trobj_name_new
-            ).
+                ev_obj_name = lv_trobj_name_new ).
           CATCH zcx_abapgit_exception.
             CONTINUE.
         ENDTRY.
