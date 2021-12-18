@@ -29,6 +29,12 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
         iv_only_favorites TYPE abap_bool.
     METHODS
       get_only_favorites RETURNING VALUE(rv_result) TYPE abap_bool.
+
+    METHODS build_export_dropdown
+      RETURNING
+        VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
 
 
@@ -127,6 +133,9 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
       RETURNING VALUE(rv_shortened) TYPE string.
 
     METHODS render_actions
+      IMPORTING ii_html TYPE REF TO zif_abapgit_html.
+
+    METHODS render_actions_tb
       IMPORTING ii_html TYPE REF TO zif_abapgit_html.
 
     METHODS column
@@ -298,7 +307,8 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_act = |gHelper.toggleRepoListDetail()|
       iv_typ = zif_abapgit_html=>c_action_type-onclick ) ).
 
-    render_actions( ii_html = ii_html ).
+    "render_actions( ii_html = ii_html ).
+    render_actions_tb( ii_html = ii_html ).
 
     ii_html->add( |</div>| ).
 
@@ -762,6 +772,97 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
   METHOD get_only_favorites.
     rv_result = mv_only_favorites.
+  ENDMETHOD.
+
+  METHOD render_actions_tb.
+    CONSTANTS:
+      lc_dummy_key     TYPE string VALUE `?key=#`,
+      lc_offline_class TYPE string VALUE `action_offline_repo`,
+      lc_online_class  TYPE string VALUE `action_online_repo`,
+      lc_action_class  TYPE string VALUE `action_link`.
+
+    DATA lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
+    DATA lo_toolbar_export_sub TYPE REF TO zcl_abapgit_html_toolbar.
+
+    ii_html->add( |<div class="float-right">| ).
+
+    CREATE OBJECT lo_toolbar EXPORTING iv_id = 'toolbar-ovp'.
+
+    CREATE OBJECT lo_toolbar_export_sub EXPORTING iv_id = 'toolbar-ovp-exp_sub'.
+
+    lo_toolbar_export_sub->add( iv_txt        = |zip, filtered by Transport/Task|
+                                iv_act        = |{ zif_abapgit_definitions=>c_action-zip_export }{ lc_dummy_key }|
+                                iv_class      = |{ lc_action_class } { lc_offline_class }|
+                                iv_span_class = |{ lc_action_class }| ).
+
+    lo_toolbar_export_sub->add( iv_txt        = |zip|
+                                iv_act        = |{ zif_abapgit_definitions=>c_action-zip_export }{ lc_dummy_key }|
+                                iv_class      = |{ lc_action_class }|
+                                iv_span_class = |{ lc_action_class }| ).
+
+
+    lo_toolbar->add( iv_txt      = 'Export Sub'
+                     io_sub      = lo_toolbar_export_sub
+                     iv_class    = |{ lc_action_class } { lc_offline_class }|
+                     iv_li_class = |{ lc_action_class }|
+                    ).
+    "iv_span_class = |{ lc_action_class }| ).
+
+
+    lo_toolbar->add( iv_txt        = |Pull|
+                     iv_act        = |{ zif_abapgit_definitions=>c_action-git_reset }{ lc_dummy_key }|
+                     iv_class      = |{ lc_action_class } { lc_online_class }|
+                     iv_span_class = |{ lc_action_class }| ).
+
+    lo_toolbar->add( iv_txt        = |Stage|
+                     iv_act        = |{ zif_abapgit_definitions=>c_action-go_stage }{ lc_dummy_key }|
+                     iv_class      = |{ lc_action_class } { lc_online_class }|
+                     iv_span_class = |{ lc_action_class }| ).
+
+    lo_toolbar->add( iv_txt        = |Patch|
+                     iv_act        = |{ zif_abapgit_definitions=>c_action-go_patch }{ lc_dummy_key }|
+                     iv_class      = |{ lc_action_class } { lc_online_class }|
+                     iv_span_class = |{ lc_action_class }| ).
+
+    lo_toolbar->add( iv_txt        = |Diff|
+                     iv_act        = |{ zif_abapgit_definitions=>c_action-go_repo_diff }{ lc_dummy_key }|
+                     iv_class      = |{ lc_action_class } { lc_online_class }|
+                     iv_span_class = |{ lc_action_class }| ).
+
+    lo_toolbar->add( iv_txt        = |Check|
+                     iv_act        = |{ zif_abapgit_definitions=>c_action-repo_code_inspector }{ lc_dummy_key }|
+                     iv_class      = |{ lc_action_class }|
+                     iv_span_class = |{ lc_action_class }| ).
+
+    lo_toolbar->add( iv_txt        = |Import|
+                     iv_act        = |{ zif_abapgit_definitions=>c_action-zip_import }{ lc_dummy_key }|
+                     iv_class      = |{ lc_action_class } { lc_offline_class }|
+                     iv_span_class = |{ lc_action_class }| ).
+
+    lo_toolbar->add( iv_txt        = |Export|
+                     iv_act        = |{ zif_abapgit_definitions=>c_action-zip_export }{ lc_dummy_key }|
+                     iv_class      = |{ lc_action_class } { lc_offline_class }|
+                     iv_span_class = |{ lc_action_class }| ).
+
+    lo_toolbar->add( iv_txt        = |Settings|
+                     iv_act        = |{ zif_abapgit_definitions=>c_action-repo_settings }{ lc_dummy_key }|
+                     iv_class      = |{ lc_action_class }|
+                     iv_span_class = |{ lc_action_class }| ).
+
+    ii_html->add( lo_toolbar->render( ) ).
+
+
+    ii_html->add( |</div>| ).
+  ENDMETHOD.
+
+  METHOD build_export_dropdown.
+
+    CREATE OBJECT ro_toolbar.
+
+
+
+
+
   ENDMETHOD.
 
 ENDCLASS.

@@ -637,6 +637,15 @@ span.action_link:not(enabled){
   position: fixed; /* so it does not take up space when hidden */
 }
 
+li.action_link.enabled{
+  visibility: visible;
+  position: relative;
+}
+
+li.action_link:not(enabled){
+  visibility: hidden;
+  position: fixed; /* so it does not take up space when hidden */
+}
 
 /* DB ENTRY DISPLAY */
 div.db_entry {
