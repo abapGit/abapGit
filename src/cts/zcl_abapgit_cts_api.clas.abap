@@ -282,14 +282,14 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
            iv_object_name = is_item-obj_name ) = abap_true.
 
         rv_transport = get_current_transport_for_obj(
-                         iv_object_type = is_item-obj_type
-                         iv_object_name = is_item-obj_name ).
+          iv_object_type = is_item-obj_type
+          iv_object_name = is_item-obj_name ).
 
       ELSEIF is_object_type_transportable( is_item-obj_type ) = abap_true.
 
         rv_transport = get_current_transport_from_db(
-                         iv_object_type = is_item-obj_type
-                         iv_object_name = is_item-obj_name  ).
+          iv_object_type = is_item-obj_type
+          iv_object_name = is_item-obj_name ).
 
       ENDIF.
 
@@ -320,7 +320,7 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
       EXCEPTIONS
         no_mapping     = 1
         OTHERS         = 2.
-    IF sy-subrc <> 0 or ev_obj_name is INITIAL.
+    IF sy-subrc <> 0 OR ev_obj_name IS INITIAL.
       zcx_abapgit_exception=>raise( |No R3TR Object found for { iv_object } { iv_obj_name }| ).
     ENDIF.
   ENDMETHOD.

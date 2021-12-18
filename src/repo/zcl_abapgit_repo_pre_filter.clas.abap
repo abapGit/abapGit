@@ -169,8 +169,7 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
                 iv_obj_name = lr_e071_filter->obj_name
               IMPORTING
                 ev_object   = lv_trobj_type_new
-                ev_obj_name = lv_trobj_name_new
-            ).
+                ev_obj_name = lv_trobj_name_new ).
           CATCH zcx_abapgit_exception.
             CONTINUE.
         ENDTRY.
