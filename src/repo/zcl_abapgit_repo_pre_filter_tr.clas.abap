@@ -1,4 +1,4 @@
-CLASS zcl_abapgit_repo_pre_filter DEFINITION
+CLASS zcl_abapgit_repo_pre_filter_tr DEFINITION
   PUBLIC
   CREATE PUBLIC.
 
@@ -6,10 +6,33 @@ CLASS zcl_abapgit_repo_pre_filter DEFINITION
   PUBLIC SECTION.
     INTERFACES zif_abapgit_repo_pre_filter.
 
+  TYPES ty_trrngtrkor_tt TYPE RANGE OF trkorr.
+  TYPES: BEGIN OF ty_e071_filter,
+           pgmid    TYPE tadir-pgmid,
+           object   TYPE tadir-object,
+           obj_name TYPE trobj_name,
+         END OF ty_e071_filter,
+         ty_e071_filter_tt TYPE STANDARD TABLE OF ty_e071_filter,
+         ty_file_filter_tt TYPE RANGE OF string,
+         ty_file_filter    TYPE LINE OF ty_file_filter_tt.
+
+
+ METHODS set_filter_values
+    IMPORTING
+      iv_package  TYPE tadir-devclass
+      it_r_trkorr TYPE ty_trrngtrkor_tt
+    RAISING
+      zcx_abapgit_exception .
+
+METHODS get_filter_values
+    EXPORTING
+      ev_package  TYPE tadir-devclass
+      et_r_trkorr TYPE ty_trrngtrkor_tt.
+
   PROTECTED SECTION.
     METHODS adjust_local_filter
       IMPORTING
-                it_e071_filter   TYPE zif_abapgit_repo_pre_filter=>ty_e071_filter_tt
+                it_e071_filter   TYPE ty_e071_filter_tt
                 iv_package       TYPE tadir-devclass
       RETURNING VALUE(rt_filter) TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
@@ -18,24 +41,15 @@ CLASS zcl_abapgit_repo_pre_filter DEFINITION
   PRIVATE SECTION.
 
     DATA mt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt .
-    DATA mt_r_trkorr TYPE zif_abapgit_repo_pre_filter=>ty_trrngtrkor_tt .
-    DATA mt_r_file_filter TYPE zif_abapgit_repo_pre_filter=>ty_file_filter_tt .
+    DATA mt_r_trkorr TYPE ty_trrngtrkor_tt .
     DATA mv_package TYPE tadir-devclass.
 
     METHODS generate_local_filter
       IMPORTING
         iv_package       TYPE tadir-devclass
-        it_r_trkorr      TYPE zif_abapgit_repo_pre_filter=>ty_trrngtrkor_tt
+        it_r_trkorr      TYPE ty_trrngtrkor_tt
       RETURNING
         VALUE(rt_filter) TYPE zif_abapgit_definitions=>ty_tadir_tt
-      RAISING
-        zcx_abapgit_exception .
-
-    METHODS generate_file_filter
-      IMPORTING
-        it_filter               TYPE zif_abapgit_definitions=>ty_tadir_tt
-      RETURNING
-        VALUE(rt_r_file_filter) TYPE zif_abapgit_repo_pre_filter=>ty_file_filter_tt
       RAISING
         zcx_abapgit_exception .
 
@@ -48,58 +62,11 @@ CLASS zcl_abapgit_repo_pre_filter DEFINITION
         VALUE(rt_filter) TYPE zif_abapgit_definitions=>ty_tadir_tt.
 ENDCLASS.
 
-CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
-
-  METHOD zif_abapgit_repo_pre_filter~filter_files.
-    IF mt_r_file_filter IS INITIAL.
-      RETURN.
-    ENDIF.
-
-    DELETE ct_files WHERE filename NOT IN mt_r_file_filter.
-  ENDMETHOD.
-
-  METHOD generate_file_filter.
-    DATA lr_filter TYPE REF TO zif_abapgit_definitions=>ty_tadir.
-    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
-    DATA lv_pattern TYPE string.
-    DATA ls_r_file_filter TYPE zif_abapgit_repo_pre_filter=>ty_file_filter.
-    DATA lo_obj_files TYPE REF TO zcl_abapgit_objects_files.
-
-    CLEAR rt_r_file_filter.
-
-    IF it_filter IS INITIAL.
-      RETURN.
-    ENDIF.
-
-    ls_r_file_filter-sign = 'I'.
-    ls_r_file_filter-option = 'EQ'.
-    ls_r_file_filter-low = zif_abapgit_definitions=>c_dot_abapgit.
-    INSERT ls_r_file_filter INTO TABLE rt_r_file_filter.
-
-    LOOP AT it_filter REFERENCE INTO lr_filter.
-      CLEAR ls_item.
-      CLEAR ls_r_file_filter.
-      ls_item-obj_type = lr_filter->object.
-      ls_item-obj_name = lr_filter->obj_name.
-
-
-      CREATE OBJECT lo_obj_files
-        EXPORTING
-          is_item = ls_item.
-
-      lv_pattern = lo_obj_files->get_file_pattern( ).
-
-      ls_r_file_filter-sign = 'I'.
-      ls_r_file_filter-option = 'CP'.
-      ls_r_file_filter-low = lv_pattern.
-      INSERT ls_r_file_filter INTO TABLE rt_r_file_filter.
-    ENDLOOP.
-
-  ENDMETHOD.
+CLASS zcl_abapgit_repo_pre_filter_tr IMPLEMENTATION.
 
 
   METHOD generate_local_filter.
-    DATA lt_e071_filter TYPE zif_abapgit_repo_pre_filter=>ty_e071_filter_tt.
+    DATA lt_e071_filter TYPE ty_e071_filter_tt.
 
     SELECT DISTINCT pgmid
                 object
@@ -115,23 +82,22 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
       it_e071_filter = lt_e071_filter ).
   ENDMETHOD.
 
-  METHOD zif_abapgit_repo_pre_filter~get_filter_values.
+  METHOD get_filter_values.
     et_r_trkorr = mt_r_trkorr.
     ev_package = mv_package.
   ENDMETHOD.
 
-  METHOD zif_abapgit_repo_pre_filter~get_local_filter.
+  METHOD zif_abapgit_repo_pre_filter~get_filter.
     rt_filter = mt_filter.
   ENDMETHOD.
 
   METHOD init.
     CLEAR mt_filter.
-    CLEAR mt_r_file_filter.
     CLEAR mt_r_trkorr.
     CLEAR mv_package.
   ENDMETHOD.
 
-  METHOD zif_abapgit_repo_pre_filter~set_filter_values.
+  METHOD set_filter_values.
     init( ).
     mt_r_trkorr = it_r_trkorr.
     mv_package = iv_package.
@@ -139,14 +105,14 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
       mt_filter = generate_local_filter(
         iv_package  = mv_package
         it_r_trkorr = mt_r_trkorr ).
-      mt_r_file_filter = generate_file_filter( mt_filter ).
+
     ENDIF.
   ENDMETHOD.
 
   METHOD adjust_local_filter.
 
-    DATA lt_e071_filter TYPE zif_abapgit_repo_pre_filter=>ty_e071_filter_tt.
-    DATA lr_e071_filter TYPE REF TO zif_abapgit_repo_pre_filter=>ty_e071_filter.
+    DATA lt_e071_filter TYPE ty_e071_filter_tt.
+    DATA lr_e071_filter TYPE REF TO ty_e071_filter.
     DATA ls_filter TYPE zif_abapgit_definitions=>ty_tadir.
     DATA lv_trobj_name_new TYPE trobj_name.
     DATA lv_trobj_type_new TYPE tadir-object.

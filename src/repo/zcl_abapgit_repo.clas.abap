@@ -356,9 +356,9 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     " Deserialize objects
     TRY.
         lt_updated_files = zcl_abapgit_objects=>deserialize(
-            io_repo   = me
-            is_checks = is_checks
-            ii_log    = ii_log ).
+          io_repo   = me
+          is_checks = is_checks
+          ii_log    = ii_log ).
       CATCH zcx_abapgit_exception INTO lx_error.
 * ensure to reset default transport request task
         zcl_abapgit_default_transport=>get_instance( )->reset( ).
@@ -503,7 +503,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
         is_local_settings = get_local_settings( ).
 
     IF ii_pre_filter IS NOT INITIAL.
-      lt_filter = ii_pre_filter->get_local_filter( ).
+      lt_filter = ii_pre_filter->get_filter( ).
     ENDIF.
 
     rt_files = lo_serialize->files_local(
@@ -519,9 +519,22 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
   METHOD get_files_remote.
+    DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lr_filter TYPE REF TO zcl_abapgit_repo_filter.
+
     rt_files = mt_remote.
     IF ii_pre_filter IS NOT INITIAL.
-      ii_pre_filter->filter_files( CHANGING ct_files = rt_files ).
+      lt_filter = ii_pre_filter->get_filter( ).
+
+      CREATE OBJECT lr_filter.
+      lr_filter->apply_file_filter(
+        EXPORTING
+          it_filter   = lt_filter
+          io_dot      = get_dot_abapgit( )
+          iv_devclass = get_package( )
+        CHANGING
+          ct_files    = rt_files ).
+
     ENDIF.
   ENDMETHOD.
 
@@ -644,11 +657,9 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
         ls_last_item       = <ls_local>-item.
       ENDIF.
 
-      compare_with_remote_checksum( EXPORTING
-                                      it_remote_files = lt_remote
-                                      is_local_file = <ls_local>-file
-                                    CHANGING
-                                      cs_checksum = <ls_checksum> ).
+      compare_with_remote_checksum( EXPORTING it_remote_files = lt_remote
+                                              is_local_file   = <ls_local>-file
+                                    CHANGING  cs_checksum     = <ls_checksum> ).
 
     ENDLOOP.
     set( it_checksums = lt_checksums ).

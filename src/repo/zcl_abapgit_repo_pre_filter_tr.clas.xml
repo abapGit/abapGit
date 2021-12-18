@@ -3,9 +3,9 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOCLASS>
-    <CLSNAME>ZCL_ABAPGIT_REPO_PRE_FILTER</CLSNAME>
+    <CLSNAME>ZCL_ABAPGIT_REPO_PRE_FILTER_TR</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Repository Pre-Filter</DESCRIPT>
+    <DESCRIPT>Repository Pre Filter Transports</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
