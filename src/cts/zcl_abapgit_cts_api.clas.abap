@@ -320,10 +320,9 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
       EXCEPTIONS
         no_mapping     = 1
         OTHERS         = 2.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
+    IF sy-subrc <> 0 or ev_obj_name is INITIAL.
+      zcx_abapgit_exception=>raise( |No R3TR Object found for { iv_object } { iv_obj_name }| ).
     ENDIF.
-
   ENDMETHOD.
 
 ENDCLASS.

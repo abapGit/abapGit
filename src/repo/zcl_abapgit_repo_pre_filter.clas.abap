@@ -20,6 +20,7 @@ CLASS zcl_abapgit_repo_pre_filter DEFINITION
     DATA mt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt .
     DATA mt_r_trkorr TYPE zif_abapgit_repo_pre_filter=>ty_trrngtrkor_tt .
     DATA mt_r_file_filter TYPE zif_abapgit_repo_pre_filter=>ty_file_filter_tt .
+    DATA mv_package TYPE tadir-devclass.
 
     METHODS generate_local_filter
       IMPORTING
@@ -115,7 +116,8 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_repo_pre_filter~get_filter_values.
-    rt_r_trkorr = mt_r_trkorr.
+    et_r_trkorr = mt_r_trkorr.
+    ev_package = mv_package.
   ENDMETHOD.
 
   METHOD zif_abapgit_repo_pre_filter~get_local_filter.
@@ -126,68 +128,20 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
     CLEAR mt_filter.
     CLEAR mt_r_file_filter.
     CLEAR mt_r_trkorr.
+    CLEAR mv_package.
   ENDMETHOD.
 
   METHOD zif_abapgit_repo_pre_filter~set_filter_values.
-
     init( ).
+    mt_r_trkorr = it_r_trkorr.
+    mv_package = iv_package.
     IF it_r_trkorr IS NOT INITIAL.
       mt_filter = generate_local_filter(
-        iv_package  = iv_package
-        it_r_trkorr = it_r_trkorr ).
+        iv_package  = mv_package
+        it_r_trkorr = mt_r_trkorr ).
       mt_r_file_filter = generate_file_filter( mt_filter ).
     ENDIF.
   ENDMETHOD.
-
-  METHOD zif_abapgit_repo_pre_filter~set_filter_values_via_dialog.
-
-    DATA ls_selection  TYPE trwbo_selection.
-    DATA lt_r_trkorr  TYPE zif_abapgit_repo_pre_filter=>ty_trrngtrkor_tt.
-    DATA ls_r_trkorr  TYPE zif_abapgit_repo_pre_filter=>ty_trrngtrkor.
-    DATA lr_request TYPE REF TO trwbo_request_header.
-    DATA lt_request TYPE trwbo_request_headers.
-
-    ls_selection-trkorrpattern = space.
-    ls_selection-connect_req_task_conditions = 'X'.
-    ls_selection-reqfunctions = 'KTRXS'.
-    ls_selection-reqstatus = 'RNODL'.
-    ls_selection-taskstatus = 'RNODL'.
-    CONDENSE ls_selection-reqfunctions NO-GAPS.
-    ls_selection-taskfunctions = 'QRSX'.
-    CONCATENATE sy-sysid '*' INTO ls_selection-trkorrpattern.
-
-    CALL FUNCTION 'TRINT_SELECT_REQUESTS'
-      EXPORTING
-        iv_username_pattern    = '*'
-        is_selection           = ls_selection
-        iv_complete_projects   = abap_false
-        iv_via_selscreen       = 'X'
-        iv_title               = 'Select Transports / Tasks'
-      IMPORTING
-        et_requests            = lt_request
-      EXCEPTIONS
-        action_aborted_by_user = 1
-        OTHERS                 = 2.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Pre-Filter Canceled' ).
-    ENDIF.
-
-    IF lt_request IS INITIAL.
-      zcx_abapgit_exception=>raise( 'No Request Found' ).
-    ENDIF.
-
-    LOOP AT lt_request REFERENCE INTO lr_request.
-      ls_r_trkorr-sign = 'I'.
-      ls_r_trkorr-option = 'EQ'.
-      ls_r_trkorr-low = lr_request->trkorr.
-      INSERT ls_r_trkorr INTO TABLE lt_r_trkorr.
-    ENDLOOP.
-
-    zif_abapgit_repo_pre_filter~set_filter_values(
-      iv_package  = iv_package
-      it_r_trkorr = lt_r_trkorr[] ).
-  ENDMETHOD.
-
 
   METHOD adjust_local_filter.
 
@@ -212,7 +166,7 @@ CLASS zcl_abapgit_repo_pre_filter IMPLEMENTATION.
             lr_cts_api->get_r3tr_obj_for_limu_obj(
               EXPORTING
                 iv_object   = lr_e071_filter->object
-                iv_obj_name =  lr_e071_filter->obj_name
+                iv_obj_name = lr_e071_filter->obj_name
               IMPORTING
                 ev_object   = lv_trobj_type_new
                 ev_obj_name = lv_trobj_name_new
