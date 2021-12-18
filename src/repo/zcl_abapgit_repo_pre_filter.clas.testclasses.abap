@@ -47,7 +47,6 @@ CLASS ltcl_adjust_filter IMPLEMENTATION.
 
         READ TABLE lt_filter_adj REFERENCE INTO lr_filter_adj INDEX 1.
         cl_abap_unit_assert=>assert_subrc( exp = 0
-                                           act = sy-subrc
                                            msg = iv_msg ).
 
         cl_abap_unit_assert=>assert_equals( exp = is_filter_adj-obj_name
