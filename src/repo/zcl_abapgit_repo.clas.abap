@@ -520,6 +520,9 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
   METHOD get_files_remote.
     rt_files = mt_remote.
+    IF ii_pre_filter IS NOT INITIAL.
+      ii_pre_filter->filter_files( CHANGING ct_files = rt_files ).
+    ENDIF.
   ENDMETHOD.
 
 
