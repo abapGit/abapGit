@@ -207,7 +207,9 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     DATA: lv_key           TYPE zif_abapgit_persistence=>ty_repo-key,
           lv_last_repo_key TYPE zif_abapgit_persistence=>ty_repo-key,
-          li_pre_filter    TYPE REF TO zif_abapgit_repo_pre_filter.
+          li_pre_filter    TYPE REF TO zif_abapgit_repo_pre_filter,
+          lo_repo          TYPE REF TO zcl_abapgit_repo,
+          lt_r_trkorr      TYPE zif_abapgit_repo_pre_filter=>ty_trrngtrkor_tt.
 
     lv_key = ii_event->query( )->get( 'KEY' ).
 
@@ -247,9 +249,17 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         rs_handled-page  = get_page_stage( ii_event ).
         rs_handled-state = get_state_diff( ii_event ).
       WHEN zif_abapgit_definitions=>c_action-go_stage_transport.              " Go Staging page by Transport
+
+        lt_r_trkorr = zcl_abapgit_gui_pre_filter=>get_transports(  ).
+
+        lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+
         CREATE OBJECT li_pre_filter TYPE zcl_abapgit_repo_pre_filter.
-        rs_handled-page  = get_page_stage( ii_event      = ii_event
-                                           ii_pre_filter = li_pre_filter ).
+        li_pre_filter->set_filter_values( iv_package  = lo_repo->get_package( )
+                                          it_r_trkorr = lt_r_trkorr ).
+
+        rs_handled-page = get_page_stage( ii_event      = ii_event
+                                          ii_pre_filter = li_pre_filter ).
         rs_handled-state = get_state_diff( ii_event ).
       WHEN zif_abapgit_definitions=>c_action-go_branch_overview.              " Go repo branch overview
         rs_handled-page  = get_page_branch_overview( lv_key ).
@@ -743,7 +753,8 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
           lv_package        TYPE zif_abapgit_persistence=>ty_repo-package,
           lv_folder_logic   TYPE string,
           lv_main_lang_only TYPE zif_abapgit_persistence=>ty_local_settings-main_language_only,
-          li_pre_filter     TYPE REF TO zif_abapgit_repo_pre_filter.
+          li_pre_filter     TYPE REF TO zif_abapgit_repo_pre_filter,
+          lt_r_trkorr       TYPE zif_abapgit_repo_pre_filter=>ty_trrngtrkor_tt.
 
     CONSTANTS:
       BEGIN OF lc_page,
@@ -815,12 +826,17 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
                        iv_xstr    = lv_xstr ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
       WHEN zif_abapgit_definitions=>c_action-zip_export_transport.                      " Export repo as ZIP
+
+        lt_r_trkorr = zcl_abapgit_gui_pre_filter=>get_transports(  ).
         lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
-
+        lo_repo->refresh( ).
         CREATE OBJECT li_pre_filter TYPE zcl_abapgit_repo_pre_filter.
-        li_pre_filter->set_filter_values_via_dialog( lo_repo->get_package( ) ).
-        lv_xstr = zcl_abapgit_zip=>encode_files( lo_repo->get_files_local( ii_pre_filter = li_pre_filter ) ).
 
+        li_pre_filter->set_filter_values( iv_package  = lo_repo->get_package( )
+                                          it_r_trkorr = lt_r_trkorr ).
+
+        lv_xstr = zcl_abapgit_zip=>encode_files( lo_repo->get_files_local( ii_pre_filter = li_pre_filter ) ).
+        lo_repo->refresh( ).
         file_download( iv_package = lo_repo->get_package( )
                        iv_xstr    = lv_xstr ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.

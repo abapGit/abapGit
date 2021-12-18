@@ -284,8 +284,8 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     IF mv_are_changes_recorded_in_tr = abap_true.
       ro_advanced_dropdown->add(
-          iv_txt  = 'Add All Objects to Transport'
-          iv_act = |{ zif_abapgit_definitions=>c_action-repo_add_all_obj_to_trans_req }?key={ mv_key }| ).
+        iv_txt = 'Add All Objects to Transport'
+        iv_act = |{ zif_abapgit_definitions=>c_action-repo_add_all_obj_to_trans_req }?key={ mv_key }| ).
     ENDIF.
 
     ro_advanced_dropdown->add( iv_txt = 'Syntax Check'
@@ -311,21 +311,21 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         iv_act = |{ zif_abapgit_definitions=>c_action-repo_open_in_master_lang }?key={ mv_key }| ).
     ENDIF.
 
-    ro_advanced_dropdown->add( iv_txt = 'Remove'
+    ro_advanced_dropdown->add( iv_txt   = 'Remove'
                                iv_title = `Remove abapGit's records of the repository (the system's `
-                                       && `development objects will remain unaffected)`
-                               iv_act = |{ zif_abapgit_definitions=>c_action-repo_remove }?key={ mv_key }| ).
+                                          && `development objects will remain unaffected)`
+                               iv_act   = |{ zif_abapgit_definitions=>c_action-repo_remove }?key={ mv_key }| ).
 
     CLEAR lv_crossout.
     IF mo_repo->get_local_settings( )-write_protected = abap_true
         OR zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>c_authorization-uninstall ) = abap_false.
       lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
     ENDIF.
-    ro_advanced_dropdown->add( iv_txt = 'Uninstall'
+    ro_advanced_dropdown->add( iv_txt   = 'Uninstall'
                                iv_title = `Delete all development objects belonging to this package `
-                                       && `(and subpackages) from the system`
-                               iv_act = |{ zif_abapgit_definitions=>c_action-repo_purge }?key={ mv_key }|
-                               iv_opt = lv_crossout ).
+                                          && `(and subpackages) from the system`
+                               iv_act   = |{ zif_abapgit_definitions=>c_action-repo_purge }?key={ mv_key }|
+                               iv_opt   = lv_crossout ).
 
   ENDMETHOD.
 
@@ -426,17 +426,17 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ro_menu->add(
       iv_txt = zcl_abapgit_gui_buttons=>repo_list( )
       iv_act = zif_abapgit_definitions=>c_action-abapgit_home
-    )->add(
-      iv_txt = zcl_abapgit_gui_buttons=>settings( )
-      iv_act = zif_abapgit_definitions=>c_action-go_settings
-    )->add(
-      iv_txt = zcl_abapgit_gui_buttons=>advanced( )
-      iv_title = 'Utilities'
-      io_sub = zcl_abapgit_gui_chunk_lib=>advanced_submenu( )
-    )->add(
-      iv_txt = zcl_abapgit_gui_buttons=>help( )
-      iv_title = 'Help'
-      io_sub = zcl_abapgit_gui_chunk_lib=>help_submenu( ) ).
+               )->add(
+                 iv_txt = zcl_abapgit_gui_buttons=>settings( )
+                 iv_act = zif_abapgit_definitions=>c_action-go_settings
+               )->add(
+                 iv_txt = zcl_abapgit_gui_buttons=>advanced( )
+                 iv_title = 'Utilities'
+                 io_sub = zcl_abapgit_gui_chunk_lib=>advanced_submenu( )
+               )->add(
+                 iv_txt = zcl_abapgit_gui_buttons=>help( )
+                 iv_title = 'Help'
+                 io_sub = zcl_abapgit_gui_chunk_lib=>help_submenu( ) ).
 
   ENDMETHOD.
 
@@ -493,8 +493,8 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       ENDIF.
 
       ro_toolbar->add( iv_txt = 'Export'
-                              iv_opt = zif_abapgit_html=>c_html_opt-strong
-                              io_sub = io_tb_export ).
+                       iv_opt = zif_abapgit_html=>c_html_opt-strong
+                       io_sub = io_tb_export ).
 
       li_log = mo_repo->get_log( ).
       IF li_log IS BOUND AND li_log->count( ) > 0.
@@ -513,8 +513,8 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                      iv_act = |{ zif_abapgit_definitions=>c_action-repo_refresh }?key={ mv_key }|
                      iv_opt = zif_abapgit_html=>c_html_opt-strong ).
 
-    ro_toolbar->add( iv_txt = zcl_abapgit_html=>icon( iv_name = 'cog' )
-                     iv_act = |{ zif_abapgit_definitions=>c_action-repo_settings }?key={ mv_key }|
+    ro_toolbar->add( iv_txt   = zcl_abapgit_html=>icon( iv_name = 'cog' )
+                     iv_act   = |{ zif_abapgit_definitions=>c_action-repo_settings }?key={ mv_key }|
                      iv_title = `Repository Settings` ).
 
   ENDMETHOD.
@@ -577,9 +577,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     CREATE OBJECT ro_toolbar.
 
     ro_toolbar->add(
-        iv_txt = 'Changes First'
-        iv_chk = mv_diff_first
-        iv_act = c_actions-toggle_diff_first ).
+      iv_txt = 'Changes First'
+      iv_chk = mv_diff_first
+      iv_act = c_actions-toggle_diff_first ).
 
     ro_toolbar->add(
       iv_txt = 'Changes Only'
@@ -1225,7 +1225,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
       WHEN c_actions-change_dir.        " Change dir
         lv_path         = ii_event->query( )->get( 'PATH' ).
-        mv_cur_dir      = zcl_abapgit_path=>change_dir(
+        mv_cur_dir = zcl_abapgit_path=>change_dir(
           iv_cur_dir = mv_cur_dir
           iv_cd      = lv_path ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
