@@ -6,7 +6,7 @@ CLASS zcl_abapgit_gui_pre_filter DEFINITION
   PUBLIC SECTION.
 
     CLASS-METHODS get_transports
-      RETURNING VALUE(et_r_trkorr) TYPE zif_abapgit_repo_pre_filter=>ty_trrngtrkor_tt
+      RETURNING VALUE(rt_r_trkorr) TYPE zif_abapgit_repo_pre_filter=>ty_trrngtrkor_tt
       RAISING
                 zcx_abapgit_exception.
 
@@ -21,7 +21,7 @@ CLASS zcl_abapgit_gui_pre_filter IMPLEMENTATION.
   METHOD get_transports.
     DATA ls_selection  TYPE trwbo_selection.
 
-    DATA ls_r_trkorr TYPE line of zif_abapgit_repo_pre_filter=>ty_trrngtrkor_tt.
+    DATA ls_r_trkorr TYPE LINE OF zif_abapgit_repo_pre_filter=>ty_trrngtrkor_tt.
     DATA lr_request TYPE REF TO trwbo_request_header.
     DATA lt_request TYPE trwbo_request_headers.
 
@@ -58,7 +58,7 @@ CLASS zcl_abapgit_gui_pre_filter IMPLEMENTATION.
       ls_r_trkorr-sign = 'I'.
       ls_r_trkorr-option = 'EQ'.
       ls_r_trkorr-low = lr_request->trkorr.
-      INSERT ls_r_trkorr INTO TABLE et_r_trkorr.
+      INSERT ls_r_trkorr INTO TABLE rt_r_trkorr.
     ENDLOOP.
   ENDMETHOD.
 
