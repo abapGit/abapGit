@@ -6,28 +6,25 @@ CLASS zcl_abapgit_repo_pre_filter_tr DEFINITION
   PUBLIC SECTION.
     INTERFACES zif_abapgit_repo_pre_filter.
 
-  TYPES ty_trrngtrkor_tt TYPE RANGE OF trkorr.
-  TYPES: BEGIN OF ty_e071_filter,
-           pgmid    TYPE tadir-pgmid,
-           object   TYPE tadir-object,
-           obj_name TYPE trobj_name,
-         END OF ty_e071_filter,
-         ty_e071_filter_tt TYPE STANDARD TABLE OF ty_e071_filter,
-         ty_file_filter_tt TYPE RANGE OF string,
-         ty_file_filter    TYPE LINE OF ty_file_filter_tt.
+    TYPES ty_trrngtrkor_tt TYPE RANGE OF trkorr.
+    TYPES: BEGIN OF ty_e071_filter,
+             pgmid    TYPE tadir-pgmid,
+             object   TYPE tadir-object,
+             obj_name TYPE trobj_name,
+           END OF ty_e071_filter,
+           ty_e071_filter_tt TYPE STANDARD TABLE OF ty_e071_filter.
 
+    METHODS set_filter_values
+      IMPORTING
+        iv_package  TYPE tadir-devclass
+        it_r_trkorr TYPE ty_trrngtrkor_tt
+      RAISING
+        zcx_abapgit_exception .
 
- METHODS set_filter_values
-    IMPORTING
-      iv_package  TYPE tadir-devclass
-      it_r_trkorr TYPE ty_trrngtrkor_tt
-    RAISING
-      zcx_abapgit_exception .
-
-METHODS get_filter_values
-    EXPORTING
-      ev_package  TYPE tadir-devclass
-      et_r_trkorr TYPE ty_trrngtrkor_tt.
+    METHODS get_filter_values
+      EXPORTING
+        ev_package  TYPE tadir-devclass
+        et_r_trkorr TYPE ty_trrngtrkor_tt.
 
   PROTECTED SECTION.
     METHODS adjust_local_filter

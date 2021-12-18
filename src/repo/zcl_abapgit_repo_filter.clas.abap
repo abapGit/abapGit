@@ -144,9 +144,7 @@ CLASS zcl_abapgit_repo_filter IMPLEMENTATION.
 
       INSERT ls_tadir INTO TABLE lt_tadir.
 
-      filter_generated_tadir(
-        CHANGING
-          ct_tadir = lt_tadir ).
+      filter_generated_tadir( CHANGING ct_tadir = lt_tadir ).
 
       IF lt_tadir IS INITIAL.
         DELETE ct_files.
