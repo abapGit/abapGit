@@ -135,9 +135,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
                 iv_css_class   TYPE string OPTIONAL
       RETURNING VALUE(rv_html) TYPE string.
 
-    METHODS action_link
-      IMPORTING iv_content     TYPE string
-      RETURNING VALUE(rv_html) TYPE string.
+
 ENDCLASS.
 
 
@@ -725,11 +723,6 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       rv_html = |<td>| && iv_content && |</td>|.
     ENDIF.
   ENDMETHOD.
-
-  METHOD action_link.
-    rv_html = |<span class="action_link">| && iv_content && |</span>|.
-  ENDMETHOD.
-
 
   METHOD set_only_favorites.
     mv_only_favorites = iv_only_favorites.
