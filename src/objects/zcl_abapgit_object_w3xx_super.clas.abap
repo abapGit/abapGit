@@ -141,6 +141,9 @@ CLASS zcl_abapgit_object_w3xx_super IMPLEMENTATION.
     DELETE ct_params WHERE name = c_param_names-version.
     DELETE ct_params WHERE name = c_param_names-filesize.
 
+    " Avoid diffs due to different order
+    SORT ct_params.
+
   ENDMETHOD.
 
 
