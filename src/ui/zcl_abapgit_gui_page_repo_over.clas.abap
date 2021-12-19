@@ -30,22 +30,6 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
     METHODS
       get_only_favorites RETURNING VALUE(rv_result) TYPE abap_bool.
 
-    METHODS render_stage_sub_menu
-      IMPORTING
-        VALUE(ii_html)   TYPE REF TO zif_abapgit_html
-        !iv_dummy_key    TYPE string
-        !iv_action_class TYPE string
-        !iv_online_class TYPE string
-        !iv_separator    TYPE string .
-
-    METHODS render_export_sub_menu
-      IMPORTING
-        VALUE(ii_html)    TYPE REF TO zif_abapgit_html
-        !iv_dummy_key     TYPE string
-        !iv_action_class  TYPE string
-        !iv_offline_class TYPE string
-        !iv_separator     TYPE string .
-
   PROTECTED SECTION.
 
 
@@ -151,9 +135,8 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
                 iv_css_class   TYPE string OPTIONAL
       RETURNING VALUE(rv_html) TYPE string.
 
-    METHODS action_link
-      IMPORTING iv_content     TYPE string
-      RETURNING VALUE(rv_html) TYPE string.
+
+
 ENDCLASS.
 
 
@@ -494,85 +477,85 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
   METHOD render_actions.
 
     CONSTANTS:
-      lc_separator     TYPE string VALUE `<span class="separator">|</span>`,
       lc_dummy_key     TYPE string VALUE `?key=#`,
       lc_offline_class TYPE string VALUE `action_offline_repo`,
       lc_online_class  TYPE string VALUE `action_online_repo`,
       lc_action_class  TYPE string VALUE `action_link`.
 
-    DATA:
-      lv_settings_link TYPE string,
-      lv_check_link    TYPE string,
-      lv_stage_link    TYPE string,
-      lv_patch_link    TYPE string,
-      lv_diff_link     TYPE string,
-      lv_pull_link     TYPE string.
+    DATA lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
+    DATA lo_toolbar_export_sub TYPE REF TO zcl_abapgit_html_toolbar.
+    DATA lo_toolbar_stage_sub TYPE REF TO zcl_abapgit_html_toolbar.
 
-    DATA:
-      lv_zip_import_link TYPE string,
-      lv_zip_export_link TYPE string.
+    CREATE OBJECT lo_toolbar EXPORTING iv_id = 'toolbar-ovp'.
 
-    ii_html->add( |<div class="float-right">| ).
+    lo_toolbar->add( iv_txt      = |Pull|
+                     iv_act      = |{ zif_abapgit_definitions=>c_action-git_reset }{ lc_dummy_key }|
+                     iv_class    = |{ lc_action_class } { lc_online_class }|
+                     iv_li_class = |{ lc_action_class }| ).
 
-    lv_pull_link = ii_html->a(
-      iv_txt   = |Pull|
-      iv_act   = |{ zif_abapgit_definitions=>c_action-git_reset }{ lc_dummy_key }|
-      iv_class = |{ lc_action_class } { lc_online_class }| ).
+    CREATE OBJECT lo_toolbar_stage_sub EXPORTING iv_id = 'toolbar-ovp-stage_sub'.
 
-    ii_html->add( action_link( lv_pull_link && lc_separator ) ).
+    lo_toolbar_stage_sub->add( iv_txt      = |Stage|
+                               iv_act      = |{ zif_abapgit_definitions=>c_action-go_stage }{ lc_dummy_key }|
+                               iv_class    = |{ lc_action_class } { lc_online_class }|
+                               iv_li_class = |{ lc_action_class }| ).
 
-    "Stage sub menu
-    render_stage_sub_menu(
-        ii_html         = ii_html         " HTML
-        iv_dummy_key    = lc_dummy_key
-        iv_action_class = lc_action_class
-        iv_online_class = lc_online_class
-        iv_separator    = lc_separator ).
+    lo_toolbar_stage_sub->add( iv_txt      = |Stage, filtered by Transport/Task|
+                               iv_act      = |{ zif_abapgit_definitions=>c_action-go_stage_transport }{ lc_dummy_key }|
+                               iv_class    = |{ lc_action_class } { lc_online_class }|
+                               iv_li_class = |{ lc_action_class }| ).
 
-    lv_patch_link = ii_html->a(
-      iv_txt   = |Patch|
-      iv_act   = |{ zif_abapgit_definitions=>c_action-go_patch }{ lc_dummy_key }|
-      iv_class = |{ lc_action_class } { lc_online_class } | ).
+    lo_toolbar->add( iv_txt      = |Stage|
+                     io_sub      = lo_toolbar_stage_sub
+                     iv_class    = |{ lc_action_class } { lc_online_class }|
+                     iv_li_class = |{ lc_action_class }|
+                    ).
 
-    ii_html->add( action_link( lv_patch_link && lc_separator ) ).
+    lo_toolbar->add( iv_txt      = |Patch|
+                     iv_act      = |{ zif_abapgit_definitions=>c_action-go_patch }{ lc_dummy_key }|
+                     iv_class    = |{ lc_action_class } { lc_online_class }|
+                     iv_li_class = |{ lc_action_class }| ).
 
-    lv_diff_link = ii_html->a(
-      iv_txt   = |Diff|
-      iv_act   = |{ zif_abapgit_definitions=>c_action-go_repo_diff }{ lc_dummy_key }|
-      iv_class = |{ lc_action_class } { lc_online_class }| ).
+    lo_toolbar->add( iv_txt      = |Diff|
+                     iv_act      = |{ zif_abapgit_definitions=>c_action-go_repo_diff }{ lc_dummy_key }|
+                     iv_class    = |{ lc_action_class } { lc_online_class }|
+                     iv_li_class = |{ lc_action_class }| ).
 
-    ii_html->add( action_link( lv_diff_link && lc_separator ) ).
+    lo_toolbar->add( iv_txt      = |Check|
+                     iv_act      = |{ zif_abapgit_definitions=>c_action-repo_code_inspector }{ lc_dummy_key }|
+                     iv_class    = |{ lc_action_class }|
+                     iv_li_class = |{ lc_action_class }| ).
 
-    lv_check_link = ii_html->a(
-      iv_txt   = |Check|
-      iv_act   = |{ zif_abapgit_definitions=>c_action-repo_code_inspector }{ lc_dummy_key }|
-      iv_class = |{ lc_action_class }| ).
+    lo_toolbar->add( iv_txt      = |Import|
+                     iv_act      = |{ zif_abapgit_definitions=>c_action-zip_import }{ lc_dummy_key }|
+                     iv_class    = |{ lc_action_class } { lc_offline_class }|
+                     iv_li_class = |{ lc_action_class }| ).
 
-    ii_html->add( action_link( lv_check_link && lc_separator ) ).
+    CREATE OBJECT lo_toolbar_export_sub EXPORTING iv_id = 'toolbar-ovp-exp_sub'.
 
-    lv_zip_import_link = ii_html->a(
-      iv_txt   = |Import|
-      iv_act   = |{ zif_abapgit_definitions=>c_action-zip_import }{ lc_dummy_key }|
-      iv_class = |{ lc_action_class } { lc_offline_class }| ).
+    lo_toolbar_export_sub->add( iv_txt      = |zip|
+                                iv_act      = |{ zif_abapgit_definitions=>c_action-zip_export }{ lc_dummy_key }|
+                                iv_class    = |{ lc_action_class } { lc_offline_class }|
+                                iv_li_class = |{ lc_action_class }| ).
 
-    ii_html->add( action_link( lv_zip_import_link && lc_separator ) ).
+    lo_toolbar_export_sub->add( iv_txt      = |zip, filtered by Transport/Task|
+                                iv_act      = |{ zif_abapgit_definitions=>c_action-zip_export_transport }{ lc_dummy_key }|
+                                iv_class    = |{ lc_action_class } { lc_offline_class }|
+                                iv_li_class = |{ lc_action_class }| ).
 
-    "Export sub menu
-    render_export_sub_menu(
-        ii_html         = ii_html         " HTML
-        iv_dummy_key    = lc_dummy_key
-        iv_action_class = lc_action_class
-        iv_offline_class = lc_offline_class
-        iv_separator    = lc_separator ).
+    lo_toolbar->add( iv_txt      = 'Export'
+                     io_sub      = lo_toolbar_export_sub
+                     iv_class    = |{ lc_action_class } { lc_offline_class }|
+                     iv_li_class = |{ lc_action_class }|
+                    ).
 
-    lv_settings_link = ii_html->a(
-      iv_txt   = |Settings|
-      iv_act   = |{ zif_abapgit_definitions=>c_action-repo_settings }{ lc_dummy_key }|
-      iv_class = |{ lc_action_class }| ).
+    lo_toolbar->add( iv_txt      = |Settings|
+                     iv_act      = |{ zif_abapgit_definitions=>c_action-repo_settings }{ lc_dummy_key }|
+                     iv_class    = |{ lc_action_class }|
+                     iv_li_class = |{ lc_action_class }| ).
 
-    ii_html->add( action_link( lv_settings_link ) ).
+    ii_html->add( lo_toolbar->render( iv_right = abap_true ) ).
 
-    ii_html->add( |</div>| ).
   ENDMETHOD.
 
   METHOD shorten_repo_url.
@@ -770,56 +753,12 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
-  METHOD action_link.
-    rv_html = |<span class="action_link">| && iv_content && |</span>|.
-  ENDMETHOD.
-
-
   METHOD set_only_favorites.
     mv_only_favorites = iv_only_favorites.
   ENDMETHOD.
 
   METHOD get_only_favorites.
     rv_result = mv_only_favorites.
-  ENDMETHOD.
-
-  METHOD render_export_sub_menu.
-
-    DATA lv_stage_link TYPE string.
-
-    lv_stage_link = ii_html->a(
-      iv_txt   = |Export|
-      iv_act   = |{ zif_abapgit_definitions=>c_action-zip_export }{ iv_dummy_key }|
-      iv_class = |{ iv_action_class } { iv_offline_class } | ).
-
-    ii_html->add( action_link( lv_stage_link ) ).
-
-    lv_stage_link = ii_html->a(
-      iv_txt   = |<sup>filtered by, Transport/Task</sup>|
-      iv_act   = |{ zif_abapgit_definitions=>c_action-zip_export_transport }{ iv_dummy_key }|
-      iv_class = |{ iv_action_class } { iv_offline_class } | ).
-
-    ii_html->add( action_link( lv_stage_link && iv_separator ) ).
-
-  ENDMETHOD.
-
-  METHOD render_stage_sub_menu.
-    DATA lv_stage_link TYPE string.
-
-    lv_stage_link = ii_html->a(
-      iv_txt   = |Stage|
-      iv_act   = |{ zif_abapgit_definitions=>c_action-go_stage }{ iv_dummy_key }|
-      iv_class = |{ iv_action_class } { iv_online_class } | ).
-
-    ii_html->add( action_link( lv_stage_link ) ).
-
-    lv_stage_link = ii_html->a(
-      iv_txt   = |<sup>filtered by, Transport/Task</sup>|
-      iv_act   = |{ zif_abapgit_definitions=>c_action-go_stage_transport }{ iv_dummy_key }|
-      iv_class = |{ iv_action_class } { iv_online_class } | ).
-
-    ii_html->add( action_link( lv_stage_link && iv_separator ) ).
-
   ENDMETHOD.
 
 ENDCLASS.
