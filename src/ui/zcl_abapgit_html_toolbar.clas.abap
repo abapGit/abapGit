@@ -21,7 +21,6 @@ CLASS zcl_abapgit_html_toolbar DEFINITION
         !iv_id         TYPE string OPTIONAL
         !iv_title      TYPE string OPTIONAL
         !iv_class      TYPE string OPTIONAL
-        !iv_span_class TYPE string OPTIONAL
         !iv_li_class   TYPE string OPTIONAL
       RETURNING
         VALUE(ro_self) TYPE REF TO zcl_abapgit_html_toolbar .
@@ -48,20 +47,19 @@ CLASS zcl_abapgit_html_toolbar DEFINITION
 
     TYPES:
       BEGIN OF ty_item,
-        txt        TYPE string,
-        act        TYPE string,
-        ico        TYPE string,
-        sub        TYPE REF TO zcl_abapgit_html_toolbar,
-        opt        TYPE c LENGTH 1,
-        typ        TYPE c LENGTH 1,
-        cur        TYPE abap_bool,
-        chk        TYPE abap_bool,
-        aux        TYPE string,
-        id         TYPE string,
-        title      TYPE string,
-        class      TYPE string,
-        span_class TYPE string,
-        li_class   TYPE string,
+        txt      TYPE string,
+        act      TYPE string,
+        ico      TYPE string,
+        sub      TYPE REF TO zcl_abapgit_html_toolbar,
+        opt      TYPE c LENGTH 1,
+        typ      TYPE c LENGTH 1,
+        cur      TYPE abap_bool,
+        chk      TYPE abap_bool,
+        aux      TYPE string,
+        id       TYPE string,
+        title    TYPE string,
+        class    TYPE string,
+        li_class TYPE string,
       END OF ty_item .
     TYPES:
       ty_items TYPE STANDARD TABLE OF ty_item .
@@ -104,7 +102,6 @@ CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
     ls_item-id    = iv_id.
     ls_item-title = iv_title.
     ls_item-class = iv_class.
-    ls_item-span_class = iv_span_class.
     ls_item-li_class = iv_li_class.
 
     APPEND ls_item TO mt_items.
@@ -237,9 +234,6 @@ CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
 
       ri_html->add( |<li{ lv_class }{ lv_check }{ lv_aux }>| ).
 
-      IF <ls_item>-span_class IS NOT INITIAL.
-        ri_html->add( |<span class="{ <ls_item>-span_class }">| ).
-      ENDIF.
       IF <ls_item>-sub IS INITIAL.
         ri_html->add_a( iv_txt   = lv_icon && <ls_item>-txt
                         iv_typ   = <ls_item>-typ
@@ -257,9 +251,6 @@ CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
                         iv_title = <ls_item>-title
                         iv_class = <ls_item>-class ).
         ri_html->add( <ls_item>-sub->render_items( iv_sort ) ).
-      ENDIF.
-      IF <ls_item>-span_class IS NOT INITIAL.
-        ri_html->add( |</span>| ).
       ENDIF.
       ri_html->add( '</li>' ).
 
