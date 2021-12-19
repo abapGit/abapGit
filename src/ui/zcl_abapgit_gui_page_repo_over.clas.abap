@@ -508,8 +508,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     lo_toolbar->add( iv_txt      = |Stage|
                      io_sub      = lo_toolbar_stage_sub
                      iv_class    = |{ lc_action_class } { lc_online_class }|
-                     iv_li_class = |{ lc_action_class }|
-                    ).
+                     iv_li_class = |{ lc_action_class }| ).
 
     lo_toolbar->add( iv_txt      = |Patch|
                      iv_act      = |{ zif_abapgit_definitions=>c_action-go_patch }{ lc_dummy_key }|
@@ -538,16 +537,16 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
                                 iv_class    = |{ lc_action_class } { lc_offline_class }|
                                 iv_li_class = |{ lc_action_class }| ).
 
-    lo_toolbar_export_sub->add( iv_txt      = |zip, filtered by Transport/Task|
-                                iv_act      = |{ zif_abapgit_definitions=>c_action-zip_export_transport }{ lc_dummy_key }|
-                                iv_class    = |{ lc_action_class } { lc_offline_class }|
-                                iv_li_class = |{ lc_action_class }| ).
+    lo_toolbar_export_sub->add(
+      iv_txt      = |zip, filtered by Transport/Task|
+      iv_act      = |{ zif_abapgit_definitions=>c_action-zip_export_transport }{ lc_dummy_key }|
+      iv_class    = |{ lc_action_class } { lc_offline_class }|
+      iv_li_class = |{ lc_action_class }| ).
 
     lo_toolbar->add( iv_txt      = 'Export'
                      io_sub      = lo_toolbar_export_sub
                      iv_class    = |{ lc_action_class } { lc_offline_class }|
-                     iv_li_class = |{ lc_action_class }|
-                    ).
+                     iv_li_class = |{ lc_action_class }| ).
 
     lo_toolbar->add( iv_txt      = |Settings|
                      iv_act      = |{ zif_abapgit_definitions=>c_action-repo_settings }{ lc_dummy_key }|
