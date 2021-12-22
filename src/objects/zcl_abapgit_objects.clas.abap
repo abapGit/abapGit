@@ -123,8 +123,9 @@ CLASS zcl_abapgit_objects DEFINITION
         !iv_package TYPE devclass .
     CLASS-METHODS delete_object
       IMPORTING
-        !iv_package TYPE devclass
-        !is_item    TYPE zif_abapgit_definitions=>ty_item
+        !iv_package   TYPE devclass
+        !is_item      TYPE zif_abapgit_definitions=>ty_item
+        !iv_transport TYPE trkorr
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS compare_remote_to_local
@@ -137,10 +138,11 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS deserialize_objects
       IMPORTING
-        !is_step  TYPE zif_abapgit_objects=>ty_step_data
-        !ii_log   TYPE REF TO zif_abapgit_log
+        !is_step      TYPE zif_abapgit_objects=>ty_step_data
+        !ii_log       TYPE REF TO zif_abapgit_log
+        !iv_transport TYPE trkorr
       CHANGING
-        !ct_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt
+        !ct_files     TYPE zif_abapgit_definitions=>ty_file_signatures_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS check_objects_locked
@@ -186,7 +188,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
+CLASS zcl_abapgit_objects IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -503,8 +505,9 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
         TRY.
             delete_object(
-              iv_package = <ls_tadir>-devclass
-              is_item    = ls_item ).
+              iv_package   = <ls_tadir>-devclass
+              is_item      = ls_item
+              iv_transport = is_checks-transport-transport ).
 
             INSERT <ls_tadir> INTO TABLE lt_deleted.
             DELETE lt_tadir.
@@ -552,7 +555,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     li_obj = create_object( is_item     = is_item
                             iv_language = zif_abapgit_definitions=>c_english ).
 
-    li_obj->delete( iv_package ).
+    li_obj->delete( iv_package   = iv_package
+                    iv_transport = iv_transport ).
 
     IF li_obj->get_metadata( )-delete_tadir = abap_true.
 
@@ -721,9 +725,13 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     "run deserialize for all steps and it's objects
     SORT lt_steps BY order.
     LOOP AT lt_steps ASSIGNING <ls_step>.
-      deserialize_objects( EXPORTING is_step = <ls_step>
-                                     ii_log  = ii_log
-                           CHANGING ct_files = rt_accessed_files ).
+      deserialize_objects(
+        EXPORTING
+          is_step      = <ls_step>
+          ii_log       = ii_log
+          iv_transport = is_checks-transport-transport
+        CHANGING
+          ct_files     = rt_accessed_files ).
     ENDLOOP.
 
     update_package_tree( io_repo->get_package( ) ).
@@ -764,10 +772,11 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         iv_text    = |Deserialize { is_step-descr } - { <ls_obj>-item-obj_name }| ).
 
       TRY.
-          <ls_obj>-obj->deserialize( iv_package = <ls_obj>-package
-                                     io_xml     = <ls_obj>-xml
-                                     iv_step    = is_step-step_id
-                                     ii_log     = ii_log ).
+          <ls_obj>-obj->deserialize( iv_package   = <ls_obj>-package
+                                     io_xml       = <ls_obj>-xml
+                                     iv_step      = is_step-step_id
+                                     ii_log       = ii_log
+                                     iv_transport = iv_transport ).
           APPEND LINES OF <ls_obj>-obj->mo_files->get_accessed_files( ) TO ct_files.
 
           ii_log->add_success( iv_msg = |Object { <ls_obj>-item-obj_name } imported|
