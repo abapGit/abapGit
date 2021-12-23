@@ -71,6 +71,7 @@ CLASS zcl_abapgit_object_chkc IMPLEMENTATION.
     ENDIF.
 
     super->zif_abapgit_object~deserialize(
+        iv_transport = iv_transport
         iv_package = iv_package
         io_xml     = io_xml
         iv_step    = iv_step
