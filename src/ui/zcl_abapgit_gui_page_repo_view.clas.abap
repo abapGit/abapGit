@@ -362,6 +362,18 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     REPLACE FIRST OCCURRENCE OF mv_cur_dir IN lv_path WITH ''.
     lv_encode = zcl_abapgit_html_action_utils=>dir_encode( lv_path ).
 
+    " remove leading and trailing / for display
+    IF lv_path <> '/'.
+      IF lv_path(1) = '/'.
+        lv_path = lv_path+1.
+      ENDIF.
+      IF substring( val = reverse( lv_path )
+                    len = 1 ) = '/'.
+        lv_path = substring( val = lv_path
+                             len = strlen( lv_path ) - 1 ).
+      ENDIF.
+    ENDIF.
+
     rv_html = li_html->a(
       iv_txt = lv_path
       iv_act = |{ c_actions-change_dir }?{ lv_encode }| ).
@@ -846,11 +858,11 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
           " Repo content table
           ri_html->add( '<table class="repo_tab">' ).
 
+          ri_html->add( render_order_by( ) ).
+
           IF zcl_abapgit_path=>is_root( mv_cur_dir ) = abap_false.
             ri_html->add( render_parent_dir( ) ).
           ENDIF.
-
-          ri_html->add( render_order_by( ) ).
 
           LOOP AT lt_repo_items ASSIGNING <ls_item>.
             IF mv_max_lines > 0 AND sy-tabix > mv_max_lines.
@@ -925,7 +937,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ri_html->add( '<table class="w100"><tr>' ).
 
     IF mv_show_folders = abap_true.
-      ri_html->add( |<td class="current_dir">{ mv_cur_dir }</td>| ).
+      ri_html->add( '<td class="current_dir">' ).
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_path( mv_cur_dir ) ).
+      ri_html->add( '</td>' ).
     ENDIF.
 
     ri_html->add( '<td class="right">' ).
@@ -1181,7 +1195,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     ri_html->add( '<tr class="folder">' ).
     ri_html->add( |<td class="icon">{ ri_html->icon( 'folder' ) }</td>| ).
-    ri_html->add( |<td class="object" colspan="4">{ build_dir_jump_link( '..' ) }</td>| ).
+    ri_html->add( |<td class="dir" colspan="4">{ build_dir_jump_link( '..' ) }</td>| ).
     IF mo_repo->has_remote_source( ) = abap_true.
       ri_html->add( |<td colspan="1"></td>| ). " Dummy for online
     ENDIF.
