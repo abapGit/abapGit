@@ -548,206 +548,357 @@ ENDCLASS.
 CLASS lcl_json_to_abap DEFINITION FINAL.
   PUBLIC SECTION.
 
-    METHODS find_loc
+    METHODS constructor
       IMPORTING
-        iv_path TYPE string
-        iv_name TYPE string OPTIONAL " not mandatory
-        iv_append_tables TYPE abap_bool DEFAULT abap_false
-      RETURNING
-        VALUE(r_ref) TYPE REF TO data
-      RAISING
-        zcx_abapgit_ajson_error.
-
-    CLASS-METHODS bind
-      IMPORTING
-        !ii_custom_mapping TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL
-      CHANGING
-        c_obj              TYPE any
-        co_instance        TYPE REF TO lcl_json_to_abap.
+        !ii_custom_mapping TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL.
 
     METHODS to_abap
       IMPORTING
-        it_nodes TYPE zif_abapgit_ajson=>ty_nodes_ts
+        it_nodes     TYPE zif_abapgit_ajson=>ty_nodes_ts
+      CHANGING
+        c_container TYPE any
       RAISING
         zcx_abapgit_ajson_error.
 
     METHODS to_timestamp
       IMPORTING
-        is_path          TYPE zif_abapgit_ajson=>ty_node
+        iv_value         TYPE zif_abapgit_ajson=>ty_node-value
       RETURNING
         VALUE(rv_result) TYPE timestamp
       RAISING
         zcx_abapgit_ajson_error.
 
+    METHODS to_date
+      IMPORTING
+        iv_value         TYPE zif_abapgit_ajson=>ty_node-value
+      RETURNING
+        VALUE(rv_result) TYPE d
+      RAISING
+        zcx_abapgit_ajson_error.
+
   PRIVATE SECTION.
-    DATA mr_obj TYPE REF TO data.
+
+    TYPES:
+      BEGIN OF ty_type_cache,
+        type_path         TYPE string,
+        target_field_name TYPE string,
+        dd                TYPE REF TO cl_abap_datadescr,
+        type_kind         LIKE cl_abap_typedescr=>typekind_any,
+        tab_item_buf      TYPE REF TO data,
+      END OF ty_type_cache.
+    DATA mt_node_type_cache TYPE HASHED TABLE OF ty_type_cache WITH UNIQUE KEY type_path.
+
+    DATA mr_nodes TYPE REF TO zif_abapgit_ajson=>ty_nodes_ts.
     DATA mi_custom_mapping TYPE REF TO zif_abapgit_ajson_mapping.
+
+    METHODS any_to_abap
+      IMPORTING
+        iv_path        TYPE string
+        is_parent_type TYPE ty_type_cache OPTIONAL
+        i_container_ref TYPE REF TO data
+      RAISING
+        zcx_abapgit_ajson_error.
+
+    METHODS value_to_abap
+      IMPORTING
+        is_node      TYPE zif_abapgit_ajson=>ty_node
+        is_node_type TYPE ty_type_cache
+        i_container_ref TYPE REF TO data
+      RAISING
+        zcx_abapgit_ajson_error
+        cx_sy_conversion_no_number.
+
+    METHODS get_node_type
+      IMPORTING
+        is_node            TYPE zif_abapgit_ajson=>ty_node OPTIONAL " Empty for root
+        is_parent_type     TYPE ty_type_cache OPTIONAL
+        i_container_ref    TYPE REF TO data OPTIONAL
+      RETURNING
+        VALUE(rs_node_type) TYPE ty_type_cache
+      RAISING
+        zcx_abapgit_ajson_error.
 
 ENDCLASS.
 
 CLASS lcl_json_to_abap IMPLEMENTATION.
 
-  METHOD bind.
-    CREATE OBJECT co_instance.
-    GET REFERENCE OF c_obj INTO co_instance->mr_obj.
-    co_instance->mi_custom_mapping = ii_custom_mapping.
+  METHOD constructor.
+    mi_custom_mapping = ii_custom_mapping.
   ENDMETHOD.
 
   METHOD to_abap.
 
     DATA lr_ref TYPE REF TO data.
-    DATA lv_type TYPE c.
-    DATA lx TYPE REF TO cx_root.
-    FIELD-SYMBOLS <n> LIKE LINE OF it_nodes.
-    FIELD-SYMBOLS <value> TYPE any.
+
+    CLEAR c_container. " what about data/obj refs ?
+    CLEAR mt_node_type_cache.
+
+    GET REFERENCE OF c_container INTO lr_ref.
+    GET REFERENCE OF it_nodes INTO mr_nodes.
+
+    get_node_type( i_container_ref = lr_ref ). " Pre-cache root node type
+
+    any_to_abap(
+      iv_path         = ''
+      i_container_ref = lr_ref ).
+
+  ENDMETHOD.
+
+  METHOD get_node_type.
+
+    DATA lv_node_type_path TYPE string.
+    DATA lo_sdescr TYPE REF TO cl_abap_structdescr.
+    DATA lo_tdescr TYPE REF TO cl_abap_tabledescr.
+    DATA lo_ddescr TYPE REF TO cl_abap_datadescr.
+
+    " Calculate type path
+    IF is_parent_type-type_kind = cl_abap_typedescr=>typekind_table.
+      lv_node_type_path = is_parent_type-type_path && '/-'. " table item type
+    ELSEIF is_parent_type-type_kind IS NOT INITIAL.
+      lv_node_type_path = is_parent_type-type_path && '/' && is_node-name.
+    ENDIF. " For root node lv_node_type_path remains ''
+
+    " Get or create cached
+    READ TABLE mt_node_type_cache INTO rs_node_type WITH KEY type_path = lv_node_type_path.
+    IF sy-subrc <> 0.
+
+      rs_node_type-type_path         = lv_node_type_path.
+
+      IF mi_custom_mapping IS BOUND.
+        rs_node_type-target_field_name = to_upper( mi_custom_mapping->to_abap(
+          iv_path = is_node-path
+          iv_name = is_node-name ) ).
+        IF rs_node_type-target_field_name IS INITIAL.
+          rs_node_type-target_field_name = to_upper( is_node-name ).
+        ENDIF.
+      ELSE.
+        rs_node_type-target_field_name = to_upper( is_node-name ).
+      ENDIF.
+
+      CASE is_parent_type-type_kind.
+        WHEN 'h'. " Table
+          lo_tdescr ?= is_parent_type-dd.
+          rs_node_type-dd = lo_tdescr->get_table_line_type( ).
+
+        WHEN 'u' OR 'v'. " Structure
+          lo_sdescr ?= is_parent_type-dd.
+          lo_sdescr->get_component_type(
+            EXPORTING
+              p_name      = rs_node_type-target_field_name
+            RECEIVING
+              p_descr_ref = rs_node_type-dd
+            EXCEPTIONS
+              component_not_found = 4 ).
+          IF sy-subrc <> 0.
+            zcx_abapgit_ajson_error=>raise( |Path not found| ).
+          ENDIF.
+
+        WHEN ''. " Root node
+          rs_node_type-dd ?= cl_abap_typedescr=>describe_by_data_ref( i_container_ref ).
+
+        WHEN OTHERS.
+          zcx_abapgit_ajson_error=>raise( |Unexpected parent type| ).
+      ENDCASE.
+
+      rs_node_type-type_kind         = rs_node_type-dd->type_kind. " for caching and cleaner unintialized access
+      IF rs_node_type-type_kind = 'h'. " Table
+        lo_tdescr ?= rs_node_type-dd.
+        IF lo_tdescr->table_kind <> 'S'. " standard
+          lo_ddescr = lo_tdescr->get_table_line_type( ).
+          CREATE DATA rs_node_type-tab_item_buf TYPE HANDLE lo_ddescr.
+        ENDIF.
+      ENDIF.
+
+      INSERT rs_node_type INTO TABLE mt_node_type_cache.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD any_to_abap.
+
+    DATA ls_node_type LIKE LINE OF mt_node_type_cache.
+    DATA lx_ajson TYPE REF TO zcx_abapgit_ajson_error.
+    DATA lx_root TYPE REF TO cx_root.
+    DATA lr_target_field TYPE REF TO data.
+
+    FIELD-SYMBOLS <n> TYPE zif_abapgit_ajson=>ty_node.
+    FIELD-SYMBOLS <parent_stdtab> TYPE STANDARD TABLE.
+    FIELD-SYMBOLS <parent_anytab> TYPE ANY TABLE.
+    FIELD-SYMBOLS <parent_struc> TYPE any.
+    FIELD-SYMBOLS <tab_item> TYPE any.
+
+    " Assign container
+    CASE is_parent_type-type_kind.
+      WHEN 'h'. " Table
+        IF is_parent_type-tab_item_buf IS BOUND. " Indirect hint that table was sorted/hashed, see get_node_type.
+          ASSIGN i_container_ref->* TO <parent_anytab>.
+          ASSERT sy-subrc = 0.
+
+          lr_target_field = is_parent_type-tab_item_buf. " For hashed/sorted table - same buffer for all children
+          ASSIGN is_parent_type-tab_item_buf->* TO <tab_item>.
+          ASSERT sy-subrc = 0.
+
+        ELSE.
+          ASSIGN i_container_ref->* TO <parent_stdtab>.
+          ASSERT sy-subrc = 0.
+        ENDIF.
+
+      WHEN 'u' OR 'v'. " Structure
+        ASSIGN i_container_ref->* TO <parent_struc>.
+        ASSERT sy-subrc = 0.
+    ENDCASE.
 
     TRY.
-        LOOP AT it_nodes ASSIGNING <n> USING KEY array_index.
-          lr_ref = find_loc(
-          iv_append_tables = abap_true
-          iv_path = <n>-path
-          iv_name = <n>-name ).
-          ASSIGN lr_ref->* TO <value>.
-          ASSERT sy-subrc = 0.
-          DESCRIBE FIELD <value> TYPE lv_type.
 
-          CASE <n>-type.
-            WHEN zif_abapgit_ajson=>node_type-null.
-            " Do nothing
-            WHEN zif_abapgit_ajson=>node_type-boolean.
-              <value> = boolc( <n>-value = 'true' ).
-            WHEN zif_abapgit_ajson=>node_type-number.
-              <value> = <n>-value.
-            WHEN zif_abapgit_ajson=>node_type-string.
-              IF lv_type = 'D' AND <n>-value IS NOT INITIAL.
-                DATA lv_y TYPE c LENGTH 4.
-                DATA lv_m TYPE c LENGTH 2.
-                DATA lv_d TYPE c LENGTH 2.
+      " array_index because stringified index goes in wrong order [1, 10, 2 ...]
+        LOOP AT mr_nodes->* ASSIGNING <n> USING KEY array_index WHERE path = iv_path.
 
-                FIND FIRST OCCURRENCE OF REGEX '^(\d{4})-(\d{2})-(\d{2})(T|$)'
-                IN <n>-value
-                SUBMATCHES lv_y lv_m lv_d.
-                IF sy-subrc <> 0.
-                  zcx_abapgit_ajson_error=>raise(
-                  iv_msg      = 'Unexpected date format'
-                  iv_location = <n>-path && <n>-name ).
-                ENDIF.
-                CONCATENATE lv_y lv_m lv_d INTO <value>.
-              ELSEIF lv_type = 'P' AND <n>-value IS NOT INITIAL.
-                <value> = to_timestamp( is_path = <n> ).
-              ELSE.
-                <value> = <n>-value.
+        " Get or create type cache record
+          IF is_parent_type-type_kind <> 'h' OR ls_node_type-type_kind IS INITIAL.
+          " table records are the same, no need to refetch twice
+            ls_node_type = get_node_type(
+            is_node        = <n>
+            is_parent_type = is_parent_type ).
+          ENDIF.
+
+        " Validate node type
+          IF ls_node_type-type_kind CA 'lr'. " data/obj ref
+          " TODO maybe in future
+            zcx_abapgit_ajson_error=>raise( 'Cannot assign to ref' ).
+          ENDIF.
+
+        " Find target field reference
+          CASE is_parent_type-type_kind.
+            WHEN 'h'. " Table
+              IF NOT ls_node_type-target_field_name CO '0123456789'.
+              " Does not affect anything actually but for integrity
+                zcx_abapgit_ajson_error=>raise( 'Need index to access tables' ).
               ENDIF.
-            WHEN zif_abapgit_ajson=>node_type-object.
-              IF NOT lv_type CO 'uv'.
-                zcx_abapgit_ajson_error=>raise(
-                iv_msg      = 'Expected structure'
-                iv_location = <n>-path && <n>-name ).
+
+              IF is_parent_type-tab_item_buf IS NOT BOUND. " Indirect hint that table was srt/hsh, see get_node_type
+                APPEND INITIAL LINE TO <parent_stdtab> REFERENCE INTO lr_target_field.
+                ASSERT sy-subrc = 0.
               ENDIF.
-            WHEN zif_abapgit_ajson=>node_type-array.
-              IF NOT lv_type CO 'h'.
-                zcx_abapgit_ajson_error=>raise(
-                iv_msg      = 'Expected table'
-                iv_location = <n>-path && <n>-name ).
-              ENDIF.
+
+            WHEN 'u' OR 'v'.
+              FIELD-SYMBOLS <field> TYPE any.
+              ASSIGN COMPONENT ls_node_type-target_field_name OF STRUCTURE <parent_struc> TO <field>.
+              ASSERT sy-subrc = 0.
+              GET REFERENCE OF <field> INTO lr_target_field.
+
+            WHEN ''. " Root node
+              lr_target_field = i_container_ref.
+
             WHEN OTHERS.
-              zcx_abapgit_ajson_error=>raise(
-              iv_msg      = |Unexpected JSON type [{ <n>-type }]|
-              iv_location = <n>-path && <n>-name ).
+              zcx_abapgit_ajson_error=>raise( 'Unexpected parent type' ).
           ENDCASE.
 
+        " Process value assignment
+          CASE <n>-type.
+            WHEN zif_abapgit_ajson=>node_type-object.
+              IF NOT ls_node_type-type_kind CO 'uv'.
+                zcx_abapgit_ajson_error=>raise( 'Expected structure' ).
+              ENDIF.
+              any_to_abap(
+              iv_path         = <n>-path && <n>-name && '/'
+              is_parent_type  = ls_node_type
+              i_container_ref = lr_target_field ).
+
+            WHEN zif_abapgit_ajson=>node_type-array.
+              IF NOT ls_node_type-type_kind = 'h'.
+                zcx_abapgit_ajson_error=>raise( 'Expected table' ).
+              ENDIF.
+              any_to_abap(
+              iv_path         = <n>-path && <n>-name && '/'
+              is_parent_type  = ls_node_type
+              i_container_ref = lr_target_field ).
+
+            WHEN OTHERS.
+              value_to_abap(
+              is_node         = <n>
+              is_node_type    = ls_node_type
+              i_container_ref = lr_target_field ).
+          ENDCASE.
+
+          IF is_parent_type-tab_item_buf IS BOUND. " Indirect hint that table was sorted/hashed, see get_node_type.
+            TRY.
+                INSERT <tab_item> INTO TABLE <parent_anytab>.
+              CATCH cx_sy_itab_duplicate_key.
+                sy-subrc = 4.
+            ENDTRY.
+            IF sy-subrc <> 0.
+              zcx_abapgit_ajson_error=>raise( 'Duplicate insertion' ).
+            ENDIF.
+          ENDIF.
+
         ENDLOOP.
-      CATCH cx_sy_conversion_no_number INTO lx.
+
+      CATCH zcx_abapgit_ajson_error INTO lx_ajson.
+        IF lx_ajson->location IS INITIAL.
+          lx_ajson->set_location( <n>-path && <n>-name ).
+        ENDIF.
+        RAISE EXCEPTION lx_ajson.
+      CATCH cx_sy_conversion_no_number.
         zcx_abapgit_ajson_error=>raise(
-        iv_msg      = |Source is not a number|
+        iv_msg = 'Source is not a number'
+        iv_location = <n>-path && <n>-name ).
+      CATCH cx_root INTO lx_root.
+        zcx_abapgit_ajson_error=>raise(
+        iv_msg = lx_root->get_text( )
         iv_location = <n>-path && <n>-name ).
     ENDTRY.
 
   ENDMETHOD.
 
-  METHOD find_loc.
+  METHOD value_to_abap.
 
-    DATA lt_path TYPE string_table.
-    DATA lv_trace TYPE string.
-    DATA lv_seg LIKE LINE OF lt_path.
-    DATA lv_type TYPE c.
-    DATA lv_size TYPE i.
-    DATA lv_index TYPE i.
-    FIELD-SYMBOLS <struc> TYPE any.
-    FIELD-SYMBOLS <table> TYPE STANDARD TABLE.
-    FIELD-SYMBOLS <value> TYPE any.
-    FIELD-SYMBOLS <seg> LIKE LINE OF lt_path.
+    FIELD-SYMBOLS <container> TYPE any.
 
-    SPLIT iv_path AT '/' INTO TABLE lt_path.
-    DELETE lt_path WHERE table_line IS INITIAL.
-    IF iv_name IS NOT INITIAL.
-      APPEND iv_name TO lt_path.
+    IF is_node_type-type_kind CA 'lruvh'. " refs, table, strucs
+      zcx_abapgit_ajson_error=>raise( |Unsupported target for value [{ is_node_type-type_kind }]| ).
     ENDIF.
 
-    r_ref = mr_obj.
+    ASSIGN i_container_ref->* TO <container>.
+    ASSERT sy-subrc = 0.
 
-    LOOP AT lt_path ASSIGNING <seg>.
-      lv_trace = lv_trace && '/' && <seg>.
+    CASE is_node-type.
+      WHEN zif_abapgit_ajson=>node_type-null.
+        " Do nothing
+      WHEN zif_abapgit_ajson=>node_type-boolean.
+        " TODO: check type ?
+        <container> = boolc( is_node-value = 'true' ).
+      WHEN zif_abapgit_ajson=>node_type-number.
+        " TODO: check type ?
+        <container> = is_node-value.
 
-      IF mi_custom_mapping IS BOUND.
-        lv_seg = mi_custom_mapping->to_abap( iv_path = iv_path
-                                             iv_name = <seg> ).
-      ELSE.
-        CLEAR lv_seg.
-      ENDIF.
-
-      IF lv_seg IS INITIAL.
-        lv_seg = to_upper( <seg> ).
-      ELSE.
-        lv_seg = to_upper( lv_seg ).
-      ENDIF.
-
-      ASSIGN r_ref->* TO <struc>.
-      ASSERT sy-subrc = 0.
-      DESCRIBE FIELD <struc> TYPE lv_type.
-
-      IF lv_type CA 'lr'. " data/obj ref
-        " TODO maybe in future
-        zcx_abapgit_ajson_error=>raise(
-          iv_msg      = 'Cannot assign to ref'
-          iv_location = lv_trace ).
-
-      ELSEIF lv_type = 'h'. " table
-        IF NOT lv_seg CO '0123456789'.
-          zcx_abapgit_ajson_error=>raise(
-            iv_msg      = 'Need index to access tables'
-            iv_location = lv_trace ).
+      WHEN zif_abapgit_ajson=>node_type-string.
+        " TODO: check type ?
+        IF is_node_type-type_kind = 'D' AND is_node-value IS NOT INITIAL.
+          <container> = to_date( is_node-value ).
+        ELSEIF is_node_type-type_kind = 'P' AND is_node-value IS NOT INITIAL.
+          <container> = to_timestamp( is_node-value ).
+        ELSE.
+          <container> = is_node-value.
         ENDIF.
-        lv_index = lv_seg.
-        ASSIGN r_ref->* TO <table>.
-        ASSERT sy-subrc = 0.
+      WHEN OTHERS.
+        zcx_abapgit_ajson_error=>raise( |Unexpected JSON type [{ is_node-type }]| ).
+    ENDCASE.
 
-        lv_size = lines( <table> ).
-        IF iv_append_tables = abap_true AND lv_index = lv_size + 1.
-          APPEND INITIAL LINE TO <table>.
-        ENDIF.
+  ENDMETHOD.
 
-        READ TABLE <table> INDEX lv_index ASSIGNING <value>.
-        IF sy-subrc <> 0.
-          zcx_abapgit_ajson_error=>raise(
-            iv_msg      = 'Index not found in table'
-            iv_location = lv_trace ).
-        ENDIF.
+  METHOD to_date.
 
-      ELSEIF lv_type CA 'uv'. " structure
-        ASSIGN COMPONENT lv_seg OF STRUCTURE <struc> TO <value>.
-        IF sy-subrc <> 0.
-          zcx_abapgit_ajson_error=>raise(
-            iv_msg      = 'Path not found'
-            iv_location = lv_trace ).
-        ENDIF.
-      ELSE.
-        zcx_abapgit_ajson_error=>raise(
-          iv_msg = 'Target is not deep'
-          iv_location = lv_trace ).
-      ENDIF.
-      GET REFERENCE OF <value> INTO r_ref.
-    ENDLOOP.
+    DATA lv_y TYPE c LENGTH 4.
+    DATA lv_m TYPE c LENGTH 2.
+    DATA lv_d TYPE c LENGTH 2.
+
+    FIND FIRST OCCURRENCE OF REGEX '^(\d{4})-(\d{2})-(\d{2})(T|$)'
+      IN iv_value
+      SUBMATCHES lv_y lv_m lv_d.
+    IF sy-subrc <> 0.
+      zcx_abapgit_ajson_error=>raise( 'Unexpected date format' ).
+    ENDIF.
+    CONCATENATE lv_y lv_m lv_d INTO rv_result.
 
   ENDMETHOD.
 
@@ -779,9 +930,10 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
     DATA lv_timestamp TYPE timestampl.
 
     FIND FIRST OCCURRENCE OF REGEX lc_regex_ts_with_hour
-      IN is_path-value SUBMATCHES ls_timestamp-year ls_timestamp-month ls_timestamp-day ls_timestamp-t
-                                  ls_timestamp-hour ls_timestamp-minute ls_timestamp-second
-                                  ls_timestamp-local_sign ls_timestamp-local_hour ls_timestamp-local_minute.
+      IN iv_value SUBMATCHES
+        ls_timestamp-year ls_timestamp-month ls_timestamp-day ls_timestamp-t
+        ls_timestamp-hour ls_timestamp-minute ls_timestamp-second
+        ls_timestamp-local_sign ls_timestamp-local_hour ls_timestamp-local_minute.
 
     IF sy-subrc = 0.
 
@@ -790,13 +942,12 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
     ELSE.
 
       FIND FIRST OCCURRENCE OF REGEX lc_regex_ts_utc
-        IN is_path-value SUBMATCHES ls_timestamp-year ls_timestamp-month ls_timestamp-day ls_timestamp-t
-                                    ls_timestamp-hour ls_timestamp-minute ls_timestamp-second.
+        IN iv_value SUBMATCHES
+          ls_timestamp-year ls_timestamp-month ls_timestamp-day ls_timestamp-t
+          ls_timestamp-hour ls_timestamp-minute ls_timestamp-second.
 
       IF sy-subrc <> 0.
-        zcx_abapgit_ajson_error=>raise(
-          iv_msg      = 'Unexpected timestamp format'
-          iv_location = is_path-path && is_path-name ).
+        zcx_abapgit_ajson_error=>raise( 'Unexpected timestamp format' ).
       ENDIF.
 
     ENDIF.
@@ -810,21 +961,24 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
 
         CASE ls_timestamp-local_sign.
           WHEN '-'.
-            lv_timestamp = cl_abap_tstmp=>add( tstmp = lv_timestamp
-                                               secs = lv_seconds_conv ).
+            lv_timestamp = cl_abap_tstmp=>add(
+            tstmp = lv_timestamp
+            secs  = lv_seconds_conv ).
           WHEN '+'.
-            lv_timestamp = cl_abap_tstmp=>subtractsecs( tstmp = lv_timestamp
-                                                        secs = lv_seconds_conv ).
+            lv_timestamp = cl_abap_tstmp=>subtractsecs(
+            tstmp = lv_timestamp
+            secs  = lv_seconds_conv ).
         ENDCASE.
 
       CATCH cx_parameter_invalid_range cx_parameter_invalid_type.
-        zcx_abapgit_ajson_error=>raise(
-        iv_msg      = 'Unexpected error calculating timestamp'
-        iv_location = is_path-path && is_path-name ).
+        zcx_abapgit_ajson_error=>raise( 'Unexpected error calculating timestamp' ).
     ENDTRY.
 
-    cl_abap_tstmp=>move( EXPORTING tstmp_src = lv_timestamp
-                         IMPORTING tstmp_tgt = rv_result ).
+    cl_abap_tstmp=>move(
+      EXPORTING
+        tstmp_src = lv_timestamp
+      IMPORTING
+        tstmp_tgt = rv_result ).
 
   ENDMETHOD.
 

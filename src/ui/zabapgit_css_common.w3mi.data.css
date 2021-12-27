@@ -225,6 +225,7 @@ div.repo {
 span.branch,
 span.user-box,
 span.package-box,
+span.path-box,
 span.transport-box {
   padding: 2px 4px;
   border: 1px solid;
