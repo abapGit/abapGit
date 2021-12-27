@@ -71,6 +71,7 @@ span.package-box {
   border-color: #d3ccd2;
   background-color: #ebe3ea;
 }
+span.path-box,
 span.transport-box {
   border-color: #a7e3cf;
   background-color: #dbf3eb;
