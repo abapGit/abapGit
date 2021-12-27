@@ -45,8 +45,18 @@ public section.
       !IV_LOCATION type STRING optional
     raising
       zcx_abapgit_ajson_error .
+  methods set_location
+    importing
+      iv_location type string.
 protected section.
 private section.
+  types:
+    begin of ty_message_parts,
+      a1 like a1,
+      a2 like a1,
+      a3 like a1,
+      a4 like a1,
+    end of ty_message_parts.
 ENDCLASS.
 
 
@@ -77,21 +87,15 @@ endmethod.
 
 method raise.
 
-  data:
-    begin of ls_msg,
-      a1 like a1,
-      a2 like a1,
-      a3 like a1,
-      a4 like a1,
-    end of ls_msg.
+  data ls_msg type ty_message_parts.
+  data lv_tmp type string.
 
   if iv_location is initial.
-    ls_msg = iv_msg.
+    lv_tmp = iv_msg.
   else.
-    data lv_tmp type string.
     lv_tmp = iv_msg && | @{ iv_location }|.
-    ls_msg = lv_tmp.
   endif.
+  ls_msg = lv_tmp.
 
   raise exception type zcx_abapgit_ajson_error
     exporting
@@ -104,4 +108,25 @@ method raise.
       a4       = ls_msg-a4.
 
 endmethod.
+
+method set_location.
+
+  data ls_msg type ty_message_parts.
+  data lv_tmp type string.
+
+  if iv_location is initial.
+    lv_tmp = message.
+  else.
+    lv_tmp = message && | @{ iv_location }|.
+  endif.
+  ls_msg = lv_tmp.
+
+  location = iv_location.
+  a1       = ls_msg-a1.
+  a2       = ls_msg-a2.
+  a3       = ls_msg-a3.
+  a4       = ls_msg-a4.
+
+endmethod.
+
 ENDCLASS.
