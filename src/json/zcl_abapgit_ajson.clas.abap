@@ -439,7 +439,7 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
     CREATE OBJECT lo_to_abap.
 
     TRY.
-        rv_value = lo_to_abap->to_timestamp( is_path = lr_item->* ).
+        rv_value = lo_to_abap->to_timestamp( lr_item->value ).
       CATCH zcx_abapgit_ajson_error.
         RETURN.
     ENDTRY.
@@ -801,13 +801,15 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
     DATA lo_to_abap TYPE REF TO lcl_json_to_abap.
 
     CLEAR ev_container.
-    lcl_json_to_abap=>bind(
+    CREATE OBJECT lo_to_abap
       EXPORTING
-        ii_custom_mapping = mi_custom_mapping
+        ii_custom_mapping = mi_custom_mapping.
+
+    lo_to_abap->to_abap(
+      EXPORTING
+        it_nodes    = zif_abapgit_ajson~mt_json_tree
       CHANGING
-        c_obj             = ev_container
-        co_instance       = lo_to_abap ).
-    lo_to_abap->to_abap( mt_json_tree ).
+        c_container = ev_container ).
 
   ENDMETHOD.
 ENDCLASS.
