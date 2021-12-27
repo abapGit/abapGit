@@ -172,6 +172,7 @@
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_camel_case", "method": "to_json_first_lower"},
 
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_fields", "method": "to_json"},
+      {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_fields", "method": "to_abap"},
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_to_lower", "method": "to_json"},
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_to_upper", "method": "to_json"},
 
