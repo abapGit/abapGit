@@ -180,7 +180,7 @@
       {"object": "ZCL_ABAPGIT_DATA_DESERIALIZER", "class": "ltcl_test", "method": "test1"},
       {"object": "ZCL_ABAPGIT_DATA_SERIALIZER", "class": "ltcl_test", "method": "serialize"},
 
-      {"object": "ZCL_ABAPGIT_REPO", "class": "ltcl_find_remote_dot_abapgit", "method": "positive"},
+      {"object": "ZCL_ABAPGIT_REPO", "class": "ltcl_find_remote_dot_abapgit", "method": "positive", "note": "Void type: XUBNAME"},
       {"object": "ZCL_ABAPGIT_REPO", "class": "ltcl_find_remote_dot_abapgit", "method": "new_repo_needs_no_dot_abapgit"},
 
       {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff01", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
