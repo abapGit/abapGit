@@ -9,6 +9,8 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
   PROTECTED SECTION.
 
     METHODS deserialize_proxy
+      IMPORTING
+        !iv_transport TYPE trkorr
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize_abap
@@ -105,15 +107,14 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
   METHOD deserialize_proxy.
 
-    DATA: lv_transport    TYPE e070use-ordernum,
+    DATA: lv_transport    TYPE trkorr,
           li_proxy_object TYPE REF TO if_px_main,
           lv_name         TYPE prx_r3name,
           lx_proxy_fault  TYPE REF TO cx_proxy_fault.
 
-    lv_transport = zcl_abapgit_default_transport=>get_instance(
-                                               )->get( )-ordernum.
-
     lv_name = ms_item-obj_name.
+
+    lv_transport = iv_transport.
 
     TRY.
         li_proxy_object = cl_pxn_factory=>create(
@@ -251,7 +252,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     IF ls_vseointerf-clsproxy = abap_true.
       " Proxy interfaces are managed via SPRX
-      deserialize_proxy( ).
+      deserialize_proxy( iv_transport ).
       RETURN.
     ENDIF.
 
