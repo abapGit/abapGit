@@ -8,6 +8,25 @@ Legend
 + : added
 - : removed
 
+2022-01-03 v1.114.0
+-------------------
++ AIFC object support
++ Add user exit for adjusting display of filenames
++ Add user exit for serialize postprocess
+! Refactoring: Prioritization/sequence of deserialization
+! Performance optimiziation, parallel mode
+* Commit page, option to hide author fields
+* Fix vimium links
+* Fix "remove" button for data tables
+* Webgui fixes
+* Downport clipboard_export
+* DDLX/SMTG: Raise exception
+* Always use active version for DOCU CL
+* Requirements dependency check
+* W3xx avoid diffs of parameters
+* Repo View, improive view with folders
+* Adjust usage of transport in object classes
+
 2021-11-26 v1.113.0
 -------------------
 ! SRVB serialization changes
