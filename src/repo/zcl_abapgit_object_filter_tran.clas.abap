@@ -1,10 +1,10 @@
-CLASS zcl_abapgit_repo_pre_filter_tr DEFINITION
+CLASS zcl_abapgit_object_filter_tran DEFINITION
   PUBLIC
   CREATE PUBLIC.
 
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_repo_pre_filter.
+    INTERFACES zif_abapgit_object_filter.
 
     TYPES ty_trrngtrkor_tt TYPE RANGE OF trkorr.
     TYPES: BEGIN OF ty_e071_filter,
@@ -59,7 +59,7 @@ CLASS zcl_abapgit_repo_pre_filter_tr DEFINITION
         VALUE(rt_filter) TYPE zif_abapgit_definitions=>ty_tadir_tt.
 ENDCLASS.
 
-CLASS zcl_abapgit_repo_pre_filter_tr IMPLEMENTATION.
+CLASS zcl_abapgit_object_filter_tran IMPLEMENTATION.
 
 
   METHOD generate_local_filter.
@@ -84,7 +84,7 @@ CLASS zcl_abapgit_repo_pre_filter_tr IMPLEMENTATION.
     ev_package = mv_package.
   ENDMETHOD.
 
-  METHOD zif_abapgit_repo_pre_filter~get_filter.
+  METHOD zif_abapgit_object_filter~get_filter.
     rt_filter = mt_filter.
   ENDMETHOD.
 

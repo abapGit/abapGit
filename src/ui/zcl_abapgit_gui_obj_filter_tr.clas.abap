@@ -1,4 +1,4 @@
-CLASS zcl_abapgit_gui_pre_filter_tr DEFINITION
+CLASS zcl_abapgit_gui_obj_filter_tr DEFINITION
   PUBLIC
   FINAL
   CREATE PUBLIC .
@@ -6,7 +6,7 @@ CLASS zcl_abapgit_gui_pre_filter_tr DEFINITION
   PUBLIC SECTION.
 
     CLASS-METHODS get_transports
-      RETURNING VALUE(rt_r_trkorr) TYPE zcl_abapgit_repo_pre_filter_tr=>ty_trrngtrkor_tt
+      RETURNING VALUE(rt_r_trkorr) TYPE zcl_abapgit_object_filter_tran=>ty_trrngtrkor_tt
       RAISING
                 zcx_abapgit_exception.
 
@@ -16,12 +16,12 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_pre_filter_tr IMPLEMENTATION.
+CLASS zcl_abapgit_gui_obj_filter_tr IMPLEMENTATION.
 
   METHOD get_transports.
     DATA ls_selection  TYPE trwbo_selection.
 
-    DATA ls_r_trkorr TYPE LINE OF zcl_abapgit_repo_pre_filter_tr=>ty_trrngtrkor_tt.
+    DATA ls_r_trkorr TYPE LINE OF zcl_abapgit_object_filter_tran=>ty_trrngtrkor_tt.
     DATA lr_request TYPE REF TO trwbo_request_header.
     DATA lt_request TYPE trwbo_request_headers.
 

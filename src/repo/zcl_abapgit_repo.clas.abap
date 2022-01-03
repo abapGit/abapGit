@@ -34,7 +34,7 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS get_files_local
       IMPORTING
         !ii_log         TYPE REF TO zif_abapgit_log OPTIONAL
-        !ii_pre_filter  TYPE REF TO zif_abapgit_repo_pre_filter OPTIONAL
+        !ii_obj_filter  TYPE REF TO zif_abapgit_object_filter OPTIONAL
       RETURNING
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
@@ -44,7 +44,7 @@ CLASS zcl_abapgit_repo DEFINITION
         VALUE(rt_checksums) TYPE zif_abapgit_definitions=>ty_file_signatures_tt .
     METHODS get_files_remote
       IMPORTING
-        ii_pre_filter   TYPE REF TO zif_abapgit_repo_pre_filter OPTIONAL
+        ii_obj_filter   TYPE REF TO zif_abapgit_object_filter OPTIONAL
       RETURNING
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
       RAISING
@@ -502,8 +502,8 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
         io_dot_abapgit    = get_dot_abapgit( )
         is_local_settings = get_local_settings( ).
 
-    IF ii_pre_filter IS NOT INITIAL.
-      lt_filter = ii_pre_filter->get_filter( ).
+    IF ii_obj_filter IS NOT INITIAL.
+      lt_filter = ii_obj_filter->get_filter( ).
     ENDIF.
 
     rt_files = lo_serialize->files_local(
@@ -523,11 +523,11 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     DATA lr_filter TYPE REF TO zcl_abapgit_repo_filter.
 
     rt_files = mt_remote.
-    IF ii_pre_filter IS NOT INITIAL.
-      lt_filter = ii_pre_filter->get_filter( ).
+    IF ii_obj_filter IS NOT INITIAL.
+      lt_filter = ii_obj_filter->get_filter( ).
 
       CREATE OBJECT lr_filter.
-      lr_filter->apply_file_filter(
+      lr_filter->apply_object_filter(
         EXPORTING
           it_filter   = lt_filter
           io_dot      = get_dot_abapgit( )
