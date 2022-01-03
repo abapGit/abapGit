@@ -134,7 +134,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
   METHOD get_files_remote.
     fetch_remote( ).
-    rt_files = super->get_files_remote( ii_pre_filter ).
+    rt_files = super->get_files_remote( ii_obj_filter ).
   ENDMETHOD.
 
 

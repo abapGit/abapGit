@@ -1,4 +1,4 @@
-INTERFACE zif_abapgit_repo_pre_filter
+INTERFACE zif_abapgit_object_filter
   PUBLIC .
 
   METHODS get_filter

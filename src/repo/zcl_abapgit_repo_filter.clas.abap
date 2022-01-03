@@ -10,7 +10,7 @@ CLASS zcl_abapgit_repo_filter DEFINITION
       CHANGING
         ct_tadir  TYPE zif_abapgit_definitions=>ty_tadir_tt .
 
-    METHODS apply_file_filter
+    METHODS apply_object_filter
       IMPORTING
         it_filter   TYPE zif_abapgit_definitions=>ty_tadir_tt
         io_dot      TYPE REF TO zcl_abapgit_dot_abapgit OPTIONAL
@@ -109,7 +109,7 @@ CLASS zcl_abapgit_repo_filter IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
-  METHOD apply_file_filter.
+  METHOD apply_object_filter.
     DATA lr_file TYPE REF TO  zif_abapgit_definitions=>ty_file.
     DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
     DATA ls_tadir TYPE zif_abapgit_definitions=>ty_tadir.
