@@ -248,6 +248,7 @@ CLASS ltcl_prio_deserialization DEFINITION FINAL FOR TESTING
       mo_objects          TYPE REF TO zcl_abapgit_file_deserialize,
       mt_input            TYPE zif_abapgit_definitions=>ty_results_tt,
       mt_output           TYPE zif_abapgit_definitions=>ty_results_tt,
+      mv_counter          TYPE i,
       mv_exp_output_tabix TYPE i.
 
 ENDCLASS.
@@ -387,17 +388,24 @@ CLASS ltcl_prio_deserialization IMPLEMENTATION.
 
   METHOD given.
 
-    DATA: ls_input LIKE LINE OF mt_input.
-
+    DATA ls_input LIKE LINE OF mt_input.
     ls_input-obj_type = iv_object_type.
+    ls_input-obj_name = mv_counter.
     INSERT ls_input INTO TABLE mt_input.
+    mv_counter = mv_counter + 1.
 
   ENDMETHOD.
 
 
   METHOD when_deser_is_priorized.
 
-    mt_output = mo_objects->prioritize_deser( mt_input ).
+    DATA lo_log TYPE REF TO zcl_abapgit_log.
+
+    CREATE OBJECT lo_log.
+
+    mt_output = mo_objects->prioritize_deser(
+      ii_log     = lo_log
+      it_results = mt_input ).
 
   ENDMETHOD.
 
