@@ -8,12 +8,6 @@
     <WWWPARAMS>
      <RELID>MI</RELID>
      <OBJID>ZABAPGIT_CSS_COMMON</OBJID>
-     <NAME>mimetype</NAME>
-     <VALUE>text/css</VALUE>
-    </WWWPARAMS>
-    <WWWPARAMS>
-     <RELID>MI</RELID>
-     <OBJID>ZABAPGIT_CSS_COMMON</OBJID>
      <NAME>fileextension</NAME>
      <VALUE>.css</VALUE>
     </WWWPARAMS>
@@ -22,6 +16,12 @@
      <OBJID>ZABAPGIT_CSS_COMMON</OBJID>
      <NAME>filename</NAME>
      <VALUE>common.css</VALUE>
+    </WWWPARAMS>
+    <WWWPARAMS>
+     <RELID>MI</RELID>
+     <OBJID>ZABAPGIT_CSS_COMMON</OBJID>
+     <NAME>mimetype</NAME>
+     <VALUE>text/css</VALUE>
     </WWWPARAMS>
    </PARAMS>
   </asx:values>
