@@ -319,6 +319,12 @@ CLASS ZCL_ABAPGIT_OBJECT_TOBJ IMPLEMENTATION.
 
     ls_tobj = read_extra( ls_objh-objectname ).
 
+    IF ls_tobj-tvdir-detail = ``.
+      " to prevent xslt serialization error,
+      " force clear if numc field is empty
+      CLEAR ls_tobj-tvdir-detail.
+    ENDIF.
+
     io_xml->add( iv_name = 'TOBJ'
                  ig_data = ls_tobj ).
 
