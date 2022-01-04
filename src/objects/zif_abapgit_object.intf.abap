@@ -50,7 +50,7 @@ INTERFACE zif_abapgit_object
       zcx_abapgit_exception .
   METHODS changed_by
     RETURNING
-      VALUE(rv_user) TYPE xubname
+      VALUE(rv_user) TYPE syuname
     RAISING
       zcx_abapgit_exception .
   METHODS jump

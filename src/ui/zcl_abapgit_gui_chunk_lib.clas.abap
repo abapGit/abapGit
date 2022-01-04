@@ -141,7 +141,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS render_user_name
       IMPORTING
-        !iv_username       TYPE xubname
+        !iv_username       TYPE syuname
         !iv_interactive    TYPE abap_bool DEFAULT abap_true
         !iv_icon_only      TYPE abap_bool DEFAULT abap_false
         !iv_suppress_title TYPE abap_bool DEFAULT abap_false
