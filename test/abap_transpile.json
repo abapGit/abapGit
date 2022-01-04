@@ -225,10 +225,10 @@
       {"object": "ZCL_ABAPGIT_INJECTOR", "class": "ltcl_simple_dependency_inject", "method": "simple_injection"},
 
       {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "validate3", "note": "assert failed"},
-      {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "normalize", "note": "Void type: TIMESTAMPL"},
-      {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "exit_clean", "note": "Void type: TIMESTAMPL"},
-      {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "exit_dirty_confirm", "note": "Void type: TIMESTAMPL"},
-      {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "exit_dirty_cancel", "note": "Void type: TIMESTAMPL"},
+      {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "normalize", "note": "assert failed"},
+      {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "exit_clean", "note": "todo, eq TABLE"},
+      {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "exit_dirty_confirm", "note": "todo, eq TABLE"},
+      {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "exit_dirty_cancel", "note": "todo, eq TABLE"},
 
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "ddls_before_dcls", "note": "hmm, something with promises?"},
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "webi_before_sprx", "note": "hmm, something with promises?"},
@@ -246,7 +246,7 @@
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "enho_before_enhc", "note": "hmm, something with promises?"},
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "xslt_before_clas_and_prog", "note": "hmm, something with promises?"},
 
-      {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "ignore", "note": "Void type: DLVUNIT"},
+      {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "ignore", "note": "Void type: DLVUNIT, TDEVC"},
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "identity"},
 
       {"object": "ZCL_ABAPGIT_OBJECT_FILTER_TRAN", "class": "ltcl_adjust_filter", "method": "adjust_local_filter_r3tr_clas", "note": "?"},
