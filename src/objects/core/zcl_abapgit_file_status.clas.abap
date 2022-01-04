@@ -762,7 +762,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
     DATA lt_remote TYPE zif_abapgit_definitions=>ty_files_tt.
     DATA li_exit TYPE REF TO zif_abapgit_exit.
 
-    lt_local = io_repo->get_files_local( ii_log ).
+    lt_local = io_repo->get_files_local( ii_log = ii_log ).
 
     IF lines( lt_local ) <= 2.
       " Less equal two means that we have only the .abapgit.xml and the package in

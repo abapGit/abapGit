@@ -13,12 +13,12 @@
     "zcl_abapgit_dot_abapgit",
     "zcl_abapgit_exit",
     "zcl_abapgit_factory",
+    "zcl_abapgit_file_deserialize",
     "zcl_abapgit_frontend_services",
     "zcl_abapgit_git*",
     "zcl_abapgit_gui*",
     "zcl_abapgit_hash",
     "zcl_abapgit_html*",
-    "zcl_abapgit_file_deserialize",
     "zcl_abapgit_http*",
     "zcl_abapgit_injector",
     "zcl_abapgit_log.clas",
@@ -43,6 +43,7 @@
     "zcl_abapgit_settings",
     "zcl_abapgit_string_map",
     "zcl_abapgit_syntax_*",
+    "zcl_abapgit_tadir",
     "zcl_abapgit_time",
     "zcl_abapgit_ui*",
     "zcl_abapgit_url",
@@ -91,7 +92,6 @@
     "addCommonJS": true,
     "unknownTypes": "runtimeError",
     "skip": [
-      {"object": "ZCL_ABAPGIT_INTEGRATION_GIT", "class": "ltcl_test", "method": "test01",    "note": "started failing at #1775"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_direct_text"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_no_text"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_get_t100_longtext", "method": "test01"},
@@ -179,20 +179,20 @@
       {"object": "ZCL_ABAPGIT_DATA_DESERIALIZER", "class": "ltcl_test", "method": "test1"},
       {"object": "ZCL_ABAPGIT_DATA_SERIALIZER", "class": "ltcl_test", "method": "serialize"},
 
-      {"object": "ZCL_ABAPGIT_REPO", "class": "ltcl_find_remote_dot_abapgit", "method": "positive"},
+      {"object": "ZCL_ABAPGIT_REPO", "class": "ltcl_find_remote_dot_abapgit", "method": "positive", "note": "Void type: XUBNAME"},
       {"object": "ZCL_ABAPGIT_REPO", "class": "ltcl_find_remote_dot_abapgit", "method": "new_repo_needs_no_dot_abapgit"},
 
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff01", "note": "Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff02", "note": "Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff03", "note": "Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff04", "note": "Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff05", "note": "Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff06", "note": "Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff07", "note": "Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff08", "note": "Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff09", "note": "Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff10", "note": "Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff11", "note": "Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff01", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff02", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff03", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff04", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff05", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff06", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff07", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff08", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff09", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff10", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff11", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
 
       {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_renderable", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
       {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_event_handler", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
@@ -208,7 +208,6 @@
       {"object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR", "class": "ltcl_html_processor_test", "method": "process_with_preserve"},
       {"object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR", "class": "ltcl_html_processor_test", "method": "process_no_css"},
       {"object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR", "class": "ltcl_html_processor_test", "method": "process_fails"},
-      {"object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR", "class": "ltcl_html_processor_test", "method": "find_head_closing_tag"},
 
       {"object": "ZCL_ABAPGIT_XML", "class": "ltcl_xml", "method": "space_leading_trailing"},
       {"object": "ZCL_ABAPGIT_XML", "class": "ltcl_xml", "method": "bad_xml_raises_exc"},
@@ -218,8 +217,7 @@
       {"object": "ZCL_ABAPGIT_XML_INPUT", "class": "ltcl_xml", "method": "empty"},
       {"object": "ZCL_ABAPGIT_XML_INPUT", "class": "ltcl_xml", "method": "down"},
 
-      {"object": "ZCL_ABAPGIT_GIT_TRANSPORT", "class": "ltcl_git_transport", "method": "flush_error"},
-      {"object": "ZCL_ABAPGIT_GIT_COMMIT", "class": "ltcl_test", "method": "parse_commits"},
+      {"object": "ZCL_ABAPGIT_GIT_COMMIT", "class": "ltcl_test", "method": "parse_commits", "note": "fix method check_author_regex first"},
       {"object": "ZCL_ABAPGIT_GIT_COMMIT", "class": "ltcl_test", "method": "check_author_regex"},
       {"object": "ZCL_ABAPGIT_GIT_URL", "class": "ltcl_repo_online", "method": "test_repo_commit_show_urls"},
 
@@ -257,7 +255,11 @@
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "xslt_before_clas_and_prog", "note": "hmm, something with promises?"},
 
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "ignore", "note": "Void type: DLVUNIT"},
-      {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "identity"}
+      {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "identity"},
+      
+      {"object": "ZCL_ABAPGIT_OBJECT_FILTER_TRAN", "class": "ltcl_adjust_filter", "method": "adjust_local_filter_r3tr_clas", "note": "?"},
+      {"object": "ZCL_ABAPGIT_OBJECT_FILTER_TRAN", "class": "ltcl_adjust_filter", "method": "adjust_local_filter_limu_fm", "note": "?"},
+      {"object": "ZCL_ABAPGIT_OBJECT_FILTER_TRAN", "class": "ltcl_adjust_filter", "method": "adjust_local_filter_limu_meth", "note": "?"}      
     ]
   }
 }
