@@ -218,20 +218,13 @@
       {"object": "ZCL_ABAPGIT_XML_INPUT", "class": "ltcl_xml", "method": "down"},
 
       {"object": "ZCL_ABAPGIT_GIT_COMMIT", "class": "ltcl_test", "method": "parse_commits", "note": "fix method check_author_regex first"},
-      {"object": "ZCL_ABAPGIT_GIT_COMMIT", "class": "ltcl_test", "method": "check_author_regex"},
+      {"object": "ZCL_ABAPGIT_GIT_COMMIT", "class": "ltcl_test", "method": "check_author_regex", "note": "https://github.com/abaplint/transpiler/pull/577"},
       {"object": "ZCL_ABAPGIT_GIT_URL", "class": "ltcl_repo_online", "method": "test_repo_commit_show_urls"},
-
-      {"object": "ZCL_ABAPGIT_USER_RECORD", "class": "ltcl_user_record", "method": "test_invalid_user", "note": "Void type: BAPIADDR3"},
-
-      {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "raise_error_if_package_exists", "note": "Void type: SCOMPKDTLN"},
-      {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_given_in_popup", "note": "Void type: SCOMPKDTLN"},
-      {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_not_created_when_canc", "note": "Void type: SCOMPKDTLN"},
-      {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_created_when_confirm", "note": "Void type: SCOMPKDTLN"},
 
       {"object": "ZCL_ABAPGIT_INJECTOR", "class": "ltcl_no_dependency_injection", "method": "no_injection"},
       {"object": "ZCL_ABAPGIT_INJECTOR", "class": "ltcl_simple_dependency_inject", "method": "simple_injection"},
 
-      {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "validate", "note": "Void type: TIMESTAMPL"},
+      {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "sdf validate", "note": "Void type: TIMESTAMPL"},
       {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "normalize", "note": "Void type: TIMESTAMPL"},
       {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "is_empty", "note": "Void type: TIMESTAMPL"},
       {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "exit_clean", "note": "Void type: TIMESTAMPL"},
@@ -256,10 +249,17 @@
 
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "ignore", "note": "Void type: DLVUNIT"},
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "identity"},
-      
+
       {"object": "ZCL_ABAPGIT_OBJECT_FILTER_TRAN", "class": "ltcl_adjust_filter", "method": "adjust_local_filter_r3tr_clas", "note": "?"},
       {"object": "ZCL_ABAPGIT_OBJECT_FILTER_TRAN", "class": "ltcl_adjust_filter", "method": "adjust_local_filter_limu_fm", "note": "?"},
-      {"object": "ZCL_ABAPGIT_OBJECT_FILTER_TRAN", "class": "ltcl_adjust_filter", "method": "adjust_local_filter_limu_meth", "note": "?"}      
+      {"object": "ZCL_ABAPGIT_OBJECT_FILTER_TRAN", "class": "ltcl_adjust_filter", "method": "adjust_local_filter_limu_meth", "note": "?"},
+
+
+      {"object": "ZCL_ABAPGIT_USER_RECORD", "class": "ltcl_user_record", "method": "test_invalid_user", "note": "Void type: BAPIADDR3"},
+      {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "raise_error_if_package_exists", "note": "Void type: SCOMPKDTLN"},
+      {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_given_in_popup", "note": "Void type: SCOMPKDTLN"},
+      {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_not_created_when_canc", "note": "Void type: SCOMPKDTLN"},
+      {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_created_when_confirm", "note": "Void type: SCOMPKDTLN"}
     ]
   }
 }
