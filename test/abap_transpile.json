@@ -116,11 +116,6 @@
       {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_extract_author_data", "method": "extract_author_data9"},
       {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_is_binary", "method": "image_is_binary",          "note": "REGEX '[^[:print:]]'"},
 
-      {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_git_user",   "note": "skip, this changes database"},
-      {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_repo_show",  "note": "skip, this changes database"},
-      {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_settings",   "note": "skip, this changes database"},
-      {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_repo_login", "note": "skip, this changes database"},
-
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_condensed", "note": "field sorting is wrong, probably sorted internal tables needed"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_indented"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "array_index",     "note": "uses secondary index array_index?"},
@@ -164,15 +159,15 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_abap_to_json", "method": "set_array"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_abap_to_json", "method": "set_complex_obj"},
 
-      {"object": "ZCL_ABAPGIT_UI_INJECTOR", "class": "ltcl_no_dependency_injection", "method": "no_injection"},
-      {"object": "ZCL_ABAPGIT_UI_INJECTOR", "class": "ltcl_simple_dependency_inject", "method": "simple_injection"},
+      {"object": "ZCL_ABAPGIT_UI_INJECTOR", "class": "ltcl_no_dependency_injection", "method": "no_injection", "note": "RTTI?"},
+      {"object": "ZCL_ABAPGIT_UI_INJECTOR", "class": "ltcl_simple_dependency_inject", "method": "simple_injection", "note": "RTTI?"},
 
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_camel_case", "method": "to_abap", "note": "secondary key fields? READ WITH KEY, Path not found @/FieldData"},
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_camel_case", "method": "to_json"},
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_camel_case", "method": "to_json_first_lower"},
 
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_fields", "method": "to_json"},
-      {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_fields", "method": "to_abap"},
+      {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_fields", "method": "to_abap", "note": "RTTI describe_by_data_ref() todo"},
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_to_lower", "method": "to_json"},
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_to_upper", "method": "to_json"},
 
@@ -241,6 +236,10 @@
 
 
 
+      {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_git_user",   "note": "skip, this changes database"},
+      {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_repo_show",  "note": "skip, this changes database"},
+      {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_settings",   "note": "skip, this changes database"},
+      {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_repo_login", "note": "skip, this changes database"},
       {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff01", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
       {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff02", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
       {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff03", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
