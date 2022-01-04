@@ -224,9 +224,8 @@
       {"object": "ZCL_ABAPGIT_INJECTOR", "class": "ltcl_no_dependency_injection", "method": "no_injection"},
       {"object": "ZCL_ABAPGIT_INJECTOR", "class": "ltcl_simple_dependency_inject", "method": "simple_injection"},
 
-      {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "validate", "note": "Void type: TIMESTAMPL"},
+      {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "validate3", "note": "assert failed"},
       {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "normalize", "note": "Void type: TIMESTAMPL"},
-      {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "is_empty", "note": "Void type: TIMESTAMPL"},
       {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "exit_clean", "note": "Void type: TIMESTAMPL"},
       {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "exit_dirty_confirm", "note": "Void type: TIMESTAMPL"},
       {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "exit_dirty_cancel", "note": "Void type: TIMESTAMPL"},
