@@ -182,18 +182,6 @@
       {"object": "ZCL_ABAPGIT_REPO", "class": "ltcl_find_remote_dot_abapgit", "method": "positive", "note": "Void type: XUBNAME"},
       {"object": "ZCL_ABAPGIT_REPO", "class": "ltcl_find_remote_dot_abapgit", "method": "new_repo_needs_no_dot_abapgit"},
 
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff01", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff02", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff03", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff04", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff05", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff06", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff07", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff08", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff09", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff10", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff11", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-
       {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_renderable", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
       {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_event_handler", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
 
@@ -254,6 +242,18 @@
       {"object": "ZCL_ABAPGIT_OBJECT_FILTER_TRAN", "class": "ltcl_adjust_filter", "method": "adjust_local_filter_limu_meth", "note": "?"},
 
 
+
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff01", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff02", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff03", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff04", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff05", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff06", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff07", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff08", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff09", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff10", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff11", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
       {"object": "ZCL_ABAPGIT_USER_RECORD", "class": "ltcl_user_record", "method": "test_invalid_user", "note": "Void type: BAPIADDR3"},
       {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "raise_error_if_package_exists", "note": "Void type: SCOMPKDTLN"},
       {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_given_in_popup", "note": "Void type: SCOMPKDTLN"},
