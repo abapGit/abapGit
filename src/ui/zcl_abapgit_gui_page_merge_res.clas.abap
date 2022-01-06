@@ -29,7 +29,7 @@ CLASS zcl_abapgit_gui_page_merge_res DEFINITION
         rstate     TYPE char1,
         fstate     TYPE char1, " FILE state - Abstraction for shorter ifs
         o_diff     TYPE REF TO zcl_abapgit_diff,
-        changed_by TYPE xubname,
+        changed_by TYPE syuname,
         type       TYPE string,
       END OF ty_file_diff .
 

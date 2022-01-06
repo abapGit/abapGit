@@ -17,7 +17,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         rstate     TYPE c LENGTH 1,
         fstate     TYPE c LENGTH 1, " FILE state - Abstraction for shorter ifs
         o_diff     TYPE REF TO zcl_abapgit_diff,
-        changed_by TYPE xubname,
+        changed_by TYPE syuname,
         type       TYPE string,
       END OF ty_file_diff.
     TYPES:

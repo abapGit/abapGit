@@ -309,7 +309,7 @@ INTERFACE zif_abapgit_definitions
       lstate     TYPE ty_item_state,
       rstate     TYPE ty_item_state,
       files      TYPE ty_repo_file_tt,
-      changed_by TYPE xubname,
+      changed_by TYPE syuname,
       packmove   TYPE abap_bool,
     END OF ty_repo_item .
   TYPES:
