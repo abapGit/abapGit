@@ -8,8 +8,8 @@ CLASS zcl_abapgit_requirement_helper DEFINITION
     TYPES:
       BEGIN OF ty_requirement_status,
         met               TYPE abap_bool,
-        component         TYPE dlvunit,
-        description       TYPE cvers_sdu-desc_text,
+        component         TYPE tdevc-dlvunit,
+        description       TYPE string,
         installed_release TYPE saprelease,
         installed_patch   TYPE sappatchlv,
         required_release  TYPE saprelease,
