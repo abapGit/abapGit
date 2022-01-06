@@ -141,7 +141,7 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_tab_hashed", "note": "runtime error, SortByLengthZero"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "arrays"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "root_assignment"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "get_timestamp", "note": "Void type: TIMESTAMPL"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_reader_test", "method": "get_timestamp", "note": "cl_abap_tstmp->move(), https://github.com/open-abap/open-abap/issues/223"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_parser_test", "method": "parse_error"},
 
@@ -163,15 +163,12 @@
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_camel_case", "method": "to_json_first_lower"},
 
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_fields", "method": "to_json"},
-      {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_fields", "method": "to_abap", "note": "RTTI describe_by_data_ref() todo"},
+      {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_fields", "method": "to_abap", "note": "RTTI describe_by_data_ref() todo, https://github.com/open-abap/open-abap/issues/224"},
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_to_lower", "method": "to_json"},
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_to_upper", "method": "to_json"},
 
       {"object": "ZCL_ABAPGIT_DATA_DESERIALIZER", "class": "ltcl_test", "method": "test1"},
-      {"object": "ZCL_ABAPGIT_DATA_SERIALIZER", "class": "ltcl_test", "method": "serialize", "note": "RTTI describe_by_name() todo"},
-
-      {"object": "ZCL_ABAPGIT_REPO", "class": "ltcl_find_remote_dot_abapgit", "method": "positive", "note": "Void type: XUBNAME"},
-      {"object": "ZCL_ABAPGIT_REPO", "class": "ltcl_find_remote_dot_abapgit", "method": "new_repo_needs_no_dot_abapgit", "note": "Void type: XUBNAME"},
+      {"object": "ZCL_ABAPGIT_DATA_SERIALIZER", "class": "ltcl_test", "method": "serialize", "note": "RTTI describe_by_name() todo, https://github.com/open-abap/open-abap/issues/225"},
 
       {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_renderable", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
       {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_event_handler", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
@@ -223,7 +220,8 @@
 
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "ignore", "note": "Void type: SAPRELEASE"},
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "identity", "note": "Void type: SAPRELEASE"},
-
+      {"object": "ZCL_ABAPGIT_REPO", "class": "ltcl_find_remote_dot_abapgit", "method": "positive", "note": "Void type: SAPRELEASE"},
+      {"object": "ZCL_ABAPGIT_REPO", "class": "ltcl_find_remote_dot_abapgit", "method": "new_repo_needs_no_dot_abapgit", "note": "Void type: SAPRELEASE"},
 
 
       {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_git_user",   "note": "skip, this changes database"},
