@@ -947,8 +947,18 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         lv_link = build_dir_jump_link( is_item-path ).
         ri_html->add( |<td class="dir" colspan="2">{ lv_link }</td>| ).
       ELSE.
+        IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
+          lv_link = zcl_abapgit_html_action_utils=>jump_encode(
+            iv_obj_type = 'CLAS'
+            iv_obj_name = |ZCL_ABAPGIT_OBJECT_{ is_item-obj_type }| ).
+          lv_link = ri_html->a(
+            iv_txt = |{ is_item-obj_type }|
+            iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_link }| ).
+        ELSE.
+          lv_link = is_item-obj_type.
+        ENDIF.
+        ri_html->add( |<td class="type">{ lv_link }</td>| ).
         lv_link = build_obj_jump_link( is_item ).
-        ri_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
         ri_html->add( |<td class="object">{ lv_link } { build_inactive_object_code( is_item ) }</td>| ).
       ENDIF.
     ENDIF.
