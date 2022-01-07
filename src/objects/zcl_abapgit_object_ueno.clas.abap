@@ -618,7 +618,7 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
       iv_tcode   = 'SD11'
       it_bdcdata = lt_bdcdata ).
 
-   ENDMETHOD.
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
