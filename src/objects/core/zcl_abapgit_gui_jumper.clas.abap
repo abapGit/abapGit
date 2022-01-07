@@ -179,4 +179,31 @@ CLASS zcl_abapgit_gui_jumper IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_jumper~jump_batch_input.
+
+    DATA lv_msg TYPE c LENGTH 80.
+
+    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
+      STARTING NEW TASK 'GIT'
+      EXPORTING
+        tcode                 = iv_tcode
+        mode_val              = 'E'
+      TABLES
+        using_tab             = it_bdcdata
+      EXCEPTIONS
+        system_failure        = 1 MESSAGE lv_msg
+        communication_failure = 2 MESSAGE lv_msg
+        resource_failure      = 3
+        OTHERS                = 4.
+
+    CASE sy-subrc.
+      WHEN 1 OR 2.
+        zcx_abapgit_exception=>raise( |Batch input error for transaction { iv_tcode }: { lv_msg }| ).
+      WHEN 3 OR 4.
+        zcx_abapgit_exception=>raise( |Batch input error for transaction { iv_tcode }| ).
+    ENDCASE.
+
+  ENDMETHOD.
 ENDCLASS.
