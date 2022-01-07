@@ -116,11 +116,9 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
           ls_diff_block-start = sy-tabix.
         ENDIF.
         ls_diff_block-len = ls_diff_block-len + 1.
-      ELSE.
-        IF ls_diff_block-start IS NOT INITIAL.
-          APPEND ls_diff_block TO lt_diff_block.
-          CLEAR ls_diff_block.
-        ENDIF.
+      ELSEIF ls_diff_block-start IS NOT INITIAL.
+        APPEND ls_diff_block TO lt_diff_block.
+        CLEAR ls_diff_block.
       ENDIF.
     ENDLOOP.
 
@@ -130,11 +128,14 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
       DO ls_diff_block-len TIMES.
         lv_block_begin = ls_diff_block-start + sy-index - 1.
         READ TABLE mt_diff ASSIGNING <ls_diff_begin> INDEX lv_block_begin.
-        ASSERT sy-subrc = 0.
+        IF sy-subrc <> 0.
+          EXIT.
+        ENDIF.
         lv_block_end = ls_diff_block-start + ls_diff_block-len + sy-index - 1.
         READ TABLE mt_diff ASSIGNING <ls_diff_end> INDEX lv_block_end.
-        ASSERT sy-subrc = 0.
-
+        IF sy-subrc <> 0.
+          EXIT.
+        ENDIF.
         IF <ls_diff_begin>-new = <ls_diff_end>-new.
           <ls_diff_begin>-old_num = <ls_diff_end>-old_num.
           <ls_diff_begin>-old     = <ls_diff_end>-old.
