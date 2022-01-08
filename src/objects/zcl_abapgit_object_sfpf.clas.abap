@@ -236,15 +236,15 @@ CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
         ENDIF.
 
         IF zif_abapgit_object~exists( ) = abap_true.
-        TRY.
-            CALL METHOD cl_fp_wb_form=>('DELETE')
-              EXPORTING
-                i_name     = lv_name
-                i_ordernum = iv_transport
-                i_dark     = abap_true. " > 740
-          CATCH cx_sy_dyn_call_error.
-            cl_fp_wb_form=>delete( lv_name ).
-        ENDTRY.
+          TRY.
+              CALL METHOD cl_fp_wb_form=>('DELETE')
+                EXPORTING
+                  i_name     = lv_name
+                  i_ordernum = iv_transport
+                  i_dark     = abap_true. " > 740
+            CATCH cx_sy_dyn_call_error.
+              cl_fp_wb_form=>delete( lv_name ).
+          ENDTRY.
         ENDIF.
 
         tadir_insert( iv_package ).
