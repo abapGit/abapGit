@@ -193,20 +193,20 @@ CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_name    TYPE fpname,
-          lo_wb_form TYPE REF TO cl_fp_wb_form,
-          lv_corrnum TYPE e070use-ordernum.
-
-
-    lo_wb_form ?= load( ).
+    DATA: lv_name TYPE fpname.
 
     lv_name = ms_item-obj_name.
-    lv_corrnum = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
 
     TRY.
-        lo_wb_form->delete( i_name = lv_name
-                            i_ordernum = lv_corrnum
-                            i_dark = 'X' ).
+        TRY.
+            CALL METHOD cl_fp_wb_form=>('DELETE')
+              EXPORTING
+                i_name     = lv_name
+                i_ordernum = iv_transport
+                i_dark     = abap_true. " > 740
+          CATCH cx_sy_dyn_call_error.
+            cl_fp_wb_form=>delete( lv_name ).
+        ENDTRY.
       CATCH cx_fp_api.
         zcx_abapgit_exception=>raise( 'SFPI error, delete' ).
     ENDTRY.
@@ -221,14 +221,11 @@ CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
           lv_name      TYPE fpname,
           li_wb_object TYPE REF TO if_fp_wb_form,
           li_form      TYPE REF TO if_fp_form,
-          lx_fp_err    TYPE REF TO cx_fp_api,
-          lv_corrnum   TYPE e070use-ordernum.
+          lx_fp_err    TYPE REF TO cx_fp_api.
 
 
     lv_name = ms_item-obj_name.
     lv_xstr = cl_ixml_80_20=>render_to_xstring( io_xml->get_raw( ) ).
-
-    lv_corrnum = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
 
     TRY.
         li_form = cl_fp_helper=>convert_xstring_to_form( lv_xstr ).
@@ -239,16 +236,33 @@ CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
         ENDIF.
 
         IF zif_abapgit_object~exists( ) = abap_true.
-          cl_fp_wb_form=>delete( i_name = lv_name
-                                 i_ordernum = lv_corrnum
-                                 i_dark = 'X' ).
+        TRY.
+            CALL METHOD cl_fp_wb_form=>('DELETE')
+              EXPORTING
+                i_name     = lv_name
+                i_ordernum = iv_transport
+                i_dark     = abap_true. " > 740
+          CATCH cx_sy_dyn_call_error.
+            cl_fp_wb_form=>delete( lv_name ).
+        ENDTRY.
         ENDIF.
 
         tadir_insert( iv_package ).
-        li_wb_object = cl_fp_wb_form=>create( i_name = lv_name
-                                              i_form = li_form
-                                              i_ordernum = lv_corrnum
-                                              i_dark = 'X' ).
+
+        TRY.
+            CALL METHOD cl_fp_wb_form=>('CREATE')
+              EXPORTING
+                i_name     = lv_name
+                i_form     = li_form
+                i_ordernum = iv_transport
+                i_dark     = abap_true " > 740
+              RECEIVING
+                r_wb_form  = li_wb_object.
+          CATCH cx_sy_dyn_call_error.
+            li_wb_object = cl_fp_wb_form=>create( i_name = lv_name
+                                                  i_form = li_form ).
+        ENDTRY.
+
         li_wb_object->save( ).
         li_wb_object->free( ).
       CATCH cx_fp_api INTO lx_fp_err.

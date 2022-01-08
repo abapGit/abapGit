@@ -109,13 +109,13 @@ CLASS zcl_abapgit_object_enho IMPLEMENTATION.
     DATA: lv_enh_id     TYPE enhname,
           li_enh_object TYPE REF TO if_enh_object,
           lx_enh_root   TYPE REF TO cx_enh_root,
-          lv_corrnum    TYPE e070use-ordernum.
+          lv_corrnum    TYPE trkorr.
 
     IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
     ENDIF.
 
-    lv_corrnum = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
+    lv_corrnum = iv_transport.
 
     lv_enh_id = ms_item-obj_name.
     TRY.
@@ -127,7 +127,7 @@ CLASS zcl_abapgit_object_enho IMPLEMENTATION.
             nevertheless_delete = abap_true
             run_dark            = abap_true
           CHANGING
-            trkorr = lv_corrnum ).
+            trkorr              = lv_corrnum ).
         li_enh_object->unlock( ).
       CATCH cx_enh_root INTO lx_enh_root.
         zcx_abapgit_exception=>raise_with_text( lx_enh_root ).
