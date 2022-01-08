@@ -586,7 +586,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     super->constructor( ).
 
     TRY.
-       lo_persistence_user = zcl_abapgit_persistence_user=>get_instance( ).
+        lo_persistence_user = zcl_abapgit_persistence_user=>get_instance( ).
 
         mv_key = iv_key.
         mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).

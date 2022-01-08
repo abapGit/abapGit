@@ -141,7 +141,7 @@ INTERFACE zif_abapgit_persist_user
       VALUE(rv_order_descending) TYPE abap_bool
     RAISING
       zcx_abapgit_exception.
-  METHODS get_diff_First
+  METHODS get_diff_first
     RETURNING
       VALUE(rv_diff_first) TYPE abap_bool
     RAISING
