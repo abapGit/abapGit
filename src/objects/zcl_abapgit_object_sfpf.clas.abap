@@ -205,7 +205,9 @@ CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
                 i_ordernum = iv_transport
                 i_dark     = abap_true. " > 740
           CATCH cx_sy_dyn_call_error.
-            cl_fp_wb_form=>delete( lv_name ).
+            cl_fp_wb_form=>delete(
+              i_name     = lv_name
+              i_ordernum = iv_transport ).
         ENDTRY.
       CATCH cx_fp_api.
         zcx_abapgit_exception=>raise( 'SFPI error, delete' ).
@@ -243,7 +245,9 @@ CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
                   i_ordernum = iv_transport
                   i_dark     = abap_true. " > 740
             CATCH cx_sy_dyn_call_error.
-              cl_fp_wb_form=>delete( lv_name ).
+              cl_fp_wb_form=>delete(
+                i_name     = lv_name
+                i_ordernum = iv_transport ).
           ENDTRY.
         ENDIF.
 
@@ -259,8 +263,10 @@ CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
               RECEIVING
                 r_wb_form  = li_wb_object.
           CATCH cx_sy_dyn_call_error.
-            li_wb_object = cl_fp_wb_form=>create( i_name = lv_name
-                                                  i_form = li_form ).
+            li_wb_object = cl_fp_wb_form=>create(
+              i_name     = lv_name
+              i_form     = li_form
+              i_ordernum = iv_transport ).
         ENDTRY.
 
         li_wb_object->save( ).
