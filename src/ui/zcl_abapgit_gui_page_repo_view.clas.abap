@@ -174,6 +174,9 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception.
+    METHODS order_files
+      CHANGING
+        ct_files TYPE zif_abapgit_definitions=>ty_repo_file_tt.
 
 ENDCLASS.
 
@@ -233,12 +236,23 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       INSERT ls_sort INTO TABLE lt_sort.
     ENDIF.
 
+    IF mv_order_by = 'PATH'.
+      ls_sort-name = 'OBJ_NAME'.
+      INSERT ls_sort INTO TABLE lt_sort.
+    ENDIF.
+
     SORT lt_code_items STABLE BY (lt_sort).
     SORT lt_diff_items STABLE BY (lt_sort).
 
     INSERT LINES OF lt_non_code_and_metadata_items INTO TABLE ct_repo_items.
     INSERT LINES OF lt_diff_items INTO TABLE ct_repo_items.
     INSERT LINES OF lt_code_items INTO TABLE ct_repo_items.
+
+    IF mv_order_by = 'PATH'.
+      LOOP AT ct_repo_items ASSIGNING <ls_repo_item>.
+        order_files( CHANGING ct_files = <ls_repo_item>-files ).
+      ENDLOOP.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -1319,4 +1333,29 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
+
+  METHOD order_files.
+
+    DATA:
+      lt_sort TYPE abap_sortorder_tab,
+      ls_sort LIKE LINE OF lt_sort.
+
+    IF lines( ct_files ) = 0.
+      RETURN.
+    ENDIF.
+
+    ls_sort-descending = mv_order_descending.
+    ls_sort-astext     = abap_true.
+    ls_sort-name       = 'PATH'.
+    INSERT ls_sort INTO TABLE lt_sort.
+
+    ls_sort-descending = mv_order_descending.
+    ls_sort-astext     = abap_true.
+    ls_sort-name       = 'FILENAME'.
+    INSERT ls_sort INTO TABLE lt_sort.
+
+    SORT ct_files STABLE BY (lt_sort).
+
+  ENDMETHOD.
+
 ENDCLASS.
