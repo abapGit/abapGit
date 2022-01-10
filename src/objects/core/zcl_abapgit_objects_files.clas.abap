@@ -245,19 +245,15 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
 
   METHOD is_json_metadata.
 
-    DATA lv_regex TYPE string.
+    DATA lv_pattern TYPE string.
 
     FIELD-SYMBOLS <ls_file> LIKE LINE OF mt_files.
 
-    lv_regex = '^[^\.]+\.' && to_lower( ms_item-obj_type ) && '\.json$'.
+    lv_pattern = |*.{ to_lower( ms_item-obj_type ) }.json|.
 
-    LOOP AT mt_files ASSIGNING <ls_file>.
-      FIND REGEX lv_regex IN  <ls_file>-filename.
-      IF sy-subrc = 0.
-        " Object contains ABAP file format
-        rv_result = abap_true.
-        EXIT.
-      ENDIF.
+    LOOP AT mt_files ASSIGNING <ls_file> WHERE filename CP lv_pattern.
+      rv_result = abap_true.
+      EXIT.
     ENDLOOP.
 
   ENDMETHOD.
