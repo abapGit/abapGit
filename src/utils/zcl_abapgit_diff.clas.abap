@@ -111,7 +111,8 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
 
     " Determine start and length of diff blocks
     LOOP AT mt_diff ASSIGNING <ls_diff>.
-      IF <ls_diff>-result = zif_abapgit_definitions=>c_diff-insert.
+      IF <ls_diff>-result = zif_abapgit_definitions=>c_diff-insert OR
+         <ls_diff>-result = zif_abapgit_definitions=>c_diff-delete.
         IF ls_diff_block IS INITIAL.
           ls_diff_block-start = sy-tabix.
         ENDIF.
@@ -136,14 +137,28 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
         IF sy-subrc <> 0.
           EXIT.
         ENDIF.
-        IF <ls_diff_begin>-new = <ls_diff_end>-new.
-          <ls_diff_begin>-old_num = <ls_diff_end>-old_num.
-          <ls_diff_begin>-old     = <ls_diff_end>-old.
-          <ls_diff_end>-result    = <ls_diff_begin>-result.
-          CLEAR: <ls_diff_begin>-result, <ls_diff_end>-old_num, <ls_diff_end>-old.
-        ELSE.
-          EXIT.
-        ENDIF.
+        CASE <ls_diff_begin>-result.
+          WHEN zif_abapgit_definitions=>c_diff-insert.
+            IF <ls_diff_begin>-new = <ls_diff_end>-new.
+              <ls_diff_begin>-old_num = <ls_diff_end>-old_num.
+              <ls_diff_begin>-old     = <ls_diff_end>-old.
+              <ls_diff_end>-result    = <ls_diff_begin>-result.
+              CLEAR: <ls_diff_begin>-result, <ls_diff_end>-old_num, <ls_diff_end>-old.
+            ELSE.
+              EXIT.
+            ENDIF.
+          WHEN zif_abapgit_definitions=>c_diff-delete.
+            IF <ls_diff_begin>-old = <ls_diff_end>-old.
+              <ls_diff_begin>-new_num = <ls_diff_end>-new_num.
+              <ls_diff_begin>-new     = <ls_diff_end>-new.
+              <ls_diff_end>-result    = <ls_diff_begin>-result.
+              CLEAR: <ls_diff_begin>-result, <ls_diff_end>-new_num, <ls_diff_end>-new.
+            ELSE.
+              EXIT.
+            ENDIF.
+          WHEN OTHERS.
+            EXIT.
+        ENDCASE.
       ENDDO.
     ENDLOOP.
 
