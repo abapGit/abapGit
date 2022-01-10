@@ -676,7 +676,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
           IF iv_order_descending = abap_true.
             lv_tmp = lv_tmp && ri_html->a(
               iv_txt   = lv_disp_name
-              iv_act   = |{ zif_abapgit_definitions=>c_action-direction }?direction=ASCENDING|
+              iv_act   = |{ zif_abapgit_definitions=>c_action-change_order_by }|
               iv_title = <ls_col>-title ).
           ELSE.
             lv_tmp = lv_tmp && ri_html->a(
