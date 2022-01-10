@@ -6,14 +6,15 @@ CLASS zcl_abapgit_ajson_utilities DEFINITION
 
     METHODS diff
       IMPORTING
-        !iv_json_a TYPE string OPTIONAL
-        !iv_json_b TYPE string OPTIONAL
-        !io_json_a TYPE REF TO zif_abapgit_ajson OPTIONAL
-        !io_json_b TYPE REF TO zif_abapgit_ajson OPTIONAL
+        !iv_json_a            TYPE string OPTIONAL
+        !iv_json_b            TYPE string OPTIONAL
+        !io_json_a            TYPE REF TO zif_abapgit_ajson OPTIONAL
+        !io_json_b            TYPE REF TO zif_abapgit_ajson OPTIONAL
+        !iv_keep_empty_arrays TYPE abap_bool DEFAULT abap_false
       EXPORTING
-        !eo_insert TYPE REF TO zif_abapgit_ajson
-        !eo_delete TYPE REF TO zif_abapgit_ajson
-        !eo_change TYPE REF TO zif_abapgit_ajson
+        !eo_insert            TYPE REF TO zif_abapgit_ajson
+        !eo_delete            TYPE REF TO zif_abapgit_ajson
+        !eo_change            TYPE REF TO zif_abapgit_ajson
       RAISING
         zcx_abapgit_ajson_error .
     METHODS sort
@@ -34,6 +35,14 @@ CLASS zcl_abapgit_ajson_utilities DEFINITION
     DATA mo_delete TYPE REF TO zif_abapgit_ajson .
     DATA mo_change TYPE REF TO zif_abapgit_ajson .
 
+    METHODS normalize_input
+      IMPORTING
+        !iv_json       TYPE string OPTIONAL
+        !io_json       TYPE REF TO zif_abapgit_ajson OPTIONAL
+      RETURNING
+        VALUE(ro_json) TYPE REF TO zif_abapgit_ajson
+      RAISING
+        zcx_abapgit_ajson_error .
     METHODS diff_a_b
       IMPORTING
         !iv_path TYPE string
@@ -46,7 +55,8 @@ CLASS zcl_abapgit_ajson_utilities DEFINITION
         zcx_abapgit_ajson_error .
     METHODS delete_empty_nodes
       IMPORTING
-        !io_json TYPE REF TO zif_abapgit_ajson
+        !io_json              TYPE REF TO zif_abapgit_ajson
+        !iv_keep_empty_arrays TYPE abap_bool
       RAISING
         zcx_abapgit_ajson_error .
 ENDCLASS.
@@ -59,16 +69,22 @@ CLASS zcl_abapgit_ajson_utilities IMPLEMENTATION.
   METHOD delete_empty_nodes.
 
     DATA ls_json_tree LIKE LINE OF io_json->mt_json_tree.
-    DATA lv_subrc TYPE sy-subrc.
+    DATA lv_done TYPE abap_bool.
 
     DO.
-      LOOP AT io_json->mt_json_tree INTO ls_json_tree
-        WHERE type = 'array' AND children = 0.
+      lv_done = abap_true.
 
-        io_json->delete( ls_json_tree-path && ls_json_tree-name ).
+      IF iv_keep_empty_arrays = abap_false.
+        LOOP AT io_json->mt_json_tree INTO ls_json_tree
+          WHERE type = 'array' AND children = 0.
 
-      ENDLOOP.
-      lv_subrc = sy-subrc.
+          io_json->delete( ls_json_tree-path && ls_json_tree-name ).
+
+        ENDLOOP.
+        IF sy-subrc = 0.
+          lv_done = abap_false.
+        ENDIF.
+      ENDIF.
 
       LOOP AT io_json->mt_json_tree INTO ls_json_tree
         WHERE type = 'object' AND children = 0.
@@ -76,7 +92,11 @@ CLASS zcl_abapgit_ajson_utilities IMPLEMENTATION.
         io_json->delete( ls_json_tree-path && ls_json_tree-name ).
 
       ENDLOOP.
-      IF lv_subrc = 4 AND sy-subrc = 4.
+      IF sy-subrc = 0.
+        lv_done = abap_false.
+      ENDIF.
+
+      IF lv_done = abap_true.
         EXIT. " nothing else to delete
       ENDIF.
     ENDDO.
@@ -86,28 +106,13 @@ CLASS zcl_abapgit_ajson_utilities IMPLEMENTATION.
 
   METHOD diff.
 
-    IF boolc( iv_json_a IS SUPPLIED ) = boolc( io_json_a IS SUPPLIED ).
-      zcx_abapgit_ajson_error=>raise( 'Either supply JSON string or instance, but not both' ).
-    ENDIF.
-    IF boolc( iv_json_b IS SUPPLIED ) = boolc( io_json_b IS SUPPLIED ).
-      zcx_abapgit_ajson_error=>raise( 'Either supply JSON string or instance, but not both' ).
-    ENDIF.
+    mo_json_a = normalize_input(
+      iv_json = iv_json_a
+      io_json = io_json_a ).
 
-    IF iv_json_a IS SUPPLIED.
-      mo_json_a = zcl_abapgit_ajson=>parse( iv_json_a ).
-    ELSEIF io_json_a IS BOUND.
-      mo_json_a = io_json_a.
-    ELSE.
-      zcx_abapgit_ajson_error=>raise( 'Supply either JSON string or instance' ).
-    ENDIF.
-
-    IF iv_json_b IS SUPPLIED.
-      mo_json_b = zcl_abapgit_ajson=>parse( iv_json_b ).
-    ELSEIF io_json_a IS BOUND.
-      mo_json_b = io_json_b.
-    ELSE.
-      zcx_abapgit_ajson_error=>raise( 'Supply either JSON string or instance' ).
-    ENDIF.
+    mo_json_b = normalize_input(
+      iv_json = iv_json_b
+      io_json = io_json_b ).
 
     mo_insert = zcl_abapgit_ajson=>create_empty( ).
     mo_delete = zcl_abapgit_ajson=>create_empty( ).
@@ -120,9 +125,15 @@ CLASS zcl_abapgit_ajson_utilities IMPLEMENTATION.
     eo_delete ?= mo_delete.
     eo_change ?= mo_change.
 
-    delete_empty_nodes( eo_insert ).
-    delete_empty_nodes( eo_delete ).
-    delete_empty_nodes( eo_change ).
+    delete_empty_nodes(
+      io_json              = eo_insert
+      iv_keep_empty_arrays = iv_keep_empty_arrays ).
+    delete_empty_nodes(
+      io_json              = eo_delete
+      iv_keep_empty_arrays = iv_keep_empty_arrays ).
+    delete_empty_nodes(
+      io_json              = eo_change
+      iv_keep_empty_arrays = iv_keep_empty_arrays ).
 
   ENDMETHOD.
 
@@ -243,21 +254,30 @@ CLASS zcl_abapgit_ajson_utilities IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD normalize_input.
+
+    IF boolc( iv_json IS INITIAL ) = boolc( io_json IS INITIAL ).
+      zcx_abapgit_ajson_error=>raise( 'Either supply JSON string or instance, but not both' ).
+    ENDIF.
+
+    IF iv_json IS NOT INITIAL.
+      ro_json = zcl_abapgit_ajson=>parse( iv_json ).
+    ELSEIF io_json IS NOT INITIAL.
+      ro_json = io_json.
+    ELSE.
+      zcx_abapgit_ajson_error=>raise( 'Supply either JSON string or instance' ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD sort.
 
     DATA lo_json TYPE REF TO zif_abapgit_ajson.
 
-    IF boolc( iv_json IS SUPPLIED ) = boolc( io_json IS SUPPLIED ).
-      zcx_abapgit_ajson_error=>raise( 'Either supply JSON string or instance, but not both' ).
-    ENDIF.
-
-    IF iv_json IS SUPPLIED.
-      lo_json = zcl_abapgit_ajson=>parse( iv_json ).
-    ELSEIF io_json IS BOUND.
-      lo_json = io_json.
-    ELSE.
-      zcx_abapgit_ajson_error=>raise( 'Supply either JSON string or instance' ).
-    ENDIF.
+    lo_json = normalize_input(
+      iv_json = iv_json
+      io_json = io_json ).
 
     " Nodes are parsed into a sorted table, so no explicit sorting required
     rv_sorted = lo_json->stringify( 2 ).

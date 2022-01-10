@@ -33,7 +33,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
     TYPES:
       BEGIN OF ty_changed_by,
         item TYPE zif_abapgit_definitions=>ty_item,
-        name TYPE xubname,
+        name TYPE syuname,
       END OF ty_changed_by .
     TYPES:
       ty_changed_by_tt TYPE SORTED TABLE OF ty_changed_by WITH UNIQUE KEY item .
@@ -72,7 +72,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         !is_file       TYPE zif_abapgit_definitions=>ty_file
         !is_item       TYPE zif_abapgit_definitions=>ty_item OPTIONAL
         !is_status     TYPE zif_abapgit_definitions=>ty_result
-        !iv_changed_by TYPE xubname OPTIONAL
+        !iv_changed_by TYPE syuname OPTIONAL
         !iv_transport  TYPE trkorr OPTIONAL
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html

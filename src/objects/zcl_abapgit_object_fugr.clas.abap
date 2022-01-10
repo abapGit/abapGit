@@ -983,7 +983,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
   METHOD zif_abapgit_object~changed_by.
 
     TYPES: BEGIN OF ty_stamps,
-             user TYPE xubname,
+             user TYPE syuname,
              date TYPE d,
              time TYPE t,
            END OF ty_stamps.

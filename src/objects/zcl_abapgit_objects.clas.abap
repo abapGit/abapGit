@@ -57,7 +57,7 @@ CLASS zcl_abapgit_objects DEFINITION
       IMPORTING
         !is_item       TYPE zif_abapgit_definitions=>ty_item
       RETURNING
-        VALUE(rv_user) TYPE xubname .
+        VALUE(rv_user) TYPE syuname .
     CLASS-METHODS is_supported
       IMPORTING
         !is_item        TYPE zif_abapgit_definitions=>ty_item

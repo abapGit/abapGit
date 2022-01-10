@@ -417,19 +417,9 @@ CLASS zcl_abapgit_object_w3xx_super IMPLEMENTATION.
     ls_bdcdata-fval = '=ONLI'.
     APPEND ls_bdcdata TO lt_bdcdata.
 
-    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
-      STARTING NEW TASK 'GIT'
-      EXPORTING
-        tcode     = 'SMW0'
-        mode_val  = 'E'
-      TABLES
-        using_tab = lt_bdcdata
-      EXCEPTIONS
-        OTHERS    = 1.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, SE35' ).
-    ENDIF.
+    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+      iv_tcode   = 'SMW0'
+      it_bdcdata = lt_bdcdata ).
 
   ENDMETHOD.
 

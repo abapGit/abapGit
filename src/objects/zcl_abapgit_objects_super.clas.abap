@@ -5,7 +5,7 @@ CLASS zcl_abapgit_objects_super DEFINITION
 
   PUBLIC SECTION.
 
-    CONSTANTS c_user_unknown TYPE xubname VALUE 'UNKNOWN'.
+    CONSTANTS c_user_unknown TYPE syuname VALUE 'UNKNOWN'.
 
     METHODS constructor
       IMPORTING
