@@ -1,7 +1,6 @@
 CLASS zcl_abapgit_ajson_utilities DEFINITION
   PUBLIC
   CREATE PUBLIC .
-
   PUBLIC SECTION.
 
     METHODS diff
