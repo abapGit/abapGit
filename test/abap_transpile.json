@@ -92,731 +92,158 @@
     "addCommonJS": true,
     "unknownTypes": "runtimeError",
     "skip": [
-      {
-        "object": "ZCX_ABAPGIT_EXCEPTION",
-        "class": "ltcl_test",
-        "method": "test_direct_text"
-      },
-      {
-        "object": "ZCX_ABAPGIT_EXCEPTION",
-        "class": "ltcl_test",
-        "method": "test_no_text"
-      },
-      {
-        "object": "ZCX_ABAPGIT_EXCEPTION",
-        "class": "ltcl_get_t100_longtext",
-        "method": "test01"
-      },
-      {
-        "object": "ZCX_ABAPGIT_EXCEPTION",
-        "class": "ltcl_split_text",
-        "method": "test_set_msg_b"
-      },
-      {
-        "object": "ZCX_ABAPGIT_EXCEPTION",
-        "class": "ltcl_split_text",
-        "method": "test_set_msg_c"
-      },
-      {
-        "object": "ZCX_ABAPGIT_EXCEPTION",
-        "class": "ltcl_split_text",
-        "method": "test_set_msg_d"
-      },
-      {
-        "object": "ZCX_ABAPGIT_EXCEPTION",
-        "class": "ltcl_split_text",
-        "method": "test_set_msg_e"
-      },
-      {
-        "object": "ZCX_ABAPGIT_EXCEPTION",
-        "class": "ltcl_split_text",
-        "method": "test_set_msg_z"
-      },
-      {
-        "object": "ZCL_ABAPGIT_HTML",
-        "class": "ltcl_html",
-        "method": "style1",
-        "note": "ASSERT failed, ??"
-      },
-      {
-        "object": "ZCL_ABAPGIT_XML_PRETTY",
-        "class": "ltcl_test",
-        "method": "pretty1",
-        "note": "ASSERT failed, ??"
-      },
-      {
-        "object": "ZCL_ABAPGIT_XML_PRETTY",
-        "class": "ltcl_test",
-        "method": "pretty2"
-      },
-      {
-        "object": "ZCL_ABAPGIT_XML_PRETTY",
-        "class": "ltcl_test",
-        "method": "pretty3"
-      },
-      {
-        "object": "ZCL_ABAPGIT_XML_PRETTY",
-        "class": "ltcl_test",
-        "method": "malformatted",
-        "note": "infinite loop"
-      },
-      {
-        "object": "ZCL_ABAPGIT_XML_PRETTY",
-        "class": "ltcl_test",
-        "method": "dont_ignore_error",
-        "note": "infinite loop"
-      },
-      {
-        "object": "ZCL_ABAPGIT_XML_PRETTY",
-        "class": "ltcl_test",
-        "method": "unpretty"
-      },
-      {
-        "object": "ZCL_ABAPGIT_ZLIB",
-        "class": "ltcl_zlib",
-        "method": "dynamic"
-      },
-      {
-        "object": "ZCL_ABAPGIT_ZLIB",
-        "class": "ltcl_zlib",
-        "method": "fixed"
-      },
-      {
-        "object": "ZCL_ABAPGIT_GIT_ADD_PATCH",
-        "class": "ltcl_calculate_patch",
-        "method": "multiple_non_adjacent_delete"
-      },
-      {
-        "object": "ZCL_ABAPGIT_GIT_ADD_PATCH",
-        "class": "ltcl_calculate_patch",
-        "method": "multiple_partial_delete"
-      },
-      {
-        "object": "ZCL_ABAPGIT_UTILS",
-        "class": "ltcl_is_binary",
-        "method": "image_is_binary",
-        "note": "REGEX '[^[:print:]]'"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_serializer_test",
-        "method": "stringify_condensed",
-        "note": "field sorting is wrong, probably sorted internal tables needed"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_serializer_test",
-        "method": "stringify_indented"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_serializer_test",
-        "method": "array_index",
-        "note": "uses secondary index array_index?"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_serializer_test",
-        "method": "item_order",
-        "note": "uses secondary index item_order?"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_serializer_test",
-        "method": "simple_indented",
-        "note": "??"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_serializer_test",
-        "method": "escape",
-        "note": "ASSERT failed, ??"
-      },
-      {
-        "object": "ZCL_ABAPGIT_DATA_CONFIG",
-        "class": "ltcl_test",
-        "method": "to_json"
-      },
-      {
-        "object": "ZCL_ABAPGIT_DATA_CONFIG",
-        "class": "ltcl_test",
-        "method": "from_json"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_json_to_abap",
-        "method": "find_loc",
-        "note": "assert failed"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_json_to_abap",
-        "method": "to_abap_negative"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_json_to_abap",
-        "method": "to_abap_struc"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_json_to_abap",
-        "method": "to_abap_hashed_plain_tab"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_json_to_abap",
-        "method": "to_abap_sorted_tab"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_json_to_abap",
-        "method": "to_abap_hashed_tab"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON_UTILITIES",
-        "class": "ltcl_json_utils",
-        "method": "json_diff_arrays"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_json_to_abap",
-        "method": "to_abap_w_plain_tab"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_json_to_abap",
-        "method": "to_abap_w_tab_of_struc"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_json_to_abap",
-        "method": "to_abap_array_of_arrays"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_json_to_abap",
-        "method": "to_abap_value"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_json_to_abap",
-        "method": "to_abap_array"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_writer_test",
-        "method": "set_obj"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_writer_test",
-        "method": "set_ajson"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_writer_test",
-        "method": "set_tab"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_writer_test",
-        "method": "set_tab_hashed",
-        "note": "runtime error, SortByLengthZero"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_writer_test",
-        "method": "arrays"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_writer_test",
-        "method": "root_assignment"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_parser_test",
-        "method": "parse_error"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_integrated",
-        "method": "reader",
-        "note": "keyword? Path not found @/false"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_integrated",
-        "method": "array_index",
-        "note": "Index not found in table @/10"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_integrated",
-        "method": "array_simple",
-        "note": "Index not found in table @/10"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_integrated",
-        "method": "item_order_integrated"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_integrated",
-        "method": "stringify"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_abap_to_json",
-        "method": "set_obj"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_abap_to_json",
-        "method": "set_array"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON",
-        "class": "ltcl_abap_to_json",
-        "method": "set_complex_obj"
-      },
-      {
-        "object": "ZCL_ABAPGIT_UI_INJECTOR",
-        "class": "ltcl_no_dependency_injection",
-        "method": "no_injection",
-        "note": "RTTI?"
-      },
-      {
-        "object": "ZCL_ABAPGIT_UI_INJECTOR",
-        "class": "ltcl_simple_dependency_inject",
-        "method": "simple_injection",
-        "note": "RTTI?"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON_MAPPING",
-        "class": "ltcl_camel_case",
-        "method": "to_abap",
-        "note": "secondary key fields? READ WITH KEY, Path not found @/FieldData"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON_MAPPING",
-        "class": "ltcl_camel_case",
-        "method": "to_json"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON_MAPPING",
-        "class": "ltcl_camel_case",
-        "method": "to_json_first_lower"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON_MAPPING",
-        "class": "ltcl_fields",
-        "method": "to_json"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON_MAPPING",
-        "class": "ltcl_fields",
-        "method": "to_abap",
-        "note": "RTTI describe_by_data_ref() todo, https://github.com/open-abap/open-abap/issues/224"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON_MAPPING",
-        "class": "ltcl_to_lower",
-        "method": "to_json"
-      },
-      {
-        "object": "ZCL_ABAPGIT_AJSON_MAPPING",
-        "class": "ltcl_to_upper",
-        "method": "to_json"
-      },
-      {
-        "object": "ZCL_ABAPGIT_DATA_DESERIALIZER",
-        "class": "ltcl_test",
-        "method": "test1"
-      },
-      {
-        "object": "ZCL_ABAPGIT_DATA_SERIALIZER",
-        "class": "ltcl_test",
-        "method": "serialize",
-        "note": "RTTI describe_by_name() todo, https://github.com/open-abap/open-abap/issues/225"
-      },
-      {
-        "object": "ZCL_ABAPGIT_GUI_UTILS",
-        "class": "ltcl_gui_utils",
-        "method": "is_renderable",
-        "note": "casting, https://github.com/abaplint/transpiler/issues/465"
-      },
-      {
-        "object": "ZCL_ABAPGIT_GUI_UTILS",
-        "class": "ltcl_gui_utils",
-        "method": "is_event_handler",
-        "note": "casting, https://github.com/abaplint/transpiler/issues/465"
-      },
-      {
-        "object": "ZCL_ABAPGIT_GUI_ASSET_MANAGER",
-        "class": "ltcl_abapgit_gui_asset_manager",
-        "method": "get_mime_asset",
-        "note": "failed to load GUI asset: css/common.css"
-      },
-      {
-        "object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR",
-        "class": "ltcl_single_file",
-        "method": "test_simple_variables",
-        "note": "table keys? Cannot read property 'get' of undefined in CS"
-      },
-      {
-        "object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR",
-        "class": "ltcl_single_file",
-        "method": "test_complex_variables"
-      },
-      {
-        "object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR",
-        "class": "ltcl_single_file",
-        "method": "test_overwrite",
-        "note": "MODIFY FROM with table unique key not working"
-      },
-      {
-        "object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR",
-        "class": "ltcl_multiple_files",
-        "method": "test_overwrite"
-      },
-      {
-        "object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR",
-        "class": "ltcl_html_processor_test",
-        "method": "process_typical"
-      },
-      {
-        "object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR",
-        "class": "ltcl_html_processor_test",
-        "method": "process_with_preserve"
-      },
-      {
-        "object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR",
-        "class": "ltcl_html_processor_test",
-        "method": "process_no_css"
-      },
-      {
-        "object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR",
-        "class": "ltcl_html_processor_test",
-        "method": "process_fails"
-      },
-      {
-        "object": "ZCL_ABAPGIT_XML",
-        "class": "ltcl_xml",
-        "method": "space_leading_trailing",
-        "note": "todo in if_ixml_document$find_from_path, https://github.com/open-abap/open-abap/issues/226"
-      },
-      {
-        "object": "ZCL_ABAPGIT_XML",
-        "class": "ltcl_xml",
-        "method": "bad_xml_raises_exc"
-      },
-      {
-        "object": "ZCL_ABAPGIT_XML_OUTPUT",
-        "class": "ltcl_xml_output",
-        "method": "render_xml_string"
-      },
-      {
-        "object": "ZCL_ABAPGIT_XML_OUTPUT",
-        "class": "ltcl_xml_output",
-        "method": "add_simple_object"
-      },
-      {
-        "object": "ZCL_ABAPGIT_XML_INPUT",
-        "class": "ltcl_xml",
-        "method": "up"
-      },
-      {
-        "object": "ZCL_ABAPGIT_XML_INPUT",
-        "class": "ltcl_xml",
-        "method": "empty"
-      },
-      {
-        "object": "ZCL_ABAPGIT_XML_INPUT",
-        "class": "ltcl_xml",
-        "method": "down"
-      },
-      {
-        "object": "ZCL_ABAPGIT_GIT_URL",
-        "class": "ltcl_repo_online",
-        "method": "test_repo_commit_show_urls"
-      },
-      {
-        "object": "ZCL_ABAPGIT_INJECTOR",
-        "class": "ltcl_no_dependency_injection",
-        "method": "no_injection"
-      },
-      {
-        "object": "ZCL_ABAPGIT_INJECTOR",
-        "class": "ltcl_simple_dependency_inject",
-        "method": "simple_injection"
-      },
-      {
-        "object": "ZCL_ABAPGIT_HTML_FORM_UTILS",
-        "class": "ltcl_test_form",
-        "method": "validate3",
-        "note": "assert failed"
-      },
-      {
-        "object": "ZCL_ABAPGIT_HTML_FORM_UTILS",
-        "class": "ltcl_test_form",
-        "method": "normalize",
-        "note": "assert failed"
-      },
-      {
-        "object": "ZCL_ABAPGIT_HTML_FORM_UTILS",
-        "class": "ltcl_test_form",
-        "method": "exit_clean",
-        "note": "todo, eq TABLE"
-      },
-      {
-        "object": "ZCL_ABAPGIT_HTML_FORM_UTILS",
-        "class": "ltcl_test_form",
-        "method": "exit_dirty_confirm",
-        "note": "todo, eq TABLE"
-      },
-      {
-        "object": "ZCL_ABAPGIT_HTML_FORM_UTILS",
-        "class": "ltcl_test_form",
-        "method": "exit_dirty_cancel",
-        "note": "todo, eq TABLE"
-      },
-      {
-        "object": "ZCL_ABAPGIT_FILE_DESERIALIZE",
-        "class": "ltcl_prio_deserialization",
-        "method": "ddls_before_dcls",
-        "note": "hmm, something with promises?"
-      },
-      {
-        "object": "ZCL_ABAPGIT_FILE_DESERIALIZE",
-        "class": "ltcl_prio_deserialization",
-        "method": "webi_before_sprx",
-        "note": "hmm, something with promises?"
-      },
-      {
-        "object": "ZCL_ABAPGIT_FILE_DESERIALIZE",
-        "class": "ltcl_prio_deserialization",
-        "method": "iasp_before_isrp",
-        "note": "hmm, something with promises?"
-      },
-      {
-        "object": "ZCL_ABAPGIT_FILE_DESERIALIZE",
-        "class": "ltcl_prio_deserialization",
-        "method": "iobj_before_odso",
-        "note": "hmm, something with promises?"
-      },
-      {
-        "object": "ZCL_ABAPGIT_FILE_DESERIALIZE",
-        "class": "ltcl_prio_deserialization",
-        "method": "tobj_before_scp1",
-        "note": "hmm, something with promises?"
-      },
-      {
-        "object": "ZCL_ABAPGIT_FILE_DESERIALIZE",
-        "class": "ltcl_prio_deserialization",
-        "method": "otgr_before_char",
-        "note": "hmm, something with promises?"
-      },
-      {
-        "object": "ZCL_ABAPGIT_FILE_DESERIALIZE",
-        "class": "ltcl_prio_deserialization",
-        "method": "sprx_before_clas",
-        "note": "hmm, something with promises?"
-      },
-      {
-        "object": "ZCL_ABAPGIT_FILE_DESERIALIZE",
-        "class": "ltcl_prio_deserialization",
-        "method": "sprx_before_intf",
-        "note": "hmm, something with promises?"
-      },
-      {
-        "object": "ZCL_ABAPGIT_FILE_DESERIALIZE",
-        "class": "ltcl_prio_deserialization",
-        "method": "sprx_before_tabl",
-        "note": "hmm, something with promises?"
-      },
-      {
-        "object": "ZCL_ABAPGIT_FILE_DESERIALIZE",
-        "class": "ltcl_prio_deserialization",
-        "method": "pinf_before_devc",
-        "note": "hmm, something with promises?"
-      },
-      {
-        "object": "ZCL_ABAPGIT_FILE_DESERIALIZE",
-        "class": "ltcl_prio_deserialization",
-        "method": "clas_before_pinf",
-        "note": "hmm, something with promises?"
-      },
-      {
-        "object": "ZCL_ABAPGIT_FILE_DESERIALIZE",
-        "class": "ltcl_prio_deserialization",
-        "method": "enhs_before_ensc",
-        "note": "hmm, something with promises?"
-      },
-      {
-        "object": "ZCL_ABAPGIT_FILE_DESERIALIZE",
-        "class": "ltcl_prio_deserialization",
-        "method": "ensc_before_enho",
-        "note": "hmm, something with promises?"
-      },
-      {
-        "object": "ZCL_ABAPGIT_FILE_DESERIALIZE",
-        "class": "ltcl_prio_deserialization",
-        "method": "enho_before_enhc",
-        "note": "hmm, something with promises?"
-      },
-      {
-        "object": "ZCL_ABAPGIT_FILE_DESERIALIZE",
-        "class": "ltcl_prio_deserialization",
-        "method": "xslt_before_clas_and_prog",
-        "note": "hmm, something with promises?"
-      },
-      {
-        "object": "ZCL_ABAPGIT_DOT_ABAPGIT",
-        "class": "ltcl_dot_abapgit",
-        "method": "ignore",
-        "note": "Void type: SAPRELEASE"
-      },
-      {
-        "object": "ZCL_ABAPGIT_DOT_ABAPGIT",
-        "class": "ltcl_dot_abapgit",
-        "method": "identity",
-        "note": "Void type: SAPRELEASE"
-      },
-      {
-        "object": "ZCL_ABAPGIT_REPO",
-        "class": "ltcl_find_remote_dot_abapgit",
-        "method": "positive",
-        "note": "Void type: SAPRELEASE"
-      },
-      {
-        "object": "ZCL_ABAPGIT_REPO",
-        "class": "ltcl_find_remote_dot_abapgit",
-        "method": "new_repo_needs_no_dot_abapgit",
-        "note": "Void type: SAPRELEASE"
-      },
-      {
-        "object": "ZCL_ABAPGIT_PERSISTENCE_USER",
-        "class": "ltcl_user",
-        "method": "set_get_git_user",
-        "note": "skip, this changes database"
-      },
-      {
-        "object": "ZCL_ABAPGIT_PERSISTENCE_USER",
-        "class": "ltcl_user",
-        "method": "set_get_repo_show",
-        "note": "skip, this changes database"
-      },
-      {
-        "object": "ZCL_ABAPGIT_PERSISTENCE_USER",
-        "class": "ltcl_user",
-        "method": "set_get_settings",
-        "note": "skip, this changes database"
-      },
-      {
-        "object": "ZCL_ABAPGIT_PERSISTENCE_USER",
-        "class": "ltcl_user",
-        "method": "set_get_repo_login",
-        "note": "skip, this changes database"
-      },
-      {
-        "object": "ZCL_ABAPGIT_DIFF",
-        "class": "ltcl_diff",
-        "method": "diff01",
-        "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"
-      },
-      {
-        "object": "ZCL_ABAPGIT_DIFF",
-        "class": "ltcl_diff",
-        "method": "diff02",
-        "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"
-      },
-      {
-        "object": "ZCL_ABAPGIT_DIFF",
-        "class": "ltcl_diff",
-        "method": "diff03",
-        "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"
-      },
-      {
-        "object": "ZCL_ABAPGIT_DIFF",
-        "class": "ltcl_diff",
-        "method": "diff04",
-        "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"
-      },
-      {
-        "object": "ZCL_ABAPGIT_DIFF",
-        "class": "ltcl_diff",
-        "method": "diff05",
-        "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"
-      },
-      {
-        "object": "ZCL_ABAPGIT_DIFF",
-        "class": "ltcl_diff",
-        "method": "diff06",
-        "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"
-      },
-      {
-        "object": "ZCL_ABAPGIT_DIFF",
-        "class": "ltcl_diff",
-        "method": "diff07",
-        "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"
-      },
-      {
-        "object": "ZCL_ABAPGIT_DIFF",
-        "class": "ltcl_diff",
-        "method": "diff08",
-        "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"
-      },
-      {
-        "object": "ZCL_ABAPGIT_DIFF",
-        "class": "ltcl_diff",
-        "method": "diff09",
-        "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"
-      },
-      {
-        "object": "ZCL_ABAPGIT_DIFF",
-        "class": "ltcl_diff",
-        "method": "diff10",
-        "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"
-      },
-      {
-        "object": "ZCL_ABAPGIT_DIFF",
-        "class": "ltcl_diff",
-        "method": "diff11",
-        "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"
-      },
-      {
-        "object": "ZCL_ABAPGIT_USER_RECORD",
-        "class": "ltcl_user_record",
-        "method": "test_invalid_user",
-        "note": "Void type: BAPIADDR3"
-      },
-      {
-        "object": "ZCL_ABAPGIT_SERVICES_BASIS",
-        "class": "ltcl_create_package",
-        "method": "raise_error_if_package_exists",
-        "note": "Void type: SCOMPKDTLN"
-      },
-      {
-        "object": "ZCL_ABAPGIT_SERVICES_BASIS",
-        "class": "ltcl_create_package",
-        "method": "package_given_in_popup",
-        "note": "Void type: SCOMPKDTLN"
-      },
-      {
-        "object": "ZCL_ABAPGIT_SERVICES_BASIS",
-        "class": "ltcl_create_package",
-        "method": "package_not_created_when_canc",
-        "note": "Void type: SCOMPKDTLN"
-      },
-      {
-        "object": "ZCL_ABAPGIT_SERVICES_BASIS",
-        "class": "ltcl_create_package",
-        "method": "package_created_when_confirm",
-        "note": "Void type: SCOMPKDTLN"
-      }
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_direct_text"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_no_text"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_get_t100_longtext", "method": "test01"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_b"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_c"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_d"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_e"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_z"},
+      {"object": "ZCL_ABAPGIT_HTML",      "class": "ltcl_html", "method": "style1",     "note": "ASSERT failed, ??"},
+      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty1",   "note": "ASSERT failed, ??"},
+      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty2"},
+      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty3"},
+      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "malformatted", "note": "infinite loop"},
+      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "dont_ignore_error", "note": "infinite loop"},
+      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "unpretty"},
+      {"object": "ZCL_ABAPGIT_ZLIB",       "class": "ltcl_zlib", "method": "dynamic"},
+      {"object": "ZCL_ABAPGIT_ZLIB",       "class": "ltcl_zlib", "method": "fixed"},
+      {"object": "ZCL_ABAPGIT_GIT_ADD_PATCH", "class": "ltcl_calculate_patch", "method": "multiple_non_adjacent_delete"},
+      {"object": "ZCL_ABAPGIT_GIT_ADD_PATCH", "class": "ltcl_calculate_patch", "method": "multiple_partial_delete"},
+      {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_is_binary", "method": "image_is_binary",          "note": "REGEX '[^[:print:]]'"},
+
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_condensed", "note": "field sorting is wrong, probably sorted internal tables needed"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_indented"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "array_index",     "note": "uses secondary index array_index?"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "item_order",      "note": "uses secondary index item_order?"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "simple_indented", "note": "??"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "escape",          "note": "ASSERT failed, ??"},
+
+      {"object": "ZCL_ABAPGIT_DATA_CONFIG", "class": "ltcl_test", "method": "to_json"},
+      {"object": "ZCL_ABAPGIT_DATA_CONFIG", "class": "ltcl_test", "method": "from_json"},
+
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "find_loc",          "note": "assert failed"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_negative"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_struc"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_hashed_plain_tab"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_sorted_tab"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_hashed_tab"},
+      {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "json_diff_arrays"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_w_plain_tab"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_w_tab_of_struc"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_array_of_arrays"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_value"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_array"},
+
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_obj"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_ajson"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_tab"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_tab_hashed", "note": "runtime error, SortByLengthZero"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "arrays"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "root_assignment"},
+
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_parser_test", "method": "parse_error"},
+
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "reader",       "note": "keyword? Path not found @/false"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_index",  "note": "Index not found in table @/10"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_simple", "note": "Index not found in table @/10"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "item_order_integrated"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "stringify"},
+
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_abap_to_json", "method": "set_obj"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_abap_to_json", "method": "set_array"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_abap_to_json", "method": "set_complex_obj"},
+
+      {"object": "ZCL_ABAPGIT_UI_INJECTOR", "class": "ltcl_no_dependency_injection", "method": "no_injection", "note": "RTTI?"},
+      {"object": "ZCL_ABAPGIT_UI_INJECTOR", "class": "ltcl_simple_dependency_inject", "method": "simple_injection", "note": "RTTI?"},
+
+      {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_camel_case", "method": "to_abap", "note": "secondary key fields? READ WITH KEY, Path not found @/FieldData"},
+      {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_camel_case", "method": "to_json"},
+      {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_camel_case", "method": "to_json_first_lower"},
+
+      {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_fields", "method": "to_json"},
+      {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_fields", "method": "to_abap", "note": "RTTI describe_by_data_ref() todo, https://github.com/open-abap/open-abap/issues/224"},
+      {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_to_lower", "method": "to_json"},
+      {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_to_upper", "method": "to_json"},
+
+      {"object": "ZCL_ABAPGIT_DATA_DESERIALIZER", "class": "ltcl_test", "method": "test1"},
+      {"object": "ZCL_ABAPGIT_DATA_SERIALIZER", "class": "ltcl_test", "method": "serialize", "note": "RTTI describe_by_name() todo, https://github.com/open-abap/open-abap/issues/225"},
+
+      {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_renderable", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
+      {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_event_handler", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
+
+      {"object": "ZCL_ABAPGIT_GUI_ASSET_MANAGER", "class": "ltcl_abapgit_gui_asset_manager", "method": "get_mime_asset", "note": "failed to load GUI asset: css/common.css"},
+      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_simple_variables", "note": "table keys? Cannot read property 'get' of undefined in CS"},
+      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_complex_variables"},
+      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_overwrite", "note": "MODIFY FROM with table unique key not working"},
+      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_multiple_files", "method": "test_overwrite"},
+      {"object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR", "class": "ltcl_html_processor_test", "method": "process_typical"},
+      {"object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR", "class": "ltcl_html_processor_test", "method": "process_with_preserve"},
+      {"object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR", "class": "ltcl_html_processor_test", "method": "process_no_css"},
+      {"object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR", "class": "ltcl_html_processor_test", "method": "process_fails"},
+
+      {"object": "ZCL_ABAPGIT_XML", "class": "ltcl_xml", "method": "space_leading_trailing", "note": "todo in if_ixml_document$find_from_path, https://github.com/open-abap/open-abap/issues/226"},
+      {"object": "ZCL_ABAPGIT_XML", "class": "ltcl_xml", "method": "bad_xml_raises_exc"},
+      {"object": "ZCL_ABAPGIT_XML_OUTPUT", "class": "ltcl_xml_output", "method": "render_xml_string"},
+      {"object": "ZCL_ABAPGIT_XML_OUTPUT", "class": "ltcl_xml_output", "method": "add_simple_object"},
+      {"object": "ZCL_ABAPGIT_XML_INPUT", "class": "ltcl_xml", "method": "up"},
+      {"object": "ZCL_ABAPGIT_XML_INPUT", "class": "ltcl_xml", "method": "empty"},
+      {"object": "ZCL_ABAPGIT_XML_INPUT", "class": "ltcl_xml", "method": "down"},
+
+      {"object": "ZCL_ABAPGIT_GIT_URL", "class": "ltcl_repo_online", "method": "test_repo_commit_show_urls"},
+
+      {"object": "ZCL_ABAPGIT_INJECTOR", "class": "ltcl_no_dependency_injection", "method": "no_injection"},
+      {"object": "ZCL_ABAPGIT_INJECTOR", "class": "ltcl_simple_dependency_inject", "method": "simple_injection"},
+
+      {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "validate3", "note": "assert failed"},
+      {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "normalize", "note": "assert failed"},
+      {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "exit_clean", "note": "todo, eq TABLE"},
+      {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "exit_dirty_confirm", "note": "todo, eq TABLE"},
+      {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "exit_dirty_cancel", "note": "todo, eq TABLE"},
+
+      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "ddls_before_dcls", "note": "hmm, something with promises?"},
+      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "webi_before_sprx", "note": "hmm, something with promises?"},
+      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "iasp_before_isrp", "note": "hmm, something with promises?"},
+      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "iobj_before_odso", "note": "hmm, something with promises?"},
+      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "tobj_before_scp1", "note": "hmm, something with promises?"},
+      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "otgr_before_char", "note": "hmm, something with promises?"},
+      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "sprx_before_clas", "note": "hmm, something with promises?"},
+      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "sprx_before_intf", "note": "hmm, something with promises?"},
+      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "sprx_before_tabl", "note": "hmm, something with promises?"},
+      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "pinf_before_devc", "note": "hmm, something with promises?"},
+      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "clas_before_pinf", "note": "hmm, something with promises?"},
+      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "enhs_before_ensc", "note": "hmm, something with promises?"},
+      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "ensc_before_enho", "note": "hmm, something with promises?"},
+      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "enho_before_enhc", "note": "hmm, something with promises?"},
+      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "xslt_before_clas_and_prog", "note": "hmm, something with promises?"},
+
+      {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "ignore", "note": "Void type: SAPRELEASE"},
+      {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "identity", "note": "Void type: SAPRELEASE"},
+      {"object": "ZCL_ABAPGIT_REPO", "class": "ltcl_find_remote_dot_abapgit", "method": "positive", "note": "Void type: SAPRELEASE"},
+      {"object": "ZCL_ABAPGIT_REPO", "class": "ltcl_find_remote_dot_abapgit", "method": "new_repo_needs_no_dot_abapgit", "note": "Void type: SAPRELEASE"},
+
+
+      {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_git_user",   "note": "skip, this changes database"},
+      {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_repo_show",  "note": "skip, this changes database"},
+      {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_settings",   "note": "skip, this changes database"},
+      {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_repo_login", "note": "skip, this changes database"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff01", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff02", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff03", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff04", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff05", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff06", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff07", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff08", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff09", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff10", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff11", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
+      {"object": "ZCL_ABAPGIT_USER_RECORD", "class": "ltcl_user_record", "method": "test_invalid_user", "note": "Void type: BAPIADDR3"},
+      {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "raise_error_if_package_exists", "note": "Void type: SCOMPKDTLN"},
+      {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_given_in_popup", "note": "Void type: SCOMPKDTLN"},
+      {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_not_created_when_canc", "note": "Void type: SCOMPKDTLN"},
+      {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_created_when_confirm", "note": "Void type: SCOMPKDTLN"}
     ]
   }
 }
