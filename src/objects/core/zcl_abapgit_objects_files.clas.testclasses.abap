@@ -30,8 +30,8 @@ CLASS ltcl_objects_files DEFINITION FOR TESTING
 
     METHODS get_file_pattern FOR TESTING.
 
-    METHODS is_aff FOR TESTING.
-    METHODS is_not_aff FOR TESTING.
+    METHODS is_json_metadata FOR TESTING.
+    METHODS is_not_json_metadata FOR TESTING.
 ENDCLASS.
 
 CLASS ltcl_objects_files IMPLEMENTATION.
@@ -152,7 +152,7 @@ CLASS ltcl_objects_files IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD is_aff.
+  METHOD is_json_metadata.
 
     DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
     DATA lv_data TYPE xstring.
@@ -170,16 +170,16 @@ CLASS ltcl_objects_files IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       exp = abap_true
-      act = mo_cut->is_aff( ) ).
+      act = mo_cut->is_json_metadata( ) ).
 
   ENDMETHOD.
 
-  METHOD is_not_aff.
+  METHOD is_not_json_metadata.
 
     " checks PROG ZLF (see setup)
     cl_abap_unit_assert=>assert_equals(
       exp = abap_false
-      act = mo_cut->is_aff( ) ).
+      act = mo_cut->is_json_metadata( ) ).
 
   ENDMETHOD.
 

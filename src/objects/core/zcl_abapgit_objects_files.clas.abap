@@ -80,7 +80,7 @@ CLASS zcl_abapgit_objects_files DEFINITION
     METHODS get_file_pattern
       RETURNING
         VALUE(rv_pattern) TYPE string .
-    METHODS is_aff
+    METHODS is_json_metadata
       RETURNING
         VALUE(rv_result) TYPE abap_bool.
   PROTECTED SECTION.
@@ -243,7 +243,7 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD is_aff.
+  METHOD is_json_metadata.
 
     DATA lv_regex TYPE string.
 

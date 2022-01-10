@@ -1042,7 +1042,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     li_obj->serialize( li_xml ).
 
-    IF lo_files->is_aff( ) = abap_false.
+    IF lo_files->is_json_metadata( ) = abap_false.
       lo_files->add_xml( ii_xml      = li_xml
                          is_metadata = li_obj->get_metadata( ) ).
     ENDIF.
