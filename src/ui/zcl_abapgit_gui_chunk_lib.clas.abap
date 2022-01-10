@@ -141,7 +141,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS render_user_name
       IMPORTING
-        !iv_username       TYPE xubname
+        !iv_username       TYPE syuname
         !iv_interactive    TYPE abap_bool DEFAULT abap_true
         !iv_icon_only      TYPE abap_bool DEFAULT abap_false
         !iv_suppress_title TYPE abap_bool DEFAULT abap_false
@@ -676,7 +676,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
           IF iv_order_descending = abap_true.
             lv_tmp = lv_tmp && ri_html->a(
               iv_txt   = lv_disp_name
-              iv_act   = |{ zif_abapgit_definitions=>c_action-direction }?direction=ASCENDING|
+              iv_act   = |{ zif_abapgit_definitions=>c_action-change_order_by }|
               iv_title = <ls_col>-title ).
           ELSE.
             lv_tmp = lv_tmp && ri_html->a(
