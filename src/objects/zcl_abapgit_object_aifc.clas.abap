@@ -534,28 +534,57 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
 
 
   METHOD execute_checks.
-    DATA lt_finf TYPE TABLE OF /aif/t_finf.
-    DATA ls_finf LIKE LINE OF lt_finf.
-    DATA ls_ifkeys TYPE /aif/ifkeys.
+    DATA ls_ifkeys TYPE ty_aif_key_s.
+
+    DATA lr_tabledescr TYPE REF TO cl_abap_tabledescr.
+    DATA lr_structdescr TYPE REF TO cl_abap_structdescr.
+    DATA lr_table TYPE REF TO data.
+    FIELD-SYMBOLS <lt_table> TYPE STANDARD TABLE.
+    FIELD-SYMBOLS <ls_table> TYPE any.
+    FIELD-SYMBOLS: <lv_value> TYPE any.
 
     DATA: lx_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
     DATA: lx_root TYPE REF TO cx_root.
+
+    CLEAR lr_tabledescr.
+    lr_structdescr ?= cl_abap_typedescr=>describe_by_name( p_name = '/AIF/T_FINF' ).
+    lr_tabledescr =  cl_abap_tabledescr=>create( p_line_type = lr_structdescr ).
+
+    CREATE DATA lr_table TYPE HANDLE lr_tabledescr.
+    ASSIGN lr_table->* TO <lt_table>.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( iv_text = 'Fieldsymbol not assigned' ).
+    ENDIF.
 
     TRY.
         io_xml->read( EXPORTING
                     iv_name = '/AIF/T_FINF'
                   CHANGING
-                    cg_data = lt_finf ).
+                    cg_data = <lt_table> ).
 
-        READ TABLE lt_finf INTO ls_finf INDEX 1.
-        ls_ifkeys-ns = ls_finf-ns.
-        ls_ifkeys-ifname = ls_finf-ifname.
-        ls_ifkeys-ifver = ls_finf-ifversion.
+        READ TABLE <lt_table> ASSIGNING <ls_table> INDEX 1.
+        ASSIGN COMPONENT 'NS' OF STRUCTURE <ls_table> TO <lv_value>.
+        IF <lv_value> IS ASSIGNED.
+          ls_ifkeys-ns = <lv_value>.
+          UNASSIGN  <lv_value>.
+        ENDIF.
+
+        ASSIGN COMPONENT 'IFNAME' OF STRUCTURE <ls_table> TO <lv_value>.
+        IF <lv_value> IS ASSIGNED.
+          ls_ifkeys-ifname = <lv_value>.
+          UNASSIGN  <lv_value>.
+        ENDIF.
+
+        ASSIGN COMPONENT 'IFVERSION' OF STRUCTURE <ls_table> TO <lv_value>.
+        IF <lv_value> IS ASSIGNED.
+          ls_ifkeys-ifver = <lv_value>.
+          UNASSIGN  <lv_value>.
+        ENDIF.
 
         CALL METHOD mo_abapgit_util->('/AIF/IF_ABAPGIT_AIFC_UTIL~EXECUTE_CHECKS')
           EXPORTING
             is_ifkeys  = ls_ifkeys
-            is_finf    = ls_finf
+            is_finf    = <ls_table>
           RECEIVING
             rv_success = rv_success.
 
