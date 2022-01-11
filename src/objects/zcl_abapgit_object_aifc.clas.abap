@@ -87,6 +87,13 @@ CLASS zcl_abapgit_object_aifc DEFINITION
         VALUE(rv_success) TYPE abap_bool
       RAISING
         zcx_abapgit_exception.
+    METHODS execute_checks
+      IMPORTING
+        !io_xml           TYPE REF TO zif_abapgit_xml_input
+      RETURNING
+        VALUE(rv_success) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
 
   PRIVATE SECTION.
     TYPES:
@@ -279,6 +286,10 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
     ENDIF.
 
     TRY.
+        IF execute_checks( io_xml = io_xml ) = abap_false.
+          zcx_abapgit_exception=>raise( iv_text = 'AIF interface checks failed' ).
+        ENDIF.
+
         io_xml->read( EXPORTING
                         iv_name = `Content_table`
                       CHANGING
@@ -519,5 +530,40 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
     LOOP AT ct_data ASSIGNING <ls_data>.
       MOVE-CORRESPONDING ls_data_to_clear TO <ls_data>.
     ENDLOOP.
+  ENDMETHOD.
+
+
+  METHOD execute_checks.
+    DATA lt_finf TYPE TABLE OF /aif/t_finf.
+    DATA ls_finf LIKE LINE OF lt_finf.
+    DATA ls_ifkeys TYPE /aif/ifkeys.
+
+    DATA: lx_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
+    DATA: lx_root TYPE REF TO cx_root.
+
+    TRY.
+        io_xml->read( EXPORTING
+                    iv_name = '/AIF/T_FINF'
+                  CHANGING
+                    cg_data = lt_finf ).
+
+        READ TABLE lt_finf INTO ls_finf INDEX 1.
+        ls_ifkeys-ns = ls_finf-ns.
+        ls_ifkeys-ifname = ls_finf-ifname.
+        ls_ifkeys-ifver = ls_finf-ifversion.
+
+        CALL METHOD mo_abapgit_util->('/AIF/IF_ABAPGIT_AIFC_UTIL~EXECUTE_CHECKS')
+          EXPORTING
+            is_ifkeys  = ls_ifkeys
+            is_finf    = ls_finf
+          RECEIVING
+            rv_success = rv_success.
+
+      CATCH cx_sy_dyn_call_error INTO lx_dyn_call_error.
+        zcx_abapgit_exception=>raise( iv_text = 'AIFC not supported'
+                                      ix_previous = lx_dyn_call_error ).
+      CATCH cx_root INTO lx_root.
+        zcx_abapgit_exception=>raise_with_text( lx_root ).
+    ENDTRY.
   ENDMETHOD.
 ENDCLASS.
