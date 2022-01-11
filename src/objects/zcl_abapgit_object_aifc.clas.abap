@@ -87,7 +87,6 @@ CLASS zcl_abapgit_object_aifc DEFINITION
         VALUE(rv_success) TYPE abap_bool
       RAISING
         zcx_abapgit_exception.
-
     METHODS execute_checks
       IMPORTING
         !io_xml           TYPE REF TO zif_abapgit_xml_input
@@ -532,7 +531,8 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
       MOVE-CORRESPONDING ls_data_to_clear TO <ls_data>.
     ENDLOOP.
   ENDMETHOD.
-  
+
+
   METHOD execute_checks.
     DATA ls_ifkeys TYPE ty_aif_key_s.
 
