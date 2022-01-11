@@ -22,7 +22,7 @@ CLASS zcl_abapgit_background_push_au DEFINITION
         zcx_abapgit_exception .
     METHODS determine_user_details
       IMPORTING
-        !iv_changed_by TYPE xubname
+        !iv_changed_by TYPE syuname
       RETURNING
         VALUE(rs_user) TYPE zif_abapgit_definitions=>ty_git_user .
     METHODS push_deletions
@@ -94,13 +94,13 @@ CLASS zcl_abapgit_background_push_au IMPLEMENTATION.
     TYPES: BEGIN OF ty_changed,
              filename   TYPE string,
              path       TYPE string,
-             changed_by TYPE xubname,
+             changed_by TYPE syuname,
            END OF ty_changed.
 
     DATA: ls_comment    TYPE zif_abapgit_definitions=>ty_comment,
           ls_files      TYPE zif_abapgit_definitions=>ty_stage_files,
           lt_changed    TYPE STANDARD TABLE OF ty_changed WITH DEFAULT KEY,
-          lt_users      TYPE STANDARD TABLE OF xubname WITH DEFAULT KEY,
+          lt_users      TYPE STANDARD TABLE OF syuname WITH DEFAULT KEY,
           ls_user_files LIKE ls_files,
           lv_changed_by LIKE LINE OF lt_users,
           lo_stage      TYPE REF TO zcl_abapgit_stage.

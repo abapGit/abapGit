@@ -80,7 +80,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
+CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
 
   METHOD get_current_transport_for_obj.
@@ -282,14 +282,14 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
            iv_object_name = is_item-obj_name ) = abap_true.
 
         rv_transport = get_current_transport_for_obj(
-                         iv_object_type = is_item-obj_type
-                         iv_object_name = is_item-obj_name ).
+          iv_object_type = is_item-obj_type
+          iv_object_name = is_item-obj_name ).
 
       ELSEIF is_object_type_transportable( is_item-obj_type ) = abap_true.
 
         rv_transport = get_current_transport_from_db(
-                         iv_object_type = is_item-obj_type
-                         iv_object_name = is_item-obj_name  ).
+          iv_object_type = is_item-obj_type
+          iv_object_name = is_item-obj_name ).
 
       ENDIF.
 
@@ -303,4 +303,26 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
       rv_possible = zcl_abapgit_factory=>get_sap_package( iv_package )->are_changes_recorded_in_tr_req( ).
     ENDIF.
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_cts_api~get_r3tr_obj_for_limu_obj.
+
+    CLEAR ev_object.
+    CLEAR ev_obj_name.
+
+    CALL FUNCTION 'GET_R3TR_OBJECT_FROM_LIMU_OBJ'
+      EXPORTING
+        p_limu_objtype = iv_object
+        p_limu_objname = iv_obj_name
+      IMPORTING
+        p_r3tr_objtype = ev_object
+        p_r3tr_objname = ev_obj_name
+      EXCEPTIONS
+        no_mapping     = 1
+        OTHERS         = 2.
+    IF sy-subrc <> 0 OR ev_obj_name IS INITIAL.
+      zcx_abapgit_exception=>raise( |No R3TR Object found for { iv_object } { iv_obj_name }| ).
+    ENDIF.
+  ENDMETHOD.
+
 ENDCLASS.

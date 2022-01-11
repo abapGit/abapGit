@@ -174,6 +174,9 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception.
+    METHODS order_files
+      CHANGING
+        ct_files TYPE zif_abapgit_definitions=>ty_repo_file_tt.
 
 ENDCLASS.
 
@@ -233,12 +236,23 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       INSERT ls_sort INTO TABLE lt_sort.
     ENDIF.
 
+    IF mv_order_by = 'PATH'.
+      ls_sort-name = 'OBJ_NAME'.
+      INSERT ls_sort INTO TABLE lt_sort.
+    ENDIF.
+
     SORT lt_code_items STABLE BY (lt_sort).
     SORT lt_diff_items STABLE BY (lt_sort).
 
     INSERT LINES OF lt_non_code_and_metadata_items INTO TABLE ct_repo_items.
     INSERT LINES OF lt_diff_items INTO TABLE ct_repo_items.
     INSERT LINES OF lt_code_items INTO TABLE ct_repo_items.
+
+    IF mv_order_by = 'PATH'.
+      LOOP AT ct_repo_items ASSIGNING <ls_repo_item>.
+        order_files( CHANGING ct_files = <ls_repo_item>-files ).
+      ENDLOOP.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -349,6 +363,18 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     lv_path = iv_path.
     REPLACE FIRST OCCURRENCE OF mv_cur_dir IN lv_path WITH ''.
     lv_encode = zcl_abapgit_html_action_utils=>dir_encode( lv_path ).
+
+    " remove leading and trailing / for display
+    IF lv_path <> '/'.
+      IF lv_path(1) = '/'.
+        lv_path = lv_path+1.
+      ENDIF.
+      IF substring( val = reverse( lv_path )
+                    len = 1 ) = '/'.
+        lv_path = substring( val = lv_path
+                             len = strlen( lv_path ) - 1 ).
+      ENDIF.
+    ENDIF.
 
     rv_html = li_html->a(
       iv_txt = lv_path
@@ -567,26 +593,32 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA: lo_settings TYPE REF TO zcl_abapgit_settings,
-          lx_error    TYPE REF TO zcx_abapgit_exception.
+    DATA: lo_settings         TYPE REF TO zcl_abapgit_settings,
+          lx_error            TYPE REF TO zcx_abapgit_exception,
+          lo_persistence_user TYPE REF TO zif_abapgit_persist_user.
 
     super->constructor( ).
 
     TRY.
-        mv_key           = iv_key.
-        mo_repo          = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-        mv_cur_dir       = '/'. " Root
-        mv_hide_files    = zcl_abapgit_persistence_user=>get_instance( )->get_hide_files( ).
-        mv_changes_only  = zcl_abapgit_persistence_user=>get_instance( )->get_changes_only( ).
-        mv_diff_first    = abap_true.
+        lo_persistence_user = zcl_abapgit_persistence_user=>get_instance( ).
+
+        mv_key = iv_key.
+        mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+        mv_cur_dir = '/'. " Root
+
+        mv_hide_files = lo_persistence_user->get_hide_files( ).
+        mv_changes_only = lo_persistence_user->get_changes_only( ).
+        mv_order_by = lo_persistence_user->get_order_by( ).
+        mv_order_descending = lo_persistence_user->get_order_descending( ).
+        mv_diff_first = lo_persistence_user->get_diff_first( ).
 
         ms_control-page_title = 'Repository'.
         ms_control-page_menu = build_main_menu( ).
 
         " Read global settings to get max # of objects to be listed
-        lo_settings     = zcl_abapgit_persist_factory=>get_settings( )->read( ).
-        mv_max_lines    = lo_settings->get_max_lines( ).
-        mv_max_setting  = mv_max_lines.
+        lo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
+        mv_max_lines = lo_settings->get_max_lines( ).
+        mv_max_setting = mv_max_lines.
 
       CATCH zcx_abapgit_exception INTO lx_error.
         " Reset 'last shown repo' so next start will go to repo overview
@@ -812,11 +844,11 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
           " Repo content table
           ri_html->add( '<table class="repo_tab">' ).
 
+          ri_html->add( render_order_by( ) ).
+
           IF zcl_abapgit_path=>is_root( mv_cur_dir ) = abap_false.
             ri_html->add( render_parent_dir( ) ).
           ENDIF.
-
-          ri_html->add( render_order_by( ) ).
 
           LOOP AT lt_repo_items ASSIGNING <ls_item>.
             IF mv_max_lines > 0 AND sy-tabix > mv_max_lines.
@@ -891,7 +923,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ri_html->add( '<table class="w100"><tr>' ).
 
     IF mv_show_folders = abap_true.
-      ri_html->add( |<td class="current_dir">{ mv_cur_dir }</td>| ).
+      ri_html->add( '<td class="current_dir">' ).
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_path( mv_cur_dir ) ).
+      ri_html->add( '</td>' ).
     ENDIF.
 
     ri_html->add( '<td class="right">' ).
@@ -1147,7 +1181,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     ri_html->add( '<tr class="folder">' ).
     ri_html->add( |<td class="icon">{ ri_html->icon( 'folder' ) }</td>| ).
-    ri_html->add( |<td class="object" colspan="4">{ build_dir_jump_link( '..' ) }</td>| ).
+    ri_html->add( |<td class="dir" colspan="4">{ build_dir_jump_link( '..' ) }</td>| ).
     IF mo_repo->has_remote_source( ) = abap_true.
       ri_html->add( |<td colspan="1"></td>| ). " Dummy for online
     ENDIF.
@@ -1206,7 +1240,8 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-toggle_diff_first.
-        mv_diff_first = boolc( mv_diff_first = abap_false ).
+        mv_diff_first = zcl_abapgit_persistence_user=>get_instance( )->set_diff_first(
+          boolc( mv_diff_first = abap_false ) ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-display_more.      " Increase MAX lines limit
@@ -1214,12 +1249,15 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN zif_abapgit_definitions=>c_action-change_order_by.
-        mv_order_by      = ii_event->query( )->get( 'ORDERBY' ).
+        mv_order_by = zcl_abapgit_persistence_user=>get_instance( )->set_order_by(
+          ii_event->query( )->get( 'ORDERBY' ) ).
+        mv_order_descending = zcl_abapgit_persistence_user=>get_instance( )->set_order_descending( abap_false ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN zif_abapgit_definitions=>c_action-direction.
-        mv_order_descending = boolc( ii_event->query( )->get( 'DIRECTION' ) = 'DESCENDING' ).
-        rs_handled-state    = zcl_abapgit_gui=>c_event_state-re_render.
+        mv_order_descending = zcl_abapgit_persistence_user=>get_instance( )->set_order_descending(
+          boolc( ii_event->query( )->get( 'DIRECTION' ) = 'DESCENDING' ) ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN zif_abapgit_definitions=>c_action-repo_open_in_master_lang.
         open_in_main_language( ).
@@ -1295,4 +1333,29 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
+
+  METHOD order_files.
+
+    DATA:
+      lt_sort TYPE abap_sortorder_tab,
+      ls_sort LIKE LINE OF lt_sort.
+
+    IF lines( ct_files ) = 0.
+      RETURN.
+    ENDIF.
+
+    ls_sort-descending = mv_order_descending.
+    ls_sort-astext     = abap_true.
+    ls_sort-name       = 'PATH'.
+    INSERT ls_sort INTO TABLE lt_sort.
+
+    ls_sort-descending = mv_order_descending.
+    ls_sort-astext     = abap_true.
+    ls_sort-name       = 'FILENAME'.
+    INSERT ls_sort INTO TABLE lt_sort.
+
+    SORT ct_files STABLE BY (lt_sort).
+
+  ENDMETHOD.
+
 ENDCLASS.
