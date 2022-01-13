@@ -12,9 +12,7 @@ CLASS zcl_abapgit_objects_files DEFINITION
       IMPORTING
         !iv_extra  TYPE clike OPTIONAL
         !iv_ext    TYPE string
-        !iv_string TYPE string
-      RAISING
-        zcx_abapgit_exception .
+        !iv_string TYPE string.
     METHODS read_string
       IMPORTING
         !iv_extra        TYPE clike OPTIONAL
@@ -28,9 +26,7 @@ CLASS zcl_abapgit_objects_files DEFINITION
         !iv_extra     TYPE clike OPTIONAL
         !ii_xml       TYPE REF TO zif_abapgit_xml_output
         !iv_normalize TYPE abap_bool DEFAULT abap_true
-        !is_metadata  TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
-      RAISING
-        zcx_abapgit_exception .
+        !is_metadata  TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL.
     METHODS read_xml
       IMPORTING
         !iv_extra     TYPE clike OPTIONAL
@@ -49,9 +45,7 @@ CLASS zcl_abapgit_objects_files DEFINITION
     METHODS add_abap
       IMPORTING
         !iv_extra TYPE clike OPTIONAL
-        !it_abap  TYPE STANDARD TABLE
-      RAISING
-        zcx_abapgit_exception .
+        !it_abap  TYPE STANDARD TABLE.
     METHODS add
       IMPORTING
         !is_file TYPE zif_abapgit_definitions=>ty_file .
@@ -59,9 +53,7 @@ CLASS zcl_abapgit_objects_files DEFINITION
       IMPORTING
         !iv_extra TYPE clike OPTIONAL
         !iv_ext   TYPE string
-        !iv_data  TYPE xstring
-      RAISING
-        zcx_abapgit_exception .
+        !iv_data  TYPE xstring.
     METHODS read_raw
       IMPORTING
         !iv_extra      TYPE clike OPTIONAL
@@ -88,6 +80,9 @@ CLASS zcl_abapgit_objects_files DEFINITION
     METHODS get_file_pattern
       RETURNING
         VALUE(rv_pattern) TYPE string .
+    METHODS is_json_metadata
+      RETURNING
+        VALUE(rv_result) TYPE abap_bool.
   PROTECTED SECTION.
 
     METHODS read_file
@@ -245,6 +240,22 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
     " Escape special characters for use with 'covers pattern' (CP)
     REPLACE ALL OCCURRENCES OF '#' IN rv_pattern WITH '##'.
     REPLACE ALL OCCURRENCES OF '+' IN rv_pattern WITH '#+'.
+  ENDMETHOD.
+
+
+  METHOD is_json_metadata.
+
+    DATA lv_pattern TYPE string.
+
+    FIELD-SYMBOLS <ls_file> LIKE LINE OF mt_files.
+
+    lv_pattern = |*.{ to_lower( ms_item-obj_type ) }.json|.
+
+    LOOP AT mt_files ASSIGNING <ls_file> WHERE filename CP lv_pattern.
+      rv_result = abap_true.
+      EXIT.
+    ENDLOOP.
+
   ENDMETHOD.
 
 

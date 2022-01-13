@@ -29,6 +29,9 @@ CLASS ltcl_objects_files DEFINITION FOR TESTING
         cx_static_check.
 
     METHODS get_file_pattern FOR TESTING.
+
+    METHODS is_json_metadata FOR TESTING.
+    METHODS is_not_json_metadata FOR TESTING.
 ENDCLASS.
 
 CLASS ltcl_objects_files IMPLEMENTATION.
@@ -38,6 +41,7 @@ CLASS ltcl_objects_files IMPLEMENTATION.
           ls_item  TYPE zif_abapgit_definitions=>ty_item.
     FIELD-SYMBOLS: <ls_files> LIKE LINE OF lt_files.
 
+    " filenames are lower case
     APPEND INITIAL LINE TO lt_files ASSIGNING <ls_files>.
     <ls_files>-filename = 'zlf.prog.abap'.
     <ls_files>-data = get_program_data( zif_abapgit_definitions=>c_newline ).
@@ -45,8 +49,9 @@ CLASS ltcl_objects_files IMPLEMENTATION.
     <ls_files>-filename = 'zlf.prog.xml'.
     <ls_files>-data = get_xml_data( ).
 
-    ls_item-obj_type = 'prog'.
-    ls_item-obj_name = 'zlf'.
+    " object type and name are upper case
+    ls_item-obj_type = 'PROG'.
+    ls_item-obj_name = 'ZLF'.
     CREATE OBJECT mo_cut
       EXPORTING
         is_item = ls_item.
@@ -127,20 +132,54 @@ CLASS ltcl_objects_files IMPLEMENTATION.
 
     DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
 
+    " filenames are lower case
     cl_abap_unit_assert=>assert_equals(
       exp = 'zlf.prog.*'
       act = mo_cut->get_file_pattern( ) ).
 
-    ls_item-obj_type = 'prog'.
-    ls_item-obj_name = '/test/zlf'.
+    " object type and name are upper case
+    ls_item-obj_type = 'PROG'.
+    ls_item-obj_name = '/TEST/ZLF'.
 
     CREATE OBJECT mo_cut
       EXPORTING
         is_item = ls_item.
 
+    " filenames are lower case
     cl_abap_unit_assert=>assert_equals(
       exp = '##test##zlf.prog.*'
       act = mo_cut->get_file_pattern( ) ).
+
+  ENDMETHOD.
+
+  METHOD is_json_metadata.
+
+    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
+    DATA lv_data TYPE xstring.
+
+    " object type and name are upper case
+    ls_item-obj_type = 'CHKO'.
+    ls_item-obj_name = 'Z_AFF_EXAMPLE_CHKO'.
+
+    CREATE OBJECT mo_cut
+      EXPORTING
+        is_item = ls_item.
+
+    mo_cut->add_raw( iv_data = lv_data
+                     iv_ext  = 'json' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_true
+      act = mo_cut->is_json_metadata( ) ).
+
+  ENDMETHOD.
+
+  METHOD is_not_json_metadata.
+
+    " checks PROG ZLF (see setup)
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_false
+      act = mo_cut->is_json_metadata( ) ).
 
   ENDMETHOD.
 
