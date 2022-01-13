@@ -100,7 +100,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS jump_display_user
       IMPORTING
-        !iv_username TYPE xubname
+        !iv_username TYPE syuname
       RAISING
         zcx_abapgit_exception .
     METHODS call_browser

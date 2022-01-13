@@ -8,7 +8,7 @@ INTERFACE zif_abapgit_longtexts
       !iv_longtext_id TYPE dokil-id
       !it_dokil       TYPE zif_abapgit_definitions=>ty_dokil_tt OPTIONAL
     RETURNING
-      VALUE(rv_user)  TYPE xubname
+      VALUE(rv_user)  TYPE syuname
     RAISING
       zcx_abapgit_exception .
   METHODS serialize

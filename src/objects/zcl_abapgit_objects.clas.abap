@@ -57,7 +57,7 @@ CLASS zcl_abapgit_objects DEFINITION
       IMPORTING
         !is_item       TYPE zif_abapgit_definitions=>ty_item
       RETURNING
-        VALUE(rv_user) TYPE xubname .
+        VALUE(rv_user) TYPE syuname .
     CLASS-METHODS is_supported
       IMPORTING
         !is_item        TYPE zif_abapgit_definitions=>ty_item
@@ -1042,8 +1042,10 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     li_obj->serialize( li_xml ).
 
-    lo_files->add_xml( ii_xml      = li_xml
-                       is_metadata = li_obj->get_metadata( ) ).
+    IF lo_files->is_json_metadata( ) = abap_false.
+      lo_files->add_xml( ii_xml      = li_xml
+                         is_metadata = li_obj->get_metadata( ) ).
+    ENDIF.
 
     rs_files_and_item-files = lo_files->get_files( ).
 

@@ -194,21 +194,9 @@ CLASS zcl_abapgit_object_pers IMPLEMENTATION.
     ls_bcdata-fval = '=PERSDISPLAY'.
     APPEND ls_bcdata TO lt_bcdata.
 
-    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
-      STARTING NEW TASK 'GIT'
-      EXPORTING
-        tcode                   = 'PERSREG'
-        mode_val                = 'E'
-      TABLES
-        using_tab               = lt_bcdata
-      EXCEPTIONS
-        call_transaction_denied = 1
-        tcode_invalid           = 2
-        OTHERS                  = 3.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |error from ABAP4_CALL_TRANSACTION, PERSREG. SUBRC= {  sy-subrc }| ).
-    ENDIF.
+    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+      iv_tcode   = 'PERSREG'
+      it_bdcdata = lt_bcdata ).
 
   ENDMETHOD.
 

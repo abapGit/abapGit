@@ -96,7 +96,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
+CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
 
 
   METHOD access_free.
@@ -734,19 +734,9 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
     <ls_bdcdata>-fnam = 'RSUD3-OBJ_KEY'.
     <ls_bdcdata>-fval = ms_item-obj_name.
 
-    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
-      STARTING NEW TASK 'GIT'
-      EXPORTING
-        tcode                 = 'SD11'
-        mode_val              = 'E'
-      TABLES
-        using_tab             = lt_bdcdata
-      EXCEPTIONS
-        system_failure        = 1
-        communication_failure = 2
-        resource_failure      = 3
-        OTHERS                = 4
-        ##fm_subrc_ok.                                                   "#EC CI_SUBRC
+    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+      iv_tcode   = 'SD11'
+      it_bdcdata = lt_bdcdata ).
 
   ENDMETHOD.
 
