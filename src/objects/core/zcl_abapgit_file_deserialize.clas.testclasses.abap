@@ -234,7 +234,8 @@ CLASS ltcl_prio_deserialization DEFINITION FINAL FOR TESTING
       enhs_before_ensc FOR TESTING RAISING cx_static_check,
       ensc_before_enho FOR TESTING RAISING cx_static_check,
       enho_before_enhc FOR TESTING RAISING cx_static_check,
-      xslt_before_clas_and_prog FOR TESTING RAISING cx_static_check,
+      xslt_before_clas FOR TESTING RAISING cx_static_check,
+      xslt_before_prog FOR TESTING RAISING cx_static_check,
 
       given
         IMPORTING
@@ -364,7 +365,7 @@ CLASS ltcl_prio_deserialization IMPLEMENTATION.
     then( 'PINF' ).
   ENDMETHOD.
 
-  METHOD xslt_before_clas_and_prog.
+  METHOD xslt_before_clas.
     given( 'XSLT' ).
     given( 'INTF' ).
     given( 'CLAS' ).
@@ -372,6 +373,14 @@ CLASS ltcl_prio_deserialization IMPLEMENTATION.
     then( 'XSLT' ).
     then( 'INTF' ).
     then( 'CLAS' ).
+  ENDMETHOD.
+
+  METHOD xslt_before_prog.
+    given( 'PROG' ).
+    given( 'XSLT' ).
+    when_deser_is_priorized( ).
+    then( 'XSLT' ).
+    then( 'PROG' ).
   ENDMETHOD.
 
   METHOD ddls_before_dcls.
