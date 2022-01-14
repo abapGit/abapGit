@@ -286,8 +286,8 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
     ENDIF.
 
     TRY.
-        IF execute_checks( io_xml = io_xml ) = abap_false.
-          zcx_abapgit_exception=>raise( iv_text = 'AIF interface checks failed' ).
+        IF execute_checks( io_xml ) = abap_false.
+          zcx_abapgit_exception=>raise( 'AIF interface checks failed' ).
         ENDIF.
 
         io_xml->read( EXPORTING
@@ -313,7 +313,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
           CREATE DATA lr_table TYPE HANDLE lr_tabledescr.
           ASSIGN lr_table->* TO <lt_table>.
           IF sy-subrc <> 0.
-            zcx_abapgit_exception=>raise( iv_text = 'Fieldsymbol not assigned' ).
+            zcx_abapgit_exception=>raise( 'Fieldsymbol not assigned' ).
           ENDIF.
 
           io_xml->read( EXPORTING
@@ -357,11 +357,11 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
                               iv_package = iv_package ).
 
 
-        IF authorization_check( io_log = ii_log ) = abap_false.
+        IF authorization_check( ii_log ) = abap_false.
           RETURN.
         ENDIF.
 
-        IF validate_interface( is_ifkeys = ls_ifkey ) = abap_false.
+        IF validate_interface( ls_ifkey ) = abap_false.
           RETURN.
         ENDIF.
 
@@ -553,7 +553,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
     CREATE DATA lr_table TYPE HANDLE lr_tabledescr.
     ASSIGN lr_table->* TO <lt_table>.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( iv_text = 'Fieldsymbol not assigned' ).
+      zcx_abapgit_exception=>raise( 'Fieldsymbol not assigned' ).
     ENDIF.
 
     TRY.
