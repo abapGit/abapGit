@@ -738,7 +738,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     " Generate table with expected values after extending
     generate_extend( iv_token    = '.'
-                     iv_offset   = 00
+                     iv_offset   = 0
                      iv_length   = 22
                      iv_text_tag = '' ).
     generate_extend( iv_token    = 'K'
