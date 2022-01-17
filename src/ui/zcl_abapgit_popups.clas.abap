@@ -457,9 +457,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     ENDIF.
 
     set_starting_position(
-      EXPORTING
-        iv_width  = 24
-        iv_height = lines( lt_selection ) ).
+      iv_width  = 24
+      iv_height = lines( lt_selection ) ).
 
     CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
       EXPORTING
@@ -586,9 +585,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     ENDLOOP.
 
     set_starting_position(
-      EXPORTING
-        iv_width  = 74
-        iv_height = lines( it_pulls ) ).
+      iv_width  = 74
+      iv_height = lines( lt_selection ) ).
 
     CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
       EXPORTING
@@ -719,9 +717,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
   METHOD zif_abapgit_popups~popup_to_confirm.
 
     set_starting_position(
-      EXPORTING
-        iv_width  = 65
-        iv_height = 5 ).
+      iv_width  = 65
+      iv_height = 5 ).
 
     CALL FUNCTION 'POPUP_TO_CONFIRM'
       EXPORTING
@@ -840,9 +837,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     ASSERT sy-subrc = 0.
 
     set_starting_position(
-      EXPORTING
-        iv_width  = iv_end_column - iv_start_column
-        iv_height = iv_end_line - iv_start_line ).
+      iv_width  = iv_end_column - iv_start_column
+      iv_height = iv_end_line - iv_start_line ).
 
     TRY.
         cl_salv_table=>factory( IMPORTING r_salv_table = mo_select_list_popup
@@ -1008,9 +1004,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_field> TYPE sval.
 
     set_starting_position(
-      EXPORTING
-        iv_width  = 120
-        iv_height = lines( ct_fields ) ).
+      iv_width  = 120
+      iv_height = lines( ct_fields ) ).
 
     CALL FUNCTION 'POPUP_GET_VALUES'
       EXPORTING
