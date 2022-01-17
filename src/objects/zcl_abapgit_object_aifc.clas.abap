@@ -546,7 +546,6 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
     DATA: lx_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
     DATA: lx_root TYPE REF TO cx_root.
 
-    CLEAR lr_tabledescr.
     lr_structdescr ?= cl_abap_typedescr=>describe_by_name( p_name = '/AIF/T_FINF' ).
     lr_tabledescr =  cl_abap_tabledescr=>create( p_line_type = lr_structdescr ).
 
@@ -563,30 +562,29 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
                     cg_data = <lt_table> ).
 
         READ TABLE <lt_table> ASSIGNING <ls_table> INDEX 1.
-        ASSIGN COMPONENT 'NS' OF STRUCTURE <ls_table> TO <lv_value>.
-        IF <lv_value> IS ASSIGNED.
-          ls_ifkeys-ns = <lv_value>.
-          UNASSIGN  <lv_value>.
-        ENDIF.
+        IF sy-subrc = 0.
+          ASSIGN COMPONENT 'NS' OF STRUCTURE <ls_table> TO <lv_value>.
+          IF sy-subrc = 0.
+            ls_ifkeys-ns = <lv_value>.
+          ENDIF.
 
-        ASSIGN COMPONENT 'IFNAME' OF STRUCTURE <ls_table> TO <lv_value>.
-        IF <lv_value> IS ASSIGNED.
-          ls_ifkeys-ifname = <lv_value>.
-          UNASSIGN  <lv_value>.
-        ENDIF.
+          ASSIGN COMPONENT 'IFNAME' OF STRUCTURE <ls_table> TO <lv_value>.
+          IF sy-subrc = 0.
+            ls_ifkeys-ifname = <lv_value>.
+          ENDIF.
 
-        ASSIGN COMPONENT 'IFVERSION' OF STRUCTURE <ls_table> TO <lv_value>.
-        IF <lv_value> IS ASSIGNED.
-          ls_ifkeys-ifver = <lv_value>.
-          UNASSIGN  <lv_value>.
-        ENDIF.
+          ASSIGN COMPONENT 'IFVERSION' OF STRUCTURE <ls_table> TO <lv_value>.
+          IF sy-subrc = 0.
+            ls_ifkeys-ifver = <lv_value>.
+          ENDIF.
 
-        CALL METHOD mo_abapgit_util->('/AIF/IF_ABAPGIT_AIFC_UTIL~EXECUTE_CHECKS')
-          EXPORTING
-            is_ifkeys  = ls_ifkeys
-            is_finf    = <ls_table>
-          RECEIVING
-            rv_success = rv_success.
+          CALL METHOD mo_abapgit_util->('/AIF/IF_ABAPGIT_AIFC_UTIL~EXECUTE_CHECKS')
+            EXPORTING
+              is_ifkeys  = ls_ifkeys
+              is_finf    = <ls_table>
+            RECEIVING
+              rv_success = rv_success.
+        ENDIF.
 
       CATCH cx_sy_dyn_call_error INTO lx_dyn_call_error.
         zcx_abapgit_exception=>raise( iv_text = 'AIFC not supported'
