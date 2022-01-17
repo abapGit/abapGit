@@ -1341,7 +1341,7 @@ LinkHints.prototype.getHintStartValue = function(targetsCount){
 
 LinkHints.prototype.deployHintContainers = function() {
 
-  var hintTargets = document.querySelectorAll("a, input, textarea");
+  var hintTargets = document.querySelectorAll("a, input, textarea, i");
   var codeCounter = this.getHintStartValue(hintTargets.length);
   var hintsMap    = { first: codeCounter };
 
@@ -1368,8 +1368,12 @@ LinkHints.prototype.deployHintContainers = function() {
     hint.container.classList.add("link-hint");
     if (hint.parent.nodeName === "INPUT" || hint.parent.nodeName === "TEXTAREA"){
       hint.container.classList.add("link-hint-input");
-    } else {
+    } else if (hint.parent.nodeName === "A") {
       hint.container.classList.add("link-hint-a");
+    } else if (hint.parent.nodeName === "I" && hint.parent.classList.contains("cursor-pointer")) {
+      hint.container.classList.add("link-hint-i");
+    } else {
+      continue;
     }
 
     hint.container.classList.add("nodisplay");            // hide by default
