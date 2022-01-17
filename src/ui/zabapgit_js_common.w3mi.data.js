@@ -1341,7 +1341,7 @@ LinkHints.prototype.getHintStartValue = function(targetsCount){
 
 LinkHints.prototype.deployHintContainers = function() {
 
-  var hintTargets = document.querySelectorAll("a, input, textarea");
+  var hintTargets = document.querySelectorAll("a, input, textarea, i");
   var codeCounter = this.getHintStartValue(hintTargets.length);
   var hintsMap    = { first: codeCounter };
 
@@ -1366,9 +1366,9 @@ LinkHints.prototype.deployHintContainers = function() {
 
     hint.pendingSpan.classList.add("pending");
     hint.container.classList.add("link-hint");
-    if (hint.parent.nodeName === "INPUT" || hint.parent.nodeName === "TEXTAREA"){
+    if (hint.parent.nodeName === "INPUT" || hint.parent.nodeName === "TEXTAREA" || hint.parent.nodeName === "I"){
       hint.container.classList.add("link-hint-input");
-    } else {
+    } else if (hint.parent.nodeName === "A") {
       hint.container.classList.add("link-hint-a");
     }
 
