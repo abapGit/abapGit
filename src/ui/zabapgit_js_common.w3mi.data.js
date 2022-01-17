@@ -1366,10 +1366,14 @@ LinkHints.prototype.deployHintContainers = function() {
 
     hint.pendingSpan.classList.add("pending");
     hint.container.classList.add("link-hint");
-    if (hint.parent.nodeName === "INPUT" || hint.parent.nodeName === "TEXTAREA" || hint.parent.nodeName === "I"){
+    if (hint.parent.nodeName === "INPUT" || hint.parent.nodeName === "TEXTAREA"){
       hint.container.classList.add("link-hint-input");
     } else if (hint.parent.nodeName === "A") {
       hint.container.classList.add("link-hint-a");
+    } else if (hint.parent.nodeName === "I" && hint.parent.classList.contains("cursor-pointer")) {
+      hint.container.classList.add("link-hint-i");
+    } else {
+      continue;
     }
 
     hint.container.classList.add("nodisplay");            // hide by default
