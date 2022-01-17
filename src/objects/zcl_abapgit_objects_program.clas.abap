@@ -198,7 +198,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
+CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
 
   METHOD add_tpool.
@@ -505,10 +505,6 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
         iv_title   = lv_title
         iv_package = iv_package ).
     ENDIF.
-
-    insert_tpool(
-      is_progdir = is_progdir
-      it_tpool   = it_tpool ).
 
     update_progdir( is_progdir ).
 
