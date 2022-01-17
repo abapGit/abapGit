@@ -188,12 +188,6 @@ CLASS zcl_abapgit_objects_program DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
         !is_progdir TYPE ty_progdir
       RAISING
         zcx_abapgit_exception .
-    METHODS insert_tpool
-      IMPORTING
-        !is_progdir TYPE ty_progdir
-        !it_tpool   TYPE textpool_table
-      RAISING
-        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -630,21 +624,6 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
     ELSEIF sy-subrc > 0.
       zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD insert_tpool.
-
-    IF NOT it_tpool[] IS INITIAL.
-      INSERT TEXTPOOL is_progdir-name
-        FROM it_tpool
-        LANGUAGE mv_language
-        STATE 'I'.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'Error from INSERT TEXTPOOL' ).
-      ENDIF.
     ENDIF.
 
   ENDMETHOD.
