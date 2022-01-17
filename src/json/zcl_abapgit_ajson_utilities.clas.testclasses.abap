@@ -129,6 +129,7 @@ CLASS ltcl_json_utils DEFINITION
     METHODS json_diff FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS json_diff_types FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS json_diff_arrays FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS json_merge FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS json_sort FOR TESTING RAISING zcx_abapgit_ajson_error.
 
 ENDCLASS.
@@ -407,6 +408,59 @@ CLASS ltcl_json_utils IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lines( lo_change->mt_json_tree )
       exp = 0 ).
+
+  ENDMETHOD.
+
+  METHOD json_merge.
+
+    DATA:
+      lv_json_a    TYPE string,
+      lv_json_b    TYPE string,
+      lo_util      TYPE REF TO zcl_abapgit_ajson_utilities,
+      lo_merge     TYPE REF TO zif_abapgit_ajson,
+      lo_merge_exp TYPE REF TO lcl_nodes_helper.
+
+    " Merge new value of b into a
+    lv_json_a =
+      '{\n' &&
+      '  "string": [\n' &&
+      '    "a",\n' &&
+      '    "c"\n' &&
+      '  ],\n' &&
+      '  "number": 123\n' &&
+      '}'.
+
+    lv_json_b =
+      '{\n' &&
+      '  "string": [\n' &&
+      '    "a",\n' &&
+      '    "b"\n' && " new array value
+      '  ],\n' &&
+      '  "number": 456,\n' && " existing values are not overwritten
+      '  "float": 123.45\n' &&
+      '}'.
+
+    REPLACE ALL OCCURRENCES OF '\n' IN lv_json_a WITH cl_abap_char_utilities=>newline.
+    REPLACE ALL OCCURRENCES OF '\n' IN lv_json_b WITH cl_abap_char_utilities=>newline.
+
+    CREATE OBJECT lo_merge_exp.
+    lo_merge_exp->add( '                |        |object |        |0|3' ).
+    lo_merge_exp->add( '/               |float   |num    |123.45  |0|0' ).
+    lo_merge_exp->add( '/               |number  |num    |123     |0|0' ).
+    lo_merge_exp->add( '/               |string  |array  |        |0|3' ).
+    lo_merge_exp->add( '/string/        |1       |str    |a       |1|0' ).
+    lo_merge_exp->add( '/string/        |2       |str    |c       |2|0' ).
+    lo_merge_exp->add( '/string/        |3       |str    |b       |3|0' ).
+
+    CREATE OBJECT lo_util.
+
+    lo_merge = lo_util->merge(
+      iv_json_a = lv_json_a
+      iv_json_b = lv_json_b ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_merge->mt_json_tree
+      exp = lo_merge_exp->mt_nodes ).
 
   ENDMETHOD.
 
