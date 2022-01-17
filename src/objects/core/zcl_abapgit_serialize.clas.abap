@@ -451,14 +451,16 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
   METHOD run_parallel.
 
     DATA: lv_msg  TYPE c LENGTH 100,
+          lv_task TYPE c LENGTH 32,
           lv_free LIKE mv_free.
 
 
     ASSERT mv_free > 0.
 
     DO.
+      lv_task = |{ iv_task }-{ sy-index }|.
       CALL FUNCTION 'Z_ABAPGIT_SERIALIZE_PARALLEL'
-        STARTING NEW TASK iv_task
+        STARTING NEW TASK lv_task
         DESTINATION IN GROUP mv_group
         CALLING on_end_of_task ON END OF TASK
         EXPORTING
