@@ -931,6 +931,10 @@ div.message-panel:hover .message-panel-commands {
   margin-left: -30px;
 }
 
+.link-hint-i {
+  margin-left: -30px;
+}
+
 .link-hint .pending { color: hsla(0, 0%, 0%, 0.2); }
 
 /* Tooltip arrow */
