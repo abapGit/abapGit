@@ -87,6 +87,13 @@ CLASS zcl_abapgit_object_aifc DEFINITION
         VALUE(rv_success) TYPE abap_bool
       RAISING
         zcx_abapgit_exception.
+    METHODS execute_checks
+      IMPORTING
+        !io_xml           TYPE REF TO zif_abapgit_xml_input
+      RETURNING
+        VALUE(rv_success) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
 
   PRIVATE SECTION.
     TYPES:
@@ -279,6 +286,10 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
     ENDIF.
 
     TRY.
+        IF execute_checks( io_xml ) = abap_false.
+          zcx_abapgit_exception=>raise( 'AIF interface checks failed' ).
+        ENDIF.
+
         io_xml->read( EXPORTING
                         iv_name = `Content_table`
                       CHANGING
@@ -302,7 +313,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
           CREATE DATA lr_table TYPE HANDLE lr_tabledescr.
           ASSIGN lr_table->* TO <lt_table>.
           IF sy-subrc <> 0.
-            zcx_abapgit_exception=>raise( iv_text = 'Fieldsymbol not assigned' ).
+            zcx_abapgit_exception=>raise( 'Fieldsymbol not assigned' ).
           ENDIF.
 
           io_xml->read( EXPORTING
@@ -346,11 +357,11 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
                               iv_package = iv_package ).
 
 
-        IF authorization_check( io_log = ii_log ) = abap_false.
+        IF authorization_check( ii_log ) = abap_false.
           RETURN.
         ENDIF.
 
-        IF validate_interface( is_ifkeys = ls_ifkey ) = abap_false.
+        IF validate_interface( ls_ifkey ) = abap_false.
           RETURN.
         ENDIF.
 
@@ -519,5 +530,67 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
     LOOP AT ct_data ASSIGNING <ls_data>.
       MOVE-CORRESPONDING ls_data_to_clear TO <ls_data>.
     ENDLOOP.
+  ENDMETHOD.
+
+
+  METHOD execute_checks.
+    DATA ls_ifkeys TYPE ty_aif_key_s.
+
+    DATA lr_tabledescr TYPE REF TO cl_abap_tabledescr.
+    DATA lr_structdescr TYPE REF TO cl_abap_structdescr.
+    DATA lr_table TYPE REF TO data.
+    FIELD-SYMBOLS <lt_table> TYPE STANDARD TABLE.
+    FIELD-SYMBOLS <ls_table> TYPE any.
+    FIELD-SYMBOLS: <lv_value> TYPE any.
+
+    DATA: lx_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
+    DATA: lx_root TYPE REF TO cx_root.
+
+    lr_structdescr ?= cl_abap_typedescr=>describe_by_name( p_name = '/AIF/T_FINF' ).
+    lr_tabledescr =  cl_abap_tabledescr=>create( p_line_type = lr_structdescr ).
+
+    CREATE DATA lr_table TYPE HANDLE lr_tabledescr.
+    ASSIGN lr_table->* TO <lt_table>.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Fieldsymbol not assigned' ).
+    ENDIF.
+
+    TRY.
+        io_xml->read( EXPORTING
+                    iv_name = '/AIF/T_FINF'
+                  CHANGING
+                    cg_data = <lt_table> ).
+
+        READ TABLE <lt_table> ASSIGNING <ls_table> INDEX 1.
+        IF sy-subrc = 0.
+          ASSIGN COMPONENT 'NS' OF STRUCTURE <ls_table> TO <lv_value>.
+          IF sy-subrc = 0.
+            ls_ifkeys-ns = <lv_value>.
+          ENDIF.
+
+          ASSIGN COMPONENT 'IFNAME' OF STRUCTURE <ls_table> TO <lv_value>.
+          IF sy-subrc = 0.
+            ls_ifkeys-ifname = <lv_value>.
+          ENDIF.
+
+          ASSIGN COMPONENT 'IFVERSION' OF STRUCTURE <ls_table> TO <lv_value>.
+          IF sy-subrc = 0.
+            ls_ifkeys-ifver = <lv_value>.
+          ENDIF.
+
+          CALL METHOD mo_abapgit_util->('/AIF/IF_ABAPGIT_AIFC_UTIL~EXECUTE_CHECKS')
+            EXPORTING
+              is_ifkeys  = ls_ifkeys
+              is_finf    = <ls_table>
+            RECEIVING
+              rv_success = rv_success.
+        ENDIF.
+
+      CATCH cx_sy_dyn_call_error INTO lx_dyn_call_error.
+        zcx_abapgit_exception=>raise( iv_text = 'AIFC not supported'
+                                      ix_previous = lx_dyn_call_error ).
+      CATCH cx_root INTO lx_root.
+        zcx_abapgit_exception=>raise_with_text( lx_root ).
+    ENDTRY.
   ENDMETHOD.
 ENDCLASS.
