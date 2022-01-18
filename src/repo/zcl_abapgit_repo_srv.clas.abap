@@ -191,11 +191,9 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
       IF sy-subrc = 0.
         DELETE lt_list INDEX sy-tabix.
         CONTINUE. " Leave the repo be
-      ELSE.
-        IF lo_repo_db->exists( lo_repo->get_key( ) ) = abap_false.
-          " Not a fav, and also does not exist, probably uninstalled
-          DELETE mt_list INDEX lv_repo_index.
-        ENDIF.
+      ELSEIF lo_repo_db->exists( lo_repo->get_key( ) ) = abap_false.
+        " Not a fav, and also does not exist, probably uninstalled
+        DELETE mt_list INDEX lv_repo_index.
       ENDIF.
 
     ENDLOOP.
