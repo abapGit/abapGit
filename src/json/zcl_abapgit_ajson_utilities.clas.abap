@@ -17,6 +17,17 @@ CLASS zcl_abapgit_ajson_utilities DEFINITION
         !eo_change            TYPE REF TO zif_abapgit_ajson
       RAISING
         zcx_abapgit_ajson_error .
+    METHODS merge
+      IMPORTING
+        !iv_json_a            TYPE string OPTIONAL
+        !iv_json_b            TYPE string OPTIONAL
+        !io_json_a            TYPE REF TO zif_abapgit_ajson OPTIONAL
+        !io_json_b            TYPE REF TO zif_abapgit_ajson OPTIONAL
+        !iv_keep_empty_arrays TYPE abap_bool DEFAULT abap_false
+      RETURNING
+        VALUE(ro_json)        TYPE REF TO zif_abapgit_ajson
+      RAISING
+        zcx_abapgit_ajson_error .
     METHODS sort
       IMPORTING
         !iv_json         TYPE string OPTIONAL
@@ -50,7 +61,8 @@ CLASS zcl_abapgit_ajson_utilities DEFINITION
         zcx_abapgit_ajson_error .
     METHODS diff_b_a
       IMPORTING
-        !iv_path TYPE string
+        !iv_path  TYPE string
+        !iv_array TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_ajson_error .
     METHODS delete_empty_nodes
@@ -225,9 +237,7 @@ CLASS zcl_abapgit_ajson_utilities IMPLEMENTATION.
 
     DATA lv_path TYPE string.
 
-    FIELD-SYMBOLS:
-      <node_a> LIKE LINE OF mo_json_b->mt_json_tree,
-      <node_b> LIKE LINE OF mo_json_b->mt_json_tree.
+    FIELD-SYMBOLS <node_b> LIKE LINE OF mo_json_b->mt_json_tree.
 
     LOOP AT mo_json_b->mt_json_tree ASSIGNING <node_b> WHERE path = iv_path.
       lv_path = <node_b>-path && <node_b>-name && '/'.
@@ -235,21 +245,59 @@ CLASS zcl_abapgit_ajson_utilities IMPLEMENTATION.
       CASE <node_b>-type.
         WHEN 'array'.
           mo_insert->touch_array( lv_path ).
-          diff_b_a( lv_path ).
+          diff_b_a(
+            iv_path  = lv_path
+            iv_array = abap_true ).
         WHEN 'object'.
           diff_b_a( lv_path ).
         WHEN OTHERS.
-          READ TABLE mo_json_a->mt_json_tree ASSIGNING <node_a>
-            WITH TABLE KEY path = <node_b>-path name = <node_b>-name.
-          IF sy-subrc <> 0.
-            " save as insert
-            mo_insert->set(
-              iv_path      = lv_path
-              iv_val       = <node_b>-value
-              iv_node_type = <node_b>-type ).
+          IF iv_array = abap_false.
+            READ TABLE mo_json_a->mt_json_tree TRANSPORTING NO FIELDS
+              WITH TABLE KEY path = <node_b>-path name = <node_b>-name.
+            IF sy-subrc <> 0.
+              " save as insert
+              mo_insert->set(
+                iv_path      = lv_path
+                iv_val       = <node_b>-value
+                iv_node_type = <node_b>-type ).
+            ENDIF.
+          ELSE.
+            READ TABLE mo_insert->mt_json_tree TRANSPORTING NO FIELDS
+              WITH KEY path = <node_b>-path value = <node_b>-value.
+            IF sy-subrc <> 0.
+              " save as new array value
+              mo_insert->push(
+                iv_path = iv_path
+                iv_val  = <node_b>-value ).
+            ENDIF.
           ENDIF.
       ENDCASE.
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD merge.
+
+    mo_json_a = normalize_input(
+      iv_json = iv_json_a
+      io_json = io_json_a ).
+
+    mo_json_b = normalize_input(
+      iv_json = iv_json_b
+      io_json = io_json_b ).
+
+    " Start with first JSON...
+    mo_insert = mo_json_a.
+
+    " ...and add all nodes from second JSON
+    diff_b_a( '/' ).
+
+    ro_json ?= mo_insert.
+
+    delete_empty_nodes(
+      io_json              = ro_json
+      iv_keep_empty_arrays = iv_keep_empty_arrays ).
 
   ENDMETHOD.
 
