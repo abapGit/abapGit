@@ -226,7 +226,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_persist_repo~list_favorites.
+  METHOD zif_abapgit_persist_repo~list_by_keys.
     DATA: lt_content TYPE zif_abapgit_persistence=>ty_contents,
           ls_content LIKE LINE OF lt_content,
           ls_repo    LIKE LINE OF rt_repos.

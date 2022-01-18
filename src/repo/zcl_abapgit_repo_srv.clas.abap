@@ -180,7 +180,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
     lo_repo_db        = zcl_abapgit_persist_factory=>get_repo( ).
     lt_user_favorites = zcl_abapgit_persistence_user=>get_instance( )->get_favorites( ).
-    lt_list           = lo_repo_db->list_favorites( lt_user_favorites ).
+    lt_list           = lo_repo_db->list_by_keys( lt_user_favorites ).
 
     SORT lt_list BY package.
 
