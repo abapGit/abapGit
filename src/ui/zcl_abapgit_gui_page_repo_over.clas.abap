@@ -483,8 +483,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       lc_action_class  TYPE string VALUE `action_link`.
 
     DATA lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
-    DATA lo_toolbar_export_sub TYPE REF TO zcl_abapgit_html_toolbar.
-    DATA lo_toolbar_stage_sub TYPE REF TO zcl_abapgit_html_toolbar.
+    DATA lo_toolbar_more_sub TYPE REF TO zcl_abapgit_html_toolbar.
 
     CREATE OBJECT lo_toolbar EXPORTING iv_id = 'toolbar-ovp'.
 
@@ -493,20 +492,8 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
                      iv_class    = |{ lc_action_class } { lc_online_class }|
                      iv_li_class = |{ lc_action_class }| ).
 
-    CREATE OBJECT lo_toolbar_stage_sub EXPORTING iv_id = 'toolbar-ovp-stage_sub'.
-
-    lo_toolbar_stage_sub->add( iv_txt      = |Stage|
-                               iv_act      = |{ zif_abapgit_definitions=>c_action-go_stage }{ lc_dummy_key }|
-                               iv_class    = |{ lc_action_class } { lc_online_class }|
-                               iv_li_class = |{ lc_action_class }| ).
-
-    lo_toolbar_stage_sub->add( iv_txt      = |Stage, filtered by Transport/Task|
-                               iv_act      = |{ zif_abapgit_definitions=>c_action-go_stage_transport }{ lc_dummy_key }|
-                               iv_class    = |{ lc_action_class } { lc_online_class }|
-                               iv_li_class = |{ lc_action_class }| ).
-
     lo_toolbar->add( iv_txt      = |Stage|
-                     io_sub      = lo_toolbar_stage_sub
+                     iv_act      = |{ zif_abapgit_definitions=>c_action-go_stage }{ lc_dummy_key }|
                      iv_class    = |{ lc_action_class } { lc_online_class }|
                      iv_li_class = |{ lc_action_class }| ).
 
@@ -525,31 +512,37 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
                      iv_class    = |{ lc_action_class }|
                      iv_li_class = |{ lc_action_class }| ).
 
+
     lo_toolbar->add( iv_txt      = |Import|
                      iv_act      = |{ zif_abapgit_definitions=>c_action-zip_import }{ lc_dummy_key }|
                      iv_class    = |{ lc_action_class } { lc_offline_class }|
                      iv_li_class = |{ lc_action_class }| ).
 
-    CREATE OBJECT lo_toolbar_export_sub EXPORTING iv_id = 'toolbar-ovp-exp_sub'.
-
-    lo_toolbar_export_sub->add( iv_txt      = |zip|
-                                iv_act      = |{ zif_abapgit_definitions=>c_action-zip_export }{ lc_dummy_key }|
-                                iv_class    = |{ lc_action_class } { lc_offline_class }|
-                                iv_li_class = |{ lc_action_class }| ).
-
-    lo_toolbar_export_sub->add(
-      iv_txt      = |zip, filtered by Transport/Task|
-      iv_act      = |{ zif_abapgit_definitions=>c_action-zip_export_transport }{ lc_dummy_key }|
-      iv_class    = |{ lc_action_class } { lc_offline_class }|
-      iv_li_class = |{ lc_action_class }| ).
-
-    lo_toolbar->add( iv_txt      = 'Export'
-                     io_sub      = lo_toolbar_export_sub
+    lo_toolbar->add( iv_txt      = |Export|
+                     iv_act      = |{ zif_abapgit_definitions=>c_action-zip_export }{ lc_dummy_key }|
                      iv_class    = |{ lc_action_class } { lc_offline_class }|
                      iv_li_class = |{ lc_action_class }| ).
 
     lo_toolbar->add( iv_txt      = |Settings|
                      iv_act      = |{ zif_abapgit_definitions=>c_action-repo_settings }{ lc_dummy_key }|
+                     iv_class    = |{ lc_action_class }|
+                     iv_li_class = |{ lc_action_class }| ).
+
+    CREATE OBJECT lo_toolbar_more_sub EXPORTING iv_id = 'toolbar-ovp-more_sub'.
+
+    lo_toolbar_more_sub->add( iv_txt      = |Stage, filtered by Transport/Task|
+                              iv_act      = |{ zif_abapgit_definitions=>c_action-go_stage_transport }{ lc_dummy_key }|
+                              iv_class    = |{ lc_action_class } { lc_online_class }|
+                              iv_li_class = |{ lc_action_class }| ).
+
+    lo_toolbar_more_sub->add(
+      iv_txt      = |Export, filtered by Transport/Task|
+      iv_act      = |{ zif_abapgit_definitions=>c_action-zip_export_transport }{ lc_dummy_key }|
+      iv_class    = |{ lc_action_class } { lc_offline_class }|
+      iv_li_class = |{ lc_action_class }| ).
+
+    lo_toolbar->add( iv_txt      = |More|
+                     io_sub      = lo_toolbar_more_sub
                      iv_class    = |{ lc_action_class }|
                      iv_li_class = |{ lc_action_class }| ).
 
