@@ -221,7 +221,11 @@ CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
 
 
       IF <ls_item>-cur = abap_true.
-        lv_class_value =  |current-menu-item { <ls_item>-li_class }|.
+        IF <ls_item>-li_class IS INITIAL.
+          lv_class_value =  'current-menu-item'.
+        ELSE.
+          lv_class_value =  |current-menu-item { <ls_item>-li_class }|.
+        ENDIF.
       ELSE.
         lv_class_value =  <ls_item>-li_class.
       ENDIF.
