@@ -1034,10 +1034,9 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     lv_title = 'Select Transports / Tasks'.
 
     rt_r_trkorr = zif_abapgit_popups~popup_select_tr_requests(
-      EXPORTING
-        is_selection        = ls_selection
-        iv_title            = lv_title
-        iv_username_pattern = '*' ).
+      is_selection        = ls_selection
+      iv_title            = lv_title
+      iv_username_pattern = '*' ).
   ENDMETHOD.
 
 ENDCLASS.
