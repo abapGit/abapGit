@@ -533,5 +533,5 @@ INTERFACE zif_abapgit_definitions
       main_language_only    TYPE abap_bool,
       translation_languages TYPE ty_languages,
     END OF ty_i18n_params .
-
+  TYPES ty_trrngtrkor_tt TYPE RANGE OF trkorr.
 ENDINTERFACE.

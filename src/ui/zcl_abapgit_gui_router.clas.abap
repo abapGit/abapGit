@@ -209,7 +209,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
           lv_last_repo_key    TYPE zif_abapgit_persistence=>ty_repo-key,
           lo_obj_filter_trans TYPE REF TO zcl_abapgit_object_filter_tran,
           lo_repo             TYPE REF TO zcl_abapgit_repo,
-          lt_r_trkorr         TYPE zcl_abapgit_object_filter_tran=>ty_trrngtrkor_tt.
+          lt_r_trkorr         TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_trrngtrkor_tt.
 
     lv_key = ii_event->query( )->get( 'KEY' ).
 
@@ -754,7 +754,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
           lv_folder_logic     TYPE string,
           lv_main_lang_only   TYPE zif_abapgit_persistence=>ty_local_settings-main_language_only,
           lo_obj_filter_trans TYPE REF TO zcl_abapgit_object_filter_tran,
-          lt_r_trkorr         TYPE zcl_abapgit_object_filter_tran=>ty_trrngtrkor_tt.
+          lt_r_trkorr         TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_trrngtrkor_tt.
 
     CONSTANTS:
       BEGIN OF lc_page,

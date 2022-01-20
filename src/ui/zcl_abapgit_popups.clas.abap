@@ -985,7 +985,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
   ENDMETHOD.
   METHOD zif_abapgit_popups~popup_select_tr_requests.
-    DATA ls_r_trkorr TYPE LINE OF zcl_abapgit_object_filter_tran=>ty_trrngtrkor_tt.
+    DATA ls_r_trkorr TYPE LINE OF zif_abapgit_definitions=>ty_trrngtrkor_tt.
     DATA lr_request TYPE REF TO trwbo_request_header.
     DATA lt_request TYPE trwbo_request_headers.
 

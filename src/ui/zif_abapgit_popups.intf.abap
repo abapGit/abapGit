@@ -113,9 +113,9 @@ INTERFACE zif_abapgit_popups
     IMPORTING is_selection        TYPE trwbo_selection
               iv_title            TYPE trwbo_title
               iv_username_pattern TYPE any DEFAULT sy-uname
-    RETURNING VALUE(rt_r_trkorr)  TYPE zcl_abapgit_object_filter_tran=>ty_trrngtrkor_tt
+    RETURNING VALUE(rt_r_trkorr)  TYPE zif_abapgit_definitions=>ty_trrngtrkor_tt
     RAISING   zcx_abapgit_exception.
   METHODS popup_select_wb_tc_tr_and_tsk
-    RETURNING VALUE(rt_r_trkorr) TYPE zcl_abapgit_object_filter_tran=>ty_trrngtrkor_tt
+    RETURNING VALUE(rt_r_trkorr) TYPE zif_abapgit_definitions=>ty_trrngtrkor_tt
     RAISING   zcx_abapgit_exception.
 ENDINTERFACE.
