@@ -24,11 +24,11 @@ CLASS zcl_abapgit_gui_buttons DEFINITION
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-endclass.
+ENDCLASS.
 
 
 
-class zcl_abapgit_gui_buttons implementation.
+CLASS zcl_abapgit_gui_buttons IMPLEMENTATION.
 
 
   METHOD advanced.
@@ -57,6 +57,6 @@ class zcl_abapgit_gui_buttons implementation.
 
 
   METHOD settings.
-    rv_html_string = `<i class="icon icon-cog"></i> Settings`.
+    rv_html_string = `<i class="icon icon-user-cog-solid"></i> Settings`.
   ENDMETHOD.
-endclass.
+ENDCLASS.
