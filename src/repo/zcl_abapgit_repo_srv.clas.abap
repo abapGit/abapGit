@@ -82,7 +82,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
 
   METHOD add.
@@ -147,16 +147,6 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_repo_srv~list_favorites.
-
-    IF mv_init = abap_false OR mv_only_favorites = abap_false.
-      refresh_favorites( ).
-    ENDIF.
-
-    rt_list = mt_list.
-
-  ENDMETHOD.
-
 
   METHOD refresh_all.
 
@@ -176,19 +166,41 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD refresh_favorites.
 
     DATA: lt_list           TYPE zif_abapgit_persistence=>ty_repos,
           lt_user_favorites TYPE zif_abapgit_persist_user=>ty_favorites.
 
-    FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
+    DATA lo_repo TYPE REF TO zcl_abapgit_repo.
+    DATA lv_repo_index TYPE i.
+    DATA lo_repo_db TYPE REF TO zif_abapgit_persist_repo.
 
-    CLEAR mt_list.
+    FIELD-SYMBOLS: <ls_repo_record> LIKE LINE OF lt_list.
 
+    lo_repo_db        = zcl_abapgit_persist_factory=>get_repo( ).
     lt_user_favorites = zcl_abapgit_persistence_user=>get_instance( )->get_favorites( ).
-    lt_list = zcl_abapgit_persist_factory=>get_repo( )->list_favorites( lt_user_favorites ).
-    LOOP AT lt_list ASSIGNING <ls_list>.
-      instantiate_and_add( <ls_list> ).
+    lt_list           = lo_repo_db->list_by_keys( lt_user_favorites ).
+
+    SORT lt_list BY package.
+
+    LOOP AT mt_list INTO lo_repo.
+      lv_repo_index = sy-tabix.
+
+      READ TABLE lt_list TRANSPORTING NO FIELDS WITH KEY package = lo_repo->get_package( ).
+      IF sy-subrc = 0.
+        DELETE lt_list INDEX sy-tabix.
+        CONTINUE. " Leave the repo be
+      ELSEIF lo_repo_db->exists( lo_repo->get_key( ) ) = abap_false.
+        " Not a fav, and also does not exist, probably uninstalled
+        DELETE mt_list INDEX lv_repo_index.
+      ENDIF.
+
+    ENDLOOP.
+
+    " Create remaining (new) favs
+    LOOP AT lt_list ASSIGNING <ls_repo_record>.
+      instantiate_and_add( <ls_repo_record> ).
     ENDLOOP.
 
     mv_init = abap_true.
@@ -441,6 +453,30 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_repo_srv~list_favorites.
+
+    DATA lt_user_favorites TYPE zif_abapgit_persist_user=>ty_favorites.
+    DATA lo_repo TYPE REF TO zcl_abapgit_repo.
+
+    lt_user_favorites = zcl_abapgit_persistence_user=>get_instance( )->get_favorites( ).
+    SORT lt_user_favorites BY table_line.
+
+    IF mv_init = abap_false OR mv_only_favorites = abap_false.
+      refresh_favorites( ).
+    ENDIF.
+
+    LOOP AT mt_list INTO lo_repo.
+      READ TABLE lt_user_favorites
+        TRANSPORTING NO FIELDS
+        WITH KEY table_line = lo_repo->get_key( ).
+      IF sy-subrc = 0.
+        APPEND lo_repo TO rt_list.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_repo_srv~new_offline.
 
     DATA: ls_repo        TYPE zif_abapgit_persistence=>ty_repo,
@@ -636,5 +672,4 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
 ENDCLASS.

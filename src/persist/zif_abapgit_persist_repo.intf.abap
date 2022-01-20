@@ -20,16 +20,23 @@ INTERFACE zif_abapgit_persist_repo
       !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
     RAISING
       zcx_abapgit_exception .
+  METHODS exists
+    IMPORTING
+      !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
+    RETURNING
+      VALUE(rv_yes) TYPE abap_bool.
   METHODS list
     RETURNING
       VALUE(rt_repos) TYPE zif_abapgit_persistence=>ty_repos
     RAISING
       zcx_abapgit_exception .
-  METHODS list_favorites
-    IMPORTING it_keys         TYPE zif_abapgit_persistence=>ty_repo_keys
-    RETURNING VALUE(rt_repos) TYPE zif_abapgit_persistence=>ty_repos
+  METHODS list_by_keys
+    IMPORTING
+      it_keys         TYPE zif_abapgit_persistence=>ty_repo_keys
+    RETURNING
+      VALUE(rt_repos) TYPE zif_abapgit_persistence=>ty_repos
     RAISING
-              zcx_abapgit_exception .
+      zcx_abapgit_exception .
   METHODS lock
     IMPORTING
       !iv_mode TYPE enqmode
