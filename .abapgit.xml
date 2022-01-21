@@ -5,21 +5,6 @@
    <MASTER_LANGUAGE>E</MASTER_LANGUAGE>
    <STARTING_FOLDER>/src/</STARTING_FOLDER>
    <FOLDER_LOGIC>PREFIX</FOLDER_LOGIC>
-   <IGNORE>
-    <item>/.travis.yml</item>
-    <item>/CONTRIBUTING.md</item>
-    <item>/LICENSE</item>
-    <item>/README.md</item>
-    <item>/package.json</item>
-    <item>/changelog.txt</item>
-    <item>/.gitignore</item>
-    <item>/.editorconfig</item>
-    <item>/CODE_OF_CONDUCT.md</item>
-    <item>/abaplint.json</item>
-    <item>/.eslintrc.yaml</item>
-    <item>/.gitlab-ci.yml</item>
-    <item>/.devcontainer.json</item>
-   </IGNORE>
   </DATA>
  </asx:values>
 </asx:abap>
