@@ -201,7 +201,7 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
         destination          = 'NONE'
       EXCEPTIONS
         destination_not_open = 1
-        others               = 2.
+        OTHERS               = 2.
     IF sy-subrc <> 0.
       " this error should not happen; if it happens, it's not so serious, ignore it.
     ENDIF.
