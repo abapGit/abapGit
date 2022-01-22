@@ -1,3 +1,3 @@
-FUNCTION-POOL ZABAPGIT_APACK.               "MESSAGE-ID ..
+FUNCTION-POOL zabapgit_apack.               "MESSAGE-ID ..
 
 * INCLUDE LZABAPGIT_APACKD...                " Local class definition
