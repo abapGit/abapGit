@@ -433,13 +433,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       iv_txt = zcl_abapgit_gui_buttons=>repo_list( )
       iv_act = zif_abapgit_definitions=>c_action-abapgit_home
     )->add(
-      iv_txt = zcl_abapgit_gui_buttons=>settings( )
-      iv_act = zif_abapgit_definitions=>c_action-go_settings
-    )->add(
-      iv_txt = zcl_abapgit_gui_buttons=>advanced( )
-      iv_title = 'Utilities'
-      io_sub = zcl_abapgit_gui_chunk_lib=>advanced_submenu( )
-    )->add(
       iv_txt = zcl_abapgit_gui_buttons=>help( )
       iv_title = 'Help'
       io_sub = zcl_abapgit_gui_chunk_lib=>help_submenu( ) ).
@@ -517,8 +510,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                      iv_act = |{ zif_abapgit_definitions=>c_action-repo_refresh }?key={ mv_key }|
                      iv_opt = zif_abapgit_html=>c_html_opt-strong ).
 
-    ro_toolbar->add( iv_txt = zcl_abapgit_html=>icon( iv_name = 'cog' )
-                     iv_act = |{ zif_abapgit_definitions=>c_action-repo_settings }?key={ mv_key }|
+    ro_toolbar->add( iv_txt   = 'Settings'
+                     iv_act   = |{ zif_abapgit_definitions=>c_action-repo_settings }?key={ mv_key }|
+                     iv_opt   = zif_abapgit_html=>c_html_opt-strong
                      iv_title = `Repository Settings` ).
 
   ENDMETHOD.
@@ -756,6 +750,31 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ENDIF.
 
     MESSAGE 'Repository opened in a new window' TYPE 'S'.
+
+  ENDMETHOD.
+
+
+  METHOD order_files.
+
+    DATA:
+      lt_sort TYPE abap_sortorder_tab,
+      ls_sort LIKE LINE OF lt_sort.
+
+    IF lines( ct_files ) = 0.
+      RETURN.
+    ENDIF.
+
+    ls_sort-descending = mv_order_descending.
+    ls_sort-astext     = abap_true.
+    ls_sort-name       = 'PATH'.
+    INSERT ls_sort INTO TABLE lt_sort.
+
+    ls_sort-descending = mv_order_descending.
+    ls_sort-astext     = abap_true.
+    ls_sort-name       = 'FILENAME'.
+    INSERT ls_sort INTO TABLE lt_sort.
+
+    SORT ct_files STABLE BY (lt_sort).
 
   ENDMETHOD.
 
@@ -1333,29 +1352,4 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
-
-  METHOD order_files.
-
-    DATA:
-      lt_sort TYPE abap_sortorder_tab,
-      ls_sort LIKE LINE OF lt_sort.
-
-    IF lines( ct_files ) = 0.
-      RETURN.
-    ENDIF.
-
-    ls_sort-descending = mv_order_descending.
-    ls_sort-astext     = abap_true.
-    ls_sort-name       = 'PATH'.
-    INSERT ls_sort INTO TABLE lt_sort.
-
-    ls_sort-descending = mv_order_descending.
-    ls_sort-astext     = abap_true.
-    ls_sort-name       = 'FILENAME'.
-    INSERT ls_sort INTO TABLE lt_sort.
-
-    SORT ct_files STABLE BY (lt_sort).
-
-  ENDMETHOD.
-
 ENDCLASS.

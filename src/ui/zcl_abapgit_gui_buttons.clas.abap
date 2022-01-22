@@ -57,6 +57,6 @@ CLASS zcl_abapgit_gui_buttons IMPLEMENTATION.
 
 
   METHOD settings.
-    rv_html_string = `<i class="icon icon-user-cog-solid"></i> Settings`.
+    rv_html_string = `<i class="icon icon-cog"></i> Settings`.
   ENDMETHOD.
 ENDCLASS.
