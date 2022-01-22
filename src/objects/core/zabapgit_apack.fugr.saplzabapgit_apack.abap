@@ -2,7 +2,7 @@
 *   System-defined Include-files.                                 *
 *******************************************************************
 INCLUDE lzabapgit_apacktop.                " Global Declarations
-INCLUDE LZABAPGIT_APACKUXX.                " Function Modules
+INCLUDE lzabapgit_apackuxx.                " Function Modules
 
 *******************************************************************
 *   User-defined Include-files (if necessary).                    *
