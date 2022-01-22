@@ -207,7 +207,7 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
     ENDIF.
 
     IF lv_provider_serialized IS NOT INITIAL.
-      CALL TRANSFORMATION ID SOURCE XML lv_provider_serialized RESULT root = ro_provider.
+      CALL TRANSFORMATION id SOURCE XML lv_provider_serialized RESULT root = ro_provider.
     ENDIF.
 
   ENDMETHOD.
