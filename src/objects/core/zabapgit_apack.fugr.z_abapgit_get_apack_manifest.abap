@@ -1,4 +1,4 @@
-FUNCTION Z_ABAPGIT_GET_APACK_MANIFEST.
+FUNCTION z_abapgit_get_apack_manifest.
 *"----------------------------------------------------------------------
 *"*"Local Interface:
 *"  IMPORTING
