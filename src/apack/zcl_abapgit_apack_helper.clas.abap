@@ -24,6 +24,11 @@ CLASS zcl_abapgit_apack_helper DEFINITION
         VALUE(rs_file) TYPE zif_abapgit_definitions=>ty_file
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS get_manifest_provider
+      IMPORTING
+        !iv_clsname        TYPE seometarel-clsname
+      RETURNING
+        value(ro_provider) TYPE REF TO object.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -161,11 +166,7 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
     LOOP AT lt_manifest_implementation INTO ls_manifest_implementation.
       CLEAR: lo_manifest_provider, lo_apack_reader.
 
-      TRY.
-          CREATE OBJECT lo_manifest_provider TYPE (ls_manifest_implementation-clsname).
-        CATCH cx_sy_create_object_error.
-          CLEAR: lo_manifest_provider.
-      ENDTRY.
+      lo_manifest_provider = get_manifest_provider( ls_manifest_implementation-clsname ).
 
       IF lo_manifest_provider IS NOT BOUND.
         CONTINUE.
@@ -180,6 +181,34 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
       ENDIF.
 
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD get_manifest_provider.
+
+    DATA: lv_provider_serialized TYPE xstring.
+
+    CALL FUNCTION 'Z_ABAPGIT_GET_APACK_MANIFEST'
+      DESTINATION 'NONE'
+      EXPORTING
+        iv_clsname             = iv_clsname
+      IMPORTING
+        ev_provider_serialized = lv_provider_serialized.
+
+    CALL FUNCTION 'RFC_CONNECTION_CLOSE'
+      EXPORTING
+        destination          = 'NONE'
+      EXCEPTIONS
+        destination_not_open = 1
+        others               = 2.
+    IF sy-subrc <> 0.
+      " this error should not happen; if it happens, it's not so serious, ignore it.
+    ENDIF.
+
+    IF lv_provider_serialized IS NOT INITIAL.
+      CALL TRANSFORMATION ID SOURCE XML lv_provider_serialized RESULT root = ro_provider.
+    ENDIF.
 
   ENDMETHOD.
 

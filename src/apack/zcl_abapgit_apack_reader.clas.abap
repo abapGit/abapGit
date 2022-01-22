@@ -193,11 +193,7 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
                  tadir~devclass = mv_package_name.
       ENDIF.
       IF ls_manifest_implementation IS NOT INITIAL.
-        TRY.
-            CREATE OBJECT lo_manifest_provider TYPE (ls_manifest_implementation-clsname).
-          CATCH cx_sy_create_object_error.
-            CLEAR: rs_manifest_descriptor.
-        ENDTRY.
+        lo_manifest_provider = zcl_abapgit_apack_helper=>get_manifest_provider( ls_manifest_implementation-clsname ).
         IF lo_manifest_provider IS BOUND.
           copy_manifest_descriptor( lo_manifest_provider ).
         ENDIF.
