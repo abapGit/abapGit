@@ -28,7 +28,7 @@ CLASS zcl_abapgit_apack_helper DEFINITION
       IMPORTING
         !iv_clsname        TYPE seometarel-clsname
       RETURNING
-        value(ro_provider) TYPE REF TO object.
+        VALUE(ro_provider) TYPE REF TO object.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
