@@ -22,9 +22,7 @@ CLASS zcl_abapgit_apack_provider_prx DEFINITION
 
     METHODS copy_manifest_descriptor
       IMPORTING
-        !io_manifest_provider TYPE REF TO object
-      RAISING
-        zcx_abapgit_exception.
+        !io_manifest_provider TYPE REF TO object.
 
 ENDCLASS.
 
