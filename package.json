@@ -26,8 +26,8 @@
   },
   "devDependencies": {
     "@abaplint/cli": "^2.84.3",
-    "@abaplint/runtime": "^1.7.26",
-    "@abaplint/transpiler-cli": "^1.7.26",
+    "@abaplint/runtime": "^1.7.28",
+    "@abaplint/transpiler-cli": "^1.7.28",
     "abapmerge": "^0.14.3",
     "c8": "^7.11.0",
     "eslint": "^8.7.0"
