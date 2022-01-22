@@ -697,8 +697,8 @@ CLASS ltcl_calculate_status DEFINITION FOR TESTING RISK LEVEL HARMLESS
       local_outside_main FOR TESTING RAISING zcx_abapgit_exception,
       complete FOR TESTING RAISING zcx_abapgit_exception,
       only_local2 FOR TESTING RAISING zcx_abapgit_exception,
-      only_remote2 FOR TESTING RAISING zcx_abapgit_exception.
-
+      only_remote2 FOR TESTING RAISING zcx_abapgit_exception,
+      only_remote3 FOR TESTING RAISING zcx_abapgit_exception.
 ENDCLASS.
 
 CLASS ltcl_calculate_status IMPLEMENTATION.
@@ -1163,6 +1163,7 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
 
   METHOD only_remote2.
 
+    " Add local class implementation
     mo_helper->add_local(
       iv_path     = '/src/sub/'
       iv_obj_name = 'ZCL_CLAS'
@@ -1175,7 +1176,6 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
       iv_filename = 'zcl_clas.clas.abap'
       iv_sha1     = '332211' ).
 
-
     mo_helper->add_remote(
       iv_path     = '/src/sub/'
       iv_filename = 'zcl_clas.clas.locals_imp.abap'
@@ -1186,13 +1186,58 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
       iv_filename = 'zcl_clas.clas.locals_imp.abap'
       iv_sha1     = '1111' ).
 
-    mo_result = mo_helper->run( iv_devclass = '$DIFFERENT$' ).
+    mo_result = mo_helper->run( iv_devclass = '$DIFFERENT' ).
 
     mo_result->assert_lines( 2 ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_result->get_line( 2 )-match
       exp = abap_false ).
+
+  ENDMETHOD.
+
+  METHOD only_remote3.
+
+    " Add subpackage remotely
+    mo_helper->add_local(
+      iv_path     = '/src/'
+      iv_obj_name = '$DIFFERENT'
+      iv_obj_type = 'DEVC'
+      iv_filename = 'package.devc.xml'
+      iv_sha1     = '112233' ).
+
+    mo_helper->add_remote(
+      iv_path     = '/src/'
+      iv_filename = 'package.devc.xml'
+      iv_sha1     = '112233' ).
+
+    mo_helper->add_remote(
+      iv_path     = '/src/sub/'
+      iv_filename = 'package.devc.xml'
+      iv_sha1     = '332211' ).
+
+    mo_helper->add_state(
+      iv_path     = '/src/'
+      iv_filename = 'package.devc.xml'
+      iv_sha1     = '112233' ).
+
+    mo_result = mo_helper->run( iv_devclass = '$DIFFERENT' ).
+
+    mo_result->assert_lines( 2 ).
+
+    " main package matches
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_result->get_line( 1 )-match
+      exp = abap_true ).
+
+    " subpackage should appear as added remotely
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_result->get_line( 2 )-lstate
+      exp = zif_abapgit_definitions=>c_state-unchanged ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_result->get_line( 2 )-rstate
+      exp = zif_abapgit_definitions=>c_state-added ).
 
   ENDMETHOD.
 
