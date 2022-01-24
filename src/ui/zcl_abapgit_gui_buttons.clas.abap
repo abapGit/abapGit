@@ -30,28 +30,33 @@ ENDCLASS.
 
 CLASS zcl_abapgit_gui_buttons IMPLEMENTATION.
 
-  METHOD new_online.
-    rv_html_string = `<i class="icon icon-cloud-upload-alt"></i> New Online`.
-  ENDMETHOD.
-
-  METHOD new_offline.
-    rv_html_string = `<i class="icon icon-plug"></i> New Offline`.
-  ENDMETHOD.
 
   METHOD advanced.
     rv_html_string = `<i class="icon icon-tools-solid"></i>`.
   ENDMETHOD.
 
+
   METHOD help.
     rv_html_string = `<i class="icon icon-question-circle-solid"></i>`.
   ENDMETHOD.
+
+
+  METHOD new_offline.
+    rv_html_string = `<i class="icon icon-plug"></i> New Offline`.
+  ENDMETHOD.
+
+
+  METHOD new_online.
+    rv_html_string = `<i class="icon icon-cloud-upload-alt"></i> New Online`.
+  ENDMETHOD.
+
 
   METHOD repo_list.
     rv_html_string = `<i class="icon icon-bars"></i> Repository List`.
   ENDMETHOD.
 
+
   METHOD settings.
     rv_html_string = `<i class="icon icon-cog"></i> Settings`.
   ENDMETHOD.
-
 ENDCLASS.
