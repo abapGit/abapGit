@@ -530,16 +530,15 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     CREATE OBJECT lo_toolbar_more_sub EXPORTING iv_id = 'toolbar-ovp-more_sub'.
 
-    lo_toolbar_more_sub->add( iv_txt      = |Stage, filtered by Transport/Task|
+    lo_toolbar_more_sub->add( iv_txt      = |Stage by Transport|
                               iv_act      = |{ zif_abapgit_definitions=>c_action-go_stage_transport }{ lc_dummy_key }|
                               iv_class    = |{ lc_action_class } { lc_online_class }|
                               iv_li_class = |{ lc_action_class }| ).
 
-    lo_toolbar_more_sub->add(
-      iv_txt      = |Export, filtered by Transport/Task|
-      iv_act      = |{ zif_abapgit_definitions=>c_action-zip_export_transport }{ lc_dummy_key }|
-      iv_class    = |{ lc_action_class } { lc_offline_class }|
-      iv_li_class = |{ lc_action_class }| ).
+    lo_toolbar_more_sub->add( iv_txt      = |Export by Transport|
+                              iv_act      = |{ zif_abapgit_definitions=>c_action-zip_export_transport }{ lc_dummy_key }|
+                              iv_class    = |{ lc_action_class } { lc_offline_class }|
+                              iv_li_class = |{ lc_action_class }| ).
 
     lo_toolbar->add( iv_txt      = |More|
                      io_sub      = lo_toolbar_more_sub
