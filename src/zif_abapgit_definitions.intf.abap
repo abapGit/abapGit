@@ -448,6 +448,7 @@ INTERFACE zif_abapgit_definitions
       abapgit_home                  TYPE string VALUE 'abapgit_home',
       zip_import                    TYPE string VALUE 'zip_import',
       zip_export                    TYPE string VALUE 'zip_export',
+      zip_export_transport          TYPE string VALUE 'zip_export_transport',
       zip_package                   TYPE string VALUE 'zip_package',
       zip_transport                 TYPE string VALUE 'zip_transport',
       zip_object                    TYPE string VALUE 'zip_object',
@@ -475,6 +476,7 @@ INTERFACE zif_abapgit_definitions
       go_repo_diff                  TYPE string VALUE 'go_repo_diff',
       go_file_diff                  TYPE string VALUE 'go_fill_diff',
       go_stage                      TYPE string VALUE 'go_stage',
+      go_stage_transport            TYPE string VALUE 'go_stage_transport',
       go_commit                     TYPE string VALUE 'go_commit',
       go_branch_overview            TYPE string VALUE 'go_branch_overview',
       go_tag_overview               TYPE string VALUE 'go_tag_overview',
@@ -531,5 +533,5 @@ INTERFACE zif_abapgit_definitions
       main_language_only    TYPE abap_bool,
       translation_languages TYPE ty_languages,
     END OF ty_i18n_params .
-
+  TYPES ty_trrngtrkor_tt TYPE RANGE OF trkorr.
 ENDINTERFACE.

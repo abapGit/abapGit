@@ -45,16 +45,16 @@ CLASS zcl_abapgit_popups DEFINITION
       EXPORTING
         !et_list TYPE INDEX TABLE .
     METHODS on_select_list_link_click
-        FOR EVENT link_click OF cl_salv_events_table
+      FOR EVENT link_click OF cl_salv_events_table
       IMPORTING
         !row
         !column .
     METHODS on_select_list_function_click
-        FOR EVENT added_function OF cl_salv_events_table
+      FOR EVENT added_function OF cl_salv_events_table
       IMPORTING
         !e_salv_function .
     METHODS on_double_click
-        FOR EVENT double_click OF cl_salv_events_table
+      FOR EVENT double_click OF cl_salv_events_table
       IMPORTING
         !row
         !column .
@@ -797,18 +797,18 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
                          iv_fieldname = 'LINE'
                          iv_fieldtext = 'Branch name'
                          iv_value     = lv_transports_as_text
-               CHANGING ct_fields     = lt_fields ).
+               CHANGING  ct_fields    = lt_fields ).
 
     add_field( EXPORTING iv_tabname   = 'ABAPTXT255'
                          iv_fieldname = 'LINE'
                          iv_fieldtext = 'Commit text'
                          iv_value     = lv_desc_as_text
-               CHANGING ct_fields     = lt_fields ).
+               CHANGING  ct_fields    = lt_fields ).
 
-    _popup_3_get_values( EXPORTING iv_popup_title    = 'Transport to new Branch'
-                         IMPORTING ev_value_1        = lv_branch_name
-                                   ev_value_2        = lv_commit_text
-                         CHANGING  ct_fields         = lt_fields ).
+    _popup_3_get_values( EXPORTING iv_popup_title = 'Transport to new Branch'
+                         IMPORTING ev_value_1     = lv_branch_name
+                                   ev_value_2     = lv_commit_text
+                         CHANGING  ct_fields      = lt_fields ).
 
     rs_transport_branch-branch_name = lv_branch_name.
     rs_transport_branch-commit_text = lv_commit_text.
@@ -842,7 +842,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
     TRY.
         cl_salv_table=>factory( IMPORTING r_salv_table = mo_select_list_popup
-                                CHANGING  t_table = <lt_table> ).
+                                CHANGING  t_table      = <lt_table> ).
 
         CASE iv_selection_mode.
           WHEN if_salv_c_selection_mode=>single.
@@ -854,7 +854,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
         ENDCASE.
 
         mo_select_list_popup->set_screen_status( pfstatus = lv_pfstatus
-                                                 report = 'SAPMSVIM' ).
+                                                 report   = 'SAPMSVIM' ).
 
         mo_select_list_popup->set_screen_popup( start_column = ms_start_pos-col
                                                 end_column   = ms_start_pos-col + iv_end_column - iv_start_column
@@ -1046,4 +1046,59 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+  METHOD zif_abapgit_popups~popup_select_tr_requests.
+    DATA ls_r_trkorr TYPE LINE OF zif_abapgit_definitions=>ty_trrngtrkor_tt.
+    DATA lr_request TYPE REF TO trwbo_request_header.
+    DATA lt_request TYPE trwbo_request_headers.
+
+    CALL FUNCTION 'TRINT_SELECT_REQUESTS'
+      EXPORTING
+        iv_username_pattern    = iv_username_pattern
+        is_selection           = is_selection
+        iv_complete_projects   = abap_false
+        iv_via_selscreen       = 'X'
+        iv_title               = iv_title
+      IMPORTING
+        et_requests            = lt_request
+      EXCEPTIONS
+        action_aborted_by_user = 1
+        OTHERS                 = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Selection Canceled' ).
+    ENDIF.
+
+    IF lt_request IS INITIAL.
+      zcx_abapgit_exception=>raise( 'No Request Found' ).
+    ENDIF.
+
+    LOOP AT lt_request REFERENCE INTO lr_request.
+      ls_r_trkorr-sign = 'I'.
+      ls_r_trkorr-option = 'EQ'.
+      ls_r_trkorr-low = lr_request->trkorr.
+      INSERT ls_r_trkorr INTO TABLE rt_r_trkorr.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_popups~popup_select_wb_tc_tr_and_tsk.
+    DATA ls_selection  TYPE trwbo_selection.
+    DATA lv_title TYPE trwbo_title.
+
+    ls_selection-trkorrpattern = space.
+    ls_selection-connect_req_task_conditions = 'X'.
+    ls_selection-reqfunctions = 'KTRXS'.
+    ls_selection-reqstatus = 'RNODL'.
+    ls_selection-taskstatus = 'RNODL'.
+    CONDENSE ls_selection-reqfunctions NO-GAPS.
+    ls_selection-taskfunctions = 'QRSX'.
+    CONCATENATE sy-sysid '*' INTO ls_selection-trkorrpattern.
+
+    lv_title = 'Select Transports / Tasks'.
+
+    rt_r_trkorr = zif_abapgit_popups~popup_select_tr_requests(
+      is_selection        = ls_selection
+      iv_title            = lv_title
+      iv_username_pattern = '*' ).
+  ENDMETHOD.
+
 ENDCLASS.

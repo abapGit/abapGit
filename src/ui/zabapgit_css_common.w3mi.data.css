@@ -628,14 +628,16 @@ table.db_tab td.data {
   font-style: italic;
 }
 
-span.action_link.enabled{
+li.action_link.enabled{
   visibility: visible;
   position: relative;
+  display: block;
 }
 
-span.action_link:not(enabled){
+li.action_link:not(enabled){
   visibility: hidden;
   position: fixed; /* so it does not take up space when hidden */
+  display: none;
 }
 
 

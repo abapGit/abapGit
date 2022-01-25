@@ -76,6 +76,14 @@ CLASS ltcl_abapgit_popups_mock IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_popups~popup_select_tr_requests.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_popups~popup_select_wb_tc_tr_and_tsk.
+
+  ENDMETHOD.
+
 ENDCLASS.
 
 CLASS ltcl_no_dependency_injection IMPLEMENTATION.

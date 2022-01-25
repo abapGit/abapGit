@@ -6,7 +6,6 @@ CLASS zcl_abapgit_object_filter_tran DEFINITION
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object_filter.
 
-    TYPES ty_trrngtrkor_tt TYPE RANGE OF trkorr.
     TYPES: BEGIN OF ty_e071_filter,
              pgmid    TYPE tadir-pgmid,
              object   TYPE tadir-object,
@@ -17,14 +16,14 @@ CLASS zcl_abapgit_object_filter_tran DEFINITION
     METHODS set_filter_values
       IMPORTING
         iv_package  TYPE tadir-devclass
-        it_r_trkorr TYPE ty_trrngtrkor_tt
+        it_r_trkorr TYPE zif_abapgit_definitions=>ty_trrngtrkor_tt
       RAISING
         zcx_abapgit_exception .
 
     METHODS get_filter_values
       EXPORTING
         ev_package  TYPE tadir-devclass
-        et_r_trkorr TYPE ty_trrngtrkor_tt.
+        et_r_trkorr TYPE zif_abapgit_definitions=>ty_trrngtrkor_tt.
 
   PROTECTED SECTION.
     METHODS adjust_local_filter
@@ -38,13 +37,13 @@ CLASS zcl_abapgit_object_filter_tran DEFINITION
   PRIVATE SECTION.
 
     DATA mt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt .
-    DATA mt_r_trkorr TYPE ty_trrngtrkor_tt .
+    DATA mt_r_trkorr TYPE zif_abapgit_definitions=>ty_trrngtrkor_tt .
     DATA mv_package TYPE tadir-devclass.
 
     METHODS generate_local_filter
       IMPORTING
         iv_package       TYPE tadir-devclass
-        it_r_trkorr      TYPE ty_trrngtrkor_tt
+        it_r_trkorr      TYPE zif_abapgit_definitions=>ty_trrngtrkor_tt
       RETURNING
         VALUE(rt_filter) TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
