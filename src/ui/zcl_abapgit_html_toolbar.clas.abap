@@ -20,6 +20,8 @@ CLASS zcl_abapgit_html_toolbar DEFINITION
         !iv_aux        TYPE string OPTIONAL
         !iv_id         TYPE string OPTIONAL
         !iv_title      TYPE string OPTIONAL
+        !iv_class      TYPE string OPTIONAL
+        !iv_li_class   TYPE string OPTIONAL
       RETURNING
         VALUE(ro_self) TYPE REF TO zcl_abapgit_html_toolbar .
     METHODS count
@@ -45,17 +47,19 @@ CLASS zcl_abapgit_html_toolbar DEFINITION
 
     TYPES:
       BEGIN OF ty_item,
-        txt   TYPE string,
-        act   TYPE string,
-        ico   TYPE string,
-        sub   TYPE REF TO zcl_abapgit_html_toolbar,
-        opt   TYPE c LENGTH 1,
-        typ   TYPE c LENGTH 1,
-        cur   TYPE abap_bool,
-        chk   TYPE abap_bool,
-        aux   TYPE string,
-        id    TYPE string,
-        title TYPE string,
+        txt      TYPE string,
+        act      TYPE string,
+        ico      TYPE string,
+        sub      TYPE REF TO zcl_abapgit_html_toolbar,
+        opt      TYPE c LENGTH 1,
+        typ      TYPE c LENGTH 1,
+        cur      TYPE abap_bool,
+        chk      TYPE abap_bool,
+        aux      TYPE string,
+        id       TYPE string,
+        title    TYPE string,
+        class    TYPE string,
+        li_class TYPE string,
       END OF ty_item .
     TYPES:
       ty_items TYPE STANDARD TABLE OF ty_item .
@@ -72,7 +76,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTML_TOOLBAR IMPLEMENTATION.
+CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
 
 
   METHOD add.
@@ -97,6 +101,8 @@ CLASS ZCL_ABAPGIT_HTML_TOOLBAR IMPLEMENTATION.
     ls_item-aux   = iv_aux.
     ls_item-id    = iv_id.
     ls_item-title = iv_title.
+    ls_item-class = iv_class.
+    ls_item-li_class = iv_li_class.
 
     APPEND ls_item TO mt_items.
 
@@ -162,12 +168,13 @@ CLASS ZCL_ABAPGIT_HTML_TOOLBAR IMPLEMENTATION.
 
   METHOD render_items.
 
-    DATA: lv_class     TYPE string,
-          lv_icon      TYPE string,
-          lv_id        TYPE string,
-          lv_check     TYPE string,
-          lv_aux       TYPE string,
-          lv_has_icons TYPE abap_bool.
+    DATA: lv_class       TYPE string,
+          lv_class_value TYPE string,
+          lv_icon        TYPE string,
+          lv_id          TYPE string,
+          lv_check       TYPE string,
+          lv_aux         TYPE string,
+          lv_has_icons   TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF mt_items.
 
@@ -193,7 +200,7 @@ CLASS ZCL_ABAPGIT_HTML_TOOLBAR IMPLEMENTATION.
 
     " Render items
     LOOP AT mt_items ASSIGNING <ls_item>.
-      CLEAR: lv_class, lv_icon.
+      CLEAR: lv_class, lv_class_value, lv_icon.
 
       IF <ls_item>-typ = zif_abapgit_html=>c_action_type-separator.
         ri_html->add( |<li class="separator">{ <ls_item>-txt }</li>| ).
@@ -212,29 +219,41 @@ CLASS ZCL_ABAPGIT_HTML_TOOLBAR IMPLEMENTATION.
         ENDIF.
       ENDIF.
 
-      IF <ls_item>-cur = abap_true.
-        lv_class = ' class="current-menu-item"'.
-      ENDIF.
 
+      IF <ls_item>-cur = abap_true.
+        IF <ls_item>-li_class IS INITIAL.
+          lv_class_value =  'current-menu-item'.
+        ELSE.
+          lv_class_value =  |current-menu-item { <ls_item>-li_class }|.
+        ENDIF.
+      ELSE.
+        lv_class_value =  <ls_item>-li_class.
+      ENDIF.
+      IF lv_class_value IS NOT INITIAL.
+        lv_class =   | class="{ lv_class_value }"|.
+      ENDIF.
       IF <ls_item>-aux IS NOT INITIAL.
         lv_aux = | data-aux="{ <ls_item>-aux }"|.
       ENDIF.
 
       ri_html->add( |<li{ lv_class }{ lv_check }{ lv_aux }>| ).
+
       IF <ls_item>-sub IS INITIAL.
         ri_html->add_a( iv_txt   = lv_icon && <ls_item>-txt
                         iv_typ   = <ls_item>-typ
                         iv_act   = <ls_item>-act
                         iv_id    = <ls_item>-id
                         iv_opt   = <ls_item>-opt
-                        iv_title = <ls_item>-title ).
+                        iv_title = <ls_item>-title
+                        iv_class = <ls_item>-class ).
       ELSE.
         ri_html->add_a( iv_txt   = lv_icon && <ls_item>-txt
                         iv_typ   = zif_abapgit_html=>c_action_type-dummy
                         iv_act   = ''
                         iv_id    = <ls_item>-id
                         iv_opt   = <ls_item>-opt
-                        iv_title = <ls_item>-title ).
+                        iv_title = <ls_item>-title
+                        iv_class = <ls_item>-class ).
         ri_html->add( <ls_item>-sub->render_items( iv_sort ) ).
       ENDIF.
       ri_html->add( '</li>' ).

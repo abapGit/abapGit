@@ -91,6 +91,12 @@ CLASS ltcl_popups_mock IMPLEMENTATION.
     mv_user_decision = iv_user_decision.
   ENDMETHOD.
 
+  METHOD zif_abapgit_popups~popup_select_tr_requests.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_popups~popup_select_wb_tc_tr_and_tsk.
+  ENDMETHOD.
+
 ENDCLASS.
 
 CLASS ltcl_test_form DEFINITION
