@@ -156,6 +156,7 @@ CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
           lt_color_negative TYPE lvc_t_scol,
           lt_color_positive TYPE lvc_t_scol,
           ls_color          TYPE lvc_s_scol,
+          ls_position       TYPE zcl_abapgit_popups=>ty_popup_position,
           lx_ex             TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <ls_line>        TYPE ty_color_line,
@@ -199,10 +200,15 @@ CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
         lo_column = lo_columns->get_column( 'REQUIRED_PATCH' ).
         lo_column->set_short_text( 'Req. SP L.' ).
 
-        lo_alv->set_screen_popup( start_column = 30
-                                  end_column   = 100
-                                  start_line   = 10
-                                  end_line     = 20 ).
+        ls_position = zcl_abapgit_popups=>center(
+          iv_width  = 70
+          iv_height = 10 ).
+
+        lo_alv->set_screen_popup( start_column = ls_position-start_column
+                                  end_column   = ls_position-end_column
+                                  start_line   = ls_position-start_row
+                                  end_line     = ls_position-end_row ).
+
         lo_alv->get_display_settings( )->set_list_header( 'Requirements' ).
         lo_alv->display( ).
 

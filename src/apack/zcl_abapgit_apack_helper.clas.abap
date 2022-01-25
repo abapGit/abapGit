@@ -212,6 +212,7 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
           lv_handle              TYPE i,
           ls_hyperlink           TYPE salv_s_int4_column,
           lv_hyperlink           TYPE service_rl,
+          ls_position            TYPE zcl_abapgit_popups=>ty_popup_position,
           lx_ex                  TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <ls_line>       TYPE ty_color_line,
@@ -269,7 +270,6 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
         lo_column_table ?= lo_column.
         lo_column_table->set_cell_type( if_salv_c_cell_type=>link ).
 
-
         lo_column = lo_columns->get_column( 'VERSION' ).
         lo_column->set_short_text( 'Version' ).
 
@@ -310,10 +310,15 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
 
         UNASSIGN <ls_line>.
 
-        lo_alv->set_screen_popup( start_column = 30
-                                  end_column   = 120
-                                  start_line   = 10
-                                  end_line     = 20 ).
+        ls_position = zcl_abapgit_popups=>center(
+          iv_width  = 90
+          iv_height = 10 ).
+
+        lo_alv->set_screen_popup( start_column = ls_position-start_column
+                                  end_column   = ls_position-end_column
+                                  start_line   = ls_position-start_row
+                                  end_line     = ls_position-end_row ).
+
         lo_alv->get_display_settings( )->set_list_header( 'APACK dependencies' ).
         lo_alv->display( ).
 
