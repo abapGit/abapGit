@@ -8,6 +8,21 @@ CLASS zcl_abapgit_popups DEFINITION
 
     INTERFACES zif_abapgit_popups .
 
+    TYPES:
+      BEGIN OF ty_popup_position,
+        start_column LIKE  sy-cucol,
+        start_row    LIKE  sy-curow,
+        end_column   LIKE  sy-cucol,
+        end_row      LIKE  sy-curow,
+      END OF ty_popup_position.
+
+    CLASS-METHODS center
+      IMPORTING
+        !iv_width          TYPE i
+        !iv_height         TYPE i
+      RETURNING
+        VALUE(rs_position) TYPE ty_popup_position.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS c_default_column TYPE abap_componentdescr-name VALUE `DEFAULT_COLUMN` ##NO_TEXT.
@@ -22,11 +37,7 @@ CLASS zcl_abapgit_popups DEFINITION
     DATA mr_table TYPE REF TO data .
     DATA mv_cancel TYPE abap_bool VALUE abap_false.
     DATA mo_table_descr TYPE REF TO cl_abap_tabledescr .
-    DATA:
-      BEGIN OF ms_start_pos,
-        col TYPE i,
-        row TYPE i,
-      END OF ms_start_pos.
+    DATA ms_position TYPE ty_popup_position.
 
     METHODS add_field
       IMPORTING
@@ -45,16 +56,16 @@ CLASS zcl_abapgit_popups DEFINITION
       EXPORTING
         !et_list TYPE INDEX TABLE .
     METHODS on_select_list_link_click
-      FOR EVENT link_click OF cl_salv_events_table
+        FOR EVENT link_click OF cl_salv_events_table
       IMPORTING
         !row
         !column .
     METHODS on_select_list_function_click
-      FOR EVENT added_function OF cl_salv_events_table
+        FOR EVENT added_function OF cl_salv_events_table
       IMPORTING
         !e_salv_function .
     METHODS on_double_click
-      FOR EVENT double_click OF cl_salv_events_table
+        FOR EVENT double_click OF cl_salv_events_table
       IMPORTING
         !row
         !column .
@@ -70,13 +81,6 @@ CLASS zcl_abapgit_popups DEFINITION
         !ct_fields         TYPE ty_lt_fields
       RAISING
         zcx_abapgit_exception .
-    METHODS set_starting_position
-      IMPORTING
-        !iv_width  TYPE i
-        !iv_height TYPE i
-      RAISING
-        zcx_abapgit_exception .
-
 ENDCLASS.
 
 
@@ -95,6 +99,35 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     <ls_field>-value      = iv_value.
     <ls_field>-field_attr = iv_field_attr.
     <ls_field>-field_obl  = iv_obligatory.
+
+  ENDMETHOD.
+
+
+  METHOD center.
+
+    CONSTANTS:
+      lc_min_size TYPE i VALUE 10,
+      lc_min_pos  TYPE i VALUE 5.
+
+    " Magic math to approximate starting position of popup
+    IF sy-scols > lc_min_size AND iv_width > 0 AND sy-scols > iv_width.
+      rs_position-start_column = nmax(
+        val1 = ( sy-scols - iv_width ) / 2
+        val2 = lc_min_pos ).
+    ELSE.
+      rs_position-start_column = lc_min_pos.
+    ENDIF.
+
+    IF sy-srows > lc_min_size AND iv_height > 0 AND sy-srows > iv_height.
+      rs_position-start_row = nmax(
+        val1 = ( sy-srows - iv_height ) / 2 - 1
+        val2 = lc_min_pos ).
+    ELSE.
+      rs_position-start_row = lc_min_pos.
+    ENDIF.
+
+    rs_position-end_column = rs_position-start_column + iv_width.
+    rs_position-end_row = rs_position-start_row + iv_height.
 
   ENDMETHOD.
 
@@ -339,32 +372,6 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD set_starting_position.
-
-    CONSTANTS:
-      lc_min_size TYPE i VALUE 10,
-      lc_min_pos  TYPE i VALUE 5.
-
-    " Magic math to approximate starting position of popup
-    IF sy-scols > lc_min_size AND iv_width > 0.
-      ms_start_pos-col = nmax(
-        val1 = ( sy-scols - iv_width ) / 2
-        val2 = lc_min_pos ).
-    ELSE.
-      ms_start_pos-col = lc_min_pos.
-    ENDIF.
-
-    IF sy-srows > lc_min_size AND iv_height > 0.
-      ms_start_pos-row = nmax(
-        val1 = ( sy-srows - iv_height ) / 2 - 1
-        val2 = lc_min_pos ).
-    ELSE.
-      ms_start_pos-row = lc_min_pos.
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_popups~branch_list_popup.
 
     DATA: lo_branches    TYPE REF TO zcl_abapgit_git_branch_list,
@@ -456,7 +463,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       <ls_sel>-varoption = zif_abapgit_popups=>c_new_branch_label.
     ENDIF.
 
-    set_starting_position(
+    ms_position = center(
       iv_width  = 24
       iv_height = lines( lt_selection ) ).
 
@@ -464,8 +471,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       EXPORTING
         textline1  = 'Select branch'
         titel      = 'Select branch'
-        start_col  = ms_start_pos-col
-        start_row  = ms_start_pos-row
+        start_col  = ms_position-start_column
+        start_row  = ms_position-start_row
         cursorline = lv_default
       IMPORTING
         answer     = lv_answer
@@ -584,7 +591,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       <ls_sel>-varoption = |{ <ls_pull>-number } - { <ls_pull>-title } @{ <ls_pull>-user }|.
     ENDLOOP.
 
-    set_starting_position(
+    ms_position = center(
       iv_width  = 74
       iv_height = lines( lt_selection ) ).
 
@@ -592,8 +599,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       EXPORTING
         textline1 = 'Select pull request'
         titel     = 'Select pull request'
-        start_col = ms_start_pos-col
-        start_row = ms_start_pos-row
+        start_col = ms_position-start_column
+        start_row = ms_position-start_row
       IMPORTING
         answer    = lv_answer
       TABLES
@@ -714,9 +721,71 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_popups~popup_select_tr_requests.
+    DATA ls_r_trkorr TYPE LINE OF zif_abapgit_definitions=>ty_trrngtrkor_tt.
+    DATA lr_request TYPE REF TO trwbo_request_header.
+    DATA lt_request TYPE trwbo_request_headers.
+
+    ms_position = center(
+      iv_width  = 120
+      iv_height = 10 ).
+
+    CALL FUNCTION 'TRINT_SELECT_REQUESTS'
+      EXPORTING
+        iv_username_pattern    = iv_username_pattern
+        is_selection           = is_selection
+        iv_complete_projects   = abap_false
+        is_popup               = ms_position
+        iv_via_selscreen       = 'X'
+        iv_title               = iv_title
+      IMPORTING
+        et_requests            = lt_request
+      EXCEPTIONS
+        action_aborted_by_user = 1
+        OTHERS                 = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Selection canceled' ).
+    ENDIF.
+
+    IF lt_request IS INITIAL.
+      zcx_abapgit_exception=>raise( 'No Request Found' ).
+    ENDIF.
+
+    LOOP AT lt_request REFERENCE INTO lr_request.
+      ls_r_trkorr-sign = 'I'.
+      ls_r_trkorr-option = 'EQ'.
+      ls_r_trkorr-low = lr_request->trkorr.
+      INSERT ls_r_trkorr INTO TABLE rt_r_trkorr.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_popups~popup_select_wb_tc_tr_and_tsk.
+    DATA ls_selection  TYPE trwbo_selection.
+    DATA lv_title TYPE trwbo_title.
+
+    ls_selection-trkorrpattern = space.
+    ls_selection-connect_req_task_conditions = 'X'.
+    ls_selection-reqfunctions = 'KTRXS'.
+    ls_selection-reqstatus = 'RNODL'.
+    ls_selection-taskstatus = 'RNODL'.
+    CONDENSE ls_selection-reqfunctions NO-GAPS.
+    ls_selection-taskfunctions = 'QRSX'.
+    CONCATENATE sy-sysid '*' INTO ls_selection-trkorrpattern.
+
+    lv_title = 'Select Transports / Tasks'.
+
+    rt_r_trkorr = zif_abapgit_popups~popup_select_tr_requests(
+      is_selection        = ls_selection
+      iv_title            = lv_title
+      iv_username_pattern = '*' ).
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_popups~popup_to_confirm.
 
-    set_starting_position(
+    ms_position = center(
       iv_width  = 65
       iv_height = 5 ).
 
@@ -730,8 +799,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
         icon_button_2         = iv_icon_button_2
         default_button        = iv_default_button
         display_cancel_button = iv_display_cancel_button
-        start_column          = ms_start_pos-col
-        start_row             = ms_start_pos-row
+        start_column          = ms_position-start_column
+        start_row             = ms_position-start_row
       IMPORTING
         answer                = rv_answer
       EXCEPTIONS
@@ -836,7 +905,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     ASSIGN mr_table->* TO <lt_table>.
     ASSERT sy-subrc = 0.
 
-    set_starting_position(
+    ms_position = center(
       iv_width  = iv_end_column - iv_start_column
       iv_height = iv_end_line - iv_start_line ).
 
@@ -856,10 +925,10 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
         mo_select_list_popup->set_screen_status( pfstatus = lv_pfstatus
                                                  report   = 'SAPMSVIM' ).
 
-        mo_select_list_popup->set_screen_popup( start_column = ms_start_pos-col
-                                                end_column   = ms_start_pos-col + iv_end_column - iv_start_column
-                                                start_line   = ms_start_pos-row
-                                                end_line     = ms_start_pos-row + iv_end_line - iv_start_line ).
+        mo_select_list_popup->set_screen_popup( start_column = ms_position-start_column
+                                                end_column   = ms_position-end_column
+                                                start_line   = ms_position-start_row
+                                                end_line     = ms_position-end_row ).
 
         lo_events = mo_select_list_popup->get_event( ).
 
@@ -1003,7 +1072,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     DATA lv_answer TYPE c LENGTH 1.
     FIELD-SYMBOLS: <ls_field> TYPE sval.
 
-    set_starting_position(
+    ms_position = center(
       iv_width  = 120
       iv_height = lines( ct_fields ) ).
 
@@ -1011,8 +1080,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       EXPORTING
         no_value_check = iv_no_value_check
         popup_title    = iv_popup_title
-        start_column   = ms_start_pos-col
-        start_row      = ms_start_pos-row
+        start_column   = ms_position-start_column
+        start_row      = ms_position-start_row
       IMPORTING
         returncode     = lv_answer
       TABLES
@@ -1046,59 +1115,4 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-  METHOD zif_abapgit_popups~popup_select_tr_requests.
-    DATA ls_r_trkorr TYPE LINE OF zif_abapgit_definitions=>ty_trrngtrkor_tt.
-    DATA lr_request TYPE REF TO trwbo_request_header.
-    DATA lt_request TYPE trwbo_request_headers.
-
-    CALL FUNCTION 'TRINT_SELECT_REQUESTS'
-      EXPORTING
-        iv_username_pattern    = iv_username_pattern
-        is_selection           = is_selection
-        iv_complete_projects   = abap_false
-        iv_via_selscreen       = 'X'
-        iv_title               = iv_title
-      IMPORTING
-        et_requests            = lt_request
-      EXCEPTIONS
-        action_aborted_by_user = 1
-        OTHERS                 = 2.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Selection Canceled' ).
-    ENDIF.
-
-    IF lt_request IS INITIAL.
-      zcx_abapgit_exception=>raise( 'No Request Found' ).
-    ENDIF.
-
-    LOOP AT lt_request REFERENCE INTO lr_request.
-      ls_r_trkorr-sign = 'I'.
-      ls_r_trkorr-option = 'EQ'.
-      ls_r_trkorr-low = lr_request->trkorr.
-      INSERT ls_r_trkorr INTO TABLE rt_r_trkorr.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_popups~popup_select_wb_tc_tr_and_tsk.
-    DATA ls_selection  TYPE trwbo_selection.
-    DATA lv_title TYPE trwbo_title.
-
-    ls_selection-trkorrpattern = space.
-    ls_selection-connect_req_task_conditions = 'X'.
-    ls_selection-reqfunctions = 'KTRXS'.
-    ls_selection-reqstatus = 'RNODL'.
-    ls_selection-taskstatus = 'RNODL'.
-    CONDENSE ls_selection-reqfunctions NO-GAPS.
-    ls_selection-taskfunctions = 'QRSX'.
-    CONCATENATE sy-sysid '*' INTO ls_selection-trkorrpattern.
-
-    lv_title = 'Select Transports / Tasks'.
-
-    rt_r_trkorr = zif_abapgit_popups~popup_select_tr_requests(
-      is_selection        = ls_selection
-      iv_title            = lv_title
-      iv_username_pattern = '*' ).
-  ENDMETHOD.
-
 ENDCLASS.

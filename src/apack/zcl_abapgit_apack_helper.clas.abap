@@ -41,6 +41,15 @@ CLASS zcl_abapgit_apack_helper DEFINITION
     TYPES: END OF ty_dependency_status .
     TYPES:
       ty_dependency_statuses TYPE STANDARD TABLE OF ty_dependency_status WITH NON-UNIQUE DEFAULT KEY .
+    TYPES:
+      BEGIN OF ty_color_line,
+        exception(1) TYPE c,
+        color        TYPE lvc_t_scol.
+        INCLUDE TYPE ty_dependency_status.
+    TYPES: t_hyperlink  TYPE salv_t_int4_column,
+      END OF ty_color_line.
+
+    TYPES: ty_color_tab TYPE STANDARD TABLE OF ty_color_line WITH DEFAULT KEY.
 
     CLASS-METHODS get_dependencies_met_status
       IMPORTING
@@ -59,6 +68,14 @@ CLASS zcl_abapgit_apack_helper DEFINITION
         !it_dependencies TYPE ty_dependency_statuses
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS get_color_table
+      IMPORTING
+        !io_alv          TYPE REF TO cl_salv_table
+        !it_dependencies TYPE ty_dependency_statuses
+      CHANGING
+        !ct_color_table  TYPE ty_color_tab
+      RAISING
+        cx_salv_existing.
 ENDCLASS.
 
 
@@ -97,6 +114,71 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
     lt_met_status = get_dependencies_met_status( it_dependencies ).
 
     show_dependencies_popup( lt_met_status ).
+
+  ENDMETHOD.
+
+
+  METHOD get_color_table.
+
+    DATA:
+      lo_functional_settings TYPE REF TO cl_salv_functional_settings,
+      lo_hyperlinks          TYPE REF TO cl_salv_hyperlinks,
+      lt_color_negative      TYPE lvc_t_scol,
+      lt_color_normal        TYPE lvc_t_scol,
+      lt_color_positive      TYPE lvc_t_scol,
+      ls_color               TYPE lvc_s_scol,
+      lv_handle              TYPE i,
+      ls_hyperlink           TYPE salv_s_int4_column,
+      lv_hyperlink           TYPE service_rl.
+
+    FIELD-SYMBOLS:
+      <ls_line>       TYPE ty_color_line,
+      <ls_dependency> LIKE LINE OF it_dependencies.
+
+    CLEAR: ls_color.
+    ls_color-color-col = col_negative.
+    APPEND ls_color TO lt_color_negative.
+
+    CLEAR: ls_color.
+    ls_color-color-col = col_normal.
+    APPEND ls_color TO lt_color_normal.
+
+    CLEAR: ls_color.
+    ls_color-color-col = col_positive.
+    APPEND ls_color TO lt_color_positive.
+
+    lo_functional_settings = io_alv->get_functional_settings( ).
+    lo_hyperlinks = lo_functional_settings->get_hyperlinks( ).
+
+    CLEAR: lv_handle, ls_color.
+    LOOP AT it_dependencies ASSIGNING <ls_dependency>.
+      lv_handle = lv_handle + 1.
+
+      APPEND INITIAL LINE TO ct_color_table ASSIGNING <ls_line>.
+      MOVE-CORRESPONDING <ls_dependency> TO <ls_line>.
+
+      CASE <ls_line>-met.
+        WHEN zif_abapgit_definitions=>c_yes.
+          <ls_line>-color     = lt_color_positive.
+          <ls_line>-exception = '3'.
+        WHEN zif_abapgit_definitions=>c_partial.
+          <ls_line>-color     = lt_color_normal.
+          <ls_line>-exception = '2'.
+        WHEN zif_abapgit_definitions=>c_no.
+          <ls_line>-color     = lt_color_negative.
+          <ls_line>-exception = '1'.
+      ENDCASE.
+
+      CLEAR: ls_hyperlink.
+      ls_hyperlink-columnname = 'GIT_URL'.
+      ls_hyperlink-value      = lv_handle.
+      APPEND ls_hyperlink TO <ls_line>-t_hyperlink.
+
+      lv_hyperlink = <ls_line>-git_url.
+      lo_hyperlinks->add_hyperlink( handle    = lv_handle
+                                    hyperlink = lv_hyperlink ).
+
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -186,59 +268,23 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
 
   METHOD show_dependencies_popup.
 
-    TYPES:
-      BEGIN OF ty_color_line,
-        exception(1) TYPE c,
-        color        TYPE lvc_t_scol.
-        INCLUDE TYPE ty_dependency_status.
-    TYPES: t_hyperlink TYPE salv_t_int4_column,
-           END OF ty_color_line.
-
-    TYPES: ty_color_tab TYPE STANDARD TABLE OF ty_color_line WITH DEFAULT KEY.
-
-    DATA: lo_alv                 TYPE REF TO cl_salv_table,
-          lo_functional_settings TYPE REF TO cl_salv_functional_settings,
-          lo_hyperlinks          TYPE REF TO cl_salv_hyperlinks,
-          lo_column              TYPE REF TO cl_salv_column,
-          lo_column_table        TYPE REF TO cl_salv_column_table,
-          lo_columns             TYPE REF TO cl_salv_columns_table,
-          lt_columns             TYPE salv_t_column_ref,
-          ls_column              LIKE LINE OF lt_columns,
-          lt_color_table         TYPE ty_color_tab,
-          lt_color_negative      TYPE lvc_t_scol,
-          lt_color_normal        TYPE lvc_t_scol,
-          lt_color_positive      TYPE lvc_t_scol,
-          ls_color               TYPE lvc_s_scol,
-          lv_handle              TYPE i,
-          ls_hyperlink           TYPE salv_s_int4_column,
-          lv_hyperlink           TYPE service_rl,
-          lx_ex                  TYPE REF TO cx_root.
-
-    FIELD-SYMBOLS: <ls_line>       TYPE ty_color_line,
-                   <ls_dependency> LIKE LINE OF it_dependencies.
+    DATA: lo_alv          TYPE REF TO cl_salv_table,
+          lo_column       TYPE REF TO cl_salv_column,
+          lo_column_table TYPE REF TO cl_salv_column_table,
+          lo_columns      TYPE REF TO cl_salv_columns_table,
+          lt_columns      TYPE salv_t_column_ref,
+          ls_column       LIKE LINE OF lt_columns,
+          lt_color_table  TYPE ty_color_tab,
+          ls_position     TYPE zcl_abapgit_popups=>ty_popup_position,
+          lx_ex           TYPE REF TO cx_root.
 
     IF it_dependencies IS INITIAL.
       RETURN.
     ENDIF.
 
-    CLEAR: ls_color.
-    ls_color-color-col = col_negative.
-    APPEND ls_color TO lt_color_negative.
-
-    CLEAR: ls_color.
-    ls_color-color-col = col_normal.
-    APPEND ls_color TO lt_color_normal.
-
-    CLEAR: ls_color.
-    ls_color-color-col = col_positive.
-    APPEND ls_color TO lt_color_positive.
-
     TRY.
         cl_salv_table=>factory( IMPORTING r_salv_table  = lo_alv
                                 CHANGING  t_table       = lt_color_table ).
-
-        lo_functional_settings = lo_alv->get_functional_settings( ).
-        lo_hyperlinks = lo_functional_settings->get_hyperlinks( ).
 
         lo_columns = lo_alv->get_columns( ).
         lt_columns = lo_columns->get( ).
@@ -269,51 +315,28 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
         lo_column_table ?= lo_column.
         lo_column_table->set_cell_type( if_salv_c_cell_type=>link ).
 
-
         lo_column = lo_columns->get_column( 'VERSION' ).
         lo_column->set_short_text( 'Version' ).
 
         lo_column = lo_columns->get_column( 'TARGET_PACKAGE' ).
         lo_column->set_technical( ).
 
-        lo_hyperlinks = lo_functional_settings->get_hyperlinks( ).
+        get_color_table(
+          EXPORTING
+            io_alv          = lo_alv
+            it_dependencies = it_dependencies
+          CHANGING
+            ct_color_table  = lt_color_table ).
 
-        CLEAR: lv_handle, ls_color.
-        LOOP AT it_dependencies ASSIGNING <ls_dependency>.
-          lv_handle = lv_handle + 1.
+        ls_position = zcl_abapgit_popups=>center(
+          iv_width  = 90
+          iv_height = 10 ).
 
-          APPEND INITIAL LINE TO lt_color_table ASSIGNING <ls_line>.
-          MOVE-CORRESPONDING <ls_dependency> TO <ls_line>.
+        lo_alv->set_screen_popup( start_column = ls_position-start_column
+                                  end_column   = ls_position-end_column
+                                  start_line   = ls_position-start_row
+                                  end_line     = ls_position-end_row ).
 
-          CASE <ls_line>-met.
-            WHEN zif_abapgit_definitions=>c_yes.
-              <ls_line>-color     = lt_color_positive.
-              <ls_line>-exception = '3'.
-            WHEN zif_abapgit_definitions=>c_partial.
-              <ls_line>-color     = lt_color_normal.
-              <ls_line>-exception = '2'.
-            WHEN zif_abapgit_definitions=>c_no.
-              <ls_line>-color     = lt_color_negative.
-              <ls_line>-exception = '1'.
-          ENDCASE.
-
-          CLEAR: ls_hyperlink.
-          ls_hyperlink-columnname = 'GIT_URL'.
-          ls_hyperlink-value      = lv_handle.
-          APPEND ls_hyperlink TO <ls_line>-t_hyperlink.
-
-          lv_hyperlink = <ls_line>-git_url.
-          lo_hyperlinks->add_hyperlink( handle    = lv_handle
-                                        hyperlink = lv_hyperlink ).
-
-        ENDLOOP.
-
-        UNASSIGN <ls_line>.
-
-        lo_alv->set_screen_popup( start_column = 30
-                                  end_column   = 120
-                                  start_line   = 10
-                                  end_line     = 20 ).
         lo_alv->get_display_settings( )->set_list_header( 'APACK dependencies' ).
         lo_alv->display( ).
 
