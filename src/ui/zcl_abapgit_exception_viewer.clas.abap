@@ -74,7 +74,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_EXCEPTION_VIEWER IMPLEMENTATION.
+CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
 
 
   METHOD add_row.
@@ -283,6 +283,7 @@ CLASS ZCL_ABAPGIT_EXCEPTION_VIEWER IMPLEMENTATION.
           lo_event   TYPE REF TO cl_salv_events_table,
           lo_columns TYPE REF TO cl_salv_columns_table,
           lo_alv     TYPE REF TO cl_salv_table.
+    DATA  ls_position TYPE zcl_abapgit_popups=>ty_popup_position.
 
     TRY.
         cl_salv_table=>factory(
@@ -295,10 +296,14 @@ CLASS ZCL_ABAPGIT_EXCEPTION_VIEWER IMPLEMENTATION.
 
         lo_alv->set_top_of_list( build_top_of_list( get_top_of_callstack( ) ) ).
 
-        lo_alv->set_screen_popup( start_column = 10
-                                  end_column   = 180
-                                  start_line   = 3
-                                  end_line     = 30 ).
+        ls_position = zcl_abapgit_popups=>center(
+          iv_width  = 150
+          iv_height = 25 ).
+
+        lo_alv->set_screen_popup( start_column = ls_position-start_column
+                                  end_column   = ls_position-end_column
+                                  start_line   = ls_position-start_row
+                                  end_line     = ls_position-end_row ).
 
         lo_event = lo_alv->get_event( ).
 
