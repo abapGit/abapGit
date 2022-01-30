@@ -22,6 +22,11 @@ CLASS zcl_abapgit_objects_activation DEFINITION
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS clear .
+    CLASS-METHODS is_ddic_type
+      IMPORTING
+        !iv_obj_type     TYPE trobjtype
+      RETURNING
+        VALUE(rv_result) TYPE abap_bool .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -58,11 +63,6 @@ CLASS zcl_abapgit_objects_activation DEFINITION
         !iv_logname TYPE ddmass-logname
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS is_ddic_type
-      IMPORTING
-        !iv_obj_type     TYPE trobjtype
-      RETURNING
-        VALUE(rv_result) TYPE abap_bool .
 ENDCLASS.
 
 
@@ -302,6 +302,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
       lc_ntab       TYPE c LENGTH 14 VALUE 'NTTT NTTB NTDT',
       lc_ddls       TYPE c LENGTH 14 VALUE 'DDLS DRUL DTDC',
       lc_switches   TYPE c LENGTH 24 VALUE 'SF01 SF02 SFSW SFBS SFBF',
+      lc_para       TYPE c LENGTH 4  VALUE 'PARA', " can be referenced by DTEL
       lc_enhd       TYPE c LENGTH 4  VALUE 'ENHD'.
 
     rv_result = abap_true.
@@ -309,7 +310,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
        lc_technset NS iv_obj_type AND lc_f4_objects NS iv_obj_type AND
        lc_enqueue  NS iv_obj_type AND lc_sqsc       NS iv_obj_type AND
        lc_stob     NS iv_obj_type AND lc_ntab       NS iv_obj_type AND
-       lc_ddls     NS iv_obj_type AND
+       lc_ddls     NS iv_obj_type AND lc_para       NS iv_obj_type AND
        lc_switches NS iv_obj_type AND iv_obj_type <> lc_enhd.
       rv_result = abap_false.
     ENDIF.

@@ -20,7 +20,6 @@ INTERFACE zif_abapgit_objects
       step_id      TYPE zif_abapgit_definitions=>ty_deserialization_step,
       order        TYPE i,
       descr        TYPE string,
-      is_ddic      TYPE abap_bool,
       syntax_check TYPE abap_bool,
       objects      TYPE ty_deserialization_tt,
     END OF ty_step_data .

@@ -698,7 +698,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           LOOP AT lt_steps_id ASSIGNING <lv_step_id>.
             READ TABLE lt_steps WITH KEY step_id = <lv_step_id> ASSIGNING <ls_step>.
             ASSERT sy-subrc = 0.
-            IF <ls_step>-is_ddic = abap_true AND li_obj->get_metadata( )-ddic = abap_false.
+            IF <lv_step_id> = zif_abapgit_object=>gc_step_id-ddic AND
+               zcl_abapgit_objects_activation=>is_ddic_type( ls_item-obj_type ) = abap_false.
               " DDIC only for DDIC objects
               zcx_abapgit_exception=>raise( |Step { <lv_step_id> } is only for DDIC objects| ).
             ENDIF.
@@ -793,9 +794,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     CASE is_step-step_id.
       WHEN zif_abapgit_object=>gc_step_id-ddic.
-        zcl_abapgit_objects_activation=>activate( is_step-is_ddic ).
+        zcl_abapgit_objects_activation=>activate( abap_true ).
       WHEN zif_abapgit_object=>gc_step_id-abap.
-        zcl_abapgit_objects_activation=>activate( is_step-is_ddic ).
+        zcl_abapgit_objects_activation=>activate( abap_false ).
       WHEN zif_abapgit_object=>gc_step_id-late.
         " late can have both DDIC (like TABL with REF TO) and non-DDIC objects
         zcl_abapgit_objects_activation=>activate( abap_true ).
@@ -845,21 +846,18 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
     <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-ddic.
     <ls_step>-descr        = 'Import DDIC objects'.
-    <ls_step>-is_ddic      = abap_true.
     <ls_step>-syntax_check = abap_false.
     <ls_step>-order        = 1.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
     <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-abap.
     <ls_step>-descr        = 'Import objects main'.
-    <ls_step>-is_ddic      = abap_false.
     <ls_step>-syntax_check = abap_false.
     <ls_step>-order        = 2.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
     <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-late.
     <ls_step>-descr        = 'Import late objects'.
-    <ls_step>-is_ddic      = abap_false.
     <ls_step>-syntax_check = abap_true.
     <ls_step>-order        = 3.
   ENDMETHOD.
