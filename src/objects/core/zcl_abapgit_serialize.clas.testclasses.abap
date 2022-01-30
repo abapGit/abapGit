@@ -107,6 +107,8 @@ CLASS ltcl_serialize IMPLEMENTATION.
   METHOD unsupported.
 
     DATA: lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt,
+          ls_msg   TYPE zif_abapgit_log=>ty_log_out,
+          lt_msg   TYPE zif_abapgit_log=>ty_log_outs,
           li_log1  TYPE REF TO zif_abapgit_log,
           li_log2  TYPE REF TO zif_abapgit_log.
 
@@ -129,12 +131,20 @@ CLASS ltcl_serialize IMPLEMENTATION.
       ii_log              = li_log2
       iv_force_sequential = abap_false ).
 
-    cl_abap_unit_assert=>assert_char_cp(
-      act = zcl_abapgit_log_viewer=>to_html( li_log1 )->render( )
-      exp = '*Object type ABCD not supported*' ).
+    lt_msg = li_log1->get_messages( ).
+    READ TABLE lt_msg INTO ls_msg INDEX 1.
+    cl_abap_unit_assert=>assert_subrc( ).
 
     cl_abap_unit_assert=>assert_char_cp(
-      act = zcl_abapgit_log_viewer=>to_html( li_log2 )->render( )
+      act = ls_msg-text
+      exp = '*Object type ABCD not supported*' ).
+
+    lt_msg = li_log2->get_messages( ).
+    READ TABLE lt_msg INTO ls_msg INDEX 1.
+    cl_abap_unit_assert=>assert_subrc( ).
+
+    cl_abap_unit_assert=>assert_char_cp(
+      act = ls_msg-text
       exp = '*Object type ABCD not supported*' ).
 
   ENDMETHOD.
