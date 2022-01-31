@@ -794,21 +794,13 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     CASE is_step-step_id.
       WHEN zif_abapgit_object=>gc_step_id-ddic.
-        zcl_abapgit_objects_activation=>activate(
-          iv_ddic = abap_true
-          ii_log  = ii_log ).
+        zcl_abapgit_objects_activation=>activate( abap_true ).
       WHEN zif_abapgit_object=>gc_step_id-abap.
-        zcl_abapgit_objects_activation=>activate(
-          iv_ddic = abap_false
-          ii_log  = ii_log ).
+        zcl_abapgit_objects_activation=>activate( abap_false ).
       WHEN zif_abapgit_object=>gc_step_id-late.
         " late can have both DDIC (like TABL with REF TO) and non-DDIC objects
-        zcl_abapgit_objects_activation=>activate(
-          iv_ddic = abap_true
-          ii_log  = ii_log ).
-        zcl_abapgit_objects_activation=>activate(
-          iv_ddic = abap_false
-          ii_log  = ii_log ).
+        zcl_abapgit_objects_activation=>activate( abap_true ).
+        zcl_abapgit_objects_activation=>activate( abap_false ).
     ENDCASE.
 
 *   Call postprocessing
