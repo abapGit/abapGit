@@ -312,6 +312,8 @@ CLASS zcl_abapgit_log_viewer IMPLEMENTATION.
         lo_functions = lo_alv->get_functions( ).
         lo_functions->set_all( ).
 
+        lo_alv->get_display_settings( )->set_list_header( |abapGit Log Viewer| ).
+
         lo_columns = lo_alv->get_columns( ).
 
         lo_columns->set_optimize( ).

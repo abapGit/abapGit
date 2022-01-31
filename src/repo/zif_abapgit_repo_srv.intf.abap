@@ -44,7 +44,7 @@ INTERFACE zif_abapgit_repo_srv
   METHODS new_online
     IMPORTING
       !iv_url            TYPE string
-      !iv_branch_name    TYPE string
+      !iv_branch_name    TYPE string OPTIONAL
       !iv_display_name   TYPE string OPTIONAL
       !iv_package        TYPE devclass
       !iv_folder_logic   TYPE string DEFAULT zif_abapgit_dot_abapgit=>c_folder_logic-prefix
