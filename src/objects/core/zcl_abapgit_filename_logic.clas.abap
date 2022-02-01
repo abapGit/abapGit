@@ -16,7 +16,6 @@ CLASS zcl_abapgit_filename_logic DEFINITION
 
     CONSTANTS:
       BEGIN OF c_json_file,
-        sep       TYPE c LENGTH 1 VALUE '.',
         extension TYPE c LENGTH 4 VALUE 'json',
       END OF c_json_file.
 
