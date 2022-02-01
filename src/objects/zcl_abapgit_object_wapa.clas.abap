@@ -27,7 +27,7 @@ CLASS zcl_abapgit_object_wapa DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RETURNING VALUE(rt_content) TYPE o2pageline_table,
       read_page
         IMPORTING is_page         TYPE o2pagattr
-                  iv_no_files_add TYPE abap_bool OPTIONAL        
+                  iv_no_files_add TYPE abap_bool OPTIONAL
         RETURNING VALUE(rs_page)  TYPE ty_page
         RAISING   zcx_abapgit_exception,
       create_new_application
@@ -469,7 +469,8 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
       CASE sy-subrc.
         WHEN 0.
 
-          ls_local_page = read_page( is_page = <ls_remote_page>-attributes iv_no_files_add = abap_true ).
+          ls_local_page = read_page( is_page = <ls_remote_page>-attributes
+                                     iv_no_files_add = abap_true ).
 
         WHEN 1.
 
