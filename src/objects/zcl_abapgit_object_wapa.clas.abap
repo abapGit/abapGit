@@ -26,8 +26,9 @@ CLASS zcl_abapgit_object_wapa DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         IMPORTING iv_content        TYPE xstring
         RETURNING VALUE(rt_content) TYPE o2pageline_table,
       read_page
-        IMPORTING is_page        TYPE o2pagattr
-        RETURNING VALUE(rs_page) TYPE ty_page
+        IMPORTING is_page         TYPE o2pagattr
+                  iv_no_files_add TYPE abap_bool OPTIONAL        
+        RETURNING VALUE(rs_page)  TYPE ty_page
         RAISING   zcx_abapgit_exception,
       create_new_application
         IMPORTING is_attributes TYPE o2applattr
@@ -233,10 +234,12 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
       SPLIT is_page-pagename AT '.' INTO lv_extra lv_ext.
       REPLACE ALL OCCURRENCES OF '/' IN lv_ext WITH '_-'.
       REPLACE ALL OCCURRENCES OF '/' IN lv_extra WITH '_-'.
-      mo_files->add_raw(
-        iv_extra = lv_extra
-        iv_ext   = lv_ext
-        iv_data  = lv_content ).
+      IF iv_no_files_add = abap_false.
+        mo_files->add_raw(
+          iv_extra = lv_extra
+          iv_ext   = lv_ext
+          iv_data  = lv_content ).
+      ENDIF.
 
       CLEAR: rs_page-attributes-implclass.
 
@@ -466,7 +469,7 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
       CASE sy-subrc.
         WHEN 0.
 
-          ls_local_page = read_page( <ls_remote_page>-attributes ).
+          ls_local_page = read_page( is_page = <ls_remote_page>-attributes iv_no_files_add = abap_true ).
 
         WHEN 1.
 
