@@ -360,8 +360,9 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
           is_checks = is_checks
           ii_log    = ii_log ).
       CATCH zcx_abapgit_exception INTO lx_error.
-* ensure to reset default transport request task
+" Ensure to reset default transport request task
         zcl_abapgit_default_transport=>get_instance( )->reset( ).
+        refresh( iv_drop_log = abap_false ).
         RAISE EXCEPTION lx_error.
     ENDTRY.
 
