@@ -14,6 +14,12 @@ CLASS zcl_abapgit_filename_logic DEFINITION
         extension TYPE c LENGTH 3 VALUE 'xml',
       END OF c_package_file.
 
+    CONSTANTS:
+      BEGIN OF c_json_file,
+        sep       TYPE c LENGTH 1 VALUE '.',
+        extension TYPE c LENGTH 4 VALUE 'json',
+      END OF c_json_file.
+
     CLASS-METHODS file_to_object
       IMPORTING
         !iv_filename TYPE string
@@ -23,6 +29,7 @@ CLASS zcl_abapgit_filename_logic DEFINITION
       EXPORTING
         !es_item     TYPE zif_abapgit_definitions=>ty_item
         !ev_is_xml   TYPE abap_bool
+        !ev_is_json  TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS object_to_file
@@ -74,6 +81,7 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
     es_item-obj_type = lv_type.
     es_item-obj_name = lv_name.
     ev_is_xml        = boolc( lv_ext = to_upper( c_package_file-extension ) AND strlen( lv_type ) = 4 ).
+    ev_is_json       = boolc( lv_ext = to_upper( c_json_file-extension ) AND strlen( lv_type ) = 4 ).
 
   ENDMETHOD.
 
