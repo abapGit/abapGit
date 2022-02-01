@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_PROXY_AUTH</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Proxy auth</DESCRIPT>
+    <DESCRIPT>abapGit - Proxy Authentication</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
