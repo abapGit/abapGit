@@ -1015,6 +1015,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
   METHOD serialize.
 
     DATA: li_obj         TYPE REF TO zif_abapgit_object,
+          lx_error       TYPE REF TO zcx_abapgit_exception,
           li_xml         TYPE REF TO zif_abapgit_xml_output,
           lo_files       TYPE REF TO zcl_abapgit_objects_files,
           ls_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params.
@@ -1046,7 +1047,12 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     li_xml->i18n_params( ls_i18n_params ).
 
-    li_obj->serialize( li_xml ).
+    TRY.
+        li_obj->serialize( li_xml ).
+      CATCH zcx_abapgit_exception INTO lx_error.
+        rs_files_and_item-item-inactive = boolc( li_obj->is_active( ) = abap_false ).
+        RAISE EXCEPTION lx_error.
+    ENDTRY.
 
     IF lo_files->is_json_metadata( ) = abap_false.
       lo_files->add_xml( ii_xml      = li_xml
