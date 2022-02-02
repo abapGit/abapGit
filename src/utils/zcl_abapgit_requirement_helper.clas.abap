@@ -128,11 +128,10 @@ CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
 
     show_requirement_popup( lt_met_status ).
 
-    CALL FUNCTION 'POPUP_TO_CONFIRM'
-      EXPORTING
-        text_question = 'The project has unmet requirements. Do you want to continue?'
-      IMPORTING
-        answer        = lv_answer.
+    lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
+      iv_titlebar      = 'Warning'
+      iv_text_question = 'The project has unmet requirements. Do you want to continue?' ).
+
     IF lv_answer <> '1'.
       zcx_abapgit_exception=>raise( 'Cancelling because of unmet requirements.' ).
     ENDIF.

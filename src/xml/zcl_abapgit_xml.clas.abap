@@ -33,6 +33,8 @@ CLASS zcl_abapgit_xml DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS display_version_mismatch
+      IMPORTING
+        !iv_vers TYPE string
       RAISING
         zcx_abapgit_exception .
     METHODS raise_exception_for
@@ -56,21 +58,19 @@ CLASS zcl_abapgit_xml IMPLEMENTATION.
 
   METHOD display_version_mismatch.
 
-    DATA: lv_version TYPE string.
-    DATA: lv_file    TYPE string.
+    DATA lv_text TYPE string.
 
-    lv_version = |abapGit version: { zif_abapgit_version=>c_abap_version }|.
+    lv_text = |The XML versions do not match, expected: { zif_abapgit_version=>c_xml_version }, actual: { iv_vers }|.
+
     IF mv_filename IS NOT INITIAL.
-      lv_file = |File: { mv_filename }|.
+      lv_text = lv_text && |, file: { mv_filename }|.
     ENDIF.
 
-    CALL FUNCTION 'POPUP_TO_INFORM'
-      EXPORTING
-        titel = 'abapGit XML version mismatch'
-        txt1  = 'abapGit XML version mismatch'
-        txt2  = 'See https://docs.abapgit.org/other-xml-mismatch.html'
-        txt3  = lv_version
-        txt4  = lv_file.
+    lv_text = lv_text && | (see https://docs.abapgit.org/other-xml-mismatch.html)|.
+
+    zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
+      iv_titlebar      = 'abapGit XML Version Mismatch'
+      iv_text_question = lv_text ).
 
     IF mv_filename IS INITIAL.
       zcx_abapgit_exception=>raise( 'abapGit XML version mismatch' ).
@@ -125,7 +125,7 @@ CLASS zcl_abapgit_xml IMPLEMENTATION.
     li_version = li_element->if_ixml_node~get_attributes(
       )->get_named_item_ns( c_attr_version ).
     IF li_version->get_value( ) <> zif_abapgit_version=>c_xml_version.
-      display_version_mismatch( ).
+      display_version_mismatch( li_version->get_value( ) ).
     ENDIF.
 
 * buffer serializer metadata. Git node will be removed lateron
