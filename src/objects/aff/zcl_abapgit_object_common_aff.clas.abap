@@ -164,7 +164,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
         CREATE OBJECT lo_settings TYPE ('CL_AFF_SETTINGS_DESERIALIZE')
           EXPORTING
-            version  = 'I'
+            version  = 'A'
             language = mv_language
             user     = sy-uname.
 
