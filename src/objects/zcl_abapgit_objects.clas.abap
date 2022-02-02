@@ -657,9 +657,10 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
             lv_path = <ls_result>-path.
           ENDIF.
 
+          ls_item-devclass = lv_package.
+
           IF <ls_result>-packmove = abap_true.
             " Move object to new package
-            ls_item-devclass = lv_package.
             change_package_assignments( is_item = ls_item
                                         ii_log  = ii_log ).
             " No other changes required
