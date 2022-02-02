@@ -584,6 +584,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           lt_remote   TYPE zif_abapgit_definitions=>ty_files_tt,
           lv_package  TYPE devclass,
           lo_files    TYPE REF TO zcl_abapgit_objects_files,
+          ls_metadata TYPE zif_abapgit_definitions=>ty_metadata,
           lo_xml      TYPE REF TO zif_abapgit_xml_input,
           lt_results  TYPE zif_abapgit_definitions=>ty_results_tt,
           li_progress TYPE REF TO zif_abapgit_progress,
@@ -670,14 +671,21 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
             EXPORTING
               is_item = ls_item
               iv_path = lv_path.
+
           lo_files->set_files( lt_remote ).
 
-          "analyze XML in order to instantiate the proper serializer
-          lo_xml = lo_files->read_xml( ).
+          IF lo_files->is_json_metadata( ) = abap_false.
+            "analyze XML in order to instantiate the proper serializer
+            lo_xml = lo_files->read_xml( ).
+            ls_metadata = lo_xml->get_metadata( ).
+          ELSE.
+            " there's no XML and metadata for JSON format
+            CLEAR: lo_xml, ls_metadata.
+          ENDIF.
 
           li_obj = create_object( is_item     = ls_item
                                   iv_language = io_repo->get_dot_abapgit( )->get_main_language( )
-                                  is_metadata = lo_xml->get_metadata( ) ).
+                                  is_metadata = ls_metadata ).
 
           compare_remote_to_local(
             ii_object = li_obj
