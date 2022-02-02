@@ -48,7 +48,14 @@ CLASS zcl_abapgit_object_wapa DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
           it_local_pages  TYPE o2pagelist
           it_remote_pages TYPE ty_pages_tt
         RAISING
-          zcx_abapgit_exception.
+          zcx_abapgit_exception,
+      get_file_name
+        IMPORTING
+          !iv_pagename TYPE o2pagattr-pagename
+          !iv_content  TYPE xstring OPTIONAL
+        EXPORTING
+          ev_extra     TYPE string
+          ev_ext       TYPE string.
 
 ENDCLASS.
 
@@ -155,6 +162,38 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_file_name.
+
+    DATA:
+      lv_len     TYPE i,
+      lv_xstring TYPE xstring,
+      lv_string  TYPE string.
+
+    SPLIT iv_pagename AT '.' INTO ev_extra ev_ext.
+    REPLACE ALL OCCURRENCES OF '/' IN ev_ext WITH '_-'.
+    REPLACE ALL OCCURRENCES OF '/' IN ev_extra WITH '_-'.
+
+    lv_len = xstrlen( iv_content ).
+
+    " Heuristic to determine if this is a JSON or JS file for Fiori UI5
+    FIND REGEX '^UI5[0-9A-F]+$' IN ev_extra.
+
+    IF sy-subrc = 0 AND lv_len > 1.
+      lv_len = nmin( val1 = 10
+                     val2 = lv_len ).
+      lv_xstring = iv_content(lv_len).
+      lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( lv_xstring ).
+      lv_len = strlen( lv_string ).
+      IF lv_len > 1 AND lv_string(1) = '{'.
+        ev_ext = 'json'.
+      ELSE.
+        ev_ext = 'js'.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD get_page_content.
 
     DATA: lt_content TYPE o2pageline_table,
@@ -231,9 +270,15 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
       ASSERT sy-subrc = 0.
 
       lv_content = get_page_content( lo_page ).
-      SPLIT is_page-pagename AT '.' INTO lv_extra lv_ext.
-      REPLACE ALL OCCURRENCES OF '/' IN lv_ext WITH '_-'.
-      REPLACE ALL OCCURRENCES OF '/' IN lv_extra WITH '_-'.
+
+      get_file_name(
+        EXPORTING
+          iv_pagename = is_page-pagename
+          iv_content  = lv_content
+        IMPORTING
+          ev_extra    = lv_extra
+          ev_ext      = lv_ext ).
+
       IF iv_no_files_add = abap_false.
         mo_files->add_raw(
           iv_extra = lv_extra
@@ -486,9 +531,12 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
 
       ENDCASE.
 
-      SPLIT <ls_remote_page>-attributes-pagename AT '.' INTO lv_extra lv_ext.
-      REPLACE ALL OCCURRENCES OF '/' IN lv_extra WITH '_-'.
-      REPLACE ALL OCCURRENCES OF '/' IN lv_ext WITH '_-'.
+      get_file_name(
+        EXPORTING
+          iv_pagename = <ls_remote_page>-attributes-pagename
+        IMPORTING
+          ev_extra    = lv_extra
+          ev_ext      = lv_ext ).
 
       lt_remote_content = to_page_content( mo_files->read_raw( iv_extra = lv_extra
                                                                iv_ext   = lv_ext ) ).
