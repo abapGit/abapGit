@@ -1,4 +1,4 @@
-"! <p class="shorttext synchronized" lang="en">Git Commit</p>
+"! <p class="shorttext synchronized" lang="en">abapGit - Git Commit</p>
 CLASS zcl_abapgit_git_commit DEFINITION
   PUBLIC
   CREATE PUBLIC .
