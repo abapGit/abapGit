@@ -546,6 +546,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
     DATA:
       ls_item         LIKE LINE OF ct_items,
       lv_is_xml       TYPE abap_bool,
+      lv_is_json      TYPE abap_bool,
       lv_sub_fetched  TYPE abap_bool,
       lt_sub_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
       lv_msg          TYPE string.
@@ -562,9 +563,10 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
           iv_devclass = iv_devclass
         IMPORTING
           es_item     = ls_item
-          ev_is_xml   = lv_is_xml ).
+          ev_is_xml   = lv_is_xml
+          ev_is_json  = lv_is_json ).
 
-      CHECK lv_is_xml = abap_true. " only object definitions
+      CHECK lv_is_xml = abap_true OR lv_is_json = abap_true. " only object definitions
 
       ls_item-devclass = get_object_package(
         iv_object   = ls_item-obj_type

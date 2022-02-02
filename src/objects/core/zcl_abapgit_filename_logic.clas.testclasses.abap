@@ -29,6 +29,7 @@ CLASS ltcl_run_checks IMPLEMENTATION.
 
     DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
     DATA lv_is_xml TYPE abap_bool.
+    DATA lv_is_json TYPE abap_bool.
 
     zcl_abapgit_filename_logic=>file_to_object(
       EXPORTING
@@ -126,6 +127,27 @@ CLASS ltcl_run_checks IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = 'ZMIME_<>_?'
       act = ls_item-obj_name ).
+
+    " JSON
+    zcl_abapgit_filename_logic=>file_to_object(
+      EXPORTING
+        iv_filename = 'ztest.chko.json'
+        iv_path     = '/src/'
+        iv_devclass = '$PACK'
+        io_dot      = mo_dot
+      IMPORTING
+        es_item     = ls_item
+        ev_is_json  = lv_is_json ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'CHKO'
+      act = ls_item-obj_type ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'ZTEST'
+      act = ls_item-obj_name ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_true
+      act = lv_is_json ).
 
   ENDMETHOD.
 
