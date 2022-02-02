@@ -214,6 +214,8 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
               iv_type = <ls_type>
               is_item = ms_item ).
         ENDLOOP.
+        
+        tadir_insert( ms_item-devclass ).
 
       CATCH cx_static_check INTO lx_exception.
         ii_log->add_exception(
