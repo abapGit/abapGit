@@ -237,7 +237,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       INSERT ls_sort INTO TABLE lt_sort.
     ENDIF.
 
-    IF mv_order_by = 'PATH'.
+    IF mv_order_by = 'TRANSPORT'.
       ls_sort-name = 'OBJ_NAME'.
       INSERT ls_sort INTO TABLE lt_sort.
     ENDIF.
@@ -249,7 +249,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     INSERT LINES OF lt_diff_items INTO TABLE ct_repo_items.
     INSERT LINES OF lt_code_items INTO TABLE ct_repo_items.
 
-    IF mv_order_by = 'PATH'.
+    IF mv_order_by = 'TRANSPORT'.
       LOOP AT ct_repo_items ASSIGNING <ls_repo_item>.
         order_files( CHANGING ct_files = <ls_repo_item>-files ).
       ENDLOOP.
@@ -773,7 +773,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     ls_sort-descending = mv_order_descending.
     ls_sort-astext     = abap_true.
-    ls_sort-name       = 'PATH'.
+    ls_sort-name       = 'TRANSPORT'.
     INSERT ls_sort INTO TABLE lt_sort.
 
     ls_sort-descending = mv_order_descending.
@@ -965,29 +965,19 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
   METHOD render_item.
 
-    DATA: lv_link    TYPE string,
-          lv_colspan TYPE i.
+    DATA: lv_link    TYPE string.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    IF iv_render_transports = abap_false.
-      lv_colspan = 2.
-    ELSE.
-      lv_colspan = 3.
-    ENDIF.
 
     ri_html->add( |<tr{ get_item_class( is_item ) }>| ).
 
     IF is_item-obj_name IS INITIAL AND is_item-is_dir = abap_false.
-      ri_html->add( |<td colspan="{ lv_colspan }"></td>|
+      ri_html->add( |<td colspan="2"></td>|
                  && '<td class="object">'
                  && '<i class="grey">non-code and meta files</i>'
                  && '</td>' ).
     ELSE.
       ri_html->add( |<td class="icon">{ get_item_icon( is_item ) }</td>| ).
-      IF iv_render_transports = abap_true.
-        ri_html->add( render_item_lock_column( is_item ) ).
-      ENDIF.
 
       IF is_item-is_dir = abap_true. " Subdir
         lv_link = build_dir_jump_link( is_item-path ).
@@ -995,7 +985,10 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       ELSE.
         lv_link = build_obj_jump_link( is_item ).
         ri_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
-        ri_html->add( |<td class="object">{ lv_link } { build_inactive_object_code( is_item ) }</td>| ).
+        ri_html->add( |<td class="object">{ lv_link } { build_inactive_object_code( is_item ) }| ).
+        " Files
+        ri_html->add( render_item_files( is_item ) ).
+        ri_html->add( |</td>| ).
       ENDIF.
     ENDIF.
 
@@ -1004,10 +997,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ri_html->add( render_item_changed_by( is_item ) ).
     ri_html->add( '</td>' ).
 
-    " Files
-    ri_html->add( '<td class="files">' ).
-    ri_html->add( render_item_files( is_item ) ).
-    ri_html->add( '</td>' ).
+    IF iv_render_transports = abap_true.
+      ri_html->add( render_item_lock_column( is_item ) ).
+    ENDIF.
 
     " Command
     ri_html->add( '<td class="cmd">' ).
@@ -1041,7 +1033,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     IF is_item-is_dir = abap_true. " Directory
-
       ri_html->add( '<div>' ).
       ri_html->add( |<span class="grey">{ is_item-changes } changes</span>| ).
       ri_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state( iv_lstate = is_item-lstate
@@ -1049,7 +1040,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       ri_html->add( '</div>' ).
 
     ELSEIF is_item-changes > 0.
-
+      ri_html->add( '<br>' ).
       IF mv_hide_files = abap_true AND is_item-obj_name IS NOT INITIAL.
 
         lv_difflink = zcl_abapgit_html_action_utils=>obj_encode(
@@ -1120,17 +1111,16 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ri_html->add( '<td class="icon">' ).
+    ri_html->add( '<td class="transport">' ).
 
     ls_item-obj_type = is_item-obj_type.
     ls_item-obj_name = is_item-obj_name.
 
     TRY.
         lv_transport = zcl_abapgit_factory=>get_cts_api( )->get_transport_for_object( ls_item ).
-
         IF lv_transport IS NOT INITIAL.
           ri_html->add( zcl_abapgit_gui_chunk_lib=>render_transport( iv_transport = lv_transport
-                                                                     iv_icon_only = abap_true ) ).
+                                                                     iv_icon_only = abap_false ) ).
         ENDIF.
       CATCH zcx_abapgit_exception ##NO_HANDLER.
         " Ignore errors related to object check when trying to get transport
@@ -1150,10 +1140,8 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
+    " icon
     APPEND INITIAL LINE TO lt_col_spec.
-    IF mv_are_changes_recorded_in_tr = abap_true.
-      APPEND INITIAL LINE TO lt_col_spec.
-    ENDIF.
 
     ls_col_spec-tech_name = 'OBJ_TYPE'.
     ls_col_spec-display_name = 'Type'.
@@ -1170,10 +1158,12 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ls_col_spec-allow_order_by = abap_true.
     APPEND ls_col_spec TO lt_col_spec.
 
-    ls_col_spec-tech_name = 'PATH'.
-    ls_col_spec-display_name = 'Path'.
-    ls_col_spec-allow_order_by = abap_true.
-    APPEND ls_col_spec TO lt_col_spec.
+    IF mv_are_changes_recorded_in_tr = abap_true.
+      ls_col_spec-tech_name = 'TRANSPORT'.
+      ls_col_spec-display_name = 'Transport'.
+      ls_col_spec-allow_order_by = abap_true.
+      APPEND ls_col_spec TO lt_col_spec.
+    ENDIF.
 
     ls_col_spec-tech_name = 'LSTATE'.
     ls_col_spec-display_name = 'Status'.
