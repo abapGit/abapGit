@@ -107,7 +107,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
             wi_tadir_devclass              = tr_key-devclass
             wi_test_modus                  = abap_false
           .
-        IF SY-SUBRC <> 0.
+        IF sy-subrc <> 0.
         ENDIF.
 
       CATCH cx_root INTO lx_error.
