@@ -94,7 +94,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
         ENDLOOP.
 
         DATA tr_key TYPE trkey .
-        call method lo_object_aff->('IF_AFF_OBJ~TO_TRKEY')
+        CALL METHOD lo_object_aff->('IF_AFF_OBJ~TO_TRKEY')
           RECEIVING
             result = tr_key.
 
