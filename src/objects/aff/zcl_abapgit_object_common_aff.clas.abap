@@ -98,7 +98,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           RECEIVING
             result = tr_key.
 
-        call function 'TR_TADIR_INTERFACE'
+        CALL FUNCTION 'TR_TADIR_INTERFACE'
           EXPORTING
             wi_delete_tadir_entry          = abap_true
             wi_tadir_pgmid                 = 'R3TR'
