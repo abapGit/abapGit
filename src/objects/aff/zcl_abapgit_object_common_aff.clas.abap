@@ -93,7 +93,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
              iv_msgv4    = <ls_msg>-msgv4  ).
         ENDLOOP.
 
-        data tr_key type trkey .
+        DATA tr_key TYPE trkey .
         call method lo_object_aff->('IF_AFF_OBJ~TO_TRKEY')
           RECEIVING
             result = tr_key.
