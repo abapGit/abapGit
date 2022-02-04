@@ -93,6 +93,23 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
              iv_msgv4    = <ls_msg>-msgv4  ).
         ENDLOOP.
 
+        data tr_key type trkey .
+        call method lo_object_aff->('IF_AFF_OBJ~TO_TRKEY')
+          RECEIVING
+            result = tr_key.
+
+        call function 'TR_TADIR_INTERFACE'
+          EXPORTING
+            wi_delete_tadir_entry          = abap_true
+            wi_tadir_pgmid                 = 'R3TR'
+            wi_tadir_object                = tr_key-obj_type
+            wi_tadir_obj_name              = tr_key-obj_name
+            wi_tadir_devclass              = tr_key-devclass
+            wi_test_modus                  = abap_false
+          .
+        IF SY-SUBRC <> 0.
+        ENDIF.
+
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
@@ -214,6 +231,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
               iv_type = <ls_type>
               is_item = ms_item ).
         ENDLOOP.
+
         tadir_insert( ms_item-devclass ).
 
       CATCH cx_static_check INTO lx_exception.
