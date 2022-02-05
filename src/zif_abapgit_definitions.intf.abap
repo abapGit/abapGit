@@ -74,10 +74,15 @@ INTERFACE zif_abapgit_definitions
       comment   TYPE string,
     END OF ty_comment .
   TYPES:
-    BEGIN OF ty_item,
+    BEGIN OF ty_item_signature,
       obj_type TYPE tadir-object,
       obj_name TYPE tadir-obj_name,
       devclass TYPE devclass,
+    END OF ty_item_signature .
+  TYPES:
+    BEGIN OF ty_item.
+      INCLUDE TYPE ty_item_signature.
+  TYPES:
       inactive TYPE abap_bool,
     END OF ty_item .
   TYPES:

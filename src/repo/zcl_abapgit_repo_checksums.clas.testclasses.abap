@@ -29,7 +29,6 @@ CLASS ltcl_test_checksum_serializer IMPLEMENTATION.
     <ls_cs>-item-devclass = '$PKG'.
     <ls_cs>-item-obj_type = 'PROG'.
     <ls_cs>-item-obj_name = 'ZHELLO'.
-    <ls_cs>-item-inactive = 'X'. " should not affect
     APPEND INITIAL LINE TO <ls_cs>-files ASSIGNING <ls_file>.
     <ls_file>-path     = '/'.
     <ls_file>-filename = 'zhello.prog.abap'.
@@ -85,16 +84,10 @@ CLASS ltcl_test_checksum_serializer IMPLEMENTATION.
     DATA lt_checksums_act TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
     DATA lv_str TYPE string.
 
-    FIELD-SYMBOLS <ls_cs> LIKE LINE OF lt_checksums_exp.
-
     get_mock(
       IMPORTING
         et_checksums = lt_checksums_exp
         ev_str       = lv_str ).
-
-    LOOP AT lt_checksums_exp ASSIGNING <ls_cs>.
-      CLEAR <ls_cs>-item-inactive.
-    ENDLOOP.
 
     lt_checksums_act = lcl_checksum_serializer=>deserialize( lv_str ).
 
@@ -128,14 +121,10 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
 
     DATA li_cut TYPE REF TO zif_abapgit_repo_checksums.
     DATA lt_checksums_exp TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
-    FIELD-SYMBOLS <ls_cs> LIKE LINE OF lt_checksums_exp.
 
     zcl_abapgit_persist_injector=>set_repo_cs( me ).
 
     ltcl_test_checksum_serializer=>get_mock( IMPORTING et_checksums = lt_checksums_exp ).
-    LOOP AT lt_checksums_exp ASSIGNING <ls_cs>.
-      CLEAR <ls_cs>-item-inactive.
-    ENDLOOP.
 
     CREATE OBJECT li_cut TYPE zcl_abapgit_repo_checksums
       EXPORTING
