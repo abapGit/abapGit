@@ -19,6 +19,7 @@ CLASS zcl_abapgit_repo_checksums DEFINITION
 
   PROTECTED SECTION.
   PRIVATE SECTION.
+    CLASS-DATA c_splitter TYPE string VALUE `|`.
 ENDCLASS.
 
 
@@ -42,12 +43,12 @@ CLASS ZCL_ABAPGIT_REPO_CHECKSUMS IMPLEMENTATION.
 
       IF lv_buf+0(1) = '/'.
         IF <ls_cs> IS NOT ASSIGNED.
-          " Incorrect checksums struture, maybe raise, though it is not critical for execution
+          " Incorrect checksums structure, maybe raise, though it is not critical for execution
           RETURN.
         ENDIF.
 
         APPEND INITIAL LINE TO <ls_cs>-files ASSIGNING <ls_file>.
-        SPLIT lv_buf AT space INTO <ls_file>-path <ls_file>-filename <ls_file>-sha1.
+        SPLIT lv_buf AT c_splitter INTO <ls_file>-path <ls_file>-filename <ls_file>-sha1.
 
         IF <ls_file>-path IS INITIAL OR <ls_file>-filename IS INITIAL OR <ls_file>-sha1 IS INITIAL..
           " Incorrect checksums struture, maybe raise, though it is not critical for execution
@@ -55,7 +56,7 @@ CLASS ZCL_ABAPGIT_REPO_CHECKSUMS IMPLEMENTATION.
         ENDIF.
       ELSE.
         APPEND INITIAL LINE TO lt_checksums ASSIGNING <ls_cs>.
-        SPLIT lv_buf AT space INTO <ls_cs>-item-obj_type <ls_cs>-item-obj_name <ls_cs>-item-devclass.
+        SPLIT lv_buf AT c_splitter INTO <ls_cs>-item-obj_type <ls_cs>-item-obj_name <ls_cs>-item-devclass.
 
         IF <ls_cs>-item-obj_type IS INITIAL OR <ls_cs>-item-obj_name IS INITIAL OR <ls_cs>-item-devclass IS INITIAL.
           " Incorrect checksums struture, maybe raise, though it is not critical for execution
@@ -82,14 +83,14 @@ CLASS ZCL_ABAPGIT_REPO_CHECKSUMS IMPLEMENTATION.
 
       CONCATENATE <ls_cs>-item-obj_type <ls_cs>-item-obj_name <ls_cs>-item-devclass
         INTO lv_buf
-        SEPARATED BY space.
+        SEPARATED BY c_splitter.
       APPEND lv_buf TO lt_buf_tab.
 
       LOOP AT <ls_cs>-files ASSIGNING <ls_file>.
 
         CONCATENATE <ls_file>-path <ls_file>-filename <ls_file>-sha1
           INTO lv_buf
-          SEPARATED BY space.
+          SEPARATED BY c_splitter.
         APPEND lv_buf TO lt_buf_tab.
 
       ENDLOOP.
