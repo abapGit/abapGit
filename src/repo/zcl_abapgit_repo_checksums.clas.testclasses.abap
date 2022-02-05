@@ -51,6 +51,9 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
       |DEVC $PKG $PKG\n| &&
       |/ $pkg.devc.xml hash3|.
 
+    ev_str = replace( val = ev_str sub = ` ` with = `|` occ = 0 ).
+    " This way it's easier to read and adjust ¯\_(ツ)_/¯
+
   ENDMETHOD.
 
   METHOD serialize.
