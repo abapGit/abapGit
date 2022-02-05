@@ -611,7 +611,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     LOOP AT lt_local ASSIGNING <ls_local>.
       IF ls_last_item <> <ls_local>-item OR sy-tabix = 1. " First or New item reached ?
         APPEND INITIAL LINE TO lt_checksums ASSIGNING <ls_checksum>.
-        <ls_checksum>-item = <ls_local>-item.
+        <ls_checksum>-item = <ls_local>-item. " Assuming local-item type starts with item_signature !
         ls_last_item       = <ls_local>-item.
       ENDIF.
 
@@ -922,10 +922,10 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       ENDIF.
 
       READ TABLE lt_checksums ASSIGNING <ls_checksum> " TODO Optimize
-        WITH KEY item = <ls_local>-item.
+        WITH KEY item = <ls_local>-item. " Assuming local-item type starts with item_signature !
       IF sy-subrc > 0.
         APPEND INITIAL LINE TO lt_checksums ASSIGNING <ls_checksum>.
-        <ls_checksum>-item = <ls_local>-item.
+        <ls_checksum>-item = <ls_local>-item. " Assuming local-item type starts with item_signature !
       ENDIF.
 
       APPEND <ls_new_state> TO <ls_checksum>-files.

@@ -14,7 +14,7 @@ INTERFACE zif_abapgit_persistence PUBLIC.
     ty_contents TYPE SORTED TABLE OF ty_content WITH UNIQUE KEY type value .
 
   TYPES: BEGIN OF ty_local_checksum,
-           item  TYPE zif_abapgit_definitions=>ty_item,
+           item  TYPE zif_abapgit_definitions=>ty_item_signature,
            files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
          END OF ty_local_checksum.
 
