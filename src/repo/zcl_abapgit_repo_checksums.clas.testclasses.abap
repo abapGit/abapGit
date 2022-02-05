@@ -1,3 +1,7 @@
+**********************************************************************
+* SERIALIZER
+**********************************************************************
+
 CLASS ltcl_test_checksum_serializer DEFINITION FINAL
   FOR TESTING
   DURATION SHORT
@@ -6,7 +10,7 @@ CLASS ltcl_test_checksum_serializer DEFINITION FINAL
     METHODS serialize FOR TESTING.
     METHODS deserialize FOR TESTING.
 
-    METHODS get_mock
+    CLASS-METHODS get_mock
       EXPORTING
         et_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt
         ev_str       TYPE string.
@@ -97,6 +101,65 @@ CLASS ltcl_test_checksum_serializer IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lt_checksums_act
       exp = lt_checksums_exp ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+**********************************************************************
+* CHECKSUMS
+**********************************************************************
+
+CLASS ltcl_test_checksums DEFINITION FINAL
+  FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
+  PUBLIC SECTION.
+
+    INTERFACES zif_abapgit_persist_repo_cs.
+
+    METHODS get FOR TESTING.
+
+ENDCLASS.
+
+CLASS ltcl_test_checksums IMPLEMENTATION.
+
+  METHOD get.
+
+    DATA li_cut TYPE REF TO zif_abapgit_repo_checksums.
+    DATA lt_checksums_exp TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
+    FIELD-SYMBOLS <ls_cs> LIKE LINE OF lt_checksums_exp.
+
+    zcl_abapgit_persist_injector=>set_repo_cs( me ).
+
+    ltcl_test_checksum_serializer=>get_mock( IMPORTING et_checksums = lt_checksums_exp ).
+    LOOP AT lt_checksums_exp ASSIGNING <ls_cs>.
+      CLEAR <ls_cs>-item-inactive.
+    ENDLOOP.
+
+    CREATE OBJECT li_cut TYPE zcl_abapgit_repo_checksums
+      EXPORTING
+        iv_repo_key = '1'.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = li_cut->get( )
+      exp = lt_checksums_exp ).
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_persist_repo_cs~delete.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_persist_repo_cs~read.
+
+    IF iv_key = '1'.
+      ltcl_test_checksum_serializer=>get_mock( IMPORTING ev_str = rv_cs_blob ).
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_persist_repo_cs~update.
 
   ENDMETHOD.
 
