@@ -1,4 +1,4 @@
-CLASS ltcl_test_checksums DEFINITION FINAL
+CLASS ltcl_test_checksum_serializer DEFINITION FINAL
   FOR TESTING
   DURATION SHORT
   RISK LEVEL HARMLESS.
@@ -12,7 +12,7 @@ CLASS ltcl_test_checksums DEFINITION FINAL
         ev_str       TYPE string.
 ENDCLASS.
 
-CLASS ltcl_test_checksums IMPLEMENTATION.
+CLASS ltcl_test_checksum_serializer IMPLEMENTATION.
 
   METHOD get_mock.
 
@@ -59,7 +59,6 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
   METHOD serialize.
 
     DATA lt_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
-    DATA lo_cs TYPE REF TO zcl_abapgit_repo_checksums.
     DATA lv_act TYPE string.
     DATA lv_exp TYPE string.
 
@@ -68,8 +67,7 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
         et_checksums = lt_checksums
         ev_str       = lv_exp ).
 
-    CREATE OBJECT lo_cs.
-    lv_act = lo_cs->serialize( lt_checksums ).
+    lv_act = lcl_checksum_serializer=>serialize( lt_checksums ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_act
@@ -81,7 +79,6 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
 
     DATA lt_checksums_exp TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
     DATA lt_checksums_act TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
-    DATA lo_cs TYPE REF TO zcl_abapgit_repo_checksums.
     DATA lv_str TYPE string.
 
     FIELD-SYMBOLS <ls_cs> LIKE LINE OF lt_checksums_exp.
@@ -95,8 +92,7 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
       CLEAR <ls_cs>-item-inactive.
     ENDLOOP.
 
-    CREATE OBJECT lo_cs.
-    lt_checksums_act = lo_cs->deserialize( lv_str ).
+    lt_checksums_act = lcl_checksum_serializer=>deserialize( lv_str ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lt_checksums_act
