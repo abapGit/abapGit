@@ -6,6 +6,7 @@ CLASS zcl_abapgit_persistence_repo DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_persist_repo .
+    INTERFACES zif_abapgit_persist_repo_cs .
 
     METHODS constructor .
   PROTECTED SECTION.
@@ -308,4 +309,30 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
                    iv_data  = lv_blob ).
 
   ENDMETHOD.
+
+  METHOD zif_abapgit_persist_repo_cs~delete.
+
+    mo_db->delete(
+      iv_type  = zcl_abapgit_persistence_db=>c_type_repo_csum
+      iv_value = iv_key ).
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_persist_repo_cs~read.
+
+    rv_cs_blob = mo_db->read(
+      iv_type  = zcl_abapgit_persistence_db=>c_type_repo_csum
+      iv_value = iv_key ).
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_persist_repo_cs~update.
+
+    mo_db->modify(
+      iv_type  = zcl_abapgit_persistence_db=>c_type_repo_csum
+      iv_value = iv_key
+      iv_data  = iv_cs_blob ).
+
+  ENDMETHOD.
+
 ENDCLASS.
