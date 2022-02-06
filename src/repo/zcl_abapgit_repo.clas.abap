@@ -15,7 +15,13 @@ CLASS zcl_abapgit_repo DEFINITION
       get_package FOR zif_abapgit_repo~get_package,
       get_files_local FOR zif_abapgit_repo~get_files_local,
       get_files_remote FOR zif_abapgit_repo~get_files_remote,
+      get_local_settings FOR zif_abapgit_repo~get_local_settings,
+      create_new_log FOR zif_abapgit_repo~create_new_log,
       refresh FOR zif_abapgit_repo~refresh.
+
+    METHODS constructor
+      IMPORTING
+        !is_data TYPE zif_abapgit_persistence=>ty_repo .
 
     METHODS bind_listener
       IMPORTING
@@ -30,9 +36,6 @@ CLASS zcl_abapgit_repo DEFINITION
         VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_delete_checks
       RAISING
         zcx_abapgit_exception .
-    METHODS constructor
-      IMPORTING
-        !is_data TYPE zif_abapgit_persistence=>ty_repo .
     METHODS get_local_checksums_per_file
       RETURNING
         VALUE(rt_checksums) TYPE zif_abapgit_definitions=>ty_file_signatures_tt .
@@ -74,9 +77,6 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS set_files_remote
       IMPORTING
         !it_files TYPE zif_abapgit_definitions=>ty_files_tt .
-    METHODS get_local_settings
-      RETURNING
-        VALUE(rs_settings) TYPE zif_abapgit_persistence=>ty_repo-local_settings .
     METHODS set_local_settings
       IMPORTING
         !is_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings
@@ -98,11 +98,6 @@ CLASS zcl_abapgit_repo DEFINITION
         !iv_offline TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
-    METHODS create_new_log
-      IMPORTING
-        !iv_title     TYPE string OPTIONAL
-      RETURNING
-        VALUE(ri_log) TYPE REF TO zif_abapgit_log .
     METHODS get_log
       RETURNING
         VALUE(ri_log) TYPE REF TO zif_abapgit_log .

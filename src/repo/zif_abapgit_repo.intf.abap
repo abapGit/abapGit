@@ -17,6 +17,9 @@ INTERFACE zif_abapgit_repo
   METHODS get_package
     RETURNING
       VALUE(rv_package) TYPE zif_abapgit_persistence=>ty_repo-package .
+  METHODS get_local_settings
+    RETURNING
+      VALUE(rs_settings) TYPE zif_abapgit_persistence=>ty_repo-local_settings .
 
   METHODS get_files_local
     IMPORTING
@@ -37,9 +40,14 @@ INTERFACE zif_abapgit_repo
     IMPORTING
       !iv_drop_cache TYPE abap_bool DEFAULT abap_false
       !iv_drop_log   TYPE abap_bool DEFAULT abap_true
-        PREFERRED PARAMETER iv_drop_cache
+    PREFERRED PARAMETER iv_drop_cache
     RAISING
       zcx_abapgit_exception .
 
+  METHODS create_new_log
+    IMPORTING
+      !iv_title     TYPE string OPTIONAL
+    RETURNING
+      VALUE(ri_log) TYPE REF TO zif_abapgit_log .
 
 ENDINTERFACE.
