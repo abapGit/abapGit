@@ -16,7 +16,6 @@ CLASS zcl_abapgit_repo DEFINITION
       get_files_local FOR zif_abapgit_repo~get_files_local,
       get_files_remote FOR zif_abapgit_repo~get_files_remote,
       get_local_settings FOR zif_abapgit_repo~get_local_settings,
-      create_new_log FOR zif_abapgit_repo~create_new_log,
       refresh FOR zif_abapgit_repo~refresh.
 
     METHODS constructor
@@ -98,6 +97,11 @@ CLASS zcl_abapgit_repo DEFINITION
         !iv_offline TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
+    METHODS create_new_log
+      IMPORTING
+        !iv_title     TYPE string OPTIONAL
+      RETURNING
+        VALUE(ri_log) TYPE REF TO zif_abapgit_log .
     METHODS get_log
       RETURNING
         VALUE(ri_log) TYPE REF TO zif_abapgit_log .
@@ -187,7 +191,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 
   METHOD bind_listener.

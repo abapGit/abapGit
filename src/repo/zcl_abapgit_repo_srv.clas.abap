@@ -588,8 +588,10 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
     DATA: lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
     DATA: lx_error TYPE REF TO zcx_abapgit_exception.
+    DATA lo_repo TYPE REF TO zcl_abapgit_repo.
 
-    ri_log = ii_repo->create_new_log( 'Uninstall Log' ).
+    lo_repo ?= ii_repo. " Hack, remove later
+    ri_log = lo_repo->create_new_log( 'Uninstall Log' ).
 
     IF ii_repo->get_local_settings( )-write_protected = abap_true.
       zcx_abapgit_exception=>raise( 'Cannot purge. Local code is write-protected by repo config' ).

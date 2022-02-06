@@ -44,10 +44,4 @@ INTERFACE zif_abapgit_repo
     RAISING
       zcx_abapgit_exception .
 
-  METHODS create_new_log
-    IMPORTING
-      !iv_title     TYPE string OPTIONAL
-    RETURNING
-      VALUE(ri_log) TYPE REF TO zif_abapgit_log .
-
 ENDINTERFACE.
