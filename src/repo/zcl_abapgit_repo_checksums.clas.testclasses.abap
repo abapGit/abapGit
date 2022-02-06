@@ -112,6 +112,7 @@ CLASS ltcl_test_checksums DEFINITION FINAL
     INTERFACES zif_abapgit_persist_repo_cs.
 
     METHODS get FOR TESTING.
+    METHODS rebuild. " FOR TESTING. TODO
 
 ENDCLASS.
 
@@ -136,6 +137,13 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD rebuild.
+
+    " TODO: but needs extraction of zif_repo first
+    " Now repo srv INTERFACE returns repo CLASS INSTANCE (?!)
+
+  ENDMETHOD.
+
   METHOD zif_abapgit_persist_repo_cs~delete.
 
   ENDMETHOD.
@@ -151,5 +159,7 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
   METHOD zif_abapgit_persist_repo_cs~update.
 
   ENDMETHOD.
+
+
 
 ENDCLASS.
