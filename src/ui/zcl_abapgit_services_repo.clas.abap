@@ -101,7 +101,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
   METHOD check_package.
 
     DATA:
-      lo_repo     TYPE REF TO zcl_abapgit_repo,
+      li_repo     TYPE REF TO zif_abapgit_repo,
       li_repo_srv TYPE REF TO zif_abapgit_repo_srv,
       lv_reason   TYPE string.
 
@@ -113,10 +113,10 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
         iv_package    = is_repo_params-package
         iv_ign_subpkg = is_repo_params-ignore_subpackages
       IMPORTING
-        eo_repo    = lo_repo
+        ei_repo    = li_repo
         ev_reason  = lv_reason ).
 
-    IF lo_repo IS BOUND.
+    IF li_repo IS BOUND.
       zcx_abapgit_exception=>raise( lv_reason ).
     ENDIF.
 
@@ -209,7 +209,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     check_package( is_repo_params ).
 
     " create new repo and add to favorites
-    ro_repo = zcl_abapgit_repo_srv=>get_instance( )->new_offline(
+    ro_repo ?= zcl_abapgit_repo_srv=>get_instance( )->new_offline(
       iv_url            = is_repo_params-url
       iv_package        = is_repo_params-package
       iv_folder_logic   = is_repo_params-folder_logic
@@ -233,7 +233,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
     check_package( is_repo_params ).
 
-    ro_repo = zcl_abapgit_repo_srv=>get_instance( )->new_online(
+    ro_repo ?= zcl_abapgit_repo_srv=>get_instance( )->new_online(
       iv_url            = is_repo_params-url
       iv_branch_name    = is_repo_params-branch_name
       iv_package        = is_repo_params-package
@@ -433,7 +433,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
           lv_message   TYPE string.
 
 
-    lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     lv_repo_name = lo_repo->get_name( ).
 
     lv_package = lo_repo->get_package( ).
@@ -467,7 +467,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     ENDIF.
 
     ri_log = zcl_abapgit_repo_srv=>get_instance( )->purge(
-      io_repo   = lo_repo
+      ii_repo   = lo_repo
       is_checks = ls_checks ).
 
     COMMIT WORK.
@@ -501,7 +501,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Not authorized' ).
     ENDIF.
 
-    lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
     lv_question = 'This will rebuild and overwrite local repo checksums.'.
 
@@ -538,16 +538,16 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
   METHOD remove.
 
     DATA: lv_answer    TYPE c LENGTH 1,
-          lo_repo      TYPE REF TO zcl_abapgit_repo,
+          li_repo      TYPE REF TO zif_abapgit_repo,
           lv_package   TYPE devclass,
           lv_question  TYPE c LENGTH 200,
           lv_repo_name TYPE string,
           lv_message   TYPE string.
 
 
-    lo_repo      = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-    lv_repo_name = lo_repo->get_name( ).
-    lv_package   = lo_repo->get_package( ).
+    li_repo      = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    lv_repo_name = li_repo->get_name( ).
+    lv_package   = li_repo->get_package( ).
     lv_question  = |This will remove the repository reference to the package { lv_package
       }. All objects will safely remain in the system.|.
 
@@ -565,7 +565,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    zcl_abapgit_repo_srv=>get_instance( )->delete( lo_repo ).
+    zcl_abapgit_repo_srv=>get_instance( )->delete( li_repo ).
 
     COMMIT WORK.
 

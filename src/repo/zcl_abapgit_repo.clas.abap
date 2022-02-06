@@ -14,7 +14,8 @@ CLASS zcl_abapgit_repo DEFINITION
       is_offline FOR zif_abapgit_repo~is_offline,
       get_package FOR zif_abapgit_repo~get_package,
       get_files_local FOR zif_abapgit_repo~get_files_local,
-      get_files_remote FOR zif_abapgit_repo~get_files_remote.
+      get_files_remote FOR zif_abapgit_repo~get_files_remote,
+      refresh FOR zif_abapgit_repo~refresh.
 
     METHODS bind_listener
       IMPORTING
@@ -55,13 +56,6 @@ CLASS zcl_abapgit_repo DEFINITION
       IMPORTING
         !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
         !ii_log    TYPE REF TO zif_abapgit_log
-      RAISING
-        zcx_abapgit_exception .
-    METHODS refresh
-      IMPORTING
-        !iv_drop_cache TYPE abap_bool DEFAULT abap_false
-        !iv_drop_log   TYPE abap_bool DEFAULT abap_true
-          PREFERRED PARAMETER iv_drop_cache
       RAISING
         zcx_abapgit_exception .
     METHODS update_local_checksums

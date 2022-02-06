@@ -33,6 +33,13 @@ INTERFACE zif_abapgit_repo
       VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
     RAISING
       zcx_abapgit_exception .
+  METHODS refresh
+    IMPORTING
+      !iv_drop_cache TYPE abap_bool DEFAULT abap_false
+      !iv_drop_log   TYPE abap_bool DEFAULT abap_true
+        PREFERRED PARAMETER iv_drop_cache
+    RAISING
+      zcx_abapgit_exception .
 
 
 ENDINTERFACE.

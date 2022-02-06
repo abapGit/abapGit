@@ -11,7 +11,7 @@ CLASS zcl_abapgit_gui_page_tag DEFINITION PUBLIC FINAL
 
     METHODS:
       constructor
-        IMPORTING io_repo TYPE REF TO zcl_abapgit_repo
+        IMPORTING ii_repo TYPE REF TO zif_abapgit_repo
         RAISING   zcx_abapgit_exception,
 
       zif_abapgit_gui_event_handler~on_event REDEFINITION.
@@ -76,7 +76,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
 
-    mo_repo_online ?= io_repo.
+    mo_repo_online ?= ii_repo.
 
     ms_control-page_title = 'Tag'.
     mv_selected_type = c_tag_type-lightweight.
