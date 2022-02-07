@@ -21,7 +21,7 @@ CLASS zcl_abapgit_object_chkc IMPLEMENTATION.
 
     DATA: lr_data        TYPE REF TO data,
           lo_chkc_db_api TYPE REF TO object,
-          lv_name        TYPE c LENGTH 120,
+          lv_name        TYPE c LENGTH 30,
           lx_error       TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <ls_chkc_header> TYPE any,
