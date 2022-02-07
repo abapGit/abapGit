@@ -32,7 +32,6 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           lo_aff_factory     TYPE REF TO object,
           lv_name            TYPE c LENGTH 120,
           lx_error           TYPE REF TO cx_root,
-          lv_tr_key          TYPE trkey,
           lo_aff_log         TYPE REF TO object.
 
     FIELD-SYMBOLS: <ls_intf_aff_obj> TYPE any,
@@ -94,17 +93,13 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
              iv_msgv4    = <ls_msg>-msgv4  ).
         ENDLOOP.
 
-        CALL METHOD lo_object_aff->('IF_AFF_OBJ~TO_TRKEY')
-          RECEIVING
-            result = lv_tr_key.
-
         CALL FUNCTION 'TR_TADIR_INTERFACE'
           EXPORTING
             wi_delete_tadir_entry          = abap_true
             wi_tadir_pgmid                 = 'R3TR'
-            wi_tadir_object                = lv_tr_key-obj_type
-            wi_tadir_obj_name              = lv_tr_key-obj_name
-            wi_tadir_devclass              = lv_tr_key-devclass
+            wi_tadir_object                = ms_item-obj_type
+            wi_tadir_obj_name              = ms_item-obj_name
+            wi_tadir_devclass              = ms_item-devclass
             wi_test_modus                  = abap_false.
         IF sy-subrc <> 0.
         ENDIF.
