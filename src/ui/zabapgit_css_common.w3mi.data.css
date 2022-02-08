@@ -298,37 +298,28 @@ table.repo_tab {
   text-align: center;
   padding-left: 8px;
   padding-right: 4px;
-  vertical-align: baseline;
-}
-
-.repo_tab td.user {
-  vertical-align: baseline;
 }
 
 .repo_tab td.transport {
   width: 140px;
   text-align: left;
-  vertical-align: baseline;
 }
 .repo_tab td.type {
   width: 4em;
   padding-left: 0.5em;
-  vertical-align: baseline;
+}
+
+.repo_tab td.filename{
+  padding-left: 1em;
 }
 
 .repo_tab td.object {
   padding-left: 0.5em;
-  vertical-align: baseline;
 }
 
 .repo_tab td.files {
   padding-left: 0.5em;
   line-height: 1.5;
-  vertical-align: baseline;
-}
-
-.repo_tab td.dir{
-  vertical-align: baseline;
 }
 
 .repo_tab td.cmd, .repo_tab th.cmd {

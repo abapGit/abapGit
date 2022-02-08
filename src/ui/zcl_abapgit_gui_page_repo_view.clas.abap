@@ -78,6 +78,11 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+    METHODS render_file_command
+      IMPORTING
+        !is_file       TYPE zif_abapgit_definitions=>ty_repo_file
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS get_item_class
       IMPORTING
         !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
@@ -88,7 +93,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
       RETURNING
         VALUE(rv_html) TYPE string .
-    METHODS render_item_lock_column
+    METHODS render_item_transport
       IMPORTING
         !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
       RETURNING
@@ -886,7 +891,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
           ENDLOOP.
 
           IF mv_changes_only = abap_true.
-            ri_html->add( `<tfoot><tr><td colspan="5">` ).
+            ri_html->add( `<tfoot><tr><td class="grey" colspan="5">` ).
             ri_html->add( `(Only changes are shown. ` ).
             ri_html->add( ri_html->a(
               iv_txt   = |Show All|
@@ -987,7 +992,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         ri_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
         ri_html->add( |<td class="object">{ lv_link } { build_inactive_object_code( is_item ) }| ).
         " Files
-        ri_html->add( render_item_files( is_item ) ).
         ri_html->add( |</td>| ).
       ENDIF.
     ENDIF.
@@ -998,17 +1002,19 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ri_html->add( '</td>' ).
 
     IF iv_render_transports = abap_true.
-      ri_html->add( render_item_lock_column( is_item ) ).
+      ri_html->add( render_item_transport( is_item ) ).
     ENDIF.
 
     " Command
     ri_html->add( '<td class="cmd">' ).
-    IF mo_repo->has_remote_source( ) = abap_true.
+    IF mo_repo->has_remote_source( ).
       ri_html->add( render_item_command( is_item ) ).
     ENDIF.
     ri_html->add( '</td>' ).
 
     ri_html->add( '</tr>' ).
+
+    ri_html->add( render_item_files( is_item ) ).
 
   ENDMETHOD.
 
@@ -1040,7 +1046,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       ri_html->add( '</div>' ).
 
     ELSEIF is_item-changes > 0.
-      ri_html->add( '<br>' ).
       IF mv_hide_files = abap_true AND is_item-obj_name IS NOT INITIAL.
 
         lv_difflink = zcl_abapgit_html_action_utils=>obj_encode(
@@ -1054,27 +1059,31 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                                                                     iv_rstate = is_item-rstate ) ).
         ri_html->add( '</div>' ).
 
-      ELSE.
-        LOOP AT is_item-files INTO ls_file.
-
-          ri_html->add( '<div>' ).
-          IF ls_file-is_changed = abap_true.
-            lv_difflink = zcl_abapgit_html_action_utils=>file_encode(
-              iv_key  = mo_repo->get_key( )
-              ig_file = ls_file ).
-            ri_html->add_a( iv_txt = 'diff'
-                            iv_act = |{ zif_abapgit_definitions=>c_action-go_file_diff }?{ lv_difflink }| ).
-            ri_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state( iv_lstate = ls_file-lstate
-                                                                        iv_rstate = ls_file-rstate ) ).
-          ELSE.
-            ri_html->add( '&nbsp;' ).
-          ENDIF.
-          ri_html->add( '</div>' ).
-
-        ENDLOOP.
       ENDIF.
 
     ENDIF.
+
+  ENDMETHOD.
+
+  METHOD render_file_command.
+
+    DATA: lv_difflink TYPE string.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    ri_html->add( '<div>' ).
+    IF is_file-is_changed = abap_true.
+      lv_difflink = zcl_abapgit_html_action_utils=>file_encode(
+        iv_key  = mo_repo->get_key( )
+        ig_file = is_file ).
+      ri_html->add_a( iv_txt = 'diff'
+                      iv_act = |{ zif_abapgit_definitions=>c_action-go_file_diff }?{ lv_difflink }| ).
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state( iv_lstate = is_file-lstate
+                                                                  iv_rstate = is_file-rstate ) ).
+    ELSE.
+      ri_html->add( '&nbsp;' ).
+    ENDIF.
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 
@@ -1093,17 +1102,45 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     li_exit = zcl_abapgit_exit=>get_instance( ).
 
     LOOP AT is_item-files INTO ls_file.
+      ri_html->add( |<tr{ get_item_class( is_item ) }>| ).
+
+      ri_html->add( |<td class="icon"></td>| ).
+
+      ri_html->add( |<td class="type"></td>| ).
+      ri_html->add( |<td class="filename darkgrey">| ).
+
       IF mv_show_folders = abap_true.
         ri_html->add( |<div>{ li_exit->adjust_display_filename( ls_file-filename ) }</div>| ).
       ELSE.
         ri_html->add( |<div>{ li_exit->adjust_display_filename( ls_file-path && ls_file-filename ) }</div>| ).
       ENDIF.
+
+      ri_html->add( |</td>| ).
+
+      " Changed by (not applicable to file)
+      ri_html->add( '<td class="user">' ).
+      ri_html->add( '</td>' ).
+
+      " Transport (not applicable to file)
+      IF mv_are_changes_recorded_in_tr = abap_true.
+        ri_html->add( `<td></td>` ).
+      ENDIF.
+
+      " Command
+      ri_html->add( '<td class="cmd">' ).
+      IF mo_repo->has_remote_source( ) = abap_true.
+        ri_html->add( render_file_command( ls_file ) ).
+      ENDIF.
+      ri_html->add( '</td>' ).
+
+      ri_html->add( '</tr>' ).
+
     ENDLOOP.
 
   ENDMETHOD.
 
 
-  METHOD render_item_lock_column.
+  METHOD render_item_transport.
 
     DATA:
       ls_item      TYPE zif_abapgit_definitions=>ty_item,
@@ -1119,8 +1156,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     TRY.
         lv_transport = zcl_abapgit_factory=>get_cts_api( )->get_transport_for_object( ls_item ).
         IF lv_transport IS NOT INITIAL.
-          ri_html->add( zcl_abapgit_gui_chunk_lib=>render_transport( iv_transport = lv_transport
-                                                                     iv_icon_only = abap_false ) ).
+          ri_html->add( zcl_abapgit_gui_chunk_lib=>render_transport( iv_transport = lv_transport ) ).
         ENDIF.
       CATCH zcx_abapgit_exception ##NO_HANDLER.
         " Ignore errors related to object check when trying to get transport
