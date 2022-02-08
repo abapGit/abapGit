@@ -1353,10 +1353,5 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
     ls_hotkey_action-hotkey = |l|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-description   = |abapGit Settings|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_settings.
-    ls_hotkey_action-hotkey = |x|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
   ENDMETHOD.
 ENDCLASS.
