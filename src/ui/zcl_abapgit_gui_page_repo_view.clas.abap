@@ -990,9 +990,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       ELSE.
         lv_link = build_obj_jump_link( is_item ).
         ri_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
-        ri_html->add( |<td class="object">{ lv_link } { build_inactive_object_code( is_item ) }| ).
-        " Files
-        ri_html->add( |</td>| ).
+        ri_html->add( |<td class="object">{ lv_link } { build_inactive_object_code( is_item ) }</td>| ).
       ENDIF.
     ENDIF.
 
