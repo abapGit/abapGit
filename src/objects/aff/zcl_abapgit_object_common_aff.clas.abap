@@ -102,6 +102,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
             wi_tadir_devclass              = ms_item-devclass
             wi_test_modus                  = abap_false.
         IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise_t100( ).
         ENDIF.
 
       CATCH cx_root INTO lx_error.
