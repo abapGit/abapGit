@@ -1007,7 +1007,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     " Command
     ri_html->add( '<td class="cmd">' ).
-    IF mo_repo->has_remote_source( ).
+    IF mo_repo->has_remote_source( ) = abap_true.
       ri_html->add( render_item_command( is_item ) ).
     ENDIF.
     ri_html->add( '</td>' ).
