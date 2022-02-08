@@ -97,7 +97,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    lo_repo ?= ii_repo. " Hack, refactor later
+    lo_repo ?= ii_repo. " TODO, refactor later
     lo_repo->bind_listener( me ).
     APPEND ii_repo TO mt_list.
 
@@ -590,7 +590,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
     DATA: lx_error TYPE REF TO zcx_abapgit_exception.
     DATA lo_repo TYPE REF TO zcl_abapgit_repo.
 
-    lo_repo ?= ii_repo. " Hack, remove later
+    lo_repo ?= ii_repo. " TODO, remove later
     ri_log = lo_repo->create_new_log( 'Uninstall Log' ).
 
     IF ii_repo->get_local_settings( )-write_protected = abap_true.
