@@ -33,6 +33,11 @@ INTERFACE zif_abapgit_persist_user
       VALUE(rv_hide) TYPE abap_bool
     RAISING
       zcx_abapgit_exception .
+  METHODS get_show_folders
+    RETURNING
+      VALUE(rv_folders) TYPE abap_bool
+    RAISING
+      zcx_abapgit_exception .
   METHODS get_repo_git_user_email
     IMPORTING
       !iv_url         TYPE zif_abapgit_persistence=>ty_repo-url
@@ -168,6 +173,11 @@ INTERFACE zif_abapgit_persist_user
       VALUE(rv_hide) TYPE abap_bool
     RAISING
       zcx_abapgit_exception .
+  METHODS toggle_show_folders
+    RETURNING
+      VALUE(rv_folders) TYPE abap_bool
+    RAISING
+      zcx_abapgit_exception.
   METHODS get_settings
     RETURNING
       VALUE(rs_user_settings) TYPE zif_abapgit_definitions=>ty_s_user_settings
