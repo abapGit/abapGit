@@ -617,6 +617,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         mv_order_by = lo_persistence_user->get_order_by( ).
         mv_order_descending = lo_persistence_user->get_order_descending( ).
         mv_diff_first = lo_persistence_user->get_diff_first( ).
+        mv_show_folders = lo_persistence_user->get_show_folders( ).
 
         ms_control-page_title = 'Repository'.
         ms_control-page_menu = build_main_menu( ).
@@ -1281,7 +1282,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-toggle_folders.    " Toggle folder view
-        mv_show_folders = boolc( mv_show_folders <> abap_true ).
+        mv_show_folders = zcl_abapgit_persistence_user=>get_instance( )->toggle_show_folders( ).
         mv_cur_dir      = '/'. " Root
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
