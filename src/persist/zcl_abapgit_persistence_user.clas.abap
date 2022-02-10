@@ -45,6 +45,7 @@ CLASS zcl_abapgit_persistence_user DEFINITION
         favorites        TYPE ty_favorites,
         repo_config      TYPE ty_repo_configs,
         settings         TYPE zif_abapgit_definitions=>ty_s_user_settings,
+        show_folders     TYPE abap_bool,
       END OF ty_user .
 
     DATA mv_user TYPE sy-uname .
@@ -233,6 +234,12 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
   METHOD zif_abapgit_persist_user~get_hide_files.
 
     rv_hide = ms_user-hide_files.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_persist_user~get_show_folders.
+
+    rv_folders = ms_user-show_folders.
 
   ENDMETHOD.
 
@@ -426,6 +433,13 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
 
     rv_hide = ms_user-hide_files.
 
+  ENDMETHOD.
+
+  METHOD zif_abapgit_persist_user~toggle_show_folders.
+    ms_user-show_folders = boolc( ms_user-show_folders = abap_false ).
+    update( ).
+
+    rv_folders = ms_user-show_folders.
   ENDMETHOD.
 
   METHOD zif_abapgit_persist_user~get_diff_first.
