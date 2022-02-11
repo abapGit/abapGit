@@ -15,7 +15,9 @@ CLASS ltcl_diff DEFINITION FOR TESTING
                              iv_new     TYPE zif_abapgit_definitions=>ty_diff-new
                              iv_result  TYPE zif_abapgit_definitions=>ty_diff-result
                              iv_old_num TYPE zif_abapgit_definitions=>ty_diff-old_num
-                             iv_old     TYPE zif_abapgit_definitions=>ty_diff-old.
+                             iv_old     TYPE zif_abapgit_definitions=>ty_diff-old
+                             iv_beacon  TYPE zif_abapgit_definitions=>ty_diff-beacon
+                               DEFAULT zcl_abapgit_diff=>co_starting_beacon.
 
     METHODS: setup.
 
@@ -36,7 +38,9 @@ CLASS ltcl_diff DEFINITION FOR TESTING
       diff08 FOR TESTING,
       diff09 FOR TESTING,
       diff10 FOR TESTING,
-      diff11 FOR TESTING.
+      diff11 FOR TESTING,
+      diff12 FOR TESTING,
+      diff13 FOR TESTING.
 
 ENDCLASS.
 
@@ -65,7 +69,7 @@ CLASS ltcl_diff IMPLEMENTATION.
     ls_expected-result  = iv_result.
     ls_expected-old_num = iv_old_num.
     ls_expected-old     = iv_old.
-    ls_expected-beacon  = zcl_abapgit_diff=>co_starting_beacon.
+    ls_expected-beacon  = iv_beacon.
     APPEND ls_expected TO mt_expected.
   ENDMETHOD.
 
@@ -391,6 +395,116 @@ CLASS ltcl_diff IMPLEMENTATION.
                   iv_old     = `DATA foo TYPE i.` ).
 
     test( iv_ignore_case = abap_true ).
+
+  ENDMETHOD.
+
+  METHOD diff12.
+
+    " adjusted diffs for insert (workaround for kernel issue)
+    add_new( iv_new = `REPORT zprog_diff.` ).
+    add_new( iv_new = `*` ).
+    add_new( iv_new = `FORM t_1.` ).
+    add_new( iv_new = `ENDFORM.` ).
+    add_new( iv_new = `FORM t_2.` ).
+    add_new( iv_new = `ENDFORM.` ).
+
+    add_old( iv_old = `REPORT zprog_diff.` ).
+    add_old( iv_old = `FORM t_1.` ).
+    add_old( iv_old = `ENDFORM.` ).
+
+    add_expected( iv_new_num = '    1'
+                  iv_new     = `REPORT zprog_diff.`
+                  iv_result  = '' " no diff!
+                  iv_old_num = '    1'
+                  iv_old     = `REPORT zprog_diff.`
+                  iv_beacon  = 1 ).
+    add_expected( iv_new_num = '    2'
+                  iv_new     = `*`
+                  iv_result  = 'I'
+                  iv_old_num = '     '
+                  iv_old     = ``
+                  iv_beacon  = 1 ).
+    add_expected( iv_new_num = '    3'
+                  iv_new     = `FORM t_1.`
+                  iv_result  = '' " no diff!
+                  iv_old_num = '    2'
+                  iv_old     = `FORM t_1.`
+                  iv_beacon  = 2 ).
+    add_expected( iv_new_num = '    4'
+                  iv_new     = `ENDFORM.`
+                  iv_result  = '' " no diff!
+                  iv_old_num = '    3'
+                  iv_old     = `ENDFORM.`
+                  iv_beacon  = 2 ).
+    add_expected( iv_new_num = '    5'
+                  iv_new     = `FORM t_2.`
+                  iv_result  = 'I'
+                  iv_old_num = '     '
+                  iv_old     = ``
+                  iv_beacon  = 3 ).
+    add_expected( iv_new_num = '    6'
+                  iv_new     = `ENDFORM.`
+                  iv_result  = 'I'
+                  iv_old_num = '     '
+                  iv_old     = ``
+                  iv_beacon  = 3 ).
+
+    test( ).
+
+  ENDMETHOD.
+
+  METHOD diff13.
+
+    " adjusted diffs for delete (workaround for kernel issue)
+    add_old( iv_old = `REPORT zprog_diff.` ).
+    add_old( iv_old = `*` ).
+    add_old( iv_old = `FORM t_1.` ).
+    add_old( iv_old = `ENDFORM.` ).
+    add_old( iv_old = `FORM t_2.` ).
+    add_old( iv_old = `ENDFORM.` ).
+
+    add_new( iv_new = `REPORT zprog_diff.` ).
+    add_new( iv_new = `FORM t_1.` ).
+    add_new( iv_new = `ENDFORM.` ).
+
+    add_expected( iv_old_num = '    1'
+                  iv_old     = `REPORT zprog_diff.`
+                  iv_result  = '' " no diff!
+                  iv_new_num = '    1'
+                  iv_new     = `REPORT zprog_diff.`
+                  iv_beacon  = 1 ).
+    add_expected( iv_old_num = '    2'
+                  iv_old     = `*`
+                  iv_result  = 'D'
+                  iv_new_num = '     '
+                  iv_new     = ``
+                  iv_beacon  = 1 ).
+    add_expected( iv_old_num = '    3'
+                  iv_old     = `FORM t_1.`
+                  iv_result  = '' " no diff!
+                  iv_new_num = '    2'
+                  iv_new     = `FORM t_1.`
+                  iv_beacon  = 2 ).
+    add_expected( iv_old_num = '    4'
+                  iv_old     = `ENDFORM.`
+                  iv_result  = '' " no diff!
+                  iv_new_num = '    3'
+                  iv_new     = `ENDFORM.`
+                  iv_beacon  = 2 ).
+    add_expected( iv_old_num = '    5'
+                  iv_old     = `FORM t_2.`
+                  iv_result  = 'D'
+                  iv_new_num = '     '
+                  iv_new     = ``
+                  iv_beacon  = 2 ).
+    add_expected( iv_old_num = '    6'
+                  iv_old     = `ENDFORM.`
+                  iv_result  = 'D'
+                  iv_new_num = '     '
+                  iv_new     = ``
+                  iv_beacon  = 2 ).
+
+    test( ).
 
   ENDMETHOD.
 

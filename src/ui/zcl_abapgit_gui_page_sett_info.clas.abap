@@ -100,7 +100,7 @@ CLASS zcl_abapgit_gui_page_sett_info DEFINITION
         zcx_abapgit_exception .
     METHODS format_user
       IMPORTING
-        !iv_username   TYPE xubname
+        !iv_username   TYPE syuname
       RETURNING
         VALUE(rv_user) TYPE string .
     METHODS format_timestamp

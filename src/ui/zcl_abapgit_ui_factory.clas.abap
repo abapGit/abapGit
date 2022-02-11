@@ -16,9 +16,6 @@ CLASS zcl_abapgit_ui_factory DEFINITION
     CLASS-METHODS get_tag_popups
       RETURNING
         VALUE(ri_tag_popups) TYPE REF TO zif_abapgit_tag_popups .
-    CLASS-METHODS get_gui_functions
-      RETURNING
-        VALUE(ri_gui_functions) TYPE REF TO zif_abapgit_gui_functions .
     CLASS-METHODS get_gui
       RETURNING
         VALUE(ro_gui) TYPE REF TO zcl_abapgit_gui
@@ -46,7 +43,6 @@ CLASS zcl_abapgit_ui_factory DEFINITION
 
     CLASS-DATA gi_popups TYPE REF TO zif_abapgit_popups .
     CLASS-DATA gi_tag_popups TYPE REF TO zif_abapgit_tag_popups .
-    CLASS-DATA gi_gui_functions TYPE REF TO zif_abapgit_gui_functions .
     CLASS-DATA gi_html_viewer TYPE REF TO zif_abapgit_html_viewer .
     CLASS-DATA go_gui TYPE REF TO zcl_abapgit_gui .
     CLASS-DATA gi_fe_services TYPE REF TO zif_abapgit_frontend_services .
@@ -162,17 +158,6 @@ CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
           ii_asset_man      = li_asset_man.
     ENDIF.
     ro_gui = go_gui.
-
-  ENDMETHOD.
-
-
-  METHOD get_gui_functions.
-
-    IF gi_gui_functions IS INITIAL.
-      CREATE OBJECT gi_gui_functions TYPE zcl_abapgit_gui_functions.
-    ENDIF.
-
-    ri_gui_functions = gi_gui_functions.
 
   ENDMETHOD.
 

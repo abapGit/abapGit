@@ -78,11 +78,91 @@ CLASS zcl_abapgit_diff DEFINITION
       RETURNING
         VALUE(rt_diff) TYPE zif_abapgit_definitions=>ty_diffs_tt.
     METHODS calculate_stats.
+    METHODS adjust_diff.
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_diff IMPLEMENTATION.
+
+
+  METHOD adjust_diff.
+
+    " ABAP kernel diff traverses files from bottom up which leads to odd display of diffs
+    " SAP won't adjust this kernel service so we will do it here
+    " https://github.com/abapGit/abapGit/issues/4395
+
+    TYPES:
+      BEGIN OF ty_diff_block,
+        start TYPE i,
+        len   TYPE i,
+      END OF ty_diff_block.
+
+    DATA:
+      lv_block_begin TYPE i,
+      lv_block_end   TYPE i,
+      ls_diff_block  TYPE ty_diff_block,
+      lt_diff_block  TYPE STANDARD TABLE OF ty_diff_block WITH DEFAULT KEY.
+
+    FIELD-SYMBOLS:
+      <ls_diff>       LIKE LINE OF mt_diff,
+      <ls_diff_begin> LIKE LINE OF mt_diff,
+      <ls_diff_end>   LIKE LINE OF mt_diff.
+
+    " Determine start and length of diff blocks
+    LOOP AT mt_diff ASSIGNING <ls_diff>.
+      IF <ls_diff>-result = zif_abapgit_definitions=>c_diff-insert OR
+         <ls_diff>-result = zif_abapgit_definitions=>c_diff-delete.
+        IF ls_diff_block IS INITIAL.
+          ls_diff_block-start = sy-tabix.
+        ENDIF.
+        ls_diff_block-len = ls_diff_block-len + 1.
+      ELSEIF ls_diff_block-start IS NOT INITIAL.
+        APPEND ls_diff_block TO lt_diff_block.
+        CLEAR ls_diff_block.
+      ENDIF.
+    ENDLOOP.
+
+    " For each diff block, check if beginning is same as end of block
+    " If yes, move diff block down
+    LOOP AT lt_diff_block INTO ls_diff_block.
+      DO ls_diff_block-len TIMES.
+        lv_block_begin = ls_diff_block-start + sy-index - 1.
+        READ TABLE mt_diff ASSIGNING <ls_diff_begin> INDEX lv_block_begin.
+        IF sy-subrc <> 0.
+          EXIT.
+        ENDIF.
+        lv_block_end = ls_diff_block-start + ls_diff_block-len + sy-index - 1.
+        READ TABLE mt_diff ASSIGNING <ls_diff_end> INDEX lv_block_end.
+        IF sy-subrc <> 0.
+          EXIT.
+        ENDIF.
+        CASE <ls_diff_begin>-result.
+          WHEN zif_abapgit_definitions=>c_diff-insert.
+            IF <ls_diff_begin>-new = <ls_diff_end>-new.
+              <ls_diff_begin>-old_num = <ls_diff_end>-old_num.
+              <ls_diff_begin>-old     = <ls_diff_end>-old.
+              <ls_diff_end>-result    = <ls_diff_begin>-result.
+              CLEAR: <ls_diff_begin>-result, <ls_diff_end>-old_num, <ls_diff_end>-old.
+            ELSE.
+              EXIT.
+            ENDIF.
+          WHEN zif_abapgit_definitions=>c_diff-delete.
+            IF <ls_diff_begin>-old = <ls_diff_end>-old.
+              <ls_diff_begin>-new_num = <ls_diff_end>-new_num.
+              <ls_diff_begin>-new     = <ls_diff_end>-new.
+              <ls_diff_end>-result    = <ls_diff_begin>-result.
+              CLEAR: <ls_diff_begin>-result, <ls_diff_end>-new_num, <ls_diff_end>-new.
+            ELSE.
+              EXIT.
+            ENDIF.
+          WHEN OTHERS.
+            EXIT.
+        ENDCASE.
+      ENDDO.
+    ENDLOOP.
+
+  ENDMETHOD.
 
 
   METHOD calculate_stats.
@@ -196,6 +276,8 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
 
     mt_diff = compute_and_render( it_new = lt_new
                                   it_old = lt_old ).
+
+    adjust_diff( ).
 
     calculate_stats( ).
     map_beacons( ).

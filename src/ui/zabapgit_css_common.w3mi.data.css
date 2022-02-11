@@ -225,6 +225,7 @@ div.repo {
 span.branch,
 span.user-box,
 span.package-box,
+span.path-box,
 span.transport-box {
   padding: 2px 4px;
   border: 1px solid;
@@ -291,32 +292,43 @@ table.repo_tab {
   padding-top: 2px;
   padding-bottom: 2px;
 }
+
 .repo_tab td.icon {
   width: 1px;
   text-align: center;
   padding-left: 8px;
   padding-right: 4px;
 }
-.repo_tab td.icon:not(:first-child) {
-  width: 26px;
+
+.repo_tab td.transport {
+  width: 140px;
   text-align: left;
 }
 .repo_tab td.type {
   width: 4em;
   padding-left: 0.5em;
 }
+
+.repo_tab td.filename{
+  padding-left: 1em;
+}
+
 .repo_tab td.object {
   padding-left: 0.5em;
 }
+
 .repo_tab td.files {
   padding-left: 0.5em;
   line-height: 1.5;
 }
+
 .repo_tab td.cmd, .repo_tab th.cmd {
   text-align: right;
   padding-left: 0.5em;
   padding-right: 0.7em;
+  min-width: 70px;
 }
+
 .repo_tab th.cmd .icon{
   padding-right: 8px;
 }
@@ -626,14 +638,16 @@ table.db_tab td.data {
   font-style: italic;
 }
 
-span.action_link.enabled{
+li.action_link.enabled{
   visibility: visible;
   position: relative;
+  display: block;
 }
 
-span.action_link:not(enabled){
+li.action_link:not(enabled){
   visibility: hidden;
   position: fixed; /* so it does not take up space when hidden */
+  display: none;
 }
 
 
@@ -926,6 +940,10 @@ div.message-panel:hover .message-panel-commands {
 }
 
 .link-hint-input {
+  margin-left: -30px;
+}
+
+.link-hint-i {
   margin-left: -30px;
 }
 

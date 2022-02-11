@@ -69,7 +69,8 @@ CLASS zcl_abapgit_object_ensc IMPLEMENTATION.
                   CHANGING  cg_data = lt_comp_spots ).
 
     IF zif_abapgit_object~exists( ) = abap_true.
-      zif_abapgit_object~delete( iv_package ).
+      zif_abapgit_object~delete( iv_package   = iv_package
+                                 iv_transport = iv_transport ).
     ENDIF.
 
     lv_package = iv_package.

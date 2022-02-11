@@ -91,7 +91,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_LOG_VIEWER IMPLEMENTATION.
+CLASS zcl_abapgit_log_viewer IMPLEMENTATION.
 
 
   METHOD calculate_cell_type.
@@ -289,6 +289,7 @@ CLASS ZCL_ABAPGIT_LOG_VIEWER IMPLEMENTATION.
           lo_columns     TYPE REF TO cl_salv_columns_table,
           lo_column      TYPE REF TO cl_salv_column,
           lo_functions   TYPE REF TO cl_salv_functions_list,
+          ls_position    TYPE zcl_abapgit_popups=>ty_popup_position,
           lv_add_obj_col TYPE abap_bool,
           lo_event       TYPE REF TO cl_salv_events_table.
 
@@ -310,6 +311,8 @@ CLASS ZCL_ABAPGIT_LOG_VIEWER IMPLEMENTATION.
 
         lo_functions = lo_alv->get_functions( ).
         lo_functions->set_all( ).
+
+        lo_alv->get_display_settings( )->set_list_header( |abapGit Log Viewer| ).
 
         lo_columns = lo_alv->get_columns( ).
 
@@ -384,10 +387,14 @@ CLASS ZCL_ABAPGIT_LOG_VIEWER IMPLEMENTATION.
           lo_column->set_technical( abap_true ).
         ENDIF.
 
-        lo_alv->set_screen_popup( start_column = 10
-                                  end_column   = 140
-                                  start_line   = 4
-                                  end_line     = 25 ).
+        ls_position = zcl_abapgit_popups=>center(
+          iv_width  = 125
+          iv_height = 20 ).
+
+        lo_alv->set_screen_popup( start_column = ls_position-start_column
+                                  end_column   = ls_position-end_column
+                                  start_line   = ls_position-start_row
+                                  end_line     = ls_position-end_row ).
 
         CREATE OBJECT lo_form_header
           EXPORTING

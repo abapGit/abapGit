@@ -37,7 +37,7 @@ CLASS zcl_abapgit_object_ecatt_super DEFINITION
   PRIVATE SECTION.
     TYPES:
       BEGIN OF ty_last_changed,
-        luser TYPE xubname,
+        luser TYPE syuname,
         ldate TYPE d,
         ltime TYPE t,
       END OF ty_last_changed.
@@ -77,7 +77,7 @@ CLASS zcl_abapgit_object_ecatt_super DEFINITION
         IMPORTING
           ii_document               TYPE REF TO if_ixml_document
         RETURNING
-          VALUE(rv_changed_by_user) TYPE xubname,
+          VALUE(rv_changed_by_user) TYPE syuname,
 
       get_change_information
         IMPORTING

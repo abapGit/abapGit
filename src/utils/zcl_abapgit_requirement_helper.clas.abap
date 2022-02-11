@@ -8,8 +8,8 @@ CLASS zcl_abapgit_requirement_helper DEFINITION
     TYPES:
       BEGIN OF ty_requirement_status,
         met               TYPE abap_bool,
-        component         TYPE dlvunit,
-        description       TYPE cvers_sdu-desc_text,
+        component         TYPE tdevc-dlvunit,
+        description       TYPE string,
         installed_release TYPE saprelease,
         installed_patch   TYPE sappatchlv,
         required_release  TYPE saprelease,
@@ -106,7 +106,6 @@ CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
 
     DATA: lt_met_status TYPE ty_requirement_status_tt.
 
-
     lt_met_status = get_requirement_met_status( it_requirements ).
 
     READ TABLE lt_met_status TRANSPORTING NO FIELDS WITH KEY met = abap_false.
@@ -129,11 +128,10 @@ CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
 
     show_requirement_popup( lt_met_status ).
 
-    CALL FUNCTION 'POPUP_TO_CONFIRM'
-      EXPORTING
-        text_question = 'The project has unmet requirements. Do you want to continue?'
-      IMPORTING
-        answer        = lv_answer.
+    lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
+      iv_titlebar      = 'Warning'
+      iv_text_question = 'The project has unmet requirements. Do you want to continue?' ).
+
     IF lv_answer <> '1'.
       zcx_abapgit_exception=>raise( 'Cancelling because of unmet requirements.' ).
     ENDIF.
@@ -157,6 +155,7 @@ CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
           lt_color_negative TYPE lvc_t_scol,
           lt_color_positive TYPE lvc_t_scol,
           ls_color          TYPE lvc_s_scol,
+          ls_position       TYPE zcl_abapgit_popups=>ty_popup_position,
           lx_ex             TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <ls_line>        TYPE ty_color_line,
@@ -200,10 +199,15 @@ CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
         lo_column = lo_columns->get_column( 'REQUIRED_PATCH' ).
         lo_column->set_short_text( 'Req. SP L.' ).
 
-        lo_alv->set_screen_popup( start_column = 30
-                                  end_column   = 100
-                                  start_line   = 10
-                                  end_line     = 20 ).
+        ls_position = zcl_abapgit_popups=>center(
+          iv_width  = 70
+          iv_height = 10 ).
+
+        lo_alv->set_screen_popup( start_column = ls_position-start_column
+                                  end_column   = ls_position-end_column
+                                  start_line   = ls_position-start_row
+                                  end_line     = ls_position-end_row ).
+
         lo_alv->get_display_settings( )->set_list_header( 'Requirements' ).
         lo_alv->display( ).
 
@@ -216,13 +220,17 @@ CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
 
   METHOD version_greater_or_equal.
 
-    DATA: lv_number TYPE n LENGTH 4 ##NEEDED.
+    DATA:
+      lv_installed_release TYPE n LENGTH 4,
+      lv_installed_patch   TYPE n LENGTH 4,
+      lv_required_release  TYPE n LENGTH 4,
+      lv_required_patch    TYPE n LENGTH 4.
 
     TRY.
-        MOVE EXACT: is_status-installed_release TO lv_number,
-                    is_status-installed_patch   TO lv_number,
-                    is_status-required_release  TO lv_number,
-                    is_status-required_patch    TO lv_number.
+        MOVE EXACT: is_status-installed_release TO lv_installed_release,
+                    is_status-installed_patch   TO lv_installed_patch,
+                    is_status-required_release  TO lv_required_release,
+                    is_status-required_patch    TO lv_required_patch.
       CATCH cx_sy_conversion_error.
         " Cannot compare by number, assume requirement not fullfilled (user can force install
         " anyways if this was an error)
@@ -231,12 +239,13 @@ CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
     ENDTRY.
 
     " Versions are comparable by number, compare release and if necessary patch level
-    IF is_status-installed_release > is_status-required_release
-        OR ( is_status-installed_release = is_status-required_release
-        AND ( is_status-required_patch IS INITIAL OR
-        is_status-installed_patch >= is_status-required_patch ) ).
+    IF lv_installed_release > lv_required_release
+        OR ( lv_installed_release = lv_required_release
+         AND ( lv_required_patch = 0
+            OR lv_installed_patch >= lv_required_patch ) ).
 
       rv_true = abap_true.
+
     ENDIF.
 
   ENDMETHOD.

@@ -141,7 +141,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS render_user_name
       IMPORTING
-        !iv_username       TYPE xubname
+        !iv_username       TYPE syuname
         !iv_interactive    TYPE abap_bool DEFAULT abap_true
         !iv_icon_only      TYPE abap_bool DEFAULT abap_false
         !iv_suppress_title TYPE abap_bool DEFAULT abap_false
@@ -164,6 +164,14 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         iv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result.
 
 
+    CLASS-METHODS render_path
+      IMPORTING
+        !iv_path        TYPE string
+        !iv_interactive TYPE abap_bool DEFAULT abap_true
+      RETURNING
+        VALUE(ri_html)  TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
 
     CLASS-METHODS render_repo_top_commit_hash
@@ -195,11 +203,10 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
 
   METHOD advanced_submenu.
-    DATA: li_gui_functions        TYPE REF TO zif_abapgit_gui_functions,
-          lv_supports_ie_devtools TYPE abap_bool.
 
-    li_gui_functions = zcl_abapgit_ui_factory=>get_gui_functions( ).
-    lv_supports_ie_devtools = li_gui_functions->is_sapgui_for_windows( ).
+    DATA lv_supports_ie_devtools TYPE abap_bool.
+
+    lv_supports_ie_devtools = zcl_abapgit_ui_factory=>get_frontend_services( )->is_sapgui_for_windows( ).
 
     CREATE OBJECT ro_menu.
 
@@ -669,7 +676,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
           IF iv_order_descending = abap_true.
             lv_tmp = lv_tmp && ri_html->a(
               iv_txt   = lv_disp_name
-              iv_act   = |{ zif_abapgit_definitions=>c_action-direction }?direction=ASCENDING|
+              iv_act   = |{ zif_abapgit_definitions=>c_action-change_order_by }|
               iv_title = <ls_col>-title ).
           ELSE.
             lv_tmp = lv_tmp && ri_html->a(
@@ -735,6 +742,50 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ELSE.
       ri_html->add( iv_package ).
     ENDIF.
+    ri_html->add( '</span>' ).
+
+  ENDMETHOD.
+
+
+  METHOD render_path.
+
+    DATA:
+      lv_path    TYPE string,
+      lv_jump    TYPE string,
+      lv_folder  TYPE string,
+      lt_folders TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    IF iv_path IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    lv_jump = |{ zcl_abapgit_gui_page_repo_view=>c_actions-change_dir }?PATH=|.
+
+    ri_html->add( |<span class="path-box">| ).
+
+    IF iv_interactive = abap_true.
+      SPLIT iv_path AT '/' INTO TABLE lt_folders.
+
+      LOOP AT lt_folders INTO lv_folder.
+        IF lv_folder IS INITIAL.
+          " root
+          lv_path = '/'.
+        ELSEIF sy-tabix < lines( lt_folders ).
+          lv_path = lv_path && lv_folder && '/'.
+          ri_html->add_a( iv_act = lv_jump && lv_path
+                          iv_txt = lv_folder ).
+        ELSE.
+          " no link for current folder
+          ri_html->add( | <strong>{ lv_folder }</strong> | ).
+        ENDIF.
+        ri_html->add( '/' ).
+      ENDLOOP.
+    ELSE.
+      ri_html->add( iv_path ).
+    ENDIF.
+
     ri_html->add( '</span>' ).
 
   ENDMETHOD.

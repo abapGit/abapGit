@@ -72,6 +72,7 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       IMPORTING
         !it_functions TYPE ty_function_tt
         !ii_log       TYPE REF TO zif_abapgit_log
+        !iv_transport TYPE trkorr
       RAISING
         zcx_abapgit_exception .
     METHODS serialize_xml
@@ -81,8 +82,9 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         zcx_abapgit_exception .
     METHODS deserialize_xml
       IMPORTING
-        !ii_xml     TYPE REF TO zif_abapgit_xml_input
-        !iv_package TYPE devclass
+        !ii_xml       TYPE REF TO zif_abapgit_xml_input
+        !iv_package   TYPE devclass
+        !iv_transport TYPE trkorr
       RAISING
         zcx_abapgit_exception .
     METHODS serialize_includes
@@ -145,6 +147,40 @@ ENDCLASS.
 CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
 
+  METHOD belongs_incl_to_other_fugr.
+    " make sure that the include belongs to the function group
+    " like in LSEAPFAP Form TADIR_MAINTENANCE
+    DATA ls_tadir TYPE tadir.
+    DATA lv_namespace TYPE rs38l-namespace.
+    DATA lv_area TYPE rs38l-area.
+    DATA lv_include TYPE rs38l-include.
+
+    rv_belongs_to_other_fugr = abap_false.
+    IF iv_include(1) = 'L' OR iv_include+1 CS '/L'.
+      lv_include = iv_include.
+      ls_tadir-object = 'FUGR'.
+
+      CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
+        IMPORTING
+          namespace = lv_namespace
+          group     = lv_area
+        CHANGING
+          include   = lv_include
+        EXCEPTIONS
+          OTHERS    = 1.
+      IF lv_area(1) = 'X'.    " "EXIT"-function-module
+        ls_tadir-object = 'FUGS'.
+      ENDIF.
+      IF sy-subrc = 0.
+        CONCATENATE lv_namespace lv_area INTO ls_tadir-obj_name.
+        IF ls_tadir-obj_name <> ms_item-obj_name.
+          rv_belongs_to_other_fugr = abap_true.
+        ENDIF.
+      ENDIF.
+    ENDIF.
+  ENDMETHOD.
+
+
   METHOD check_rfc_parameters.
 
 * function module RS_FUNCTIONMODULE_INSERT does the same deep down, but the right error
@@ -199,13 +235,9 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
           lv_namespace TYPE rs38l-namespace,
           lt_source    TYPE TABLE OF abaptxt255,
           lv_msg       TYPE string,
-          lx_error     TYPE REF TO zcx_abapgit_exception,
-          lv_corrnum   TYPE e070use-ordernum.
+          lx_error     TYPE REF TO zcx_abapgit_exception.
 
     FIELD-SYMBOLS: <ls_func> LIKE LINE OF it_functions.
-
-
-    lv_corrnum = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
 
     LOOP AT it_functions ASSIGNING <ls_func>.
 
@@ -274,7 +306,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
           exception_class         = <ls_func>-exception_classes
           namespace               = lv_namespace
           remote_basxml_supported = <ls_func>-remote_basxml
-          corrnum                 = lv_corrnum
+          corrnum                 = iv_transport
         IMPORTING
           function_include        = lv_include
         TABLES
@@ -397,8 +429,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
           lv_areat        TYPE tlibt-areat,
           lv_stext        TYPE tftit-stext,
           lv_group        TYPE rs38l-area,
-          lv_abap_version TYPE trdir-uccheck,
-          lv_corrnum      TYPE e070use-ordernum.
+          lv_abap_version TYPE trdir-uccheck.
 
     lv_abap_version = get_abap_version( ii_xml ).
     lv_complete = ms_item-obj_name.
@@ -429,7 +460,6 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     ii_xml->read( EXPORTING iv_name = 'AREAT'
                   CHANGING cg_data = lv_areat ).
     lv_stext = lv_areat.
-    lv_corrnum = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
 
     CALL FUNCTION 'RS_FUNCTION_POOL_INSERT'
       EXPORTING
@@ -438,7 +468,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         namespace               = lv_namespace
         devclass                = iv_package
         unicode_checks          = lv_abap_version
-        corrnum                 = lv_corrnum
+        corrnum                 = iv_transport
         suppress_corr_check     = abap_false
       EXCEPTIONS
         name_already_exists     = 1
@@ -953,7 +983,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
   METHOD zif_abapgit_object~changed_by.
 
     TYPES: BEGIN OF ty_stamps,
-             user TYPE xubname,
+             user TYPE syuname,
              date TYPE d,
              time TYPE t,
            END OF ty_stamps.
@@ -1021,21 +1051,18 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
   METHOD zif_abapgit_object~delete.
 
     DATA: lv_area     TYPE rs38l-area,
-          lt_includes TYPE ty_sobj_name_tt,
-          lv_corrnum  TYPE e070use-ordernum.
-
+          lt_includes TYPE ty_sobj_name_tt.
 
     lt_includes = includes( ).
 
     lv_area = ms_item-obj_name.
-    lv_corrnum = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
 
     CALL FUNCTION 'RS_FUNCTION_POOL_DELETE'
       EXPORTING
         area                   = lv_area
         suppress_popups        = abap_true
         skip_progress_ind      = abap_true
-        corrnum                = lv_corrnum
+        corrnum                = iv_transport
       EXCEPTIONS
         canceled_in_corr       = 1
         enqueue_system_failure = 2
@@ -1064,14 +1091,16 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
           ls_cua          TYPE ty_cua.
 
     deserialize_xml(
-      ii_xml     = io_xml
-      iv_package = iv_package ).
+      ii_xml       = io_xml
+      iv_package   = iv_package
+      iv_transport = iv_transport ).
 
     io_xml->read( EXPORTING iv_name = 'FUNCTIONS'
                   CHANGING cg_data = lt_functions ).
     deserialize_functions(
       it_functions = lt_functions
-      ii_log       = ii_log ).
+      ii_log       = ii_log
+      iv_transport = iv_transport ).
 
     deserialize_includes(
       ii_xml     = io_xml
@@ -1204,39 +1233,5 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
                    ig_data = ls_cua ).
     ENDIF.
 
-  ENDMETHOD.
-
-
-  METHOD belongs_incl_to_other_fugr.
-    " make sure that the include belongs to the function group
-    " like in LSEAPFAP Form TADIR_MAINTENANCE
-    DATA ls_tadir TYPE tadir.
-    DATA lv_namespace TYPE rs38l-namespace.
-    DATA lv_area TYPE rs38l-area.
-    DATA lv_include TYPE rs38l-include.
-
-    rv_belongs_to_other_fugr = abap_false.
-    IF iv_include(1) = 'L' OR iv_include+1 CS '/L'.
-      lv_include = iv_include.
-      ls_tadir-object = 'FUGR'.
-
-      CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
-        IMPORTING
-          namespace = lv_namespace
-          group     = lv_area
-        CHANGING
-          include   = lv_include
-        EXCEPTIONS
-          OTHERS    = 1.
-      IF lv_area(1) = 'X'.    " "EXIT"-function-module
-        ls_tadir-object = 'FUGS'.
-      ENDIF.
-      IF sy-subrc = 0.
-        CONCATENATE lv_namespace lv_area INTO ls_tadir-obj_name.
-        IF ls_tadir-obj_name <> ms_item-obj_name.
-          rv_belongs_to_other_fugr = abap_true.
-        ENDIF.
-      ENDIF.
-    ENDIF.
   ENDMETHOD.
 ENDCLASS.

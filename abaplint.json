@@ -124,8 +124,9 @@
         "^cl_blue_wb_utility$", "^boole_d$",
         "^cl_srvd_wb_object_data$", "^cx_aff_", "^cl_aff_", "^if_aff_",
         "^cl_wb_object_operator_factory$",
+        "^cl_aunit_assert$",
         "^cx_wb_object_operation_error$",
-        "^if_srvd_types$",
+        "^if_srvd_types$", "^xubname$",
         "^if_wb_adt_plugin_resource_co$",
         "^if_wb_object_data_selection_co$",
         "^if_wb_object_operator$"

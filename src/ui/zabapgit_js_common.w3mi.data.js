@@ -1341,7 +1341,7 @@ LinkHints.prototype.getHintStartValue = function(targetsCount){
 
 LinkHints.prototype.deployHintContainers = function() {
 
-  var hintTargets = document.querySelectorAll("a, input, textarea");
+  var hintTargets = document.querySelectorAll("a, input, textarea, i");
   var codeCounter = this.getHintStartValue(hintTargets.length);
   var hintsMap    = { first: codeCounter };
 
@@ -1368,8 +1368,12 @@ LinkHints.prototype.deployHintContainers = function() {
     hint.container.classList.add("link-hint");
     if (hint.parent.nodeName === "INPUT" || hint.parent.nodeName === "TEXTAREA"){
       hint.container.classList.add("link-hint-input");
-    } else {
+    } else if (hint.parent.nodeName === "A") {
       hint.container.classList.add("link-hint-a");
+    } else if (hint.parent.nodeName === "I" && hint.parent.classList.contains("cursor-pointer")) {
+      hint.container.classList.add("link-hint-i");
+    } else {
+      continue;
     }
 
     hint.container.classList.add("nodisplay");            // hide by default
@@ -1378,11 +1382,12 @@ LinkHints.prototype.deployHintContainers = function() {
     if (hintTargets[i].nodeName === "INPUT" || hintTargets[i].nodeName === "TEXTAREA") {
       // does not work if inside the input node
       if (hintTargets[i].type === "checkbox" || hintTargets[i].type === "radio") {
-        if (hintTargets[i].nextElementSibling.nodeName === "LABEL" ) {
+        if (hintTargets[i].nextElementSibling && hintTargets[i].nextElementSibling.nodeName === "LABEL" ) {
           // insert at end of label
           hintTargets[i].nextElementSibling.appendChild(hint.container);
         } else {
-          // skip because something changed in ZCL_ABAPGIT_HTML_FORM
+          // inserting right after
+          hintTargets[i].insertAdjacentElement("afterend", hint.container);
         }
       } else {
         // inserting right after
@@ -2129,6 +2134,11 @@ function CommandPalette(commandEnumerator, opts) {
   this.renderAndBindElements();
   this.hookEvents();
   Hotkeys.addHotkeyToHelpSheet(opts.toggleKey, opts.hotkeyDescription);
+
+  if (!CommandPalette.instances) {
+    CommandPalette.instances = [];
+  }
+  CommandPalette.instances.push(this);
 }
 
 CommandPalette.prototype.hookEvents = function(){
@@ -2268,6 +2278,14 @@ CommandPalette.prototype.adjustScrollPosition = function(itemElement){
 CommandPalette.prototype.toggleDisplay = function(forceState) {
   var isDisplayed = (this.elements.palette.style.display !== "none");
   var tobeDisplayed = (forceState !== undefined) ? forceState : !isDisplayed;
+
+  if (tobeDisplayed) {
+    // auto close other command palettes
+    CommandPalette.instances.forEach(function(instance){
+      instance.elements.palette.style.display = "none";
+    });
+  }
+
   this.elements.palette.style.display = tobeDisplayed ? "" : "none";
   if (tobeDisplayed) {
     this.elements.input.value = "";
@@ -2275,6 +2293,7 @@ CommandPalette.prototype.toggleDisplay = function(forceState) {
     this.applyFilter();
     this.selectFirst();
   }
+
 };
 
 CommandPalette.prototype.getCommandByElement = function(element) {

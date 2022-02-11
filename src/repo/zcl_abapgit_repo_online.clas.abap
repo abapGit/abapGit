@@ -41,6 +41,7 @@ CLASS zcl_abapgit_repo_online DEFINITION
         REDEFINITION .
     METHODS has_remote_source
         REDEFINITION .
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -133,7 +134,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
   METHOD get_files_remote.
     fetch_remote( ).
-    rt_files = super->get_files_remote( ).
+    rt_files = super->get_files_remote( ii_obj_filter ).
   ENDMETHOD.
 
 
@@ -323,7 +324,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
     reset_remote( ).
     set( iv_branch_name     = iv_branch_name
-         iv_selected_commit = space  ).
+         iv_selected_commit = space ).
 
   ENDMETHOD.
 
@@ -348,7 +349,8 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
     DATA lv_offs TYPE i.
 
-    IF iv_overwrite = abap_true. " For repo settings page
+    " For repo settings page
+    IF iv_overwrite = abap_true.
       set( iv_switched_origin = iv_url ).
       RETURN.
     ENDIF.

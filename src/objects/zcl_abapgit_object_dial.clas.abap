@@ -20,7 +20,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_DIAL IMPLEMENTATION.
+CLASS zcl_abapgit_object_dial IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -76,18 +76,10 @@ CLASS ZCL_ABAPGIT_OBJECT_DIAL IMPLEMENTATION.
     ls_bcdata-fval = '=BACK'.
     APPEND ls_bcdata TO lt_bcdata.
 
-    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
-      EXPORTING
-        tcode     = 'SE35'
-        mode_val  = 'E'
-      TABLES
-        using_tab = lt_bcdata
-      EXCEPTIONS
-        OTHERS    = 1.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, SE35' ).
-    ENDIF.
+    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+      iv_tcode      = 'SE35'
+      it_bdcdata    = lt_bcdata
+      iv_new_window = abap_false ).
 
   ENDMETHOD.
 

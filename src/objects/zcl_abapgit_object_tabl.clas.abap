@@ -911,12 +911,11 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-    rs_metadata-ddic = abap_true.
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
+    rv_active = is_active_ddic( ).
   ENDMETHOD.
 
 
@@ -936,6 +935,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     DATA: lv_name   TYPE ddobjname,
+          lv_state  TYPE ddgotstate,
           ls_dd02v  TYPE dd02v,
           ls_dd09l  TYPE dd09l,
           lt_dd03p  TYPE ty_dd03p_tt,
@@ -962,6 +962,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
         name          = lv_name
         langu         = mv_language
       IMPORTING
+        gotstate      = lv_state
         dd02v_wa      = ls_dd02v
         dd09l_wa      = ls_dd09l
       TABLES
@@ -979,8 +980,9 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from DDIF_TABL_GET' ).
     ENDIF.
 
-    IF ls_dd02v IS INITIAL.
-      zcx_abapgit_exception=>raise( |No active version found for { ms_item-obj_type } { ms_item-obj_name }| ).
+    " Check if any active version was returned
+    IF lv_state <> 'A'.
+      RETURN.
     ENDIF.
 
     CLEAR: ls_dd02v-as4user,

@@ -39,7 +39,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
+CLASS zcl_abapgit_log IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -258,6 +258,7 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
       ls_msg-exception = <ls_log>-exception.
       APPEND ls_msg TO rt_msg.
     ENDLOOP.
+    DELETE ADJACENT DUPLICATES FROM rt_msg.
   ENDMETHOD.
 
 

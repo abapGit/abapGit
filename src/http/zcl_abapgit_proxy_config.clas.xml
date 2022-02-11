@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_PROXY_CONFIG</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Proxy configuration</DESCRIPT>
+    <DESCRIPT>abapGit - Proxy Configuration</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

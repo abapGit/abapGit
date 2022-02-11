@@ -1,6 +1,9 @@
 INTERFACE zif_abapgit_gui_jumper
   PUBLIC.
 
+  TYPES:
+    ty_bdcdata_tt TYPE STANDARD TABLE OF bdcdata WITH DEFAULT KEY.
+
   METHODS jump
     IMPORTING
       !is_item         TYPE zif_abapgit_definitions=>ty_item
@@ -20,6 +23,14 @@ INTERFACE zif_abapgit_gui_jumper
       !iv_line_number  TYPE i
     RETURNING
       VALUE(rv_exit)   TYPE abap_bool
+    RAISING
+      zcx_abapgit_exception.
+
+  METHODS jump_batch_input
+    IMPORTING
+      !iv_tcode      TYPE sy-tcode
+      !it_bdcdata    TYPE ty_bdcdata_tt
+      !iv_new_window TYPE abap_bool DEFAULT abap_true
     RAISING
       zcx_abapgit_exception.
 

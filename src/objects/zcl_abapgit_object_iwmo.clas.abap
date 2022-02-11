@@ -111,21 +111,9 @@ CLASS zcl_abapgit_object_iwmo IMPLEMENTATION.
     <ls_bdcdata>-fnam = 'GS_MODEL_SCREEN_100-VERSION'.
     <ls_bdcdata>-fval = lv_version.
 
-    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
-      STARTING NEW TASK 'GIT'
-      EXPORTING
-        tcode                   = '/IWBEP/REG_MODEL'
-        mode_val                = 'E'
-      TABLES
-        using_tab               = lt_bdcdata
-      EXCEPTIONS
-        call_transaction_denied = 1
-        tcode_invalid           = 2
-        OTHERS                  = 3.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from ABAP4_CALL_TRANSACTION. Subrc={ sy-subrc }| ).
-    ENDIF.
+    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+      iv_tcode   = '/IWBEP/REG_MODEL'
+      it_bdcdata = lt_bdcdata ).
 
   ENDMETHOD.
 

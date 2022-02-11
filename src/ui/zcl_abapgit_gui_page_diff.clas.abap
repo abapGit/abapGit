@@ -17,7 +17,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         rstate     TYPE c LENGTH 1,
         fstate     TYPE c LENGTH 1, " FILE state - Abstraction for shorter ifs
         o_diff     TYPE REF TO zcl_abapgit_diff,
-        changed_by TYPE xubname,
+        changed_by TYPE syuname,
         type       TYPE string,
       END OF ty_file_diff.
     TYPES:
@@ -559,6 +559,9 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
       READ TABLE lt_status ASSIGNING <ls_status>
         WITH KEY path = is_file-path filename = is_file-filename.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |File { is_file-path }{ is_file-filename } not found| ).
+      ENDIF.
 
       append_diff( it_remote = lt_remote
                    it_local  = lt_local

@@ -343,6 +343,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
 * todo, more to be added here
     REPLACE ALL OCCURRENCES OF '%3F' IN rv_string WITH '?'.
     REPLACE ALL OCCURRENCES OF '%3D' IN rv_string WITH '='.
+    REPLACE ALL OCCURRENCES OF '%2f' IN rv_string WITH '/'.
     REPLACE ALL OCCURRENCES OF gv_non_breaking_space IN rv_string WITH ` `.
 
   ENDMETHOD.

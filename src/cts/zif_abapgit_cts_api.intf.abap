@@ -38,4 +38,14 @@ INTERFACE zif_abapgit_cts_api
       VALUE(rt_transports) TYPE ty_transport_list
     RAISING
       zcx_abapgit_exception .
+  METHODS get_r3tr_obj_for_limu_obj
+    IMPORTING
+      iv_object   TYPE tadir-object
+      iv_obj_name TYPE trobj_name
+    EXPORTING
+      ev_object   TYPE tadir-object
+      ev_obj_name TYPE trobj_name
+    RAISING
+      zcx_abapgit_exception .
+
 ENDINTERFACE.

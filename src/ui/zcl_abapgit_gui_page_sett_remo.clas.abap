@@ -235,16 +235,18 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
     <ls_column>-name = 'MESSAGE'.
     <ls_column>-text = 'Message'.
+    <ls_column>-length = 60.
     APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
     <ls_column>-name = 'DATETIME'.
     <ls_column>-text = 'Datetime'.
+    <ls_column>-length = 17.
 
     li_popups = zcl_abapgit_ui_factory=>get_popups( ).
     li_popups->popup_to_select_from_list(
       EXPORTING
         it_list               = it_value_tab
         iv_title              = |Checkout Commit|
-        iv_end_column         = 83
+        iv_end_column         = 100
         iv_striped_pattern    = abap_true
         iv_optimize_col_width = abap_false
         iv_selection_mode     = if_salv_c_selection_mode=>single
@@ -995,5 +997,4 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     gui_services( )->get_hotkeys_ctl( )->register_hotkeys( zif_abapgit_gui_hotkeys~get_hotkey_actions( ) ).
 
   ENDMETHOD.
-
 ENDCLASS.

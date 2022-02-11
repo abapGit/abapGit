@@ -192,9 +192,7 @@ CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
             rt_tmpl_cont = <lt_content>.
 
       CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise(
-            iv_text     = lx_error->get_text( )
-            ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
     es_template = <lg_template>.

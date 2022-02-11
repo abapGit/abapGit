@@ -382,7 +382,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     ri_html->add( '<table class="stage_tab">' ).
     ri_html->add( '<thead>' ).
     ri_html->add( '<tr>' ).
-    ri_html->add( '<th colspan="3">Staged Files (<a href="#top">Summary</a>)</th>' ).
+    ri_html->add( '<th colspan="3">Staged Files (See <a href="#top">Summary</a> Above)</th>' ).
     ri_html->add( '</tr>' ).
     ri_html->add( '</thead>' ).
 
@@ -449,7 +449,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
       ri_html->add( 'files' ).
     ENDIF.
 
-    ri_html->add( '(<a href="#stage-details">Details</a>)' ).
+    ri_html->add( '(See <a href="#stage-details">Details</a> Below)' ).
 
   ENDMETHOD.
 

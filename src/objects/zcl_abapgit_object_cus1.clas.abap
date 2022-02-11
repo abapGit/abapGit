@@ -177,19 +177,10 @@ CLASS zcl_abapgit_object_cus1 IMPLEMENTATION.
     <ls_bdc_data>-fnam = 'BDC_OKCODE'.
     <ls_bdc_data>-fval = '=ACT_DISP'.
 
-    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
-      EXPORTING
-        tcode                   = 'S_CUS_ACTIVITY'
-        mode_val                = 'E'
-      TABLES
-        using_tab               = lt_bdc_data
-      EXCEPTIONS
-        call_transaction_denied = 1
-        tcode_invalid           = 2
-        OTHERS                  = 3.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from JUMP CUS1: { sy-subrc }| ).
-    ENDIF.
+    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+      iv_tcode   = 'S_CUS_ACTIVITY'
+      it_bdcdata = lt_bdc_data ).
+
   ENDMETHOD.
 
 

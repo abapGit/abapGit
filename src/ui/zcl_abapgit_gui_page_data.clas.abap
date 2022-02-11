@@ -224,7 +224,6 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
         iv_action      = c_event-update ).
       lo_form->command(
         iv_label       = 'Remove'
-        iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
         iv_action      = c_event-remove ).
       ri_html->add( lo_form->render( lo_form_data ) ).
     ENDLOOP.

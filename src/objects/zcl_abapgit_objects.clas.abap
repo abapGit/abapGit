@@ -57,7 +57,7 @@ CLASS zcl_abapgit_objects DEFINITION
       IMPORTING
         !is_item       TYPE zif_abapgit_definitions=>ty_item
       RETURNING
-        VALUE(rv_user) TYPE xubname .
+        VALUE(rv_user) TYPE syuname .
     CLASS-METHODS is_supported
       IMPORTING
         !is_item        TYPE zif_abapgit_definitions=>ty_item
@@ -89,6 +89,14 @@ CLASS zcl_abapgit_objects DEFINITION
   PRIVATE SECTION.
 
     TYPES:
+      BEGIN OF ty_supported_types,
+        obj_type  TYPE tadir-object,
+        supported TYPE abap_bool,
+      END OF ty_supported_types.
+
+    TYPES: ty_supported_types_tt TYPE SORTED TABLE OF ty_supported_types WITH UNIQUE KEY obj_type.
+
+    TYPES:
       BEGIN OF ty_obj_serializer_item,
         item     TYPE zif_abapgit_definitions=>ty_item,
         metadata TYPE zif_abapgit_definitions=>ty_metadata,
@@ -97,7 +105,8 @@ CLASS zcl_abapgit_objects DEFINITION
       ty_obj_serializer_map TYPE SORTED TABLE OF ty_obj_serializer_item WITH UNIQUE KEY item .
 
     CLASS-DATA gt_obj_serializer_map TYPE ty_obj_serializer_map .
-    CLASS-DATA gt_supported_obj_types TYPE ty_types_tt .
+    CLASS-DATA gt_supported_obj_types TYPE ty_supported_types_tt .
+    CLASS-DATA gv_supported_obj_types_loaded TYPE abap_bool .
 
     CLASS-METHODS check_duplicates
       IMPORTING
@@ -114,8 +123,9 @@ CLASS zcl_abapgit_objects DEFINITION
         !iv_package TYPE devclass .
     CLASS-METHODS delete_object
       IMPORTING
-        !iv_package TYPE devclass
-        !is_item    TYPE zif_abapgit_definitions=>ty_item
+        !iv_package   TYPE devclass
+        !is_item      TYPE zif_abapgit_definitions=>ty_item
+        !iv_transport TYPE trkorr
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS compare_remote_to_local
@@ -128,10 +138,11 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS deserialize_objects
       IMPORTING
-        !is_step  TYPE zif_abapgit_objects=>ty_step_data
-        !ii_log   TYPE REF TO zif_abapgit_log
+        !is_step      TYPE zif_abapgit_objects=>ty_step_data
+        !ii_log       TYPE REF TO zif_abapgit_log
+        !iv_transport TYPE trkorr
       CHANGING
-        !ct_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt
+        !ct_files     TYPE zif_abapgit_definitions=>ty_file_signatures_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS check_objects_locked
@@ -172,7 +183,7 @@ CLASS zcl_abapgit_objects DEFINITION
     CLASS-METHODS change_package_assignments
       IMPORTING
         !is_item TYPE zif_abapgit_definitions=>ty_item
-        !ii_log  TYPE REF TO zif_abapgit_log.
+        !ii_log  TYPE REF TO zif_abapgit_log .
 ENDCLASS.
 
 
@@ -325,14 +336,13 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 * before pull, this is useful eg. when overwriting a TABL object.
 * only the main XML file is used for comparison
 
-    DATA: ls_remote_file      TYPE zif_abapgit_definitions=>ty_file,
-          li_remote_version   TYPE REF TO zif_abapgit_xml_input,
-          lv_count            TYPE i,
-          ls_result           TYPE zif_abapgit_comparator=>ty_result,
-          lv_answer           TYPE string,
-          li_comparator       TYPE REF TO zif_abapgit_comparator,
-          lv_gui_is_available TYPE abap_bool,
-          ls_item             TYPE zif_abapgit_definitions=>ty_item.
+    DATA: ls_remote_file    TYPE zif_abapgit_definitions=>ty_file,
+          li_remote_version TYPE REF TO zif_abapgit_xml_input,
+          lv_count          TYPE i,
+          ls_result         TYPE zif_abapgit_comparator=>ty_result,
+          lv_answer         TYPE string,
+          li_comparator     TYPE REF TO zif_abapgit_comparator,
+          ls_item           TYPE zif_abapgit_definitions=>ty_item.
 
     FIND ALL OCCURRENCES OF '.' IN is_result-filename MATCH COUNT lv_count.
 
@@ -371,24 +381,18 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
                            is_item = ls_item ).
 
       "continue or abort?
-      lv_gui_is_available = zcl_abapgit_ui_factory=>get_gui_functions( )->gui_is_available( ).
-      IF lv_gui_is_available = abap_true.
-        CALL FUNCTION 'POPUP_TO_CONFIRM'
-          EXPORTING
-            titlebar              = 'Warning'
-            text_question         = ls_result-text
-            text_button_1         = 'Abort'
-            icon_button_1         = 'ICON_CANCEL'
-            text_button_2         = 'Pull anyway'
-            icon_button_2         = 'ICON_OKAY'
-            default_button        = '2'
-            display_cancel_button = abap_false
-          IMPORTING
-            answer                = lv_answer
-          EXCEPTIONS
-            text_not_found        = 1
-            OTHERS                = 2.
-        IF sy-subrc <> 0 OR lv_answer = 1.
+      IF zcl_abapgit_ui_factory=>get_frontend_services( )->gui_is_available( ) = abap_true.
+        lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
+          iv_titlebar              = 'Warning'
+          iv_text_question         = ls_result-text
+          iv_text_button_1         = 'Pull Anyway'
+          iv_icon_button_1         = 'ICON_OKAY'
+          iv_text_button_2         = 'Cancel'
+          iv_icon_button_2         = 'ICON_CANCEL'
+          iv_default_button        = '2'
+          iv_display_cancel_button = abap_false ).
+
+        IF lv_answer = '2'.
           zcx_abapgit_exception=>raise( |Deserialization for object { is_result-obj_name } | &
                                         |(type { is_result-obj_type }) aborted by user| ).
         ENDIF.
@@ -496,8 +500,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
         TRY.
             delete_object(
-              iv_package = <ls_tadir>-devclass
-              is_item    = ls_item ).
+              iv_package   = <ls_tadir>-devclass
+              is_item      = ls_item
+              iv_transport = is_checks-transport-transport ).
 
             INSERT <ls_tadir> INTO TABLE lt_deleted.
             DELETE lt_tadir.
@@ -545,7 +550,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     li_obj = create_object( is_item     = is_item
                             iv_language = zif_abapgit_definitions=>c_english ).
 
-    li_obj->delete( iv_package ).
+    li_obj->delete( iv_package   = iv_package
+                    iv_transport = iv_transport ).
 
     IF li_obj->get_metadata( )-delete_tadir = abap_true.
 
@@ -578,6 +584,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           lt_remote   TYPE zif_abapgit_definitions=>ty_files_tt,
           lv_package  TYPE devclass,
           lo_files    TYPE REF TO zcl_abapgit_objects_files,
+          ls_metadata TYPE zif_abapgit_definitions=>ty_metadata,
           lo_xml      TYPE REF TO zif_abapgit_xml_input,
           lt_results  TYPE zif_abapgit_definitions=>ty_results_tt,
           li_progress TYPE REF TO zif_abapgit_progress,
@@ -650,9 +657,10 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
             lv_path = <ls_result>-path.
           ENDIF.
 
+          ls_item-devclass = lv_package.
+
           IF <ls_result>-packmove = abap_true.
             " Move object to new package
-            ls_item-devclass = lv_package.
             change_package_assignments( is_item = ls_item
                                         ii_log  = ii_log ).
             " No other changes required
@@ -664,14 +672,21 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
             EXPORTING
               is_item = ls_item
               iv_path = lv_path.
+
           lo_files->set_files( lt_remote ).
 
-          "analyze XML in order to instantiate the proper serializer
-          lo_xml = lo_files->read_xml( ).
+          IF lo_files->is_json_metadata( ) = abap_false.
+            "analyze XML in order to instantiate the proper serializer
+            lo_xml = lo_files->read_xml( ).
+            ls_metadata = lo_xml->get_metadata( ).
+          ELSE.
+            " there's no XML and metadata for JSON format
+            CLEAR: lo_xml, ls_metadata.
+          ENDIF.
 
           li_obj = create_object( is_item     = ls_item
                                   iv_language = io_repo->get_dot_abapgit( )->get_main_language( )
-                                  is_metadata = lo_xml->get_metadata( ) ).
+                                  is_metadata = ls_metadata ).
 
           compare_remote_to_local(
             ii_object = li_obj
@@ -687,7 +702,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           LOOP AT lt_steps_id ASSIGNING <lv_step_id>.
             READ TABLE lt_steps WITH KEY step_id = <lv_step_id> ASSIGNING <ls_step>.
             ASSERT sy-subrc = 0.
-            IF <ls_step>-is_ddic = abap_true AND li_obj->get_metadata( )-ddic = abap_false.
+            IF <lv_step_id> = zif_abapgit_object=>gc_step_id-ddic AND
+               zcl_abapgit_objects_activation=>is_ddic_type( ls_item-obj_type ) = abap_false.
               " DDIC only for DDIC objects
               zcx_abapgit_exception=>raise( |Step { <lv_step_id> } is only for DDIC objects| ).
             ENDIF.
@@ -714,9 +730,13 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     "run deserialize for all steps and it's objects
     SORT lt_steps BY order.
     LOOP AT lt_steps ASSIGNING <ls_step>.
-      deserialize_objects( EXPORTING is_step = <ls_step>
-                                     ii_log  = ii_log
-                           CHANGING ct_files = rt_accessed_files ).
+      deserialize_objects(
+        EXPORTING
+          is_step      = <ls_step>
+          ii_log       = ii_log
+          iv_transport = is_checks-transport-transport
+        CHANGING
+          ct_files     = rt_accessed_files ).
     ENDLOOP.
 
     update_package_tree( io_repo->get_package( ) ).
@@ -757,10 +777,11 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         iv_text    = |Deserialize { is_step-descr } - { <ls_obj>-item-obj_name }| ).
 
       TRY.
-          <ls_obj>-obj->deserialize( iv_package = <ls_obj>-package
-                                     io_xml     = <ls_obj>-xml
-                                     iv_step    = is_step-step_id
-                                     ii_log     = ii_log ).
+          <ls_obj>-obj->deserialize( iv_package   = <ls_obj>-package
+                                     io_xml       = <ls_obj>-xml
+                                     iv_step      = is_step-step_id
+                                     ii_log       = ii_log
+                                     iv_transport = iv_transport ).
           APPEND LINES OF <ls_obj>-obj->mo_files->get_accessed_files( ) TO ct_files.
 
           ii_log->add_success( iv_msg = |Object { <ls_obj>-item-obj_name } imported|
@@ -777,13 +798,21 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     CASE is_step-step_id.
       WHEN zif_abapgit_object=>gc_step_id-ddic.
-        zcl_abapgit_objects_activation=>activate( is_step-is_ddic ).
+        zcl_abapgit_objects_activation=>activate(
+          iv_ddic = abap_true
+          ii_log  = ii_log ).
       WHEN zif_abapgit_object=>gc_step_id-abap.
-        zcl_abapgit_objects_activation=>activate( is_step-is_ddic ).
+        zcl_abapgit_objects_activation=>activate(
+          iv_ddic = abap_false
+          ii_log  = ii_log ).
       WHEN zif_abapgit_object=>gc_step_id-late.
         " late can have both DDIC (like TABL with REF TO) and non-DDIC objects
-        zcl_abapgit_objects_activation=>activate( abap_true ).
-        zcl_abapgit_objects_activation=>activate( abap_false ).
+        zcl_abapgit_objects_activation=>activate(
+          iv_ddic = abap_true
+          ii_log  = ii_log ).
+        zcl_abapgit_objects_activation=>activate(
+          iv_ddic = abap_false
+          ii_log  = ii_log ).
     ENDCASE.
 
 *   Call postprocessing
@@ -798,6 +827,11 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
   METHOD exists.
 
     DATA: li_obj TYPE REF TO zif_abapgit_object.
+
+    " Might be called for objects without tadir entry
+    IF is_item IS INITIAL.
+      RETURN.
+    ENDIF.
 
     " For unsupported objects, assume object exists
     IF is_type_supported( is_item-obj_type ) = abap_false.
@@ -824,21 +858,18 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
     <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-ddic.
     <ls_step>-descr        = 'Import DDIC objects'.
-    <ls_step>-is_ddic      = abap_true.
     <ls_step>-syntax_check = abap_false.
     <ls_step>-order        = 1.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
     <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-abap.
     <ls_step>-descr        = 'Import objects main'.
-    <ls_step>-is_ddic      = abap_false.
     <ls_step>-syntax_check = abap_false.
     <ls_step>-order        = 2.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
     <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-late.
     <ls_step>-descr        = 'Import late objects'.
-    <ls_step>-is_ddic      = abap_false.
     <ls_step>-syntax_check = abap_true.
     <ls_step>-order        = 3.
   ENDMETHOD.
@@ -885,13 +916,35 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
   METHOD is_type_supported.
 
-    " If necessary, initialize list
-    IF gt_supported_obj_types IS INITIAL.
-      supported_list( ).
+    DATA: ls_item               TYPE zif_abapgit_definitions=>ty_item,
+          ls_supported_obj_type TYPE ty_supported_types.
+
+    FIELD-SYMBOLS <ls_supported_obj_type> TYPE ty_supported_types.
+
+    IF iv_obj_type IS INITIAL.
+      " empty object type should never exist
+      RETURN.
     ENDIF.
 
-    READ TABLE gt_supported_obj_types TRANSPORTING NO FIELDS WITH TABLE KEY table_line = iv_obj_type.
-    rv_bool = boolc( sy-subrc = 0 ).
+    READ TABLE gt_supported_obj_types
+      ASSIGNING <ls_supported_obj_type>
+      WITH KEY obj_type = iv_obj_type.
+
+    IF sy-subrc <> 0.
+
+      ls_item-obj_type = iv_obj_type.
+
+      ls_supported_obj_type-obj_type  = iv_obj_type.
+      ls_supported_obj_type-supported = is_supported( ls_item ).
+
+      INSERT ls_supported_obj_type INTO TABLE gt_supported_obj_types.
+
+      rv_bool = ls_supported_obj_type-supported.
+      RETURN.
+
+    ENDIF.
+
+    rv_bool = <ls_supported_obj_type>-supported.
 
   ENDMETHOD.
 
@@ -966,6 +1019,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
   METHOD serialize.
 
     DATA: li_obj         TYPE REF TO zif_abapgit_object,
+          lx_error       TYPE REF TO zcx_abapgit_exception,
           li_xml         TYPE REF TO zif_abapgit_xml_output,
           lo_files       TYPE REF TO zcl_abapgit_objects_files,
           ls_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params.
@@ -997,10 +1051,17 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     li_xml->i18n_params( ls_i18n_params ).
 
-    li_obj->serialize( li_xml ).
+    TRY.
+        li_obj->serialize( li_xml ).
+      CATCH zcx_abapgit_exception INTO lx_error.
+        rs_files_and_item-item-inactive = boolc( li_obj->is_active( ) = abap_false ).
+        RAISE EXCEPTION lx_error.
+    ENDTRY.
 
-    lo_files->add_xml( ii_xml      = li_xml
-                       is_metadata = li_obj->get_metadata( ) ).
+    IF lo_files->is_json_metadata( ) = abap_false.
+      lo_files->add_xml( ii_xml      = li_xml
+                         is_metadata = li_obj->get_metadata( ) ).
+    ENDIF.
 
     rs_files_and_item-files = lo_files->get_files( ).
 
@@ -1017,15 +1078,22 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
   METHOD supported_list.
 
-    DATA: lt_objects TYPE STANDARD TABLE OF ko100,
-          ls_item    TYPE zif_abapgit_definitions=>ty_item.
+    DATA: lt_objects            TYPE STANDARD TABLE OF ko100,
+          ls_item               TYPE zif_abapgit_definitions=>ty_item,
+          ls_supported_obj_type TYPE ty_supported_types.
 
     FIELD-SYMBOLS <ls_object> LIKE LINE OF lt_objects.
+    FIELD-SYMBOLS <ls_supported_obj_type> TYPE ty_supported_types.
 
-    IF gt_supported_obj_types IS NOT INITIAL.
-      rt_types = gt_supported_obj_types.
+    IF gv_supported_obj_types_loaded = abap_true.
+      LOOP AT gt_supported_obj_types ASSIGNING <ls_supported_obj_type> WHERE supported = abap_true.
+        INSERT <ls_supported_obj_type>-obj_type INTO TABLE rt_types.
+      ENDLOOP.
       RETURN.
     ENDIF.
+
+    " delete content because it might be filled already by method IS_TYPE_SUPPORTED
+    CLEAR gt_supported_obj_types.
 
     CALL FUNCTION 'TR_OBJECT_TABLE'
       TABLES
@@ -1034,13 +1102,21 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         OTHERS         = 1 ##FM_SUBRC_OK.
 
     LOOP AT lt_objects ASSIGNING <ls_object> WHERE pgmid = 'R3TR'.
+
       ls_item-obj_type = <ls_object>-object.
 
-      IF is_supported( ls_item ) = abap_true.
-        INSERT <ls_object>-object INTO TABLE rt_types.
+      ls_supported_obj_type-obj_type  = <ls_object>-object.
+      ls_supported_obj_type-supported = is_supported( ls_item ).
+
+      INSERT ls_supported_obj_type INTO TABLE gt_supported_obj_types.
+
+      IF ls_supported_obj_type-supported = abap_true.
+        INSERT ls_supported_obj_type-obj_type INTO TABLE rt_types.
       ENDIF.
+
     ENDLOOP.
-    gt_supported_obj_types = rt_types.
+
+    gv_supported_obj_types_loaded = abap_true.
 
   ENDMETHOD.
 

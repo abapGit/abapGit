@@ -27,7 +27,7 @@ body {
   background-color: var(--theme-background-color);
   color: var(--theme-primary-font-color);
 }
-select, input, textarea { 
+select, input, textarea {
   color: var(--theme-primary-font-color);
   border-color: #ffffff;
   background-color: var(--theme-background-color);
@@ -57,6 +57,7 @@ span.package-box {
   background-color: #705a6d;
   border-color: #987095;
 }
+span.path-box,
 span.transport-box {
   background-color: #456d5d;
   border-color: #60a087;
@@ -66,8 +67,8 @@ span.transport-box {
 #debug-output { color: var(--theme-greyscale-dark); }
 
 /* abapGit logo in header and footer */
-.logo .icon.icon-abapgit { 
-  color: var(--theme-primary-font-color); 
+.logo .icon.icon-abapgit {
+  color: var(--theme-primary-font-color);
 }
 
 /* TUTORIAL */
@@ -93,32 +94,32 @@ span.branch_branch {
 
 .repo_tab th {
   border-top-color: var(--theme-greyscale-dark);
-  background-color: black; 
+  background-color: black;
 }
 .repo_tab td {
   border-top-color: var(--theme-greyscale-dark);
 }
 
 /* STAGE */
-.stage_tab { 
+.stage_tab {
   border-color: var(--theme-greyscale-dark);
-  background-color: var(--theme-background-color); 
+  background-color: var(--theme-background-color);
 }
 .stage_tab th {
   border-top-color: var(--theme-greyscale-dark);
-  background-color: black; 
+  background-color: black;
 }
-.stage_tab td { 
-  color: var(--theme-primary-font-color); 
+.stage_tab td {
+  color: var(--theme-primary-font-color);
   border-top-color:  var(--theme-greyscale-dark);
 }
-.stage_tab td.status.highlight { 
+.stage_tab td.status.highlight {
   color: var(--theme-primary-font-color) !important;
   background-color: var(--theme-background-color);
 }
-.stage_tab td.status { 
+.stage_tab td.status {
   color: #777;
-  background-color: var(--theme-background-color); 
+  background-color: var(--theme-background-color);
 }
 .stage_tab th { background-color: var(--theme-container-background-color); }
 .stage_tab tr:hover {background-color: var(--theme-list-hover-background-color) !important;}
@@ -186,7 +187,7 @@ div.log { color: var(--theme-greyscale-dark); }
 /* DIALOGS */
 .dialog {
   color: var(--theme-primary-font-color-reduced);
-  background-color: var(--theme-container-background-color); 
+  background-color: var(--theme-container-background-color);
 }
 .dialog li.dialog-commands a {
   border-color: #ccc;

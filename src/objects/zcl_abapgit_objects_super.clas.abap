@@ -5,7 +5,7 @@ CLASS zcl_abapgit_objects_super DEFINITION
 
   PUBLIC SECTION.
 
-    CONSTANTS c_user_unknown TYPE xubname VALUE 'UNKNOWN'.
+    CONSTANTS c_user_unknown TYPE syuname VALUE 'UNKNOWN'.
 
     METHODS constructor
       IMPORTING
@@ -78,6 +78,11 @@ CLASS zcl_abapgit_objects_super DEFINITION
     METHODS deserialize_lxe_texts
       IMPORTING
         !ii_xml TYPE REF TO zif_abapgit_xml_input
+      RAISING
+        zcx_abapgit_exception .
+    METHODS is_active_ddic
+      RETURNING
+        VALUE(rv_active) TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
@@ -278,6 +283,37 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
     ENDIF.
 
     rv_active = boolc( ms_item-inactive = abap_false ).
+  ENDMETHOD.
+
+
+  METHOD is_active_ddic.
+
+    DATA:
+      lv_type  TYPE ddobjtyp,
+      lv_name  TYPE ddobjname,
+      lv_state TYPE ddgotstate.
+
+    ms_item-inactive = abap_false.
+
+    lv_type = ms_item-obj_type.
+    lv_name = ms_item-obj_name.
+
+    CALL FUNCTION 'DDIF_STATE_GET'
+      EXPORTING
+        type          = lv_type
+        name          = lv_name
+        state         = 'A'
+      IMPORTING
+        gotstate      = lv_state
+      EXCEPTIONS
+        illegal_input = 1
+        OTHERS        = 2.
+    IF sy-subrc <> 0 OR lv_state <> 'A'.
+      ms_item-inactive = abap_true.
+    ENDIF.
+
+    rv_active = boolc( ms_item-inactive = abap_false ).
+
   ENDMETHOD.
 
 

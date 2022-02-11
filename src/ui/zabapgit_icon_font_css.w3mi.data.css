@@ -72,4 +72,5 @@
 .icon-times-solid:before { content: "\f12a"; }
 .icon-tools-solid:before { content: "\f12b"; }
 .icon-truck-solid:before { content: "\f12c"; }
-.icon-user-solid:before { content: "\f12d"; }
+.icon-user-cog-solid:before { content: "\f12d"; }
+.icon-user-solid:before { content: "\f12e"; }

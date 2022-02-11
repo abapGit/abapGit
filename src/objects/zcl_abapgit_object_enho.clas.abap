@@ -108,19 +108,26 @@ CLASS zcl_abapgit_object_enho IMPLEMENTATION.
 
     DATA: lv_enh_id     TYPE enhname,
           li_enh_object TYPE REF TO if_enh_object,
-          lx_enh_root   TYPE REF TO cx_enh_root.
+          lx_enh_root   TYPE REF TO cx_enh_root,
+          lv_corrnum    TYPE trkorr.
 
     IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
     ENDIF.
+
+    lv_corrnum = iv_transport.
 
     lv_enh_id = ms_item-obj_name.
     TRY.
         li_enh_object = cl_enh_factory=>get_enhancement(
           enhancement_id = lv_enh_id
           lock           = abap_true ).
-        li_enh_object->delete( nevertheless_delete = abap_true
-                               run_dark            = abap_true ).
+        li_enh_object->delete(
+          EXPORTING
+            nevertheless_delete = abap_true
+            run_dark            = abap_true
+          CHANGING
+            trkorr              = lv_corrnum ).
         li_enh_object->unlock( ).
       CATCH cx_enh_root INTO lx_enh_root.
         zcx_abapgit_exception=>raise_with_text( lx_enh_root ).
@@ -135,7 +142,8 @@ CLASS zcl_abapgit_object_enho IMPLEMENTATION.
           li_enho     TYPE REF TO zif_abapgit_object_enho.
 
     IF zif_abapgit_object~exists( ) = abap_true.
-      zif_abapgit_object~delete( iv_package ).
+      zif_abapgit_object~delete( iv_package   = iv_package
+                                 iv_transport = iv_transport ).
     ENDIF.
 
     io_xml->read( EXPORTING iv_name = 'TOOL'

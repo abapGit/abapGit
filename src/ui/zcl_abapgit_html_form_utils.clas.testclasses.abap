@@ -91,6 +91,12 @@ CLASS ltcl_popups_mock IMPLEMENTATION.
     mv_user_decision = iv_user_decision.
   ENDMETHOD.
 
+  METHOD zif_abapgit_popups~popup_select_tr_requests.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_popups~popup_select_wb_tc_tr_and_tsk.
+  ENDMETHOD.
+
 ENDCLASS.
 
 CLASS ltcl_test_form DEFINITION
@@ -104,7 +110,9 @@ CLASS ltcl_test_form DEFINITION
       mo_popups_mock TYPE REF TO ltcl_popups_mock.
 
     METHODS setup.
-    METHODS validate FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS validate1 FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS validate2 FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS validate3 FOR TESTING RAISING zcx_abapgit_exception.
     METHODS normalize FOR TESTING RAISING zcx_abapgit_exception.
     METHODS is_empty FOR TESTING RAISING zcx_abapgit_exception.
     METHODS exit_clean FOR TESTING RAISING zcx_abapgit_exception.
@@ -122,7 +130,7 @@ CLASS ltcl_test_form IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD validate.
+  METHOD validate1.
 
     DATA lo_cut TYPE REF TO zcl_abapgit_html_form_utils.
     DATA lo_form TYPE REF TO zcl_abapgit_html_form.
@@ -174,8 +182,18 @@ CLASS ltcl_test_form IMPLEMENTATION.
       act = lo_log->size( )
       exp = 0 ).
 
+  ENDMETHOD.
+
+  METHOD validate2.
+
+    DATA lo_cut TYPE REF TO zcl_abapgit_html_form_utils.
+    DATA lo_form TYPE REF TO zcl_abapgit_html_form.
+    DATA lo_form_data TYPE REF TO zcl_abapgit_string_map.
+    DATA lo_log TYPE REF TO zcl_abapgit_string_map.
+
     " New form
     lo_form = zcl_abapgit_html_form=>create( ).
+    lo_form_data = zcl_abapgit_string_map=>create( ).
 
     lo_form->text(
       iv_name  = 'field3'
@@ -221,8 +239,18 @@ CLASS ltcl_test_form IMPLEMENTATION.
       act = lo_log->size( )
       exp = 0 ).
 
+  ENDMETHOD.
+
+  METHOD validate3.
+
+    DATA lo_cut TYPE REF TO zcl_abapgit_html_form_utils.
+    DATA lo_form TYPE REF TO zcl_abapgit_html_form.
+    DATA lo_form_data TYPE REF TO zcl_abapgit_string_map.
+    DATA lo_log TYPE REF TO zcl_abapgit_string_map.
+
     " New form
     lo_form = zcl_abapgit_html_form=>create( ).
+    lo_form_data = zcl_abapgit_string_map=>create( ).
 
     lo_form->number(
       iv_name  = 'field4'

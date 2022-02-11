@@ -10,9 +10,9 @@ CLASS zcl_abapgit_ui_injector DEFINITION
     CLASS-METHODS set_tag_popups
       IMPORTING
         !ii_tag_popups TYPE REF TO zif_abapgit_tag_popups .
-    CLASS-METHODS set_gui_functions
+    CLASS-METHODS set_frontend_services
       IMPORTING
-        !ii_gui_functions TYPE REF TO zif_abapgit_gui_functions .
+        !ii_fe_serv TYPE REF TO zif_abapgit_frontend_services .
     CLASS-METHODS set_gui_services
       IMPORTING
         !ii_gui_services TYPE REF TO zif_abapgit_gui_services .
@@ -22,13 +22,16 @@ CLASS zcl_abapgit_ui_injector DEFINITION
     CLASS-METHODS set_html_viewer
       IMPORTING
         !ii_html_viewer TYPE REF TO zif_abapgit_html_viewer .
+    CLASS-METHODS set_gui_jumper
+      IMPORTING
+        !ii_gui_jumper TYPE REF TO zif_abapgit_gui_jumper .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_UI_INJECTOR IMPLEMENTATION.
+CLASS zcl_abapgit_ui_injector IMPLEMENTATION.
 
 
   METHOD get_dummy_gui_services.
@@ -38,9 +41,16 @@ CLASS ZCL_ABAPGIT_UI_INJECTOR IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD set_gui_functions.
+  METHOD set_frontend_services.
 
-    zcl_abapgit_ui_factory=>gi_gui_functions = ii_gui_functions.
+    zcl_abapgit_ui_factory=>gi_fe_services = ii_fe_serv.
+
+  ENDMETHOD.
+
+
+  METHOD set_gui_jumper.
+
+    zcl_abapgit_ui_factory=>gi_gui_jumper = ii_gui_jumper.
 
   ENDMETHOD.
 

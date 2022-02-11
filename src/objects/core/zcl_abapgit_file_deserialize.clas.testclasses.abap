@@ -221,19 +221,35 @@ CLASS ltcl_prio_deserialization DEFINITION FINAL FOR TESTING
     METHODS:
       setup,
       ddls_before_dcls FOR TESTING RAISING cx_static_check,
+      webi_before_sprx FOR TESTING RAISING cx_static_check,
+      iasp_before_isrp FOR TESTING RAISING cx_static_check,
+      iobj_before_odso FOR TESTING RAISING cx_static_check,
+      tobj_before_scp1 FOR TESTING RAISING cx_static_check,
+      otgr_before_char FOR TESTING RAISING cx_static_check,
+      sprx_before_clas FOR TESTING RAISING cx_static_check,
+      sprx_before_intf FOR TESTING RAISING cx_static_check,
+      sprx_before_tabl FOR TESTING RAISING cx_static_check,
+      pinf_before_devc FOR TESTING RAISING cx_static_check,
+      clas_before_pinf FOR TESTING RAISING cx_static_check,
+      enhs_before_ensc FOR TESTING RAISING cx_static_check,
+      ensc_before_enho FOR TESTING RAISING cx_static_check,
+      enho_before_enhc FOR TESTING RAISING cx_static_check,
+      xslt_before_clas FOR TESTING RAISING cx_static_check,
+      xslt_before_prog FOR TESTING RAISING cx_static_check,
 
       given
         IMPORTING
-          iv_object_type TYPE trobjtype,
+          iv_object_type TYPE string,
       when_deser_is_priorized,
       then
         IMPORTING
-          iv_exp_object_type TYPE trobjtype.
+          iv_exp_object_type TYPE string.
 
     DATA:
       mo_objects          TYPE REF TO zcl_abapgit_file_deserialize,
       mt_input            TYPE zif_abapgit_definitions=>ty_results_tt,
       mt_output           TYPE zif_abapgit_definitions=>ty_results_tt,
+      mv_counter          TYPE i,
       mv_exp_output_tabix TYPE i.
 
 ENDCLASS.
@@ -241,42 +257,164 @@ ENDCLASS.
 CLASS ltcl_prio_deserialization IMPLEMENTATION.
 
   METHOD setup.
-
     CREATE OBJECT mo_objects.
     mv_exp_output_tabix = 0.
+  ENDMETHOD.
 
+  METHOD enhs_before_ensc.
+    given( 'ENSC' ).
+    given( 'ENHS' ).
+    when_deser_is_priorized( ).
+    then( 'ENHS' ).
+    then( 'ENSC' ).
+  ENDMETHOD.
+
+  METHOD ensc_before_enho.
+    given( 'ENHO' ).
+    given( 'ENSC' ).
+    when_deser_is_priorized( ).
+    then( 'ENSC' ).
+    then( 'ENHO' ).
+  ENDMETHOD.
+
+  METHOD enho_before_enhc.
+    given( 'ENHC' ).
+    given( 'ENHO' ).
+    when_deser_is_priorized( ).
+    then( 'ENHO' ).
+    then( 'ENHC' ).
+  ENDMETHOD.
+
+  METHOD sprx_before_clas.
+    given( 'CLAS' ).
+    given( 'SPRX' ).
+    when_deser_is_priorized( ).
+    then( 'SPRX' ).
+    then( 'CLAS' ).
+  ENDMETHOD.
+
+  METHOD sprx_before_intf.
+    given( 'INTF' ).
+    given( 'SPRX' ).
+    when_deser_is_priorized( ).
+    then( 'SPRX' ).
+    then( 'INTF' ).
+  ENDMETHOD.
+
+  METHOD sprx_before_tabl.
+    given( 'TABL' ).
+    given( 'SPRX' ).
+    when_deser_is_priorized( ).
+    then( 'SPRX' ).
+    then( 'TABL' ).
+  ENDMETHOD.
+
+  METHOD otgr_before_char.
+    given( 'CHAR' ).
+    given( 'OTGR' ).
+    when_deser_is_priorized( ).
+    then( 'OTGR' ).
+    then( 'CHAR' ).
+  ENDMETHOD.
+
+  METHOD pinf_before_devc.
+    given( 'DEVC' ).
+    given( 'PINF' ).
+    when_deser_is_priorized( ).
+    then( 'PINF' ).
+    then( 'DEVC' ).
+  ENDMETHOD.
+
+  METHOD tobj_before_scp1.
+    given( 'SCP1' ).
+    given( 'TOBJ' ).
+    when_deser_is_priorized( ).
+    then( 'TOBJ' ).
+    then( 'SCP1' ).
+  ENDMETHOD.
+
+  METHOD iobj_before_odso.
+    given( 'ODSO' ).
+    given( 'IOBJ' ).
+    when_deser_is_priorized( ).
+    then( 'IOBJ' ).
+    then( 'ODSO' ).
+  ENDMETHOD.
+
+  METHOD iasp_before_isrp.
+    given( 'ISRP' ).
+    given( 'IASP' ).
+    when_deser_is_priorized( ).
+    then( 'IASP' ).
+    then( 'ISRP' ).
+  ENDMETHOD.
+
+  METHOD webi_before_sprx.
+    given( 'SPRX' ).
+    given( 'WEBI' ).
+    when_deser_is_priorized( ).
+    then( 'WEBI' ).
+    then( 'SPRX' ).
+  ENDMETHOD.
+
+  METHOD clas_before_pinf.
+    given( 'PINF' ).
+    given( 'CLAS' ).
+    when_deser_is_priorized( ).
+    then( 'CLAS' ).
+    then( 'PINF' ).
+  ENDMETHOD.
+
+  METHOD xslt_before_clas.
+    given( 'XSLT' ).
+    given( 'INTF' ).
+    given( 'CLAS' ).
+    when_deser_is_priorized( ).
+    then( 'XSLT' ).
+    then( 'INTF' ).
+    then( 'CLAS' ).
+  ENDMETHOD.
+
+  METHOD xslt_before_prog.
+    given( 'PROG' ).
+    given( 'XSLT' ).
+    when_deser_is_priorized( ).
+    then( 'XSLT' ).
+    then( 'PROG' ).
   ENDMETHOD.
 
   METHOD ddls_before_dcls.
-
     given( 'DCLS' ).
     given( 'DDLS' ).
     given( 'DCLS' ).
     given( 'DDLS' ).
-
     when_deser_is_priorized( ).
-
     then( 'DDLS' ).
     then( 'DDLS' ).
     then( 'DCLS' ).
     then( 'DCLS' ).
-
   ENDMETHOD.
-
 
   METHOD given.
 
-    DATA: ls_input LIKE LINE OF mt_input.
-
+    DATA ls_input LIKE LINE OF mt_input.
     ls_input-obj_type = iv_object_type.
+    ls_input-obj_name = mv_counter.
     INSERT ls_input INTO TABLE mt_input.
+    mv_counter = mv_counter + 1.
 
   ENDMETHOD.
 
 
   METHOD when_deser_is_priorized.
 
-    mt_output = mo_objects->prioritize_deser( mt_input ).
+    DATA lo_log TYPE REF TO zcl_abapgit_log.
+
+    CREATE OBJECT lo_log.
+
+    mt_output = mo_objects->prioritize_deser(
+      ii_log     = lo_log
+      it_results = mt_input ).
 
   ENDMETHOD.
 

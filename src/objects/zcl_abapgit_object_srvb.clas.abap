@@ -23,13 +23,6 @@ CLASS zcl_abapgit_object_srvb DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
           iv_fieldname       TYPE csequence
         CHANGING
           cs_service_binding TYPE any.
-    METHODS get_transport_req_if_needed
-      IMPORTING
-        !iv_package                 TYPE devclass
-      RETURNING
-        VALUE(rv_transport_request) TYPE trkorr
-      RAISING
-        zcx_abapgit_exception .
     METHODS get_wb_object_operator
       RETURNING
         VALUE(ro_object_operator) TYPE REF TO object
@@ -59,10 +52,12 @@ CLASS zcl_abapgit_object_srvb DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       mr_service_binding       TYPE REF TO data,
       mr_srvb_svrs_config      TYPE REF TO object,
       mo_object_operator       TYPE REF TO object.
-
 ENDCLASS.
 
+
+
 CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
+
 
   METHOD clear_field.
 
@@ -130,17 +125,56 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD get_transport_req_if_needed.
 
-    DATA: li_sap_package TYPE REF TO zif_abapgit_sap_package.
+  METHOD constructor.
 
-    li_sap_package = zcl_abapgit_factory=>get_sap_package( iv_package ).
+    super->constructor(
+        is_item     = is_item
+        iv_language = iv_language ).
 
-    IF li_sap_package->are_changes_recorded_in_tr_req( ) = abap_true.
-      rv_transport_request = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
-    ENDIF.
+    mv_service_binding_key = ms_item-obj_name.
+
+    TRY.
+        CREATE DATA mr_service_binding TYPE ('CL_SRVB_OBJECT_DATA=>TY_OBJECT_DATA').
+        CREATE OBJECT mi_persistence TYPE ('CL_SRVB_OBJECT_PERSIST').
+
+      CATCH cx_sy_create_error.
+        zcx_abapgit_exception=>raise( |SRVB not supported by your NW release| ).
+    ENDTRY.
+
+    mv_is_inactive_supported = is_ai_supported(  ).
 
   ENDMETHOD.
+
+
+  METHOD get_object_data.
+
+    FIELD-SYMBOLS:
+      <ls_service_binding> TYPE any,
+      <lv_language>        TYPE data.
+
+    ASSIGN mr_service_binding->* TO <ls_service_binding>.
+    ASSERT sy-subrc = 0.
+
+    io_xml->read(
+      EXPORTING
+        iv_name = 'SRVB'
+      CHANGING
+        cg_data = <ls_service_binding> ).
+
+
+    " We have to set the language explicitly,
+    " because otherwise the description isn't stored
+    ASSIGN COMPONENT 'METADATA-LANGUAGE' OF STRUCTURE <ls_service_binding>
+           TO <lv_language>.
+    ASSERT sy-subrc = 0.
+    <lv_language> = mv_language.
+
+    CREATE OBJECT ro_object_data TYPE ('CL_SRVB_OBJECT_DATA').
+    ro_object_data->set_data( p_data = <ls_service_binding>  ).
+
+  ENDMETHOD.
+
 
   METHOD get_wb_object_operator.
 
@@ -171,33 +205,20 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD get_object_data.
 
-    FIELD-SYMBOLS:
-      <ls_service_binding> TYPE any,
-      <lv_language>        TYPE data.
-
-    ASSIGN mr_service_binding->* TO <ls_service_binding>.
-    ASSERT sy-subrc = 0.
-
-    io_xml->read(
-      EXPORTING
-        iv_name = 'SRVB'
-      CHANGING
-        cg_data = <ls_service_binding> ).
-
-
-    " We have to set the language explicitly,
-    " because otherwise the description isn't stored
-    ASSIGN COMPONENT 'METADATA-LANGUAGE' OF STRUCTURE <ls_service_binding>
-           TO <lv_language>.
-    ASSERT sy-subrc = 0.
-    <lv_language> = mv_language.
-
-    CREATE OBJECT ro_object_data TYPE ('CL_SRVB_OBJECT_DATA').
-    ro_object_data->set_data( p_data = <ls_service_binding>  ).
+  METHOD is_ai_supported.
+    TRY.
+        CREATE OBJECT mr_srvb_svrs_config TYPE ('CL_SRVB_SVRS_CONFIG')
+            EXPORTING iv_objtype = 'SRVB'.
+      CATCH cx_sy_create_error.
+        rv_ai_supported = abap_false.
+    ENDTRY.
+    CALL METHOD mr_srvb_svrs_config->('HAS_INACTIVE_VERSION')
+      RECEIVING
+        rv_has_inactive = rv_ai_supported.
 
   ENDMETHOD.
+
 
   METHOD merge_object_data.
 
@@ -259,38 +280,6 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD is_ai_supported.
-    TRY.
-        CREATE OBJECT mr_srvb_svrs_config TYPE ('CL_SRVB_SVRS_CONFIG')
-            EXPORTING iv_objtype = 'SRVB'.
-      CATCH cx_sy_create_error.
-        rv_ai_supported = abap_false.
-    ENDTRY.
-    CALL METHOD mr_srvb_svrs_config->('HAS_INACTIVE_VERSION')
-      RECEIVING
-        rv_has_inactive = rv_ai_supported.
-
-  ENDMETHOD.
-
-  METHOD constructor.
-
-    super->constructor(
-        is_item     = is_item
-        iv_language = iv_language ).
-
-    mv_service_binding_key = ms_item-obj_name.
-
-    TRY.
-        CREATE DATA mr_service_binding TYPE ('CL_SRVB_OBJECT_DATA=>TY_OBJECT_DATA').
-        CREATE OBJECT mi_persistence TYPE ('CL_SRVB_OBJECT_PERSIST').
-
-      CATCH cx_sy_create_error.
-        zcx_abapgit_exception=>raise( |SRVB not supported by your NW release| ).
-    ENDTRY.
-
-    mv_is_inactive_supported = is_ai_supported(  ).
-
-  ENDMETHOD.
 
   METHOD zif_abapgit_object~changed_by.
 
@@ -338,14 +327,12 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
     DATA:
       lo_object_data        TYPE REF TO if_wb_object_data_model,
       lx_error              TYPE REF TO cx_root,
-      lv_transport_request  TYPE trkorr,
       lo_wb_object_operator TYPE REF TO object,
       lo_merged_data_all    TYPE REF TO if_wb_object_data_model,
       lv_version            TYPE r3state.
 
     TRY.
         lo_object_data = get_object_data( io_xml ).
-        lv_transport_request = get_transport_req_if_needed( iv_package ).
         lo_wb_object_operator = get_wb_object_operator( ).
 
         IF mv_is_inactive_supported = abap_true.
@@ -364,7 +351,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
               data_selection    = 'AL' "if_wb_object_data_selection_co=>c_all_data
               version           = lv_version
               package           = iv_package
-              transport_request = lv_transport_request.
+              transport_request = iv_transport.
 
         ELSE.
 
@@ -374,7 +361,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
               io_object_data    = lo_merged_data_all
               data_selection    = 'AL' "if_wb_object_data_selection_co=>c_all_data
               version           = lv_version
-              transport_request = lv_transport_request.
+              transport_request = iv_transport.
 
         ENDIF.
 

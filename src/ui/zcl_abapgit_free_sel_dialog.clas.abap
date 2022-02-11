@@ -57,7 +57,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_FREE_SEL_DIALOG IMPLEMENTATION.
+CLASS zcl_abapgit_free_sel_dialog IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -134,12 +134,21 @@ CLASS ZCL_ABAPGIT_FREE_SEL_DIALOG IMPLEMENTATION.
 
 
   METHOD free_selections_dialog.
+
+    DATA ls_position TYPE zcl_abapgit_popups=>ty_popup_position.
+
+    ls_position = zcl_abapgit_popups=>center(
+      iv_width  = 60
+      iv_height = lines( ct_fields ) + 15 ).
+
     CALL FUNCTION 'FREE_SELECTIONS_DIALOG'
       EXPORTING
         selection_id    = iv_selection_id
         title           = mv_title
         frame_text      = mv_frame_text
         status          = 1
+        start_col       = ls_position-start_column
+        start_row       = ls_position-start_row
         as_window       = abap_true
         no_intervals    = abap_true
         tree_visible    = abap_false

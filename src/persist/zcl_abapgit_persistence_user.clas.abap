@@ -38,10 +38,14 @@ CLASS zcl_abapgit_persistence_user DEFINITION
         repo_show        TYPE zif_abapgit_persistence=>ty_repo-key,
         hide_files       TYPE abap_bool,
         changes_only     TYPE abap_bool,
+        order_by         TYPE string,
+        order_descending TYPE abap_bool,
+        diff_first       TYPE abap_bool,
         diff_unified     TYPE abap_bool,
         favorites        TYPE ty_favorites,
         repo_config      TYPE ty_repo_configs,
         settings         TYPE zif_abapgit_definitions=>ty_s_user_settings,
+        show_folders     TYPE abap_bool,
       END OF ty_user .
 
     DATA mv_user TYPE sy-uname .
@@ -83,7 +87,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
+CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -230,6 +234,12 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
   METHOD zif_abapgit_persist_user~get_hide_files.
 
     rv_hide = ms_user-hide_files.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_persist_user~get_show_folders.
+
+    rv_folders = ms_user-show_folders.
 
   ENDMETHOD.
 
@@ -416,7 +426,6 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD zif_abapgit_persist_user~toggle_hide_files.
 
     ms_user-hide_files = boolc( ms_user-hide_files = abap_false ).
@@ -425,4 +434,42 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
     rv_hide = ms_user-hide_files.
 
   ENDMETHOD.
+
+  METHOD zif_abapgit_persist_user~toggle_show_folders.
+    ms_user-show_folders = boolc( ms_user-show_folders = abap_false ).
+    update( ).
+
+    rv_folders = ms_user-show_folders.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_persist_user~get_diff_first.
+    rv_diff_first = ms_user-diff_first.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_persist_user~get_order_by.
+    rv_order_by = ms_user-order_by.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_persist_user~get_order_descending.
+    rv_order_descending = ms_user-order_descending.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_persist_user~set_diff_first.
+    ms_user-diff_first = iv_diff_first.
+    update( ).
+    rv_diff_first = ms_user-diff_first.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_persist_user~set_order_by.
+    ms_user-order_by = iv_order_by.
+    update( ).
+    rv_order_by = ms_user-order_by.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_persist_user~set_order_descending.
+    ms_user-order_descending = iv_order_descending.
+    update( ).
+    rv_order_descending = ms_user-order_descending.
+  ENDMETHOD.
+
 ENDCLASS.

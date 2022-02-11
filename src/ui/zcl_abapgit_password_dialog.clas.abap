@@ -17,16 +17,12 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PASSWORD_DIALOG IMPLEMENTATION.
+CLASS zcl_abapgit_password_dialog IMPLEMENTATION.
 
 
   METHOD popup.
 
-    DATA lv_gui_is_available TYPE abap_bool.
-
-    lv_gui_is_available = zcl_abapgit_ui_factory=>get_gui_functions( )->gui_is_available( ).
-
-    IF lv_gui_is_available = abap_true.
+    IF zcl_abapgit_ui_factory=>get_frontend_services( )->gui_is_available( ) = abap_true.
       PERFORM password_popup
         IN PROGRAM (sy-cprog)
         USING iv_repo_url

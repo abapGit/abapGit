@@ -15,6 +15,7 @@ CLASS zcl_abapgit_serialize DEFINITION
         !p_task TYPE clike ##NEEDED.
     METHODS serialize
       IMPORTING
+        !iv_package          TYPE devclass OPTIONAL
         !it_tadir            TYPE zif_abapgit_definitions=>ty_tadir_tt
         !ii_log              TYPE REF TO zif_abapgit_log OPTIONAL
         !iv_force_sequential TYPE abap_bool DEFAULT abap_false
@@ -156,7 +157,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
         IMPORTING
           es_item     = <ls_return>-item ).
 
-      <ls_return>-item-obj_type = 'TABU'.
+      <ls_return>-item-obj_type = zif_abapgit_data_config=>c_data_type-tabu.
     ENDLOOP.
 
     lt_files = zcl_abapgit_data_factory=>get_serializer( )->serialize( ii_data_config ).
@@ -212,6 +213,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     lv_force = boolc( lines( lt_tadir ) < 10 ).
 
     lt_found = serialize(
+      iv_package          = iv_package
       it_tadir            = lt_tadir
       ii_log              = ii_log
       iv_force_sequential = lv_force ).
@@ -449,14 +451,16 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
   METHOD run_parallel.
 
     DATA: lv_msg  TYPE c LENGTH 100,
+          lv_task TYPE c LENGTH 32,
           lv_free LIKE mv_free.
 
 
     ASSERT mv_free > 0.
 
     DO.
+      lv_task = |{ iv_task }-{ sy-index }|.
       CALL FUNCTION 'Z_ABAPGIT_SERIALIZE_PARALLEL'
-        STARTING NEW TASK iv_task
+        STARTING NEW TASK lv_task
         DESTINATION IN GROUP mv_group
         CALLING on_end_of_task ON END OF TASK
         EXPORTING
@@ -523,6 +527,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     DATA: lv_max      TYPE i,
           li_progress TYPE REF TO zif_abapgit_progress,
+          li_exit     TYPE REF TO zif_abapgit_exit,
           lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
@@ -557,6 +562,16 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     WAIT UNTIL mv_free = lv_max UP TO 120 SECONDS.
     rt_files = mt_files.
     FREE mt_files.
+
+*   Call postprocessing
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+
+    li_exit->serialize_postprocess(
+      EXPORTING
+        iv_package = iv_package
+        ii_log     = ii_log
+      CHANGING
+        ct_files   = rt_files ).
 
   ENDMETHOD.
 ENDCLASS.

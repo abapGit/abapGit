@@ -2,7 +2,7 @@ INTERFACE zif_abapgit_dot_abapgit PUBLIC.
 
   TYPES:
     BEGIN OF ty_requirement,
-      component   TYPE dlvunit,
+      component   TYPE tdevc-dlvunit,
       min_release TYPE saprelease,
       min_patch   TYPE sappatchlv,
     END OF ty_requirement .

@@ -161,15 +161,13 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
     DATA:
       lv_program    LIKE sy-repid,
-      lv_obj_name   TYPE e071-obj_name,
-      lv_corrnumber TYPE e071-trkorr.
+      lv_obj_name   TYPE e071-obj_name.
 
     lv_program = ms_item-obj_name.
-    lv_corrnumber = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
 
     CALL FUNCTION 'RS_DELETE_PROGRAM'
       EXPORTING
-        corrnumber                 = lv_corrnumber
+        corrnumber                 = iv_transport
         program                    = lv_program
         suppress_popup             = abap_true
         mass_delete_call           = abap_true

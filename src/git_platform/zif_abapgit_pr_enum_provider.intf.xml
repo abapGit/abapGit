@@ -5,7 +5,7 @@
    <VSEOINTERF>
     <CLSNAME>ZIF_ABAPGIT_PR_ENUM_PROVIDER</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapgit PR enumerator provider</DESCRIPT>
+    <DESCRIPT>abapGit - PR Enumerator Provider</DESCRIPT>
     <EXPOSURE>2</EXPOSURE>
     <STATE>1</STATE>
     <UNICODE>X</UNICODE>

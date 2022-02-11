@@ -546,6 +546,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
     DATA:
       ls_item         LIKE LINE OF ct_items,
       lv_is_xml       TYPE abap_bool,
+      lv_is_json      TYPE abap_bool,
       lv_sub_fetched  TYPE abap_bool,
       lt_sub_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
       lv_msg          TYPE string.
@@ -562,9 +563,10 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
           iv_devclass = iv_devclass
         IMPORTING
           es_item     = ls_item
-          ev_is_xml   = lv_is_xml ).
+          ev_is_xml   = lv_is_xml
+          ev_is_json  = lv_is_json ).
 
-      CHECK lv_is_xml = abap_true. " only object definitions
+      CHECK lv_is_xml = abap_true OR lv_is_json = abap_true. " only object definitions
 
       ls_item-devclass = get_object_package(
         iv_object   = ls_item-obj_type
@@ -694,22 +696,23 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
         it_items    = it_items_idx
         it_state    = it_state_idx ).
 
-      " Check if same file exists in different location
+      " Check if same file exists in different location (not for generic package files)
       READ TABLE it_local ASSIGNING <ls_local>
         WITH KEY file-filename = <ls_remote>-filename.
-      IF sy-subrc = 0.
+      IF sy-subrc = 0 AND <ls_remote>-filename <> zcl_abapgit_filename_logic=>c_package_file.
         <ls_result>-match = abap_false.
         <ls_result>-lstate = zif_abapgit_definitions=>c_state-deleted.
         <ls_result>-rstate = zif_abapgit_definitions=>c_state-unchanged.
         IF <ls_local>-file-sha1 = <ls_remote>-sha1.
           <ls_result>-packmove = abap_true.
         ENDIF.
-      ELSEIF sy-subrc = 4.
+      ELSE.
         " Check if file existed before and was deleted locally
         READ TABLE it_state_idx TRANSPORTING NO FIELDS
           WITH KEY path = <ls_remote>-path filename = <ls_remote>-filename
           BINARY SEARCH.
         IF sy-subrc = 0.
+          <ls_result>-match = abap_false.
           <ls_result>-lstate = zif_abapgit_definitions=>c_state-deleted.
         ENDIF.
       ENDIF.
@@ -761,7 +764,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
     DATA lt_remote TYPE zif_abapgit_definitions=>ty_files_tt.
     DATA li_exit TYPE REF TO zif_abapgit_exit.
 
-    lt_local = io_repo->get_files_local( ii_log ).
+    lt_local = io_repo->get_files_local( ii_log = ii_log ).
 
     IF lines( lt_local ) <= 2.
       " Less equal two means that we have only the .abapgit.xml and the package in
