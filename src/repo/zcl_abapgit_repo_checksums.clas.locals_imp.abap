@@ -4,7 +4,7 @@ CLASS lcl_checksum_serializer DEFINITION
 
   PUBLIC SECTION.
 
-    CLASS-DATA c_splitter TYPE string VALUE `|`.
+    CLASS-DATA gc_splitter TYPE string VALUE `|`.
 
     CLASS-METHODS serialize
       IMPORTING
@@ -48,15 +48,15 @@ CLASS lcl_checksum_serializer IMPLEMENTATION.
         ENDIF.
 
         APPEND INITIAL LINE TO <ls_cs>-files ASSIGNING <ls_file>.
-        SPLIT lv_buf AT c_splitter INTO <ls_file>-path <ls_file>-filename <ls_file>-sha1.
+        SPLIT lv_buf AT gc_splitter INTO <ls_file>-path <ls_file>-filename <ls_file>-sha1.
 
-        IF <ls_file>-path IS INITIAL OR <ls_file>-filename IS INITIAL OR <ls_file>-sha1 IS INITIAL..
+        IF <ls_file>-path IS INITIAL OR <ls_file>-filename IS INITIAL OR <ls_file>-sha1 IS INITIAL.
           " Incorrect checksums struture, maybe raise, though it is not critical for execution
           RETURN.
         ENDIF.
       ELSE.
         APPEND INITIAL LINE TO lt_checksums ASSIGNING <ls_cs>.
-        SPLIT lv_buf AT c_splitter INTO <ls_cs>-item-obj_type <ls_cs>-item-obj_name <ls_cs>-item-devclass.
+        SPLIT lv_buf AT gc_splitter INTO <ls_cs>-item-obj_type <ls_cs>-item-obj_name <ls_cs>-item-devclass.
 
         IF <ls_cs>-item-obj_type IS INITIAL OR <ls_cs>-item-obj_name IS INITIAL OR <ls_cs>-item-devclass IS INITIAL.
           " Incorrect checksums struture, maybe raise, though it is not critical for execution
@@ -83,14 +83,14 @@ CLASS lcl_checksum_serializer IMPLEMENTATION.
 
       CONCATENATE <ls_cs>-item-obj_type <ls_cs>-item-obj_name <ls_cs>-item-devclass
         INTO lv_buf
-        SEPARATED BY c_splitter.
+        SEPARATED BY gc_splitter.
       APPEND lv_buf TO lt_buf_tab.
 
       LOOP AT <ls_cs>-files ASSIGNING <ls_file>.
 
         CONCATENATE <ls_file>-path <ls_file>-filename <ls_file>-sha1
           INTO lv_buf
-          SEPARATED BY c_splitter.
+          SEPARATED BY gc_splitter.
         APPEND lv_buf TO lt_buf_tab.
 
       ENDLOOP.

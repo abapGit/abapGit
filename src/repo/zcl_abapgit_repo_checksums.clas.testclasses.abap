@@ -55,7 +55,7 @@ CLASS ltcl_test_checksum_serializer IMPLEMENTATION.
       |/ $pkg.devc.xml hash3|.
 
     ev_str = replace( val = ev_str sub = ` ` with = `|` occ = 0 ).
-    " This way it's easier to read and adjust ¯\_(ツ)_/¯
+    " This way it's easier to read and adjust :)
 
   ENDMETHOD.
 
