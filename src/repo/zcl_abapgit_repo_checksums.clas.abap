@@ -123,13 +123,13 @@ CLASS zcl_abapgit_repo_checksums IMPLEMENTATION.
     DATA lt_remote    TYPE zif_abapgit_definitions=>ty_files_tt.
     DATA lt_local     TYPE ty_local_files_by_item_tt.
     DATA lt_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
-    DATA lo_repo      TYPE REF TO zcl_abapgit_repo.
+    DATA li_repo      TYPE REF TO zif_abapgit_repo.
 
-    lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mv_repo_key ).
+    li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mv_repo_key ).
     " Should be safe as repo_srv is supposed to be single source of repo instances
 
-    lt_local  = lo_repo->get_files_local( ).
-    lt_remote = lo_repo->get_files_remote( ).
+    lt_local  = li_repo->get_files_local( ).
+    lt_remote = li_repo->get_files_remote( ).
 
     remove_non_code_related_files( CHANGING ct_local_files = lt_local ).
 

@@ -11,6 +11,10 @@ CLASS zcl_abapgit_repo_srv DEFINITION
     CLASS-METHODS get_instance
       RETURNING
         VALUE(ri_srv) TYPE REF TO zif_abapgit_repo_srv .
+    CLASS-METHODS inject_instance
+      IMPORTING
+        ii_srv TYPE REF TO zif_abapgit_repo_srv.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -130,6 +134,9 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     ri_srv = gi_ref.
   ENDMETHOD.
 
+  METHOD inject_instance.
+    gi_ref = ii_srv.
+  ENDMETHOD.
 
   METHOD instantiate_and_add.
 
