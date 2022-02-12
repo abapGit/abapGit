@@ -75,11 +75,15 @@ CLASS lcl_checksum_serializer IMPLEMENTATION.
 
     DATA lt_buf_tab TYPE string_table.
     DATA lv_buf TYPE string.
+    DATA lt_checksums_sorted LIKE it_checksums.
 
     FIELD-SYMBOLS <ls_cs> LIKE LINE OF it_checksums.
     FIELD-SYMBOLS <ls_file> LIKE LINE OF <ls_cs>-files.
 
-    LOOP AT it_checksums ASSIGNING <ls_cs>.
+    lt_checksums_sorted = it_checksums.
+    SORT lt_checksums_sorted BY item.
+
+    LOOP AT lt_checksums_sorted ASSIGNING <ls_cs>.
 
       CONCATENATE <ls_cs>-item-obj_type <ls_cs>-item-obj_name <ls_cs>-item-devclass
         INTO lv_buf
