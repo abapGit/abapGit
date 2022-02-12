@@ -63,7 +63,7 @@ CLASS zcl_abapgit_repo_checksums IMPLEMENTATION.
     LOOP AT it_local ASSIGNING <ls_local>.
       IF ls_last_item <> <ls_local>-item OR sy-tabix = 1. " First or New item reached ?
         APPEND INITIAL LINE TO rt_checksums ASSIGNING <ls_checksum>.
-        <ls_checksum>-item = <ls_local>-item. " Assuming local-item type starts with item_signature !
+        MOVE-CORRESPONDING <ls_local>-item TO <ls_checksum>-item.
         ls_last_item       = <ls_local>-item.
       ENDIF.
 
@@ -77,7 +77,6 @@ CLASS zcl_abapgit_repo_checksums IMPLEMENTATION.
       ENDIF.
 
       APPEND INITIAL LINE TO <ls_checksum>-files ASSIGNING <ls_cs_file_sig>.
-*      <ls_file_sig> = <ls_local>-file. " Assuming <ls_local> starts from file signature
       MOVE-CORRESPONDING <ls_local>-file TO <ls_cs_file_sig>.
 
       " If hashes are equal -> local sha1 is OK already (no change)
@@ -137,6 +136,25 @@ CLASS zcl_abapgit_repo_checksums IMPLEMENTATION.
       it_remote         = lt_remote
       it_local          = lt_local
       iv_branches_equal = iv_branches_equal ).
+
+    save_checksums( lt_checksums ).
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_checksums~update.
+
+    DATA lt_checksums   TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
+    DATA lt_local_files TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA li_repo        TYPE REF TO zif_abapgit_repo.
+
+    li_repo        = zcl_abapgit_repo_srv=>get_instance( )->get( mv_repo_key ).
+    lt_checksums   = zif_abapgit_repo_checksums~get( ).
+    lt_local_files = li_repo->get_files_local( ).
+
+    lt_checksums = lcl_update_calculator=>calculate_updated(
+      it_current_checksums = lt_checksums
+      it_local_files       = lt_local_files
+      it_updated_files     = it_updated_files ).
 
     save_checksums( lt_checksums ).
 

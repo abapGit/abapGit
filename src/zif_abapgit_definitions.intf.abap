@@ -97,6 +97,8 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     ty_files_item_tt TYPE STANDARD TABLE OF ty_file_item WITH DEFAULT KEY .
   TYPES:
+    ty_files_item_by_file_tt TYPE SORTED TABLE OF ty_file_item WITH UNIQUE KEY file-path file-filename.
+  TYPES:
     ty_yes_no         TYPE c LENGTH 1,
     ty_yes_no_partial TYPE c LENGTH 1.
   TYPES:

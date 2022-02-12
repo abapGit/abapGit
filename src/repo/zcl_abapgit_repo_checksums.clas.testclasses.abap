@@ -130,6 +130,7 @@ CLASS ltcl_test_checksums DEFINITION FINAL
 
     METHODS get FOR TESTING.
     METHODS rebuild_simple FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS update_simple FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -206,6 +207,26 @@ CLASS ltcl_remote_file_builder IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
+CLASS ltcl_file_sig_builder DEFINITION FINAL.
+  PUBLIC SECTION.
+    DATA mt_tab TYPE zif_abapgit_definitions=>ty_file_signatures_tt.
+    METHODS add IMPORTING iv_str TYPE STRING.
+ENDCLASS.
+
+CLASS ltcl_file_sig_builder IMPLEMENTATION.
+  METHOD add.
+    DATA ls_item LIKE LINE OF mt_tab.
+    DATA lv_tmp TYPE string.
+    lv_tmp = iv_str.
+    condense lv_tmp.
+    SPLIT lv_tmp AT space INTO
+      ls_item-path
+      ls_item-filename
+      ls_item-sha1.
+    APPEND ls_item TO mt_tab.
+  ENDMETHOD.
+ENDCLASS.
+
 **********************************************************************
 * CHECKSUMS UT
 **********************************************************************
@@ -258,6 +279,12 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
     lo_r_builder->add( '/ $pkg.devc.xml    hash3' ).
     lo_mock->mt_remote_files = lo_r_builder->mt_tab.
 
+    CREATE OBJECT li_cut TYPE zcl_abapgit_repo_checksums
+      EXPORTING
+        iv_repo_key = '1'.
+
+    li_cut->rebuild( ).
+
     lv_cs_exp = ltcl_test_checksum_serializer=>space_to_separator(
       |DEVC $PKG $PKG\n| &&
       |/ $pkg.devc.xml hash3\n| &&
@@ -265,13 +292,45 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
       |/ zhello.prog.abap hash1\n| &&
       |/ zhello.prog.xml hash2|
     ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mv_last_update_key
+      exp = '1' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mv_last_update_cs_blob
+      exp = lv_cs_exp ).
+
+  ENDMETHOD.
+
+  METHOD update_simple.
+
+    DATA lo_mock TYPE REF TO ltcl_repo_mock.
+    DATA li_cut TYPE REF TO zif_abapgit_repo_checksums.
+    DATA lv_cs_exp TYPE string.
+    DATA lo_f_builder TYPE REF TO ltcl_file_sig_builder.
+
+    CREATE OBJECT lo_mock.
+
+    zcl_abapgit_repo_srv=>inject_instance( lo_mock ).
+    zcl_abapgit_persist_injector=>set_repo_cs( me ).
+
+    CREATE OBJECT lo_f_builder.
+    lo_f_builder->add( '/ zhello.prog.abap hash1' ).
+    lo_f_builder->add( '/ zhello.prog.xml  hashNEW' ).
+*    lo_f_builder->add( '/ $pkg.devc.xml    hash3' ).
 
     CREATE OBJECT li_cut TYPE zcl_abapgit_repo_checksums
       EXPORTING
         iv_repo_key = '1'.
 
-    li_cut->rebuild( ).
+    li_cut->update( lo_f_builder->mt_tab ).
 
+    lv_cs_exp = ltcl_test_checksum_serializer=>space_to_separator(
+      |DEVC $PKG $PKG\n| &&
+      |/ $pkg.devc.xml hash3\n| &&
+      |PROG ZHELLO $PKG\n| &&
+      |/ zhello.prog.abap hash1\n| &&
+      |/ zhello.prog.xml hashNEW|
+    ).
     cl_abap_unit_assert=>assert_equals(
       act = mv_last_update_key
       exp = '1' ).
@@ -296,6 +355,69 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
   METHOD zif_abapgit_persist_repo_cs~update.
     mv_last_update_key     = iv_key.
     mv_last_update_cs_blob = iv_cs_blob.
+  ENDMETHOD.
+
+ENDCLASS.
+
+**********************************************************************
+* UPDATE CALCULATOR
+**********************************************************************
+
+CLASS ltcl_update_calculator_test DEFINITION FINAL
+  FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+
+    METHODS simple_test FOR TESTING.
+
+ENDCLASS.
+
+CLASS ltcl_update_calculator_test IMPLEMENTATION.
+
+  METHOD simple_test.
+
+    DATA lt_cs_current TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
+    DATA lt_cs_exp TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
+    DATA lt_cs_act TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
+    DATA lo_l_builder TYPE REF TO ltcl_local_file_builder.
+    DATA lo_f_builder TYPE REF TO ltcl_file_sig_builder.
+
+    CREATE OBJECT lo_f_builder.
+    lo_f_builder->add( '/ zhello.prog.abap hash1' ).
+    lo_f_builder->add( '/ zhello.prog.xml  hashNEW' ).
+
+    CREATE OBJECT lo_l_builder.
+    lo_l_builder->add( '$PKG PROG ZHELLO / zhello.prog.abap hash1' ).
+    lo_l_builder->add( '$PKG PROG ZHELLO / zhello.prog.xml  hash2' ).
+    lo_l_builder->add( '$PKG DEVC $PKG   / $pkg.devc.xml    hash3' ).
+
+    lt_cs_current = lcl_checksum_serializer=>deserialize( ltcl_test_checksum_serializer=>space_to_separator(
+      |DEVC $PKG $PKG\n| &&
+      |/ $pkg.devc.xml hash3\n| &&
+      |PROG ZHELLO $PKG\n| &&
+      |/ zhello.prog.abap hash1\n| &&
+      |/ zhello.prog.xml hash2|
+    ) ).
+
+    lt_cs_exp = lcl_checksum_serializer=>deserialize( ltcl_test_checksum_serializer=>space_to_separator(
+      |DEVC $PKG $PKG\n| &&
+      |/ $pkg.devc.xml hash3\n| &&
+      |PROG ZHELLO $PKG\n| &&
+      |/ zhello.prog.abap hash1\n| &&
+      |/ zhello.prog.xml hashNEW|
+    ) ).
+
+    lt_cs_act = lcl_update_calculator=>calculate_updated(
+      it_current_checksums = lt_cs_current
+      it_updated_files     = lo_f_builder->mt_tab
+      it_local_files       = lo_l_builder->mt_tab ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_cs_act
+      exp = lt_cs_exp ).
+
   ENDMETHOD.
 
 ENDCLASS.
