@@ -213,7 +213,7 @@ CLASS lcl_local_file_builder IMPLEMENTATION.
     DATA ls_item LIKE LINE OF mt_tab.
     DATA lv_tmp TYPE string.
     lv_tmp = iv_str.
-    condense lv_tmp.
+    CONDENSE lv_tmp.
     SPLIT lv_tmp AT space INTO
       ls_item-item-devclass
       ls_item-item-obj_type
@@ -236,7 +236,7 @@ CLASS lcl_remote_file_builder IMPLEMENTATION.
     DATA ls_item LIKE LINE OF mt_tab.
     DATA lv_tmp TYPE string.
     lv_tmp = iv_str.
-    condense lv_tmp.
+    CONDENSE lv_tmp.
     SPLIT lv_tmp AT space INTO
       ls_item-path
       ls_item-filename
@@ -256,7 +256,7 @@ CLASS lcl_file_sig_builder IMPLEMENTATION.
     DATA ls_item LIKE LINE OF mt_tab.
     DATA lv_tmp TYPE string.
     lv_tmp = iv_str.
-    condense lv_tmp.
+    CONDENSE lv_tmp.
     SPLIT lv_tmp AT space INTO
       ls_item-path
       ls_item-filename
