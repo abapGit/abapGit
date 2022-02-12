@@ -30,7 +30,8 @@ INTERFACE zif_abapgit_persistence PUBLIC.
     END OF ty_local_settings.
 
   TYPES: ty_local_checksum_tt TYPE STANDARD TABLE OF ty_local_checksum WITH DEFAULT KEY.
-  TYPES: ty_local_checksum_by_item_tt TYPE SORTED TABLE OF ty_local_checksum WITH NON-UNIQUE KEY item-obj_type item-obj_name.
+  TYPES: ty_local_checksum_by_item_tt TYPE SORTED TABLE OF ty_local_checksum
+    WITH NON-UNIQUE KEY item-obj_type item-obj_name.
 
   TYPES: BEGIN OF ty_repo_xml,
            url             TYPE string,
