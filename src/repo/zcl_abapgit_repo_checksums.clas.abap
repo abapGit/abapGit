@@ -9,7 +9,9 @@ CLASS zcl_abapgit_repo_checksums DEFINITION
 
     METHODS constructor
       IMPORTING
-        !iv_repo_key TYPE zif_abapgit_persistence=>ty_repo-key.
+        !iv_repo_key TYPE zif_abapgit_persistence=>ty_repo-key
+      RAISING
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -18,6 +20,7 @@ CLASS zcl_abapgit_repo_checksums DEFINITION
       ty_local_files_by_item_tt TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_file_item WITH NON-UNIQUE KEY item.
 
     DATA mv_repo_key TYPE zif_abapgit_persistence=>ty_repo-key.
+    DATA mi_repo TYPE REF TO zif_abapgit_repo.
 
     METHODS remove_non_code_related_files
       CHANGING
@@ -37,6 +40,17 @@ CLASS zcl_abapgit_repo_checksums DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    METHODS add_meta
+      CHANGING
+        cv_cs_blob TYPE string
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS extract_meta
+      CHANGING
+*        co_string_map - return string map with meta when it is needed
+        cv_cs_blob TYPE string.
+
 ENDCLASS.
 
 
@@ -46,6 +60,8 @@ CLASS zcl_abapgit_repo_checksums IMPLEMENTATION.
   METHOD constructor.
     ASSERT iv_repo_key IS NOT INITIAL.
     mv_repo_key = iv_repo_key.
+    mi_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mv_repo_key ).
+    " Should be safe as repo_srv is supposed to be single source of repo instances
   ENDMETHOD.
 
   METHOD build_checksums_from_files.
@@ -112,6 +128,7 @@ CLASS zcl_abapgit_repo_checksums IMPLEMENTATION.
     ENDTRY.
 
     IF lv_cs_blob IS NOT INITIAL.
+      extract_meta( CHANGING cv_cs_blob = lv_cs_blob ).
       rt_checksums = lcl_checksum_serializer=>deserialize( lv_cs_blob ).
     ENDIF.
 
@@ -122,13 +139,9 @@ CLASS zcl_abapgit_repo_checksums IMPLEMENTATION.
     DATA lt_remote    TYPE zif_abapgit_definitions=>ty_files_tt.
     DATA lt_local     TYPE ty_local_files_by_item_tt.
     DATA lt_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
-    DATA li_repo      TYPE REF TO zif_abapgit_repo.
 
-    li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mv_repo_key ).
-    " Should be safe as repo_srv is supposed to be single source of repo instances
-
-    lt_local  = li_repo->get_files_local( ).
-    lt_remote = li_repo->get_files_remote( ).
+    lt_local  = mi_repo->get_files_local( ).
+    lt_remote = mi_repo->get_files_remote( ).
 
     remove_non_code_related_files( CHANGING ct_local_files = lt_local ).
 
@@ -145,11 +158,9 @@ CLASS zcl_abapgit_repo_checksums IMPLEMENTATION.
 
     DATA lt_checksums   TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
     DATA lt_local_files TYPE zif_abapgit_definitions=>ty_files_item_tt.
-    DATA li_repo        TYPE REF TO zif_abapgit_repo.
 
-    li_repo        = zcl_abapgit_repo_srv=>get_instance( )->get( mv_repo_key ).
     lt_checksums   = zif_abapgit_repo_checksums~get( ).
-    lt_local_files = li_repo->get_files_local( ).
+    lt_local_files = mi_repo->get_files_local( ).
 
     lt_checksums = lcl_update_calculator=>calculate_updated(
       it_current_checksums = lt_checksums
@@ -165,9 +176,34 @@ CLASS zcl_abapgit_repo_checksums IMPLEMENTATION.
     DATA lv_cs_blob TYPE string.
 
     lv_cs_blob = lcl_checksum_serializer=>serialize( it_checksums ).
+    add_meta( CHANGING cv_cs_blob = lv_cs_blob ).
     zcl_abapgit_persist_factory=>get_repo_cs( )->update(
       iv_key     = mv_repo_key
       iv_cs_blob = lv_cs_blob ).
+
+  ENDMETHOD.
+
+  METHOD add_meta.
+
+    DATA lv_meta_str TYPE string.
+
+    lv_meta_str = |#repo_name#{ mi_repo->get_name( ) }|.
+
+    cv_cs_blob = lv_meta_str && |\n| && cv_cs_blob.
+
+  ENDMETHOD.
+
+  METHOD extract_meta.
+
+    DATA lv_meta_str TYPE string.
+
+    IF cv_cs_blob+0(1) <> '#'.
+      RETURN. " No meta ? just ignore it
+    ENDIF.
+
+    SPLIT cv_cs_blob AT |\n| INTO lv_meta_str cv_cs_blob.
+    " Just remove the header meta string - this is OK for now.
+    " There is just repo name for the moment - needed to for DB util and potential debug
 
   ENDMETHOD.
 

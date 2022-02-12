@@ -128,7 +128,7 @@ CLASS ltcl_test_checksums DEFINITION FINAL
     DATA mv_last_update_key TYPE zif_abapgit_persistence=>ty_repo-key.
     DATA mv_last_update_cs_blob TYPE zif_abapgit_persistence=>ty_content-data_str.
 
-    METHODS get FOR TESTING.
+    METHODS get FOR TESTING RAISING zcx_abapgit_exception.
     METHODS rebuild_simple FOR TESTING RAISING zcx_abapgit_exception.
     METHODS update_simple FOR TESTING RAISING zcx_abapgit_exception.
 
@@ -162,13 +162,17 @@ CLASS ltcl_repo_mock IMPLEMENTATION.
     rt_files = mt_remote_files.
   ENDMETHOD.
 
+  METHOD zif_abapgit_repo~get_key.
+    rv_key = '1'.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_name.
+    rv_name = 'test'.
+  ENDMETHOD.
+
   METHOD zif_abapgit_repo_srv~delete.
   ENDMETHOD.
-  METHOD zif_abapgit_repo~get_key.
-  ENDMETHOD.
   METHOD zif_abapgit_repo~get_local_settings.
-  ENDMETHOD.
-  METHOD zif_abapgit_repo~get_name.
   ENDMETHOD.
   METHOD zif_abapgit_repo~get_package.
   ENDMETHOD.
@@ -269,9 +273,12 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
 
   METHOD get.
 
+    DATA lo_mock TYPE REF TO ltcl_repo_mock.
     DATA li_cut TYPE REF TO zif_abapgit_repo_checksums.
     DATA lt_checksums_exp TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
 
+    CREATE OBJECT lo_mock.
+    zcl_abapgit_repo_srv=>inject_instance( lo_mock ).
     zcl_abapgit_persist_injector=>set_repo_cs( me ).
 
     ltcl_test_checksum_serializer=>get_mock( IMPORTING et_checksums = lt_checksums_exp ).
@@ -295,7 +302,6 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
     DATA lo_r_builder TYPE REF TO ltcl_remote_file_builder.
 
     CREATE OBJECT lo_mock.
-
     zcl_abapgit_repo_srv=>inject_instance( lo_mock ).
     zcl_abapgit_persist_injector=>set_repo_cs( me ).
 
@@ -320,6 +326,7 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
     li_cut->rebuild( ).
 
     lv_cs_exp = ltcl_test_checksum_serializer=>space_to_separator(
+      |#repo_name#test\n| &&
       |DEVC $PKG $PKG\n| &&
       |/ $pkg.devc.xml hash3\n| &&
       |PROG ZHELLO $PKG\n| &&
@@ -358,6 +365,7 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
     li_cut->update( lo_f_builder->mt_tab ).
 
     lv_cs_exp = ltcl_test_checksum_serializer=>space_to_separator(
+      |#repo_name#test\n| &&
       |DEVC $PKG $PKG\n| &&
       |/ $pkg.devc.xml hash3\n| &&
       |PROG ZHELLO $PKG\n| &&
@@ -381,6 +389,7 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
 
     IF iv_key = '1'.
       ltcl_test_checksum_serializer=>get_mock( IMPORTING ev_str = rv_cs_blob ).
+      rv_cs_blob = |#repo_name#test\n{ rv_cs_blob }|.
     ENDIF.
 
   ENDMETHOD.
