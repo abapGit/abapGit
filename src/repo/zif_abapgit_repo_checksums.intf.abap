@@ -11,4 +11,10 @@ INTERFACE zif_abapgit_repo_checksums
     RAISING
       zcx_abapgit_exception.
 
+  METHODS update
+    IMPORTING
+      !it_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt
+    RAISING
+      zcx_abapgit_exception.
+
 ENDINTERFACE.

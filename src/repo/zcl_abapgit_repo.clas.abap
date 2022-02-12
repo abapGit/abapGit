@@ -47,7 +47,7 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
     METHODS update_local_checksums
       IMPORTING
-        !it_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt
+        !it_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt
       RAISING
         zcx_abapgit_exception .
     METHODS rebuild_local_checksums
@@ -881,10 +881,10 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_checksum>  LIKE LINE OF lt_checksums,
                    <ls_file>      LIKE LINE OF <ls_checksum>-files,
                    <ls_local>     LIKE LINE OF lt_local,
-                   <ls_new_state> LIKE LINE OF it_files.
+                   <ls_new_state> LIKE LINE OF it_updated_files.
 
     lt_checksums = get_local_checksums( ).
-    lt_files_idx = it_files.
+    lt_files_idx = it_updated_files.
     SORT lt_files_idx BY path filename. " Sort for binary search
 
     " Loop through current chacksum state, update sha1 for common files
