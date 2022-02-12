@@ -57,8 +57,7 @@ CLASS ltcl_test_checksum_serializer IMPLEMENTATION.
       |/ $pkg.devc.xml hash3\n| &&
       |PROG ZHELLO $PKG\n| &&
       |/ zhello.prog.abap hash1\n| &&
-      |/ zhello.prog.xml hash2|
-    ).
+      |/ zhello.prog.xml hash2| ).
 
   ENDMETHOD.
 
