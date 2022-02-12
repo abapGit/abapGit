@@ -55,14 +55,19 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo_checksums IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO_CHECKSUMS IMPLEMENTATION.
 
-  METHOD constructor.
-    ASSERT iv_repo_key IS NOT INITIAL.
-    mv_repo_key = iv_repo_key.
-    mi_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mv_repo_key ).
-    " Should be safe as repo_srv is supposed to be single source of repo instances
+
+  METHOD add_meta.
+
+    DATA lv_meta_str TYPE string.
+
+    lv_meta_str = |#repo_name#{ mi_repo->get_name( ) }|.
+
+    cv_cs_blob = lv_meta_str && |\n| && cv_cs_blob.
+
   ENDMETHOD.
+
 
   METHOD build_checksums_from_files.
 
@@ -107,6 +112,30 @@ CLASS zcl_abapgit_repo_checksums IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD constructor.
+    ASSERT iv_repo_key IS NOT INITIAL.
+    mv_repo_key = iv_repo_key.
+    mi_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mv_repo_key ).
+    " Should be safe as repo_srv is supposed to be single source of repo instances
+  ENDMETHOD.
+
+
+  METHOD extract_meta.
+
+    DATA lv_meta_str TYPE string.
+
+    IF cv_cs_blob+0(1) <> '#'.
+      RETURN. " No meta ? just ignore it
+    ENDIF.
+
+    SPLIT cv_cs_blob AT |\n| INTO lv_meta_str cv_cs_blob.
+    " Just remove the header meta string - this is OK for now.
+    " There is just repo name for the moment - needed to for DB util and potential debug
+
+  ENDMETHOD.
+
+
   METHOD remove_non_code_related_files.
 
     DELETE ct_local_files
@@ -115,6 +144,20 @@ CLASS zcl_abapgit_repo_checksums IMPLEMENTATION.
       AND file-filename = zif_abapgit_definitions=>c_dot_abapgit ).
 
   ENDMETHOD.
+
+
+  METHOD save_checksums.
+
+    DATA lv_cs_blob TYPE string.
+
+    lv_cs_blob = lcl_checksum_serializer=>serialize( it_checksums ).
+    add_meta( CHANGING cv_cs_blob = lv_cs_blob ).
+    zcl_abapgit_persist_factory=>get_repo_cs( )->update(
+      iv_key     = mv_repo_key
+      iv_cs_blob = lv_cs_blob ).
+
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_repo_checksums~get.
 
@@ -133,6 +176,7 @@ CLASS zcl_abapgit_repo_checksums IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
 
   METHOD zif_abapgit_repo_checksums~rebuild.
 
@@ -154,6 +198,7 @@ CLASS zcl_abapgit_repo_checksums IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD zif_abapgit_repo_checksums~update.
 
     DATA lt_checksums   TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
@@ -170,41 +215,4 @@ CLASS zcl_abapgit_repo_checksums IMPLEMENTATION.
     save_checksums( lt_checksums ).
 
   ENDMETHOD.
-
-  METHOD save_checksums.
-
-    DATA lv_cs_blob TYPE string.
-
-    lv_cs_blob = lcl_checksum_serializer=>serialize( it_checksums ).
-    add_meta( CHANGING cv_cs_blob = lv_cs_blob ).
-    zcl_abapgit_persist_factory=>get_repo_cs( )->update(
-      iv_key     = mv_repo_key
-      iv_cs_blob = lv_cs_blob ).
-
-  ENDMETHOD.
-
-  METHOD add_meta.
-
-    DATA lv_meta_str TYPE string.
-
-    lv_meta_str = |#repo_name#{ mi_repo->get_name( ) }|.
-
-    cv_cs_blob = lv_meta_str && |\n| && cv_cs_blob.
-
-  ENDMETHOD.
-
-  METHOD extract_meta.
-
-    DATA lv_meta_str TYPE string.
-
-    IF cv_cs_blob+0(1) <> '#'.
-      RETURN. " No meta ? just ignore it
-    ENDIF.
-
-    SPLIT cv_cs_blob AT |\n| INTO lv_meta_str cv_cs_blob.
-    " Just remove the header meta string - this is OK for now.
-    " There is just repo name for the moment - needed to for DB util and potential debug
-
-  ENDMETHOD.
-
 ENDCLASS.
