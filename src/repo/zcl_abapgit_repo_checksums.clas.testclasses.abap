@@ -162,6 +162,40 @@ CLASS ltcl_repo_mock IMPLEMENTATION.
     rt_files = mt_remote_files.
   ENDMETHOD.
 
+  METHOD zif_abapgit_repo_srv~delete.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo~get_key.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo~get_local_settings.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo~get_name.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo~get_package.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo_srv~get_repo_from_package.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo_srv~get_repo_from_url.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo~is_offline.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo_srv~is_repo_installed.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo_srv~list.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo_srv~list_favorites.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo_srv~new_offline.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo_srv~new_online.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo_srv~purge.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo~refresh.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo_srv~validate_package.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo_srv~validate_url.
+  ENDMETHOD.
 ENDCLASS.
 
 CLASS ltcl_local_file_builder DEFINITION FINAL.
@@ -316,7 +350,6 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
     CREATE OBJECT lo_f_builder.
     lo_f_builder->add( '/ zhello.prog.abap hash1' ).
     lo_f_builder->add( '/ zhello.prog.xml  hashNEW' ).
-*    lo_f_builder->add( '/ $pkg.devc.xml    hash3' ).
 
     CREATE OBJECT li_cut TYPE zcl_abapgit_repo_checksums
       EXPORTING
