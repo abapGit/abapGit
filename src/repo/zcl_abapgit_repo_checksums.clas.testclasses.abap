@@ -138,7 +138,7 @@ ENDCLASS.
 * HELPERS
 **********************************************************************
 
-CLASS ltcl_repo_mock DEFINITION FINAL.
+CLASS lcl_repo_mock DEFINITION FINAL.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_repo.
     INTERFACES zif_abapgit_repo_srv.
@@ -146,7 +146,7 @@ CLASS ltcl_repo_mock DEFINITION FINAL.
     DATA mt_remote_files TYPE zif_abapgit_definitions=>ty_files_tt.
 ENDCLASS.
 
-CLASS ltcl_repo_mock IMPLEMENTATION.
+CLASS lcl_repo_mock IMPLEMENTATION.
 
   METHOD zif_abapgit_repo_srv~get.
     IF iv_key = '1'.
@@ -202,13 +202,13 @@ CLASS ltcl_repo_mock IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS ltcl_local_file_builder DEFINITION FINAL.
+CLASS lcl_local_file_builder DEFINITION FINAL.
   PUBLIC SECTION.
     DATA mt_tab TYPE zif_abapgit_definitions=>ty_files_item_tt.
-    METHODS add IMPORTING iv_str TYPE STRING.
+    METHODS add IMPORTING iv_str TYPE string.
 ENDCLASS.
 
-CLASS ltcl_local_file_builder IMPLEMENTATION.
+CLASS lcl_local_file_builder IMPLEMENTATION.
   METHOD add.
     DATA ls_item LIKE LINE OF mt_tab.
     DATA lv_tmp TYPE string.
@@ -225,13 +225,13 @@ CLASS ltcl_local_file_builder IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS ltcl_remote_file_builder DEFINITION FINAL.
+CLASS lcl_remote_file_builder DEFINITION FINAL.
   PUBLIC SECTION.
     DATA mt_tab TYPE zif_abapgit_definitions=>ty_files_tt.
-    METHODS add IMPORTING iv_str TYPE STRING.
+    METHODS add IMPORTING iv_str TYPE string.
 ENDCLASS.
 
-CLASS ltcl_remote_file_builder IMPLEMENTATION.
+CLASS lcl_remote_file_builder IMPLEMENTATION.
   METHOD add.
     DATA ls_item LIKE LINE OF mt_tab.
     DATA lv_tmp TYPE string.
@@ -245,13 +245,13 @@ CLASS ltcl_remote_file_builder IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS ltcl_file_sig_builder DEFINITION FINAL.
+CLASS lcl_file_sig_builder DEFINITION FINAL.
   PUBLIC SECTION.
     DATA mt_tab TYPE zif_abapgit_definitions=>ty_file_signatures_tt.
-    METHODS add IMPORTING iv_str TYPE STRING.
+    METHODS add IMPORTING iv_str TYPE string.
 ENDCLASS.
 
-CLASS ltcl_file_sig_builder IMPLEMENTATION.
+CLASS lcl_file_sig_builder IMPLEMENTATION.
   METHOD add.
     DATA ls_item LIKE LINE OF mt_tab.
     DATA lv_tmp TYPE string.
@@ -273,7 +273,7 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
 
   METHOD get.
 
-    DATA lo_mock TYPE REF TO ltcl_repo_mock.
+    DATA lo_mock TYPE REF TO lcl_repo_mock.
     DATA li_cut TYPE REF TO zif_abapgit_repo_checksums.
     DATA lt_checksums_exp TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
 
@@ -295,11 +295,11 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
 
   METHOD rebuild_simple.
 
-    DATA lo_mock TYPE REF TO ltcl_repo_mock.
+    DATA lo_mock TYPE REF TO lcl_repo_mock.
     DATA li_cut TYPE REF TO zif_abapgit_repo_checksums.
     DATA lv_cs_exp TYPE string.
-    DATA lo_l_builder TYPE REF TO ltcl_local_file_builder.
-    DATA lo_r_builder TYPE REF TO ltcl_remote_file_builder.
+    DATA lo_l_builder TYPE REF TO lcl_local_file_builder.
+    DATA lo_r_builder TYPE REF TO lcl_remote_file_builder.
 
     CREATE OBJECT lo_mock.
     zcl_abapgit_repo_srv=>inject_instance( lo_mock ).
@@ -331,8 +331,7 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
       |/ $pkg.devc.xml hash3\n| &&
       |PROG ZHELLO $PKG\n| &&
       |/ zhello.prog.abap hash1\n| &&
-      |/ zhello.prog.xml hash2|
-    ).
+      |/ zhello.prog.xml hash2| ).
     cl_abap_unit_assert=>assert_equals(
       act = mv_last_update_key
       exp = '1' ).
@@ -344,10 +343,10 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
 
   METHOD update_simple.
 
-    DATA lo_mock TYPE REF TO ltcl_repo_mock.
+    DATA lo_mock TYPE REF TO lcl_repo_mock.
     DATA li_cut TYPE REF TO zif_abapgit_repo_checksums.
     DATA lv_cs_exp TYPE string.
-    DATA lo_f_builder TYPE REF TO ltcl_file_sig_builder.
+    DATA lo_f_builder TYPE REF TO lcl_file_sig_builder.
 
     CREATE OBJECT lo_mock.
 
@@ -370,8 +369,7 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
       |/ $pkg.devc.xml hash3\n| &&
       |PROG ZHELLO $PKG\n| &&
       |/ zhello.prog.abap hash1\n| &&
-      |/ zhello.prog.xml hashNEW|
-    ).
+      |/ zhello.prog.xml hashNEW| ).
     cl_abap_unit_assert=>assert_equals(
       act = mv_last_update_key
       exp = '1' ).
@@ -423,8 +421,8 @@ CLASS ltcl_update_calculator_test IMPLEMENTATION.
     DATA lt_cs_current TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
     DATA lt_cs_exp TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
     DATA lt_cs_act TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
-    DATA lo_l_builder TYPE REF TO ltcl_local_file_builder.
-    DATA lo_f_builder TYPE REF TO ltcl_file_sig_builder.
+    DATA lo_l_builder TYPE REF TO lcl_local_file_builder.
+    DATA lo_f_builder TYPE REF TO lcl_file_sig_builder.
 
     CREATE OBJECT lo_f_builder.
     lo_f_builder->add( '/ zhello.prog.abap hash1' ).
@@ -440,16 +438,14 @@ CLASS ltcl_update_calculator_test IMPLEMENTATION.
       |/ $pkg.devc.xml hash3\n| &&
       |PROG ZHELLO $PKG\n| &&
       |/ zhello.prog.abap hash1\n| &&
-      |/ zhello.prog.xml hash2|
-    ) ).
+      |/ zhello.prog.xml hash2| ) ).
 
     lt_cs_exp = lcl_checksum_serializer=>deserialize( ltcl_test_checksum_serializer=>space_to_separator(
       |DEVC $PKG $PKG\n| &&
       |/ $pkg.devc.xml hash3\n| &&
       |PROG ZHELLO $PKG\n| &&
       |/ zhello.prog.abap hash1\n| &&
-      |/ zhello.prog.xml hashNEW|
-    ) ).
+      |/ zhello.prog.xml hashNEW| ) ).
 
     lt_cs_act = lcl_update_calculator=>calculate_updated(
       it_current_checksums = lt_cs_current

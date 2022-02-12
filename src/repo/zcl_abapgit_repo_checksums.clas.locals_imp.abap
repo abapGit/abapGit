@@ -100,7 +100,9 @@ CLASS lcl_checksum_serializer IMPLEMENTATION.
 
     ENDLOOP.
 
-    rv_string = concat_lines_of( table = lt_buf_tab sep = |\n| ).
+    rv_string = concat_lines_of(
+      table = lt_buf_tab
+      sep   = |\n| ).
 
   ENDMETHOD.
 ENDCLASS.
