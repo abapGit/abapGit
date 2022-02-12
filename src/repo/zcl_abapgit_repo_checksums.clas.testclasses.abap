@@ -8,7 +8,9 @@ CLASS ltcl_test_checksum_serializer DEFINITION FINAL
   RISK LEVEL HARMLESS.
   PUBLIC SECTION.
     METHODS serialize FOR TESTING.
+    METHODS serialize_w_zero_item FOR TESTING.
     METHODS deserialize FOR TESTING.
+    METHODS deserialize_w_root_file FOR TESTING.
 
     CLASS-METHODS get_mock
       EXPORTING
@@ -110,6 +112,66 @@ CLASS ltcl_test_checksum_serializer IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD serialize_w_zero_item.
+
+    DATA lt_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
+    DATA lv_act TYPE string.
+    DATA lv_exp TYPE string.
+
+    FIELD-SYMBOLS <ls_cs> LIKE LINE OF lt_checksums.
+    FIELD-SYMBOLS <ls_file> LIKE LINE OF <ls_cs>-files.
+
+    APPEND INITIAL LINE TO lt_checksums ASSIGNING <ls_cs>. " empty item !
+
+    lv_act = lcl_checksum_serializer=>serialize( lt_checksums ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_act
+      exp = '' ).
+
+    APPEND INITIAL LINE TO <ls_cs>-files ASSIGNING <ls_file>.
+    <ls_file>-path     = '/'.
+    <ls_file>-filename = '.gitignore'.
+    <ls_file>-sha1     = 'whatever'.
+    APPEND INITIAL LINE TO <ls_cs>-files ASSIGNING <ls_file>.
+    <ls_file>-path     = '/'.
+    <ls_file>-filename = '.abapgit.xml'.
+    <ls_file>-sha1     = 'hashZ'.
+
+    lv_act = lcl_checksum_serializer=>serialize( lt_checksums ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_act
+      exp = space_to_separator(
+        |@\n| &&
+        |/ .gitignore whatever\n| && " it's OK, helper doesn't filter irrelevant files
+        |/ .abapgit.xml hashZ| ) ).
+
+  ENDMETHOD.
+
+  METHOD deserialize_w_root_file.
+
+    DATA lt_checksums_exp TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
+    DATA lt_checksums_act TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
+    DATA lv_str TYPE string.
+
+    FIELD-SYMBOLS <ls_cs> LIKE LINE OF lt_checksums_exp.
+    FIELD-SYMBOLS <ls_file> LIKE LINE OF <ls_cs>-files.
+
+    APPEND INITIAL LINE TO lt_checksums_exp ASSIGNING <ls_cs>. " empty item !
+    APPEND INITIAL LINE TO <ls_cs>-files ASSIGNING <ls_file>.
+    <ls_file>-path     = '/'.
+    <ls_file>-filename = '.abapgit.xml'.
+    <ls_file>-sha1     = 'hashZ'.
+
+    lt_checksums_act = lcl_checksum_serializer=>deserialize( space_to_separator(
+      |@\n| &&
+      |/ .abapgit.xml hashZ| ) ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_checksums_act
+      exp = lt_checksums_exp ).
+
+  ENDMETHOD.
+
 ENDCLASS.
 
 **********************************************************************
@@ -129,6 +191,7 @@ CLASS ltcl_test_checksums DEFINITION FINAL
 
     METHODS get FOR TESTING RAISING zcx_abapgit_exception.
     METHODS rebuild_simple FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS rebuild_w_dot_abapgit FOR TESTING RAISING zcx_abapgit_exception.
     METHODS update_simple FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
@@ -220,6 +283,9 @@ CLASS lcl_local_file_builder IMPLEMENTATION.
       ls_item-file-path
       ls_item-file-filename
       ls_item-file-sha1.
+    IF ls_item-item-devclass = '@'. " Root items
+      CLEAR: ls_item-item-devclass, ls_item-item-obj_type, ls_item-item-obj_name.
+    ENDIF.
     APPEND ls_item TO mt_tab.
   ENDMETHOD.
 ENDCLASS.
@@ -394,6 +460,50 @@ CLASS ltcl_test_checksums IMPLEMENTATION.
   METHOD zif_abapgit_persist_repo_cs~update.
     mv_last_update_key     = iv_key.
     mv_last_update_cs_blob = iv_cs_blob.
+  ENDMETHOD.
+
+  METHOD rebuild_w_dot_abapgit.
+
+    DATA lo_mock TYPE REF TO lcl_repo_mock.
+    DATA li_cut TYPE REF TO zif_abapgit_repo_checksums.
+    DATA lv_cs_exp TYPE string.
+    DATA lo_l_builder TYPE REF TO lcl_local_file_builder.
+    DATA lo_r_builder TYPE REF TO lcl_remote_file_builder.
+
+    CREATE OBJECT lo_mock.
+    zcl_abapgit_repo_srv=>inject_instance( lo_mock ).
+    zcl_abapgit_persist_injector=>set_repo_cs( me ).
+
+    " Local
+    CREATE OBJECT lo_l_builder.
+    lo_l_builder->add( '@ @ @ / .abapgit.xml hashZ' ).
+    lo_l_builder->add( '@ @ @ / .gitignore   whatever' ).
+    lo_l_builder->add( '$PKG DEVC $PKG   / $pkg.devc.xml    hash3' ).
+    lo_mock->mt_local_files = lo_l_builder->mt_tab.
+
+    " Remote
+    CREATE OBJECT lo_r_builder.
+    lo_r_builder->add( '/ .abapgit.xml     hashZ' ).
+    lo_r_builder->add( '/ .gitignore       whatever' ).
+    lo_r_builder->add( '/ $pkg.devc.xml    hash3' ).
+    lo_mock->mt_remote_files = lo_r_builder->mt_tab.
+
+    CREATE OBJECT li_cut TYPE zcl_abapgit_repo_checksums
+      EXPORTING
+        iv_repo_key = '1'.
+
+    li_cut->rebuild( ).
+
+    lv_cs_exp = ltcl_test_checksum_serializer=>space_to_separator(
+      |#repo_name#test\n| &&
+      |@\n| &&
+      |/ .abapgit.xml hashZ\n| &&
+      |DEVC $PKG $PKG\n| &&
+      |/ $pkg.devc.xml hash3| ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mv_last_update_cs_blob
+      exp = lv_cs_exp ).
+
   ENDMETHOD.
 
 ENDCLASS.
