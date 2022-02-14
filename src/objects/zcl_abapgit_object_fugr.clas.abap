@@ -626,6 +626,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       APPEND lv_maintviewname TO rt_includes.
     ENDIF.
 
+    SORT rt_includes.
     IF lines( rt_includes ) > 0.
       " check which includes have their own tadir entry
       " these includes might reside in a different package or might be shared between multiple function groups
