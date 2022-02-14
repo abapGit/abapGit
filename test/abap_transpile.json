@@ -2,6 +2,10 @@
   "input_folder": "{test,src,deps}",
   "input_filter": [
     "vseointerf",
+    "saprelease",
+    "sappatchlv",
+    "sci_chkv",
+    "zif_abapgit_object_filter",
     "zcl_abapgit_adt_link",
     "zcl_abapgit_ajson*",
     "zcl_abapgit_auth",
