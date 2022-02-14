@@ -5,10 +5,10 @@ CLASS zcl_abapgit_object_dtel DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
   PROTECTED SECTION.
-  PRIVATE SECTION.
+private section.
 
-    TYPES:
-      BEGIN OF ty_dd04_text,
+  types:
+    BEGIN OF ty_dd04_text,
         ddlanguage TYPE dd04t-ddlanguage,
         ddtext     TYPE dd04t-ddtext,
         reptext    TYPE dd04t-reptext,
@@ -16,27 +16,32 @@ CLASS zcl_abapgit_object_dtel DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         scrtext_m  TYPE dd04t-scrtext_m,
         scrtext_l  TYPE dd04t-scrtext_l,
       END OF ty_dd04_text .
-    TYPES:
-      ty_dd04_texts TYPE STANDARD TABLE OF ty_dd04_text .
+  types:
+    ty_dd04_texts TYPE STANDARD TABLE OF ty_dd04_text .
 
-    CONSTANTS c_longtext_id_dtel TYPE dokil-id VALUE 'DE' ##NO_TEXT.
+  constants C_LONGTEXT_ID_DTEL type DOKIL-ID value 'DE' ##NO_TEXT.
 
-    METHODS serialize_texts
-      IMPORTING
-        !ii_xml TYPE REF TO zif_abapgit_xml_output
-      RAISING
-        zcx_abapgit_exception .
-    METHODS deserialize_texts
-      IMPORTING
-        !ii_xml   TYPE REF TO zif_abapgit_xml_input
-        !is_dd04v TYPE dd04v
-      RAISING
-        zcx_abapgit_exception .
+  methods IS_ABAPCLASS_OR_ABAPINTERFACE
+    importing
+      !IV_REFERENCE_NAME type CLIKE
+    returning
+      value(RV_ABAPCLASS_OR_ABAPINTERFACE) type ABAP_BOOL .
+  methods SERIALIZE_TEXTS
+    importing
+      !II_XML type ref to ZIF_ABAPGIT_XML_OUTPUT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods DESERIALIZE_TEXTS
+    importing
+      !II_XML type ref to ZIF_ABAPGIT_XML_INPUT
+      !IS_DD04V type DD04V
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
 
 
   METHOD deserialize_texts.
@@ -86,6 +91,27 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
+  ENDMETHOD.
+
+
+  METHOD is_abapclass_or_abapinterface.
+
+    DATA ls_cifkey TYPE seoclskey.
+
+    ls_cifkey-clsname = iv_reference_name.
+
+    CALL FUNCTION 'SEO_CLIF_GET'
+      EXPORTING
+        cifkey       = ls_cifkey
+      EXCEPTIONS
+        not_existing = 1
+        deleted      = 2
+        model_only   = 3
+        OTHERS       = 4.
+
+    IF sy-subrc = 0.
+      rv_abapclass_or_abapinterface = abap_true.
+    ENDIF.
   ENDMETHOD.
 
 
@@ -183,7 +209,9 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
                   CHANGING cg_data = ls_dd04v ).
 
     " DDIC Step: Replace REF TO class/interface with generic reference to avoid cyclic dependency
-    IF iv_step = zif_abapgit_object=>gc_step_id-ddic AND ls_dd04v-datatype = 'REF'.
+    IF iv_step = zif_abapgit_object=>gc_step_id-ddic AND ls_dd04v-datatype = 'REF'
+      AND is_abapclass_or_abapinterface( ls_dd04v-domname ) = abap_true.
+
       ls_dd04v-rollname = 'OBJECT'.
     ELSEIF iv_step = zif_abapgit_object=>gc_step_id-late AND ls_dd04v-datatype <> 'REF'.
       RETURN. " already active

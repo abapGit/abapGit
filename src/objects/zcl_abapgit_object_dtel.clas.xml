@@ -11,6 +11,14 @@
     <FIXPT>X</FIXPT>
     <UNICODE>X</UNICODE>
    </VSEOCLASS>
+   <DESCRIPTIONS>
+    <SEOCOMPOTX>
+     <CLSNAME>ZCL_ABAPGIT_OBJECT_DTEL</CLSNAME>
+     <CMPNAME>IS_ABAPCLASS_OR_ABAPINTERFACE</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Checks if reference name is abap class or abap interface</DESCRIPT>
+    </SEOCOMPOTX>
+   </DESCRIPTIONS>
   </asx:values>
  </asx:abap>
 </abapGit>
