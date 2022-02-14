@@ -630,10 +630,12 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     check_objects_locked( iv_language = io_repo->get_dot_abapgit( )->get_main_language( )
                           it_items    = lt_items ).
 
+    ii_log->add_success( |Prepare Deserialize| ).
+
     lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
     LOOP AT lt_results ASSIGNING <ls_result>.
       li_progress->show( iv_current = sy-tabix
-                         iv_text    = |Deserialize { <ls_result>-obj_name }| ).
+                         iv_text    = |Prepare Deserialize: { <ls_result>-obj_type } { <ls_result>-obj_name }| ).
 
       CLEAR ls_item.
       ls_item-obj_type = <ls_result>-obj_type.
@@ -727,6 +729,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     ENDLOOP.
 
+    li_progress->off( ).
+
     "run deserialize for all steps and it's objects
     SORT lt_steps BY order.
     LOOP AT lt_steps ASSIGNING <ls_step>.
@@ -745,8 +749,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     DELETE ADJACENT DUPLICATES FROM rt_accessed_files. " Just in case
 
     zcl_abapgit_default_transport=>get_instance( )->reset( ).
-
-    li_progress->off( ).
 
   ENDMETHOD.
 
@@ -769,12 +771,15 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     zcl_abapgit_objects_activation=>clear( ).
 
+    ii_log->add_success( |Step { is_step-order } - { is_step-descr }| ).
+
     li_progress = zcl_abapgit_progress=>get_instance( lines( is_step-objects ) ).
 
     LOOP AT is_step-objects ASSIGNING <ls_obj>.
       li_progress->show(
         iv_current = sy-tabix
-        iv_text    = |Deserialize { is_step-descr } - { <ls_obj>-item-obj_name }| ).
+        iv_text    = |Step { is_step-order } - { is_step-descr }:| &&
+                     | { <ls_obj>-item-obj_type } { <ls_obj>-item-obj_name }| ).
 
       TRY.
           <ls_obj>-obj->deserialize( iv_package   = <ls_obj>-package
@@ -796,6 +801,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     ENDLOOP.
 
+    li_progress->show( iv_current = lines( is_step-objects )
+                       iv_text    = |Step { is_step-order } - Activating Objects| ).
+
     CASE is_step-step_id.
       WHEN zif_abapgit_object=>gc_step_id-ddic.
         zcl_abapgit_objects_activation=>activate(
@@ -814,6 +822,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           iv_ddic = abap_false
           ii_log  = ii_log ).
     ENDCASE.
+
+    li_progress->off( ).
 
 *   Call postprocessing
     li_exit = zcl_abapgit_exit=>get_instance( ).
@@ -857,19 +867,19 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
     <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-ddic.
-    <ls_step>-descr        = 'Import DDIC objects'.
+    <ls_step>-descr        = 'Deserialize DDIC Objects'.
     <ls_step>-syntax_check = abap_false.
     <ls_step>-order        = 1.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
     <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-abap.
-    <ls_step>-descr        = 'Import objects main'.
+    <ls_step>-descr        = 'Deserialize non-DDIC Objects'.
     <ls_step>-syntax_check = abap_false.
     <ls_step>-order        = 2.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
     <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-late.
-    <ls_step>-descr        = 'Import late objects'.
+    <ls_step>-descr        = 'Post-process Objects'.
     <ls_step>-syntax_check = abap_true.
     <ls_step>-order        = 3.
   ENDMETHOD.

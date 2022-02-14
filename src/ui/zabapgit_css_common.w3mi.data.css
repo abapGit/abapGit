@@ -292,33 +292,43 @@ table.repo_tab {
   padding-top: 2px;
   padding-bottom: 2px;
 }
+
 .repo_tab td.icon {
   width: 1px;
   text-align: center;
   padding-left: 8px;
   padding-right: 4px;
 }
-.repo_tab td.icon:not(:first-child) {
-  width: 26px;
+
+.repo_tab td.transport {
+  width: 140px;
   text-align: left;
 }
 .repo_tab td.type {
   width: 4em;
   padding-left: 0.5em;
 }
+
+.repo_tab td.filename{
+  padding-left: 1em;
+}
+
 .repo_tab td.object {
   padding-left: 0.5em;
 }
+
 .repo_tab td.files {
   padding-left: 0.5em;
   line-height: 1.5;
 }
+
 .repo_tab td.cmd, .repo_tab th.cmd {
   text-align: right;
   padding-left: 0.5em;
   padding-right: 0.7em;
   min-width: 70px;
 }
+
 .repo_tab th.cmd .icon{
   padding-right: 8px;
 }
