@@ -402,8 +402,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
     CASE lv_ddtypekind.
       WHEN 'STOB'.
         open_adt_stob( ms_item-obj_name ).
-      WHEN OTHERS.
-        zcx_abapgit_exception=>raise( 'DDLS Jump Error' ).
+        rv_exit = abap_true.
     ENDCASE.
 
   ENDMETHOD.
