@@ -183,25 +183,15 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
 
   METHOD activate_new.
 
-    DATA: li_progress TYPE REF TO zif_abapgit_progress.
-
     IF gt_objects IS INITIAL.
       RETURN.
     ENDIF.
 
-    li_progress = zcl_abapgit_progress=>get_instance( 100 ).
-
     IF iv_ddic = abap_true.
-
-      li_progress->show( iv_current = 98
-                         iv_text    = 'Activating DDIC' ).
 
       activate_ddic( ii_log ).
 
     ELSE.
-
-      li_progress->show( iv_current = 98
-                         iv_text    = 'Activating non DDIC' ).
 
       activate_old( ii_log ).
 
@@ -376,19 +366,9 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
           lo_cross    TYPE REF TO cl_wb_crossreference,
           ls_item     TYPE zif_abapgit_definitions=>ty_item,
           lv_error    TYPE c LENGTH 1,
-          lv_include  TYPE programm,
-          li_progress TYPE REF TO zif_abapgit_progress.
-
-
-    li_progress = zcl_abapgit_progress=>get_instance( lines( gt_classes ) ).
+          lv_include  TYPE programm.
 
     LOOP AT gt_classes INTO ls_class.
-      IF sy-tabix MOD 20 = 0.
-        li_progress->show(
-          iv_current = sy-tabix
-          iv_text    = 'Updating where-used lists' ).
-      ENDIF.
-
       CASE ls_class-object.
         WHEN 'CLAS'.
           lv_include = cl_oo_classname_service=>get_classpool_name( ls_class-clsname ).
