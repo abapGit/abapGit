@@ -206,8 +206,6 @@
 
       {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "validate3", "note": "assert failed"},
       {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "normalize", "note": "assert failed"},
-      {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "exit_dirty_confirm", "note": "todo, eq TABLE"},
-      {"object": "ZCL_ABAPGIT_HTML_FORM_UTILS", "class": "ltcl_test_form", "method": "exit_dirty_cancel", "note": "todo, eq TABLE"},
 
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "clas_before_pinf", "note": "hmm, something with promises?"},
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "ddls_before_dcls", "note": "hmm, something with promises?"},
