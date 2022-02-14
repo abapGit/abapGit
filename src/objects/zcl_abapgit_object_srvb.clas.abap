@@ -382,36 +382,37 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
   METHOD zif_abapgit_object~exists.
 
     DATA lo_object_data TYPE REF TO if_wb_object_data_model.
-    DATA lo_wb_object_operator TYPE REF TO object.
 
-    lo_wb_object_operator = get_wb_object_operator( ).
     TRY.
         IF mv_is_inactive_supported = abap_true.
           TRY.
-              CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
-                EXPORTING
-                  data_selection = 'ST'
-                  version        = 'I'
-                IMPORTING
-                  eo_object_data = lo_object_data.
+              mi_persistence->get(
+            EXPORTING
+              p_object_key     = mv_service_binding_key
+              p_version        = 'I'
+              p_data_selection = 'ST'
+            CHANGING
+              p_object_data    = lo_object_data ).
 
             CATCH cx_root.
-              CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
-                EXPORTING
-                  data_selection = 'ST'
-                  version        = 'A'
-                IMPORTING
-                  eo_object_data = lo_object_data.
+              mi_persistence->get(
+            EXPORTING
+              p_object_key     = mv_service_binding_key
+              p_version        = 'A'
+              p_data_selection = 'ST'
+            CHANGING
+              p_object_data    = lo_object_data ).
 
           ENDTRY.
         ELSE.
 
-          CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
-            EXPORTING
-              data_selection = 'ST'
-              version        = 'A'
-            IMPORTING
-              eo_object_data = lo_object_data.
+          mi_persistence->get(
+        EXPORTING
+          p_object_key     = mv_service_binding_key
+          p_version        = 'A'
+          p_data_selection = 'ST'
+        CHANGING
+          p_object_data    = lo_object_data ).
 
         ENDIF.
         rv_bool = boolc( lo_object_data IS NOT INITIAL AND lo_object_data->get_object_key( ) IS NOT INITIAL ).
