@@ -14,6 +14,14 @@ jobs:
         node-version: '16'
     - name: npm install
       run: npm install
+    - name: npm run eslint
+      run: npm run eslint
+    - name: npm run abaplint
+      run: npm run abaplint
+    - name: test merge
+      run: |
+        npm run merge
+        npm run merge.ci
     - name: npm run unit
       run: npm run unit
     - name: npm run coverage

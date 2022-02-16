@@ -19,8 +19,6 @@ jobs:
     - name: Run npm steps
       run: |
         npm install
-        npm run eslint
-        npm run abaplint
         npm run merge
         npm run merge.ci
     - name: build-merged-build
