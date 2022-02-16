@@ -163,7 +163,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
-      IF lv_rc > 0.
+      IF lv_rc > 4.
         add_errors_to_log(
           iv_logname = lv_logname
           ii_log     = ii_log ).
