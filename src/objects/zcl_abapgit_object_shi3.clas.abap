@@ -321,11 +321,11 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
     CASE ls_head-type.
       WHEN 'BMENU'.
         jump_se43( ).
+        rv_exit = abap_true.
       WHEN 'GHIER'.
         jump_sbach04( ).
+        rv_exit = abap_true.
     ENDCASE.
-
-    rv_exit = abap_true.
 
   ENDMETHOD.
 
