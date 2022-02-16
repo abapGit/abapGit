@@ -982,7 +982,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ri_html->add( |<tr{ get_item_class( is_item = is_item 
+    ri_html->add( |<tr{ get_item_class( is_item = is_item
                                         iv_is_object_row = abap_true ) }>| ).
 
     IF is_item-obj_name IS INITIAL AND is_item-is_dir = abap_false.
