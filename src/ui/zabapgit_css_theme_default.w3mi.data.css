@@ -146,8 +146,12 @@ table.repo_tab {
 }
 .repo_tab td {
   color: #333;
+}
+
+.repo_tab tr.object_row{
   border-top-color: var(--theme-table-border-color);
 }
+
 .repo_tab .inactive      { color: orange; }
 .repo_tab tr.unsupported { color: var(--theme-greyscale-lighter); }
 .repo_tab tr.modified    { background-color: #fbf7e9; }

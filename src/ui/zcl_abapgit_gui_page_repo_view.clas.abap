@@ -85,9 +85,10 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS get_item_class
       IMPORTING
-        !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
+        !is_item         TYPE zif_abapgit_definitions=>ty_repo_item
+        iv_is_object_row TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(rv_html) TYPE string .
+        VALUE(rv_html)   TYPE string .
     METHODS get_item_icon
       IMPORTING
         !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
@@ -666,6 +667,12 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       APPEND 'unsupported' TO lt_class.
     ENDIF.
 
+    IF iv_is_object_row = abap_true.
+      APPEND 'object_row' TO lt_class.
+    ELSE.
+      APPEND 'file_row' TO lt_class.
+    ENDIF.
+
     IF lines( lt_class ) > 0.
       rv_html = | class="{ concat_lines_of( table = lt_class
                                             sep = ` ` ) }"|.
@@ -975,7 +982,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ri_html->add( |<tr{ get_item_class( is_item ) }>| ).
+    ri_html->add( |<tr{ get_item_class( is_item = is_item iv_is_object_row = abap_true ) }>| ).
 
     IF is_item-obj_name IS INITIAL AND is_item-is_dir = abap_false.
       ri_html->add( |<td colspan="2"></td>|
@@ -983,7 +990,14 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                  && '<i class="grey">non-code and meta files</i>'
                  && '</td>' ).
     ELSE.
-      ri_html->add( |<td class="icon">{ get_item_icon( is_item ) }</td>| ).
+
+      " Command
+      ri_html->add( '<td class="status">' ).
+      ri_html->add( get_item_icon( is_item ) ).
+      IF mo_repo->has_remote_source( ) = abap_true.
+        ri_html->add( render_item_command( is_item ) ).
+      ENDIF.
+      ri_html->add( '</td>' ).
 
       IF is_item-is_dir = abap_true. " Subdir
         lv_link = build_dir_jump_link( is_item-path ).
@@ -1003,13 +1017,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     IF iv_render_transports = abap_true.
       ri_html->add( render_item_transport( is_item ) ).
     ENDIF.
-
-    " Command
-    ri_html->add( '<td class="cmd">' ).
-    IF mo_repo->has_remote_source( ) = abap_true.
-      ri_html->add( render_item_command( is_item ) ).
-    ENDIF.
-    ri_html->add( '</td>' ).
 
     ri_html->add( '</tr>' ).
 
@@ -1075,10 +1082,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       lv_difflink = zcl_abapgit_html_action_utils=>file_encode(
         iv_key  = mo_repo->get_key( )
         ig_file = is_file ).
-      ri_html->add_a( iv_txt = 'diff'
+      ri_html->add_a( iv_txt = zcl_abapgit_gui_chunk_lib=>render_item_state( iv_lstate = is_file-lstate
+                                                                             iv_rstate = is_file-rstate )
                       iv_act = |{ zif_abapgit_definitions=>c_action-go_file_diff }?{ lv_difflink }| ).
-      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state( iv_lstate = is_file-lstate
-                                                                  iv_rstate = is_file-rstate ) ).
     ELSE.
       ri_html->add( '&nbsp;' ).
     ENDIF.
@@ -1103,7 +1109,12 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     LOOP AT is_item-files INTO ls_file.
       ri_html->add( |<tr{ get_item_class( is_item ) }>| ).
 
-      ri_html->add( |<td class="icon"></td>| ).
+      " Command
+      ri_html->add( '<td class="status">' ).
+      IF mo_repo->has_remote_source( ) = abap_true.
+        ri_html->add( render_file_command( ls_file ) ).
+      ENDIF.
+      ri_html->add( '</td>' ).
 
       ri_html->add( |<td class="type"></td>| ).
       ri_html->add( |<td class="filename darkgrey">| ).
@@ -1124,13 +1135,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       IF mv_are_changes_recorded_in_tr = abap_true.
         ri_html->add( `<td></td>` ).
       ENDIF.
-
-      " Command
-      ri_html->add( '<td class="cmd">' ).
-      IF mo_repo->has_remote_source( ) = abap_true.
-        ri_html->add( render_file_command( ls_file ) ).
-      ENDIF.
-      ri_html->add( '</td>' ).
 
       ri_html->add( '</tr>' ).
 
@@ -1175,36 +1179,37 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    " icon
-    APPEND INITIAL LINE TO lt_col_spec.
+    ls_col_spec-tech_name = 'LSTATE'.
+    ls_col_spec-display_name = 'Status'.
+    ls_col_spec-allow_order_by = abap_true.
+    ls_col_spec-css_class = 'status'.
+    APPEND ls_col_spec TO lt_col_spec.
 
+    CLEAR ls_col_spec.
     ls_col_spec-tech_name = 'OBJ_TYPE'.
     ls_col_spec-display_name = 'Type'.
     ls_col_spec-allow_order_by = abap_true.
     APPEND ls_col_spec TO lt_col_spec.
 
+    CLEAR ls_col_spec.
     ls_col_spec-tech_name = 'OBJ_NAME'.
     ls_col_spec-display_name = 'Name'.
     ls_col_spec-allow_order_by = abap_true.
     APPEND ls_col_spec TO lt_col_spec.
 
+    CLEAR ls_col_spec.
     ls_col_spec-tech_name = 'CHANGED_BY'.
     ls_col_spec-display_name = 'Changed by'.
     ls_col_spec-allow_order_by = abap_true.
     APPEND ls_col_spec TO lt_col_spec.
 
     IF mv_are_changes_recorded_in_tr = abap_true.
+      CLEAR ls_col_spec.
       ls_col_spec-tech_name = 'TRANSPORT'.
       ls_col_spec-display_name = 'Transport'.
       ls_col_spec-allow_order_by = abap_true.
       APPEND ls_col_spec TO lt_col_spec.
     ENDIF.
-
-    ls_col_spec-tech_name = 'LSTATE'.
-    ls_col_spec-display_name = 'Status'.
-    ls_col_spec-allow_order_by = abap_true.
-    ls_col_spec-css_class = 'cmd'.
-    APPEND ls_col_spec TO lt_col_spec.
 
     ri_html->add( |<thead>| ).
     ri_html->add( |<tr>| ).

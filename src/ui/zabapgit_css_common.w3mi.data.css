@@ -287,10 +287,13 @@ table.repo_tab {
   font-weight: normal;
 }
 .repo_tab td {
-  border-top: 1px solid;
   vertical-align: middle;
   padding-top: 2px;
   padding-bottom: 2px;
+}
+
+.repo_tab tr.object_row{
+  border-top: 2px solid;
 }
 
 .repo_tab td.icon {
@@ -327,6 +330,16 @@ table.repo_tab {
   padding-left: 0.5em;
   padding-right: 0.7em;
   min-width: 70px;
+}
+
+.status .icon{
+  padding-left: 1em;
+}
+
+.repo_tab th.status, .repo_tab td.status {
+  padding-left: 0.5em;
+  padding-right: 0.7em;
+  max-width: 15px;
 }
 
 .repo_tab th.cmd .icon{
