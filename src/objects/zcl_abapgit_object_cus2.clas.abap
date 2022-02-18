@@ -137,9 +137,6 @@ CLASS zcl_abapgit_object_cus2 IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
-
-    zcx_abapgit_exception=>raise( |TODO: Jump| ).
-
   ENDMETHOD.
 
 

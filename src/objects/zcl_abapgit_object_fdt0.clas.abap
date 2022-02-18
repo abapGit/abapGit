@@ -669,6 +669,8 @@ CLASS zcl_abapgit_object_fdt0 IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Could not open BRF+ Workbench' ).
     ENDIF.
 
+    rv_exit = abap_true.
+
   ENDMETHOD.
 
 

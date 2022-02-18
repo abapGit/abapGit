@@ -90,9 +90,6 @@ CLASS zcl_abapgit_object_g4bs IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
-
-    zcx_abapgit_exception=>raise( |TODO: Jump| ).
-
   ENDMETHOD.
 
 

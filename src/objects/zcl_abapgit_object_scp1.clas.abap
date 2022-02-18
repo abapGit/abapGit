@@ -435,6 +435,8 @@ CLASS zcl_abapgit_object_scp1 IMPLEMENTATION.
 
     SUBMIT scpr3 AND RETURN.
 
+    rv_exit = abap_true.
+
   ENDMETHOD.
 
 

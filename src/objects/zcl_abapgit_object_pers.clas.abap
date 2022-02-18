@@ -198,6 +198,8 @@ CLASS zcl_abapgit_object_pers IMPLEMENTATION.
       iv_tcode   = 'PERSREG'
       it_bdcdata = lt_bcdata ).
 
+    rv_exit = abap_true.
+
   ENDMETHOD.
 
 
