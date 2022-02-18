@@ -447,6 +447,9 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
     APPEND ls_param TO lt_params.
 
     SUBMIT (lv_report) WITH SELECTION-TABLE lt_params AND RETURN.
+
+    rv_exit = abap_true.
+
   ENDMETHOD.
 
 

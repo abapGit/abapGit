@@ -310,6 +310,8 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
       EXPORTING
         object = mv_objectname.
 
+    rv_exit = abap_true.
+
   ENDMETHOD.
 
 
