@@ -144,6 +144,8 @@ CLASS zcl_abapgit_object_doct IMPLEMENTATION.
       iv_tcode   = 'SE61'
       it_bdcdata = lt_bcdata ).
 
+    rv_exit = abap_true.
+
   ENDMETHOD.
 
 

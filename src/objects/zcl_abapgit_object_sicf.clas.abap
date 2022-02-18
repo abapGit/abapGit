@@ -556,6 +556,8 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
       iv_tcode   = 'SICF'
       it_bdcdata = lt_bcdata ).
 
+    rv_exit = abap_true.
+
   ENDMETHOD.
 
 
