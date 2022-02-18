@@ -147,6 +147,9 @@ CLASS zcl_abapgit_object_shi5 IMPLEMENTATION.
         originals_only       = abap_true
       TABLES
         show_only_extensions = lt_extension.
+
+    rv_exit = abap_true.
+
   ENDMETHOD.
 
 

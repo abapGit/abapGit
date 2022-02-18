@@ -977,16 +977,20 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Object { is_item-obj_type } { is_item-obj_name } doesn't exist| ).
     ENDIF.
 
-    " Open object in new window
-    lv_exit = zcl_abapgit_ui_factory=>get_gui_jumper( )->jump(
-      is_item         = is_item
-      iv_sub_obj_name = iv_sub_obj_name
-      iv_sub_obj_type = iv_sub_obj_type
-      iv_line_number  = iv_line_number ).
+    " First priority object-specific handler
+    lv_exit = li_obj->jump( ).
 
-    " If all fails, try object-specific handler
-    IF lv_exit IS INITIAL.
-      li_obj->jump( ).
+    IF lv_exit = abap_false.
+      " Open object in new window with generic jumper
+      lv_exit = zcl_abapgit_ui_factory=>get_gui_jumper( )->jump(
+        is_item         = is_item
+        iv_sub_obj_name = iv_sub_obj_name
+        iv_sub_obj_type = iv_sub_obj_type
+        iv_line_number  = iv_line_number ).
+    ENDIF.
+
+    IF lv_exit = abap_false.
+      zcx_abapgit_exception=>raise( |Jump to { is_item-obj_type } { is_item-obj_name } not possible| ).
     ENDIF.
 
   ENDMETHOD.

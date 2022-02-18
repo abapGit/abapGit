@@ -96,6 +96,8 @@ CLASS zcl_abapgit_object_iwvb IMPLEMENTATION.
       WITH ip_avers = ms_item-obj_name+32(4)
       AND RETURN.
 
+    rv_exit = abap_true.
+
   ENDMETHOD.
 
 
