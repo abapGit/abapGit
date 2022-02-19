@@ -232,6 +232,8 @@ CLASS zcl_abapgit_object_susc IMPLEMENTATION.
       EXPORTING
         objclass = lv_objclass.
 
+    rv_exit = abap_true.
+
   ENDMETHOD.
 
 

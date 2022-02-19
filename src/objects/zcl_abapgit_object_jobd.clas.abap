@@ -155,6 +155,8 @@ CLASS zcl_abapgit_object_jobd IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
+    rv_exit = abap_true.
+
   ENDMETHOD.
 
 

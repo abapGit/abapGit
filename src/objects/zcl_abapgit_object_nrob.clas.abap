@@ -252,6 +252,8 @@ CLASS zcl_abapgit_object_nrob IMPLEMENTATION.
       iv_tcode   = 'SNRO'
       it_bdcdata = lt_bcdata ).
 
+    rv_exit = abap_true.
+
   ENDMETHOD.
 
 

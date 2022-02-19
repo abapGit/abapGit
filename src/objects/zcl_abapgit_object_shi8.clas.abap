@@ -124,7 +124,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI8 IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
-    zcx_abapgit_exception=>raise( |TODO: Jump SHI8| ).
   ENDMETHOD.
 
 
