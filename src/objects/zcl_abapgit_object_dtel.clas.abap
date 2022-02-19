@@ -212,7 +212,7 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
     IF iv_step = zif_abapgit_object=>gc_step_id-ddic AND ls_dd04v-datatype = 'REF'
       AND is_abapclass_or_abapinterface( ls_dd04v-domname ) = abap_true.
 
-      ls_dd04v-rollname = 'OBJECT'.
+      ls_dd04v-domname = 'OBJECT'.
     ELSEIF iv_step = zif_abapgit_object=>gc_step_id-late AND ls_dd04v-datatype <> 'REF'.
       RETURN. " already active
     ENDIF.

@@ -48,9 +48,9 @@ CLASS zcl_abapgit_object_ttyp IMPLEMENTATION.
                   CHANGING cg_data = ls_dd40v ).
 
     " DDIC Step: Replace REF TO class/interface with generic reference to avoid cyclic dependency
-    IF iv_step = zif_abapgit_object=>gc_step_id-ddic AND ls_dd40v-datatype = 'REF'.
+    IF iv_step = zif_abapgit_object=>gc_step_id-ddic AND ls_dd40v-rowkind = 'R'.
       ls_dd40v-rowtype = 'OBJECT'.
-    ELSEIF iv_step = zif_abapgit_object=>gc_step_id-late AND ls_dd40v-datatype <> 'REF'.
+    ELSEIF iv_step = zif_abapgit_object=>gc_step_id-late AND ls_dd40v-rowkind = 'R'.
       RETURN. " already active
     ENDIF.
 
