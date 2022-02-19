@@ -155,6 +155,8 @@ CLASS zcl_abapgit_object_cus0 IMPLEMENTATION.
         i_display    = abap_true
       CHANGING
         img_activity = lv_img_activity.
+
+    rv_exit = abap_true.
   ENDMETHOD.
 
 

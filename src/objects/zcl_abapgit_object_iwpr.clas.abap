@@ -95,6 +95,8 @@ CLASS zcl_abapgit_object_iwpr IMPLEMENTATION.
       WITH i_prname = ms_item-obj_name
       AND RETURN.
 
+    rv_exit = abap_true.
+
   ENDMETHOD.
 
 

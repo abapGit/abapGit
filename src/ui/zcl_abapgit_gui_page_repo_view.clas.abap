@@ -188,7 +188,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -609,7 +609,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         lo_persistence_user = zcl_abapgit_persistence_user=>get_instance( ).
 
         mv_key = iv_key.
-        mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+        mo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
         mv_cur_dir = '/'. " Root
 
         mv_hide_files = lo_persistence_user->get_hide_files( ).
@@ -812,7 +812,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     TRY.
         " Reinit, for the case of type change
-        mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
+        mo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
 
         mv_are_changes_recorded_in_tr = zcl_abapgit_factory=>get_sap_package( mo_repo->get_package( )
           )->are_changes_recorded_in_tr_req( ).

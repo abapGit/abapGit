@@ -171,9 +171,7 @@ CLASS zcl_abapgit_object_dial IMPLEMENTATION.
         object_not_found = 1
         OTHERS           = 2.
 
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
+    rv_exit = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
