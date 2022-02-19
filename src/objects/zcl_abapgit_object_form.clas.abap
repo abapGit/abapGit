@@ -387,6 +387,8 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
       iv_tcode   = 'SE71'
       it_bdcdata = lt_bdcdata ).
 
+    rv_exit = abap_true.
+
   ENDMETHOD.
 
 

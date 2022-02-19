@@ -115,6 +115,8 @@ CLASS zcl_abapgit_object_iwmo IMPLEMENTATION.
       iv_tcode   = '/IWBEP/REG_MODEL'
       it_bdcdata = lt_bdcdata ).
 
+    rv_exit = abap_true.
+
   ENDMETHOD.
 
 

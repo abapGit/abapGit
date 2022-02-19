@@ -1,47 +1,36 @@
 name: test
 
 on:
-  push:
   pull_request:
 
 jobs:
-  unit:
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-node@v2
       with:
         node-version: '16'
+    - name: npm install
+      run: |
+        npm install
+        npm run eslint
+        npm run merge
+        npm run merge.ci
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2
+      with:
+        node-version: '16'
+    - name: npm install
+      run: npm install
     - name: npm run unit
-      run: |
-        npm install
-        npm run unit
+      run: npm run unit
     - name: npm run coverage
-      run: |
-        npm run coverage
-    - name: Update coverage.abapgit.org
-      uses: peaceiris/actions-gh-pages@v3
-      if: github.ref == 'refs/heads/main' && github.repository == 'abapGit/abapGit'
-      with:
-        deploy_key: ${{ secrets.COVERAGE_DEPLOY_KEY }}
-        external_repository: abapGit/coverage.abapgit.org
-        user_name: 'github-actions[bot]'
-        user_email: 'github-actions[bot]@users.noreply.github.com'
-        publish_branch: main
-        cname: coverage.abapgit.org
-        force_orphan: true
-        publish_dir: ./coverage
-  integration:
-    needs: unit
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v2
-      with:
-        node-version: '16'
+      run: npm run coverage
     - name: npm run integration
-      run: |
-        npm install
-        npm run integration
+      run: npm run integration

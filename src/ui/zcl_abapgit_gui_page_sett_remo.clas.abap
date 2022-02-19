@@ -170,7 +170,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
 
 
   METHOD checkout_commit_build_list.
@@ -651,7 +651,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       " Remember key, switch, retrieve new instance (todo, refactor #2244)
       lv_key = ms_repo_current-key.
       mo_repo->switch_repo_type( ms_repo_new-offline ).
-      mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+      mo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
     ENDIF.
 
     IF mo_repo->is_offline( ) = abap_true.

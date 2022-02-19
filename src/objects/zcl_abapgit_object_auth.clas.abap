@@ -155,6 +155,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AUTH IMPLEMENTATION.
         EXPORTING
           id_field    = mv_fieldname
           id_wbo_mode = abap_false.
+      rv_exit = abap_true.
     ENDIF.
   ENDMETHOD.
 
