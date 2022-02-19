@@ -59,7 +59,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_services_git IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
 
 
   METHOD commit.
@@ -192,7 +192,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     DATA: lo_repo TYPE REF TO zcl_abapgit_repo.
 
-    lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
     lo_repo->refresh( ).
 
@@ -205,7 +205,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     DATA lo_repo TYPE REF TO zcl_abapgit_repo.
 
-    lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
     IF lo_repo->get_local_settings( )-write_protected = abap_true.
       zcx_abapgit_exception=>raise( 'Cannot pull. Local code is write-protected in repo settings' ).
