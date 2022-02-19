@@ -3,18 +3,18 @@ INTERFACE zif_abapgit_repo_srv
 
 
   TYPES:
-    ty_repo_list TYPE STANDARD TABLE OF REF TO zcl_abapgit_repo WITH DEFAULT KEY .
+    ty_repo_list TYPE STANDARD TABLE OF REF TO zif_abapgit_repo WITH DEFAULT KEY .
 
   METHODS delete
     IMPORTING
-      !io_repo TYPE REF TO zcl_abapgit_repo
+      !ii_repo TYPE REF TO zif_abapgit_repo
     RAISING
       zcx_abapgit_exception .
   METHODS get
     IMPORTING
       !iv_key        TYPE zif_abapgit_persistence=>ty_value
     RETURNING
-      VALUE(ro_repo) TYPE REF TO zcl_abapgit_repo
+      VALUE(ri_repo) TYPE REF TO zif_abapgit_repo
     RAISING
       zcx_abapgit_exception .
   METHODS is_repo_installed
@@ -26,11 +26,15 @@ INTERFACE zif_abapgit_repo_srv
     RAISING
       zcx_abapgit_exception .
   METHODS list
-    RETURNING VALUE(rt_list) TYPE ty_repo_list
-    RAISING zcx_abapgit_exception .
+    RETURNING
+      VALUE(rt_list) TYPE ty_repo_list
+    RAISING
+      zcx_abapgit_exception .
   METHODS list_favorites
-    RETURNING VALUE(rt_list) TYPE ty_repo_list
-    RAISING zcx_abapgit_exception .
+    RETURNING
+      VALUE(rt_list) TYPE ty_repo_list
+    RAISING
+      zcx_abapgit_exception .
   METHODS new_offline
     IMPORTING
       !iv_url            TYPE string
@@ -38,7 +42,7 @@ INTERFACE zif_abapgit_repo_srv
       !iv_folder_logic   TYPE string DEFAULT zif_abapgit_dot_abapgit=>c_folder_logic-full
       !iv_main_lang_only TYPE abap_bool DEFAULT abap_false
     RETURNING
-      VALUE(ro_repo)     TYPE REF TO zcl_abapgit_repo_offline
+      VALUE(ri_repo)     TYPE REF TO zif_abapgit_repo
     RAISING
       zcx_abapgit_exception .
   METHODS new_online
@@ -51,12 +55,12 @@ INTERFACE zif_abapgit_repo_srv
       !iv_ign_subpkg     TYPE abap_bool DEFAULT abap_false
       !iv_main_lang_only TYPE abap_bool DEFAULT abap_false
     RETURNING
-      VALUE(ro_repo)     TYPE REF TO zcl_abapgit_repo_online
+      VALUE(ri_repo)     TYPE REF TO zif_abapgit_repo
     RAISING
       zcx_abapgit_exception .
   METHODS purge
     IMPORTING
-      !io_repo      TYPE REF TO zcl_abapgit_repo
+      !ii_repo      TYPE REF TO zif_abapgit_repo
       !is_checks    TYPE zif_abapgit_definitions=>ty_delete_checks
     RETURNING
       VALUE(ri_log) TYPE REF TO zif_abapgit_log
@@ -80,7 +84,7 @@ INTERFACE zif_abapgit_repo_srv
       !iv_package    TYPE devclass
       !iv_ign_subpkg TYPE abap_bool DEFAULT abap_false
     EXPORTING
-      VALUE(eo_repo) TYPE REF TO zcl_abapgit_repo
+      VALUE(ei_repo) TYPE REF TO zif_abapgit_repo
       !ev_reason     TYPE string
     RAISING
       zcx_abapgit_exception .
@@ -88,7 +92,7 @@ INTERFACE zif_abapgit_repo_srv
     IMPORTING
       !iv_url    TYPE string
     EXPORTING
-      !eo_repo   TYPE REF TO zcl_abapgit_repo
+      !ei_repo   TYPE REF TO zif_abapgit_repo
       !ev_reason TYPE string
     RAISING
       zcx_abapgit_exception .

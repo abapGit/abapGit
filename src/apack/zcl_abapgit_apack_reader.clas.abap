@@ -48,7 +48,7 @@ CLASS zcl_abapgit_apack_reader DEFINITION
 
     TYPES:
       BEGIN OF ty_s_manifest_declaration,
-        clsname  TYPE seometarel-clsname,
+        clsname  TYPE seoclsname,
         devclass TYPE devclass,
       END OF ty_s_manifest_declaration .
 

@@ -71,7 +71,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
 
 
   METHOD build_where.
@@ -97,7 +97,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
 
     ms_control-page_title = 'Data'.
 
-    mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    mo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     mi_config = mo_repo->get_data_config( ).
 
   ENDMETHOD.
