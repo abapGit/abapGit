@@ -283,7 +283,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD ADD_ERRORS_AND_WARNINGS_TO_LOG.
+  METHOD add_errors_and_warnings_to_log.
 
     DATA: lt_lines      TYPE STANDARD TABLE OF trlog,
           lv_logname_db TYPE ddprh-protname.
