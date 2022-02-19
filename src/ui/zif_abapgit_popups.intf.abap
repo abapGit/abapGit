@@ -38,18 +38,19 @@ INTERFACE zif_abapgit_popups
       VALUE(rs_branch)    TYPE zif_abapgit_definitions=>ty_git_branch
     RAISING
       zcx_abapgit_exception .
+  TYPES ty_char1 TYPE c LENGTH 1.
   METHODS popup_to_confirm
     IMPORTING
       !iv_titlebar              TYPE clike
       !iv_text_question         TYPE clike
       !iv_text_button_1         TYPE clike DEFAULT 'Yes'
-      !iv_icon_button_1         TYPE icon-name DEFAULT space
+      !iv_icon_button_1         TYPE clike DEFAULT space
       !iv_text_button_2         TYPE clike DEFAULT 'No'
-      !iv_icon_button_2         TYPE icon-name DEFAULT space
-      !iv_default_button        TYPE char1 DEFAULT '1'
-      !iv_display_cancel_button TYPE char1 DEFAULT abap_true
+      !iv_icon_button_2         TYPE clike DEFAULT space
+      !iv_default_button        TYPE ty_char1 DEFAULT '1'
+      !iv_display_cancel_button TYPE ty_char1 DEFAULT abap_true
     RETURNING
-      VALUE(rv_answer)          TYPE char1
+      VALUE(rv_answer)          TYPE ty_char1
     RAISING
       zcx_abapgit_exception .
   METHODS popup_to_create_package
