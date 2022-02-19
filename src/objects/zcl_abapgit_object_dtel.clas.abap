@@ -209,11 +209,11 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
                   CHANGING cg_data = ls_dd04v ).
 
     " DDIC Step: Replace REF TO class/interface with generic reference to avoid cyclic dependency
-    IF iv_step = zif_abapgit_object=>gc_step_id-ddic AND ls_dd04v-datatype = 'REF'
+    IF iv_step = zif_abapgit_object=>gc_step_id-ddic AND ls_dd04v-refkind = 'R'
       AND is_abapclass_or_abapinterface( ls_dd04v-domname ) = abap_true.
 
       ls_dd04v-domname = 'OBJECT'.
-    ELSEIF iv_step = zif_abapgit_object=>gc_step_id-late AND ls_dd04v-datatype <> 'REF'.
+    ELSEIF iv_step = zif_abapgit_object=>gc_step_id-late AND ls_dd04v-refkind <> 'R'.
       RETURN. " already active
     ENDIF.
 
