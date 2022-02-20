@@ -98,6 +98,13 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
 
     DATA ls_cifkey TYPE seoclskey.
 
+    LOOP AT zcl_abapgit_objects_context=>gt_items TRANSPORTING NO FIELDS
+        WHERE obj_name = iv_reference_name
+          AND ( obj_type = 'CLAS' OR obj_type = 'INTF' ).
+      rv_abapclass_or_abapinterface = abap_true.
+      RETURN.
+    ENDLOOP.
+
     ls_cifkey-clsname = iv_reference_name.
 
     CALL FUNCTION 'SEO_CLIF_GET'
