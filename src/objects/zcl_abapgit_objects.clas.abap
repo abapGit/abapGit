@@ -626,7 +626,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     li_progress = zcl_abapgit_progress=>get_instance( lines( lt_results ) ).
 
     lt_items = map_results_to_items( lt_results ).
-    zcl_abapgit_objects_context=>gt_items = lt_items.
 
     check_objects_locked( iv_language = io_repo->get_dot_abapgit( )->get_main_language( )
                           it_items    = lt_items ).
