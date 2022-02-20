@@ -65,7 +65,7 @@ CLASS zcl_abapgit_objects_activation DEFINITION
         !ii_log TYPE REF TO zif_abapgit_log
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS add_errors_to_log
+    CLASS-METHODS add_errors_and_warnings_to_log
       IMPORTING
         !iv_logname TYPE ddmass-logname
         !ii_log     TYPE REF TO zif_abapgit_log
@@ -164,9 +164,12 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
       ENDIF.
 
       IF lv_rc > 0.
-        add_errors_to_log(
+        add_errors_and_warnings_to_log(
           iv_logname = lv_logname
           ii_log     = ii_log ).
+      ENDIF.
+
+      IF lv_rc > 4.
         zcx_abapgit_exception=>raise( 'Activation cancelled. Check the inactive objects.' ).
       ENDIF.
 
@@ -183,6 +186,8 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
 
   METHOD activate_new.
 
+    DATA: lt_objects TYPE TABLE OF dwinactiv.
+
     IF gt_objects IS INITIAL.
       RETURN.
     ENDIF.
@@ -193,7 +198,21 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
 
     ELSE.
 
-      activate_old( ii_log ).
+      " Activate transformations first
+      lt_objects = gt_objects.
+      DELETE gt_objects WHERE object <> 'XSLT'.
+      IF gt_objects IS NOT INITIAL.
+        activate_old( ii_log ).
+      ENDIF.
+
+      " Activate other objects
+      gt_objects = lt_objects.
+      DELETE gt_objects WHERE object = 'XSLT'.
+      IF gt_objects IS NOT INITIAL.
+        activate_old( ii_log ).
+      ENDIF.
+
+      gt_objects = lt_objects.
 
     ENDIF.
 
@@ -280,7 +299,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD add_errors_to_log.
+  METHOD add_errors_and_warnings_to_log.
 
     DATA: lt_lines      TYPE STANDARD TABLE OF trlog,
           lv_logname_db TYPE ddprh-protname.
@@ -306,12 +325,14 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
     ENDIF.
 
     " Only error messsages
-    DELETE lt_lines WHERE severity <> 'E'.
+    DELETE lt_lines WHERE severity <> 'E'
+                      AND severity <> 'W'.
     " Remove "Return code..." message
     DELETE lt_lines WHERE class = 'D0' AND number = '319'.
 
     LOOP AT lt_lines ASSIGNING <ls_line>.
-      ii_log->add( <ls_line>-line ).
+      ii_log->add( iv_msg  = <ls_line>-line
+                   iv_type = <ls_line>-severity ).
     ENDLOOP.
 
   ENDMETHOD.
