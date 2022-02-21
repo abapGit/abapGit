@@ -189,7 +189,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -658,6 +658,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
   METHOD get_item_class.
 
     DATA lt_class TYPE TABLE OF string.
+
+    IF iv_is_object_row = abap_true.
+      APPEND 'object_row' TO lt_class.
+    ELSE.
+      APPEND 'file_row' TO lt_class.
+    ENDIF.
 
     IF is_item-is_dir = abap_true.
       APPEND 'folder' TO lt_class.

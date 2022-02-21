@@ -225,6 +225,7 @@ div.log { color: var(--theme-greyscale-dark); }
   background-color: #64a8ff;
   color: #fff;
 }
+.dialog li.with-command input[type="button"]:hover,
 .dialog li.with-command input[type="submit"]:hover {
   background-color: #64a8ff;
   color: #fff;

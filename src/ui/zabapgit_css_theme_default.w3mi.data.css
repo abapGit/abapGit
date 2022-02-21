@@ -544,6 +544,7 @@ table.settings_tab input:focus {
   background-color: #64a8ff;
   color: #fff;
 }
+.dialog li.with-command input[type="button"]:hover,
 .dialog li.with-command input[type="submit"]:hover {
   background-color: #64a8ff;
   color: #fff;
