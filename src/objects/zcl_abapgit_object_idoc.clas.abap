@@ -217,6 +217,8 @@ CLASS zcl_abapgit_object_idoc IMPLEMENTATION.
       iv_tcode   = 'WE30'
       it_bdcdata = lt_bdcdata ).
 
+    rv_exit = abap_true.
+
   ENDMETHOD.
 
 

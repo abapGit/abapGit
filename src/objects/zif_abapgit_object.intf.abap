@@ -54,6 +54,8 @@ INTERFACE zif_abapgit_object
     RAISING
       zcx_abapgit_exception .
   METHODS jump
+    RETURNING
+      VALUE(rv_exit) TYPE abap_bool
     RAISING
       zcx_abapgit_exception .
   METHODS get_metadata

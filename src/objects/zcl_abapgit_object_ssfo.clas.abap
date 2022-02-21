@@ -390,6 +390,8 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
       iv_tcode   = 'SMARTFORMS'
       it_bdcdata = lt_bdcdata ).
 
+    rv_exit = abap_true.
+
   ENDMETHOD.
 
 

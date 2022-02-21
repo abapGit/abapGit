@@ -53,7 +53,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
 
 
   METHOD check_sapgui.
@@ -273,7 +273,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
     LOOP AT lt_repo_list ASSIGNING <lo_repo>.
 
       IF <lo_repo>->get_package( ) IN lt_r_package.
-        lo_repo = <lo_repo>.
+        lo_repo ?= <lo_repo>.
         EXIT.
       ENDIF.
 

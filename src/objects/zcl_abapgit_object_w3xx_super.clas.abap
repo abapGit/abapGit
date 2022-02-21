@@ -421,6 +421,8 @@ CLASS zcl_abapgit_object_w3xx_super IMPLEMENTATION.
       iv_tcode   = 'SMW0'
       it_bdcdata = lt_bdcdata ).
 
+    rv_exit = abap_true.
+
   ENDMETHOD.
 
 

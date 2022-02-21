@@ -343,6 +343,8 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
       iv_tcode   = 'SCDO'
       it_bdcdata = lt_bdcdata ).
 
+    rv_exit = abap_true.
+
   ENDMETHOD.
 
 

@@ -163,6 +163,8 @@ CLASS zcl_abapgit_object_styl IMPLEMENTATION.
       iv_tcode   = 'SE72'
       it_bdcdata = lt_bcdata ).
 
+    rv_exit = abap_true.
+
   ENDMETHOD.
 
 

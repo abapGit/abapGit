@@ -204,6 +204,8 @@ CLASS zcl_abapgit_object_ssst IMPLEMENTATION.
       iv_tcode   = 'SMARTSTYLES'
       it_bdcdata = lt_bcdata ).
 
+    rv_exit = abap_true.
+
   ENDMETHOD.
 
 

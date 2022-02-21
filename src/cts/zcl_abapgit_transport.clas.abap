@@ -64,7 +64,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_transport IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
 
 
   METHOD add_all_objects_to_trans_req.
@@ -147,7 +147,7 @@ CLASS zcl_abapgit_transport IMPLEMENTATION.
       <lv_package> TYPE devclass,
       <ls_object>  TYPE tadir.
 
-    lo_repo     = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo    ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     lv_package  = lo_repo->get_package( ).
     lt_packages = zcl_abapgit_factory=>get_sap_package( lv_package )->list_subpackages( ).
     INSERT lv_package INTO TABLE lt_packages.
@@ -292,6 +292,33 @@ CLASS zcl_abapgit_transport IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD show_log.
+
+    DATA: li_log     TYPE REF TO zif_abapgit_log,
+          lv_message TYPE string.
+    FIELD-SYMBOLS: <ls_log> TYPE sprot_u.
+
+    CREATE OBJECT li_log TYPE zcl_abapgit_log
+      EXPORTING
+        iv_title = iv_title.
+
+    LOOP AT it_log ASSIGNING <ls_log>.
+
+      MESSAGE ID <ls_log>-ag TYPE <ls_log>-severity NUMBER <ls_log>-msgnr
+       WITH <ls_log>-var1 <ls_log>-var2 <ls_log>-var3 <ls_log>-var4
+       INTO lv_message.
+
+      li_log->add(
+          iv_msg  = lv_message
+          iv_type = <ls_log>-severity ).
+
+    ENDLOOP.
+
+    zcl_abapgit_log_viewer=>show_log( li_log ).
+
+  ENDMETHOD.
+
+
   METHOD to_tadir.
     DATA: lt_requests TYPE trwbo_requests.
 
@@ -351,32 +378,4 @@ CLASS zcl_abapgit_transport IMPLEMENTATION.
       iv_show_log       = iv_show_log_popup ).
 
   ENDMETHOD.
-
-
-  METHOD show_log.
-
-    DATA: li_log     TYPE REF TO zif_abapgit_log,
-          lv_message TYPE string.
-    FIELD-SYMBOLS: <ls_log> TYPE sprot_u.
-
-    CREATE OBJECT li_log TYPE zcl_abapgit_log
-      EXPORTING
-        iv_title = iv_title.
-
-    LOOP AT it_log ASSIGNING <ls_log>.
-
-      MESSAGE ID <ls_log>-ag TYPE <ls_log>-severity NUMBER <ls_log>-msgnr
-       WITH <ls_log>-var1 <ls_log>-var2 <ls_log>-var3 <ls_log>-var4
-       INTO lv_message.
-
-      li_log->add(
-          iv_msg  = lv_message
-          iv_type = <ls_log>-severity ).
-
-    ENDLOOP.
-
-    zcl_abapgit_log_viewer=>show_log( li_log ).
-
-  ENDMETHOD.
-
 ENDCLASS.
