@@ -93,7 +93,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_clas IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -192,6 +192,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     IF lines( lt_lines ) = 0.
       mi_object_oriented_object_fct->delete_documentation(
+        iv_id          = 'CL'
         iv_object_name = lv_object
         iv_language    = mv_language ).
       RETURN.
@@ -199,6 +200,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     mi_object_oriented_object_fct->create_documentation(
       it_lines       = lt_lines
+      iv_id          = 'CL'
       iv_object_name = lv_object
       iv_language    = mv_language ).
 
@@ -208,6 +210,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     LOOP AT lt_i18n_lines INTO ls_i18n_lines.
       mi_object_oriented_object_fct->create_documentation(
         it_lines         = ls_i18n_lines-lines
+        iv_id            = 'CL'
         iv_object_name   = lv_object
         iv_language      = ls_i18n_lines-language
         iv_no_masterlang = abap_true ).
@@ -351,8 +354,8 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     ENDIF.
 
     lt_descriptions = mi_object_oriented_object_fct->read_descriptions(
-      iv_obejct_name = iv_clsname
-      iv_language = lv_language ).
+      iv_object_name = iv_clsname
+      iv_language    = lv_language ).
 
     IF lines( lt_descriptions ) = 0.
       RETURN.
@@ -367,13 +370,17 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
   METHOD serialize_docu.
 
     DATA: lt_lines      TYPE tlinetab,
+          lv_object     TYPE dokhl-object,
           lv_langu      TYPE sy-langu,
           lt_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_lines,
           ls_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_line.
 
+    lv_object = iv_clsname.
+
     lt_lines = mi_object_oriented_object_fct->read_documentation(
-      iv_class_name = iv_clsname
-      iv_language   = mv_language ).
+      iv_id          = 'CL'
+      iv_object_name = lv_object
+      iv_language    = mv_language ).
     IF lines( lt_lines ) > 0.
       ii_xml->add( iv_name = 'LINES'
                    ig_data = lt_lines ).
@@ -386,8 +393,9 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     LOOP AT it_langu_additional INTO lv_langu.
 
       lt_lines = mi_object_oriented_object_fct->read_documentation(
-        iv_class_name = iv_clsname
-        iv_language   = lv_langu ).
+        iv_id          = 'CL'
+        iv_object_name = lv_object
+        iv_language    = lv_langu ).
 
       IF lines( lt_lines ) > 0.
         CLEAR ls_i18n_lines.
