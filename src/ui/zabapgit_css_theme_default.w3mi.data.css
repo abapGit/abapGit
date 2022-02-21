@@ -146,6 +146,9 @@ table.repo_tab {
 }
 .repo_tab td {
   color: #333;
+}
+
+.repo_tab tr.object_row{
   border-top-color: var(--theme-table-border-color);
 }
 .repo_tab .inactive      { color: orange; }

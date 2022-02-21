@@ -278,7 +278,7 @@ table.repo_tab {
   border: 1px solid;
   border-radius: 3px;
   width: 100%;
-  line-height: 1.5;
+  line-height: 1.2;
 }
 .repo_tab th {
   text-align: left;
@@ -287,7 +287,6 @@ table.repo_tab {
   font-weight: normal;
 }
 .repo_tab td {
-  border-top: 1px solid;
   vertical-align: middle;
   padding-top: 2px;
   padding-bottom: 2px;
@@ -320,6 +319,10 @@ table.repo_tab {
 .repo_tab td.files {
   padding-left: 0.5em;
   line-height: 1.5;
+}
+
+.repo_tab tr.object_row{
+  border-top: 1px solid;
 }
 
 .repo_tab td.cmd, .repo_tab th.cmd {
