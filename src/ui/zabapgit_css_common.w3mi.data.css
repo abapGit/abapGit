@@ -278,7 +278,7 @@ table.repo_tab {
   border: 1px solid;
   border-radius: 3px;
   width: 100%;
-  line-height: 1.5;
+  line-height: 1.2;
 }
 .repo_tab th {
   text-align: left;
@@ -287,7 +287,6 @@ table.repo_tab {
   font-weight: normal;
 }
 .repo_tab td {
-  border-top: 1px solid;
   vertical-align: middle;
   padding-top: 2px;
   padding-bottom: 2px;
@@ -320,6 +319,10 @@ table.repo_tab {
 .repo_tab td.files {
   padding-left: 0.5em;
   line-height: 1.5;
+}
+
+.repo_tab tr.object_row{
+  border-top: 1px solid;
 }
 
 .repo_tab td.cmd, .repo_tab th.cmd {
@@ -1162,6 +1165,7 @@ settings_tab tr:first-child td { border-top: 0px; }
   border-radius: 3px;
   font-size: smaller;
 }
+.dialog li.dialog-commands input[type="button"],
 .dialog li.dialog-commands input[type="submit"] {
   border: 1px solid;
   padding: 6px 12px;
@@ -1193,6 +1197,7 @@ settings_tab tr:first-child td { border-top: 0px; }
 .dialog input[type="checkbox"] + label {
   display: inline-block;
 }
+.dialog input[type="password"],
 .dialog input[type="text"] {
   width: 100%;
   box-sizing: border-box;
@@ -1252,6 +1257,7 @@ settings_tab tr:first-child td { border-top: 0px; }
 .dialog li.with-command div.command-container {
   display: table-cell;
 }
+.dialog li.with-command input[type="button"],
 .dialog li.with-command input[type="submit"] {
   height: 2.5em;
 }
