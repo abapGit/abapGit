@@ -85,9 +85,10 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS get_item_class
       IMPORTING
-        !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
+        !is_item         TYPE zif_abapgit_definitions=>ty_repo_item
+        iv_is_object_row TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(rv_html) TYPE string .
+        VALUE(rv_html)   TYPE string .
     METHODS get_item_icon
       IMPORTING
         !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
@@ -188,7 +189,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -658,6 +659,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
     DATA lt_class TYPE TABLE OF string.
 
+    IF iv_is_object_row = abap_true.
+      APPEND 'object_row' TO lt_class.
+    ELSE.
+      APPEND 'file_row' TO lt_class.
+    ENDIF.
+
     IF is_item-is_dir = abap_true.
       APPEND 'folder' TO lt_class.
     ELSEIF is_item-changes > 0.
@@ -975,7 +982,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ri_html->add( |<tr{ get_item_class( is_item ) }>| ).
+    ri_html->add( |<tr{ get_item_class( is_item = is_item
+                                        iv_is_object_row = abap_true ) }>| ).
 
     IF is_item-obj_name IS INITIAL AND is_item-is_dir = abap_false.
       ri_html->add( |<td colspan="2"></td>|
