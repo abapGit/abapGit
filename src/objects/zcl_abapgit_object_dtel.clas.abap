@@ -21,11 +21,11 @@ CLASS zcl_abapgit_object_dtel DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     CONSTANTS c_longtext_id_dtel TYPE dokil-id VALUE 'DE' ##NO_TEXT.
 
-    METHODS is_abapclass_or_abapinterface
+    METHODS is_ref_to_class_or_interface
       IMPORTING
-        !iv_reference_name                   TYPE clike
+        !is_dd04v        TYPE dd04v
       RETURNING
-        VALUE(rv_abapclass_or_abapinterface) TYPE abap_bool .
+        VALUE(rv_result) TYPE abap_bool .
     METHODS serialize_texts
       IMPORTING
         !ii_xml TYPE REF TO zif_abapgit_xml_output
@@ -94,24 +94,14 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD is_abapclass_or_abapinterface.
+  METHOD is_ref_to_class_or_interface.
 
-    DATA ls_cifkey TYPE seoclskey.
-
-    ls_cifkey-clsname = iv_reference_name.
-
-    CALL FUNCTION 'SEO_CLIF_GET'
-      EXPORTING
-        cifkey       = ls_cifkey
-      EXCEPTIONS
-        not_existing = 1
-        deleted      = 2
-        model_only   = 3
-        OTHERS       = 4.
-
-    IF sy-subrc = 0.
-      rv_abapclass_or_abapinterface = abap_true.
+    IF is_dd04v-refkind = 'R'
+        AND ( is_dd04v-reftype = 'C'
+           OR is_dd04v-reftype = 'I' ).
+      rv_result = abap_true.
     ENDIF.
+
   ENDMETHOD.
 
 
@@ -209,11 +199,9 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
                   CHANGING cg_data = ls_dd04v ).
 
     " DDIC Step: Replace REF TO class/interface with generic reference to avoid cyclic dependency
-    IF iv_step = zif_abapgit_object=>gc_step_id-ddic AND ls_dd04v-refkind = 'R'
-      AND is_abapclass_or_abapinterface( ls_dd04v-domname ) = abap_true.
-
+    IF iv_step = zif_abapgit_object=>gc_step_id-ddic AND is_ref_to_class_or_interface( ls_dd04v ) = abap_true.
       ls_dd04v-domname = 'OBJECT'.
-    ELSEIF iv_step = zif_abapgit_object=>gc_step_id-late AND ls_dd04v-refkind <> 'R'.
+    ELSEIF iv_step = zif_abapgit_object=>gc_step_id-late AND is_ref_to_class_or_interface( ls_dd04v ) = abap_false.
       RETURN. " already active
     ENDIF.
 

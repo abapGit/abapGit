@@ -146,6 +146,9 @@ table.repo_tab {
 }
 .repo_tab td {
   color: #333;
+}
+
+.repo_tab tr.object_row{
   border-top-color: var(--theme-table-border-color);
 }
 .repo_tab .inactive      { color: orange; }
@@ -540,6 +543,7 @@ table.settings_tab input:focus {
   background-color: #64a8ff;
   color: #fff;
 }
+.dialog li.with-command input[type="button"]:hover,
 .dialog li.with-command input[type="submit"]:hover {
   background-color: #64a8ff;
   color: #fff;
