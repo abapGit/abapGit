@@ -998,20 +998,22 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                  && '</td>' ).
     ELSE.
 
-      " Command
-      ri_html->add( '<td class="status">' ).
-      ri_html->add( get_item_icon( is_item ) ).
-      IF mo_repo->has_remote_source( ) = abap_true.
-        ri_html->add( render_item_command( is_item ) ).
+      IF mv_show_folders = abap_true OR mv_hide_files = abap_true.
+        " Command
+        ri_html->add( '<td class="status">' ).
+
+        IF mo_repo->has_remote_source( ) = abap_true.
+          ri_html->add( render_item_command( is_item ) ).
+        ENDIF.
+        ri_html->add( '</td>' ).
       ENDIF.
-      ri_html->add( '</td>' ).
 
       IF is_item-is_dir = abap_true. " Subdir
         lv_link = build_dir_jump_link( is_item-path ).
         ri_html->add( |<td class="dir" colspan="2">{ lv_link }</td>| ).
       ELSE.
         lv_link = build_obj_jump_link( is_item ).
-        ri_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
+        ri_html->add( |<td class="type">{ get_item_icon( is_item ) } { is_item-obj_type }</td>| ).
         ri_html->add( |<td class="object">{ lv_link } { build_inactive_object_code( is_item ) }</td>| ).
       ENDIF.
     ENDIF.
@@ -1084,7 +1086,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ri_html->add( '<div>' ).
     IF is_file-is_changed = abap_true.
       lv_difflink = zcl_abapgit_html_action_utils=>file_encode(
         iv_key  = mo_repo->get_key( )
@@ -1095,7 +1096,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ELSE.
       ri_html->add( '&nbsp;' ).
     ENDIF.
-    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 
@@ -1117,20 +1117,22 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       ri_html->add( |<tr{ get_item_class( is_item ) }>| ).
 
       " Command
-      ri_html->add( '<td class="status">' ).
-      IF mo_repo->has_remote_source( ) = abap_true.
-        ri_html->add( render_file_command( ls_file ) ).
-      ENDIF.
-      ri_html->add( '</td>' ).
+*      ri_html->add( '<td class="status">' ).
+*      IF mo_repo->has_remote_source( ) = abap_true.
+*      ENDIF.
+*      ri_html->add( '</td>' ).
 
       ri_html->add( |<td class="type"></td>| ).
       ri_html->add( |<td class="filename darkgrey">| ).
 
+      ri_html->add( `<div>` ).
+      ri_html->add( render_file_command( ls_file ) ).
       IF mv_show_folders = abap_true.
-        ri_html->add( |<div>{ li_exit->adjust_display_filename( ls_file-filename ) }</div>| ).
+        ri_html->add( |{ li_exit->adjust_display_filename( ls_file-filename ) }| ).
       ELSE.
-        ri_html->add( |<div>{ li_exit->adjust_display_filename( ls_file-path && ls_file-filename ) }</div>| ).
+        ri_html->add( |{ li_exit->adjust_display_filename( ls_file-path && ls_file-filename ) }| ).
       ENDIF.
+      ri_html->add( `</div>` ).
 
       ri_html->add( |</td>| ).
 
@@ -1186,11 +1188,13 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ls_col_spec-tech_name = 'LSTATE'.
-    ls_col_spec-display_name = 'Status'.
-    ls_col_spec-allow_order_by = abap_true.
-    ls_col_spec-css_class = 'status'.
-    APPEND ls_col_spec TO lt_col_spec.
+    IF mv_show_folders = abap_true OR mv_hide_files = abap_true.
+      ls_col_spec-tech_name = 'LSTATE'.
+      ls_col_spec-display_name = 'Status'.
+      ls_col_spec-allow_order_by = abap_true.
+      ls_col_spec-css_class = 'status'.
+      APPEND ls_col_spec TO lt_col_spec.
+    ENDIF.
 
     CLEAR ls_col_spec.
     ls_col_spec-tech_name = 'OBJ_TYPE'.
