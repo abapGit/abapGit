@@ -245,7 +245,6 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
     DATA:
       ls_vseointerf         TYPE vseointerf,
       ls_clskey             TYPE seoclskey,
-      lv_interfacepool_name TYPE seoclsname,
       lt_langu_additional   TYPE zif_abapgit_lang_definitions=>ty_langus.
 
     ls_clskey-clsname = ms_item-obj_name.
@@ -265,17 +264,14 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
     io_xml->add( iv_name = 'VSEOINTERF'
                  ig_data = ls_vseointerf ).
 
-    lv_interfacepool_name = cl_oo_classname_service=>get_interfacepool_name( |{ ms_item-obj_name }| ).
-
-    " Table d010tinf stores info. on languages in which program is maintained
-    " Select all active translations of program texts
+    " Select all active translations of documentation
     " Skip main language - it was already serialized
-    SELECT DISTINCT language
+    SELECT DISTINCT langu
       INTO TABLE lt_langu_additional
-      FROM d010tinf
-      WHERE r3state  = 'A'
-        AND prog     = lv_interfacepool_name
-        AND language <> mv_language.
+      FROM dokhl
+      WHERE id     = 'IF'
+        AND object = ls_clskey-clsname
+        AND langu  <> mv_language.
 
     serialize_docu( ii_xml              = io_xml
                     iv_clsname          = ls_clskey-clsname

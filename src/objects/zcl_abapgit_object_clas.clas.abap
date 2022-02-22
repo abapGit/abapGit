@@ -538,6 +538,13 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
       serialize_sotr( ii_xml ).
     ENDIF.
 
+    SELECT DISTINCT langu
+      INTO TABLE lt_langu_additional
+      FROM dokhl
+      WHERE id     = 'CL'
+        AND object = ls_clskey-clsname
+        AND langu  <> mv_language.
+
     serialize_docu( ii_xml              = ii_xml
                     iv_clsname          = ls_clskey-clsname
                     it_langu_additional = lt_langu_additional ).
