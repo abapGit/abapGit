@@ -73,12 +73,12 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
-    METHODS render_item_command
+    METHODS render_item_status
       IMPORTING
         !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
-    METHODS render_file_command
+    METHODS render_file_status
       IMPORTING
         !is_file       TYPE zif_abapgit_definitions=>ty_repo_file
       RETURNING
@@ -184,6 +184,9 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
     METHODS order_files
       CHANGING
         ct_files TYPE zif_abapgit_definitions=>ty_repo_file_tt.
+    METHODS render_repo_list_footer
+      IMPORTING
+        ii_html TYPE REF TO zif_abapgit_html.
 
 ENDCLASS.
 
@@ -566,8 +569,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                           iv_act = |{ zif_abapgit_definitions=>c_action-git_tag_create }?key={ mv_key }| ).
     ro_tag_dropdown->add( iv_txt = 'Delete'
                           iv_act = |{ zif_abapgit_definitions=>c_action-git_tag_delete }?key={ mv_key }| ).
-
-
   ENDMETHOD.
 
 
@@ -578,19 +579,16 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ro_toolbar->add(
       iv_txt = 'Changes First'
       iv_chk = mv_diff_first
-      iv_act = c_actions-toggle_diff_first ).
-
-    ro_toolbar->add(
+      iv_act = c_actions-toggle_diff_first
+    )->add(
       iv_txt = 'Changes Only'
       iv_chk = mv_changes_only
-      iv_act = c_actions-toggle_changes ).
-
-    ro_toolbar->add(
+      iv_act = c_actions-toggle_changes
+    )->add(
       iv_txt = 'File Paths'
       iv_chk = boolc( NOT mv_hide_files = abap_true )
-      iv_act = c_actions-toggle_hide_files ).
-
-    ro_toolbar->add(
+      iv_act = c_actions-toggle_hide_files
+    )->add(
       iv_txt = 'Folders'
       iv_chk = mv_show_folders
       iv_act = c_actions-toggle_folders ).
@@ -904,14 +902,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                                        iv_render_transports = mv_are_changes_recorded_in_tr ) ).
           ENDLOOP.
 
-          IF mv_changes_only = abap_true.
-            ri_html->add( `<tfoot><tr><td class="grey" colspan="5">` ).
-            ri_html->add( `(Only changes are shown. ` ).
-            ri_html->add( ri_html->a(
-              iv_txt   = |Show All|
-              iv_act   = |{ c_actions-toggle_changes }| ) ).
-            ri_html->add( `)</td></tr></tfoot>` ).
-          ENDIF.
+          render_repo_list_footer( ri_html ).
 
           ri_html->add( '</table>' ).
         ENDIF.
@@ -998,15 +989,13 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                  && '</td>' ).
     ELSE.
 
-      IF mv_show_folders = abap_true OR mv_hide_files = abap_true.
-        " Command
-        ri_html->add( '<td class="status">' ).
+      " Command
+      ri_html->add( '<td class="status">' ).
 
-        IF mo_repo->has_remote_source( ) = abap_true.
-          ri_html->add( render_item_command( is_item ) ).
-        ENDIF.
-        ri_html->add( '</td>' ).
+      IF mo_repo->has_remote_source( ) = abap_true.
+        ri_html->add( render_item_status( is_item ) ).
       ENDIF.
+      ri_html->add( '</td>' ).
 
       IF is_item-is_dir = abap_true. " Subdir
         lv_link = build_dir_jump_link( is_item-path ).
@@ -1046,32 +1035,32 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_item_command.
+  METHOD render_item_status.
 
     DATA: lv_difflink TYPE string,
           ls_file     LIKE LINE OF is_item-files.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    IF is_item-is_dir = abap_true. " Directory
+    IF is_item-is_dir = abap_true AND is_item-changes > 0. " Directory
       ri_html->add( '<div>' ).
-      ri_html->add( |<span class="grey">{ is_item-changes } changes</span>| ).
       ri_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state( iv_lstate = is_item-lstate
                                                                   iv_rstate = is_item-rstate ) ).
+      ri_html->add( |<span class="grey">({ is_item-changes })</span>| ).
       ri_html->add( '</div>' ).
 
     ELSEIF is_item-changes > 0.
-      IF mv_hide_files = abap_true AND is_item-obj_name IS NOT INITIAL.
+      IF is_item-obj_name IS NOT INITIAL.
 
         lv_difflink = zcl_abapgit_html_action_utils=>obj_encode(
           iv_key    = mo_repo->get_key( )
           ig_object = is_item ).
 
         ri_html->add( '<div>' ).
-        ri_html->add_a( iv_txt = |diff ({ is_item-changes })|
+        ri_html->add_a( iv_txt = zcl_abapgit_gui_chunk_lib=>render_item_state( iv_lstate = is_item-lstate
+                                                                               iv_rstate = is_item-rstate )
                         iv_act = |{ zif_abapgit_definitions=>c_action-go_file_diff }?{ lv_difflink }| ).
-        ri_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state( iv_lstate = is_item-lstate
-                                                                    iv_rstate = is_item-rstate ) ).
+        ri_html->add( |({ is_item-changes })| ).
         ri_html->add( '</div>' ).
 
       ENDIF.
@@ -1080,7 +1069,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD render_file_command.
+  METHOD render_file_status.
 
     DATA: lv_difflink TYPE string.
 
@@ -1116,17 +1105,13 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     LOOP AT is_item-files INTO ls_file.
       ri_html->add( |<tr{ get_item_class( is_item ) }>| ).
 
-      " Command
-*      ri_html->add( '<td class="status">' ).
-*      IF mo_repo->has_remote_source( ) = abap_true.
-*      ENDIF.
-*      ri_html->add( '</td>' ).
-
+      ri_html->add( |<td class="status">| ).
+      ri_html->add( render_file_status( ls_file ) ).
+      ri_html->add( |</td>| ).
       ri_html->add( |<td class="type"></td>| ).
       ri_html->add( |<td class="filename darkgrey">| ).
 
       ri_html->add( `<div>` ).
-      ri_html->add( render_file_command( ls_file ) ).
       IF mv_show_folders = abap_true.
         ri_html->add( |{ li_exit->adjust_display_filename( ls_file-filename ) }| ).
       ELSE.
@@ -1188,13 +1173,11 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    IF mv_show_folders = abap_true OR mv_hide_files = abap_true.
-      ls_col_spec-tech_name = 'LSTATE'.
-      ls_col_spec-display_name = 'Status'.
-      ls_col_spec-allow_order_by = abap_true.
-      ls_col_spec-css_class = 'status'.
-      APPEND ls_col_spec TO lt_col_spec.
-    ENDIF.
+    ls_col_spec-tech_name = 'LSTATE'.
+    ls_col_spec-display_name = 'Status'.
+    ls_col_spec-allow_order_by = abap_true.
+    ls_col_spec-css_class = 'status'.
+    APPEND ls_col_spec TO lt_col_spec.
 
     CLEAR ls_col_spec.
     ls_col_spec-tech_name = 'OBJ_TYPE'.
@@ -1256,6 +1239,16 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD render_repo_list_footer.
+    IF mv_changes_only = abap_true.
+      ii_html->add( `<tfoot><tr><td class="grey" colspan="5">` ).
+      ii_html->add( `(Only changes are shown. ` ).
+      ii_html->add( ii_html->a(
+        iv_txt   = |Show All|
+        iv_act   = |{ c_actions-toggle_changes }| ) ).
+      ii_html->add( `)</td></tr></tfoot>` ).
+    ENDIF.
+  ENDMETHOD.
 
   METHOD render_scripts.
 
