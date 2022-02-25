@@ -18,6 +18,12 @@ jobs:
         npm run eslint
         npm run merge
         npm run merge.ci
+    - name: Upload build artifact
+      uses: actions/upload-artifact@main
+      with:
+        name: zabapgit_standalone.abap
+        path: ./zabapgit.abap
+        retention-days: 7
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
