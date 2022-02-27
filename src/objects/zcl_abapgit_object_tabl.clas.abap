@@ -750,7 +750,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       ENDIF.
 
       " DDIC Step: Replace REF TO class/interface with generic reference to avoid cyclic dependency
-      LOOP AT lt_dd03p ASSIGNING <ls_dd03p> WHERE datatype = 'REF'.
+      LOOP AT lt_dd03p ASSIGNING <ls_dd03p> WHERE comptype = 'R' AND ( reftype = 'C' OR reftype = 'I' ).
         IF iv_step = zif_abapgit_object=>gc_step_id-ddic.
           <ls_dd03p>-rollname = 'OBJECT'.
         ELSE.
