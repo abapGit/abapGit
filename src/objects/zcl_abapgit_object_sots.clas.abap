@@ -40,7 +40,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_sots IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_SOTS IMPLEMENTATION.
 
 
   METHOD create_sots.
@@ -104,9 +104,18 @@ CLASS zcl_abapgit_object_sots IMPLEMENTATION.
 
   METHOD get_raw_text_filename.
 
+    DATA lv_langu TYPE string.
+
+    " Lower case language codes can cause duplicate filenames therefore add suffix to make them unique
+    " Note: Using ISO code would be better but is not compatible with existing files
+    lv_langu = is_entry-langu.
+    IF lv_langu = to_lower( lv_langu ).
+      lv_langu = lv_langu && '-'.
+    ENDIF.
+
     rv_filename =
         to_lower( |{ is_entry-concept }_|
-               && |{ is_entry-langu   }_|
+               && |{ lv_langu         }_|
                && |{ is_entry-object  }_|
                && |{ is_entry-lfd_num }| ).
 
