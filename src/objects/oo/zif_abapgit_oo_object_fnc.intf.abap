@@ -69,6 +69,7 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
     create_documentation
       IMPORTING
         it_lines         TYPE tlinetab
+        iv_id            TYPE dokhl-id
         iv_object_name   TYPE dokhl-object
         iv_language      TYPE spras
         iv_no_masterlang TYPE abap_bool OPTIONAL
@@ -76,6 +77,7 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
         zcx_abapgit_exception,
     delete_documentation
       IMPORTING
+        iv_id          TYPE dokhl-id
         iv_object_name TYPE dokhl-object
         iv_language    TYPE spras
       RAISING
@@ -126,7 +128,8 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
         VALUE(rt_text_pool) TYPE textpool_table,
     read_documentation
       IMPORTING
-        iv_class_name   TYPE seoclsname
+        iv_id           TYPE dokhl-id
+        iv_object_name  TYPE dokhl-object
         iv_language     TYPE spras
       RETURNING
         VALUE(rt_lines) TYPE tlinetab,
@@ -138,7 +141,7 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
         zcx_abapgit_exception,
     read_descriptions
       IMPORTING
-        iv_obejct_name         TYPE seoclsname
+        iv_object_name         TYPE seoclsname
         iv_language            TYPE spras OPTIONAL
       RETURNING
         VALUE(rt_descriptions) TYPE ty_seocompotx_tt,
