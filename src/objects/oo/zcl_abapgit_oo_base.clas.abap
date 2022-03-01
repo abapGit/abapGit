@@ -21,7 +21,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_oo_base IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OO_BASE IMPLEMENTATION.
 
 
   METHOD convert_attrib_to_vseoattrib.
@@ -51,7 +51,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
   METHOD zif_abapgit_oo_object_fnc~create_documentation.
     CALL FUNCTION 'DOCU_UPD'
       EXPORTING
-        id            = 'CL'
+        id            = iv_id
         langu         = iv_language
         object        = iv_object_name
         no_masterlang = iv_no_masterlang
@@ -66,10 +66,21 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_oo_object_fnc~create_sotr.
+    ASSERT 0 = 1. "Subclass responsibility
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_oo_object_fnc~delete.
+    ASSERT 0 = 1. "Subclass responsibility
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_oo_object_fnc~delete_documentation.
     CALL FUNCTION 'DOCU_DEL'
       EXPORTING
-        id       = 'CL'
+        id       = iv_id
         langu    = iv_language
         object   = iv_object_name
         typ      = 'E'
@@ -79,16 +90,6 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'Error from DOCU_DEL' ).
     ENDIF.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_oo_object_fnc~create_sotr.
-    ASSERT 0 = 1. "Subclass responsibility
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_oo_object_fnc~delete.
-    ASSERT 0 = 1. "Subclass responsibility
   ENDMETHOD.
 
 
@@ -147,14 +148,14 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
     IF iv_language IS INITIAL.
       " load all languages
       SELECT * FROM seocompotx INTO TABLE rt_descriptions
-             WHERE clsname   = iv_obejct_name
+             WHERE clsname   = iv_object_name
                AND descript <> ''
              ORDER BY PRIMARY KEY.                        "#EC CI_SUBRC
     ELSE.
       " load main language
       SELECT * FROM seocompotx INTO TABLE rt_descriptions
-              WHERE clsname   = iv_obejct_name
-                AND langu = iv_language
+              WHERE clsname   = iv_object_name
+                AND langu     = iv_language
                 AND descript <> ''
               ORDER BY PRIMARY KEY.                       "#EC CI_SUBRC
     ENDIF.
@@ -163,16 +164,13 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
 
   METHOD zif_abapgit_oo_object_fnc~read_documentation.
     DATA: lv_state  TYPE dokstate,
-          lv_object TYPE dokhl-object,
           lt_lines  TYPE tlinetab.
-
-    lv_object = iv_class_name.
 
     CALL FUNCTION 'DOCU_GET'
       EXPORTING
-        id                     = 'CL'
+        id                     = iv_id
         langu                  = iv_language
-        object                 = lv_object
+        object                 = iv_object_name
         version_active_or_last = space " retrieve active version
       IMPORTING
         dokstate               = lv_state
