@@ -56,6 +56,9 @@ CLASS zcl_abapgit_object_webi DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       RAISING
         zcx_abapgit_exception
         cx_ws_md_exception.
+    METHODS sort
+      CHANGING
+        cs_webi TYPE ty_webi.
 
 ENDCLASS.
 
@@ -503,10 +506,7 @@ CLASS zcl_abapgit_object_webi IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    SORT ls_webi-pveptype BY
-      vepname ASCENDING
-      version ASCENDING
-      typename ASCENDING.
+    sort( CHANGING cs_webi = ls_webi ).
 
     lv_name = ms_item-obj_name.
     TRY.
@@ -553,4 +553,26 @@ CLASS zcl_abapgit_object_webi IMPLEMENTATION.
       io_xml      = io_xml ).
 
   ENDMETHOD.
+
+  METHOD sort.
+    SORT cs_webi-pvepheader BY vepname version.
+    SORT cs_webi-pvepfunction BY vepname version function.
+    SORT cs_webi-pvepfault BY vepname version function fault.
+    SORT cs_webi-pvepparameter BY vepname version function vepparam vepparamtype.
+    SORT cs_webi-pveptype BY vepname version typename.
+    SORT cs_webi-pvepelemtype BY vepname version typename.
+    SORT cs_webi-pveptabletype BY vepname version typename.
+    SORT cs_webi-pvepstrutype BY vepname version typename fieldpos.
+    SORT cs_webi-pveptypesoapext BY vepname version typename.
+    SORT cs_webi-pvepeletypsoap BY vepname version typename assign_type assign_data1 assign_data2.
+    SORT cs_webi-pveptabtypsoap BY vepname version typename.
+    SORT cs_webi-pvepfuncsoapext BY vepname version function.
+    SORT cs_webi-pvepfieldref BY vepname version function vepparam vepparamtype strucid fieldname.
+    SORT cs_webi-pvependpoint BY relid vepname version sortfield.
+    SORT cs_webi-pvepvisoapext BY vepname version.
+    SORT cs_webi-pvepparasoapext BY vepname version function vepparam vepparamtype.
+    SORT cs_webi-pwsheader BY wsname version.
+    SORT cs_webi-pwssoapprop BY wsname version feature soapapp funcref propnum.
+  ENDMETHOD.
+
 ENDCLASS.
