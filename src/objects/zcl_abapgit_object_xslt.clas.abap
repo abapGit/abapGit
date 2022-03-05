@@ -99,8 +99,14 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
     DATA: lv_source     TYPE string,
           lo_xslt       TYPE REF TO cl_o2_api_xsltdesc,
           lv_len        TYPE i,
-          ls_attributes TYPE o2xsltattr,
-          lt_errors     type o2xslterrt.
+          ls_attributes TYPE o2xsltattr.
+
+    " Transformation might depend on other objects like a class
+    " We attempt to activate it in late step
+    IF iv_step = zif_abapgit_object=>gc_step_id-late.
+      zcl_abapgit_objects_activation=>add_item( ms_item ).
+      RETURN.
+    ENDIF.
 
     IF zif_abapgit_object~exists( ) = abap_true.
       zif_abapgit_object~delete( iv_package   = iv_package
@@ -153,21 +159,7 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
 
     lo_xslt->set_changeable( abap_false ).
 
-    lo_xslt->activate(
-      EXPORTING
-        i_force             = abap_true
-        i_suppress_load_gen = abap_true
-      IMPORTING
-        e_error_list        = lt_errors
-      EXCEPTIONS
-        generate_error      = 1
-        storage_error       = 2
-        syntax_errors       = 3
-        xtc_not_available   = 4
-        OTHERS              = 5 ).
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from XSLT activate, { sy-subrc }| ).
-    ENDIF.
+    zcl_abapgit_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.
 
@@ -191,6 +183,7 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
   ENDMETHOD.
 
 
