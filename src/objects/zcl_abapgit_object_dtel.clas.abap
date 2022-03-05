@@ -198,13 +198,6 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'DD04V'
                   CHANGING cg_data = ls_dd04v ).
 
-    " DDIC Step: Replace REF TO class/interface with generic reference to avoid cyclic dependency
-    IF iv_step = zif_abapgit_object=>gc_step_id-ddic AND is_ref_to_class_or_interface( ls_dd04v ) = abap_true.
-      ls_dd04v-domname = 'OBJECT'.
-    ELSEIF iv_step = zif_abapgit_object=>gc_step_id-late AND is_ref_to_class_or_interface( ls_dd04v ) = abap_false.
-      RETURN. " already active
-    ENDIF.
-
     corr_insert( iv_package = iv_package
                  ig_object_class = 'DICT' ).
 
@@ -265,7 +258,6 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
-    APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
   ENDMETHOD.
 
 

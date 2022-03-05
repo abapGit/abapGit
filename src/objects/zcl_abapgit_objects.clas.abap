@@ -866,6 +866,12 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_step>    TYPE LINE OF zif_abapgit_objects=>ty_step_data_tt.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
+    <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-pre_ddic.
+    <ls_step>-descr        = 'Create empty classes/interfaces used by DDIC'.
+    <ls_step>-syntax_check = abap_false.
+    <ls_step>-order        = 0.
+
+    APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
     <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-ddic.
     <ls_step>-descr        = 'Deserialize DDIC Objects'.
     <ls_step>-syntax_check = abap_false.

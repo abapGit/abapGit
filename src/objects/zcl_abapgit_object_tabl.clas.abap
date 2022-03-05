@@ -749,15 +749,6 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
         <lg_roworcolst> = 'C'. "Reverse fix from serialize
       ENDIF.
 
-      " DDIC Step: Replace REF TO class/interface with generic reference to avoid cyclic dependency
-      LOOP AT lt_dd03p ASSIGNING <ls_dd03p> WHERE comptype = 'R' AND ( reftype = 'C' OR reftype = 'I' ).
-        IF iv_step = zif_abapgit_object=>gc_step_id-ddic.
-          <ls_dd03p>-rollname = 'OBJECT'.
-        ELSE.
-          lv_refs = abap_true.
-        ENDIF.
-      ENDLOOP.
-
       " Number fields sequentially and fill table name
       LOOP AT lt_dd03p ASSIGNING <ls_dd03p>.
         <ls_dd03p>-position   = sy-tabix.
@@ -905,7 +896,6 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
-    APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
   ENDMETHOD.
 
 
