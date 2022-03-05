@@ -186,8 +186,6 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
 
   METHOD activate_new.
 
-    DATA: lt_objects TYPE TABLE OF dwinactiv.
-
     IF gt_objects IS INITIAL.
       RETURN.
     ENDIF.
@@ -198,21 +196,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
 
     ELSE.
 
-      " Activate transformations first
-      lt_objects = gt_objects.
-      DELETE gt_objects WHERE object <> 'XSLT'.
-      IF gt_objects IS NOT INITIAL.
-        activate_old( ii_log ).
-      ENDIF.
-
-      " Activate other objects
-      gt_objects = lt_objects.
-      DELETE gt_objects WHERE object = 'XSLT'.
-      IF gt_objects IS NOT INITIAL.
-        activate_old( ii_log ).
-      ENDIF.
-
-      gt_objects = lt_objects.
+      activate_old( ii_log ).
 
     ENDIF.
 
