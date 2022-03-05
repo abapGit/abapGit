@@ -867,7 +867,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
     <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-pre_ddic.
-    <ls_step>-descr        = 'Create empty classes/interfaces used by DDIC'.
+    <ls_step>-descr        = 'Pre-process DDIC Objects'.
     <ls_step>-syntax_check = abap_false.
     <ls_step>-order        = 0.
 
