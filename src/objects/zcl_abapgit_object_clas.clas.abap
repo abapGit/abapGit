@@ -226,8 +226,8 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
 
 
   METHOD deserialize_pre_ddic.
-
-    DATA(ls_vseoclass) = VALUE vseoclass( ).
+    DATA: ls_vseoclass  TYPE vseoclass,
+          lt_attributes TYPE zif_abapgit_definitions=>ty_obj_attribute_tt.
 
     ii_xml->read( EXPORTING iv_name = 'VSEOCLASS'
                   CHANGING  cg_data = ls_vseoclass ).
@@ -235,7 +235,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
     mi_object_oriented_object_fct->create(
       EXPORTING
         iv_package    = iv_package
-        it_attributes = VALUE #( )
+        it_attributes = lt_attributes
       CHANGING
         cg_properties = ls_vseoclass ).
 
