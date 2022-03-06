@@ -369,16 +369,16 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
     IF iv_step = zif_abapgit_object=>gc_step_id-abap.
 
-    IF ls_vseointerf-clsproxy = abap_true.
-      " Proxy interfaces are managed via SPRX
-      deserialize_proxy( iv_transport ).
-      RETURN.
-    ENDIF.
+      IF ls_vseointerf-clsproxy = abap_true.
+        " Proxy interfaces are managed via SPRX
+        deserialize_proxy( iv_transport ).
+        RETURN.
+      ENDIF.
 
-    deserialize_abap( ii_xml     = io_xml
-                      iv_package = iv_package ).
+      deserialize_abap( ii_xml     = io_xml
+                        iv_package = iv_package ).
 
-    deserialize_docu( io_xml ).
+      deserialize_docu( io_xml ).
 
     ELSE.
 
