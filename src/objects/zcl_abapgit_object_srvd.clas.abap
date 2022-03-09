@@ -131,7 +131,6 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
         iv_fieldname = 'ABAP_LANGUAGE_VERSION'
       CHANGING
         cs_metadata  = cs_metadata ).
-        
     clear_field(
       EXPORTING
         iv_fieldname = 'ABAP_LANGU_VERSION'
