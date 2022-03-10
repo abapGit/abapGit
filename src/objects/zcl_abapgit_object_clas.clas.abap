@@ -664,12 +664,12 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
 
       deserialize_docu( io_xml ).
 
-    ELSEIF iv_step = zif_abapgit_object=>gc_step_id-pre_ddic.
+    ELSEIF iv_step = zif_abapgit_object=>gc_step_id-early.
 
-      " If class does not exist, create it 
+      " If class does not exist, create it
       " so DDIC that depends on it does not fail activation
       IF zif_abapgit_object~exists( ) = abap_false.
-        deserialize_pre_ddic( 
+        deserialize_pre_ddic(
           ii_xml     = io_xml
           iv_package = iv_package ).
       ENDIF.
@@ -693,7 +693,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_deserialize_steps.
-    APPEND zif_abapgit_object=>gc_step_id-pre_ddic TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-early TO rt_steps.
     APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
 
