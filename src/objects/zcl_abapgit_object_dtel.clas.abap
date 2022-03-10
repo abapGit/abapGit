@@ -21,11 +21,6 @@ CLASS zcl_abapgit_object_dtel DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     CONSTANTS c_longtext_id_dtel TYPE dokil-id VALUE 'DE' ##NO_TEXT.
 
-    METHODS is_ref_to_class_or_interface
-      IMPORTING
-        !is_dd04v        TYPE dd04v
-      RETURNING
-        VALUE(rv_result) TYPE abap_bool .
     METHODS serialize_texts
       IMPORTING
         !ii_xml TYPE REF TO zif_abapgit_xml_output
@@ -90,17 +85,6 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
     ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD is_ref_to_class_or_interface.
-
-    IF is_dd04v-refkind = 'R'
-        AND ( is_dd04v-reftype = 'C'
-           OR is_dd04v-reftype = 'I' ).
-      rv_result = abap_true.
-    ENDIF.
 
   ENDMETHOD.
 
