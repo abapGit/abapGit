@@ -388,7 +388,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
       " so DDIC that depends on it does not fail activation
       IF zif_abapgit_object~exists( ) = abap_false.
         deserialize_pre_ddic(
-          ii_xml     = io_xml 
+          ii_xml     = io_xml
           iv_package = iv_package ).
       ENDIF.
 
