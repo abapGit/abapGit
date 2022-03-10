@@ -142,10 +142,12 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
 
   METHOD deserialize_pre_ddic.
+
     DATA: ls_vseointerf   TYPE vseointerf,
           ls_clskey       TYPE seoclskey.
 
     ls_clskey-clsname = ms_item-obj_name.
+
     ii_xml->read( EXPORTING iv_name = 'VSEOINTERF'
                   CHANGING cg_data = ls_vseointerf ).
 
@@ -380,13 +382,18 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
       deserialize_docu( io_xml ).
 
-    ELSE.
+    ELSEIF iv_step = zif_abapgit_object=>gc_step_id-pre_ddic.
 
+      " If interface does not exist, create it 
+      " so DDIC that depends on it does not fail activation
       IF zif_abapgit_object~exists( ) = abap_false.
-        deserialize_pre_ddic( ii_xml = io_xml iv_package = iv_package ).
+        deserialize_pre_ddic(
+          ii_xml     = io_xml 
+          iv_package = iv_package ).
       ENDIF.
 
     ENDIF.
+
   ENDMETHOD.
 
 
