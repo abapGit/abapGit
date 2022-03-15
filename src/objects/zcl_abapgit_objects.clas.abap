@@ -863,31 +863,31 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
 
   METHOD get_deserialize_steps.
-    FIELD-SYMBOLS: <ls_step>    TYPE LINE OF zif_abapgit_objects=>ty_step_data_tt.
+    FIELD-SYMBOLS: <ls_step> TYPE LINE OF zif_abapgit_objects=>ty_step_data_tt.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
     <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-early.
     <ls_step>-descr        = 'Pre-process Objects'.
     <ls_step>-syntax_check = abap_false.
-    <ls_step>-order        = 0.
+    <ls_step>-order        = 1.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
     <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-ddic.
     <ls_step>-descr        = 'Deserialize DDIC Objects'.
     <ls_step>-syntax_check = abap_false.
-    <ls_step>-order        = 1.
+    <ls_step>-order        = 2.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
     <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-abap.
     <ls_step>-descr        = 'Deserialize non-DDIC Objects'.
     <ls_step>-syntax_check = abap_false.
-    <ls_step>-order        = 2.
+    <ls_step>-order        = 3.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
     <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-late.
     <ls_step>-descr        = 'Post-process Objects'.
     <ls_step>-syntax_check = abap_true.
-    <ls_step>-order        = 3.
+    <ls_step>-order        = 4.
   ENDMETHOD.
 
 
