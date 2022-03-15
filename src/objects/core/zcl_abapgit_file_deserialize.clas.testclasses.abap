@@ -224,6 +224,7 @@ CLASS ltcl_prio_deserialization DEFINITION FINAL FOR TESTING
       webi_before_sprx FOR TESTING RAISING cx_static_check,
       iasp_before_iarp FOR TESTING RAISING cx_static_check,
       iarp_before_iatu FOR TESTING RAISING cx_static_check,
+      prog_before_iaxu FOR TESTING RAISING cx_static_check,
       iobj_before_odso FOR TESTING RAISING cx_static_check,
       tobj_before_scp1 FOR TESTING RAISING cx_static_check,
       otgr_before_char FOR TESTING RAISING cx_static_check,
@@ -356,6 +357,14 @@ CLASS ltcl_prio_deserialization IMPLEMENTATION.
     when_deser_is_priorized( ).
     then( 'IARP' ).
     then( 'IATU' ).
+  ENDMETHOD.
+
+  METHOD prog_before_iaxu.
+    given( 'IAXU' ).
+    given( 'PROG' ).
+    when_deser_is_priorized( ).
+    then( 'PROG' ).
+    then( 'IAXU' ).
   ENDMETHOD.
 
   METHOD webi_before_sprx.

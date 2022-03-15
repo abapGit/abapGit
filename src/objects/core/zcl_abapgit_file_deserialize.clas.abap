@@ -204,9 +204,10 @@ CLASS ZCL_ABAPGIT_FILE_DESERIALIZE IMPLEMENTATION.
         WHEN 'IARP'.
           lt_requires = lt_items.
           DELETE lt_requires WHERE obj_type <> 'IASP'.
-        WHEN 'IATU'.
+        WHEN 'IATU' OR 'IAXU'.
           lt_requires = lt_items.
           DELETE lt_requires WHERE obj_type <> 'IASP'
+            AND obj_type <> 'PROG'
             AND obj_type <> 'IARP'.
         WHEN 'DCLS'.
           lt_requires = lt_items.
