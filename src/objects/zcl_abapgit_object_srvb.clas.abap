@@ -367,7 +367,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
 
         corr_insert( iv_package ).
 
-      CATCH cx_swb_exception INTO lx_error.
+      CATCH cx_root INTO lx_error.
         CALL FUNCTION 'DEQUEUE_ESWB_EO'
           EXPORTING
             objtype = ms_item-obj_type
