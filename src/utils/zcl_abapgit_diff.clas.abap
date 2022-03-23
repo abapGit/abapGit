@@ -277,9 +277,7 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
     mt_diff = compute_and_render( it_new = lt_new
                                   it_old = lt_old ).
 
-    DO 2 TIMES.
-      adjust_diff( ).
-    ENDDO.
+    adjust_diff( ).
 
     calculate_stats( ).
     map_beacons( ).
