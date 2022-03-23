@@ -285,6 +285,7 @@ CLASS zcl_abapgit_syntax_highlighter IMPLEMENTATION.
       REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>horizontal_tab IN rv_line WITH '&nbsp;&rarr;&nbsp;'.
       REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>cr_lf(1)       IN rv_line WITH '&para;'.
       REPLACE ALL OCCURRENCES OF ` `                                    IN rv_line WITH '&middot;'.
+      REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>form_feed      IN rv_line WITH '<span class="red">&odash;</span>'.
 
       IF strlen( rv_line ) BETWEEN 1 AND 2.
         lv_bom = zcl_abapgit_convert=>string_to_xstring( rv_line ).
