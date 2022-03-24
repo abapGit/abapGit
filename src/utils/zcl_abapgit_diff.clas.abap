@@ -495,12 +495,16 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
 
     " Check if one value contains a final newline but the other not
     " If yes, add a special characters that's visible in diff render
-    lv_new_last = substring(
-      val = lv_new
-      off = strlen( lv_new ) - 1 ).
-    lv_old_last = substring(
-      val = lv_old
-      off = strlen( lv_old ) - 1 ).
+    IF lv_new IS NOT INITIAL.
+      lv_new_last = substring(
+        val = lv_new
+        off = strlen( lv_new ) - 1 ).
+    ENDIF.
+    IF lv_old IS NOT INITIAL.
+      lv_old_last = substring(
+        val = lv_old
+        off = strlen( lv_old ) - 1 ).
+    ENDIF.
 
     IF lv_new_last = zif_abapgit_definitions=>c_newline AND lv_old_last <> zif_abapgit_definitions=>c_newline.
       lv_old = lv_old && cl_abap_char_utilities=>form_feed.
