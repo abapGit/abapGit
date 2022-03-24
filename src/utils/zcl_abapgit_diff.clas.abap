@@ -506,9 +506,11 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
         off = strlen( lv_old ) - 1 ).
     ENDIF.
 
-    IF lv_new_last = zif_abapgit_definitions=>c_newline AND lv_old_last <> zif_abapgit_definitions=>c_newline.
+    IF lv_new_last = zif_abapgit_definitions=>c_newline AND lv_old_last <> zif_abapgit_definitions=>c_newline
+      AND lv_old IS NOT INITIAL.
       lv_old = lv_old && cl_abap_char_utilities=>form_feed.
-    ELSEIF lv_new_last <> zif_abapgit_definitions=>c_newline AND lv_old_last = zif_abapgit_definitions=>c_newline.
+    ELSEIF lv_new_last <> zif_abapgit_definitions=>c_newline AND lv_old_last = zif_abapgit_definitions=>c_newline
+      AND lv_new IS NOT INITIAL.
       lv_new = lv_new && cl_abap_char_utilities=>form_feed.
     ENDIF.
 
