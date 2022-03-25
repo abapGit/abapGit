@@ -2,9 +2,7 @@
 [![Slack](https://abapgit-slackinviter.herokuapp.com/badge.svg)](https://abapgit-slackinviter.herokuapp.com/)
 [![abap package version](https://img.shields.io/endpoint?url=https://shield.abap.space/version-shield-json/github/abapGit/abapGit/src/zif_abapgit_version.intf.abap/c_abap_version&label=version)](https://github.com/abapGit/abapGit/blob/main/src/zif_abapgit_version.intf.abap)
 
-[![Banner](img/UA_banner.png)](https://donate.redcrossredcrescent.org/ua/donate/~my-donation?_cv=1)
-
-# ![Logo](img/UA_abapGit_3.png) <!--img src="img/logo.svg#gh-light-mode-only" height="40" alt="abapGit logo"><img src="img/logo-dark.svg#gh-dark-mode-only" height="40" alt="abapGit logo"-->
+# <img src="img/logo.svg#gh-light-mode-only" height="40" alt="abapGit logo"><img src="img/logo-dark.svg#gh-dark-mode-only" height="40" alt="abapGit logo"> <a href="https://donate.redcrossredcrescent.org/ua/donate/~my-donation?_cv=1"><img src="img/Ukraine-heart-shape-flag.svg" height="40" alt="Ukraine heart-shape flag"></a>
 
 Git client for ABAP
 
