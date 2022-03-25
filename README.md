@@ -4,7 +4,7 @@
 
 [![Banner](img/UA_banner.png)](https://donate.redcrossredcrescent.org/ua/donate/~my-donation?_cv=1)
 
-# [![Logo](img/UA_abapGit.png)]
+# ![Logo](img/UA_abapGit.png)
 # <!--img src="img/logo.svg#gh-light-mode-only" height="40" alt="abapGit logo"><img src="img/logo-dark.svg#gh-dark-mode-only" height="40" alt="abapGit logo"-->
 
 Git client for ABAP
