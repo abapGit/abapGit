@@ -215,4 +215,19 @@ CLASS ZCL_ABAPGIT_REPO_CHECKSUMS IMPLEMENTATION.
     save_checksums( lt_checksums ).
 
   ENDMETHOD.
+
+  METHOD zif_abapgit_repo_checksums~get_checksums_per_file.
+
+    DATA lt_checksums   TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
+    FIELD-SYMBOLS <ls_object> LIKE LINE OF lt_checksums.
+
+    lt_checksums = zif_abapgit_repo_checksums~get( ).
+
+    LOOP AT lt_checksums ASSIGNING <ls_object>.
+      APPEND LINES OF <ls_object>-files TO rt_checksums.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
 ENDCLASS.

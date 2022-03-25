@@ -231,6 +231,8 @@ CLASS lcl_repo_mock IMPLEMENTATION.
   METHOD zif_abapgit_repo~get_name.
     rv_name = 'test'.
   ENDMETHOD.
+  METHOD zif_abapgit_repo~checksums.
+  ENDMETHOD.
 
   METHOD zif_abapgit_repo_srv~delete.
   ENDMETHOD.

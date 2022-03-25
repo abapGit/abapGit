@@ -44,7 +44,6 @@ INTERFACE zif_abapgit_persistence PUBLIC.
            deserialized_at TYPE timestampl,
            offline         TYPE abap_bool,
            switched_origin TYPE string,
-           local_checksums TYPE ty_local_checksum_tt,
            dot_abapgit     TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
            head_branch     TYPE string,   " HEAD symref of the repo, master branch
            local_settings  TYPE ty_local_settings,
@@ -62,7 +61,6 @@ INTERFACE zif_abapgit_persistence PUBLIC.
       deserialized_at TYPE abap_bool,
       offline         TYPE abap_bool,
       switched_origin TYPE abap_bool,
-      local_checksums TYPE abap_bool,
       dot_abapgit     TYPE abap_bool,
       head_branch     TYPE abap_bool,
       local_settings  TYPE abap_bool,
