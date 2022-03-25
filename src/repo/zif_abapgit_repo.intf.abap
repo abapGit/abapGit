@@ -63,4 +63,10 @@ INTERFACE zif_abapgit_repo
     RAISING
       zcx_abapgit_exception .
 
+  METHODS checksums
+    RETURNING
+      VALUE(ri_checksums) TYPE REF TO zif_abapgit_repo_checksums
+    RAISING
+      zcx_abapgit_exception .
+
 ENDINTERFACE.
