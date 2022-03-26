@@ -173,15 +173,6 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS check_language
       RAISING
         zcx_abapgit_exception .
-    METHODS remove_non_code_related_files
-      CHANGING
-        !ct_local_files TYPE zif_abapgit_definitions=>ty_files_item_tt .
-    METHODS compare_with_remote_checksum
-      IMPORTING
-        !it_remote_files TYPE zif_abapgit_definitions=>ty_files_tt
-        !is_local_file   TYPE zif_abapgit_definitions=>ty_file_item-file
-      CHANGING
-        !cs_checksum     TYPE zif_abapgit_persistence=>ty_local_checksum .
 ENDCLASS.
 
 
@@ -239,29 +230,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     IF get_local_settings( )-write_protected = abap_true.
       zcx_abapgit_exception=>raise( 'Cannot deserialize. Local code is write-protected by repo config' ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD compare_with_remote_checksum.
-    FIELD-SYMBOLS: <ls_remote_file> LIKE LINE OF it_remote_files,
-                   <ls_file_sig>    LIKE LINE OF cs_checksum-files.
-    READ TABLE it_remote_files ASSIGNING <ls_remote_file>
-        WITH KEY path = is_local_file-path filename = is_local_file-filename
-        BINARY SEARCH.
-    IF sy-subrc <> 0.  " Ignore new local ones
-      RETURN.
-    ENDIF.
-
-    APPEND INITIAL LINE TO cs_checksum-files ASSIGNING <ls_file_sig>.
-    MOVE-CORRESPONDING is_local_file TO <ls_file_sig>.
-
-    " If hashes are equal -> local sha1 is OK
-    " Else if R-branch is ahead  -> assume changes were remote, state - local sha1
-    "      Else (branches equal) -> assume changes were local, state - remote sha1
-    IF is_local_file-sha1 <> <ls_remote_file>-sha1.
-      <ls_file_sig>-sha1 = <ls_remote_file>-sha1.
     ENDIF.
 
   ENDMETHOD.
@@ -639,17 +607,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     mv_request_local_refresh = abap_true.
     get_files_local( ).
-
-  ENDMETHOD.
-
-
-  METHOD remove_non_code_related_files.
-
-    DELETE ct_local_files
-          WHERE item IS INITIAL
-          AND NOT ( file-path = zif_abapgit_definitions=>c_root_dir
-          AND file-filename = zif_abapgit_definitions=>c_dot_abapgit ).
-    SORT ct_local_files BY item.
 
   ENDMETHOD.
 
