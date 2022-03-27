@@ -3,7 +3,8 @@
 [![abap package version](https://img.shields.io/endpoint?url=https://shield.abap.space/version-shield-json/github/abapGit/abapGit/src/zif_abapgit_version.intf.abap/c_abap_version&label=version)](https://github.com/abapGit/abapGit/blob/main/src/zif_abapgit_version.intf.abap)
 
 <!--img src="img/logo.svg#gh-light-mode-only" height="40" alt="abapGit logo"><img src="img/logo-dark.svg#gh-dark-mode-only" height="40" alt="abapGit logo"--> 
-# <a href="https://supportukrainenow.org/"><img src="img/abapGit_in_Ukraine_Colors.svg" height="40" alt="abapGit logo"></a> <a href="https://supportukrainenow.org/"><img src="img/Ukraine-heart-shape-flag.svg" height="40" alt="Ukraine heart-shape flag"></a>
+# <a href="https://supportukrainenow.org/"><img src="img/abapGit_in_Ukraine_Colors.svg" height="40" alt="abapGit logo"></a>
+<a href="https://supportukrainenow.org/"><img src="img/Ukraine-heart-shape-flag.svg" height="25" alt="Support Ukraine"> Support Ukraine</a>
 
 Git client for ABAP
 
