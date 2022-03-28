@@ -23,6 +23,7 @@ INTERFACE zif_abapgit_dot_abapgit PUBLIC.
     BEGIN OF c_folder_logic,
       prefix TYPE string VALUE 'PREFIX',
       full   TYPE string VALUE 'FULL',
+      mixed  TYPE string VALUE 'MIXED',
     END OF c_folder_logic .
 
 ENDINTERFACE.
