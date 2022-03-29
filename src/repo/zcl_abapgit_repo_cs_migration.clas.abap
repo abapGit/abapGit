@@ -11,7 +11,7 @@ CLASS zcl_abapgit_repo_cs_migration DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES:
-      tty_repo_ids TYPE SORTED TABLE OF zabapgit-value WITH UNIQUE KEY table_line.
+      tty_repo_ids TYPE SORTED TABLE OF zif_abapgit_persistence=>ty_repo-key WITH UNIQUE KEY table_line.
 
     CLASS-METHODS get_unconverted_repo_ids
       RETURNING
