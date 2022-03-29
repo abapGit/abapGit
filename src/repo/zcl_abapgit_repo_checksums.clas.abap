@@ -13,6 +13,12 @@ CLASS zcl_abapgit_repo_checksums DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    METHODS force_write
+      IMPORTING
+        it_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -136,6 +142,15 @@ CLASS ZCL_ABAPGIT_REPO_CHECKSUMS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD force_write.
+
+    " for migration only for the moment
+
+    save_checksums( it_checksums ).
+
+  ENDMETHOD.
+
+
   METHOD remove_non_code_related_files.
 
     DELETE ct_local_files
@@ -178,6 +193,20 @@ CLASS ZCL_ABAPGIT_REPO_CHECKSUMS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_repo_checksums~get_checksums_per_file.
+
+    DATA lt_checksums   TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
+    FIELD-SYMBOLS <ls_object> LIKE LINE OF lt_checksums.
+
+    lt_checksums = zif_abapgit_repo_checksums~get( ).
+
+    LOOP AT lt_checksums ASSIGNING <ls_object>.
+      APPEND LINES OF <ls_object>-files TO rt_checksums.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_repo_checksums~rebuild.
 
     DATA lt_remote    TYPE zif_abapgit_definitions=>ty_files_tt.
@@ -215,19 +244,4 @@ CLASS ZCL_ABAPGIT_REPO_CHECKSUMS IMPLEMENTATION.
     save_checksums( lt_checksums ).
 
   ENDMETHOD.
-
-  METHOD zif_abapgit_repo_checksums~get_checksums_per_file.
-
-    DATA lt_checksums   TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
-    FIELD-SYMBOLS <ls_object> LIKE LINE OF lt_checksums.
-
-    lt_checksums = zif_abapgit_repo_checksums~get( ).
-
-    LOOP AT lt_checksums ASSIGNING <ls_object>.
-      APPEND LINES OF <ls_object>-files TO rt_checksums.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
 ENDCLASS.
