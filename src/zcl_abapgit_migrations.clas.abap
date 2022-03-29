@@ -12,7 +12,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_migrations IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_MIGRATIONS IMPLEMENTATION.
 
 
   METHOD run.
@@ -23,6 +23,8 @@ CLASS zcl_abapgit_migrations IMPLEMENTATION.
     " Create ZIF_APACK_MANIFEST interface
     zcl_abapgit_apack_migration=>run( ).
 
-  ENDMETHOD.
+    " Migrate checksums from repo metadata to separate DB object
+    zcl_abapgit_repo_cs_migration=>run( ).
 
+  ENDMETHOD.
 ENDCLASS.
