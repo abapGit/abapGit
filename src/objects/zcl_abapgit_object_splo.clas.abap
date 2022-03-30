@@ -10,7 +10,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_SPLO IMPLEMENTATION.
+CLASS zcl_abapgit_object_splo IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -52,6 +52,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SPLO IMPLEMENTATION.
     MODIFY tsp0p FROM ls_tsp0p.                           "#EC CI_SUBRC
 
     tadir_insert( iv_package ).
+
+    corr_insert( iv_package ).
 
   ENDMETHOD.
 
