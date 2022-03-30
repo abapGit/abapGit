@@ -108,6 +108,9 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
         WHEN 'DDLS'.
           " DDLS after DCLS but before other DDIC
           <ls_tadir>-korrnum = '720000'.
+        WHEN 'DDLX'.
+          " DDLX before DDLS
+          <ls_tadir>-korrnum = '719000'.
         WHEN 'AUTH'.
           " AUTH after DCLS
           <ls_tadir>-korrnum = '715000'.
