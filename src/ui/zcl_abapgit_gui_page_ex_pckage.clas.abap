@@ -49,6 +49,7 @@ CLASS zcl_abapgit_gui_page_ex_pckage DEFINITION
 ENDCLASS.
 
 
+
 CLASS zcl_abapgit_gui_page_ex_pckage IMPLEMENTATION.
 
 
@@ -68,6 +69,22 @@ CLASS zcl_abapgit_gui_page_ex_pckage IMPLEMENTATION.
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title      = 'Export Package to ZIP'
       ii_child_component = lo_component ).
+  ENDMETHOD.
+
+
+  METHOD export_package.
+    DATA lv_package TYPE devclass.
+    DATA lv_folder_logic TYPE string.
+    DATA lv_main_lang_only TYPE abap_bool.
+
+    lv_package        = mo_form_data->get( c_id-package ).
+    lv_folder_logic   = mo_form_data->get( c_id-folder_logic ).
+    lv_main_lang_only = mo_form_data->get( c_id-main_lang_only ).
+
+    zcl_abapgit_zip=>export_package(
+        iv_package        = lv_package
+        iv_folder_logic   = lv_folder_logic
+        iv_main_lang_only = lv_main_lang_only ).
   ENDMETHOD.
 
 
@@ -91,6 +108,9 @@ CLASS zcl_abapgit_gui_page_ex_pckage IMPLEMENTATION.
     )->option(
       iv_label         = 'Full'
       iv_value         = zif_abapgit_dot_abapgit=>c_folder_logic-full
+    )->option(
+      iv_label         = 'Mixed'
+      iv_value         = zif_abapgit_dot_abapgit=>c_folder_logic-mixed
     )->checkbox(
       iv_name          = c_id-main_lang_only
       iv_label         = 'Serialize Main Language Only'
@@ -102,17 +122,6 @@ CLASS zcl_abapgit_gui_page_ex_pckage IMPLEMENTATION.
     )->command(
       iv_label         = 'Back'
       iv_action        = c_event-go_back ).
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_renderable~render.
-    gui_services( )->register_event_handler( me ).
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    ri_html->add( mo_form->render(
-      io_values         = mo_form_data
-      io_validation_log = mo_validation_log ) ).
   ENDMETHOD.
 
 
@@ -150,18 +159,13 @@ CLASS zcl_abapgit_gui_page_ex_pckage IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD export_package.
-    DATA lv_package TYPE devclass.
-    DATA lv_folder_logic TYPE string.
-    DATA lv_main_lang_only TYPE abap_bool.
+  METHOD zif_abapgit_gui_renderable~render.
+    gui_services( )->register_event_handler( me ).
 
-    lv_package        = mo_form_data->get( c_id-package ).
-    lv_folder_logic   = mo_form_data->get( c_id-folder_logic ).
-    lv_main_lang_only = mo_form_data->get( c_id-main_lang_only ).
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    zcl_abapgit_zip=>export_package(
-        iv_package        = lv_package
-        iv_folder_logic   = lv_folder_logic
-        iv_main_lang_only = lv_main_lang_only ).
+    ri_html->add( mo_form->render(
+      io_values         = mo_form_data
+      io_validation_log = mo_validation_log ) ).
   ENDMETHOD.
 ENDCLASS.
