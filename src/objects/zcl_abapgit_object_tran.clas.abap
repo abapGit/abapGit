@@ -109,7 +109,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_tran IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
 
 
   METHOD add_data.
@@ -722,6 +722,8 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
         clear_functiongroup_globals( ).
 
+        corr_insert( iv_package ).
+
         CALL FUNCTION 'RPY_TRANSACTION_INSERT'
           EXPORTING
             transaction             = ls_tstc-tcode
@@ -738,6 +740,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
             html_enabled            = ls_tstcc-s_webgui
             java_enabled            = ls_tstcc-s_platin
             wingui_enabled          = ls_tstcc-s_win32
+            suppress_corr_insert    = abap_true
           TABLES
             param_values            = lt_param_values
           EXCEPTIONS
@@ -837,8 +840,6 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
     zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
       iv_tcode      = 'SE93'
       it_bdcdata    = lt_bdcdata ).
-
-    rv_exit = abap_true.
 
   ENDMETHOD.
 
