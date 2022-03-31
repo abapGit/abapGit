@@ -172,7 +172,6 @@ CLASS zcl_abapgit_objects_program DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
       IMPORTING
         !is_progdir TYPE ty_progdir
         !it_source  TYPE abaptxt255_tab
-        !it_tpool   TYPE textpool_table
         !iv_title   TYPE repti
         !iv_package TYPE devclass
       RAISING
@@ -497,7 +496,6 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       insert_program(
         is_progdir = is_progdir
         it_source  = it_source
-        it_tpool   = it_tpool
         iv_title   = lv_title
         iv_package = iv_package ).
     ENDIF.
@@ -543,13 +541,6 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
           STATE lv_state.          "of the mail program -> insert empty textpool
       ENDIF.
     ELSE.
-      IF lines( it_tpool ) = 1 AND lv_language = mv_language.
-        READ TABLE it_tpool WITH KEY id = 'R' TRANSPORTING NO FIELDS.
-        IF sy-subrc = 0.
-          RETURN. "No action because description in main language is already there
-        ENDIF.
-      ENDIF.
-
       INSERT TEXTPOOL iv_program
         FROM it_tpool
         LANGUAGE lv_language
@@ -622,17 +613,6 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         PROGRAM TYPE is_progdir-subc.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'Error from INSERT REPORT .. PROGRAM TYPE' ).
-      ENDIF.
-
-      IF it_tpool IS NOT INITIAL.
-        INSERT TEXTPOOL is_progdir-name
-          FROM it_tpool
-          LANGUAGE mv_language
-          STATE 'A'.
-        INSERT TEXTPOOL is_progdir-name
-          FROM it_tpool
-          LANGUAGE mv_language
-          STATE 'I'.
       ENDIF.
 
     ELSEIF sy-subrc > 0.
