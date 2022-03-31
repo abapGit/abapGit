@@ -64,6 +64,8 @@ CLASS zcl_abapgit_object_vcls IMPLEMENTATION.
     DELETE FROM vclstrudep WHERE vclname = lv_vclname.    "#EC CI_SUBRC
     DELETE FROM vclmf WHERE vclname = lv_vclname.         "#EC CI_SUBRC
 
+    corr_insert( iv_package ).
+
   ENDMETHOD.
 
 
