@@ -80,7 +80,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
+CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
 
   METHOD add.
@@ -622,26 +622,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
           li_repo    TYPE REF TO zif_abapgit_repo,
           lv_reason  TYPE string.
 
-    IF iv_package IS INITIAL.
-      zcx_abapgit_exception=>raise( 'add, package empty' ).
-    ENDIF.
-
-    IF iv_package = '$TMP'.
-      zcx_abapgit_exception=>raise( 'not possible to use $TMP, create new (local) package' ).
-    ENDIF.
-
-    " Check if package name is allowed
-    cl_package_helper=>check_package_name(
-      EXPORTING
-        i_package_name       = iv_package
-      EXCEPTIONS
-        undefined_name       = 1
-        wrong_name_prefix    = 2
-        reserved_local_name  = 3
-        invalid_package_name = 4 ).
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Package name { iv_package } not valid| ).
-    ENDIF.
+    zcl_abapgit_sap_package=>validate_name( iv_package ).
 
     " Check if package owned by SAP is allowed (new packages are ok, since they are created automatically)
     SELECT SINGLE as4user FROM tdevc
