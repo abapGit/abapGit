@@ -125,6 +125,9 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
     )->option(
       iv_label       = 'Full'
       iv_value       = zif_abapgit_dot_abapgit=>c_folder_logic-full
+    )->option(
+      iv_label       = 'Mixed'
+      iv_value       = zif_abapgit_dot_abapgit=>c_folder_logic-mixed
     )->text(
       iv_name        = c_id-display_name
       iv_label       = 'Display Name'
@@ -180,12 +183,11 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
     ENDIF.
 
     IF io_form_data->get( c_id-folder_logic ) <> zif_abapgit_dot_abapgit=>c_folder_logic-prefix
-        AND io_form_data->get( c_id-folder_logic ) <> zif_abapgit_dot_abapgit=>c_folder_logic-full.
+        AND io_form_data->get( c_id-folder_logic ) <> zif_abapgit_dot_abapgit=>c_folder_logic-full
+        AND io_form_data->get( c_id-folder_logic ) <> zif_abapgit_dot_abapgit=>c_folder_logic-mixed.
       ro_validation_log->set(
         iv_key = c_id-folder_logic
-        iv_val = |Invalid folder logic { io_form_data->get( c_id-folder_logic )
-        }. Must be { zif_abapgit_dot_abapgit=>c_folder_logic-prefix
-        } or { zif_abapgit_dot_abapgit=>c_folder_logic-full } | ).
+        iv_val = |Invalid folder logic { io_form_data->get( c_id-folder_logic ) }| ).
     ENDIF.
 
   ENDMETHOD.

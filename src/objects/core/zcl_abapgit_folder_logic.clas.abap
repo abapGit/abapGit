@@ -106,7 +106,15 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
 * ZZZ_something. This will define the folder name in the zip file to be "something",
 * similarily with online projects. Alternatively change to FULL folder logic
               lv_message = 'PREFIX: Unexpected package naming (' && iv_package && ')'
-                           && 'you might switch to FULL folder logic'.
+                           && 'you might switch the folder logic'.
+              zcx_abapgit_exception=>raise( lv_message ).
+            ENDIF.
+          WHEN zif_abapgit_dot_abapgit=>c_folder_logic-mixed.
+            lv_len = strlen( iv_top ).
+
+            IF iv_package(lv_len) <> iv_top.
+              lv_message = 'MIXED: Unexpected package naming (' && iv_package && ')'
+                           && 'you might switch the folder logic'.
               zcx_abapgit_exception=>raise( lv_message ).
             ENDIF.
           WHEN OTHERS.
@@ -150,6 +158,7 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
           lv_new                  TYPE string,
           lv_path                 TYPE string,
           lv_absolute_name        TYPE string,
+          lv_folder_logic         TYPE string,
           lt_unique_package_names TYPE HASHED TABLE OF devclass WITH UNIQUE KEY table_line.
 
     lv_length  = strlen( io_dot->get_starting_folder( ) ).
@@ -179,7 +188,8 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
     WHILE lv_path CA '/'.
       SPLIT lv_path AT '/' INTO lv_new lv_path.
 
-      CASE io_dot->get_folder_logic( ).
+      lv_folder_logic = io_dot->get_folder_logic( ).
+      CASE lv_folder_logic.
         WHEN zif_abapgit_dot_abapgit=>c_folder_logic-full.
           lv_absolute_name = lv_new.
           TRANSLATE lv_absolute_name USING '#/'.
@@ -188,14 +198,16 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
           ENDIF.
         WHEN zif_abapgit_dot_abapgit=>c_folder_logic-prefix.
           CONCATENATE rv_package '_' lv_new INTO lv_absolute_name.
+        WHEN zif_abapgit_dot_abapgit=>c_folder_logic-mixed.
+          CONCATENATE iv_top '_' lv_new INTO lv_absolute_name.
         WHEN OTHERS.
-          ASSERT 0 = 1.
+          zcx_abapgit_exception=>raise( |Invalid folder logic: { lv_folder_logic }| ).
       ENDCASE.
 
       TRANSLATE lv_absolute_name TO UPPER CASE.
 
       IF strlen( lv_absolute_name ) > 30.
-        zcx_abapgit_exception=>raise( |Package { lv_absolute_name } exceeds ABAP 30-characters-name limit| ).
+        zcx_abapgit_exception=>raise( |Package { lv_absolute_name } exceeds ABAP 30-characters name limit| ).
       ENDIF.
 
       rv_package = lv_absolute_name.
