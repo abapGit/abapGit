@@ -136,6 +136,9 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
     )->option(
       iv_label       = 'Full'
       iv_value       = zif_abapgit_dot_abapgit=>c_folder_logic-full
+    )->option(
+      iv_label       = 'Mixed'
+      iv_value       = zif_abapgit_dot_abapgit=>c_folder_logic-mixed
     )->text(
       iv_name        = c_id-starting_folder
       iv_label       = 'Starting Folder'
