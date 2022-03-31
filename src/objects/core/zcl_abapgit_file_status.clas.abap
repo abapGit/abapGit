@@ -27,14 +27,6 @@ CLASS zcl_abapgit_file_status DEFINITION
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS prepare_remote
-      IMPORTING
-        !io_dot          TYPE REF TO zcl_abapgit_dot_abapgit
-        !it_remote       TYPE zif_abapgit_definitions=>ty_files_tt
-      RETURNING
-        VALUE(rt_remote) TYPE zif_abapgit_definitions=>ty_files_tt
-      RAISING
-        zcx_abapgit_exception .
     CLASS-METHODS process_local
       IMPORTING
         !io_dot       TYPE REF TO zcl_abapgit_dot_abapgit
@@ -282,10 +274,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
     lt_state_idx = it_cur_state. " Force sort it
 
-    " Prepare remote files
-    lt_remote = prepare_remote(
-      io_dot    = io_dot
-      it_remote = it_remote ).
+    lt_remote = it_remote.
 
     " Process local files and new local files
     process_local(
@@ -517,27 +506,6 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
         rv_devclass = lv_name.
       ENDIF.
     ENDIF.
-  ENDMETHOD.
-
-
-  METHOD prepare_remote.
-
-    DATA lv_index TYPE sy-index.
-
-    FIELD-SYMBOLS <ls_remote> LIKE LINE OF it_remote.
-
-    rt_remote = it_remote.
-    SORT rt_remote BY path filename.
-
-    " Skip ignored files
-    LOOP AT rt_remote ASSIGNING <ls_remote>.
-      lv_index = sy-tabix.
-      IF io_dot->is_ignored( iv_path     = <ls_remote>-path
-                             iv_filename = <ls_remote>-filename ) = abap_true.
-        DELETE rt_remote INDEX lv_index.
-      ENDIF.
-    ENDLOOP.
-
   ENDMETHOD.
 
 
@@ -774,7 +742,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
       io_repo->find_remote_dot_abapgit( ).
     ENDIF.
 
-    lt_remote = io_repo->get_files_remote( ).
+    lt_remote = io_repo->get_files_remote( iv_ignore_files = abap_true ).
 
     li_exit = zcl_abapgit_exit=>get_instance( ).
     li_exit->pre_calculate_repo_status(

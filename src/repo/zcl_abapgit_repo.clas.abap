@@ -82,7 +82,7 @@ CLASS zcl_abapgit_repo DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS has_remote_source
-      ABSTRACT
+          ABSTRACT
       RETURNING
         VALUE(rv_yes) TYPE abap_bool .
     METHODS status
@@ -118,6 +118,11 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS get_unsupported_objects_local
       RETURNING
         VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_items_tt
+      RAISING
+        zcx_abapgit_exception .
+    METHODS remove_ignored_files
+      CHANGING
+        ct_files TYPE zif_abapgit_definitions=>ty_files_tt
       RAISING
         zcx_abapgit_exception .
   PROTECTED SECTION.
@@ -191,7 +196,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
   METHOD bind_listener.
@@ -510,6 +515,11 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
           ct_files    = rt_files ).
 
     ENDIF.
+
+    IF iv_ignore_files = abap_true.
+      remove_ignored_files( CHANGING ct_files = rt_files ).
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -698,6 +708,27 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     mv_request_local_refresh = abap_true.
     get_files_local( ).
+
+  ENDMETHOD.
+
+
+  METHOD remove_ignored_files.
+
+    DATA lo_dot TYPE REF TO zcl_abapgit_dot_abapgit.
+    DATA lv_index TYPE sy-index.
+
+    FIELD-SYMBOLS <ls_files> LIKE LINE OF ct_files.
+
+    lo_dot = get_dot_abapgit( ).
+
+    " Skip ignored files
+    LOOP AT ct_files ASSIGNING <ls_files>.
+      lv_index = sy-tabix.
+      IF lo_dot->is_ignored( iv_path     = <ls_files>-path
+                             iv_filename = <ls_files>-filename ) = abap_true.
+        DELETE ct_files INDEX lv_index.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 
