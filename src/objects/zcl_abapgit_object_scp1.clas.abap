@@ -371,6 +371,8 @@ CLASS zcl_abapgit_object_scp1 IMPLEMENTATION.
 
     tadir_insert( iv_package ).
 
+    corr_insert( iv_package ).
+
   ENDMETHOD.
 
 

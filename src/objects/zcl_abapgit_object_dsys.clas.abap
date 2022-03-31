@@ -154,6 +154,8 @@ CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
 
     tadir_insert( iv_package ).
 
+    corr_insert( iv_package ).
+
   ENDMETHOD.
 
 
