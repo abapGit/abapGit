@@ -64,6 +64,8 @@ CLASS zcl_abapgit_object_doct IMPLEMENTATION.
 
     tadir_insert( iv_package ).
 
+    corr_insert( iv_package ).
+
   ENDMETHOD.
 
 
