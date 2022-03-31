@@ -229,6 +229,7 @@
       "while": true,
       "case": true,
       "select": true,
+      "when": false,
       "do": true,
       "at": true
     },
@@ -331,6 +332,7 @@
       "refresh": true,
       "compute": true,
       "add": true,
+      "occurences": true,
       "selectWithoutInto": true,
       "ranges": true,
       "callTransformation": true,
