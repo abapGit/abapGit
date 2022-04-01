@@ -722,6 +722,8 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
         clear_functiongroup_globals( ).
 
+        corr_insert( iv_package ).
+
         CALL FUNCTION 'RPY_TRANSACTION_INSERT'
           EXPORTING
             transaction             = ls_tstc-tcode
@@ -738,6 +740,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
             html_enabled            = ls_tstcc-s_webgui
             java_enabled            = ls_tstcc-s_platin
             wingui_enabled          = ls_tstcc-s_win32
+            suppress_corr_insert    = abap_true
           TABLES
             param_values            = lt_param_values
           EXCEPTIONS
