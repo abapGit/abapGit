@@ -259,6 +259,7 @@
 
       {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_test_checksum_serializer"},
       {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_test_checksums", "method": "rebuild_simple"},
+      {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_test_checksums", "method": "rebuild_w_dot_abapgit"},
       {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_update_calculator_test"}
     ]
   }
