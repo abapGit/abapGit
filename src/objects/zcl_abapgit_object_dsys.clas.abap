@@ -128,6 +128,8 @@ CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
       iv_object_name = mv_doc_object
       iv_longtext_id = c_id ).
 
+    corr_insert( iv_package ).
+
   ENDMETHOD.
 
 

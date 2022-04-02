@@ -250,6 +250,8 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
+    corr_insert( iv_package ).
+
   ENDMETHOD.
 
 
