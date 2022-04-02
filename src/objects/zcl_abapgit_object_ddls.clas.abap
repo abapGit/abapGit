@@ -320,7 +320,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
 
       CATCH cx_root INTO lx_error.
         IF lo_ddl IS NOT INITIAL.
-          " Attempt clean-up by catch error if it doesn't work
+          " Attempt clean-up but catch error if it doesn't work
           TRY.
               CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~DELETE')
                 EXPORTING
