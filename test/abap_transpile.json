@@ -258,7 +258,7 @@
       {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_created_when_confirm", "note": "Void type: SCOMPKDTLN"},
 
       {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_test_checksum_serializer"},
-      {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_test_checksums"},
+      {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_test_checksums", "method": "rebuild_simple"},
       {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_update_calculator_test"}
     ]
   }
