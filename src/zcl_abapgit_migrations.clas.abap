@@ -4,7 +4,9 @@ CLASS zcl_abapgit_migrations DEFINITION
 
   PUBLIC SECTION.
     CLASS-METHODS run
-      RAISING zcx_abapgit_exception.
+      RAISING
+        zcx_abapgit_exception
+        zcx_abapgit_not_found.
 
   PROTECTED SECTION.
   PRIVATE SECTION.

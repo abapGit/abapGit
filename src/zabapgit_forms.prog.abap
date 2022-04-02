@@ -4,13 +4,16 @@
 
 FORM run.
 
-  DATA: lx_exception TYPE REF TO zcx_abapgit_exception.
+  DATA lx_exception TYPE REF TO zcx_abapgit_exception.
+  DATA lx_not_found TYPE REF TO zcx_abapgit_not_found.
 
   TRY.
       zcl_abapgit_migrations=>run( ).
       PERFORM open_gui.
     CATCH zcx_abapgit_exception INTO lx_exception.
       MESSAGE lx_exception TYPE 'E'.
+    CATCH zcx_abapgit_not_found INTO lx_not_found.
+      MESSAGE lx_not_found TYPE 'E'.
   ENDTRY.
 
 ENDFORM.                    "run
