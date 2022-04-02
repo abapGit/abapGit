@@ -11,11 +11,11 @@ CLASS zcl_abapgit_repo_cs_migration DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES:
-      tty_repo_ids TYPE SORTED TABLE OF zif_abapgit_persistence=>ty_repo-key WITH UNIQUE KEY table_line.
+      ty_repo_ids TYPE SORTED TABLE OF zif_abapgit_persistence=>ty_repo-key WITH UNIQUE KEY table_line.
 
     CLASS-METHODS get_unconverted_repo_ids
       RETURNING
-        VALUE(rt_repo_ids) TYPE tty_repo_ids.
+        VALUE(rt_repo_ids) TYPE ty_repo_ids.
     CLASS-METHODS clear_repo_metadata
       IMPORTING
         iv_repo_key TYPE zif_abapgit_persistence=>ty_repo-key
@@ -38,10 +38,10 @@ CLASS ZCL_ABAPGIT_REPO_CS_MIGRATION IMPLEMENTATION.
 
   METHOD clear_repo_metadata.
 
-      DATA lo_repo_persistence TYPE REF TO zcl_abapgit_persistence_repo.
+    DATA lo_repo_persistence TYPE REF TO zcl_abapgit_persistence_repo.
 
-      lo_repo_persistence ?= zcl_abapgit_persist_factory=>get_repo( ).
-      lo_repo_persistence->rewrite_repo_meta( iv_repo_key ).
+    lo_repo_persistence ?= zcl_abapgit_persist_factory=>get_repo( ).
+    lo_repo_persistence->rewrite_repo_meta( iv_repo_key ).
 
   ENDMETHOD.
 
@@ -79,12 +79,16 @@ CLASS ZCL_ABAPGIT_REPO_CS_MIGRATION IMPLEMENTATION.
 
   METHOD get_unconverted_repo_ids.
 
-    DATA lt_cs_ids TYPE tty_repo_ids.
+    DATA lt_cs_ids TYPE ty_repo_ids.
     DATA lv_repo_id LIKE LINE OF rt_repo_ids.
     DATA lv_index TYPE i.
 
-    SELECT value FROM zabapgit INTO TABLE rt_repo_ids WHERE type = zcl_abapgit_persistence_db=>c_type_repo.
-    SELECT value FROM zabapgit INTO TABLE lt_cs_ids WHERE type = zcl_abapgit_persistence_db=>c_type_repo_csum.
+    SELECT value FROM (zcl_abapgit_persistence_db=>c_tabname)
+      INTO TABLE rt_repo_ids
+      WHERE type = zcl_abapgit_persistence_db=>c_type_repo.
+    SELECT value FROM (zcl_abapgit_persistence_db=>c_tabname)
+      INTO TABLE lt_cs_ids
+      WHERE type = zcl_abapgit_persistence_db=>c_type_repo_csum.
 
     LOOP AT rt_repo_ids INTO lv_repo_id.
       lv_index = sy-tabix.
@@ -99,7 +103,7 @@ CLASS ZCL_ABAPGIT_REPO_CS_MIGRATION IMPLEMENTATION.
 
   METHOD run.
 
-    DATA lt_repo_ids TYPE tty_repo_ids.
+    DATA lt_repo_ids TYPE ty_repo_ids.
     DATA lv_repo_id LIKE LINE OF lt_repo_ids.
 
     lt_repo_ids = get_unconverted_repo_ids( ).
