@@ -45,7 +45,7 @@ CLASS zcl_abapgit_requirement_helper DEFINITION
         VALUE(rt_status) TYPE ty_requirement_status_tt
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS version_greater_or_equal
+    CLASS-METHODS is_version_greater_or_equal
       IMPORTING
         !is_status     TYPE ty_requirement_status
       RETURNING
@@ -90,7 +90,7 @@ CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
         <ls_status>-installed_release = <ls_installed_comp>-release.
         <ls_status>-installed_patch = <ls_installed_comp>-extrelease.
         <ls_status>-description = <ls_installed_comp>-desc_text.
-        <ls_status>-met = version_greater_or_equal( <ls_status> ).
+        <ls_status>-met = is_version_greater_or_equal( <ls_status> ).
       ELSE.
         " Component is not installed at all
         <ls_status>-met = abap_false.
@@ -113,6 +113,39 @@ CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
       rv_status = zif_abapgit_definitions=>c_no.
     ELSE.
       rv_status = zif_abapgit_definitions=>c_yes.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD is_version_greater_or_equal.
+
+    DATA:
+      lv_installed_release TYPE n LENGTH 4,
+      lv_installed_patch   TYPE n LENGTH 4,
+      lv_required_release  TYPE n LENGTH 4,
+      lv_required_patch    TYPE n LENGTH 4.
+
+    TRY.
+        MOVE EXACT: is_status-installed_release TO lv_installed_release,
+                    is_status-installed_patch   TO lv_installed_patch,
+                    is_status-required_release  TO lv_required_release,
+                    is_status-required_patch    TO lv_required_patch.
+      CATCH cx_sy_conversion_error.
+        " Cannot compare by number, assume requirement not fullfilled (user can force install
+        " anyways if this was an error)
+        rv_true = abap_false.
+        RETURN.
+    ENDTRY.
+
+    " Versions are comparable by number, compare release and if necessary patch level
+    IF lv_installed_release > lv_required_release
+        OR ( lv_installed_release = lv_required_release
+         AND ( lv_required_patch = 0
+            OR lv_installed_patch >= lv_required_patch ) ).
+
+      rv_true = abap_true.
+
     ENDIF.
 
   ENDMETHOD.
@@ -214,39 +247,6 @@ CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
       CATCH cx_salv_msg cx_salv_not_found cx_salv_data_error INTO lx_ex.
         zcx_abapgit_exception=>raise( lx_ex->get_text( ) ).
     ENDTRY.
-
-  ENDMETHOD.
-
-
-  METHOD version_greater_or_equal.
-
-    DATA:
-      lv_installed_release TYPE n LENGTH 4,
-      lv_installed_patch   TYPE n LENGTH 4,
-      lv_required_release  TYPE n LENGTH 4,
-      lv_required_patch    TYPE n LENGTH 4.
-
-    TRY.
-        MOVE EXACT: is_status-installed_release TO lv_installed_release,
-                    is_status-installed_patch   TO lv_installed_patch,
-                    is_status-required_release  TO lv_required_release,
-                    is_status-required_patch    TO lv_required_patch.
-      CATCH cx_sy_conversion_error.
-        " Cannot compare by number, assume requirement not fullfilled (user can force install
-        " anyways if this was an error)
-        rv_true = abap_false.
-        RETURN.
-    ENDTRY.
-
-    " Versions are comparable by number, compare release and if necessary patch level
-    IF lv_installed_release > lv_required_release
-        OR ( lv_installed_release = lv_required_release
-         AND ( lv_required_patch = 0
-            OR lv_installed_patch >= lv_required_patch ) ).
-
-      rv_true = abap_true.
-
-    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
