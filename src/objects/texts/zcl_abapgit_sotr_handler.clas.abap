@@ -10,7 +10,7 @@ CLASS zcl_abapgit_sotr_handler DEFINITION
 
     CLASS-METHODS read_sotr
       IMPORTING
-        !iv_pgmid    TYPE pgmid
+        !iv_pgmid    TYPE pgmid DEFAULT 'R3TR'
         !iv_object   TYPE trobjtype
         !iv_obj_name TYPE csequence
         !io_xml      TYPE REF TO zif_abapgit_xml_output OPTIONAL
@@ -22,8 +22,17 @@ CLASS zcl_abapgit_sotr_handler DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS create_sotr
       IMPORTING
-        !iv_package TYPE devclass
-        !io_xml     TYPE REF TO zif_abapgit_xml_input
+        !iv_package  TYPE devclass
+        !io_xml      TYPE REF TO zif_abapgit_xml_input OPTIONAL
+        !it_sotr     TYPE zif_abapgit_definitions=>ty_sotr_tt OPTIONAL
+        !it_sotr_use TYPE zif_abapgit_definitions=>ty_sotr_use_tt OPTIONAL
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS delete_sotr
+      IMPORTING
+        !iv_pgmid    TYPE pgmid DEFAULT 'R3TR'
+        !iv_object   TYPE trobjtype
+        !iv_obj_name TYPE csequence
       RAISING
         zcx_abapgit_exception .
   PROTECTED SECTION.
@@ -59,10 +68,15 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_sotr> LIKE LINE OF lt_sotr.
 
-    io_xml->read( EXPORTING iv_name = 'SOTR'
-                  CHANGING cg_data = lt_sotr ).
-    io_xml->read( EXPORTING iv_name = 'SOTR_USE'
-                  CHANGING cg_data = lt_sotr_use ).
+    IF io_xml IS BOUND.
+      io_xml->read( EXPORTING iv_name = 'SOTR'
+                    CHANGING cg_data = lt_sotr ).
+      io_xml->read( EXPORTING iv_name = 'SOTR_USE'
+                    CHANGING cg_data = lt_sotr_use ).
+    ELSE.
+      lt_sotr     = it_sotr.
+      lt_sotr_use = it_sotr_use.
+    ENDIF.
 
     LOOP AT lt_sotr ASSIGNING <ls_sotr>.
       CALL FUNCTION 'SOTR_OBJECT_GET_OBJECTS'
@@ -122,10 +136,43 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD delete_sotr.
+
+    DATA lt_sotr_use TYPE ty_sotr_use_tt.
+
+    FIELD-SYMBOLS <ls_sotr_use> LIKE LINE OF lt_sotr_use.
+
+    lt_sotr_use = get_sotr_usage( iv_pgmid    = iv_pgmid
+                                  iv_object   = iv_object
+                                  iv_obj_name = iv_obj_name ).
+
+    LOOP AT lt_sotr_use ASSIGNING <ls_sotr_use> WHERE concept IS NOT INITIAL.
+
+      CALL FUNCTION 'SOTR_DELETE_CONCEPT'
+        EXPORTING
+          concept             = <ls_sotr_use>-concept
+        EXCEPTIONS
+          no_entry_found      = 1
+          text_not_found      = 2
+          invalid_package     = 3
+          text_not_changeable = 4
+          text_enqueued       = 5
+          no_correction       = 6
+          parameter_error     = 7
+          OTHERS              = 8.
+      IF sy-subrc > 2.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD get_sotr_4_concept.
 
-    DATA: ls_header  TYPE sotr_head,
-          lt_entries TYPE sotr_text_tt.
+    DATA: ls_header  TYPE zif_abapgit_definitions=>ty_sotr-header,
+          lt_entries TYPE zif_abapgit_definitions=>ty_sotr-entries.
 
     FIELD-SYMBOLS: <ls_entry> LIKE LINE OF lt_entries.
 
@@ -171,7 +218,7 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
     lv_obj_name = iv_obj_name.
 
     " Objects with multiple components
-    IF iv_pgmid = 'LIMU' AND ( iv_object = 'WDYV' OR iv_object = 'WAPP' ).
+    IF iv_pgmid = 'LIMU' AND ( iv_object CP 'WDY*' OR iv_object = 'WAPP' ).
       lv_obj_name+30 = '%'.
     ENDIF.
 
@@ -195,13 +242,13 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
 
   METHOD read_sotr.
 
-    FIELD-SYMBOLS <ls_sotr_use> TYPE sotr_use.
+    FIELD-SYMBOLS <ls_sotr_use> LIKE LINE OF et_sotr_use.
 
     DATA lv_sotr TYPE zif_abapgit_definitions=>ty_sotr.
 
-    " Known SOTR usage...
-    " LIMU: CPUB, WAPP, WDYV
-    " R3TR: ENHC, ENHO, ENHS, ENSC, SCGR, SMIF, WDYA, WEBI, WEBS
+    " SOTR usage (see LSOTR_SYSTEM_SETTINGSF01, FORM GET_OBJECT_TABLE)
+    " LIMU: CPUB, WAPP, WDYC, WDYD, WDYV
+    " R3TR: ENHC, ENHD, ENHO, ENHS, ENSC, SCGR, SICF, WDCA, WDCC, WDYA, WEBI, WEBS, XSLT
 
     et_sotr_use = get_sotr_usage( iv_pgmid    = iv_pgmid
                                   iv_object   = iv_object
