@@ -320,10 +320,14 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
 
       CATCH cx_root INTO lx_error.
         IF lo_ddl IS NOT INITIAL.
-          CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~DELETE')
-            EXPORTING
-              name = ms_item-obj_name
-              prid = 0.
+          " Attempt clean-up but catch error if it doesn't work
+          TRY.
+              CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~DELETE')
+                EXPORTING
+                  name = ms_item-obj_name
+                  prid = 0.
+            CATCH cx_root ##NO_HANDLER.
+          ENDTRY.
         ENDIF.
 
         zcx_abapgit_exception=>raise_with_text( lx_error ).
