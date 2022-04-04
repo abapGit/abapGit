@@ -482,6 +482,10 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
       CHANGING
         cg_data = ls_package_data ).
 
+    IF mv_local_devclass(1) = '$' AND ls_package_data-mainpack IS NOT INITIAL.
+      zcx_abapgit_exception=>raise( |{ iv_package } is main or structure package and cannot be used in locally| ).
+    ENDIF.
+
     li_package = get_package( ).
 
     " Swap out repository package name with the local installation package name
