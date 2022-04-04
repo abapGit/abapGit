@@ -5,9 +5,6 @@ CLASS zcl_abapgit_sotr_handler DEFINITION
 
   PUBLIC SECTION.
 
-    TYPES:
-      ty_sotr_use_tt TYPE STANDARD TABLE OF sotr_use WITH DEFAULT KEY .
-
     CLASS-METHODS read_sotr
       IMPORTING
         !iv_pgmid    TYPE pgmid DEFAULT 'R3TR'
@@ -35,6 +32,11 @@ CLASS zcl_abapgit_sotr_handler DEFINITION
         !iv_obj_name TYPE csequence
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS delete_sotr_package
+      IMPORTING
+        !iv_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
     CLASS-METHODS get_sotr_usage
       IMPORTING
@@ -42,7 +44,7 @@ CLASS zcl_abapgit_sotr_handler DEFINITION
         !iv_object         TYPE trobjtype
         !iv_obj_name       TYPE csequence
       RETURNING
-        VALUE(rt_sotr_use) TYPE ty_sotr_use_tt.
+        VALUE(rt_sotr_use) TYPE zif_abapgit_definitions=>ty_sotr_use_tt.
 
     CLASS-METHODS get_sotr_4_concept
       IMPORTING
@@ -138,7 +140,7 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
 
   METHOD delete_sotr.
 
-    DATA lt_sotr_use TYPE ty_sotr_use_tt.
+    DATA lt_sotr_use TYPE zif_abapgit_definitions=>ty_sotr_use_tt.
 
     FIELD-SYMBOLS <ls_sotr_use> LIKE LINE OF lt_sotr_use.
 
@@ -151,6 +153,37 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
       CALL FUNCTION 'SOTR_DELETE_CONCEPT'
         EXPORTING
           concept             = <ls_sotr_use>-concept
+        EXCEPTIONS
+          no_entry_found      = 1
+          text_not_found      = 2
+          invalid_package     = 3
+          text_not_changeable = 4
+          text_enqueued       = 5
+          no_correction       = 6
+          parameter_error     = 7
+          OTHERS              = 8.
+      IF sy-subrc > 2.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD delete_sotr_package.
+
+    DATA lt_sotr_head TYPE STANDARD TABLE OF sotr_head WITH DEFAULT KEY.
+
+    FIELD-SYMBOLS <ls_sotr_head> LIKE LINE OF lt_sotr_head.
+
+    SELECT * FROM sotr_head INTO TABLE lt_sotr_head WHERE paket = iv_package.
+
+    LOOP AT lt_sotr_head ASSIGNING <ls_sotr_head> WHERE concept IS NOT INITIAL.
+
+      CALL FUNCTION 'SOTR_DELETE_CONCEPT'
+        EXPORTING
+          concept             = <ls_sotr_head>-concept
         EXCEPTIONS
           no_entry_found      = 1
           text_not_found      = 2
