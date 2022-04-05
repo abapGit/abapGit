@@ -34,6 +34,46 @@ ENDCLASS.
 
 CLASS zcl_abapgit_object_sush IMPLEMENTATION.
 
+
+  METHOD clear_metadata.
+
+    DATA:
+      BEGIN OF ls_empty_metadata,
+        modifier  TYPE c LENGTH 12, " usob_sm-modifier
+        moddate   TYPE d, " usob_sm-moddate,
+        modtime   TYPE t, " usob_sm-modtime,
+        srcsystem TYPE tadir-srcsystem,
+        author    TYPE tadir-author,
+        devclass  TYPE tadir-devclass,
+      END OF ls_empty_metadata.
+
+    FIELD-SYMBOLS:
+      <ls_usobx>     TYPE any,
+      <ls_usbot>     TYPE any,
+      <ls_usobt_ext> TYPE any,
+      <ls_usobx_ext> TYPE any.
+
+    MOVE-CORRESPONDING ls_empty_metadata TO cs_data_head.
+
+    LOOP AT ct_usobx ASSIGNING <ls_usobx>.
+      MOVE-CORRESPONDING ls_empty_metadata TO <ls_usobx>.
+    ENDLOOP.
+
+    LOOP AT ct_usobt ASSIGNING <ls_usbot>.
+      MOVE-CORRESPONDING ls_empty_metadata TO <ls_usbot>.
+    ENDLOOP.
+
+    LOOP AT ct_usobt_ext ASSIGNING <ls_usobt_ext>.
+      MOVE-CORRESPONDING ls_empty_metadata TO <ls_usobt_ext>.
+    ENDLOOP.
+
+    LOOP AT ct_usobx_ext ASSIGNING <ls_usobx_ext>.
+      MOVE-CORRESPONDING ls_empty_metadata TO <ls_usobx_ext>.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD constructor.
 
     DATA: lr_data_head TYPE REF TO data.
@@ -85,6 +125,8 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
       CATCH cx_static_check INTO lx_err.
         zcx_abapgit_exception=>raise_with_text( lx_err ).
     ENDTRY.
+
+    corr_insert( iv_package ).
 
   ENDMETHOD.
 
@@ -314,44 +356,4 @@ CLASS zcl_abapgit_object_sush IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
-
-
-  METHOD clear_metadata.
-
-    DATA:
-      BEGIN OF ls_empty_metadata,
-        modifier  TYPE c LENGTH 12, " usob_sm-modifier
-        moddate   TYPE d, " usob_sm-moddate,
-        modtime   TYPE t, " usob_sm-modtime,
-        srcsystem TYPE tadir-srcsystem,
-        author    TYPE tadir-author,
-        devclass  TYPE tadir-devclass,
-      END OF ls_empty_metadata.
-
-    FIELD-SYMBOLS:
-      <ls_usobx>     TYPE any,
-      <ls_usbot>     TYPE any,
-      <ls_usobt_ext> TYPE any,
-      <ls_usobx_ext> TYPE any.
-
-    MOVE-CORRESPONDING ls_empty_metadata TO cs_data_head.
-
-    LOOP AT ct_usobx ASSIGNING <ls_usobx>.
-      MOVE-CORRESPONDING ls_empty_metadata TO <ls_usobx>.
-    ENDLOOP.
-
-    LOOP AT ct_usobt ASSIGNING <ls_usbot>.
-      MOVE-CORRESPONDING ls_empty_metadata TO <ls_usbot>.
-    ENDLOOP.
-
-    LOOP AT ct_usobt_ext ASSIGNING <ls_usobt_ext>.
-      MOVE-CORRESPONDING ls_empty_metadata TO <ls_usobt_ext>.
-    ENDLOOP.
-
-    LOOP AT ct_usobx_ext ASSIGNING <ls_usobx_ext>.
-      MOVE-CORRESPONDING ls_empty_metadata TO <ls_usobx_ext>.
-    ENDLOOP.
-
-  ENDMETHOD.
-
 ENDCLASS.

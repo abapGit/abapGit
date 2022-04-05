@@ -10,7 +10,7 @@ CLASS zcl_abapgit_object_vcls DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     CONSTANTS c_cluster_type TYPE c VALUE 'C' ##NO_TEXT.
     CONSTANTS c_mode_insert TYPE obj_para-maint_mode VALUE 'I' ##NO_TEXT.
 
-    METHODS check_lock
+    METHODS is_locked
       IMPORTING
         !iv_tabname         TYPE tabname
         !iv_argument        TYPE seqg3-garg
@@ -22,10 +22,10 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_vcls IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_VCLS IMPLEMENTATION.
 
 
-  METHOD check_lock.
+  METHOD is_locked.
 
     DATA:
       ls_rstable_key TYPE rstable, " Lock argument for table RSTABLE
@@ -63,6 +63,8 @@ CLASS zcl_abapgit_object_vcls IMPLEMENTATION.
     DELETE FROM vclstruct WHERE vclname = lv_vclname. "#EC CI_NOFIRST "#EC CI_SUBRC
     DELETE FROM vclstrudep WHERE vclname = lv_vclname.    "#EC CI_SUBRC
     DELETE FROM vclmf WHERE vclname = lv_vclname.         "#EC CI_SUBRC
+
+    corr_insert( iv_package ).
 
   ENDMETHOD.
 
@@ -188,16 +190,16 @@ CLASS zcl_abapgit_object_vcls IMPLEMENTATION.
     lv_argument_langu = |@{ ms_item-obj_name }|.
 
     "Check all relevant maintein tabeles for view clusters
-    IF check_lock( iv_tabname = 'VCLDIR'
-                   iv_argument = lv_argument ) = abap_true
-        OR check_lock( iv_tabname = 'VCLDIRT'
-                       iv_argument = lv_argument_langu ) = abap_true
-        OR check_lock( iv_tabname = 'VCLSTRUC'
-                       iv_argument = lv_argument )       = abap_true
-        OR check_lock( iv_tabname = 'VCLSTRUCT'
-                       iv_argument = lv_argument_langu ) = abap_true
-        OR check_lock( iv_tabname = 'VCLMF'
-                       iv_argument = lv_argument )       = abap_true.
+    IF is_locked( iv_tabname = 'VCLDIR'
+                  iv_argument = lv_argument ) = abap_true
+        OR is_locked( iv_tabname = 'VCLDIRT'
+                      iv_argument = lv_argument_langu ) = abap_true
+        OR is_locked( iv_tabname = 'VCLSTRUC'
+                      iv_argument = lv_argument )       = abap_true
+        OR is_locked( iv_tabname = 'VCLSTRUCT'
+                      iv_argument = lv_argument_langu ) = abap_true
+        OR is_locked( iv_tabname = 'VCLMF'
+                      iv_argument = lv_argument )       = abap_true.
 
       rv_is_locked = abap_true.
     ENDIF.
