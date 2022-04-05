@@ -482,8 +482,12 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
       CHANGING
         cg_data = ls_package_data ).
 
-    IF mv_local_devclass(1) = '$' AND ls_package_data-mainpack IS NOT INITIAL.
-      zcx_abapgit_exception=>raise( |{ iv_package } is main or structure package and cannot be used in locally| ).
+    IF mv_local_devclass(1) = '$'.
+      IF ls_package_data-mainpack = 'X'.
+        zcx_abapgit_exception=>raise( |Main package { iv_package } cannot be used in locally| ).
+      ELSEIF ls_package_data-mainpack = 'S'.
+        zcx_abapgit_exception=>raise( |Structure package { iv_package } cannot be used in locally| ).
+      ENDIF.
     ENDIF.
 
     li_package = get_package( ).
