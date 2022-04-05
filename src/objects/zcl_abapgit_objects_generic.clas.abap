@@ -11,6 +11,8 @@ CLASS zcl_abapgit_objects_generic DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS delete
+      IMPORTING
+        !iv_package TYPE devclass
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize
@@ -260,6 +262,8 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
+    corr_insert( iv_package ).
+
   ENDMETHOD.
 
 
@@ -267,7 +271,7 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
 
     validate( io_xml ).
 
-    delete( ).
+    delete( iv_package ).
 
     deserialize_data( io_xml ).
 
