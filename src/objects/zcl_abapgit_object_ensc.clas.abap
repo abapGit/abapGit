@@ -27,8 +27,9 @@ CLASS zcl_abapgit_object_ensc IMPLEMENTATION.
 
     TRY.
         li_spot_ref = cl_enh_factory=>get_enhancement_spot_comp(
-          lock = abap_true
-          name = lv_spot_name ).
+          lock     = abap_true
+          run_dark = abap_true
+          name     = lv_spot_name ).
 
         IF li_spot_ref IS BOUND.
           li_spot_ref->if_enh_object~delete(
@@ -123,8 +124,9 @@ CLASS zcl_abapgit_object_ensc IMPLEMENTATION.
 
     TRY.
         cl_enh_factory=>get_enhancement_spot_comp(
-          lock = ''
-          name = lv_spot_name ).
+          lock     = ''
+          run_dark = abap_true
+          name     = lv_spot_name ).
         rv_bool = abap_true.
       CATCH cx_enh_root.
         rv_bool = abap_false.
@@ -181,8 +183,9 @@ CLASS zcl_abapgit_object_ensc IMPLEMENTATION.
 
     TRY.
         li_spot_ref = cl_enh_factory=>get_enhancement_spot_comp(
-          lock = ''
-          name = lv_spot_name ).
+          lock     = ''
+          run_dark = abap_true
+          name     = lv_spot_name ).
 
         lo_spot_ref ?= li_spot_ref.
 
