@@ -311,7 +311,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
     DATA:
       lt_lxe_texts      TYPE zif_abapgit_lxe_texts=>ty_tlxe_i18n,
       ls_lxe_item       TYPE zif_abapgit_lxe_texts=>ty_lxe_i18n,
-      lv_error          TYPE  lxestring,
+      lv_error          TYPE lxestring,
       lt_text_pairs_tmp LIKE ls_lxe_item-text_pairs.
 
     ii_xml->read( EXPORTING iv_name = iv_lxe_text_name
