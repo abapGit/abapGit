@@ -95,6 +95,8 @@ CLASS zcl_abapgit_object_srfc IMPLEMENTATION.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
+    corr_insert( iv_package ).
+
   ENDMETHOD.
 
 
