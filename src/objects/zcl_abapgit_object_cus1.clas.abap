@@ -181,6 +181,8 @@ CLASS zcl_abapgit_object_cus1 IMPLEMENTATION.
       iv_tcode   = 'S_CUS_ACTIVITY'
       it_bdcdata = lt_bdc_data ).
 
+    rv_exit = abap_true.
+
   ENDMETHOD.
 
 
