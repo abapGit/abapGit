@@ -38,7 +38,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SPPF IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    get_generic( )->delete( ).
+    get_generic( )->delete( iv_package ).
 
   ENDMETHOD.
 

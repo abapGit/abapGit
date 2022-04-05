@@ -531,7 +531,7 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
     delete_docu_usp( ).
 
     " the deletion of the tables of the entity
-    get_generic( )->delete( ).
+    get_generic( )->delete( iv_package ).
 
   ENDMETHOD.
 
