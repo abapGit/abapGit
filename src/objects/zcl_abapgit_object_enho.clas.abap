@@ -80,6 +80,7 @@ CLASS zcl_abapgit_object_enho IMPLEMENTATION.
     TRY.
         li_enh_tool = cl_enh_factory=>get_enhancement(
           enhancement_id   = lv_enh_id
+          run_dark         = abap_true
           bypassing_buffer = abap_true ).
       CATCH cx_enh_root.
         rv_user = c_user_unknown.
@@ -121,6 +122,7 @@ CLASS zcl_abapgit_object_enho IMPLEMENTATION.
     TRY.
         li_enh_object = cl_enh_factory=>get_enhancement(
           enhancement_id = lv_enh_id
+          run_dark       = abap_true
           lock           = abap_true ).
         li_enh_object->delete(
           EXPORTING
@@ -172,6 +174,7 @@ CLASS zcl_abapgit_object_enho IMPLEMENTATION.
     TRY.
         cl_enh_factory=>get_enhancement(
           enhancement_id   = lv_enh_id
+          run_dark         = abap_true
           bypassing_buffer = abap_true ).
         rv_bool = abap_true.
       CATCH cx_enh_root.
@@ -235,6 +238,7 @@ CLASS zcl_abapgit_object_enho IMPLEMENTATION.
     TRY.
         li_enh_tool = cl_enh_factory=>get_enhancement(
           enhancement_id   = lv_enh_id
+          run_dark         = abap_true
           bypassing_buffer = abap_true ).
       CATCH cx_enh_root INTO lx_enh_root.
         zcx_abapgit_exception=>raise_with_text( lx_enh_root ).

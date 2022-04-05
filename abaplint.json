@@ -64,6 +64,15 @@
     "globalMacros": []
   },
   "rules": {
+    "align_parameters": false,
+    "cds_parser_error": true,
+    "constant_classes": true,
+    "no_aliases": false,
+    "nrob_consistency": true,
+    "omit_preceding_zeros": true,
+    "prefer_corresponding": true,
+    "static_call_via_instance": false,
+    "unnecessary_chaining": false,
     "pragma_placement": true,
     "unsecure_fae": false,
     "identical_descriptions": false,
@@ -229,6 +238,7 @@
       "while": true,
       "case": true,
       "select": true,
+      "when": false,
       "do": true,
       "at": true
     },
@@ -331,6 +341,7 @@
       "refresh": true,
       "compute": true,
       "add": true,
+      "occurences": true,
       "selectWithoutInto": true,
       "ranges": true,
       "callTransformation": true,
