@@ -47,6 +47,8 @@ CLASS zcl_abapgit_object_area IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Error while deleting AREA: { ms_item-obj_name }| ).
     ENDIF.
 
+    corr_insert( iv_package ).
+
   ENDMETHOD.
 
 
