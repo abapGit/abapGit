@@ -7,17 +7,24 @@ CLASS zcl_abapgit_syntax_json DEFINITION
 
     CONSTANTS:
       " JSON... This was easy :-)
+      " JSONC... With comments
       BEGIN OF c_css,
-        keyword TYPE string VALUE 'keyword',                "#EC NOTEXT
+        keyword TYPE string VALUE 'selectors',              "#EC NOTEXT
         text    TYPE string VALUE 'text',                   "#EC NOTEXT
+        values  TYPE string VALUE 'properties',             "#EC NOTEXT
+        comment TYPE string VALUE 'comment',                "#EC NOTEXT
       END OF c_css .
     CONSTANTS:
       BEGIN OF c_token,
         keyword TYPE c VALUE 'K',                           "#EC NOTEXT
         text    TYPE c VALUE 'T',                           "#EC NOTEXT
+        values  TYPE c VALUE 'V',                           "#EC NOTEXT
+        comment TYPE c VALUE 'C',                           "#EC NOTEXT
       END OF c_token .
     CONSTANTS:
       BEGIN OF c_regex,
+        " comments /* ... */ or //
+        comment TYPE string VALUE '\/\*.*\*\/|\/\*|\*\/|\/\/', "#EC NOTEXT
         " not much here
         keyword TYPE string VALUE 'true|false|null',        "#EC NOTEXT
         " double quoted strings
@@ -34,7 +41,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SYNTAX_JSON IMPLEMENTATION.
+CLASS zcl_abapgit_syntax_json IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -47,9 +54,20 @@ CLASS ZCL_ABAPGIT_SYNTAX_JSON IMPLEMENTATION.
               iv_token = c_token-keyword
               iv_style = c_css-keyword ).
 
+    " Style for keys
     add_rule( iv_regex = c_regex-text
               iv_token = c_token-text
               iv_style = c_css-text ).
+
+    " Style for values
+    add_rule( iv_regex = ''
+              iv_token = c_token-values
+              iv_style = c_css-values ).
+
+    " JSONC comments
+    add_rule( iv_regex = c_regex-comment
+              iv_token = c_token-comment
+              iv_style = c_css-comment ).
 
   ENDMETHOD.
 
@@ -58,6 +76,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_JSON IMPLEMENTATION.
 
     DATA:
       lv_match      TYPE string,
+      lv_count      TYPE i,
       lv_line_len   TYPE i,
       lv_prev_token TYPE c.
 
@@ -98,6 +117,14 @@ CLASS ZCL_ABAPGIT_SYNTAX_JSON IMPLEMENTATION.
     ENDLOOP.
 
     DELETE ct_matches WHERE token IS INITIAL.
+
+    " Switch style of second text match to values
+    LOOP AT ct_matches ASSIGNING <ls_match> WHERE token = c_token-text.
+      lv_count = lv_count + 1.
+      IF lv_count = 2.
+        <ls_match>-token = c_token-values.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 ENDCLASS.
