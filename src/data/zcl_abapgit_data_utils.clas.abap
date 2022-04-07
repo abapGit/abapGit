@@ -1,6 +1,6 @@
 CLASS zcl_abapgit_data_utils DEFINITION
   PUBLIC
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
@@ -10,12 +10,19 @@ CLASS zcl_abapgit_data_utils DEFINITION
       RETURNING
         VALUE(rr_data) TYPE REF TO data
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     CLASS-METHODS build_filename
       IMPORTING
         !is_config         TYPE zif_abapgit_data_config=>ty_config
       RETURNING
-        VALUE(rv_filename) TYPE string .
+        VALUE(rv_filename) TYPE string.
+    CLASS-METHODS jump
+      IMPORTING
+        !is_item       TYPE zif_abapgit_definitions=>ty_item
+      RETURNING
+        VALUE(rv_exit) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -89,6 +96,31 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
       CATCH cx_root.
         zcx_abapgit_exception=>raise( |Error creating internal table for data serialization| ).
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD jump.
+
+    IF is_item-obj_type = zif_abapgit_data_config=>c_data_type-tabu.
+      " Run SE16 with authorization check
+      CALL FUNCTION 'RS_TABLE_LIST_CREATE'
+        EXPORTING
+          table_name         = is_item-obj_name
+        EXCEPTIONS
+          table_is_structure = 1
+          table_not_exists   = 2
+          db_not_exists      = 3
+          no_permission      = 4
+          no_change_allowed  = 5
+          table_is_gtt       = 6
+          OTHERS             = 7.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |Table { is_item-obj_name } cannot be displayed| ).
+      ENDIF.
+
+      rv_exit = abap_true.
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
