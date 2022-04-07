@@ -162,19 +162,36 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
             dialog_needed        = 5
             OTHERS               = 6.
       CATCH cx_sy_dyn_call_param_not_found.
-        " no_ask_delete_append not available in lower releases
-        CALL FUNCTION 'RS_DD_DELETE_OBJ'
-          EXPORTING
-            no_ask               = iv_no_ask
-            objname              = lv_objname
-            objtype              = lv_objtype
-          EXCEPTIONS
-            not_executed         = 1
-            object_not_found     = 2
-            object_not_specified = 3
-            permission_failure   = 4
-            dialog_needed        = 5
-            OTHERS               = 6.
+        TRY.
+            " try to force deletion for APPENDs
+            CALL FUNCTION 'RS_DD_DELETE_OBJ'
+              EXPORTING
+                no_ask               = iv_no_ask
+                objname              = lv_objname
+                objtype              = lv_objtype
+                aie_force_deletion   = iv_no_ask_delete_append
+              EXCEPTIONS
+                not_executed         = 1
+                object_not_found     = 2
+                object_not_specified = 3
+                permission_failure   = 4
+                dialog_needed        = 5
+                OTHERS               = 6.
+          CATCH cx_sy_dyn_call_param_not_found.
+            " no_ask_delete_append and aie_force_deletion not available in lower releases
+            CALL FUNCTION 'RS_DD_DELETE_OBJ'
+              EXPORTING
+                no_ask               = iv_no_ask
+                objname              = lv_objname
+                objtype              = lv_objtype
+              EXCEPTIONS
+                not_executed         = 1
+                object_not_found     = 2
+                object_not_specified = 3
+                permission_failure   = 4
+                dialog_needed        = 5
+                OTHERS               = 6.
+        ENDTRY.
     ENDTRY.
 
     IF sy-subrc = 5.
