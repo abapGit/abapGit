@@ -32,7 +32,7 @@ CLASS ltcl_abapgit_syntax_json IMPLEMENTATION.
   METHOD comment_1.
     cl_abap_unit_assert=>assert_equals(
       act = mo_cut->process_line( |"key":"value" // comment| )
-      exp = |<span class="text">"key"</span>:<span class="properties">"value"</span>| 
+      exp = |<span class="text">"key"</span>:<span class="properties">"value"</span>|
          && | <span class="comment">//</span> comment| ).
   ENDMETHOD.
 
