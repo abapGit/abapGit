@@ -1054,6 +1054,12 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     DATA: lv_area     TYPE rs38l-area,
           lt_includes TYPE ty_sobj_name_tt.
 
+    " FUGR related to change documents will be deleted by CHDO
+    SELECT SINGLE fgrp FROM tcdrps INTO lv_area WHERE fgrp = ms_item-obj_name.
+    IF sy-subrc = 0.
+      RETURN.
+    ENDIF.
+
     lt_includes = includes( ).
 
     lv_area = ms_item-obj_name.

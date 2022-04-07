@@ -65,6 +65,8 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
+    corr_insert( iv_package ).
+
   ENDMETHOD.
 
 
