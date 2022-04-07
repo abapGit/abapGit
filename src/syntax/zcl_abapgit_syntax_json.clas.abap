@@ -1,7 +1,7 @@
 CLASS zcl_abapgit_syntax_json DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_syntax_highlighter
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
@@ -13,14 +13,14 @@ CLASS zcl_abapgit_syntax_json DEFINITION
         text    TYPE string VALUE 'text',                   "#EC NOTEXT
         values  TYPE string VALUE 'properties',             "#EC NOTEXT
         comment TYPE string VALUE 'comment',                "#EC NOTEXT
-      END OF c_css .
+      END OF c_css.
     CONSTANTS:
       BEGIN OF c_token,
         keyword TYPE c VALUE 'K',                           "#EC NOTEXT
         text    TYPE c VALUE 'T',                           "#EC NOTEXT
         values  TYPE c VALUE 'V',                           "#EC NOTEXT
         comment TYPE c VALUE 'C',                           "#EC NOTEXT
-      END OF c_token .
+      END OF c_token.
     CONSTANTS:
       BEGIN OF c_regex,
         " comments /* ... */ or //
@@ -29,9 +29,9 @@ CLASS zcl_abapgit_syntax_json DEFINITION
         keyword TYPE string VALUE 'true|false|null',        "#EC NOTEXT
         " double quoted strings
         text    TYPE string VALUE '"',                      "#EC NOTEXT
-      END OF c_regex .
+      END OF c_regex.
 
-    METHODS constructor .
+    METHODS constructor.
   PROTECTED SECTION.
 
     METHODS order_matches REDEFINITION.
