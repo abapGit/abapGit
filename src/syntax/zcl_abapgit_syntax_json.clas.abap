@@ -121,7 +121,7 @@ CLASS zcl_abapgit_syntax_json IMPLEMENTATION.
     " Switch style of second text match to values
     LOOP AT ct_matches ASSIGNING <ls_match> WHERE token = c_token-text.
       lv_count = lv_count + 1.
-      IF lv_count = 2.
+      IF lv_count >= 2.
         <ls_match>-token = c_token-values.
       ENDIF.
     ENDLOOP.
