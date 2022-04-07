@@ -311,6 +311,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
     DATA:
       lt_lxe_texts      TYPE zif_abapgit_lxe_texts=>ty_tlxe_i18n,
       ls_lxe_item       TYPE zif_abapgit_lxe_texts=>ty_lxe_i18n,
+      lv_error          TYPE lxestring,
       lt_text_pairs_tmp LIKE ls_lxe_item-text_pairs.
 
     ii_xml->read( EXPORTING iv_name = iv_lxe_text_name
@@ -327,8 +328,13 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
           objtype   = ls_lxe_item-objtype
           objname   = ls_lxe_item-objname
           read_only = abap_false
+        IMPORTING
+          err_msg   = lv_error
         TABLES
           lt_pcx_s1 = lt_text_pairs_tmp.
+      IF lv_error IS NOT INITIAL.
+        zcx_abapgit_exception=>raise( lv_error ).
+      ENDIF.
 
       "Call actual Write FM
       CALL FUNCTION 'LXE_OBJ_TEXT_PAIR_WRITE'
@@ -338,8 +344,13 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
           custmnr   = ls_lxe_item-custmnr
           objtype   = ls_lxe_item-objtype
           objname   = ls_lxe_item-objname
+        IMPORTING
+          err_msg   = lv_error
         TABLES
           lt_pcx_s1 = ls_lxe_item-text_pairs.
+      IF lv_error IS NOT INITIAL.
+        zcx_abapgit_exception=>raise( lv_error ).
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.
@@ -350,6 +361,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
     DATA:
       lt_obj_list      TYPE lxe_tt_colob,
       lv_main_lang     TYPE lxeisolang,
+      lv_error         TYPE lxestring,
       lt_languages     TYPE zif_abapgit_definitions=>ty_languages,
       lt_lxe_texts     TYPE zif_abapgit_lxe_texts=>ty_tlxe_i18n,
       ls_lxe_text_item TYPE zif_abapgit_lxe_texts=>ty_lxe_i18n.
@@ -391,8 +403,13 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
             custmnr   = ls_lxe_text_item-custmnr
             objtype   = ls_lxe_text_item-objtype
             objname   = ls_lxe_text_item-objname
+          IMPORTING
+            err_msg   = lv_error
           TABLES
             lt_pcx_s1 = ls_lxe_text_item-text_pairs.
+        IF lv_error IS NOT INITIAL.
+          zcx_abapgit_exception=>raise( lv_error ).
+        ENDIF.
 
         IF ls_lxe_text_item-text_pairs IS NOT INITIAL.
           APPEND ls_lxe_text_item TO lt_lxe_texts.
