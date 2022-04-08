@@ -482,6 +482,14 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
       CHANGING
         cg_data = ls_package_data ).
 
+    IF mv_local_devclass(1) = '$'.
+      IF ls_package_data-mainpack = 'X'.
+        zcx_abapgit_exception=>raise( |Main package { iv_package } cannot be used in local package| ).
+      ELSEIF ls_package_data-mainpack = 'S'.
+        zcx_abapgit_exception=>raise( |Structure package { iv_package } cannot be used in local package| ).
+      ENDIF.
+    ENDIF.
+
     li_package = get_package( ).
 
     " Swap out repository package name with the local installation package name
@@ -627,6 +635,8 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
     li_package->save_generic(
       EXPORTING
         i_save_sign           = ls_save_sign
+        i_transport_request   = iv_transport
+        i_suppress_dialog     = abap_true
       EXCEPTIONS
         cancelled_in_corr     = 1
         permission_failure    = 2
