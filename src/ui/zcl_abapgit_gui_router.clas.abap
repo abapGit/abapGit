@@ -131,7 +131,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
+CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
 
   METHOD abapgit_services_actions.
@@ -681,7 +681,11 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         TRY.
             " Hide HTML Viewer in dummy screen0 for direct CALL SCREEN to work
             li_html_viewer->set_visiblity( abap_false ).
-            zcl_abapgit_objects=>jump( ls_item ).
+            IF ls_item-obj_type = zif_abapgit_data_config=>c_data_type-tabu.
+              zcl_abapgit_data_utils=>jump( ls_item ).
+            ELSE.
+              zcl_abapgit_objects=>jump( ls_item ).
+            ENDIF.
             li_html_viewer->set_visiblity( abap_true ).
           CATCH zcx_abapgit_exception INTO lx_ex.
             li_html_viewer->set_visiblity( abap_true ).
