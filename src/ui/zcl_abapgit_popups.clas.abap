@@ -464,13 +464,13 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     ENDIF.
 
     ms_position = center(
-      iv_width  = 24
+      iv_width  = 30
       iv_height = lines( lt_selection ) ).
 
     CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
       EXPORTING
-        textline1  = 'Select Branch'
-        titel      = 'Select a branch'
+        titel      = 'Select Branch'
+        textline1  = 'Select a branch'
         start_col  = ms_position-start_column
         start_row  = ms_position-start_row
         cursorline = lv_default
@@ -1095,21 +1095,25 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     lo_branches = zcl_abapgit_git_transport=>branches( iv_url ).
     lt_tags     = lo_branches->get_tags_only( ).
 
-    LOOP AT lt_tags ASSIGNING <ls_tag>.
+    LOOP AT lt_tags ASSIGNING <ls_tag> WHERE name NP '*^{}'.
 
       APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
       <ls_sel>-varoption = zcl_abapgit_git_tag=>remove_tag_prefix( <ls_tag>-name ).
 
     ENDLOOP.
 
+    IF lt_selection IS INITIAL.
+      zcx_abapgit_exception=>raise( 'No tags are available to select' ).
+    ENDIF.
+
     ms_position = center(
-      iv_width  = 24
+      iv_width  = 30
       iv_height = lines( lt_selection ) ).
 
     CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
       EXPORTING
-        textline1  = 'Select Tag'
-        titel      = 'Select a tag'
+        titel      = 'Select Tag'
+        textline1  = 'Select a tag'
         start_col  = ms_position-start_column
         start_row  = ms_position-start_row
         cursorline = lv_default
