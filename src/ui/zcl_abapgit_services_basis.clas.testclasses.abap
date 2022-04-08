@@ -415,4 +415,8 @@ CLASS ltcl_popups_mock IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_popups~tag_list_popup.
+
+  ENDMETHOD.
+
 ENDCLASS.
