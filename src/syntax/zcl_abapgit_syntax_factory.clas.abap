@@ -31,7 +31,7 @@ CLASS zcl_abapgit_syntax_factory IMPLEMENTATION.
       CREATE OBJECT ro_instance TYPE zcl_abapgit_syntax_css.
     ELSEIF iv_filename CP '*.js'.
       CREATE OBJECT ro_instance TYPE zcl_abapgit_syntax_js.
-    ELSEIF iv_filename CP '*.json'.
+    ELSEIF iv_filename CP '*.json' OR iv_filename CP '*.jsonc'.
       CREATE OBJECT ro_instance TYPE zcl_abapgit_syntax_json.
     ELSEIF iv_filename CP '*.txt' OR iv_filename CP '*.ini'  OR iv_filename CP '*.text'.
       CREATE OBJECT ro_instance TYPE zcl_abapgit_syntax_txt.
