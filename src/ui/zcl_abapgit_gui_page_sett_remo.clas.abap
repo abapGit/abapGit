@@ -170,7 +170,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
 
   METHOD checkout_commit_build_list.
@@ -391,7 +391,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
 
     lo_repo ?= mo_repo.
 
-    ls_tag = zcl_abapgit_ui_factory=>get_tag_popups( )->tag_select_popup( lo_repo ).
+    ls_tag = zcl_abapgit_ui_factory=>get_popups( )->tag_list_popup( lo_repo->get_url( ) ).
 
     IF ls_tag IS NOT INITIAL.
       rv_tag = ls_tag-name.

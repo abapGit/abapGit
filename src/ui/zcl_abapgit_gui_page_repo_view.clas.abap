@@ -557,8 +557,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    ro_tag_dropdown->add( iv_txt = 'Overview'
-                          iv_act = |{ zif_abapgit_definitions=>c_action-go_tag_overview }?key={ mv_key }| ).
     ro_tag_dropdown->add( iv_txt = 'Switch'
                           iv_act = |{ zif_abapgit_definitions=>c_action-git_tag_switch }?key={ mv_key }|
                           iv_opt = iv_wp_opt ).
