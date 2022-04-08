@@ -681,7 +681,9 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         TRY.
             " Hide HTML Viewer in dummy screen0 for direct CALL SCREEN to work
             li_html_viewer->set_visiblity( abap_false ).
-            IF zcl_abapgit_data_utils=>jump( ls_item ) IS INITIAL.
+            IF ls_item-obj_type = zif_abapgit_data_config=>c_data_type-tabu.
+              zcl_abapgit_data_utils=>jump( ls_item ).
+            ELSE.
               zcl_abapgit_objects=>jump( ls_item ).
             ENDIF.
             li_html_viewer->set_visiblity( abap_true ).
