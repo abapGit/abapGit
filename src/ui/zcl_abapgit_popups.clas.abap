@@ -1136,7 +1136,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
     lv_tag = zcl_abapgit_git_tag=>add_tag_prefix( <ls_sel>-varoption ).
 
-    READ TABLE lt_tags WITH KEY name = lv_tag ASSIGNING <ls_tag>.
+    READ TABLE lt_tags WITH KEY name_key COMPONENTS name = lv_tag ASSIGNING <ls_tag>.
     IF sy-subrc <> 0.
       " tag name longer than 65 characters
       LOOP AT lt_tags ASSIGNING <ls_tag> WHERE name CS lv_tag.
