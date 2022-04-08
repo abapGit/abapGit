@@ -434,11 +434,10 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    get_files_remote( ).
-
     CREATE OBJECT ri_config TYPE zcl_abapgit_data_config.
     mi_data_config = ri_config.
 
+    " Assume remote data has been loaded already
     READ TABLE mt_remote ASSIGNING <ls_remote>
       WITH KEY file_path
       COMPONENTS path = zif_abapgit_data_config=>c_default_path.
