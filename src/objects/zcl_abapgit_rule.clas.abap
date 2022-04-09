@@ -42,6 +42,7 @@ CLASS zcl_abapgit_rule IMPLEMENTATION.
 
   METHOD zif_abapgit_rule~apply_clear_logic.
     DATA ls_item TYPE zif_abapgit_rule~ty_item.
+    DATA lt_field type ddfields.
 
     FIELD-SYMBOLS <ls_data> TYPE any.
     FIELD-SYMBOLS <ls_field> TYPE dfies.
@@ -49,7 +50,7 @@ CLASS zcl_abapgit_rule IMPLEMENTATION.
 
     CHECK mt_item IS NOT INITIAL.
 
-    DATA(lt_field) = get_fields( ct_data ).
+    lt_field = get_fields( ct_data ).
     LOOP AT ct_data ASSIGNING <ls_data>.
       LOOP AT lt_field ASSIGNING <ls_field>.
         CLEAR ls_item.
@@ -65,6 +66,7 @@ CLASS zcl_abapgit_rule IMPLEMENTATION.
 
   METHOD zif_abapgit_rule~apply_fill_logic.
     DATA ls_item TYPE zif_abapgit_rule~ty_item.
+    DATA lt_field type ddfields.
 
     FIELD-SYMBOLS <ls_data> TYPE any.
     FIELD-SYMBOLS <ls_field> TYPE dfies.
@@ -72,7 +74,7 @@ CLASS zcl_abapgit_rule IMPLEMENTATION.
 
     CHECK mt_item IS NOT INITIAL.
 
-    DATA(lt_field) = get_fields( ct_data ).
+    lt_field = get_fields( ct_data ).
     LOOP AT ct_data ASSIGNING <ls_data>.
       LOOP AT lt_field ASSIGNING <ls_field>.
         CLEAR ls_item.
