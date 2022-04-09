@@ -29,7 +29,7 @@ ENDCLASS.
 CLASS zcl_abapgit_rule IMPLEMENTATION.
 
   METHOD create.
-    ro_result = NEW zcl_abapgit_rule( ).
+    CREATE OBJECT ro_result TYPE zcl_abapgit_rule.
   ENDMETHOD.
 
   METHOD zif_abapgit_rule~add_item.
@@ -48,7 +48,9 @@ CLASS zcl_abapgit_rule IMPLEMENTATION.
     FIELD-SYMBOLS <ls_field> TYPE dfies.
     FIELD-SYMBOLS <lv_value> TYPE any.
 
-    CHECK mt_item IS NOT INITIAL.
+    IF mt_item IS INITIAL.
+      RETURN.
+    ENDIF.
 
     lt_field = get_fields( ct_data ).
     LOOP AT ct_data ASSIGNING <ls_data>.
@@ -72,7 +74,9 @@ CLASS zcl_abapgit_rule IMPLEMENTATION.
     FIELD-SYMBOLS <ls_field> TYPE dfies.
     FIELD-SYMBOLS <lv_value> TYPE any.
 
-    CHECK mt_item IS NOT INITIAL.
+    IF mt_item IS INITIAL.
+      RETURN.
+    ENDIF.
 
     lt_field = get_fields( ct_data ).
     LOOP AT ct_data ASSIGNING <ls_data>.

@@ -714,22 +714,22 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
   METHOD apply_clear_logic.
     DATA lv_table TYPE tabname.
 
-    CHECK mo_rule IS BOUND.
-
-    lv_table = iv_table.
-    mo_rule->apply_clear_logic( EXPORTING iv_table = lv_table
-                                CHANGING  ct_data  = ct_data ).
+    IF mo_rule IS BOUND.
+      lv_table = iv_table.
+      mo_rule->apply_clear_logic( EXPORTING iv_table = lv_table
+                                  CHANGING  ct_data  = ct_data ).
+    ENDIF.
   ENDMETHOD.
 
 
   METHOD apply_fill_logic.
     DATA lv_table TYPE tabname.
 
-    CHECK mo_rule IS BOUND.
-
-    lv_table = iv_table.
-    mo_rule->apply_fill_logic( EXPORTING iv_table = lv_table
-                                CHANGING  ct_data = ct_data ).
+    IF mo_rule IS BOUND.
+      lv_table = iv_table.
+      mo_rule->apply_fill_logic( EXPORTING iv_table = lv_table
+                                  CHANGING  ct_data = ct_data ).
+    ENDIF.
   ENDMETHOD.
 
 ENDCLASS.
