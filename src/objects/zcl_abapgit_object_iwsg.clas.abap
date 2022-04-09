@@ -14,6 +14,9 @@ CLASS zcl_abapgit_object_iwsg DEFINITION
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
+    METHODS get_rule
+      RETURNING
+        VALUE(ro_result) TYPE REF TO zif_abapgit_rule.
 ENDCLASS.
 
 
@@ -25,6 +28,7 @@ CLASS zcl_abapgit_object_iwsg IMPLEMENTATION.
 
     CREATE OBJECT ro_generic
       EXPORTING
+        io_rule     = get_rule( )
         is_item     = ms_item
         iv_language = mv_language.
 
@@ -98,4 +102,48 @@ CLASS zcl_abapgit_object_iwsg IMPLEMENTATION.
     get_generic( )->serialize( io_xml ).
 
   ENDMETHOD.
+
+  METHOD get_rule.
+    DATA ls_record TYPE /iwfnd/i_med_srh.
+    DATA ls_item TYPE zif_abapgit_rule=>ty_item.
+    DATA lt_item TYPE zif_abapgit_rule=>ty_items.
+
+    SELECT SINGLE *
+      FROM /iwfnd/i_med_srh
+      INTO ls_record
+     WHERE srv_identifier = ms_item-obj_name
+       AND is_active      = 'A'.
+
+    ls_item-tabname     = '/IWFND/I_MED_SRH'.
+    ls_item-fieldname   = 'CREATED_BY'.
+    ls_item-clear_field = abap_true.
+    IF ls_record-created_by IS INITIAL.
+      ls_item-fill_rule   = zif_abapgit_rule=>c_fill_rule-user.
+    ENDIF.
+    INSERT ls_item INTO TABLE lt_item.
+
+    ls_item-tabname     = '/IWFND/I_MED_SRH'.
+    ls_item-fieldname   = 'CREATED_TIMESTMP'.
+    ls_item-clear_field = abap_true.
+    IF ls_record-created_timestmp IS INITIAL.
+      ls_item-fill_rule   = zif_abapgit_rule=>c_fill_rule-timestamp.
+    ENDIF.
+    INSERT ls_item INTO TABLE lt_item.
+
+    ls_item-tabname     = '/IWFND/I_MED_SRH'.
+    ls_item-fieldname   = 'CHANGED_BY'.
+    ls_item-clear_field = abap_true.
+    ls_item-fill_rule   = zif_abapgit_rule=>c_fill_rule-user.
+    INSERT ls_item INTO TABLE lt_item.
+
+    ls_item-tabname     = '/IWFND/I_MED_SRH'.
+    ls_item-fieldname   = 'CHANGED_TIMESTMP'.
+    ls_item-clear_field = abap_true.
+    ls_item-fill_rule   = zif_abapgit_rule=>c_fill_rule-timestamp.
+    INSERT ls_item INTO TABLE lt_item.
+
+    ro_result = zcl_abapgit_rule=>create( ).
+    ro_result->add_items( lt_item ).
+  ENDMETHOD.
+
 ENDCLASS.
