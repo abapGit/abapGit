@@ -712,7 +712,7 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD apply_clear_logic.
-    DATA lv_table TYPE tabname .
+    DATA lv_table TYPE tabname.
 
     CHECK mo_rule IS BOUND.
 
@@ -723,7 +723,7 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
 
 
   METHOD apply_fill_logic.
-    DATA lv_table TYPE tabname .
+    DATA lv_table TYPE tabname.
 
     CHECK mo_rule IS BOUND.
 
