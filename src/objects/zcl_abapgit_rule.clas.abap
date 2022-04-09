@@ -42,7 +42,7 @@ CLASS zcl_abapgit_rule IMPLEMENTATION.
 
   METHOD zif_abapgit_rule~apply_clear_logic.
     DATA ls_item TYPE zif_abapgit_rule~ty_item.
-    DATA lt_field type ddfields.
+    DATA lt_field TYPE ddfields.
 
     FIELD-SYMBOLS <ls_data> TYPE any.
     FIELD-SYMBOLS <ls_field> TYPE dfies.
@@ -66,7 +66,7 @@ CLASS zcl_abapgit_rule IMPLEMENTATION.
 
   METHOD zif_abapgit_rule~apply_fill_logic.
     DATA ls_item TYPE zif_abapgit_rule~ty_item.
-    DATA lt_field type ddfields.
+    DATA lt_field TYPE ddfields.
 
     FIELD-SYMBOLS <ls_data> TYPE any.
     FIELD-SYMBOLS <ls_field> TYPE dfies.
