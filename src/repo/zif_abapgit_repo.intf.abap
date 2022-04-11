@@ -43,5 +43,24 @@ INTERFACE zif_abapgit_repo
     PREFERRED PARAMETER iv_drop_cache
     RAISING
       zcx_abapgit_exception .
+  METHODS get_dot_abapgit
+    RETURNING
+      VALUE(ro_dot_abapgit) TYPE REF TO zcl_abapgit_dot_abapgit .
+  METHODS set_dot_abapgit
+    IMPORTING
+      !io_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit
+    RAISING
+      zcx_abapgit_exception .
+  METHODS deserialize
+    IMPORTING
+      !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
+      !ii_log    TYPE REF TO zif_abapgit_log
+    RAISING
+      zcx_abapgit_exception .
+  METHODS deserialize_checks
+    RETURNING
+      VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
+    RAISING
+      zcx_abapgit_exception .
 
 ENDINTERFACE.
