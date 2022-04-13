@@ -142,7 +142,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_file_status IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
 
   METHOD build_existing.
@@ -789,7 +789,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
       io_dot       = io_repo->get_dot_abapgit( )
       it_local     = lt_local
       it_remote    = lt_remote
-      it_cur_state = io_repo->get_local_checksums_per_file( ) ).
+      it_cur_state = io_repo->zif_abapgit_repo~checksums( )->get_checksums_per_file( ) ).
 
     run_checks(
       ii_log     = ii_log
