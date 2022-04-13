@@ -37,7 +37,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
 
   METHOD build_main_menu.
@@ -85,9 +85,7 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
 
     ri_html->add( mo_repo_overview->zif_abapgit_gui_renderable~render( ) ).
 
-    register_deferred_script( zcl_abapgit_gui_chunk_lib=>render_repo_palette(
-      iv_action = c_actions-select
-      iv_only_favorites = mv_only_favorites ) ).
+    register_deferred_script( zcl_abapgit_gui_chunk_lib=>render_repo_palette( c_actions-select ) ).
 
   ENDMETHOD.
 

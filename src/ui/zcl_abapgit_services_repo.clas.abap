@@ -216,7 +216,8 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       iv_main_lang_only = is_repo_params-main_lang_only ).
 
     " Make sure there're no leftovers from previous repos
-    ro_repo->rebuild_local_checksums( ).
+    ro_repo->zif_abapgit_repo~checksums( )->rebuild( ).
+    ro_repo->reset_status( ). " TODO refactor later
 
     toggle_favorite( ro_repo->get_key( ) ).
 
@@ -243,7 +244,8 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       iv_main_lang_only = is_repo_params-main_lang_only ).
 
     " Make sure there're no leftovers from previous repos
-    ro_repo->rebuild_local_checksums( ).
+    ro_repo->zif_abapgit_repo~checksums( )->rebuild( ).
+    ro_repo->reset_status( ). " TODO refactor later
 
     toggle_favorite( ro_repo->get_key( ) ).
 
@@ -528,7 +530,8 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    lo_repo->rebuild_local_checksums( ).
+    lo_repo->zif_abapgit_repo~checksums( )->rebuild( ).
+    lo_repo->reset_status( ). " TODO refactor later
 
     COMMIT WORK AND WAIT.
 
