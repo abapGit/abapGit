@@ -189,7 +189,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -1256,8 +1256,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     ri_html->set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_palette(
-      iv_action = zif_abapgit_definitions=>c_action-go_repo
-      iv_only_favorites = abap_true ) ).
+      iv_action = zif_abapgit_definitions=>c_action-go_repo ) ).
 
   ENDMETHOD.
 

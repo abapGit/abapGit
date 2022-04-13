@@ -150,6 +150,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
           ls_match  TYPE submatch_result,
           lv_cnt    TYPE i.
 
+    DATA lt_lines TYPE string_table.
 
     CASE is_data-type.
       WHEN zcl_abapgit_persistence_db=>c_type_repo.
@@ -186,6 +187,20 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
         rv_text = 'Global Settings'.
       WHEN zcl_abapgit_persistence_db=>c_type_packages.
         rv_text = 'Local Package Details'.
+      WHEN zcl_abapgit_persistence_db=>c_type_repo_csum.
+        IF strlen( is_data-data_str ) > 0.
+          SPLIT is_data-data_str AT cl_abap_char_utilities=>newline INTO TABLE lt_lines.
+          READ TABLE lt_lines INDEX 1 INTO rv_text.
+          rv_text = |{ rv_text } ({ lines( lt_lines ) } lines)|.
+
+          IF strlen( rv_text ) >= 250.
+            rv_text = rv_text(250).
+          ENDIF.
+          rv_text = escape(
+            val    = rv_text
+            format = cl_abap_format=>e_html_attr ).
+        ENDIF.
+
       WHEN OTHERS.
         IF strlen( is_data-data_str ) >= 250.
           rv_text = is_data-data_str(250).
