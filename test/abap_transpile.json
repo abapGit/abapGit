@@ -151,9 +151,12 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_tab"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_tab_hashed", "note": "runtime error, SortByLengthZero"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "arrays"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_obj_w_date_time"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "root_assignment"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_parser_test", "method": "parse_error"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_parser_test", "method": "duplicate_key", "note": "invalid json, should throw real abap exception"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_parser_test", "method": "non_json", "note": "invalid json, should throw real abap exception"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "reader",       "note": "keyword? Path not found @/false"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_index",  "note": "error ASSIGN, not a structure"},
@@ -255,7 +258,12 @@
       {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "raise_error_if_package_exists", "note": "Void type: SCOMPKDTLN"},
       {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_given_in_popup", "note": "Void type: SCOMPKDTLN"},
       {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_not_created_when_canc", "note": "Void type: SCOMPKDTLN"},
-      {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_created_when_confirm", "note": "Void type: SCOMPKDTLN"}
+      {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_created_when_confirm", "note": "Void type: SCOMPKDTLN"},
+
+      {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_test_checksum_serializer"},
+      {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_test_checksums", "method": "rebuild_simple"},
+      {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_test_checksums", "method": "rebuild_w_dot_abapgit"},
+      {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_update_calculator_test"}
     ]
   }
 }
