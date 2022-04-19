@@ -479,12 +479,13 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
-    APPEND 'AS4USER' TO lt_clr_comps.
-    APPEND 'AS4DATE' TO lt_clr_comps.
-    APPEND 'AS4TIME' TO lt_clr_comps.
-    APPEND 'ACTFLAG' TO lt_clr_comps.
-    APPEND 'CHGFLAG' TO lt_clr_comps.
+    APPEND 'AS4USER'               TO lt_clr_comps.
+    APPEND 'AS4DATE'               TO lt_clr_comps.
+    APPEND 'AS4TIME'               TO lt_clr_comps.
+    APPEND 'ACTFLAG'               TO lt_clr_comps.
+    APPEND 'CHGFLAG'               TO lt_clr_comps.
     APPEND 'ABAP_LANGUAGE_VERSION' TO lt_clr_comps.
+    APPEND 'ABAP_LANGU_VERSION'    TO lt_clr_comps.
 
     LOOP AT lt_clr_comps ASSIGNING <lv_comp>.
       ASSIGN COMPONENT <lv_comp> OF STRUCTURE <lg_data> TO <lg_field>.
