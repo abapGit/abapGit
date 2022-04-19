@@ -11,6 +11,10 @@ CLASS zcl_abapgit_repo_srv DEFINITION
     CLASS-METHODS get_instance
       RETURNING
         VALUE(ri_srv) TYPE REF TO zif_abapgit_repo_srv .
+    CLASS-METHODS inject_instance
+      IMPORTING
+        ii_srv TYPE REF TO zif_abapgit_repo_srv.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -80,7 +84,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
+CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
 
   METHOD add.
@@ -130,6 +134,9 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
     ri_srv = gi_ref.
   ENDMETHOD.
 
+  METHOD inject_instance.
+    gi_ref = ii_srv.
+  ENDMETHOD.
 
   METHOD instantiate_and_add.
 
@@ -298,6 +305,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
   METHOD zif_abapgit_repo_srv~delete.
 
     zcl_abapgit_persist_factory=>get_repo( )->delete( ii_repo->get_key( ) ).
+    zcl_abapgit_persist_factory=>get_repo_cs( )->delete( ii_repo->get_key( ) ).
 
     " If favorite, remove it
     IF zcl_abapgit_persistence_user=>get_instance( )->is_favorite_repo( ii_repo->get_key( ) ) = abap_true.
@@ -622,13 +630,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
           li_repo    TYPE REF TO zif_abapgit_repo,
           lv_reason  TYPE string.
 
-    IF iv_package IS INITIAL.
-      zcx_abapgit_exception=>raise( 'add, package empty' ).
-    ENDIF.
-
-    IF iv_package = '$TMP'.
-      zcx_abapgit_exception=>raise( 'not possible to use $TMP, create new (local) package' ).
-    ENDIF.
+    zcl_abapgit_sap_package=>validate_name( iv_package ).
 
     " Check if package owned by SAP is allowed (new packages are ok, since they are created automatically)
     SELECT SINGLE as4user FROM tdevc

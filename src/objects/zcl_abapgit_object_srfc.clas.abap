@@ -95,6 +95,8 @@ CLASS zcl_abapgit_object_srfc IMPLEMENTATION.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
+    corr_insert( iv_package ).
+
   ENDMETHOD.
 
 
@@ -142,6 +144,8 @@ CLASS zcl_abapgit_object_srfc IMPLEMENTATION.
         li_srfc_persist->save( li_object_data ).
 
         tadir_insert( iv_package ).
+
+        corr_insert( iv_package ).
 
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).

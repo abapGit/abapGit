@@ -36,19 +36,21 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
   PRIVATE SECTION.
     TYPES:
       BEGIN OF ty_overview,
-        favorite        TYPE string,
+        favorite            TYPE string,
         "! True for offline, false for online repo
-        type            TYPE string,
-        key             TYPE zif_abapgit_persistence=>ty_value,
-        name            TYPE string,
-        url             TYPE string,
-        package         TYPE devclass,
-        branch          TYPE string,
-        created_by      TYPE syuname,
-        created_at      TYPE string,
-        deserialized_by TYPE syuname,
-        deserialized_at TYPE string,
-        write_protected TYPE abap_bool,
+        type                TYPE string,
+        key                 TYPE zif_abapgit_persistence=>ty_value,
+        name                TYPE string,
+        url                 TYPE string,
+        package             TYPE devclass,
+        branch              TYPE string,
+        created_by          TYPE syuname,
+        created_at          TYPE string,
+        created_at_raw      TYPE timestampl,
+        deserialized_by     TYPE syuname,
+        deserialized_at     TYPE string,
+        deserialized_at_raw TYPE timestampl,
+        write_protected     TYPE abap_bool,
       END OF ty_overview,
       ty_overviews TYPE STANDARD TABLE OF ty_overview
                    WITH NON-UNIQUE DEFAULT KEY.
@@ -56,7 +58,8 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
       BEGIN OF c_action,
         select       TYPE string VALUE 'select',
         apply_filter TYPE string VALUE 'apply_filter',
-      END OF c_action .
+      END OF c_action ,
+      c_raw_field_suffix TYPE string VALUE `_RAW` ##NO_TEXT.
 
     DATA: mv_order_descending TYPE abap_bool,
           mv_filter           TYPE string,
@@ -176,10 +179,18 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     IF mv_order_by IS NOT INITIAL.
 
-      ls_sort-name       = mv_order_by.
+      CLEAR ls_sort.
+
+      IF mv_order_by = 'CREATED_AT' OR mv_order_by = 'DESERIALIZED_AT'.
+        ls_sort-name = mv_order_by && c_raw_field_suffix.
+      ELSE.
+        ls_sort-name   = mv_order_by.
+        ls_sort-astext = abap_true.
+      ENDIF.
+
       ls_sort-descending = mv_order_descending.
-      ls_sort-astext     = abap_true.
       INSERT ls_sort INTO TABLE lt_sort.
+
     ENDIF.
 
     SORT ct_overview BY (lt_sort).
@@ -224,16 +235,17 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
       CLEAR: ls_overview.
 
-      ls_overview-favorite   = zcl_abapgit_persistence_user=>get_instance(
-        )->is_favorite_repo( <ls_repo>->ms_data-key ).
-      ls_overview-type       = <ls_repo>->ms_data-offline.
-      ls_overview-key        = <ls_repo>->ms_data-key.
-      ls_overview-name       = <ls_repo>->get_name( ).
-      ls_overview-url        = <ls_repo>->ms_data-url.
-      ls_overview-package    = <ls_repo>->ms_data-package.
-      ls_overview-branch     = <ls_repo>->ms_data-branch_name.
-      ls_overview-created_by = <ls_repo>->ms_data-created_by.
+      ls_overview-favorite        = zcl_abapgit_persistence_user=>get_instance(
+                                      )->is_favorite_repo( <ls_repo>->ms_data-key ).
+      ls_overview-type            = <ls_repo>->ms_data-offline.
+      ls_overview-key             = <ls_repo>->ms_data-key.
+      ls_overview-name            = <ls_repo>->get_name( ).
+      ls_overview-url             = <ls_repo>->ms_data-url.
+      ls_overview-package         = <ls_repo>->ms_data-package.
+      ls_overview-branch          = <ls_repo>->ms_data-branch_name.
+      ls_overview-created_by      = <ls_repo>->ms_data-created_by.
       ls_overview-write_protected = <ls_repo>->ms_data-local_settings-write_protected.
+      ls_overview-created_at_raw  = <ls_repo>->ms_data-created_at.
 
       IF <ls_repo>->ms_data-created_at IS NOT INITIAL.
         CONVERT TIME STAMP <ls_repo>->ms_data-created_at
@@ -244,7 +256,8 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
         ls_overview-created_at = |{ lv_date DATE = USER } { lv_time TIME = USER }|.
       ENDIF.
 
-      ls_overview-deserialized_by = <ls_repo>->ms_data-deserialized_by.
+      ls_overview-deserialized_by     = <ls_repo>->ms_data-deserialized_by.
+      ls_overview-deserialized_at_raw = <ls_repo>->ms_data-deserialized_at.
 
       IF <ls_repo>->ms_data-deserialized_at IS NOT INITIAL.
         CONVERT TIME STAMP <ls_repo>->ms_data-deserialized_at

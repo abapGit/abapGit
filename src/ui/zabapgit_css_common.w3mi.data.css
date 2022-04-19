@@ -230,6 +230,7 @@ span.transport-box {
   padding: 2px 4px;
   border: 1px solid;
   border-radius: 4px;
+  display: inline-block;
 }
 
 /* MISC AND REFACTOR */
@@ -314,6 +315,7 @@ table.repo_tab {
 
 .repo_tab td.filename{
   padding-left: 1em;
+  word-break: break-all;
 }
 
 .repo_tab td.object {
@@ -384,6 +386,9 @@ input.stage-filter { width: 18em; }
 }
 .stage_tab td.highlight {
   font-weight: bold;
+}
+.stage_tab td.name {
+  word-break: break-all;
 }
 
 .stage_tab tr:first-child td { border-top: 0px; }

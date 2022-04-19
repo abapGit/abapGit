@@ -149,6 +149,9 @@ CLASS lcl_json_parser IMPLEMENTATION.
     DATA lx_sxml TYPE REF TO cx_sxml_error.
     DATA lv_location TYPE string.
     TRY.
+      " TODO sane JSON check:
+      " JSON can be true,false,null,(-)digits
+      " or start from " or from {
         rt_json_tree = _parse( iv_json ).
       CATCH cx_sxml_parse_error INTO lx_sxml_parse.
         lv_location = _get_location(
@@ -249,6 +252,9 @@ CLASS lcl_json_parser IMPLEMENTATION.
                   <item>-name = lo_attr->get_value( ).
                 ENDIF.
               ENDLOOP.
+            ENDIF.
+            IF <item>-name IS INITIAL.
+              raise( 'Node without name (maybe not JSON)' ).
             ENDIF.
           ENDIF.
 
@@ -998,6 +1004,7 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
         iv_array_index     TYPE i DEFAULT 0
         ii_custom_mapping  TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL
         iv_keep_item_order TYPE abap_bool DEFAULT abap_false
+        iv_format_datetime TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rt_nodes)   TYPE zif_abapgit_ajson=>ty_nodes_tt
       RAISING
@@ -1011,10 +1018,27 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
         iv_array_index     TYPE i DEFAULT 0
         ii_custom_mapping  TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL
         iv_keep_item_order TYPE abap_bool DEFAULT abap_false
+        iv_format_datetime TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rt_nodes)   TYPE zif_abapgit_ajson=>ty_nodes_tt
       RAISING
         zcx_abapgit_ajson_error.
+
+    CLASS-METHODS format_date
+      IMPORTING
+        iv_date TYPE d
+      RETURNING
+        VALUE(rv_str) TYPE string.
+    CLASS-METHODS format_time
+      IMPORTING
+        iv_time TYPE t
+      RETURNING
+        VALUE(rv_str) TYPE string.
+    CLASS-METHODS format_timestamp
+      IMPORTING
+        iv_ts TYPE timestamp
+      RETURNING
+        VALUE(rv_str) TYPE string.
 
     CLASS-METHODS class_constructor.
 
@@ -1023,6 +1047,7 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
     CLASS-DATA gv_ajson_absolute_type_name TYPE string.
     DATA mi_custom_mapping TYPE REF TO zif_abapgit_ajson_mapping.
     DATA mv_keep_item_order TYPE abap_bool.
+    DATA mv_format_datetime TYPE abap_bool.
 
     METHODS convert_any
       IMPORTING
@@ -1130,6 +1155,7 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
     CREATE OBJECT lo_converter.
     lo_converter->mi_custom_mapping  = ii_custom_mapping.
     lo_converter->mv_keep_item_order = iv_keep_item_order.
+    lo_converter->mv_format_datetime = iv_format_datetime.
 
     lo_converter->convert_any(
       EXPORTING
@@ -1231,6 +1257,43 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD format_date.
+    IF iv_date IS NOT INITIAL.
+      rv_str = iv_date+0(4) && '-' && iv_date+4(2) && '-' && iv_date+6(2).
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD format_time.
+    IF iv_time IS NOT INITIAL.
+      rv_str = iv_time+0(2) && ':' && iv_time+2(2) && ':' && iv_time+4(2).
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD format_timestamp.
+
+    CONSTANTS lc_utc TYPE c LENGTH 6 VALUE 'UTC'.
+
+    DATA lv_date TYPE d.
+    DATA lv_time TYPE t.
+
+    IF iv_ts IS INITIAL.
+      " The zero value is January 1, year 1, 00:00:00.000000000 UTC.
+      lv_date = '00010101'.
+    ELSE.
+
+      CONVERT TIME STAMP iv_ts TIME ZONE lc_utc
+        INTO DATE lv_date TIME lv_time.
+
+    ENDIF.
+
+    rv_str =
+      lv_date+0(4) && '-' && lv_date+4(2) && '-' && lv_date+6(2) &&
+      'T' &&
+      lv_time+0(2) && '-' && lv_time+2(2) && '-' && lv_time+4(2) &&
+      'Z'.
+
+  ENDMETHOD.
+
   METHOD convert_value.
 
     DATA ls_node LIKE LINE OF ct_nodes.
@@ -1261,10 +1324,32 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
       ELSE.
         ls_node-value = 'false'.
       ENDIF.
-    ELSEIF io_type->type_kind CO 'CNgXyDT'. " Char like, date/time, xstring
+    ELSEIF io_type->absolute_name = '\TYPE=TIMESTAMP'.
+      IF mv_format_datetime = abap_true.
+        ls_node-type  = zif_abapgit_ajson=>node_type-string.
+        ls_node-value = format_timestamp( iv_data ).
+      ELSE.
+        ls_node-type  = zif_abapgit_ajson=>node_type-number.
+        ls_node-value = |{ iv_data }|.
+      ENDIF.
+    ELSEIF io_type->type_kind CO 'CNgXy'. " Char like, xstring
       ls_node-type = zif_abapgit_ajson=>node_type-string.
       ls_node-value = |{ iv_data }|.
-    ELSEIF io_type->type_kind CO 'bsI8PaeF'. " Numeric
+    ELSEIF io_type->type_kind = 'D'. " Date
+      ls_node-type = zif_abapgit_ajson=>node_type-string.
+      IF mv_format_datetime = abap_true.
+        ls_node-value = format_date( iv_data ).
+      ELSE.
+        ls_node-value = |{ iv_data }|.
+      ENDIF.
+    ELSEIF io_type->type_kind = 'T'. " Time
+      ls_node-type = zif_abapgit_ajson=>node_type-string.
+      IF mv_format_datetime = abap_true.
+        ls_node-value = format_time( iv_data ).
+      ELSE.
+        ls_node-value = |{ iv_data }|.
+      ENDIF.
+    ELSEIF io_type->type_kind CO 'bsI8aeFP'. " Numeric
       ls_node-type = zif_abapgit_ajson=>node_type-number.
       ls_node-value = |{ iv_data }|.
     ELSE.
@@ -1354,7 +1439,7 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
     " and rtti seems to cache type descriptions really well (https://github.com/sbcgua/benchmarks.git)
     " the structures will be repeated in real life
 
-    ls_next_prefix-path = is_prefix-path && is_prefix-name && '/'.
+    ls_next_prefix-path = is_prefix-path && ls_root-name && '/'.
 
     LOOP AT lt_comps ASSIGNING <c>.
 
@@ -1464,6 +1549,7 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
     CREATE OBJECT lo_converter.
     lo_converter->mi_custom_mapping  = ii_custom_mapping.
     lo_converter->mv_keep_item_order = iv_keep_item_order.
+    lo_converter->mv_format_datetime = iv_format_datetime.
 
     lo_converter->insert_value_with_type(
       EXPORTING

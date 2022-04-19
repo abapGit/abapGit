@@ -485,12 +485,34 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
 
   METHOD unpack.
 
-    DATA: lv_new TYPE string,
-          lv_old TYPE string.
-
+    DATA: lv_new      TYPE string,
+          lv_old      TYPE string,
+          lv_new_last TYPE c LENGTH 1,
+          lv_old_last TYPE c LENGTH 1.
 
     lv_new = zcl_abapgit_convert=>xstring_to_string_utf8( iv_new ).
     lv_old = zcl_abapgit_convert=>xstring_to_string_utf8( iv_old ).
+
+    " Check if one value contains a final newline but the other not
+    " If yes, add a special characters that's visible in diff render
+    IF lv_new IS NOT INITIAL.
+      lv_new_last = substring(
+        val = lv_new
+        off = strlen( lv_new ) - 1 ).
+    ENDIF.
+    IF lv_old IS NOT INITIAL.
+      lv_old_last = substring(
+        val = lv_old
+        off = strlen( lv_old ) - 1 ).
+    ENDIF.
+
+    IF lv_new_last = zif_abapgit_definitions=>c_newline AND lv_old_last <> zif_abapgit_definitions=>c_newline
+      AND lv_old IS NOT INITIAL.
+      lv_old = lv_old && cl_abap_char_utilities=>form_feed.
+    ELSEIF lv_new_last <> zif_abapgit_definitions=>c_newline AND lv_old_last = zif_abapgit_definitions=>c_newline
+      AND lv_new IS NOT INITIAL.
+      lv_new = lv_new && cl_abap_char_utilities=>form_feed.
+    ENDIF.
 
     SPLIT lv_new AT zif_abapgit_definitions=>c_newline INTO TABLE et_new.
     SPLIT lv_old AT zif_abapgit_definitions=>c_newline INTO TABLE et_old.

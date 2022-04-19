@@ -192,7 +192,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -356,14 +356,14 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    ro_branch_dropdown->add( iv_txt = 'Overview'
-                             iv_act = |{ zif_abapgit_definitions=>c_action-go_branch_overview }?key={ mv_key }| ).
     ro_branch_dropdown->add( iv_txt = 'Switch'
                              iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?key={ mv_key }| ).
     ro_branch_dropdown->add( iv_txt = 'Create'
                              iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_create }?key={ mv_key }| ).
     ro_branch_dropdown->add( iv_txt = 'Delete'
                              iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_delete }?key={ mv_key }| ).
+    ro_branch_dropdown->add( iv_txt = 'Merge'
+                             iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_merge }?key={ mv_key }| ).
 
   ENDMETHOD.
 
@@ -948,6 +948,29 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_file_command.
+
+    DATA: lv_difflink TYPE string.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    ri_html->add( '<div>' ).
+    IF is_file-is_changed = abap_true.
+      lv_difflink = zcl_abapgit_html_action_utils=>file_encode(
+        iv_key  = mo_repo->get_key( )
+        ig_file = is_file ).
+      ri_html->add_a( iv_txt = 'diff'
+                      iv_act = |{ zif_abapgit_definitions=>c_action-go_file_diff }?{ lv_difflink }| ).
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state( iv_lstate = is_file-lstate
+                                                                  iv_rstate = is_file-rstate ) ).
+    ELSE.
+      ri_html->add( '&nbsp;' ).
+    ENDIF.
+    ri_html->add( '</div>' ).
+
+  ENDMETHOD.
+
+
   METHOD render_head_line.
 
     DATA lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
@@ -1087,7 +1110,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
 
   METHOD render_item_files.
 
@@ -1256,8 +1278,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     ri_html->set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_palette(
-      iv_action = zif_abapgit_definitions=>c_action-go_repo
-      iv_only_favorites = abap_true ) ).
+      iv_action = zif_abapgit_definitions=>c_action-go_repo ) ).
 
   ENDMETHOD.
 

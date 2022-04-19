@@ -1038,13 +1038,23 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
   METHOD zif_abapgit_popups~popup_transport_request.
 
-    DATA: lt_e071  TYPE STANDARD TABLE OF e071,
-          lt_e071k TYPE STANDARD TABLE OF e071k.
+    DATA: lt_e071    TYPE STANDARD TABLE OF e071,
+          lt_e071k   TYPE STANDARD TABLE OF e071k,
+          lv_order   TYPE trkorr,
+          ls_e070use TYPE e070use.
+
+    " If default transport is set and its type matches, then use it as default for the popup
+    ls_e070use = zcl_abapgit_default_transport=>get_instance( )->get( ).
+
+    IF ls_e070use-trfunction = is_transport_type-request AND iv_use_default = abap_true.
+      lv_order = ls_e070use-ordernum.
+    ENDIF.
 
     CALL FUNCTION 'TRINT_ORDER_CHOICE'
       EXPORTING
         wi_order_type          = is_transport_type-request
         wi_task_type           = is_transport_type-task
+        wi_order               = lv_order
       IMPORTING
         we_order               = rv_transport
       TABLES

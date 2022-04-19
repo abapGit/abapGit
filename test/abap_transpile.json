@@ -100,6 +100,7 @@
     "addFilenames": true,
     "addCommonJS": true,
     "unknownTypes": "runtimeError",
+    "extraSetup": "../test/setup.mjs",
     "skip": [
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_direct_text"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_test", "method": "test_no_text"},
@@ -150,9 +151,12 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_tab"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_tab_hashed", "note": "runtime error, SortByLengthZero"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "arrays"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_obj_w_date_time"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "root_assignment"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_parser_test", "method": "parse_error"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_parser_test", "method": "duplicate_key", "note": "invalid json, should throw real abap exception"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_parser_test", "method": "non_json", "note": "invalid json, should throw real abap exception"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "reader",       "note": "keyword? Path not found @/false"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_index",  "note": "error ASSIGN, not a structure"},
@@ -170,6 +174,7 @@
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_camel_case", "method": "to_abap", "note": "secondary key fields? READ WITH KEY, Path not found @/FieldData"},
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_camel_case", "method": "to_json"},
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_camel_case", "method": "to_json_first_lower"},
+      {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_camel_case", "method": "to_json_nested_struc"},
 
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_fields", "method": "to_json"},
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_to_lower", "method": "to_json"},
@@ -212,10 +217,13 @@
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "enho_before_enhc", "note": "hmm, something with promises?"},
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "enhs_before_ensc", "note": "hmm, something with promises?"},
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "ensc_before_enho", "note": "hmm, something with promises?"},
+      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "iarp_before_iatu", "note": "hmm, something with promises?"},
+      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "iasp_before_iarp", "note": "hmm, something with promises?"},
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "iasp_before_isrp", "note": "hmm, something with promises?"},
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "iobj_before_odso", "note": "hmm, something with promises?"},
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "otgr_before_char", "note": "hmm, something with promises?"},
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "pinf_before_devc", "note": "hmm, something with promises?"},
+      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "prog_before_iaxu", "note": "hmm, something with promises?"},
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "sprx_before_clas", "note": "hmm, something with promises?"},
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "sprx_before_intf", "note": "hmm, something with promises?"},
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "sprx_before_tabl", "note": "hmm, something with promises?"},
@@ -250,7 +258,12 @@
       {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "raise_error_if_package_exists", "note": "Void type: SCOMPKDTLN"},
       {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_given_in_popup", "note": "Void type: SCOMPKDTLN"},
       {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_not_created_when_canc", "note": "Void type: SCOMPKDTLN"},
-      {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_created_when_confirm", "note": "Void type: SCOMPKDTLN"}
+      {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_created_when_confirm", "note": "Void type: SCOMPKDTLN"},
+
+      {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_test_checksum_serializer"},
+      {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_test_checksums", "method": "rebuild_simple"},
+      {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_test_checksums", "method": "rebuild_w_dot_abapgit"},
+      {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_update_calculator_test"}
     ]
   }
 }

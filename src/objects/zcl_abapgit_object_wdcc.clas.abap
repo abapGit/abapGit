@@ -65,6 +65,8 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'Object type WDCC not supported for this release' ).
     ENDTRY.
 
+    corr_insert( iv_package ).
+
   ENDMETHOD.
 
 
@@ -227,7 +229,9 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
         x_config_type        = 'X'
         x_config_var         = 'X'.
 
-    tadir_insert( iv_package = iv_package ).
+    tadir_insert( iv_package ).
+
+    corr_insert( iv_package ).
 
   ENDMETHOD.
 
