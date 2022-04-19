@@ -948,29 +948,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_file_command.
-
-    DATA: lv_difflink TYPE string.
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    ri_html->add( '<div>' ).
-    IF is_file-is_changed = abap_true.
-      lv_difflink = zcl_abapgit_html_action_utils=>file_encode(
-        iv_key  = mo_repo->get_key( )
-        ig_file = is_file ).
-      ri_html->add_a( iv_txt = 'diff'
-                      iv_act = |{ zif_abapgit_definitions=>c_action-go_file_diff }?{ lv_difflink }| ).
-      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state( iv_lstate = is_file-lstate
-                                                                  iv_rstate = is_file-rstate ) ).
-    ELSE.
-      ri_html->add( '&nbsp;' ).
-    ENDIF.
-    ri_html->add( '</div>' ).
-
-  ENDMETHOD.
-
-
   METHOD render_head_line.
 
     DATA lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
