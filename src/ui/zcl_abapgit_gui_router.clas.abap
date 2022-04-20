@@ -235,7 +235,8 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         rs_handled-page  = zcl_abapgit_gui_page_run_bckg=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-go_repo_diff                         " Go Diff page
-        OR zif_abapgit_definitions=>c_action-go_file_diff.
+        OR zif_abapgit_definitions=>c_action-go_file_diff
+        OR zif_abapgit_definitions=>c_action-go_obj_diff.
         rs_handled-page  = get_page_diff( ii_event ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
       WHEN zif_abapgit_definitions=>c_action-go_stage.                        " Go Staging page

@@ -111,6 +111,11 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
       RETURNING
         VALUE(rv_html) TYPE string .
+    METHODS build_obj_diff_link
+      IMPORTING
+        !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
+      RETURNING
+        VALUE(rv_html) TYPE string .
     METHODS build_dir_jump_link
       IMPORTING
         !iv_path       TYPE string
@@ -192,7 +197,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -392,9 +397,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    rv_html = li_html->a(
-      iv_txt = lv_path
-      iv_act = |{ c_actions-change_dir }?{ lv_encode }| ).
+    rv_html = |<span class='icon icon-folder darkgrey'>| &&
+      li_html->a(
+        iv_txt = ` &rsaquo;`
+        iv_act = |{ c_actions-change_dir }?{ lv_encode }| ) && |</span>|.
 
   ENDMETHOD.
 
@@ -533,11 +539,23 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD build_obj_diff_link.
+
+    DATA lv_encode TYPE string.
+    DATA li_html TYPE REF TO zif_abapgit_html.
+
+    CREATE OBJECT li_html TYPE zcl_abapgit_html.
+    rv_html = li_html->a(
+      iv_txt = |{ is_item-obj_name }|
+      iv_act = |{ zif_abapgit_definitions=>c_action-go_obj_diff }?KEY={ mo_repo->get_key( ) }&OBJ_TYPE={ is_item-obj_type }&OBJ_NAME={ is_item-obj_name }| ).
+
+  ENDMETHOD.
 
   METHOD build_obj_jump_link.
 
     DATA lv_encode TYPE string.
     DATA li_html TYPE REF TO zif_abapgit_html.
+    DATA: lv_icon TYPE string.
 
     CREATE OBJECT li_html TYPE zcl_abapgit_html.
 
@@ -545,9 +563,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
       iv_obj_type = is_item-obj_type
       iv_obj_name = is_item-obj_name ).
 
-    rv_html = li_html->a(
-      iv_txt = |{ is_item-obj_name }|
-      iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_encode }| ).
+    lv_icon = get_item_icon( is_item ).
+    rv_html = |{ lv_icon }<span class=''>| &&
+      li_html->a( iv_txt = | &rsaquo;|
+                  iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_encode }|
+                  iv_title = |Open in Editor| ) && |</span>|.
 
   ENDMETHOD.
 
@@ -975,7 +995,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
   METHOD render_item.
 
-    DATA: lv_link    TYPE string.
+    DATA: lv_link      TYPE string,
+          lv_diff_link TYPE string.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -999,11 +1020,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
       IF is_item-is_dir = abap_true. " Subdir
         lv_link = build_dir_jump_link( is_item-path ).
-        ri_html->add( |<td class="dir" colspan="2">{ get_item_icon( is_item ) } { lv_link }</td>| ).
+        ri_html->add( |<td class="dir" colspan="2">{ is_item-path }</td>| ).
       ELSE.
         lv_link = build_obj_jump_link( is_item ).
-        ri_html->add( |<td class="type">{ get_item_icon( is_item ) } { is_item-obj_type }</td>| ).
-        ri_html->add( |<td class="object">{ lv_link } { build_inactive_object_code( is_item ) }</td>| ).
+        lv_diff_link = build_obj_diff_link( is_item ).
+        ri_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
+        ri_html->add( |<td class="object">{ lv_diff_link } { build_inactive_object_code( is_item ) }</td>| ).
       ENDIF.
     ENDIF.
 
@@ -1015,6 +1037,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
     IF iv_render_transports = abap_true.
       ri_html->add( render_item_transport( is_item ) ).
     ENDIF.
+
+    ri_html->add( |<td>{ lv_link }</td>| ).
 
     ri_html->add( '</tr>' ).
 
@@ -1029,7 +1053,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
     IF is_item-changes = 0 OR is_item-changed_by IS INITIAL.
       ri_html->add( '&nbsp;' ).
     ELSE.
-      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_user_name( is_item-changed_by ) ).
+      ri_html->add(
+        zcl_abapgit_gui_chunk_lib=>render_user_name(
+          iv_username    = is_item-changed_by
+          iv_interactive = abap_false ) ).
     ENDIF.
 
   ENDMETHOD.
@@ -1057,10 +1084,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
           ig_object = is_item ).
 
         ri_html->add( '<div>' ).
-        ri_html->add_a( iv_txt = zcl_abapgit_gui_chunk_lib=>render_item_state( iv_lstate = is_item-lstate
-                                                                               iv_rstate = is_item-rstate )
-                        iv_act = |{ zif_abapgit_definitions=>c_action-go_file_diff }?{ lv_difflink }| ).
-        ri_html->add( |({ is_item-changes })| ).
+        ri_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state( iv_lstate = is_item-lstate
+                                                                    iv_rstate = is_item-rstate ) ).
+        " hide 0 or 1 changes to reduce clutter
+        IF is_item-changes > 1.
+          ri_html->add( |({ is_item-changes })| ).
+        ENDIF.
+
         ri_html->add( '</div>' ).
 
       ENDIF.
@@ -1129,6 +1159,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
         ri_html->add( `<td></td>` ).
       ENDIF.
 
+      ri_html->add( `<td></td>` ).
+
       ri_html->add( '</tr>' ).
 
     ENDLOOP.
@@ -1152,7 +1184,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
     TRY.
         lv_transport = zcl_abapgit_factory=>get_cts_api( )->get_transport_for_object( ls_item ).
         IF lv_transport IS NOT INITIAL.
-          ri_html->add( zcl_abapgit_gui_chunk_lib=>render_transport( iv_transport = lv_transport ) ).
+          ri_html->add( zcl_abapgit_gui_chunk_lib=>render_transport(
+            iv_transport   = lv_transport
+            iv_interactive = abap_false ) ).
         ENDIF.
       CATCH zcx_abapgit_exception ##NO_HANDLER.
         " Ignore errors related to object check when trying to get transport
@@ -1186,7 +1220,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
     CLEAR ls_col_spec.
     ls_col_spec-tech_name = 'OBJ_NAME'.
-    ls_col_spec-display_name = 'Name'.
+    ls_col_spec-display_name = 'Name (click to see diff)'.
     ls_col_spec-allow_order_by = abap_true.
     APPEND ls_col_spec TO lt_col_spec.
 
@@ -1203,6 +1237,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
       ls_col_spec-allow_order_by = abap_true.
       APPEND ls_col_spec TO lt_col_spec.
     ENDIF.
+
+    CLEAR ls_col_spec.
+    ls_col_spec-tech_name = 'GO'.
+    ls_col_spec-display_name = ''.
+    ls_col_spec-allow_order_by = abap_false.
+    APPEND ls_col_spec TO lt_col_spec.
+
 
     ri_html->add( |<thead>| ).
     ri_html->add( |<tr>| ).
