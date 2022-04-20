@@ -1042,7 +1042,8 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         lv_link = build_dir_jump_link( is_item-path ).
         lv_dir_path = is_item-path.
         format_dir_path( CHANGING cv_path = lv_dir_path ).
-        ri_html->add( |<td class="dir" colspan="2">{ lv_dir_path }</td>| ).
+        ri_html->add( |<td class="type"></td>| ).
+        ri_html->add( |<td class="dir">{ lv_dir_path }</td>| ).
       ELSE.
         lv_link = build_obj_jump_link( is_item ).
         lv_diff_link = build_obj_diff_link( is_item ).
