@@ -94,9 +94,9 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     CLASS-METHODS render_repo_palette
       IMPORTING
-        iv_action         TYPE string
+        iv_action      TYPE string
       RETURNING
-        VALUE(ri_html)    TYPE REF TO zif_abapgit_html
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS advanced_submenu
@@ -142,6 +142,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
       IMPORTING
         !iv_username       TYPE syuname
         !iv_interactive    TYPE abap_bool DEFAULT abap_true
+        !iv_text_only      TYPE abap_bool DEFAULT abap_false
         !iv_icon_only      TYPE abap_bool DEFAULT abap_false
         !iv_suppress_title TYPE abap_bool DEFAULT abap_false
       RETURNING
@@ -152,6 +153,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
       IMPORTING
         !iv_transport   TYPE trkorr
         !iv_interactive TYPE abap_bool DEFAULT abap_true
+        !iv_text_only   TYPE abap_bool DEFAULT abap_false
         !iv_icon_only   TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(ri_html)  TYPE REF TO zif_abapgit_html
@@ -159,7 +161,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS render_sci_result
       IMPORTING
-        ii_html TYPE REF TO zif_abapgit_html
+        ii_html       TYPE REF TO zif_abapgit_html
         iv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result.
 
 
@@ -198,7 +200,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
+CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
 
   METHOD advanced_submenu.
@@ -1039,6 +1041,8 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
       ri_html->add_a( iv_act   = lv_jump
                       iv_title = |Transport { iv_transport }|
                       iv_txt   = zcl_abapgit_html=>icon( 'truck-solid/darkgrey' ) ).
+    ELSEIF iv_text_only = abap_true.
+      ri_html->add( iv_transport ).
     ELSE.
       ri_html->add( |<span class="transport-box">| ).
 
@@ -1091,6 +1095,8 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
       ri_html->add_a( iv_act   = lv_jump
                       iv_title = lv_title
                       iv_txt   = zcl_abapgit_html=>icon( 'user-solid/darkgrey' ) ).
+    ELSEIF iv_text_only = abap_true.
+      ri_html->add( iv_username ).
     ELSE.
       ri_html->add( |<span class="user-box">| ).
 

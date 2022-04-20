@@ -1056,7 +1056,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       ri_html->add(
         zcl_abapgit_gui_chunk_lib=>render_user_name(
           iv_username    = is_item-changed_by
-          iv_interactive = abap_false ) ).
+          iv_text_only   = abap_true ) ).
     ENDIF.
 
   ENDMETHOD.
@@ -1186,7 +1186,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         IF lv_transport IS NOT INITIAL.
           ri_html->add( zcl_abapgit_gui_chunk_lib=>render_transport(
             iv_transport   = lv_transport
-            iv_interactive = abap_false ) ).
+            iv_text_only   = abap_true ) ).
         ENDIF.
       CATCH zcx_abapgit_exception ##NO_HANDLER.
         " Ignore errors related to object check when trying to get transport
@@ -1226,14 +1226,14 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     CLEAR ls_col_spec.
     ls_col_spec-tech_name = 'CHANGED_BY'.
-    ls_col_spec-display_name = 'Changed by'.
+    ls_col_spec-display_name = zcl_abapgit_html=>icon( 'user-solid/darkgrey' ) && 'Changed by'.
     ls_col_spec-allow_order_by = abap_true.
     APPEND ls_col_spec TO lt_col_spec.
 
     IF mv_are_changes_recorded_in_tr = abap_true.
       CLEAR ls_col_spec.
       ls_col_spec-tech_name = 'TRANSPORT'.
-      ls_col_spec-display_name = 'Transport'.
+      ls_col_spec-display_name = zcl_abapgit_html=>icon( 'truck-solid/darkgrey' ) && 'Transport'.
       ls_col_spec-allow_order_by = abap_true.
       APPEND ls_col_spec TO lt_col_spec.
     ENDIF.
