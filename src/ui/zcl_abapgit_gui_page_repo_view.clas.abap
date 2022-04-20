@@ -119,6 +119,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
     METHODS build_dir_jump_link
       IMPORTING
         !iv_path       TYPE string
+        !iv_title      TYPE string OPTIONAL
       RETURNING
         VALUE(rv_html) TYPE string .
     METHODS build_inactive_object_code
@@ -192,6 +193,9 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
     METHODS render_repo_list_footer
       IMPORTING
         ii_html TYPE REF TO zif_abapgit_html.
+    METHODS format_dir_path
+      CHANGING
+        cv_path TYPE string.
 
 ENDCLASS.
 
@@ -378,6 +382,13 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     DATA lv_path   TYPE string.
     DATA lv_encode TYPE string.
     DATA li_html TYPE REF TO zif_abapgit_html.
+    DATA lv_title TYPE string.
+
+    IF iv_title IS INITIAL.
+      lv_title = ` &rsaquo;`. " todo space through css
+    ELSE.
+      lv_title = iv_title.
+    ENDIF.
 
     CREATE OBJECT li_html TYPE zcl_abapgit_html.
 
@@ -385,24 +396,32 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     REPLACE FIRST OCCURRENCE OF mv_cur_dir IN lv_path WITH ''.
     lv_encode = zcl_abapgit_html_action_utils=>dir_encode( lv_path ).
 
-    " remove leading and trailing / for display
-    IF lv_path <> '/'.
-      IF lv_path(1) = '/'.
-        lv_path = lv_path+1.
-      ENDIF.
-      IF substring( val = reverse( lv_path )
-                    len = 1 ) = '/'.
-        lv_path = substring( val = lv_path
-                             len = strlen( lv_path ) - 1 ).
-      ENDIF.
-    ENDIF.
-
     rv_html = |<span class='icon icon-folder darkgrey'>| &&
       li_html->a(
-        iv_txt = ` &rsaquo;`
+        iv_txt = lv_title
         iv_act = |{ c_actions-change_dir }?{ lv_encode }| ) && |</span>|.
 
   ENDMETHOD.
+
+  METHOD format_dir_path.
+
+    REPLACE FIRST OCCURRENCE OF mv_cur_dir IN cv_path WITH ''.
+
+    " remove leading and trailing / for display
+    IF cv_path <> '/'.
+      IF cv_path(1) = '/'.
+        cv_path = cv_path+1.
+      ENDIF.
+      IF substring( val = reverse( cv_path )
+                    len = 1 ) = '/'.
+        cv_path = substring( val = cv_path
+                             len = strlen( cv_path ) - 1 ).
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
 
 
   METHOD build_head_menu.
@@ -996,7 +1015,8 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
   METHOD render_item.
 
     DATA: lv_link      TYPE string,
-          lv_diff_link TYPE string.
+          lv_diff_link TYPE string,
+          lv_dir_path  TYPE string.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -1020,7 +1040,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
       IF is_item-is_dir = abap_true. " Subdir
         lv_link = build_dir_jump_link( is_item-path ).
-        ri_html->add( |<td class="dir" colspan="2">{ is_item-path }</td>| ).
+        lv_dir_path = is_item-path.
+        format_dir_path( CHANGING cv_path = lv_dir_path ).
+        ri_html->add( |<td class="dir" colspan="2">{ lv_dir_path }</td>| ).
       ELSE.
         lv_link = build_obj_jump_link( is_item ).
         lv_diff_link = build_obj_diff_link( is_item ).
@@ -1271,7 +1293,10 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     ri_html->add( '<tr class="folder">' ).
     ri_html->add( |<td class="icon"></td>| ).
-    ri_html->add( |<td class="dir" colspan="4">{ ri_html->icon( 'folder' ) } { build_dir_jump_link( '..' ) }</td>| ).
+    ri_html->add( |<td></td>| ).
+    ri_html->add( |<td></td>| ).
+    ri_html->add( |<td></td>| ).
+    ri_html->add( |<td class="dir">{ build_dir_jump_link( iv_path ='' iv_title = '..' ) }</td>| ).
     IF mo_repo->has_remote_source( ) = abap_true.
       ri_html->add( |<td colspan="1"></td>| ). " Dummy for online
     ENDIF.
