@@ -1,4 +1,4 @@
-INTERFACE zif_abapgit_rule
+INTERFACE zif_abapgit_field_rules
   PUBLIC .
   TYPES ty_fill_rule TYPE c LENGTH 2.
   CONSTANTS:
