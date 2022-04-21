@@ -21,11 +21,6 @@ CLASS zcl_abapgit_field_rules DEFINITION
 
     DATA mt_item TYPE ty_items.
 
-    METHODS get_fields
-      IMPORTING
-        it_data          TYPE STANDARD TABLE
-      RETURNING
-        VALUE(rt_result) TYPE ddfields.
     METHODS fill_value
       IMPORTING
         iv_rule  TYPE zif_abapgit_field_rules=>ty_fill_rule
@@ -55,63 +50,43 @@ CLASS zcl_abapgit_field_rules IMPLEMENTATION.
 
   METHOD zif_abapgit_field_rules~apply_clear_logic.
     DATA ls_item TYPE ty_item.
-    DATA lt_field TYPE ddfields.
 
     FIELD-SYMBOLS <ls_data> TYPE any.
-    FIELD-SYMBOLS <ls_field> TYPE dfies.
     FIELD-SYMBOLS <lv_value> TYPE any.
 
     IF mt_item IS INITIAL.
       RETURN.
     ENDIF.
 
-    lt_field = get_fields( ct_data ).
     LOOP AT ct_data ASSIGNING <ls_data>.
-      LOOP AT lt_field ASSIGNING <ls_field>.
-        CLEAR ls_item.
-        READ TABLE mt_item INTO ls_item WITH KEY tabname   = iv_table
-                                                 fieldname = <ls_field>-fieldname.
-        ASSIGN COMPONENT <ls_field>-fieldname OF STRUCTURE <ls_data> TO <lv_value>.
-        CLEAR <lv_value>.
+      LOOP AT mt_item INTO ls_item WHERE tabname = iv_table.
+        ASSIGN COMPONENT ls_item-fieldname OF STRUCTURE <ls_data> TO <lv_value>.
+        IF sy-subrc = 0.
+          CLEAR <lv_value>.
+        ENDIF.
       ENDLOOP.
     ENDLOOP.
   ENDMETHOD.
 
   METHOD zif_abapgit_field_rules~apply_fill_logic.
     DATA ls_item TYPE ty_item.
-    DATA lt_field TYPE ddfields.
 
     FIELD-SYMBOLS <ls_data> TYPE any.
-    FIELD-SYMBOLS <ls_field> TYPE dfies.
     FIELD-SYMBOLS <lv_value> TYPE any.
 
     IF mt_item IS INITIAL.
       RETURN.
     ENDIF.
 
-    lt_field = get_fields( ct_data ).
     LOOP AT ct_data ASSIGNING <ls_data>.
-      LOOP AT lt_field ASSIGNING <ls_field>.
-        CLEAR ls_item.
-        READ TABLE mt_item INTO ls_item WITH KEY tabname   = iv_table
-                                                 fieldname = <ls_field>-fieldname.
+      LOOP AT mt_item INTO ls_item WHERE tabname = iv_table.
+        ASSIGN COMPONENT ls_item-fieldname OF STRUCTURE <ls_data> TO <lv_value>.
         IF sy-subrc = 0.
-          ASSIGN COMPONENT <ls_field>-fieldname OF STRUCTURE <ls_data> TO <lv_value>.
           fill_value( EXPORTING iv_rule  = ls_item-fill_rule
                       CHANGING  cv_value = <lv_value> ).
         ENDIF.
       ENDLOOP.
     ENDLOOP.
-  ENDMETHOD.
-
-
-  METHOD get_fields.
-    DATA lo_tabledescr TYPE REF TO cl_abap_tabledescr.
-    DATA lo_structdescr TYPE REF TO cl_abap_structdescr.
-
-    lo_tabledescr ?= cl_abap_tabledescr=>describe_by_data( it_data ).
-    lo_structdescr ?= lo_tabledescr->get_table_line_type( ).
-    rt_result = lo_structdescr->get_ddic_field_list( ).
   ENDMETHOD.
 
 
