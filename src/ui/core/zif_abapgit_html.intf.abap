@@ -76,4 +76,9 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_class   TYPE string OPTIONAL
       !iv_onclick TYPE string OPTIONAL .
 
+  METHODS add_td
+    IMPORTING
+      !iv_class   TYPE string OPTIONAL
+      !iv_content TYPE string OPTIONAL.
+
 ENDINTERFACE.

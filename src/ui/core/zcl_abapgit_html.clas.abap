@@ -19,10 +19,16 @@ CLASS zcl_abapgit_html DEFINITION
         VALUE(rv_str) TYPE string .
     CLASS-METHODS checkbox
       IMPORTING
-         iv_id         TYPE string OPTIONAL
-         iv_checked    TYPE abap_bool OPTIONAL
+        iv_id          TYPE string OPTIONAL
+        iv_checked     TYPE abap_bool OPTIONAL
       RETURNING
         VALUE(rv_html) TYPE string .
+
+    CLASS-METHODS td
+      IMPORTING iv_class         TYPE string
+                iv_content       TYPE string
+      RETURNING VALUE(rv_result) TYPE string.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -53,6 +59,7 @@ CLASS zcl_abapgit_html DEFINITION
     CLASS-DATA go_single_tags_re TYPE REF TO cl_abap_regex .
     DATA mt_buffer TYPE string_table .
     CLASS-DATA gv_spaces TYPE string .
+
 
     METHODS indent_line
       CHANGING
@@ -393,6 +400,13 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_html~add_td.
+
+    zif_abapgit_html~add( td(
+      iv_class   = iv_class
+      iv_content = iv_content ) ).
+
+  ENDMETHOD.
 
   METHOD zif_abapgit_html~icon.
 
@@ -433,4 +447,13 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
   METHOD zif_abapgit_html~set_title.
     zif_abapgit_html~mv_chunk_title = iv_title.
   ENDMETHOD.
+
+  METHOD td.
+    IF iv_class IS NOT INITIAL.
+      rv_result = |<td class="{ iv_class }">{ iv_content }</td>|.
+    ELSE.
+      rv_result = |<td>{ iv_content }</td>|.
+    ENDIF.
+  ENDMETHOD.
+
 ENDCLASS.
