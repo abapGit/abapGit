@@ -717,7 +717,7 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
     IF mo_field_rules IS BOUND.
       lv_table = iv_table.
       mo_field_rules->apply_clear_logic( EXPORTING iv_table = lv_table
-                                  CHANGING  ct_data  = ct_data ).
+                                         CHANGING  ct_data  = ct_data ).
     ENDIF.
   ENDMETHOD.
 
@@ -728,7 +728,7 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
     IF mo_field_rules IS BOUND.
       lv_table = iv_table.
       mo_field_rules->apply_fill_logic( EXPORTING iv_table = lv_table
-                                  CHANGING  ct_data = ct_data ).
+                                        CHANGING  ct_data  = ct_data ).
     ENDIF.
   ENDMETHOD.
 
