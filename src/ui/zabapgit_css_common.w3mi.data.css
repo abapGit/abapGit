@@ -341,7 +341,7 @@ table.repo_tab {
 .repo_tab th.status, .repo_tab td.status {
   padding-left: 0.5em;
   padding-right: 0.7em;
-  width: 75px;
+  width: 25px;
 }
 
 .repo_tab th.cmd .icon{
@@ -352,6 +352,8 @@ table.repo_tab {
 .repo_tab tr:hover td {
   background-image: linear-gradient(rgba(0, 0, 0, 0.075), rgba(0, 0, 0, 0.075));
 }
+
+.repo_tab .ro-go { font-size: 125%; }
 
 
 /* STAGE */
@@ -1023,7 +1025,7 @@ table.commit tr .title {
 .repo-overview { font-size: smaller; }
 .repo-overview tbody td { height: 2em; }
 .ro-detail { display: none; }
-.ro-go { font-size: 150%; }
+.db_tab .ro-go { font-size: 150%; }
 
 /* Branch Overview Page */
 .gitGraph-scrollWrapper, .gitGraph-Wrapper{
