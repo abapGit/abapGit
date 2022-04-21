@@ -37,7 +37,7 @@ CLASS zcl_abapgit_field_rules IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_field_rules~add.
-    DATA ls_item TYPE zcl_abapgit_field_rules=>ty_item.
+    DATA ls_item TYPE ty_item.
 
     ls_item-tabname   = iv_table.
     ls_item-fieldname = iv_field.
