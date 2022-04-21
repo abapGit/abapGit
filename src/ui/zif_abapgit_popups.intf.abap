@@ -100,7 +100,7 @@ INTERFACE zif_abapgit_popups
   METHODS popup_transport_request
     IMPORTING
       !is_transport_type        TYPE zif_abapgit_definitions=>ty_transport_type
-      !iv_use_default_transport TYPE abap_bool DEFAULT abap_true
+      !iv_use_default_transport TYPE abap_bool DEFAULT abap_false
     RETURNING
       VALUE(rv_transport)       TYPE trkorr
     RAISING
