@@ -1,4 +1,4 @@
-INTERFACE zif_abapgit_rule
+INTERFACE zif_abapgit_field_rules
   PUBLIC .
   TYPES ty_fill_rule TYPE c LENGTH 2.
   CONSTANTS:
@@ -9,21 +9,14 @@ INTERFACE zif_abapgit_rule
       user      TYPE ty_fill_rule VALUE 'UR',
       client    TYPE ty_fill_rule VALUE 'CT',
     END OF c_fill_rule.
-  TYPES:
-    BEGIN OF ty_item,
-      tabname     TYPE tabname,
-      fieldname   TYPE fieldname,
-      clear_field TYPE abap_bool,
-      fill_rule   TYPE ty_fill_rule,
-    END OF ty_item,
-    ty_items TYPE SORTED TABLE OF ty_item WITH UNIQUE KEY tabname fieldname.
 
-  METHODS add_item
+  METHODS add
     IMPORTING
-      is_item TYPE ty_item.
-  METHODS add_items
-    IMPORTING
-      it_item TYPE ty_items.
+      iv_table       TYPE tabname
+      iv_field       TYPE fieldname
+      iv_fill_rule   TYPE ty_fill_rule
+    RETURNING
+      VALUE(ro_self) TYPE REF TO zif_abapgit_field_rules.
   METHODS apply_clear_logic
     IMPORTING
       iv_table TYPE tabname

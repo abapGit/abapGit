@@ -6,9 +6,9 @@ CLASS zcl_abapgit_objects_generic DEFINITION
 
     METHODS constructor
       IMPORTING
-        !is_item     TYPE zif_abapgit_definitions=>ty_item
-        !iv_language TYPE spras DEFAULT sy-langu
-        io_rule      TYPE REF TO zif_abapgit_rule OPTIONAL
+        !is_item       TYPE zif_abapgit_definitions=>ty_item
+        !iv_language   TYPE spras DEFAULT sy-langu
+        io_field_rules TYPE REF TO zif_abapgit_field_rules OPTIONAL
       RAISING
         zcx_abapgit_exception .
     METHODS delete
@@ -106,7 +106,7 @@ CLASS zcl_abapgit_objects_generic DEFINITION
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
-    DATA mo_rule TYPE REF TO zif_abapgit_rule.
+    DATA mo_field_rules TYPE REF TO zif_abapgit_field_rules.
 
     METHODS apply_clear_logic
       IMPORTING
@@ -226,7 +226,7 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
 
     ms_item = is_item.
     mv_language = iv_language.
-    mo_rule = io_rule.
+    mo_field_rules = io_field_rules.
 
   ENDMETHOD.
 
@@ -714,10 +714,10 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
   METHOD apply_clear_logic.
     DATA lv_table TYPE tabname.
 
-    IF mo_rule IS BOUND.
+    IF mo_field_rules IS BOUND.
       lv_table = iv_table.
-      mo_rule->apply_clear_logic( EXPORTING iv_table = lv_table
-                                  CHANGING  ct_data  = ct_data ).
+      mo_field_rules->apply_clear_logic( EXPORTING iv_table = lv_table
+                                         CHANGING  ct_data  = ct_data ).
     ENDIF.
   ENDMETHOD.
 
@@ -725,10 +725,10 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
   METHOD apply_fill_logic.
     DATA lv_table TYPE tabname.
 
-    IF mo_rule IS BOUND.
+    IF mo_field_rules IS BOUND.
       lv_table = iv_table.
-      mo_rule->apply_fill_logic( EXPORTING iv_table = lv_table
-                                  CHANGING  ct_data = ct_data ).
+      mo_field_rules->apply_fill_logic( EXPORTING iv_table = lv_table
+                                        CHANGING  ct_data  = ct_data ).
     ENDIF.
   ENDMETHOD.
 
