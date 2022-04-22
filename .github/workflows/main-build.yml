@@ -40,6 +40,8 @@ jobs:
         retention-days: 7
 
   auto-tag:
+    runs-on: ubuntu-latest
+    steps:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 2
