@@ -65,11 +65,11 @@ CLASS ZCL_ABAPGIT_LOGIN_MANAGER IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_auth> LIKE LINE OF gt_auth.
 
-    READ TABLE gt_auth WITH KEY uri = zcl_abapgit_url=>host( iv_uri )
+    READ TABLE gt_auth WITH KEY uri = iv_uri
       TRANSPORTING NO FIELDS.
     IF sy-subrc <> 0.
       APPEND INITIAL LINE TO gt_auth ASSIGNING <ls_auth>.
-      <ls_auth>-uri           = zcl_abapgit_url=>host( iv_uri ).
+      <ls_auth>-uri           =  iv_uri.
       <ls_auth>-authorization = iv_auth.
     ENDIF.
 
@@ -87,7 +87,7 @@ CLASS ZCL_ABAPGIT_LOGIN_MANAGER IMPLEMENTATION.
 
     DATA ls_auth LIKE LINE OF gt_auth.
 
-    READ TABLE gt_auth INTO ls_auth WITH KEY uri = zcl_abapgit_url=>host( iv_uri ).
+    READ TABLE gt_auth INTO ls_auth WITH KEY uri = iv_uri.
     IF sy-subrc = 0.
       rv_auth = ls_auth-authorization.
     ENDIF.
@@ -99,7 +99,7 @@ CLASS ZCL_ABAPGIT_LOGIN_MANAGER IMPLEMENTATION.
 
     DATA: ls_auth LIKE LINE OF gt_auth.
 
-    READ TABLE gt_auth INTO ls_auth WITH KEY uri = zcl_abapgit_url=>host( iv_uri ).
+    READ TABLE gt_auth INTO ls_auth WITH KEY uri = iv_uri.
     IF sy-subrc = 0.
       rv_authorization = ls_auth-authorization.
 
