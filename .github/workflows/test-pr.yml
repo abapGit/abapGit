@@ -1,10 +1,13 @@
-name: test
+name: test-pr
 
 on:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
-  build:
+  lint-and-merge:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -24,7 +27,8 @@ jobs:
         name: zabapgit_standalone.abap
         path: ./zabapgit.abap
         retention-days: 7
-  test:
+
+  unit-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

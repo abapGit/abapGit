@@ -95,7 +95,6 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
     CLASS-METHODS render_repo_palette
       IMPORTING
         iv_action         TYPE string
-        iv_only_favorites TYPE abap_bool
       RETURNING
         VALUE(ri_html)    TYPE REF TO zif_abapgit_html
       RAISING
@@ -199,7 +198,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
 
   METHOD advanced_submenu.
@@ -803,11 +802,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       <ls_repo>     LIKE LINE OF lt_repo_list,
       <lr_repo_obj> LIKE LINE OF lt_repo_obj_list.
 
-    IF iv_only_favorites = abap_true.
-      lt_repo_obj_list = zcl_abapgit_repo_srv=>get_instance( )->list_favorites( ).
-    ELSE.
-      lt_repo_obj_list = zcl_abapgit_repo_srv=>get_instance( )->list( ).
-    ENDIF.
+    lt_repo_obj_list = zcl_abapgit_repo_srv=>get_instance( )->list( ).
 
     LOOP AT lt_repo_obj_list ASSIGNING <lr_repo_obj>.
       ls_repo_data = <lr_repo_obj>->ms_data.

@@ -74,10 +74,15 @@ INTERFACE zif_abapgit_definitions
       comment   TYPE string,
     END OF ty_comment .
   TYPES:
-    BEGIN OF ty_item,
+    BEGIN OF ty_item_signature,
       obj_type TYPE tadir-object,
       obj_name TYPE tadir-obj_name,
       devclass TYPE devclass,
+    END OF ty_item_signature .
+  TYPES:
+    BEGIN OF ty_item.
+      INCLUDE TYPE ty_item_signature.
+  TYPES:
       inactive TYPE abap_bool,
     END OF ty_item .
   TYPES:
@@ -91,6 +96,8 @@ INTERFACE zif_abapgit_definitions
     END OF ty_file_item .
   TYPES:
     ty_files_item_tt TYPE STANDARD TABLE OF ty_file_item WITH DEFAULT KEY .
+  TYPES:
+    ty_files_item_by_file_tt TYPE SORTED TABLE OF ty_file_item WITH UNIQUE KEY file-path file-filename.
   TYPES:
     ty_yes_no         TYPE c LENGTH 1,
     ty_yes_no_partial TYPE c LENGTH 1.
@@ -459,6 +466,7 @@ INTERFACE zif_abapgit_definitions
       git_branch_create             TYPE string VALUE 'git_branch_create',
       git_branch_switch             TYPE string VALUE 'git_branch_switch',
       git_branch_delete             TYPE string VALUE 'git_branch_delete',
+      git_branch_merge              TYPE string VALUE 'git_branch_merge',
       git_tag_create                TYPE string VALUE 'git_tag_create',
       git_tag_delete                TYPE string VALUE 'git_tag_delete',
       git_tag_switch                TYPE string VALUE 'git_tag_switch',
@@ -477,7 +485,6 @@ INTERFACE zif_abapgit_definitions
       go_stage                      TYPE string VALUE 'go_stage',
       go_stage_transport            TYPE string VALUE 'go_stage_transport',
       go_commit                     TYPE string VALUE 'go_commit',
-      go_branch_overview            TYPE string VALUE 'go_branch_overview',
       go_debuginfo                  TYPE string VALUE 'go_debuginfo',
       go_settings                   TYPE string VALUE 'go_settings',
       go_settings_personal          TYPE string VALUE 'go_settings_personal',
