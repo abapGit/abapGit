@@ -5,9 +5,6 @@
    <MASTER_LANGUAGE>E</MASTER_LANGUAGE>
    <STARTING_FOLDER>/src/</STARTING_FOLDER>
    <FOLDER_LOGIC>PREFIX</FOLDER_LOGIC>
-   <IGNORE>
-    <item>/src/zabapgit.tran.xml</item>
-   </IGNORE>
   </DATA>
  </asx:values>
 </asx:abap>
