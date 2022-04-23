@@ -33,9 +33,9 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
     ASSIGN COMPONENT iv_fieldname
            OF STRUCTURE cg_metadata
            TO <lg_field>.
-    ASSERT sy-subrc = 0.
-
-    CLEAR: <lg_field>.
+    IF sy-subrc = 0.
+      CLEAR: <lg_field>.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -77,6 +77,11 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
                  CHANGING  cg_metadata  = <lg_metadata> ).
 
     clear_field( EXPORTING iv_fieldname = 'MASTER_SYSTEM'
+                 CHANGING  cg_metadata  = <lg_metadata> ).
+
+    clear_field( EXPORTING iv_fieldname = 'ABAP_LANGUAGE_VERSION'
+                 CHANGING  cg_metadata  = <lg_metadata> ).
+    clear_field( EXPORTING iv_fieldname = 'ABAP_LANGU_VERSION'
                  CHANGING  cg_metadata  = <lg_metadata> ).
 
   ENDMETHOD.

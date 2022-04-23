@@ -9,6 +9,7 @@ CLASS zcl_abapgit_persistence_db DEFINITION
     CONSTANTS:
       c_type_settings   TYPE zif_abapgit_persistence=>ty_type VALUE 'SETTINGS' ##NO_TEXT,
       c_type_repo       TYPE zif_abapgit_persistence=>ty_type VALUE 'REPO' ##NO_TEXT,
+      c_type_repo_csum  TYPE zif_abapgit_persistence=>ty_type VALUE 'REPO_CS' ##NO_TEXT,
       c_type_background TYPE zif_abapgit_persistence=>ty_type VALUE 'BACKGROUND' ##NO_TEXT,
       c_type_packages   TYPE zif_abapgit_persistence=>ty_type VALUE 'PACKAGES' ##NO_TEXT,
       c_type_user       TYPE zif_abapgit_persistence=>ty_type VALUE 'USER' ##NO_TEXT.
@@ -90,7 +91,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_persistence_db IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
 
 
   METHOD add.
@@ -156,14 +157,6 @@ CLASS zcl_abapgit_persistence_db IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD list_by_type.
-    SELECT * FROM (c_tabname)
-      INTO TABLE rt_content
-      WHERE type = iv_type
-      ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
-  ENDMETHOD.
-
-
   METHOD list_by_keys.
     FIELD-SYMBOLS: <ls_key> LIKE LINE OF it_keys.
     LOOP AT it_keys ASSIGNING <ls_key>.
@@ -172,6 +165,14 @@ CLASS zcl_abapgit_persistence_db IMPLEMENTATION.
       WHERE value = <ls_key> AND
             type  = iv_type.
     ENDLOOP.
+  ENDMETHOD.
+
+
+  METHOD list_by_type.
+    SELECT * FROM (c_tabname)
+      INTO TABLE rt_content
+      WHERE type = iv_type
+      ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
   ENDMETHOD.
 
 
@@ -258,6 +259,4 @@ CLASS zcl_abapgit_persistence_db IMPLEMENTATION.
       iv_ignore_errors = abap_false ).
 
   ENDMETHOD.
-
-
 ENDCLASS.

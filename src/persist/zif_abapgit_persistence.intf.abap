@@ -14,7 +14,7 @@ INTERFACE zif_abapgit_persistence PUBLIC.
     ty_contents TYPE SORTED TABLE OF ty_content WITH UNIQUE KEY type value .
 
   TYPES: BEGIN OF ty_local_checksum,
-           item  TYPE zif_abapgit_definitions=>ty_item,
+           item  TYPE zif_abapgit_definitions=>ty_item_signature,
            files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
          END OF ty_local_checksum.
 
@@ -30,6 +30,8 @@ INTERFACE zif_abapgit_persistence PUBLIC.
     END OF ty_local_settings.
 
   TYPES: ty_local_checksum_tt TYPE STANDARD TABLE OF ty_local_checksum WITH DEFAULT KEY.
+  TYPES: ty_local_checksum_by_item_tt TYPE SORTED TABLE OF ty_local_checksum
+    WITH NON-UNIQUE KEY item-obj_type item-obj_name.
 
   TYPES: BEGIN OF ty_repo_xml,
            url             TYPE string,
@@ -42,7 +44,6 @@ INTERFACE zif_abapgit_persistence PUBLIC.
            deserialized_at TYPE timestampl,
            offline         TYPE abap_bool,
            switched_origin TYPE string,
-           local_checksums TYPE ty_local_checksum_tt,
            dot_abapgit     TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
            head_branch     TYPE string,   " HEAD symref of the repo, master branch
            local_settings  TYPE ty_local_settings,
@@ -60,7 +61,6 @@ INTERFACE zif_abapgit_persistence PUBLIC.
       deserialized_at TYPE abap_bool,
       offline         TYPE abap_bool,
       switched_origin TYPE abap_bool,
-      local_checksums TYPE abap_bool,
       dot_abapgit     TYPE abap_bool,
       head_branch     TYPE abap_bool,
       local_settings  TYPE abap_bool,

@@ -3,9 +3,9 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOCLASS>
-    <CLSNAME>ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW</CLSNAME>
+    <CLSNAME>ZCL_ABAPGIT_REPO_CS_MIGRATION</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>GUI - Branch Overview page</DESCRIPT>
+    <DESCRIPT>abapGit repo checksums migration</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
