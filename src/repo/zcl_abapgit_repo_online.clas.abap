@@ -75,7 +75,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo_online IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
 
   METHOD check_and_create_package.
@@ -315,7 +315,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
     mv_current_commit = ls_push-branch.
 
-    update_local_checksums( ls_push-updated_files ).
+    zif_abapgit_repo~checksums( )->update( ls_push-updated_files ).
 
     reset_status( ).
 

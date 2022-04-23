@@ -6,8 +6,15 @@ CLASS zcl_abapgit_persistence_repo DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_persist_repo .
+    INTERFACES zif_abapgit_persist_repo_cs .
 
     METHODS constructor .
+    METHODS rewrite_repo_meta
+      IMPORTING
+        !iv_repo_key TYPE zif_abapgit_persistence=>ty_repo-key
+      RAISING
+        zcx_abapgit_exception
+        zcx_abapgit_not_found.
   PROTECTED SECTION.
 
   PRIVATE SECTION.
@@ -141,6 +148,27 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD rewrite_repo_meta.
+
+    DATA lv_old_blob TYPE string.
+    DATA lv_new_blob TYPE string.
+    DATA ls_repo_meta TYPE zif_abapgit_persistence=>ty_repo.
+
+    lv_old_blob = mo_db->read(
+      iv_type  = zcl_abapgit_persistence_db=>c_type_repo
+      iv_value = iv_repo_key ).
+
+    MOVE-CORRESPONDING from_xml( lv_old_blob ) TO ls_repo_meta.
+    lv_new_blob = to_xml( ls_repo_meta ).
+
+    mo_db->update(
+      iv_type  = zcl_abapgit_persistence_db=>c_type_repo
+      iv_value = iv_repo_key
+      iv_data  = lv_new_blob ).
+
+  ENDMETHOD.
+
+
   METHOD to_xml.
 
     DATA: ls_xml TYPE zif_abapgit_persistence=>ty_repo_xml.
@@ -151,6 +179,34 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
     CALL TRANSFORMATION id
       SOURCE repo = ls_xml
       RESULT XML rv_repo_xml_string.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_persist_repo_cs~delete.
+
+    mo_db->delete(
+      iv_type  = zcl_abapgit_persistence_db=>c_type_repo_csum
+      iv_value = iv_key ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_persist_repo_cs~read.
+
+    rv_cs_blob = mo_db->read(
+      iv_type  = zcl_abapgit_persistence_db=>c_type_repo_csum
+      iv_value = iv_key ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_persist_repo_cs~update.
+
+    mo_db->modify(
+      iv_type  = zcl_abapgit_persistence_db=>c_type_repo_csum
+      iv_value = iv_key
+      iv_data  = iv_cs_blob ).
+
   ENDMETHOD.
 
 
