@@ -617,19 +617,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD remove_non_code_related_files.
-
-    DELETE ct_local_files
-          WHERE item IS INITIAL
-          AND NOT ( file-path = zif_abapgit_definitions=>c_root_dir
-          AND file-filename = zif_abapgit_definitions=>c_dot_abapgit ).
-    SORT ct_local_files BY item.
-
-  ENDMETHOD.
-
-
-=======
->>>>>>> main
   METHOD reset_remote.
     CLEAR mt_remote.
     mv_request_remote_refresh = abap_true.
