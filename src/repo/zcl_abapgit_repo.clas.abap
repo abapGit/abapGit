@@ -596,7 +596,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
-<<<<<<< mbtools/deser_ignore
   METHOD remove_ignored_files.
 
     DATA lo_dot TYPE REF TO zcl_abapgit_dot_abapgit.
