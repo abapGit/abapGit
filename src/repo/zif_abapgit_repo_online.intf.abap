@@ -40,6 +40,9 @@ INTERFACE zif_abapgit_repo_online
       !iv_overwrite TYPE abap_bool DEFAULT abap_false
     RAISING
       zcx_abapgit_exception .
+  METHODS get_switched_origin
+    RETURNING
+      VALUE(rv_switched_origin) TYPE zif_abapgit_persistence=>ty_repo-switched_origin.
   METHODS push
     IMPORTING
       !is_comment TYPE zif_abapgit_definitions=>ty_comment

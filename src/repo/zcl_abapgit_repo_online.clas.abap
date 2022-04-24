@@ -28,6 +28,8 @@ CLASS zcl_abapgit_repo_online DEFINITION
       FOR zif_abapgit_repo_online~set_url .
     ALIASES switch_origin
       FOR zif_abapgit_repo_online~switch_origin .
+    ALIASES get_switched_origin
+      FOR zif_abapgit_repo_online~get_switched_origin.
 
     METHODS check_and_create_package
       IMPORTING
@@ -382,5 +384,9 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Cannot switch origin twice' ).
     ENDIF.
 
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_online~get_switched_origin.
+    rv_switched_origin = ms_data-switched_origin.
   ENDMETHOD.
 ENDCLASS.
