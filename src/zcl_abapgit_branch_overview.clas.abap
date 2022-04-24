@@ -95,7 +95,8 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
 
     mt_commits = zcl_abapgit_git_commit=>parse_commits( lt_objects ).
     IF lines( mt_commits ) > 2000.
-      zcx_abapgit_exception=>raise( 'Too many commits to display overview' ).
+      zcx_abapgit_exception=>raise(
+       |Too many commits to display overview (you can switch HEAD manually in the repository's remote settings)| ).
     ENDIF.
     zcl_abapgit_git_commit=>sort_commits( CHANGING ct_commits = mt_commits ).
 
