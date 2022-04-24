@@ -537,6 +537,9 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       " Reduced width for short fields
       lv_item_class = lv_item_class && ' w40'.
     ENDIF.
+    IF is_field-type = zif_abapgit_html_form=>c_field_type-hidden.
+      lv_item_class = lv_item_class && ' hidden'.
+    ENDIF.
     IF lv_item_class IS NOT INITIAL.
       lv_item_class = | class="{ lv_item_class }"|.
     ENDIF.

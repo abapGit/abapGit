@@ -1193,6 +1193,9 @@ settings_tab tr:first-child td { border-top: 0px; }
   margin: 4px 0px;
   padding-left: 0.5em;
 }
+.dialog li.hidden {
+  padding: 0px 0px;
+}
 .dialog .radio-container {
   border: 1px solid;
   display: inline-block;
