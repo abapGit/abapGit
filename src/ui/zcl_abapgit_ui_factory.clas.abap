@@ -13,9 +13,6 @@ CLASS zcl_abapgit_ui_factory DEFINITION
     CLASS-METHODS get_popups
       RETURNING
         VALUE(ri_popups) TYPE REF TO zif_abapgit_popups .
-    CLASS-METHODS get_tag_popups
-      RETURNING
-        VALUE(ri_tag_popups) TYPE REF TO zif_abapgit_tag_popups .
     CLASS-METHODS get_gui
       RETURNING
         VALUE(ro_gui) TYPE REF TO zcl_abapgit_gui
@@ -42,7 +39,6 @@ CLASS zcl_abapgit_ui_factory DEFINITION
   PRIVATE SECTION.
 
     CLASS-DATA gi_popups TYPE REF TO zif_abapgit_popups .
-    CLASS-DATA gi_tag_popups TYPE REF TO zif_abapgit_tag_popups .
     CLASS-DATA gi_html_viewer TYPE REF TO zif_abapgit_html_viewer .
     CLASS-DATA go_gui TYPE REF TO zcl_abapgit_gui .
     CLASS-DATA gi_fe_services TYPE REF TO zif_abapgit_frontend_services .
@@ -202,17 +198,6 @@ CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
     ENDIF.
 
     ri_popups = gi_popups.
-
-  ENDMETHOD.
-
-
-  METHOD get_tag_popups.
-
-    IF gi_tag_popups IS INITIAL.
-      CREATE OBJECT gi_tag_popups TYPE zcl_abapgit_tag_popups.
-    ENDIF.
-
-    ri_tag_popups = gi_tag_popups.
 
   ENDMETHOD.
 ENDCLASS.

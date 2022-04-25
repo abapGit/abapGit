@@ -430,7 +430,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     lo_repo ?= mo_repo.
 
-    ls_tag = zcl_abapgit_ui_factory=>get_tag_popups( )->tag_select_popup( lo_repo ).
+    ls_tag = zcl_abapgit_ui_factory=>get_popups( )->tag_list_popup( lo_repo->get_url( ) ).
 
     IF ls_tag IS NOT INITIAL.
       rv_tag = ls_tag-name.
