@@ -584,6 +584,8 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
           iv_name        = c_id-commit
           iv_label       = 'Commit'
           iv_required    = abap_true
+          iv_min         = 40
+          iv_max         = 40
           iv_side_action = c_event-choose_commit ).
       ELSE.
         ro_form->hidden( c_id-commit ).
