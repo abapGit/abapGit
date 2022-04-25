@@ -277,7 +277,7 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
   METHOD is_active.
 
     " DDIC types (see LSINTF01, FORM det_dtabname)
-    CONSTANTS c_ddic_type TYPE string
+    CONSTANTS lc_ddic_type TYPE string
       VALUE 'DDLS,DOMA,DTEL,ENQU,INDX,MCID,MCOB,SHLP,SQLT,SQSC,STOB,TABL,TTYP,VIEW,XINX'.
 
     DATA: lt_messages    TYPE STANDARD TABLE OF sprot_u WITH DEFAULT KEY,
@@ -285,7 +285,7 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
           ls_e071_tadir  LIKE LINE OF lt_e071_tadirs.
 
     " For DDIC types, use more accurate method
-    IF c_ddic_type CS ms_item-obj_type.
+    IF lc_ddic_type CS ms_item-obj_type.
       rv_active = is_active_ddic( ).
       RETURN.
     ENDIF.
