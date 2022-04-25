@@ -7,9 +7,6 @@ CLASS zcl_abapgit_ui_injector DEFINITION
     CLASS-METHODS set_popups
       IMPORTING
         !ii_popups TYPE REF TO zif_abapgit_popups .
-    CLASS-METHODS set_tag_popups
-      IMPORTING
-        !ii_tag_popups TYPE REF TO zif_abapgit_tag_popups .
     CLASS-METHODS set_frontend_services
       IMPORTING
         !ii_fe_serv TYPE REF TO zif_abapgit_frontend_services .
@@ -72,13 +69,6 @@ CLASS zcl_abapgit_ui_injector IMPLEMENTATION.
   METHOD set_popups.
 
     zcl_abapgit_ui_factory=>gi_popups = ii_popups.
-
-  ENDMETHOD.
-
-
-  METHOD set_tag_popups.
-
-    zcl_abapgit_ui_factory=>gi_tag_popups = ii_tag_popups.
 
   ENDMETHOD.
 ENDCLASS.
