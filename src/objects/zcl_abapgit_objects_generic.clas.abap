@@ -6,8 +6,9 @@ CLASS zcl_abapgit_objects_generic DEFINITION
 
     METHODS constructor
       IMPORTING
-        !is_item     TYPE zif_abapgit_definitions=>ty_item
-        !iv_language TYPE spras DEFAULT sy-langu
+        !is_item       TYPE zif_abapgit_definitions=>ty_item
+        !iv_language   TYPE spras DEFAULT sy-langu
+        io_field_rules TYPE REF TO zif_abapgit_field_rules OPTIONAL
       RAISING
         zcx_abapgit_exception .
     METHODS delete
@@ -105,6 +106,18 @@ CLASS zcl_abapgit_objects_generic DEFINITION
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
+    DATA mo_field_rules TYPE REF TO zif_abapgit_field_rules.
+
+    METHODS apply_clear_logic
+      IMPORTING
+        iv_table TYPE objsl-tobj_name
+      CHANGING
+        ct_data  TYPE STANDARD TABLE.
+    METHODS apply_fill_logic
+      IMPORTING
+        iv_table TYPE objsl-tobj_name
+      CHANGING
+        ct_data  TYPE STANDARD TABLE.
 ENDCLASS.
 
 
@@ -213,6 +226,7 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
 
     ms_item = is_item.
     mv_language = iv_language.
+    mo_field_rules = io_field_rules.
 
   ENDMETHOD.
 
@@ -295,6 +309,8 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
       CREATE DATA lr_ref TYPE STANDARD TABLE OF (<ls_table>-tobj_name).
       ASSIGN lr_ref->* TO <lt_data>.
 
+      apply_fill_logic( EXPORTING iv_table = <ls_table>-tobj_name
+                        CHANGING  ct_data  = <lt_data> ).
       io_xml->read(
         EXPORTING
           iv_name = <ls_table>-tobj_name
@@ -609,6 +625,9 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
         WHERE (lv_where)
         ORDER BY PRIMARY KEY.
 
+      apply_clear_logic( EXPORTING iv_table = <ls_object_table>-tobj_name
+                         CHANGING  ct_data  = <lt_data> ).
+
       io_xml->add(
         iv_name = <ls_object_table>-tobj_name
         ig_data = <lt_data> ).
@@ -691,4 +710,20 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
+  METHOD apply_clear_logic.
+    IF mo_field_rules IS BOUND.
+      mo_field_rules->apply_clear_logic( EXPORTING iv_table = |{ iv_table }|
+                                         CHANGING  ct_data  = ct_data ).
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD apply_fill_logic.
+    IF mo_field_rules IS BOUND.
+      mo_field_rules->apply_fill_logic( EXPORTING iv_table = |{ iv_table }|
+                                        CHANGING  ct_data  = ct_data ).
+    ENDIF.
+  ENDMETHOD.
+
 ENDCLASS.
