@@ -19,10 +19,15 @@ CLASS zcl_abapgit_sotr_handler DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS create_sotr
       IMPORTING
+        !iv_package TYPE devclass
+        !io_xml     TYPE REF TO zif_abapgit_xml_input
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS create_sotr_from_data
+      IMPORTING
         !iv_package  TYPE devclass
-        !io_xml      TYPE REF TO zif_abapgit_xml_input OPTIONAL
-        !it_sotr     TYPE zif_abapgit_definitions=>ty_sotr_tt OPTIONAL
-        !it_sotr_use TYPE zif_abapgit_definitions=>ty_sotr_use_tt OPTIONAL
+        !it_sotr     TYPE zif_abapgit_definitions=>ty_sotr_tt
+        !it_sotr_use TYPE zif_abapgit_definitions=>ty_sotr_use_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS delete_sotr
@@ -62,25 +67,32 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
   METHOD create_sotr.
 
     DATA:
-      lt_objects  TYPE sotr_objects,
-      ls_paket    TYPE sotr_pack,
-      lv_object   LIKE LINE OF lt_objects,
       lt_sotr     TYPE zif_abapgit_definitions=>ty_sotr_tt,
       lt_sotr_use TYPE zif_abapgit_definitions=>ty_sotr_use_tt.
 
-    FIELD-SYMBOLS: <ls_sotr> LIKE LINE OF lt_sotr.
+    io_xml->read( EXPORTING iv_name = 'SOTR'
+                  CHANGING cg_data = lt_sotr ).
+    io_xml->read( EXPORTING iv_name = 'SOTR_USE'
+                  CHANGING cg_data = lt_sotr_use ).
 
-    IF io_xml IS BOUND.
-      io_xml->read( EXPORTING iv_name = 'SOTR'
-                    CHANGING cg_data = lt_sotr ).
-      io_xml->read( EXPORTING iv_name = 'SOTR_USE'
-                    CHANGING cg_data = lt_sotr_use ).
-    ELSE.
-      lt_sotr     = it_sotr.
-      lt_sotr_use = it_sotr_use.
-    ENDIF.
+    create_sotr_from_data(
+      iv_package  = iv_package
+      it_sotr     = lt_sotr
+      it_sotr_use = lt_sotr_use ).
 
-    LOOP AT lt_sotr ASSIGNING <ls_sotr>.
+  ENDMETHOD.
+
+
+  METHOD create_sotr_from_data.
+
+    DATA:
+      lt_objects TYPE sotr_objects,
+      ls_paket   TYPE sotr_pack,
+      lv_object  LIKE LINE OF lt_objects.
+
+    FIELD-SYMBOLS: <ls_sotr> LIKE LINE OF it_sotr.
+
+    LOOP AT it_sotr ASSIGNING <ls_sotr>.
       CALL FUNCTION 'SOTR_OBJECT_GET_OBJECTS'
         EXPORTING
           object_vector    = <ls_sotr>-header-objid_vec
@@ -133,7 +145,7 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
 
     CALL FUNCTION 'SOTR_USAGE_MODIFY'
       EXPORTING
-        sotr_usage = lt_sotr_use.
+        sotr_usage = it_sotr_use.
 
   ENDMETHOD.
 
