@@ -85,6 +85,13 @@ Legend
 * Avoid logon when comparing with remote (#5458)
 * DDLS: Clear ABAP language version (#5474)
 * DDLX: Clear ABAP language version (#5476)
+* FUGR: Fix diff of includes (#5489)
+* DTDC: Support ABAP 2208 (#5478)
+* Create empty classes/interfaces before DDIC (#5393)
+* Fix user/password for background mode (#5488)
+* IWSG: Clear metadata fields (#5464)
+* Properly ignore files during deserialize (#5427)
+* SPRX: Fix suppress_dialog error (#5491)
 
 2022-01-03 v1.114.0
 -------------------
