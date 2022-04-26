@@ -28,9 +28,7 @@ CLASS zcl_abapgit_object_ensc IMPLEMENTATION.
 
         lo_spot_ref ?= li_spot_ref.
 
-        lo_spot_ref->if_enh_spot_composite~get_change_attributes(
-          IMPORTING
-            changedby = rv_user ).
+        lo_spot_ref->if_enh_spot_composite~get_change_attributes( IMPORTING changedby = rv_user ).
       CATCH cx_root.
         rv_user = c_user_unknown.
     ENDTRY.
