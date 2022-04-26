@@ -610,7 +610,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     zcl_abapgit_objects_activation=>clear( ).
 
-    lt_remote = io_repo->get_files_remote( ).
+    lt_remote = io_repo->get_files_remote( iv_ignore_files = abap_true ).
 
     lt_results = zcl_abapgit_file_deserialize=>get_results(
       io_repo = io_repo
