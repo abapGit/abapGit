@@ -6,29 +6,11 @@ CLASS zcl_abapgit_object_ttyp DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-
-    METHODS is_ref_to_class_or_interface
-      IMPORTING
-        !is_dd40v        TYPE dd40v
-      RETURNING
-        VALUE(rv_result) TYPE abap_bool .
-
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_object_ttyp IMPLEMENTATION.
-
-
-  METHOD is_ref_to_class_or_interface.
-
-    IF is_dd40v-rowkind = 'R'
-        AND ( is_dd40v-reftype = 'C'
-           OR is_dd40v-reftype = 'I' ).
-      rv_result = abap_true.
-    ENDIF.
-
-  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -64,13 +46,6 @@ CLASS zcl_abapgit_object_ttyp IMPLEMENTATION.
 
     io_xml->read( EXPORTING iv_name = 'DD40V'
                   CHANGING cg_data = ls_dd40v ).
-
-    " DDIC Step: Replace REF TO class/interface with generic reference to avoid cyclic dependency
-    IF iv_step = zif_abapgit_object=>gc_step_id-ddic AND is_ref_to_class_or_interface( ls_dd40v ) = abap_true.
-      ls_dd40v-rowtype = 'OBJECT'.
-    ELSEIF iv_step = zif_abapgit_object=>gc_step_id-late AND is_ref_to_class_or_interface( ls_dd40v ) = abap_false.
-      RETURN. " already active
-    ENDIF.
 
     io_xml->read( EXPORTING iv_name = 'DD42V'
                   CHANGING cg_data = lt_dd42v ).
@@ -140,7 +115,6 @@ CLASS zcl_abapgit_object_ttyp IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
-    APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
   ENDMETHOD.
 
 

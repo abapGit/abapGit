@@ -22,29 +22,55 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
         delete  TYPE string VALUE 'delete',
         backup  TYPE string VALUE 'backup',
         restore TYPE string VALUE 'restore',
-      END OF c_action .
+      END OF c_action.
+
+    DATA mt_methods TYPE zcl_abapgit_background=>ty_methods.
 
     CLASS-METHODS backup
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     CLASS-METHODS delete
       IMPORTING
         !is_key TYPE zif_abapgit_persistence=>ty_content
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     CLASS-METHODS restore
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS explain_content
       IMPORTING
         !is_data       TYPE zif_abapgit_persistence=>ty_content
       RETURNING
         VALUE(rv_text) TYPE string
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS build_menu
       RETURNING
-        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
+        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
+    METHODS explain_content_repo
+      IMPORTING
+        !is_data  TYPE zif_abapgit_persistence=>ty_content
+      EXPORTING
+        !ev_value TYPE string
+        !ev_extra TYPE string
+      RAISING
+        zcx_abapgit_exception.
+    METHODS explain_content_repo_cs
+      IMPORTING
+        !is_data  TYPE zif_abapgit_persistence=>ty_content
+      EXPORTING
+        !ev_value TYPE string
+        !ev_extra TYPE string
+      RAISING
+        zcx_abapgit_exception.
+    METHODS explain_content_background
+      IMPORTING
+        !is_data  TYPE zif_abapgit_persistence=>ty_content
+      EXPORTING
+        !ev_value TYPE string
+        !ev_extra TYPE string
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -146,71 +172,168 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
 
   METHOD explain_content.
 
-    DATA: ls_result TYPE match_result,
-          ls_match  TYPE submatch_result,
-          lv_cnt    TYPE i.
-
-    DATA lt_lines TYPE string_table.
+    DATA:
+          lv_descr  TYPE string,
+          lv_value  TYPE string,
+          lv_extra  TYPE string.
 
     CASE is_data-type.
       WHEN zcl_abapgit_persistence_db=>c_type_repo.
-        FIND FIRST OCCURRENCE OF REGEX '<url>(.*)</url>'
-          IN is_data-data_str IGNORING CASE RESULTS ls_result.
-        READ TABLE ls_result-submatches INTO ls_match INDEX 1.
-        IF sy-subrc IS INITIAL.
-          rv_text = is_data-data_str+ls_match-offset(ls_match-length).
-        ENDIF.
+        lv_descr = 'Repo Settings'.
 
-        FIND FIRST OCCURRENCE OF REGEX '<OFFLINE/>'
-          IN is_data-data_str IGNORING CASE MATCH COUNT lv_cnt.
-        IF lv_cnt > 0.
-          rv_text = |<strong>On-line</strong>, Name: <strong>{
-                    zcl_abapgit_url=>name( rv_text ) }</strong>|.
-        ELSE.
-          rv_text = |Off-line, Name: <strong>{ rv_text }</strong>|.
-        ENDIF.
+        explain_content_repo(
+          EXPORTING
+            is_data  = is_data
+          IMPORTING
+            ev_value = lv_value
+            ev_extra = lv_extra ).
 
       WHEN zcl_abapgit_persistence_db=>c_type_background.
-        FIND FIRST OCCURRENCE OF REGEX '<method>(.*)</method>'
-          IN is_data-data_str IGNORING CASE RESULTS ls_result.
-        READ TABLE ls_result-submatches INTO ls_match INDEX 1.
-        IF sy-subrc IS NOT INITIAL.
-          RETURN.
-        ENDIF.
-        rv_text = |Method: { is_data-data_str+ls_match-offset(ls_match-length) }, |
-               && |Repository: { zcl_abapgit_repo_srv=>get_instance( )->get( is_data-value )->get_name( ) }|.
+        lv_descr = 'Background Settings'.
+
+        explain_content_background(
+          EXPORTING
+            is_data  = is_data
+          IMPORTING
+            ev_value = lv_value
+            ev_extra = lv_extra ).
 
       WHEN zcl_abapgit_persistence_db=>c_type_user.
-        rv_text = |Personal Settings: <strong>{
-                  zcl_abapgit_user_record=>get_instance( is_data-value )->get_name( ) }</strong>|.
+        lv_descr = 'Personal Settings'.
+        lv_value = zcl_abapgit_user_record=>get_instance( is_data-value )->get_name( ).
       WHEN zcl_abapgit_persistence_db=>c_type_settings.
-        rv_text = 'Global Settings'.
+        lv_descr = 'Global Settings'.
       WHEN zcl_abapgit_persistence_db=>c_type_packages.
-        rv_text = 'Local Package Details'.
+        lv_descr = 'Local Package Details'.
       WHEN zcl_abapgit_persistence_db=>c_type_repo_csum.
-        IF strlen( is_data-data_str ) > 0.
-          SPLIT is_data-data_str AT cl_abap_char_utilities=>newline INTO TABLE lt_lines.
-          READ TABLE lt_lines INDEX 1 INTO rv_text.
-          rv_text = |{ rv_text } ({ lines( lt_lines ) } lines)|.
+        lv_descr = 'Repo Checksums'.
 
-          IF strlen( rv_text ) >= 250.
-            rv_text = rv_text(250).
-          ENDIF.
-          rv_text = escape(
-            val    = rv_text
-            format = cl_abap_format=>e_html_attr ).
-        ENDIF.
+        explain_content_repo_cs(
+          EXPORTING
+            is_data  = is_data
+          IMPORTING
+            ev_value = lv_value
+            ev_extra = lv_extra ).
 
       WHEN OTHERS.
         IF strlen( is_data-data_str ) >= 250.
-          rv_text = is_data-data_str(250).
+          lv_value = is_data-data_str(250).
         ELSE.
-          rv_text = is_data-data_str.
+          lv_value = is_data-data_str.
         ENDIF.
-        rv_text = escape( val    = rv_text
-                          format = cl_abap_format=>e_html_attr ).
-        rv_text = |<pre>{ rv_text }</pre>|.
+
+        lv_value = escape(
+          val    = lv_value
+          format = cl_abap_format=>e_html_attr ).
+
+        lv_value = |<pre>{ lv_value }</pre>|.
     ENDCASE.
+
+    IF lv_value IS NOT INITIAL.
+      lv_descr = |{ lv_descr }: |.
+    ENDIF.
+
+    IF lv_extra IS NOT INITIAL.
+      lv_extra = | ({ lv_extra })|.
+    ENDIF.
+
+    rv_text = |{ lv_descr }<strong>{ lv_value }</strong>{ lv_extra }|.
+
+    IF strlen( rv_text ) >= 250.
+      rv_text = rv_text(250) && '...'.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD explain_content_background.
+
+    DATA:
+      ls_result TYPE match_result,
+      ls_match  TYPE submatch_result,
+      lv_class  TYPE string,
+      ls_method LIKE LINE OF mt_methods.
+
+    ev_value = |{ zcl_abapgit_repo_srv=>get_instance( )->get( is_data-value )->get_name( ) }|.
+
+    FIND FIRST OCCURRENCE OF REGEX '<METHOD>(.*)</METHOD>'
+      IN is_data-data_str IGNORING CASE RESULTS ls_result.
+    READ TABLE ls_result-submatches INTO ls_match INDEX 1.
+    IF sy-subrc = 0.
+      lv_class = is_data-data_str+ls_match-offset(ls_match-length).
+    ENDIF.
+
+    IF mt_methods IS INITIAL.
+      mt_methods = zcl_abapgit_background=>list_methods( ).
+    ENDIF.
+
+    READ TABLE mt_methods INTO ls_method WITH TABLE KEY class = lv_class.
+    IF sy-subrc = 0.
+      ev_extra = ls_method-description.
+    ELSE.
+      ev_extra = lv_class.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD explain_content_repo.
+
+    DATA:
+      ls_result TYPE match_result,
+      ls_match  TYPE submatch_result,
+      lv_cnt    TYPE i.
+
+    FIND FIRST OCCURRENCE OF REGEX '<OFFLINE/>'
+      IN is_data-data_str IGNORING CASE MATCH COUNT lv_cnt.
+    IF lv_cnt > 0.
+      ev_extra = 'Online'.
+    ELSE.
+      ev_extra = 'Offline'.
+    ENDIF.
+
+    FIND FIRST OCCURRENCE OF REGEX '<DISPLAY_NAME>(.*)</DISPLAY_NAME>'
+      IN is_data-data_str IGNORING CASE RESULTS ls_result.
+    READ TABLE ls_result-submatches INTO ls_match INDEX 1.
+    IF sy-subrc = 0.
+      ev_value = is_data-data_str+ls_match-offset(ls_match-length).
+    ENDIF.
+
+    IF ev_value IS INITIAL.
+      FIND FIRST OCCURRENCE OF REGEX '<URL>(.*)</URL>'
+        IN is_data-data_str IGNORING CASE RESULTS ls_result.
+      READ TABLE ls_result-submatches INTO ls_match INDEX 1.
+      IF sy-subrc = 0.
+        ev_value = is_data-data_str+ls_match-offset(ls_match-length).
+        IF lv_cnt > 0.
+          ev_value = zcl_abapgit_url=>name( ev_value ).
+        ENDIF.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD explain_content_repo_cs.
+
+    DATA:
+      ls_result TYPE match_result,
+      ls_match  TYPE submatch_result,
+      lt_lines  TYPE string_table.
+
+    IF strlen( is_data-data_str ) > 0.
+      SPLIT is_data-data_str AT cl_abap_char_utilities=>newline INTO TABLE lt_lines.
+      ev_extra = |{ lines( lt_lines ) } lines|.
+
+      READ TABLE lt_lines INDEX 1 INTO ev_value.
+      IF sy-subrc = 0.
+        REPLACE '#repo_name#' IN ev_value WITH ''.
+        ev_value = escape(
+          val    = ev_value
+          format = cl_abap_format=>e_html_attr ).
+      ENDIF.
+    ENDIF.
+
   ENDMETHOD.
 
 
