@@ -41,6 +41,12 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
 
     DATA mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc .
 
+    METHODS deserialize_pre_ddic
+      IMPORTING
+        ii_xml     TYPE REF TO zif_abapgit_xml_input
+        iv_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception.
     METHODS serialize_xml
       IMPORTING
         !io_xml TYPE REF TO zif_abapgit_xml_output
@@ -131,6 +137,25 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
         iv_language      = ls_i18n_lines-language
         iv_no_masterlang = abap_true ).
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD deserialize_pre_ddic.
+
+    DATA: ls_vseointerf   TYPE vseointerf,
+          ls_clskey       TYPE seoclskey.
+
+    ls_clskey-clsname = ms_item-obj_name.
+
+    ii_xml->read( EXPORTING iv_name = 'VSEOINTERF'
+                  CHANGING cg_data = ls_vseointerf ).
+
+    mi_object_oriented_object_fct->create(
+      EXPORTING
+        iv_package    = iv_package
+      CHANGING
+        cg_properties = ls_vseointerf ).
 
   ENDMETHOD.
 
@@ -344,16 +369,31 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'VSEOINTERF'
                   CHANGING cg_data = ls_vseointerf ).
 
-    IF ls_vseointerf-clsproxy = abap_true.
-      " Proxy interfaces are managed via SPRX
-      deserialize_proxy( iv_transport ).
-      RETURN.
+    IF iv_step = zif_abapgit_object=>gc_step_id-abap.
+
+      IF ls_vseointerf-clsproxy = abap_true.
+        " Proxy interfaces are managed via SPRX
+        deserialize_proxy( iv_transport ).
+        RETURN.
+      ENDIF.
+
+      deserialize_abap( ii_xml     = io_xml
+                        iv_package = iv_package ).
+
+      deserialize_docu( io_xml ).
+
+    ELSEIF iv_step = zif_abapgit_object=>gc_step_id-early.
+
+      " If interface does not exist, create it
+      " so DDIC that depends on it does not fail activation
+      IF zif_abapgit_object~exists( ) = abap_false.
+        deserialize_pre_ddic(
+          ii_xml     = io_xml
+          iv_package = iv_package ).
+      ENDIF.
+
     ENDIF.
 
-    deserialize_abap( ii_xml     = io_xml
-                      iv_package = iv_package ).
-
-    deserialize_docu( io_xml ).
   ENDMETHOD.
 
 
@@ -385,6 +425,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_deserialize_steps.
+    APPEND zif_abapgit_object=>gc_step_id-early TO rt_steps.
     APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
 
