@@ -79,6 +79,12 @@ CLASS zcl_abapgit_object_clas DEFINITION
           zcx_abapgit_exception.
 
   PRIVATE SECTION.
+    METHODS deserialize_pre_ddic
+      IMPORTING
+        ii_xml     TYPE REF TO zif_abapgit_xml_input
+        iv_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception.
     METHODS:
       is_class_locked
         RETURNING VALUE(rv_is_class_locked) TYPE abap_bool
@@ -215,6 +221,23 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
         iv_language      = ls_i18n_lines-language
         iv_no_masterlang = abap_true ).
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD deserialize_pre_ddic.
+    DATA: ls_vseoclass  TYPE vseoclass,
+          lt_attributes TYPE zif_abapgit_definitions=>ty_obj_attribute_tt.
+
+    ii_xml->read( EXPORTING iv_name = 'VSEOCLASS'
+                  CHANGING  cg_data = ls_vseoclass ).
+
+    mi_object_oriented_object_fct->create(
+      EXPORTING
+        iv_package    = iv_package
+        it_attributes = lt_attributes
+      CHANGING
+        cg_properties = ls_vseoclass ).
 
   ENDMETHOD.
 
@@ -629,15 +652,29 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    deserialize_abap( ii_xml     = io_xml
-                      iv_package = iv_package ).
+    IF iv_step = zif_abapgit_object=>gc_step_id-abap.
 
-    deserialize_tpool( io_xml ).
+      deserialize_abap( ii_xml     = io_xml
+                        iv_package = iv_package ).
 
-    deserialize_sotr( ii_ml     = io_xml
-                      iv_package = iv_package ).
+      deserialize_tpool( io_xml ).
 
-    deserialize_docu( io_xml ).
+      deserialize_sotr( ii_ml     = io_xml
+                        iv_package = iv_package ).
+
+      deserialize_docu( io_xml ).
+
+    ELSEIF iv_step = zif_abapgit_object=>gc_step_id-early.
+
+      " If class does not exist, create it
+      " so DDIC that depends on it does not fail activation
+      IF zif_abapgit_object~exists( ) = abap_false.
+        deserialize_pre_ddic(
+          ii_xml     = io_xml
+          iv_package = iv_package ).
+      ENDIF.
+
+    ENDIF.
 
   ENDMETHOD.
 
@@ -656,6 +693,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_deserialize_steps.
+    APPEND zif_abapgit_object=>gc_step_id-early TO rt_steps.
     APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
 
