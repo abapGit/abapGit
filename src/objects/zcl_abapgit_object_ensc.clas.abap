@@ -13,7 +13,28 @@ CLASS zcl_abapgit_object_ensc IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown. " todo
+
+    DATA: lv_spot_name TYPE enhspotcompositename,
+          li_spot_ref  TYPE REF TO if_enh_spot_composite,
+          lo_spot_ref  TYPE REF TO cl_enh_spot_composite.
+
+    lv_spot_name = ms_item-obj_name.
+
+    TRY.
+        li_spot_ref = cl_enh_factory=>get_enhancement_spot_comp(
+          lock     = ''
+          run_dark = abap_true
+          name     = lv_spot_name ).
+
+        lo_spot_ref ?= li_spot_ref.
+
+        lo_spot_ref->if_enh_spot_composite~get_change_attributes(
+          IMPORTING
+            changedby = rv_user ).
+      CATCH cx_root.
+        rv_user = c_user_unknown.
+    ENDTRY.
+
   ENDMETHOD.
 
 
