@@ -13,6 +13,10 @@ CLASS zcl_abapgit_object_wdyn DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
+    CONSTANTS c_longtext_id_wc TYPE dokil-id VALUE 'WC' ##NO_TEXT.
+    CONSTANTS c_longtext_id_wd TYPE dokil-id VALUE 'WD' ##NO_TEXT.
+    CONSTANTS c_longtext_name_wc TYPE string VALUE 'LONGTEXTS_WC' ##NO_TEXT.
+
     DATA:
       mt_components TYPE TABLE OF wdy_ctlr_compo_vrs,
       mt_sources    TYPE TABLE OF wdy_ctlr_compo_source_vrs.
@@ -72,7 +76,7 @@ CLASS zcl_abapgit_object_wdyn DEFINITION
         CHANGING  ct_exception TYPE abap_func_excpbind_tab,
       add_with_inactive_parts
         RAISING
-          zcx_abapgit_exception .
+          zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -457,8 +461,28 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
+    SORT rs_component-view_metadata BY
+      definition-component_name ASCENDING
+      definition-view_name ASCENDING.
+
     LOOP AT rs_component-view_metadata ASSIGNING <ls_view>.
+      SORT <ls_view>-descriptions.
+      SORT <ls_view>-view_containers.
+      SORT <ls_view>-view_container_texts.
+      SORT <ls_view>-iobound_plugs.
+      SORT <ls_view>-iobound_plug_texts.
+      SORT <ls_view>-plug_parameters.
+      SORT <ls_view>-plug_parameter_texts.
       SORT <ls_view>-ui_elements.
+      SORT <ls_view>-ui_context_bindings.
+      SORT <ls_view>-ui_event_bindings.
+      SORT <ls_view>-ui_ddic_bindings.
+      SORT <ls_view>-ui_properties.
+      SORT <ls_view>-navigation_links.
+      SORT <ls_view>-navigation_target_refs.
+      SORT <ls_view>-vsh_nodes.
+      SORT <ls_view>-vsh_placeholders.
+      SORT <ls_view>-viewset_properties.
     ENDLOOP.
 
     SORT mt_components BY
@@ -715,7 +739,7 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
 
     DATA: ls_key    TYPE wdy_md_component_key,
           lv_corrnr TYPE trkorr,
-          lx_error      TYPE REF TO cx_wdy_md_exception,
+          lx_error  TYPE REF TO cx_wdy_md_exception,
           ls_delta  TYPE svrs2_xversionable_object.
 
 
@@ -743,7 +767,7 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
 
     DATA: ls_key    TYPE wdy_md_view_key,
           lv_corrnr TYPE trkorr,
-          lx_error      TYPE REF TO cx_wdy_md_exception,
+          lx_error  TYPE REF TO cx_wdy_md_exception,
           ls_delta  TYPE svrs2_xversionable_object.
 
 
@@ -766,7 +790,11 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown. " todo
+    SELECT SINGLE changedby FROM wdy_component INTO rv_user
+      WHERE component_name = ms_item-obj_name AND version = 'A'.
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ENDIF.
   ENDMETHOD.
 
 
@@ -834,6 +862,12 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
 
     add_with_inactive_parts( ).
 
+    deserialize_longtexts( io_xml ).
+
+    deserialize_longtexts(
+      ii_xml           = io_xml
+      iv_longtext_name = c_longtext_name_wc ).
+
   ENDMETHOD.
 
 
@@ -883,6 +917,10 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     DATA: ls_component   TYPE wdy_component_metadata,
+          ls_comp        TYPE wdy_ctlr_compo_vrs,
+          lv_object      TYPE dokil-object,
+          lt_object      TYPE STANDARD TABLE OF dokil-object WITH DEFAULT KEY,
+          lt_dokil       TYPE STANDARD TABLE OF dokil WITH DEFAULT KEY,
           ls_description TYPE wdy_ext_ctx_map.
 
     ls_component = read( ).
@@ -902,6 +940,34 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
         iv_obj_name = ms_item-obj_name
         io_xml      = io_xml ).
     ENDIF.
+
+    serialize_longtexts(
+      ii_xml         = io_xml
+      iv_longtext_id = c_longtext_id_wd ).
+
+    LOOP AT mt_components INTO ls_comp.
+      lv_object    = ls_comp-component_name.
+      lv_object+30 = ls_comp-controller_name.
+      COLLECT lv_object INTO lt_object.
+    ENDLOOP.
+
+    IF io_xml->i18n_params( )-main_language_only = abap_true.
+      SELECT * FROM dokil INTO TABLE lt_dokil
+        FOR ALL ENTRIES IN lt_object
+        WHERE id = c_longtext_id_wc AND object = lt_object-table_line AND masterlang = abap_true
+        ORDER BY PRIMARY KEY.
+    ELSE.
+      SELECT * FROM dokil INTO TABLE lt_dokil
+        FOR ALL ENTRIES IN lt_object
+        WHERE id = c_longtext_id_wc AND object = lt_object-table_line
+        ORDER BY PRIMARY KEY.
+    ENDIF.
+
+    serialize_longtexts(
+      ii_xml           = io_xml
+      it_dokil         = lt_dokil
+      iv_longtext_id   = c_longtext_id_wc
+      iv_longtext_name = c_longtext_name_wc ).
 
   ENDMETHOD.
 ENDCLASS.
