@@ -98,7 +98,11 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown. " todo
+    SELECT SINGLE as4user FROM dd12l INTO rv_user
+      WHERE sqltab = mv_name AND indexname = mv_id.
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ENDIF.
   ENDMETHOD.
 
 
