@@ -660,36 +660,28 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
         iv_key = c_id-head_type
         iv_val = is_settings-head_type ).
 
-      CASE is_settings-head_type.
-        WHEN c_head_types-branch.
-          lv_head = is_settings-branch.
-          REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-heads_prefix IN lv_head WITH space.
-          CONDENSE lv_head.
-          io_form_data->set(
-            iv_key = c_id-branch
-            iv_val = lv_head ).
-        WHEN c_head_types-tag.
-          lv_head = is_settings-tag.
-          REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-heads_prefix IN lv_head WITH space.
-          CONDENSE lv_head.
-          io_form_data->set(
-            iv_key = c_id-tag
-            iv_val = lv_head ).
-        WHEN c_head_types-commit.
-          lv_head = is_settings-branch.
-          REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-heads_prefix IN lv_head WITH space.
-          CONDENSE lv_head.
-          io_form_data->set(
-            iv_key = c_id-branch
-            iv_val = lv_head ).
-          io_form_data->set(
-            iv_key = c_id-commit
-            iv_val = is_settings-commit ).
-        WHEN c_head_types-pull_request.
-          io_form_data->set(
-            iv_key = c_id-pull_request
-            iv_val = is_settings-pull_request ).
-      ENDCASE.
+      " When pull request is selected the previously selected branch/tag is also loaded to be able to switch back to it
+      lv_head = is_settings-branch.
+      REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-heads_prefix IN lv_head WITH space.
+      CONDENSE lv_head.
+      io_form_data->set(
+        iv_key = c_id-branch
+        iv_val = lv_head ).
+
+      lv_head = is_settings-tag.
+      REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-heads_prefix IN lv_head WITH space.
+      CONDENSE lv_head.
+      io_form_data->set(
+        iv_key = c_id-tag
+        iv_val = lv_head ).
+
+      io_form_data->set(
+        iv_key = c_id-commit
+        iv_val = is_settings-commit ).
+
+      io_form_data->set(
+        iv_key = c_id-pull_request
+        iv_val = is_settings-pull_request ).
     ENDIF.
 
     " Set for is_dirty check
@@ -1155,7 +1147,6 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
   METHOD get_remote_settings_from_repo.
     DATA: lo_repo_online  TYPE REF TO zcl_abapgit_repo_online,
           lo_repo_offline TYPE REF TO zcl_abapgit_repo_offline,
-          lv_dummy        TYPE string ##NEEDED,
           lv_branch       TYPE ty_remote_settings-branch.
 
     IF io_repo->is_offline( ) = abap_false.
@@ -1175,7 +1166,11 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
         " get_url( ) returns the source repo of the PR branch
 
         rs_settings-switched_origin = lo_repo_online->get_switched_origin( ).
-        SPLIT rs_settings-switched_origin AT '@' INTO rs_settings-url lv_dummy.
+        SPLIT rs_settings-switched_origin AT '@' INTO rs_settings-url rs_settings-branch.
+        IF rs_settings-branch CP zif_abapgit_definitions=>c_git_branch-tags.
+          rs_settings-tag = rs_settings-branch.
+          CLEAR rs_settings-branch.
+        ENDIF.
 
         lv_branch = lo_repo_online->get_selected_branch( ).
         REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-heads_prefix IN lv_branch WITH space.
