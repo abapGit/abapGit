@@ -652,6 +652,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     ENDLOOP.
 
     APPEND lv_program TO rt_includes.
+    SORT rt_includes.
 
     mt_includes_cache = rt_includes.
 
