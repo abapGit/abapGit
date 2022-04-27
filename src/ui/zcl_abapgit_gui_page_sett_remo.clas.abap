@@ -388,16 +388,23 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     DATA:
       lo_repo  TYPE REF TO zcl_abapgit_repo_online,
       lt_pulls TYPE zif_abapgit_pr_enum_provider=>ty_pull_requests,
-      ls_pull  LIKE LINE OF lt_pulls.
+      ls_pull  LIKE LINE OF lt_pulls,
+      lv_url   TYPE ty_remote_settings-url.
 
     IF mo_form_data->get( c_id-offline ) = abap_true.
       RETURN.
     ELSEIF mo_repo->is_offline( ) = abap_true.
-      MESSAGE 'Please save conversion to online repository before choosing pull request' TYPE 'S'.
+      MESSAGE 'Please save conversion to online repository before choosing a pull request' TYPE 'S'.
       RETURN.
     ENDIF.
 
     lo_repo ?= mo_repo.
+    lv_url = mo_form_data->get( c_id-url ).
+
+    IF lo_repo->get_url( ) <> lv_url.
+      MESSAGE 'Please save new URL first before choosing a pull request' TYPE 'S'.
+      RETURN.
+    ENDIF.
 
     lt_pulls = zcl_abapgit_pr_enumerator=>new( lo_repo )->get_pulls( ).
 
@@ -419,18 +426,20 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     DATA:
       lo_repo TYPE REF TO zcl_abapgit_repo_online,
-      ls_tag  TYPE zif_abapgit_definitions=>ty_git_tag.
+      ls_tag  TYPE zif_abapgit_definitions=>ty_git_tag,
+      lv_url  TYPE ty_remote_settings-url.
 
     IF mo_form_data->get( c_id-offline ) = abap_true.
       RETURN.
     ELSEIF mo_repo->is_offline( ) = abap_true.
-      MESSAGE 'Please save conversion to online repository before choosing tag' TYPE 'S'.
+      MESSAGE 'Please save conversion to online repository before choosing a tag' TYPE 'S'.
       RETURN.
     ENDIF.
 
     lo_repo ?= mo_repo.
+    lv_url = mo_form_data->get( c_id-url ).
 
-    ls_tag = zcl_abapgit_ui_factory=>get_popups( )->tag_list_popup( lo_repo->get_url( ) ).
+    ls_tag = zcl_abapgit_ui_factory=>get_popups( )->tag_list_popup( lv_url ).
 
     IF ls_tag IS NOT INITIAL.
       rv_tag = ls_tag-name.
