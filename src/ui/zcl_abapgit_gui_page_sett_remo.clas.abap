@@ -863,7 +863,8 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       lv_branch                TYPE ty_remote_settings-branch,
       lv_url                   TYPE ty_remote_settings-url,
       lv_branch_check_error_id TYPE string,
-      lv_pull_request          TYPE ty_remote_settings-pull_request.
+      lv_pull_request          TYPE ty_remote_settings-pull_request,
+      lv_commit                TYPE ty_remote_settings-commit.
 
     ro_validation_log = mo_form_util->validate( io_form_data ).
     lv_offline = io_form_data->get( c_id-offline ).
@@ -910,8 +911,16 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
             lv_branch = zif_abapgit_definitions=>c_git_branch-heads_prefix && lv_branch.
           ENDIF.
           lv_branch_check_error_id = c_id-pull_request.
-        WHEN c_head_types-commit ##NEEDED.
-          " Not implemented (needs API that doesn't rely on finding the first commit in the branch)
+        WHEN c_head_types-commit.
+          lv_commit = io_form_data->get( c_id-commit ).
+
+          " Cannot check for commit existence currently (needs API that doesn't rely on finding the first commit
+          " in the branch), check format instead
+          IF lv_commit CN '0123456789abcdef'.
+            ro_validation_log->set(
+              iv_key = c_id-commit
+              iv_val = 'Commit needs to be hexadecimal and in lowercase' ).
+          ENDIF.
         WHEN OTHERS.
           ro_validation_log->set(
             iv_key = c_id-head_type
