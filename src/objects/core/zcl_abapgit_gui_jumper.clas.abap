@@ -60,9 +60,9 @@ CLASS zcl_abapgit_gui_jumper IMPLEMENTATION.
 
     lv_exit = cl_rsawbn_awb=>is_supported_navigation(
       i_tlogo = lv_tlogo
-      i_fcode = rsawc_c_tfc-display ).
+      i_fcode = 'DISPLAY' ).
 
-    IF lv_exit = rs_c_false.
+    IF lv_exit = abap_false.
       RETURN.
     ENDIF.
 
