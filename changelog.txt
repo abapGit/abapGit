@@ -8,7 +8,7 @@ Legend
 + : added
 - : removed
 
-2022-xx-xx v1.115.0
+2022-04-28 v1.115.0
 -------------------
 
 ! Rework checksums (#5328)
