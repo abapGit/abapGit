@@ -64,7 +64,6 @@ Legend
 * SRVB: Fix uncaught exception (#5398)
 * Repo List: Fix sort (#5397)
 * Fix deserialize order (#5399)
-* ajson, Automatic Update (#5412)
 * DDLX: Delete before DDLS (#5414)
 * UENO: Fix diff related to release (#5422)
 * Record objects in transports (#5419)
