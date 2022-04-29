@@ -74,12 +74,12 @@ CLASS zcl_abapgit_gui_jumper IMPLEMENTATION.
           IMPORTING
             e_exit_own_application = lv_exit.
       CATCH cx_root.
-        CALL METHOD cl_rsawbn_awb=>navigate_from_application
+        cl_rsawbn_awb=>navigate_from_application(
           EXPORTING
             i_tlogo                = lv_tlogo
             i_objnm                = lv_objnm
           IMPORTING
-            e_exit_own_application = lv_exit.
+            e_exit_own_application = lv_exit ).
     ENDTRY.
 
     rv_exit = lv_exit.
