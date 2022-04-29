@@ -54,7 +54,6 @@ CLASS zcl_abapgit_gui_jumper IMPLEMENTATION.
       lv_tlogo TYPE rstlogo,
       lv_objnm TYPE rsawbnobjnm.
 
-
     lv_tlogo = is_item-obj_type.
     lv_objnm = is_item-obj_name.
 
@@ -66,13 +65,22 @@ CLASS zcl_abapgit_gui_jumper IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    cl_rsawbn_awb=>navigate_from_application(
-      EXPORTING
-        i_tlogo                = lv_tlogo
-        i_objnm                = lv_objnm
-        i_new_mode             = iv_new_window
-      IMPORTING
-        e_exit_own_application = lv_exit ).
+    TRY.
+        CALL METHOD ('CL_RSAWBN_AWB')=>('NAVIGATE_FROM_APPLICATION')
+          EXPORTING
+            i_tlogo                = lv_tlogo
+            i_objnm                = lv_objnm
+            i_new_mode             = iv_new_window
+          IMPORTING
+            e_exit_own_application = lv_exit.
+      CATCH cx_root.
+        cl_rsawbn_awb=>navigate_from_application(
+          EXPORTING
+            i_tlogo                = lv_tlogo
+            i_objnm                = lv_objnm
+          IMPORTING
+            e_exit_own_application = lv_exit ).
+    ENDTRY.
 
     rv_exit = lv_exit.
 

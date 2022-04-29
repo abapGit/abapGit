@@ -275,6 +275,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
     lt_state_idx = it_cur_state. " Force sort it
 
     lt_remote = it_remote.
+    SORT lt_remote BY path filename.
 
     " Process local files and new local files
     process_local(
