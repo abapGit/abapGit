@@ -38,6 +38,7 @@ CLASS zcl_abapgit_factory DEFINITION
     CLASS-METHODS get_lxe_texts
       RETURNING
         VALUE(ri_lxe_texts) TYPE REF TO zif_abapgit_lxe_texts .
+        
   PROTECTED SECTION.
   PRIVATE SECTION.
 
