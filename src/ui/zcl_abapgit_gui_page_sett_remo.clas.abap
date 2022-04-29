@@ -742,6 +742,12 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
         switch_to_pull_req( iv_pull = ls_settings_new-pull_request ).
     ENDCASE.
 
+    IF ls_settings_new-head_type <> c_head_types-pull_request.
+      " Switching from PR to something else will reset the URL in repo->switch_origin( space )
+      " -> set URL again
+      lo_repo_online->set_url( ls_settings_new-url ).
+    ENDIF.
+
     COMMIT WORK AND WAIT.
 
     MESSAGE 'Settings succesfully saved' TYPE 'S'.
