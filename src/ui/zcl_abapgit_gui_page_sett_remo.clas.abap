@@ -386,27 +386,17 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
   METHOD choose_pull_req.
 
     DATA:
-      lo_repo  TYPE REF TO zcl_abapgit_repo_online,
       lt_pulls TYPE zif_abapgit_pr_enum_provider=>ty_pull_requests,
       ls_pull  LIKE LINE OF lt_pulls,
       lv_url   TYPE ty_remote_settings-url.
 
     IF mo_form_data->get( c_id-offline ) = abap_true.
       RETURN.
-    ELSEIF mo_repo->is_offline( ) = abap_true.
-      MESSAGE 'Please save conversion to online repository before choosing a pull request' TYPE 'S'.
-      RETURN.
     ENDIF.
 
-    lo_repo ?= mo_repo.
     lv_url = mo_form_data->get( c_id-url ).
 
-    IF lo_repo->get_url( ) <> lv_url.
-      MESSAGE 'Please save new URL first before choosing a pull request' TYPE 'S'.
-      RETURN.
-    ENDIF.
-
-    lt_pulls = zcl_abapgit_pr_enumerator=>new( lo_repo )->get_pulls( ).
+    lt_pulls = zcl_abapgit_pr_enumerator=>new( lv_url )->get_pulls( ).
 
     IF lines( lt_pulls ) = 0.
       MESSAGE 'No pull requests found' TYPE 'S'.
