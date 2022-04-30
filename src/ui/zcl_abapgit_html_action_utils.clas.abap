@@ -254,9 +254,9 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
     LOOP AT lt_substrings ASSIGNING <lv_substring>.
 
       CLEAR ls_field.
-      "<lv_substring> = unescape( <lv_substring> ).
       " On attempt to change unescaping -> run unit tests to check !
 
+      " Unescape name and value separately
       ls_field-name = unescape( substring_before(
         val = <lv_substring>
         sub = '=' ) ).
