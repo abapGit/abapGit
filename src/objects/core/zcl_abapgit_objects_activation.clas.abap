@@ -71,6 +71,15 @@ CLASS zcl_abapgit_objects_activation DEFINITION
         !ii_log     TYPE REF TO zif_abapgit_log
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS add_activation_errors_to_log
+      IMPORTING
+        !io_checklist       TYPE REF TO cl_wb_checklist
+        !ii_log             TYPE REF TO zif_abapgit_log
+      RETURNING
+        VALUE(rv_try_again) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
+
 ENDCLASS.
 
 
@@ -205,8 +214,12 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
 
   METHOD activate_old.
 
-    DATA: lv_popup TYPE abap_bool,
-          lv_no_ui TYPE abap_bool.
+    DATA:
+      lv_popup     TYPE abap_bool,
+      lv_no_ui     TYPE abap_bool,
+      lv_try_again TYPE abap_bool,
+      lv_msg       TYPE string,
+      lo_checklist TYPE REF TO cl_wb_checklist.
 
     IF gt_objects IS NOT INITIAL.
 
@@ -228,6 +241,8 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
               activate_ddic_objects  = iv_ddic
               with_popup             = lv_popup
               ui_decoupled           = lv_no_ui
+            IMPORTING
+              p_checklist            = lo_checklist
             TABLES
               objects                = gt_objects
             EXCEPTIONS
@@ -240,6 +255,8 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
             EXPORTING
               activate_ddic_objects  = iv_ddic
               with_popup             = lv_popup
+            IMPORTING
+              p_checklist            = lo_checklist
             TABLES
               objects                = gt_objects
             EXCEPTIONS
@@ -252,7 +269,16 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
         WHEN 1 OR 3 OR 4.
           zcx_abapgit_exception=>raise_t100( ).
         WHEN 2.
-          zcx_abapgit_exception=>raise( 'Activation cancelled. Check the inactive objects.' ).
+          lv_msg = 'Check the log and inactive objects.'.
+          IF lv_popup = abap_false.
+            lv_try_again = add_activation_errors_to_log(
+              ii_log       = ii_log
+              io_checklist = lo_checklist ).
+            IF lv_try_again = abap_true.
+              lv_msg = 'Turn on "Activation Popup" in "Personal Settings" and try again'.
+            ENDIF.
+          ENDIF.
+          zcx_abapgit_exception=>raise( |Activation cancelled. { lv_msg }| ).
       ENDCASE.
 
     ENDIF.
@@ -279,6 +305,39 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
       <ls_object>-obj_name   = iv_name.
       <ls_object>-delet_flag = iv_delete.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD add_activation_errors_to_log.
+
+    DATA:
+      ls_item    TYPE zif_abapgit_definitions=>ty_item,
+      lt_message TYPE swbme_error_tab.
+
+    FIELD-SYMBOLS:
+      <lv_msg>     TYPE string,
+      <ls_message> LIKE LINE OF lt_message.
+
+    io_checklist->get_error_messages( IMPORTING p_error_tab = lt_message ).
+
+    LOOP AT lt_message ASSIGNING <ls_message> WHERE mtype = 'E'.
+      " When activting without popup, includes used in multiple main programs cause error
+      " Run again WITH activation popup (see abapGit, Personal Settings)
+      IF <ls_message>-message-msgid = 'EU' AND <ls_message>-message-msgno = '404'.
+        rv_try_again = abap_true.
+      ENDIF.
+      CLEAR ls_item.
+      IF strlen( <ls_message>-object_text ) > 5.
+        ls_item-obj_type = <ls_message>-object_text(4).
+        ls_item-obj_name = <ls_message>-object_text+5(*).
+      ENDIF.
+      LOOP AT <ls_message>-mtext ASSIGNING <lv_msg>.
+        ii_log->add_error(
+          iv_msg  = <lv_msg>
+          is_item = ls_item ).
+      ENDLOOP.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -367,11 +426,11 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
 
   METHOD update_where_used.
 
-    DATA: ls_class    LIKE LINE OF gt_classes,
-          lo_cross    TYPE REF TO cl_wb_crossreference,
-          ls_item     TYPE zif_abapgit_definitions=>ty_item,
-          lv_error    TYPE c LENGTH 1,
-          lv_include  TYPE programm.
+    DATA: ls_class   LIKE LINE OF gt_classes,
+          lo_cross   TYPE REF TO cl_wb_crossreference,
+          ls_item    TYPE zif_abapgit_definitions=>ty_item,
+          lv_error   TYPE c LENGTH 1,
+          lv_include TYPE programm.
 
     LOOP AT gt_classes INTO ls_class.
       CASE ls_class-object.
