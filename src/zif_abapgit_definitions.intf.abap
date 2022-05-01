@@ -61,8 +61,6 @@ INTERFACE zif_abapgit_definitions
       body         TYPE string,
     END OF ty_git_tag .
   TYPES:
-    ty_git_tag_list_tt TYPE STANDARD TABLE OF ty_git_tag WITH DEFAULT KEY .
-  TYPES:
     BEGIN OF ty_git_user,
       name  TYPE string,
       email TYPE string,
