@@ -14,6 +14,9 @@ CLASS zcl_abapgit_object_g4ba DEFINITION
         VALUE(ro_generic) TYPE REF TO zcl_abapgit_objects_generic
       RAISING
         zcx_abapgit_exception .
+    METHODS get_field_rules
+      RETURNING
+        VALUE(ro_result) TYPE REF TO zif_abapgit_field_rules.
 ENDCLASS.
 
 
@@ -21,12 +24,52 @@ ENDCLASS.
 CLASS zcl_abapgit_object_g4ba IMPLEMENTATION.
 
 
+  METHOD get_field_rules.
+
+    ro_result = zcl_abapgit_field_rules=>create( ).
+    ro_result->add(
+      iv_table     = '/IWBEP/I_V4_MSGR'
+      iv_field     = 'CREATED_BY'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
+    )->add(
+      iv_table     = '/IWBEP/I_V4_MSGR'
+      iv_field     = 'CHANGED_BY'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
+    )->add(
+      iv_table     = '/IWBEP/I_V4_MSGR'
+      iv_field     = 'CREATED_TS'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp
+    )->add(
+      iv_table     = '/IWBEP/I_V4_MSGR'
+      iv_field     = 'CHANGED_TS'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp
+    )->add(
+      iv_table     = '/IWBEP/I_V4_MSGA'
+      iv_field     = 'CREATED_BY'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
+    )->add(
+      iv_table     = '/IWBEP/I_V4_MSGA'
+      iv_field     = 'CHANGED_BY'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
+    )->add(
+      iv_table     = '/IWBEP/I_V4_MSGA'
+      iv_field     = 'CREATED_TS'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp
+    )->add(
+      iv_table     = '/IWBEP/I_V4_MSGA'
+      iv_field     = 'CHANGED_TS'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp ).
+
+  ENDMETHOD.
+
+
   METHOD get_generic.
 
     CREATE OBJECT ro_generic
       EXPORTING
-        is_item     = ms_item
-        iv_language = mv_language.
+        io_field_rules = get_field_rules( )
+        is_item        = ms_item
+        iv_language    = mv_language.
 
   ENDMETHOD.
 
