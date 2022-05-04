@@ -20,13 +20,6 @@ CLASS zcl_abapgit_factory DEFINITION
         VALUE(ri_code_inspector) TYPE REF TO zif_abapgit_code_inspector
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS get_branch_overview
-      IMPORTING
-        !io_repo                  TYPE REF TO zcl_abapgit_repo_online
-      RETURNING
-        VALUE(ri_branch_overview) TYPE REF TO zif_abapgit_branch_overview
-      RAISING
-        zcx_abapgit_exception .
     CLASS-METHODS get_stage_logic
       RETURNING
         VALUE(ri_logic) TYPE REF TO zif_abapgit_stage_logic .
@@ -79,16 +72,6 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_factory IMPLEMENTATION.
-
-
-  METHOD get_branch_overview.
-
-    CREATE OBJECT ri_branch_overview
-      TYPE zcl_abapgit_branch_overview
-      EXPORTING
-        io_repo = io_repo.
-
-  ENDMETHOD.
 
 
   METHOD get_code_inspector.
