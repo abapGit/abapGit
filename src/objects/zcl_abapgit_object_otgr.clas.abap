@@ -289,9 +289,7 @@ CLASS zcl_abapgit_object_otgr IMPLEMENTATION.
 
           CATCH cx_sy_dyn_call_param_not_found.
 
-            lo_otgr->get_elements(
-              IMPORTING
-                ex_elements = ls_otgr-elements ).
+            lo_otgr->get_elements( IMPORTING ex_elements = ls_otgr-elements ).
 
         ENDTRY.
 
