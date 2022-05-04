@@ -33,7 +33,7 @@ jobs:
         rm -rf ajson_mirror
         git status
     - name: Open PR
-      uses: peter-evans/create-pull-request@v3
+      uses: peter-evans/create-pull-request@v4
       with:
         title: ajson, Automatic Update
         branch: automatic/ajson
