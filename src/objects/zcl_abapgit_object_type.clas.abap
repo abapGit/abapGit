@@ -99,7 +99,15 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown. " todo
+    DATA lv_prog TYPE progname.
+
+    CONCATENATE '%_C' ms_item-obj_name INTO lv_prog.
+
+    SELECT SINGLE unam FROM reposrc INTO rv_user
+      WHERE progname = lv_prog AND r3state = 'A'.
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ENDIF.
   ENDMETHOD.
 
 

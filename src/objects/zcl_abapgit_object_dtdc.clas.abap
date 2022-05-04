@@ -34,13 +34,18 @@ CLASS zcl_abapgit_object_dtdc DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RETURNING
           VALUE(ri_wb_object_operator) TYPE REF TO object
         RAISING
-          zcx_abapgit_exception.
+          zcx_abapgit_exception,
+
+      has_own_wb_data_class
+        RETURNING
+          VALUE(rv_supported) TYPE abap_bool.
 
     DATA:
-      mr_dynamic_cache      TYPE REF TO data,
-      mv_dynamic_cache_key  TYPE seu_objkey,
-      mi_persistence        TYPE REF TO if_wb_object_persist,
-      mi_wb_object_operator TYPE REF TO object.
+      mr_dynamic_cache         TYPE REF TO data,
+      mv_dynamic_cache_key     TYPE seu_objkey,
+      mv_has_own_wb_data_class TYPE abap_bool,
+      mi_persistence           TYPE REF TO if_wb_object_persist,
+      mi_wb_object_operator    TYPE REF TO object.
 ENDCLASS.
 
 
@@ -54,9 +59,9 @@ CLASS zcl_abapgit_object_dtdc IMPLEMENTATION.
 
     ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_dynamic_cache
            TO <lv_value>.
-    ASSERT sy-subrc = 0.
-
-    CLEAR: <lv_value>.
+    IF sy-subrc = 0.
+      CLEAR: <lv_value>.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -107,6 +112,17 @@ CLASS zcl_abapgit_object_dtdc IMPLEMENTATION.
 
     clear_field(
       EXPORTING
+        iv_fieldname          = 'METADATA-ABAP_LANGUAGE_VERSION'
+      CHANGING
+        cs_dynamic_cache = cs_dynamic_cache ).
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'METADATA-ABAP_LANGU_VERSION'
+      CHANGING
+        cs_dynamic_cache = cs_dynamic_cache ).
+
+    clear_field(
+      EXPORTING
         iv_fieldname          = 'CONTENT-SOURCE'
       CHANGING
         cs_dynamic_cache = cs_dynamic_cache ).
@@ -121,9 +137,14 @@ CLASS zcl_abapgit_object_dtdc IMPLEMENTATION.
         iv_language = iv_language ).
 
     mv_dynamic_cache_key = ms_item-obj_name.
+    mv_has_own_wb_data_class = has_own_wb_data_class( ).
 
     TRY.
-        CREATE DATA mr_dynamic_cache TYPE ('CL_DTDC_WB_OBJECT_DATA=>TY_DTDC_OBJECT_DATA').
+        IF mv_has_own_wb_data_class = abap_true.
+          CREATE DATA mr_dynamic_cache TYPE ('CL_DTDC_WB_OBJECT_DATA=>TY_DTDC_OBJECT_DATA').
+        ELSE.
+          CREATE DATA mr_dynamic_cache TYPE ('CL_BLUE_SOURCE_OBJECT_DATA=>TY_OBJECT_DATA').
+        ENDIF.
         CREATE OBJECT mi_persistence TYPE ('CL_DTDC_OBJECT_PERSIST').
 
       CATCH cx_sy_create_error.
@@ -148,7 +169,11 @@ CLASS zcl_abapgit_object_dtdc IMPLEMENTATION.
 
     li_wb_object_operator = get_wb_object_operator( ).
 
-    CREATE DATA lr_dynamic_cache_old TYPE ('CL_DTDC_WB_OBJECT_DATA=>TY_DTDC_OBJECT_DATA').
+    IF mv_has_own_wb_data_class = abap_true.
+      CREATE DATA lr_dynamic_cache_old TYPE ('CL_DTDC_WB_OBJECT_DATA=>TY_DTDC_OBJECT_DATA').
+    ELSE.
+      CREATE DATA lr_dynamic_cache_old TYPE ('CL_BLUE_SOURCE_OBJECT_DATA=>TY_OBJECT_DATA').
+    ENDIF.
     ASSIGN lr_dynamic_cache_old->* TO <ls_dynamic_cache_old>.
     ASSERT sy-subrc = 0.
 
@@ -274,7 +299,11 @@ CLASS zcl_abapgit_object_dtdc IMPLEMENTATION.
     li_wb_object_operator = get_wb_object_operator( ).
 
     TRY.
-        CREATE OBJECT li_object_data_model TYPE ('CL_DTDC_WB_OBJECT_DATA').
+        IF mv_has_own_wb_data_class = abap_true.
+          CREATE OBJECT li_object_data_model TYPE ('CL_DTDC_WB_OBJECT_DATA').
+        ELSE.
+          CREATE OBJECT li_object_data_model TYPE ('CL_BLUE_SOURCE_OBJECT_DATA').
+        ENDIF.
 
         ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <ls_dynamic_cache>
                TO <lv_source>.
@@ -419,6 +448,22 @@ CLASS zcl_abapgit_object_dtdc IMPLEMENTATION.
     mo_files->add_string(
         iv_ext    = 'asdtdc'
         iv_string = lv_source ).
+
+  ENDMETHOD.
+
+
+  METHOD has_own_wb_data_class.
+
+    DATA:
+      lr_own_type TYPE REF TO data,
+      lx_error    TYPE REF TO cx_root.
+
+    TRY.
+        CREATE DATA lr_own_type TYPE ('CL_DTDC_WB_OBJECT_DATA=>TY_DTDC_OBJECT_DATA').
+        rv_supported = abap_true.
+      CATCH cx_root INTO lx_error.
+        rv_supported = abap_false.
+    ENDTRY.
 
   ENDMETHOD.
 ENDCLASS.

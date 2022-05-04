@@ -84,6 +84,8 @@ CLASS ltcl_parser_test DEFINITION FINAL
     METHODS parse_date FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS parse_bare_values FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS parse_error FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS duplicate_key FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS non_json FOR TESTING RAISING zcx_abapgit_ajson_error.
 
 ENDCLASS.
 
@@ -342,6 +344,36 @@ CLASS ltcl_parser_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lt_act
       exp = lo_nodes->mt_nodes ).
+
+  ENDMETHOD.
+
+  METHOD duplicate_key.
+
+    DATA lo_cut TYPE REF TO lcl_json_parser.
+    DATA lx TYPE REF TO zcx_abapgit_ajson_error.
+
+    TRY.
+        CREATE OBJECT lo_cut.
+        lo_cut->parse( '{ "a" = 1, "a" = 1 }' ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_ajson_error INTO lx.
+        cl_abap_unit_assert=>assert_not_initial( lx ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD non_json.
+
+    DATA lo_cut TYPE REF TO lcl_json_parser.
+    DATA lx TYPE REF TO zcx_abapgit_ajson_error.
+
+    TRY.
+        CREATE OBJECT lo_cut.
+        lo_cut->parse( '<html><head><title>X</title></head><body><h1>Y</h1></body></html>' ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_ajson_error INTO lx.
+        cl_abap_unit_assert=>assert_not_initial( lx ).
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -1829,6 +1861,7 @@ CLASS ltcl_writer_test DEFINITION FINAL
     METHODS set_value FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS ignore_empty FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_obj FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS set_obj_w_date_time FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_tab FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_tab_hashed FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS prove_path_exists FOR TESTING RAISING zcx_abapgit_ajson_error.
@@ -2114,6 +2147,7 @@ CLASS ltcl_writer_test IMPLEMENTATION.
       BEGIN OF ls_struc,
         b TYPE string VALUE 'abc',
         c TYPE i VALUE 10,
+        d TYPE d VALUE '20220401',
       END OF ls_struc.
 
     lo_cut = zcl_abapgit_ajson=>create_empty( ).
@@ -2121,13 +2155,52 @@ CLASS ltcl_writer_test IMPLEMENTATION.
 
     " Prepare source
     CREATE OBJECT lo_nodes.
-    lo_nodes->add( '        |      |object |     ||1' ).
-    lo_nodes->add( '/       |x     |object |     ||2' ).
-    lo_nodes->add( '/x/     |b     |str    |abc  ||0' ).
-    lo_nodes->add( '/x/     |c     |num    |10   ||0' ).
+    lo_nodes->add( '        |      |object |         ||1' ).
+    lo_nodes->add( '/       |x     |object |         ||3' ).
+    lo_nodes->add( '/x/     |b     |str    |abc      ||0' ).
+    lo_nodes->add( '/x/     |c     |num    |10       ||0' ).
+    lo_nodes->add( '/x/     |d     |str    |20220401 ||0' ).
 
     li_writer->set(
       iv_path = '/x'
+      iv_val  = ls_struc ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->mt_json_tree
+      exp = lo_nodes->sorted( ) ).
+
+  ENDMETHOD.
+
+  METHOD set_obj_w_date_time.
+
+    DATA lo_nodes TYPE REF TO lcl_nodes_helper.
+    DATA lo_cut TYPE REF TO zif_abapgit_ajson.
+    DATA li_writer TYPE REF TO zif_abapgit_ajson.
+
+    DATA:
+      BEGIN OF ls_struc,
+        d       TYPE d VALUE '20220401',
+        d_empty TYPE d,
+        t       TYPE t VALUE '200103',
+        t_empty TYPE t,
+        ts      TYPE timestamp VALUE '20220401200103',
+        p(5)    TYPE p DECIMALS 2 VALUE '123.45',
+      END OF ls_struc.
+
+    lo_cut = zcl_abapgit_ajson=>create_empty( )->format_datetime( ).
+    li_writer = lo_cut.
+
+    " Prepare source
+    CREATE OBJECT lo_nodes.
+    lo_nodes->add( '      |        |object |           ||6' ).
+    lo_nodes->add( '/     |d       |str    |2022-04-01 ||0' ).
+    lo_nodes->add( '/     |d_empty |str    |           ||0' ).
+    lo_nodes->add( '/     |t       |str    |20:01:03   ||0' ).
+    lo_nodes->add( '/     |t_empty |str    |           ||0' ).
+    lo_nodes->add( '/     |ts      |str    |2022-04-01T20-01-03Z ||0' ).
+    lo_nodes->add( '/     |p       |num    |123.45     ||0' ).
+
+    li_writer->set(
+      iv_path = '/'
       iv_val  = ls_struc ).
     cl_abap_unit_assert=>assert_equals(
       act = lo_cut->mt_json_tree
@@ -2577,12 +2650,18 @@ CLASS ltcl_writer_test IMPLEMENTATION.
     lo_cut = zcl_abapgit_ajson=>create_empty( ).
     li_writer = lo_cut.
     CREATE OBJECT lo_nodes_exp.
-    lo_nodes_exp->add( '        |      |object |           ||1' ).
+    lo_nodes_exp->add( '        |      |object |           ||2' ).
     lo_nodes_exp->add( '/       |a     |str    |2020-07-05 ||0' ).
+    lo_nodes_exp->add( '/       |b     |str    |           ||0' ).
 
     lv_date = '20200705'.
     li_writer->set_date(
       iv_path = '/a'
+      iv_val  = lv_date ).
+
+    CLEAR lv_date.
+    li_writer->set_date(
+      iv_path = '/b'
       iv_val  = lv_date ).
 
     cl_abap_unit_assert=>assert_equals(

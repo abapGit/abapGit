@@ -400,6 +400,7 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
   METHOD read_stats_files.
 
     DATA ls_stats TYPE ty_stats.
+    DATA lt_remote_wo_ignored TYPE zif_abapgit_definitions=>ty_files_tt.
 
     et_local = mo_repo->get_files_local( ).
 
@@ -409,17 +410,15 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
     IF mo_repo->has_remote_source( ) = abap_true.
       et_remote = mo_repo->get_files_remote( ).
       ls_stats-remote = lines( et_remote ).
+      lt_remote_wo_ignored = mo_repo->get_files_remote( iv_ignore_files = abap_true ).
     ENDIF.
 
     APPEND ls_stats TO mt_stats.
 
     IF et_remote IS NOT INITIAL.
+      CLEAR ls_stats.
       ls_stats-measure = 'Number of Ignored Files'.
-      ls_stats-local  = ls_stats-remote - ls_stats-local.
-      IF ls_stats-local < 0.
-        ls_stats-local = 0.
-      ENDIF.
-      ls_stats-remote = 0.
+      ls_stats-remote = lines( et_remote ) - lines( lt_remote_wo_ignored ).
       APPEND ls_stats TO mt_stats.
     ENDIF.
 

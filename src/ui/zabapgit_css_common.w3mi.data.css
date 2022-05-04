@@ -674,12 +674,15 @@ div.db_entry pre {
   border-radius: 3px;
   padding: 0.5em;
   margin: 0.5em 0em;
-  width: 60em;
+  width: 98%;
 }
 
-div.db_entry textarea { margin: 0.5em 0em; }
+div.db_entry textarea {
+  margin: 0.5em 0em;
+  width: 98%;
+}
 div.db_entry table.toolbar {
-  width: 50em;
+  width: 100%;
 }
 
 table.tag {
@@ -1192,6 +1195,9 @@ settings_tab tr:first-child td { border-top: 0px; }
   font-size: 75%;
   margin: 4px 0px;
   padding-left: 0.5em;
+}
+.dialog li.hidden {
+  padding: 0px 0px;
 }
 .dialog .radio-container {
   border: 1px solid;

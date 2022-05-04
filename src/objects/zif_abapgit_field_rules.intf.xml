@@ -3,9 +3,9 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOINTERF>
-    <CLSNAME>ZIF_ABAPGIT_BRANCH_OVERVIEW</CLSNAME>
+    <CLSNAME>ZIF_ABAPGIT_FIELD_RULES</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Branch overview</DESCRIPT>
+    <DESCRIPT>abapGit Rule</DESCRIPT>
     <EXPOSURE>2</EXPOSURE>
     <STATE>1</STATE>
     <UNICODE>X</UNICODE>

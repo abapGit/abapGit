@@ -33,11 +33,58 @@ CLASS zcl_abapgit_gui_jumper DEFINITION
       RETURNING
         VALUE(rv_exit)   TYPE abap_bool.
 
+    METHODS jump_bw
+      IMPORTING
+        !is_item       TYPE zif_abapgit_definitions=>ty_item
+        !iv_new_window TYPE abap_bool
+      RETURNING
+        VALUE(rv_exit) TYPE abap_bool.
+
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_gui_jumper IMPLEMENTATION.
+
+
+  METHOD jump_bw.
+
+    DATA:
+      lv_exit  TYPE abap_bool,
+      lv_tlogo TYPE rstlogo,
+      lv_objnm TYPE rsawbnobjnm.
+
+    lv_tlogo = is_item-obj_type.
+    lv_objnm = is_item-obj_name.
+
+    lv_exit = cl_rsawbn_awb=>is_supported_navigation(
+      i_tlogo = lv_tlogo
+      i_fcode = 'DISPLAY' ).
+
+    IF lv_exit = abap_false.
+      RETURN.
+    ENDIF.
+
+    TRY.
+        CALL METHOD ('CL_RSAWBN_AWB')=>('NAVIGATE_FROM_APPLICATION')
+          EXPORTING
+            i_tlogo                = lv_tlogo
+            i_objnm                = lv_objnm
+            i_new_mode             = iv_new_window
+          IMPORTING
+            e_exit_own_application = lv_exit.
+      CATCH cx_root.
+        cl_rsawbn_awb=>navigate_from_application(
+          EXPORTING
+            i_tlogo                = lv_tlogo
+            i_objnm                = lv_objnm
+          IMPORTING
+            e_exit_own_application = lv_exit ).
+    ENDTRY.
+
+    rv_exit = lv_exit.
+
+  ENDMETHOD.
 
 
   METHOD jump_tr.
@@ -153,6 +200,15 @@ CLASS zcl_abapgit_gui_jumper IMPLEMENTATION.
     " 4) Transport Tool Jump
     rv_exit = jump_tr( is_item ).
 
+    IF rv_exit = abap_true.
+      RETURN.
+    ENDIF.
+
+    " 5) BW Jump
+    rv_exit = jump_bw(
+      is_item       = is_item
+      iv_new_window = iv_new_window ).
+
   ENDMETHOD.
 
 
@@ -201,12 +257,12 @@ CLASS zcl_abapgit_gui_jumper IMPLEMENTATION.
     ELSE.
       CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
         EXPORTING
-          tcode                 = iv_tcode
-          mode_val              = 'E'
+          tcode     = iv_tcode
+          mode_val  = 'E'
         TABLES
-          using_tab             = it_bdcdata
+          using_tab = it_bdcdata
         EXCEPTIONS
-          OTHERS                = 4.
+          OTHERS    = 4.
     ENDIF.
 
     CASE sy-subrc.
