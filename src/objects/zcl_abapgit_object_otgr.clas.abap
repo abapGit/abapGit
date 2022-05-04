@@ -279,11 +279,19 @@ CLASS zcl_abapgit_object_otgr IMPLEMENTATION.
     TRY.
         ls_otgr-cls_type_group-name = lo_otgr->if_cls_object_type_group~get_name( ).
         ls_otgr-cls_type_group-proxy_flag = lo_otgr->if_cls_object_type_group~get_proxy_filter( ).
-        lo_otgr->get_elements(
-          EXPORTING
-            im_explicit_elements_only = abap_true
-          IMPORTING
-            ex_elements               = ls_otgr-elements ).
+
+        TRY.
+            CALL METHOD lo_otgr->('GET_ELEMENTS')
+              EXPORTING
+                im_explicit_elements_only = abap_true " doesn't exist on lower releases. Eg. 752 SP04
+              IMPORTING
+                ex_elements               = ls_otgr-elements.
+
+          CATCH cx_sy_dyn_call_param_not_found.
+
+            lo_otgr->get_elements( IMPORTING ex_elements = ls_otgr-elements ).
+
+        ENDTRY.
 
         " Remove children since they are created automatically (by the child group)
         LOOP AT ls_otgr-elements ASSIGNING <ls_element>.
