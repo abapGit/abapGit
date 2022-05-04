@@ -234,10 +234,15 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
     DATA:
       lv_object      TYPE sproxhdr-object,
       lv_obj_name    TYPE sproxhdr-obj_name,
+      lv_transp_flag TYPE abap_bool,
       lv_return_code TYPE i,
       lt_log         TYPE sprx_log_t.
 
     corr_insert( iv_package ).
+
+    IF iv_package(1) <> '$'.
+      lv_transp_flag = abap_true.
+    ENDIF.
 
     get_object_and_name(
       IMPORTING
@@ -249,6 +254,7 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
           EXPORTING
             object           = lv_object
             obj_name         = lv_obj_name
+            i_transport      = lv_transp_flag
             suppress_dialogs = abap_true
           CHANGING
             c_return_code    = lv_return_code
@@ -258,6 +264,7 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
            EXPORTING
              object           = lv_object
              obj_name         = lv_obj_name
+             i_transport      = lv_transp_flag
            CHANGING
              c_return_code    = lv_return_code
              ct_log           = lt_log ).
@@ -275,6 +282,8 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
           lt_sproxdat_new TYPE sprx_dat_t.
 
     tadir_insert( iv_package ).
+
+    corr_insert( iv_package ).
 
     delta_handling(
       EXPORTING
