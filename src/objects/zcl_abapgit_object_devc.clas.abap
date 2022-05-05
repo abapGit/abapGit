@@ -381,6 +381,9 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
 
     lv_package = ms_item-obj_name.
 
+    " Remove remaining OTR entries
+    zcl_abapgit_sotr_handler=>delete_sotr_package( iv_package ).
+
     remove_obsolete_tadir( lv_package ).
 
     IF is_empty( lv_package ) = abap_true.

@@ -177,7 +177,10 @@
       "exclude": ["/json/"]
     },
     "7bit_ascii": {
-      "exclude": ["zcl_abapgit_utils.clas.testclasses.abap"]
+      "exclude": [
+        "zcl_abapgit_utils.clas.testclasses.abap",
+        "zcl_abapgit_html_action_utils.clas.testclasses.abap"
+      ]
     },
     "abapdoc": false,
     "check_ddic": true,
