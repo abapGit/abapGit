@@ -16,6 +16,7 @@ INTERFACE zif_abapgit_html_form
       label         TYPE string,
       hint          TYPE string,
       dblclick      TYPE string,
+      click         TYPE string,
       placeholder   TYPE string,
       required      TYPE string,
       upper_case    TYPE abap_bool,
