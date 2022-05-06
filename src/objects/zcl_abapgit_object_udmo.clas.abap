@@ -204,7 +204,7 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
         object_class        = c_transport_object_class
         devclass            = iv_package
         master_language     = mv_language
-        mode                = 'INSERT'
+        mode                = 'I'
         global_lock         = abap_true
         suppress_dialog     = abap_true
       EXCEPTIONS
@@ -233,9 +233,10 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
 
       CALL FUNCTION 'SDU_DMO_ENT_PUT'
         EXPORTING
-          object = ls_udmo_entity
+          object   = ls_udmo_entity
         EXCEPTIONS
-          OTHERS = 0.
+          ret_code = 1
+          OTHERS   = 2 ##FM_SUBRC_OK.
 
     ENDLOOP.
 
