@@ -64,6 +64,13 @@
     "globalMacros": []
   },
   "rules": {
+    "classic_exceptions_overlap": true,
+    "local_testclass_consistency": true,
+    "no_external_form_calls": false,
+    "no_inline_in_optional_branches": true,
+    "pragma_style": false,
+    "slow_parameter_passing": false,
+    "unnecessary_pragma": false,
     "align_parameters": false,
     "cds_parser_error": true,
     "constant_classes": true,
@@ -73,7 +80,6 @@
     "prefer_corresponding": true,
     "static_call_via_instance": false,
     "unnecessary_chaining": false,
-    "pragma_placement": true,
     "unsecure_fae": false,
     "identical_descriptions": false,
     "modify_only_own_db_tables": false,
@@ -155,7 +161,6 @@
     "sicf_consistency": true,
     "sql_escape_host_variables": true,
     "xml_consistency": true,
-    "check_no_handler_pragma": true,
     "newline_between_methods": false,
     "chain_mainly_declarations": {
       "definitions": true,
@@ -199,6 +204,7 @@
     "ambiguous_statement": true,
     "avoid_use": {
       "define": true,
+      "testSeams": true,
       "defaultKey": false,
       "describeLines": true,
       "break": true,
@@ -287,7 +293,6 @@
       "local": "^LCL_.*$",
       "test": "^LT.+$"
     },
-    "local_testclass_location": true,
     "local_variable_names": {
       "expectedData": "^L._.*$",
       "expectedConstant": "^LC_.*$",
