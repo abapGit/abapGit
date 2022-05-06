@@ -30,6 +30,10 @@ CLASS zcl_abapgit_object_splo IMPLEMENTATION.
     DELETE FROM tsp1d WHERE papart = ms_item-obj_name.    "#EC CI_SUBRC
     DELETE FROM tsp0p WHERE pdpaper = ms_item-obj_name.   "#EC CI_SUBRC
 
+    set_default_transport( iv_transport ).
+
+    corr_insert( iv_package ).
+
   ENDMETHOD.
 
 
@@ -50,6 +54,8 @@ CLASS zcl_abapgit_object_splo IMPLEMENTATION.
     MODIFY tsp1t FROM ls_tsp1t.                           "#EC CI_SUBRC
     MODIFY tsp1d FROM ls_tsp1d.                           "#EC CI_SUBRC
     MODIFY tsp0p FROM ls_tsp0p.                           "#EC CI_SUBRC
+
+    set_default_transport( iv_transport ).
 
     tadir_insert( iv_package ).
 
