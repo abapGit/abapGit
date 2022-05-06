@@ -91,7 +91,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
+CLASS zcl_abapgit_persistence_db IMPLEMENTATION.
 
 
   METHOD add.
@@ -110,15 +110,15 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
 
   METHOD delete.
 
+    DATA lv_data TYPE string.
+
     lock( iv_type  = iv_type
           iv_value = iv_value ).
 
+    " Ignore errors since record might not exist
     DELETE FROM (c_tabname)
       WHERE type = iv_type
       AND value = iv_value.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'DB Delete failed' ).
-    ENDIF.
 
   ENDMETHOD.
 
