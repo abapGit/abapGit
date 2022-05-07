@@ -410,7 +410,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
       SELECT SINGLE category FROM seoclassdf INTO lv_category
         WHERE clsname = ls_class_key-clsname
         AND ( version = '1'
-        OR version = '0' ) ##warn_ok.                   "#EC CI_GENBUFF
+        OR version = '0' ) ##WARN_OK.                   "#EC CI_GENBUFF
       IF sy-subrc = 0 AND lv_category = seoc_category_webdynpro_class.
         rv_bool = abap_false.
       ENDIF.
