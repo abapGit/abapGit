@@ -329,11 +329,10 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
     lv_type = ms_item-obj_type.
     lv_name = ms_item-obj_name.
 
-    " Check for all states
-    " ' ' object not in DDIC
-    " 'N' object is in status "new"
-    " 'A' object is in status "active"
-    " 'M' object is in status "revised"
+    " Check if an inactive version of the DDIC object exists
+    " state = 'A' checks if an active version exists but does not detect new or modified objects
+    " state = 'M' checks for all possible versions so we can find out if an inactive one exists
+    " See documentation of the function module
     CALL FUNCTION 'DDIF_STATE_GET'
       EXPORTING
         type          = lv_type
