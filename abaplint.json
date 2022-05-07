@@ -68,7 +68,7 @@
     "local_testclass_consistency": true,
     "no_external_form_calls": false,
     "no_inline_in_optional_branches": true,
-    "pragma_style": false,
+    "pragma_style": true,
     "slow_parameter_passing": false,
     "unnecessary_pragma": false,
     "align_parameters": false,

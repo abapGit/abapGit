@@ -55,7 +55,7 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
         TRY.
             ei_code_item_element ?= ii_node.
             RETURN.
-          CATCH cx_sy_move_cast_error ##no_handler.
+          CATCH cx_sy_move_cast_error ##NO_HANDLER.
         ENDTRY.
 
       ELSEIF iv_name NOT IN get_range_node_codes( ) AND
@@ -184,7 +184,7 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
           SHIFT lv_coding_line RIGHT BY lv_leading_spaces PLACES.
           li_element->set_value( lv_coding_line ).
         ENDIF.
-      CATCH zcx_abapgit_exception ##no_handler.
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
     ENDTRY.
 
   ENDMETHOD.
