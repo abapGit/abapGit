@@ -402,7 +402,7 @@ CLASS zcl_abapgit_object_webi IMPLEMENTATION.
       CATCH cx_ws_md_exception INTO lx_root.
         TRY.
             mi_vi->if_ws_md_lockable_object~unlock( ).
-          CATCH cx_ws_md_exception ##no_handler.
+          CATCH cx_ws_md_exception ##NO_HANDLER.
         ENDTRY.
         zcx_abapgit_exception=>raise_with_text( lx_root ).
     ENDTRY.

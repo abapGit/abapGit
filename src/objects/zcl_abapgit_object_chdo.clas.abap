@@ -252,6 +252,8 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
       delete_tadir_tabl( ls_tcdrs ).
     ENDLOOP.
 
+    corr_insert( iv_package ).
+
   ENDMETHOD.
 
 

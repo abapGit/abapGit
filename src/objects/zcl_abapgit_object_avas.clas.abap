@@ -36,7 +36,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_AVAS IMPLEMENTATION.
+CLASS zcl_abapgit_object_avas IMPLEMENTATION.
 
 
   METHOD insert_assignments.
@@ -133,6 +133,8 @@ CLASS ZCL_ABAPGIT_OBJECT_AVAS IMPLEMENTATION.
 
     lo_avas->if_pak_wb_object_internal~unlock( ).
 
+    corr_insert( iv_package ).
+
   ENDMETHOD.
 
 
@@ -150,10 +152,10 @@ CLASS ZCL_ABAPGIT_OBJECT_AVAS IMPLEMENTATION.
 
     tadir_insert( iv_package ).
 
+    corr_insert( iv_package ).
+
     insert_assignments( ls_avas ).
 * todo, how does links work?
-
-* corr_insert?
 
   ENDMETHOD.
 
