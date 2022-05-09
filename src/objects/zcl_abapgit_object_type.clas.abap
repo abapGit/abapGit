@@ -78,7 +78,7 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
 
     lv_typdname = ms_item-obj_name.
 
-    " Active version
+    " Get active version, ignore errors if not found
     CALL FUNCTION 'TYPD_GET_OBJECT'
       EXPORTING
         typdname          = lv_typdname
@@ -90,10 +90,7 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
       EXCEPTIONS
         version_not_found = 1
         reps_not_exist    = 2
-        OTHERS            = 3.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |No active version found for { ms_item-obj_type } { ms_item-obj_name }| ).
-    ENDIF.
+        OTHERS            = 3 ##FM_SUBRC_OK.
 
   ENDMETHOD.
 
@@ -207,6 +204,10 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
 
     read( IMPORTING ev_ddtext = lv_ddtext
                     et_source = lt_source ).
+
+    IF lt_source IS INITIAL.
+      RETURN.
+    ENDIF.
 
     io_xml->add( iv_name = 'DDTEXT'
                  ig_data = lv_ddtext ).
