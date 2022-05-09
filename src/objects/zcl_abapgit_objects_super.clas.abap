@@ -41,6 +41,9 @@ CLASS zcl_abapgit_objects_super DEFINITION
     METHODS set_default_package
       IMPORTING
         !iv_package TYPE devclass .
+    METHODS set_default_transport
+      IMPORTING
+        !iv_transport TYPE trkorr.
     METHODS serialize_longtexts
       IMPORTING
         !ii_xml           TYPE REF TO zif_abapgit_xml_output
@@ -380,7 +383,7 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
   METHOD set_default_package.
 
-    " In certain cases we need to set the package package via ABAP memory
+    " In certain cases we need to set the package via ABAP memory
     " because we can't supply it via the APIs.
     "
     " Set default package, see function module RS_CORR_INSERT FORM get_current_devclass.
@@ -391,6 +394,18 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
     " We don't need to reset the memory as it is done in above mentioned form routine.
 
     EXPORT current_devclass FROM iv_package TO MEMORY ID 'EUK'.
+
+  ENDMETHOD.
+
+
+  METHOD set_default_transport.
+
+    " In certain cases we need to set the transport via ABAP memory
+    " because we can't supply it via the APIs.
+    "
+    " See function module RS_CORR_INSERT
+
+    EXPORT tasknr FROM iv_transport TO MEMORY ID 'EUT'.
 
   ENDMETHOD.
 
