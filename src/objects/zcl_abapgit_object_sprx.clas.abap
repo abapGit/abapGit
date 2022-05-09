@@ -238,8 +238,6 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
       lv_return_code TYPE i,
       lt_log         TYPE sprx_log_t.
 
-    corr_insert( iv_package ).
-
     IF iv_package(1) <> '$'.
       lv_transp_flag = abap_true.
     ENDIF.
@@ -272,6 +270,8 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
     IF lv_return_code <> 0.
       zcx_abapgit_exception=>raise( 'SPRX: Error from DELETE_SINGLE_PROXY' ).
     ENDIF.
+
+    corr_insert( iv_package ).
 
   ENDMETHOD.
 

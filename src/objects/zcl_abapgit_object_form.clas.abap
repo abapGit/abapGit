@@ -194,7 +194,7 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
       TABLES
         selections    = rt_text_header
       EXCEPTIONS
-        OTHERS        = 1 ##fm_subrc_ok.  "#EC CI_SUBRC
+        OTHERS        = 1 ##FM_SUBRC_OK.  "#EC CI_SUBRC
 
   ENDMETHOD.
 
@@ -510,8 +510,7 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
         object    = cs_form_data-text_header-tdobject
         olanguage = cs_form_data-orig_language
       EXCEPTIONS
-        OTHERS    = 1
-        ##fm_subrc_ok.                                                   "#EC CI_SUBRC
+        OTHERS    = 1 ##FM_SUBRC_OK.                                                   "#EC CI_SUBRC
 
   ENDMETHOD.
 
