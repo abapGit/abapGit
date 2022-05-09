@@ -135,6 +135,7 @@ CLASS zcl_abapgit_object_shlp IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     DATA: lv_name  TYPE ddobjname,
+          lv_state TYPE ddgotstate,
           ls_dd30v TYPE dd30v,
           lt_dd31v TYPE TABLE OF dd31v,
           lt_dd32p TYPE TABLE OF dd32p,
@@ -151,6 +152,7 @@ CLASS zcl_abapgit_object_shlp IMPLEMENTATION.
         state         = 'A'
         langu         = mv_language
       IMPORTING
+        gotstate      = lv_state
         dd30v_wa      = ls_dd30v
       TABLES
         dd31v_tab     = lt_dd31v
@@ -163,8 +165,8 @@ CLASS zcl_abapgit_object_shlp IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    IF ls_dd30v IS INITIAL.
-      zcx_abapgit_exception=>raise( |No active version found for { ms_item-obj_type } { ms_item-obj_name }| ).
+    IF ls_dd30v IS INITIAL OR lv_state <> 'A'.
+      RETURN.
     ENDIF.
 
     CLEAR: ls_dd30v-as4user,
