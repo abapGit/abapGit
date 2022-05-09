@@ -108,6 +108,198 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
 
     w3_api_save( li_template ).
 
+    " Release locks
+    w3_api_set_changeable(
+      ii_template   = li_template
+      iv_changeable = abap_false ).
+
+  ENDMETHOD.
+
+
+  METHOD w3_api_create_new.
+
+    cl_w3_api_template=>if_w3_api_template~create_new(
+      EXPORTING
+        p_template_data          = is_template_data
+        p_program_name           = is_template_data-programm
+      IMPORTING
+        p_template               = ri_template
+      EXCEPTIONS
+        object_already_existing  = 1
+        object_just_created      = 2
+        not_authorized           = 3
+        undefined_name           = 4
+        author_not_existing      = 5
+        action_cancelled         = 6
+        error_occured            = 7
+        user_error               = 8
+        OTHERS                   = 9 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from w3_api_template~create_new subrc={ sy-subrc }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD w3_api_delete.
+
+    ii_template->if_w3_api_object~delete(
+      EXCEPTIONS
+        object_not_empty      = 1
+        object_not_changeable = 2
+        object_invalid        = 3
+        error_occured         = 4
+        OTHERS                = 5 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from w3_api_template~delete subrc={ sy-subrc }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD w3_api_get_attributes.
+
+    ii_template->get_attributes(
+      IMPORTING
+        p_attributes     = rs_attributes
+      EXCEPTIONS
+        object_invalid   = 1
+        template_deleted = 2
+        error_occured    = 3
+        OTHERS           = 4 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from w3_api_template~get_attributes subrc={ sy-subrc }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD w3_api_get_source.
+
+    ii_template->get_source(
+      IMPORTING
+        p_source         = rt_source
+      EXCEPTIONS
+        object_invalid   = 1
+        template_deleted = 2
+        error_occured    = 3
+        OTHERS           = 4 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from w3_api_template~get_source subrc={ sy-subrc }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD w3_api_load.
+
+    cl_w3_api_template=>if_w3_api_template~load(
+      EXPORTING
+        p_template_name     = is_name
+      IMPORTING
+        p_template          = ri_template
+      EXCEPTIONS
+        object_not_existing = 1
+        permission_failure  = 2
+        error_occured       = 3
+        OTHERS              = 4 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from if_w3_api_template~load subrc={ sy-subrc }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD w3_api_save.
+
+    ii_template->if_w3_api_object~save(
+      EXCEPTIONS
+        object_invalid        = 1
+        object_not_changeable = 2
+        action_cancelled      = 3
+        permission_failure    = 4
+        not_changed           = 5
+        data_invalid          = 6
+        error_occured         = 7
+        OTHERS                = 8 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from w3_api_template~save subrc={ sy-subrc }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD w3_api_set_attributes.
+
+    ii_template->set_attributes(
+      EXPORTING
+        p_attributes          = is_attr
+      EXCEPTIONS
+        object_not_changeable = 1
+        object_deleted        = 2
+        object_invalid        = 3
+        author_not_existing   = 4
+        authorize_failure     = 5
+        error_occured         = 6
+        OTHERS                = 7 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from w3_api_template~set_attributes subrc={ sy-subrc }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD w3_api_set_changeable.
+
+    ii_template->if_w3_api_object~set_changeable(
+      EXPORTING
+        p_changeable                 = iv_changeable
+      EXCEPTIONS
+        action_cancelled             = 1
+        object_locked_by_other_user  = 2
+        permission_failure           = 3
+        object_already_changeable    = 4
+        object_already_unlocked      = 5
+        object_just_created          = 6
+        object_deleted               = 7
+        object_modified              = 8
+        object_not_existing          = 9
+        object_invalid               = 10
+        error_occured                = 11
+        OTHERS                       = 12 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from w3_api_template~set_changeable subrc={ sy-subrc }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD w3_api_set_source.
+
+    ii_template->set_source(
+      EXPORTING
+        p_source              = it_source
+      EXCEPTIONS
+        object_not_changeable = 1
+        object_deleted        = 2
+        object_invalid        = 3
+        authorize_failure     = 4
+        invalid_parameter     = 5
+        error_occured         = 6
+        OTHERS                = 7 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from w3_api_template~set_source subrc={ sy-subrc }| ).
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -215,191 +407,6 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
 
     mo_files->add_string( iv_ext    = 'html'
                           iv_string = lv_source ).
-
-  ENDMETHOD.
-
-
-  METHOD w3_api_load.
-
-    cl_w3_api_template=>if_w3_api_template~load(
-      EXPORTING
-        p_template_name     = is_name
-      IMPORTING
-        p_template          = ri_template
-      EXCEPTIONS
-        object_not_existing = 1
-        permission_failure  = 2
-        error_occured       = 3
-        OTHERS              = 4 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from if_w3_api_template~load subrc={ sy-subrc }| ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD w3_api_set_changeable.
-
-    ii_template->if_w3_api_object~set_changeable(
-      EXPORTING
-        p_changeable                 = iv_changeable
-      EXCEPTIONS
-        action_cancelled             = 1
-        object_locked_by_other_user  = 2
-        permission_failure           = 3
-        object_already_changeable    = 4
-        object_already_unlocked      = 5
-        object_just_created          = 6
-        object_deleted               = 7
-        object_modified              = 8
-        object_not_existing          = 9
-        object_invalid               = 10
-        error_occured                = 11
-        OTHERS                       = 12 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from w3_api_template~set_changeable subrc={ sy-subrc }| ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD w3_api_delete.
-
-    ii_template->if_w3_api_object~delete(
-      EXCEPTIONS
-        object_not_empty      = 1
-        object_not_changeable = 2
-        object_invalid        = 3
-        error_occured         = 4
-        OTHERS                = 5 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from w3_api_template~delete subrc={ sy-subrc }| ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD w3_api_save.
-
-    ii_template->if_w3_api_object~save(
-      EXCEPTIONS
-        object_invalid        = 1
-        object_not_changeable = 2
-        action_cancelled      = 3
-        permission_failure    = 4
-        not_changed           = 5
-        data_invalid          = 6
-        error_occured         = 7
-        OTHERS                = 8 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from w3_api_template~save subrc={ sy-subrc }| ).
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD w3_api_get_attributes.
-
-    ii_template->get_attributes(
-      IMPORTING
-        p_attributes     = rs_attributes
-      EXCEPTIONS
-        object_invalid   = 1
-        template_deleted = 2
-        error_occured    = 3
-        OTHERS           = 4 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from w3_api_template~get_attributes subrc={ sy-subrc }| ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD w3_api_get_source.
-
-    ii_template->get_source(
-      IMPORTING
-        p_source         = rt_source
-      EXCEPTIONS
-        object_invalid   = 1
-        template_deleted = 2
-        error_occured    = 3
-        OTHERS           = 4 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from w3_api_template~get_source subrc={ sy-subrc }| ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD w3_api_create_new.
-
-    cl_w3_api_template=>if_w3_api_template~create_new(
-      EXPORTING
-        p_template_data          = is_template_data
-        p_program_name           = is_template_data-programm
-      IMPORTING
-        p_template               = ri_template
-      EXCEPTIONS
-        object_already_existing  = 1
-        object_just_created      = 2
-        not_authorized           = 3
-        undefined_name           = 4
-        author_not_existing      = 5
-        action_cancelled         = 6
-        error_occured            = 7
-        user_error               = 8
-        OTHERS                   = 9 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from w3_api_template~create_new subrc={ sy-subrc }| ).
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD w3_api_set_attributes.
-
-    ii_template->set_attributes(
-      EXPORTING
-        p_attributes          = is_attr
-      EXCEPTIONS
-        object_not_changeable = 1
-        object_deleted        = 2
-        object_invalid        = 3
-        author_not_existing   = 4
-        authorize_failure     = 5
-        error_occured         = 6
-        OTHERS                = 7 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from w3_api_template~set_attributes subrc={ sy-subrc }| ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD w3_api_set_source.
-
-    ii_template->set_source(
-      EXPORTING
-        p_source              = it_source
-      EXCEPTIONS
-        object_not_changeable = 1
-        object_deleted        = 2
-        object_invalid        = 3
-        authorize_failure     = 4
-        invalid_parameter     = 5
-        error_occured         = 6
-        OTHERS                = 7 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from w3_api_template~set_source subrc={ sy-subrc }| ).
-    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
