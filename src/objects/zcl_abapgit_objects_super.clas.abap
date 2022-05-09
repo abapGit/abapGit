@@ -82,12 +82,12 @@ CLASS zcl_abapgit_objects_super DEFINITION
         !ii_xml TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception .
+  PRIVATE SECTION.
     METHODS is_active_ddic
       RETURNING
         VALUE(rv_active) TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
-  PRIVATE SECTION.
 ENDCLASS.
 
 
@@ -279,9 +279,19 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
   METHOD is_active.
 
+    " DDIC types (see LSINTF01, FORM det_dtabname)
+    CONSTANTS lc_ddic_type TYPE string
+      VALUE 'DDLS,DOMA,DTEL,ENQU,INDX,MCID,MCOB,SHLP,SQLT,SQSC,STOB,TABL,TTYP,VIEW,XINX'.
+
     DATA: lt_messages    TYPE STANDARD TABLE OF sprot_u WITH DEFAULT KEY,
           lt_e071_tadirs TYPE STANDARD TABLE OF e071 WITH DEFAULT KEY,
           ls_e071_tadir  LIKE LINE OF lt_e071_tadirs.
+
+    " For DDIC types, use more accurate method
+    IF lc_ddic_type CS ms_item-obj_type.
+      rv_active = is_active_ddic( ).
+      RETURN.
+    ENDIF.
 
     ms_item-inactive = abap_false.
 
@@ -303,6 +313,7 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
     ENDIF.
 
     rv_active = boolc( ms_item-inactive = abap_false ).
+
   ENDMETHOD.
 
 
@@ -318,11 +329,15 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
     lv_type = ms_item-obj_type.
     lv_name = ms_item-obj_name.
 
+    " Check if an inactive version of the DDIC object exists
+    " state = 'A' checks if an active version exists but does not detect new or modified objects
+    " state = 'M' checks for all possible versions so we can find out if an inactive one exists
+    " See documentation of the function module
     CALL FUNCTION 'DDIF_STATE_GET'
       EXPORTING
         type          = lv_type
         name          = lv_name
-        state         = 'A'
+        state         = 'M'
       IMPORTING
         gotstate      = lv_state
       EXCEPTIONS
@@ -333,7 +348,6 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
     ENDIF.
 
     rv_active = boolc( ms_item-inactive = abap_false ).
-
   ENDMETHOD.
 
 
