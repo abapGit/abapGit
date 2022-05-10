@@ -121,6 +121,14 @@ CLASS zcl_abapgit_objects DEFINITION
     CLASS-METHODS update_package_tree
       IMPORTING
         !iv_package TYPE devclass .
+    CLASS-METHODS delete_objects
+      IMPORTING
+        !ii_log       TYPE REF TO zif_abapgit_log
+        !iv_transport TYPE trkorr
+      CHANGING
+        !ct_items     TYPE zif_abapgit_definitions=>ty_items_tt
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS delete_object
       IMPORTING
         !iv_package   TYPE devclass
@@ -147,7 +155,7 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS check_objects_locked
       IMPORTING
-        !iv_language TYPE spras
+        !iv_language TYPE spras DEFAULT zif_abapgit_definitions=>c_english
         !it_items    TYPE zif_abapgit_definitions=>ty_items_tt
       RAISING
         zcx_abapgit_exception .
@@ -163,9 +171,10 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS map_tadir_to_items
       IMPORTING
-        !it_tadir       TYPE zif_abapgit_definitions=>ty_tadir_tt
-      RETURNING
-        VALUE(rt_items) TYPE zif_abapgit_definitions=>ty_items_tt .
+        !it_tadir   TYPE zif_abapgit_definitions=>ty_tadir_tt
+      EXPORTING
+        et_items    TYPE zif_abapgit_definitions=>ty_items_tt
+        et_packages TYPE zif_abapgit_definitions=>ty_items_tt .
     CLASS-METHODS map_results_to_items
       IMPORTING
         !it_results     TYPE zif_abapgit_definitions=>ty_results_tt
@@ -456,84 +465,53 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
   METHOD delete.
 
-    DATA: ls_item     TYPE zif_abapgit_definitions=>ty_item,
-          li_progress TYPE REF TO zif_abapgit_progress,
-          lt_tadir    LIKE it_tadir,
-          lt_deleted  LIKE it_tadir,
-          lt_items    TYPE zif_abapgit_definitions=>ty_items_tt,
-          lx_error    TYPE REF TO zcx_abapgit_exception,
-          lv_count    TYPE i.
-
-    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
+    DATA:
+      lt_tadir    LIKE it_tadir,
+      ls_item     TYPE zif_abapgit_definitions=>ty_item,
+      lt_items    TYPE zif_abapgit_definitions=>ty_items_tt,
+      lt_packages TYPE zif_abapgit_definitions=>ty_items_tt.
 
     lt_tadir = it_tadir.
+
+    zcl_abapgit_dependencies=>resolve( CHANGING ct_tadir = lt_tadir ).
+
+    map_tadir_to_items(
+      EXPORTING
+        it_tadir    = lt_tadir
+      IMPORTING
+        et_items    = lt_items
+        et_packages = lt_packages ).
+
+    check_objects_locked( lt_items ).
+
+    check_objects_locked( lt_packages ).
 
     IF is_checks-transport-required = abap_true.
       zcl_abapgit_default_transport=>get_instance( )->set( is_checks-transport-transport ).
     ENDIF.
 
-    TRY.
-        zcl_abapgit_dependencies=>resolve( CHANGING ct_tadir = lt_tadir ).
+    delete_objects(
+      EXPORTING
+        ii_log       = ii_log
+        iv_transport = is_checks-transport-transport
+      CHANGING
+        ct_items     = lt_items ).
 
-        li_progress = zcl_abapgit_progress=>get_instance( lines( lt_tadir ) ).
-
-        lt_items = map_tadir_to_items( lt_tadir ).
-
-        check_objects_locked( iv_language = zif_abapgit_definitions=>c_english
-                              it_items    = lt_items ).
-
-      CATCH zcx_abapgit_exception INTO lx_error.
-        zcl_abapgit_default_transport=>get_instance( )->reset( ).
-        RAISE EXCEPTION lx_error.
-    ENDTRY.
-
-    lv_count = 1.
-    DO.
-      CLEAR lt_deleted.
-      LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-        li_progress->show( iv_current = lv_count
-                           iv_text    = |Delete { <ls_tadir>-obj_name }| ).
-
-        CLEAR ls_item.
-        ls_item-obj_type = <ls_tadir>-object.
-        ls_item-obj_name = <ls_tadir>-obj_name.
-
-        TRY.
-            delete_object(
-              iv_package   = <ls_tadir>-devclass
-              is_item      = ls_item
-              iv_transport = is_checks-transport-transport ).
-
-            INSERT <ls_tadir> INTO TABLE lt_deleted.
-            DELETE lt_tadir.
-            lv_count = lv_count + 1.
-
-            " make sure to save object deletions
-            COMMIT WORK.
-          CATCH zcx_abapgit_exception INTO lx_error.
-            IF ii_log IS BOUND.
-              ii_log->add_exception( ix_exc  = lx_error
-                                     is_item = ls_item ).
-              ii_log->add_error( iv_msg = |Deletion of object { ls_item-obj_name } failed|
-                                 is_item = ls_item ).
-            ENDIF.
-        ENDTRY.
-
-      ENDLOOP.
-
-      " Exit if done or nothing else was deleted
-      IF lines( lt_tadir ) = 0 OR lines( lt_deleted ) = 0.
-        EXIT.
-      ENDIF.
-    ENDDO.
+    delete_objects(
+      EXPORTING
+        ii_log       = ii_log
+        iv_transport = is_checks-transport-transport
+      CHANGING
+        ct_items     = lt_packages ).
 
     zcl_abapgit_default_transport=>get_instance( )->reset( ).
 
-    IF lx_error IS BOUND AND lines( lt_tadir ) > 0.
+    IF lines( lt_items ) > 0 OR lines( lt_packages ) > 0.
       zcx_abapgit_exception=>raise( 'Error during uninstall. Check the log.' ).
+    ELSE.
+      " Disregard any intermediate messages
+      ii_log->clear( ).
     ENDIF.
-
-    li_progress->off( ).
 
   ENDMETHOD.
 
@@ -573,6 +551,59 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       " TODO: This is not very clean and has to be improved in the future. See PR 2741.
 
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD delete_objects.
+
+    DATA:
+      li_progress TYPE REF TO zif_abapgit_progress,
+      lt_deleted  LIKE ct_items,
+      lx_error    TYPE REF TO zcx_abapgit_exception,
+      lv_count    TYPE i.
+
+    FIELD-SYMBOLS <ls_item> LIKE LINE OF ct_items.
+
+    li_progress = zcl_abapgit_progress=>get_instance( lines( ct_items ) ).
+
+    lv_count = 1.
+    DO.
+      CLEAR lt_deleted.
+      LOOP AT ct_items ASSIGNING <ls_item>.
+        li_progress->show( iv_current = lv_count
+                           iv_text    = |Delete { <ls_item>-obj_name }| ).
+
+        TRY.
+            delete_object(
+              iv_package   = <ls_item>-devclass
+              is_item      = <ls_item>
+              iv_transport = iv_transport ).
+
+            INSERT <ls_item> INTO TABLE lt_deleted.
+            DELETE ct_items.
+            lv_count = lv_count + 1.
+
+            " make sure to save object deletions
+            COMMIT WORK.
+          CATCH zcx_abapgit_exception INTO lx_error.
+            IF ii_log IS BOUND.
+              ii_log->add_exception( ix_exc  = lx_error
+                                     is_item = <ls_item> ).
+              ii_log->add_error( iv_msg = |Deletion of object { <ls_item>-obj_name } failed|
+                                 is_item = <ls_item> ).
+            ENDIF.
+        ENDTRY.
+
+      ENDLOOP.
+
+      " Exit if done or nothing else was deleted
+      IF lines( ct_items ) = 0 OR lines( lt_deleted ) = 0.
+        EXIT.
+      ENDIF.
+    ENDDO.
+
+    li_progress->off( ).
 
   ENDMETHOD.
 
@@ -721,7 +752,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         CATCH zcx_abapgit_exception INTO lx_exc.
           ii_log->add_exception( ix_exc = lx_exc
                                  is_item = ls_item ).
-          ii_log->add_error( iv_msg = |Import of object { ls_item-obj_name } failed|
+          ii_log->add_error( iv_msg = |Prepare for object { ls_item-obj_name } failed|
                              is_item = ls_item ).
           "object should not be part of any deserialization step
           CONTINUE.
@@ -1021,7 +1052,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
   METHOD map_tadir_to_items.
 
-    DATA: ls_item LIKE LINE OF rt_items.
+    DATA: ls_item LIKE LINE OF et_items.
     FIELD-SYMBOLS: <ls_tadir> TYPE zif_abapgit_definitions=>ty_tadir.
 
     LOOP AT it_tadir ASSIGNING <ls_tadir>.
@@ -1029,7 +1060,11 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       ls_item-devclass = <ls_tadir>-devclass.
       ls_item-obj_type = <ls_tadir>-object.
       ls_item-obj_name = <ls_tadir>-obj_name.
-      INSERT ls_item INTO TABLE rt_items.
+      IF ls_item-obj_type = 'DEVC'.
+        INSERT ls_item INTO TABLE et_packages.
+      ELSE.
+        INSERT ls_item INTO TABLE et_items.
+      ENDIF.
 
     ENDLOOP.
 
