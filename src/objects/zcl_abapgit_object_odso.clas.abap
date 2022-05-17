@@ -133,6 +133,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
 
     FIELD-SYMBOLS:
       <lg_details>     TYPE any,
+      <lg_odsobject>   TYPE any,
       <lt_infoobjects> TYPE STANDARD TABLE,
       <lt_navigation>  TYPE STANDARD TABLE,
       <lt_indexes>     TYPE STANDARD TABLE,
@@ -169,17 +170,34 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'INDEX_IOBJ'
                   CHANGING  cg_data =  <lt_index_iobj> ).
     TRY.
-        CALL FUNCTION 'BAPI_ODSO_CREATE'
-          EXPORTING
-            details              = <lg_details>
-          IMPORTING
-            odsobject            = lv_dsonam
-          TABLES
-            infoobjects          = <lt_infoobjects>
-            navigationattributes = <lt_navigation>
-            indexes              = <lt_indexes>
-            indexesinfoobjects   = <lt_index_iobj>
-            return               = lt_return.
+
+        ASSIGN COMPONENT 'ODSOBJECT' OF STRUCTURE <lg_details> TO <lg_odsobject>.
+        ASSERT sy-subrc = 0.
+
+        IF zif_abapgit_object~exists( ) = abap_false.
+          CALL FUNCTION 'BAPI_ODSO_CREATE'
+            EXPORTING
+              details              = <lg_details>
+            IMPORTING
+              odsobject            = lv_dsonam
+            TABLES
+              infoobjects          = <lt_infoobjects>
+              navigationattributes = <lt_navigation>
+              indexes              = <lt_indexes>
+              indexesinfoobjects   = <lt_index_iobj>
+              return               = lt_return.
+        ELSE.
+          CALL FUNCTION 'BAPI_ODSO_CHANGE'
+            EXPORTING
+              odsobject            = <lg_odsobject>
+              details              = <lg_details>
+            TABLES
+              infoobjects          = <lt_infoobjects>
+              navigationattributes = <lt_navigation>
+              indexes              = <lt_indexes>
+              indexesinfoobjects   = <lt_index_iobj>
+              return               = lt_return.
+        ENDIF.
 
       CATCH  cx_sy_dyn_call_illegal_func.
         zcx_abapgit_exception=>raise( |Necessary BW function modules not found or object not supported| ).
@@ -192,7 +210,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
 
     CALL FUNCTION 'BAPI_ODSO_ACTIVATE'
       EXPORTING
-        odsobject = lv_dsonam
+        odsobject = <lg_odsobject>
       TABLES
         return    = lt_return.
 
