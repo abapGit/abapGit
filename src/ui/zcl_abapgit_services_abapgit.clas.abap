@@ -30,6 +30,9 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
     CLASS-METHODS prepare_gui_startup
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS get_abapgit_tcode
+      RETURNING
+        VALUE(rv_tcode) TYPE tcode .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -284,4 +287,22 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
+
+  METHOD get_abapgit_tcode.
+    CONSTANTS: lc_report_tcode_hex TYPE x VALUE '80'.
+    DATA: lt_tcodes TYPE STANDARD TABLE OF tcode.
+
+    SELECT tcode
+      FROM tstc
+      INTO TABLE lt_tcodes
+      WHERE pgmna = sy-cprog
+        AND cinfo = lc_report_tcode_hex.
+
+    IF lines( lt_tcodes ) > 0.
+      READ TABLE lt_tcodes INDEX 1 INTO rv_tcode.
+    ENDIF.
+  ENDMETHOD.
+
+
 ENDCLASS.
