@@ -241,7 +241,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
       INSERT ls_sort INTO TABLE lt_sort.
     ENDIF.
 
-    IF mv_order_by = 'PATH'.
+    " Use object name as secondary sort criteria
+    IF mv_order_by <> 'OBJ_NAME'.
       ls_sort-name = 'OBJ_NAME'.
       INSERT ls_sort INTO TABLE lt_sort.
     ENDIF.
@@ -253,11 +254,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
     INSERT LINES OF lt_diff_items INTO TABLE ct_repo_items.
     INSERT LINES OF lt_code_items INTO TABLE ct_repo_items.
 
-    IF mv_order_by = 'PATH'.
-      LOOP AT ct_repo_items ASSIGNING <ls_repo_item>.
-        order_files( CHANGING ct_files = <ls_repo_item>-files ).
-      ENDLOOP.
-    ENDIF.
+    " Files are listed under the object names so we always sort them by name
+    LOOP AT ct_repo_items ASSIGNING <ls_repo_item>.
+      order_files( CHANGING ct_files = <ls_repo_item>-files ).
+    ENDLOOP.
 
   ENDMETHOD.
 
