@@ -43,6 +43,9 @@ CLASS zcl_abapgit_repo_content_list DEFINITION
       CHANGING  ct_repo_items TYPE zif_abapgit_definitions=>ty_repo_item_tt
       RAISING   zcx_abapgit_exception.
 
+    METHODS determine_transports
+      CHANGING ct_repo_items TYPE zif_abapgit_definitions=>ty_repo_item_tt.
+
     METHODS filter_changes
       CHANGING ct_repo_items TYPE zif_abapgit_definitions=>ty_repo_item_tt.
 
@@ -243,6 +246,25 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD determine_transports.
+
+    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
+
+    FIELD-SYMBOLS <ls_item> LIKE LINE OF ct_repo_items.
+
+    LOOP AT ct_repo_items ASSIGNING <ls_item>.
+      ls_item-obj_type = <ls_item>-obj_type.
+      ls_item-obj_name = <ls_item>-obj_name.
+      TRY.
+          <ls_item>-transport = zcl_abapgit_factory=>get_cts_api( )->get_transport_for_object( ls_item ).
+        CATCH zcx_abapgit_exception ##NO_HANDLER.
+          " Ignore errors related to object check when trying to get transport
+      ENDTRY.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD filter_changes.
 
     FIELD-SYMBOLS: <ls_item> TYPE zif_abapgit_definitions=>ty_repo_item.
@@ -300,6 +322,8 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
       " There are never changes for offline repositories
       filter_changes( CHANGING ct_repo_items = rt_repo_items ).
     ENDIF.
+
+    determine_transports( CHANGING ct_repo_items = rt_repo_items ).
 
     SORT rt_repo_items BY
       sortkey ASCENDING
