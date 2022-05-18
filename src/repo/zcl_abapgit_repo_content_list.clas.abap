@@ -9,8 +9,9 @@ CLASS zcl_abapgit_repo_content_list DEFINITION
 
     METHODS list
       IMPORTING iv_path              TYPE string
-                iv_by_folders        TYPE abap_bool
-                iv_changes_only      TYPE abap_bool
+                iv_by_folders        TYPE abap_bool OPTIONAL
+                iv_changes_only      TYPE abap_bool OPTIONAL
+                iv_transports        TYPE abap_bool OPTIONAL
       RETURNING VALUE(rt_repo_items) TYPE zif_abapgit_definitions=>ty_repo_item_tt
       RAISING   zcx_abapgit_exception.
 
@@ -323,7 +324,9 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
       filter_changes( CHANGING ct_repo_items = rt_repo_items ).
     ENDIF.
 
-    determine_transports( CHANGING ct_repo_items = rt_repo_items ).
+    IF iv_transports = abap_true.
+      determine_transports( CHANGING ct_repo_items = rt_repo_items ).
+    ENDIF.
 
     SORT rt_repo_items BY
       sortkey ASCENDING

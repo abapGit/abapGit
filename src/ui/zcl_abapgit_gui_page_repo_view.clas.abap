@@ -826,7 +826,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
         lt_repo_items = lo_browser->list( iv_path         = mv_cur_dir
                                           iv_by_folders   = mv_show_folders
-                                          iv_changes_only = mv_changes_only ).
+                                          iv_changes_only = mv_changes_only
+                                          iv_transports   = mv_are_changes_recorded_in_tr ).
 
         apply_order_by( CHANGING ct_repo_items = lt_repo_items ).
 
