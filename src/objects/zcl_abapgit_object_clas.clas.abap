@@ -14,87 +14,107 @@ CLASS zcl_abapgit_object_clas DEFINITION
       IMPORTING
         !is_item     TYPE zif_abapgit_definitions=>ty_item
         !iv_language TYPE spras .
-  PROTECTED SECTION.
-    DATA: mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc,
-          mv_skip_testclass             TYPE abap_bool,
-          mv_classpool_name             TYPE progname.
-    METHODS:
-      deserialize_abap
-        IMPORTING ii_xml     TYPE REF TO zif_abapgit_xml_input
-                  iv_package TYPE devclass
-        RAISING   zcx_abapgit_exception,
-      deserialize_docu
-        IMPORTING ii_xml TYPE REF TO zif_abapgit_xml_input
-        RAISING   zcx_abapgit_exception,
-      deserialize_tpool
-        IMPORTING ii_xml TYPE REF TO zif_abapgit_xml_input
-        RAISING   zcx_abapgit_exception,
-      deserialize_sotr
-        IMPORTING ii_ml      TYPE REF TO zif_abapgit_xml_input
-                  iv_package TYPE devclass
-        RAISING   zcx_abapgit_exception,
-      serialize_xml
-        IMPORTING ii_xml TYPE REF TO zif_abapgit_xml_output
-        RAISING   zcx_abapgit_exception,
-      serialize_attr
-        IMPORTING
-          !ii_xml     TYPE REF TO zif_abapgit_xml_output
-          !iv_clsname TYPE seoclsname
-        RAISING
-          zcx_abapgit_exception,
-      serialize_descr
-        IMPORTING
-          !ii_xml     TYPE REF TO zif_abapgit_xml_output
-          !iv_clsname TYPE seoclsname
-        RAISING
-          zcx_abapgit_exception,
-      serialize_docu
-        IMPORTING
-          !ii_xml              TYPE REF TO zif_abapgit_xml_output
-          !it_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus OPTIONAL
-          !iv_clsname          TYPE seoclsname
-        RAISING
-          zcx_abapgit_exception,
-      serialize_tpool
-        IMPORTING
-          !ii_xml              TYPE REF TO zif_abapgit_xml_output
-          !it_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus OPTIONAL
-          !iv_clsname          TYPE seoclsname
-        RAISING
-          zcx_abapgit_exception,
-      serialize_sotr
-        IMPORTING
-          !ii_xml TYPE REF TO zif_abapgit_xml_output
-        RAISING
-          zcx_abapgit_exception,
-      source_apack_replacement
-        CHANGING
-          !ct_source TYPE seop_source_string
-        RAISING
-          zcx_abapgit_exception,
-      repo_apack_replacement
-        CHANGING
-          !ct_source TYPE seop_source_string
-        RAISING
-          zcx_abapgit_exception.
+protected section.
 
-  PRIVATE SECTION.
-    METHODS deserialize_pre_ddic
-      IMPORTING
-        ii_xml     TYPE REF TO zif_abapgit_xml_input
-        iv_package TYPE devclass
-      RAISING
-        zcx_abapgit_exception.
-    METHODS:
-      is_class_locked
-        RETURNING VALUE(rv_is_class_locked) TYPE abap_bool
-        RAISING   zcx_abapgit_exception.
-    METHODS interface_replacement
-      IMPORTING
-        !iv_from_interface TYPE seoclsname
-        !iv_to_interface   TYPE seoclsname
-      CHANGING
-        !ct_source         TYPE seop_source_string .
+  data MI_OBJECT_ORIENTED_OBJECT_FCT type ref to ZIF_ABAPGIT_OO_OBJECT_FNC .
+  data MV_SKIP_TESTCLASS type ABAP_BOOL .
+  data MV_CLASSPOOL_NAME type PROGNAME .
+
+  methods DESERIALIZE_ABAP
+    importing
+      !II_XML type ref to ZIF_ABAPGIT_XML_INPUT
+      !IV_PACKAGE type DEVCLASS
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods DESERIALIZE_DOCU
+    importing
+      !II_XML type ref to ZIF_ABAPGIT_XML_INPUT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods DESERIALIZE_TPOOL
+    importing
+      !II_XML type ref to ZIF_ABAPGIT_XML_INPUT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods DESERIALIZE_SOTR
+    importing
+      !II_ML type ref to ZIF_ABAPGIT_XML_INPUT
+      !IV_PACKAGE type DEVCLASS
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods SERIALIZE_XML
+    importing
+      !II_XML type ref to ZIF_ABAPGIT_XML_OUTPUT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods SERIALIZE_ATTR
+    importing
+      !II_XML type ref to ZIF_ABAPGIT_XML_OUTPUT
+      !IV_CLSNAME type SEOCLSNAME
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods SERIALIZE_DESCR
+    importing
+      !II_XML type ref to ZIF_ABAPGIT_XML_OUTPUT
+      !IV_CLSNAME type SEOCLSNAME
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods SERIALIZE_DOCU
+    importing
+      !II_XML type ref to ZIF_ABAPGIT_XML_OUTPUT
+      !IV_LANGU type DOKHL-LANGU optional
+      !IV_OBJ type DOKHL-OBJECT
+      !IV_ID type DOKHL-ID
+      !IV_IS_LANGU_ADDITIONAL type ABAP_BOOL
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods SERIALIZE_TPOOL
+    importing
+      !II_XML type ref to ZIF_ABAPGIT_XML_OUTPUT
+      !IT_LANGU_ADDITIONAL type ZIF_ABAPGIT_LANG_DEFINITIONS=>TY_LANGUS optional
+      !IV_CLSNAME type SEOCLSNAME
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods SERIALIZE_SOTR
+    importing
+      !II_XML type ref to ZIF_ABAPGIT_XML_OUTPUT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods SOURCE_APACK_REPLACEMENT
+    changing
+      !CT_SOURCE type SEOP_SOURCE_STRING
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods REPO_APACK_REPLACEMENT
+    changing
+      !CT_SOURCE type SEOP_SOURCE_STRING
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+private section.
+
+  methods SERIALIZE_ALL_DOCU
+    importing
+      !II_XML type ref to ZIF_ABAPGIT_XML_OUTPUT
+      !IV_CLSNAME type SEOCLSNAME
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods DESERIALIZE_PRE_DDIC
+    importing
+      !II_XML type ref to ZIF_ABAPGIT_XML_INPUT
+      !IV_PACKAGE type DEVCLASS
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods IS_CLASS_LOCKED
+    returning
+      value(RV_IS_CLASS_LOCKED) type ABAP_BOOL
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods INTERFACE_REPLACEMENT
+    importing
+      !IV_FROM_INTERFACE type SEOCLSNAME
+      !IV_TO_INTERFACE type SEOCLSNAME
+    changing
+      !CT_SOURCE type SEOP_SOURCE_STRING .
 ENDCLASS.
 
 
@@ -352,6 +372,27 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  method SERIALIZE_ALL_DOCU.
+    data lv_pattern type string.
+    data wa_dokhl type dokhl.
+    concatenate iv_clsname '%' into lv_pattern RESPECTING BLANKS.
+    SELECT * FROM DOKHL INTO WA_DOKHL
+      WHERE id     IN ('CL','CA','CE','CO','IF','IA','IE','IO')
+        AND object LIKE lv_pattern.
+      data lv_is_langu_additional TYPE ABAP_BOOL VALUE ABAP_FALSE.
+      IF wa_dokhl-langu <> mv_language.
+        lv_is_langu_additional = abap_false.
+      ENDIF.
+      SERIALIZE_DOCU( ii_xml              = ii_xml
+                      iv_obj              = wa_dokhl-object
+                      iv_id               = wa_dokhl-id
+                      iv_langu            = wa_dokhl-langu
+                      iv_is_langu_additional = lv_is_langu_additional ).
+    ENDSELECT.
+
+  endmethod.
+
+
   METHOD serialize_attr.
 
     DATA: lt_attributes TYPE zif_abapgit_definitions=>ty_obj_attribute_tt.
@@ -391,47 +432,51 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
 
 
   METHOD serialize_docu.
-
     DATA: lt_lines      TYPE tlinetab,
           lv_object     TYPE dokhl-object,
           lv_langu      TYPE sy-langu,
           lt_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_lines,
-          ls_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_line.
+          ls_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_line,
+          lv_name       TYPE string,
+          lv_i18n_name  TYPE string.
 
-    lv_object = iv_clsname.
+    " XML for SOTR will use hyphen as a delimiter between class and component
+    " this is guaranteed to never be used by SAP as a valid character in class
+    " or components, because it is already the ABAP field separater
+    CONSTANTS: c_delimiter TYPE C VALUE '-'.
+
+    IF iv_is_langu_additional = ABAP_TRUE.
+      " don't serialize additional languages if configured to skip them
+      IF ii_xml->i18n_params( )-main_language_only = abap_true.
+        RETURN.
+      ELSE.
+        " otherwise use the special XML tag for additional languages
+        lv_name = 'I18N_LINES'.
+      ENDIF.
+    ELSE.
+      " otherwise use the regular tag for the main language
+      lv_name = 'LINES'.
+    ENDIF.
+
+    " append the object and component name if we're serializing
+    " attribute, method or event documentation
+    IF iv_id <> 'CL' AND iv_id <> 'IF'.
+      CONCATENATE   lv_name
+        c_delimiter iv_id
+        c_delimiter iv_obj(30)
+        c_delimiter iv_obj+30(30)
+        INTO lv_name.
+    ENDIF.
+
+    lv_object = iv_obj.
 
     lt_lines = mi_object_oriented_object_fct->read_documentation(
-      iv_id          = 'CL'
+      iv_id          = iv_id
       iv_object_name = lv_object
-      iv_language    = mv_language ).
+      iv_language    = iv_langu ).
     IF lines( lt_lines ) > 0.
-      ii_xml->add( iv_name = 'LINES'
+      ii_xml->add( iv_name = lv_name
                    ig_data = lt_lines ).
-    ENDIF.
-
-    IF ii_xml->i18n_params( )-main_language_only = abap_true.
-      RETURN.
-    ENDIF.
-
-    LOOP AT it_langu_additional INTO lv_langu.
-
-      lt_lines = mi_object_oriented_object_fct->read_documentation(
-        iv_id          = 'CL'
-        iv_object_name = lv_object
-        iv_language    = lv_langu ).
-
-      IF lines( lt_lines ) > 0.
-        CLEAR ls_i18n_lines.
-        ls_i18n_lines-language = lv_langu.
-        ls_i18n_lines-lines    = lt_lines.
-        INSERT ls_i18n_lines INTO TABLE lt_i18n_lines.
-      ENDIF.
-
-    ENDLOOP.
-
-    IF lines( lt_i18n_lines ) > 0.
-      ii_xml->add( iv_name = 'I18N_LINES'
-                   ig_data = lt_i18n_lines ).
     ENDIF.
 
   ENDMETHOD.
@@ -561,16 +606,8 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
       serialize_sotr( ii_xml ).
     ENDIF.
 
-    SELECT DISTINCT langu
-      INTO TABLE lt_langu_additional
-      FROM dokhl
-      WHERE id     = 'CL'
-        AND object = ls_clskey-clsname
-        AND langu  <> mv_language.
-
-    serialize_docu( ii_xml              = ii_xml
-                    iv_clsname          = ls_clskey-clsname
-                    it_langu_additional = lt_langu_additional ).
+    serialize_all_docu( ii_xml              = ii_xml
+                        iv_clsname          = ls_clskey-clsname ).
 
     serialize_descr( ii_xml     = ii_xml
                      iv_clsname = ls_clskey-clsname ).
