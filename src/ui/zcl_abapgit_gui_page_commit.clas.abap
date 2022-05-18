@@ -105,11 +105,6 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
         !it_stage      TYPE zif_abapgit_definitions=>ty_stage_tt
       RETURNING
         VALUE(rv_text) TYPE string.
-    METHODS is_valid_email
-      IMPORTING
-        iv_email        TYPE string
-      RETURNING
-        VALUE(rv_valid) TYPE abap_bool.
     METHODS branch_name_to_internal
       IMPORTING
         iv_branch_name            TYPE string
@@ -356,23 +351,6 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD is_valid_email.
-
-    " Email address validation (RFC 5322)
-    " https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch04s01.html
-    CONSTANTS lc_email_regex TYPE string VALUE
-      '[\w!#$%&*+/=?`{|}~^-]+(?:\.[\w!#$%&*+/=?`{|}~^-]+)*@(?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,6}'.
-
-    IF iv_email IS INITIAL.
-      rv_valid = abap_true.
-    ELSE.
-      FIND REGEX lc_email_regex IN iv_email.
-      rv_valid = boolc( sy-subrc = 0 ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD render_stage_details.
 
     FIELD-SYMBOLS <ls_stage> LIKE LINE OF mt_stage.
@@ -461,13 +439,13 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
     ro_validation_log = mo_form_util->validate( io_form_data ).
 
-    IF is_valid_email( io_form_data->get( c_id-committer_email ) ) = abap_false.
+    IF zcl_abapgit_utils=>is_valid_email( io_form_data->get( c_id-committer_email ) ) = abap_false.
       ro_validation_log->set(
         iv_key = c_id-committer_email
         iv_val = |Invalid email address| ).
     ENDIF.
 
-    IF is_valid_email( io_form_data->get( c_id-author_email ) ) = abap_false.
+    IF zcl_abapgit_utils=>is_valid_email( io_form_data->get( c_id-author_email ) ) = abap_false.
       ro_validation_log->set(
         iv_key = c_id-author_email
         iv_val = |Invalid email address| ).
