@@ -247,7 +247,8 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
   METHOD switch_tag.
 
     DATA: lo_repo TYPE REF TO zcl_abapgit_repo_online,
-          ls_tag  TYPE zif_abapgit_definitions=>ty_git_tag.
+          ls_tag  TYPE zif_abapgit_definitions=>ty_git_tag,
+          lv_text TYPE string.
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
@@ -256,9 +257,15 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
+    REPLACE '^{}' IN ls_tag-name WITH ''.
+
     lo_repo->select_branch( ls_tag-name ).
 
     COMMIT WORK AND WAIT.
+
+    lv_text = |Tag switched to { zcl_abapgit_git_tag=>remove_tag_prefix( ls_tag-name ) } |.
+
+    MESSAGE lv_text TYPE 'S'.
 
   ENDMETHOD.
 ENDCLASS.
