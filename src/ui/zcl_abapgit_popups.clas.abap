@@ -30,6 +30,15 @@ CLASS zcl_abapgit_popups DEFINITION
     TYPES:
       ty_lt_fields TYPE STANDARD TABLE OF sval WITH DEFAULT KEY .
 
+    TYPES:
+      BEGIN OF ty_commit_value_tab,
+        commit   TYPE zif_abapgit_definitions=>ty_sha1,
+        message  TYPE c LENGTH 50,
+        datetime TYPE c LENGTH 20,
+      END OF ty_commit_value_tab.
+    TYPES:
+      ty_commit_value_tab_tt TYPE STANDARD TABLE OF ty_commit_value_tab WITH DEFAULT KEY.
+
     CONSTANTS c_fieldname_selected TYPE abap_componentdescr-name VALUE `SELECTED` ##NO_TEXT.
     CONSTANTS c_answer_cancel      TYPE c LENGTH 1 VALUE 'A' ##NO_TEXT.
 
@@ -56,16 +65,16 @@ CLASS zcl_abapgit_popups DEFINITION
       EXPORTING
         !et_list TYPE INDEX TABLE .
     METHODS on_select_list_link_click
-        FOR EVENT link_click OF cl_salv_events_table
+      FOR EVENT link_click OF cl_salv_events_table
       IMPORTING
         !row
         !column .
     METHODS on_select_list_function_click
-        FOR EVENT added_function OF cl_salv_events_table
+      FOR EVENT added_function OF cl_salv_events_table
       IMPORTING
         !e_salv_function .
     METHODS on_double_click
-        FOR EVENT double_click OF cl_salv_events_table
+      FOR EVENT double_click OF cl_salv_events_table
       IMPORTING
         !row
         !column .
@@ -81,6 +90,15 @@ CLASS zcl_abapgit_popups DEFINITION
         !ct_fields         TYPE ty_lt_fields
       RAISING
         zcx_abapgit_exception .
+    METHODS commit_list_build
+      IMPORTING
+        !iv_repo_url    TYPE string
+        !iv_branch_name TYPE string
+      EXPORTING
+        !et_value_tab   TYPE ty_commit_value_tab_tt
+        !et_commits     TYPE zif_abapgit_definitions=>ty_commit_tt
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -128,6 +146,54 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
     rs_position-end_column = rs_position-start_column + iv_width.
     rs_position-end_row = rs_position-start_row + iv_height.
+
+  ENDMETHOD.
+
+
+  METHOD commit_list_build.
+
+    DATA:
+      lv_unix_time   TYPE zcl_abapgit_time=>ty_unixtime,
+      lv_date        TYPE d,
+      lv_date_string TYPE c LENGTH 12,
+      lv_time        TYPE t,
+      lv_time_string TYPE c LENGTH 10.
+
+    FIELD-SYMBOLS:
+      <ls_commit>    TYPE zif_abapgit_definitions=>ty_commit,
+      <ls_value_tab> TYPE ty_commit_value_tab.
+
+    CLEAR: et_commits, et_value_tab.
+
+    et_commits = zcl_abapgit_git_commit=>get_by_branch( iv_branch_name  = iv_branch_name
+                                                        iv_repo_url     = iv_repo_url
+                                                        iv_deepen_level = 99
+                                                        iv_sorted       = abap_false )-commits.
+
+    IF et_commits IS INITIAL.
+      zcx_abapgit_exception=>raise( |No commits are available in this branch.| ).
+    ENDIF.
+
+    SORT et_commits BY time DESCENDING.
+
+    LOOP AT et_commits ASSIGNING <ls_commit>.
+
+      APPEND INITIAL LINE TO et_value_tab ASSIGNING <ls_value_tab>.
+      <ls_value_tab>-commit  = <ls_commit>-sha1.
+      <ls_value_tab>-message = <ls_commit>-message.
+      lv_unix_time = <ls_commit>-time.
+      zcl_abapgit_time=>get_utc(
+        EXPORTING
+          iv_unix = lv_unix_time
+        IMPORTING
+          ev_time = lv_time
+          ev_date = lv_date ).
+      WRITE: lv_date TO lv_date_string,
+             lv_time TO lv_time_string.
+      <ls_value_tab>-datetime = |{ lv_date_string }, | &&
+                                |{ lv_time_string }|.
+
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -619,6 +685,64 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     ASSERT sy-subrc = 0.
 
     READ TABLE it_pulls INTO rs_pull INDEX sy-tabix.
+    ASSERT sy-subrc = 0.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_popups~commit_list_popup.
+
+    DATA:
+      lt_commits         TYPE zif_abapgit_definitions=>ty_commit_tt,
+      lt_value_tab       TYPE ty_commit_value_tab_tt,
+      lt_selected_values TYPE ty_commit_value_tab_tt,
+      lt_columns         TYPE zif_abapgit_definitions=>ty_alv_column_tt.
+
+    FIELD-SYMBOLS:
+      <ls_value_tab> TYPE ty_commit_value_tab,
+      <ls_column>    TYPE zif_abapgit_definitions=>ty_alv_column.
+
+    commit_list_build(
+      EXPORTING
+        iv_branch_name = iv_branch_name
+        iv_repo_url    = iv_repo_url
+      IMPORTING
+        et_value_tab   = lt_value_tab
+        et_commits     = lt_commits ).
+
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name   = 'COMMIT'.
+    <ls_column>-text   = 'Hash'.
+    <ls_column>-length = 8.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'MESSAGE'.
+    <ls_column>-text = 'Message'.
+    <ls_column>-length = 60.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'DATETIME'.
+    <ls_column>-text = 'Datetime'.
+    <ls_column>-length = 17.
+
+    zif_abapgit_popups~popup_to_select_from_list(
+      EXPORTING
+        it_list               = lt_value_tab
+        iv_title              = |Select a commit|
+        iv_end_column         = 100
+        iv_striped_pattern    = abap_true
+        iv_optimize_col_width = abap_false
+        iv_selection_mode     = if_salv_c_selection_mode=>single
+        it_columns_to_display = lt_columns
+      IMPORTING
+        et_list               = lt_selected_values ).
+
+    IF lt_selected_values IS INITIAL.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
+    ENDIF.
+
+    READ TABLE lt_selected_values ASSIGNING <ls_value_tab> INDEX 1.
+    ASSERT sy-subrc = 0.
+
+    READ TABLE lt_commits INTO rs_commit WITH KEY sha1 = <ls_value_tab>-commit.
     ASSERT sy-subrc = 0.
 
   ENDMETHOD.
