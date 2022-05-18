@@ -269,10 +269,12 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
           ls_header TYPE ttree,
           ls_tadir  TYPE tadir.
 
+    " Ignore buffer and get state from DB
     CALL FUNCTION 'STREE_STRUCTURE_EXIST'
       EXPORTING
         structure_id         = mv_tree_id
-        do_not_read_devclass = ''
+        read_from_database   = abap_true
+        do_not_read_devclass = abap_false
       IMPORTING
         message              = ls_msg
         structure_header     = ls_header

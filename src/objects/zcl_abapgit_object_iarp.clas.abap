@@ -55,11 +55,11 @@ CLASS zcl_abapgit_object_iarp DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
       w3_api_save
         IMPORTING ii_resource TYPE REF TO if_w3_api_resource
-        RAISING
-                  zcx_abapgit_exception,
+        RAISING   zcx_abapgit_exception,
 
       w3_api_set_changeable
-        IMPORTING ii_resource TYPE REF TO if_w3_api_resource
+        IMPORTING ii_resource   TYPE REF TO if_w3_api_resource
+                  iv_changeable TYPE abap_bool DEFAULT abap_true
         RAISING   zcx_abapgit_exception,
 
       w3_api_delete
@@ -116,6 +116,11 @@ CLASS zcl_abapgit_object_iarp IMPLEMENTATION.
         it_parameters = it_parameters ).
 
     w3_api_save( li_resource ).
+
+    " Release locks
+    w3_api_set_changeable(
+      ii_resource   = li_resource
+      iv_changeable = abap_false ).
 
   ENDMETHOD.
 
@@ -255,7 +260,7 @@ CLASS zcl_abapgit_object_iarp IMPLEMENTATION.
 
     ii_resource->if_w3_api_object~set_changeable(
       EXPORTING
-        p_changeable                 = abap_true
+        p_changeable                 = iv_changeable
       EXCEPTIONS
         action_cancelled             = 1
         object_locked_by_other_user  = 2

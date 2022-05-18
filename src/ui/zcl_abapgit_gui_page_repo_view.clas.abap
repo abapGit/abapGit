@@ -175,9 +175,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
     METHODS is_repo_lang_logon_lang
       RETURNING
         VALUE(rv_repo_lang_is_logon_lang) TYPE abap_bool .
-    METHODS get_abapgit_tcode
-      RETURNING
-        VALUE(rv_tcode) TYPE tcode .
+
     METHODS render_item_changed_by
       IMPORTING
         !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
@@ -325,7 +323,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                                iv_act = |{ c_actions-go_data }?key={ mv_key }|
                                iv_opt = lv_crossout ).
 
-    IF is_repo_lang_logon_lang( ) = abap_false AND get_abapgit_tcode( ) IS NOT INITIAL.
+    IF is_repo_lang_logon_lang( ) = abap_false AND zcl_abapgit_services_abapgit=>get_abapgit_tcode( ) IS NOT INITIAL.
       ro_advanced_dropdown->add(
         iv_txt = 'Open in Main Language'
         iv_act = |{ zif_abapgit_definitions=>c_action-repo_open_in_master_lang }?key={ mv_key }| ).
@@ -654,22 +652,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_abapgit_tcode.
-    CONSTANTS: lc_report_tcode_hex TYPE x VALUE '80'.
-    DATA: lt_tcodes TYPE STANDARD TABLE OF tcode.
-
-    SELECT tcode
-      FROM tstc
-      INTO TABLE lt_tcodes
-      WHERE pgmna = sy-cprog
-        AND cinfo = lc_report_tcode_hex.
-
-    IF lines( lt_tcodes ) > 0.
-      READ TABLE lt_tcodes INDEX 1 INTO rv_tcode.
-    ENDIF.
-  ENDMETHOD.
-
-
   METHOD get_item_class.
 
     DATA lt_class TYPE TABLE OF string.
@@ -741,7 +723,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     " https://blogs.sap.com/2017/01/13/logon-language-sy-langu-and-rfc/
 
     lv_main_language = mo_repo->get_dot_abapgit( )->get_main_language( ).
-    lv_tcode = get_abapgit_tcode( ).
+    lv_tcode = zcl_abapgit_services_abapgit=>get_abapgit_tcode( ).
     ASSERT lv_tcode IS NOT INITIAL.
 
     IF lv_main_language = sy-langu.
