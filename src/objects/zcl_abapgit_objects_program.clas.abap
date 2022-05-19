@@ -300,28 +300,28 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
   ENDMETHOD.
 
 
-  method DESERIALIZE_ALL_DOCU.
-    data: lt_cat type ty_oo_docu_cat_tt.
-    data: ls_cat type ty_oo_docu_cat.
+  METHOD deserialize_all_docu.
+    DATA: lt_cat TYPE ty_oo_docu_cat_tt.
+    DATA: ls_cat TYPE ty_oo_docu_cat.
 
     deserialize_docu(
       ii_xml                        = ii_xml
-      iv_id = IV_ID
+      iv_id = iv_id
       iv_clsname                    = ms_item-obj_name
       ii_object_oriented_object_fct = ii_object_oriented_object_fct ).
 
     ii_xml->read( EXPORTING iv_name = 'DOCU_CAT'
                   CHANGING cg_data  = lt_cat  ).
 
-    loop at lt_cat into ls_cat.
+    LOOP AT lt_cat INTO ls_cat.
       deserialize_docu(
         ii_xml                        = ii_xml
         iv_id                         = ls_cat-id
         iv_clsname                    = ms_item-obj_name
         iv_comp                       = ls_cat-comp
         ii_object_oriented_object_fct = ii_object_oriented_object_fct ).
-    endloop.
-  endmethod.
+    ENDLOOP.
+  ENDMETHOD.
 
 
   METHOD deserialize_cua.
@@ -848,63 +848,64 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
   ENDMETHOD.
 
 
-  method SERIALIZE_ALL_DOCU.
-    data: lt_docu_cat type ty_oo_docu_cat_tt. " catalog of component docu
+  METHOD serialize_all_docu.
+    DATA: lt_docu_cat TYPE ty_oo_docu_cat_tt. " catalog of component docu
 
-    data lv_pattern TYPE string.
-    data lv_object type DOKU_OBJ.
-    data lv_id type DOKU_ID.
-    data lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus.
-    data lr_id type range of dokhl-id.
-    data wa_id like LINE OF lr_id.
+    DATA lv_pattern TYPE string.
+    DATA lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus.
+    DATA lr_id TYPE RANGE OF dokhl-id.
+    DATA wa_id LIKE LINE OF lr_id.
+    DATA: BEGIN OF wa_dokhl,
+            id     TYPE doku_id,
+            object TYPE doku_obj,
+          END OF wa_dokhl.
 
     wa_id-sign = 'I'.
     wa_id-option = 'EQ'.
-    wa_id-low = IV_ID.
-    append wa_id to lr_id.
+    wa_id-low = iv_id.
+    APPEND wa_id TO lr_id.
 
-    if iv_id = 'CL'.
-      wa_id-low = 'CA'.  append wa_id to lr_id.
-      wa_id-low = 'CE'.  append wa_id to lr_id.
-      wa_id-low = 'CO'.  append wa_id to lr_id.
-    else.
-      wa_id-low = 'IA'.  append wa_id to lr_id.
-      wa_id-low = 'IE'.  append wa_id to lr_id.
-      wa_id-low = 'IO'.  append wa_id to lr_id.
-    endif.
+    IF iv_id = 'CL'.
+      wa_id-low = 'CA'.  APPEND wa_id TO lr_id.
+      wa_id-low = 'CE'.  APPEND wa_id TO lr_id.
+      wa_id-low = 'CO'.  APPEND wa_id TO lr_id.
+    ELSE.
+      wa_id-low = 'IA'.  APPEND wa_id TO lr_id.
+      wa_id-low = 'IE'.  APPEND wa_id TO lr_id.
+      wa_id-low = 'IO'.  APPEND wa_id TO lr_id.
+    ENDIF.
 
-    concatenate iv_clsname '%' into lv_pattern RESPECTING BLANKS.
+    CONCATENATE iv_clsname '%' INTO lv_pattern RESPECTING BLANKS.
 
-
-    SELECT DISTINCT OBJECT, ID FROM DOKHL INTO (@LV_OBJECT, @LV_ID)
-      WHERE id       IN   @lr_id
-        AND object   LIKE @lv_pattern
-        and langu    =    @mv_language.
+    SELECT DISTINCT object id FROM dokhl INTO CORRESPONDING FIELDS OF wa_dokhl
+      WHERE id       IN   lr_id
+        AND object   LIKE lv_pattern
+        AND langu    =    mv_language.
 
       SELECT DISTINCT langu
         INTO TABLE lt_langu_additional
         FROM dokhl
-        WHERE id     =  lv_id
-          AND object =  lv_object
+        WHERE id     =  wa_dokhl-id
+          AND object =  wa_dokhl-object
           AND langu  <> mv_language.
-        SERIALIZE_DOCU( EXPORTING
-                          ii_xml              = ii_xml
-                          iv_obj              = lv_object
-                          iv_id               = lv_id
-                          it_langu_additional = lt_langu_additional
-                          ii_object_oriented_object_fct = ii_object_oriented_object_fct ).
+      serialize_docu( EXPORTING
+                        ii_xml              = ii_xml
+                        iv_obj              = wa_dokhl-object
+                        iv_id               = wa_dokhl-id
+                        it_langu_additional = lt_langu_additional
+                        ii_object_oriented_object_fct = ii_object_oriented_object_fct ).
 
-        if lv_id <> 'CL' and lv_id <> 'IF'.
-          data ls_docu_cat type ty_oo_docu_cat.
-          ls_docu_cat-id = lv_id.
-          ls_docu_cat-comp = lv_object+30(30).
-          APPEND ls_docu_cat to lt_docu_cat.
-        endif.
-      ENDSELECT.
-      ii_xml->add( iv_name = 'DOCU_CAT'
-                   ig_data = lt_docu_cat ).
+      IF wa_dokhl-id <> 'CL' AND wa_dokhl-id <> 'IF'.
+        DATA ls_docu_cat TYPE ty_oo_docu_cat.
+        ls_docu_cat-id = wa_dokhl-id.
+        ls_docu_cat-comp = wa_dokhl-object+30(30).
+        APPEND ls_docu_cat TO lt_docu_cat.
+      ENDIF.
+    ENDSELECT.
+    ii_xml->add( iv_name = 'DOCU_CAT'
+                 ig_data = lt_docu_cat ).
 
-  endmethod.
+  ENDMETHOD.
 
 
   METHOD serialize_cua.
@@ -939,7 +940,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
   ENDMETHOD.
 
 
-  method SERIALIZE_DOCU.
+  METHOD serialize_docu.
     DATA: lt_lines      TYPE tlinetab,
           lv_langu      TYPE sy-langu,
           lt_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_lines,
@@ -984,7 +985,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
       ii_xml->add( iv_name = lv_i18n_name
                    ig_data = lt_i18n_lines ).
     ENDIF.
-  endmethod.
+  ENDMETHOD.
 
 
   METHOD serialize_dynpros.
