@@ -1210,7 +1210,6 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
           lv_answer    TYPE c LENGTH 1,
           lv_default   TYPE i,
           lv_tag       TYPE string,
-          lv_text      TYPE string,
           lt_selection TYPE TABLE OF spopli.
 
     FIELD-SYMBOLS: <ls_sel> LIKE LINE OF lt_selection,
@@ -1272,9 +1271,6 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
     ls_branch = lo_branches->find_by_name( <ls_tag>-name ).
     MOVE-CORRESPONDING ls_branch TO rs_tag.
-
-    lv_text = |Tag switched to { zcl_abapgit_git_tag=>remove_tag_prefix( rs_tag-name ) } |.
-    MESSAGE lv_text TYPE 'S'.
 
   ENDMETHOD.
 
