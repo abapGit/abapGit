@@ -6,37 +6,25 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
       IMPORTING
         is_item     TYPE zif_abapgit_definitions=>ty_item
         iv_language TYPE spras.
-  PROTECTED SECTION.
+protected section.
 
-    METHODS deserialize_proxy
-      IMPORTING
-        !iv_transport TYPE trkorr
-      RAISING
-        zcx_abapgit_exception .
-    METHODS deserialize_abap
-      IMPORTING
-        !ii_xml     TYPE REF TO zif_abapgit_xml_input
-        !iv_package TYPE devclass
-      RAISING
-        zcx_abapgit_exception .
-    METHODS deserialize_docu
-      IMPORTING
-        !ii_xml TYPE REF TO zif_abapgit_xml_input
-      RAISING
-        zcx_abapgit_exception .
-    METHODS serialize_docu
-      IMPORTING
-        !ii_xml              TYPE REF TO zif_abapgit_xml_output
-        !it_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus OPTIONAL
-        !iv_clsname          TYPE seoclsname
-      RAISING
-        zcx_abapgit_exception.
-    METHODS serialize_descr
-      IMPORTING
-        !ii_xml     TYPE REF TO zif_abapgit_xml_output
-        !iv_clsname TYPE seoclsname
-      RAISING
-        zcx_abapgit_exception.
+  methods DESERIALIZE_PROXY
+    importing
+      !IV_TRANSPORT type TRKORR
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods DESERIALIZE_ABAP
+    importing
+      !II_XML type ref to ZIF_ABAPGIT_XML_INPUT
+      !IV_PACKAGE type DEVCLASS
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods SERIALIZE_DESCR
+    importing
+      !II_XML type ref to ZIF_ABAPGIT_XML_OUTPUT
+      !IV_CLSNAME type SEOCLSNAME
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
   PRIVATE SECTION.
 
     DATA mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc .
@@ -97,47 +85,6 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
       it_descriptions = lt_descriptions ).
 
     mi_object_oriented_object_fct->add_to_activation_list( ms_item ).
-  ENDMETHOD.
-
-
-  METHOD deserialize_docu.
-
-    DATA: lt_lines      TYPE tlinetab,
-          lv_object     TYPE dokhl-object,
-          lt_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_lines,
-          ls_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_line.
-
-    ii_xml->read( EXPORTING iv_name = 'LINES'
-                  CHANGING cg_data = lt_lines ).
-
-    lv_object = ms_item-obj_name.
-
-    IF lines( lt_lines ) = 0.
-      mi_object_oriented_object_fct->delete_documentation(
-        iv_id          = 'IF'
-        iv_object_name = lv_object
-        iv_language    = mv_language ).
-      RETURN.
-    ENDIF.
-
-    mi_object_oriented_object_fct->create_documentation(
-      it_lines       = lt_lines
-      iv_id          = 'IF'
-      iv_object_name = lv_object
-      iv_language    = mv_language ).
-
-    ii_xml->read( EXPORTING iv_name = 'I18N_LINES'
-                  CHANGING cg_data = lt_i18n_lines ).
-
-    LOOP AT lt_i18n_lines INTO ls_i18n_lines.
-      mi_object_oriented_object_fct->create_documentation(
-        it_lines         = ls_i18n_lines-lines
-        iv_id            = 'IF'
-        iv_object_name   = lv_object
-        iv_language      = ls_i18n_lines-language
-        iv_no_masterlang = abap_true ).
-    ENDLOOP.
-
   ENDMETHOD.
 
 
@@ -218,53 +165,6 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD serialize_docu.
-
-    DATA: lt_lines      TYPE tlinetab,
-          lv_object     TYPE dokhl-object,
-          lv_langu      TYPE sy-langu,
-          lt_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_lines,
-          ls_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_line.
-
-    lv_object = iv_clsname.
-
-    lt_lines = mi_object_oriented_object_fct->read_documentation(
-      iv_id          = 'IF'
-      iv_object_name = lv_object
-      iv_language    = mv_language ).
-    IF lines( lt_lines ) > 0.
-      ii_xml->add( iv_name = 'LINES'
-                   ig_data = lt_lines ).
-    ENDIF.
-
-    IF ii_xml->i18n_params( )-main_language_only = abap_true.
-      RETURN.
-    ENDIF.
-
-    LOOP AT it_langu_additional INTO lv_langu.
-
-      lt_lines = mi_object_oriented_object_fct->read_documentation(
-        iv_id          = 'IF'
-        iv_object_name = lv_object
-        iv_language    = lv_langu ).
-
-      IF lines( lt_lines ) > 0.
-        CLEAR ls_i18n_lines.
-        ls_i18n_lines-language = lv_langu.
-        ls_i18n_lines-lines    = lt_lines.
-        INSERT ls_i18n_lines INTO TABLE lt_i18n_lines.
-      ENDIF.
-
-    ENDLOOP.
-
-    IF lines( lt_i18n_lines ) > 0.
-      ii_xml->add( iv_name = 'I18N_LINES'
-                   ig_data = lt_i18n_lines ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD serialize_xml.
 
     DATA:
@@ -289,18 +189,11 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
     io_xml->add( iv_name = 'VSEOINTERF'
                  ig_data = ls_vseointerf ).
 
-    " Select all active translations of documentation
-    " Skip main language - it was already serialized
-    SELECT DISTINCT langu
-      INTO TABLE lt_langu_additional
-      FROM dokhl
-      WHERE id     = 'IF'
-        AND object = ls_clskey-clsname
-        AND langu  <> mv_language.
 
-    serialize_docu( ii_xml              = io_xml
-                    iv_clsname          = ls_clskey-clsname
-                    it_langu_additional = lt_langu_additional ).
+    serialize_all_docu( ii_xml                        = io_xml
+                        iv_clsname                    = ls_clskey-clsname
+                        iv_id                         = 'IF'
+                        ii_object_oriented_object_fct = mi_object_oriented_object_fct ).
 
     serialize_descr( ii_xml     = io_xml
                      iv_clsname = ls_clskey-clsname ).
@@ -380,7 +273,10 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
       deserialize_abap( ii_xml     = io_xml
                         iv_package = iv_package ).
 
-      deserialize_docu( io_xml ).
+      deserialize_all_docu(
+        II_OBJECT_ORIENTED_OBJECT_FCT = MI_OBJECT_ORIENTED_OBJECT_FCT
+        II_XML                        = io_xml
+        IV_ID                         = 'IF'        ).
 
     ELSEIF iv_step = zif_abapgit_object=>gc_step_id-early.
 

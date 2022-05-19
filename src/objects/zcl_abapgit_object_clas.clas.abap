@@ -26,11 +26,6 @@ protected section.
       !IV_PACKAGE type DEVCLASS
     raising
       ZCX_ABAPGIT_EXCEPTION .
-  methods DESERIALIZE_DOCU
-    importing
-      !II_XML type ref to ZIF_ABAPGIT_XML_INPUT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
   methods DESERIALIZE_TPOOL
     importing
       !II_XML type ref to ZIF_ABAPGIT_XML_INPUT
@@ -59,15 +54,6 @@ protected section.
       !IV_CLSNAME type SEOCLSNAME
     raising
       ZCX_ABAPGIT_EXCEPTION .
-  methods SERIALIZE_DOCU
-    importing
-      !II_XML type ref to ZIF_ABAPGIT_XML_OUTPUT
-      !IV_LANGU type DOKHL-LANGU optional
-      !IV_OBJ type DOKHL-OBJECT
-      !IV_ID type DOKHL-ID
-      !IV_IS_LANGU_ADDITIONAL type ABAP_BOOL
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
   methods SERIALIZE_TPOOL
     importing
       !II_XML type ref to ZIF_ABAPGIT_XML_OUTPUT
@@ -92,12 +78,6 @@ protected section.
       ZCX_ABAPGIT_EXCEPTION .
 private section.
 
-  methods SERIALIZE_ALL_DOCU
-    importing
-      !II_XML type ref to ZIF_ABAPGIT_XML_OUTPUT
-      !IV_CLSNAME type SEOCLSNAME
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
   methods DESERIALIZE_PRE_DDIC
     importing
       !II_XML type ref to ZIF_ABAPGIT_XML_INPUT
@@ -200,47 +180,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
       it_descriptions = lt_descriptions ).
 
     mi_object_oriented_object_fct->add_to_activation_list( ms_item ).
-
-  ENDMETHOD.
-
-
-  METHOD deserialize_docu.
-
-    DATA: lt_lines      TYPE tlinetab,
-          lv_object     TYPE dokhl-object,
-          lt_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_lines,
-          ls_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_line.
-
-    ii_xml->read( EXPORTING iv_name = 'LINES'
-                  CHANGING cg_data = lt_lines ).
-
-    lv_object = ms_item-obj_name.
-
-    IF lines( lt_lines ) = 0.
-      mi_object_oriented_object_fct->delete_documentation(
-        iv_id          = 'CL'
-        iv_object_name = lv_object
-        iv_language    = mv_language ).
-      RETURN.
-    ENDIF.
-
-    mi_object_oriented_object_fct->create_documentation(
-      it_lines       = lt_lines
-      iv_id          = 'CL'
-      iv_object_name = lv_object
-      iv_language    = mv_language ).
-
-    ii_xml->read( EXPORTING iv_name = 'I18N_LINES'
-                  CHANGING cg_data = lt_i18n_lines ).
-
-    LOOP AT lt_i18n_lines INTO ls_i18n_lines.
-      mi_object_oriented_object_fct->create_documentation(
-        it_lines         = ls_i18n_lines-lines
-        iv_id            = 'CL'
-        iv_object_name   = lv_object
-        iv_language      = ls_i18n_lines-language
-        iv_no_masterlang = abap_true ).
-    ENDLOOP.
 
   ENDMETHOD.
 
@@ -372,27 +311,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
   ENDMETHOD.
 
 
-  method SERIALIZE_ALL_DOCU.
-    data lv_pattern type string.
-    data wa_dokhl type dokhl.
-    concatenate iv_clsname '%' into lv_pattern RESPECTING BLANKS.
-    SELECT * FROM DOKHL INTO WA_DOKHL
-      WHERE id     IN ('CL','CA','CE','CO','IF','IA','IE','IO')
-        AND object LIKE lv_pattern.
-      data lv_is_langu_additional TYPE ABAP_BOOL VALUE ABAP_FALSE.
-      IF wa_dokhl-langu <> mv_language.
-        lv_is_langu_additional = abap_false.
-      ENDIF.
-      SERIALIZE_DOCU( ii_xml              = ii_xml
-                      iv_obj              = wa_dokhl-object
-                      iv_id               = wa_dokhl-id
-                      iv_langu            = wa_dokhl-langu
-                      iv_is_langu_additional = lv_is_langu_additional ).
-    ENDSELECT.
-
-  endmethod.
-
-
   METHOD serialize_attr.
 
     DATA: lt_attributes TYPE zif_abapgit_definitions=>ty_obj_attribute_tt.
@@ -427,57 +345,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
 
     ii_xml->add( iv_name = 'DESCRIPTIONS'
                  ig_data = lt_descriptions ).
-
-  ENDMETHOD.
-
-
-  METHOD serialize_docu.
-    DATA: lt_lines      TYPE tlinetab,
-          lv_object     TYPE dokhl-object,
-          lv_langu      TYPE sy-langu,
-          lt_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_lines,
-          ls_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_line,
-          lv_name       TYPE string,
-          lv_i18n_name  TYPE string.
-
-    " XML for SOTR will use hyphen as a delimiter between class and component
-    " this is guaranteed to never be used by SAP as a valid character in class
-    " or components, because it is already the ABAP field separater
-    CONSTANTS: c_delimiter TYPE C VALUE '-'.
-
-    IF iv_is_langu_additional = ABAP_TRUE.
-      " don't serialize additional languages if configured to skip them
-      IF ii_xml->i18n_params( )-main_language_only = abap_true.
-        RETURN.
-      ELSE.
-        " otherwise use the special XML tag for additional languages
-        lv_name = 'I18N_LINES'.
-      ENDIF.
-    ELSE.
-      " otherwise use the regular tag for the main language
-      lv_name = 'LINES'.
-    ENDIF.
-
-    " append the object and component name if we're serializing
-    " attribute, method or event documentation
-    IF iv_id <> 'CL' AND iv_id <> 'IF'.
-      CONCATENATE   lv_name
-        c_delimiter iv_id
-        c_delimiter iv_obj(30)
-        c_delimiter iv_obj+30(30)
-        INTO lv_name.
-    ENDIF.
-
-    lv_object = iv_obj.
-
-    lt_lines = mi_object_oriented_object_fct->read_documentation(
-      iv_id          = iv_id
-      iv_object_name = lv_object
-      iv_language    = iv_langu ).
-    IF lines( lt_lines ) > 0.
-      ii_xml->add( iv_name = lv_name
-                   ig_data = lt_lines ).
-    ENDIF.
 
   ENDMETHOD.
 
@@ -606,8 +473,10 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
       serialize_sotr( ii_xml ).
     ENDIF.
 
-    serialize_all_docu( ii_xml              = ii_xml
-                        iv_clsname          = ls_clskey-clsname ).
+    serialize_all_docu( ii_xml                        = ii_xml
+                        iv_clsname                    = ls_clskey-clsname
+                        iv_id                         = 'CL'
+                        ii_object_oriented_object_fct = mi_object_oriented_object_fct ).
 
     serialize_descr( ii_xml     = ii_xml
                      iv_clsname = ls_clskey-clsname ).
@@ -699,7 +568,10 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
       deserialize_sotr( ii_ml     = io_xml
                         iv_package = iv_package ).
 
-      deserialize_docu( io_xml ).
+      deserialize_all_docu(
+        II_OBJECT_ORIENTED_OBJECT_FCT = MI_OBJECT_ORIENTED_OBJECT_FCT
+        II_XML                        = io_xml
+        IV_ID                         = 'CL' ).
 
     ELSEIF iv_step = zif_abapgit_object=>gc_step_id-early.
 
