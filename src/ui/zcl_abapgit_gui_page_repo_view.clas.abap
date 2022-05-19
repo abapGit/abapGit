@@ -241,7 +241,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
       INSERT ls_sort INTO TABLE lt_sort.
     ENDIF.
 
-    IF mv_order_by = 'TRANSPORT'.
+    " Use object name as secondary sort criteria
+    IF mv_order_by <> 'OBJ_NAME'.
       ls_sort-name = 'OBJ_NAME'.
       INSERT ls_sort INTO TABLE lt_sort.
     ENDIF.
@@ -253,11 +254,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
     INSERT LINES OF lt_diff_items INTO TABLE ct_repo_items.
     INSERT LINES OF lt_code_items INTO TABLE ct_repo_items.
 
-    IF mv_order_by = 'TRANSPORT'.
-      LOOP AT ct_repo_items ASSIGNING <ls_repo_item>.
-        order_files( CHANGING ct_files = <ls_repo_item>-files ).
-      ENDLOOP.
-    ENDIF.
+    " Files are listed under the object names so we always sort them by name
+    LOOP AT ct_repo_items ASSIGNING <ls_repo_item>.
+      order_files( CHANGING ct_files = <ls_repo_item>-files ).
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -766,7 +766,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
     ls_sort-descending = mv_order_descending.
     ls_sort-astext     = abap_true.
-    ls_sort-name       = 'TRANSPORT'.
+    ls_sort-name       = 'PATH'.
     INSERT ls_sort INTO TABLE lt_sort.
 
     ls_sort-descending = mv_order_descending.
@@ -826,7 +826,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
         lt_repo_items = lo_browser->list( iv_path         = mv_cur_dir
                                           iv_by_folders   = mv_show_folders
-                                          iv_changes_only = mv_changes_only ).
+                                          iv_changes_only = mv_changes_only
+                                          iv_transports   = mv_are_changes_recorded_in_tr ).
 
         apply_order_by( CHANGING ct_repo_items = lt_repo_items ).
 
@@ -1130,25 +1131,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
   METHOD render_item_transport.
 
-    DATA:
-      ls_item      TYPE zif_abapgit_definitions=>ty_item,
-      lv_transport TYPE trkorr.
-
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( '<td class="transport">' ).
 
-    ls_item-obj_type = is_item-obj_type.
-    ls_item-obj_name = is_item-obj_name.
-
-    TRY.
-        lv_transport = zcl_abapgit_factory=>get_cts_api( )->get_transport_for_object( ls_item ).
-        IF lv_transport IS NOT INITIAL.
-          ri_html->add( zcl_abapgit_gui_chunk_lib=>render_transport( iv_transport = lv_transport ) ).
-        ENDIF.
-      CATCH zcx_abapgit_exception ##NO_HANDLER.
-        " Ignore errors related to object check when trying to get transport
-    ENDTRY.
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_transport( is_item-transport ) ).
 
     ri_html->add( '</td>' ).
 
