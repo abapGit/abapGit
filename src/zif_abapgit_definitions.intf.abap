@@ -317,6 +317,7 @@ INTERFACE zif_abapgit_definitions
       rstate     TYPE ty_item_state,
       files      TYPE ty_repo_file_tt,
       changed_by TYPE syuname,
+      transport  TYPE trkorr,
       packmove   TYPE abap_bool,
       srcsystem  TYPE tadir-srcsystem,
     END OF ty_repo_item .
