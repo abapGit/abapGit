@@ -880,14 +880,16 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
     SELECT DISTINCT object id FROM dokhl INTO CORRESPONDING FIELDS OF wa_dokhl
       WHERE id       IN   lr_id
         AND object   LIKE lv_pattern
-        AND langu    =    mv_language.
+        AND langu    =    mv_language
+      order by object id.
 
       SELECT DISTINCT langu
         INTO TABLE lt_langu_additional
         FROM dokhl
         WHERE id     =  wa_dokhl-id
           AND object =  wa_dokhl-object
-          AND langu  <> mv_language.
+          AND langu  <> mv_language
+        order by langu.
       serialize_docu( EXPORTING
                         ii_xml              = ii_xml
                         iv_obj              = wa_dokhl-object
