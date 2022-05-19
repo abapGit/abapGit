@@ -405,8 +405,12 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
           lt_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_lines,
           ls_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_line.
 
-    lv_name      = make_docu_tag( iv_prefix = 'LINES'       iv_id = iv_id     iv_comp = iv_comp ).
-    lv_i18n_name = make_docu_tag( iv_prefix = 'I18N_LINES'  iv_id = iv_id     iv_comp = iv_comp ).
+    lv_name      = make_docu_tag( iv_prefix = 'LINES'
+                                  iv_id = iv_id
+                                  iv_comp = iv_comp ).
+    lv_i18n_name = make_docu_tag( iv_prefix = 'I18N_LINES'
+                                  iv_id = iv_id
+                                  iv_comp = iv_comp ).
 
     ii_xml->read( EXPORTING iv_name = lv_name
                   CHANGING cg_data = lt_lines ).
@@ -854,25 +858,32 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
     DATA lv_pattern TYPE string.
     DATA lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus.
     DATA lr_id TYPE RANGE OF dokhl-id.
-    DATA wa_id LIKE LINE OF lr_id.
+    DATA ls_id LIKE LINE OF lr_id.
     DATA: BEGIN OF wa_dokhl,
             id     TYPE doku_id,
             object TYPE doku_obj,
           END OF wa_dokhl.
+    DATA ls_docu_cat TYPE ty_oo_docu_cat.
 
-    wa_id-sign = 'I'.
-    wa_id-option = 'EQ'.
-    wa_id-low = iv_id.
-    APPEND wa_id TO lr_id.
+    ls_id-sign = 'I'.
+    ls_id-option = 'EQ'.
+    ls_id-low = iv_id.
+    APPEND ls_id TO lr_id.
 
     IF iv_id = 'CL'.
-      wa_id-low = 'CA'.  APPEND wa_id TO lr_id.
-      wa_id-low = 'CE'.  APPEND wa_id TO lr_id.
-      wa_id-low = 'CO'.  APPEND wa_id TO lr_id.
+      ls_id-low = 'CA'.
+      APPEND ls_id TO lr_id.
+      ls_id-low = 'CE'.
+      APPEND ls_id TO lr_id.
+      ls_id-low = 'CO'.
+      APPEND ls_id TO lr_id.
     ELSE.
-      wa_id-low = 'IA'.  APPEND wa_id TO lr_id.
-      wa_id-low = 'IE'.  APPEND wa_id TO lr_id.
-      wa_id-low = 'IO'.  APPEND wa_id TO lr_id.
+      ls_id-low = 'IA'.
+      APPEND ls_id TO lr_id.
+      ls_id-low = 'IE'.
+      APPEND ls_id TO lr_id.
+      ls_id-low = 'IO'.
+      APPEND ls_id TO lr_id.
     ENDIF.
 
     CONCATENATE iv_clsname '%' INTO lv_pattern RESPECTING BLANKS.
@@ -890,15 +901,14 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
           AND object =  wa_dokhl-object
           AND langu  <> mv_language
         ORDER BY langu.
-      serialize_docu( EXPORTING
-                        ii_xml              = ii_xml
+      serialize_docu(   ii_xml              = ii_xml
                         iv_obj              = wa_dokhl-object
                         iv_id               = wa_dokhl-id
                         it_langu_additional = lt_langu_additional
                         ii_object_oriented_object_fct = ii_object_oriented_object_fct ).
 
       IF wa_dokhl-id <> 'CL' AND wa_dokhl-id <> 'IF'.
-        DATA ls_docu_cat TYPE ty_oo_docu_cat.
+        CLEAR ls_docu_cat.
         ls_docu_cat-id = wa_dokhl-id.
         ls_docu_cat-comp = wa_dokhl-object+30(30).
         APPEND ls_docu_cat TO lt_docu_cat.
@@ -952,8 +962,12 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 
     " append the object and component name if we're serializing
     " attribute, method or event documentation
-    lv_name      = make_docu_tag( iv_prefix = 'LINES'       iv_id = iv_id iv_comp = iv_obj+30(30) ).
-    lv_i18n_name = make_docu_tag( iv_prefix = 'I18N_LINES'  iv_id = iv_id iv_comp = iv_obj+30(30) ).
+    lv_name      = make_docu_tag( iv_prefix = 'LINES'
+                                  iv_id = iv_id
+                                  iv_comp = iv_obj+30(30) ).
+    lv_i18n_name = make_docu_tag( iv_prefix = 'I18N_LINES'
+                                  iv_id = iv_id
+                                  iv_comp = iv_obj+30(30) ).
 
     lt_lines = ii_object_oriented_object_fct->read_documentation(
       iv_id          = iv_id
