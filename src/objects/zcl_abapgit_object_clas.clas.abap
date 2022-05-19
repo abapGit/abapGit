@@ -14,87 +14,87 @@ CLASS zcl_abapgit_object_clas DEFINITION
       IMPORTING
         !is_item     TYPE zif_abapgit_definitions=>ty_item
         !iv_language TYPE spras .
-protected section.
+  PROTECTED SECTION.
 
-  data MI_OBJECT_ORIENTED_OBJECT_FCT type ref to ZIF_ABAPGIT_OO_OBJECT_FNC .
-  data MV_SKIP_TESTCLASS type ABAP_BOOL .
-  data MV_CLASSPOOL_NAME type PROGNAME .
+    DATA mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc .
+    DATA mv_skip_testclass TYPE abap_bool .
+    DATA mv_classpool_name TYPE progname .
 
-  methods DESERIALIZE_ABAP
-    importing
-      !II_XML type ref to ZIF_ABAPGIT_XML_INPUT
-      !IV_PACKAGE type DEVCLASS
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods DESERIALIZE_TPOOL
-    importing
-      !II_XML type ref to ZIF_ABAPGIT_XML_INPUT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods DESERIALIZE_SOTR
-    importing
-      !II_ML type ref to ZIF_ABAPGIT_XML_INPUT
-      !IV_PACKAGE type DEVCLASS
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods SERIALIZE_XML
-    importing
-      !II_XML type ref to ZIF_ABAPGIT_XML_OUTPUT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods SERIALIZE_ATTR
-    importing
-      !II_XML type ref to ZIF_ABAPGIT_XML_OUTPUT
-      !IV_CLSNAME type SEOCLSNAME
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods SERIALIZE_DESCR
-    importing
-      !II_XML type ref to ZIF_ABAPGIT_XML_OUTPUT
-      !IV_CLSNAME type SEOCLSNAME
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods SERIALIZE_TPOOL
-    importing
-      !II_XML type ref to ZIF_ABAPGIT_XML_OUTPUT
-      !IT_LANGU_ADDITIONAL type ZIF_ABAPGIT_LANG_DEFINITIONS=>TY_LANGUS optional
-      !IV_CLSNAME type SEOCLSNAME
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods SERIALIZE_SOTR
-    importing
-      !II_XML type ref to ZIF_ABAPGIT_XML_OUTPUT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods SOURCE_APACK_REPLACEMENT
-    changing
-      !CT_SOURCE type SEOP_SOURCE_STRING
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods REPO_APACK_REPLACEMENT
-    changing
-      !CT_SOURCE type SEOP_SOURCE_STRING
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-private section.
+    METHODS deserialize_abap
+      IMPORTING
+        !ii_xml     TYPE REF TO zif_abapgit_xml_input
+        !iv_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception .
+    METHODS deserialize_tpool
+      IMPORTING
+        !ii_xml TYPE REF TO zif_abapgit_xml_input
+      RAISING
+        zcx_abapgit_exception .
+    METHODS deserialize_sotr
+      IMPORTING
+        !ii_ml      TYPE REF TO zif_abapgit_xml_input
+        !iv_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception .
+    METHODS serialize_xml
+      IMPORTING
+        !ii_xml TYPE REF TO zif_abapgit_xml_output
+      RAISING
+        zcx_abapgit_exception .
+    METHODS serialize_attr
+      IMPORTING
+        !ii_xml     TYPE REF TO zif_abapgit_xml_output
+        !iv_clsname TYPE seoclsname
+      RAISING
+        zcx_abapgit_exception .
+    METHODS serialize_descr
+      IMPORTING
+        !ii_xml     TYPE REF TO zif_abapgit_xml_output
+        !iv_clsname TYPE seoclsname
+      RAISING
+        zcx_abapgit_exception .
+    METHODS serialize_tpool
+      IMPORTING
+        !ii_xml              TYPE REF TO zif_abapgit_xml_output
+        !it_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus OPTIONAL
+        !iv_clsname          TYPE seoclsname
+      RAISING
+        zcx_abapgit_exception .
+    METHODS serialize_sotr
+      IMPORTING
+        !ii_xml TYPE REF TO zif_abapgit_xml_output
+      RAISING
+        zcx_abapgit_exception .
+    METHODS source_apack_replacement
+      CHANGING
+        !ct_source TYPE seop_source_string
+      RAISING
+        zcx_abapgit_exception .
+    METHODS repo_apack_replacement
+      CHANGING
+        !ct_source TYPE seop_source_string
+      RAISING
+        zcx_abapgit_exception .
+  PRIVATE SECTION.
 
-  methods DESERIALIZE_PRE_DDIC
-    importing
-      !II_XML type ref to ZIF_ABAPGIT_XML_INPUT
-      !IV_PACKAGE type DEVCLASS
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods IS_CLASS_LOCKED
-    returning
-      value(RV_IS_CLASS_LOCKED) type ABAP_BOOL
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods INTERFACE_REPLACEMENT
-    importing
-      !IV_FROM_INTERFACE type SEOCLSNAME
-      !IV_TO_INTERFACE type SEOCLSNAME
-    changing
-      !CT_SOURCE type SEOP_SOURCE_STRING .
+    METHODS deserialize_pre_ddic
+      IMPORTING
+        !ii_xml     TYPE REF TO zif_abapgit_xml_input
+        !iv_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception .
+    METHODS is_class_locked
+      RETURNING
+        VALUE(rv_is_class_locked) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
+    METHODS interface_replacement
+      IMPORTING
+        !iv_from_interface TYPE seoclsname
+        !iv_to_interface   TYPE seoclsname
+      CHANGING
+        !ct_source         TYPE seop_source_string .
 ENDCLASS.
 
 
@@ -569,9 +569,9 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
                         iv_package = iv_package ).
 
       deserialize_all_docu(
-        II_OBJECT_ORIENTED_OBJECT_FCT = MI_OBJECT_ORIENTED_OBJECT_FCT
-        II_XML                        = io_xml
-        IV_ID                         = 'CL' ).
+        ii_object_oriented_object_fct = mi_object_oriented_object_fct
+        ii_xml                        = io_xml
+        iv_id                         = 'CL' ).
 
     ELSEIF iv_step = zif_abapgit_object=>gc_step_id-early.
 

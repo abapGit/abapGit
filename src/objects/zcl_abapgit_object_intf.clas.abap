@@ -6,25 +6,25 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
       IMPORTING
         is_item     TYPE zif_abapgit_definitions=>ty_item
         iv_language TYPE spras.
-protected section.
+  PROTECTED SECTION.
 
-  methods DESERIALIZE_PROXY
-    importing
-      !IV_TRANSPORT type TRKORR
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods DESERIALIZE_ABAP
-    importing
-      !II_XML type ref to ZIF_ABAPGIT_XML_INPUT
-      !IV_PACKAGE type DEVCLASS
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods SERIALIZE_DESCR
-    importing
-      !II_XML type ref to ZIF_ABAPGIT_XML_OUTPUT
-      !IV_CLSNAME type SEOCLSNAME
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
+    METHODS deserialize_proxy
+      IMPORTING
+        !iv_transport TYPE trkorr
+      RAISING
+        zcx_abapgit_exception .
+    METHODS deserialize_abap
+      IMPORTING
+        !ii_xml     TYPE REF TO zif_abapgit_xml_input
+        !iv_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception .
+    METHODS serialize_descr
+      IMPORTING
+        !ii_xml     TYPE REF TO zif_abapgit_xml_output
+        !iv_clsname TYPE seoclsname
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
 
     DATA mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc .
@@ -90,8 +90,8 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
   METHOD deserialize_pre_ddic.
 
-    DATA: ls_vseointerf   TYPE vseointerf,
-          ls_clskey       TYPE seoclskey.
+    DATA: ls_vseointerf TYPE vseointerf,
+          ls_clskey     TYPE seoclskey.
 
     ls_clskey-clsname = ms_item-obj_name.
 
@@ -168,9 +168,9 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
   METHOD serialize_xml.
 
     DATA:
-      ls_vseointerf         TYPE vseointerf,
-      ls_clskey             TYPE seoclskey,
-      lt_langu_additional   TYPE zif_abapgit_lang_definitions=>ty_langus.
+      ls_vseointerf       TYPE vseointerf,
+      ls_clskey           TYPE seoclskey,
+      lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus.
 
     ls_clskey-clsname = ms_item-obj_name.
 
@@ -274,9 +274,9 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
                         iv_package = iv_package ).
 
       deserialize_all_docu(
-        II_OBJECT_ORIENTED_OBJECT_FCT = MI_OBJECT_ORIENTED_OBJECT_FCT
-        II_XML                        = io_xml
-        IV_ID                         = 'IF'        ).
+        ii_object_oriented_object_fct = mi_object_oriented_object_fct
+        ii_xml                        = io_xml
+        iv_id                         = 'IF'        ).
 
     ELSEIF iv_step = zif_abapgit_object=>gc_step_id-early.
 
