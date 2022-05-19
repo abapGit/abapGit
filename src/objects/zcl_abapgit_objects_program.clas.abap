@@ -198,7 +198,7 @@ CLASS zcl_abapgit_objects_program DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
         !iv_id        TYPE doku_id
         !iv_comp      TYPE clike
       RETURNING
-        VALUE(ov_tag) TYPE string .
+        VALUE(rv_tag) TYPE string .
     METHODS uncondense_flow
       IMPORTING
         !it_flow       TYPE swydyflow
@@ -795,9 +795,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 
   METHOD make_docu_tag.
     IF iv_id = 'IF' OR iv_id = 'CL'.
-      ov_tag = iv_prefix.  " LINES or I18N_LINES
+      rv_tag = iv_prefix.  " LINES or I18N_LINES
     ELSE.
-      CONCATENATE iv_prefix '_' iv_id '_' iv_comp INTO ov_tag.
+      CONCATENATE iv_prefix '_' iv_id '_' iv_comp INTO rv_tag.
     ENDIF.
   ENDMETHOD.
 
@@ -859,10 +859,10 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
     DATA lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus.
     DATA lr_id TYPE RANGE OF dokhl-id.
     DATA ls_id LIKE LINE OF lr_id.
-    DATA: BEGIN OF wa_dokhl,
+    DATA: BEGIN OF ls_dokhl,
             id     TYPE doku_id,
             object TYPE doku_obj,
-          END OF wa_dokhl.
+          END OF ls_dokhl.
     DATA ls_docu_cat TYPE ty_oo_docu_cat.
 
     ls_id-sign = 'I'.
@@ -888,7 +888,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 
     CONCATENATE iv_clsname '%' INTO lv_pattern RESPECTING BLANKS.
 
-    SELECT DISTINCT object id FROM dokhl INTO CORRESPONDING FIELDS OF wa_dokhl
+    SELECT DISTINCT object id FROM dokhl INTO CORRESPONDING FIELDS OF ls_dokhl
       WHERE id       IN   lr_id
         AND object   LIKE lv_pattern
         AND langu    =    mv_language
@@ -897,20 +897,20 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
       SELECT DISTINCT langu
         INTO TABLE lt_langu_additional
         FROM dokhl
-        WHERE id     =  wa_dokhl-id
-          AND object =  wa_dokhl-object
+        WHERE id     =  ls_dokhl-id
+          AND object =  ls_dokhl-object
           AND langu  <> mv_language
         ORDER BY langu.
       serialize_docu(   ii_xml              = ii_xml
-                        iv_obj              = wa_dokhl-object
-                        iv_id               = wa_dokhl-id
+                        iv_obj              = ls_dokhl-object
+                        iv_id               = ls_dokhl-id
                         it_langu_additional = lt_langu_additional
                         ii_object_oriented_object_fct = ii_object_oriented_object_fct ).
 
-      IF wa_dokhl-id <> 'CL' AND wa_dokhl-id <> 'IF'.
+      IF ls_dokhl-id <> 'CL' AND ls_dokhl-id <> 'IF'.
         CLEAR ls_docu_cat.
-        ls_docu_cat-id = wa_dokhl-id.
-        ls_docu_cat-comp = wa_dokhl-object+30(30).
+        ls_docu_cat-id = ls_dokhl-id.
+        ls_docu_cat-comp = ls_dokhl-object+30(30).
         APPEND ls_docu_cat TO lt_docu_cat.
       ENDIF.
     ENDSELECT.
