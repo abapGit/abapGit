@@ -181,6 +181,8 @@ CLASS zcl_abapgit_objects_program DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
         !iv_obj                        TYPE dokhl-object
         !iv_id                         TYPE dokhl-id
         !ii_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc
+      RETURNING
+        VALUE(rv_num_lines)            TYPE i
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize_docu
@@ -306,7 +308,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 
     deserialize_docu(
       ii_xml                        = ii_xml
-      iv_id = iv_id
+      iv_id                         = iv_id
       iv_clsname                    = ms_item-obj_name
       ii_object_oriented_object_fct = ii_object_oriented_object_fct ).
 
@@ -855,7 +857,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
   METHOD serialize_all_docu.
     DATA: lt_docu_cat TYPE ty_oo_docu_cat_tt. " catalog of component docu
 
-    DATA lv_pattern TYPE string.
+    DATA lv_pattern(31).
     DATA lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus.
     DATA lr_id TYPE RANGE OF dokhl-id.
     DATA ls_id LIKE LINE OF lr_id.
@@ -864,6 +866,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
             object TYPE doku_obj,
           END OF ls_dokhl.
     DATA ls_docu_cat TYPE ty_oo_docu_cat.
+    DATA lv_num_lines TYPE i.
 
     ls_id-sign = 'I'.
     ls_id-option = 'EQ'.
@@ -886,7 +889,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
       APPEND ls_id TO lr_id.
     ENDIF.
 
-    CONCATENATE iv_clsname '%' INTO lv_pattern RESPECTING BLANKS.
+    lv_pattern = iv_clsname.
+    lv_pattern+30 = '%'.
 
     SELECT DISTINCT object id FROM dokhl INTO CORRESPONDING FIELDS OF ls_dokhl
       WHERE id       IN   lr_id
@@ -901,13 +905,13 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
           AND object =  ls_dokhl-object
           AND langu  <> mv_language
         ORDER BY langu.
-      serialize_docu(   ii_xml              = ii_xml
-                        iv_obj              = ls_dokhl-object
-                        iv_id               = ls_dokhl-id
-                        it_langu_additional = lt_langu_additional
-                        ii_object_oriented_object_fct = ii_object_oriented_object_fct ).
+      lv_num_lines = serialize_docu( ii_xml              = ii_xml
+                                     iv_obj              = ls_dokhl-object
+                                     iv_id               = ls_dokhl-id
+                                     it_langu_additional = lt_langu_additional
+                                     ii_object_oriented_object_fct = ii_object_oriented_object_fct ).
 
-      IF ls_dokhl-id <> 'CL' AND ls_dokhl-id <> 'IF'.
+      IF lv_num_lines > 0 AND ls_dokhl-id <> 'CL' AND ls_dokhl-id <> 'IF'.
         CLEAR ls_docu_cat.
         ls_docu_cat-id = ls_dokhl-id.
         ls_docu_cat-comp = ls_dokhl-object+30(30).
@@ -974,7 +978,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
       iv_object_name = iv_obj
       iv_language    = mv_language ).
 
-    IF lines( lt_lines ) > 0.
+    rv_num_lines = lines( lt_lines ).
+    IF rv_num_lines > 0.
       ii_xml->add( iv_name = lv_name
                    ig_data = lt_lines ).
     ENDIF.

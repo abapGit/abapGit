@@ -276,7 +276,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
       deserialize_all_docu(
         ii_object_oriented_object_fct = mi_object_oriented_object_fct
         ii_xml                        = io_xml
-        iv_id                         = 'IF'        ).
+        iv_id                         = 'IF' ).
 
     ELSEIF iv_step = zif_abapgit_object=>gc_step_id-early.
 
