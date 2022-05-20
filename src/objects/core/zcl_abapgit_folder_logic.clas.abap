@@ -50,7 +50,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
 
 
   METHOD get_instance.
@@ -162,7 +162,8 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
           lt_unique_package_names TYPE HASHED TABLE OF devclass WITH UNIQUE KEY table_line.
 
     lv_length  = strlen( io_dot->get_starting_folder( ) ).
-    IF lv_length > strlen( iv_path ).
+    IF lv_length > strlen( iv_path )
+    OR iv_path = '/data/'.
 * treat as not existing locally
       RETURN.
     ENDIF.
