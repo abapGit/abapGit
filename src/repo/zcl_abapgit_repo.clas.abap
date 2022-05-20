@@ -304,6 +304,37 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       ii_config  = get_data_config( )
       it_files   = get_files_remote( ) ).
 
+    " Update database
+    DATA ls_result      TYPE zif_abapgit_data_deserializer=>ty_result.
+    DATA ls_overwrite   TYPE zif_abapgit_definitions=>ty_overwrite.
+    FIELD-SYMBOLS <tab> TYPE ANY TABLE.
+
+    LOOP AT lt_result INTO ls_result.
+      READ TABLE is_checks-overwrite INTO ls_overwrite WITH KEY obj_type = 'TABU' obj_name = ls_result-table.
+      IF sy-subrc <> 0 OR ls_overwrite-decision <> 'Y'.
+        CONTINUE.
+      ENDIF.
+
+      IF ls_result-deletes IS BOUND.
+        ASSIGN ls_result-deletes->* TO <tab>.
+        IF <tab> IS NOT INITIAL.
+          DELETE (ls_result-table) FROM TABLE <tab>.
+        ENDIF.
+      ENDIF.
+      IF ls_result-inserts IS BOUND.
+        ASSIGN ls_result-inserts->* TO <tab>.
+        IF <tab> IS NOT INITIAL.
+          INSERT (ls_result-table) FROM TABLE <tab>.
+        ENDIF.
+      ENDIF.
+      IF ls_result-updates IS BOUND.
+        ASSIGN ls_result-updates->* TO <tab>.
+        IF <tab> IS NOT INITIAL.
+          MODIFY (ls_result-table) FROM TABLE <tab>.
+        ENDIF.
+      ENDIF.
+    ENDLOOP.
+
     CLEAR: mt_local.
 
     update_last_deserialize( ).
