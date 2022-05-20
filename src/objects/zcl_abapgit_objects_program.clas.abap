@@ -857,7 +857,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
   METHOD serialize_all_docu.
     DATA: lt_docu_cat TYPE ty_oo_docu_cat_tt. " catalog of component docu
 
-    DATA lv_pattern(31).
+    DATA lv_pattern TYPE c LENGTH 31.
     DATA lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus.
     DATA lr_id TYPE RANGE OF dokhl-id.
     DATA ls_id LIKE LINE OF lr_id.
