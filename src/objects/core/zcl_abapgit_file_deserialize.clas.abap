@@ -120,7 +120,7 @@ CLASS ZCL_ABAPGIT_FILE_DESERIALIZE IMPLEMENTATION.
     ENDIF.
 
     "ignore table content
-    DELETE rt_results WHERE path = '/data/'.
+    DELETE rt_results WHERE path = zif_abapgit_data_config=>c_default_path.
 
     SORT rt_results
       BY obj_type ASCENDING

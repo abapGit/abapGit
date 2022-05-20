@@ -163,7 +163,7 @@ CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
 
     lv_length  = strlen( io_dot->get_starting_folder( ) ).
     IF lv_length > strlen( iv_path )
-    OR iv_path = '/data/'.
+    OR iv_path = zif_abapgit_data_config=>c_default_path.
 * treat as not existing locally
       RETURN.
     ENDIF.
