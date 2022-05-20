@@ -119,6 +119,9 @@ CLASS ZCL_ABAPGIT_FILE_DESERIALIZE IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
+    "ignore table content
+    DELETE rt_results WHERE path = '/data/'.
+
     SORT rt_results
       BY obj_type ASCENDING
          obj_name ASCENDING
