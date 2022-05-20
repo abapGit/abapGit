@@ -485,18 +485,18 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
     ENDLOOP.
 
     IF mo_repo->has_remote_source( ) = abap_true.
-      LOOP AT it_remote ASSIGNING <ls_remote>.
-        ls_info_file = read_stats_file( <ls_remote> ).
-
-        ls_info_remote-size = ls_info_remote-size + ls_info_file-size.
-        ls_info_remote-line = ls_info_remote-line + ls_info_file-line.
-        ls_info_remote-sloc = ls_info_remote-sloc + ls_info_file-sloc.
-
+      LOOP AT it_remote ASSIGNING <ls_remote> WHERE filename IS NOT INITIAL.
         lv_ignored = mo_repo->get_dot_abapgit( )->is_ignored(
                        iv_filename = <ls_remote>-filename
                        iv_path     = <ls_remote>-path ).
 
-        IF <ls_remote>-filename IS NOT INITIAL AND lv_ignored = abap_false.
+        IF lv_ignored = abap_false.
+          ls_info_file = read_stats_file( <ls_remote> ).
+
+          ls_info_remote-size = ls_info_remote-size + ls_info_file-size.
+          ls_info_remote-line = ls_info_remote-line + ls_info_file-line.
+          ls_info_remote-sloc = ls_info_remote-sloc + ls_info_file-sloc.
+
           TRY.
               zcl_abapgit_filename_logic=>file_to_object(
                 EXPORTING
