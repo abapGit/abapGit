@@ -82,6 +82,10 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
           <ls_tadir>-korrnum = '999000'.
         WHEN 'DOMA'.
           <ls_tadir>-korrnum = '900000'.
+        WHEN 'SPRX'.
+          <ls_tadir>-korrnum = '850000'.
+        WHEN 'WEBI'.
+          <ls_tadir>-korrnum = '840000'.
         WHEN 'PARA'.
           " PARA after DTEL
           <ls_tadir>-korrnum = '810000'.
@@ -150,6 +154,10 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
           <ls_tadir>-korrnum = '220000'.
         WHEN 'IDOC'.
           <ls_tadir>-korrnum = '200000'.
+        WHEN 'IOBJ'.
+          <ls_tadir>-korrnum = '195000'.
+        WHEN 'ODSO'.
+          <ls_tadir>-korrnum = '190000'.
         WHEN 'WDCA'.
           <ls_tadir>-korrnum = '174000'.
         WHEN 'WDYA'.
@@ -160,6 +168,9 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
           <ls_tadir>-korrnum = '171000'.
         WHEN 'IEXT'.
           <ls_tadir>-korrnum = '150000'.
+        WHEN 'PINF'.
+          " PINF before exposed objects
+          <ls_tadir>-korrnum = '130000'.
         WHEN OTHERS.
           <ls_tadir>-korrnum = '100000'.
       ENDCASE.

@@ -121,6 +121,11 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         !is_item                     TYPE zif_abapgit_definitions=>ty_repo_item
       RETURNING
         VALUE(rv_inactive_html_code) TYPE string .
+    METHODS build_srcsystem_code
+      IMPORTING
+        !is_item                     TYPE zif_abapgit_definitions=>ty_repo_item
+      RETURNING
+        VALUE(rv_srcsystem_html_code) TYPE string .
     METHODS open_in_main_language
       RAISING
         zcx_abapgit_exception .
@@ -170,9 +175,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
     METHODS is_repo_lang_logon_lang
       RETURNING
         VALUE(rv_repo_lang_is_logon_lang) TYPE abap_bool .
-    METHODS get_abapgit_tcode
-      RETURNING
-        VALUE(rv_tcode) TYPE tcode .
+
     METHODS render_item_changed_by
       IMPORTING
         !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
@@ -189,7 +192,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -243,7 +246,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
       INSERT ls_sort INTO TABLE lt_sort.
     ENDIF.
 
-    IF mv_order_by = 'TRANSPORT'.
+    " Use object name as secondary sort criteria
+    IF mv_order_by <> 'OBJ_NAME'.
       ls_sort-name = 'OBJ_NAME'.
       INSERT ls_sort INTO TABLE lt_sort.
     ENDIF.
@@ -255,11 +259,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
     INSERT LINES OF lt_diff_items INTO TABLE ct_repo_items.
     INSERT LINES OF lt_code_items INTO TABLE ct_repo_items.
 
-    IF mv_order_by = 'TRANSPORT'.
-      LOOP AT ct_repo_items ASSIGNING <ls_repo_item>.
-        order_files( CHANGING ct_files = <ls_repo_item>-files ).
-      ENDLOOP.
-    ENDIF.
+    " Files are listed under the object names so we always sort them by name
+    LOOP AT ct_repo_items ASSIGNING <ls_repo_item>.
+      order_files( CHANGING ct_files = <ls_repo_item>-files ).
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -320,7 +323,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
                                iv_act = |{ c_actions-go_data }?key={ mv_key }|
                                iv_opt = lv_crossout ).
 
-    IF is_repo_lang_logon_lang( ) = abap_false AND get_abapgit_tcode( ) IS NOT INITIAL.
+    IF is_repo_lang_logon_lang( ) = abap_false AND zcl_abapgit_services_abapgit=>get_abapgit_tcode( ) IS NOT INITIAL.
       ro_advanced_dropdown->add(
         iv_txt = 'Open in Main Language'
         iv_act = |{ zif_abapgit_definitions=>c_action-repo_open_in_master_lang }?key={ mv_key }| ).
@@ -549,6 +552,18 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD build_srcsystem_code.
+
+    IF is_item-srcsystem IS NOT INITIAL AND is_item-srcsystem <> sy-sysid.
+      rv_srcsystem_html_code = zcl_abapgit_html=>icon(
+        iv_name  = 'server-solid/grey'
+        iv_hint  = |Original system: { is_item-srcsystem }|
+        iv_class = 'cursor-pointer' ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD build_tag_dropdown.
 
     CREATE OBJECT ro_tag_dropdown.
@@ -637,22 +652,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_abapgit_tcode.
-    CONSTANTS: lc_report_tcode_hex TYPE x VALUE '80'.
-    DATA: lt_tcodes TYPE STANDARD TABLE OF tcode.
-
-    SELECT tcode
-      FROM tstc
-      INTO TABLE lt_tcodes
-      WHERE pgmna = sy-cprog
-        AND cinfo = lc_report_tcode_hex.
-
-    IF lines( lt_tcodes ) > 0.
-      READ TABLE lt_tcodes INDEX 1 INTO rv_tcode.
-    ENDIF.
-  ENDMETHOD.
-
-
   METHOD get_item_class.
 
     DATA lt_class TYPE TABLE OF string.
@@ -724,7 +723,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
     " https://blogs.sap.com/2017/01/13/logon-language-sy-langu-and-rfc/
 
     lv_main_language = mo_repo->get_dot_abapgit( )->get_main_language( ).
-    lv_tcode = get_abapgit_tcode( ).
+    lv_tcode = zcl_abapgit_services_abapgit=>get_abapgit_tcode( ).
     ASSERT lv_tcode IS NOT INITIAL.
 
     IF lv_main_language = sy-langu.
@@ -784,7 +783,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
     ls_sort-descending = mv_order_descending.
     ls_sort-astext     = abap_true.
-    ls_sort-name       = 'TRANSPORT'.
+    ls_sort-name       = 'PATH'.
     INSERT ls_sort INTO TABLE lt_sort.
 
     ls_sort-descending = mv_order_descending.
@@ -844,7 +843,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
         lt_repo_items = lo_browser->list( iv_path         = mv_cur_dir
                                           iv_by_folders   = mv_show_folders
-                                          iv_changes_only = mv_changes_only ).
+                                          iv_changes_only = mv_changes_only
+                                          iv_transports   = mv_are_changes_recorded_in_tr ).
 
         apply_order_by( CHANGING ct_repo_items = lt_repo_items ).
 
@@ -1020,7 +1020,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
       ELSE.
         lv_link = build_obj_jump_link( is_item ).
         ri_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
-        ri_html->add( |<td class="object">{ lv_link } { build_inactive_object_code( is_item ) }</td>| ).
+        ri_html->add( |<td class="object">{ lv_link } { build_inactive_object_code( is_item )
+                      } { build_srcsystem_code( is_item ) }</td>| ).
       ENDIF.
     ENDIF.
 
@@ -1148,25 +1149,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
   METHOD render_item_transport.
 
-    DATA:
-      ls_item      TYPE zif_abapgit_definitions=>ty_item,
-      lv_transport TYPE trkorr.
-
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( '<td class="transport">' ).
 
-    ls_item-obj_type = is_item-obj_type.
-    ls_item-obj_name = is_item-obj_name.
-
-    TRY.
-        lv_transport = zcl_abapgit_factory=>get_cts_api( )->get_transport_for_object( ls_item ).
-        IF lv_transport IS NOT INITIAL.
-          ri_html->add( zcl_abapgit_gui_chunk_lib=>render_transport( iv_transport = lv_transport ) ).
-        ENDIF.
-      CATCH zcx_abapgit_exception ##NO_HANDLER.
-        " Ignore errors related to object check when trying to get transport
-    ENDTRY.
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_transport( is_item-transport ) ).
 
     ri_html->add( '</td>' ).
 

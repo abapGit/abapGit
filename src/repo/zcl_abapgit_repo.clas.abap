@@ -190,17 +190,30 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD check_language.
 
-    DATA lv_main_language TYPE spras.
+    DATA:
+      lv_main_language TYPE spras,
+      lv_error_message TYPE string.
 
     " assumes find_remote_dot_abapgit has been called before
     lv_main_language = get_dot_abapgit( )->get_main_language( ).
 
+
     IF lv_main_language <> sy-langu.
-      zcx_abapgit_exception=>raise( |Current login language |
-                                 && |'{ zcl_abapgit_convert=>conversion_exit_isola_output( sy-langu ) }'|
-                                 && | does not match main language |
-                                 && |'{ zcl_abapgit_convert=>conversion_exit_isola_output( lv_main_language ) }'.|
-                                 && | Select 'Advanced' > 'Open in Main Language'| ).
+
+      lv_error_message = |Current login language |
+                      && |'{ zcl_abapgit_convert=>conversion_exit_isola_output( sy-langu ) }'|
+                      && | does not match main language |
+                      && |'{ zcl_abapgit_convert=>conversion_exit_isola_output( lv_main_language ) }'.|.
+
+      " Feature open in main language only exists if abapGit tcode is present
+      IF zcl_abapgit_services_abapgit=>get_abapgit_tcode( ) IS INITIAL.
+        lv_error_message = lv_error_message && | Please logon in main language and retry.|.
+      ELSE.
+        lv_error_message = lv_error_message && | Select 'Advanced' > 'Open in Main Language'|.
+      ENDIF.
+
+      zcx_abapgit_exception=>raise( lv_error_message ).
+
     ENDIF.
 
   ENDMETHOD.

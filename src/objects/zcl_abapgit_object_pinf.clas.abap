@@ -36,8 +36,9 @@ CLASS zcl_abapgit_object_pinf DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         zcx_abapgit_exception .
     METHODS update_elements
       IMPORTING
-        is_pinf      TYPE ty_pinf
-        ii_interface TYPE REF TO lif_package_interface_facade
+        !iv_package   TYPE devclass
+        !is_pinf      TYPE ty_pinf
+        !ii_interface TYPE REF TO lif_package_interface_facade
       RAISING
         zcx_abapgit_exception .
     METHODS load
@@ -185,33 +186,34 @@ CLASS zcl_abapgit_object_pinf IMPLEMENTATION.
   METHOD update_elements.
 
     DATA: lt_existing TYPE ty_elements,
+          ls_element  LIKE LINE OF is_pinf-elements,
           lt_add      TYPE scomeldata,
           lv_index    TYPE i,
           lv_found    TYPE abap_bool,
           ls_attr     TYPE scomeldtln.
 
-    FIELD-SYMBOLS: <li_element> LIKE LINE OF lt_existing,
-                   <ls_element> LIKE LINE OF is_pinf-elements.
+    FIELD-SYMBOLS <li_element> LIKE LINE OF lt_existing.
 
     ii_interface->set_elements_changeable( abap_true ).
 
     lt_existing = ii_interface->get_elements( ).
 
-    LOOP AT is_pinf-elements ASSIGNING <ls_element>.
+    LOOP AT is_pinf-elements INTO ls_element.
 
       lv_found = abap_false.
       LOOP AT lt_existing ASSIGNING <li_element>.
         lv_index = sy-tabix.
         <li_element>->get_all_attributes( IMPORTING e_element_data = ls_attr ).
-        IF <ls_element>-elem_type = ls_attr-elem_type
-            AND <ls_element>-elem_key = ls_attr-elem_key.
+        IF ls_element-elem_type = ls_attr-elem_type
+            AND ls_element-elem_key = ls_attr-elem_key.
           DELETE lt_existing INDEX lv_index.
           CONTINUE. " current loop
         ENDIF.
       ENDLOOP.
 
       IF lv_found = abap_false.
-        APPEND <ls_element> TO lt_add.
+        ls_element-elem_pack = iv_package.
+        APPEND ls_element TO lt_add.
       ENDIF.
     ENDLOOP.
 
@@ -280,6 +282,7 @@ CLASS zcl_abapgit_object_pinf IMPLEMENTATION.
       ii_interface = li_interface ).
 
     update_elements(
+      iv_package   = iv_package
       is_pinf      = ls_pinf
       ii_interface = li_interface ).
 
@@ -358,7 +361,8 @@ CLASS zcl_abapgit_object_pinf IMPLEMENTATION.
     ls_pinf-attributes = li_interface->get_all_attributes( ).
 
     "Delete the package name if it comes from the same package
-    IF ls_pinf-attributes-tadir_devc = ls_pinf-attributes-pack_name.
+    IF ls_pinf-attributes-tadir_devc = ls_pinf-attributes-pack_name OR
+      ms_item-devclass = ls_pinf-attributes-pack_name.
       CLEAR ls_pinf-attributes-pack_name.
     ENDIF.
 
