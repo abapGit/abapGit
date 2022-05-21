@@ -93,6 +93,8 @@ CLASS zcl_abapgit_data_serializer IMPLEMENTATION.
     DATA ls_config LIKE LINE OF lt_configs.
     DATA ls_file LIKE LINE OF rt_files.
     DATA lr_data TYPE REF TO data.
+    DATA lv_table TYPE tabname.
+    DATA lv_subrc TYPE sy-subrc.
 
     ls_file-path = zif_abapgit_data_config=>c_default_path.
     lt_configs = ii_config->get_configs( ).
@@ -101,14 +103,27 @@ CLASS zcl_abapgit_data_serializer IMPLEMENTATION.
       ASSERT ls_config-type = zif_abapgit_data_config=>c_data_type-tabu. " todo
       ASSERT ls_config-name IS NOT INITIAL.
 
-      lr_data = read_database_table(
-        iv_name  = ls_config-name
-        it_where = ls_config-where ).
+      lv_table = ls_config-name.
 
-      ls_file-filename = zcl_abapgit_data_utils=>build_filename( ls_config ).
-      ls_file-data = convert_itab_to_json( lr_data ).
-      ls_file-sha1 = zcl_abapgit_hash=>sha1_blob( ls_file-data ).
-      APPEND ls_file TO rt_files.
+      CALL FUNCTION 'DD_EXIST_TABLE'
+        EXPORTING
+          tabname      = lv_table
+          status       = 'A'
+        IMPORTING
+          subrc        = lv_subrc
+        EXCEPTIONS
+          wrong_status = 1
+          OTHERS       = 2.
+      IF sy-subrc = 0 AND lv_subrc = 0.
+        lr_data = read_database_table(
+          iv_name  = ls_config-name
+          it_where = ls_config-where ).
+
+        ls_file-filename = zcl_abapgit_data_utils=>build_filename( ls_config ).
+        ls_file-data = convert_itab_to_json( lr_data ).
+        ls_file-sha1 = zcl_abapgit_hash=>sha1_blob( ls_file-data ).
+        APPEND ls_file TO rt_files.
+      ENDIF.
 
     ENDLOOP.
 
