@@ -324,6 +324,7 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
     IF sy-subrc = 0.
       lv_string = lv_url.
       rv_hash = zcl_abapgit_hash=>sha1_raw( zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ) ).
+      rv_hash = to_upper( rv_hash ).
     ENDIF.
 
   ENDMETHOD.
@@ -347,10 +348,10 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
       WHERE pgmid = iv_pgmid
       AND object = 'SICF'
       AND obj_name LIKE lv_obj_name
-      ORDER BY PRIMARY KEY ##TOO_MANY_ITAB_FIELDS. "#EC CI_GENBUFF
+      ORDER BY PRIMARY KEY ##TOO_MANY_ITAB_FIELDS.      "#EC CI_GENBUFF
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-      IF read_sicf_url( <ls_tadir>-obj_name ) = lv_hash.
+      IF read_sicf_url( <ls_tadir>-obj_name ) = to_upper( lv_hash ).
         rs_tadir = <ls_tadir>.
         RETURN.
       ENDIF.
@@ -391,7 +392,7 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: ls_icfservice TYPE icfservice.
+    DATA ls_icfservice TYPE icfservice.
 
     read( IMPORTING es_icfservice = ls_icfservice ).
 
@@ -481,15 +482,11 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: ls_tadir TYPE zif_abapgit_definitions=>ty_tadir,
-          ls_key   TYPE ty_sicf_key.
+    DATA ls_key TYPE ty_sicf_key.
 
-    ls_tadir = read_tadir_sicf( ms_item-obj_name ).
+    ls_key = read_tadir_sicf( ms_item-obj_name )-obj_name.
 
-    rv_bool = boolc( NOT ls_tadir IS INITIAL ).
-
-    IF rv_bool = abap_true.
-      ls_key = ls_tadir-obj_name.
+    IF ls_key IS NOT INITIAL.
       SELECT SINGLE icfaltnme FROM icfservice INTO ls_key-icf_name
         WHERE icf_name = ls_key-icf_name
         AND icfparguid = ls_key-icfparguid.
