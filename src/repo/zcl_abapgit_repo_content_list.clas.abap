@@ -57,7 +57,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
+CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
 
 
   METHOD build_folders.
@@ -127,15 +127,16 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       APPEND INITIAL LINE TO rt_repo_items ASSIGNING <ls_repo_item>.
-      <ls_repo_item>-obj_type = <ls_tadir>-object.
-      <ls_repo_item>-obj_name = <ls_tadir>-obj_name.
-      <ls_repo_item>-path     = <ls_tadir>-path.
+      <ls_repo_item>-obj_type  = <ls_tadir>-object.
+      <ls_repo_item>-obj_name  = <ls_tadir>-obj_name.
+      <ls_repo_item>-path      = <ls_tadir>-path.
+      <ls_repo_item>-srcsystem = <ls_tadir>-srcsystem.
       MOVE-CORRESPONDING <ls_repo_item> TO ls_item.
       <ls_repo_item>-inactive = boolc( zcl_abapgit_objects=>is_active( ls_item ) = abap_false ).
       IF <ls_repo_item>-inactive = abap_true.
         <ls_repo_item>-sortkey = c_sortkey-inactive.
       ELSE.
-        <ls_repo_item>-sortkey  = c_sortkey-default.      " Default sort key
+        <ls_repo_item>-sortkey = c_sortkey-default.      " Default sort key
       ENDIF.
 
       IF <ls_repo_item>-obj_type IS NOT INITIAL.
@@ -153,7 +154,7 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
   METHOD build_repo_items_with_remote.
 
     DATA:
-      lo_state  TYPE REF TO zcl_abapgit_item_state,
+      lo_state      TYPE REF TO zcl_abapgit_item_state,
       ls_file       TYPE zif_abapgit_definitions=>ty_repo_file,
       lt_status     TYPE zif_abapgit_definitions=>ty_results_tt,
       ls_item       TYPE zif_abapgit_definitions=>ty_item,
@@ -169,12 +170,13 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
     LOOP AT lt_status ASSIGNING <ls_status>.
       AT NEW obj_name. "obj_type + obj_name
         APPEND INITIAL LINE TO rt_repo_items ASSIGNING <ls_repo_item>.
-        <ls_repo_item>-obj_type = <ls_status>-obj_type.
-        <ls_repo_item>-obj_name = <ls_status>-obj_name.
-        <ls_repo_item>-inactive = <ls_status>-inactive.
-        <ls_repo_item>-sortkey  = c_sortkey-default. " Default sort key
-        <ls_repo_item>-changes  = 0.
-        <ls_repo_item>-path     = <ls_status>-path.
+        <ls_repo_item>-obj_type  = <ls_status>-obj_type.
+        <ls_repo_item>-obj_name  = <ls_status>-obj_name.
+        <ls_repo_item>-inactive  = <ls_status>-inactive.
+        <ls_repo_item>-sortkey   = c_sortkey-default. " Default sort key
+        <ls_repo_item>-changes   = 0.
+        <ls_repo_item>-path      = <ls_status>-path.
+        <ls_repo_item>-srcsystem = <ls_status>-srcsystem.
         CREATE OBJECT lo_state.
       ENDAT.
 
