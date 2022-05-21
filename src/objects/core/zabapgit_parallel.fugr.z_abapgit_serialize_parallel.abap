@@ -5,6 +5,7 @@ FUNCTION z_abapgit_serialize_parallel.
 *"     VALUE(IV_OBJ_TYPE) TYPE  TADIR-OBJECT
 *"     VALUE(IV_OBJ_NAME) TYPE  TADIR-OBJ_NAME
 *"     VALUE(IV_DEVCLASS) TYPE  TADIR-DEVCLASS
+*"     VALUE(IV_SRCSYSTEM) TYPE  TADIR-SRCSYSTEM
 *"     VALUE(IV_LANGUAGE) TYPE  SY-LANGU
 *"     VALUE(IV_PATH) TYPE  STRING
 *"     VALUE(IV_MAIN_LANGUAGE_ONLY) TYPE  CHAR1
@@ -22,9 +23,10 @@ FUNCTION z_abapgit_serialize_parallel.
         ls_files TYPE zcl_abapgit_objects=>ty_serialization.
 
   TRY.
-      ls_item-obj_type = iv_obj_type.
-      ls_item-obj_name = iv_obj_name.
-      ls_item-devclass = iv_devclass.
+      ls_item-obj_type  = iv_obj_type.
+      ls_item-obj_name  = iv_obj_name.
+      ls_item-devclass  = iv_devclass.
+      ls_item-srcsystem = iv_srcsystem.
 
       ls_files = zcl_abapgit_objects=>serialize(
         is_item               = ls_item

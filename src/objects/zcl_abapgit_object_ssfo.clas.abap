@@ -318,6 +318,7 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
   METHOD zif_abapgit_object~is_active.
 
     DATA: lv_ssfo_formname TYPE tdsfname.
+    DATA lv_inactive TYPE abap_bool.
 
     lv_ssfo_formname = ms_item-obj_name.
 
@@ -325,9 +326,9 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
       EXPORTING
         i_formname = lv_ssfo_formname
       IMPORTING
-        o_inactive = ms_item-inactive.
+        o_inactive = lv_inactive.
 
-    rv_active = boolc( ms_item-inactive = abap_false ).
+    rv_active = boolc( lv_inactive = abap_false ).
 
   ENDMETHOD.
 
