@@ -121,6 +121,11 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         !is_item                     TYPE zif_abapgit_definitions=>ty_repo_item
       RETURNING
         VALUE(rv_inactive_html_code) TYPE string .
+    METHODS build_srcsystem_code
+      IMPORTING
+        !is_item                     TYPE zif_abapgit_definitions=>ty_repo_item
+      RETURNING
+        VALUE(rv_srcsystem_html_code) TYPE string .
     METHODS open_in_main_language
       RAISING
         zcx_abapgit_exception .
@@ -187,7 +192,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -543,6 +548,18 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
     rv_html = li_html->a(
       iv_txt = |{ is_item-obj_name }|
       iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_encode }| ).
+
+  ENDMETHOD.
+
+
+  METHOD build_srcsystem_code.
+
+    IF is_item-srcsystem IS NOT INITIAL AND is_item-srcsystem <> sy-sysid.
+      rv_srcsystem_html_code = zcl_abapgit_html=>icon(
+        iv_name  = 'server-solid/grey'
+        iv_hint  = |Original system: { is_item-srcsystem }|
+        iv_class = 'cursor-pointer' ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -1003,7 +1020,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
       ELSE.
         lv_link = build_obj_jump_link( is_item ).
         ri_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
-        ri_html->add( |<td class="object">{ lv_link } { build_inactive_object_code( is_item ) }</td>| ).
+        ri_html->add( |<td class="object">{ lv_link } { build_inactive_object_code( is_item )
+                      } { build_srcsystem_code( is_item ) }</td>| ).
       ENDIF.
     ENDIF.
 
