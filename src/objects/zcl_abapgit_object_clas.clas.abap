@@ -96,7 +96,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
+CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -646,6 +646,8 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
   METHOD zif_abapgit_object~delete.
     DATA: ls_clskey TYPE seoclskey.
     ls_clskey-clsname = ms_item-obj_name.
+
+    corr_insert( iv_package ).
 
     mi_object_oriented_object_fct->delete( ls_clskey ).
   ENDMETHOD.
