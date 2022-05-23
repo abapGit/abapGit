@@ -97,6 +97,10 @@
        <TYP>TADIR-DEVCLASS</TYP>
       </RSIMP>
       <RSIMP>
+       <PARAMETER>IV_SRCSYSTEM</PARAMETER>
+       <TYP>TADIR-SRCSYSTEM</TYP>
+      </RSIMP>
+      <RSIMP>
        <PARAMETER>IV_LANGUAGE</PARAMETER>
        <TYP>SY-LANGU</TYP>
       </RSIMP>
@@ -143,6 +147,11 @@
        <PARAMETER>IV_DEVCLASS</PARAMETER>
        <KIND>P</KIND>
        <STEXT>Package</STEXT>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>IV_SRCSYSTEM</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>Original System of Object</STEXT>
       </RSFDO>
       <RSFDO>
        <PARAMETER>IV_LANGUAGE</PARAMETER>

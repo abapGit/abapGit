@@ -158,9 +158,15 @@ CLASS lcl_package_interface_facade IMPLEMENTATION.
 
   METHOD lif_package_interface_facade~add_elements.
 
+    DATA:
+      lt_mismatched TYPE scomeldata,
+      ls_mismatched LIKE LINE OF lt_mismatched.
+
     mi_interface->add_elements(
       EXPORTING
         i_elements_data        = it_elements_data
+      IMPORTING
+        e_mismatched_elem_data = lt_mismatched
       EXCEPTIONS
         object_invalid         = 1
         intern_err             = 2
@@ -169,6 +175,11 @@ CLASS lcl_package_interface_facade IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
+
+    LOOP AT lt_mismatched INTO ls_mismatched.
+      zcx_abapgit_exception=>raise( |Object { ls_mismatched-elem_type } { ls_mismatched-elem_key } | &&
+                                    |from different package { ls_mismatched-elem_pack }| ).
+    ENDLOOP.
 
   ENDMETHOD.
 
