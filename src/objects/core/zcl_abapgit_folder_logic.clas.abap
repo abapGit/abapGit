@@ -50,7 +50,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
+CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
 
 
   METHOD get_instance.

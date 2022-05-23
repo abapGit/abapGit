@@ -262,11 +262,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     DATA: lt_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
           lt_result        TYPE zif_abapgit_data_deserializer=>ty_results,
-          lx_error         TYPE REF TO zcx_abapgit_exception,
-          ls_result        TYPE zif_abapgit_data_deserializer=>ty_result,
-          ls_overwrite     TYPE zif_abapgit_definitions=>ty_overwrite.
-
-    FIELD-SYMBOLS <lt_tab> TYPE ANY TABLE.
+          lx_error         TYPE REF TO zcx_abapgit_exception.
 
     find_remote_dot_abapgit( ).
     find_remote_dot_apack( ).
@@ -307,39 +303,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     lt_result = zcl_abapgit_data_factory=>get_deserializer( )->deserialize(
       ii_config  = get_data_config( )
       it_files   = get_files_remote( ) ).
-
-    " Update database if user wants to: shall be added
-    " to the deserialize function above together with parameter
-    " IS_CHECKS once the 'test' period is ended
-    LOOP AT lt_result INTO ls_result.
-      READ TABLE is_checks-overwrite INTO ls_overwrite
-        WITH KEY object_type_and_name
-      COMPONENTS obj_type = zif_abapgit_data_config=>c_data_type-tabu
-                 obj_name = ls_result-table.
-
-      IF sy-subrc <> 0 OR ls_overwrite-decision <> zif_abapgit_definitions=>c_yes.
-        CONTINUE.
-      ENDIF.
-
-      IF ls_result-deletes IS BOUND.
-        ASSIGN ls_result-deletes->* TO <lt_tab>.
-        IF <lt_tab> IS NOT INITIAL.
-          DELETE (ls_result-table) FROM TABLE <lt_tab>.
-        ENDIF.
-      ENDIF.
-      IF ls_result-inserts IS BOUND.
-        ASSIGN ls_result-inserts->* TO <lt_tab>.
-        IF <lt_tab> IS NOT INITIAL.
-          INSERT (ls_result-table) FROM TABLE <lt_tab>.
-        ENDIF.
-      ENDIF.
-      IF ls_result-updates IS BOUND.
-        ASSIGN ls_result-updates->* TO <lt_tab>.
-        IF <lt_tab> IS NOT INITIAL.
-          MODIFY (ls_result-table) FROM TABLE <lt_tab>.
-        ENDIF.
-      ENDIF.
-    ENDLOOP.
 
     CLEAR: mt_local.
 

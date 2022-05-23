@@ -32,7 +32,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
+CLASS zcl_abapgit_data_serializer IMPLEMENTATION.
 
 
   METHOD convert_itab_to_json.
@@ -48,7 +48,6 @@ CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
     TRY.
         lo_ajson = zcl_abapgit_ajson=>create_empty( ).
         lo_ajson->keep_item_order( ).
-        lo_ajson->format_datetime( ).
         lo_ajson->set(
           iv_path = '/'
           iv_val = <lg_tab> ).
