@@ -7,6 +7,7 @@ CLASS ltcl_camel_case DEFINITION FINAL FOR TESTING
       to_abap FOR TESTING RAISING zcx_abapgit_ajson_error,
       to_json FOR TESTING RAISING zcx_abapgit_ajson_error,
       to_json_nested_struc FOR TESTING RAISING zcx_abapgit_ajson_error,
+      to_json_nested_table FOR TESTING RAISING zcx_abapgit_ajson_error,
       to_json_first_lower FOR TESTING RAISING zcx_abapgit_ajson_error.
 
 ENDCLASS.
@@ -91,6 +92,38 @@ CLASS ltcl_camel_case IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lo_ajson->stringify( )
       exp = '{"fieldData":"field_value","strucData":{"fieldMore":"field_more"}}' ).
+
+  ENDMETHOD.
+
+
+  METHOD to_json_nested_table.
+
+    DATA:
+      lo_ajson   TYPE REF TO zcl_abapgit_ajson,
+      li_mapping TYPE REF TO zif_abapgit_ajson_mapping.
+    DATA:
+      lv_value TYPE string,
+      BEGIN OF ls_result,
+        field_data TYPE string,
+        BEGIN OF struc_data,
+          field_more TYPE string_table,
+        END OF struc_data,
+      END OF ls_result.
+
+    li_mapping = zcl_abapgit_ajson_mapping=>create_camel_case( iv_first_json_upper = abap_false ).
+
+    ls_result-field_data = 'field_value'.
+    lv_value = 'field_more'.
+    INSERT lv_value INTO TABLE ls_result-struc_data-field_more.
+
+    lo_ajson = zcl_abapgit_ajson=>create_empty( ii_custom_mapping = li_mapping ).
+
+    lo_ajson->set( iv_path = '/'
+                   iv_val = ls_result ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_ajson->stringify( )
+      exp = '{"fieldData":"field_value","strucData":{"fieldMore":["field_more"]}}' ).
 
   ENDMETHOD.
 
