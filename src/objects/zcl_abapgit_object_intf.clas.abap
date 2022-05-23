@@ -1,7 +1,7 @@
 CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgit_objects_program.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
+
     METHODS constructor
       IMPORTING
         is_item     TYPE zif_abapgit_definitions=>ty_item
@@ -56,7 +56,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
+CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -75,7 +75,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
 
     ls_clskey-clsname = ms_item-obj_name.
-    lt_source = mo_files->read_abap( ).
+    lt_source = zif_abapgit_object~mo_files->read_abap( ).
     ii_xml->read( EXPORTING iv_name = 'VSEOINTERF'
                   CHANGING cg_data = ls_vseointerf ).
 
@@ -481,7 +481,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
     lt_source = mi_object_oriented_object_fct->serialize_abap( ls_interface_key ).
 
-    mo_files->add_abap( lt_source ).
+    zif_abapgit_object~mo_files->add_abap( lt_source ).
 
     serialize_xml( io_xml ).
   ENDMETHOD.

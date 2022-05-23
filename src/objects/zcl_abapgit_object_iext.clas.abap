@@ -2,7 +2,7 @@ CLASS zcl_abapgit_object_iext DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
+
     METHODS:
       constructor
         IMPORTING

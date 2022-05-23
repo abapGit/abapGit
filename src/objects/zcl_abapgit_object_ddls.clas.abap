@@ -2,7 +2,6 @@ CLASS zcl_abapgit_object_ddls DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
     METHODS constructor
       IMPORTING
@@ -163,7 +162,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
   METHOD read_baseinfo.
 
     TRY.
-        rv_baseinfo_string = mo_files->read_string( 'baseinfo' ).
+        rv_baseinfo_string = zif_abapgit_object~mo_files->read_string( 'baseinfo' ).
 
       CATCH zcx_abapgit_exception.
         " File not found. That's ok, as the object could have been created in a
@@ -279,7 +278,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
 
         ASSIGN COMPONENT 'SOURCE' OF STRUCTURE <lg_data> TO <lg_source>.
         ASSERT sy-subrc = 0.
-        <lg_source> = mo_files->read_string( 'asddls' ).
+        <lg_source> = zif_abapgit_object~mo_files->read_string( 'asddls' ).
 
         CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
           RECEIVING
@@ -461,8 +460,9 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
             IF <lg_ddlname> = ms_item-obj_name AND <lg_as4local> = 'A'.
               ASSIGN COMPONENT 'BASEINFO_STRING' OF STRUCTURE <lg_data_baseinfo> TO <lg_field>.
               ASSERT sy-subrc = 0.
-              mo_files->add_string( iv_ext    = 'baseinfo'
-                                    iv_string = <lg_field> ).
+              zif_abapgit_object~mo_files->add_string(
+                iv_ext    = 'baseinfo'
+                iv_string = <lg_field> ).
               EXIT.
             ENDIF.
           ENDLOOP.
@@ -499,8 +499,9 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
 
     format_source_before_serialize( CHANGING cv_string = <lg_field> ).
 
-    mo_files->add_string( iv_ext    = 'asddls'
-                          iv_string = <lg_field> ).
+    zif_abapgit_object~mo_files->add_string(
+      iv_ext    = 'asddls'
+      iv_string = <lg_field> ).
 
     CLEAR <lg_field>.
 

@@ -2,8 +2,6 @@ CLASS zcl_abapgit_object_enho DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -34,17 +32,17 @@ CLASS zcl_abapgit_object_enho IMPLEMENTATION.
         CREATE OBJECT ri_enho TYPE zcl_abapgit_object_enho_hook
           EXPORTING
             is_item  = ms_item
-            io_files = mo_files.
+            io_files = zif_abapgit_object~mo_files.
       WHEN cl_enh_tool_class=>tooltype.
         CREATE OBJECT ri_enho TYPE zcl_abapgit_object_enho_class
           EXPORTING
             is_item  = ms_item
-            io_files = mo_files.
+            io_files = zif_abapgit_object~mo_files.
       WHEN cl_enh_tool_intf=>tooltype.
         CREATE OBJECT ri_enho TYPE zcl_abapgit_object_enho_intf
           EXPORTING
             is_item  = ms_item
-            io_files = mo_files.
+            io_files = zif_abapgit_object~mo_files.
       WHEN cl_wdr_cfg_enhancement=>tooltype.
         CREATE OBJECT ri_enho TYPE zcl_abapgit_object_enho_wdyc
           EXPORTING
@@ -53,7 +51,7 @@ CLASS zcl_abapgit_object_enho IMPLEMENTATION.
         CREATE OBJECT ri_enho TYPE zcl_abapgit_object_enho_fugr
           EXPORTING
             is_item  = ms_item
-            io_files = mo_files.
+            io_files = zif_abapgit_object~mo_files.
       WHEN 'WDYENH'.
         CREATE OBJECT ri_enho TYPE zcl_abapgit_object_enho_wdyn
           EXPORTING

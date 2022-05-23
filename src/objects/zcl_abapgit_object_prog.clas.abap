@@ -2,8 +2,6 @@ CLASS zcl_abapgit_object_prog DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -223,7 +221,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
     lv_program_name = ms_item-obj_name.
 
-    lt_source = mo_files->read_abap( ).
+    lt_source = zif_abapgit_object~mo_files->read_abap( ).
 
     io_xml->read( EXPORTING iv_name = 'TPOOL'
                   CHANGING cg_data = lt_tpool_ext ).
@@ -326,7 +324,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
     serialize_program( io_xml   = io_xml
                        is_item  = ms_item
-                       io_files = mo_files ).
+                       io_files = zif_abapgit_object~mo_files ).
 
     " Texts serializing (translations)
     IF io_xml->i18n_params( )-translation_languages IS INITIAL.
