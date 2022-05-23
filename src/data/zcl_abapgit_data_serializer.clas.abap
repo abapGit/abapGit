@@ -28,6 +28,11 @@ CLASS zcl_abapgit_data_serializer DEFINITION
         VALUE(rr_data) TYPE REF TO data
       RAISING
         zcx_abapgit_exception .
+    METHODS exists_database_table
+      IMPORTING
+        !iv_name         TYPE tadir-obj_name
+      RETURNING
+        VALUE(rv_exists) TYPE abap_bool.
 ENDCLASS.
 
 
@@ -57,6 +62,28 @@ CLASS zcl_abapgit_data_serializer IMPLEMENTATION.
     ENDTRY.
 
     rv_data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ).
+
+  ENDMETHOD.
+
+
+  METHOD exists_database_table.
+
+    DATA lv_table TYPE tabname.
+    DATA lv_subrc TYPE sy-subrc.
+
+    lv_table = iv_name.
+
+    CALL FUNCTION 'DD_EXIST_TABLE'
+      EXPORTING
+        tabname      = lv_table
+        status       = 'A'
+      IMPORTING
+        subrc        = lv_subrc
+      EXCEPTIONS
+        wrong_status = 1
+        OTHERS       = 2.
+
+    rv_exists = boolc( sy-subrc = 0 AND lv_subrc = 0 ).
 
   ENDMETHOD.
 
@@ -93,8 +120,6 @@ CLASS zcl_abapgit_data_serializer IMPLEMENTATION.
     DATA ls_config LIKE LINE OF lt_configs.
     DATA ls_file LIKE LINE OF rt_files.
     DATA lr_data TYPE REF TO data.
-    DATA lv_table TYPE tabname.
-    DATA lv_subrc TYPE sy-subrc.
 
     ls_file-path = zif_abapgit_data_config=>c_default_path.
     lt_configs = ii_config->get_configs( ).
@@ -103,18 +128,7 @@ CLASS zcl_abapgit_data_serializer IMPLEMENTATION.
       ASSERT ls_config-type = zif_abapgit_data_config=>c_data_type-tabu. " todo
       ASSERT ls_config-name IS NOT INITIAL.
 
-      lv_table = ls_config-name.
-
-      CALL FUNCTION 'DD_EXIST_TABLE'
-        EXPORTING
-          tabname      = lv_table
-          status       = 'A'
-        IMPORTING
-          subrc        = lv_subrc
-        EXCEPTIONS
-          wrong_status = 1
-          OTHERS       = 2.
-      IF sy-subrc = 0 AND lv_subrc = 0.
+      IF exists_database_table( ls_config-name ) = abap_true.
         lr_data = read_database_table(
           iv_name  = ls_config-name
           it_where = ls_config-where ).
