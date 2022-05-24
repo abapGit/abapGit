@@ -33,7 +33,7 @@ CLASS zcl_abapgit_popups DEFINITION
     TYPES:
       BEGIN OF ty_commit_value_tab,
         commit   TYPE zif_abapgit_definitions=>ty_sha1,
-        message  TYPE c LENGTH 50,
+        message  TYPE c LENGTH 100,
         datetime TYPE c LENGTH 20,
       END OF ty_commit_value_tab.
     TYPES:
