@@ -26,14 +26,7 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
   PRIVATE SECTION.
 
     TYPES:
-      BEGIN OF ty_commit_value_tab,
-        sha1     TYPE zif_abapgit_definitions=>ty_sha1,
-        message  TYPE c LENGTH 50,
-        datetime TYPE c LENGTH 20,
-      END OF ty_commit_value_tab .
-    TYPES:
-      ty_commit_value_tab_tt TYPE STANDARD TABLE OF ty_commit_value_tab WITH DEFAULT KEY,
-      ty_head_type           TYPE c LENGTH 1,
+      ty_head_type TYPE c LENGTH 1,
       BEGIN OF ty_remote_settings,
         offline         TYPE zif_abapgit_persistence=>ty_repo-offline,
         url             TYPE zif_abapgit_persistence=>ty_repo-url,
