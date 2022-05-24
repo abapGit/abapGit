@@ -81,7 +81,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
+CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
 
   METHOD add_local_packages.
@@ -99,6 +99,7 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
         <ls_tadir>-object   = 'DEVC'.
         <ls_tadir>-obj_name = <lv_package>.
         <ls_tadir>-devclass = <lv_package>.
+        <ls_tadir>-srcsystem = sy-sysid.
       ENDIF.
 
     ENDLOOP.
@@ -144,6 +145,7 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
           <ls_nspc>-object   = 'NSPC'.
           <ls_nspc>-obj_name = lv_namespace.
           <ls_nspc>-devclass = iv_package.
+          <ls_nspc>-srcsystem = sy-sysid.
 
           INSERT <ls_nspc> INTO TABLE lt_tadir_nspc.
         ENDIF.
