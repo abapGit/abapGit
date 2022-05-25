@@ -26,18 +26,22 @@ CLASS zcx_abapgit_exception DEFINITION
     DATA msgv2 TYPE symsgv READ-ONLY .
     DATA msgv3 TYPE symsgv READ-ONLY .
     DATA msgv4 TYPE symsgv READ-ONLY .
+    DATA mv_longtext TYPE string READ-ONLY.
     DATA mt_callstack TYPE abap_callstack READ-ONLY .
     DATA mi_log TYPE REF TO zif_abapgit_log READ-ONLY.
 
     "! Raise exception with text
     "! @parameter iv_text | Text
     "! @parameter ix_previous | Previous exception
+    "! @parameter ii_log | Log
+    "! @parameter iv_longtext | Longtext
     "! @raising zcx_abapgit_exception | Exception
     CLASS-METHODS raise
       IMPORTING
         !iv_text     TYPE clike
         !ix_previous TYPE REF TO cx_root OPTIONAL
         !ii_log      TYPE REF TO zif_abapgit_log OPTIONAL
+        !iv_longtext TYPE csequence OPTIONAL
       RAISING
         zcx_abapgit_exception .
     "! Raise exception with T100 message
@@ -50,6 +54,9 @@ CLASS zcx_abapgit_exception DEFINITION
     "! @parameter iv_msgv2 | Message variable 2
     "! @parameter iv_msgv3 | Message variable 3
     "! @parameter iv_msgv4 | Message variable 4
+    "! @parameter ii_log | Log
+    "! @parameter ix_previous | Previous Exception
+    "! @parameter iv_longtext | Longtext
     "! @raising zcx_abapgit_exception | Exception
     CLASS-METHODS raise_t100
       IMPORTING
@@ -61,22 +68,29 @@ CLASS zcx_abapgit_exception DEFINITION
         VALUE(iv_msgv4) TYPE symsgv DEFAULT sy-msgv4
         !ii_log         TYPE REF TO zif_abapgit_log OPTIONAL
         !ix_previous    TYPE REF TO cx_root OPTIONAL
+        !iv_longtext    TYPE csequence OPTIONAL
       RAISING
         zcx_abapgit_exception .
+    "! Raise with text from previous exception
+    "! @parameter ix_previous | Previous Exception
+    "! @parameter iv_longtext | Longtext
+    "! @raising zcx_abapgit_exception | Exception
     CLASS-METHODS raise_with_text
       IMPORTING
         !ix_previous TYPE REF TO cx_root
+        !iv_longtext TYPE csequence OPTIONAL
       RAISING
         zcx_abapgit_exception .
     METHODS constructor
       IMPORTING
         !textid   LIKE if_t100_message=>t100key OPTIONAL
         !previous LIKE previous OPTIONAL
-        !ii_log   TYPE REF TO zif_abapgit_log OPTIONAL
+        !log      TYPE REF TO zif_abapgit_log OPTIONAL
         !msgv1    TYPE symsgv OPTIONAL
         !msgv2    TYPE symsgv OPTIONAL
         !msgv3    TYPE symsgv OPTIONAL
-        !msgv4    TYPE symsgv OPTIONAL .
+        !msgv4    TYPE symsgv OPTIONAL
+        !longtext TYPE csequence OPTIONAL .
 
     METHODS get_source_position
         REDEFINITION .
@@ -101,6 +115,9 @@ CLASS zcx_abapgit_exception DEFINITION
     METHODS get_t100_longtext_itf
       RETURNING
         VALUE(rt_itf) TYPE tline_tab .
+    METHODS get_longtext_from_attribute
+      RETURNING
+        VALUE(rv_longtext) TYPE string.
     METHODS remove_empty_section
       IMPORTING
         !iv_tabix_from TYPE i
@@ -114,7 +131,7 @@ ENDCLASS.
 
 
 
-CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
+CLASS zcx_abapgit_exception IMPLEMENTATION.
 
 
   METHOD constructor ##ADT_SUPPRESS_GENERATION.
@@ -125,7 +142,8 @@ CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
     me->msgv2 = msgv2.
     me->msgv3 = msgv3.
     me->msgv4 = msgv4.
-    me->mi_log = ii_log.
+    me->mi_log = log.
+    me->mv_longtext = longtext.
 
     CLEAR me->textid.
     IF textid IS INITIAL.
@@ -200,15 +218,38 @@ CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD get_longtext_from_attribute.
+    FIELD-SYMBOLS: <lg_msgv> TYPE data.
+
+    rv_longtext = mv_longtext.
+
+    ASSIGN me->(if_t100_message~t100key-attr1) TO <lg_msgv>.
+    IF sy-subrc = 0.
+      REPLACE ALL OCCURRENCES OF '&1' IN rv_longtext WITH <lg_msgv>.
+    ENDIF.
+    ASSIGN me->(if_t100_message~t100key-attr2) TO <lg_msgv>.
+    IF sy-subrc = 0.
+      REPLACE ALL OCCURRENCES OF '&2' IN rv_longtext WITH <lg_msgv>.
+    ENDIF.
+    ASSIGN me->(if_t100_message~t100key-attr3) TO <lg_msgv>.
+    IF sy-subrc = 0.
+      REPLACE ALL OCCURRENCES OF '&3' IN rv_longtext WITH <lg_msgv>.
+    ENDIF.
+    ASSIGN me->(if_t100_message~t100key-attr4) TO <lg_msgv>.
+    IF sy-subrc = 0.
+      REPLACE ALL OCCURRENCES OF '&4' IN rv_longtext WITH <lg_msgv>.
+    ENDIF.
+  ENDMETHOD.
+
 
   METHOD if_message~get_longtext.
 
     result = super->get_longtext( ).
 
-    IF if_t100_message~t100key IS NOT INITIAL.
-
+    IF mv_longtext IS NOT INITIAL.
+      result = get_longtext_from_attribute( ).
+    ELSEIF if_t100_message~t100key IS NOT INITIAL.
       result = itf_to_string( get_t100_longtext_itf( ) ).
-
     ENDIF.
 
   ENDMETHOD.
@@ -306,7 +347,8 @@ CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
 
     raise_t100(
       ii_log      = ii_log
-      ix_previous = ix_previous ).
+      ix_previous = ix_previous
+      iv_longtext = iv_longtext ).
 
   ENDMETHOD.
 
@@ -328,19 +370,21 @@ CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
     RAISE EXCEPTION TYPE zcx_abapgit_exception
       EXPORTING
         textid   = ls_t100_key
-        ii_log   = ii_log
+        log      = ii_log
         msgv1    = iv_msgv1
         msgv2    = iv_msgv2
         msgv3    = iv_msgv3
         msgv4    = iv_msgv4
-        previous = ix_previous.
+        previous = ix_previous
+        longtext = iv_longtext.
   ENDMETHOD.
 
 
   METHOD raise_with_text.
     raise(
-      iv_text = ix_previous->get_text( )
-      ix_previous = ix_previous ).
+      iv_text     = ix_previous->get_text( )
+      ix_previous = ix_previous
+      iv_longtext = iv_longtext ).
   ENDMETHOD.
 
 
