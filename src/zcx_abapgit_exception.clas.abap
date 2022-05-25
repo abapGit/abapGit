@@ -115,9 +115,6 @@ CLASS zcx_abapgit_exception DEFINITION
     METHODS get_t100_longtext_itf
       RETURNING
         VALUE(rt_itf) TYPE tline_tab .
-    METHODS get_longtext_from_attribute
-      RETURNING
-        VALUE(rv_longtext) TYPE string.
     METHODS remove_empty_section
       IMPORTING
         !iv_tabix_from TYPE i
@@ -219,36 +216,13 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD get_longtext_from_attribute.
-    FIELD-SYMBOLS: <lg_msgv> TYPE data.
-
-    rv_longtext = mv_longtext.
-
-    ASSIGN me->(if_t100_message~t100key-attr1) TO <lg_msgv>.
-    IF sy-subrc = 0.
-      REPLACE ALL OCCURRENCES OF '&1' IN rv_longtext WITH <lg_msgv>.
-    ENDIF.
-    ASSIGN me->(if_t100_message~t100key-attr2) TO <lg_msgv>.
-    IF sy-subrc = 0.
-      REPLACE ALL OCCURRENCES OF '&2' IN rv_longtext WITH <lg_msgv>.
-    ENDIF.
-    ASSIGN me->(if_t100_message~t100key-attr3) TO <lg_msgv>.
-    IF sy-subrc = 0.
-      REPLACE ALL OCCURRENCES OF '&3' IN rv_longtext WITH <lg_msgv>.
-    ENDIF.
-    ASSIGN me->(if_t100_message~t100key-attr4) TO <lg_msgv>.
-    IF sy-subrc = 0.
-      REPLACE ALL OCCURRENCES OF '&4' IN rv_longtext WITH <lg_msgv>.
-    ENDIF.
-  ENDMETHOD.
-
 
   METHOD if_message~get_longtext.
 
     result = super->get_longtext( ).
 
     IF mv_longtext IS NOT INITIAL.
-      result = get_longtext_from_attribute( ).
+      result = mv_longtext.
     ELSEIF if_t100_message~t100key IS NOT INITIAL.
       result = itf_to_string( get_t100_longtext_itf( ) ).
     ENDIF.
