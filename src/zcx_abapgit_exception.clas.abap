@@ -27,7 +27,7 @@ CLASS zcx_abapgit_exception DEFINITION
     DATA msgv3 TYPE symsgv READ-ONLY .
     DATA msgv4 TYPE symsgv READ-ONLY .
     DATA mv_longtext TYPE string READ-ONLY.
-    DATA mt_callstack TYPE abap_callstack READ-ONLY .
+    DATA mt_callstack TYPE abap_callstack READ-ONLY.
     DATA mi_log TYPE REF TO zif_abapgit_log READ-ONLY.
 
     "! Raise exception with text
@@ -55,7 +55,7 @@ CLASS zcx_abapgit_exception DEFINITION
     "! @parameter iv_msgv3 | Message variable 3
     "! @parameter iv_msgv4 | Message variable 4
     "! @parameter ii_log | Log
-    "! @parameter ix_previous | Previous Exception
+    "! @parameter ix_previous | Previous exception
     "! @parameter iv_longtext | Longtext
     "! @raising zcx_abapgit_exception | Exception
     CLASS-METHODS raise_t100
@@ -72,7 +72,7 @@ CLASS zcx_abapgit_exception DEFINITION
       RAISING
         zcx_abapgit_exception .
     "! Raise with text from previous exception
-    "! @parameter ix_previous | Previous Exception
+    "! @parameter ix_previous | Previous exception
     "! @parameter iv_longtext | Longtext
     "! @raising zcx_abapgit_exception | Exception
     CLASS-METHODS raise_with_text
@@ -99,7 +99,7 @@ CLASS zcx_abapgit_exception DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CONSTANTS c_generic_error_msg TYPE string VALUE `An error occured (ZCX_ABAPGIT_EXCEPTION)` ##NO_TEXT.
+    CONSTANTS c_generic_error_msg TYPE string VALUE `An error occured (ZCX_ABAPGIT_EXCEPTION)`.
 
     CLASS-METHODS split_text_to_symsg
       IMPORTING
@@ -142,10 +142,11 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
     me->msgv2 = msgv2.
     me->msgv3 = msgv3.
     me->msgv4 = msgv4.
-    me->mi_log = log.
-    me->mv_longtext = longtext.
+    mi_log = log.
+    mv_longtext = longtext.
 
     CLEAR me->textid.
+
     IF textid IS INITIAL.
       if_t100_message~t100key = if_t100_message=>default_textid.
     ELSE.
@@ -172,7 +173,7 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
         IMPORTING
           program_name = program_name
           include_name = include_name
-          source_line  = source_line   ).
+          source_line  = source_line ).
     ENDIF.
 
   ENDMETHOD.

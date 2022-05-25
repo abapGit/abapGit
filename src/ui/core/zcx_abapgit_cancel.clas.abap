@@ -36,6 +36,7 @@ CLASS zcx_abapgit_cancel IMPLEMENTATION.
       longtext = longtext ).
 
     CLEAR me->textid.
+
     IF textid IS INITIAL.
       if_t100_message~t100key = if_t100_message=>default_textid.
     ELSE.
