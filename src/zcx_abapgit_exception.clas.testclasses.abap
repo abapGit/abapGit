@@ -448,3 +448,190 @@ CLASS ltcl_split_text IMPLEMENTATION.
 
   ENDMETHOD.
 ENDCLASS.
+
+CLASS ltcl_longtext DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
+  PUBLIC SECTION.
+    METHODS:
+      empty_longtext FOR TESTING,
+      longtext FOR TESTING,
+      multiline_longtext FOR TESTING,
+      t100_longtext_override FOR TESTING,
+      text_from_previous_exception FOR TESTING.
+  PRIVATE SECTION.
+    CLASS-DATA:
+      BEGIN OF gs_test_data,
+        text                  TYPE string VALUE `Exception error short text`,
+        empty_longtext        TYPE string VALUE ``,
+        longtext_500          TYPE string,
+        longtext_500_multline TYPE string,
+        t100_with_longtext    TYPE symsg,
+      END OF gs_test_data.
+    DATA:
+      mo_cut TYPE REF TO zcx_abapgit_exception,
+      BEGIN OF ms_given,
+        text               TYPE string,
+        t100_message       TYPE symsg,
+        longtext           TYPE string,
+        previous_exception TYPE REF TO cx_root,
+      END OF ms_given.
+    CLASS-METHODS:
+      class_setup,
+      class_teardown.
+    METHODS:
+      given_the_text IMPORTING iv_text TYPE csequence,
+      given_the_longtext IMPORTING iv_longtext TYPE csequence,
+      given_the_t100_message IMPORTING is_message TYPE symsg,
+      given_the_previous_exception IMPORTING ix_previous_exception TYPE REF TO cx_root,
+      when_instantiated_using_raise,
+      when_instan_using_raise_t100,
+      when_inst_usng_raise_with_text,
+      then_the_text_should_equal IMPORTING iv_text TYPE csequence,
+      then_the_longtext_should_equal IMPORTING iv_longtext TYPE csequence,
+      teardown.
+ENDCLASS.
+
+CLASS ltcl_longtext IMPLEMENTATION.
+  METHOD empty_longtext.
+    given_the_text( gs_test_data-text ).
+    given_the_longtext( gs_test_data-empty_longtext ).
+
+    when_instantiated_using_raise( ).
+
+    then_the_text_should_equal( gs_test_data-text ).
+    then_the_longtext_should_equal( gs_test_data-empty_longtext ).
+  ENDMETHOD.
+
+  METHOD longtext.
+    given_the_text( gs_test_data-text ).
+    given_the_longtext( gs_test_data-longtext_500 ).
+
+    when_instantiated_using_raise( ).
+
+    then_the_text_should_equal( gs_test_data-text ).
+    then_the_longtext_should_equal( gs_test_data-longtext_500 ).
+  ENDMETHOD.
+
+  METHOD multiline_longtext.
+    given_the_text( gs_test_data-text ).
+    given_the_longtext( gs_test_data-longtext_500_multline ).
+
+    when_instantiated_using_raise( ).
+
+    then_the_text_should_equal( gs_test_data-text ).
+    then_the_longtext_should_equal( gs_test_data-longtext_500_multline ).
+  ENDMETHOD.
+
+  METHOD t100_longtext_override.
+    given_the_longtext( gs_test_data-longtext_500 ).
+    given_the_t100_message( gs_test_data-t100_with_longtext ).
+
+    when_instan_using_raise_t100( ).
+
+    then_the_longtext_should_equal( gs_test_data-longtext_500 ).
+  ENDMETHOD.
+
+  METHOD text_from_previous_exception.
+    DATA: lx_previous TYPE REF TO cx_sy_dyn_call_illegal_method.
+
+    CREATE OBJECT lx_previous.
+
+    given_the_previous_exception( lx_previous ).
+    given_the_longtext( gs_test_data-longtext_500 ).
+
+    when_inst_usng_raise_with_text( ).
+
+    then_the_text_should_equal( condense( lx_previous->get_text( ) ) ).
+    then_the_longtext_should_equal( gs_test_data-longtext_500 ).
+  ENDMETHOD.
+
+  METHOD given_the_text.
+    ms_given-text = iv_text.
+  ENDMETHOD.
+
+  METHOD given_the_longtext.
+    ms_given-longtext = iv_longtext.
+  ENDMETHOD.
+
+  METHOD given_the_t100_message.
+    ms_given-t100_message = is_message.
+  ENDMETHOD.
+
+  METHOD given_the_previous_exception.
+    ms_given-previous_exception = ix_previous_exception.
+  ENDMETHOD.
+
+  METHOD when_instantiated_using_raise.
+    TRY.
+        zcx_abapgit_exception=>raise( iv_text     = ms_given-text
+                                      ix_previous = ms_given-previous_exception
+                                      iv_longtext = ms_given-longtext ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception INTO mo_cut ##NEEDED.
+    ENDTRY.
+  ENDMETHOD.
+
+  METHOD when_instan_using_raise_t100.
+    TRY.
+        zcx_abapgit_exception=>raise_t100( iv_msgid    = ms_given-t100_message-msgid
+                                           iv_msgno    = ms_given-t100_message-msgno
+                                           iv_msgv1    = ms_given-t100_message-msgv1
+                                           iv_msgv2    = ms_given-t100_message-msgv2
+                                           iv_msgv3    = ms_given-t100_message-msgv3
+                                           iv_msgv4    = ms_given-t100_message-msgv4
+                                           ix_previous = ms_given-previous_exception
+                                           iv_longtext = ms_given-longtext ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception INTO mo_cut ##NEEDED.
+    ENDTRY.
+  ENDMETHOD.
+
+  METHOD when_inst_usng_raise_with_text.
+    TRY.
+        zcx_abapgit_exception=>raise_with_text( ix_previous = ms_given-previous_exception
+                                                iv_longtext = ms_given-longtext ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception INTO mo_cut ##NEEDED.
+    ENDTRY.
+  ENDMETHOD.
+
+  METHOD then_the_text_should_equal.
+    cl_abap_unit_assert=>assert_equals( exp = iv_text
+                                        act = mo_cut->get_text( ) ).
+  ENDMETHOD.
+
+  METHOD then_the_longtext_should_equal.
+    cl_abap_unit_assert=>assert_equals( exp = iv_longtext
+                                        act = mo_cut->get_longtext( ) ).
+  ENDMETHOD.
+
+  METHOD class_setup.
+    gs_test_data-longtext_500 =
+      `Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et` &&
+      ` dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Ste` &&
+      `t clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, ` &&
+      `consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat,` &&
+      ` sed diam voluptua. At vero eos et accusam et justo duo dolores et e`.
+
+    gs_test_data-longtext_500_multline =
+      `Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et` &&
+      ` dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum.` &&
+      cl_abap_char_utilities=>newline &&
+      `Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.` &&
+      cl_abap_char_utilities=>newline &&
+      cl_abap_char_utilities=>newline &&
+      `Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et` &&
+      ` dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores ete`.
+
+    gs_test_data-t100_with_longtext-msgid = '00'.
+    gs_test_data-t100_with_longtext-msgno = '002'.
+  ENDMETHOD.
+
+  METHOD class_teardown.
+    CLEAR gs_test_data.
+  ENDMETHOD.
+
+  METHOD teardown.
+    CLEAR ms_given.
+    FREE mo_cut.
+  ENDMETHOD.
+ENDCLASS.
