@@ -223,19 +223,20 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
 
 
   METHOD if_message~get_longtext.
+    DATA: lv_preserve_newlines_handled TYPE abap_bool VALUE abap_false.
 
     IF mv_longtext IS NOT INITIAL.
       result = mv_longtext.
     ELSEIF if_t100_message~t100key IS NOT INITIAL.
       result = itf_to_string( get_t100_longtext_itf( ) ).
     ELSE.
-      result = super->get_longtext( abap_false ).
+      result = super->get_longtext( preserve_newlines ).
+      lv_preserve_newlines_handled = abap_true.
     ENDIF.
 
-    IF preserve_newlines = abap_false.
+    IF lv_preserve_newlines_handled = abap_false AND preserve_newlines = abap_false.
       result = remove_newlines_from_string( result ).
     ENDIF.
-
   ENDMETHOD.
 
 
