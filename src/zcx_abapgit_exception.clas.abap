@@ -124,6 +124,11 @@ CLASS zcx_abapgit_exception DEFINITION
     METHODS replace_section_head_with_text
       CHANGING
         !cs_itf TYPE tline .
+    CLASS-METHODS remove_newlines_from_string
+      IMPORTING
+        iv_string        TYPE string
+      RETURNING
+        VALUE(rv_result) TYPE string.
 ENDCLASS.
 
 
@@ -219,12 +224,16 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
 
   METHOD if_message~get_longtext.
 
-    result = super->get_longtext( ).
-
     IF mv_longtext IS NOT INITIAL.
       result = mv_longtext.
     ELSEIF if_t100_message~t100key IS NOT INITIAL.
       result = itf_to_string( get_t100_longtext_itf( ) ).
+    ELSE.
+      result = super->get_longtext( abap_false ).
+    ENDIF.
+
+    IF preserve_newlines = abap_false.
+      result = remove_newlines_from_string( result ).
     ENDIF.
 
   ENDMETHOD.
@@ -472,5 +481,14 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
 
     rs_msg = ls_msg.
 
+  ENDMETHOD.
+
+  METHOD remove_newlines_from_string.
+    rv_result = iv_string.
+
+    REPLACE ALL OCCURRENCES OF ` ` && cl_abap_char_utilities=>cr_lf IN rv_result WITH ` `.
+    REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>cr_lf IN rv_result WITH ` `.
+    REPLACE ALL OCCURRENCES OF ` ` && cl_abap_char_utilities=>newline IN rv_result WITH ` `.
+    REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>newline IN rv_result WITH ` `.
   ENDMETHOD.
 ENDCLASS.
