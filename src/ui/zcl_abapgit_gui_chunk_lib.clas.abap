@@ -412,21 +412,28 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     lv_error_text = ix_error->get_text( ).
     lv_longtext = ix_error->if_message~get_longtext( abap_true ).
 
-    REPLACE FIRST OCCURRENCE OF REGEX
-      |({ zcx_abapgit_exception=>c_section_text-cause }{ cl_abap_char_utilities=>newline })|
-      IN lv_longtext WITH |<h3>$1</h3>|.
+    IF lv_longtext IS NOT INITIAL.
+      lv_error_text = |{ lv_error_text } (longtext available on hover)|.
 
-    REPLACE FIRST OCCURRENCE OF REGEX
-      |({ zcx_abapgit_exception=>c_section_text-system_response }{ cl_abap_char_utilities=>newline })|
-      IN lv_longtext WITH |<h3>$1</h3>|.
+      REPLACE FIRST OCCURRENCE OF REGEX
+        |({ zcx_abapgit_exception=>c_section_text-cause }{ cl_abap_char_utilities=>newline })|
+        IN lv_longtext WITH |<h3>$1</h3>|.
 
-    REPLACE FIRST OCCURRENCE OF REGEX
-      |({ zcx_abapgit_exception=>c_section_text-what_to_do }{ cl_abap_char_utilities=>newline })|
-      IN lv_longtext WITH |<h3>$1</h3>|.
+      REPLACE FIRST OCCURRENCE OF REGEX
+        |({ zcx_abapgit_exception=>c_section_text-system_response }{ cl_abap_char_utilities=>newline })|
+        IN lv_longtext WITH |<h3>$1</h3>|.
 
-    REPLACE FIRST OCCURRENCE OF REGEX
-      |({ zcx_abapgit_exception=>c_section_text-sys_admin }{ cl_abap_char_utilities=>newline })|
-      IN lv_longtext WITH |<h3>$1</h3>|.
+      REPLACE FIRST OCCURRENCE OF REGEX
+        |({ zcx_abapgit_exception=>c_section_text-what_to_do }{ cl_abap_char_utilities=>newline })|
+        IN lv_longtext WITH |<h3>$1</h3>|.
+
+      REPLACE FIRST OCCURRENCE OF REGEX
+        |({ zcx_abapgit_exception=>c_section_text-sys_admin }{ cl_abap_char_utilities=>newline })|
+        IN lv_longtext WITH |<h3>$1</h3>|.
+
+      REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>cr_lf IN lv_longtext WITH '<br/>'.
+      REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>newline IN lv_longtext WITH '<br/>'.
+    ENDIF.
 
     ri_html->add( |<div id="message" class="message-panel">| ).
     ri_html->add( |{ ri_html->icon( 'exclamation-circle/red' ) } { lv_error_text }| ).
