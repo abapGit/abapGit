@@ -454,7 +454,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     ri_html->add( |<div id="message" class="message-panel">| ).
     ri_html->add( |{ ri_html->icon( 'exclamation-circle/red' ) } { lv_error_text }| ).
-    ri_html->add( |<div class="float-right">| ).
+    ri_html->add( |<div class="message-panel-bar">| ).
 
     ri_html->add_a(
       iv_txt   = `&#x274c;`
@@ -464,7 +464,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     ri_html->add( |</div>| ).
 
-    ri_html->add( |<div class="float-right message-panel-commands">| ).
+    ri_html->add( |<div class="message-panel-bar message-panel-commands">| ).
 
     IF ix_error->if_t100_message~t100key-msgid IS NOT INITIAL.
 
