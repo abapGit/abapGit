@@ -400,11 +400,14 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
   METHOD render_error_message_box.
 
     DATA:
-      lv_error_text   TYPE string,
-      lv_longtext     TYPE string,
-      lv_program_name TYPE sy-repid,
-      lv_title        TYPE string,
-      lv_text         TYPE string.
+      lv_error_text          TYPE string,
+      lv_longtext            TYPE string,
+      lt_longtext_paragraphs TYPE string_table,
+      lv_program_name        TYPE sy-repid,
+      lv_title               TYPE string,
+      lv_text                TYPE string.
+    FIELD-SYMBOLS:
+      <lv_longtext_paragraph> TYPE string.
 
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
@@ -431,8 +434,22 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
         |({ zcx_abapgit_exception=>c_section_text-sys_admin }{ cl_abap_char_utilities=>newline })|
         IN lv_longtext WITH |<h3>$1</h3>|.
 
-      REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>cr_lf IN lv_longtext WITH '<br/>'.
-      REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>newline IN lv_longtext WITH '<br/>'.
+      REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>cr_lf
+        IN lv_longtext
+        WITH cl_abap_char_utilities=>newline.
+
+      SPLIT lv_longtext AT cl_abap_char_utilities=>newline INTO TABLE lt_longtext_paragraphs.
+      CLEAR lv_longtext.
+
+      LOOP AT lt_longtext_paragraphs ASSIGNING <lv_longtext_paragraph>.
+        CONDENSE <lv_longtext_paragraph>.
+
+        IF <lv_longtext_paragraph> IS INITIAL.
+          CONTINUE.
+        ENDIF.
+
+        lv_longtext = |{ lv_longtext }<p>{ <lv_longtext_paragraph> }</p>{ cl_abap_char_utilities=>newline }|.
+      ENDLOOP.
     ENDIF.
 
     ri_html->add( |<div id="message" class="message-panel">| ).
