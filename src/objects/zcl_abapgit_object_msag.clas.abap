@@ -193,6 +193,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
         FOR ALL ENTRIES IN lt_doku_object_names
         WHERE id = 'NA'
         AND object = lt_doku_object_names-table_line
+        AND langu <> c_translation_detective_lang
         ORDER BY PRIMARY KEY.
     ENDIF.
 
@@ -225,6 +226,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
     SELECT DISTINCT sprsl AS langu INTO TABLE lt_i18n_langs
       FROM t100t
       WHERE arbgb = lv_msg_id
+      AND sprsl <> c_translation_detective_lang
       AND sprsl <> mv_language.          "#EC CI_BYPASS "#EC CI_GENBUFF
 
     SORT lt_i18n_langs ASCENDING.

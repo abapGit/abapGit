@@ -6,6 +6,7 @@ CLASS zcl_abapgit_objects_super DEFINITION
   PUBLIC SECTION.
 
     CONSTANTS c_user_unknown TYPE syuname VALUE 'UNKNOWN'.
+    CONSTANTS c_translation_detective_lang TYPE spras VALUE '늑'.
 
     METHODS constructor
       IMPORTING
