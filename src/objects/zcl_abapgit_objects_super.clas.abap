@@ -16,6 +16,7 @@ CLASS zcl_abapgit_objects_super DEFINITION
     DATA ms_item TYPE zif_abapgit_definitions=>ty_item .
     DATA mv_language TYPE spras .
     DATA mv_translation_detective_lang TYPE spras.
+    DATA mv_pseudo_translation_language TYPE spras.
 
     METHODS get_metadata
       RETURNING
@@ -100,11 +101,33 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
 
   METHOD constructor.
+    " Translation Object Detective
+    " https://help.sap.com/docs/ABAP_PLATFORM_NEW/ceb25152cb0d4adba664cebea2bf4670/88a3d3cbccf64601975acabaccdfde45.html
     CALL FUNCTION 'CONVERSION_EXIT_ISOLA_INPUT'
       EXPORTING
-        input  = '1Q'
+        input            = '1Q'
       IMPORTING
-        output = mv_translation_detective_lang.
+        output           = mv_translation_detective_lang
+      EXCEPTIONS
+        unknown_language = 1
+        OTHERS           = 2.
+    IF sy-subrc = 1.
+      " The language for Translation Object Detective was not setup
+    ENDIF.
+    " 1943470 - Using technical language key 2Q to create pseudo-translations of ABAP developments
+    " https://launchpad.support.sap.com/#/notes/1943470
+    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_INPUT'
+      EXPORTING
+        input            = '2Q'
+      IMPORTING
+        output           = mv_pseudo_translation_language
+      EXCEPTIONS
+        unknown_language = 1
+        OTHERS           = 2.
+    IF sy-subrc = 1.
+      " The language for Pseudo Translation was not setup
+    ENDIF.
+
     ms_item = is_item.
     ASSERT NOT ms_item IS INITIAL.
     mv_language = iv_language.

@@ -160,11 +160,11 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 
   METHOD serialize_longtexts_msag.
 
-    DATA: lv_doku_object_name           TYPE dokhl-object,
-          lt_doku_object_names          TYPE STANDARD TABLE OF dokhl-object
+    DATA: lv_doku_object_name  TYPE dokhl-object,
+          lt_doku_object_names TYPE STANDARD TABLE OF dokhl-object
                           WITH NON-UNIQUE DEFAULT KEY,
-          lt_dokil            TYPE zif_abapgit_definitions=>ty_dokil_tt,
-          ls_dokil            LIKE LINE OF lt_dokil.
+          lt_dokil             TYPE zif_abapgit_definitions=>ty_dokil_tt,
+          ls_dokil             LIKE LINE OF lt_dokil.
 
     FIELD-SYMBOLS: <ls_t100>  TYPE t100.
 
@@ -194,6 +194,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
         WHERE id = 'NA'
         AND object = lt_doku_object_names-table_line
         AND langu <> mv_translation_detective_lang
+        AND langu <> mv_pseudo_translation_language
         ORDER BY PRIMARY KEY.
     ENDIF.
 
@@ -227,6 +228,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
       FROM t100t
       WHERE arbgb = lv_msg_id
       AND sprsl <> mv_translation_detective_lang
+      AND sprsl <> mv_pseudo_translation_language
       AND sprsl <> mv_language.          "#EC CI_BYPASS "#EC CI_GENBUFF
 
     SORT lt_i18n_langs ASCENDING.
