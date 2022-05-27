@@ -6,7 +6,6 @@ CLASS zcl_abapgit_objects_super DEFINITION
   PUBLIC SECTION.
 
     CONSTANTS c_user_unknown TYPE syuname VALUE 'UNKNOWN'.
-    CONSTANTS c_translation_detective_lang TYPE spras VALUE '늑'.
 
     METHODS constructor
       IMPORTING
@@ -16,6 +15,7 @@ CLASS zcl_abapgit_objects_super DEFINITION
 
     DATA ms_item TYPE zif_abapgit_definitions=>ty_item .
     DATA mv_language TYPE spras .
+    DATA mv_translation_detective_lang TYPE spras.
 
     METHODS get_metadata
       RETURNING
@@ -100,6 +100,11 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
 
   METHOD constructor.
+    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_INPUT'
+      EXPORTING
+        input  = '1Q'
+      IMPORTING
+        output = mv_translation_detective_lang.
     ms_item = is_item.
     ASSERT NOT ms_item IS INITIAL.
     mv_language = iv_language.
