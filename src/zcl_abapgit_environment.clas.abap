@@ -157,8 +157,8 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
 
   METHOD zif_abapgit_environment~get_system_language_filter.
     DATA lv_translation_detective_lang TYPE spras.
-    DATA mv_pseudo_translation_language TYPE spras.
-    FIELD-SYMBOLS <fs_system_language_filter> LIKE LINE OF rt_system_language_filter.
+    DATA lv_pseudo_translation_language TYPE spras.
+    FIELD-SYMBOLS <ls_system_language_filter> LIKE LINE OF rt_system_language_filter.
 
     " Translation Object Detective
     " https://help.sap.com/docs/ABAP_PLATFORM_NEW/ceb25152cb0d4adba664cebea2bf4670/88a3d3cbccf64601975acabaccdfde45.html
@@ -174,10 +174,10 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
       " The language for Translation Object Detective was not setup
     ENDIF.
     IF NOT lv_translation_detective_lang IS INITIAL.
-      APPEND INITIAL LINE TO rt_system_language_filter ASSIGNING <fs_system_language_filter>.
-      <fs_system_language_filter>-sign = 'E'.
-      <fs_system_language_filter>-option = 'EQ'.
-      <fs_system_language_filter>-low = lv_translation_detective_lang.
+      APPEND INITIAL LINE TO rt_system_language_filter ASSIGNING <ls_system_language_filter>.
+      <ls_system_language_filter>-sign = 'E'.
+      <ls_system_language_filter>-option = 'EQ'.
+      <ls_system_language_filter>-low = lv_translation_detective_lang.
     ENDIF.
     " 1943470 - Using technical language key 2Q to create pseudo-translations of ABAP developments
     " https://launchpad.support.sap.com/#/notes/1943470
@@ -185,18 +185,18 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
       EXPORTING
         input            = '2Q'
       IMPORTING
-        output           = mv_pseudo_translation_language
+        output           = lv_pseudo_translation_language
       EXCEPTIONS
         unknown_language = 1
         OTHERS           = 2.
     IF sy-subrc = 1.
       " The language for Pseudo Translation was not setup
     ENDIF.
-    IF NOT mv_pseudo_translation_language IS INITIAL.
-      APPEND INITIAL LINE TO rt_system_language_filter ASSIGNING <fs_system_language_filter>.
-      <fs_system_language_filter>-sign = 'E'.
-      <fs_system_language_filter>-option = 'EQ'.
-      <fs_system_language_filter>-low = mv_pseudo_translation_language.
+    IF NOT lv_pseudo_translation_language IS INITIAL.
+      APPEND INITIAL LINE TO rt_system_language_filter ASSIGNING <ls_system_language_filter>.
+      <ls_system_language_filter>-sign = 'E'.
+      <ls_system_language_filter>-option = 'EQ'.
+      <ls_system_language_filter>-low = lv_pseudo_translation_language.
     ENDIF.
   ENDMETHOD.
 

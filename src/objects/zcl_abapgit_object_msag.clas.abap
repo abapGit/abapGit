@@ -165,7 +165,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
                           WITH NON-UNIQUE DEFAULT KEY,
           lt_dokil             TYPE zif_abapgit_definitions=>ty_dokil_tt,
           ls_dokil             LIKE LINE OF lt_dokil,
-          language_filter      TYPE zif_abapgit_environment=>ty_system_language_filter.
+          lt_language_filter   TYPE zif_abapgit_environment=>ty_system_language_filter.
 
     FIELD-SYMBOLS: <ls_t100>  TYPE t100.
 
@@ -189,13 +189,13 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
         AND masterlang = abap_true
         ORDER BY PRIMARY KEY.
     ELSE.
-      language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
+      lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
       SELECT * FROM dokil
         INTO TABLE lt_dokil
         FOR ALL ENTRIES IN lt_doku_object_names
         WHERE id = 'NA'
         AND object = lt_doku_object_names-table_line
-        AND langu IN language_filter
+        AND langu IN lt_language_filter
         ORDER BY PRIMARY KEY.
     ENDIF.
 
@@ -212,11 +212,11 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 
   METHOD serialize_texts.
 
-    DATA: lv_msg_id       TYPE rglif-message_id,
-          lt_t100_texts   TYPE ty_t100_texts,
-          lt_t100t        TYPE TABLE OF t100t,
-          lt_i18n_langs   TYPE TABLE OF langu,
-          language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
+    DATA: lv_msg_id          TYPE rglif-message_id,
+          lt_t100_texts      TYPE ty_t100_texts,
+          lt_t100t           TYPE TABLE OF t100t,
+          lt_i18n_langs      TYPE TABLE OF langu,
+          lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
     lv_msg_id = ms_item-obj_name.
 
@@ -226,11 +226,11 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 
     " Collect additional languages
     " Skip main lang - it has been already serialized and also technical languages
-    language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
+    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
     SELECT DISTINCT sprsl AS langu INTO TABLE lt_i18n_langs
       FROM t100t
       WHERE arbgb = lv_msg_id
-      AND sprsl IN language_filter
+      AND sprsl IN lt_language_filter
       AND sprsl <> mv_language.          "#EC CI_BYPASS "#EC CI_GENBUFF
 
     SORT lt_i18n_langs ASCENDING.
