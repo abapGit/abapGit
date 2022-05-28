@@ -188,13 +188,13 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
         AND masterlang = abap_true
         ORDER BY PRIMARY KEY.
     ELSE.
+      DATA(language_filter) = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
       SELECT * FROM dokil
         INTO TABLE lt_dokil
         FOR ALL ENTRIES IN lt_doku_object_names
         WHERE id = 'NA'
         AND object = lt_doku_object_names-table_line
-        AND langu <> mv_translation_detective_lang
-        AND langu <> mv_pseudo_translation_language
+        AND langu IN language_filter
         ORDER BY PRIMARY KEY.
     ENDIF.
 
@@ -224,11 +224,11 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 
     " Collect additional languages
     " Skip main lang - it has been already serialized
+    DATA(language_filter) = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
     SELECT DISTINCT sprsl AS langu INTO TABLE lt_i18n_langs
       FROM t100t
       WHERE arbgb = lv_msg_id
-      AND sprsl <> mv_translation_detective_lang
-      AND sprsl <> mv_pseudo_translation_language
+      AND sprsl IN language_filter
       AND sprsl <> mv_language.          "#EC CI_BYPASS "#EC CI_GENBUFF
 
     SORT lt_i18n_langs ASCENDING.

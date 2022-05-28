@@ -154,4 +154,48 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
     rv_allowed = zcl_abapgit_exit=>get_instance( )->allow_sap_objects( ).
 
   ENDMETHOD.
+
+  METHOD zif_abapgit_environment~get_system_language_filter.
+    DATA lv_translation_detective_lang TYPE spras.
+    DATA mv_pseudo_translation_language TYPE spras.
+    " Translation Object Detective
+    " https://help.sap.com/docs/ABAP_PLATFORM_NEW/ceb25152cb0d4adba664cebea2bf4670/88a3d3cbccf64601975acabaccdfde45.html
+    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_INPUT'
+      EXPORTING
+        input            = '1Q'
+      IMPORTING
+        output           = lv_translation_detective_lang
+      EXCEPTIONS
+        unknown_language = 1
+        OTHERS           = 2.
+    IF sy-subrc = 1.
+      " The language for Translation Object Detective was not setup
+    ENDIF.
+    IF NOT lv_translation_detective_lang IS INITIAL.
+      APPEND INITIAL LINE TO rt_system_language_filter ASSIGNING FIELD-SYMBOL(<fs_system_language_filter>).
+      <fs_system_language_filter>-sign = 'E'.
+      <fs_system_language_filter>-option = 'EQ'.
+      <fs_system_language_filter>-low = lv_translation_detective_lang.
+    ENDIF.
+    " 1943470 - Using technical language key 2Q to create pseudo-translations of ABAP developments
+    " https://launchpad.support.sap.com/#/notes/1943470
+    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_INPUT'
+      EXPORTING
+        input            = '2Q'
+      IMPORTING
+        output           = mv_pseudo_translation_language
+      EXCEPTIONS
+        unknown_language = 1
+        OTHERS           = 2.
+    IF sy-subrc = 1.
+      " The language for Pseudo Translation was not setup
+    ENDIF.
+    IF NOT mv_pseudo_translation_language IS INITIAL.
+      APPEND INITIAL LINE TO rt_system_language_filter ASSIGNING <fs_system_language_filter>.
+      <fs_system_language_filter>-sign = 'E'.
+      <fs_system_language_filter>-option = 'EQ'.
+      <fs_system_language_filter>-low = mv_pseudo_translation_language.
+    ENDIF.
+  ENDMETHOD.
+
 ENDCLASS.
