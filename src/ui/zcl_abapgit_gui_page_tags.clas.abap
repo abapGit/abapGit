@@ -389,6 +389,9 @@ CLASS zcl_abapgit_gui_page_tags IMPLEMENTATION.
     " If staying on form, initialize it with current settings
     IF rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       mo_form = get_form_schema( mo_form_data ).
+      CREATE OBJECT mo_form_util
+        EXPORTING
+          io_form = mo_form.
     ENDIF.
 
   ENDMETHOD.
