@@ -45,6 +45,14 @@ INTERFACE zif_abapgit_popups
       VALUE(rs_tag) TYPE zif_abapgit_definitions=>ty_git_tag
     RAISING
       zcx_abapgit_exception .
+  METHODS commit_list_popup
+    IMPORTING
+      !iv_repo_url     TYPE string
+      !iv_branch_name  TYPE string OPTIONAL
+    RETURNING
+      VALUE(rs_commit) TYPE zif_abapgit_definitions=>ty_commit
+    RAISING
+      zcx_abapgit_exception .
   TYPES ty_char1 TYPE c LENGTH 1.
   TYPES ty_icon TYPE c LENGTH 30.
   METHODS popup_to_confirm
