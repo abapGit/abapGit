@@ -76,13 +76,13 @@ INTERFACE zif_abapgit_definitions
       obj_type  TYPE tadir-object,
       obj_name  TYPE tadir-obj_name,
       devclass  TYPE devclass,
-      srcsystem TYPE tadir-srcsystem,
     END OF ty_item_signature .
   TYPES:
     BEGIN OF ty_item.
       INCLUDE TYPE ty_item_signature.
   TYPES:
-      inactive TYPE abap_bool,
+      srcsystem TYPE tadir-srcsystem,
+      inactive  TYPE abap_bool,
     END OF ty_item .
   TYPES:
     ty_items_tt TYPE STANDARD TABLE OF ty_item WITH DEFAULT KEY .
