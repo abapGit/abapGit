@@ -158,6 +158,8 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
   METHOD zif_abapgit_environment~get_system_language_filter.
     DATA lv_translation_detective_lang TYPE spras.
     DATA mv_pseudo_translation_language TYPE spras.
+    FIELD-SYMBOLS <fs_system_language_filter> LIKE LINE OF rt_system_language_filter.
+
     " Translation Object Detective
     " https://help.sap.com/docs/ABAP_PLATFORM_NEW/ceb25152cb0d4adba664cebea2bf4670/88a3d3cbccf64601975acabaccdfde45.html
     CALL FUNCTION 'CONVERSION_EXIT_ISOLA_INPUT'
@@ -172,7 +174,7 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
       " The language for Translation Object Detective was not setup
     ENDIF.
     IF NOT lv_translation_detective_lang IS INITIAL.
-      APPEND INITIAL LINE TO rt_system_language_filter ASSIGNING FIELD-SYMBOL(<fs_system_language_filter>).
+      APPEND INITIAL LINE TO rt_system_language_filter ASSIGNING <fs_system_language_filter>.
       <fs_system_language_filter>-sign = 'E'.
       <fs_system_language_filter>-option = 'EQ'.
       <fs_system_language_filter>-low = lv_translation_detective_lang.
