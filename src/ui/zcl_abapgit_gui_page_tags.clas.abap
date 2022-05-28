@@ -195,7 +195,6 @@ CLASS zcl_abapgit_gui_page_tags IMPLEMENTATION.
       )->text(
         iv_name        = c_id-message
         iv_label       = 'Comment'
-        iv_required    = abap_true
         iv_max         = lv_commitmsg_comment_length
         iv_placeholder = |Add a mandatory comment with max { lv_commitmsg_comment_length } characters|
       )->textarea(
@@ -207,11 +206,9 @@ CLASS zcl_abapgit_gui_page_tags IMPLEMENTATION.
       )->text(
         iv_name        = c_id-tagger_name
         iv_label       = 'Tagger Name'
-        iv_required    = abap_true
       )->text(
         iv_name        = c_id-tagger_email
-        iv_label       = 'Tagger Email'
-        iv_required    = abap_true ).
+        iv_label       = 'Tagger Email' ).
     ELSE.
       ro_form->hidden( c_id-message
       )->hidden( c_id-body
