@@ -234,6 +234,7 @@ INTERFACE zif_abapgit_definitions
       cmpname   TYPE seocmpname,
       attkeyfld TYPE seokeyfld,
       attbusobj TYPE seobusobj,
+      exposure  TYPE seoexpose,
     END OF ty_obj_attribute .
   TYPES:
     ty_obj_attribute_tt TYPE STANDARD TABLE OF ty_obj_attribute WITH DEFAULT KEY
