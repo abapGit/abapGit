@@ -369,8 +369,9 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
   METHOD serialize_descr.
 
-    DATA: lt_descriptions TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt,
-          lv_language     TYPE spras.
+    DATA: lt_descriptions    TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt,
+          lv_language        TYPE spras,
+          lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
     IF ii_xml->i18n_params( )-main_language_only = abap_true.
       lv_language = mv_language.
@@ -383,6 +384,9 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     IF lines( lt_descriptions ) = 0.
       RETURN.
     ENDIF.
+    " Remove technical languages
+    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
+    DELETE lt_descriptions WHERE NOT langu IN lt_language_filter.
 
     ii_xml->add( iv_name = 'DESCRIPTIONS'
                  ig_data = lt_descriptions ).
@@ -504,7 +508,8 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     DATA: ls_vseoclass        TYPE vseoclass,
           ls_clskey           TYPE seoclskey,
-          lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus.
+          lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus,
+          lt_language_filter  TYPE zif_abapgit_environment=>ty_system_language_filter.
 
     ls_clskey-clsname = ms_item-obj_name.
 
@@ -543,11 +548,13 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     " Table d010tinf stores info. on languages in which program is maintained
     " Select all active translations of program texts
     " Skip main language - it was already serialized
+    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
     SELECT DISTINCT language
       INTO TABLE lt_langu_additional
       FROM d010tinf
       WHERE r3state  = 'A'
         AND prog     = mv_classpool_name
+        AND language IN lt_language_filter
         AND language <> mv_language.
 
     ii_xml->add( iv_name = 'VSEOCLASS'
@@ -566,7 +573,8 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       FROM dokhl
       WHERE id     = 'CL'
         AND object = ls_clskey-clsname
-        AND langu  <> mv_language.
+        AND langu IN lt_language_filter
+        AND langu <> mv_language.
 
     serialize_docu( ii_xml              = ii_xml
                     iv_clsname          = ls_clskey-clsname

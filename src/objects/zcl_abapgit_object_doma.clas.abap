@@ -129,13 +129,14 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
 
   METHOD serialize_texts.
 
-    DATA: lv_name       TYPE ddobjname,
-          lv_index      TYPE i,
-          ls_dd01v      TYPE dd01v,
-          lt_dd07v      TYPE TABLE OF dd07v,
-          lt_i18n_langs TYPE TABLE OF langu,
-          lt_dd01_texts TYPE ty_dd01_texts,
-          lt_dd07_texts TYPE ty_dd07_texts.
+    DATA: lv_name            TYPE ddobjname,
+          lv_index           TYPE i,
+          ls_dd01v           TYPE dd01v,
+          lt_dd07v           TYPE TABLE OF dd07v,
+          lt_i18n_langs      TYPE TABLE OF langu,
+          lt_dd01_texts      TYPE ty_dd01_texts,
+          lt_dd07_texts      TYPE ty_dd07_texts,
+          lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
     FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
                    <ls_dd07v>     LIKE LINE OF lt_dd07v,
@@ -150,14 +151,17 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
     lv_name = ms_item-obj_name.
 
     " Collect additional languages, skip main lang - it was serialized already
+    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
     SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
       FROM dd01v
       WHERE domname = lv_name
+      AND ddlanguage IN lt_language_filter
       AND ddlanguage <> mv_language.                      "#EC CI_SUBRC
 
     SELECT DISTINCT ddlanguage AS langu APPENDING TABLE lt_i18n_langs
       FROM dd07v
       WHERE domname = lv_name
+      AND ddlanguage IN lt_language_filter
       AND ddlanguage <> mv_language.                      "#EC CI_SUBRC
 
     SORT lt_i18n_langs.
