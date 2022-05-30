@@ -211,7 +211,8 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
       lv_index               TYPE i,
       lv_langu               TYPE sy-langu,
       lv_laiso               TYPE laiso,
-      lv_installed_languages TYPE string.
+      lv_installed_languages TYPE string,
+      lt_language_filter     TYPE zif_abapgit_environment=>ty_system_language_filter.
 
     IF gt_installed_languages_cache IS INITIAL.
       CALL FUNCTION 'SYSTEM_INSTALLED_LANGUAGES'
@@ -224,9 +225,16 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'Fail to get system SYSTEM_INSTALLED_LANGUAGES' ).
       ENDIF.
 
+      lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
+
       DO strlen( lv_installed_languages ) TIMES.
         lv_index = sy-index - 1.
         lv_langu = lv_installed_languages+lv_index(1).
+
+        IF lv_langu NOT IN lt_language_filter.
+          CONTINUE.
+        ENDIF.
+
         lv_laiso = langu_to_laiso_safe( lv_langu ).
         APPEND lv_laiso TO gt_installed_languages_cache.
       ENDDO.
