@@ -327,7 +327,8 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_sotr_use> LIKE LINE OF et_sotr_use.
 
-    DATA lv_sotr TYPE zif_abapgit_definitions=>ty_sotr.
+    DATA: lv_sotr            TYPE zif_abapgit_definitions=>ty_sotr,
+          lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
     " SOTR usage (see LSOTR_SYSTEM_SETTINGSF01, FORM GET_OBJECT_TABLE)
     " LIMU: CPUB, WAPP, WDYC, WDYD, WDYV
@@ -346,6 +347,9 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
         DELETE lv_sotr-entries WHERE langu <> iv_language.
         CHECK lv_sotr-entries IS NOT INITIAL.
       ENDIF.
+      lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
+      DELETE lv_sotr-entries WHERE NOT langu IN lt_language_filter.
+      CHECK lv_sotr-entries IS NOT INITIAL.
 
       INSERT lv_sotr INTO TABLE et_sotr.
     ENDLOOP.
