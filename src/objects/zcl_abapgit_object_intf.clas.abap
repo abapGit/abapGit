@@ -189,6 +189,12 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
         li_proxy_object->dequeue( ).
 
       CATCH cx_proxy_fault INTO lx_proxy_fault.
+        IF li_proxy_object IS BOUND.
+          TRY.
+              li_proxy_object->dequeue( ).
+            CATCH cx_proxy_gen_error ##NO_HANDLER.
+          ENDTRY.
+        ENDIF.
         zcx_abapgit_exception=>raise_with_text( lx_proxy_fault ).
     ENDTRY.
 
@@ -362,6 +368,8 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
     ENDIF.
+
+    corr_insert( iv_package ).
 
     mi_object_oriented_object_fct->delete( ls_clskey ).
   ENDMETHOD.
