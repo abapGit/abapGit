@@ -32,6 +32,8 @@ CLASS ZCL_ABAPGIT_OO_BASE IMPLEMENTATION.
       INSERT INITIAL LINE INTO TABLE rt_vseoattrib ASSIGNING <ls_vseoattrib>.
       MOVE-CORRESPONDING <ls_attribute> TO <ls_vseoattrib>.
       <ls_vseoattrib>-clsname = iv_clsname.
+      <ls_vseoattrib>-state = seoc_state_implemented.
+      <ls_vseoattrib>-exposure = <ls_attribute>-exposure.
       UNASSIGN <ls_vseoattrib>.
     ENDLOOP.
     UNASSIGN <ls_attribute>.
@@ -134,7 +136,7 @@ CLASS ZCL_ABAPGIT_OO_BASE IMPLEMENTATION.
 
 
   METHOD zif_abapgit_oo_object_fnc~read_attributes.
-    SELECT cmpname attbusobj attkeyfld
+    SELECT cmpname attbusobj attkeyfld exposure
       FROM seocompodf
       INTO CORRESPONDING FIELDS OF TABLE rt_attributes
       WHERE clsname = iv_object_name
