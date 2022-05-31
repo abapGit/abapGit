@@ -86,11 +86,6 @@ CLASS zcl_abapgit_objects_super DEFINITION
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
-    METHODS is_active_ddic
-      RETURNING
-        VALUE(rv_active) TYPE abap_bool
-      RAISING
-        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -282,75 +277,8 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
   METHOD is_active.
 
-    " DDIC types (see LSINTF01, FORM det_dtabname)
-    CONSTANTS lc_ddic_type TYPE string
-      VALUE 'DDLS,DOMA,DTEL,ENQU,INDX,MCID,MCOB,SHLP,SQLT,SQSC,STOB,TABL,TTYP,VIEW,XINX'.
+    rv_active = zcl_abapgit_objects_activation=>is_active( ms_item ).
 
-    DATA: lt_messages    TYPE STANDARD TABLE OF sprot_u WITH DEFAULT KEY,
-          lt_e071_tadirs TYPE STANDARD TABLE OF e071 WITH DEFAULT KEY,
-          ls_e071_tadir  LIKE LINE OF lt_e071_tadirs.
-
-    " For DDIC types, use more accurate method
-    IF lc_ddic_type CS ms_item-obj_type.
-      rv_active = is_active_ddic( ).
-      RETURN.
-    ENDIF.
-
-    ms_item-inactive = abap_false.
-
-    ls_e071_tadir-object   = ms_item-obj_type.
-    ls_e071_tadir-obj_name = ms_item-obj_name.
-    INSERT ls_e071_tadir INTO TABLE lt_e071_tadirs.
-
-    CALL FUNCTION 'RS_INACTIVE_OBJECTS_WARNING'
-      EXPORTING
-        suppress_protocol         = abap_false
-        with_program_includes     = abap_false
-        suppress_dictionary_check = abap_false
-      TABLES
-        p_e071                    = lt_e071_tadirs
-        p_xmsg                    = lt_messages.
-
-    IF lt_messages IS NOT INITIAL.
-      ms_item-inactive = abap_true.
-    ENDIF.
-
-    rv_active = boolc( ms_item-inactive = abap_false ).
-
-  ENDMETHOD.
-
-
-  METHOD is_active_ddic.
-
-    DATA:
-      lv_type  TYPE ddobjtyp,
-      lv_name  TYPE ddobjname,
-      lv_state TYPE ddgotstate.
-
-    ms_item-inactive = abap_false.
-
-    lv_type = ms_item-obj_type.
-    lv_name = ms_item-obj_name.
-
-    " Check if an inactive version of the DDIC object exists
-    " state = 'A' checks if an active version exists but does not detect new or modified objects
-    " state = 'M' checks for all possible versions so we can find out if an inactive one exists
-    " See documentation of the function module
-    CALL FUNCTION 'DDIF_STATE_GET'
-      EXPORTING
-        type          = lv_type
-        name          = lv_name
-        state         = 'M'
-      IMPORTING
-        gotstate      = lv_state
-      EXCEPTIONS
-        illegal_input = 1
-        OTHERS        = 2.
-    IF sy-subrc <> 0 OR lv_state <> 'A'.
-      ms_item-inactive = abap_true.
-    ENDIF.
-
-    rv_active = boolc( ms_item-inactive = abap_false ).
   ENDMETHOD.
 
 

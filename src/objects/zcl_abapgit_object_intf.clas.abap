@@ -143,8 +143,8 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
   METHOD deserialize_pre_ddic.
 
-    DATA: ls_vseointerf   TYPE vseointerf,
-          ls_clskey       TYPE seoclskey.
+    DATA: ls_vseointerf TYPE vseointerf,
+          ls_clskey     TYPE seoclskey.
 
     ls_clskey-clsname = ms_item-obj_name.
 
@@ -203,8 +203,9 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
   METHOD serialize_descr.
 
-    DATA: lt_descriptions TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt,
-          lv_language     TYPE spras.
+    DATA: lt_descriptions    TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt,
+          lv_language        TYPE spras,
+          lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
     IF ii_xml->i18n_params( )-main_language_only = abap_true.
       lv_language = mv_language.
@@ -213,6 +214,10 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     lt_descriptions = mi_object_oriented_object_fct->read_descriptions(
       iv_object_name = iv_clsname
       iv_language    = lv_language ).
+
+    " Remove technical languages
+    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
+    DELETE lt_descriptions WHERE NOT langu IN lt_language_filter.
 
     IF lines( lt_descriptions ) = 0.
       RETURN.
@@ -274,9 +279,9 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
   METHOD serialize_xml.
 
     DATA:
-      ls_vseointerf         TYPE vseointerf,
-      ls_clskey             TYPE seoclskey,
-      lt_langu_additional   TYPE zif_abapgit_lang_definitions=>ty_langus.
+      ls_vseointerf       TYPE vseointerf,
+      ls_clskey           TYPE seoclskey,
+      lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus.
 
     ls_clskey-clsname = ms_item-obj_name.
 
