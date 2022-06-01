@@ -110,8 +110,9 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
   METHOD serialize_texts.
 
-    DATA: lt_tpool_i18n TYPE ty_tpools_i18n,
-          lt_tpool      TYPE textpool_table.
+    DATA: lt_tpool_i18n      TYPE ty_tpools_i18n,
+          lt_tpool           TYPE textpool_table,
+          lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
     FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
 
@@ -122,12 +123,14 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
     " Table d010tinf stores info. on languages in which program is maintained
     " Select all active translations of program texts
     " Skip main language - it was already serialized
+    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
     SELECT DISTINCT language
       INTO CORRESPONDING FIELDS OF TABLE lt_tpool_i18n
       FROM d010tinf
       WHERE r3state = 'A'
       AND prog = ms_item-obj_name
-      AND language <> mv_language ##TOO_MANY_ITAB_FIELDS.
+      AND language <> mv_language
+      AND language IN lt_language_filter ##TOO_MANY_ITAB_FIELDS.
 
     SORT lt_tpool_i18n BY language ASCENDING.
     LOOP AT lt_tpool_i18n ASSIGNING <ls_tpool>.
@@ -158,8 +161,8 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
   METHOD zif_abapgit_object~delete.
 
     DATA:
-      lv_program    LIKE sy-repid,
-      lv_obj_name   TYPE e071-obj_name.
+      lv_program  LIKE sy-repid,
+      lv_obj_name TYPE e071-obj_name.
 
     lv_program = ms_item-obj_name.
 

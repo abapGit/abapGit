@@ -36,6 +36,9 @@ CLASS ltcl_abapgit_popups_mock IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_popups~commit_list_popup.
+  ENDMETHOD.
+
   METHOD zif_abapgit_popups~create_branch_popup.
 
   ENDMETHOD.
