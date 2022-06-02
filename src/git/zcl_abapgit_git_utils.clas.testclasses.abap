@@ -21,6 +21,8 @@ CLASS ltcl_git_utils IMPLEMENTATION.
 
   METHOD get_null.
 
+    CONSTANTS lc_null TYPE x LENGTH 2 VALUE '0000'.
+
     DATA:
       lv_c TYPE c LENGTH 1,
       lv_x TYPE x LENGTH 2.
@@ -31,7 +33,7 @@ CLASS ltcl_git_utils IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_x
-      exp = '0000' ).
+      exp = lc_null ).
 
   ENDMETHOD.
 
