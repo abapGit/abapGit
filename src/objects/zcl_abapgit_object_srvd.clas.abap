@@ -2,7 +2,7 @@ CLASS zcl_abapgit_object_srvd DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
+
     METHODS:
       constructor
         IMPORTING
@@ -10,7 +10,6 @@ CLASS zcl_abapgit_object_srvd DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
           iv_language TYPE spras
         RAISING
           zcx_abapgit_exception.
-
   PROTECTED SECTION.
 
   PRIVATE SECTION.
@@ -196,9 +195,9 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
     ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <lg_data> TO <lv_source>.
     ASSERT sy-subrc = 0.
 
-    <lv_source> = mo_files->read_string( mc_source_file ).
+    <lv_source> = zif_abapgit_object~mo_files->read_string( mc_source_file ).
     IF <lv_source> IS INITIAL.
-      <lv_source> = mo_files->read_string( 'assrvd' ).
+      <lv_source> = zif_abapgit_object~mo_files->read_string( 'assrvd' ).
     ENDIF.
 
     CREATE OBJECT ro_object_data TYPE ('CL_SRVD_WB_OBJECT_DATA').
@@ -551,13 +550,12 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
         lv_source = <lv_source>.
 
         io_xml->add(
-           iv_name = mc_xml_parent_name
-           ig_data = <lv_metadata> ).
+          iv_name = mc_xml_parent_name
+          ig_data = <lv_metadata> ).
 
-        mo_files->add_string(
-            iv_ext    = mc_source_file
-            iv_string = lv_source ).
-
+        zif_abapgit_object~mo_files->add_string(
+          iv_ext    = mc_source_file
+          iv_string = lv_source ).
 
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).

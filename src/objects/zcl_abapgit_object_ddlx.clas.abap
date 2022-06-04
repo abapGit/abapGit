@@ -2,7 +2,6 @@ CLASS zcl_abapgit_object_ddlx DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA mi_persistence TYPE REF TO if_wb_object_persist .
@@ -163,7 +162,7 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
         TRY.
             " If the file doesn't exist that's ok, because previously
             " the source code was stored in the xml. We are downward compatible.
-            <lg_source> = mo_files->read_string( 'asddlxs' ).
+            <lg_source> = zif_abapgit_object~mo_files->read_string( 'asddlxs' ).
           CATCH zcx_abapgit_exception ##NO_HANDLER.
         ENDTRY.
 
@@ -309,8 +308,9 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
         ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <lg_data> TO <lg_field>.
         ASSERT sy-subrc = 0.
 
-        mo_files->add_string( iv_ext    = 'asddlxs'
-                              iv_string = <lg_field> ).
+        zif_abapgit_object~mo_files->add_string(
+          iv_ext    = 'asddlxs'
+          iv_string = <lg_field> ).
 
         CLEAR <lg_field>.
 
