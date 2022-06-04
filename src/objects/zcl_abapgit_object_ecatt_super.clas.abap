@@ -8,15 +8,11 @@ CLASS zcl_abapgit_object_ecatt_super DEFINITION
 
     INTERFACES zif_abapgit_object .
 
-    ALIASES mo_files
-      FOR zif_abapgit_object~mo_files .
-
     METHODS:
       constructor
         IMPORTING
           !is_item     TYPE zif_abapgit_definitions=>ty_item
           !iv_language TYPE spras .
-
   PROTECTED SECTION.
     METHODS:
       get_object_type ABSTRACT

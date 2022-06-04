@@ -2,7 +2,7 @@ CLASS zcl_abapgit_object_drul DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
+
     METHODS:
       constructor
         IMPORTING
@@ -10,7 +10,6 @@ CLASS zcl_abapgit_object_drul DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
           iv_language TYPE spras
         RAISING
           zcx_abapgit_exception.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
     METHODS:
@@ -280,7 +279,7 @@ CLASS zcl_abapgit_object_drul IMPLEMENTATION.
                TO <lv_source>.
         ASSERT sy-subrc = 0.
 
-        <lv_source> = mo_files->read_string( 'asdrul' ).
+        <lv_source> = zif_abapgit_object~mo_files->read_string( 'asdrul' ).
 
         tadir_insert( iv_package ).
 
@@ -416,7 +415,7 @@ CLASS zcl_abapgit_object_drul IMPLEMENTATION.
         iv_name = 'DRUL'
         ig_data = <ls_dependency_rule> ).
 
-    mo_files->add_string(
+    zif_abapgit_object~mo_files->add_string(
         iv_ext    = 'asdrul'
         iv_string = lv_source ).
 

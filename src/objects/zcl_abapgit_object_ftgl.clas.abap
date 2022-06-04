@@ -2,7 +2,6 @@ CLASS zcl_abapgit_object_ftgl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
     METHODS:
       constructor
@@ -11,7 +10,6 @@ CLASS zcl_abapgit_object_ftgl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
           iv_language TYPE spras
         RAISING
           zcx_abapgit_exception.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA:
