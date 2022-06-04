@@ -121,6 +121,7 @@
       {"object": "ZCL_ABAPGIT_ZLIB",       "class": "ltcl_zlib", "method": "fixed"},
       {"object": "ZCL_ABAPGIT_GIT_ADD_PATCH", "class": "ltcl_calculate_patch", "method": "multiple_non_adjacent_delete"},
       {"object": "ZCL_ABAPGIT_GIT_ADD_PATCH", "class": "ltcl_calculate_patch", "method": "multiple_partial_delete"},
+
       {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_is_binary", "method": "image_is_binary",          "note": "REGEX '[^[:print:]]'"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_condensed", "note": "field sorting is wrong, probably sorted internal tables needed"},
@@ -189,7 +190,8 @@
 
       {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_renderable", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
       {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_event_handler", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
-
+      {"object": "ZCL_ABAPGIT_GIT_UTILS", "class": "ltcl_git_utils", "method": "get_null", "note": "ASSIGN CASTING, https://github.com/abaplint/transpiler/issues/418"},
+      
       {"object": "ZCL_ABAPGIT_GUI_ASSET_MANAGER", "class": "ltcl_abapgit_gui_asset_manager", "method": "get_mime_asset", "note": "failed to load GUI asset: css/common.css"},
       {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_simple_variables", "note": "table keys? Cannot read property 'get' of undefined in CS"},
       {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_complex_variables"},
