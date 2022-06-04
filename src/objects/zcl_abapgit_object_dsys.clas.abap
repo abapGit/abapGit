@@ -209,13 +209,13 @@ CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
 
     CALL FUNCTION 'DSYS_EDIT'
       EXPORTING
-        dokclass         = mv_doc_object+0(4)
-        dokname          = mv_doc_object+4(*)
-        doklangu         = lv_lang
+        dokclass            = mv_doc_object+0(4)
+        dokname             = mv_doc_object+4(*)
+        doklangu            = lv_lang
       EXCEPTIONS
-        class_unknown    = 1
-        object_not_found = 2
-        OTHERS           = 3.
+        not_hypertext_class = 1
+        no_editor           = 2
+        OTHERS              = 3.
 
     rv_exit = boolc( sy-subrc = 0 ).
 

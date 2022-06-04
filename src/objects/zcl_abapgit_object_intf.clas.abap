@@ -1,7 +1,7 @@
 CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgit_objects_program.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
+
     METHODS constructor
       IMPORTING
         is_item     TYPE zif_abapgit_definitions=>ty_item
@@ -75,7 +75,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
 
     ls_clskey-clsname = ms_item-obj_name.
-    lt_source = mo_files->read_abap( ).
+    lt_source = zif_abapgit_object~mo_files->read_abap( ).
     ii_xml->read( EXPORTING iv_name = 'VSEOINTERF'
                   CHANGING cg_data = ls_vseointerf ).
 
@@ -189,6 +189,12 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
         li_proxy_object->dequeue( ).
 
       CATCH cx_proxy_fault INTO lx_proxy_fault.
+        IF li_proxy_object IS BOUND.
+          TRY.
+              li_proxy_object->dequeue( ).
+            CATCH cx_proxy_fault ##NO_HANDLER.
+          ENDTRY.
+        ENDIF.
         zcx_abapgit_exception=>raise_with_text( lx_proxy_fault ).
     ENDTRY.
 
@@ -363,6 +369,8 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       RETURN.
     ENDIF.
 
+    corr_insert( iv_package ).
+
     mi_object_oriented_object_fct->delete( ls_clskey ).
   ENDMETHOD.
 
@@ -486,7 +494,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     lt_source = mi_object_oriented_object_fct->serialize_abap( ls_interface_key ).
 
-    mo_files->add_abap( lt_source ).
+    zif_abapgit_object~mo_files->add_abap( lt_source ).
 
     serialize_xml( io_xml ).
   ENDMETHOD.

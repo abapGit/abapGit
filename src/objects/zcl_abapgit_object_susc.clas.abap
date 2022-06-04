@@ -2,7 +2,6 @@ CLASS zcl_abapgit_object_susc DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
   PROTECTED SECTION.
 
     CONSTANTS transobjecttype_class TYPE c LENGTH 1 VALUE 'C' ##NO_TEXT.
