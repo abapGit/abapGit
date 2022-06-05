@@ -416,7 +416,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     lv_longtext = ix_error->if_message~get_longtext( abap_true ).
 
     IF lv_longtext IS NOT INITIAL.
-      lv_error_text = |{ lv_error_text } (longtext available on hover)|.
+      lv_error_text = |{ lv_error_text } <span class="emphasis">More...</span>|.
 
       REPLACE FIRST OCCURRENCE OF REGEX
         |({ zcx_abapgit_exception=>c_section_text-cause }{ cl_abap_char_utilities=>newline })|
