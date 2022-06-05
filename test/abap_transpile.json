@@ -121,7 +121,6 @@
       {"object": "ZCL_ABAPGIT_ZLIB",       "class": "ltcl_zlib", "method": "fixed"},
       {"object": "ZCL_ABAPGIT_GIT_ADD_PATCH", "class": "ltcl_calculate_patch", "method": "multiple_non_adjacent_delete"},
       {"object": "ZCL_ABAPGIT_GIT_ADD_PATCH", "class": "ltcl_calculate_patch", "method": "multiple_partial_delete"},
-
       {"object": "ZCL_ABAPGIT_UTILS", "class": "ltcl_is_binary", "method": "image_is_binary",          "note": "REGEX '[^[:print:]]'"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_condensed", "note": "field sorting is wrong, probably sorted internal tables needed"},
