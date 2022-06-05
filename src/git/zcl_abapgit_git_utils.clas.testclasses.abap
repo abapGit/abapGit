@@ -1,4 +1,3 @@
-
 CLASS ltcl_git_utils DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
 
   PRIVATE SECTION.
@@ -12,7 +11,6 @@ CLASS ltcl_git_utils DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
       length_utf8_hex FOR TESTING RAISING zcx_abapgit_exception.
 ENDCLASS.
 
-
 CLASS ltcl_git_utils IMPLEMENTATION.
 
   METHOD setup.
@@ -23,16 +21,16 @@ CLASS ltcl_git_utils IMPLEMENTATION.
 
     CONSTANTS lc_null TYPE x LENGTH 2 VALUE '0000'.
 
-    DATA:
-      lv_c TYPE c LENGTH 1,
-      lv_x TYPE x LENGTH 2.
+    DATA lv_c TYPE c LENGTH 1.
+
+    FIELD-SYMBOLS <lv_x> TYPE x.
 
     lv_c = mo_cut->get_null( ).
 
-    lv_x = lv_c.
+    ASSIGN lv_c TO <lv_x> CASTING.
 
     cl_abap_unit_assert=>assert_equals(
-      act = lv_x
+      act = <lv_x>
       exp = lc_null ).
 
   ENDMETHOD.
