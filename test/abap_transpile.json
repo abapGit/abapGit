@@ -109,7 +109,6 @@
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_z"},
 
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_general", "method": "direct_text"},
-      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_general", "method": "no_text"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_general", "method": "text_from_exception"},
 
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_longtext", "method": "empty_longtext"},
