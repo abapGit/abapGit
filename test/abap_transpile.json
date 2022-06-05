@@ -184,7 +184,6 @@
       {"object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR", "class": "ltcl_html_processor_test", "method": "process_typical", "note": "something gets CHAR1 type?"},
       {"object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR", "class": "ltcl_html_processor_test", "method": "process_with_preserve"},
       {"object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR", "class": "ltcl_html_processor_test", "method": "process_no_css"},
-      {"object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR", "class": "ltcl_html_processor_test", "method": "process_fails"},
 
       {"object": "ZCL_ABAPGIT_XML", "class": "ltcl_xml", "method": "space_leading_trailing", "note": "todo in if_ixml_document$find_from_path, https://github.com/open-abap/open-abap/issues/226"},
       {"object": "ZCL_ABAPGIT_XML", "class": "ltcl_xml", "method": "bad_xml_raises_exc", "note": "handling of xml parser errors, cl_ixml, test method parse_negative"},
