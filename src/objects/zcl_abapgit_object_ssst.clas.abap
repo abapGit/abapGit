@@ -2,9 +2,8 @@ CLASS zcl_abapgit_object_ssst DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
-    CONSTANTS: c_style_active TYPE tdactivate VALUE 'A'.
 
+    CONSTANTS: c_style_active TYPE tdactivate VALUE 'A'.
   PROTECTED SECTION.
   PRIVATE SECTION.
     METHODS validate_font

@@ -7,8 +7,6 @@ CLASS zcl_abapgit_object_wdca DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_object .
-    ALIASES mo_files
-      FOR zif_abapgit_object~mo_files .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -281,8 +279,10 @@ CLASS zcl_abapgit_object_wdca IMPLEMENTATION.
           iv_transport = iv_transport ).
 
     TRY.
-        lv_xml_string = mo_files->read_string( iv_extra = 'appl_config'
-                                               iv_ext   = 'xml' ).
+        lv_xml_string = zif_abapgit_object~mo_files->read_string(
+          iv_extra = 'appl_config'
+          iv_ext   = 'xml' ).
+
         TRY.
             lv_xml_string = zcl_abapgit_xml_pretty=>print( iv_xml           = lv_xml_string
                                                            iv_ignore_errors = abap_false
@@ -413,10 +413,10 @@ CLASS zcl_abapgit_object_wdca IMPLEMENTATION.
       ASSERT sy-subrc = 0.
     ENDIF.
 
-    mo_files->add_string( iv_extra  = 'appl_config'
-                          iv_ext    = 'xml'
-                          iv_string = lv_xml_string ).
-
+    zif_abapgit_object~mo_files->add_string(
+      iv_extra  = 'appl_config'
+      iv_ext    = 'xml'
+      iv_string = lv_xml_string ).
 
     SELECT * FROM wdy_config_appt INTO TABLE lt_cc_text
       WHERE config_id   = ls_outline-config_id

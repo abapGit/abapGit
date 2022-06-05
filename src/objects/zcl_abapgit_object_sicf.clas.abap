@@ -8,9 +8,6 @@ CLASS zcl_abapgit_object_sicf DEFINITION
 
     INTERFACES zif_abapgit_object .
 
-    ALIASES mo_files
-      FOR zif_abapgit_object~mo_files .
-
     TYPES: ty_hash TYPE c LENGTH 25.
 
     CLASS-METHODS read_tadir_sicf

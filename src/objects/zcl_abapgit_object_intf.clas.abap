@@ -1,7 +1,7 @@
 CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgit_objects_program.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
+
     METHODS constructor
       IMPORTING
         is_item     TYPE zif_abapgit_definitions=>ty_item
@@ -56,7 +56,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
+CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -75,7 +75,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
 
     ls_clskey-clsname = ms_item-obj_name.
-    lt_source = mo_files->read_abap( ).
+    lt_source = zif_abapgit_object~mo_files->read_abap( ).
     ii_xml->read( EXPORTING iv_name = 'VSEOINTERF'
                   CHANGING cg_data = ls_vseointerf ).
 
@@ -143,8 +143,8 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
   METHOD deserialize_pre_ddic.
 
-    DATA: ls_vseointerf   TYPE vseointerf,
-          ls_clskey       TYPE seoclskey.
+    DATA: ls_vseointerf TYPE vseointerf,
+          ls_clskey     TYPE seoclskey.
 
     ls_clskey-clsname = ms_item-obj_name.
 
@@ -189,6 +189,12 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
         li_proxy_object->dequeue( ).
 
       CATCH cx_proxy_fault INTO lx_proxy_fault.
+        IF li_proxy_object IS BOUND.
+          TRY.
+              li_proxy_object->dequeue( ).
+            CATCH cx_proxy_fault ##NO_HANDLER.
+          ENDTRY.
+        ENDIF.
         zcx_abapgit_exception=>raise_with_text( lx_proxy_fault ).
     ENDTRY.
 
@@ -197,8 +203,9 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
   METHOD serialize_descr.
 
-    DATA: lt_descriptions TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt,
-          lv_language     TYPE spras.
+    DATA: lt_descriptions    TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt,
+          lv_language        TYPE spras,
+          lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
     IF ii_xml->i18n_params( )-main_language_only = abap_true.
       lv_language = mv_language.
@@ -207,6 +214,10 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
     lt_descriptions = mi_object_oriented_object_fct->read_descriptions(
       iv_object_name = iv_clsname
       iv_language    = lv_language ).
+
+    " Remove technical languages
+    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
+    DELETE lt_descriptions WHERE NOT langu IN lt_language_filter.
 
     IF lines( lt_descriptions ) = 0.
       RETURN.
@@ -268,9 +279,9 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
   METHOD serialize_xml.
 
     DATA:
-      ls_vseointerf         TYPE vseointerf,
-      ls_clskey             TYPE seoclskey,
-      lt_langu_additional   TYPE zif_abapgit_lang_definitions=>ty_langus.
+      ls_vseointerf       TYPE vseointerf,
+      ls_clskey           TYPE seoclskey,
+      lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus.
 
     ls_clskey-clsname = ms_item-obj_name.
 
@@ -357,6 +368,8 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
     IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
     ENDIF.
+
+    corr_insert( iv_package ).
 
     mi_object_oriented_object_fct->delete( ls_clskey ).
   ENDMETHOD.
@@ -481,7 +494,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
     lt_source = mi_object_oriented_object_fct->serialize_abap( ls_interface_key ).
 
-    mo_files->add_abap( lt_source ).
+    zif_abapgit_object~mo_files->add_abap( lt_source ).
 
     serialize_xml( io_xml ).
   ENDMETHOD.
