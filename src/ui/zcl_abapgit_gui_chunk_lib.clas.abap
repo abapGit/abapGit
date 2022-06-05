@@ -400,11 +400,14 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
   METHOD render_error_message_box.
 
     DATA:
-      lv_error_text   TYPE string,
-      lv_longtext     TYPE string,
-      lv_program_name TYPE sy-repid,
-      lv_title        TYPE string,
-      lv_text         TYPE string.
+      lv_error_text          TYPE string,
+      lv_longtext            TYPE string,
+      lt_longtext_paragraphs TYPE string_table,
+      lv_program_name        TYPE sy-repid,
+      lv_title               TYPE string,
+      lv_text                TYPE string.
+    FIELD-SYMBOLS:
+      <lv_longtext_paragraph> TYPE string.
 
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
@@ -412,25 +415,46 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     lv_error_text = ix_error->get_text( ).
     lv_longtext = ix_error->if_message~get_longtext( abap_true ).
 
-    REPLACE FIRST OCCURRENCE OF REGEX
-      |({ zcx_abapgit_exception=>c_section_text-cause }{ cl_abap_char_utilities=>newline })|
-      IN lv_longtext WITH |<h3>$1</h3>|.
+    IF lv_longtext IS NOT INITIAL.
+      lv_error_text = |{ lv_error_text } <span class="emphasis">More...</span>|.
 
-    REPLACE FIRST OCCURRENCE OF REGEX
-      |({ zcx_abapgit_exception=>c_section_text-system_response }{ cl_abap_char_utilities=>newline })|
-      IN lv_longtext WITH |<h3>$1</h3>|.
+      REPLACE FIRST OCCURRENCE OF REGEX
+        |({ zcx_abapgit_exception=>c_section_text-cause }{ cl_abap_char_utilities=>newline })|
+        IN lv_longtext WITH |<h3>$1</h3>|.
 
-    REPLACE FIRST OCCURRENCE OF REGEX
-      |({ zcx_abapgit_exception=>c_section_text-what_to_do }{ cl_abap_char_utilities=>newline })|
-      IN lv_longtext WITH |<h3>$1</h3>|.
+      REPLACE FIRST OCCURRENCE OF REGEX
+        |({ zcx_abapgit_exception=>c_section_text-system_response }{ cl_abap_char_utilities=>newline })|
+        IN lv_longtext WITH |<h3>$1</h3>|.
 
-    REPLACE FIRST OCCURRENCE OF REGEX
-      |({ zcx_abapgit_exception=>c_section_text-sys_admin }{ cl_abap_char_utilities=>newline })|
-      IN lv_longtext WITH |<h3>$1</h3>|.
+      REPLACE FIRST OCCURRENCE OF REGEX
+        |({ zcx_abapgit_exception=>c_section_text-what_to_do }{ cl_abap_char_utilities=>newline })|
+        IN lv_longtext WITH |<h3>$1</h3>|.
+
+      REPLACE FIRST OCCURRENCE OF REGEX
+        |({ zcx_abapgit_exception=>c_section_text-sys_admin }{ cl_abap_char_utilities=>newline })|
+        IN lv_longtext WITH |<h3>$1</h3>|.
+
+      REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>cr_lf
+        IN lv_longtext
+        WITH cl_abap_char_utilities=>newline.
+
+      SPLIT lv_longtext AT cl_abap_char_utilities=>newline INTO TABLE lt_longtext_paragraphs.
+      CLEAR lv_longtext.
+
+      LOOP AT lt_longtext_paragraphs ASSIGNING <lv_longtext_paragraph>.
+        CONDENSE <lv_longtext_paragraph>.
+
+        IF <lv_longtext_paragraph> IS INITIAL.
+          CONTINUE.
+        ENDIF.
+
+        lv_longtext = |{ lv_longtext }<p>{ <lv_longtext_paragraph> }</p>{ cl_abap_char_utilities=>newline }|.
+      ENDLOOP.
+    ENDIF.
 
     ri_html->add( |<div id="message" class="message-panel">| ).
     ri_html->add( |{ ri_html->icon( 'exclamation-circle/red' ) } { lv_error_text }| ).
-    ri_html->add( |<div class="float-right">| ).
+    ri_html->add( |<div class="message-panel-bar">| ).
 
     ri_html->add_a(
       iv_txt   = `&#x274c;`
@@ -440,7 +464,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     ri_html->add( |</div>| ).
 
-    ri_html->add( |<div class="float-right message-panel-commands">| ).
+    ri_html->add( |<div class="message-panel-bar message-panel-commands">| ).
 
     IF ix_error->if_t100_message~t100key-msgid IS NOT INITIAL.
 
