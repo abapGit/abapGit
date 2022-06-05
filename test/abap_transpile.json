@@ -127,8 +127,7 @@
 
       {"object": "ZCL_ABAPGIT_DATA_CONFIG", "class": "ltcl_test", "method": "to_json"},
 
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_negative"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_struc"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_negative", "note": "todo in cl_abap_structdescr.get_component_type"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_hashed_plain_tab"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_sorted_tab"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_hashed_tab"},
