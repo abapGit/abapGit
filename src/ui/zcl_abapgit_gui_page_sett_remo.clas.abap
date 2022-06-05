@@ -488,6 +488,81 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_remote_settings_from_form.
+    rs_settings-url = io_form_data->get( c_id-url ).
+    rs_settings-offline = io_form_data->get( c_id-offline ).
+
+    IF rs_settings-offline = abap_false.
+      rs_settings-head_type = io_form_data->get( c_id-head_type ).
+
+      CASE rs_settings-head_type.
+        WHEN c_head_types-branch.
+          rs_settings-branch = zif_abapgit_definitions=>c_git_branch-heads_prefix && io_form_data->get( c_id-branch ).
+        WHEN c_head_types-tag.
+          rs_settings-tag = zif_abapgit_definitions=>c_git_branch-tags_prefix && io_form_data->get( c_id-tag ).
+        WHEN c_head_types-commit.
+          rs_settings-branch = zif_abapgit_definitions=>c_git_branch-heads_prefix && io_form_data->get( c_id-branch ).
+          rs_settings-commit = io_form_data->get( c_id-commit ).
+        WHEN c_head_types-pull_request.
+          rs_settings-pull_request = io_form_data->get( c_id-pull_request ).
+      ENDCASE.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD get_remote_settings_from_repo.
+    DATA: lo_repo_online  TYPE REF TO zcl_abapgit_repo_online,
+          lo_repo_offline TYPE REF TO zcl_abapgit_repo_offline,
+          lv_branch       TYPE ty_remote_settings-branch.
+
+    IF io_repo->is_offline( ) = abap_false.
+      lo_repo_online ?= io_repo.
+
+      rs_settings-url = lo_repo_online->get_url( ).
+      rs_settings-offline = abap_false.
+      rs_settings-switched_origin = lo_repo_online->get_switched_origin( ).
+
+      IF lo_repo_online->get_selected_commit( ) IS NOT INITIAL.
+        rs_settings-commit = lo_repo_online->get_selected_commit( ).
+        rs_settings-branch = lo_repo_online->get_selected_branch( ).
+        rs_settings-head_type = c_head_types-commit.
+      ELSEIF lo_repo_online->get_switched_origin( ) IS NOT INITIAL.
+        " get_switched_origin( ) returns the original repo url + HEAD concatenated with @
+        " get_branch( ) returns the branch of the PR in the source repo
+        " get_url( ) returns the source repo of the PR branch
+
+        rs_settings-switched_origin = lo_repo_online->get_switched_origin( ).
+        SPLIT rs_settings-switched_origin AT '@' INTO rs_settings-url rs_settings-branch.
+        IF rs_settings-branch CP zif_abapgit_definitions=>c_git_branch-tags.
+          rs_settings-tag = rs_settings-branch.
+          CLEAR rs_settings-branch.
+        ENDIF.
+
+        lv_branch = lo_repo_online->get_selected_branch( ).
+        REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-heads_prefix IN lv_branch WITH space.
+        CONDENSE lv_branch.
+        rs_settings-pull_request = |{ lo_repo_online->get_url( ) }@{ lv_branch }|.
+        rs_settings-head_type = c_head_types-pull_request.
+      ELSE.
+        rs_settings-branch = lo_repo_online->get_selected_branch( ).
+        rs_settings-head_type = c_head_types-branch.
+
+        IF rs_settings-branch CP zif_abapgit_definitions=>c_git_branch-tags.
+          rs_settings-head_type = c_head_types-tag.
+          rs_settings-tag = rs_settings-branch.
+          CLEAR rs_settings-branch.
+        ENDIF.
+      ENDIF.
+
+    ELSE.
+      lo_repo_offline ?= io_repo.
+
+      rs_settings-url = lo_repo_offline->get_name( ).
+      rs_settings-offline = abap_true.
+    ENDIF.
+  ENDMETHOD.
+
+
   METHOD init.
     mo_repo = io_repo.
     ms_settings_old = get_remote_settings_from_repo( mo_repo ).
@@ -598,7 +673,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
         switch_to_pull_req( iv_pull = ls_settings_new-pull_request ).
     ENDCASE.
 
-    IF ls_settings_new-head_type <> c_head_types-pull_request.
+    IF mo_repo->is_offline( ) = abap_false AND ls_settings_new-head_type <> c_head_types-pull_request.
       " Switching from PR to something else will reset the URL in repo->switch_origin( space )
       " -> set URL again
       lo_repo_online->set_url( ls_settings_new-url ).
@@ -1013,78 +1088,5 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     gui_services( )->get_hotkeys_ctl( )->register_hotkeys( zif_abapgit_gui_hotkeys~get_hotkey_actions( ) ).
 
-  ENDMETHOD.
-
-  METHOD get_remote_settings_from_repo.
-    DATA: lo_repo_online  TYPE REF TO zcl_abapgit_repo_online,
-          lo_repo_offline TYPE REF TO zcl_abapgit_repo_offline,
-          lv_branch       TYPE ty_remote_settings-branch.
-
-    IF io_repo->is_offline( ) = abap_false.
-      lo_repo_online ?= io_repo.
-
-      rs_settings-url = lo_repo_online->get_url( ).
-      rs_settings-offline = abap_false.
-      rs_settings-switched_origin = lo_repo_online->get_switched_origin( ).
-
-      IF lo_repo_online->get_selected_commit( ) IS NOT INITIAL.
-        rs_settings-commit = lo_repo_online->get_selected_commit( ).
-        rs_settings-branch = lo_repo_online->get_selected_branch( ).
-        rs_settings-head_type = c_head_types-commit.
-      ELSEIF lo_repo_online->get_switched_origin( ) IS NOT INITIAL.
-        " get_switched_origin( ) returns the original repo url + HEAD concatenated with @
-        " get_branch( ) returns the branch of the PR in the source repo
-        " get_url( ) returns the source repo of the PR branch
-
-        rs_settings-switched_origin = lo_repo_online->get_switched_origin( ).
-        SPLIT rs_settings-switched_origin AT '@' INTO rs_settings-url rs_settings-branch.
-        IF rs_settings-branch CP zif_abapgit_definitions=>c_git_branch-tags.
-          rs_settings-tag = rs_settings-branch.
-          CLEAR rs_settings-branch.
-        ENDIF.
-
-        lv_branch = lo_repo_online->get_selected_branch( ).
-        REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-heads_prefix IN lv_branch WITH space.
-        CONDENSE lv_branch.
-        rs_settings-pull_request = |{ lo_repo_online->get_url( ) }@{ lv_branch }|.
-        rs_settings-head_type = c_head_types-pull_request.
-      ELSE.
-        rs_settings-branch = lo_repo_online->get_selected_branch( ).
-        rs_settings-head_type = c_head_types-branch.
-
-        IF rs_settings-branch CP zif_abapgit_definitions=>c_git_branch-tags.
-          rs_settings-head_type = c_head_types-tag.
-          rs_settings-tag = rs_settings-branch.
-          CLEAR rs_settings-branch.
-        ENDIF.
-      ENDIF.
-
-    ELSE.
-      lo_repo_offline ?= io_repo.
-
-      rs_settings-url = lo_repo_offline->get_name( ).
-      rs_settings-offline = abap_true.
-    ENDIF.
-  ENDMETHOD.
-
-  METHOD get_remote_settings_from_form.
-    rs_settings-url = io_form_data->get( c_id-url ).
-    rs_settings-offline = io_form_data->get( c_id-offline ).
-
-    IF rs_settings-offline = abap_false.
-      rs_settings-head_type = io_form_data->get( c_id-head_type ).
-
-      CASE rs_settings-head_type.
-        WHEN c_head_types-branch.
-          rs_settings-branch = zif_abapgit_definitions=>c_git_branch-heads_prefix && io_form_data->get( c_id-branch ).
-        WHEN c_head_types-tag.
-          rs_settings-tag = zif_abapgit_definitions=>c_git_branch-tags_prefix && io_form_data->get( c_id-tag ).
-        WHEN c_head_types-commit.
-          rs_settings-branch = zif_abapgit_definitions=>c_git_branch-heads_prefix && io_form_data->get( c_id-branch ).
-          rs_settings-commit = io_form_data->get( c_id-commit ).
-        WHEN c_head_types-pull_request.
-          rs_settings-pull_request = io_form_data->get( c_id-pull_request ).
-      ENDCASE.
-    ENDIF.
   ENDMETHOD.
 ENDCLASS.
