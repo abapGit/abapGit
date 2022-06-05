@@ -913,6 +913,12 @@ div.message-panel {
   background-color: hsla(0, 42%, 90%, 1);
 }
 
+.message-panel-bar {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+}
+
 .message-panel-commands {
   display: none;
   margin-right: 2em;
