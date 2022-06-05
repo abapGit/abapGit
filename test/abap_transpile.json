@@ -156,8 +156,6 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "root_assignment"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_parser_test", "method": "parse_error"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_parser_test", "method": "duplicate_key", "note": "invalid json, should throw real abap exception"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_parser_test", "method": "non_json", "note": "invalid json, should throw real abap exception"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "reader",       "note": "keyword? Path not found @/false"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_index",  "note": "error ASSIGN, not a structure"},
