@@ -134,7 +134,7 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "simple_indented", "note": "??"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "escape",          "note": "ASSERT failed, ??"},
 
-      {"object": "ZCL_ABAPGIT_DATA_CONFIG", "class": "ltcl_test", "method": "to_json"},
+      {"object": "ZCL_ABAPGIT_DATA_CONFIG", "class": "ltcl_test", "method": "to_json", "note": "uses ajson"},
       {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "json_diff_arrays", "note": "infinite loop"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_negative", "note": "todo in cl_abap_structdescr.get_component_type"},
