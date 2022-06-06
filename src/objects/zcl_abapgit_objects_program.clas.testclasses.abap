@@ -4,8 +4,8 @@ CLASS ltcl_test DEFINITION FINAL
   DURATION SHORT.
 
   PRIVATE SECTION.
-    METHODS strip_generation_comments_1 for testing.
-    METHODS strip_generation_comments_2 for testing.
+    METHODS strip_generation_comments_1 FOR TESTING.
+    METHODS strip_generation_comments_2 FOR TESTING.
 ENDCLASS.
 
 CLASS zcl_abapgit_objects_program DEFINITION LOCAL FRIENDS ltcl_test.
@@ -20,24 +20,24 @@ CLASS ltcl_test IMPLEMENTATION.
     DATA lt_src_exp TYPE abaptxt255_tab.
 
 
-    append '*---------------------------------------------------------------------*' to lt_src_orig.
-    append '*    view related data declarations' to lt_src_orig.
-    append '*   generation date: 03.02.2022 at 13:19:02' to lt_src_orig.
-    append '*   view maintenance generator version: #001407#' to lt_src_orig.
-    append '*---------------------------------------------------------------------*' to lt_src_orig.
-    append 'some code starts here' to lt_src_orig.
+    APPEND '*---------------------------------------------------------------------*' TO lt_src_orig.
+    APPEND '*    view related data declarations' TO lt_src_orig.
+    APPEND '*   generation date: 03.02.2022 at 13:19:02' TO lt_src_orig.
+    APPEND '*   view maintenance generator version: #001407#' TO lt_src_orig.
+    APPEND '*---------------------------------------------------------------------*' TO lt_src_orig.
+    APPEND 'some code starts here' TO lt_src_orig.
 
-    append '*---------------------------------------------------------------------*' to lt_src_exp.
-    append '*    view related data declarations' to lt_src_exp.
-    append '*---------------------------------------------------------------------*' to lt_src_exp.
-    append 'some code starts here' to lt_src_exp.
+    APPEND '*---------------------------------------------------------------------*' TO lt_src_exp.
+    APPEND '*    view related data declarations' TO lt_src_exp.
+    APPEND '*---------------------------------------------------------------------*' TO lt_src_exp.
+    APPEND 'some code starts here' TO lt_src_exp.
 
     " case 1, not FUGR, should skip
     ls_item-obj_type = 'PROG'.
     CREATE OBJECT lo_cut
       EXPORTING
         iv_language = 'E'
-        is_item = ls_item.
+        is_item     = ls_item.
 
     lt_src_act = lt_src_orig.
     lo_cut->strip_generation_comments( CHANGING ct_source = lt_src_act ).
@@ -50,7 +50,7 @@ CLASS ltcl_test IMPLEMENTATION.
     CREATE OBJECT lo_cut
       EXPORTING
         iv_language = 'E'
-        is_item = ls_item.
+        is_item     = ls_item.
 
     lt_src_act = lt_src_orig.
     lo_cut->strip_generation_comments( CHANGING ct_source = lt_src_act ).
@@ -60,20 +60,20 @@ CLASS ltcl_test IMPLEMENTATION.
 
     " case 3, wrong pattern
 
-    clear lt_src_orig.
-    append '*---------------------------------------------------------------------*' to lt_src_orig.
-    append '* extra line' to lt_src_orig.
-    append '*    view related data declarations' to lt_src_orig.
-    append '*   generation date: 03.02.2022 at 13:19:02' to lt_src_orig.
-    append '*   view maintenance generator version: #001407#' to lt_src_orig.
-    append '*---------------------------------------------------------------------*' to lt_src_orig.
-    append 'some code starts here' to lt_src_orig.
+    CLEAR lt_src_orig.
+    APPEND '*---------------------------------------------------------------------*' TO lt_src_orig.
+    APPEND '* extra line' TO lt_src_orig.
+    APPEND '*    view related data declarations' TO lt_src_orig.
+    APPEND '*   generation date: 03.02.2022 at 13:19:02' TO lt_src_orig.
+    APPEND '*   view maintenance generator version: #001407#' TO lt_src_orig.
+    APPEND '*---------------------------------------------------------------------*' TO lt_src_orig.
+    APPEND 'some code starts here' TO lt_src_orig.
 
     ls_item-obj_type = 'FUGR'.
     CREATE OBJECT lo_cut
       EXPORTING
         iv_language = 'E'
-        is_item = ls_item.
+        is_item     = ls_item.
 
     lt_src_act = lt_src_orig.
     lo_cut->strip_generation_comments( CHANGING ct_source = lt_src_act ).
@@ -92,25 +92,25 @@ CLASS ltcl_test IMPLEMENTATION.
     DATA lt_src_exp TYPE abaptxt255_tab.
 
 
-    append '* regenerated at 06.06.2022 10:47:40' to lt_src_orig.
-    append 'some code 1' to lt_src_orig.
-    append 'some code 2' to lt_src_orig.
-    append 'some code 3' to lt_src_orig.
-    append 'some code 4' to lt_src_orig.
-    append 'some code 5' to lt_src_orig.
+    APPEND '* regenerated at 06.06.2022 10:47:40' TO lt_src_orig.
+    APPEND 'some code 1' TO lt_src_orig.
+    APPEND 'some code 2' TO lt_src_orig.
+    APPEND 'some code 3' TO lt_src_orig.
+    APPEND 'some code 4' TO lt_src_orig.
+    APPEND 'some code 5' TO lt_src_orig.
 
-    append 'some code 1' to lt_src_exp.
-    append 'some code 2' to lt_src_exp.
-    append 'some code 3' to lt_src_exp.
-    append 'some code 4' to lt_src_exp.
-    append 'some code 5' to lt_src_exp.
+    APPEND 'some code 1' TO lt_src_exp.
+    APPEND 'some code 2' TO lt_src_exp.
+    APPEND 'some code 3' TO lt_src_exp.
+    APPEND 'some code 4' TO lt_src_exp.
+    APPEND 'some code 5' TO lt_src_exp.
 
     " case 1, not FUGR, should skip
     ls_item-obj_type = 'FUGR'.
     CREATE OBJECT lo_cut
       EXPORTING
         iv_language = 'E'
-        is_item = ls_item.
+        is_item     = ls_item.
 
     lt_src_act = lt_src_orig.
     lo_cut->strip_generation_comments( CHANGING ct_source = lt_src_act ).
