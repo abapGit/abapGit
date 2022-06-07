@@ -161,8 +161,6 @@
       {"object": "ZCL_ABAPGIT_UI_INJECTOR", "class": "ltcl_no_dependency_injection", "method": "no_injection", "note": "RTTI? class absolute_name"},
       {"object": "ZCL_ABAPGIT_UI_INJECTOR", "class": "ltcl_simple_dependency_inject", "method": "simple_injection", "note": "RTTI?"},
 
-      {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_camel_case", "method": "to_json_nested_struc"},
-
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_fields", "method": "to_json"},
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_to_lower", "method": "to_json"},
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_to_upper", "method": "to_json"},
