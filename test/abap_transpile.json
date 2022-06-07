@@ -158,8 +158,6 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "item_order_integrated"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "stringify"},
 
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_abap_to_json", "method": "set_complex_obj"},
-
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_tab_nested_struct"},
 
       {"object": "ZCL_ABAPGIT_UI_INJECTOR", "class": "ltcl_no_dependency_injection", "method": "no_injection", "note": "RTTI? class absolute_name"},
