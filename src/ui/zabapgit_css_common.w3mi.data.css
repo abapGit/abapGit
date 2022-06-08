@@ -900,12 +900,12 @@ div.info-panel div.info-list td { padding-right: 1em }
 div.message-panel {
   z-index: 99;
   box-shadow: 2px 2px 4px 0px hsla(0, 0%, 0%, .1);
-  padding: 12px;
-  margin-left: -48%;
+  padding: 0.5em 1em;
   position: fixed;
   bottom: 12px;
-  width: 94%;
-  left: 50%;
+  width: 95%;
+  margin: 0 auto;
+  max-width: 1248px;
 
   border: 1px solid;
   border-radius: 5px;
