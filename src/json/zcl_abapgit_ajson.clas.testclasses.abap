@@ -1871,7 +1871,9 @@ CLASS ltcl_writer_test DEFINITION FINAL
     METHODS arrays FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS arrays_negative FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS root_assignment FOR TESTING RAISING zcx_abapgit_ajson_error.
-    METHODS set_bool FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS set_bool_abap_bool FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS set_bool_int FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS set_bool_tab FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_str FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_int FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_date FOR TESTING RAISING zcx_abapgit_ajson_error.
@@ -2569,12 +2571,11 @@ CLASS ltcl_writer_test IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD set_bool.
+  METHOD set_bool_abap_bool.
 
     DATA lo_cut TYPE REF TO zcl_abapgit_ajson.
     DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
     DATA li_writer TYPE REF TO zif_abapgit_ajson.
-    DATA lt_tab TYPE string_table.
 
     " abap_bool
     lo_cut = zcl_abapgit_ajson=>create_empty( ).
@@ -2595,6 +2596,14 @@ CLASS ltcl_writer_test IMPLEMENTATION.
       act = lo_cut->mt_json_tree
       exp = lo_nodes_exp->sorted( ) ).
 
+  ENDMETHOD.
+
+  METHOD set_bool_int.
+
+    DATA lo_cut TYPE REF TO zcl_abapgit_ajson.
+    DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
+    DATA li_writer TYPE REF TO zif_abapgit_ajson.
+
     " int
     lo_cut = zcl_abapgit_ajson=>create_empty( ).
     li_writer = lo_cut.
@@ -2613,6 +2622,15 @@ CLASS ltcl_writer_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lo_cut->mt_json_tree
       exp = lo_nodes_exp->sorted( ) ).
+
+  ENDMETHOD.
+
+  METHOD set_bool_tab.
+
+    DATA lo_cut TYPE REF TO zcl_abapgit_ajson.
+    DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
+    DATA li_writer TYPE REF TO zif_abapgit_ajson.
+    DATA lt_tab TYPE string_table.
 
     " tab
     lo_cut = zcl_abapgit_ajson=>create_empty( ).
