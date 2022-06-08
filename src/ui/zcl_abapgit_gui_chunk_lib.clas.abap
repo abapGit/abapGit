@@ -198,7 +198,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
+CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
 
   METHOD advanced_submenu.
@@ -266,6 +266,11 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
            WHERE arbgb = iv_msgid
            AND msgnr = iv_msgno
            AND sprsl = sy-langu.
+
+    " Don't return any generic messages like `&1 &2 &3 &4`
+    IF rv_text CO ' 0123456789&'.
+      CLEAR rv_text.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -472,15 +477,16 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
         iv_msgid = ix_error->if_t100_message~t100key-msgid
         iv_msgno = ix_error->if_t100_message~t100key-msgno ).
 
-      lv_text = |Message ({ ix_error->if_t100_message~t100key-msgid }/{ ix_error->if_t100_message~t100key-msgno })|.
+      IF lv_title IS NOT INITIAL.
+        lv_text = |Message ({ ix_error->if_t100_message~t100key-msgid }/{ ix_error->if_t100_message~t100key-msgno })|.
 
-      ri_html->add_a(
-        iv_txt   = lv_text
-        iv_typ   = zif_abapgit_html=>c_action_type-sapevent
-        iv_act   = zif_abapgit_definitions=>c_action-goto_message
-        iv_title = lv_title
-        iv_id    = `a_goto_message` ).
-
+        ri_html->add_a(
+          iv_txt   = lv_text
+          iv_typ   = zif_abapgit_html=>c_action_type-sapevent
+          iv_act   = zif_abapgit_definitions=>c_action-goto_message
+          iv_title = lv_title
+          iv_id    = `a_goto_message` ).
+      ENDIF.
     ENDIF.
 
     ix_error->get_source_position( IMPORTING program_name = lv_program_name ).
