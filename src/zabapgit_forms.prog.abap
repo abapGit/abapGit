@@ -75,8 +75,8 @@ FORM output.
       p_exclude = lt_ucomm.
 
   " For variant maintainance we have to omit this because
-  " it instantiates controls and hides mainainance screens.
-  " Variant mainainance uses SUBMIT which sets CALLD = 'X'.
+  " it instantiates controls and hides maintenance screens.
+  " Variant maintenance uses SUBMIT which sets CALLD = 'X'.
   IF sy-calld = abap_false.
     TRY.
         zcl_abapgit_ui_factory=>get_gui( )->set_focus( ).
