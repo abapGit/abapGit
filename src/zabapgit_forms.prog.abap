@@ -74,11 +74,16 @@ FORM output.
     TABLES
       p_exclude = lt_ucomm.
 
-  TRY.
-      zcl_abapgit_ui_factory=>get_gui( )->set_focus( ).
-    CATCH zcx_abapgit_exception INTO lx_error.
-      MESSAGE lx_error TYPE 'S' DISPLAY LIKE 'E'.
-  ENDTRY.
+  " For variant maintainance we have to omit this because
+  " it instantiates controls and hides mainainance screens.
+  " Variant mainainance uses SUBMIT which sets CALLD = 'X'.
+  IF sy-calld = abap_false.
+    TRY.
+        zcl_abapgit_ui_factory=>get_gui( )->set_focus( ).
+      CATCH zcx_abapgit_exception INTO lx_error.
+        MESSAGE lx_error TYPE 'S' DISPLAY LIKE 'E'.
+    ENDTRY.
+  ENDIF.
 
 ENDFORM.
 
