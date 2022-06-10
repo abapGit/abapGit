@@ -60,8 +60,10 @@ ENDFORM.                    "branch_popup
 
 FORM output.
 
-  DATA: lx_error TYPE REF TO zcx_abapgit_exception,
-        lt_ucomm TYPE TABLE OF sy-ucomm.
+  DATA: lx_error       TYPE REF TO zcx_abapgit_exception,
+        lt_ucomm       TYPE TABLE OF sy-ucomm,
+        lt_variscreens TYPE STANDARD TABLE OF rsdynnr
+                            WITH NON-UNIQUE DEFAULT KEY.
 
   PERFORM set_pf_status IN PROGRAM rsdbrunt IF FOUND.
 
@@ -74,10 +76,12 @@ FORM output.
     TABLES
       p_exclude = lt_ucomm.
 
-  " For variant maintainance we have to omit this because
+  " For variant maintenance we have to omit this because
   " it instantiates controls and hides maintenance screens.
-  " Variant maintenance uses SUBMIT which sets CALLD = 'X'.
-  IF sy-calld = abap_false.
+  " Memory is set in LSVARF08 / EXPORT_SCREEN_TABLES.
+  IMPORT variscreens = lt_variscreens FROM MEMORY ID '%_SCRNR_%'.
+
+  IF lines( lt_variscreens ) = 0. " no variant maintenance
     TRY.
         zcl_abapgit_ui_factory=>get_gui( )->set_focus( ).
       CATCH zcx_abapgit_exception INTO lx_error.
