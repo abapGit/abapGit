@@ -506,17 +506,13 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
   METHOD check_package_sub_package.
 
-    DATA:
-      ls_item TYPE zif_abapgit_definitions=>ty_item,
-      lv_msg  TYPE string.
+    DATA lv_msg TYPE string.
 
     FIELD-SYMBOLS <ls_result> LIKE LINE OF it_results.
 
     LOOP AT it_results ASSIGNING <ls_result> WHERE package IS INITIAL AND obj_type = 'DEVC'.
-      ls_item-obj_type = <ls_result>-obj_type.
-      ls_item-obj_name = <ls_result>-obj_name.
 
-      IF zcl_abapgit_objects=>exists( ls_item ) = abap_true.
+      IF zcl_abapgit_factory=>get_sap_package( |{ <ls_result>-obj_name }| )->exists( ) = abap_true.
         " If package already exist but is not included in the package hierarchy of
         " the package assigned to the repository, then a manual change of the package
         " is required i.e. setting a parent package to the repo package (or one of its
@@ -530,6 +526,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
         ii_log->add( iv_msg = lv_msg
                      iv_type = 'W' ).
       ENDIF.
+
     ENDLOOP.
 
   ENDMETHOD.
