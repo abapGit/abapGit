@@ -506,23 +506,30 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
   METHOD check_package_sub_package.
 
-    DATA lv_msg TYPE string.
+    DATA:
+      ls_item TYPE zif_abapgit_definitions=>ty_item,
+      lv_msg  TYPE string.
 
     FIELD-SYMBOLS <ls_result> LIKE LINE OF it_results.
 
     LOOP AT it_results ASSIGNING <ls_result> WHERE package IS INITIAL AND obj_type = 'DEVC'.
-      " If package already exist but is not included in the package hierarchy of
-      " the package assigned to the repository, then a manual change of the package
-      " is required i.e. setting a parent package to the repo package (or one of its
-      " subpackages). We don't do this automatically since it's not clear where in the
-      " hierarchy the new package should be located or whether the sub package shall be
-      " removed from the repo.
-      lv_msg = |Package { <ls_result>-obj_name } already exists but is not a subpackage of { iv_top }. |
-            && |Check your package and folder logic, and either assign { <ls_result>-obj_name } |
-            && |to the package hierarchy of { iv_top } or remove package { <ls_result>-obj_name } |
-            && |from the repository.|.
-      ii_log->add( iv_msg = lv_msg
-                   iv_type = 'W' ).
+      ls_item-obj_type = <ls_result>-obj_type.
+      ls_item-obj_name = <ls_result>-obj_name.
+
+      IF zcl_abapgit_objects=>exists( ls_item ) = abap_true.
+        " If package already exist but is not included in the package hierarchy of
+        " the package assigned to the repository, then a manual change of the package
+        " is required i.e. setting a parent package to the repo package (or one of its
+        " subpackages). We don't do this automatically since it's not clear where in the
+        " hierarchy the new package should be located or whether the sub package shall be
+        " removed from the repo.
+        lv_msg = |Package { <ls_result>-obj_name } already exists but is not a subpackage of { iv_top }. |
+              && |Check your package and folder logic, and either assign { <ls_result>-obj_name } |
+              && |to the package hierarchy of { iv_top } or remove package { <ls_result>-obj_name } |
+              && |from the repository.|.
+        ii_log->add( iv_msg = lv_msg
+                     iv_type = 'W' ).
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.
