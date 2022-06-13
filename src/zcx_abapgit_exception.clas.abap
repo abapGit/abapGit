@@ -133,7 +133,7 @@ ENDCLASS.
 
 
 
-CLASS zcx_abapgit_exception IMPLEMENTATION.
+CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
 
 
   METHOD constructor ##ADT_SUPPRESS_GENERATION.
@@ -382,6 +382,16 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD remove_newlines_from_string.
+    rv_result = iv_string.
+
+    REPLACE ALL OCCURRENCES OF ` ` && cl_abap_char_utilities=>cr_lf IN rv_result WITH ` `.
+    REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>cr_lf IN rv_result WITH ` `.
+    REPLACE ALL OCCURRENCES OF ` ` && cl_abap_char_utilities=>newline IN rv_result WITH ` `.
+    REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>newline IN rv_result WITH ` `.
+  ENDMETHOD.
+
+
   METHOD replace_section_head_with_text.
 
     CASE cs_itf-tdline.
@@ -482,14 +492,5 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
 
     rs_msg = ls_msg.
 
-  ENDMETHOD.
-
-  METHOD remove_newlines_from_string.
-    rv_result = iv_string.
-
-    REPLACE ALL OCCURRENCES OF ` ` && cl_abap_char_utilities=>cr_lf IN rv_result WITH ` `.
-    REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>cr_lf IN rv_result WITH ` `.
-    REPLACE ALL OCCURRENCES OF ` ` && cl_abap_char_utilities=>newline IN rv_result WITH ` `.
-    REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>newline IN rv_result WITH ` `.
   ENDMETHOD.
 ENDCLASS.

@@ -142,7 +142,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
 
   METHOD check_rfc_parameters.
@@ -853,10 +853,12 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       APPEND ls_function TO rt_functions.
 
       IF NOT lt_new_source IS INITIAL.
+        strip_generation_comments( CHANGING ct_source = lt_new_source ).
         zif_abapgit_object~mo_files->add_abap(
           iv_extra = <ls_func>-funcname
           it_abap  = lt_new_source ).
       ELSE.
+        strip_generation_comments( CHANGING ct_source = lt_source ).
         zif_abapgit_object~mo_files->add_abap(
           iv_extra = <ls_func>-funcname
           it_abap  = lt_source ).
