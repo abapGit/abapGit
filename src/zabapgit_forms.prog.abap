@@ -155,14 +155,10 @@ FORM adjust_toolbar USING pv_dynnr TYPE sy-dynnr.
     RETURN. " Ignore errors, just exit
   ENDIF.
 
-  IF zcl_abapgit_factory=>get_environment( )->is_variant_maintenance( ) = abap_true.
-    " Insert toolbar for variant maintenance. Otherwise important buttons
-    " are missing and variant maintenance is not possible.
-    lv_no_toolbar = abap_false.
-  ELSE.
-    " Remove toolbar on html screen
-    lv_no_toolbar = abap_true.
-  ENDIF.
+  " Remove toolbar on html screen but re-insert toolbar for variant maintenance.
+  " Because otherwise important buttons are missing and variant maintenance is not possible.
+  lv_no_toolbar = boolc( zcl_abapgit_factory=>get_environment(
+                                           )->is_variant_maintenance( ) = abap_false ).
 
   IF ls_header-no_toolbar = lv_no_toolbar.
     RETURN. " No change required
