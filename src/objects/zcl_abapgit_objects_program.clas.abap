@@ -1,58 +1,66 @@
-CLASS zcl_abapgit_objects_program DEFINITION PUBLIC INHERITING FROM zcl_abapgit_objects_super.
+CLASS zcl_abapgit_objects_program DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_super
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    TYPES: BEGIN OF ty_progdir,
-             name    TYPE progdir-name,
-             state   TYPE progdir-state,
-             sqlx    TYPE progdir-sqlx,
-             edtx    TYPE progdir-edtx,
-             varcl   TYPE progdir-varcl,
-             dbapl   TYPE progdir-dbapl,
-             dbna    TYPE progdir-dbna,
-             clas    TYPE progdir-clas,
-             type    TYPE progdir-type,
-             occurs  TYPE progdir-occurs,
-             subc    TYPE progdir-subc,
-             appl    TYPE progdir-appl,
-             secu    TYPE progdir-secu,
-             cnam    TYPE progdir-cnam,
-             cdat    TYPE progdir-cdat,
-             unam    TYPE progdir-unam,
-             udat    TYPE progdir-udat,
-             vern    TYPE progdir-vern,
-             levl    TYPE progdir-levl,
-             rstat   TYPE progdir-rstat,
-             rmand   TYPE progdir-rmand,
-             rload   TYPE progdir-rload,
-             fixpt   TYPE progdir-fixpt,
-             sset    TYPE progdir-sset,
-             sdate   TYPE progdir-sdate,
-             stime   TYPE progdir-stime,
-             idate   TYPE progdir-idate,
-             itime   TYPE progdir-itime,
-             ldbname TYPE progdir-ldbname,
-             uccheck TYPE progdir-uccheck,
-           END OF ty_progdir.
+
+    TYPES:
+      BEGIN OF ty_progdir,
+        name    TYPE progdir-name,
+        state   TYPE progdir-state,
+        sqlx    TYPE progdir-sqlx,
+        edtx    TYPE progdir-edtx,
+        varcl   TYPE progdir-varcl,
+        dbapl   TYPE progdir-dbapl,
+        dbna    TYPE progdir-dbna,
+        clas    TYPE progdir-clas,
+        type    TYPE progdir-type,
+        occurs  TYPE progdir-occurs,
+        subc    TYPE progdir-subc,
+        appl    TYPE progdir-appl,
+        secu    TYPE progdir-secu,
+        cnam    TYPE progdir-cnam,
+        cdat    TYPE progdir-cdat,
+        unam    TYPE progdir-unam,
+        udat    TYPE progdir-udat,
+        vern    TYPE progdir-vern,
+        levl    TYPE progdir-levl,
+        rstat   TYPE progdir-rstat,
+        rmand   TYPE progdir-rmand,
+        rload   TYPE progdir-rload,
+        fixpt   TYPE progdir-fixpt,
+        sset    TYPE progdir-sset,
+        sdate   TYPE progdir-sdate,
+        stime   TYPE progdir-stime,
+        idate   TYPE progdir-idate,
+        itime   TYPE progdir-itime,
+        ldbname TYPE progdir-ldbname,
+        uccheck TYPE progdir-uccheck,
+      END OF ty_progdir.
 
     METHODS serialize_program
-      IMPORTING io_xml     TYPE REF TO zif_abapgit_xml_output OPTIONAL
-                is_item    TYPE zif_abapgit_definitions=>ty_item
-                io_files   TYPE REF TO zcl_abapgit_objects_files
-                iv_program TYPE programm OPTIONAL
-                iv_extra   TYPE clike OPTIONAL
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !io_xml TYPE REF TO zif_abapgit_xml_output OPTIONAL
+        !is_item TYPE zif_abapgit_definitions=>ty_item
+        !io_files TYPE REF TO zcl_abapgit_objects_files
+        !iv_program TYPE programm OPTIONAL
+        !iv_extra TYPE clike OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
     METHODS read_progdir
-      IMPORTING iv_program        TYPE programm
-      RETURNING VALUE(rs_progdir) TYPE ty_progdir.
-
+      IMPORTING
+        !iv_program TYPE programm
+      RETURNING
+        VALUE(rs_progdir) TYPE ty_progdir.
     METHODS deserialize_program
-      IMPORTING is_progdir TYPE ty_progdir
-                it_source  TYPE abaptxt255_tab
-                it_tpool   TYPE textpool_table
-                iv_package TYPE devclass
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !is_progdir TYPE ty_progdir
+        !it_source TYPE abaptxt255_tab
+        !it_tpool TYPE textpool_table
+        !iv_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
 
     TYPES:
@@ -85,7 +93,7 @@ CLASS zcl_abapgit_objects_program DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
 
     METHODS strip_generation_comments
       CHANGING
-        ct_source TYPE abaptxt255_tab.
+        ct_source TYPE STANDARD TABLE. " tab of string or charX
     METHODS serialize_dynpros
       IMPORTING
         !iv_program_name TYPE programm
@@ -192,7 +200,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_program IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 
 
   METHOD add_tpool.
@@ -965,12 +973,20 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
   METHOD strip_generation_comments.
 
-    FIELD-SYMBOLS <lv_line> LIKE LINE OF ct_source.
+    FIELD-SYMBOLS <lv_line> TYPE any. " Assuming CHAR (e.g. abaptxt255_tab) or string (FUGR)
 
     IF ms_item-obj_type <> 'FUGR'.
       RETURN.
     ENDIF.
 
+    " Case 1: MV FM main prog and TOPs
+    READ TABLE ct_source INDEX 1 ASSIGNING <lv_line>.
+    IF sy-subrc = 0 AND <lv_line> CP '#**regenerated at *'.
+      DELETE ct_source INDEX 1.
+      RETURN.
+    ENDIF.
+
+    " Case 2: MV FM includes
     IF lines( ct_source ) < 5. " Generation header length
       RETURN.
     ENDIF.
