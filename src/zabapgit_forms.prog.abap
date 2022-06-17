@@ -8,6 +8,10 @@ FORM run.
   DATA lx_not_found TYPE REF TO zcx_abapgit_not_found.
 
   TRY.
+      IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>c_authorization-startup ) = abap_false.
+        zcx_abapgit_exception=>raise( 'No authorization to start abapGit' ).
+      ENDIF.
+
       zcl_abapgit_migrations=>run( ).
       PERFORM open_gui.
     CATCH zcx_abapgit_exception INTO lx_exception.
