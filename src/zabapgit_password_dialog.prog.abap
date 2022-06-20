@@ -4,22 +4,22 @@
 
 * Todo, remove comment about Github token usage by 2021-12-31
 
-SELECTION-SCREEN BEGIN OF SCREEN 1002 TITLE s_title.
+SELECTION-SCREEN BEGIN OF SCREEN 1002 TITLE sc_title.
 SELECTION-SCREEN BEGIN OF LINE.
-SELECTION-SCREEN COMMENT 1(18) s_url FOR FIELD p_url.
+SELECTION-SCREEN COMMENT 1(18) sc_url FOR FIELD p_url.
 PARAMETERS: p_url TYPE string LOWER CASE VISIBLE LENGTH 60 ##SEL_WRONG.
 SELECTION-SCREEN END OF LINE.
 SELECTION-SCREEN BEGIN OF LINE.
-SELECTION-SCREEN COMMENT 1(18) s_user FOR FIELD p_user.
+SELECTION-SCREEN COMMENT 1(18) sc_user FOR FIELD p_user.
 PARAMETERS: p_user TYPE string LOWER CASE VISIBLE LENGTH 60 ##SEL_WRONG.
 SELECTION-SCREEN END OF LINE.
 SELECTION-SCREEN BEGIN OF LINE.
-SELECTION-SCREEN COMMENT 1(18) s_pass FOR FIELD p_pass.
+SELECTION-SCREEN COMMENT 1(18) sc_pass FOR FIELD p_pass.
 PARAMETERS: p_pass TYPE c LENGTH 255 LOWER CASE VISIBLE LENGTH 60 ##SEL_WRONG.
 SELECTION-SCREEN END OF LINE.
 SELECTION-SCREEN SKIP.
 SELECTION-SCREEN BEGIN OF LINE.
-SELECTION-SCREEN COMMENT 1(18) s_cmnt FOR FIELD p_cmnt.
+SELECTION-SCREEN COMMENT 1(18) sc_cmnt FOR FIELD p_cmnt.
 PARAMETERS: p_cmnt TYPE c LENGTH 255 LOWER CASE VISIBLE LENGTH 60 ##SEL_WRONG.
 SELECTION-SCREEN END OF LINE.
 SELECTION-SCREEN END OF SCREEN 1002.
@@ -90,11 +90,11 @@ CLASS lcl_password_dialog IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD on_screen_init.
-    s_title = 'Login'.
-    s_url   = 'Repo URL'.
-    s_user  = 'User'.
-    s_pass  = 'Password or Token'.
-    s_cmnt  = 'Note'.
+    sc_title = 'Login'.
+    sc_url   = 'Repo URL'.
+    sc_user  = 'User'.
+    sc_pass  = 'Password or Token'.
+    sc_cmnt  = 'Note'.
   ENDMETHOD.
 
   METHOD on_screen_output.
@@ -169,8 +169,8 @@ CLASS lcl_password_dialog IMPLEMENTATION.
 
     FIND REGEX 'https?://([^/^:]*)' IN iv_repo_url SUBMATCHES lv_host.
     IF lv_host IS NOT INITIAL AND lv_host <> space.
-      CLEAR s_title.
-      CONCATENATE 'Login:' lv_host INTO s_title IN CHARACTER MODE SEPARATED BY space.
+      CLEAR sc_title.
+      CONCATENATE 'Login:' lv_host INTO sc_title IN CHARACTER MODE SEPARATED BY space.
     ENDIF.
 
   ENDMETHOD.
