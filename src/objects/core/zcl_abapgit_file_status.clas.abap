@@ -519,7 +519,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
         " subpackages). We don't do this automatically since it's not clear where in the
         " hierarchy the new package should be located or whether the sub package shall be
         " removed from the repo.
-        lv_msg = |Package { <ls_result>-obj_name } already exists but is not a subpackage of { iv_top }. |
+        lv_msg = |Package { <ls_result>-obj_name } already exists but is not a sub-package of { iv_top }. |
               && |Check your package and folder logic, and either assign { <ls_result>-obj_name } |
               && |to the package hierarchy of { iv_top } or remove package { <ls_result>-obj_name } |
               && |from the repository.|.
