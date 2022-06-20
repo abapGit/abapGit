@@ -2,7 +2,6 @@
 * UTILS
 **********************************************************************
 
-
 INTERFACE lif_kind.
 
   TYPES ty_kind TYPE c LENGTH 1.
