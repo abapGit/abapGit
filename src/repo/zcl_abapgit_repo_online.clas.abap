@@ -31,11 +31,7 @@ CLASS zcl_abapgit_repo_online DEFINITION
     ALIASES get_switched_origin
       FOR zif_abapgit_repo_online~get_switched_origin.
 
-    METHODS check_and_create_package
-      IMPORTING
-        !iv_package TYPE devclass
-      RAISING
-        zcx_abapgit_exception .
+
 
     METHODS get_files_remote
         REDEFINITION .
@@ -78,32 +74,6 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
-
-
-  METHOD check_and_create_package.
-
-    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
-    DATA lv_package TYPE devclass.
-
-    ls_item-obj_type = 'DEVC'.
-    ls_item-obj_name = iv_package.
-
-    IF zcl_abapgit_objects=>exists( ls_item ) = abap_false.
-      " Check if any package is included in remote
-      READ TABLE mt_remote TRANSPORTING NO FIELDS
-        WITH KEY file
-        COMPONENTS filename = zcl_abapgit_filename_logic=>c_package_file.
-      IF sy-subrc <> 0.
-        " If not, prompt to create it
-        lv_package = zcl_abapgit_services_basis=>create_package( iv_package ).
-        IF lv_package IS NOT INITIAL.
-          COMMIT WORK AND WAIT.
-        ENDIF.
-      ENDIF.
-    ENDIF.
-
-  ENDMETHOD.
-
 
   METHOD fetch_remote.
 
