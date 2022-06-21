@@ -16,7 +16,7 @@ CLASS zcl_abapgit_object_iwom DEFINITION
   PRIVATE SECTION.
     METHODS get_field_rules
       RETURNING
-        value(ro_result) TYPE REF TO zif_abapgit_field_rules.
+        VALUE(ro_result) TYPE REF TO zif_abapgit_field_rules.
 ENDCLASS.
 
 
