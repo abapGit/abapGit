@@ -289,7 +289,10 @@ CLASS zcl_abapgit_syntax_highlighter IMPLEMENTATION.
         WITH '<span class="red">&odash;</span>'.
 
       IF strlen( rv_line ) BETWEEN 1 AND 2.
-        lv_bom = zcl_abapgit_convert=>string_to_xstring( rv_line ).
+        TRY.
+            lv_bom = zcl_abapgit_convert=>string_to_xstring( rv_line ).
+          CATCH zcx_abapgit_exception ##NO_HANDLER.
+        ENDTRY.
         IF lv_bom(2) = cl_abap_char_utilities=>byte_order_mark_big.
           rv_line = '<span class="red">&squf;</span>'. " UTF-16 big-endian (FE FF)
         ENDIF.
