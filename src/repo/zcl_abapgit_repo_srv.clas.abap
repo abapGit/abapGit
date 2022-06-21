@@ -522,6 +522,8 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     ls_repo-local_settings-main_language_only = iv_main_lang_only.
     lo_repo->set_local_settings( ls_repo-local_settings ).
+    lo_repo->check_and_create_package( iv_package ).
+
     ri_repo = lo_repo.
 
   ENDMETHOD.

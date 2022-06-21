@@ -78,11 +78,15 @@ FORM output.
     TABLES
       p_exclude = lt_ucomm.
 
-  TRY.
-      zcl_abapgit_ui_factory=>get_gui( )->set_focus( ).
-    CATCH zcx_abapgit_exception INTO lx_error.
-      MESSAGE lx_error TYPE 'S' DISPLAY LIKE 'E'.
-  ENDTRY.
+  " For variant maintenance we have to omit this because
+  " it instantiates controls and hides maintenance screens.
+  IF zcl_abapgit_factory=>get_environment( )->is_variant_maintenance( ) = abap_false.
+    TRY.
+        zcl_abapgit_ui_factory=>get_gui( )->set_focus( ).
+      CATCH zcx_abapgit_exception INTO lx_error.
+        MESSAGE lx_error TYPE 'S' DISPLAY LIKE 'E'.
+    ENDTRY.
+  ENDIF.
 
 ENDFORM.
 
@@ -128,12 +132,13 @@ FORM password_popup
 
 ENDFORM.
 
-FORM remove_toolbar USING pv_dynnr TYPE sy-dynnr.
+FORM adjust_toolbar USING pv_dynnr TYPE sy-dynnr.
 
   DATA: ls_header               TYPE rpy_dyhead,
         lt_containers           TYPE dycatt_tab,
         lt_fields_to_containers TYPE dyfatc_tab,
-        lt_flow_logic           TYPE swydyflow.
+        lt_flow_logic           TYPE swydyflow,
+        lv_no_toolbar           LIKE ls_header-no_toolbar.
 
   CALL FUNCTION 'RPY_DYNPRO_READ'
     EXPORTING
@@ -154,11 +159,16 @@ FORM remove_toolbar USING pv_dynnr TYPE sy-dynnr.
     RETURN. " Ignore errors, just exit
   ENDIF.
 
-  IF ls_header-no_toolbar = abap_true.
+  " Remove toolbar on html screen but re-insert toolbar for variant maintenance.
+  " Because otherwise important buttons are missing and variant maintenance is not possible.
+  lv_no_toolbar = boolc( zcl_abapgit_factory=>get_environment(
+                                           )->is_variant_maintenance( ) = abap_false ).
+
+  IF ls_header-no_toolbar = lv_no_toolbar.
     RETURN. " No change required
   ENDIF.
 
-  ls_header-no_toolbar = abap_true.
+  ls_header-no_toolbar = lv_no_toolbar.
 
   CALL FUNCTION 'RPY_DYNPRO_INSERT'
     EXPORTING
