@@ -25,22 +25,24 @@ CLASS ltcl_diff DEFINITION FOR TESTING
       IMPORTING
         !iv_ignore_indentation TYPE abap_bool DEFAULT abap_false
         !iv_ignore_comments    TYPE abap_bool DEFAULT abap_false
-        !iv_ignore_case        TYPE abap_bool DEFAULT abap_false.
+        !iv_ignore_case        TYPE abap_bool DEFAULT abap_false
+      RAISING
+        zcx_abapgit_exception.
 
     METHODS:
-      diff01 FOR TESTING,
-      diff02 FOR TESTING,
-      diff03 FOR TESTING,
-      diff04 FOR TESTING,
-      diff05 FOR TESTING,
-      diff06 FOR TESTING,
-      diff07 FOR TESTING,
-      diff08 FOR TESTING,
-      diff09 FOR TESTING,
-      diff10 FOR TESTING,
-      diff11 FOR TESTING,
-      diff12 FOR TESTING,
-      diff13 FOR TESTING.
+      diff01 FOR TESTING RAISING zcx_abapgit_exception,
+      diff02 FOR TESTING RAISING zcx_abapgit_exception,
+      diff03 FOR TESTING RAISING zcx_abapgit_exception,
+      diff04 FOR TESTING RAISING zcx_abapgit_exception,
+      diff05 FOR TESTING RAISING zcx_abapgit_exception,
+      diff06 FOR TESTING RAISING zcx_abapgit_exception,
+      diff07 FOR TESTING RAISING zcx_abapgit_exception,
+      diff08 FOR TESTING RAISING zcx_abapgit_exception,
+      diff09 FOR TESTING RAISING zcx_abapgit_exception,
+      diff10 FOR TESTING RAISING zcx_abapgit_exception,
+      diff11 FOR TESTING RAISING zcx_abapgit_exception,
+      diff12 FOR TESTING RAISING zcx_abapgit_exception,
+      diff13 FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
