@@ -14,6 +14,9 @@ CLASS zcl_abapgit_object_iwom DEFINITION
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
+    METHODS get_field_rules
+      RETURNING
+        value(ro_result) TYPE REF TO zif_abapgit_field_rules.
 ENDCLASS.
 
 
@@ -25,8 +28,9 @@ CLASS zcl_abapgit_object_iwom IMPLEMENTATION.
 
     CREATE OBJECT ro_generic
       EXPORTING
-        is_item     = ms_item
-        iv_language = mv_language.
+        io_field_rules = get_field_rules( )
+        is_item        = ms_item
+        iv_language    = mv_language.
 
   ENDMETHOD.
 
@@ -98,4 +102,25 @@ CLASS zcl_abapgit_object_iwom IMPLEMENTATION.
     get_generic( )->serialize( io_xml ).
 
   ENDMETHOD.
+
+  METHOD get_field_rules.
+    ro_result = zcl_abapgit_field_rules=>create( ).
+    ro_result->add(
+      iv_table     = '/IWFND/I_MED_OHD'
+      iv_field     = 'CREATED_BY'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
+    )->add(
+      iv_table     = '/IWFND/I_MED_OHD'
+      iv_field     = 'CREATED_TIMESTMP'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp
+    )->add(
+      iv_table     = '/IWFND/I_MED_OHD'
+      iv_field     = 'CHANGED_BY'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
+    )->add(
+      iv_table     = '/IWFND/I_MED_OHD'
+      iv_field     = 'CHANGED_TIMESTMP'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp ).
+  ENDMETHOD.
+
 ENDCLASS.
