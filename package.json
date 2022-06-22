@@ -29,7 +29,7 @@
     "@abaplint/runtime": "^2.0.45",
     "@abaplint/transpiler-cli": "^2.0.45",
     "@abaplint/database-sqlite": "^2.0.30",
-    "abapmerge": "^0.14.6",
+    "abapmerge": "^0.14.7",
     "c8": "^7.11.3",
     "eslint": "^8.18.0"
   }
