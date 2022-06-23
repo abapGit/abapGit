@@ -22,7 +22,8 @@ CLASS zcl_abapgit_object_wapa DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RAISING   zcx_abapgit_exception,
       to_page_content
         IMPORTING iv_content        TYPE xstring
-        RETURNING VALUE(rt_content) TYPE o2pageline_table,
+        RETURNING VALUE(rt_content) TYPE o2pageline_table
+        RAISING   zcx_abapgit_exception,
       read_page
         IMPORTING is_page         TYPE o2pagattr
                   iv_no_files_add TYPE abap_bool OPTIONAL
