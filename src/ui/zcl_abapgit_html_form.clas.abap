@@ -810,8 +810,8 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     IF is_field-rows > 0.
       lv_rows = | rows="{ is_field-rows }"|.
-    ELSE.
-      lv_rows = lines( zcl_abapgit_convert=>split_string( is_attr-value ) ).
+    ELSEIF is_attr-value IS NOT INITIAL.
+      lv_rows = | rows="{ lines( zcl_abapgit_convert=>split_string( is_attr-value ) ) + 1 }"|.
     ENDIF.
 
     IF is_field-cols > 0.
