@@ -42,7 +42,8 @@ CLASS ltcl_diff DEFINITION FOR TESTING
       diff10 FOR TESTING RAISING zcx_abapgit_exception,
       diff11 FOR TESTING RAISING zcx_abapgit_exception,
       diff12 FOR TESTING RAISING zcx_abapgit_exception,
-      diff13 FOR TESTING RAISING zcx_abapgit_exception.
+      diff13 FOR TESTING RAISING zcx_abapgit_exception,
+      diff14 FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -141,7 +142,7 @@ CLASS ltcl_diff IMPLEMENTATION.
 
     add_expected( iv_new_num = '    1'
                   iv_new     = 'A'
-                  iv_result  = ''
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
                   iv_old_num = '    1'
                   iv_old     = 'A' ).
     test( ).
@@ -189,12 +190,12 @@ CLASS ltcl_diff IMPLEMENTATION.
 
     add_expected( iv_new_num = '    1'
                   iv_new     = 'A'
-                  iv_result  = ''
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
                   iv_old_num = '    1'
                   iv_old     = 'A' ).
     add_expected( iv_new_num = '    2'
                   iv_new     = 'B'
-                  iv_result  = ''
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
                   iv_old_num = '    2'
                   iv_old     = 'B' ).
     test( ).
@@ -217,12 +218,12 @@ CLASS ltcl_diff IMPLEMENTATION.
 
     add_expected( iv_new_num = '    1'
                   iv_new     = 'A'
-                  iv_result  = ''
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
                   iv_old_num = '    1'
                   iv_old     = 'A' ).
     add_expected( iv_new_num = '    2'
                   iv_new     = 'B'
-                  iv_result  = ''
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
                   iv_old_num = '    2'
                   iv_old     = 'B' ).
     add_expected( iv_new_num = '    3'
@@ -232,7 +233,7 @@ CLASS ltcl_diff IMPLEMENTATION.
                   iv_old     = '' ).
     add_expected( iv_new_num = '    4'
                   iv_new     = 'C'
-                  iv_result  = ''
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
                   iv_old_num = '    3'
                   iv_old     = 'C' ).
     add_expected( iv_new_num = '    5'
@@ -260,22 +261,22 @@ CLASS ltcl_diff IMPLEMENTATION.
 
     add_expected( iv_new_num = '    1'
                   iv_new     = 'A'
-                  iv_result  = ''
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
                   iv_old_num = '    1'
                   iv_old     = 'A' ).
     add_expected( iv_new_num = '    2'
                   iv_new     = ' B'
-                  iv_result  = '' " no diff!
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
                   iv_old_num = '    2'
                   iv_old     = 'B' ).
     add_expected( iv_new_num = '    3'
                   iv_new     = 'C'
-                  iv_result  = ''
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
                   iv_old_num = '    3'
                   iv_old     = 'C' ).
     add_expected( iv_new_num = '    4'
                   iv_new     = '    D'
-                  iv_result  = '' " no diff!
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
                   iv_old_num = '    4'
                   iv_old     = 'D' ).
 
@@ -298,22 +299,22 @@ CLASS ltcl_diff IMPLEMENTATION.
 
     add_expected( iv_new_num = '    1'
                   iv_new     = 'A'
-                  iv_result  = ''
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
                   iv_old_num = '    1'
                   iv_old     = 'A' ).
     add_expected( iv_new_num = '    2'
                   iv_new     = '* X'
-                  iv_result  = '' " no diff!
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
                   iv_old_num = '    2'
                   iv_old     = '* B' ).
     add_expected( iv_new_num = '    3'
                   iv_new     = 'C'
-                  iv_result  = ''
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
                   iv_old_num = '    3'
                   iv_old     = 'C' ).
     add_expected( iv_new_num = '    4'
                   iv_new     = 'D " new'
-                  iv_result  = '' " no diff!
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
                   iv_old_num = '    4'
                   iv_old     = 'D " old' ).
 
@@ -336,22 +337,22 @@ CLASS ltcl_diff IMPLEMENTATION.
 
     add_expected( iv_new_num = '    1'
                   iv_new     = 'A'
-                  iv_result  = ''
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
                   iv_old_num = '    1'
                   iv_old     = 'A' ).
     add_expected( iv_new_num = '    2'
                   iv_new     = 'b'
-                  iv_result  = '' " no diff!
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
                   iv_old_num = '    2'
                   iv_old     = 'B' ).
     add_expected( iv_new_num = '    3'
                   iv_new     = 'c'
-                  iv_result  = ''
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
                   iv_old_num = '    3'
                   iv_old     = 'c' ).
     add_expected( iv_new_num = '    4'
                   iv_new     = 'D'
-                  iv_result  = '' " no diff!
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
                   iv_old_num = '    4'
                   iv_old     = 'd' ).
 
@@ -368,7 +369,7 @@ CLASS ltcl_diff IMPLEMENTATION.
 
     add_expected( iv_new_num = '    1'
                   iv_new     = `WRITE 'TEST'`
-                  iv_result  = 'U'
+                  iv_result  = zif_abapgit_definitions=>c_diff-update
                   iv_old_num = '    1'
                   iv_old     = `WRITE 'test'` ).
 
@@ -387,12 +388,12 @@ CLASS ltcl_diff IMPLEMENTATION.
 
     add_expected( iv_new_num = '    1'
                   iv_new     = `write 'test'`
-                  iv_result  = '' " no diff!
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
                   iv_old_num = '    1'
                   iv_old     = `WRITE 'test'` ).
     add_expected( iv_new_num = '    2'
                   iv_new     = `DATA FOO TYPE I.`
-                  iv_result  = '' " no diff!
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
                   iv_old_num = '    2'
                   iv_old     = `DATA foo TYPE i.` ).
 
@@ -416,37 +417,37 @@ CLASS ltcl_diff IMPLEMENTATION.
 
     add_expected( iv_new_num = '    1'
                   iv_new     = `REPORT zprog_diff.`
-                  iv_result  = '' " no diff!
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
                   iv_old_num = '    1'
                   iv_old     = `REPORT zprog_diff.`
                   iv_beacon  = 1 ).
     add_expected( iv_new_num = '    2'
                   iv_new     = `*`
-                  iv_result  = 'I'
+                  iv_result  = zif_abapgit_definitions=>c_diff-insert
                   iv_old_num = '     '
                   iv_old     = ``
                   iv_beacon  = 1 ).
     add_expected( iv_new_num = '    3'
                   iv_new     = `FORM t_1.`
-                  iv_result  = '' " no diff!
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
                   iv_old_num = '    2'
                   iv_old     = `FORM t_1.`
                   iv_beacon  = 2 ).
     add_expected( iv_new_num = '    4'
                   iv_new     = `ENDFORM.`
-                  iv_result  = '' " no diff!
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
                   iv_old_num = '    3'
                   iv_old     = `ENDFORM.`
                   iv_beacon  = 2 ).
     add_expected( iv_new_num = '    5'
                   iv_new     = `FORM t_2.`
-                  iv_result  = 'I'
+                  iv_result  = zif_abapgit_definitions=>c_diff-insert
                   iv_old_num = '     '
                   iv_old     = ``
                   iv_beacon  = 3 ).
     add_expected( iv_new_num = '    6'
                   iv_new     = `ENDFORM.`
-                  iv_result  = 'I'
+                  iv_result  = zif_abapgit_definitions=>c_diff-insert
                   iv_old_num = '     '
                   iv_old     = ``
                   iv_beacon  = 3 ).
@@ -471,40 +472,85 @@ CLASS ltcl_diff IMPLEMENTATION.
 
     add_expected( iv_old_num = '    1'
                   iv_old     = `REPORT zprog_diff.`
-                  iv_result  = '' " no diff!
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
                   iv_new_num = '    1'
                   iv_new     = `REPORT zprog_diff.`
                   iv_beacon  = 1 ).
     add_expected( iv_old_num = '    2'
                   iv_old     = `*`
-                  iv_result  = 'D'
+                  iv_result  = zif_abapgit_definitions=>c_diff-delete
                   iv_new_num = '     '
                   iv_new     = ``
                   iv_beacon  = 1 ).
     add_expected( iv_old_num = '    3'
                   iv_old     = `FORM t_1.`
-                  iv_result  = '' " no diff!
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
                   iv_new_num = '    2'
                   iv_new     = `FORM t_1.`
                   iv_beacon  = 2 ).
     add_expected( iv_old_num = '    4'
                   iv_old     = `ENDFORM.`
-                  iv_result  = '' " no diff!
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
                   iv_new_num = '    3'
                   iv_new     = `ENDFORM.`
                   iv_beacon  = 2 ).
     add_expected( iv_old_num = '    5'
                   iv_old     = `FORM t_2.`
-                  iv_result  = 'D'
+                  iv_result  = zif_abapgit_definitions=>c_diff-delete
                   iv_new_num = '     '
                   iv_new     = ``
                   iv_beacon  = 2 ).
     add_expected( iv_old_num = '    6'
                   iv_old     = `ENDFORM.`
-                  iv_result  = 'D'
+                  iv_result  = zif_abapgit_definitions=>c_diff-delete
                   iv_new_num = '     '
                   iv_new     = ``
                   iv_beacon  = 2 ).
+
+    test( ).
+
+  ENDMETHOD.
+
+  METHOD diff14.
+
+    " lines with different whitespace
+    add_new( iv_new = 'A' ).
+    add_new( iv_new = `` ). " empty line
+    add_new( iv_new = ` ` ). " one space
+    add_new( iv_new = `   ` ). " some spaces
+    add_new( iv_new = 'E' ).
+
+    add_old( iv_old = 'A' ).
+    add_old( iv_old = `     ` ). " some spaces
+    add_old( iv_old = `  ` ). " two spaces
+    add_old( iv_old = `` ). " empty line
+    add_old( iv_old = 'E' ).
+
+    add_expected( iv_new_num = '    1'
+                  iv_new     = 'A'
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
+                  iv_old_num = '    1'
+                  iv_old     = 'A' ).
+    add_expected( iv_new_num = '    2'
+                  iv_new     = ''
+                  iv_result  = zif_abapgit_definitions=>c_diff-update
+                  iv_old_num = '    2'
+                  iv_old     = `     ` ).
+    add_expected( iv_new_num = '    3'
+                  iv_new     = ` `
+                  iv_result  = zif_abapgit_definitions=>c_diff-update
+                  iv_old_num = '    3'
+                  iv_old     = `  ` ).
+    add_expected( iv_new_num = '    4'
+                  iv_new     = `   `
+                  iv_result  = zif_abapgit_definitions=>c_diff-update
+                  iv_old_num = '    4'
+                  iv_old     = '' ).
+    add_expected( iv_new_num = '    5'
+                  iv_new     = 'E'
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
+                  iv_old_num = '    5'
+                  iv_old     = 'E' ).
 
     test( ).
 
