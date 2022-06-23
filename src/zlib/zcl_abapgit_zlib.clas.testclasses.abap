@@ -6,7 +6,7 @@ CLASS ltcl_zlib DEFINITION FOR TESTING
   PRIVATE SECTION.
     METHODS:
       fixed FOR TESTING RAISING cx_dynamic_check,
-      dynamic FOR TESTING RAISING cx_dynamic_check,
+      dynamic FOR TESTING RAISING cx_dynamic_check zcx_abapgit_exception,
       not_compressed FOR TESTING RAISING cx_dynamic_check.
 
 ENDCLASS.

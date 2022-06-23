@@ -13,7 +13,8 @@ CLASS ltcl_find_remote_dot_abapgit DEFINITION FINAL FOR TESTING
       when_find_remote_dot_abapgit,
       then_dot_abapgit_is_bound,
       then_no_exception_is_raised,
-      given_dot_abapgit_file,
+      given_dot_abapgit_file
+        RAISING zcx_abapgit_exception,
       given_no_dot_abapgit_file,
       then_dot_abapgit_is_not_bound,
       given_repo_has_files
