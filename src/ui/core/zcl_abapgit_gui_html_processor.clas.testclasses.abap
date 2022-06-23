@@ -58,7 +58,7 @@ CLASS ltcl_html_processor_test DEFINITION
       RETURNING
         VALUE(rv_html) TYPE string.
 
-    METHODS setup.
+    METHODS setup RAISING zcx_abapgit_exception.
     METHODS process_typical FOR TESTING RAISING zcx_abapgit_exception.
     METHODS process_with_preserve FOR TESTING RAISING zcx_abapgit_exception.
     METHODS process_no_css FOR TESTING RAISING zcx_abapgit_exception.

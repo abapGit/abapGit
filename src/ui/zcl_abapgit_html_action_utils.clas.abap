@@ -119,7 +119,11 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
 
     CONSTANTS lc_nbsp TYPE xstring VALUE 'C2A0'. " &nbsp;
 
-    gv_non_breaking_space = zcl_abapgit_convert=>xstring_to_string_utf8( lc_nbsp ).
+    TRY.
+        gv_non_breaking_space = zcl_abapgit_convert=>xstring_to_string_utf8( lc_nbsp ).
+      CATCH zcx_abapgit_exception.
+        ASSERT 0 = 1.
+    ENDTRY.
 
   ENDMETHOD.
 

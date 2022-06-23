@@ -12,7 +12,9 @@ CLASS zcl_abapgit_diff DEFINITION
         !iv_old                TYPE xstring
         !iv_ignore_indentation TYPE abap_bool DEFAULT abap_false
         !iv_ignore_comments    TYPE abap_bool DEFAULT abap_false
-        !iv_ignore_case        TYPE abap_bool DEFAULT abap_false.
+        !iv_ignore_case        TYPE abap_bool DEFAULT abap_false
+      RAISING
+        zcx_abapgit_exception.
     METHODS get
       RETURNING
         VALUE(rt_diff) TYPE zif_abapgit_definitions=>ty_diffs_tt.
@@ -65,7 +67,9 @@ CLASS zcl_abapgit_diff DEFINITION
         !iv_old TYPE xstring
       EXPORTING
         !et_new TYPE rswsourcet
-        !et_old TYPE rswsourcet.
+        !et_old TYPE rswsourcet
+      RAISING
+        zcx_abapgit_exception.
     METHODS map_beacons.
     METHODS shortlist.
     METHODS create_regex_set

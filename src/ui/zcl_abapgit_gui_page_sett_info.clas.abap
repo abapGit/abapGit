@@ -380,7 +380,10 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
     rs_info-size = xstrlen( is_file-data ).
 
     IF is_file-filename CP '*.abap'.
-      lv_code = zcl_abapgit_convert=>xstring_to_string_utf8( is_file-data ).
+      TRY.
+          lv_code = zcl_abapgit_convert=>xstring_to_string_utf8( is_file-data ).
+        CATCH zcx_abapgit_exception ##NO_HANDLER.
+      ENDTRY.
 
       SPLIT lv_code AT zif_abapgit_definitions=>c_newline INTO TABLE lt_code.
 

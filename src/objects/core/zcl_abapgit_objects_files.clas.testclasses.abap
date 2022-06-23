@@ -4,17 +4,23 @@ CLASS ltcl_objects_files DEFINITION FOR TESTING
   PRIVATE SECTION.
     DATA: mo_cut TYPE REF TO zcl_abapgit_objects_files.
 
-    METHODS setup.
+    METHODS setup
+      RAISING
+        zcx_abapgit_exception .
 
     METHODS get_program_data
       IMPORTING
         iv_line_break    TYPE clike
       RETURNING
-        VALUE(rv_result) TYPE xstring.
+        VALUE(rv_result) TYPE xstring
+      RAISING
+        zcx_abapgit_exception .
 
     METHODS get_xml_data
       RETURNING
-        VALUE(rv_result) TYPE xstring.
+        VALUE(rv_result) TYPE xstring
+      RAISING
+        zcx_abapgit_exception .
 
     METHODS get_expected_abap_source
       RETURNING
