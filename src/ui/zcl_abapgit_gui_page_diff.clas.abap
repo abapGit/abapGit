@@ -152,12 +152,12 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         VALUE(rv_is_refrseh) TYPE abap_bool.
     METHODS modify_files_before_diff_calc
       IMPORTING
-         it_diff_files_old TYPE ty_file_diffs
+        it_diff_files_old TYPE ty_file_diffs
       RETURNING
-        VALUE(rt_files)    TYPE zif_abapgit_definitions=>ty_stage_tt.
+        VALUE(rt_files)   TYPE zif_abapgit_definitions=>ty_stage_tt.
     METHODS add_view_sub_menu
       IMPORTING
-         io_menu TYPE REF TO zcl_abapgit_html_toolbar .
+        io_menu TYPE REF TO zcl_abapgit_html_toolbar .
 
     METHODS render_content
         REDEFINITION .
@@ -201,6 +201,11 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         !is_diff       TYPE ty_file_diff
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+    METHODS render_line_no_diffs
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
     METHODS render_line_split
       IMPORTING
         !is_diff_line  TYPE zif_abapgit_definitions=>ty_diff
@@ -256,6 +261,11 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         is_status                   TYPE zif_abapgit_definitions=>ty_result
       RETURNING
         VALUE(rv_is_file_requested) TYPE abap_bool.
+    METHODS has_diffs
+      IMPORTING
+        !it_diffs           TYPE zif_abapgit_definitions=>ty_diffs_tt
+      RETURNING
+        VALUE(rv_has_diffs) TYPE abap_bool.
 
 ENDCLASS.
 
@@ -641,6 +651,16 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD has_diffs.
+
+    LOOP AT it_diffs TRANSPORTING NO FIELDS WHERE result IS NOT INITIAL.
+      rv_has_diffs = abap_true.
+      EXIT.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD insert_nav.
 
   ENDMETHOD.
@@ -984,6 +1004,11 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     lt_diffs = is_diff-o_diff->get( ).
 
+    IF has_diffs( lt_diffs ) = abap_false.
+      ri_html->add( render_line_no_diffs( ) ).
+      RETURN.
+    ENDIF.
+
     lv_insert_nav = insert_nav( ).
 
     LOOP AT lt_diffs ASSIGNING <ls_diff>.
@@ -1027,6 +1052,26 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     IF mv_unified = abap_true.
       ri_html->add( render_line_unified( ) ). " Release delayed lines
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD render_line_no_diffs.
+
+    DATA ls_diff_line TYPE zif_abapgit_definitions=>ty_diff.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    IF mv_unified = abap_true.
+      ls_diff_line-old = 'No diffs found'.
+      ri_html->add( render_line_unified( is_diff_line = ls_diff_line ) ).
+    ELSE.
+      ls_diff_line-new = 'No diffs found'.
+      ri_html->add( render_line_split( is_diff_line = ls_diff_line
+                                       iv_filename  = ''
+                                       iv_fstate    = ''
+                                       iv_index     = 1 ) ).
     ENDIF.
 
   ENDMETHOD.
