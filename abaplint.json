@@ -123,9 +123,7 @@
       "pragmas": ["##NO_TEXT"],
       "pseudo": ["#EC NOTEXT"]
     },
-    "unused_types": {
-      "skipNames": ["/aff_types/"]
-    },
+    "unused_types": true,
     "begin_single_include": true,
     "names_no_dash": true,
     "parser_missing_space": true,
