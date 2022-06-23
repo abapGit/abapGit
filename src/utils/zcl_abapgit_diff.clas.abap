@@ -241,7 +241,7 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
         APPEND ls_diff TO rt_diff.
       ENDLOOP.
     ELSEIF sy-subrc = 2.
-      " Identical input
+      " Copy input... but it might not be identical
       LOOP AT it_old ASSIGNING <ls_old>.
         CLEAR ls_diff.
         ls_diff-old_num = sy-tabix.
@@ -250,6 +250,11 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
         ASSERT sy-subrc = 0.
         ls_diff-new_num = sy-tabix.
         ls_diff-new     = <ls_new>.
+        " SAP function ignores lines that contain only whitespace so we compare directly
+        IF ( mv_compare_mode = 1 OR mv_compare_mode = 3 ) AND <ls_old> <> <ls_new> AND
+           ( strlen( condense( <ls_old> ) ) = 0 OR strlen( condense( <ls_new> ) ) = 0 ).
+          ls_diff-result = zif_abapgit_definitions=>c_diff-update.
+        ENDIF.
         APPEND ls_diff TO rt_diff.
       ENDLOOP.
     ELSE.
