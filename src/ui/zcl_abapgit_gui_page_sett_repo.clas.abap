@@ -287,7 +287,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
     lt_ignore = zcl_abapgit_convert=>split_string( mo_form_data->get( c_id-ignore ) ).
     LOOP AT lt_ignore INTO lv_ignore.
       lv_ignore = condense( lv_ignore ).
-      if lv_ignore IS NOT INITIAL.
+      IF lv_ignore IS NOT INITIAL.
         lo_dot->add_ignore( iv_path = ''
                             iv_filename = lv_ignore ).
       ENDIF.
