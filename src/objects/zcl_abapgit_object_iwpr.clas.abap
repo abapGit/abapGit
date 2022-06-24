@@ -14,6 +14,9 @@ CLASS zcl_abapgit_object_iwpr DEFINITION
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
+    METHODS get_field_rules
+      RETURNING
+        VALUE(ro_result) TYPE REF TO zif_abapgit_field_rules.
 ENDCLASS.
 
 
@@ -25,8 +28,9 @@ CLASS zcl_abapgit_object_iwpr IMPLEMENTATION.
 
     CREATE OBJECT ro_generic
       EXPORTING
-        is_item     = ms_item
-        iv_language = mv_language.
+        io_field_rules = get_field_rules( )
+        is_item        = ms_item
+        iv_language    = mv_language.
 
   ENDMETHOD.
 
@@ -105,4 +109,25 @@ CLASS zcl_abapgit_object_iwpr IMPLEMENTATION.
     get_generic( )->serialize( io_xml ).
 
   ENDMETHOD.
+
+  METHOD get_field_rules.
+    ro_result = zcl_abapgit_field_rules=>create( ).
+    ro_result->add(
+      iv_table     = '/IWBEP/I_SBD_GA'
+      iv_field     = 'CREATION_USER_ID'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
+    )->add(
+      iv_table     = '/IWBEP/I_SBD_GA'
+      iv_field     = 'CREATION_TIME'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp
+    )->add(
+      iv_table     = '/IWBEP/I_SBD_GA'
+      iv_field     = 'LAST_CHG_USER_ID'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
+    )->add(
+      iv_table     = '/IWBEP/I_SBD_GA'
+      iv_field     = 'LAST_CHG_TIME'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp ).
+  ENDMETHOD.
+
 ENDCLASS.

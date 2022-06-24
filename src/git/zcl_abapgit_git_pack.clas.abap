@@ -71,12 +71,16 @@ CLASS zcl_abapgit_git_pack DEFINITION
       IMPORTING
         !it_nodes      TYPE ty_nodes_tt
       RETURNING
-        VALUE(rv_data) TYPE xstring .
+        VALUE(rv_data) TYPE xstring
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS encode_commit
       IMPORTING
         !is_commit     TYPE ty_commit
       RETURNING
-        VALUE(rv_data) TYPE xstring .
+        VALUE(rv_data) TYPE xstring
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS encode_tag
       IMPORTING
         !is_tag        TYPE ty_tag
@@ -148,7 +152,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
+CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 
 
   METHOD decode.

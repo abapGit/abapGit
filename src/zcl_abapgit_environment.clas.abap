@@ -200,4 +200,17 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
+  METHOD zif_abapgit_environment~is_variant_maintenance.
+
+    DATA:
+      lt_variscreens TYPE STANDARD TABLE OF rsdynnr
+                          WITH NON-UNIQUE DEFAULT KEY.
+
+    " Memory is set in LSVARF08 / EXPORT_SCREEN_TABLES.
+    IMPORT variscreens = lt_variscreens FROM MEMORY ID '%_SCRNR_%'.
+
+    rv_is_variant_maintenance = boolc( lines( lt_variscreens ) > 0 ).
+
+  ENDMETHOD.
+
 ENDCLASS.

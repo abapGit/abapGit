@@ -44,7 +44,9 @@ CLASS zcl_abapgit_news DEFINITION
       IMPORTING
         !iv_rawdata          TYPE xstring
         !iv_lastseen_version TYPE string
-        !iv_current_version  TYPE string .
+        !iv_current_version  TYPE string
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
 

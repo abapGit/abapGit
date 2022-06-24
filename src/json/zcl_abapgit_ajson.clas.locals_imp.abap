@@ -2,6 +2,57 @@
 * UTILS
 **********************************************************************
 
+INTERFACE lif_kind.
+
+  TYPES ty_kind TYPE c LENGTH 1.
+
+  CONSTANTS:
+    any         TYPE ty_kind VALUE cl_abap_typedescr=>typekind_any,
+    date        TYPE ty_kind VALUE cl_abap_typedescr=>typekind_date,
+    time        TYPE ty_kind VALUE cl_abap_typedescr=>typekind_time,
+    packed      TYPE ty_kind VALUE cl_abap_typedescr=>typekind_packed,
+    table       TYPE ty_kind VALUE cl_abap_typedescr=>typekind_table,
+    struct_flat TYPE ty_kind VALUE cl_abap_typedescr=>typekind_struct1,
+    struct_deep TYPE ty_kind VALUE cl_abap_typedescr=>typekind_struct2,
+    data_ref    TYPE ty_kind VALUE cl_abap_typedescr=>typekind_dref,
+    object_ref  TYPE ty_kind VALUE cl_abap_typedescr=>typekind_oref.
+
+  CONSTANTS:
+    BEGIN OF numeric,
+      int1       TYPE ty_kind VALUE cl_abap_tabledescr=>typekind_int1,
+      int2       TYPE ty_kind VALUE cl_abap_tabledescr=>typekind_int2,
+      int4       TYPE ty_kind VALUE cl_abap_tabledescr=>typekind_int,
+      int8       TYPE ty_kind VALUE '8', " cl_abap_tabledescr=>typekind_int8 not in lower releases
+      float      TYPE ty_kind VALUE cl_abap_tabledescr=>typekind_float,
+      packed     TYPE ty_kind VALUE cl_abap_tabledescr=>typekind_packed,
+      decfloat16 TYPE ty_kind VALUE cl_abap_tabledescr=>typekind_decfloat16,
+      decfloat34 TYPE ty_kind VALUE cl_abap_tabledescr=>typekind_decfloat34,
+    END OF numeric.
+
+  CONSTANTS:
+    BEGIN OF texts,
+      char   TYPE ty_kind VALUE cl_abap_tabledescr=>typekind_char,
+      numc   TYPE ty_kind VALUE cl_abap_tabledescr=>typekind_num,
+      string TYPE ty_kind VALUE cl_abap_tabledescr=>typekind_string,
+    END OF texts.
+
+  CONSTANTS:
+    BEGIN OF binary,
+      hex     TYPE ty_kind VALUE cl_abap_tabledescr=>typekind_hex,
+      xstring TYPE ty_kind VALUE cl_abap_tabledescr=>typekind_xstring,
+    END OF binary.
+
+  CONSTANTS:
+    BEGIN OF deep_targets,
+      table       TYPE ty_kind VALUE cl_abap_typedescr=>typekind_table,
+      struct_flat TYPE ty_kind VALUE cl_abap_typedescr=>typekind_struct1,
+      struct_deep TYPE ty_kind VALUE cl_abap_typedescr=>typekind_struct2,
+      data_ref    TYPE ty_kind VALUE cl_abap_typedescr=>typekind_dref,
+      object_ref  TYPE ty_kind VALUE cl_abap_typedescr=>typekind_oref,
+    END OF deep_targets.
+
+ENDINTERFACE.
+
 CLASS lcl_utils DEFINITION FINAL.
   PUBLIC SECTION.
 
@@ -589,7 +640,7 @@ CLASS lcl_json_to_abap DEFINITION FINAL.
         type_path         TYPE string,
         target_field_name TYPE string,
         dd                TYPE REF TO cl_abap_datadescr,
-        type_kind         LIKE cl_abap_typedescr=>typekind_any,
+        type_kind         LIKE lif_kind=>any,
         tab_item_buf      TYPE REF TO data,
       END OF ty_type_cache.
     DATA mt_node_type_cache TYPE HASHED TABLE OF ty_type_cache WITH UNIQUE KEY type_path.
@@ -658,7 +709,7 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
     DATA lo_ddescr TYPE REF TO cl_abap_datadescr.
 
     " Calculate type path
-    IF is_parent_type-type_kind = cl_abap_typedescr=>typekind_table.
+    IF is_parent_type-type_kind = lif_kind=>table.
       lv_node_type_path = is_parent_type-type_path && '/-'. " table item type
     ELSEIF is_parent_type-type_kind IS NOT INITIAL.
       lv_node_type_path = is_parent_type-type_path && '/' && is_node-name.
@@ -682,11 +733,11 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
       ENDIF.
 
       CASE is_parent_type-type_kind.
-        WHEN 'h'. " Table
+        WHEN lif_kind=>table.
           lo_tdescr ?= is_parent_type-dd.
           rs_node_type-dd = lo_tdescr->get_table_line_type( ).
 
-        WHEN 'u' OR 'v'. " Structure
+        WHEN lif_kind=>struct_flat OR lif_kind=>struct_deep.
           lo_sdescr ?= is_parent_type-dd.
           lo_sdescr->get_component_type(
             EXPORTING
@@ -707,9 +758,9 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
       ENDCASE.
 
       rs_node_type-type_kind         = rs_node_type-dd->type_kind. " for caching and cleaner unintialized access
-      IF rs_node_type-type_kind = 'h'. " Table
+      IF rs_node_type-type_kind = lif_kind=>table.
         lo_tdescr ?= rs_node_type-dd.
-        IF lo_tdescr->table_kind <> 'S'. " standard
+        IF lo_tdescr->table_kind <> cl_abap_tabledescr=>tablekind_std.
           lo_ddescr = lo_tdescr->get_table_line_type( ).
           CREATE DATA rs_node_type-tab_item_buf TYPE HANDLE lo_ddescr.
         ENDIF.
@@ -735,7 +786,7 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
 
     " Assign container
     CASE is_parent_type-type_kind.
-      WHEN 'h'. " Table
+      WHEN lif_kind=>table.
         IF is_parent_type-tab_item_buf IS BOUND. " Indirect hint that table was sorted/hashed, see get_node_type.
           ASSIGN i_container_ref->* TO <parent_anytab>.
           ASSERT sy-subrc = 0.
@@ -749,7 +800,7 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
           ASSERT sy-subrc = 0.
         ENDIF.
 
-      WHEN 'u' OR 'v'. " Structure
+      WHEN lif_kind=>struct_flat OR lif_kind=>struct_deep.
         ASSIGN i_container_ref->* TO <parent_struc>.
         ASSERT sy-subrc = 0.
     ENDCASE.
@@ -760,7 +811,7 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
         LOOP AT mr_nodes->* ASSIGNING <n> USING KEY array_index WHERE path = iv_path.
 
         " Get or create type cache record
-          IF is_parent_type-type_kind <> 'h' OR ls_node_type-type_kind IS INITIAL.
+          IF is_parent_type-type_kind <> lif_kind=>table OR ls_node_type-type_kind IS INITIAL.
           " table records are the same, no need to refetch twice
             ls_node_type = get_node_type(
             is_node        = <n>
@@ -768,14 +819,15 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
           ENDIF.
 
         " Validate node type
-          IF ls_node_type-type_kind CA 'lr'. " data/obj ref
+          IF ls_node_type-type_kind = lif_kind=>data_ref OR
+           ls_node_type-type_kind = lif_kind=>object_ref.
           " TODO maybe in future
             zcx_abapgit_ajson_error=>raise( 'Cannot assign to ref' ).
           ENDIF.
 
         " Find target field reference
           CASE is_parent_type-type_kind.
-            WHEN 'h'. " Table
+            WHEN lif_kind=>table.
               IF NOT ls_node_type-target_field_name CO '0123456789'.
               " Does not affect anything actually but for integrity
                 zcx_abapgit_ajson_error=>raise( 'Need index to access tables' ).
@@ -786,7 +838,7 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
                 ASSERT sy-subrc = 0.
               ENDIF.
 
-            WHEN 'u' OR 'v'.
+            WHEN lif_kind=>struct_flat OR lif_kind=>struct_deep.
               FIELD-SYMBOLS <field> TYPE any.
               ASSIGN COMPONENT ls_node_type-target_field_name OF STRUCTURE <parent_struc> TO <field>.
               ASSERT sy-subrc = 0.
@@ -802,7 +854,8 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
         " Process value assignment
           CASE <n>-type.
             WHEN zif_abapgit_ajson=>node_type-object.
-              IF NOT ls_node_type-type_kind CO 'uv'.
+              IF ls_node_type-type_kind <> lif_kind=>struct_flat AND
+               ls_node_type-type_kind <> lif_kind=>struct_deep.
                 zcx_abapgit_ajson_error=>raise( 'Expected structure' ).
               ENDIF.
               any_to_abap(
@@ -811,7 +864,7 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
               i_container_ref = lr_target_field ).
 
             WHEN zif_abapgit_ajson=>node_type-array.
-              IF NOT ls_node_type-type_kind = 'h'.
+              IF NOT ls_node_type-type_kind = lif_kind=>table.
                 zcx_abapgit_ajson_error=>raise( 'Expected table' ).
               ENDIF.
               any_to_abap(
@@ -860,7 +913,7 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
 
     FIELD-SYMBOLS <container> TYPE any.
 
-    IF is_node_type-type_kind CA 'lruvh'. " refs, table, strucs
+    IF is_node_type-type_kind CA lif_kind=>deep_targets.
       zcx_abapgit_ajson_error=>raise( |Unsupported target for value [{ is_node_type-type_kind }]| ).
     ENDIF.
 
@@ -879,9 +932,9 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
 
       WHEN zif_abapgit_ajson=>node_type-string.
         " TODO: check type ?
-        IF is_node_type-type_kind = 'D' AND is_node-value IS NOT INITIAL.
+        IF is_node_type-type_kind = lif_kind=>date AND is_node-value IS NOT INITIAL.
           <container> = to_date( is_node-value ).
-        ELSEIF is_node_type-type_kind = 'P' AND is_node-value IS NOT INITIAL.
+        ELSEIF is_node_type-type_kind = lif_kind=>packed AND is_node-value IS NOT INITIAL.
           <container> = to_timestamp( is_node-value ).
         ELSE.
           <container> = is_node-value.
@@ -1206,7 +1259,7 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
 
       WHEN OTHERS.
 
-        IF io_type->type_kind = cl_abap_typedescr=>typekind_dref OR iv_data IS INITIAL.
+        IF io_type->type_kind = lif_kind=>data_ref OR iv_data IS INITIAL.
           " Convert data references and initial references to other types (like ref to class or interface)
           " Initial references will result in "null"
           convert_ref(
@@ -1218,7 +1271,7 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
             CHANGING
               ct_nodes = ct_nodes ).
 
-        ELSEIF io_type->type_kind = cl_abap_typedescr=>typekind_oref
+        ELSEIF io_type->type_kind = lif_kind=>object_ref
           AND cl_abap_typedescr=>describe_by_object_ref( iv_data )->absolute_name = gv_ajson_absolute_type_name.
           convert_ajson(
             EXPORTING
@@ -1334,24 +1387,25 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
         ls_node-type  = zif_abapgit_ajson=>node_type-number.
         ls_node-value = |{ iv_data }|.
       ENDIF.
-    ELSEIF io_type->type_kind CO 'CNgXy'. " Char like, xstring
+    ELSEIF io_type->type_kind CO lif_kind=>texts OR
+           io_type->type_kind CO lif_kind=>binary.
       ls_node-type = zif_abapgit_ajson=>node_type-string.
       ls_node-value = |{ iv_data }|.
-    ELSEIF io_type->type_kind = 'D'. " Date
+    ELSEIF io_type->type_kind = lif_kind=>date.
       ls_node-type = zif_abapgit_ajson=>node_type-string.
       IF mv_format_datetime = abap_true.
         ls_node-value = format_date( iv_data ).
       ELSE.
         ls_node-value = |{ iv_data }|.
       ENDIF.
-    ELSEIF io_type->type_kind = 'T'. " Time
+    ELSEIF io_type->type_kind = lif_kind=>time.
       ls_node-type = zif_abapgit_ajson=>node_type-string.
       IF mv_format_datetime = abap_true.
         ls_node-value = format_time( iv_data ).
       ELSE.
         ls_node-value = |{ iv_data }|.
       ENDIF.
-    ELSEIF io_type->type_kind CO 'bsI8aeFP'. " Numeric
+    ELSEIF io_type->type_kind CO lif_kind=>numeric.
       ls_node-type = zif_abapgit_ajson=>node_type-number.
       ls_node-value = |{ iv_data }|.
     ELSE.
@@ -1571,7 +1625,9 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
     DATA ls_node LIKE LINE OF ct_nodes.
 
     lv_prefix = is_prefix-path && is_prefix-name.
-    IF io_type->type_kind CO 'CNgXyDT'. " Char like, date/time, xstring
+    IF io_type->type_kind CO lif_kind=>texts OR
+       io_type->type_kind CO lif_kind=>date OR
+       io_type->type_kind CO lif_kind=>time.
       IF iv_type = zif_abapgit_ajson=>node_type-boolean AND iv_data <> 'true' AND iv_data <> 'false'.
         zcx_abapgit_ajson_error=>raise( |Unexpected boolean value [{ iv_data }] @{ lv_prefix }| ).
       ELSEIF iv_type = zif_abapgit_ajson=>node_type-null AND iv_data IS NOT INITIAL.
@@ -1582,7 +1638,7 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
         AND iv_type <> zif_abapgit_ajson=>node_type-null AND iv_type <> zif_abapgit_ajson=>node_type-number.
         zcx_abapgit_ajson_error=>raise( |Unexpected type for value [{ iv_type },{ iv_data }] @{ lv_prefix }| ).
       ENDIF.
-    ELSEIF io_type->type_kind CO 'bsI8PaeF'. " Numeric
+    ELSEIF io_type->type_kind CO lif_kind=>numeric.
       IF iv_type <> zif_abapgit_ajson=>node_type-number.
         zcx_abapgit_ajson_error=>raise( |Unexpected value for numeric [{ iv_data }] @{ lv_prefix }| ).
       ENDIF.

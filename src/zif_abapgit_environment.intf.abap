@@ -31,4 +31,7 @@ INTERFACE zif_abapgit_environment
   METHODS get_system_language_filter
     RETURNING
       VALUE(rt_system_language_filter) TYPE ty_system_language_filter.
+  METHODS is_variant_maintenance
+    RETURNING
+      VALUE(rv_is_variant_maintenance) TYPE abap_bool.
 ENDINTERFACE.

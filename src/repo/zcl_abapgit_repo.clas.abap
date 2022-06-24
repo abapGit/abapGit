@@ -99,6 +99,11 @@ CLASS zcl_abapgit_repo DEFINITION
         ct_files TYPE zif_abapgit_definitions=>ty_files_tt
       RAISING
         zcx_abapgit_exception .
+    METHODS check_and_create_package
+      IMPORTING
+         iv_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
 
     DATA mt_local TYPE zif_abapgit_definitions=>ty_files_item_tt .
@@ -159,6 +164,30 @@ ENDCLASS.
 
 CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
+  METHOD check_and_create_package.
+
+    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
+    DATA lv_package TYPE devclass.
+
+    ls_item-obj_type = 'DEVC'.
+    ls_item-obj_name = iv_package.
+
+    IF zcl_abapgit_objects=>exists( ls_item ) = abap_false.
+      " Check if any package is included in remote
+      READ TABLE mt_remote TRANSPORTING NO FIELDS
+        WITH KEY file
+        COMPONENTS filename = zcl_abapgit_filename_logic=>c_package_file.
+      IF sy-subrc <> 0.
+        " If not, prompt to create it
+        lv_package = zcl_abapgit_services_basis=>create_package( iv_package ).
+        IF lv_package IS NOT INITIAL.
+          COMMIT WORK AND WAIT.
+        ENDIF.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
 
   METHOD bind_listener.
     mi_listener = ii_listener.
@@ -191,8 +220,9 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   METHOD check_language.
 
     DATA:
-      lv_main_language TYPE spras,
-      lv_error_message TYPE string.
+      lv_main_language  TYPE spras,
+      lv_error_message  TYPE string,
+      lv_error_longtext TYPE string.
 
     " assumes find_remote_dot_abapgit has been called before
     lv_main_language = get_dot_abapgit( )->get_main_language( ).
@@ -208,11 +238,14 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       " Feature open in main language only exists if abapGit tcode is present
       IF zcl_abapgit_services_abapgit=>get_abapgit_tcode( ) IS INITIAL.
         lv_error_message = lv_error_message && | Please logon in main language and retry.|.
+        lv_error_longtext = |For the Advanced menu option 'Open in Main Language' to be available a transaction code| &&
+                            | must be assigned to report { sy-cprog }.|.
       ELSE.
         lv_error_message = lv_error_message && | Select 'Advanced' > 'Open in Main Language'|.
       ENDIF.
 
-      zcx_abapgit_exception=>raise( lv_error_message ).
+      zcx_abapgit_exception=>raise( iv_text     = lv_error_message
+                                    iv_longtext = lv_error_longtext ).
 
     ENDIF.
 

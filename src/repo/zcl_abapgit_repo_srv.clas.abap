@@ -18,21 +18,6 @@ CLASS zcl_abapgit_repo_srv DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    ALIASES get_repo_from_package
-      FOR zif_abapgit_repo_srv~get_repo_from_package .
-    ALIASES get_repo_from_url
-      FOR zif_abapgit_repo_srv~get_repo_from_url .
-    ALIASES delete
-      FOR zif_abapgit_repo_srv~delete .
-    ALIASES get
-      FOR zif_abapgit_repo_srv~get .
-    ALIASES list
-      FOR zif_abapgit_repo_srv~list .
-    ALIASES validate_package
-      FOR zif_abapgit_repo_srv~validate_package .
-    ALIASES validate_url
-      FOR zif_abapgit_repo_srv~validate_url .
-
     CLASS-DATA gi_ref TYPE REF TO zif_abapgit_repo_srv .
     DATA mv_init TYPE abap_bool.
     DATA mv_only_favorites TYPE abap_bool.
@@ -134,9 +119,11 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     ri_srv = gi_ref.
   ENDMETHOD.
 
+
   METHOD inject_instance.
     gi_ref = ii_srv.
   ENDMETHOD.
+
 
   METHOD instantiate_and_add.
 
@@ -220,7 +207,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     DATA li_repo      TYPE REF TO zif_abapgit_repo.
     DATA ls_full_meta TYPE zif_abapgit_persistence=>ty_repo.
 
-    li_repo = get( iv_key ).
+    li_repo = zif_abapgit_repo_srv~get( iv_key ).
     DELETE TABLE mt_list FROM li_repo.
     ASSERT sy-subrc IS INITIAL.
 
@@ -241,7 +228,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       li_repo     TYPE REF TO zif_abapgit_repo.
 
     LOOP AT it_repos INTO ls_repo.
-      li_repo = get( ls_repo-key ).
+      li_repo = zif_abapgit_repo_srv~get( ls_repo-key ).
 
       li_package = zcl_abapgit_factory=>get_sap_package( ls_repo-package ).
       IF li_package->exists( ) = abap_false.
@@ -424,7 +411,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
           lo_repo_online TYPE REF TO zcl_abapgit_repo_online,
           lv_err         TYPE string.
 
-    lt_repo = list( ).
+    lt_repo = zif_abapgit_repo_srv~list( ).
 
     LOOP AT lt_repo INTO li_repo.
       CHECK li_repo->is_offline( ) = abap_false.
@@ -496,7 +483,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Not authorized' ).
     ENDIF.
 
-    validate_package( iv_package ).
+    zif_abapgit_repo_srv~validate_package( iv_package ).
 
     IF iv_url IS INITIAL.
       zcx_abapgit_exception=>raise( 'Missing display name for repo' ).
@@ -522,6 +509,8 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     ls_repo-local_settings-main_language_only = iv_main_lang_only.
     lo_repo->set_local_settings( ls_repo-local_settings ).
+    lo_repo->check_and_create_package( iv_package ).
+
     ri_repo = lo_repo.
 
   ENDMETHOD.
@@ -546,10 +535,10 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Not authorized' ).
     ENDIF.
 
-    validate_package( iv_package    = iv_package
+    zif_abapgit_repo_srv~validate_package( iv_package    = iv_package
                       iv_ign_subpkg = iv_ign_subpkg ).
 
-    validate_url( lv_url ).
+    zif_abapgit_repo_srv~validate_url( lv_url ).
 
     lv_branch_name = determine_branch_name(
       iv_name = iv_branch_name
@@ -619,7 +608,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
         RAISE EXCEPTION lx_error.
     ENDTRY.
 
-    delete( ii_repo ).
+    zif_abapgit_repo_srv~delete( ii_repo ).
 
   ENDMETHOD.
 
@@ -643,7 +632,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     " Check if package is already used in another repo
     IF iv_chk_exists = abap_true.
-      get_repo_from_package(
+      zif_abapgit_repo_srv~get_repo_from_package(
         EXPORTING
           iv_package    = iv_package
           iv_ign_subpkg = iv_ign_subpkg
@@ -668,7 +657,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     zcl_abapgit_url=>validate( iv_url ).
 
     IF iv_chk_exists = abap_true.
-      get_repo_from_url(
+      zif_abapgit_repo_srv~get_repo_from_url(
         EXPORTING
           iv_url    = iv_url
         IMPORTING
