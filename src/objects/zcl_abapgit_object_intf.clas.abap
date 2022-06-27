@@ -583,7 +583,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
     " get infos for json file
     IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
       DATA lo_ajson          TYPE REF TO object.
-      CREATE OBJECT lo_ajson TYPE ('ZCL_ABAPGIT_JSON_CNT_HNDLR_EC').
+      CREATE OBJECT lo_ajson TYPE ('ZCL_ABAPGIT_JSON_HANDLER').
 
       ls_aff = get_aff_content_for_intf( ls_interface_key ).
 
@@ -648,7 +648,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
     DATA lv_json_as_xstring TYPE xstring.
     DATA lx_exception TYPE REF TO cx_static_check.
 
-    CREATE OBJECT lo_ajson TYPE ('ZCL_ABAPGIT_JSON_CNT_HNDLR_EC').
+    CREATE OBJECT lo_ajson TYPE ('ZCL_ABAPGIT_JSON_HANDLER').
 
     " get INTF metadata
     lv_json_as_xstring = zif_abapgit_object~mo_files->read_raw( iv_ext = 'json' ).
