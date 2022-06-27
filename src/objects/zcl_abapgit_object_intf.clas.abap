@@ -52,11 +52,29 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
         !io_xml TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
+
+    METHODS get_aff_content_from_json_file
+      IMPORTING
+                ii_log        TYPE REF TO zif_abapgit_log OPTIONAL
+      RETURNING VALUE(result) TYPE zif_abapgit_aff_intf_v1=>ty_main
+      RAISING
+                zcx_abapgit_exception.
+    METHODS get_aff_content_for_intf
+      IMPORTING
+        is_interface_key   TYPE seoclskey
+      RETURNING
+        VALUE(rs_intf_aff) TYPE zif_abapgit_aff_intf_v1=>ty_main.
+    METHODS get_descriptions_from_aff
+      IMPORTING
+        is_clskey       TYPE seoclskey
+        is_intf_aff     TYPE zif_abapgit_aff_intf_v1=>ty_main
+      EXPORTING
+        et_descriptions TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_intf IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -73,11 +91,32 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
           lt_descriptions TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt,
           ls_clskey       TYPE seoclskey.
 
+    DATA ls_intf_aff TYPE zif_abapgit_aff_intf_v1=>ty_main.
 
     ls_clskey-clsname = ms_item-obj_name.
     lt_source = zif_abapgit_object~mo_files->read_abap( ).
-    ii_xml->read( EXPORTING iv_name = 'VSEOINTERF'
-                  CHANGING cg_data = ls_vseointerf ).
+
+    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
+
+      ls_intf_aff = get_aff_content_from_json_file( ).
+
+      ls_vseointerf-clsname  = ls_clskey-clsname.
+      ls_vseointerf-descript = ls_intf_aff-header-description.
+      ls_vseointerf-unicode  = ls_intf_aff-header-abap_language_version.
+      ls_vseointerf-langu    = ls_intf_aff-header-original_language.
+      ls_vseointerf-clsproxy = ls_intf_aff-proxy.
+      ls_vseointerf-exposure = seoc_exposure_public.
+      ls_vseointerf-state    = seoc_state_implemented.
+
+      "  to do : fill it right!
+      ls_vseointerf-author    = sy-uname.
+      ls_vseointerf-createdon = sy-datum.
+      ls_vseointerf-changedby = sy-uname.
+    ELSE.
+      ii_xml->read( EXPORTING iv_name = 'VSEOINTERF'
+                    CHANGING cg_data = ls_vseointerf ).
+    ENDIF.
+
 
     mi_object_oriented_object_fct->create(
       EXPORTING
@@ -89,8 +128,18 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       is_key               = ls_clskey
       it_source            = lt_source ).
 
-    ii_xml->read( EXPORTING iv_name = 'DESCRIPTIONS'
-                  CHANGING cg_data = lt_descriptions ).
+    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
+      get_descriptions_from_aff(
+       EXPORTING
+         is_clskey = ls_clskey
+         is_intf_aff = ls_intf_aff
+       IMPORTING
+         et_descriptions = lt_descriptions  ).
+    ELSE.
+      " what's about seosubcotx ??
+      ii_xml->read( EXPORTING iv_name = 'DESCRIPTIONS'
+                    CHANGING cg_data = lt_descriptions ).
+    ENDIF.
 
     mi_object_oriented_object_fct->update_descriptions(
       is_key          = ls_clskey
@@ -106,6 +155,8 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
           lv_object     TYPE dokhl-object,
           lt_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_lines,
           ls_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_line.
+
+    check ii_xml is bound.
 
     ii_xml->read( EXPORTING iv_name = 'LINES'
                   CHANGING cg_data = lt_lines ).
@@ -146,10 +197,30 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     DATA: ls_vseointerf TYPE vseointerf,
           ls_clskey     TYPE seoclskey.
 
+    data ls_intf_aff TYPE zif_abapgit_aff_intf_v1=>ty_main.
+
     ls_clskey-clsname = ms_item-obj_name.
 
-    ii_xml->read( EXPORTING iv_name = 'VSEOINTERF'
-                  CHANGING cg_data = ls_vseointerf ).
+    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
+
+      ls_intf_aff = get_aff_content_from_json_file( ).
+
+      ls_vseointerf-clsname  = ls_clskey-clsname.
+      ls_vseointerf-descript = ls_intf_aff-header-description.
+      ls_vseointerf-unicode  = ls_intf_aff-header-abap_language_version.
+      ls_vseointerf-langu    = ls_intf_aff-header-original_language.
+      ls_vseointerf-clsproxy = ls_intf_aff-proxy.
+      ls_vseointerf-exposure = seoc_exposure_public.
+      ls_vseointerf-state    = seoc_state_implemented.
+
+      "  to do : fill it right!
+      ls_vseointerf-author    = sy-uname.
+      ls_vseointerf-createdon = sy-datum.
+      ls_vseointerf-changedby = sy-uname.
+    ELSE.
+      ii_xml->read( EXPORTING iv_name = 'VSEOINTERF'
+                    CHANGING cg_data = ls_vseointerf ).
+    ENDIF.
 
     mi_object_oriented_object_fct->create(
       EXPORTING
@@ -379,8 +450,17 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     DATA: ls_vseointerf TYPE vseointerf.
 
-    io_xml->read( EXPORTING iv_name = 'VSEOINTERF'
-                  CHANGING cg_data = ls_vseointerf ).
+    data ls_intf_aff TYPE zif_abapgit_aff_intf_v1=>ty_main.
+
+    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
+      ls_intf_aff = get_aff_content_from_json_file( ii_log ).
+    ELSE.
+      io_xml->read( EXPORTING iv_name = 'VSEOINTERF'
+                    CHANGING cg_data = ls_vseointerf ).
+    ENDIF.
+
+*    io_xml->read( EXPORTING iv_name = 'VSEOINTERF'
+*                  CHANGING cg_data = ls_vseointerf ).
 
     IF iv_step = zif_abapgit_object=>gc_step_id-abap.
 
@@ -477,6 +557,11 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     DATA: lt_source        TYPE seop_source_string,
           ls_interface_key TYPE seoclskey.
 
+    DATA lv_json_xstring   TYPE xstring.
+    DATA lx_exception      TYPE REF TO cx_root.
+    DATA lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus.
+    data ls_aff              TYPE zif_abapgit_aff_intf_v1=>ty_main.
+
     ls_interface_key-clsname = ms_item-obj_name.
 
     IF zif_abapgit_object~exists( ) = abap_false.
@@ -495,7 +580,136 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     lt_source = mi_object_oriented_object_fct->serialize_abap( ls_interface_key ).
 
     zif_abapgit_object~mo_files->add_abap( lt_source ).
+    " get infos for json file
+    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
+      DATA lo_ajson          TYPE REF TO object.
+      CREATE OBJECT lo_ajson TYPE ('ZCL_ABAPGIT_JSON_CNT_HNDLR_EC').
 
-    serialize_xml( io_xml ).
+      ls_aff = get_aff_content_for_intf( ls_interface_key ).
+
+      TRY.
+          CALL METHOD lo_ajson->('SERIALIZE')
+            EXPORTING
+              iv_data   = ls_aff
+            RECEIVING
+              rv_result = lv_json_xstring.
+
+          zif_abapgit_object~mo_files->add_raw( iv_ext = 'json'
+                             iv_data = lv_json_xstring ).
+
+        CATCH cx_root INTO lx_exception.
+          zcx_abapgit_exception=>raise_with_text( lx_exception ).
+      ENDTRY.
+
+      " Select all active translations of documentation
+      " Skip main language - it was already serialized
+      SELECT DISTINCT langu
+        INTO TABLE lt_langu_additional
+        FROM dokhl
+        WHERE id     = 'IF'
+          AND object = ls_interface_key-clsname
+          AND langu  <> mv_language.
+
+      serialize_docu( ii_xml              = io_xml
+                      iv_clsname          = ls_interface_key-clsname
+                      it_langu_additional = lt_langu_additional ).
+
+    ELSE.
+      serialize_xml( io_xml ).
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD get_aff_content_for_intf.
+
+    " get metadata and fill 'ZIF_ABAPGIT_AFF_INTF_V1=>TY_MAIN'
+    rs_intf_aff-format_version = '1'.
+    SELECT SINGLE masterlang FROM tadir INTO rs_intf_aff-header-original_language
+       WHERE pgmid    = seok_pgmid_r3tr AND object   = seok_r3tr_interface AND obj_name = is_interface_key-clsname.
+
+    SELECT SINGLE FROM vseointerf
+      FIELDS descript AS description, unicode AS abap_language_version, category, clsproxy AS proxy
+      WHERE clsname = @is_interface_key-clsname AND version = @seoc_version_active AND langu = @rs_intf_aff-header-original_language
+      INTO (@rs_intf_aff-header-description, @rs_intf_aff-header-abap_language_version, @rs_intf_aff-category, @rs_intf_aff-proxy).
+
+    DATA(clif_descriptions) = cl_oo_aff_clif_helper=>get_descriptions_compo_subco(
+                              language  = rs_intf_aff-header-original_language
+                              clif_name = is_interface_key-clsname ).
+
+    rs_intf_aff-descriptions = clif_descriptions.
+
+  ENDMETHOD.
+
+
+  METHOD get_aff_content_from_json_file.
+
+    DATA lv_object TYPE trkey.
+    DATA lo_ajson TYPE REF TO object.
+    DATA lv_json_as_xstring TYPE xstring.
+    DATA lx_exception TYPE REF TO cx_static_check.
+
+    CREATE OBJECT lo_ajson TYPE ('ZCL_ABAPGIT_JSON_CNT_HNDLR_EC').
+
+    " get INTF metadata
+    lv_json_as_xstring = zif_abapgit_object~mo_files->read_raw( iv_ext = 'json' ).
+
+    lv_object-devclass = ms_item-devclass.
+    lv_object-obj_type = ms_item-obj_type.
+    lv_object-obj_name = ms_item-obj_name.
+
+    TRY.
+        CALL METHOD lo_ajson->('DESERIALIZE')
+          EXPORTING
+            iv_content = lv_json_as_xstring
+          IMPORTING
+            ev_data    = result.
+
+      CATCH cx_static_check INTO lx_exception.
+        IF ii_log IS BOUND.
+          ii_log->add_exception(
+              ix_exc  = lx_exception
+              is_item = ms_item ).
+        ENDIF.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD get_descriptions_from_aff.
+
+    DATA ls_description TYPE seocompotx.
+
+    LOOP AT is_intf_aff-descriptions-types ASSIGNING FIELD-SYMBOL(<fs_description>).
+      ls_description-clsname  = is_clskey-clsname.
+      ls_description-cmpname  = <fs_description>-name.
+      ls_description-langu    = is_intf_aff-header-original_language.
+      ls_description-descript = <fs_description>-description.
+      APPEND ls_description TO et_descriptions.
+    ENDLOOP.
+
+    LOOP AT is_intf_aff-descriptions-attributes ASSIGNING <fs_description>.
+      ls_description-clsname  = is_clskey-clsname.
+      ls_description-cmpname  = <fs_description>-name.
+      ls_description-langu    = is_intf_aff-header-original_language.
+      ls_description-descript = <fs_description>-description.
+      APPEND ls_description TO et_descriptions.
+    ENDLOOP.
+
+    LOOP AT is_intf_aff-descriptions-methods ASSIGNING FIELD-SYMBOL(<fs_meth_description>).
+      ls_description-clsname  = is_clskey-clsname.
+      ls_description-cmpname  = <fs_meth_description>-name.
+      ls_description-langu    = is_intf_aff-header-original_language.
+      ls_description-descript = <fs_meth_description>-description.
+      APPEND ls_description TO et_descriptions.
+    ENDLOOP.
+
+    LOOP AT is_intf_aff-descriptions-events ASSIGNING FIELD-SYMBOL(<fs_evt_description>).
+      ls_description-clsname  = is_clskey-clsname.
+      ls_description-cmpname  = <fs_evt_description>-name.
+      ls_description-langu    = is_intf_aff-header-original_language.
+      ls_description-descript = <fs_evt_description>-description.
+      APPEND ls_description TO et_descriptions.
+    ENDLOOP.
+
   ENDMETHOD.
 ENDCLASS.
