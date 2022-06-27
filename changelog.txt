@@ -20,6 +20,7 @@ Legend
 + CLAS: Add exposure to workflow class attributes (#5603) 
 + Support direct longtexts in exceptions (#5592) 
 + New Offline: Auto create package if non-existing (#5634) 
++ DDLX: implement changed_by (#5655)
 * Fix syntax error in BW jump (#5498) 
 * Fix status calculation (#5500) 
 * Fix ignore count in repo statistics (#5505)
@@ -80,6 +81,12 @@ Legend
 * Propagate codepage conversion errors (#5638)
 * IWVB: Clear metadata fields (#5647) 
 * Diff: Properly show diffs for whitespace (#5643)
+* Fix repo settings dialog (#5649)
+* LinkHints: enable radio button (#5656)
+* Downport: GUI HTML Viewer (#5664)
+* SSST: Suppress list output for warnings (#5666)
+* BDEF: Fix dump when pulling repo (#5661)
+* Improve folder logic popup (#5662)
 
 2022-04-28 v1.115.0
 -------------------
