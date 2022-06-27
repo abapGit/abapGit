@@ -794,6 +794,9 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
     <ls_sel>-varoption = zif_abapgit_dot_abapgit=>c_folder_logic-full.
 
+    APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
+    <ls_sel>-varoption = zif_abapgit_dot_abapgit=>c_folder_logic-mixed.
+
     CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
       EXPORTING
         titel     = 'Folder logic'
