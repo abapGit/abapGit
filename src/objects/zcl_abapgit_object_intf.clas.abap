@@ -156,7 +156,9 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
           lt_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_lines,
           ls_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_line.
 
-    CHECK ii_xml IS BOUND.
+    IF ii_xml IS NOT BOUND.
+      RETURN.
+    ENDIF.
 
     ii_xml->read( EXPORTING iv_name = 'LINES'
                   CHANGING cg_data = lt_lines ).
@@ -459,9 +461,6 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
                     CHANGING cg_data = ls_vseointerf ).
     ENDIF.
 
-*    io_xml->read( EXPORTING iv_name = 'VSEOINTERF'
-*                  CHANGING cg_data = ls_vseointerf ).
-
     IF iv_step = zif_abapgit_object=>gc_step_id-abap.
 
       IF ls_vseointerf-clsproxy = abap_true.
@@ -625,18 +624,20 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     " get metadata and fill 'ZIF_ABAPGIT_AFF_INTF_V1=>TY_MAIN'
     rs_intf_aff-format_version = '1'.
     SELECT SINGLE masterlang FROM tadir INTO rs_intf_aff-header-original_language
-       WHERE pgmid    = seok_pgmid_r3tr AND object   = seok_r3tr_interface AND obj_name = is_interface_key-clsname.
+       WHERE pgmid = seok_pgmid_r3tr AND object = seok_r3tr_interface AND
+             obj_name = is_interface_key-clsname.
 
-    SELECT SINGLE FROM vseointerf
-      FIELDS descript AS description, unicode AS abap_language_version, category, clsproxy AS proxy
-      WHERE clsname = @is_interface_key-clsname AND version = @seoc_version_active AND langu = @rs_intf_aff-header-original_language
-      INTO (@rs_intf_aff-header-description, @rs_intf_aff-header-abap_language_version, @rs_intf_aff-category, @rs_intf_aff-proxy).
+    SELECT SINGLE descript AS description, unicode AS abap_language_version, category,
+                  clsproxy AS proxy
+       FROM vseointerf
+       INTO (@rs_intf_aff-header-description, @rs_intf_aff-header-abap_language_version,
+             @rs_intf_aff-category, @rs_intf_aff-proxy)
+      WHERE clsname = @is_interface_key-clsname AND version = @seoc_version_active AND
+            langu = @rs_intf_aff-header-original_language.
 
-    DATA(clif_descriptions) = cl_oo_aff_clif_helper=>get_descriptions_compo_subco(
+    rs_intf_aff-descriptions = cl_oo_aff_clif_helper=>get_descriptions_compo_subco(
                               language  = rs_intf_aff-header-original_language
                               clif_name = is_interface_key-clsname ).
-
-    rs_intf_aff-descriptions = clif_descriptions.
 
   ENDMETHOD.
 
@@ -680,8 +681,12 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
   METHOD get_descriptions_from_aff.
 
     DATA ls_description TYPE seocompotx.
+    FIELD-SYMBOLS <fs_description> TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description.
+    FIELD-SYMBOLS <fs_meth_description> TYPE zif_abapgit_aff_oo_types_v1=>ty_method.
+    FIELD-SYMBOLS <fs_evt_description>  TYPE zif_abapgit_aff_oo_types_v1=>ty_event.
 
-    LOOP AT is_intf_aff-descriptions-types ASSIGNING FIELD-SYMBOL(<fs_description>).
+
+    LOOP AT is_intf_aff-descriptions-types ASSIGNING <fs_description>.
       ls_description-clsname  = is_clskey-clsname.
       ls_description-cmpname  = <fs_description>-name.
       ls_description-langu    = is_intf_aff-header-original_language.
@@ -697,7 +702,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       APPEND ls_description TO et_descriptions.
     ENDLOOP.
 
-    LOOP AT is_intf_aff-descriptions-methods ASSIGNING FIELD-SYMBOL(<fs_meth_description>).
+    LOOP AT is_intf_aff-descriptions-methods ASSIGNING <fs_meth_description>.
       ls_description-clsname  = is_clskey-clsname.
       ls_description-cmpname  = <fs_meth_description>-name.
       ls_description-langu    = is_intf_aff-header-original_language.
@@ -705,7 +710,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       APPEND ls_description TO et_descriptions.
     ENDLOOP.
 
-    LOOP AT is_intf_aff-descriptions-events ASSIGNING FIELD-SYMBOL(<fs_evt_description>).
+    LOOP AT is_intf_aff-descriptions-events ASSIGNING <fs_evt_description>.
       ls_description-clsname  = is_clskey-clsname.
       ls_description-cmpname  = <fs_evt_description>-name.
       ls_description-langu    = is_intf_aff-header-original_language.
