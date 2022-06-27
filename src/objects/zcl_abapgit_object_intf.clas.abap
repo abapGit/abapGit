@@ -74,7 +74,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
+CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -156,7 +156,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
           lt_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_lines,
           ls_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_line.
 
-    check ii_xml is bound.
+    CHECK ii_xml IS BOUND.
 
     ii_xml->read( EXPORTING iv_name = 'LINES'
                   CHANGING cg_data = lt_lines ).
@@ -197,7 +197,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
     DATA: ls_vseointerf TYPE vseointerf,
           ls_clskey     TYPE seoclskey.
 
-    data ls_intf_aff TYPE zif_abapgit_aff_intf_v1=>ty_main.
+    DATA ls_intf_aff TYPE zif_abapgit_aff_intf_v1=>ty_main.
 
     ls_clskey-clsname = ms_item-obj_name.
 
@@ -450,7 +450,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
     DATA: ls_vseointerf TYPE vseointerf.
 
-    data ls_intf_aff TYPE zif_abapgit_aff_intf_v1=>ty_main.
+    DATA ls_intf_aff TYPE zif_abapgit_aff_intf_v1=>ty_main.
 
     IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
       ls_intf_aff = get_aff_content_from_json_file( ii_log ).
@@ -560,7 +560,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
     DATA lv_json_xstring   TYPE xstring.
     DATA lx_exception      TYPE REF TO cx_root.
     DATA lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus.
-    data ls_aff              TYPE zif_abapgit_aff_intf_v1=>ty_main.
+    DATA ls_aff              TYPE zif_abapgit_aff_intf_v1=>ty_main.
 
     ls_interface_key-clsname = ms_item-obj_name.
 
@@ -582,13 +582,13 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
     zif_abapgit_object~mo_files->add_abap( lt_source ).
     " get infos for json file
     IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
-      DATA lo_ajson          TYPE REF TO object.
-      CREATE OBJECT lo_ajson TYPE ('ZCL_ABAPGIT_JSON_HANDLER').
+      DATA lo_ajson          TYPE REF TO zcl_abapgit_json_handler.
+      CREATE OBJECT lo_ajson.
 
       ls_aff = get_aff_content_for_intf( ls_interface_key ).
 
       TRY.
-          CALL METHOD lo_ajson->('SERIALIZE')
+          CALL METHOD lo_ajson->serialize
             EXPORTING
               iv_data   = ls_aff
             RECEIVING
@@ -644,11 +644,11 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
   METHOD get_aff_content_from_json_file.
 
     DATA lv_object TYPE trkey.
-    DATA lo_ajson TYPE REF TO object.
+    DATA lo_ajson TYPE REF TO zcl_abapgit_json_handler.
     DATA lv_json_as_xstring TYPE xstring.
     DATA lx_exception TYPE REF TO cx_static_check.
 
-    CREATE OBJECT lo_ajson TYPE ('ZCL_ABAPGIT_JSON_HANDLER').
+    CREATE OBJECT lo_ajson.
 
     " get INTF metadata
     lv_json_as_xstring = zif_abapgit_object~mo_files->read_raw( iv_ext = 'json' ).
@@ -658,11 +658,13 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
     lv_object-obj_name = ms_item-obj_name.
 
     TRY.
-        CALL METHOD lo_ajson->('DESERIALIZE')
+        CALL METHOD lo_ajson->deserialize
           EXPORTING
             iv_content = lv_json_as_xstring
           IMPORTING
             ev_data    = result.
+
+        result-header-original_language = 'E'.
 
       CATCH cx_static_check INTO lx_exception.
         IF ii_log IS BOUND.
