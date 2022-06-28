@@ -60,7 +60,7 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
     DATA lv_json       TYPE string.
     DATA lo_ajson      TYPE REF TO zcl_abapgit_ajson.
     DATA lo_ajson_filtered TYPE REF TO zcl_abapgit_ajson.
-    DATA aff_filter   TYPE REF TO zif_abapgit_ajson_filter.
+    DATA lo_aff_filter   TYPE REF TO zif_abapgit_ajson_filter.
 
     FIELD-SYMBOLS: <lg_source> LIKE LINE OF lt_st_source.
 
@@ -75,9 +75,9 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
       iv_path = '/'
       iv_val  = iv_data ).
 
-    CREATE OBJECT aff_filter TYPE lcl_aff_filter.
+    CREATE OBJECT lo_aff_filter TYPE lcl_aff_filter.
     lo_ajson_filtered = zcl_abapgit_ajson=>create_from( ii_source_json = lo_ajson
-                                                        ii_filter = aff_filter ).
+                                                        ii_filter = lo_aff_filter ).
     lo_ajson_filtered->keep_item_order( ).
 
     lv_json = lo_ajson_filtered->stringify( 2 ).
