@@ -77,7 +77,7 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
     CREATE OBJECT lo_aff_filter TYPE lcl_aff_filter.
     lo_ajson_filtered = zcl_abapgit_ajson=>create_from( ii_source_json = lo_ajson
-                                                        ii_filter = lo_aff_filter ).
+                                                        ii_filter = zcl_abapgit_ajson_filter_lib=>create_empty_filter( ) ).
     lo_ajson_filtered->keep_item_order( ).
 
     lv_json = lo_ajson_filtered->stringify( 2 ).
