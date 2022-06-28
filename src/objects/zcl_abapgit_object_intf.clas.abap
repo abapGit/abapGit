@@ -616,18 +616,19 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
   METHOD get_aff_content_for_intf.
 
-    " get metadata and fill 'ZIF_ABAPGIT_AFF_INTF_V1=>TY_MAIN'
+    " get metadata and fill 'ZIF_ABAPGIT_AFF_INTF_V1=>TY_MAIN' in 702 compatible way
+
     rs_intf_aff-format_version = '1'.
+
     SELECT SINGLE masterlang FROM tadir INTO rs_intf_aff-header-original_language
        WHERE pgmid = seok_pgmid_r3tr AND object = 'INTF' AND obj_name = is_interface_key-clsname.
 
-    SELECT SINGLE descript AS description, unicode AS abap_language_version, category,
-                  clsproxy AS proxy
-       FROM vseointerf
-       INTO (@rs_intf_aff-header-description, @rs_intf_aff-header-abap_language_version,
-             @rs_intf_aff-category, @rs_intf_aff-proxy)
-      WHERE clsname = @is_interface_key-clsname AND version = @seoc_version_active AND
-            langu = @rs_intf_aff-header-original_language.
+    SELECT SINGLE descript AS description category clsproxy AS proxy unicode AS abap_language_version
+           FROM vseointerf
+           INTO (rs_intf_aff-header-description, rs_intf_aff-category, rs_intf_aff-proxy,
+                 rs_intf_aff-header-abap_language_version)
+           WHERE clsname = is_interface_key-clsname AND version = '1' AND
+                 langu = rs_intf_aff-header-original_language.
 
     rs_intf_aff-descriptions = cl_oo_aff_clif_helper=>get_descriptions_compo_subco(
                               language  = rs_intf_aff-header-original_language

@@ -33,7 +33,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_JSON_HANDLER IMPLEMENTATION.
+CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
 
   METHOD deserialize.
@@ -60,7 +60,7 @@ CLASS ZCL_ABAPGIT_JSON_HANDLER IMPLEMENTATION.
     DATA lv_json       TYPE string.
     DATA lo_ajson      TYPE REF TO zcl_abapgit_ajson.
     DATA lo_ajson_filtered TYPE REF TO zcl_abapgit_ajson.
-    data aff_filter   type ref to zif_abapgit_ajson_filter.
+    DATA aff_filter   TYPE REF TO zif_abapgit_ajson_filter.
 
     FIELD-SYMBOLS: <lg_source> LIKE LINE OF lt_st_source.
 

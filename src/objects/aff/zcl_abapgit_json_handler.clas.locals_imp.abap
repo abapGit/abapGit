@@ -27,12 +27,12 @@ CLASS lcl_mapping IMPLEMENTATION.
 ENDCLASS.
 
 
-class lcl_aff_filter definition final.
-  public section.
-    interfaces zif_abapgit_ajson_filter.
+CLASS lcl_aff_filter DEFINITION FINAL.
+  PUBLIC SECTION.
+    INTERFACES zif_abapgit_ajson_filter.
   PRIVATE SECTION.
     DATA mt_skip_paths TYPE HASHED TABLE OF string WITH UNIQUE KEY table_line.
-endclass.
+ENDCLASS.
 
 CLASS lcl_aff_filter IMPLEMENTATION.
 
@@ -40,7 +40,7 @@ CLASS lcl_aff_filter IMPLEMENTATION.
     DATA lv_path TYPE string.
     lv_path = is_node-path && is_node-name.
 
-    rv_keep = boolc( NOT ( lv_path = `/header/abapLanguageVersion` and is_node-value = 'X' ) ).
+    rv_keep = boolc( NOT ( lv_path = `/header/abapLanguageVersion` AND is_node-value = 'X' ) ).
   ENDMETHOD.
 
 
