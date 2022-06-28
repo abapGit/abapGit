@@ -57,7 +57,7 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
       IMPORTING
         ii_log          TYPE REF TO zif_abapgit_log OPTIONAL
       RETURNING
-        VALUE(r_result) TYPE zif_abapgit_aff_intf_v1=>ty_main
+        VALUE(rs_result) TYPE zif_abapgit_aff_intf_v1=>ty_main
       RAISING
         zcx_abapgit_exception.
     METHODS get_aff_content_for_intf
@@ -69,7 +69,7 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
       IMPORTING
                 is_clskey             TYPE seoclskey
                 is_intf_aff           TYPE zif_abapgit_aff_intf_v1=>ty_main
-      RETURNING VALUE(r_descriptions) TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt.
+      RETURNING VALUE(rs_descriptions) TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt.
 ENDCLASS.
 
 
@@ -130,7 +130,6 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
       lt_descriptions = get_descriptions_from_aff(
-       EXPORTING
          is_clskey = ls_clskey
          is_intf_aff = ls_intf_aff ).
     ELSE.
@@ -658,9 +657,9 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
            EXPORTING
              iv_content = lv_json_as_xstring
            IMPORTING
-             ev_data    = r_result ).
+             ev_data    = rs_result ).
 
-        r_result-header-original_language = 'E'.
+        rs_result-header-original_language = 'E'.
 
       CATCH cx_static_check INTO lx_exception.
         IF ii_log IS BOUND.
@@ -686,7 +685,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       ls_description-cmpname  = <ls_description>-name.
       ls_description-langu    = is_intf_aff-header-original_language.
       ls_description-descript = <ls_description>-description.
-      APPEND ls_description TO r_descriptions.
+      APPEND ls_description TO rs_descriptions.
     ENDLOOP.
 
     LOOP AT is_intf_aff-descriptions-attributes ASSIGNING <ls_description>.
@@ -694,7 +693,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       ls_description-cmpname  = <ls_description>-name.
       ls_description-langu    = is_intf_aff-header-original_language.
       ls_description-descript = <ls_description>-description.
-      APPEND ls_description TO r_descriptions.
+      APPEND ls_description TO rs_descriptions.
     ENDLOOP.
 
     LOOP AT is_intf_aff-descriptions-methods ASSIGNING <ls_meth_description>.
@@ -702,7 +701,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       ls_description-cmpname  = <ls_meth_description>-name.
       ls_description-langu    = is_intf_aff-header-original_language.
       ls_description-descript = <ls_meth_description>-description.
-      APPEND ls_description TO r_descriptions.
+      APPEND ls_description TO rs_descriptions.
     ENDLOOP.
 
     LOOP AT is_intf_aff-descriptions-events ASSIGNING <ls_evt_description>.
@@ -710,7 +709,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       ls_description-cmpname  = <ls_evt_description>-name.
       ls_description-langu    = is_intf_aff-header-original_language.
       ls_description-descript = <ls_evt_description>-description.
-      APPEND ls_description TO r_descriptions.
+      APPEND ls_description TO rs_descriptions.
     ENDLOOP.
 
   ENDMETHOD.
