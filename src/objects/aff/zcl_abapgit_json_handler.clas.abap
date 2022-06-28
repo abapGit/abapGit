@@ -59,6 +59,8 @@ CLASS ZCL_ABAPGIT_JSON_HANDLER IMPLEMENTATION.
     DATA lo_mapping    TYPE REF TO lcl_mapping.
     DATA lv_json       TYPE string.
     DATA lo_ajson      TYPE REF TO zcl_abapgit_ajson.
+    DATA lo_ajson_filtered TYPE REF TO zcl_abapgit_ajson.
+    data aff_filter   type ref to zif_abapgit_ajson_filter.
 
     FIELD-SYMBOLS: <lg_source> LIKE LINE OF lt_st_source.
 
@@ -66,15 +68,21 @@ CLASS ZCL_ABAPGIT_JSON_HANDLER IMPLEMENTATION.
     GET REFERENCE OF iv_data INTO <lg_source>-value.
     CREATE OBJECT lo_mapping.
 
-    lo_ajson = zcl_abapgit_ajson=>create_empty( ii_custom_mapping = lo_mapping ).
+    lo_ajson = zcl_abapgit_ajson=>create_empty( lo_mapping ).
+
     lo_ajson->keep_item_order( ).
     lo_ajson->set(
       iv_path = '/'
       iv_val  = iv_data ).
 
-    lv_json = lo_ajson->stringify( 2 ).
+    CREATE OBJECT aff_filter TYPE lcl_aff_filter.
+    lo_ajson_filtered = zcl_abapgit_ajson=>create_from( ii_source_json = lo_ajson
+                                                        ii_filter = aff_filter ).
+    lo_ajson_filtered->keep_item_order( ).
 
-    rv_result = zcl_abapgit_convert=>string_to_xstring_utf8( iv_string = lv_json ).
+    lv_json = lo_ajson_filtered->stringify( 2 ).
+
+    rv_result = zcl_abapgit_convert=>string_to_xstring_utf8( lv_json ).
 
   ENDMETHOD.
 ENDCLASS.
