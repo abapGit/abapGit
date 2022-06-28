@@ -15,26 +15,26 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
         zcx_abapgit_exception .
     METHODS deserialize_abap
       IMPORTING
-        !ii_xml     TYPE REF TO zif_abapgit_xml_input
-        !iv_package TYPE devclass
+        ii_xml     TYPE REF TO zif_abapgit_xml_input
+        iv_package TYPE devclass
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize_docu
       IMPORTING
-        !ii_xml TYPE REF TO zif_abapgit_xml_input
+        ii_xml TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception .
     METHODS serialize_docu
       IMPORTING
-        !ii_xml              TYPE REF TO zif_abapgit_xml_output
-        !it_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus OPTIONAL
-        !iv_clsname          TYPE seoclsname
+        ii_xml              TYPE REF TO zif_abapgit_xml_output
+        it_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus OPTIONAL
+        iv_clsname          TYPE seoclsname
       RAISING
         zcx_abapgit_exception.
     METHODS serialize_descr
       IMPORTING
-        !ii_xml     TYPE REF TO zif_abapgit_xml_output
-        !iv_clsname TYPE seoclsname
+        ii_xml     TYPE REF TO zif_abapgit_xml_output
+        iv_clsname TYPE seoclsname
       RAISING
         zcx_abapgit_exception.
   PRIVATE SECTION.
@@ -49,16 +49,17 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
         zcx_abapgit_exception.
     METHODS serialize_xml
       IMPORTING
-        !io_xml TYPE REF TO zif_abapgit_xml_output
+        io_xml TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
 
     METHODS get_aff_content_from_json_file
       IMPORTING
-                ii_log        TYPE REF TO zif_abapgit_log OPTIONAL
-      RETURNING VALUE(result) TYPE zif_abapgit_aff_intf_v1=>ty_main
+        ii_log        TYPE REF TO zif_abapgit_log OPTIONAL
+      RETURNING
+        VALUE(result) TYPE zif_abapgit_aff_intf_v1=>ty_main
       RAISING
-                zcx_abapgit_exception.
+        zcx_abapgit_exception.
     METHODS get_aff_content_for_intf
       IMPORTING
         is_interface_key   TYPE seoclskey
@@ -74,7 +75,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_intf IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -560,6 +561,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     DATA lx_exception      TYPE REF TO cx_root.
     DATA lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus.
     DATA ls_aff              TYPE zif_abapgit_aff_intf_v1=>ty_main.
+    DATA lo_ajson          TYPE REF TO zcl_abapgit_json_handler.
 
     ls_interface_key-clsname = ms_item-obj_name.
 
@@ -581,17 +583,14 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     zif_abapgit_object~mo_files->add_abap( lt_source ).
     " get infos for json file
     IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
-      DATA lo_ajson          TYPE REF TO zcl_abapgit_json_handler.
+
       CREATE OBJECT lo_ajson.
 
       ls_aff = get_aff_content_for_intf( ls_interface_key ).
 
       TRY.
-          CALL METHOD lo_ajson->serialize
-            EXPORTING
-              iv_data   = ls_aff
-            RECEIVING
-              rv_result = lv_json_xstring.
+
+          lv_json_xstring = lo_ajson->serialize( iv_data   = ls_aff ) .
 
           zif_abapgit_object~mo_files->add_raw( iv_ext = 'json'
                              iv_data = lv_json_xstring ).
@@ -624,8 +623,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     " get metadata and fill 'ZIF_ABAPGIT_AFF_INTF_V1=>TY_MAIN'
     rs_intf_aff-format_version = '1'.
     SELECT SINGLE masterlang FROM tadir INTO rs_intf_aff-header-original_language
-       WHERE pgmid = seok_pgmid_r3tr AND object = seok_r3tr_interface AND
-             obj_name = is_interface_key-clsname.
+       WHERE pgmid = seok_pgmid_r3tr AND object = 'INTF' AND obj_name = is_interface_key-clsname.
 
     SELECT SINGLE descript AS description, unicode AS abap_language_version, category,
                   clsproxy AS proxy
@@ -659,11 +657,11 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     lv_object-obj_name = ms_item-obj_name.
 
     TRY.
-        CALL METHOD lo_ajson->deserialize
-          EXPORTING
-            iv_content = lv_json_as_xstring
-          IMPORTING
-            ev_data    = result.
+        lo_ajson->deserialize(
+           EXPORTING
+             iv_content = lv_json_as_xstring
+           IMPORTING
+             ev_data    = result ).
 
         result-header-original_language = 'E'.
 
@@ -681,40 +679,40 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
   METHOD get_descriptions_from_aff.
 
     DATA ls_description TYPE seocompotx.
-    FIELD-SYMBOLS <fs_description> TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description.
-    FIELD-SYMBOLS <fs_meth_description> TYPE zif_abapgit_aff_oo_types_v1=>ty_method.
-    FIELD-SYMBOLS <fs_evt_description>  TYPE zif_abapgit_aff_oo_types_v1=>ty_event.
+    FIELD-SYMBOLS <ls_description>      TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description.
+    FIELD-SYMBOLS <ls_meth_description> TYPE zif_abapgit_aff_oo_types_v1=>ty_method.
+    FIELD-SYMBOLS <ls_evt_description>  TYPE zif_abapgit_aff_oo_types_v1=>ty_event.
 
 
-    LOOP AT is_intf_aff-descriptions-types ASSIGNING <fs_description>.
+    LOOP AT is_intf_aff-descriptions-types ASSIGNING <ls_description>.
       ls_description-clsname  = is_clskey-clsname.
-      ls_description-cmpname  = <fs_description>-name.
+      ls_description-cmpname  = <ls_description>-name.
       ls_description-langu    = is_intf_aff-header-original_language.
-      ls_description-descript = <fs_description>-description.
+      ls_description-descript = <ls_description>-description.
       APPEND ls_description TO et_descriptions.
     ENDLOOP.
 
-    LOOP AT is_intf_aff-descriptions-attributes ASSIGNING <fs_description>.
+    LOOP AT is_intf_aff-descriptions-attributes ASSIGNING <ls_description>.
       ls_description-clsname  = is_clskey-clsname.
-      ls_description-cmpname  = <fs_description>-name.
+      ls_description-cmpname  = <ls_description>-name.
       ls_description-langu    = is_intf_aff-header-original_language.
-      ls_description-descript = <fs_description>-description.
+      ls_description-descript = <ls_description>-description.
       APPEND ls_description TO et_descriptions.
     ENDLOOP.
 
-    LOOP AT is_intf_aff-descriptions-methods ASSIGNING <fs_meth_description>.
+    LOOP AT is_intf_aff-descriptions-methods ASSIGNING <ls_meth_description>.
       ls_description-clsname  = is_clskey-clsname.
-      ls_description-cmpname  = <fs_meth_description>-name.
+      ls_description-cmpname  = <ls_meth_description>-name.
       ls_description-langu    = is_intf_aff-header-original_language.
-      ls_description-descript = <fs_meth_description>-description.
+      ls_description-descript = <ls_meth_description>-description.
       APPEND ls_description TO et_descriptions.
     ENDLOOP.
 
-    LOOP AT is_intf_aff-descriptions-events ASSIGNING <fs_evt_description>.
+    LOOP AT is_intf_aff-descriptions-events ASSIGNING <ls_evt_description>.
       ls_description-clsname  = is_clskey-clsname.
-      ls_description-cmpname  = <fs_evt_description>-name.
+      ls_description-cmpname  = <ls_evt_description>-name.
       ls_description-langu    = is_intf_aff-header-original_language.
-      ls_description-descript = <fs_evt_description>-description.
+      ls_description-descript = <ls_evt_description>-description.
       APPEND ls_description TO et_descriptions.
     ENDLOOP.
 
