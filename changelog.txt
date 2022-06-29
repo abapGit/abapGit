@@ -12,6 +12,7 @@ Legend
 -------------------
 
 ! Changes to exception class: Update abapGit using stand-alone versions to avoid dumps
+! FUGR: Better maintenance view auto comments cleanups (#5622)
 - Remove "branch overview" class/interface (#5503) 
 + IOBJ, ODSO: Add jump (#5495) 
 + FDT0: Add check of local/transportable apps (#5561) 
@@ -74,7 +75,6 @@ Legend
 * W3xx: Replace call with TADIR_INSERT (#5618)
 * UI: Message box improvements (#5616) 
 * Adjust screen element naming (#5625) 
-* FUGR: Better maintenance view auto comments cleanups (#5622)
 * Add authorization exit on startup (#5630) 
 * Fix variant maintainance for abapGit report (#5627)
 * IWOM/IWMO: Clear object metadata (#5635) 
