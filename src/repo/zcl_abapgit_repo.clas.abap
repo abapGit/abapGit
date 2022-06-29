@@ -162,7 +162,13 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_repo IMPLEMENTATION.
+
+
+  METHOD bind_listener.
+    mi_listener = ii_listener.
+  ENDMETHOD.
+
 
   METHOD check_and_create_package.
 
@@ -186,11 +192,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-  ENDMETHOD.
-
-
-  METHOD bind_listener.
-    mi_listener = ii_listener.
   ENDMETHOD.
 
 
@@ -291,86 +292,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD deserialize.
-
-    DATA: lt_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
-          lt_result        TYPE zif_abapgit_data_deserializer=>ty_results,
-          lx_error         TYPE REF TO zcx_abapgit_exception.
-
-    find_remote_dot_abapgit( ).
-    find_remote_dot_apack( ).
-
-    check_write_protect( ).
-    check_language( ).
-
-    IF is_checks-requirements-met = zif_abapgit_definitions=>c_no AND is_checks-requirements-decision IS INITIAL.
-      zcx_abapgit_exception=>raise( 'Requirements not met and undecided' ).
-    ENDIF.
-
-    IF is_checks-dependencies-met = zif_abapgit_definitions=>c_no.
-      zcx_abapgit_exception=>raise( 'APACK dependencies not met' ).
-    ENDIF.
-
-    IF is_checks-transport-required = abap_true AND is_checks-transport-transport IS INITIAL.
-      zcx_abapgit_exception=>raise( |No transport request was supplied| ).
-    ENDIF.
-
-    " Deserialize objects
-    TRY.
-        lt_updated_files = zcl_abapgit_objects=>deserialize(
-          io_repo   = me
-          is_checks = is_checks
-          ii_log    = ii_log ).
-      CATCH zcx_abapgit_exception INTO lx_error.
-        " Ensure to reset default transport request task
-        zcl_abapgit_default_transport=>get_instance( )->reset( ).
-        refresh( iv_drop_log = abap_false ).
-        RAISE EXCEPTION lx_error.
-    ENDTRY.
-
-    APPEND get_dot_abapgit( )->get_signature( ) TO lt_updated_files.
-
-    zif_abapgit_repo~checksums( )->update( lt_updated_files ).
-
-    " Deserialize data (no save to database, just test for now)
-    lt_result = zcl_abapgit_data_factory=>get_deserializer( )->deserialize(
-      ii_config  = get_data_config( )
-      it_files   = get_files_remote( ) ).
-
-    CLEAR: mt_local.
-
-    update_last_deserialize( ).
-    reset_status( ).
-
-    COMMIT WORK AND WAIT.
-
-    check_for_restart( ).
-
-  ENDMETHOD.
-
-
-  METHOD deserialize_checks.
-
-    DATA: lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
-          lt_dependencies TYPE zif_abapgit_apack_definitions=>ty_dependencies.
-
-    find_remote_dot_abapgit( ).
-    find_remote_dot_apack( ).
-
-    check_write_protect( ).
-    check_language( ).
-
-    rs_checks = zcl_abapgit_objects=>deserialize_checks( me ).
-
-    lt_requirements = get_dot_abapgit( )->get_data( )-requirements.
-    rs_checks-requirements-met = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements ).
-
-    lt_dependencies = get_dot_apack( )->get_manifest_descriptor( )-dependencies.
-    rs_checks-dependencies-met = zcl_abapgit_apack_helper=>are_dependencies_met( lt_dependencies ).
-
-  ENDMETHOD.
-
-
   METHOD find_remote_dot_abapgit.
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF mt_remote.
@@ -432,13 +353,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_dot_abapgit.
-    CREATE OBJECT ro_dot_abapgit
-      EXPORTING
-        is_data = ms_data-dot_abapgit.
-  ENDMETHOD.
-
-
   METHOD get_dot_apack.
     IF mo_apack_reader IS NOT BOUND.
       mo_apack_reader = zcl_abapgit_apack_reader=>create_instance( ms_data-package ).
@@ -449,89 +363,8 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_files_local.
-
-    DATA lo_serialize TYPE REF TO zcl_abapgit_serialize.
-    DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    " Serialization happened before and no refresh request
-    IF lines( mt_local ) > 0 AND mv_request_local_refresh = abap_false.
-      rt_files = mt_local.
-      RETURN.
-    ENDIF.
-
-    CREATE OBJECT lo_serialize
-      EXPORTING
-        io_dot_abapgit    = get_dot_abapgit( )
-        is_local_settings = get_local_settings( ).
-
-    IF ii_obj_filter IS NOT INITIAL.
-      lt_filter = ii_obj_filter->get_filter( ).
-    ENDIF.
-
-    rt_files = lo_serialize->files_local(
-      iv_package     = get_package( )
-      ii_data_config = get_data_config( )
-      ii_log         = ii_log
-      it_filter      = lt_filter ).
-
-    mt_local                 = rt_files.
-    mv_request_local_refresh = abap_false. " Fulfill refresh
-
-  ENDMETHOD.
-
-
-  METHOD get_files_remote.
-    DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA lr_filter TYPE REF TO zcl_abapgit_repo_filter.
-
-    rt_files = mt_remote.
-    IF ii_obj_filter IS NOT INITIAL.
-      lt_filter = ii_obj_filter->get_filter( ).
-
-      CREATE OBJECT lr_filter.
-      lr_filter->apply_object_filter(
-        EXPORTING
-          it_filter   = lt_filter
-          io_dot      = get_dot_abapgit( )
-          iv_devclass = get_package( )
-        CHANGING
-          ct_files    = rt_files ).
-
-    ENDIF.
-
-    IF iv_ignore_files = abap_true.
-      remove_ignored_files( CHANGING ct_files = rt_files ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD get_key.
-    rv_key = ms_data-key.
-  ENDMETHOD.
-
-
-  METHOD get_local_settings.
-
-    rs_settings = ms_data-local_settings.
-
-  ENDMETHOD.
-
-
   METHOD get_log.
     ri_log = mi_log.
-  ENDMETHOD.
-
-
-  METHOD get_name.
-
-    rv_name = ms_data-local_settings-display_name.
-
-  ENDMETHOD.
-
-
-  METHOD get_package.
-    rv_package = ms_data-package.
   ENDMETHOD.
 
 
@@ -562,11 +395,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD is_offline.
-    rv_offline = ms_data-offline.
-  ENDMETHOD.
-
-
   METHOD notify_listener.
 
     DATA ls_meta_slug TYPE zif_abapgit_persistence=>ty_repo_xml.
@@ -577,22 +405,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
         iv_key         = ms_data-key
         is_meta        = ls_meta_slug
         is_change_mask = is_change_mask ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD refresh.
-
-    mv_request_local_refresh = abap_true.
-    reset_remote( ).
-
-    IF iv_drop_log = abap_true.
-      CLEAR mi_log.
-    ENDIF.
-
-    IF iv_drop_cache = abap_true.
-      CLEAR mt_local.
     ENDIF.
 
   ENDMETHOD.
@@ -746,11 +558,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD set_dot_abapgit.
-    set( is_dot_abapgit = io_dot_abapgit->get_data( ) ).
-  ENDMETHOD.
-
-
   METHOD set_dot_apack.
     get_dot_apack( ).
     mo_apack_reader->set_manifest_descriptor( io_dot_apack->get_manifest_descriptor( ) ).
@@ -824,5 +631,199 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       EXPORTING
         iv_repo_key = ms_data-key.
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo~deserialize.
+
+    DATA: lt_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
+          lt_result        TYPE zif_abapgit_data_deserializer=>ty_results,
+          lx_error         TYPE REF TO zcx_abapgit_exception.
+
+    find_remote_dot_abapgit( ).
+    find_remote_dot_apack( ).
+
+    check_write_protect( ).
+    check_language( ).
+
+    IF is_checks-requirements-met = zif_abapgit_definitions=>c_no AND is_checks-requirements-decision IS INITIAL.
+      zcx_abapgit_exception=>raise( 'Requirements not met and undecided' ).
+    ENDIF.
+
+    IF is_checks-dependencies-met = zif_abapgit_definitions=>c_no.
+      zcx_abapgit_exception=>raise( 'APACK dependencies not met' ).
+    ENDIF.
+
+    IF is_checks-transport-required = abap_true AND is_checks-transport-transport IS INITIAL.
+      zcx_abapgit_exception=>raise( |No transport request was supplied| ).
+    ENDIF.
+
+    " Deserialize objects
+    TRY.
+        lt_updated_files = zcl_abapgit_objects=>deserialize(
+          io_repo   = me
+          is_checks = is_checks
+          ii_log    = ii_log ).
+      CATCH zcx_abapgit_exception INTO lx_error.
+        " Ensure to reset default transport request task
+        zcl_abapgit_default_transport=>get_instance( )->reset( ).
+        refresh( iv_drop_log = abap_false ).
+        RAISE EXCEPTION lx_error.
+    ENDTRY.
+
+    APPEND get_dot_abapgit( )->get_signature( ) TO lt_updated_files.
+
+    zif_abapgit_repo~checksums( )->update( lt_updated_files ).
+
+    " Deserialize data (no save to database, just test for now)
+    lt_result = zcl_abapgit_data_factory=>get_deserializer( )->deserialize(
+      ii_config  = get_data_config( )
+      it_files   = get_files_remote( ) ).
+
+    CLEAR: mt_local.
+
+    update_last_deserialize( ).
+    reset_status( ).
+
+    COMMIT WORK AND WAIT.
+
+    check_for_restart( ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo~deserialize_checks.
+
+    DATA: lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
+          lt_dependencies TYPE zif_abapgit_apack_definitions=>ty_dependencies.
+
+    find_remote_dot_abapgit( ).
+    find_remote_dot_apack( ).
+
+    check_write_protect( ).
+    check_language( ).
+
+    rs_checks = zcl_abapgit_objects=>deserialize_checks( me ).
+
+    lt_requirements = get_dot_abapgit( )->get_data( )-requirements.
+    rs_checks-requirements-met = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements ).
+
+    lt_dependencies = get_dot_apack( )->get_manifest_descriptor( )-dependencies.
+    rs_checks-dependencies-met = zcl_abapgit_apack_helper=>are_dependencies_met( lt_dependencies ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo~get_dot_abapgit.
+    CREATE OBJECT ro_dot_abapgit
+      EXPORTING
+        is_data = ms_data-dot_abapgit.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo~get_files_local.
+
+    DATA lo_serialize TYPE REF TO zcl_abapgit_serialize.
+    DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    " Serialization happened before and no refresh request
+    IF lines( mt_local ) > 0 AND mv_request_local_refresh = abap_false.
+      rt_files = mt_local.
+      RETURN.
+    ENDIF.
+
+    CREATE OBJECT lo_serialize
+      EXPORTING
+        io_dot_abapgit    = get_dot_abapgit( )
+        is_local_settings = get_local_settings( ).
+
+    IF ii_obj_filter IS NOT INITIAL.
+      lt_filter = ii_obj_filter->get_filter( ).
+    ENDIF.
+
+    rt_files = lo_serialize->files_local(
+      iv_package     = get_package( )
+      ii_data_config = get_data_config( )
+      ii_log         = ii_log
+      it_filter      = lt_filter ).
+
+    mt_local                 = rt_files.
+    mv_request_local_refresh = abap_false. " Fulfill refresh
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo~get_files_remote.
+    DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lr_filter TYPE REF TO zcl_abapgit_repo_filter.
+
+    rt_files = mt_remote.
+    IF ii_obj_filter IS NOT INITIAL.
+      lt_filter = ii_obj_filter->get_filter( ).
+
+      CREATE OBJECT lr_filter.
+      lr_filter->apply_object_filter(
+        EXPORTING
+          it_filter   = lt_filter
+          io_dot      = get_dot_abapgit( )
+          iv_devclass = get_package( )
+        CHANGING
+          ct_files    = rt_files ).
+
+    ENDIF.
+
+    IF iv_ignore_files = abap_true.
+      remove_ignored_files( CHANGING ct_files = rt_files ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo~get_key.
+    rv_key = ms_data-key.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo~get_local_settings.
+
+    rs_settings = ms_data-local_settings.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo~get_name.
+
+    rv_name = ms_data-local_settings-display_name.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo~get_package.
+    rv_package = ms_data-package.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo~is_offline.
+    rv_offline = ms_data-offline.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo~refresh.
+
+    mv_request_local_refresh = abap_true.
+    reset_remote( ).
+
+    IF iv_drop_log = abap_true.
+      CLEAR mi_log.
+    ENDIF.
+
+    IF iv_drop_cache = abap_true.
+      CLEAR mt_local.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo~set_dot_abapgit.
+    set( is_dot_abapgit = io_dot_abapgit->get_data( ) ).
   ENDMETHOD.
 ENDCLASS.
