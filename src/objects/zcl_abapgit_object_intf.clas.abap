@@ -207,10 +207,6 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
           lv_language        TYPE spras,
           lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
-*    IF ii_xml->i18n_params( )-main_language_only = abap_true.
-*      lv_language = mv_language.
-*    ENDIF.
-
     lt_descriptions = mi_object_oriented_object_fct->read_descriptions(
       iv_object_name = iv_clsname
       iv_language    = lv_language ).
@@ -244,10 +240,6 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     IF lines( lt_lines ) > 0.
       rs_docu-lines = lt_lines.
     ENDIF.
-
-*    IF ii_xml->i18n_params( )-main_language_only = abap_true.
-*      RETURN.
-*    ENDIF.
 
     LOOP AT it_langu_additional INTO lv_langu.
 
