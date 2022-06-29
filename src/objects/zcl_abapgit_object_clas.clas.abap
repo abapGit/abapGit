@@ -471,7 +471,13 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lt_tpool_main = lt_tpool.
+    " Copy single records to be able to catch duplicate key error
+    LOOP AT lt_tpool ASSIGNING <ls_tpool>.
+      INSERT <ls_tpool> INTO TABLE lt_tpool_main.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |Inconsistent textpool in { ms_item-obj_type } { ms_item-obj_name }| ).
+      ENDIF.
+    ENDLOOP.
 
     LOOP AT it_langu_additional INTO lv_langu.
 
