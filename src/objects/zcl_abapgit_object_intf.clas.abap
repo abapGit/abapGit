@@ -26,17 +26,17 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
         zcx_abapgit_exception .
     METHODS serialize_docu
       IMPORTING
-        !ii_xml              TYPE REF TO zif_abapgit_xml_output
-        !it_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus OPTIONAL
-        !iv_clsname          TYPE seoclsname
+                !it_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus OPTIONAL
+                !iv_clsname          TYPE seoclsname
+      RETURNING VALUE(rs_docu)       TYPE zif_abapgit_intf=>ty_docu
       RAISING
-        zcx_abapgit_exception.
+                zcx_abapgit_exception.
     METHODS serialize_descr
       IMPORTING
-        !ii_xml     TYPE REF TO zif_abapgit_xml_output
-        !iv_clsname TYPE seoclsname
+                !iv_clsname           TYPE seoclsname
+      RETURNING VALUE(rs_description) TYPE zif_abapgit_intf=>ty_intf-description
       RAISING
-        zcx_abapgit_exception.
+                zcx_abapgit_exception.
   PRIVATE SECTION.
 
     DATA mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc .
@@ -207,9 +207,9 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
           lv_language        TYPE spras,
           lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
-    IF ii_xml->i18n_params( )-main_language_only = abap_true.
-      lv_language = mv_language.
-    ENDIF.
+*    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+*      lv_language = mv_language.
+*    ENDIF.
 
     lt_descriptions = mi_object_oriented_object_fct->read_descriptions(
       iv_object_name = iv_clsname
@@ -223,9 +223,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    ii_xml->add( iv_name = 'DESCRIPTIONS'
-                 ig_data = lt_descriptions ).
-
+    rs_description = lt_descriptions.
   ENDMETHOD.
 
 
@@ -244,13 +242,12 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       iv_object_name = lv_object
       iv_language    = mv_language ).
     IF lines( lt_lines ) > 0.
-      ii_xml->add( iv_name = 'LINES'
-                   ig_data = lt_lines ).
+      rs_docu-lines = lt_lines.
     ENDIF.
 
-    IF ii_xml->i18n_params( )-main_language_only = abap_true.
-      RETURN.
-    ENDIF.
+*    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+*      RETURN.
+*    ENDIF.
 
     LOOP AT it_langu_additional INTO lv_langu.
 
@@ -269,8 +266,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     ENDLOOP.
 
     IF lines( lt_i18n_lines ) > 0.
-      ii_xml->add( iv_name = 'I18N_LINES'
-                   ig_data = lt_i18n_lines ).
+      rs_docu-i18n_lines = lt_i18n_lines.
     ENDIF.
 
   ENDMETHOD.
@@ -279,26 +275,23 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
   METHOD serialize_xml.
 
     DATA:
-      ls_vseointerf       TYPE vseointerf,
+      ls_intf             TYPE   zif_abapgit_intf=>ty_intf,
       ls_clskey           TYPE seoclskey,
       lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus.
 
     ls_clskey-clsname = ms_item-obj_name.
 
-    ls_vseointerf = mi_object_oriented_object_fct->get_interface_properties( ls_clskey ).
+    ls_intf-vseointerf = mi_object_oriented_object_fct->get_interface_properties( ls_clskey ).
 
-    CLEAR: ls_vseointerf-uuid,
-           ls_vseointerf-author,
-           ls_vseointerf-createdon,
-           ls_vseointerf-changedby,
-           ls_vseointerf-changedon,
-           ls_vseointerf-chgdanyby,
-           ls_vseointerf-chgdanyon,
-           ls_vseointerf-r3release,
-           ls_vseointerf-version.
-
-    io_xml->add( iv_name = 'VSEOINTERF'
-                 ig_data = ls_vseointerf ).
+    CLEAR: ls_intf-vseointerf-uuid,
+           ls_intf-vseointerf-author,
+           ls_intf-vseointerf-createdon,
+           ls_intf-vseointerf-changedby,
+           ls_intf-vseointerf-changedon,
+           ls_intf-vseointerf-chgdanyby,
+           ls_intf-vseointerf-chgdanyon,
+           ls_intf-vseointerf-r3release,
+           ls_intf-vseointerf-version.
 
     " Select all active translations of documentation
     " Skip main language - it was already serialized
@@ -309,12 +302,24 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
         AND object = ls_clskey-clsname
         AND langu  <> mv_language.
 
-    serialize_docu( ii_xml              = io_xml
+    ls_intf-docu = serialize_docu(
                     iv_clsname          = ls_clskey-clsname
                     it_langu_additional = lt_langu_additional ).
 
-    serialize_descr( ii_xml     = io_xml
-                     iv_clsname = ls_clskey-clsname ).
+    ls_intf-description = serialize_descr( ls_clskey-clsname ).
+
+*    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
+*      lcl_aff=>save_content( ls_intf ).
+*    ELSE.
+    io_xml->add( iv_name = 'VSEOINTERF'
+               ig_data = ls_intf-vseointerf ).
+    io_xml->add( iv_name =  'DESCRIPTIONS'
+                 ig_data = ls_intf-description ).
+    io_xml->add( iv_name = 'LINES'
+                 ig_data = ls_intf-docu-lines ).
+    io_xml->add( iv_name = 'I18N_LINES'
+                 ig_data = ls_intf-docu-i18n_lines ).
+*    ENDIF.
 
   ENDMETHOD.
 
