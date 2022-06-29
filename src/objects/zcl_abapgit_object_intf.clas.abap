@@ -308,9 +308,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     ls_intf-description = serialize_descr( ls_clskey-clsname ).
 
-*    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
-*      lcl_aff=>save_content( ls_intf ).
-*    ELSE.
+    " HERE: switch with feature flag for XML or JSON file format
     io_xml->add( iv_name = 'VSEOINTERF'
                ig_data = ls_intf-vseointerf ).
     io_xml->add( iv_name =  'DESCRIPTIONS'
@@ -319,7 +317,6 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
                  ig_data = ls_intf-docu-lines ).
     io_xml->add( iv_name = 'I18N_LINES'
                  ig_data = ls_intf-docu-i18n_lines ).
-*    ENDIF.
 
   ENDMETHOD.
 
