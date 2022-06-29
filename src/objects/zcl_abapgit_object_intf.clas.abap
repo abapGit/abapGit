@@ -2,18 +2,18 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
 
-  TYPES:
-    BEGIN OF ty_docu,
-      lines      TYPE tlinetab,
-      i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_lines,
-    END OF ty_docu.
+    TYPES:
+      BEGIN OF ty_docu,
+        lines      TYPE tlinetab,
+        i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_lines,
+      END OF ty_docu.
 
-  TYPES:
-    BEGIN OF ty_intf,
-      vseointerf  TYPE vseointerf,
-      docu        TYPE ty_docu,
-      description TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt,
-    END OF ty_intf.
+    TYPES:
+      BEGIN OF ty_intf,
+        vseointerf  TYPE vseointerf,
+        docu        TYPE ty_docu,
+        description TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt,
+      END OF ty_intf.
 
     METHODS constructor
       IMPORTING
