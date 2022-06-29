@@ -2,6 +2,19 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
 
+  TYPES:
+    BEGIN OF ty_docu,
+      lines      TYPE tlinetab,
+      i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_lines,
+    END OF ty_docu.
+
+  TYPES:
+    BEGIN OF ty_intf,
+      vseointerf  TYPE vseointerf,
+      docu        TYPE ty_docu,
+      description TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt,
+    END OF ty_intf.
+
     METHODS constructor
       IMPORTING
         is_item     TYPE zif_abapgit_definitions=>ty_item
@@ -28,13 +41,13 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
       IMPORTING
                 !it_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus OPTIONAL
                 !iv_clsname          TYPE seoclsname
-      RETURNING VALUE(rs_docu)       TYPE zif_abapgit_intf=>ty_docu
+      RETURNING VALUE(rs_docu)       TYPE ty_docu
       RAISING
                 zcx_abapgit_exception.
     METHODS serialize_descr
       IMPORTING
                 !iv_clsname           TYPE seoclsname
-      RETURNING VALUE(rs_description) TYPE zif_abapgit_intf=>ty_intf-description
+      RETURNING VALUE(rs_description) TYPE ty_intf-description
       RAISING
                 zcx_abapgit_exception.
   PRIVATE SECTION.
@@ -267,7 +280,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
   METHOD serialize_xml.
 
     DATA:
-      ls_intf             TYPE   zif_abapgit_intf=>ty_intf,
+      ls_intf             TYPE ty_intf,
       ls_clskey           TYPE seoclskey,
       lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus.
 
