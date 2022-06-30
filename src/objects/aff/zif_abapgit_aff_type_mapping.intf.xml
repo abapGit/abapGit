@@ -3,7 +3,7 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOINTERF>
-    <CLSNAME>ZIF_ABAPIT_AFF_TYPE_MAPPING</CLSNAME>
+    <CLSNAME>ZIF_ABAPGIT_AFF_TYPE_MAPPING</CLSNAME>
     <LANGU>E</LANGU>
     <DESCRIPT>abapgit - the mapping to ABAP file format types</DESCRIPT>
     <EXPOSURE>2</EXPOSURE>

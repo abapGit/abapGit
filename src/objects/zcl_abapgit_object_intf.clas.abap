@@ -293,7 +293,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       ls_aff_intf         TYPE zif_abapgit_aff_intf_v1=>ty_main,
       lx_exception        TYPE REF TO cx_root,
       lv_json_xstring     TYPE xstring,
-      lo_aff_mapper       TYPE REF TO zif_abapit_aff_type_mapping,
+      lo_aff_mapper       TYPE REF TO zif_abapgit_aff_type_mapping,
       lo_ajson            TYPE REF TO zcl_abapgit_json_handler,
       lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus.
 
@@ -332,7 +332,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
       CREATE OBJECT lo_aff_mapper TYPE lcl_aff_type_mapping.
       lo_aff_mapper->to_aff( EXPORTING iv_data = ls_intf
-                             IMPORTING rs_data = ls_aff_intf ).
+                             IMPORTING es_data = ls_aff_intf ).
       CREATE OBJECT lo_ajson.
 
       TRY.
