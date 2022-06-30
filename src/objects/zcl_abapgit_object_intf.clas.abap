@@ -290,11 +290,8 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     DATA:
       ls_intf             TYPE ty_intf,
       ls_clskey           TYPE seoclskey,
-      ls_aff_intf         TYPE zif_abapgit_aff_intf_v1=>ty_main,
       lx_exception        TYPE REF TO cx_root,
-      lv_json_xstring     TYPE xstring,
-      lo_aff_mapper       TYPE REF TO zif_abapgit_aff_type_mapping,
-      lo_ajson            TYPE REF TO zcl_abapgit_json_handler,
+      lv_serialized_data  TYPE xstring,
       lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus.
 
     ls_clskey-clsname = ms_item-obj_name.
@@ -330,21 +327,9 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     " HERE: switch with feature flag for XML or JSON file format
     IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
-      CREATE OBJECT lo_aff_mapper TYPE lcl_aff_type_mapping.
-      lo_aff_mapper->to_aff( EXPORTING iv_data = ls_intf
-                             IMPORTING es_data = ls_aff_intf ).
-      CREATE OBJECT lo_ajson.
-
-      TRY.
-
-          lv_json_xstring = lo_ajson->serialize( ls_aff_intf ).
-
-          zif_abapgit_object~mo_files->add_raw( iv_ext = 'json'
-                                                iv_data = lv_json_xstring ).
-
-        CATCH cx_root INTO lx_exception.
-          zcx_abapgit_exception=>raise_with_text( lx_exception ).
-      ENDTRY.
+      lv_serialized_data = lcl_aff_serialize_metadata=>serialize( ls_intf ).
+      zif_abapgit_object~mo_files->add_raw( iv_ext = 'json'
+                                            iv_data = lv_serialized_data ).
 
     ELSE.
       io_xml->add( iv_name = 'VSEOINTERF'
