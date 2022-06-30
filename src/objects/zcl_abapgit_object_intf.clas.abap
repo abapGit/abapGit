@@ -39,6 +39,7 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
         zcx_abapgit_exception .
     METHODS serialize_docu
       IMPORTING
+                !ii_xml              TYPE REF TO zif_abapgit_xml_output
                 !it_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus OPTIONAL
                 !iv_clsname          TYPE seoclsname
       RETURNING VALUE(rs_docu)       TYPE ty_docu
@@ -46,6 +47,7 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
                 zcx_abapgit_exception.
     METHODS serialize_descr
       IMPORTING
+                !ii_xml               TYPE REF TO zif_abapgit_xml_output
                 !iv_clsname           TYPE seoclsname
       RETURNING VALUE(rs_description) TYPE ty_intf-description
       RAISING
@@ -220,6 +222,10 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
           lv_language        TYPE spras,
           lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
+    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+      lv_language = mv_language.
+    ENDIF.
+
     lt_descriptions = mi_object_oriented_object_fct->read_descriptions(
       iv_object_name = iv_clsname
       iv_language    = lv_language ).
@@ -233,6 +239,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     ENDIF.
 
     rs_description = lt_descriptions.
+
   ENDMETHOD.
 
 
@@ -252,6 +259,10 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       iv_language    = mv_language ).
 
     rs_docu-lines = lt_lines.
+
+    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+      RETURN.
+    ENDIF.
 
     LOOP AT it_langu_additional INTO lv_langu.
 
@@ -305,10 +316,12 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
         AND langu  <> mv_language.
 
     ls_intf-docu = serialize_docu(
+                    ii_xml              = io_xml
                     iv_clsname          = ls_clskey-clsname
                     it_langu_additional = lt_langu_additional ).
 
-    ls_intf-description = serialize_descr( ls_clskey-clsname ).
+    ls_intf-description = serialize_descr( ii_xml     = io_xml
+                                           iv_clsname = ls_clskey-clsname ).
 
     " HERE: switch with feature flag for XML or JSON file format
     io_xml->add( iv_name = 'VSEOINTERF'
