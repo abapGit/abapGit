@@ -251,7 +251,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       iv_object_name = lv_object
       iv_language    = mv_language ).
 
-      rs_docu-lines = lt_lines.
+    rs_docu-lines = lt_lines.
 
     LOOP AT it_langu_additional INTO lv_langu.
 
