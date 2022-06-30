@@ -122,6 +122,7 @@ CLASS zcl_abapgit_object_ssst IMPLEMENTATION.
       CALL FUNCTION 'SSF_ACTIVATE_STYLE'
         EXPORTING
           i_stylename          = ls_header-stylename
+          redirect_error_msg   = abap_true " otherwise warnings write list output
         EXCEPTIONS
           no_name              = 1
           no_style             = 2

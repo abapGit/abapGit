@@ -1474,8 +1474,10 @@ LinkHints.prototype.hintActivate = function (hint) {
     this.activatedDropdown = hint.parent.parentElement;
     this.activatedDropdown.classList.toggle("force-nav-hover");
     hint.parent.focus();
-  } else if (hint.parent.type === "checkbox" || hint.parent.type === "radio") {
+  } else if (hint.parent.type === "checkbox") {
     this.toggleCheckbox(hint);
+  } else if (hint.parent.type === "radio") {
+    this.toggleRadioButton(hint);
   } else if (hint.parent.type === "submit") {
     hint.parent.click();
   } else if (hint.parent.nodeName === "INPUT" || hint.parent.nodeName === "TEXTAREA") {
@@ -1487,16 +1489,24 @@ LinkHints.prototype.hintActivate = function (hint) {
 };
 
 LinkHints.prototype.toggleCheckbox = function (hint) {
-  // ensures that onclick handler is executed
-  // https://stackoverflow.com/questions/41981509/trigger-an-event-when-a-checkbox-is-changed-programmatically-via-javascript
-  var event = document.createEvent("HTMLEvents");
   var checked = hint.parent.checked;
-  event.initEvent("click", false, true);
-  hint.parent.parentElement.dispatchEvent(event);
+  this.triggerClickHandler(hint.parent.parentElement);
   if (checked === hint.parent.checked) {
     // fallback if no handler is registered
     hint.parent.checked = !hint.parent.checked;
   }
+};
+
+LinkHints.prototype.toggleRadioButton = function(hint) {
+  this.triggerClickHandler(hint.parent);
+};
+
+LinkHints.prototype.triggerClickHandler = function(el){
+  // ensures that onclick handler is executed
+  // https://stackoverflow.com/questions/41981509/trigger-an-event-when-a-checkbox-is-changed-programmatically-via-javascript
+  var event = document.createEvent("HTMLEvents");
+  event.initEvent("click", false, true);
+  el.dispatchEvent(event);
 };
 
 LinkHints.prototype.filterHints = function () {
