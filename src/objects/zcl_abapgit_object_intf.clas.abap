@@ -290,7 +290,6 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     DATA:
       ls_intf             TYPE ty_intf,
       ls_clskey           TYPE seoclskey,
-      lx_exception        TYPE REF TO cx_root,
       lv_serialized_data  TYPE xstring,
       lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus.
 
