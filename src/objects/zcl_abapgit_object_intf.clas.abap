@@ -290,6 +290,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     DATA:
       ls_intf             TYPE ty_intf,
       ls_clskey           TYPE seoclskey,
+      lv_serialized_data  TYPE xstring,
       lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus.
 
     ls_clskey-clsname = ms_item-obj_name.
@@ -324,14 +325,21 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
                                            iv_clsname = ls_clskey-clsname ).
 
     " HERE: switch with feature flag for XML or JSON file format
-    io_xml->add( iv_name = 'VSEOINTERF'
-               ig_data = ls_intf-vseointerf ).
-    io_xml->add( iv_name =  'DESCRIPTIONS'
-                 ig_data = ls_intf-description ).
-    io_xml->add( iv_name = 'LINES'
-                 ig_data = ls_intf-docu-lines ).
-    io_xml->add( iv_name = 'I18N_LINES'
-                 ig_data = ls_intf-docu-i18n_lines ).
+    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
+      lv_serialized_data = lcl_aff_serialize_metadata=>serialize( ls_intf ).
+      zif_abapgit_object~mo_files->add_raw( iv_ext = 'json'
+                                            iv_data = lv_serialized_data ).
+
+    ELSE.
+      io_xml->add( iv_name = 'VSEOINTERF'
+                   ig_data = ls_intf-vseointerf ).
+      io_xml->add( iv_name =  'DESCRIPTIONS'
+                   ig_data = ls_intf-description ).
+      io_xml->add( iv_name = 'LINES'
+                   ig_data = ls_intf-docu-lines ).
+      io_xml->add( iv_name = 'I18N_LINES'
+                   ig_data = ls_intf-docu-i18n_lines ).
+    ENDIF.
 
   ENDMETHOD.
 
