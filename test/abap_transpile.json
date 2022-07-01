@@ -168,7 +168,6 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "chaining"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "push_json"},
 
-      {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "json_diff_types"},
       {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "json_merge"},
 
       {"object": "ZCL_ABAPGIT_UI_INJECTOR", "class": "ltcl_no_dependency_injection", "method": "no_injection", "note": "RTTI? class absolute_name"},
