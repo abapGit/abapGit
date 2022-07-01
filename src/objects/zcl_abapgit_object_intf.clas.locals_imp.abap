@@ -3,15 +3,10 @@
 *"* declarations
 CLASS lcl_aff_helper DEFINITION.
   PUBLIC SECTION.
-    CLASS-METHODS:
-      create_empty_class
-        IMPORTING iv_class_name TYPE seoclsname
-                  io_lock_handle   TYPE REF TO if_adt_lock_handle
-        RAISING   cx_aff_root,
-      create_empty_interface
-        IMPORTING iv_intf_name   TYPE seoclsname
-                  io_lock_handle TYPE REF TO if_adt_lock_handle
-        RAISING   cx_aff_root,
+    CLASS-METHODS: create_empty_interface
+      IMPORTING iv_intf_name   TYPE seoclsname
+                io_lock_handle TYPE REF TO if_adt_lock_handle
+      RAISING   cx_aff_root,
       generate_class_pool
         IMPORTING iv_class_name TYPE seoclsname,
       get_descriptions_compo_subco
@@ -80,37 +75,7 @@ ENDCLASS.
 
 CLASS lcl_aff_helper IMPLEMENTATION.
 
-  METHOD create_empty_class.
-    DATA(empty_class) = VALUE vseoclass(
-      clsname         = iv_class_name
-      version         = seoc_version_active
-      langu           = sy-langu
-      descript        = space
-      category        = seoc_category_general
-      exposure        = seoc_exposure_public
-      state           = seoc_state_implemented
-      fixpt           = abap_true
-      clsccincl       = abap_true
-      with_unit_tests = abap_false ).
 
-    CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
-      EXPORTING
-        version       = seoc_version_active
-        suppress_corr = abap_true
-        lock_handle   = io_lock_handle
-      CHANGING
-        class         = empty_class
-      EXCEPTIONS
-        OTHERS        = 1.
-    IF sy-subrc <> 0.
-      IF sy-msgid IS NOT INITIAL.
-        MESSAGE ID sy-msgid TYPE 'S' NUMBER sy-msgno WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4 INTO DATA(class_error).
-      ELSE.
-        class_error = 'Internal error' ##NO_TEXT.
-      ENDIF.
-      RAISE EXCEPTION TYPE cx_aff_root MESSAGE e023(seo_aff) WITH iv_class_name class_error.
-    ENDIF.
-  ENDMETHOD.
 
 
   METHOD create_empty_interface.
@@ -118,13 +83,12 @@ CLASS lcl_aff_helper IMPLEMENTATION.
       lo_interface_error TYPE string,
       ls_empty_interface TYPE vseointerf.
 
-    ls_empty_interface = VALUE vseointerf(
-      clsname  = iv_intf_name
-      version  = seoc_version_active
-      langu    = sy-langu
-      descript = space
-      state    = seoc_state_implemented
-      exposure = seoc_exposure_public ).
+    ls_empty_interface-clsname = iv_intf_name.
+    ls_empty_interface-version = seoc_version_active.
+    ls_empty_interface-langu = sy-langu.
+    ls_empty_interface-descript = space.
+    ls_empty_interface-state = seoc_state_implemented.
+    ls_empty_interface-exposure = seoc_exposure_public.
 
     CALL FUNCTION 'SEO_INTERFACE_CREATE_COMPLETE'
       EXPORTING
@@ -147,7 +111,10 @@ CLASS lcl_aff_helper IMPLEMENTATION.
 
 
   METHOD generate_class_pool.
-    DATA(cifkey) = VALUE seoclskey( clsname = iv_class_name ).
+    DATA:
+      lo_cifkey TYPE seoclskey.
+
+    lo_cifkey-clsname = iv_class_name.
     PERFORM set_wbinactive IN PROGRAM saplseok USING ' '.
     CALL FUNCTION 'SEO_WBINACTIVE_BROADCAST'
       EXPORTING
@@ -158,17 +125,17 @@ CLASS lcl_aff_helper IMPLEMENTATION.
 
     CALL FUNCTION 'SEO_BUFFER_REFRESH'
       EXPORTING
-        cifkey  = cifkey
+        cifkey  = lo_cifkey
         version = seoc_version_active.
 
     CALL FUNCTION 'SEO_BUFFER_REFRESH'
       EXPORTING
-        cifkey  = cifkey
+        cifkey  = lo_cifkey
         version = seoc_version_inactive.
 
     CALL FUNCTION 'SEO_CLASS_GENERATE_CLASSPOOL'
       EXPORTING
-        clskey        = cifkey
+        clskey        = lo_cifkey
         suppress_corr = seox_true
       EXCEPTIONS
         OTHERS        = 1 ##FM_SUBRC_OK.
@@ -234,125 +201,160 @@ CLASS lcl_aff_helper IMPLEMENTATION.
 
 
   METHOD get_attributes.
+    DATA:
+      lo_component TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description.
+
     LOOP AT is_components ASSIGNING FIELD-SYMBOL(<attribute>) WHERE cmptype = seoo_cmptype_attribute AND descript IS NOT INITIAL.
-      INSERT VALUE #( name = <attribute>-cmpname description = <attribute>-descript ) INTO TABLE rs_result.
+      lo_component-name = <attribute>-cmpname.
+      lo_component-description = <attribute>-descript.
+      INSERT lo_component INTO TABLE rs_result.
     ENDLOOP.
   ENDMETHOD.
 
   METHOD get_methods.
+    DATA:
+      lo_method    TYPE zif_abapgit_aff_oo_types_v1=>ty_method,
+      lo_exception TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description,
+      lo_parameter TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description.
+
     LOOP AT is_components ASSIGNING FIELD-SYMBOL(<method>) WHERE cmptype = seoo_cmptype_method.
-      DATA(method) = VALUE zif_abapgit_aff_oo_types_v1=>ty_method( name = <method>-cmpname description = <method>-descript ).
+      lo_method-name = <method>-cmpname.
+      lo_method-description = <method>-descript.
 
       LOOP AT is_sub_components ASSIGNING FIELD-SYMBOL(<sub_component>) WHERE cmpname = <method>-cmpname.
         CASE <sub_component>-scotype.
           WHEN seos_scotype_parameter.
-            INSERT VALUE #( name = <sub_component>-sconame description = <sub_component>-descript ) INTO TABLE method-parameters.
+            lo_parameter-name = <sub_component>-sconame.
+            lo_parameter-description = <sub_component>-descript.
+            INSERT lo_parameter INTO TABLE lo_method-parameters.
           WHEN seos_scotype_exception.
-            INSERT VALUE #( name = <sub_component>-sconame description = <sub_component>-descript ) INTO TABLE method-exceptions.
+            lo_exception-name = <sub_component>-sconame.
+            lo_exception-description = <sub_component>-descript.
+            INSERT lo_exception INTO TABLE lo_method-exceptions.
         ENDCASE.
       ENDLOOP.
 
-      IF method-description IS NOT INITIAL OR method-exceptions IS NOT INITIAL OR method-parameters IS NOT INITIAL.
-        INSERT method INTO TABLE rs_result.
+      IF lo_method-description IS NOT INITIAL OR lo_method-exceptions IS NOT INITIAL OR lo_method-parameters IS NOT INITIAL.
+        INSERT lo_method INTO TABLE rs_result.
       ENDIF.
     ENDLOOP.
   ENDMETHOD.
 
   METHOD get_types.
+    DATA:
+        lo_type TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description.
+
     LOOP AT is_components ASSIGNING FIELD-SYMBOL(<types>) WHERE cmptype = seoo_cmptype_type AND descript IS NOT INITIAL.
-      INSERT VALUE #( name = <types>-cmpname description = <types>-descript ) INTO TABLE rs_result.
+      lo_type-name = <types>-cmpname.
+      lo_type-description = <types>-descript.
+      INSERT lo_type INTO TABLE rs_result.
     ENDLOOP.
   ENDMETHOD.
 
   METHOD get_events.
+    DATA:
+      lo_parameter TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description,
+      lo_event     TYPE zif_abapgit_aff_oo_types_v1=>ty_event.
+
     LOOP AT is_components ASSIGNING FIELD-SYMBOL(<event>) WHERE cmptype = seoo_cmptype_event.
-      DATA(event) = VALUE if_oo_aff_types_v1=>ty_event( name = <event>-cmpname description = <event>-descript ).
+      lo_event-name = <event>-cmpname.
+      lo_event-description = <event>-descript.
 
       LOOP AT is_sub_components ASSIGNING FIELD-SYMBOL(<sub_component>) WHERE cmpname = <event>-cmpname.
-        INSERT VALUE #( name = <sub_component>-sconame description = <sub_component>-descript ) INTO TABLE event-parameters.
+        lo_parameter-name = <sub_component>-sconame.
+        lo_parameter-description = <sub_component>-descript.
+        INSERT lo_parameter INTO TABLE lo_event-parameters.
       ENDLOOP.
 
-      IF event-description IS NOT INITIAL OR event-parameters IS NOT INITIAL.
-        INSERT event INTO TABLE rs_result.
+      IF lo_event-description IS NOT INITIAL OR lo_event-parameters IS NOT INITIAL.
+        INSERT lo_event INTO TABLE rs_result.
       ENDIF.
     ENDLOOP.
   ENDMETHOD.
 
 
   METHOD set_attributes.
+    DATA:
+      lo_attribute TYPE seocompotx.
+
     LOOP AT is_properties-attributes ASSIGNING FIELD-SYMBOL(<attribute>).
-      DATA(attribute) = VALUE seocompotx(
-          clsname  = iv_clif_name
-          cmpname  = <attribute>-name
-          langu    = iv_language
-          descript = <attribute>-description ).
-      MODIFY seocompotx FROM attribute.
+      lo_attribute-clsname  = iv_clif_name.
+      lo_attribute-cmpname  = <attribute>-name.
+      lo_attribute-langu    = iv_language.
+      lo_attribute-descript = <attribute>-description.
+      MODIFY seocompotx FROM lo_attribute.
     ENDLOOP.
   ENDMETHOD.
 
 
   METHOD set_methods.
+    DATA:
+      lo_method           TYPE seocompotx,
+      lo_method_exception TYPE seosubcotx,
+      lo_method_parameter TYPE seosubcotx.
+
     LOOP AT is_properties-methods ASSIGNING FIELD-SYMBOL(<method>).
-      DATA(method) = VALUE seocompotx(
-        clsname  = iv_clif_name
-        cmpname  = <method>-name
-        langu    = iv_language
-        descript = <method>-description ).
-      MODIFY seocompotx FROM method.
+      lo_method-clsname  = iv_clif_name.
+      lo_method-cmpname  = <method>-name.
+      lo_method-langu    = iv_language.
+      lo_method-descript = <method>-description.
+      MODIFY seocompotx FROM lo_method.
 
       LOOP AT <method>-parameters ASSIGNING FIELD-SYMBOL(<parameter>).
-        DATA(method_parameter) = VALUE seosubcotx(
-          clsname  = iv_clif_name
-          cmpname  = <method>-name
-          sconame  = <parameter>-name
-          langu    = iv_language
-          descript = <parameter>-description ).
-        MODIFY seosubcotx FROM method_parameter.
+        lo_method_parameter-clsname  = iv_clif_name.
+        lo_method_parameter-cmpname  = <method>-name.
+        lo_method_parameter-sconame  = <parameter>-name.
+        lo_method_parameter-langu    = iv_language.
+        lo_method_parameter-descript = <parameter>-description.
+        MODIFY seosubcotx FROM lo_method_parameter.
       ENDLOOP.
 
       LOOP AT <method>-exceptions ASSIGNING FIELD-SYMBOL(<exception>).
-        DATA(exception) = VALUE seosubcotx(
-          clsname  = iv_clif_name
-          cmpname  = <method>-name
-          sconame  = <exception>-name
-          langu    = iv_language
-          descript = <exception>-description ).
-        MODIFY seosubcotx FROM exception.
+        lo_method_exception-clsname  = iv_clif_name.
+        lo_method_exception-cmpname  = <method>-name.
+        lo_method_exception-sconame  = <exception>-name.
+        lo_method_exception-langu    = iv_language.
+        lo_method_exception-descript = <exception>-description.
+        MODIFY seosubcotx FROM lo_method_exception.
       ENDLOOP.
     ENDLOOP.
   ENDMETHOD.
 
 
   METHOD set_events.
+    DATA:
+      lo_event_parameter TYPE seosubcotx,
+      lo_event           TYPE seocompotx.
+
     LOOP AT is_properties-events ASSIGNING FIELD-SYMBOL(<event>).
-      DATA(event) = VALUE seocompotx(
-        clsname  = iv_clif_name
-        cmpname  = <event>-name
-        langu    = iv_language
-        descript = <event>-description ).
-      MODIFY seocompotx FROM event.
+      lo_event-clsname  = iv_clif_name.
+      lo_event-cmpname  = <event>-name.
+      lo_event-langu    = iv_language.
+      lo_event-descript = <event>-description.
+      MODIFY seocompotx FROM lo_event.
 
       LOOP AT <event>-parameters ASSIGNING FIELD-SYMBOL(<parameter>).
-        DATA(evet_parameter) = VALUE seosubcotx(
-          clsname  = iv_clif_name
-          cmpname  = <event>-name
-          sconame  = <parameter>-name
-          langu    = iv_language
-          descript = <parameter>-description ).
-        MODIFY seosubcotx FROM evet_parameter.
+        lo_event_parameter-clsname  = iv_clif_name.
+        lo_event_parameter-cmpname  = <event>-name.
+        lo_event_parameter-sconame  = <parameter>-name.
+        lo_event_parameter-langu    = iv_language.
+        lo_event_parameter-descript = <parameter>-description.
+        MODIFY seosubcotx FROM lo_event_parameter.
       ENDLOOP.
     ENDLOOP.
   ENDMETHOD.
 
 
   METHOD set_types.
+    DATA:
+      lo_type TYPE seocompotx.
+
     LOOP AT is_properties-types ASSIGNING FIELD-SYMBOL(<type>).
-      DATA(type) = VALUE seocompotx(
-        clsname  = iv_clif_name
-        cmpname  = <type>-name
-        langu    = iv_language
-        descript = <type>-description ).
-      MODIFY seocompotx FROM type.
+      lo_type-clsname  = iv_clif_name.
+      lo_type-cmpname  = <type>-name.
+      lo_type-langu    = iv_language.
+      lo_type-descript = <type>-description.
+      MODIFY seocompotx FROM lo_type.
     ENDLOOP.
   ENDMETHOD.
 
