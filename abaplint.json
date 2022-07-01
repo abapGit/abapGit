@@ -46,6 +46,8 @@
       "seop_incextapp_implementation",
       "seop_incextapp_macros",
       "seop_incextapp_testclasses",
+      "seos_scotype_exception",
+      "seos_scotype_parameter",
       "sews_c_vif_version",
       "skwfc_obtype_folder",
       "skwfc_obtype_loio",
