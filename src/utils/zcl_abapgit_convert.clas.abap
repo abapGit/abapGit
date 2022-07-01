@@ -18,17 +18,23 @@ CLASS zcl_abapgit_convert DEFINITION
       IMPORTING
         !iv_string        TYPE string
       RETURNING
-        VALUE(rv_xstring) TYPE xstring .
+        VALUE(rv_xstring) TYPE xstring
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS xstring_to_string_utf8
       IMPORTING
         !iv_data         TYPE xsequence
       RETURNING
-        VALUE(rv_string) TYPE string .
+        VALUE(rv_string) TYPE string
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS string_to_xstring_utf8_bom
       IMPORTING
         !iv_string        TYPE string
       RETURNING
-        VALUE(rv_xstring) TYPE xstring .
+        VALUE(rv_xstring) TYPE xstring
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS xstring_to_int
       IMPORTING
         !iv_xstring TYPE xstring
@@ -55,7 +61,9 @@ CLASS zcl_abapgit_convert DEFINITION
       IMPORTING
         !iv_str        TYPE string
       RETURNING
-        VALUE(rv_xstr) TYPE xstring .
+        VALUE(rv_xstr) TYPE xstring
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS string_to_tab
       IMPORTING
         !iv_str  TYPE string
@@ -82,7 +90,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
+CLASS zcl_abapgit_convert IMPLEMENTATION.
 
 
   METHOD base64_to_xstring.
@@ -195,6 +203,8 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
 
   METHOD string_to_xstring_utf8.
 
+    DATA lx_error TYPE REF TO cx_root.
+
     TRY.
         IF go_convert_out IS INITIAL.
           go_convert_out = cl_abap_conv_out_ce=>create( encoding = 'UTF-8' ).
@@ -207,7 +217,8 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
       CATCH cx_parameter_invalid_range
             cx_sy_codepage_converter_init
             cx_sy_conversion_codepage
-            cx_parameter_invalid_type.                  "#EC NO_HANDLER
+            cx_parameter_invalid_type INTO lx_error.
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
   ENDMETHOD.
@@ -271,6 +282,8 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
 
   METHOD xstring_to_string_utf8.
 
+    DATA lx_error TYPE REF TO cx_root.
+
     TRY.
         IF go_convert_in IS INITIAL.
           go_convert_in = cl_abap_conv_in_ce=>create( encoding = 'UTF-8' ).
@@ -286,7 +299,8 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
       CATCH cx_parameter_invalid_range
             cx_sy_codepage_converter_init
             cx_sy_conversion_codepage
-            cx_parameter_invalid_type.                  "#EC NO_HANDLER
+            cx_parameter_invalid_type INTO lx_error.
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
   ENDMETHOD.

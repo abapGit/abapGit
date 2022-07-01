@@ -3,7 +3,8 @@ CLASS ltcl_test_base DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT A
   PROTECTED SECTION.
     METHODS:
       add_file IMPORTING iv_url     TYPE string
-                         iv_content TYPE string OPTIONAL.
+                         iv_content TYPE string OPTIONAL
+               RAISING zcx_abapgit_exception.
     DATA:
       mo_asset_manager TYPE REF TO zcl_abapgit_gui_asset_manager,
       mo_cut           TYPE REF TO zcl_abapgit_gui_css_processor.
@@ -36,9 +37,9 @@ ENDCLASS.
 CLASS ltcl_single_file DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT INHERITING FROM ltcl_test_base.
   PUBLIC SECTION.
     METHODS:
-      test_file_exists FOR TESTING,
+      test_file_exists FOR TESTING RAISING zcx_abapgit_exception,
       test_file_does_not_exist FOR TESTING,
-      test_empty_file FOR TESTING,
+      test_empty_file FOR TESTING RAISING zcx_abapgit_exception,
       test_no_variables FOR TESTING RAISING zcx_abapgit_exception,
       test_simple_variables FOR TESTING RAISING zcx_abapgit_exception,
       test_complex_variables FOR TESTING RAISING zcx_abapgit_exception,

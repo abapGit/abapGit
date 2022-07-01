@@ -12,7 +12,9 @@ CLASS zcl_abapgit_diff DEFINITION
         !iv_old                TYPE xstring
         !iv_ignore_indentation TYPE abap_bool DEFAULT abap_false
         !iv_ignore_comments    TYPE abap_bool DEFAULT abap_false
-        !iv_ignore_case        TYPE abap_bool DEFAULT abap_false.
+        !iv_ignore_case        TYPE abap_bool DEFAULT abap_false
+      RAISING
+        zcx_abapgit_exception.
     METHODS get
       RETURNING
         VALUE(rt_diff) TYPE zif_abapgit_definitions=>ty_diffs_tt.
@@ -65,7 +67,9 @@ CLASS zcl_abapgit_diff DEFINITION
         !iv_old TYPE xstring
       EXPORTING
         !et_new TYPE rswsourcet
-        !et_old TYPE rswsourcet.
+        !et_old TYPE rswsourcet
+      RAISING
+        zcx_abapgit_exception.
     METHODS map_beacons.
     METHODS shortlist.
     METHODS create_regex_set
@@ -237,7 +241,7 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
         APPEND ls_diff TO rt_diff.
       ENDLOOP.
     ELSEIF sy-subrc = 2.
-      " Identical input
+      " Copy input... but it might not be identical
       LOOP AT it_old ASSIGNING <ls_old>.
         CLEAR ls_diff.
         ls_diff-old_num = sy-tabix.
@@ -246,6 +250,11 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
         ASSERT sy-subrc = 0.
         ls_diff-new_num = sy-tabix.
         ls_diff-new     = <ls_new>.
+        " SAP function ignores lines that contain only whitespace so we compare directly
+        IF ( mv_compare_mode = 1 OR mv_compare_mode = 3 ) AND <ls_old> <> <ls_new> AND
+           ( strlen( condense( <ls_old> ) ) = 0 OR strlen( condense( <ls_new> ) ) = 0 ).
+          ls_diff-result = zif_abapgit_definitions=>c_diff-update.
+        ENDIF.
         APPEND ls_diff TO rt_diff.
       ENDLOOP.
     ELSE.
