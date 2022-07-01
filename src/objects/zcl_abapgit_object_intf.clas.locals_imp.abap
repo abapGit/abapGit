@@ -284,11 +284,12 @@ CLASS lcl_aff_helper IMPLEMENTATION.
   METHOD get_types.
     DATA:
         lo_type TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description.
+    FIELD-SYMBOLS: <ls_types> TYPE lcl_aff_helper=>ty_component.
 
-    LOOP AT is_components ASSIGNING FIELD-SYMBOL(<types>)
+    LOOP AT is_components ASSIGNING <ls_types>
         WHERE cmptype = seoo_cmptype_type AND descript IS NOT INITIAL.
-      lo_type-name = <types>-cmpname.
-      lo_type-description = <types>-descript.
+      lo_type-name = <ls_types>-cmpname.
+      lo_type-description = <ls_types>-descript.
       INSERT lo_type INTO TABLE rs_result.
     ENDLOOP.
   ENDMETHOD.
