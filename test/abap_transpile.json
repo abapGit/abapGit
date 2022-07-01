@@ -173,8 +173,6 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_abap_to_json", "method": "set_value_string"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_abap_to_json", "method": "set_complex_obj"},
 
-      {"object": "ZCL_ABAPGIT_AJSON_FILTER_LIB", "class": "ltcl_filters_test", "method": "and_filter"},
-
       {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "json_diff"},
       {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "json_diff_types"},
       {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "json_merge"},
