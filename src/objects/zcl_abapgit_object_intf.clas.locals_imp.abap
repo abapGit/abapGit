@@ -225,6 +225,7 @@ CLASS lcl_aff_helper IMPLEMENTATION.
         AND sub_component_text~descript IS NOT INITIAL
       INTO TABLE @lt_sub_components.                   "#EC CI_BUFFJOIN
 
+
     rs_properties-attributes = get_attributes( CORRESPONDING #( lt_components ) ).
     rs_properties-methods = get_methods( is_components = CORRESPONDING #( lt_components )
                                          is_sub_components = lt_sub_components ).
@@ -284,7 +285,7 @@ CLASS lcl_aff_helper IMPLEMENTATION.
   METHOD get_types.
     DATA:
         lo_type TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description.
-    FIELD-SYMBOLS: <ls_types> TYPE lcl_aff_helper=>ty_component.
+    FIELD-SYMBOLS: <ls_types> TYPE ty_component.
 
     LOOP AT is_components ASSIGNING <ls_types>
         WHERE cmptype = seoo_cmptype_type AND descript IS NOT INITIAL.
