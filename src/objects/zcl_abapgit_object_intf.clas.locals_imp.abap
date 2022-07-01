@@ -3,7 +3,7 @@ CLASS lcl_aff_helper DEFINITION.
     CLASS-METHODS: create_empty_interface
       IMPORTING iv_intf_name   TYPE seoclsname
                 io_lock_handle TYPE REF TO if_adt_lock_handle
-      RAISING   cx_aff_root,
+      RAISING   zcx_abapgit_exception,
       generate_class_pool
         IMPORTING iv_class_name TYPE seoclsname,
       get_descriptions_compo_subco
@@ -100,7 +100,7 @@ CLASS lcl_aff_helper IMPLEMENTATION.
       ELSE.
         lo_interface_error = 'Internal error'.
       ENDIF.
-      RAISE EXCEPTION TYPE cx_aff_root MESSAGE e021(seo_aff) WITH iv_intf_name lo_interface_error.
+*      zcx_abapgit_exception=>raise_with_text(  ).
     ENDIF.
   ENDMETHOD.
 
@@ -180,19 +180,14 @@ CLASS lcl_aff_helper IMPLEMENTATION.
   METHOD get_descriptions_compo_subco.
     TYPES:
       BEGIN OF ty_helper_type,
-        cmpname  TYPE seocmpname ,
-        descript TYPE seodescr ,
-        cmptype  TYPE seocmptype ,
-      END OF ty_helper_type,
-      BEGIN OF ly_sub_helper_type,
-        cmpname  TYPE seocmpname ,
-        sconame  TYPE seosconame ,
-        descript TYPE seodescr ,
-        scotype  TYPE seoscotype ,
-      END OF ly_sub_helper_type.
+        cmpname  TYPE seocmpname,
+        descript TYPE seodescr,
+        cmptype  TYPE seocmptype,
+      END OF ty_helper_type.
     DATA:
       lt_components     TYPE STANDARD TABLE OF ty_helper_type,
-      lt_sub_components TYPE STANDARD TABLE OF ly_sub_helper_type.
+      lt_sub_components TYPE ty_sub_compontents,
+      lt_components_exp TYPE ty_compontents.
 
     SELECT FROM seocompo AS component LEFT OUTER JOIN seocompotx AS component_text
       ON component~cmpname = component_text~cmpname AND component~clsname = component_text~clsname
@@ -211,13 +206,14 @@ CLASS lcl_aff_helper IMPLEMENTATION.
         AND sub_component_text~descript IS NOT INITIAL
       INTO TABLE @lt_sub_components.                   "#EC CI_BUFFJOIN
 
+    MOVE-CORRESPONDING lt_components TO lt_components_exp.
 
-    rs_properties-attributes = get_attributes( CORRESPONDING #( lt_components ) ).
-    rs_properties-methods = get_methods( is_components = CORRESPONDING #( lt_components )
+    rs_properties-attributes = get_attributes( lt_components_exp ).
+    rs_properties-methods = get_methods( is_components = lt_components_exp
                                          is_sub_components = lt_sub_components ).
-    rs_properties-events = get_events( is_components = CORRESPONDING #( lt_components )
+    rs_properties-events = get_events( is_components = lt_components_exp
                                        is_sub_components = lt_sub_components ).
-    rs_properties-types = get_types( CORRESPONDING #( lt_components ) ).
+    rs_properties-types = get_types( lt_components_exp ).
 
   ENDMETHOD.
 
