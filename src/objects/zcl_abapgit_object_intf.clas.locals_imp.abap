@@ -138,23 +138,9 @@ CLASS lcl_aff_helper IMPLEMENTATION.
 
 
   METHOD get_descr_comp_subc_w_exposure.
-    TYPES:
-      BEGIN OF ty_helper_type,
-        cmpname    TYPE seosubco-cmpname,
-        descript   TYPE seocompotx-descript,
-        cmptype    TYPE seocompo-cmptype,
-        visibility TYPE seocompodf-exposure,
-      END OF ty_helper_type,
-      BEGIN OF ty_sub_helper_type,
-        cmpname    TYPE seosubco-cmpname,
-        sconame    TYPE seosubco-sconame,
-        descript   TYPE seosubcotx-descript,
-        scotype    TYPE seosubco-scotype,
-        visibility TYPE seocompodf-exposure,
-      END OF ty_sub_helper_type.
     DATA:
-      lt_components     TYPE STANDARD TABLE OF ty_helper_type,
-      lt_sub_components TYPE STANDARD TABLE OF ty_sub_helper_type.
+      lt_components     TYPE ty_compontents,
+      lt_sub_components TYPE ty_sub_compontents.
 
     SELECT FROM seocompo AS component LEFT OUTER JOIN seocompotx AS component_text
       ON component~cmpname = component_text~cmpname AND component~clsname = component_text~clsname AND
@@ -162,7 +148,7 @@ CLASS lcl_aff_helper IMPLEMENTATION.
       INNER JOIN seocompodf AS df
       ON component~clsname = df~clsname AND
          component~cmpname = df~cmpname
-      FIELDS component~cmpname, component_text~descript, component~cmptype, df~exposure AS visibility
+      FIELDS df~exposure AS visibility, component~cmpname, component_text~descript, component~cmptype
       WHERE component~clsname = @iv_clif_name AND
             df~exposure       = @iv_exposure
       INTO TABLE @lt_components.                       "#EC CI_BUFFJOIN
@@ -175,34 +161,34 @@ CLASS lcl_aff_helper IMPLEMENTATION.
       ON sub_component~clsname = df~clsname AND
          sub_component~cmpname = df~cmpname
       FIELDS sub_component~cmpname, sub_component~sconame, sub_component_text~descript,
-             sub_component~scotype, df~exposure AS visibility
+             sub_component~scotype
       WHERE sub_component~clsname    = @iv_clif_name
         AND df~exposure              = @iv_exposure
         AND sub_component_text~langu = @iv_language
         AND sub_component_text~descript IS NOT INITIAL
      INTO TABLE @lt_sub_components.                    "#EC CI_BUFFJOIN
 
-    rs_properties-attributes = get_attributes( is_components = CORRESPONDING #( lt_components ) ).
-    rs_properties-methods = get_methods( is_components = CORRESPONDING #( lt_components )
-                                         is_sub_components = CORRESPONDING #( lt_sub_components ) ).
-    rs_properties-events = get_events( is_components = CORRESPONDING #( lt_components )
-                                       is_sub_components = CORRESPONDING #( lt_sub_components ) ).
-    rs_properties-types = get_types( is_components = CORRESPONDING #( lt_components ) ).
+    rs_properties-attributes = get_attributes( lt_components ).
+    rs_properties-methods = get_methods( is_components = lt_components
+                                         is_sub_components = lt_sub_components ).
+    rs_properties-events = get_events( is_components = lt_components
+                                       is_sub_components = lt_sub_components ).
+    rs_properties-types = get_types( lt_components ).
   ENDMETHOD.
 
 
   METHOD get_descriptions_compo_subco.
     TYPES:
       BEGIN OF ty_helper_type,
-        cmpname  TYPE seocompo-cmpname,
-        descript TYPE seocompotx-descript,
-        cmptype  TYPE seocompo-cmptype,
+        cmpname  TYPE seocmpname ,
+        descript TYPE seodescr ,
+        cmptype  TYPE seocmptype ,
       END OF ty_helper_type,
       BEGIN OF ly_sub_helper_type,
-        cmpname  TYPE seosubco-cmpname,
-        sconame  TYPE seosubco-sconame,
-        descript TYPE seosubcotx-descript,
-        scotype  TYPE seosubco-scotype,
+        cmpname  TYPE seocmpname ,
+        sconame  TYPE seosconame ,
+        descript TYPE seodescr ,
+        scotype  TYPE seoscotype ,
       END OF ly_sub_helper_type.
     DATA:
       lt_components     TYPE STANDARD TABLE OF ty_helper_type,
