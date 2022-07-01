@@ -114,7 +114,11 @@ CLASS lcl_aff_helper IMPLEMENTATION.
 
 
   METHOD create_empty_interface.
-    DATA(empty_interface) = VALUE vseointerf(
+    DATA:
+      lo_interface_error TYPE string,
+      ls_empty_interface TYPE vseointerf.
+
+    ls_empty_interface = VALUE vseointerf(
       clsname  = iv_intf_name
       version  = seoc_version_active
       langu    = sy-langu
@@ -128,16 +132,16 @@ CLASS lcl_aff_helper IMPLEMENTATION.
         suppress_corr = abap_true
         lock_handle   = io_lock_handle
       CHANGING
-        interface     = empty_interface
+        interface     = ls_empty_interface
       EXCEPTIONS
         OTHERS        = 1.
     IF sy-subrc <> 0.
       IF sy-msgid IS NOT INITIAL.
-        MESSAGE ID sy-msgid TYPE 'S' NUMBER sy-msgno WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4 INTO DATA(interface_error).
+        MESSAGE ID sy-msgid TYPE 'S' NUMBER sy-msgno WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4 INTO lo_interface_error.
       ELSE.
-        interface_error = 'Internal error' ##NO_TEXT.
+        lo_interface_error = 'Internal error'.
       ENDIF.
-      RAISE EXCEPTION TYPE cx_aff_root MESSAGE e021(seo_aff) WITH iv_intf_name interface_error.
+      RAISE EXCEPTION TYPE cx_aff_root MESSAGE e021(seo_aff) WITH iv_intf_name lo_interface_error.
     ENDIF.
   ENDMETHOD.
 
