@@ -100,7 +100,7 @@ CLASS lcl_aff_helper IMPLEMENTATION.
       ELSE.
         lo_interface_error = 'Internal error'.
       ENDIF.
-*      zcx_abapgit_exception=>raise_with_text(  ).
+      " todo: raise exception here
     ENDIF.
   ENDMETHOD.
 
