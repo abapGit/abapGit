@@ -76,8 +76,6 @@ ENDCLASS.
 CLASS lcl_aff_helper IMPLEMENTATION.
 
 
-
-
   METHOD create_empty_interface.
     DATA:
       lo_interface_error TYPE string,
@@ -203,10 +201,11 @@ CLASS lcl_aff_helper IMPLEMENTATION.
   METHOD get_attributes.
     DATA:
       lo_component TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description.
+    FIELD-SYMBOLS <lo_attribute> TYPE ty_component.
 
-    LOOP AT is_components ASSIGNING FIELD-SYMBOL(<attribute>) WHERE cmptype = seoo_cmptype_attribute AND descript IS NOT INITIAL.
-      lo_component-name = <attribute>-cmpname.
-      lo_component-description = <attribute>-descript.
+    LOOP AT is_components ASSIGNING <lo_attribute> WHERE cmptype = seoo_cmptype_attribute AND descript IS NOT INITIAL.
+      lo_component-name = <lo_attribute>-cmpname.
+      lo_component-description = <lo_attribute>-descript.
       INSERT lo_component INTO TABLE rs_result.
     ENDLOOP.
   ENDMETHOD.
@@ -217,19 +216,22 @@ CLASS lcl_aff_helper IMPLEMENTATION.
       lo_exception TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description,
       lo_parameter TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description.
 
-    LOOP AT is_components ASSIGNING FIELD-SYMBOL(<method>) WHERE cmptype = seoo_cmptype_method.
-      lo_method-name = <method>-cmpname.
-      lo_method-description = <method>-descript.
+    FIELD-SYMBOLS <ls_sub_component> TYPE ty_sub_component.
+    FIELD-SYMBOLS <ls_component> TYPE ty_component.
 
-      LOOP AT is_sub_components ASSIGNING FIELD-SYMBOL(<sub_component>) WHERE cmpname = <method>-cmpname.
-        CASE <sub_component>-scotype.
+    LOOP AT is_components ASSIGNING <ls_component> WHERE cmptype = seoo_cmptype_method.
+      lo_method-name = <ls_component>-cmpname.
+      lo_method-description = <ls_component>-descript.
+
+      LOOP AT is_sub_components ASSIGNING <ls_sub_component> WHERE cmpname = <ls_component>-cmpname.
+        CASE <ls_sub_component>-scotype.
           WHEN seos_scotype_parameter.
-            lo_parameter-name = <sub_component>-sconame.
-            lo_parameter-description = <sub_component>-descript.
+            lo_parameter-name = <ls_sub_component>-sconame.
+            lo_parameter-description = <ls_sub_component>-descript.
             INSERT lo_parameter INTO TABLE lo_method-parameters.
           WHEN seos_scotype_exception.
-            lo_exception-name = <sub_component>-sconame.
-            lo_exception-description = <sub_component>-descript.
+            lo_exception-name = <ls_sub_component>-sconame.
+            lo_exception-description = <ls_sub_component>-descript.
             INSERT lo_exception INTO TABLE lo_method-exceptions.
         ENDCASE.
       ENDLOOP.
@@ -255,14 +257,16 @@ CLASS lcl_aff_helper IMPLEMENTATION.
     DATA:
       lo_parameter TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description,
       lo_event     TYPE zif_abapgit_aff_oo_types_v1=>ty_event.
+    FIELD-SYMBOLS <ls_event> TYPE ty_component.
+    FIELD-SYMBOLS <ls_sub_component> TYPE ty_sub_component.
 
-    LOOP AT is_components ASSIGNING FIELD-SYMBOL(<event>) WHERE cmptype = seoo_cmptype_event.
-      lo_event-name = <event>-cmpname.
-      lo_event-description = <event>-descript.
+    LOOP AT is_components ASSIGNING <ls_event> WHERE cmptype = seoo_cmptype_event.
+      lo_event-name = <ls_event>-cmpname.
+      lo_event-description = <ls_event>-descript.
 
-      LOOP AT is_sub_components ASSIGNING FIELD-SYMBOL(<sub_component>) WHERE cmpname = <event>-cmpname.
-        lo_parameter-name = <sub_component>-sconame.
-        lo_parameter-description = <sub_component>-descript.
+      LOOP AT is_sub_components ASSIGNING <ls_sub_component> WHERE cmpname = <ls_event>-cmpname.
+        lo_parameter-name = <ls_sub_component>-sconame.
+        lo_parameter-description = <ls_sub_component>-descript.
         INSERT lo_parameter INTO TABLE lo_event-parameters.
       ENDLOOP.
 
@@ -276,12 +280,13 @@ CLASS lcl_aff_helper IMPLEMENTATION.
   METHOD set_attributes.
     DATA:
       lo_attribute TYPE seocompotx.
+    FIELD-SYMBOLS: <ls_attribute> TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description.
 
-    LOOP AT is_properties-attributes ASSIGNING FIELD-SYMBOL(<attribute>).
+    LOOP AT is_properties-attributes ASSIGNING <ls_attribute>.
       lo_attribute-clsname  = iv_clif_name.
-      lo_attribute-cmpname  = <attribute>-name.
+      lo_attribute-cmpname  = <ls_attribute>-name.
       lo_attribute-langu    = iv_language.
-      lo_attribute-descript = <attribute>-description.
+      lo_attribute-descript = <ls_attribute>-description.
       MODIFY seocompotx FROM lo_attribute.
     ENDLOOP.
   ENDMETHOD.
@@ -292,29 +297,32 @@ CLASS lcl_aff_helper IMPLEMENTATION.
       lo_method           TYPE seocompotx,
       lo_method_exception TYPE seosubcotx,
       lo_method_parameter TYPE seosubcotx.
+    FIELD-SYMBOLS: <ls_method> TYPE zif_abapgit_aff_oo_types_v1=>ty_method,
+                   <ls_parameter> TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description,
+                   <ls_exception> TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description.
 
-    LOOP AT is_properties-methods ASSIGNING FIELD-SYMBOL(<method>).
+    LOOP AT is_properties-methods ASSIGNING <ls_method>.
       lo_method-clsname  = iv_clif_name.
-      lo_method-cmpname  = <method>-name.
+      lo_method-cmpname  = <ls_method>-name.
       lo_method-langu    = iv_language.
-      lo_method-descript = <method>-description.
+      lo_method-descript = <ls_method>-description.
       MODIFY seocompotx FROM lo_method.
 
-      LOOP AT <method>-parameters ASSIGNING FIELD-SYMBOL(<parameter>).
+      LOOP AT <ls_method>-parameters ASSIGNING <ls_parameter>.
         lo_method_parameter-clsname  = iv_clif_name.
-        lo_method_parameter-cmpname  = <method>-name.
-        lo_method_parameter-sconame  = <parameter>-name.
+        lo_method_parameter-cmpname  = <ls_method>-name.
+        lo_method_parameter-sconame  = <ls_parameter>-name.
         lo_method_parameter-langu    = iv_language.
-        lo_method_parameter-descript = <parameter>-description.
+        lo_method_parameter-descript = <ls_parameter>-description.
         MODIFY seosubcotx FROM lo_method_parameter.
       ENDLOOP.
 
-      LOOP AT <method>-exceptions ASSIGNING FIELD-SYMBOL(<exception>).
+      LOOP AT <ls_method>-exceptions ASSIGNING <ls_exception>.
         lo_method_exception-clsname  = iv_clif_name.
-        lo_method_exception-cmpname  = <method>-name.
-        lo_method_exception-sconame  = <exception>-name.
+        lo_method_exception-cmpname  = <ls_method>-name.
+        lo_method_exception-sconame  = <ls_exception>-name.
         lo_method_exception-langu    = iv_language.
-        lo_method_exception-descript = <exception>-description.
+        lo_method_exception-descript = <ls_exception>-description.
         MODIFY seosubcotx FROM lo_method_exception.
       ENDLOOP.
     ENDLOOP.
@@ -325,20 +333,22 @@ CLASS lcl_aff_helper IMPLEMENTATION.
     DATA:
       lo_event_parameter TYPE seosubcotx,
       lo_event           TYPE seocompotx.
+    FIELD-SYMBOLS: <ls_event> TYPE zif_abapgit_aff_oo_types_v1=>ty_event,
+                   <ls_parameter> TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description.
 
-    LOOP AT is_properties-events ASSIGNING FIELD-SYMBOL(<event>).
+    LOOP AT is_properties-events ASSIGNING <ls_event>.
       lo_event-clsname  = iv_clif_name.
-      lo_event-cmpname  = <event>-name.
+      lo_event-cmpname  = <ls_event>-name.
       lo_event-langu    = iv_language.
-      lo_event-descript = <event>-description.
+      lo_event-descript = <ls_event>-description.
       MODIFY seocompotx FROM lo_event.
 
-      LOOP AT <event>-parameters ASSIGNING FIELD-SYMBOL(<parameter>).
+      LOOP AT <ls_event>-parameters ASSIGNING <ls_parameter>.
         lo_event_parameter-clsname  = iv_clif_name.
-        lo_event_parameter-cmpname  = <event>-name.
-        lo_event_parameter-sconame  = <parameter>-name.
+        lo_event_parameter-cmpname  = <ls_event>-name.
+        lo_event_parameter-sconame  = <ls_parameter>-name.
         lo_event_parameter-langu    = iv_language.
-        lo_event_parameter-descript = <parameter>-description.
+        lo_event_parameter-descript = <ls_parameter>-description.
         MODIFY seosubcotx FROM lo_event_parameter.
       ENDLOOP.
     ENDLOOP.
@@ -348,12 +358,13 @@ CLASS lcl_aff_helper IMPLEMENTATION.
   METHOD set_types.
     DATA:
       lo_type TYPE seocompotx.
+    FIELD-SYMBOLS: <ls_type> TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description.
 
-    LOOP AT is_properties-types ASSIGNING FIELD-SYMBOL(<type>).
+    LOOP AT is_properties-types ASSIGNING <ls_type>.
       lo_type-clsname  = iv_clif_name.
-      lo_type-cmpname  = <type>-name.
+      lo_type-cmpname  = <ls_type>-name.
       lo_type-langu    = iv_language.
-      lo_type-descript = <type>-description.
+      lo_type-descript = <ls_type>-description.
       MODIFY seocompotx FROM lo_type.
     ENDLOOP.
   ENDMETHOD.
