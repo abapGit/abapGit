@@ -55,12 +55,14 @@ CLASS ltcl_serialize DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS F
 
   PRIVATE SECTION.
     DATA:
+      mo_dot TYPE REF TO zcl_abapgit_dot_abapgit,
       mo_cut TYPE REF TO zcl_abapgit_serialize.
 
     METHODS:
       setup,
       test FOR TESTING RAISING zcx_abapgit_exception,
-      unsupported FOR TESTING RAISING zcx_abapgit_exception.
+      unsupported FOR TESTING RAISING zcx_abapgit_exception,
+      ignored FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -68,8 +70,13 @@ ENDCLASS.
 CLASS ltcl_serialize IMPLEMENTATION.
 
   METHOD setup.
+
+    mo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
+
     TRY.
-        CREATE OBJECT mo_cut.
+        CREATE OBJECT mo_cut
+          EXPORTING
+            io_dot_abapgit = mo_dot.
       CATCH zcx_abapgit_exception.
         cl_abap_unit_assert=>fail( 'Error creating serializer' ).
     ENDTRY.
@@ -146,6 +153,62 @@ CLASS ltcl_serialize IMPLEMENTATION.
     cl_abap_unit_assert=>assert_char_cp(
       act = ls_msg-text
       exp = '*Object type ABCD not supported*' ).
+
+  ENDMETHOD.
+
+  METHOD ignored.
+
+    DATA: lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt,
+          ls_msg   TYPE zif_abapgit_log=>ty_log_out,
+          lt_msg   TYPE zif_abapgit_log=>ty_log_outs,
+          li_log1  TYPE REF TO zif_abapgit_log,
+          li_log2  TYPE REF TO zif_abapgit_log.
+
+    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF lt_tadir.
+
+    mo_dot->add_ignore(
+      iv_path     = '/src/'
+      iv_filename = 'zcl_test_ignore.clas.*' ).
+
+    APPEND INITIAL LINE TO lt_tadir ASSIGNING <ls_tadir>.
+    <ls_tadir>-object   = 'CLAS'.
+    <ls_tadir>-obj_name = 'ZCL_TEST'.
+    <ls_tadir>-devclass = '$ZTEST'.
+
+    APPEND INITIAL LINE TO lt_tadir ASSIGNING <ls_tadir>.
+    <ls_tadir>-object   = 'CLAS'.
+    <ls_tadir>-obj_name = 'ZCL_TEST_IGNORE'.
+    <ls_tadir>-devclass = '$ZTEST'.
+
+    CREATE OBJECT li_log1 TYPE zcl_abapgit_log.
+    mo_cut->serialize(
+      iv_package          = '$ZTEST'
+      it_tadir            = lt_tadir
+      ii_log              = li_log1
+      iv_force_sequential = abap_true ).
+
+    CREATE OBJECT li_log2 TYPE zcl_abapgit_log.
+    mo_cut->serialize(
+      iv_package          = '$ZTEST'
+      it_tadir            = lt_tadir
+      ii_log              = li_log2
+      iv_force_sequential = abap_false ).
+
+    lt_msg = li_log1->get_messages( ).
+    READ TABLE lt_msg INTO ls_msg INDEX 1.
+    cl_abap_unit_assert=>assert_subrc( ).
+
+    cl_abap_unit_assert=>assert_char_cp(
+      act = ls_msg-text
+      exp = '*Object CLAS ZCL_TEST_IGNORE ignored*' ).
+
+    lt_msg = li_log2->get_messages( ).
+    READ TABLE lt_msg INTO ls_msg INDEX 1.
+    cl_abap_unit_assert=>assert_subrc( ).
+
+    cl_abap_unit_assert=>assert_char_cp(
+      act = ls_msg-text
+      exp = '*Object CLAS ZCL_TEST_IGNORE ignored*' ).
 
   ENDMETHOD.
 
