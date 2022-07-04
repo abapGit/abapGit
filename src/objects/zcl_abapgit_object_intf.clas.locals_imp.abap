@@ -192,12 +192,14 @@ CLASS lcl_aff_helper IMPLEMENTATION.
       lt_sub_components TYPE ty_sub_compontents,
       lt_components_exp TYPE ty_compontents.
 
-    SELECT FROM seocompo AS component LEFT OUTER JOIN seocompotx AS component_text
-      ON component~cmpname = component_text~cmpname AND component~clsname = component_text~clsname
-                                                    AND component_text~langu = @iv_language
-      FIELDS component~cmpname, component_text~descript, component~cmptype
-      WHERE component~clsname = @iv_clif_name
-      INTO TABLE @lt_components.                       "#EC CI_BUFFJOIN
+
+    SELECT component~cmpname component_text~descript component~cmptype
+      INTO TABLE lt_components
+      FROM seocompo AS component
+     LEFT OUTER JOIN seocompotx AS component_text
+      ON component~cmpname = component_text~cmpname AND component~clsname    = component_text~clsname
+                                                    AND component_text~langu = iv_language
+      WHERE component~clsname = iv_clif_name.                   "#EC CI_BUFFJOIN
 
     SELECT FROM seosubco AS sub_component JOIN seosubcotx AS sub_component_text
       ON  sub_component~clsname = sub_component_text~clsname
