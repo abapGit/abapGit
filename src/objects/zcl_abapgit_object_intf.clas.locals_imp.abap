@@ -201,15 +201,15 @@ CLASS lcl_aff_helper IMPLEMENTATION.
                                                     AND component_text~langu = iv_language
       WHERE component~clsname = iv_clif_name.                   "#EC CI_BUFFJOIN
 
-    SELECT FROM seosubco AS sub_component JOIN seosubcotx AS sub_component_text
-      ON  sub_component~clsname = sub_component_text~clsname
+    SELECT sub_component~cmpname sub_component~sconame sub_component_text~descript sub_component~scotype
+      INTO TABLE lt_sub_components
+      FROM seosubco AS sub_component JOIN seosubcotx AS sub_component_text
+      ON sub_component~clsname      = sub_component_text~clsname
           AND sub_component~cmpname = sub_component_text~cmpname
           AND sub_component~sconame = sub_component_text~sconame
-      FIELDS sub_component~cmpname, sub_component~sconame, sub_component_text~descript, sub_component~scotype
-      WHERE sub_component~clsname    = @iv_clif_name
-        AND sub_component_text~langu = @iv_language
-        AND sub_component_text~descript IS NOT INITIAL
-      INTO TABLE @lt_sub_components.                   "#EC CI_BUFFJOIN
+      WHERE sub_component~clsname    = iv_clif_name
+        AND sub_component_text~langu = iv_language
+        AND sub_component_text~descript <> space .     "#EC CI_BUFFJOIN
 
     MOVE-CORRESPONDING lt_components TO lt_components_exp.
 
