@@ -167,7 +167,7 @@ CLASS lcl_aff_helper IMPLEMENTATION.
       WHERE sub_component~clsname    = iv_clif_name
         AND df~exposure              = iv_exposure
         AND sub_component_text~langu = iv_language
-        AND sub_component_text~descript <> space .     "#EC CI_BUFFJOIN
+        AND sub_component_text~descript <> space.     "#EC CI_BUFFJOIN
 
 
 
