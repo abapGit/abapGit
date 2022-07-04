@@ -142,31 +142,34 @@ CLASS lcl_aff_helper IMPLEMENTATION.
       lt_components     TYPE ty_compontents,
       lt_sub_components TYPE ty_sub_compontents.
 
-    SELECT FROM seocompo AS component LEFT OUTER JOIN seocompotx AS component_text
+
+    SELECT df~exposure AS visibility component~cmpname component_text~descript component~cmptype
+      INTO TABLE lt_components
+      FROM seocompo AS component
+      LEFT OUTER JOIN seocompotx AS component_text
       ON component~cmpname = component_text~cmpname AND component~clsname = component_text~clsname AND
-         component_text~langu = @iv_language
+         component_text~langu = iv_language
       INNER JOIN seocompodf AS df
       ON component~clsname = df~clsname AND
          component~cmpname = df~cmpname
-      FIELDS df~exposure AS visibility, component~cmpname, component_text~descript, component~cmptype
-      WHERE component~clsname = @iv_clif_name AND
-            df~exposure       = @iv_exposure
-      INTO TABLE @lt_components.                       "#EC CI_BUFFJOIN
+      WHERE component~clsname = iv_clif_name AND
+            df~exposure       = iv_exposure.           "#EC CI_BUFFJOIN
 
-    SELECT FROM seosubco AS sub_component JOIN seosubcotx AS sub_component_text
+    SELECT sub_component~cmpname sub_component~sconame sub_component_text~descript sub_component~scotype
+      INTO TABLE lt_sub_components
+      FROM seosubco AS sub_component JOIN seosubcotx AS sub_component_text
       ON  sub_component~clsname = sub_component_text~clsname
           AND sub_component~cmpname = sub_component_text~cmpname
           AND sub_component~sconame = sub_component_text~sconame
       INNER JOIN seocompodf AS df
       ON sub_component~clsname = df~clsname AND
          sub_component~cmpname = df~cmpname
-      FIELDS sub_component~cmpname, sub_component~sconame, sub_component_text~descript,
-             sub_component~scotype
-      WHERE sub_component~clsname    = @iv_clif_name
-        AND df~exposure              = @iv_exposure
-        AND sub_component_text~langu = @iv_language
-        AND sub_component_text~descript IS NOT INITIAL
-     INTO TABLE @lt_sub_components.                    "#EC CI_BUFFJOIN
+      WHERE sub_component~clsname    = iv_clif_name
+        AND df~exposure              = iv_exposure
+        AND sub_component_text~langu = iv_language
+        AND sub_component_text~descript <> space .     "#EC CI_BUFFJOIN
+
+
 
     rs_properties-attributes = get_attributes( lt_components ).
     rs_properties-methods = get_methods( is_components = lt_components
