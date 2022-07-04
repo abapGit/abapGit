@@ -209,7 +209,7 @@ CLASS lcl_aff_helper IMPLEMENTATION.
           AND sub_component~sconame = sub_component_text~sconame
       WHERE sub_component~clsname    = iv_clif_name
         AND sub_component_text~langu = iv_language
-        AND sub_component_text~descript <> space .     "#EC CI_BUFFJOIN
+        AND sub_component_text~descript <> space.     "#EC CI_BUFFJOIN
 
     MOVE-CORRESPONDING lt_components TO lt_components_exp.
 
