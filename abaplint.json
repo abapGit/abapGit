@@ -65,6 +65,8 @@
     "globalMacros": []
   },
   "rules": {
+    "cds_legacy_view": true,
+    "superfluous_value": true,
     "classic_exceptions_overlap": true,
     "local_testclass_consistency": true,
     "no_external_form_calls": false,
@@ -352,6 +354,7 @@
       "refresh": true,
       "compute": true,
       "add": true,
+      "clientSpecified": true,
       "occurences": true,
       "selectWithoutInto": true,
       "ranges": true,
