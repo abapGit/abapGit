@@ -167,7 +167,7 @@ CLASS lcl_aff_helper IMPLEMENTATION.
       WHERE sub_component~clsname    = iv_clif_name
         AND df~exposure              = iv_exposure
         AND sub_component_text~langu = iv_language
-        AND sub_component_text~descript <> space.     "#EC CI_BUFFJOIN
+        AND sub_component_text~descript <> space.      "#EC CI_BUFFJOIN
 
 
 
@@ -199,7 +199,7 @@ CLASS lcl_aff_helper IMPLEMENTATION.
      LEFT OUTER JOIN seocompotx AS component_text
       ON component~cmpname = component_text~cmpname AND component~clsname    = component_text~clsname
                                                     AND component_text~langu = iv_language
-      WHERE component~clsname = iv_clif_name.                   "#EC CI_BUFFJOIN
+      WHERE component~clsname = iv_clif_name.          "#EC CI_BUFFJOIN
 
     SELECT sub_component~cmpname sub_component~sconame sub_component_text~descript sub_component~scotype
       INTO TABLE lt_sub_components
@@ -209,7 +209,7 @@ CLASS lcl_aff_helper IMPLEMENTATION.
           AND sub_component~sconame = sub_component_text~sconame
       WHERE sub_component~clsname    = iv_clif_name
         AND sub_component_text~langu = iv_language
-        AND sub_component_text~descript <> space.     "#EC CI_BUFFJOIN
+        AND sub_component_text~descript <> space.      "#EC CI_BUFFJOIN
 
     MOVE-CORRESPONDING lt_components TO lt_components_exp.
 
@@ -469,7 +469,7 @@ CLASS lcl_paths_filter DEFINITION FINAL.
       END OF ty_key_value.
 
   PRIVATE SECTION.
-    DATA mt_skip_paths TYPE STANDARD TABLE OF ty_key_value WITH DEFAULT KEY.
+    DATA mt_skip_paths TYPE STANDARD TABLE OF ty_key_value WITH key KEY.
 ENDCLASS.
 
 CLASS lcl_paths_filter IMPLEMENTATION.
@@ -481,19 +481,22 @@ CLASS lcl_paths_filter IMPLEMENTATION.
     lv_path = is_node-path && is_node-name.
 
     IF line_exists( mt_skip_paths[ key = lv_path value = is_node-value ] )
-      and iv_visit = zif_abapgit_ajson_filter=>visit_type-value.
+      AND iv_visit = zif_abapgit_ajson_filter=>visit_type-value.
+      RETURN abap_false.
+    ELSEIF line_exists( mt_skip_paths[ key = lv_path ] )
+      AND iv_visit = zif_abapgit_ajson_filter=>visit_type-value.
+      RETURN abap_true.
+    ENDIF.
+
+    IF is_node-type = 'bool' AND is_node-value = 'false' AND iv_visit = zif_abapgit_ajson_filter=>visit_type-value.
       RETURN abap_false.
     ENDIF.
 
-    IF is_node-type = 'bool' and is_node-value = 'false' and iv_visit = zif_abapgit_ajson_filter=>visit_type-value.
-      return abap_false.
-    ENDIF.
 
-
-    if not ( ( iv_visit = zif_abapgit_ajson_filter=>visit_type-value AND is_node-value IS NOT INITIAL ) OR
+    IF NOT ( ( iv_visit = zif_abapgit_ajson_filter=>visit_type-value AND is_node-value IS NOT INITIAL ) OR
          ( iv_visit <> zif_abapgit_ajson_filter=>visit_type-value AND is_node-children > 0 ) ).
-      return abap_false.
-    endif.
+      RETURN abap_false.
+    ENDIF.
 
     RETURN abap_true.
 
@@ -536,7 +539,7 @@ CLASS lcl_aff_serialize_metadata IMPLEMENTATION.
     TRY.
         lcl_paths_filter = NEW lcl_paths_filter( ls_data_aff ).
       CATCH zcx_abapgit_ajson_error INTO DATA(exception).
-        BREAK-POINT.
+        " todo: exception handling
     ENDTRY.
 
     CREATE OBJECT lo_ajson.
