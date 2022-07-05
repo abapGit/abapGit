@@ -62,7 +62,7 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
   METHOD serialize.
     DATA lt_st_source  TYPE abap_trans_srcbind_tab.
-    DATA lo_mapping    TYPE REF TO lcl_mapping.
+    DATA lo_mapping    TYPE REF TO zif_abapgit_ajson_mapping.
     DATA lv_json       TYPE string.
     DATA lo_ajson      TYPE REF TO zcl_abapgit_ajson.
     DATA lo_ajson_filtered TYPE REF TO zif_abapgit_ajson.
@@ -71,7 +71,8 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
     APPEND INITIAL LINE TO lt_st_source ASSIGNING <lg_source>.
     GET REFERENCE OF iv_data INTO <lg_source>-value.
-    CREATE OBJECT lo_mapping.
+
+    lo_mapping = zcl_abapgit_ajson_mapping=>create_camel_case( iv_first_json_upper = abap_false ).
 
     lo_ajson = zcl_abapgit_ajson=>create_empty( lo_mapping ).
 
