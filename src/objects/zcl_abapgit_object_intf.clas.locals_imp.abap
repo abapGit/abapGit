@@ -477,17 +477,24 @@ CLASS lcl_paths_filter IMPLEMENTATION.
   METHOD zif_abapgit_ajson_filter~keep_node.
 
     DATA lv_path TYPE string.
+    DATA iv_line_exists TYPE abap_bool.
 
     lv_path = is_node-path && is_node-name.
 
-    IF line_exists( mt_skip_paths[ key = lv_path value = is_node-value ] )
+*    READ TABLE mt_skip_paths WITH KEY table_line = lv_path TRANSPORTING NO FIELDS.
+
+    READ TABLE mt_skip_paths WITH KEY key = lv_path value = is_node-value TRANSPORTING NO FIELDS.
+    IF boolc( sy-subrc = 0 ) = abap_true
       AND iv_visit = zif_abapgit_ajson_filter=>visit_type-value.
       rv_keep = abap_false.
       RETURN.
-    ELSEIF line_exists( mt_skip_paths[ key = lv_path ] )
-      AND iv_visit = zif_abapgit_ajson_filter=>visit_type-value.
-      rv_keep = abap_true.
-      RETURN.
+    ELSE.
+      READ TABLE mt_skip_paths WITH KEY key = lv_path TRANSPORTING NO FIELDS.
+      IF boolc( sy-subrc = 0 ) = abap_true
+        AND iv_visit = zif_abapgit_ajson_filter=>visit_type-value.
+        rv_keep = abap_true.
+        RETURN.
+      ENDIF.
     ENDIF.
 
     IF is_node-type = 'bool' AND is_node-value = 'false' AND iv_visit = zif_abapgit_ajson_filter=>visit_type-value.
