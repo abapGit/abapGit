@@ -507,11 +507,11 @@ CLASS lcl_paths_filter IMPLEMENTATION.
 
   METHOD constructor.
     " extract annotations and build table for values to be skipped ( path/name | value )
-    DATA abapLanguagePair TYPE ty_key_value.
-    abapLanguagePair-key = `/header/abapLanguageVersion`.
-    abaplanguagepair-value = 'X'.
+    DATA abap_language_pair TYPE ty_key_value.
+    abap_language_pair-key = `/header/abapLanguageVersion`.
+    abap_language_pair-value = 'X'.
 
-    APPEND abapLanguagePair TO mt_skip_paths.
+    APPEND abap_language_pair TO mt_skip_paths.
   ENDMETHOD.
 
 ENDCLASS.
