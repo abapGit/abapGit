@@ -480,9 +480,15 @@ CLASS lcl_paths_filter IMPLEMENTATION.
 
     lv_path = is_node-path && is_node-name.
 
-    IF line_exists( mt_skip_paths[ key = lv_path value = is_node-value ] ).
+    IF line_exists( mt_skip_paths[ key = lv_path value = is_node-value ] )
+      and iv_visit = zif_abapgit_ajson_filter=>visit_type-value.
       RETURN abap_false.
     ENDIF.
+
+    IF is_node-type = 'bool' and is_node-value = 'false' and iv_visit = zif_abapgit_ajson_filter=>visit_type-value.
+      return abap_false.
+    ENDIF.
+
 
     if not ( ( iv_visit = zif_abapgit_ajson_filter=>visit_type-value AND is_node-value IS NOT INITIAL ) OR
          ( iv_visit <> zif_abapgit_ajson_filter=>visit_type-value AND is_node-children > 0 ) ).
