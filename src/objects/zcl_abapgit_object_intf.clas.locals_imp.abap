@@ -469,7 +469,7 @@ CLASS lcl_paths_filter DEFINITION FINAL.
       END OF ty_key_value.
 
   PRIVATE SECTION.
-    DATA mt_skip_paths TYPE STANDARD TABLE OF ty_key_value WITH key KEY.
+    DATA mt_skip_paths TYPE STANDARD TABLE OF ty_key_value WITH Key key.
 ENDCLASS.
 
 CLASS lcl_paths_filter IMPLEMENTATION.
