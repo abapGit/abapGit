@@ -507,7 +507,7 @@ CLASS lcl_paths_filter IMPLEMENTATION.
 
   METHOD constructor.
     " extract annotations and build table for values to be skipped ( path/name | value )
-    data abapLanguagePair type ty_key_value.
+    DATA abapLanguagePair TYPE ty_key_value.
     abapLanguagePair-key = `/header/abapLanguageVersion`.
     abaplanguagepair-value = 'X'.
 
@@ -530,13 +530,13 @@ CLASS lcl_aff_serialize_metadata IMPLEMENTATION.
 
   METHOD serialize.
     DATA:
-      ls_data_abapgit  TYPE zcl_abapgit_object_intf=>ty_intf,
-      ls_data_aff      TYPE zif_abapgit_aff_intf_v1=>ty_main,
-      lx_exception     TYPE REF TO cx_root,
+      ls_data_abapgit    TYPE zcl_abapgit_object_intf=>ty_intf,
+      ls_data_aff        TYPE zif_abapgit_aff_intf_v1=>ty_main,
+      lx_exception       TYPE REF TO cx_root,
       lx_exception_ajson TYPE REF TO zcx_abapgit_ajson_error,
-      lo_ajson         TYPE REF TO zcl_abapgit_json_handler,
-      lcl_paths_filter TYPE REF TO lcl_paths_filter,
-      lo_aff_mapper    TYPE REF TO zif_abapgit_aff_type_mapping.
+      lo_ajson           TYPE REF TO zcl_abapgit_json_handler,
+      lcl_paths_filter   TYPE REF TO lcl_paths_filter,
+      lo_aff_mapper      TYPE REF TO zif_abapgit_aff_type_mapping.
 
     ls_data_abapgit = is_intf.
 
