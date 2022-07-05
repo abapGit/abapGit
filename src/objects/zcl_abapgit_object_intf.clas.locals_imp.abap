@@ -454,6 +454,53 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
 
 ENDCLASS.
 
+CLASS lcl_paths_filter DEFINITION FINAL.
+  PUBLIC SECTION.
+    INTERFACES zif_abapgit_ajson_filter.
+    METHODS constructor
+      IMPORTING
+        is_aff_intf_v1 TYPE zif_abapgit_aff_intf_v1=>ty_main
+      RAISING
+        zcx_abapgit_ajson_error.
+    TYPES:
+      BEGIN OF ty_key_value,
+        key   TYPE string,
+        value TYPE string,
+      END OF ty_key_value.
+
+  PRIVATE SECTION.
+    DATA mt_skip_paths TYPE STANDARD TABLE OF ty_key_value WITH DEFAULT KEY.
+ENDCLASS.
+
+CLASS lcl_paths_filter IMPLEMENTATION.
+
+  METHOD zif_abapgit_ajson_filter~keep_node.
+
+    DATA lv_path TYPE string.
+
+    lv_path = is_node-path && is_node-name.
+
+    IF line_exists( mt_skip_paths[ key = lv_path value = is_node-value ] ).
+      RETURN abap_false.
+    ENDIF.
+
+    if not ( ( iv_visit = zif_abapgit_ajson_filter=>visit_type-value AND is_node-value IS NOT INITIAL ) OR
+         ( iv_visit <> zif_abapgit_ajson_filter=>visit_type-value AND is_node-children > 0 ) ).
+      return abap_false.
+    endif.
+
+    RETURN abap_true.
+
+  ENDMETHOD.
+
+  METHOD constructor.
+    " extract annotations and build table for values to be skipped ( path/name | value )
+    APPEND VALUE #( key = `/header/abapLanguageVersion` value = 'X' ) TO mt_skip_paths.
+  ENDMETHOD.
+
+ENDCLASS.
+
+
 CLASS lcl_aff_serialize_metadata DEFINITION.
   PUBLIC SECTION.
 
@@ -467,20 +514,29 @@ CLASS lcl_aff_serialize_metadata IMPLEMENTATION.
 
   METHOD serialize.
     DATA:
-      ls_data_abapgit TYPE zcl_abapgit_object_intf=>ty_intf,
-      ls_data_aff     TYPE zif_abapgit_aff_intf_v1=>ty_main,
-      lx_exception    TYPE REF TO cx_root,
-      lo_ajson        TYPE REF TO zcl_abapgit_json_handler,
-      lo_aff_mapper   TYPE REF TO zif_abapgit_aff_type_mapping.
+      ls_data_abapgit  TYPE zcl_abapgit_object_intf=>ty_intf,
+      ls_data_aff      TYPE zif_abapgit_aff_intf_v1=>ty_main,
+      lx_exception     TYPE REF TO cx_root,
+      lo_ajson         TYPE REF TO zcl_abapgit_json_handler,
+      lcl_paths_filter TYPE REF TO lcl_paths_filter,
+      lo_aff_mapper    TYPE REF TO zif_abapgit_aff_type_mapping.
 
     ls_data_abapgit = is_intf.
 
     CREATE OBJECT lo_aff_mapper TYPE lcl_aff_type_mapping.
     lo_aff_mapper->to_aff( EXPORTING iv_data = ls_data_abapgit
                            IMPORTING es_data = ls_data_aff ).
+
+    TRY.
+        lcl_paths_filter = NEW lcl_paths_filter( ls_data_aff ).
+      CATCH zcx_abapgit_ajson_error INTO DATA(exception).
+        BREAK-POINT.
+    ENDTRY.
+
     CREATE OBJECT lo_ajson.
     TRY.
-        rv_result = lo_ajson->serialize( ls_data_aff ).
+        rv_result = lo_ajson->serialize( iv_data = ls_data_aff
+                                         io_filter = lcl_paths_filter ).
       CATCH cx_root INTO lx_exception.
         zcx_abapgit_exception=>raise_with_text( lx_exception ).
     ENDTRY.

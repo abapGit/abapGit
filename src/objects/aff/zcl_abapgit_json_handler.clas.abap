@@ -12,6 +12,7 @@ CLASS zcl_abapgit_json_handler DEFINITION
     "! @parameter rv_result | serialized data
     METHODS serialize
       IMPORTING iv_data          TYPE data
+                io_filter        TYPE REF TO zif_abapgit_ajson_filter OPTIONAL
       RETURNING VALUE(rv_result) TYPE xstring
       RAISING   cx_static_check.
 
@@ -27,6 +28,11 @@ CLASS zcl_abapgit_json_handler DEFINITION
   PROTECTED SECTION.
 
   PRIVATE SECTION.
+    METHODS apply_filter
+      IMPORTING io_filter        TYPE REF TO zif_abapgit_ajson_filter
+                io_ajson         TYPE REF TO zif_abapgit_ajson
+      RETURNING VALUE(ro_result) TYPE REF TO zcl_abapgit_ajson
+      RAISING   zcx_abapgit_ajson_error.
 
 
 ENDCLASS.
@@ -46,7 +52,7 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
     lv_json = zcl_abapgit_convert=>xstring_to_string_utf8( iv_content ).
     lo_mapping = zcl_abapgit_ajson_mapping=>create_camel_case( ).
 
-    lo_ajson = zcl_abapgit_ajson=>parse( iv_json = lv_json
+    lo_ajson = zcl_abapgit_ajson=>parse( iv_json           = lv_json
                                          ii_custom_mapping = lo_mapping ).
 
     lo_ajson->zif_abapgit_ajson~to_abap( IMPORTING ev_container = ev_data ).
@@ -59,8 +65,7 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
     DATA lo_mapping    TYPE REF TO lcl_mapping.
     DATA lv_json       TYPE string.
     DATA lo_ajson      TYPE REF TO zcl_abapgit_ajson.
-    DATA lo_ajson_filtered TYPE REF TO zcl_abapgit_ajson.
-    DATA lo_aff_filter   TYPE REF TO zif_abapgit_ajson_filter.
+    DATA lo_ajson_filtered TYPE REF TO zif_abapgit_ajson.
 
     FIELD-SYMBOLS: <lg_source> LIKE LINE OF lt_st_source.
 
@@ -75,15 +80,29 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
       iv_path = '/'
       iv_val  = iv_data ).
 
-    CREATE OBJECT lo_aff_filter TYPE lcl_aff_filter.
-    lo_ajson_filtered = zcl_abapgit_ajson=>create_from(
-      ii_source_json = lo_ajson
-      ii_filter = zcl_abapgit_ajson_filter_lib=>create_empty_filter( ) ).
-    lo_ajson_filtered->keep_item_order( ).
+    IF io_filter IS SUPPLIED.
+      lo_ajson_filtered = apply_filter(
+        EXPORTING io_filter = io_filter
+                  io_ajson  = lo_ajson ).
 
-    lv_json = lo_ajson_filtered->stringify( 2 ).
+      lv_json = lo_ajson_filtered->stringify( 2 ).
+    ELSE.
+      lv_json = lo_ajson->stringify( 2 ).
+    ENDIF.
+
 
     rv_result = zcl_abapgit_convert=>string_to_xstring_utf8( lv_json ).
 
   ENDMETHOD.
+
+  METHOD apply_filter.
+    DATA lo_ajson_filtered      TYPE REF TO zcl_abapgit_ajson.
+    lo_ajson_filtered = zcl_abapgit_ajson=>create_from(
+                          ii_source_json = io_ajson
+                          ii_filter      = io_filter ).
+
+    lo_ajson_filtered->keep_item_order( ).
+    ro_result = lo_ajson_filtered.
+  ENDMETHOD.
+
 ENDCLASS.
