@@ -482,29 +482,36 @@ CLASS lcl_paths_filter IMPLEMENTATION.
 
     IF line_exists( mt_skip_paths[ key = lv_path value = is_node-value ] )
       AND iv_visit = zif_abapgit_ajson_filter=>visit_type-value.
-      RETURN abap_false.
+      rv_keep = abap_false.
+      RETURN.
     ELSEIF line_exists( mt_skip_paths[ key = lv_path ] )
       AND iv_visit = zif_abapgit_ajson_filter=>visit_type-value.
-      RETURN abap_true.
+      rv_keep = abap_true.
+      RETURN.
     ENDIF.
 
     IF is_node-type = 'bool' AND is_node-value = 'false' AND iv_visit = zif_abapgit_ajson_filter=>visit_type-value.
-      RETURN abap_false.
+      rv_keep = abap_false.
     ENDIF.
 
 
     IF NOT ( ( iv_visit = zif_abapgit_ajson_filter=>visit_type-value AND is_node-value IS NOT INITIAL ) OR
          ( iv_visit <> zif_abapgit_ajson_filter=>visit_type-value AND is_node-children > 0 ) ).
-      RETURN abap_false.
+      rv_keep = abap_false.
+      RETURN.
     ENDIF.
 
-    RETURN abap_true.
+    rv_keep = abap_true.
 
   ENDMETHOD.
 
   METHOD constructor.
     " extract annotations and build table for values to be skipped ( path/name | value )
-    APPEND VALUE #( key = `/header/abapLanguageVersion` value = 'X' ) TO mt_skip_paths.
+    data abapLanguagePair type ty_key_value.
+    abapLanguagePair-key = `/header/abapLanguageVersion`.
+    abaplanguagepair-value = 'X'.
+
+    APPEND abapLanguagePair TO mt_skip_paths.
   ENDMETHOD.
 
 ENDCLASS.
@@ -526,6 +533,7 @@ CLASS lcl_aff_serialize_metadata IMPLEMENTATION.
       ls_data_abapgit  TYPE zcl_abapgit_object_intf=>ty_intf,
       ls_data_aff      TYPE zif_abapgit_aff_intf_v1=>ty_main,
       lx_exception     TYPE REF TO cx_root,
+      lx_exception_ajson TYPE REF TO zcx_abapgit_ajson_error,
       lo_ajson         TYPE REF TO zcl_abapgit_json_handler,
       lcl_paths_filter TYPE REF TO lcl_paths_filter,
       lo_aff_mapper    TYPE REF TO zif_abapgit_aff_type_mapping.
@@ -537,8 +545,8 @@ CLASS lcl_aff_serialize_metadata IMPLEMENTATION.
                            IMPORTING es_data = ls_data_aff ).
 
     TRY.
-        lcl_paths_filter = NEW lcl_paths_filter( ls_data_aff ).
-      CATCH zcx_abapgit_ajson_error INTO DATA(exception).
+        CREATE OBJECT lcl_paths_filter EXPORTING is_aff_intf_v1 = ls_data_aff.
+      CATCH zcx_abapgit_ajson_error INTO lx_exception_ajson.
         " todo: exception handling
     ENDTRY.
 

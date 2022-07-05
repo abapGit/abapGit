@@ -83,8 +83,8 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
     IF io_filter IS SUPPLIED.
       lo_ajson_filtered = apply_filter(
-        EXPORTING io_filter = io_filter
-                  io_ajson  = lo_ajson ).
+        io_filter = io_filter
+        io_ajson  = lo_ajson ).
 
       lv_json = lo_ajson_filtered->stringify( 2 ).
     ELSE.
