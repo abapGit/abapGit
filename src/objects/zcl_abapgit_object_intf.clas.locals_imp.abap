@@ -481,8 +481,6 @@ CLASS lcl_paths_filter IMPLEMENTATION.
 
     lv_path = is_node-path && is_node-name.
 
-*    READ TABLE mt_skip_paths WITH KEY table_line = lv_path TRANSPORTING NO FIELDS.
-
     READ TABLE mt_skip_paths WITH KEY key = lv_path value = is_node-value TRANSPORTING NO FIELDS.
     IF boolc( sy-subrc = 0 ) = abap_true
       AND iv_visit = zif_abapgit_ajson_filter=>visit_type-value.
@@ -499,6 +497,7 @@ CLASS lcl_paths_filter IMPLEMENTATION.
 
     IF is_node-type = 'bool' AND is_node-value = 'false' AND iv_visit = zif_abapgit_ajson_filter=>visit_type-value.
       rv_keep = abap_false.
+      RETURN.
     ENDIF.
 
 
