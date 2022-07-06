@@ -477,7 +477,7 @@ CLASS lcl_paths_filter IMPLEMENTATION.
   METHOD zif_abapgit_ajson_filter~keep_node.
 
     DATA lv_path TYPE string.
-    DATA iv_line_exists TYPE abap_bool.
+    DATA lv_line_exists TYPE abap_bool.
 
     lv_path = is_node-path && is_node-name.
 
@@ -513,11 +513,11 @@ CLASS lcl_paths_filter IMPLEMENTATION.
 
   METHOD constructor.
     " extract annotations and build table for values to be skipped ( path/name | value )
-    DATA abap_language_pair TYPE ty_key_value.
-    abap_language_pair-key = `/header/abapLanguageVersion`.
-    abap_language_pair-value = 'X'.
+    DATA lo_abap_language_pair TYPE ty_key_value.
+    lo_abap_language_pair-key = `/header/abapLanguageVersion`.
+    lo_abap_language_pair-value = 'X'.
 
-    APPEND abap_language_pair TO mt_skip_paths.
+    APPEND lo_abap_language_pair TO mt_skip_paths.
   ENDMETHOD.
 
 ENDCLASS.
@@ -541,7 +541,7 @@ CLASS lcl_aff_serialize_metadata IMPLEMENTATION.
       lx_exception       TYPE REF TO cx_root,
       lx_exception_ajson TYPE REF TO zcx_abapgit_ajson_error,
       lo_ajson           TYPE REF TO zcl_abapgit_json_handler,
-      lcl_paths_filter   TYPE REF TO lcl_paths_filter,
+      lc_paths_filter   TYPE REF TO lcl_paths_filter,
       lo_aff_mapper      TYPE REF TO zif_abapgit_aff_type_mapping.
 
     ls_data_abapgit = is_intf.
@@ -551,7 +551,7 @@ CLASS lcl_aff_serialize_metadata IMPLEMENTATION.
                            IMPORTING es_data = ls_data_aff ).
 
     TRY.
-        CREATE OBJECT lcl_paths_filter EXPORTING is_aff_intf_v1 = ls_data_aff.
+        CREATE OBJECT lc_paths_filter EXPORTING is_aff_intf_v1 = ls_data_aff.
       CATCH zcx_abapgit_ajson_error INTO lx_exception_ajson.
         " todo: exception handling
     ENDTRY.
@@ -559,7 +559,7 @@ CLASS lcl_aff_serialize_metadata IMPLEMENTATION.
     CREATE OBJECT lo_ajson.
     TRY.
         rv_result = lo_ajson->serialize( iv_data = ls_data_aff
-                                         io_filter = lcl_paths_filter ).
+                                         io_filter = lc_paths_filter ).
       CATCH cx_root INTO lx_exception.
         zcx_abapgit_exception=>raise_with_text( lx_exception ).
     ENDTRY.
