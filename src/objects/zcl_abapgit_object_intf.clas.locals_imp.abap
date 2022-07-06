@@ -190,7 +190,10 @@ CLASS lcl_aff_helper IMPLEMENTATION.
     DATA:
       lt_components     TYPE STANDARD TABLE OF ty_helper_type,
       lt_sub_components TYPE ty_sub_compontents,
-      lt_components_exp TYPE ty_compontents.
+      lt_components_exp TYPE ty_compontents,
+      ls_component_exp  LIKE LINE OF lt_components_exp.
+    FIELD-SYMBOLS:
+      <ls_component> TYPE lcl_aff_helper=>ty_sub_component.
 
 
     SELECT component~cmpname component_text~descript component~cmptype
@@ -211,7 +214,11 @@ CLASS lcl_aff_helper IMPLEMENTATION.
         AND sub_component_text~langu = iv_language
         AND sub_component_text~descript <> space.     "#EC CI_BUFFJOIN
 
-    MOVE-CORRESPONDING lt_components TO lt_components_exp.
+    LOOP AT lt_sub_components ASSIGNING <ls_component>.
+      CLEAR ls_component_exp.
+      MOVE-CORRESPONDING <ls_component> TO ls_component_exp.
+      INSERT ls_component_exp INTO TABLE lt_components_exp.
+    ENDLOOP.
 
     rs_properties-attributes = get_attributes( lt_components_exp ).
     rs_properties-methods = get_methods( is_components = lt_components_exp
