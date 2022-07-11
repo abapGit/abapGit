@@ -18,10 +18,8 @@
     "zcl_abapgit_f",
     "zcl_abapgit_git*",
     "zcl_abapgit_gui*",
-    "zcl_abapgit_hash",
-    "zcl_abapgit_html*",
-    "zcl_abapgit_http*",
-    "zcl_abapgit_injector",
+    "zcl_abapgit_h",
+    "zcl_abapgit_i",
     "zcl_abapgit_log.clas",
     "zcl_abapgit_login_manager",
     "zcl_abapgit_news",
@@ -186,6 +184,8 @@
       {"object": "ZCL_ABAPGIT_DATA_SERIALIZER", "class": "ltcl_test", "method": "serialize", "note": "abap.FunctionModules.DD_EXIST_TABLE is not a function"},
 
       {"object": "ZCL_ABAPGIT_DATA_CONFIG", "class": "ltcl_test", "method": "to_json", "note": "todo in CREATE DATA TYPE HANDLE"},
+
+      {"object": "ZCL_ABAPGIT_ITEM_GRAPH", "class": "ltcl_test", "method": "basic", "note": "ReferenceError: obj_type is not defined"},
 
       {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_renderable", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
       {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_event_handler", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
