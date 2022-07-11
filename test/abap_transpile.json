@@ -137,14 +137,14 @@
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "neg_incorrect_path_vs_pack", "note": "??"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "neg_similar_filenames", "note": "??"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "neg_empty_filenames", "note": "??"},
-      {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "package_move", "note": "Void type: TROBJTYPE"},
+      {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "package_move", "note": "Void type: SOBJ_NAME"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "check_namespace", "note": "??"},
 
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_calculate_status", "method": "moved", "note": "??"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_calculate_status", "method": "complete", "note": "??"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_calculate_status", "method": "only_local2", "note": "??"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_calculate_status", "method": "only_remote2", "note": "??"},
-      {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_calculate_status", "method": "only_remote3", "note": "Void type: NAMESPACE"},
+      {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_calculate_status", "method": "only_remote3", "note": "Void type: PARENTCL"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_calculate_status", "method": "local_outside_main", "note": "abap.Classes.ZCL_ABAPGIT_SAP_PACKAGE is not a constructor"},
 
       {"object": "ZCL_ABAPGIT_FOLDER_LOGIC", "class": "ltcl_folder_logic", "method": "prefix1", "note": "Void type: NAMESPACE"},
