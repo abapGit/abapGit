@@ -73,6 +73,7 @@
     "zif_abapgit_http*",
     "zif_abapgit_log",
     "zif_abapgit_longtexts",
+    "zif_abapgit_field_rules",
     "zif_abapgit_lxe_texts",
     "zif_abapgit_merge",
     "zif_abapgit_object_filter",
