@@ -1,10 +1,7 @@
 {
   "input_folder": "{test,src,deps}",
   "input_filter": [
-    "sappatchlv",
-    "saprelease",
-    "sci_chkv",
-    "vseointerf",
+    "deps/",
     "zcl_abapgit_adt_link",
     "zcl_abapgit_ajson*",
     "zcl_abapgit_apack_reader",
