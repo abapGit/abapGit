@@ -469,6 +469,12 @@ CLASS lcl_aff_serialize_metadata DEFINITION.
       IMPORTING is_intf          TYPE data
       RETURNING VALUE(rv_result) TYPE xstring
       RAISING   zcx_abapgit_exception.
+  PRIVATE SECTION.
+    CLASS-METHODS:
+      get_mappings
+        RETURNING VALUE(rt_result) TYPE zcl_abapgit_json_handler=>ty_enum_mappings,
+      get_paths_to_skip
+        RETURNING VALUE(rt_result) TYPE zcl_abapgit_json_handler=>ty_skip_paths.
 ENDCLASS.
 
 CLASS lcl_aff_serialize_metadata IMPLEMENTATION.
@@ -480,7 +486,9 @@ CLASS lcl_aff_serialize_metadata IMPLEMENTATION.
       lx_exception       TYPE REF TO cx_root,
       lx_exception_ajson TYPE REF TO zcx_abapgit_ajson_error,
       lo_aff_handler     TYPE REF TO zcl_abapgit_json_handler,
-      lo_aff_mapper      TYPE REF TO zif_abapgit_aff_type_mapping.
+      lo_aff_mapper      TYPE REF TO zif_abapgit_aff_type_mapping,
+      lt_enum_mappings   TYPE zcl_abapgit_json_handler=>ty_enum_mappings,
+      lt_paths_to_skip TYPE zcl_abapgit_json_handler=>ty_skip_paths.
 
     ls_data_abapgit = is_intf.
 
@@ -488,13 +496,59 @@ CLASS lcl_aff_serialize_metadata IMPLEMENTATION.
     lo_aff_mapper->to_aff( EXPORTING iv_data = ls_data_abapgit
                            IMPORTING es_data = ls_data_aff ).
 
+    lt_enum_mappings = get_mappings( ).
+    lt_paths_to_skip = get_paths_to_skip( ).
+
     CREATE OBJECT lo_aff_handler.
     TRY.
-        rv_result = lo_aff_handler->serialize( ls_data_aff ).
+        rv_result = lo_aff_handler->serialize( iv_data          = ls_data_aff
+                                               iv_enum_mappings = lt_enum_mappings
+                                               iv_skip_paths    = lt_paths_to_skip ).
       CATCH cx_root INTO lx_exception.
         zcx_abapgit_exception=>raise_with_text( lx_exception ).
     ENDTRY.
 
+  ENDMETHOD.
+
+  METHOD get_mappings.
+    DATA:
+      ls_category_mapping   TYPE zcl_abapgit_json_handler=>ty_enum_mapping,
+      ls_json_abap_mapping  TYPE zcl_abapgit_json_handler=>ty_json_abap_mapping,
+      lt_json_abap_mappings TYPE zcl_abapgit_json_handler=>ty_json_abap_mappings.
+
+    ls_json_abap_mapping-abap = zif_abapgit_aff_intf_v1=>co_category-general.
+    ls_json_abap_mapping-json = 'standard'.
+    APPEND ls_json_abap_mapping TO lt_json_abap_mappings.
+    ls_json_abap_mapping-abap = zif_abapgit_aff_intf_v1=>co_category-classic_badi.
+    ls_json_abap_mapping-json = 'classicBadi'.
+    APPEND ls_json_abap_mapping TO lt_json_abap_mappings.
+    ls_json_abap_mapping-abap = zif_abapgit_aff_intf_v1=>co_category-business_static_components.
+    ls_json_abap_mapping-json = 'businessStaticComponents'.
+    APPEND ls_json_abap_mapping TO lt_json_abap_mappings.
+    ls_json_abap_mapping-abap = zif_abapgit_aff_intf_v1=>co_category-db_procedure_proxy.
+    ls_json_abap_mapping-json = 'dbProcedureProxy'.
+    APPEND ls_json_abap_mapping TO lt_json_abap_mappings.
+    ls_json_abap_mapping-abap = zif_abapgit_aff_intf_v1=>co_category-web_dynpro_runtime.
+    ls_json_abap_mapping-json = 'webDynproRuntime'.
+    APPEND ls_json_abap_mapping TO lt_json_abap_mappings.
+    ls_json_abap_mapping-abap = zif_abapgit_aff_intf_v1=>co_category-enterprise_service.
+    ls_json_abap_mapping-json = 'enterpriseService'.
+    APPEND ls_json_abap_mapping TO lt_json_abap_mappings.
+
+    ls_category_mapping-path = '/category'.
+    ls_category_mapping-mappings = lt_json_abap_mappings.
+
+    APPEND ls_category_mapping TO rt_result.
+  ENDMETHOD.
+
+  METHOD get_paths_to_skip.
+    DATA:
+      ls_path_to_skipp TYPE zcl_abapgit_json_handler=>ty_path_value_pair .
+
+    ls_path_to_skipp-path  = '/category'.
+    ls_path_to_skipp-value = 'standard'.
+
+    APPEND ls_path_to_skipp TO rt_result.
   ENDMETHOD.
 
 ENDCLASS.
