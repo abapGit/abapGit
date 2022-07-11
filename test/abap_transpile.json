@@ -114,8 +114,8 @@
 
       {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "json_diff_arrays", "note": "infinite loop"},
 
-      {"object": "ZCL_ABAPGIT_TRANSPORT_OBJECTS", "class": "ltcl_transport_objects", "method": "add_new_to_local_files", "note": "ReferenceError: obj_name is not defined"},
-      {"object": "ZCL_ABAPGIT_TRANSPORT_OBJECTS", "class": "ltcl_transport_objects", "method": "modified_to_new_local_files", "note": "??"},
+      {"object": "ZCL_ABAPGIT_TRANSPORT_OBJECTS", "class": "ltcl_transport_objects", "method": "add_new_to_local_files", "note": "READ TABLE WITH KEY item-obj_name, subkey not working in transpiler"},
+      {"object": "ZCL_ABAPGIT_TRANSPORT_OBJECTS", "class": "ltcl_transport_objects", "method": "modified_to_new_local_files", "note": "READ TABLE WITH KEY item-obj_name, subkey not working in transpiler"},
       {"object": "ZCL_ABAPGIT_TRANSPORT_OBJECTS", "class": "ltcl_transport_objects", "method": "transport_not_in_repository", "note": "??"},
       {"object": "ZCL_ABAPGIT_TRANSPORT_OBJECTS", "class": "ltcl_transport_objects", "method": "object_not_in_local_files", "note": "??"},
       {"object": "ZCL_ABAPGIT_TRANSPORT_OBJECTS", "class": "ltcl_transport_objects", "method": "cant_be_added_with_del_flag", "note": "??"},
@@ -130,15 +130,15 @@
       {"object": "ZCL_ABAPGIT_TRANSPORT_OBJECTS", "class": "ltcl_transport_objects", "method": "should_add_all_local_files", "note": "??"},
       {"object": "ZCL_ABAPGIT_TRANSPORT_OBJECTS", "class": "ltcl_transport_objects", "method": "should_delete_all_related", "note": "??"},
 
-      {"object": "ZCL_ABAPGIT_FILENAME_LOGIC", "class": "ltcl_run_checks", "method": "file_to_object", "note": "??"},
+      {"object": "ZCL_ABAPGIT_FILENAME_LOGIC", "class": "ltcl_run_checks", "method": "file_to_object", "note": "some bug in url unescape"},
       {"object": "ZCL_ABAPGIT_FILENAME_LOGIC", "class": "ltcl_run_checks", "method": "file_to_object_pack", "note": "??"},
 
-      {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "positive", "note": "??"},
+      {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "positive", "note": "Void type: TDEVC-PARENTCL"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "neg_diff_path_for_same_obj", "note": "??"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "neg_incorrect_path_vs_pack", "note": "??"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "neg_similar_filenames", "note": "??"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "neg_empty_filenames", "note": "??"},
-      {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "package_move", "note": "Void type: SOBJ_NAME"},
+      {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "package_move", "note": "Void type: TRNSPACE"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "check_namespace", "note": "??"},
 
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_calculate_status", "method": "moved", "note": "ReferenceError: filename is not defined"},
