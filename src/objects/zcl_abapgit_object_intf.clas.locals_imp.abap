@@ -490,7 +490,7 @@ CLASS lcl_aff_serialize_metadata IMPLEMENTATION.
 
     CREATE OBJECT lo_aff_handler.
     TRY.
-        rv_result = lo_aff_handler->serialize( iv_data = ls_data_aff ).
+        rv_result = lo_aff_handler->serialize( ls_data_aff ).
       CATCH cx_root INTO lx_exception.
         zcx_abapgit_exception=>raise_with_text( lx_exception ).
     ENDTRY.

@@ -101,5 +101,4 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
   ENDMETHOD.
 
-
 ENDCLASS.

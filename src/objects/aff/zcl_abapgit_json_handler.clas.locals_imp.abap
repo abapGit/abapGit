@@ -41,6 +41,8 @@ CLASS lcl_aff_filter IMPLEMENTATION.
       RETURN.
     ENDIF.
 
+    " AFF: if INTEGER type is initial (0) then is will be skipped
+    "      However, if type is $required, it should be serialized.
     IF NOT ( ( iv_visit = zif_abapgit_ajson_filter=>visit_type-value AND is_node-value IS NOT INITIAL ) OR
          ( iv_visit <> zif_abapgit_ajson_filter=>visit_type-value AND is_node-children > 0 ) ).
       rv_keep = abap_false.
