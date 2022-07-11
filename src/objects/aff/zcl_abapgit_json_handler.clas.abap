@@ -12,7 +12,6 @@ CLASS zcl_abapgit_json_handler DEFINITION
     "! @parameter rv_result | serialized data
     METHODS serialize
       IMPORTING iv_data          TYPE data
-                io_filter        TYPE REF TO zif_abapgit_ajson_filter OPTIONAL
       RETURNING VALUE(rv_result) TYPE xstring
       RAISING   cx_static_check.
 
@@ -61,11 +60,13 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
 
   METHOD serialize.
-    DATA lt_st_source  TYPE abap_trans_srcbind_tab.
-    DATA lo_mapping    TYPE REF TO zif_abapgit_ajson_mapping.
-    DATA lv_json       TYPE string.
-    DATA lo_ajson      TYPE REF TO zcl_abapgit_ajson.
-    DATA lo_ajson_filtered TYPE REF TO zif_abapgit_ajson.
+    DATA: lt_st_source      TYPE abap_trans_srcbind_tab,
+          lo_mapping        TYPE REF TO zif_abapgit_ajson_mapping,
+          lv_json           TYPE string,
+          lo_ajson          TYPE REF TO zcl_abapgit_ajson,
+          lo_ajson_filtered TYPE REF TO zif_abapgit_ajson,
+          lo_filter         TYPE REF TO lcl_aff_filter,
+          lv_enum_json TYPE string.
 
     FIELD-SYMBOLS: <lg_source> LIKE LINE OF lt_st_source.
 
@@ -81,16 +82,26 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
       iv_path = '/'
       iv_val  = iv_data ).
 
-    IF io_filter IS SUPPLIED.
-      lo_ajson_filtered = apply_filter(
-        io_filter = io_filter
-        io_ajson  = lo_ajson ).
-
-      lv_json = lo_ajson_filtered->stringify( 2 ).
-    ELSE.
-      lv_json = lo_ajson->stringify( 2 ).
+    " [!] INTF specific
+    lv_enum_json = lo_ajson->get_string( iv_path = '/category' ).
+    IF lv_enum_json = `00`.
+      lo_ajson->set_string(
+       iv_path = '/category'
+       iv_val  = `` ).
+    ELSEIF lv_enum_json = `01`.
+      lo_ajson->set_string(
+       iv_path = '/category'
+       iv_val  = `classicBadi` ).
     ENDIF.
 
+    CREATE OBJECT lo_filter.
+    lo_ajson_filtered = zcl_abapgit_ajson=>create_from(
+                          ii_source_json = lo_ajson
+                          ii_filter      = lo_filter ).
+
+    lo_ajson_filtered->keep_item_order( ).
+
+    lv_json = lo_ajson_filtered->stringify( 2 ).
 
     rv_result = zcl_abapgit_convert=>string_to_xstring_utf8( lv_json ).
 
