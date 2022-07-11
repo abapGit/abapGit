@@ -73,8 +73,8 @@
     "zif_abapgit_stage_logic",
     "zif_abapgit_tadir",
     "zif_abapgit_tag_popups",
-    "zif_abapgit_version",
-    "zif_abapgit_xml*"
+    "zif_abapgit_v",
+    "zif_abapgit_x"
   ],
   "output_folder": "output",
   "libs": [
