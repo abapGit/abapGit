@@ -27,12 +27,6 @@ CLASS zcl_abapgit_json_handler DEFINITION
   PROTECTED SECTION.
 
   PRIVATE SECTION.
-    METHODS apply_filter
-      IMPORTING io_filter        TYPE REF TO zif_abapgit_ajson_filter
-                io_ajson         TYPE REF TO zif_abapgit_ajson
-      RETURNING VALUE(ro_result) TYPE REF TO zcl_abapgit_ajson
-      RAISING   zcx_abapgit_ajson_error.
-
 
 ENDCLASS.
 
@@ -66,7 +60,7 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
           lo_ajson          TYPE REF TO zcl_abapgit_ajson,
           lo_ajson_filtered TYPE REF TO zif_abapgit_ajson,
           lo_filter         TYPE REF TO lcl_aff_filter,
-          lv_enum_json TYPE string.
+          lv_enum_json      TYPE string.
 
     FIELD-SYMBOLS: <lg_source> LIKE LINE OF lt_st_source.
 
@@ -107,14 +101,5 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD apply_filter.
-    DATA lo_ajson_filtered      TYPE REF TO zcl_abapgit_ajson.
-    lo_ajson_filtered = zcl_abapgit_ajson=>create_from(
-                          ii_source_json = io_ajson
-                          ii_filter      = io_filter ).
-
-    lo_ajson_filtered->keep_item_order( ).
-    ro_result = lo_ajson_filtered.
-  ENDMETHOD.
 
 ENDCLASS.
