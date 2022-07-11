@@ -21,7 +21,30 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_iwsg IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_IWSG IMPLEMENTATION.
+
+
+  METHOD get_field_rules.
+
+    ro_result = zcl_abapgit_field_rules=>create( ).
+    ro_result->add(
+      iv_table     = '/IWFND/I_MED_SRH'
+      iv_field     = 'CREATED_BY'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
+    )->add(
+      iv_table     = '/IWFND/I_MED_SRH'
+      iv_field     = 'CREATED_TIMESTMP'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp
+    )->add(
+      iv_table     = '/IWFND/I_MED_SRH'
+      iv_field     = 'CHANGED_BY'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
+    )->add(
+      iv_table     = '/IWFND/I_MED_SRH'
+      iv_field     = 'CHANGED_TIMESTMP'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp ).
+
+  ENDMETHOD.
 
 
   METHOD get_generic.
@@ -36,7 +59,13 @@ CLASS zcl_abapgit_object_iwsg IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = zcl_abapgit_objects_super=>c_user_unknown.
+
+    SELECT SINGLE changed_by FROM ('/IWFND/I_MED_SRH') INTO rv_user
+      WHERE srv_identifier = ms_item-obj_name.
+    IF sy-subrc <> 0.
+      rv_user = zcl_abapgit_objects_super=>c_user_unknown.
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -102,27 +131,4 @@ CLASS zcl_abapgit_object_iwsg IMPLEMENTATION.
     get_generic( )->serialize( io_xml ).
 
   ENDMETHOD.
-
-  METHOD get_field_rules.
-
-    ro_result = zcl_abapgit_field_rules=>create( ).
-    ro_result->add(
-      iv_table     = '/IWFND/I_MED_SRH'
-      iv_field     = 'CREATED_BY'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
-    )->add(
-      iv_table     = '/IWFND/I_MED_SRH'
-      iv_field     = 'CREATED_TIMESTMP'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp
-    )->add(
-      iv_table     = '/IWFND/I_MED_SRH'
-      iv_field     = 'CHANGED_BY'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
-    )->add(
-      iv_table     = '/IWFND/I_MED_SRH'
-      iv_field     = 'CHANGED_TIMESTMP'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp ).
-
-  ENDMETHOD.
-
 ENDCLASS.
