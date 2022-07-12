@@ -88,9 +88,9 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
     ELSE.
       lv_parentcl = get_parent( iv_package ).
 
-      IF lv_parentcl IS INITIAL.
-        zcx_abapgit_exception=>raise( |error, expected parent package, { iv_package }| ).
-      ELSE.
+      " If the parent package can not be determined, we return an initial path and handle
+      " it outside of this class (in zcl_abapgit_file_status)
+      IF lv_parentcl IS NOT INITIAL.
         lv_folder_logic = io_dot->get_folder_logic( ).
         CASE lv_folder_logic.
           WHEN zif_abapgit_dot_abapgit=>c_folder_logic-full.
