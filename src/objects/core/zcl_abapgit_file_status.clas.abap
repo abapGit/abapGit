@@ -110,6 +110,13 @@ CLASS zcl_abapgit_file_status DEFINITION
         !it_results TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS check_package_sub_package
+      IMPORTING
+        !ii_log     TYPE REF TO zif_abapgit_log
+        !it_results TYPE zif_abapgit_definitions=>ty_results_tt
+        !iv_top     TYPE devclass
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS check_package_folder
       IMPORTING
         !ii_log     TYPE REF TO zif_abapgit_log
@@ -455,9 +462,11 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
         iv_package = <ls_result>-package ).
 
       IF lv_path <> <ls_result>-path.
-        ii_log->add( iv_msg = |Package and path does not match for object, {
+        ii_log->add( iv_msg = |Package and path do not match for object {
                        <ls_result>-obj_type } { <ls_result>-obj_name }|
                      iv_type = 'W' ).
+      ELSEIF lv_path IS INITIAL.
+        zcx_abapgit_exception=>raise( |Error determining parent package of package { <ls_result>-package }| ).
       ENDIF.
 
     ENDLOOP.
@@ -495,6 +504,34 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD check_package_sub_package.
+
+    DATA lv_msg TYPE string.
+
+    FIELD-SYMBOLS <ls_result> LIKE LINE OF it_results.
+
+    LOOP AT it_results ASSIGNING <ls_result> WHERE package IS INITIAL AND obj_type = 'DEVC'.
+
+      IF zcl_abapgit_factory=>get_sap_package( |{ <ls_result>-obj_name }| )->exists( ) = abap_true.
+        " If package already exist but is not included in the package hierarchy of
+        " the package assigned to the repository, then a manual change of the package
+        " is required i.e. setting a parent package to the repo package (or one of its
+        " subpackages). We don't do this automatically since it's not clear where in the
+        " hierarchy the new package should be located or whether the sub package shall be
+        " removed from the repo.
+        lv_msg = |Package { <ls_result>-obj_name } already exists but is not a sub-package of { iv_top }. |
+              && |Check your package and folder logic, and either assign { <ls_result>-obj_name } |
+              && |to the package hierarchy of { iv_top } or remove package { <ls_result>-obj_name } |
+              && |from the repository.|.
+        ii_log->add( iv_msg = lv_msg
+                     iv_type = 'W' ).
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD get_object_package.
     DATA: lv_name    TYPE devclass,
           li_package TYPE REF TO zif_abapgit_sap_package.
@@ -520,8 +557,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
       lv_is_xml       TYPE abap_bool,
       lv_is_json      TYPE abap_bool,
       lv_sub_fetched  TYPE abap_bool,
-      lt_sub_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
-      lv_msg          TYPE string.
+      lt_sub_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
 
     FIELD-SYMBOLS <ls_remote> LIKE LINE OF it_remote.
 
@@ -555,20 +591,8 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
         READ TABLE lt_sub_packages TRANSPORTING NO FIELDS
           WITH KEY table_line = ls_item-devclass
           BINARY SEARCH.
-        IF sy-subrc <> 0.
-          IF ls_item-obj_type = 'DEVC'.
-            " If package already exist but is not included in the package hierarchy of
-            " the package assigned to the repository, then a manual change of the package
-            " is required i.e. setting a parent package to iv_devclass (or one of its
-            " subpackages). We don't this automatically since it's not clear where in the
-            " hierarchy the new package should be located. (#4108)
-            lv_msg = |Package { ls_item-devclass } already exists but is not a subpackage of { iv_devclass
-                     }. Check your package and folder logic or assign { ls_item-devclass
-                     } to package hierarchy of { iv_devclass } to match the repository.|.
-            zcx_abapgit_exception=>raise( lv_msg ).
-          ELSE.
-            CLEAR ls_item-devclass.
-          ENDIF.
+        IF sy-subrc <> 0 AND ls_item-obj_type = 'DEVC'.
+          CLEAR ls_item-devclass.
         ENDIF.
       ENDIF.
 
@@ -709,6 +733,12 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
     check_files_folder(
       ii_log     = ii_log
       it_results = it_results ).
+
+    " Check that sub packages are included in the package hierarchy
+    check_package_sub_package(
+      ii_log     = ii_log
+      it_results = it_results
+      iv_top     = iv_top ).
 
     " Check that objects are created in package corresponding to folder
     check_package_folder(
