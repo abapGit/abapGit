@@ -27,12 +27,13 @@ CLASS zcl_abapgit_json_handler DEFINITION
     "! implementing class.
     "!
     "! @parameter iv_data | data to be serialized
-    "! @parameter iv_enum_mappings | ABAP / JSON value mappings that have to be done
+    "! @parameter iv_enum_mappings | ABAP/JSON value mappings
+    "! @parameter iv_skip_paths | path/value pairs to be skipped during serialization
     "! @parameter rv_result | serialized data
     METHODS serialize
       IMPORTING iv_data          TYPE data
-                iv_enum_mappings TYPE ty_enum_mappings OPTIONAL
-                iv_skip_paths    TYPE ty_skip_paths OPTIONAL
+                iv_enum_mappings TYPE ty_enum_mappings
+                iv_skip_paths    TYPE ty_skip_paths
       RETURNING VALUE(rv_result) TYPE xstring
       RAISING   cx_static_check.
 
@@ -131,7 +132,7 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
   METHOD set_original_language.
     DATA:
       lv_iso_language      TYPE i18_a_langiso2,
-      lv_original_language TYPE sylangu.
+      lv_original_language TYPE sy-langu.
 
 
     lv_original_language = co_ajson->get_string( '/header/originalLanguage' ).
@@ -173,7 +174,6 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
   METHOD set_custom_enum.
     DATA:
       lv_enum_abap    TYPE string,
-      lv_enum_json    TYPE string,
       ls_enum_mapping TYPE ty_enum_mapping,
       ls_mapping      TYPE ty_json_abap_mapping.
 
