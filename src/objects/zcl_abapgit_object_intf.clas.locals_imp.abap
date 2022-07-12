@@ -543,7 +543,7 @@ CLASS lcl_aff_serialize_metadata IMPLEMENTATION.
 
   METHOD get_paths_to_skip.
     DATA:
-      ls_path_to_skipp TYPE zcl_abapgit_json_handler=>ty_path_value_pair .
+      ls_path_to_skipp TYPE zcl_abapgit_json_handler=>ty_path_value_pair.
 
     ls_path_to_skipp-path  = '/category'.
     ls_path_to_skipp-value = 'standard'.

@@ -56,7 +56,7 @@ CLASS zcl_abapgit_json_handler DEFINITION
         CHANGING co_ajson TYPE REF TO zcl_abapgit_ajson
         RAISING  zcx_abapgit_ajson_error,
       set_custom_enum
-        IMPORTING it_enum_mappings TYPE zcl_abapgit_json_handler=>ty_enum_mappings
+        IMPORTING it_enum_mappings TYPE ty_enum_mappings
         CHANGING  co_ajson         TYPE REF TO zcl_abapgit_ajson
         RAISING   zcx_abapgit_ajson_error,
       set_abap_language_version
@@ -174,8 +174,8 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
     DATA:
       lv_enum_abap    TYPE string,
       lv_enum_json    TYPE string,
-      ls_enum_mapping TYPE zcl_abapgit_json_handler=>ty_enum_mapping,
-      ls_mapping      TYPE zcl_abapgit_json_handler=>ty_json_abap_mapping.
+      ls_enum_mapping TYPE ty_enum_mapping,
+      ls_mapping      TYPE ty_json_abap_mapping.
 
 
     LOOP AT it_enum_mappings INTO ls_enum_mapping.
