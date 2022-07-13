@@ -130,13 +130,6 @@
       {"object": "ZCL_ABAPGIT_FOLDER_LOGIC", "class": "ltcl_folder_logic", "method": "mixed3", "note": "??"},
       {"object": "ZCL_ABAPGIT_FOLDER_LOGIC", "class": "ltcl_folder_logic", "method": "full3", "note": "??"},
 
-      {"object": "ZCL_ABAPGIT_FOLDER_LOGIC", "class": "ltcl_folder_logic_namespaces", "method": "prefix1", "note": "https://github.com/abapGit/abapGit/issues/5684"},
-      {"object": "ZCL_ABAPGIT_FOLDER_LOGIC", "class": "ltcl_folder_logic_namespaces", "method": "prefix2", "note": "https://github.com/abapGit/abapGit/issues/5684"},
-      {"object": "ZCL_ABAPGIT_FOLDER_LOGIC", "class": "ltcl_folder_logic_namespaces", "method": "mixed1", "note": "https://github.com/abapGit/abapGit/issues/5684"},
-      {"object": "ZCL_ABAPGIT_FOLDER_LOGIC", "class": "ltcl_folder_logic_namespaces", "method": "mixed2", "note": "https://github.com/abapGit/abapGit/issues/5684"},
-      {"object": "ZCL_ABAPGIT_FOLDER_LOGIC", "class": "ltcl_folder_logic_namespaces", "method": "full1", "note": "https://github.com/abapGit/abapGit/issues/5684"},
-      {"object": "ZCL_ABAPGIT_FOLDER_LOGIC", "class": "ltcl_folder_logic_namespaces", "method": "full2", "note": "https://github.com/abapGit/abapGit/issues/5684"},
-
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_negative", "note": "todo in cl_abap_structdescr.get_component_type, raise classic exception"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_sorted_tab", "note": "CREATE DATA, unknown handle type"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_struc", "note": "??"},
