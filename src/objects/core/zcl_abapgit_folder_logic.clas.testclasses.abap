@@ -375,8 +375,6 @@ CLASS ltcl_folder_logic_namespaces IMPLEMENTATION.
 
   ENDMETHOD.
 
-
-
   METHOD prefix1.
     ltcl_folder_logic_helper=>test(
       iv_starting = c_src
@@ -431,4 +429,109 @@ CLASS ltcl_folder_logic_namespaces IMPLEMENTATION.
       iv_path     = '/src/#test#t1/' ).
   ENDMETHOD.
 
+ENDCLASS.
+
+CLASS ltcl_folder_logic_no_parent DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
+
+  PUBLIC SECTION.
+    INTERFACES: zif_abapgit_sap_package.
+
+  PRIVATE SECTION.
+    CONSTANTS: c_top TYPE devclass VALUE '$TOP',
+               c_src TYPE string VALUE '/src/'.
+
+    DATA mo_dot TYPE REF TO zcl_abapgit_dot_abapgit.
+
+    METHODS:
+      setup,
+      test IMPORTING iv_folder_logic TYPE string RAISING zcx_abapgit_exception,
+      prefix FOR TESTING RAISING zcx_abapgit_exception,
+      mixed FOR TESTING RAISING zcx_abapgit_exception,
+      full FOR TESTING RAISING zcx_abapgit_exception.
+
+ENDCLASS.
+
+CLASS ltcl_folder_logic_no_parent IMPLEMENTATION.
+
+  METHOD zif_abapgit_sap_package~list_subpackages.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~list_superpackages.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~read_parent.
+    rv_parentcl = ''.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~create_child.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~exists.
+    rv_bool = abap_true.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~are_changes_recorded_in_tr_req.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~get_transport_type.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~get_transport_layer.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~create.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~create_local.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD setup.
+
+    zcl_abapgit_injector=>set_sap_package( iv_package     = c_top
+                                           ii_sap_package = me ).
+
+    zcl_abapgit_injector=>set_sap_package( iv_package     = '$FOOBAR'
+                                           ii_sap_package = me ).
+
+  ENDMETHOD.
+
+  METHOD test.
+
+    DATA lv_path TYPE string.
+
+    mo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
+    mo_dot->set_starting_folder( c_src ).
+    mo_dot->set_folder_logic( iv_folder_logic ).
+
+    lv_path = zcl_abapgit_folder_logic=>get_instance( )->package_to_path(
+      iv_top     = c_top
+      io_dot     = mo_dot
+      iv_package = '$FOOBAR' ).
+
+    " If package is not in the package hierarchy i.e. a sub-package of $TOP, then return no path
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_path
+      exp = '' ).
+
+  ENDMETHOD.
+
+  METHOD prefix.
+    test( zif_abapgit_dot_abapgit=>c_folder_logic-prefix ).
+  ENDMETHOD.
+
+  METHOD mixed.
+    test( zif_abapgit_dot_abapgit=>c_folder_logic-mixed ).
+  ENDMETHOD.
+
+  METHOD full.
+    test( zif_abapgit_dot_abapgit=>c_folder_logic-full ).
+  ENDMETHOD.
 ENDCLASS.

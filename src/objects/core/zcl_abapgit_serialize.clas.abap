@@ -108,6 +108,13 @@ CLASS zcl_abapgit_serialize DEFINITION
     METHODS filter_unsupported_objects
       CHANGING
         !ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt .
+    METHODS filter_ignored_objects
+      IMPORTING
+        !iv_package TYPE devclass
+      CHANGING
+        !ct_tadir   TYPE zif_abapgit_definitions=>ty_tadir_tt
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
 ENDCLASS.
 
@@ -359,6 +366,85 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD filter_ignored_objects.
+
+    DATA:
+      ls_ignored_count TYPE ty_unsupported_count,
+      lt_ignored_count TYPE ty_unsupported_count_tt,
+      lo_folder_logic  TYPE REF TO zcl_abapgit_folder_logic,
+      ls_item          TYPE zif_abapgit_definitions=>ty_item,
+      lv_path          TYPE string,
+      lv_filename      TYPE string.
+
+    FIELD-SYMBOLS:
+      <ls_tadir>         LIKE LINE OF ct_tadir,
+      <ls_ignored_count> TYPE ty_unsupported_count.
+
+    " Ignore logic requires .abapGit.xml
+    IF mo_dot_abapgit IS INITIAL OR iv_package IS INITIAL OR mi_log IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
+
+    LOOP AT ct_tadir ASSIGNING <ls_tadir>.
+      CLEAR: ls_ignored_count.
+
+      ls_item-obj_type = <ls_tadir>-object.
+      ls_item-obj_name = <ls_tadir>-obj_name.
+
+      IF <ls_tadir>-devclass IS NOT INITIAL.
+        lv_path = lo_folder_logic->package_to_path(
+          iv_top     = iv_package
+          io_dot     = mo_dot_abapgit
+          iv_package = <ls_tadir>-devclass ).
+      ELSE.
+        lv_path = mo_dot_abapgit->get_starting_folder( ).
+      ENDIF.
+
+      lv_filename = zcl_abapgit_filename_logic=>object_to_file(
+        is_item  = ls_item
+        iv_ext   = '*' ).
+
+      IF mo_dot_abapgit->is_ignored(
+        iv_path     = lv_path
+        iv_filename = lv_filename ) = abap_false.
+        CONTINUE.
+      ENDIF.
+
+      READ TABLE lt_ignored_count ASSIGNING <ls_ignored_count> WITH TABLE KEY obj_type = <ls_tadir>-object.
+      IF sy-subrc <> 0.
+        ls_ignored_count-obj_type = <ls_tadir>-object.
+        ls_ignored_count-count    = 1.
+        ls_ignored_count-obj_name = <ls_tadir>-obj_name.
+        INSERT ls_ignored_count INTO TABLE lt_ignored_count ASSIGNING <ls_ignored_count>.
+      ELSE.
+        CLEAR: <ls_ignored_count>-obj_name.
+        <ls_ignored_count>-count = <ls_ignored_count>-count + 1.
+      ENDIF.
+      " init object so we can remove these entries afterwards
+      CLEAR <ls_tadir>-object.
+    ENDLOOP.
+    IF lt_ignored_count IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    " remove ignored objects
+    DELETE ct_tadir WHERE object IS INITIAL.
+
+    LOOP AT lt_ignored_count ASSIGNING <ls_ignored_count>.
+      IF <ls_ignored_count>-count = 1.
+        mi_log->add_warning( iv_msg  = |Object { <ls_ignored_count>-obj_type } {
+                                       <ls_ignored_count>-obj_name } ignored| ).
+      ELSE.
+        mi_log->add_warning( iv_msg  = |Object type { <ls_ignored_count>-obj_type } with {
+                                       <ls_ignored_count>-count } objects ignored| ).
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD filter_unsupported_objects.
 
     DATA: ls_unsupported_count TYPE ty_unsupported_count,
@@ -542,6 +628,13 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     lt_tadir = it_tadir.
     filter_unsupported_objects( CHANGING ct_tadir = lt_tadir ).
+
+    filter_ignored_objects(
+      EXPORTING
+        iv_package = iv_package
+      CHANGING
+        ct_tadir   = lt_tadir ).
+
     li_progress = zcl_abapgit_progress=>get_instance( lines( lt_tadir ) ).
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.

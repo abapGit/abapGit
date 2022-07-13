@@ -781,28 +781,46 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
   METHOD zif_abapgit_popups~popup_folder_logic.
 
-    DATA: lt_fields       TYPE TABLE OF sval.
-    DATA: lv_folder_logic TYPE spo_value.
+    DATA:
+      lt_selection TYPE TABLE OF spopli,
+      lv_answer    TYPE c LENGTH 1.
 
-    CLEAR: rv_folder_logic.
+    FIELD-SYMBOLS: <ls_sel> LIKE LINE OF lt_selection.
 
-    add_field( EXPORTING iv_tabname   = 'TDEVC'
-                         iv_fieldname = 'INTSYS'
-                         iv_fieldtext = 'Folder logic'
-                         iv_value     = 'PREFIX'
-               CHANGING  ct_fields    = lt_fields ).
+    APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
+    <ls_sel>-selflag   = abap_true.
+    <ls_sel>-varoption = zif_abapgit_dot_abapgit=>c_folder_logic-prefix.
 
-    TRY.
+    APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
+    <ls_sel>-varoption = zif_abapgit_dot_abapgit=>c_folder_logic-full.
 
-        _popup_3_get_values( EXPORTING iv_popup_title    = 'Export package'
-                                       iv_no_value_check = abap_true
-                             IMPORTING ev_value_1        = lv_folder_logic
-                             CHANGING  ct_fields         = lt_fields ).
+    APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
+    <ls_sel>-varoption = zif_abapgit_dot_abapgit=>c_folder_logic-mixed.
 
-        rv_folder_logic = to_upper( lv_folder_logic ).
+    CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
+      EXPORTING
+        titel     = 'Folder logic'
+        textline1 = 'Select folder logic'
+        start_col = ms_position-start_column
+        start_row = ms_position-start_row
+      IMPORTING
+        answer    = lv_answer
+      TABLES
+        t_spopli  = lt_selection
+      EXCEPTIONS
+        OTHERS    = 1.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Error from POPUP_TO_DECIDE_LIST' ).
+    ENDIF.
 
-      CATCH zcx_abapgit_cancel.
-    ENDTRY.
+    IF lv_answer = c_answer_cancel.
+      zcx_abapgit_cancel=>raise( |Canceled| ).
+    ENDIF.
+
+    READ TABLE lt_selection ASSIGNING <ls_sel> WITH KEY selflag = abap_true.
+    ASSERT sy-subrc = 0.
+
+    rv_folder_logic = <ls_sel>-varoption.
 
   ENDMETHOD.
 
