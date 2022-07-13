@@ -156,7 +156,8 @@
         "^if_srvd_types$", "^xubname$",
         "^if_wb_adt_plugin_resource_co$",
         "^if_wb_object_data_selection_co$",
-        "^if_wb_object_operator$"
+        "^if_wb_object_operator$",
+        "^cl_abap_syst"
       ]
     },
     "forbidden_identifier": true,
