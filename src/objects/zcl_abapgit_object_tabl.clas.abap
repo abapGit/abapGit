@@ -312,7 +312,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
     ENDLOOP.
 
-    lv_uname = cl_abap_syst=>get_user_name( ).
+    lv_uname = sy-uname.
 
     CALL FUNCTION 'TR_TADIR_INTERFACE'
       EXPORTING
