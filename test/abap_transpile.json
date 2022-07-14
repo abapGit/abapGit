@@ -29,7 +29,7 @@
     "zcl_abapgit_stage",
     "zcl_abapgit_sap_package",
     "zcl_abapgit_string_map",
-    "zcl_abapgit_serialize Void type: RZLLI_APCL",
+    "zcl_abapgit_serialize TODO cl_i18n_languages",
     "zcl_abapgit_syntax",
     "zcl_abapgit_t",
     "zcl_abapgit_u",
@@ -103,6 +103,9 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "escape",          "note": "ASSERT failed, ??"},
 
       {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "json_diff_arrays", "note": "infinite loop"},
+
+      {"object": "ZCL_ABAPGIT_SERIALIZE", "class": "ltcl_determine_max_threads", "method": "determine_max_threads", "note": "TypeError: abap.FunctionModules.FUNCTION_EXISTS is not a function"},
+      {"object": "ZCL_ABAPGIT_SERIALIZE", "class": "ltcl_determine_max_threads", "method": "force", "note": "TypeError: Cannot read properties of undefined (reading 'sap1_to_sap2')"},
 
       {"object": "ZCL_ABAPGIT_ITEM_STATE", "class": "ltcl_state_test", "method": "test_sum_with_ritem", "note": "Void type: RZLLI_APCL"},
 
