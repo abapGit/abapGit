@@ -164,7 +164,7 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
 
     io_page->get_page(
       IMPORTING
-        p_content = lt_content
+        p_content    = lt_content
         p_xml_source = lv_xml_source
       EXCEPTIONS
         invalid_call = 1
