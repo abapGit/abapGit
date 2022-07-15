@@ -157,11 +157,14 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
   METHOD get_page_content.
 
     DATA: lt_content TYPE o2pageline_table,
-          lv_string  TYPE string.
+          lv_string  TYPE string,
+          lv_xstring TYPE xstring,
+          lt_solix   TYPE solix_tab.
 
     io_page->get_page(
       IMPORTING
         p_content = lt_content
+        p_xml_source = DATA(xml_source)
       EXCEPTIONS
         invalid_call = 1
         page_deleted = 2
@@ -171,9 +174,19 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |WAPA - error from get_page_content| ).
     ENDIF.
 
-    CONCATENATE LINES OF lt_content INTO lv_string SEPARATED BY zif_abapgit_definitions=>c_newline RESPECTING BLANKS.
+    TRY.
+        lt_solix = cl_bcs_convert=>soli_to_solix( lt_content ).
+        lv_xstring = cl_bcs_convert=>solix_to_xstring( lt_solix ).
+      CATCH cx_bcs.
+        CLEAR lv_xstring.
+    ENDTRY.
 
-    rv_content = zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ).
+    IF lv_xstring IS NOT INITIAL AND zcl_abapgit_utils=>is_binary( lv_xstring ) = abap_true.
+      rv_content = lv_xstring.
+    ELSE.
+      CONCATENATE LINES OF lt_content INTO lv_string SEPARATED BY zif_abapgit_definitions=>c_newline RESPECTING BLANKS.
+      rv_content = zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -258,12 +271,26 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
 
   METHOD to_page_content.
 
-    DATA: lv_string TYPE string.
+    DATA: lv_string TYPE string,
+          lt_solix  TYPE solix_tab.
 
+    IF zcl_abapgit_utils=>is_binary( iv_content ) = abap_true.
 
-    lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_content ).
+      lt_solix = cl_bcs_convert=>xstring_to_solix( iv_content ).
 
-    SPLIT lv_string AT zif_abapgit_definitions=>c_newline INTO TABLE rt_content.
+      CALL FUNCTION 'SO_SOLIXTAB_TO_SOLITAB'
+        EXPORTING
+          ip_solixtab = lt_solix
+        IMPORTING
+          ep_solitab  = rt_content.
+
+    ELSE.
+
+      lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_content ).
+
+      SPLIT lv_string AT zif_abapgit_definitions=>c_newline INTO TABLE rt_content.
+
+    ENDIF.
 
   ENDMETHOD.
 
