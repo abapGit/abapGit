@@ -156,29 +156,36 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
 
   METHOD get_page_content.
 
-    DATA: lt_content TYPE o2pageline_table,
-          lv_string  TYPE string,
-          lv_xstring TYPE xstring,
-          lt_solix   TYPE solix_tab.
+    DATA: lt_content    TYPE o2pageline_table,
+          lv_xml_source TYPE xstring,
+          lv_string     TYPE string,
+          lv_xstring    TYPE xstring,
+          lt_solix      TYPE solix_tab.
 
     io_page->get_page(
       IMPORTING
         p_content = lt_content
+        p_xml_source = lv_xml_source
       EXCEPTIONS
         invalid_call = 1
         page_deleted = 2
         OTHERS       = 3 ).
-
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |WAPA - error from get_page_content| ).
     ENDIF.
 
-    TRY.
-        lt_solix = cl_bcs_convert=>soli_to_solix( lt_content ).
-        lv_xstring = cl_bcs_convert=>solix_to_xstring( lt_solix ).
-      CATCH cx_bcs.
-        CLEAR lv_xstring.
-    ENDTRY.
+    IF lv_xml_source IS NOT INITIAL.
+      lv_xstring = lv_xml_source.
+    ELSE.
+
+      TRY.
+          lt_solix = cl_bcs_convert=>soli_to_solix( lt_content ).
+          lv_xstring = cl_bcs_convert=>solix_to_xstring( lt_solix ).
+        CATCH cx_bcs.
+          CLEAR lv_xstring.
+      ENDTRY.
+
+    ENDIF.
 
     IF lv_xstring IS NOT INITIAL AND zcl_abapgit_utils=>is_binary( lv_xstring ) = abap_true.
       rv_content = lv_xstring.
