@@ -1,7 +1,7 @@
 INTERFACE zif_abapgit_ajson
   PUBLIC.
 
-  CONSTANTS version TYPE string VALUE 'v1.1.4'. "#EC NOTEXT
+  CONSTANTS version TYPE string VALUE 'v1.1.6'. "#EC NOTEXT
   CONSTANTS origin TYPE string VALUE 'https://github.com/sbcgua/ajson'. "#EC NOTEXT
   CONSTANTS license TYPE string VALUE 'MIT'. "#EC NOTEXT
 
@@ -55,6 +55,10 @@ INTERFACE zif_abapgit_ajson
       VALUE(ri_json) TYPE REF TO zif_abapgit_ajson.
 
   " METHODS ex.reader
+
+  METHODS is_empty
+    RETURNING
+      VALUE(rv_yes) TYPE abap_bool.
 
   METHODS exists
     IMPORTING
