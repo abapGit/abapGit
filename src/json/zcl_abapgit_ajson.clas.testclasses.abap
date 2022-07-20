@@ -2953,6 +2953,7 @@ CLASS ltcl_integrated DEFINITION
     METHODS item_order_integrated FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS chaining FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS push_json FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS is_empty FOR TESTING RAISING zcx_abapgit_ajson_error.
 
 ENDCLASS.
 
@@ -3255,6 +3256,22 @@ CLASS ltcl_integrated IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lv_act
       exp = lv_exp ).
+
+  ENDMETHOD.
+
+  METHOD is_empty.
+
+    DATA li_cut TYPE REF TO zif_abapgit_ajson.
+
+    li_cut = zcl_abapgit_ajson=>create_empty( ).
+
+    cl_abap_unit_assert=>assert_true( li_cut->is_empty( ) ).
+
+    li_cut->set(
+      iv_path = '/x'
+      iv_val  = '123' ).
+
+    cl_abap_unit_assert=>assert_false( li_cut->is_empty( ) ).
 
   ENDMETHOD.
 
