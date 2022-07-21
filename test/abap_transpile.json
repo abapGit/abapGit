@@ -199,7 +199,7 @@
 
       {"object": "ZCL_ABAPGIT_GIT_URL", "class": "ltcl_repo_online", "method": "test_repo_commit_show_urls"},
 
-      {"object": "ZCL_ABAPGIT_LXE_TEXTS", "class": "ltcl_lxe_texts", "method": "lang_string_to_table", "note": "CL_I18N_LANGUAGES"},
+      {"object": "ZCL_ABAPGIT_LXE_TEXTS", "class": "ltcl_lxe_texts", "method": "lang_string_to_table", "note": "https://github.com/open-abap/open-abap/issues/382"},
 
       {"object": "ZCL_ABAPGIT_INJECTOR", "class": "ltcl_no_dependency_injection", "method": "no_injection"},
       {"object": "ZCL_ABAPGIT_INJECTOR", "class": "ltcl_simple_dependency_inject", "method": "simple_injection"},
