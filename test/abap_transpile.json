@@ -108,8 +108,6 @@
       {"object": "ZCL_ABAPGIT_SERIALIZE", "class": "ltcl_determine_max_threads", "method": "determine_max_threads", "note": "TypeError: abap.FunctionModules.FUNCTION_EXISTS is not a function"},
       {"object": "ZCL_ABAPGIT_SERIALIZE", "class": "ltcl_determine_max_threads", "method": "force", "note": "TypeError: Cannot read properties of undefined (reading 'sap1_to_sap2')"},
 
-      {"object": "ZCL_ABAPGIT_ITEM_STATE", "class": "ltcl_state_test", "method": "test_sum_with_ritem", "note": "Void type: RZLLI_APCL"},
-
       {"object": "ZCL_ABAPGIT_TRANSPORT_OBJECTS", "class": "ltcl_transport_objects", "method": "should_add_all_local_files", "note": "??"},
       {"object": "ZCL_ABAPGIT_TRANSPORT_OBJECTS", "class": "ltcl_transport_objects", "method": "should_delete_all_related", "note": "??"},
 
