@@ -540,7 +540,7 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
       ls_package_data-dlvunit = 'HOME'.
     ENDIF.
 
-    ls_package_data-as4user = cl_abap_syst=>get_user_name( ).
+    ls_package_data-as4user = sy-uname.
 
     IF li_package IS BOUND.
       " Package already exists, change it

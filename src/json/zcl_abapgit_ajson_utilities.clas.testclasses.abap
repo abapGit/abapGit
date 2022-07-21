@@ -131,6 +131,7 @@ CLASS ltcl_json_utils DEFINITION
     METHODS json_diff_arrays FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS json_merge FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS json_sort FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS is_equal FOR TESTING RAISING zcx_abapgit_ajson_error.
 
 ENDCLASS.
 
@@ -507,6 +508,35 @@ CLASS ltcl_json_utils IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lv_sorted
       exp = lv_sorted_exp ).
+
+  ENDMETHOD.
+
+  METHOD is_equal.
+
+    cl_abap_unit_assert=>assert_true(
+      zcl_abapgit_ajson_utilities=>new( )->is_equal(
+        ii_json_a = zcl_abapgit_ajson=>parse( '{"a":1,"b":2}' )
+        ii_json_b = zcl_abapgit_ajson=>parse( '{"a":1,"b":2}' ) ) ).
+
+    cl_abap_unit_assert=>assert_true(
+      zcl_abapgit_ajson_utilities=>new( )->is_equal(
+        iv_json_a = '{"a":1,"b":2}'
+        iv_json_b = '{"a":1,"b":2}' ) ).
+
+    cl_abap_unit_assert=>assert_false(
+      zcl_abapgit_ajson_utilities=>new( )->is_equal(
+        iv_json_a = '{"a":1,"b":2}'
+        iv_json_b = '{"a":1,"b":3}' ) ).
+
+    cl_abap_unit_assert=>assert_false(
+      zcl_abapgit_ajson_utilities=>new( )->is_equal(
+        iv_json_a = '{"a":1,"b":2}'
+        iv_json_b = '{"a":1,"b":2,"c":3}' ) ).
+
+    cl_abap_unit_assert=>assert_false(
+      zcl_abapgit_ajson_utilities=>new( )->is_equal(
+        iv_json_a = '{"a":1,"b":2,"c":3}'
+        iv_json_b = '{"a":1,"b":2}' ) ).
 
   ENDMETHOD.
 

@@ -4,6 +4,9 @@ CLASS zcl_abapgit_ajson_utilities DEFINITION
 
   PUBLIC SECTION.
 
+    CLASS-METHODS new
+      RETURNING
+        VALUE(ro_instance) TYPE REF TO zcl_abapgit_ajson_utilities.
     METHODS diff
       IMPORTING
         !iv_json_a            TYPE string OPTIONAL
@@ -36,6 +39,17 @@ CLASS zcl_abapgit_ajson_utilities DEFINITION
         VALUE(rv_sorted) TYPE string
       RAISING
         zcx_abapgit_ajson_error .
+    METHODS is_equal
+      IMPORTING
+        !iv_json_a            TYPE string OPTIONAL
+        !iv_json_b            TYPE string OPTIONAL
+        !ii_json_a            TYPE REF TO zif_abapgit_ajson OPTIONAL
+        !ii_json_b            TYPE REF TO zif_abapgit_ajson OPTIONAL
+      RETURNING
+        VALUE(rv_yes) TYPE abap_bool
+      RAISING
+        zcx_abapgit_ajson_error .
+
   PROTECTED SECTION.
 
   PRIVATE SECTION.
@@ -277,6 +291,31 @@ CLASS zcl_abapgit_ajson_utilities IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD is_equal.
+
+    DATA li_ins TYPE REF TO zif_abapgit_ajson.
+    DATA li_del TYPE REF TO zif_abapgit_ajson.
+    DATA li_mod TYPE REF TO zif_abapgit_ajson.
+
+    diff(
+      EXPORTING
+        iv_json_a = iv_json_a
+        iv_json_b = iv_json_b
+        io_json_a = ii_json_a
+        io_json_b = ii_json_b
+      IMPORTING
+        eo_insert = li_ins
+        eo_delete = li_del
+        eo_change = li_mod ).
+
+    rv_yes = boolc(
+      li_ins->is_empty( ) = abap_true AND
+      li_del->is_empty( ) = abap_true AND
+      li_mod->is_empty( ) = abap_true ).
+
+  ENDMETHOD.
+
+
   METHOD merge.
 
     mo_json_a = normalize_input(
@@ -299,6 +338,11 @@ CLASS zcl_abapgit_ajson_utilities IMPLEMENTATION.
       io_json              = ro_json
       iv_keep_empty_arrays = iv_keep_empty_arrays ).
 
+  ENDMETHOD.
+
+
+  METHOD new.
+    CREATE OBJECT ro_instance.
   ENDMETHOD.
 
 
