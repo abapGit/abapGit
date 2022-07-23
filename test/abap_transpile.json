@@ -83,7 +83,7 @@
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_longtext", "method": "text_from_previous_exception"},
 
       {"object": "ZCL_ABAPGIT_HTML",       "class": "ltcl_html", "method": "style1",    "note": "indentation is wrong in result, ASSERT failed, ??"},
-      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty1",   "note": "ASSERT failed, ??"},
+      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty1",   "note": "ASSERT failed, ??, newline missing, offset off by one?"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty2"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty3"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "malformatted", "note": "infinite loop"},
@@ -114,7 +114,7 @@
       {"object": "ZCL_ABAPGIT_FILENAME_LOGIC", "class": "ltcl_run_checks", "method": "file_to_object", "note": "some bug in url unescape"},
       {"object": "ZCL_ABAPGIT_FILENAME_LOGIC", "class": "ltcl_run_checks", "method": "file_to_object_pack", "note": "??"},
 
-      {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "positive", "note": "Void type: TRNSPACE"},
+      {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "positive", "note": " https://github.com/abapGit/abapGit/pull/5693 "},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "neg_diff_path_for_same_obj", "note": "Void type: TRNSPACE"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "neg_incorrect_path_vs_pack", "note": "??"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "neg_similar_filenames", "note": "??"},
