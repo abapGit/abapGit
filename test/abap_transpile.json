@@ -187,7 +187,6 @@
       {"object": "ZCL_ABAPGIT_GUI_ASSET_MANAGER", "class": "ltcl_abapgit_gui_asset_manager", "method": "get_mime_asset", "note": "failed to load GUI asset: css/common.css"},
       {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_overwrite", "note": "MODIFY FROM with table unique key not working"},
       {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_multiple_files", "method": "test_overwrite"},
-      {"object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR", "class": "ltcl_html_processor_test", "method": "process_typical", "note": "something gets CHAR1 type?"},
 
       {"object": "ZCL_ABAPGIT_XML", "class": "ltcl_xml", "method": "space_leading_trailing", "note": "todo in if_ixml_document$find_from_path, https://github.com/open-abap/open-abap/issues/226 "},
       {"object": "ZCL_ABAPGIT_XML", "class": "ltcl_xml", "method": "bad_xml_raises_exc", "note": "handling of xml parser errors, cl_ixml, test method parse_negative"},
