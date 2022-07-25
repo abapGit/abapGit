@@ -445,8 +445,8 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
     ls_data_aff-header-original_language = ls_data_abapgit-vseointerf-langu.
 
     " get category and proxy
-     ls_data_aff-category = ls_data_abapgit-vseointerf-category.
-     ls_data_aff-proxy = ls_data_abapgit-vseointerf-clsproxy.
+    ls_data_aff-category = ls_data_abapgit-vseointerf-category.
+    ls_data_aff-proxy = ls_data_abapgit-vseointerf-clsproxy.
 
     " get descriptions
     ls_data_aff-descriptions = lcl_aff_helper=>get_descriptions_compo_subco(
@@ -478,12 +478,12 @@ CLASS lcl_aff_serialize_metadata IMPLEMENTATION.
 
   METHOD serialize.
     DATA:
-      ls_data_aff        TYPE zif_abapgit_aff_intf_v1=>ty_main,
-      lx_exception       TYPE REF TO cx_root,
-      lo_aff_handler     TYPE REF TO zcl_abapgit_json_handler,
-      lo_aff_mapper      TYPE REF TO zif_abapgit_aff_type_mapping,
-      lt_enum_mappings   TYPE zcl_abapgit_json_handler=>ty_enum_mappings,
-      lt_paths_to_skip   TYPE zcl_abapgit_json_handler=>ty_skip_paths.
+      ls_data_aff      TYPE zif_abapgit_aff_intf_v1=>ty_main,
+      lx_exception     TYPE REF TO cx_root,
+      lo_aff_handler   TYPE REF TO zcl_abapgit_json_handler,
+      lo_aff_mapper    TYPE REF TO zif_abapgit_aff_type_mapping,
+      lt_enum_mappings TYPE zcl_abapgit_json_handler=>ty_enum_mappings,
+      lt_paths_to_skip TYPE zcl_abapgit_json_handler=>ty_skip_paths.
 
 
     CREATE OBJECT lo_aff_mapper TYPE lcl_aff_type_mapping.

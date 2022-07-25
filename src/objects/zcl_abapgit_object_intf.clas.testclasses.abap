@@ -2,7 +2,7 @@
 CLASS ltcl_serialize DEFINITION FINAL FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
   PRIVATE SECTION.
     METHODS:
-      serialize_key_user FOR TESTING RAISING cx_static_check,
+      serialize_non_default FOR TESTING RAISING cx_static_check,
       serialize_default FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
@@ -44,7 +44,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD serialize_key_user.
+  METHOD serialize_non_default.
     DATA:
       lv_expected        TYPE string,
       lv_actual          TYPE string,
