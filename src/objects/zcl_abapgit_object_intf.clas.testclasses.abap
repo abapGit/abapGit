@@ -16,26 +16,6 @@ CLASS lth_oo_object_fnc DEFINITION FINAL FOR TESTING.
       ms_activation_item    TYPE zif_abapgit_definitions=>ty_item.
 ENDCLASS.
 
-CLASS ltcl_unit_test DEFINITION FINAL FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
-
-  PRIVATE SECTION.
-    DATA:
-      mo_cut        TYPE REF TO zif_abapgit_object,
-      mo_log        TYPE REF TO zcl_abapgit_log,
-      mo_object_fnc TYPE REF TO lth_oo_object_fnc,
-      ms_item       TYPE zif_abapgit_definitions=>ty_item.
-
-    METHODS:
-      setup,
-
-      get_xml
-        RETURNING VALUE(rv_xml) TYPE string,
-      get_source
-        RETURNING VALUE(rt_source) TYPE rswsourcet,
-
-      deserializes FOR TESTING RAISING cx_static_check.
-ENDCLASS.
-
 CLASS lth_oo_object_fnc IMPLEMENTATION.
 
   METHOD zif_abapgit_oo_object_fnc~add_to_activation_list.
@@ -113,6 +93,26 @@ CLASS lth_oo_object_fnc IMPLEMENTATION.
 ENDCLASS.
 
 
+CLASS ltcl_unit_test DEFINITION FINAL FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+    DATA:
+      mo_cut        TYPE REF TO zif_abapgit_object,
+      mo_log        TYPE REF TO zcl_abapgit_log,
+      mo_object_fnc TYPE REF TO lth_oo_object_fnc,
+      ms_item       TYPE zif_abapgit_definitions=>ty_item.
+
+    METHODS:
+      setup,
+
+      get_xml
+        RETURNING VALUE(rv_xml) TYPE string,
+      get_source
+        RETURNING VALUE(rt_source) TYPE rswsourcet,
+
+      deserializes FOR TESTING RAISING cx_static_check.
+ENDCLASS.
+
 CLASS ltcl_unit_test IMPLEMENTATION.
 
   METHOD setup.
@@ -141,6 +141,9 @@ CLASS ltcl_unit_test IMPLEMENTATION.
 
   METHOD deserializes.
     DATA lo_xmlin TYPE REF TO zcl_abapgit_xml_input.
+    DATA ls_expected_vseointerf TYPE vseointerf.
+    DATA ls_expected_clskey TYPE seoclskey.
+    DATA lt_expected_descriptions TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt.
 
     CREATE OBJECT lo_xmlin TYPE zcl_abapgit_xml_input
       EXPORTING
@@ -159,7 +162,6 @@ CLASS ltcl_unit_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals( exp = 'MY_PACKAGE'
                                         act = mo_object_fnc->mv_create_package ).
 
-    DATA ls_expected_vseointerf TYPE vseointerf.
     ls_expected_vseointerf-clsname = 'zif_abapgit_test_intf'.
     ls_expected_vseointerf-langu = 'e'.
     ls_expected_vseointerf-descript = 'test interface for abap git'.
@@ -169,14 +171,12 @@ CLASS ltcl_unit_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals( exp = ls_expected_vseointerf
                                         act = mo_object_fnc->ms_create_vseointerf ).
 
-    DATA ls_expected_clskey TYPE seoclskey.
     ls_expected_clskey-clsname = 'ZIF_ABAPGIT_TEST_INTF'.
     cl_abap_unit_assert=>assert_equals( exp = ls_expected_clskey
                                         act = mo_object_fnc->ms_deserialize_key ).
     cl_abap_unit_assert=>assert_equals( exp = ls_expected_clskey
                                         act = mo_object_fnc->ms_deserialize_key ).
 
-    DATA lt_expected_descriptions TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt.
     cl_abap_unit_assert=>assert_equals( exp = ls_expected_clskey
                                         act = mo_object_fnc->ms_descriptions_key ).
     cl_abap_unit_assert=>assert_equals( exp = lt_expected_descriptions
