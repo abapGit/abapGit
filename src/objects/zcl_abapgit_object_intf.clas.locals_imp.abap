@@ -466,7 +466,7 @@ CLASS lcl_aff_serialize_metadata DEFINITION.
   PUBLIC SECTION.
 
     CLASS-METHODS serialize
-      IMPORTING is_intf          TYPE data
+      IMPORTING is_intf          TYPE zcl_abapgit_object_intf=>ty_intf
       RETURNING VALUE(rv_result) TYPE xstring
       RAISING   zcx_abapgit_exception.
   PRIVATE SECTION.
@@ -481,19 +481,16 @@ CLASS lcl_aff_serialize_metadata IMPLEMENTATION.
 
   METHOD serialize.
     DATA:
-      ls_data_abapgit    TYPE zcl_abapgit_object_intf=>ty_intf,
       ls_data_aff        TYPE zif_abapgit_aff_intf_v1=>ty_main,
       lx_exception       TYPE REF TO cx_root,
-      lx_exception_ajson TYPE REF TO zcx_abapgit_ajson_error,
       lo_aff_handler     TYPE REF TO zcl_abapgit_json_handler,
       lo_aff_mapper      TYPE REF TO zif_abapgit_aff_type_mapping,
       lt_enum_mappings   TYPE zcl_abapgit_json_handler=>ty_enum_mappings,
-      lt_paths_to_skip TYPE zcl_abapgit_json_handler=>ty_skip_paths.
+      lt_paths_to_skip   TYPE zcl_abapgit_json_handler=>ty_skip_paths.
 
-    ls_data_abapgit = is_intf.
 
     CREATE OBJECT lo_aff_mapper TYPE lcl_aff_type_mapping.
-    lo_aff_mapper->to_aff( EXPORTING iv_data = ls_data_abapgit
+    lo_aff_mapper->to_aff( EXPORTING iv_data = is_intf
                            IMPORTING es_data = ls_data_aff ).
 
     lt_enum_mappings = get_mappings( ).
