@@ -423,14 +423,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
     ENDLOOP.
 
     LOOP AT lt_namespace INTO lv_namespace.
-      CALL FUNCTION 'TR_READ_NAMESPACE'
-        EXPORTING
-          iv_namespace           = lv_namespace
-        IMPORTING
-          es_trnspace            = ls_trnspace
-        EXCEPTIONS
-          namespace_not_existing = 1
-          OTHERS                 = 2.
+      SELECT SINGLE editflag FROM trnspace INTO ls_trnspace-editflag WHERE namespace = lv_namespace.
       IF sy-subrc <> 0.
         ii_log->add( iv_msg  = |Namespace { lv_namespace } does not exist. Create it in transaction SE03|
                      iv_type = 'W' ).
