@@ -52,7 +52,6 @@ CLASS ltcl_serialize IMPLEMENTATION.
       lv_is_equal        TYPE abap_bool,
       ls_intf            TYPE zcl_abapgit_object_intf=>ty_intf.
 
-    " code does select DB for category and clsproxy
     ls_intf-vseointerf-unicode = zif_abapgit_aff_types_v1=>co_abap_language_version_src-key_user.
     ls_intf-vseointerf-descript = `abc`.
     ls_intf-vseointerf-langu = `F`.
@@ -79,7 +78,6 @@ CLASS ltcl_serialize IMPLEMENTATION.
       iv_json_a = lv_actual
       iv_json_b = lv_expected ).
     cl_abap_unit_assert=>assert_true( lv_is_equal ).
-
   ENDMETHOD.
 
 ENDCLASS.
