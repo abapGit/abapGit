@@ -445,11 +445,8 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
     ls_data_aff-header-original_language = ls_data_abapgit-vseointerf-langu.
 
     " get category and proxy
-    SELECT SINGLE category clsproxy AS proxy
-           FROM vseointerf
-           INTO (ls_data_aff-category, ls_data_aff-proxy)
-           WHERE clsname = ls_data_abapgit-vseointerf-clsname AND version = '1' AND
-                 langu = ls_data_aff-header-original_language.
+     ls_data_aff-category = ls_data_abapgit-vseointerf-category.
+     ls_data_aff-proxy = ls_data_abapgit-vseointerf-clsproxy.
 
     " get descriptions
     ls_data_aff-descriptions = lcl_aff_helper=>get_descriptions_compo_subco(
