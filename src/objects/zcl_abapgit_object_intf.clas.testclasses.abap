@@ -16,6 +16,26 @@ CLASS lth_oo_object_fnc DEFINITION FINAL FOR TESTING.
       ms_activation_item    TYPE zif_abapgit_definitions=>ty_item.
 ENDCLASS.
 
+CLASS ltcl_unit_test DEFINITION FINAL FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+    DATA:
+      mo_cut        TYPE REF TO zif_abapgit_object,
+      mo_log        TYPE REF TO zcl_abapgit_log,
+      mo_object_fnc TYPE REF TO lth_oo_object_fnc,
+      ms_item       TYPE zif_abapgit_definitions=>ty_item.
+
+    METHODS:
+      setup,
+
+      get_xml
+        RETURNING VALUE(rv_xml) TYPE string,
+      get_source
+        RETURNING VALUE(rt_source) TYPE rswsourcet,
+
+      deserializes FOR TESTING RAISING cx_static_check.
+ENDCLASS.
+
 CLASS lth_oo_object_fnc IMPLEMENTATION.
 
   METHOD zif_abapgit_oo_object_fnc~add_to_activation_list.
@@ -93,27 +113,6 @@ CLASS lth_oo_object_fnc IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS ltcl_unit_test DEFINITION FINAL FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
-
-  PRIVATE SECTION.
-    DATA:
-      mo_cut        TYPE REF TO zif_abapgit_object,
-      mo_log        TYPE REF TO zcl_abapgit_log,
-      mo_object_fnc TYPE REF TO lth_oo_object_fnc,
-      ms_item       TYPE zif_abapgit_definitions=>ty_item.
-
-    METHODS:
-      setup,
-
-      get_xml
-        RETURNING VALUE(rv_xml) TYPE string,
-      get_source
-        RETURNING VALUE(rt_source) TYPE rswsourcet,
-
-      deserializes FOR TESTING RAISING cx_static_check.
-ENDCLASS.
-
-
 CLASS ltcl_unit_test IMPLEMENTATION.
 
   METHOD setup.
@@ -133,10 +132,10 @@ CLASS ltcl_unit_test IMPLEMENTATION.
 
     CREATE OBJECT mo_log.
 
-    CREATE OBJECT me->mo_object_fnc.
-    lo_cut->mi_object_oriented_object_fct  = me->mo_object_fnc.
+    CREATE OBJECT mo_object_fnc.
+    lo_cut->mi_object_oriented_object_fct  = mo_object_fnc.
 
-    me->mo_cut = lo_cut.
+    mo_cut = lo_cut.
 
   ENDMETHOD.
 
@@ -157,7 +156,8 @@ CLASS ltcl_unit_test IMPLEMENTATION.
       iv_transport = 'XXX12345678' ).
 
 
-    cl_abap_unit_assert=>assert_equals( exp = 'MY_PACKAGE' act = me->mo_object_fnc->mv_create_package ).
+    cl_abap_unit_assert=>assert_equals( exp = 'MY_PACKAGE'
+                                        act = mo_object_fnc->mv_create_package ).
 
     DATA ls_expected_vseointerf TYPE vseointerf.
     ls_expected_vseointerf-clsname = 'zif_abapgit_test_intf'.
@@ -166,18 +166,24 @@ CLASS ltcl_unit_test IMPLEMENTATION.
     ls_expected_vseointerf-exposure = '2'.
     ls_expected_vseointerf-state = '1'.
     ls_expected_vseointerf-unicode = 'x'.
-    cl_abap_unit_assert=>assert_equals( exp = ls_expected_vseointerf act = me->mo_object_fnc->ms_create_vseointerf ).
+    cl_abap_unit_assert=>assert_equals( exp = ls_expected_vseointerf
+                                        act = mo_object_fnc->ms_create_vseointerf ).
 
     DATA ls_expected_clskey TYPE seoclskey.
     ls_expected_clskey-clsname = 'ZIF_ABAPGIT_TEST_INTF'.
-    cl_abap_unit_assert=>assert_equals( exp = ls_expected_clskey act = me->mo_object_fnc->ms_deserialize_key ).
-    cl_abap_unit_assert=>assert_equals( exp = ls_expected_clskey act = me->mo_object_fnc->ms_deserialize_key ).
+    cl_abap_unit_assert=>assert_equals( exp = ls_expected_clskey
+                                        act = mo_object_fnc->ms_deserialize_key ).
+    cl_abap_unit_assert=>assert_equals( exp = ls_expected_clskey
+                                        act = mo_object_fnc->ms_deserialize_key ).
 
     DATA lt_expected_descriptions TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt.
-    cl_abap_unit_assert=>assert_equals( exp = ls_expected_clskey act = me->mo_object_fnc->ms_descriptions_key ).
-    cl_abap_unit_assert=>assert_equals( exp = lt_expected_descriptions act = me->mo_object_fnc->mt_descriptions ).
+    cl_abap_unit_assert=>assert_equals( exp = ls_expected_clskey
+                                        act = mo_object_fnc->ms_descriptions_key ).
+    cl_abap_unit_assert=>assert_equals( exp = lt_expected_descriptions
+                                        act = mo_object_fnc->mt_descriptions ).
 
-    cl_abap_unit_assert=>assert_equals( exp = me->ms_item act = me->mo_object_fnc->ms_activation_item ).
+    cl_abap_unit_assert=>assert_equals( exp = ms_item
+                                        act = mo_object_fnc->ms_activation_item ).
   ENDMETHOD.
 
   METHOD get_xml.
