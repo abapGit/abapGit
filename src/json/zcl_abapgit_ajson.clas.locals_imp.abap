@@ -1058,6 +1058,7 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
         ii_custom_mapping  TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL
         iv_keep_item_order TYPE abap_bool DEFAULT abap_false
         iv_format_datetime TYPE abap_bool DEFAULT abap_false
+        iv_item_order      TYPE i DEFAULT 0
       RETURNING
         VALUE(rt_nodes)   TYPE zif_abapgit_ajson=>ty_nodes_tt
       RAISING
@@ -1072,6 +1073,7 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
         ii_custom_mapping  TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL
         iv_keep_item_order TYPE abap_bool DEFAULT abap_false
         iv_format_datetime TYPE abap_bool DEFAULT abap_false
+        iv_item_order      TYPE i DEFAULT 0
       RETURNING
         VALUE(rt_nodes)   TYPE zif_abapgit_ajson=>ty_nodes_tt
       RAISING
@@ -1212,10 +1214,11 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
 
     lo_converter->convert_any(
       EXPORTING
-        iv_data   = iv_data
-        io_type   = lo_type
-        is_prefix = is_prefix
-        iv_index  = iv_array_index
+        iv_data       = iv_data
+        io_type       = lo_type
+        is_prefix     = is_prefix
+        iv_index      = iv_array_index
+        iv_item_order = iv_item_order
       CHANGING
         ct_nodes = rt_nodes ).
 
@@ -1614,11 +1617,12 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
 
     lo_converter->insert_value_with_type(
       EXPORTING
-        iv_data   = iv_data
-        iv_type   = iv_type
-        io_type   = lo_type
-        is_prefix = is_prefix
-        iv_index  = iv_array_index
+        iv_data       = iv_data
+        iv_type       = iv_type
+        io_type       = lo_type
+        is_prefix     = is_prefix
+        iv_index      = iv_array_index
+        iv_item_order = iv_item_order
       CHANGING
         ct_nodes = rt_nodes ).
 
