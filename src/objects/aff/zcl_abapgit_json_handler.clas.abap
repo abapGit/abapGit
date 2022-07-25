@@ -126,6 +126,9 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
     lv_json = lo_ajson_filtered->stringify( 2 ).
 
+    " files end with an empty line (EOF)
+    lv_json = lv_json && cl_abap_char_utilities=>newline.
+
     rv_result = zcl_abapgit_convert=>string_to_xstring_utf8( lv_json ).
   ENDMETHOD.
 
