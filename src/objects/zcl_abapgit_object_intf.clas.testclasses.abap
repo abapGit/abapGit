@@ -1,150 +1,150 @@
-class ltcl_unit_test definition deferred.
-class zcl_abapgit_object_intf definition local friends ltcl_unit_test.
+CLASS ltcl_unit_test DEFINITION DEFERRED.
+CLASS zcl_abapgit_object_intf DEFINITION LOCAL FRIENDS ltcl_unit_test.
 
-class lth_oo_object_fnc definition final for testing.
+CLASS lth_oo_object_fnc DEFINITION FINAL FOR TESTING.
 
-  public section.
-    interfaces zif_abapgit_oo_object_fnc.
+  PUBLIC SECTION.
+    INTERFACES zif_abapgit_oo_object_fnc.
 
-    data:
-      mv_create_package     type devclass,
-      ms_create_vseointerf  type vseointerf,
-      ms_deserialize_key    type seoclskey,
-      mt_deserialize_source type zif_abapgit_definitions=>ty_string_tt,
-      ms_descriptions_key   type seoclskey,
-      mt_descriptions       type zif_abapgit_oo_object_fnc=>ty_seocompotx_tt,
-      ms_activation_item    type zif_abapgit_definitions=>ty_item.
-endclass.
+    DATA:
+      mv_create_package     TYPE devclass,
+      ms_create_vseointerf  TYPE vseointerf,
+      ms_deserialize_key    TYPE seoclskey,
+      mt_deserialize_source TYPE zif_abapgit_definitions=>ty_string_tt,
+      ms_descriptions_key   TYPE seoclskey,
+      mt_descriptions       TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt,
+      ms_activation_item    TYPE zif_abapgit_definitions=>ty_item.
+ENDCLASS.
 
-class lth_oo_object_fnc implementation.
+CLASS lth_oo_object_fnc IMPLEMENTATION.
 
-  method zif_abapgit_oo_object_fnc~add_to_activation_list.
+  METHOD zif_abapgit_oo_object_fnc~add_to_activation_list.
     ms_activation_item = is_item.
-  endmethod.
+  ENDMETHOD.
 
-  method zif_abapgit_oo_object_fnc~create.
+  METHOD zif_abapgit_oo_object_fnc~create.
     mv_create_package = iv_package.
     ms_create_vseointerf = cg_properties.
-  endmethod.
+  ENDMETHOD.
 
-  method zif_abapgit_oo_object_fnc~create_documentation.
-  endmethod.
+  METHOD zif_abapgit_oo_object_fnc~create_documentation.
+  ENDMETHOD.
 
-  method zif_abapgit_oo_object_fnc~create_sotr.
-  endmethod.
-  method zif_abapgit_oo_object_fnc~delete.
-  endmethod.
+  METHOD zif_abapgit_oo_object_fnc~create_sotr.
+  ENDMETHOD.
+  METHOD zif_abapgit_oo_object_fnc~delete.
+  ENDMETHOD.
 
-  method zif_abapgit_oo_object_fnc~delete_documentation.
-  endmethod.
+  METHOD zif_abapgit_oo_object_fnc~delete_documentation.
+  ENDMETHOD.
 
-  method zif_abapgit_oo_object_fnc~deserialize_source.
+  METHOD zif_abapgit_oo_object_fnc~deserialize_source.
     ms_deserialize_key = is_key.
     mt_deserialize_source = it_source.
-  endmethod.
+  ENDMETHOD.
 
-  method zif_abapgit_oo_object_fnc~exists.
-  endmethod.
+  METHOD zif_abapgit_oo_object_fnc~exists.
+  ENDMETHOD.
 
-  method zif_abapgit_oo_object_fnc~generate_locals.
-  endmethod.
+  METHOD zif_abapgit_oo_object_fnc~generate_locals.
+  ENDMETHOD.
 
-  method zif_abapgit_oo_object_fnc~get_class_properties.
-  endmethod.
+  METHOD zif_abapgit_oo_object_fnc~get_class_properties.
+  ENDMETHOD.
 
-  method zif_abapgit_oo_object_fnc~get_includes.
-  endmethod.
+  METHOD zif_abapgit_oo_object_fnc~get_includes.
+  ENDMETHOD.
 
-  method zif_abapgit_oo_object_fnc~get_interface_properties.
-  endmethod.
+  METHOD zif_abapgit_oo_object_fnc~get_interface_properties.
+  ENDMETHOD.
 
-  method zif_abapgit_oo_object_fnc~get_skip_test_classes.
-  endmethod.
+  METHOD zif_abapgit_oo_object_fnc~get_skip_test_classes.
+  ENDMETHOD.
 
-  method zif_abapgit_oo_object_fnc~insert_text_pool.
-  endmethod.
+  METHOD zif_abapgit_oo_object_fnc~insert_text_pool.
+  ENDMETHOD.
 
-  method zif_abapgit_oo_object_fnc~read_attributes.
-  endmethod.
+  METHOD zif_abapgit_oo_object_fnc~read_attributes.
+  ENDMETHOD.
 
-  method zif_abapgit_oo_object_fnc~read_descriptions.
-  endmethod.
+  METHOD zif_abapgit_oo_object_fnc~read_descriptions.
+  ENDMETHOD.
 
-  method zif_abapgit_oo_object_fnc~read_documentation.
-  endmethod.
+  METHOD zif_abapgit_oo_object_fnc~read_documentation.
+  ENDMETHOD.
 
-  method zif_abapgit_oo_object_fnc~read_sotr.
-  endmethod.
+  METHOD zif_abapgit_oo_object_fnc~read_sotr.
+  ENDMETHOD.
 
-  method zif_abapgit_oo_object_fnc~read_superclass.
-  endmethod.
+  METHOD zif_abapgit_oo_object_fnc~read_superclass.
+  ENDMETHOD.
 
-  method zif_abapgit_oo_object_fnc~read_text_pool.
-  endmethod.
+  METHOD zif_abapgit_oo_object_fnc~read_text_pool.
+  ENDMETHOD.
 
-  method zif_abapgit_oo_object_fnc~serialize_abap.
-  endmethod.
+  METHOD zif_abapgit_oo_object_fnc~serialize_abap.
+  ENDMETHOD.
 
-  method zif_abapgit_oo_object_fnc~update_descriptions.
+  METHOD zif_abapgit_oo_object_fnc~update_descriptions.
     ms_descriptions_key = is_key.
     mt_descriptions = it_descriptions.
-  endmethod.
+  ENDMETHOD.
 
-endclass.
+ENDCLASS.
 
 
-class ltcl_unit_test definition final for testing duration short risk level harmless.
+CLASS ltcl_unit_test DEFINITION FINAL FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
 
-  private section.
-    data:
-      mo_cut        type ref to zif_abapgit_object,
-      mo_log        type ref to zcl_abapgit_log,
-      mo_object_fnc type ref to lth_oo_object_fnc,
-      ms_item       type zif_abapgit_definitions=>ty_item.
+  PRIVATE SECTION.
+    DATA:
+      mo_cut        TYPE REF TO zif_abapgit_object,
+      mo_log        TYPE REF TO zcl_abapgit_log,
+      mo_object_fnc TYPE REF TO lth_oo_object_fnc,
+      ms_item       TYPE zif_abapgit_definitions=>ty_item.
 
-    methods:
+    METHODS:
       setup,
 
       get_xml
-        returning value(rv_xml) type string,
+        RETURNING VALUE(rv_xml) TYPE string,
       get_source
-        returning value(rt_source) type rswsourcet,
+        RETURNING VALUE(rt_source) TYPE rswsourcet,
 
-      deserializes for testing raising cx_static_check.
-endclass.
+      deserializes FOR TESTING RAISING cx_static_check.
+ENDCLASS.
 
 
-class ltcl_unit_test implementation.
+CLASS ltcl_unit_test IMPLEMENTATION.
 
-  method setup.
-    data lo_cut type ref to zcl_abapgit_object_intf.
+  METHOD setup.
+    DATA lo_cut TYPE REF TO zcl_abapgit_object_intf.
 
     ms_item-obj_name = 'ZIF_ABAPGIT_TEST_INTF'.
     ms_item-obj_type = 'INTF'.
 
-    create object lo_cut
-      exporting
+    CREATE OBJECT lo_cut
+      EXPORTING
         is_item     = ms_item
         iv_language = 'E'.
 
-    create object lo_cut->zif_abapgit_object~mo_files
-      exporting
+    CREATE OBJECT lo_cut->zif_abapgit_object~mo_files
+      EXPORTING
         is_item = ms_item.
 
-    create object mo_log.
+    CREATE OBJECT mo_log.
 
-    create object me->mo_object_fnc.
+    CREATE OBJECT me->mo_object_fnc.
     lo_cut->mi_object_oriented_object_fct  = me->mo_object_fnc.
 
     me->mo_cut = lo_cut.
 
-  endmethod.
+  ENDMETHOD.
 
-  method deserializes.
-    data lo_xmlin type ref to zcl_abapgit_xml_input.
+  METHOD deserializes.
+    DATA lo_xmlin TYPE REF TO zcl_abapgit_xml_input.
 
-    create object lo_xmlin type zcl_abapgit_xml_input
-      exporting
+    CREATE OBJECT lo_xmlin TYPE zcl_abapgit_xml_input
+      EXPORTING
         iv_xml = get_xml( ).
 
     mo_cut->mo_files->add_abap( get_source( ) ).
@@ -159,7 +159,7 @@ class ltcl_unit_test implementation.
 
     cl_abap_unit_assert=>assert_equals( exp = 'MY_PACKAGE' act = me->mo_object_fnc->mv_create_package ).
 
-    data ls_expected_vseointerf type vseointerf.
+    DATA ls_expected_vseointerf TYPE vseointerf.
     ls_expected_vseointerf-clsname = 'zif_abapgit_test_intf'.
     ls_expected_vseointerf-langu = 'e'.
     ls_expected_vseointerf-descript = 'test interface for abap git'.
@@ -168,19 +168,19 @@ class ltcl_unit_test implementation.
     ls_expected_vseointerf-unicode = 'x'.
     cl_abap_unit_assert=>assert_equals( exp = ls_expected_vseointerf act = me->mo_object_fnc->ms_create_vseointerf ).
 
-    data ls_expected_clskey type seoclskey.
+    DATA ls_expected_clskey TYPE seoclskey.
     ls_expected_clskey-clsname = 'ZIF_ABAPGIT_TEST_INTF'.
     cl_abap_unit_assert=>assert_equals( exp = ls_expected_clskey act = me->mo_object_fnc->ms_deserialize_key ).
     cl_abap_unit_assert=>assert_equals( exp = ls_expected_clskey act = me->mo_object_fnc->ms_deserialize_key ).
 
-    data lt_expected_descriptions type zif_abapgit_oo_object_fnc=>ty_seocompotx_tt.
+    DATA lt_expected_descriptions TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt.
     cl_abap_unit_assert=>assert_equals( exp = ls_expected_clskey act = me->mo_object_fnc->ms_descriptions_key ).
     cl_abap_unit_assert=>assert_equals( exp = lt_expected_descriptions act = me->mo_object_fnc->mt_descriptions ).
 
     cl_abap_unit_assert=>assert_equals( exp = me->ms_item act = me->mo_object_fnc->ms_activation_item ).
-  endmethod.
+  ENDMETHOD.
 
-  method get_xml.
+  METHOD get_xml.
     rv_xml =
     '<?xml version="1.0" encoding="UTF-8"?>' &&'<abapGit version="v1.0.0">' &&
     '<asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">' &&
@@ -196,16 +196,16 @@ class ltcl_unit_test implementation.
       '</asx:values>' &&
     '</asx:abap>' &&
   '</abapGit>'.
-  endmethod.
+  ENDMETHOD.
 
-  method get_source.
-    append 'interface zif_abapgit_test_intf' to rt_source.
-    append '  public.' to rt_source.
-    append '  methods:' to rt_source.
-    append '    one_method' to rt_source.
-    append '      returning value(rv_value) type string.' to rt_source.
-    append '' to rt_source.
-    append 'endinterface.' to rt_source.
-  endmethod.
+  METHOD get_source.
+    APPEND 'interface zif_abapgit_test_intf' TO rt_source.
+    APPEND '  public.' TO rt_source.
+    APPEND '  methods:' TO rt_source.
+    APPEND '    one_method' TO rt_source.
+    APPEND '      returning value(rv_value) type string.' TO rt_source.
+    APPEND '' TO rt_source.
+    APPEND 'endinterface.' TO rt_source.
+  ENDMETHOD.
 
-endclass.
+ENDCLASS.
