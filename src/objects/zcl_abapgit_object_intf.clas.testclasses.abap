@@ -345,4 +345,5 @@ CLASS ltcl_serialize IMPLEMENTATION.
       iv_json_b = lv_expected ).
     cl_abap_unit_assert=>assert_true( lv_is_equal ).
   ENDMETHOD.
+  
 ENDCLASS.
