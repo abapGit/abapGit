@@ -167,7 +167,7 @@ CLASS lcl_aff_helper IMPLEMENTATION.
       WHERE sub_component~clsname    = iv_clif_name
         AND df~exposure              = iv_exposure
         AND sub_component_text~langu = iv_language
-        AND sub_component_text~descript <> space.     "#EC CI_BUFFJOIN
+        AND sub_component_text~descript <> space.      "#EC CI_BUFFJOIN
 
 
 
@@ -202,7 +202,7 @@ CLASS lcl_aff_helper IMPLEMENTATION.
      LEFT OUTER JOIN seocompotx AS component_text
       ON component~cmpname = component_text~cmpname AND component~clsname    = component_text~clsname
                                                     AND component_text~langu = iv_language
-      WHERE component~clsname = iv_clif_name.                   "#EC CI_BUFFJOIN
+      WHERE component~clsname = iv_clif_name.          "#EC CI_BUFFJOIN
 
     SELECT sub_component~cmpname sub_component~sconame sub_component_text~descript sub_component~scotype
       INTO TABLE lt_sub_components
@@ -212,7 +212,7 @@ CLASS lcl_aff_helper IMPLEMENTATION.
           AND sub_component~sconame = sub_component_text~sconame
       WHERE sub_component~clsname    = iv_clif_name
         AND sub_component_text~langu = iv_language
-        AND sub_component_text~descript <> space.     "#EC CI_BUFFJOIN
+        AND sub_component_text~descript <> space.      "#EC CI_BUFFJOIN
 
     LOOP AT lt_components ASSIGNING <ls_component>.
       CLEAR ls_component_exp.
@@ -445,11 +445,8 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
     ls_data_aff-header-original_language = ls_data_abapgit-vseointerf-langu.
 
     " get category and proxy
-    SELECT SINGLE category clsproxy AS proxy
-           FROM vseointerf
-           INTO (ls_data_aff-category, ls_data_aff-proxy)
-           WHERE clsname = ls_data_abapgit-vseointerf-clsname AND version = '1' AND
-                 langu = ls_data_aff-header-original_language.
+    ls_data_aff-category = ls_data_abapgit-vseointerf-category.
+    ls_data_aff-proxy = ls_data_abapgit-vseointerf-clsproxy.
 
     " get descriptions
     ls_data_aff-descriptions = lcl_aff_helper=>get_descriptions_compo_subco(
@@ -461,37 +458,91 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
 
 ENDCLASS.
 
+
 CLASS lcl_aff_serialize_metadata DEFINITION.
   PUBLIC SECTION.
 
     CLASS-METHODS serialize
-      IMPORTING is_intf          TYPE data
+      IMPORTING is_intf          TYPE zcl_abapgit_object_intf=>ty_intf
       RETURNING VALUE(rv_result) TYPE xstring
       RAISING   zcx_abapgit_exception.
+  PRIVATE SECTION.
+    CLASS-METHODS:
+      get_mappings
+        RETURNING VALUE(rt_result) TYPE zcl_abapgit_json_handler=>ty_enum_mappings,
+      get_paths_to_skip
+        RETURNING VALUE(rt_result) TYPE zcl_abapgit_json_handler=>ty_skip_paths.
 ENDCLASS.
 
 CLASS lcl_aff_serialize_metadata IMPLEMENTATION.
 
   METHOD serialize.
     DATA:
-      ls_data_abapgit TYPE zcl_abapgit_object_intf=>ty_intf,
-      ls_data_aff     TYPE zif_abapgit_aff_intf_v1=>ty_main,
-      lx_exception    TYPE REF TO cx_root,
-      lo_ajson        TYPE REF TO zcl_abapgit_json_handler,
-      lo_aff_mapper   TYPE REF TO zif_abapgit_aff_type_mapping.
+      ls_data_aff      TYPE zif_abapgit_aff_intf_v1=>ty_main,
+      lx_exception     TYPE REF TO cx_root,
+      lo_aff_handler   TYPE REF TO zcl_abapgit_json_handler,
+      lo_aff_mapper    TYPE REF TO zif_abapgit_aff_type_mapping,
+      lt_enum_mappings TYPE zcl_abapgit_json_handler=>ty_enum_mappings,
+      lt_paths_to_skip TYPE zcl_abapgit_json_handler=>ty_skip_paths.
 
-    ls_data_abapgit = is_intf.
 
     CREATE OBJECT lo_aff_mapper TYPE lcl_aff_type_mapping.
-    lo_aff_mapper->to_aff( EXPORTING iv_data = ls_data_abapgit
+    lo_aff_mapper->to_aff( EXPORTING iv_data = is_intf
                            IMPORTING es_data = ls_data_aff ).
-    CREATE OBJECT lo_ajson.
+
+    lt_enum_mappings = get_mappings( ).
+    lt_paths_to_skip = get_paths_to_skip( ).
+
+    CREATE OBJECT lo_aff_handler.
     TRY.
-        rv_result = lo_ajson->serialize( ls_data_aff ).
+        rv_result = lo_aff_handler->serialize( iv_data          = ls_data_aff
+                                               iv_enum_mappings = lt_enum_mappings
+                                               iv_skip_paths    = lt_paths_to_skip ).
       CATCH cx_root INTO lx_exception.
         zcx_abapgit_exception=>raise_with_text( lx_exception ).
     ENDTRY.
 
+  ENDMETHOD.
+
+  METHOD get_mappings.
+    DATA:
+      ls_category_mapping   TYPE zcl_abapgit_json_handler=>ty_enum_mapping,
+      ls_json_abap_mapping  TYPE zcl_abapgit_json_handler=>ty_json_abap_mapping,
+      lt_json_abap_mappings TYPE zcl_abapgit_json_handler=>ty_json_abap_mappings.
+
+    ls_json_abap_mapping-abap = zif_abapgit_aff_intf_v1=>co_category-general.
+    ls_json_abap_mapping-json = 'standard'.
+    APPEND ls_json_abap_mapping TO lt_json_abap_mappings.
+    ls_json_abap_mapping-abap = zif_abapgit_aff_intf_v1=>co_category-classic_badi.
+    ls_json_abap_mapping-json = 'classicBadi'.
+    APPEND ls_json_abap_mapping TO lt_json_abap_mappings.
+    ls_json_abap_mapping-abap = zif_abapgit_aff_intf_v1=>co_category-business_static_components.
+    ls_json_abap_mapping-json = 'businessStaticComponents'.
+    APPEND ls_json_abap_mapping TO lt_json_abap_mappings.
+    ls_json_abap_mapping-abap = zif_abapgit_aff_intf_v1=>co_category-db_procedure_proxy.
+    ls_json_abap_mapping-json = 'dbProcedureProxy'.
+    APPEND ls_json_abap_mapping TO lt_json_abap_mappings.
+    ls_json_abap_mapping-abap = zif_abapgit_aff_intf_v1=>co_category-web_dynpro_runtime.
+    ls_json_abap_mapping-json = 'webDynproRuntime'.
+    APPEND ls_json_abap_mapping TO lt_json_abap_mappings.
+    ls_json_abap_mapping-abap = zif_abapgit_aff_intf_v1=>co_category-enterprise_service.
+    ls_json_abap_mapping-json = 'enterpriseService'.
+    APPEND ls_json_abap_mapping TO lt_json_abap_mappings.
+
+    ls_category_mapping-path = '/category'.
+    ls_category_mapping-mappings = lt_json_abap_mappings.
+
+    APPEND ls_category_mapping TO rt_result.
+  ENDMETHOD.
+
+  METHOD get_paths_to_skip.
+    DATA:
+      ls_path_to_skipp TYPE zcl_abapgit_json_handler=>ty_path_value_pair.
+
+    ls_path_to_skipp-path  = '/category'.
+    ls_path_to_skipp-value = 'standard'.
+
+    APPEND ls_path_to_skipp TO rt_result.
   ENDMETHOD.
 
 ENDCLASS.
