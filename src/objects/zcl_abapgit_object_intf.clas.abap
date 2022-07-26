@@ -59,7 +59,7 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
                  is_i18n_params      TYPE zif_abapgit_definitions=>ty_i18n_params
                  it_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus OPTIONAL
                  iv_clsname          TYPE seoclsname
-      RETURNING value(rs_docu)       TYPE ty_docu
+      RETURNING VALUE(rs_docu)       TYPE ty_docu
       RAISING
                 zcx_abapgit_exception.
     METHODS serialize_descr
