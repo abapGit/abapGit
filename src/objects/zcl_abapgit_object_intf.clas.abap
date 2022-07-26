@@ -19,34 +19,6 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
       IMPORTING
         is_item     TYPE zif_abapgit_definitions=>ty_item
         iv_language TYPE spras.
-  PROTECTED SECTION.
-
-    METHODS deserialize_proxy
-      IMPORTING
-        !iv_transport TYPE trkorr
-      RAISING
-        zcx_abapgit_exception .
-
-    METHODS deserialize_docu
-      IMPORTING
-        !is_docu TYPE  ty_docu
-      RAISING
-        zcx_abapgit_exception .
-    METHODS serialize_docu
-      IMPORTING
-                !is_i18n_params      TYPE zif_abapgit_definitions=>ty_i18n_params
-                !it_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus OPTIONAL
-                !iv_clsname          TYPE seoclsname
-      RETURNING VALUE(rs_docu)       TYPE ty_docu
-      RAISING
-                zcx_abapgit_exception.
-    METHODS serialize_descr
-      IMPORTING
-                !is_i18n_params       TYPE zif_abapgit_definitions=>ty_i18n_params
-                !iv_clsname           TYPE seoclsname
-      RETURNING VALUE(rs_description) TYPE ty_intf-description
-      RAISING
-                zcx_abapgit_exception.
   PRIVATE SECTION.
 
     DATA mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc .
@@ -72,6 +44,31 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
     METHODS deserialize_descriptions
       IMPORTING
         it_description TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt OPTIONAL.
+    METHODS deserialize_proxy
+      IMPORTING
+         iv_transport TYPE trkorr
+      RAISING
+        zcx_abapgit_exception .
+    METHODS deserialize_docu
+      IMPORTING
+         is_docu TYPE  ty_docu
+      RAISING
+        zcx_abapgit_exception .
+    METHODS serialize_docu
+      IMPORTING
+                 is_i18n_params      TYPE zif_abapgit_definitions=>ty_i18n_params
+                 it_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus OPTIONAL
+                 iv_clsname          TYPE seoclsname
+      RETURNING value(rs_docu)       TYPE ty_docu
+      RAISING
+                zcx_abapgit_exception.
+    METHODS serialize_descr
+      IMPORTING
+                 is_i18n_params       TYPE zif_abapgit_definitions=>ty_i18n_params
+                 iv_clsname           TYPE seoclsname
+      RETURNING value(rs_description) TYPE ty_intf-description
+      RAISING
+                zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -404,8 +401,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~deserialize.
-    DATA: ls_vseointerf TYPE vseointerf,
-          lt_source     TYPE rswsourcet,
+    DATA: lt_source     TYPE rswsourcet,
           ls_clskey     TYPE seoclskey.
 
     IF iv_step = zif_abapgit_object=>gc_step_id-abap.
