@@ -66,7 +66,7 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
       IMPORTING
                  is_i18n_params       TYPE zif_abapgit_definitions=>ty_i18n_params
                  iv_clsname           TYPE seoclsname
-      RETURNING value(rs_description) TYPE ty_intf-description
+      RETURNING VALUE(rs_description) TYPE ty_intf-description
       RAISING
                 zcx_abapgit_exception.
 ENDCLASS.
