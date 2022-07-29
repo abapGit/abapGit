@@ -74,6 +74,10 @@
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_c", "note": "probably some bug in fm TEXT_SPLIT"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_z", "note": "probably some bug in fm TEXT_SPLIT"},
 
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_t100", "method": "text6", "note": ""},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_t100", "method": "text7", "note": ""},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_t100", "method": "text8", "note": ""},
+
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_general", "method": "direct_text"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_general", "method": "text_from_exception", "note": "Cannot read properties of undefined (reading 'if_message$get_text')"},
 
