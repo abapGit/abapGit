@@ -26,11 +26,14 @@
   },
   "devDependencies": {
     "@abaplint/cli": "^2.91.18",
+    "@abaplint/database-sqlite": "^2.1.6",
     "@abaplint/runtime": "^2.1.11",
     "@abaplint/transpiler-cli": "^2.1.11",
-    "@abaplint/database-sqlite": "^2.1.6",
     "abapmerge": "^0.14.7",
     "c8": "^7.12.0",
     "eslint": "^8.20.0"
+  },
+  "dependencies": {
+    "@sap/apihub-enterprise-service-provider": "^0.0.10"
   }
 }
