@@ -74,9 +74,9 @@
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_c", "note": "probably some bug in fm TEXT_SPLIT"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_z", "note": "probably some bug in fm TEXT_SPLIT"},
 
-      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_t100", "method": "text6", "note": ""},
-      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_t100", "method": "text7", "note": ""},
-      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_t100", "method": "text8", "note": ""},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_t100", "method": "text6", "note": "uses MSAG from database"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_t100", "method": "text7", "note": "uses MSAG from database"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_t100", "method": "text8", "note": "uses MSAG from database"},
 
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_general", "method": "direct_text"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_general", "method": "text_from_exception", "note": "Cannot read properties of undefined (reading 'if_message$get_text')"},
@@ -84,7 +84,7 @@
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_longtext", "method": "empty_longtext"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_longtext", "method": "longtext"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_longtext", "method": "multiline_longtext"},
-      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_longtext", "method": "text_from_previous_exception"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_longtext", "method": "text_from_previous_exception", "note": "Cannot read properties of undefined (reading 'if_message$get_text')"},
 
       {"object": "ZCL_ABAPGIT_HTML",       "class": "ltcl_html", "method": "style1",    "note": "indentation is wrong in result, ASSERT failed, ??"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty1",   "note": "ASSERT failed, ??, newline missing, offset off by one?"},
@@ -118,9 +118,9 @@
       {"object": "ZCL_ABAPGIT_FILENAME_LOGIC", "class": "ltcl_run_checks", "method": "file_to_object", "note": "some bug in url unescape"},
       {"object": "ZCL_ABAPGIT_FILENAME_LOGIC", "class": "ltcl_run_checks", "method": "file_to_object_pack", "note": "??"},
 
-      {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "positive", "note": " https://github.com/abapGit/abapGit/pull/5693 "},
+      {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "positive", "note": "Void type: TRNSPACE"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "neg_diff_path_for_same_obj", "note": "Void type: TRNSPACE"},
-      {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "neg_incorrect_path_vs_pack", "note": "??"},
+      {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "neg_incorrect_path_vs_pack", "note": "Void type: TRNSPACE"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "neg_similar_filenames", "note": "??"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "neg_empty_filenames", "note": "??"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "package_move", "note": "Void type: TRNSPACE"},
@@ -147,7 +147,6 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_w_tab_of_struc", "note": "CREATE DATA, unknown handle type"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_array_of_arrays", "note": "Right-hand side of 'instanceof' is not an object"},
 
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_bool_abap_bool"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_bool_int"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_bool_tab"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_obj_w_date_time"},
