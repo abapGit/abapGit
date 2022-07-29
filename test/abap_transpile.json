@@ -147,8 +147,8 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_w_tab_of_struc", "note": "CREATE DATA, unknown handle type"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_array_of_arrays", "note": "Right-hand side of 'instanceof' is not an object"},
 
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "overwrite_w_keep_order_touch"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "overwrite_w_keep_order_set"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "overwrite_w_keep_order_touch", "note": "some sorting"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "overwrite_w_keep_order_set", "note": "some sorting"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_tab_hashed", "note": "runtime error, SortByLengthZero"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "reader",       "note": "keyword? Path not found @/false"},
