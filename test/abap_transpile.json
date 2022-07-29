@@ -118,7 +118,6 @@
       {"object": "ZCL_ABAPGIT_FILENAME_LOGIC", "class": "ltcl_run_checks", "method": "file_to_object", "note": "some bug in url unescape"},
       {"object": "ZCL_ABAPGIT_FILENAME_LOGIC", "class": "ltcl_run_checks", "method": "file_to_object_pack", "note": "??"},
 
-      {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "neg_incorrect_path_vs_pack", "note": "Void type: TRNSPACE"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "neg_similar_filenames", "note": "??"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "neg_empty_filenames", "note": "??"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "package_move", "note": "Void type: TRNSPACE"},
