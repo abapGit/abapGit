@@ -29,7 +29,7 @@
     "zcl_abapgit_stage",
     "zcl_abapgit_sap_package",
     "zcl_abapgit_string_map",
-    "zcl_abapgit_serialize TODO cl_i18n_languages",
+    "zcl_abapgit_serialize TODO cl_i18n_languages->sap1_to_sap2",
     "zcl_abapgit_syntax",
     "zcl_abapgit_t",
     "zcl_abapgit_u",
@@ -118,8 +118,8 @@
       {"object": "ZCL_ABAPGIT_FILENAME_LOGIC", "class": "ltcl_run_checks", "method": "file_to_object", "note": "some bug in url unescape"},
       {"object": "ZCL_ABAPGIT_FILENAME_LOGIC", "class": "ltcl_run_checks", "method": "file_to_object_pack", "note": "??"},
 
-      {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "check_namespace", "note": "??"},
-      {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "check_sub_package", "note": "Void type: TRNSPACE"},
+      {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "check_namespace", "note": "Collect, transpiler todo"},
+      {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "check_sub_package", "note": "??"},
 
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_calculate_status", "method": "complete", "note": "??"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_calculate_status", "method": "only_local2", "note": "??"},
