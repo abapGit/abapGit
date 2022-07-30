@@ -25,13 +25,7 @@
     "zcl_abapgit_objects.clas.abap",
     "zcl_abapgit_p",
     "zcl_abapgit_r",
-    "zcl_abapgit_sap_package",
-    "zcl_abapgit_serialize",
-    "zcl_abapgit_services",
-    "zcl_abapgit_set",
-    "zcl_abapgit_stage",
-    "zcl_abapgit_string_map",
-    "zcl_abapgit_syntax",
+    "zcl_abapgit_s",
     "zcl_abapgit_t",
     "zcl_abapgit_u",
     "zcl_abapgit_v",
@@ -196,6 +190,11 @@
       {"object": "ZCL_ABAPGIT_XML_INPUT", "class": "ltcl_xml", "method": "down"},
 
       {"object": "ZCL_ABAPGIT_GIT_URL", "class": "ltcl_repo_online", "method": "test_repo_commit_show_urls"},
+
+      {"object": "ZCL_ABAPGIT_SOTR_HANDLER", "class": "ltcl_sotr_handler", "method": "sotr_wda_0001", "note": "Void type: SOTR_HEAD"},
+      {"object": "ZCL_ABAPGIT_SOTR_HANDLER", "class": "ltcl_sotr_handler", "method": "sotr_wda_0003_not_exist", "note": "Void type: SOTR_HEAD"},
+      {"object": "ZCL_ABAPGIT_SOTR_HANDLER", "class": "ltcl_sotr_handler", "method": "sotr_wda_0004", "note": "Void type: SOTR_HEAD"},
+      {"object": "ZCL_ABAPGIT_SOTR_HANDLER", "class": "ltcl_sotr_handler", "method": "sotr_cx_0002", "note": "Void type: SOTR_HEAD"},
 
       {"object": "ZCL_ABAPGIT_LXE_TEXTS", "class": "ltcl_lxe_texts", "method": "lang_string_to_table", "note": "https://github.com/open-abap/open-abap/issues/382 "},
 
