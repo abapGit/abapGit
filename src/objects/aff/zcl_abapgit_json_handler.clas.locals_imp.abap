@@ -1,47 +1,70 @@
-*"* use this source file for the definition and implementation of
-*"* local helper classes, interface definitions and type
-*"* declarations
-CLASS lcl_mapping DEFINITION.
-  PUBLIC SECTION.
-    INTERFACES zif_abapgit_ajson_mapping.
-ENDCLASS.
-
-CLASS lcl_mapping IMPLEMENTATION.
-  METHOD zif_abapgit_ajson_mapping~to_abap.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_ajson_mapping~to_json.
-    TYPES ty_token TYPE c LENGTH 255.
-    DATA lt_tokens TYPE STANDARD TABLE OF ty_token.
-    FIELD-SYMBOLS <lg_token> LIKE LINE OF lt_tokens.
-
-    rv_result = iv_name.
-
-    SPLIT rv_result AT `_` INTO TABLE lt_tokens.
-    LOOP AT lt_tokens ASSIGNING <lg_token> FROM 2.
-      TRANSLATE <lg_token>(1) TO UPPER CASE.
-    ENDLOOP.
-    CONCATENATE LINES OF lt_tokens INTO rv_result.
-
-  ENDMETHOD.
-ENDCLASS.
-
-
 CLASS lcl_aff_filter DEFINITION FINAL.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_ajson_filter.
+    TYPES:
+      BEGIN OF ty_path_value_pair,
+        path  TYPE string,
+        value TYPE string,
+      END OF ty_path_value_pair,
+      ty_skip_paths TYPE STANDARD TABLE OF ty_path_value_pair WITH KEY path.
+
+    METHODS constructor
+      IMPORTING iv_skip_paths TYPE ty_skip_paths OPTIONAL
+      RAISING   zcx_abapgit_ajson_error.
   PRIVATE SECTION.
-    DATA mt_skip_paths TYPE HASHED TABLE OF string WITH UNIQUE KEY table_line.
+    DATA mt_skip_paths TYPE ty_skip_paths.
 ENDCLASS.
 
 CLASS lcl_aff_filter IMPLEMENTATION.
 
   METHOD zif_abapgit_ajson_filter~keep_node.
+
     DATA lv_path TYPE string.
+
     lv_path = is_node-path && is_node-name.
 
-    rv_keep = boolc( NOT ( lv_path = `/header/abapLanguageVersion` AND is_node-value = 'X' ) ).
+    READ TABLE mt_skip_paths WITH KEY path = lv_path value = is_node-value TRANSPORTING NO FIELDS.
+    IF boolc( sy-subrc = 0 ) = abap_true
+      AND iv_visit = zif_abapgit_ajson_filter=>visit_type-value.
+      rv_keep = abap_false.
+      RETURN.
+    ELSE.
+      READ TABLE mt_skip_paths WITH KEY path = lv_path TRANSPORTING NO FIELDS.
+      IF boolc( sy-subrc = 0 ) = abap_true
+        AND iv_visit = zif_abapgit_ajson_filter=>visit_type-value.
+        rv_keep = abap_true.
+        RETURN.
+      ENDIF.
+    ENDIF.
+
+    IF is_node-type = 'bool' AND is_node-value = 'false' AND iv_visit = zif_abapgit_ajson_filter=>visit_type-value.
+      rv_keep = abap_false.
+      RETURN.
+    ENDIF.
+
+    " AFF: if INTEGER type is initial (0) then is will be skipped
+    "      However, if type is $required, it should be serialized.
+    IF NOT ( ( iv_visit = zif_abapgit_ajson_filter=>visit_type-value AND is_node-value IS NOT INITIAL ) OR
+         ( iv_visit <> zif_abapgit_ajson_filter=>visit_type-value AND is_node-children > 0 ) ).
+      rv_keep = abap_false.
+      RETURN.
+    ENDIF.
+
+    rv_keep = abap_true.
+
   ENDMETHOD.
 
+  METHOD constructor.
+    " extract annotations and build table for values to be skipped ( path/name | value )
+    DATA lo_abap_language_pair TYPE ty_path_value_pair.
+    lo_abap_language_pair-path = `/header/abapLanguageVersion`.
+    lo_abap_language_pair-value = 'standard'.
+
+    APPEND lo_abap_language_pair TO mt_skip_paths.
+
+    IF iv_skip_paths IS NOT INITIAL.
+      APPEND LINES OF iv_skip_paths TO mt_skip_paths.
+    ENDIF.
+  ENDMETHOD.
 
 ENDCLASS.

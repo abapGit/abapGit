@@ -12,7 +12,7 @@
     "zcl_abapgit_default_transport",
     "zcl_abapgit_diff",
     "zcl_abapgit_dot_abapgit",
-    "zcl_abapgit_dependencies https://github.com/abaplint/transpiler/issues/798",
+    "zcl_abapgit_dependencies https://github.com/abaplint/transpiler/issues/798 ",
     "zcl_abapgit_exit",
     "zcl_abapgit_exception",
     "zcl_abapgit_environment",
@@ -71,8 +71,12 @@
     "extraSetup": "../test/setup.mjs",
     "skip": [
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_get_t100_longtext", "method": "test01", "note": "implement function module DOCU_GET, open-abap"},
-      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_c"},
-      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_z"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_c", "note": "probably some bug in fm TEXT_SPLIT"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_z", "note": "probably some bug in fm TEXT_SPLIT"},
+
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_t100", "method": "text6", "note": ""},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_t100", "method": "text7", "note": ""},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_t100", "method": "text8", "note": ""},
 
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_general", "method": "direct_text"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_general", "method": "text_from_exception", "note": "Cannot read properties of undefined (reading 'if_message$get_text')"},
@@ -83,7 +87,7 @@
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_longtext", "method": "text_from_previous_exception"},
 
       {"object": "ZCL_ABAPGIT_HTML",       "class": "ltcl_html", "method": "style1",    "note": "indentation is wrong in result, ASSERT failed, ??"},
-      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty1",   "note": "ASSERT failed, ??"},
+      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty1",   "note": "ASSERT failed, ??, newline missing, offset off by one?"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty2"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty3"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "malformatted", "note": "infinite loop"},
@@ -108,15 +112,13 @@
       {"object": "ZCL_ABAPGIT_SERIALIZE", "class": "ltcl_determine_max_threads", "method": "determine_max_threads", "note": "TypeError: abap.FunctionModules.FUNCTION_EXISTS is not a function"},
       {"object": "ZCL_ABAPGIT_SERIALIZE", "class": "ltcl_determine_max_threads", "method": "force", "note": "TypeError: Cannot read properties of undefined (reading 'sap1_to_sap2')"},
 
-      {"object": "ZCL_ABAPGIT_ITEM_STATE", "class": "ltcl_state_test", "method": "test_sum_with_ritem", "note": "Void type: RZLLI_APCL"},
-
       {"object": "ZCL_ABAPGIT_TRANSPORT_OBJECTS", "class": "ltcl_transport_objects", "method": "should_add_all_local_files", "note": "??"},
       {"object": "ZCL_ABAPGIT_TRANSPORT_OBJECTS", "class": "ltcl_transport_objects", "method": "should_delete_all_related", "note": "??"},
 
       {"object": "ZCL_ABAPGIT_FILENAME_LOGIC", "class": "ltcl_run_checks", "method": "file_to_object", "note": "some bug in url unescape"},
       {"object": "ZCL_ABAPGIT_FILENAME_LOGIC", "class": "ltcl_run_checks", "method": "file_to_object_pack", "note": "??"},
 
-      {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "positive", "note": "Void type: TRNSPACE"},
+      {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "positive", "note": " https://github.com/abapGit/abapGit/pull/5693 "},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "neg_diff_path_for_same_obj", "note": "Void type: TRNSPACE"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "neg_incorrect_path_vs_pack", "note": "??"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "neg_similar_filenames", "note": "??"},
@@ -128,7 +130,6 @@
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_calculate_status", "method": "complete", "note": "??"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_calculate_status", "method": "only_local2", "note": "??"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_calculate_status", "method": "only_remote3", "note": "CL_PACKAGE_FACTORY missing"},
-      {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_calculate_status", "method": "local_outside_main", "note": "error cx_sy_dynamic_osql_semantics"},
 
       {"object": "ZCL_ABAPGIT_PERSIST_PACKAGES", "class": "ltcl_packages", "method": "test_package", "note": "ZABAPGIT table not existing, error cx_sy_dynamic_osql_semantics"},
 
@@ -185,15 +186,13 @@
       {"object": "ZCL_ABAPGIT_REQUIREMENT_HELPER", "class": "ltcl_formats", "method": "shorter_patch", "note": "Void type: CVERS_SDU"},
       {"object": "ZCL_ABAPGIT_REQUIREMENT_HELPER", "class": "ltcl_formats", "method": "higher_patch", "note": "Void type: CVERS_SDU"},
 
-      {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_renderable", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
-      {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_event_handler", "note": "casting, https://github.com/abaplint/transpiler/issues/465"},
+      {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_renderable", "note": "casting, https://github.com/abaplint/transpiler/issues/465 "},
+      {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_event_handler", "note": "casting, https://github.com/abaplint/transpiler/issues/465 "},
 
-      {"object": "ZCL_ABAPGIT_GUI_ASSET_MANAGER", "class": "ltcl_abapgit_gui_asset_manager", "method": "get_mime_asset", "note": "failed to load GUI asset: css/common.css"},
-      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_single_file", "method": "test_overwrite", "note": "MODIFY FROM with table unique key not working"},
+      {"object": "ZCL_ABAPGIT_GUI_ASSET_MANAGER", "class": "ltcl_abapgit_gui_asset_manager", "method": "get_mime_asset", "note": "todo in open-abap fm WWWPARAMS_READ"},
       {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_multiple_files", "method": "test_overwrite"},
-      {"object": "ZCL_ABAPGIT_GUI_HTML_PROCESSOR", "class": "ltcl_html_processor_test", "method": "process_typical", "note": "something gets CHAR1 type?"},
 
-      {"object": "ZCL_ABAPGIT_XML", "class": "ltcl_xml", "method": "space_leading_trailing", "note": "todo in if_ixml_document$find_from_path, https://github.com/open-abap/open-abap/issues/226"},
+      {"object": "ZCL_ABAPGIT_XML", "class": "ltcl_xml", "method": "space_leading_trailing", "note": "todo in if_ixml_document$find_from_path, https://github.com/open-abap/open-abap/issues/226 "},
       {"object": "ZCL_ABAPGIT_XML", "class": "ltcl_xml", "method": "bad_xml_raises_exc", "note": "handling of xml parser errors, cl_ixml, test method parse_negative"},
       {"object": "ZCL_ABAPGIT_XML_OUTPUT", "class": "ltcl_xml_output", "method": "render_xml_string", "note": "kernel_call_transformation.mi_writer.get(...).if_sxml_writer$open_element is not a function"},
       {"object": "ZCL_ABAPGIT_XML_OUTPUT", "class": "ltcl_xml_output", "method": "add_simple_object", "note": "kernel_call_transformation.mi_writer.get(...).if_sxml_writer$open_element is not a function"},
@@ -203,7 +202,7 @@
 
       {"object": "ZCL_ABAPGIT_GIT_URL", "class": "ltcl_repo_online", "method": "test_repo_commit_show_urls"},
 
-      {"object": "ZCL_ABAPGIT_LXE_TEXTS", "class": "ltcl_lxe_texts", "method": "lang_string_to_table", "note": "CL_I18N_LANGUAGES"},
+      {"object": "ZCL_ABAPGIT_LXE_TEXTS", "class": "ltcl_lxe_texts", "method": "lang_string_to_table", "note": "https://github.com/open-abap/open-abap/issues/382 "},
 
       {"object": "ZCL_ABAPGIT_INJECTOR", "class": "ltcl_no_dependency_injection", "method": "no_injection"},
       {"object": "ZCL_ABAPGIT_INJECTOR", "class": "ltcl_simple_dependency_inject", "method": "simple_injection"},
@@ -256,7 +255,7 @@
       {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_not_created_when_canc", "note": "Void type: SCOMPKDTLN"},
       {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_created_when_confirm", "note": "Void type: SCOMPKDTLN"},
 
-      {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_test_checksums", "method": "rebuild_simple"},
+      {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_test_checksums", "method": "rebuild_simple", "note": "some sorting problem?"},
       {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_test_checksums", "method": "rebuild_w_dot_abapgit"}
     ]
   }
