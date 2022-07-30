@@ -12,7 +12,7 @@
     "zcl_abapgit_default_transport",
     "zcl_abapgit_diff",
     "zcl_abapgit_dot_abapgit",
-    "zcl_abapgit_dependencies https://github.com/abaplint/transpiler/issues/798 ",
+    "zcl_abapgit_dependencies",
     "zcl_abapgit_exit",
     "zcl_abapgit_environment",
     "zcl_abapgit_exception",
@@ -80,6 +80,8 @@
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_longtext", "method": "longtext"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_longtext", "method": "multiline_longtext"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_longtext", "method": "text_from_previous_exception", "note": "Cannot read properties of undefined (reading 'if_message$get_text')"},
+
+      {"object": "ZCL_ABAPGIT_DEPENDENCIES", "class": "ltcl_resolve_packages", "method": "resolve_single", "note": "??"},
 
       {"object": "ZCL_ABAPGIT_HTML",       "class": "ltcl_html", "method": "style1",    "note": "indentation is wrong in result, ASSERT failed, ??"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty1",   "note": "ASSERT failed, ??, newline missing, offset off by one?"},
