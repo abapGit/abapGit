@@ -26,7 +26,7 @@
     "zcl_abapgit_p",
     "zcl_abapgit_r",
     "zcl_abapgit_sap_package",
-    "zcl_abapgit_serialize runtime fm SYSTEM_INSTALLED_LANGUAGES missing",
+    "zcl_abapgit_serialize",
     "zcl_abapgit_services",
     "zcl_abapgit_set",
     "zcl_abapgit_stage",
@@ -115,6 +115,7 @@
       {"object": "ZCL_ABAPGIT_SERIALIZE", "class": "ltcl_serialize", "method": "test",        "note": "Void type: KO100"},
       {"object": "ZCL_ABAPGIT_SERIALIZE", "class": "ltcl_serialize", "method": "unsupported", "note": "Void type: KO100"},
       {"object": "ZCL_ABAPGIT_SERIALIZE", "class": "ltcl_serialize", "method": "ignored",     "note": "Void type: KO100"},
+      {"object": "ZCL_ABAPGIT_SERIALIZE", "class": "ltcl_i18n", "method": "test", "note": "Void type: DD02V"},
 
       {"object": "ZCL_ABAPGIT_TRANSPORT_OBJECTS", "class": "ltcl_transport_objects", "method": "should_add_all_local_files", "note": "??"},
       {"object": "ZCL_ABAPGIT_TRANSPORT_OBJECTS", "class": "ltcl_transport_objects", "method": "should_delete_all_related", "note": "??"},
