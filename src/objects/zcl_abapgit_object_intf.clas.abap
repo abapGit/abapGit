@@ -19,6 +19,33 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
       IMPORTING
         is_item     TYPE zif_abapgit_definitions=>ty_item
         iv_language TYPE spras.
+
+  PROTECTED SECTION.
+    METHODS deserialize_proxy
+      IMPORTING
+        iv_transport TYPE trkorr
+      RAISING
+        zcx_abapgit_exception .
+    METHODS deserialize_docu
+      IMPORTING
+        is_docu TYPE  ty_docu
+      RAISING
+        zcx_abapgit_exception .
+    METHODS serialize_docu
+      IMPORTING
+                is_i18n_params      TYPE zif_abapgit_definitions=>ty_i18n_params
+                it_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus OPTIONAL
+                iv_clsname          TYPE seoclsname
+      RETURNING VALUE(rs_docu)      TYPE ty_docu
+      RAISING
+                zcx_abapgit_exception.
+    METHODS serialize_descr
+      IMPORTING
+                is_i18n_params        TYPE zif_abapgit_definitions=>ty_i18n_params
+                iv_clsname            TYPE seoclsname
+      RETURNING VALUE(rs_description) TYPE ty_intf-description
+      RAISING
+                zcx_abapgit_exception.
   PRIVATE SECTION.
 
     DATA mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc .
@@ -34,9 +61,9 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
         io_xml TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
-    METHODS deserialize_xml
+    METHODS deserialize_intf
       IMPORTING
-        ii_xml       TYPE REF TO zif_abapgit_xml_input
+        is_intf      TYPE ty_intf
         iv_package   TYPE devclass
         iv_transport TYPE trkorr
       RAISING
@@ -44,29 +71,10 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
     METHODS deserialize_descriptions
       IMPORTING
         it_description TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt OPTIONAL.
-    METHODS deserialize_proxy
+    METHODS read_xml
       IMPORTING
-         iv_transport TYPE trkorr
-      RAISING
-        zcx_abapgit_exception .
-    METHODS deserialize_docu
-      IMPORTING
-         is_docu TYPE  ty_docu
-      RAISING
-        zcx_abapgit_exception .
-    METHODS serialize_docu
-      IMPORTING
-                 is_i18n_params      TYPE zif_abapgit_definitions=>ty_i18n_params
-                 it_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus OPTIONAL
-                 iv_clsname          TYPE seoclsname
-      RETURNING VALUE(rs_docu)       TYPE ty_docu
-      RAISING
-                zcx_abapgit_exception.
-    METHODS serialize_descr
-      IMPORTING
-                 is_i18n_params       TYPE zif_abapgit_definitions=>ty_i18n_params
-                 iv_clsname           TYPE seoclsname
-      RETURNING VALUE(rs_description) TYPE ty_intf-description
+                ii_xml         TYPE REF TO zif_abapgit_xml_input
+      RETURNING VALUE(rs_intf) TYPE ty_intf
       RAISING
                 zcx_abapgit_exception.
 ENDCLASS.
@@ -83,24 +91,21 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     mi_object_oriented_object_fct = zcl_abapgit_oo_factory=>make( ms_item-obj_type ).
   ENDMETHOD.
 
-
-  METHOD deserialize_xml.
-    DATA: ls_intf   TYPE ty_intf.
-
+  METHOD read_xml.
     ii_xml->read( EXPORTING iv_name = 'VSEOINTERF'
-                  CHANGING  cg_data = ls_intf-vseointerf ).
+                  CHANGING  cg_data = rs_intf-vseointerf ).
     ii_xml->read( EXPORTING iv_name = 'DESCRIPTIONS'
-                  CHANGING  cg_data = ls_intf-description ).
+                  CHANGING  cg_data = rs_intf-description ).
     ii_xml->read( EXPORTING iv_name = 'LINES'
-                  CHANGING  cg_data = ls_intf-docu-lines ).
+                  CHANGING  cg_data = rs_intf-docu-lines ).
     ii_xml->read( EXPORTING iv_name = 'I18N_LINES'
-                  CHANGING  cg_data = ls_intf-docu-i18n_lines ).
+                  CHANGING  cg_data = rs_intf-docu-i18n_lines ).
+  ENDMETHOD.
 
-    IF ls_intf-vseointerf-clsproxy = abap_true.
-      " Proxy interfaces are managed via SPRX
-      deserialize_proxy( iv_transport ).
-      RETURN.
-    ENDIF.
+  METHOD deserialize_intf.
+    DATA ls_intf TYPE ty_intf.
+
+    ls_intf = is_intf.
 
     mi_object_oriented_object_fct->create(
       EXPORTING
@@ -401,19 +406,30 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~deserialize.
-    DATA: lt_source     TYPE rswsourcet,
-          ls_clskey     TYPE seoclskey.
+    DATA: lt_source TYPE rswsourcet,
+          ls_clskey TYPE seoclskey,
+          ls_intf   TYPE ty_intf.
+
 
     IF iv_step = zif_abapgit_object=>gc_step_id-abap.
-      deserialize_xml( ii_xml       = io_xml
-                       iv_package   = iv_package
-                       iv_transport = iv_transport ).
+      ls_intf = read_xml( io_xml ).
 
-      ls_clskey-clsname = ms_item-obj_name.
-      lt_source = zif_abapgit_object~mo_files->read_abap( ).
-      mi_object_oriented_object_fct->deserialize_source(
-        is_key    = ls_clskey
-        it_source = lt_source ).
+      IF ls_intf-vseointerf-clsproxy = abap_true.
+        " Proxy interfaces are managed via SPRX
+        deserialize_proxy( iv_transport ).
+        RETURN.
+
+      ELSE.
+        deserialize_intf( is_intf      = ls_intf
+                          iv_package   = iv_package
+                          iv_transport = iv_transport ).
+
+        ls_clskey-clsname = ms_item-obj_name.
+        lt_source = zif_abapgit_object~mo_files->read_abap( ).
+        mi_object_oriented_object_fct->deserialize_source(
+          is_key    = ls_clskey
+          it_source = lt_source ).
+      ENDIF.
 
     ELSEIF iv_step = zif_abapgit_object=>gc_step_id-early.
 
