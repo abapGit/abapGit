@@ -33,19 +33,24 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
         zcx_abapgit_exception .
     METHODS serialize_docu
       IMPORTING
-                is_i18n_params      TYPE zif_abapgit_definitions=>ty_i18n_params
-                it_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus OPTIONAL
-                iv_clsname          TYPE seoclsname
-      RETURNING VALUE(rs_docu)      TYPE ty_docu
+                !ii_xml              TYPE REF TO zif_abapgit_xml_output
+                !it_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus OPTIONAL
+                !iv_clsname          TYPE seoclsname
+      RETURNING VALUE(rs_docu)       TYPE ty_docu
       RAISING
                 zcx_abapgit_exception.
     METHODS serialize_descr
       IMPORTING
-                is_i18n_params        TYPE zif_abapgit_definitions=>ty_i18n_params
-                iv_clsname            TYPE seoclsname
+                !ii_xml               TYPE REF TO zif_abapgit_xml_output
+                !iv_clsname           TYPE seoclsname
       RETURNING VALUE(rs_description) TYPE ty_intf-description
       RAISING
                 zcx_abapgit_exception.
+    METHODS serialize_xml
+      IMPORTING
+        !io_xml TYPE REF TO zif_abapgit_xml_output
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
 
     DATA mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc .
@@ -56,11 +61,6 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
         iv_package TYPE devclass
       RAISING
         zcx_abapgit_exception.
-    METHODS serialize_xml
-      IMPORTING
-        io_xml TYPE REF TO zif_abapgit_xml_output
-      RAISING
-        zcx_abapgit_exception .
     METHODS deserialize_intf
       IMPORTING
         is_intf      TYPE ty_intf
@@ -91,6 +91,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     mi_object_oriented_object_fct = zcl_abapgit_oo_factory=>make( ms_item-obj_type ).
   ENDMETHOD.
 
+
   METHOD read_xml.
     ii_xml->read( EXPORTING iv_name = 'VSEOINTERF'
                   CHANGING  cg_data = rs_intf-vseointerf ).
@@ -101,6 +102,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     ii_xml->read( EXPORTING iv_name = 'I18N_LINES'
                   CHANGING  cg_data = rs_intf-docu-i18n_lines ).
   ENDMETHOD.
+
 
   METHOD deserialize_intf.
     DATA ls_intf TYPE ty_intf.
@@ -120,6 +122,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     mi_object_oriented_object_fct->add_to_activation_list( ms_item ).
   ENDMETHOD.
 
+
   METHOD deserialize_descriptions.
     DATA:  ls_clskey TYPE seoclskey.
     ls_clskey-clsname = ms_item-obj_name.
@@ -128,6 +131,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       is_key          = ls_clskey
       it_descriptions = it_description ).
   ENDMETHOD.
+
 
   METHOD deserialize_docu.
     DATA: lv_object     TYPE dokhl-object,
@@ -227,7 +231,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
           lv_language        TYPE spras,
           lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
-    IF is_i18n_params-main_language_only = abap_true.
+    IF ii_xml->i18n_params( )-main_language_only = abap_true.
       lv_language = mv_language.
     ENDIF.
 
@@ -265,7 +269,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     rs_docu-lines = lt_lines.
 
-    IF is_i18n_params-main_language_only = abap_true.
+    IF ii_xml->i18n_params( )-main_language_only = abap_true.
       RETURN.
     ENDIF.
 
@@ -322,12 +326,12 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
         AND langu  <> mv_language.
 
     ls_intf-docu = serialize_docu(
-      is_i18n_params      = io_xml->i18n_params( )
+      ii_xml              = io_xml
       iv_clsname          = ls_clskey-clsname
       it_langu_additional = lt_langu_additional ).
 
-    ls_intf-description = serialize_descr( is_i18n_params = io_xml->i18n_params( )
-                                           iv_clsname     = ls_clskey-clsname ).
+    ls_intf-description = serialize_descr( ii_xml     = io_xml
+                                           iv_clsname = ls_clskey-clsname ).
 
     " HERE: switch with feature flag for XML or JSON file format
     IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
