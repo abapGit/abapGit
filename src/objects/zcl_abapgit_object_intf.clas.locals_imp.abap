@@ -550,6 +550,24 @@ CLASS lcl_aff_serialize_metadata IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD deserialize.
+    DATA:
+      lo_ajson     TYPE REF TO zcl_abapgit_json_handler,
+      lx_exception TYPE REF TO cx_static_check,
+      ls_aff_data  TYPE zif_abapgit_aff_intf_v1=>ty_main.
+
+
+    CREATE OBJECT lo_ajson.
+    TRY.
+        lo_ajson->deserialize(
+           EXPORTING
+             iv_content = iv_data
+           IMPORTING
+             ev_data    = ls_aff_data ).
+      CATCH cx_static_check INTO lx_exception.
+        zcx_abapgit_exception=>raise_with_text( lx_exception ).
+    ENDTRY.
+
+    " do either convert to abapgit type or write direct to DB via lcl_aff_helper
 
   ENDMETHOD.
 
