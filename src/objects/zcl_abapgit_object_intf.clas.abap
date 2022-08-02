@@ -61,13 +61,7 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
         iv_package TYPE devclass
       RAISING
         zcx_abapgit_exception.
-    METHODS deserialize_intf
-      IMPORTING
-        is_intf      TYPE ty_intf
-        iv_package   TYPE devclass
-        iv_transport TYPE trkorr
-      RAISING
-        zcx_abapgit_exception .
+
     METHODS deserialize_descriptions
       IMPORTING
         it_description TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt OPTIONAL.
@@ -102,26 +96,6 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     ii_xml->read( EXPORTING iv_name = 'I18N_LINES'
                   CHANGING  cg_data = rs_intf-docu-i18n_lines ).
   ENDMETHOD.
-
-
-  METHOD deserialize_intf.
-    DATA ls_intf TYPE ty_intf.
-
-    ls_intf = is_intf.
-
-    mi_object_oriented_object_fct->create(
-      EXPORTING
-        iv_package    = iv_package
-      CHANGING
-        cg_properties = ls_intf-vseointerf ).
-
-    deserialize_descriptions( it_description = ls_intf-description ).
-
-    deserialize_docu( is_docu = ls_intf-docu ).
-
-    mi_object_oriented_object_fct->add_to_activation_list( ms_item ).
-  ENDMETHOD.
-
 
   METHOD deserialize_descriptions.
     DATA:  ls_clskey TYPE seoclskey.
@@ -414,25 +388,31 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
           ls_clskey TYPE seoclskey,
           ls_intf   TYPE ty_intf.
 
-
     IF iv_step = zif_abapgit_object=>gc_step_id-abap.
       ls_intf = read_xml( io_xml ).
 
       IF ls_intf-vseointerf-clsproxy = abap_true.
         " Proxy interfaces are managed via SPRX
         deserialize_proxy( iv_transport ).
-        RETURN.
 
       ELSE.
-        deserialize_intf( is_intf      = ls_intf
-                          iv_package   = iv_package
-                          iv_transport = iv_transport ).
+        mi_object_oriented_object_fct->create(
+          EXPORTING
+            iv_package    = iv_package
+          CHANGING
+            cg_properties = ls_intf-vseointerf ).
 
         ls_clskey-clsname = ms_item-obj_name.
         lt_source = zif_abapgit_object~mo_files->read_abap( ).
         mi_object_oriented_object_fct->deserialize_source(
           is_key    = ls_clskey
           it_source = lt_source ).
+
+        deserialize_descriptions( it_description = ls_intf-description ).
+
+        deserialize_docu( is_docu = ls_intf-docu ).
+
+        mi_object_oriented_object_fct->add_to_activation_list( ms_item ).
       ENDIF.
 
     ELSEIF iv_step = zif_abapgit_object=>gc_step_id-early.
