@@ -466,6 +466,10 @@ CLASS lcl_aff_serialize_metadata DEFINITION.
       IMPORTING is_intf          TYPE zcl_abapgit_object_intf=>ty_intf
       RETURNING VALUE(rv_result) TYPE xstring
       RAISING   zcx_abapgit_exception.
+    CLASS-METHODS deserialize
+      IMPORTING iv_data          TYPE xstring
+      RETURNING VALUE(rv_result) TYPE zcl_abapgit_object_intf=>ty_intf
+      RAISING   zcx_abapgit_exception.
   PRIVATE SECTION.
     CLASS-METHODS:
       get_mappings
@@ -543,6 +547,10 @@ CLASS lcl_aff_serialize_metadata IMPLEMENTATION.
     ls_path_to_skipp-value = 'standard'.
 
     APPEND ls_path_to_skipp TO rt_result.
+  ENDMETHOD.
+
+  METHOD deserialize.
+
   ENDMETHOD.
 
 ENDCLASS.

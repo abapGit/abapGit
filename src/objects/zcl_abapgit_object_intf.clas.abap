@@ -386,12 +386,14 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
     DATA: lt_source TYPE rswsourcet,
           ls_clskey TYPE seoclskey,
+          lv_json_data TYPE xstring,
           ls_intf   TYPE ty_intf.
 
     IF iv_step = zif_abapgit_object=>gc_step_id-abap.
       " HERE: switch with feature flag between XML and JSON file format
       IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
-
+        lv_json_data = zif_abapgit_object~mo_files->read_raw( iv_ext = 'json' ).
+        ls_intf = lcl_aff_metadata_handler=>deserialize( lv_json_data ).
       ELSE.
         ls_intf = read_xml( io_xml ).
       ENDIF.
