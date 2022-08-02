@@ -389,7 +389,12 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
           ls_intf   TYPE ty_intf.
 
     IF iv_step = zif_abapgit_object=>gc_step_id-abap.
-      ls_intf = read_xml( io_xml ).
+      " HERE: switch with feature flag between XML and JSON file format
+      IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
+
+      ELSE.
+        ls_intf = read_xml( io_xml ).
+      ENDIF.
 
       IF ls_intf-vseointerf-clsproxy = abap_true.
         " Proxy interfaces are managed via SPRX
