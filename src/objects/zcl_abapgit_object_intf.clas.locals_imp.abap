@@ -567,7 +567,7 @@ CLASS lcl_aff_serialize_metadata IMPLEMENTATION.
         zcx_abapgit_exception=>raise_with_text( lx_exception ).
     ENDTRY.
 
-    " do either convert to abapgit type or write direct to DB via lcl_aff_helper
+    " convert to abapgit type
 
   ENDMETHOD.
 
