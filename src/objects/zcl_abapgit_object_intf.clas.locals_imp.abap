@@ -426,6 +426,11 @@ ENDCLASS.
 CLASS lcl_aff_type_mapping DEFINITION.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_aff_type_mapping.
+  PRIVATE SECTION.
+      METHODS set_abapgit_descriptions
+      IMPORTING is_clsname      TYPE seoclsname
+                is_intf_aff     TYPE zif_abapgit_aff_intf_v1=>ty_main
+      RETURNING VALUE(rs_return) TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt.
 ENDCLASS.
 
 CLASS lcl_aff_type_mapping IMPLEMENTATION.
@@ -464,9 +469,65 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
 
     ls_data_aff = iv_data.
 
-    " do conversion here
+    ls_data_abapgit-description = set_abapgit_descriptions( is_clsname = 'MYCLASS'
+                                                            is_intf_aff = ls_data_aff ).
+
+    ls_data_abapgit-vseointerf-clsname = 'MYCLASS'.
+    ls_data_abapgit-vseointerf-descript = ls_data_aff-header-description.
+    ls_data_abapgit-vseointerf-unicode  = ls_data_aff-header-abap_language_version.
+    ls_data_abapgit-vseointerf-langu    = ls_data_aff-header-original_language.
+    ls_data_abapgit-vseointerf-clsproxy = ls_data_aff-proxy.
+    ls_data_abapgit-vseointerf-exposure = seoc_exposure_public.
+    ls_data_abapgit-vseointerf-state    = seoc_state_implemented.
+
+    "  to do : fill it right!
+    ls_data_abapgit-vseointerf-author    = sy-uname.
+    ls_data_abapgit-vseointerf-createdon = sy-datum.
+    ls_data_abapgit-vseointerf-changedby = sy-uname.
 
     es_data = ls_data_abapgit.
+
+  ENDMETHOD.
+
+  METHOD set_abapgit_descriptions.
+
+    DATA ls_description TYPE seocompotx.
+    FIELD-SYMBOLS <ls_description>      TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description.
+    FIELD-SYMBOLS <ls_meth_description> TYPE zif_abapgit_aff_oo_types_v1=>ty_method.
+    FIELD-SYMBOLS <ls_evt_description>  TYPE zif_abapgit_aff_oo_types_v1=>ty_event.
+
+
+    LOOP AT is_intf_aff-descriptions-types ASSIGNING <ls_description>.
+      ls_description-clsname  = is_clsname.
+      ls_description-cmpname  = <ls_description>-name.
+      ls_description-langu    = is_intf_aff-header-original_language.
+      ls_description-descript = <ls_description>-description.
+      APPEND ls_description TO rs_return.
+    ENDLOOP.
+
+    LOOP AT is_intf_aff-descriptions-attributes ASSIGNING <ls_description>.
+      ls_description-clsname  = is_clsname.
+      ls_description-cmpname  = <ls_description>-name.
+      ls_description-langu    = is_intf_aff-header-original_language.
+      ls_description-descript = <ls_description>-description.
+      APPEND ls_description TO rs_return.
+    ENDLOOP.
+
+    LOOP AT is_intf_aff-descriptions-methods ASSIGNING <ls_meth_description>.
+      ls_description-clsname  = is_clsname.
+      ls_description-cmpname  = <ls_meth_description>-name.
+      ls_description-langu    = is_intf_aff-header-original_language.
+      ls_description-descript = <ls_meth_description>-description.
+      APPEND ls_description TO rs_return.
+    ENDLOOP.
+
+    LOOP AT is_intf_aff-descriptions-events ASSIGNING <ls_evt_description>.
+      ls_description-clsname  = is_clsname.
+      ls_description-cmpname  = <ls_evt_description>-name.
+      ls_description-langu    = is_intf_aff-header-original_language.
+      ls_description-descript = <ls_evt_description>-description.
+      APPEND ls_description TO rs_return.
+    ENDLOOP.
 
   ENDMETHOD.
 

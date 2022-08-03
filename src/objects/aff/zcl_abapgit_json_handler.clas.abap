@@ -65,6 +65,11 @@ CLASS zcl_abapgit_json_handler DEFINITION
       set_abap_language_version
         CHANGING co_ajson TYPE REF TO zcl_abapgit_ajson
         RAISING  zcx_abapgit_ajson_error,
+      "! For deserialization
+      set_original_language_deser
+        CHANGING co_ajson TYPE REF TO zcl_abapgit_ajson
+        RAISING  zcx_abapgit_ajson_error,
+      "! For deserialization
       set_defaults
         IMPORTING it_defaults TYPE ty_skip_paths
         CHANGING  co_ajson    TYPE REF TO zcl_abapgit_ajson
@@ -90,7 +95,8 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
     lo_ajson = zcl_abapgit_ajson=>parse( iv_json           = lv_json
                                          ii_custom_mapping = lo_mapping ).
 
-    " do modify ajson data, e.g. en -> E and others
+
+    set_original_language_deser( CHANGING co_ajson = lo_ajson ).
     set_defaults( EXPORTING it_defaults = iv_defaults
                   CHANGING  co_ajson    = lo_ajson ).
 
@@ -204,6 +210,48 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
   METHOD set_defaults.
 
+  ENDMETHOD.
+
+  METHOD set_original_language_deser.
+    DATA:
+      lv_iso_language      TYPE i18_a_langiso2,
+      lv_original_language TYPE sy-langu.
+
+
+    lv_iso_language = co_ajson->get_string( '/header/originalLanguage' ).
+
+    cl_i18n_languages=>locale_to_sap1(
+      EXPORTING
+        iv_localename        = lv_iso_language
+        iv_consider_inactive = abap_true
+      IMPORTING
+        ev_lang_sap1         = lv_original_language
+      EXCEPTIONS
+        no_assignment        = 1
+        OTHERS               = 2 ).
+    IF sy-subrc <> 0.
+      FIND REGEX `[A-Z]{2}` IN lv_iso_language.
+      IF sy-subrc = 0.
+        "Fallback try to convert from SAP language
+        cl_i18n_languages=>sap2_to_sap1(
+          EXPORTING
+            im_lang_sap2      = lv_iso_language
+          RECEIVING
+            re_lang_sap1      = lv_original_language
+          EXCEPTIONS
+            no_assignment     = 1
+            no_representation = 2
+            OTHERS            = 3 ).
+        IF sy-subrc <> 0.
+          RAISE EXCEPTION TYPE zcx_abapgit_ajson_error.
+        ENDIF.
+      ELSE.
+        RAISE EXCEPTION TYPE zcx_abapgit_ajson_error.
+      ENDIF.
+    ENDIF.
+
+    co_ajson->set_string( iv_path = '/header/originalLanguage'
+                          iv_val  = lv_original_language ).
   ENDMETHOD.
 
 ENDCLASS.
