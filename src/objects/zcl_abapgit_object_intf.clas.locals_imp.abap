@@ -486,8 +486,12 @@ CLASS lcl_aff_serialize_metadata DEFINITION.
       RAISING   zcx_abapgit_exception.
   PRIVATE SECTION.
     CLASS-METHODS:
+      "! For serialization
+      "! @parameter rt_result | Map/table that associates ABAP values to JSON values (enums)
       get_mappings
         RETURNING VALUE(rt_result) TYPE zcl_abapgit_json_handler=>ty_enum_mappings,
+      "! For serialization
+      "! @parameter rt_result | Paths that will not be serialized (depending on value)
       get_paths_to_skip
         RETURNING VALUE(rt_result) TYPE zcl_abapgit_json_handler=>ty_skip_paths.
 ENDCLASS.
