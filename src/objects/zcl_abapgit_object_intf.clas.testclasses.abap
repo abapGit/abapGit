@@ -268,6 +268,7 @@ ENDCLASS.
 CLASS ltcl_aff_metadata DEFINITION FINAL FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
   PRIVATE SECTION.
     METHODS:
+      deserialize_non_defaults FOR TESTING RAISING cx_static_check,
       serialize_non_default FOR TESTING RAISING cx_static_check,
       serialize_default FOR TESTING RAISING cx_static_check.
 
@@ -345,4 +346,39 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
       iv_json_b = lv_expected ).
     cl_abap_unit_assert=>assert_true( lv_is_equal ).
   ENDMETHOD.
+
+  METHOD deserialize_non_defaults.
+    DATA:
+      lv_source         TYPE string,
+      lv_source_xstring TYPE xstring,
+      ls_actual         TYPE zcl_abapgit_object_intf=>ty_intf,
+      ls_expected       TYPE zcl_abapgit_object_intf=>ty_intf.
+
+
+    ls_expected-vseointerf-unicode = zif_abapgit_aff_types_v1=>co_abap_language_version_src-key_user.
+    ls_expected-vseointerf-descript = `abc`.
+    ls_expected-vseointerf-langu = `F`.
+    ls_expected-vseointerf-category = zif_abapgit_aff_intf_v1=>co_category-db_procedure_proxy.
+    ls_expected-vseointerf-clsproxy = abap_true.
+
+    lv_source =
+      `{` && cl_abap_char_utilities=>newline &&
+      `  "formatVersion": "1",` && cl_abap_char_utilities=>newline &&
+      `  "header": {` && cl_abap_char_utilities=>newline &&
+      `    "description": "abc",` && cl_abap_char_utilities=>newline &&
+      `    "originalLanguage": "fr",` && cl_abap_char_utilities=>newline &&
+      `    "abapLanguageVersion": "keyUser"` && cl_abap_char_utilities=>newline &&
+      `  },` && cl_abap_char_utilities=>newline &&
+      `  "category": "dbProcedureProxy",` && cl_abap_char_utilities=>newline &&
+      `  "proxy": true` && cl_abap_char_utilities=>newline &&
+      `}` && cl_abap_char_utilities=>newline.
+
+    lv_source_xstring = cl_abap_codepage=>convert_to( lv_source ).
+
+    " cut
+    ls_actual = lcl_aff_metadata_handler=>deserialize( lv_source_xstring ).
+
+    cl_abap_unit_assert=>assert_equals( act = ls_actual exp = ls_expected ).
+  ENDMETHOD.
+
 ENDCLASS.
