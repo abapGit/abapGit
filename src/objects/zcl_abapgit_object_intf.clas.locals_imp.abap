@@ -572,7 +572,10 @@ CLASS lcl_aff_serialize_metadata IMPLEMENTATION.
       lo_ajson      TYPE REF TO zcl_abapgit_json_handler,
       lx_exception  TYPE REF TO cx_static_check,
       lo_aff_mapper TYPE REF TO zif_abapgit_aff_type_mapping,
-      ls_aff_data   TYPE zif_abapgit_aff_intf_v1=>ty_main.
+      ls_aff_data   TYPE zif_abapgit_aff_intf_v1=>ty_main,
+      lt_values_for_initial TYPE zcl_abapgit_json_handler=>ty_skip_paths.
+
+    lt_values_for_initial = get_paths_to_skip( ).
 
 
     CREATE OBJECT lo_ajson.
