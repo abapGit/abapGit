@@ -1,6 +1,14 @@
 INTERFACE zif_abapgit_aff_type_mapping
   PUBLIC .
   METHODS:
+    "! Convert from AFF to abapGit data
+    "!
+    "! @parameter iv_data | ABAP data as AFF type
+    "! @parameter es_data | ABAP data as abapGit type
+    to_abapgit
+      IMPORTING iv_data TYPE data
+      EXPORTING es_data TYPE data,
+
     "! Converts to AFF specific meta data
     "!
     "! @parameter iv_data | (meta-)data of the object

@@ -456,6 +456,20 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
     es_data = ls_data_aff.
   ENDMETHOD.
 
+  METHOD zif_abapgit_aff_type_mapping~to_abapgit.
+    DATA:
+      ls_data_abapgit TYPE zcl_abapgit_object_intf=>ty_intf,
+      ls_data_aff     TYPE zif_abapgit_aff_intf_v1=>ty_main.
+
+
+    ls_data_aff = iv_data.
+
+   " do conversion here
+
+    es_data = ls_data_abapgit.
+
+  ENDMETHOD.
+
 ENDCLASS.
 
 
@@ -553,6 +567,7 @@ CLASS lcl_aff_serialize_metadata IMPLEMENTATION.
     DATA:
       lo_ajson     TYPE REF TO zcl_abapgit_json_handler,
       lx_exception TYPE REF TO cx_static_check,
+      lo_aff_mapper TYPE REF TO zif_abapgit_aff_type_mapping,
       ls_aff_data  TYPE zif_abapgit_aff_intf_v1=>ty_main.
 
 
@@ -567,7 +582,9 @@ CLASS lcl_aff_serialize_metadata IMPLEMENTATION.
         zcx_abapgit_exception=>raise_with_text( lx_exception ).
     ENDTRY.
 
-    " convert to abapgit type
+    CREATE OBJECT lo_aff_mapper TYPE lcl_aff_type_mapping.
+    lo_aff_mapper->to_abapgit( EXPORTING iv_data = ls_aff_data
+                               IMPORTING es_data = rv_result ).
 
   ENDMETHOD.
 
