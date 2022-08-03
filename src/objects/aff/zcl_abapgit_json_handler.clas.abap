@@ -45,7 +45,7 @@ CLASS zcl_abapgit_json_handler DEFINITION
     "! @parameter ev_data | data of the xstring
     METHODS deserialize
       IMPORTING iv_content TYPE xstring
-                iv_defaults TYPE zcl_abapgit_json_handler=>ty_skip_paths
+                iv_defaults TYPE ty_skip_paths
       EXPORTING ev_data    TYPE data
       RAISING   cx_static_check.
 

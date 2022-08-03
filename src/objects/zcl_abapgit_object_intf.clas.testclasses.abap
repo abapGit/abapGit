@@ -378,7 +378,8 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
     " cut
     ls_actual = lcl_aff_metadata_handler=>deserialize( lv_source_xstring ).
 
-    cl_abap_unit_assert=>assert_equals( act = ls_actual exp = ls_expected ).
+    cl_abap_unit_assert=>assert_equals( act = ls_actual
+                                        exp = ls_expected ).
   ENDMETHOD.
 
 ENDCLASS.

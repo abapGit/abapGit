@@ -427,7 +427,7 @@ CLASS lcl_aff_type_mapping DEFINITION.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_aff_type_mapping.
   PRIVATE SECTION.
-      METHODS set_abapgit_descriptions
+    METHODS set_abapgit_descriptions
       IMPORTING is_clsname      TYPE seoclsname
                 is_intf_aff     TYPE zif_abapgit_aff_intf_v1=>ty_main
       RETURNING VALUE(rs_return) TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt.
