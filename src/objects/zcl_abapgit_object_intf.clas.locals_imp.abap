@@ -583,6 +583,7 @@ CLASS lcl_aff_serialize_metadata IMPLEMENTATION.
         lo_ajson->deserialize(
            EXPORTING
              iv_content = iv_data
+             iv_defaults = lt_values_for_initial
            IMPORTING
              ev_data    = ls_aff_data ).
       CATCH cx_static_check INTO lx_exception.

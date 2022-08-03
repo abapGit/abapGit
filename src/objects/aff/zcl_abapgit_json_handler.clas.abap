@@ -41,9 +41,11 @@ CLASS zcl_abapgit_json_handler DEFINITION
     "! the implementing class
     "!
     "! @parameter iv_content | xstring to be deserialized
+    "! @parameter iv_defaults | path-value pairs that apply if value is initial
     "! @parameter ev_data | data of the xstring
     METHODS deserialize
       IMPORTING iv_content TYPE xstring
+                iv_defaults TYPE zcl_abapgit_json_handler=>ty_skip_paths
       EXPORTING ev_data    TYPE data
       RAISING   cx_static_check.
 
@@ -62,7 +64,11 @@ CLASS zcl_abapgit_json_handler DEFINITION
         RAISING   zcx_abapgit_ajson_error,
       set_abap_language_version
         CHANGING co_ajson TYPE REF TO zcl_abapgit_ajson
-        RAISING  zcx_abapgit_ajson_error.
+        RAISING  zcx_abapgit_ajson_error,
+      set_defaults
+        IMPORTING it_defaults TYPE ty_skip_paths
+        CHANGING  co_ajson    TYPE REF TO zcl_abapgit_ajson
+        RAISING   zcx_abapgit_ajson_error.
 
 ENDCLASS.
 
@@ -83,6 +89,10 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
     lo_ajson = zcl_abapgit_ajson=>parse( iv_json           = lv_json
                                          ii_custom_mapping = lo_mapping ).
+
+    " do modify ajson data, e.g. en -> E and others
+    set_defaults( EXPORTING it_defaults = iv_defaults
+                  CHANGING  co_ajson    = lo_ajson ).
 
     lo_ajson->zif_abapgit_ajson~to_abap( IMPORTING ev_container = ev_data ).
 
@@ -189,6 +199,11 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
                               iv_val  = ls_mapping-json ).
       ENDIF.
     ENDLOOP.
+  ENDMETHOD.
+
+
+  METHOD set_defaults.
+
   ENDMETHOD.
 
 ENDCLASS.
