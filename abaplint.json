@@ -152,6 +152,7 @@
         "^cl_srvd_wb_object_data$", "^cx_aff_", "^cl_aff_", "^if_aff_",
         "^cl_wb_object_operator_factory$",
         "^cl_aunit_assert$",
+        "^if_adt_lock_handle$",
         "^cx_wb_object_operation_error$",
         "^if_srvd_types$", "^xubname$",
         "^if_wb_adt_plugin_resource_co$",
