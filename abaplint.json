@@ -239,7 +239,7 @@
     "colon_missing_space": true,
     "commented_code": {
       "allowIncludeInFugr": false,
-      "exclude": ["otgr"]
+      "exclude": ["otgr", "intf"]
     },
     "constructor_visibility_public": true,
     "contains_tab": true,
