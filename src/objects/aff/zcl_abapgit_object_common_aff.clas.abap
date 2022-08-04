@@ -138,7 +138,8 @@ CLASS ZCL_ABAPGIT_OBJECT_COMMON_AFF IMPLEMENTATION.
                    <ls_messages>             TYPE ANY TABLE,
                    <ls_message>              TYPE any,
                    <ls_text>                 TYPE any,
-                   <ls_type>                 TYPE any.
+                   <ls_type>                 TYPE any,
+                   <ls_msg>                  type symsg.
 
     lv_json_as_xstring = zif_abapgit_object~mo_files->read_raw( iv_ext = 'json' ).
 
@@ -218,12 +219,23 @@ CLASS ZCL_ABAPGIT_OBJECT_COMMON_AFF IMPLEMENTATION.
             messages = <ls_messages>.
 
         LOOP AT <ls_messages> ASSIGNING <ls_message>.
+          ASSIGN COMPONENT 'MESSAGE' OF STRUCTURE <ls_message> TO <ls_msg>.
           ASSIGN COMPONENT 'TEXT' OF STRUCTURE <ls_message> TO <ls_text>.
           ASSIGN COMPONENT 'TYPE' OF STRUCTURE <ls_message> TO <ls_type>.
           ii_log->add(
               iv_msg  = <ls_text>
               iv_type = <ls_type>
               is_item = ms_item ).
+
+          check <ls_msg>-msgty = 'E'.
+
+          zcx_abapgit_exception=>raise_t100(
+             iv_msgid    = <ls_msg>-msgid
+             iv_msgno    = <ls_msg>-msgno
+             iv_msgv1    = <ls_msg>-msgv1
+             iv_msgv2    = <ls_msg>-msgv2
+             iv_msgv3    = <ls_msg>-msgv3
+             iv_msgv4    = <ls_msg>-msgv4  ).
         ENDLOOP.
 
         tadir_insert( ms_item-devclass ).
