@@ -361,6 +361,9 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
     ls_expected-vseointerf-langu = `F`.
     ls_expected-vseointerf-category = zif_abapgit_aff_intf_v1=>co_category-db_procedure_proxy.
     ls_expected-vseointerf-clsproxy = abap_true.
+    " is this good assumption for unit testing?
+    ls_expected-vseointerf-exposure = seoc_exposure_public.
+    ls_expected-vseointerf-state    = seoc_state_implemented.
 
     lv_source =
       `{` && cl_abap_char_utilities=>newline &&
@@ -396,6 +399,9 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
     ls_expected-vseointerf-langu = `F`.
     ls_expected-vseointerf-category = zif_abapgit_aff_intf_v1=>co_category-general.
     ls_expected-vseointerf-clsproxy = abap_false.
+    " is this good assumption for unit testing?
+    ls_expected-vseointerf-exposure = seoc_exposure_public.
+    ls_expected-vseointerf-state    = seoc_state_implemented.
 
     lv_source =
       `{` && cl_abap_char_utilities=>newline &&
