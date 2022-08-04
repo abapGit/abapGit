@@ -209,7 +209,18 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
 
   METHOD set_defaults.
+    DATA:
+      lv_enum_json TYPE string,
+      ls_default   TYPE ty_path_value_pair.
 
+
+    LOOP AT it_defaults INTO ls_default.
+      lv_enum_json = co_ajson->get_string( ls_default-path ).
+      IF lv_enum_json <> 0.
+        co_ajson->set_string( iv_path = ls_default-path
+                              iv_val  = ls_default-value ).
+      ENDIF.
+    ENDLOOP.
   ENDMETHOD.
 
   METHOD set_original_language_deser.
