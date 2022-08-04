@@ -80,14 +80,15 @@ CLASS ZCL_ABAPGIT_OBJECT_COMMON_AFF IMPLEMENTATION.
 
         LOOP AT <ls_messages> ASSIGNING <ls_message>.
           ASSIGN COMPONENT 'MESSAGE' OF STRUCTURE <ls_message> TO <ls_msg>.
-          CHECK <ls_msg>-msgty = 'E'.
-          zcx_abapgit_exception=>raise_t100(
-             iv_msgid    = <ls_msg>-msgid
-             iv_msgno    = <ls_msg>-msgno
-             iv_msgv1    = <ls_msg>-msgv1
-             iv_msgv2    = <ls_msg>-msgv2
-             iv_msgv3    = <ls_msg>-msgv3
-             iv_msgv4    = <ls_msg>-msgv4  ).
+          IF <ls_msg>-msgty = 'E'.
+            zcx_abapgit_exception=>raise_t100(
+              iv_msgid    = <ls_msg>-msgid
+              iv_msgno    = <ls_msg>-msgno
+              iv_msgv1    = <ls_msg>-msgv1
+              iv_msgv2    = <ls_msg>-msgv2
+              iv_msgv3    = <ls_msg>-msgv3
+              iv_msgv4    = <ls_msg>-msgv4 ).
+          ENDIF.
         ENDLOOP.
 
         CALL FUNCTION 'TR_TADIR_INTERFACE'
@@ -412,14 +413,15 @@ CLASS ZCL_ABAPGIT_OBJECT_COMMON_AFF IMPLEMENTATION.
 
         LOOP AT <ls_messages> ASSIGNING <ls_message>.
           ASSIGN COMPONENT 'MESSAGE' OF STRUCTURE <ls_message> TO <ls_msg>.
-          CHECK <ls_msg>-msgty = 'E'.
-          zcx_abapgit_exception=>raise_t100(
-             iv_msgid    = <ls_msg>-msgid
-             iv_msgno    = <ls_msg>-msgno
-             iv_msgv1    = <ls_msg>-msgv1
-             iv_msgv2    = <ls_msg>-msgv2
-             iv_msgv3    = <ls_msg>-msgv3
-             iv_msgv4    = <ls_msg>-msgv4  ).
+          IF <ls_msg>-msgty = 'E'.
+            zcx_abapgit_exception=>raise_t100(
+              iv_msgid    = <ls_msg>-msgid
+              iv_msgno    = <ls_msg>-msgno
+              iv_msgv1    = <ls_msg>-msgv1
+              iv_msgv2    = <ls_msg>-msgv2
+              iv_msgv3    = <ls_msg>-msgv3
+              iv_msgv4    = <ls_msg>-msgv4 ).
+          ENDIF.
         ENDLOOP.
 
         CALL METHOD lo_files_container->('IF_AFF_FILES_CONTAINER~GET_FILE')
