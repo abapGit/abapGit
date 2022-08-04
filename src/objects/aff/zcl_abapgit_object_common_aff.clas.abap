@@ -139,7 +139,7 @@ CLASS ZCL_ABAPGIT_OBJECT_COMMON_AFF IMPLEMENTATION.
                    <ls_message>              TYPE any,
                    <ls_text>                 TYPE any,
                    <ls_type>                 TYPE any,
-                   <ls_msg>                  type symsg.
+                   <ls_msg>                  TYPE symsg.
 
     lv_json_as_xstring = zif_abapgit_object~mo_files->read_raw( iv_ext = 'json' ).
 
@@ -227,7 +227,7 @@ CLASS ZCL_ABAPGIT_OBJECT_COMMON_AFF IMPLEMENTATION.
               iv_type = <ls_type>
               is_item = ms_item ).
 
-          check <ls_msg>-msgty = 'E'.
+          CHECK <ls_msg>-msgty = 'E'.
 
           zcx_abapgit_exception=>raise_t100(
              iv_msgid    = <ls_msg>-msgid
