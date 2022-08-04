@@ -14,8 +14,8 @@ CLASS zcl_abapgit_object_evtb DEFINITION
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-      CONSTANTS:
-      co_table_name TYPE tabname VALUE 'EVTB_HEADER'.
+    CONSTANTS:
+    co_table_name TYPE tabname VALUE 'EVTB_HEADER'.
 ENDCLASS.
 
 
@@ -49,11 +49,11 @@ CLASS zcl_abapgit_object_evtb IMPLEMENTATION.
 
   METHOD zif_abapgit_object~changed_by.
 
-    DATA: lv_user  TYPE string,
-          lx_error TYPE REF TO cx_root,
-          lv_where_expr_active type string,
-          lv_where_expr_inactive type string,
-          lv_select type string.
+    DATA: lv_user                TYPE string,
+          lx_error               TYPE REF TO cx_root,
+          lv_where_expr_active   TYPE string,
+          lv_where_expr_inactive TYPE string,
+          lv_select              TYPE string.
 
     IF ms_item-obj_type <> 'EVTB'.
       RETURN.
@@ -61,8 +61,10 @@ CLASS zcl_abapgit_object_evtb IMPLEMENTATION.
 
     TRY.
 
-        lv_where_expr_active      = 'EVTB_NAME = ' &&  cl_abap_dyn_prg=>quote( ms_item-obj_name ) && ' AND VERSION = ' &&  cl_abap_dyn_prg=>quote( 'A' ).
-        lv_where_expr_inactive    = 'EVTB_NAME = ' &&  cl_abap_dyn_prg=>quote( ms_item-obj_name ) && ' AND VERSION = ' &&  cl_abap_dyn_prg=>quote( 'I' ).
+        lv_where_expr_active      = 'EVTB_NAME = '   &&  cl_abap_dyn_prg=>quote( ms_item-obj_name )  &&
+                                 ' AND VERSION = '   &&  cl_abap_dyn_prg=>quote( 'A' ).
+        lv_where_expr_inactive    = 'EVTB_NAME = '   &&  cl_abap_dyn_prg=>quote( ms_item-obj_name ) &&
+                                 ' AND VERSION = '   &&  cl_abap_dyn_prg=>quote( 'I' ).
 
         lv_select                 = 'CHANGED_BY'.
 
