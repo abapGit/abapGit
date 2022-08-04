@@ -475,6 +475,7 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
 
     ls_data_abapgit-vseointerf-clsname = 'MYCLASS'.
     ls_data_abapgit-vseointerf-descript = ls_data_aff-header-description.
+    ls_data_abapgit-vseointerf-category = ls_data_aff-category.
     ls_data_abapgit-vseointerf-unicode  = ls_data_aff-header-abap_language_version.
     ls_data_abapgit-vseointerf-langu    = ls_data_aff-header-original_language.
     ls_data_abapgit-vseointerf-clsproxy = ls_data_aff-proxy.
