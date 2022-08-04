@@ -534,7 +534,7 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS lcl_aff_serialize_metadata DEFINITION.
+CLASS lcl_aff_metadata_handler DEFINITION.
   PUBLIC SECTION.
 
     CLASS-METHODS serialize
@@ -557,7 +557,7 @@ CLASS lcl_aff_serialize_metadata DEFINITION.
         RETURNING VALUE(rt_result) TYPE zcl_abapgit_json_handler=>ty_skip_paths.
 ENDCLASS.
 
-CLASS lcl_aff_serialize_metadata IMPLEMENTATION.
+CLASS lcl_aff_metadata_handler IMPLEMENTATION.
 
   METHOD serialize.
     DATA:

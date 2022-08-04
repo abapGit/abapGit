@@ -309,7 +309,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     " HERE: switch with feature flag for XML or JSON file format
     IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
-      lv_serialized_data = lcl_aff_serialize_metadata=>serialize( ls_intf ).
+      lv_serialized_data = lcl_aff_metadata_handler=>serialize( ls_intf ).
       zif_abapgit_object~mo_files->add_raw( iv_ext  = 'json'
                                             iv_data = lv_serialized_data ).
 

@@ -291,7 +291,7 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
     ls_intf-vseointerf-category = zif_abapgit_aff_intf_v1=>co_category-general.
     ls_intf-vseointerf-clsproxy = abap_false.
 
-    lv_serialized_data = lcl_aff_serialize_metadata=>serialize( ls_intf ).
+    lv_serialized_data = lcl_aff_metadata_handler=>serialize( ls_intf ).
 
     lv_expected =
       `{` && cl_abap_char_utilities=>newline &&
@@ -325,7 +325,7 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
     ls_intf-vseointerf-category = zif_abapgit_aff_intf_v1=>co_category-db_procedure_proxy.
     ls_intf-vseointerf-clsproxy = abap_true.
 
-    lv_serialized_data = lcl_aff_serialize_metadata=>serialize( ls_intf ).
+    lv_serialized_data = lcl_aff_metadata_handler=>serialize( ls_intf ).
 
     lv_expected =
       `{` && cl_abap_char_utilities=>newline &&
