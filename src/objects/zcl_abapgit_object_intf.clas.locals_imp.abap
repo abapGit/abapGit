@@ -635,9 +635,11 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
       lx_exception  TYPE REF TO cx_static_check,
       lo_aff_mapper TYPE REF TO zif_abapgit_aff_type_mapping,
       ls_aff_data   TYPE zif_abapgit_aff_intf_v1=>ty_main,
+      lt_enum_mappings      TYPE zcl_abapgit_json_handler=>ty_enum_mappings,
       lt_values_for_initial TYPE zcl_abapgit_json_handler=>ty_skip_paths.
 
     lt_values_for_initial = get_paths_to_skip( ).
+    lt_enum_mappings = get_mappings( ).
 
 
     CREATE OBJECT lo_ajson.
@@ -646,6 +648,7 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
            EXPORTING
              iv_content = iv_data
              iv_defaults = lt_values_for_initial
+             iv_enum_mappings = lt_enum_mappings
            IMPORTING
              ev_data    = ls_aff_data ).
       CATCH cx_static_check INTO lx_exception.

@@ -46,6 +46,7 @@ CLASS zcl_abapgit_json_handler DEFINITION
     METHODS deserialize
       IMPORTING iv_content TYPE xstring
                 iv_defaults TYPE ty_skip_paths
+                iv_enum_mappings TYPE ty_enum_mappings
       EXPORTING ev_data    TYPE data
       RAISING   cx_static_check.
 
@@ -73,6 +74,10 @@ CLASS zcl_abapgit_json_handler DEFINITION
       set_defaults
         IMPORTING it_defaults TYPE ty_skip_paths
         CHANGING  co_ajson    TYPE REF TO zcl_abapgit_ajson
+        RAISING   zcx_abapgit_ajson_error,
+    set_custom_enum_deserialize
+        IMPORTING it_enum_mappings TYPE ty_enum_mappings
+        CHANGING  co_ajson         TYPE REF TO zcl_abapgit_ajson
         RAISING   zcx_abapgit_ajson_error.
 
 ENDCLASS.
@@ -99,6 +104,8 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
     set_original_language_deser( CHANGING co_ajson = lo_ajson ).
     set_defaults( EXPORTING it_defaults = iv_defaults
                   CHANGING  co_ajson    = lo_ajson ).
+    set_custom_enum_deserialize( EXPORTING it_enum_mappings = iv_enum_mappings
+                                 CHANGING co_ajson          = lo_ajson  ).
 
     lo_ajson->zif_abapgit_ajson~to_abap( IMPORTING ev_container = ev_data ).
 
@@ -203,6 +210,24 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
       IF sy-subrc = 0.
         co_ajson->set_string( iv_path = ls_enum_mapping-path
                               iv_val  = ls_mapping-json ).
+      ENDIF.
+    ENDLOOP.
+  ENDMETHOD.
+
+
+  METHOD set_custom_enum_deserialize.
+    DATA:
+      lv_enum_json    TYPE string,
+      ls_enum_mapping TYPE ty_enum_mapping,
+      ls_mapping      TYPE ty_json_abap_mapping.
+
+
+    LOOP AT it_enum_mappings INTO ls_enum_mapping.
+      lv_enum_json = co_ajson->get_string( ls_enum_mapping-path ).
+      READ TABLE ls_enum_mapping-mappings WITH KEY json = lv_enum_json INTO ls_mapping.
+      IF sy-subrc = 0.
+        co_ajson->set_string( iv_path = ls_enum_mapping-path
+                              iv_val  = ls_mapping-abap ).
       ENDIF.
     ENDLOOP.
   ENDMETHOD.
