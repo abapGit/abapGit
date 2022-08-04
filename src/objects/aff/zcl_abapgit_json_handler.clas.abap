@@ -66,6 +66,10 @@ CLASS zcl_abapgit_json_handler DEFINITION
       set_abap_language_version
         CHANGING co_ajson TYPE REF TO zcl_abapgit_ajson
         RAISING  zcx_abapgit_ajson_error,
+      "! Get the enum mapping from object handler, as other enums as well
+      set_abap_language_version_des
+        CHANGING co_ajson TYPE REF TO zcl_abapgit_ajson
+        RAISING  zcx_abapgit_ajson_error,
       "! For deserialization
       set_original_language_deser
         CHANGING co_ajson TYPE REF TO zcl_abapgit_ajson
@@ -104,6 +108,7 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
     set_original_language_deser( CHANGING co_ajson = lo_ajson ).
     set_defaults( EXPORTING it_defaults = iv_defaults
                   CHANGING  co_ajson    = lo_ajson ).
+    set_abap_language_version_des( CHANGING co_ajson = lo_ajson ).
     set_custom_enum_deserialize( EXPORTING it_enum_mappings = iv_enum_mappings
                                  CHANGING co_ajson          = lo_ajson  ).
 
@@ -195,6 +200,25 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
     co_ajson->set_string( iv_path = '/header/abapLanguageVersion'
                           iv_val  = lv_enum_json ).
+  ENDMETHOD.
+
+  METHOD set_abap_language_version_des.
+    DATA:
+      lv_enum_abap TYPE string,
+      lv_enum_json TYPE string.
+
+
+    lv_enum_json = co_ajson->get_string( '/header/abapLanguageVersion' ).
+    IF lv_enum_json = 'standard'.
+      lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
+    ELSEIF lv_enum_json = 'cloudDevelopment'.
+      lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version-cloud_development.
+    ELSEIF lv_enum_json = 'keyUser'.
+      lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version-key_user.
+    ENDIF.
+
+    co_ajson->set_string( iv_path = '/header/abapLanguageVersion'
+                          iv_val  = lv_enum_abap ).
   ENDMETHOD.
 
   METHOD set_custom_enum.
