@@ -473,19 +473,19 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
     ls_data_abapgit-description = set_abapgit_descriptions( is_clsname = 'MYCLASS'
                                                             is_intf_aff = ls_data_aff ).
 
-    ls_data_abapgit-vseointerf-clsname = 'MYCLASS'.
     ls_data_abapgit-vseointerf-descript = ls_data_aff-header-description.
     ls_data_abapgit-vseointerf-category = ls_data_aff-category.
     ls_data_abapgit-vseointerf-unicode  = ls_data_aff-header-abap_language_version.
     ls_data_abapgit-vseointerf-langu    = ls_data_aff-header-original_language.
     ls_data_abapgit-vseointerf-clsproxy = ls_data_aff-proxy.
+    " to be reviewed
     ls_data_abapgit-vseointerf-exposure = seoc_exposure_public.
     ls_data_abapgit-vseointerf-state    = seoc_state_implemented.
 
     "  to do : fill it right!
-    ls_data_abapgit-vseointerf-author    = sy-uname.
-    ls_data_abapgit-vseointerf-createdon = sy-datum.
-    ls_data_abapgit-vseointerf-changedby = sy-uname.
+*    ls_data_abapgit-vseointerf-author    = sy-uname.
+*    ls_data_abapgit-vseointerf-createdon = sy-datum.
+*    ls_data_abapgit-vseointerf-changedby = sy-uname.
 
     es_data = ls_data_abapgit.
 
