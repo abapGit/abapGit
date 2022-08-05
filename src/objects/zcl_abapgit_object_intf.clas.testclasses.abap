@@ -306,7 +306,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
     lv_is_equal = zcl_abapgit_ajson_utilities=>new( )->is_equal(
       iv_json_a = lv_actual
       iv_json_b = lv_expected ).
-    cl_abap_unit_assert=>assert_true( lv_is_equal ).
+    cl_abap_unit_assert=>assert_equals( act = lv_is_equal exp = abap_true ).
   ENDMETHOD.
 
 
@@ -343,6 +343,6 @@ CLASS ltcl_serialize IMPLEMENTATION.
     lv_is_equal = zcl_abapgit_ajson_utilities=>new( )->is_equal(
       iv_json_a = lv_actual
       iv_json_b = lv_expected ).
-    cl_abap_unit_assert=>assert_true( lv_is_equal ).
+    cl_abap_unit_assert=>assert_equals( act = lv_is_equal exp = abap_true ).
   ENDMETHOD.
 ENDCLASS.
