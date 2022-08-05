@@ -394,6 +394,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
         lv_json_data = zif_abapgit_object~mo_files->read_raw( iv_ext = 'json' ).
         ls_intf = lcl_aff_metadata_handler=>deserialize( lv_json_data ).
+        ls_intf-vseointerf-clsname = ms_item-obj_name.
       ELSE.
         ls_intf = read_xml( io_xml ).
       ENDIF.
