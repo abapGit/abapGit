@@ -44,10 +44,10 @@ CLASS zcl_abapgit_json_handler DEFINITION
     "! @parameter iv_defaults | path-value pairs that apply if value is initial
     "! @parameter ev_data | data of the xstring
     METHODS deserialize
-      IMPORTING iv_content TYPE xstring
-                iv_defaults TYPE ty_skip_paths
+      IMPORTING iv_content       TYPE xstring
+                iv_defaults      TYPE ty_skip_paths
                 iv_enum_mappings TYPE ty_enum_mappings
-      EXPORTING ev_data    TYPE data
+      EXPORTING ev_data          TYPE data
       RAISING   cx_static_check.
 
 
@@ -79,7 +79,7 @@ CLASS zcl_abapgit_json_handler DEFINITION
         IMPORTING it_defaults TYPE ty_skip_paths
         CHANGING  co_ajson    TYPE REF TO zcl_abapgit_ajson
         RAISING   zcx_abapgit_ajson_error,
-    set_custom_enum_deserialize
+      set_custom_enum_deserialize
         IMPORTING it_enum_mappings TYPE ty_enum_mappings
         CHANGING  co_ajson         TYPE REF TO zcl_abapgit_ajson
         RAISING   zcx_abapgit_ajson_error.

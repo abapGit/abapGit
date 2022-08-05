@@ -384,10 +384,10 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~deserialize.
-    DATA: lt_source TYPE rswsourcet,
-          ls_clskey TYPE seoclskey,
+    DATA: lt_source    TYPE rswsourcet,
+          ls_clskey    TYPE seoclskey,
           lv_json_data TYPE xstring,
-          ls_intf   TYPE ty_intf.
+          ls_intf      TYPE ty_intf.
 
     IF iv_step = zif_abapgit_object=>gc_step_id-abap.
       " HERE: switch with feature flag between XML and JSON file format
