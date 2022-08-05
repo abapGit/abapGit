@@ -265,7 +265,7 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
     LOOP AT it_defaults INTO ls_default.
       lv_enum_json = co_ajson->get_string( ls_default-path ).
-      IF lv_enum_json <> 0.
+      IF lv_enum_json = ``.
         co_ajson->set_string( iv_path = ls_default-path
                               iv_val  = ls_default-value ).
       ENDIF.
