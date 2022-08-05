@@ -637,9 +637,15 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
       lo_aff_mapper TYPE REF TO zif_abapgit_aff_type_mapping,
       ls_aff_data   TYPE zif_abapgit_aff_intf_v1=>ty_main,
       lt_enum_mappings      TYPE zcl_abapgit_json_handler=>ty_enum_mappings,
+      lt_default_abap_langu_version TYPE zcl_abapgit_json_handler=>ty_path_value_pair,
       lt_values_for_initial TYPE zcl_abapgit_json_handler=>ty_skip_paths.
 
     lt_values_for_initial = get_paths_to_skip( ).
+
+    lt_default_abap_langu_version-path  = '/header/abapLanguageVersion'.
+    lt_default_abap_langu_version-value = 'standard'.
+    APPEND lt_default_abap_langu_version TO lt_values_for_initial.
+
     lt_enum_mappings = get_mappings( ).
 
 
