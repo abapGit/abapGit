@@ -470,9 +470,10 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
 
     ls_data_aff = iv_data.
 
-    ls_data_abapgit-description = set_abapgit_descriptions( is_clsname = 'Z_AFF_EXAMPLE_INTF'
+    ls_data_abapgit-description = set_abapgit_descriptions( is_clsname  = CONV #( iv_object_name )
                                                             is_intf_aff = ls_data_aff ).
 
+    ls_data_abapgit-vseointerf-clsname = iv_object_name.
     ls_data_abapgit-vseointerf-descript = ls_data_aff-header-description.
     ls_data_abapgit-vseointerf-category = ls_data_aff-category.
     ls_data_abapgit-vseointerf-unicode  = ls_data_aff-header-abap_language_version.
@@ -545,7 +546,7 @@ CLASS lcl_aff_metadata_handler DEFINITION.
       RAISING   zcx_abapgit_exception.
     CLASS-METHODS deserialize
       IMPORTING iv_data          TYPE xstring
-      RETURNING VALUE(rv_result) TYPE zcl_abapgit_object_intf=>ty_intf
+      RETURNING VALUE(rv_result) TYPE zif_abapgit_aff_intf_v1=>ty_main
       RAISING   zcx_abapgit_exception.
   PRIVATE SECTION.
     CLASS-METHODS:
@@ -634,8 +635,6 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
     DATA:
       lo_ajson                      TYPE REF TO zcl_abapgit_json_handler,
       lx_exception                  TYPE REF TO cx_static_check,
-      lo_aff_mapper                 TYPE REF TO zif_abapgit_aff_type_mapping,
-      ls_aff_data                   TYPE zif_abapgit_aff_intf_v1=>ty_main,
       lt_enum_mappings              TYPE zcl_abapgit_json_handler=>ty_enum_mappings,
       lt_default_abap_langu_version TYPE zcl_abapgit_json_handler=>ty_path_value_pair,
       lt_values_for_initial         TYPE zcl_abapgit_json_handler=>ty_skip_paths.
@@ -657,14 +656,11 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
              iv_defaults = lt_values_for_initial
              iv_enum_mappings = lt_enum_mappings
            IMPORTING
-             ev_data    = ls_aff_data ).
+             ev_data    = rv_result ).
       CATCH cx_static_check INTO lx_exception.
         zcx_abapgit_exception=>raise_with_text( lx_exception ).
     ENDTRY.
 
-    CREATE OBJECT lo_aff_mapper TYPE lcl_aff_type_mapping.
-    lo_aff_mapper->to_abapgit( EXPORTING iv_data = ls_aff_data
-                               IMPORTING es_data = rv_result ).
 
   ENDMETHOD.
 

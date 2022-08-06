@@ -352,18 +352,16 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
     DATA:
       lv_source         TYPE string,
       lv_source_xstring TYPE xstring,
-      ls_actual         TYPE zcl_abapgit_object_intf=>ty_intf,
-      ls_expected       TYPE zcl_abapgit_object_intf=>ty_intf.
+      ls_actual         TYPE zif_abapgit_aff_intf_v1=>ty_main,
+      ls_expected       TYPE zif_abapgit_aff_intf_v1=>ty_main.
 
 
-    ls_expected-vseointerf-unicode = zif_abapgit_aff_types_v1=>co_abap_language_version_src-key_user.
-    ls_expected-vseointerf-descript = `abc`.
-    ls_expected-vseointerf-langu = `F`.
-    ls_expected-vseointerf-category = zif_abapgit_aff_intf_v1=>co_category-db_procedure_proxy.
-    ls_expected-vseointerf-clsproxy = abap_true.
-    " is this good assumption for unit testing?
-    ls_expected-vseointerf-exposure = seoc_exposure_public.
-    ls_expected-vseointerf-state    = seoc_state_implemented.
+    ls_expected-format_version = `1`.
+    ls_expected-header-description = 'abc'.
+    ls_expected-header-original_language = 'F'.
+    ls_expected-header-abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-key_user.
+    ls_expected-category = zif_abapgit_aff_intf_v1=>co_category-db_procedure_proxy.
+    ls_expected-proxy = abap_true.
 
     lv_source =
       `{` && cl_abap_char_utilities=>newline &&
@@ -390,18 +388,16 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
     DATA:
       lv_source         TYPE string,
       lv_source_xstring TYPE xstring,
-      ls_actual         TYPE zcl_abapgit_object_intf=>ty_intf,
-      ls_expected       TYPE zcl_abapgit_object_intf=>ty_intf.
+      ls_actual         TYPE zif_abapgit_aff_intf_v1=>ty_main,
+      ls_expected       TYPE zif_abapgit_aff_intf_v1=>ty_main.
 
 
-    ls_expected-vseointerf-unicode = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
-    ls_expected-vseointerf-descript = `abc`.
-    ls_expected-vseointerf-langu = `F`.
-    ls_expected-vseointerf-category = zif_abapgit_aff_intf_v1=>co_category-general.
-    ls_expected-vseointerf-clsproxy = abap_false.
-    " is this good assumption for unit testing?
-    ls_expected-vseointerf-exposure = seoc_exposure_public.
-    ls_expected-vseointerf-state    = seoc_state_implemented.
+    ls_expected-format_version = `1`.
+    ls_expected-header-description = 'abc'.
+    ls_expected-header-original_language = 'F'.
+    ls_expected-header-abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
+    ls_expected-category = zif_abapgit_aff_intf_v1=>co_category-general.
+    ls_expected-proxy = abap_false.
 
     lv_source =
       `{` && cl_abap_char_utilities=>newline &&
