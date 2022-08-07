@@ -6,8 +6,7 @@ CLASS zcl_abapgit_object_chko DEFINITION
 
   PUBLIC SECTION.
     METHODS zif_abapgit_object~changed_by REDEFINITION.
-    METHODS zif_abapgit_object~deserialize REDEFINITION.
-    METHODS zif_abapgit_object~serialize REDEFINITION.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -15,7 +14,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_chko IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_CHKO IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -28,9 +27,6 @@ CLASS zcl_abapgit_object_chko IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_chko_header> TYPE any,
                    <ls_chko_user>   TYPE any.
 
-    IF ms_item-obj_type <> 'CHKO'.
-      RETURN.
-    ENDIF.
 
     TRY.
         CREATE OBJECT lo_chko_db_api TYPE ('CL_CHKO_DB_API').
@@ -61,33 +57,6 @@ CLASS zcl_abapgit_object_chko IMPLEMENTATION.
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~deserialize.
-
-    IF ms_item-obj_type <> 'CHKO'.
-      RETURN.
-    ENDIF.
-
-    super->zif_abapgit_object~deserialize(
-        iv_transport = iv_transport
-        iv_package = iv_package
-        io_xml     = io_xml
-        iv_step    = iv_step
-        ii_log     = ii_log   ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~serialize.
-
-    IF ms_item-obj_type <> 'CHKO'.
-      RETURN.
-    ENDIF.
-
-    super->zif_abapgit_object~serialize( io_xml = io_xml ).
 
   ENDMETHOD.
 ENDCLASS.
