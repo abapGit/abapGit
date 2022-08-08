@@ -15,7 +15,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_COMMON_AFF IMPLEMENTATION.
+CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~delete.
@@ -348,7 +348,9 @@ CLASS ZCL_ABAPGIT_OBJECT_COMMON_AFF IMPLEMENTATION.
           lo_aff_factory       TYPE REF TO object,
           lv_json_as_xstring   TYPE xstring,
           lx_exception         TYPE REF TO cx_root,
-          lv_name              TYPE c LENGTH 120.
+          lv_name              TYPE c LENGTH 120,
+          lv_is_deletion       TYPE abap_bool VALUE abap_false,
+          lv_dummy             TYPE string.
 
     FIELD-SYMBOLS: <ls_intf_aff_obj>      TYPE any,
                    <ls_intf_aff_log>      TYPE any,
@@ -429,6 +431,16 @@ CLASS ZCL_ABAPGIT_OBJECT_COMMON_AFF IMPLEMENTATION.
             name   = |{ to_lower( lv_name ) }.{ to_lower( ms_item-obj_type ) }.json|
           RECEIVING
             result = lo_object_json_file.
+
+        CALL METHOD lo_object_json_file->('IF_AFF_FILE~IS_DELETION')
+          RECEIVING
+            result = lv_is_deletion.
+
+        " avoid to serialize empty content (object was never activated, exists inactive only).
+        IF lv_is_deletion = abap_true.
+          MESSAGE s821(eu) WITH lv_name INTO lv_dummy.
+          zcx_abapgit_exception=>raise_t100( ).
+        ENDIF.
 
         CALL METHOD lo_object_json_file->('IF_AFF_FILE~GET_CONTENT')
           RECEIVING
