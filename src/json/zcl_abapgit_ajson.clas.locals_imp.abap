@@ -15,7 +15,8 @@ INTERFACE lif_kind.
     struct_flat TYPE ty_kind VALUE cl_abap_typedescr=>typekind_struct1,
     struct_deep TYPE ty_kind VALUE cl_abap_typedescr=>typekind_struct2,
     data_ref    TYPE ty_kind VALUE cl_abap_typedescr=>typekind_dref,
-    object_ref  TYPE ty_kind VALUE cl_abap_typedescr=>typekind_oref.
+    object_ref  TYPE ty_kind VALUE cl_abap_typedescr=>typekind_oref,
+    enum        TYPE ty_kind VALUE 'k'. " cl_abap_typedescr=>typekind_enum not in lower releases
 
   CONSTANTS:
     BEGIN OF numeric,
@@ -1385,7 +1386,8 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
         ls_node-value = |{ iv_data }|.
       ENDIF.
     ELSEIF io_type->type_kind CO lif_kind=>texts OR
-           io_type->type_kind CO lif_kind=>binary.
+           io_type->type_kind CO lif_kind=>binary OR
+           io_type->type_kind CO lif_kind=>enum.
       ls_node-type = zif_abapgit_ajson=>node_type-string.
       ls_node-value = |{ iv_data }|.
     ELSEIF io_type->type_kind = lif_kind=>date.
