@@ -10,6 +10,11 @@ CLASS zcl_abapgit_object_common_aff DEFINITION
       ABSTRACT METHODS changed_by .
   PROTECTED SECTION.
   PRIVATE SECTION.
+    METHODS is_file_empty
+      IMPORTING
+        io_object_json_file TYPE REF TO object
+      RETURNING
+        VALUE(rv_is_empty)  TYPE abap_bool.
 
 ENDCLASS.
 
@@ -432,12 +437,8 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           RECEIVING
             result = lo_object_json_file.
 
-        CALL METHOD lo_object_json_file->('IF_AFF_FILE~IS_DELETION')
-          RECEIVING
-            result = lv_is_deletion.
-
         " avoid to serialize empty content (object was never activated, exists inactive only).
-        IF lv_is_deletion = abap_true.
+        IF is_file_empty( lo_object_json_file ) = abap_true.
           MESSAGE s821(eu) WITH lv_name INTO lv_dummy.
           zcx_abapgit_exception=>raise_t100( ).
         ENDIF.
@@ -453,6 +454,15 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
       CATCH cx_root INTO lx_exception.
         zcx_abapgit_exception=>raise_with_text( lx_exception ).
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD is_file_empty.
+
+    CALL METHOD io_object_json_file->('IF_AFF_FILE~IS_DELETION')
+      RECEIVING
+        result = rv_is_empty.
 
   ENDMETHOD.
 ENDCLASS.
