@@ -466,7 +466,7 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
     DATA:
       ls_data_abapgit TYPE zcl_abapgit_object_intf=>ty_intf,
       ls_data_aff     TYPE zif_abapgit_aff_intf_v1=>ty_main,
-      lv_classname    type seoclsname.
+      lv_classname    TYPE seoclsname.
 
 
     ls_data_aff = iv_data.
