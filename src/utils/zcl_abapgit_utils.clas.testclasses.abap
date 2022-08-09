@@ -275,14 +275,18 @@ CLASS ltcl_is_binary IMPLEMENTATION.
 
   METHOD then_is_not_binary.
 
-    cl_abap_unit_assert=>assert_false( mv_act_is_binary ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mv_act_is_binary
+      exp = abap_false ).
 
   ENDMETHOD.
 
 
   METHOD then_is_binary.
 
-    cl_abap_unit_assert=>assert_true( mv_act_is_binary ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mv_act_is_binary
+      exp = abap_true ).
 
   ENDMETHOD.
 
