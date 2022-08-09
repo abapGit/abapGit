@@ -465,12 +465,15 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
   METHOD zif_abapgit_aff_type_mapping~to_abapgit.
     DATA:
       ls_data_abapgit TYPE zcl_abapgit_object_intf=>ty_intf,
-      ls_data_aff     TYPE zif_abapgit_aff_intf_v1=>ty_main.
+      ls_data_aff     TYPE zif_abapgit_aff_intf_v1=>ty_main,
+      lv_classname    type seoclsname.
 
 
     ls_data_aff = iv_data.
 
-    ls_data_abapgit-description = set_abapgit_descriptions( is_clsname  = CONV #( iv_object_name )
+    lv_classname = iv_object_name.
+
+    ls_data_abapgit-description = set_abapgit_descriptions( is_clsname  = lv_classname
                                                             is_intf_aff = ls_data_aff ).
 
     ls_data_abapgit-vseointerf-clsname = iv_object_name.
