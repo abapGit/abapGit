@@ -56,22 +56,22 @@ CLASS zcl_abapgit_json_handler DEFINITION
   PRIVATE SECTION.
 
     METHODS:
-      set_original_language
+      map2json_original_language
         CHANGING co_ajson TYPE REF TO zcl_abapgit_ajson
         RAISING  zcx_abapgit_ajson_error,
-      set_custom_enum
+      map2json_custom_enum
         IMPORTING it_enum_mappings TYPE ty_enum_mappings
         CHANGING  co_ajson         TYPE REF TO zcl_abapgit_ajson
         RAISING   zcx_abapgit_ajson_error,
-      set_abap_language_version
+      map2json_abap_language_version
         CHANGING co_ajson TYPE REF TO zcl_abapgit_ajson
         RAISING  zcx_abapgit_ajson_error,
       "! Get the enum mapping from object handler, as other enums as well
-      set_abap_language_version_des
+      map2abap_abap_language_version
         CHANGING co_ajson TYPE REF TO zcl_abapgit_ajson
         RAISING  zcx_abapgit_ajson_error,
       "! For deserialization
-      set_original_language_deser
+      map2abap_original_language
         CHANGING co_ajson TYPE REF TO zcl_abapgit_ajson
         RAISING  zcx_abapgit_ajson_error,
       "! For deserialization
@@ -79,7 +79,7 @@ CLASS zcl_abapgit_json_handler DEFINITION
         IMPORTING it_defaults TYPE ty_skip_paths
         CHANGING  co_ajson    TYPE REF TO zcl_abapgit_ajson
         RAISING   zcx_abapgit_ajson_error,
-      set_custom_enum_deserialize
+      map2abap_custom_enum
         IMPORTING it_enum_mappings TYPE ty_enum_mappings
         CHANGING  co_ajson         TYPE REF TO zcl_abapgit_ajson
         RAISING   zcx_abapgit_ajson_error.
@@ -105,12 +105,12 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
                                          ii_custom_mapping = lo_mapping ).
 
 
-    set_original_language_deser( CHANGING co_ajson = lo_ajson ).
+    map2abap_original_language( CHANGING co_ajson = lo_ajson ).
     set_defaults( EXPORTING it_defaults = iv_defaults
                   CHANGING  co_ajson    = lo_ajson ).
-    set_abap_language_version_des( CHANGING co_ajson = lo_ajson ).
-    set_custom_enum_deserialize( EXPORTING it_enum_mappings = iv_enum_mappings
-                                 CHANGING co_ajson          = lo_ajson  ).
+    map2abap_abap_language_version( CHANGING co_ajson = lo_ajson ).
+    map2abap_custom_enum( EXPORTING it_enum_mappings = iv_enum_mappings
+                          CHANGING co_ajson          = lo_ajson  ).
 
     lo_ajson->zif_abapgit_ajson~to_abap( IMPORTING ev_container = ev_data ).
 
@@ -140,10 +140,10 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
       iv_path = '/'
       iv_val  = iv_data ).
 
-    set_original_language( CHANGING co_ajson = lo_ajson ).
-    set_abap_language_version( CHANGING co_ajson = lo_ajson ).
-    set_custom_enum( EXPORTING it_enum_mappings = iv_enum_mappings
-                     CHANGING co_ajson          = lo_ajson ).
+    map2json_original_language( CHANGING co_ajson = lo_ajson ).
+    map2json_abap_language_version( CHANGING co_ajson = lo_ajson ).
+    map2json_custom_enum( EXPORTING it_enum_mappings = iv_enum_mappings
+                          CHANGING co_ajson          = lo_ajson ).
 
     CREATE OBJECT lo_filter EXPORTING iv_skip_paths = iv_skip_paths.
     lo_ajson_filtered = zcl_abapgit_ajson=>create_from(
@@ -160,7 +160,7 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
     rv_result = zcl_abapgit_convert=>string_to_xstring_utf8( lv_json ).
   ENDMETHOD.
 
-  METHOD set_original_language.
+  METHOD map2json_original_language.
     DATA:
       lv_iso_language      TYPE i18_a_langiso2,
       lv_original_language TYPE sy-langu.
@@ -182,7 +182,7 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
-  METHOD set_abap_language_version.
+  METHOD map2json_abap_language_version.
     DATA:
       lv_enum_abap TYPE string,
       lv_enum_json TYPE string.
@@ -202,7 +202,7 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
                           iv_val  = lv_enum_json ).
   ENDMETHOD.
 
-  METHOD set_abap_language_version_des.
+  METHOD map2abap_abap_language_version.
     DATA:
       lv_enum_abap TYPE string,
       lv_enum_json TYPE string.
@@ -221,7 +221,7 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
                           iv_val  = lv_enum_abap ).
   ENDMETHOD.
 
-  METHOD set_custom_enum.
+  METHOD map2json_custom_enum.
     DATA:
       lv_enum_abap    TYPE string,
       ls_enum_mapping TYPE ty_enum_mapping,
@@ -239,7 +239,7 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD set_custom_enum_deserialize.
+  METHOD map2abap_custom_enum.
     DATA:
       lv_enum_json    TYPE string,
       ls_enum_mapping TYPE ty_enum_mapping,
@@ -272,7 +272,7 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
     ENDLOOP.
   ENDMETHOD.
 
-  METHOD set_original_language_deser.
+  METHOD map2abap_original_language.
     DATA:
       lv_iso_language      TYPE i18_a_langiso2,
       lv_original_language TYPE sy-langu.
