@@ -5,12 +5,8 @@ CLASS zcl_abapgit_object_evtb DEFINITION
   CREATE PUBLIC.
 
   PUBLIC SECTION.
-    METHODS zif_abapgit_object~changed_by
-        REDEFINITION .
-    METHODS zif_abapgit_object~deserialize
-        REDEFINITION .
-    METHODS zif_abapgit_object~serialize
-        REDEFINITION .
+    METHODS zif_abapgit_object~changed_by REDEFINITION .
+
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -22,29 +18,6 @@ ENDCLASS.
 
 CLASS zcl_abapgit_object_evtb IMPLEMENTATION.
 
-  METHOD zif_abapgit_object~serialize.
-    IF ms_item-obj_type <> 'EVTB'.
-      RETURN.
-    ENDIF.
-
-    super->zif_abapgit_object~serialize( io_xml = io_xml ).
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~deserialize.
-    IF ms_item-obj_type <> 'EVTB'.
-      RETURN.
-    ENDIF.
-
-    super->zif_abapgit_object~deserialize(
-        iv_transport = iv_transport
-        iv_package = iv_package
-        io_xml     = io_xml
-        iv_step    = iv_step
-        ii_log     = ii_log   ).
-
-
-  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -54,10 +27,6 @@ CLASS zcl_abapgit_object_evtb IMPLEMENTATION.
           lv_where_expr_active   TYPE string,
           lv_where_expr_inactive TYPE string,
           lv_select              TYPE string.
-
-    IF ms_item-obj_type <> 'EVTB'.
-      RETURN.
-    ENDIF.
 
     TRY.
 
@@ -69,13 +38,13 @@ CLASS zcl_abapgit_object_evtb IMPLEMENTATION.
         lv_select                 = 'CHANGED_BY'.
 
 
-        SELECT SINGLE (lv_select) INTO @lv_user
+        SELECT SINGLE (lv_select) INTO lv_user
             FROM (co_table_name)
             WHERE (lv_where_expr_inactive).
 
 
         IF lv_user IS INITIAL.
-          SELECT SINGLE (lv_select) INTO @lv_user
+          SELECT SINGLE (lv_select) INTO lv_user
             FROM (co_table_name)
             WHERE (lv_where_expr_active).
         ENDIF.
