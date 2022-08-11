@@ -265,16 +265,18 @@ CLASS ltcl_unit_test IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS ltcl_serialize DEFINITION FINAL FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
+CLASS ltcl_aff_metadata DEFINITION FINAL FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
   PRIVATE SECTION.
     METHODS:
+      deserialize_defaults FOR TESTING RAISING cx_static_check,
+      deserialize_non_defaults FOR TESTING RAISING cx_static_check,
       serialize_non_default FOR TESTING RAISING cx_static_check,
       serialize_default FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
 
 
-CLASS ltcl_serialize IMPLEMENTATION.
+CLASS ltcl_aff_metadata IMPLEMENTATION.
 
   METHOD serialize_default.
     DATA:
@@ -290,7 +292,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
     ls_intf-vseointerf-category = zif_abapgit_aff_intf_v1=>co_category-general.
     ls_intf-vseointerf-clsproxy = abap_false.
 
-    lv_serialized_data = lcl_aff_serialize_metadata=>serialize( ls_intf ).
+    lv_serialized_data = lcl_aff_metadata_handler=>serialize( ls_intf ).
 
     lv_expected =
       `{` && cl_abap_char_utilities=>newline &&
@@ -326,7 +328,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
     ls_intf-vseointerf-category = zif_abapgit_aff_intf_v1=>co_category-db_procedure_proxy.
     ls_intf-vseointerf-clsproxy = abap_true.
 
-    lv_serialized_data = lcl_aff_serialize_metadata=>serialize( ls_intf ).
+    lv_serialized_data = lcl_aff_metadata_handler=>serialize( ls_intf ).
 
     lv_expected =
       `{` && cl_abap_char_utilities=>newline &&
@@ -349,4 +351,74 @@ CLASS ltcl_serialize IMPLEMENTATION.
       act = lv_is_equal
       exp = abap_true ).
   ENDMETHOD.
+
+  METHOD deserialize_non_defaults.
+    DATA:
+      lv_source         TYPE string,
+      lv_source_xstring TYPE xstring,
+      ls_actual         TYPE zif_abapgit_aff_intf_v1=>ty_main,
+      ls_expected       TYPE zif_abapgit_aff_intf_v1=>ty_main.
+
+
+    ls_expected-format_version = `1`.
+    ls_expected-header-description = 'abc'.
+    ls_expected-header-original_language = 'F'.
+    ls_expected-header-abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-key_user.
+    ls_expected-category = zif_abapgit_aff_intf_v1=>co_category-db_procedure_proxy.
+    ls_expected-proxy = abap_true.
+
+    lv_source =
+      `{` && cl_abap_char_utilities=>newline &&
+      `  "formatVersion": "1",` && cl_abap_char_utilities=>newline &&
+      `  "header": {` && cl_abap_char_utilities=>newline &&
+      `    "description": "abc",` && cl_abap_char_utilities=>newline &&
+      `    "originalLanguage": "fr",` && cl_abap_char_utilities=>newline &&
+      `    "abapLanguageVersion": "keyUser"` && cl_abap_char_utilities=>newline &&
+      `  },` && cl_abap_char_utilities=>newline &&
+      `  "category": "dbProcedureProxy",` && cl_abap_char_utilities=>newline &&
+      `  "proxy": true` && cl_abap_char_utilities=>newline &&
+      `}` && cl_abap_char_utilities=>newline.
+
+    lv_source_xstring = cl_abap_codepage=>convert_to( lv_source ).
+
+    " cut
+    ls_actual = lcl_aff_metadata_handler=>deserialize( lv_source_xstring ).
+
+    cl_abap_unit_assert=>assert_equals( act = ls_actual
+                                        exp = ls_expected ).
+  ENDMETHOD.
+
+  METHOD deserialize_defaults.
+    DATA:
+      lv_source         TYPE string,
+      lv_source_xstring TYPE xstring,
+      ls_actual         TYPE zif_abapgit_aff_intf_v1=>ty_main,
+      ls_expected       TYPE zif_abapgit_aff_intf_v1=>ty_main.
+
+
+    ls_expected-format_version = `1`.
+    ls_expected-header-description = 'abc'.
+    ls_expected-header-original_language = 'F'.
+    ls_expected-header-abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
+    ls_expected-category = zif_abapgit_aff_intf_v1=>co_category-general.
+    ls_expected-proxy = abap_false.
+
+    lv_source =
+      `{` && cl_abap_char_utilities=>newline &&
+      `  "formatVersion": "1",` && cl_abap_char_utilities=>newline &&
+      `  "header": {` && cl_abap_char_utilities=>newline &&
+      `    "description": "abc",` && cl_abap_char_utilities=>newline &&
+      `    "originalLanguage": "fr"` && cl_abap_char_utilities=>newline &&
+      `  }` && cl_abap_char_utilities=>newline &&
+      `}` && cl_abap_char_utilities=>newline.
+
+    lv_source_xstring = cl_abap_codepage=>convert_to( lv_source ).
+
+    " cut
+    ls_actual = lcl_aff_metadata_handler=>deserialize( lv_source_xstring ).
+
+    cl_abap_unit_assert=>assert_equals( act = ls_actual
+                                        exp = ls_expected ).
+  ENDMETHOD.
+
 ENDCLASS.
