@@ -71,6 +71,10 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
       RETURNING VALUE(rs_intf) TYPE ty_intf
       RAISING
                 zcx_abapgit_exception.
+    METHODS read_json
+      RETURNING VALUE(rs_intf) TYPE ty_intf
+      RAISING
+                zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -141,19 +145,20 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
   METHOD deserialize_pre_ddic.
 
-    DATA: ls_vseointerf TYPE vseointerf,
-          ls_clskey     TYPE seoclskey.
+    DATA: ls_intf   TYPE ty_intf.
 
-    ls_clskey-clsname = ms_item-obj_name.
-
-    ii_xml->read( EXPORTING iv_name = 'VSEOINTERF'
-                  CHANGING  cg_data = ls_vseointerf ).
+    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
+      ls_intf = read_json( ).
+    ELSE.
+      ii_xml->read( EXPORTING iv_name = 'VSEOINTERF'
+                    CHANGING  cg_data = ls_intf-vseointerf ).
+    ENDIF.
 
     mi_object_oriented_object_fct->create(
       EXPORTING
         iv_package    = iv_package
       CHANGING
-        cg_properties = ls_vseointerf ).
+        cg_properties = ls_intf-vseointerf ).
 
   ENDMETHOD.
 
@@ -309,7 +314,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     " HERE: switch with feature flag for XML or JSON file format
     IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
-      lv_serialized_data = lcl_aff_serialize_metadata=>serialize( ls_intf ).
+      lv_serialized_data = lcl_aff_metadata_handler=>serialize( ls_intf ).
       zif_abapgit_object~mo_files->add_raw( iv_ext  = 'json'
                                             iv_data = lv_serialized_data ).
 
@@ -384,12 +389,20 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~deserialize.
-    DATA: lt_source TYPE rswsourcet,
-          ls_clskey TYPE seoclskey,
-          ls_intf   TYPE ty_intf.
+    DATA: lt_source     TYPE rswsourcet,
+          ls_clskey     TYPE seoclskey,
+          lv_json_data  TYPE xstring,
+          ls_intf_aff   TYPE zif_abapgit_aff_intf_v1=>ty_main,
+          lo_aff_mapper TYPE REF TO zif_abapgit_aff_type_mapping,
+          ls_intf       TYPE ty_intf.
 
     IF iv_step = zif_abapgit_object=>gc_step_id-abap.
-      ls_intf = read_xml( io_xml ).
+      " HERE: switch with feature flag between XML and JSON file format
+      IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
+        ls_intf = read_json( ).
+      ELSE.
+        ls_intf = read_xml( io_xml ).
+      ENDIF.
 
       IF ls_intf-vseointerf-clsproxy = abap_true.
         " Proxy interfaces are managed via SPRX
@@ -427,6 +440,21 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD read_json.
+    DATA lv_json_data TYPE xstring.
+    DATA ls_intf_aff TYPE zif_abapgit_aff_intf_v1=>ty_main.
+    DATA lo_aff_mapper TYPE REF TO zif_abapgit_aff_type_mapping.
+
+    lv_json_data = zif_abapgit_object~mo_files->read_raw( iv_ext = 'json' ).
+    ls_intf_aff = lcl_aff_metadata_handler=>deserialize( lv_json_data ).
+
+    CREATE OBJECT lo_aff_mapper TYPE lcl_aff_type_mapping.
+    lo_aff_mapper->to_abapgit( EXPORTING iv_data = ls_intf_aff
+                                         iv_object_name = ms_item-obj_name
+                               IMPORTING es_data = rs_intf ).
   ENDMETHOD.
 
 
