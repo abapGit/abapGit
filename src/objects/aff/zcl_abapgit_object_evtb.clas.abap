@@ -1,7 +1,6 @@
 CLASS zcl_abapgit_object_evtb DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_object_common_aff
-
   CREATE PUBLIC.
 
   PUBLIC SECTION.
