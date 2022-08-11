@@ -14,10 +14,7 @@ CLASS zcl_abapgit_object_evtb DEFINITION
 ENDCLASS.
 
 
-
 CLASS zcl_abapgit_object_evtb IMPLEMENTATION.
-
-
 
   METHOD zif_abapgit_object~changed_by.
 
@@ -29,23 +26,14 @@ CLASS zcl_abapgit_object_evtb IMPLEMENTATION.
 
     TRY.
 
-        lv_where_expr_active      = 'EVTB_NAME = '   &&  cl_abap_dyn_prg=>quote( ms_item-obj_name )  &&
-                                 ' AND VERSION = '   &&  cl_abap_dyn_prg=>quote( 'A' ).
-        lv_where_expr_inactive    = 'EVTB_NAME = '   &&  cl_abap_dyn_prg=>quote( ms_item-obj_name ) &&
-                                 ' AND VERSION = '   &&  cl_abap_dyn_prg=>quote( 'I' ).
-
-        lv_select                 = 'CHANGED_BY'.
-
-
-        SELECT SINGLE (lv_select) INTO lv_user
+        SELECT SINGLE changed_by INTO lv_user
             FROM (co_table_name)
-            WHERE (lv_where_expr_inactive).
-
+            WHERE evtb_name = ms_item-obj_name AND version = 'I'.
 
         IF lv_user IS INITIAL.
-          SELECT SINGLE (lv_select) INTO lv_user
+          SELECT SINGLE changed_by INTO lv_user
             FROM (co_table_name)
-            WHERE (lv_where_expr_active).
+            WHERE evtb_name = ms_item-obj_name AND version = 'A'.
         ENDIF.
 
         rv_user = lv_user.
@@ -55,7 +43,6 @@ CLASS zcl_abapgit_object_evtb IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
-
 
 ENDCLASS.
 
