@@ -19,10 +19,7 @@ CLASS zcl_abapgit_object_evtb IMPLEMENTATION.
   METHOD zif_abapgit_object~changed_by.
 
     DATA: lv_user                TYPE string,
-          lx_error               TYPE REF TO cx_root,
-          lv_where_expr_active   TYPE string,
-          lv_where_expr_inactive TYPE string,
-          lv_select              TYPE string.
+          lx_error               TYPE REF TO cx_root.
 
     TRY.
 
