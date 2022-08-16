@@ -1,20 +1,20 @@
 CLASS lcl_aff_helper DEFINITION.
   PUBLIC SECTION.
     CLASS-METHODS:
+
 *    create_empty_interface
+
 *      IMPORTING iv_intf_name   TYPE seoclsname
+
 *                io_lock_handle TYPE REF TO if_adt_lock_handle
+
 *      RAISING   zcx_abapgit_exception,
       generate_class_pool
         IMPORTING iv_class_name TYPE seoclsname,
       get_descriptions_compo_subco
         IMPORTING iv_language          TYPE sy-langu
                   iv_clif_name         TYPE seoclsname
-        RETURNING VALUE(rs_properties) TYPE zif_abapgit_aff_oo_types_v1=>ty_descriptions ,
-      get_descr_comp_subc_w_exposure
-        IMPORTING iv_language          TYPE sy-langu
-                  iv_clif_name         TYPE seoclsname
-                  iv_exposure          TYPE seoexpose DEFAULT seoc_exposure_public
+                  it_descriptions      TYPE zcl_abapgit_object_intf=>ty_intf-description
         RETURNING VALUE(rs_properties) TYPE zif_abapgit_aff_oo_types_v1=>ty_descriptions ,
       set_descriptions_compo_subco
         IMPORTING iv_clif_name  TYPE seoclsname
@@ -40,18 +40,20 @@ CLASS lcl_aff_helper DEFINITION.
     CLASS-METHODS:
       get_attributes
         IMPORTING is_components    TYPE ty_compontents
+                  it_descriptions  TYPE zcl_abapgit_object_intf=>ty_intf-description
         RETURNING VALUE(rs_result) TYPE zif_abapgit_aff_oo_types_v1=>ty_component_descriptions,
       get_methods
-        IMPORTING is_components     TYPE ty_compontents
-                  is_sub_components TYPE ty_sub_compontents
-        RETURNING VALUE(rs_result)  TYPE zif_abapgit_aff_oo_types_v1=>ty_methods,
+        IMPORTING is_components    TYPE ty_compontents
+                  it_descriptions  TYPE zcl_abapgit_object_intf=>ty_intf-description
+        RETURNING VALUE(rs_result) TYPE zif_abapgit_aff_oo_types_v1=>ty_methods,
       get_types
         IMPORTING is_components    TYPE ty_compontents
+                  it_descriptions  TYPE zcl_abapgit_object_intf=>ty_intf-description
         RETURNING VALUE(rs_result) TYPE zif_abapgit_aff_oo_types_v1=>ty_component_descriptions,
       get_events
-        IMPORTING is_components     TYPE ty_compontents
-                  is_sub_components TYPE ty_sub_compontents
-        RETURNING VALUE(rs_result)  TYPE zif_abapgit_aff_oo_types_v1=>ty_events,
+        IMPORTING is_components    TYPE ty_compontents
+                  it_descriptions  TYPE zcl_abapgit_object_intf=>ty_intf-description
+        RETURNING VALUE(rs_result) TYPE zif_abapgit_aff_oo_types_v1=>ty_events,
       set_methods
         IMPORTING iv_clif_name  TYPE seoclsname
                   iv_language   TYPE langu
@@ -137,178 +139,87 @@ CLASS lcl_aff_helper IMPLEMENTATION.
         OTHERS        = 1 ##FM_SUBRC_OK.
   ENDMETHOD.
 
-
-  METHOD get_descr_comp_subc_w_exposure.
-    DATA:
-      lt_components     TYPE ty_compontents,
-      lt_sub_components TYPE ty_sub_compontents.
-
-
-    SELECT df~exposure AS visibility component~cmpname component_text~descript component~cmptype
-      INTO TABLE lt_components
-      FROM seocompo AS component
-      LEFT OUTER JOIN seocompotx AS component_text
-      ON component~cmpname = component_text~cmpname AND component~clsname = component_text~clsname AND
-         component_text~langu = iv_language
-      INNER JOIN seocompodf AS df
-      ON component~clsname = df~clsname AND
-         component~cmpname = df~cmpname
-      WHERE component~clsname = iv_clif_name AND
-            df~exposure       = iv_exposure.           "#EC CI_BUFFJOIN
-
-    SELECT sub_component~cmpname sub_component~sconame sub_component_text~descript sub_component~scotype
-      INTO TABLE lt_sub_components
-      FROM seosubco AS sub_component JOIN seosubcotx AS sub_component_text
-      ON  sub_component~clsname = sub_component_text~clsname
-          AND sub_component~cmpname = sub_component_text~cmpname
-          AND sub_component~sconame = sub_component_text~sconame
-      INNER JOIN seocompodf AS df
-      ON sub_component~clsname = df~clsname AND
-         sub_component~cmpname = df~cmpname
-      WHERE sub_component~clsname    = iv_clif_name
-        AND df~exposure              = iv_exposure
-        AND sub_component_text~langu = iv_language
-        AND sub_component_text~descript <> space.      "#EC CI_BUFFJOIN
-
-
-
-    rs_properties-attributes = get_attributes( lt_components ).
-    rs_properties-methods = get_methods( is_components = lt_components
-                                         is_sub_components = lt_sub_components ).
-    rs_properties-events = get_events( is_components = lt_components
-                                       is_sub_components = lt_sub_components ).
-    rs_properties-types = get_types( lt_components ).
-  ENDMETHOD.
-
-
   METHOD get_descriptions_compo_subco.
-    TYPES:
-      BEGIN OF ty_helper_type,
-        cmpname  TYPE seocmpname,
-        descript TYPE seodescr,
-        cmptype  TYPE seocmptype,
-      END OF ty_helper_type.
     DATA:
-      lt_components     TYPE STANDARD TABLE OF ty_helper_type,
-      lt_sub_components TYPE ty_sub_compontents,
-      lt_components_exp TYPE ty_compontents,
-      ls_component_exp  LIKE LINE OF lt_components_exp.
-    FIELD-SYMBOLS:
-      <ls_component> LIKE LINE OF lt_components.
+      lt_components_exp TYPE ty_compontents.
 
+    SELECT *
+      INTO CORRESPONDING FIELDS OF TABLE lt_components_exp
+      FROM seocompo
+      WHERE clsname = iv_clif_name.                    "#EC CI_BUFFJOIN
 
-    SELECT component~cmpname component_text~descript component~cmptype
-      INTO TABLE lt_components
-      FROM seocompo AS component
-     LEFT OUTER JOIN seocompotx AS component_text
-      ON component~cmpname = component_text~cmpname AND component~clsname    = component_text~clsname
-                                                    AND component_text~langu = iv_language
-      WHERE component~clsname = iv_clif_name.          "#EC CI_BUFFJOIN
-
-    SELECT sub_component~cmpname sub_component~sconame sub_component_text~descript sub_component~scotype
-      INTO TABLE lt_sub_components
-      FROM seosubco AS sub_component JOIN seosubcotx AS sub_component_text
-      ON sub_component~clsname      = sub_component_text~clsname
-          AND sub_component~cmpname = sub_component_text~cmpname
-          AND sub_component~sconame = sub_component_text~sconame
-      WHERE sub_component~clsname    = iv_clif_name
-        AND sub_component_text~langu = iv_language
-        AND sub_component_text~descript <> space.      "#EC CI_BUFFJOIN
-
-    LOOP AT lt_components ASSIGNING <ls_component>.
-      CLEAR ls_component_exp.
-      MOVE-CORRESPONDING <ls_component> TO ls_component_exp.
-      INSERT ls_component_exp INTO TABLE lt_components_exp.
-    ENDLOOP.
-
-    rs_properties-attributes = get_attributes( lt_components_exp ).
-    rs_properties-methods = get_methods( is_components = lt_components_exp
-                                         is_sub_components = lt_sub_components ).
-    rs_properties-events = get_events( is_components = lt_components_exp
-                                       is_sub_components = lt_sub_components ).
-    rs_properties-types = get_types( lt_components_exp ).
+    rs_properties-attributes = get_attributes( is_components   = lt_components_exp
+                                               it_descriptions = it_descriptions ).
+    rs_properties-methods = get_methods( is_components   = lt_components_exp
+                                         it_descriptions = it_descriptions ).
+    rs_properties-events = get_events( is_components   = lt_components_exp
+                                       it_descriptions = it_descriptions ).
+    rs_properties-types = get_types( is_components   = lt_components_exp
+                                     it_descriptions = it_descriptions ).
 
   ENDMETHOD.
 
 
   METHOD get_attributes.
-    DATA:
-      lo_component TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description.
-    FIELD-SYMBOLS <lo_attribute> TYPE ty_component.
+    DATA lv_attribute TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description.
+    FIELD-SYMBOLS:
+      <ls_component>   TYPE ty_component,
+      <ls_description> TYPE seocompotx.
 
-    LOOP AT is_components ASSIGNING <lo_attribute> WHERE cmptype = seoo_cmptype_attribute AND descript IS NOT INITIAL.
-      lo_component-name = <lo_attribute>-cmpname.
-      lo_component-description = <lo_attribute>-descript.
-      INSERT lo_component INTO TABLE rs_result.
+    LOOP AT is_components ASSIGNING <ls_component> WHERE cmptype = seoo_cmptype_attribute.
+      lv_attribute-name = <ls_component>-cmpname.
+      READ TABLE it_descriptions WITH KEY cmpname = <ls_component>-cmpname ASSIGNING <ls_description>.
+      IF sy-subrc = 0.
+        lv_attribute-description = <ls_description>-descript.
+        INSERT lv_attribute INTO TABLE rs_result.
+      ENDIF.
     ENDLOOP.
   ENDMETHOD.
 
   METHOD get_methods.
-    DATA:
-      lo_method    TYPE zif_abapgit_aff_oo_types_v1=>ty_method,
-      lo_exception TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description,
-      lo_parameter TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description.
-
-    FIELD-SYMBOLS <ls_sub_component> TYPE ty_sub_component.
-    FIELD-SYMBOLS <ls_component> TYPE ty_component.
+    DATA lv_method    TYPE zif_abapgit_aff_oo_types_v1=>ty_method.
+    FIELD-SYMBOLS:
+      <ls_component>   TYPE ty_component,
+      <ls_description> TYPE seocompotx.
 
     LOOP AT is_components ASSIGNING <ls_component> WHERE cmptype = seoo_cmptype_method.
-      lo_method-name = <ls_component>-cmpname.
-      lo_method-description = <ls_component>-descript.
-
-      LOOP AT is_sub_components ASSIGNING <ls_sub_component> WHERE cmpname = <ls_component>-cmpname.
-        CASE <ls_sub_component>-scotype.
-          WHEN seos_scotype_parameter.
-            lo_parameter-name = <ls_sub_component>-sconame.
-            lo_parameter-description = <ls_sub_component>-descript.
-            INSERT lo_parameter INTO TABLE lo_method-parameters.
-          WHEN seos_scotype_exception.
-            lo_exception-name = <ls_sub_component>-sconame.
-            lo_exception-description = <ls_sub_component>-descript.
-            INSERT lo_exception INTO TABLE lo_method-exceptions.
-        ENDCASE.
-      ENDLOOP.
-
-      IF lo_method-description IS NOT INITIAL
-          OR lo_method-exceptions IS NOT INITIAL
-          OR lo_method-parameters IS NOT INITIAL.
-        INSERT lo_method INTO TABLE rs_result.
+      lv_method-name = <ls_component>-cmpname.
+      READ TABLE it_descriptions WITH KEY cmpname = <ls_component>-cmpname ASSIGNING <ls_description>.
+      IF sy-subrc = 0.
+        lv_method-description = <ls_description>-descript.
+        INSERT lv_method INTO TABLE rs_result.
       ENDIF.
     ENDLOOP.
   ENDMETHOD.
 
   METHOD get_types.
-    DATA:
-        lo_type TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description.
-    FIELD-SYMBOLS: <ls_types> TYPE ty_component.
+    DATA lv_type TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description.
+    FIELD-SYMBOLS:
+      <ls_component>   TYPE ty_component,
+      <ls_description> TYPE seocompotx.
 
-    LOOP AT is_components ASSIGNING <ls_types>
-        WHERE cmptype = seoo_cmptype_type AND descript IS NOT INITIAL.
-      lo_type-name = <ls_types>-cmpname.
-      lo_type-description = <ls_types>-descript.
-      INSERT lo_type INTO TABLE rs_result.
+    LOOP AT is_components ASSIGNING <ls_component> WHERE cmptype = seoo_cmptype_type AND descript IS NOT INITIAL.
+      lv_type-name = <ls_component>-cmpname.
+      READ TABLE it_descriptions WITH KEY cmpname = <ls_component>-cmpname ASSIGNING <ls_description>.
+      IF sy-subrc = 0.
+        lv_type-description = <ls_description>-descript.
+        INSERT lv_type INTO TABLE rs_result.
+      ENDIF.
     ENDLOOP.
   ENDMETHOD.
 
   METHOD get_events.
-    DATA:
-      lo_parameter TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description,
-      lo_event     TYPE zif_abapgit_aff_oo_types_v1=>ty_event.
-    FIELD-SYMBOLS <ls_event> TYPE ty_component.
-    FIELD-SYMBOLS <ls_sub_component> TYPE ty_sub_component.
+    DATA lv_event     TYPE zif_abapgit_aff_oo_types_v1=>ty_event.
+    FIELD-SYMBOLS:
+      <ls_component>   TYPE ty_component,
+      <ls_description> TYPE seocompotx.
 
-    LOOP AT is_components ASSIGNING <ls_event> WHERE cmptype = seoo_cmptype_event.
-      lo_event-name = <ls_event>-cmpname.
-      lo_event-description = <ls_event>-descript.
-
-      LOOP AT is_sub_components ASSIGNING <ls_sub_component> WHERE cmpname = <ls_event>-cmpname.
-        lo_parameter-name = <ls_sub_component>-sconame.
-        lo_parameter-description = <ls_sub_component>-descript.
-        INSERT lo_parameter INTO TABLE lo_event-parameters.
-      ENDLOOP.
-
-      IF lo_event-description IS NOT INITIAL OR lo_event-parameters IS NOT INITIAL.
-        INSERT lo_event INTO TABLE rs_result.
+    LOOP AT is_components ASSIGNING <ls_component> WHERE cmptype = seoo_cmptype_event.
+      lv_event-name = <ls_component>-cmpname.
+      READ TABLE it_descriptions WITH KEY cmpname = <ls_component>-cmpname ASSIGNING <ls_description>.
+      IF sy-subrc = 0.
+        lv_event-description = <ls_description>-descript.
+        INSERT lv_event INTO TABLE rs_result.
       ENDIF.
     ENDLOOP.
   ENDMETHOD.
@@ -409,17 +320,17 @@ CLASS lcl_aff_helper IMPLEMENTATION.
 
   METHOD set_descriptions_compo_subco.
     set_attributes( is_properties = is_properties
-                    iv_clif_name = iv_clif_name
-                    iv_language = iv_language ).
+                    iv_clif_name  = iv_clif_name
+                    iv_language   = iv_language ).
     set_methods( is_properties = is_properties
-                 iv_clif_name = iv_clif_name
-                 iv_language = iv_language ).
+                 iv_clif_name  = iv_clif_name
+                 iv_language   = iv_language ).
     set_events( is_properties = is_properties
-                iv_clif_name = iv_clif_name
-                iv_language = iv_language ).
+                iv_clif_name  = iv_clif_name
+                iv_language   = iv_language ).
     set_types( is_properties = is_properties
-               iv_clif_name = iv_clif_name
-               iv_language = iv_language ).
+               iv_clif_name  = iv_clif_name
+               iv_language   = iv_language ).
   ENDMETHOD.
 
 ENDCLASS.
@@ -439,7 +350,11 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
   METHOD zif_abapgit_aff_type_mapping~to_aff.
     DATA:
       ls_data_abapgit TYPE zcl_abapgit_object_intf=>ty_intf,
-      ls_data_aff     TYPE zif_abapgit_aff_intf_v1=>ty_main.
+      ls_data_aff     TYPE zif_abapgit_aff_intf_v1=>ty_main,
+      lt_seocompo     TYPE STANDARD TABLE OF seocompo.
+
+    FIELD-SYMBOLS:
+        <ls_seocompo> TYPE seocompo.
 
     ls_data_abapgit = iv_data.
 
@@ -456,8 +371,9 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
 
     " get descriptions
     ls_data_aff-descriptions = lcl_aff_helper=>get_descriptions_compo_subco(
-                              iv_language  = ls_data_aff-header-original_language
-                              iv_clif_name = ls_data_abapgit-vseointerf-clsname ).
+      iv_language     = ls_data_aff-header-original_language
+      iv_clif_name    = ls_data_abapgit-vseointerf-clsname
+      it_descriptions = ls_data_abapgit-description ).
 
     es_data = ls_data_aff.
   ENDMETHOD.
@@ -648,12 +564,12 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
     CREATE OBJECT lo_ajson.
     TRY.
         lo_ajson->deserialize(
-           EXPORTING
-             iv_content = iv_data
-             iv_defaults = lt_values_for_initial
-             iv_enum_mappings = lt_enum_mappings
-           IMPORTING
-             ev_data    = rv_result ).
+          EXPORTING
+            iv_content       = iv_data
+            iv_defaults      = lt_values_for_initial
+            iv_enum_mappings = lt_enum_mappings
+          IMPORTING
+            ev_data          = rv_result ).
       CATCH cx_static_check INTO lx_exception.
         zcx_abapgit_exception=>raise_with_text( lx_exception ).
     ENDTRY.
