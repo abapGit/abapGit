@@ -160,15 +160,20 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
     DATA lo_structdescr TYPE REF TO cl_abap_structdescr.
     DATA lt_fields      TYPE ddfields.
     DATA ls_field       LIKE LINE OF lt_fields.
+    DATA lv_key         TYPE string.
 
-
+    lv_key = iv_tabkey.
     lo_structdescr ?= cl_abap_typedescr=>describe_by_name( iv_table ).
 
     lt_fields = lo_structdescr->get_ddic_field_list( ).
 
     LOOP AT lt_fields INTO ls_field WHERE keyflag = abap_true.
+      IF NOT rv_where IS INITIAL.
+        rv_where = |{ rv_where } AND |.
+      ENDIF.
+      rv_where = |{ rv_where }{ to_lower( ls_field-fieldname ) } = '{ lv_key(ls_field-leng) }'|.
+      lv_key = lv_key+ls_field-leng.
     ENDLOOP.
-
 
   ENDMETHOD.
 
