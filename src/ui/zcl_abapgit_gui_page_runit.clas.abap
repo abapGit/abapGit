@@ -112,8 +112,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
       LOOP AT ls_program-classes INTO ls_class.
         lv_class_ndx = sy-tabix.
 
-        ri_html->add( |<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;{
-          ls_class-info-name }</td><td></td></tr>| ).
+        ri_html->add( |<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;{ ls_class-info-name }</td><td></td></tr>| ).
         LOOP AT ls_class-methods INTO ls_method.
           lv_method_ndx = sy-tabix.
 
