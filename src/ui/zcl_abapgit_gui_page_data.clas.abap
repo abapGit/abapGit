@@ -180,8 +180,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
+    ri_html->add( '<div class="repo">' ).
     ri_html->add( render_add( ) ).
     ri_html->add( render_existing( ) ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 
