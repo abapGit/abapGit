@@ -38,6 +38,7 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
 
+    METHODS add_via_transport .
     METHODS build_menu
       RETURNING
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
@@ -76,6 +77,24 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
+
+
+  METHOD add_via_transport.
+
+    DATA lt_trkorr TYPE trwbo_request_headers.
+    DATA ls_trkorr LIKE LINE OF lt_trkorr.
+
+    lt_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_transports( ).
+    IF lines( lt_trkorr ) <> 1.
+      RETURN.
+    ENDIF.
+
+    READ TABLE lt_trkorr INDEX 1 TRANSPORTING trkorr INTO ls_trkorr.
+    ASSERT sy-subrc = 0.
+
+* todo
+
+  ENDMETHOD.
 
 
   METHOD build_menu.
@@ -260,7 +279,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
         event_remove( ii_event ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_event-add_via_transport.
-        BREAK-POINT.
+        add_via_transport( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDCASE.
 
