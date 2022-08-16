@@ -329,15 +329,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN c_event-add.
         event_add( ii_event ).
+        mo_repo->refresh( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_event-update.
         event_update( ii_event ).
+        mo_repo->refresh( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_event-remove.
         event_remove( ii_event ).
+        mo_repo->refresh( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_event-add_via_transport.
         add_via_transport( ).
+        mo_repo->refresh( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDCASE.
 
