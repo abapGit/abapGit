@@ -77,6 +77,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
     DATA lv_method_ndx  TYPE i.
     DATA lv_text        TYPE string.
     DATA lv_count       TYPE i.
+    DATA ls_program     LIKE LINE OF lo_result->f_task_data-programs.
+    DATA ls_class       LIKE LINE OF ls_program-classes.
+    DATA ls_method      LIKE LINE OF ls_class-methods.
 
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
@@ -99,14 +102,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
 
     ri_html->add( |<hr><table>| ).
 
-    LOOP AT lo_result->f_task_data-programs INTO DATA(ls_program).
+    LOOP AT lo_result->f_task_data-programs INTO ls_program.
       lv_program_ndx = sy-tabix.
       ri_html->add( |<tr><td>{ ls_program-info-key-obj_type } { ls_program-info-key-obj_name }</td><td></td></tr>| ).
-      LOOP AT ls_program-classes INTO DATA(ls_class).
+      LOOP AT ls_program-classes INTO ls_class.
         lv_class_ndx = sy-tabix.
 
         ri_html->add( |<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;{ ls_class-info-name }</td><td></td></tr>| ).
-        LOOP AT ls_class-methods INTO DATA(ls_method).
+        LOOP AT ls_class-methods INTO ls_method.
           lv_method_ndx = sy-tabix.
 
           CLEAR lv_text.
