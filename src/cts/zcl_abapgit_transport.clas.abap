@@ -235,7 +235,8 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
 
 
   METHOD read.
-    BREAK-POINT.
+
+    rs_request-h-trkorr = is_trkorr-trkorr.
 
     CALL FUNCTION 'TRINT_READ_REQUEST'
       EXPORTING

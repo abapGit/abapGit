@@ -38,6 +38,13 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
 
+    METHODS concatenated_key_to_where
+      IMPORTING
+        iv_table        TYPE tabname
+        iv_tabkey       TYPE clike
+      RETURNING
+        VALUE(rv_where) TYPE string_table.
+
     METHODS add_via_transport
       RAISING
         zcx_abapgit_exception.
@@ -86,6 +93,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
     DATA lt_trkorr  TYPE trwbo_request_headers.
     DATA ls_trkorr  LIKE LINE OF lt_trkorr.
     DATA ls_request TYPE trwbo_request.
+    DATA ls_key     LIKE LINE OF ls_request-keys.
+    DATA ls_config TYPE zif_abapgit_data_config=>ty_config.
+
 
     lt_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_transports( ).
     IF lines( lt_trkorr ) <> 1.
@@ -96,8 +106,25 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
     ASSERT sy-subrc = 0.
 
     ls_request = zcl_abapgit_transport=>read( ls_trkorr ).
+
+    IF lines( ls_request-keys ) = 0.
+      zcx_abapgit_exception=>raise( |No keys found, select task| ).
+    ENDIF.
+
+    LOOP AT ls_request-keys INTO ls_key WHERE object = 'TABU'.
+      ASSERT ls_key-objname IS NOT INITIAL.
+      ASSERT ls_key-tabkey IS NOT INITIAL.
+
+      CLEAR ls_config.
+      ls_config-type = zif_abapgit_data_config=>c_data_type-tabu.
+      ls_config-name = to_upper( ls_key-objname ).
+      ls_config-where = concatenated_key_to_where(
+        iv_table  = ls_key-objname
+        iv_tabkey = ls_key-tabkey ).
+      mi_config->add_config( ls_config ).
+    ENDLOOP.
+
     BREAK-POINT.
-* todo
 
   ENDMETHOD.
 
@@ -126,6 +153,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
+  ENDMETHOD.
+
+
+  METHOD concatenated_key_to_where.
+* todo
   ENDMETHOD.
 
 
