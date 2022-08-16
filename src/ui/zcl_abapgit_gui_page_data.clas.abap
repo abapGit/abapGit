@@ -18,9 +18,10 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
 
     CONSTANTS:
       BEGIN OF c_event,
-        add    TYPE string VALUE 'add',
-        update TYPE string VALUE 'update',
-        remove TYPE string VALUE 'remove',
+        add               TYPE string VALUE 'add',
+        update            TYPE string VALUE 'update',
+        remove            TYPE string VALUE 'remove',
+        add_via_transport TYPE string VALUE 'add_via_transport',
       END OF c_event .
 
     CONSTANTS:
@@ -37,6 +38,9 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
 
+    METHODS build_menu
+      RETURNING
+        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
     METHODS build_where
       IMPORTING
         !io_map         TYPE REF TO zcl_abapgit_string_map
@@ -74,6 +78,16 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
 
 
+  METHOD build_menu.
+
+    CREATE OBJECT ro_menu.
+
+    ro_menu->add( iv_txt = 'Add via transport'
+                  iv_act = c_event-add_via_transport ).
+
+  ENDMETHOD.
+
+
   METHOD build_where.
 
     DATA lv_where LIKE LINE OF rt_where.
@@ -96,6 +110,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
     super->constructor( ).
 
     ms_control-page_title = 'Data'.
+    ms_control-page_menu = build_menu( ).
 
     mo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     mi_config = mo_repo->get_data_config( ).
@@ -179,7 +194,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
   METHOD render_content.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
     ri_html->add( '<div class="repo">' ).
     ri_html->add( render_add( ) ).
     ri_html->add( render_existing( ) ).
@@ -244,6 +258,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_event-remove.
         event_remove( ii_event ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_event-add_via_transport.
+        BREAK-POINT.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDCASE.
 
