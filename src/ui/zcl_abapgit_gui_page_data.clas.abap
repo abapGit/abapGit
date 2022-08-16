@@ -38,7 +38,9 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
 
-    METHODS add_via_transport .
+    METHODS add_via_transport
+      RAISING
+        zcx_abapgit_exception.
     METHODS build_menu
       RETURNING
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
@@ -81,17 +83,20 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
 
   METHOD add_via_transport.
 
-    DATA lt_trkorr TYPE trwbo_request_headers.
-    DATA ls_trkorr LIKE LINE OF lt_trkorr.
+    DATA lt_trkorr  TYPE trwbo_request_headers.
+    DATA ls_trkorr  LIKE LINE OF lt_trkorr.
+    DATA ls_request TYPE trwbo_request.
 
     lt_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_transports( ).
     IF lines( lt_trkorr ) <> 1.
       RETURN.
     ENDIF.
 
-    READ TABLE lt_trkorr INDEX 1 TRANSPORTING trkorr INTO ls_trkorr.
+    READ TABLE lt_trkorr INDEX 1 INTO ls_trkorr.
     ASSERT sy-subrc = 0.
 
+    ls_request = zcl_abapgit_transport=>read( ls_trkorr ).
+    BREAK-POINT.
 * todo
 
   ENDMETHOD.

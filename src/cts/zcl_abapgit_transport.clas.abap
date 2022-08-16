@@ -3,7 +3,7 @@ CLASS zcl_abapgit_transport DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-
+* todo, add interfaces for this class, consider merging zcl_abapgit_transport_mass into this class?
     CLASS-METHODS zip
       IMPORTING
         !iv_show_log_popup TYPE abap_bool DEFAULT abap_true
@@ -13,6 +13,7 @@ CLASS zcl_abapgit_transport DEFINITION
         VALUE(rv_xstr)     TYPE xstring
       RAISING
         zcx_abapgit_exception .
+
     CLASS-METHODS to_tadir
       IMPORTING
         it_transport_headers TYPE trwbo_request_headers
@@ -20,11 +21,21 @@ CLASS zcl_abapgit_transport DEFINITION
         VALUE(rt_tadir)      TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
+
     CLASS-METHODS add_all_objects_to_trans_req
       IMPORTING
         iv_key TYPE zif_abapgit_persistence=>ty_value
       RAISING
         zcx_abapgit_exception .
+
+    CLASS-METHODS read
+      IMPORTING
+        !is_trkorr        TYPE trwbo_request_header OPTIONAL
+      RETURNING
+        VALUE(rs_request) TYPE trwbo_request
+      RAISING
+        zcx_abapgit_exception .
+
   PROTECTED SECTION.
 
     CLASS-METHODS read_requests
@@ -220,6 +231,30 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
     ENDLOOP.
 
     READ TABLE lt_super INDEX lines( lt_super ) INTO rv_package.
+  ENDMETHOD.
+
+
+  METHOD read.
+    BREAK-POINT.
+
+    CALL FUNCTION 'TRINT_READ_REQUEST'
+      EXPORTING
+        iv_read_e070       = abap_true
+        iv_read_e07t       = abap_true
+        iv_read_e070c      = abap_true
+        iv_read_e070m      = abap_true
+        iv_read_objs_keys  = abap_true
+        iv_read_objs       = abap_true
+        iv_read_attributes = abap_true
+      CHANGING
+        cs_request         = rs_request
+      EXCEPTIONS
+        error_occured      = 1
+        OTHERS             = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
   ENDMETHOD.
 
 
