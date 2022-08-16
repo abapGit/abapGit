@@ -1,9 +1,10 @@
 CLASS lcl_aff_helper DEFINITION.
   PUBLIC SECTION.
-    CLASS-METHODS: create_empty_interface
-      IMPORTING iv_intf_name   TYPE seoclsname
-                io_lock_handle TYPE REF TO if_adt_lock_handle
-      RAISING   zcx_abapgit_exception,
+    CLASS-METHODS:
+*    create_empty_interface
+*      IMPORTING iv_intf_name   TYPE seoclsname
+*                io_lock_handle TYPE REF TO if_adt_lock_handle
+*      RAISING   zcx_abapgit_exception,
       generate_class_pool
         IMPORTING iv_class_name TYPE seoclsname,
       get_descriptions_compo_subco
@@ -73,36 +74,36 @@ ENDCLASS.
 CLASS lcl_aff_helper IMPLEMENTATION.
 
 
-  METHOD create_empty_interface.
-    DATA:
-      lo_interface_error TYPE string,
-      ls_empty_interface TYPE vseointerf.
-
-    ls_empty_interface-clsname = iv_intf_name.
-    ls_empty_interface-version = seoc_version_active.
-    ls_empty_interface-langu = sy-langu.
-    ls_empty_interface-descript = space.
-    ls_empty_interface-state = seoc_state_implemented.
-    ls_empty_interface-exposure = seoc_exposure_public.
-
-    CALL FUNCTION 'SEO_INTERFACE_CREATE_COMPLETE'
-      EXPORTING
-        version       = seoc_version_active
-        suppress_corr = abap_true
-        lock_handle   = io_lock_handle
-      CHANGING
-        interface     = ls_empty_interface
-      EXCEPTIONS
-        OTHERS        = 1.
-    IF sy-subrc <> 0.
-      IF sy-msgid IS NOT INITIAL.
-        MESSAGE ID sy-msgid TYPE 'S' NUMBER sy-msgno WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4 INTO lo_interface_error.
-      ELSE.
-        lo_interface_error = 'Internal error'.
-      ENDIF.
-      " todo: raise exception here
-    ENDIF.
-  ENDMETHOD.
+*  METHOD create_empty_interface.
+*    DATA:
+*      lo_interface_error TYPE string,
+*      ls_empty_interface TYPE vseointerf.
+*
+*    ls_empty_interface-clsname = iv_intf_name.
+*    ls_empty_interface-version = seoc_version_active.
+*    ls_empty_interface-langu = sy-langu.
+*    ls_empty_interface-descript = space.
+*    ls_empty_interface-state = seoc_state_implemented.
+*    ls_empty_interface-exposure = seoc_exposure_public.
+*
+*    CALL FUNCTION 'SEO_INTERFACE_CREATE_COMPLETE'
+*      EXPORTING
+*        version       = seoc_version_active
+*        suppress_corr = abap_true
+*        lock_handle   = io_lock_handle
+*      CHANGING
+*        interface     = ls_empty_interface
+*      EXCEPTIONS
+*        OTHERS        = 1.
+*    IF sy-subrc <> 0.
+*      IF sy-msgid IS NOT INITIAL.
+*        MESSAGE ID sy-msgid TYPE 'S' NUMBER sy-msgno WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4 INTO lo_interface_error.
+*      ELSE.
+*        lo_interface_error = 'Internal error'.
+*      ENDIF.
+*      " todo: raise exception here
+*    ENDIF.
+*  ENDMETHOD.
 
 
   METHOD generate_class_pool.
@@ -167,7 +168,7 @@ CLASS lcl_aff_helper IMPLEMENTATION.
       WHERE sub_component~clsname    = iv_clif_name
         AND df~exposure              = iv_exposure
         AND sub_component_text~langu = iv_language
-        AND sub_component_text~descript <> space.     "#EC CI_BUFFJOIN
+        AND sub_component_text~descript <> space.      "#EC CI_BUFFJOIN
 
 
 
@@ -202,7 +203,7 @@ CLASS lcl_aff_helper IMPLEMENTATION.
      LEFT OUTER JOIN seocompotx AS component_text
       ON component~cmpname = component_text~cmpname AND component~clsname    = component_text~clsname
                                                     AND component_text~langu = iv_language
-      WHERE component~clsname = iv_clif_name.                   "#EC CI_BUFFJOIN
+      WHERE component~clsname = iv_clif_name.          "#EC CI_BUFFJOIN
 
     SELECT sub_component~cmpname sub_component~sconame sub_component_text~descript sub_component~scotype
       INTO TABLE lt_sub_components
@@ -212,7 +213,7 @@ CLASS lcl_aff_helper IMPLEMENTATION.
           AND sub_component~sconame = sub_component_text~sconame
       WHERE sub_component~clsname    = iv_clif_name
         AND sub_component_text~langu = iv_language
-        AND sub_component_text~descript <> space.     "#EC CI_BUFFJOIN
+        AND sub_component_text~descript <> space.      "#EC CI_BUFFJOIN
 
     LOOP AT lt_components ASSIGNING <ls_component>.
       CLEAR ls_component_exp.
@@ -426,6 +427,11 @@ ENDCLASS.
 CLASS lcl_aff_type_mapping DEFINITION.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_aff_type_mapping.
+  PRIVATE SECTION.
+    METHODS set_abapgit_descriptions
+      IMPORTING is_clsname       TYPE seoclsname
+                is_intf_aff      TYPE zif_abapgit_aff_intf_v1=>ty_main
+      RETURNING VALUE(rs_return) TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt.
 ENDCLASS.
 
 CLASS lcl_aff_type_mapping IMPLEMENTATION.
@@ -445,11 +451,8 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
     ls_data_aff-header-original_language = ls_data_abapgit-vseointerf-langu.
 
     " get category and proxy
-    SELECT SINGLE category clsproxy AS proxy
-           FROM vseointerf
-           INTO (ls_data_aff-category, ls_data_aff-proxy)
-           WHERE clsname = ls_data_abapgit-vseointerf-clsname AND version = '1' AND
-                 langu = ls_data_aff-header-original_language.
+    ls_data_aff-category = ls_data_abapgit-vseointerf-category.
+    ls_data_aff-proxy = ls_data_abapgit-vseointerf-clsproxy.
 
     " get descriptions
     ls_data_aff-descriptions = lcl_aff_helper=>get_descriptions_compo_subco(
@@ -459,38 +462,202 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
     es_data = ls_data_aff.
   ENDMETHOD.
 
-ENDCLASS.
-
-CLASS lcl_aff_serialize_metadata DEFINITION.
-  PUBLIC SECTION.
-
-    CLASS-METHODS serialize
-      IMPORTING is_intf          TYPE data
-      RETURNING VALUE(rv_result) TYPE xstring
-      RAISING   zcx_abapgit_exception.
-ENDCLASS.
-
-CLASS lcl_aff_serialize_metadata IMPLEMENTATION.
-
-  METHOD serialize.
+  METHOD zif_abapgit_aff_type_mapping~to_abapgit.
     DATA:
       ls_data_abapgit TYPE zcl_abapgit_object_intf=>ty_intf,
       ls_data_aff     TYPE zif_abapgit_aff_intf_v1=>ty_main,
-      lx_exception    TYPE REF TO cx_root,
-      lo_ajson        TYPE REF TO zcl_abapgit_json_handler,
-      lo_aff_mapper   TYPE REF TO zif_abapgit_aff_type_mapping.
+      lv_classname    TYPE seoclsname.
 
-    ls_data_abapgit = is_intf.
+
+    ls_data_aff = iv_data.
+
+    lv_classname = iv_object_name.
+
+    ls_data_abapgit-description = set_abapgit_descriptions( is_clsname  = lv_classname
+                                                            is_intf_aff = ls_data_aff ).
+
+    ls_data_abapgit-vseointerf-clsname = iv_object_name.
+    ls_data_abapgit-vseointerf-descript = ls_data_aff-header-description.
+    ls_data_abapgit-vseointerf-category = ls_data_aff-category.
+    ls_data_abapgit-vseointerf-unicode  = ls_data_aff-header-abap_language_version.
+    ls_data_abapgit-vseointerf-langu    = ls_data_aff-header-original_language.
+    ls_data_abapgit-vseointerf-clsproxy = ls_data_aff-proxy.
+    ls_data_abapgit-vseointerf-exposure = seoc_exposure_public.
+    ls_data_abapgit-vseointerf-state    = seoc_state_implemented.
+
+    es_data = ls_data_abapgit.
+
+  ENDMETHOD.
+
+  METHOD set_abapgit_descriptions.
+
+    DATA ls_description TYPE seocompotx.
+    FIELD-SYMBOLS <ls_description>      TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description.
+    FIELD-SYMBOLS <ls_meth_description> TYPE zif_abapgit_aff_oo_types_v1=>ty_method.
+    FIELD-SYMBOLS <ls_evt_description>  TYPE zif_abapgit_aff_oo_types_v1=>ty_event.
+
+
+    LOOP AT is_intf_aff-descriptions-types ASSIGNING <ls_description>.
+      ls_description-clsname  = is_clsname.
+      ls_description-cmpname  = <ls_description>-name.
+      ls_description-langu    = is_intf_aff-header-original_language.
+      ls_description-descript = <ls_description>-description.
+      APPEND ls_description TO rs_return.
+    ENDLOOP.
+
+    LOOP AT is_intf_aff-descriptions-attributes ASSIGNING <ls_description>.
+      ls_description-clsname  = is_clsname.
+      ls_description-cmpname  = <ls_description>-name.
+      ls_description-langu    = is_intf_aff-header-original_language.
+      ls_description-descript = <ls_description>-description.
+      APPEND ls_description TO rs_return.
+    ENDLOOP.
+
+    LOOP AT is_intf_aff-descriptions-methods ASSIGNING <ls_meth_description>.
+      ls_description-clsname  = is_clsname.
+      ls_description-cmpname  = <ls_meth_description>-name.
+      ls_description-langu    = is_intf_aff-header-original_language.
+      ls_description-descript = <ls_meth_description>-description.
+      APPEND ls_description TO rs_return.
+    ENDLOOP.
+
+    LOOP AT is_intf_aff-descriptions-events ASSIGNING <ls_evt_description>.
+      ls_description-clsname  = is_clsname.
+      ls_description-cmpname  = <ls_evt_description>-name.
+      ls_description-langu    = is_intf_aff-header-original_language.
+      ls_description-descript = <ls_evt_description>-description.
+      APPEND ls_description TO rs_return.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+
+CLASS lcl_aff_metadata_handler DEFINITION.
+  PUBLIC SECTION.
+
+    CLASS-METHODS serialize
+      IMPORTING is_intf          TYPE zcl_abapgit_object_intf=>ty_intf
+      RETURNING VALUE(rv_result) TYPE xstring
+      RAISING   zcx_abapgit_exception.
+    CLASS-METHODS deserialize
+      IMPORTING iv_data          TYPE xstring
+      RETURNING VALUE(rv_result) TYPE zif_abapgit_aff_intf_v1=>ty_main
+      RAISING   zcx_abapgit_exception.
+  PRIVATE SECTION.
+    CLASS-METHODS:
+      "! For serialization
+      "! @parameter rt_result | Map/table that associates ABAP values to JSON values (enums)
+      get_mappings
+        RETURNING VALUE(rt_result) TYPE zcl_abapgit_json_handler=>ty_enum_mappings,
+      "! For serialization
+      "! @parameter rt_result | Paths that will not be serialized (depending on value)
+      get_paths_to_skip
+        RETURNING VALUE(rt_result) TYPE zcl_abapgit_json_handler=>ty_skip_paths.
+ENDCLASS.
+
+CLASS lcl_aff_metadata_handler IMPLEMENTATION.
+
+  METHOD serialize.
+    DATA:
+      ls_data_aff      TYPE zif_abapgit_aff_intf_v1=>ty_main,
+      lx_exception     TYPE REF TO cx_root,
+      lo_aff_handler   TYPE REF TO zcl_abapgit_json_handler,
+      lo_aff_mapper    TYPE REF TO zif_abapgit_aff_type_mapping,
+      lt_enum_mappings TYPE zcl_abapgit_json_handler=>ty_enum_mappings,
+      lt_paths_to_skip TYPE zcl_abapgit_json_handler=>ty_skip_paths.
+
 
     CREATE OBJECT lo_aff_mapper TYPE lcl_aff_type_mapping.
-    lo_aff_mapper->to_aff( EXPORTING iv_data = ls_data_abapgit
+    lo_aff_mapper->to_aff( EXPORTING iv_data = is_intf
                            IMPORTING es_data = ls_data_aff ).
-    CREATE OBJECT lo_ajson.
+
+    lt_enum_mappings = get_mappings( ).
+    lt_paths_to_skip = get_paths_to_skip( ).
+
+    CREATE OBJECT lo_aff_handler.
     TRY.
-        rv_result = lo_ajson->serialize( ls_data_aff ).
+        rv_result = lo_aff_handler->serialize( iv_data          = ls_data_aff
+                                               iv_enum_mappings = lt_enum_mappings
+                                               iv_skip_paths    = lt_paths_to_skip ).
       CATCH cx_root INTO lx_exception.
         zcx_abapgit_exception=>raise_with_text( lx_exception ).
     ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD get_mappings.
+    DATA:
+      ls_category_mapping   TYPE zcl_abapgit_json_handler=>ty_enum_mapping,
+      ls_json_abap_mapping  TYPE zcl_abapgit_json_handler=>ty_json_abap_mapping,
+      lt_json_abap_mappings TYPE zcl_abapgit_json_handler=>ty_json_abap_mappings.
+
+    ls_json_abap_mapping-abap = zif_abapgit_aff_intf_v1=>co_category-general.
+    ls_json_abap_mapping-json = 'standard'.
+    APPEND ls_json_abap_mapping TO lt_json_abap_mappings.
+    ls_json_abap_mapping-abap = zif_abapgit_aff_intf_v1=>co_category-classic_badi.
+    ls_json_abap_mapping-json = 'classicBadi'.
+    APPEND ls_json_abap_mapping TO lt_json_abap_mappings.
+    ls_json_abap_mapping-abap = zif_abapgit_aff_intf_v1=>co_category-business_static_components.
+    ls_json_abap_mapping-json = 'businessStaticComponents'.
+    APPEND ls_json_abap_mapping TO lt_json_abap_mappings.
+    ls_json_abap_mapping-abap = zif_abapgit_aff_intf_v1=>co_category-db_procedure_proxy.
+    ls_json_abap_mapping-json = 'dbProcedureProxy'.
+    APPEND ls_json_abap_mapping TO lt_json_abap_mappings.
+    ls_json_abap_mapping-abap = zif_abapgit_aff_intf_v1=>co_category-web_dynpro_runtime.
+    ls_json_abap_mapping-json = 'webDynproRuntime'.
+    APPEND ls_json_abap_mapping TO lt_json_abap_mappings.
+    ls_json_abap_mapping-abap = zif_abapgit_aff_intf_v1=>co_category-enterprise_service.
+    ls_json_abap_mapping-json = 'enterpriseService'.
+    APPEND ls_json_abap_mapping TO lt_json_abap_mappings.
+
+    ls_category_mapping-path = '/category'.
+    ls_category_mapping-mappings = lt_json_abap_mappings.
+
+    APPEND ls_category_mapping TO rt_result.
+  ENDMETHOD.
+
+  METHOD get_paths_to_skip.
+    DATA:
+      ls_path_to_skipp TYPE zcl_abapgit_json_handler=>ty_path_value_pair.
+
+    ls_path_to_skipp-path  = '/category'.
+    ls_path_to_skipp-value = 'standard'.
+
+    APPEND ls_path_to_skipp TO rt_result.
+  ENDMETHOD.
+
+  METHOD deserialize.
+    DATA:
+      lo_ajson                      TYPE REF TO zcl_abapgit_json_handler,
+      lx_exception                  TYPE REF TO cx_static_check,
+      lt_enum_mappings              TYPE zcl_abapgit_json_handler=>ty_enum_mappings,
+      lt_default_abap_langu_version TYPE zcl_abapgit_json_handler=>ty_path_value_pair,
+      lt_values_for_initial         TYPE zcl_abapgit_json_handler=>ty_skip_paths.
+
+    lt_values_for_initial = get_paths_to_skip( ).
+
+    lt_default_abap_langu_version-path  = '/header/abapLanguageVersion'.
+    lt_default_abap_langu_version-value = 'standard'.
+    APPEND lt_default_abap_langu_version TO lt_values_for_initial.
+
+    lt_enum_mappings = get_mappings( ).
+
+
+    CREATE OBJECT lo_ajson.
+    TRY.
+        lo_ajson->deserialize(
+           EXPORTING
+             iv_content = iv_data
+             iv_defaults = lt_values_for_initial
+             iv_enum_mappings = lt_enum_mappings
+           IMPORTING
+             ev_data    = rv_result ).
+      CATCH cx_static_check INTO lx_exception.
+        zcx_abapgit_exception=>raise_with_text( lx_exception ).
+    ENDTRY.
+
 
   ENDMETHOD.
 
