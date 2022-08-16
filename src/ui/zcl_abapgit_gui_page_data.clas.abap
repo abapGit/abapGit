@@ -38,16 +38,15 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
 
-    METHODS concatenated_key_to_where
+    CLASS-METHODS concatenated_key_to_where
       IMPORTING
-        iv_table        TYPE tabname
-        iv_tabkey       TYPE clike
+        !iv_table       TYPE tabname
+        !iv_tabkey      TYPE clike
       RETURNING
-        VALUE(rv_where) TYPE string_table.
-
+        VALUE(rv_where) TYPE string .
     METHODS add_via_transport
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS build_menu
       RETURNING
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
@@ -94,7 +93,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
     DATA ls_trkorr  LIKE LINE OF lt_trkorr.
     DATA ls_request TYPE trwbo_request.
     DATA ls_key     LIKE LINE OF ls_request-keys.
-    DATA ls_config TYPE zif_abapgit_data_config=>ty_config.
+    DATA lv_where   TYPE string.
+    DATA ls_config  TYPE zif_abapgit_data_config=>ty_config.
 
 
     lt_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_transports( ).
@@ -118,13 +118,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
       CLEAR ls_config.
       ls_config-type = zif_abapgit_data_config=>c_data_type-tabu.
       ls_config-name = to_upper( ls_key-objname ).
-      ls_config-where = concatenated_key_to_where(
+      lv_where = concatenated_key_to_where(
         iv_table  = ls_key-objname
         iv_tabkey = ls_key-tabkey ).
+      APPEND lv_where TO ls_config-where.
       mi_config->add_config( ls_config ).
     ENDLOOP.
-
-    BREAK-POINT.
 
   ENDMETHOD.
 
@@ -157,7 +156,20 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
 
 
   METHOD concatenated_key_to_where.
-* todo
+
+    DATA lo_structdescr TYPE REF TO cl_abap_structdescr.
+    DATA lt_fields      TYPE ddfields.
+    DATA ls_field       LIKE LINE OF lt_fields.
+
+
+    lo_structdescr ?= cl_abap_typedescr=>describe_by_name( iv_table ).
+
+    lt_fields = lo_structdescr->get_ddic_field_list( ).
+
+    LOOP AT lt_fields INTO ls_field WHERE keyflag = abap_true.
+    ENDLOOP.
+
+
   ENDMETHOD.
 
 
