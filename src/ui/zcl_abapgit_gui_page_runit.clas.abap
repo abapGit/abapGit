@@ -19,20 +19,20 @@ CLASS zcl_abapgit_gui_page_runit DEFINITION
   PROTECTED SECTION.
     METHODS render_content
         REDEFINITION .
-private section.
+  PRIVATE SECTION.
 
-  data MV_DEVCLASS type DEVCLASS .
+    DATA mv_devclass TYPE devclass .
 
-  methods BUILD_TADIR
-    returning
-      value(RT_TADIR) type SABP_T_TADIR_KEYS
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods RUN
-    returning
-      value(RO_RESULT) type ref to CL_SAUNIT_INTERNAL_RESULT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
+    METHODS build_tadir
+      RETURNING
+        VALUE(rt_tadir) TYPE sabp_t_tadir_keys
+      RAISING
+        zcx_abapgit_exception .
+    METHODS run
+      RETURNING
+        VALUE(ro_result) TYPE REF TO cl_saunit_internal_result
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -71,11 +71,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
 
   METHOD render_content.
 
-    DATA lo_result TYPE REF TO cl_saunit_internal_result.
+    DATA lo_result      TYPE REF TO cl_saunit_internal_result.
     DATA lv_program_ndx TYPE i.
-    DATA lv_class_ndx TYPE i.
-    DATA lv_method_ndx TYPE i.
-    DATA lv_text TYPE string.
+    DATA lv_class_ndx   TYPE i.
+    DATA lv_method_ndx  TYPE i.
+    DATA lv_text        TYPE string.
+    DATA lv_count       TYPE i.
 
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
@@ -90,8 +91,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
           lv_text = lv_params.
         ENDLOOP.
         ri_html->add( |<span class="boxed red-filled-set">{ lv_text }</span><br>| ).
+        lv_count = lv_count + 1.
       ENDLOOP.
     ENDLOOP.
+
+    ri_html->add( |<b>{ lv_count } Errors</b><br>| ).
 
     ri_html->add( |<hr><table>| ).
 
@@ -165,6 +169,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
 
 
   METHOD zif_abapgit_gui_event_handler~on_event.
-    BREAK-POINT.
+    RETURN.
   ENDMETHOD.
 ENDCLASS.
