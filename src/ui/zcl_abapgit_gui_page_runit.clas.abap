@@ -107,11 +107,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
 
     LOOP AT lo_result->f_task_data-programs INTO ls_program.
       lv_program_ndx = sy-tabix.
-      ri_html->add( |<tr><td>{ ls_program-info-key-obj_type } { ls_program-info-key-obj_name }</td><td></td></tr>| ).
+      ri_html->add( |<tr><td>{ ls_program-info-key-obj_type } {
+        ls_program-info-key-obj_name }</td><td></td></tr>| ).
       LOOP AT ls_program-classes INTO ls_class.
         lv_class_ndx = sy-tabix.
 
-        ri_html->add( |<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;{ ls_class-info-name }</td><td></td></tr>| ).
+        ri_html->add( |<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;{
+          ls_class-info-name }</td><td></td></tr>| ).
         LOOP AT ls_class-methods INTO ls_method.
           lv_method_ndx = sy-tabix.
 
@@ -135,7 +137,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
             lv_text = |<span class="boxed red-filled-set">{ lv_text }</span>|.
           ENDIF.
 
-          ri_html->add( |<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ ls_method-info-name }</td><td>{ lv_text }</td></tr>| ).
+          ri_html->add( |<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{
+            ls_method-info-name }</td><td>{ lv_text }</td></tr>| ).
         ENDLOOP.
       ENDLOOP.
     ENDLOOP.
