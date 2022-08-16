@@ -71,15 +71,18 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
 
   METHOD render_content.
 
-    DATA lo_result      TYPE REF TO cl_saunit_internal_result.
-    DATA lv_program_ndx TYPE i.
-    DATA lv_class_ndx   TYPE i.
-    DATA lv_method_ndx  TYPE i.
-    DATA lv_text        TYPE string.
-    DATA lv_count       TYPE i.
-    DATA ls_program     LIKE LINE OF lo_result->f_task_data-programs.
-    DATA ls_class       LIKE LINE OF ls_program-classes.
-    DATA ls_method      LIKE LINE OF ls_class-methods.
+    DATA lo_result         TYPE REF TO cl_saunit_internal_result.
+    DATA lv_program_ndx    TYPE i.
+    DATA lv_class_ndx      TYPE i.
+    DATA lv_method_ndx     TYPE i.
+    DATA lv_text           TYPE string.
+    DATA lv_count          TYPE i.
+    DATA ls_program        LIKE LINE OF lo_result->f_task_data-programs.
+    DATA ls_class          LIKE LINE OF ls_program-classes.
+    DATA ls_method         LIKE LINE OF ls_class-methods.
+    DATA ls_alert_by_index LIKE LINE OF lo_result->f_task_data-alerts_by_indicies.
+    DATA ls_alert          LIKE LINE OF ls_alert_by_index-alerts.
+    DATA lv_params         LIKE LINE OF ls_alert-header-params.
 
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
@@ -88,9 +91,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
 
     lo_result = run( ).
 
-    LOOP AT lo_result->f_task_data-alerts_by_indicies INTO DATA(ls_alert_by_index).
-      LOOP AT ls_alert_by_index-alerts INTO DATA(ls_alert) WHERE kind = 'F'.
-        LOOP AT ls_alert-header-params INTO DATA(lv_params).
+    LOOP AT lo_result->f_task_data-alerts_by_indicies INTO ls_alert_by_index.
+      LOOP AT ls_alert_by_index-alerts INTO ls_alert WHERE kind = 'F'.
+        LOOP AT ls_alert-header-params INTO lv_params.
           lv_text = lv_params.
         ENDLOOP.
         ri_html->add( |<span class="boxed red-filled-set">{ lv_text }</span><br>| ).
