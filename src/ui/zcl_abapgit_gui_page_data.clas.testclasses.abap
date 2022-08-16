@@ -16,7 +16,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
     lv_where = zcl_abapgit_gui_page_data=>concatenated_key_to_where(
       iv_table  = 'T100'
-      iv_tabkey = 'EABC55555555555555555001').
+      iv_tabkey = 'EABC55555555555555555001' ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_where

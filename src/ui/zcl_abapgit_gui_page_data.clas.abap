@@ -168,6 +168,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
     lt_fields = lo_structdescr->get_ddic_field_list( ).
 
     LOOP AT lt_fields INTO ls_field WHERE keyflag = abap_true.
+      IF ls_field-position = '0001' AND ls_field-datatype = 'CLNT'.
+        lv_key = lv_key+ls_field-leng.
+        CONTINUE.
+      ENDIF.
       IF NOT rv_where IS INITIAL.
         rv_where = |{ rv_where } AND |.
       ENDIF.
