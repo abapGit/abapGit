@@ -124,6 +124,7 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
 
       READ TABLE it_binary INDEX 1 ASSIGNING <lv_line>.
       DESCRIBE FIELD <lv_line> LENGTH lv_row_len IN CHARACTER MODE.
+      lv_offset = lv_row_len / 2.
 
       LOOP AT it_binary ASSIGNING <lv_line>.
 
