@@ -77,7 +77,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_GLOB IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -366,10 +366,11 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
     ENDIF.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
+    ri_html->add( '<div class="form-container">' ).
     ri_html->add( mo_form->render(
       io_values         = mo_form_data
       io_validation_log = mo_validation_log ) ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 ENDCLASS.
