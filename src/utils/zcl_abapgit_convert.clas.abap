@@ -4,6 +4,11 @@ CLASS zcl_abapgit_convert DEFINITION
 
   PUBLIC SECTION.
 
+    CLASS-METHODS binary_to_xstring
+      IMPORTING
+        it_binary         TYPE soli_tab
+      RETURNING
+        VALUE(rv_xstring) TYPE xstring.
     CLASS-METHODS bitbyte_to_int
       IMPORTING
         !iv_bits      TYPE clike
@@ -96,6 +101,42 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
   METHOD base64_to_xstring.
 
     rv_xstr = cl_http_utility=>decode_x_base64( iv_base64 ).
+
+  ENDMETHOD.
+
+
+  METHOD binary_to_xstring.
+
+    DATA:
+      lv_row_len TYPE i,
+      lv_offset  TYPE i,
+      lv_convert TYPE c,
+      ls_soli    TYPE soli.
+
+    FIELD-SYMBOLS:
+      <lv_x> TYPE x.
+
+    IF cl_abap_char_utilities=>charsize > 1. "unicode
+      DESCRIBE FIELD ls_soli-line LENGTH lv_row_len IN CHARACTER MODE.
+      lv_offset = lv_row_len / 2.
+      LOOP AT it_binary INTO ls_soli.
+        IF ls_soli-line+lv_offset IS NOT INITIAL.
+          lv_convert = abap_true.
+          EXIT.
+        ENDIF.
+      ENDLOOP.
+    ENDIF.
+
+    LOOP AT it_binary ASSIGNING <lv_x> CASTING.
+
+      IF lv_convert = abap_true.
+        CONCATENATE rv_xstring <lv_x>(lv_row_len) INTO rv_xstring IN BYTE MODE.
+        CONCATENATE rv_xstring <lv_x>+lv_row_len  INTO rv_xstring IN BYTE MODE.
+      ELSE.
+        CONCATENATE rv_xstring <lv_x> INTO rv_xstring IN BYTE MODE.
+      ENDIF.
+
+    ENDLOOP.
 
   ENDMETHOD.
 
