@@ -177,14 +177,7 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
     IF lv_xml_source IS NOT INITIAL.
       lv_xstring = lv_xml_source.
     ELSE.
-
-      TRY.
-          lt_solix = cl_bcs_convert=>soli_to_solix( lt_content ).
-          lv_xstring = cl_bcs_convert=>solix_to_xstring( lt_solix ).
-        CATCH cx_bcs.
-          CLEAR lv_xstring.
-      ENDTRY.
-
+      lv_xstring = zcl_abapgit_convert=>binary_to_xstring( lt_content ).
     ENDIF.
 
     IF lv_xstring IS NOT INITIAL AND zcl_abapgit_utils=>is_binary( lv_xstring ) = abap_true.
@@ -282,13 +275,8 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
 
     IF zcl_abapgit_utils=>is_binary( iv_content ) = abap_true.
 
-      lt_solix = cl_bcs_convert=>xstring_to_solix( iv_content ).
-
-      CALL FUNCTION 'SO_SOLIXTAB_TO_SOLITAB'
-        EXPORTING
-          ip_solixtab = lt_solix
-        IMPORTING
-          ep_solitab  = rt_content.
+      zcl_abapgit_convert=>xstring_to_bintab( EXPORTING iv_xstr   = iv_content
+                                              IMPORTING et_bintab = rt_content ).
 
     ELSE.
 
