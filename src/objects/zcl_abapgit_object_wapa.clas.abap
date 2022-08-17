@@ -159,8 +159,7 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
     DATA: lt_content    TYPE o2pageline_table,
           lv_xml_source TYPE xstring,
           lv_string     TYPE string,
-          lv_xstring    TYPE xstring,
-          lt_solix      TYPE solix_tab.
+          lv_xstring    TYPE xstring.
 
     io_page->get_page(
       IMPORTING
@@ -270,8 +269,7 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
 
   METHOD to_page_content.
 
-    DATA: lv_string TYPE string,
-          lt_solix  TYPE solix_tab.
+    DATA: lv_string TYPE string.
 
     IF zcl_abapgit_utils=>is_binary( iv_content ) = abap_true.
 

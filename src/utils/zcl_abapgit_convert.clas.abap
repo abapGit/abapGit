@@ -6,7 +6,7 @@ CLASS zcl_abapgit_convert DEFINITION
 
     CLASS-METHODS binary_to_xstring
       IMPORTING
-        it_binary         TYPE soli_tab
+        it_binary         TYPE STANDARD TABLE
       RETURNING
         VALUE(rv_xstring) TYPE xstring.
     CLASS-METHODS bitbyte_to_int
@@ -110,21 +110,30 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
     DATA:
       lv_row_len TYPE i,
       lv_offset  TYPE i,
-      lv_convert TYPE c,
-      ls_soli    TYPE soli.
+      lv_convert TYPE c.
 
     FIELD-SYMBOLS:
-      <lv_x> TYPE x.
+      <lv_line> TYPE any,
+      <lv_x>    TYPE x.
+
+    IF it_binary IS INITIAL.
+      RETURN.
+    ENDIF.
 
     IF cl_abap_char_utilities=>charsize > 1. "unicode
-      DESCRIBE FIELD ls_soli-line LENGTH lv_row_len IN CHARACTER MODE.
-      lv_offset = lv_row_len / 2.
-      LOOP AT it_binary INTO ls_soli.
-        IF ls_soli-line+lv_offset IS NOT INITIAL.
+
+      READ TABLE it_binary INDEX 1 ASSIGNING <lv_line>.
+      DESCRIBE FIELD <lv_line> LENGTH lv_row_len IN CHARACTER MODE.
+
+      LOOP AT it_binary ASSIGNING <lv_line>.
+
+        IF <lv_line>+lv_offset IS NOT INITIAL.
           lv_convert = abap_true.
           EXIT.
         ENDIF.
+
       ENDLOOP.
+
     ENDIF.
 
     LOOP AT it_binary ASSIGNING <lv_x> CASTING.
