@@ -153,7 +153,6 @@ CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
       CASE lv_btype.
         WHEN '00'.
           not_compressed( ).
-          EXIT.
         WHEN '01'.
           fixed( ).
           decode_loop( ).
@@ -446,13 +445,16 @@ CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
 
     DATA: lv_len  TYPE i,
           lv_nlen TYPE i ##NEEDED.
+    DATA lv_bytes TYPE xstring.
 
-    go_stream->take_bits( 5 ).
+* skip any remaining bits in current partially processed byte
+    go_stream->clear_bits( ).
 
     lv_len = go_stream->take_int( 16 ).
     lv_nlen = go_stream->take_int( 16 ).
 
-    gv_out = go_stream->take_bytes( lv_len ).
+    lv_bytes = go_stream->take_bytes( lv_len ).
+    CONCATENATE gv_out lv_bytes INTO gv_out IN BYTE MODE.
 
   ENDMETHOD.
 
