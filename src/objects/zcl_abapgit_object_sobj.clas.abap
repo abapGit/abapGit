@@ -15,7 +15,11 @@ CLASS zcl_abapgit_object_sobj DEFINITION
   PRIVATE SECTION.
     METHODS get_field_rules
       RETURNING
-        VALUE(ro_result) TYPE REF TO zif_abapgit_field_rules.
+        VALUE(ri_rules) TYPE REF TO zif_abapgit_field_rules.
+    METHODS is_locked RETURNING VALUE(rv_is_locked) TYPE abap_bool.
+    METHODS is_objtype_locked RETURNING VALUE(rv_is_locked) TYPE abap_bool.
+    METHODS is_program_locked RETURNING VALUE(rv_is_locked) TYPE abap_bool.
+    METHODS get_program RETURNING VALUE(rv_program) TYPE tojtb-progname.
 ENDCLASS.
 
 
@@ -92,9 +96,7 @@ CLASS zcl_abapgit_object_sobj IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_locked.
-
-    rv_is_locked = abap_false.
-
+    rv_is_locked = is_locked(  ).
   ENDMETHOD.
 
 
@@ -111,85 +113,148 @@ CLASS zcl_abapgit_object_sobj IMPLEMENTATION.
 
   METHOD get_field_rules.
 
-    ro_result = zcl_abapgit_field_rules=>create( ).
-    ro_result->add(
-        iv_table     = 'TOJTB'
-        iv_field     = 'CREA_USER'
-        iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
+    ri_rules = zcl_abapgit_field_rules=>create( ).
+    ri_rules->add(
+      iv_table     = 'TOJTB'
+      iv_field     = 'CREA_USER'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
     )->add(
-        iv_table     = 'TOJTB'
-        iv_field     = 'CREA_DATE'
-        iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-date
+      iv_table     = 'TOJTB'
+      iv_field     = 'CREA_DATE'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-date
     )->add(
-        iv_table     = 'TOJTB'
-        iv_field     = 'CREA_TIME'
-        iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-time
+      iv_table     = 'TOJTB'
+      iv_field     = 'CREA_TIME'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-time
+    )->add(
+      iv_table     = 'TOJTB'
+      iv_field     = 'CHAN_USER'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
+    )->add(
+      iv_table     = 'TOJTB'
+      iv_field     = 'CHAN_DATE'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-date
+    )->add(
+      iv_table     = 'TOJTB'
+      iv_field     = 'CHAN_TIME'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-time
+    )->add(
+      iv_table     = 'TOJTB'
+      iv_field     = 'ACTV_USER'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
+    )->add(
+      iv_table     = 'TOJTB'
+      iv_field     = 'ACTV_DATE'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-date
+    )->add(
+      iv_table     = 'TOJTB'
+      iv_field     = 'ACTV_TIME'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-time
+    )->add(
+      iv_table     = 'TOJTB'
+      iv_field     = 'REL_USER'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
+    )->add(
+      iv_table     = 'TOJTB'
+      iv_field     = 'REL_DATE'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-date
+    )->add(
+      iv_table     = 'TOJTB'
+      iv_field     = 'REL_TIME'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-time ).
+
+*    ri_rules->add(
+*      iv_table     = 'TOJTB'
+*      iv_field     = 'CHAN_REL'
+*      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-sap_release
 *    )->add(
-*        iv_table     = 'TOJTB'
-*        iv_field     = 'CREA_REL'
-*        iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-???
-    )->add(
-        iv_table     = 'TOJTB'
-        iv_field     = 'CHAN_USER'
-        iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
-    )->add(
-        iv_table     = 'TOJTB'
-        iv_field     = 'CHAN_DATE'
-        iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-date
-    )->add(
-        iv_table     = 'TOJTB'
-        iv_field     = 'CHAN_TIME'
-        iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-time
+*      iv_table     = 'TOJTB'
+*      iv_field     = 'VERSION'
+*      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-sap_release
 *    )->add(
-*        iv_table     = 'TOJTB'
-*        iv_field     = 'CHAN_REL'
-*        iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-???
+*      iv_table     = 'TOJTB'
+*      iv_field     = 'CREA_REL'
+*      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-sap_release
 *    )->add(
-*        iv_table     = 'TOJTB'
-*        iv_field     = 'VERSION'
-*        iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-???
-    )->add(
-        iv_table     = 'TOJTB'
-        iv_field     = 'ACTV_USER'
-        iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
-    )->add(
-        iv_table     = 'TOJTB'
-        iv_field     = 'ACTV_DATE'
-        iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-date
-    )->add(
-        iv_table     = 'TOJTB'
-        iv_field     = 'ACTV_TIME'
-        iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-time
-    )->add(
-        iv_table     = 'TOJTB'
-        iv_field     = 'REL_USER'
-        iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
-    )->add(
-        iv_table     = 'TOJTB'
-        iv_field     = 'REL_DATE'
-        iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-date
-    )->add(
-        iv_table     = 'TOJTB'
-        iv_field     = 'REL_TIME'
-        iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-time
-     ).
-    ")->add(
-*        iv_table     = 'TOJTB'
-*        iv_field     = 'REL_REL'
-*        iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-???
+*      iv_table     = 'TOJTB'
+*      iv_field     = 'REL_REL'
+*      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-sap_release
 *    )->add(
-*        iv_table     = 'SWOTD'
-*        iv_field     = 'CREA_REL'
-*        iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-???
-*     )->add(
-*        iv_table     = 'SWOTDQ'
-*        iv_field     = 'CREA_REL'
-*        iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-???
-*     )->add(
-*        iv_table     = 'SWOTDI'
-*        iv_field     = 'CREA_REL'
-*        iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-???
-*     ).
+*      iv_table     = 'TOJTB'
+*      iv_field     = 'CCHILDREN'
+*      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-??? "new type?
+*    )->add(
+*      iv_table     = 'SWOTD'
+*      iv_field     = 'CREA_REL'
+*      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-sap_release
+*    )->add(
+*      iv_table     = 'SWOTDQ'
+*      iv_field     = 'CREA_REL'
+*      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-sap_release
+*    )->add(
+*      iv_table     = 'SWOTDI'
+*      iv_field     = 'CREA_REL'
+*      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-sap_release
+*    ).
 
   ENDMETHOD.
+  METHOD is_locked.
+    rv_is_locked = boolc( is_objtype_locked( ) = abap_true OR is_program_locked(  ) = abap_true ).
+  ENDMETHOD.
+
+  METHOD is_objtype_locked.
+    CONSTANTS lc_tabname TYPE tabname VALUE 'SWOTBASDAT'.
+    DATA lv_varkey TYPE vim_enqkey.
+
+    rv_is_locked = abap_false.
+    lv_varkey = ms_item-obj_name.
+
+    CALL FUNCTION 'ENQUEUE_E_TABLE'
+      EXPORTING
+        tabname      = lc_tabname
+        varkey       = lv_varkey
+      EXCEPTIONS
+        foreign_lock = 1
+        OTHERS       = 999.
+    IF sy-subrc IS NOT INITIAL.
+      rv_is_locked = abap_true.
+    ELSE.
+      CALL FUNCTION 'DEQUEUE_E_TABLE'
+        EXPORTING
+          tabname = lc_tabname
+          varkey  = lv_varkey.
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD is_program_locked.
+    CONSTANTS lc_enqueue_exclusive TYPE enqmode VALUE 'X'.
+    DATA lv_progname TYPE progname.
+
+    rv_is_locked = abap_false.
+    lv_progname = get_program(  ).
+
+    IF lv_progname IS NOT INITIAL.
+      CALL FUNCTION 'ENQUEUE_ESRDIRE'
+        EXPORTING
+          mode_trdir   = lc_enqueue_exclusive
+          name         = lv_progname
+        EXCEPTIONS
+          foreign_lock = 1
+          OTHERS       = 999.
+      IF sy-subrc IS NOT INITIAL.
+        rv_is_locked = abap_true.
+      ELSE.
+        CALL FUNCTION 'DEQUEUE_ESRDIRE'
+          EXPORTING
+            mode_trdir = lc_enqueue_exclusive
+            name       = lv_progname.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD get_program.
+    SELECT SINGLE progname INTO rv_program FROM tojtb WHERE name = ms_item-obj_name.
+  ENDMETHOD.
+
 ENDCLASS.
