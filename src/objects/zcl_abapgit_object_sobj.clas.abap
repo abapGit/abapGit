@@ -39,7 +39,7 @@ CLASS zcl_abapgit_object_sobj IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    data: begin of ls_userinfo,
+    DATA: begin of ls_userinfo,
             crea_user type tojtb-crea_user,
             chan_user type tojtb-chan_user,
           end   of ls_userinfo.
