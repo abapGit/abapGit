@@ -39,8 +39,17 @@ CLASS zcl_abapgit_object_sobj IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
+    data: begin of ls_userinfo,
+            crea_user type tojtb-crea_user,
+            chan_user type tojtb-chan_user,
+          end   of ls_userinfo.
 
-    SELECT SINGLE crea_user, chan_user INTO @DATA(ls_userinfo) FROM tojtb WHERE name = @ms_item-obj_name.
+    SELECT SINGLE
+        crea_user
+        chan_user
+    INTO (ls_userinfo-crea_user, ls_userinfo-chan_user)
+    FROM tojtb WHERE name = ms_item-obj_name.
+
     IF ls_userinfo-chan_user IS INITIAL.
       ls_userinfo-chan_user = ls_userinfo-crea_user.
     ENDIF.
