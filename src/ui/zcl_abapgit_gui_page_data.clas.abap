@@ -172,6 +172,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
         lv_key = lv_key+ls_field-leng.
         CONTINUE.
       ENDIF.
+      IF lv_key = |*|.
+        EXIT. " current loop
+      ENDIF.
       IF NOT rv_where IS INITIAL.
         rv_where = |{ rv_where } AND |.
       ENDIF.
