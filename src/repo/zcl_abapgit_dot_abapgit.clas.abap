@@ -283,7 +283,7 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
     TRY.
         lv_mark = zcl_abapgit_convert=>xstring_to_string_utf8( cl_abap_char_utilities=>byte_order_mark_utf8 ).
       CATCH zcx_abapgit_exception ##NO_HANDLER.
-* In non-unicode systems, the byte order mark throws an error        
+* In non-unicode systems, the byte order mark throws an error
     ENDTRY.
     IF lv_xml(1) <> lv_mark.
       CONCATENATE lv_mark lv_xml INTO lv_xml.
