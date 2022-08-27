@@ -286,6 +286,8 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     DATA: li_package TYPE REF TO zif_abapgit_sap_package.
 
+    find_remote_dot_abapgit( ).
+
     check_write_protect( ).
     check_language( ).
 
