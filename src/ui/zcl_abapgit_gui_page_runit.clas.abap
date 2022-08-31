@@ -36,7 +36,7 @@ CLASS zcl_abapgit_gui_page_runit DEFINITION
         zcx_abapgit_exception .
     METHODS run
       RETURNING
-        VALUE(ro_result) TYPE REF TO cl_saunit_internal_result
+        VALUE(ro_result) TYPE REF TO object
       RAISING
         zcx_abapgit_exception .
 ENDCLASS.
@@ -77,6 +77,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
 
   METHOD render_content.
 
+*    DATA lo_result         TYPE REF TO object.
     DATA lo_result         TYPE REF TO cl_saunit_internal_result.
     DATA lv_program_ndx    TYPE i.
     DATA lv_class_ndx      TYPE i.
@@ -95,7 +96,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
 
     ri_html->add( '<div class="repo">' ).
 
-    lo_result = run( ).
+    lo_result ?= run( ).
 
     LOOP AT lo_result->f_task_data-alerts_by_indicies INTO ls_alert_by_index.
       LOOP AT ls_alert_by_index-alerts INTO ls_alert WHERE kind = 'F'.
@@ -157,9 +158,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
 
     DATA lo_passport TYPE REF TO object.
     DATA lo_runner   TYPE REF TO object.
-    DATA li_result   TYPE REF TO if_saunit_internal_result.
     DATA lt_keys     TYPE ty_keys_tt.
-    DATA lo_result   TYPE REF TO cl_saunit_internal_result.
+    DATA li_result TYPE REF TO data.
+    FIELD-SYMBOLS <li_result> TYPE any.
 
     lt_keys = build_tadir( ).
 
@@ -169,15 +170,18 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
 
     lo_runner = cl_aucv_test_runner_standard=>create( lo_passport ).
 
+    CREATE DATA li_result TYPE REF TO ('IF_SAUNIT_INTERNAL_RESULT').
+    ASSIGN li_result->* TO <li_result>.
+
     CALL METHOD lo_runner->('RUN_FOR_PROGRAM_KEYS')
       EXPORTING
         i_limit_on_duration_category = '36' " long
         i_limit_on_risk_level        = '33' " critical
         i_program_keys               = lt_keys
       IMPORTING
-        e_aunit_result               = li_result.
+        e_aunit_result               = <li_result>.
 
-    ro_result ?= li_result.
+    ro_result = <li_result>.
 
   ENDMETHOD.
 
