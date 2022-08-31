@@ -182,7 +182,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
       RECEIVING
         result = lo_passport.
 
-    CALL METHOD cl_aucv_test_runner_standard=>('CREATE')
+    CALL METHOD ('CL_AUCV_TEST_RUNNER_STANDARD')=>create
       EXPORTING
         i_passport = lo_passport
       RECEIVING
