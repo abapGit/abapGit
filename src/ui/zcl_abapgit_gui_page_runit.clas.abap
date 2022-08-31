@@ -85,10 +85,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
     DATA lv_count          TYPE i.
     DATA lv_params         TYPE string.
 
-    DATA ls_program        TYPE if_saunit_internal_result_type=>ty_s_program.
-    DATA ls_class          LIKE LINE OF ls_program-classes.
-    DATA ls_method         LIKE LINE OF ls_class-methods.
-
     FIELD-SYMBOLS <ls_task_data>      TYPE any.
     FIELD-SYMBOLS <lt_programs>       TYPE ANY TABLE.
     FIELD-SYMBOLS <ls_alert_by_index> TYPE any.
@@ -98,7 +94,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
     FIELD-SYMBOLS <lt_methods>        TYPE ANY TABLE.
     FIELD-SYMBOLS <ls_alert>          TYPE any.
     FIELD-SYMBOLS <ls_program>        TYPE any.
-    FIELD-SYMBOLS <ls_class>        TYPE any.
+    FIELD-SYMBOLS <ls_class>          TYPE any.
+    FIELD-SYMBOLS <ls_method>         TYPE any.
     FIELD-SYMBOLS <lv_any>            TYPE any.
     FIELD-SYMBOLS <lt_params>         TYPE string_table.
 
@@ -142,7 +139,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
         ASSIGN COMPONENT 'INFO-NAME' OF STRUCTURE <ls_class> TO <lv_any>.
         ri_html->add( |<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;{ <lv_any> }</td><td></td></tr>| ).
         ASSIGN COMPONENT 'METHODS' OF STRUCTURE <ls_class> TO <lt_methods>.
-        LOOP AT <lt_methods> INTO ls_method.
+        LOOP AT <lt_methods> ASSIGNING <ls_method>.
           lv_method_ndx = sy-tabix.
 
           CLEAR lv_text.
@@ -167,8 +164,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
             lv_text = |<span class="boxed red-filled-set">{ lv_text }</span>|.
           ENDIF.
 
+          ASSIGN COMPONENT 'INFO-NAME' OF STRUCTURE <ls_method> TO <lv_any>.
           ri_html->add( |<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{
-            ls_method-info-name }</td><td>{ lv_text }</td></tr>| ).
+            <lv_any> }</td><td>{ lv_text }</td></tr>| ).
         ENDLOOP.
       ENDLOOP.
     ENDLOOP.
