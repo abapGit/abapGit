@@ -45,13 +45,25 @@ CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
 
   METHOD zif_abapgit_data_config~add_config.
 
+    DATA lv_where TYPE string.
+
+    FIELD-SYMBOLS <ls_config> LIKE LINE OF mt_config.
+
     ASSERT is_config-type IS NOT INITIAL.
     ASSERT is_config-name IS NOT INITIAL.
     ASSERT is_config-name = to_upper( is_config-name ).
 
     INSERT is_config INTO TABLE mt_config.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Already in table' ).
+* append to existing
+      READ TABLE mt_config ASSIGNING <ls_config> WITH KEY type = is_config-type name = is_config-name.
+      ASSERT sy-subrc = 0.
+      LOOP AT is_config-where INTO lv_where.
+        READ TABLE <ls_config>-where TRANSPORTING NO FIELDS WITH KEY table_line = lv_where.
+        IF sy-subrc <> 0.
+          INSERT lv_where INTO TABLE <ls_config>-where.
+        ENDIF.
+      ENDLOOP.
     ENDIF.
 
   ENDMETHOD.
