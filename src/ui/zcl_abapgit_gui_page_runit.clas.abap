@@ -110,8 +110,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
     ASSIGN COMPONENT 'PROGRAMS' OF STRUCTURE <ls_task_data> TO <lt_programs>.
 
     LOOP AT <lt_indices> ASSIGNING <ls_alert_by_index>.
-*      ASSIGN COMPONENT 'ALERTS' OF STRUCTURE <ls_alert_by_index> TO <lt_alerts>.
-      LOOP AT ls_alert_by_index-alerts INTO ls_alert WHERE kind = 'F'.
+      ASSIGN COMPONENT 'ALERTS' OF STRUCTURE <ls_alert_by_index> TO <lt_alerts>.
+      LOOP AT <lt_alerts> INTO ls_alert WHERE ('KIND = ''F'' OR KIND = ''S''').  " check level=F(ail?) instead?
         LOOP AT ls_alert-header-params INTO lv_params.
           lv_text = lv_params.
         ENDLOOP.
