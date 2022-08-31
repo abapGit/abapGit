@@ -77,28 +77,36 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
 
   METHOD render_content.
 
-*    DATA lo_result         TYPE REF TO object.
-    DATA lo_result         TYPE REF TO cl_saunit_internal_result.
+    DATA lo_result         TYPE REF TO object.
     DATA lv_program_ndx    TYPE i.
     DATA lv_class_ndx      TYPE i.
     DATA lv_method_ndx     TYPE i.
     DATA lv_text           TYPE string.
     DATA lv_count          TYPE i.
+
     DATA ls_program        TYPE if_saunit_internal_result_type=>ty_s_program.
     DATA ls_class          LIKE LINE OF ls_program-classes.
     DATA ls_method         LIKE LINE OF ls_class-methods.
+
     DATA ls_alert_by_index TYPE if_saunit_internal_result_type=>ty_s_alerts_by_index.
     DATA ls_alert          LIKE LINE OF ls_alert_by_index-alerts.
     DATA lv_params         LIKE LINE OF ls_alert-header-params.
 
+    FIELD-SYMBOLS <ls_task_data> TYPE any.
+    FIELD-SYMBOLS <lt_programs>  TYPE if_saunit_internal_result_type=>ty_t_programs.
+    FIELD-SYMBOLS <lt_indices>   TYPE if_saunit_internal_result_type=>ty_t_alerts_by_indicies.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( '<div class="repo">' ).
 
-    lo_result ?= run( ).
+    lo_result = run( ).
 
-    LOOP AT lo_result->f_task_data-alerts_by_indicies INTO ls_alert_by_index.
+    ASSIGN lo_result->('F_TASK_DATA') TO <ls_task_data>.
+    ASSIGN COMPONENT 'ALERTS_BY_INDICIES' OF STRUCTURE <ls_task_data> TO <lt_indices>.
+    ASSIGN COMPONENT 'PROGRAMS' OF STRUCTURE <ls_task_data> TO <lt_programs>.
+
+    LOOP AT <lt_indices> INTO ls_alert_by_index.
       LOOP AT ls_alert_by_index-alerts INTO ls_alert WHERE kind = 'F'.
         LOOP AT ls_alert-header-params INTO lv_params.
           lv_text = lv_params.
@@ -112,7 +120,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
 
     ri_html->add( |<hr><table>| ).
 
-    LOOP AT lo_result->f_task_data-programs INTO ls_program.
+    LOOP AT <lt_programs> INTO ls_program.
       lv_program_ndx = sy-tabix.
       ri_html->add( |<tr><td>{ ls_program-info-key-obj_type } {
         ls_program-info-key-obj_name }</td><td></td></tr>| ).
@@ -124,7 +132,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
           lv_method_ndx = sy-tabix.
 
           CLEAR lv_text.
-          READ TABLE lo_result->f_task_data-alerts_by_indicies WITH KEY
+          READ TABLE <lt_indices> WITH KEY
             program_ndx = lv_program_ndx
             class_ndx = lv_class_ndx
             method_ndx = lv_method_ndx
