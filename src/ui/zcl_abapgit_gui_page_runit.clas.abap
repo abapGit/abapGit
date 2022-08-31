@@ -21,11 +21,17 @@ CLASS zcl_abapgit_gui_page_runit DEFINITION
         REDEFINITION .
   PRIVATE SECTION.
 
+    TYPES: BEGIN OF ty_key,
+             obj_name TYPE tadir-obj_name,
+             obj_type TYPE tadir-object,
+           END OF ty_key.
+    TYPES ty_keys_tt TYPE STANDARD TABLE OF ty_key WITH DEFAULT KEY.
+
     DATA mv_devclass TYPE devclass .
 
     METHODS build_tadir
       RETURNING
-        VALUE(rt_tadir) TYPE sabp_t_tadir_keys
+        VALUE(rt_tadir) TYPE ty_keys_tt
       RAISING
         zcx_abapgit_exception .
     METHODS run
@@ -152,7 +158,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
     DATA lo_passport TYPE REF TO object.
     DATA lo_runner   TYPE REF TO cl_aucv_test_runner_abstract.
     DATA li_result   TYPE REF TO if_saunit_internal_result.
-    DATA lt_keys     TYPE sabp_t_tadir_keys.
+    DATA lt_keys     TYPE ty_keys_tt.
     DATA lo_result   TYPE REF TO cl_saunit_internal_result.
 
     lt_keys = build_tadir( ).
