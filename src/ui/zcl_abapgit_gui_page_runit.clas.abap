@@ -186,15 +186,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
 
     lt_keys = build_tadir( ).
 
-    CALL METHOD ('\PROGRAM=SAPLSAUCV_GUI_RUNNER\CLASS=PASSPORT')=>get
-      RECEIVING
-        result = lo_passport.
+    TRY.
+        CALL METHOD ('\PROGRAM=SAPLSAUCV_GUI_RUNNER\CLASS=PASSPORT')=>get
+          RECEIVING
+            result = lo_passport.
 
-    CALL METHOD ('CL_AUCV_TEST_RUNNER_STANDARD')=>create
-      EXPORTING
-        i_passport = lo_passport
-      RECEIVING
-        result     = lo_runner.
+        CALL METHOD ('CL_AUCV_TEST_RUNNER_STANDARD')=>create
+          EXPORTING
+            i_passport = lo_passport
+          RECEIVING
+            result     = lo_runner.
+      CATCH cx_root.
+        zcx_abapgit_exception=>raise( |Not supported in your NW release| ).
+    ENDTRY.
 
     CREATE DATA li_result TYPE REF TO ('IF_SAUNIT_INTERNAL_RESULT').
     ASSIGN li_result->* TO <li_result>.
