@@ -94,7 +94,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
     FIELD-SYMBOLS <ls_alert_by_index> TYPE any.
     FIELD-SYMBOLS <lt_indices>        TYPE ANY TABLE.
     FIELD-SYMBOLS <lt_alerts>         TYPE ANY TABLE.
+    FIELD-SYMBOLS <lt_classes>        TYPE ANY TABLE.
+    FIELD-SYMBOLS <lt_methods>        TYPE ANY TABLE.
     FIELD-SYMBOLS <ls_alert>          TYPE any.
+    FIELD-SYMBOLS <ls_program>        TYPE any.
+    FIELD-SYMBOLS <ls_class>        TYPE any.
+    FIELD-SYMBOLS <lv_any>            TYPE any.
     FIELD-SYMBOLS <lt_params>         TYPE string_table.
 
 
@@ -124,15 +129,20 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
 
     ri_html->add( |<hr><table>| ).
 
-    LOOP AT <lt_programs> INTO ls_program.
+    LOOP AT <lt_programs> ASSIGNING <ls_program>.
       lv_program_ndx = sy-tabix.
-      ri_html->add( |<tr><td>{ ls_program-info-key-obj_type } {
-        ls_program-info-key-obj_name }</td><td></td></tr>| ).
-      LOOP AT ls_program-classes INTO ls_class.
+      ASSIGN COMPONENT 'INFO-KEY-OBJ_TYPE' OF STRUCTURE <ls_program> TO <lv_any>.
+      ri_html->add( |<tr><td>{ <lv_any> } | ).
+      ASSIGN COMPONENT 'INFO-KEY-OBJ_NAME' OF STRUCTURE <ls_program> TO <lv_any>.
+      ri_html->add( |{ <lv_any> }</td><td></td></tr>| ).
+      ASSIGN COMPONENT 'CLASSES' OF STRUCTURE <ls_program> TO <lt_classes>.
+      LOOP AT <lt_classes> ASSIGNING <ls_class>.
         lv_class_ndx = sy-tabix.
 
-        ri_html->add( |<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;{ ls_class-info-name }</td><td></td></tr>| ).
-        LOOP AT ls_class-methods INTO ls_method.
+        ASSIGN COMPONENT 'INFO-NAME' OF STRUCTURE <ls_class> TO <lv_any>.
+        ri_html->add( |<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;{ <lv_any> }</td><td></td></tr>| ).
+        ASSIGN COMPONENT 'METHODS' OF STRUCTURE <ls_class> TO <lt_methods>.
+        LOOP AT <lt_methods> INTO ls_method.
           lv_method_ndx = sy-tabix.
 
           CLEAR lv_text.
