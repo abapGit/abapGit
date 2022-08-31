@@ -92,9 +92,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
     DATA ls_alert          LIKE LINE OF ls_alert_by_index-alerts.
     DATA lv_params         LIKE LINE OF ls_alert-header-params.
 
-    FIELD-SYMBOLS <ls_task_data> TYPE any.
-    FIELD-SYMBOLS <lt_programs>  TYPE if_saunit_internal_result_type=>ty_t_programs.
-    FIELD-SYMBOLS <lt_indices>   TYPE if_saunit_internal_result_type=>ty_t_alerts_by_indicies.
+    FIELD-SYMBOLS <ls_task_data>      TYPE any.
+    FIELD-SYMBOLS <lt_programs>       TYPE ANY TABLE.
+    FIELD-SYMBOLS <ls_alert_by_index> TYPE any.
+    FIELD-SYMBOLS <lt_indices>        TYPE ANY TABLE.
+    FIELD-SYMBOLS <lt_alerts>         TYPE ANY TABLE.
+
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -106,7 +109,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
     ASSIGN COMPONENT 'ALERTS_BY_INDICIES' OF STRUCTURE <ls_task_data> TO <lt_indices>.
     ASSIGN COMPONENT 'PROGRAMS' OF STRUCTURE <ls_task_data> TO <lt_programs>.
 
-    LOOP AT <lt_indices> INTO ls_alert_by_index.
+    LOOP AT <lt_indices> ASSIGNING <ls_alert_by_index>.
+*      ASSIGN COMPONENT 'ALERTS' OF STRUCTURE <ls_alert_by_index> TO <lt_alerts>.
       LOOP AT ls_alert_by_index-alerts INTO ls_alert WHERE kind = 'F'.
         LOOP AT ls_alert-header-params INTO lv_params.
           lv_text = lv_params.
@@ -133,9 +137,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
 
           CLEAR lv_text.
           READ TABLE <lt_indices> WITH KEY
-            program_ndx = lv_program_ndx
-            class_ndx = lv_class_ndx
-            method_ndx = lv_method_ndx
+            ('PROGRAM_NDX') = lv_program_ndx
+            ('CLASS_NDX') = lv_class_ndx
+            ('METHOD_NDX') = lv_method_ndx
             INTO ls_alert_by_index.
           IF sy-subrc = 0.
             LOOP AT ls_alert_by_index-alerts INTO ls_alert.
