@@ -90,13 +90,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
 
     DATA ls_alert_by_index TYPE if_saunit_internal_result_type=>ty_s_alerts_by_index.
     DATA ls_alert          LIKE LINE OF ls_alert_by_index-alerts.
-    DATA lv_params         LIKE LINE OF ls_alert-header-params.
+    DATA lv_params         TYPE string. "LIKE LINE OF ls_alert-header-params.
 
     FIELD-SYMBOLS <ls_task_data>      TYPE any.
     FIELD-SYMBOLS <lt_programs>       TYPE ANY TABLE.
     FIELD-SYMBOLS <ls_alert_by_index> TYPE any.
     FIELD-SYMBOLS <lt_indices>        TYPE ANY TABLE.
     FIELD-SYMBOLS <lt_alerts>         TYPE ANY TABLE.
+    FIELD-SYMBOLS <ls_alert> TYPE any.
+    FIELD-SYMBOLS <lt_params> TYPE string_table.
 
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
@@ -111,8 +113,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
 
     LOOP AT <lt_indices> ASSIGNING <ls_alert_by_index>.
       ASSIGN COMPONENT 'ALERTS' OF STRUCTURE <ls_alert_by_index> TO <lt_alerts>.
-      LOOP AT <lt_alerts> INTO ls_alert WHERE ('KIND = ''F'' OR KIND = ''S''').  " check level=F(ail?) instead?
-        LOOP AT ls_alert-header-params INTO lv_params.
+      LOOP AT <lt_alerts> ASSIGNING <ls_alert> WHERE ('KIND = ''F'' OR KIND = ''S''').  " check level=F(ail?) instead?
+        ASSIGN COMPONENT 'HEADER-PARAMS' OF STRUCTURE <ls_alert> TO <lt_params>.
+        LOOP AT <lt_params> INTO lv_params.
           lv_text = lv_params.
         ENDLOOP.
         ri_html->add( |<span class="boxed red-filled-set">{ lv_text }</span><br>| ).
@@ -143,8 +146,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
             ASSIGNING <ls_alert_by_index>.
           IF sy-subrc = 0.
             ASSIGN COMPONENT 'ALERTS' OF STRUCTURE <ls_alert_by_index> TO <lt_alerts>.
-            LOOP AT <lt_alerts> INTO ls_alert.
-              LOOP AT ls_alert-header-params INTO lv_params.
+            LOOP AT <lt_alerts> ASSIGNING <ls_alert>.
+              ASSIGN COMPONENT 'HEADER-PARAMS' OF STRUCTURE <ls_alert> TO <lt_params>.
+              LOOP AT <lt_params> INTO lv_params.
                 lv_text = lv_params.
               ENDLOOP.
             ENDLOOP.
