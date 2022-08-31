@@ -156,7 +156,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
   METHOD run.
 
     DATA lo_passport TYPE REF TO object.
-    DATA lo_runner   TYPE REF TO cl_aucv_test_runner_abstract.
+    DATA lo_runner   TYPE REF TO object.
     DATA li_result   TYPE REF TO if_saunit_internal_result.
     DATA lt_keys     TYPE ty_keys_tt.
     DATA lo_result   TYPE REF TO cl_saunit_internal_result.
@@ -169,13 +169,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
 
     lo_runner = cl_aucv_test_runner_standard=>create( lo_passport ).
 
-    lo_runner->run_for_program_keys(
+    CALL METHOD lo_runner->('RUN_FOR_PROGRAM_KEYS')
       EXPORTING
         i_limit_on_duration_category = '36' " long
         i_limit_on_risk_level        = '33' " critical
         i_program_keys               = lt_keys
       IMPORTING
-        e_aunit_result               = li_result ).
+        e_aunit_result               = li_result.
 
     ro_result ?= li_result.
 
