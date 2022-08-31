@@ -84,10 +84,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
     DATA lv_method_ndx     TYPE i.
     DATA lv_text           TYPE string.
     DATA lv_count          TYPE i.
-    DATA ls_program        LIKE LINE OF lo_result->f_task_data-programs.
+    DATA ls_program        TYPE if_saunit_internal_result_type=>ty_s_program.
     DATA ls_class          LIKE LINE OF ls_program-classes.
     DATA ls_method         LIKE LINE OF ls_class-methods.
-    DATA ls_alert_by_index LIKE LINE OF lo_result->f_task_data-alerts_by_indicies.
+    DATA ls_alert_by_index TYPE if_saunit_internal_result_type=>ty_s_alerts_by_index.
     DATA ls_alert          LIKE LINE OF ls_alert_by_index-alerts.
     DATA lv_params         LIKE LINE OF ls_alert-header-params.
 
