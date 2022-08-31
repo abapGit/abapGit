@@ -173,7 +173,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
     DATA lo_passport TYPE REF TO object.
     DATA lo_runner   TYPE REF TO object.
     DATA lt_keys     TYPE ty_keys_tt.
-    DATA li_result TYPE REF TO data.
+    DATA li_result   TYPE REF TO data.
     FIELD-SYMBOLS <li_result> TYPE any.
 
     lt_keys = build_tadir( ).
@@ -182,7 +182,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
       RECEIVING
         result = lo_passport.
 
-    lo_runner = cl_aucv_test_runner_standard=>create( lo_passport ).
+    CALL METHOD cl_aucv_test_runner_standard=>('CREATE')
+      EXPORTING
+        i_passport = lo_passport
+      RECEIVING
+        result     = lo_runner.
 
     CREATE DATA li_result TYPE REF TO ('IF_SAUNIT_INTERNAL_RESULT').
     ASSIGN li_result->* TO <li_result>.
