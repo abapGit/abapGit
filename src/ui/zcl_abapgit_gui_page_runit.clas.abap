@@ -129,9 +129,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
     LOOP AT <lt_programs> ASSIGNING <ls_program>.
       lv_program_ndx = sy-tabix.
       ASSIGN COMPONENT 'INFO-KEY-OBJ_TYPE' OF STRUCTURE <ls_program> TO <lv_any>.
-      ri_html->add( |<tr><td>{ <lv_any> } | ).
-      ASSIGN COMPONENT 'INFO-KEY-OBJ_NAME' OF STRUCTURE <ls_program> TO <lv_any>.
-      ri_html->add( |{ <lv_any> }</td><td></td></tr>| ).
+      IF sy-subrc = 0.
+        ri_html->add( |<tr><td>{ <lv_any> } | ).
+        ASSIGN COMPONENT 'INFO-KEY-OBJ_NAME' OF STRUCTURE <ls_program> TO <lv_any>.
+        ri_html->add( |{ <lv_any> }</td><td></td></tr>| ).
+      ELSE.
+* KEY field does not exist in 750
+        ASSIGN COMPONENT 'INFO-NAME' OF STRUCTURE <ls_program> TO <lv_any>.
+        ri_html->add( |<tr><td>{ <lv_any> }</td><td></td></tr>| ).
+      ENDIF.
       ASSIGN COMPONENT 'CLASSES' OF STRUCTURE <ls_program> TO <lt_classes>.
       LOOP AT <lt_classes> ASSIGNING <ls_class>.
         lv_class_ndx = sy-tabix.
