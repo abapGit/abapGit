@@ -8,7 +8,7 @@ CLASS zcl_abapgit_cts_api DEFINITION
   PUBLIC SECTION.
     INTERFACES:
       zif_abapgit_cts_api.
-  PROTECTED SECTION.BAD
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     "! Returns the transport request / task the object is currently locked in
