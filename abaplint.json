@@ -377,6 +377,8 @@
       "regex": true,
       "sortByFS": true,
       "subtract": true,
+      "formDefinition": true,
+      "formImplementation": true,
       "freeMemory": true,
       "exitFromSQL": true,
       "multiply": true,
