@@ -45,29 +45,29 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
 
     CLASS-METHODS concatenated_key_to_where
       IMPORTING
-        !iv_table TYPE tabname
-        !iv_tabkey TYPE clike
+        !iv_table       TYPE tabname
+        !iv_tabkey      TYPE clike
       RETURNING
-        value(rv_where) TYPE string .
+        VALUE(rv_where) TYPE string .
     METHODS add_via_transport
       RAISING
         zcx_abapgit_exception .
     METHODS build_menu
       RETURNING
-        value(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
+        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
     METHODS build_where
       IMPORTING
-        !io_map TYPE REF TO zcl_abapgit_string_map
+        !io_map         TYPE REF TO zcl_abapgit_string_map
       RETURNING
-        value(rt_where) TYPE string_table .
+        VALUE(rt_where) TYPE string_table .
     METHODS render_add
       RETURNING
-        value(ri_html) TYPE REF TO zif_abapgit_html
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
     METHODS render_existing
       RETURNING
-        value(ri_html) TYPE REF TO zif_abapgit_html
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
     METHODS event_add
