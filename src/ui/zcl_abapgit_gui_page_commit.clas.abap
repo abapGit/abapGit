@@ -114,7 +114,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
 
   METHOD branch_name_to_internal.
@@ -527,6 +527,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
+    ri_html->add( '<div class="repo">' ).
     ri_html->add( '<div id="top" class="paddings">' ).
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mo_repo ) ).
     ri_html->add( '</div>' ).
@@ -542,6 +543,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
     ri_html->add( '<div id="stage-details" class="dialog w800px">' ).
     ri_html->add( render_stage_details( ) ).
+    ri_html->add( '</div>' ).
     ri_html->add( '</div>' ).
 
   ENDMETHOD.

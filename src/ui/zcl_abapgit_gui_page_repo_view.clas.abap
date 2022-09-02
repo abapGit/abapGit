@@ -17,6 +17,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         toggle_diff_first TYPE string VALUE 'toggle_diff_first ' ##NO_TEXT,
         display_more      TYPE string VALUE 'display_more' ##NO_TEXT,
         go_data           TYPE string VALUE 'go_data',
+        go_unit           TYPE string VALUE 'go_unit',
       END OF c_actions .
 
     METHODS constructor
@@ -123,7 +124,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         VALUE(rv_inactive_html_code) TYPE string .
     METHODS build_srcsystem_code
       IMPORTING
-        !is_item                     TYPE zif_abapgit_definitions=>ty_repo_item
+        !is_item                      TYPE zif_abapgit_definitions=>ty_repo_item
       RETURNING
         VALUE(rv_srcsystem_html_code) TYPE string .
     METHODS open_in_main_language
@@ -192,7 +193,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -306,11 +307,18 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       ro_advanced_dropdown->add( iv_txt = 'Stage by Transport'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-go_stage_transport }?key={ mv_key }| ).
     ENDIF.
+
+    ro_advanced_dropdown->add( iv_txt = 'Quality Assurance'
+                               iv_typ = zif_abapgit_html=>c_action_type-separator ).
     ro_advanced_dropdown->add( iv_txt = 'Syntax Check'
                                iv_act = |{ zif_abapgit_definitions=>c_action-repo_syntax_check }?key={ mv_key }| ).
+    ro_advanced_dropdown->add( iv_txt = 'Unit Test'
+                               iv_act = |{ c_actions-go_unit }| ).
     ro_advanced_dropdown->add( iv_txt = 'Run Code Inspector'
                                iv_act = |{ zif_abapgit_definitions=>c_action-repo_code_inspector }?key={ mv_key }| ).
 
+    ro_advanced_dropdown->add( iv_txt = 'Very Advanced'
+                               iv_typ = zif_abapgit_html=>c_action_type-separator ).
     CLEAR lv_crossout.
     IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>c_authorization-update_local_checksum ) = abap_false.
       lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
@@ -328,6 +336,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         iv_txt = 'Open in Main Language'
         iv_act = |{ zif_abapgit_definitions=>c_action-repo_open_in_master_lang }?key={ mv_key }| ).
     ENDIF.
+
+    ro_advanced_dropdown->add( iv_txt = 'Danger'
+                               iv_typ = zif_abapgit_html=>c_action_type-separator ).
 
     ro_advanced_dropdown->add( iv_txt   = 'Remove'
                                iv_title = `Remove abapGit's records of the repository (the system's `
@@ -1265,6 +1276,12 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_data
           EXPORTING
             iv_key = |{ ii_event->query( )->get( 'KEY' ) }|.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+
+      WHEN c_actions-go_unit.
+        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_runit
+          EXPORTING
+            iv_devclass = mo_repo->get_package( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN c_actions-toggle_hide_files. " Toggle file diplay
