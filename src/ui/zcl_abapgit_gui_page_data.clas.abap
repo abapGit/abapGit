@@ -34,52 +34,52 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
 
     METHODS render_content
         REDEFINITION .
-  PRIVATE SECTION.
+PRIVATE SECTION.
 
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo .
+  DATA mo_repo TYPE REF TO zcl_abapgit_repo .
 
-    CLASS-METHODS concatenated_key_to_where
-      IMPORTING
-        !iv_table       TYPE tabname
-        !iv_tabkey      TYPE clike
-      RETURNING
-        VALUE(rv_where) TYPE string .
-    METHODS add_via_transport
-      RAISING
-        zcx_abapgit_exception .
-    METHODS build_menu
-      RETURNING
-        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
-    METHODS build_where
-      IMPORTING
-        !io_map         TYPE REF TO zcl_abapgit_string_map
-      RETURNING
-        VALUE(rt_where) TYPE string_table .
-    METHODS render_add
-      RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html
-      RAISING
-        zcx_abapgit_exception .
-    METHODS render_existing
-      RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html
-      RAISING
-        zcx_abapgit_exception .
-    METHODS event_add
-      IMPORTING
-        !ii_event TYPE REF TO zif_abapgit_gui_event
-      RAISING
-        zcx_abapgit_exception .
-    METHODS event_remove
-      IMPORTING
-        !ii_event TYPE REF TO zif_abapgit_gui_event
-      RAISING
-        zcx_abapgit_exception .
-    METHODS event_update
-      IMPORTING
-        !ii_event TYPE REF TO zif_abapgit_gui_event
-      RAISING
-        zcx_abapgit_exception .
+  CLASS-METHODS concatenated_key_to_where
+    IMPORTING
+      !iv_table TYPE tabname
+      !iv_tabkey TYPE trobj_name
+    RETURNING
+      value(rv_where) TYPE string .
+  METHODS add_via_transport
+    RAISING
+      zcx_abapgit_exception .
+  METHODS build_menu
+    RETURNING
+      value(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
+  METHODS build_where
+    IMPORTING
+      !io_map TYPE REF TO zcl_abapgit_string_map
+    RETURNING
+      value(rt_where) TYPE string_table .
+  METHODS render_add
+    RETURNING
+      value(ri_html) TYPE REF TO zif_abapgit_html
+    RAISING
+      zcx_abapgit_exception .
+  METHODS render_existing
+    RETURNING
+      value(ri_html) TYPE REF TO zif_abapgit_html
+    RAISING
+      zcx_abapgit_exception .
+  METHODS event_add
+    IMPORTING
+      !ii_event TYPE REF TO zif_abapgit_gui_event
+    RAISING
+      zcx_abapgit_exception .
+  METHODS event_remove
+    IMPORTING
+      !ii_event TYPE REF TO zif_abapgit_gui_event
+    RAISING
+      zcx_abapgit_exception .
+  METHODS event_update
+    IMPORTING
+      !ii_event TYPE REF TO zif_abapgit_gui_event
+    RAISING
+      zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -160,7 +160,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
     DATA lo_structdescr TYPE REF TO cl_abap_structdescr.
     DATA lt_fields      TYPE ddfields.
     DATA ls_field       LIKE LINE OF lt_fields.
-    DATA lv_key         TYPE string.
+    DATA lv_key         TYPE trobj_name.
 
     lv_key = iv_tabkey.
     lo_structdescr ?= cl_abap_typedescr=>describe_by_name( iv_table ).
