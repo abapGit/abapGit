@@ -1,3 +1,8 @@
+*----------------------------------------------------------------------*
+*       CLASS zcl_abapgit_gui_page_data DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS zcl_abapgit_gui_page_data DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_gui_page
@@ -34,52 +39,52 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
 
     METHODS render_content
         REDEFINITION .
-PRIVATE SECTION.
+  PRIVATE SECTION.
 
-  DATA mo_repo TYPE REF TO zcl_abapgit_repo .
+    DATA mo_repo TYPE REF TO zcl_abapgit_repo .
 
-  CLASS-METHODS concatenated_key_to_where
-    IMPORTING
-      !iv_table TYPE tabname
-      !iv_tabkey TYPE trobj_name
-    RETURNING
-      value(rv_where) TYPE string .
-  METHODS add_via_transport
-    RAISING
-      zcx_abapgit_exception .
-  METHODS build_menu
-    RETURNING
-      value(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
-  METHODS build_where
-    IMPORTING
-      !io_map TYPE REF TO zcl_abapgit_string_map
-    RETURNING
-      value(rt_where) TYPE string_table .
-  METHODS render_add
-    RETURNING
-      value(ri_html) TYPE REF TO zif_abapgit_html
-    RAISING
-      zcx_abapgit_exception .
-  METHODS render_existing
-    RETURNING
-      value(ri_html) TYPE REF TO zif_abapgit_html
-    RAISING
-      zcx_abapgit_exception .
-  METHODS event_add
-    IMPORTING
-      !ii_event TYPE REF TO zif_abapgit_gui_event
-    RAISING
-      zcx_abapgit_exception .
-  METHODS event_remove
-    IMPORTING
-      !ii_event TYPE REF TO zif_abapgit_gui_event
-    RAISING
-      zcx_abapgit_exception .
-  METHODS event_update
-    IMPORTING
-      !ii_event TYPE REF TO zif_abapgit_gui_event
-    RAISING
-      zcx_abapgit_exception .
+    CLASS-METHODS concatenated_key_to_where
+      IMPORTING
+        !iv_table TYPE tabname
+        !iv_tabkey TYPE clike
+      RETURNING
+        value(rv_where) TYPE string .
+    METHODS add_via_transport
+      RAISING
+        zcx_abapgit_exception .
+    METHODS build_menu
+      RETURNING
+        value(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
+    METHODS build_where
+      IMPORTING
+        !io_map TYPE REF TO zcl_abapgit_string_map
+      RETURNING
+        value(rt_where) TYPE string_table .
+    METHODS render_add
+      RETURNING
+        value(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
+    METHODS render_existing
+      RETURNING
+        value(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
+    METHODS event_add
+      IMPORTING
+        !ii_event TYPE REF TO zif_abapgit_gui_event
+      RAISING
+        zcx_abapgit_exception .
+    METHODS event_remove
+      IMPORTING
+        !ii_event TYPE REF TO zif_abapgit_gui_event
+      RAISING
+        zcx_abapgit_exception .
+    METHODS event_update
+      IMPORTING
+        !ii_event TYPE REF TO zif_abapgit_gui_event
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -125,7 +130,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
       mi_config->add_config( ls_config ).
     ENDLOOP.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "add_via_transport
 
 
   METHOD build_menu.
@@ -135,7 +140,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
     ro_menu->add( iv_txt = 'Add via transport'
                   iv_act = c_event-add_via_transport ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "build_menu
 
 
   METHOD build_where.
@@ -152,7 +157,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "build_where
 
 
   METHOD concatenated_key_to_where.
@@ -160,7 +165,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
     DATA lo_structdescr TYPE REF TO cl_abap_structdescr.
     DATA lt_fields      TYPE ddfields.
     DATA ls_field       LIKE LINE OF lt_fields.
-    DATA lv_key         TYPE trobj_name.
+    DATA lv_key         TYPE c LENGTH 120.
 
     lv_key = iv_tabkey.
     lo_structdescr ?= cl_abap_typedescr=>describe_by_name( iv_table ).
@@ -182,7 +187,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
       lv_key = lv_key+ls_field-leng.
     ENDLOOP.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "concatenated_key_to_where
 
 
   METHOD constructor.
@@ -195,7 +200,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
     mo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     mi_config = mo_repo->get_data_config( ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "constructor
 
 
   METHOD event_add.
@@ -211,7 +216,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
 
     mi_config->add_config( ls_config ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "event_add
 
 
   METHOD event_remove.
@@ -226,7 +231,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
 
     mi_config->remove_config( ls_config ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "event_remove
 
 
   METHOD event_update.
@@ -242,7 +247,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
 
     mi_config->update_config( ls_config ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "event_update
 
 
   METHOD render_add.
@@ -268,7 +273,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
       iv_action      = c_event-add ).
     ri_html->add( lo_form->render( lo_form_data ) ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "render_add
 
 
   METHOD render_content.
@@ -279,7 +284,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
     ri_html->add( render_add( ) ).
     ri_html->add( '</div>' ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "render_content
 
 
   METHOD render_existing.
@@ -324,7 +329,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
       ri_html->add( lo_form->render( lo_form_data ) ).
     ENDLOOP.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "render_existing
 
 
   METHOD zif_abapgit_gui_event_handler~on_event.
@@ -348,5 +353,5 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDCASE.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "zif_abapgit_gui_event_handler~on_event
 ENDCLASS.
