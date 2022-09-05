@@ -41,7 +41,7 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
     CLASS-METHODS concatenated_key_to_where
       IMPORTING
         !iv_table       TYPE tabname
-        !iv_tabkey      TYPE clike
+        !iv_tabkey      TYPE trobj_name
       RETURNING
         VALUE(rv_where) TYPE string .
     METHODS add_via_transport
@@ -160,7 +160,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
     DATA lo_structdescr TYPE REF TO cl_abap_structdescr.
     DATA lt_fields      TYPE ddfields.
     DATA ls_field       LIKE LINE OF lt_fields.
-    DATA lv_key         TYPE c LENGTH 120.
+    DATA lv_key         TYPE trobj_name.
 
     lv_key = iv_tabkey.
     lo_structdescr ?= cl_abap_typedescr=>describe_by_name( iv_table ).
