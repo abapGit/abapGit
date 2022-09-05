@@ -77,6 +77,7 @@ CLASS zcl_abapgit_ajson DEFINITION
     DATA mi_custom_mapping TYPE REF TO zif_abapgit_ajson_mapping.
     DATA mv_keep_item_order TYPE abap_bool.
     DATA mv_format_datetime TYPE abap_bool.
+    " TODO restructure into zif_ajson=>ty_opts
 
     METHODS get_item
       IMPORTING
@@ -106,6 +107,11 @@ ENDCLASS.
 
 CLASS zcl_abapgit_ajson IMPLEMENTATION.
 
+  METHOD zif_abapgit_ajson~opts.
+    rs_opts-read_only       = mv_read_only.
+    rs_opts-format_datetime = mv_format_datetime.
+    rs_opts-keep_item_order = mv_keep_item_order.
+  ENDMETHOD.
 
   METHOD constructor.
     format_datetime( abap_true ).

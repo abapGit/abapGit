@@ -1034,11 +1034,7 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
         zcx_abapgit_ajson_error=>raise( 'Unexpected error calculating timestamp' ).
     ENDTRY.
 
-    cl_abap_tstmp=>move(
-      EXPORTING
-        tstmp_src = lv_timestamp
-      IMPORTING
-        tstmp_tgt = rv_result ).
+    rv_result = lv_timestamp.
 
   ENDMETHOD.
 
@@ -1335,20 +1331,13 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
     DATA lv_date TYPE d.
     DATA lv_time TYPE t.
 
-    IF iv_ts IS INITIAL.
-      " The zero value is January 1, year 1, 00:00:00.000000000 UTC.
-      lv_date = '00010101'.
-    ELSE.
-
-      CONVERT TIME STAMP iv_ts TIME ZONE lc_utc
-        INTO DATE lv_date TIME lv_time.
-
-    ENDIF.
+    CONVERT TIME STAMP iv_ts TIME ZONE lc_utc
+      INTO DATE lv_date TIME lv_time.
 
     rv_str =
       lv_date+0(4) && '-' && lv_date+4(2) && '-' && lv_date+6(2) &&
       'T' &&
-      lv_time+0(2) && '-' && lv_time+2(2) && '-' && lv_time+4(2) &&
+      lv_time+0(2) && ':' && lv_time+2(2) && ':' && lv_time+4(2) &&
       'Z'.
 
   ENDMETHOD.
