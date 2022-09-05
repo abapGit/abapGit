@@ -125,17 +125,14 @@ CLASS zcl_abapgit_news IMPLEMENTATION.
     lo_repo_online ?= io_repo.
     lv_url          = lo_repo_online->get_url( ).
 
-    IF zcl_abapgit_url=>is_abapgit_repo( lv_url ) = abap_true.
-      lv_version = zif_abapgit_version=>c_abap_version. " TODO refactor
-    ELSE.
-
-      lo_apack = io_repo->get_dot_apack( ).
-      IF lo_apack IS NOT BOUND.
-        RETURN.
-      ENDIF.
-
+    lo_apack = io_repo->get_dot_apack( ).
+    IF lo_apack IS BOUND.
       lv_version = lo_apack->get_manifest_descriptor( )-version.
+    ENDIF.
 
+    IF lv_version IS INITIAL.
+      lv_version = zcl_abapgit_version=>get_version_constant_value(
+                       io_repo->get_dot_abapgit( )->get_version_constant( ) ).
     ENDIF.
 
     IF lv_version IS INITIAL.

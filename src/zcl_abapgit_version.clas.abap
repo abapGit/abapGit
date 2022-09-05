@@ -31,6 +31,13 @@ CLASS zcl_abapgit_version DEFINITION
         !is_b            TYPE zif_abapgit_definitions=>ty_version OPTIONAL
       RETURNING
         VALUE(rv_result) TYPE i .
+    CLASS-METHODS get_version_constant_value
+      IMPORTING
+        iv_version_constant TYPE string
+      RETURNING
+        VALUE(rv_version)   TYPE string
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -241,5 +248,28 @@ CLASS zcl_abapgit_version IMPLEMENTATION.
     " Calculated value of version number, empty version will become 0 which is OK
     rv_version = lv_major * 1000000 + lv_minor * 1000 + lv_release.
 
+  ENDMETHOD.
+
+  METHOD get_version_constant_value.
+    DATA: lv_version_class     TYPE string,
+          lv_version_component TYPE string.
+    FIELD-SYMBOLS: <lv_version> TYPE string.
+
+    IF iv_version_constant NP '*=>*'.
+      zcx_abapgit_exception=>raise( 'Version constant needs to use the format CLASS=>CONSTANT' ).
+    ENDIF.
+
+    SPLIT iv_version_constant AT '=>' INTO lv_version_class lv_version_component.
+    IF sy-subrc <> 0 OR lv_version_class IS INITIAL OR lv_version_component IS INITIAL.
+      zcx_abapgit_exception=>raise( 'Version constant cannot be parsed' ).
+    ENDIF.
+
+    ASSIGN (lv_version_class)=>(lv_version_component) TO <lv_version>.
+    IF sy-subrc = 0.
+      rv_version = <lv_version>.
+    ELSE.
+      zcx_abapgit_exception=>raise( |Could not access version at class { lv_version_class } component | &&
+                                    |{ lv_version_component }| ).
+    ENDIF.
   ENDMETHOD.
 ENDCLASS.
