@@ -1,11 +1,12 @@
-CLASS zcl_abapgit_object_sobj DEFINITION
-  PUBLIC
-  INHERITING FROM zcl_abapgit_objects_super
-  FINAL
-  CREATE PUBLIC .
+class ZCL_ABAPGIT_OBJECT_SOBJ definition
+  public
+  inheriting from ZCL_ABAPGIT_OBJECTS_SUPER
+  final
+  create public .
 
-  PUBLIC SECTION.
-    INTERFACES zif_abapgit_object .
+public section.
+
+  interfaces ZIF_ABAPGIT_OBJECT .
   PROTECTED SECTION.
     METHODS get_generic
       RETURNING
@@ -24,7 +25,61 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_sobj IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_SOBJ IMPLEMENTATION.
+
+
+  METHOD get_field_rules.
+
+    ri_rules = zcl_abapgit_field_rules=>create( ).
+    ri_rules->add(
+      iv_table     = 'TOJTB'
+      iv_field     = 'CREA_USER'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
+    )->add(
+      iv_table     = 'TOJTB'
+      iv_field     = 'CREA_DATE'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-date
+    )->add(
+      iv_table     = 'TOJTB'
+      iv_field     = 'CREA_TIME'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-time
+    )->add(
+      iv_table     = 'TOJTB'
+      iv_field     = 'CHAN_USER'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
+    )->add(
+      iv_table     = 'TOJTB'
+      iv_field     = 'CHAN_DATE'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-date
+    )->add(
+      iv_table     = 'TOJTB'
+      iv_field     = 'CHAN_TIME'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-time
+    )->add(
+      iv_table     = 'TOJTB'
+      iv_field     = 'ACTV_USER'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
+    )->add(
+      iv_table     = 'TOJTB'
+      iv_field     = 'ACTV_DATE'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-date
+    )->add(
+      iv_table     = 'TOJTB'
+      iv_field     = 'ACTV_TIME'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-time
+    )->add(
+      iv_table     = 'TOJTB'
+      iv_field     = 'REL_USER'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
+    )->add(
+      iv_table     = 'TOJTB'
+      iv_field     = 'REL_DATE'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-date
+    )->add(
+      iv_table     = 'TOJTB'
+      iv_field     = 'REL_TIME'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-time ).
+  ENDMETHOD.
 
 
   METHOD get_generic.
@@ -34,6 +89,69 @@ CLASS zcl_abapgit_object_sobj IMPLEMENTATION.
         io_field_rules = get_field_rules( )
         is_item        = ms_item
         iv_language    = mv_language.
+
+  ENDMETHOD.
+
+
+  METHOD get_program.
+    SELECT SINGLE progname INTO rv_program FROM tojtb WHERE name = ms_item-obj_name.
+  ENDMETHOD.
+
+
+  METHOD is_locked.
+    rv_is_locked = boolc( is_objtype_locked( ) = abap_true OR is_program_locked(  ) = abap_true ).
+  ENDMETHOD.
+
+
+  METHOD is_objtype_locked.
+    CONSTANTS lc_tabname TYPE tabname VALUE 'SWOTBASDAT'.
+    DATA lv_varkey TYPE vim_enqkey.
+
+    rv_is_locked = abap_false.
+    lv_varkey = ms_item-obj_name.
+
+    CALL FUNCTION 'ENQUEUE_E_TABLE'
+      EXPORTING
+        tabname      = lc_tabname
+        varkey       = lv_varkey
+      EXCEPTIONS
+        foreign_lock = 1
+        OTHERS       = 999.
+    IF sy-subrc IS NOT INITIAL.
+      rv_is_locked = abap_true.
+    ELSE.
+      CALL FUNCTION 'DEQUEUE_E_TABLE'
+        EXPORTING
+          tabname = lc_tabname
+          varkey  = lv_varkey.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD is_program_locked.
+    CONSTANTS lc_enqueue_exclusive TYPE enqmode VALUE 'X'.
+    DATA lv_progname TYPE progname.
+
+    rv_is_locked = abap_false.
+    lv_progname = get_program(  ).
+
+    IF lv_progname IS NOT INITIAL.
+      CALL FUNCTION 'ENQUEUE_ESRDIRE'
+        EXPORTING
+          mode_trdir   = lc_enqueue_exclusive
+          name         = lv_progname
+        EXCEPTIONS
+          foreign_lock = 1
+          OTHERS       = 999.
+      IF sy-subrc IS NOT INITIAL.
+        rv_is_locked = abap_true.
+      ELSE.
+        CALL FUNCTION 'DEQUEUE_ESRDIRE'
+          EXPORTING
+            mode_trdir = lc_enqueue_exclusive
+            name       = lv_progname.
+      ENDIF.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -119,151 +237,4 @@ CLASS zcl_abapgit_object_sobj IMPLEMENTATION.
     get_generic( )->serialize( io_xml ).
 
   ENDMETHOD.
-
-  METHOD get_field_rules.
-
-    ri_rules = zcl_abapgit_field_rules=>create( ).
-    ri_rules->add(
-      iv_table     = 'TOJTB'
-      iv_field     = 'CREA_USER'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
-    )->add(
-      iv_table     = 'TOJTB'
-      iv_field     = 'CREA_DATE'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-date
-    )->add(
-      iv_table     = 'TOJTB'
-      iv_field     = 'CREA_TIME'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-time
-    )->add(
-      iv_table     = 'TOJTB'
-      iv_field     = 'CHAN_USER'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
-    )->add(
-      iv_table     = 'TOJTB'
-      iv_field     = 'CHAN_DATE'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-date
-    )->add(
-      iv_table     = 'TOJTB'
-      iv_field     = 'CHAN_TIME'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-time
-    )->add(
-      iv_table     = 'TOJTB'
-      iv_field     = 'ACTV_USER'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
-    )->add(
-      iv_table     = 'TOJTB'
-      iv_field     = 'ACTV_DATE'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-date
-    )->add(
-      iv_table     = 'TOJTB'
-      iv_field     = 'ACTV_TIME'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-time
-    )->add(
-      iv_table     = 'TOJTB'
-      iv_field     = 'REL_USER'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
-    )->add(
-      iv_table     = 'TOJTB'
-      iv_field     = 'REL_DATE'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-date
-    )->add(
-      iv_table     = 'TOJTB'
-      iv_field     = 'REL_TIME'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-time ).
-
-*    ri_rules->add(
-*      iv_table     = 'TOJTB'
-*      iv_field     = 'CHAN_REL'
-*      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-sap_release
-*    )->add(
-*      iv_table     = 'TOJTB'
-*      iv_field     = 'VERSION'
-*      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-sap_release
-*    )->add(
-*      iv_table     = 'TOJTB'
-*      iv_field     = 'CREA_REL'
-*      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-sap_release
-*    )->add(
-*      iv_table     = 'TOJTB'
-*      iv_field     = 'REL_REL'
-*      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-sap_release
-*    )->add(
-*      iv_table     = 'TOJTB'
-*      iv_field     = 'CCHILDREN'
-*      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-??? "new type?
-*    )->add(
-*      iv_table     = 'SWOTD'
-*      iv_field     = 'CREA_REL'
-*      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-sap_release
-*    )->add(
-*      iv_table     = 'SWOTDQ'
-*      iv_field     = 'CREA_REL'
-*      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-sap_release
-*    )->add(
-*      iv_table     = 'SWOTDI'
-*      iv_field     = 'CREA_REL'
-*      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-sap_release
-*    ).
-
-  ENDMETHOD.
-  METHOD is_locked.
-    rv_is_locked = boolc( is_objtype_locked( ) = abap_true OR is_program_locked(  ) = abap_true ).
-  ENDMETHOD.
-
-  METHOD is_objtype_locked.
-    CONSTANTS lc_tabname TYPE tabname VALUE 'SWOTBASDAT'.
-    DATA lv_varkey TYPE vim_enqkey.
-
-    rv_is_locked = abap_false.
-    lv_varkey = ms_item-obj_name.
-
-    CALL FUNCTION 'ENQUEUE_E_TABLE'
-      EXPORTING
-        tabname      = lc_tabname
-        varkey       = lv_varkey
-      EXCEPTIONS
-        foreign_lock = 1
-        OTHERS       = 999.
-    IF sy-subrc IS NOT INITIAL.
-      rv_is_locked = abap_true.
-    ELSE.
-      CALL FUNCTION 'DEQUEUE_E_TABLE'
-        EXPORTING
-          tabname = lc_tabname
-          varkey  = lv_varkey.
-    ENDIF.
-  ENDMETHOD.
-
-  METHOD is_program_locked.
-    CONSTANTS lc_enqueue_exclusive TYPE enqmode VALUE 'X'.
-    DATA lv_progname TYPE progname.
-
-    rv_is_locked = abap_false.
-    lv_progname = get_program(  ).
-
-    IF lv_progname IS NOT INITIAL.
-      CALL FUNCTION 'ENQUEUE_ESRDIRE'
-        EXPORTING
-          mode_trdir   = lc_enqueue_exclusive
-          name         = lv_progname
-        EXCEPTIONS
-          foreign_lock = 1
-          OTHERS       = 999.
-      IF sy-subrc IS NOT INITIAL.
-        rv_is_locked = abap_true.
-      ELSE.
-        CALL FUNCTION 'DEQUEUE_ESRDIRE'
-          EXPORTING
-            mode_trdir = lc_enqueue_exclusive
-            name       = lv_progname.
-      ENDIF.
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD get_program.
-    SELECT SINGLE progname INTO rv_program FROM tojtb WHERE name = ms_item-obj_name.
-  ENDMETHOD.
-
 ENDCLASS.
