@@ -1,8 +1,3 @@
-*----------------------------------------------------------------------*
-*       CLASS zcl_abapgit_gui_page_data DEFINITION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
 CLASS zcl_abapgit_gui_page_data DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_gui_page
@@ -130,7 +125,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
       mi_config->add_config( ls_config ).
     ENDLOOP.
 
-  ENDMETHOD.                    "add_via_transport
+  ENDMETHOD.
 
 
   METHOD build_menu.
@@ -140,7 +135,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
     ro_menu->add( iv_txt = 'Add via transport'
                   iv_act = c_event-add_via_transport ).
 
-  ENDMETHOD.                    "build_menu
+  ENDMETHOD.
 
 
   METHOD build_where.
@@ -157,7 +152,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.                    "build_where
+  ENDMETHOD.
 
 
   METHOD concatenated_key_to_where.
@@ -187,7 +182,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
       lv_key = lv_key+ls_field-leng.
     ENDLOOP.
 
-  ENDMETHOD.                    "concatenated_key_to_where
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -200,7 +195,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
     mo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     mi_config = mo_repo->get_data_config( ).
 
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
 
   METHOD event_add.
@@ -216,7 +211,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
 
     mi_config->add_config( ls_config ).
 
-  ENDMETHOD.                    "event_add
+  ENDMETHOD.
 
 
   METHOD event_remove.
@@ -231,7 +226,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
 
     mi_config->remove_config( ls_config ).
 
-  ENDMETHOD.                    "event_remove
+  ENDMETHOD.
 
 
   METHOD event_update.
@@ -247,7 +242,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
 
     mi_config->update_config( ls_config ).
 
-  ENDMETHOD.                    "event_update
+  ENDMETHOD.
 
 
   METHOD render_add.
@@ -273,7 +268,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
       iv_action      = c_event-add ).
     ri_html->add( lo_form->render( lo_form_data ) ).
 
-  ENDMETHOD.                    "render_add
+  ENDMETHOD.
 
 
   METHOD render_content.
@@ -284,7 +279,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
     ri_html->add( render_add( ) ).
     ri_html->add( '</div>' ).
 
-  ENDMETHOD.                    "render_content
+  ENDMETHOD.
 
 
   METHOD render_existing.
@@ -329,7 +324,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
       ri_html->add( lo_form->render( lo_form_data ) ).
     ENDLOOP.
 
-  ENDMETHOD.                    "render_existing
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_event_handler~on_event.
@@ -353,5 +348,5 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDCASE.
 
-  ENDMETHOD.                    "zif_abapgit_gui_event_handler~on_event
+  ENDMETHOD.
 ENDCLASS.

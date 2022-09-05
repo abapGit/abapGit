@@ -1,11 +1,6 @@
 CLASS ltcl_test DEFINITION DEFERRED.
 CLASS zcl_abapgit_gui_page_data DEFINITION LOCAL FRIENDS ltcl_test.
 
-*----------------------------------------------------------------------*
-*       CLASS ltcl_test DEFINITION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
 CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
 
   PRIVATE SECTION.
@@ -13,14 +8,9 @@ CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
     METHODS concatenated_key_to_where2 FOR TESTING RAISING cx_static_check.
     METHODS concatenated_key_to_where3 FOR TESTING RAISING cx_static_check.
     METHODS concatenated_key_to_where4 FOR TESTING RAISING cx_static_check.
-ENDCLASS.                    "ltcl_test DEFINITION
+ENDCLASS.
 
 
-*----------------------------------------------------------------------*
-*       CLASS ltcl_test IMPLEMENTATION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
 CLASS ltcl_test IMPLEMENTATION.
 
   METHOD concatenated_key_to_where1.
@@ -35,7 +25,7 @@ CLASS ltcl_test IMPLEMENTATION.
       act = lv_where
       exp = |sprsl = 'E' AND arbgb = 'ABC55555555555555555' AND msgnr = '001'| ).
 
-  ENDMETHOD.                    "concatenated_key_to_where1
+  ENDMETHOD.
 
   METHOD concatenated_key_to_where2.
 
@@ -49,7 +39,7 @@ CLASS ltcl_test IMPLEMENTATION.
       act = lv_where
       exp = |sprsl = 'E' AND arbgb = 'SHORT' AND msgnr = ''| ).
 
-  ENDMETHOD.                    "concatenated_key_to_where2
+  ENDMETHOD.
 
   METHOD concatenated_key_to_where3.
 
@@ -63,7 +53,7 @@ CLASS ltcl_test IMPLEMENTATION.
       act = lv_where
       exp = |sprsl = 'E' AND arbgb = 'SHORT' AND msgnr = '001'| ).
 
-  ENDMETHOD.                    "concatenated_key_to_where3
+  ENDMETHOD.
 
   METHOD concatenated_key_to_where4.
 
@@ -77,6 +67,6 @@ CLASS ltcl_test IMPLEMENTATION.
       act = lv_where
       exp = |sprsl = 'E' AND arbgb = 'SHORT' AND msgnr = '0'| ).
 
-  ENDMETHOD.                    "concatenated_key_to_where4
+  ENDMETHOD.
 
-ENDCLASS.                    "ltcl_test IMPLEMENTATION
+ENDCLASS.
