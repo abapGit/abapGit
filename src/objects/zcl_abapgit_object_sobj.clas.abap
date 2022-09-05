@@ -1,12 +1,12 @@
-class ZCL_ABAPGIT_OBJECT_SOBJ definition
-  public
-  inheriting from ZCL_ABAPGIT_OBJECTS_SUPER
-  final
-  create public .
+CLASS zcl_abapgit_object_sobj DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_super
+  FINAL
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  interfaces ZIF_ABAPGIT_OBJECT .
+    INTERFACES zif_abapgit_object .
   PROTECTED SECTION.
     METHODS get_generic
       RETURNING
@@ -79,6 +79,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SOBJ IMPLEMENTATION.
       iv_table     = 'TOJTB'
       iv_field     = 'REL_TIME'
       iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-time ).
+
   ENDMETHOD.
 
 
