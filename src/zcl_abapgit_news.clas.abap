@@ -108,12 +108,13 @@ CLASS zcl_abapgit_news IMPLEMENTATION.
       lc_log_filename    TYPE string VALUE 'changelog*',
       lc_log_filename_up TYPE string VALUE 'CHANGELOG*'.
 
-    DATA: lo_apack       TYPE REF TO zcl_abapgit_apack_reader,
-          lt_remote      TYPE zif_abapgit_definitions=>ty_files_tt,
-          lv_version     TYPE string,
-          lv_last_seen   TYPE string,
-          lv_url         TYPE string,
-          lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
+    DATA: lo_apack            TYPE REF TO zcl_abapgit_apack_reader,
+          lt_remote           TYPE zif_abapgit_definitions=>ty_files_tt,
+          lv_version          TYPE string,
+          lv_last_seen        TYPE string,
+          lv_url              TYPE string,
+          lo_repo_online      TYPE REF TO zcl_abapgit_repo_online,
+          lv_version_constant TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit-version_constant.
 
     FIELD-SYMBOLS <ls_file> LIKE LINE OF lt_remote.
 
@@ -131,8 +132,14 @@ CLASS zcl_abapgit_news IMPLEMENTATION.
     ENDIF.
 
     IF lv_version IS INITIAL.
-      lv_version = zcl_abapgit_version=>get_version_constant_value(
-                       io_repo->get_dot_abapgit( )->get_version_constant( ) ).
+      TRY.
+          lv_version_constant = io_repo->get_dot_abapgit( )->get_version_constant( ).
+          IF lv_version_constant IS NOT INITIAL.
+            lv_version = zcl_abapgit_version=>get_version_constant_value( lv_version_constant ).
+          ENDIF.
+        CATCH zcx_abapgit_exception.
+          CLEAR lv_version.
+      ENDTRY.
     ENDIF.
 
     IF lv_version IS INITIAL.
