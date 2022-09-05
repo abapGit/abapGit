@@ -160,7 +160,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
     DATA lo_structdescr TYPE REF TO cl_abap_structdescr.
     DATA lt_fields      TYPE ddfields.
     DATA ls_field       LIKE LINE OF lt_fields.
-    DATA lv_key         TYPE string.
+    DATA lv_key         TYPE c LENGTH 900.
 
     lv_key = iv_tabkey.
     lo_structdescr ?= cl_abap_typedescr=>describe_by_name( iv_table ).
