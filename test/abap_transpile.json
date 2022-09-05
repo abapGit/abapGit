@@ -243,9 +243,6 @@
       {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_not_created_when_canc", "note": "Void type: SCOMPKDTLN"},
       {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_created_when_confirm", "note": "Void type: SCOMPKDTLN"},
 
-      {"object": "ZCL_ABAPGIT_GUI_PAGE_DATA", "class": "ltcl_test", "method": "concatenated_key_to_where3", "note": "???"},
-      {"object": "ZCL_ABAPGIT_GUI_PAGE_DATA", "class": "ltcl_test", "method": "concatenated_key_to_where4", "note": "???"},
-      
       {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_test_checksums", "method": "rebuild_simple", "note": "some sorting problem?"},
       {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_test_checksums", "method": "rebuild_w_dot_abapgit"}
     ]
