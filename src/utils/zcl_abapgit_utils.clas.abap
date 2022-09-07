@@ -9,23 +9,28 @@ CLASS zcl_abapgit_utils DEFINITION
       IMPORTING
         !iv_data            TYPE xstring
       RETURNING
-        VALUE(rv_is_binary) TYPE abap_bool .
+        VALUE(rv_is_binary) TYPE abap_bool.
     CLASS-METHODS extract_author_data
       IMPORTING
         !iv_author TYPE string
       EXPORTING
-        !ev_author  TYPE zif_abapgit_definitions=>ty_commit-author
-        !ev_email   TYPE zif_abapgit_definitions=>ty_commit-email
-        !ev_time    TYPE zif_abapgit_definitions=>ty_commit-time
+        !ev_author TYPE zif_abapgit_definitions=>ty_commit-author
+        !ev_email  TYPE zif_abapgit_definitions=>ty_commit-email
+        !ev_time   TYPE zif_abapgit_definitions=>ty_commit-time
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS is_valid_email
+      IMPORTING
+        iv_email        TYPE string
+      RETURNING
+        VALUE(rv_valid) TYPE abap_bool.
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_UTILS IMPLEMENTATION.
+CLASS zcl_abapgit_utils IMPLEMENTATION.
 
 
   METHOD extract_author_data.
@@ -74,7 +79,13 @@ CLASS ZCL_ABAPGIT_UTILS IMPLEMENTATION.
 
     lv_data = iv_data(lv_xlen).
 
-    lv_string_data = zcl_abapgit_convert=>xstring_to_string_utf8( lv_data ).
+    TRY.
+        lv_string_data = zcl_abapgit_convert=>xstring_to_string_utf8( lv_data ).
+      CATCH zcx_abapgit_exception.
+        " Contains data that does not convert to UTF-8 so consider it binary
+        rv_is_binary = abap_true.
+        RETURN.
+    ENDTRY.
 
     REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>newline IN lv_string_data WITH space.
     REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>cr_lf IN lv_string_data WITH space.
@@ -85,4 +96,20 @@ CLASS ZCL_ABAPGIT_UTILS IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD is_valid_email.
+
+    " Email address validation (RFC 5322)
+    " https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch04s01.html
+    CONSTANTS lc_email_regex TYPE string VALUE
+      '[\w!#$%&*+/=?`{|}~^-]+(?:\.[\w!#$%&*+/=?`{|}~^-]+)*@(?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,6}'.
+
+    IF iv_email IS INITIAL.
+      rv_valid = abap_true.
+    ELSE.
+      FIND REGEX lc_email_regex IN iv_email.
+      rv_valid = boolc( sy-subrc = 0 ).
+    ENDIF.
+
+  ENDMETHOD.
 ENDCLASS.

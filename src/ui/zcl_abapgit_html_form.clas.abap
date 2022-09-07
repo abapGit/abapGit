@@ -83,6 +83,7 @@ CLASS zcl_abapgit_html_form DEFINITION
         !iv_default_value TYPE csequence OPTIONAL
         !iv_hint          TYPE csequence OPTIONAL
         !iv_condense      TYPE abap_bool DEFAULT abap_false
+        !iv_action        TYPE csequence OPTIONAL
       RETURNING
         VALUE(ro_self)    TYPE REF TO zcl_abapgit_html_form .
     METHODS option
@@ -332,6 +333,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     ls_field-label = iv_label.
     ls_field-default_value = iv_default_value.
     ls_field-hint  = iv_hint.
+    ls_field-click = iv_action.
 
     " put options into one column instead of side-by-side
     ls_field-condense = iv_condense.
@@ -535,6 +537,9 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       " Reduced width for short fields
       lv_item_class = lv_item_class && ' w40'.
     ENDIF.
+    IF is_field-type = zif_abapgit_html_form=>c_field_type-hidden.
+      lv_item_class = lv_item_class && ' hidden'.
+    ENDIF.
     IF lv_item_class IS NOT INITIAL.
       lv_item_class = | class="{ lv_item_class }"|.
     ENDIF.
@@ -627,7 +632,8 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     DATA:
       lv_checked   TYPE string,
       lv_opt_id    TYPE string,
-      lv_opt_value TYPE string.
+      lv_opt_value TYPE string,
+      lv_onclick   TYPE string.
 
     FIELD-SYMBOLS <ls_opt> LIKE LINE OF is_field-subitems.
 
@@ -648,12 +654,19 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
         lv_checked = ' checked'.
       ENDIF.
 
+      CLEAR lv_onclick.
+      IF is_field-click IS NOT INITIAL.
+        lv_onclick = |onclick="document.getElementById('{ mv_form_id }').action = 'sapevent:|
+                  && |{ is_field-click }'; document.getElementById('{ mv_form_id }').submit()"|.
+      ENDIF.
+
       lv_opt_id = |{ is_field-name }{ sy-tabix }|.
       IF is_field-condense = abap_true.
         ii_html->add( '<div>' ).
       ENDIF.
       ii_html->add( |<input type="radio" name="{ is_field-name }" id="{ lv_opt_id }"|
-                 && | value="{ lv_opt_value }"{ lv_checked }{ is_attr-autofocus }>| ).
+                 && | value="{ lv_opt_value }"{ lv_checked }{ is_attr-autofocus }|
+                 && | { lv_onclick }>| ).
       ii_html->add( |<label for="{ lv_opt_id }">{ <ls_opt>-label }</label>| ).
       IF is_field-condense = abap_true.
         ii_html->add( '</div>' ).
@@ -797,8 +810,8 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     IF is_field-rows > 0.
       lv_rows = | rows="{ is_field-rows }"|.
-    ELSE.
-      lv_rows = lines( zcl_abapgit_convert=>split_string( is_attr-value ) ).
+    ELSEIF is_attr-value IS NOT INITIAL.
+      lv_rows = | rows="{ lines( zcl_abapgit_convert=>split_string( is_attr-value ) ) + 1 }"|.
     ENDIF.
 
     IF is_field-cols > 0.

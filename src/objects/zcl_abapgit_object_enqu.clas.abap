@@ -7,9 +7,6 @@ CLASS zcl_abapgit_object_enqu DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_object .
-
-    ALIASES mo_files
-      FOR zif_abapgit_object~mo_files .
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: ty_dd27p TYPE STANDARD TABLE OF dd27p WITH DEFAULT KEY.
@@ -136,6 +133,7 @@ CLASS zcl_abapgit_object_enqu IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     DATA: lv_name  TYPE ddobjname,
+          lv_state TYPE ddgotstate,
           ls_dd25v TYPE dd25v,
           lt_dd26e TYPE TABLE OF dd26e,
           lt_dd27p TYPE ty_dd27p.
@@ -148,6 +146,7 @@ CLASS zcl_abapgit_object_enqu IMPLEMENTATION.
         state         = 'A'
         langu         = mv_language
       IMPORTING
+        gotstate      = lv_state
         dd25v_wa      = ls_dd25v
       TABLES
         dd26e_tab     = lt_dd26e
@@ -159,8 +158,8 @@ CLASS zcl_abapgit_object_enqu IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    IF ls_dd25v IS INITIAL.
-      zcx_abapgit_exception=>raise( |No active version found for { ms_item-obj_type } { ms_item-obj_name }| ).
+    IF ls_dd25v IS INITIAL OR lv_state <> 'A'.
+      RETURN.
     ENDIF.
 
     CLEAR: ls_dd25v-as4user,

@@ -2,8 +2,6 @@ CLASS zcl_abapgit_object_msag DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -160,11 +158,12 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 
   METHOD serialize_longtexts_msag.
 
-    DATA: lv_doku_object_name           TYPE dokhl-object,
-          lt_doku_object_names          TYPE STANDARD TABLE OF dokhl-object
+    DATA: lv_doku_object_name  TYPE dokhl-object,
+          lt_doku_object_names TYPE STANDARD TABLE OF dokhl-object
                           WITH NON-UNIQUE DEFAULT KEY,
-          lt_dokil            TYPE zif_abapgit_definitions=>ty_dokil_tt,
-          ls_dokil            LIKE LINE OF lt_dokil.
+          lt_dokil             TYPE zif_abapgit_definitions=>ty_dokil_tt,
+          ls_dokil             LIKE LINE OF lt_dokil,
+          lt_language_filter   TYPE zif_abapgit_environment=>ty_system_language_filter.
 
     FIELD-SYMBOLS: <ls_t100>  TYPE t100.
 
@@ -188,11 +187,13 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
         AND masterlang = abap_true
         ORDER BY PRIMARY KEY.
     ELSE.
+      lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
       SELECT * FROM dokil
         INTO TABLE lt_dokil
         FOR ALL ENTRIES IN lt_doku_object_names
         WHERE id = 'NA'
         AND object = lt_doku_object_names-table_line
+        AND langu IN lt_language_filter
         ORDER BY PRIMARY KEY.
     ENDIF.
 
@@ -209,10 +210,11 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 
   METHOD serialize_texts.
 
-    DATA: lv_msg_id     TYPE rglif-message_id,
-          lt_t100_texts TYPE ty_t100_texts,
-          lt_t100t      TYPE TABLE OF t100t,
-          lt_i18n_langs TYPE TABLE OF langu.
+    DATA: lv_msg_id          TYPE rglif-message_id,
+          lt_t100_texts      TYPE ty_t100_texts,
+          lt_t100t           TYPE TABLE OF t100t,
+          lt_i18n_langs      TYPE TABLE OF langu,
+          lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
     lv_msg_id = ms_item-obj_name.
 
@@ -221,10 +223,12 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
     ENDIF.
 
     " Collect additional languages
-    " Skip main lang - it has been already serialized
+    " Skip main lang - it has been already serialized and also technical languages
+    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
     SELECT DISTINCT sprsl AS langu INTO TABLE lt_i18n_langs
       FROM t100t
       WHERE arbgb = lv_msg_id
+      AND sprsl IN lt_language_filter
       AND sprsl <> mv_language.          "#EC CI_BYPASS "#EC CI_GENBUFF
 
     SORT lt_i18n_langs ASCENDING.
@@ -362,7 +366,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'MSAG: Table T100 modify failed' ).
       ENDIF.
       CLEAR ls_t100u.
-      MOVE-CORRESPONDING <ls_t100> TO ls_t100u ##enh_ok.
+      MOVE-CORRESPONDING <ls_t100> TO ls_t100u ##ENH_OK.
       ls_t100u-name    = sy-uname.
       ls_t100u-datum   = sy-datum.
       ls_t100u-selfdef = '3'.

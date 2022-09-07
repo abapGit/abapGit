@@ -120,12 +120,16 @@ CLASS ltcl_is_binary DEFINITION FINAL FOR TESTING
 
       given_file
         IMPORTING
-          iv_file TYPE string,
+          iv_file TYPE string
+        RAISING zcx_abapgit_exception,
       given_image,
-      given_cds_metadata,
-      given_cds_view_with_umlaut,
+      given_cds_metadata
+        RAISING zcx_abapgit_exception,
+      given_cds_view_with_umlaut
+        RAISING zcx_abapgit_exception,
 
-      when_is_binary_determined,
+      when_is_binary_determined
+        RAISING zcx_abapgit_exception,
 
       then_is_not_binary,
       then_is_binary.
@@ -271,14 +275,18 @@ CLASS ltcl_is_binary IMPLEMENTATION.
 
   METHOD then_is_not_binary.
 
-    cl_abap_unit_assert=>assert_false( mv_act_is_binary ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mv_act_is_binary
+      exp = abap_false ).
 
   ENDMETHOD.
 
 
   METHOD then_is_binary.
 
-    cl_abap_unit_assert=>assert_true( mv_act_is_binary ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mv_act_is_binary
+      exp = abap_true ).
 
   ENDMETHOD.
 

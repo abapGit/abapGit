@@ -2,7 +2,7 @@ CLASS zcl_abapgit_object_amsd DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
+
     METHODS:
       constructor
         IMPORTING
@@ -10,7 +10,6 @@ CLASS zcl_abapgit_object_amsd DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
           iv_language TYPE spras
         RAISING
           zcx_abapgit_exception.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
     METHODS:
@@ -316,7 +315,7 @@ CLASS zcl_abapgit_object_amsd IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_deserialize_steps.
-    APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
 
 

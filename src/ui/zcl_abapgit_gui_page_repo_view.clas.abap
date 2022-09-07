@@ -17,6 +17,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         toggle_diff_first TYPE string VALUE 'toggle_diff_first ' ##NO_TEXT,
         display_more      TYPE string VALUE 'display_more' ##NO_TEXT,
         go_data           TYPE string VALUE 'go_data',
+        go_unit           TYPE string VALUE 'go_unit',
       END OF c_actions .
 
     METHODS constructor
@@ -127,6 +128,11 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         !is_item                     TYPE zif_abapgit_definitions=>ty_repo_item
       RETURNING
         VALUE(rv_inactive_html_code) TYPE string .
+    METHODS build_srcsystem_code
+      IMPORTING
+        !is_item                      TYPE zif_abapgit_definitions=>ty_repo_item
+      RETURNING
+        VALUE(rv_srcsystem_html_code) TYPE string .
     METHODS open_in_main_language
       RAISING
         zcx_abapgit_exception .
@@ -176,9 +182,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
     METHODS is_repo_lang_logon_lang
       RETURNING
         VALUE(rv_repo_lang_is_logon_lang) TYPE abap_bool .
-    METHODS get_abapgit_tcode
-      RETURNING
-        VALUE(rv_tcode) TYPE tcode .
+
     METHODS render_item_changed_by
       IMPORTING
         !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
@@ -255,7 +259,8 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       INSERT ls_sort INTO TABLE lt_sort.
     ENDIF.
 
-    IF mv_order_by = 'TRANSPORT'.
+    " Use object name as secondary sort criteria
+    IF mv_order_by <> 'OBJ_NAME'.
       ls_sort-name = 'OBJ_NAME'.
       INSERT ls_sort INTO TABLE lt_sort.
     ENDIF.
@@ -267,11 +272,10 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     INSERT LINES OF lt_diff_items INTO TABLE ct_repo_items.
     INSERT LINES OF lt_code_items INTO TABLE ct_repo_items.
 
-    IF mv_order_by = 'TRANSPORT'.
-      LOOP AT ct_repo_items ASSIGNING <ls_repo_item>.
-        order_files( CHANGING ct_files = <ls_repo_item>-files ).
-      ENDLOOP.
-    ENDIF.
+    " Files are listed under the object names so we always sort them by name
+    LOOP AT ct_repo_items ASSIGNING <ls_repo_item>.
+      order_files( CHANGING ct_files = <ls_repo_item>-files ).
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -315,11 +319,18 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       ro_advanced_dropdown->add( iv_txt = 'Stage by Transport'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-go_stage_transport }?key={ mv_key }| ).
     ENDIF.
+
+    ro_advanced_dropdown->add( iv_txt = 'Quality Assurance'
+                               iv_typ = zif_abapgit_html=>c_action_type-separator ).
     ro_advanced_dropdown->add( iv_txt = 'Syntax Check'
                                iv_act = |{ zif_abapgit_definitions=>c_action-repo_syntax_check }?key={ mv_key }| ).
+    ro_advanced_dropdown->add( iv_txt = 'Unit Test'
+                               iv_act = |{ c_actions-go_unit }| ).
     ro_advanced_dropdown->add( iv_txt = 'Run Code Inspector'
                                iv_act = |{ zif_abapgit_definitions=>c_action-repo_code_inspector }?key={ mv_key }| ).
 
+    ro_advanced_dropdown->add( iv_txt = 'Very Advanced'
+                               iv_typ = zif_abapgit_html=>c_action_type-separator ).
     CLEAR lv_crossout.
     IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>c_authorization-update_local_checksum ) = abap_false.
       lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
@@ -332,11 +343,14 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                                iv_act = |{ c_actions-go_data }?key={ mv_key }|
                                iv_opt = lv_crossout ).
 
-    IF is_repo_lang_logon_lang( ) = abap_false AND get_abapgit_tcode( ) IS NOT INITIAL.
+    IF is_repo_lang_logon_lang( ) = abap_false AND zcl_abapgit_services_abapgit=>get_abapgit_tcode( ) IS NOT INITIAL.
       ro_advanced_dropdown->add(
         iv_txt = 'Open in Main Language'
         iv_act = |{ zif_abapgit_definitions=>c_action-repo_open_in_master_lang }?key={ mv_key }| ).
     ENDIF.
+
+    ro_advanced_dropdown->add( iv_txt = 'Danger'
+                               iv_typ = zif_abapgit_html=>c_action_type-separator ).
 
     ro_advanced_dropdown->add( iv_txt   = 'Remove'
                                iv_title = `Remove abapGit's records of the repository (the system's `
@@ -589,6 +603,18 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD build_srcsystem_code.
+
+    IF is_item-srcsystem IS NOT INITIAL AND is_item-srcsystem <> sy-sysid.
+      rv_srcsystem_html_code = zcl_abapgit_html=>icon(
+        iv_name  = 'server-solid/grey'
+        iv_hint  = |Original system: { is_item-srcsystem }|
+        iv_class = 'cursor-pointer' ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD build_tag_dropdown.
 
     CREATE OBJECT ro_tag_dropdown.
@@ -597,8 +623,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    ro_tag_dropdown->add( iv_txt = 'Overview'
-                          iv_act = |{ zif_abapgit_definitions=>c_action-go_tag_overview }?key={ mv_key }| ).
     ro_tag_dropdown->add( iv_txt = 'Switch'
                           iv_act = |{ zif_abapgit_definitions=>c_action-git_tag_switch }?key={ mv_key }|
                           iv_opt = iv_wp_opt ).
@@ -671,22 +695,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         RAISE EXCEPTION lx_error.
     ENDTRY.
 
-  ENDMETHOD.
-
-
-  METHOD get_abapgit_tcode.
-    CONSTANTS: lc_report_tcode_hex TYPE x VALUE '80'.
-    DATA: lt_tcodes TYPE STANDARD TABLE OF tcode.
-
-    SELECT tcode
-      FROM tstc
-      INTO TABLE lt_tcodes
-      WHERE pgmna = sy-cprog
-        AND cinfo = lc_report_tcode_hex.
-
-    IF lines( lt_tcodes ) > 0.
-      READ TABLE lt_tcodes INDEX 1 INTO rv_tcode.
-    ENDIF.
   ENDMETHOD.
 
 
@@ -767,7 +775,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     " https://blogs.sap.com/2017/01/13/logon-language-sy-langu-and-rfc/
 
     lv_main_language = mo_repo->get_dot_abapgit( )->get_main_language( ).
-    lv_tcode = get_abapgit_tcode( ).
+    lv_tcode = zcl_abapgit_services_abapgit=>get_abapgit_tcode( ).
     ASSERT lv_tcode IS NOT INITIAL.
 
     IF lv_main_language = sy-langu.
@@ -827,7 +835,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     ls_sort-descending = mv_order_descending.
     ls_sort-astext     = abap_true.
-    ls_sort-name       = 'TRANSPORT'.
+    ls_sort-name       = 'PATH'.
     INSERT ls_sort INTO TABLE lt_sort.
 
     ls_sort-descending = mv_order_descending.
@@ -858,6 +866,8 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     gui_services( )->register_event_handler( me ).
     CREATE OBJECT mo_repo_aggregated_state.
 
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
     TRY.
         " Reinit, for the case of type change
         mo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
@@ -867,7 +877,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
         lo_news = zcl_abapgit_news=>create( mo_repo ).
 
-        CREATE OBJECT ri_html TYPE zcl_abapgit_html.
         ri_html->add( |<div class="repo" id="repo{ mv_key }">| ).
         ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
           io_repo               = mo_repo
@@ -887,7 +896,8 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
         lt_repo_items = lo_browser->list( iv_path         = mv_cur_dir
                                           iv_by_folders   = mv_show_folders
-                                          iv_changes_only = mv_changes_only ).
+                                          iv_changes_only = mv_changes_only
+                                          iv_transports   = mv_are_changes_recorded_in_tr ).
 
         apply_order_by( CHANGING ct_repo_items = lt_repo_items ).
 
@@ -908,15 +918,19 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
         CLEAR lv_msg.
 
-        IF mo_repo->is_offline( ) = abap_true
-            AND mo_repo->has_remote_source( ) = abap_true
-            AND mo_repo_aggregated_state->is_unchanged( ) = abap_true.
-          " Offline match banner
-          lv_msg = 'ZIP source is attached and completely <b>matches</b> the local state'.
-        ELSEIF lines( lt_repo_items ) = 0.
-          " Online match banner
+        IF lines( lt_repo_items ) = 0.
           IF mv_changes_only = abap_true.
-            lv_msg = 'Local state completely <b>matches</b> the remote repository'.
+            IF mo_repo->is_offline( ) = abap_true.
+              " Offline match banner
+              IF mo_repo->has_remote_source( ) = abap_true.
+                lv_msg = 'Local state completely <b>matches</b> the ZIP file'.
+              ELSE.
+                lv_msg = 'Import a ZIP file to see if there are any changes'.
+              ENDIF.
+            ELSE.
+              " Online match banner
+              lv_msg = 'Local state completely <b>matches</b> the remote repository'.
+            ENDIF.
           ELSE.
             lv_msg = |Package is empty. Show { build_dir_jump_link( 'parent' ) } package|.
           ENDIF.
@@ -1045,12 +1059,12 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         ENDIF.
         ri_html->add( |</td>| ).
       ELSE.
-        lv_link = build_obj_jump_link( is_item ).
         lv_diff_link = build_obj_diff_link( is_item ).
         ri_html->add_td( iv_class = `type`
                          iv_content = |{ is_item-obj_type }| ).
         ri_html->add_td( iv_class = `object`
-                         iv_content = |{ lv_diff_link } { build_inactive_object_code( is_item ) }| ).
+                         iv_content = |{ lv_diff_link } { build_inactive_object_code( is_item ) 
+                         } { build_srcsystem_code( is_item ) }| ).
       ENDIF.
     ENDIF.
 
@@ -1198,10 +1212,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
 
   METHOD render_item_transport.
-
-    DATA:
-      ls_item      TYPE zif_abapgit_definitions=>ty_item,
-      lv_transport TYPE trkorr.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -1359,6 +1369,12 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_data
           EXPORTING
             iv_key = |{ ii_event->query( )->get( 'KEY' ) }|.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+
+      WHEN c_actions-go_unit.
+        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_runit
+          EXPORTING
+            iv_devclass = mo_repo->get_package( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN c_actions-toggle_hide_files. " Toggle file diplay

@@ -2,8 +2,6 @@ CLASS zcl_abapgit_object_type DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS: c_prefix TYPE c LENGTH 3 VALUE '%_C'.
@@ -78,7 +76,7 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
 
     lv_typdname = ms_item-obj_name.
 
-    " Active version
+    " Get active version, ignore errors if not found
     CALL FUNCTION 'TYPD_GET_OBJECT'
       EXPORTING
         typdname          = lv_typdname
@@ -90,16 +88,21 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
       EXCEPTIONS
         version_not_found = 1
         reps_not_exist    = 2
-        OTHERS            = 3.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |No active version found for { ms_item-obj_type } { ms_item-obj_name }| ).
-    ENDIF.
+        OTHERS            = 3 ##FM_SUBRC_OK.
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown. " todo
+    DATA lv_prog TYPE progname.
+
+    CONCATENATE '%_C' ms_item-obj_name INTO lv_prog.
+
+    SELECT SINGLE unam FROM reposrc INTO rv_user
+      WHERE progname = lv_prog AND r3state = 'A'.
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ENDIF.
   ENDMETHOD.
 
 
@@ -128,7 +131,7 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'DDTEXT'
                   CHANGING cg_data = lv_ddtext ).
 
-    lt_source = mo_files->read_abap( ).
+    lt_source = zif_abapgit_object~mo_files->read_abap( ).
 
     IF zif_abapgit_object~exists( ) = abap_false.
       create( iv_ddtext   = lv_ddtext
@@ -200,10 +203,14 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
     read( IMPORTING ev_ddtext = lv_ddtext
                     et_source = lt_source ).
 
+    IF lt_source IS INITIAL.
+      RETURN.
+    ENDIF.
+
     io_xml->add( iv_name = 'DDTEXT'
                  ig_data = lv_ddtext ).
 
-    mo_files->add_abap( lt_source ).
+    zif_abapgit_object~mo_files->add_abap( lt_source ).
 
   ENDMETHOD.
 ENDCLASS.

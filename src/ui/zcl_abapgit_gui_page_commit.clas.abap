@@ -105,11 +105,6 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
         !it_stage      TYPE zif_abapgit_definitions=>ty_stage_tt
       RETURNING
         VALUE(rv_text) TYPE string.
-    METHODS is_valid_email
-      IMPORTING
-        iv_email        TYPE string
-      RETURNING
-        VALUE(rv_valid) TYPE abap_bool.
     METHODS branch_name_to_internal
       IMPORTING
         iv_branch_name            TYPE string
@@ -119,7 +114,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
 
   METHOD branch_name_to_internal.
@@ -356,23 +351,6 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD is_valid_email.
-
-    " Email address validation (RFC 5322)
-    " https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch04s01.html
-    CONSTANTS lc_email_regex TYPE string VALUE
-      '[\w!#$%&*+/=?`{|}~^-]+(?:\.[\w!#$%&*+/=?`{|}~^-]+)*@(?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,6}'.
-
-    IF iv_email IS INITIAL.
-      rv_valid = abap_true.
-    ELSE.
-      FIND REGEX lc_email_regex IN iv_email.
-      rv_valid = boolc( sy-subrc = 0 ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD render_stage_details.
 
     FIELD-SYMBOLS <ls_stage> LIKE LINE OF mt_stage.
@@ -461,13 +439,13 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
     ro_validation_log = mo_form_util->validate( io_form_data ).
 
-    IF is_valid_email( io_form_data->get( c_id-committer_email ) ) = abap_false.
+    IF zcl_abapgit_utils=>is_valid_email( io_form_data->get( c_id-committer_email ) ) = abap_false.
       ro_validation_log->set(
         iv_key = c_id-committer_email
         iv_val = |Invalid email address| ).
     ENDIF.
 
-    IF is_valid_email( io_form_data->get( c_id-author_email ) ) = abap_false.
+    IF zcl_abapgit_utils=>is_valid_email( io_form_data->get( c_id-author_email ) ) = abap_false.
       ro_validation_log->set(
         iv_key = c_id-author_email
         iv_val = |Invalid email address| ).
@@ -549,6 +527,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
+    ri_html->add( '<div class="repo">' ).
     ri_html->add( '<div id="top" class="paddings">' ).
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mo_repo ) ).
     ri_html->add( '</div>' ).
@@ -564,6 +543,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
     ri_html->add( '<div id="stage-details" class="dialog w800px">' ).
     ri_html->add( render_stage_details( ) ).
+    ri_html->add( '</div>' ).
     ri_html->add( '</div>' ).
 
   ENDMETHOD.

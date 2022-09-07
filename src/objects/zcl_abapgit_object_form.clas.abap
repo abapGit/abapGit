@@ -2,12 +2,11 @@ CLASS zcl_abapgit_object_form DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
+
     METHODS constructor
       IMPORTING
         is_item     TYPE zif_abapgit_definitions=>ty_item
         iv_language TYPE spras.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS: c_objectname_form    TYPE thead-tdobject VALUE 'FORM' ##NO_TEXT.
@@ -135,7 +134,7 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
                  ig_data = it_lines ).
     lv_string = li_xml->render( ).
     IF lv_string IS NOT INITIAL.
-      mo_files->add_string( iv_extra  =
+      zif_abapgit_object~mo_files->add_string( iv_extra  =
                     build_extra_from_header( is_form_data-form_header )
                             iv_ext    = c_extension_xml
                             iv_string = lv_string ).
@@ -160,12 +159,12 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
     DATA li_xml TYPE REF TO zif_abapgit_xml_input.
 
     TRY.
-        lv_string = mo_files->read_string( iv_extra =
+        lv_string = zif_abapgit_object~mo_files->read_string( iv_extra =
                                    build_extra_from_header( is_form_data-form_header )
                                            iv_ext   = c_extension_xml ).
       CATCH zcx_abapgit_exception.
 
-        lv_string = mo_files->read_string( iv_extra =
+        lv_string = zif_abapgit_object~mo_files->read_string( iv_extra =
                                build_extra_from_header_old( is_form_data-form_header )
                                            iv_ext   = c_extension_xml ).
 
@@ -194,7 +193,7 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
       TABLES
         selections    = rt_text_header
       EXCEPTIONS
-        OTHERS        = 1 ##fm_subrc_ok.  "#EC CI_SUBRC
+        OTHERS        = 1 ##FM_SUBRC_OK.  "#EC CI_SUBRC
 
   ENDMETHOD.
 
@@ -510,8 +509,7 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
         object    = cs_form_data-text_header-tdobject
         olanguage = cs_form_data-orig_language
       EXCEPTIONS
-        OTHERS    = 1
-        ##fm_subrc_ok.                                                   "#EC CI_SUBRC
+        OTHERS    = 1 ##FM_SUBRC_OK.                                                   "#EC CI_SUBRC
 
   ENDMETHOD.
 

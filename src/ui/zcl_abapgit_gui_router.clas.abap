@@ -439,6 +439,10 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     lv_key = ii_event->query( )->get( 'KEY' ).
 
+    IF lv_key IS NOT INITIAL.
+      li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+    ENDIF.
+
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-git_pull.                      " GIT Pull
         zcl_abapgit_services_git=>pull( lv_key ).
@@ -456,18 +460,12 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         zcl_abapgit_services_git=>switch_branch( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-git_branch_merge.              " GIT Merge branch
-        li_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
         rs_handled-page  = zcl_abapgit_gui_page_merge_sel=>create( li_repo ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-      WHEN zif_abapgit_definitions=>c_action-go_tag_overview.               " GIT Tag overview
-        zcl_abapgit_services_git=>tag_overview( lv_key ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-git_tag_create.                " GIT Tag create
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_tag
-          EXPORTING
-            ii_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+        rs_handled-page  = zcl_abapgit_gui_page_tags=>create( li_repo ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-      WHEN zif_abapgit_definitions=>c_action-git_tag_delete.                " GIT Tag create
+      WHEN zif_abapgit_definitions=>c_action-git_tag_delete.                " GIT Tag delete
         zcl_abapgit_services_git=>delete_tag( lv_key ).
         zcl_abapgit_services_repo=>refresh( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.

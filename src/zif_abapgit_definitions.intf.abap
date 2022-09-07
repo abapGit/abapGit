@@ -61,8 +61,6 @@ INTERFACE zif_abapgit_definitions
       body         TYPE string,
     END OF ty_git_tag .
   TYPES:
-    ty_git_tag_list_tt TYPE STANDARD TABLE OF ty_git_tag WITH DEFAULT KEY .
-  TYPES:
     BEGIN OF ty_git_user,
       name  TYPE string,
       email TYPE string,
@@ -75,15 +73,16 @@ INTERFACE zif_abapgit_definitions
     END OF ty_comment .
   TYPES:
     BEGIN OF ty_item_signature,
-      obj_type TYPE tadir-object,
-      obj_name TYPE tadir-obj_name,
-      devclass TYPE devclass,
+      obj_type  TYPE tadir-object,
+      obj_name  TYPE tadir-obj_name,
+      devclass  TYPE devclass,
     END OF ty_item_signature .
   TYPES:
     BEGIN OF ty_item.
       INCLUDE TYPE ty_item_signature.
   TYPES:
-      inactive TYPE abap_bool,
+      srcsystem TYPE tadir-srcsystem,
+      inactive  TYPE abap_bool,
     END OF ty_item .
   TYPES:
     ty_items_tt TYPE STANDARD TABLE OF ty_item WITH DEFAULT KEY .
@@ -178,29 +177,31 @@ INTERFACE zif_abapgit_definitions
       WITH NON-UNIQUE SORTED KEY type COMPONENTS type sha1 .
   TYPES:
     BEGIN OF ty_tadir,
-      pgmid    TYPE tadir-pgmid,
-      object   TYPE tadir-object,
-      obj_name TYPE tadir-obj_name,
-      devclass TYPE tadir-devclass,
-      korrnum  TYPE tadir-korrnum, " todo, I think this field can be removed after #2464 -Hvam
-      delflag  TYPE tadir-delflag,
-      genflag  TYPE tadir-genflag,
-      path     TYPE string,
+      pgmid     TYPE tadir-pgmid,
+      object    TYPE tadir-object,
+      obj_name  TYPE tadir-obj_name,
+      devclass  TYPE tadir-devclass,
+      korrnum   TYPE tadir-korrnum, " used by ZCL_ABAPGIT_DEPENDENCIES->RESOLVE
+      delflag   TYPE tadir-delflag,
+      genflag   TYPE tadir-genflag,
+      path      TYPE string,
+      srcsystem TYPE tadir-srcsystem,
     END OF ty_tadir .
   TYPES:
     ty_tadir_tt TYPE STANDARD TABLE OF ty_tadir WITH DEFAULT KEY .
   TYPES:
     BEGIN OF ty_result,
-      obj_type TYPE tadir-object,
-      obj_name TYPE tadir-obj_name,
-      inactive TYPE abap_bool,
-      path     TYPE string,
-      filename TYPE string,
-      package  TYPE devclass,
-      match    TYPE abap_bool,
-      lstate   TYPE ty_item_state,
-      rstate   TYPE ty_item_state,
-      packmove TYPE abap_bool,
+      obj_type  TYPE tadir-object,
+      obj_name  TYPE tadir-obj_name,
+      inactive  TYPE abap_bool,
+      path      TYPE string,
+      filename  TYPE string,
+      package   TYPE devclass,
+      match     TYPE abap_bool,
+      lstate    TYPE ty_item_state,
+      rstate    TYPE ty_item_state,
+      packmove  TYPE abap_bool,
+      srcsystem TYPE tadir-srcsystem,
     END OF ty_result .
   TYPES:
     ty_results_tt TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY .
@@ -233,6 +234,7 @@ INTERFACE zif_abapgit_definitions
       cmpname   TYPE seocmpname,
       attkeyfld TYPE seokeyfld,
       attbusobj TYPE seobusobj,
+      exposure  TYPE seoexpose,
     END OF ty_obj_attribute .
   TYPES:
     ty_obj_attribute_tt TYPE STANDARD TABLE OF ty_obj_attribute WITH DEFAULT KEY
@@ -316,7 +318,9 @@ INTERFACE zif_abapgit_definitions
       rstate     TYPE ty_item_state,
       files      TYPE ty_repo_file_tt,
       changed_by TYPE syuname,
+      transport  TYPE trkorr,
       packmove   TYPE abap_bool,
+      srcsystem  TYPE tadir-srcsystem,
     END OF ty_repo_item .
   TYPES:
     ty_repo_item_tt TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY .
@@ -486,7 +490,6 @@ INTERFACE zif_abapgit_definitions
       go_stage                      TYPE string VALUE 'go_stage',
       go_stage_transport            TYPE string VALUE 'go_stage_transport',
       go_commit                     TYPE string VALUE 'go_commit',
-      go_tag_overview               TYPE string VALUE 'go_tag_overview',
       go_debuginfo                  TYPE string VALUE 'go_debuginfo',
       go_settings                   TYPE string VALUE 'go_settings',
       go_settings_personal          TYPE string VALUE 'go_settings_personal',

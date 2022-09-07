@@ -26,11 +26,12 @@ CLASS zcl_abapgit_git_utils DEFINITION
         zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
+    CLASS-DATA go_convert_in TYPE REF TO cl_abap_conv_in_ce.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GIT_UTILS IMPLEMENTATION.
+CLASS zcl_abapgit_git_utils IMPLEMENTATION.
 
 
   METHOD get_null.
@@ -48,28 +49,33 @@ CLASS ZCL_ABAPGIT_GIT_UTILS IMPLEMENTATION.
   METHOD length_utf8_hex.
 
     DATA: lv_xstring TYPE xstring,
-          lv_string  TYPE string,
           lv_char4   TYPE c LENGTH 4,
-          lv_x       TYPE x LENGTH 2,
-          lo_obj     TYPE REF TO cl_abap_conv_in_ce,
-          lv_len     TYPE i.
+          lv_x       TYPE x LENGTH 2.
 
+    IF xstrlen( iv_data ) < 4.
+      zcx_abapgit_exception=>raise( 'error converting to hex, LENGTH_UTF8_HEX' ).
+    ENDIF.
 
     lv_xstring = iv_data(4).
 
-    lo_obj = cl_abap_conv_in_ce=>create(
-        input    = lv_xstring
-        encoding = 'UTF-8' ).
-    lv_len = xstrlen( lv_xstring ).
+    IF go_convert_in IS INITIAL.
+      go_convert_in = cl_abap_conv_in_ce=>create( encoding = 'UTF-8' ).
+    ENDIF.
 
     TRY.
-        lo_obj->read( EXPORTING n    = lv_len
-                      IMPORTING data = lv_string ).
-      CATCH cx_sy_conversion_codepage.
+        go_convert_in->convert(
+          EXPORTING
+            input = lv_xstring
+            n     = 4
+          IMPORTING
+            data  = lv_char4 ).
+
+      CATCH cx_sy_codepage_converter_init
+            cx_sy_conversion_codepage
+            cx_parameter_invalid_type.
         zcx_abapgit_exception=>raise( 'error converting to hex, LENGTH_UTF8_HEX' ).
     ENDTRY.
 
-    lv_char4 = lv_string.
     TRANSLATE lv_char4 TO UPPER CASE.
     lv_x = lv_char4.
     rv_len = lv_x.
@@ -91,7 +97,7 @@ CLASS ZCL_ABAPGIT_GIT_UTILS IMPLEMENTATION.
 
     lv_x = lv_len + 4.
 
-    rv_pkt = rv_pkt && '00' && lv_x && iv_string.
+    rv_pkt = '00' && lv_x && iv_string.
 
   ENDMETHOD.
 ENDCLASS.

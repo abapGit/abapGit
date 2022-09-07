@@ -2,8 +2,6 @@ CLASS zcl_abapgit_object_view DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: ty_dd26v TYPE STANDARD TABLE OF dd26v
@@ -30,6 +28,7 @@ CLASS zcl_abapgit_object_view DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS:
       read_view
         EXPORTING
+          ev_state TYPE ddgotstate
           es_dd25v TYPE dd25v
           es_dd09l TYPE dd09l
           et_dd26v TYPE ty_dd26v
@@ -38,7 +37,6 @@ CLASS zcl_abapgit_object_view DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
           et_dd28v TYPE ty_dd28v
         RAISING
           zcx_abapgit_exception.
-
 ENDCLASS.
 
 
@@ -58,6 +56,7 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
         state         = 'A'
         langu         = mv_language
       IMPORTING
+        gotstate      = ev_state
         dd25v_wa      = es_dd25v
         dd09l_wa      = es_dd09l
       TABLES
@@ -235,6 +234,7 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     DATA: ls_dd25v TYPE dd25v,
+          lv_state TYPE ddgotstate,
           ls_dd09l TYPE dd09l,
           lt_dd26v TYPE ty_dd26v,
           lt_dd27p TYPE ty_dd27p,
@@ -245,6 +245,7 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
 
     read_view(
       IMPORTING
+        ev_state = lv_state
         es_dd25v = ls_dd25v
         es_dd09l = ls_dd09l
         et_dd26v = lt_dd26v
@@ -252,8 +253,8 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
         et_dd28j = lt_dd28j
         et_dd28v = lt_dd28v ).
 
-    IF ls_dd25v IS INITIAL.
-      zcx_abapgit_exception=>raise( |No active version found for { ms_item-obj_type } { ms_item-obj_name }| ).
+    IF ls_dd25v IS INITIAL OR lv_state <> 'A'.
+      RETURN.
     ENDIF.
 
     CLEAR: ls_dd25v-as4user,

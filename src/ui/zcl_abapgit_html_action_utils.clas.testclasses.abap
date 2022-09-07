@@ -13,6 +13,7 @@ CLASS ltcl_html_action_utils DEFINITION FOR TESTING RISK LEVEL HARMLESS
     METHODS parse_fields_wrong_format FOR TESTING.
     METHODS parse_post_form_data FOR TESTING.
     METHODS parse_fields_webgui FOR TESTING.
+    METHODS parse_fields_special_chars FOR TESTING.
 
   PRIVATE SECTION.
 
@@ -371,6 +372,24 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
       iv_index = 3
       iv_name  = 'FILENAME'
       iv_value = '/nsp/test_ddls_bug2.ddls.asddls' ).
+
+  ENDMETHOD.
+
+  METHOD parse_fields_special_chars.
+
+    DATA lv_string TYPE string.
+
+    " URL encoded data
+    lv_string = `TEST=!"#$%25%26'()*+,-./09:;<%3d>?@AZ[\]^_``az{|}~¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿`.
+
+    _given_string_is( lv_string ).
+    _when_fields_are_parsed( ).
+    _then_field_count_should_be( 1 ).
+
+    _then_fields_should_be(
+      iv_index = 1
+      iv_name  = 'TEST'
+      iv_value = `!"#$%&'()*+,-./09:;<=>?@AZ[\]^_``az{|}~¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿` ).
 
   ENDMETHOD.
 

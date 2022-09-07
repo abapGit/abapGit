@@ -2,8 +2,6 @@ CLASS zcl_abapgit_object_dtel DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -21,11 +19,6 @@ CLASS zcl_abapgit_object_dtel DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     CONSTANTS c_longtext_id_dtel TYPE dokil-id VALUE 'DE' ##NO_TEXT.
 
-    METHODS is_ref_to_class_or_interface
-      IMPORTING
-        !is_dd04v        TYPE dd04v
-      RETURNING
-        VALUE(rv_result) TYPE abap_bool .
     METHODS serialize_texts
       IMPORTING
         !ii_xml TYPE REF TO zif_abapgit_xml_output
@@ -94,24 +87,14 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD is_ref_to_class_or_interface.
-
-    IF is_dd04v-refkind = 'R'
-        AND ( is_dd04v-reftype = 'C'
-           OR is_dd04v-reftype = 'I' ).
-      rv_result = abap_true.
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD serialize_texts.
 
-    DATA: lv_name       TYPE ddobjname,
-          lv_index      TYPE i,
-          ls_dd04v      TYPE dd04v,
-          lt_dd04_texts TYPE ty_dd04_texts,
-          lt_i18n_langs TYPE TABLE OF langu.
+    DATA: lv_name            TYPE ddobjname,
+          lv_index           TYPE i,
+          ls_dd04v           TYPE dd04v,
+          lt_dd04_texts      TYPE ty_dd04_texts,
+          lt_i18n_langs      TYPE TABLE OF langu,
+          lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
     FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
                    <ls_dd04_text> LIKE LINE OF lt_dd04_texts.
@@ -123,9 +106,11 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
     lv_name = ms_item-obj_name.
 
     " Collect additional languages, skip main lang - it was serialized already
+    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
     SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
       FROM dd04v
       WHERE rollname = lv_name
+      AND ddlanguage IN lt_language_filter
       AND ddlanguage <> mv_language.                      "#EC CI_SUBRC
 
     LOOP AT lt_i18n_langs ASSIGNING <lv_lang>.
@@ -198,13 +183,6 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'DD04V'
                   CHANGING cg_data = ls_dd04v ).
 
-    " DDIC Step: Replace REF TO class/interface with generic reference to avoid cyclic dependency
-    IF iv_step = zif_abapgit_object=>gc_step_id-ddic AND is_ref_to_class_or_interface( ls_dd04v ) = abap_true.
-      ls_dd04v-domname = 'OBJECT'.
-    ELSEIF iv_step = zif_abapgit_object=>gc_step_id-late AND is_ref_to_class_or_interface( ls_dd04v ) = abap_false.
-      RETURN. " already active
-    ENDIF.
-
     corr_insert( iv_package = iv_package
                  ig_object_class = 'DICT' ).
 
@@ -265,7 +243,6 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
-    APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
   ENDMETHOD.
 
 
@@ -305,7 +282,7 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
       AND as4local = 'A'
       AND as4vers = '0000'.
     IF sy-subrc <> 0 OR ls_dd04v IS INITIAL.
-      zcx_abapgit_exception=>raise( |No active version found for { ms_item-obj_type } { ms_item-obj_name }| ).
+      RETURN.
     ENDIF.
 
     SELECT SINGLE * FROM dd04t

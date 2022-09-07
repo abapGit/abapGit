@@ -3,10 +3,6 @@ CLASS zcl_abapgit_object_sots DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES:
       zif_abapgit_object.
-
-    ALIASES:
-      mo_files FOR zif_abapgit_object~mo_files.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES:
@@ -40,7 +36,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_SOTS IMPLEMENTATION.
+CLASS zcl_abapgit_object_sots IMPLEMENTATION.
 
 
   METHOD create_sots.
@@ -259,8 +255,9 @@ CLASS ZCL_ABAPGIT_OBJECT_SOTS IMPLEMENTATION.
       LOOP AT <ls_sots>-entries ASSIGNING <ls_entry>.
 
         TRY.
-            <ls_entry>-text = mo_files->read_string( iv_extra = get_raw_text_filename( <ls_entry> )
-                                                     iv_ext   = 'txt' ).
+            <ls_entry>-text = zif_abapgit_object~mo_files->read_string(
+              iv_extra = get_raw_text_filename( <ls_entry> )
+              iv_ext   = 'txt' ).
 
           CATCH zcx_abapgit_exception.
             " Most probably file not found -> ignore
@@ -348,9 +345,10 @@ CLASS ZCL_ABAPGIT_OBJECT_SOTS IMPLEMENTATION.
 
       LOOP AT <ls_sots>-entries ASSIGNING <ls_entry>.
 
-        mo_files->add_string( iv_extra  = get_raw_text_filename( <ls_entry> )
-                              iv_ext    = 'txt'
-                              iv_string = <ls_entry>-text ).
+        zif_abapgit_object~mo_files->add_string(
+          iv_extra  = get_raw_text_filename( <ls_entry> )
+          iv_ext    = 'txt'
+          iv_string = <ls_entry>-text ).
 
         CLEAR: <ls_entry>-text.
 

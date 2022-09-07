@@ -8,11 +8,13 @@ CLASS zcl_abapgit_object_common_aff DEFINITION
 
     INTERFACES zif_abapgit_object
       ABSTRACT METHODS changed_by .
-
-    ALIASES mo_files
-      FOR zif_abapgit_object~mo_files .
   PROTECTED SECTION.
   PRIVATE SECTION.
+    METHODS is_file_empty
+      IMPORTING
+        io_object_json_file TYPE REF TO object
+      RETURNING
+        VALUE(rv_is_empty)  TYPE abap_bool.
 
 ENDCLASS.
 
@@ -83,24 +85,27 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
         LOOP AT <ls_messages> ASSIGNING <ls_message>.
           ASSIGN COMPONENT 'MESSAGE' OF STRUCTURE <ls_message> TO <ls_msg>.
-          CHECK <ls_msg>-msgty = 'E'.
-          zcx_abapgit_exception=>raise_t100(
-             iv_msgid    = <ls_msg>-msgid
-             iv_msgno    = <ls_msg>-msgno
-             iv_msgv1    = <ls_msg>-msgv1
-             iv_msgv2    = <ls_msg>-msgv2
-             iv_msgv3    = <ls_msg>-msgv3
-             iv_msgv4    = <ls_msg>-msgv4  ).
+          IF <ls_msg>-msgty = 'E'.
+            zcx_abapgit_exception=>raise_t100(
+              iv_msgid    = <ls_msg>-msgid
+              iv_msgno    = <ls_msg>-msgno
+              iv_msgv1    = <ls_msg>-msgv1
+              iv_msgv2    = <ls_msg>-msgv2
+              iv_msgv3    = <ls_msg>-msgv3
+              iv_msgv4    = <ls_msg>-msgv4 ).
+          ENDIF.
         ENDLOOP.
 
         CALL FUNCTION 'TR_TADIR_INTERFACE'
           EXPORTING
-            wi_delete_tadir_entry          = abap_true
-            wi_tadir_pgmid                 = 'R3TR'
-            wi_tadir_object                = ms_item-obj_type
-            wi_tadir_obj_name              = ms_item-obj_name
-            wi_tadir_devclass              = ms_item-devclass
-            wi_test_modus                  = abap_false.
+            wi_delete_tadir_entry = abap_true
+            wi_tadir_pgmid        = 'R3TR'
+            wi_tadir_object       = ms_item-obj_type
+            wi_tadir_obj_name     = ms_item-obj_name
+            wi_tadir_devclass     = ms_item-devclass
+            wi_test_modus         = abap_false
+          EXCEPTIONS
+            OTHERS                = 1.
         IF sy-subrc <> 0.
           zcx_abapgit_exception=>raise_t100( ).
         ENDIF.
@@ -128,7 +133,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           lo_aff_factory          TYPE REF TO object,
           lr_messages             TYPE REF TO data,
           lv_json_as_xstring      TYPE xstring,
-          lx_exception            TYPE REF TO cx_static_check,
+          lx_exception            TYPE REF TO cx_root,
           lv_name                 TYPE c LENGTH 120.
 
     FIELD-SYMBOLS: <ls_intf_aff_obj>         TYPE any,
@@ -139,9 +144,10 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
                    <ls_messages>             TYPE ANY TABLE,
                    <ls_message>              TYPE any,
                    <ls_text>                 TYPE any,
-                   <ls_type>                 TYPE any.
+                   <ls_type>                 TYPE any,
+                   <ls_msg>                  TYPE symsg.
 
-    lv_json_as_xstring = mo_files->read_raw( iv_ext = 'json' ).
+    lv_json_as_xstring = zif_abapgit_object~mo_files->read_raw( iv_ext = 'json' ).
 
     lv_name = ms_item-obj_name.
 
@@ -219,17 +225,30 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
             messages = <ls_messages>.
 
         LOOP AT <ls_messages> ASSIGNING <ls_message>.
+          ASSIGN COMPONENT 'MESSAGE' OF STRUCTURE <ls_message> TO <ls_msg>.
           ASSIGN COMPONENT 'TEXT' OF STRUCTURE <ls_message> TO <ls_text>.
           ASSIGN COMPONENT 'TYPE' OF STRUCTURE <ls_message> TO <ls_type>.
           ii_log->add(
               iv_msg  = <ls_text>
               iv_type = <ls_type>
               is_item = ms_item ).
+
+          IF <ls_msg>-msgty = 'E'.
+            zcx_abapgit_exception=>raise_t100(
+              iv_msgid    = <ls_msg>-msgid
+              iv_msgno    = <ls_msg>-msgno
+              iv_msgv1    = <ls_msg>-msgv1
+              iv_msgv2    = <ls_msg>-msgv2
+              iv_msgv3    = <ls_msg>-msgv3
+              iv_msgv4    = <ls_msg>-msgv4 ).
+          ENDIF.
         ENDLOOP.
 
         tadir_insert( ms_item-devclass ).
 
-      CATCH cx_static_check INTO lx_exception.
+      CATCH cx_root INTO lx_exception.
+        ii_log->add_error( is_item = ms_item
+                           iv_msg  = 'Error at deserialize' ).
         ii_log->add_exception(
            ix_exc  = lx_exception
            is_item = ms_item ).
@@ -314,6 +333,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
+    RETURN.
   ENDMETHOD.
 
 
@@ -333,7 +353,9 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           lo_aff_factory       TYPE REF TO object,
           lv_json_as_xstring   TYPE xstring,
           lx_exception         TYPE REF TO cx_root,
-          lv_name              TYPE c LENGTH 120.
+          lv_name              TYPE c LENGTH 120,
+          lv_is_deletion       TYPE abap_bool VALUE abap_false,
+          lv_dummy             TYPE string.
 
     FIELD-SYMBOLS: <ls_intf_aff_obj>      TYPE any,
                    <ls_intf_aff_log>      TYPE any,
@@ -398,14 +420,15 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
         LOOP AT <ls_messages> ASSIGNING <ls_message>.
           ASSIGN COMPONENT 'MESSAGE' OF STRUCTURE <ls_message> TO <ls_msg>.
-          CHECK <ls_msg>-msgty = 'E'.
-          zcx_abapgit_exception=>raise_t100(
-             iv_msgid    = <ls_msg>-msgid
-             iv_msgno    = <ls_msg>-msgno
-             iv_msgv1    = <ls_msg>-msgv1
-             iv_msgv2    = <ls_msg>-msgv2
-             iv_msgv3    = <ls_msg>-msgv3
-             iv_msgv4    = <ls_msg>-msgv4  ).
+          IF <ls_msg>-msgty = 'E'.
+            zcx_abapgit_exception=>raise_t100(
+              iv_msgid    = <ls_msg>-msgid
+              iv_msgno    = <ls_msg>-msgno
+              iv_msgv1    = <ls_msg>-msgv1
+              iv_msgv2    = <ls_msg>-msgv2
+              iv_msgv3    = <ls_msg>-msgv3
+              iv_msgv4    = <ls_msg>-msgv4 ).
+          ENDIF.
         ENDLOOP.
 
         CALL METHOD lo_files_container->('IF_AFF_FILES_CONTAINER~GET_FILE')
@@ -414,16 +437,32 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           RECEIVING
             result = lo_object_json_file.
 
+        " avoid to serialize empty content (object was never activated, exists inactive only).
+        IF is_file_empty( lo_object_json_file ) = abap_true.
+          MESSAGE s821(eu) WITH lv_name INTO lv_dummy.
+          zcx_abapgit_exception=>raise_t100( ).
+        ENDIF.
+
         CALL METHOD lo_object_json_file->('IF_AFF_FILE~GET_CONTENT')
           RECEIVING
             result = lv_json_as_xstring.
 
-        mo_files->add_raw( iv_ext = 'json'
-                           iv_data = lv_json_as_xstring ).
+        zif_abapgit_object~mo_files->add_raw(
+          iv_ext = 'json'
+          iv_data = lv_json_as_xstring ).
 
       CATCH cx_root INTO lx_exception.
         zcx_abapgit_exception=>raise_with_text( lx_exception ).
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD is_file_empty.
+
+    CALL METHOD io_object_json_file->('IF_AFF_FILE~IS_DELETION')
+      RECEIVING
+        result = rv_is_empty.
 
   ENDMETHOD.
 ENDCLASS.

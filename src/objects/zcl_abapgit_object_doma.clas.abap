@@ -2,8 +2,6 @@ CLASS zcl_abapgit_object_doma DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -129,13 +127,14 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
 
   METHOD serialize_texts.
 
-    DATA: lv_name       TYPE ddobjname,
-          lv_index      TYPE i,
-          ls_dd01v      TYPE dd01v,
-          lt_dd07v      TYPE TABLE OF dd07v,
-          lt_i18n_langs TYPE TABLE OF langu,
-          lt_dd01_texts TYPE ty_dd01_texts,
-          lt_dd07_texts TYPE ty_dd07_texts.
+    DATA: lv_name            TYPE ddobjname,
+          lv_index           TYPE i,
+          ls_dd01v           TYPE dd01v,
+          lt_dd07v           TYPE TABLE OF dd07v,
+          lt_i18n_langs      TYPE TABLE OF langu,
+          lt_dd01_texts      TYPE ty_dd01_texts,
+          lt_dd07_texts      TYPE ty_dd07_texts,
+          lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
     FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
                    <ls_dd07v>     LIKE LINE OF lt_dd07v,
@@ -150,14 +149,17 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
     lv_name = ms_item-obj_name.
 
     " Collect additional languages, skip main lang - it was serialized already
+    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
     SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
       FROM dd01v
       WHERE domname = lv_name
+      AND ddlanguage IN lt_language_filter
       AND ddlanguage <> mv_language.                      "#EC CI_SUBRC
 
     SELECT DISTINCT ddlanguage AS langu APPENDING TABLE lt_i18n_langs
       FROM dd07v
       WHERE domname = lv_name
+      AND ddlanguage IN lt_language_filter
       AND ddlanguage <> mv_language.                      "#EC CI_SUBRC
 
     SORT lt_i18n_langs.
@@ -353,6 +355,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     DATA: lv_name    TYPE ddobjname,
+          lv_state   TYPE ddgotstate,
           ls_dd01v   TYPE dd01v,
           lv_masklen TYPE c LENGTH 4,
           lt_dd07v   TYPE TABLE OF dd07v.
@@ -364,8 +367,10 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
     CALL FUNCTION 'DDIF_DOMA_GET'
       EXPORTING
         name          = lv_name
+        state         = 'A'
         langu         = mv_language
       IMPORTING
+        gotstate      = lv_state
         dd01v_wa      = ls_dd01v
       TABLES
         dd07v_tab     = lt_dd07v
@@ -376,8 +381,8 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    IF ls_dd01v IS INITIAL.
-      zcx_abapgit_exception=>raise( |No active version found for { ms_item-obj_type } { ms_item-obj_name }| ).
+    IF ls_dd01v IS INITIAL OR lv_state <> 'A'.
+      RETURN.
     ENDIF.
 
     CLEAR: ls_dd01v-as4user,

@@ -7,9 +7,6 @@ CLASS zcl_abapgit_object_tabl DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_object .
-
-    ALIASES mo_files
-      FOR zif_abapgit_object~mo_files .
   PROTECTED SECTION.
     TYPES: BEGIN OF ty_segment_definition,
              segmentheader     TYPE edisegmhd,
@@ -269,8 +266,8 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
     lv_package = iv_package.
 
     LOOP AT lt_segment_definitions ASSIGNING <ls_segment_definition>.
-      <ls_segment_definition>-segmentheader-presp = cl_abap_syst=>get_user_name( ).
-      <ls_segment_definition>-segmentheader-pwork = cl_abap_syst=>get_user_name( ).
+      <ls_segment_definition>-segmentheader-presp = sy-uname.
+      <ls_segment_definition>-segmentheader-pwork = sy-uname.
 
       CALL FUNCTION 'SEGMENT_READ'
         EXPORTING
@@ -315,7 +312,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
     ENDLOOP.
 
-    lv_uname = cl_abap_syst=>get_user_name( ).
+    lv_uname = sy-uname.
 
     CALL FUNCTION 'TR_TADIR_INTERFACE'
       EXPORTING
@@ -542,11 +539,12 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
   METHOD serialize_texts.
 
-    DATA: lv_name       TYPE ddobjname,
-          lv_index      TYPE i,
-          ls_dd02v      TYPE dd02v,
-          lt_dd02_texts TYPE ty_dd02_texts,
-          lt_i18n_langs TYPE TABLE OF langu.
+    DATA: lv_name            TYPE ddobjname,
+          lv_index           TYPE i,
+          ls_dd02v           TYPE dd02v,
+          lt_dd02_texts      TYPE ty_dd02_texts,
+          lt_i18n_langs      TYPE TABLE OF langu,
+          lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
     FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
                    <ls_dd02_text> LIKE LINE OF lt_dd02_texts.
@@ -558,9 +556,11 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
     lv_name = ms_item-obj_name.
 
     " Collect additional languages, skip main lang - it was serialized already
+    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
     SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
       FROM dd02v
       WHERE tabname = lv_name
+      AND ddlanguage IN lt_language_filter
       AND ddlanguage <> mv_language.                      "#EC CI_SUBRC
 
     LOOP AT lt_i18n_langs ASSIGNING <lv_lang>.
@@ -723,7 +723,6 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
           lt_dd08v  TYPE TABLE OF dd08v,
           lt_dd35v  TYPE TABLE OF dd35v,
           lt_dd36m  TYPE dd36mttyp,
-          lv_refs   TYPE abap_bool,
           ls_extras TYPE ty_tabl_extras.
 
     FIELD-SYMBOLS: <ls_dd03p>      TYPE dd03p,
@@ -748,15 +747,6 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       IF sy-subrc = 0 AND <lg_roworcolst> IS INITIAL.
         <lg_roworcolst> = 'C'. "Reverse fix from serialize
       ENDIF.
-
-      " DDIC Step: Replace REF TO class/interface with generic reference to avoid cyclic dependency
-      LOOP AT lt_dd03p ASSIGNING <ls_dd03p> WHERE comptype = 'R' AND ( reftype = 'C' OR reftype = 'I' ).
-        IF iv_step = zif_abapgit_object=>gc_step_id-ddic.
-          <ls_dd03p>-rollname = 'OBJECT'.
-        ELSE.
-          lv_refs = abap_true.
-        ENDIF.
-      ENDLOOP.
 
       " Number fields sequentially and fill table name
       LOOP AT lt_dd03p ASSIGNING <ls_dd03p>.
@@ -793,7 +783,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
         CLEAR: lt_dd08v, lt_dd35v, lt_dd36m.
       ENDIF.
 
-      IF iv_step = zif_abapgit_object=>gc_step_id-late AND lv_refs = abap_false
+      IF iv_step = zif_abapgit_object=>gc_step_id-late
         AND lines( lt_dd35v ) = 0 AND lines( lt_dd08v ) = 0.
         RETURN. " already active
       ENDIF.
@@ -915,7 +905,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_active.
-    rv_active = is_active_ddic( ).
+    rv_active = is_active( ).
   ENDMETHOD.
 
 

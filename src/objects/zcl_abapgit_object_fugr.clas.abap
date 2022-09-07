@@ -2,8 +2,6 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -144,7 +142,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
 
   METHOD check_rfc_parameters.
@@ -207,7 +205,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
     LOOP AT it_functions ASSIGNING <ls_func>.
 
-      lt_source = mo_files->read_abap( iv_extra = <ls_func>-funcname ).
+      lt_source = zif_abapgit_object~mo_files->read_abap( iv_extra = <ls_func>-funcname ).
 
       lv_area = ms_item-obj_name.
 
@@ -337,9 +335,9 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       ENDIF.
 
       TRY.
-          lt_source = mo_files->read_abap( iv_extra = <lv_include> ).
+          lt_source = zif_abapgit_object~mo_files->read_abap( iv_extra = <lv_include> ).
 
-          lo_xml = mo_files->read_xml( <lv_include> ).
+          lo_xml = zif_abapgit_object~mo_files->read_xml( <lv_include> ).
 
           lo_xml->read( EXPORTING iv_name = 'PROGDIR'
                         CHANGING cg_data = ls_progdir ).
@@ -508,7 +506,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
     LOOP AT lt_includes ASSIGNING <lv_include>.
 
-      lo_xml = mo_files->read_xml( <lv_include> ).
+      lo_xml = zif_abapgit_object~mo_files->read_xml( <lv_include> ).
 
       lo_xml->read( EXPORTING iv_name = 'PROGDIR'
                     CHANGING cg_data = ls_progdir ).
@@ -652,6 +650,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     ENDLOOP.
 
     APPEND lv_program TO rt_includes.
+    SORT rt_includes.
 
     mt_includes_cache = rt_includes.
 
@@ -854,11 +853,15 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       APPEND ls_function TO rt_functions.
 
       IF NOT lt_new_source IS INITIAL.
-        mo_files->add_abap( iv_extra = <ls_func>-funcname
-                            it_abap  = lt_new_source ).
+        strip_generation_comments( CHANGING ct_source = lt_new_source ).
+        zif_abapgit_object~mo_files->add_abap(
+          iv_extra = <ls_func>-funcname
+          it_abap  = lt_new_source ).
       ELSE.
-        mo_files->add_abap( iv_extra = <ls_func>-funcname
-                            it_abap  = lt_source ).
+        strip_generation_comments( CHANGING ct_source = lt_source ).
+        zif_abapgit_object~mo_files->add_abap(
+          iv_extra = <ls_func>-funcname
+          it_abap  = lt_source ).
       ENDIF.
 
     ENDLOOP.
@@ -879,7 +882,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
 * todo, filename is not correct, a include can be used in several programs
       serialize_program( is_item    = ms_item
-                         io_files   = mo_files
+                         io_files   = zif_abapgit_object~mo_files
                          iv_program = <lv_include>
                          iv_extra   = <lv_include> ).
 

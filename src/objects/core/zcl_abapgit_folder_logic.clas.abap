@@ -88,9 +88,9 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
     ELSE.
       lv_parentcl = get_parent( iv_package ).
 
-      IF lv_parentcl IS INITIAL.
-        zcx_abapgit_exception=>raise( |error, expected parent package, { iv_package }| ).
-      ELSE.
+      " If the parent package can not be determined, we return an initial path and handle
+      " it outside of this class (in zcl_abapgit_file_status)
+      IF lv_parentcl IS NOT INITIAL.
         lv_folder_logic = io_dot->get_folder_logic( ).
         CASE lv_folder_logic.
           WHEN zif_abapgit_dot_abapgit=>c_folder_logic-full.
@@ -178,7 +178,7 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
       ELSE.
         ls_package-devclass = iv_top.
         ls_package-ctext = iv_top.
-        ls_package-as4user = cl_abap_syst=>get_user_name( ).
+        ls_package-as4user = sy-uname.
         zcl_abapgit_factory=>get_sap_package( iv_top )->create( ls_package ).
       ENDIF.
     ENDIF.

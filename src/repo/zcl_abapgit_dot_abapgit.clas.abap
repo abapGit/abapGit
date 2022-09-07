@@ -280,7 +280,11 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
 
     "unicode systems always add the byte order mark to the xml, while non-unicode does not
     "this code will always add the byte order mark if it is not in the xml
-    lv_mark = zcl_abapgit_convert=>xstring_to_string_utf8( cl_abap_char_utilities=>byte_order_mark_utf8 ).
+    TRY.
+        lv_mark = zcl_abapgit_convert=>xstring_to_string_utf8( cl_abap_char_utilities=>byte_order_mark_utf8 ).
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
+* In non-unicode systems, the byte order mark throws an error
+    ENDTRY.
     IF lv_xml(1) <> lv_mark.
       CONCATENATE lv_mark lv_xml INTO lv_xml.
     ENDIF.

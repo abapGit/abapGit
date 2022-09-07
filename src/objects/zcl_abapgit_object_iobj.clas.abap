@@ -2,8 +2,6 @@ CLASS zcl_abapgit_object_iobj DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
     METHODS:
@@ -17,7 +15,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_IOBJ IMPLEMENTATION.
+CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
 
   METHOD clear_field.
@@ -55,14 +53,20 @@ CLASS ZCL_ABAPGIT_OBJECT_IOBJ IMPLEMENTATION.
 
     CALL FUNCTION 'RSD_IOBJ_GET'
       EXPORTING
-        i_iobjnm  = lv_objna
-        i_objvers = 'A'
+        i_iobjnm         = lv_objna
+        i_objvers        = 'A'
       IMPORTING
-        e_s_viobj = <lg_viobj>.
-
-    ASSIGN COMPONENT 'TSTPNM' OF STRUCTURE <lg_viobj> TO <lg_tstpnm>.
-
-    rv_user = <lg_tstpnm>.
+        e_s_viobj        = <lg_viobj>
+      EXCEPTIONS
+        iobj_not_found   = 1
+        illegal_input    = 2
+        bct_comp_invalid = 3
+        not_authorized   = 4
+        OTHERS           = 5.
+    IF sy-subrc = 0.
+      ASSIGN COMPONENT 'TSTPNM' OF STRUCTURE <lg_viobj> TO <lg_tstpnm>.
+      rv_user = <lg_tstpnm>.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -208,30 +212,48 @@ CLASS ZCL_ABAPGIT_OBJECT_IOBJ IMPLEMENTATION.
 
     TRY.
 
-        CALL FUNCTION 'BAPI_IOBJ_CREATE'
-          EXPORTING
-            details                  = <lg_details>
-          IMPORTING
-            return                   = ls_return
-          TABLES
-            compounds                = <lt_compounds>
-            attributes               = <lt_attributes>
-            navigationattributes     = <lt_navigationattributes>
-            atrnavinfoprovider       = <lt_atrnavinfoprovider>
-            hierarchycharacteristics = <lt_hierarchycharacteristics>
-            elimination              = <lt_elimination>
-            hanafieldsmapping        = <lt_hanafieldsmapping>
-            xxlattributes            = <lt_xxlattributes>.
-
-        IF ls_return-type = 'E'.
-          zcx_abapgit_exception=>raise( |Error when creating iobj: { ls_return-message }| ).
-        ENDIF.
-
         ASSIGN
           COMPONENT 'INFOOBJECT'
           OF STRUCTURE <lg_details>
           TO <lg_infoobject>.
         ASSERT sy-subrc = 0.
+
+        IF zif_abapgit_object~exists( ) = abap_false.
+          CALL FUNCTION 'BAPI_IOBJ_CREATE'
+            EXPORTING
+              details                  = <lg_details>
+            IMPORTING
+              return                   = ls_return
+            TABLES
+              compounds                = <lt_compounds>
+              attributes               = <lt_attributes>
+              navigationattributes     = <lt_navigationattributes>
+              atrnavinfoprovider       = <lt_atrnavinfoprovider>
+              hierarchycharacteristics = <lt_hierarchycharacteristics>
+              elimination              = <lt_elimination>
+              hanafieldsmapping        = <lt_hanafieldsmapping>
+              xxlattributes            = <lt_xxlattributes>.
+        ELSE.
+          CALL FUNCTION 'BAPI_IOBJ_CHANGE'
+            EXPORTING
+              infoobject               = <lg_infoobject>
+              details                  = <lg_details>
+            IMPORTING
+              return                   = ls_return
+            TABLES
+              compounds                = <lt_compounds>
+              attributes               = <lt_attributes>
+              navigationattributes     = <lt_navigationattributes>
+              atrnavinfoprovider       = <lt_atrnavinfoprovider>
+              hierarchycharacteristics = <lt_hierarchycharacteristics>
+              elimination              = <lt_elimination>
+              hanafieldsmapping        = <lt_hanafieldsmapping>
+              xxlattributes            = <lt_xxlattributes>.
+        ENDIF.
+
+        IF ls_return-type = 'E'.
+          zcx_abapgit_exception=>raise( |Error when creating iobj: { ls_return-message }| ).
+        ENDIF.
 
         APPEND <lg_infoobject> TO <lt_infoobjects>.
 
@@ -336,6 +358,7 @@ CLASS ZCL_ABAPGIT_OBJECT_IOBJ IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
+    " Covered by ZCL_ABAPGIT_OBJECTS=>JUMP
   ENDMETHOD.
 
 

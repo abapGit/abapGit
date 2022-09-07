@@ -3,9 +3,9 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOINTERF>
-    <CLSNAME>ZIF_ABAPGIT_TAG_POPUPS</CLSNAME>
+    <CLSNAME>ZIF_ABAPGIT_AFF_TYPES_V1</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit tag popups</DESCRIPT>
+    <DESCRIPT>General types reusable in AFF</DESCRIPT>
     <EXPOSURE>2</EXPOSURE>
     <STATE>1</STATE>
     <UNICODE>X</UNICODE>

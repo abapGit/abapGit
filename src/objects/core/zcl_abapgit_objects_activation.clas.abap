@@ -28,6 +28,13 @@ CLASS zcl_abapgit_objects_activation DEFINITION
         !iv_obj_type     TYPE trobjtype
       RETURNING
         VALUE(rv_result) TYPE abap_bool .
+    CLASS-METHODS is_active
+      IMPORTING
+        !is_item         TYPE zif_abapgit_definitions=>ty_item
+      RETURNING
+        VALUE(rv_active) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -36,6 +43,20 @@ CLASS zcl_abapgit_objects_activation DEFINITION
         object  TYPE trobjtype,
         clsname TYPE seoclsname,
       END OF ty_classes.
+
+    CONSTANTS:
+      c_domain     TYPE c LENGTH 9  VALUE 'DOMA DOMD',
+      c_types      TYPE c LENGTH 50 VALUE 'DTEL DTED TABL TABD SQLT SQLD TTYP TTYD VIEW VIED',
+      c_technset   TYPE c LENGTH 24 VALUE 'TABT VIET SQTT INDX XINX',
+      c_f4_objects TYPE c LENGTH 35 VALUE 'SHLP SHLD MCOB MCOD MACO MACD MCID',
+      c_enqueue    TYPE c LENGTH 9  VALUE 'ENQU ENQD',
+      c_sqsc       TYPE c LENGTH 4  VALUE 'SQSC',
+      c_stob       TYPE c LENGTH 4  VALUE 'STOB',
+      c_ntab       TYPE c LENGTH 14 VALUE 'NTTT NTTB NTDT',
+      c_ddls       TYPE c LENGTH 14 VALUE 'DDLS DRUL DTDC',
+      c_switches   TYPE c LENGTH 24 VALUE 'SF01 SF02 SFSW SFBS SFBF',
+      c_para       TYPE c LENGTH 4  VALUE 'PARA', " can be referenced by DTEL
+      c_enhd       TYPE c LENGTH 4  VALUE 'ENHD'.
 
     CLASS-DATA:
       gt_classes TYPE STANDARD TABLE OF ty_classes WITH DEFAULT KEY .
@@ -71,6 +92,38 @@ CLASS zcl_abapgit_objects_activation DEFINITION
         !ii_log     TYPE REF TO zif_abapgit_log
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS add_activation_errors_to_log
+      IMPORTING
+        !io_checklist       TYPE REF TO cl_wb_checklist
+        !ii_log             TYPE REF TO zif_abapgit_log
+      RETURNING
+        VALUE(rv_try_again) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS is_non_ddic_active
+      IMPORTING
+        !is_item         TYPE zif_abapgit_definitions=>ty_item
+      RETURNING
+        VALUE(rv_active) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS is_ddic_active
+      IMPORTING
+        !is_item         TYPE zif_abapgit_definitions=>ty_item
+      RETURNING
+        VALUE(rv_active) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS get_ddic_type
+      IMPORTING
+        !iv_obj_type TYPE clike
+        !iv_obj_name TYPE clike
+      EXPORTING
+        !ev_type     TYPE ddobjtyp
+        !ev_name     TYPE ddobjname
+        !ev_id       TYPE ddobjectid
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -116,17 +169,16 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
         CONTINUE.
       ENDIF.
       ls_gentab-tabix = sy-tabix.
-      ls_gentab-type = <ls_object>-object.
-      ls_gentab-name = <ls_object>-obj_name.
-      IF ls_gentab-type = 'INDX' OR ls_gentab-type = 'XINX' OR ls_gentab-type = 'MCID'.
-        CALL FUNCTION 'DD_E071_TO_DD'
-          EXPORTING
-            object   = <ls_object>-object
-            obj_name = <ls_object>-obj_name
-          IMPORTING
-            name     = ls_gentab-name
-            id       = ls_gentab-indx.
-      ENDIF.
+
+      get_ddic_type(
+        EXPORTING
+          iv_obj_type = <ls_object>-object
+          iv_obj_name = <ls_object>-obj_name
+        IMPORTING
+          ev_type     = ls_gentab-type
+          ev_name     = ls_gentab-name
+          ev_id       = ls_gentab-indx ).
+
       INSERT ls_gentab INTO TABLE lt_gentab.
     ENDLOOP.
 
@@ -205,8 +257,12 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
 
   METHOD activate_old.
 
-    DATA: lv_popup TYPE abap_bool,
-          lv_no_ui TYPE abap_bool.
+    DATA:
+      lv_popup     TYPE abap_bool,
+      lv_no_ui     TYPE abap_bool,
+      lv_try_again TYPE abap_bool,
+      lv_msg       TYPE string,
+      lo_checklist TYPE REF TO cl_wb_checklist.
 
     IF gt_objects IS NOT INITIAL.
 
@@ -228,6 +284,8 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
               activate_ddic_objects  = iv_ddic
               with_popup             = lv_popup
               ui_decoupled           = lv_no_ui
+            IMPORTING
+              p_checklist            = lo_checklist
             TABLES
               objects                = gt_objects
             EXCEPTIONS
@@ -240,6 +298,8 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
             EXPORTING
               activate_ddic_objects  = iv_ddic
               with_popup             = lv_popup
+            IMPORTING
+              p_checklist            = lo_checklist
             TABLES
               objects                = gt_objects
             EXCEPTIONS
@@ -252,7 +312,16 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
         WHEN 1 OR 3 OR 4.
           zcx_abapgit_exception=>raise_t100( ).
         WHEN 2.
-          zcx_abapgit_exception=>raise( 'Activation cancelled. Check the inactive objects.' ).
+          lv_msg = 'Check the log and inactive objects.'.
+          IF lv_popup = abap_false.
+            lv_try_again = add_activation_errors_to_log(
+              ii_log       = ii_log
+              io_checklist = lo_checklist ).
+            IF lv_try_again = abap_true.
+              lv_msg = 'Turn on "Activation Popup" in "Personal Settings" and try again'.
+            ENDIF.
+          ENDIF.
+          zcx_abapgit_exception=>raise( |Activation cancelled. { lv_msg }| ).
       ENDCASE.
 
     ENDIF.
@@ -279,6 +348,39 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
       <ls_object>-obj_name   = iv_name.
       <ls_object>-delet_flag = iv_delete.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD add_activation_errors_to_log.
+
+    DATA:
+      ls_item    TYPE zif_abapgit_definitions=>ty_item,
+      lt_message TYPE swbme_error_tab.
+
+    FIELD-SYMBOLS:
+      <lv_msg>     TYPE string,
+      <ls_message> LIKE LINE OF lt_message.
+
+    io_checklist->get_error_messages( IMPORTING p_error_tab = lt_message ).
+
+    LOOP AT lt_message ASSIGNING <ls_message> WHERE mtype = 'E'.
+      " When activting without popup, includes used in multiple main programs cause error
+      " Run again WITH activation popup (see abapGit, Personal Settings)
+      IF <ls_message>-message-msgid = 'EU' AND <ls_message>-message-msgno = '404'.
+        rv_try_again = abap_true.
+      ENDIF.
+      CLEAR ls_item.
+      IF strlen( <ls_message>-object_text ) > 5.
+        ls_item-obj_type = <ls_message>-object_text(4).
+        ls_item-obj_name = <ls_message>-object_text+5(*).
+      ENDIF.
+      LOOP AT <ls_message>-mtext ASSIGNING <lv_msg>.
+        ii_log->add_error(
+          iv_msg  = <lv_msg>
+          is_item = ls_item ).
+      ENDLOOP.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -334,44 +436,141 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_ddic_type.
+
+    DATA lv_obj_name TYPE e071-obj_name.
+
+    ev_type = iv_obj_type.
+
+    IF ev_type = 'INDX' OR ev_type = 'XINX' OR ev_type = 'MCID'.
+      lv_obj_name = iv_obj_name. "cast
+
+      CALL FUNCTION 'DD_E071_TO_DD'
+        EXPORTING
+          object        = ev_type
+          obj_name      = lv_obj_name
+        IMPORTING
+          name          = ev_name
+          id            = ev_id
+        EXCEPTIONS
+          illegal_input = 1
+          OTHERS        = 2.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+    ELSE.
+      ev_name = iv_obj_name.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD is_active.
+
+    " Checks if object is active or not
+    "
+    " Note: If object does not exist, this method returns true
+    " is_not_inactive might be a better name but we avoid the double negative
+
+    IF is_ddic_type( is_item-obj_type ) = abap_true
+      AND c_para     NS is_item-obj_type
+      AND c_switches NS is_item-obj_type.
+      rv_active = is_ddic_active( is_item ).
+    ELSE.
+      rv_active = is_non_ddic_active( is_item ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD is_ddic_active.
+
+    DATA:
+      lv_type  TYPE ddobjtyp,
+      lv_name  TYPE ddobjname,
+      lv_id    TYPE ddobjectid,
+      lv_state TYPE ddgotstate.
+
+    get_ddic_type(
+      EXPORTING
+        iv_obj_type = is_item-obj_type
+        iv_obj_name = is_item-obj_name
+      IMPORTING
+        ev_type     = lv_type
+        ev_name     = lv_name
+        ev_id       = lv_id ).
+
+    " Check if an inactive version of the DDIC object exists
+    " state = 'A' checks if an active version exists but does not detect new or modified objects
+    " state = 'M' checks for all possible versions so we can find out if an inactive one exists
+    " See documentation of the function module
+    CALL FUNCTION 'DDIF_STATE_GET'
+      EXPORTING
+        type          = lv_type
+        name          = lv_name
+        id            = lv_id
+        state         = 'M'
+      IMPORTING
+        gotstate      = lv_state
+      EXCEPTIONS
+        illegal_input = 1
+        OTHERS        = 2.
+
+    rv_active = boolc( sy-subrc = 0 AND ( lv_state = '' OR lv_state = 'A' ) ).
+
+  ENDMETHOD.
+
+
   METHOD is_ddic_type.
 
     " Determine if object can be handled by mass activation (see RADMASUTC form ma_tab_check)
 
-    CONSTANTS:
-      lc_domain     TYPE c LENGTH 9  VALUE 'DOMA DOMD',
-      lc_types      TYPE c LENGTH 50 VALUE 'DTEL DTED TABL TABD SQLT SQLD TTYP TTYD VIEW VIED',
-      lc_technset   TYPE c LENGTH 24 VALUE 'TABT VIET SQTT INDX XINX',
-      lc_f4_objects TYPE c LENGTH 35 VALUE 'SHLP SHLD MCOB MCOD MACO MACD MCID',
-      lc_enqueue    TYPE c LENGTH 9  VALUE 'ENQU ENQD',
-      lc_sqsc       TYPE c LENGTH 4  VALUE 'SQSC',
-      lc_stob       TYPE c LENGTH 4  VALUE 'STOB',
-      lc_ntab       TYPE c LENGTH 14 VALUE 'NTTT NTTB NTDT',
-      lc_ddls       TYPE c LENGTH 14 VALUE 'DDLS DRUL DTDC',
-      lc_switches   TYPE c LENGTH 24 VALUE 'SF01 SF02 SFSW SFBS SFBF',
-      lc_para       TYPE c LENGTH 4  VALUE 'PARA', " can be referenced by DTEL
-      lc_enhd       TYPE c LENGTH 4  VALUE 'ENHD'.
-
     rv_result = abap_true.
-    IF lc_domain   NS iv_obj_type AND lc_types      NS iv_obj_type AND
-       lc_technset NS iv_obj_type AND lc_f4_objects NS iv_obj_type AND
-       lc_enqueue  NS iv_obj_type AND lc_sqsc       NS iv_obj_type AND
-       lc_stob     NS iv_obj_type AND lc_ntab       NS iv_obj_type AND
-       lc_ddls     NS iv_obj_type AND lc_para       NS iv_obj_type AND
-       lc_switches NS iv_obj_type AND iv_obj_type <> lc_enhd.
+
+    IF c_domain   NS iv_obj_type AND c_types      NS iv_obj_type AND
+       c_technset NS iv_obj_type AND c_f4_objects NS iv_obj_type AND
+       c_enqueue  NS iv_obj_type AND c_sqsc       NS iv_obj_type AND
+       c_stob     NS iv_obj_type AND c_ntab       NS iv_obj_type AND
+       c_ddls     NS iv_obj_type AND c_para       NS iv_obj_type AND
+       c_switches NS iv_obj_type AND iv_obj_type <> c_enhd.
       rv_result = abap_false.
     ENDIF.
 
   ENDMETHOD.
 
 
+  METHOD is_non_ddic_active.
+
+    DATA:
+      lt_messages TYPE STANDARD TABLE OF sprot_u WITH DEFAULT KEY,
+      ls_e071     TYPE e071,
+      lt_e071     TYPE STANDARD TABLE OF e071 WITH DEFAULT KEY.
+
+    ls_e071-object   = is_item-obj_type.
+    ls_e071-obj_name = is_item-obj_name.
+    INSERT ls_e071 INTO TABLE lt_e071.
+
+    CALL FUNCTION 'RS_INACTIVE_OBJECTS_WARNING'
+      EXPORTING
+        suppress_protocol         = abap_false
+        with_program_includes     = abap_false
+        suppress_dictionary_check = abap_false
+      TABLES
+        p_e071                    = lt_e071
+        p_xmsg                    = lt_messages.
+
+    rv_active = boolc( lt_messages IS INITIAL ).
+
+  ENDMETHOD.
+
+
   METHOD update_where_used.
 
-    DATA: ls_class    LIKE LINE OF gt_classes,
-          lo_cross    TYPE REF TO cl_wb_crossreference,
-          ls_item     TYPE zif_abapgit_definitions=>ty_item,
-          lv_error    TYPE c LENGTH 1,
-          lv_include  TYPE programm.
+    DATA: ls_class   LIKE LINE OF gt_classes,
+          lo_cross   TYPE REF TO cl_wb_crossreference,
+          ls_item    TYPE zif_abapgit_definitions=>ty_item,
+          lv_error   TYPE c LENGTH 1,
+          lv_include TYPE programm.
 
     LOOP AT gt_classes INTO ls_class.
       CASE ls_class-object.

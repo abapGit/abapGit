@@ -448,6 +448,10 @@ CLASS zcl_abapgit_object_fdt0 IMPLEMENTATION.
 
         ELSE.
 
+          tadir_insert( iv_package ).
+
+          corr_insert( iv_package ).
+
           cl_fdt_delete_handling=>mark_for_delete_via_job(
             EXPORTING
               is_object_category_sel     = ls_object_category_sel
@@ -502,6 +506,7 @@ CLASS zcl_abapgit_object_fdt0 IMPLEMENTATION.
     DATA lo_dexc TYPE REF TO if_fdt_data_exchange.
     DATA lx_fdt_input TYPE REF TO cx_fdt_input.
     DATA lo_dom_tree TYPE REF TO if_ixml_document.
+    DATA lv_transportable_package TYPE abap_bool.
     DATA lv_is_local TYPE abap_bool.
     DATA lt_message TYPE if_fdt_types=>t_message.
     DATA lv_create TYPE abap_bool.
@@ -519,6 +524,14 @@ CLASS zcl_abapgit_object_fdt0 IMPLEMENTATION.
       CHANGING
         co_dom_tree = lo_dom_tree ).
 
+    lv_transportable_package = zcl_abapgit_factory=>get_sap_package( iv_package )->are_changes_recorded_in_tr_req( ).
+
+    IF lv_transportable_package = abap_true AND lv_is_local = abap_true.
+      zcx_abapgit_exception=>raise( 'Local applications can only be imported into a local package' ).
+    ELSEIF lv_transportable_package = abap_false AND lv_is_local = abap_false.
+      zcx_abapgit_exception=>raise( 'Transportable application can only be imported into transportable package' ).
+    ENDIF.
+
     lo_dexc = cl_fdt_factory=>if_fdt_factory~get_instance( )->get_data_exchange( ).
 
     TRY.
@@ -535,6 +548,10 @@ CLASS zcl_abapgit_object_fdt0 IMPLEMENTATION.
               et_message  = lt_message ).
 
         ELSE. "Transportable Object
+
+          tadir_insert( iv_package ).
+
+          corr_insert( iv_package ).
 
           lo_dexc->import_xml(
             EXPORTING

@@ -30,6 +30,15 @@ CLASS zcl_abapgit_popups DEFINITION
     TYPES:
       ty_lt_fields TYPE STANDARD TABLE OF sval WITH DEFAULT KEY .
 
+    TYPES:
+      BEGIN OF ty_commit_value_tab,
+        commit   TYPE zif_abapgit_definitions=>ty_sha1,
+        message  TYPE c LENGTH 100,
+        datetime TYPE c LENGTH 20,
+      END OF ty_commit_value_tab.
+    TYPES:
+      ty_commit_value_tab_tt TYPE STANDARD TABLE OF ty_commit_value_tab WITH DEFAULT KEY.
+
     CONSTANTS c_fieldname_selected TYPE abap_componentdescr-name VALUE `SELECTED` ##NO_TEXT.
     CONSTANTS c_answer_cancel      TYPE c LENGTH 1 VALUE 'A' ##NO_TEXT.
 
@@ -56,16 +65,16 @@ CLASS zcl_abapgit_popups DEFINITION
       EXPORTING
         !et_list TYPE INDEX TABLE .
     METHODS on_select_list_link_click
-        FOR EVENT link_click OF cl_salv_events_table
+      FOR EVENT link_click OF cl_salv_events_table
       IMPORTING
         !row
         !column .
     METHODS on_select_list_function_click
-        FOR EVENT added_function OF cl_salv_events_table
+      FOR EVENT added_function OF cl_salv_events_table
       IMPORTING
         !e_salv_function .
     METHODS on_double_click
-        FOR EVENT double_click OF cl_salv_events_table
+      FOR EVENT double_click OF cl_salv_events_table
       IMPORTING
         !row
         !column .
@@ -81,6 +90,15 @@ CLASS zcl_abapgit_popups DEFINITION
         !ct_fields         TYPE ty_lt_fields
       RAISING
         zcx_abapgit_exception .
+    METHODS commit_list_build
+      IMPORTING
+        !iv_repo_url    TYPE string
+        !iv_branch_name TYPE string
+      EXPORTING
+        !et_value_tab   TYPE ty_commit_value_tab_tt
+        !et_commits     TYPE zif_abapgit_definitions=>ty_commit_tt
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -128,6 +146,54 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
     rs_position-end_column = rs_position-start_column + iv_width.
     rs_position-end_row = rs_position-start_row + iv_height.
+
+  ENDMETHOD.
+
+
+  METHOD commit_list_build.
+
+    DATA:
+      lv_unix_time   TYPE zcl_abapgit_time=>ty_unixtime,
+      lv_date        TYPE d,
+      lv_date_string TYPE c LENGTH 12,
+      lv_time        TYPE t,
+      lv_time_string TYPE c LENGTH 10.
+
+    FIELD-SYMBOLS:
+      <ls_commit>    TYPE zif_abapgit_definitions=>ty_commit,
+      <ls_value_tab> TYPE ty_commit_value_tab.
+
+    CLEAR: et_commits, et_value_tab.
+
+    et_commits = zcl_abapgit_git_commit=>get_by_branch( iv_branch_name  = iv_branch_name
+                                                        iv_repo_url     = iv_repo_url
+                                                        iv_deepen_level = 99
+                                                        iv_sorted       = abap_false )-commits.
+
+    IF et_commits IS INITIAL.
+      zcx_abapgit_exception=>raise( |No commits are available in this branch.| ).
+    ENDIF.
+
+    SORT et_commits BY time DESCENDING.
+
+    LOOP AT et_commits ASSIGNING <ls_commit>.
+
+      APPEND INITIAL LINE TO et_value_tab ASSIGNING <ls_value_tab>.
+      <ls_value_tab>-commit  = <ls_commit>-sha1.
+      <ls_value_tab>-message = <ls_commit>-message.
+      lv_unix_time = <ls_commit>-time.
+      zcl_abapgit_time=>get_utc(
+        EXPORTING
+          iv_unix = lv_unix_time
+        IMPORTING
+          ev_time = lv_time
+          ev_date = lv_date ).
+      WRITE: lv_date TO lv_date_string,
+             lv_time TO lv_time_string.
+      <ls_value_tab>-datetime = |{ lv_date_string }, | &&
+                                |{ lv_time_string }|.
+
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -464,13 +530,13 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     ENDIF.
 
     ms_position = center(
-      iv_width  = 24
+      iv_width  = 30
       iv_height = lines( lt_selection ) ).
 
     CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
       EXPORTING
-        textline1  = 'Select branch'
-        titel      = 'Select branch'
+        titel      = 'Select Branch'
+        textline1  = 'Select a branch'
         start_col  = ms_position-start_column
         start_row  = ms_position-start_row
         cursorline = lv_default
@@ -624,6 +690,64 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_popups~commit_list_popup.
+
+    DATA:
+      lt_commits         TYPE zif_abapgit_definitions=>ty_commit_tt,
+      lt_value_tab       TYPE ty_commit_value_tab_tt,
+      lt_selected_values TYPE ty_commit_value_tab_tt,
+      lt_columns         TYPE zif_abapgit_definitions=>ty_alv_column_tt.
+
+    FIELD-SYMBOLS:
+      <ls_value_tab> TYPE ty_commit_value_tab,
+      <ls_column>    TYPE zif_abapgit_definitions=>ty_alv_column.
+
+    commit_list_build(
+      EXPORTING
+        iv_branch_name = iv_branch_name
+        iv_repo_url    = iv_repo_url
+      IMPORTING
+        et_value_tab   = lt_value_tab
+        et_commits     = lt_commits ).
+
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name   = 'COMMIT'.
+    <ls_column>-text   = 'Hash'.
+    <ls_column>-length = 8.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'MESSAGE'.
+    <ls_column>-text = 'Message'.
+    <ls_column>-length = 60.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'DATETIME'.
+    <ls_column>-text = 'Datetime'.
+    <ls_column>-length = 17.
+
+    zif_abapgit_popups~popup_to_select_from_list(
+      EXPORTING
+        it_list               = lt_value_tab
+        iv_title              = |Select a commit|
+        iv_end_column         = 100
+        iv_striped_pattern    = abap_true
+        iv_optimize_col_width = abap_false
+        iv_selection_mode     = if_salv_c_selection_mode=>single
+        it_columns_to_display = lt_columns
+      IMPORTING
+        et_list               = lt_selected_values ).
+
+    IF lt_selected_values IS INITIAL.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
+    ENDIF.
+
+    READ TABLE lt_selected_values ASSIGNING <ls_value_tab> INDEX 1.
+    ASSERT sy-subrc = 0.
+
+    READ TABLE lt_commits INTO rs_commit WITH KEY sha1 = <ls_value_tab>-commit.
+    ASSERT sy-subrc = 0.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_popups~create_branch_popup.
 
     DATA: lt_fields TYPE TABLE OF sval.
@@ -657,28 +781,46 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
   METHOD zif_abapgit_popups~popup_folder_logic.
 
-    DATA: lt_fields       TYPE TABLE OF sval.
-    DATA: lv_folder_logic TYPE spo_value.
+    DATA:
+      lt_selection TYPE TABLE OF spopli,
+      lv_answer    TYPE c LENGTH 1.
 
-    CLEAR: rv_folder_logic.
+    FIELD-SYMBOLS: <ls_sel> LIKE LINE OF lt_selection.
 
-    add_field( EXPORTING iv_tabname   = 'TDEVC'
-                         iv_fieldname = 'INTSYS'
-                         iv_fieldtext = 'Folder logic'
-                         iv_value     = 'PREFIX'
-               CHANGING  ct_fields    = lt_fields ).
+    APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
+    <ls_sel>-selflag   = abap_true.
+    <ls_sel>-varoption = zif_abapgit_dot_abapgit=>c_folder_logic-prefix.
 
-    TRY.
+    APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
+    <ls_sel>-varoption = zif_abapgit_dot_abapgit=>c_folder_logic-full.
 
-        _popup_3_get_values( EXPORTING iv_popup_title    = 'Export package'
-                                       iv_no_value_check = abap_true
-                             IMPORTING ev_value_1        = lv_folder_logic
-                             CHANGING  ct_fields         = lt_fields ).
+    APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
+    <ls_sel>-varoption = zif_abapgit_dot_abapgit=>c_folder_logic-mixed.
 
-        rv_folder_logic = to_upper( lv_folder_logic ).
+    CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
+      EXPORTING
+        titel     = 'Folder logic'
+        textline1 = 'Select folder logic'
+        start_col = ms_position-start_column
+        start_row = ms_position-start_row
+      IMPORTING
+        answer    = lv_answer
+      TABLES
+        t_spopli  = lt_selection
+      EXCEPTIONS
+        OTHERS    = 1.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Error from POPUP_TO_DECIDE_LIST' ).
+    ENDIF.
 
-      CATCH zcx_abapgit_cancel.
-    ENDTRY.
+    IF lv_answer = c_answer_cancel.
+      zcx_abapgit_cancel=>raise( |Canceled| ).
+    ENDIF.
+
+    READ TABLE lt_selection ASSIGNING <ls_sel> WITH KEY selflag = abap_true.
+    ASSERT sy-subrc = 0.
+
+    rv_folder_logic = <ls_sel>-varoption.
 
   ENDMETHOD.
 
@@ -1046,7 +1188,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     " If default transport is set and its type matches, then use it as default for the popup
     ls_e070use = zcl_abapgit_default_transport=>get_instance( )->get( ).
 
-    IF ls_e070use-trfunction = is_transport_type-request AND iv_use_default = abap_true.
+    IF ( ls_e070use-trfunction = is_transport_type-request OR ls_e070use-trfunction IS INITIAL )
+      AND iv_use_default_transport = abap_true.
       lv_order = ls_e070use-ordernum.
     ENDIF.
 
@@ -1073,6 +1216,79 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     ELSEIF sy-subrc > 1.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_popups~tag_list_popup.
+
+    DATA: lo_branches  TYPE REF TO zcl_abapgit_git_branch_list,
+          lt_tags      TYPE zif_abapgit_definitions=>ty_git_branch_list_tt,
+          ls_branch    TYPE zif_abapgit_definitions=>ty_git_branch,
+          lv_answer    TYPE c LENGTH 1,
+          lv_default   TYPE i,
+          lv_tag       TYPE string,
+          lt_selection TYPE TABLE OF spopli.
+
+    FIELD-SYMBOLS: <ls_sel> LIKE LINE OF lt_selection,
+                   <ls_tag> LIKE LINE OF lt_tags.
+
+
+    lo_branches = zcl_abapgit_git_transport=>branches( iv_url ).
+    lt_tags     = lo_branches->get_tags_only( ).
+
+    LOOP AT lt_tags ASSIGNING <ls_tag> WHERE name NP '*^{}'.
+
+      APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
+      <ls_sel>-varoption = zcl_abapgit_git_tag=>remove_tag_prefix( <ls_tag>-name ).
+
+    ENDLOOP.
+
+    IF lt_selection IS INITIAL.
+      zcx_abapgit_exception=>raise( 'No tags are available to select' ).
+    ENDIF.
+
+    ms_position = center(
+      iv_width  = 30
+      iv_height = lines( lt_selection ) ).
+
+    CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
+      EXPORTING
+        titel      = 'Select Tag'
+        textline1  = 'Select a tag'
+        start_col  = ms_position-start_column
+        start_row  = ms_position-start_row
+        cursorline = lv_default
+      IMPORTING
+        answer     = lv_answer
+      TABLES
+        t_spopli   = lt_selection
+      EXCEPTIONS
+        OTHERS     = 1.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Error from POPUP_TO_DECIDE_LIST' ).
+    ENDIF.
+
+    IF lv_answer = c_answer_cancel.
+      RETURN.
+    ENDIF.
+
+    READ TABLE lt_selection ASSIGNING <ls_sel> WITH KEY selflag = abap_true.
+    ASSERT sy-subrc = 0.
+
+    lv_tag = zcl_abapgit_git_tag=>add_tag_prefix( <ls_sel>-varoption ).
+
+    READ TABLE lt_tags WITH KEY name_key COMPONENTS name = lv_tag ASSIGNING <ls_tag>.
+    IF sy-subrc <> 0.
+      " tag name longer than 65 characters
+      LOOP AT lt_tags ASSIGNING <ls_tag> WHERE name CS lv_tag.
+        EXIT.
+      ENDLOOP.
+    ENDIF.
+    ASSERT <ls_tag> IS ASSIGNED.
+
+    ls_branch = lo_branches->find_by_name( <ls_tag>-name ).
+    MOVE-CORRESPONDING ls_branch TO rs_tag.
 
   ENDMETHOD.
 

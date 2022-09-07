@@ -380,7 +380,10 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
     rs_info-size = xstrlen( is_file-data ).
 
     IF is_file-filename CP '*.abap'.
-      lv_code = zcl_abapgit_convert=>xstring_to_string_utf8( is_file-data ).
+      TRY.
+          lv_code = zcl_abapgit_convert=>xstring_to_string_utf8( is_file-data ).
+        CATCH zcx_abapgit_exception ##NO_HANDLER.
+      ENDTRY.
 
       SPLIT lv_code AT zif_abapgit_definitions=>c_newline INTO TABLE lt_code.
 
@@ -400,6 +403,7 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
   METHOD read_stats_files.
 
     DATA ls_stats TYPE ty_stats.
+    DATA lt_remote_wo_ignored TYPE zif_abapgit_definitions=>ty_files_tt.
 
     et_local = mo_repo->get_files_local( ).
 
@@ -409,17 +413,15 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
     IF mo_repo->has_remote_source( ) = abap_true.
       et_remote = mo_repo->get_files_remote( ).
       ls_stats-remote = lines( et_remote ).
+      lt_remote_wo_ignored = mo_repo->get_files_remote( iv_ignore_files = abap_true ).
     ENDIF.
 
     APPEND ls_stats TO mt_stats.
 
     IF et_remote IS NOT INITIAL.
+      CLEAR ls_stats.
       ls_stats-measure = 'Number of Ignored Files'.
-      ls_stats-local  = ls_stats-remote - ls_stats-local.
-      IF ls_stats-local < 0.
-        ls_stats-local = 0.
-      ENDIF.
-      ls_stats-remote = 0.
+      ls_stats-remote = lines( et_remote ) - lines( lt_remote_wo_ignored ).
       APPEND ls_stats TO mt_stats.
     ENDIF.
 
@@ -486,18 +488,18 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
     ENDLOOP.
 
     IF mo_repo->has_remote_source( ) = abap_true.
-      LOOP AT it_remote ASSIGNING <ls_remote>.
-        ls_info_file = read_stats_file( <ls_remote> ).
-
-        ls_info_remote-size = ls_info_remote-size + ls_info_file-size.
-        ls_info_remote-line = ls_info_remote-line + ls_info_file-line.
-        ls_info_remote-sloc = ls_info_remote-sloc + ls_info_file-sloc.
-
+      LOOP AT it_remote ASSIGNING <ls_remote> WHERE filename IS NOT INITIAL.
         lv_ignored = mo_repo->get_dot_abapgit( )->is_ignored(
                        iv_filename = <ls_remote>-filename
                        iv_path     = <ls_remote>-path ).
 
-        IF <ls_remote>-filename IS NOT INITIAL AND lv_ignored = abap_false.
+        IF lv_ignored = abap_false.
+          ls_info_file = read_stats_file( <ls_remote> ).
+
+          ls_info_remote-size = ls_info_remote-size + ls_info_file-size.
+          ls_info_remote-line = ls_info_remote-line + ls_info_file-line.
+          ls_info_remote-sloc = ls_info_remote-sloc + ls_info_file-sloc.
+
           TRY.
               zcl_abapgit_filename_logic=>file_to_object(
                 EXPORTING

@@ -6,8 +6,8 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
 
     CLASS-METHODS parse_post_form_data
       IMPORTING
-        !it_post_data TYPE zif_abapgit_html_viewer=>ty_post_data
-        !iv_upper_cased TYPE abap_bool DEFAULT abap_false
+        !it_post_data    TYPE zif_abapgit_html_viewer=>ty_post_data
+        !iv_upper_cased  TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rt_fields) TYPE tihttpnvp .
     CLASS-METHODS parse_fields
@@ -23,7 +23,7 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
         VALUE(rt_fields) TYPE tihttpnvp .
     CLASS-METHODS translate_postdata
       IMPORTING
-        !it_postdata TYPE zif_abapgit_html_viewer=>ty_post_data
+        !it_postdata     TYPE zif_abapgit_html_viewer=>ty_post_data
       RETURNING
         VALUE(rv_string) TYPE string .
 
@@ -90,14 +90,6 @@ ENDCLASS.
 
 CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
 
-  METHOD class_constructor.
-
-    CONSTANTS lc_nbsp TYPE xstring VALUE 'C2A0'. " &nbsp;
-
-    gv_non_breaking_space = zcl_abapgit_convert=>xstring_to_string_utf8( lc_nbsp ).
-
-  ENDMETHOD.
-
 
   METHOD add_field.
 
@@ -119,6 +111,19 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
     ENDCASE.
 
     APPEND ls_field TO ct_field.
+
+  ENDMETHOD.
+
+
+  METHOD class_constructor.
+
+    CONSTANTS lc_nbsp TYPE xstring VALUE 'C2A0'. " &nbsp;
+
+    TRY.
+        gv_non_breaking_space = zcl_abapgit_convert=>xstring_to_string_utf8( lc_nbsp ).
+      CATCH zcx_abapgit_exception.
+        ASSERT 0 = 1.
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -253,16 +258,16 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
     LOOP AT lt_substrings ASSIGNING <lv_substring>.
 
       CLEAR ls_field.
-      <lv_substring> = unescape( <lv_substring> ).
       " On attempt to change unescaping -> run unit tests to check !
 
-      ls_field-name = substring_before(
+      " Unescape name and value separately
+      ls_field-name = unescape( substring_before(
         val = <lv_substring>
-        sub = '=' ).
+        sub = '=' ) ).
 
-      ls_field-value = substring_after(
+      ls_field-value = unescape( substring_after(
         val = <lv_substring>
-        sub = '=' ).
+        sub = '=' ) ).
 
       IF ls_field IS INITIAL. " Not a field with proper structure
         CONTINUE.
@@ -341,9 +346,11 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
     rv_string = iv_string.
 
 * todo, more to be added here
-    REPLACE ALL OCCURRENCES OF '%3F' IN rv_string WITH '?'.
-    REPLACE ALL OCCURRENCES OF '%3D' IN rv_string WITH '='.
-    REPLACE ALL OCCURRENCES OF '%2f' IN rv_string WITH '/'.
+    REPLACE ALL OCCURRENCES OF '%3F' IN rv_string WITH '?' IGNORING CASE.
+    REPLACE ALL OCCURRENCES OF '%3D' IN rv_string WITH '=' IGNORING CASE.
+    REPLACE ALL OCCURRENCES OF '%2F' IN rv_string WITH '/' IGNORING CASE.
+    REPLACE ALL OCCURRENCES OF '%25' IN rv_string WITH '%' IGNORING CASE.
+    REPLACE ALL OCCURRENCES OF '%26' IN rv_string WITH '&' IGNORING CASE.
     REPLACE ALL OCCURRENCES OF gv_non_breaking_space IN rv_string WITH ` `.
 
   ENDMETHOD.

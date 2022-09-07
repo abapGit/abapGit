@@ -2,8 +2,6 @@ CLASS zcl_abapgit_object_ssfo DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -55,7 +53,7 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
         TRY.
             ei_code_item_element ?= ii_node.
             RETURN.
-          CATCH cx_sy_move_cast_error ##no_handler.
+          CATCH cx_sy_move_cast_error ##NO_HANDLER.
         ENDTRY.
 
       ELSEIF iv_name NOT IN get_range_node_codes( ) AND
@@ -184,7 +182,7 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
           SHIFT lv_coding_line RIGHT BY lv_leading_spaces PLACES.
           li_element->set_value( lv_coding_line ).
         ENDIF.
-      CATCH zcx_abapgit_exception ##no_handler.
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
     ENDTRY.
 
   ENDMETHOD.
@@ -318,6 +316,7 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
   METHOD zif_abapgit_object~is_active.
 
     DATA: lv_ssfo_formname TYPE tdsfname.
+    DATA lv_inactive TYPE abap_bool.
 
     lv_ssfo_formname = ms_item-obj_name.
 
@@ -325,9 +324,9 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
       EXPORTING
         i_formname = lv_ssfo_formname
       IMPORTING
-        o_inactive = ms_item-inactive.
+        o_inactive = lv_inactive.
 
-    rv_active = boolc( ms_item-inactive = abap_false ).
+    rv_active = boolc( lv_inactive = abap_false ).
 
   ENDMETHOD.
 

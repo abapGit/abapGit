@@ -2,8 +2,6 @@ CLASS zcl_abapgit_object_splo DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -30,6 +28,10 @@ CLASS zcl_abapgit_object_splo IMPLEMENTATION.
     DELETE FROM tsp1d WHERE papart = ms_item-obj_name.    "#EC CI_SUBRC
     DELETE FROM tsp0p WHERE pdpaper = ms_item-obj_name.   "#EC CI_SUBRC
 
+    set_default_transport( iv_transport ).
+
+    corr_insert( iv_package ).
+
   ENDMETHOD.
 
 
@@ -50,6 +52,8 @@ CLASS zcl_abapgit_object_splo IMPLEMENTATION.
     MODIFY tsp1t FROM ls_tsp1t.                           "#EC CI_SUBRC
     MODIFY tsp1d FROM ls_tsp1d.                           "#EC CI_SUBRC
     MODIFY tsp0p FROM ls_tsp0p.                           "#EC CI_SUBRC
+
+    set_default_transport( iv_transport ).
 
     tadir_insert( iv_package ).
 

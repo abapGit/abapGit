@@ -686,12 +686,15 @@ div.db_entry pre {
   border-radius: 3px;
   padding: 0.5em;
   margin: 0.5em 0em;
-  width: 60em;
+  width: 98%;
 }
 
-div.db_entry textarea { margin: 0.5em 0em; }
+div.db_entry textarea {
+  margin: 0.5em 0em;
+  width: 98%;
+}
 div.db_entry table.toolbar {
-  width: 50em;
+  width: 100%;
 }
 
 table.tag {
@@ -909,17 +912,23 @@ div.info-panel div.info-list td { padding-right: 1em }
 div.message-panel {
   z-index: 99;
   box-shadow: 2px 2px 4px 0px hsla(0, 0%, 0%, .1);
-  padding: 12px;
-  margin-left: -48%;
+  padding: 0.5em 1em;
   position: fixed;
   bottom: 12px;
-  width: 94%;
-  left: 50%;
+  width: 95%;
+  margin: 0 auto;
+  max-width: 1248px;
 
   border: 1px solid;
   border-radius: 5px;
   border-color: hsl(0, 42%, 64%);
   background-color: hsla(0, 42%, 90%, 1);
+}
+
+.message-panel-bar {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
 }
 
 .message-panel-commands {
@@ -1204,6 +1213,9 @@ settings_tab tr:first-child td { border-top: 0px; }
   font-size: 75%;
   margin: 4px 0px;
   padding-left: 0.5em;
+}
+.dialog li.hidden {
+  padding: 0px 0px;
 }
 .dialog .radio-container {
   border: 1px solid;
