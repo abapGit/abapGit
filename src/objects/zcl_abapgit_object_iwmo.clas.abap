@@ -24,6 +24,27 @@ ENDCLASS.
 CLASS zcl_abapgit_object_iwmo IMPLEMENTATION.
 
 
+  METHOD get_field_rules.
+    ro_result = zcl_abapgit_field_rules=>create( ).
+    ro_result->add(
+      iv_table     = '/IWBEP/I_MGW_OHD'
+      iv_field     = 'CREATED_BY'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
+    )->add(
+      iv_table     = '/IWBEP/I_MGW_OHD'
+      iv_field     = 'CREATED_TIMESTMP'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp
+    )->add(
+      iv_table     = '/IWBEP/I_MGW_OHD'
+      iv_field     = 'CHANGED_BY'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
+    )->add(
+      iv_table     = '/IWBEP/I_MGW_OHD'
+      iv_field     = 'CHANGED_TIMESTMP'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp ).
+  ENDMETHOD.
+
+
   METHOD get_generic.
 
     CREATE OBJECT ro_generic
@@ -36,7 +57,17 @@ CLASS zcl_abapgit_object_iwmo IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = zcl_abapgit_objects_super=>c_user_unknown.
+    DATA lv_created TYPE sy-uname.
+    DATA lv_changed TYPE sy-uname.
+
+    SELECT created_by changed_by INTO (lv_created, lv_changed) FROM ('/IWBEP/I_MGW_OHD')
+      WHERE technical_name = ms_item-obj_name.
+    ENDSELECT.
+
+    rv_user = lv_changed.
+    IF lv_changed IS INITIAL.
+      rv_user = lv_created.
+    ENDIF.
   ENDMETHOD.
 
 
@@ -129,25 +160,4 @@ CLASS zcl_abapgit_object_iwmo IMPLEMENTATION.
     get_generic( )->serialize( io_xml ).
 
   ENDMETHOD.
-
-  METHOD get_field_rules.
-    ro_result = zcl_abapgit_field_rules=>create( ).
-    ro_result->add(
-      iv_table     = '/IWBEP/I_MGW_OHD'
-      iv_field     = 'CREATED_BY'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
-    )->add(
-      iv_table     = '/IWBEP/I_MGW_OHD'
-      iv_field     = 'CREATED_TIMESTMP'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp
-    )->add(
-      iv_table     = '/IWBEP/I_MGW_OHD'
-      iv_field     = 'CHANGED_BY'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
-    )->add(
-      iv_table     = '/IWBEP/I_MGW_OHD'
-      iv_field     = 'CHANGED_TIMESTMP'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp ).
-  ENDMETHOD.
-
 ENDCLASS.
