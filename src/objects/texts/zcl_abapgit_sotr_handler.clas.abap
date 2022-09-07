@@ -88,6 +88,8 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
     DATA:
       lt_objects TYPE sotr_objects,
       ls_paket   TYPE sotr_pack,
+      lv_alias   TYPE sotr_head-alias_name,
+      lv_pos     TYPE i,
       lv_object  LIKE LINE OF lt_objects.
 
     FIELD-SYMBOLS: <ls_sotr> LIKE LINE OF it_sotr.
@@ -110,11 +112,17 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
 
       ls_paket-paket = iv_package.
 
+      " Replace package in alias with new package
+      lv_alias = <ls_sotr>-header-alias_name.
+      IF lv_alias CS '/'.
+        lv_alias = iv_package && lv_alias+sy-fdpos(*).
+      ENDIF.
+
       CALL FUNCTION 'SOTR_CREATE_CONCEPT'
         EXPORTING
           paket                         = ls_paket
           crea_lan                      = <ls_sotr>-header-crea_lan
-          alias_name                    = <ls_sotr>-header-alias_name
+          alias_name                    = lv_alias
           object                        = lv_object
           entries                       = <ls_sotr>-entries
           concept_default               = <ls_sotr>-header-concept
@@ -256,6 +264,7 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
 
     DATA: ls_header  TYPE zif_abapgit_definitions=>ty_sotr-header,
           lt_entries TYPE zif_abapgit_definitions=>ty_sotr-entries.
+    DATA lv_alias_pattern LIKE ls_header-alias_name.
 
     FIELD-SYMBOLS: <ls_entry> LIKE LINE OF lt_entries.
 
@@ -271,6 +280,16 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
         OTHERS         = 2.
     IF sy-subrc <> 0.
       RETURN.
+    ENDIF.
+
+    " If alias contains package, remove it
+    lv_alias_pattern = ls_header-paket && '/'.
+    IF ls_header-alias_name CS lv_alias_pattern.
+      ls_header-alias_name = replace(
+        val  = ls_header-alias_name
+        sub  = lv_alias_pattern
+        with = '/'
+        occ  = 1 ).
     ENDIF.
 
     CLEAR: ls_header-paket,
