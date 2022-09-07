@@ -57,17 +57,19 @@ CLASS zcl_abapgit_object_iwsv IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
+
     DATA lv_created TYPE sy-uname.
     DATA lv_changed TYPE sy-uname.
 
+    " Get entry with highest version
     SELECT created_by changed_by INTO (lv_created, lv_changed) FROM ('/IWBEP/I_MGW_SRH')
       WHERE technical_name = ms_item-obj_name.
+      rv_user = lv_changed.
+      IF lv_changed IS INITIAL.
+        rv_user = lv_created.
+      ENDIF.
     ENDSELECT.
 
-    rv_user = lv_changed.
-    IF lv_changed IS INITIAL.
-      rv_user = lv_created.
-    ENDIF.
   ENDMETHOD.
 
 
