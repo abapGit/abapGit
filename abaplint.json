@@ -158,7 +158,13 @@
         "^if_wb_adt_plugin_resource_co$",
         "^if_wb_object_data_selection_co$",
         "^if_wb_object_operator$",
-        "^cl_abap_syst"
+        "^cl_abap_syst",
+        "^SABP_T_TADIR_KEYS$",
+        "^CL_SAUNIT_INTERNAL_RESULT$",
+        "^CL_AUCV_TEST_RUNNER_ABSTRACT$",
+        "^IF_SAUNIT_INTERNAL_RESULT$",
+        "^IF_SAUNIT_INTERNAL_RESULT_TYPE$",
+        "^CL_AUCV_TEST_RUNNER_STANDARD$"
       ]
     },
     "forbidden_identifier": true,
@@ -359,35 +365,8 @@
       "shlp": "^Z",
       "xslt": "^Z"
     },
-    "obsolete_statement": {
-      "refresh": true,
-      "compute": true,
-      "add": true,
-      "clientSpecified": true,
-      "occurences": true,
-      "selectWithoutInto": true,
-      "ranges": true,
-      "callTransformation": true,
-      "regex": true,
-      "sortByFS": true,
-      "subtract": true,
-      "freeMemory": true,
-      "exitFromSQL": true,
-      "multiply": true,
-      "communication": true,
-      "typePools": true,
-      "load": true,
-      "move": true,
-      "divide": true,
-      "fieldSymbolStructure": true,
-      "requested": true,
-      "pack": true,
-      "setExtended": true,
-      "withHeaderLine": true,
-      "occurs": true,
-      "parameter": true
-    },
-    "parser_error": {},
+    "obsolete_statement": true,
+    "parser_error": true,
     "preferred_compare_operator": {
       "badOperators": [
         "EQ",

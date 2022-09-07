@@ -29,21 +29,35 @@ CLASS lcl_paths_filter DEFINITION FINAL.
       IMPORTING
         it_skip_paths TYPE string_table OPTIONAL
         iv_skip_paths TYPE string OPTIONAL
+        iv_pattern_search TYPE abap_bool
       RAISING
         zcx_abapgit_ajson_error.
   PRIVATE SECTION.
     DATA mt_skip_paths TYPE HASHED TABLE OF string WITH UNIQUE KEY table_line.
+    DATA mv_pattern_search TYPE abap_bool.
 ENDCLASS.
 
 CLASS lcl_paths_filter IMPLEMENTATION.
 
   METHOD zif_abapgit_ajson_filter~keep_node.
 
-    DATA lv_path TYPE string.
+    DATA lv_full_path TYPE string.
+    FIELD-SYMBOLS <p> LIKE LINE OF mt_skip_paths.
 
-    lv_path = is_node-path && is_node-name.
-    READ TABLE mt_skip_paths WITH KEY table_line = lv_path TRANSPORTING NO FIELDS.
-    rv_keep = boolc( sy-subrc <> 0 ).
+    lv_full_path = is_node-path && is_node-name.
+
+    IF mv_pattern_search = abap_true.
+      rv_keep = abap_true.
+      LOOP AT mt_skip_paths ASSIGNING <p>.
+        IF lv_full_path CP <p>.
+          rv_keep = abap_false.
+          EXIT.
+        ENDIF.
+      ENDLOOP.
+    ELSE.
+      READ TABLE mt_skip_paths WITH KEY table_line = lv_full_path TRANSPORTING NO FIELDS.
+      rv_keep = boolc( sy-subrc <> 0 ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -77,6 +91,7 @@ CLASS lcl_paths_filter IMPLEMENTATION.
     DELETE ADJACENT DUPLICATES FROM lt_tab.
 
     mt_skip_paths = lt_tab.
+    mv_pattern_search = iv_pattern_search.
 
   ENDMETHOD.
 
