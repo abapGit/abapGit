@@ -1343,6 +1343,9 @@ CLASS ltcl_json_to_abap DEFINITION
     METHODS to_abap_struc
       FOR TESTING
       RAISING zcx_abapgit_ajson_error.
+    METHODS to_abap_timestamp_initial
+      FOR TESTING
+      RAISING zcx_abapgit_ajson_error.
     METHODS to_abap_value
       FOR TESTING
       RAISING zcx_abapgit_ajson_error.
@@ -1420,6 +1423,28 @@ CLASS ltcl_json_to_abap IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = ls_mock
       exp = ls_exp ).
+
+  ENDMETHOD.
+
+  METHOD to_abap_timestamp_initial.
+
+    DATA lo_cut TYPE REF TO lcl_json_to_abap.
+    DATA lv_mock TYPE timestamp.
+    DATA lo_nodes TYPE REF TO lcl_nodes_helper.
+
+    CREATE OBJECT lo_nodes.
+    lo_nodes->add( '       |           |str    |0000-00-00T00:00:00Z| ' ).
+
+    CREATE OBJECT lo_cut.
+    lo_cut->to_abap(
+      EXPORTING
+        it_nodes    = lo_nodes->sorted( )
+      CHANGING
+        c_container = lv_mock ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_mock
+      exp = 0 ).
 
   ENDMETHOD.
 
@@ -2201,7 +2226,7 @@ CLASS ltcl_writer_test IMPLEMENTATION.
     lo_nodes->add( '/     |d_empty |str    |           ||0' ).
     lo_nodes->add( '/     |t       |str    |20:01:03   ||0' ).
     lo_nodes->add( '/     |t_empty |str    |           ||0' ).
-    lo_nodes->add( '/     |ts      |str    |2022-04-01T20-01-03Z ||0' ).
+    lo_nodes->add( '/     |ts      |str    |2022-04-01T20:01:03Z ||0' ).
     lo_nodes->add( '/     |p       |num    |123.45     ||0' ).
 
     li_writer->set(
@@ -2752,7 +2777,7 @@ CLASS ltcl_writer_test IMPLEMENTATION.
     li_writer = lo_cut.
     CREATE OBJECT lo_nodes_exp.
     lo_nodes_exp->add( '        |      |object |                     ||1' ).
-    lo_nodes_exp->add( '/       |a     |str    |2021-05-05T12-00-00Z ||0' ).
+    lo_nodes_exp->add( '/       |a     |str    |2021-05-05T12:00:00Z ||0' ).
 
     lv_timestamp = '20210505120000'.
     li_writer->set_timestamp(
@@ -3393,6 +3418,8 @@ CLASS ltcl_abap_to_json DEFINITION
     METHODS set_value_true FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_value_false FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_value_xsdboolean FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS set_value_timestamp FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS set_value_timestamp_initial FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_null FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_obj FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_array FOR TESTING RAISING zcx_abapgit_ajson_error.
@@ -3524,6 +3551,43 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
     lo_nodes_exp->add( '       |      |null |null ||' ).
 
     lt_nodes = lcl_abap_to_json=>convert( iv_data = lv_null_ref ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_nodes
+      exp = lo_nodes_exp->mt_nodes ).
+
+  ENDMETHOD.
+
+  METHOD set_value_timestamp.
+
+    DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
+    DATA lt_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt.
+
+    DATA lv_timestamp TYPE timestamp.
+    CREATE OBJECT lo_nodes_exp.
+    lo_nodes_exp->add( '        |      |str |2022-08-31T00:00:00Z||' ).
+
+    CONVERT DATE '20220831' TIME '000000'
+      INTO TIME STAMP lv_timestamp TIME ZONE ''.
+    lt_nodes = lcl_abap_to_json=>convert( lcl_abap_to_json=>format_timestamp( lv_timestamp ) ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_nodes
+      exp = lo_nodes_exp->mt_nodes ).
+
+  ENDMETHOD.
+
+  METHOD set_value_timestamp_initial.
+
+    DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
+    DATA lt_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt.
+
+    DATA lv_timestamp TYPE timestamp.
+    CREATE OBJECT lo_nodes_exp.
+    lo_nodes_exp->add( '        |      |str |0000-00-00T00:00:00Z||' ).
+
+    lv_timestamp = 0.
+    lt_nodes = lcl_abap_to_json=>convert( lcl_abap_to_json=>format_timestamp( lv_timestamp ) ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lt_nodes
