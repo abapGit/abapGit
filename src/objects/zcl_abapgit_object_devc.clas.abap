@@ -359,7 +359,12 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = get_package( )->changed_by.
+    DATA li_package TYPE REF TO if_package.
+
+    li_package = get_package( ).
+    IF li_package IS BOUND.
+      rv_user = li_package->changed_by.
+    ENDIF.
   ENDMETHOD.
 
 
