@@ -579,7 +579,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     CREATE OBJECT li_html TYPE zcl_abapgit_html.
     rv_html = li_html->a(
       iv_txt = |{ is_item-obj_name }|
-      iv_act = |{ zif_abapgit_definitions=>c_action-go_obj_diff }?KEY={ 
+      iv_act = |{ zif_abapgit_definitions=>c_action-go_obj_diff }?KEY={
                mo_repo->get_key( ) }&OBJ_TYPE={ is_item-obj_type }&OBJ_NAME={ is_item-obj_name }| ).
 
   ENDMETHOD.
@@ -1060,12 +1060,13 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         ENDIF.
         ri_html->add( |</td>| ).
       ELSE.
+        lv_link = build_obj_jump_link( is_item ).
         lv_diff_link = build_obj_diff_link( is_item ).
         ri_html->add_td( iv_class = `type`
                          iv_content = |{ is_item-obj_type }| ).
         ri_html->add_td( iv_class = `object`
                          iv_content = |{ lv_diff_link } { build_inactive_object_code( is_item )
-                         } { build_srcsystem_code( is_item ) }| ).
+                         } { build_srcsystem_code( is_item ) } { lv_link }| ).
       ENDIF.
     ENDIF.
 
