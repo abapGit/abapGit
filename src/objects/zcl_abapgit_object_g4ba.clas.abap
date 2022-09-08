@@ -75,7 +75,16 @@ CLASS zcl_abapgit_object_g4ba IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = zcl_abapgit_objects_super=>c_user_unknown.
+    DATA lv_created TYPE sy-uname.
+    DATA lv_changed TYPE sy-uname.
+
+    SELECT SINGLE created_by changed_by INTO (lv_created, lv_changed) FROM ('/IWBEP/I_V4_MSGR')
+      WHERE group_id = ms_item-obj_name.
+
+    rv_user = lv_changed.
+    IF lv_changed IS INITIAL.
+      rv_user = lv_created.
+    ENDIF.
   ENDMETHOD.
 
 
