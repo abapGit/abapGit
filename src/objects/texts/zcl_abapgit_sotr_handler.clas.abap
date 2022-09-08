@@ -262,8 +262,8 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
   METHOD get_sotr_4_concept.
 
     DATA: ls_header  TYPE zif_abapgit_definitions=>ty_sotr-header,
+          lv_paket   LIKE ls_header-alias_name,
           lt_entries TYPE zif_abapgit_definitions=>ty_sotr-entries.
-    DATA lv_alias_pattern LIKE ls_header-alias_name.
 
     FIELD-SYMBOLS: <ls_entry> LIKE LINE OF lt_entries.
 
@@ -282,11 +282,11 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
     ENDIF.
 
     " If alias contains package, remove it
-    lv_alias_pattern = ls_header-paket && '/'.
-    IF ls_header-alias_name CS lv_alias_pattern.
+    lv_paket = ls_header-paket && '/'.
+    IF ls_header-alias_name CS lv_paket.
       ls_header-alias_name = replace(
         val  = ls_header-alias_name
-        sub  = lv_alias_pattern
+        sub  = lv_paket
         with = '/'
         occ  = 1 ).
     ENDIF.
