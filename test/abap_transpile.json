@@ -19,6 +19,7 @@
     "zcl_abapgit_n",
     "zcl_abapgit_objects.clas.abap",
     "zcl_abapgit_objects_super",
+    "zcl_abapgit_objects_program",
     "zcl_abapgit_p",
     "zcl_abapgit_r",
     "zcl_abapgit_s",
@@ -187,6 +188,9 @@
       {"object": "ZCL_ABAPGIT_XML_INPUT", "class": "ltcl_xml", "method": "down"},
 
       {"object": "ZCL_ABAPGIT_GIT_URL", "class": "ltcl_repo_online", "method": "test_repo_commit_show_urls"},
+
+      {"object": "ZCL_ABAPGIT_OBJECTS_PROGRAM", "class": "ltcl_test", "method": "strip_generation_comments_1", "note": "Void type: ABAPTXT255_TAB"},
+      {"object": "ZCL_ABAPGIT_OBJECTS_PROGRAM", "class": "ltcl_test", "method": "strip_generation_comments_2", "note": "Void type: ABAPTXT255_TAB"},
 
       {"object": "ZCL_ABAPGIT_SOTR_HANDLER", "class": "ltcl_sotr_handler", "method": "sotr_wda_0001",           "note": "Void type: SOTR_HEAD"},
       {"object": "ZCL_ABAPGIT_SOTR_HANDLER", "class": "ltcl_sotr_handler", "method": "sotr_wda_0003_not_exist", "note": "Void type: SOTR_HEAD"},
