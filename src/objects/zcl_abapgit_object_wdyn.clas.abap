@@ -948,23 +948,25 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
       COLLECT lv_object INTO lt_object.
     ENDLOOP.
 
-    IF io_xml->i18n_params( )-main_language_only = abap_true.
-      SELECT * FROM dokil INTO TABLE lt_dokil
-        FOR ALL ENTRIES IN lt_object
-        WHERE id = c_longtext_id_wc AND object = lt_object-table_line AND masterlang = abap_true
-        ORDER BY PRIMARY KEY.
-    ELSE.
-      SELECT * FROM dokil INTO TABLE lt_dokil
-        FOR ALL ENTRIES IN lt_object
-        WHERE id = c_longtext_id_wc AND object = lt_object-table_line
-        ORDER BY PRIMARY KEY.
-    ENDIF.
+    IF lt_object IS NOT INITIAL.
+      IF io_xml->i18n_params( )-main_language_only = abap_true.
+        SELECT * FROM dokil INTO TABLE lt_dokil
+          FOR ALL ENTRIES IN lt_object
+          WHERE id = c_longtext_id_wc AND object = lt_object-table_line AND masterlang = abap_true
+          ORDER BY PRIMARY KEY.
+      ELSE.
+        SELECT * FROM dokil INTO TABLE lt_dokil
+          FOR ALL ENTRIES IN lt_object
+          WHERE id = c_longtext_id_wc AND object = lt_object-table_line
+          ORDER BY PRIMARY KEY.
+      ENDIF.
 
-    serialize_longtexts(
-      ii_xml           = io_xml
-      it_dokil         = lt_dokil
-      iv_longtext_id   = c_longtext_id_wc
-      iv_longtext_name = c_longtext_name_wc ).
+      serialize_longtexts(
+        ii_xml           = io_xml
+        it_dokil         = lt_dokil
+        iv_longtext_id   = c_longtext_id_wc
+        iv_longtext_name = c_longtext_name_wc ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
