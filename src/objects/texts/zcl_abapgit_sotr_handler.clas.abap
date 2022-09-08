@@ -89,7 +89,6 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
       lt_objects TYPE sotr_objects,
       ls_paket   TYPE sotr_pack,
       lv_alias   TYPE sotr_head-alias_name,
-      lv_pos     TYPE i,
       lv_object  LIKE LINE OF lt_objects.
 
     FIELD-SYMBOLS: <ls_sotr> LIKE LINE OF it_sotr.
