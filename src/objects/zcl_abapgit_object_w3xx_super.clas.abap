@@ -472,6 +472,8 @@ CLASS zcl_abapgit_object_w3xx_super IMPLEMENTATION.
     io_xml->add( iv_name = 'TEXT'
                  ig_data = ms_key-text ).
 
+    SORT lt_w3params.
+
     io_xml->add( iv_name = 'PARAMS'
                  ig_data = lt_w3params ).
 
