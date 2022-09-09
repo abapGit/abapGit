@@ -149,10 +149,10 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
 
     lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
       iv_titlebar              = 'Warning'
-      iv_text_question         = 'Delete?'
-      iv_text_button_1         = 'Ok'
+      iv_text_question         = |Are you sure you want to delete entry { is_key-type } { is_key-value }?|
+      iv_text_button_1         = 'Yes'
       iv_icon_button_1         = 'ICON_DELETE'
-      iv_text_button_2         = 'Cancel'
+      iv_text_button_2         = 'No'
       iv_icon_button_2         = 'ICON_CANCEL'
       iv_default_button        = '2'
       iv_display_cancel_button = abap_false ).
@@ -164,6 +164,17 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
     zcl_abapgit_persistence_db=>get_instance( )->delete(
       iv_type  = is_key-type
       iv_value = is_key-value ).
+
+    " If deleting repo, also delete corresponding checksums
+    " Other way around is ok, since checksums are automatically recreated
+    IF is_key-type = zcl_abapgit_persistence_db=>c_type_repo.
+      zcl_abapgit_persistence_db=>get_instance( )->delete(
+        iv_type  = zcl_abapgit_persistence_db=>c_type_repo_csum
+        iv_value = is_key-value ).
+
+      " Initialize repo list
+      zcl_abapgit_repo_srv=>get_instance( )->init( ).
+    ENDIF.
 
     COMMIT WORK.
 

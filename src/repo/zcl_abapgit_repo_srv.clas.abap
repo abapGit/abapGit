@@ -326,7 +326,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       ENDLOOP.
     ENDDO.
 
-    zcx_abapgit_exception=>raise( 'repo not found, get' ).
+    zcx_abapgit_exception=>raise( |Repository not found in database. Key: REPO, { iv_key }| ).
 
   ENDMETHOD.
 
@@ -399,6 +399,11 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     ENDLOOP.
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_srv~init.
+    CLEAR mv_init.
   ENDMETHOD.
 
 
