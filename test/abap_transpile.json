@@ -199,7 +199,6 @@
       {"object": "ZCL_ABAPGIT_OBJECTS_PROGRAM", "class": "ltcl_test", "method": "strip_generation_comments_2", "note": "Void type: ABAPTXT255_TAB"},
       {"object": "ZCL_ABAPGIT_OBJECTS_FILES", "class": "ltcl_objects_files", "method": "read_abap", "note": "Void type: ABAPTXT255_TAB"},
       {"object": "ZCL_ABAPGIT_OBJECTS_FILES", "class": "ltcl_objects_files", "method": "read_xml", "note": "Void type: PROGNAME"},
-      {"object": "ZCL_ABAPGIT_OBJECTS_FILES", "class": "ltcl_objects_files", "method": "get_file_pattern", "note": "infinite loop"},
 
       {"object": "ZCL_ABAPGIT_SOTR_HANDLER", "class": "ltcl_sotr_handler", "method": "sotr_wda_0001",           "note": "Void type: SOTR_HEAD"},
       {"object": "ZCL_ABAPGIT_SOTR_HANDLER", "class": "ltcl_sotr_handler", "method": "sotr_wda_0003_not_exist", "note": "Void type: SOTR_HEAD"},
