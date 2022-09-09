@@ -24,7 +24,7 @@
     "zcl_abapgit_objects.clas.abap",
     "zcl_abapgit_oo_factory",
     "zcl_abapgit_oo_base",
-    "zcl_abapgit_oo_interface needs zcl_abapgit_oo_base",
+    "zcl_abapgit_oo_interface",
     "zcl_abapgit_p",
     "zcl_abapgit_r",
     "zcl_abapgit_s",
