@@ -131,7 +131,7 @@
       {"object": "ZCL_ABAPGIT_FOLDER_LOGIC", "class": "ltcl_folder_logic", "method": "mixed3", "note": "??"},
       {"object": "ZCL_ABAPGIT_FOLDER_LOGIC", "class": "ltcl_folder_logic", "method": "full3", "note": "??"},
 
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_negative", "note": "todo in cl_abap_structdescr.get_component_type, raise classic exception"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_negative", "note": "CREATE DATA, unknown handle type"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_sorted_tab", "note": "CREATE DATA, unknown handle type"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_struc", "note": "CREATE DATA, unknown handle type"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_array", "note": "??"},
@@ -145,7 +145,7 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "overwrite_w_keep_order_set", "note": "some sorting"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_tab_hashed", "note": "runtime error, SortByLengthZero"},
 
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "reader",       "note": "todo in cl_abap_structdescr.get_component_type"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "reader",       "note": "Path not found @/false"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_index",  "note": "CREATE DATA, unknown handle type"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_simple", "note": "CREATE DATA, unknown handle type"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "item_order_integrated", "note": "some sorting"},
