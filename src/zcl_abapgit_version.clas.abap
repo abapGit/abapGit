@@ -38,6 +38,14 @@ CLASS zcl_abapgit_version DEFINITION
         VALUE(rv_version)   TYPE string
       RAISING
         zcx_abapgit_exception.
+    CLASS-METHODS parse_version_from_source
+      IMPORTING
+        it_source         TYPE string_table
+        iv_component_name TYPE csequence
+      RETURNING
+        VALUE(rv_version) TYPE string
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -271,5 +279,93 @@ CLASS zcl_abapgit_version IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Could not access version at class { lv_version_class } component | &&
                                     |{ lv_version_component }| ).
     ENDIF.
+  ENDMETHOD.
+
+  METHOD parse_version_from_source.
+    TYPES: ty_statement TYPE c LENGTH 40.
+    CONSTANTS: BEGIN OF c_token_types,
+                 identifier TYPE stokes-type VALUE 'I',
+                 literal    TYPE stokes-type VALUE 'S',
+               END OF c_token_types.
+    DATA: lt_keyword_filter    TYPE STANDARD TABLE OF ty_statement,
+          lt_statements        TYPE sstmnt_tab,
+          lt_tokens            TYPE stokes_tab,
+          lt_structures        TYPE sstruc_tab,
+          lv_found_token_index TYPE i,
+          lv_component_name    TYPE string,
+          lv_version_length    TYPE i.
+    FIELD-SYMBOLS: <ls_structure> TYPE sstruc,
+                   <ls_statement> TYPE sstmnt,
+                   <ls_token>     TYPE stokes.
+
+    IF iv_component_name CA '-'.
+      zcx_abapgit_exception=>raise( 'Structured version constants are not supported' ).
+    ENDIF.
+
+    lv_component_name = condense( to_upper( iv_component_name ) ).
+
+    APPEND 'CONSTANTS' TO lt_keyword_filter.
+
+    SCAN ABAP-SOURCE it_source
+      KEYWORDS FROM lt_keyword_filter
+      STATEMENTS INTO lt_statements
+      TOKENS INTO lt_tokens
+      STRUCTURES INTO lt_structures.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Source code could not be parsed to extract version (syntax error?)' ).
+    ENDIF.
+
+    READ TABLE lt_structures ASSIGNING <ls_structure> WITH KEY type = 'P'.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Could not find top level structure to parse version constant' ).
+    ENDIF.
+
+    LOOP AT lt_statements FROM <ls_structure>-stmnt_from TO <ls_structure>-stmnt_to ASSIGNING <ls_statement>.
+      LOOP AT lt_tokens FROM <ls_statement>-from TO <ls_statement>-to
+           TRANSPORTING NO FIELDS
+           WHERE type = 'I' AND str = lv_component_name.
+        lv_found_token_index = sy-tabix.
+        EXIT.
+      ENDLOOP.
+
+      IF sy-subrc = 0.
+        LOOP AT lt_tokens FROM lv_found_token_index TO <ls_statement>-to
+             TRANSPORTING NO FIELDS
+             WHERE type = c_token_types-identifier AND str = 'VALUE'.
+          lv_found_token_index = sy-tabix.
+          EXIT.
+        ENDLOOP.
+
+        IF lv_found_token_index + 1 > <ls_statement>-to.
+         zcx_abapgit_exception=>raise( 'Internal error parsing version constant' ).
+        ENDIF.
+
+        READ TABLE lt_tokens INDEX lv_found_token_index + 1 ASSIGNING <ls_token>.
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise( 'Internal error parsing version constant' ).
+        ENDIF.
+
+        CASE <ls_token>-type.
+          WHEN c_token_types-identifier.
+            rv_version = <ls_token>-str.
+            IF rv_version(1) CA sy-abcde.
+              zcx_abapgit_exception=>raise(
+                'References to other constants are not supported in version constant value' ).
+            ENDIF.
+          WHEN c_token_types-literal.
+            rv_version = <ls_token>-str.
+            IF rv_version CP '`*`' OR rv_version CP `'*'`.
+              lv_version_length = strlen( rv_version ).
+              rv_version = substring( val = rv_version off = 1 len = lv_version_length - 2 ).
+            ENDIF.
+        ENDCASE.
+
+        CONDENSE rv_version.
+
+        RETURN.
+      ENDIF.
+    ENDLOOP.
+
+    zcx_abapgit_exception=>raise( |Could not parse version constant { iv_component_name }| ).
   ENDMETHOD.
 ENDCLASS.
