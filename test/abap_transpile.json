@@ -134,7 +134,7 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_sorted_tab", "note": "CREATE DATA, cl_abap_structdescr"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_hashed_plain_tab", "note": "??"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_hashed_tab", "note": "CREATE DATA, unknown handle type"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_w_tab_of_struc", "note": "CREATE DATA, unknown handle type"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_w_tab_of_struc", "note": "CREATE DATA, TypeError: _a.set is not a function"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_array_of_arrays", "note": "CREATE DATA, unknown handle type"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "overwrite_w_keep_order_touch", "note": "some sorting"},
