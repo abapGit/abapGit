@@ -337,7 +337,7 @@ CLASS zcl_abapgit_version IMPLEMENTATION.
         ENDLOOP.
 
         IF lv_found_token_index + 1 > <ls_statement>-to.
-         zcx_abapgit_exception=>raise( 'Internal error parsing version constant' ).
+          zcx_abapgit_exception=>raise( 'Internal error parsing version constant' ).
         ENDIF.
 
         READ TABLE lt_tokens INDEX lv_found_token_index + 1 ASSIGNING <ls_token>.
