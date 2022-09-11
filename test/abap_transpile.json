@@ -97,8 +97,6 @@
       {"object": "ZCL_ABAPGIT_ZLIB",       "class": "ltcl_zlib", "method": "fixed"},
       {"object": "ZCL_ABAPGIT_UTILS",      "class": "ltcl_is_binary", "method": "image_is_binary",          "note": "REGEX '[^[:print:]]'"},
 
-      {"object": "ZCL_ABAPGIT_CONVERT", "class": "ltcl_convert", "method": "xstring_to_string_not_utf8", "note": "Decode of invalid UTF8 does not fail"},
-
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_condensed", "note": "field sorting is wrong, probably sorted internal tables needed"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_indented"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "array_index",     "note": "uses secondary index array_index?"},
