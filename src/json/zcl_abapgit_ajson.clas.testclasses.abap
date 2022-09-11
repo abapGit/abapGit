@@ -3085,11 +3085,9 @@ CLASS ltcl_integrated IMPLEMENTATION.
     lv_src = lv_src && ']'.
 
     DATA li_reader TYPE REF TO zif_abapgit_ajson.
-    WRITE '@KERNEL console.dir(lv_src);'.
     li_reader = zcl_abapgit_ajson=>parse( lv_src ).
     li_reader->to_abap( IMPORTING ev_container = lt_act ).
 
-    WRITE '@KERNEL console.dir(lt_act);'.
     cl_abap_unit_assert=>assert_equals(
       act = lt_act
       exp = lt_exp ).
