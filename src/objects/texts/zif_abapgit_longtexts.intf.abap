@@ -23,6 +23,8 @@ INTERFACE zif_abapgit_longtexts
   METHODS deserialize
     IMPORTING
       !iv_longtext_name TYPE string DEFAULT 'LONGTEXTS'
+      !iv_object_name   TYPE sobj_name
+      !iv_longtext_id   TYPE dokil-id
       !ii_xml           TYPE REF TO zif_abapgit_xml_input
       !iv_main_language TYPE sy-langu
     RAISING

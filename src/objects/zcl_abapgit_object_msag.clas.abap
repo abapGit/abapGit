@@ -402,7 +402,8 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
         AND msgnr = ls_t100u-msgnr.                       "#EC CI_SUBRC
     ENDLOOP.
 
-    deserialize_longtexts( io_xml ).
+    deserialize_longtexts( ii_xml         = io_xml
+                           iv_longtext_id = 'NA' ).
 
     deserialize_texts( io_xml ).
 

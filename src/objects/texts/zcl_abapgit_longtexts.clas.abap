@@ -162,8 +162,6 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
   METHOD zif_abapgit_longtexts~deserialize.
 
     DATA: lt_longtexts    TYPE ty_longtexts,
-          lv_longtext_id  TYPE dokil-id,
-          lv_object_name  TYPE dokil-object,
           lt_dokil        TYPE zif_abapgit_definitions=>ty_dokil_tt,
           lv_no_main_lang TYPE dokil-masterlang.
 
@@ -175,10 +173,6 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
         iv_name = iv_longtext_name
       CHANGING
         cg_data = lt_longtexts ).
-
-    IF lt_longtexts IS INITIAL.
-      RETURN.
-    ENDIF.
 
     LOOP AT lt_longtexts ASSIGNING <ls_longtext>.
 
@@ -194,17 +188,14 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
         TABLES
           line          = <ls_longtext>-lines.
 
-      lv_longtext_id = <ls_longtext>-dokil-id.
-      lv_object_name = <ls_longtext>-dokil-object.
-
     ENDLOOP.
 
     " Read existing texts and check if they were deserialized above
     " If not, delete the texts
     SELECT * FROM dokil
       INTO TABLE lt_dokil
-      WHERE id     = lv_longtext_id
-      AND   object = lv_object_name.
+      WHERE id     = iv_longtext_id
+      AND   object = iv_object_name.
 
     LOOP AT lt_dokil ASSIGNING <ls_dokil>.
 
