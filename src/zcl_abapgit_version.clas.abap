@@ -323,7 +323,7 @@ CLASS zcl_abapgit_version IMPLEMENTATION.
     LOOP AT lt_statements FROM <ls_structure>-stmnt_from TO <ls_structure>-stmnt_to ASSIGNING <ls_statement>.
       LOOP AT lt_tokens FROM <ls_statement>-from TO <ls_statement>-to
            TRANSPORTING NO FIELDS
-           WHERE type = 'I' AND str = lv_component_name.
+           WHERE type = c_token_types-identifier AND str = lv_component_name.
         lv_found_token_index = sy-tabix.
         EXIT.
       ENDLOOP.
@@ -356,7 +356,10 @@ CLASS zcl_abapgit_version IMPLEMENTATION.
             rv_version = <ls_token>-str.
             IF rv_version CP '`*`' OR rv_version CP `'*'`.
               lv_version_length = strlen( rv_version ).
-              rv_version = substring( val = rv_version off = 1 len = lv_version_length - 2 ).
+              rv_version = substring(
+                             val = rv_version
+                             off = 1
+                             len = lv_version_length - 2 ).
             ENDIF.
         ENDCASE.
 
