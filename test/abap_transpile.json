@@ -134,7 +134,6 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_sorted_tab", "note": "CREATE DATA, cl_abap_structdescr"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_struc", "note": "CREATE DATA, unknown handle type"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_array", "note": "??"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_w_plain_tab", "note": "??"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_hashed_plain_tab", "note": "??"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_hashed_tab", "note": "CREATE DATA, unknown handle type"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_w_tab_of_struc", "note": "CREATE DATA, unknown handle type"},
@@ -146,7 +145,7 @@
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "reader",       "note": "Path not found @/false"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_index",  "note": "CREATE DATA, cl_abap_structdescr"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_simple", "note": "CREATE DATA, unknown handle type"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_simple", "note": "sorting is wrong"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "item_order_integrated", "note": "some sorting"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "stringify"},
 
