@@ -21,7 +21,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OO_BASE IMPLEMENTATION.
+CLASS zcl_abapgit_oo_base IMPLEMENTATION.
 
 
   METHOD convert_attrib_to_vseoattrib.
@@ -164,6 +164,24 @@ CLASS ZCL_ABAPGIT_OO_BASE IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_oo_object_fnc~read_descriptions_sub.
+    IF iv_language IS INITIAL.
+      " load all languages
+      SELECT * FROM seosubcotx INTO TABLE rt_descriptions
+             WHERE clsname   = iv_object_name
+               AND descript <> ''
+             ORDER BY PRIMARY KEY.                        "#EC CI_SUBRC
+    ELSE.
+      " load main language
+      SELECT * FROM seosubcotx INTO TABLE rt_descriptions
+              WHERE clsname   = iv_object_name
+                AND langu     = iv_language
+                AND descript <> ''
+              ORDER BY PRIMARY KEY.                       "#EC CI_SUBRC
+    ENDIF.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_oo_object_fnc~read_documentation.
     DATA: lv_state  TYPE dokstate,
           lt_lines  TYPE tlinetab.
@@ -230,5 +248,11 @@ CLASS ZCL_ABAPGIT_OO_BASE IMPLEMENTATION.
   METHOD zif_abapgit_oo_object_fnc~update_descriptions.
     DELETE FROM seocompotx WHERE clsname = is_key-clsname. "#EC CI_SUBRC
     INSERT seocompotx FROM TABLE it_descriptions.         "#EC CI_SUBRC
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_oo_object_fnc~update_descriptions_sub.
+    DELETE FROM seosubcotx WHERE clsname = is_key-clsname. "#EC CI_SUBRC
+    INSERT seosubcotx FROM TABLE it_descriptions.         "#EC CI_SUBRC
   ENDMETHOD.
 ENDCLASS.
