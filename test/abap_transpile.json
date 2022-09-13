@@ -2,6 +2,8 @@
   "input_folder": "{test,src,deps}",
   "input_filter": [
     "deps/",
+    "src/ui/zcl_abapgit_e",
+    "src/zcl_abapgit_e",
     "zcl_abapgit_adt_link",
     "zcl_abapgit_ajson*",
     "zcl_abapgit_apack_reader",
@@ -9,15 +11,20 @@
     "zcl_abapgit_b",
     "zcl_abapgit_c",
     "zcl_abapgit_d",
-    "src/zcl_abapgit_e",
-    "src/ui/zcl_abapgit_e",
     "zcl_abapgit_f",
     "zcl_abapgit_g",
     "zcl_abapgit_h",
     "zcl_abapgit_i",
     "zcl_abapgit_l",
     "zcl_abapgit_n",
+    "zcl_abapgit_object_intf, transpiler todo, super constructor call",
+    "zcl_abapgit_objects_files",
+    "zcl_abapgit_objects_program",
+    "zcl_abapgit_objects_super",
     "zcl_abapgit_objects.clas.abap",
+    "zcl_abapgit_oo_factory",
+    "zcl_abapgit_oo_base",
+    "zcl_abapgit_oo_interface",
     "zcl_abapgit_p",
     "zcl_abapgit_r",
     "zcl_abapgit_s",
@@ -38,6 +45,7 @@
     "zif_abapgit_l",
     "zif_abapgit_m",
     "zif_abapgit_object",
+    "zif_abapgit_oo_object_fnc",
     "zif_abapgit_p",
     "zif_abapgit_r",
     "zif_abapgit_s",
@@ -76,8 +84,6 @@
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_longtext", "method": "multiline_longtext"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_longtext", "method": "text_from_previous_exception", "note": "Cannot read properties of undefined (reading 'if_message$get_text')"},
 
-      {"object": "ZCL_ABAPGIT_DEPENDENCIES", "class": "ltcl_resolve_packages", "method": "resolve_single", "note": "??"},
-
       {"object": "ZCL_ABAPGIT_HTML",       "class": "ltcl_html", "method": "style1",    "note": "indentation is wrong in result, ASSERT failed, ??"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty1",   "note": "ASSERT failed, ??, newline missing, offset off by one?"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty2"},
@@ -89,17 +95,12 @@
       {"object": "ZCL_ABAPGIT_ZLIB",       "class": "ltcl_zlib", "method": "fixed"},
       {"object": "ZCL_ABAPGIT_UTILS",      "class": "ltcl_is_binary", "method": "image_is_binary",          "note": "REGEX '[^[:print:]]'"},
 
-      {"object": "ZCL_ABAPGIT_CONVERT", "class": "ltcl_convert", "method": "xstring_to_string_not_utf8", "note": "Decode of invalid UTF8 does not fail"},
-
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_condensed", "note": "field sorting is wrong, probably sorted internal tables needed"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_indented"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "array_index",     "note": "uses secondary index array_index?"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "item_order",      "note": "uses secondary index item_order?"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "simple_indented", "note": "some sorting"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "escape",          "note": "ASSERT failed, ??"},
-
-      {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "json_diff_arrays", "note": "infinite loop"},
-      {"object": "ZCL_ABAPGIT_AJSON_UTILITIES", "class": "ltcl_json_utils", "method": "is_equal", "note": "infinite loop"},
 
       {"object": "ZCL_ABAPGIT_SERIALIZE", "class": "ltcl_determine_max_threads", "method": "determine_max_threads", "note": "TypeError: abap.FunctionModules.FUNCTION_EXISTS is not a function"},
       {"object": "ZCL_ABAPGIT_SERIALIZE", "class": "ltcl_serialize", "method": "test",        "note": "Void type: KO100"},
@@ -110,8 +111,7 @@
       {"object": "ZCL_ABAPGIT_TRANSPORT_OBJECTS", "class": "ltcl_transport_objects", "method": "should_add_all_local_files", "note": "??"},
       {"object": "ZCL_ABAPGIT_TRANSPORT_OBJECTS", "class": "ltcl_transport_objects", "method": "should_delete_all_related", "note": "??"},
 
-      {"object": "ZCL_ABAPGIT_FILENAME_LOGIC", "class": "ltcl_run_checks", "method": "file_to_object", "note": "some bug in url unescape"},
-      {"object": "ZCL_ABAPGIT_FILENAME_LOGIC", "class": "ltcl_run_checks", "method": "file_to_object_pack", "note": "??"},
+      {"object": "ZCL_ABAPGIT_FILENAME_LOGIC", "class": "ltcl_run_checks", "method": "file_to_object_pack", "note": "CL_PACKAGE_FACTORY missing"},
 
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "check_namespace", "note": "Collect, transpiler todo"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "check_sub_package", "note": "??"},
@@ -126,23 +126,19 @@
       {"object": "ZCL_ABAPGIT_FOLDER_LOGIC", "class": "ltcl_folder_logic", "method": "mixed3", "note": "??"},
       {"object": "ZCL_ABAPGIT_FOLDER_LOGIC", "class": "ltcl_folder_logic", "method": "full3", "note": "??"},
 
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_negative", "note": "todo in cl_abap_structdescr.get_component_type, raise classic exception"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_sorted_tab", "note": "CREATE DATA, unknown handle type"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_struc", "note": "CREATE DATA, unknown handle type"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_array", "note": "??"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_w_plain_tab", "note": "??"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_sorted_tab", "note": "CREATE DATA, cl_abap_structdescr"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_hashed_plain_tab", "note": "??"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_hashed_tab", "note": "CREATE DATA, unknown handle type"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_w_tab_of_struc", "note": "CREATE DATA, unknown handle type"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_array_of_arrays", "note": "Right-hand side of 'instanceof' is not an object"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_w_tab_of_struc", "note": "CREATE DATA, TypeError: _a.set is not a function"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_array_of_arrays", "note": "CREATE DATA, unknown handle type"},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "overwrite_w_keep_order_touch", "note": "some sorting"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "overwrite_w_keep_order_set", "note": "some sorting"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_tab_hashed", "note": "runtime error, SortByLengthZero"},
 
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "reader",       "note": "keyword? Path not found @/false"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_index",  "note": "CREATE DATA, unknown handle type"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_simple", "note": "Right-hand side of 'instanceof' is not an object"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "reader",       "note": "Path not found @/false"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_index",  "note": "CREATE DATA, cl_abap_structdescr"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_simple", "note": "sorting is wrong"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "item_order_integrated", "note": "some sorting"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "stringify"},
 
@@ -151,10 +147,8 @@
 
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_camel_case", "method": "to_abap", "note": "secondary key fields? READ WITH KEY, Path not found @/FieldData"},
 
-      {"object": "ZCL_ABAPGIT_DATA_DESERIALIZER", "class": "ltcl_test", "method": "test1", "note": "cx_sy_create_data_error in Statements.createData"},
-      {"object": "ZCL_ABAPGIT_DATA_SERIALIZER", "class": "ltcl_test", "method": "serialize", "note": "abap.FunctionModules.DD_EXIST_TABLE is not a function"},
-
-      {"object": "ZCL_ABAPGIT_DATA_CONFIG", "class": "ltcl_test", "method": "to_json", "note": "todo in CREATE DATA TYPE HANDLE"},
+      {"object": "ZCL_ABAPGIT_DATA_DESERIALIZER", "class": "ltcl_test", "method": "test1", "note": "refactor testcase, it uses SFLIGHT, cx_sy_create_data_error in Statements.createData"},
+      {"object": "ZCL_ABAPGIT_DATA_SERIALIZER", "class": "ltcl_test", "method": "serialize", "note": "refactor to use RTTI? abap.FunctionModules.DD_EXIST_TABLE is not a function"},
 
       {"object": "ZCL_ABAPGIT_REQUIREMENT_HELPER", "class": "ltcl_lower_release", "method": "empty_patch", "note": "Void type: CVERS_SDU"},
       {"object": "ZCL_ABAPGIT_REQUIREMENT_HELPER", "class": "ltcl_lower_release", "method": "lower_patch", "note": "Void type: CVERS_SDU"},
@@ -186,6 +180,11 @@
       {"object": "ZCL_ABAPGIT_XML_INPUT", "class": "ltcl_xml", "method": "down"},
 
       {"object": "ZCL_ABAPGIT_GIT_URL", "class": "ltcl_repo_online", "method": "test_repo_commit_show_urls"},
+
+      {"object": "ZCL_ABAPGIT_OBJECTS_PROGRAM", "class": "ltcl_test", "method": "strip_generation_comments_1", "note": "Void type: ABAPTXT255_TAB"},
+      {"object": "ZCL_ABAPGIT_OBJECTS_PROGRAM", "class": "ltcl_test", "method": "strip_generation_comments_2", "note": "Void type: ABAPTXT255_TAB"},
+      {"object": "ZCL_ABAPGIT_OBJECTS_FILES", "class": "ltcl_objects_files", "method": "read_abap", "note": "Void type: ABAPTXT255_TAB"},
+      {"object": "ZCL_ABAPGIT_OBJECTS_FILES", "class": "ltcl_objects_files", "method": "read_xml", "note": "Void type: PROGNAME"},
 
       {"object": "ZCL_ABAPGIT_SOTR_HANDLER", "class": "ltcl_sotr_handler", "method": "sotr_wda_0001",           "note": "Void type: SOTR_HEAD"},
       {"object": "ZCL_ABAPGIT_SOTR_HANDLER", "class": "ltcl_sotr_handler", "method": "sotr_wda_0003_not_exist", "note": "Void type: SOTR_HEAD"},
