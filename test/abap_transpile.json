@@ -147,10 +147,10 @@
 
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_camel_case", "method": "to_abap", "note": "secondary key fields? READ WITH KEY, Path not found @/FieldData"},
 
-      {"object": "ZCL_ABAPGIT_DATA_DESERIALIZER", "class": "ltcl_test", "method": "test1", "note": " https://github.com/abapGit/abapGit/pull/5758 "},
-      {"object": "ZCL_ABAPGIT_DATA_SERIALIZER", "class": "ltcl_test", "method": "serialize", "note": " https://github.com/abapGit/abapGit/pull/5758 "},
-      {"object": "ZCL_ABAPGIT_DATA_SERIALIZER", "class": "ltcl_test", "method": "serialize_error_table", "note": "throws cx_sy_create_data_error"},
-      {"object": "ZCL_ABAPGIT_DATA_SERIALIZER", "class": "ltcl_test", "method": "serialize_error_field", "note": "todo in cl_abap_tabledescr->get_with_keys"},
+      {"object": "ZCL_ABAPGIT_DATA_DESERIALIZER", "class": "ltcl_test", "method": "test1", "note": " https://github.com/open-abap/open-abap/pull/455 "},
+      {"object": "ZCL_ABAPGIT_DATA_SERIALIZER", "class": "ltcl_test", "method": "serialize", "note": " https://github.com/open-abap/open-abap/pull/455 "},
+      {"object": "ZCL_ABAPGIT_DATA_SERIALIZER", "class": "ltcl_test", "method": "serialize_error_table", "note": " https://github.com/open-abap/open-abap/pull/455 "},
+      {"object": "ZCL_ABAPGIT_DATA_SERIALIZER", "class": "ltcl_test", "method": "serialize_error_field", "note": " https://github.com/open-abap/open-abap/pull/455 "},
 
       {"object": "ZCL_ABAPGIT_REQUIREMENT_HELPER", "class": "ltcl_lower_release", "method": "empty_patch", "note": "Void type: CVERS_SDU"},
       {"object": "ZCL_ABAPGIT_REQUIREMENT_HELPER", "class": "ltcl_lower_release", "method": "lower_patch", "note": "Void type: CVERS_SDU"},
