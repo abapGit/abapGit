@@ -15,6 +15,8 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
 
   TYPES:
     ty_seocompotx_tt TYPE STANDARD TABLE OF seocompotx WITH DEFAULT KEY .
+  TYPES:
+    ty_seosubcotx_tt TYPE STANDARD TABLE OF seosubcotx WITH DEFAULT KEY .
 
   METHODS:
     create
@@ -54,6 +56,10 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
       IMPORTING
         is_key          TYPE seoclskey
         it_descriptions TYPE ty_seocompotx_tt,
+    update_descriptions_sub
+      IMPORTING
+        is_key          TYPE seoclskey
+        it_descriptions TYPE ty_seosubcotx_tt,
     add_to_activation_list
       IMPORTING
         is_item TYPE zif_abapgit_definitions=>ty_item
@@ -145,6 +151,12 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
         iv_language            TYPE spras OPTIONAL
       RETURNING
         VALUE(rt_descriptions) TYPE ty_seocompotx_tt,
+    read_descriptions_sub
+      IMPORTING
+        iv_object_name         TYPE seoclsname
+        iv_language            TYPE spras OPTIONAL
+      RETURNING
+        VALUE(rt_descriptions) TYPE ty_seosubcotx_tt,
     delete
       IMPORTING
         is_deletion_key TYPE seoclskey
