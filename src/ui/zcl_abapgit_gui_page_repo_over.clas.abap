@@ -358,7 +358,14 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     lo_toolbar_more_sub->add( iv_txt = 'Danger'
                               iv_typ = zif_abapgit_html=>c_action_type-separator ).
 
+    lo_toolbar_more_sub->add( iv_txt   = |Remove|
+                              iv_title = |Remove abapGit's records of the repository (the system's |
+                                         && |development objects will remain unaffected)|
+                              iv_act   = |{ zif_abapgit_definitions=>c_action-repo_remove }{ lc_dummy_key }| ).
+
     lo_toolbar_more_sub->add( iv_txt      = |Uninstall|
+                              iv_title    = |Delete all development objects belonging to this package |
+                                            && |(and subpackages) from the system|
                               iv_act      = |{ zif_abapgit_definitions=>c_action-repo_purge }{ lc_dummy_key }|
                               iv_class    = |{ lc_action_class } { lc_online_class }|
                               iv_li_class = |{ lc_action_class }| ).
