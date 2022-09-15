@@ -17,7 +17,7 @@
     "zcl_abapgit_i",
     "zcl_abapgit_l",
     "zcl_abapgit_n",
-    "zcl_abapgit_object_intf, CREATE OBJECT wrong type determined, transpiler change",
+    "zcl_abapgit_object_intf, Void type: TLINETAB",
     "zcl_abapgit_objects_files",
     "zcl_abapgit_objects_program",
     "zcl_abapgit_objects_super",
