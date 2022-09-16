@@ -49,4 +49,7 @@ INTERFACE zif_abapgit_sap_package
       VALUE(rv_transport_layer) TYPE devlayer
     RAISING
       zcx_abapgit_exception .
+  METHODS get_description
+    RETURNING
+      VALUE(rv_description) TYPE string.
 ENDINTERFACE.

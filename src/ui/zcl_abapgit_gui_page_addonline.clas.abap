@@ -108,8 +108,6 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
 
   METHOD derive_package.
 
-    DATA lv_name TYPE string.
-
     " Derive package from URL (repo name)
     TRY.
         rv_package = to_upper( replace(
@@ -122,7 +120,7 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
 
     " Map to valid package name
     IF rv_package(1) NA 'YZ'.
-      rv_package = 'Z' && rv_package.
+      rv_package = '$' && rv_package.
     ENDIF.
     IF strlen( rv_package ) > 30.
       rv_package = rv_package(30).
