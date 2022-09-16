@@ -105,6 +105,10 @@ CLASS ltcl_run_checks IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~get_description.
+    RETURN.
+  ENDMETHOD.
+
   METHOD append_result.
 
     DATA ls_result LIKE LINE OF mt_results.

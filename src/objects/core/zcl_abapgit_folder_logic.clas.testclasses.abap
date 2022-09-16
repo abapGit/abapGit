@@ -96,6 +96,10 @@ CLASS ltcl_folder_logic_package IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~get_description.
+    RETURN.
+  ENDMETHOD.
+
 ENDCLASS.
 
 CLASS ltcl_folder_logic DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
@@ -162,6 +166,10 @@ CLASS ltcl_folder_logic IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_sap_package~create_local.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~get_description.
     RETURN.
   ENDMETHOD.
 
@@ -362,6 +370,10 @@ CLASS ltcl_folder_logic_namespaces IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~get_description.
+    RETURN.
+  ENDMETHOD.
+
   METHOD setup.
 
     zcl_abapgit_injector=>set_sap_package( iv_package     = c_top
@@ -490,6 +502,10 @@ CLASS ltcl_folder_logic_no_parent IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_sap_package~create_local.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~get_description.
     RETURN.
   ENDMETHOD.
 
