@@ -79,6 +79,9 @@ CLASS lth_oo_object_fnc IMPLEMENTATION.
   METHOD zif_abapgit_oo_object_fnc~read_descriptions.
   ENDMETHOD.
 
+  METHOD zif_abapgit_oo_object_fnc~read_descriptions_sub.
+  ENDMETHOD.
+
   METHOD zif_abapgit_oo_object_fnc~read_documentation.
   ENDMETHOD.
 
@@ -97,6 +100,9 @@ CLASS lth_oo_object_fnc IMPLEMENTATION.
   METHOD zif_abapgit_oo_object_fnc~update_descriptions.
     ms_descriptions_key = is_key.
     mt_descriptions = it_descriptions.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_oo_object_fnc~update_descriptions_sub.
   ENDMETHOD.
 
 ENDCLASS.

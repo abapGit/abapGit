@@ -41,23 +41,23 @@ CLASS zcl_abapgit_objects_program DEFINITION
 
     METHODS serialize_program
       IMPORTING
-        !io_xml TYPE REF TO zif_abapgit_xml_output OPTIONAL
-        !is_item TYPE zif_abapgit_definitions=>ty_item
-        !io_files TYPE REF TO zcl_abapgit_objects_files
+        !io_xml     TYPE REF TO zif_abapgit_xml_output OPTIONAL
+        !is_item    TYPE zif_abapgit_definitions=>ty_item
+        !io_files   TYPE REF TO zcl_abapgit_objects_files
         !iv_program TYPE programm OPTIONAL
-        !iv_extra TYPE clike OPTIONAL
+        !iv_extra   TYPE clike OPTIONAL
       RAISING
         zcx_abapgit_exception.
     METHODS read_progdir
       IMPORTING
-        !iv_program TYPE programm
+        !iv_program       TYPE programm
       RETURNING
         VALUE(rs_progdir) TYPE ty_progdir.
     METHODS deserialize_program
       IMPORTING
         !is_progdir TYPE ty_progdir
-        !it_source TYPE abaptxt255_tab
-        !it_tpool TYPE textpool_table
+        !it_source  TYPE abaptxt255_tab
+        !it_tpool   TYPE textpool_table
         !iv_package TYPE devclass
       RAISING
         zcx_abapgit_exception.
@@ -200,7 +200,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
+CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
 
   METHOD add_tpool.
@@ -337,10 +337,10 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 
     CONSTANTS lc_rpyty_force_off TYPE c LENGTH 1 VALUE '/'.
 
-    DATA: lv_name   TYPE dwinactiv-obj_name,
+    DATA: lv_name            TYPE dwinactiv-obj_name,
           lt_d020s_to_delete TYPE TABLE OF d020s,
-          ls_d020s  LIKE LINE OF lt_d020s_to_delete,
-          ls_dynpro LIKE LINE OF it_dynpros.
+          ls_d020s           LIKE LINE OF lt_d020s_to_delete,
+          ls_dynpro          LIKE LINE OF it_dynpros.
 
     FIELD-SYMBOLS: <ls_field> TYPE rpy_dyfatc.
 
@@ -446,9 +446,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 
       CALL FUNCTION 'RS_SCRP_DELETE'
         EXPORTING
-          dynnr      = ls_d020s-dnum
-          progname   = ms_item-obj_name
-          with_popup = abap_false
+          dynnr                  = ls_d020s-dnum
+          progname               = ms_item-obj_name
+          with_popup             = abap_false
         EXCEPTIONS
           enqueued_by_user       = 1
           enqueue_system_failure = 2
