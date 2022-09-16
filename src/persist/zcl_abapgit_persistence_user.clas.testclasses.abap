@@ -5,9 +5,10 @@ CLASS ltcl_user DEFINITION
 
   PRIVATE SECTION.
     CONSTANTS:
+      c_tabname   TYPE tabname VALUE 'ZABAPGIT',
+      c_type      TYPE c LENGTH 12 VALUE 'REPO',
       c_abap_user TYPE sy-uname VALUE 'ABAPGIT_TEST',
       c_git_user  TYPE string VALUE 'abapgit_tester',
-      c_repo_key  TYPE zif_abapgit_persistence=>ty_repo-key VALUE '000000000001',
       c_repo_url  TYPE string VALUE 'https://github.com/abapGit/abapGit'.
 
     DATA:
@@ -44,10 +45,16 @@ CLASS ltcl_user IMPLEMENTATION.
 
   METHOD set_get_repo_show.
 
-    DATA: lv_key TYPE zif_abapgit_persistence=>ty_repo-key.
+    DATA: lv_key      TYPE zif_abapgit_persistence=>ty_repo-key,
+          lv_repo_key TYPE zif_abapgit_persistence=>ty_repo-key.
+
+    SELECT MIN( value ) FROM (c_tabname) INTO lv_repo_key WHERE type = c_type.
+    IF sy-subrc <> 0.
+      RETURN. " can't test
+    ENDIF.
 
     mi_user = zcl_abapgit_persistence_user=>get_instance( c_abap_user ).
-    mi_user->set_repo_show( c_repo_key ).
+    mi_user->set_repo_show( lv_repo_key ).
 
     FREE mi_user.
 
@@ -56,7 +63,7 @@ CLASS ltcl_user IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_key
-      exp = c_repo_key ).
+      exp = lv_repo_key ).
 
   ENDMETHOD.
 
