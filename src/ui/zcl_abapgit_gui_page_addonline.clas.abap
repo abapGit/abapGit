@@ -38,6 +38,7 @@ CLASS zcl_abapgit_gui_page_addonline DEFINITION
         go_back         TYPE string VALUE 'go-back',
         choose_package  TYPE string VALUE 'choose-package',
         create_package  TYPE string VALUE 'create-package',
+        derive_package  TYPE string VALUE 'derive-package-name',
         choose_branch   TYPE string VALUE 'choose-branch',
         add_online_repo TYPE string VALUE 'add-repo-online',
       END OF c_event.
@@ -58,11 +59,24 @@ CLASS zcl_abapgit_gui_page_addonline DEFINITION
     METHODS get_form_schema
       RETURNING
         VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form.
+
+    METHODS derive_package
+      IMPORTING
+        iv_url            TYPE string
+      RETURNING
+        VALUE(rv_package) TYPE devclass.
+
+    METHODS derive_name
+      IMPORTING
+        iv_package     TYPE devclass
+      RETURNING
+        VALUE(rv_name) TYPE string.
+
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -83,6 +97,36 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title      = 'New Online Repository'
       ii_child_component = lo_component ).
+
+  ENDMETHOD.
+
+
+  METHOD derive_name.
+    rv_name = zcl_abapgit_factory=>get_sap_package( iv_package )->get_description( ).
+  ENDMETHOD.
+
+
+  METHOD derive_package.
+
+    DATA lv_name TYPE string.
+
+    " Derive package from URL (repo name)
+    TRY.
+        rv_package = to_upper( replace(
+          val  = zcl_abapgit_url=>name( iv_url )
+          sub  = '.git'
+          with = '' ) ).
+      CATCH zcx_abapgit_exception.
+        RETURN.
+    ENDTRY.
+
+    " Map to valid package name
+    IF rv_package(1) NA 'YZ'.
+      rv_package = 'Z' && rv_package.
+    ENDIF.
+    IF strlen( rv_package ) > 30.
+      rv_package = rv_package(30).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -148,6 +192,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
       iv_label       = 'Create Package'
       iv_action      = c_event-create_package
     )->command(
+      iv_label       = 'Derive Package'
+      iv_action      = c_event-derive_package
+    )->command(
       iv_label       = 'Back'
       iv_action      = c_event-go_back ).
 
@@ -196,6 +243,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA: ls_repo_params     TYPE zif_abapgit_services_repo=>ty_repo_params,
+          lv_package         TYPE devclass,
           lo_new_online_repo TYPE REF TO zcl_abapgit_repo_online.
 
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
@@ -228,6 +276,22 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
         ELSE.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
         ENDIF.
+
+      WHEN c_event-derive_package.
+
+        lv_package = derive_package( mo_form_data->get( c_id-url ) ).
+
+        IF lv_package IS NOT INITIAL.
+          mo_form_data->set(
+            iv_key = c_id-package
+            iv_val = lv_package ).
+
+          mo_form_data->set(
+            iv_key = c_id-display_name
+            iv_val = derive_name( lv_package ) ).
+        ENDIF.
+
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_event-choose_branch.
 
