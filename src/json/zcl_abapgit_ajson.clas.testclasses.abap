@@ -1373,6 +1373,12 @@ CLASS ltcl_json_to_abap DEFINITION
     METHODS to_abap_negative
       FOR TESTING
       RAISING zcx_abapgit_ajson_error.
+    METHODS to_abap_corresponding
+      FOR TESTING
+      RAISING zcx_abapgit_ajson_error.
+    METHODS to_abap_corresponding_negative
+      FOR TESTING
+      RAISING zcx_abapgit_ajson_error.
 
 ENDCLASS.
 
@@ -1865,6 +1871,68 @@ CLASS ltcl_json_to_abap IMPLEMENTATION.
         cl_abap_unit_assert=>assert_equals(
         act = lx->message
         exp = 'Duplicate insertion' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD to_abap_corresponding.
+
+    DATA lo_cut TYPE REF TO lcl_json_to_abap.
+    DATA ls_act TYPE ty_struc.
+    DATA ls_exp  TYPE ty_struc.
+    DATA lo_nodes TYPE REF TO lcl_nodes_helper.
+
+    CREATE OBJECT lo_nodes.
+    lo_nodes->add( '       |           |object |                          | ' ).
+    lo_nodes->add( '/      |a          |str    |test                      | ' ).
+    lo_nodes->add( '/      |c          |num    |24022022                  | ' ).
+
+    ls_exp-a  = 'test'.
+
+    CREATE OBJECT lo_cut
+      EXPORTING
+        iv_corresponding = abap_true.
+
+    lo_cut->to_abap(
+      EXPORTING
+        it_nodes    = lo_nodes->sorted( )
+      CHANGING
+        c_container = ls_act ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_act
+      exp = ls_exp ).
+
+  ENDMETHOD.
+
+  METHOD to_abap_corresponding_negative.
+
+    DATA lo_cut TYPE REF TO lcl_json_to_abap.
+    DATA ls_act TYPE ty_struc.
+    DATA ls_exp  TYPE ty_struc.
+    DATA lo_nodes TYPE REF TO lcl_nodes_helper.
+    DATA lx TYPE REF TO zcx_abapgit_ajson_error.
+
+    CREATE OBJECT lo_nodes.
+    lo_nodes->add( '       |           |object |                          | ' ).
+    lo_nodes->add( '/      |a          |str    |test                      | ' ).
+    lo_nodes->add( '/      |c          |num    |24022022                  | ' ).
+
+    ls_exp-a  = 'test'.
+    ls_exp-b  = 24022022.
+
+    TRY.
+        CREATE OBJECT lo_cut.
+        lo_cut->to_abap(
+        EXPORTING
+          it_nodes    = lo_nodes->sorted( )
+        CHANGING
+          c_container = ls_act ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_ajson_error INTO lx.
+        cl_abap_unit_assert=>assert_equals(
+        act = lx->message
+        exp = 'Path not found' ).
     ENDTRY.
 
   ENDMETHOD.
@@ -3562,13 +3630,14 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
 
     DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
     DATA lt_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt.
+    DATA lv_timezone TYPE tzonref-tzone VALUE ''.
 
     DATA lv_timestamp TYPE timestamp.
     CREATE OBJECT lo_nodes_exp.
     lo_nodes_exp->add( '        |      |str |2022-08-31T00:00:00Z||' ).
 
     CONVERT DATE '20220831' TIME '000000'
-      INTO TIME STAMP lv_timestamp TIME ZONE ''.
+      INTO TIME STAMP lv_timestamp TIME ZONE lv_timezone.
     lt_nodes = lcl_abap_to_json=>convert( lcl_abap_to_json=>format_timestamp( lv_timestamp ) ).
 
     cl_abap_unit_assert=>assert_equals(
