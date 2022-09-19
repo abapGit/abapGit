@@ -46,7 +46,7 @@ CLASS ltcl_user IMPLEMENTATION.
     DATA: lv_key      TYPE zif_abapgit_persistence=>ty_repo-key,
           lv_repo_key TYPE zif_abapgit_persistence=>ty_repo-key.
 
-    SELECT MIN( value ) FROM (zcl_abapgit_persistence_db=>c_tabname) INTO lv_repo_key 
+    SELECT MIN( value ) FROM (zcl_abapgit_persistence_db=>c_tabname) INTO lv_repo_key
       WHERE type = zcl_abapgit_persistence_db=>c_type_repo.
     IF sy-subrc <> 0.
       RETURN. " can't test
