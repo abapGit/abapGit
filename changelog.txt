@@ -8,6 +8,50 @@ Legend
 + : added
 - : removed
 
+2022-09-19 v1.117.0
+-------------------
+
+! Removal of some unused code currently does not work automatically (#5578):
+  Edit class zcl_abapgit_popups` and remove method zif_abapgit_popups~branch_popup_callback manually
+- Remove unused branch popup (#5742)
++ AFF: Allow object handler to serialize JSON via experimental feature (#5660)
++ Skipping serialization for ignored objects (#5648)
++ IWSG: implement CHANGED_BY (#5680)
++ Improve package / sub-package check (#5628)
++ New Object EVTB - Event Binding - based on AFF (#5707)
++ Data serialization, add WHERE condition based on transport (#5720)
++ Add page for running unit tests (#5719)
++ Export object page: add setting for only main language (#5735)
++ New SOBJ - Business Object Type - serializer (#5724)
++ G4xx, IWxx: Changed by (#5747)
++ Add uninstall option to repository overview (#5753)
++ CLAS,INTF: Add missing shorttexts (#5755)
+* CLAS: Avoid duplicate key error (#5663)
+* AFF: Get data for serialization from the DB (#5670)
+* Repo view: Fix "View > Changes only" for offline (#5641)
+* Exception handling small improvement (#5691)
+* AFF: Custom AJSON filter for INTF serialization (#5675)
+* AFF: More detailed error msg (#5709)
+* Improvements for CHK* classes (#5712)
+* Deal with empty active version (object was never activated) (#5714)
+* AFF: deserialize INTF metadata as JSON (#5704)
+* zlib/deflate decompression, bugfix (#5723)
+* Advanced dropdown: add separators (#5717)
+* Fix language conversion, now 7.02 compatible (#5727)
+* Fix some background colors (#5716)
+* Fix regression in non-Unicode systems (#5732)
+* Check logon language during uninstall (#5731)
+* Fixed "Add via Transport" short keys (#5736)
+* DEVC: Fix dump if package has been delete (#5741)
+* Fix dump when deleting repo with DB utility (#5740)
+* WDYN: Fix dump if no components exist (#5749)
+* SCVI: Sort tables to avoid diffs (#5745)
+* W3XX: Sort parameters to avoid diffs (#5746)
+* SUSH,SUSC: Fix deletion (#5748)
+* DSYS: Simplify namespace split (#5757)
+* DOCV: Handle namespaces (#5756)
+* SOTR: Fix handling of alias names (#5750)
+
 2022-06-29 v1.116.0
 -------------------
 
