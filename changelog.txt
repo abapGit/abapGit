@@ -13,6 +13,8 @@ Legend
 
 ! Removal of some unused code currently does not work automatically (#5578):
   Edit class zcl_abapgit_popups` and remove method zif_abapgit_popups~branch_popup_callback manually
+! CLAS and INTF xml file changes: Cleared object name and added descriptions for sub-components
+! SOTR: Fix handling of alias names (#5750)
 - Remove unused branch popup (#5742)
 + AFF: Allow object handler to serialize JSON via experimental feature (#5660)
 + Skipping serialization for ignored objects (#5648)
@@ -50,7 +52,6 @@ Legend
 * SUSH,SUSC: Fix deletion (#5748)
 * DSYS: Simplify namespace split (#5757)
 * DOCV: Handle namespaces (#5756)
-* SOTR: Fix handling of alias names (#5750)
 
 2022-06-29 v1.116.0
 -------------------
