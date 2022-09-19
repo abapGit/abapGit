@@ -5,8 +5,6 @@ CLASS ltcl_user DEFINITION
 
   PRIVATE SECTION.
     CONSTANTS:
-      c_tabname   TYPE tabname VALUE 'ZABAPGIT',
-      c_type      TYPE c LENGTH 12 VALUE 'REPO',
       c_abap_user TYPE sy-uname VALUE 'ABAPGIT_TEST',
       c_git_user  TYPE string VALUE 'abapgit_tester',
       c_repo_url  TYPE string VALUE 'https://github.com/abapGit/abapGit'.
@@ -48,7 +46,8 @@ CLASS ltcl_user IMPLEMENTATION.
     DATA: lv_key      TYPE zif_abapgit_persistence=>ty_repo-key,
           lv_repo_key TYPE zif_abapgit_persistence=>ty_repo-key.
 
-    SELECT MIN( value ) FROM (c_tabname) INTO lv_repo_key WHERE type = c_type.
+    SELECT MIN( value ) FROM (zcl_abapgit_persistence_db=>c_tabname) INTO lv_repo_key 
+      WHERE type = zcl_abapgit_persistence_db=>c_type_repo.
     IF sy-subrc <> 0.
       RETURN. " can't test
     ENDIF.
