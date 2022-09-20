@@ -17,6 +17,8 @@ CLASS zcl_abapgit_object_msag DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       ty_t100s      TYPE STANDARD TABLE OF t100
                            WITH NON-UNIQUE DEFAULT KEY .
 
+    CONSTANTS c_longtext_id_msag TYPE dokil-id VALUE 'NA'.
+
     METHODS serialize_texts
       IMPORTING
         !ii_xml TYPE REF TO zif_abapgit_xml_output
@@ -55,7 +57,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
     CLEAR lv_key_s.
     CALL FUNCTION 'DOCU_OBJECT_NAME_CONCATENATE'
       EXPORTING
-        docu_id  = 'NA'
+        docu_id  = c_longtext_id_msag
         element  = iv_message_id
         addition = '   '
       IMPORTING
@@ -65,7 +67,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 
     CALL FUNCTION 'DOKU_DELETE_ALL'
       EXPORTING
-        doku_id                        = 'NA'
+        doku_id                        = c_longtext_id_msag
         doku_object                    = lv_key_s
         generic_use                    = 'X'
         suppress_authority             = space
@@ -182,7 +184,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
       SELECT * FROM dokil
         INTO TABLE lt_dokil
         FOR ALL ENTRIES IN lt_doku_object_names
-        WHERE id = 'NA'
+        WHERE id = c_longtext_id_msag
         AND object = lt_doku_object_names-table_line
         AND masterlang = abap_true
         ORDER BY PRIMARY KEY.
@@ -191,7 +193,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
       SELECT * FROM dokil
         INTO TABLE lt_dokil
         FOR ALL ENTRIES IN lt_doku_object_names
-        WHERE id = 'NA'
+        WHERE id = c_longtext_id_msag
         AND object = lt_doku_object_names-table_line
         AND langu IN lt_language_filter
         ORDER BY PRIMARY KEY.
@@ -403,7 +405,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
     ENDLOOP.
 
     deserialize_longtexts( ii_xml         = io_xml
-                           iv_longtext_id = 'NA' ).
+                           iv_longtext_id = c_longtext_id_msag ).
 
     deserialize_texts( io_xml ).
 
