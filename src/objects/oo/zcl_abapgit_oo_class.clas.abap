@@ -599,9 +599,7 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
         it_source  = lt_source ).
 
       " If method was implemented before, remove from list
-      IF lv_method CS '~'.
-        DELETE lt_incls WHERE cpdkey-clsname = is_key-clsname AND cpdkey-cpdname = lv_method.
-      ENDIF.
+      DELETE lt_incls WHERE cpdkey-clsname = is_key-clsname AND cpdkey-cpdname = lv_method.
     ENDLOOP.
 
 * full class include
