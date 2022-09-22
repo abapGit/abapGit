@@ -3630,7 +3630,7 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
 
     DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
     DATA lt_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt.
-    DATA lv_timezone TYPE tzonref-tzone VALUE ''.
+    DATA lv_timezone TYPE timezone VALUE ''.
 
     DATA lv_timestamp TYPE timestamp.
     CREATE OBJECT lo_nodes_exp.
