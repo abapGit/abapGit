@@ -81,7 +81,7 @@ CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
         ENDIF.
       CATCH cx_sy_sql_error INTO lx_sql.
         zcx_abapgit_exception=>raise(
-          iv_text     = lx_sql->sqlmsg
+          iv_text     = lx_sql->get_text( )
           ix_previous = lx_sql ).
     ENDTRY.
 
