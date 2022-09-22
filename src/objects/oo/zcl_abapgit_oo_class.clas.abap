@@ -209,7 +209,6 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
     " get method includes for implemented interfaces
     " this will contain also leftover includes for deleted interface methods
     rt_includes = cl_oo_classname_service=>get_all_method_includes( iv_classname ).
-    DELETE rt_includes WHERE cpdkey-cpdname NA '~'.
   ENDMETHOD.
 
 
