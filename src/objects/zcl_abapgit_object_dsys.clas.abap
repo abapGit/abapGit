@@ -143,6 +143,8 @@ CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
       WHEN 'v2.0.0'.
         zcl_abapgit_factory=>get_longtexts( )->deserialize(
           ii_xml           = io_xml
+          iv_object_name   = mv_doc_object
+          iv_longtext_id   = c_id
           iv_main_language = mv_language ).
 
       WHEN OTHERS.
