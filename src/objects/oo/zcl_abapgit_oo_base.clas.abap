@@ -21,7 +21,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OO_BASE IMPLEMENTATION.
+CLASS zcl_abapgit_oo_base IMPLEMENTATION.
 
 
   METHOD convert_attrib_to_vseoattrib.
@@ -147,6 +147,8 @@ CLASS ZCL_ABAPGIT_OO_BASE IMPLEMENTATION.
 
 
   METHOD zif_abapgit_oo_object_fnc~read_descriptions.
+    FIELD-SYMBOLS <ls_description> LIKE LINE OF rt_descriptions.
+
     IF iv_language IS INITIAL.
       " load all languages
       SELECT * FROM seocompotx INTO TABLE rt_descriptions
@@ -161,6 +163,34 @@ CLASS ZCL_ABAPGIT_OO_BASE IMPLEMENTATION.
                 AND descript <> ''
               ORDER BY PRIMARY KEY.                       "#EC CI_SUBRC
     ENDIF.
+
+    LOOP AT rt_descriptions ASSIGNING <ls_description>.
+      CLEAR <ls_description>-clsname.
+    ENDLOOP.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_oo_object_fnc~read_descriptions_sub.
+    FIELD-SYMBOLS <ls_description> LIKE LINE OF rt_descriptions.
+
+    IF iv_language IS INITIAL.
+      " load all languages
+      SELECT * FROM seosubcotx INTO TABLE rt_descriptions
+             WHERE clsname   = iv_object_name
+               AND descript <> ''
+             ORDER BY PRIMARY KEY.                        "#EC CI_SUBRC
+    ELSE.
+      " load main language
+      SELECT * FROM seosubcotx INTO TABLE rt_descriptions
+              WHERE clsname   = iv_object_name
+                AND langu     = iv_language
+                AND descript <> ''
+              ORDER BY PRIMARY KEY.                       "#EC CI_SUBRC
+    ENDIF.
+
+    LOOP AT rt_descriptions ASSIGNING <ls_description>.
+      CLEAR <ls_description>-clsname.
+    ENDLOOP.
   ENDMETHOD.
 
 
@@ -228,7 +258,27 @@ CLASS ZCL_ABAPGIT_OO_BASE IMPLEMENTATION.
 
 
   METHOD zif_abapgit_oo_object_fnc~update_descriptions.
+    DATA lt_descriptions LIKE it_descriptions.
+    FIELD-SYMBOLS <ls_description> LIKE LINE OF it_descriptions.
+
+    lt_descriptions = it_descriptions.
+    LOOP AT lt_descriptions ASSIGNING <ls_description>.
+      <ls_description>-clsname = is_key-clsname.
+    ENDLOOP.
     DELETE FROM seocompotx WHERE clsname = is_key-clsname. "#EC CI_SUBRC
-    INSERT seocompotx FROM TABLE it_descriptions.         "#EC CI_SUBRC
+    INSERT seocompotx FROM TABLE lt_descriptions.         "#EC CI_SUBRC
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_oo_object_fnc~update_descriptions_sub.
+    DATA lt_descriptions LIKE it_descriptions.
+    FIELD-SYMBOLS <ls_description> LIKE LINE OF it_descriptions.
+
+    lt_descriptions = it_descriptions.
+    LOOP AT lt_descriptions ASSIGNING <ls_description>.
+      <ls_description>-clsname = is_key-clsname.
+    ENDLOOP.
+    DELETE FROM seosubcotx WHERE clsname = is_key-clsname. "#EC CI_SUBRC
+    INSERT seosubcotx FROM TABLE lt_descriptions.         "#EC CI_SUBRC
   ENDMETHOD.
 ENDCLASS.
