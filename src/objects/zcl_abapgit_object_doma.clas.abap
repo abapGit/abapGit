@@ -303,7 +303,8 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
                        is_dd01v = ls_dd01v
                        it_dd07v = lt_dd07v ).
 
-    deserialize_longtexts( io_xml ).
+    deserialize_longtexts( ii_xml         = io_xml
+                           iv_longtext_id = c_longtext_id_doma ).
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 

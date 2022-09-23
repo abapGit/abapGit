@@ -836,7 +836,8 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       deserialize_texts( io_xml   = io_xml
                          is_dd02v = ls_dd02v ).
 
-      deserialize_longtexts( io_xml ).
+      deserialize_longtexts( ii_xml         = io_xml
+                             iv_longtext_id = c_longtext_id_tabl ).
 
       io_xml->read( EXPORTING iv_name = c_s_dataname-tabl_extras
                     CHANGING cg_data = ls_extras ).
