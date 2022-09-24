@@ -3440,13 +3440,17 @@ CLASS ltcl_integrated IMPLEMENTATION.
 
     li_cut = zcl_abapgit_ajson=>create_empty( ).
 
-    cl_abap_unit_assert=>assert_true( li_cut->is_empty( ) ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_true
+      act = li_cut->is_empty( ) ).
 
     li_cut->set(
       iv_path = '/x'
       iv_val  = '123' ).
 
-    cl_abap_unit_assert=>assert_false( li_cut->is_empty( ) ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_false
+      act = li_cut->is_empty( ) ).
 
   ENDMETHOD.
 
