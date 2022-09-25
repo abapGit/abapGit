@@ -122,7 +122,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
       WHEN zif_abapgit_definitions=>c_action-toggle_favorites.
 
-        mv_only_favorites = ii_event->query( )->get( 'FAVORITES' ).
+        IF ii_event->query( )->has( 'FAVORITES' ) = abap_true.
+          mv_only_favorites = ii_event->query( )->get( 'FAVORITES' ).
+        ELSE.
+          mv_only_favorites = boolc( mv_only_favorites = abap_false ).
+        ENDIF.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN zif_abapgit_definitions=>c_action-direction.
