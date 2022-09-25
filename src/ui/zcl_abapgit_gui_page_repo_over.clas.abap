@@ -12,9 +12,10 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
     DATA mv_only_favorites   TYPE abap_bool READ-ONLY.
 
     METHODS constructor
-      IMPORTING iv_only_favorites TYPE abap_bool
+      IMPORTING
+        iv_only_favorites TYPE abap_bool
       RAISING
-                zcx_abapgit_exception .
+        zcx_abapgit_exception .
     METHODS set_order_by
       IMPORTING
         !iv_order_by TYPE string .
@@ -27,8 +28,9 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
     METHODS set_only_favorites
       IMPORTING
         iv_only_favorites TYPE abap_bool.
-    METHODS
-      get_only_favorites RETURNING VALUE(rv_result) TYPE abap_bool.
+    METHODS get_only_favorites
+      RETURNING
+        VALUE(rv_result) TYPE abap_bool.
 
   PROTECTED SECTION.
 
@@ -58,7 +60,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
       BEGIN OF c_action,
         select       TYPE string VALUE 'select',
         apply_filter TYPE string VALUE 'apply_filter',
-      END OF c_action ,
+      END OF c_action,
       c_raw_field_suffix TYPE string VALUE `_RAW` ##NO_TEXT.
 
     DATA: mv_order_descending TYPE abap_bool,
@@ -67,13 +69,16 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
           mt_col_spec         TYPE zif_abapgit_definitions=>ty_col_spec_tt,
           mt_overview         TYPE ty_overviews.
 
-    METHODS: render_text_input
-      IMPORTING iv_name        TYPE string
-                iv_label       TYPE string
-                iv_value       TYPE string OPTIONAL
-                iv_max_length  TYPE string OPTIONAL
-                !iv_autofocus  TYPE abap_bool DEFAULT abap_false
-      RETURNING VALUE(ri_html) TYPE REF TO zif_abapgit_html,
+    METHODS:
+      render_text_input
+        IMPORTING
+          iv_name        TYPE string
+          iv_label       TYPE string
+          iv_value       TYPE string OPTIONAL
+          iv_max_length  TYPE string OPTIONAL
+          iv_autofocus  TYPE abap_bool DEFAULT abap_false
+        RETURNING
+          VALUE(ri_html) TYPE REF TO zif_abapgit_html,
 
       apply_filter
         CHANGING
@@ -126,25 +131,28 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
         zcx_abapgit_exception.
 
     METHODS shorten_repo_url
-      IMPORTING iv_full_url         TYPE string
-                iv_max_length       TYPE i DEFAULT 60
-      RETURNING VALUE(rv_shortened) TYPE string.
+      IMPORTING
+        iv_full_url         TYPE string
+        iv_max_length       TYPE i DEFAULT 60
+      RETURNING
+        VALUE(rv_shortened) TYPE string.
 
     METHODS render_actions
-      IMPORTING ii_html TYPE REF TO zif_abapgit_html.
+      IMPORTING
+        ii_html TYPE REF TO zif_abapgit_html.
 
     METHODS column
-      IMPORTING iv_content     TYPE string OPTIONAL
-                iv_css_class   TYPE string OPTIONAL
-      RETURNING VALUE(rv_html) TYPE string.
-
-
+      IMPORTING
+        iv_content     TYPE string OPTIONAL
+        iv_css_class   TYPE string OPTIONAL
+      RETURNING
+        VALUE(rv_html) TYPE string.
 
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -194,7 +202,6 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ENDIF.
 
     SORT ct_overview BY (lt_sort).
-
 
   ENDMETHOD.
 
