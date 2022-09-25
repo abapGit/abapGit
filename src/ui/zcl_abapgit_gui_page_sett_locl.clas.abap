@@ -29,6 +29,7 @@ CLASS zcl_abapgit_gui_page_sett_locl DEFINITION
       BEGIN OF c_id,
         local                        TYPE string VALUE 'local',
         display_name                 TYPE string VALUE 'display_name',
+        tags                         TYPE string VALUE 'tags',
         ignore_subpackages           TYPE string VALUE 'ignore_subpackages',
         write_protected              TYPE string VALUE 'write_protected',
         only_local_objects           TYPE string VALUE 'only_local_objects',
@@ -72,7 +73,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -110,8 +111,8 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
   METHOD get_form_schema.
 
     ro_form = zcl_abapgit_html_form=>create(
-                iv_form_id   = 'repo-local-settings-form'
-                iv_help_page = 'https://docs.abapgit.org/settings-local.html' ).
+      iv_form_id   = 'repo-local-settings-form'
+      iv_help_page = 'https://docs.abapgit.org/settings-local.html' ).
 
     ro_form->start_group(
       iv_name        = c_id-local
@@ -121,6 +122,10 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
       iv_name        = c_id-display_name
       iv_label       = 'Display Name'
       iv_hint        = 'Name to show instead of original repo name (optional)'
+    )->text(
+      iv_name        = c_id-tags
+      iv_label       = |Tags (comma-separated, allowed characters: "{ zcl_abapgit_persist_tag_utils=>c_allowed_chars }")|
+      iv_hint        = 'Comma-separated tags for grouping and repo organization (optional)'
     )->checkbox(
       iv_name        = c_id-write_protected
       iv_label       = 'Write Protected'
@@ -170,6 +175,9 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
       iv_key = c_id-display_name
       iv_val = ms_settings-display_name ).
     mo_form_data->set(
+      iv_key = c_id-tags
+      iv_val = ms_settings-tags ).
+    mo_form_data->set(
       iv_key = c_id-ignore_subpackages
       iv_val = boolc( ms_settings-ignore_subpackages = abap_true ) ) ##TYPE.
     mo_form_data->set(
@@ -197,6 +205,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
   METHOD save_settings.
 
     ms_settings-display_name                 = mo_form_data->get( c_id-display_name ).
+    ms_settings-tags                         = zcl_abapgit_persist_tag_utils=>normalize( mo_form_data->get( c_id-tags ) ).
     ms_settings-ignore_subpackages           = mo_form_data->get( c_id-ignore_subpackages ).
     ms_settings-main_language_only           = mo_form_data->get( c_id-main_language_only ).
     ms_settings-write_protected              = mo_form_data->get( c_id-write_protected ).
@@ -240,6 +249,14 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
         iv_val = |If block commit is active, a check variant has to be maintained| ).
     ENDIF.
 
+    TRY.
+        zcl_abapgit_persist_tag_utils=>validate( io_form_data->get( c_id-tags ) ).
+      CATCH zcx_abapgit_exception INTO lx_error.
+        ro_validation_log->set(
+          iv_key = c_id-tags
+          iv_val = lx_error->get_text( ) ).
+    ENDTRY.
+
   ENDMETHOD.
 
 
@@ -279,9 +296,9 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
     ri_html->add( `<div class="repo">` ).
 
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
-                    io_repo               = mo_repo
-                    iv_show_commit        = abap_false
-                    iv_interactive_branch = abap_true ) ).
+      io_repo               = mo_repo
+      iv_show_commit        = abap_false
+      iv_interactive_branch = abap_true ) ).
 
     ri_html->add( mo_form->render(
       io_values         = mo_form_data
