@@ -47,7 +47,6 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
         deserialized_at     TYPE string,
         deserialized_at_raw TYPE timestampl,
         write_protected     TYPE abap_bool,
-        tags                TYPE string_table,
       END OF ty_overview,
       ty_overviews TYPE STANDARD TABLE OF ty_overview
                    WITH NON-UNIQUE DEFAULT KEY.
@@ -249,8 +248,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       IF <ls_repo>->ms_data-deserialized_at IS NOT INITIAL.
         ls_overview-deserialized_at = zcl_abapgit_gui_chunk_lib=>render_timestamp( <ls_repo>->ms_data-deserialized_at ).
       ENDIF.
-
-      ls_overview-tags = zcl_abapgit_persist_tag_utils=>split( <ls_repo>->ms_data-local_settings-tags ).
 
       INSERT ls_overview INTO TABLE rt_overview.
 
@@ -455,7 +452,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
   METHOD render_table_footer.
 
     IF mv_only_favorites = abap_true.
-      ii_html->add( `<tfoot><tr><td colspan="6">` ).
+      ii_html->add( `<tfoot><tr><td colspan="5">` ).
       ii_html->add( `(Only favorites are shown. ` ).
       ii_html->add( ii_html->a(
         iv_txt   = |Show All|
@@ -484,11 +481,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       iv_tech_name      = 'NAME'
       iv_display_name   = 'Name'
       iv_allow_order_by = abap_true ).
-
-    _add_column(
-      iv_tech_name      = 'TAGS'
-      iv_display_name   = 'Tags'
-      iv_allow_order_by = abap_false ).
 
     _add_column(
       iv_tech_name      = 'PACKAGE'
@@ -608,9 +600,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     ii_html->add(
       column( iv_content = ii_html->a( iv_txt = is_repo-name
                                        iv_act = |{ c_action-select }?key={ is_repo-key }| ) && lv_lock ) ).
-
-    " Tags, TODO
-    ii_html->add( column( ) ).
 
     ii_html->add(
       column( iv_content = zcl_abapgit_gui_chunk_lib=>render_package_name(
