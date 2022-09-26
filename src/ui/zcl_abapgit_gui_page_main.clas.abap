@@ -177,46 +177,5 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
     ls_hotkey_action-hotkey = |o|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-description = |Stage|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_stage.
-    ls_hotkey_action-hotkey = |s|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-    ls_hotkey_action-description   = |Diff|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_repo_diff.
-    ls_hotkey_action-hotkey = |d|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-    ls_hotkey_action-description = |Check|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_code_inspector.
-    ls_hotkey_action-hotkey = |c|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-    ls_hotkey_action-description   = |Pull|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-git_reset.
-    ls_hotkey_action-hotkey = |p|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-    ls_hotkey_action-description = |Patch|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_patch.
-    ls_hotkey_action-hotkey = |p|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-    " registered/handled in js
-    ls_hotkey_action-description = |Previous Repository|.
-    ls_hotkey_action-action = `#`.
-    ls_hotkey_action-hotkey = |4|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-    ls_hotkey_action-description = |Next Repository|.
-    ls_hotkey_action-action = `##`.
-    ls_hotkey_action-hotkey = |6|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-    ls_hotkey_action-description = |Open Repository|.
-    ls_hotkey_action-action = `###`.
-    ls_hotkey_action-hotkey = |Enter|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
   ENDMETHOD.
 ENDCLASS.
