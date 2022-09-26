@@ -7,8 +7,10 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
     INTERFACES: zif_abapgit_gui_hotkeys.
     METHODS:
       constructor
-        IMPORTING iv_only_favorites TYPE abap_bool
-        RAISING   zcx_abapgit_exception,
+        IMPORTING
+          iv_only_favorites TYPE abap_bool
+        RAISING
+          zcx_abapgit_exception,
       zif_abapgit_gui_event_handler~on_event REDEFINITION.
 
 
@@ -19,19 +21,14 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
   PRIVATE SECTION.
     CONSTANTS:
       BEGIN OF c_actions,
-        show         TYPE string VALUE 'show' ##NO_TEXT,
-        overview     TYPE string VALUE 'overview',
-        select       TYPE string VALUE 'select',
-        apply_filter TYPE string VALUE 'apply_filter',
         abapgit_home TYPE string VALUE 'abapgit_home',
       END OF c_actions.
 
-    DATA: mo_repo_overview  TYPE REF TO zcl_abapgit_gui_page_repo_over,
-          mv_repo_key       TYPE zif_abapgit_persistence=>ty_value,
-          mv_only_favorites TYPE abap_bool.
+    DATA mo_repo_overview  TYPE REF TO zcl_abapgit_gui_page_repo_over.
 
     METHODS build_main_menu
-      RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
+      RETURNING
+        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
 
 ENDCLASS.
 
@@ -66,91 +63,35 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
 
   METHOD constructor.
+
     super->constructor( ).
     ms_control-page_menu  = build_main_menu( ).
     ms_control-page_title = 'Repository List'.
-    mv_only_favorites = iv_only_favorites.
+
+    CREATE OBJECT mo_repo_overview
+      EXPORTING
+        iv_only_favorites = iv_only_favorites.
+
   ENDMETHOD.
 
 
   METHOD render_content.
 
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
     register_hotkeys( ).
 
-    IF mo_repo_overview IS INITIAL OR mo_repo_overview->mv_only_favorites <> mv_only_favorites.
-      CREATE OBJECT mo_repo_overview EXPORTING iv_only_favorites = mv_only_favorites.
-    ENDIF.
-
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     ri_html->add( mo_repo_overview->zif_abapgit_gui_renderable~render( ) ).
-
-    register_deferred_script( zcl_abapgit_gui_chunk_lib=>render_repo_palette( c_actions-select ) ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    DATA: lv_key TYPE zif_abapgit_persistence=>ty_value.
-
-    lv_key = ii_event->query( )->get( 'KEY' ).
-
     CASE ii_event->mv_action.
       WHEN c_actions-abapgit_home.
-        CLEAR mv_repo_key.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN c_actions-select.
-
-        zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lv_key ).
-
-        TRY.
-            zcl_abapgit_repo_srv=>get_instance( )->get( lv_key )->refresh( ).
-          CATCH zcx_abapgit_exception ##NO_HANDLER.
-        ENDTRY.
-
-        mv_repo_key = lv_key.
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_repo_view
-          EXPORTING
-            iv_key = lv_key.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-
-      WHEN zif_abapgit_definitions=>c_action-change_order_by.
-
-        mo_repo_overview->set_order_by( ii_event->query( )->get( 'ORDERBY' ) ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-
-      WHEN zif_abapgit_definitions=>c_action-toggle_favorites.
-
-        IF ii_event->query( )->has( 'FAVORITES' ) = abap_true.
-          mv_only_favorites = ii_event->query( )->get( 'FAVORITES' ).
-        ELSE.
-          mv_only_favorites = boolc( mv_only_favorites = abap_false ).
-        ENDIF.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-
-      WHEN zif_abapgit_definitions=>c_action-direction.
-
-        mo_repo_overview->set_order_direction(
-          boolc( ii_event->query( )->get( 'DIRECTION' ) = 'DESCENDING' ) ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-
-      WHEN c_actions-apply_filter.
-
-        mo_repo_overview->set_filter( ii_event->mt_postdata ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-
-      WHEN zif_abapgit_definitions=>c_action-go_patch.
-
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_patch
-          EXPORTING
-            iv_key = lv_key.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-
       WHEN OTHERS.
-
         rs_handled = super->zif_abapgit_gui_event_handler~on_event( ii_event ).
-
     ENDCASE.
 
   ENDMETHOD.
@@ -158,7 +99,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_hotkeys~get_hotkey_actions.
 
-    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
+    DATA ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
 
     ls_hotkey_action-ui_component = 'Main'.
 

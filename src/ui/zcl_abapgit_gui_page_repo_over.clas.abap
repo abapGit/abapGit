@@ -8,24 +8,13 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
 
     INTERFACES zif_abapgit_gui_renderable .
     INTERFACES zif_abapgit_gui_hotkeys.
-
-    DATA mv_order_by TYPE string READ-ONLY .
-    DATA mv_only_favorites TYPE abap_bool READ-ONLY.
+    INTERFACES zif_abapgit_gui_event_handler.
 
     METHODS constructor
       IMPORTING
         iv_only_favorites TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
-    METHODS set_order_by
-      IMPORTING
-        !iv_order_by TYPE string .
-    METHODS set_order_direction
-      IMPORTING
-        !iv_order_descending TYPE abap_bool .
-    METHODS set_filter
-      IMPORTING
-        it_postdata TYPE zif_abapgit_html_viewer=>ty_post_data .
 
   PROTECTED SECTION.
 
@@ -59,11 +48,22 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
       c_raw_field_suffix TYPE string VALUE `_RAW` ##NO_TEXT.
 
     DATA: mv_order_descending TYPE abap_bool,
+          mv_only_favorites   TYPE abap_bool,
           mv_filter           TYPE string,
+          mv_order_by         TYPE string,
           mt_col_spec         TYPE zif_abapgit_definitions=>ty_col_spec_tt.
 
-    METHODS:
+    METHODS set_order_by
+      IMPORTING
+        !iv_order_by TYPE string .
+    METHODS set_order_direction
+      IMPORTING
+        !iv_order_descending TYPE abap_bool .
+    METHODS set_filter
+      IMPORTING
+        it_postdata TYPE zif_abapgit_html_viewer=>ty_post_data .
 
+    METHODS:
       apply_filter
         CHANGING
           ct_overview TYPE ty_overviews,
@@ -481,7 +481,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       ii_html->add( `(Only favorites are shown. ` ).
       ii_html->add( ii_html->a(
         iv_txt   = |Show All|
-        iv_act   = |{ zif_abapgit_definitions=>c_action-toggle_favorites }?favorites={ abap_false }| ) ).
+        iv_act   = |{ zif_abapgit_definitions=>c_action-toggle_favorites }?force_state={ abap_false }| ) ).
       ii_html->add( `)</td></tr></tfoot>` ).
     ENDIF.
 
@@ -738,6 +738,63 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_gui_event_handler~on_event.
+
+    DATA lv_key TYPE zif_abapgit_persistence=>ty_value.
+
+    lv_key = ii_event->query( )->get( 'KEY' ).
+
+    CASE ii_event->mv_action.
+      WHEN c_action-select.
+
+        zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lv_key ).
+
+        TRY.
+            zcl_abapgit_repo_srv=>get_instance( )->get( lv_key )->refresh( ).
+          CATCH zcx_abapgit_exception ##NO_HANDLER.
+        ENDTRY.
+
+        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_repo_view
+          EXPORTING
+            iv_key = lv_key.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+
+      WHEN zif_abapgit_definitions=>c_action-change_order_by.
+
+        set_order_by( ii_event->query( )->get( 'ORDERBY' ) ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+
+      WHEN zif_abapgit_definitions=>c_action-toggle_favorites.
+
+        IF ii_event->query( )->has( 'FORCE_STATE' ) = abap_true.
+          mv_only_favorites = ii_event->query( )->get( 'FORCE_STATE' ).
+        ELSE.
+          mv_only_favorites = boolc( mv_only_favorites = abap_false ).
+        ENDIF.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+
+      WHEN zif_abapgit_definitions=>c_action-direction.
+
+        set_order_direction( boolc( ii_event->query( )->get( 'DIRECTION' ) = 'DESCENDING' ) ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+
+      WHEN c_action-apply_filter.
+
+        set_filter( ii_event->mt_postdata ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+
+      WHEN zif_abapgit_definitions=>c_action-go_patch.
+
+        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_patch
+          EXPORTING
+            iv_key = lv_key.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+
+    ENDCASE.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_hotkeys~get_hotkey_actions.
 
     DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
@@ -802,7 +859,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       ii_html     = ri_html
       it_overview = lt_overview ).
 
+    gui_services( )->register_event_handler( me ).
     register_deferred_script( render_scripts( ) ).
+    register_deferred_script( zcl_abapgit_gui_chunk_lib=>render_repo_palette( c_action-select ) ).
     register_hotkeys( ).
 
   ENDMETHOD.
