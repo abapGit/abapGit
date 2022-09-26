@@ -9,7 +9,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
     INTERFACES zif_abapgit_gui_renderable .
 
     DATA mv_order_by TYPE string READ-ONLY .
-    DATA mv_only_favorites   TYPE abap_bool READ-ONLY.
+    DATA mv_only_favorites TYPE abap_bool READ-ONLY.
 
     METHODS constructor
       IMPORTING
@@ -120,6 +120,12 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
           iv_title          TYPE string OPTIONAL
           iv_allow_order_by TYPE any OPTIONAL.
 
+    METHODS prepare_overviews
+      RETURNING
+        VALUE(rt_overviews) TYPE ty_overviews
+      RAISING
+        zcx_abapgit_exception.
+
     METHODS render_scripts
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
@@ -138,6 +144,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
       IMPORTING
         iv_content     TYPE string OPTIONAL
         iv_css_class   TYPE string OPTIONAL
+        PREFERRED PARAMETER iv_content
       RETURNING
         VALUE(rv_html) TYPE string.
 
@@ -252,6 +259,23 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       INSERT ls_overview INTO TABLE rt_overview.
 
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD prepare_overviews.
+
+    DATA lt_repo_obj_list TYPE zif_abapgit_repo_srv=>ty_repo_list.
+
+    IF mv_only_favorites = abap_true.
+      lt_repo_obj_list = zcl_abapgit_repo_srv=>get_instance( )->list_favorites( ).
+    ELSE.
+      lt_repo_obj_list = zcl_abapgit_repo_srv=>get_instance( )->list( ).
+    ENDIF.
+
+    rt_overviews = map_repo_list_to_overview( lt_repo_obj_list ).
+    apply_order_by( CHANGING ct_overview = rt_overviews ).
+    apply_filter( CHANGING ct_overview = rt_overviews ).
 
   ENDMETHOD.
 
@@ -551,16 +575,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
   METHOD render_table_item.
 
     DATA:
-      lv_type_icon            TYPE string,
-      lv_favorite_icon        TYPE string,
-      lv_favorite_class       TYPE string,
-      lv_text                 TYPE string,
-      lv_lock                 TYPE string,
-      lv_toggle_favorite_link TYPE string,
-      lv_repo_go_link         TYPE string,
-      lv_remote_icon_link     TYPE string.
+      lv_type_icon             TYPE string,
+      lv_favorite_icon         TYPE string,
+      lv_favorite_class        TYPE string,
+      lv_text                  TYPE string,
+      lv_lock                  TYPE string,
+      lv_repo_go_link          TYPE string,
+      lv_edit_remote_icon_link TYPE string.
 
-    IF is_repo-type = abap_true.
+    " Precalculations
+    IF is_repo-type = abap_true. " False means online
       lv_type_icon = 'plug/darkgrey'.
     ELSE.
       lv_type_icon = 'cloud-upload-alt/darkgrey'.
@@ -574,90 +598,103 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       lv_favorite_class = ''.
     ENDIF.
 
+    lv_favorite_icon = ii_html->icon(
+      iv_name  = lv_favorite_icon
+      iv_class = 'pad-sides'
+      iv_hint  = 'Click to toggle favorite' ).
+
+    IF is_repo-write_protected = abap_true.
+      lv_lock = ii_html->icon(
+        iv_name  = 'lock/grey70'
+        iv_class = 'm-em5-sides'
+        iv_hint  = 'Locked from pulls' ).
+    ENDIF.
+
+    " Start of row
     ii_html->add(
       |<tr class="repo { lv_favorite_class }" data-key="{ is_repo-key }" data-offline="{ is_repo-type }">| ).
 
-    lv_toggle_favorite_link = ii_html->a(
-      iv_act = |{ zif_abapgit_definitions=>c_action-repo_toggle_fav }?key={ is_repo-key }|
-      iv_txt = ii_html->icon( iv_name  = lv_favorite_icon
-      iv_class = 'pad-sides'
-      iv_hint  = 'Click to toggle favorite' ) ).
-
+    " Favorite
     ii_html->add(
-      column( iv_content = lv_toggle_favorite_link
-              iv_css_class = 'wmin' ) ).
+      column(
+        iv_content = ii_html->a(
+          iv_act = |{ zif_abapgit_definitions=>c_action-repo_toggle_fav }?key={ is_repo-key }|
+          iv_txt = lv_favorite_icon )
+        iv_css_class = 'wmin' ) ).
 
-    IF is_repo-write_protected = abap_true.
-      lv_lock = ii_html->icon( iv_name  = 'lock/grey70'
-                               iv_class = 'm-em5-sides'
-                               iv_hint  = 'Locked from pulls' ).
-    ENDIF.
-
+    " Online/Offline
     ii_html->add(
-      column( iv_content = ii_html->icon( lv_type_icon )
-              iv_css_class = 'wmin' ) ).
+      column(
+        iv_content = ii_html->icon( lv_type_icon )
+        iv_css_class = 'wmin' ) ).
 
+    " Repo name
     ii_html->add(
-      column( iv_content = ii_html->a( iv_txt = is_repo-name
-                                       iv_act = |{ c_action-select }?key={ is_repo-key }| ) && lv_lock ) ).
+      column( ii_html->a(
+        iv_txt = is_repo-name
+        iv_act = |{ c_action-select }?key={ is_repo-key }| ) && lv_lock ) ).
 
+    " Package
     ii_html->add(
-      column( iv_content = zcl_abapgit_gui_chunk_lib=>render_package_name(
-                          iv_package = is_repo-package
-                          iv_suppress_title = boolc( NOT mv_only_favorites = abap_true ) )->render( ) ) ).
+      column( zcl_abapgit_gui_chunk_lib=>render_package_name(
+        iv_package = is_repo-package
+        iv_suppress_title = boolc( NOT mv_only_favorites = abap_true ) )->render( ) ) ).
 
-
+    " Repo URL
     IF is_repo-type = abap_false.
-      lv_remote_icon_link = ii_html->a(
-        iv_txt   = ii_html->icon( iv_name  = 'edit-solid'
-                                  iv_class = 'pad-sides'
-                                  iv_hint  = 'Change remote' )
-        iv_act   = |{ zif_abapgit_definitions=>c_action-repo_remote_settings }?| &&
-                   |key={ is_repo-key }|
+      lv_edit_remote_icon_link = ii_html->a(
+        iv_txt   = ii_html->icon(
+          iv_name  = 'edit-solid'
+          iv_class = 'pad-sides'
+          iv_hint  = 'Change remote' )
+        iv_act   = |{ zif_abapgit_definitions=>c_action-repo_remote_settings }?key={ is_repo-key }|
         iv_class = |remote_repo| ).
 
-      lv_text = zcl_abapgit_gui_chunk_lib=>shorten_repo_url( is_repo-url ) && lv_remote_icon_link.
-
-      ii_html->add( column( iv_content = |{ ii_html->a(
-        iv_txt   = lv_text
+      ii_html->add( column( ii_html->a(
+        iv_txt   = zcl_abapgit_gui_chunk_lib=>shorten_repo_url( is_repo-url ) && lv_edit_remote_icon_link
         iv_title = is_repo-url
-        iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ is_repo-url }| ) }| ) ).
+        iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ is_repo-url }| ) ) ).
     ELSE.
       ii_html->add( column( ) ).
     ENDIF.
 
+    " Branch
     IF is_repo-branch IS INITIAL.
-      ii_html->add( column( iv_content = |&nbsp;| ) ).
+      ii_html->add( column( |&nbsp;| ) ).
     ELSE.
-      ii_html->add(
-        column( iv_content = zcl_abapgit_gui_chunk_lib=>render_branch_name(
-                            iv_branch   = is_repo-branch
-                            iv_repo_key = is_repo-key )->render( ) ) ).
+      ii_html->add( column( zcl_abapgit_gui_chunk_lib=>render_branch_name(
+        iv_branch   = is_repo-branch
+        iv_repo_key = is_repo-key )->render( ) ) ).
     ENDIF.
 
-    ii_html->add(
-      column( iv_content = zcl_abapgit_gui_chunk_lib=>render_user_name(
-                          iv_username = is_repo-deserialized_by
-                          iv_suppress_title = boolc( NOT mv_only_favorites = abap_true ) )->render( )
-              iv_css_class = 'ro-detail' ) ).
+    " Details: deserialized by
+    ii_html->add( column(
+      iv_content = zcl_abapgit_gui_chunk_lib=>render_user_name(
+        iv_username       = is_repo-deserialized_by
+        iv_suppress_title = boolc( NOT mv_only_favorites = abap_true ) )->render( )
+      iv_css_class = 'ro-detail' ) ).
 
-    ii_html->add(
-      column( iv_content = is_repo-deserialized_at
-              iv_css_class = 'ro-detail' ) ).
+    " Details: deserialized at
+    ii_html->add( column(
+      iv_content = is_repo-deserialized_at
+      iv_css_class = 'ro-detail' ) ).
 
-    ii_html->add(
-      column( iv_content = zcl_abapgit_gui_chunk_lib=>render_user_name(
-                  iv_username = is_repo-created_by
-                  iv_suppress_title = boolc( NOT mv_only_favorites = abap_true ) )->render( )
-              iv_css_class = 'ro-detail' ) ).
+    " Details: created by
+    ii_html->add( column(
+      iv_content = zcl_abapgit_gui_chunk_lib=>render_user_name(
+        iv_username = is_repo-created_by
+        iv_suppress_title = boolc( NOT mv_only_favorites = abap_true ) )->render( )
+      iv_css_class = 'ro-detail' ) ).
 
-    ii_html->add(
-      column( iv_content = is_repo-created_at
-              iv_css_class = 'ro-detail' ) ).
+    " Details: created at
+    ii_html->add( column(
+      iv_content = is_repo-created_at
+      iv_css_class = 'ro-detail' ) ).
 
-    ii_html->add(
-      column( iv_content = |{ is_repo-key }|
-              iv_css_class = 'ro-detail' ) ).
+    " Details: repo key
+    ii_html->add( column(
+      iv_content = |{ is_repo-key }|
+      iv_css_class = 'ro-detail' ) ).
 
     " the link is clicked in javascript
     lv_repo_go_link = ii_html->a(
@@ -666,8 +703,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       iv_class = 'hidden' ).
 
     ii_html->add( column(
-      iv_content = |<span class="link" title="Open">&rsaquo;{ lv_repo_go_link }</span>|
+      iv_content   = |<span class="link" title="Open">&rsaquo;{ lv_repo_go_link }</span>|
       iv_css_class = 'ro-go' ) ).
+
     ii_html->add( `</tr>` ).
 
   ENDMETHOD.
@@ -675,14 +713,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
   METHOD set_filter.
 
-    FIELD-SYMBOLS: <lv_postdata> LIKE LINE OF it_postdata.
+    FIELD-SYMBOLS <lv_postdata> LIKE LINE OF it_postdata.
 
-    READ TABLE it_postdata ASSIGNING <lv_postdata>
-                           INDEX 1.
+    READ TABLE it_postdata ASSIGNING <lv_postdata> INDEX 1.
     IF sy-subrc = 0.
       FIND FIRST OCCURRENCE OF REGEX `filter=(.*)`
-           IN <lv_postdata>
-           SUBMATCHES mv_filter.
+        IN <lv_postdata>
+        SUBMATCHES mv_filter.
     ENDIF.
 
     mv_filter = condense( mv_filter ).
@@ -702,18 +739,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    DATA lt_repo_obj_list TYPE zif_abapgit_repo_srv=>ty_repo_list.
     DATA lt_overview TYPE ty_overviews.
 
-    IF mv_only_favorites = abap_true.
-      lt_repo_obj_list = zcl_abapgit_repo_srv=>get_instance( )->list_favorites( ).
-    ELSE.
-      lt_repo_obj_list = zcl_abapgit_repo_srv=>get_instance( )->list( ).
-    ENDIF.
-
-    lt_overview = map_repo_list_to_overview( lt_repo_obj_list ).
-    apply_order_by( CHANGING ct_overview = lt_overview ).
-    apply_filter( CHANGING ct_overview = lt_overview ).
+    lt_overview = prepare_overviews( ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
