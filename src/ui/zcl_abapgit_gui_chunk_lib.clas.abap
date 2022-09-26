@@ -162,7 +162,6 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         ii_html TYPE REF TO zif_abapgit_html
         iv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result.
 
-
     CLASS-METHODS render_path
       IMPORTING
         !iv_path        TYPE string
@@ -171,6 +170,30 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         VALUE(ri_html)  TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
+
+    CLASS-METHODS render_timestamp
+      IMPORTING
+        iv_timestamp TYPE timestampl
+      RETURNING
+        VALUE(rv_rendered) TYPE string.
+
+    CLASS-METHODS render_text_input
+      IMPORTING
+        iv_name        TYPE string
+        iv_label       TYPE string
+        iv_value       TYPE string OPTIONAL
+        iv_max_length  TYPE string OPTIONAL
+        iv_autofocus  TYPE abap_bool DEFAULT abap_false
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html.
+
+    CLASS-METHODS shorten_repo_url
+      IMPORTING
+        iv_full_url         TYPE string
+        iv_max_length       TYPE i DEFAULT 60
+      RETURNING
+        VALUE(rv_shortened) TYPE string.
+
   PROTECTED SECTION.
 
     CLASS-METHODS render_repo_top_commit_hash
@@ -198,7 +221,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
 
   METHOD advanced_submenu.
@@ -1048,6 +1071,45 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_text_input.
+
+    DATA lv_attrs TYPE string.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    IF iv_value IS NOT INITIAL.
+      lv_attrs = | value="{ iv_value }"|.
+    ENDIF.
+
+    IF iv_max_length IS NOT INITIAL.
+      lv_attrs = lv_attrs && | maxlength="{ iv_max_length }"|.
+    ENDIF.
+
+    IF iv_autofocus = abap_true.
+      lv_attrs = lv_attrs && | autofocus|.
+    ENDIF.
+
+    ri_html->add( |<label for="{ iv_name }">{ iv_label }</label>| ).
+    ri_html->add( |<input id="{ iv_name }" name="{ iv_name }" type="text"{ lv_attrs }>| ).
+
+  ENDMETHOD.
+
+
+  METHOD render_timestamp.
+
+    DATA lv_date TYPE d.
+    DATA lv_time TYPE t.
+
+    CONVERT TIME STAMP iv_timestamp
+      TIME ZONE gv_time_zone
+      INTO DATE lv_date
+      TIME      lv_time.
+
+    rv_rendered = |{ lv_date DATE = USER } { lv_time TIME = USER }|.
+
+  ENDMETHOD.
+
+
   METHOD render_transport.
 
     DATA:
@@ -1191,5 +1253,25 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       iv_act = zif_abapgit_definitions=>c_action-go_settings_personal
       iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-go_settings_personal ) ).
 
+  ENDMETHOD.
+
+
+  METHOD shorten_repo_url.
+    DATA lv_new_length TYPE i.
+    DATA lv_length_to_truncate_to TYPE i.
+
+    rv_shortened = iv_full_url.
+
+    REPLACE FIRST OCCURRENCE OF 'https://' IN rv_shortened WITH ''.
+    REPLACE FIRST OCCURRENCE OF 'http://' IN rv_shortened WITH ''.
+    IF rv_shortened CP '*.git'.
+      lv_new_length = strlen( rv_shortened ) - 4.
+      rv_shortened  = rv_shortened(lv_new_length).
+    ENDIF.
+
+    IF strlen( rv_shortened ) > iv_max_length.
+      lv_length_to_truncate_to = iv_max_length - 3.
+      rv_shortened = rv_shortened(lv_length_to_truncate_to) && `...`.
+    ENDIF.
   ENDMETHOD.
 ENDCLASS.

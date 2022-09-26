@@ -60,19 +60,9 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
 
     DATA: mv_order_descending TYPE abap_bool,
           mv_filter           TYPE string,
-          mv_time_zone        TYPE timezone,
           mt_col_spec         TYPE zif_abapgit_definitions=>ty_col_spec_tt.
 
     METHODS:
-      render_text_input
-        IMPORTING
-          iv_name        TYPE string
-          iv_label       TYPE string
-          iv_value       TYPE string OPTIONAL
-          iv_max_length  TYPE string OPTIONAL
-          iv_autofocus  TYPE abap_bool DEFAULT abap_false
-        RETURNING
-          VALUE(ri_html) TYPE REF TO zif_abapgit_html,
 
       apply_filter
         CHANGING
@@ -137,13 +127,6 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-    METHODS shorten_repo_url
-      IMPORTING
-        iv_full_url         TYPE string
-        iv_max_length       TYPE i DEFAULT 60
-      RETURNING
-        VALUE(rv_shortened) TYPE string.
-
     METHODS render_action_toolbar
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html.
@@ -158,12 +141,6 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
         iv_css_class   TYPE string OPTIONAL
       RETURNING
         VALUE(rv_html) TYPE string.
-
-    METHODS render_timestamp
-      IMPORTING
-        iv_timestamp TYPE timestampl
-      RETURNING
-        VALUE(rv_rendered) TYPE string.
 
 ENDCLASS.
 
@@ -238,14 +215,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     mv_order_by = |NAME|.
     mv_only_favorites = iv_only_favorites.
 
-    CALL FUNCTION 'GET_SYSTEM_TIMEZONE'
-      IMPORTING
-        timezone            = mv_time_zone
-      EXCEPTIONS
-        customizing_missing = 1
-        OTHERS              = 2.
-    ASSERT sy-subrc = 0.
-
   ENDMETHOD.
 
 
@@ -271,14 +240,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       ls_overview-created_at_raw  = <ls_repo>->ms_data-created_at.
 
       IF <ls_repo>->ms_data-created_at IS NOT INITIAL.
-        ls_overview-created_at = render_timestamp( <ls_repo>->ms_data-created_at ).
+        ls_overview-created_at = zcl_abapgit_gui_chunk_lib=>render_timestamp( <ls_repo>->ms_data-created_at ).
       ENDIF.
 
       ls_overview-deserialized_by     = <ls_repo>->ms_data-deserialized_by.
       ls_overview-deserialized_at_raw = <ls_repo>->ms_data-deserialized_at.
 
       IF <ls_repo>->ms_data-deserialized_at IS NOT INITIAL.
-        ls_overview-deserialized_at = render_timestamp( <ls_repo>->ms_data-deserialized_at ).
+        ls_overview-deserialized_at = zcl_abapgit_gui_chunk_lib=>render_timestamp( <ls_repo>->ms_data-deserialized_at ).
       ENDIF.
 
       ls_overview-tags = zcl_abapgit_persist_tag_utils=>split( <ls_repo>->ms_data-local_settings-tags ).
@@ -401,7 +370,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( |<form class="inline" method="post" action="sapevent:{ c_action-apply_filter }">| ).
-    ri_html->add( render_text_input(
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_text_input(
       iv_name      = |filter|
       iv_label     = |Filter: |
       iv_value     = mv_filter
@@ -658,7 +627,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
                    |key={ is_repo-key }|
         iv_class = |remote_repo| ).
 
-      lv_text = shorten_repo_url( is_repo-url ) && lv_remote_icon_link.
+      lv_text = zcl_abapgit_gui_chunk_lib=>shorten_repo_url( is_repo-url ) && lv_remote_icon_link.
 
       ii_html->add( column( iv_content = |{ ii_html->a(
         iv_txt   = lv_text
@@ -715,45 +684,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_text_input.
-
-    DATA lv_attrs TYPE string.
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    IF iv_value IS NOT INITIAL.
-      lv_attrs = | value="{ iv_value }"|.
-    ENDIF.
-
-    IF iv_max_length IS NOT INITIAL.
-      lv_attrs = lv_attrs && | maxlength="{ iv_max_length }"|.
-    ENDIF.
-
-    IF iv_autofocus = abap_true.
-      lv_attrs = lv_attrs && | autofocus|.
-    ENDIF.
-
-    ri_html->add( |<label for="{ iv_name }">{ iv_label }</label>| ).
-    ri_html->add( |<input id="{ iv_name }" name="{ iv_name }" type="text"{ lv_attrs }>| ).
-
-  ENDMETHOD.
-
-
-  METHOD render_timestamp.
-
-    DATA lv_date TYPE d.
-    DATA lv_time TYPE t.
-
-    CONVERT TIME STAMP iv_timestamp
-      TIME ZONE mv_time_zone
-      INTO DATE lv_date
-      TIME      lv_time.
-
-    rv_rendered = |{ lv_date DATE = USER } { lv_time TIME = USER }|.
-
-  ENDMETHOD.
-
-
   METHOD set_filter.
 
     FIELD-SYMBOLS: <lv_postdata> LIKE LINE OF it_postdata.
@@ -778,26 +708,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
   METHOD set_order_direction.
     mv_order_descending = iv_order_descending.
-  ENDMETHOD.
-
-
-  METHOD shorten_repo_url.
-    DATA lv_new_length TYPE i.
-    DATA lv_length_to_truncate_to TYPE i.
-
-    rv_shortened = iv_full_url.
-
-    REPLACE FIRST OCCURRENCE OF 'https://' IN rv_shortened WITH ''.
-    REPLACE FIRST OCCURRENCE OF 'http://' IN rv_shortened WITH ''.
-    IF rv_shortened CP '*.git'.
-      lv_new_length = strlen( rv_shortened ) - 4.
-      rv_shortened  = rv_shortened(lv_new_length).
-    ENDIF.
-
-    IF strlen( rv_shortened ) > iv_max_length.
-      lv_length_to_truncate_to = iv_max_length - 3.
-      rv_shortened = rv_shortened(lv_length_to_truncate_to) && `...`.
-    ENDIF.
   ENDMETHOD.
 
 
