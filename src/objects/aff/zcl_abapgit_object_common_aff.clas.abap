@@ -367,7 +367,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           lx_exception         TYPE REF TO cx_root,
           lv_name              TYPE c LENGTH 120,
           lv_file_name         TYPE string,
-          lo_file_name_mapper  TYPE REF to object,
+          lo_file_name_mapper  TYPE REF TO object,
           lv_is_deletion       TYPE abap_bool VALUE abap_false,
           lv_dummy             TYPE string.
 
