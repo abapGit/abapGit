@@ -429,9 +429,10 @@ CLASS lcl_aff_type_mapping DEFINITION.
     INTERFACES zif_abapgit_aff_type_mapping.
   PRIVATE SECTION.
     METHODS set_abapgit_descriptions
-      IMPORTING is_clsname       TYPE seoclsname
-                is_intf_aff      TYPE zif_abapgit_aff_intf_v1=>ty_main
-      RETURNING VALUE(rs_return) TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt.
+      IMPORTING is_clsname          TYPE seoclsname
+                is_intf_aff         TYPE zif_abapgit_aff_intf_v1=>ty_main
+      EXPORTING et_descriptions     TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt
+                et_descriptions_sub TYPE zif_abapgit_oo_object_fnc=>ty_seosubcotx_tt.
 ENDCLASS.
 
 CLASS lcl_aff_type_mapping IMPLEMENTATION.
@@ -491,7 +492,8 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
 
   METHOD set_abapgit_descriptions.
 
-    DATA ls_description TYPE seocompotx.
+    DATA ls_description       TYPE seocompotx.
+    DATA ls_description_subco TYPE seosubcotx.
     FIELD-SYMBOLS <ls_description>      TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description.
     FIELD-SYMBOLS <ls_meth_description> TYPE zif_abapgit_aff_oo_types_v1=>ty_method.
     FIELD-SYMBOLS <ls_evt_description>  TYPE zif_abapgit_aff_oo_types_v1=>ty_event.
@@ -502,7 +504,7 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
       ls_description-cmpname  = <ls_description>-name.
       ls_description-langu    = is_intf_aff-header-original_language.
       ls_description-descript = <ls_description>-description.
-      APPEND ls_description TO rs_return.
+      APPEND ls_description TO et_descriptions.
     ENDLOOP.
 
     LOOP AT is_intf_aff-descriptions-attributes ASSIGNING <ls_description>.
@@ -510,7 +512,7 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
       ls_description-cmpname  = <ls_description>-name.
       ls_description-langu    = is_intf_aff-header-original_language.
       ls_description-descript = <ls_description>-description.
-      APPEND ls_description TO rs_return.
+      APPEND ls_description TO et_descriptions.
     ENDLOOP.
 
     LOOP AT is_intf_aff-descriptions-methods ASSIGNING <ls_meth_description>.
@@ -518,7 +520,25 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
       ls_description-cmpname  = <ls_meth_description>-name.
       ls_description-langu    = is_intf_aff-header-original_language.
       ls_description-descript = <ls_meth_description>-description.
-      APPEND ls_description TO rs_return.
+      APPEND ls_description TO et_descriptions.
+
+      LOOP AT <ls_meth_description>-parameters ASSIGNING <ls_description>.
+        ls_description_subco-clsname  = ls_description-clsname.
+        ls_description_subco-cmpname  = ls_description-cmpname.
+        ls_description_subco-langu    = ls_description-langu.
+        ls_description_subco-sconame  = <ls_description>-name.
+        ls_description_subco-descript = <ls_description>-description.
+        APPEND ls_description_subco TO et_descriptions_sub.
+      ENDLOOP.
+
+      LOOP AT <ls_meth_description>-exceptions ASSIGNING <ls_description>.
+        ls_description_subco-clsname  = ls_description-clsname.
+        ls_description_subco-cmpname  = ls_description-cmpname.
+        ls_description_subco-langu    = ls_description-langu.
+        ls_description_subco-sconame  = <ls_description>-name.
+        ls_description_subco-descript = <ls_description>-description.
+        APPEND ls_description_subco TO et_descriptions_sub.
+      ENDLOOP.
     ENDLOOP.
 
     LOOP AT is_intf_aff-descriptions-events ASSIGNING <ls_evt_description>.
@@ -526,7 +546,16 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
       ls_description-cmpname  = <ls_evt_description>-name.
       ls_description-langu    = is_intf_aff-header-original_language.
       ls_description-descript = <ls_evt_description>-description.
-      APPEND ls_description TO rs_return.
+      APPEND ls_description TO et_descriptions.
+
+       LOOP AT <ls_evt_description>-parameters ASSIGNING <ls_description>.
+        ls_description_subco-clsname  = ls_description-clsname.
+        ls_description_subco-cmpname  = ls_description-cmpname.
+        ls_description_subco-langu    = ls_description-langu.
+        ls_description_subco-sconame  = <ls_description>-name.
+        ls_description_subco-descript = <ls_description>-description.
+        APPEND ls_description_subco TO et_descriptions_sub.
+      ENDLOOP.
     ENDLOOP.
 
   ENDMETHOD.
