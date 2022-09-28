@@ -548,7 +548,7 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
       ls_description-descript = <ls_evt_description>-description.
       APPEND ls_description TO et_descriptions.
 
-       LOOP AT <ls_evt_description>-parameters ASSIGNING <ls_description>.
+      LOOP AT <ls_evt_description>-parameters ASSIGNING <ls_description>.
         ls_description_subco-clsname  = ls_description-clsname.
         ls_description_subco-cmpname  = ls_description-cmpname.
         ls_description_subco-langu    = ls_description-langu.
