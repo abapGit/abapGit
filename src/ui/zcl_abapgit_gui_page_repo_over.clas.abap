@@ -462,12 +462,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
   METHOD render_table_footer.
 
     IF mv_only_favorites = abap_true.
-      ii_html->add( `<tfoot><tr><td colspan="5">` ).
-      ii_html->add( `(Only favorites are shown. ` ).
-      ii_html->add( ii_html->a(
-        iv_txt   = |Show All|
-        iv_act   = |{ zif_abapgit_definitions=>c_action-toggle_favorites }?force_state={ abap_false }| ) ).
-      ii_html->add( `)</td></tr></tfoot>` ).
+      ii_html->add( `<tfoot>` ).
+      ii_html->add( `<tr><td colspan="100%">` ).
+      ii_html->add( |(Only favorites are shown. {
+        ii_html->a(
+          iv_txt   = |Show All|
+          iv_act   = |{ zif_abapgit_definitions=>c_action-toggle_favorites }?force_state={ abap_false }| )
+      })| ).
+      ii_html->add( `</td></tr>` ).
+      ii_html->add( `</tfoot>` ).
     ENDIF.
 
   ENDMETHOD.
@@ -541,7 +544,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     _add_column(
       iv_tech_name      = 'GO'
-      iv_css_class      = 'ro-go'
+      iv_css_class      = 'ro-go wmin'
       iv_allow_order_by = abap_false ).
 
     ii_html->add( |<thead>| ).
@@ -565,8 +568,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       lv_repo_type_icon TYPE string,
       lv_favorite_icon  TYPE string,
       lv_fav_tr_class   TYPE string,
-      lv_lock           TYPE string,
-      lv_repo_go_link   TYPE string.
+      lv_lock           TYPE string.
 
     lv_is_online_repo = boolc( is_repo-type = abap_false ).
 
@@ -675,15 +677,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       iv_class = 'ro-detail'
       iv_content = |{ is_repo-key }| ).
 
-    " the link is clicked in javascript
-    lv_repo_go_link = ii_html->a(
-      iv_txt   = ``
-      iv_act   = |{ c_action-select }?key={ is_repo-key }|
-      iv_class = 'hidden' ).
-
+    " Go-to action
     ii_html->td(
-      iv_class   = 'ro-go'
-      iv_content = |<span class="link" title="Open">&rsaquo;{ lv_repo_go_link }</span>| ).
+      iv_class = 'ro-go wmin'
+      iv_content = ii_html->a(
+        iv_title = 'Open'
+        iv_txt   = '&rtrif;'
+        iv_act   = |{ c_action-select }?key={ is_repo-key }| ) ).
 
     ii_html->add( `</tr>` ).
 

@@ -370,11 +370,17 @@ table.db_tab tbody tr:active td {
 }
 table.db_tab th {
   color: var(--theme-link-color);
-  border-bottom-color: #ddd;
+}
+table.db_tab thead tr,
+table.db_tab tfoot tr {
+  border-color: #ddd;
+  /*border-bottom-color: #ddd;*/
+  /*border-top-color: #ddd;*/
 }
 
 table.db_tab tr.selected {
-  background-color: rgba(191, 191, 191, 1) !important;
+  /*background-color: rgba(191, 191, 191, 1) !important;*/
+  border-color: hsl(214, 50%, 75%) !important;
 }
 table.db_tab a.remote_repo {
   color: var(--theme-primary-font-color-reduced);

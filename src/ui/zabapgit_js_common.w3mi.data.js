@@ -286,15 +286,16 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
     var rows = Array.prototype.slice.call(self.getVisibleRows());
     var selected = document.querySelector(".repo.selected");
     var indexOfSelected = rows.indexOf(selected);
+    var lastRow = rows.length - 1;
 
     if (keycode == 13 && // "enter" to open
        document.activeElement.tagName.toLowerCase() != "input") { // prevent opening if command field has focus
       self.openSelectedRepo();
-    } else if ((keycode == 52) && indexOfSelected > 0) {
-      // "4" for previous
+    } else if ((keycode == 52 || keycode == 56) && indexOfSelected > 0) {
+      // "4,8" for previous, digits are the numlock keys
       self.selectRowByIndex(indexOfSelected - 1);
-    } else if ((keycode == 54) && indexOfSelected < rows.length - 1) {
-      // "6" for next
+    } else if ((keycode == 54 || keycode == 50) && indexOfSelected < lastRow) {
+      // "6,2" for next
       self.selectRowByIndex(indexOfSelected + 1);
     }
   });

@@ -626,26 +626,36 @@ table.db_tab pre {
   margin: 0px;
   width: 30em;
 }
-
 table.db_tab tr.firstrow td { padding-top: 0.5em; }
 table.db_tab th {
   text-align: left;
   padding: 0.5em;
+}
+table.db_tab thead tr {
   border-bottom: 1px solid;
+}
+table.db_tab tfoot tr {
+  border-top: 1px solid;
 }
 table.db_tab td {
   padding: 4px 8px;
   vertical-align: middle;
   word-break: break-all;
 }
-
 table.db_tab th.package {
     width: 45ch;
 }
-
 table.db_tab td.data {
   font-style: italic;
 }
+table.db_tab tbody tr {
+  /*border is there but transparent, needed for proper alignment*/
+  border-color: transparent !important;
+  border: 1px solid;
+  border-left-width: 3px;
+}
+
+
 
 li.action_link.enabled{
   visibility: visible;
@@ -1022,8 +1032,16 @@ table.commit tr .title {
 /* Repo overview */
 .repo-overview { font-size: smaller; }
 .repo-overview tbody td { height: 2em; }
-.ro-detail { display: none; }
-.ro-go { font-size: 150%; }
+.repo-overview .ro-detail { display: none; }
+.repo-overview .ro-go a {
+  font-size: 150%;
+  padding: 0px 0.15em;
+  border-radius: 0px;
+}
+.repo-overview .ro-go a:hover { 
+  background-color: white;
+  text-decoration: none;
+}
 
 /* Branch Overview Page */
 .gitGraph-scrollWrapper, .gitGraph-Wrapper{
