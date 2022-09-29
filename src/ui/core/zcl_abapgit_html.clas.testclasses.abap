@@ -1,10 +1,14 @@
-
 CLASS ltcl_html DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
 
   PRIVATE SECTION.
-    DATA: mo_html TYPE REF TO zif_abapgit_html.
+    CONSTANTS c_lf LIKE cl_abap_char_utilities=>newline VALUE cl_abap_char_utilities=>newline.
+    DATA mo_html TYPE REF TO zif_abapgit_html.
 
     METHODS:
+      wrap    FOR TESTING RAISING zcx_abapgit_exception,
+      td      FOR TESTING RAISING zcx_abapgit_exception,
+      th      FOR TESTING RAISING zcx_abapgit_exception,
+      wrap_ii FOR TESTING RAISING zcx_abapgit_exception,
       indent1 FOR TESTING RAISING zcx_abapgit_exception,
       indent2 FOR TESTING RAISING zcx_abapgit_exception,
       indent3 FOR TESTING RAISING zcx_abapgit_exception,
@@ -116,6 +120,72 @@ CLASS ltcl_html IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = mo_html->render( )
       exp = lv_exp ).
+
+  ENDMETHOD.
+
+  METHOD td.
+
+    mo_html->td( 'Hello' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_html->render( )
+      exp =
+        '<td>' && c_lf &&
+        '  Hello' && c_lf &&
+        '</td>' ).
+
+  ENDMETHOD.
+
+  METHOD th.
+
+    mo_html->th( 'Hello' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_html->render( )
+      exp =
+        '<th>' && c_lf &&
+        '  Hello' && c_lf &&
+        '</th>' ).
+
+  ENDMETHOD.
+
+  METHOD wrap_ii.
+
+    mo_html->wrap(
+      iv_tag     = 'td'
+      ii_content = zcl_abapgit_html=>new( )->add( 'Hello' ) ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_html->render( )
+      exp =
+        '<td>' && c_lf &&
+        '  Hello' && c_lf &&
+        '</td>' ).
+
+  ENDMETHOD.
+
+  METHOD wrap.
+
+    mo_html->wrap(
+      iv_tag     = 'td' ).
+    mo_html->wrap(
+      iv_tag     = 'td'
+      iv_content = 'Hello' ).
+    mo_html->wrap(
+      iv_tag     = 'td'
+      iv_class   = 'class'
+      iv_hint    = 'hint'
+      iv_id      = 'id'
+      iv_content = 'Hello' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_html->render( )
+      exp =
+        '<td></td>' && c_lf &&
+        '<td>' && c_lf &&
+        '  Hello' && c_lf &&
+        '</td>' && c_lf &&
+        '<td id="id" class="class" title="hint">' && c_lf &&
+        '  Hello' && c_lf &&
+        '</td>' ).
 
   ENDMETHOD.
 

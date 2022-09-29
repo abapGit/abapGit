@@ -9,6 +9,9 @@ CLASS zcl_abapgit_html DEFINITION
     CONSTANTS c_indent_size TYPE i VALUE 2 ##NO_TEXT.
 
     CLASS-METHODS class_constructor .
+    CLASS-METHODS new
+      RETURNING
+        VALUE(ri_instance) TYPE REF TO zif_abapgit_html.
     CLASS-METHODS icon
       IMPORTING
         !iv_name      TYPE string
@@ -19,12 +22,15 @@ CLASS zcl_abapgit_html DEFINITION
         VALUE(rv_str) TYPE string .
     CLASS-METHODS checkbox
       IMPORTING
-         iv_id         TYPE string OPTIONAL
-         iv_checked    TYPE abap_bool OPTIONAL
+        iv_id          TYPE string OPTIONAL
+        iv_checked     TYPE abap_bool OPTIONAL
       RETURNING
         VALUE(rv_html) TYPE string .
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    ALIASES add FOR zif_abapgit_html~add.
+    ALIASES wrap FOR zif_abapgit_html~wrap.
 
     TYPES:
       BEGIN OF ty_indent_context,
@@ -68,7 +74,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_html IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
 
   METHOD checkbox.
@@ -85,6 +91,7 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
     ENDIF.
 
     rv_html = rv_html && `/>`.
+
   ENDMETHOD.
 
 
@@ -94,8 +101,9 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
         pattern     = '<(AREA|BASE|BR|COL|COMMAND|EMBED|HR|IMG|INPUT|LINK|META|PARAM|SOURCE|!)'
         ignore_case = abap_false.
 
-    gv_spaces = repeat( val = ` `
-                        occ = 200 ).
+    gv_spaces = repeat(
+      val = ` `
+      occ = 200 ).
 
   ENDMETHOD.
 
@@ -194,6 +202,11 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
       cs_context-indent_str = gv_spaces(lv_spaces).
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD new.
+    CREATE OBJECT ri_instance TYPE zcl_abapgit_html.
   ENDMETHOD.
 
 
@@ -356,6 +369,8 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
         ASSERT 1 = 0. " Dev mistake
     ENDCASE.
 
+    ri_self = me.
+
   ENDMETHOD.
 
 
@@ -371,6 +386,8 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
       iv_style = iv_style
       iv_title = iv_title ) ).
 
+    ri_self = me.
+
   ENDMETHOD.
 
 
@@ -379,6 +396,8 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
     zif_abapgit_html~add( checkbox(
       iv_id      = iv_id
       iv_checked = iv_checked ) ).
+
+    ri_self = me.
 
   ENDMETHOD.
 
@@ -390,6 +409,8 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
       iv_class   = iv_class
       iv_hint    = iv_hint
       iv_onclick = iv_onclick ) ).
+
+    ri_self = me.
 
   ENDMETHOD.
 
@@ -432,5 +453,74 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
 
   METHOD zif_abapgit_html~set_title.
     zif_abapgit_html~mv_chunk_title = iv_title.
+    ri_self = me.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_html~td.
+    wrap(
+      iv_tag   = 'td'
+      iv_content = iv_content
+      ii_content = ii_content
+      iv_id    = iv_id
+      iv_class = iv_class
+      iv_hint  = iv_hint ).
+    ri_self = me.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_html~th.
+    wrap(
+      iv_tag   = 'th'
+      iv_content = iv_content
+      ii_content = ii_content
+      iv_id    = iv_id
+      iv_class = iv_class
+      iv_hint  = iv_hint ).
+    ri_self = me.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_html~wrap.
+
+    DATA lv_open_tag TYPE string.
+    DATA lv_close_tag TYPE string.
+
+    DATA: lv_class TYPE string,
+          lv_id    TYPE string,
+          lv_title TYPE string.
+
+    IF iv_id IS NOT INITIAL.
+      lv_id = | id="{ iv_id }"|.
+    ENDIF.
+
+    IF iv_class IS NOT INITIAL.
+      lv_class = | class="{ iv_class }"|.
+    ENDIF.
+
+    IF iv_hint IS NOT INITIAL.
+      lv_title = | title="{ iv_hint }"|.
+    ENDIF.
+
+    lv_open_tag = |<{ iv_tag }{ lv_id }{ lv_class }{ lv_title }>|.
+    lv_close_tag = |</{ iv_tag }>|.
+
+    IF ii_content IS NOT BOUND AND iv_content IS INITIAL.
+      lv_open_tag = lv_open_tag && lv_close_tag.
+      CLEAR lv_close_tag.
+    ENDIF.
+
+    add( lv_open_tag ).
+    IF ii_content IS BOUND.
+      add( ii_content ).
+    ELSEIF iv_content IS NOT INITIAL.
+      add( iv_content ).
+    ENDIF.
+    IF lv_close_tag IS NOT INITIAL.
+      add( `</` && iv_tag && `>` ).
+    ENDIF.
+
+    ri_self = me.
+
   ENDMETHOD.
 ENDCLASS.
