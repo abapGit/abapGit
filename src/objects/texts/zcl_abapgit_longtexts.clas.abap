@@ -1,12 +1,10 @@
 CLASS zcl_abapgit_longtexts DEFINITION
   PUBLIC
   CREATE PRIVATE
-  GLOBAL FRIENDS zcl_abapgit_factory .
+
+  GLOBAL FRIENDS zcl_abapgit_factory.
 
   PUBLIC SECTION.
-
-    INTERFACES zif_abapgit_longtexts .
-  PROTECTED SECTION.
 
     TYPES:
       BEGIN OF ty_longtext,
@@ -17,9 +15,13 @@ CLASS zcl_abapgit_longtexts DEFINITION
     TYPES:
       ty_longtexts TYPE STANDARD TABLE OF ty_longtext WITH NON-UNIQUE DEFAULT KEY .
 
+    INTERFACES zif_abapgit_longtexts.
+
+  PROTECTED SECTION.
+
     METHODS read
       IMPORTING
-        !iv_object_name     TYPE sobj_name
+        !iv_object_name     TYPE clike
         !iv_longtext_id     TYPE dokil-id
         !it_dokil           TYPE zif_abapgit_definitions=>ty_dokil_tt
         !iv_main_lang_only  TYPE abap_bool DEFAULT abap_false
@@ -31,6 +33,13 @@ CLASS zcl_abapgit_longtexts DEFINITION
   PRIVATE SECTION.
 
     CONSTANTS c_docu_state_active TYPE dokstate VALUE 'A' ##NO_TEXT.
+
+    METHODS escape_name
+      IMPORTING
+        !iv_longtext_id  TYPE dokil-id
+        !iv_object_name  TYPE clike
+      RETURNING
+        VALUE(rv_object) TYPE dokil-object.
 ENDCLASS.
 
 
@@ -38,30 +47,56 @@ ENDCLASS.
 CLASS zcl_abapgit_longtexts IMPLEMENTATION.
 
 
+  METHOD escape_name.
+    " Prepare name for SQL LIKE condition
+    rv_object = iv_object_name.
+
+    IF 'CA,CE,CO,CT,IA,IE,IO,WC' CS iv_longtext_id.
+      " Document types of objects with sub-objects
+      rv_object+30 = '%'.
+    ENDIF.
+
+    rv_object = replace(
+      val  = rv_object
+      sub  = '_'
+      with = '#_'
+      occ  = 0 ).
+  ENDMETHOD.
+
+
   METHOD read.
 
     DATA: ls_longtext TYPE ty_longtext,
+          lv_object   TYPE dokil-object,
           lt_dokil    TYPE zif_abapgit_definitions=>ty_dokil_tt.
 
     FIELD-SYMBOLS: <ls_dokil> LIKE LINE OF lt_dokil.
 
+    lv_object = escape_name(
+      iv_longtext_id = iv_longtext_id
+      iv_object_name = iv_object_name ).
+
     IF lines( it_dokil ) > 0.
 
       lt_dokil = it_dokil.
+
+      IF iv_main_lang_only = abap_true.
+        DELETE lt_dokil WHERE masterlang <> abap_true.
+      ENDIF.
 
     ELSEIF iv_longtext_id IS NOT INITIAL.
       IF iv_main_lang_only = abap_true.
         SELECT * FROM dokil
                  INTO TABLE lt_dokil
                  WHERE id     = iv_longtext_id
-                 AND object = iv_object_name
+                 AND object LIKE lv_object ESCAPE '#'
                  AND masterlang = abap_true
                  ORDER BY PRIMARY KEY.
       ELSE.
         SELECT * FROM dokil
                  INTO TABLE lt_dokil
                  WHERE id     = iv_longtext_id
-                 AND object = iv_object_name
+                 AND object LIKE lv_object ESCAPE '#'
                  ORDER BY PRIMARY KEY.
       ENDIF.
     ELSE.
@@ -130,13 +165,19 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
 
   METHOD zif_abapgit_longtexts~delete.
 
-    DATA: lt_dokil TYPE zif_abapgit_definitions=>ty_dokil_tt.
+    DATA: lt_dokil  TYPE zif_abapgit_definitions=>ty_dokil_tt,
+          lv_object TYPE dokil-object.
+
     FIELD-SYMBOLS: <ls_dokil> TYPE dokil.
+
+    lv_object = escape_name(
+      iv_longtext_id = iv_longtext_id
+      iv_object_name = iv_object_name ).
 
     SELECT * FROM dokil
       INTO TABLE lt_dokil
       WHERE id     = iv_longtext_id
-      AND   object = iv_object_name.
+      AND   object LIKE lv_object ESCAPE '#'.
 
     LOOP AT lt_dokil ASSIGNING <ls_dokil>.
 
@@ -162,11 +203,16 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
   METHOD zif_abapgit_longtexts~deserialize.
 
     DATA: lt_longtexts    TYPE ty_longtexts,
+          lv_object       TYPE dokil-object,
           lt_dokil        TYPE zif_abapgit_definitions=>ty_dokil_tt,
           lv_no_main_lang TYPE dokil-masterlang.
 
     FIELD-SYMBOLS: <ls_longtext> TYPE ty_longtext,
                    <ls_dokil>    TYPE dokil.
+
+    lv_object = escape_name(
+      iv_longtext_id = iv_longtext_id
+      iv_object_name = iv_object_name ).
 
     ii_xml->read(
       EXPORTING
@@ -195,7 +241,7 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
     SELECT * FROM dokil
       INTO TABLE lt_dokil
       WHERE id     = iv_longtext_id
-      AND   object = iv_object_name.
+      AND   object LIKE lv_object ESCAPE '#'.
 
     LOOP AT lt_dokil ASSIGNING <ls_dokil>.
 
@@ -228,19 +274,11 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
   METHOD zif_abapgit_longtexts~serialize.
 
     DATA lt_longtexts TYPE ty_longtexts.
-    DATA lt_dokil LIKE it_dokil.
-    DATA lv_main_lang_only TYPE abap_bool.
-
-    lt_dokil = it_dokil.
-    lv_main_lang_only = ii_xml->i18n_params( )-main_language_only.
-    IF lv_main_lang_only = abap_true.
-      DELETE lt_dokil WHERE masterlang <> abap_true.
-    ENDIF.
 
     lt_longtexts = read( iv_object_name    = iv_object_name
                          iv_longtext_id    = iv_longtext_id
-                         it_dokil          = lt_dokil
-                         iv_main_lang_only = lv_main_lang_only ).
+                         it_dokil          = it_dokil
+                         iv_main_lang_only = ii_xml->i18n_params( )-main_language_only ).
 
     ii_xml->add( iv_name = iv_longtext_name
                  ig_data = lt_longtexts ).
