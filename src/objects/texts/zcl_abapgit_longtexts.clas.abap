@@ -1,10 +1,11 @@
 CLASS zcl_abapgit_longtexts DEFINITION
   PUBLIC
   CREATE PRIVATE
-
   GLOBAL FRIENDS zcl_abapgit_factory.
 
   PUBLIC SECTION.
+
+    INTERFACES zif_abapgit_longtexts.
 
     TYPES:
       BEGIN OF ty_longtext,
@@ -14,8 +15,6 @@ CLASS zcl_abapgit_longtexts DEFINITION
       END OF ty_longtext .
     TYPES:
       ty_longtexts TYPE STANDARD TABLE OF ty_longtext WITH NON-UNIQUE DEFAULT KEY .
-
-    INTERFACES zif_abapgit_longtexts.
 
   PROTECTED SECTION.
 
@@ -51,7 +50,7 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
     " Prepare name for SQL LIKE condition
     rv_object = iv_object_name.
 
-    IF 'CA,CE,CO,CT,IA,IE,IO,WC' CS iv_longtext_id.
+    IF 'CA,CE,CO,CT,IA,IE,IO,WC,FU' CS iv_longtext_id.
       " Document types of objects with sub-objects
       rv_object+30 = '%'.
     ENDIF.
