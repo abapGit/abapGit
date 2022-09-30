@@ -559,13 +559,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
   METHOD render_table_item.
 
     DATA:
-      lv_is_online_repo        TYPE abap_bool,
-      lv_repo_type_icon        TYPE string,
-      lv_favorite_icon         TYPE string,
-      lv_fav_tr_class          TYPE string,
-      lv_text                  TYPE string,
-      lv_lock                  TYPE string,
-      lv_repo_go_link          TYPE string.
+      lv_is_online_repo TYPE abap_bool,
+      lv_repo_type_icon TYPE string,
+      lv_favorite_icon  TYPE string,
+      lv_fav_tr_class   TYPE string,
+      lv_lock           TYPE string,
+      lv_repo_go_link   TYPE string.
 
     lv_is_online_repo = boolc( is_repo-type = abap_false ).
 
