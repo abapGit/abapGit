@@ -45,6 +45,12 @@ CLASS zcl_abapgit_object_clas DEFINITION
           !iv_clsname TYPE seoclsname
         RAISING
           zcx_abapgit_exception,
+      serialize_descr_sub
+        IMPORTING
+          !ii_xml     TYPE REF TO zif_abapgit_xml_output
+          !iv_clsname TYPE seoclsname
+        RAISING
+          zcx_abapgit_exception,
       serialize_docu
         IMPORTING
           !ii_xml              TYPE REF TO zif_abapgit_xml_output
@@ -119,6 +125,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
           lt_local_macros          TYPE seop_source_string,
           lt_test_classes          TYPE seop_source_string,
           lt_descriptions          TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt,
+          lt_descriptions_sub      TYPE zif_abapgit_oo_object_fnc=>ty_seosubcotx_tt,
           ls_class_key             TYPE seoclskey,
           lt_attributes            TYPE zif_abapgit_definitions=>ty_obj_attribute_tt.
 
@@ -179,6 +186,13 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     mi_object_oriented_object_fct->update_descriptions(
       is_key          = ls_class_key
       it_descriptions = lt_descriptions ).
+
+    ii_xml->read( EXPORTING iv_name = 'DESCRIPTIONS_SUB'
+                  CHANGING cg_data = lt_descriptions_sub ).
+
+    mi_object_oriented_object_fct->update_descriptions_sub(
+      is_key          = ls_class_key
+      it_descriptions = lt_descriptions_sub ).
 
     mi_object_oriented_object_fct->add_to_activation_list( ms_item ).
 
@@ -395,6 +409,33 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD serialize_descr_sub.
+
+    DATA: lt_descriptions    TYPE zif_abapgit_oo_object_fnc=>ty_seosubcotx_tt,
+          lv_language        TYPE spras,
+          lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
+
+    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+      lv_language = mv_language.
+    ENDIF.
+
+    lt_descriptions = mi_object_oriented_object_fct->read_descriptions_sub(
+      iv_object_name = iv_clsname
+      iv_language    = lv_language ).
+
+    IF lines( lt_descriptions ) = 0.
+      RETURN.
+    ENDIF.
+    " Remove technical languages
+    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
+    DELETE lt_descriptions WHERE NOT langu IN lt_language_filter.
+
+    ii_xml->add( iv_name = 'DESCRIPTIONS_SUB'
+                 ig_data = lt_descriptions ).
+
+  ENDMETHOD.
+
+
   METHOD serialize_docu.
 
     DATA: lt_lines      TYPE tlinetab,
@@ -589,6 +630,9 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     serialize_descr( ii_xml     = ii_xml
                      iv_clsname = ls_clskey-clsname ).
+
+    serialize_descr_sub( ii_xml     = ii_xml
+                         iv_clsname = ls_clskey-clsname ).
 
     serialize_attr( ii_xml     = ii_xml
                     iv_clsname = ls_clskey-clsname ).

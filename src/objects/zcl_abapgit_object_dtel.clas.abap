@@ -206,7 +206,8 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
     deserialize_texts( ii_xml   = io_xml
                        is_dd04v = ls_dd04v ).
 
-    deserialize_longtexts( io_xml ).
+    deserialize_longtexts( ii_xml         = io_xml
+                           iv_longtext_id = c_longtext_id_dtel ).
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 

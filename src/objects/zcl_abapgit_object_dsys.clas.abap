@@ -49,16 +49,12 @@ CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
     super->constructor( is_item = is_item
                         iv_language = iv_language ).
 
-    IF ms_item-obj_name(1) = '/'.
-      CALL FUNCTION 'RS_NAME_SPLIT_NAMESPACE'
-        EXPORTING
-          name_with_namespace    = ms_item-obj_name
-        IMPORTING
-          namespace              = lv_prefix
-          name_without_namespace = lv_bare_name.
-    ELSE.
-      lv_bare_name = ms_item-obj_name.
-    ENDIF.
+    CALL FUNCTION 'RS_NAME_SPLIT_NAMESPACE'
+      EXPORTING
+        name_with_namespace    = ms_item-obj_name
+      IMPORTING
+        namespace              = lv_prefix
+        name_without_namespace = lv_bare_name.
 
     mv_doc_object = |{ lv_bare_name+0(4) }{ lv_prefix }{ lv_bare_name+4(*) }|.
 
@@ -147,6 +143,8 @@ CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
       WHEN 'v2.0.0'.
         zcl_abapgit_factory=>get_longtexts( )->deserialize(
           ii_xml           = io_xml
+          iv_object_name   = mv_doc_object
+          iv_longtext_id   = c_id
           iv_main_language = mv_language ).
 
       WHEN OTHERS.
