@@ -129,6 +129,14 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         VALUE(ri_html)  TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS render_repo_url
+      IMPORTING
+        iv_url TYPE zif_abapgit_persistence=>ty_repo-url
+        iv_render_remote_edit_for_key TYPE zif_abapgit_persistence=>ty_repo-key OPTIONAL
+      RETURNING
+        VALUE(ri_html)  TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS render_package_name
       IMPORTING
         !iv_package        TYPE devclass
@@ -1045,6 +1053,26 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
       CATCH zcx_abapgit_exception.
         ii_html->add( |<span class="url">{ lv_icon_commit }{ lv_commit_short_hash }</span>| ).
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD render_repo_url.
+
+    ri_html = zcl_abapgit_html=>new( )->add_a(
+      iv_txt   = shorten_repo_url( iv_url )
+      iv_title = iv_url
+      iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ iv_url }| ).
+
+    IF iv_render_remote_edit_for_key IS NOT INITIAL.
+      ri_html->add_a(
+        iv_txt   = ri_html->icon(
+          iv_name  = 'edit-solid'
+          iv_class = 'pad-sides'
+          iv_hint  = 'Change remote' )
+        iv_act   = |{ zif_abapgit_definitions=>c_action-repo_remote_settings }?key={ iv_render_remote_edit_for_key }|
+        iv_class = |remote_repo| ).
+    ENDIF.
 
   ENDMETHOD.
 

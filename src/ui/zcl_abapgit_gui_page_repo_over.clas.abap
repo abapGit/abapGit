@@ -565,14 +565,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       lv_fav_tr_class          TYPE string,
       lv_text                  TYPE string,
       lv_lock                  TYPE string,
-      lv_repo_go_link          TYPE string,
-      lv_edit_remote_icon_link TYPE string.
+      lv_repo_go_link          TYPE string.
 
     lv_is_online_repo = boolc( is_repo-type = abap_false ).
 
     " Start of row
     IF is_repo-favorite = abap_true.
-*      lv_fav_tr_class = ' favorite'.
+      lv_fav_tr_class = ' favorite'.
     ELSE.
       lv_fav_tr_class = ''.
     ENDIF.
@@ -630,19 +629,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     " Repo URL
     IF lv_is_online_repo = abap_true.
-      lv_edit_remote_icon_link = ii_html->a(
-        iv_txt   = ii_html->icon(
-          iv_name  = 'edit-solid'
-          iv_class = 'pad-sides'
-          iv_hint  = 'Change remote' )
-        iv_act   = |{ zif_abapgit_definitions=>c_action-repo_remote_settings }?key={ is_repo-key }|
-        iv_class = |remote_repo| ).
-
-      ii_html->td( ii_html->a(
-        iv_txt   = zcl_abapgit_gui_chunk_lib=>shorten_repo_url( is_repo-url )
-        iv_title = is_repo-url
-        iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ is_repo-url }| ) &&
-        lv_edit_remote_icon_link ).
+      ii_html->td( ii_content = zcl_abapgit_gui_chunk_lib=>render_repo_url(
+        iv_url = is_repo-url
+        iv_render_remote_edit_for_key = is_repo-key ) ).
     ELSE.
       ii_html->td( ).
     ENDIF.
