@@ -416,8 +416,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
   METHOD render_repo_list.
 
-    ii_html->add( |<div class="db_list repo-overview">| ).
-    ii_html->add( |<table class="db_tab">| ).
+    ii_html->add( |<div class="repo-overview">| ).
+    ii_html->add( |<table>| ).
 
     render_table_header( ii_html ).
     render_table_body(
@@ -574,24 +574,18 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     " Start of row
     IF is_repo-favorite = abap_true.
-      lv_fav_tr_class = ' favorite'.
+      lv_fav_tr_class = ' class="favorite"'.
     ELSE.
       lv_fav_tr_class = ''.
     ENDIF.
 
-    ii_html->add( |<tr class="repo{
-      lv_fav_tr_class }" data-key="{
+    ii_html->add( |<tr{
+      lv_fav_tr_class } data-key="{
       is_repo-key }" data-offline="{ is_repo-type }">| ).
 
     " Favorite
-    IF is_repo-favorite = abap_true.
-      lv_favorite_icon = 'star/blue'.
-    ELSE.
-      lv_favorite_icon = 'star/grey'.
-    ENDIF.
-
     lv_favorite_icon = ii_html->icon(
-      iv_name  = lv_favorite_icon
+      iv_name  = 'star/grey' " blue is added in css, based on TR style
       iv_class = 'pad-sides'
       iv_hint  = 'Click to toggle favorite' ).
 

@@ -486,7 +486,8 @@ table.diff_tab {
   font-size: 10pt;
   width: 100%;
 }
-table.diff_tab td,th {
+table.diff_tab td,
+table.diff_tab th {
   padding-left: 0.5em;
   padding-right: 0.5em;
 }
@@ -615,7 +616,7 @@ div.db_list {
   overflow-x: auto;
 }
 
-table.db_tab{
+table.db_tab {
   table-layout: fixed;
 }
 table.db_tab pre {
@@ -648,14 +649,6 @@ table.db_tab th.package {
 table.db_tab td.data {
   font-style: italic;
 }
-table.db_tab tbody tr {
-  /*border is there but transparent, needed for proper alignment*/
-  border-color: transparent !important;
-  border: 1px solid;
-  border-left-width: 3px;
-}
-
-
 
 li.action_link.enabled{
   visibility: visible;
@@ -1030,16 +1023,44 @@ table.commit tr .title {
 }
 
 /* Repo overview */
-.repo-overview { font-size: smaller; }
+.repo-overview { 
+  font-size: smaller;
+  padding: 0.5em;
+  overflow-x: auto;
+}
+.repo-overview th {
+  text-align: left;
+}
+.repo-overview thead tr {
+  border-bottom: #ddd 1px solid;
+}
+.repo-overview tfoot tr {
+  border-top: #ddd 1px solid;
+}
+.repo-overview tr.favorite .icon-star {
+  color: #5e8dc9 !important;
+}
+
+/*
+.repo-overview th.package {
+    width: 45ch;
+}
+*/
+
+/*.repo-overview tbody tr { height: 2em; }
 .repo-overview tbody td { height: 2em; }
+*/
+.repo-overview td,
+.repo-overview th { 
+  padding: 6px 6px; /* maybe use height ? */
+}
 .repo-overview .ro-detail { display: none; }
 .repo-overview .ro-go a {
   font-size: 150%;
   padding: 0px 0.15em;
-  border-radius: 0px;
 }
 .repo-overview .ro-go a:hover { 
-  background-color: white;
+  color: #ff721e;
   text-decoration: none;
 }
 

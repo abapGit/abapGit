@@ -358,6 +358,23 @@ div.debug_container {
   background-color: var(--theme-container-background-color);
 }
 
+/* Repo overview */
+
+.repo-overview { background-color: white; }
+.repo-overview thead tr,
+.repo-overview tfoot tr {
+  border-color: #ddd;
+}
+.repo-overview a.remote_repo { color: var(--theme-primary-font-color-reduced); }
+.repo-overview a.remote_repo:hover { color: var(--theme-link-color); }
+.repo-overview tbody tr:hover td {
+  background-color: hsla(214, 50%, 50%, 0.05);
+  /*background-color: rgba(0, 0, 0, 0.075);*/
+}
+.repo-overview tbody tr.selected {
+  background-color: hsla(214, 50%, 75%, 0.33);
+}
+
 /* DB ENTRIES */
 div.db_list { background-color: #fff; }
 table.db_tab td      { color: #333; }
@@ -374,13 +391,6 @@ table.db_tab th {
 table.db_tab thead tr,
 table.db_tab tfoot tr {
   border-color: #ddd;
-  /*border-bottom-color: #ddd;*/
-  /*border-top-color: #ddd;*/
-}
-
-table.db_tab tr.selected {
-  /*background-color: rgba(191, 191, 191, 1) !important;*/
-  border-color: hsl(214, 50%, 75%) !important;
 }
 table.db_tab a.remote_repo {
   color: var(--theme-primary-font-color-reduced);
