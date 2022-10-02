@@ -19,7 +19,7 @@ Works with: [GitHub](https://github.com/),
 
 ABAP Version: 702 or higher
 
-Latest build: [zabapgit.abap](https://raw.githubusercontent.com/abapGit/build/main/zabapgit.abap)
+Latest build: [zabapgit_standalone.prog.abap](https://raw.githubusercontent.com/abapGit/build/main/zabapgit_standalone.prog.abap)
 
 *Notes: Some people reported that browsers have issues displaying the file with more than 100k lines. The easiest solution is to "Save as" the link above and then open it with any editor/viewer (notepad included) and copy from there. If your SAP GUI editor freezes when pasting the code, use Utilities > More Utilities > Upload/Download > Upload in the editor instead.*
 
