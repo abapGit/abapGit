@@ -164,8 +164,7 @@ CLASS ltcl_html IMPLEMENTATION.
 
   METHOD wrap.
 
-    mo_html->wrap(
-      iv_tag     = 'td' ).
+    mo_html->wrap( iv_tag = 'td' ).
     mo_html->wrap(
       iv_tag     = 'td'
       iv_content = 'Hello' ).
