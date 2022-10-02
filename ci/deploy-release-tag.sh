@@ -36,9 +36,12 @@ TAG="v$VERSION_AFTER"
 echo "version change detected [$VERSION_BEFORE > $VERSION_AFTER], creating a new tag ..."
 
 # DEPLOY
-
-git config user.email "builds@travis-ci.com"
-git config user.name "Travis CI"
+if [ -z $GIT_USER_EMAIL ] || [ -z $GIT_USER_NAME ]; then
+    echo "Failed: Git user name and email must be defined via env"
+    exit 1
+fi
+git config user.email "$GIT_USER_EMAIL"
+git config user.name "$GIT_USER_NAME"
 
 REPO_URL=$(git remote -v | grep -m1 '^origin' | sed -Ene 's#.*(https://[^[:space:]]+).*#\1#p')
 PUSH_URL=$(echo "$REPO_URL" | sed -Ene "s#(https://)#\1$GITHUB_API_KEY@#p")
@@ -46,3 +49,4 @@ PUSH_URL=$(echo "$REPO_URL" | sed -Ene "s#(https://)#\1$GITHUB_API_KEY@#p")
 
 git tag $TAG || exit 1
 git push $PUSH_URL $TAG || exit 1
+echo "::set-output name=pushedTag::$TAG"
