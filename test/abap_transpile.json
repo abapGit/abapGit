@@ -114,7 +114,7 @@
 
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_calculate_status", "method": "complete", "note": "??"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_calculate_status", "method": "only_local2", "note": "??"},
-      {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_calculate_status", "method": "only_remote3", "note": "CL_PACKAGE_FACTORY missing"},
+      {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_calculate_status", "method": "only_remote3", "note": "??"},
 
       {"object": "ZCL_ABAPGIT_PERSIST_PACKAGES", "class": "ltcl_packages", "method": "test_package", "note": "ZABAPGIT table not existing, error cx_sy_dynamic_osql_semantics"},
 
@@ -169,8 +169,8 @@
 
       {"object": "ZCL_ABAPGIT_OBJECTS_PROGRAM", "class": "ltcl_test", "method": "strip_generation_comments_1", "note": "Void type: ABAPTXT255_TAB"},
       {"object": "ZCL_ABAPGIT_OBJECTS_PROGRAM", "class": "ltcl_test", "method": "strip_generation_comments_2", "note": "Void type: ABAPTXT255_TAB"},
-      {"object": "ZCL_ABAPGIT_OBJECTS_FILES", "class": "ltcl_objects_files", "method": "read_abap", "note": "Void type: ABAPTXT255_TAB"},
-      {"object": "ZCL_ABAPGIT_OBJECTS_FILES", "class": "ltcl_objects_files", "method": "read_xml", "note": "Void type: PROGNAME"},
+      {"object": "ZCL_ABAPGIT_OBJECTS_FILES", "class": "ltcl_objects_files", "method": "read_abap",            "note": "Void type: ABAPTXT255_TAB"},
+      {"object": "ZCL_ABAPGIT_OBJECTS_FILES", "class": "ltcl_objects_files", "method": "read_xml",             "note": "Void type: PROGNAME"},
 
       {"object": "ZCL_ABAPGIT_SOTR_HANDLER", "class": "ltcl_sotr_handler", "method": "sotr_wda_0001",           "note": "Void type: SOTR_HEAD"},
       {"object": "ZCL_ABAPGIT_SOTR_HANDLER", "class": "ltcl_sotr_handler", "method": "sotr_wda_0003_not_exist", "note": "Void type: SOTR_HEAD"},
@@ -222,14 +222,13 @@
       {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff12", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
       {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff13", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
       {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff14", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
-      {"object": "ZCL_ABAPGIT_USER_RECORD", "class": "ltcl_user_record", "method": "test_invalid_user", "note": "Void type: BAPIADDR3"},
+      {"object": "ZCL_ABAPGIT_USER_RECORD", "class": "ltcl_user_record", "method": "test_invalid_user",                   "note": "Void type: BAPIADDR3"},
       {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "raise_error_if_package_exists", "note": "Void type: SCOMPKDTLN"},
-      {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_given_in_popup", "note": "Void type: SCOMPKDTLN"},
+      {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_given_in_popup",        "note": "Void type: SCOMPKDTLN"},
       {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_not_created_when_canc", "note": "Void type: SCOMPKDTLN"},
-      {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_created_when_confirm", "note": "Void type: SCOMPKDTLN"},
+      {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_created_when_confirm",  "note": "Void type: SCOMPKDTLN"},
 
-      {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_test_checksums", "method": "rebuild_simple", "note": "some sorting problem?"},
-      {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_test_checksums", "method": "rebuild_w_dot_abapgit"}
+      {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_test_checksums", "method": "rebuild_simple", "note": "some sorting problem?"}
     ]
   }
 }
