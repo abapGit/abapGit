@@ -61,9 +61,9 @@ CLASS ZCL_ABAPGIT_GUI_COMPONENT IMPLEMENTATION.
       li_hotkey_provider = ii_hotkey_provider.
     ELSE.
       TRY.
-        li_hotkey_provider ?= me.
-      CATCH cx_root.
-        RETURN.
+          li_hotkey_provider ?= me.
+        CATCH cx_root.
+          RETURN.
       ENDTRY.
     ENDIF.
 
