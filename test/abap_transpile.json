@@ -133,9 +133,6 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "stringify"},
       {"object": "ZCL_ABAPGIT_AJSON_MAPPING", "class": "ltcl_camel_case", "method": "to_abap", "note": "secondary key fields? READ WITH KEY, Path not found @/FieldData"},
 
-      {"object": "ZCL_ABAPGIT_UI_INJECTOR", "class": "ltcl_no_dependency_injection", "method": "no_injection", "note": "RTTI? class absolute_name"},
-      {"object": "ZCL_ABAPGIT_UI_INJECTOR", "class": "ltcl_simple_dependency_inject", "method": "simple_injection", "note": "RTTI?"},
-
       {"object": "ZCL_ABAPGIT_REQUIREMENT_HELPER", "class": "ltcl_lower_release", "method": "empty_patch", "note": "Void type: CVERS_SDU"},
       {"object": "ZCL_ABAPGIT_REQUIREMENT_HELPER", "class": "ltcl_lower_release", "method": "lower_patch", "note": "Void type: CVERS_SDU"},
       {"object": "ZCL_ABAPGIT_REQUIREMENT_HELPER", "class": "ltcl_lower_release", "method": "same_patch", "note": "Void type: CVERS_SDU"},
@@ -159,7 +156,7 @@
 
       {"object": "ZCL_ABAPGIT_XML", "class": "ltcl_xml", "method": "space_leading_trailing", "note": "todo in if_ixml_document$find_from_path, https://github.com/open-abap/open-abap/issues/226 "},
       {"object": "ZCL_ABAPGIT_XML", "class": "ltcl_xml", "method": "bad_xml_raises_exc", "note": "handling of xml parser errors, cl_ixml, test method parse_negative"},
-      {"object": "ZCL_ABAPGIT_XML_OUTPUT", "class": "ltcl_xml_output", "method": "render_xml_string", "note": " https://github.com/abaplint/transpiler/issues/646 "},
+      {"object": "ZCL_ABAPGIT_XML_OUTPUT", "class": "ltcl_xml_output", "method": "render_xml_string", "note": "kernel_call_transformation.mi_writer.get(...).if_sxml_writer$open_element is not a function"},
       {"object": "ZCL_ABAPGIT_XML_OUTPUT", "class": "ltcl_xml_output", "method": "add_simple_object", "note": "kernel_call_transformation.mi_writer.get(...).if_sxml_writer$open_element is not a function"},
       {"object": "ZCL_ABAPGIT_XML_INPUT", "class": "ltcl_xml", "method": "up"},
       {"object": "ZCL_ABAPGIT_XML_INPUT", "class": "ltcl_xml", "method": "empty"},
@@ -177,6 +174,8 @@
       {"object": "ZCL_ABAPGIT_SOTR_HANDLER", "class": "ltcl_sotr_handler", "method": "sotr_wda_0004",           "note": "Void type: SOTR_HEAD"},
       {"object": "ZCL_ABAPGIT_SOTR_HANDLER", "class": "ltcl_sotr_handler", "method": "sotr_cx_0002",            "note": "Void type: SOTR_HEAD"},
 
+      {"object": "ZCL_ABAPGIT_UI_INJECTOR", "class": "ltcl_no_dependency_injection", "method": "no_injection", "note": "RTTI? class absolute_name"},
+      {"object": "ZCL_ABAPGIT_UI_INJECTOR", "class": "ltcl_simple_dependency_inject", "method": "simple_injection", "note": "RTTI?"},
       {"object": "ZCL_ABAPGIT_INJECTOR", "class": "ltcl_no_dependency_injection", "method": "no_injection"},
       {"object": "ZCL_ABAPGIT_INJECTOR", "class": "ltcl_simple_dependency_inject", "method": "simple_injection"},
 
