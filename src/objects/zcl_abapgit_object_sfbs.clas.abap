@@ -5,6 +5,8 @@ CLASS zcl_abapgit_object_sfbs DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PROTECTED SECTION.
   PRIVATE SECTION.
+    CONSTANTS c_longtext_id_sfbs TYPE dokil-id VALUE 'BS'.
+
     METHODS:
       get
         RETURNING VALUE(ro_bfs) TYPE REF TO cl_sfw_bfs
@@ -120,6 +122,9 @@ CLASS zcl_abapgit_object_sfbs IMPLEMENTATION.
 
     lo_bfs->save_all( ).
 
+    deserialize_longtexts( ii_xml         = io_xml
+                           iv_longtext_id = c_longtext_id_sfbs ).
+
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.
@@ -226,6 +231,9 @@ CLASS zcl_abapgit_object_sfbs IMPLEMENTATION.
                  iv_name = 'NESTED_BFS' ).
     io_xml->add( ig_data = lt_parent_bfs
                  iv_name = 'PARENT_BFS' ).
+
+    serialize_longtexts( ii_xml         = io_xml
+                         iv_longtext_id = c_longtext_id_sfbs ).
 
   ENDMETHOD.
 ENDCLASS.
