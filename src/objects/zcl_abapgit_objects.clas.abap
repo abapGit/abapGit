@@ -431,6 +431,11 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     REPLACE FIRST OCCURRENCE OF 'LCL' IN lv_class_name WITH 'ZCL_ABAPGIT'.
 
+    IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true.
+      " Prevent accidental usage of object handlers in the developer version
+      lv_class_name = |\\PROGRAM={ sy-repid }\\CLASS={ lv_class_name }|.
+    ENDIF.
+
     TRY.
         CREATE OBJECT ri_obj TYPE (lv_class_name)
           EXPORTING
