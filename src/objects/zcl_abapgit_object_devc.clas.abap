@@ -5,8 +5,7 @@ CLASS zcl_abapgit_object_devc DEFINITION PUBLIC
   PUBLIC SECTION.
     INTERFACES:
       zif_abapgit_object.
-    ALIASES:
-      mo_files FOR zif_abapgit_object~mo_files.
+
     METHODS:
       constructor IMPORTING is_item     TYPE zif_abapgit_definitions=>ty_item
                             iv_language TYPE spras.
@@ -360,7 +359,12 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = get_package( )->changed_by.
+    DATA li_package TYPE REF TO if_package.
+
+    li_package = get_package( ).
+    IF li_package IS BOUND.
+      rv_user = li_package->changed_by.
+    ENDIF.
   ENDMETHOD.
 
 
@@ -541,7 +545,7 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
       ls_package_data-dlvunit = 'HOME'.
     ENDIF.
 
-    ls_package_data-as4user = cl_abap_syst=>get_user_name( ).
+    ls_package_data-as4user = sy-uname.
 
     IF li_package IS BOUND.
       " Package already exists, change it

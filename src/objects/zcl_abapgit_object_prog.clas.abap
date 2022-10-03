@@ -2,8 +2,6 @@ CLASS zcl_abapgit_object_prog DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -112,8 +110,9 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
   METHOD serialize_texts.
 
-    DATA: lt_tpool_i18n TYPE ty_tpools_i18n,
-          lt_tpool      TYPE textpool_table.
+    DATA: lt_tpool_i18n      TYPE ty_tpools_i18n,
+          lt_tpool           TYPE textpool_table,
+          lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
     FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
 
@@ -124,12 +123,14 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
     " Table d010tinf stores info. on languages in which program is maintained
     " Select all active translations of program texts
     " Skip main language - it was already serialized
+    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
     SELECT DISTINCT language
       INTO CORRESPONDING FIELDS OF TABLE lt_tpool_i18n
       FROM d010tinf
       WHERE r3state = 'A'
       AND prog = ms_item-obj_name
-      AND language <> mv_language ##TOO_MANY_ITAB_FIELDS.
+      AND language <> mv_language
+      AND language IN lt_language_filter ##TOO_MANY_ITAB_FIELDS.
 
     SORT lt_tpool_i18n BY language ASCENDING.
     LOOP AT lt_tpool_i18n ASSIGNING <ls_tpool>.
@@ -160,8 +161,8 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
   METHOD zif_abapgit_object~delete.
 
     DATA:
-      lv_program    LIKE sy-repid,
-      lv_obj_name   TYPE e071-obj_name.
+      lv_program  LIKE sy-repid,
+      lv_obj_name TYPE e071-obj_name.
 
     lv_program = ms_item-obj_name.
 
@@ -223,7 +224,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
     lv_program_name = ms_item-obj_name.
 
-    lt_source = mo_files->read_abap( ).
+    lt_source = zif_abapgit_object~mo_files->read_abap( ).
 
     io_xml->read( EXPORTING iv_name = 'TPOOL'
                   CHANGING cg_data = lt_tpool_ext ).
@@ -262,7 +263,8 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
       deserialize_texts( io_xml ).
       deserialize_lxe_texts( io_xml ).
 
-      deserialize_longtexts( io_xml ).
+      deserialize_longtexts( ii_xml         = io_xml
+                             iv_longtext_id = c_longtext_id_prog ).
 
     ENDIF.
 
@@ -326,7 +328,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
     serialize_program( io_xml   = io_xml
                        is_item  = ms_item
-                       io_files = mo_files ).
+                       io_files = zif_abapgit_object~mo_files ).
 
     " Texts serializing (translations)
     IF io_xml->i18n_params( )-translation_languages IS INITIAL.

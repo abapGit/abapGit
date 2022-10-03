@@ -2,8 +2,6 @@ CLASS zcl_abapgit_object_iatu DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
     METHODS:
@@ -337,7 +335,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'ATTR'
                   CHANGING cg_data = ls_attr ).
 
-    lv_source = mo_files->read_string( 'html' ).
+    lv_source = zif_abapgit_object~mo_files->read_string( 'html' ).
 
     ls_attr-devclass = iv_package.
     save( is_attr   = ls_attr
@@ -405,8 +403,9 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
     io_xml->add( iv_name = 'ATTR'
                  ig_data = ls_attr ).
 
-    mo_files->add_string( iv_ext    = 'html'
-                          iv_string = lv_source ).
+    zif_abapgit_object~mo_files->add_string(
+      iv_ext    = 'html'
+      iv_string = lv_source ).
 
   ENDMETHOD.
 ENDCLASS.

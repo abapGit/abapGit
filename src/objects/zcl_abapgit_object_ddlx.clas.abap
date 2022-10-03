@@ -2,7 +2,6 @@ CLASS zcl_abapgit_object_ddlx DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA mi_persistence TYPE REF TO if_wb_object_persist .
@@ -109,7 +108,46 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown.
+
+    DATA:
+      lv_object_key  TYPE seu_objkey,
+      li_data_model  TYPE REF TO if_wb_object_data_model,
+      li_persistence TYPE REF TO if_wb_object_persist,
+      lr_data        TYPE REF TO data.
+
+    FIELD-SYMBOLS:
+      <lg_data>       TYPE any,
+      <lg_changed_by> TYPE data.
+
+    lv_object_key = ms_item-obj_name.
+
+    TRY.
+        CREATE DATA lr_data
+          TYPE ('CL_DDLX_WB_OBJECT_DATA=>TY_OBJECT_DATA').
+        ASSIGN lr_data->* TO <lg_data>.
+
+        CREATE OBJECT li_data_model
+          TYPE ('CL_DDLX_WB_OBJECT_DATA').
+
+        li_persistence = get_persistence( ).
+
+        li_persistence->get(
+          EXPORTING
+            p_object_key  = lv_object_key
+            p_version     = swbm_version_active
+          CHANGING
+            p_object_data = li_data_model ).
+      CATCH cx_root.
+        rv_user = c_user_unknown.
+        RETURN.
+    ENDTRY.
+
+    li_data_model->get_data( IMPORTING p_data = <lg_data> ).
+
+    ASSIGN COMPONENT 'METADATA-CHANGED_BY' OF STRUCTURE <lg_data> TO <lg_changed_by>.
+    ASSERT sy-subrc = 0.
+    rv_user = <lg_changed_by>.
+
   ENDMETHOD.
 
 
@@ -163,7 +201,7 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
         TRY.
             " If the file doesn't exist that's ok, because previously
             " the source code was stored in the xml. We are downward compatible.
-            <lg_source> = mo_files->read_string( 'asddlxs' ).
+            <lg_source> = zif_abapgit_object~mo_files->read_string( 'asddlxs' ).
           CATCH zcx_abapgit_exception ##NO_HANDLER.
         ENDTRY.
 
@@ -309,8 +347,9 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
         ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <lg_data> TO <lg_field>.
         ASSERT sy-subrc = 0.
 
-        mo_files->add_string( iv_ext    = 'asddlxs'
-                              iv_string = <lg_field> ).
+        zif_abapgit_object~mo_files->add_string(
+          iv_ext    = 'asddlxs'
+          iv_string = <lg_field> ).
 
         CLEAR <lg_field>.
 

@@ -118,6 +118,12 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
         WHEN 'AUTH'.
           " AUTH after DCLS
           <ls_tadir>-korrnum = '715000'.
+        WHEN 'SUSH'.
+          " SUSH after SUSC
+          <ls_tadir>-korrnum = '712000'.
+        WHEN 'SUSC'.
+          " SUSC after SUSO
+          <ls_tadir>-korrnum = '711000'.
         WHEN 'SUSO'.
           " SUSO after DCLS
           <ls_tadir>-korrnum = '710000'.
@@ -130,8 +136,6 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
           <ls_tadir>-korrnum = '551000'.
         WHEN 'IATU'.
           <ls_tadir>-korrnum = '550000'.
-        WHEN 'SUSC'.
-          <ls_tadir>-korrnum = '500000'.
         WHEN 'ACID'.
           " ACID after PROG/FUGR/CLAS
           <ls_tadir>-korrnum = '300000'.

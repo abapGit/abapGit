@@ -5,6 +5,7 @@ CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
     DATA ms_config TYPE zif_abapgit_data_config=>ty_config.
 
     METHODS setup.
+    METHODS double_add_config FOR TESTING RAISING cx_static_check.
     METHODS to_json FOR TESTING RAISING cx_static_check.
     METHODS from_json
       IMPORTING it_files TYPE zif_abapgit_definitions=>ty_files_tt
@@ -28,6 +29,29 @@ CLASS ltcl_test IMPLEMENTATION.
     ms_config-type = zif_abapgit_data_config=>c_data_type-tabu.
     ms_config-name  = 'DUMMY'.
     APPEND 'DUMMY' TO ms_config-where.
+
+  ENDMETHOD.
+
+  METHOD double_add_config.
+
+    DATA li_config TYPE REF TO zif_abapgit_data_config.
+    DATA ls_config TYPE zif_abapgit_data_config=>ty_config.
+
+    CREATE OBJECT li_config TYPE zcl_abapgit_data_config.
+
+    ls_config-name = 'HELLO'.
+    ls_config-type = zif_abapgit_data_config=>c_data_type-tabu.
+    APPEND 'foo' TO ls_config-where.
+
+    li_config->add_config( ls_config ).
+
+    CLEAR ls_config-where.
+    APPEND 'bar' TO ls_config-where.
+    li_config->add_config( ls_config ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( li_config->get_configs( ) )
+      exp = 1 ).
 
   ENDMETHOD.
 

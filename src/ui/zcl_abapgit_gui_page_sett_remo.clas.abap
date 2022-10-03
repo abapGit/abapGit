@@ -26,14 +26,7 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
   PRIVATE SECTION.
 
     TYPES:
-      BEGIN OF ty_commit_value_tab,
-        sha1     TYPE zif_abapgit_definitions=>ty_sha1,
-        message  TYPE c LENGTH 50,
-        datetime TYPE c LENGTH 20,
-      END OF ty_commit_value_tab .
-    TYPES:
-      ty_commit_value_tab_tt TYPE STANDARD TABLE OF ty_commit_value_tab WITH DEFAULT KEY,
-      ty_head_type           TYPE c LENGTH 1,
+      ty_head_type TYPE c LENGTH 1,
       BEGIN OF ty_remote_settings,
         offline         TYPE zif_abapgit_persistence=>ty_repo-offline,
         url             TYPE zif_abapgit_persistence=>ty_repo-url,
@@ -186,127 +179,11 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-    METHODS checkout_commit_build_list
-      IMPORTING
-        !iv_branch_name TYPE string
-        !iv_repo_url    TYPE string
-      EXPORTING
-        !et_value_tab   TYPE ty_commit_value_tab_tt
-        !et_commits     TYPE zif_abapgit_definitions=>ty_commit_tt
-      RAISING
-        zcx_abapgit_exception .
-    METHODS checkout_commit_build_popup
-      IMPORTING
-        !it_commits               TYPE zif_abapgit_definitions=>ty_commit_tt
-        !it_value_tab             TYPE ty_commit_value_tab_tt
-      RETURNING
-        VALUE(rs_selected_commit) TYPE zif_abapgit_definitions=>ty_commit
-      RAISING
-        zcx_abapgit_exception .
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
-
-
-  METHOD checkout_commit_build_list.
-
-    DATA: lv_unix_time   TYPE zcl_abapgit_time=>ty_unixtime,
-          lv_date        TYPE sy-datum,
-          lv_date_string TYPE c LENGTH 12,
-          lv_time        TYPE sy-uzeit,
-          lv_time_string TYPE c LENGTH 10.
-
-    FIELD-SYMBOLS: <ls_commit>    TYPE zif_abapgit_definitions=>ty_commit,
-                   <ls_value_tab> TYPE ty_commit_value_tab.
-
-    CLEAR: et_commits, et_value_tab.
-
-    et_commits = zcl_abapgit_git_commit=>get_by_branch( iv_branch_name  = iv_branch_name
-                                                        iv_repo_url     = iv_repo_url
-                                                        iv_deepen_level = 99 )-commits.
-
-    SORT et_commits BY time DESCENDING.
-
-    IF et_commits IS INITIAL.
-      zcx_abapgit_exception=>raise( |No commits are available in this branch.| ).
-    ENDIF.
-
-    LOOP AT et_commits ASSIGNING <ls_commit>.
-
-      APPEND INITIAL LINE TO et_value_tab ASSIGNING <ls_value_tab>.
-      <ls_value_tab>-sha1    = <ls_commit>-sha1.
-      <ls_value_tab>-message = <ls_commit>-message.
-      lv_unix_time = <ls_commit>-time.
-      zcl_abapgit_time=>get_utc(
-        EXPORTING
-          iv_unix = lv_unix_time
-        IMPORTING
-          ev_time = lv_time
-          ev_date = lv_date ).
-      WRITE: lv_date TO lv_date_string,
-             lv_time TO lv_time_string.
-      <ls_value_tab>-datetime = |{ lv_date_string }, | &&
-                                |{ lv_time_string }|.
-
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD checkout_commit_build_popup.
-
-    DATA: lt_columns         TYPE zif_abapgit_definitions=>ty_alv_column_tt,
-          li_popups          TYPE REF TO zif_abapgit_popups,
-          lt_selected_values TYPE ty_commit_value_tab_tt.
-
-    FIELD-SYMBOLS: <ls_value_tab> TYPE ty_commit_value_tab,
-                   <ls_column>    TYPE zif_abapgit_definitions=>ty_alv_column.
-
-    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
-    <ls_column>-name   = 'SHA1'.
-    <ls_column>-text   = 'Hash'.
-    <ls_column>-length = 8.
-    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
-    <ls_column>-name = 'MESSAGE'.
-    <ls_column>-text = 'Message'.
-    <ls_column>-length = 60.
-    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
-    <ls_column>-name = 'DATETIME'.
-    <ls_column>-text = 'Datetime'.
-    <ls_column>-length = 17.
-
-    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
-    li_popups->popup_to_select_from_list(
-      EXPORTING
-        it_list               = it_value_tab
-        iv_title              = |Checkout Commit|
-        iv_end_column         = 100
-        iv_striped_pattern    = abap_true
-        iv_optimize_col_width = abap_false
-        iv_selection_mode     = if_salv_c_selection_mode=>single
-        it_columns_to_display = lt_columns
-      IMPORTING
-        et_list               = lt_selected_values ).
-
-    IF lt_selected_values IS INITIAL.
-      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
-    ENDIF.
-
-    READ TABLE lt_selected_values
-      ASSIGNING <ls_value_tab>
-      INDEX 1.
-
-    IF <ls_value_tab> IS NOT ASSIGNED.
-      zcx_abapgit_exception=>raise( |Though result set of popup wasn't empty selected value couldn't retrieved.| ).
-    ENDIF.
-
-    READ TABLE it_commits
-      INTO rs_selected_commit
-      WITH KEY sha1 = <ls_value_tab>-sha1.
-
-  ENDMETHOD.
 
 
   METHOD check_protection.
@@ -352,33 +229,22 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
   METHOD choose_commit.
 
     DATA:
-      lt_value_tab       TYPE ty_commit_value_tab_tt,
-      lt_commits         TYPE zif_abapgit_definitions=>ty_commit_tt,
-      ls_selected_commit TYPE zif_abapgit_definitions=>ty_commit,
-      lv_branch          TYPE ty_remote_settings-branch.
+      lv_url         TYPE string,
+      lv_branch_name TYPE zif_abapgit_persistence=>ty_repo-branch_name,
+      li_popups      TYPE REF TO zif_abapgit_popups.
 
     IF mo_form_data->get( c_id-offline ) = abap_true.
       RETURN.
     ENDIF.
 
-    lv_branch = zif_abapgit_definitions=>c_git_branch-heads_prefix && mo_form_data->get( c_id-branch ).
-    CONDENSE lv_branch.
+    lv_url = mo_form_data->get( c_id-url ).
+    lv_branch_name = zif_abapgit_definitions=>c_git_branch-heads_prefix && mo_form_data->get( c_id-branch ).
 
-    checkout_commit_build_list(
-      EXPORTING
-        iv_branch_name = lv_branch
-        iv_repo_url    = mo_form_data->get( c_id-url )
-      IMPORTING
-        et_value_tab   = lt_value_tab
-        et_commits     = lt_commits ).
+    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
 
-    ls_selected_commit = checkout_commit_build_popup(
-      it_commits   = lt_commits
-      it_value_tab = lt_value_tab ).
-
-    IF ls_selected_commit IS NOT INITIAL.
-      rv_commit = ls_selected_commit-sha1.
-    ENDIF.
+    rv_commit = li_popups->commit_list_popup(
+      iv_repo_url    = lv_url
+      iv_branch_name = lv_branch_name )-sha1.
 
   ENDMETHOD.
 
@@ -622,6 +488,81 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_remote_settings_from_form.
+    rs_settings-url = io_form_data->get( c_id-url ).
+    rs_settings-offline = io_form_data->get( c_id-offline ).
+
+    IF rs_settings-offline = abap_false.
+      rs_settings-head_type = io_form_data->get( c_id-head_type ).
+
+      CASE rs_settings-head_type.
+        WHEN c_head_types-branch.
+          rs_settings-branch = zif_abapgit_definitions=>c_git_branch-heads_prefix && io_form_data->get( c_id-branch ).
+        WHEN c_head_types-tag.
+          rs_settings-tag = zif_abapgit_definitions=>c_git_branch-tags_prefix && io_form_data->get( c_id-tag ).
+        WHEN c_head_types-commit.
+          rs_settings-branch = zif_abapgit_definitions=>c_git_branch-heads_prefix && io_form_data->get( c_id-branch ).
+          rs_settings-commit = io_form_data->get( c_id-commit ).
+        WHEN c_head_types-pull_request.
+          rs_settings-pull_request = io_form_data->get( c_id-pull_request ).
+      ENDCASE.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD get_remote_settings_from_repo.
+    DATA: lo_repo_online  TYPE REF TO zcl_abapgit_repo_online,
+          lo_repo_offline TYPE REF TO zcl_abapgit_repo_offline,
+          lv_branch       TYPE ty_remote_settings-branch.
+
+    IF io_repo->is_offline( ) = abap_false.
+      lo_repo_online ?= io_repo.
+
+      rs_settings-url = lo_repo_online->get_url( ).
+      rs_settings-offline = abap_false.
+      rs_settings-switched_origin = lo_repo_online->get_switched_origin( ).
+
+      IF lo_repo_online->get_selected_commit( ) IS NOT INITIAL.
+        rs_settings-commit = lo_repo_online->get_selected_commit( ).
+        rs_settings-branch = lo_repo_online->get_selected_branch( ).
+        rs_settings-head_type = c_head_types-commit.
+      ELSEIF lo_repo_online->get_switched_origin( ) IS NOT INITIAL.
+        " get_switched_origin( ) returns the original repo url + HEAD concatenated with @
+        " get_branch( ) returns the branch of the PR in the source repo
+        " get_url( ) returns the source repo of the PR branch
+
+        rs_settings-switched_origin = lo_repo_online->get_switched_origin( ).
+        SPLIT rs_settings-switched_origin AT '@' INTO rs_settings-url rs_settings-branch.
+        IF rs_settings-branch CP zif_abapgit_definitions=>c_git_branch-tags.
+          rs_settings-tag = rs_settings-branch.
+          CLEAR rs_settings-branch.
+        ENDIF.
+
+        lv_branch = lo_repo_online->get_selected_branch( ).
+        REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-heads_prefix IN lv_branch WITH space.
+        CONDENSE lv_branch.
+        rs_settings-pull_request = |{ lo_repo_online->get_url( ) }@{ lv_branch }|.
+        rs_settings-head_type = c_head_types-pull_request.
+      ELSE.
+        rs_settings-branch = lo_repo_online->get_selected_branch( ).
+        rs_settings-head_type = c_head_types-branch.
+
+        IF rs_settings-branch CP zif_abapgit_definitions=>c_git_branch-tags.
+          rs_settings-head_type = c_head_types-tag.
+          rs_settings-tag = rs_settings-branch.
+          CLEAR rs_settings-branch.
+        ENDIF.
+      ENDIF.
+
+    ELSE.
+      lo_repo_offline ?= io_repo.
+
+      rs_settings-url = lo_repo_offline->get_name( ).
+      rs_settings-offline = abap_true.
+    ENDIF.
+  ENDMETHOD.
+
+
   METHOD init.
     mo_repo = io_repo.
     ms_settings_old = get_remote_settings_from_repo( mo_repo ).
@@ -732,7 +673,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
         switch_to_pull_req( iv_pull = ls_settings_new-pull_request ).
     ENDCASE.
 
-    IF ls_settings_new-head_type <> c_head_types-pull_request.
+    IF mo_repo->is_offline( ) = abap_false AND ls_settings_new-head_type <> c_head_types-pull_request.
       " Switching from PR to something else will reset the URL in repo->switch_origin( space )
       " -> set URL again
       lo_repo_online->set_url( ls_settings_new-url ).
@@ -1147,78 +1088,5 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     gui_services( )->get_hotkeys_ctl( )->register_hotkeys( zif_abapgit_gui_hotkeys~get_hotkey_actions( ) ).
 
-  ENDMETHOD.
-
-  METHOD get_remote_settings_from_repo.
-    DATA: lo_repo_online  TYPE REF TO zcl_abapgit_repo_online,
-          lo_repo_offline TYPE REF TO zcl_abapgit_repo_offline,
-          lv_branch       TYPE ty_remote_settings-branch.
-
-    IF io_repo->is_offline( ) = abap_false.
-      lo_repo_online ?= io_repo.
-
-      rs_settings-url = lo_repo_online->get_url( ).
-      rs_settings-offline = abap_false.
-      rs_settings-switched_origin = lo_repo_online->get_switched_origin( ).
-
-      IF lo_repo_online->get_selected_commit( ) IS NOT INITIAL.
-        rs_settings-commit = lo_repo_online->get_selected_commit( ).
-        rs_settings-branch = lo_repo_online->get_selected_branch( ).
-        rs_settings-head_type = c_head_types-commit.
-      ELSEIF lo_repo_online->get_switched_origin( ) IS NOT INITIAL.
-        " get_switched_origin( ) returns the original repo url + HEAD concatenated with @
-        " get_branch( ) returns the branch of the PR in the source repo
-        " get_url( ) returns the source repo of the PR branch
-
-        rs_settings-switched_origin = lo_repo_online->get_switched_origin( ).
-        SPLIT rs_settings-switched_origin AT '@' INTO rs_settings-url rs_settings-branch.
-        IF rs_settings-branch CP zif_abapgit_definitions=>c_git_branch-tags.
-          rs_settings-tag = rs_settings-branch.
-          CLEAR rs_settings-branch.
-        ENDIF.
-
-        lv_branch = lo_repo_online->get_selected_branch( ).
-        REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-heads_prefix IN lv_branch WITH space.
-        CONDENSE lv_branch.
-        rs_settings-pull_request = |{ lo_repo_online->get_url( ) }@{ lv_branch }|.
-        rs_settings-head_type = c_head_types-pull_request.
-      ELSE.
-        rs_settings-branch = lo_repo_online->get_selected_branch( ).
-        rs_settings-head_type = c_head_types-branch.
-
-        IF rs_settings-branch CP zif_abapgit_definitions=>c_git_branch-tags.
-          rs_settings-head_type = c_head_types-tag.
-          rs_settings-tag = rs_settings-branch.
-          CLEAR rs_settings-branch.
-        ENDIF.
-      ENDIF.
-
-    ELSE.
-      lo_repo_offline ?= io_repo.
-
-      rs_settings-url = lo_repo_offline->get_name( ).
-      rs_settings-offline = abap_true.
-    ENDIF.
-  ENDMETHOD.
-
-  METHOD get_remote_settings_from_form.
-    rs_settings-url = io_form_data->get( c_id-url ).
-    rs_settings-offline = io_form_data->get( c_id-offline ).
-
-    IF rs_settings-offline = abap_false.
-      rs_settings-head_type = io_form_data->get( c_id-head_type ).
-
-      CASE rs_settings-head_type.
-        WHEN c_head_types-branch.
-          rs_settings-branch = zif_abapgit_definitions=>c_git_branch-heads_prefix && io_form_data->get( c_id-branch ).
-        WHEN c_head_types-tag.
-          rs_settings-tag = zif_abapgit_definitions=>c_git_branch-tags_prefix && io_form_data->get( c_id-tag ).
-        WHEN c_head_types-commit.
-          rs_settings-branch = zif_abapgit_definitions=>c_git_branch-heads_prefix && io_form_data->get( c_id-branch ).
-          rs_settings-commit = io_form_data->get( c_id-commit ).
-        WHEN c_head_types-pull_request.
-          rs_settings-pull_request = io_form_data->get( c_id-pull_request ).
-      ENDCASE.
-    ENDIF.
   ENDMETHOD.
 ENDCLASS.

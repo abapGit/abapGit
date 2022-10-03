@@ -45,6 +45,14 @@ INTERFACE zif_abapgit_popups
       VALUE(rs_tag) TYPE zif_abapgit_definitions=>ty_git_tag
     RAISING
       zcx_abapgit_exception .
+  METHODS commit_list_popup
+    IMPORTING
+      !iv_repo_url     TYPE string
+      !iv_branch_name  TYPE string OPTIONAL
+    RETURNING
+      VALUE(rs_commit) TYPE zif_abapgit_definitions=>ty_commit
+    RAISING
+      zcx_abapgit_exception .
   TYPES ty_char1 TYPE c LENGTH 1.
   TYPES ty_icon TYPE c LENGTH 30.
   METHODS popup_to_confirm
@@ -93,15 +101,6 @@ INTERFACE zif_abapgit_popups
       !it_columns_to_display TYPE zif_abapgit_definitions=>ty_alv_column_tt
     EXPORTING
       VALUE(et_list)         TYPE STANDARD TABLE
-    RAISING
-      zcx_abapgit_exception .
-  METHODS branch_popup_callback
-    IMPORTING
-      !iv_code       TYPE clike
-    CHANGING
-      !ct_fields     TYPE ty_sval_tt
-      !cs_error      TYPE svale
-      !cv_show_popup TYPE char01
     RAISING
       zcx_abapgit_exception .
   METHODS popup_transport_request

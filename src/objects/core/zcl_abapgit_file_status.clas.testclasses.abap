@@ -33,6 +33,9 @@ ENDCLASS.
 CLASS ltcl_run_checks DEFINITION FOR TESTING RISK LEVEL HARMLESS
   DURATION SHORT FINAL.
 
+  PUBLIC SECTION.
+    INTERFACES: zif_abapgit_sap_package.
+
   PRIVATE SECTION.
     DATA: mt_results TYPE zif_abapgit_definitions=>ty_results_tt,
           mo_dot     TYPE REF TO zcl_abapgit_dot_abapgit,
@@ -55,11 +58,52 @@ CLASS ltcl_run_checks DEFINITION FOR TESTING RISK LEVEL HARMLESS
       neg_similar_filenames FOR TESTING RAISING zcx_abapgit_exception,
       neg_empty_filenames FOR TESTING RAISING zcx_abapgit_exception,
       package_move FOR TESTING RAISING zcx_abapgit_exception,
-      check_namespace FOR TESTING RAISING zcx_abapgit_exception.
+      check_namespace FOR TESTING RAISING zcx_abapgit_exception,
+      check_sub_package FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
 CLASS ltcl_run_checks IMPLEMENTATION.
+
+  METHOD zif_abapgit_sap_package~list_subpackages.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~list_superpackages.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~read_parent.
+    rv_parentcl = '$MAIN'.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~create_child.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~exists.
+    rv_bool = abap_true.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~are_changes_recorded_in_tr_req.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~get_transport_type.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~get_transport_layer.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~create.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~create_local.
+    RETURN.
+  ENDMETHOD.
 
   METHOD append_result.
 
@@ -87,6 +131,12 @@ CLASS ltcl_run_checks IMPLEMENTATION.
 
     mo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
     mo_dot->set_starting_folder( '/' ).  " assumed by unit tests
+
+    zcl_abapgit_injector=>set_sap_package( iv_package     = '$MAIN'
+                                           ii_sap_package = me ).
+
+    zcl_abapgit_injector=>set_sap_package( iv_package     = '$MAIN_SUB'
+                                           ii_sap_package = me ).
 
   ENDMETHOD.
 
@@ -249,7 +299,7 @@ CLASS ltcl_run_checks IMPLEMENTATION.
 
     ltcl_util=>check_contains(
       ii_log     = mi_log
-      iv_pattern = |Package and path does not match for object, *| ).
+      iv_pattern = |Package and path do not match for object*| ).
 
   ENDMETHOD.
 
@@ -459,6 +509,42 @@ CLASS ltcl_run_checks IMPLEMENTATION.
     ltcl_util=>check_contains(
       ii_log     = mi_log
       iv_pattern = |Namespace *| ).
+
+  ENDMETHOD.
+
+  METHOD check_sub_package.
+
+    append_result( iv_obj_type = 'DEVC'
+                   iv_obj_name = '$MAIN'
+                   iv_match    = 'X'
+                   iv_lstate   = ' '
+                   iv_rstate   = ' '
+                   iv_package  = '$MAIN'
+                   iv_path     = '/'
+                   iv_filename = 'package.devc.xml' ).
+
+    append_result( iv_obj_type = 'DEVC'
+                   iv_obj_name = '$MAIN_SUB'
+                   iv_match    = ' '
+                   iv_lstate   = ' '
+                   iv_rstate   = 'X'
+                   iv_package  = ''
+                   iv_path     = ''
+                   iv_filename = 'package.devc.xml' ).
+
+    zcl_abapgit_file_status=>run_checks(
+      ii_log     = mi_log
+      it_results = mt_results
+      io_dot     = mo_dot
+      iv_top     = '$MAIN' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mi_log->count( )
+      exp = 1 ).
+
+    ltcl_util=>check_contains(
+      ii_log     = mi_log
+      iv_pattern = |Package $MAIN_SUB already exists but is not a sub-package of $MAIN*| ).
 
   ENDMETHOD.
 

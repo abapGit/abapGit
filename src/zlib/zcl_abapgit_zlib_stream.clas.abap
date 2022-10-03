@@ -23,23 +23,29 @@ CLASS zcl_abapgit_zlib_stream DEFINITION
     "! Take bytes, there's an implicit realignment to start at the beginning of a byte
     "! i.e. if next bit of current byte is not the first bit, then this byte is skipped
     "! and the bytes are taken from the next one.
-    "! @parameter iv_length | <p class="shorttext synchronized" lang="en">Number of BYTES to read (not bits)</p>
-    "! @parameter rv_bytes | <p class="shorttext synchronized" lang="en">Bytes taken</p>
+    "! @parameter iv_length | <p class="shorttext synchronized" lang="en"></p>
+    "! @parameter rv_bytes | <p class="shorttext synchronized" lang="en"></p>
     METHODS take_bytes
       IMPORTING
-        iv_length       TYPE i
+        !iv_length      TYPE i
       RETURNING
-        VALUE(rv_bytes) TYPE xstring.
+        VALUE(rv_bytes) TYPE xstring .
+    METHODS clear_bits .
   PROTECTED SECTION.
   PRIVATE SECTION.
-    DATA: mv_compressed TYPE xstring,
-          mv_bits       TYPE string.
 
+    DATA mv_bits TYPE string .
+    DATA mv_compressed TYPE xstring .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_zlib_stream IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_ZLIB_STREAM IMPLEMENTATION.
+
+
+  METHOD clear_bits.
+    CLEAR mv_bits.
+  ENDMETHOD.
 
 
   METHOD constructor.

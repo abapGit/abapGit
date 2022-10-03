@@ -1,24 +1,37 @@
-CLASS zcl_abapgit_object_docv DEFINITION PUBLIC INHERITING FROM zcl_abapgit_objects_super FINAL.
+CLASS zcl_abapgit_object_docv DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_super
+  FINAL
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
+    INTERFACES zif_abapgit_object.
+
+    METHODS constructor
+      IMPORTING
+        !is_item     TYPE zif_abapgit_definitions=>ty_item
+        !iv_language TYPE spras.
   PROTECTED SECTION.
   PRIVATE SECTION.
-    CONSTANTS: c_typ     TYPE dokhl-typ VALUE 'E',
-               c_version TYPE dokhl-dokversion VALUE '0001',
-               c_name    TYPE string VALUE 'DOC'.
 
-    TYPES: BEGIN OF ty_data,
-             doctitle TYPE dsyst-doktitle,
-             head     TYPE thead,
-             lines    TYPE tline_tab,
-           END OF ty_data.
+    TYPES:
+      BEGIN OF ty_data,
+        doctitle TYPE dsyst-doktitle,
+        head     TYPE thead,
+        lines    TYPE tline_tab,
+      END OF ty_data.
 
-    METHODS: read
-      RETURNING VALUE(rs_data) TYPE ty_data.
+    CONSTANTS c_typ TYPE dokhl-typ VALUE 'E' ##NO_TEXT.
+    CONSTANTS c_version TYPE dokhl-dokversion VALUE '0001' ##NO_TEXT.
+    CONSTANTS c_name TYPE string VALUE 'DOC' ##NO_TEXT.
 
+    DATA mv_id TYPE dokhl-id.
+    DATA mv_doc_object TYPE dokhl-object.
+
+    METHODS read
+      RETURNING
+        VALUE(rs_data) TYPE ty_data.
 ENDCLASS.
 
 
@@ -26,20 +39,34 @@ ENDCLASS.
 CLASS zcl_abapgit_object_docv IMPLEMENTATION.
 
 
+  METHOD constructor.
+
+    DATA: lv_prefix    TYPE namespace,
+          lv_bare_name TYPE progname.
+
+    super->constructor( is_item = is_item
+                        iv_language = iv_language ).
+
+    CALL FUNCTION 'RS_NAME_SPLIT_NAMESPACE'
+      EXPORTING
+        name_with_namespace    = ms_item-obj_name
+      IMPORTING
+        namespace              = lv_prefix
+        name_without_namespace = lv_bare_name.
+
+    mv_id         = lv_bare_name(2).
+    mv_doc_object = |{ lv_prefix }{ lv_bare_name+2(*) }|.
+
+  ENDMETHOD.
+
+
   METHOD read.
-
-    DATA: lv_object TYPE dokhl-object,
-          lv_id     TYPE dokhl-id.
-
-
-    lv_id = ms_item-obj_name(2).
-    lv_object = ms_item-obj_name+2.
 
     CALL FUNCTION 'DOCU_READ'
       EXPORTING
-        id       = lv_id
+        id       = mv_id
         langu    = mv_language
-        object   = lv_object
+        object   = mv_doc_object
         typ      = c_typ
         version  = c_version
       IMPORTING
@@ -61,18 +88,11 @@ CLASS zcl_abapgit_object_docv IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_id     TYPE dokhl-id,
-          lv_object TYPE dokhl-object.
-
-
-    lv_id = ms_item-obj_name(2).
-    lv_object = ms_item-obj_name+2.
-
     CALL FUNCTION 'DOCU_DEL'
       EXPORTING
-        id       = lv_id
+        id       = mv_id
         langu    = mv_language
-        object   = lv_object
+        object   = mv_doc_object
         typ      = c_typ
       EXCEPTIONS
         ret_code = 1
@@ -106,16 +126,9 @@ CLASS zcl_abapgit_object_docv IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: lv_id     TYPE dokhl-id,
-          lv_object TYPE dokhl-object.
-
-
-    lv_id = ms_item-obj_name(2).
-    lv_object = ms_item-obj_name+2.
-
-    SELECT SINGLE id FROM dokil INTO lv_id
-      WHERE id     = lv_id
-        AND object = lv_object.                         "#EC CI_GENBUFF
+    SELECT SINGLE id FROM dokil INTO mv_id
+      WHERE id     = mv_id
+        AND object = mv_doc_object.                     "#EC CI_GENBUFF
 
     rv_bool = boolc( sy-subrc = 0 ).
 

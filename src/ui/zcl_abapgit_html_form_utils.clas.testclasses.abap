@@ -38,10 +38,10 @@ CLASS ltcl_popups_mock IMPLEMENTATION.
   METHOD zif_abapgit_popups~branch_list_popup.
   ENDMETHOD.
 
-  METHOD zif_abapgit_popups~branch_popup_callback.
+  METHOD zif_abapgit_popups~choose_pr_popup.
   ENDMETHOD.
 
-  METHOD zif_abapgit_popups~choose_pr_popup.
+  METHOD zif_abapgit_popups~commit_list_popup.
   ENDMETHOD.
 
   METHOD zif_abapgit_popups~create_branch_popup.

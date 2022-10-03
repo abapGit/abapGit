@@ -23,24 +23,9 @@
       "abap_func_exporting",
       "abap_func_tables",
       "cssf_formtype_text",
-      "seoc_category_exception",
-      "seoc_category_webdynpro_class",
-      "seoc_exposure_private",
-      "seoc_exposure_protected",
-      "seoc_exposure_public",
-      "seoc_version_active",
-      "seoc_version_inactive",
       "seok_access_free",
       "seok_access_modify",
       "seok_pgmid_r3tr",
-      "seop_ext_class_locals_def",
-      "seop_ext_class_locals_imp",
-      "seop_ext_class_macros",
-      "seop_ext_class_testclasses",
-      "seop_incextapp_definition",
-      "seop_incextapp_implementation",
-      "seop_incextapp_macros",
-      "seop_incextapp_testclasses",
       "sews_c_vif_version",
       "skwfc_obtype_folder",
       "skwfc_obtype_loio",
@@ -64,6 +49,8 @@
     "globalMacros": []
   },
   "rules": {
+    "cds_legacy_view": true,
+    "superfluous_value": true,
     "classic_exceptions_overlap": true,
     "local_testclass_consistency": true,
     "no_external_form_calls": false,
@@ -122,7 +109,9 @@
       "pragmas": ["##NO_TEXT"],
       "pseudo": ["#EC NOTEXT"]
     },
-    "unused_types": true,
+    "unused_types": {
+      "exclude": ["/aff_types/"]
+    },
     "begin_single_include": true,
     "names_no_dash": true,
     "parser_missing_space": true,
@@ -140,11 +129,19 @@
         "^cl_srvd_wb_object_data$", "^cx_aff_", "^cl_aff_", "^if_aff_",
         "^cl_wb_object_operator_factory$",
         "^cl_aunit_assert$",
+        "^if_adt_lock_handle$",
         "^cx_wb_object_operation_error$",
         "^if_srvd_types$", "^xubname$",
         "^if_wb_adt_plugin_resource_co$",
         "^if_wb_object_data_selection_co$",
-        "^if_wb_object_operator$"
+        "^if_wb_object_operator$",
+        "^cl_abap_syst",
+        "^SABP_T_TADIR_KEYS$",
+        "^CL_SAUNIT_INTERNAL_RESULT$",
+        "^CL_AUCV_TEST_RUNNER_ABSTRACT$",
+        "^IF_SAUNIT_INTERNAL_RESULT$",
+        "^IF_SAUNIT_INTERNAL_RESULT_TYPE$",
+        "^CL_AUCV_TEST_RUNNER_STANDARD$"
       ]
     },
     "forbidden_identifier": true,
@@ -225,7 +222,7 @@
     "colon_missing_space": true,
     "commented_code": {
       "allowIncludeInFugr": false,
-      "exclude": ["otgr"]
+      "exclude": ["otgr", "intf"]
     },
     "constructor_visibility_public": true,
     "contains_tab": true,
@@ -345,34 +342,8 @@
       "shlp": "^Z",
       "xslt": "^Z"
     },
-    "obsolete_statement": {
-      "refresh": true,
-      "compute": true,
-      "add": true,
-      "occurences": true,
-      "selectWithoutInto": true,
-      "ranges": true,
-      "callTransformation": true,
-      "regex": true,
-      "sortByFS": true,
-      "subtract": true,
-      "freeMemory": true,
-      "exitFromSQL": true,
-      "multiply": true,
-      "communication": true,
-      "typePools": true,
-      "load": true,
-      "move": true,
-      "divide": true,
-      "fieldSymbolStructure": true,
-      "requested": true,
-      "pack": true,
-      "setExtended": true,
-      "withHeaderLine": true,
-      "occurs": true,
-      "parameter": true
-    },
-    "parser_error": {},
+    "obsolete_statement": true,
+    "parser_error": true,
     "preferred_compare_operator": {
       "badOperators": [
         "EQ",

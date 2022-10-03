@@ -88,6 +88,7 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
     DATA:
       lt_objects TYPE sotr_objects,
       ls_paket   TYPE sotr_pack,
+      lv_alias   TYPE sotr_head-alias_name,
       lv_object  LIKE LINE OF lt_objects.
 
     FIELD-SYMBOLS: <ls_sotr> LIKE LINE OF it_sotr.
@@ -110,11 +111,17 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
 
       ls_paket-paket = iv_package.
 
+      " Replace package in alias with new package
+      lv_alias = <ls_sotr>-header-alias_name.
+      IF lv_alias CS '/'.
+        lv_alias = iv_package && lv_alias+sy-fdpos(*).
+      ENDIF.
+
       CALL FUNCTION 'SOTR_CREATE_CONCEPT'
         EXPORTING
           paket                         = ls_paket
           crea_lan                      = <ls_sotr>-header-crea_lan
-          alias_name                    = <ls_sotr>-header-alias_name
+          alias_name                    = lv_alias
           object                        = lv_object
           entries                       = <ls_sotr>-entries
           concept_default               = <ls_sotr>-header-concept
@@ -186,6 +193,7 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
   METHOD delete_sotr_package.
 
     DATA lt_sotr_head TYPE STANDARD TABLE OF sotr_head WITH DEFAULT KEY.
+    DATA lv_obj_name TYPE tadir-obj_name.
 
     FIELD-SYMBOLS <ls_sotr_head> LIKE LINE OF lt_sotr_head.
 
@@ -211,12 +219,50 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
 
     ENDLOOP.
 
+    " Nothing left, then delete SOTR from TADIR
+    SELECT * FROM sotr_head INTO TABLE lt_sotr_head WHERE paket = iv_package.
+    IF sy-subrc <> 0.
+      SELECT SINGLE obj_name FROM tadir INTO lv_obj_name
+        WHERE pgmid = 'R3TR' AND object = 'SOTR' AND obj_name = iv_package.
+      IF sy-subrc = 0.
+        CALL FUNCTION 'TR_TADIR_INTERFACE'
+          EXPORTING
+            wi_delete_tadir_entry = abap_true
+            wi_test_modus         = abap_false
+            wi_tadir_pgmid        = 'R3TR'
+            wi_tadir_object       = 'SOTR'
+            wi_tadir_obj_name     = lv_obj_name
+          EXCEPTIONS
+            OTHERS                = 1 ##FM_SUBRC_OK.
+
+        IF zcl_abapgit_factory=>get_sap_package( iv_package )->are_changes_recorded_in_tr_req( ) = abap_true.
+          CALL FUNCTION 'RS_CORR_INSERT'
+            EXPORTING
+              object              = lv_obj_name
+              object_class        = 'SOTR'
+              mode                = 'D'
+              global_lock         = abap_true
+              devclass            = iv_package
+              suppress_dialog     = abap_true
+            EXCEPTIONS
+              cancelled           = 1
+              permission_failure  = 2
+              unknown_objectclass = 3
+              OTHERS              = 4.
+          IF sy-subrc <> 0.
+            zcx_abapgit_exception=>raise_t100( ).
+          ENDIF.
+        ENDIF.
+      ENDIF.
+    ENDIF.
+
   ENDMETHOD.
 
 
   METHOD get_sotr_4_concept.
 
     DATA: ls_header  TYPE zif_abapgit_definitions=>ty_sotr-header,
+          lv_paket   LIKE ls_header-alias_name,
           lt_entries TYPE zif_abapgit_definitions=>ty_sotr-entries.
 
     FIELD-SYMBOLS: <ls_entry> LIKE LINE OF lt_entries.
@@ -233,6 +279,16 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
         OTHERS         = 2.
     IF sy-subrc <> 0.
       RETURN.
+    ENDIF.
+
+    " If alias contains package, remove it
+    lv_paket = ls_header-paket && '/'.
+    IF ls_header-alias_name CS lv_paket.
+      ls_header-alias_name = replace(
+        val  = ls_header-alias_name
+        sub  = lv_paket
+        with = '/'
+        occ  = 1 ).
     ENDIF.
 
     CLEAR: ls_header-paket,
@@ -289,7 +345,8 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_sotr_use> LIKE LINE OF et_sotr_use.
 
-    DATA lv_sotr TYPE zif_abapgit_definitions=>ty_sotr.
+    DATA: lv_sotr            TYPE zif_abapgit_definitions=>ty_sotr,
+          lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
     " SOTR usage (see LSOTR_SYSTEM_SETTINGSF01, FORM GET_OBJECT_TABLE)
     " LIMU: CPUB, WAPP, WDYC, WDYD, WDYV
@@ -308,6 +365,9 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
         DELETE lv_sotr-entries WHERE langu <> iv_language.
         CHECK lv_sotr-entries IS NOT INITIAL.
       ENDIF.
+      lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
+      DELETE lv_sotr-entries WHERE NOT langu IN lt_language_filter.
+      CHECK lv_sotr-entries IS NOT INITIAL.
 
       INSERT lv_sotr INTO TABLE et_sotr.
     ENDLOOP.

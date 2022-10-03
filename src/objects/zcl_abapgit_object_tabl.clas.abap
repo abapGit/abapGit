@@ -7,9 +7,6 @@ CLASS zcl_abapgit_object_tabl DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_object .
-
-    ALIASES mo_files
-      FOR zif_abapgit_object~mo_files .
   PROTECTED SECTION.
     TYPES: BEGIN OF ty_segment_definition,
              segmentheader     TYPE edisegmhd,
@@ -62,6 +59,8 @@ CLASS zcl_abapgit_object_tabl DEFINITION
     TYPES:
       ty_dd03p_tt TYPE STANDARD TABLE OF dd03p .
     TYPES:
+      ty_dd08v_tt TYPE STANDARD TABLE OF dd08v.
+    TYPES:
       BEGIN OF ty_dd02_text,
         ddlanguage TYPE dd02t-ddlanguage,
         ddtext     TYPE dd02t-ddtext,
@@ -111,6 +110,9 @@ CLASS zcl_abapgit_object_tabl DEFINITION
         !iv_tabclass               TYPE dd02l-tabclass
       RETURNING
         VALUE(rv_is_db_table_type) TYPE dd02l-tabclass .
+    METHODS clear_foreign_keys
+      CHANGING
+        !ct_dd08v TYPE ty_dd08v_tt.
 ENDCLASS.
 
 
@@ -208,6 +210,30 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD clear_foreign_keys.
+
+    DATA:
+      ls_item  TYPE zif_abapgit_definitions=>ty_item,
+      lv_index TYPE sy-tabix.
+
+    FIELD-SYMBOLS <ls_dd08v> TYPE dd08v.
+
+    " Remove foreign key definitions where the check table/view does not exist (yet)
+    LOOP AT ct_dd08v ASSIGNING <ls_dd08v>.
+      lv_index = sy-tabix.
+      ls_item-obj_name = <ls_dd08v>-checktable.
+      ls_item-obj_type = 'TABL'.
+      IF zcl_abapgit_objects=>exists( ls_item ) = abap_false.
+        ls_item-obj_type = 'VIEW'.
+        IF zcl_abapgit_objects=>exists( ls_item ) = abap_false.
+          DELETE ct_dd08v INDEX lv_index.
+        ENDIF.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD delete_extras.
 
     DELETE FROM tddat WHERE tabname = iv_tabname.
@@ -269,8 +295,8 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
     lv_package = iv_package.
 
     LOOP AT lt_segment_definitions ASSIGNING <ls_segment_definition>.
-      <ls_segment_definition>-segmentheader-presp = cl_abap_syst=>get_user_name( ).
-      <ls_segment_definition>-segmentheader-pwork = cl_abap_syst=>get_user_name( ).
+      <ls_segment_definition>-segmentheader-presp = sy-uname.
+      <ls_segment_definition>-segmentheader-pwork = sy-uname.
 
       CALL FUNCTION 'SEGMENT_READ'
         EXPORTING
@@ -315,7 +341,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
     ENDLOOP.
 
-    lv_uname = cl_abap_syst=>get_user_name( ).
+    lv_uname = sy-uname.
 
     CALL FUNCTION 'TR_TADIR_INTERFACE'
       EXPORTING
@@ -542,11 +568,12 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
   METHOD serialize_texts.
 
-    DATA: lv_name       TYPE ddobjname,
-          lv_index      TYPE i,
-          ls_dd02v      TYPE dd02v,
-          lt_dd02_texts TYPE ty_dd02_texts,
-          lt_i18n_langs TYPE TABLE OF langu.
+    DATA: lv_name            TYPE ddobjname,
+          lv_index           TYPE i,
+          ls_dd02v           TYPE dd02v,
+          lt_dd02_texts      TYPE ty_dd02_texts,
+          lt_i18n_langs      TYPE TABLE OF langu,
+          lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
     FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
                    <ls_dd02_text> LIKE LINE OF lt_dd02_texts.
@@ -558,9 +585,11 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
     lv_name = ms_item-obj_name.
 
     " Collect additional languages, skip main lang - it was serialized already
+    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
     SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
       FROM dd02v
       WHERE tabname = lv_name
+      AND ddlanguage IN lt_language_filter
       AND ddlanguage <> mv_language.                      "#EC CI_SUBRC
 
     LOOP AT lt_i18n_langs ASSIGNING <lv_lang>.
@@ -780,7 +809,8 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
       " DDIC Step: Remove references to search helps and foreign keys
       IF iv_step = zif_abapgit_object=>gc_step_id-ddic.
-        CLEAR: lt_dd08v, lt_dd35v, lt_dd36m.
+        CLEAR: lt_dd35v, lt_dd36m.
+        clear_foreign_keys( CHANGING ct_dd08v = lt_dd08v ).
       ENDIF.
 
       IF iv_step = zif_abapgit_object=>gc_step_id-late
@@ -836,7 +866,8 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       deserialize_texts( io_xml   = io_xml
                          is_dd02v = ls_dd02v ).
 
-      deserialize_longtexts( io_xml ).
+      deserialize_longtexts( ii_xml         = io_xml
+                             iv_longtext_id = c_longtext_id_tabl ).
 
       io_xml->read( EXPORTING iv_name = c_s_dataname-tabl_extras
                     CHANGING cg_data = ls_extras ).

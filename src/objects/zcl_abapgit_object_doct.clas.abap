@@ -2,13 +2,12 @@ CLASS zcl_abapgit_object_doct DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
+
     METHODS:
       constructor
         IMPORTING
           is_item     TYPE zif_abapgit_definitions=>ty_item
           iv_language TYPE spras.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -61,6 +60,8 @@ CLASS zcl_abapgit_object_doct IMPLEMENTATION.
 
     mi_longtexts->deserialize(
       iv_longtext_name = c_name
+      iv_object_name   = ms_item-obj_name
+      iv_longtext_id   = c_id
       ii_xml           = io_xml
       iv_main_language = mv_language ).
 

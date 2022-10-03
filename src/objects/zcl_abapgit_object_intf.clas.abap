@@ -407,7 +407,6 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     ls_intf-description = serialize_descr( ii_xml     = io_xml
                                            iv_clsname = ls_clskey-clsname ).
-
     ls_intf-description_sub = serialize_descr_sub( ii_xml     = io_xml
                                                    iv_clsname = ls_clskey-clsname ).
 
@@ -443,6 +442,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
         ii_xml           = io_xml
         iv_longtext_name = c_longtext_name-events
         iv_longtext_id   = c_longtext_id-events ).
+
     ENDIF.
 
   ENDMETHOD.

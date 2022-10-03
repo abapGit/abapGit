@@ -2,7 +2,7 @@ CLASS zcl_abapgit_object_iext DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
+
     METHODS:
       constructor
         IMPORTING
@@ -76,7 +76,7 @@ CLASS zcl_abapgit_object_iext IMPLEMENTATION.
                   CHANGING  cg_data = ls_extension ).
 
     MOVE-CORRESPONDING ls_extension-attributes TO ls_attributes.
-    ls_attributes-presp = cl_abap_syst=>get_user_name( ).
+    ls_attributes-presp = sy-uname.
     ls_attributes-pwork = ls_attributes-presp.
 
     IF zif_abapgit_object~exists( ) = abap_true.

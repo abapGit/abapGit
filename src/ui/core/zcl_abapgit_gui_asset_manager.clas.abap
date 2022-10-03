@@ -18,7 +18,9 @@ CLASS zcl_abapgit_gui_asset_manager DEFINITION PUBLIC FINAL CREATE PUBLIC .
         !iv_cachable  TYPE abap_bool DEFAULT abap_true
         !iv_mime_name TYPE wwwdatatab-objid OPTIONAL
         !iv_base64    TYPE string OPTIONAL
-        !iv_inline    TYPE string OPTIONAL .
+        !iv_inline    TYPE string OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -45,7 +47,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
+CLASS zcl_abapgit_gui_asset_manager IMPLEMENTATION.
 
 
   METHOD get_mime_asset.

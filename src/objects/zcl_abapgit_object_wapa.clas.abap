@@ -2,8 +2,6 @@ CLASS zcl_abapgit_object_wapa DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_page,
@@ -24,7 +22,8 @@ CLASS zcl_abapgit_object_wapa DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RAISING   zcx_abapgit_exception,
       to_page_content
         IMPORTING iv_content        TYPE xstring
-        RETURNING VALUE(rt_content) TYPE o2pageline_table,
+        RETURNING VALUE(rt_content) TYPE o2pageline_table
+        RAISING   zcx_abapgit_exception,
       read_page
         IMPORTING is_page         TYPE o2pagattr
                   iv_no_files_add TYPE abap_bool OPTIONAL
@@ -235,7 +234,7 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
       REPLACE ALL OCCURRENCES OF '/' IN lv_ext WITH '_-'.
       REPLACE ALL OCCURRENCES OF '/' IN lv_extra WITH '_-'.
       IF iv_no_files_add = abap_false.
-        mo_files->add_raw(
+        zif_abapgit_object~mo_files->add_raw(
           iv_extra = lv_extra
           iv_ext   = lv_ext
           iv_data  = lv_content ).
@@ -490,8 +489,8 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
       REPLACE ALL OCCURRENCES OF '/' IN lv_extra WITH '_-'.
       REPLACE ALL OCCURRENCES OF '/' IN lv_ext WITH '_-'.
 
-      lt_remote_content = to_page_content( mo_files->read_raw( iv_extra = lv_extra
-                                                               iv_ext   = lv_ext ) ).
+      lt_remote_content = to_page_content( zif_abapgit_object~mo_files->read_raw( iv_extra = lv_extra
+                                                                                  iv_ext   = lv_ext ) ).
       lt_local_content = to_page_content( get_page_content( lo_page ) ).
 
       IF ls_local_page = <ls_remote_page> AND lt_local_content = lt_remote_content.

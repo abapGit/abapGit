@@ -9,12 +9,13 @@ CLASS ltcl_convert DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FIN
     METHODS convert_int FOR TESTING RAISING zcx_abapgit_exception.
     METHODS split_string FOR TESTING.
     METHODS convert_bitbyte FOR TESTING RAISING zcx_abapgit_exception.
-    METHODS string_to_xstring_utf8 FOR TESTING.
-    METHODS xstring_to_string_utf8 FOR TESTING.
+    METHODS string_to_xstring_utf8 FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS xstring_to_string_utf8 FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS xstring_to_string_not_utf8 FOR TESTING RAISING zcx_abapgit_exception.
     METHODS base64_to_xstring FOR TESTING.
     METHODS conversion_exit_isola_output FOR TESTING.
     METHODS string_to_tab FOR TESTING.
-    METHODS string_to_xstring FOR TESTING.
+    METHODS string_to_xstring FOR TESTING RAISING zcx_abapgit_exception.
     METHODS xstring_to_bintab FOR TESTING.
 
 ENDCLASS.
@@ -129,6 +130,19 @@ CLASS ltcl_convert IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lv_result
       exp = 'abc' ).
+
+  ENDMETHOD.
+
+  METHOD xstring_to_string_not_utf8.
+
+    DATA lv_result TYPE string.
+
+    " 0xF8-0xFF are not valid in UTF-8
+    TRY.
+        lv_result = zcl_abapgit_convert=>xstring_to_string_utf8( 'F8FF00' ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
+    ENDTRY.
 
   ENDMETHOD.
 
