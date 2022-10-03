@@ -7,15 +7,6 @@ CLASS zcl_abapgit_longtexts DEFINITION
 
     INTERFACES zif_abapgit_longtexts.
 
-    TYPES:
-      BEGIN OF ty_longtext,
-        dokil TYPE dokil,
-        head  TYPE thead,
-        lines TYPE tline_tab,
-      END OF ty_longtext .
-    TYPES:
-      ty_longtexts TYPE STANDARD TABLE OF ty_longtext WITH NON-UNIQUE DEFAULT KEY .
-
   PROTECTED SECTION.
 
     METHODS read
@@ -26,7 +17,7 @@ CLASS zcl_abapgit_longtexts DEFINITION
         !iv_main_lang_only  TYPE abap_bool DEFAULT abap_false
         !iv_clear_fields    TYPE abap_bool DEFAULT abap_true
       RETURNING
-        VALUE(rt_longtexts) TYPE ty_longtexts
+        VALUE(rt_longtexts) TYPE zif_abapgit_longtexts=>ty_longtexts
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
@@ -50,9 +41,11 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
     " Prepare name for SQL LIKE condition
     rv_object = iv_object_name.
 
-    IF 'CA,CE,CO,CT,IA,IE,IO,WC,FU' CS iv_longtext_id.
+    IF 'CA,CE,CO,CT,IA,IE,IO,WC,FU,FX,DI,IS,PS' CS iv_longtext_id.
       " Document types of objects with sub-objects
       rv_object+30 = '%'.
+    ELSEIF 'OD' CS iv_longtext_id.
+      rv_object+10 = '%'.
     ENDIF.
 
     rv_object = replace(
@@ -65,7 +58,7 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
 
   METHOD read.
 
-    DATA: ls_longtext TYPE ty_longtext,
+    DATA: ls_longtext TYPE zif_abapgit_longtexts=>ty_longtext,
           lv_object   TYPE dokil-object,
           lt_dokil    TYPE zif_abapgit_definitions=>ty_dokil_tt.
 
@@ -143,8 +136,8 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
 
   METHOD zif_abapgit_longtexts~changed_by.
 
-    DATA: lt_longtexts TYPE ty_longtexts.
-    FIELD-SYMBOLS: <ls_longtext> TYPE ty_longtext.
+    DATA: lt_longtexts TYPE zif_abapgit_longtexts=>ty_longtexts.
+    FIELD-SYMBOLS: <ls_longtext> TYPE zif_abapgit_longtexts=>ty_longtext.
 
     lt_longtexts = read( iv_object_name  = iv_object_name
                          iv_longtext_id  = iv_longtext_id
@@ -201,12 +194,12 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
 
   METHOD zif_abapgit_longtexts~deserialize.
 
-    DATA: lt_longtexts    TYPE ty_longtexts,
+    DATA: lt_longtexts    TYPE zif_abapgit_longtexts=>ty_longtexts,
           lv_object       TYPE dokil-object,
           lt_dokil        TYPE zif_abapgit_definitions=>ty_dokil_tt,
           lv_no_main_lang TYPE dokil-masterlang.
 
-    FIELD-SYMBOLS: <ls_longtext> TYPE ty_longtext,
+    FIELD-SYMBOLS: <ls_longtext> TYPE zif_abapgit_longtexts=>ty_longtext,
                    <ls_dokil>    TYPE dokil.
 
     lv_object = escape_name(
@@ -272,15 +265,17 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
 
   METHOD zif_abapgit_longtexts~serialize.
 
-    DATA lt_longtexts TYPE ty_longtexts.
-
-    lt_longtexts = read( iv_object_name    = iv_object_name
+    rt_longtexts = read( iv_object_name    = iv_object_name
                          iv_longtext_id    = iv_longtext_id
                          it_dokil          = it_dokil
                          iv_main_lang_only = ii_xml->i18n_params( )-main_language_only ).
 
+    IF rt_longtexts IS REQUESTED.
+      RETURN.
+    ENDIF.
+
     ii_xml->add( iv_name = iv_longtext_name
-                 ig_data = lt_longtexts ).
+                 ig_data = rt_longtexts ).
 
   ENDMETHOD.
 ENDCLASS.

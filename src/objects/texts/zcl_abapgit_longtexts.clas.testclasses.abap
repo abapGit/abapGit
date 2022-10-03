@@ -20,7 +20,7 @@ CLASS ltcl_longtexts IMPLEMENTATION.
 
   METHOD escape_name.
 
-    DATA lv_act TYPE c LENGTH 60.
+    DATA lv_act TYPE dokil-object.
 
     " no sub-objects
     lv_act = mo_cut->escape_name(
