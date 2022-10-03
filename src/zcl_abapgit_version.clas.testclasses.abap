@@ -86,7 +86,6 @@ ENDCLASS.
 CLASS ltcl_version_parse DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
   PUBLIC SECTION.
     METHODS:
-      abapgit_version FOR TESTING,
       interface FOR TESTING,
       interface2 FOR TESTING,
       class FOR TESTING,
@@ -115,22 +114,6 @@ CLASS ltcl_version_parse DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLE
 ENDCLASS.
 
 CLASS ltcl_version_parse IMPLEMENTATION.
-  METHOD abapgit_version.
-    DATA: lt_source TYPE string_table.
-
-    IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true.
-      cl_abap_unit_assert=>skip( 'Test method not supported in standalone version' ).
-    ENDIF.
-
-    READ REPORT 'ZIF_ABAPGIT_VERSION===========IU' INTO lt_source STATE 'A'.
-    cl_abap_unit_assert=>assert_subrc( ).
-
-    given_the_source( lt_source ).
-    given_the_component_name( 'C_ABAP_VERSION' ).
-    when_parse_is_called( ).
-    then_version_should_equal( zif_abapgit_version=>c_abap_version ).
-  ENDMETHOD.
-
   METHOD interface.
     DATA: lt_source TYPE string_table.
 

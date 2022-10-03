@@ -35,6 +35,7 @@ CLASS zcl_abapgit_gui_page_sett_repo DEFINITION
         ignore           TYPE string VALUE 'ignore',
         requirements     TYPE string VALUE 'requirements',
         version_constant TYPE string VALUE 'version_constant',
+        version_value    TYPE string VALUE 'version_value',
       END OF c_id.
     CONSTANTS:
       BEGIN OF c_event,
@@ -165,6 +166,10 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
       iv_name        = c_id-version_constant
       iv_label       = 'Version Constant'
       iv_placeholder = 'ZVERSION_CLASS=>VERSION_CONSTANT'
+    )->text(
+      iv_name        = c_id-version_value
+      iv_label       = 'Version Value'
+      iv_readonly    = abap_true
     )->command(
       iv_label       = 'Save Settings'
       iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
@@ -218,6 +223,15 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
     mo_form_data->set(
       iv_key = c_id-version_constant
       iv_val = ls_dot-version_constant ).
+    TRY.
+        mo_form_data->set(
+          iv_key = c_id-version_value
+          iv_val = zcl_abapgit_version=>get_version_constant_value( ls_dot-version_constant ) ).
+      CATCH zcx_abapgit_exception.
+        mo_form_data->set(
+          iv_key = c_id-version_value
+          iv_val = '' ).
+    ENDTRY.
 
     lv_ignore = concat_lines_of(
       table = ls_dot-ignore
