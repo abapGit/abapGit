@@ -859,10 +859,13 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
 
     add_with_inactive_parts( ).
 
-    deserialize_longtexts( io_xml ).
+    deserialize_longtexts(
+      ii_xml         = io_xml
+      iv_longtext_id = c_longtext_id_wd ).
 
     deserialize_longtexts(
       ii_xml           = io_xml
+      iv_longtext_id   = c_longtext_id_wc
       iv_longtext_name = c_longtext_name_wc ).
 
   ENDMETHOD.

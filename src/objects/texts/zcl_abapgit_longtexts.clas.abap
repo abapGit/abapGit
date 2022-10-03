@@ -162,8 +162,11 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
   METHOD zif_abapgit_longtexts~deserialize.
 
     DATA: lt_longtexts    TYPE ty_longtexts,
+          lt_dokil        TYPE zif_abapgit_definitions=>ty_dokil_tt,
           lv_no_main_lang TYPE dokil-masterlang.
-    FIELD-SYMBOLS: <ls_longtext> TYPE ty_longtext.
+
+    FIELD-SYMBOLS: <ls_longtext> TYPE ty_longtext,
+                   <ls_dokil>    TYPE dokil.
 
     ii_xml->read(
       EXPORTING
@@ -184,6 +187,38 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
           no_masterlang = lv_no_main_lang
         TABLES
           line          = <ls_longtext>-lines.
+
+    ENDLOOP.
+
+    " Read existing texts and check if they were deserialized above
+    " If not, delete the texts
+    SELECT * FROM dokil
+      INTO TABLE lt_dokil
+      WHERE id     = iv_longtext_id
+      AND   object = iv_object_name.
+
+    LOOP AT lt_dokil ASSIGNING <ls_dokil>.
+
+      READ TABLE lt_longtexts TRANSPORTING NO FIELDS WITH KEY
+        dokil-id     = <ls_dokil>-id
+        dokil-langu  = <ls_dokil>-langu
+        dokil-object = <ls_dokil>-object
+        dokil-typ    = <ls_dokil>-typ.
+      IF sy-subrc <> 0.
+        CALL FUNCTION 'DOCU_DEL'
+          EXPORTING
+            id       = <ls_dokil>-id
+            langu    = <ls_dokil>-langu
+            object   = <ls_dokil>-object
+            typ      = <ls_dokil>-typ
+          EXCEPTIONS
+            ret_code = 1
+            OTHERS   = 2.
+
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise_t100( ).
+        ENDIF.
+      ENDIF.
 
     ENDLOOP.
 
