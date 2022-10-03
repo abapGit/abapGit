@@ -203,6 +203,21 @@
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "xslt_before_prog", "note": "hmm, something with promises?"},
 
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "identity", "note": "cx_xslt_runtime_error"},
+
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "abapgit_version", "note": "SCAN-ABAP-SOURCE"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "interface", "note": "SCAN-ABAP-SOURCE"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "interface2", "note": "SCAN-ABAP-SOURCE"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "class", "note": "SCAN-ABAP-SOURCE"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "class_private", "note": "SCAN-ABAP-SOURCE"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "structured_constant", "note": "SCAN-ABAP-SOURCE"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "int4", "note": "SCAN-ABAP-SOURCE"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "decfloat34", "note": "SCAN-ABAP-SOURCE"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "syntax_error", "note": "SCAN-ABAP-SOURCE"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "class_data", "note": "SCAN-ABAP-SOURCE"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "ampersand", "note": "SCAN-ABAP-SOURCE"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "constant_reference", "note": "SCAN-ABAP-SOURCE"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "missing_constant", "note": "SCAN-ABAP-SOURCE"},
+      
       {"object": "ZCL_ABAPGIT_REPO", "class": "ltcl_find_remote_dot_abapgit", "method": "positive", "note": "passing data to super constructor()? ASSERT failed"},
       {"object": "ZCL_ABAPGIT_REPO", "class": "ltcl_find_remote_dot_abapgit", "method": "new_repo_needs_no_dot_abapgit", "note": "passing data to super constructor()? ASSERT failed"},
 
