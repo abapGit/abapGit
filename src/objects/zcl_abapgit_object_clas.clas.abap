@@ -7,88 +7,109 @@ CLASS zcl_abapgit_object_clas DEFINITION
 
     INTERFACES zif_abapgit_object .
 
-    ALIASES mo_files
-      FOR zif_abapgit_object~mo_files .
-
     METHODS constructor
       IMPORTING
         !is_item     TYPE zif_abapgit_definitions=>ty_item
         !iv_language TYPE spras .
   PROTECTED SECTION.
+    DATA: mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc,
+          mv_skip_testclass             TYPE abap_bool,
+          mv_classpool_name             TYPE progname.
+    METHODS:
+      deserialize_abap
+        IMPORTING ii_xml     TYPE REF TO zif_abapgit_xml_input
+                  iv_package TYPE devclass
+        RAISING   zcx_abapgit_exception,
+      deserialize_docu
+        IMPORTING ii_xml TYPE REF TO zif_abapgit_xml_input
+        RAISING   zcx_abapgit_exception,
+      deserialize_tpool
+        IMPORTING ii_xml TYPE REF TO zif_abapgit_xml_input
+        RAISING   zcx_abapgit_exception,
+      deserialize_sotr
+        IMPORTING ii_ml      TYPE REF TO zif_abapgit_xml_input
+                  iv_package TYPE devclass
+        RAISING   zcx_abapgit_exception,
+      serialize_xml
+        IMPORTING ii_xml TYPE REF TO zif_abapgit_xml_output
+        RAISING   zcx_abapgit_exception,
+      serialize_attr
+        IMPORTING
+          !ii_xml     TYPE REF TO zif_abapgit_xml_output
+          !iv_clsname TYPE seoclsname
+        RAISING
+          zcx_abapgit_exception,
+      serialize_descr
+        IMPORTING
+          !ii_xml     TYPE REF TO zif_abapgit_xml_output
+          !iv_clsname TYPE seoclsname
+        RAISING
+          zcx_abapgit_exception,
+      serialize_descr_sub
+        IMPORTING
+          !ii_xml     TYPE REF TO zif_abapgit_xml_output
+          !iv_clsname TYPE seoclsname
+        RAISING
+          zcx_abapgit_exception,
+      serialize_docu
+        IMPORTING
+          !ii_xml              TYPE REF TO zif_abapgit_xml_output
+          !it_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus OPTIONAL
+          !iv_clsname          TYPE seoclsname
+        RAISING
+          zcx_abapgit_exception,
+      serialize_tpool
+        IMPORTING
+          !ii_xml              TYPE REF TO zif_abapgit_xml_output
+          !it_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus OPTIONAL
+          !iv_clsname          TYPE seoclsname
+        RAISING
+          zcx_abapgit_exception,
+      serialize_sotr
+        IMPORTING
+          !ii_xml TYPE REF TO zif_abapgit_xml_output
+        RAISING
+          zcx_abapgit_exception,
+      source_apack_replacement
+        CHANGING
+          !ct_source TYPE seop_source_string
+        RAISING
+          zcx_abapgit_exception,
+      repo_apack_replacement
+        CHANGING
+          !ct_source TYPE seop_source_string
+        RAISING
+          zcx_abapgit_exception.
 
-    DATA mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc .
-    DATA mv_skip_testclass TYPE abap_bool .
-    DATA mv_classpool_name TYPE progname .
-
-    METHODS deserialize_abap
-      IMPORTING
-        !ii_xml     TYPE REF TO zif_abapgit_xml_input
-        !iv_package TYPE devclass
-      RAISING
-        zcx_abapgit_exception .
-    METHODS deserialize_tpool
-      IMPORTING
-        !ii_xml TYPE REF TO zif_abapgit_xml_input
-      RAISING
-        zcx_abapgit_exception .
-    METHODS deserialize_sotr
-      IMPORTING
-        !ii_ml      TYPE REF TO zif_abapgit_xml_input
-        !iv_package TYPE devclass
-      RAISING
-        zcx_abapgit_exception .
-    METHODS serialize_xml
-      IMPORTING
-        !ii_xml TYPE REF TO zif_abapgit_xml_output
-      RAISING
-        zcx_abapgit_exception .
-    METHODS serialize_attr
-      IMPORTING
-        !ii_xml     TYPE REF TO zif_abapgit_xml_output
-        !iv_clsname TYPE seoclsname
-      RAISING
-        zcx_abapgit_exception .
-    METHODS serialize_descr
-      IMPORTING
-        !ii_xml     TYPE REF TO zif_abapgit_xml_output
-        !iv_clsname TYPE seoclsname
-      RAISING
-        zcx_abapgit_exception .
-    METHODS serialize_tpool
-      IMPORTING
-        !ii_xml              TYPE REF TO zif_abapgit_xml_output
-        !it_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus OPTIONAL
-        !iv_clsname          TYPE seoclsname
-      RAISING
-        zcx_abapgit_exception .
-    METHODS serialize_sotr
-      IMPORTING
-        !ii_xml TYPE REF TO zif_abapgit_xml_output
-      RAISING
-        zcx_abapgit_exception .
-    METHODS source_apack_replacement
-      CHANGING
-        !ct_source TYPE seop_source_string
-      RAISING
-        zcx_abapgit_exception .
-    METHODS repo_apack_replacement
-      CHANGING
-        !ct_source TYPE seop_source_string
-      RAISING
-        zcx_abapgit_exception .
   PRIVATE SECTION.
+
+    CONSTANTS:
+      BEGIN OF c_longtext_name,
+        attributes TYPE string VALUE 'LONGTEXTS_CA',
+        methods    TYPE string VALUE 'LONGTEXTS_CO',
+        events     TYPE string VALUE 'LONGTEXTS_CE',
+        types      TYPE string VALUE 'LONGTEXTS_CT',
+      END OF c_longtext_name.
+
+    CONSTANTS:
+      BEGIN OF c_longtext_id,
+        class      TYPE dokil-id VALUE 'CL',
+        attributes TYPE dokil-id VALUE 'CA',
+        methods    TYPE dokil-id VALUE 'CO',
+        events     TYPE dokil-id VALUE 'CE',
+        types      TYPE dokil-id VALUE 'CT',
+      END OF c_longtext_id.
 
     METHODS deserialize_pre_ddic
       IMPORTING
-        !ii_xml     TYPE REF TO zif_abapgit_xml_input
-        !iv_package TYPE devclass
+        ii_xml     TYPE REF TO zif_abapgit_xml_input
+        iv_package TYPE devclass
       RAISING
-        zcx_abapgit_exception .
-    METHODS is_class_locked
-      RETURNING
-        VALUE(rv_is_class_locked) TYPE abap_bool
-      RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+    METHODS:
+      is_class_locked
+        RETURNING VALUE(rv_is_class_locked) TYPE abap_bool
+        RAISING   zcx_abapgit_exception.
     METHODS interface_replacement
       IMPORTING
         !iv_from_interface TYPE seoclsname
@@ -122,23 +143,28 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
           lt_local_macros          TYPE seop_source_string,
           lt_test_classes          TYPE seop_source_string,
           lt_descriptions          TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt,
+          lt_descriptions_sub      TYPE zif_abapgit_oo_object_fnc=>ty_seosubcotx_tt,
           ls_class_key             TYPE seoclskey,
           lt_attributes            TYPE zif_abapgit_definitions=>ty_obj_attribute_tt.
 
 
-    lt_source = mo_files->read_abap( ).
+    lt_source = zif_abapgit_object~mo_files->read_abap( ).
 
-    lt_local_definitions = mo_files->read_abap( iv_extra = zif_abapgit_oo_object_fnc=>c_parts-locals_def
-                                                iv_error = abap_false ).
+    lt_local_definitions = zif_abapgit_object~mo_files->read_abap(
+      iv_extra = zif_abapgit_oo_object_fnc=>c_parts-locals_def
+      iv_error = abap_false ).
 
-    lt_local_implementations = mo_files->read_abap( iv_extra = zif_abapgit_oo_object_fnc=>c_parts-locals_imp
-                                                    iv_error = abap_false ).
+    lt_local_implementations = zif_abapgit_object~mo_files->read_abap(
+      iv_extra = zif_abapgit_oo_object_fnc=>c_parts-locals_imp
+      iv_error = abap_false ).
 
-    lt_local_macros = mo_files->read_abap( iv_extra = zif_abapgit_oo_object_fnc=>c_parts-macros
-                                           iv_error = abap_false ).
+    lt_local_macros = zif_abapgit_object~mo_files->read_abap(
+      iv_extra = zif_abapgit_oo_object_fnc=>c_parts-macros
+      iv_error = abap_false ).
 
-    lt_test_classes = mo_files->read_abap( iv_extra = zif_abapgit_oo_object_fnc=>c_parts-testclasses
-                                           iv_error = abap_false ).
+    lt_test_classes = zif_abapgit_object~mo_files->read_abap(
+      iv_extra = zif_abapgit_oo_object_fnc=>c_parts-testclasses
+      iv_error = abap_false ).
 
     ls_class_key-clsname = ms_item-obj_name.
 
@@ -179,7 +205,75 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       is_key          = ls_class_key
       it_descriptions = lt_descriptions ).
 
+    ii_xml->read( EXPORTING iv_name = 'DESCRIPTIONS_SUB'
+                  CHANGING cg_data = lt_descriptions_sub ).
+
+    mi_object_oriented_object_fct->update_descriptions_sub(
+      is_key          = ls_class_key
+      it_descriptions = lt_descriptions_sub ).
+
     mi_object_oriented_object_fct->add_to_activation_list( ms_item ).
+
+  ENDMETHOD.
+
+
+  METHOD deserialize_docu.
+
+    DATA: lt_lines      TYPE tlinetab,
+          lv_object     TYPE dokhl-object,
+          lt_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_lines,
+          ls_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_line.
+
+    ii_xml->read( EXPORTING iv_name = 'LINES'
+                  CHANGING cg_data = lt_lines ).
+
+    lv_object = ms_item-obj_name.
+
+    IF lines( lt_lines ) = 0.
+      mi_object_oriented_object_fct->delete_documentation(
+        iv_id          = c_longtext_id-class
+        iv_object_name = lv_object
+        iv_language    = mv_language ).
+      RETURN.
+    ENDIF.
+
+    mi_object_oriented_object_fct->create_documentation(
+      it_lines       = lt_lines
+      iv_id          = c_longtext_id-class
+      iv_object_name = lv_object
+      iv_language    = mv_language ).
+
+    ii_xml->read( EXPORTING iv_name = 'I18N_LINES'
+                  CHANGING cg_data = lt_i18n_lines ).
+
+    LOOP AT lt_i18n_lines INTO ls_i18n_lines.
+      mi_object_oriented_object_fct->create_documentation(
+        it_lines         = ls_i18n_lines-lines
+        iv_id            = c_longtext_id-class
+        iv_object_name   = lv_object
+        iv_language      = ls_i18n_lines-language
+        iv_no_masterlang = abap_true ).
+    ENDLOOP.
+
+    deserialize_longtexts(
+      ii_xml           = ii_xml
+      iv_longtext_name = c_longtext_name-attributes
+      iv_longtext_id   = c_longtext_id-attributes ).
+
+    deserialize_longtexts(
+      ii_xml           = ii_xml
+      iv_longtext_name = c_longtext_name-methods
+      iv_longtext_id   = c_longtext_id-methods ).
+
+    deserialize_longtexts(
+      ii_xml           = ii_xml
+      iv_longtext_name = c_longtext_name-events
+      iv_longtext_id   = c_longtext_id-events ).
+
+    deserialize_longtexts(
+      ii_xml           = ii_xml
+      iv_longtext_name = c_longtext_name-types
+      iv_longtext_id   = c_longtext_id-types ).
 
   ENDMETHOD.
 
@@ -328,8 +422,9 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
   METHOD serialize_descr.
 
-    DATA: lt_descriptions TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt,
-          lv_language     TYPE spras.
+    DATA: lt_descriptions    TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt,
+          lv_language        TYPE spras,
+          lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
     IF ii_xml->i18n_params( )-main_language_only = abap_true.
       lv_language = mv_language.
@@ -342,9 +437,106 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     IF lines( lt_descriptions ) = 0.
       RETURN.
     ENDIF.
+    " Remove technical languages
+    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
+    DELETE lt_descriptions WHERE NOT langu IN lt_language_filter.
 
     ii_xml->add( iv_name = 'DESCRIPTIONS'
                  ig_data = lt_descriptions ).
+
+  ENDMETHOD.
+
+
+  METHOD serialize_descr_sub.
+
+    DATA: lt_descriptions    TYPE zif_abapgit_oo_object_fnc=>ty_seosubcotx_tt,
+          lv_language        TYPE spras,
+          lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
+
+    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+      lv_language = mv_language.
+    ENDIF.
+
+    lt_descriptions = mi_object_oriented_object_fct->read_descriptions_sub(
+      iv_object_name = iv_clsname
+      iv_language    = lv_language ).
+
+    IF lines( lt_descriptions ) = 0.
+      RETURN.
+    ENDIF.
+    " Remove technical languages
+    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
+    DELETE lt_descriptions WHERE NOT langu IN lt_language_filter.
+
+    ii_xml->add( iv_name = 'DESCRIPTIONS_SUB'
+                 ig_data = lt_descriptions ).
+
+  ENDMETHOD.
+
+
+  METHOD serialize_docu.
+
+    DATA: lt_lines      TYPE tlinetab,
+          lv_object     TYPE dokhl-object,
+          lv_langu      TYPE sy-langu,
+          lt_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_lines,
+          ls_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_line.
+
+    lv_object = iv_clsname.
+
+    lt_lines = mi_object_oriented_object_fct->read_documentation(
+      iv_id          = c_longtext_id-class
+      iv_object_name = lv_object
+      iv_language    = mv_language ).
+    IF lines( lt_lines ) > 0.
+      ii_xml->add( iv_name = 'LINES'
+                   ig_data = lt_lines ).
+    ENDIF.
+
+    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+      RETURN.
+    ENDIF.
+
+    LOOP AT it_langu_additional INTO lv_langu.
+
+      lt_lines = mi_object_oriented_object_fct->read_documentation(
+        iv_id          = c_longtext_id-class
+        iv_object_name = lv_object
+        iv_language    = lv_langu ).
+
+      IF lines( lt_lines ) > 0.
+        CLEAR ls_i18n_lines.
+        ls_i18n_lines-language = lv_langu.
+        ls_i18n_lines-lines    = lt_lines.
+        INSERT ls_i18n_lines INTO TABLE lt_i18n_lines.
+      ENDIF.
+
+    ENDLOOP.
+
+    IF lines( lt_i18n_lines ) > 0.
+      ii_xml->add( iv_name = 'I18N_LINES'
+                   ig_data = lt_i18n_lines ).
+    ENDIF.
+
+    serialize_longtexts(
+      ii_xml           = ii_xml
+      iv_longtext_name = c_longtext_name-attributes
+      iv_longtext_id   = c_longtext_id-attributes ).
+
+    serialize_longtexts(
+      ii_xml           = ii_xml
+      iv_longtext_name = c_longtext_name-methods
+      iv_longtext_id   = c_longtext_id-methods ).
+
+    serialize_longtexts(
+      ii_xml           = ii_xml
+      iv_longtext_name = c_longtext_name-events
+      iv_longtext_id   = c_longtext_id-events ).
+
+    serialize_longtexts(
+      ii_xml           = ii_xml
+      iv_longtext_name = c_longtext_name-types
+      iv_longtext_id   = c_longtext_id-types ).
 
   ENDMETHOD.
 
@@ -378,7 +570,13 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lt_tpool_main = lt_tpool.
+    " Copy single records to be able to catch duplicate key error
+    LOOP AT lt_tpool ASSIGNING <ls_tpool>.
+      INSERT <ls_tpool> INTO TABLE lt_tpool_main.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |Inconsistent textpool in { ms_item-obj_type } { ms_item-obj_name }| ).
+      ENDIF.
+    ENDLOOP.
 
     LOOP AT it_langu_additional INTO lv_langu.
 
@@ -416,7 +614,8 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     DATA: ls_vseoclass        TYPE vseoclass,
           ls_clskey           TYPE seoclskey,
-          lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus.
+          lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus,
+          lt_language_filter  TYPE zif_abapgit_environment=>ty_system_language_filter.
 
     ls_clskey-clsname = ms_item-obj_name.
 
@@ -455,11 +654,13 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     " Table d010tinf stores info. on languages in which program is maintained
     " Select all active translations of program texts
     " Skip main language - it was already serialized
+    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
     SELECT DISTINCT language
       INTO TABLE lt_langu_additional
       FROM d010tinf
       WHERE r3state  = 'A'
         AND prog     = mv_classpool_name
+        AND language IN lt_language_filter
         AND language <> mv_language.
 
     ii_xml->add( iv_name = 'VSEOCLASS'
@@ -473,13 +674,23 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       serialize_sotr( ii_xml ).
     ENDIF.
 
-    serialize_all_docu( ii_xml                        = ii_xml
-                        iv_clsname                    = ls_clskey-clsname
-                        iv_id                         = 'CL'
-                        ii_object_oriented_object_fct = mi_object_oriented_object_fct ).
+    SELECT DISTINCT langu
+      INTO TABLE lt_langu_additional
+      FROM dokhl
+      WHERE id     = 'CL'
+        AND object = ls_clskey-clsname
+        AND langu IN lt_language_filter
+        AND langu <> mv_language.
+
+    serialize_docu( ii_xml              = ii_xml
+                    iv_clsname          = ls_clskey-clsname
+                    it_langu_additional = lt_langu_additional ).
 
     serialize_descr( ii_xml     = ii_xml
                      iv_clsname = ls_clskey-clsname ).
+
+    serialize_descr_sub( ii_xml     = ii_xml
+                         iv_clsname = ls_clskey-clsname ).
 
     serialize_attr( ii_xml     = ii_xml
                     iv_clsname = ls_clskey-clsname ).
@@ -570,10 +781,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       deserialize_sotr( ii_ml     = io_xml
                         iv_package = iv_package ).
 
-      deserialize_all_docu(
-        ii_object_oriented_object_fct = mi_object_oriented_object_fct
-        ii_xml                        = io_xml
-        iv_id                         = 'CL' ).
+      deserialize_docu( io_xml ).
 
     ELSEIF iv_step = zif_abapgit_object=>gc_step_id-early.
 
@@ -657,22 +865,24 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     source_apack_replacement( CHANGING ct_source = lt_source ).
 
-    mo_files->add_abap( lt_source ).
+    zif_abapgit_object~mo_files->add_abap( lt_source ).
 
     lt_source = mi_object_oriented_object_fct->serialize_abap(
       is_class_key = ls_class_key
       iv_type      = seop_ext_class_locals_def ).
     IF lines( lt_source ) > 0.
-      mo_files->add_abap( iv_extra = zif_abapgit_oo_object_fnc=>c_parts-locals_def
-                          it_abap  = lt_source ).
+      zif_abapgit_object~mo_files->add_abap(
+        iv_extra = zif_abapgit_oo_object_fnc=>c_parts-locals_def
+        it_abap  = lt_source ).
     ENDIF.
 
     lt_source = mi_object_oriented_object_fct->serialize_abap(
       is_class_key = ls_class_key
       iv_type      = seop_ext_class_locals_imp ).
     IF lines( lt_source ) > 0.
-      mo_files->add_abap( iv_extra = zif_abapgit_oo_object_fnc=>c_parts-locals_imp
-                          it_abap  = lt_source ).
+      zif_abapgit_object~mo_files->add_abap(
+        iv_extra = zif_abapgit_oo_object_fnc=>c_parts-locals_imp
+        it_abap  = lt_source ).
     ENDIF.
 
     lt_source = mi_object_oriented_object_fct->serialize_abap(
@@ -681,16 +891,18 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     mv_skip_testclass = mi_object_oriented_object_fct->get_skip_test_classes( ).
     IF lines( lt_source ) > 0 AND mv_skip_testclass = abap_false.
-      mo_files->add_abap( iv_extra = zif_abapgit_oo_object_fnc=>c_parts-testclasses
-                          it_abap  = lt_source ).
+      zif_abapgit_object~mo_files->add_abap(
+        iv_extra = zif_abapgit_oo_object_fnc=>c_parts-testclasses
+        it_abap  = lt_source ).
     ENDIF.
 
     lt_source = mi_object_oriented_object_fct->serialize_abap(
       is_class_key = ls_class_key
       iv_type      = seop_ext_class_macros ).
     IF lines( lt_source ) > 0.
-      mo_files->add_abap( iv_extra = zif_abapgit_oo_object_fnc=>c_parts-macros
-                          it_abap  = lt_source ).
+      zif_abapgit_object~mo_files->add_abap(
+        iv_extra = zif_abapgit_oo_object_fnc=>c_parts-macros
+        it_abap  = lt_source ).
     ENDIF.
 
     serialize_xml( io_xml ).

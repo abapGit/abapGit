@@ -1,58 +1,66 @@
-CLASS zcl_abapgit_objects_program DEFINITION PUBLIC INHERITING FROM zcl_abapgit_objects_super.
+CLASS zcl_abapgit_objects_program DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_super
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    TYPES: BEGIN OF ty_progdir,
-             name    TYPE progdir-name,
-             state   TYPE progdir-state,
-             sqlx    TYPE progdir-sqlx,
-             edtx    TYPE progdir-edtx,
-             varcl   TYPE progdir-varcl,
-             dbapl   TYPE progdir-dbapl,
-             dbna    TYPE progdir-dbna,
-             clas    TYPE progdir-clas,
-             type    TYPE progdir-type,
-             occurs  TYPE progdir-occurs,
-             subc    TYPE progdir-subc,
-             appl    TYPE progdir-appl,
-             secu    TYPE progdir-secu,
-             cnam    TYPE progdir-cnam,
-             cdat    TYPE progdir-cdat,
-             unam    TYPE progdir-unam,
-             udat    TYPE progdir-udat,
-             vern    TYPE progdir-vern,
-             levl    TYPE progdir-levl,
-             rstat   TYPE progdir-rstat,
-             rmand   TYPE progdir-rmand,
-             rload   TYPE progdir-rload,
-             fixpt   TYPE progdir-fixpt,
-             sset    TYPE progdir-sset,
-             sdate   TYPE progdir-sdate,
-             stime   TYPE progdir-stime,
-             idate   TYPE progdir-idate,
-             itime   TYPE progdir-itime,
-             ldbname TYPE progdir-ldbname,
-             uccheck TYPE progdir-uccheck,
-           END OF ty_progdir.
+
+    TYPES:
+      BEGIN OF ty_progdir,
+        name    TYPE progdir-name,
+        state   TYPE progdir-state,
+        sqlx    TYPE progdir-sqlx,
+        edtx    TYPE progdir-edtx,
+        varcl   TYPE progdir-varcl,
+        dbapl   TYPE progdir-dbapl,
+        dbna    TYPE progdir-dbna,
+        clas    TYPE progdir-clas,
+        type    TYPE progdir-type,
+        occurs  TYPE progdir-occurs,
+        subc    TYPE progdir-subc,
+        appl    TYPE progdir-appl,
+        secu    TYPE progdir-secu,
+        cnam    TYPE progdir-cnam,
+        cdat    TYPE progdir-cdat,
+        unam    TYPE progdir-unam,
+        udat    TYPE progdir-udat,
+        vern    TYPE progdir-vern,
+        levl    TYPE progdir-levl,
+        rstat   TYPE progdir-rstat,
+        rmand   TYPE progdir-rmand,
+        rload   TYPE progdir-rload,
+        fixpt   TYPE progdir-fixpt,
+        sset    TYPE progdir-sset,
+        sdate   TYPE progdir-sdate,
+        stime   TYPE progdir-stime,
+        idate   TYPE progdir-idate,
+        itime   TYPE progdir-itime,
+        ldbname TYPE progdir-ldbname,
+        uccheck TYPE progdir-uccheck,
+      END OF ty_progdir.
 
     METHODS serialize_program
-      IMPORTING io_xml     TYPE REF TO zif_abapgit_xml_output OPTIONAL
-                is_item    TYPE zif_abapgit_definitions=>ty_item
-                io_files   TYPE REF TO zcl_abapgit_objects_files
-                iv_program TYPE programm OPTIONAL
-                iv_extra   TYPE clike OPTIONAL
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !io_xml     TYPE REF TO zif_abapgit_xml_output OPTIONAL
+        !is_item    TYPE zif_abapgit_definitions=>ty_item
+        !io_files   TYPE REF TO zcl_abapgit_objects_files
+        !iv_program TYPE programm OPTIONAL
+        !iv_extra   TYPE clike OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
     METHODS read_progdir
-      IMPORTING iv_program        TYPE programm
-      RETURNING VALUE(rs_progdir) TYPE ty_progdir.
-
+      IMPORTING
+        !iv_program       TYPE programm
+      RETURNING
+        VALUE(rs_progdir) TYPE ty_progdir.
     METHODS deserialize_program
-      IMPORTING is_progdir TYPE ty_progdir
-                it_source  TYPE abaptxt255_tab
-                it_tpool   TYPE textpool_table
-                iv_package TYPE devclass
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !is_progdir TYPE ty_progdir
+        !it_source  TYPE abaptxt255_tab
+        !it_tpool   TYPE textpool_table
+        !iv_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
 
     TYPES:
@@ -82,17 +90,10 @@ CLASS zcl_abapgit_objects_program DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
         tit TYPE STANDARD TABLE OF rsmpe_titt WITH DEFAULT KEY,
         biv TYPE STANDARD TABLE OF rsmpe_buts WITH DEFAULT KEY,
       END OF ty_cua .
-    TYPES:
-      BEGIN OF ty_oo_docu_cat,
-        id   TYPE doku_id,
-        comp TYPE seocmpname,
-      END OF ty_oo_docu_cat .
-    TYPES:
-      ty_oo_docu_cat_tt TYPE STANDARD TABLE OF ty_oo_docu_cat .
 
     METHODS strip_generation_comments
       CHANGING
-        !ct_source TYPE abaptxt255_tab .
+        ct_source TYPE STANDARD TABLE. " tab of string or charX
     METHODS serialize_dynpros
       IMPORTING
         !iv_program_name TYPE programm
@@ -157,61 +158,19 @@ CLASS zcl_abapgit_objects_program DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
         !it_tpool       TYPE zif_abapgit_definitions=>ty_tpool_tt
       RETURNING
         VALUE(rt_tpool) TYPE zif_abapgit_definitions=>ty_tpool_tt .
-    METHODS serialize_all_docu
-      IMPORTING
-        !ii_xml                        TYPE REF TO zif_abapgit_xml_output
-        !iv_clsname                    TYPE seoclsname
-        !ii_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc
-        !iv_id                         TYPE doku_id
-      RAISING
-        zcx_abapgit_exception .
-    METHODS deserialize_all_docu
-      IMPORTING
-        !ii_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc
-        !ii_xml                        TYPE REF TO zif_abapgit_xml_input
-        !iv_id                         TYPE doku_id
-      RAISING
-        zcx_abapgit_exception .
   PRIVATE SECTION.
+    METHODS:
+      uncondense_flow
+        IMPORTING it_flow        TYPE swydyflow
+                  it_spaces      TYPE ty_spaces_tt
+        RETURNING VALUE(rt_flow) TYPE swydyflow.
 
-    METHODS serialize_docu
-      IMPORTING
-        !ii_xml                        TYPE REF TO zif_abapgit_xml_output
-        !it_langu_additional           TYPE zif_abapgit_lang_definitions=>ty_langus
-        !iv_obj                        TYPE dokhl-object
-        !iv_id                         TYPE dokhl-id
-        !ii_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc
-      RETURNING
-        VALUE(rv_num_lines)            TYPE i
-      RAISING
-        zcx_abapgit_exception .
-    METHODS deserialize_docu
-      IMPORTING
-        !ii_xml                        TYPE REF TO zif_abapgit_xml_input
-        !iv_id                         TYPE doku_id
-        !iv_comp                       TYPE clike OPTIONAL
-        !iv_clsname                    TYPE clike
-        !ii_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc
-      RAISING
-        zcx_abapgit_exception .
-    METHODS make_docu_tag
-      IMPORTING
-        !iv_prefix    TYPE clike
-        !iv_id        TYPE doku_id
-        !iv_comp      TYPE clike
-      RETURNING
-        VALUE(rv_tag) TYPE string .
-    METHODS uncondense_flow
-      IMPORTING
-        !it_flow       TYPE swydyflow
-        !it_spaces     TYPE ty_spaces_tt
-      RETURNING
-        VALUE(rt_flow) TYPE swydyflow .
     CLASS-METHODS auto_correct_cua_adm
       IMPORTING
-        !is_cua TYPE ty_cua
+        is_cua TYPE ty_cua
       CHANGING
-        !cs_adm TYPE rsmpe_adm .
+        cs_adm TYPE rsmpe_adm.
+
     METHODS get_program_title
       IMPORTING
         !it_tpool       TYPE textpool_table
@@ -241,7 +200,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
+CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
 
   METHOD add_tpool.
@@ -299,30 +258,6 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.
-
-
-  METHOD deserialize_all_docu.
-    DATA: lt_cat TYPE ty_oo_docu_cat_tt.
-    DATA: ls_cat TYPE ty_oo_docu_cat.
-
-    deserialize_docu(
-      ii_xml                        = ii_xml
-      iv_id                         = iv_id
-      iv_clsname                    = ms_item-obj_name
-      ii_object_oriented_object_fct = ii_object_oriented_object_fct ).
-
-    ii_xml->read( EXPORTING iv_name = 'DOCU_CAT'
-                  CHANGING cg_data  = lt_cat  ).
-
-    LOOP AT lt_cat INTO ls_cat.
-      deserialize_docu(
-        ii_xml                        = ii_xml
-        iv_id                         = ls_cat-id
-        iv_clsname                    = ms_item-obj_name
-        iv_comp                       = ls_cat-comp
-        ii_object_oriented_object_fct = ii_object_oriented_object_fct ).
-    ENDLOOP.
   ENDMETHOD.
 
 
@@ -395,56 +330,6 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
       iv_type = 'CUAD'
       iv_name = iv_program_name ).
 
-  ENDMETHOD.
-
-
-  METHOD deserialize_docu.
-    DATA lv_name TYPE string.
-    DATA lv_i18n_name  TYPE string.
-
-    DATA: lt_lines      TYPE tlinetab,
-          lv_object     TYPE dokhl-object,
-          lt_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_lines,
-          ls_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_line.
-
-    lv_name      = make_docu_tag( iv_prefix = 'LINES'
-                                  iv_id = iv_id
-                                  iv_comp = iv_comp ).
-    lv_i18n_name = make_docu_tag( iv_prefix = 'I18N_LINES'
-                                  iv_id = iv_id
-                                  iv_comp = iv_comp ).
-
-    ii_xml->read( EXPORTING iv_name = lv_name
-                  CHANGING cg_data = lt_lines ).
-
-    lv_object = iv_clsname.
-    lv_object+30(30) = iv_comp.
-
-    IF lines( lt_lines ) = 0.
-      ii_object_oriented_object_fct->delete_documentation(
-        iv_id          = iv_id
-        iv_object_name = lv_object
-        iv_language    = mv_language ).
-      RETURN.
-    ENDIF.
-
-    ii_object_oriented_object_fct->create_documentation(
-      it_lines       = lt_lines
-      iv_id          = iv_id
-      iv_object_name = lv_object
-      iv_language    = mv_language ).
-
-    ii_xml->read( EXPORTING iv_name = lv_i18n_name
-                  CHANGING cg_data = lt_i18n_lines ).
-
-    LOOP AT lt_i18n_lines INTO ls_i18n_lines.
-      ii_object_oriented_object_fct->create_documentation(
-        it_lines         = ls_i18n_lines-lines
-        iv_id            = iv_id
-        iv_object_name   = lv_object
-        iv_language      = ls_i18n_lines-language
-        iv_no_masterlang = abap_true ).
-    ENDLOOP.
   ENDMETHOD.
 
 
@@ -795,15 +680,6 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD make_docu_tag.
-    IF iv_id = 'IF' OR iv_id = 'CL'.
-      rv_tag = iv_prefix.  " LINES or I18N_LINES
-    ELSE.
-      CONCATENATE iv_prefix '_' iv_id '_' iv_comp INTO rv_tag.
-    ENDIF.
-  ENDMETHOD.
-
-
   METHOD read_progdir.
 
     DATA: ls_sapdir TYPE progdir.
@@ -854,76 +730,6 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD serialize_all_docu.
-    DATA: lt_docu_cat TYPE ty_oo_docu_cat_tt. " catalog of component docu
-
-    DATA lv_pattern TYPE c LENGTH 31.
-    DATA lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus.
-    DATA lr_id TYPE RANGE OF dokhl-id.
-    DATA ls_id LIKE LINE OF lr_id.
-    DATA: BEGIN OF ls_dokhl,
-            id     TYPE doku_id,
-            object TYPE doku_obj,
-          END OF ls_dokhl.
-    DATA ls_docu_cat TYPE ty_oo_docu_cat.
-    DATA lv_num_lines TYPE i.
-
-    ls_id-sign = 'I'.
-    ls_id-option = 'EQ'.
-    ls_id-low = iv_id.
-    APPEND ls_id TO lr_id.
-
-    IF iv_id = 'CL'.
-      ls_id-low = 'CA'.
-      APPEND ls_id TO lr_id.
-      ls_id-low = 'CE'.
-      APPEND ls_id TO lr_id.
-      ls_id-low = 'CO'.
-      APPEND ls_id TO lr_id.
-    ELSE.
-      ls_id-low = 'IA'.
-      APPEND ls_id TO lr_id.
-      ls_id-low = 'IE'.
-      APPEND ls_id TO lr_id.
-      ls_id-low = 'IO'.
-      APPEND ls_id TO lr_id.
-    ENDIF.
-
-    lv_pattern = iv_clsname.
-    lv_pattern+30 = '%'.
-
-    SELECT DISTINCT object id FROM dokhl INTO CORRESPONDING FIELDS OF ls_dokhl
-      WHERE id       IN   lr_id
-        AND object   LIKE lv_pattern
-        AND langu    =    mv_language
-      ORDER BY object id.
-
-      SELECT DISTINCT langu
-        INTO TABLE lt_langu_additional
-        FROM dokhl
-        WHERE id     =  ls_dokhl-id
-          AND object =  ls_dokhl-object
-          AND langu  <> mv_language
-        ORDER BY langu.
-      lv_num_lines = serialize_docu( ii_xml              = ii_xml
-                                     iv_obj              = ls_dokhl-object
-                                     iv_id               = ls_dokhl-id
-                                     it_langu_additional = lt_langu_additional
-                                     ii_object_oriented_object_fct = ii_object_oriented_object_fct ).
-
-      IF lv_num_lines > 0 AND ls_dokhl-id <> 'CL' AND ls_dokhl-id <> 'IF'.
-        CLEAR ls_docu_cat.
-        ls_docu_cat-id = ls_dokhl-id.
-        ls_docu_cat-comp = ls_dokhl-object+30(30).
-        APPEND ls_docu_cat TO lt_docu_cat.
-      ENDIF.
-    ENDSELECT.
-    ii_xml->add( iv_name = 'DOCU_CAT'
-                 ig_data = lt_docu_cat ).
-
-  ENDMETHOD.
-
-
   METHOD serialize_cua.
 
     CALL FUNCTION 'RS_CUA_INTERNAL_FETCH'
@@ -953,59 +759,6 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-  ENDMETHOD.
-
-
-  METHOD serialize_docu.
-    DATA: lt_lines      TYPE tlinetab,
-          lv_langu      TYPE sy-langu,
-          lt_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_lines,
-          ls_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_line,
-          lv_name       TYPE string,
-          lv_i18n_name  TYPE string.
-
-    " append the object and component name if we're serializing
-    " attribute, method or event documentation
-    lv_name      = make_docu_tag( iv_prefix = 'LINES'
-                                  iv_id = iv_id
-                                  iv_comp = iv_obj+30(30) ).
-    lv_i18n_name = make_docu_tag( iv_prefix = 'I18N_LINES'
-                                  iv_id = iv_id
-                                  iv_comp = iv_obj+30(30) ).
-
-    lt_lines = ii_object_oriented_object_fct->read_documentation(
-      iv_id          = iv_id
-      iv_object_name = iv_obj
-      iv_language    = mv_language ).
-
-    rv_num_lines = lines( lt_lines ).
-    IF rv_num_lines > 0.
-      ii_xml->add( iv_name = lv_name
-                   ig_data = lt_lines ).
-    ENDIF.
-
-    IF ii_xml->i18n_params( )-main_language_only = abap_true.
-      RETURN.
-    ENDIF.
-
-    LOOP AT it_langu_additional INTO lv_langu.
-      lt_lines = ii_object_oriented_object_fct->read_documentation(
-        iv_id          = iv_id
-        iv_object_name = iv_obj
-        iv_language    = lv_langu ).
-
-      IF lines( lt_lines ) > 0.
-        CLEAR ls_i18n_lines.
-        ls_i18n_lines-language = lv_langu.
-        ls_i18n_lines-lines    = lt_lines.
-        INSERT ls_i18n_lines INTO TABLE lt_i18n_lines.
-      ENDIF.
-    ENDLOOP.
-
-    IF lines( lt_i18n_lines ) > 0.
-      ii_xml->add( iv_name = lv_i18n_name
-                   ig_data = lt_i18n_lines ).
-    ENDIF.
   ENDMETHOD.
 
 
@@ -1220,12 +973,20 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 
   METHOD strip_generation_comments.
 
-    FIELD-SYMBOLS <lv_line> LIKE LINE OF ct_source.
+    FIELD-SYMBOLS <lv_line> TYPE any. " Assuming CHAR (e.g. abaptxt255_tab) or string (FUGR)
 
     IF ms_item-obj_type <> 'FUGR'.
       RETURN.
     ENDIF.
 
+    " Case 1: MV FM main prog and TOPs
+    READ TABLE ct_source INDEX 1 ASSIGNING <lv_line>.
+    IF sy-subrc = 0 AND <lv_line> CP '#**regenerated at *'.
+      DELETE ct_source INDEX 1.
+      RETURN.
+    ENDIF.
+
+    " Case 2: MV FM includes
     IF lines( ct_source ) < 5. " Generation header length
       RETURN.
     ENDIF.
