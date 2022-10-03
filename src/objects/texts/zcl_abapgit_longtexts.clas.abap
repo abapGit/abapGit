@@ -270,7 +270,7 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
                          it_dokil          = it_dokil
                          iv_main_lang_only = ii_xml->i18n_params( )-main_language_only ).
 
-    IF rt_longtexts IS REQUESTED.
+    IF rt_longtexts IS SUPPLIED.
       RETURN.
     ENDIF.
 
