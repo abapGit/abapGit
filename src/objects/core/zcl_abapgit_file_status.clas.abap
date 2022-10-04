@@ -460,7 +460,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
       IF lv_path IS INITIAL.
         ii_log->add_error( |{ lv_object } already exists outside of { iv_top } package hierarchy| ).
       ELSEIF lv_path <> <ls_result>-path.
-        ii_log->add_warning( |Package and path do not match for { lv_object }| ).
+        ii_log->add_warning( |Package and path do not match for object { lv_object }| ).
       ENDIF.
 
     ENDLOOP.
