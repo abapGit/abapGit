@@ -6,5 +6,5 @@ wc -l ./zabapgit.abap
 
 # Deploy artifacts
 git clone https://github.com/abapGit/build.git ../build
-cp zabapgit.abap ../build/zabapgit.abap
+cp zabapgit.abap ../build/zabapgit_standalone.prog.abap
 cd ../build
