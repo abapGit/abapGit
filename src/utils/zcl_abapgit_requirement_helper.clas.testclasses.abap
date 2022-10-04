@@ -103,7 +103,9 @@ CLASS ltcl_lower_release IMPLEMENTATION.
 
     ls_requirement-component   = ls_component-component.
     ls_requirement-min_release = ls_component-release - 1.
-    ls_requirement-min_patch   = nmax( val1 = ls_component-extrelease - 1 val2 = 0 ).
+    ls_requirement-min_patch   = nmax(
+                                   val1 = ls_component-extrelease - 1
+                                   val2 = 0 ).
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
@@ -221,7 +223,9 @@ CLASS ltcl_same_release IMPLEMENTATION.
 
     ls_requirement-component   = ls_component-component.
     ls_requirement-min_release = ls_component-release.
-    ls_requirement-min_patch   = nmax( val1 = ls_component-extrelease - 1 val2 = 0 ).
+    ls_requirement-min_patch   = nmax(
+                                   val1 = ls_component-extrelease - 1
+                                   val2 = 0 ).
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
