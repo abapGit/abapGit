@@ -57,10 +57,15 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
     " Guess object type and name
     SPLIT to_upper( iv_filename ) AT '.' INTO lv_name lv_type lv_ext.
 
-    " Handle namespaces
-    REPLACE ALL OCCURRENCES OF '#' IN lv_name WITH '/'.
-    REPLACE ALL OCCURRENCES OF '#' IN lv_type WITH '/'.
-    REPLACE ALL OCCURRENCES OF '#' IN lv_ext WITH '/'.
+      " Handle namespaces
+    IF lv_type = to_upper( c_json_file-extension ).
+      REPLACE '(' IN lv_name WITH '/'.
+      REPLACE ')' IN lv_name WITH '/'.
+    ELSE.
+      REPLACE ALL OCCURRENCES OF '#' IN lv_name WITH '/'.
+      REPLACE ALL OCCURRENCES OF '#' IN lv_type WITH '/'.
+      REPLACE ALL OCCURRENCES OF '#' IN lv_ext WITH '/'.
+    ENDIF.
 
     " The counter part to this logic must be maintained in OBJECT_TO_FILE
     IF lv_type = to_upper( c_package_file-obj_type ).
@@ -88,6 +93,7 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
   METHOD object_to_file.
 
     DATA lv_obj_name TYPE string.
+    DATA lv_nb_of_slash TYPE string.
 
     lv_obj_name = is_item-obj_name.
 
@@ -121,8 +127,15 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
     ENDIF.
 
     " handle namespaces
-    REPLACE ALL OCCURRENCES OF '/' IN rv_filename WITH '#'.
-    TRANSLATE rv_filename TO LOWER CASE.
-
+    IF is_item-obj_type = to_upper( c_json_file-extension ).
+      FIND ALL OCCURRENCES OF `/` IN rv_filename MATCH COUNT lv_nb_of_slash.
+      IF lv_nb_of_slash = 2.
+        REPLACE FIRST OCCURRENCE OF `/` IN rv_filename WITH `(`.
+        REPLACE `/` IN rv_filename WITH `)`.
+      ENDIF.
+    ELSE.
+      REPLACE ALL OCCURRENCES OF '/' IN rv_filename WITH '#'.
+      TRANSLATE rv_filename TO LOWER CASE.
+    ENDIF.
   ENDMETHOD.
 ENDCLASS.
