@@ -148,8 +148,6 @@
       {"object": "ZCL_ABAPGIT_REQUIREMENT_HELPER", "class": "ltcl_formats", "method": "shorter_patch", "note": "Void type: CVERS_SDU"},
       {"object": "ZCL_ABAPGIT_REQUIREMENT_HELPER", "class": "ltcl_formats", "method": "higher_patch", "note": "Void type: CVERS_SDU"},
 
-      {"object": "ZCL_ABAPGIT_GUI_UTILS", "class": "ltcl_gui_utils", "method": "is_event_handler", "note": "casting with interfaces"},
-
       {"object": "ZCL_ABAPGIT_GUI_ASSET_MANAGER", "class": "ltcl_abapgit_gui_asset_manager", "method": "get_mime_asset", "note": "todo in open-abap fm WWWPARAMS_READ"},
       {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_multiple_files", "method": "test_overwrite"},
 
