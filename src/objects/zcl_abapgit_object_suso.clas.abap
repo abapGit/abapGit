@@ -10,6 +10,8 @@ CLASS zcl_abapgit_object_suso DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
           iv_language TYPE spras.
   PROTECTED SECTION.
   PRIVATE SECTION.
+    CONSTANTS c_longtext_id_suso TYPE dokil-id VALUE 'UO'.
+
     DATA:
       mv_objectname TYPE tobj-objct.
 
@@ -258,6 +260,9 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
     DELETE FROM tobjvor WHERE objct = ms_item-obj_name.   "#EC CI_SUBRC
     INSERT tobjvor FROM TABLE lt_tobjvor.                 "#EC CI_SUBRC
 
+    deserialize_longtexts( ii_xml         = io_xml
+                           iv_longtext_id = c_longtext_id_suso ).
+
     regenerate_sap_all( ).
 
   ENDMETHOD.
@@ -365,6 +370,9 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
                  iv_name = 'TOBJVORDAT' ).
     io_xml->add( ig_data = lt_tobjvor
                  iv_name = 'TOBJVOR' ).
+
+    serialize_longtexts( ii_xml         = io_xml
+                         iv_longtext_id = c_longtext_id_suso ).
 
   ENDMETHOD.
 ENDCLASS.

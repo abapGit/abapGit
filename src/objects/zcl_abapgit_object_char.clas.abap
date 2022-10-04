@@ -19,6 +19,8 @@ CLASS zcl_abapgit_object_char DEFINITION
         cls_attr_valuet TYPE STANDARD TABLE OF cls_attr_valuet WITH DEFAULT KEY,
       END OF ty_char .
 
+    CONSTANTS c_longtext_id_char TYPE dokil-id VALUE 'CH'.
+
     METHODS instantiate_char_and_lock
       IMPORTING
         !iv_type_group       TYPE cls_object_type_group
@@ -215,6 +217,9 @@ CLASS zcl_abapgit_object_char IMPLEMENTATION.
         lo_char->if_pak_wb_object_internal~unlock( ).
     ENDTRY.
 
+    deserialize_longtexts( ii_xml         = io_xml
+                           iv_longtext_id = c_longtext_id_char ).
+
   ENDMETHOD.
 
 
@@ -298,6 +303,9 @@ CLASS zcl_abapgit_object_char IMPLEMENTATION.
 
     io_xml->add( iv_name = 'CHAR'
                  ig_data = ls_char ).
+
+    serialize_longtexts( ii_xml         = io_xml
+                         iv_longtext_id = c_longtext_id_char ).
 
   ENDMETHOD.
 ENDCLASS.
