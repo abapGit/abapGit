@@ -6,20 +6,14 @@
    <TEXT>abapGit - Common Scripts (JS)</TEXT>
    <PARAMS>
     <WWWPARAMS>
-     <RELID>MI</RELID>
-     <OBJID>ZABAPGIT_JS_COMMON</OBJID>
      <NAME>fileextension</NAME>
      <VALUE>.js</VALUE>
     </WWWPARAMS>
     <WWWPARAMS>
-     <RELID>MI</RELID>
-     <OBJID>ZABAPGIT_JS_COMMON</OBJID>
      <NAME>filename</NAME>
      <VALUE>common.js</VALUE>
     </WWWPARAMS>
     <WWWPARAMS>
-     <RELID>MI</RELID>
-     <OBJID>ZABAPGIT_JS_COMMON</OBJID>
      <NAME>mimetype</NAME>
      <VALUE>text/javascript</VALUE>
     </WWWPARAMS>
