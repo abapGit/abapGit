@@ -6,20 +6,14 @@
    <TEXT>abapGit - Icon Set CSS Map</TEXT>
    <PARAMS>
     <WWWPARAMS>
-     <RELID>MI</RELID>
-     <OBJID>ZABAPGIT_ICON_FONT_CSS</OBJID>
      <NAME>fileextension</NAME>
      <VALUE>.css</VALUE>
     </WWWPARAMS>
     <WWWPARAMS>
-     <RELID>MI</RELID>
-     <OBJID>ZABAPGIT_ICON_FONT_CSS</OBJID>
      <NAME>filename</NAME>
      <VALUE>ag-icons.css</VALUE>
     </WWWPARAMS>
     <WWWPARAMS>
-     <RELID>MI</RELID>
-     <OBJID>ZABAPGIT_ICON_FONT_CSS</OBJID>
      <NAME>mimetype</NAME>
      <VALUE>text/css</VALUE>
     </WWWPARAMS>
