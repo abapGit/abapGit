@@ -8,7 +8,7 @@ Legend
 + : added
 - : removed
 
-2022-10-xx v1.118.0
+2022-10-04 v1.118.0
 -------------------
 
 ! Change build deployment filename (#5792)
@@ -16,9 +16,12 @@ Legend
   in a clonable repo at https://github.com/abapGit/build
 ! Several XML formats have been enhanced to support object
   documentation (longtexts)
+! W3xx: Remove unnecessary metadata (#5780)
 + Allow use of changelog feature without APACK (#5739)
 + Prepare processing longtexts for sub components (#5786)
-+ Various objects: Add documentation (longtexts) (#5796) 
++ Various objects: Add documentation (longtexts) (#5796)
++ CLAS,INTF: Support for component documentation (#5575)
++ FUGR: Add documentation (longtexts) (#5795)
 * Delete obsolete longtexts on pull (#5751) 
 * Force usage of local object handler classes (#5778)
 * CLAS: Fix pull for deleted interface methods (#5768) 
