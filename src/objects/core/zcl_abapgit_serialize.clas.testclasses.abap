@@ -264,7 +264,7 @@ CLASS ltcl_i18n IMPLEMENTATION.
                    <ls_result>     LIKE LINE OF lt_result,
                    <ls_i18n_langs> LIKE LINE OF lt_i18n_langs.
 
-    " Assumption: Table T100 has English and German description
+    " Assumption: Table T100 has at least English and German description
     APPEND INITIAL LINE TO lt_tadir ASSIGNING <ls_tadir>.
     <ls_tadir>-object   = 'TABL'.
     <ls_tadir>-obj_name = 'T100'.
@@ -296,16 +296,10 @@ CLASS ltcl_i18n IMPLEMENTATION.
     lo_input->zif_abapgit_xml_input~read( EXPORTING iv_name = 'I18N_LANGS'
                                           CHANGING  cg_data = lt_i18n_langs ).
 
-    cl_abap_unit_assert=>assert_equals(
-      act = lines( lt_i18n_langs )
-      exp = 1 ).
+    cl_abap_unit_assert=>assert_not_initial( lt_i18n_langs ).
 
-    READ TABLE lt_i18n_langs ASSIGNING <ls_i18n_langs> INDEX 1.
-    ASSERT sy-subrc = 0.
-
-    cl_abap_unit_assert=>assert_equals(
-      act = <ls_i18n_langs>
-      exp = 'D' ).
+    READ TABLE lt_i18n_langs ASSIGNING <ls_i18n_langs> WITH KEY table_line = 'D'.
+    cl_abap_unit_assert=>assert_subrc( ).
 
   ENDMETHOD.
 ENDCLASS.
