@@ -66,7 +66,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
       with:
-        repository: https://github.com/abapGit/build.git
+        repository: abapGit/build
     - name: mirror tag to the artifact
       env:
         GITHUB_API_KEY: ${{ secrets.DEPLOY_ABAPGIT_BUILD }}
