@@ -474,8 +474,10 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
 
     lv_classname = iv_object_name.
 
-    ls_data_abapgit-description = set_abapgit_descriptions( is_clsname  = lv_classname
-                                                            is_intf_aff = ls_data_aff ).
+    set_abapgit_descriptions( EXPORTING is_clsname          = lv_classname
+                                        is_intf_aff         = ls_data_aff
+                              IMPORTING et_descriptions     = ls_data_abapgit-description
+                                        et_descriptions_sub = ls_data_abapgit-description_sub ).
 
     ls_data_abapgit-vseointerf-clsname = iv_object_name.
     ls_data_abapgit-vseointerf-descript = ls_data_aff-header-description.
