@@ -17,6 +17,7 @@ INTERFACE zif_abapgit_dot_abapgit PUBLIC.
       folder_logic                 TYPE string,
       ignore                       TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
       requirements                 TYPE ty_requirement_tt,
+      version_constant             TYPE string,
     END OF ty_dot_abapgit .
 
   CONSTANTS:
