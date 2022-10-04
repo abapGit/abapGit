@@ -440,6 +440,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
     DATA:
       lv_path         TYPE string,
+      lv_object       TYPE string,
       lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
 
     FIELD-SYMBOLS <ls_result> LIKE LINE OF it_results.
@@ -454,12 +455,12 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
         io_dot     = io_dot
         iv_package = <ls_result>-package ).
 
-      IF lv_path <> <ls_result>-path.
-        ii_log->add( iv_msg = |Package and path do not match for object {
-                       <ls_result>-obj_type } { <ls_result>-obj_name }|
-                     iv_type = 'W' ).
-      ELSEIF lv_path IS INITIAL.
-        zcx_abapgit_exception=>raise( |Error determining parent package of package { <ls_result>-package }| ).
+      lv_object = |{ <ls_result>-obj_type } { <ls_result>-obj_name }|.
+
+      IF lv_path IS INITIAL.
+        ii_log->add_error( |{ lv_object } already exists outside of { iv_top } package hierarchy| ).
+      ELSEIF lv_path <> <ls_result>-path.
+        ii_log->add_warning( |Package and path do not match for { lv_object }| ).
       ENDIF.
 
     ENDLOOP.

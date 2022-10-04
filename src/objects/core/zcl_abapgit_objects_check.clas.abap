@@ -284,6 +284,9 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
         ls_overwrite-obj_type = <ls_result>-obj_type.
         ls_overwrite-obj_name = <ls_result>-obj_name.
         ls_overwrite-devclass = ls_tadir-devclass.
+        ls_overwrite-action   = zif_abapgit_objects=>c_deserialize_action-overwrite.
+        ls_overwrite-icon     = icon_change.
+        ls_overwrite-text     = 'Overwrite local object'.
         INSERT ls_overwrite INTO TABLE lt_overwrite_unique.
       ENDIF.
 
