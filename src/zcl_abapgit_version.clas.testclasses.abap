@@ -87,9 +87,9 @@ CLASS ltcl_version_parse DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLE
   PUBLIC SECTION.
     METHODS:
       abapgit_version FOR TESTING,
-      interface FOR TESTING,
+      interface1 FOR TESTING,
       interface2 FOR TESTING,
-      class FOR TESTING,
+      class1 FOR TESTING,
       class_private FOR TESTING,
       structured_constant FOR TESTING,
       int4 FOR TESTING,
@@ -131,7 +131,7 @@ CLASS ltcl_version_parse IMPLEMENTATION.
     then_version_should_equal( zif_abapgit_version=>c_abap_version ).
   ENDMETHOD.
 
-  METHOD interface.
+  METHOD interface1.
     DATA: lt_source TYPE string_table.
 
     APPEND 'INTERFACE version.' TO lt_source.
@@ -158,7 +158,7 @@ CLASS ltcl_version_parse IMPLEMENTATION.
     then_version_should_equal( '1.2.3' ).
   ENDMETHOD.
 
-  METHOD class.
+  METHOD class1.
     DATA: lt_source TYPE string_table.
 
     APPEND 'CLASS version DEFINITION CREATE PRIVATE PUBLIC.' TO lt_source.
