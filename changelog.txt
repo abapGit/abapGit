@@ -11,12 +11,12 @@ Legend
 2022-10-04 v1.118.0
 -------------------
 
+! W3xx: Remove unnecessary metadata (#5780)
 ! Change build deployment filename (#5792)
   File is now named "zabapgit_standalone.prog.abap" and located
   in a clonable repo at https://github.com/abapGit/build
 ! Several XML formats have been enhanced to support object
   documentation (longtexts)
-! W3xx: Remove unnecessary metadata (#5780)
 + Allow use of changelog feature without APACK (#5739)
 + Prepare processing longtexts for sub components (#5786)
 + Various objects: Add documentation (longtexts) (#5796)
@@ -26,8 +26,6 @@ Legend
 * Force usage of local object handler classes (#5778)
 * CLAS: Fix pull for deleted interface methods (#5768) 
 * TABL: Fix deserialize if foreign key exists (#5773)
-* Fix subcomponent text deserialization (json) (#5783) 
-* Fix language dependent unit test (#5799) 
 
 2022-09-19 v1.117.0
 -------------------
