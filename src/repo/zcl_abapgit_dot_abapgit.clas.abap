@@ -80,6 +80,10 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
     METHODS set_requirements
       IMPORTING
         !it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt .
+    METHODS get_version_constant
+      RETURNING VALUE(rv_version_constant) TYPE string.
+    METHODS set_version_constant
+      IMPORTING iv_version_constant TYPE csequence.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -313,6 +317,13 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
     ms_data-starting_folder = iv_path.
   ENDMETHOD.
 
+  METHOD get_version_constant.
+    rv_version_constant = ms_data-version_constant.
+  ENDMETHOD.
+
+  METHOD set_version_constant.
+    ms_data-version_constant = iv_version_constant.
+  ENDMETHOD.
 
   METHOD to_file.
     rs_file-path     = zif_abapgit_definitions=>c_root_dir.
@@ -338,4 +349,5 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
     ASSERT sy-subrc = 0.
 
   ENDMETHOD.
+
 ENDCLASS.
