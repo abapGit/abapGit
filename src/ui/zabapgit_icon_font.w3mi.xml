@@ -6,20 +6,14 @@
    <TEXT>abapGit - Icon Set</TEXT>
    <PARAMS>
     <WWWPARAMS>
-     <RELID>MI</RELID>
-     <OBJID>ZABAPGIT_ICON_FONT</OBJID>
      <NAME>fileextension</NAME>
      <VALUE>.woff</VALUE>
     </WWWPARAMS>
     <WWWPARAMS>
-     <RELID>MI</RELID>
-     <OBJID>ZABAPGIT_ICON_FONT</OBJID>
      <NAME>filename</NAME>
      <VALUE>ag-icons.woff</VALUE>
     </WWWPARAMS>
     <WWWPARAMS>
-     <RELID>MI</RELID>
-     <OBJID>ZABAPGIT_ICON_FONT</OBJID>
      <NAME>mimetype</NAME>
      <VALUE>application/x-font-woff</VALUE>
     </WWWPARAMS>
