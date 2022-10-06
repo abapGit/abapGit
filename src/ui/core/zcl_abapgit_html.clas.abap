@@ -9,7 +9,7 @@ CLASS zcl_abapgit_html DEFINITION
     CONSTANTS c_indent_size TYPE i VALUE 2 ##NO_TEXT.
 
     CLASS-METHODS class_constructor .
-    CLASS-METHODS new
+    CLASS-METHODS create
       RETURNING
         VALUE(ri_instance) TYPE REF TO zif_abapgit_html.
     CLASS-METHODS icon
@@ -108,6 +108,11 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD create.
+    CREATE OBJECT ri_instance TYPE zcl_abapgit_html.
+  ENDMETHOD.
+
+
   METHOD icon.
 
     DATA: lv_hint       TYPE string,
@@ -202,11 +207,6 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       cs_context-indent_str = gv_spaces(lv_spaces).
     ENDIF.
 
-  ENDMETHOD.
-
-
-  METHOD new.
-    CREATE OBJECT ri_instance TYPE zcl_abapgit_html.
   ENDMETHOD.
 
 

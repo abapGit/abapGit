@@ -150,7 +150,7 @@ CLASS ltcl_html IMPLEMENTATION.
 
     mo_html->wrap(
       iv_tag     = 'td'
-      ii_content = zcl_abapgit_html=>new( )->add( 'Hello' ) ).
+      ii_content = zcl_abapgit_html=>create( )->add( 'Hello' ) ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_html->render( )
