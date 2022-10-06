@@ -11,7 +11,7 @@ CLASS zcl_abapgit_aff_registry DEFINITION
     METHODS:
       constructor
         IMPORTING
-          settings TYPE REF TO zcl_abapgit_settings OPTIONAL.
+          io_settings TYPE REF TO zcl_abapgit_settings OPTIONAL.
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES:
@@ -24,54 +24,53 @@ CLASS zcl_abapgit_aff_registry DEFINITION
       registry TYPE HASHED TABLE OF ty_registry_entry WITH UNIQUE KEY obj_type.
 
     DATA:
-      settings TYPE REF TO zcl_abapgit_settings.
+      lo_settings TYPE REF TO zcl_abapgit_settings.
 
     CLASS-METHODS:
       register
         IMPORTING
-          obj_type     TYPE tadir-object
-          experimental TYPE abap_bool DEFAULT abap_false.
+          iv_obj_type     TYPE tadir-object
+          iv_experimental TYPE abap_bool DEFAULT abap_false.
 
 ENDCLASS.
-
 
 
 CLASS zcl_abapgit_aff_registry IMPLEMENTATION.
 
   METHOD class_constructor.
-    register( obj_type = 'CHKC' ).
-    register( obj_type = 'CHKO' ).
-    register( obj_type = 'CHKV' ).
-    register( obj_type = 'EVTB' ).
-    register( obj_type = 'INTF' experimental = abap_true ).
+    register( iv_obj_type = 'CHKC' ).
+    register( iv_obj_type = 'CHKO' ).
+    register( iv_obj_type = 'CHKV' ).
+    register( iv_obj_type = 'EVTB' ).
+    register( iv_obj_type = 'INTF' iv_experimental = abap_true ).
   ENDMETHOD.
 
   METHOD constructor.
-    IF settings IS SUPPLIED.
-      me->settings = settings.
+    IF io_settings IS SUPPLIED.
+      lo_settings = io_settings.
     ELSE.
-      me->settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
+      lo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
     ENDIF.
   ENDMETHOD.
 
   METHOD zif_abapgit_aff_registry~is_supported_object_type.
-    DATA registry_entry TYPE ty_registry_entry.
+    DATA ls_registry_entry TYPE ty_registry_entry.
 
-    READ TABLE registry WITH TABLE KEY obj_type = obj_type INTO registry_entry.
-    IF sy-subrc = 0 AND ( registry_entry-experimental = abap_false OR
-                          settings->get_experimental_features( ) = abap_true ).
-      result = abap_true.
+    READ TABLE registry WITH TABLE KEY obj_type = iv_obj_type INTO ls_registry_entry.
+    IF sy-subrc = 0 AND ( ls_registry_entry-experimental = abap_false OR
+                          lo_settings->get_experimental_features( ) = abap_true ).
+      rv_result = abap_true.
     ELSE.
-      result = abap_false.
+      rv_result = abap_false.
     ENDIF.
   ENDMETHOD.
 
   METHOD register.
-    DATA registry_entry TYPE ty_registry_entry.
+    DATA ls_registry_entry TYPE ty_registry_entry.
 
-    registry_entry-obj_type = obj_type.
-    registry_entry-experimental = experimental.
-    INSERT registry_entry INTO TABLE registry.
+    ls_registry_entry-obj_type = iv_obj_type.
+    ls_registry_entry-experimental = iv_experimental.
+    INSERT ls_registry_entry INTO TABLE registry.
   ENDMETHOD.
 
 ENDCLASS.

@@ -33,7 +33,7 @@ CLASS ltcl_aff_registry IMPLEMENTATION.
     settings_stub->set_experimental_features( experimental ).
     CREATE OBJECT cut TYPE zcl_abapgit_aff_registry
       EXPORTING
-        settings = settings_stub.
+        io_settings = settings_stub.
     act = cut->is_supported_object_type( obj_type ).
     cl_abap_unit_assert=>assert_equals( exp = is_supported act = act ).
   ENDMETHOD.

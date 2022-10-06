@@ -127,7 +127,7 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
 
     " handle namespaces
     CREATE OBJECT lo_aff_registry TYPE zcl_abapgit_aff_registry.
-    IF lo_aff_registry->is_supported_object_type( is_item-obj_type ).
+    IF lo_aff_registry->is_supported_object_type( is_item-obj_type ) = abap_true.
       FIND ALL OCCURRENCES OF `/` IN rv_filename MATCH COUNT lv_nb_of_slash.
       IF lv_nb_of_slash = 2.
         REPLACE FIRST OCCURRENCE OF `/` IN rv_filename WITH `(`.
