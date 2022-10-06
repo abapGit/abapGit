@@ -44,6 +44,7 @@ CLASS zcl_abapgit_aff_registry IMPLEMENTATION.
     register( iv_obj_type = 'EVTB' ).
     register( iv_obj_type = 'INTF'
               iv_experimental = abap_true ).
+    register( iv_obj_type = 'SMBC' ).
   ENDMETHOD.
 
   METHOD constructor.

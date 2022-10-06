@@ -16,7 +16,8 @@ CLASS ltcl_aff_registry DEFINITION FINAL FOR TESTING
       chkv FOR TESTING RAISING cx_static_check,
       evtb FOR TESTING RAISING cx_static_check,
       intf_not_supported FOR TESTING RAISING cx_static_check,
-      intf_experimental FOR TESTING RAISING cx_static_check.
+      intf_experimental FOR TESTING RAISING cx_static_check,
+      smbc FOR TESTING RAISING cx_static_check.
 ENDCLASS.
 
 
@@ -75,5 +76,9 @@ CLASS ltcl_aff_registry IMPLEMENTATION.
                  iv_experimental = abap_true ).
   ENDMETHOD.
 
+  METHOD smbc.
+    assert_that( iv_obj_type = 'SMBC'
+                 iv_is_supported = abap_true ).
+  ENDMETHOD.
 
 ENDCLASS.
