@@ -65,6 +65,10 @@ CLASS zcl_abapgit_object_enho_intf IMPLEMENTATION.
         lo_enh_intf->if_enh_object~save( run_dark = abap_true ).
         lo_enh_intf->if_enh_object~unlock( ).
       CATCH cx_enh_root INTO lx_enh_root.
+        TRY.
+            lo_enh_intf->if_enh_object~unlock( ).
+          CATCH cx_sy_ref_is_initial cx_enh_mod_not_allowed ##NO_HANDLER.
+        ENDTRY.
         zcx_abapgit_exception=>raise_with_text( lx_enh_root ).
     ENDTRY.
 
