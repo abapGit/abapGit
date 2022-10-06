@@ -21,10 +21,10 @@ CLASS zcl_abapgit_aff_registry DEFINITION
       END OF ty_registry_entry.
 
     CLASS-DATA:
-      registry TYPE HASHED TABLE OF ty_registry_entry WITH UNIQUE KEY obj_type.
+      gt_registry TYPE HASHED TABLE OF ty_registry_entry WITH UNIQUE KEY obj_type.
 
     DATA:
-      lo_settings TYPE REF TO zcl_abapgit_settings.
+      mo_settings TYPE REF TO zcl_abapgit_settings.
 
     CLASS-METHODS:
       register
@@ -47,18 +47,18 @@ CLASS zcl_abapgit_aff_registry IMPLEMENTATION.
 
   METHOD constructor.
     IF io_settings IS SUPPLIED.
-      lo_settings = io_settings.
+      mo_settings = io_settings.
     ELSE.
-      lo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
+      mo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
     ENDIF.
   ENDMETHOD.
 
   METHOD zif_abapgit_aff_registry~is_supported_object_type.
     DATA ls_registry_entry TYPE ty_registry_entry.
 
-    READ TABLE registry WITH TABLE KEY obj_type = iv_obj_type INTO ls_registry_entry.
+    READ TABLE gt_registry WITH TABLE KEY obj_type = iv_obj_type INTO ls_registry_entry.
     IF sy-subrc = 0 AND ( ls_registry_entry-experimental = abap_false OR
-                          lo_settings->get_experimental_features( ) = abap_true ).
+                          mo_settings->get_experimental_features( ) = abap_true ).
       rv_result = abap_true.
     ELSE.
       rv_result = abap_false.
@@ -70,7 +70,7 @@ CLASS zcl_abapgit_aff_registry IMPLEMENTATION.
 
     ls_registry_entry-obj_type = iv_obj_type.
     ls_registry_entry-experimental = iv_experimental.
-    INSERT ls_registry_entry INTO TABLE registry.
+    INSERT ls_registry_entry INTO TABLE gt_registry.
   ENDMETHOD.
 
 ENDCLASS.
