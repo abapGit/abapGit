@@ -62,8 +62,8 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
     REPLACE ALL OCCURRENCES OF '#' IN lv_type WITH '/'.
     REPLACE ALL OCCURRENCES OF '#' IN lv_ext WITH '/'.
     " Assume AFF namespace convention
-    REPLACE ALL OCCURRENCES OF '(' IN lv_ext WITH '/'.
-    REPLACE ALL OCCURRENCES OF ')' IN lv_ext WITH '/'.
+    REPLACE ALL OCCURRENCES OF '(' IN lv_name WITH '/'.
+    REPLACE ALL OCCURRENCES OF ')' IN lv_name WITH '/'.
 
     " The counter part to this logic must be maintained in OBJECT_TO_FILE
     IF lv_type = to_upper( c_package_file-obj_type ).
@@ -92,6 +92,7 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
 
     DATA lv_obj_name TYPE string.
     DATA lv_nb_of_slash TYPE string.
+    DATA lo_aff_registry TYPE REF TO zif_abapgit_aff_registry.
 
     lv_obj_name = is_item-obj_name.
 
@@ -125,7 +126,8 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
     ENDIF.
 
     " handle namespaces
-    IF is_item-obj_type = to_upper( c_json_file-extension ).
+    CREATE OBJECT lo_aff_registry TYPE zcl_abapgit_aff_registry.
+    IF lo_aff_registry->is_supported_object_type( is_item-obj_type ).
       FIND ALL OCCURRENCES OF `/` IN rv_filename MATCH COUNT lv_nb_of_slash.
       IF lv_nb_of_slash = 2.
         REPLACE FIRST OCCURRENCE OF `/` IN rv_filename WITH `(`.
@@ -133,7 +135,8 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
       ENDIF.
     ELSE.
       REPLACE ALL OCCURRENCES OF '/' IN rv_filename WITH '#'.
-      TRANSLATE rv_filename TO LOWER CASE.
     ENDIF.
+
+    TRANSLATE rv_filename TO LOWER CASE.
   ENDMETHOD.
 ENDCLASS.
