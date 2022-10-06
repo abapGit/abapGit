@@ -6,20 +6,14 @@
    <TEXT>abapGit - Default Color Theme</TEXT>
    <PARAMS>
     <WWWPARAMS>
-     <RELID>MI</RELID>
-     <OBJID>ZABAPGIT_CSS_THEME_DEFAULT</OBJID>
      <NAME>fileextension</NAME>
      <VALUE>.css</VALUE>
     </WWWPARAMS>
     <WWWPARAMS>
-     <RELID>MI</RELID>
-     <OBJID>ZABAPGIT_CSS_THEME_DEFAULT</OBJID>
      <NAME>filename</NAME>
      <VALUE>default_theme.css</VALUE>
     </WWWPARAMS>
     <WWWPARAMS>
-     <RELID>MI</RELID>
-     <OBJID>ZABAPGIT_CSS_THEME_DEFAULT</OBJID>
      <NAME>mimetype</NAME>
      <VALUE>text/css</VALUE>
     </WWWPARAMS>

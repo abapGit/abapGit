@@ -6,20 +6,14 @@
    <TEXT>abapGit - Belize Blue Theme</TEXT>
    <PARAMS>
     <WWWPARAMS>
-     <RELID>MI</RELID>
-     <OBJID>ZABAPGIT_CSS_THEME_BELIZE_BLUE</OBJID>
      <NAME>fileextension</NAME>
      <VALUE>.CSS</VALUE>
     </WWWPARAMS>
     <WWWPARAMS>
-     <RELID>MI</RELID>
-     <OBJID>ZABAPGIT_CSS_THEME_BELIZE_BLUE</OBJID>
      <NAME>filename</NAME>
      <VALUE>belize_theme.css</VALUE>
     </WWWPARAMS>
     <WWWPARAMS>
-     <RELID>MI</RELID>
-     <OBJID>ZABAPGIT_CSS_THEME_BELIZE_BLUE</OBJID>
      <NAME>mimetype</NAME>
      <VALUE>text/css</VALUE>
     </WWWPARAMS>

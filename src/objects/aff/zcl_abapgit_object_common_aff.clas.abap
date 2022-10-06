@@ -306,7 +306,9 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
             result = rv_bool.
 
       CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise_with_text( lx_error ).
+        " return false instead of raising exception, because abapGit assumes
+        " that raising exception = existing object
+        rv_bool = abap_false.
     ENDTRY.
 
   ENDMETHOD.
