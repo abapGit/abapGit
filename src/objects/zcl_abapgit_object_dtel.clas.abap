@@ -18,6 +18,7 @@ CLASS zcl_abapgit_object_dtel DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       ty_dd04_texts TYPE STANDARD TABLE OF ty_dd04_text .
 
     CONSTANTS c_longtext_id_dtel TYPE dokil-id VALUE 'DE' ##NO_TEXT.
+    CONSTANTS c_longtext_id_dtel_suppl TYPE dokil-id VALUE 'DZ' ##NO_TEXT.
 
     METHODS serialize_texts
       IMPORTING
@@ -209,6 +210,10 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
     deserialize_longtexts( ii_xml         = io_xml
                            iv_longtext_id = c_longtext_id_dtel ).
 
+    deserialize_longtexts( ii_xml           = io_xml
+                           iv_longtext_name = 'LONGTEXTS_' && c_longtext_id_dtel_suppl
+                           iv_longtext_id   = c_longtext_id_dtel_suppl ).
+
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.
@@ -325,6 +330,10 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
 
     serialize_longtexts( ii_xml         = io_xml
                          iv_longtext_id = c_longtext_id_dtel ).
+
+    serialize_longtexts( ii_xml           = io_xml
+                         iv_longtext_name = 'LONGTEXTS_' && c_longtext_id_dtel_suppl
+                         iv_longtext_id   = c_longtext_id_dtel_suppl ).
 
   ENDMETHOD.
 ENDCLASS.

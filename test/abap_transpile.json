@@ -173,6 +173,8 @@
 
       {"object": "ZCL_ABAPGIT_GIT_URL", "class": "ltcl_repo_online", "method": "test_repo_commit_show_urls"},
 
+      {"object": "ZCL_ABAPGIT_LONGTEXTS", "class": "ltcl_longtexts", "method": "escape_name", "note": "Void type: DOKIL"},
+
       {"object": "ZCL_ABAPGIT_OBJECTS_PROGRAM", "class": "ltcl_test", "method": "strip_generation_comments_1", "note": "Void type: ABAPTXT255_TAB"},
       {"object": "ZCL_ABAPGIT_OBJECTS_PROGRAM", "class": "ltcl_test", "method": "strip_generation_comments_2", "note": "Void type: ABAPTXT255_TAB"},
       {"object": "ZCL_ABAPGIT_OBJECTS_FILES", "class": "ltcl_objects_files", "method": "read_abap", "note": "Void type: ABAPTXT255_TAB"},
@@ -207,6 +209,21 @@
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "xslt_before_prog", "note": "hmm, something with promises?"},
 
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "identity", "note": "cx_xslt_runtime_error"},
+
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "abapgit_version", "note": "SCAN-ABAP-SOURCE"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "interface1", "note": "SCAN-ABAP-SOURCE"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "interface2", "note": "SCAN-ABAP-SOURCE"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "class1", "note": "SCAN-ABAP-SOURCE"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "class_private", "note": "SCAN-ABAP-SOURCE"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "structured_constant", "note": "SCAN-ABAP-SOURCE"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "int4", "note": "SCAN-ABAP-SOURCE"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "decfloat34", "note": "SCAN-ABAP-SOURCE"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "syntax_error", "note": "SCAN-ABAP-SOURCE"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "class_data", "note": "SCAN-ABAP-SOURCE"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "ampersand", "note": "SCAN-ABAP-SOURCE"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "constant_reference", "note": "SCAN-ABAP-SOURCE"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "missing_constant", "note": "SCAN-ABAP-SOURCE"},
+      
       {"object": "ZCL_ABAPGIT_REPO", "class": "ltcl_find_remote_dot_abapgit", "method": "positive", "note": "passing data to super constructor()? ASSERT failed"},
       {"object": "ZCL_ABAPGIT_REPO", "class": "ltcl_find_remote_dot_abapgit", "method": "new_repo_needs_no_dot_abapgit", "note": "passing data to super constructor()? ASSERT failed"},
 

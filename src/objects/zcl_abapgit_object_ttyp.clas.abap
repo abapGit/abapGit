@@ -4,6 +4,7 @@ CLASS zcl_abapgit_object_ttyp DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
   PROTECTED SECTION.
   PRIVATE SECTION.
+    CONSTANTS c_longtext_id_ttyp TYPE dokil-id VALUE 'TT'.
 ENDCLASS.
 
 
@@ -89,6 +90,9 @@ CLASS zcl_abapgit_object_ttyp IMPLEMENTATION.
 
       zcx_abapgit_exception=>raise( lv_msg ).
     ENDIF.
+
+    deserialize_longtexts( ii_xml         = io_xml
+                           iv_longtext_id = c_longtext_id_ttyp ).
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 
@@ -187,6 +191,9 @@ CLASS zcl_abapgit_object_ttyp IMPLEMENTATION.
                  ig_data = lt_dd42v ).
     io_xml->add( iv_name = 'DD43V'
                  ig_data = lt_dd43v ).
+
+    serialize_longtexts( ii_xml         = io_xml
+                         iv_longtext_id = c_longtext_id_ttyp ).
 
   ENDMETHOD.
 ENDCLASS.
