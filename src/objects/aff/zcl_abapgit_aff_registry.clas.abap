@@ -42,7 +42,8 @@ CLASS zcl_abapgit_aff_registry IMPLEMENTATION.
     register( iv_obj_type = 'CHKO' ).
     register( iv_obj_type = 'CHKV' ).
     register( iv_obj_type = 'EVTB' ).
-    register( iv_obj_type = 'INTF' iv_experimental = abap_true ).
+    register( iv_obj_type = 'INTF'
+              iv_experimental = abap_true ).
   ENDMETHOD.
 
   METHOD constructor.
@@ -57,8 +58,9 @@ CLASS zcl_abapgit_aff_registry IMPLEMENTATION.
     DATA ls_registry_entry TYPE ty_registry_entry.
 
     READ TABLE gt_registry WITH TABLE KEY obj_type = iv_obj_type INTO ls_registry_entry.
-    IF sy-subrc = 0 AND ( ls_registry_entry-experimental = abap_false OR
-                          mo_settings->get_experimental_features( ) = abap_true ).
+    IF sy-subrc = 0 AND ls_registry_entry-experimental = abap_false.
+      rv_result = abap_true.
+    ELSEIF sy-subrc = 0 AND mo_settings->get_experimental_features( ) = abap_true.
       rv_result = abap_true.
     ELSE.
       rv_result = abap_false.

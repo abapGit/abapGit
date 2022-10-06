@@ -35,7 +35,8 @@ CLASS ltcl_aff_registry IMPLEMENTATION.
       EXPORTING
         io_settings = lo_settings_stub.
     lv_act = lo_cut->is_supported_object_type( iv_obj_type ).
-    cl_abap_unit_assert=>assert_equals( exp = iv_is_supported act = lv_act ).
+    cl_abap_unit_assert=>assert_equals( exp = iv_is_supported
+                                        act = lv_act ).
   ENDMETHOD.
 
   METHOD clas_not_supported.
