@@ -57,15 +57,13 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
     " Guess object type and name
     SPLIT to_upper( iv_filename ) AT '.' INTO lv_name lv_type lv_ext.
 
-      " Handle namespaces
-    IF lv_type = to_upper( c_json_file-extension ).
-      REPLACE '(' IN lv_name WITH '/'.
-      REPLACE ')' IN lv_name WITH '/'.
-    ELSE.
-      REPLACE ALL OCCURRENCES OF '#' IN lv_name WITH '/'.
-      REPLACE ALL OCCURRENCES OF '#' IN lv_type WITH '/'.
-      REPLACE ALL OCCURRENCES OF '#' IN lv_ext WITH '/'.
-    ENDIF.
+    " Handle namespaces
+    REPLACE ALL OCCURRENCES OF '#' IN lv_name WITH '/'.
+    REPLACE ALL OCCURRENCES OF '#' IN lv_type WITH '/'.
+    REPLACE ALL OCCURRENCES OF '#' IN lv_ext WITH '/'.
+    " Assume AFF namespace convention
+    REPLACE ALL OCCURRENCES OF '(' IN lv_ext WITH '/'.
+    REPLACE ALL OCCURRENCES OF ')' IN lv_ext WITH '/'.
 
     " The counter part to this logic must be maintained in OBJECT_TO_FILE
     IF lv_type = to_upper( c_package_file-obj_type ).
