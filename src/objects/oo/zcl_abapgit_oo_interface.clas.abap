@@ -315,5 +315,16 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
     ELSEIF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
+
+    CLEAR:
+      rs_interface_properties-uuid,
+      rs_interface_properties-author,
+      rs_interface_properties-createdon,
+      rs_interface_properties-changedby,
+      rs_interface_properties-changedon,
+      rs_interface_properties-chgdanyby,
+      rs_interface_properties-chgdanyon,
+      rs_interface_properties-r3release,
+      rs_interface_properties-version.
   ENDMETHOD.
 ENDCLASS.

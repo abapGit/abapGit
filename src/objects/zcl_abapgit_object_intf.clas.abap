@@ -382,16 +382,6 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     ls_intf-vseointerf = mi_object_oriented_object_fct->get_interface_properties( ls_clskey ).
 
-    CLEAR: ls_intf-vseointerf-uuid,
-           ls_intf-vseointerf-author,
-           ls_intf-vseointerf-createdon,
-           ls_intf-vseointerf-changedby,
-           ls_intf-vseointerf-changedon,
-           ls_intf-vseointerf-chgdanyby,
-           ls_intf-vseointerf-chgdanyon,
-           ls_intf-vseointerf-r3release,
-           ls_intf-vseointerf-version.
-
     " Select all active translations of documentation
     " Skip main language - it was already serialized
     SELECT DISTINCT langu
