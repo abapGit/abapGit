@@ -83,6 +83,10 @@ CLASS zcl_abapgit_object_enho_wdyn IMPLEMENTATION.
         lo_wdyn->if_enh_object~unlock( ).
 
       CATCH cx_root.
+        TRY.
+            lo_wdyn->if_enh_object~unlock( ).
+          CATCH cx_sy_ref_is_initial cx_enh_mod_not_allowed ##NO_HANDLER.
+        ENDTRY.
         zcx_abapgit_exception=>raise( |error deserializing ENHO wdyn { ms_item-obj_name }| ).
     ENDTRY.
 
