@@ -433,13 +433,28 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
   METHOD zif_abapgit_oo_object_fnc~create.
 
-    DATA: lt_vseoattrib TYPE seoo_attributes_r.
-    FIELD-SYMBOLS: <lv_clsname> TYPE seoclsname.
+    DATA:
+      lt_vseoattrib TYPE seoo_attributes_r,
+      ls_class_key  TYPE seoclskey,
+      ls_properties TYPE vseoclass,
+      lt_attributes TYPE zif_abapgit_definitions=>ty_obj_attribute_tt.
 
-* same as in super class, but with "version = seoc_version_active"
+    FIELD-SYMBOLS: <lv_clsname> TYPE seoclsname.
 
     ASSIGN COMPONENT 'CLSNAME' OF STRUCTURE cg_properties TO <lv_clsname>.
     ASSERT sy-subrc = 0.
+
+    " Get existing class properties and attributes and check if the class
+    " needs to be created/updated (or is the same)
+    IF iv_check = abap_true.
+      ls_class_key-clsname = <lv_clsname>.
+      ls_properties = zif_abapgit_oo_object_fnc~get_class_properties( ls_class_key ).
+      lt_attributes = zif_abapgit_oo_object_fnc~read_attributes( <lv_clsname> ).
+
+      IF ls_properties = cg_properties AND lt_attributes = it_attributes.
+        RETURN.
+      ENDIF.
+    ENDIF.
 
     lt_vseoattrib = convert_attrib_to_vseoattrib(
                       iv_clsname    = <lv_clsname>
@@ -449,7 +464,7 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
         CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
           EXPORTING
             devclass        = iv_package
-            overwrite       = iv_overwrite
+            overwrite       = abap_true
             version         = seoc_version_active
             suppress_dialog = abap_true " Parameter missing in 702
           CHANGING
@@ -467,7 +482,7 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
         CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
           EXPORTING
             devclass        = iv_package
-            overwrite       = iv_overwrite
+            overwrite       = abap_true
             version         = seoc_version_active
           CHANGING
             class           = cg_properties
@@ -685,6 +700,20 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
     ELSEIF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
+
+    CLEAR:
+      rs_class_properties-uuid,
+      rs_class_properties-author,
+      rs_class_properties-createdon,
+      rs_class_properties-changedby,
+      rs_class_properties-changedon,
+      rs_class_properties-r3release,
+      rs_class_properties-chgdanyby,
+      rs_class_properties-chgdanyon,
+      rs_class_properties-clsfinal,
+      rs_class_properties-clsabstrct,
+      rs_class_properties-exposure,
+      rs_class_properties-version.
   ENDMETHOD.
 
 

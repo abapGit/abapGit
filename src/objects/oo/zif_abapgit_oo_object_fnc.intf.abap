@@ -21,8 +21,8 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
   METHODS:
     create
       IMPORTING
+        iv_check      TYPE abap_bool
         iv_package    TYPE devclass
-        iv_overwrite  TYPE abap_bool DEFAULT abap_true
         it_attributes TYPE zif_abapgit_definitions=>ty_obj_attribute_tt OPTIONAL
       CHANGING
         cg_properties TYPE any

@@ -157,11 +157,27 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
 
 
   METHOD zif_abapgit_oo_object_fnc~create.
-    DATA: lt_vseoattrib TYPE seoo_attributes_r.
+
+    DATA:
+      lt_vseoattrib    TYPE seoo_attributes_r,
+      ls_interface_key TYPE seoclskey,
+      ls_properties    TYPE vseointerf.
+
     FIELD-SYMBOLS: <lv_clsname> TYPE seoclsname.
 
     ASSIGN COMPONENT 'CLSNAME' OF STRUCTURE cg_properties TO <lv_clsname>.
     ASSERT sy-subrc = 0.
+
+    " Get existing interface properties and check if the interface
+    " needs to be created/updated (or is the same)
+    IF iv_check = abap_true.
+      ls_interface_key-clsname = <lv_clsname>.
+      ls_properties = zif_abapgit_oo_object_fnc~get_interface_properties( ls_interface_key ).
+
+      IF ls_properties = cg_properties.
+        RETURN.
+      ENDIF.
+    ENDIF.
 
     lt_vseoattrib = convert_attrib_to_vseoattrib(
                       iv_clsname    = <lv_clsname>
@@ -171,7 +187,7 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
         CALL FUNCTION 'SEO_INTERFACE_CREATE_COMPLETE'
           EXPORTING
             devclass        = iv_package
-            overwrite       = iv_overwrite
+            overwrite       = abap_true
             version         = seoc_version_active
             suppress_dialog = abap_true " Parameter missing in 702
           CHANGING
@@ -189,7 +205,7 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
         CALL FUNCTION 'SEO_INTERFACE_CREATE_COMPLETE'
           EXPORTING
             devclass        = iv_package
-            overwrite       = iv_overwrite
+            overwrite       = abap_true
             version         = seoc_version_active
           CHANGING
             interface       = cg_properties
@@ -206,6 +222,7 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
+
   ENDMETHOD.
 
 

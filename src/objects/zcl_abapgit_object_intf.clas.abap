@@ -185,7 +185,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
   METHOD deserialize_pre_ddic.
 
-    DATA: ls_intf   TYPE ty_intf.
+    DATA ls_intf TYPE ty_intf.
 
     IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
       ls_intf = read_json( ).
@@ -196,6 +196,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     mi_object_oriented_object_fct->create(
       EXPORTING
+        iv_check      = abap_false
         iv_package    = iv_package
       CHANGING
         cg_properties = ls_intf-vseointerf ).
@@ -527,6 +528,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       ELSE.
         mi_object_oriented_object_fct->create(
           EXPORTING
+            iv_check      = abap_true
             iv_package    = iv_package
           CHANGING
             cg_properties = ls_intf-vseointerf ).
