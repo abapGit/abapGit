@@ -22,10 +22,14 @@ INTERFACE zif_abapgit_html PUBLIC.
 
   METHODS set_title
     IMPORTING
-      iv_title TYPE string.
+      iv_title TYPE string
+    RETURNING
+      VALUE(ri_self) TYPE REF TO zif_abapgit_html.
   METHODS add
     IMPORTING
-      !ig_chunk TYPE any .
+      !ig_chunk TYPE any
+    RETURNING
+      VALUE(ri_self) TYPE REF TO zif_abapgit_html.
   METHODS render
     IMPORTING
       !iv_no_indent_jscss TYPE abap_bool OPTIONAL
@@ -43,11 +47,15 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_class TYPE string OPTIONAL
       !iv_id    TYPE string OPTIONAL
       !iv_style TYPE string OPTIONAL
-      !iv_title TYPE string OPTIONAL.
+      !iv_title TYPE string OPTIONAL
+    RETURNING
+      VALUE(ri_self) TYPE REF TO zif_abapgit_html.
   METHODS add_checkbox
     IMPORTING
       iv_id      TYPE string
-      iv_checked TYPE abap_bool OPTIONAL.
+      iv_checked TYPE abap_bool OPTIONAL
+    RETURNING
+      VALUE(ri_self) TYPE REF TO zif_abapgit_html.
   METHODS a
     IMPORTING
       !iv_txt       TYPE string
@@ -74,6 +82,41 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_name    TYPE string
       !iv_hint    TYPE string OPTIONAL
       !iv_class   TYPE string OPTIONAL
-      !iv_onclick TYPE string OPTIONAL .
+      !iv_onclick TYPE string OPTIONAL
+    RETURNING
+      VALUE(ri_self) TYPE REF TO zif_abapgit_html.
+
+  METHODS wrap
+    IMPORTING
+      !iv_tag     TYPE string
+      !iv_content TYPE string OPTIONAL
+      !ii_content TYPE REF TO zif_abapgit_html OPTIONAL
+      !iv_id      TYPE string OPTIONAL
+      !iv_class   TYPE string OPTIONAL
+      !iv_hint    TYPE string OPTIONAL
+    RETURNING
+      VALUE(ri_self) TYPE REF TO zif_abapgit_html.
+
+  METHODS td
+    IMPORTING
+      !iv_content TYPE string OPTIONAL
+      !ii_content TYPE REF TO zif_abapgit_html OPTIONAL
+      !iv_id      TYPE string OPTIONAL
+      !iv_class   TYPE string OPTIONAL
+      !iv_hint    TYPE string OPTIONAL
+      PREFERRED PARAMETER iv_content
+    RETURNING
+      VALUE(ri_self) TYPE REF TO zif_abapgit_html.
+
+  METHODS th
+    IMPORTING
+      !iv_content TYPE string OPTIONAL
+      !ii_content TYPE REF TO zif_abapgit_html OPTIONAL
+      !iv_id      TYPE string OPTIONAL
+      !iv_class   TYPE string OPTIONAL
+      !iv_hint    TYPE string OPTIONAL
+      PREFERRED PARAMETER iv_content
+    RETURNING
+      VALUE(ri_self) TYPE REF TO zif_abapgit_html.
 
 ENDINTERFACE.
