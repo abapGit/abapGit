@@ -128,6 +128,23 @@ CLASS ltcl_run_checks IMPLEMENTATION.
       exp = 'ZMIME_<>_?'
       act = ls_item-obj_name ).
 
+    zcl_abapgit_filename_logic=>file_to_object(
+     EXPORTING
+       iv_filename = 'ztest(name).w3mi.data,json'
+       iv_path     = '/src/'
+       iv_devclass = '$PACK'
+       io_dot      = mo_dot
+     IMPORTING
+       es_item     = ls_item
+       ev_is_xml   = lv_is_xml ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'W3MI'
+      act = ls_item-obj_type ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'ZTEST(NAME)'
+      act = ls_item-obj_name ).
+
     " AFF file
     zcl_abapgit_filename_logic=>file_to_object(
       EXPORTING
@@ -235,6 +252,17 @@ CLASS ltcl_run_checks IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       exp = 'zmime_%3c%3e_%3f.w3mi.jpg'
+      act = lv_filename ).
+
+    ls_item-obj_type = 'W3MI'.
+    ls_item-obj_name = 'ZTEST(NAME)'.
+
+    lv_filename = zcl_abapgit_filename_logic=>object_to_file(
+      is_item  = ls_item
+      iv_ext   = 'json' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'ztest(name).w3mi.data.json'
       act = lv_filename ).
 
     " AFF object with namespace
