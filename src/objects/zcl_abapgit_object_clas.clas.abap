@@ -181,6 +181,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     mi_object_oriented_object_fct->create(
       EXPORTING
+        iv_check      = abap_true
         iv_package    = iv_package
         it_attributes = lt_attributes
       CHANGING
@@ -279,16 +280,16 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
 
   METHOD deserialize_pre_ddic.
-    DATA: ls_vseoclass  TYPE vseoclass,
-          lt_attributes TYPE zif_abapgit_definitions=>ty_obj_attribute_tt.
+
+    DATA: ls_vseoclass TYPE vseoclass.
 
     ii_xml->read( EXPORTING iv_name = 'VSEOCLASS'
                   CHANGING  cg_data = ls_vseoclass ).
 
     mi_object_oriented_object_fct->create(
       EXPORTING
+        iv_check      = abap_false
         iv_package    = iv_package
-        it_attributes = lt_attributes
       CHANGING
         cg_properties = ls_vseoclass ).
 
@@ -633,19 +634,6 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     ENDTRY.
 
     zcl_abapgit_language=>restore_login_language( ).
-
-    CLEAR: ls_vseoclass-uuid,
-           ls_vseoclass-author,
-           ls_vseoclass-createdon,
-           ls_vseoclass-changedby,
-           ls_vseoclass-changedon,
-           ls_vseoclass-r3release,
-           ls_vseoclass-chgdanyby,
-           ls_vseoclass-chgdanyon,
-           ls_vseoclass-clsfinal,
-           ls_vseoclass-clsabstrct,
-           ls_vseoclass-exposure,
-           ls_vseoclass-version.
 
     IF mv_skip_testclass = abap_true.
       CLEAR ls_vseoclass-with_unit_tests.
