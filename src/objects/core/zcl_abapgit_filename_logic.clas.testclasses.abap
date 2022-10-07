@@ -262,7 +262,7 @@ CLASS ltcl_run_checks IMPLEMENTATION.
       iv_ext   = 'json' ).
 
     cl_abap_unit_assert=>assert_equals(
-      exp = 'ztest(name).w3mi.data.json'
+      exp = 'ztest(name).w3mi.json'
       act = lv_filename ).
 
     " AFF object with namespace
