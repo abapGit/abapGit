@@ -63,6 +63,7 @@ span.separator {
 .center       { text-align:center; }
 .paddings     { padding: 0.5em 0.5em; }
 .pad-sides    { padding-left: 0.3em; padding-right: 0.3em; }
+.pad-1em      { padding: 1em 1em; }
 .margin-v5    { margin-top: 0.5em; margin-bottom: 0.5em; }
 .margin-v1    { margin-top: 1em; margin-bottom: 1em; }
 .indent5em    { padding-left: 0.5em; }
@@ -1338,4 +1339,17 @@ settings_tab tr:first-child td { border-top: 0px; }
 
 .sticky_full_width + .not_sticky {
   padding-top: 50px;
+}
+
+/* Light toolbar or blocks with separators */
+.toolbar-light a {
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+  border-left: 1px solid;
+  border-left-color: #ccc;
+}
+
+.toolbar-light a:first-child {
+  padding-left: 0;
+  border-left: none;
 }
