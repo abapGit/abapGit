@@ -1059,7 +1059,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
   METHOD render_repo_url.
 
-    ri_html = zcl_abapgit_html=>new( )->add_a(
+    ri_html = zcl_abapgit_html=>create( )->add_a(
       iv_txt   = shorten_repo_url( iv_url )
       iv_title = iv_url
       iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ iv_url }| ).
