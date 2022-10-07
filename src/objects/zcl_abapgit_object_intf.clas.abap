@@ -28,7 +28,8 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
         zcx_abapgit_exception .
     METHODS deserialize_docu
       IMPORTING
-        is_docu TYPE  ty_docu
+        !ii_xml  TYPE REF TO zif_abapgit_xml_input
+        !is_docu TYPE ty_docu
       RAISING
         zcx_abapgit_exception .
     METHODS serialize_docu
@@ -59,6 +60,21 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
+
+    CONSTANTS:
+      BEGIN OF c_longtext_name,
+        attributes TYPE string VALUE 'LONGTEXTS_IA',
+        methods    TYPE string VALUE 'LONGTEXTS_IO',
+        events     TYPE string VALUE 'LONGTEXTS_IE',
+      END OF c_longtext_name.
+
+    CONSTANTS:
+      BEGIN OF c_longtext_id,
+        interface  TYPE dokil-id VALUE 'IF',
+        attributes TYPE dokil-id VALUE 'IA',
+        methods    TYPE dokil-id VALUE 'IO',
+        events     TYPE dokil-id VALUE 'IE',
+      END OF c_longtext_id.
 
     DATA mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc .
 
@@ -128,7 +144,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     IF lines( is_docu-lines ) = 0.
       mi_object_oriented_object_fct->delete_documentation(
-        iv_id          = 'IF'
+        iv_id          = c_longtext_id-interface
         iv_object_name = lv_object
         iv_language    = mv_language ).
       RETURN.
@@ -136,18 +152,33 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     mi_object_oriented_object_fct->create_documentation(
       it_lines       = is_docu-lines
-      iv_id          = 'IF'
+      iv_id          = c_longtext_id-interface
       iv_object_name = lv_object
       iv_language    = mv_language ).
 
     LOOP AT is_docu-i18n_lines INTO ls_i18n_lines.
       mi_object_oriented_object_fct->create_documentation(
         it_lines         = ls_i18n_lines-lines
-        iv_id            = 'IF'
+        iv_id            = c_longtext_id-interface
         iv_object_name   = lv_object
         iv_language      = ls_i18n_lines-language
         iv_no_masterlang = abap_true ).
     ENDLOOP.
+
+    deserialize_longtexts(
+      ii_xml           = ii_xml
+      iv_longtext_name = c_longtext_name-attributes
+      iv_longtext_id   = c_longtext_id-attributes ).
+
+    deserialize_longtexts(
+      ii_xml           = ii_xml
+      iv_longtext_name = c_longtext_name-methods
+      iv_longtext_id   = c_longtext_id-methods ).
+
+    deserialize_longtexts(
+      ii_xml           = ii_xml
+      iv_longtext_name = c_longtext_name-events
+      iv_longtext_id   = c_longtext_id-events ).
 
   ENDMETHOD.
 
@@ -307,7 +338,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     lv_object = iv_clsname.
 
     lt_lines = mi_object_oriented_object_fct->read_documentation(
-      iv_id          = 'IF'
+      iv_id          = c_longtext_id-interface
       iv_object_name = lv_object
       iv_language    = mv_language ).
 
@@ -320,7 +351,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     LOOP AT it_langu_additional INTO lv_langu.
 
       lt_lines = mi_object_oriented_object_fct->read_documentation(
-        iv_id          = 'IF'
+        iv_id          = c_longtext_id-interface
         iv_object_name = lv_object
         iv_language    = lv_langu ).
 
@@ -365,7 +396,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     SELECT DISTINCT langu
       INTO TABLE lt_langu_additional
       FROM dokhl
-      WHERE id     = 'IF'
+      WHERE id     = c_longtext_id-interface
         AND object = ls_clskey-clsname
         AND langu  <> mv_language.
 
@@ -376,7 +407,6 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     ls_intf-description = serialize_descr( ii_xml     = io_xml
                                            iv_clsname = ls_clskey-clsname ).
-
     ls_intf-description_sub = serialize_descr_sub( ii_xml     = io_xml
                                                    iv_clsname = ls_clskey-clsname ).
 
@@ -397,6 +427,22 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
                    ig_data = ls_intf-docu-lines ).
       io_xml->add( iv_name = 'I18N_LINES'
                    ig_data = ls_intf-docu-i18n_lines ).
+
+      serialize_longtexts(
+        ii_xml           = io_xml
+        iv_longtext_name = c_longtext_name-attributes
+        iv_longtext_id   = c_longtext_id-attributes ).
+
+      serialize_longtexts(
+        ii_xml           = io_xml
+        iv_longtext_name = c_longtext_name-methods
+        iv_longtext_id   = c_longtext_id-methods ).
+
+      serialize_longtexts(
+        ii_xml           = io_xml
+        iv_longtext_name = c_longtext_name-events
+        iv_longtext_id   = c_longtext_id-events ).
+
     ENDIF.
 
   ENDMETHOD.
@@ -495,7 +541,9 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
         deserialize_descr_sub( it_description = ls_intf-description_sub ).
 
-        deserialize_docu( is_docu = ls_intf-docu ).
+        deserialize_docu(
+          is_docu = ls_intf-docu
+          ii_xml  = io_xml ).
 
         mi_object_oriented_object_fct->add_to_activation_list( ms_item ).
       ENDIF.

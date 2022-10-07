@@ -1,7 +1,6 @@
 CLASS ltcl_html DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
 
   PRIVATE SECTION.
-    CONSTANTS c_lf LIKE cl_abap_char_utilities=>newline VALUE cl_abap_char_utilities=>newline.
     DATA mo_html TYPE REF TO zif_abapgit_html.
 
     METHODS:
@@ -129,8 +128,8 @@ CLASS ltcl_html IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = mo_html->render( )
       exp =
-        '<td>' && c_lf &&
-        '  Hello' && c_lf &&
+        '<td>' && cl_abap_char_utilities=>newline &&
+        '  Hello' && cl_abap_char_utilities=>newline &&
         '</td>' ).
 
   ENDMETHOD.
@@ -141,8 +140,8 @@ CLASS ltcl_html IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = mo_html->render( )
       exp =
-        '<th>' && c_lf &&
-        '  Hello' && c_lf &&
+        '<th>' && cl_abap_char_utilities=>newline &&
+        '  Hello' && cl_abap_char_utilities=>newline &&
         '</th>' ).
 
   ENDMETHOD.
@@ -151,13 +150,13 @@ CLASS ltcl_html IMPLEMENTATION.
 
     mo_html->wrap(
       iv_tag     = 'td'
-      ii_content = zcl_abapgit_html=>new( )->add( 'Hello' ) ).
+      ii_content = zcl_abapgit_html=>create( )->add( 'Hello' ) ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_html->render( )
       exp =
-        '<td>' && c_lf &&
-        '  Hello' && c_lf &&
+        '<td>' && cl_abap_char_utilities=>newline &&
+        '  Hello' && cl_abap_char_utilities=>newline &&
         '</td>' ).
 
   ENDMETHOD.
@@ -178,12 +177,12 @@ CLASS ltcl_html IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = mo_html->render( )
       exp =
-        '<td></td>' && c_lf &&
-        '<td>' && c_lf &&
-        '  Hello' && c_lf &&
-        '</td>' && c_lf &&
-        '<td id="id" class="class" title="hint">' && c_lf &&
-        '  Hello' && c_lf &&
+        '<td></td>' && cl_abap_char_utilities=>newline &&
+        '<td>' && cl_abap_char_utilities=>newline &&
+        '  Hello' && cl_abap_char_utilities=>newline &&
+        '</td>' && cl_abap_char_utilities=>newline &&
+        '<td id="id" class="class" title="hint">' && cl_abap_char_utilities=>newline &&
+        '  Hello' && cl_abap_char_utilities=>newline &&
         '</td>' ).
 
   ENDMETHOD.

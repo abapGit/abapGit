@@ -119,7 +119,13 @@ CLASS ltcl_version_parse IMPLEMENTATION.
     DATA: lt_source TYPE string_table.
 
     IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true.
-      cl_abap_unit_assert=>skip( 'Test method not supported in standalone version' ).
+      TRY.
+          CALL METHOD cl_abap_unit_assert=>('SKIP')
+            EXPORTING
+              msg = 'Test method not supported in standalone version'.
+        CATCH cx_sy_dyn_call_illegal_method. " NW <= 752
+          RETURN.
+      ENDTRY.
     ENDIF.
 
     READ REPORT 'ZIF_ABAPGIT_VERSION===========IU' INTO lt_source STATE 'A'.
