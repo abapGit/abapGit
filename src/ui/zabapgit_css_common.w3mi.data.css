@@ -1032,24 +1032,14 @@ table.commit tr .title {
   text-align: left;
 }
 .repo-overview thead tr {
-  border-bottom: #ddd 1px solid;
+  border-bottom: 1px solid;
 }
 .repo-overview tfoot tr {
-  border-top: #ddd 1px solid;
+  border-top: 1px solid;
 }
 .repo-overview tr.favorite .icon-star {
   color: #5e8dc9 !important;
 }
-
-/*
-.repo-overview th.package {
-    width: 45ch;
-}
-*/
-
-/*.repo-overview tbody tr { height: 2em; }
-.repo-overview tbody td { height: 2em; }
-*/
 .repo-overview td,
 .repo-overview th { 
   padding: 6px 6px; /* maybe use height ? */

@@ -360,16 +360,15 @@ div.debug_container {
 
 /* Repo overview */
 
-.repo-overview { background-color: white; }
+.repo-overview { background-color: var(--theme-container-background-color); }
 .repo-overview thead tr,
 .repo-overview tfoot tr {
-  border-color: #ddd;
+  border-color: var(--theme-container-border-color);
 }
 .repo-overview a.remote_repo { color: var(--theme-primary-font-color-reduced); }
 .repo-overview a.remote_repo:hover { color: var(--theme-link-color); }
 .repo-overview tbody tr:hover td {
   background-color: hsla(214, 50%, 50%, 0.05);
-  /*background-color: rgba(0, 0, 0, 0.075);*/
 }
 .repo-overview tbody tr.selected {
   background-color: hsla(214, 50%, 75%, 0.33);
