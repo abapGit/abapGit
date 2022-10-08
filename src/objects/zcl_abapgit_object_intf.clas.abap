@@ -185,7 +185,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
   METHOD deserialize_pre_ddic.
 
-    DATA: ls_intf   TYPE ty_intf.
+    DATA ls_intf TYPE ty_intf.
 
     IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
       ls_intf = read_json( ).
@@ -196,6 +196,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     mi_object_oriented_object_fct->create(
       EXPORTING
+        iv_check      = abap_false
         iv_package    = iv_package
       CHANGING
         cg_properties = ls_intf-vseointerf ).
@@ -381,16 +382,6 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     ls_intf-vseointerf = mi_object_oriented_object_fct->get_interface_properties( ls_clskey ).
 
-    CLEAR: ls_intf-vseointerf-uuid,
-           ls_intf-vseointerf-author,
-           ls_intf-vseointerf-createdon,
-           ls_intf-vseointerf-changedby,
-           ls_intf-vseointerf-changedon,
-           ls_intf-vseointerf-chgdanyby,
-           ls_intf-vseointerf-chgdanyon,
-           ls_intf-vseointerf-r3release,
-           ls_intf-vseointerf-version.
-
     " Select all active translations of documentation
     " Skip main language - it was already serialized
     SELECT DISTINCT langu
@@ -527,6 +518,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       ELSE.
         mi_object_oriented_object_fct->create(
           EXPORTING
+            iv_check      = abap_true
             iv_package    = iv_package
           CHANGING
             cg_properties = ls_intf-vseointerf ).
