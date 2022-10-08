@@ -23,6 +23,11 @@ CLASS zcl_abapgit_gui_component DEFINITION
         VALUE(ri_gui_services) TYPE REF TO zif_abapgit_gui_services
       RAISING
         zcx_abapgit_exception.
+    METHODS register_hotkeys
+      IMPORTING
+        ii_hotkey_provider TYPE REF TO zif_abapgit_gui_hotkeys OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
 
   PRIVATE SECTION.
     DATA mi_gui_services TYPE REF TO zif_abapgit_gui_services.
@@ -45,5 +50,24 @@ CLASS ZCL_ABAPGIT_GUI_COMPONENT IMPLEMENTATION.
     gui_services( )->get_html_parts( )->add_part(
       iv_collection = c_html_parts-scripts
       ii_part       = ii_part ).
+  ENDMETHOD.
+
+
+  METHOD register_hotkeys.
+
+    DATA li_hotkey_provider TYPE REF TO zif_abapgit_gui_hotkeys.
+
+    IF ii_hotkey_provider IS BOUND.
+      li_hotkey_provider = ii_hotkey_provider.
+    ELSE.
+      TRY.
+          li_hotkey_provider ?= me.
+        CATCH cx_root.
+          RETURN.
+      ENDTRY.
+    ENDIF.
+
+    gui_services( )->get_hotkeys_ctl( )->register_hotkeys( li_hotkey_provider->get_hotkey_actions( ) ).
+
   ENDMETHOD.
 ENDCLASS.
