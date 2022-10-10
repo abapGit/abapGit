@@ -6,8 +6,7 @@ CLASS zcl_abapgit_aff_registry DEFINITION
   PUBLIC SECTION.
     INTERFACES:
       zif_abapgit_aff_registry.
-    CLASS-METHODS:
-      class_constructor.
+
     METHODS:
       constructor
         IMPORTING
@@ -37,16 +36,6 @@ ENDCLASS.
 
 CLASS zcl_abapgit_aff_registry IMPLEMENTATION.
 
-  METHOD class_constructor.
-    register( iv_obj_type = 'CHKC' ).
-    register( iv_obj_type = 'CHKO' ).
-    register( iv_obj_type = 'CHKV' ).
-    register( iv_obj_type = 'EVTB' ).
-    register( iv_obj_type = 'INTF'
-              iv_experimental = abap_true ).
-    register( iv_obj_type = 'SMBC' ).
-  ENDMETHOD.
-
   METHOD constructor.
     IF io_settings IS SUPPLIED.
       mo_settings = io_settings.
@@ -56,7 +45,18 @@ CLASS zcl_abapgit_aff_registry IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_aff_registry~is_supported_object_type.
+
     DATA ls_registry_entry TYPE ty_registry_entry.
+
+    IF gt_registry IS INITIAL.
+      register( iv_obj_type = 'CHKC' ).
+      register( iv_obj_type = 'CHKO' ).
+      register( iv_obj_type = 'CHKV' ).
+      register( iv_obj_type = 'EVTB' ).
+      register( iv_obj_type = 'INTF'
+                iv_experimental = abap_true ).
+      register( iv_obj_type = 'SMBC' ).
+    ENDIF.
 
     READ TABLE gt_registry WITH TABLE KEY obj_type = iv_obj_type INTO ls_registry_entry.
     IF sy-subrc = 0 AND ls_registry_entry-experimental = abap_false.

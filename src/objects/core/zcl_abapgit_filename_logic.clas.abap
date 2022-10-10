@@ -19,8 +19,7 @@ CLASS zcl_abapgit_filename_logic DEFINITION
         extension TYPE c LENGTH 4 VALUE 'json',
       END OF c_json_file.
 
-    CLASS-METHODS:
-      class_constructor.
+
     CLASS-METHODS file_to_object
       IMPORTING
         !iv_filename TYPE string
@@ -67,6 +66,7 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
     REPLACE ALL OCCURRENCES OF '#' IN lv_type WITH '/'.
     REPLACE ALL OCCURRENCES OF '#' IN lv_ext WITH '/'.
     " Assume AFF namespace convention
+    CREATE OBJECT go_aff_registry TYPE zcl_abapgit_aff_registry.
     IF go_aff_registry->is_supported_object_type( lv_type ) = abap_true.
       REPLACE ALL OCCURRENCES OF '(' IN lv_name WITH '/'.
       REPLACE ALL OCCURRENCES OF ')' IN lv_name WITH '/'.
@@ -133,6 +133,7 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
     ENDIF.
 
     " handle namespaces
+    CREATE OBJECT go_aff_registry TYPE zcl_abapgit_aff_registry.
     IF go_aff_registry->is_supported_object_type( is_item-obj_type ) = abap_true.
       FIND ALL OCCURRENCES OF `/` IN rv_filename MATCH COUNT lv_nb_of_slash.
       IF lv_nb_of_slash = 2.
@@ -144,10 +145,6 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
     ENDIF.
 
     TRANSLATE rv_filename TO LOWER CASE.
-  ENDMETHOD.
-
-  METHOD class_constructor.
-    CREATE OBJECT go_aff_registry TYPE zcl_abapgit_aff_registry.
   ENDMETHOD.
 
 ENDCLASS.
