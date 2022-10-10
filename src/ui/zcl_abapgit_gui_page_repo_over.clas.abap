@@ -579,9 +579,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       lv_fav_tr_class = ''.
     ENDIF.
 
-    ii_html->add( |<tr{
-      lv_fav_tr_class } data-key="{
-      is_repo-key }" data-offline="{ is_repo-type }">| ).
+    ii_html->add( |<tr{ lv_fav_tr_class } data-key="{ is_repo-key }" data-offline="{ is_repo-type }">| ).
 
     " Favorite
     lv_favorite_icon = ii_html->icon(
