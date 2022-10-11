@@ -122,7 +122,7 @@ CLASS zcl_abapgit_object_drul IMPLEMENTATION.
     mv_dependency_rule_key = ms_item-obj_name.
 
     TRY.
-        CREATE DATA mr_dependency_rule TYPE ('CL_DRUL_WB_OBJECT_DATA=>TY_OBJECT_DATA').
+        CREATE DATA mr_dependency_rule TYPE ('CL_BLUE_SOURCE_OBJECT_DATA=>TY_OBJECT_DATA').
         CREATE OBJECT mi_persistence TYPE ('CL_DRUL_WB_OBJECT_PERSIST').
 
       CATCH cx_sy_create_error.
