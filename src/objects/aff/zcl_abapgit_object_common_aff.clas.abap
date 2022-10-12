@@ -134,6 +134,8 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           lr_messages             TYPE REF TO data,
           lv_json_as_xstring      TYPE xstring,
           lx_exception            TYPE REF TO cx_root,
+          lv_file_name            TYPE string,
+          lo_file_name_mapper     TYPE REF TO object,
           lv_name                 TYPE c LENGTH 120.
 
     FIELD-SYMBOLS: <ls_intf_aff_obj>         TYPE any,
@@ -161,11 +163,6 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           RECEIVING
             result      = lo_object_handler.
 
-        CREATE OBJECT lo_object_json_file TYPE ('CL_AFF_FILE')
-          EXPORTING
-            name    = |{ to_lower( lv_name ) }.{ to_lower( ms_item-obj_type ) }.json|
-            content = lv_json_as_xstring.
-
         CREATE OBJECT lo_object_aff TYPE ('CL_AFF_OBJ')
           EXPORTING
             package = ms_item-devclass
@@ -180,11 +177,26 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           EXPORTING
             object = <ls_intf_aff_obj>.
 
+        CALL METHOD ('CL_AFF_FILE_NAME_MAPPER')=>for_json
+          RECEIVING
+            result = lo_file_name_mapper.
+
+        CALL METHOD lo_file_name_mapper->('IF_AFF_FILE_NAME_MAPPER~GET_FILE_NAME_FROM_OBJECT')
+          EXPORTING
+            object = <ls_intf_aff_obj>
+          RECEIVING
+            result = lv_file_name.
+
         CREATE OBJECT lo_settings TYPE ('CL_AFF_SETTINGS_DESERIALIZE')
           EXPORTING
             version  = 'A'
             language = mv_language
             user     = sy-uname.
+
+        CREATE OBJECT lo_object_json_file TYPE ('CL_AFF_FILE')
+          EXPORTING
+            name    = lv_file_name
+            content = lv_json_as_xstring.
 
         CREATE DATA lr_intf_aff_file TYPE REF TO ('IF_AFF_FILE').
         ASSIGN lr_intf_aff_file->* TO <ls_intf_aff_file>.
@@ -294,7 +306,9 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
             result = rv_bool.
 
       CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise_with_text( lx_error ).
+        " return false instead of raising exception, because abapGit assumes
+        " that raising exception = existing object
+        rv_bool = abap_false.
     ENDTRY.
 
   ENDMETHOD.
@@ -354,6 +368,8 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           lv_json_as_xstring   TYPE xstring,
           lx_exception         TYPE REF TO cx_root,
           lv_name              TYPE c LENGTH 120,
+          lv_file_name         TYPE string,
+          lo_file_name_mapper  TYPE REF TO object,
           lv_is_deletion       TYPE abap_bool VALUE abap_false,
           lv_dummy             TYPE string.
 
@@ -431,9 +447,19 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           ENDIF.
         ENDLOOP.
 
+        CALL METHOD ('CL_AFF_FILE_NAME_MAPPER')=>for_json
+          RECEIVING
+            result = lo_file_name_mapper.
+
+        CALL METHOD lo_file_name_mapper->('IF_AFF_FILE_NAME_MAPPER~GET_FILE_NAME_FROM_OBJECT')
+          EXPORTING
+            object = <ls_intf_aff_obj>
+          RECEIVING
+            result = lv_file_name.
+
         CALL METHOD lo_files_container->('IF_AFF_FILES_CONTAINER~GET_FILE')
           EXPORTING
-            name   = |{ to_lower( lv_name ) }.{ to_lower( ms_item-obj_type ) }.json|
+            name   = lv_file_name
           RECEIVING
             result = lo_object_json_file.
 

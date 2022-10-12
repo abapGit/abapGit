@@ -122,7 +122,7 @@ CLASS zcl_abapgit_object_drul IMPLEMENTATION.
     mv_dependency_rule_key = ms_item-obj_name.
 
     TRY.
-        CREATE DATA mr_dependency_rule TYPE ('CL_DRUL_WB_OBJECT_DATA=>TY_OBJECT_DATA').
+        CREATE DATA mr_dependency_rule TYPE ('CL_BLUE_SOURCE_OBJECT_DATA=>TY_OBJECT_DATA').
         CREATE OBJECT mi_persistence TYPE ('CL_DRUL_WB_OBJECT_PERSIST').
 
       CATCH cx_sy_create_error.
@@ -147,7 +147,7 @@ CLASS zcl_abapgit_object_drul IMPLEMENTATION.
 
     li_wb_object_operator = get_wb_object_operator( ).
 
-    CREATE DATA lr_dependency_rule_old TYPE ('CL_DRUL_WB_OBJECT_DATA=>TY_OBJECT_DATA').
+    CREATE DATA lr_dependency_rule_old TYPE ('CL_BLUE_SOURCE_OBJECT_DATA=>TY_OBJECT_DATA').
     ASSIGN lr_dependency_rule_old->* TO <ls_dependency_rule_old>.
     ASSERT sy-subrc = 0.
 
@@ -273,7 +273,7 @@ CLASS zcl_abapgit_object_drul IMPLEMENTATION.
     li_wb_object_operator = get_wb_object_operator( ).
 
     TRY.
-        CREATE OBJECT li_object_data_model TYPE ('CL_DRUL_WB_OBJECT_DATA').
+        CREATE OBJECT li_object_data_model TYPE ('CL_BLUE_SOURCE_OBJECT_DATA').
 
         ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <ls_dependency_rule>
                TO <lv_source>.

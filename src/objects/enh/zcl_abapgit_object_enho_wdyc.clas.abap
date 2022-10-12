@@ -67,6 +67,10 @@ CLASS zcl_abapgit_object_enho_wdyc IMPLEMENTATION.
         lo_wdyconf->if_enh_object~save( run_dark = abap_true ).
         lo_wdyconf->if_enh_object~unlock( ).
       CATCH cx_enh_root cx_static_check.
+        TRY.
+            lo_wdyconf->if_enh_object~unlock( ).
+          CATCH cx_sy_ref_is_initial cx_enh_mod_not_allowed ##NO_HANDLER.
+        ENDTRY.
         zcx_abapgit_exception=>raise( 'error deserializing ENHO wdyconf' ).
     ENDTRY.
   ENDMETHOD.

@@ -20,6 +20,8 @@ CLASS zcl_abapgit_object_xinx DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     CONSTANTS:
       c_objtype_extension_index   TYPE trobjtype VALUE 'XINX'.
 
+    CONSTANTS c_longtext_id_xinx TYPE dokil-id VALUE 'XI'.
+
     DATA:
       mv_name TYPE ddobjname,
       mv_id   TYPE ddobjectid.
@@ -288,6 +290,9 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Cannot activate extension index { mv_id } of table { mv_name }| ).
     ENDIF.
 
+    deserialize_longtexts( ii_xml         = io_xml
+                           iv_longtext_id = c_longtext_id_xinx ).
+
   ENDMETHOD.
 
 
@@ -367,6 +372,9 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
 
     io_xml->add( iv_name = 'XINX'
                  ig_data = ls_extension_index ).
+
+    serialize_longtexts( ii_xml         = io_xml
+                         iv_longtext_id = c_longtext_id_xinx ).
 
   ENDMETHOD.
 ENDCLASS.
