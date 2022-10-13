@@ -188,8 +188,8 @@ div.log .icon { padding-right: 6px; }
 
 /* REPOSITORY */
 div.repo {
-  margin-top: 3px;
-  margin-bottom: 3px;
+/*  margin-top: 3px;*/
+/*  margin-bottom: 3px;*/
   padding: 0.5em 1em 0.5em 1em;
   position: relative;
 }
@@ -1024,15 +1024,25 @@ table.commit tr .title {
 
 /* Repo overview */
 .repo-overview { 
-  font-size: smaller;
-  padding: 0.5em;
-  overflow-x: auto;
+  /*font-size: smaller;*/
+  padding: 0.5em 0.7em;
+  /*overflow-x: auto;*/
+  /*overflow-x: hidden;*/
+}
+.repo-overview-toolbar {
+  padding: 1em;
+  /*margin-top: -0.5em;*/
 }
 .repo-overview th {
   text-align: left;
+  font-weight: normal;
+}
+.repo-overview table {
+  border: 1px solid;
 }
 .repo-overview thead tr {
   border-bottom: 1px solid;
+  line-height: 1.5;
 }
 .repo-overview tfoot tr {
   border-top: 1px solid;
@@ -1046,13 +1056,14 @@ table.commit tr .title {
 }
 .repo-overview .ro-detail { display: none; }
 .repo-overview .ro-go a {
-  font-size: 150%;
+  /*font-size: 150%;*/
   padding: 0px 0.15em;
 }
 .repo-overview .ro-go a:hover { 
   color: #ff721e;
   text-decoration: none;
 }
+
 
 /* Branch Overview Page */
 .gitGraph-scrollWrapper, .gitGraph-Wrapper{

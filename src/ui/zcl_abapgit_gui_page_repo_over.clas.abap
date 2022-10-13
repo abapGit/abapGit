@@ -406,7 +406,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
   METHOD render_header_bar.
 
-    ii_html->add( |<div class="pad-1em" id="repo-overview-toolbar">| ).
+    ii_html->add( |<div class="repo-overview-toolbar">| ).
     ii_html->add( render_filter_bar( ) ).
     ii_html->add( render_action_toolbar( ) ).
     ii_html->add( |</div>| ).
@@ -416,7 +416,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
   METHOD render_repo_list.
 
-    ii_html->add( |<div class="repo-overview">| ).
     ii_html->add( |<table>| ).
 
     render_table_header( ii_html ).
@@ -426,7 +425,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     render_table_footer( ii_html ).
 
     ii_html->add( |</table>| ).
-    ii_html->add( |</div>| ).
 
   ENDMETHOD.
 
@@ -823,11 +821,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    render_header_bar( ri_html ).
     zcl_abapgit_exit=>get_instance( )->wall_message_list( ri_html ).
+
+    ri_html->add( |<div class="repo-overview">| ).
+    render_header_bar( ri_html ).
     render_repo_list(
       ii_html     = ri_html
       it_overview = lt_overview ).
+    ri_html->add( |</div>| ).
 
     gui_services( )->register_event_handler( me ).
     register_deferred_script( render_scripts( ) ).
