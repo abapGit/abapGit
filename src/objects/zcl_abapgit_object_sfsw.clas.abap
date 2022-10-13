@@ -5,6 +5,8 @@ CLASS zcl_abapgit_object_sfsw DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PROTECTED SECTION.
   PRIVATE SECTION.
+    CONSTANTS c_longtext_id_sfsw TYPE dokil-id VALUE 'SW'.
+
     METHODS:
       get
         RETURNING VALUE(ro_switch) TYPE REF TO cl_sfw_sw
@@ -171,6 +173,9 @@ CLASS zcl_abapgit_object_sfsw IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error in CL_SFW_SW->SAVE_ALL' ).
     ENDIF.
 
+    deserialize_longtexts( ii_xml         = io_xml
+                           iv_longtext_id = c_longtext_id_sfsw ).
+
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.
@@ -271,6 +276,9 @@ CLASS zcl_abapgit_object_sfsw IMPLEMENTATION.
                  iv_name = 'PARENT_BF' ).
     io_xml->add( ig_data = lt_conflicts
                  iv_name = 'CONFLICTS' ).
+
+    serialize_longtexts( ii_xml         = io_xml
+                         iv_longtext_id = c_longtext_id_sfsw ).
 
   ENDMETHOD.
 ENDCLASS.

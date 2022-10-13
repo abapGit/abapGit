@@ -82,6 +82,24 @@ CLASS zcl_abapgit_object_clas DEFINITION
           zcx_abapgit_exception.
 
   PRIVATE SECTION.
+
+    CONSTANTS:
+      BEGIN OF c_longtext_name,
+        attributes TYPE string VALUE 'LONGTEXTS_CA',
+        methods    TYPE string VALUE 'LONGTEXTS_CO',
+        events     TYPE string VALUE 'LONGTEXTS_CE',
+        types      TYPE string VALUE 'LONGTEXTS_CT',
+      END OF c_longtext_name.
+
+    CONSTANTS:
+      BEGIN OF c_longtext_id,
+        class      TYPE dokil-id VALUE 'CL',
+        attributes TYPE dokil-id VALUE 'CA',
+        methods    TYPE dokil-id VALUE 'CO',
+        events     TYPE dokil-id VALUE 'CE',
+        types      TYPE dokil-id VALUE 'CT',
+      END OF c_longtext_id.
+
     METHODS deserialize_pre_ddic
       IMPORTING
         ii_xml     TYPE REF TO zif_abapgit_xml_input
@@ -163,6 +181,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     mi_object_oriented_object_fct->create(
       EXPORTING
+        iv_check      = abap_true
         iv_package    = iv_package
         it_attributes = lt_attributes
       CHANGING
@@ -213,7 +232,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     IF lines( lt_lines ) = 0.
       mi_object_oriented_object_fct->delete_documentation(
-        iv_id          = 'CL'
+        iv_id          = c_longtext_id-class
         iv_object_name = lv_object
         iv_language    = mv_language ).
       RETURN.
@@ -221,7 +240,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     mi_object_oriented_object_fct->create_documentation(
       it_lines       = lt_lines
-      iv_id          = 'CL'
+      iv_id          = c_longtext_id-class
       iv_object_name = lv_object
       iv_language    = mv_language ).
 
@@ -231,26 +250,46 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     LOOP AT lt_i18n_lines INTO ls_i18n_lines.
       mi_object_oriented_object_fct->create_documentation(
         it_lines         = ls_i18n_lines-lines
-        iv_id            = 'CL'
+        iv_id            = c_longtext_id-class
         iv_object_name   = lv_object
         iv_language      = ls_i18n_lines-language
         iv_no_masterlang = abap_true ).
     ENDLOOP.
 
+    deserialize_longtexts(
+      ii_xml           = ii_xml
+      iv_longtext_name = c_longtext_name-attributes
+      iv_longtext_id   = c_longtext_id-attributes ).
+
+    deserialize_longtexts(
+      ii_xml           = ii_xml
+      iv_longtext_name = c_longtext_name-methods
+      iv_longtext_id   = c_longtext_id-methods ).
+
+    deserialize_longtexts(
+      ii_xml           = ii_xml
+      iv_longtext_name = c_longtext_name-events
+      iv_longtext_id   = c_longtext_id-events ).
+
+    deserialize_longtexts(
+      ii_xml           = ii_xml
+      iv_longtext_name = c_longtext_name-types
+      iv_longtext_id   = c_longtext_id-types ).
+
   ENDMETHOD.
 
 
   METHOD deserialize_pre_ddic.
-    DATA: ls_vseoclass  TYPE vseoclass,
-          lt_attributes TYPE zif_abapgit_definitions=>ty_obj_attribute_tt.
+
+    DATA: ls_vseoclass TYPE vseoclass.
 
     ii_xml->read( EXPORTING iv_name = 'VSEOCLASS'
                   CHANGING  cg_data = ls_vseoclass ).
 
     mi_object_oriented_object_fct->create(
       EXPORTING
+        iv_check      = abap_false
         iv_package    = iv_package
-        it_attributes = lt_attributes
       CHANGING
         cg_properties = ls_vseoclass ).
 
@@ -447,7 +486,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     lv_object = iv_clsname.
 
     lt_lines = mi_object_oriented_object_fct->read_documentation(
-      iv_id          = 'CL'
+      iv_id          = c_longtext_id-class
       iv_object_name = lv_object
       iv_language    = mv_language ).
     IF lines( lt_lines ) > 0.
@@ -462,7 +501,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     LOOP AT it_langu_additional INTO lv_langu.
 
       lt_lines = mi_object_oriented_object_fct->read_documentation(
-        iv_id          = 'CL'
+        iv_id          = c_longtext_id-class
         iv_object_name = lv_object
         iv_language    = lv_langu ).
 
@@ -479,6 +518,26 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       ii_xml->add( iv_name = 'I18N_LINES'
                    ig_data = lt_i18n_lines ).
     ENDIF.
+
+    serialize_longtexts(
+      ii_xml           = ii_xml
+      iv_longtext_name = c_longtext_name-attributes
+      iv_longtext_id   = c_longtext_id-attributes ).
+
+    serialize_longtexts(
+      ii_xml           = ii_xml
+      iv_longtext_name = c_longtext_name-methods
+      iv_longtext_id   = c_longtext_id-methods ).
+
+    serialize_longtexts(
+      ii_xml           = ii_xml
+      iv_longtext_name = c_longtext_name-events
+      iv_longtext_id   = c_longtext_id-events ).
+
+    serialize_longtexts(
+      ii_xml           = ii_xml
+      iv_longtext_name = c_longtext_name-types
+      iv_longtext_id   = c_longtext_id-types ).
 
   ENDMETHOD.
 
@@ -575,19 +634,6 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     ENDTRY.
 
     zcl_abapgit_language=>restore_login_language( ).
-
-    CLEAR: ls_vseoclass-uuid,
-           ls_vseoclass-author,
-           ls_vseoclass-createdon,
-           ls_vseoclass-changedby,
-           ls_vseoclass-changedon,
-           ls_vseoclass-r3release,
-           ls_vseoclass-chgdanyby,
-           ls_vseoclass-chgdanyon,
-           ls_vseoclass-clsfinal,
-           ls_vseoclass-clsabstrct,
-           ls_vseoclass-exposure,
-           ls_vseoclass-version.
 
     IF mv_skip_testclass = abap_true.
       CLEAR ls_vseoclass-with_unit_tests.
