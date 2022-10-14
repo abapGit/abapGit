@@ -216,8 +216,8 @@
       {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "syntax_error", "note": "SCAN-ABAP-SOURCE"},
       {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "class_data", "note": "SCAN-ABAP-SOURCE"},
       {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "ampersand", "note": "SCAN-ABAP-SOURCE"},
-      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "constant_reference", "note": "Void type: STOKES"},
-      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "missing_constant",   "note": "Void type: STOKES"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "constant_reference", "note": "Void type: SSTRUC_TAB"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "missing_constant",   "note": "Void type: SSTRUC_TAB"},
 
       {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_git_user",   "note": "skip, this changes database"},
       {"object": "ZCL_ABAPGIT_PERSISTENCE_USER", "class": "ltcl_user", "method": "set_get_repo_show",  "note": "skip, this changes database"},
