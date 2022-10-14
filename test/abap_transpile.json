@@ -18,7 +18,7 @@
     "zcl_abapgit_i",
     "zcl_abapgit_l",
     "zcl_abapgit_n",
-    "zcl_abapgit_object_intf Void type: TLINETAB",
+    "zcl_abapgit_object_intf",
     "zcl_abapgit_objects_files",
     "zcl_abapgit_objects_program",
     "zcl_abapgit_objects_super",
@@ -165,6 +165,12 @@
       {"object": "ZCL_ABAPGIT_XML_INPUT", "class": "ltcl_xml", "method": "down"},
 
       {"object": "ZCL_ABAPGIT_GIT_URL", "class": "ltcl_repo_online", "method": "test_repo_commit_show_urls"},
+
+      {"object": "ZCL_ABAPGIT_OBJECT_INTF", "class": "ltcl_unit_test",    "method": "deserializes",             "note": "Void type: SEOSUBCOTX"},
+      {"object": "ZCL_ABAPGIT_OBJECT_INTF", "class": "ltcl_aff_metadata", "method": "deserialize_defaults",     "note": "Void type: zcl_abapgit_json_handler"},
+      {"object": "ZCL_ABAPGIT_OBJECT_INTF", "class": "ltcl_aff_metadata", "method": "deserialize_non_defaults", "note": "Void type: zcl_abapgit_json_handler"},
+      {"object": "ZCL_ABAPGIT_OBJECT_INTF", "class": "ltcl_aff_metadata", "method": "serialize_non_default",    "note": "Void type: SEOSUBCOTX"},
+      {"object": "ZCL_ABAPGIT_OBJECT_INTF", "class": "ltcl_aff_metadata", "method": "serialize_default",        "note": "Void type: SEOSUBCOTX"},
 
       {"object": "ZCL_ABAPGIT_OBJECTS_PROGRAM", "class": "ltcl_test", "method": "strip_generation_comments_1", "note": "Void type: ABAPTXT255_TAB"},
       {"object": "ZCL_ABAPGIT_OBJECTS_PROGRAM", "class": "ltcl_test", "method": "strip_generation_comments_2", "note": "Void type: ABAPTXT255_TAB"},
