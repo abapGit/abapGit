@@ -207,11 +207,11 @@
 
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "identity", "note": " https://github.com/open-abap/open-abap/issues/471 "},
 
-      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "abapgit_version",     "note": "SCAN-ABAP-SOURCE"},
-      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "interface1",          "note": "SCAN-ABAP-SOURCE"},
-      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "interface2",          "note": "SCAN-ABAP-SOURCE"},
-      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "class1",              "note": "SCAN-ABAP-SOURCE"},
-      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "class_private",       "note": "SCAN-ABAP-SOURCE"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "abapgit_version",     "note": "Error: ReadReport, transpiler todo"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "interface1",          "note": "SCAN-ABAP-SOURCE, wrong value"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "interface2",          "note": "SCAN-ABAP-SOURCE, wrong value"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "class1",              "note": "SCAN-ABAP-SOURCE, wrong value"},
+      {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "class_private",       "note": "SCAN-ABAP-SOURCE, wrong value"},
       {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "int4",                "note": "SCAN-ABAP-SOURCE, wrong value"},
       {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "decfloat34",          "note": "SCAN-ABAP-SOURCE, wrong value"},
       {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "ampersand",           "note": "SCAN-ABAP-SOURCE, wrong value"},
