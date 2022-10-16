@@ -108,7 +108,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
 
 
   METHOD check_langs_versus_installed.
@@ -247,8 +247,8 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
 
   METHOD get_lang_iso4.
 
-    DATA lv_lang_iso639 TYPE i18_a_langiso2.
-    DATA lv_country TYPE land1.
+    DATA lv_lang_iso639 TYPE laiso.
+    DATA lv_country     TYPE land1.
 
     cl_i18n_languages=>sap2_to_iso639_1(
       EXPORTING
@@ -335,6 +335,84 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Could not convert lang [{ iv_langu }] to ISO| ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD read_lxe_object_text_pair.
+
+    DATA:
+      lv_error TYPE lxestring.
+
+    TRY.
+        CALL FUNCTION 'LXE_OBJ_TEXT_PAIR_READ'
+          EXPORTING
+            s_lang    = iv_s_lang
+            t_lang    = iv_t_lang
+            custmnr   = iv_custmnr
+            objtype   = iv_objtype
+            objname   = iv_objname
+            read_only = iv_read_only
+          IMPORTING
+            err_msg   = lv_error  " doesn't exist in NW <= 750
+          TABLES
+            lt_pcx_s1 = rt_text_pairs_tmp.
+        IF lv_error IS NOT INITIAL.
+          zcx_abapgit_exception=>raise( lv_error ).
+        ENDIF.
+
+      CATCH cx_sy_dyn_call_param_not_found.
+
+        CALL FUNCTION 'LXE_OBJ_TEXT_PAIR_READ'
+          EXPORTING
+            s_lang    = iv_s_lang
+            t_lang    = iv_t_lang
+            custmnr   = iv_custmnr
+            objtype   = iv_objtype
+            objname   = iv_objname
+            read_only = iv_read_only
+          TABLES
+            lt_pcx_s1 = rt_text_pairs_tmp.
+
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD write_lxe_object_text_pair.
+
+    DATA:
+      lv_error TYPE lxestring.
+
+    TRY.
+        CALL FUNCTION 'LXE_OBJ_TEXT_PAIR_WRITE'
+          EXPORTING
+            s_lang    = iv_s_lang
+            t_lang    = iv_t_lang
+            custmnr   = iv_custmnr
+            objtype   = iv_objtype
+            objname   = iv_objname
+          IMPORTING
+            err_msg   = lv_error  " doesn't exist in NW <= 750
+          TABLES
+            lt_pcx_s1 = it_pcx_s1.
+        IF lv_error IS NOT INITIAL.
+          zcx_abapgit_exception=>raise( lv_error ).
+        ENDIF.
+
+      CATCH cx_sy_dyn_call_param_not_found.
+
+        CALL FUNCTION 'LXE_OBJ_TEXT_PAIR_WRITE'
+          EXPORTING
+            s_lang    = iv_s_lang
+            t_lang    = iv_t_lang
+            custmnr   = iv_custmnr
+            objtype   = iv_objtype
+            objname   = iv_objname
+          TABLES
+            lt_pcx_s1 = it_pcx_s1.
+
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -429,83 +507,4 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
                  ig_data = lt_lxe_texts ).
 
   ENDMETHOD.
-
-
-  METHOD read_lxe_object_text_pair.
-
-    DATA:
-      lv_error TYPE lxestring.
-
-    TRY.
-        CALL FUNCTION 'LXE_OBJ_TEXT_PAIR_READ'
-          EXPORTING
-            s_lang    = iv_s_lang
-            t_lang    = iv_t_lang
-            custmnr   = iv_custmnr
-            objtype   = iv_objtype
-            objname   = iv_objname
-            read_only = iv_read_only
-          IMPORTING
-            err_msg   = lv_error  " doesn't exist in NW <= 750
-          TABLES
-            lt_pcx_s1 = rt_text_pairs_tmp.
-        IF lv_error IS NOT INITIAL.
-          zcx_abapgit_exception=>raise( lv_error ).
-        ENDIF.
-
-      CATCH cx_sy_dyn_call_param_not_found.
-
-        CALL FUNCTION 'LXE_OBJ_TEXT_PAIR_READ'
-          EXPORTING
-            s_lang    = iv_s_lang
-            t_lang    = iv_t_lang
-            custmnr   = iv_custmnr
-            objtype   = iv_objtype
-            objname   = iv_objname
-            read_only = iv_read_only
-          TABLES
-            lt_pcx_s1 = rt_text_pairs_tmp.
-
-    ENDTRY.
-
-  ENDMETHOD.
-
-
-  METHOD write_lxe_object_text_pair.
-
-    DATA:
-      lv_error TYPE lxestring.
-
-    TRY.
-        CALL FUNCTION 'LXE_OBJ_TEXT_PAIR_WRITE'
-          EXPORTING
-            s_lang    = iv_s_lang
-            t_lang    = iv_t_lang
-            custmnr   = iv_custmnr
-            objtype   = iv_objtype
-            objname   = iv_objname
-          IMPORTING
-            err_msg   = lv_error  " doesn't exist in NW <= 750
-          TABLES
-            lt_pcx_s1 = it_pcx_s1.
-        IF lv_error IS NOT INITIAL.
-          zcx_abapgit_exception=>raise( lv_error ).
-        ENDIF.
-
-      CATCH cx_sy_dyn_call_param_not_found.
-
-        CALL FUNCTION 'LXE_OBJ_TEXT_PAIR_WRITE'
-          EXPORTING
-            s_lang    = iv_s_lang
-            t_lang    = iv_t_lang
-            custmnr   = iv_custmnr
-            objtype   = iv_objtype
-            objname   = iv_objname
-          TABLES
-            lt_pcx_s1 = it_pcx_s1.
-
-    ENDTRY.
-
-  ENDMETHOD.
-
 ENDCLASS.

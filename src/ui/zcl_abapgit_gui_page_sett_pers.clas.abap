@@ -138,7 +138,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
     )->radio(
       iv_name          = c_id-icon_scaling
       iv_default_value = ''
-      iv_label         = 'Icon Scaling'
+      iv_label         = 'Icon Scaling (HDPI)'
+      iv_hint          = 'Adjust size of icons for High DPI displays'
     )->option(
       iv_label         = 'Automatic'
       iv_value         = ''
