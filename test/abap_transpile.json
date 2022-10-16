@@ -155,7 +155,7 @@
       {"object": "ZCL_ABAPGIT_REQUIREMENT_HELPER", "class": "ltcl_formats", "method": "higher_patch", "note": "Void type: CVERS_SDU"},
 
       {"object": "ZCL_ABAPGIT_GUI_ASSET_MANAGER", "class": "ltcl_abapgit_gui_asset_manager", "method": "get_mime_asset", "note": "todo in open-abap fm WWWPARAMS_READ"},
-      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_multiple_files", "method": "test_overwrite"},
+      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_multiple_files",            "method": "test_overwrite", "note": "??"},
 
       {"object": "ZCL_ABAPGIT_XML", "class": "ltcl_xml", "method": "space_leading_trailing", "note": "todo in if_ixml_document$find_from_path, https://github.com/open-abap/open-abap/issues/226 "},
       {"object": "ZCL_ABAPGIT_XML", "class": "ltcl_xml", "method": "bad_xml_raises_exc", "note": "handling of xml parser errors, cl_ixml, test method parse_negative"},
@@ -168,7 +168,6 @@
       {"object": "ZCL_ABAPGIT_GIT_URL", "class": "ltcl_repo_online", "method": "test_repo_commit_show_urls"},
 
       {"object": "ZCL_ABAPGIT_OBJECT_INTF", "class": "ltcl_unit_test",    "method": "deserializes",             "note": "Void type: SEOSUBCOTX"},
-      {"object": "ZCL_ABAPGIT_OBJECT_INTF", "class": "ltcl_aff_metadata", "method": "deserialize_defaults",     "note": "conversion_exit_isola, original_language not filled"},
       {"object": "ZCL_ABAPGIT_OBJECT_INTF", "class": "ltcl_aff_metadata", "method": "deserialize_non_defaults", "note": "conversion_exit_isola, original_language not filled"},
       {"object": "ZCL_ABAPGIT_OBJECT_INTF", "class": "ltcl_aff_metadata", "method": "serialize_non_default",    "note": "Void type: SEOSUBCOTX"},
       {"object": "ZCL_ABAPGIT_OBJECT_INTF", "class": "ltcl_aff_metadata", "method": "serialize_default",        "note": "Void type: SEOSUBCOTX"},
