@@ -4,14 +4,16 @@ CLASS ltcl_test DEFINITION FINAL
   DURATION SHORT.
 
   PRIVATE SECTION.
-    METHODS strip_generation_comments_1 FOR TESTING.
+    METHODS not_fugr FOR TESTING.
+    METHODS fugr FOR TESTING.
+    METHODS wrong_pattern FOR TESTING.
     METHODS strip_generation_comments_2 FOR TESTING.
 ENDCLASS.
 
 CLASS zcl_abapgit_objects_program DEFINITION LOCAL FRIENDS ltcl_test.
 
 CLASS ltcl_test IMPLEMENTATION.
-  METHOD strip_generation_comments_1.
+  METHOD not_fugr.
 
     DATA lo_cut TYPE REF TO zcl_abapgit_objects_program.
     DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
@@ -45,6 +47,28 @@ CLASS ltcl_test IMPLEMENTATION.
       act = lt_src_act
       exp = lt_src_orig ).
 
+  ENDMETHOD.
+
+  METHOD fugr.
+
+    DATA lo_cut TYPE REF TO zcl_abapgit_objects_program.
+    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
+    DATA lt_src_orig TYPE abaptxt255_tab.
+    DATA lt_src_act TYPE abaptxt255_tab.
+    DATA lt_src_exp TYPE abaptxt255_tab.
+
+    APPEND '*---------------------------------------------------------------------*' TO lt_src_orig.
+    APPEND '*    view related data declarations' TO lt_src_orig.
+    APPEND '*   generation date: 03.02.2022 at 13:19:02' TO lt_src_orig.
+    APPEND '*   view maintenance generator version: #001407#' TO lt_src_orig.
+    APPEND '*---------------------------------------------------------------------*' TO lt_src_orig.
+    APPEND 'some code starts here' TO lt_src_orig.
+
+    APPEND '*---------------------------------------------------------------------*' TO lt_src_exp.
+    APPEND '*    view related data declarations' TO lt_src_exp.
+    APPEND '*---------------------------------------------------------------------*' TO lt_src_exp.
+    APPEND 'some code starts here' TO lt_src_exp.
+
     " case 2, FUGR
     ls_item-obj_type = 'FUGR'.
     CREATE OBJECT lo_cut
@@ -58,7 +82,15 @@ CLASS ltcl_test IMPLEMENTATION.
       act = lt_src_act
       exp = lt_src_exp ).
 
+  ENDMETHOD.
+
+  METHOD wrong_pattern.
     " case 3, wrong pattern
+
+    DATA lo_cut TYPE REF TO zcl_abapgit_objects_program.
+    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
+    DATA lt_src_orig TYPE abaptxt255_tab.
+    DATA lt_src_act TYPE abaptxt255_tab.
 
     CLEAR lt_src_orig.
     APPEND '*---------------------------------------------------------------------*' TO lt_src_orig.
