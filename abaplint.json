@@ -129,6 +129,7 @@
         "^cl_srvd_wb_object_data$", "^cx_aff_", "^cl_aff_", "^if_aff_",
         "^cl_wb_object_operator_factory$",
         "^cl_aunit_assert$",
+        "^I18_A_LANGISO2$",
         "^if_adt_lock_handle$",
         "^cx_wb_object_operation_error$",
         "^if_srvd_types$", "^xubname$",
