@@ -188,8 +188,6 @@ div.log .icon { padding-right: 6px; }
 
 /* REPOSITORY */
 div.repo {
-/*  margin-top: 3px;*/
-/*  margin-bottom: 3px;*/
   padding: 0.5em 1em 0.5em 1em;
   position: relative;
 }
@@ -1024,11 +1022,8 @@ table.commit tr .title {
 
 /* Repo overview */
 .repo-overview { 
-  /*font-size: smaller;*/
   font-size: 90%;
   padding: 0.5em 0.7em;
-  /*overflow-x: auto;*/
-  /*overflow-x: hidden;*/
 }
 .repo-overview-toolbar {
   padding: 1em;
@@ -1057,7 +1052,6 @@ table.commit tr .title {
 }
 .repo-overview .ro-detail { display: none; }
 .repo-overview .ro-go a {
-  /*font-size: 150%;*/
   padding: 0px 0.15em;
 }
 .repo-overview .ro-go a:hover { 

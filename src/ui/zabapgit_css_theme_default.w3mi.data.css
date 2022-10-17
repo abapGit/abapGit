@@ -385,10 +385,6 @@ div.debug_container {
 .repo-overview tbody tr:hover td { background-color: hsla(214, 50%, 50%, 0.05); }
 .repo-overview tbody tr.selected { background-color: hsla(214, 50%, 75%, 0.33); }
 
-/*.repo-overview tbody tr:hover td { background-color: hsla(47, 100%, 65%, 0.2); }
-.repo-overview tbody tr.selected { background-color: hsla(47, 100%, 65%, 0.45); }
-*/
-
 /* DB ENTRIES */
 div.db_list { background-color: #fff; }
 table.db_tab td      { color: #333; }
