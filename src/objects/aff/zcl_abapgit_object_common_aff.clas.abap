@@ -370,7 +370,6 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           lv_name              TYPE c LENGTH 120,
           lv_file_name         TYPE string,
           lo_file_name_mapper  TYPE REF TO object,
-          lv_is_deletion       TYPE abap_bool VALUE abap_false,
           lv_dummy             TYPE string.
 
     FIELD-SYMBOLS: <ls_intf_aff_obj>      TYPE any,
