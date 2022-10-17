@@ -188,8 +188,6 @@ div.log .icon { padding-right: 6px; }
 
 /* REPOSITORY */
 div.repo {
-  margin-top: 3px;
-  margin-bottom: 3px;
   padding: 0.5em 1em 0.5em 1em;
   position: relative;
 }
@@ -486,7 +484,8 @@ table.diff_tab {
   font-size: 10pt;
   width: 100%;
 }
-table.diff_tab td,th {
+table.diff_tab td,
+table.diff_tab th {
   padding-left: 0.5em;
   padding-right: 0.5em;
 }
@@ -615,7 +614,7 @@ div.db_list {
   overflow-x: auto;
 }
 
-table.db_tab{
+table.db_tab {
   table-layout: fixed;
 }
 table.db_tab pre {
@@ -626,23 +625,25 @@ table.db_tab pre {
   margin: 0px;
   width: 30em;
 }
-
 table.db_tab tr.firstrow td { padding-top: 0.5em; }
 table.db_tab th {
   text-align: left;
   padding: 0.5em;
+}
+table.db_tab thead tr {
   border-bottom: 1px solid;
+}
+table.db_tab tfoot tr {
+  border-top: 1px solid;
 }
 table.db_tab td {
   padding: 4px 8px;
   vertical-align: middle;
   word-break: break-all;
 }
-
 table.db_tab th.package {
     width: 45ch;
 }
-
 table.db_tab td.data {
   font-style: italic;
 }
@@ -1020,10 +1021,44 @@ table.commit tr .title {
 }
 
 /* Repo overview */
-.repo-overview { font-size: smaller; }
-.repo-overview tbody td { height: 2em; }
-.ro-detail { display: none; }
-.ro-go { font-size: 150%; }
+.repo-overview { 
+  font-size: 90%;
+  padding: 0.5em 0.7em;
+}
+.repo-overview-toolbar {
+  padding: 1em;
+  /*margin-top: -0.5em;*/
+}
+.repo-overview th {
+  text-align: left;
+  font-weight: normal;
+}
+.repo-overview table {
+  border: 1px solid;
+}
+.repo-overview thead tr {
+  border-bottom: 1px solid;
+  line-height: 1.5;
+}
+.repo-overview tfoot tr {
+  border-top: 1px solid;
+}
+.repo-overview tr.favorite .icon-star {
+  color: #5e8dc9 !important;
+}
+.repo-overview td,
+.repo-overview th { 
+  padding: 6px 6px; /* maybe use height ? */
+}
+.repo-overview .ro-detail { display: none; }
+.repo-overview .ro-go a {
+  padding: 0px 0.15em;
+}
+.repo-overview .ro-go a:hover { 
+  color: #ff721e;
+  text-decoration: none;
+}
+
 
 /* Branch Overview Page */
 .gitGraph-scrollWrapper, .gitGraph-Wrapper{
