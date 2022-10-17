@@ -1025,6 +1025,7 @@ table.commit tr .title {
 /* Repo overview */
 .repo-overview { 
   /*font-size: smaller;*/
+  font-size: 90%;
   padding: 0.5em 0.7em;
   /*overflow-x: auto;*/
   /*overflow-x: hidden;*/
