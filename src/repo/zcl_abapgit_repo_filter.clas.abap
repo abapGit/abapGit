@@ -114,9 +114,7 @@ CLASS zcl_abapgit_repo_filter IMPLEMENTATION.
     DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
     DATA ls_tadir TYPE zif_abapgit_definitions=>ty_tadir.
     DATA lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA lt_items TYPE zif_abapgit_definitions=>ty_items_tt.
-
-    DATA: lt_filter TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_tadir
+    DATA lt_filter TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_tadir
                       WITH NON-UNIQUE KEY object obj_name.
 
     lt_filter = it_filter.
