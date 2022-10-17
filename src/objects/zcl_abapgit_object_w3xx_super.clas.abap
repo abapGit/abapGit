@@ -203,7 +203,6 @@ CLASS zcl_abapgit_object_w3xx_super IMPLEMENTATION.
     DATA lt_w3mime    TYPE STANDARD TABLE OF w3mime.
     DATA lt_w3html    TYPE STANDARD TABLE OF w3html.
     DATA lv_size      TYPE i.
-    DATA lv_tadir_obj TYPE tadir-object.
 
 
     io_xml->read( EXPORTING iv_name = 'TEXT'

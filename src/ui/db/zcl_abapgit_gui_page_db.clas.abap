@@ -328,8 +328,6 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
   METHOD explain_content_repo_cs.
 
     DATA:
-      ls_result TYPE match_result,
-      ls_match  TYPE submatch_result,
       lt_lines  TYPE string_table.
 
     IF strlen( is_data-data_str ) > 0.
