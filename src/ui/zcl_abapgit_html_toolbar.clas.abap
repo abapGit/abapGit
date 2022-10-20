@@ -24,7 +24,7 @@ CLASS zcl_abapgit_html_toolbar DEFINITION
         !iv_li_class   TYPE string OPTIONAL
       RETURNING
         VALUE(ro_self) TYPE REF TO zcl_abapgit_html_toolbar .
-    METHODS count
+    METHODS count_items
       RETURNING
         VALUE(rv_count) TYPE i .
     METHODS render
@@ -116,7 +116,7 @@ CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD count.
+  METHOD count_items.
     rv_count = lines( mt_items ).
   ENDMETHOD.
 
