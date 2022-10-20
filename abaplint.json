@@ -84,7 +84,12 @@
     "intf_referencing_clas": false,
     "method_implemented_twice": true,
     "parser_702_chaining": true,
-    "sy_modification": false,
+    "sy_modification": {
+      "exclude": [
+        "zcl_abapgit_ajson.clas.locals_imp.abap",
+        "zcl_abapgit_objects_program.clas.abap"
+      ]
+    },
     "call_transaction_authority_check": true,
     "function_module_recommendations": false,
     "method_overwrites_builtin": {

@@ -82,9 +82,7 @@ CLASS zcl_abapgit_services_basis IMPLEMENTATION.
     ENDIF.
 
     IF zcl_abapgit_factory=>get_sap_package( iv_devclass )->exists( ) = abap_true.
-      " Package &1 already exists
-      MESSAGE e042(pak) INTO sy-msgli WITH iv_devclass.
-      zcx_abapgit_exception=>raise_t100( ).
+      zcx_abapgit_exception=>raise( |Package { iv_devclass } already exists| ).
     ENDIF.
 
   ENDMETHOD.
