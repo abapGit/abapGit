@@ -77,7 +77,7 @@ CLASS zcl_abapgit_objects_files DEFINITION
     METHODS get_accessed_files
       RETURNING
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_file_signatures_tt .
-    METHODS contains
+    METHODS contains_file
       IMPORTING
         !iv_extra         TYPE clike OPTIONAL
         !iv_ext           TYPE string
@@ -204,7 +204,7 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD contains.
+  METHOD contains_file.
     DATA: lv_filename TYPE string.
 
     lv_filename = zcl_abapgit_filename_logic=>object_to_file(

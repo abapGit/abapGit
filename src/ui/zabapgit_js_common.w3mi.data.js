@@ -250,8 +250,7 @@ function RepoOverViewHelper() {
   this.pageId = "RepoOverViewHelperState"; // constant is OK for this case
   this.isDetailsDisplayed = false;
   this.isOnlyFavoritesDisplayed = false;
-  this.detailCssClass = findStyleSheetByName(".ro-detail");
-  this.actionCssClass = findStyleSheetByName(".ro-action");
+  this.detailCssClass = findStyleSheetByName(".repo-overview .ro-detail");
   var icon = document.getElementById("icon-filter-detail");
   this.toggleFilterIcon(icon, this.isDetailsDisplayed);
   this.registerRowSelection();
@@ -284,26 +283,30 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
     }
     var keycode = event.keyCode;
     var rows = Array.prototype.slice.call(self.getVisibleRows());
-    var selected = document.querySelector(".repo.selected");
+    var selected = document.querySelector(".repo-overview tr.selected");
     var indexOfSelected = rows.indexOf(selected);
+    var lastRow = rows.length - 1;
 
-    if (keycode == 13 && // "enter" to open
-       document.activeElement.tagName.toLowerCase() != "input") { // prevent opening if command field has focus
+    if (keycode == 13 && document.activeElement.tagName.toLowerCase() != "input") {
+      // "enter" to open, unless command field has focus
       self.openSelectedRepo();
-    } else if ((keycode == 52 || keycode == 100) && indexOfSelected > 0) {
-      // "4" for previous
+    } else if ((keycode == 52 || keycode == 56) && indexOfSelected > 0) {
+      // "4,8" for previous, digits are the numlock keys
+      // NB: numpad must be activated, keypress does not detect arrows
+      //     if we need arrows it will be keydown. But then mind the keycodes, they may change !
+      //     e.g. 100 is 'd' with keypress (and conflicts with diff hotkey), and also it is arrow-left keydown
       self.selectRowByIndex(indexOfSelected - 1);
-    } else if ((keycode == 54 || keycode == 102) && indexOfSelected < rows.length - 1) {
-      // "6" for next
+    } else if ((keycode == 54 || keycode == 50) && indexOfSelected < lastRow) {
+      // "6,2" for next
       self.selectRowByIndex(indexOfSelected + 1);
     }
   });
 };
 
 RepoOverViewHelper.prototype.openSelectedRepo = function () {
-  this.selectedRepoKey = document.querySelector(".repo.selected").dataset.key;
+  this.selectedRepoKey = document.querySelector(".repo-overview tr.selected").dataset.key;
   this.saveLocalStorage();
-  document.querySelector(".repo.selected td.ro-go a").click();
+  document.querySelector(".repo-overview tr.selected td.ro-go a").click();
 };
 
 RepoOverViewHelper.prototype.selectRowByIndex = function (index) {
@@ -324,7 +327,7 @@ RepoOverViewHelper.prototype.selectRowByIndex = function (index) {
 
 RepoOverViewHelper.prototype.selectRowByRepoKey = function (key) {
   var attributeQuery = "[data-key='" + key + "']";
-  var row = document.querySelector(".repo" + attributeQuery);
+  var row = document.querySelector(".repo-overview tbody tr" + attributeQuery);
   // navigation to already selected repo
   if (row.dataset.key === key && row.classList.contains("selected")) {
     return;
@@ -371,24 +374,24 @@ RepoOverViewHelper.prototype.updateActionLinks = function (selectedRow) {
 };
 
 RepoOverViewHelper.prototype.deselectAllRows = function () {
-  document.querySelectorAll(".repo").forEach(function (x) {
+  document.querySelectorAll(".repo-overview tbody tr").forEach(function (x) {
     x.classList.remove("selected");
   });
 };
 
 RepoOverViewHelper.prototype.getVisibleRows = function () {
-  return document.querySelectorAll(".repo:not(.nodisplay)");
+  return document.querySelectorAll(".repo-overview tbody tr:not(.nodisplay)");
 };
 
 RepoOverViewHelper.prototype.registerRowSelection = function () {
   var self = this;
-  document.querySelectorAll(".repo td:not(.ro-go)").forEach(function (repoListRowCell) {
+  document.querySelectorAll(".repo-overview tr td:not(.ro-go)").forEach(function (repoListRowCell) {
     repoListRowCell.addEventListener("click", function () {
       self.selectRowByRepoKey(this.parentElement.dataset.key);
     });
   });
 
-  document.querySelectorAll(".repo td.ro-go").forEach(function (openRepoIcon) {
+  document.querySelectorAll(".repo-overview tr td.ro-go").forEach(function (openRepoIcon) {
     openRepoIcon.addEventListener("click", function () {
       var selectedRow = this.parentElement;
       self.selectRowByRepoKey(selectedRow.dataset.key);
