@@ -92,7 +92,14 @@
     },
     "call_transaction_authority_check": true,
     "function_module_recommendations": false,
-    "method_overwrites_builtin": false,
+    "method_overwrites_builtin": {
+      "exclude": [
+        "zcl_abapgit_ajson.clas.locals_imp.abap",
+        "zcl_abapgit_ajson.clas.testclasses.abap",
+        "zcl_abapgit_stage.clas.abap",
+        "zif_abapgit_log.intf.abap"
+      ]
+    },
     "omit_parameter_name": false,
     "omit_receiving": true,
     "unused_methods": true,
