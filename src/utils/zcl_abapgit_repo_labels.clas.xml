@@ -3,7 +3,7 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOCLASS>
-    <CLSNAME>ZCL_ABAPGIT_PERSIST_TAG_UTILS</CLSNAME>
+    <CLSNAME>ZCL_ABAPGIT_REPO_LABELS</CLSNAME>
     <LANGU>E</LANGU>
     <DESCRIPT>abapGit repo grouping tags</DESCRIPT>
     <STATE>1</STATE>

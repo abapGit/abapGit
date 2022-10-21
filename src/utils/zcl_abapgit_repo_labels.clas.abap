@@ -1,4 +1,4 @@
-CLASS zcl_abapgit_persist_tag_utils DEFINITION
+CLASS zcl_abapgit_repo_labels DEFINITION
   PUBLIC
   FINAL
   CREATE PUBLIC .
@@ -6,14 +6,14 @@ CLASS zcl_abapgit_persist_tag_utils DEFINITION
   PUBLIC SECTION.
 
     CONSTANTS c_allowed_chars TYPE string VALUE `-_.a-zA-Z0-9` ##NO_TEXT.
-    " it is easier to whilelist chars, though potentially other chars can be added later if needed
-    CLASS-METHODS class_constructor.
 
+    " it is easier to allow chars, though potentially other chars can be added later if needed
+    CLASS-METHODS class_constructor.
     CLASS-METHODS validate
       IMPORTING
         !iv_tags TYPE string
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     CLASS-METHODS split
       IMPORTING
         !iv_tags       TYPE string
@@ -31,7 +31,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PERSIST_TAG_UTILS IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO_LABELS IMPLEMENTATION.
 
 
   METHOD class_constructor.
