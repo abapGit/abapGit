@@ -289,6 +289,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
           lv_href  TYPE string,
           lv_click TYPE string,
           lv_id    TYPE string,
+          lv_act   TYPE string,
           lv_style TYPE string,
           lv_title TYPE string.
 
@@ -308,14 +309,21 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       lv_class = | class="{ lv_class }"|.
     ENDIF.
 
-    lv_href  = ' href="#"'. " Default, dummy
+    lv_href = ' href="#"'. " Default, dummy
+    lv_act  = iv_act.
     IF ( iv_act IS NOT INITIAL OR iv_typ = zif_abapgit_html=>c_action_type-dummy )
         AND iv_opt NA zif_abapgit_html=>c_html_opt-crossout.
       CASE iv_typ.
         WHEN zif_abapgit_html=>c_action_type-url.
-          lv_href  = | href="{ iv_act }"|.
+          IF iv_query IS NOT INITIAL.
+            lv_act = lv_act && `?` && iv_query.
+          ENDIF.
+          lv_href  = | href="{ lv_act }"|.
         WHEN zif_abapgit_html=>c_action_type-sapevent.
-          lv_href  = | href="sapevent:{ iv_act }"|.
+          IF iv_query IS NOT INITIAL.
+            lv_act = lv_act && `?` && iv_query.
+          ENDIF.
+          lv_href  = | href="sapevent:{ lv_act }"|.
         WHEN zif_abapgit_html=>c_action_type-onclick.
           lv_href  = ' href="#"'.
           lv_click = | onclick="{ iv_act }"|.
