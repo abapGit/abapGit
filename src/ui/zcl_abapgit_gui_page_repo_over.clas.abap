@@ -50,8 +50,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
     DATA: mv_order_descending TYPE abap_bool,
           mv_only_favorites   TYPE abap_bool,
           mv_filter           TYPE string,
-          mv_order_by         TYPE string,
-          mt_col_spec         TYPE zif_abapgit_definitions=>ty_col_spec_tt.
+          mv_order_by         TYPE string.
 
     METHODS set_order_by
       IMPORTING
@@ -110,16 +109,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
           ii_html TYPE REF TO zif_abapgit_html,
 
       apply_order_by
-        CHANGING ct_overview TYPE ty_overviews,
-
-      _add_column
-        IMPORTING
-          iv_tech_name      TYPE string OPTIONAL
-          iv_display_name   TYPE string OPTIONAL
-          iv_css_class      TYPE string OPTIONAL
-          iv_add_tz         TYPE abap_bool OPTIONAL
-          iv_title          TYPE string OPTIONAL
-          iv_allow_order_by TYPE any OPTIONAL.
+        CHANGING ct_overview TYPE ty_overviews.
 
     METHODS prepare_overviews
       RETURNING
@@ -140,6 +130,10 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
     METHODS render_filter_bar
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html.
+
+    METHODS build_table_scheme
+      RETURNING
+        VALUE(rt_tab_scheme) TYPE zif_abapgit_definitions=>ty_col_spec_tt.
 
 ENDCLASS.
 
@@ -195,6 +189,73 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     ENDIF.
 
     SORT ct_overview BY (lt_sort).
+
+  ENDMETHOD.
+
+
+  METHOD build_table_scheme.
+
+    DATA lo_tab_scheme TYPE REF TO lcl_table_scheme.
+
+    CREATE OBJECT lo_tab_scheme.
+
+    lo_tab_scheme->add_column(
+      iv_tech_name      = 'FAVORITE'
+      iv_css_class      = 'wmin'
+      iv_allow_order_by = abap_false
+    )->add_column(
+      iv_tech_name      = 'TYPE'
+      iv_css_class      = 'wmin'
+      iv_allow_order_by = abap_false
+    )->add_column(
+      iv_tech_name      = 'NAME'
+      iv_display_name   = 'Name'
+      iv_allow_order_by = abap_true
+    )->add_column(
+      iv_tech_name      = 'PACKAGE'
+      iv_display_name   = 'Package'
+      iv_css_class      = 'package'
+      iv_allow_order_by = abap_true
+    )->add_column(
+      iv_tech_name      = 'URL'
+      iv_display_name   = 'Remote'
+      iv_allow_order_by = abap_true
+    )->add_column(
+      iv_tech_name      = 'BRANCH'
+      iv_display_name   = 'Branch'
+      iv_allow_order_by = abap_true
+    )->add_column(
+      iv_tech_name      = 'DESERIALIZED_BY'
+      iv_display_name   = 'Deserialized by'
+      iv_css_class      = 'ro-detail'
+      iv_allow_order_by = abap_true
+    )->add_column(
+      iv_tech_name      = 'DESERIALIZED_AT'
+      iv_display_name   = 'Deserialized at'
+      iv_css_class      = 'ro-detail'
+      iv_allow_order_by = abap_true
+    )->add_column(
+      iv_tech_name      = 'CREATED_BY'
+      iv_display_name   = 'Created by'
+      iv_css_class      = 'ro-detail'
+      iv_allow_order_by = abap_true
+    )->add_column(
+      iv_tech_name      = 'CREATED_AT'
+      iv_display_name   = 'Created at'
+      iv_css_class      = 'ro-detail'
+      iv_add_tz         = abap_true
+      iv_allow_order_by = abap_true
+    )->add_column(
+      iv_tech_name      = 'KEY'
+      iv_display_name   = 'Key'
+      iv_css_class      = 'ro-detail'
+      iv_allow_order_by = abap_true
+    )->add_column(
+      iv_tech_name      = 'GO'
+      iv_css_class      = 'ro-go wmin'
+      iv_allow_order_by = abap_false ).
+
+    rt_tab_scheme = lo_tab_scheme->mt_col_spec.
 
   ENDMETHOD.
 
@@ -476,80 +537,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
   METHOD render_table_header.
 
-    CLEAR mt_col_spec.
-
-    _add_column(
-      iv_tech_name      = 'FAVORITE'
-      iv_css_class      = 'wmin'
-      iv_allow_order_by = abap_false ).
-
-    _add_column(
-      iv_tech_name      = 'TYPE'
-      iv_css_class      = 'wmin'
-      iv_allow_order_by = abap_false ).
-
-    _add_column(
-      iv_tech_name      = 'NAME'
-      iv_display_name   = 'Name'
-      iv_allow_order_by = abap_true ).
-
-    _add_column(
-      iv_tech_name      = 'PACKAGE'
-      iv_display_name   = 'Package'
-      iv_css_class      = 'package'
-      iv_allow_order_by = abap_true ).
-
-    _add_column(
-      iv_tech_name      = 'URL'
-      iv_display_name   = 'Remote'
-      iv_allow_order_by = abap_true ).
-
-    _add_column(
-      iv_tech_name      = 'BRANCH'
-      iv_display_name   = 'Branch'
-      iv_allow_order_by = abap_true ).
-
-    _add_column(
-      iv_tech_name      = 'DESERIALIZED_BY'
-      iv_display_name   = 'Deserialized by'
-      iv_css_class      = 'ro-detail'
-      iv_allow_order_by = abap_true ).
-
-    _add_column(
-      iv_tech_name      = 'DESERIALIZED_AT'
-      iv_display_name   = 'Deserialized at'
-      iv_css_class      = 'ro-detail'
-      iv_allow_order_by = abap_true ).
-
-    _add_column(
-      iv_tech_name      = 'CREATED_BY'
-      iv_display_name   = 'Created by'
-      iv_css_class      = 'ro-detail'
-      iv_allow_order_by = abap_true ).
-
-    _add_column(
-      iv_tech_name      = 'CREATED_AT'
-      iv_display_name   = 'Created at'
-      iv_css_class      = 'ro-detail'
-      iv_add_tz         = abap_true
-      iv_allow_order_by = abap_true ).
-
-    _add_column(
-      iv_tech_name      = 'KEY'
-      iv_display_name   = 'Key'
-      iv_css_class      = 'ro-detail'
-      iv_allow_order_by = abap_true ).
-
-    _add_column(
-      iv_tech_name      = 'GO'
-      iv_css_class      = 'ro-go wmin'
-      iv_allow_order_by = abap_false ).
-
     ii_html->add( |<thead>| ).
     ii_html->add( |<tr>| ).
 
     ii_html->add( zcl_abapgit_gui_chunk_lib=>render_order_by_header_cells(
-      it_col_spec         = mt_col_spec
+      it_col_spec         = build_table_scheme( )
       iv_order_by         = mv_order_by
       iv_order_descending = mv_order_descending ) ).
 
@@ -834,20 +826,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     register_deferred_script( render_scripts( ) ).
     register_deferred_script( zcl_abapgit_gui_chunk_lib=>render_repo_palette( c_action-select ) ).
     register_hotkeys( ).
-
-  ENDMETHOD.
-
-
-  METHOD _add_column.
-
-    FIELD-SYMBOLS <ls_col> LIKE LINE OF mt_col_spec.
-    APPEND INITIAL LINE TO mt_col_spec ASSIGNING <ls_col>.
-    <ls_col>-display_name   = iv_display_name.
-    <ls_col>-tech_name      = iv_tech_name.
-    <ls_col>-title          = iv_title.
-    <ls_col>-css_class      = iv_css_class.
-    <ls_col>-add_tz         = iv_add_tz.
-    <ls_col>-allow_order_by = iv_allow_order_by.
 
   ENDMETHOD.
 ENDCLASS.
