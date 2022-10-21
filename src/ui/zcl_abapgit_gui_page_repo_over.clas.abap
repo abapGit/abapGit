@@ -45,7 +45,9 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
       BEGIN OF c_action,
         select       TYPE string VALUE 'select',
         apply_filter TYPE string VALUE 'apply_filter',
+        label_filter TYPE string VALUE 'label_filter',
       END OF c_action,
+      c_label_filter_prefix TYPE string VALUE `label:`,
       c_raw_field_suffix TYPE string VALUE `_RAW` ##NO_TEXT.
 
     DATA: mv_order_descending TYPE abap_bool,
@@ -110,6 +112,10 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
         IMPORTING
           ii_html TYPE REF TO zif_abapgit_html,
 
+      render_header_label_list
+        IMPORTING
+          ii_html TYPE REF TO zif_abapgit_html,
+
       apply_order_by
         CHANGING ct_overview TYPE ty_overviews.
 
@@ -140,6 +146,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
     METHODS render_label_list
       IMPORTING
         it_labels TYPE string_table
+        iv_clickable TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rv_html) TYPE string.
 
@@ -158,18 +165,36 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
   METHOD apply_filter.
 
-    IF mv_filter IS NOT INITIAL.
+    DATA lv_pfxl TYPE i.
+    DATA lv_idx TYPE i.
+    DATA lv_filter_label TYPE string.
+    FIELD-SYMBOLS <ls_r> LIKE LINE OF ct_overview.
 
+    IF mv_filter IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    lv_pfxl = strlen( c_label_filter_prefix ).
+
+    IF strlen( mv_filter ) > lv_pfxl AND mv_filter+0(lv_pfxl) = c_label_filter_prefix.
+      lv_filter_label = mv_filter+lv_pfxl.
+      LOOP AT ct_overview ASSIGNING <ls_r>.
+        lv_idx = sy-tabix.
+        READ TABLE <ls_r>-labels TRANSPORTING NO FIELDS WITH KEY table_line = lv_filter_label.
+        IF sy-subrc <> 0.
+          DELETE ct_overview INDEX lv_idx.
+        ENDIF.
+      ENDLOOP.
+    ELSE. " Regular filter
       DELETE ct_overview WHERE key             NS mv_filter
-                           AND name            NS mv_filter
-                           AND url             NS mv_filter
-                           AND package         NS mv_filter
-                           AND branch          NS mv_filter
-                           AND created_by      NS mv_filter
-                           AND created_at      NS mv_filter
-                           AND deserialized_by NS mv_filter
-                           AND deserialized_at NS mv_filter.
-
+        AND name            NS mv_filter
+        AND url             NS mv_filter
+        AND package         NS mv_filter
+        AND branch          NS mv_filter
+        AND created_by      NS mv_filter
+        AND created_at      NS mv_filter
+        AND deserialized_by NS mv_filter
+        AND deserialized_at NS mv_filter.
     ENDIF.
 
   ENDMETHOD.
@@ -358,6 +383,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     ENDIF.
 
     rt_overviews = map_repo_list_to_overview( lt_repo_obj_list ).
+
+    " Hmmm, side effect, not ideal, but we need label list before filter applied
+    mt_all_labels = collect_all_labels( rt_overviews ).
+
     apply_order_by( CHANGING ct_overview = rt_overviews ).
     apply_filter( CHANGING ct_overview = rt_overviews ).
 
@@ -514,20 +543,45 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_header_label_list.
+
+    IF mt_all_labels IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    ii_html->add( |<div class="repo-label-catalog">| ).
+    ii_html->add( '<label>Labels:</label>' ).
+    ii_html->add( render_label_list(
+      it_labels    = mt_all_labels
+      iv_clickable = abap_true ) ).
+    ii_html->add( |</div>| ).
+
+  ENDMETHOD.
+
+
   METHOD render_label_list.
 
     " TODO: probably move to chunks if rendered elsewhere
 
     DATA lt_fragments TYPE string_table.
     DATA lv_l TYPE string.
+    DATA li_html TYPE REF TO zif_abapgit_html.
 
     IF it_labels IS INITIAL.
       RETURN.
     ENDIF.
 
-    APPEND `<ul class="repo-label-list">` TO lt_fragments.
+    li_html = zcl_abapgit_html=>create( ).
+
+    APPEND `<ul class="repo-labels">` TO lt_fragments.
 
     LOOP AT it_labels INTO lv_l WHERE table_line IS NOT INITIAL.
+      IF iv_clickable = abap_true.
+        lv_l = li_html->a(
+          iv_txt = lv_l
+          iv_act = |{ c_action-label_filter }|
+          iv_query = lv_l ).
+      ENDIF.
       lv_l = `<li>` && lv_l && `</li>`.
       APPEND lv_l TO lt_fragments.
     ENDLOOP.
@@ -812,6 +866,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
         set_filter( ii_event->mt_postdata ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
+      WHEN c_action-label_filter.
+
+        IF ii_event->mv_getdata IS NOT INITIAL.
+          mv_filter = c_label_filter_prefix && ii_event->mv_getdata.
+        ELSE.
+          CLEAR mv_filter. " Unexpected request
+        ENDIF.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+
       WHEN zif_abapgit_definitions=>c_action-go_patch.
 
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_patch
@@ -879,7 +942,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     DATA lt_overview TYPE ty_overviews.
 
     lt_overview = prepare_overviews( ).
-    mt_all_labels = collect_all_labels( lt_overview ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -887,6 +949,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     ri_html->add( |<div class="repo-overview">| ).
     render_header_bar( ri_html ).
+    render_header_label_list( ri_html ).
     render_repo_list(
       ii_html     = ri_html
       it_overview = lt_overview ).
