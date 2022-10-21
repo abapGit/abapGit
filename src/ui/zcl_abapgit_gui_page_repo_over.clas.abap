@@ -27,6 +27,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
         type                TYPE string,
         key                 TYPE zif_abapgit_persistence=>ty_value,
         name                TYPE string,
+        labels              TYPE string_table,
         url                 TYPE string,
         package             TYPE devclass,
         branch              TYPE string,
@@ -50,6 +51,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
     DATA: mv_order_descending TYPE abap_bool,
           mv_only_favorites   TYPE abap_bool,
           mv_filter           TYPE string,
+          mt_all_labels       TYPE string_table,
           mv_order_by         TYPE string.
 
     METHODS set_order_by
@@ -135,6 +137,18 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
       RETURNING
         VALUE(rt_tab_scheme) TYPE zif_abapgit_definitions=>ty_col_spec_tt.
 
+    METHODS render_label_list
+      IMPORTING
+        it_labels TYPE string_table
+      RETURNING
+        VALUE(rv_html) TYPE string.
+
+    METHODS collect_all_labels
+      IMPORTING
+        it_overview TYPE ty_overviews
+      RETURNING
+        VALUE(rt_list) TYPE string_table.
+
 ENDCLASS.
 
 
@@ -211,7 +225,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       iv_tech_name      = 'NAME'
       iv_display_name   = 'Name'
       iv_allow_order_by = abap_true
-    )->add_column(
+    ).
+
+    IF mt_all_labels IS NOT INITIAL.
+      lo_tab_scheme->add_column(
+        iv_tech_name      = 'LABELS'
+        iv_display_name   = 'Labels'
+        iv_allow_order_by = abap_false ).
+    ENDIF.
+
+    lo_tab_scheme->add_column(
       iv_tech_name      = 'PACKAGE'
       iv_display_name   = 'Package'
       iv_css_class      = 'package'
@@ -260,6 +283,21 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD collect_all_labels.
+
+    FIELD-SYMBOLS <ls_r> LIKE LINE OF it_overview.
+
+    LOOP AT it_overview ASSIGNING <ls_r>.
+      APPEND LINES OF <ls_r>-labels TO rt_list.
+    ENDLOOP.
+
+    SORT rt_list.
+    DELETE rt_list WHERE table_line IS INITIAL.
+    DELETE ADJACENT DUPLICATES FROM rt_list.
+
+  ENDMETHOD.
+
+
   METHOD constructor.
 
     super->constructor( ).
@@ -283,6 +321,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       ls_overview-type            = <ls_repo>->ms_data-offline.
       ls_overview-key             = <ls_repo>->ms_data-key.
       ls_overview-name            = <ls_repo>->get_name( ).
+      ls_overview-labels          = zcl_abapgit_repo_labels=>split( <ls_repo>->ms_data-local_settings-labels ).
       ls_overview-url             = <ls_repo>->ms_data-url.
       ls_overview-package         = <ls_repo>->ms_data-package.
       ls_overview-branch          = <ls_repo>->ms_data-branch_name.
@@ -475,6 +514,31 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_label_list.
+
+    " TODO: probably move to chunks if rendered elsewhere
+
+    DATA lt_fragments TYPE string_table.
+    DATA lv_l TYPE string.
+
+    IF it_labels IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    APPEND `<ul class="repo-label-list">` TO lt_fragments.
+
+    LOOP AT it_labels INTO lv_l WHERE table_line IS NOT INITIAL.
+      lv_l = `<li>` && lv_l && `</li>`.
+      APPEND lv_l TO lt_fragments.
+    ENDLOOP.
+
+    APPEND `</ul>` TO lt_fragments.
+
+    rv_html = concat_lines_of( table = lt_fragments ).
+
+  ENDMETHOD.
+
+
   METHOD render_repo_list.
 
     ii_html->add( |<table>| ).
@@ -606,6 +670,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       ii_html->a(
         iv_txt = is_repo-name
         iv_act = |{ c_action-select }?key={ is_repo-key }| ) && lv_lock ).
+
+    " Labels
+    IF mt_all_labels IS NOT INITIAL.
+      ii_html->td( render_label_list( is_repo-labels ) ).
+    ENDIF.
 
     " Package
     ii_html->td( ii_content = zcl_abapgit_gui_chunk_lib=>render_package_name(
@@ -810,6 +879,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     DATA lt_overview TYPE ty_overviews.
 
     lt_overview = prepare_overviews( ).
+    mt_all_labels = collect_all_labels( lt_overview ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
