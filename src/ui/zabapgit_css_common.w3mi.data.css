@@ -1029,7 +1029,7 @@ table.commit tr .title {
   font-size: 90%;
 }
 .repo-overview-toolbar {
-  padding: 0.5em 1em;
+  padding: 1em 1em;
   /*margin-top: -0.5em;*/
 }
 .repo-overview-toolbar label {
@@ -1070,8 +1070,8 @@ table.commit tr .title {
 
 /* Repo labels */
 .repo-label-catalog {
-  padding: 0.5em 1em;
-  margin-top: -0.5em;
+  padding: 1em 1em;
+  margin-top: -1em;
 }
 .repo-label-catalog label {
   margin-right: 0.5em;
@@ -1083,6 +1083,8 @@ ul.repo-labels {
   padding-left: 0px;
   margin-block-start: 0px;
   margin-block-end: 0px;
+  margin-top: 0px;
+  margin-bottom: 0px;
 }
 ul.repo-labels li {
   display: inline-block;
