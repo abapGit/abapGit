@@ -336,6 +336,7 @@ INTERFACE zif_abapgit_definitions
       ui_theme               TYPE string,
       hide_sapgui_hint       TYPE abap_bool,
       activate_wo_popup      TYPE abap_bool,
+      label_colors           TYPE string,
     END OF ty_s_user_settings .
   TYPES:
     ty_dokil_tt TYPE STANDARD TABLE OF dokil

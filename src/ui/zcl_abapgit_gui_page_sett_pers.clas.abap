@@ -38,6 +38,7 @@ CLASS zcl_abapgit_gui_page_sett_pers DEFINITION
         parallel_proc_disabled TYPE string VALUE 'parallel_proc_disabled',
         hide_sapgui_hint       TYPE string VALUE 'hide_sapgui_hint',
         activate_wo_popup      TYPE string VALUE 'activate_wo_popup',
+        label_colors           TYPE string VALUE 'label_colors',
       END OF c_id.
     CONSTANTS:
       BEGIN OF c_event,
@@ -97,7 +98,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title      = 'Personal Settings'
       io_page_menu       = zcl_abapgit_gui_chunk_lib=>settings_toolbar(
-                             zif_abapgit_definitions=>c_action-go_settings_personal )
+        zif_abapgit_definitions=>c_action-go_settings_personal )
       ii_child_component = lo_component ).
 
   ENDMETHOD.
@@ -155,6 +156,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
       iv_hint          = 'Maximum number of objects listed (0 = All)'
       iv_min           = 0
       iv_max           = 10000
+    )->text(
+      iv_name          = c_id-label_colors
+      iv_label         = 'Repo label colors (label:color pairs, comma separeted, colors are "red", or #xxxxxx)'
     )->start_group(
       iv_name          = c_id-interaction
       iv_label         = 'Interaction'
@@ -218,6 +222,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
     mo_form_data->set(
       iv_key = c_id-max_lines
       iv_val = |{ ms_settings-max_lines }| ).
+    mo_form_data->set(
+      iv_key = c_id-label_colors
+      iv_val = ms_settings-label_colors ).
 
     " Interaction
     mo_form_data->set(
@@ -255,6 +262,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
     ms_settings-ui_theme = mo_form_data->get( c_id-ui_theme ).
     ms_settings-icon_scaling = mo_form_data->get( c_id-icon_scaling ).
     ms_settings-max_lines = mo_form_data->get( c_id-max_lines ).
+    ms_settings-label_colors = zcl_abapgit_repo_labels=>normalize_colors( mo_form_data->get(  c_id-label_colors ) ).
 
     " Interaction
     ms_settings-activate_wo_popup = mo_form_data->get( c_id-activate_wo_popup ).
@@ -282,7 +290,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
 
   METHOD validate_form.
 
+    DATA lx_error TYPE REF TO zcx_abapgit_exception.
+
     ro_validation_log = mo_form_util->validate( io_form_data ).
+
+    TRY.
+        zcl_abapgit_repo_labels=>validate_colors( io_form_data->get( c_id-label_colors ) ).
+      CATCH zcx_abapgit_exception INTO lx_error.
+        ro_validation_log->set(
+          iv_key = c_id-label_colors
+          iv_val = lx_error->get_text( ) ).
+    ENDTRY.
 
   ENDMETHOD.
 
