@@ -6,6 +6,11 @@ CLASS ltcl_tags DEFINITION FINAL
     METHODS split FOR TESTING.
     METHODS validate FOR TESTING RAISING zcx_abapgit_exception.
     METHODS normalize FOR TESTING.
+
+    METHODS split_colors FOR TESTING.
+    METHODS validate_colors FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS normalize_colors FOR TESTING.
+
 ENDCLASS.
 
 CLASS ltcl_tags IMPLEMENTATION.
@@ -14,7 +19,6 @@ CLASS ltcl_tags IMPLEMENTATION.
 
     DATA lt_exp TYPE string_table.
 
-    CLEAR lt_exp.
     APPEND `a` TO lt_exp.
     APPEND `ab` TO lt_exp.
     APPEND `a_b` TO lt_exp.
@@ -63,6 +67,87 @@ CLASS ltcl_tags IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals( " duplicates and sorting
       act = zcl_abapgit_repo_labels=>normalize( 'ba,ab,ab' )
       exp = 'ab,ba' ).
+
+  ENDMETHOD.
+
+  METHOD validate_colors.
+
+    zcl_abapgit_repo_labels=>validate_colors( 'a:red, b : #123456 ,,' ).
+    zcl_abapgit_repo_labels=>validate_colors( '' ).
+    zcl_abapgit_repo_labels=>validate_colors( ',' ).
+
+    TRY.
+        zcl_abapgit_repo_labels=>validate_colors( 'a,ab' ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
+
+    TRY.
+        zcl_abapgit_repo_labels=>validate_colors( 'a:' ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
+
+    TRY.
+        zcl_abapgit_repo_labels=>validate_colors( ':red' ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
+
+    TRY.
+        zcl_abapgit_repo_labels=>validate_colors( 'a:1234' ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
+
+    TRY.
+        zcl_abapgit_repo_labels=>validate_colors( 'a:#1234' ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD split_colors.
+
+    DATA lt_exp TYPE zcl_abapgit_repo_labels=>ty_label_colors.
+    FIELD-SYMBOLS <ls_c> LIKE LINE OF lt_exp.
+
+    APPEND INITIAL LINE TO lt_exp ASSIGNING <ls_c>.
+    <ls_c>-label = 'a'.
+    <ls_c>-color = 'red'.
+    APPEND INITIAL LINE TO lt_exp ASSIGNING <ls_c>.
+    <ls_c>-label = 'b'.
+    <ls_c>-color = '#123456'.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_repo_labels=>split_colors( 'a:red, b : #123456 ,,' )
+      exp = lt_exp ).
+
+  ENDMETHOD.
+
+  METHOD normalize_colors.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_repo_labels=>normalize_colors( 'a:red , b : #123456' )
+      exp = 'a:red,b:#123456' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_repo_labels=>normalize_colors( 'a:red,b:,:blue' )
+      exp = 'a:red' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_repo_labels=>normalize_colors( '' )
+      exp = '' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_repo_labels=>normalize_colors( ',, ,' )
+      exp = '' ).
+
+    cl_abap_unit_assert=>assert_equals( " duplicates and sorting
+      act = zcl_abapgit_repo_labels=>normalize_colors( 'b:blue,a:red,a:red,a:blue' )
+      exp = 'a:red,b:blue' ).
+
 
   ENDMETHOD.
 
