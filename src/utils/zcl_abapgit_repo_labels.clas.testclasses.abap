@@ -8,6 +8,7 @@ CLASS ltcl_tags DEFINITION FINAL
     METHODS normalize FOR TESTING.
 
     METHODS split_colors FOR TESTING.
+    METHODS split_colors_into_map FOR TESTING.
     METHODS validate_colors FOR TESTING RAISING zcx_abapgit_exception.
     METHODS normalize_colors FOR TESTING.
 
@@ -122,6 +123,24 @@ CLASS ltcl_tags IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = zcl_abapgit_repo_labels=>split_colors( 'a:red, b : #123456 ,,' )
+      exp = lt_exp ).
+
+  ENDMETHOD.
+
+  METHOD split_colors_into_map.
+
+    DATA lt_exp TYPE zcl_abapgit_string_map=>ty_entries.
+    DATA ls_e LIKE LINE OF lt_exp.
+
+    ls_e-k = 'a'.
+    ls_e-v = 'red'.
+    INSERT ls_e INTO TABLE lt_exp.
+    ls_e-k = 'b'.
+    ls_e-v = '#123456'.
+    INSERT ls_e INTO TABLE lt_exp.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_repo_labels=>split_colors_into_map( 'a:red, b : #123456 ,,' )->mt_entries
       exp = lt_exp ).
 
   ENDMETHOD.

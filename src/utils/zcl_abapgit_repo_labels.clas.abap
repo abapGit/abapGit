@@ -10,8 +10,7 @@ CLASS zcl_abapgit_repo_labels DEFINITION
         label TYPE string,
         color TYPE string,
       END OF ty_label_color,
-      ty_label_colors TYPE STANDARD TABLE OF ty_label_color WITH KEY label,
-      ty_label_colors_by_name TYPE SORTED TABLE OF ty_label_color WITH UNIQUE KEY label.
+      ty_label_colors TYPE STANDARD TABLE OF ty_label_color WITH KEY label.
 
     CONSTANTS c_allowed_chars TYPE string VALUE `-_.a-zA-Z0-9` ##NO_TEXT.
 
@@ -43,6 +42,11 @@ CLASS zcl_abapgit_repo_labels DEFINITION
         !iv_config TYPE string
       RETURNING
         VALUE(rt_label_colors) TYPE ty_label_colors.
+    CLASS-METHODS split_colors_into_map
+      IMPORTING
+        !iv_config TYPE string
+      RETURNING
+        VALUE(ro_map) TYPE REF TO zcl_abapgit_string_map.
     CLASS-METHODS normalize_colors
       IMPORTING
         !iv_config TYPE string
@@ -153,6 +157,26 @@ CLASS ZCL_ABAPGIT_REPO_LABELS IMPLEMENTATION.
         CONDENSE: ls_c-label, ls_c-color.
         APPEND ls_c TO rt_label_colors.
       ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD split_colors_into_map.
+
+    DATA lt_colors TYPE ty_label_colors.
+    FIELD-SYMBOLS <ls_c> LIKE LINE OF lt_colors.
+
+    lt_colors = split_colors( iv_config ).
+
+    ro_map = zcl_abapgit_string_map=>create( ).
+    LOOP AT lt_colors ASSIGNING <ls_c>.
+      TRY.
+          ro_map->set(
+            iv_key = <ls_c>-label
+            iv_val = <ls_c>-color ).
+        CATCH zcx_abapgit_exception.
+      ENDTRY.
     ENDLOOP.
 
   ENDMETHOD.
