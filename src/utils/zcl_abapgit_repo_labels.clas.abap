@@ -94,7 +94,9 @@ CLASS ZCL_ABAPGIT_REPO_LABELS IMPLEMENTATION.
     SORT lt_normalized.
     DELETE ADJACENT DUPLICATES FROM lt_normalized.
 
-    rv_labels = concat_lines_of( table = lt_normalized sep = `,` ).
+    rv_labels = concat_lines_of(
+      table = lt_normalized
+      sep = `,` ).
 
   ENDMETHOD.
 
@@ -125,7 +127,9 @@ CLASS ZCL_ABAPGIT_REPO_LABELS IMPLEMENTATION.
       APPEND lv_pair TO lt_pairs.
     ENDLOOP.
 
-    rv_config = concat_lines_of( table = lt_pairs sep = `,` ).
+    rv_config = concat_lines_of(
+      table = lt_pairs
+      sep = `,` ).
 
   ENDMETHOD.
 
@@ -154,7 +158,8 @@ CLASS ZCL_ABAPGIT_REPO_LABELS IMPLEMENTATION.
       CONDENSE <lv_pair>.
       IF <lv_pair> IS NOT INITIAL.
         SPLIT <lv_pair> AT ':' INTO ls_c-label ls_c-color.
-        CONDENSE: ls_c-label, ls_c-color.
+        CONDENSE ls_c-label.
+        CONDENSE ls_c-color.
         APPEND ls_c TO rt_label_colors.
       ENDIF.
     ENDLOOP.

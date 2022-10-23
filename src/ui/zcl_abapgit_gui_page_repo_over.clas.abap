@@ -249,8 +249,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     )->add_column(
       iv_tech_name      = 'NAME'
       iv_display_name   = 'Name'
-      iv_allow_order_by = abap_true
-    ).
+      iv_allow_order_by = abap_true ).
 
     IF mt_all_labels IS NOT INITIAL.
       lo_tab_scheme->add_column(
