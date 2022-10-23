@@ -54,6 +54,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
           mv_only_favorites   TYPE abap_bool,
           mv_filter           TYPE string,
           mt_all_labels       TYPE string_table,
+          mo_label_colors     TYPE REF TO zcl_abapgit_string_map,
           mv_order_by         TYPE string.
 
     METHODS set_order_by
@@ -324,9 +325,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
   METHOD constructor.
 
+    DATA ls_settings TYPE zif_abapgit_definitions=>ty_s_user_settings.
+
     super->constructor( ).
     mv_order_by = |NAME|.
     mv_only_favorites = iv_only_favorites.
+
+    ls_settings = zcl_abapgit_persist_factory=>get_settings( )->read( )->get_user_settings( ).
+    mo_label_colors = zcl_abapgit_repo_labels=>split_colors_into_map( ls_settings-label_colors ).
 
   ENDMETHOD.
 
@@ -507,7 +513,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     ri_html->add( |<form class="inline" method="post" action="sapevent:{ c_action-apply_filter }">| ).
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_text_input(
       iv_name      = |filter|
-      iv_label     = |Filter: |
+      iv_label     = |Filter:|
       iv_value     = mv_filter
       iv_autofocus = abap_true ) ).
     ri_html->add( |<input type="submit" class="hidden-submit">| ).
@@ -549,7 +555,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     ENDIF.
 
     ii_html->add( |<div class="repo-label-catalog">| ).
-    ii_html->add( '<label>Labels:</label>' ).
+    ii_html->add( '<label>Filter by label:</label>' ).
     ii_html->add( render_label_list(
       it_labels    = mt_all_labels
       iv_clickable = abap_true ) ).
@@ -564,6 +570,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     DATA lt_fragments TYPE string_table.
     DATA lv_l TYPE string.
+    DATA lv_color TYPE string.
     DATA li_html TYPE REF TO zif_abapgit_html.
 
     IF it_labels IS INITIAL.
@@ -575,13 +582,18 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     APPEND `<ul class="repo-labels">` TO lt_fragments.
 
     LOOP AT it_labels INTO lv_l WHERE table_line IS NOT INITIAL.
+      lv_color = mo_label_colors->get( lv_l ).
+      IF lv_color IS NOT INITIAL.
+        lv_color = | style="background-color:{ lv_color }"|.
+      ENDIF.
+
       IF iv_clickable = abap_true.
         lv_l = li_html->a(
           iv_txt = lv_l
           iv_act = |{ c_action-label_filter }|
           iv_query = lv_l ).
       ENDIF.
-      lv_l = `<li>` && lv_l && `</li>`.
+      lv_l = |<li{ lv_color }>{ lv_l }</li>|.
       APPEND lv_l TO lt_fragments.
     ENDLOOP.
 
@@ -726,7 +738,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     " Labels
     IF mt_all_labels IS NOT INITIAL.
-      ii_html->td( render_label_list( is_repo-labels ) ).
+      ii_html->td(
+        iv_content = render_label_list( is_repo-labels )
+        iv_class   = 'labels' ).
     ENDIF.
 
     " Package

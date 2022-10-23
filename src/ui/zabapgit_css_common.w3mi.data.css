@@ -1022,12 +1022,18 @@ table.commit tr .title {
 
 /* Repo overview */
 .repo-overview { 
-  font-size: 90%;
   padding: 0.5em 0.7em;
+  /*font-size: 90%;*/
+}
+.repo-overview table {
+  font-size: 90%;
 }
 .repo-overview-toolbar {
-  padding: 1em;
+  padding: 0.5em 1em;
   /*margin-top: -0.5em;*/
+}
+.repo-overview-toolbar label {
+  margin-right: 0.5em;
 }
 .repo-overview th {
   text-align: left;
@@ -1057,6 +1063,38 @@ table.commit tr .title {
 .repo-overview .ro-go a:hover { 
   color: #ff721e;
   text-decoration: none;
+}
+.repo-overview td.labels {
+  max-width: 18ch;
+}
+
+/* Repo labels */
+.repo-label-catalog {
+  padding: 0.5em 1em;
+  margin-top: -0.5em;
+}
+.repo-label-catalog label {
+  margin-right: 0.5em;
+}
+ul.repo-labels {
+  display: inline-block;
+  list-style-type: none;
+  padding-inline-start: 0px;
+  padding-left: 0px;
+  margin-block-start: 0px;
+  margin-block-end: 0px;
+}
+ul.repo-labels li {
+  display: inline-block;
+  padding: 3px 5px;
+  border-radius: 3px;
+  background-color: rgba(0,0,0,0.1); /* defaut color, can be overriden by user colors */
+}
+ul.repo-labels li:not(:last-child) { margin-right: 0.3em; }
+table ul.repo-labels li {
+  font-size: 90%;
+  padding: 2px 4px;
+  margin-bottom: 1px;
 }
 
 
