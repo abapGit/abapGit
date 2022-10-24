@@ -86,7 +86,6 @@
     "parser_702_chaining": true,
     "sy_modification": {
       "exclude": [
-        "zcl_abapgit_ajson.clas.locals_imp.abap",
         "zcl_abapgit_objects_program.clas.abap"
       ]
     },
@@ -94,8 +93,6 @@
     "function_module_recommendations": false,
     "method_overwrites_builtin": {
       "exclude": [
-        "zcl_abapgit_ajson.clas.locals_imp.abap",
-        "zcl_abapgit_ajson.clas.testclasses.abap",
         "zcl_abapgit_stage.clas.abap",
         "zif_abapgit_log.intf.abap"
       ]
