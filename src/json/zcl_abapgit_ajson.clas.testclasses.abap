@@ -405,7 +405,7 @@ CLASS ltcl_serializer_test DEFINITION FINAL
     METHODS item_order FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS simple_indented FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS empty_set FOR TESTING RAISING zcx_abapgit_ajson_error.
-    METHODS escape FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS escape_string FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS empty FOR TESTING RAISING zcx_abapgit_ajson_error.
 
 ENDCLASS.
@@ -684,7 +684,7 @@ CLASS ltcl_serializer_test IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD escape.
+  METHOD escape_string.
 
     DATA lv_act TYPE string.
     DATA lv_exp TYPE string.
