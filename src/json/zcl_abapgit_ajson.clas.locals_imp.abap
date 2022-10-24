@@ -389,7 +389,7 @@ CLASS lcl_json_serializer DEFINITION FINAL CREATE PRIVATE.
     DATA mv_indent_step TYPE i.
     DATA mv_level TYPE i.
 
-    CLASS-METHODS escape
+    CLASS-METHODS escape_string
       IMPORTING
         iv_unescaped TYPE string
       RETURNING
@@ -475,7 +475,7 @@ CLASS lcl_json_serializer IMPLEMENTATION.
       WHEN zif_abapgit_ajson=>node_type-object.
         lv_item = lv_item && '{'.
       WHEN zif_abapgit_ajson=>node_type-string.
-        lv_item = lv_item && |"{ escape( is_node-value ) }"|.
+        lv_item = lv_item && |"{ escape_string( is_node-value ) }"|.
       WHEN zif_abapgit_ajson=>node_type-boolean OR zif_abapgit_ajson=>node_type-number.
         lv_item = lv_item && is_node-value.
       WHEN zif_abapgit_ajson=>node_type-null.
@@ -560,7 +560,7 @@ CLASS lcl_json_serializer IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD escape.
+  METHOD escape_string.
 
     rv_escaped = iv_unescaped.
     IF rv_escaped CA |"\\\t\n\r|.
@@ -897,12 +897,12 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
           IF is_parent_type-tab_item_buf IS BOUND. " Indirect hint that table was sorted/hashed, see get_node_type.
             TRY.
                 INSERT <tab_item> INTO TABLE <parent_anytab>.
+                IF sy-subrc <> 0.
+                  zcx_abapgit_ajson_error=>raise( 'Duplicate insertion' ).
+                ENDIF.
               CATCH cx_sy_itab_duplicate_key.
-                sy-subrc = 4.
+                zcx_abapgit_ajson_error=>raise( 'Duplicate insertion' ).
             ENDTRY.
-            IF sy-subrc <> 0.
-              zcx_abapgit_ajson_error=>raise( 'Duplicate insertion' ).
-            ENDIF.
           ENDIF.
 
         ENDLOOP.
