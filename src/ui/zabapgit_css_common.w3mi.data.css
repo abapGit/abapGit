@@ -1090,17 +1090,127 @@ ul.repo-labels li {
   display: inline-block;
   padding: 3px 5px;
   border-radius: 3px;
-  border: 1px solid;
+  border-style: solid;
+  border-width: 1px;
   margin-bottom: 2px;
-  background-color: rgba(0,0,0,0.1);  /* defaut color, can be overriden by user colors */
+}
+ul.repo-labels li a {
+  color: inherit;
 }
 ul.repo-labels li:not(:last-child) { margin-right: 0.3em; }
 table ul.repo-labels li {
   font-size: 90%;
   padding: 2px 4px;
-  /*margin-bottom: 1px;*/
 }
 
+/* LABEL COLORS */
+.rl-white {
+  color: hsl(0, 0%, 30%);
+  background-color: hsl(0, 0%, 100%);
+  border-color: hsl(0, 0%, 80%);
+}
+.rl-white-b {
+  color: hsl(214, 100%, 60%);
+  background-color: hsl(0, 0%, 100%);
+  border-color: hsl(214, 89%, 86%);
+}
+.rl-white-r {
+  color: hsl(0, 100%, 41%);
+  background-color: hsl(0, 0%, 100%);
+  border-color: hsl(0, 100%, 85%);
+}
+.rl-grey {
+  color: hsl(0, 0%, 100%);
+  background-color: hsl(0, 0%, 70%);
+  border-color: hsl(0, 0%, 60%);
+}
+.rl-dark-w {
+  color: hsl(0, 0%, 100%);
+  background-color: hsl(0, 0%, 25%);
+  border-color: hsl(0, 0%, 25%);;
+}
+.rl-dark-y {
+  color: hsl(43, 95%, 75%);
+  background-color: hsl(0, 0%, 25%);
+  border-color: hsl(0, 0%, 25%);
+}
+.rl-dark-r {
+  color: hsl(0, 100%, 74%);
+  background-color: hsl(0, 0%, 25%);
+  border-color: hsl(0, 0%, 25%);
+}
+.rl-dark-b {
+  color: hsl(227, 92%, 80%);
+  background-color: hsl(0, 0%, 25%);
+  border-color: hsl(0, 0%, 25%);
+}
+.rl-lightblue {
+  color: hsl(217, 80%, 25%);
+  background-color: hsl(216, 76%, 84%);
+  border-color: hsl(216, 76%, 73%);
+}
+.rl-darkblue {
+  color: hsl(218, 77%, 88%);
+  background-color: hsl(217, 66%, 32%);
+  border-color: hsl(217, 66%, 20%);
+}
+.rl-lightgreen {
+  color: hsl(153, 76%, 18%);
+  background-color: hsl(152, 65%, 82%);
+  border-color: hsl(152, 65%, 65%);
+}
+.rl-darkgreen {
+  color: hsl(0, 0%, 100%);
+  background-color: hsl(153, 77%, 37%);
+  border-color: hsl(153, 77%, 30%);
+}
+.rl-lightred {
+  color: hsl(8, 86%, 29%);
+  background-color: hsl(8, 74%, 80%);
+  border-color: hsl(8, 74%, 70%);
+}
+.rl-darkred {
+  color: hsl(7, 76%, 85%);
+  background-color: hsl(8, 77%, 29%);
+  border-color: hsl(8, 77%, 20%);
+}
+.rl-yellow {
+  color: hsl(44, 87%, 22%);
+  background-color: hsl(44, 94%, 87%);
+  border-color: hsl(44, 94%, 70%);
+}
+.rl-darkyellow {
+  color: hsl(49, 100%, 24%);
+  background-color: hsl(49, 100%, 64%);
+  border-color: hsl(49, 100%, 49%);
+}
+.rl-orrange {
+  color: hsl(0, 0%, 100%);
+  background-color: hsl(19, 100%, 61%);
+  border-color: hsl(19, 100%, 50%);
+}
+.rl-brown {
+  color: hsl(33, 100%, 89%);
+  background-color: hsl(33, 66%, 39%);
+  border-color: hsl(33, 66%, 30%);
+}
+.rl-pink {
+  color: hsl(340, 35%, 45%);
+  background-color: hsl(340, 85%, 77%);
+  border-color: hsl(340, 85%, 65%);
+}
+.rl-teal {
+  color: hsl(0, 0%, 100%);
+  background-color: hsl(191, 61%, 45%);
+  border-color: hsl(191, 61%, 37%);
+}
+.rl-darkviolet {
+  color: hsl(0, 0%, 100%);
+  background-color: hsl(258, 100%, 80%);
+  border-color: hsl(258, 100%, 72%);
+}
+
+/* FORM FIELD HELP TOOLTIP */
 .form-field-help-tooltip {
   position: relative;
   display: inline-block;
@@ -1127,7 +1237,7 @@ table ul.repo-labels li {
 .form-field-help-tooltip code {
   border-radius: 5px;
   font-size: 90%;
-  padding: 0.2em 0.4em;
+  padding: 0.1em 0.4em;
   background-color: #e2e2e2;
   word-wrap: break-word;
 }
