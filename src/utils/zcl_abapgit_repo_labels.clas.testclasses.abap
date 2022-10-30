@@ -74,9 +74,10 @@ CLASS ltcl_tags IMPLEMENTATION.
 
   METHOD validate_colors.
 
-    zcl_abapgit_repo_labels=>validate_colors( 'a:red, b : #123456 ,,' ).
+    zcl_abapgit_repo_labels=>validate_colors( 'a:red, b : #123456 ,,c:red-w' ).
     zcl_abapgit_repo_labels=>validate_colors( '' ).
     zcl_abapgit_repo_labels=>validate_colors( ',' ).
+    zcl_abapgit_repo_labels=>validate_colors( 'a:#123,b:#123/234,c:#123456,d:#123456/234567' ).
 
     TRY.
         zcl_abapgit_repo_labels=>validate_colors( 'a,ab' ).
@@ -104,6 +105,12 @@ CLASS ltcl_tags IMPLEMENTATION.
 
     TRY.
         zcl_abapgit_repo_labels=>validate_colors( 'a:#1234' ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
+
+    TRY.
+        zcl_abapgit_repo_labels=>validate_colors( 'a:123/234' ).
         cl_abap_unit_assert=>fail( ).
       CATCH zcx_abapgit_exception.
     ENDTRY.
