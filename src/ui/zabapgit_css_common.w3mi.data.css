@@ -1090,15 +1090,47 @@ ul.repo-labels li {
   display: inline-block;
   padding: 3px 5px;
   border-radius: 3px;
-  background-color: rgba(0,0,0,0.1); /* defaut color, can be overriden by user colors */
+  border: 1px solid;
+  margin-bottom: 2px;
+  background-color: rgba(0,0,0,0.1);  /* defaut color, can be overriden by user colors */
 }
 ul.repo-labels li:not(:last-child) { margin-right: 0.3em; }
 table ul.repo-labels li {
   font-size: 90%;
   padding: 2px 4px;
-  margin-bottom: 1px;
+  /*margin-bottom: 1px;*/
 }
 
+.form-field-help-tooltip {
+  position: relative;
+  display: inline-block;
+}
+.form-field-help-tooltip .form-field-help-tooltip-text {
+  visibility: hidden;
+  width: 40ch;
+  border-radius: 5px;
+  position: absolute;
+  z-index: 1;
+  border: 1px solid;
+  padding: 0.4em 0.6em;
+}
+.form-field-help-tooltip .form-field-help-tooltip-text p {
+  margin: 0px;
+}
+.form-field-help-tooltip .form-field-help-tooltip-text {
+  background-color: white;
+  border-color: #888;
+}
+.form-field-help-tooltip:hover .form-field-help-tooltip-text {
+  visibility: visible;
+}
+.form-field-help-tooltip code {
+  border-radius: 5px;
+  font-size: 90%;
+  padding: 0.2em 0.4em;
+  background-color: #e2e2e2;
+  word-wrap: break-word;
+}
 
 /* Branch Overview Page */
 .gitGraph-scrollWrapper, .gitGraph-Wrapper{

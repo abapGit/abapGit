@@ -69,6 +69,9 @@ CLASS zcl_abapgit_gui_page_sett_pers DEFINITION
     METHODS save_settings
       RAISING
         zcx_abapgit_exception.
+    METHODS render_repo_labels_help_hint
+      RETURNING
+        VALUE(rv_html) TYPE string.
 ENDCLASS.
 
 
@@ -158,7 +161,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
       iv_max           = 10000
     )->text(
       iv_name          = c_id-label_colors
-      iv_label         = 'Repo label colors (label:color pairs, comma separeted, colors are "red", or #xxxxxx)'
+      iv_label         = `Repo label colors ` && render_repo_labels_help_hint( )
     )->start_group(
       iv_name          = c_id-interaction
       iv_label         = 'Interaction'
@@ -247,6 +250,64 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
 
     " Set for is_dirty check
     mo_form_util->set_data( mo_form_data ).
+
+  ENDMETHOD.
+
+
+  METHOD render_repo_labels_help_hint.
+
+    DATA lt_fragments TYPE string_table.
+    DATA lt_labels TYPE string_table.
+    DATA lv_l TYPE string.
+    DATA lo_colors TYPE REF TO zcl_abapgit_string_map.
+
+    APPEND `<p style="margin-bottom: 0.3em">` TO lt_fragments.
+    APPEND `Comma-separated list of <code>label:color</code> pairs.` TO lt_fragments.
+    APPEND ` <code>color</code> part can be either a css style (see below) or <code>#fg/bg</code> pair,`
+      TO lt_fragments.
+    APPEND ` where <code>fg</code> and <code>bg</code> are RGB color codes (3 or 6 long).` TO lt_fragments.
+    APPEND ` You can also specify just <code>fg</code> or <code>bg</code>` TO lt_fragments.
+    APPEND ` (defaults will be used for missing parts).` TO lt_fragments.
+    APPEND ` E.g. <code>utils:brown, work:#ff0000/880000, client X:#ddd, client Y:#/333</code>` TO lt_fragments.
+    APPEND `<br>Available CSS styles:` TO lt_fragments.
+    APPEND `</p>` TO lt_fragments.
+
+    APPEND `white` TO lt_labels.
+    APPEND `grey` TO lt_labels.
+    APPEND `darkgray-w` TO lt_labels.
+    APPEND `darkgray-y` TO lt_labels.
+    APPEND `lightblue` TO lt_labels.
+    APPEND `darkblue` TO lt_labels.
+    APPEND `lightgreen` TO lt_labels.
+    APPEND `darkgreen` TO lt_labels.
+    APPEND `lightred` TO lt_labels.
+    APPEND `darkred` TO lt_labels.
+    APPEND `yelow` TO lt_labels.
+    APPEND `orrange` TO lt_labels.
+    APPEND `brown` TO lt_labels.
+    APPEND `rose` TO lt_labels.
+    APPEND `teal` TO lt_labels.
+    APPEND `darkviolet` TO lt_labels.
+
+    lo_colors = zcl_abapgit_string_map=>create( ).
+    LOOP AT lt_labels INTO lv_l.
+      TRY.
+          lo_colors->set(
+            iv_key = lv_l
+            iv_val = `rl-` && lv_l ).
+        CATCH zcx_abapgit_exception.
+      ENDTRY.
+    ENDLOOP.
+
+    APPEND zcl_abapgit_gui_chunk_lib=>render_label_list(
+      it_labels       = lt_labels
+      io_label_colors = lo_colors ) TO lt_fragments.
+
+    APPEND
+      `<p style="margin-top: 0.3em">see also <code>rl-*</code> styles in common.css (styles, forgotten here)</p>`
+      TO lt_fragments.
+
+    rv_html = zcl_abapgit_gui_chunk_lib=>render_help_hint( concat_lines_of( table = lt_fragments ) ).
 
   ENDMETHOD.
 
