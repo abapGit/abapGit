@@ -553,9 +553,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
   ENDMETHOD.
 
-
-
-
   METHOD render_repo_list.
 
     ii_html->add( |<table>| ).
