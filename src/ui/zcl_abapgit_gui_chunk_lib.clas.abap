@@ -706,17 +706,19 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     APPEND `<ul class="repo-labels">` TO lt_fragments.
 
     LOOP AT it_labels INTO lv_l WHERE table_line IS NOT INITIAL.
+      CLEAR lv_class.
+      CLEAR lv_style.
       ls_parsed_color = zcl_abapgit_repo_labels=>parse_color( io_label_colors->get( lv_l ) ).
       IF ls_parsed_color-cls IS NOT INITIAL.
-        lv_class = | class="{ ls_parsed_color-cls }"|.
+        lv_class = | class="rl-{ ls_parsed_color-cls }"|.
       ELSEIF ls_parsed_color-fg IS NOT INITIAL OR ls_parsed_color-bg IS NOT INITIAL.
         lv_style = ` style="`.
         IF ls_parsed_color-fg IS NOT INITIAL.
-          lv_style = lv_style && |color:{ ls_parsed_color-fg };|.
+          lv_style = lv_style && |color:#{ ls_parsed_color-fg };|.
         ENDIF.
         IF ls_parsed_color-bg IS NOT INITIAL.
-          lv_style = lv_style && |background-color:{ ls_parsed_color-bg };|.
-          lv_style = lv_style && |border-color:{ ls_parsed_color-bg };|.
+          lv_style = lv_style && |background-color:#{ ls_parsed_color-bg };|.
+          lv_style = lv_style && |border-color:#{ ls_parsed_color-bg };|.
         ENDIF.
         lv_style = lv_style && `"`.
       ENDIF.

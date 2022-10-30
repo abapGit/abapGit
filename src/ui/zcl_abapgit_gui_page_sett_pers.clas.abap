@@ -273,19 +273,24 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
     APPEND `</p>` TO lt_fragments.
 
     APPEND `white` TO lt_labels.
+    APPEND `white-b` TO lt_labels.
+    APPEND `white-r` TO lt_labels.
     APPEND `grey` TO lt_labels.
-    APPEND `darkgray-w` TO lt_labels.
-    APPEND `darkgray-y` TO lt_labels.
+    APPEND `dark-w` TO lt_labels.
+    APPEND `dark-y` TO lt_labels.
+    APPEND `dark-r` TO lt_labels.
+    APPEND `dark-b` TO lt_labels.
     APPEND `lightblue` TO lt_labels.
     APPEND `darkblue` TO lt_labels.
     APPEND `lightgreen` TO lt_labels.
     APPEND `darkgreen` TO lt_labels.
     APPEND `lightred` TO lt_labels.
     APPEND `darkred` TO lt_labels.
-    APPEND `yelow` TO lt_labels.
+    APPEND `yellow` TO lt_labels.
+    APPEND `darkyellow` TO lt_labels.
     APPEND `orrange` TO lt_labels.
     APPEND `brown` TO lt_labels.
-    APPEND `rose` TO lt_labels.
+    APPEND `pink` TO lt_labels.
     APPEND `teal` TO lt_labels.
     APPEND `darkviolet` TO lt_labels.
 
@@ -294,7 +299,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
       TRY.
           lo_colors->set(
             iv_key = lv_l
-            iv_val = `rl-` && lv_l ).
+            iv_val = lv_l ).
         CATCH zcx_abapgit_exception.
       ENDTRY.
     ENDLOOP.

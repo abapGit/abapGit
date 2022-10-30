@@ -318,14 +318,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA ls_settings TYPE zif_abapgit_definitions=>ty_s_user_settings.
 
     super->constructor( ).
     mv_order_by = |NAME|.
     mv_only_favorites = iv_only_favorites.
-
-    ls_settings = zcl_abapgit_persist_factory=>get_settings( )->read( )->get_user_settings( ).
-    mo_label_colors = zcl_abapgit_repo_labels=>split_colors_into_map( ls_settings-label_colors ).
 
   ENDMETHOD.
 
@@ -911,6 +907,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
   METHOD zif_abapgit_gui_renderable~render.
 
     DATA lt_overview TYPE ty_overviews.
+    DATA ls_settings TYPE zif_abapgit_definitions=>ty_s_user_settings.
+
+    ls_settings = zcl_abapgit_persist_factory=>get_settings( )->read( )->get_user_settings( ).
+    mo_label_colors = zcl_abapgit_repo_labels=>split_colors_into_map( ls_settings-label_colors ).
 
     lt_overview = prepare_overviews( ).
 
