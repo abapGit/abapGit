@@ -144,13 +144,6 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
       RETURNING
         VALUE(rt_tab_scheme) TYPE zif_abapgit_definitions=>ty_col_spec_tt.
 
-    METHODS render_label_list
-      IMPORTING
-        it_labels TYPE string_table
-        iv_clickable TYPE abap_bool DEFAULT abap_false
-      RETURNING
-        VALUE(rv_html) TYPE string.
-
     METHODS collect_all_labels
       IMPORTING
         it_overview TYPE ty_overviews
@@ -556,52 +549,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     ii_html->add( |<div class="repo-label-catalog">| ).
     ii_html->add( '<label>Filter by label:</label>' ).
-    ii_html->add( render_label_list(
-      it_labels    = mt_all_labels
-      iv_clickable = abap_true ) ).
+    ii_html->add( zcl_abapgit_gui_chunk_lib=>render_label_list(
+      it_labels           = mt_all_labels
+      io_label_colors     = mo_label_colors
+      iv_clickable_action = c_action-label_filter ) ).
     ii_html->add( |</div>| ).
 
   ENDMETHOD.
 
 
-  METHOD render_label_list.
-
-    " TODO: probably move to chunks if rendered elsewhere
-
-    DATA lt_fragments TYPE string_table.
-    DATA lv_l TYPE string.
-    DATA lv_color TYPE string.
-    DATA li_html TYPE REF TO zif_abapgit_html.
-
-    IF it_labels IS INITIAL.
-      RETURN.
-    ENDIF.
-
-    li_html = zcl_abapgit_html=>create( ).
-
-    APPEND `<ul class="repo-labels">` TO lt_fragments.
-
-    LOOP AT it_labels INTO lv_l WHERE table_line IS NOT INITIAL.
-      lv_color = mo_label_colors->get( lv_l ).
-      IF lv_color IS NOT INITIAL.
-        lv_color = | style="background-color:{ lv_color }"|.
-      ENDIF.
-
-      IF iv_clickable = abap_true.
-        lv_l = li_html->a(
-          iv_txt = lv_l
-          iv_act = |{ c_action-label_filter }|
-          iv_query = lv_l ).
-      ENDIF.
-      lv_l = |<li{ lv_color }>{ lv_l }</li>|.
-      APPEND lv_l TO lt_fragments.
-    ENDLOOP.
-
-    APPEND `</ul>` TO lt_fragments.
-
-    rv_html = concat_lines_of( table = lt_fragments ).
-
-  ENDMETHOD.
 
 
   METHOD render_repo_list.
@@ -739,7 +695,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     " Labels
     IF mt_all_labels IS NOT INITIAL.
       ii_html->td(
-        iv_content = render_label_list( is_repo-labels )
+        iv_content = zcl_abapgit_gui_chunk_lib=>render_label_list(
+          it_labels = is_repo-labels
+          io_label_colors = mo_label_colors )
         iv_class   = 'labels' ).
     ENDIF.
 
