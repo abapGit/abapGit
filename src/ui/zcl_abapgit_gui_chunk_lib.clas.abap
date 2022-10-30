@@ -692,7 +692,9 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     DATA lt_fragments TYPE string_table.
     DATA lv_l TYPE string.
-    DATA lv_color TYPE string.
+    DATA lv_class TYPE string.
+    DATA lv_style TYPE string.
+    DATA ls_parsed_color TYPE zcl_abapgit_repo_labels=>ty_color.
     DATA li_html TYPE REF TO zif_abapgit_html.
 
     IF it_labels IS INITIAL.
@@ -704,9 +706,19 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     APPEND `<ul class="repo-labels">` TO lt_fragments.
 
     LOOP AT it_labels INTO lv_l WHERE table_line IS NOT INITIAL.
-      lv_color = io_label_colors->get( lv_l ).
-      IF lv_color IS NOT INITIAL.
-        lv_color = | style="background-color:{ lv_color }"|.
+      ls_parsed_color = zcl_abapgit_repo_labels=>parse_color( io_label_colors->get( lv_l ) ).
+      IF ls_parsed_color-cls IS NOT INITIAL.
+        lv_class = | class="{ ls_parsed_color-cls }"|.
+      ELSEIF ls_parsed_color-fg IS NOT INITIAL OR ls_parsed_color-bg IS NOT INITIAL.
+        lv_style = ` style="`.
+        IF ls_parsed_color-fg IS NOT INITIAL.
+          lv_style = lv_style && |color:{ ls_parsed_color-fg };|.
+        ENDIF.
+        IF ls_parsed_color-bg IS NOT INITIAL.
+          lv_style = lv_style && |background-color:{ ls_parsed_color-bg };|.
+          lv_style = lv_style && |border-color:{ ls_parsed_color-bg };|.
+        ENDIF.
+        lv_style = lv_style && `"`.
       ENDIF.
 
       IF iv_clickable_action IS NOT INITIAL.
@@ -715,7 +727,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
           iv_act = |{ iv_clickable_action }|
           iv_query = lv_l ).
       ENDIF.
-      lv_l = |<li{ lv_color }>{ lv_l }</li>|.
+      lv_l = |<li{ lv_class }{ lv_style }>{ lv_l }</li>|.
       APPEND lv_l TO lt_fragments.
     ENDLOOP.
 
