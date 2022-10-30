@@ -12,7 +12,7 @@ CLASS zcl_abapgit_repo_labels DEFINITION
       END OF ty_label_color,
       ty_label_colors TYPE STANDARD TABLE OF ty_label_color WITH KEY label.
 
-    CONSTANTS c_allowed_chars TYPE string VALUE `-_.a-zA-Z0-9` ##NO_TEXT.
+    CONSTANTS c_allowed_chars TYPE string VALUE `-_. a-zA-Z0-9` ##NO_TEXT.
 
     " it is easier to allow chars, though potentially other chars can be added later if needed
     CLASS-METHODS class_constructor.
