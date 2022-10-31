@@ -1,9 +1,18 @@
-![CI](https://github.com/abapGit/abapGit/workflows/CI/badge.svg)
+![Build](https://github.com/abapGit/abapGit/workflows/main-build/badge.svg)
+![Test](https://github.com/abapGit/abapGit/workflows/test-pr/badge.svg)
 [![Slack](https://abapgit-slackinviter.herokuapp.com/badge.svg)](https://abapgit-slackinviter.herokuapp.com/)
 [![abap package version](https://img.shields.io/endpoint?url=https://shield.abap.space/version-shield-json/github/abapGit/abapGit/src/zif_abapgit_version.intf.abap/c_abap_version&label=version)](https://github.com/abapGit/abapGit/blob/main/src/zif_abapgit_version.intf.abap)
 
-<!--img src="img/logo.svg#gh-light-mode-only" height="40" alt="abapGit logo"><img src="img/logo-dark.svg#gh-dark-mode-only" height="40" alt="abapGit logo"--> 
+<!--
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="img/logo-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="img/logo.svg">
+  <img height="40" alt="abapGit logo" src="img/logo.svg">
+</picture>
+--> 
+
 # <a href="https://supportukrainenow.org/"><img src="img/abapGit_in_Ukraine_Colors.svg" height="40" alt="abapGit logo"></a>
+
 <a href="https://supportukrainenow.org/"><img src="img/Ukraine-heart-shape-flag.svg" height="25" alt="Support Ukraine"> Support Ukraine</a>
 
 Git client for ABAP
@@ -26,12 +35,14 @@ Latest build: [zabapgit_standalone.prog.abap](https://raw.githubusercontent.com/
 It is recommended to use SAP GUI for Windows, since there are known issues related to running abapGit and SAP GUI for Java. The focus of abapGit is on supporting [ADT](https://github.com/abapGit/ADT_Frontend) instead of supporting SAP GUI for Java.
 
 ## Design Goals
+
 - Easy installation
 - Easy upgrade
 - Small system footprint
 - Code readable in git repository
 
-## Documentation/Guides
+## Documentation and Guides
+
 https://docs.abapgit.org
 
 ## Contributing
@@ -43,10 +54,11 @@ You can find the contribution guidelines [here](CONTRIBUTING.md).
 See [dotabap.org](https://dotabap.org) or [this page](https://docs.abapgit.org/other-where-used.html).
 
 ## FAQ
+
 For questions/comments/bugs/feature requests/wishes please create an [issue](https://github.com/abapGit/abapGit/issues).
 
 ![abapgit](img/abapgit_1_99_0.png)
 
-## Credits and references
+## Credits and References
 
 Icons used in abapGit are created from [Font Awesome](https://fontawesome.com/) free icon set ([CC BY 4.0 License](https://fontawesome.com/license/free)).
