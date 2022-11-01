@@ -4,7 +4,8 @@
     "test": "npm run eslint && npm run abaplint",
     "merge": "abapmerge -f src/zabapgit.prog.abap -c zabapgit_standalone > zabapgit.abap",
     "merge.ci": "cp zabapgit.abap ci/zabapgit_standalone.prog.abap && cd ci && abaplint --format codeframe && cd ..",
-    "unit": "rm -rf output && abap_transpile test/abap_transpile.json && echo RUNNING && node output/index.mjs",
+    "build": "rm -rf output && abap_transpile test/abap_transpile.json",
+    "unit": "npm run build && echo RUNNING && node output/index.mjs",
     "coverage": "npm run unit && c8 node output/index.mjs && c8 report --reporter=html",
     "integration": "rm -rf output && cp test/abap_transpile.json test/abap_transpile_int.json && sed -i 's/zcl_abapgit_auth/zcl_abapgit_integration_git/g' test/abap_transpile_int.json && abap_transpile test/abap_transpile_int.json && echo RUNNING && node output/index.mjs",
     "abaplint": "abaplint --format codeframe",
@@ -25,12 +26,12 @@
     ]
   },
   "devDependencies": {
-    "@abaplint/cli": "^2.93.39",
-    "@abaplint/database-sqlite": "^2.2.14",
-    "@abaplint/runtime": "^2.2.15",
-    "@abaplint/transpiler-cli": "^2.2.15",
-    "abapmerge": "^0.14.7",
+    "@abaplint/cli": "^2.93.59",
+    "@abaplint/database-sqlite": "^2.3.21",
+    "@abaplint/runtime": "^2.3.30",
+    "@abaplint/transpiler-cli": "^2.3.30",
+    "abapmerge": "^0.14.8",
     "c8": "^7.12.0",
-    "eslint": "^8.25.0"
+    "eslint": "^8.26.0"
   }
 }

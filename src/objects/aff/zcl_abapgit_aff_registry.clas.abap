@@ -24,6 +24,7 @@ CLASS zcl_abapgit_aff_registry DEFINITION
 
     DATA:
       mo_settings TYPE REF TO zcl_abapgit_settings.
+    METHODS initialize_registry_table.
 
     CLASS-METHODS:
       register
@@ -49,13 +50,7 @@ CLASS zcl_abapgit_aff_registry IMPLEMENTATION.
     DATA ls_registry_entry TYPE ty_registry_entry.
 
     IF gt_registry IS INITIAL.
-      register( iv_obj_type = 'CHKC' ).
-      register( iv_obj_type = 'CHKO' ).
-      register( iv_obj_type = 'CHKV' ).
-      register( iv_obj_type = 'EVTB' ).
-      register( iv_obj_type = 'INTF'
-                iv_experimental = abap_true ).
-      register( iv_obj_type = 'SMBC' ).
+      initialize_registry_table( ).
     ENDIF.
 
     READ TABLE gt_registry WITH TABLE KEY obj_type = iv_obj_type INTO ls_registry_entry.
@@ -66,6 +61,16 @@ CLASS zcl_abapgit_aff_registry IMPLEMENTATION.
     ELSE.
       rv_result = abap_false.
     ENDIF.
+  ENDMETHOD.
+
+  METHOD initialize_registry_table.
+    register( iv_obj_type = 'CHKC' ).
+    register( iv_obj_type = 'CHKO' ).
+    register( iv_obj_type = 'CHKV' ).
+    register( iv_obj_type = 'EVTB' ).
+    register( iv_obj_type     = 'INTF'
+              iv_experimental = abap_true ).
+    register( iv_obj_type = 'SMBC' ).
   ENDMETHOD.
 
   METHOD register.
