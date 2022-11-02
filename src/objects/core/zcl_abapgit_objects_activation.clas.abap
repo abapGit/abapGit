@@ -591,7 +591,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
       IF lv_error = abap_true.
         ls_item-obj_type = ls_class-object.
         ls_item-obj_name = ls_class-clsname.
-        lv_msg = |Error updating where-used list for { ls-item-obj_type } { ls_item-obj_name }.|
+        lv_msg = |Error updating where-used list for { ls_item-obj_type } { ls_item-obj_name }.|
           && | Check for syntax errors|.
         ii_log->add(
           iv_msg  = lv_msg
