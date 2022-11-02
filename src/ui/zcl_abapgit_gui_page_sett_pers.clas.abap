@@ -159,8 +159,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
       iv_hint          = 'Maximum number of objects listed (0 = All)'
       iv_min           = 0
       iv_max           = 10000
-    )->text(
+    )->textarea(
       iv_name          = c_id-label_colors
+      iv_rows          = 3
       iv_label         = `Repo label colors ` && render_repo_labels_help_hint( )
     )->start_group(
       iv_name          = c_id-interaction
