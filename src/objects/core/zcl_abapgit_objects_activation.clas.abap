@@ -569,6 +569,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
     DATA: ls_class   LIKE LINE OF gt_classes,
           lo_cross   TYPE REF TO cl_wb_crossreference,
           ls_item    TYPE zif_abapgit_definitions=>ty_item,
+          lv_msg     TYPE string,
           lv_error   TYPE c LENGTH 1,
           lv_include TYPE programm.
 
@@ -590,8 +591,10 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
       IF lv_error = abap_true.
         ls_item-obj_type = ls_class-object.
         ls_item-obj_name = ls_class-clsname.
+        lv_msg = |Error updating where-used list for { ls-item-obj_type } { ls_item-obj_name }.|
+          && | Check for syntax errors|.
         ii_log->add(
-          iv_msg  = 'Error updating where-used list'
+          iv_msg  = lv_msg
           is_item = ls_item ).
       ENDIF.
     ENDLOOP.
