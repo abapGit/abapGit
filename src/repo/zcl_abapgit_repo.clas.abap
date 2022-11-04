@@ -158,11 +158,14 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS check_language
       RAISING
         zcx_abapgit_exception .
+    METHODS normalize_local_settings
+      CHANGING
+        cs_local_settings TYPE zif_abapgit_persistence=>ty_local_settings.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 
   METHOD bind_listener.
@@ -400,6 +403,15 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD normalize_local_settings.
+
+    cs_local_settings-labels = zcl_abapgit_repo_labels=>normalize( cs_local_settings-labels ).
+
+    " TODO: more validation and normalization ?
+
+  ENDMETHOD.
+
+
   METHOD notify_listener.
 
     DATA ls_meta_slug TYPE zif_abapgit_persistence=>ty_repo_xml.
@@ -544,6 +556,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     IF is_local_settings IS SUPPLIED.
       ms_data-local_settings = is_local_settings.
       ls_mask-local_settings = abap_true.
+      normalize_local_settings( CHANGING cs_local_settings = ms_data-local_settings ).
     ENDIF.
 
     IF iv_deserialized_at IS SUPPLIED OR iv_deserialized_by IS SUPPLIED.
