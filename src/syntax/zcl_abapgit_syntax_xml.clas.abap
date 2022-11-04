@@ -24,7 +24,7 @@ CLASS zcl_abapgit_syntax_xml DEFINITION
         "for XML tags, we will use a submatch
         " main pattern includes quoted strings so we can ignore < and > in attr values
         xml_tag  TYPE string VALUE '(?:"[^"]*")|(?:''[^'']*'')|([<>])', "#EC NOTEXT
-        attr     TYPE string VALUE '(?:^|\s)[-a-z:_0-9]+\s*(?==)', "#EC NOTEXT
+        attr     TYPE string VALUE '(?:^|\s)[-a-z:_0-9]+\s*(?==\s*["|''])', "#EC NOTEXT
         attr_val TYPE string VALUE '("[^"]*")|(''[^'']*'')', "#EC NOTEXT
         " comments <!-- ... -->
         comment  TYPE string VALUE '[\<]!--.*--[\>]|[\<]!--|--[\>]', "#EC NOTEXT
@@ -41,7 +41,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SYNTAX_XML IMPLEMENTATION.
+CLASS zcl_abapgit_syntax_xml IMPLEMENTATION.
 
 
   METHOD constructor.
