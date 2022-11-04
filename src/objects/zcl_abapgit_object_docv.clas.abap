@@ -49,10 +49,10 @@ CLASS zcl_abapgit_object_docv IMPLEMENTATION.
     super->constructor( is_item     = is_item
                         iv_language = iv_language ).
 
-    IF ms_item-obj_name(2) = 'UO' OR ms_item-obj_name(2) = 'UP'.
+    IF ms_item-obj_name(2) <> 'DT'. " IN, MO, UO, UP
       mv_id         = ms_item-obj_name(2).
       mv_doc_object = ms_item-obj_name+2.
-    ELSE. " DT, IN, MO
+    ELSE. " DT
       CALL FUNCTION 'RS_NAME_SPLIT_NAMESPACE'
         EXPORTING
           name_with_namespace    = ms_item-obj_name
