@@ -1021,7 +1021,7 @@ table.commit tr .title {
 }
 
 /* Repo overview */
-.repo-overview { 
+.repo-overview {
   padding: 0.5em 0.7em;
   /*font-size: 90%;*/
 }
@@ -1053,14 +1053,15 @@ table.commit tr .title {
   color: #5e8dc9 !important;
 }
 .repo-overview td,
-.repo-overview th { 
+.repo-overview th {
   padding: 6px 6px; /* maybe use height ? */
 }
 .repo-overview .ro-detail { display: none; }
+.repo-overview .ro-detail-not { display: normal; }
 .repo-overview .ro-go a {
   padding: 0px 0.15em;
 }
-.repo-overview .ro-go a:hover { 
+.repo-overview .ro-go a:hover {
   color: #ff721e;
   text-decoration: none;
 }

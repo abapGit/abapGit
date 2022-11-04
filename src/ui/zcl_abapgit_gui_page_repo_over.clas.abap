@@ -154,7 +154,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -260,10 +260,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     )->add_column(
       iv_tech_name      = 'URL'
       iv_display_name   = 'Remote'
+      iv_css_class      = 'ro-detail-not'
       iv_allow_order_by = abap_true
     )->add_column(
       iv_tech_name      = 'BRANCH'
       iv_display_name   = 'Branch'
+      iv_css_class      = 'ro-detail-not'
       iv_allow_order_by = abap_true
     )->add_column(
       iv_tech_name      = 'DESERIALIZED_BY'
@@ -553,6 +555,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD render_repo_list.
 
     ii_html->add( |<table>| ).
@@ -702,8 +705,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     " Repo URL
     IF lv_is_online_repo = abap_true.
       ii_html->td( ii_content = zcl_abapgit_gui_chunk_lib=>render_repo_url(
-        iv_url = is_repo-url
-        iv_render_remote_edit_for_key = is_repo-key ) ).
+        iv_url                        = is_repo-url
+        iv_render_remote_edit_for_key = is_repo-key )
+        iv_class                      = 'ro-detail-not' ).
     ELSE.
       ii_html->td( ).
     ENDIF.
@@ -714,7 +718,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     ELSE.
       ii_html->td( ii_content = zcl_abapgit_gui_chunk_lib=>render_branch_name(
         iv_branch   = is_repo-branch
-        iv_repo_key = is_repo-key ) ).
+        iv_repo_key = is_repo-key )
+        iv_class    = 'ro-detail-not' ).
     ENDIF.
 
     " Details: deserialized by

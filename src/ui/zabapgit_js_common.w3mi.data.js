@@ -251,6 +251,7 @@ function RepoOverViewHelper() {
   this.isDetailsDisplayed = false;
   this.isOnlyFavoritesDisplayed = false;
   this.detailCssClass = findStyleSheetByName(".repo-overview .ro-detail");
+  this.detailCssClassNot = findStyleSheetByName(".repo-overview .ro-detail-not");
   var icon = document.getElementById("icon-filter-detail");
   this.toggleFilterIcon(icon, this.isDetailsDisplayed);
   this.registerRowSelection();
@@ -421,6 +422,7 @@ RepoOverViewHelper.prototype.toggleItemsDetail = function (forceDisplay) {
     }
 
     this.detailCssClass.style.display = this.isDetailsDisplayed ? "" : "none";
+    this.detailCssClassNot.style.display = this.isDetailsDisplayed ? "none" : "";
     var icon = document.getElementById("icon-filter-detail");
     this.toggleFilterIcon(icon, this.isDetailsDisplayed);
   }
