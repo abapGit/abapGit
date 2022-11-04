@@ -35,6 +35,10 @@ CLASS ltcl_folder_logic_helper IMPLEMENTATION.
       io_dot     = lo_dot
       iv_package = iv_package ).
 
+    IF lv_path IS INITIAL.
+      zcx_abapgit_exception=>raise( 'Unable to determine path' ).
+    ENDIF.
+
     cl_abap_unit_assert=>assert_equals(
       act = lv_package
       exp = iv_package ).
@@ -57,7 +61,11 @@ ENDCLASS.
 CLASS ltcl_folder_logic_package IMPLEMENTATION.
 
   METHOD zif_abapgit_sap_package~list_subpackages.
-    RETURN.
+    DATA lv_devclass TYPE devclass.
+    lv_devclass = '$TOP_BAR'.
+    INSERT lv_devclass INTO TABLE rt_list.
+    lv_devclass = '$TOP_FOO_BAR'.
+    INSERT lv_devclass INTO TABLE rt_list.
   ENDMETHOD.
 
   METHOD zif_abapgit_sap_package~list_superpackages.
@@ -125,8 +133,22 @@ ENDCLASS.
 
 CLASS ltcl_folder_logic IMPLEMENTATION.
 
+  " Test packages:
+  "
+  " $TOP
+  " > $TOP_FOO
+  " > > $TOP_BAR
+  " > > $TOP_FOO_BAR
+  "
+  " $FOOBAR (outside of $TOP)
   METHOD zif_abapgit_sap_package~list_subpackages.
-    RETURN.
+    DATA lv_devclass TYPE devclass.
+    lv_devclass = '$TOP_BAR'.
+    INSERT lv_devclass INTO TABLE rt_list.
+    lv_devclass = '$TOP_FOO'.
+    INSERT lv_devclass INTO TABLE rt_list.
+    lv_devclass = '$TOP_FOO_BAR'.
+    INSERT lv_devclass INTO TABLE rt_list.
   ENDMETHOD.
 
   METHOD zif_abapgit_sap_package~list_superpackages.
@@ -322,8 +344,17 @@ ENDCLASS.
 
 CLASS ltcl_folder_logic_namespaces IMPLEMENTATION.
 
+  " Test packages:
+  "
+  " /TEST/TOOLS
+  " > /TEST/T1
+  " > /TEST/TOOLS_T1
   METHOD zif_abapgit_sap_package~list_subpackages.
-    RETURN.
+    DATA lv_devclass TYPE devclass.
+    lv_devclass = '/TEST/T1'.
+    INSERT lv_devclass INTO TABLE rt_list.
+    lv_devclass = '/TEST/TOOLS_T1'.
+    INSERT lv_devclass INTO TABLE rt_list.
   ENDMETHOD.
 
   METHOD zif_abapgit_sap_package~list_superpackages.
