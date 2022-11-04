@@ -38,6 +38,7 @@ CLASS zcl_abapgit_gui_page_sett_pers DEFINITION
         parallel_proc_disabled TYPE string VALUE 'parallel_proc_disabled',
         hide_sapgui_hint       TYPE string VALUE 'hide_sapgui_hint',
         activate_wo_popup      TYPE string VALUE 'activate_wo_popup',
+        label_colors           TYPE string VALUE 'label_colors',
       END OF c_id.
     CONSTANTS:
       BEGIN OF c_event,
@@ -68,6 +69,9 @@ CLASS zcl_abapgit_gui_page_sett_pers DEFINITION
     METHODS save_settings
       RAISING
         zcx_abapgit_exception.
+    METHODS render_repo_labels_help_hint
+      RETURNING
+        VALUE(rv_html) TYPE string.
 ENDCLASS.
 
 
@@ -97,7 +101,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title      = 'Personal Settings'
       io_page_menu       = zcl_abapgit_gui_chunk_lib=>settings_toolbar(
-                             zif_abapgit_definitions=>c_action-go_settings_personal )
+        zif_abapgit_definitions=>c_action-go_settings_personal )
       ii_child_component = lo_component ).
 
   ENDMETHOD.
@@ -155,6 +159,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
       iv_hint          = 'Maximum number of objects listed (0 = All)'
       iv_min           = 0
       iv_max           = 10000
+    )->textarea(
+      iv_name          = c_id-label_colors
+      iv_rows          = 3
+      iv_label         = `Repo label colors ` && render_repo_labels_help_hint( )
     )->start_group(
       iv_name          = c_id-interaction
       iv_label         = 'Interaction'
@@ -218,6 +226,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
     mo_form_data->set(
       iv_key = c_id-max_lines
       iv_val = |{ ms_settings-max_lines }| ).
+    mo_form_data->set(
+      iv_key = c_id-label_colors
+      iv_val = ms_settings-label_colors ).
 
     " Interaction
     mo_form_data->set(
@@ -244,6 +255,69 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_repo_labels_help_hint.
+
+    DATA lt_fragments TYPE string_table.
+    DATA lt_labels TYPE string_table.
+    DATA lv_l TYPE string.
+    DATA lo_colors TYPE REF TO zcl_abapgit_string_map.
+
+    APPEND `<p style="margin-bottom: 0.3em">` TO lt_fragments.
+    APPEND `Comma-separated list of <code>label:color</code> pairs.` TO lt_fragments.
+    APPEND ` <code>color</code> part can be either a css style (see below) or <code>#fg/bg</code> pair,`
+      TO lt_fragments.
+    APPEND ` where <code>fg</code> and <code>bg</code> are RGB color codes (3 or 6 long).` TO lt_fragments.
+    APPEND ` You can also specify just <code>fg</code> or <code>bg</code>` TO lt_fragments.
+    APPEND ` (defaults will be used for missing parts).` TO lt_fragments.
+    APPEND ` E.g. <code>utils:brown, work:#ff0000/880000, client X:#ddd, client Y:#/333</code>` TO lt_fragments.
+    APPEND `<br>Available CSS styles:` TO lt_fragments.
+    APPEND `</p>` TO lt_fragments.
+
+    APPEND `white` TO lt_labels.
+    APPEND `white-b` TO lt_labels.
+    APPEND `white-r` TO lt_labels.
+    APPEND `grey` TO lt_labels.
+    APPEND `dark-w` TO lt_labels.
+    APPEND `dark-y` TO lt_labels.
+    APPEND `dark-r` TO lt_labels.
+    APPEND `dark-b` TO lt_labels.
+    APPEND `lightblue` TO lt_labels.
+    APPEND `darkblue` TO lt_labels.
+    APPEND `lightgreen` TO lt_labels.
+    APPEND `darkgreen` TO lt_labels.
+    APPEND `lightred` TO lt_labels.
+    APPEND `darkred` TO lt_labels.
+    APPEND `yellow` TO lt_labels.
+    APPEND `darkyellow` TO lt_labels.
+    APPEND `orrange` TO lt_labels.
+    APPEND `brown` TO lt_labels.
+    APPEND `pink` TO lt_labels.
+    APPEND `teal` TO lt_labels.
+    APPEND `darkviolet` TO lt_labels.
+
+    lo_colors = zcl_abapgit_string_map=>create( ).
+    LOOP AT lt_labels INTO lv_l.
+      TRY.
+          lo_colors->set(
+            iv_key = lv_l
+            iv_val = lv_l ).
+        CATCH zcx_abapgit_exception.
+      ENDTRY.
+    ENDLOOP.
+
+    APPEND zcl_abapgit_gui_chunk_lib=>render_label_list(
+      it_labels       = lt_labels
+      io_label_colors = lo_colors ) TO lt_fragments.
+
+    APPEND
+      `<p style="margin-top: 0.3em">see also <code>rl-*</code> styles in common.css (styles, forgotten here)</p>`
+      TO lt_fragments.
+
+    rv_html = zcl_abapgit_gui_chunk_lib=>render_help_hint( concat_lines_of( table = lt_fragments ) ).
+
+  ENDMETHOD.
+
+
   METHOD save_settings.
 
     DATA li_persistence TYPE REF TO zif_abapgit_persist_settings.
@@ -255,6 +329,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
     ms_settings-ui_theme = mo_form_data->get( c_id-ui_theme ).
     ms_settings-icon_scaling = mo_form_data->get( c_id-icon_scaling ).
     ms_settings-max_lines = mo_form_data->get( c_id-max_lines ).
+    ms_settings-label_colors = zcl_abapgit_repo_labels=>normalize_colors( mo_form_data->get(  c_id-label_colors ) ).
 
     " Interaction
     ms_settings-activate_wo_popup = mo_form_data->get( c_id-activate_wo_popup ).
@@ -282,7 +357,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
 
   METHOD validate_form.
 
+    DATA lx_error TYPE REF TO zcx_abapgit_exception.
+
     ro_validation_log = mo_form_util->validate( io_form_data ).
+
+    TRY.
+        zcl_abapgit_repo_labels=>validate_colors( io_form_data->get( c_id-label_colors ) ).
+      CATCH zcx_abapgit_exception INTO lx_error.
+        ro_validation_log->set(
+          iv_key = c_id-label_colors
+          iv_val = lx_error->get_text( ) ).
+    ENDTRY.
 
   ENDMETHOD.
 

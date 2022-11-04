@@ -6,12 +6,16 @@
   --theme-background-color: #E8E8E8;
   --theme-container-background-color: #f2f2f2;
   --theme-container-border-color: lightgrey;
+  --theme-table-background-color: white;
+  --theme-table-border-color: #ddd;
+  --theme-table-cell-border-color: #eee;
+
   --theme-primary-font: "72", Arial, Helvetica, sans-serif;
   --theme-primary-font-color: #333333;
   --theme-primary-font-color-reduced: #ccc;
   --theme-font-size: 12pt;
   --theme-link-color: #4078c0;
-  --theme-table-border-color: #eee;
+
   --theme-greyscale-dark: #808080;
   --theme-greyscale-medium: #b3b3b3;
   --theme-greyscale-light: #ccc;
@@ -136,20 +140,20 @@ span.branch_branch {
 
 /* REPOSITORY TABLE*/
 table.repo_tab {
-  border-color: #ddd;
-  background-color: #fff;
+  border-color: var(--theme-table-border-color);
+  background-color: var(--theme-table-background-color);
 }
 .repo_tab th {
   color: var(--theme-link-color);
   background-color: #edf2f9;
-  border-bottom-color: #ddd;
+  border-bottom-color: var(--theme-table-border-color);
 }
 .repo_tab td {
-  color: #333;
+  color: var(--theme-primary-font-color);
 }
 
 .repo_tab tr.object_row{
-  border-top-color: var(--theme-table-border-color);
+  border-top-color: var(--theme-table-cell-border-color);
 }
 .repo_tab .inactive      { color: orange; }
 .repo_tab tr.unsupported { color: var(--theme-greyscale-lighter); }
@@ -195,7 +199,7 @@ table.repo_tab {
 }
 .stage_tab td {
   color: var(--theme-greyscale-medium);
-  border-top-color: var(--theme-table-border-color);
+  border-top-color: var(--theme-table-cell-border-color);
 }
 .stage_tab td.status {
   color: var(--theme-primary-font-color-reduced);
@@ -307,7 +311,8 @@ span.state-block span.none {
 
 
 /* DIFF TABLE */
-table.diff_tab td,th {
+table.diff_tab td,
+table.diff_tab th {
   color: #444;
 }
 table.diff_tab thead.header th {
@@ -322,13 +327,13 @@ table.diff_tab thead.nav_line th {
 }
 table.diff_tab td.num, th.num {
   color: var(--theme-primary-font-color-reduced);
-  border-left-color: var(--theme-table-border-color);
-  border-right-color: var(--theme-table-border-color);
+  border-left-color: var(--theme-table-cell-border-color);
+  border-right-color: var(--theme-table-cell-border-color);
 }
 table.diff_tab td.patch, th.patch {
   color: var(--theme-primary-font-color-reduced);
-  border-left-color: var(--theme-table-border-color);
-  border-right-color: var(--theme-table-border-color);
+  border-left-color: var(--theme-table-cell-border-color);
+  border-right-color: var(--theme-table-cell-border-color);
 }
 
 /* STYLES for Syntax Highlighting */
@@ -358,6 +363,28 @@ div.debug_container {
   background-color: var(--theme-container-background-color);
 }
 
+/* Repo overview */
+
+.repo-overview { background-color: var(--theme-container-background-color); }
+.repo-overview table { 
+  background-color: var(--theme-table-background-color);
+  border-color: var(--theme-table-border-color);
+}
+.repo-overview th {
+  color: var(--theme-link-color);
+}
+.repo-overview thead tr {
+  background-color: #edf2f9;
+}
+.repo-overview thead tr,
+.repo-overview tfoot tr {
+  border-color: var(--theme-table-border-color);
+}
+.repo-overview a.remote_repo { color: var(--theme-primary-font-color-reduced); }
+.repo-overview a.remote_repo:hover { color: var(--theme-link-color); }
+.repo-overview tbody tr:hover td { background-color: hsla(214, 50%, 50%, 0.05); }
+.repo-overview tbody tr.selected { background-color: hsla(214, 50%, 75%, 0.33); }
+
 /* DB ENTRIES */
 div.db_list { background-color: #fff; }
 table.db_tab td      { color: #333; }
@@ -370,11 +397,10 @@ table.db_tab tbody tr:active td {
 }
 table.db_tab th {
   color: var(--theme-link-color);
-  border-bottom-color: #ddd;
 }
-
-table.db_tab tr.selected {
-  background-color: rgba(191, 191, 191, 1) !important;
+table.db_tab thead tr,
+table.db_tab tfoot tr {
+  border-color: #ddd;
 }
 table.db_tab a.remote_repo {
   color: var(--theme-primary-font-color-reduced);

@@ -13,7 +13,8 @@ CLASS ltcl_abapgit_syntax_xml DEFINITION FINAL FOR TESTING
       complete_xml_tag_with_closing FOR TESTING RAISING cx_static_check,
       empty_attributes FOR TESTING RAISING cx_static_check,
       open_tags FOR TESTING RAISING cx_static_check,
-      attributes_only FOR TESTING RAISING cx_static_check.
+      attributes_only FOR TESTING RAISING cx_static_check,
+      attribute_value_equal_signs FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
 
@@ -99,6 +100,20 @@ CLASS ltcl_abapgit_syntax_xml IMPLEMENTATION.
 
 
   ENDMETHOD.
+
+  METHOD attribute_value_equal_signs.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = |<span class="xml_tag">&lt;meta</span>|
+         && |<span class="attr"> name</span>=|
+         && |<span class="attr_val">"viewport"</span>|
+         && |<span class="attr"> content</span>=|
+         && |<span class="attr_val">"width=device, initial=1.0, maximum=1.0"</span>|
+         && |<span class="xml_tag">&gt;</span>|
+      act = mo_cut->process_line( |<meta name="viewport" content="width=device, initial=1.0, maximum=1.0">| ) ).
+
+  ENDMETHOD.
+
 
 ENDCLASS.
 

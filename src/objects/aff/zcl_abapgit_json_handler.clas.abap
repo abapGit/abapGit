@@ -239,7 +239,6 @@ CLASS ZCL_ABAPGIT_JSON_HANDLER IMPLEMENTATION.
           lv_json           TYPE string,
           lo_ajson          TYPE REF TO zcl_abapgit_ajson,
           lo_ajson_filtered TYPE REF TO zif_abapgit_ajson,
-          lv_enum_abap      TYPE string,
           lo_filter         TYPE REF TO lcl_aff_filter.
 
     FIELD-SYMBOLS: <lg_source> LIKE LINE OF lt_st_source.

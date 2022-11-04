@@ -116,7 +116,6 @@ CLASS ltcl_test_checksum_serializer IMPLEMENTATION.
 
     DATA lt_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
     DATA lv_act TYPE string.
-    DATA lv_exp TYPE string.
 
     FIELD-SYMBOLS <ls_cs> LIKE LINE OF lt_checksums.
     FIELD-SYMBOLS <ls_file> LIKE LINE OF <ls_cs>-files.
@@ -151,7 +150,6 @@ CLASS ltcl_test_checksum_serializer IMPLEMENTATION.
 
     DATA lt_checksums_exp TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
     DATA lt_checksums_act TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
-    DATA lv_str TYPE string.
 
     FIELD-SYMBOLS <ls_cs> LIKE LINE OF lt_checksums_exp.
     FIELD-SYMBOLS <ls_file> LIKE LINE OF <ls_cs>-files.

@@ -230,7 +230,7 @@ CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
     TRY.
         li_form = cl_fp_helper=>convert_xstring_to_form( lv_xstr ).
 
-        IF zif_abapgit_object~mo_files->contains( c_layout_file_ext ) = abap_true.
+        IF zif_abapgit_object~mo_files->contains_file( c_layout_file_ext ) = abap_true.
           lv_layout = zif_abapgit_object~mo_files->read_raw( c_layout_file_ext ).
           li_form->get_layout( )->set_layout_data( lv_layout ).
         ENDIF.

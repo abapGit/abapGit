@@ -202,6 +202,20 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
       RETURNING
         VALUE(rv_shortened) TYPE string.
 
+    CLASS-METHODS render_label_list
+      IMPORTING
+        it_labels TYPE string_table
+        io_label_colors TYPE REF TO zcl_abapgit_string_map
+        iv_clickable_action TYPE string OPTIONAL
+      RETURNING
+        VALUE(rv_html) TYPE string.
+
+    CLASS-METHODS render_help_hint
+      IMPORTING
+        iv_text_to_wrap TYPE string
+      RETURNING
+        VALUE(rv_html) TYPE string.
+
   PROTECTED SECTION.
 
     CLASS-METHODS render_repo_top_commit_hash
@@ -225,6 +239,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !iv_program_name                  TYPE sy-repid
       RETURNING
         VALUE(rv_normalized_program_name) TYPE string .
+
 ENDCLASS.
 
 
@@ -556,6 +571,28 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_help_hint.
+
+    " TODO potentially move to or integrate with zcl_abapgit_html_form
+
+    DATA lt_fragments TYPE string_table.
+    DATA li_html TYPE REF TO zif_abapgit_html.
+    li_html = zcl_abapgit_html=>create( ).
+
+    APPEND `<div class="form-field-help-tooltip">` TO lt_fragments.
+    APPEND li_html->icon(
+      iv_name = 'question-circle-solid'
+      iv_class = 'blue' ) TO lt_fragments.
+    APPEND `<div class="form-field-help-tooltip-text">` TO lt_fragments.
+    APPEND iv_text_to_wrap TO lt_fragments.
+    APPEND `</div>` TO lt_fragments.
+    APPEND `</div>` TO lt_fragments.
+
+    rv_html = concat_lines_of( table = lt_fragments ).
+
+  ENDMETHOD.
+
+
   METHOD render_infopanel.
 
     DATA lv_display TYPE string.
@@ -648,6 +685,58 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
                   ' If this does not disappear soon,' &&
                   ' then there is a JS init error, please log an issue' ).
     ri_html->add( '</div>' ).
+  ENDMETHOD.
+
+
+  METHOD render_label_list.
+
+    DATA lt_fragments TYPE string_table.
+    DATA lv_l TYPE string.
+    DATA lv_class TYPE string.
+    DATA lv_style TYPE string.
+    DATA ls_parsed_color TYPE zcl_abapgit_repo_labels=>ty_color.
+    DATA li_html TYPE REF TO zif_abapgit_html.
+
+    IF it_labels IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    li_html = zcl_abapgit_html=>create( ).
+
+    APPEND `<ul class="repo-labels">` TO lt_fragments.
+
+    LOOP AT it_labels INTO lv_l WHERE table_line IS NOT INITIAL.
+      CLEAR lv_class.
+      CLEAR lv_style.
+      ls_parsed_color = zcl_abapgit_repo_labels=>parse_color( io_label_colors->get( lv_l ) ).
+      IF ls_parsed_color-cls IS NOT INITIAL.
+        lv_class = | class="rl-{ ls_parsed_color-cls }"|.
+      ELSEIF ls_parsed_color-fg IS NOT INITIAL OR ls_parsed_color-bg IS NOT INITIAL.
+        lv_style = ` style="`.
+        IF ls_parsed_color-fg IS NOT INITIAL.
+          lv_style = lv_style && |color:#{ ls_parsed_color-fg };|.
+        ENDIF.
+        IF ls_parsed_color-bg IS NOT INITIAL.
+          lv_style = lv_style && |background-color:#{ ls_parsed_color-bg };|.
+          lv_style = lv_style && |border-color:#{ ls_parsed_color-bg };|.
+        ENDIF.
+        lv_style = lv_style && `"`.
+      ENDIF.
+
+      IF iv_clickable_action IS NOT INITIAL.
+        lv_l = li_html->a(
+          iv_txt = lv_l
+          iv_act = |{ iv_clickable_action }|
+          iv_query = lv_l ).
+      ENDIF.
+      lv_l = |<li{ lv_class }{ lv_style }>{ lv_l }</li>|.
+      APPEND lv_l TO lt_fragments.
+    ENDLOOP.
+
+    APPEND `</ul>` TO lt_fragments.
+
+    rv_html = concat_lines_of( table = lt_fragments ).
+
   ENDMETHOD.
 
 
