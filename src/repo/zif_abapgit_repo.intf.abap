@@ -8,9 +8,7 @@ INTERFACE zif_abapgit_repo
       VALUE(rv_key) TYPE zif_abapgit_persistence=>ty_value .
   METHODS get_name
     RETURNING
-      VALUE(rv_name) TYPE string
-    RAISING
-      zcx_abapgit_exception .
+      VALUE(rv_name) TYPE string.
   METHODS is_offline
     RETURNING
       VALUE(rv_offline) TYPE abap_bool .
