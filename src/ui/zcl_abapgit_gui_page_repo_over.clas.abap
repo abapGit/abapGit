@@ -553,6 +553,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD render_repo_list.
 
     ii_html->add( |<table>| ).
@@ -776,6 +777,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
 
   METHOD set_order_by.
+    IF mv_order_by <> iv_order_by.
+      set_order_direction( abap_false ). " Reset ordering
+    ENDIF.
     mv_order_by = iv_order_by.
   ENDMETHOD.
 
@@ -809,7 +813,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-change_order_by.
 
         set_order_by( ii_event->query( )->get( 'ORDERBY' ) ).
-        set_order_direction( abap_false ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN zif_abapgit_definitions=>c_action-toggle_favorites.
