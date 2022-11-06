@@ -245,7 +245,10 @@ function getIndocStyleSheet() {
   return style.sheet;
 }
 
-function RepoOverViewHelper() {
+function RepoOverViewHelper(opts) {
+  if (opts && opts.focusFilterKey) {
+    this.focusFilterKey = opts.focusFilterKey;
+  }
   this.setHooks();
   this.pageId = "RepoOverViewHelperState"; // constant is OK for this case
   this.isDetailsDisplayed = false;
@@ -281,6 +284,13 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
     if (document.activeElement.id === "filter") {
       return;
     }
+    if (self.focusFilterKey && event.key === self.focusFilterKey) {
+      var filterInput = document.getElementById("filter");
+      if (filterInput) filterInput.focus();
+      event.preventDefault();
+      return;
+    }
+
     var keycode = event.keyCode;
     var rows = Array.prototype.slice.call(self.getVisibleRows());
     var selected = document.querySelector(".repo-overview tr.selected");

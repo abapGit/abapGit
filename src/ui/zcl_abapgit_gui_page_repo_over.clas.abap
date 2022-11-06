@@ -503,8 +503,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_text_input(
       iv_name      = |filter|
       iv_label     = |Filter:|
-      iv_value     = mv_filter
-      iv_autofocus = abap_true ) ).
+      iv_value     = mv_filter ) ).
     ri_html->add( |<input type="submit" class="hidden-submit">| ).
     ri_html->add( |</form>| ).
 
@@ -574,8 +573,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
-    ri_html->add( 'setInitialFocus("filter");' ).
-    ri_html->add( 'var gHelper = new RepoOverViewHelper();' ).
+    ri_html->add( 'var gHelper = new RepoOverViewHelper({ focusFilterKey: "f" });' ).
 
   ENDMETHOD.
 
@@ -900,6 +898,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     ls_hotkey_action-description = |Open Repository|.
     ls_hotkey_action-action = `###`.
     ls_hotkey_action-hotkey = |Enter|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description = |Focus filter|.
+    ls_hotkey_action-action = `####`.
+    ls_hotkey_action-hotkey = |f|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
