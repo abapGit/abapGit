@@ -1,6 +1,7 @@
 CLASS zcl_abapgit_data_factory DEFINITION
   PUBLIC
   CREATE PUBLIC
+
   GLOBAL FRIENDS zcl_abapgit_data_injector .
 
   PUBLIC SECTION.
@@ -11,6 +12,9 @@ CLASS zcl_abapgit_data_factory DEFINITION
     CLASS-METHODS get_deserializer
       RETURNING
         VALUE(ri_deserializer) TYPE REF TO zif_abapgit_data_deserializer .
+    CLASS-METHODS get_config
+      RETURNING
+        VALUE(ri_config) TYPE REF TO zif_abapgit_data_config .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -21,6 +25,11 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_DATA_FACTORY IMPLEMENTATION.
+
+
+  METHOD get_config.
+    CREATE OBJECT ri_config TYPE zcl_abapgit_data_config.
+  ENDMETHOD.
 
 
   METHOD get_deserializer.
