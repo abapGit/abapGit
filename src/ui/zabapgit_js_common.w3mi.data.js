@@ -467,9 +467,11 @@ function StageHelper(params) {
   this.formAction      = params.formAction;
   this.patchAction     = params.patchAction;
   this.user            = params.user;
+  this.ids             = params.ids;
   this.selectedCount   = 0;
   this.filteredCount   = 0;
   this.lastFilterValue = "";
+  this.focusFilterKey  = params.focusFilterKey;
 
   // DOM nodes
   this.dom = {
@@ -507,7 +509,6 @@ function StageHelper(params) {
   this.setHooks();
   if (this.user) this.injectFilterMe();
   Hotkeys.addHotkeyToHelpSheet("^Enter", "Commit");
-  this.dom.objectSearch.focus();
 }
 
 StageHelper.prototype.findCounters = function() {
@@ -546,6 +547,17 @@ StageHelper.prototype.setHooks = function() {
   this.dom.objectSearch.onkeypress   = this.onFilter.bind(this);
   window.onbeforeunload              = this.onPageUnload.bind(this);
   window.onload                      = this.onPageLoad.bind(this);
+
+  var self = this;
+  document.addEventListener("keypress", function(event) {
+    if (document.activeElement.id !== self.ids.objectSearch
+      && self.focusFilterKey && event.key === self.focusFilterKey) {
+
+      self.dom.objectSearch.focus();
+      event.preventDefault();
+    }
+  });
+
 };
 
 // Detect column index
