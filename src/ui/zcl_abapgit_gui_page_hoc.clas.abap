@@ -11,6 +11,7 @@ CLASS zcl_abapgit_gui_page_hoc DEFINITION
         !ii_child_component TYPE REF TO zif_abapgit_gui_renderable
         !iv_page_title      TYPE string
         !io_page_menu       TYPE REF TO zcl_abapgit_html_toolbar OPTIONAL
+        !ii_page_menu_provider TYPE REF TO zif_abapgit_gui_menu_provider OPTIONAL
       RETURNING
         VALUE(ri_page_wrap) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
@@ -27,7 +28,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_hoc IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_HOC IMPLEMENTATION.
 
 
   METHOD create.
@@ -37,6 +38,7 @@ CLASS zcl_abapgit_gui_page_hoc IMPLEMENTATION.
     CREATE OBJECT lo_page.
     lo_page->ms_control-page_title = iv_page_title.
     lo_page->ms_control-page_menu  = io_page_menu.
+    lo_page->ms_control-page_menu_provider = ii_page_menu_provider.
     lo_page->mi_child = ii_child_component.
 
     ri_page_wrap = lo_page.
