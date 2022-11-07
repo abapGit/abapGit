@@ -2441,7 +2441,7 @@ function enumerateUiActions() {
     });
 
   // command links
-  [].slice.call(document.querySelectorAll("a[class*='command']"))
+  [].slice.call(document.querySelectorAll("a.command"))
     .filter(function(anchor){
       return !!anchor.text;
     }).forEach(function(anchor){
