@@ -24,6 +24,7 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
         page_layout TYPE string,
         page_title TYPE string,
         page_menu  TYPE REF TO zcl_abapgit_html_toolbar,
+        page_menu_provider TYPE REF TO zif_abapgit_gui_menu_provider,
       END OF  ty_control .
 
     DATA ms_control TYPE ty_control .
@@ -53,7 +54,9 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS title
       RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
     METHODS footer
       IMPORTING
         !iv_time       TYPE ty_time
@@ -88,7 +91,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -264,6 +267,13 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
   METHOD title.
 
+    DATA lo_page_menu LIKE ms_control-page_menu.
+
+    lo_page_menu = ms_control-page_menu.
+    IF lo_page_menu IS NOT BOUND AND ms_control-page_menu_provider IS BOUND.
+      lo_page_menu = ms_control-page_menu_provider->get_menu( ).
+    ENDIF.
+
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( '<div id="header">' ).
@@ -275,9 +285,9 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
     ri_html->add( |<div class="page-title"><span class="spacer">&#x25BA;</span>{ ms_control-page_title }</div>| ).
 
-    IF ms_control-page_menu IS BOUND.
+    IF lo_page_menu IS BOUND.
       ri_html->add( '<div class="float-right">' ).
-      ri_html->add( ms_control-page_menu->render( iv_right = abap_true ) ).
+      ri_html->add( lo_page_menu->render( iv_right = abap_true ) ).
       ri_html->add( '</div>' ).
     ENDIF.
 
