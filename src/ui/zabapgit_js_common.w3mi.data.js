@@ -2429,6 +2429,30 @@ function enumerateUiActions() {
       });
     });
 
+  // labels
+  [].slice.call(document.querySelectorAll("a[href*='sapevent:label']"))
+    .forEach(function(anchor){
+      items.push({
+        action: function(){
+          anchor.click();
+        },
+        title: "Label: " + anchor.text
+      });
+    });
+
+  // command links
+  [].slice.call(document.querySelectorAll("a[class*='command']"))
+    .filter(function(anchor){
+      return !!anchor.text;
+    }).forEach(function(anchor){
+      items.push({
+        action: function(){
+          anchor.click();
+        },
+        title: anchor.text
+      });
+    });
+
   return items;
 }
 
