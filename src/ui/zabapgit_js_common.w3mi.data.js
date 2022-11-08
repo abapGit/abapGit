@@ -2420,7 +2420,7 @@ function enumerateUiActions() {
   // - links inside forms
   // - label links
   // - command links
-  [].slice.call(document.querySelectorAll("form a, a[href*='sapevent:label'], a.command"))
+  [].slice.call(document.querySelectorAll("form a, a.command"))
     .filter(function(anchor){
       return !!anchor.title || !!anchor.text;
     }).forEach(function(anchor){
@@ -2437,30 +2437,6 @@ function enumerateUiActions() {
         })()
       });
     });
-
-  // labels
-  // [].slice.call(document.querySelectorAll("a[href*='sapevent:label']"))
-  //   .forEach(function(anchor){
-  //     items.push({
-  //       action: function(){
-  //         anchor.click();
-  //       },
-  //       title: "Label: " + anchor.text
-  //     });
-  //   });
-
-  // // command links
-  // [].slice.call(document.querySelectorAll("a.command"))
-  //   .filter(function(anchor){
-  //     return !!anchor.text;
-  //   }).forEach(function(anchor){
-  //     items.push({
-  //       action: function(){
-  //         anchor.click();
-  //       },
-  //       title: anchor.text
-  //     });
-  //   });
 
   return items;
 }
