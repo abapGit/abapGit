@@ -517,11 +517,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     ri_html->add( '<span class="toolbar-light pad-sides">' ).
     ri_html->add( ri_html->a(
       iv_txt   = |<i id="icon-filter-favorite" class="icon icon-check { lv_icon_class }"></i> Only Favorites|
+      iv_class = 'command'
       iv_act   = |{ zif_abapgit_definitions=>c_action-toggle_favorites }| ) ).
     ri_html->add( ri_html->a(
-      iv_txt = '<i id="icon-filter-detail" class="icon icon-check"></i> Detail'
-      iv_act = |gHelper.toggleRepoListDetail()|
-      iv_typ = zif_abapgit_html=>c_action_type-onclick ) ).
+      iv_txt   = '<i id="icon-filter-detail" class="icon icon-check"></i> Detail'
+      iv_act   = |gHelper.toggleRepoListDetail()|
+      iv_class = 'command'
+      iv_typ   = zif_abapgit_html=>c_action_type-onclick ) ).
     ri_html->add( '</span>' ).
 
   ENDMETHOD.
