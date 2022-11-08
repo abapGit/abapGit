@@ -23,7 +23,8 @@ CLASS zcl_abapgit_gui_hotkey_ctl DEFINITION
 
     DATA:
       mt_hotkeys       TYPE zif_abapgit_gui_hotkeys=>ty_hotkeys_with_descr,
-      ms_user_settings TYPE zif_abapgit_definitions=>ty_s_user_settings.
+      ms_user_settings TYPE zif_abapgit_definitions=>ty_s_user_settings,
+      mv_visible       TYPE abap_bool.
     CLASS-DATA gv_hint_was_shown TYPE abap_bool .
 
     METHODS render_scripts
@@ -176,14 +177,14 @@ CLASS zcl_abapgit_gui_hotkey_ctl IMPLEMENTATION.
 
     lv_hint = |Close window with upper right corner 'X'|.
     IF lv_hotkey IS NOT INITIAL.
-      lv_hint = lv_hint && | or press '{ <ls_hotkey>-hotkey }' again|.
+      lv_hint = lv_hint && | or press '{ <ls_hotkey>-hotkey }'|.
     ENDIF.
 
     ri_html = zcl_abapgit_gui_chunk_lib=>render_infopanel(
       iv_div_id     = 'hotkeys'
       iv_title      = 'Hotkeys'
       iv_hint       = lv_hint
-      iv_hide       = abap_true
+      iv_hide       = boolc( mv_visible = abap_false )
       iv_scrollable = abap_false
       io_content    = ri_html ).
 
@@ -193,5 +194,17 @@ CLASS zcl_abapgit_gui_hotkey_ctl IMPLEMENTATION.
         && |</div>| ).
     ENDIF.
 
+    " Always reset visibility here. Closing of the popup has to be done by the
+    " user and is handeled in JS.
+    mv_visible = abap_false.
+
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_hotkey_ctl~set_visible.
+
+    mv_visible = iv_visible.
+
+  ENDMETHOD.
+
 ENDCLASS.
