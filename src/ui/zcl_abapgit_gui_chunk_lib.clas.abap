@@ -336,7 +336,10 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
       iv_act = zif_abapgit_definitions=>c_action-go_explore
     )->add(
       iv_txt = 'Changelog'
-      iv_act = zif_abapgit_definitions=>c_action-changelog ).
+      iv_act = zif_abapgit_definitions=>c_action-changelog
+    )->add(
+      iv_txt = 'Hotkeys'
+      iv_act = zif_abapgit_definitions=>c_action-show_hotkeys ).
 
   ENDMETHOD.
 
