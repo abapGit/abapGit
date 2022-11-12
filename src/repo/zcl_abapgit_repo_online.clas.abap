@@ -33,9 +33,9 @@ CLASS zcl_abapgit_repo_online DEFINITION
 
 
 
-    METHODS get_files_remote
+    METHODS zif_abapgit_repo~get_files_remote
         REDEFINITION .
-    METHODS get_name
+    METHODS zif_abapgit_repo~get_name
         REDEFINITION .
     METHODS has_remote_source
         REDEFINITION .
@@ -73,7 +73,8 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
+CLASS zcl_abapgit_repo_online IMPLEMENTATION.
+
 
   METHOD fetch_remote.
 
@@ -101,23 +102,6 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     set_objects( ls_pull-objects ).
     mv_current_commit = ls_pull-commit.
 
-  ENDMETHOD.
-
-
-  METHOD get_files_remote.
-    fetch_remote( ).
-    rt_files = super->get_files_remote(
-      ii_obj_filter   = ii_obj_filter
-      iv_ignore_files = iv_ignore_files ).
-  ENDMETHOD.
-
-
-  METHOD get_name.
-    rv_name = super->get_name( ).
-    IF rv_name IS INITIAL.
-      rv_name = zcl_abapgit_url=>name( ms_data-url ).
-      rv_name = cl_http_utility=>unescape_url( rv_name ).
-    ENDIF.
   ENDMETHOD.
 
 
@@ -231,6 +215,11 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
   METHOD zif_abapgit_repo_online~get_selected_commit.
     rv_selected_commit = ms_data-selected_commit.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_online~get_switched_origin.
+    rv_switched_origin = ms_data-switched_origin.
   ENDMETHOD.
 
 
@@ -358,7 +347,24 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_repo_online~get_switched_origin.
-    rv_switched_origin = ms_data-switched_origin.
+
+  METHOD zif_abapgit_repo~get_files_remote.
+    fetch_remote( ).
+    rt_files = super->get_files_remote(
+      ii_obj_filter   = ii_obj_filter
+      iv_ignore_files = iv_ignore_files ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo~get_name.
+    rv_name = super->get_name( ).
+    IF rv_name IS INITIAL.
+      TRY.
+          rv_name = zcl_abapgit_url=>name( ms_data-url ).
+          rv_name = cl_http_utility=>unescape_url( rv_name ).
+        CATCH zcx_abapgit_exception.
+          rv_name = 'New online repo'. "unlikely fallback
+      ENDTRY.
+    ENDIF.
   ENDMETHOD.
 ENDCLASS.
