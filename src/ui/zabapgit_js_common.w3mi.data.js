@@ -2416,40 +2416,25 @@ function enumerateUiActions() {
       });
     });
 
-  // links inside forms
-  [].slice.call(document.querySelectorAll("form a"))
+  // others:
+  // - links inside forms
+  // - label links
+  // - command links
+  [].slice.call(document.querySelectorAll("form a, a.command"))
     .filter(function(anchor){
-      return !!anchor.title;
+      return !!anchor.title || !!anchor.text;
     }).forEach(function(anchor){
       items.push({
         action: function(){
           anchor.click();
         },
-        title: anchor.title
-      });
-    });
-
-  // labels
-  [].slice.call(document.querySelectorAll("a[href*='sapevent:label']"))
-    .forEach(function(anchor){
-      items.push({
-        action: function(){
-          anchor.click();
-        },
-        title: "Label: " + anchor.text
-      });
-    });
-
-  // command links
-  [].slice.call(document.querySelectorAll("a.command"))
-    .filter(function(anchor){
-      return !!anchor.text;
-    }).forEach(function(anchor){
-      items.push({
-        action: function(){
-          anchor.click();
-        },
-        title: anchor.text
+        title: (function(){
+          var result = anchor.title + anchor.text;
+          if (anchor.href.includes("label")) {
+            result = "Label: " + result;
+          }
+          return result;
+        })()
       });
     });
 
