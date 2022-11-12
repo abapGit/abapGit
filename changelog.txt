@@ -8,6 +8,32 @@ Legend
 + : added
 - : removed
 
+2022-11-12 v1.119.0
+-------------------
+
++ VIEW: Add translation support (#5806) 
++ SMBC: Business Configuration Maintenance Objects (#5812) 
++ UI: Add hint for "icon scaling" setting (#5819)
++ Local organization/grouping/labeling of repos (#5814)
++ Repo overview: Add labels and links to command palette (#5861)
++ Add "Show Hotkeys" to Help Menu (#5863) 
++ AFF: New object RONT - SAP Object Type (#5862) 
++ AFF: New object NONT - SAP Object Type Node (#5866)
++ Repo view: Render labels (#5864) 
+* AFF: Fix existence check (#5803) 
+* ENHO: Unlock objects in cases of errors (#5811)
+* CLAS,ENHO: Fix inactive enhancements (#5810) 
+* AFF with namespaces (#5779)
+* Disable "experimental" feature for stand-alone version (#5828) 
+* Skip Project piece list request (#5834)
+* CLAS,INTF: Catch runtime error during update (#5841) 
+* Reset sort order to ascending in repo overview (#5840) 
+* DOCV: Add object to tadir and transports (#5845) 
+* Improve error message for where-used list update (#5849) 
+* Fix syntax highlighting for xml and html (#5851) 
+* Fix "Unexpected package naming" error (#5805) 
+* DOCV: Fix dump for namespaced documents (#5855) 
+
 2022-10-04 v1.118.0
 -------------------
 
