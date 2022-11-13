@@ -990,7 +990,11 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
   METHOD render_head_line.
 
-    DATA lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
+    DATA:
+      lo_toolbar      TYPE REF TO zcl_abapgit_html_toolbar,
+      ls_settings     TYPE zif_abapgit_definitions=>ty_s_user_settings,
+      lo_label_colors TYPE REF TO zcl_abapgit_string_map,
+      lt_labels       TYPE string_table.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     lo_toolbar = build_head_menu( ).
@@ -1002,6 +1006,19 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       ri_html->add( '<td class="current_dir">' ).
       ri_html->add( zcl_abapgit_gui_chunk_lib=>render_path( mv_cur_dir ) ).
       ri_html->add( '</td>' ).
+    ENDIF.
+
+    lt_labels = zcl_abapgit_repo_labels=>split( mo_repo->ms_data-local_settings-labels ).
+
+    IF lines( lt_labels ) > 0.
+      ls_settings = zcl_abapgit_persist_factory=>get_settings( )->read( )->get_user_settings( ).
+      lo_label_colors = zcl_abapgit_repo_labels=>split_colors_into_map( ls_settings-label_colors ).
+
+      ri_html->td(
+        iv_content = zcl_abapgit_gui_chunk_lib=>render_label_list(
+                       it_labels = lt_labels
+                       io_label_colors = lo_label_colors )
+        iv_class   = 'labels' ).
     ENDIF.
 
     ri_html->add( '<td class="right">' ).

@@ -730,6 +730,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
         lv_l = li_html->a(
           iv_txt = lv_l
           iv_act = |{ iv_clickable_action }|
+          iv_class = 'command'
           iv_query = lv_l ).
       ENDIF.
       lv_l = |<li{ lv_class }{ lv_style }>{ lv_l }</li>|.
