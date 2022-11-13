@@ -93,7 +93,6 @@
       {"object": "ZCL_ABAPGIT_ZLIB",       "class": "ltcl_zlib", "method": "dynamic"},
       {"object": "ZCL_ABAPGIT_ZLIB",       "class": "ltcl_zlib", "method": "fixed"},
 
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_indented"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "array_index",     "note": "uses secondary index array_index?"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "item_order",      "note": "uses secondary index item_order?"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "simple_indented", "note": "some sorting"},
