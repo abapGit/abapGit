@@ -87,12 +87,11 @@
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty1",           "note": "open-abap does not add the byte order mark"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty2",           "note": "open-abap does not add the byte order mark"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty3",           "note": "open-abap does not add the byte order mark"},
+      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "unpretty",          "note": "open-abap does not add the byte order mark"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "malformatted",      "note": "infinite loop"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "dont_ignore_error", "note": "infinite loop"},
-      {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "unpretty",          "note": "open-abap does not add the byte order mark"},
       {"object": "ZCL_ABAPGIT_ZLIB",       "class": "ltcl_zlib", "method": "dynamic"},
       {"object": "ZCL_ABAPGIT_ZLIB",       "class": "ltcl_zlib", "method": "fixed"},
-      {"object": "ZCL_ABAPGIT_UTILS",      "class": "ltcl_is_binary", "method": "image_is_binary", "note": "REGEX '[^[:print:]]', https://github.com/abaplint/transpiler/pull/980 "},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_condensed", "note": "field sorting is wrong, probably sorted internal tables needed"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "stringify_indented"},
