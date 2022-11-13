@@ -87,7 +87,6 @@
       {"object": "ZCL_ABAPGIT_HTML",       "class": "ltcl_html", "method": "style1",    "note": "indentation is wrong in result, ASSERT failed, ??"},
       {"object": "ZCL_ABAPGIT_HTML",       "class": "ltcl_html", "method": "wrap"},
       {"object": "ZCL_ABAPGIT_HTML",       "class": "ltcl_html", "method": "wrap_ii"},
-      {"object": "ZCL_ABAPGIT_HTML",       "class": "ltcl_html", "method": "th"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty1",           "note": "open-abap does not add the byte order mark"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty2",           "note": "open-abap does not add the byte order mark"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty3",           "note": "open-abap does not add the byte order mark"},
