@@ -20,6 +20,9 @@
   --theme-greyscale-light: #CCCCCC;
   --theme-greyscale-lighter: #E5E5E5;
   --theme-list-hover-background-color: black;
+
+  --theme-table-background-color: #333333;
+  --theme-table-head-background-color: #202020;
 }
 
 /* GLOBALS */
