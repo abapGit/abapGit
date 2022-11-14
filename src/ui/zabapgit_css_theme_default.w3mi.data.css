@@ -7,6 +7,7 @@
   --theme-container-background-color: #f2f2f2;
   --theme-container-border-color: lightgrey;
   --theme-table-background-color: white;
+  --theme-table-head-background-color: #edf2f9;
   --theme-table-border-color: #ddd;
   --theme-table-cell-border-color: #eee;
 
@@ -366,7 +367,7 @@ div.debug_container {
 /* Repo overview */
 
 .repo-overview { background-color: var(--theme-container-background-color); }
-.repo-overview table { 
+.repo-overview table {
   background-color: var(--theme-table-background-color);
   border-color: var(--theme-table-border-color);
 }
@@ -374,7 +375,7 @@ div.debug_container {
   color: var(--theme-link-color);
 }
 .repo-overview thead tr {
-  background-color: #edf2f9;
+  background-color: var(--theme-table-head-background-color);
 }
 .repo-overview thead tr,
 .repo-overview tfoot tr {

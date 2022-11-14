@@ -124,7 +124,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -659,6 +659,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     ri_html->add( |  user:            "{ to_lower( sy-uname ) }",| ).
     ri_html->add( '  formAction:      "stage_commit",' ).
     ri_html->add( |  patchAction:     "{ zif_abapgit_definitions=>c_action-go_patch }",| ).
+    ri_html->add( '  focusFilterKey:  "f",' ).
 
     ri_html->add( '  ids: {' ).
     ri_html->add( '    stageTab:          "stageTab",' ).
@@ -863,6 +864,12 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     ls_hotkey_action-description  = |Refresh|.
     ls_hotkey_action-action       = c_action-stage_refresh.
     ls_hotkey_action-hotkey       = |r|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    " registered/handled in js
+    ls_hotkey_action-description = |Focus filter|.
+    ls_hotkey_action-action = `#`.
+    ls_hotkey_action-hotkey = |f|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
