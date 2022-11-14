@@ -116,7 +116,7 @@ CLASS ZCL_ABAPGIT_REPO_LABELS IMPLEMENTATION.
 
     rv_labels = concat_lines_of(
       table = lt_normalized
-      sep = `,` ).
+      sep = `, ` ).
 
   ENDMETHOD.
 
@@ -149,7 +149,7 @@ CLASS ZCL_ABAPGIT_REPO_LABELS IMPLEMENTATION.
 
     rv_config = concat_lines_of(
       table = lt_pairs
-      sep = `,` ).
+      sep = `, ` ).
 
   ENDMETHOD.
 
@@ -188,10 +188,16 @@ CLASS ZCL_ABAPGIT_REPO_LABELS IMPLEMENTATION.
   METHOD split_colors.
 
     DATA lt_pairs TYPE string_table.
+    DATA lv_clean_config LIKE iv_config.
     DATA ls_c LIKE LINE OF rt_label_colors.
     FIELD-SYMBOLS <lv_pair> LIKE LINE OF lt_pairs.
 
-    SPLIT iv_config AT ',' INTO TABLE lt_pairs.
+    lv_clean_config = replace(
+      val = iv_config
+      sub = cl_abap_char_utilities=>newline
+      with = ` ` ). " text area ends with LF
+
+    SPLIT lv_clean_config AT ',' INTO TABLE lt_pairs.
     LOOP AT lt_pairs ASSIGNING <lv_pair>.
       CONDENSE <lv_pair>.
       IF <lv_pair> IS NOT INITIAL.

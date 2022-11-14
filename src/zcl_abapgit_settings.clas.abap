@@ -379,7 +379,8 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
 
 
   METHOD set_default_link_hint_key.
-    set_link_hint_key( |f| ).
+    " Since #5859 'f' is used for "focus filter", we use 't' as the new default
+    set_link_hint_key( |t| ).
   ENDMETHOD.
 
 

@@ -245,7 +245,10 @@ function getIndocStyleSheet() {
   return style.sheet;
 }
 
-function RepoOverViewHelper() {
+function RepoOverViewHelper(opts) {
+  if (opts && opts.focusFilterKey) {
+    this.focusFilterKey = opts.focusFilterKey;
+  }
   this.setHooks();
   this.pageId = "RepoOverViewHelperState"; // constant is OK for this case
   this.isDetailsDisplayed = false;
@@ -281,6 +284,13 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
     if (document.activeElement.id === "filter") {
       return;
     }
+    if (self.focusFilterKey && event.key === self.focusFilterKey) {
+      var filterInput = document.getElementById("filter");
+      if (filterInput) filterInput.focus();
+      event.preventDefault();
+      return;
+    }
+
     var keycode = event.keyCode;
     var rows = Array.prototype.slice.call(self.getVisibleRows());
     var selected = document.querySelector(".repo-overview tr.selected");
@@ -457,9 +467,11 @@ function StageHelper(params) {
   this.formAction      = params.formAction;
   this.patchAction     = params.patchAction;
   this.user            = params.user;
+  this.ids             = params.ids;
   this.selectedCount   = 0;
   this.filteredCount   = 0;
   this.lastFilterValue = "";
+  this.focusFilterKey  = params.focusFilterKey;
 
   // DOM nodes
   this.dom = {
@@ -497,7 +509,6 @@ function StageHelper(params) {
   this.setHooks();
   if (this.user) this.injectFilterMe();
   Hotkeys.addHotkeyToHelpSheet("^Enter", "Commit");
-  this.dom.objectSearch.focus();
 }
 
 StageHelper.prototype.findCounters = function() {
@@ -536,6 +547,17 @@ StageHelper.prototype.setHooks = function() {
   this.dom.objectSearch.onkeypress   = this.onFilter.bind(this);
   window.onbeforeunload              = this.onPageUnload.bind(this);
   window.onload                      = this.onPageLoad.bind(this);
+
+  var self = this;
+  document.addEventListener("keypress", function(event) {
+    if (document.activeElement.id !== self.ids.objectSearch
+      && self.focusFilterKey && event.key === self.focusFilterKey) {
+
+      self.dom.objectSearch.focus();
+      event.preventDefault();
+    }
+  });
+
 };
 
 // Detect column index

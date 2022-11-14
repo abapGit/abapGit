@@ -52,11 +52,11 @@ CLASS ltcl_tags IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = zcl_abapgit_repo_labels=>normalize( `a,ab, a_b ,,a-b,a.b,Ab, a b ` )
-      exp = 'Ab,a,a b,a-b,a.b,a_b,ab' ).
+      exp = 'Ab, a, a b, a-b, a.b, a_b, ab' ).
 
     cl_abap_unit_assert=>assert_equals(
       act = zcl_abapgit_repo_labels=>normalize( 'a,ab#,a_b' )
-      exp = 'a,a_b' ).
+      exp = 'a, a_b' ).
 
     cl_abap_unit_assert=>assert_equals(
       act = zcl_abapgit_repo_labels=>normalize( '' )
@@ -68,7 +68,7 @@ CLASS ltcl_tags IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals( " duplicates and sorting
       act = zcl_abapgit_repo_labels=>normalize( 'ba,ab,ab' )
-      exp = 'ab,ba' ).
+      exp = 'ab, ba' ).
 
   ENDMETHOD.
 
@@ -133,6 +133,14 @@ CLASS ltcl_tags IMPLEMENTATION.
       act = zcl_abapgit_repo_labels=>split_colors( 'a:red, b : #123456 ,,' )
       exp = lt_exp ).
 
+    CLEAR lt_exp. " Case for textarea - it adds LF at the end
+    APPEND INITIAL LINE TO lt_exp ASSIGNING <ls_c>.
+    <ls_c>-label = 'a'.
+    <ls_c>-color = 'red'.
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_repo_labels=>split_colors( `a:red ` && cl_abap_char_utilities=>newline )
+      exp = lt_exp ).
+
   ENDMETHOD.
 
   METHOD split_colors_into_map.
@@ -157,7 +165,7 @@ CLASS ltcl_tags IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = zcl_abapgit_repo_labels=>normalize_colors( 'a:red , b : #123456' )
-      exp = 'a:red,b:#123456' ).
+      exp = 'a:red, b:#123456' ).
 
     cl_abap_unit_assert=>assert_equals(
       act = zcl_abapgit_repo_labels=>normalize_colors( 'a:red,b:,:blue' )
@@ -173,7 +181,7 @@ CLASS ltcl_tags IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals( " duplicates and sorting
       act = zcl_abapgit_repo_labels=>normalize_colors( 'b:blue,a:red,a:red,a:blue' )
-      exp = 'a:red,b:blue' ).
+      exp = 'a:red, b:blue' ).
 
 
   ENDMETHOD.
