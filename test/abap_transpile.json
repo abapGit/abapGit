@@ -105,7 +105,7 @@
       {"object": "ZCL_ABAPGIT_SERIALIZE", "class": "ltcl_i18n", "method": "test",             "note": "Void type: DD02V"},
 
       {"object": "ZCL_ABAPGIT_TRANSPORT_OBJECTS", "class": "ltcl_transport_objects", "method": "should_add_all_local_files", "note": "Object CL_FOO.xml not added to stage"},
-      {"object": "ZCL_ABAPGIT_TRANSPORT_OBJECTS", "class": "ltcl_transport_objects", "method": "should_delete_all_related", "note": "??"},
+      {"object": "ZCL_ABAPGIT_TRANSPORT_OBJECTS", "class": "ltcl_transport_objects", "method": "should_delete_all_related", "note": "Object CL_FOO.xml not removed in stage"},
 
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_run_checks", "method": "check_sub_package", "note": "??"},
 
