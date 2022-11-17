@@ -116,7 +116,6 @@
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_tab_hashed", "note": "runtime error, SortByLengthZero"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "reader",                "note": "Path not found @/false"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_index",           "note": "Expected 'row: 2, col: 0', got 'row: 10, col: 0'"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_simple",          "note": "sorting is wrong"},
 
       {"object": "ZCL_ABAPGIT_REQUIREMENT_HELPER", "class": "ltcl_lower_release", "method": "empty_patch", "note": "Void type: CVERS_SDU"},
       {"object": "ZCL_ABAPGIT_REQUIREMENT_HELPER", "class": "ltcl_lower_release", "method": "lower_patch", "note": "Void type: CVERS_SDU"},
