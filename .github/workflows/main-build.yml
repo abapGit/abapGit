@@ -67,13 +67,19 @@ jobs:
     - uses: actions/checkout@v3
       with:
         repository: abapGit/build
+        path: build
+    - uses: actions/checkout@v3
+      with:
+        repository: abapGit/abapGit
+        path: abapGit
     - name: mirror tag to the artifact
       env:
         GITHUB_API_KEY: ${{ secrets.DEPLOY_ABAPGIT_BUILD }}
         GIT_USER_NAME: 'github-actions[bot]'
         GIT_USER_EMAIL: 'github-actions[bot]@users.noreply.github.com'
-      run: ./ci/push-tag.sh ${{ needs.auto-tag.outputs.pushedTag }}
-      # Importantly, this calls the push-tags script from build repository, not the local one !
+      run: |
+        cd build
+        ../abapGit/ci/push-tag.sh ${{ needs.auto-tag.outputs.pushedTag }}
 
   coverage:
     runs-on: ubuntu-latest
