@@ -150,6 +150,8 @@
       {"object": "ZCL_ABAPGIT_INJECTOR", "class": "ltcl_no_dependency_injection", "method": "no_injection"},
       {"object": "ZCL_ABAPGIT_INJECTOR", "class": "ltcl_simple_dependency_inject", "method": "simple_injection"},
 
+      {"object": "ZCL_ABAPGIT_ENVIRONMENT", "class": "ltcl_test", "method": "is_repo_object_changes_allowed", "note": "Void type: TADIR-EDTFLAG"},
+
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "clas_before_pinf", "note": "hmm, something with promises? or cyclic requires"},
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "ddls_before_dcls", "note": "hmm, something with promises?"},
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "enho_before_enhc", "note": "hmm, something with promises?"},
