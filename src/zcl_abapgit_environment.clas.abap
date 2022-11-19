@@ -118,7 +118,7 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
     " This method will be used in the context of SAP Cloud Platform:
     " Pull/Push operations are executed in background jobs.
     " In case of the respective application server needs to be restarted,
-    " it is required to terminae the background job and reschedule again.
+    " it is required to terminate the background job and reschedule again.
     rv_result = abap_false.
     TRY.
         CALL METHOD ('CL_APJ_SCP_TOOLS')=>('IS_RESTART_REQUIRED')
@@ -136,7 +136,7 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
           CALL METHOD ('CL_COS_UTILITIES')=>('IS_SAP_CLOUD_PLATFORM')
             RECEIVING
               rv_is_sap_cloud_platform = mv_cloud.
-        CATCH cx_sy_dyn_call_illegal_method.
+        CATCH cx_sy_dyn_call_error.
           mv_cloud = abap_false.
       ENDTRY.
     ENDIF.

@@ -73,13 +73,10 @@
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_get_t100_longtext", "method": "test01", "note": "implement function module DOCU_GET, open-abap"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_c", "note": "probably some bug in fm TEXT_SPLIT"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_z", "note": "probably some bug in fm TEXT_SPLIT"},
-
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_t100", "method": "text6", "note": "uses MSAG from database"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_t100", "method": "text7", "note": "uses MSAG from database"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_t100", "method": "text8", "note": "uses MSAG from database"},
-
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_general", "method": "direct_text"},
-
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_longtext", "method": "empty_longtext"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_longtext", "method": "longtext"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_longtext", "method": "multiline_longtext"},
@@ -90,13 +87,9 @@
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "unpretty",          "note": "open-abap does not add the byte order mark"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "malformatted",      "note": "infinite loop"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "dont_ignore_error", "note": "infinite loop"},
+
       {"object": "ZCL_ABAPGIT_ZLIB",       "class": "ltcl_zlib", "method": "dynamic"},
       {"object": "ZCL_ABAPGIT_ZLIB",       "class": "ltcl_zlib", "method": "fixed"},
-
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "array_index",     "note": "uses secondary index array_index?"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "item_order",      "note": "uses secondary index item_order?"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "simple_indented", "note": "some sorting"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "escape_string",   "note": "ASSERT failed, ??"},
 
       {"object": "ZCL_ABAPGIT_SERIALIZE", "class": "ltcl_determine_max_threads", "method": "determine_max_threads", "note": "TypeError: abap.FunctionModules.FUNCTION_EXISTS is not a function"},
       {"object": "ZCL_ABAPGIT_SERIALIZE", "class": "ltcl_serialize", "method": "test",        "note": "Void type: KO100"},
@@ -110,14 +103,10 @@
 
       {"object": "ZCL_ABAPGIT_PERSIST_PACKAGES", "class": "ltcl_packages", "method": "test_package", "note": "ZABAPGIT table not existing, error cx_sy_dynamic_osql_semantics"},
 
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "escape_string",        "note": "ASSERT failed, ??"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_array_of_arrays", "note": "Expected table to contain 2 rows, got 4"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "overwrite_w_keep_order_touch", "note": "some sorting"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "overwrite_w_keep_order_set", "note": "some sorting"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_tab_hashed", "note": "runtime error, SortByLengthZero"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "reader",                "note": "Path not found @/false"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_index",           "note": "Expected 'row: 2, col: 0', got 'row: 10, col: 0'"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "array_simple",          "note": "sorting is wrong"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "item_order_integrated", "note": "some sorting"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_tab_hashed",           "note": "runtime error, SortByLengthZero"},
+      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "reader",                    "note": "Path not found @/false, keywords?"},
 
       {"object": "ZCL_ABAPGIT_REQUIREMENT_HELPER", "class": "ltcl_lower_release", "method": "empty_patch", "note": "Void type: CVERS_SDU"},
       {"object": "ZCL_ABAPGIT_REQUIREMENT_HELPER", "class": "ltcl_lower_release", "method": "lower_patch", "note": "Void type: CVERS_SDU"},
@@ -161,7 +150,9 @@
       {"object": "ZCL_ABAPGIT_INJECTOR", "class": "ltcl_no_dependency_injection", "method": "no_injection"},
       {"object": "ZCL_ABAPGIT_INJECTOR", "class": "ltcl_simple_dependency_inject", "method": "simple_injection"},
 
-      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "clas_before_pinf", "note": "hmm, something with promises?"},
+      {"object": "ZCL_ABAPGIT_ENVIRONMENT", "class": "ltcl_test", "method": "is_repo_object_changes_allowed", "note": "Void type: TADIR-EDTFLAG"},
+
+      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "clas_before_pinf", "note": "hmm, something with promises? or cyclic requires"},
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "ddls_before_dcls", "note": "hmm, something with promises?"},
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "enho_before_enhc", "note": "hmm, something with promises?"},
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "enhs_before_ensc", "note": "hmm, something with promises?"},
@@ -216,7 +207,7 @@
       {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_not_created_when_canc", "note": "Void type: SCOMPKDTLN"},
       {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_created_when_confirm",  "note": "Void type: SCOMPKDTLN"},
 
-      {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_test_checksums", "method": "rebuild_simple", "note": "some sorting problem?"}
+      {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_test_checksums", "method": "rebuild_simple", "note": "??"}
     ]
   }
 }
