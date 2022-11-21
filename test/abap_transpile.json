@@ -136,7 +136,7 @@
 
       {"object": "ZCL_ABAPGIT_GIT_URL", "class": "ltcl_repo_online", "method": "test_repo_commit_show_urls"},
 
-      {"object": "ZCL_ABAPGIT_OBJECT_INTF", "class": "ltcl_unit_test",    "method": "deserializes",             "note": "Void type: THEAD"},
+      {"object": "ZCL_ABAPGIT_OBJECT_INTF", "class": "ltcl_unit_test",    "method": "deserializes",             "note": "&amp; bug"},
       {"object": "ZCL_ABAPGIT_OBJECT_INTF", "class": "ltcl_aff_metadata", "method": "serialize_non_default",    "note": "cx_sy_dynamic_osql_semantics syntax error => transpiler bug, LEFT OUTER JOIN"},
       {"object": "ZCL_ABAPGIT_OBJECT_INTF", "class": "ltcl_aff_metadata", "method": "serialize_default",        "note": "cx_sy_dynamic_osql_semantics syntax error => transpiler bug"},
 
