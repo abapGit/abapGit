@@ -148,9 +148,7 @@ CLASS zcl_abapgit_xml IMPLEMENTATION.
 
     DATA: li_ostream       TYPE REF TO if_ixml_ostream,
           li_renderer      TYPE REF TO if_ixml_renderer,
-          lv_mark          TYPE string,
           li_streamfactory TYPE REF TO if_ixml_stream_factory.
-
 
     li_streamfactory = mi_ixml->create_stream_factory( ).
 
@@ -162,16 +160,7 @@ CLASS zcl_abapgit_xml IMPLEMENTATION.
 
     li_renderer->render( ).
 
-    "unicode systems always add the byte order mark to the xml, while non-unicode does not
-    "this code will always add the byte order mark if it is not in the xml
-    TRY.
-        lv_mark = zcl_abapgit_convert=>xstring_to_string_utf8( cl_abap_char_utilities=>byte_order_mark_utf8 ).
-      CATCH zcx_abapgit_exception ##NO_HANDLER.
-        ASSERT 0 = 1.
-    ENDTRY.
-    IF rv_xml(1) <> lv_mark.
-      CONCATENATE lv_mark rv_xml INTO rv_xml.
-    ENDIF.
+    " handling of BOM moved to zcl_abapgit_convert=>string_to_xstring_utf8_bom
 
   ENDMETHOD.
 ENDCLASS.
