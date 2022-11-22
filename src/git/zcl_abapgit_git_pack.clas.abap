@@ -480,7 +480,8 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
       ls_node-chmod = lv_chmod.
       IF ls_node-chmod <> zif_abapgit_definitions=>c_chmod-dir
           AND ls_node-chmod <> zif_abapgit_definitions=>c_chmod-file
-          AND ls_node-chmod <> zif_abapgit_definitions=>c_chmod-executable.
+          AND ls_node-chmod <> zif_abapgit_definitions=>c_chmod-executable
+          AND ls_node-chmod <> zif_abapgit_definitions=>c_chmod-submodule.
         zcx_abapgit_exception=>raise( |Unknown chmod| ).
       ENDIF.
 

@@ -774,7 +774,8 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
     LOOP AT lt_nodes ASSIGNING <ls_node>.
       CASE <ls_node>-chmod.
         WHEN zif_abapgit_definitions=>c_chmod-file
-            OR zif_abapgit_definitions=>c_chmod-executable.
+            OR zif_abapgit_definitions=>c_chmod-executable
+            OR zif_abapgit_definitions=>c_chmod-submodule.
           APPEND INITIAL LINE TO rt_expanded ASSIGNING <ls_exp>.
           <ls_exp>-path  = iv_base.
           <ls_exp>-name  = <ls_node>-name.
