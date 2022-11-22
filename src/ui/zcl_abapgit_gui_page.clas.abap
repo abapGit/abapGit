@@ -91,7 +91,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -117,7 +117,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ri_html->add( '<div id="footer">' ).
     ri_html->add( '<table class="w100"><tr>' ).
 
-    ri_html->add( '<td class="w40"></td>' ).  " spacer
+    ri_html->add( '<td class="w40 sponsor">' ).
+    ri_html->add( ri_html->icon( iv_name = 'heart-regular/pink'
+                                 iv_hint = 'Sponsor us' ) ).
+    ri_html->add_a( iv_act   = 'https://abapgit.org/sponsor.html'
+                    iv_typ   = zif_abapgit_html=>c_action_type-url
+                    iv_txt   = 'Sponsor us' ).
+    ri_html->add( '</td>' ).
 
     ri_html->add( '<td class="center">' ).
     ri_html->add( '<div class="logo">' ).
