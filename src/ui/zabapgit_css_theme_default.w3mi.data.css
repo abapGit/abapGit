@@ -54,6 +54,7 @@ input:focus, textarea:focus { border-color: #8cadd9; }
 .blue         { color: #5e8dc9    !important; }
 .red          { color: red        !important; }
 .white        { color: white      !important; }
+.pink         { color: pink       !important; }
 
 /* Floating buttons and color sets */
 .blue-set {
