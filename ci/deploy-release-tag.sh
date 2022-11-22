@@ -49,4 +49,5 @@ PUSH_URL=$(echo "$REPO_URL" | sed -Ene "s#(https://)#\1$GITHUB_API_KEY@#p")
 
 git tag $TAG || exit 1
 git push $PUSH_URL $TAG || exit 1
-echo "::set-output name=pushedTag::$TAG"
+echo "pushedTag=$TAG" >> $GITHUB_OUTPUT
+# https://github.blog/changelog/2022-10-11-github-actions-deprecating-save-state-and-set-output-commands/
