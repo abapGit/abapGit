@@ -109,27 +109,29 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true.
-      lv_version_detail = ` (Standalone Version)`.
+      lv_version_detail = ` - Standalone Version`.
     ELSE.
-      lv_version_detail = ` (Developer Version)`.
+      lv_version_detail = ` - Developer Version`.
     ENDIF.
 
     ri_html->add( '<div id="footer">' ).
     ri_html->add( '<table class="w100"><tr>' ).
 
     ri_html->add( '<td class="w40 sponsor">' ).
-    ri_html->add( ri_html->icon( iv_name = 'heart-regular/pink'
-                                 iv_hint = 'Sponsor us' ) ).
-    ri_html->add_a( iv_act   = 'https://abapgit.org/sponsor.html'
-                    iv_typ   = zif_abapgit_html=>c_action_type-url
-                    iv_txt   = 'Sponsor us' ).
+    ri_html->add_a( iv_act = zif_abapgit_definitions=>c_action-sponsor
+                    iv_txt = ri_html->icon( iv_name = 'heart-regular/pink'
+                                            iv_hint = 'Sponsor us' ) ).
+    ri_html->add_a( iv_act = zif_abapgit_definitions=>c_action-sponsor
+                    iv_txt = 'Sponsor us' ).
     ri_html->add( '</td>' ).
 
     ri_html->add( '<td class="center">' ).
     ri_html->add( '<div class="logo">' ).
-    ri_html->add( ri_html->icon( 'git-alt' ) ).
-    ri_html->add( ri_html->icon( iv_name = 'abapgit'
-                                 iv_hint = |{ iv_time } sec| ) ).
+    ri_html->add_a( iv_act = zif_abapgit_definitions=>c_action-homepage
+                    iv_txt = ri_html->icon( 'git-alt' ) ).
+    ri_html->add_a( iv_act = zif_abapgit_definitions=>c_action-homepage
+                    iv_txt = ri_html->icon( iv_name = 'abapgit'
+                                            iv_hint = |{ iv_time } sec| ) ).
     ri_html->add( '</div>' ).
     ri_html->add( |<div class="version">{ zif_abapgit_version=>c_abap_version }{ lv_version_detail }</div>| ).
     ri_html->add( '</td>' ).
@@ -285,8 +287,10 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     ri_html->add( '<div id="header">' ).
 
     ri_html->add( '<div class="logo">' ).
-    ri_html->add( ri_html->icon( 'git-alt' ) ).
-    ri_html->add( ri_html->icon( 'abapgit' ) ).
+    ri_html->add_a( iv_act = zif_abapgit_definitions=>c_action-abapgit_home
+                    iv_txt = ri_html->icon( 'git-alt' ) ).
+    ri_html->add_a( iv_act = zif_abapgit_definitions=>c_action-abapgit_home
+                    iv_txt = ri_html->icon( 'abapgit' ) ).
     ri_html->add( '</div>' ).
 
     ri_html->add( |<div class="page-title"><span class="spacer">&#x25BA;</span>{ ms_control-page_title }</div>| ).
