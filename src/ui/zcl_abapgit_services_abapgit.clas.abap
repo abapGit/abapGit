@@ -13,6 +13,8 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
     CONSTANTS c_changelog_path TYPE string VALUE '/blob/main/changelog.txt' ##NO_TEXT.
 
     CLASS-METHODS open_abapgit_homepage
+      IMPORTING
+        iv_page TYPE string OPTIONAL
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS open_abapgit_wikipage
@@ -56,7 +58,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
+CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
 
 
   METHOD check_sapgui.
@@ -95,6 +97,22 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
       li_user_persistence->set_settings( ls_settings ).
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD get_abapgit_tcode.
+    CONSTANTS: lc_report_tcode_hex TYPE x VALUE '80'.
+    DATA: lt_tcodes TYPE STANDARD TABLE OF tcode.
+
+    SELECT tcode
+      FROM tstc
+      INTO TABLE lt_tcodes
+      WHERE pgmna = sy-cprog
+        AND cinfo = lc_report_tcode_hex.
+
+    IF lines( lt_tcodes ) > 0.
+      READ TABLE lt_tcodes INDEX 1 INTO rv_tcode.
+    ENDIF.
   ENDMETHOD.
 
 
@@ -172,7 +190,7 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
 
 
   METHOD open_abapgit_homepage.
-    open_url_in_browser( c_abapgit_homepage ).
+    open_url_in_browser( |{ c_abapgit_homepage }/{ iv_page }| ).
   ENDMETHOD.
 
 
@@ -287,22 +305,4 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
-
-  METHOD get_abapgit_tcode.
-    CONSTANTS: lc_report_tcode_hex TYPE x VALUE '80'.
-    DATA: lt_tcodes TYPE STANDARD TABLE OF tcode.
-
-    SELECT tcode
-      FROM tstc
-      INTO TABLE lt_tcodes
-      WHERE pgmna = sy-cprog
-        AND cinfo = lc_report_tcode_hex.
-
-    IF lines( lt_tcodes ) > 0.
-      READ TABLE lt_tcodes INDEX 1 INTO rv_tcode.
-    ENDIF.
-  ENDMETHOD.
-
-
 ENDCLASS.
