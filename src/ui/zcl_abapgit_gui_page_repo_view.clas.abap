@@ -425,7 +425,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     lo_tb_branch = build_branch_dropdown( ).
 
-    lo_tb_tag = build_tag_dropdown( lv_wp_opt ).
+    lo_tb_tag = build_tag_dropdown( ).
 
     lo_tb_advanced = build_advanced_dropdown( iv_wp_opt = lv_wp_opt ).
 
