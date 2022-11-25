@@ -284,7 +284,7 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
     if (document.activeElement.id === "filter") {
       return;
     }
-    if (self.focusFilterKey && event.key === self.focusFilterKey) {
+    if (self.focusFilterKey && event.key === self.focusFilterKey && !CommandPalette.isVisible()) {
       var filterInput = document.getElementById("filter");
       if (filterInput) filterInput.focus();
       event.preventDefault();
@@ -551,7 +551,8 @@ StageHelper.prototype.setHooks = function() {
   var self = this;
   document.addEventListener("keypress", function(event) {
     if (document.activeElement.id !== self.ids.objectSearch
-      && self.focusFilterKey && event.key === self.focusFilterKey) {
+      && self.focusFilterKey && event.key === self.focusFilterKey
+      && !CommandPalette.isVisible()) {
 
       self.dom.objectSearch.focus();
       event.preventDefault();
@@ -2354,6 +2355,11 @@ CommandPalette.prototype.exec = function(cmd) {
   } else {
     submitSapeventForm(null, cmd.action);
   }
+};
+
+// Is any command palette visible?
+CommandPalette.isVisible = function(){
+  return CommandPalette.instances.reduce(function(result, instance){ return result || instance.elements.palette.style.display !== "none" }, false);
 };
 
 /* COMMAND ENUMERATORS */

@@ -73,9 +73,9 @@ INTERFACE zif_abapgit_definitions
     END OF ty_comment .
   TYPES:
     BEGIN OF ty_item_signature,
-      obj_type  TYPE tadir-object,
-      obj_name  TYPE tadir-obj_name,
-      devclass  TYPE devclass,
+      obj_type TYPE tadir-object,
+      obj_name TYPE tadir-obj_name,
+      devclass TYPE devclass,
     END OF ty_item_signature .
   TYPES:
     BEGIN OF ty_item.
@@ -508,6 +508,8 @@ INTERFACE zif_abapgit_definitions
       direction                     TYPE string VALUE 'direction',
       documentation                 TYPE string VALUE 'documentation',
       changelog                     TYPE string VALUE 'changelog',
+      homepage                      TYPE string VALUE 'homepage',
+      sponsor                       TYPE string VALUE 'sponsor',
       clipboard                     TYPE string VALUE 'clipboard',
       show_hotkeys                  TYPE string VALUE 'show_hotkeys',
     END OF c_action.
