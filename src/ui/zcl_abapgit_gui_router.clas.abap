@@ -266,6 +266,12 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-changelog.                       " abapGit full changelog
         zcl_abapgit_services_abapgit=>open_abapgit_changelog( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
+      WHEN zif_abapgit_definitions=>c_action-homepage.                        " abapGit homepage
+        zcl_abapgit_services_abapgit=>open_abapgit_homepage( ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
+      WHEN zif_abapgit_definitions=>c_action-sponsor.                         " abapGit sponsor us
+        zcl_abapgit_services_abapgit=>open_abapgit_homepage( 'sponsor.html' ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
       WHEN zif_abapgit_definitions=>c_action-show_hotkeys.                    " show hotkeys
         zcl_abapgit_ui_factory=>get_gui(
                              )->zif_abapgit_gui_services~get_hotkeys_ctl(
