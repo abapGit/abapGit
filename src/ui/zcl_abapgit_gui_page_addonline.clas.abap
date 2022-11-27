@@ -28,6 +28,7 @@ CLASS zcl_abapgit_gui_page_addonline DEFINITION
         package            TYPE string VALUE 'package',
         branch_name        TYPE string VALUE 'branch_name',
         display_name       TYPE string VALUE 'display_name',
+        labels             TYPE string VALUE 'labels',
         folder_logic       TYPE string VALUE 'folder_logic',
         ignore_subpackages TYPE string VALUE 'ignore_subpackages',
         main_lang_only     TYPE string VALUE 'main_lang_only',
@@ -62,7 +63,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -132,6 +133,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
       iv_name        = c_id-display_name
       iv_label       = 'Display Name'
       iv_hint        = 'Name to show instead of original repository name (optional)'
+    )->text(
+      iv_name        = c_id-labels
+      iv_label       = |Labels (comma-separated, allowed chars: "{ zcl_abapgit_repo_labels=>c_allowed_chars }")|
+      iv_hint        = 'Comma-separated labels for grouping and repo organization (optional)'
     )->checkbox(
       iv_name        = c_id-ignore_subpackages
       iv_label       = 'Ignore Subpackages'
