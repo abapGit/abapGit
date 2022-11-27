@@ -251,7 +251,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     IF mo_settings->get_link_hints_enabled( ) = abap_true AND lv_link_hint_key IS NOT INITIAL.
 
       ii_html->add( |activateLinkHints("{ lv_link_hint_key }");| ).
-      ii_html->add( |setInitialFocusWithQuerySelector('a span', true);| ).
+      ii_html->add( |setInitialFocusWithQuerySelector('#header', false);| ).
       ii_html->add( |enableArrowListNavigation();| ).
 
     ENDIF.
