@@ -19,6 +19,13 @@ CLASS zcl_abapgit_repo_labels DEFINITION
         bg TYPE string,
       END OF ty_color.
 
+    TYPES:
+      BEGIN OF ty_label,
+        label TYPE string,
+      END OF ty_label,
+      ty_labels TYPE STANDARD TABLE OF ty_label WITH NON-UNIQUE DEFAULT KEY
+                     WITH NON-UNIQUE SORTED KEY key_label COMPONENTS label.
+
     CONSTANTS c_allowed_chars TYPE string VALUE `-_. a-zA-Z0-9` ##NO_TEXT.
 
     " it is easier to allow chars, though potentially other chars can be added later if needed
@@ -65,6 +72,17 @@ CLASS zcl_abapgit_repo_labels DEFINITION
         iv_color TYPE string
       RETURNING
         VALUE(rs_parsed) TYPE ty_color.
+
+    CLASS-METHODS get_label_list
+      RETURNING
+        VALUE(rt_labels) TYPE ty_labels
+      RAISING
+        zcx_abapgit_exception.
+    CLASS-METHODS choose_labels
+      IMPORTING
+        io_form_data TYPE REF TO zcl_abapgit_string_map
+      RAISING
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -315,4 +333,54 @@ CLASS ZCL_ABAPGIT_REPO_LABELS IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
+
+  METHOD get_label_list.
+
+    DATA:
+      lt_repo           TYPE zif_abapgit_repo_srv=>ty_repo_list,
+      ls_local_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings,
+      lt_labels         TYPE string_table,
+      ls_label          LIKE LINE OF rt_labels.
+
+    FIELD-SYMBOLS:
+      <ls_repo>  TYPE REF TO zif_abapgit_repo,
+      <lv_label> TYPE LINE OF string_table.
+
+    lt_repo = zcl_abapgit_repo_srv=>get_instance( )->list( ).
+
+    LOOP AT lt_repo ASSIGNING <ls_repo>.
+
+      ls_local_settings = <ls_repo>->get_local_settings( ).
+      lt_labels = split( ls_local_settings-labels ).
+
+      LOOP AT lt_labels ASSIGNING <lv_label>.
+        ls_label-label = <lv_label>.
+        INSERT ls_label INTO TABLE rt_labels.
+      ENDLOOP.
+
+    ENDLOOP.
+
+    SORT rt_labels.
+    DELETE ADJACENT DUPLICATES FROM rt_labels.
+
+  ENDMETHOD.
+
+
+  METHOD choose_labels.
+
+    DATA:
+      lv_old_labels TYPE string,
+      lv_new_labels TYPE string.
+
+    lv_old_labels = io_form_data->get( zif_abapgit_definitions=>c_id-labels ).
+
+    lv_new_labels = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_labels( lv_old_labels ).
+
+    io_form_data->set(
+      iv_key = zif_abapgit_definitions=>c_id-labels
+      iv_val = lv_new_labels ).
+
+  ENDMETHOD.
+
 ENDCLASS.
