@@ -27,6 +27,7 @@ CLASS zcl_abapgit_gui_page_addofflin DEFINITION
         url            TYPE string VALUE 'url',
         package        TYPE string VALUE 'package',
         folder_logic   TYPE string VALUE 'folder_logic',
+        labels         TYPE string VALUE 'labels',
         main_lang_only TYPE string VALUE 'main_lang_only',
       END OF c_id .
 
@@ -58,7 +59,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_ADDOFFLIN IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -116,6 +117,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDOFFLIN IMPLEMENTATION.
     )->option(
       iv_label       = 'Mixed'
       iv_value       = zif_abapgit_dot_abapgit=>c_folder_logic-mixed
+    )->text(
+      iv_name        = c_id-labels
+      iv_label       = |Labels (comma-separated, allowed chars: "{ zcl_abapgit_repo_labels=>c_allowed_chars }")|
+      iv_hint        = 'Comma-separated labels for grouping and repo organization (optional)'
     )->checkbox(
       iv_name        = c_id-main_lang_only
       iv_label       = 'Serialize Main Language Only'
