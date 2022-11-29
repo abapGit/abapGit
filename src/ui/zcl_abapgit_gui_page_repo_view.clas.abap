@@ -142,8 +142,6 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS build_tag_dropdown
-      IMPORTING
-        !iv_wp_opt             LIKE zif_abapgit_html=>c_html_opt-crossout
       RETURNING
         VALUE(ro_tag_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
       RAISING
@@ -282,9 +280,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ENDIF.
 
     IF mo_repo->is_offline( ) = abap_false. " Online ?
-      ro_advanced_dropdown->add( iv_txt = 'Force Stage'
-                                 iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?key={ mv_key }| ).
-
       CLEAR lv_crossout.
       IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>c_authorization-transport_to_branch ) = abap_false.
         lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
@@ -310,6 +305,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     ro_advanced_dropdown->add( iv_txt = 'Quality Assurance'
                                iv_typ = zif_abapgit_html=>c_action_type-separator ).
+
     ro_advanced_dropdown->add( iv_txt = 'Syntax Check'
                                iv_act = |{ zif_abapgit_definitions=>c_action-repo_syntax_check }?key={ mv_key }| ).
     ro_advanced_dropdown->add( iv_txt = 'Unit Test'
@@ -328,8 +324,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                                iv_opt = lv_crossout ).
 
     ro_advanced_dropdown->add( iv_txt = 'Beta - Data'
-                               iv_act = |{ c_actions-go_data }?key={ mv_key }|
-                               iv_opt = lv_crossout ).
+                               iv_act = |{ c_actions-go_data }?key={ mv_key }| ).
 
     IF is_repo_lang_logon_lang( ) = abap_false AND zcl_abapgit_services_abapgit=>get_abapgit_tcode( ) IS NOT INITIAL.
       ro_advanced_dropdown->add(
@@ -427,7 +422,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     lo_tb_branch = build_branch_dropdown( ).
 
-    lo_tb_tag = build_tag_dropdown( lv_wp_opt ).
+    lo_tb_tag = build_tag_dropdown( ).
 
     lo_tb_advanced = build_advanced_dropdown( iv_wp_opt = lv_wp_opt ).
 
@@ -459,10 +454,10 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ro_menu->add(
       iv_txt = zcl_abapgit_gui_buttons=>repo_list( )
       iv_act = zif_abapgit_definitions=>c_action-abapgit_home
-               )->add(
-                 iv_txt = zcl_abapgit_gui_buttons=>help( )
-                 iv_title = 'Help'
-                 io_sub = zcl_abapgit_gui_chunk_lib=>help_submenu( ) ).
+    )->add(
+      iv_txt = zcl_abapgit_gui_buttons=>help( )
+      iv_title = 'Help'
+      io_sub = zcl_abapgit_gui_chunk_lib=>help_submenu( ) ).
 
   ENDMETHOD.
 
@@ -481,12 +476,10 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                          iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?key={ mv_key }|
                          iv_opt = iv_pull_opt ).
       ENDIF.
-      IF mo_repo_aggregated_state->local( ) IS NOT INITIAL. " Something new at local
+      IF mo_repo_aggregated_state->is_unchanged( ) = abap_false. " Any changes
         ro_toolbar->add( iv_txt = 'Stage'
                          iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?key={ mv_key }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
-      ENDIF.
-      IF mo_repo_aggregated_state->is_unchanged( ) = abap_false. " Any changes
         ro_toolbar->add( iv_txt = 'Diff'
                          iv_act = |{ zif_abapgit_definitions=>c_action-go_repo_diff }?key={ mv_key }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
@@ -584,8 +577,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ENDIF.
 
     ro_tag_dropdown->add( iv_txt = 'Switch'
-                          iv_act = |{ zif_abapgit_definitions=>c_action-git_tag_switch }?key={ mv_key }|
-                          iv_opt = iv_wp_opt ).
+                          iv_act = |{ zif_abapgit_definitions=>c_action-git_tag_switch }?key={ mv_key }| ).
     ro_tag_dropdown->add( iv_txt = 'Create'
                           iv_act = |{ zif_abapgit_definitions=>c_action-git_tag_create }?key={ mv_key }| ).
     ro_tag_dropdown->add( iv_txt = 'Delete'
