@@ -2443,6 +2443,17 @@ function enumerateUiActions() {
       });
     });
 
+  // radio buttons
+  [].slice.call(document.querySelectorAll("input[type='radio']"))
+    .forEach(function(input){
+      items.push({
+        action: function(){
+          input.click();
+        },
+        title: document.querySelector("label[for='" + input.id + "']").textContent
+      });
+    });
+
   // others:
   // - links inside forms
   // - label links
