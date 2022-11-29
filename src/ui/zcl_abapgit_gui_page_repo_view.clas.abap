@@ -280,9 +280,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ENDIF.
 
     IF mo_repo->is_offline( ) = abap_false. " Online ?
-      ro_advanced_dropdown->add( iv_txt = 'Force Stage'
-                                 iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?key={ mv_key }| ).
-
       CLEAR lv_crossout.
       IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>c_authorization-transport_to_branch ) = abap_false.
         lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
@@ -479,12 +476,10 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                          iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?key={ mv_key }|
                          iv_opt = iv_pull_opt ).
       ENDIF.
-      IF mo_repo_aggregated_state->local( ) IS NOT INITIAL. " Something new at local
+      IF mo_repo_aggregated_state->is_unchanged( ) = abap_false. " Any changes
         ro_toolbar->add( iv_txt = 'Stage'
                          iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?key={ mv_key }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
-      ENDIF.
-      IF mo_repo_aggregated_state->is_unchanged( ) = abap_false. " Any changes
         ro_toolbar->add( iv_txt = 'Diff'
                          iv_act = |{ zif_abapgit_definitions=>c_action-go_repo_diff }?key={ mv_key }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
