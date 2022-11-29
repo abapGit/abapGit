@@ -2458,7 +2458,8 @@ function enumerateUiActions() {
   // - links inside forms
   // - label links
   // - command links
-  [].slice.call(document.querySelectorAll("form a, a.command"))
+  // - other header links
+  [].slice.call(document.querySelectorAll("form a, a.command, #header a"))
     .filter(function(anchor){
       return !!anchor.title || !!anchor.text;
     }).forEach(function(anchor){
