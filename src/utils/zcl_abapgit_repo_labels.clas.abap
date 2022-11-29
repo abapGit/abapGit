@@ -15,8 +15,8 @@ CLASS zcl_abapgit_repo_labels DEFINITION
     TYPES:
       BEGIN OF ty_color,
         cls TYPE string,
-        fg  TYPE string,
-        bg  TYPE string,
+        fg TYPE string,
+        bg TYPE string,
       END OF ty_color.
 
     CONSTANTS c_allowed_chars TYPE string VALUE `-_. a-zA-Z0-9` ##NO_TEXT.
@@ -30,12 +30,12 @@ CLASS zcl_abapgit_repo_labels DEFINITION
         zcx_abapgit_exception.
     CLASS-METHODS split
       IMPORTING
-        !iv_labels       TYPE string
+        !iv_labels TYPE string
       RETURNING
         VALUE(rt_labels) TYPE string_table.
     CLASS-METHODS normalize
       IMPORTING
-        !iv_labels       TYPE string
+        !iv_labels TYPE string
       RETURNING
         VALUE(rv_labels) TYPE string.
 
@@ -46,23 +46,23 @@ CLASS zcl_abapgit_repo_labels DEFINITION
         zcx_abapgit_exception.
     CLASS-METHODS split_colors
       IMPORTING
-        !iv_config             TYPE string
+        !iv_config TYPE string
       RETURNING
         VALUE(rt_label_colors) TYPE ty_label_colors.
     CLASS-METHODS split_colors_into_map
       IMPORTING
-        !iv_config    TYPE string
+        !iv_config TYPE string
       RETURNING
         VALUE(ro_map) TYPE REF TO zcl_abapgit_string_map.
     CLASS-METHODS normalize_colors
       IMPORTING
-        !iv_config       TYPE string
+        !iv_config TYPE string
       RETURNING
         VALUE(rv_config) TYPE string.
 
     CLASS-METHODS parse_color
       IMPORTING
-        iv_color         TYPE string
+        iv_color TYPE string
       RETURNING
         VALUE(rs_parsed) TYPE ty_color.
 
@@ -72,7 +72,7 @@ CLASS zcl_abapgit_repo_labels DEFINITION
 
     CLASS-METHODS validate_one_label_color
       IMPORTING
-        !is_lc    TYPE ty_label_color
+        !is_lc TYPE ty_label_color
         !iv_index TYPE i DEFAULT 0
       RAISING
         zcx_abapgit_exception.
@@ -88,7 +88,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo_labels IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO_LABELS IMPLEMENTATION.
 
 
   METHOD class_constructor.
@@ -315,5 +315,4 @@ CLASS zcl_abapgit_repo_labels IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
 ENDCLASS.
