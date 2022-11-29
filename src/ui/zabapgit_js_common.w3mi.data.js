@@ -103,9 +103,9 @@ function debugOutput(text, dstID) {
   stdout.innerHTML = stdout.innerHTML + wrapped;
 }
 
-// Use a pre-created form or create a hidden form
+// Use a supplied form, a pre-created form or create a hidden form
 // and submit with sapevent
-function submitSapeventForm(params, action, method) {
+function submitSapeventForm(params, action, method, form) {
 
   function getSapeventPrefix() {
     if (document.querySelector('a[href*="file:///SAPEVENT:"]'))  {
@@ -116,16 +116,16 @@ function submitSapeventForm(params, action, method) {
   }
 
   var stub_form_id = "form_" + action;
-  var form = document.getElementById(stub_form_id);
 
-  if (form === null) {
-    form = document.createElement("form");
-    form.setAttribute("method", method || "post");
-    if (/sapevent/i.test(action)){
-      form.setAttribute("action", action);
-    } else {
-      form.setAttribute("action", getSapeventPrefix() + "SAPEVENT:" + action);
-    }
+  form = form
+      || document.getElementById(stub_form_id)
+      || document.createElement("form");
+
+  form.setAttribute("method", method || "post");
+  if (/sapevent/i.test(action)){
+    form.setAttribute("action", action);
+  } else {
+    form.setAttribute("action", getSapeventPrefix() + "SAPEVENT:" + action);
   }
 
   for(var key in params) {
@@ -136,7 +136,9 @@ function submitSapeventForm(params, action, method) {
     form.appendChild(hiddenField);
   }
 
-  if (form.id !== stub_form_id) {
+  var formExistsInDOM = form.id && Boolean(document.querySelector("#" + form.id));
+
+  if (form.id !== stub_form_id && !formExistsInDOM) {
     document.body.appendChild(form);
   }
 
@@ -2431,13 +2433,10 @@ function enumerateUiActions() {
     .forEach(function(input){
       items.push({
         action: function(){
-          if ([].slice.call(input.classList).indexOf("main") !== -1){
-            var parentForm = input.parentNode.parentNode.parentNode;
-            if (parentForm.nodeName === "FORM"){
-              parentForm.submit();
-            }
+          if (input.form.action.includes(input.formAction)){
+            input.form.submit();
           } else {
-            submitSapeventForm({}, input.formAction, "post");
+            submitSapeventForm({}, input.formAction, "post", input.form);
           }
         },
         title: input.value + " " + input.title.replace(/\[.*\]/,"")
