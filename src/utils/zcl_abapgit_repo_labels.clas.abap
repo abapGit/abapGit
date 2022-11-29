@@ -15,8 +15,8 @@ CLASS zcl_abapgit_repo_labels DEFINITION
     TYPES:
       BEGIN OF ty_color,
         cls TYPE string,
-        fg TYPE string,
-        bg TYPE string,
+        fg  TYPE string,
+        bg  TYPE string,
       END OF ty_color.
 
     TYPES:
@@ -37,12 +37,12 @@ CLASS zcl_abapgit_repo_labels DEFINITION
         zcx_abapgit_exception.
     CLASS-METHODS split
       IMPORTING
-        !iv_labels TYPE string
+        !iv_labels       TYPE string
       RETURNING
         VALUE(rt_labels) TYPE string_table.
     CLASS-METHODS normalize
       IMPORTING
-        !iv_labels TYPE string
+        !iv_labels       TYPE string
       RETURNING
         VALUE(rv_labels) TYPE string.
 
@@ -53,23 +53,23 @@ CLASS zcl_abapgit_repo_labels DEFINITION
         zcx_abapgit_exception.
     CLASS-METHODS split_colors
       IMPORTING
-        !iv_config TYPE string
+        !iv_config             TYPE string
       RETURNING
         VALUE(rt_label_colors) TYPE ty_label_colors.
     CLASS-METHODS split_colors_into_map
       IMPORTING
-        !iv_config TYPE string
+        !iv_config    TYPE string
       RETURNING
         VALUE(ro_map) TYPE REF TO zcl_abapgit_string_map.
     CLASS-METHODS normalize_colors
       IMPORTING
-        !iv_config TYPE string
+        !iv_config       TYPE string
       RETURNING
         VALUE(rv_config) TYPE string.
 
     CLASS-METHODS parse_color
       IMPORTING
-        iv_color TYPE string
+        iv_color         TYPE string
       RETURNING
         VALUE(rs_parsed) TYPE ty_color.
 
@@ -78,11 +78,7 @@ CLASS zcl_abapgit_repo_labels DEFINITION
         VALUE(rt_labels) TYPE ty_labels
       RAISING
         zcx_abapgit_exception.
-    CLASS-METHODS choose_labels
-      IMPORTING
-        io_form_data TYPE REF TO zcl_abapgit_string_map
-      RAISING
-        zcx_abapgit_exception.
+
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -90,7 +86,7 @@ CLASS zcl_abapgit_repo_labels DEFINITION
 
     CLASS-METHODS validate_one_label_color
       IMPORTING
-        !is_lc TYPE ty_label_color
+        !is_lc    TYPE ty_label_color
         !iv_index TYPE i DEFAULT 0
       RAISING
         zcx_abapgit_exception.
@@ -106,7 +102,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_LABELS IMPLEMENTATION.
+CLASS zcl_abapgit_repo_labels IMPLEMENTATION.
 
 
   METHOD class_constructor.
@@ -363,23 +359,6 @@ CLASS ZCL_ABAPGIT_REPO_LABELS IMPLEMENTATION.
 
     SORT rt_labels.
     DELETE ADJACENT DUPLICATES FROM rt_labels.
-
-  ENDMETHOD.
-
-
-  METHOD choose_labels.
-
-    DATA:
-      lv_old_labels TYPE string,
-      lv_new_labels TYPE string.
-
-    lv_old_labels = io_form_data->get( zif_abapgit_definitions=>c_id-labels ).
-
-    lv_new_labels = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_labels( lv_old_labels ).
-
-    io_form_data->set(
-      iv_key = zif_abapgit_definitions=>c_id-labels
-      iv_val = lv_new_labels ).
 
   ENDMETHOD.
 

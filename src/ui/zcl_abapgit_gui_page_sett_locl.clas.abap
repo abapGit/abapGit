@@ -36,6 +36,7 @@ CLASS zcl_abapgit_gui_page_sett_locl DEFINITION
         checks                       TYPE string VALUE 'checks',
         code_inspector_check_variant TYPE string VALUE 'code_inspector_check_variant',
         block_commit                 TYPE string VALUE 'block_commit',
+        labels                       TYPE string VALUE 'labels',
       END OF c_id .
     CONSTANTS:
       BEGIN OF c_event,
@@ -69,6 +70,9 @@ CLASS zcl_abapgit_gui_page_sett_locl DEFINITION
     METHODS save_settings
       RAISING
         zcx_abapgit_exception .
+    METHODS choose_labels
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -124,7 +128,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
       iv_label       = 'Display Name'
       iv_hint        = 'Name to show instead of original repo name (optional)'
     )->text(
-      iv_name        = zif_abapgit_definitions=>c_id-labels
+      iv_name        = c_id-labels
       iv_side_action = c_event-choose_labels
       iv_label       = |Labels (comma-separated, allowed chars: "{ zcl_abapgit_repo_labels=>c_allowed_chars }")|
       iv_hint        = 'Comma-separated labels for grouping and repo organization (optional)'
@@ -177,7 +181,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
       iv_key = c_id-display_name
       iv_val = ms_settings-display_name ).
     mo_form_data->set(
-      iv_key = zif_abapgit_definitions=>c_id-labels
+      iv_key = c_id-labels
       iv_val = ms_settings-labels ).
     mo_form_data->set(
       iv_key = c_id-ignore_subpackages
@@ -208,7 +212,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
 
     ms_settings-display_name                 = mo_form_data->get( c_id-display_name ).
     ms_settings-labels                       = zcl_abapgit_repo_labels=>normalize(
-                                                 mo_form_data->get( zif_abapgit_definitions=>c_id-labels ) ).
+                                                 mo_form_data->get( c_id-labels ) ).
     ms_settings-ignore_subpackages           = mo_form_data->get( c_id-ignore_subpackages ).
     ms_settings-main_language_only           = mo_form_data->get( c_id-main_language_only ).
     ms_settings-write_protected              = mo_form_data->get( c_id-write_protected ).
@@ -253,10 +257,10 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
     ENDIF.
 
     TRY.
-        zcl_abapgit_repo_labels=>validate( io_form_data->get( zif_abapgit_definitions=>c_id-labels ) ).
+        zcl_abapgit_repo_labels=>validate( io_form_data->get( c_id-labels ) ).
       CATCH zcx_abapgit_exception INTO lx_error.
         ro_validation_log->set(
-          iv_key = zif_abapgit_definitions=>c_id-labels
+          iv_key = c_id-labels
           iv_val = lx_error->get_text( ) ).
     ENDTRY.
 
@@ -273,7 +277,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
 
       WHEN c_event-choose_labels.
 
-        zcl_abapgit_repo_labels=>choose_labels( mo_form_data ).
+        choose_labels( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_event-save.
@@ -313,6 +317,23 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
       io_validation_log = mo_validation_log ) ).
 
     ri_html->add( `</div>` ).
+
+  ENDMETHOD.
+
+
+  METHOD choose_labels.
+
+    DATA:
+      lv_old_labels TYPE string,
+      lv_new_labels TYPE string.
+
+    lv_old_labels = mo_form_data->get( c_id-labels ).
+
+    lv_new_labels = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_labels( lv_old_labels ).
+
+    mo_form_data->set(
+      iv_key = c_id-labels
+      iv_val = lv_new_labels ).
 
   ENDMETHOD.
 

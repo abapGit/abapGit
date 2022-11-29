@@ -549,9 +549,4 @@ INTERFACE zif_abapgit_definitions
     END OF ty_i18n_params .
   TYPES ty_trrngtrkor_tt TYPE RANGE OF trkorr.
 
-  CONSTANTS:
-    BEGIN OF c_id,
-      labels TYPE string VALUE 'labels',
-    END OF c_id.
-
 ENDINTERFACE.

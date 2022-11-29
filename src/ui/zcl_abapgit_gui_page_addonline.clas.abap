@@ -29,6 +29,7 @@ CLASS zcl_abapgit_gui_page_addonline DEFINITION
         branch_name        TYPE string VALUE 'branch_name',
         display_name       TYPE string VALUE 'display_name',
         folder_logic       TYPE string VALUE 'folder_logic',
+        labels             TYPE string VALUE 'labels',
         ignore_subpackages TYPE string VALUE 'ignore_subpackages',
         main_lang_only     TYPE string VALUE 'main_lang_only',
       END OF c_id.
@@ -59,6 +60,10 @@ CLASS zcl_abapgit_gui_page_addonline DEFINITION
     METHODS get_form_schema
       RETURNING
         VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form.
+
+    METHODS choose_labels
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -135,7 +140,7 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
       iv_label       = 'Display Name'
       iv_hint        = 'Name to show instead of original repository name (optional)'
     )->text(
-      iv_name        = zif_abapgit_definitions=>c_id-labels
+      iv_name        = c_id-labels
       iv_side_action = c_event-choose_labels
       iv_label       = |Labels (comma-separated, allowed chars: "{ zcl_abapgit_repo_labels=>c_allowed_chars }")|
       iv_hint        = 'Comma-separated labels for grouping and repo organization (optional)'
@@ -198,10 +203,10 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
     ENDIF.
 
     TRY.
-        zcl_abapgit_repo_labels=>validate( io_form_data->get( zif_abapgit_definitions=>c_id-labels ) ).
+        zcl_abapgit_repo_labels=>validate( io_form_data->get( c_id-labels ) ).
       CATCH zcx_abapgit_exception INTO lx_err.
         ro_validation_log->set(
-          iv_key = zif_abapgit_definitions=>c_id-labels
+          iv_key = c_id-labels
           iv_val = lx_err->get_text( ) ).
     ENDTRY.
 
@@ -272,7 +277,7 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
 
       WHEN c_event-choose_labels.
 
-        zcl_abapgit_repo_labels=>choose_labels( mo_form_data ).
+        choose_labels( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_event-add_online_repo.
@@ -306,6 +311,23 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
       io_values         = mo_form_data
       io_validation_log = mo_validation_log ) ).
     ri_html->add( '</div>' ).
+  ENDMETHOD.
+
+
+  METHOD choose_labels.
+
+    DATA:
+      lv_old_labels TYPE string,
+      lv_new_labels TYPE string.
+
+    lv_old_labels = mo_form_data->get( c_id-labels ).
+
+    lv_new_labels = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_labels( lv_old_labels ).
+
+    mo_form_data->set(
+      iv_key = c_id-labels
+      iv_val = lv_new_labels ).
+
   ENDMETHOD.
 
 ENDCLASS.
