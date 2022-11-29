@@ -1303,7 +1303,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
   METHOD zif_abapgit_popups~popup_to_select_labels.
 
     DATA:
-      lt_all_labels         TYPE zcl_abapgit_repo_labels=>ty_labels,
+      lt_all_labels         TYPE zif_abapgit_repo_srv=>ty_labels,
       ls_label              LIKE LINE OF lt_all_labels,
       lt_current_labels     TYPE string_table,
       lt_selected_labels    LIKE lt_all_labels,
@@ -1313,12 +1313,12 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       lv_save_tabix         TYPE i,
       li_popup              TYPE REF TO zif_abapgit_popups.
 
-    FIELD-SYMBOLS: <lv_label>         TYPE zcl_abapgit_repo_labels=>ty_label,
+    FIELD-SYMBOLS: <lv_label>         TYPE zif_abapgit_repo_srv=>ty_label,
                    <lv_current_label> TYPE LINE OF string_table.
 
     lt_current_labels = zcl_abapgit_repo_labels=>split( iv_labels ).
 
-    lt_all_labels = zcl_abapgit_repo_labels=>get_label_list( ).
+    lt_all_labels = zcl_abapgit_repo_srv=>get_instance( )->get_label_list( ).
 
     " Add labels which are not saved yet
     LOOP AT lt_current_labels ASSIGNING <lv_current_label>.
