@@ -28,8 +28,8 @@ CLASS zcl_abapgit_gui_page_addonline DEFINITION
         package            TYPE string VALUE 'package',
         branch_name        TYPE string VALUE 'branch_name',
         display_name       TYPE string VALUE 'display_name',
-        folder_logic       TYPE string VALUE 'folder_logic',
         labels             TYPE string VALUE 'labels',
+        folder_logic       TYPE string VALUE 'folder_logic',
         ignore_subpackages TYPE string VALUE 'ignore_subpackages',
         main_lang_only     TYPE string VALUE 'main_lang_only',
       END OF c_id.

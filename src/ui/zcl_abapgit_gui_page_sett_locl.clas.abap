@@ -29,6 +29,7 @@ CLASS zcl_abapgit_gui_page_sett_locl DEFINITION
       BEGIN OF c_id,
         local                        TYPE string VALUE 'local',
         display_name                 TYPE string VALUE 'display_name',
+        labels                       TYPE string VALUE 'labels',
         ignore_subpackages           TYPE string VALUE 'ignore_subpackages',
         write_protected              TYPE string VALUE 'write_protected',
         only_local_objects           TYPE string VALUE 'only_local_objects',
@@ -36,7 +37,6 @@ CLASS zcl_abapgit_gui_page_sett_locl DEFINITION
         checks                       TYPE string VALUE 'checks',
         code_inspector_check_variant TYPE string VALUE 'code_inspector_check_variant',
         block_commit                 TYPE string VALUE 'block_commit',
-        labels                       TYPE string VALUE 'labels',
       END OF c_id .
     CONSTANTS:
       BEGIN OF c_event,
@@ -211,8 +211,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
   METHOD save_settings.
 
     ms_settings-display_name                 = mo_form_data->get( c_id-display_name ).
-    ms_settings-labels                       = zcl_abapgit_repo_labels=>normalize(
-                                                 mo_form_data->get( c_id-labels ) ).
+    ms_settings-labels                       = zcl_abapgit_repo_labels=>normalize( mo_form_data->get( c_id-labels ) ).
     ms_settings-ignore_subpackages           = mo_form_data->get( c_id-ignore_subpackages ).
     ms_settings-main_language_only           = mo_form_data->get( c_id-main_language_only ).
     ms_settings-write_protected              = mo_form_data->get( c_id-write_protected ).
