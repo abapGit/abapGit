@@ -690,7 +690,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       <ls_repo>  TYPE REF TO zif_abapgit_repo,
       <lv_label> TYPE LINE OF string_table.
 
-    lt_repo = zcl_abapgit_repo_srv=>get_instance( )->list( ).
+    lt_repo = zif_abapgit_repo_srv~list( ).
 
     LOOP AT lt_repo ASSIGNING <ls_repo>.
 
