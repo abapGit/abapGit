@@ -513,6 +513,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     lo_repo ?= instantiate_and_add( ls_repo ).
 
     ls_repo-local_settings-main_language_only = iv_main_lang_only.
+    ls_repo-local_settings-labels = iv_labels.
     lo_repo->set_local_settings( ls_repo-local_settings ).
     lo_repo->check_and_create_package( iv_package ).
 
@@ -571,6 +572,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       ls_repo-local_settings-ignore_subpackages = iv_ign_subpkg.
     ENDIF.
     ls_repo-local_settings-main_language_only = iv_main_lang_only.
+    ls_repo-local_settings-labels = iv_labels.
     lo_repo->set_local_settings( ls_repo-local_settings ).
 
     lo_repo->refresh( ).
