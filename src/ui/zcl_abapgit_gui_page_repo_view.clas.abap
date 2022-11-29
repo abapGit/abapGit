@@ -480,6 +480,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         ro_toolbar->add( iv_txt = 'Stage'
                          iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?key={ mv_key }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+        ro_toolbar->add( iv_txt = 'Patch'
+                         iv_act = |{ zif_abapgit_definitions=>c_action-go_patch }?key={ mv_key }|
+                         iv_opt = zif_abapgit_html=>c_html_opt-strong ).
         ro_toolbar->add( iv_txt = 'Diff'
                          iv_act = |{ zif_abapgit_definitions=>c_action-go_repo_diff }?key={ mv_key }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
@@ -1274,6 +1277,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA lv_path TYPE string.
+    DATA lv_key TYPE zif_abapgit_persistence=>ty_value.
+
+    lv_key = ii_event->query( )->get( 'KEY' ).
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-go_repo. " Switch to another repo
@@ -1338,8 +1344,13 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         open_in_main_language( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
-      WHEN OTHERS.
+      WHEN zif_abapgit_definitions=>c_action-go_patch.
+        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_patch
+          EXPORTING
+            iv_key = lv_key.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
 
+      WHEN OTHERS.
         rs_handled = super->zif_abapgit_gui_event_handler~on_event( ii_event ). " TODO refactor, move to HOC components
 
     ENDCASE.
