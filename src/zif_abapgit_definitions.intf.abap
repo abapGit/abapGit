@@ -548,5 +548,4 @@ INTERFACE zif_abapgit_definitions
       translation_languages TYPE ty_languages,
     END OF ty_i18n_params .
   TYPES ty_trrngtrkor_tt TYPE RANGE OF trkorr.
-
 ENDINTERFACE.

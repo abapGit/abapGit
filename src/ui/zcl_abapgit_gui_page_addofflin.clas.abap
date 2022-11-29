@@ -254,7 +254,4 @@ CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
 
   ENDMETHOD.
 
-
-
-
 ENDCLASS.
