@@ -70,9 +70,6 @@ CLASS zcl_abapgit_gui_page_sett_locl DEFINITION
     METHODS save_settings
       RAISING
         zcx_abapgit_exception .
-    METHODS choose_labels
-      RAISING
-        zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -276,7 +273,9 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
 
       WHEN c_event-choose_labels.
 
-        choose_labels( ).
+        zcl_abapgit_repo_labels=>choose_labels(
+            iv_id        = c_id-labels
+            io_form_data = mo_form_data ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_event-save.
@@ -316,23 +315,6 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
       io_validation_log = mo_validation_log ) ).
 
     ri_html->add( `</div>` ).
-
-  ENDMETHOD.
-
-
-  METHOD choose_labels.
-
-    DATA:
-      lv_old_labels TYPE string,
-      lv_new_labels TYPE string.
-
-    lv_old_labels = mo_form_data->get( c_id-labels ).
-
-    lv_new_labels = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_labels( lv_old_labels ).
-
-    mo_form_data->set(
-      iv_key = c_id-labels
-      iv_val = lv_new_labels ).
 
   ENDMETHOD.
 

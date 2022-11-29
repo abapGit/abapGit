@@ -57,10 +57,6 @@ CLASS zcl_abapgit_gui_page_addofflin DEFINITION
       RETURNING
         VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form .
 
-    METHODS choose_labels
-      RAISING
-        zcx_abapgit_exception.
-
 ENDCLASS.
 
 
@@ -219,7 +215,9 @@ CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
 
       WHEN c_event-choose_labels.
 
-        choose_labels( ).
+        zcl_abapgit_repo_labels=>choose_labels(
+            iv_id        = c_id-labels
+            io_form_data = mo_form_data ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_event-add_offline_repo.
@@ -257,20 +255,6 @@ CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD choose_labels.
 
-    DATA:
-      lv_old_labels TYPE string,
-      lv_new_labels TYPE string.
-
-    lv_old_labels = mo_form_data->get( c_id-labels ).
-
-    lv_new_labels = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_labels( lv_old_labels ).
-
-    mo_form_data->set(
-      iv_key = c_id-labels
-      iv_val = lv_new_labels ).
-
-  ENDMETHOD.
 
 ENDCLASS.

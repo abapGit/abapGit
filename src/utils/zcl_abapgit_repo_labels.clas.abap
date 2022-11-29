@@ -79,6 +79,12 @@ CLASS zcl_abapgit_repo_labels DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    CLASS-METHODS choose_labels
+      IMPORTING
+        iv_id        TYPE string
+        io_form_data TYPE REF TO zcl_abapgit_string_map
+      RAISING
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -359,6 +365,23 @@ CLASS zcl_abapgit_repo_labels IMPLEMENTATION.
 
     SORT rt_labels.
     DELETE ADJACENT DUPLICATES FROM rt_labels.
+
+  ENDMETHOD.
+
+
+  METHOD choose_labels.
+
+    DATA:
+      lv_old_labels TYPE string,
+      lv_new_labels TYPE string.
+
+    lv_old_labels = io_form_data->get( iv_id ).
+
+    lv_new_labels = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_labels( lv_old_labels ).
+
+    io_form_data->set(
+      iv_key = iv_id
+      iv_val = lv_new_labels ).
 
   ENDMETHOD.
 
