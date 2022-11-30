@@ -1366,6 +1366,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
         iv_selection_mode     = if_salv_c_selection_mode=>multiple
         it_columns_to_display = lt_columns_to_display
         it_preselected_rows   = lt_preselected_rows
+        iv_start_column       = 15
+        iv_end_column         = 55
       IMPORTING
         et_list               = lt_selected_labels ).
 
