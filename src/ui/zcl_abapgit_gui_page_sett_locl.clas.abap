@@ -40,7 +40,8 @@ CLASS zcl_abapgit_gui_page_sett_locl DEFINITION
       END OF c_id .
     CONSTANTS:
       BEGIN OF c_event,
-        save TYPE string VALUE 'save',
+        save          TYPE string VALUE 'save',
+        choose_labels TYPE string VALUE 'choose-labels',
       END OF c_event .
 
     DATA mo_form TYPE REF TO zcl_abapgit_html_form .
@@ -69,11 +70,15 @@ CLASS zcl_abapgit_gui_page_sett_locl DEFINITION
     METHODS save_settings
       RAISING
         zcx_abapgit_exception .
+    METHODS choose_labels
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -124,6 +129,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
       iv_hint        = 'Name to show instead of original repo name (optional)'
     )->text(
       iv_name        = c_id-labels
+      iv_side_action = c_event-choose_labels
       iv_label       = |Labels (comma-separated, allowed chars: "{ zcl_abapgit_repo_labels=>c_allowed_chars }")|
       iv_hint        = 'Comma-separated labels for grouping and repo organization (optional)'
     )->checkbox(
@@ -268,6 +274,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-go_back.
         rs_handled-state = mo_form_util->exit( mo_form_data ).
 
+      WHEN c_event-choose_labels.
+
+        choose_labels( ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+
       WHEN c_event-save.
         " Validate form entries before saving
         mo_validation_log = validate_form( mo_form_data ).
@@ -307,4 +318,22 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
     ri_html->add( `</div>` ).
 
   ENDMETHOD.
+
+
+  METHOD choose_labels.
+
+    DATA:
+      lv_old_labels TYPE string,
+      lv_new_labels TYPE string.
+
+    lv_old_labels = mo_form_data->get( c_id-labels ).
+
+    lv_new_labels = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_labels( lv_old_labels ).
+
+    mo_form_data->set(
+      iv_key = c_id-labels
+      iv_val = lv_new_labels ).
+
+  ENDMETHOD.
+
 ENDCLASS.
