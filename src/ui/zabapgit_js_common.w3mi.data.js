@@ -2549,4 +2549,4 @@ function toggleSticky() {
   } else {
     header.classList.remove( stickyClass );
   }
-}
+}
