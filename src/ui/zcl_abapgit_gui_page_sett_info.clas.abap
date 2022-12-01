@@ -171,6 +171,8 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
 
   METHOD format_timestamp.
 
+    DATA lv_temp TYPE c LENGTH 30.
+
     IF iv_timestamp IS INITIAL.
       rv_timestamp = 'n/a'.
       RETURN.
@@ -180,7 +182,9 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
       EXPORTING
         input  = iv_timestamp
       IMPORTING
-        output = rv_timestamp.
+        output = lv_temp.
+
+    rv_timestamp = lv_temp.
 
   ENDMETHOD.
 
