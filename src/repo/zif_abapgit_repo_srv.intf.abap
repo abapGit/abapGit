@@ -3,7 +3,13 @@ INTERFACE zif_abapgit_repo_srv
 
 
   TYPES:
-    ty_repo_list TYPE STANDARD TABLE OF REF TO zif_abapgit_repo WITH DEFAULT KEY .
+    ty_repo_list TYPE STANDARD TABLE OF REF TO zif_abapgit_repo WITH DEFAULT KEY,
+
+    BEGIN OF ty_label,
+      label TYPE string,
+    END OF ty_label,
+    ty_labels TYPE STANDARD TABLE OF ty_label WITH NON-UNIQUE DEFAULT KEY
+                   WITH NON-UNIQUE SORTED KEY key_label COMPONENTS label.
 
   METHODS init.
   METHODS delete
@@ -99,4 +105,10 @@ INTERFACE zif_abapgit_repo_srv
       !ev_reason TYPE string
     RAISING
       zcx_abapgit_exception .
+  METHODS get_label_list
+    RETURNING
+      VALUE(rt_labels) TYPE ty_labels
+    RAISING
+      zcx_abapgit_exception.
+
 ENDINTERFACE.
