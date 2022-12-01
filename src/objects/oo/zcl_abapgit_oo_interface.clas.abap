@@ -82,7 +82,7 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
   METHOD update_meta.
 
     DATA: lo_update     TYPE REF TO cl_oo_interface_section_source,
-          lx_error      TYPE REF TO cx_oo_save_failure,
+          lx_error      TYPE REF TO cx_oo_source_save_failure,
           ls_clskey     TYPE seoclskey,
           lv_scan_error TYPE abap_bool.
 
@@ -134,7 +134,7 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
 * this will update the SEO* database tables
     TRY.
         lo_update->revert_scan_result( ).
-      CATCH cx_oo_save_failure INTO lx_error.
+      CATCH cx_oo_source_save_failure INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
