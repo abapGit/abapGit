@@ -9,6 +9,7 @@ CLASS ltcl_run_checks DEFINITION FOR TESTING RISK LEVEL HARMLESS
 
     METHODS:
       setup,
+      dot_abapgit FOR TESTING RAISING zcx_abapgit_exception,
       file_to_object FOR TESTING RAISING zcx_abapgit_exception,
       object_to_file FOR TESTING RAISING zcx_abapgit_exception,
       file_to_object_pack FOR TESTING RAISING zcx_abapgit_exception,
@@ -22,6 +23,25 @@ CLASS ltcl_run_checks IMPLEMENTATION.
 
     " Assume for unit tests that starting folder is /src/ with prefix logic
     mo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
+
+  ENDMETHOD.
+
+  METHOD dot_abapgit.
+
+    DATA lv_is_xml TYPE abap_bool.
+
+    zcl_abapgit_filename_logic=>file_to_object(
+      EXPORTING
+        iv_filename = zif_abapgit_definitions=>c_dot_abapgit
+        iv_path     = '/'
+        io_dot      = mo_dot
+      IMPORTING
+        ev_is_xml   = lv_is_xml ).
+
+    " .abapgit.xml is not considered an "XML file" since it does not represent an object (item)
+    cl_abap_unit_assert=>assert_equals(
+      exp = abap_false
+      act = lv_is_xml ).
 
   ENDMETHOD.
 

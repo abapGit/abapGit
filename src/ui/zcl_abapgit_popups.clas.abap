@@ -65,16 +65,16 @@ CLASS zcl_abapgit_popups DEFINITION
       EXPORTING
         !et_list TYPE INDEX TABLE .
     METHODS on_select_list_link_click
-      FOR EVENT link_click OF cl_salv_events_table
+        FOR EVENT link_click OF cl_salv_events_table
       IMPORTING
         !row
         !column .
     METHODS on_select_list_function_click
-      FOR EVENT added_function OF cl_salv_events_table
+        FOR EVENT added_function OF cl_salv_events_table
       IMPORTING
         !e_salv_function .
     METHODS on_double_click
-      FOR EVENT double_click OF cl_salv_events_table
+        FOR EVENT double_click OF cl_salv_events_table
       IMPORTING
         !row
         !column .
@@ -975,7 +975,10 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
           lo_table_header TYPE REF TO cl_salv_form_text.
 
     FIELD-SYMBOLS: <lt_table>             TYPE STANDARD TABLE,
-                   <ls_column_to_display> TYPE zif_abapgit_definitions=>ty_alv_column.
+                   <ls_column_to_display> TYPE zif_abapgit_definitions=>ty_alv_column,
+                   <lv_row>               TYPE i,
+                   <ls_line>              TYPE any,
+                   <lv_selected>          TYPE data.
 
     CLEAR: et_list.
 
@@ -983,6 +986,23 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
     ASSIGN mr_table->* TO <lt_table>.
     ASSERT sy-subrc = 0.
+
+    LOOP AT it_preselected_rows ASSIGNING <lv_row>.
+
+      READ TABLE <lt_table> INDEX <lv_row> ASSIGNING <ls_line>.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |Preselected row { <lv_row> } doesn't exist| ).
+      ENDIF.
+
+      ASSIGN
+        COMPONENT c_fieldname_selected
+        OF STRUCTURE <ls_line>
+        TO <lv_selected>.
+      ASSERT sy-subrc = 0.
+
+      <lv_selected> = abap_true.
+
+    ENDLOOP.
 
     ms_position = center(
       iv_width  = iv_end_column - iv_start_column
@@ -1278,4 +1298,86 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_popups~popup_to_select_labels.
+
+    DATA:
+      lt_all_labels         TYPE zif_abapgit_repo_srv=>ty_labels,
+      ls_label              LIKE LINE OF lt_all_labels,
+      lt_current_labels     TYPE string_table,
+      lt_selected_labels    LIKE lt_all_labels,
+      lt_columns_to_display TYPE zif_abapgit_definitions=>ty_alv_column_tt,
+      lt_preselected_rows   TYPE zif_abapgit_popups=>ty_rows,
+      ls_columns_to_display LIKE LINE OF lt_columns_to_display,
+      lv_save_tabix         TYPE i,
+      li_popup              TYPE REF TO zif_abapgit_popups.
+
+    FIELD-SYMBOLS: <lv_label>         TYPE zif_abapgit_repo_srv=>ty_label,
+                   <lv_current_label> TYPE LINE OF string_table.
+
+    lt_current_labels = zcl_abapgit_repo_labels=>split( iv_labels ).
+
+    lt_all_labels = zcl_abapgit_repo_srv=>get_instance( )->get_label_list( ).
+
+    " Add labels which are not saved yet
+    LOOP AT lt_current_labels ASSIGNING <lv_current_label>.
+
+      READ TABLE lt_all_labels TRANSPORTING NO FIELDS
+                               WITH KEY key_label
+                               COMPONENTS label = <lv_current_label>.
+      IF sy-subrc <> 0.
+        ls_label-label = <lv_current_label>.
+        INSERT ls_label INTO TABLE lt_all_labels.
+      ENDIF.
+
+    ENDLOOP.
+
+    IF lines( lt_all_labels ) = 0.
+      zcx_abapgit_exception=>raise( |No labels maintained yet| ).
+    ENDIF.
+
+    SORT lt_all_labels.
+    DELETE ADJACENT DUPLICATES FROM lt_all_labels.
+
+    " Preselect current labels
+    LOOP AT lt_all_labels ASSIGNING <lv_label>.
+
+      lv_save_tabix = sy-tabix.
+
+      READ TABLE lt_current_labels TRANSPORTING NO FIELDS
+                                   WITH KEY table_line = <lv_label>-label.
+      IF sy-subrc = 0.
+        INSERT lv_save_tabix INTO TABLE lt_preselected_rows.
+      ENDIF.
+
+    ENDLOOP.
+
+    ls_columns_to_display-name = 'LABEL'.
+    ls_columns_to_display-text = 'Label'.
+    INSERT ls_columns_to_display INTO TABLE lt_columns_to_display.
+
+    li_popup = zcl_abapgit_ui_factory=>get_popups( ).
+    li_popup->popup_to_select_from_list(
+      EXPORTING
+        iv_header_text        = 'Select labels'
+        iv_select_column_text = 'Add label'
+        it_list               = lt_all_labels
+        iv_selection_mode     = if_salv_c_selection_mode=>multiple
+        it_columns_to_display = lt_columns_to_display
+        it_preselected_rows   = lt_preselected_rows
+        iv_start_column       = 15
+        iv_end_column         = 55
+      IMPORTING
+        et_list               = lt_selected_labels ).
+
+    LOOP AT lt_selected_labels ASSIGNING <lv_label>.
+      IF rv_labels IS NOT INITIAL.
+        rv_labels = rv_labels && ','.
+      ENDIF.
+      rv_labels = rv_labels && <lv_label>-label.
+    ENDLOOP.
+
+  ENDMETHOD.
+
 ENDCLASS.

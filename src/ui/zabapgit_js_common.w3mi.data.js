@@ -1985,7 +1985,7 @@ Patch.prototype.registerStagePatch = function (){
 
   var aRefresh = document.querySelectorAll("[id*=" + REFRESH_PREFIX + "]");
   [].forEach.call( aRefresh, function(el) {
-    el.addEventListener("click", memoizeScrollPosition(this.submitPatch.bind(this, el.id)).bind(this));
+    el.addEventListener("click", memorizeScrollPosition(this.submitPatch.bind(this, el.id)).bind(this));
   }.bind(this));
 
   // for hotkeys
@@ -1993,11 +1993,11 @@ Patch.prototype.registerStagePatch = function (){
     this.submitPatch(this.ACTION.PATCH_STAGE);
   }.bind(this);
 
-  window.refreshLocal = memoizeScrollPosition(function(){
+  window.refreshLocal = memorizeScrollPosition(function(){
     this.submitPatch(this.ACTION.REFRESH_LOCAL);
   }.bind(this));
 
-  window.refreshAll = memoizeScrollPosition(function(){
+  window.refreshAll = memorizeScrollPosition(function(){
     this.submitPatch(this.ACTION.REFRESH_ALL);
   }.bind(this));
 
@@ -2458,7 +2458,8 @@ function enumerateUiActions() {
   // - links inside forms
   // - label links
   // - command links
-  [].slice.call(document.querySelectorAll("form a, a.command"))
+  // - other header links
+  [].slice.call(document.querySelectorAll("form a, a.command, #header a"))
     .filter(function(anchor){
       return !!anchor.title || !!anchor.text;
     }).forEach(function(anchor){
@@ -2497,12 +2498,17 @@ function enumerateJumpAllFiles() {
 /* Save Scroll Position for Diff/Patch Page */
 
 function saveScrollPosition(){
-  if (!window.sessionStorage) { return }
+  // Not supported by Java GUI
+  try { if (!window.sessionStorage) { return } }
+  catch(err) { return }
+
   window.sessionStorage.setItem("scrollTop", document.querySelector("html").scrollTop);
 }
 
 function restoreScrollPosition(){
-  if (!window.sessionStorage) { return }
+  // Not supported by Java GUI
+  try { if (!window.sessionStorage) { return } }
+  catch(err) { return }
 
   var scrollTop = window.sessionStorage.getItem("scrollTop");
   if (scrollTop) {
@@ -2511,7 +2517,7 @@ function restoreScrollPosition(){
   window.sessionStorage.setItem("scrollTop", 0);
 }
 
-function memoizeScrollPosition(fn){
+function memorizeScrollPosition(fn){
   return function(){
     saveScrollPosition();
     return fn.call(this, fn.args);
