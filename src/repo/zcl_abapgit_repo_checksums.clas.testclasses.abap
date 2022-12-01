@@ -272,6 +272,9 @@ CLASS lcl_repo_mock IMPLEMENTATION.
   ENDMETHOD.
   METHOD zif_abapgit_repo_srv~validate_url.
   ENDMETHOD.
+  METHOD zif_abapgit_repo_srv~get_label_list.
+  ENDMETHOD.
+
 ENDCLASS.
 
 CLASS lcl_local_file_builder DEFINITION FINAL.
