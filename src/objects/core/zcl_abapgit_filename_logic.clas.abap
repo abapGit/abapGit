@@ -55,7 +55,7 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
 
     DATA:
       lv_name TYPE string,
-      lv_type TYPE trobjtype,
+      lv_type TYPE string,
       lv_ext  TYPE string.
 
     " Guess object type and name
@@ -67,7 +67,7 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
     REPLACE ALL OCCURRENCES OF '#' IN lv_ext WITH '/'.
     " Assume AFF namespace convention
     CREATE OBJECT go_aff_registry TYPE zcl_abapgit_aff_registry.
-    IF go_aff_registry->is_supported_object_type( lv_type ) = abap_true.
+    IF go_aff_registry->is_supported_object_type( |{ lv_type }| ) = abap_true.
       REPLACE ALL OCCURRENCES OF '(' IN lv_name WITH '/'.
       REPLACE ALL OCCURRENCES OF ')' IN lv_name WITH '/'.
     ENDIF.
@@ -146,5 +146,4 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
 
     TRANSLATE rv_filename TO LOWER CASE.
   ENDMETHOD.
-
 ENDCLASS.
