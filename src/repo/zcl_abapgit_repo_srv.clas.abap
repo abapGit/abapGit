@@ -676,4 +676,37 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_srv~get_label_list.
+
+    DATA:
+      lt_repo           TYPE zif_abapgit_repo_srv=>ty_repo_list,
+      ls_local_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings,
+      lt_labels         TYPE string_table,
+      ls_label          LIKE LINE OF rt_labels.
+
+    FIELD-SYMBOLS:
+      <ls_repo>  TYPE REF TO zif_abapgit_repo,
+      <lv_label> TYPE LINE OF string_table.
+
+    lt_repo = zif_abapgit_repo_srv~list( ).
+
+    LOOP AT lt_repo ASSIGNING <ls_repo>.
+
+      ls_local_settings = <ls_repo>->get_local_settings( ).
+      lt_labels = zcl_abapgit_repo_labels=>split( ls_local_settings-labels ).
+
+      LOOP AT lt_labels ASSIGNING <lv_label>.
+        ls_label-label = <lv_label>.
+        INSERT ls_label INTO TABLE rt_labels.
+      ENDLOOP.
+
+    ENDLOOP.
+
+    SORT rt_labels.
+    DELETE ADJACENT DUPLICATES FROM rt_labels.
+
+  ENDMETHOD.
+
 ENDCLASS.

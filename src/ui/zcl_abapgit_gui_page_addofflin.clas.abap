@@ -35,6 +35,7 @@ CLASS zcl_abapgit_gui_page_addofflin DEFINITION
       BEGIN OF c_event,
         go_back          TYPE string VALUE 'go-back',
         choose_package   TYPE string VALUE 'choose-package',
+        choose_labels    TYPE string VALUE 'choose-labels',
         create_package   TYPE string VALUE 'create-package',
         add_offline_repo TYPE string VALUE 'add-repo-offline',
       END OF c_event .
@@ -55,6 +56,11 @@ CLASS zcl_abapgit_gui_page_addofflin DEFINITION
     METHODS get_form_schema
       RETURNING
         VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form .
+
+    METHODS choose_labels
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -119,6 +125,7 @@ CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
       iv_value       = zif_abapgit_dot_abapgit=>c_folder_logic-mixed
     )->text(
       iv_name        = c_id-labels
+      iv_side_action = c_event-choose_labels
       iv_label       = |Labels (comma-separated, allowed chars: "{ zcl_abapgit_repo_labels=>c_allowed_chars }")|
       iv_hint        = 'Comma-separated labels for grouping and repo organization (optional)'
     )->checkbox(
@@ -163,6 +170,14 @@ CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
         iv_val = |Invalid folder logic { io_form_data->get( c_id-folder_logic ) }| ).
     ENDIF.
 
+    TRY.
+        zcl_abapgit_repo_labels=>validate( io_form_data->get( c_id-labels ) ).
+      CATCH zcx_abapgit_exception INTO lx_err.
+        ro_validation_log->set(
+          iv_key = c_id-labels
+          iv_val = lx_err->get_text( ) ).
+    ENDTRY.
+
   ENDMETHOD.
 
 
@@ -202,6 +217,11 @@ CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
         ENDIF.
 
+      WHEN c_event-choose_labels.
+
+        choose_labels( ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+
       WHEN c_event-add_offline_repo.
 
         mo_validation_log = validate_form( mo_form_data ).
@@ -235,4 +255,22 @@ CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
     ri_html->add( '</div>' ).
 
   ENDMETHOD.
+
+
+  METHOD choose_labels.
+
+    DATA:
+      lv_old_labels TYPE string,
+      lv_new_labels TYPE string.
+
+    lv_old_labels = mo_form_data->get( c_id-labels ).
+
+    lv_new_labels = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_labels( lv_old_labels ).
+
+    mo_form_data->set(
+      iv_key = c_id-labels
+      iv_val = lv_new_labels ).
+
+  ENDMETHOD.
+
 ENDCLASS.
