@@ -92,6 +92,10 @@ CLASS ltcl_abapgit_popups_mock IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_popups~choose_code_insp_check_variant.
+
+  ENDMETHOD.
+
 ENDCLASS.
 
 CLASS ltcl_no_dependency_injection IMPLEMENTATION.

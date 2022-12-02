@@ -147,6 +147,7 @@
         "^if_wb_object_operator$",
         "^cl_abap_syst",
         "^SABP_T_TADIR_KEYS$",
+        "^CL_OO_SOURCE$",
         "^CL_SAUNIT_INTERNAL_RESULT$",
         "^CL_AUCV_TEST_RUNNER_ABSTRACT$",
         "^IF_SAUNIT_INTERNAL_RESULT$",
