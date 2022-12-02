@@ -251,9 +251,9 @@ CLASS zcl_abapgit_oo_serializer IMPLEMENTATION.
 
   METHOD serialize_abap_old.
 * for old ABAP AS versions
-    DATA: lo_source TYPE REF TO cl_oo_source.
+    DATA: lo_source TYPE REF TO object.
 
-    CREATE OBJECT lo_source
+    CREATE OBJECT lo_source TYPE ('CL_OO_SOURCE')
       EXPORTING
         clskey             = is_clskey
       EXCEPTIONS
@@ -263,8 +263,12 @@ CLASS zcl_abapgit_oo_serializer IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    lo_source->read( 'A' ).
-    rt_source = lo_source->get_old_source( ).
+    CALL METHOD lo_source->('READ')
+      EXPORTING
+        version = 'A'.
+    CALL METHOD lo_source->('GET_OLD_SOURCE')
+      RECEIVING
+        old_source = rt_source.
     remove_signatures( CHANGING ct_source = rt_source ).
 
   ENDMETHOD.
