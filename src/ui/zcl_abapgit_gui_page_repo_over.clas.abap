@@ -150,6 +150,10 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
       RETURNING
         VALUE(rt_list) TYPE string_table.
 
+    METHODS render_filter_help_hint
+      RETURNING
+        VALUE(rv_html) TYPE string.
+
 ENDCLASS.
 
 
@@ -172,13 +176,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     IF strlen( mv_filter ) > lv_pfxl AND mv_filter+0(lv_pfxl) = c_label_filter_prefix.
       lv_filter_label = mv_filter+lv_pfxl.
-      LOOP AT ct_overview ASSIGNING <ls_r>.
-        lv_idx = sy-tabix.
-        READ TABLE <ls_r>-labels TRANSPORTING NO FIELDS WITH KEY table_line = lv_filter_label.
-        IF sy-subrc <> 0.
-          DELETE ct_overview INDEX lv_idx.
-        ENDIF.
-      ENDLOOP.
+      IF lv_filter_label = 'all'.
+        DELETE ct_overview WHERE labels IS INITIAL.
+      ELSEIF lv_filter_label = 'none'.
+        DELETE ct_overview WHERE labels IS NOT INITIAL.
+      ELSE.
+        LOOP AT ct_overview ASSIGNING <ls_r>.
+          lv_idx = sy-tabix.
+          READ TABLE <ls_r>-labels TRANSPORTING NO FIELDS WITH KEY table_line = lv_filter_label.
+          IF sy-subrc <> 0.
+            DELETE ct_overview INDEX lv_idx.
+          ENDIF.
+        ENDLOOP.
+      ENDIF.
     ELSE. " Regular filter
       DELETE ct_overview WHERE key             NS mv_filter
         AND name            NS mv_filter
@@ -502,7 +512,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     ri_html->add( |<form class="inline" method="post" action="sapevent:{ c_action-apply_filter }">| ).
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_text_input(
       iv_name      = |filter|
-      iv_label     = |Filter:|
+      iv_label     = |Filter: { render_filter_help_hint( ) }|
       iv_value     = mv_filter ) ).
     ri_html->add( |<input type="submit" class="hidden-submit">| ).
     ri_html->add( |</form>| ).
@@ -524,6 +534,22 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       iv_class = 'command'
       iv_typ   = zif_abapgit_html=>c_action_type-onclick ) ).
     ri_html->add( '</span>' ).
+
+  ENDMETHOD.
+
+
+  METHOD render_filter_help_hint.
+
+    DATA lt_fragments TYPE string_table.
+
+    APPEND `Filter is applied to all text fields in the below table.` TO lt_fragments.
+    APPEND ` Search works for any portion of the text (so can be a mid part as well).` TO lt_fragments.
+    APPEND `<br>Starting query from <code>label:xxx</code> will filter appropriate label.` TO lt_fragments.
+    APPEND `Two "special" label queries are available:` TO lt_fragments.
+    APPEND ` <code>all</code> (to select all repos that has at least one label)` TO lt_fragments.
+    APPEND ` and <code>none</code> (to select unlabeled repos).` TO lt_fragments.
+
+    rv_html = zcl_abapgit_gui_chunk_lib=>render_help_hint( concat_lines_of( table = lt_fragments ) ).
 
   ENDMETHOD.
 
