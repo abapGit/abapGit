@@ -40,8 +40,9 @@ CLASS zcl_abapgit_gui_page_sett_locl DEFINITION
       END OF c_id .
     CONSTANTS:
       BEGIN OF c_event,
-        save          TYPE string VALUE 'save',
-        choose_labels TYPE string VALUE 'choose-labels',
+        save                 TYPE string VALUE 'save',
+        choose_labels        TYPE string VALUE 'choose-labels',
+        choose_check_variant TYPE string VALUE 'choose_check_variant',
       END OF c_event .
 
     DATA mo_form TYPE REF TO zcl_abapgit_html_form .
@@ -71,6 +72,9 @@ CLASS zcl_abapgit_gui_page_sett_locl DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS choose_labels
+      RAISING
+        zcx_abapgit_exception.
+    METHODS choose_check_variant
       RAISING
         zcx_abapgit_exception.
 
@@ -154,6 +158,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
       iv_hint        = 'Code Inspector check performed to run from menu and before commit'
     )->text(
       iv_name        = c_id-code_inspector_check_variant
+      iv_side_action = c_event-choose_check_variant
       iv_label       = 'Code Inspector Check Variant'
       iv_hint        = 'Global check variant for Code Inspector or ABAP Test Cockpit'
     )->checkbox(
@@ -279,6 +284,12 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
         choose_labels( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
+
+      WHEN c_event-choose_check_variant.
+
+        choose_check_variant( ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+
       WHEN c_event-save.
         " Validate form entries before saving
         mo_validation_log = validate_form( mo_form_data ).
@@ -333,6 +344,21 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
     mo_form_data->set(
       iv_key = c_id-labels
       iv_val = lv_new_labels ).
+
+  ENDMETHOD.
+
+
+  METHOD choose_check_variant.
+
+    DATA: lv_check_variant TYPE sci_chkv.
+
+    lv_check_variant = zcl_abapgit_ui_factory=>get_popups( )->choose_code_insp_check_variant( ).
+
+    IF lv_check_variant IS NOT INITIAL.
+      mo_form_data->set(
+        iv_key = c_id-code_inspector_check_variant
+        iv_val = lv_check_variant ).
+    ENDIF.
 
   ENDMETHOD.
 
