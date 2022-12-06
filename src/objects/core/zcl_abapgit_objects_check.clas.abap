@@ -53,6 +53,12 @@ CLASS zcl_abapgit_objects_check DEFINITION
         VALUE(rt_overwrite) TYPE zif_abapgit_definitions=>ty_overwrite_tt
       RAISING
         zcx_abapgit_exception.
+    CLASS-METHODS determine_transport_request
+      IMPORTING
+        io_repo                     TYPE REF TO zcl_abapgit_repo
+        iv_transport_type           TYPE zif_abapgit_definitions=>ty_transport_type
+      RETURNING
+        VALUE(rv_transport_request) TYPE trkorr.
 ENDCLASS.
 
 
@@ -103,14 +109,9 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
       rs_checks-transport-required = li_package->are_changes_recorded_in_tr_req( ).
       IF NOT rs_checks-transport-required IS INITIAL.
         rs_checks-transport-type = li_package->get_transport_type( ).
-        rs_checks-transport-transport = io_repo->get_local_settings( )-transport_request.
-
-        gi_exit->determine_transport_request(
-          EXPORTING
-            io_repo              = io_repo
-            iv_transport_type    = rs_checks-transport-type
-          CHANGING
-            cv_transport_request = rs_checks-transport-transport ).
+        rs_checks-transport-transport = determine_transport_request(
+                                            io_repo           = io_repo
+                                            iv_transport_type = rs_checks-transport-type ).
       ENDIF.
     ENDIF.
 
@@ -311,4 +312,21 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
     rt_overwrite = lt_overwrite_unique.
 
   ENDMETHOD.
+
+
+  METHOD determine_transport_request.
+
+    " Use transport from repo settings if maintained, or determine via user exit.
+    " If transport keeps empty here, it'll requested later via popup.
+    rv_transport_request = io_repo->get_local_settings( )-transport_request.
+
+    gi_exit->determine_transport_request(
+      EXPORTING
+        io_repo              = io_repo
+        iv_transport_type    = iv_transport_type
+      CHANGING
+        cv_transport_request = rv_transport_request ).
+
+  ENDMETHOD.
+
 ENDCLASS.
