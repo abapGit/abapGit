@@ -51,12 +51,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
-    METHODS build_head_menu
-      RETURNING
-        VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
-      RAISING
-        zcx_abapgit_exception .
-    METHODS build_view_menu
+    METHODS build_view_dropdown
       RETURNING
         VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
       RAISING
@@ -147,18 +142,11 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS build_advanced_dropdown
-      IMPORTING
-        !iv_wp_opt                  LIKE zif_abapgit_html=>c_html_opt-crossout
       RETURNING
         VALUE(ro_advanced_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
       RAISING
         zcx_abapgit_exception .
     METHODS build_main_toolbar
-      IMPORTING
-        !iv_pull_opt      LIKE zif_abapgit_html=>c_html_opt-crossout
-        !io_tb_branch     TYPE REF TO zcl_abapgit_html_toolbar
-        !io_tb_tag        TYPE REF TO zcl_abapgit_html_toolbar
-        !io_tb_advanced   TYPE REF TO zcl_abapgit_html_toolbar
       RETURNING
         VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
       RAISING
@@ -186,6 +174,15 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
     METHODS order_files
       CHANGING
         ct_files TYPE zif_abapgit_definitions=>ty_repo_file_tt.
+
+    METHODS get_crossout
+      IMPORTING
+        !iv_authorization  TYPE zif_abapgit_auth=>ty_authorization OPTIONAL
+        !iv_protected      TYPE abap_bool DEFAULT abap_false
+        !iv_strong         TYPE abap_bool DEFAULT abap_false
+          PREFERRED PARAMETER iv_authorization
+      RETURNING
+        VALUE(rv_crossout) LIKE zif_abapgit_html=>c_html_opt-crossout.
 
 ENDCLASS.
 
@@ -268,26 +265,19 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
   METHOD build_advanced_dropdown.
 
-    DATA:
-      lv_crossout LIKE zif_abapgit_html=>c_html_opt-crossout.
-
     CREATE OBJECT ro_advanced_dropdown.
 
     IF mo_repo_aggregated_state->is_unchanged( ) = abap_false. " In case of asyncronicities
       ro_advanced_dropdown->add( iv_txt = 'Selective Pull'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-git_reset }?key={ mv_key }|
-                                 iv_opt = iv_wp_opt ).
+                                 iv_opt = get_crossout( iv_protected = abap_true ) ).
     ENDIF.
 
     IF mo_repo->is_offline( ) = abap_false. " Online ?
-      CLEAR lv_crossout.
-      IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>c_authorization-transport_to_branch ) = abap_false.
-        lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
-      ENDIF.
       ro_advanced_dropdown->add(
         iv_txt = 'Transport to Branch'
         iv_act = |{ zif_abapgit_definitions=>c_action-repo_transport_to_branch }?key={ mv_key }|
-        iv_opt = lv_crossout ).
+        iv_opt = get_crossout( zif_abapgit_auth=>c_authorization-transport_to_branch ) ).
     ENDIF.
 
     IF mv_are_changes_recorded_in_tr = abap_true.
@@ -315,13 +305,10 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     ro_advanced_dropdown->add( iv_txt = 'Very Advanced'
                                iv_typ = zif_abapgit_html=>c_action_type-separator ).
-    CLEAR lv_crossout.
-    IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>c_authorization-update_local_checksum ) = abap_false.
-      lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
-    ENDIF.
+
     ro_advanced_dropdown->add( iv_txt = 'Update Local Checksums'
                                iv_act = |{ zif_abapgit_definitions=>c_action-repo_refresh_checksums }?key={ mv_key }|
-                               iv_opt = lv_crossout ).
+                               iv_opt = get_crossout( zif_abapgit_auth=>c_authorization-update_local_checksum ) ).
 
     ro_advanced_dropdown->add( iv_txt = 'Beta - Data'
                                iv_act = |{ c_actions-go_data }?key={ mv_key }| ).
@@ -340,16 +327,13 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                                           && `development objects will remain unaffected)`
                                iv_act   = |{ zif_abapgit_definitions=>c_action-repo_remove }?key={ mv_key }| ).
 
-    CLEAR lv_crossout.
-    IF mo_repo->get_local_settings( )-write_protected = abap_true
-        OR zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>c_authorization-uninstall ) = abap_false.
-      lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
-    ENDIF.
     ro_advanced_dropdown->add( iv_txt   = 'Uninstall'
                                iv_title = `Delete all development objects belonging to this package `
                                           && `(and subpackages) from the system`
                                iv_act   = |{ zif_abapgit_definitions=>c_action-repo_purge }?key={ mv_key }|
-                               iv_opt   = lv_crossout ).
+                               iv_opt   = get_crossout(
+                                            iv_authorization = zif_abapgit_auth=>c_authorization-uninstall
+                                            iv_protected     = abap_true ) ).
 
   ENDMETHOD.
 
@@ -405,36 +389,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD build_head_menu.
-
-    DATA: lo_tb_advanced TYPE REF TO zcl_abapgit_html_toolbar,
-          lo_tb_branch   TYPE REF TO zcl_abapgit_html_toolbar,
-          lo_tb_tag      TYPE REF TO zcl_abapgit_html_toolbar,
-          lv_wp_opt      LIKE zif_abapgit_html=>c_html_opt-crossout,
-          lv_pull_opt    LIKE zif_abapgit_html=>c_html_opt-crossout.
-
-    IF mo_repo->get_local_settings( )-write_protected = abap_true.
-      lv_wp_opt   = zif_abapgit_html=>c_html_opt-crossout.
-      lv_pull_opt = zif_abapgit_html=>c_html_opt-crossout.
-    ELSE.
-      lv_pull_opt = zif_abapgit_html=>c_html_opt-strong.
-    ENDIF.
-
-    lo_tb_branch = build_branch_dropdown( ).
-
-    lo_tb_tag = build_tag_dropdown( ).
-
-    lo_tb_advanced = build_advanced_dropdown( iv_wp_opt = lv_wp_opt ).
-
-    ro_toolbar = build_main_toolbar(
-      iv_pull_opt    = lv_pull_opt
-      io_tb_branch   = lo_tb_branch
-      io_tb_tag      = lo_tb_tag
-      io_tb_advanced = lo_tb_advanced ).
-
-  ENDMETHOD.
-
-
   METHOD build_inactive_object_code.
 
     IF is_item-inactive = abap_true.
@@ -470,11 +424,14 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     CREATE OBJECT ro_toolbar EXPORTING iv_id = 'toolbar-repo'.
 
     IF mo_repo->is_offline( ) = abap_false.
+      " online repo
+
       IF mo_repo_aggregated_state->remote( ) IS NOT INITIAL
          OR mo_repo_aggregated_state->is_reassigned( ) = abap_true. " Something new at remote
         ro_toolbar->add( iv_txt = 'Pull'
                          iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?key={ mv_key }|
-                         iv_opt = iv_pull_opt ).
+                         iv_opt = get_crossout( iv_protected = abap_true
+                                                iv_strong    = abap_true ) ).
       ENDIF.
       IF mo_repo_aggregated_state->is_unchanged( ) = abap_false. " Any changes
         ro_toolbar->add( iv_txt = 'Stage'
@@ -493,10 +450,13 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                          iv_act = |{ zif_abapgit_definitions=>c_action-repo_log }?key={ mv_key }| ).
       ENDIF.
       ro_toolbar->add( iv_txt = 'Branch'
-                       io_sub = io_tb_branch ).
+                       io_sub = build_branch_dropdown( ) ).
       ro_toolbar->add( iv_txt = 'Tag'
-                       io_sub = io_tb_tag ).
+                       io_sub = build_tag_dropdown( ) ).
+
     ELSE.
+      " offline repo
+
       IF mo_repo->has_remote_source( ) = abap_true AND mo_repo_aggregated_state->remote( ) IS NOT INITIAL.
         ro_toolbar->add( iv_txt = 'Pull <sup>zip</sup>'
                          iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?key={ mv_key }|
@@ -521,13 +481,14 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         ro_toolbar->add( iv_txt = 'Log'
                          iv_act = |{ zif_abapgit_definitions=>c_action-repo_log }?key={ mv_key }| ).
       ENDIF.
+
     ENDIF.
 
     ro_toolbar->add( iv_txt = 'Advanced'
-                     io_sub = io_tb_advanced ).
+                     io_sub = build_advanced_dropdown( ) ).
 
     ro_toolbar->add( iv_txt = 'View'
-                     io_sub = build_view_menu( ) ).
+                     io_sub = build_view_dropdown( ) ).
 
     ro_toolbar->add( iv_txt = 'Refresh'
                      iv_act = |{ zif_abapgit_definitions=>c_action-repo_refresh }?key={ mv_key }|
@@ -590,7 +551,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD build_view_menu.
+  METHOD build_view_dropdown.
 
     CREATE OBJECT ro_toolbar.
 
@@ -655,6 +616,19 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         RAISE EXCEPTION lx_error.
     ENDTRY.
 
+  ENDMETHOD.
+
+
+  METHOD get_crossout.
+    IF iv_strong = abap_true.
+      rv_crossout = zif_abapgit_html=>c_html_opt-strong.
+    ENDIF.
+    IF iv_protected = abap_true AND mo_repo->get_local_settings( )-write_protected = abap_true.
+      rv_crossout = zif_abapgit_html=>c_html_opt-crossout.
+    ENDIF.
+    IF iv_authorization IS NOT INITIAL AND zcl_abapgit_auth=>is_allowed( iv_authorization ) = abap_false.
+      rv_crossout = zif_abapgit_html=>c_html_opt-crossout.
+    ENDIF.
   ENDMETHOD.
 
 
@@ -992,7 +966,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       lt_labels       TYPE string_table.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-    lo_toolbar = build_head_menu( ).
+    lo_toolbar = build_main_toolbar( ).
 
     ri_html->add( '<div class="paddings">' ).
     ri_html->add( '<table class="w100"><tr>' ).
@@ -1351,6 +1325,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
 
       WHEN OTHERS.
+
         rs_handled = super->zif_abapgit_gui_event_handler~on_event( ii_event ). " TODO refactor, move to HOC components
 
     ENDCASE.
