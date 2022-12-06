@@ -11,6 +11,7 @@ CLASS zcl_abapgit_objects_check DEFINITION
         VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS class_constructor.
     CLASS-METHODS checks_adjust
       IMPORTING
         !io_repo    TYPE REF TO zcl_abapgit_repo
@@ -22,6 +23,7 @@ CLASS zcl_abapgit_objects_check DEFINITION
   PROTECTED SECTION.
 
   PRIVATE SECTION.
+    CLASS-DATA: gi_exit TYPE REF TO zif_abapgit_exit.
 
     CLASS-METHODS warning_overwrite_adjust
       IMPORTING
@@ -56,6 +58,12 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_objects_check IMPLEMENTATION.
+
+  METHOD class_constructor.
+
+    gi_exit = zcl_abapgit_exit=>get_instance( ).
+
+  ENDMETHOD.
 
 
   METHOD checks_adjust.
@@ -95,6 +103,14 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
       rs_checks-transport-required = li_package->are_changes_recorded_in_tr_req( ).
       IF NOT rs_checks-transport-required IS INITIAL.
         rs_checks-transport-type = li_package->get_transport_type( ).
+        rs_checks-transport-transport = io_repo->get_local_settings( )-transport_request.
+
+        gi_exit->determine_transport_request(
+          EXPORTING
+            io_repo              = io_repo
+            iv_transport_type    = rs_checks-transport-type
+          CHANGING
+            cv_transport_request = rs_checks-transport-transport ).
       ENDIF.
     ENDIF.
 
