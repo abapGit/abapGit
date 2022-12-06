@@ -1355,6 +1355,7 @@ function LinkHints(linkHintHotKey){
   this.pendingPath       = ""; // already typed code prefix
   this.hintsMap          = this.deployHintContainers();
   this.activatedDropdown = null;
+  this.yankModeActive    = false;
 }
 
 LinkHints.prototype.getHintStartValue = function(targetsCount){
@@ -1441,10 +1442,15 @@ LinkHints.prototype.handleKey = function(event){
     return;
   }
 
+  if (event.key === "y") {
+    this.yankModeActive = !this.yankModeActive;
+  }
+
   if (event.key === this.linkHintHotKey && Hotkeys.isHotkeyCallPossible()) {
 
     // on user hide hints, close an opened dropdown too
     if (this.areHintsDisplayed && this.activatedDropdown) this.closeActivatedDropdown();
+    if (this.areHintsDisplayed) this.yankModeActive = false;
 
     this.pendingPath = "";
     this.displayHints(!this.areHintsDisplayed);
@@ -1455,10 +1461,15 @@ LinkHints.prototype.handleKey = function(event){
     this.pendingPath += event.key;
     var hint = this.hintsMap[this.pendingPath];
 
-    if (hint) { // we are there, we have a fully specified tooltip. Let's activate it
+    if (hint) { // we are there, we have a fully specified tooltip. Let's activate or yank it
       this.displayHints(false);
       event.preventDefault();
-      this.hintActivate(hint);
+      if (this.yankModeActive) {
+        submitSapeventForm({ clipboard : hint.parent.firstChild.textContent },"yank_to_clipboard");
+        this.yankModeActive = false;
+      } else {
+        this.hintActivate(hint);
+      }
     } else {
       // we are not there yet, but let's filter the link so that only
       // the partially matched are shown

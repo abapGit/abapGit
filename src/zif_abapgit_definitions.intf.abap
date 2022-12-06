@@ -511,6 +511,7 @@ INTERFACE zif_abapgit_definitions
       homepage                      TYPE string VALUE 'homepage',
       sponsor                       TYPE string VALUE 'sponsor',
       clipboard                     TYPE string VALUE 'clipboard',
+      yank_to_clipboard             TYPE string VALUE 'yank_to_clipboard',
       show_hotkeys                  TYPE string VALUE 'show_hotkeys',
     END OF c_action.
   CONSTANTS c_spagpa_param_repo_key TYPE c LENGTH 20 VALUE 'REPO_KEY' ##NO_TEXT.

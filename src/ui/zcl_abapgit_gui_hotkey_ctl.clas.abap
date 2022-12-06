@@ -163,6 +163,10 @@ CLASS zcl_abapgit_gui_hotkey_ctl IMPLEMENTATION.
          && |<span class="key-id">{ ls_user_settings-link_hint_key }</span>|
          && |<span class="key-descr">Link Hints</span>|
          && |</li>| ).
+      ri_html->add( |<li>|
+         && |<span class="key-id">y{ ls_user_settings-link_hint_key }</span>|
+         && |<span class="key-descr">Copy Link Text</span>|
+         && |</li>| ).
     ENDIF.
 
     ri_html->add( '</ul>' ).
