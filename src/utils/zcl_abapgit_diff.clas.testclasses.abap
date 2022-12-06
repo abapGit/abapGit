@@ -594,6 +594,7 @@ CLASS ltcl_diff IMPLEMENTATION.
 
     add_beacon( `REPORT ztest_beacon` ).
     add_beacon( `CLASS lcl_test DEFINITION` ).
+    add_beacon( `CLASS lcl_test PUBLIC SECTION` ).
     add_beacon( `CLASS lcl_test IMPLEMENTATION` ).
     add_beacon( `CLASS lcl_test => METHOD test` ).
     add_beacon( `START-OF-SELECTION` ).

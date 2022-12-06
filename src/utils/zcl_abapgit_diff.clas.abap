@@ -302,6 +302,7 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
           lv_regex LIKE LINE OF lt_regex.
 
     APPEND '^\s*(CLASS|FORM|MODULE|REPORT|METHOD|INTERFACE|FUNCTION)\s[^=]' TO lt_regex.
+    APPEND '^\s*(PUBLIC|PROTECTED|PRIVATE)\sSECTION(\s|\.)' TO lt_regex.
     APPEND '^\s*(CLASS|INTERFACE|FUNCTION|TYPE)-POOL\s' TO lt_regex.
     APPEND '^\s*(START|END)-OF-SELECTION(\s|\.)' TO lt_regex.
     APPEND '^\s*INITIALIZATION(\s|\.)' TO lt_regex.
@@ -382,12 +383,14 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
                                     del = ` ` ).
 
           IF lv_submatch = 'CLASS'.
-            lv_beacon_2lev = replace( val  = lv_beacon_str
-                                      sub  = ' IMPLEMENTATION'
-                                      with = ''
-                                      occ  = 0 ).
+            lv_beacon_2lev = replace( val   = lv_beacon_str
+                                      regex = '\s+(DEFINITION|IMPLEMENTATION)'
+                                      with  = ''
+                                      occ   = 0 ).
           ELSEIF lv_submatch = 'METHOD'.
             lv_beacon_str = lv_beacon_2lev && ` => ` && lv_beacon_str.
+          ELSEIF lv_submatch = 'PUBLIC' OR lv_submatch = 'PROTECTED' OR lv_submatch = 'PRIVATE'.
+            lv_beacon_str = lv_beacon_2lev && ` ` && lv_beacon_str.
           ENDIF.
 
           APPEND lv_beacon_str TO mt_beacons.
