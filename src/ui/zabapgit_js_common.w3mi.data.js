@@ -1461,7 +1461,7 @@ LinkHints.prototype.handleKey = function(event){
     this.pendingPath += event.key;
     var hint = this.hintsMap[this.pendingPath];
 
-    if (hint) { // we are there, we have a fully specified tooltip. Let's activate oder yank it
+    if (hint) { // we are there, we have a fully specified tooltip. Let's activate or yank it
       this.displayHints(false);
       event.preventDefault();
       if (this.yankModeActive) {
