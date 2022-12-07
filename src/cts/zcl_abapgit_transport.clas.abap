@@ -387,7 +387,8 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
 
     DATA:
       ls_trkorr  TYPE trwbo_request_header,
-      ls_request TYPE trwbo_request.
+      ls_request TYPE trwbo_request,
+      lv_text    TYPE string.
 
     ls_trkorr-trkorr = iv_transport_request.
 
@@ -395,7 +396,9 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
 
     IF  ls_request-h-trstatus <> c_tr_status-modifiable
     AND ls_request-h-trstatus <> c_tr_status-modifiable_protected.
-      zcx_abapgit_exception=>raise( |Transport request { iv_transport_request } was already released| ).
+      " Task/request &1 has already been released
+      MESSAGE e064(tk) WITH iv_transport_request INTO lv_text.
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
