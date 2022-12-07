@@ -124,6 +124,10 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
 
   METHOD get_form_schema.
 
+    DATA: li_package TYPE REF TO zif_abapgit_sap_package.
+
+    li_package = zcl_abapgit_factory=>get_sap_package( mo_repo->get_package( ) ).
+
     ro_form = zcl_abapgit_html_form=>create(
       iv_form_id   = 'repo-local-settings-form'
       iv_help_page = 'https://docs.abapgit.org/settings-local.html' ).
@@ -135,13 +139,17 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
     )->text(
       iv_name        = c_id-display_name
       iv_label       = 'Display Name'
-      iv_hint        = 'Name to show instead of original repo name (optional)'
-    )->text(
-      iv_name        = c_id-transport_request
-      iv_side_action = c_event-choose_transport_request
-      iv_label       = |Transport request|
-      iv_hint        = 'Transport request; All changes are recorded therein and no transport popup appears|'
-    )->text(
+      iv_hint        = 'Name to show instead of original repo name (optional)' ).
+
+    IF li_package->are_changes_recorded_in_tr_req( ) = abap_true.
+      ro_form->text(
+        iv_name        = c_id-transport_request
+        iv_side_action = c_event-choose_transport_request
+        iv_label       = |Transport request|
+        iv_hint        = 'Transport request; All changes are recorded therein and no transport popup appears|' ).
+    ENDIF.
+
+    ro_form->text(
       iv_name        = c_id-labels
       iv_side_action = c_event-choose_labels
       iv_label       = |Labels (comma-separated, allowed chars: "{ zcl_abapgit_repo_labels=>c_allowed_chars }")|
