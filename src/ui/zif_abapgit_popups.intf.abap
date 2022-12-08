@@ -107,8 +107,9 @@ INTERFACE zif_abapgit_popups
       zcx_abapgit_exception .
   METHODS popup_transport_request
     IMPORTING
-      !is_transport_type        TYPE zif_abapgit_definitions=>ty_transport_type
+      !is_transport_type        TYPE zif_abapgit_definitions=>ty_transport_type OPTIONAL
       !iv_use_default_transport TYPE abap_bool DEFAULT abap_false
+      PREFERRED PARAMETER is_transport_type
     RETURNING
       VALUE(rv_transport)       TYPE trkorr
     RAISING
