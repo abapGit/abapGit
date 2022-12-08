@@ -108,7 +108,13 @@ INTERFACE zif_abapgit_exit
       !ct_files   TYPE zif_abapgit_definitions=>ty_files_item_tt.
   METHODS adjust_display_filename
     IMPORTING
-      !iv_filename       TYPE string
+      iv_filename        TYPE string
     RETURNING
       VALUE(rv_filename) TYPE string.
+  METHODS determine_transport_request
+    IMPORTING
+      io_repo              TYPE REF TO zcl_abapgit_repo
+      iv_transport_type    TYPE zif_abapgit_definitions=>ty_transport_type
+    CHANGING
+      cv_transport_request TYPE trkorr.
 ENDINTERFACE.
