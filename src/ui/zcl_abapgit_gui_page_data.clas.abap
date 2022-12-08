@@ -26,8 +26,9 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
 
     CONSTANTS:
       BEGIN OF c_id,
-        table TYPE string VALUE 'table',
-        where TYPE string VALUE 'where',
+        table        TYPE string VALUE 'table',
+        where        TYPE string VALUE 'where',
+        skip_initial TYPE string VALUE 'skip_initial',
       END OF c_id .
 
     DATA mi_config TYPE REF TO zif_abapgit_data_config .
@@ -305,6 +306,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
         iv_label    = 'Table'
         iv_name     = c_id-table
         iv_readonly = abap_true ).
+
+      lo_form_data->set(
+        iv_key = c_id-skip_initial
+        iv_val = ls_config-skip_initial ).
+      lo_form->checkbox(
+        iv_label = 'Skip initial values'
+        iv_name  = c_id-skip_initial ).
 
       lo_form_data->set(
         iv_key = c_id-where
