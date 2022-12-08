@@ -55,4 +55,7 @@ INTERFACE zif_abapgit_repo_online
       !iv_from TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
     RAISING
       zcx_abapgit_exception .
+  METHODS check_for_valid_branch
+    RAISING
+      zcx_abapgit_exception .
 ENDINTERFACE.
