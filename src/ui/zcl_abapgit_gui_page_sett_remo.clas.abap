@@ -796,6 +796,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     DATA:
       lx_error                 TYPE REF TO zcx_abapgit_exception,
       lo_branch_list           TYPE REF TO zcl_abapgit_git_branch_list,
+      lo_url                   TYPE REF TO zcl_abapgit_git_url,
       lv_offline               TYPE abap_bool,
       lv_head_type             TYPE ty_head_type,
       lv_branch                TYPE ty_remote_settings-branch,
@@ -823,6 +824,10 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
           zcl_abapgit_url=>name(
             iv_url      = lv_url
             iv_validate = abap_true ).
+
+          " Provider-specific URL check
+          CREATE OBJECT lo_url.
+          lo_url->validate( lv_url ).
         CATCH zcx_abapgit_exception INTO lx_error.
           ro_validation_log->set(
             iv_key = c_id-url
