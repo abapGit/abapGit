@@ -827,7 +827,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
           " Provider-specific URL check
           CREATE OBJECT lo_url.
-          lo_url->validate( lv_url ).
+          lo_url->validate_url( lv_url ).
         CATCH zcx_abapgit_exception INTO lx_error.
           ro_validation_log->set(
             iv_key = c_id-url

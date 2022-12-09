@@ -13,7 +13,7 @@ CLASS zcl_abapgit_git_url DEFINITION
       RAISING
         zcx_abapgit_exception .
 
-    METHODS validate
+    METHODS validate_url
       IMPORTING
         !iv_url TYPE string
       RAISING
@@ -90,7 +90,7 @@ CLASS zcl_abapgit_git_url IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD validate.
+  METHOD validate_url.
 
     DATA lv_provider TYPE string.
 
