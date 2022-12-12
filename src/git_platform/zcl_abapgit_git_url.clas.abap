@@ -12,6 +12,13 @@ CLASS zcl_abapgit_git_url DEFINITION
         VALUE(rv_url) TYPE string
       RAISING
         zcx_abapgit_exception .
+
+    METHODS validate_url
+      IMPORTING
+        !iv_url TYPE string
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
 
     METHODS get_default_commit_display_url
@@ -27,7 +34,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GIT_URL IMPLEMENTATION.
+CLASS zcl_abapgit_git_url IMPLEMENTATION.
 
 
   METHOD get_commit_display_url.
@@ -78,6 +85,28 @@ CLASS ZCL_ABAPGIT_GIT_URL IMPLEMENTATION.
           REPLACE REGEX '\.git$' IN rv_commit_url WITH space.
           rv_commit_url = rv_commit_url && |/-/commit/| && iv_hash.
       ENDCASE.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD validate_url.
+
+    DATA lv_provider TYPE string.
+
+    lv_provider = zcl_abapgit_url=>host( to_lower( iv_url ) ).
+
+    " Provider-specific check for URLs that don't work
+    IF lv_provider CS 'gitlab.com'.
+      FIND REGEX '\.git$' IN iv_url IGNORING CASE.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'Repo URL for GitLab must end in ".git"' ).
+      ENDIF.
+    ELSEIF lv_provider CS 'dev.azure.com'.
+      FIND REGEX '\.git$' IN iv_url IGNORING CASE.
+      IF sy-subrc = 0.
+        zcx_abapgit_exception=>raise( 'Repo URL for Azure DevOps must not end in ".git"' ).
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.

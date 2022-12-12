@@ -72,6 +72,23 @@ ENDCLASS.
 CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
 
 
+  METHOD choose_labels.
+
+    DATA:
+      lv_old_labels TYPE string,
+      lv_new_labels TYPE string.
+
+    lv_old_labels = mo_form_data->get( c_id-labels ).
+
+    lv_new_labels = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_labels( lv_old_labels ).
+
+    mo_form_data->set(
+      iv_key = c_id-labels
+      iv_val = lv_new_labels ).
+
+  ENDMETHOD.
+
+
   METHOD constructor.
     super->constructor( ).
     CREATE OBJECT mo_validation_log.
@@ -168,13 +185,21 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
 
   METHOD validate_form.
 
-    DATA lx_err TYPE REF TO zcx_abapgit_exception.
+    DATA:
+      lv_url TYPE string,
+      lo_url TYPE REF TO zcl_abapgit_git_url,
+      lx_err TYPE REF TO zcx_abapgit_exception.
 
     ro_validation_log = mo_form_util->validate( io_form_data ).
 
-    IF io_form_data->get( c_id-url ) IS NOT INITIAL.
+    lv_url = io_form_data->get( c_id-url ).
+    IF lv_url IS NOT INITIAL.
       TRY.
-          zcl_abapgit_repo_srv=>get_instance( )->validate_url( io_form_data->get( c_id-url ) ).
+          zcl_abapgit_repo_srv=>get_instance( )->validate_url( lv_url ).
+
+          " Provider-specific URL check
+          CREATE OBJECT lo_url.
+          lo_url->validate_url( lv_url ).
         CATCH zcx_abapgit_exception INTO lx_err.
           ro_validation_log->set(
             iv_key = c_id-url
@@ -312,22 +337,4 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
       io_validation_log = mo_validation_log ) ).
     ri_html->add( '</div>' ).
   ENDMETHOD.
-
-
-  METHOD choose_labels.
-
-    DATA:
-      lv_old_labels TYPE string,
-      lv_new_labels TYPE string.
-
-    lv_old_labels = mo_form_data->get( c_id-labels ).
-
-    lv_new_labels = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_labels( lv_old_labels ).
-
-    mo_form_data->set(
-      iv_key = c_id-labels
-      iv_val = lv_new_labels ).
-
-  ENDMETHOD.
-
 ENDCLASS.
