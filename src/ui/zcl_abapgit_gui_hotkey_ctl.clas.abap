@@ -38,6 +38,7 @@ ENDCLASS.
 
 CLASS zcl_abapgit_gui_hotkey_ctl IMPLEMENTATION.
 
+
   METHOD constructor.
 
     super->constructor( ).
@@ -88,7 +89,7 @@ CLASS zcl_abapgit_gui_hotkey_ctl IMPLEMENTATION.
 
     ls_hotkey-ui_component = 'Hotkeys'.
     ls_hotkey-action       = c_showhotkeys_action.
-    ls_hotkey-description  = 'Show hotkeys help'.
+    ls_hotkey-description  = 'Show Hotkeys Help'.
     ls_hotkey-hotkey       = '?'.
     INSERT ls_hotkey INTO TABLE rt_hotkey_actions.
 
@@ -125,6 +126,13 @@ CLASS zcl_abapgit_gui_hotkey_ctl IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_hotkey_ctl~reset.
     CLEAR mt_hotkeys.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_hotkey_ctl~set_visible.
+
+    mv_visible = iv_visible.
+
   ENDMETHOD.
 
 
@@ -203,12 +211,4 @@ CLASS zcl_abapgit_gui_hotkey_ctl IMPLEMENTATION.
     mv_visible = abap_false.
 
   ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_hotkey_ctl~set_visible.
-
-    mv_visible = iv_visible.
-
-  ENDMETHOD.
-
 ENDCLASS.
