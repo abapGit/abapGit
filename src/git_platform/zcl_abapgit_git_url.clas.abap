@@ -96,10 +96,16 @@ CLASS zcl_abapgit_git_url IMPLEMENTATION.
 
     lv_provider = zcl_abapgit_url=>host( to_lower( iv_url ) ).
 
+    " Provider-specific check for URLs that don't work
     IF lv_provider CS 'gitlab.com'.
       FIND REGEX '\.git$' IN iv_url IGNORING CASE.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'Repo URL for GitLab must end in ".git"' ).
+      ENDIF.
+    ELSEIF lv_provider CS 'dev.azure.com'.
+      FIND REGEX '\.git$' IN iv_url IGNORING CASE.
+      IF sy-subrc = 0.
+        zcx_abapgit_exception=>raise( 'Repo URL for Azure DevOps must not end in ".git"' ).
       ENDIF.
     ENDIF.
 
