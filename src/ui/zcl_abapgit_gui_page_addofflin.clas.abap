@@ -24,11 +24,12 @@ CLASS zcl_abapgit_gui_page_addofflin DEFINITION
 
     CONSTANTS:
       BEGIN OF c_id,
-        url            TYPE string VALUE 'url',
-        package        TYPE string VALUE 'package',
-        folder_logic   TYPE string VALUE 'folder_logic',
-        labels         TYPE string VALUE 'labels',
-        main_lang_only TYPE string VALUE 'main_lang_only',
+        url                TYPE string VALUE 'url',
+        package            TYPE string VALUE 'package',
+        folder_logic       TYPE string VALUE 'folder_logic',
+        labels             TYPE string VALUE 'labels',
+        ignore_subpackages TYPE string VALUE 'ignore_subpackages',
+        main_lang_only     TYPE string VALUE 'main_lang_only',
       END OF c_id .
 
     CONSTANTS:
@@ -66,6 +67,23 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
+
+
+  METHOD choose_labels.
+
+    DATA:
+      lv_old_labels TYPE string,
+      lv_new_labels TYPE string.
+
+    lv_old_labels = mo_form_data->get( c_id-labels ).
+
+    lv_new_labels = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_labels( lv_old_labels ).
+
+    mo_form_data->set(
+      iv_key = c_id-labels
+      iv_val = lv_new_labels ).
+
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -129,6 +147,10 @@ CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
       iv_label       = |Labels (comma-separated, allowed chars: "{ zcl_abapgit_repo_labels=>c_allowed_chars }")|
       iv_hint        = 'Comma-separated labels for grouping and repo organization (optional)'
     )->checkbox(
+      iv_name        = c_id-ignore_subpackages
+      iv_label       = 'Ignore Subpackages'
+      iv_hint        = 'Synchronize root package only'
+    )->checkbox(
       iv_name        = c_id-main_lang_only
       iv_label       = 'Serialize Main Language Only'
       iv_hint        = 'Ignore translations, serialize just main language'
@@ -154,7 +176,9 @@ CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
 
     IF io_form_data->get( c_id-package ) IS NOT INITIAL.
       TRY.
-          zcl_abapgit_repo_srv=>get_instance( )->validate_package( |{ io_form_data->get( c_id-package ) }| ).
+          zcl_abapgit_repo_srv=>get_instance( )->validate_package(
+            iv_package    = |{ io_form_data->get( c_id-package ) }|
+            iv_ign_subpkg = |{ io_form_data->get( c_id-ignore_subpackages ) }| ).
         CATCH zcx_abapgit_exception INTO lx_err.
           ro_validation_log->set(
             iv_key = c_id-package
@@ -255,22 +279,4 @@ CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
     ri_html->add( '</div>' ).
 
   ENDMETHOD.
-
-
-  METHOD choose_labels.
-
-    DATA:
-      lv_old_labels TYPE string,
-      lv_new_labels TYPE string.
-
-    lv_old_labels = mo_form_data->get( c_id-labels ).
-
-    lv_new_labels = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_labels( lv_old_labels ).
-
-    mo_form_data->set(
-      iv_key = c_id-labels
-      iv_val = lv_new_labels ).
-
-  ENDMETHOD.
-
 ENDCLASS.
