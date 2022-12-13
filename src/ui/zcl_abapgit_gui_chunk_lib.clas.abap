@@ -244,7 +244,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
+CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
 
   METHOD advanced_submenu.
@@ -984,7 +984,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     ri_html->add( |var gGoRepoPalette = new CommandPalette(createRepoCatalogEnumerator(repoCatalog, "{
       iv_action }"), \{| ).
     ri_html->add( '  toggleKey: "F2",' ).
-    ri_html->add( '  hotkeyDescription: "Go to repo ..."' ).
+    ri_html->add( '  hotkeyDescription: "Go to Repository ..."' ).
     ri_html->add( '});' ).
 
   ENDMETHOD.

@@ -1225,7 +1225,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     ri_html->add( 'var gGoJumpPalette = new CommandPalette(enumerateJumpAllFiles, {' ).
     ri_html->add( '  toggleKey: "F2",' ).
-    ri_html->add( '  hotkeyDescription: "Jump to file ..."' ).
+    ri_html->add( '  hotkeyDescription: "Jump to File ..."' ).
     ri_html->add( '});' ).
 
     " Feature for selecting ABAP code by column and copy to clipboard

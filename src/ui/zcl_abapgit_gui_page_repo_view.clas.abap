@@ -1356,7 +1356,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
     ls_hotkey_action-ui_component = 'Repo'.
 
-    ls_hotkey_action-description   = |Stage Changes|.
+    ls_hotkey_action-description   = |Stage|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_stage.
     ls_hotkey_action-hotkey = |s|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
@@ -1379,6 +1379,11 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ls_hotkey_action-description   = |Pull|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-git_pull.
     ls_hotkey_action-hotkey = |p|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description = |Patch|.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_patch.
+    ls_hotkey_action-hotkey = |a|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
     ls_hotkey_action-description   = |Diff|.
