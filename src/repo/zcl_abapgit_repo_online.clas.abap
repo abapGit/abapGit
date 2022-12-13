@@ -177,6 +177,39 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_repo_online~check_for_valid_branch.
+
+    DATA:
+      lo_branch_list TYPE REF TO zcl_abapgit_git_branch_list,
+      lv_branch      TYPE string,
+      lv_head        TYPE string,
+      lv_msg         TYPE string.
+
+    lv_branch = get_selected_branch( ).
+
+    IF lv_branch IS NOT INITIAL.
+      lo_branch_list = zcl_abapgit_git_transport=>branches( get_url( ) ).
+
+      TRY.
+          lo_branch_list->find_by_name( lv_branch ).
+        CATCH zcx_abapgit_exception.
+          " branch does not exist, fallback to head
+          lv_head = lo_branch_list->get_head_symref( ).
+          IF lo_branch_list->get_type( lv_branch ) = zif_abapgit_definitions=>c_git_branch_type-branch.
+            lv_msg = 'Branch'.
+          ELSE.
+            lv_msg = 'Tag'.
+          ENDIF.
+          lv_msg = |{ lv_msg } { lo_branch_list->get_display_name( lv_branch ) } does not exist.|
+                && | Switched to { lo_branch_list->get_display_name( lv_head ) }|.
+          MESSAGE lv_msg TYPE 'S'.
+          select_branch( lv_head ).
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_repo_online~create_branch.
 
     DATA: lv_sha1 TYPE zif_abapgit_definitions=>ty_sha1.

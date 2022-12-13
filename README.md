@@ -1,6 +1,6 @@
 ![Build](https://github.com/abapGit/abapGit/workflows/main-build/badge.svg)
 ![Test](https://github.com/abapGit/abapGit/workflows/test-pr/badge.svg)
-[![Slack](https://abapgit-slackinviter.herokuapp.com/badge.svg)](https://abapgit-slackinviter.herokuapp.com/)
+[![Slack](https://img.shields.io/badge/Join-Slack-blue)](https://communityinviter.com/apps/abapgit/abapgit)
 [![abap package version](https://img.shields.io/endpoint?url=https://shield.abap.space/version-shield-json/github/abapGit/abapGit/src/zif_abapgit_version.intf.abap/c_abap_version&label=version)](https://github.com/abapGit/abapGit/blob/main/src/zif_abapgit_version.intf.abap)
 
 <!--
@@ -24,7 +24,8 @@ Works with: [GitHub](https://github.com/),
 [abapGitServer](https://github.com/larshp/abapGitServer),
 [AWS](https://aws.amazon.com/codecommit/),
 [TFS](https://www.visualstudio.com/team-services/git/),
-[Azure DevOps](https://azure.microsoft.com/en-us/services/devops) and more.
+[Azure DevOps](https://azure.microsoft.com/en-us/services/devops) and 
+[more](https://git.wiki.kernel.org/index.php/GitHosting).
 
 ABAP Version: 702 or higher
 

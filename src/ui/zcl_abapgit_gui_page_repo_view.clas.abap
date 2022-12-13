@@ -184,6 +184,10 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
       RETURNING
         VALUE(rv_crossout) LIKE zif_abapgit_html=>c_html_opt-crossout.
 
+    METHODS check_branch
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -578,6 +582,18 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD check_branch.
+
+    DATA lo_repo TYPE REF TO zif_abapgit_repo_online.
+
+    IF mo_repo->is_offline( ) = abap_false.
+      lo_repo ?= mo_repo.
+      lo_repo->check_for_valid_branch( ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD constructor.
 
     DATA: lo_settings         TYPE REF TO zcl_abapgit_settings,
@@ -799,6 +815,8 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     TRY.
         " Reinit, for the case of type change
         mo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
+
+        check_branch( ).
 
         mv_are_changes_recorded_in_tr = zcl_abapgit_factory=>get_sap_package( mo_repo->get_package( )
           )->are_changes_recorded_in_tr_req( ).
@@ -1338,7 +1356,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
     ls_hotkey_action-ui_component = 'Repo'.
 
-    ls_hotkey_action-description   = |Stage Changes|.
+    ls_hotkey_action-description   = |Stage|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_stage.
     ls_hotkey_action-hotkey = |s|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
@@ -1361,6 +1379,11 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ls_hotkey_action-description   = |Pull|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-git_pull.
     ls_hotkey_action-hotkey = |p|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description = |Patch|.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_patch.
+    ls_hotkey_action-hotkey = |a|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
     ls_hotkey_action-description   = |Diff|.
