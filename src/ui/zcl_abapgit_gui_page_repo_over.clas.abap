@@ -158,7 +158,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -909,7 +909,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     ls_hotkey_action-description = |Patch|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_patch.
-    ls_hotkey_action-hotkey = |p|.
+    ls_hotkey_action-hotkey = |a|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
     " registered/handled in js
@@ -928,7 +928,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     ls_hotkey_action-hotkey = |Enter|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-description = |Focus filter|.
+    ls_hotkey_action-description = |Focus Filter|.
     ls_hotkey_action-action = `####`.
     ls_hotkey_action-hotkey = |f|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
