@@ -1028,7 +1028,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
           ASSIGN <ls_diff_line> TO <ls_diff>.
         ENDIF.
         ri_html->add( render_beacon( is_diff_line = <ls_diff_line>
-                                     is_diff = is_diff ) ).
+                                     is_diff      = is_diff ) ).
         lv_insert_nav = abap_false.
       ENDIF.
 
