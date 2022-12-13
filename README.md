@@ -24,7 +24,8 @@ Works with: [GitHub](https://github.com/),
 [abapGitServer](https://github.com/larshp/abapGitServer),
 [AWS](https://aws.amazon.com/codecommit/),
 [TFS](https://www.visualstudio.com/team-services/git/),
-[Azure DevOps](https://azure.microsoft.com/en-us/services/devops) and more.
+[Azure DevOps](https://azure.microsoft.com/en-us/services/devops) and 
+[more](https://git.wiki.kernel.org/index.php/GitHosting).
 
 ABAP Version: 702 or higher
 
