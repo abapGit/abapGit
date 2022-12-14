@@ -72,7 +72,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_EX_OBJECT IMPLEMENTATION.
     CREATE OBJECT lo_component.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
-      iv_page_title      = 'Export Object to Files'
+      iv_page_title      = 'Export Objects to Files'
       ii_child_component = lo_component ).
   ENDMETHOD.
 
