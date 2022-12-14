@@ -212,6 +212,8 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |Error occured while deleting { ms_item-obj_type }| ).
     ENDTRY.
 
+    corr_insert( iv_package ).
+
   ENDMETHOD.
 
 

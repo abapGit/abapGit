@@ -53,6 +53,8 @@ CLASS zcl_abapgit_object_styl IMPLEMENTATION.
         style    = lv_style
         language = '*'.
 
+    corr_insert( iv_package ).
+
   ENDMETHOD.
 
 
@@ -73,6 +75,8 @@ CLASS zcl_abapgit_object_styl IMPLEMENTATION.
         tabs         = ls_style-tabs.
 
     tadir_insert( iv_package ).
+
+    corr_insert( iv_package ).
 
   ENDMETHOD.
 
