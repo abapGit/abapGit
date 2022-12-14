@@ -101,11 +101,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_EX_OBJECT IMPLEMENTATION.
       iv_name        = c_id-object_type
       iv_required    = abap_true
       iv_upper_case  = abap_true
-      iv_side_action = c_event-choose_object_type
-    )->text(
+      iv_side_action = c_event-choose_object_type ).
+
+    ro_form->textarea(
       iv_label       = 'Object Name'
       iv_name        = c_id-object_name
       iv_required    = abap_true
+      iv_placeholder = 'One object name per line'
       iv_upper_case  = abap_true ).
 
     ro_form->checkbox(
