@@ -79,17 +79,23 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_EX_OBJECT IMPLEMENTATION.
 
   METHOD export_object.
     DATA lv_object_type TYPE trobjtype.
-    DATA lv_object_name TYPE sobj_name.
+    DATA lt_names TYPE STANDARD TABLE OF sobj_name WITH DEFAULT KEY.
+    DATA lv_name LIKE LINE OF lt_names.
+    DATA lv_list TYPE string.
     DATA lv_only_main TYPE abap_bool.
 
     lv_object_type = mo_form_data->get( c_id-object_type ).
-    lv_object_name = mo_form_data->get( c_id-object_name ).
+    lv_list = mo_form_data->get( c_id-object_name ).
     lv_only_main = mo_form_data->get( c_id-only_main ).
 
-    zcl_abapgit_zip=>export_object(
-      iv_main_language_only = lv_only_main
-      iv_object_type        = lv_object_type
-      iv_object_name        = lv_object_name ).
+    SPLIT lv_list AT |\n| INTO TABLE lt_names.
+
+    LOOP AT lt_names INTO lv_name.
+      zcl_abapgit_zip=>export_object(
+        iv_main_language_only = lv_only_main
+        iv_object_type        = lv_object_type
+        iv_object_name        = lv_name ).
+    ENDLOOP.
   ENDMETHOD.
 
 
