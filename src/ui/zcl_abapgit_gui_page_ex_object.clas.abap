@@ -88,6 +88,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_EX_OBJECT IMPLEMENTATION.
     lv_list = mo_form_data->get( c_id-object_name ).
     lv_only_main = mo_form_data->get( c_id-only_main ).
 
+    REPLACE ALL OCCURRENCES OF |\r| IN lv_list WITH ''.
     SPLIT lv_list AT |\n| INTO TABLE lt_names.
 
     LOOP AT lt_names INTO lv_name.
