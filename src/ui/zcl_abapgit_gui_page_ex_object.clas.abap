@@ -92,6 +92,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_EX_OBJECT IMPLEMENTATION.
     SPLIT lv_list AT |\n| INTO TABLE lt_names.
 
     LOOP AT lt_names INTO lv_name.
+      IF lv_name IS INITIAL.
+        CONTINUE.
+      ENDIF.
       zcl_abapgit_zip=>export_object(
         iv_main_language_only = lv_only_main
         iv_object_type        = lv_object_type
