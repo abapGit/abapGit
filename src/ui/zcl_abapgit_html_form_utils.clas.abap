@@ -178,7 +178,9 @@ CLASS zcl_abapgit_html_form_utils IMPLEMENTATION.
         ro_form_data->set(
           iv_key = <ls_field>-name
           iv_val = boolc( lv_value = 'on' ) ) ##TYPE.
-      ELSEIF <ls_field>-type = zif_abapgit_html_form=>c_field_type-text AND <ls_field>-upper_case = abap_true.
+      ELSEIF ( <ls_field>-type = zif_abapgit_html_form=>c_field_type-text
+          OR <ls_field>-type = zif_abapgit_html_form=>c_field_type-textarea )
+          AND <ls_field>-upper_case = abap_true.
         ro_form_data->set(
           iv_key = <ls_field>-name
           iv_val = to_upper( lv_value ) ).

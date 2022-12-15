@@ -56,6 +56,7 @@ CLASS zcl_abapgit_html_form DEFINITION
         !iv_placeholder TYPE csequence OPTIONAL
         !iv_rows        TYPE i OPTIONAL
         !iv_cols        TYPE i OPTIONAL
+        !iv_upper_case  TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(ro_self)  TYPE REF TO zcl_abapgit_html_form .
     METHODS number
@@ -906,6 +907,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     ls_field-placeholder = iv_placeholder.
     ls_field-rows        = iv_rows.
     ls_field-cols        = iv_cols.
+    ls_field-upper_case  = iv_upper_case.
 
     APPEND ls_field TO mt_fields.
 
