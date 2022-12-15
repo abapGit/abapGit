@@ -8,7 +8,7 @@ Legend
 + : added
 - : removed
 
-2022-12-14 v1.120.0
+2022-12-15 v1.120.0
 -------------------
 
 + Add "Sponsor us" to page footer (#5882) 
@@ -21,6 +21,9 @@ Legend
 + Copy (yank) link texts with y+LinkHints (#5915)
 + Set transport request in local repo settings or user exit (#5916)
 + Repo View: Fallback to main if branch doesn't exist (#5925)
++ Export object page: allow exporting list of objs (#5936)
++ Add status message after pulls (#5947)
++ Add "ignore sub-packages" option for offline repos (#5948)
 * TOBJ: Deletion of logical transport objects (#5873)
 * Fix type for data config serialize (#5880) 
 * Fix Git connection if submodules are present (#5883) 
