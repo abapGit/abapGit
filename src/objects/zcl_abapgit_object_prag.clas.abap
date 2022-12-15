@@ -12,19 +12,6 @@ CLASS zcl_abapgit_object_prag DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
              description TYPE c LENGTH 255,
            END OF ty_pragma.
 
-    METHODS:
-      _raise_pragma_not_exists
-        RAISING
-          zcx_abapgit_exception,
-
-      _raise_pragma_exists
-        RAISING
-          zcx_abapgit_exception,
-
-      _raise_pragma_enqueue
-        RAISING
-          zcx_abapgit_exception.
-
 ENDCLASS.
 
 
@@ -41,18 +28,23 @@ CLASS zcl_abapgit_object_prag IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lo_pragma TYPE REF TO cl_abap_pragma.
+    DATA: lo_pragma TYPE REF TO cl_abap_pragma,
+          lx_error TYPE REF TO cx_root.
 
     TRY.
         lo_pragma = cl_abap_pragma=>get_ref( ms_item-obj_name ).
 
         lo_pragma->delete( ).
+        lo_pragma->leave_change( ). "unlock
 
-      CATCH cx_abap_pragma_not_exists.
-        _raise_pragma_not_exists( ).
-      CATCH cx_abap_pragma_enqueue.
-        _raise_pragma_enqueue( ).
+      CATCH cx_root INTO lx_error.
+        IF lo_pragma IS BOUND.
+          lo_pragma->leave_change( ).
+        ENDIF.
+        zcx_abapgit_exception=>raise( lx_error->get_text( ) ).
     ENDTRY.
+
+    corr_insert( iv_package ).
 
   ENDMETHOD.
 
@@ -60,7 +52,10 @@ CLASS zcl_abapgit_object_prag IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 
     DATA: ls_pragma TYPE ty_pragma,
-          lo_pragma TYPE REF TO cl_abap_pragma.
+          lo_pragma TYPE REF TO cl_abap_pragma,
+          lx_error  TYPE REF TO cx_root.
+
+    tadir_insert( iv_package ).
 
     TRY.
         io_xml->read(
@@ -77,13 +72,12 @@ CLASS zcl_abapgit_object_prag IMPLEMENTATION.
                              p_extension   = ls_pragma-extension ).
 
         lo_pragma->save( ).
-
-      CATCH cx_abap_pragma_not_exists.
-        _raise_pragma_not_exists( ).
-      CATCH cx_abap_pragma_exists.
-        _raise_pragma_exists( ).
-      CATCH cx_abap_pragma_enqueue.
-        _raise_pragma_enqueue( ).
+        lo_pragma->leave_change( ). "unlock
+      CATCH cx_root INTO lx_error.
+        IF lo_pragma IS BOUND.
+          lo_pragma->leave_change( ).
+        ENDIF.
+        zcx_abapgit_exception=>raise( lx_error->get_text( ) ).
     ENDTRY.
 
   ENDMETHOD.
@@ -154,23 +148,8 @@ CLASS zcl_abapgit_object_prag IMPLEMENTATION.
                      ig_data = ls_pragma ).
 
       CATCH cx_abap_pragma_not_exists.
-        _raise_pragma_not_exists( ).
+        zcx_abapgit_exception=>raise( |Pragma { ms_item-obj_name } doesn't exist| ).
     ENDTRY.
 
-  ENDMETHOD.
-
-
-  METHOD _raise_pragma_enqueue.
-    zcx_abapgit_exception=>raise( |Pragma { ms_item-obj_name } enqueue error| ).
-  ENDMETHOD.
-
-
-  METHOD _raise_pragma_exists.
-    zcx_abapgit_exception=>raise( |Pragma { ms_item-obj_name } exists| ).
-  ENDMETHOD.
-
-
-  METHOD _raise_pragma_not_exists.
-    zcx_abapgit_exception=>raise( |Pragma { ms_item-obj_name } doesn't exist| ).
   ENDMETHOD.
 ENDCLASS.

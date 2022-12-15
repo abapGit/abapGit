@@ -236,7 +236,11 @@ CLASS zcl_abapgit_persistence_db IMPLEMENTATION.
 
     DATA lv_data LIKE iv_data.
 
-    lv_data = validate_and_unprettify_xml( iv_data ).
+    IF iv_data CS '<?xml'.
+      lv_data = validate_and_unprettify_xml( iv_data ).
+    ELSE.
+      lv_data = iv_data.
+    ENDIF.
 
     lock( iv_type  = iv_type
           iv_value = iv_value ).
