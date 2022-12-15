@@ -8,6 +8,45 @@ Legend
 + : added
 - : removed
 
+2022-12-15 v1.120.0
+-------------------
+
++ Add "Sponsor us" to page footer (#5882) 
++ New Online/Offline: Add labels form input (#5888)
++ Page repo: add patch function (#5896)
++ Page code inspector: add actions to command palette (#5899)
++ Add label F4 value help (#5891) 
++ Local settings: add F4 value help for check varint (#5910)
++ All/none label filter (#5911)
++ Copy (yank) link texts with y+LinkHints (#5915)
++ Set transport request in local repo settings or user exit (#5916)
++ Repo View: Fallback to main if branch doesn't exist (#5925)
++ Export object page: allow exporting list of objs (#5936)
++ Add status message after pulls (#5947)
++ Add "ignore sub-packages" option for offline repos (#5948)
+* TOBJ: Deletion of logical transport objects (#5873)
+* Fix type for data config serialize (#5880) 
+* Fix Git connection if submodules are present (#5883) 
+* Disable 'FocusFilter'-Hotkey if command palette is visible (#5887) 
+* Fix initial focus for link hints (#5892)
+* Fix command palette form submit (#5893)
+* Repo View: Fix cross-out for menu items (#5890)
+* Repo View: Consolidate "Stage" and "Force Stage" (#5889) 
+* Enable Command Palette for radio buttons (#5894) 
+* Fix file to object mapping (#5902) 
+* Fix JS init error on Diff/Patch page (#5901) 
+* Repo Settings: Fix dump in 702 (#5906)
+* Command pallette: remove duplicate header links (#5909)
+* Fix detection of SAP GUI for Windows (#5913)
+* Diff/Patch: Improve beacons (#5914, #5918, #5933)
+* Improve repository URL validation (#5927)
+* UI: Fix dark theme buttons for Chrome (#5931)
+* DOCV,SAMC,SAPC,STYL: Add missing transport entry (#5935)
+* AFF: Add NONT and RONT to registry (#5934)
+* PRAG: Fix locking and transport entries (#5939)
+* DB Util: Fix error saving non-XML data (#5940)
+* ENHO: Fix error deserializing enhancements (#5943)
+
 2022-11-14 v1.119.0
 -------------------
 
