@@ -12,7 +12,6 @@ Legend
 -------------------
 
 + Add "Sponsor us" to page footer (#5882) 
-+ Git Submodules support (#5883) 
 + New Online/Offline: Add labels form input (#5888)
 + Page repo: add patch function (#5896)
 + Page code inspector: add actions to command palette (#5899)
@@ -24,6 +23,7 @@ Legend
 + Repo View: Fallback to main if branch doesn't exist (#5925)
 * TOBJ: Deletion of logical transport objects (#5873)
 * Fix type for data config serialize (#5880) 
+* Fix Git connection if submodules are present (#5883) 
 * Disable 'FocusFilter'-Hotkey if command palette is visible (#5887) 
 * Fix initial focus for link hints (#5892)
 * Fix command palette form submit (#5893)
