@@ -15,14 +15,14 @@ CLASS zcl_abapgit_data_config DEFINITION
       IMPORTING
         !is_config     TYPE zif_abapgit_data_config=>ty_config
       RETURNING
-        VALUE(rv_json) TYPE string
+        VALUE(rv_json) TYPE xstring
       RAISING
         zcx_abapgit_exception .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
+CLASS zcl_abapgit_data_config IMPLEMENTATION.
 
 
   METHOD dump.

@@ -11,7 +11,7 @@ CLASS zcl_abapgit_data_serializer DEFINITION
 
   PRIVATE SECTION.
 
-    CONSTANTS c_max_records TYPE i VALUE 10000 ##NO_TEXT.
+    CONSTANTS c_max_records TYPE i VALUE 20000 ##NO_TEXT.
 
     METHODS convert_itab_to_json
       IMPORTING

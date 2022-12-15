@@ -20,6 +20,9 @@
   --theme-greyscale-light: #CCCCCC;
   --theme-greyscale-lighter: #E5E5E5;
   --theme-list-hover-background-color: black;
+
+  --theme-table-background-color: #333333;
+  --theme-table-head-background-color: #202020;
 }
 
 /* GLOBALS */
@@ -196,6 +199,7 @@ div.log { color: var(--theme-greyscale-dark); }
 .dialog li.dialog-commands input[type="submit"] {
   border-color: #ccc;
   background-color: var(--theme-greyscale-dark);
+  color: #fff;
 }
 .dialog li.dialog-commands input[type="submit"].main {
   background-color: #64a8ff;
@@ -219,7 +223,7 @@ div.log { color: var(--theme-greyscale-dark); }
   background-color: var(--theme-greyscale-dark);
 }
 .dialog .radio-container input[type="radio"] + label {
-  color: #808080;
+  color: #fff;
 }
 .dialog .radio-container input[type="radio"]:checked + label {
   background-color: #64a8ff;
@@ -237,11 +241,11 @@ div.log { color: var(--theme-greyscale-dark); }
   color: var(--theme-primary-font-color);
 }
 .dialog input:read-only {
-  background-color: var(--theme-greyscale-medium);
-  color: var(--theme-greyscale-dark);
+  background-color: var(--theme-greyscale-dark);
+  color: var(--theme-greyscale-medium);
 }
 /* for IE */
 .dialog input[readonly] {
-  background-color: var(--theme-greyscale-medium);
-  color: var(--theme-greyscale-dark);
+  background-color: var(--theme-greyscale-dark);
+  color: var(--theme-greyscale-medium);
 }

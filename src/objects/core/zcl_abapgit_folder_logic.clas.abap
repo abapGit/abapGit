@@ -30,6 +30,7 @@ CLASS zcl_abapgit_folder_logic DEFINITION
 
     METHODS get_parent
       IMPORTING
+        !iv_top          TYPE devclass
         !iv_package      TYPE devclass
       RETURNING
         VALUE(rv_parent) TYPE devclass
@@ -45,6 +46,7 @@ CLASS zcl_abapgit_folder_logic DEFINITION
     TYPES:
       ty_devclass_info_tt TYPE SORTED TABLE OF ty_devclass_info
         WITH UNIQUE KEY devclass .
+    DATA mt_top_subpackages TYPE ty_devclass_info_tt .
     DATA mt_parent TYPE ty_devclass_info_tt .
 ENDCLASS.
 
@@ -60,6 +62,16 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
 
   METHOD get_parent.
     DATA: ls_parent LIKE LINE OF mt_parent.
+
+    " Check that package is included in the TOP package hierarchy
+    IF mt_top_subpackages IS INITIAL.
+      mt_top_subpackages = zcl_abapgit_factory=>get_sap_package( iv_top )->list_subpackages( ).
+    ENDIF.
+
+    READ TABLE mt_top_subpackages TRANSPORTING NO FIELDS WITH KEY devclass = iv_package.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
 
     "Determine Parent Package
     READ TABLE mt_parent INTO ls_parent
@@ -86,7 +98,9 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
     IF iv_top = iv_package.
       rv_path = io_dot->get_starting_folder( ).
     ELSE.
-      lv_parentcl = get_parent( iv_package ).
+      lv_parentcl = get_parent(
+        iv_top     = iv_top
+        iv_package = iv_package ).
 
       " If the parent package can not be determined, we return an initial path and handle
       " it outside of this class (in zcl_abapgit_file_status)

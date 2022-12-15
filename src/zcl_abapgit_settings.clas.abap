@@ -215,7 +215,9 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
 
 
   METHOD get_experimental_features.
-    rv_run = ms_settings-experimental_features.
+    IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_false.
+      rv_run = ms_settings-experimental_features.
+    ENDIF.
   ENDMETHOD.
 
 
@@ -265,7 +267,9 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
 
 
   METHOD get_run_critical_tests.
-    rv_run = ms_settings-run_critical_tests.
+    IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_false.
+      rv_run = ms_settings-run_critical_tests.
+    ENDIF.
   ENDMETHOD.
 
 
@@ -375,7 +379,8 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
 
 
   METHOD set_default_link_hint_key.
-    set_link_hint_key( |f| ).
+    " Since #5859 'f' is used for "focus filter", we use 't' as the new default
+    set_link_hint_key( |t| ).
   ENDMETHOD.
 
 

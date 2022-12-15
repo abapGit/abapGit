@@ -73,9 +73,9 @@ INTERFACE zif_abapgit_definitions
     END OF ty_comment .
   TYPES:
     BEGIN OF ty_item_signature,
-      obj_type  TYPE tadir-object,
-      obj_name  TYPE tadir-obj_name,
-      devclass  TYPE devclass,
+      obj_type TYPE tadir-object,
+      obj_name TYPE tadir-obj_name,
+      devclass TYPE devclass,
     END OF ty_item_signature .
   TYPES:
     BEGIN OF ty_item.
@@ -336,6 +336,7 @@ INTERFACE zif_abapgit_definitions
       ui_theme               TYPE string,
       hide_sapgui_hint       TYPE abap_bool,
       activate_wo_popup      TYPE abap_bool,
+      label_colors           TYPE string,
     END OF ty_s_user_settings .
   TYPES:
     ty_dokil_tt TYPE STANDARD TABLE OF dokil
@@ -428,6 +429,7 @@ INTERFACE zif_abapgit_definitions
       file       TYPE ty_chmod VALUE '100644',
       executable TYPE ty_chmod VALUE '100755',
       dir        TYPE ty_chmod VALUE '40000 ',
+      submodule  TYPE ty_chmod VALUE '160000',
     END OF c_chmod .
   CONSTANTS c_crlf TYPE c LENGTH 2 VALUE cl_abap_char_utilities=>cr_lf ##NO_TEXT.
   CONSTANTS c_newline TYPE c LENGTH 1 VALUE cl_abap_char_utilities=>newline ##NO_TEXT.
@@ -506,7 +508,11 @@ INTERFACE zif_abapgit_definitions
       direction                     TYPE string VALUE 'direction',
       documentation                 TYPE string VALUE 'documentation',
       changelog                     TYPE string VALUE 'changelog',
+      homepage                      TYPE string VALUE 'homepage',
+      sponsor                       TYPE string VALUE 'sponsor',
       clipboard                     TYPE string VALUE 'clipboard',
+      yank_to_clipboard             TYPE string VALUE 'yank_to_clipboard',
+      show_hotkeys                  TYPE string VALUE 'show_hotkeys',
     END OF c_action.
   CONSTANTS c_spagpa_param_repo_key TYPE c LENGTH 20 VALUE 'REPO_KEY' ##NO_TEXT.
   CONSTANTS c_spagpa_param_package TYPE c LENGTH 20 VALUE 'PACKAGE' ##NO_TEXT.

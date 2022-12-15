@@ -154,9 +154,10 @@ div#header span.spacer {
   padding-left: 0.25em;
 }
 
+div#footer .sponsor a { font-size: smaller; }
 div#footer .logo { font-size: large }
 div#footer {
-  padding:          0.5em 1em;
+  padding:          0.5em 0.5em;
   border-top:       3px double;
 }
 div#footer .version {
@@ -168,7 +169,6 @@ div#footer .version {
   text-align: right;
   padding-right: 0.5em;
   font-size: smaller;
-  font-family: monospace;
 }
 #debug-output p {
   margin-top: 0em;
@@ -188,8 +188,6 @@ div.log .icon { padding-right: 6px; }
 
 /* REPOSITORY */
 div.repo {
-  margin-top: 3px;
-  margin-bottom: 3px;
   padding: 0.5em 1em 0.5em 1em;
   position: relative;
 }
@@ -486,7 +484,8 @@ table.diff_tab {
   font-size: 10pt;
   width: 100%;
 }
-table.diff_tab td,th {
+table.diff_tab td,
+table.diff_tab th {
   padding-left: 0.5em;
   padding-right: 0.5em;
 }
@@ -615,7 +614,7 @@ div.db_list {
   overflow-x: auto;
 }
 
-table.db_tab{
+table.db_tab {
   table-layout: fixed;
 }
 table.db_tab pre {
@@ -626,23 +625,25 @@ table.db_tab pre {
   margin: 0px;
   width: 30em;
 }
-
 table.db_tab tr.firstrow td { padding-top: 0.5em; }
 table.db_tab th {
   text-align: left;
   padding: 0.5em;
+}
+table.db_tab thead tr {
   border-bottom: 1px solid;
+}
+table.db_tab tfoot tr {
+  border-top: 1px solid;
 }
 table.db_tab td {
   padding: 4px 8px;
   vertical-align: middle;
   word-break: break-all;
 }
-
 table.db_tab th.package {
     width: 45ch;
 }
-
 table.db_tab td.data {
   font-style: italic;
 }
@@ -1020,10 +1021,226 @@ table.commit tr .title {
 }
 
 /* Repo overview */
-.repo-overview { font-size: smaller; }
-.repo-overview tbody td { height: 2em; }
-.ro-detail { display: none; }
-.ro-go { font-size: 150%; }
+.repo-overview {
+  padding: 0.5em 0.7em;
+  /*font-size: 90%;*/
+}
+.repo-overview table {
+  font-size: 90%;
+}
+.repo-overview-toolbar {
+  padding: 1em 1em;
+  /*margin-top: -0.5em;*/
+}
+.repo-overview-toolbar label {
+  margin-right: 0.5em;
+}
+.repo-overview th {
+  text-align: left;
+  font-weight: normal;
+}
+.repo-overview table {
+  border: 1px solid;
+}
+.repo-overview thead tr {
+  border-bottom: 1px solid;
+  line-height: 1.5;
+}
+.repo-overview tfoot tr {
+  border-top: 1px solid;
+}
+.repo-overview tr.favorite .icon-star {
+  color: #5e8dc9 !important;
+}
+.repo-overview td,
+.repo-overview th {
+  padding: 6px 6px; /* maybe use height ? */
+}
+.repo-overview .ro-detail { display: none; }
+.repo-overview .ro-go a {
+  padding: 0px 0.15em;
+}
+.repo-overview .ro-go a:hover {
+  color: #ff721e;
+  text-decoration: none;
+}
+.repo-overview td.labels {
+  max-width: 18ch;
+}
+
+/* Repo labels */
+.repo-label-catalog {
+  padding: 1em 1em;
+  margin-top: -1em;
+}
+.repo-label-catalog label {
+  margin-right: 0.5em;
+}
+ul.repo-labels {
+  display: inline-block;
+  list-style-type: none;
+  padding-inline-start: 0px;
+  padding-left: 0px;
+  margin-block-start: 0px;
+  margin-block-end: 0px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+ul.repo-labels li {
+  display: inline-block;
+  padding: 3px 5px;
+  border-radius: 3px;
+  border-style: solid;
+  border-width: 1px;
+  margin-bottom: 2px;
+}
+ul.repo-labels li a {
+  color: inherit;
+}
+ul.repo-labels li:not(:last-child) { margin-right: 0.3em; }
+table ul.repo-labels li {
+  font-size: 90%;
+  padding: 2px 4px;
+}
+
+/* LABEL COLORS */
+.rl-white {
+  color: hsl(0, 0%, 30%);
+  background-color: hsl(0, 0%, 100%);
+  border-color: hsl(0, 0%, 80%);
+}
+.rl-white-b {
+  color: hsl(214, 100%, 60%);
+  background-color: hsl(0, 0%, 100%);
+  border-color: hsl(214, 89%, 86%);
+}
+.rl-white-r {
+  color: hsl(0, 100%, 41%);
+  background-color: hsl(0, 0%, 100%);
+  border-color: hsl(0, 100%, 85%);
+}
+.rl-grey {
+  color: hsl(0, 0%, 100%);
+  background-color: hsl(0, 0%, 70%);
+  border-color: hsl(0, 0%, 60%);
+}
+.rl-dark-w {
+  color: hsl(0, 0%, 100%);
+  background-color: hsl(0, 0%, 25%);
+  border-color: hsl(0, 0%, 25%);;
+}
+.rl-dark-y {
+  color: hsl(43, 95%, 75%);
+  background-color: hsl(0, 0%, 25%);
+  border-color: hsl(0, 0%, 25%);
+}
+.rl-dark-r {
+  color: hsl(0, 100%, 74%);
+  background-color: hsl(0, 0%, 25%);
+  border-color: hsl(0, 0%, 25%);
+}
+.rl-dark-b {
+  color: hsl(227, 92%, 80%);
+  background-color: hsl(0, 0%, 25%);
+  border-color: hsl(0, 0%, 25%);
+}
+.rl-lightblue {
+  color: hsl(217, 80%, 25%);
+  background-color: hsl(216, 76%, 84%);
+  border-color: hsl(216, 76%, 73%);
+}
+.rl-darkblue {
+  color: hsl(218, 77%, 88%);
+  background-color: hsl(217, 66%, 32%);
+  border-color: hsl(217, 66%, 20%);
+}
+.rl-lightgreen {
+  color: hsl(153, 76%, 18%);
+  background-color: hsl(152, 65%, 82%);
+  border-color: hsl(152, 65%, 65%);
+}
+.rl-darkgreen {
+  color: hsl(0, 0%, 100%);
+  background-color: hsl(153, 77%, 37%);
+  border-color: hsl(153, 77%, 30%);
+}
+.rl-lightred {
+  color: hsl(8, 86%, 29%);
+  background-color: hsl(8, 74%, 80%);
+  border-color: hsl(8, 74%, 70%);
+}
+.rl-darkred {
+  color: hsl(7, 76%, 85%);
+  background-color: hsl(8, 77%, 29%);
+  border-color: hsl(8, 77%, 20%);
+}
+.rl-yellow {
+  color: hsl(44, 87%, 22%);
+  background-color: hsl(44, 94%, 87%);
+  border-color: hsl(44, 94%, 70%);
+}
+.rl-darkyellow {
+  color: hsl(49, 100%, 24%);
+  background-color: hsl(49, 100%, 64%);
+  border-color: hsl(49, 100%, 49%);
+}
+.rl-orrange {
+  color: hsl(0, 0%, 100%);
+  background-color: hsl(19, 100%, 61%);
+  border-color: hsl(19, 100%, 50%);
+}
+.rl-brown {
+  color: hsl(33, 100%, 89%);
+  background-color: hsl(33, 66%, 39%);
+  border-color: hsl(33, 66%, 30%);
+}
+.rl-pink {
+  color: hsl(340, 35%, 45%);
+  background-color: hsl(340, 85%, 77%);
+  border-color: hsl(340, 85%, 65%);
+}
+.rl-teal {
+  color: hsl(0, 0%, 100%);
+  background-color: hsl(191, 61%, 45%);
+  border-color: hsl(191, 61%, 37%);
+}
+.rl-darkviolet {
+  color: hsl(0, 0%, 100%);
+  background-color: hsl(258, 100%, 80%);
+  border-color: hsl(258, 100%, 72%);
+}
+
+/* FORM FIELD HELP TOOLTIP */
+.form-field-help-tooltip {
+  position: relative;
+  display: inline-block;
+}
+.form-field-help-tooltip .form-field-help-tooltip-text {
+  visibility: hidden;
+  width: 40ch;
+  border-radius: 5px;
+  position: absolute;
+  z-index: 1;
+  border: 1px solid;
+  padding: 0.4em 0.6em;
+}
+.form-field-help-tooltip .form-field-help-tooltip-text p {
+  margin: 0px;
+}
+.form-field-help-tooltip .form-field-help-tooltip-text {
+  background-color: white;
+  border-color: #888;
+}
+.form-field-help-tooltip:hover .form-field-help-tooltip-text {
+  visibility: visible;
+}
+.form-field-help-tooltip code {
+  border-radius: 5px;
+  font-size: 90%;
+  padding: 0.1em 0.4em;
+  background-color: #e2e2e2;
+  word-wrap: break-word;
+}
 
 /* Branch Overview Page */
 .gitGraph-scrollWrapper, .gitGraph-Wrapper{

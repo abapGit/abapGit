@@ -88,7 +88,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_json_handler IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_JSON_HANDLER IMPLEMENTATION.
 
 
   METHOD deserialize.
@@ -117,13 +117,128 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD map2abap_abap_language_version.
+    DATA:
+      lv_enum_abap TYPE string,
+      lv_enum_json TYPE string.
+
+
+    lv_enum_json = co_ajson->get_string( '/header/abapLanguageVersion' ).
+    IF lv_enum_json = 'standard'.
+      lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
+    ELSEIF lv_enum_json = 'cloudDevelopment'.
+      lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version-cloud_development.
+    ELSEIF lv_enum_json = 'keyUser'.
+      lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version-key_user.
+    ENDIF.
+
+    co_ajson->set_string( iv_path = '/header/abapLanguageVersion'
+                          iv_val  = lv_enum_abap ).
+  ENDMETHOD.
+
+
+  METHOD map2abap_custom_enum.
+    DATA:
+      lv_enum_json    TYPE string,
+      ls_enum_mapping TYPE ty_enum_mapping,
+      ls_mapping      TYPE ty_json_abap_mapping.
+
+
+    LOOP AT it_enum_mappings INTO ls_enum_mapping.
+      lv_enum_json = co_ajson->get_string( ls_enum_mapping-path ).
+      READ TABLE ls_enum_mapping-mappings WITH KEY json = lv_enum_json INTO ls_mapping.
+      IF sy-subrc = 0.
+        co_ajson->set_string( iv_path = ls_enum_mapping-path
+                              iv_val  = ls_mapping-abap ).
+      ENDIF.
+    ENDLOOP.
+  ENDMETHOD.
+
+
+  METHOD map2abap_original_language.
+    DATA:
+      lv_iso_language      TYPE laiso,
+      lv_original_language TYPE sy-langu.
+
+
+    lv_iso_language = co_ajson->get_string( '/header/originalLanguage' ).
+
+    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_INPUT'
+      EXPORTING
+        input  = lv_iso_language
+      IMPORTING
+        output = lv_original_language.
+
+    co_ajson->set_string( iv_path = '/header/originalLanguage'
+                          iv_val  = lv_original_language ).
+  ENDMETHOD.
+
+
+  METHOD map2json_abap_language_version.
+    DATA:
+      lv_enum_abap TYPE string,
+      lv_enum_json TYPE string.
+
+
+    lv_enum_abap = co_ajson->get_string( '/header/abapLanguageVersion' ).
+    IF lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard
+      OR lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version-standard.
+      lv_enum_json = 'standard'.
+    ELSEIF lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version-cloud_development.
+      lv_enum_json = 'cloudDevelopment'.
+    ELSEIF lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version-key_user.
+      lv_enum_json = 'keyUser'.
+    ENDIF.
+
+    co_ajson->set_string( iv_path = '/header/abapLanguageVersion'
+                          iv_val  = lv_enum_json ).
+  ENDMETHOD.
+
+
+  METHOD map2json_custom_enum.
+    DATA:
+      lv_enum_abap    TYPE string,
+      ls_enum_mapping TYPE ty_enum_mapping,
+      ls_mapping      TYPE ty_json_abap_mapping.
+
+
+    LOOP AT it_enum_mappings INTO ls_enum_mapping.
+      lv_enum_abap = co_ajson->get_string( ls_enum_mapping-path ).
+      READ TABLE ls_enum_mapping-mappings WITH KEY abap = lv_enum_abap INTO ls_mapping.
+      IF sy-subrc = 0.
+        co_ajson->set_string( iv_path = ls_enum_mapping-path
+                              iv_val  = ls_mapping-json ).
+      ENDIF.
+    ENDLOOP.
+  ENDMETHOD.
+
+
+  METHOD map2json_original_language.
+    DATA:
+      lv_iso_language      TYPE laiso,
+      lv_original_language TYPE sy-langu.
+
+
+    lv_original_language = co_ajson->get_string( '/header/originalLanguage' ).
+
+    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_OUTPUT'
+      EXPORTING
+        input  = lv_original_language
+      IMPORTING
+        output = lv_iso_language.
+
+    TRANSLATE lv_iso_language TO LOWER CASE.
+    co_ajson->set_string( iv_path = '/header/originalLanguage'
+                          iv_val  = lv_iso_language ).
+  ENDMETHOD.
+
+
   METHOD serialize.
     DATA: lt_st_source      TYPE abap_trans_srcbind_tab,
           lo_mapping        TYPE REF TO zif_abapgit_ajson_mapping,
           lv_json           TYPE string,
           lo_ajson          TYPE REF TO zcl_abapgit_ajson,
           lo_ajson_filtered TYPE REF TO zif_abapgit_ajson,
-          lv_enum_abap      TYPE string,
           lo_filter         TYPE REF TO lcl_aff_filter.
 
     FIELD-SYMBOLS: <lg_source> LIKE LINE OF lt_st_source.
@@ -160,99 +275,6 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
     rv_result = zcl_abapgit_convert=>string_to_xstring_utf8( lv_json ).
   ENDMETHOD.
 
-  METHOD map2json_original_language.
-    DATA:
-      lv_iso_language      TYPE i18_a_langiso2,
-      lv_original_language TYPE sy-langu.
-
-
-    lv_original_language = co_ajson->get_string( '/header/originalLanguage' ).
-
-    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_OUTPUT'
-      EXPORTING
-        input  = lv_original_language
-      IMPORTING
-        output = lv_iso_language.
-
-    TRANSLATE lv_iso_language TO LOWER CASE.
-    co_ajson->set_string( iv_path = '/header/originalLanguage'
-                          iv_val  = lv_iso_language ).
-  ENDMETHOD.
-
-  METHOD map2json_abap_language_version.
-    DATA:
-      lv_enum_abap TYPE string,
-      lv_enum_json TYPE string.
-
-
-    lv_enum_abap = co_ajson->get_string( '/header/abapLanguageVersion' ).
-    IF lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard
-      OR lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version-standard.
-      lv_enum_json = 'standard'.
-    ELSEIF lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version-cloud_development.
-      lv_enum_json = 'cloudDevelopment'.
-    ELSEIF lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version-key_user.
-      lv_enum_json = 'keyUser'.
-    ENDIF.
-
-    co_ajson->set_string( iv_path = '/header/abapLanguageVersion'
-                          iv_val  = lv_enum_json ).
-  ENDMETHOD.
-
-  METHOD map2abap_abap_language_version.
-    DATA:
-      lv_enum_abap TYPE string,
-      lv_enum_json TYPE string.
-
-
-    lv_enum_json = co_ajson->get_string( '/header/abapLanguageVersion' ).
-    IF lv_enum_json = 'standard'.
-      lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
-    ELSEIF lv_enum_json = 'cloudDevelopment'.
-      lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version-cloud_development.
-    ELSEIF lv_enum_json = 'keyUser'.
-      lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version-key_user.
-    ENDIF.
-
-    co_ajson->set_string( iv_path = '/header/abapLanguageVersion'
-                          iv_val  = lv_enum_abap ).
-  ENDMETHOD.
-
-  METHOD map2json_custom_enum.
-    DATA:
-      lv_enum_abap    TYPE string,
-      ls_enum_mapping TYPE ty_enum_mapping,
-      ls_mapping      TYPE ty_json_abap_mapping.
-
-
-    LOOP AT it_enum_mappings INTO ls_enum_mapping.
-      lv_enum_abap = co_ajson->get_string( ls_enum_mapping-path ).
-      READ TABLE ls_enum_mapping-mappings WITH KEY abap = lv_enum_abap INTO ls_mapping.
-      IF sy-subrc = 0.
-        co_ajson->set_string( iv_path = ls_enum_mapping-path
-                              iv_val  = ls_mapping-json ).
-      ENDIF.
-    ENDLOOP.
-  ENDMETHOD.
-
-
-  METHOD map2abap_custom_enum.
-    DATA:
-      lv_enum_json    TYPE string,
-      ls_enum_mapping TYPE ty_enum_mapping,
-      ls_mapping      TYPE ty_json_abap_mapping.
-
-
-    LOOP AT it_enum_mappings INTO ls_enum_mapping.
-      lv_enum_json = co_ajson->get_string( ls_enum_mapping-path ).
-      READ TABLE ls_enum_mapping-mappings WITH KEY json = lv_enum_json INTO ls_mapping.
-      IF sy-subrc = 0.
-        co_ajson->set_string( iv_path = ls_enum_mapping-path
-                              iv_val  = ls_mapping-abap ).
-      ENDIF.
-    ENDLOOP.
-  ENDMETHOD.
-
 
   METHOD set_defaults.
     DATA:
@@ -268,23 +290,4 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
   ENDMETHOD.
-
-  METHOD map2abap_original_language.
-    DATA:
-      lv_iso_language      TYPE i18_a_langiso2,
-      lv_original_language TYPE sy-langu.
-
-
-    lv_iso_language = co_ajson->get_string( '/header/originalLanguage' ).
-
-    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_INPUT'
-      EXPORTING
-        input  = lv_iso_language
-      IMPORTING
-        output = lv_original_language.
-
-    co_ajson->set_string( iv_path = '/header/originalLanguage'
-                          iv_val  = lv_original_language ).
-  ENDMETHOD.
-
 ENDCLASS.

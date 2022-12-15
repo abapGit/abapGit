@@ -103,9 +103,9 @@ function debugOutput(text, dstID) {
   stdout.innerHTML = stdout.innerHTML + wrapped;
 }
 
-// Use a pre-created form or create a hidden form
+// Use a supplied form, a pre-created form or create a hidden form
 // and submit with sapevent
-function submitSapeventForm(params, action, method) {
+function submitSapeventForm(params, action, method, form) {
 
   function getSapeventPrefix() {
     if (document.querySelector('a[href*="file:///SAPEVENT:"]'))  {
@@ -116,16 +116,16 @@ function submitSapeventForm(params, action, method) {
   }
 
   var stub_form_id = "form_" + action;
-  var form = document.getElementById(stub_form_id);
 
-  if (form === null) {
-    form = document.createElement("form");
-    form.setAttribute("method", method || "post");
-    if (/sapevent/i.test(action)){
-      form.setAttribute("action", action);
-    } else {
-      form.setAttribute("action", getSapeventPrefix() + "SAPEVENT:" + action);
-    }
+  form = form
+      || document.getElementById(stub_form_id)
+      || document.createElement("form");
+
+  form.setAttribute("method", method || "post");
+  if (/sapevent/i.test(action)){
+    form.setAttribute("action", action);
+  } else {
+    form.setAttribute("action", getSapeventPrefix() + "SAPEVENT:" + action);
   }
 
   for(var key in params) {
@@ -136,7 +136,9 @@ function submitSapeventForm(params, action, method) {
     form.appendChild(hiddenField);
   }
 
-  if (form.id !== stub_form_id) {
+  var formExistsInDOM = form.id && Boolean(document.querySelector("#" + form.id));
+
+  if (form.id !== stub_form_id && !formExistsInDOM) {
     document.body.appendChild(form);
   }
 
@@ -245,13 +247,15 @@ function getIndocStyleSheet() {
   return style.sheet;
 }
 
-function RepoOverViewHelper() {
+function RepoOverViewHelper(opts) {
+  if (opts && opts.focusFilterKey) {
+    this.focusFilterKey = opts.focusFilterKey;
+  }
   this.setHooks();
   this.pageId = "RepoOverViewHelperState"; // constant is OK for this case
   this.isDetailsDisplayed = false;
   this.isOnlyFavoritesDisplayed = false;
-  this.detailCssClass = findStyleSheetByName(".ro-detail");
-  this.actionCssClass = findStyleSheetByName(".ro-action");
+  this.detailCssClass = findStyleSheetByName(".repo-overview .ro-detail");
   var icon = document.getElementById("icon-filter-detail");
   this.toggleFilterIcon(icon, this.isDetailsDisplayed);
   this.registerRowSelection();
@@ -282,28 +286,39 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
     if (document.activeElement.id === "filter") {
       return;
     }
+    if (self.focusFilterKey && event.key === self.focusFilterKey && !CommandPalette.isVisible()) {
+      var filterInput = document.getElementById("filter");
+      if (filterInput) filterInput.focus();
+      event.preventDefault();
+      return;
+    }
+
     var keycode = event.keyCode;
     var rows = Array.prototype.slice.call(self.getVisibleRows());
-    var selected = document.querySelector(".repo.selected");
+    var selected = document.querySelector(".repo-overview tr.selected");
     var indexOfSelected = rows.indexOf(selected);
+    var lastRow = rows.length - 1;
 
-    if (keycode == 13 && // "enter" to open
-       document.activeElement.tagName.toLowerCase() != "input") { // prevent opening if command field has focus
+    if (keycode == 13 && document.activeElement.tagName.toLowerCase() != "input") {
+      // "enter" to open, unless command field has focus
       self.openSelectedRepo();
-    } else if ((keycode == 52 || keycode == 100) && indexOfSelected > 0) {
-      // "4" for previous
+    } else if ((keycode == 52 || keycode == 56) && indexOfSelected > 0) {
+      // "4,8" for previous, digits are the numlock keys
+      // NB: numpad must be activated, keypress does not detect arrows
+      //     if we need arrows it will be keydown. But then mind the keycodes, they may change !
+      //     e.g. 100 is 'd' with keypress (and conflicts with diff hotkey), and also it is arrow-left keydown
       self.selectRowByIndex(indexOfSelected - 1);
-    } else if ((keycode == 54 || keycode == 102) && indexOfSelected < rows.length - 1) {
-      // "6" for next
+    } else if ((keycode == 54 || keycode == 50) && indexOfSelected < lastRow) {
+      // "6,2" for next
       self.selectRowByIndex(indexOfSelected + 1);
     }
   });
 };
 
 RepoOverViewHelper.prototype.openSelectedRepo = function () {
-  this.selectedRepoKey = document.querySelector(".repo.selected").dataset.key;
+  this.selectedRepoKey = document.querySelector(".repo-overview tr.selected").dataset.key;
   this.saveLocalStorage();
-  document.querySelector(".repo.selected td.ro-go a").click();
+  document.querySelector(".repo-overview tr.selected td.ro-go a").click();
 };
 
 RepoOverViewHelper.prototype.selectRowByIndex = function (index) {
@@ -324,7 +339,7 @@ RepoOverViewHelper.prototype.selectRowByIndex = function (index) {
 
 RepoOverViewHelper.prototype.selectRowByRepoKey = function (key) {
   var attributeQuery = "[data-key='" + key + "']";
-  var row = document.querySelector(".repo" + attributeQuery);
+  var row = document.querySelector(".repo-overview tbody tr" + attributeQuery);
   // navigation to already selected repo
   if (row.dataset.key === key && row.classList.contains("selected")) {
     return;
@@ -371,24 +386,24 @@ RepoOverViewHelper.prototype.updateActionLinks = function (selectedRow) {
 };
 
 RepoOverViewHelper.prototype.deselectAllRows = function () {
-  document.querySelectorAll(".repo").forEach(function (x) {
+  document.querySelectorAll(".repo-overview tbody tr").forEach(function (x) {
     x.classList.remove("selected");
   });
 };
 
 RepoOverViewHelper.prototype.getVisibleRows = function () {
-  return document.querySelectorAll(".repo:not(.nodisplay)");
+  return document.querySelectorAll(".repo-overview tbody tr:not(.nodisplay)");
 };
 
 RepoOverViewHelper.prototype.registerRowSelection = function () {
   var self = this;
-  document.querySelectorAll(".repo td:not(.ro-go)").forEach(function (repoListRowCell) {
+  document.querySelectorAll(".repo-overview tr td:not(.ro-go)").forEach(function (repoListRowCell) {
     repoListRowCell.addEventListener("click", function () {
       self.selectRowByRepoKey(this.parentElement.dataset.key);
     });
   });
 
-  document.querySelectorAll(".repo td.ro-go").forEach(function (openRepoIcon) {
+  document.querySelectorAll(".repo-overview tr td.ro-go").forEach(function (openRepoIcon) {
     openRepoIcon.addEventListener("click", function () {
       var selectedRow = this.parentElement;
       self.selectRowByRepoKey(selectedRow.dataset.key);
@@ -454,9 +469,11 @@ function StageHelper(params) {
   this.formAction      = params.formAction;
   this.patchAction     = params.patchAction;
   this.user            = params.user;
+  this.ids             = params.ids;
   this.selectedCount   = 0;
   this.filteredCount   = 0;
   this.lastFilterValue = "";
+  this.focusFilterKey  = params.focusFilterKey;
 
   // DOM nodes
   this.dom = {
@@ -494,7 +511,6 @@ function StageHelper(params) {
   this.setHooks();
   if (this.user) this.injectFilterMe();
   Hotkeys.addHotkeyToHelpSheet("^Enter", "Commit");
-  this.dom.objectSearch.focus();
 }
 
 StageHelper.prototype.findCounters = function() {
@@ -533,6 +549,18 @@ StageHelper.prototype.setHooks = function() {
   this.dom.objectSearch.onkeypress   = this.onFilter.bind(this);
   window.onbeforeunload              = this.onPageUnload.bind(this);
   window.onload                      = this.onPageLoad.bind(this);
+
+  var self = this;
+  document.addEventListener("keypress", function(event) {
+    if (document.activeElement.id !== self.ids.objectSearch
+      && self.focusFilterKey && event.key === self.focusFilterKey
+      && !CommandPalette.isVisible()) {
+
+      self.dom.objectSearch.focus();
+      event.preventDefault();
+    }
+  });
+
 };
 
 // Detect column index
@@ -1327,6 +1355,7 @@ function LinkHints(linkHintHotKey){
   this.pendingPath       = ""; // already typed code prefix
   this.hintsMap          = this.deployHintContainers();
   this.activatedDropdown = null;
+  this.yankModeActive    = false;
 }
 
 LinkHints.prototype.getHintStartValue = function(targetsCount){
@@ -1413,10 +1442,15 @@ LinkHints.prototype.handleKey = function(event){
     return;
   }
 
+  if (event.key === "y") {
+    this.yankModeActive = !this.yankModeActive;
+  }
+
   if (event.key === this.linkHintHotKey && Hotkeys.isHotkeyCallPossible()) {
 
     // on user hide hints, close an opened dropdown too
     if (this.areHintsDisplayed && this.activatedDropdown) this.closeActivatedDropdown();
+    if (this.areHintsDisplayed) this.yankModeActive = false;
 
     this.pendingPath = "";
     this.displayHints(!this.areHintsDisplayed);
@@ -1427,10 +1461,15 @@ LinkHints.prototype.handleKey = function(event){
     this.pendingPath += event.key;
     var hint = this.hintsMap[this.pendingPath];
 
-    if (hint) { // we are there, we have a fully specified tooltip. Let's activate it
+    if (hint) { // we are there, we have a fully specified tooltip. Let's activate or yank it
       this.displayHints(false);
       event.preventDefault();
-      this.hintActivate(hint);
+      if (this.yankModeActive) {
+        submitSapeventForm({ clipboard : hint.parent.firstChild.textContent },"yank_to_clipboard");
+        this.yankModeActive = false;
+      } else {
+        this.hintActivate(hint);
+      }
     } else {
       // we are not there yet, but let's filter the link so that only
       // the partially matched are shown
@@ -1957,7 +1996,7 @@ Patch.prototype.registerStagePatch = function (){
 
   var aRefresh = document.querySelectorAll("[id*=" + REFRESH_PREFIX + "]");
   [].forEach.call( aRefresh, function(el) {
-    el.addEventListener("click", memoizeScrollPosition(this.submitPatch.bind(this, el.id)).bind(this));
+    el.addEventListener("click", memorizeScrollPosition(this.submitPatch.bind(this, el.id)).bind(this));
   }.bind(this));
 
   // for hotkeys
@@ -1965,11 +2004,11 @@ Patch.prototype.registerStagePatch = function (){
     this.submitPatch(this.ACTION.PATCH_STAGE);
   }.bind(this);
 
-  window.refreshLocal = memoizeScrollPosition(function(){
+  window.refreshLocal = memorizeScrollPosition(function(){
     this.submitPatch(this.ACTION.REFRESH_LOCAL);
   }.bind(this));
 
-  window.refreshAll = memoizeScrollPosition(function(){
+  window.refreshAll = memorizeScrollPosition(function(){
     this.submitPatch(this.ACTION.REFRESH_ALL);
   }.bind(this));
 
@@ -2331,6 +2370,11 @@ CommandPalette.prototype.exec = function(cmd) {
   }
 };
 
+// Is any command palette visible?
+CommandPalette.isVisible = function(){
+  return CommandPalette.instances.reduce(function(result, instance){ return result || instance.elements.palette.style.display !== "none" }, false);
+};
+
 /* COMMAND ENUMERATORS */
 
 function createRepoCatalogEnumerator(catalog, action) {
@@ -2400,29 +2444,47 @@ function enumerateUiActions() {
     .forEach(function(input){
       items.push({
         action: function(){
-          if ([].slice.call(input.classList).indexOf("main") !== -1){
-            var parentForm = input.parentNode.parentNode.parentNode;
-            if (parentForm.nodeName === "FORM"){
-              parentForm.submit();
-            }
+          if (input.form.action.includes(input.formAction)){
+            input.form.submit();
           } else {
-            submitSapeventForm({}, input.formAction, "post");
+            submitSapeventForm({}, input.formAction, "post", input.form);
           }
         },
         title: input.value + " " + input.title.replace(/\[.*\]/,"")
       });
     });
 
-  // links inside forms
-  [].slice.call(document.querySelectorAll("form a"))
+  // radio buttons
+  [].slice.call(document.querySelectorAll("input[type='radio']"))
+    .forEach(function(input){
+      items.push({
+        action: function(){
+          input.click();
+        },
+        title: document.querySelector("label[for='" + input.id + "']").textContent
+      });
+    });
+
+  // others:
+  // - links inside forms
+  // - label links
+  // - command links
+  // - other header links
+  [].slice.call(document.querySelectorAll("form a, a.command, #header ul:not([id*='toolbar']) a"))
     .filter(function(anchor){
-      return !!anchor.title;
+      return !!anchor.title || !!anchor.text;
     }).forEach(function(anchor){
       items.push({
         action: function(){
           anchor.click();
         },
-        title: anchor.title
+        title: (function(){
+          var result = anchor.title + anchor.text;
+          if (anchor.href.includes("label")) {
+            result = "Label: " + result;
+          }
+          return result;
+        })()
       });
     });
 
@@ -2447,12 +2509,17 @@ function enumerateJumpAllFiles() {
 /* Save Scroll Position for Diff/Patch Page */
 
 function saveScrollPosition(){
-  if (!window.sessionStorage) { return }
+  // Not supported by Java GUI
+  try { if (!window.sessionStorage) { return } }
+  catch(err) { return }
+
   window.sessionStorage.setItem("scrollTop", document.querySelector("html").scrollTop);
 }
 
 function restoreScrollPosition(){
-  if (!window.sessionStorage) { return }
+  // Not supported by Java GUI
+  try { if (!window.sessionStorage) { return } }
+  catch(err) { return }
 
   var scrollTop = window.sessionStorage.getItem("scrollTop");
   if (scrollTop) {
@@ -2461,7 +2528,7 @@ function restoreScrollPosition(){
   window.sessionStorage.setItem("scrollTop", 0);
 }
 
-function memoizeScrollPosition(fn){
+function memorizeScrollPosition(fn){
   return function(){
     saveScrollPosition();
     return fn.call(this, fn.args);

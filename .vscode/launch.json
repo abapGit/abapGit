@@ -3,7 +3,7 @@
   "configurations": [
     {
       "name": "All Unit Tests",
-      "type": "pwa-node",
+      "type": "node",
       "request": "launch",
       "pauseForSourceMap": true,
       "trace": false,
@@ -13,6 +13,7 @@
         "${workspaceFolder}/output/index.mjs",
         "${workspaceFolder}/node_modules/@abaplint/runtime/**"
       ],
+      "preLaunchTask": "npm: build",
       "program": "${workspaceFolder}/output/index.mjs",
     }
   ]

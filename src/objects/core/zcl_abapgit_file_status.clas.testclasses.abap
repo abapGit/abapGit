@@ -777,7 +777,7 @@ CLASS ltcl_calculate_status DEFINITION FOR TESTING RISK LEVEL HARMLESS
       complete_state,
       only_remote FOR TESTING RAISING zcx_abapgit_exception,
       only_local FOR TESTING RAISING zcx_abapgit_exception,
-      match FOR TESTING RAISING zcx_abapgit_exception,
+      match_file FOR TESTING RAISING zcx_abapgit_exception,
       diff FOR TESTING RAISING zcx_abapgit_exception,
       moved FOR TESTING RAISING zcx_abapgit_exception,
       local_outside_main FOR TESTING RAISING zcx_abapgit_exception,
@@ -857,7 +857,7 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD match.
+  METHOD match_file.
 
     mo_helper->add_local(
       iv_obj_type = 'DOMA'

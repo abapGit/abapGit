@@ -10,6 +10,7 @@ CLASS ltcl_convert DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FIN
     METHODS split_string FOR TESTING.
     METHODS convert_bitbyte FOR TESTING RAISING zcx_abapgit_exception.
     METHODS string_to_xstring_utf8 FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS string_to_xstring_utf8_bom FOR TESTING RAISING zcx_abapgit_exception.
     METHODS xstring_to_string_utf8 FOR TESTING RAISING zcx_abapgit_exception.
     METHODS xstring_to_string_not_utf8 FOR TESTING RAISING zcx_abapgit_exception.
     METHODS base64_to_xstring FOR TESTING.
@@ -113,6 +114,12 @@ CLASS ltcl_convert IMPLEMENTATION.
 
     DATA lv_result TYPE xstring.
 
+    lv_result = zcl_abapgit_convert=>string_to_xstring_utf8( `` ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_result
+      exp = `` ).
+
     lv_result = zcl_abapgit_convert=>string_to_xstring_utf8( 'abc' ).
 
     cl_abap_unit_assert=>assert_equals(
@@ -121,9 +128,39 @@ CLASS ltcl_convert IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD string_to_xstring_utf8_bom.
+
+    DATA lv_result TYPE xstring.
+
+    lv_result = zcl_abapgit_convert=>string_to_xstring_utf8_bom( `` ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_result
+      exp = `` ).
+
+    lv_result = zcl_abapgit_convert=>string_to_xstring_utf8_bom( 'a' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_result
+      exp = 'EFBBBF61' ).
+
+    lv_result = zcl_abapgit_convert=>string_to_xstring_utf8_bom( 'abcd' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_result
+      exp = 'EFBBBF61626364' ).
+
+  ENDMETHOD.
+
   METHOD xstring_to_string_utf8.
 
     DATA lv_result TYPE string.
+
+    lv_result = zcl_abapgit_convert=>xstring_to_string_utf8( `` ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_result
+      exp = `` ).
 
     lv_result = zcl_abapgit_convert=>xstring_to_string_utf8( '616263' ).
 

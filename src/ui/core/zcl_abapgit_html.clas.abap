@@ -29,9 +29,6 @@ CLASS zcl_abapgit_html DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    ALIASES add FOR zif_abapgit_html~add.
-    ALIASES wrap FOR zif_abapgit_html~wrap.
-
     TYPES:
       BEGIN OF ty_indent_context,
         no_indent_jscss TYPE abap_bool,
@@ -74,7 +71,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
+CLASS zcl_abapgit_html IMPLEMENTATION.
 
 
   METHOD checkbox.
@@ -289,6 +286,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
           lv_href  TYPE string,
           lv_click TYPE string,
           lv_id    TYPE string,
+          lv_act   TYPE string,
           lv_style TYPE string,
           lv_title TYPE string.
 
@@ -308,14 +306,21 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       lv_class = | class="{ lv_class }"|.
     ENDIF.
 
-    lv_href  = ' href="#"'. " Default, dummy
+    lv_href = ' href="#"'. " Default, dummy
+    lv_act  = iv_act.
     IF ( iv_act IS NOT INITIAL OR iv_typ = zif_abapgit_html=>c_action_type-dummy )
         AND iv_opt NA zif_abapgit_html=>c_html_opt-crossout.
       CASE iv_typ.
         WHEN zif_abapgit_html=>c_action_type-url.
-          lv_href  = | href="{ iv_act }"|.
+          IF iv_query IS NOT INITIAL.
+            lv_act = lv_act && `?` && iv_query.
+          ENDIF.
+          lv_href  = | href="{ lv_act }"|.
         WHEN zif_abapgit_html=>c_action_type-sapevent.
-          lv_href  = | href="sapevent:{ iv_act }"|.
+          IF iv_query IS NOT INITIAL.
+            lv_act = lv_act && `?` && iv_query.
+          ENDIF.
+          lv_href  = | href="sapevent:{ lv_act }"|.
         WHEN zif_abapgit_html=>c_action_type-onclick.
           lv_href  = ' href="#"'.
           lv_click = | onclick="{ iv_act }"|.
@@ -379,6 +384,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     zif_abapgit_html~add( zif_abapgit_html~a(
       iv_txt   = iv_txt
       iv_act   = iv_act
+      iv_query = iv_query
       iv_typ   = iv_typ
       iv_opt   = iv_opt
       iv_class = iv_class
@@ -458,7 +464,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
 
   METHOD zif_abapgit_html~td.
-    wrap(
+    zif_abapgit_html~wrap(
       iv_tag   = 'td'
       iv_content = iv_content
       ii_content = ii_content
@@ -470,7 +476,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
 
   METHOD zif_abapgit_html~th.
-    wrap(
+    zif_abapgit_html~wrap(
       iv_tag   = 'th'
       iv_content = iv_content
       ii_content = ii_content
@@ -510,14 +516,14 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       CLEAR lv_close_tag.
     ENDIF.
 
-    add( lv_open_tag ).
+    zif_abapgit_html~add( lv_open_tag ).
     IF ii_content IS BOUND.
-      add( ii_content ).
+      zif_abapgit_html~add( ii_content ).
     ELSEIF iv_content IS NOT INITIAL.
-      add( iv_content ).
+      zif_abapgit_html~add( iv_content ).
     ENDIF.
     IF lv_close_tag IS NOT INITIAL.
-      add( `</` && iv_tag && `>` ).
+      zif_abapgit_html~add( `</` && iv_tag && `>` ).
     ENDIF.
 
     ri_self = me.
