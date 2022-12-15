@@ -47,9 +47,6 @@ CLASS zcl_abapgit_object_srvd DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         VALUE(ro_object_data_merged) TYPE REF TO if_wb_object_data_model
       RAISING
         zcx_abapgit_exception .
-    METHODS is_delete_tadir
-      RETURNING
-        VALUE(rv_delete_tadir) TYPE abap_bool .
 ENDCLASS.
 
 
@@ -233,11 +230,6 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
 
     ro_object_operator = mo_object_operator.
 
-  ENDMETHOD.
-
-
-  METHOD is_delete_tadir.
-    rv_delete_tadir = abap_true.
   ENDMETHOD.
 
 
@@ -487,8 +479,7 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_metadata.
-    rs_metadata              = get_metadata( ).
-    rs_metadata-delete_tadir = is_delete_tadir( ).
+    rs_metadata = get_metadata( ).
   ENDMETHOD.
 
 
