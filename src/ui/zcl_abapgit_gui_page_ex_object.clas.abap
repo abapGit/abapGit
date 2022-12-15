@@ -72,24 +72,34 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_EX_OBJECT IMPLEMENTATION.
     CREATE OBJECT lo_component.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
-      iv_page_title      = 'Export Object to Files'
+      iv_page_title      = 'Export Objects to Files'
       ii_child_component = lo_component ).
   ENDMETHOD.
 
 
   METHOD export_object.
     DATA lv_object_type TYPE trobjtype.
-    DATA lv_object_name TYPE sobj_name.
+    DATA lt_names TYPE STANDARD TABLE OF sobj_name WITH DEFAULT KEY.
+    DATA lv_name LIKE LINE OF lt_names.
+    DATA lv_list TYPE string.
     DATA lv_only_main TYPE abap_bool.
 
     lv_object_type = mo_form_data->get( c_id-object_type ).
-    lv_object_name = mo_form_data->get( c_id-object_name ).
+    lv_list = mo_form_data->get( c_id-object_name ).
     lv_only_main = mo_form_data->get( c_id-only_main ).
 
-    zcl_abapgit_zip=>export_object(
-      iv_main_language_only = lv_only_main
-      iv_object_type        = lv_object_type
-      iv_object_name        = lv_object_name ).
+    REPLACE ALL OCCURRENCES OF |\r| IN lv_list WITH ''.
+    SPLIT lv_list AT |\n| INTO TABLE lt_names.
+
+    LOOP AT lt_names INTO lv_name.
+      IF lv_name IS INITIAL.
+        CONTINUE.
+      ENDIF.
+      zcl_abapgit_zip=>export_object(
+        iv_main_language_only = lv_only_main
+        iv_object_type        = lv_object_type
+        iv_object_name        = lv_name ).
+    ENDLOOP.
   ENDMETHOD.
 
 
@@ -101,11 +111,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_EX_OBJECT IMPLEMENTATION.
       iv_name        = c_id-object_type
       iv_required    = abap_true
       iv_upper_case  = abap_true
-      iv_side_action = c_event-choose_object_type
-    )->text(
-      iv_label       = 'Object Name'
+      iv_side_action = c_event-choose_object_type ).
+
+    ro_form->textarea(
+      iv_label       = 'Object Names'
       iv_name        = c_id-object_name
       iv_required    = abap_true
+      iv_placeholder = 'One object name per line'
       iv_upper_case  = abap_true ).
 
     ro_form->checkbox(
