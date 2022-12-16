@@ -275,7 +275,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
       iv_label       = 'Add'
       iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
       iv_action      = c_event-add ).
-      
     ri_html->add( lo_form->render( lo_form_data ) ).
 
   ENDMETHOD.
