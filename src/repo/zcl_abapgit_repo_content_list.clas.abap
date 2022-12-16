@@ -122,8 +122,10 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
 
 
     lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
-      iv_package = mo_repo->get_package( )
-      io_dot     = mo_repo->get_dot_abapgit( ) ).
+      iv_package            = mo_repo->get_package( )
+      iv_ignore_subpackages = mo_repo->get_local_settings( )-ignore_subpackages
+      iv_only_local_objects = mo_repo->get_local_settings( )-only_local_objects
+      io_dot                = mo_repo->get_dot_abapgit( ) ).
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       APPEND INITIAL LINE TO rt_repo_items ASSIGNING <ls_repo_item>.
