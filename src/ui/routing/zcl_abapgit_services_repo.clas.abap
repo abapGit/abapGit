@@ -165,6 +165,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
   METHOD gui_deserialize.
 
     DATA:
+      lv_msg    TYPE string,
       ls_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks,
       li_log    TYPE REF TO zif_abapgit_log.
 
@@ -201,6 +202,11 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     io_repo->deserialize(
       is_checks = ls_checks
       ii_log    = li_log ).
+
+    IF li_log->get_status( ) = zif_abapgit_log=>c_status-ok.
+      lv_msg = |Repository { io_repo->get_name( ) } successfully pulled for package { io_repo->get_package( ) }|.
+      MESSAGE lv_msg TYPE 'S'.
+    ENDIF.
 
   ENDMETHOD.
 
