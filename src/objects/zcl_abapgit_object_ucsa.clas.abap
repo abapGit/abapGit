@@ -125,6 +125,8 @@ CLASS zcl_abapgit_object_ucsa IMPLEMENTATION.
         zcx_abapgit_exception=>raise( lv_text ).
     ENDTRY.
 
+    tadir_delete( ).
+
   ENDMETHOD.
 
 

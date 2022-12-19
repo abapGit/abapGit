@@ -336,6 +336,7 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
+
   ENDMETHOD.
 
 

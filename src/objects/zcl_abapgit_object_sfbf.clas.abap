@@ -71,6 +71,8 @@ CLASS zcl_abapgit_object_sfbf IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Error deleting SFBF' ).
     ENDIF.
 
+    tadir_delete( ).
+
   ENDMETHOD.
 
 
