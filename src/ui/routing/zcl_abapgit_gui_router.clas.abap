@@ -456,9 +456,6 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-git_pull.                      " GIT Pull
         zcl_abapgit_services_git=>pull( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN zif_abapgit_definitions=>c_action-git_reset.                     " GIT Reset
-        zcl_abapgit_services_git=>reset( lv_key ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-git_branch_create.             " GIT Create new branch
         zcl_abapgit_services_git=>create_branch( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
