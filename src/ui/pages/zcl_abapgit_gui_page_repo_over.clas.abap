@@ -412,7 +412,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     lo_toolbar->add(
       iv_txt      = |Pull|
-      iv_act      = |{ zif_abapgit_definitions=>c_action-git_reset }{ lc_dummy_key }|
+      iv_act      = |{ zif_abapgit_definitions=>c_action-git_pull }{ lc_dummy_key }|
       iv_class    = |{ lc_action_class } { lc_online_class }|
       iv_li_class = |{ lc_action_class }| ).
 
@@ -903,7 +903,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
     ls_hotkey_action-description   = |Pull|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-git_reset.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-git_pull.
     ls_hotkey_action-hotkey = |p|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
