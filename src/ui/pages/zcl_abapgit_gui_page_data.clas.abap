@@ -26,8 +26,9 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
 
     CONSTANTS:
       BEGIN OF c_id,
-        table TYPE string VALUE 'table',
-        where TYPE string VALUE 'where',
+        table        TYPE string VALUE 'table',
+        where        TYPE string VALUE 'where',
+        skip_initial TYPE string VALUE 'skip_initial',
       END OF c_id .
 
     DATA mi_config TYPE REF TO zif_abapgit_data_config .
@@ -207,6 +208,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
 
     ls_config-type = zif_abapgit_data_config=>c_data_type-tabu.
     ls_config-name = to_upper( lo_map->get( c_id-table ) ).
+    ls_config-skip_initial = lo_map->get( c_id-skip_initial ).
     ls_config-where = build_where( lo_map ).
 
     mi_config->add_config( ls_config ).
@@ -238,6 +240,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
 
     ls_config-type = zif_abapgit_data_config=>c_data_type-tabu.
     ls_config-name = to_upper( lo_map->get( c_id-table ) ).
+    ls_config-skip_initial = lo_map->has( to_upper( c_id-skip_initial ) ).
     ls_config-where = build_where( lo_map ).
 
     mi_config->update_config( ls_config ).
@@ -258,10 +261,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
       iv_label    = 'Table'
       iv_name     = c_id-table
       iv_required = abap_true ).
+
+    lo_form->checkbox(
+      iv_label = 'Skip initial values'
+      iv_name  = c_id-skip_initial ).
+
     lo_form->textarea(
       iv_label       = 'Where'
       iv_placeholder = 'Conditions separated by newline'
       iv_name        = c_id-where ).
+
     lo_form->command(
       iv_label       = 'Add'
       iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
@@ -305,6 +314,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
         iv_label    = 'Table'
         iv_name     = c_id-table
         iv_readonly = abap_true ).
+
+      lo_form_data->set(
+        iv_key = c_id-skip_initial
+        iv_val = ls_config-skip_initial ).
+      lo_form->checkbox(
+        iv_label = 'Skip initial values'
+        iv_name  = c_id-skip_initial ).
 
       lo_form_data->set(
         iv_key = c_id-where
