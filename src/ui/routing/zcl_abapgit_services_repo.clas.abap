@@ -53,8 +53,7 @@ CLASS zcl_abapgit_services_repo DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS gui_deserialize
       IMPORTING
-        !io_repo      TYPE REF TO zcl_abapgit_repo
-        !iv_reset_all TYPE abap_bool DEFAULT abap_false
+        !io_repo TYPE REF TO zcl_abapgit_repo
       RAISING
         zcx_abapgit_exception .
   PROTECTED SECTION.
@@ -69,10 +68,9 @@ CLASS zcl_abapgit_services_repo DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS popup_decisions
       IMPORTING
-        !io_repo      TYPE REF TO zcl_abapgit_repo
-        !iv_reset_all TYPE abap_bool
+        !io_repo   TYPE REF TO zcl_abapgit_repo
       CHANGING
-        !cs_checks    TYPE zif_abapgit_definitions=>ty_deserialize_checks
+        !cs_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RAISING
         zcx_abapgit_cancel
         zcx_abapgit_exception .
@@ -181,10 +179,9 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     TRY.
         popup_decisions(
           EXPORTING
-            io_repo      = io_repo
-            iv_reset_all = iv_reset_all
+            io_repo   = io_repo
           CHANGING
-            cs_checks    = ls_checks ).
+            cs_checks = ls_checks ).
 
       CATCH zcx_abapgit_cancel.
         RETURN.
@@ -279,11 +276,13 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     lt_decision = cs_checks-overwrite.
 
-    " For regular pull, some objects are automatically handled (see below)
-    IF iv_reset_all IS INITIAL.
-      DELETE lt_decision
-        WHERE action = zif_abapgit_objects=>c_deserialize_action-add
-           OR action = zif_abapgit_objects=>c_deserialize_action-update.
+    " Only if all objects are new/added (like an initial pull),
+    " the objects are handled automatically (see below)
+    LOOP AT lt_decision TRANSPORTING NO FIELDS WHERE action <> zif_abapgit_objects=>c_deserialize_action-add.
+      EXIT.
+    ENDLOOP.
+    IF sy-subrc <> 0.
+      CLEAR lt_decision.
     ENDIF.
 
     " Ask user what to do
@@ -315,7 +314,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       IF sy-subrc = 0.
         <ls_overwrite>-decision = <ls_decision>-decision.
       ELSE.
-        " If user was not asked (regular pull), deny deletions and confirm other changes (add and update)
+        " If user was not asked, deny deletions and confirm other changes (add and update)
         CASE <ls_overwrite>-action.
           WHEN zif_abapgit_objects=>c_deserialize_action-delete
             OR zif_abapgit_objects=>c_deserialize_action-delete_add.
