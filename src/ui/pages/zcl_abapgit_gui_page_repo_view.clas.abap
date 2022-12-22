@@ -271,12 +271,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     CREATE OBJECT ro_advanced_dropdown.
 
-    IF mo_repo_aggregated_state->is_unchanged( ) = abap_false. " In case of asyncronicities
-      ro_advanced_dropdown->add( iv_txt = 'Selective Pull'
-                                 iv_act = |{ zif_abapgit_definitions=>c_action-git_reset }?key={ mv_key }|
-                                 iv_opt = get_crossout( iv_protected = abap_true ) ).
-    ENDIF.
-
     IF mo_repo->is_offline( ) = abap_false. " Online ?
       ro_advanced_dropdown->add(
         iv_txt = 'Transport to Branch'
@@ -430,14 +424,11 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     IF mo_repo->is_offline( ) = abap_false.
       " online repo
 
-      IF mo_repo_aggregated_state->remote( ) IS NOT INITIAL
-         OR mo_repo_aggregated_state->is_reassigned( ) = abap_true. " Something new at remote
+      IF mo_repo_aggregated_state->is_unchanged( ) = abap_false. " Any changes
         ro_toolbar->add( iv_txt = 'Pull'
                          iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?key={ mv_key }|
                          iv_opt = get_crossout( iv_protected = abap_true
                                                 iv_strong    = abap_true ) ).
-      ENDIF.
-      IF mo_repo_aggregated_state->is_unchanged( ) = abap_false. " Any changes
         ro_toolbar->add( iv_txt = 'Stage'
                          iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?key={ mv_key }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
