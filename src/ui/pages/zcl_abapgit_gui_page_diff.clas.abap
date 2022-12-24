@@ -1025,6 +1025,12 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
         " Get line where diff really starts
         READ TABLE lt_diffs ASSIGNING <ls_diff_line> INDEX lv_tabix + 8.
         IF sy-subrc <> 0.
+          IF <ls_diff_line> IS NOT ASSIGNED.
+            " Occurs only for small files/diffs with less than 8 lines.
+            " Therefore let's use the first line as beacon
+            READ TABLE lt_diffs ASSIGNING <ls_diff_line> INDEX lv_tabix.
+          ENDIF.
+          ASSERT <ls_diff_line> IS ASSIGNED.
           ASSIGN <ls_diff_line> TO <ls_diff>.
         ENDIF.
         ri_html->add( render_beacon( is_diff_line = <ls_diff_line>
