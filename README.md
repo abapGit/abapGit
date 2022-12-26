@@ -1,6 +1,6 @@
 ![Build](https://github.com/abapGit/abapGit/workflows/main-build/badge.svg)
 ![Test](https://github.com/abapGit/abapGit/workflows/test-pr/badge.svg)
-[![Slack](https://img.shields.io/badge/Join-Slack-blue)](https://communityinviter.com/apps/abapgit/abapgit)
+[![Slack](https://img.shields.io/badge/Join-Slack-blue)](https://communityinviter.com/apps/abapgit/abap)
 [![abap package version](https://img.shields.io/endpoint?url=https://shield.abap.space/version-shield-json/github/abapGit/abapGit/src/zif_abapgit_version.intf.abap/c_abap_version&label=version)](https://github.com/abapGit/abapGit/blob/main/src/zif_abapgit_version.intf.abap)
 
 <!--
