@@ -59,17 +59,16 @@ CLASS zcl_abapgit_objects_check DEFINITION
         iv_transport_type           TYPE zif_abapgit_definitions=>ty_transport_type
       RETURNING
         VALUE(rv_transport_request) TYPE trkorr.
+    CLASS-METHODS check_multiple_files
+      IMPORTING
+        !it_results TYPE zif_abapgit_definitions=>ty_results_tt
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_objects_check IMPLEMENTATION.
-
-  METHOD class_constructor.
-
-    gi_exit = zcl_abapgit_exit=>get_instance( ).
-
-  ENDMETHOD.
 
 
   METHOD checks_adjust.
@@ -90,6 +89,39 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD check_multiple_files.
+
+    DATA:
+      lv_msg TYPE string,
+      lt_res_sort LIKE it_results,
+      ls_file     TYPE zif_abapgit_definitions=>ty_file_signature.
+
+    FIELD-SYMBOLS <ls_result> LIKE LINE OF it_results.
+
+    lt_res_sort = it_results.
+    SORT lt_res_sort BY filename ASCENDING.
+
+    " Prevent pulling if there is more than one file with the same name
+    LOOP AT lt_res_sort ASSIGNING <ls_result>
+      WHERE obj_type <> 'DEVC' AND packmove = abap_false AND filename IS NOT INITIAL.
+      IF <ls_result>-filename = ls_file-filename.
+        lv_msg = |Pull not possible since there are multiple files with same filename, { <ls_result>-filename }.|
+          && | Keep one of the files and delete the other in the repository.|.
+        zcx_abapgit_exception=>raise( lv_msg ).
+      ENDIF.
+      MOVE-CORRESPONDING <ls_result> TO ls_file.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD class_constructor.
+
+    gi_exit = zcl_abapgit_exit=>get_instance( ).
+
+  ENDMETHOD.
+
+
   METHOD deserialize_checks.
 
     DATA: lt_results TYPE zif_abapgit_definitions=>ty_results_tt,
@@ -97,6 +129,8 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
 
     " get unfiltered status to evaluate properly which warnings are required
     lt_results = zcl_abapgit_file_status=>status( io_repo ).
+
+    check_multiple_files( lt_results ).
 
     rs_checks-overwrite = warning_overwrite_find( lt_results ).
 
@@ -114,6 +148,22 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
                                             iv_transport_type = rs_checks-transport-type ).
       ENDIF.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD determine_transport_request.
+
+    " Use transport from repo settings if maintained, or determine via user exit.
+    " If transport keeps empty here, it'll requested later via popup.
+    rv_transport_request = io_repo->get_local_settings( )-transport_request.
+
+    gi_exit->determine_transport_request(
+      EXPORTING
+        io_repo              = io_repo
+        iv_transport_type    = iv_transport_type
+      CHANGING
+        cv_transport_request = rv_transport_request ).
 
   ENDMETHOD.
 
@@ -312,21 +362,4 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
     rt_overwrite = lt_overwrite_unique.
 
   ENDMETHOD.
-
-
-  METHOD determine_transport_request.
-
-    " Use transport from repo settings if maintained, or determine via user exit.
-    " If transport keeps empty here, it'll requested later via popup.
-    rv_transport_request = io_repo->get_local_settings( )-transport_request.
-
-    gi_exit->determine_transport_request(
-      EXPORTING
-        io_repo              = io_repo
-        iv_transport_type    = iv_transport_type
-      CHANGING
-        cv_transport_request = rv_transport_request ).
-
-  ENDMETHOD.
-
 ENDCLASS.
