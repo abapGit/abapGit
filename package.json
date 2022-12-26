@@ -25,6 +25,7 @@
       "src"
     ]
   },
+
   "devDependencies": {
     "@abaplint/cli": "^2.94.9",
     "@abaplint/database-sqlite": "^2.3.87",
