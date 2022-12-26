@@ -20,6 +20,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
     mv_json = |\{\n| &&
       |  "name": "DUMMY",\n| &&
+      |  "skip_initial": false,\n| &&
       |  "type": "TABU",\n| &&
       |  "where": [\n| &&
       |    "DUMMY"\n| &&

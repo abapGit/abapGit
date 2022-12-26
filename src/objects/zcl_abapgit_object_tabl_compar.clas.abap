@@ -71,6 +71,10 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_COMPAR IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_found> TYPE rsfindlst.
 
+    IF iv_object_name IS INITIAL.
+      RETURN.
+    ENDIF.
+
     lt_scope = it_scope.
 
     lv_findstring = iv_object_name.

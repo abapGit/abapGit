@@ -467,7 +467,6 @@ INTERFACE zif_abapgit_definitions
       performance_test              TYPE string VALUE 'performance_test',
       ie_devtools                   TYPE string VALUE 'ie_devtools',
       git_pull                      TYPE string VALUE 'git_pull',
-      git_reset                     TYPE string VALUE 'git_reset',
       git_branch_create             TYPE string VALUE 'git_branch_create',
       git_branch_switch             TYPE string VALUE 'git_branch_switch',
       git_branch_delete             TYPE string VALUE 'git_branch_delete',

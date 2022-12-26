@@ -6,9 +6,10 @@ INTERFACE zif_abapgit_data_config
     ty_data_type TYPE c LENGTH 4 .
   TYPES:
     BEGIN OF ty_config,
-      type  TYPE ty_data_type,
-      name  TYPE tadir-obj_name,
-      where TYPE string_table,
+      type         TYPE ty_data_type,
+      name         TYPE tadir-obj_name,
+      skip_initial TYPE abap_bool,
+      where        TYPE string_table,
     END OF ty_config .
   TYPES:
     ty_config_tt TYPE SORTED TABLE OF ty_config WITH UNIQUE KEY type name .
