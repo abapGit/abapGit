@@ -202,7 +202,10 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
           copy_manifest_descriptor( lo_manifest_provider ).
         ENDIF.
       ELSE.
-        data(ls_descriptor) = zcl_abapgit_exit=>get_instance( )->get_apack_manifest_descriptor( iv_package_name = mv_package_name ).
+        DATA ls_descriptor TYPE zif_abapgit_apack_definitions=>ty_descriptor.
+        ls_descriptor = zcl_abapgit_exit=>get_instance( )->get_apack_manifest_descriptor(
+                            iv_package_name = mv_package_name
+                        ).
         IF ls_descriptor IS NOT INITIAL.
           set_manifest_descriptor( ls_descriptor ).
         ENDIF.
