@@ -360,7 +360,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
         es_overwrite_action-icon   = icon_create.
         es_overwrite_action-text   = 'Add local APACK'.
       ELSE.
-        IF ls_current_apack_file-sha1 EQ <ls_remote>-sha1.
+        IF ls_current_apack_file-sha1 = <ls_remote>-sha1.
           es_overwrite_action-action = zif_abapgit_objects=>c_deserialize_action-none.
         ELSE.
           es_overwrite_action-action = zif_abapgit_objects=>c_deserialize_action-overwrite.
