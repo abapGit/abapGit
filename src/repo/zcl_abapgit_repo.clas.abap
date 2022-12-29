@@ -722,7 +722,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     ENDIF.
 
     READ TABLE is_checks-overwrite INTO ls_apack_ow_check WITH KEY obj_name = 'APACK'.
-    IF sy-subrc EQ 0.
+    IF sy-subrc = 0.
       zcl_abapgit_exit=>get_instance( )->apack_manifest_deserialize(
           io_repo         = me
           io_remote_apack = lo_remote_apack
