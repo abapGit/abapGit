@@ -122,4 +122,9 @@ INTERFACE zif_abapgit_exit
       iv_package_name               TYPE devclass
     RETURNING
       VALUE(rs_manifest_descriptor) TYPE zif_abapgit_apack_definitions=>ty_descriptor.
+  METHODS apack_manifest_deserialize
+    IMPORTING
+      io_repo         TYPE REF TO zcl_abapgit_repo
+      io_remote_apack TYPE REF TO zcl_abapgit_apack_reader
+      is_ow_check     TYPE zif_abapgit_definitions=>ty_overwrite.
 ENDINTERFACE.

@@ -7,6 +7,12 @@ CLASS zcl_abapgit_apack_reader DEFINITION
 
     TYPES ty_package_name TYPE devclass .
 
+    TYPES:
+      BEGIN OF ty_s_manifest_declaration,
+        clsname  TYPE seoclsname,
+        devclass TYPE devclass,
+      END OF ty_s_manifest_declaration .
+
     CLASS-METHODS create_instance
       IMPORTING
         !iv_package_name          TYPE ty_package_name
@@ -40,21 +46,19 @@ CLASS zcl_abapgit_apack_reader DEFINITION
         VALUE(rv_has_manifest) TYPE abap_bool
       RAISING
         zcx_abapgit_exception.
+    METHODS get_manifest_implementation
+      RETURNING
+        VALUE(rs_manifest_implementation) TYPE ty_s_manifest_declaration.
     METHODS constructor
       IMPORTING
         !iv_package_name TYPE ty_package_name .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    TYPES:
-      BEGIN OF ty_s_manifest_declaration,
-        clsname  TYPE seoclsname,
-        devclass TYPE devclass,
-      END OF ty_s_manifest_declaration .
-
     DATA mv_package_name TYPE ty_package_name .
     DATA ms_cached_descriptor TYPE zif_abapgit_apack_definitions=>ty_descriptor .
     DATA mv_is_cached TYPE abap_bool .
+    DATA ms_manifest_implementation TYPE ty_s_manifest_declaration.
 
     CLASS-METHODS from_xml
       IMPORTING
@@ -170,32 +174,31 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
 
   METHOD get_manifest_descriptor.
 
-    DATA: lo_manifest_provider       TYPE REF TO object,
-          ls_manifest_implementation TYPE ty_s_manifest_declaration,
-          ls_descriptor TYPE zif_abapgit_apack_definitions=>ty_descriptor.
+    DATA: lo_manifest_provider TYPE REF TO object,
+          ls_descriptor        TYPE zif_abapgit_apack_definitions=>ty_descriptor.
 
     IF mv_is_cached IS INITIAL AND mv_package_name IS NOT INITIAL.
       SELECT SINGLE seometarel~clsname tadir~devclass FROM seometarel "#EC CI_NOORDER
          INNER JOIN tadir ON seometarel~clsname = tadir~obj_name "#EC CI_BUFFJOIN
-         INTO ls_manifest_implementation
+         INTO ms_manifest_implementation
          WHERE tadir~pgmid = 'R3TR' AND
                tadir~object = 'CLAS' AND
                seometarel~version = '1' AND
                seometarel~refclsname = zif_abapgit_apack_definitions=>c_apack_interface_cust AND
                tadir~devclass = mv_package_name.
-      IF ls_manifest_implementation IS INITIAL.
+      IF ms_manifest_implementation IS INITIAL.
         SELECT SINGLE seometarel~clsname tadir~devclass FROM seometarel "#EC CI_NOORDER
            INNER JOIN tadir ON seometarel~clsname = tadir~obj_name "#EC CI_BUFFJOIN
-           INTO ls_manifest_implementation
+           INTO ms_manifest_implementation
            WHERE tadir~pgmid = 'R3TR' AND
                  tadir~object = 'CLAS' AND
                  seometarel~version = '1' AND
                  seometarel~refclsname = zif_abapgit_apack_definitions=>c_apack_interface_sap AND
                  tadir~devclass = mv_package_name.
       ENDIF.
-      IF ls_manifest_implementation IS NOT INITIAL.
+      IF ms_manifest_implementation IS NOT INITIAL.
         TRY.
-            CREATE OBJECT lo_manifest_provider TYPE (ls_manifest_implementation-clsname).
+            CREATE OBJECT lo_manifest_provider TYPE (ms_manifest_implementation-clsname).
           CATCH cx_sy_create_object_error.
             CLEAR: rs_manifest_descriptor.
         ENDTRY.
@@ -237,4 +240,9 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
     ms_cached_descriptor = is_manifest_descriptor.
     format_version( ).
   ENDMETHOD.
+
+  METHOD get_manifest_implementation.
+    rs_manifest_implementation = ms_manifest_implementation.
+  ENDMETHOD.
+
 ENDCLASS.

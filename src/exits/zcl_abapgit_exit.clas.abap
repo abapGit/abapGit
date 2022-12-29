@@ -345,8 +345,21 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
 
     IF gi_exit IS NOT INITIAL.
       TRY.
-          rs_manifest_descriptor = gi_exit->get_apack_manifest_descriptor(
-              iv_package_name        = iv_package_name ).
+          rs_manifest_descriptor = gi_exit->get_apack_manifest_descriptor( iv_package_name = iv_package_name ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~apack_manifest_deserialize.
+
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          gi_exit->apack_manifest_deserialize(
+              io_repo                = io_repo
+              io_remote_apack        = io_remote_apack
+              is_ow_check            = is_ow_check ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.

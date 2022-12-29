@@ -56,7 +56,7 @@ CLASS zcl_abapgit_repo DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS has_remote_source
-          ABSTRACT
+      ABSTRACT
       RETURNING
         VALUE(rv_yes) TYPE abap_bool .
     METHODS status
@@ -101,7 +101,7 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
     METHODS check_and_create_package
       IMPORTING
-         iv_package TYPE devclass
+        iv_package TYPE devclass
       RAISING
         zcx_abapgit_exception .
   PROTECTED SECTION.
@@ -117,8 +117,9 @@ CLASS zcl_abapgit_repo DEFINITION
     DATA mi_data_config TYPE REF TO zif_abapgit_data_config .
 
     METHODS find_remote_dot_apack
-      RETURNING
-        VALUE(ro_dot) TYPE REF TO zcl_abapgit_apack_reader
+      EXPORTING
+        eo_dot              TYPE REF TO zcl_abapgit_apack_reader
+        es_overwrite_action TYPE zif_abapgit_definitions=>ty_overwrite
       RAISING
         zcx_abapgit_exception .
     METHODS set_dot_apack
@@ -161,11 +162,16 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS normalize_local_settings
       CHANGING
         cs_local_settings TYPE zif_abapgit_persistence=>ty_local_settings.
+    METHODS check_apack_overwrite
+      CHANGING
+        ct_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
   METHOD bind_listener.
@@ -220,6 +226,17 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD check_apack_overwrite.
+    DATA: ls_overwite_line           TYPE zif_abapgit_definitions=>ty_overwrite,
+          ls_manifest_implementation TYPE zcl_abapgit_apack_reader=>ty_s_manifest_declaration.
+
+    find_remote_dot_apack( IMPORTING es_overwrite_action = ls_overwite_line ).
+    ls_manifest_implementation = me->get_dot_apack( )->get_manifest_implementation( ).
+    IF ls_manifest_implementation IS INITIAL.
+      ls_overwite_line-obj_name = 'APACK'.
+      APPEND ls_overwite_line TO ct_overwrite.
+    ENDIF.
+  ENDMETHOD.
 
   METHOD check_language.
 
@@ -320,8 +337,13 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 
   METHOD find_remote_dot_apack.
-
+    DATA ls_current_apack_file TYPE zif_abapgit_definitions=>ty_file.
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF mt_remote.
+
+    TRY.
+        ls_current_apack_file = zcl_abapgit_apack_helper=>to_file( iv_package = ms_data-package ).
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
 
     get_files_remote( ).
 
@@ -330,9 +352,30 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       COMPONENTS path     = zif_abapgit_definitions=>c_root_dir
                  filename = zif_abapgit_apack_definitions=>c_dot_apack_manifest.
     IF sy-subrc = 0.
-      ro_dot = zcl_abapgit_apack_reader=>deserialize( iv_package_name = ms_data-package
+      eo_dot = zcl_abapgit_apack_reader=>deserialize( iv_package_name = ms_data-package
                                                       iv_xstr         = <ls_remote>-data ).
-      set_dot_apack( ro_dot ).
+      set_dot_apack( eo_dot ).
+      IF ls_current_apack_file IS INITIAL.
+        es_overwrite_action-action = zif_abapgit_objects=>c_deserialize_action-add.
+        es_overwrite_action-icon   = icon_create.
+        es_overwrite_action-text   = 'Add local APACK'.
+      ELSE.
+        IF ls_current_apack_file-sha1 EQ <ls_remote>-sha1.
+          es_overwrite_action-action = zif_abapgit_objects=>c_deserialize_action-none.
+        ELSE.
+          es_overwrite_action-action = zif_abapgit_objects=>c_deserialize_action-overwrite.
+          es_overwrite_action-icon   = icon_change.
+          es_overwrite_action-text   = 'Overwrite local APACK'.
+        ENDIF.
+      ENDIF.
+    ELSE.
+      IF ls_current_apack_file IS INITIAL.
+        es_overwrite_action-action = zif_abapgit_objects=>c_deserialize_action-none.
+      ELSE.
+        es_overwrite_action-action = zif_abapgit_objects=>c_deserialize_action-delete.
+        es_overwrite_action-icon   = icon_delete.
+        es_overwrite_action-text   = 'Delete local APAC'.
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.
@@ -654,12 +697,14 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD zif_abapgit_repo~deserialize.
 
-    DATA: lt_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
-          lt_result        TYPE zif_abapgit_data_deserializer=>ty_results,
-          lx_error         TYPE REF TO zcx_abapgit_exception.
+    DATA: lt_updated_files  TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
+          lt_result         TYPE zif_abapgit_data_deserializer=>ty_results,
+          lx_error          TYPE REF TO zcx_abapgit_exception,
+          lo_remote_apack   TYPE REF TO zcl_abapgit_apack_reader,
+          ls_apack_ow_check TYPE zif_abapgit_definitions=>ty_overwrite.
 
     find_remote_dot_abapgit( ).
-    find_remote_dot_apack( ).
+    find_remote_dot_apack( IMPORTING eo_dot = lo_remote_apack ).
 
     check_write_protect( ).
     check_language( ).
@@ -674,6 +719,15 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     IF is_checks-transport-required = abap_true AND is_checks-transport-transport IS INITIAL.
       zcx_abapgit_exception=>raise( |No transport request was supplied| ).
+    ENDIF.
+
+    READ TABLE is_checks-overwrite INTO ls_apack_ow_check WITH KEY obj_name = 'APACK'.
+    IF sy-subrc EQ 0.
+      zcl_abapgit_exit=>get_instance( )->apack_manifest_deserialize(
+          io_repo         = me
+          io_remote_apack = lo_remote_apack
+          is_ow_check     = ls_apack_ow_check
+      ).
     ENDIF.
 
     " Deserialize objects
@@ -722,6 +776,8 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     check_language( ).
 
     rs_checks = zcl_abapgit_objects=>deserialize_checks( me ).
+
+    check_apack_overwrite( CHANGING ct_overwrite = rs_checks-overwrite ).
 
     lt_requirements = get_dot_abapgit( )->get_data( )-requirements.
     rs_checks-requirements-met = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements ).

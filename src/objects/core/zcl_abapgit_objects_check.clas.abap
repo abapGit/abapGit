@@ -92,7 +92,7 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
   METHOD check_multiple_files.
 
     DATA:
-      lv_msg TYPE string,
+      lv_msg      TYPE string,
       lt_res_sort LIKE it_results,
       ls_file     TYPE zif_abapgit_definitions=>ty_file_signature.
 
