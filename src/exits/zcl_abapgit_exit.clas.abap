@@ -346,7 +346,6 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
     IF gi_exit IS NOT INITIAL.
       TRY.
           rs_manifest_descriptor = gi_exit->get_apack_manifest_descriptor(
-            EXPORTING
               iv_package_name        = iv_package_name ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.

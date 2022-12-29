@@ -171,7 +171,8 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
   METHOD get_manifest_descriptor.
 
     DATA: lo_manifest_provider       TYPE REF TO object,
-          ls_manifest_implementation TYPE ty_s_manifest_declaration.
+          ls_manifest_implementation TYPE ty_s_manifest_declaration,
+          ls_descriptor TYPE zif_abapgit_apack_definitions=>ty_descriptor.
 
     IF mv_is_cached IS INITIAL AND mv_package_name IS NOT INITIAL.
       SELECT SINGLE seometarel~clsname tadir~devclass FROM seometarel "#EC CI_NOORDER
@@ -202,10 +203,8 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
           copy_manifest_descriptor( lo_manifest_provider ).
         ENDIF.
       ELSE.
-        DATA ls_descriptor TYPE zif_abapgit_apack_definitions=>ty_descriptor.
         ls_descriptor = zcl_abapgit_exit=>get_instance( )->get_apack_manifest_descriptor(
-                            iv_package_name = mv_package_name
-                        ).
+                            iv_package_name = mv_package_name ).
         IF ls_descriptor IS NOT INITIAL.
           set_manifest_descriptor( ls_descriptor ).
         ENDIF.
