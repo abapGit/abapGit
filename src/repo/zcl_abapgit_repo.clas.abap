@@ -231,7 +231,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
           ls_manifest_implementation TYPE zcl_abapgit_apack_reader=>ty_s_manifest_declaration.
 
     find_remote_dot_apack( IMPORTING es_overwrite_action = ls_overwite_line ).
-    ls_manifest_implementation = me->get_dot_apack( )->get_manifest_implementation( ).
+    ls_manifest_implementation = get_dot_apack( )->get_manifest_implementation( ).
     IF ls_manifest_implementation IS INITIAL.
       ls_overwite_line-obj_name = 'APACK'.
       APPEND ls_overwite_line TO ct_overwrite.
