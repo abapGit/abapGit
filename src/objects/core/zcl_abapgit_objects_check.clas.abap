@@ -213,10 +213,13 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
       <ls_changes> LIKE LINE OF lt_changes.
 
     " collect all actions for object that have been changed
-    LOOP AT it_results ASSIGNING <ls_result> WHERE NOT obj_type IS INITIAL.
+    LOOP AT it_results ASSIGNING <ls_result> WHERE NOT obj_type IS INITIAL OR filename = '.apack-manifest.xml'.
 
       APPEND INITIAL LINE TO lt_changes ASSIGNING <ls_changes>.
       MOVE-CORRESPONDING <ls_result> TO <ls_changes>.
+      IF <ls_result>-filename EQ '.apack-manifest.xml'.
+        <ls_changes>-obj_name = 'APACK'.
+      ENDIF.
       <ls_changes>-devclass = <ls_result>-package.
 
       IF <ls_result>-packmove = abap_true.

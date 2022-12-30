@@ -599,6 +599,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           lt_steps    TYPE zif_abapgit_objects=>ty_step_data_tt,
           lx_exc      TYPE REF TO zcx_abapgit_exception.
     DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
+    DATA ls_apack_implementation TYPE zcl_abapgit_apack_reader=>ty_s_manifest_declaration.
 
     FIELD-SYMBOLS: <ls_result>  TYPE zif_abapgit_definitions=>ty_result,
                    <lv_step_id> TYPE LINE OF zif_abapgit_definitions=>ty_deserialization_step_tt,
@@ -752,6 +753,22 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     SORT rt_accessed_files BY path ASCENDING filename ASCENDING.
     DELETE ADJACENT DUPLICATES FROM rt_accessed_files. " Just in case
+
+    READ TABLE is_checks-overwrite TRANSPORTING NO FIELDS WITH KEY obj_name = 'APACK' decision = 'Y'.
+    IF sy-subrc = 0.
+      " update APACK
+      " check if it was already updated by its class or it doesn't have one
+      ls_apack_implementation = io_repo->get_dot_apack( )->get_manifest_implementation( ).
+      IF ls_apack_implementation IS INITIAL.
+        " has to be updated by user exit
+        zcl_abapgit_exit=>get_instance( )->repo_apack_manifest(
+          EXPORTING
+            iv_package        = io_repo->get_package( )
+            iv_event          = zif_abapgit_apack_definitions=>c_event_overwrite_local
+            io_remote_apack   = io_repo->find_remote_dot_apack( )
+        ).
+      ENDIF.
+    ENDIF.
 
     zcl_abapgit_default_transport=>get_instance( )->reset( ).
 

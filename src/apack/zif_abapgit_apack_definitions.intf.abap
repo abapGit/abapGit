@@ -27,7 +27,7 @@ INTERFACE zif_abapgit_apack_definitions PUBLIC .
     BEGIN OF ty_descriptor.
       INCLUDE TYPE ty_descriptor_wo_dependencies.
   TYPES:
-    dependencies TYPE ty_dependencies,
+      dependencies TYPE ty_dependencies,
     END OF ty_descriptor,
 
     ty_descriptors TYPE STANDARD TABLE OF ty_descriptor WITH NON-UNIQUE DEFAULT KEY.
@@ -36,4 +36,8 @@ INTERFACE zif_abapgit_apack_definitions PUBLIC .
   CONSTANTS c_repository_type_abapgit TYPE ty_repository_type VALUE 'abapGit' ##NO_TEXT.
   CONSTANTS c_apack_interface_sap TYPE seoclsname VALUE 'IF_APACK_MANIFEST' ##NO_TEXT.
   CONSTANTS c_apack_interface_cust TYPE seoclsname VALUE 'ZIF_APACK_MANIFEST' ##NO_TEXT.
+
+  CONSTANTS c_event_read_local TYPE i VALUE 0.
+  CONSTANTS c_event_create_local TYPE i VALUE 1.
+  CONSTANTS c_event_overwrite_local TYPE i VALUE 3.
 ENDINTERFACE.
