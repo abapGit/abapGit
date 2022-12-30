@@ -762,11 +762,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       IF ls_apack_implementation IS INITIAL.
         " has to be updated by user exit
         zcl_abapgit_exit=>get_instance( )->repo_apack_manifest(
-          EXPORTING
             iv_package        = io_repo->get_package( )
             iv_event          = zif_abapgit_apack_definitions=>c_event_overwrite_local
-            io_remote_apack   = io_repo->find_remote_dot_apack( )
-        ).
+            io_remote_apack   = io_repo->find_remote_dot_apack( ) ).
       ENDIF.
     ENDIF.
 

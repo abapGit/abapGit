@@ -217,7 +217,7 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
 
       APPEND INITIAL LINE TO lt_changes ASSIGNING <ls_changes>.
       MOVE-CORRESPONDING <ls_result> TO <ls_changes>.
-      IF <ls_result>-filename EQ '.apack-manifest.xml'.
+      IF <ls_result>-filename = '.apack-manifest.xml'.
         <ls_changes>-obj_name = 'APACK'.
       ENDIF.
       <ls_changes>-devclass = <ls_result>-package.
