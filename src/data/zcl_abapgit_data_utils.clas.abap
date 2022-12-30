@@ -69,6 +69,16 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
 
         " Get primary key to ensure unique entries
         IF lo_data->is_ddic_type( ) = abap_true.
+          lo_data->get_ddic_field_list(
+            RECEIVING
+              p_field_list             = lt_fields
+            EXCEPTIONS
+              not_found                = 1
+              no_ddic_type             = 2
+              OTHERS                   = 3 ).
+          IF sy-subrc <> 0.
+            zcx_abapgit_exception=>raise( |Table { iv_name } not found for data serialization| ).
+          ENDIF.
           lt_fields = lo_data->get_ddic_field_list( ).
 
           APPEND INITIAL LINE TO lt_keys ASSIGNING <ls_key>.
