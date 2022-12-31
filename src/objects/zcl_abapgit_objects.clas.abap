@@ -184,6 +184,12 @@ CLASS zcl_abapgit_objects DEFINITION
       IMPORTING
         !is_item TYPE zif_abapgit_definitions=>ty_item
         !ii_log  TYPE REF TO zif_abapgit_log .
+    CLASS-METHODS update_apack
+      IMPORTING
+        !io_repo   TYPE REF TO zcl_abapgit_repo
+        !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -599,9 +605,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           lt_steps    TYPE zif_abapgit_objects=>ty_step_data_tt,
           lx_exc      TYPE REF TO zcx_abapgit_exception.
     DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
-    DATA: ls_apack_check          LIKE LINE OF is_checks-overwrite,
-          ls_apack_implementation TYPE zcl_abapgit_apack_reader=>ty_s_manifest_declaration,
-          lv_apack_event          TYPE i.
 
     FIELD-SYMBOLS: <ls_result>  TYPE zif_abapgit_definitions=>ty_result,
                    <lv_step_id> TYPE LINE OF zif_abapgit_definitions=>ty_deserialization_step_tt,
@@ -756,25 +759,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     SORT rt_accessed_files BY path ASCENDING filename ASCENDING.
     DELETE ADJACENT DUPLICATES FROM rt_accessed_files. " Just in case
 
-    READ TABLE is_checks-overwrite INTO ls_apack_check WITH KEY obj_name = zif_abapgit_apack_definitions=>c_dot_apack_manifest
-                                                                decision = zif_abapgit_definitions=>c_yes.
-    IF sy-subrc = 0.
-      " update APACK
-      " check if it was already updated by its class
-      " if there's no implementation, it has to be updated by user exit
-      ls_apack_implementation = io_repo->get_dot_apack( )->get_manifest_implementation( ).
-      IF ls_apack_check-action = zif_abapgit_objects=>c_deserialize_action-add.
-        lv_apack_event = zif_abapgit_apack_definitions=>c_event_create_local.
-      ELSE.
-        lv_apack_event = zif_abapgit_apack_definitions=>c_event_overwrite_local.
-      ENDIF.
-      IF ls_apack_implementation IS INITIAL.
-        zcl_abapgit_exit=>get_instance( )->repo_apack_manifest(
-            iv_package        = io_repo->get_package( )
-            iv_event          = lv_apack_event
-            io_remote_apack   = io_repo->find_remote_dot_apack( ) ).
-      ENDIF.
-    ENDIF.
+    update_apack( io_repo = io_repo is_checks = is_checks ).
 
     zcl_abapgit_default_transport=>get_instance( )->reset( ).
 
@@ -1190,4 +1175,31 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
+
+  METHOD update_apack.
+    DATA: ls_apack_check          LIKE LINE OF is_checks-overwrite,
+          ls_apack_implementation TYPE zcl_abapgit_apack_reader=>ty_s_manifest_declaration,
+          lv_apack_event          TYPE i.
+    READ TABLE is_checks-overwrite
+        INTO ls_apack_check WITH KEY obj_name = zif_abapgit_apack_definitions=>c_dot_apack_manifest
+                                     decision = zif_abapgit_definitions=>c_yes.
+    IF sy-subrc = 0.
+      " update APACK
+      " check if it was already updated by its class
+      " if there's no implementation, it has to be updated by user exit
+      ls_apack_implementation = io_repo->get_dot_apack( )->get_manifest_implementation( ).
+      IF ls_apack_check-action = zif_abapgit_objects=>c_deserialize_action-add.
+        lv_apack_event = zif_abapgit_apack_definitions=>c_event_create_local.
+      ELSE.
+        lv_apack_event = zif_abapgit_apack_definitions=>c_event_overwrite_local.
+      ENDIF.
+      IF ls_apack_implementation IS INITIAL.
+        zcl_abapgit_exit=>get_instance( )->repo_apack_manifest(
+            iv_package        = io_repo->get_package( )
+            iv_event          = lv_apack_event
+            io_remote_apack   = io_repo->find_remote_dot_apack( ) ).
+      ENDIF.
+    ENDIF.
+  ENDMETHOD.
+
 ENDCLASS.
