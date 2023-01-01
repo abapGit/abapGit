@@ -213,7 +213,8 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
       <ls_changes> LIKE LINE OF lt_changes.
 
     " collect all actions for object that have been changed
-    LOOP AT it_results ASSIGNING <ls_result> WHERE NOT obj_type IS INITIAL OR filename = zif_abapgit_apack_definitions=>c_dot_apack_manifest.
+    LOOP AT it_results ASSIGNING <ls_result> WHERE NOT obj_type IS INITIAL OR
+                                                   filename = zif_abapgit_apack_definitions=>c_dot_apack_manifest.
 
       APPEND INITIAL LINE TO lt_changes ASSIGNING <ls_changes>.
       MOVE-CORRESPONDING <ls_result> TO <ls_changes>.
