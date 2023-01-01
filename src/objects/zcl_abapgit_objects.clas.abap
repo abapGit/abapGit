@@ -759,7 +759,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     SORT rt_accessed_files BY path ASCENDING filename ASCENDING.
     DELETE ADJACENT DUPLICATES FROM rt_accessed_files. " Just in case
 
-    update_apack( io_repo = io_repo is_checks = is_checks ).
+    update_apack( io_repo = io_repo
+                  is_checks = is_checks ).
 
     zcl_abapgit_default_transport=>get_instance( )->reset( ).
 
