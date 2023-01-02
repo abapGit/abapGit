@@ -96,7 +96,7 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
       lv_lstate   TYPE c LENGTH 2,
       lv_rstate   TYPE c LENGTH 2,
       lt_res_sort LIKE it_results,
-      ls_result   TYPE LINE OF it_results.
+      ls_result   LIKE LINE OF it_results.
 
     FIELD-SYMBOLS <ls_result> LIKE LINE OF it_results.
 
