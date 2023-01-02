@@ -116,14 +116,20 @@ CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
       ASSERT ls_config-type = zif_abapgit_data_config=>c_data_type-tabu. " todo
       ASSERT ls_config-name IS NOT INITIAL.
 
-      lr_data = read_database_table(
-        iv_name  = ls_config-name
-        it_where = ls_config-where ).
+      TRY.
+          lr_data = read_database_table(
+                      iv_name  = ls_config-name
+                      it_where = ls_config-where ).
+
+          ls_file-data = convert_itab_to_json(
+            ir_data         = lr_data
+            iv_skip_initial = ls_config-skip_initial ).
+
+        CATCH zcx_abapgit_exception.
+          " DB table might not yet exist
+      ENDTRY.
 
       ls_file-filename = zcl_abapgit_data_utils=>build_filename( ls_config ).
-      ls_file-data = convert_itab_to_json(
-        ir_data         = lr_data
-        iv_skip_initial = ls_config-skip_initial ).
       ls_file-sha1 = zcl_abapgit_hash=>sha1_blob( ls_file-data ).
       APPEND ls_file TO rt_files.
     ENDLOOP.
