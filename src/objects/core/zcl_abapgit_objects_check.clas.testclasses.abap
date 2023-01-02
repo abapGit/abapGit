@@ -18,7 +18,9 @@ CLASS ltcl_warning_overwrite_find DEFINITION FINAL FOR TESTING
       warning_overwrite_find_04 FOR TESTING RAISING cx_static_check,
       warning_overwrite_find_05 FOR TESTING RAISING cx_static_check,
       warning_overwrite_find_06 FOR TESTING RAISING cx_static_check,
-      check_multiple_files FOR TESTING RAISING cx_static_check,
+      check_multiple_files_01 FOR TESTING RAISING cx_static_check,
+      check_multiple_files_02 FOR TESTING RAISING cx_static_check,
+      check_multiple_files_03 FOR TESTING RAISING cx_static_check,
 
       given_result
         IMPORTING
@@ -175,7 +177,7 @@ CLASS ltcl_warning_overwrite_find IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD check_multiple_files.
+  METHOD check_multiple_files_01.
 
     " same filename but different packages (paths)
     given_result( |CLAS;ZAG_UNIT_TEST;;/src/;zag_unit_test.clas.abap;;;A;;| ).
@@ -185,6 +187,34 @@ CLASS ltcl_warning_overwrite_find IMPLEMENTATION.
         mo_objects->check_multiple_files( mt_result ).
         cl_abap_unit_assert=>fail( ).
       CATCH zcx_abapgit_exception ##NO_HANDLER.
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD check_multiple_files_02.
+
+    " same filename but change of package and object (local add + delete)
+    given_result( |CLAS;ZAG_UNIT_TEST;;/src/;zag_unit_test.clas.abap;;;A;;| ).
+    given_result( |CLAS;ZAG_UNIT_TEST;;/src/sub;zag_unit_test.clas.abap;;;D;;| ).
+
+    TRY.
+        mo_objects->check_multiple_files( mt_result ).
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
+        cl_abap_unit_assert=>fail( ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD check_multiple_files_03.
+
+    " same filename but change of package and object (remote add + delete)
+    given_result( |CLAS;ZAG_UNIT_TEST;;/src/;zag_unit_test.clas.abap;;;;A;| ).
+    given_result( |CLAS;ZAG_UNIT_TEST;;/src/sub;zag_unit_test.clas.abap;;;;D;| ).
+
+    TRY.
+        mo_objects->check_multiple_files( mt_result ).
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
+        cl_abap_unit_assert=>fail( ).
     ENDTRY.
 
   ENDMETHOD.
