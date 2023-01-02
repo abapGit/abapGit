@@ -96,7 +96,7 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
       lv_lstate   TYPE c LENGTH 2,
       lv_rstate   TYPE c LENGTH 2,
       lt_res_sort LIKE it_results,
-      ls_file     TYPE zif_abapgit_definitions=>ty_file_signature.
+      ls_result   TYPE LINE OF it_results.
 
     FIELD-SYMBOLS <ls_result> LIKE LINE OF it_results.
 
@@ -106,15 +106,16 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
     " Prevent pulling if there is more than one file with the same name
     LOOP AT lt_res_sort ASSIGNING <ls_result>
       WHERE obj_type <> 'DEVC' AND packmove = abap_false AND filename IS NOT INITIAL.
-      CONCATENATE <ls_result>-lstate ls_file-lstate INTO lv_lstate RESPECTING BLANKS.
-      CONCATENATE <ls_result>-rstate ls_file-rstate INTO lv_rstate RESPECTING BLANKS.
-      IF <ls_result>-filename = ls_file-filename AND
+      " Changing package and object at the same time is ok (state: Add + Delete)
+      CONCATENATE <ls_result>-lstate ls_result-lstate INTO lv_lstate RESPECTING BLANKS.
+      CONCATENATE <ls_result>-rstate ls_result-rstate INTO lv_rstate RESPECTING BLANKS.
+      IF <ls_result>-filename = ls_result-filename AND
         lv_lstate <> 'AD' AND lv_lstate <> 'DA' AND lv_rstate <> 'AD' AND lv_rstate <> 'DA'.
         lv_msg = |Pull not possible since there are multiple files with same filename, { <ls_result>-filename }.|
           && | Keep one of the files and delete the other in the repository.|.
         zcx_abapgit_exception=>raise( lv_msg ).
       ENDIF.
-      MOVE-CORRESPONDING <ls_result> TO ls_file.
+      MOVE-CORRESPONDING <ls_result> TO ls_result.
     ENDLOOP.
 
   ENDMETHOD.
