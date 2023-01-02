@@ -79,7 +79,6 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
           IF sy-subrc <> 0.
             zcx_abapgit_exception=>raise( |Table { iv_name } not found for data serialization| ).
           ENDIF.
-          lt_fields = lo_data->get_ddic_field_list( ).
 
           APPEND INITIAL LINE TO lt_keys ASSIGNING <ls_key>.
           <ls_key>-access_kind = cl_abap_tabledescr=>tablekind_sorted.
