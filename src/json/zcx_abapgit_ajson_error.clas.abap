@@ -43,11 +43,14 @@ public section.
     importing
       !IV_MSG type STRING
       !IV_LOCATION type STRING optional
+      !IS_NODE type ANY optional
     raising
       zcx_abapgit_ajson_error .
-  methods set_location
+  methods SET_LOCATION
     importing
-      iv_location type string.
+      !IV_LOCATION type STRING optional
+      !IS_NODE type ANY optional
+    preferred parameter IV_LOCATION .
 protected section.
 private section.
   types:
@@ -64,7 +67,7 @@ ENDCLASS.
 CLASS zcx_abapgit_ajson_error IMPLEMENTATION.
 
 
-method CONSTRUCTOR.
+  method CONSTRUCTOR.
 CALL METHOD SUPER->CONSTRUCTOR
 EXPORTING
 PREVIOUS = PREVIOUS
@@ -82,51 +85,53 @@ if textid is initial.
 else.
   IF_T100_MESSAGE~T100KEY = TEXTID.
 endif.
-endmethod.
+  endmethod.
 
 
 method raise.
 
-  data ls_msg type ty_message_parts.
-  data lv_tmp type string.
+  data lx type ref to zcx_abapgit_ajson_error.
 
-  if iv_location is initial.
-    lv_tmp = iv_msg.
-  else.
-    lv_tmp = iv_msg && | @{ iv_location }|.
-  endif.
-  ls_msg = lv_tmp.
-
-  raise exception type zcx_abapgit_ajson_error
-    exporting
-      textid   = zcx_ajson_error
-      message  = iv_msg
-      location = iv_location
-      a1       = ls_msg-a1
-      a2       = ls_msg-a2
-      a3       = ls_msg-a3
-      a4       = ls_msg-a4.
+  create object lx exporting message = iv_msg.
+  lx->set_location(
+    iv_location = iv_location
+    is_node     = is_node ).
+  raise exception lx.
 
 endmethod.
+
 
 method set_location.
 
   data ls_msg type ty_message_parts.
+  data lv_location type string.
   data lv_tmp type string.
+  field-symbols <path> type string.
+  field-symbols <name> type string.
 
-  if iv_location is initial.
-    lv_tmp = message.
-  else.
-    lv_tmp = message && | @{ iv_location }|.
+  if iv_location is not initial.
+    lv_location = iv_location.
+  elseif is_node is not initial.
+    assign component 'PATH' of structure is_node to <path>.
+    assign component 'NAME' of structure is_node to <name>.
+    if <path> is assigned and <name> is assigned.
+      lv_location = <path> && <name>.
+    endif.
   endif.
+
+  if lv_location is not initial.
+    lv_tmp = message && | @{ lv_location }|.
+  else.
+    lv_tmp = message.
+  endif.
+
   ls_msg = lv_tmp.
 
-  location = iv_location.
+  location = lv_location.
   a1       = ls_msg-a1.
   a2       = ls_msg-a2.
   a3       = ls_msg-a3.
   a4       = ls_msg-a4.
 
 endmethod.
-
 ENDCLASS.

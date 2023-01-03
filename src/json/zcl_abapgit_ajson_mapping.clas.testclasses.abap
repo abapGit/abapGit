@@ -1,4 +1,4 @@
-CLASS ltcl_camel_case DEFINITION FINAL FOR TESTING
+CLASS ltcl_test_mappers DEFINITION FINAL FOR TESTING
   DURATION SHORT
   RISK LEVEL HARMLESS.
 
@@ -11,10 +11,21 @@ CLASS ltcl_camel_case DEFINITION FINAL FOR TESTING
       to_json_nested_table FOR TESTING RAISING zcx_abapgit_ajson_error,
       to_json_first_lower FOR TESTING RAISING zcx_abapgit_ajson_error.
 
+    METHODS:
+      to_snake FOR TESTING RAISING zcx_abapgit_ajson_error,
+      to_camel FOR TESTING RAISING zcx_abapgit_ajson_error,
+      to_camel_1st_upper FOR TESTING RAISING zcx_abapgit_ajson_error,
+      rename_by_attr FOR TESTING RAISING zcx_abapgit_ajson_error,
+      rename_by_path FOR TESTING RAISING zcx_abapgit_ajson_error,
+      rename_by_pattern FOR TESTING RAISING zcx_abapgit_ajson_error,
+      compound_mapper FOR TESTING RAISING zcx_abapgit_ajson_error,
+      test_to_upper FOR TESTING RAISING zcx_abapgit_ajson_error,
+      test_to_lower FOR TESTING RAISING zcx_abapgit_ajson_error.
+
 ENDCLASS.
 
 
-CLASS ltcl_camel_case IMPLEMENTATION.
+CLASS ltcl_test_mappers IMPLEMENTATION.
 
 
   METHOD from_json_to_json.
@@ -174,6 +185,165 @@ CLASS ltcl_camel_case IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD test_to_upper.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_ajson=>create_from(
+        ii_source_json = zcl_abapgit_ajson=>parse( '{"a":1,"b":{"c":2}}' )
+        ii_mapper      = zcl_abapgit_ajson_mapping=>create_upper_case( ) )->stringify( )
+      exp = '{"A":1,"B":{"C":2}}' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_ajson=>parse( '{"a":1,"b":{"c":2}}'
+        )->map( zcl_abapgit_ajson_mapping=>create_upper_case( )
+        )->stringify( )
+      exp = '{"A":1,"B":{"C":2}}' ).
+
+  ENDMETHOD.
+
+  METHOD test_to_lower.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_ajson=>create_from(
+        ii_source_json = zcl_abapgit_ajson=>parse( '{"A":1,"B":{"C":2}}' )
+        ii_mapper      = zcl_abapgit_ajson_mapping=>create_lower_case( ) )->stringify( )
+      exp = '{"a":1,"b":{"c":2}}' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_ajson=>parse( '{"A":1,"B":{"C":2}}'
+        )->map( zcl_abapgit_ajson_mapping=>create_lower_case( )
+        )->stringify( )
+      exp = '{"a":1,"b":{"c":2}}' ).
+
+  ENDMETHOD.
+
+  METHOD rename_by_attr.
+
+    DATA lt_map TYPE zif_abapgit_ajson_mapping=>tty_rename_map.
+    FIELD-SYMBOLS <i> LIKE LINE OF lt_map.
+
+    APPEND INITIAL LINE TO lt_map ASSIGNING <i>.
+    <i>-from = 'a'.
+    <i>-to   = 'x'.
+    APPEND INITIAL LINE TO lt_map ASSIGNING <i>.
+    <i>-from = 'c'.
+    <i>-to   = 'y'.
+    APPEND INITIAL LINE TO lt_map ASSIGNING <i>.
+    <i>-from = 'd'.
+    <i>-to   = 'z'.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_ajson=>create_from(
+        ii_source_json = zcl_abapgit_ajson=>parse( '{"a":1,"b":{"c":2},"d":{"e":3}}' )
+        ii_mapper      = zcl_abapgit_ajson_mapping=>create_rename( lt_map
+        ) )->stringify( )
+      exp = '{"b":{"y":2},"x":1,"z":{"e":3}}' ).
+
+  ENDMETHOD.
+
+  METHOD rename_by_path.
+
+    DATA lt_map TYPE zif_abapgit_ajson_mapping=>tty_rename_map.
+    FIELD-SYMBOLS <i> LIKE LINE OF lt_map.
+
+    APPEND INITIAL LINE TO lt_map ASSIGNING <i>.
+    <i>-from = '/b/a'.
+    <i>-to   = 'x'.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_ajson=>create_from(
+        ii_source_json = zcl_abapgit_ajson=>parse( '{"a":1,"b":{"a":2},"c":{"a":3}}' )
+        ii_mapper      = zcl_abapgit_ajson_mapping=>create_rename(
+          it_rename_map = lt_map
+          iv_rename_by  = zcl_abapgit_ajson_mapping=>rename_by-full_path
+        ) )->stringify( )
+      exp = '{"a":1,"b":{"x":2},"c":{"a":3}}' ).
+
+  ENDMETHOD.
+
+  METHOD rename_by_pattern.
+
+    DATA lt_map TYPE zif_abapgit_ajson_mapping=>tty_rename_map.
+    FIELD-SYMBOLS <i> LIKE LINE OF lt_map.
+
+    APPEND INITIAL LINE TO lt_map ASSIGNING <i>.
+    <i>-from = '/*/this*'.
+    <i>-to   = 'x'.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_ajson=>create_from(
+        ii_source_json = zcl_abapgit_ajson=>parse( '{"andthisnot":1,"b":{"thisone":2},"c":{"a":3}}' )
+        ii_mapper      = zcl_abapgit_ajson_mapping=>create_rename(
+          it_rename_map = lt_map
+          iv_rename_by  = zcl_abapgit_ajson_mapping=>rename_by-pattern
+        ) )->stringify( )
+      exp = '{"andthisnot":1,"b":{"x":2},"c":{"a":3}}' ).
+
+  ENDMETHOD.
+
+  METHOD compound_mapper.
+
+    DATA lt_map TYPE zif_abapgit_ajson_mapping=>tty_rename_map.
+    FIELD-SYMBOLS <i> LIKE LINE OF lt_map.
+
+    APPEND INITIAL LINE TO lt_map ASSIGNING <i>.
+    <i>-from = '/b/a'.
+    <i>-to   = 'x'.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_ajson=>create_from(
+        ii_source_json = zcl_abapgit_ajson=>parse( '{"a":1,"b":{"a":2},"c":{"a":3}}' )
+        ii_mapper      = zcl_abapgit_ajson_mapping=>create_compound_mapper(
+          ii_mapper1 = zcl_abapgit_ajson_mapping=>create_rename(
+            it_rename_map = lt_map
+            iv_rename_by  = zcl_abapgit_ajson_mapping=>rename_by-full_path )
+          ii_mapper2 = zcl_abapgit_ajson_mapping=>create_upper_case( ) )
+        )->stringify( )
+      exp = '{"A":1,"B":{"X":2},"C":{"A":3}}' ).
+
+  ENDMETHOD.
+
+  METHOD to_snake.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_ajson=>create_from(
+        ii_source_json = zcl_abapgit_ajson=>parse( '{"aB":1,"BbC":2,"cD":{"xY":3},"ZZ":4}' )
+        ii_mapper      = zcl_abapgit_ajson_mapping=>create_to_snake_case( )
+        )->stringify( )
+      exp = '{"a_b":1,"bb_c":2,"c_d":{"x_y":3},"zz":4}' ).
+
+  ENDMETHOD.
+
+  METHOD to_camel.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_ajson=>create_from(
+        ii_source_json = zcl_abapgit_ajson=>parse( '{"a_b":1,"bb_c":2,"c_d":{"x_y":3},"zz":4}' )
+        ii_mapper      = zcl_abapgit_ajson_mapping=>create_to_camel_case( )
+        )->stringify( )
+      exp = '{"aB":1,"bbC":2,"cD":{"xY":3},"zz":4}' ).
+
+    " Forced underscore
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_ajson=>create_from(
+        ii_source_json = zcl_abapgit_ajson=>parse( '{"a__b":1}' )
+        ii_mapper      = zcl_abapgit_ajson_mapping=>create_to_camel_case( )
+        )->stringify( )
+      exp = '{"a_b":1}' ).
+
+  ENDMETHOD.
+
+  METHOD to_camel_1st_upper.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_ajson=>create_from(
+        ii_source_json = zcl_abapgit_ajson=>parse( '{"aj_bc":1,"bb_c":2,"c_d":{"xq_yq":3},"zz":4}' )
+        ii_mapper      = zcl_abapgit_ajson_mapping=>create_to_camel_case( iv_first_json_upper = abap_true )
+        )->stringify( )
+      exp = '{"AjBc":1,"BbC":2,"CD":{"XqYq":3},"Zz":4}' ).
+
+  ENDMETHOD.
 
 ENDCLASS.
 
