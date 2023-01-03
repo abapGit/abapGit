@@ -164,7 +164,9 @@
     "cyclic_oo": false,
     "fully_type_constants": true,
     "keep_single_parameter_on_one_line": true,
-    "prefer_returning_to_exporting": true,
+    "prefer_returning_to_exporting": {
+      "exclude": ["/json/"]
+    },
     "selection_screen_naming": true,
     "sicf_consistency": true,
     "sql_escape_host_variables": true,
@@ -291,7 +293,7 @@
     },
     "line_length": {
       "length": 120,
-      "exclude": ["zcl_abapgit_object_pdts.clas.testclasses.abap"]
+      "exclude": ["zcl_abapgit_object_pdts.clas.testclasses.abap", "/json/"]
     },
     "line_only_punc": {
       "ignoreExceptions": true
