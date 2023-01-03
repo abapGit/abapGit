@@ -8,6 +8,7 @@ class ltcl_error definition
 
     methods raise for testing.
     methods raise_w_location for testing.
+    methods raise_w_node for testing.
     methods set_location for testing.
 
 endclass.
@@ -45,6 +46,26 @@ class ltcl_error implementation.
     catch zcx_abapgit_ajson_error into lx.
       cl_abap_unit_assert=>assert_equals(
         exp = 'a @b'
+        act = lx->get_text( ) ).
+    endtry.
+
+  endmethod.
+
+  method raise_w_node.
+
+    data lx type ref to zcx_abapgit_ajson_error.
+    data ls_node type zif_abapgit_ajson=>ty_node.
+
+    ls_node-path = '/x/'.
+    ls_node-name = 'y'.
+
+    try.
+      zcx_abapgit_ajson_error=>raise( iv_msg = 'a'
+                                      is_node = ls_node ).
+      cl_abap_unit_assert=>fail( ).
+    catch zcx_abapgit_ajson_error into lx.
+      cl_abap_unit_assert=>assert_equals(
+        exp = 'a @/x/y'
         act = lx->get_text( ) ).
     endtry.
 

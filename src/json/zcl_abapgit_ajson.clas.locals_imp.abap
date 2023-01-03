@@ -1073,8 +1073,7 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
         is_prefix          TYPE zif_abapgit_ajson=>ty_path_name OPTIONAL
         iv_array_index     TYPE i DEFAULT 0
         ii_custom_mapping  TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL
-        iv_keep_item_order TYPE abap_bool DEFAULT abap_false
-        iv_format_datetime TYPE abap_bool DEFAULT abap_false
+        is_opts            TYPE zif_abapgit_ajson=>ty_opts OPTIONAL
         iv_item_order      TYPE i DEFAULT 0
       RETURNING
         VALUE(rt_nodes)   TYPE zif_abapgit_ajson=>ty_nodes_tt
@@ -1088,8 +1087,7 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
         is_prefix          TYPE zif_abapgit_ajson=>ty_path_name OPTIONAL
         iv_array_index     TYPE i DEFAULT 0
         ii_custom_mapping  TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL
-        iv_keep_item_order TYPE abap_bool DEFAULT abap_false
-        iv_format_datetime TYPE abap_bool DEFAULT abap_false
+        is_opts            TYPE zif_abapgit_ajson=>ty_opts OPTIONAL
         iv_item_order      TYPE i DEFAULT 0
       RETURNING
         VALUE(rt_nodes)   TYPE zif_abapgit_ajson=>ty_nodes_tt
@@ -1226,8 +1224,8 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
 
     CREATE OBJECT lo_converter.
     lo_converter->mi_custom_mapping  = ii_custom_mapping.
-    lo_converter->mv_keep_item_order = iv_keep_item_order.
-    lo_converter->mv_format_datetime = iv_format_datetime.
+    lo_converter->mv_keep_item_order = is_opts-keep_item_order.
+    lo_converter->mv_format_datetime = is_opts-format_datetime.
 
     lo_converter->convert_any(
       EXPORTING
@@ -1623,8 +1621,8 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
 
     CREATE OBJECT lo_converter.
     lo_converter->mi_custom_mapping  = ii_custom_mapping.
-    lo_converter->mv_keep_item_order = iv_keep_item_order.
-    lo_converter->mv_format_datetime = iv_format_datetime.
+    lo_converter->mv_keep_item_order = is_opts-keep_item_order.
+    lo_converter->mv_format_datetime = is_opts-format_datetime.
 
     lo_converter->insert_value_with_type(
       EXPORTING
@@ -1690,19 +1688,34 @@ CLASS lcl_abap_to_json IMPLEMENTATION.
 ENDCLASS.
 
 **********************************************************************
+* MUTATOR INTERFACE
+**********************************************************************
+
+INTERFACE lif_mutator_runner.
+  METHODS run
+    IMPORTING
+      it_source_tree TYPE zif_abapgit_ajson=>ty_nodes_ts
+    EXPORTING
+      et_dest_tree TYPE zif_abapgit_ajson=>ty_nodes_ts
+    RAISING
+      zcx_abapgit_ajson_error.
+ENDINTERFACE.
+
+**********************************************************************
 * FILTER RUNNER
 **********************************************************************
 
 CLASS lcl_filter_runner DEFINITION FINAL.
   PUBLIC SECTION.
-    METHODS run
+    INTERFACES lif_mutator_runner.
+    CLASS-METHODS new
       IMPORTING
         ii_filter TYPE REF TO zif_abapgit_ajson_filter
-        it_source_tree TYPE zif_abapgit_ajson=>ty_nodes_ts
-      CHANGING
-        ct_dest_tree TYPE zif_abapgit_ajson=>ty_nodes_ts
-      RAISING
-        zcx_abapgit_ajson_error.
+      RETURNING
+        VALUE(ro_instance) TYPE REF TO lcl_filter_runner.
+    METHODS constructor
+      IMPORTING
+        ii_filter TYPE REF TO zif_abapgit_ajson_filter.
 
   PRIVATE SECTION.
     DATA mi_filter TYPE REF TO zif_abapgit_ajson_filter.
@@ -1721,14 +1734,20 @@ ENDCLASS.
 
 CLASS lcl_filter_runner IMPLEMENTATION.
 
-  METHOD run.
+  METHOD new.
+    CREATE OBJECT ro_instance EXPORTING ii_filter = ii_filter.
+  ENDMETHOD.
 
+  METHOD constructor.
     ASSERT ii_filter IS BOUND.
     mi_filter = ii_filter.
-    CLEAR ct_dest_tree.
+  ENDMETHOD.
 
+  METHOD lif_mutator_runner~run.
+
+    CLEAR et_dest_tree.
     GET REFERENCE OF it_source_tree INTO mr_source_tree.
-    GET REFERENCE OF ct_dest_tree INTO mr_dest_tree.
+    GET REFERENCE OF et_dest_tree INTO mr_dest_tree.
 
     walk( iv_path = '' ).
 
@@ -1783,6 +1802,190 @@ CLASS lcl_filter_runner IMPLEMENTATION.
       ENDIF.
       INSERT ls_node INTO TABLE mr_dest_tree->*.
 
+    ENDLOOP.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+**********************************************************************
+* MAPPER RUNNER
+**********************************************************************
+
+CLASS lcl_mapper_runner DEFINITION FINAL.
+  PUBLIC SECTION.
+    INTERFACES lif_mutator_runner.
+    CLASS-METHODS new
+      IMPORTING
+        ii_mapper TYPE REF TO zif_abapgit_ajson_mapping
+      RETURNING
+        VALUE(ro_instance) TYPE REF TO lcl_mapper_runner.
+    METHODS constructor
+      IMPORTING
+        ii_mapper TYPE REF TO zif_abapgit_ajson_mapping.
+
+  PRIVATE SECTION.
+    DATA mi_mapper TYPE REF TO zif_abapgit_ajson_mapping.
+    DATA mr_source_tree TYPE REF TO zif_abapgit_ajson=>ty_nodes_ts.
+    DATA mr_dest_tree TYPE REF TO zif_abapgit_ajson=>ty_nodes_ts.
+
+    METHODS process_deep_node
+      IMPORTING
+        iv_path         TYPE string
+        iv_renamed_path TYPE string
+        iv_node_type    TYPE zif_abapgit_ajson=>ty_node-type
+      RAISING
+        zcx_abapgit_ajson_error.
+
+ENDCLASS.
+
+CLASS lcl_mapper_runner IMPLEMENTATION.
+
+  METHOD new.
+    CREATE OBJECT ro_instance EXPORTING ii_mapper = ii_mapper.
+  ENDMETHOD.
+
+  METHOD constructor.
+    ASSERT ii_mapper IS BOUND.
+    mi_mapper = ii_mapper.
+  ENDMETHOD.
+
+  METHOD lif_mutator_runner~run.
+
+    FIELD-SYMBOLS <root> LIKE LINE OF it_source_tree.
+
+    READ TABLE it_source_tree WITH KEY path = `` name = `` ASSIGNING <root>.
+    IF sy-subrc <> 0 OR NOT ( <root>-type = zif_abapgit_ajson=>node_type-array OR <root>-type = zif_abapgit_ajson=>node_type-object ).
+      " empty or one-value-only tree
+      et_dest_tree = it_source_tree.
+      RETURN.
+    ENDIF.
+
+    CLEAR et_dest_tree.
+    GET REFERENCE OF it_source_tree INTO mr_source_tree.
+    GET REFERENCE OF et_dest_tree INTO mr_dest_tree.
+    INSERT <root> INTO TABLE et_dest_tree.
+
+    process_deep_node(
+      iv_path         = `/`
+      iv_renamed_path = `/`
+      iv_node_type    = <root>-type ).
+
+  ENDMETHOD.
+
+  METHOD process_deep_node.
+
+
+    FIELD-SYMBOLS <item> LIKE LINE OF mr_source_tree->*.
+    DATA ls_renamed_node LIKE <item>.
+
+    LOOP AT mr_source_tree->* ASSIGNING <item> WHERE path = iv_path.
+      ls_renamed_node = <item>.
+      IF iv_node_type <> zif_abapgit_ajson=>node_type-array.
+        " don't rename array item names -> they are numeric index
+        mi_mapper->rename_node(
+          EXPORTING
+            is_node = <item>
+          CHANGING
+            cv_name = ls_renamed_node-name ).
+        IF ls_renamed_node-name IS INITIAL.
+          zcx_abapgit_ajson_error=>raise(
+            iv_msg  = 'Renamed node name cannot be empty'
+            is_node = <item> ).
+        ENDIF.
+      ENDIF.
+      ls_renamed_node-path = iv_renamed_path.
+
+      INSERT ls_renamed_node INTO TABLE mr_dest_tree->*.
+      IF sy-subrc <> 0. " = 4 ?
+        zcx_abapgit_ajson_error=>raise(
+          iv_msg  = 'Renamed node has a duplicate'
+          is_node = ls_renamed_node ).
+      ENDIF.
+
+      " maybe also catch CX_SY_ITAB_DUPLICATE_KEY but secondary keys are not changed here, so not for now
+
+      IF <item>-type = zif_abapgit_ajson=>node_type-array OR <item>-type = zif_abapgit_ajson=>node_type-object.
+        process_deep_node(
+          iv_path         = iv_path && <item>-name && `/`
+          iv_renamed_path = iv_renamed_path && ls_renamed_node-name && `/`
+          iv_node_type    = <item>-type ).
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+**********************************************************************
+* MUTATOR QUEUE
+**********************************************************************
+
+CLASS lcl_mutator_queue DEFINITION FINAL.
+  PUBLIC SECTION.
+    INTERFACES lif_mutator_runner.
+    CLASS-METHODS new
+      RETURNING
+        VALUE(ro_instance) TYPE REF TO lcl_mutator_queue.
+    METHODS add
+      IMPORTING
+        ii_mutator TYPE REF TO lif_mutator_runner
+      RETURNING
+        VALUE(ro_self) TYPE REF TO lcl_mutator_queue.
+
+  PRIVATE SECTION.
+    DATA mt_queue TYPE STANDARD TABLE OF REF TO lif_mutator_runner.
+
+ENDCLASS.
+
+CLASS lcl_mutator_queue IMPLEMENTATION.
+
+  METHOD add.
+    IF ii_mutator IS BOUND.
+      APPEND ii_mutator TO mt_queue.
+    ENDIF.
+    ro_self = me.
+  ENDMETHOD.
+
+  METHOD new.
+    CREATE OBJECT ro_instance.
+  ENDMETHOD.
+
+  METHOD lif_mutator_runner~run.
+
+    DATA li_mutator TYPE REF TO lif_mutator_runner.
+    DATA lv_qsize TYPE i.
+    FIELD-SYMBOLS <from> LIKE it_source_tree.
+    FIELD-SYMBOLS <to> LIKE it_source_tree.
+    DATA lr_buf TYPE REF TO zif_abapgit_ajson=>ty_nodes_ts.
+
+    lv_qsize = lines( mt_queue ).
+
+    IF lv_qsize = 0.
+      et_dest_tree = it_source_tree.
+      RETURN.
+    ENDIF.
+
+    LOOP AT mt_queue INTO li_mutator.
+      IF sy-tabix = 1.
+        ASSIGN it_source_tree TO <from>.
+      ELSE.
+        ASSIGN lr_buf->* TO <from>.
+      ENDIF.
+
+      IF sy-tabix = lv_qsize.
+        ASSIGN et_dest_tree TO <to>.
+      ELSE.
+        CREATE DATA lr_buf.
+        ASSIGN lr_buf->* TO <to>.
+      ENDIF.
+
+      li_mutator->run(
+        EXPORTING
+          it_source_tree = <from>
+        IMPORTING
+          et_dest_tree = <to> ).
     ENDLOOP.
 
   ENDMETHOD.
