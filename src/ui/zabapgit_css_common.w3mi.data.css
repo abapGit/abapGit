@@ -755,6 +755,8 @@ div.tutorial h2 { font-size: 14pt;}
   z-index: 1;
   padding: 0;
   box-shadow: 1px 1px 3px 0px #bbb;
+  max-height: 700px;
+  overflow: auto;
 }
 
 .nav-container ul ul li {

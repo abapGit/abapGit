@@ -93,7 +93,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SYNTAX_CSS IMPLEMENTATION.
+CLASS zcl_abapgit_syntax_css IMPLEMENTATION.
 
 
   METHOD class_constructor.
@@ -107,8 +107,10 @@ CLASS ZCL_ABAPGIT_SYNTAX_CSS IMPLEMENTATION.
 
     super->constructor( ).
 
-    " Initialize instances of regular expression
+    " Reset indicator for multi-line comments
+    CLEAR gv_comment.
 
+    " Initialize instances of regular expression
     add_rule( iv_regex = c_regex-keyword
               iv_token = c_token-keyword
               iv_style = c_css-keyword ).
