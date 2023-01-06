@@ -13,7 +13,8 @@ CLASS zcl_abapgit_objects_bridge DEFINITION PUBLIC FINAL CREATE PUBLIC INHERITIN
   PRIVATE SECTION.
     DATA: mo_plugin TYPE REF TO object.
 
-    " Metadata with late_deser to stay compatible with old bridge
+    " Metadata flags (late_deser, delete_tadir, and ddic) are not required by abapGit anymore
+    " We keep them to stay compatible with old bridge implementation
     TYPES:
       BEGIN OF ty_metadata,
         class        TYPE string,

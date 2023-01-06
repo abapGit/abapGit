@@ -75,11 +75,7 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA:
-      lv_object       TYPE string,
-      lv_object_class TYPE string,
-      lv_transp_pkg   TYPE abap_bool,
-      lv_dummy        TYPE string.
+    DATA lv_dummy TYPE string.
 
     CONSTANTS: lc_actvt TYPE c LENGTH 2 VALUE `06`.
 
@@ -108,38 +104,7 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |Error when deleting OAuth2 Profile { lv_profile_key }.| ).
     ENDTRY.
 
-
-    "collect change in transport
-    lv_transp_pkg = zcl_abapgit_factory=>get_sap_package( iv_package )->are_changes_recorded_in_tr_req( ).
-    IF lv_transp_pkg = abap_true.
-
-      lv_object_class = ms_item-obj_type.
-      lv_object       = ms_item-obj_name.
-
-      CALL FUNCTION 'RS_CORR_INSERT'
-        EXPORTING
-          object              = lv_object
-          object_class        = lv_object_class
-          master_language     = mv_language
-          global_lock         = abap_true
-          mode                = 'D'
-          suppress_dialog     = abap_true
-        EXCEPTIONS
-          cancelled           = 1
-          permission_failure  = 2
-          unknown_objectclass = 3
-          OTHERS              = 4.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise_t100(
-            iv_msgid              = sy-msgid
-            iv_msgno              = sy-msgno
-            iv_msgv1              = sy-msgv1
-            iv_msgv2              = sy-msgv2
-            iv_msgv3              = sy-msgv3
-            iv_msgv4              = sy-msgv4 ).
-      ENDIF.
-    ENDIF.
-
+    corr_insert( iv_package ).
 
   ENDMETHOD.
 
@@ -209,7 +174,6 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-    rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.
 
 

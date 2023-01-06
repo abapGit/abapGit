@@ -104,6 +104,7 @@ CLASS zcl_abapgit_object_tobj IMPLEMENTATION.
 
     CALL FUNCTION 'OBJ_GENERATE'
       EXPORTING
+        iv_korrnum            = iv_transport
         iv_objectname         = ls_objh-objectname
         iv_objecttype         = ls_objh-objecttype
         iv_maint_mode         = 'D'
@@ -146,6 +147,7 @@ CLASS zcl_abapgit_object_tobj IMPLEMENTATION.
 
     CALL FUNCTION 'OBJ_GENERATE'
       EXPORTING
+        iv_korrnum            = iv_transport
         iv_objectname         = ls_objh-objectname
         iv_objecttype         = ls_objh-objecttype
         iv_maint_mode         = 'I'
@@ -229,7 +231,6 @@ CLASS zcl_abapgit_object_tobj IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-    rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.
 
 

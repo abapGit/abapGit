@@ -24,6 +24,27 @@ ENDCLASS.
 CLASS zcl_abapgit_object_iwpr IMPLEMENTATION.
 
 
+  METHOD get_field_rules.
+    ro_result = zcl_abapgit_field_rules=>create( ).
+    ro_result->add(
+      iv_table     = '/IWBEP/I_SBD_GA'
+      iv_field     = 'CREATION_USER_ID'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
+    )->add(
+      iv_table     = '/IWBEP/I_SBD_GA'
+      iv_field     = 'CREATION_TIME'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp
+    )->add(
+      iv_table     = '/IWBEP/I_SBD_GA'
+      iv_field     = 'LAST_CHG_USER_ID'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
+    )->add(
+      iv_table     = '/IWBEP/I_SBD_GA'
+      iv_field     = 'LAST_CHG_TIME'
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp ).
+  ENDMETHOD.
+
+
   METHOD get_generic.
 
     CREATE OBJECT ro_generic
@@ -74,10 +95,7 @@ CLASS zcl_abapgit_object_iwpr IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_metadata.
-
     rs_metadata = get_metadata( ).
-    rs_metadata-delete_tadir = abap_true.
-
   ENDMETHOD.
 
 
@@ -109,25 +127,4 @@ CLASS zcl_abapgit_object_iwpr IMPLEMENTATION.
     get_generic( )->serialize( io_xml ).
 
   ENDMETHOD.
-
-  METHOD get_field_rules.
-    ro_result = zcl_abapgit_field_rules=>create( ).
-    ro_result->add(
-      iv_table     = '/IWBEP/I_SBD_GA'
-      iv_field     = 'CREATION_USER_ID'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
-    )->add(
-      iv_table     = '/IWBEP/I_SBD_GA'
-      iv_field     = 'CREATION_TIME'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp
-    )->add(
-      iv_table     = '/IWBEP/I_SBD_GA'
-      iv_field     = 'LAST_CHG_USER_ID'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
-    )->add(
-      iv_table     = '/IWBEP/I_SBD_GA'
-      iv_field     = 'LAST_CHG_TIME'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp ).
-  ENDMETHOD.
-
 ENDCLASS.
