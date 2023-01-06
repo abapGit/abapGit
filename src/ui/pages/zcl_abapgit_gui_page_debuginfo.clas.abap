@@ -367,7 +367,6 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
       ls_metadata = li_object->get_metadata( ).
 
       rv_html = rv_html && |<td>{ ls_metadata-version }</td>|.
-      rv_html = rv_html && |<td class="center">{ ls_metadata-delete_tadir }</td>|.
 
       lt_steps = li_object->get_deserialize_steps( ).
 

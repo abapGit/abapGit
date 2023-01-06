@@ -84,6 +84,8 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Error deleting CMPT { ms_item-obj_name }| ).
     ENDIF.
 
+    tadir_delete( ).
+
   ENDMETHOD.
 
 
@@ -169,10 +171,7 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_metadata.
-
     rs_metadata = get_metadata( ).
-    rs_metadata-delete_tadir = abap_true.
-
   ENDMETHOD.
 
 

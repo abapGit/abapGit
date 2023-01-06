@@ -147,9 +147,8 @@ INTERFACE zif_abapgit_definitions
     END OF ty_delete_checks .
   TYPES:
     BEGIN OF ty_metadata,
-      class        TYPE string,
-      version      TYPE string,
-      delete_tadir TYPE abap_bool,
+      class   TYPE string,
+      version TYPE string,
     END OF ty_metadata .
   TYPES:
     BEGIN OF ty_repo_file,
