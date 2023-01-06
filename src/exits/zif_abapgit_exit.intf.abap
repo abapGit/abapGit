@@ -117,4 +117,16 @@ INTERFACE zif_abapgit_exit
       iv_transport_type    TYPE zif_abapgit_definitions=>ty_transport_type
     CHANGING
       cv_transport_request TYPE trkorr.
+
+  METHODS validate_before_push
+    IMPORTING
+      !is_comment      TYPE zif_abapgit_definitions=>ty_comment
+      !io_stage        TYPE REF TO zcl_abapgit_stage
+      !it_old_objects  TYPE zif_abapgit_definitions=>ty_objects_tt
+      !iv_parent       TYPE zif_abapgit_definitions=>ty_sha1
+      !iv_url          TYPE string
+      !iv_branch_name  TYPE string
+    RAISING
+      zcx_abapgit_exception .
+
 ENDINTERFACE.

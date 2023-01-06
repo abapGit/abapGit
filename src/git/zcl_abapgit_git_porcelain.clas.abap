@@ -172,15 +172,25 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS create_lightweight_tag
       IMPORTING
-        !is_tag TYPE zif_abapgit_definitions=>ty_git_tag
-        !iv_url TYPE string
+        is_tag TYPE zif_abapgit_definitions=>ty_git_tag
+        iv_url TYPE string
+      RAISING
+        zcx_abapgit_exception .
+    METHODS validate_before_push
+      IMPORTING
+        !is_comment     TYPE zif_abapgit_definitions=>ty_comment
+        !io_stage       TYPE REF TO zcl_abapgit_stage
+        !it_old_objects TYPE zif_abapgit_definitions=>ty_objects_tt
+        !iv_parent      TYPE zif_abapgit_definitions=>ty_sha1
+        !iv_url         TYPE string
+        !iv_branch_name TYPE string
       RAISING
         zcx_abapgit_exception .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
+CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
 
   METHOD build_trees.
@@ -490,6 +500,15 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
                    <ls_updated> LIKE LINE OF rs_result-updated_files,
                    <ls_exp>     LIKE LINE OF lt_expanded.
 
+    zcl_abapgit_exit=>get_instance( )->validate_before_push(
+      EXPORTING
+        is_comment     = is_comment
+        io_stage       = io_stage
+        it_old_objects = it_old_objects
+        iv_parent      = iv_parent
+        iv_url         = iv_url
+        iv_branch_name = iv_branch_name
+    ).
 
     lt_expanded = full_tree( it_objects = it_old_objects
                              iv_parent  = iv_parent ).
@@ -554,9 +573,9 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
 
     APPEND LINES OF it_old_objects TO rs_result-new_objects.
     walk( EXPORTING it_objects = rs_result-new_objects
-                    iv_sha1 = lv_new_tree
-                    iv_path = '/'
-          CHANGING ct_files = rs_result-new_files ).
+                    iv_sha1    = lv_new_tree
+                    iv_path    = '/'
+          CHANGING  ct_files   = rs_result-new_files ).
 
   ENDMETHOD.
 
@@ -744,9 +763,9 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
     LOOP AT lt_nodes ASSIGNING <ls_node> WHERE chmod = zif_abapgit_definitions=>c_chmod-dir.
       CONCATENATE iv_path <ls_node>-name '/' INTO lv_path.
       walk( EXPORTING it_objects = it_objects
-                      iv_sha1 = <ls_node>-sha1
-                      iv_path = lv_path
-            CHANGING ct_files = ct_files ).
+                      iv_sha1    = <ls_node>-sha1
+                      iv_path    = lv_path
+            CHANGING  ct_files   = ct_files ).
     ENDLOOP.
 
   ENDMETHOD.
@@ -793,4 +812,22 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
+
+  METHOD validate_before_push.
+
+    DATA li_exit TYPE REF TO zif_abapgit_exit.
+
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+    li_exit->validate_before_push(
+      EXPORTING
+        is_comment     = is_comment
+        io_stage       = io_stage
+        it_old_objects = it_old_objects
+        iv_parent      = iv_parent
+        iv_url         = iv_url
+        iv_branch_name = iv_branch_name
+    ).
+
+  ENDMETHOD.
+
 ENDCLASS.
