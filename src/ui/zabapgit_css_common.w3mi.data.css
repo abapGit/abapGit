@@ -57,6 +57,7 @@ span.separator {
 }
 
 /* MODIFIERS */
+
 .emphasis     { font-weight: bold !important; }
 .crossout     { text-decoration: line-through !important; }
 .right        { text-align:right; }
@@ -114,6 +115,7 @@ span.boxed i.icon {
 }
 
 /* PANELS */
+
 div.panel {
   border-radius: 3px;
   padding: 0.5em 0.5em;
@@ -130,6 +132,7 @@ a.close-btn {
 }
 
 /* STRUCTURE DIVS, HEADER & FOOTER */
+
 div#header {
   padding:          0.5em 0.5em;
   border-bottom:    3px double;
@@ -187,6 +190,7 @@ div.log > span   { display:block; }
 div.log .icon { padding-right: 6px; }
 
 /* REPOSITORY */
+
 div.repo {
   padding: 0.5em 1em 0.5em 1em;
   position: relative;
@@ -221,6 +225,7 @@ div.repo {
 }
 
 /* ABAPGIT OBJECTS */
+
 span.branch,
 span.user-box,
 span.package-box,
@@ -233,6 +238,7 @@ span.transport-box {
 }
 
 /* MISC AND REFACTOR */
+
 .hidden-submit {
   border: 0 none;
   height: 0;
@@ -243,8 +249,8 @@ span.transport-box {
   overflow: hidden;
 }
 
-
 /* STATE BLOCK COMMON*/
+
 span.state-block {
   margin-left: 1em;
   font-family: Consolas, "Lucida Console", Courier, monospace;
@@ -261,8 +267,8 @@ span.state-block span {
   border-style: solid;
 }
 
-
 /* REPOSITORY TABLE*/
+
 div.repo_container {
   position: relative;
 }
@@ -342,7 +348,6 @@ table.repo_tab {
   background-image: linear-gradient(rgba(0, 0, 0, 0.075), rgba(0, 0, 0, 0.075));
 }
 
-
 /* STAGE */
 
 th.stage-status { width: 30px; }
@@ -389,6 +394,7 @@ input.stage-filter { width: 18em; }
 .stage_tab tbody tr:last-child td { padding-bottom: 0.5em; }
 
 /* COMMIT */
+
 div.form-container {
   padding: 1em 1em;
 }
@@ -420,6 +426,7 @@ form.aligned-form input[type="text"] { width: 25em; }
 form.aligned-form span.cell { display: table-cell; }
 
 /* SETTINGS STYLES */
+
 div.settings_container {
   padding: 0.5em 0.5em 1em;
   font-size: 10pt;
@@ -434,11 +441,8 @@ table.settings td:first-child {
   padding-right: 1em;
 }
 
-table.settings-package-requirements {
-  /*max-width: 300px;*/
-}
-
 /* DIFF */
+
 div.diff {
   padding: 0.7em
 }
@@ -479,6 +483,7 @@ div.diff_head span.state-block span {
 }
 
 /* DIFF TABLE */
+
 table.diff_tab {
   font-family: Consolas, Courier, monospace;
   font-size: 10pt;
@@ -598,6 +603,7 @@ th.diff_others *::selection {
 }
 
 /* DEBUG INFO STYLES */
+
 div.debug_container {
   padding: 0.5em;
   font-size: 10pt;
@@ -609,6 +615,7 @@ div.debug_container p {
 }
 
 /* DB ENTRIES */
+
 div.db_list {
   padding: 0.5em;
   overflow-x: auto;
@@ -660,8 +667,8 @@ li.action_link:not(enabled){
   display: none;
 }
 
-
 /* DB ENTRY DISPLAY */
+
 div.db_entry {
   padding: 0.5em;
 }
@@ -707,9 +714,9 @@ div.tutorial h1 { font-size: 18pt; }
 div.tutorial h2 { font-size: 14pt;}
 
 /* MENU */
+
 /* Special credits to example at https://codepen.io/philhoyt/pen/ujHzd */
-/* container div, aligned left,
-   but with .float-right modifier alignes right */
+/* container div, aligned left, but with .float-right modifier alignes right */
 
 .nav-container ul {
   list-style: none;
@@ -730,7 +737,11 @@ div.tutorial h2 { font-size: 14pt;}
 }
 
 /* clearfix https://css-tricks.com/snippets/css/clear-fix/ */
-.nav-container:after { clear: both; display: block; content: ""; }
+.nav-container:after {
+  clear: both;
+  display: block;
+  content: "";
+}
 
 /* submenues align to left or right border of the active item
    depending on .float-right modifier */
@@ -828,7 +839,7 @@ div.tutorial h2 { font-size: 14pt;}
 }
 .nav-container ul ul li.separator:first-child { border-top: none; }
 
-/* News Announcement */
+/* NEWS ANNOUNCEMENT */
 
 div.info-panel {
   position: absolute;
@@ -899,7 +910,7 @@ div.info-panel .version-marker {
 div.info-panel .update { border:  1px solid; }
 div.info-panel div.info-list td { padding-right: 1em }
 
-/* Error message Panel */
+/* ERROR MESSAGE PANEL */
 
 div.message-panel {
   z-index: 99;
@@ -943,14 +954,13 @@ div.message-panel:hover .message-panel-commands {
   display: block;
 }
 
-/* Tooltip text */
+/* TOOLTIP TEXT */
+
 .link-hint {
     line-height: 1em;
     text-align: center;
     padding: 5px 15px;
     border-radius: 4px;
-
-    /* Position the tooltip text */
     position: absolute;
     z-index: 1;
     margin-top: -30px;
@@ -983,6 +993,7 @@ div.message-panel:hover .message-panel-commands {
 }
 
 /* HOTKEYS */
+
 ul.hotkeys {
   list-style-type: none;
   padding: 0;
@@ -1025,14 +1036,12 @@ table.commit tr .title {
 /* Repo overview */
 .repo-overview {
   padding: 0.5em 0.7em;
-  /*font-size: 90%;*/
 }
 .repo-overview table {
   font-size: 90%;
 }
 .repo-overview-toolbar {
   padding: 1em 1em;
-  /*margin-top: -0.5em;*/
 }
 .repo-overview-toolbar label {
   margin-right: 0.5em;
@@ -1070,7 +1079,8 @@ table.commit tr .title {
   max-width: 18ch;
 }
 
-/* Repo labels */
+/* REPO LABELS */
+
 .repo-label-catalog {
   padding: 1em 1em;
   margin-top: -1em;
@@ -1106,6 +1116,7 @@ table ul.repo-labels li {
 }
 
 /* LABEL COLORS */
+
 .rl-white {
   color: hsl(0, 0%, 30%);
   background-color: hsl(0, 0%, 100%);
@@ -1213,6 +1224,7 @@ table ul.repo-labels li {
 }
 
 /* FORM FIELD HELP TOOLTIP */
+
 .form-field-help-tooltip {
   position: relative;
   display: inline-block;
@@ -1244,26 +1256,8 @@ table ul.repo-labels li {
   word-wrap: break-word;
 }
 
-/* Branch Overview Page */
-.gitGraph-scrollWrapper, .gitGraph-Wrapper{
-  overflow-y: hidden;
-}
+/* CODE INSPECTOR */
 
-.gitGraph-scrollWrapper{
-  overflow-x: auto;
-  height: 20px;
-}
-
-.gitGraph-Wrapper{
-  overflow-x: hidden;
-}
-
-.gitGraph-HTopScroller {
-  width:1000px;
-  height: 20px;
-}
-
-/* code inspector */
 .ci-head { padding: 0.5em 1em; }
 .ci-head .package-name span { margin-left: 0.3em; }
 .ci-variant { font-weight: bold; }
@@ -1280,7 +1274,7 @@ table ul.repo-labels li {
 .ci-result li:first-child { margin-top: 0px; }
 .ci-result li > span { display: block; }
 
-/* Floating buttons */
+/* FLOATING BUTTONS */
 
 .floating-button {
   position: fixed;
@@ -1294,7 +1288,7 @@ table ul.repo-labels li {
   cursor: pointer;
 }
 
-/* Command palette */
+/* COMMAND PALETTE */
 
 .cmd-palette {
   position: absolute;
@@ -1504,7 +1498,7 @@ settings_tab tr:first-child td { border-top: 0px; }
   border-right: none;
   border-left: none;
   border-bottom: none;
-  border-radius: 6px; /* doesn't work in IE ? */
+  border-radius: 6px; /* does not work in IE ? */
   padding-bottom: 1em;
 }
 .dialog fieldset:first-child {
@@ -1571,4 +1565,4 @@ settings_tab tr:first-child td { border-top: 0px; }
 .toolbar-light a:first-child {
   padding-left: 0;
   border-left: none;
-}
+}
