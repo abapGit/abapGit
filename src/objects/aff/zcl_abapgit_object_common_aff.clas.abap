@@ -130,36 +130,40 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: lr_intf_aff_obj         TYPE REF TO data,
-          lr_intf_aff_file        TYPE REF TO data,
-          lr_intf_files_container TYPE REF TO data,
-          lr_intf_aff_log         TYPE REF TO data,
-          lr_intf_aff_settings    TYPE REF TO data,
-          lo_handler_factory      TYPE REF TO object,
-          lo_object_handler       TYPE REF TO object,
-          lo_object_aff           TYPE REF TO object,
-          lo_object_json_file     TYPE REF TO object,
-          lo_files_container      TYPE REF TO object,
-          lo_settings             TYPE REF TO object,
-          lo_aff_log              TYPE REF TO object,
-          lo_aff_factory          TYPE REF TO object,
-          lr_messages             TYPE REF TO data,
-          lv_json_as_xstring      TYPE xstring,
-          lx_exception            TYPE REF TO cx_root,
-          lv_file_name            TYPE string,
-          lo_file_name_mapper     TYPE REF TO object,
-          lv_name                 TYPE c LENGTH 120.
+    DATA: lr_intf_aff_obj          TYPE REF TO data,
+          lr_intf_aff_file         TYPE REF TO data,
+          lr_intf_files_container  TYPE REF TO data,
+          lr_intf_aff_log          TYPE REF TO data,
+          lr_intf_aff_settings     TYPE REF TO data,
+          lo_handler_factory       TYPE REF TO object,
+          lo_object_handler        TYPE REF TO object,
+          lo_object_aff            TYPE REF TO object,
+          lo_object_json_file      TYPE REF TO object,
+          lo_object_file           TYPE REF TO object,
+          lo_files_container       TYPE REF TO object,
+          lo_settings              TYPE REF TO object,
+          lo_aff_log               TYPE REF TO object,
+          lo_aff_factory           TYPE REF TO object,
+          lr_messages              TYPE REF TO data,
+          lv_json_as_xstring       TYPE xstring,
+          lx_exception             TYPE REF TO cx_root,
+          lv_file_name             TYPE string,
+          lo_file_name_mapper      TYPE REF TO object,
+          lv_name                  TYPE c LENGTH 120,
+          lv_file_as_xstring       TYPE xstring,
+          ls_additional_extensions TYPE ty_extension_mapper_pairs.
 
-    FIELD-SYMBOLS: <ls_intf_aff_obj>         TYPE any,
-                   <ls_intf_aff_file>        TYPE any,
-                   <ls_intf_files_container> TYPE any,
-                   <ls_intf_aff_log>         TYPE any,
-                   <ls_intf_aff_settings>    TYPE any,
-                   <ls_messages>             TYPE ANY TABLE,
-                   <ls_message>              TYPE any,
-                   <ls_text>                 TYPE any,
-                   <ls_type>                 TYPE any,
-                   <ls_msg>                  TYPE symsg.
+    FIELD-SYMBOLS: <ls_intf_aff_obj>          TYPE any,
+                   <ls_intf_aff_file>         TYPE any,
+                   <ls_intf_files_container>  TYPE any,
+                   <ls_intf_aff_log>          TYPE any,
+                   <ls_intf_aff_settings>     TYPE any,
+                   <ls_messages>              TYPE ANY TABLE,
+                   <ls_message>               TYPE any,
+                   <ls_text>                  TYPE any,
+                   <ls_type>                  TYPE any,
+                   <ls_msg>                   TYPE symsg,
+                   <ls_extension_mapper_pair> LIKE LINE OF ls_additional_extensions.
 
 
     lv_name = ms_item-obj_name.
@@ -188,63 +192,58 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           EXPORTING
             object = <ls_intf_aff_obj>.
 
-          lv_json_as_xstring = zif_abapgit_object~mo_files->read_raw( iv_ext = 'json' ).
+        lv_json_as_xstring = zif_abapgit_object~mo_files->read_raw( iv_ext = 'json' ).
 
-          CALL METHOD ('CL_AFF_FILE_NAME_MAPPER')=>for_json
-            RECEIVING
-              result = lo_file_name_mapper.
+        CALL METHOD ('CL_AFF_FILE_NAME_MAPPER')=>for_json
+          RECEIVING
+            result = lo_file_name_mapper.
 
-          CALL METHOD lo_file_name_mapper->('IF_AFF_FILE_NAME_MAPPER~GET_FILE_NAME_FROM_OBJECT')
+        CALL METHOD lo_file_name_mapper->('IF_AFF_FILE_NAME_MAPPER~GET_FILE_NAME_FROM_OBJECT')
+          EXPORTING
+            object = <ls_intf_aff_obj>
+          RECEIVING
+            result = lv_file_name.
+
+
+        CREATE OBJECT lo_object_json_file TYPE ('CL_AFF_FILE')
+          EXPORTING
+            name    = lv_file_name
+            content = lv_json_as_xstring.
+
+        CREATE DATA lr_intf_aff_file TYPE REF TO ('IF_AFF_FILE').
+        ASSIGN lr_intf_aff_file->* TO <ls_intf_aff_file>.
+        <ls_intf_aff_file> ?= lo_object_json_file.
+
+        CALL METHOD lo_files_container->('ADD_FILE')
+          EXPORTING
+            file = <ls_intf_aff_file>.
+
+        ls_additional_extensions = get_additional_extensions( ).
+
+        LOOP AT ls_additional_extensions ASSIGNING <ls_extension_mapper_pair>.
+
+          lv_file_as_xstring = zif_abapgit_object~mo_files->read_raw( iv_ext = <ls_extension_mapper_pair>-extension ).
+
+          CALL METHOD <ls_extension_mapper_pair>-file_name_mapper->('IF_AFF_FILE_NAME_MAPPER~GET_FILE_NAME_FROM_OBJECT')
             EXPORTING
               object = <ls_intf_aff_obj>
             RECEIVING
               result = lv_file_name.
 
-
-          CREATE OBJECT lo_object_json_file TYPE ('CL_AFF_FILE')
-            EXPORTING
-              name    = lv_file_name
-              content = lv_json_as_xstring.
+          CREATE OBJECT lo_object_file TYPE ('CL_AFF_FILE')
+          EXPORTING
+            name    = lv_file_name
+            content = lv_file_as_xstring.
 
           CREATE DATA lr_intf_aff_file TYPE REF TO ('IF_AFF_FILE').
           ASSIGN lr_intf_aff_file->* TO <ls_intf_aff_file>.
-          <ls_intf_aff_file> ?= lo_object_json_file.
+          <ls_intf_aff_file> ?= lo_object_file.
 
           CALL METHOD lo_files_container->('ADD_FILE')
             EXPORTING
               file = <ls_intf_aff_file>.
 
-          DATA lv_file_as_xstring TYPE xstring.
-          DATA ls_additional_extensions TYPE ty_extension_mapper_pairs.
-          FIELD-SYMBOLS <ls_extension_mapper_pair> LIKE LINE OF ls_additional_extensions.
-          DATA lo_object_file  TYPE REF TO object.
-
-          ls_additional_extensions = get_additional_extensions( ).
-
-          LOOP AT ls_additional_extensions ASSIGNING <ls_extension_mapper_pair>.
-
-            lv_file_as_xstring = zif_abapgit_object~mo_files->read_raw( iv_ext = <ls_extension_mapper_pair>-extension ).
-
-            CALL METHOD <ls_extension_mapper_pair>-file_name_mapper->('IF_AFF_FILE_NAME_MAPPER~GET_FILE_NAME_FROM_OBJECT')
-              EXPORTING
-                object = <ls_intf_aff_obj>
-              RECEIVING
-                result = lv_file_name.
-
-            CREATE OBJECT lo_object_file TYPE ('CL_AFF_FILE')
-            EXPORTING
-              name    = lv_file_name
-              content = lv_file_as_xstring.
-
-            CREATE DATA lr_intf_aff_file TYPE REF TO ('IF_AFF_FILE').
-            ASSIGN lr_intf_aff_file->* TO <ls_intf_aff_file>.
-            <ls_intf_aff_file> ?= lo_object_file.
-
-            CALL METHOD lo_files_container->('ADD_FILE')
-              EXPORTING
-                file = <ls_intf_aff_file>.
-
-          ENDLOOP.
+        ENDLOOP.
 
         CREATE OBJECT lo_settings TYPE ('CL_AFF_SETTINGS_DESERIALIZE')
           EXPORTING
@@ -493,11 +492,46 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           ENDIF.
         ENDLOOP.
 
-          CALL METHOD ('CL_AFF_FILE_NAME_MAPPER')=>for_json
-            RECEIVING
-              result = lo_file_name_mapper.
+        CALL METHOD ('CL_AFF_FILE_NAME_MAPPER')=>for_json
+          RECEIVING
+            result = lo_file_name_mapper.
 
-          CALL METHOD lo_file_name_mapper->('IF_AFF_FILE_NAME_MAPPER~GET_FILE_NAME_FROM_OBJECT')
+        CALL METHOD lo_file_name_mapper->('IF_AFF_FILE_NAME_MAPPER~GET_FILE_NAME_FROM_OBJECT')
+          EXPORTING
+            object = <ls_intf_aff_obj>
+          RECEIVING
+            result = lv_file_name.
+
+        CALL METHOD lo_files_container->('IF_AFF_FILES_CONTAINER~GET_FILE')
+          EXPORTING
+            name   = lv_file_name
+          RECEIVING
+            result = lo_object_json_file.
+
+        " avoid to serialize empty content (object was never activated, exists inactive only).
+        IF is_file_empty( lo_object_json_file ) = abap_true.
+          MESSAGE s821(eu) WITH lv_name INTO lv_dummy.
+          zcx_abapgit_exception=>raise_t100( ).
+        ENDIF.
+
+        CALL METHOD lo_object_json_file->('IF_AFF_FILE~GET_CONTENT')
+          RECEIVING
+            result = lv_json_as_xstring.
+
+        zif_abapgit_object~mo_files->add_raw(
+          iv_ext  = 'json'
+          iv_data = lv_json_as_xstring ).
+
+        DATA ls_additional_extensions TYPE ty_extension_mapper_pairs.
+        FIELD-SYMBOLS <ls_extension_mapper_pair> LIKE LINE OF ls_additional_extensions.
+        DATA lo_object_file  TYPE REF TO object.
+        DATA lv_file_as_xstring TYPE xstring.
+
+        ls_additional_extensions = get_additional_extensions( ).
+
+        LOOP AT ls_additional_extensions ASSIGNING <ls_extension_mapper_pair>.
+
+          CALL METHOD <ls_extension_mapper_pair>-file_name_mapper->('IF_AFF_FILE_NAME_MAPPER~GET_FILE_NAME_FROM_OBJECT')
             EXPORTING
               object = <ls_intf_aff_obj>
             RECEIVING
@@ -507,52 +541,17 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
             EXPORTING
               name   = lv_file_name
             RECEIVING
-              result = lo_object_json_file.
+              result = lo_object_file.
 
-          " avoid to serialize empty content (object was never activated, exists inactive only).
-          IF is_file_empty( lo_object_json_file ) = abap_true.
-            MESSAGE s821(eu) WITH lv_name INTO lv_dummy.
-            zcx_abapgit_exception=>raise_t100( ).
-          ENDIF.
-
-          CALL METHOD lo_object_json_file->('IF_AFF_FILE~GET_CONTENT')
+          CALL METHOD lo_object_file->('IF_AFF_FILE~GET_CONTENT')
             RECEIVING
-              result = lv_json_as_xstring.
+              result = lv_file_as_xstring.
 
           zif_abapgit_object~mo_files->add_raw(
-            iv_ext  = 'json'
-            iv_data = lv_json_as_xstring ).
+            iv_ext  = <ls_extension_mapper_pair>-extension
+            iv_data = lv_file_as_xstring ).
 
-          DATA ls_additional_extensions TYPE ty_extension_mapper_pairs.
-          FIELD-SYMBOLS <ls_extension_mapper_pair> LIKE LINE OF ls_additional_extensions.
-          DATA lo_object_file  TYPE REF TO object.
-          DATA lv_file_as_xstring TYPE xstring.
-
-          ls_additional_extensions = get_additional_extensions( ).
-
-          LOOP AT ls_additional_extensions ASSIGNING <ls_extension_mapper_pair>.
-
-            CALL METHOD <ls_extension_mapper_pair>-file_name_mapper->('IF_AFF_FILE_NAME_MAPPER~GET_FILE_NAME_FROM_OBJECT')
-              EXPORTING
-                object = <ls_intf_aff_obj>
-              RECEIVING
-                result = lv_file_name.
-
-            CALL METHOD lo_files_container->('IF_AFF_FILES_CONTAINER~GET_FILE')
-              EXPORTING
-                name   = lv_file_name
-              RECEIVING
-                result = lo_object_file.
-
-            CALL METHOD lo_object_file->('IF_AFF_FILE~GET_CONTENT')
-              RECEIVING
-                result = lv_file_as_xstring.
-
-            zif_abapgit_object~mo_files->add_raw(
-              iv_ext  = <ls_extension_mapper_pair>-extension
-              iv_data = lv_file_as_xstring ).
-
-          ENDLOOP.
+        ENDLOOP.
 
       CATCH cx_root INTO lx_exception.
         zcx_abapgit_exception=>raise_with_text( lx_exception ).
