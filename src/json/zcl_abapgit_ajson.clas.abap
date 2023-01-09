@@ -675,6 +675,7 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
     DATA lv_last TYPE i.
 
     IF iv_param IS INITIAL.
+      ri_json = me.
       RETURN.
     ENDIF.
 
@@ -683,6 +684,7 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
     CONDENSE lv_val.
 
     IF lv_val IS INITIAL.
+      ri_json = me.
       RETURN. " Hmm ? or empty string ? or null ?
     ENDIF.
 
