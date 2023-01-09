@@ -125,6 +125,8 @@ CLASS zcl_abapgit_object_ucsa IMPLEMENTATION.
         zcx_abapgit_exception=>raise( lv_text ).
     ENDTRY.
 
+    tadir_delete( ).
+
   ENDMETHOD.
 
 
@@ -210,10 +212,7 @@ CLASS zcl_abapgit_object_ucsa IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_metadata.
-
     rs_metadata = get_metadata( ).
-    rs_metadata-delete_tadir = abap_true.
-
   ENDMETHOD.
 
 

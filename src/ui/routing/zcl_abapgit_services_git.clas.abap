@@ -9,11 +9,6 @@ CLASS zcl_abapgit_services_git DEFINITION
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
         zcx_abapgit_exception.
-    CLASS-METHODS reset
-      IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING
-        zcx_abapgit_exception.
     CLASS-METHODS create_branch
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
@@ -192,23 +187,6 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
     lo_repo->refresh( ).
 
     zcl_abapgit_services_repo=>gui_deserialize( lo_repo ).
-
-  ENDMETHOD.
-
-
-  METHOD reset.
-
-    DATA lo_repo TYPE REF TO zcl_abapgit_repo.
-
-    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-
-    IF lo_repo->get_local_settings( )-write_protected = abap_true.
-      zcx_abapgit_exception=>raise( 'Cannot pull. Local code is write-protected in repo settings' ).
-    ENDIF.
-
-    zcl_abapgit_services_repo=>gui_deserialize(
-      io_repo      = lo_repo
-      iv_reset_all = abap_true ).
 
   ENDMETHOD.
 

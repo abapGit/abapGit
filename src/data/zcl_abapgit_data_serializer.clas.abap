@@ -15,9 +15,10 @@ CLASS zcl_abapgit_data_serializer DEFINITION
 
     METHODS convert_itab_to_json
       IMPORTING
-        !ir_data       TYPE REF TO data
+        !ir_data         TYPE REF TO data
+        !iv_skip_initial TYPE abap_bool
       RETURNING
-        VALUE(rv_data) TYPE xstring
+        VALUE(rv_data)   TYPE xstring
       RAISING
         zcx_abapgit_exception .
     METHODS read_database_table
@@ -37,9 +38,9 @@ CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
 
   METHOD convert_itab_to_json.
 
-    DATA lo_ajson TYPE REF TO zcl_abapgit_ajson.
+    DATA lo_ajson  TYPE REF TO zcl_abapgit_ajson.
     DATA lv_string TYPE string.
-    DATA lx_ajson TYPE REF TO zcx_abapgit_ajson_error.
+    DATA lx_ajson  TYPE REF TO zcx_abapgit_ajson_error.
 
     FIELD-SYMBOLS <lg_tab> TYPE ANY TABLE.
 
@@ -51,6 +52,13 @@ CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
         lo_ajson->set(
           iv_path = '/'
           iv_val = <lg_tab> ).
+
+        IF iv_skip_initial = abap_true.
+          lo_ajson = zcl_abapgit_ajson=>create_from(
+            ii_source_json = lo_ajson
+            ii_filter = zcl_abapgit_ajson_filter_lib=>create_empty_filter( ) ).
+        ENDIF.
+
         lv_string = lo_ajson->stringify( 2 ).
       CATCH zcx_abapgit_ajson_error INTO lx_ajson.
         zcx_abapgit_exception=>raise( lx_ajson->get_text( ) ).
@@ -108,12 +116,20 @@ CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
       ASSERT ls_config-type = zif_abapgit_data_config=>c_data_type-tabu. " todo
       ASSERT ls_config-name IS NOT INITIAL.
 
-      lr_data = read_database_table(
-        iv_name  = ls_config-name
-        it_where = ls_config-where ).
+      TRY.
+          lr_data = read_database_table(
+                      iv_name  = ls_config-name
+                      it_where = ls_config-where ).
+
+          ls_file-data = convert_itab_to_json(
+            ir_data         = lr_data
+            iv_skip_initial = ls_config-skip_initial ).
+
+        CATCH zcx_abapgit_exception.
+          " DB table might not yet exist
+      ENDTRY.
 
       ls_file-filename = zcl_abapgit_data_utils=>build_filename( ls_config ).
-      ls_file-data = convert_itab_to_json( lr_data ).
       ls_file-sha1 = zcl_abapgit_hash=>sha1_blob( ls_file-data ).
       APPEND ls_file TO rt_files.
     ENDLOOP.

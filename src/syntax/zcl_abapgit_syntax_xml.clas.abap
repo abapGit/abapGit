@@ -48,8 +48,10 @@ CLASS zcl_abapgit_syntax_xml IMPLEMENTATION.
 
     super->constructor( ).
 
-    " Initialize instances of regular expressions
+    " Reset indicator for multi-line comments
+    CLEAR gv_comment.
 
+    " Initialize instances of regular expressions
     add_rule( iv_regex    = c_regex-xml_tag
               iv_token    = c_token-xml_tag
               iv_style    = c_css-xml_tag

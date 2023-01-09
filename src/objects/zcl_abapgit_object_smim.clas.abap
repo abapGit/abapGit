@@ -148,6 +148,8 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
     TRY.
         get_url_for_io( IMPORTING ev_url  = lv_url ).
       CATCH zcx_abapgit_not_found.
+        " Deleted already (maybe by "folder with children") but record deletion in transport
+        corr_insert( iv_package ).
         RETURN.
     ENDTRY.
 

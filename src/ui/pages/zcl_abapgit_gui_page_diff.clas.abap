@@ -1025,7 +1025,10 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
         " Get line where diff really starts
         READ TABLE lt_diffs ASSIGNING <ls_diff_line> INDEX lv_tabix + 8.
         IF sy-subrc <> 0.
-          ASSIGN <ls_diff_line> TO <ls_diff>.
+          " Occurs only for small files/diffs with less than 8 lines.
+          " Therefore let's use the first line as beacon
+          ASSIGN <ls_diff> TO <ls_diff_line>.
+          ASSERT <ls_diff_line> IS ASSIGNED.
         ENDIF.
         ri_html->add( render_beacon( is_diff_line = <ls_diff_line>
                                      is_diff      = is_diff ) ).
@@ -1036,9 +1039,9 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
         <ls_diff>-new = lo_highlighter->process_line( <ls_diff>-new ).
         <ls_diff>-old = lo_highlighter->process_line( <ls_diff>-old ).
       ELSE.
-        <ls_diff>-new = escape( val = <ls_diff>-new
+        <ls_diff>-new = escape( val    = <ls_diff>-new
                                 format = cl_abap_format=>e_html_attr ).
-        <ls_diff>-old = escape( val = <ls_diff>-old
+        <ls_diff>-old = escape( val    = <ls_diff>-old
                                 format = cl_abap_format=>e_html_attr ).
       ENDIF.
 
