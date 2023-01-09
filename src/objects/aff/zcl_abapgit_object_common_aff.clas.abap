@@ -25,9 +25,6 @@ CLASS zcl_abapgit_object_common_aff DEFINITION
       RETURNING
         VALUE(rv_is_empty)  TYPE abap_bool.
 
-
-
-
 ENDCLASS.
 
 
@@ -165,7 +162,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
                    <ls_msg>                   TYPE symsg,
                    <ls_extension_mapper_pair> LIKE LINE OF ls_additional_extensions.
 
-
+    lv_json_as_xstring = zif_abapgit_object~mo_files->read_raw( iv_ext = 'json' ).
     lv_name = ms_item-obj_name.
 
     " beyond here there will be dragons....
@@ -192,8 +189,6 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           EXPORTING
             object = <ls_intf_aff_obj>.
 
-        lv_json_as_xstring = zif_abapgit_object~mo_files->read_raw( iv_ext = 'json' ).
-
         CALL METHOD ('CL_AFF_FILE_NAME_MAPPER')=>for_json
           RECEIVING
             result = lo_file_name_mapper.
@@ -204,6 +199,12 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           RECEIVING
             result = lv_file_name.
 
+
+        CREATE OBJECT lo_settings TYPE ('CL_AFF_SETTINGS_DESERIALIZE')
+          EXPORTING
+            version  = 'A'
+            language = mv_language
+            user     = sy-uname.
 
         CREATE OBJECT lo_object_json_file TYPE ('CL_AFF_FILE')
           EXPORTING
@@ -244,13 +245,6 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
               file = <ls_intf_aff_file>.
 
         ENDLOOP.
-
-        CREATE OBJECT lo_settings TYPE ('CL_AFF_SETTINGS_DESERIALIZE')
-          EXPORTING
-            version  = 'A'
-            language = mv_language
-            user     = sy-uname.
-
 
         CREATE OBJECT lo_aff_factory TYPE ('CL_AFF_FACTORY').
         CALL METHOD lo_aff_factory->('CREATE_LOG')
@@ -399,31 +393,35 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: lr_intf_aff_obj      TYPE REF TO data,
-          lr_intf_aff_log      TYPE REF TO data,
-          lr_intf_aff_settings TYPE REF TO data,
-          lr_messages          TYPE REF TO data,
-          lo_handler_factory   TYPE REF TO object,
-          lo_object_handler    TYPE REF TO object,
-          lo_object_aff        TYPE REF TO object,
-          lo_object_json_file  TYPE REF TO object,
-          lo_files_container   TYPE REF TO object,
-          lo_settings          TYPE REF TO object,
-          lo_aff_log           TYPE REF TO object,
-          lo_aff_factory       TYPE REF TO object,
-          lv_json_as_xstring   TYPE xstring,
-          lx_exception         TYPE REF TO cx_root,
-          lv_name              TYPE c LENGTH 120,
-          lv_file_name         TYPE string,
-          lo_file_name_mapper  TYPE REF TO object,
-          lv_dummy             TYPE string.
+    DATA: lr_intf_aff_obj          TYPE REF TO data,
+          lr_intf_aff_log          TYPE REF TO data,
+          lr_intf_aff_settings     TYPE REF TO data,
+          lr_messages              TYPE REF TO data,
+          lo_handler_factory       TYPE REF TO object,
+          lo_object_handler        TYPE REF TO object,
+          lo_object_aff            TYPE REF TO object,
+          lo_object_json_file      TYPE REF TO object,
+          lo_files_container       TYPE REF TO object,
+          lo_settings              TYPE REF TO object,
+          lo_aff_log               TYPE REF TO object,
+          lo_aff_factory           TYPE REF TO object,
+          lo_object_file           TYPE REF TO object,
+          lv_json_as_xstring       TYPE xstring,
+          lx_exception             TYPE REF TO cx_root,
+          lv_name                  TYPE c LENGTH 120,
+          lv_file_name             TYPE string,
+          lo_file_name_mapper      TYPE REF TO object,
+          lv_dummy                 TYPE string,
+          ls_additional_extensions TYPE ty_extension_mapper_pairs,
+          lv_file_as_xstring       TYPE xstring.
 
-    FIELD-SYMBOLS: <ls_intf_aff_obj>      TYPE any,
-                   <ls_intf_aff_log>      TYPE any,
-                   <ls_intf_aff_settings> TYPE any,
-                   <ls_messages>          TYPE ANY TABLE,
-                   <ls_message>           TYPE any,
-                   <ls_msg>               TYPE symsg.
+    FIELD-SYMBOLS: <ls_intf_aff_obj>          TYPE any,
+                   <ls_intf_aff_log>          TYPE any,
+                   <ls_intf_aff_settings>     TYPE any,
+                   <ls_messages>              TYPE ANY TABLE,
+                   <ls_message>               TYPE any,
+                   <ls_msg>                   TYPE symsg,
+                   <ls_extension_mapper_pair> LIKE LINE OF ls_additional_extensions.
 
     lv_name = ms_item-obj_name.
 
@@ -521,11 +519,6 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
         zif_abapgit_object~mo_files->add_raw(
           iv_ext  = 'json'
           iv_data = lv_json_as_xstring ).
-
-        DATA ls_additional_extensions TYPE ty_extension_mapper_pairs.
-        FIELD-SYMBOLS <ls_extension_mapper_pair> LIKE LINE OF ls_additional_extensions.
-        DATA lo_object_file  TYPE REF TO object.
-        DATA lv_file_as_xstring TYPE xstring.
 
         ls_additional_extensions = get_additional_extensions( ).
 
