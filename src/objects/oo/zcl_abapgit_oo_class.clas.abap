@@ -467,7 +467,7 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
     " Hardcode STATE (#2612)
     ls_properties = cg_properties.
-    ls_properties-state = '1'.
+    ls_properties-state = seoc_state_implemented.
 
     TRY.
         CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
