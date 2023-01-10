@@ -3126,13 +3126,23 @@ CLASS ltcl_writer_test IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = zcl_abapgit_ajson=>new( )->setx( '/:1' )->stringify( )
-      exp = '1' ). " Hmmm ?
+      exp = '1' ). " Because set( path = '/' ) would write root node
 
     cl_abap_unit_assert=>assert_equals(
       act = zcl_abapgit_ajson=>new( )->setx( ':1' )->stringify( )
-      exp = '1' ). " Hmmm ?
+      exp = '1' ). " Because set( path = '' ) would write root node
 
-    " TODO some negative tests like "/a:", ""
+*    cl_abap_unit_assert=>assert_equals(
+*      act = zcl_ajson=>new( )->setx( '' )->stringify( )
+*      exp = '{}' ). " problem is that root node not set so it is not an object
+
+*    cl_abap_unit_assert=>assert_equals(
+*      act = zcl_ajson=>new( )->setx( '/a:' )->stringify( )
+*      exp = '{}' ). " should setx ignore empty values or set an empty string ? Or null ?
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_ajson=>new( )->setx( '/a:""' )->stringify( )
+      exp = '{"a":""}' ).
 
   ENDMETHOD.
 
@@ -3144,7 +3154,7 @@ CLASS ltcl_writer_test IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = zcl_abapgit_ajson=>new( )->setx( '/a:00.123' )->stringify( )
-      exp = '{"a":"00.123"}' ). " hmmm
+      exp = '{"a":"00.123"}' ). " not a number
 
     cl_abap_unit_assert=>assert_equals(
       act = zcl_abapgit_ajson=>new( )->setx( '/a:.123' )->stringify( )
