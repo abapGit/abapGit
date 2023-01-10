@@ -154,7 +154,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
                                    is_checks = ls_checks
                                    ii_log    = ii_log ).
 
-      io_repo->refresh( ).
+      io_repo->refresh( iv_drop_log = abap_false ).
     ENDIF.
 
   ENDMETHOD.
