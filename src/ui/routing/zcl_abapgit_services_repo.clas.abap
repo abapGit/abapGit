@@ -276,14 +276,10 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     lt_decision = cs_checks-overwrite.
 
-    " Only if all objects are new/added (like an initial pull),
-    " the objects are handled automatically (see below)
-    LOOP AT lt_decision TRANSPORTING NO FIELDS WHERE action <> zif_abapgit_objects=>c_deserialize_action-add.
-      EXIT.
+    " Set all new objects to YES
+    LOOP AT lt_decision ASSIGNING <ls_decision> WHERE action = zif_abapgit_objects=>c_deserialize_action-add.
+      <ls_decision>-decision = zif_abapgit_definitions=>c_yes.
     ENDLOOP.
-    IF sy-subrc <> 0.
-      CLEAR lt_decision.
-    ENDIF.
 
     " Ask user what to do
     popup_overwrite( CHANGING ct_overwrite = lt_decision ).
@@ -311,21 +307,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       READ TABLE lt_decision ASSIGNING <ls_decision> WITH KEY object_type_and_name COMPONENTS
         obj_type = <ls_overwrite>-obj_type
         obj_name = <ls_overwrite>-obj_name.
-      IF sy-subrc = 0.
-        <ls_overwrite>-decision = <ls_decision>-decision.
-      ELSE.
-        " If user was not asked, deny deletions and confirm other changes (add and update)
-        CASE <ls_overwrite>-action.
-          WHEN zif_abapgit_objects=>c_deserialize_action-delete
-            OR zif_abapgit_objects=>c_deserialize_action-delete_add.
-            <ls_overwrite>-decision = zif_abapgit_definitions=>c_no.
-          WHEN zif_abapgit_objects=>c_deserialize_action-add
-            OR zif_abapgit_objects=>c_deserialize_action-update.
-            <ls_overwrite>-decision = zif_abapgit_definitions=>c_yes.
-          WHEN OTHERS.
-            ASSERT 0 = 1.
-        ENDCASE.
-      ENDIF.
+      ASSERT sy-subrc = 0.
+      <ls_overwrite>-decision = <ls_decision>-decision.
     ENDLOOP.
 
   ENDMETHOD.
@@ -336,6 +319,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     DATA: lt_columns  TYPE zif_abapgit_definitions=>ty_alv_column_tt,
           lt_selected LIKE ct_overwrite,
           li_popups   TYPE REF TO zif_abapgit_popups.
+    DATA lt_preselected_rows TYPE zif_abapgit_popups=>ty_rows.
 
     FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF ct_overwrite,
                    <ls_column>    TYPE zif_abapgit_definitions=>ty_alv_column.
@@ -358,6 +342,10 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     <ls_column>-name = 'TEXT'.
     <ls_column>-text = 'Description'.
 
+    LOOP AT ct_overwrite ASSIGNING <ls_overwrite> WHERE decision = zif_abapgit_definitions=>c_yes.
+      INSERT sy-tabix INTO TABLE lt_preselected_rows.
+    ENDLOOP.
+
     li_popups = zcl_abapgit_ui_factory=>get_popups( ).
     li_popups->popup_to_select_from_list(
       EXPORTING
@@ -366,6 +354,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
                              && | Select the objects which should be brought in line with the remote version.|
         iv_select_column_text = 'Change?'
         it_columns_to_display = lt_columns
+        it_preselected_rows   = lt_preselected_rows
       IMPORTING
         et_list               = lt_selected ).
 
