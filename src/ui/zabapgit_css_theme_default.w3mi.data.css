@@ -26,6 +26,7 @@
 }
 
 /* GLOBALS */
+
 body {
   background-color: var(--theme-background-color);
   font-family: var(--theme-primary-font);
@@ -42,6 +43,7 @@ input, textarea, select     { border-color: #ddd; }
 input:focus, textarea:focus { border-color: #8cadd9; }
 
 /* COLOR PALETTE */
+
 .grey         { color: var(--theme-greyscale-lighter) !important; }
 .grey70       { color: var(--theme-greyscale-medium)  !important; }
 .grey80       { color: var(--theme-greyscale-light)   !important; }
@@ -56,7 +58,8 @@ input:focus, textarea:focus { border-color: #8cadd9; }
 .white        { color: white      !important; }
 .pink         { color: pink       !important; }
 
-/* Floating buttons and color sets */
+/* FLOATING BUTTONS AND COLOR SETS */
+
 .blue-set {
   border-color: #abc3e3;
   color: #5e8dc9;
@@ -69,6 +72,7 @@ input:focus, textarea:focus { border-color: #8cadd9; }
 }
 
 /* ABAPGIT OBJECTS */
+
 span.user-box {
   border-color: #c2d4ea;
   background-color: #d9e4f2;
@@ -85,6 +89,7 @@ span.transport-box {
 
 /* PANELS */
 /* TODO: add warning and error colors */
+
 div.panel.success {
   color: #589a58 !important;
   background-color: #c5eac5;
@@ -97,6 +102,7 @@ div.panel.error {
 div.dummydiv { background-color: var(--theme-container-background-color); }
 
 /* STRUCTURE DIVS, HEADER & FOOTER */
+
 div#header {
   background-color: var(--theme-background-color);
   border-bottom-color: var(--theme-container-border-color);
@@ -106,12 +112,14 @@ div#footer .version { color: var(--theme-greyscale-medium); }
 div#footer { border-top-color: var(--theme-container-border-color); }
 
 /* ERROR LOG */
+
 div.log {
   background-color: #fee6e6;
   border-color: #fdcece;
 }
 
 /* REPOSITORY */
+
 div.repo { background-color: var(--theme-container-background-color); }
 .repo_name span.name { color: #333; }
 .repo_name span.url  { color: var(--theme-primary-font-color-reduced); }
@@ -141,6 +149,7 @@ span.branch_branch {
 }
 
 /* REPOSITORY TABLE*/
+
 table.repo_tab {
   border-color: var(--theme-table-border-color);
   background-color: var(--theme-table-background-color);
@@ -162,34 +171,8 @@ table.repo_tab {
 .repo_tab tr.modified    { background-color: #fbf7e9; }
 .repo_tab td.current_dir { color: var(--theme-primary-font-color-reduced); }
 
-/*.repo_tab td.cmd span.state-block span { border-color: #000; }*/
-/*.repo_tab td.cmd span.state-block span.added {
-  background-color: #69ad74;
-  border-color: #579e64;
-  color: white;
-}
-.repo_tab td.cmd span.state-block span.changed {
-  background-color: #e0c150;
-  border-color: #d4af25;
-  color: white;
-}
-.repo_tab td.cmd span.state-block span.mixed {
-  background-color: #e0c150;
-  border-color: #579e64;
-  color: #69ad74;
-}
-.repo_tab td.cmd span.state-block span.deleted {
-  background-color: #c76861;
-  border-color: #b8605a;
-  color: white;
-}
-.repo_tab td.cmd span.state-block span.none {
-  background-color: #e8e8e8;
-  border-color: #dbdbdb;
-  color: #c8c8c8;
-}
-*/
 /* STAGE */
+
 .stage_tab {
   border-color: #ddd;
   background-color: #fff;
@@ -215,17 +198,20 @@ table.repo_tab {
 }
 
 /* COMMIT */
+
 div.form-container { background-color: #F8F8F8; }
 form.aligned-form label { color: var(--theme-greyscale-medium); }
 form.aligned-form span.sub-title { color: var(--theme-greyscale-medium); }
 
 /* SETTINGS STYLES */
+
 div.settings_container {
   color: #444;
   background-color: var(--theme-container-background-color);
 }
 
 /* DIFF */
+
 div.diff { background-color: var(--theme-container-background-color); }
 span.diff_name { color: grey; }
 span.diff_name strong { color: #333; }
@@ -251,40 +237,9 @@ div.diff_content {
   border-top-color: #ddd;
   border-bottom-color: #ddd;
 }
-/*div.diff_head span.state-block span {
-  border-color: #000;
-}
-div.diff_head span.state-block span.added {
-  background-color: #69ad74;
-  border-color: #579e64;
-  color: white;
-}
-div.diff_head span.state-block span.changed {
-  background-color: #e0c150;
-  border-color: #d4af25;
-  color: white;
-}
-div.diff_head span.state-block span.mixed {
-  background-color: #e0c150;
-  border-color: #579e64;
-  color: #69ad74;
-}
-div.diff_head span.state-block span.deleted {
-  background-color: #c76861;
-  border-color: #b8605a;
-  color: white;
-}
-div.diff_head span.state-block span.none {
-  background-color: #e8e8e8;
-  border-color: #dbdbdb;
-  color: #c8c8c8;
-}
-*/
 
 /* STATE BLOCK COLORS */
-/*span.state-block span {
-  border-color: #000;
-}*/
+
 span.state-block span.added {
   background-color: #69ad74;
   border-color: #579e64;
@@ -311,8 +266,8 @@ span.state-block span.none {
   color: #c8c8c8;
 }
 
-
 /* DIFF TABLE */
+
 table.diff_tab td,
 table.diff_tab th {
   color: #444;
@@ -338,16 +293,17 @@ table.diff_tab td.patch, th.patch {
   border-right-color: var(--theme-table-cell-border-color);
 }
 
-/* STYLES for Syntax Highlighting */
-/* abap */
+/* STYLES FOR SYNTAX HIGHLIGHTING */
+
+/* ABAP */
 .syntax-hl span.keyword  { color: #0a69ce; }
 .syntax-hl span.text     { color: #48ce4f; }
 .syntax-hl span.comment  { color: var(--theme-greyscale-dark); font-style: italic; }
-/* xml+html */
+/* XML+HTML */
 .syntax-hl span.xml_tag  { color: #457ce3; }
 .syntax-hl span.attr     { color: #b777fb; }
 .syntax-hl span.attr_val { color: #7a02f9; }
-/* css+js */
+/* CSS+JS */
 .syntax-hl span.properties   { color:#0a69ce; }
 .syntax-hl span.values       { color:blue; }
 .syntax-hl span.units        { color:maroon; }
@@ -360,6 +316,7 @@ table.diff_tab td.patch, th.patch {
 .syntax-hl span.variables    { color:purple; }
 
 /* DEBUG INFO STYLES */
+
 div.debug_container {
   color: #444;
   background-color: var(--theme-container-background-color);
@@ -388,6 +345,7 @@ div.debug_container {
 .repo-overview tbody tr.selected { background-color: hsla(214, 50%, 75%, 0.33); }
 
 /* DB ENTRIES */
+
 div.db_list { background-color: #fff; }
 table.db_tab td      { color: #333; }
 table.db_tab td.data { color: #888; }
@@ -410,6 +368,7 @@ table.db_tab a.remote_repo {
 table.db_tab a.remote_repo:hover { color: var(--theme-link-color); }
 
 /* DB ENTRY DISPLAY */
+
 div.db_entry {
   background-color: var(--theme-container-background-color);
 }
@@ -424,18 +383,19 @@ table.tag {
 table.tag td.label { background-color: #b3c1cc; }
 
 /* TUTORIAL */
+
 div.tutorial { background-color: var(--theme-container-background-color); }
 div.tutorial hr { border-color: var(--theme-greyscale-light); }
 div.tutorial h1, h2 { color: #404040; }
 
 /* MENU */
+
 .nav-container ul li:hover { background-color: #fff; }
 .nav-container ul ul li:hover { background-color: #f6f6f6; }
 .nav-container > ul > li:hover > a { background-color: #ffffff80; }
 .nav-container ul ul { background-color: #fff; }
 .nav-container.corner > ul > li:hover > a { background-color: inherit; }
 
-/* Toolbar separator style */
 .nav-container ul ul li.separator {
   color: var(--theme-greyscale-medium);
   border-bottom-color: #eee;
@@ -443,7 +403,8 @@ div.tutorial h1, h2 { color: #404040; }
 }
 .nav-container ul ul li.separator:hover { background-color: inherit; }
 
-/* News Announcement */
+/* NEWS ANNOUNCEMENT */
+
 div.info-panel { background-color: white; }
 div.info-panel div.info-hint { color: var(--theme-greyscale-light); }
 div.info-panel div.info-title {
@@ -462,12 +423,14 @@ div.info-panel .update {
   background-color: #f5c538;
 }
 
-/* Tooltips text */
+/* TOOLTIPS TEXT */
+
 .link-hint { color: var(--theme-primary-font-color); }
 .link-hint { background-color: var(--theme-linkhint-background) }
 .link-hint::after { border-top-color: var(--theme-linkhint-background) }
 
 /* HOTKEYS */
+
 ul.hotkeys span.key-id {
   background-color: #f0f0f0;
   border-color: #dcdcdc;
@@ -478,7 +441,8 @@ div.corner-hint {
   background-color: #fff;
 }
 
-/* code inspector */
+/* CODE INSPECTOR */
+
 .ci-head { background-color: var(--theme-container-background-color); }
 .ci-head .package-name span { color: grey; }
 .ci-variant   { color: #444; }
@@ -488,16 +452,14 @@ div.corner-hint {
 .ci-result li.ci-warning { border-left-color: #ecd227; }
 .ci-result li.ci-info    { border-left-color: #acacac; }
 
-/* Command palette */
+/* COMMAND PALETTE */
 
 .cmd-palette {
   border-color: #ccc;
 }
-
 .cmd-palette li.selected {
   background-color: hsla(214, 50%, 90%, 1);
 }
-
 .cmd-palette mark {
   color: white;
   background-color: #79a0d2;
