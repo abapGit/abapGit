@@ -58,11 +58,64 @@ CLASS zcl_abapgit_object_view DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
           is_dd25v TYPE dd25v
         RAISING
           zcx_abapgit_exception.
+
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_object_view IMPLEMENTATION.
+
+
+  METHOD deserialize_texts.
+
+    DATA:
+      lv_name       TYPE ddobjname,
+      lt_i18n_langs TYPE TABLE OF langu,
+      lt_dd25_texts TYPE ty_dd25_texts,
+      ls_dd25v_tmp  TYPE dd25v.
+
+    FIELD-SYMBOLS:
+      <lv_lang>      TYPE langu,
+      <ls_dd25_text> LIKE LINE OF lt_dd25_texts.
+
+    lv_name = ms_item-obj_name.
+
+    io_xml->read( EXPORTING iv_name = 'I18N_LANGS'
+                  CHANGING  cg_data = lt_i18n_langs ).
+
+    io_xml->read( EXPORTING iv_name = 'DD25_TEXTS'
+                  CHANGING  cg_data = lt_dd25_texts ).
+
+    SORT lt_i18n_langs.
+    SORT lt_dd25_texts BY ddlanguage.
+
+    LOOP AT lt_i18n_langs ASSIGNING <lv_lang>.
+
+      " View description
+      ls_dd25v_tmp = is_dd25v.
+      READ TABLE lt_dd25_texts ASSIGNING <ls_dd25_text> WITH KEY ddlanguage = <lv_lang>.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |DD25_TEXTS cannot find lang { <lv_lang> } in XML| ).
+      ENDIF.
+      MOVE-CORRESPONDING <ls_dd25_text> TO ls_dd25v_tmp.
+      CALL FUNCTION 'DDIF_VIEW_PUT'
+        EXPORTING
+          name              = lv_name
+          dd25v_wa          = ls_dd25v_tmp
+        EXCEPTIONS
+          view_not_found    = 1
+          name_inconsistent = 2
+          view_inconsistent = 3
+          put_failure       = 4
+          put_refused       = 5
+          OTHERS            = 6.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
 
 
   METHOD read_view.
@@ -90,6 +143,70 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
         OTHERS        = 2.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD serialize_texts.
+
+    DATA:
+      lv_index           TYPE i,
+      ls_dd25v           TYPE dd25v,
+      lt_dd25_texts      TYPE ty_dd25_texts,
+      lt_i18n_langs      TYPE TABLE OF langu,
+      lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
+
+    FIELD-SYMBOLS:
+      <lv_lang>      LIKE LINE OF lt_i18n_langs,
+      <ls_dd25_text> LIKE LINE OF lt_dd25_texts.
+
+    IF io_xml->i18n_params( )-main_language_only = abap_true.
+      RETURN.
+    ENDIF.
+
+    " Collect additional languages, skip main lang - it was serialized already
+    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
+    SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
+      FROM dd25v
+      WHERE viewname = ms_item-obj_name
+      AND ddlanguage IN lt_language_filter
+      AND ddlanguage <> mv_language.                      "#EC CI_SUBRC
+
+    LOOP AT lt_i18n_langs ASSIGNING <lv_lang>.
+      lv_index = sy-tabix.
+      CLEAR: ls_dd25v.
+
+      TRY.
+          read_view(
+            EXPORTING
+              iv_language = <lv_lang>
+            IMPORTING
+              es_dd25v    = ls_dd25v ).
+
+        CATCH zcx_abapgit_exception.
+          CONTINUE.
+      ENDTRY.
+
+      IF ls_dd25v-ddlanguage IS INITIAL.
+        DELETE lt_i18n_langs INDEX lv_index. " Don't save this lang
+        CONTINUE.
+      ENDIF.
+
+      APPEND INITIAL LINE TO lt_dd25_texts ASSIGNING <ls_dd25_text>.
+      MOVE-CORRESPONDING ls_dd25v TO <ls_dd25_text>.
+
+    ENDLOOP.
+
+    SORT lt_i18n_langs ASCENDING.
+    SORT lt_dd25_texts BY ddlanguage ASCENDING.
+
+    IF lines( lt_i18n_langs ) > 0.
+      io_xml->add( iv_name = 'I18N_LANGS'
+                   ig_data = lt_i18n_langs ).
+
+      io_xml->add( iv_name = 'DD25_TEXTS'
+                   ig_data = lt_dd25_texts ).
     ENDIF.
 
   ENDMETHOD.
@@ -144,19 +261,12 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'DD28V_TABLE'
                   CHANGING cg_data = lt_dd28v ).
 
-    " Process maintenance views during LATE to avoid issues with missing foreign key relationships (#4306)
-    IF iv_step = zif_abapgit_object=>gc_step_id-ddic AND ls_dd25v-viewclass = 'C'.
-      RETURN.
-    ELSEIF iv_step = zif_abapgit_object=>gc_step_id-late AND ls_dd25v-viewclass <> 'C'.
-      RETURN.
-    ENDIF.
-
     lv_name = ms_item-obj_name. " type conversion
 
     LOOP AT lt_dd27p ASSIGNING <ls_dd27p>.
       <ls_dd27p>-objpos = sy-tabix.
       <ls_dd27p>-viewname = lv_name.
-* rollname seems to be mandatory in the API, but is typically not defined in the VIEW
+      " rollname seems to be mandatory in the API, but is typically not defined in the VIEW
       SELECT SINGLE rollname FROM dd03l INTO <ls_dd27p>-rollname
         WHERE tabname = <ls_dd27p>-tabname
         AND fieldname = <ls_dd27p>-fieldname.
@@ -234,7 +344,6 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
-    APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
   ENDMETHOD.
 
 
@@ -344,121 +453,4 @@ CLASS zcl_abapgit_object_view IMPLEMENTATION.
                          iv_longtext_id = c_longtext_id_view ).
 
   ENDMETHOD.
-
-
-  METHOD serialize_texts.
-
-    DATA:
-      lv_index           TYPE i,
-      ls_dd25v           TYPE dd25v,
-      lt_dd25_texts      TYPE ty_dd25_texts,
-      lt_i18n_langs      TYPE TABLE OF langu,
-      lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
-
-    FIELD-SYMBOLS:
-      <lv_lang>      LIKE LINE OF lt_i18n_langs,
-      <ls_dd25_text> LIKE LINE OF lt_dd25_texts.
-
-    IF io_xml->i18n_params( )-main_language_only = abap_true.
-      RETURN.
-    ENDIF.
-
-    " Collect additional languages, skip main lang - it was serialized already
-    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
-    SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
-      FROM dd25v
-      WHERE viewname = ms_item-obj_name
-      AND ddlanguage IN lt_language_filter
-      AND ddlanguage <> mv_language.                      "#EC CI_SUBRC
-
-    LOOP AT lt_i18n_langs ASSIGNING <lv_lang>.
-      lv_index = sy-tabix.
-      CLEAR: ls_dd25v.
-
-      TRY.
-          read_view(
-            EXPORTING
-              iv_language = <lv_lang>
-            IMPORTING
-              es_dd25v    = ls_dd25v ).
-
-        CATCH zcx_abapgit_exception.
-          CONTINUE.
-      ENDTRY.
-
-      IF ls_dd25v-ddlanguage IS INITIAL.
-        DELETE lt_i18n_langs INDEX lv_index. " Don't save this lang
-        CONTINUE.
-      ENDIF.
-
-      APPEND INITIAL LINE TO lt_dd25_texts ASSIGNING <ls_dd25_text>.
-      MOVE-CORRESPONDING ls_dd25v TO <ls_dd25_text>.
-
-    ENDLOOP.
-
-    SORT lt_i18n_langs ASCENDING.
-    SORT lt_dd25_texts BY ddlanguage ASCENDING.
-
-    IF lines( lt_i18n_langs ) > 0.
-      io_xml->add( iv_name = 'I18N_LANGS'
-                   ig_data = lt_i18n_langs ).
-
-      io_xml->add( iv_name = 'DD25_TEXTS'
-                   ig_data = lt_dd25_texts ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD deserialize_texts.
-
-    DATA:
-      lv_name       TYPE ddobjname,
-      lt_i18n_langs TYPE TABLE OF langu,
-      lt_dd25_texts TYPE ty_dd25_texts,
-      ls_dd25v_tmp  TYPE dd25v.
-
-    FIELD-SYMBOLS:
-      <lv_lang>      TYPE langu,
-      <ls_dd25_text> LIKE LINE OF lt_dd25_texts.
-
-    lv_name = ms_item-obj_name.
-
-    io_xml->read( EXPORTING iv_name = 'I18N_LANGS'
-                  CHANGING  cg_data = lt_i18n_langs ).
-
-    io_xml->read( EXPORTING iv_name = 'DD25_TEXTS'
-                  CHANGING  cg_data = lt_dd25_texts ).
-
-    SORT lt_i18n_langs.
-    SORT lt_dd25_texts BY ddlanguage.
-
-    LOOP AT lt_i18n_langs ASSIGNING <lv_lang>.
-
-      " View description
-      ls_dd25v_tmp = is_dd25v.
-      READ TABLE lt_dd25_texts ASSIGNING <ls_dd25_text> WITH KEY ddlanguage = <lv_lang>.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |DD25_TEXTS cannot find lang { <lv_lang> } in XML| ).
-      ENDIF.
-      MOVE-CORRESPONDING <ls_dd25_text> TO ls_dd25v_tmp.
-      CALL FUNCTION 'DDIF_VIEW_PUT'
-        EXPORTING
-          name              = lv_name
-          dd25v_wa          = ls_dd25v_tmp
-        EXCEPTIONS
-          view_not_found    = 1
-          name_inconsistent = 2
-          view_inconsistent = 3
-          put_failure       = 4
-          put_refused       = 5
-          OTHERS            = 6.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise_t100( ).
-      ENDIF.
-
-    ENDLOOP.
-
-  ENDMETHOD.
-
 ENDCLASS.
