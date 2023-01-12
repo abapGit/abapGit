@@ -46,6 +46,8 @@ CLASS ltcl_diff DEFINITION FOR TESTING
       diff12 FOR TESTING RAISING zcx_abapgit_exception,
       diff13 FOR TESTING RAISING zcx_abapgit_exception,
       diff14 FOR TESTING RAISING zcx_abapgit_exception,
+      diff15 FOR TESTING RAISING zcx_abapgit_exception,
+      diff16 FOR TESTING RAISING zcx_abapgit_exception,
       map_beacons FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
@@ -562,6 +564,43 @@ CLASS ltcl_diff IMPLEMENTATION.
     test( ).
 
   ENDMETHOD.
+
+
+  METHOD diff15.
+
+    " ignore comments - edge case new comment
+    add_new( `*/` ).
+
+    add_old( '' ).
+
+    add_expected( iv_new_num = '    1'
+                  iv_new     = '*/'
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
+                  iv_old_num = '     '
+                  iv_old     = '' ).
+
+    test( iv_ignore_comments = abap_true ).
+
+  ENDMETHOD.
+
+
+  METHOD diff16.
+
+    " ignore comments - edge case deleted comment
+    add_new( `` ).
+
+    add_old( `* " problem` ).
+
+    add_expected( iv_new_num = '     '
+                  iv_new     = ''
+                  iv_result  = zif_abapgit_definitions=>c_diff-unchanged
+                  iv_old_num = '    1'
+                  iv_old     = `* " problem` ).
+
+    test( iv_ignore_comments = abap_true ).
+
+  ENDMETHOD.
+
 
   METHOD map_beacons.
 
