@@ -777,7 +777,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     zcl_abapgit_objects_activation=>clear( ).
 
-    ii_log->add_success( |Step { is_step-order } - { is_step-descr }| ).
+    ii_log->add_success( |>> Step { is_step-order } - { is_step-descr }| ).
 
     li_progress = zcl_abapgit_progress=>get_instance( lines( is_step-objects ) ).
 
