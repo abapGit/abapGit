@@ -122,7 +122,7 @@ CLASS zcl_abapgit_object_drul IMPLEMENTATION.
     mv_dependency_rule_key = ms_item-obj_name.
 
     TRY.
-        CREATE DATA mr_dependency_rule TYPE ('CL_BLUE_SOURCE_OBJECT_DATA2=>TY_OBJECT_DATA').
+        CREATE DATA mr_dependency_rule TYPE ('CL_BLUE_SOURCE_OBJECT_DATA=>TY_OBJECT_DATA').
         CREATE OBJECT mi_persistence TYPE ('CL_DRUL_WB_OBJECT_PERSIST').
 
       CATCH cx_sy_create_error.
@@ -135,8 +135,9 @@ CLASS zcl_abapgit_object_drul IMPLEMENTATION.
   METHOD fill_metadata_from_db.
 
     DATA:
-      li_wb_object_operator  TYPE REF TO object,
-      lr_dependency_rule_old TYPE REF TO data.
+      li_wb_object_operator          TYPE REF TO object,
+      lr_dependency_rule_old         TYPE REF TO data,
+      lv_drul_object_data_clas_exist TYPE c LENGTH 1.
 
     FIELD-SYMBOLS:
       <ls_dependency_rule_old> TYPE any,
@@ -148,6 +149,20 @@ CLASS zcl_abapgit_object_drul IMPLEMENTATION.
     li_wb_object_operator = get_wb_object_operator( ).
 
     CREATE DATA lr_dependency_rule_old TYPE ('CL_BLUE_SOURCE_OBJECT_DATA2=>TY_OBJECT_DATA').
+    CALL FUNCTION 'CHECK_EXIST_CLAS'
+      EXPORTING
+        name            = 'CL_DRUL_WB_OBJECT_DATA'
+      IMPORTING
+        exist           = lv_drul_object_data_clas_exist
+      EXCEPTIONS
+        tr_invalid_type = 1
+        OTHERS          = 2.
+
+    IF sy-subrc = 0 AND lv_drul_object_data_clas_exist = abap_true.
+      CREATE DATA lr_dependency_rule_old TYPE ('CL_DRUL_WB_OBJECT_DATA=>TY_OBJECT_DATA').
+    ELSE.
+      CREATE DATA lr_dependency_rule_old TYPE ('CL_BLUE_SOURCE_OBJECT_DATA=>TY_OBJECT_DATA').
+    ENDIF.
     ASSIGN lr_dependency_rule_old->* TO <ls_dependency_rule_old>.
     ASSERT sy-subrc = 0.
 
@@ -253,9 +268,10 @@ CLASS zcl_abapgit_object_drul IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 
     DATA:
-      li_object_data_model  TYPE REF TO if_wb_object_data_model,
-      li_wb_object_operator TYPE REF TO object,
-      lx_error              TYPE REF TO cx_root.
+      li_object_data_model           TYPE REF TO if_wb_object_data_model,
+      li_wb_object_operator          TYPE REF TO object,
+      lx_error                       TYPE REF TO cx_root,
+      lv_drul_object_data_clas_exist TYPE c LENGTH 1.
 
     FIELD-SYMBOLS:
       <ls_dependency_rule> TYPE any,
@@ -273,7 +289,20 @@ CLASS zcl_abapgit_object_drul IMPLEMENTATION.
     li_wb_object_operator = get_wb_object_operator( ).
 
     TRY.
-        CREATE OBJECT li_object_data_model TYPE ('CL_BLUE_SOURCE_OBJECT_DATA2').
+        CALL FUNCTION 'CHECK_EXIST_CLAS'
+          EXPORTING
+            name            = 'CL_DRUL_WB_OBJECT_DATA'
+          IMPORTING
+            exist           = lv_drul_object_data_clas_exist
+          EXCEPTIONS
+            tr_invalid_type = 1
+            OTHERS          = 2.
+
+        IF sy-subrc = 0 AND lv_drul_object_data_clas_exist = abap_true.
+          CREATE OBJECT li_object_data_model TYPE ('CL_DRUL_WB_OBJECT_DATA').
+        ELSE.
+          CREATE OBJECT li_object_data_model TYPE ('CL_BLUE_SOURCE_OBJECT_DATA').
+        ENDIF.
 
         ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <ls_dependency_rule>
                TO <lv_source>.
