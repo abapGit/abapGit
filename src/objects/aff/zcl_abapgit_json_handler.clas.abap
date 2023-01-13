@@ -57,31 +57,31 @@ CLASS zcl_abapgit_json_handler DEFINITION
 
     METHODS:
       map2json_original_language
-        CHANGING co_ajson TYPE REF TO zcl_abapgit_ajson
+        CHANGING co_ajson TYPE REF TO zif_abapgit_ajson
         RAISING  zcx_abapgit_ajson_error,
       map2json_custom_enum
         IMPORTING it_enum_mappings TYPE ty_enum_mappings
-        CHANGING  co_ajson         TYPE REF TO zcl_abapgit_ajson
+        CHANGING  co_ajson         TYPE REF TO zif_abapgit_ajson
         RAISING   zcx_abapgit_ajson_error,
       map2json_abap_language_version
-        CHANGING co_ajson TYPE REF TO zcl_abapgit_ajson
+        CHANGING co_ajson TYPE REF TO zif_abapgit_ajson
         RAISING  zcx_abapgit_ajson_error,
       "! Get the enum mapping from object handler, as other enums as well
       map2abap_abap_language_version
-        CHANGING co_ajson TYPE REF TO zcl_abapgit_ajson
+        CHANGING co_ajson TYPE REF TO zif_abapgit_ajson
         RAISING  zcx_abapgit_ajson_error,
       "! For deserialization
       map2abap_original_language
-        CHANGING co_ajson TYPE REF TO zcl_abapgit_ajson
+        CHANGING co_ajson TYPE REF TO zif_abapgit_ajson
         RAISING  zcx_abapgit_ajson_error,
       "! For deserialization
       set_defaults
         IMPORTING it_defaults TYPE ty_skip_paths
-        CHANGING  co_ajson    TYPE REF TO zcl_abapgit_ajson
+        CHANGING  co_ajson    TYPE REF TO zif_abapgit_ajson
         RAISING   zcx_abapgit_ajson_error,
       map2abap_custom_enum
         IMPORTING it_enum_mappings TYPE ty_enum_mappings
-        CHANGING  co_ajson         TYPE REF TO zcl_abapgit_ajson
+        CHANGING  co_ajson         TYPE REF TO zif_abapgit_ajson
         RAISING   zcx_abapgit_ajson_error.
 
 ENDCLASS.
@@ -93,17 +93,15 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
   METHOD deserialize.
     DATA lv_json    TYPE string.
-    DATA lo_ajson   TYPE REF TO zcl_abapgit_ajson.
+    DATA lo_ajson   TYPE REF TO zif_abapgit_ajson.
     DATA lo_mapping TYPE REF TO zif_abapgit_ajson_mapping.
 
     CLEAR ev_data.
 
     lv_json = zcl_abapgit_convert=>xstring_to_string_utf8( iv_content ).
-    lo_mapping = zcl_abapgit_ajson_mapping=>create_camel_case( ).
 
-    lo_ajson = zcl_abapgit_ajson=>parse( iv_json           = lv_json
-                                         ii_custom_mapping = lo_mapping ).
-
+    lo_ajson = zcl_abapgit_ajson=>parse( iv_json = lv_json
+      )->map( zcl_abapgit_ajson_mapping=>create_to_snake_case( ) ).
 
     map2abap_original_language( CHANGING co_ajson = lo_ajson ).
     set_defaults( EXPORTING it_defaults = iv_defaults
@@ -112,7 +110,7 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
     map2abap_custom_enum( EXPORTING it_enum_mappings = iv_enum_mappings
                           CHANGING co_ajson          = lo_ajson  ).
 
-    lo_ajson->zif_abapgit_ajson~to_abap( IMPORTING ev_container = ev_data ).
+    lo_ajson->to_abap( IMPORTING ev_container = ev_data ).
 
   ENDMETHOD.
 
@@ -123,7 +121,7 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
       lv_enum_json TYPE string.
 
 
-    lv_enum_json = co_ajson->get_string( '/header/abapLanguageVersion' ).
+    lv_enum_json = co_ajson->get_string( '/header/abap_language_version' ).
     IF lv_enum_json = 'standard'.
       lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
     ELSEIF lv_enum_json = 'cloudDevelopment'.
@@ -132,7 +130,7 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
       lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version-key_user.
     ENDIF.
 
-    co_ajson->set_string( iv_path = '/header/abapLanguageVersion'
+    co_ajson->set_string( iv_path = '/header/abap_language_version'
                           iv_val  = lv_enum_abap ).
   ENDMETHOD.
 
@@ -161,7 +159,7 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
       lv_original_language TYPE sy-langu.
 
 
-    lv_iso_language = co_ajson->get_string( '/header/originalLanguage' ).
+    lv_iso_language = co_ajson->get_string( '/header/original_language' ).
 
     CALL FUNCTION 'CONVERSION_EXIT_ISOLA_INPUT'
       EXPORTING
@@ -169,7 +167,7 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
       IMPORTING
         output = lv_original_language.
 
-    co_ajson->set_string( iv_path = '/header/originalLanguage'
+    co_ajson->set_string( iv_path = '/header/original_language'
                           iv_val  = lv_original_language ).
   ENDMETHOD.
 
@@ -237,8 +235,7 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
     DATA: lt_st_source      TYPE abap_trans_srcbind_tab,
           lo_mapping        TYPE REF TO zif_abapgit_ajson_mapping,
           lv_json           TYPE string,
-          lo_ajson          TYPE REF TO zcl_abapgit_ajson,
-          lo_ajson_filtered TYPE REF TO zif_abapgit_ajson,
+          lo_ajson          TYPE REF TO zif_abapgit_ajson,
           lo_filter         TYPE REF TO lcl_aff_filter.
 
     FIELD-SYMBOLS: <lg_source> LIKE LINE OF lt_st_source.
@@ -246,14 +243,10 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
     APPEND INITIAL LINE TO lt_st_source ASSIGNING <lg_source>.
     GET REFERENCE OF iv_data INTO <lg_source>-value.
 
-    lo_mapping = zcl_abapgit_ajson_mapping=>create_camel_case( iv_first_json_upper = abap_false ).
-
-    lo_ajson = zcl_abapgit_ajson=>create_empty( ii_custom_mapping = lo_mapping ).
-
-    lo_ajson->keep_item_order( ).
-    lo_ajson->set(
-      iv_path = '/'
-      iv_val  = iv_data ).
+    lo_ajson = zcl_abapgit_ajson=>new( iv_keep_item_order = abap_true
+      )->set( iv_path = '/'
+              iv_val  = iv_data
+      )->map( zcl_abapgit_ajson_mapping=>create_to_camel_case( ) ).
 
     map2json_original_language( CHANGING co_ajson = lo_ajson ).
     map2json_abap_language_version( CHANGING co_ajson = lo_ajson ).
@@ -261,16 +254,9 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
                           CHANGING co_ajson          = lo_ajson ).
 
     CREATE OBJECT lo_filter EXPORTING iv_skip_paths = iv_skip_paths.
-    lo_ajson_filtered = zcl_abapgit_ajson=>create_from(
-                          ii_source_json = lo_ajson
-                          ii_filter      = lo_filter ).
-
-    lo_ajson_filtered->keep_item_order( ).
-
-    lv_json = lo_ajson_filtered->stringify( 2 ).
 
     " files end with an empty line (EOF)
-    lv_json = lv_json && cl_abap_char_utilities=>newline.
+    lv_json = lo_ajson->clone( )->filter( lo_filter )->stringify( 2 ) && cl_abap_char_utilities=>newline.
 
     rv_result = zcl_abapgit_convert=>string_to_xstring_utf8( lv_json ).
   ENDMETHOD.
