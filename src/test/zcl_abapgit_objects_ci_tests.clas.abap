@@ -18,7 +18,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS_CI_TESTS IMPLEMENTATION.
+CLASS zcl_abapgit_objects_ci_tests IMPLEMENTATION.
 
 
   METHOD run.
@@ -79,6 +79,10 @@ CLASS ZCL_ABAPGIT_OBJECTS_CI_TESTS IMPLEMENTATION.
         " Prepare input for CI repo test
         CREATE DATA ld_options TYPE ('ZIF_ABAPGIT_CI_DEFINITIONS=>TY_REPO_CHECK_OPTIONS').
         ASSIGN ld_options->* TO <ls_options>.
+
+        ASSIGN COMPONENT 'CREATE_PACKAGE' OF STRUCTURE <ls_options> TO <lv_option>.
+        ASSERT sy-subrc = 0.
+        <lv_option> = abap_true.
 
         ASSIGN COMPONENT 'CHECK_LOCAL' OF STRUCTURE <ls_options> TO <lv_option>.
         ASSERT sy-subrc = 0.
