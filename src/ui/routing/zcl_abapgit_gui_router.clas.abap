@@ -617,6 +617,9 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         zcl_abapgit_services_repo=>remove( lv_key ).
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_main EXPORTING iv_only_favorites = abap_true.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
+      WHEN zif_abapgit_definitions=>c_action-repo_activate_objects.           " Repo activate objects
+        zcl_abapgit_services_repo=>activate_objects( lv_key ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-repo_newonline.                  " New offline repo
         rs_handled-page  = zcl_abapgit_gui_page_addonline=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
