@@ -1,25 +1,28 @@
 INTERFACE zif_abapgit_ajson
   PUBLIC.
 
-  CONSTANTS version TYPE string VALUE 'v1.1.6'. "#EC NOTEXT
+  CONSTANTS version TYPE string VALUE 'v1.1.7'. "#EC NOTEXT
   CONSTANTS origin TYPE string VALUE 'https://github.com/sbcgua/ajson'. "#EC NOTEXT
   CONSTANTS license TYPE string VALUE 'MIT'. "#EC NOTEXT
 
+  TYPES:
+    ty_node_type TYPE string.
+
   CONSTANTS:
     BEGIN OF node_type,
-      boolean TYPE string VALUE 'bool',
-      string  TYPE string VALUE 'str',
-      number  TYPE string VALUE 'num',
-      null    TYPE string VALUE 'null',
-      array   TYPE string VALUE 'array',
-      object  TYPE string VALUE 'object',
+      boolean TYPE ty_node_type VALUE 'bool',
+      string  TYPE ty_node_type VALUE 'str',
+      number  TYPE ty_node_type VALUE 'num',
+      null    TYPE ty_node_type VALUE 'null',
+      array   TYPE ty_node_type VALUE 'array',
+      object  TYPE ty_node_type VALUE 'object',
     END OF node_type.
 
   TYPES:
     BEGIN OF ty_node,
       path TYPE string,
       name TYPE string,
-      type TYPE string,
+      type TYPE ty_node_type,
       value TYPE string,
       index TYPE i,
       order TYPE i,
@@ -112,7 +115,7 @@ INTERFACE zif_abapgit_ajson
     IMPORTING
       iv_path TYPE string
     RETURNING
-      VALUE(rv_node_type) TYPE string.
+      VALUE(rv_node_type) TYPE ty_node_type.
 
   METHODS get_boolean
     IMPORTING
@@ -181,7 +184,7 @@ INTERFACE zif_abapgit_ajson
       iv_path TYPE string
       iv_val TYPE any
       iv_ignore_empty TYPE abap_bool DEFAULT abap_true
-      iv_node_type TYPE string OPTIONAL
+      iv_node_type TYPE ty_node_type OPTIONAL
     RETURNING
       VALUE(ri_json) TYPE REF TO zif_abapgit_ajson
     RAISING

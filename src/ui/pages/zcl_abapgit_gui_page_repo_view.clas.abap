@@ -271,6 +271,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     CREATE OBJECT ro_advanced_dropdown.
 
+    ro_advanced_dropdown->add( iv_txt = 'Activate Objects'
+                               iv_act = |{ zif_abapgit_definitions=>c_action-repo_activate_objects }?key={ mv_key }| ).
+
     IF mo_repo->is_offline( ) = abap_false. " Online ?
       ro_advanced_dropdown->add(
         iv_txt = 'Transport to Branch'

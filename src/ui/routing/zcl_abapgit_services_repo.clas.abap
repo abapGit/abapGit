@@ -56,6 +56,13 @@ CLASS zcl_abapgit_services_repo DEFINITION
         !io_repo TYPE REF TO zcl_abapgit_repo
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS activate_objects
+      IMPORTING
+        !iv_key       TYPE zif_abapgit_persistence=>ty_repo-key
+      RETURNING
+        VALUE(ri_log) TYPE REF TO zif_abapgit_log
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -94,6 +101,61 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_services_repo IMPLEMENTATION.
+
+
+  METHOD activate_objects.
+
+    DATA:
+      lo_repo       TYPE REF TO zcl_abapgit_repo,
+      lo_browser    TYPE REF TO zcl_abapgit_repo_content_list,
+      lt_repo_items TYPE zif_abapgit_definitions=>ty_repo_item_tt,
+      lv_count      TYPE i,
+      lv_message    TYPE string.
+
+    FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
+
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+
+    CREATE OBJECT lo_browser
+      EXPORTING
+        io_repo = lo_repo.
+
+    lt_repo_items = lo_browser->list( '/' ).
+
+    ri_log = lo_repo->create_new_log( 'Activation Log' ).
+
+    " Add all inactive objects to activation queue
+    zcl_abapgit_objects_activation=>clear( ).
+
+    LOOP AT lt_repo_items ASSIGNING <ls_item> WHERE inactive = abap_true.
+      zcl_abapgit_objects_activation=>add(
+        iv_type = <ls_item>-obj_type
+        iv_name = <ls_item>-obj_name ).
+      lv_count = lv_count + 1.
+    ENDLOOP.
+
+    IF lv_count = 0.
+      MESSAGE 'No inactive objects found' TYPE 'S'.
+      RETURN.
+    ENDIF.
+
+    " Activate DDIC + non-DDIC
+    zcl_abapgit_objects_activation=>activate(
+      iv_ddic = abap_true
+      ii_log  = ri_log ).
+
+    zcl_abapgit_objects_activation=>activate(
+      iv_ddic = abap_false
+      ii_log  = ri_log ).
+
+    IF ri_log->get_status( ) <> zif_abapgit_log=>c_status-error.
+      lv_message = |Successfully activated { lv_count } objects|.
+      MESSAGE lv_message TYPE 'S'.
+    ENDIF.
+
+    lo_repo->refresh( iv_drop_log = abap_false ).
+
+  ENDMETHOD.
 
 
   METHOD check_package.
@@ -276,14 +338,10 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     lt_decision = cs_checks-overwrite.
 
-    " Only if all objects are new/added (like an initial pull),
-    " the objects are handled automatically (see below)
-    LOOP AT lt_decision TRANSPORTING NO FIELDS WHERE action <> zif_abapgit_objects=>c_deserialize_action-add.
-      EXIT.
+    " Set all new objects to YES
+    LOOP AT lt_decision ASSIGNING <ls_decision> WHERE action = zif_abapgit_objects=>c_deserialize_action-add.
+      <ls_decision>-decision = zif_abapgit_definitions=>c_yes.
     ENDLOOP.
-    IF sy-subrc <> 0.
-      CLEAR lt_decision.
-    ENDIF.
 
     " Ask user what to do
     popup_overwrite( CHANGING ct_overwrite = lt_decision ).
@@ -311,21 +369,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       READ TABLE lt_decision ASSIGNING <ls_decision> WITH KEY object_type_and_name COMPONENTS
         obj_type = <ls_overwrite>-obj_type
         obj_name = <ls_overwrite>-obj_name.
-      IF sy-subrc = 0.
-        <ls_overwrite>-decision = <ls_decision>-decision.
-      ELSE.
-        " If user was not asked, deny deletions and confirm other changes (add and update)
-        CASE <ls_overwrite>-action.
-          WHEN zif_abapgit_objects=>c_deserialize_action-delete
-            OR zif_abapgit_objects=>c_deserialize_action-delete_add.
-            <ls_overwrite>-decision = zif_abapgit_definitions=>c_no.
-          WHEN zif_abapgit_objects=>c_deserialize_action-add
-            OR zif_abapgit_objects=>c_deserialize_action-update.
-            <ls_overwrite>-decision = zif_abapgit_definitions=>c_yes.
-          WHEN OTHERS.
-            ASSERT 0 = 1.
-        ENDCASE.
-      ENDIF.
+      ASSERT sy-subrc = 0.
+      <ls_overwrite>-decision = <ls_decision>-decision.
     ENDLOOP.
 
   ENDMETHOD.
@@ -336,6 +381,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     DATA: lt_columns  TYPE zif_abapgit_definitions=>ty_alv_column_tt,
           lt_selected LIKE ct_overwrite,
           li_popups   TYPE REF TO zif_abapgit_popups.
+    DATA lt_preselected_rows TYPE zif_abapgit_popups=>ty_rows.
 
     FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF ct_overwrite,
                    <ls_column>    TYPE zif_abapgit_definitions=>ty_alv_column.
@@ -358,6 +404,10 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     <ls_column>-name = 'TEXT'.
     <ls_column>-text = 'Description'.
 
+    LOOP AT ct_overwrite ASSIGNING <ls_overwrite> WHERE decision = zif_abapgit_definitions=>c_yes.
+      INSERT sy-tabix INTO TABLE lt_preselected_rows.
+    ENDLOOP.
+
     li_popups = zcl_abapgit_ui_factory=>get_popups( ).
     li_popups->popup_to_select_from_list(
       EXPORTING
@@ -366,6 +416,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
                              && | Select the objects which should be brought in line with the remote version.|
         iv_select_column_text = 'Change?'
         it_columns_to_display = lt_columns
+        it_preselected_rows   = lt_preselected_rows
       IMPORTING
         et_list               = lt_selected ).
 
@@ -491,7 +542,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     COMMIT WORK.
 
-    IF ri_log IS BOUND AND ri_log->count( ) > 0.
+    IF ri_log IS BOUND AND ri_log->get_status( ) = zif_abapgit_log=>c_status-error.
       zcl_abapgit_log_viewer=>show_log( ri_log ).
       RETURN.
     ENDIF.

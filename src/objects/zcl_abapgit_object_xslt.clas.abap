@@ -102,7 +102,9 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
     " Transformation might depend on other objects like a class
     " We attempt to activate it in late step
     IF iv_step = zif_abapgit_object=>gc_step_id-late.
-      zcl_abapgit_objects_activation=>add_item( ms_item ).
+      IF zif_abapgit_object~is_active( ) = abap_false.
+        zcl_abapgit_objects_activation=>add_item( ms_item ).
+      ENDIF.
       RETURN.
     ENDIF.
 
