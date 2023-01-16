@@ -553,7 +553,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     COMMIT WORK.
 
-    IF ri_log IS BOUND AND ri_log->count( ) > 0.
+    IF ri_log IS BOUND AND ri_log->get_status( ) = zif_abapgit_log=>c_status-error.
       zcl_abapgit_log_viewer=>show_log( ri_log ).
       RETURN.
     ENDIF.
