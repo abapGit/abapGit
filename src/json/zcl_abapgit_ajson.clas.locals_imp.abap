@@ -164,12 +164,7 @@ CLASS lcl_json_parser DEFINITION FINAL.
       ty_stack_tt TYPE STANDARD TABLE OF REF TO zif_abapgit_ajson=>ty_node.
 
     DATA mt_stack TYPE ty_stack_tt.
-
-    CLASS-METHODS join_path
-      IMPORTING
-        it_stack TYPE ty_stack_tt
-      RETURNING
-        VALUE(rv_path) TYPE string.
+    DATA mv_stack_path TYPE string.
 
     METHODS raise
       IMPORTING
@@ -264,6 +259,7 @@ CLASS lcl_json_parser IMPLEMENTATION.
     FIELD-SYMBOLS <item> LIKE LINE OF rt_json_tree.
 
     CLEAR mt_stack.
+    CLEAR mv_stack_path.
     IF iv_json IS INITIAL.
       RETURN.
     ENDIF.
@@ -287,14 +283,15 @@ CLASS lcl_json_parser IMPLEMENTATION.
 
           APPEND INITIAL LINE TO rt_json_tree ASSIGNING <item>.
 
-          <item>-type = to_lower( lo_open->qname-name ).
+          <item>-type = lo_open->qname-name.
 
           READ TABLE mt_stack INDEX 1 INTO lr_stack_top.
           IF sy-subrc = 0.
-            <item>-path = join_path( mt_stack ).
+            " Using string is faster than rebuilding path from stack
+            <item>-path = mv_stack_path.
             lr_stack_top->children = lr_stack_top->children + 1.
 
-            IF lr_stack_top->type = 'array'.
+            IF lr_stack_top->type = `array`. " This is parser type not ajson type
               <item>-name = |{ lr_stack_top->children }|.
               <item>-index = lr_stack_top->children.
             ELSE.
@@ -312,6 +309,8 @@ CLASS lcl_json_parser IMPLEMENTATION.
 
           GET REFERENCE OF <item> INTO lr_stack_top.
           INSERT lr_stack_top INTO mt_stack INDEX 1.
+          " add path component
+          mv_stack_path = mv_stack_path && <item>-name && '/'.
 
         WHEN if_sxml_node=>co_nt_element_close.
           DATA lo_close TYPE REF TO if_sxml_close_element.
@@ -323,6 +322,9 @@ CLASS lcl_json_parser IMPLEMENTATION.
             raise( 'Unexpected closing node type' ).
           ENDIF.
 
+          " remove last path component
+          mv_stack_path = substring( val = mv_stack_path
+                                     len = find( val = mv_stack_path sub = '/' occ = -2 ) + 1 ).
         WHEN if_sxml_node=>co_nt_value.
           DATA lo_value TYPE REF TO if_sxml_value_node.
           lo_value ?= lo_node.
@@ -340,21 +342,11 @@ CLASS lcl_json_parser IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD join_path.
-
-    FIELD-SYMBOLS <ref> LIKE LINE OF it_stack.
-
-    LOOP AT it_stack ASSIGNING <ref>.
-      rv_path = <ref>->name && '/' && rv_path.
-    ENDLOOP.
-
-  ENDMETHOD.
-
   METHOD raise.
 
     zcx_abapgit_ajson_error=>raise(
-      iv_location = join_path( mt_stack )
-      iv_msg      = |JSON PARSER: { iv_error } @ { join_path( mt_stack ) }| ).
+      iv_location = mv_stack_path
+      iv_msg      = |JSON PARSER: { iv_error } @ { mv_stack_path }| ).
 
   ENDMETHOD.
 
@@ -1083,7 +1075,7 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
     CLASS-METHODS insert_with_type
       IMPORTING
         iv_data            TYPE any
-        iv_type            TYPE string
+        iv_type            TYPE zif_abapgit_ajson=>ty_node_type
         is_prefix          TYPE zif_abapgit_ajson=>ty_path_name OPTIONAL
         iv_array_index     TYPE i DEFAULT 0
         ii_custom_mapping  TYPE REF TO zif_abapgit_ajson_mapping OPTIONAL
@@ -1192,7 +1184,7 @@ CLASS lcl_abap_to_json DEFINITION FINAL.
     METHODS insert_value_with_type
       IMPORTING
         iv_data TYPE any
-        iv_type TYPE string
+        iv_type TYPE zif_abapgit_ajson=>ty_node_type
         io_type TYPE REF TO cl_abap_typedescr
         is_prefix TYPE zif_abapgit_ajson=>ty_path_name
         iv_index TYPE i DEFAULT 0

@@ -102,7 +102,7 @@ CLASS zcl_abapgit_ajson_utilities IMPLEMENTATION.
 
       IF iv_keep_empty_arrays = abap_false.
         LOOP AT io_json->mt_json_tree INTO ls_json_tree
-          WHERE type = 'array' AND children = 0.
+          WHERE type = zif_abapgit_ajson=>node_type-array AND children = 0.
 
           io_json->delete( ls_json_tree-path && ls_json_tree-name ).
 
@@ -113,7 +113,7 @@ CLASS zcl_abapgit_ajson_utilities IMPLEMENTATION.
       ENDIF.
 
       LOOP AT io_json->mt_json_tree INTO ls_json_tree
-        WHERE type = 'object' AND children = 0.
+        WHERE type = zif_abapgit_ajson=>node_type-object AND children = 0.
 
         io_json->delete( ls_json_tree-path && ls_json_tree-name ).
 
@@ -184,12 +184,12 @@ CLASS zcl_abapgit_ajson_utilities IMPLEMENTATION.
 
         IF <node_a>-type = <node_b>-type.
           CASE <node_a>-type.
-            WHEN 'array'.
+            WHEN zif_abapgit_ajson=>node_type-array.
               mo_insert->touch_array( lv_path_a ).
               mo_change->touch_array( lv_path_a ).
               mo_delete->touch_array( lv_path_a ).
               diff_a_b( lv_path_a ).
-            WHEN 'object'.
+            WHEN zif_abapgit_ajson=>node_type-object.
               diff_a_b( lv_path_a ).
             WHEN OTHERS.
               IF <node_a>-value <> <node_b>-value.
@@ -203,10 +203,10 @@ CLASS zcl_abapgit_ajson_utilities IMPLEMENTATION.
         ELSE.
           " save changed type as delete + insert
           CASE <node_a>-type.
-            WHEN 'array'.
+            WHEN zif_abapgit_ajson=>node_type-array.
               mo_delete->touch_array( lv_path_a ).
               diff_a_b( lv_path_a ).
-            WHEN 'object'.
+            WHEN zif_abapgit_ajson=>node_type-object.
               diff_a_b( lv_path_a ).
             WHEN OTHERS.
               mo_delete->set(
@@ -215,10 +215,10 @@ CLASS zcl_abapgit_ajson_utilities IMPLEMENTATION.
                 iv_node_type = <node_a>-type ).
           ENDCASE.
           CASE <node_b>-type.
-            WHEN 'array'.
+            WHEN zif_abapgit_ajson=>node_type-array.
               mo_insert->touch_array( lv_path_b ).
               diff_b_a( lv_path_b ).
-            WHEN 'object'.
+            WHEN zif_abapgit_ajson=>node_type-object.
               diff_b_a( lv_path_b ).
             WHEN OTHERS.
               mo_insert->set(
@@ -230,10 +230,10 @@ CLASS zcl_abapgit_ajson_utilities IMPLEMENTATION.
       ELSE.
         " save as delete
         CASE <node_a>-type.
-          WHEN 'array'.
+          WHEN zif_abapgit_ajson=>node_type-array.
             mo_delete->touch_array( lv_path_a ).
             diff_a_b( lv_path_a ).
-          WHEN 'object'.
+          WHEN zif_abapgit_ajson=>node_type-object.
             diff_a_b( lv_path_a ).
           WHEN OTHERS.
             mo_delete->set(
@@ -257,12 +257,12 @@ CLASS zcl_abapgit_ajson_utilities IMPLEMENTATION.
       lv_path = <node_b>-path && <node_b>-name && '/'.
 
       CASE <node_b>-type.
-        WHEN 'array'.
+        WHEN zif_abapgit_ajson=>node_type-array.
           mo_insert->touch_array( lv_path ).
           diff_b_a(
             iv_path  = lv_path
             iv_array = abap_true ).
-        WHEN 'object'.
+        WHEN zif_abapgit_ajson=>node_type-object.
           diff_b_a( lv_path ).
         WHEN OTHERS.
           IF iv_array = abap_false.

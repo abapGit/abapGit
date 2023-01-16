@@ -874,7 +874,7 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
     IF ls_split_path IS INITIAL. " Assign root, exceptional processing
       ls_new_node-path = ls_split_path-path.
       ls_new_node-name = ls_split_path-name.
-      ls_new_node-type = 'array'.
+      ls_new_node-type = zif_abapgit_ajson=>node_type-array.
       INSERT ls_new_node INTO TABLE mt_json_tree.
       RETURN.
     ENDIF.
