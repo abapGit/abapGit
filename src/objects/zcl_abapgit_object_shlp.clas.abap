@@ -31,7 +31,7 @@ CLASS zcl_abapgit_object_shlp IMPLEMENTATION.
 
   METHOD adjust_exit.
 
-    CONSTANTS lc_standard_exit TYPE dd30v-selmexit VALUE 'RS_DD_SELMEXIT' ##NO_TEXT.
+    CONSTANTS lc_standard_exit TYPE dd30v-selmexit VALUE 'RS_DD_SELMEXIT'.
 
     IF cv_exit IS NOT INITIAL.
       " If exit function does not exist, replace it with standard SAP function
