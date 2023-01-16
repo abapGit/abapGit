@@ -4,11 +4,88 @@ CLASS zcl_abapgit_object_shlp DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    METHODS handle_dependencies
+      IMPORTING
+        !iv_step TYPE zif_abapgit_definitions=>ty_deserialization_step
+      CHANGING
+        !cv_exit TYPE dd30v-selmexit
+        !cv_done TYPE abap_bool.
+
+    METHODS adjust_exit
+      CHANGING
+        !cv_exit TYPE dd30v-selmexit.
+
+    METHODS check_exit
+      IMPORTING
+        !iv_exit       TYPE dd30v-selmexit
+      RETURNING
+        VALUE(rv_done) TYPE abap_bool.
+
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_object_shlp IMPLEMENTATION.
+
+
+  METHOD adjust_exit.
+
+    CONSTANTS lc_standard_exit TYPE dd30v-selmexit VALUE 'RS_DD_SELMEXIT' ##NO_TEXT.
+
+    IF cv_exit IS NOT INITIAL.
+      " If exit function does not exist, replace it with standard SAP function
+      " which exists in 7.02 and higher
+      CALL FUNCTION 'FUNCTION_EXISTS'
+        EXPORTING
+          funcname           = cv_exit
+        EXCEPTIONS
+          function_not_exist = 1
+          OTHERS             = 2.
+      IF sy-subrc <> 0.
+        cv_exit = lc_standard_exit.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD check_exit.
+
+    DATA lv_exit TYPE dd30v-selmexit.
+
+    rv_done = abap_true.
+
+    IF iv_exit IS NOT INITIAL.
+      " Check if exit function is set correctly
+      SELECT SINGLE selmexit FROM dd30v INTO lv_exit WHERE shlpname = ms_item-obj_name.
+      IF sy-subrc = 0 AND lv_exit <> iv_exit.
+        rv_done = abap_false.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD handle_dependencies.
+
+    " For search helps with dependency on exit function, we use two phases:
+    " 1) DDIC phase:
+    "    - If function does not exit, replace it with a standard SAP function
+    " 2) LATE phase
+    "    - If function was replaced, change it to the correct exit function
+    CASE iv_step.
+      WHEN zif_abapgit_object=>gc_step_id-ddic.
+        adjust_exit( CHANGING cv_exit = cv_exit ).
+
+      WHEN zif_abapgit_object=>gc_step_id-late.
+        cv_done = check_exit( cv_exit ).
+
+      WHEN OTHERS.
+        ASSERT 0 = 1.
+    ENDCASE.
+
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -37,19 +114,24 @@ CLASS zcl_abapgit_object_shlp IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 
     DATA: lv_name  TYPE ddobjname,
+          lv_done  TYPE abap_bool,
           ls_dd30v TYPE dd30v,
           lt_dd31v TYPE TABLE OF dd31v,
           lt_dd32p TYPE TABLE OF dd32p,
           lt_dd33v TYPE TABLE OF dd33v.
 
-
     io_xml->read( EXPORTING iv_name = 'DD30V'
                   CHANGING cg_data = ls_dd30v ).
 
-    IF iv_step = zif_abapgit_object=>gc_step_id-ddic AND NOT ls_dd30v-selmexit IS INITIAL.
-      ls_dd30v-selmexit = 'RS_DD_SELMEXIT'.
-    ELSEIF iv_step = zif_abapgit_object=>gc_step_id-late AND ls_dd30v-selmexit IS INITIAL.
-      RETURN. " already active
+    handle_dependencies(
+      EXPORTING
+        iv_step = iv_step
+      CHANGING
+        cv_exit = ls_dd30v-selmexit
+        cv_done = lv_done ).
+
+    IF lv_done = abap_true.
+      RETURN.
     ENDIF.
 
     io_xml->read( EXPORTING iv_name = 'DD31V_TABLE'
