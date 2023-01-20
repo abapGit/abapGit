@@ -8,6 +8,35 @@ Legend
 + : added
 - : removed
 
+2023-01-xx v1.121.0
+-------------------
+
+! CLAS,INTF: Removing STATE field in XML (#5981)
++ Repo View: Activate objects (#5994)
++ Repo View: Selectively add objects on pull (#5985)
++ Pull log: Include object counts (#5982)
++ Debug Info: Display of Deserialization Step (#5988)
++ TABU: add option to skip initial values/columns (#5922)
++ Repo View: Consolidate "Pull" and "Selective Pull" (#5951)
+* PDTS: Fix recording in transport (#6000)
+* SAPC: Fix uninstall errors (#6001)
+* SHLP: Avoid double activation (#5999)
+* DOMA: Fix domains with custom conversion exit (#5998)
+* XSLT: Avoid double activation (#5995)
+* Uninstall log: Show only if there are errors (#5996)
+* DRUL: Fix compatibility with lower releases (#5991)
+* Fix Diff: Ignore comment edge cases (#5984)
+* Pull log: Show deletion of unnecessary objects (#5974)
+* SMIM: Record deletion of objects in transport (#5975)
+* Page diff/patch: Follow-up for small files (#5976)
+* Fix syntax highlight for XML, CSS, JS (#5971)
+* Fix menus with many items (#5972)
+* Fix "duplicate file error" during pull (#5968)
+* TABU: No error when table not yet exists (#5964)
+* Prevent pull in case of duplicate files (#5952)
+* Page diff/patch: Fix dump for small files/diffs (#5956)
+* Table comparison: add guard clause to prevent long runtimes (#5954)
+
 2022-12-15 v1.120.0
 -------------------
 
