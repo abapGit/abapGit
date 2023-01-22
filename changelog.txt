@@ -25,6 +25,7 @@ Legend
 * XSLT: Avoid double activation (#5995)
 * Uninstall log: Show only if there are errors (#5996)
 * DRUL: Fix compatibility with lower releases (#5991)
+* TABL,VIEW: Simplify deserialize (#5989)
 * Fix Diff: Ignore comment edge cases (#5984)
 * Pull log: Show deletion of unnecessary objects (#5974)
 * SMIM: Record deletion of objects in transport (#5975)
