@@ -32,6 +32,20 @@ ENDCLASS.
 CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
 
+  METHOD get_additional_extensions.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD is_file_empty.
+
+    CALL METHOD io_object_json_file->('IF_AFF_FILE~IS_DELETION')
+      RECEIVING
+        result = rv_is_empty.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~delete.
 
     DATA: lr_intf_aff_obj    TYPE REF TO data,
@@ -411,7 +425,6 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           lv_name                  TYPE c LENGTH 120,
           lv_file_name             TYPE string,
           lo_file_name_mapper      TYPE REF TO object,
-          lv_dummy                 TYPE string,
           ls_additional_extensions TYPE ty_extension_mapper_pairs,
           lv_file_as_xstring       TYPE xstring.
 
@@ -508,7 +521,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
         " avoid to serialize empty content (object was never activated, exists inactive only).
         IF is_file_empty( lo_object_json_file ) = abap_true.
-          MESSAGE s821(eu) WITH lv_name INTO lv_dummy.
+          MESSAGE s821(eu) WITH lv_name INTO zcx_abapgit_exception=>null.
           zcx_abapgit_exception=>raise_t100( ).
         ENDIF.
 
@@ -551,18 +564,4 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
-
-
-  METHOD is_file_empty.
-
-    CALL METHOD io_object_json_file->('IF_AFF_FILE~IS_DELETION')
-      RECEIVING
-        result = rv_is_empty.
-
-  ENDMETHOD.
-
-  METHOD get_additional_extensions.
-    RETURN.
-  ENDMETHOD.
-
 ENDCLASS.

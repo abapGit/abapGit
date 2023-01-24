@@ -21,7 +21,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_STVI IMPLEMENTATION.
+CLASS zcl_abapgit_object_stvi IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -67,8 +67,6 @@ CLASS ZCL_ABAPGIT_OBJECT_STVI IMPLEMENTATION.
 
     DATA: ls_transaction_variant TYPE ty_transaction_variant.
 
-    DATA: lv_text TYPE natxt.
-
     io_xml->read(
       EXPORTING
         iv_name = 'STVI'
@@ -81,7 +79,7 @@ CLASS ZCL_ABAPGIT_OBJECT_STVI IMPLEMENTATION.
       EXCEPTIONS
         OTHERS    = 01.
     IF sy-subrc <> 0.
-      MESSAGE e413(ms) WITH ls_transaction_variant-shdtvciu-tcvariant INTO lv_text.
+      MESSAGE e413(ms) WITH ls_transaction_variant-shdtvciu-tcvariant INTO zcx_abapgit_exception=>null.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
