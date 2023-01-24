@@ -105,8 +105,8 @@ CLASS zcl_abapgit_popups DEFINITION
         !iv_selection_mode TYPE salv_de_constant
         !iv_object_list    TYPE abap_bool
       EXPORTING
-        !ev_report         TYPE syrepid
-        !ev_pfstatus       TYPE sypfkey.
+        !ev_report         TYPE sy-repid
+        !ev_pfstatus       TYPE sy-pfkey.
 ENDCLASS.
 
 
@@ -1109,8 +1109,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
   METHOD zif_abapgit_popups~popup_to_select_from_list.
 
-    DATA: lv_pfstatus     TYPE sypfkey,
-          lv_report       TYPE syrepid,
+    DATA: lv_pfstatus     TYPE sy-pfkey,
+          lv_report       TYPE sy-repid,
           lv_object_list  TYPE abap_bool,
           lo_events       TYPE REF TO cl_salv_events_table,
           lo_columns      TYPE REF TO cl_salv_columns_table,
@@ -1154,7 +1154,6 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       iv_height = iv_end_line - iv_start_line ).
 
     TRY.
-        DATA lv_list TYPE abap_bool VALUE abap_true.
         cl_salv_table=>factory( IMPORTING r_salv_table = mo_select_list_popup
                                 CHANGING  t_table      = <lt_table> ).
 
