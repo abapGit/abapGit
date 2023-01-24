@@ -18,6 +18,7 @@ Legend
 + Debug Info: Display of Deserialization Step (#5988)
 + TABU: add option to skip initial values/columns (#5922)
 + Repo View: Consolidate "Pull" and "Selective Pull" (#5951)
+* TOBJ: Improve error messages (#6007)
 * PDTS: Fix recording in transport (#6000)
 * SAPC: Fix uninstall errors (#6001)
 * SHLP: Avoid double activation (#5999)
