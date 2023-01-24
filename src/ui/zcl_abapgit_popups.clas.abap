@@ -48,7 +48,7 @@ CLASS zcl_abapgit_popups DEFINITION
     DATA mv_cancel TYPE abap_bool VALUE abap_false.
     DATA mo_table_descr TYPE REF TO cl_abap_tabledescr .
     DATA ms_position TYPE ty_popup_position.
-    data mv_object_list TYPE abap_bool.
+    DATA mv_object_list TYPE abap_bool.
 
     METHODS add_field
       IMPORTING
