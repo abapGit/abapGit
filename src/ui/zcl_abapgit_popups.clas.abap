@@ -48,7 +48,6 @@ CLASS zcl_abapgit_popups DEFINITION
     DATA mv_cancel TYPE abap_bool VALUE abap_false.
     DATA mo_table_descr TYPE REF TO cl_abap_tabledescr .
     DATA ms_position TYPE ty_popup_position.
-    DATA mv_object_list TYPE abap_bool.
 
     METHODS add_field
       IMPORTING
@@ -67,16 +66,16 @@ CLASS zcl_abapgit_popups DEFINITION
       EXPORTING
         !et_list TYPE INDEX TABLE .
     METHODS on_select_list_link_click
-        FOR EVENT link_click OF cl_salv_events_table
+      FOR EVENT link_click OF cl_salv_events_table
       IMPORTING
         !row
         !column .
     METHODS on_select_list_function_click
-        FOR EVENT added_function OF cl_salv_events_table
+      FOR EVENT added_function OF cl_salv_events_table
       IMPORTING
         !e_salv_function .
     METHODS on_double_click
-        FOR EVENT double_click OF cl_salv_events_table
+      FOR EVENT double_click OF cl_salv_events_table
       IMPORTING
         !row
         !column .
@@ -101,6 +100,13 @@ CLASS zcl_abapgit_popups DEFINITION
         !et_commits     TYPE zif_abapgit_definitions=>ty_commit_tt
       RAISING
         zcx_abapgit_exception.
+    METHODS get_pfstatus
+      IMPORTING
+        !iv_selection_mode TYPE salv_de_constant
+        !iv_object_list    TYPE abap_bool
+      EXPORTING
+        !ev_report         TYPE syrepid
+        !ev_pfstatus       TYPE sypfkey.
 ENDCLASS.
 
 
@@ -271,6 +277,35 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_pfstatus.
+
+    ev_report  = 'SAPMSVIM'.
+
+    IF iv_selection_mode = if_salv_c_selection_mode=>single.
+      ev_pfstatus = '110'.
+    ELSE.
+      ev_pfstatus = '102'.
+
+      IF iv_object_list = abap_true.
+        " For object lists with multiple selections, try to use a PFSTATUS that includes
+        " an additional button to show other selection options
+        CALL FUNCTION 'RS_CUA_STATUS_CHECK'
+          EXPORTING
+            objectname       = 'SELECT_MULTI_WK'
+            program          = 'SAPLSEDI_POPUPS'
+          EXCEPTIONS
+            object_not_found = 1
+            OTHERS           = 2.
+        IF sy-subrc = 0.
+          ev_report   = 'SAPLSEDI_POPUPS'.
+          ev_pfstatus = 'SELECT_MULTI_WK'.
+        ENDIF.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD get_selected_rows.
 
     DATA: lv_condition TYPE string,
@@ -369,76 +404,20 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     ASSIGN mr_table->* TO <lt_table>.
     ASSERT sy-subrc = 0.
 
+    " Work for functions of SAPMSVIM and SAPLSEDI_POPUPS
     CASE e_salv_function.
-      WHEN 'O.K.'.
+      WHEN 'O.K.' OR 'OK'.
         mv_cancel = abap_false.
         mo_select_list_popup->close_screen( ).
 
-      WHEN 'ABR'.
+      WHEN 'ABR' OR 'CANCEL'.
         "Canceled: clear list to overwrite nothing
         CLEAR <lt_table>.
         mv_cancel = abap_true.
         mo_select_list_popup->close_screen( ).
 
-      WHEN 'SALL'.
-        IF mv_object_list = abap_true.
-          ls_selection-varoption = 'All objects'.
-          APPEND ls_selection TO lt_selection.
-          ls_selection-varoption = 'Packages'.
-          APPEND ls_selection TO lt_selection.
-          ls_selection-varoption = 'DDIC objects'.
-          APPEND ls_selection TO lt_selection.
-          ls_selection-varoption = 'Source code'.
-          APPEND ls_selection TO lt_selection.
-          ls_selection-varoption = 'Enhancements'.
-          APPEND ls_selection TO lt_selection.
-
-          ls_position-start_column = ms_position-start_column + 20.
-          ls_position-start_row    = ms_position-start_row + 5.
-
-          CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
-            EXPORTING
-              titel      = 'Selection'
-              textline1  = 'Which objects should be selected?'
-              start_col  = ls_position-start_column
-              start_row  = ls_position-start_row
-              cursorline = 1
-            IMPORTING
-              answer     = lv_answer
-            TABLES
-              t_spopli   = lt_selection
-            EXCEPTIONS
-              OTHERS     = 1.
-          IF sy-subrc <> 0 OR lv_answer = c_answer_cancel.
-            RETURN.
-          ENDIF.
-        ENDIF.
-
+      WHEN 'SALL' OR 'SEL_ALL'.
         LOOP AT <lt_table> ASSIGNING <lg_line>.
-
-          IF mv_object_list = abap_true.
-            ASSIGN COMPONENT c_fieldname_obj_type OF STRUCTURE <lg_line> TO <lv_object>.
-            ASSERT sy-subrc = 0.
-
-            CASE lv_answer.
-              WHEN '2'. " Packages
-                IF 'DEVC' <> <lv_object>.
-                  CONTINUE.
-                ENDIF.
-              WHEN '3'. " DDIC
-                IF zcl_abapgit_objects_activation=>is_ddic_type( <lv_object> ) = abap_false.
-                  CONTINUE.
-                ENDIF.
-              WHEN '4'. " Source Code
-                IF 'CLAS,FUGR,INTF,PROG,TYPE' NS <lv_object>.
-                  CONTINUE.
-                ENDIF.
-              WHEN '5'. " Enhancements
-                IF 'ENHO,ENHS,ENHC,ENSC' NS <lv_object>.
-                  CONTINUE.
-                ENDIF.
-            ENDCASE.
-          ENDIF.
 
           ASSIGN COMPONENT c_fieldname_selected
                  OF STRUCTURE <lg_line>
@@ -451,7 +430,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
         mo_select_list_popup->refresh( ).
 
-      WHEN 'DSEL'.
+      WHEN 'DSEL' OR 'SEL_DEL'.
         LOOP AT <lt_table> ASSIGNING <lg_line>.
 
           ASSIGN COMPONENT c_fieldname_selected
@@ -460,6 +439,73 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
           ASSERT sy-subrc = 0.
 
           <lv_selected> = abap_false.
+
+        ENDLOOP.
+
+        mo_select_list_popup->refresh( ).
+
+      WHEN 'SEL_KEY'.
+        ls_selection-varoption = 'All objects'.
+        APPEND ls_selection TO lt_selection.
+        ls_selection-varoption = 'Packages'.
+        APPEND ls_selection TO lt_selection.
+        ls_selection-varoption = 'DDIC objects'.
+        APPEND ls_selection TO lt_selection.
+        ls_selection-varoption = 'Source code'.
+        APPEND ls_selection TO lt_selection.
+        ls_selection-varoption = 'Enhancements'.
+        APPEND ls_selection TO lt_selection.
+
+        ls_position-start_column = ms_position-start_column + 20.
+        ls_position-start_row    = ms_position-start_row + 5.
+
+        CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
+          EXPORTING
+            titel      = 'Selection'
+            textline1  = 'Which objects should be selected?'
+            start_col  = ls_position-start_column
+            start_row  = ls_position-start_row
+            cursorline = 1
+          IMPORTING
+            answer     = lv_answer
+          TABLES
+            t_spopli   = lt_selection
+          EXCEPTIONS
+            OTHERS     = 1.
+        IF sy-subrc <> 0 OR lv_answer = c_answer_cancel.
+          RETURN.
+        ENDIF.
+
+        LOOP AT <lt_table> ASSIGNING <lg_line>.
+
+          ASSIGN COMPONENT c_fieldname_obj_type OF STRUCTURE <lg_line> TO <lv_object>.
+          ASSERT sy-subrc = 0.
+
+          CASE lv_answer.
+            WHEN '2'. " Packages
+              IF 'DEVC' <> <lv_object>.
+                CONTINUE.
+              ENDIF.
+            WHEN '3'. " DDIC
+              IF zcl_abapgit_objects_activation=>is_ddic_type( <lv_object> ) = abap_false.
+                CONTINUE.
+              ENDIF.
+            WHEN '4'. " Source Code
+              IF 'CLAS,FUGR,INTF,PROG,TYPE' NS <lv_object>.
+                CONTINUE.
+              ENDIF.
+            WHEN '5'. " Enhancements
+              IF 'ENHO,ENHS,ENHC,ENSC' NS <lv_object>.
+                CONTINUE.
+              ENDIF.
+          ENDCASE.
+
+          ASSIGN COMPONENT c_fieldname_selected
+                 OF STRUCTURE <lg_line>
+                 TO <lv_selected>.
+          ASSERT sy-subrc = 0.
+
+          <lv_selected> = abap_true.
 
         ENDLOOP.
 
@@ -1064,6 +1110,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
   METHOD zif_abapgit_popups~popup_to_select_from_list.
 
     DATA: lv_pfstatus     TYPE sypfkey,
+          lv_report       TYPE syrepid,
+          lv_object_list  TYPE abap_bool,
           lo_events       TYPE REF TO cl_salv_events_table,
           lo_columns      TYPE REF TO cl_salv_columns_table,
           lt_columns      TYPE salv_t_column_ref,
@@ -1105,23 +1153,10 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       iv_width  = iv_end_column - iv_start_column
       iv_height = iv_end_line - iv_start_line ).
 
-    mv_object_list = abap_false.
-
     TRY.
+        DATA lv_list TYPE abap_bool VALUE abap_true.
         cl_salv_table=>factory( IMPORTING r_salv_table = mo_select_list_popup
                                 CHANGING  t_table      = <lt_table> ).
-
-        CASE iv_selection_mode.
-          WHEN if_salv_c_selection_mode=>single.
-            lv_pfstatus = '110'.
-
-          WHEN OTHERS.
-            lv_pfstatus = '102'.
-
-        ENDCASE.
-
-        mo_select_list_popup->set_screen_status( pfstatus = lv_pfstatus
-                                                 report   = 'SAPMSVIM' ).
 
         mo_select_list_popup->set_screen_popup( start_column = ms_position-start_column
                                                 end_column   = ms_position-end_column
@@ -1193,10 +1228,21 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
           ENDCASE.
 
           IF ls_column-columnname = c_fieldname_obj_type.
-            mv_object_list = abap_true.
+            lv_object_list = abap_true.
           ENDIF.
 
         ENDLOOP.
+
+        get_pfstatus(
+          EXPORTING
+            iv_selection_mode = iv_selection_mode
+            iv_object_list    = lv_object_list
+          IMPORTING
+            ev_report         = lv_report
+            ev_pfstatus       = lv_pfstatus ).
+
+        mo_select_list_popup->set_screen_status( pfstatus = lv_pfstatus
+                                                 report   = lv_report ).
 
         mo_select_list_popup->display( ).
 
