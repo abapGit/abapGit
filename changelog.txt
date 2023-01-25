@@ -11,7 +11,6 @@ Legend
 2023-01-24 v1.121.0
 -------------------
 
-! CLAS,INTF: Removing STATE field in XML (#5981)
 + Repo View: Activate objects (#5994)
 + Repo View: Selectively add objects on pull (#5985)
 + Pull log: Include object counts (#5982)
