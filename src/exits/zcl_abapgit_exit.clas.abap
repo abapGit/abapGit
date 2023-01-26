@@ -347,10 +347,7 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
       gi_exit->validate_before_push(
           is_comment     = is_comment
           io_stage       = io_stage
-          it_old_objects = it_old_objects
-          iv_parent      = iv_parent
-          iv_url         = iv_url
-          iv_branch_name = iv_branch_name ).
+          io_repo        = io_repo ).
     ENDIF.
 
   ENDMETHOD.

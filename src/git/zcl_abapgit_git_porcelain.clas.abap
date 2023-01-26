@@ -176,16 +176,7 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         iv_url TYPE string
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS validate_before_push
-      IMPORTING
-        !is_comment     TYPE zif_abapgit_definitions=>ty_comment
-        !io_stage       TYPE REF TO zcl_abapgit_stage
-        !it_old_objects TYPE zif_abapgit_definitions=>ty_objects_tt
-        !iv_parent      TYPE zif_abapgit_definitions=>ty_sha1
-        !iv_url         TYPE string
-        !iv_branch_name TYPE string
-      RAISING
-        zcx_abapgit_exception .
+
 ENDCLASS.
 
 
@@ -500,14 +491,6 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
                    <ls_updated> LIKE LINE OF rs_result-updated_files,
                    <ls_exp>     LIKE LINE OF lt_expanded.
 
-    validate_before_push(
-        is_comment     = is_comment
-        io_stage       = io_stage
-        it_old_objects = it_old_objects
-        iv_parent      = iv_parent
-        iv_url         = iv_url
-        iv_branch_name = iv_branch_name ).
-
     lt_expanded = full_tree( it_objects = it_old_objects
                              iv_parent  = iv_parent ).
 
@@ -808,21 +791,6 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
           zcx_abapgit_exception=>raise( 'walk_tree: unknown chmod' ).
       ENDCASE.
     ENDLOOP.
-
-  ENDMETHOD.
-
-  METHOD validate_before_push.
-
-    DATA li_exit TYPE REF TO zif_abapgit_exit.
-
-    li_exit = zcl_abapgit_exit=>get_instance( ).
-    li_exit->validate_before_push(
-        is_comment     = is_comment
-        io_stage       = io_stage
-        it_old_objects = it_old_objects
-        iv_parent      = iv_parent
-        iv_url         = iv_url
-        iv_branch_name = iv_branch_name ).
 
   ENDMETHOD.
 
