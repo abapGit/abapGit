@@ -176,7 +176,7 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         iv_url TYPE string
       RAISING
         zcx_abapgit_exception .
-    METHODS validate_before_push
+    CLASS-METHODS validate_before_push
       IMPORTING
         !is_comment     TYPE zif_abapgit_definitions=>ty_comment
         !io_stage       TYPE REF TO zcl_abapgit_stage
@@ -500,7 +500,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
                    <ls_updated> LIKE LINE OF rs_result-updated_files,
                    <ls_exp>     LIKE LINE OF lt_expanded.
 
-    zcl_abapgit_exit=>get_instance( )->validate_before_push(
+    validate_before_push(
         is_comment     = is_comment
         io_stage       = io_stage
         it_old_objects = it_old_objects
@@ -817,14 +817,12 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
     li_exit = zcl_abapgit_exit=>get_instance( ).
     li_exit->validate_before_push(
-      EXPORTING
         is_comment     = is_comment
         io_stage       = io_stage
         it_old_objects = it_old_objects
         iv_parent      = iv_parent
         iv_url         = iv_url
-        iv_branch_name = iv_branch_name
-    ).
+        iv_branch_name = iv_branch_name ).
 
   ENDMETHOD.
 
