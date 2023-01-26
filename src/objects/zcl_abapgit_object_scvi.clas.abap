@@ -68,8 +68,6 @@ CLASS zcl_abapgit_object_scvi IMPLEMENTATION.
 
     DATA: ls_screen_variant TYPE ty_screen_variant.
 
-    DATA: lv_text TYPE natxt.
-
     io_xml->read(
       EXPORTING
         iv_name = 'SCVI'
@@ -82,7 +80,7 @@ CLASS zcl_abapgit_object_scvi IMPLEMENTATION.
       EXCEPTIONS
         OTHERS    = 01.
     IF sy-subrc <> 0.
-      MESSAGE e413(ms) WITH ls_screen_variant-shdsvci-scvariant INTO lv_text.
+      MESSAGE e413(ms) WITH ls_screen_variant-shdsvci-scvariant INTO zcx_abapgit_exception=>null.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 

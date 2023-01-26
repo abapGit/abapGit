@@ -40,11 +40,68 @@ CLASS zcl_abapgit_object_doma DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         !it_dd07v TYPE dd07v_tab
       RAISING
         zcx_abapgit_exception .
+
+    METHODS handle_dependencies
+      IMPORTING
+        !iv_step TYPE zif_abapgit_definitions=>ty_deserialization_step
+      CHANGING
+        !cv_exit TYPE dd01v-convexit
+        !cv_done TYPE abap_bool.
+
+    METHODS adjust_exit
+      CHANGING
+        !cv_exit TYPE dd01v-convexit.
+
+    METHODS check_exit
+      IMPORTING
+        !iv_exit       TYPE dd01v-convexit
+      RETURNING
+        VALUE(rv_done) TYPE abap_bool.
+
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_object_doma IMPLEMENTATION.
+
+
+  METHOD adjust_exit.
+
+    DATA lv_function TYPE funcname.
+
+    IF cv_exit IS NOT INITIAL.
+      lv_function = |CONVERSION_EXIT_{ cv_exit }_INPUT|.
+
+      " If exit function does not exist, remove it
+      CALL FUNCTION 'FUNCTION_EXISTS'
+        EXPORTING
+          funcname           = lv_function
+        EXCEPTIONS
+          function_not_exist = 1
+          OTHERS             = 2.
+      IF sy-subrc <> 0.
+        cv_exit = ''.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD check_exit.
+
+    DATA lv_exit TYPE dd01v-convexit.
+
+    rv_done = abap_true.
+
+    IF iv_exit IS NOT INITIAL.
+      " Check if exit function is set correctly
+      SELECT SINGLE convexit FROM dd01v INTO lv_exit WHERE domname = ms_item-obj_name.
+      IF sy-subrc = 0 AND lv_exit <> iv_exit.
+        rv_done = abap_false.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD deserialize_texts.
@@ -121,6 +178,27 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD handle_dependencies.
+
+    " For domains with dependency on conversion exit function, we use two phases:
+    " 1) DDIC phase:
+    "    - If function does not exit, remove the exit function
+    " 2) LATE phase
+    "    - If function was removed, change it to the correct exit function
+    CASE iv_step.
+      WHEN zif_abapgit_object=>gc_step_id-ddic.
+        adjust_exit( CHANGING cv_exit = cv_exit ).
+
+      WHEN zif_abapgit_object=>gc_step_id-late.
+        cv_done = check_exit( cv_exit ).
+
+      WHEN OTHERS.
+        ASSERT 0 = 1.
+    ENDCASE.
 
   ENDMETHOD.
 
@@ -258,10 +336,8 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
 * package SEDD
 * package SDIC
 
-* fm TR_TADIR_INTERFACE
-* fm RS_CORR_INSERT ?
-
     DATA: lv_name  TYPE ddobjname,
+          lv_done  TYPE abap_bool,
           ls_dd01v TYPE dd01v,
           lt_dd07v TYPE TABLE OF dd07v.
 
@@ -271,6 +347,17 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
                   CHANGING  cg_data = ls_dd01v ).
     io_xml->read( EXPORTING iv_name = 'DD07V_TAB'
                   CHANGING  cg_data = lt_dd07v ).
+
+    handle_dependencies(
+      EXPORTING
+        iv_step = iv_step
+      CHANGING
+        cv_exit = ls_dd01v-convexit
+        cv_done = lv_done ).
+
+    IF lv_done = abap_true.
+      RETURN.
+    ENDIF.
 
     corr_insert( iv_package      = iv_package
                  ig_object_class = 'DICT' ).
@@ -329,6 +416,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
   ENDMETHOD.
 
 

@@ -295,11 +295,10 @@ CLASS ltcl_get_t100_longtext IMPLEMENTATION.
   METHOD test01.
 
     DATA: lx_err    TYPE REF TO zcx_abapgit_exception,
-          lv_dummy  TYPE string,
           lv_result TYPE string.
 
     TRY.
-        MESSAGE e058(00) WITH 'Value_1' 'Value_2' 'Value_3' 'Value_4' INTO lv_dummy.
+        MESSAGE e058(00) WITH 'Value_1' 'Value_2' 'Value_3' 'Value_4' INTO zcx_abapgit_exception=>null.
         zcx_abapgit_exception=>raise_t100( ).
       CATCH zcx_abapgit_exception INTO lx_err.
         lv_result = lx_err->get_longtext( ).

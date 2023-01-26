@@ -471,7 +471,19 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
 
+    IF it_tadir IS INITIAL.
+      RETURN.
+    ENDIF.
+
     lt_tadir = it_tadir.
+
+    IF ii_log IS BOUND.
+      IF lines( lt_tadir ) = 1.
+        ii_log->add_info( |>>> Deleting 1 object| ).
+      ELSE.
+        ii_log->add_info( |>>> Deleting { lines( lt_tadir ) } objects| ).
+      ENDIF.
+    ENDIF.
 
     IF is_checks-transport-required = abap_true.
       zcl_abapgit_default_transport=>get_instance( )->set( is_checks-transport-transport ).
@@ -515,11 +527,17 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
             " make sure to save object deletions
             COMMIT WORK.
+
+            IF ii_log IS BOUND.
+              ii_log->add_info( iv_msg  = |Object { ls_item-obj_type } { ls_item-obj_name } deleted|
+                                is_item = ls_item ).
+            ENDIF.
+
           CATCH zcx_abapgit_exception INTO lx_error.
             IF ii_log IS BOUND.
               ii_log->add_exception( ix_exc  = lx_error
                                      is_item = ls_item ).
-              ii_log->add_error( iv_msg = |Deletion of object { ls_item-obj_name } failed|
+              ii_log->add_error( iv_msg  = |Deletion of object { ls_item-obj_name } failed|
                                  is_item = ls_item ).
             ENDIF.
         ENDTRY.
@@ -600,6 +618,10 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       io_repo = io_repo
       ii_log = ii_log ).
 
+    IF lt_results IS INITIAL.
+      RETURN.
+    ENDIF.
+
     zcl_abapgit_objects_check=>checks_adjust(
       EXPORTING
         io_repo    = io_repo
@@ -614,7 +636,11 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     check_objects_locked( iv_language = io_repo->get_dot_abapgit( )->get_main_language( )
                           it_items    = lt_items ).
 
-    ii_log->add_success( |Prepare Deserialize| ).
+    IF lines( lt_items ) = 1.
+      ii_log->add_info( |>>> Deserializing 1 object| ).
+    ELSE.
+      ii_log->add_info( |>>> Deserializing { lines( lt_items ) } objects| ).
+    ENDIF.
 
     lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
     LOOP AT lt_results ASSIGNING <ls_result>.
@@ -755,7 +781,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     zcl_abapgit_objects_activation=>clear( ).
 
-    ii_log->add_success( |Step { is_step-order } - { is_step-descr }| ).
+    ii_log->add_success( |>> Step { is_step-order } - { is_step-descr }| ).
 
     li_progress = zcl_abapgit_progress=>get_instance( lines( is_step-objects ) ).
 

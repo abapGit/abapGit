@@ -22,6 +22,9 @@ CLASS zcx_abapgit_exception DEFINITION
         what_to_do      TYPE string VALUE `&WHAT_TO_DO&`,
         sys_admin       TYPE string VALUE `&SYS_ADMIN&`,
       END OF c_section_token .
+
+    CLASS-DATA null TYPE string.
+
     DATA msgv1 TYPE symsgv READ-ONLY .
     DATA msgv2 TYPE symsgv READ-ONLY .
     DATA msgv3 TYPE symsgv READ-ONLY .
@@ -133,7 +136,7 @@ ENDCLASS.
 
 
 
-CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
+CLASS zcx_abapgit_exception IMPLEMENTATION.
 
 
   METHOD constructor ##ADT_SUPPRESS_GENERATION.
@@ -488,7 +491,7 @@ CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
     ENDDO.
 
     " Set syst using generic error message
-    MESSAGE e001(00) WITH ls_msg-msgv1 ls_msg-msgv2 ls_msg-msgv3 ls_msg-msgv4 INTO lv_rest.
+    MESSAGE e001(00) WITH ls_msg-msgv1 ls_msg-msgv2 ls_msg-msgv3 ls_msg-msgv4 INTO null.
 
     rs_msg = ls_msg.
 

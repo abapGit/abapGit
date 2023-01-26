@@ -81,7 +81,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
+CLASS zcl_abapgit_transport IMPLEMENTATION.
 
 
   METHOD add_all_objects_to_trans_req.
@@ -387,8 +387,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
 
     DATA:
       ls_trkorr  TYPE trwbo_request_header,
-      ls_request TYPE trwbo_request,
-      lv_text    TYPE string.
+      ls_request TYPE trwbo_request.
 
     ls_trkorr-trkorr = iv_transport_request.
 
@@ -397,7 +396,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
     IF  ls_request-h-trstatus <> c_tr_status-modifiable
     AND ls_request-h-trstatus <> c_tr_status-modifiable_protected.
       " Task/request &1 has already been released
-      MESSAGE e064(tk) WITH iv_transport_request INTO lv_text.
+      MESSAGE e064(tk) WITH iv_transport_request INTO zcx_abapgit_exception=>null.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 

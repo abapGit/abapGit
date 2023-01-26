@@ -1003,31 +1003,31 @@ CLASS ltcl_reader_test IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = li_cut->get_node_type( '/' )
-      exp = 'object' ).
+      exp = zif_abapgit_ajson=>node_type-object ).
     cl_abap_unit_assert=>assert_equals(
       act = li_cut->get_node_type( '/string' )
-      exp = 'str' ).
+      exp = zif_abapgit_ajson=>node_type-string ).
     cl_abap_unit_assert=>assert_equals(
       act = li_cut->get_node_type( '/number' )
-      exp = 'num' ).
+      exp = zif_abapgit_ajson=>node_type-number ).
     cl_abap_unit_assert=>assert_equals(
       act = li_cut->get_node_type( '/float' )
-      exp = 'num' ).
+      exp = zif_abapgit_ajson=>node_type-number ).
     cl_abap_unit_assert=>assert_equals(
       act = li_cut->get_node_type( '/boolean' )
-      exp = 'bool' ).
+      exp = zif_abapgit_ajson=>node_type-boolean ).
     cl_abap_unit_assert=>assert_equals(
       act = li_cut->get_node_type( '/false' )
-      exp = 'bool' ).
+      exp = zif_abapgit_ajson=>node_type-boolean ).
     cl_abap_unit_assert=>assert_equals(
       act = li_cut->get_node_type( '/null' )
-      exp = 'null' ).
+      exp = zif_abapgit_ajson=>node_type-null ).
     cl_abap_unit_assert=>assert_equals(
       act = li_cut->get_node_type( '/date' )
-      exp = 'str' ).
+      exp = zif_abapgit_ajson=>node_type-string ).
     cl_abap_unit_assert=>assert_equals(
       act = li_cut->get_node_type( '/issues' )
-      exp = 'array' ).
+      exp = zif_abapgit_ajson=>node_type-array ).
 
   ENDMETHOD.
 
@@ -2987,12 +2987,12 @@ CLASS ltcl_writer_test IMPLEMENTATION.
     LOOP AT io_json_in->mt_json_tree ASSIGNING <node> WHERE path = iv_path.
       lv_path = <node>-path && <node>-name && '/'.
       CASE <node>-type.
-        WHEN 'array'.
+        WHEN zif_abapgit_ajson=>node_type-array.
           io_json_out->touch_array( lv_path ).
           set_with_type_slice( io_json_in  = io_json_in
                                io_json_out = io_json_out
                                iv_path     = lv_path ).
-        WHEN 'object'.
+        WHEN zif_abapgit_ajson=>node_type-object.
           set_with_type_slice( io_json_in  = io_json_in
                                io_json_out = io_json_out
                                iv_path     = lv_path ).
@@ -3126,13 +3126,23 @@ CLASS ltcl_writer_test IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = zcl_abapgit_ajson=>new( )->setx( '/:1' )->stringify( )
-      exp = '1' ). " Hmmm ?
+      exp = '1' ). " Because set( path = '/' ) would write root node
 
     cl_abap_unit_assert=>assert_equals(
       act = zcl_abapgit_ajson=>new( )->setx( ':1' )->stringify( )
-      exp = '1' ). " Hmmm ?
+      exp = '1' ). " Because set( path = '' ) would write root node
 
-    " TODO some negative tests like "/a:", ""
+*    cl_abap_unit_assert=>assert_equals(
+*      act = zcl_ajson=>new( )->setx( '' )->stringify( )
+*      exp = '{}' ). " problem is that root node not set so it is not an object
+
+*    cl_abap_unit_assert=>assert_equals(
+*      act = zcl_ajson=>new( )->setx( '/a:' )->stringify( )
+*      exp = '{}' ). " should setx ignore empty values or set an empty string ? Or null ?
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_ajson=>new( )->setx( '/a:""' )->stringify( )
+      exp = '{"a":""}' ).
 
   ENDMETHOD.
 
@@ -3144,7 +3154,7 @@ CLASS ltcl_writer_test IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = zcl_abapgit_ajson=>new( )->setx( '/a:00.123' )->stringify( )
-      exp = '{"a":"00.123"}' ). " hmmm
+      exp = '{"a":"00.123"}' ). " not a number
 
     cl_abap_unit_assert=>assert_equals(
       act = zcl_abapgit_ajson=>new( )->setx( '/a:.123' )->stringify( )
