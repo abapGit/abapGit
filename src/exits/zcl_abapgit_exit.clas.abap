@@ -345,7 +345,6 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
 
     IF gi_exit IS NOT INITIAL.
       gi_exit->validate_before_push(
-        EXPORTING
           is_comment     = is_comment
           io_stage       = io_stage
           it_old_objects = it_old_objects

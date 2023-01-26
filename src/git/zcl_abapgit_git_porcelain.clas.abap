@@ -501,14 +501,12 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
                    <ls_exp>     LIKE LINE OF lt_expanded.
 
     zcl_abapgit_exit=>get_instance( )->validate_before_push(
-      EXPORTING
         is_comment     = is_comment
         io_stage       = io_stage
         it_old_objects = it_old_objects
         iv_parent      = iv_parent
         iv_url         = iv_url
-        iv_branch_name = iv_branch_name
-    ).
+        iv_branch_name = iv_branch_name ).
 
     lt_expanded = full_tree( it_objects = it_old_objects
                              iv_parent  = iv_parent ).
