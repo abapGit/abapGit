@@ -117,8 +117,7 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
           lv_concname     TYPE rsdxx-objname,
           ls_transp_key   TYPE trkey,
           ls_e071         TYPE e071,
-          lv_clm_corrnum  TYPE e070-trkorr,
-          lv_message      TYPE string.
+          lv_clm_corrnum  TYPE e070-trkorr.
 
     CONCATENATE mv_name '-' mv_id INTO lv_concname.
     ls_enqueue-objtype = c_objtype_extension_index.
@@ -152,7 +151,7 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
 
     IF sy-subrc <> 0.
       " & was not deleted (correction entry not possible or canceled)
-      MESSAGE s015(e2) WITH lv_concname INTO lv_message.
+      MESSAGE s015(e2) WITH lv_concname INTO zcx_abapgit_exception=>null.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
@@ -196,7 +195,7 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
 
     IF sy-subrc <> 0.
       " Internal error & in & (contact person in charge)
-      MESSAGE i008(e2) WITH 'DD_DD_TO_E071' 'RS_DD_INDX_DELETE' INTO lv_message.
+      MESSAGE i008(e2) WITH 'DD_DD_TO_E071' 'RS_DD_INDX_DELETE' INTO zcx_abapgit_exception=>null.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 

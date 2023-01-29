@@ -90,7 +90,6 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
 
     DATA:
       lv_act_head            TYPE activ_auth,
-      lv_dummy               TYPE string,
       lo_suso                TYPE REF TO object,
       lv_failed              TYPE abap_bool,
       lv_suso_collect_in_cts TYPE i,
@@ -126,7 +125,7 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
 
       IF lv_failed = abap_true.
         " Object & does not exist; choose an existing object
-        MESSAGE s111(01) WITH mv_objectname INTO lv_dummy.
+        MESSAGE s111(01) WITH mv_objectname INTO zcx_abapgit_exception=>null.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
