@@ -344,10 +344,13 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
   METHOD zif_abapgit_exit~validate_before_push.
 
     IF gi_exit IS NOT INITIAL.
-      gi_exit->validate_before_push(
-          is_comment     = is_comment
-          io_stage       = io_stage
-          io_repo        = io_repo ).
+      TRY.
+          gi_exit->validate_before_push(
+            is_comment = is_comment
+            io_stage   = io_stage
+            io_repo    = io_repo ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
     ENDIF.
 
   ENDMETHOD.
