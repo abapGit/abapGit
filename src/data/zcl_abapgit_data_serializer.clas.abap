@@ -33,7 +33,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_data_serializer IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
 
 
   METHOD convert_itab_to_json.
