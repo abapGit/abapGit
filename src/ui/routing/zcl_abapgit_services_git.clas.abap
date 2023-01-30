@@ -92,6 +92,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
     ENDIF.
 
     validate_before_push(
+      EXPORTING
         is_comment = ls_comment
         io_stage   = io_stage
         io_repo    = io_repo ).
