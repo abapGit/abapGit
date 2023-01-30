@@ -118,15 +118,15 @@ CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
 
       TRY.
           lr_data = read_database_table(
-                      iv_name  = ls_config-name
-                      it_where = ls_config-where ).
+            iv_name  = ls_config-name
+            it_where = ls_config-where ).
 
           ls_file-data = convert_itab_to_json(
             ir_data         = lr_data
             iv_skip_initial = ls_config-skip_initial ).
-
         CATCH zcx_abapgit_exception.
           " DB table might not yet exist
+          ls_file-data = zcl_abapgit_convert=>string_to_xstring_utf8( '[]' ).
       ENDTRY.
 
       ls_file-filename = zcl_abapgit_data_utils=>build_filename( ls_config ).

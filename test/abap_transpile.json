@@ -202,7 +202,10 @@
       {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "diff16", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
       {"object": "ZCL_ABAPGIT_DIFF", "class": "ltcl_diff", "method": "map_beacons", "note": "fm RS_CMP_COMPUTE_DELTA + Void type: RSWSOURCET"},
 
-      {"object": "ZCL_ABAPGIT_USER_RECORD", "class": "ltcl_user_record", "method": "test_invalid_user",                   "note": "Void type: BAPIADDR3"},
+      {"object": "ZCL_ABAPGIT_USER_RECORD", "class": "ltcl_user_record", "method": "test_invalid_user", "note": "Void type: BAPIADDR3"},
+
+      {"object": "ZCL_ABAPGIT_OBJECT_INTF", "class": "ltcl_aff_metadata", "method": "serialize_non_default", "note": "ReferenceError: seoo_cmptype_attribute is not defined"},
+      {"object": "ZCL_ABAPGIT_OBJECT_INTF", "class": "ltcl_aff_metadata", "method": "serialize_default", "note": "ReferenceError: seoo_cmptype_attribute is not defined"},
 
       {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "raise_error_if_package_exists", "note": "Void type: SCOMPKDTLN"},
       {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_given_in_popup",        "note": "Void type: SCOMPKDTLN"},
