@@ -85,7 +85,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
     ENDIF.
 
     zcl_abapgit_exit=>get_instance(  )->validate_before_push(
-      is_comment = is_comment
+      is_comment = ls_comment
       io_stage   = io_stage
       io_repo    = io_repo ).
 
