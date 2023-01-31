@@ -341,6 +341,7 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD zif_abapgit_exit~validate_before_push.
 
     IF gi_exit IS NOT INITIAL.
@@ -354,5 +355,4 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
 ENDCLASS.
