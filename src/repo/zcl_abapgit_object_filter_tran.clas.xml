@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECT_FILTER_TRAN</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Repository Object Filter Transports</DESCRIPT>
+    <DESCRIPT>abapGit - Repository Object Filter Transports</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

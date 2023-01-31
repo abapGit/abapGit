@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_PERSISTENCE_DB</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Database persistence</DESCRIPT>
+    <DESCRIPT>abapGit - Persistence Database</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

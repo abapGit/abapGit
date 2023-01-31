@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_PERSIST_FACTORY</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>agapGit - Persistence Factory</DESCRIPT>
+    <DESCRIPT>abapGit - Persistence Factory</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

@@ -5,7 +5,7 @@
    <VSEOINTERF>
     <CLSNAME>ZIF_ABAPGIT_PERSIST_REPO_CS</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Repo checksum persistence</DESCRIPT>
+    <DESCRIPT>abapGit - Persistence for Repo Checksums</DESCRIPT>
     <EXPOSURE>2</EXPOSURE>
     <STATE>1</STATE>
     <UNICODE>X</UNICODE>

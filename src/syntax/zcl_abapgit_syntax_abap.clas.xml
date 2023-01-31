@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_SYNTAX_ABAP</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>ABAP Syntax Highlighting</DESCRIPT>
+    <DESCRIPT>abapGit - ABAP Syntax Highlighting</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

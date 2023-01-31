@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_REPO_OFFLINE</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Offline repository</DESCRIPT>
+    <DESCRIPT>abapGit - Offline Repository</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

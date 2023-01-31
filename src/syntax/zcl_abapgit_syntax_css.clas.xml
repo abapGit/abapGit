@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_SYNTAX_CSS</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>CSS Syntax Highlighting</DESCRIPT>
+    <DESCRIPT>abapGit - CSS Syntax Highlighting</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

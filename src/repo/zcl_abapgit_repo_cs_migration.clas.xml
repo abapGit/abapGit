@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_REPO_CS_MIGRATION</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit repo checksums migration</DESCRIPT>
+    <DESCRIPT>abapGit - Repository Checksum Migration</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
