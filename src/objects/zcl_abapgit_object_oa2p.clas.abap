@@ -75,10 +75,7 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA lv_dummy TYPE string.
-
     CONSTANTS: lc_actvt TYPE c LENGTH 2 VALUE `06`.
-
 
     DATA: lo_persist     TYPE REF TO object,
           lv_profile_key TYPE seu_objkey.
@@ -87,7 +84,7 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
     AUTHORITY-CHECK OBJECT 'S_OA2C_ADM'
       ID 'ACTVT'     FIELD lc_actvt.
     IF sy-subrc <> 0.
-      MESSAGE e463(01) WITH mv_profile INTO lv_dummy.
+      MESSAGE e463(01) WITH mv_profile INTO zcx_abapgit_exception=>null.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
