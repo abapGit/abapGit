@@ -40,6 +40,7 @@ CLASS zcl_abapgit_popups DEFINITION
       ty_commit_value_tab_tt TYPE STANDARD TABLE OF ty_commit_value_tab WITH DEFAULT KEY.
 
     CONSTANTS c_fieldname_selected TYPE abap_componentdescr-name VALUE `SELECTED` ##NO_TEXT.
+    CONSTANTS c_fieldname_obj_type TYPE abap_componentdescr-name VALUE `OBJ_TYPE` ##NO_TEXT.
     CONSTANTS c_answer_cancel      TYPE c LENGTH 1 VALUE 'A' ##NO_TEXT.
 
     DATA mo_select_list_popup TYPE REF TO cl_salv_table .
@@ -65,16 +66,16 @@ CLASS zcl_abapgit_popups DEFINITION
       EXPORTING
         !et_list TYPE INDEX TABLE .
     METHODS on_select_list_link_click
-        FOR EVENT link_click OF cl_salv_events_table
+      FOR EVENT link_click OF cl_salv_events_table
       IMPORTING
         !row
         !column .
     METHODS on_select_list_function_click
-        FOR EVENT added_function OF cl_salv_events_table
+      FOR EVENT added_function OF cl_salv_events_table
       IMPORTING
         !e_salv_function .
     METHODS on_double_click
-        FOR EVENT double_click OF cl_salv_events_table
+      FOR EVENT double_click OF cl_salv_events_table
       IMPORTING
         !row
         !column .
@@ -99,6 +100,13 @@ CLASS zcl_abapgit_popups DEFINITION
         !et_commits     TYPE zif_abapgit_definitions=>ty_commit_tt
       RAISING
         zcx_abapgit_exception.
+    METHODS get_pfstatus
+      IMPORTING
+        !iv_selection_mode TYPE salv_de_constant
+        !iv_object_list    TYPE abap_bool
+      EXPORTING
+        !ev_report         TYPE sy-repid
+        !ev_pfstatus       TYPE sy-pfkey.
 ENDCLASS.
 
 
@@ -269,6 +277,35 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_pfstatus.
+
+    ev_report  = 'SAPMSVIM'.
+
+    IF iv_selection_mode = if_salv_c_selection_mode=>single.
+      ev_pfstatus = '110'.
+    ELSE.
+      ev_pfstatus = '102'.
+
+      IF iv_object_list = abap_true.
+        " For object lists with multiple selections, try to use a PFSTATUS that includes
+        " an additional button to show other selection options
+        CALL FUNCTION 'RS_CUA_STATUS_CHECK'
+          EXPORTING
+            objectname       = 'SELECT_MULTI_WK'
+            program          = 'SAPLSEDI_POPUPS'
+          EXCEPTIONS
+            object_not_found = 1
+            OTHERS           = 2.
+        IF sy-subrc = 0.
+          ev_report   = 'SAPLSEDI_POPUPS'.
+          ev_pfstatus = 'SELECT_MULTI_WK'.
+        ENDIF.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD get_selected_rows.
 
     DATA: lv_condition TYPE string,
@@ -354,25 +391,32 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
   METHOD on_select_list_function_click.
 
+    DATA: lv_answer    TYPE c LENGTH 1,
+          ls_position  LIKE ms_position,
+          ls_selection TYPE spopli,
+          lt_selection TYPE TABLE OF spopli.
+
     FIELD-SYMBOLS: <lt_table>    TYPE STANDARD TABLE,
                    <lg_line>     TYPE any,
+                   <lv_object>   TYPE tadir-object,
                    <lv_selected> TYPE abap_bool.
 
     ASSIGN mr_table->* TO <lt_table>.
     ASSERT sy-subrc = 0.
 
+    " Work for functions of SAPMSVIM and SAPLSEDI_POPUPS
     CASE e_salv_function.
-      WHEN 'O.K.'.
+      WHEN 'O.K.' OR 'OK'.
         mv_cancel = abap_false.
         mo_select_list_popup->close_screen( ).
 
-      WHEN 'ABR'.
+      WHEN 'ABR' OR 'CANCEL'.
         "Canceled: clear list to overwrite nothing
         CLEAR <lt_table>.
         mv_cancel = abap_true.
         mo_select_list_popup->close_screen( ).
 
-      WHEN 'SALL'.
+      WHEN 'SALL' OR 'SEL_ALL'.
         LOOP AT <lt_table> ASSIGNING <lg_line>.
 
           ASSIGN COMPONENT c_fieldname_selected
@@ -386,7 +430,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
         mo_select_list_popup->refresh( ).
 
-      WHEN 'DSEL'.
+      WHEN 'DSEL' OR 'SEL_DEL'.
         LOOP AT <lt_table> ASSIGNING <lg_line>.
 
           ASSIGN COMPONENT c_fieldname_selected
@@ -395,6 +439,73 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
           ASSERT sy-subrc = 0.
 
           <lv_selected> = abap_false.
+
+        ENDLOOP.
+
+        mo_select_list_popup->refresh( ).
+
+      WHEN 'SEL_KEY'.
+        ls_selection-varoption = 'All objects'.
+        APPEND ls_selection TO lt_selection.
+        ls_selection-varoption = 'Packages'.
+        APPEND ls_selection TO lt_selection.
+        ls_selection-varoption = 'DDIC objects'.
+        APPEND ls_selection TO lt_selection.
+        ls_selection-varoption = 'Source code'.
+        APPEND ls_selection TO lt_selection.
+        ls_selection-varoption = 'Enhancements'.
+        APPEND ls_selection TO lt_selection.
+
+        ls_position-start_column = ms_position-start_column + 20.
+        ls_position-start_row    = ms_position-start_row + 5.
+
+        CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
+          EXPORTING
+            titel      = 'Selection'
+            textline1  = 'Which objects should be selected?'
+            start_col  = ls_position-start_column
+            start_row  = ls_position-start_row
+            cursorline = 1
+          IMPORTING
+            answer     = lv_answer
+          TABLES
+            t_spopli   = lt_selection
+          EXCEPTIONS
+            OTHERS     = 1.
+        IF sy-subrc <> 0 OR lv_answer = c_answer_cancel.
+          RETURN.
+        ENDIF.
+
+        LOOP AT <lt_table> ASSIGNING <lg_line>.
+
+          ASSIGN COMPONENT c_fieldname_obj_type OF STRUCTURE <lg_line> TO <lv_object>.
+          ASSERT sy-subrc = 0.
+
+          CASE lv_answer.
+            WHEN '2'. " Packages
+              IF 'DEVC' <> <lv_object>.
+                CONTINUE.
+              ENDIF.
+            WHEN '3'. " DDIC
+              IF zcl_abapgit_objects_activation=>is_ddic_type( <lv_object> ) = abap_false.
+                CONTINUE.
+              ENDIF.
+            WHEN '4'. " Source Code
+              IF 'CLAS,FUGR,INTF,PROG,TYPE' NS <lv_object>.
+                CONTINUE.
+              ENDIF.
+            WHEN '5'. " Enhancements
+              IF 'ENHO,ENHS,ENHC,ENSC' NS <lv_object>.
+                CONTINUE.
+              ENDIF.
+          ENDCASE.
+
+          ASSIGN COMPONENT c_fieldname_selected
+                 OF STRUCTURE <lg_line>
+                 TO <lv_selected>.
+          ASSERT sy-subrc = 0.
+
+          <lv_selected> = abap_true.
 
         ENDLOOP.
 
@@ -573,6 +684,38 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       lv_text = |Branch switched from { zcl_abapgit_git_branch_list=>get_display_name( iv_default_branch ) } to {
         zcl_abapgit_git_branch_list=>get_display_name( rs_branch-name ) } |.
       MESSAGE lv_text TYPE 'S'.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_popups~choose_code_insp_check_variant.
+
+    DATA: lt_return TYPE STANDARD TABLE OF ddshretval.
+
+    FIELD-SYMBOLS: <ls_return> LIKE LINE OF lt_return.
+
+    CALL FUNCTION 'F4IF_FIELD_VALUE_REQUEST'
+      EXPORTING
+        tabname           = 'SCI_DYNP'
+        fieldname         = 'CHKV'
+      TABLES
+        return_tab        = lt_return
+      EXCEPTIONS
+        field_not_found   = 1
+        no_help_for_field = 2
+        inconsistent_help = 3
+        no_values_found   = 4
+        OTHERS            = 5.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    READ TABLE lt_return ASSIGNING <ls_return>
+                         WITH KEY retfield = 'SCI_DYNP-CHKV'.
+    IF sy-subrc = 0.
+      rv_check_variant = <ls_return>-fieldval.
     ENDIF.
 
   ENDMETHOD.
@@ -966,7 +1109,9 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
   METHOD zif_abapgit_popups~popup_to_select_from_list.
 
-    DATA: lv_pfstatus     TYPE sypfkey,
+    DATA: lv_pfstatus     TYPE sy-pfkey,
+          lv_report       TYPE sy-repid,
+          lv_object_list  TYPE abap_bool,
           lo_events       TYPE REF TO cl_salv_events_table,
           lo_columns      TYPE REF TO cl_salv_columns_table,
           lt_columns      TYPE salv_t_column_ref,
@@ -1011,18 +1156,6 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     TRY.
         cl_salv_table=>factory( IMPORTING r_salv_table = mo_select_list_popup
                                 CHANGING  t_table      = <lt_table> ).
-
-        CASE iv_selection_mode.
-          WHEN if_salv_c_selection_mode=>single.
-            lv_pfstatus = '110'.
-
-          WHEN OTHERS.
-            lv_pfstatus = '102'.
-
-        ENDCASE.
-
-        mo_select_list_popup->set_screen_status( pfstatus = lv_pfstatus
-                                                 report   = 'SAPMSVIM' ).
 
         mo_select_list_popup->set_screen_popup( start_column = ms_position-start_column
                                                 end_column   = ms_position-end_column
@@ -1093,7 +1226,22 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
           ENDCASE.
 
+          IF ls_column-columnname = c_fieldname_obj_type.
+            lv_object_list = abap_true.
+          ENDIF.
+
         ENDLOOP.
+
+        get_pfstatus(
+          EXPORTING
+            iv_selection_mode = iv_selection_mode
+            iv_object_list    = lv_object_list
+          IMPORTING
+            ev_report         = lv_report
+            ev_pfstatus       = lv_pfstatus ).
+
+        mo_select_list_popup->set_screen_status( pfstatus = lv_pfstatus
+                                                 report   = lv_report ).
 
         mo_select_list_popup->display( ).
 
@@ -1111,6 +1259,87 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     CLEAR: mo_select_list_popup,
            mr_table,
            mo_table_descr.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_popups~popup_to_select_labels.
+
+    DATA:
+      lt_all_labels         TYPE zif_abapgit_repo_srv=>ty_labels,
+      ls_label              LIKE LINE OF lt_all_labels,
+      lt_current_labels     TYPE string_table,
+      lt_selected_labels    LIKE lt_all_labels,
+      lt_columns_to_display TYPE zif_abapgit_definitions=>ty_alv_column_tt,
+      lt_preselected_rows   TYPE zif_abapgit_popups=>ty_rows,
+      ls_columns_to_display LIKE LINE OF lt_columns_to_display,
+      lv_save_tabix         TYPE i,
+      li_popup              TYPE REF TO zif_abapgit_popups.
+
+    FIELD-SYMBOLS: <lv_label>         TYPE zif_abapgit_repo_srv=>ty_label,
+                   <lv_current_label> TYPE LINE OF string_table.
+
+    lt_current_labels = zcl_abapgit_repo_labels=>split( iv_labels ).
+
+    lt_all_labels = zcl_abapgit_repo_srv=>get_instance( )->get_label_list( ).
+
+    " Add labels which are not saved yet
+    LOOP AT lt_current_labels ASSIGNING <lv_current_label>.
+
+      READ TABLE lt_all_labels TRANSPORTING NO FIELDS
+                               WITH KEY key_label
+                               COMPONENTS label = <lv_current_label>.
+      IF sy-subrc <> 0.
+        ls_label-label = <lv_current_label>.
+        INSERT ls_label INTO TABLE lt_all_labels.
+      ENDIF.
+
+    ENDLOOP.
+
+    IF lines( lt_all_labels ) = 0.
+      zcx_abapgit_exception=>raise( |No labels maintained yet| ).
+    ENDIF.
+
+    SORT lt_all_labels.
+    DELETE ADJACENT DUPLICATES FROM lt_all_labels.
+
+    " Preselect current labels
+    LOOP AT lt_all_labels ASSIGNING <lv_label>.
+
+      lv_save_tabix = sy-tabix.
+
+      READ TABLE lt_current_labels TRANSPORTING NO FIELDS
+                                   WITH KEY table_line = <lv_label>-label.
+      IF sy-subrc = 0.
+        INSERT lv_save_tabix INTO TABLE lt_preselected_rows.
+      ENDIF.
+
+    ENDLOOP.
+
+    ls_columns_to_display-name = 'LABEL'.
+    ls_columns_to_display-text = 'Label'.
+    INSERT ls_columns_to_display INTO TABLE lt_columns_to_display.
+
+    li_popup = zcl_abapgit_ui_factory=>get_popups( ).
+    li_popup->popup_to_select_from_list(
+      EXPORTING
+        iv_header_text        = 'Select labels'
+        iv_select_column_text = 'Add label'
+        it_list               = lt_all_labels
+        iv_selection_mode     = if_salv_c_selection_mode=>multiple
+        it_columns_to_display = lt_columns_to_display
+        it_preselected_rows   = lt_preselected_rows
+        iv_start_column       = 15
+        iv_end_column         = 55
+      IMPORTING
+        et_list               = lt_selected_labels ).
+
+    LOOP AT lt_selected_labels ASSIGNING <lv_label>.
+      IF rv_labels IS NOT INITIAL.
+        rv_labels = rv_labels && ','.
+      ENDIF.
+      rv_labels = rv_labels && <lv_label>-label.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -1298,118 +1527,4 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
-
-  METHOD zif_abapgit_popups~popup_to_select_labels.
-
-    DATA:
-      lt_all_labels         TYPE zif_abapgit_repo_srv=>ty_labels,
-      ls_label              LIKE LINE OF lt_all_labels,
-      lt_current_labels     TYPE string_table,
-      lt_selected_labels    LIKE lt_all_labels,
-      lt_columns_to_display TYPE zif_abapgit_definitions=>ty_alv_column_tt,
-      lt_preselected_rows   TYPE zif_abapgit_popups=>ty_rows,
-      ls_columns_to_display LIKE LINE OF lt_columns_to_display,
-      lv_save_tabix         TYPE i,
-      li_popup              TYPE REF TO zif_abapgit_popups.
-
-    FIELD-SYMBOLS: <lv_label>         TYPE zif_abapgit_repo_srv=>ty_label,
-                   <lv_current_label> TYPE LINE OF string_table.
-
-    lt_current_labels = zcl_abapgit_repo_labels=>split( iv_labels ).
-
-    lt_all_labels = zcl_abapgit_repo_srv=>get_instance( )->get_label_list( ).
-
-    " Add labels which are not saved yet
-    LOOP AT lt_current_labels ASSIGNING <lv_current_label>.
-
-      READ TABLE lt_all_labels TRANSPORTING NO FIELDS
-                               WITH KEY key_label
-                               COMPONENTS label = <lv_current_label>.
-      IF sy-subrc <> 0.
-        ls_label-label = <lv_current_label>.
-        INSERT ls_label INTO TABLE lt_all_labels.
-      ENDIF.
-
-    ENDLOOP.
-
-    IF lines( lt_all_labels ) = 0.
-      zcx_abapgit_exception=>raise( |No labels maintained yet| ).
-    ENDIF.
-
-    SORT lt_all_labels.
-    DELETE ADJACENT DUPLICATES FROM lt_all_labels.
-
-    " Preselect current labels
-    LOOP AT lt_all_labels ASSIGNING <lv_label>.
-
-      lv_save_tabix = sy-tabix.
-
-      READ TABLE lt_current_labels TRANSPORTING NO FIELDS
-                                   WITH KEY table_line = <lv_label>-label.
-      IF sy-subrc = 0.
-        INSERT lv_save_tabix INTO TABLE lt_preselected_rows.
-      ENDIF.
-
-    ENDLOOP.
-
-    ls_columns_to_display-name = 'LABEL'.
-    ls_columns_to_display-text = 'Label'.
-    INSERT ls_columns_to_display INTO TABLE lt_columns_to_display.
-
-    li_popup = zcl_abapgit_ui_factory=>get_popups( ).
-    li_popup->popup_to_select_from_list(
-      EXPORTING
-        iv_header_text        = 'Select labels'
-        iv_select_column_text = 'Add label'
-        it_list               = lt_all_labels
-        iv_selection_mode     = if_salv_c_selection_mode=>multiple
-        it_columns_to_display = lt_columns_to_display
-        it_preselected_rows   = lt_preselected_rows
-        iv_start_column       = 15
-        iv_end_column         = 55
-      IMPORTING
-        et_list               = lt_selected_labels ).
-
-    LOOP AT lt_selected_labels ASSIGNING <lv_label>.
-      IF rv_labels IS NOT INITIAL.
-        rv_labels = rv_labels && ','.
-      ENDIF.
-      rv_labels = rv_labels && <lv_label>-label.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_popups~choose_code_insp_check_variant.
-
-    DATA: lt_return TYPE STANDARD TABLE OF ddshretval.
-
-    FIELD-SYMBOLS: <ls_return> LIKE LINE OF lt_return.
-
-    CALL FUNCTION 'F4IF_FIELD_VALUE_REQUEST'
-      EXPORTING
-        tabname           = 'SCI_DYNP'
-        fieldname         = 'CHKV'
-      TABLES
-        return_tab        = lt_return
-      EXCEPTIONS
-        field_not_found   = 1
-        no_help_for_field = 2
-        inconsistent_help = 3
-        no_values_found   = 4
-        OTHERS            = 5.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
-
-    READ TABLE lt_return ASSIGNING <ls_return>
-                         WITH KEY retfield = 'SCI_DYNP-CHKV'.
-    IF sy-subrc = 0.
-      rv_check_variant = <ls_return>-fieldval.
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.
