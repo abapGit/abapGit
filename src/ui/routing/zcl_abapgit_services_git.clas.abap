@@ -41,13 +41,6 @@ CLASS zcl_abapgit_services_git DEFINITION
         !io_stage  TYPE REF TO zcl_abapgit_stage
       RAISING
         zcx_abapgit_exception.
-    CLASS-METHODS validate_before_push
-      IMPORTING
-        !is_comment TYPE zif_abapgit_definitions=>ty_comment
-        !io_stage   TYPE REF TO zcl_abapgit_stage
-        !io_repo    TYPE REF TO zcl_abapgit_repo_online
-      RAISING
-        zcx_abapgit_exception .
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -91,10 +84,10 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
         INTO ls_comment-comment SEPARATED BY zif_abapgit_definitions=>c_newline.
     ENDIF.
 
-    validate_before_push(
-        is_comment = ls_comment
-        io_stage   = io_stage
-        io_repo    = io_repo ).
+    zcl_abapgit_exit=>get_instance(  )->validate_before_push(
+      is_comment = is_comment
+      io_stage   = io_stage
+      io_repo    = io_repo ).
 
     io_repo->push( is_comment = ls_comment
                    io_stage   = io_stage ).
@@ -258,13 +251,4 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
     MESSAGE lv_text TYPE 'S'.
 
   ENDMETHOD.
-  METHOD validate_before_push.
-
-    zcl_abapgit_exit=>get_instance(  )->validate_before_push(
-        is_comment = is_comment
-        io_stage   = io_stage
-        io_repo    = io_repo ).
-
-  ENDMETHOD.
-
 ENDCLASS.
