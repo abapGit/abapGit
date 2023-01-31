@@ -793,5 +793,4 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
-
 ENDCLASS.
