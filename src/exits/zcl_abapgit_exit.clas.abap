@@ -40,12 +40,12 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
       TRY.
           gi_exit->adjust_display_commit_url(
             EXPORTING
-              iv_repo_url           = iv_repo_url
-              iv_repo_name          = iv_repo_name
-              iv_repo_key           = iv_repo_key
-              iv_commit_hash        = iv_commit_hash
+              iv_repo_url    = iv_repo_url
+              iv_repo_name   = iv_repo_name
+              iv_repo_key    = iv_repo_key
+              iv_commit_hash = iv_commit_hash
             CHANGING
-              cv_display_url        = cv_display_url ).
+              cv_display_url = cv_display_url ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.
@@ -273,8 +273,8 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
             EXPORTING
               is_repo_meta = is_repo_meta
             CHANGING
-              ct_local  = ct_local
-              ct_remote = ct_remote ).
+              ct_local     = ct_local
+              ct_remote    = ct_remote ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.
@@ -341,4 +341,18 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_exit~validate_before_push.
+
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          gi_exit->validate_before_push(
+            is_comment = is_comment
+            io_stage   = io_stage
+            io_repo    = io_repo ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
 ENDCLASS.
