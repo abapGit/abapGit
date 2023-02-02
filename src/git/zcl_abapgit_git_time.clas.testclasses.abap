@@ -13,9 +13,9 @@ CLASS ltcl_time_test IMPLEMENTATION.
 
   METHOD get_unix.
 
-    DATA: lv_time TYPE zcl_abapgit_time=>ty_unixtime.
+    DATA: lv_time TYPE zcl_abapgit_git_time=>ty_unixtime.
 
-    lv_time = zcl_abapgit_time=>get_unix( ).
+    lv_time = zcl_abapgit_git_time=>get_unix( ).
 
     cl_abap_unit_assert=>assert_not_initial( lv_time ).
 
@@ -27,7 +27,7 @@ CLASS ltcl_time_test IMPLEMENTATION.
     DATA: lv_date TYPE sy-datum,
           lv_time TYPE sy-uzeit.
 
-    zcl_abapgit_time=>get_utc(
+    zcl_abapgit_git_time=>get_utc(
       EXPORTING
         iv_unix = '1574605521'
       IMPORTING

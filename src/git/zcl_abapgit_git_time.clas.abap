@@ -1,4 +1,4 @@
-CLASS zcl_abapgit_time DEFINITION
+CLASS zcl_abapgit_git_time DEFINITION
   PUBLIC
   FINAL
   CREATE PUBLIC .
@@ -25,7 +25,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_TIME IMPLEMENTATION.
+CLASS zcl_abapgit_git_time IMPLEMENTATION.
 
 
   METHOD get_unix.
