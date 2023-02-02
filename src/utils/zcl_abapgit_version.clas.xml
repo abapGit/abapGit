@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_VERSION</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - Version</DESCRIPT>
+    <DESCRIPT>abapGit - Version Helper</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_LONGTEXTS</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit long text serialization/deserialization</DESCRIPT>
+    <DESCRIPT>abapGit - Long Text Serializer</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

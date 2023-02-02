@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_SYNTAX_XML</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>XML Syntax Highlighter</DESCRIPT>
+    <DESCRIPT>abapGit - XML Syntax Highlighting</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

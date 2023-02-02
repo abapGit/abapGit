@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_STRING_MAP</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit string Map implementation</DESCRIPT>
+    <DESCRIPT>abapGit - String Map</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

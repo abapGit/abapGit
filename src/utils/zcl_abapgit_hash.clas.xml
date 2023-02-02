@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_HASH</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Hash functions</DESCRIPT>
+    <DESCRIPT>abapGit - Hash Functions</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

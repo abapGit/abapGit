@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECT_COMMON_AFF</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>ABAPGIT Common part for AFF functionality</DESCRIPT>
+    <DESCRIPT>abapGit - Common Part for AFF Functionality</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

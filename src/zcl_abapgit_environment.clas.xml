@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_ENVIRONMENT</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - Environment information</DESCRIPT>
+    <DESCRIPT>abapGit - Environment</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

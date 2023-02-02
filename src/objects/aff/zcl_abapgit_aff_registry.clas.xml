@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_AFF_REGISTRY</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - Class that tells you whether object type has AFF</DESCRIPT>
+    <DESCRIPT>abapGit - Registry for Object Types with AFF</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

@@ -5,7 +5,7 @@
    <VSEOINTERF>
     <CLSNAME>ZIF_ABAPGIT_AFF_TYPE_MAPPING</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapgit - the mapping to ABAP file format types</DESCRIPT>
+    <DESCRIPT>abapGit - Mapping to ABAP File Format Types</DESCRIPT>
     <EXPOSURE>2</EXPOSURE>
     <STATE>1</STATE>
     <UNICODE>X</UNICODE>

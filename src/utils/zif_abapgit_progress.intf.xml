@@ -5,7 +5,7 @@
    <VSEOINTERF>
     <CLSNAME>ZIF_ABAPGIT_PROGRESS</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Progress indicator</DESCRIPT>
+    <DESCRIPT>abapGit - Progress Indicator</DESCRIPT>
     <EXPOSURE>2</EXPOSURE>
     <STATE>1</STATE>
     <UNICODE>X</UNICODE>
