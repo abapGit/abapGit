@@ -42,7 +42,7 @@ CLASS zcl_abapgit_gui_page_merge_sel DEFINITION
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
     DATA mo_form_util TYPE REF TO zcl_abapgit_html_form_utils.
     DATA mo_repo TYPE REF TO zcl_abapgit_repo_online.
-    DATA mt_branches TYPE zif_abapgit_definitions=>ty_git_branch_list_tt.
+    DATA mt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
 
     METHODS read_branches
       RAISING

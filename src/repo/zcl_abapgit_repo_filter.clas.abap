@@ -25,12 +25,12 @@ CLASS zcl_abapgit_repo_filter DEFINITION
       CHANGING
         !ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt .
 
-private section.
+  PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_FILTER IMPLEMENTATION.
+CLASS zcl_abapgit_repo_filter IMPLEMENTATION.
 
 
   METHOD apply.

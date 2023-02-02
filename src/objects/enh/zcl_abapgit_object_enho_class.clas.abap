@@ -47,10 +47,10 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
           lt_abap        TYPE rswsourcet,
           lx_enh_root    TYPE REF TO cx_enh_root,
           lv_new_em      TYPE abap_bool,
-          lt_files       TYPE zif_abapgit_definitions=>ty_files_tt.
+          lt_files       TYPE zif_abapgit_git_definitions=>ty_files_tt.
 
     FIELD-SYMBOLS: <ls_method> LIKE LINE OF lt_tab_methods,
-                   <ls_file>   TYPE zif_abapgit_definitions=>ty_file.
+                   <ls_file>   TYPE zif_abapgit_git_definitions=>ty_file.
 
     ii_xml->read( EXPORTING iv_name = 'TAB_METHODS'
                   CHANGING cg_data = lt_tab_methods ).

@@ -32,7 +32,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_FI IMPLEMENTATION.
+CLASS zcl_abapgit_background_push_fi IMPLEMENTATION.
 
 
   METHOD build_comment.
@@ -65,7 +65,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_FI IMPLEMENTATION.
 
   METHOD push_fixed.
 
-    DATA: ls_comment TYPE zif_abapgit_definitions=>ty_comment,
+    DATA: ls_comment TYPE zif_abapgit_git_definitions=>ty_comment,
           ls_files   TYPE zif_abapgit_definitions=>ty_stage_files,
           lo_stage   TYPE REF TO zcl_abapgit_stage.
 

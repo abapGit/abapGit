@@ -24,7 +24,7 @@ CLASS zcl_abapgit_background_push_au DEFINITION
       IMPORTING
         !iv_changed_by TYPE syuname
       RETURNING
-        VALUE(rs_user) TYPE zif_abapgit_definitions=>ty_git_user .
+        VALUE(rs_user) TYPE zif_abapgit_git_definitions=>ty_git_user .
     METHODS push_deletions
       IMPORTING
         !io_repo  TYPE REF TO zcl_abapgit_repo_online
@@ -97,7 +97,7 @@ CLASS zcl_abapgit_background_push_au IMPLEMENTATION.
              changed_by TYPE syuname,
            END OF ty_changed.
 
-    DATA: ls_comment    TYPE zif_abapgit_definitions=>ty_comment,
+    DATA: ls_comment    TYPE zif_abapgit_git_definitions=>ty_comment,
           ls_files      TYPE zif_abapgit_definitions=>ty_stage_files,
           lt_changed    TYPE STANDARD TABLE OF ty_changed WITH DEFAULT KEY,
           lt_users      TYPE STANDARD TABLE OF syuname WITH DEFAULT KEY,
@@ -185,7 +185,7 @@ CLASS zcl_abapgit_background_push_au IMPLEMENTATION.
   METHOD push_deletions.
 
     DATA: lo_stage   TYPE REF TO zcl_abapgit_stage,
-          ls_comment TYPE zif_abapgit_definitions=>ty_comment.
+          ls_comment TYPE zif_abapgit_git_definitions=>ty_comment.
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF is_files-remote.
 

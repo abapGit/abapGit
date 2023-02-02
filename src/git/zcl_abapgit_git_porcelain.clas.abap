@@ -102,7 +102,8 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
     TYPES:
       ty_folders_tt TYPE STANDARD TABLE OF ty_folder WITH DEFAULT KEY .
 
-    CONSTANTS c_zero TYPE zif_abapgit_git_definitions=>ty_sha1 VALUE '0000000000000000000000000000000000000000' ##NO_TEXT.
+    CONSTANTS c_zero TYPE zif_abapgit_git_definitions=>ty_sha1
+      VALUE '0000000000000000000000000000000000000000' ##NO_TEXT.
 
     CLASS-METHODS build_trees
       IMPORTING
@@ -179,7 +180,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
+CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
 
   METHOD build_trees.

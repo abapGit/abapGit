@@ -18,7 +18,7 @@ CLASS zcl_abapgit_transport_2_branch DEFINITION
       IMPORTING
         !is_transport_to_branch TYPE zif_abapgit_definitions=>ty_transport_to_branch
       RETURNING
-        VALUE(rs_comment)       TYPE zif_abapgit_definitions=>ty_comment .
+        VALUE(rs_comment)       TYPE zif_abapgit_git_definitions=>ty_comment .
     METHODS stage_transport_objects
       IMPORTING
         !it_transport_objects TYPE zif_abapgit_definitions=>ty_tadir_tt
@@ -32,13 +32,13 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_TRANSPORT_2_BRANCH IMPLEMENTATION.
+CLASS zcl_abapgit_transport_2_branch IMPLEMENTATION.
 
 
   METHOD create.
     DATA:
       lv_branch_name     TYPE string,
-      ls_comment         TYPE zif_abapgit_definitions=>ty_comment,
+      ls_comment         TYPE zif_abapgit_git_definitions=>ty_comment,
       lo_stage           TYPE REF TO zcl_abapgit_stage,
       ls_stage_objects   TYPE zif_abapgit_definitions=>ty_stage_files,
       lt_object_statuses TYPE zif_abapgit_definitions=>ty_results_tt.
