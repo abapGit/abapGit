@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_REPO_CHECKSUMS</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit repo files checksum utility</DESCRIPT>
+    <DESCRIPT>abapGit - Repository Files Checksums Utility</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

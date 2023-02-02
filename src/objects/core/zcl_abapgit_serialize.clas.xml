@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_SERIALIZE</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Serialize objects in parallel</DESCRIPT>
+    <DESCRIPT>abapGit - Serialize Objects in Parallel</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

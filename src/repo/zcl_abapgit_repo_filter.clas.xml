@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_REPO_FILTER</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Repository Filter</DESCRIPT>
+    <DESCRIPT>abapGit - Repository Filter</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

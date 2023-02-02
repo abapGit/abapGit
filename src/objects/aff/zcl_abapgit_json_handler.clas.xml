@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_JSON_HANDLER</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - The object handler for JSON parsing</DESCRIPT>
+    <DESCRIPT>abapGit - Object Handler for JSON Parsing</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_REPO_ONLINE</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Online Repository</DESCRIPT>
+    <DESCRIPT>abapGit - Online Repository</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

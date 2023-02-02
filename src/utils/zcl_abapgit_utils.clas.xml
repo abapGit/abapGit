@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_UTILS</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit misc utils</DESCRIPT>
+    <DESCRIPT>abapGit - Miscellaneous Utilities</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

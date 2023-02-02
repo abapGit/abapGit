@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_REPO_LABELS</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit repo grouping tags</DESCRIPT>
+    <DESCRIPT>abapGit - Repository Labels</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

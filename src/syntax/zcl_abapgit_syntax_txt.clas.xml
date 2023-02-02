@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_SYNTAX_TXT</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Plain Text Highlighting</DESCRIPT>
+    <DESCRIPT>abapGit - Plain Text Highlighting</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

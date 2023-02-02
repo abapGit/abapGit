@@ -82,7 +82,7 @@
     <item>
      <FUNCNAME>Z_ABAPGIT_SERIALIZE_PARALLEL</FUNCNAME>
      <REMOTE_CALL>R</REMOTE_CALL>
-     <SHORT_TEXT>Serialize object</SHORT_TEXT>
+     <SHORT_TEXT>abapGit - Serialize Object</SHORT_TEXT>
      <IMPORT>
       <RSIMP>
        <PARAMETER>IV_OBJ_TYPE</PARAMETER>

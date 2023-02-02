@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_PERSIST_BACKGROUND</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Persist background</DESCRIPT>
+    <DESCRIPT>abapGit - Persistence for Background Settings</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
