@@ -80,7 +80,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_APACK_HELPER IMPLEMENTATION.
+CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
 
 
   METHOD are_dependencies_met.
