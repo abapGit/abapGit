@@ -34,7 +34,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GIT_URL IMPLEMENTATION.
+CLASS zcl_abapgit_git_url IMPLEMENTATION.
 
 
   METHOD get_commit_display_url.
