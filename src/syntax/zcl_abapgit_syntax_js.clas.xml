@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_SYNTAX_JS</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>JavaScript Syntax Highlighting</DESCRIPT>
+    <DESCRIPT>abapGit - JavaScript Syntax Highlighting</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

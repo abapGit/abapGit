@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_SOTR_HANDLER</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Class to Read and Create SOTR Objects</DESCRIPT>
+    <DESCRIPT>abapGit - SOTR Serializer</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

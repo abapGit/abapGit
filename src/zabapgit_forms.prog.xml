@@ -11,7 +11,7 @@
    <TPOOL>
     <item>
      <ID>R</ID>
-     <ENTRY>Include ZABAPGIT_FORMS</ENTRY>
+     <ENTRY>abapGit - Form Routines</ENTRY>
      <LENGTH>22</LENGTH>
     </item>
    </TPOOL>
