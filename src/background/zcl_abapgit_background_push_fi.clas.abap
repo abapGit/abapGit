@@ -32,7 +32,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_background_push_fi IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_FI IMPLEMENTATION.
 
 
   METHOD build_comment.
