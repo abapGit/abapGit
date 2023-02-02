@@ -25,7 +25,7 @@ CLASS ltcl_test IMPLEMENTATION.
   METHOD serialize.
 
     DATA ls_config TYPE zif_abapgit_data_config=>ty_config.
-    DATA lt_files TYPE zif_abapgit_definitions=>ty_files_tt.
+    DATA lt_files TYPE zif_abapgit_git_definitions=>ty_files_tt.
     DATA lv_where LIKE LINE OF ls_config-where.
 
     ls_config-type = 'TABU'.

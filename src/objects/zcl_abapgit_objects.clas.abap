@@ -8,7 +8,7 @@ CLASS zcl_abapgit_objects DEFINITION
       ty_types_tt TYPE SORTED TABLE OF tadir-object WITH UNIQUE KEY table_line .
     TYPES:
       BEGIN OF ty_serialization,
-        files TYPE zif_abapgit_definitions=>ty_files_tt,
+        files TYPE zif_abapgit_git_definitions=>ty_files_tt,
         item  TYPE zif_abapgit_definitions=>ty_item,
       END OF ty_serialization .
 
@@ -28,7 +28,7 @@ CLASS zcl_abapgit_objects DEFINITION
         !is_checks               TYPE zif_abapgit_definitions=>ty_deserialize_checks
         !ii_log                  TYPE REF TO zif_abapgit_log
       RETURNING
-        VALUE(rt_accessed_files) TYPE zif_abapgit_definitions=>ty_file_signatures_tt
+        VALUE(rt_accessed_files) TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS deserialize_checks
@@ -110,7 +110,7 @@ CLASS zcl_abapgit_objects DEFINITION
 
     CLASS-METHODS check_duplicates
       IMPORTING
-        !it_files TYPE zif_abapgit_definitions=>ty_files_tt
+        !it_files TYPE zif_abapgit_git_definitions=>ty_files_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS class_name
@@ -131,7 +131,7 @@ CLASS zcl_abapgit_objects DEFINITION
     CLASS-METHODS compare_remote_to_local
       IMPORTING
         !ii_object TYPE REF TO zif_abapgit_object
-        !it_remote TYPE zif_abapgit_definitions=>ty_files_tt
+        !it_remote TYPE zif_abapgit_git_definitions=>ty_files_tt
         !is_result TYPE zif_abapgit_definitions=>ty_result
         !ii_log    TYPE REF TO zif_abapgit_log
       RAISING
@@ -142,7 +142,7 @@ CLASS zcl_abapgit_objects DEFINITION
         !ii_log       TYPE REF TO zif_abapgit_log
         !iv_transport TYPE trkorr
       CHANGING
-        !ct_files     TYPE zif_abapgit_definitions=>ty_file_signatures_tt
+        !ct_files     TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS check_objects_locked
@@ -188,7 +188,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -241,7 +241,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
   METHOD check_duplicates.
 
-    DATA: lt_files          TYPE zif_abapgit_definitions=>ty_files_tt,
+    DATA: lt_files          TYPE zif_abapgit_git_definitions=>ty_files_tt,
           lv_path           TYPE string,
           lv_filename       TYPE string,
           lt_duplicates     TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
@@ -336,7 +336,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 * before pull, this is useful eg. when overwriting a TABL object.
 * only the main XML file is used for comparison
 
-    DATA: ls_remote_file    TYPE zif_abapgit_definitions=>ty_file,
+    DATA: ls_remote_file    TYPE zif_abapgit_git_definitions=>ty_file,
           li_remote_version TYPE REF TO zif_abapgit_xml_input,
           lv_count          TYPE i,
           ls_result         TYPE zif_abapgit_comparator=>ty_result,
@@ -583,7 +583,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     DATA: ls_item     TYPE zif_abapgit_definitions=>ty_item,
           li_obj      TYPE REF TO zif_abapgit_object,
-          lt_remote   TYPE zif_abapgit_definitions=>ty_files_tt,
+          lt_remote   TYPE zif_abapgit_git_definitions=>ty_files_tt,
           lv_package  TYPE devclass,
           lo_files    TYPE REF TO zcl_abapgit_objects_files,
           ls_metadata TYPE zif_abapgit_definitions=>ty_metadata,

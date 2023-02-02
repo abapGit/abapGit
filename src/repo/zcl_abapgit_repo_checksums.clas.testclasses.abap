@@ -203,7 +203,7 @@ CLASS lcl_repo_mock DEFINITION FINAL.
     INTERFACES zif_abapgit_repo.
     INTERFACES zif_abapgit_repo_srv.
     DATA mt_local_files TYPE zif_abapgit_definitions=>ty_files_item_tt.
-    DATA mt_remote_files TYPE zif_abapgit_definitions=>ty_files_tt.
+    DATA mt_remote_files TYPE zif_abapgit_git_definitions=>ty_files_tt.
 ENDCLASS.
 
 CLASS lcl_repo_mock IMPLEMENTATION.
@@ -305,7 +305,7 @@ ENDCLASS.
 
 CLASS lcl_remote_file_builder DEFINITION FINAL.
   PUBLIC SECTION.
-    DATA mt_tab TYPE zif_abapgit_definitions=>ty_files_tt.
+    DATA mt_tab TYPE zif_abapgit_git_definitions=>ty_files_tt.
     METHODS add IMPORTING iv_str TYPE string.
 ENDCLASS.
 
@@ -325,7 +325,7 @@ ENDCLASS.
 
 CLASS lcl_file_sig_builder DEFINITION FINAL.
   PUBLIC SECTION.
-    DATA mt_tab TYPE zif_abapgit_definitions=>ty_file_signatures_tt.
+    DATA mt_tab TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt.
     METHODS add IMPORTING iv_str TYPE string.
 ENDCLASS.
 

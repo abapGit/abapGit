@@ -21,8 +21,8 @@ CLASS zcl_abapgit_file_status DEFINITION
         !iv_devclass      TYPE devclass
         !io_dot           TYPE REF TO zcl_abapgit_dot_abapgit
         !it_local         TYPE zif_abapgit_definitions=>ty_files_item_tt
-        !it_remote        TYPE zif_abapgit_definitions=>ty_files_tt
-        !it_cur_state     TYPE zif_abapgit_definitions=>ty_file_signatures_tt
+        !it_remote        TYPE zif_abapgit_git_definitions=>ty_files_tt
+        !it_cur_state     TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
       RETURNING
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
@@ -31,9 +31,9 @@ CLASS zcl_abapgit_file_status DEFINITION
       IMPORTING
         !io_dot       TYPE REF TO zcl_abapgit_dot_abapgit
         !it_local     TYPE zif_abapgit_definitions=>ty_files_item_tt
-        !it_state_idx TYPE zif_abapgit_definitions=>ty_file_signatures_ts
+        !it_state_idx TYPE zif_abapgit_git_definitions=>ty_file_signatures_ts
       CHANGING
-        !ct_remote    TYPE zif_abapgit_definitions=>ty_files_tt
+        !ct_remote    TYPE zif_abapgit_git_definitions=>ty_files_tt
         !ct_items     TYPE zif_abapgit_definitions=>ty_items_tt
         !ct_results   TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
@@ -42,7 +42,7 @@ CLASS zcl_abapgit_file_status DEFINITION
       IMPORTING
         !iv_devclass TYPE devclass
         !io_dot      TYPE REF TO zcl_abapgit_dot_abapgit
-        !it_remote   TYPE zif_abapgit_definitions=>ty_files_tt
+        !it_remote   TYPE zif_abapgit_git_definitions=>ty_files_tt
       CHANGING
         !ct_items    TYPE zif_abapgit_definitions=>ty_items_tt
       RAISING
@@ -52,8 +52,8 @@ CLASS zcl_abapgit_file_status DEFINITION
         !iv_devclass  TYPE devclass
         !io_dot       TYPE REF TO zcl_abapgit_dot_abapgit
         !it_local     TYPE zif_abapgit_definitions=>ty_files_item_tt
-        !it_remote    TYPE zif_abapgit_definitions=>ty_files_tt
-        !it_state_idx TYPE zif_abapgit_definitions=>ty_file_signatures_ts
+        !it_remote    TYPE zif_abapgit_git_definitions=>ty_files_tt
+        !it_state_idx TYPE zif_abapgit_git_definitions=>ty_file_signatures_ts
         !it_items_idx TYPE zif_abapgit_definitions=>ty_items_ts
       CHANGING
         !ct_results   TYPE zif_abapgit_definitions=>ty_results_tt
@@ -70,8 +70,8 @@ CLASS zcl_abapgit_file_status DEFINITION
     CLASS-METHODS build_existing
       IMPORTING
         !is_local        TYPE zif_abapgit_definitions=>ty_file_item
-        !is_remote       TYPE zif_abapgit_definitions=>ty_file
-        !it_state        TYPE zif_abapgit_definitions=>ty_file_signatures_ts
+        !is_remote       TYPE zif_abapgit_git_definitions=>ty_file
+        !it_state        TYPE zif_abapgit_git_definitions=>ty_file_signatures_ts
       RETURNING
         VALUE(rs_result) TYPE zif_abapgit_definitions=>ty_result .
     CLASS-METHODS build_new_local
@@ -83,9 +83,9 @@ CLASS zcl_abapgit_file_status DEFINITION
       IMPORTING
         !iv_devclass     TYPE devclass
         !io_dot          TYPE REF TO zcl_abapgit_dot_abapgit
-        !is_remote       TYPE zif_abapgit_definitions=>ty_file
+        !is_remote       TYPE zif_abapgit_git_definitions=>ty_file
         !it_items        TYPE zif_abapgit_definitions=>ty_items_ts
-        !it_state        TYPE zif_abapgit_definitions=>ty_file_signatures_ts
+        !it_state        TYPE zif_abapgit_git_definitions=>ty_file_signatures_ts
       RETURNING
         VALUE(rs_result) TYPE zif_abapgit_definitions=>ty_result
       RAISING
@@ -141,7 +141,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_file_status IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
 
   METHOD build_existing.
@@ -280,7 +280,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
       lt_remote    LIKE it_remote,
       lt_items     TYPE zif_abapgit_definitions=>ty_items_tt,
       lt_items_idx TYPE zif_abapgit_definitions=>ty_items_ts, " Sorted by obj_type+obj_name
-      lt_state_idx TYPE zif_abapgit_definitions=>ty_file_signatures_ts. " Sorted by path+filename
+      lt_state_idx TYPE zif_abapgit_git_definitions=>ty_file_signatures_ts. " Sorted by path+filename
 
     lt_state_idx = it_cur_state. " Force sort it
 
@@ -380,7 +380,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
     DATA:
       lt_res_sort LIKE it_results,
-      ls_file     TYPE zif_abapgit_definitions=>ty_file_signature.
+      ls_file     TYPE zif_abapgit_git_definitions=>ty_file_signature.
 
     FIELD-SYMBOLS <ls_result> LIKE LINE OF it_results.
 
@@ -757,7 +757,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
   METHOD status.
 
     DATA lt_local TYPE zif_abapgit_definitions=>ty_files_item_tt.
-    DATA lt_remote TYPE zif_abapgit_definitions=>ty_files_tt.
+    DATA lt_remote TYPE zif_abapgit_git_definitions=>ty_files_tt.
     DATA li_exit TYPE REF TO zif_abapgit_exit.
 
     lt_local = io_repo->get_files_local( ii_log = ii_log ).

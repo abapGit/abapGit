@@ -44,7 +44,7 @@ CLASS zcl_abapgit_repo_online DEFINITION
   PRIVATE SECTION.
 
     DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt .
-    DATA mv_current_commit TYPE zif_abapgit_definitions=>ty_sha1 .
+    DATA mv_current_commit TYPE zif_abapgit_git_definitions=>ty_sha1 .
 
     METHODS handle_stage_ignore
       IMPORTING
@@ -73,7 +73,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo_online IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
 
   METHOD fetch_remote.
@@ -156,7 +156,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
   METHOD raise_error_if_branch_exists.
 
     DATA:
-      lt_branches     TYPE zif_abapgit_definitions=>ty_git_branch_list_tt,
+      lt_branches     TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt,
       lv_display_name TYPE string.
 
     lt_branches = zcl_abapgit_git_transport=>branches( get_url( ) )->get_branches_only( ).
@@ -212,7 +212,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
   METHOD zif_abapgit_repo_online~create_branch.
 
-    DATA: lv_sha1 TYPE zif_abapgit_definitions=>ty_sha1.
+    DATA: lv_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
 
     ASSERT iv_name CP zif_abapgit_definitions=>c_git_branch-heads.
 
@@ -267,7 +267,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
     DATA: ls_push   TYPE zcl_abapgit_git_porcelain=>ty_push_result,
           lv_text   TYPE string,
-          lv_parent TYPE zif_abapgit_definitions=>ty_sha1.
+          lv_parent TYPE zif_abapgit_git_definitions=>ty_sha1.
 
 
     IF ms_data-branch_name CP zif_abapgit_definitions=>c_git_branch-tags.

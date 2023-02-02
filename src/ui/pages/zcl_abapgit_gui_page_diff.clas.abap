@@ -36,7 +36,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
     METHODS constructor
       IMPORTING
         !iv_key    TYPE zif_abapgit_persistence=>ty_repo-key
-        !is_file   TYPE zif_abapgit_definitions=>ty_file OPTIONAL
+        !is_file   TYPE zif_abapgit_git_definitions=>ty_file OPTIONAL
         !is_object TYPE zif_abapgit_definitions=>ty_item OPTIONAL
         !it_files  TYPE zif_abapgit_definitions=>ty_stage_tt OPTIONAL
       RAISING
@@ -91,7 +91,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         !io_menu TYPE REF TO zcl_abapgit_html_toolbar .
     METHODS calculate_diff
       IMPORTING
-        !is_file   TYPE zif_abapgit_definitions=>ty_file OPTIONAL
+        !is_file   TYPE zif_abapgit_git_definitions=>ty_file OPTIONAL
         !is_object TYPE zif_abapgit_definitions=>ty_item OPTIONAL
         !it_files  TYPE zif_abapgit_definitions=>ty_stage_tt OPTIONAL
       RAISING
@@ -223,7 +223,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS append_diff
       IMPORTING
-        !it_remote TYPE zif_abapgit_definitions=>ty_files_tt
+        !it_remote TYPE zif_abapgit_git_definitions=>ty_files_tt
         !it_local  TYPE zif_abapgit_definitions=>ty_files_item_tt
         !is_status TYPE zif_abapgit_definitions=>ty_result
       RAISING
@@ -266,12 +266,11 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         !it_diffs           TYPE zif_abapgit_definitions=>ty_diffs_tt
       RETURNING
         VALUE(rv_has_diffs) TYPE abap_bool.
-
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
 
   METHOD add_filter_sub_menu.
@@ -542,7 +541,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
   METHOD calculate_diff.
 
-    DATA: lt_remote TYPE zif_abapgit_definitions=>ty_files_tt,
+    DATA: lt_remote TYPE zif_abapgit_git_definitions=>ty_files_tt,
           lt_local  TYPE zif_abapgit_definitions=>ty_files_item_tt,
           lt_status TYPE zif_abapgit_definitions=>ty_results_tt.
 

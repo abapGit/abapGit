@@ -17,7 +17,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
   METHOD adler32.
 
-    DATA: lv_adler TYPE zif_abapgit_definitions=>ty_adler32.
+    DATA: lv_adler TYPE zif_abapgit_git_definitions=>ty_adler32.
 
     lv_adler = zcl_abapgit_hash=>adler32( '1122334455667788' ).
 
@@ -29,7 +29,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
   METHOD sha1.
 
-    DATA: lv_sha1 TYPE zif_abapgit_definitions=>ty_sha1.
+    DATA: lv_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
 
     lv_sha1 = zcl_abapgit_hash=>sha1(
       iv_type = zif_abapgit_definitions=>c_type-commit
@@ -44,7 +44,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
   METHOD sha1_raw_valid.
 
-    DATA: lv_sha1  TYPE zif_abapgit_definitions=>ty_sha1,
+    DATA: lv_sha1  TYPE zif_abapgit_git_definitions=>ty_sha1,
           lv_input TYPE xstring.
 
     lv_input = 'C5188BAF86A64A581D2201'.
@@ -58,7 +58,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
   METHOD sha1_raw_invalid.
 
-    DATA: lv_sha1  TYPE zif_abapgit_definitions=>ty_sha1,
+    DATA: lv_sha1  TYPE zif_abapgit_git_definitions=>ty_sha1,
           lv_input TYPE xstring.
 
     lv_input = 'LOREM_IPSUM'.

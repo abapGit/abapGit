@@ -34,7 +34,7 @@ CLASS zcl_abapgit_repo_checksums DEFINITION
 
     METHODS build_checksums_from_files
       IMPORTING
-        it_remote    TYPE zif_abapgit_definitions=>ty_files_tt
+        it_remote    TYPE zif_abapgit_git_definitions=>ty_files_tt
         it_local     TYPE ty_local_files_by_item_tt
         iv_branches_equal TYPE abap_bool DEFAULT abap_false
       RETURNING
@@ -56,7 +56,6 @@ CLASS zcl_abapgit_repo_checksums DEFINITION
       CHANGING
 *        co_string_map - return string map with meta when it is needed
         cv_cs_blob TYPE string.
-
 ENDCLASS.
 
 
@@ -209,7 +208,7 @@ CLASS ZCL_ABAPGIT_REPO_CHECKSUMS IMPLEMENTATION.
 
   METHOD zif_abapgit_repo_checksums~rebuild.
 
-    DATA lt_remote    TYPE zif_abapgit_definitions=>ty_files_tt.
+    DATA lt_remote    TYPE zif_abapgit_git_definitions=>ty_files_tt.
     DATA lt_local     TYPE ty_local_files_by_item_tt.
     DATA lt_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
 

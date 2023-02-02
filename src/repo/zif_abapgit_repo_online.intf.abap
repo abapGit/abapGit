@@ -25,7 +25,7 @@ INTERFACE zif_abapgit_repo_online
       zcx_abapgit_exception .
   METHODS get_current_remote
     RETURNING
-      VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
+      VALUE(rv_sha1) TYPE zif_abapgit_git_definitions=>ty_sha1
     RAISING
       zcx_abapgit_exception .
   METHODS select_commit
@@ -45,14 +45,14 @@ INTERFACE zif_abapgit_repo_online
       VALUE(rv_switched_origin) TYPE zif_abapgit_persistence=>ty_repo-switched_origin.
   METHODS push
     IMPORTING
-      !is_comment TYPE zif_abapgit_definitions=>ty_comment
+      !is_comment TYPE zif_abapgit_git_definitions=>ty_comment
       !io_stage   TYPE REF TO zcl_abapgit_stage
     RAISING
       zcx_abapgit_exception .
   METHODS create_branch
     IMPORTING
       !iv_name TYPE string
-      !iv_from TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
+      !iv_from TYPE zif_abapgit_git_definitions=>ty_sha1 OPTIONAL
     RAISING
       zcx_abapgit_exception .
   METHODS check_for_valid_branch

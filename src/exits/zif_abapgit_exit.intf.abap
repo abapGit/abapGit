@@ -15,7 +15,7 @@ INTERFACE zif_abapgit_exit
       !iv_repo_url    TYPE csequence
       !iv_repo_name   TYPE csequence
       !iv_repo_key    TYPE csequence
-      !iv_commit_hash TYPE zif_abapgit_definitions=>ty_sha1
+      !iv_commit_hash TYPE zif_abapgit_git_definitions=>ty_sha1
     CHANGING
       !cv_display_url TYPE csequence
     RAISING
@@ -83,7 +83,7 @@ INTERFACE zif_abapgit_exit
       !is_repo_meta TYPE zif_abapgit_persistence=>ty_repo
     CHANGING
       !ct_local     TYPE zif_abapgit_definitions=>ty_files_item_tt
-      !ct_remote    TYPE zif_abapgit_definitions=>ty_files_tt
+      !ct_remote    TYPE zif_abapgit_git_definitions=>ty_files_tt
     RAISING
       zcx_abapgit_exception .
   METHODS wall_message_list
@@ -120,7 +120,7 @@ INTERFACE zif_abapgit_exit
 
   METHODS validate_before_push
     IMPORTING
-      !is_comment     TYPE zif_abapgit_definitions=>ty_comment
+      !is_comment     TYPE zif_abapgit_git_definitions=>ty_comment
       !io_stage       TYPE REF TO zcl_abapgit_stage
       !io_repo        TYPE REF TO zcl_abapgit_repo_online
     RAISING

@@ -21,7 +21,7 @@ CLASS zcl_abapgit_apack_helper DEFINITION
       IMPORTING
         !iv_package    TYPE devclass
       RETURNING
-        VALUE(rs_file) TYPE zif_abapgit_definitions=>ty_file
+        VALUE(rs_file) TYPE zif_abapgit_git_definitions=>ty_file
       RAISING
         zcx_abapgit_exception .
   PROTECTED SECTION.
@@ -80,7 +80,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_APACK_HELPER IMPLEMENTATION.
 
 
   METHOD are_dependencies_met.

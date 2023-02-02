@@ -40,7 +40,7 @@ CLASS zcl_abapgit_zip DEFINITION
       IMPORTING
         !iv_xstr        TYPE xstring
       RETURNING
-        VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
+        VALUE(rt_files) TYPE zif_abapgit_git_definitions=>ty_files_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS save_binstring_to_localfile
@@ -64,14 +64,14 @@ CLASS zcl_abapgit_zip DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS normalize_path
       CHANGING
-        !ct_files TYPE zif_abapgit_definitions=>ty_files_tt
+        !ct_files TYPE zif_abapgit_git_definitions=>ty_files_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS unzip_file
       IMPORTING
         !iv_xstr        TYPE xstring
       RETURNING
-        VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
+        VALUE(rt_files) TYPE zif_abapgit_git_definitions=>ty_files_tt
       RAISING
         zcx_abapgit_exception .
 ENDCLASS.

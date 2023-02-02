@@ -18,10 +18,10 @@ CLASS zcl_abapgit_user_record DEFINITION
         !iv_user TYPE sy-uname.
     METHODS get_name
       RETURNING
-        VALUE(rv_name) TYPE zif_abapgit_definitions=>ty_git_user-name.
+        VALUE(rv_name) TYPE zif_abapgit_git_definitions=>ty_git_user-name.
     METHODS get_email
       RETURNING
-        VALUE(rv_email) TYPE zif_abapgit_definitions=>ty_git_user-email.
+        VALUE(rv_email) TYPE zif_abapgit_git_definitions=>ty_git_user-email.
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES:
@@ -41,7 +41,7 @@ CLASS zcl_abapgit_user_record DEFINITION
                    WITH UNIQUE KEY user.
 
     DATA:
-      ms_user TYPE zif_abapgit_definitions=>ty_git_user.
+      ms_user TYPE zif_abapgit_git_definitions=>ty_git_user.
 
     METHODS check_user_exists
       IMPORTING
@@ -55,12 +55,11 @@ CLASS zcl_abapgit_user_record DEFINITION
     METHODS get_user_dtls_from_other_clnt
       IMPORTING
         iv_user TYPE sy-uname.
-
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_user_record IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_USER_RECORD IMPLEMENTATION.
 
 
   METHOD check_user_exists.

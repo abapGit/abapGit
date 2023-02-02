@@ -7,15 +7,15 @@ CLASS zcl_abapgit_git_pack DEFINITION
       BEGIN OF ty_node,
         chmod TYPE zif_abapgit_definitions=>ty_chmod,
         name  TYPE string,
-        sha1  TYPE zif_abapgit_definitions=>ty_sha1,
+        sha1  TYPE zif_abapgit_git_definitions=>ty_sha1,
       END OF ty_node .
     TYPES:
       ty_nodes_tt TYPE STANDARD TABLE OF ty_node WITH DEFAULT KEY .
     TYPES:
       BEGIN OF ty_commit,
-        tree      TYPE zif_abapgit_definitions=>ty_sha1,
-        parent    TYPE zif_abapgit_definitions=>ty_sha1,
-        parent2   TYPE zif_abapgit_definitions=>ty_sha1,
+        tree      TYPE zif_abapgit_git_definitions=>ty_sha1,
+        parent    TYPE zif_abapgit_git_definitions=>ty_sha1,
+        parent2   TYPE zif_abapgit_git_definitions=>ty_sha1,
         author    TYPE string,
         committer TYPE string,
         gpgsig    TYPE string,
@@ -126,7 +126,7 @@ CLASS zcl_abapgit_git_pack DEFINITION
       IMPORTING
         !iv_x          TYPE x
       RETURNING
-        VALUE(rv_type) TYPE zif_abapgit_definitions=>ty_type
+        VALUE(rv_type) TYPE zif_abapgit_git_definitions=>ty_type
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS get_length
@@ -136,7 +136,7 @@ CLASS zcl_abapgit_git_pack DEFINITION
         !cv_data   TYPE xstring .
     CLASS-METHODS type_and_length
       IMPORTING
-        !iv_type          TYPE zif_abapgit_definitions=>ty_type
+        !iv_type          TYPE zif_abapgit_git_definitions=>ty_type
         !iv_length        TYPE i
       RETURNING
         VALUE(rv_xstring) TYPE xstring
@@ -152,7 +152,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_git_pack IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
 
   METHOD decode.
@@ -163,8 +163,8 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
           lv_zlib           TYPE x LENGTH 2,
           lv_objects        TYPE i,
           lv_len            TYPE i,
-          lv_sha1           TYPE zif_abapgit_definitions=>ty_sha1,
-          lv_ref_delta      TYPE zif_abapgit_definitions=>ty_sha1,
+          lv_sha1           TYPE zif_abapgit_git_definitions=>ty_sha1,
+          lv_ref_delta      TYPE zif_abapgit_git_definitions=>ty_sha1,
           lv_compressed_len TYPE i,
           lv_compressed     TYPE xstring,
           lv_decompressed   TYPE xstring,
@@ -512,7 +512,7 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
           lv_result TYPE xstring,
           lv_offset TYPE i,
           lo_stream TYPE REF TO lcl_stream,
-          lv_sha1   TYPE zif_abapgit_definitions=>ty_sha1,
+          lv_sha1   TYPE zif_abapgit_git_definitions=>ty_sha1,
           ls_object LIKE LINE OF ct_objects,
           lv_len    TYPE i,
           lv_tmp    TYPE xstring,
@@ -602,7 +602,7 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 
   METHOD delta_header.
 
-    DATA: lv_bitbyte TYPE zif_abapgit_definitions=>ty_bitbyte,
+    DATA: lv_bitbyte TYPE zif_abapgit_git_definitions=>ty_bitbyte,
           lv_bits    TYPE string,
           lv_x       TYPE x.
 
@@ -624,7 +624,7 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
   METHOD encode.
 
     DATA: lv_sha1          TYPE x LENGTH 20,
-          lv_adler32       TYPE zif_abapgit_definitions=>ty_adler32,
+          lv_adler32       TYPE zif_abapgit_git_definitions=>ty_adler32,
           lv_compressed    TYPE xstring,
           lv_xstring       TYPE xstring,
           li_progress      TYPE REF TO zif_abapgit_progress,
@@ -794,7 +794,7 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 
     DATA: lv_x           TYPE x,
           lv_length_bits TYPE string,
-          lv_bitbyte     TYPE zif_abapgit_definitions=>ty_bitbyte.
+          lv_bitbyte     TYPE zif_abapgit_git_definitions=>ty_bitbyte.
 
 
     lv_x = cv_data(1).
@@ -927,7 +927,7 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 
     DATA: ls_data           TYPE zcl_abapgit_zlib=>ty_decompress,
           lv_compressed_len TYPE i,
-          lv_adler32        TYPE zif_abapgit_definitions=>ty_adler32.
+          lv_adler32        TYPE zif_abapgit_git_definitions=>ty_adler32.
 
 
     ls_data = zcl_abapgit_zlib=>decompress( cv_data ).

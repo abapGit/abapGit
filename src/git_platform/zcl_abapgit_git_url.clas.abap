@@ -24,7 +24,7 @@ CLASS zcl_abapgit_git_url DEFINITION
     METHODS get_default_commit_display_url
       IMPORTING
         !iv_repo_url         TYPE string
-        !iv_hash             TYPE zif_abapgit_definitions=>ty_sha1
+        !iv_hash             TYPE zif_abapgit_git_definitions=>ty_sha1
       RETURNING
         VALUE(rv_commit_url) TYPE string
       RAISING
@@ -34,7 +34,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_git_url IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GIT_URL IMPLEMENTATION.
 
 
   METHOD get_commit_display_url.

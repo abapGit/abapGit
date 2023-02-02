@@ -32,7 +32,7 @@ CLASS zcl_abapgit_popups DEFINITION
 
     TYPES:
       BEGIN OF ty_commit_value_tab,
-        commit   TYPE zif_abapgit_definitions=>ty_sha1,
+        commit   TYPE zif_abapgit_git_definitions=>ty_sha1,
         message  TYPE c LENGTH 100,
         datetime TYPE c LENGTH 20,
       END OF ty_commit_value_tab.
@@ -111,7 +111,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_popups IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
 
   METHOD add_field.
@@ -552,7 +552,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
   METHOD zif_abapgit_popups~branch_list_popup.
 
     DATA: lo_branches    TYPE REF TO zcl_abapgit_git_branch_list,
-          lt_branches    TYPE zif_abapgit_definitions=>ty_git_branch_list_tt,
+          lt_branches    TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt,
           lv_answer      TYPE c LENGTH 1,
           lv_default     TYPE i,
           lv_head_suffix TYPE string,
@@ -1409,8 +1409,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
   METHOD zif_abapgit_popups~tag_list_popup.
 
     DATA: lo_branches  TYPE REF TO zcl_abapgit_git_branch_list,
-          lt_tags      TYPE zif_abapgit_definitions=>ty_git_branch_list_tt,
-          ls_branch    TYPE zif_abapgit_definitions=>ty_git_branch,
+          lt_tags      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt,
+          ls_branch    TYPE zif_abapgit_git_definitions=>ty_git_branch,
           lv_answer    TYPE c LENGTH 1,
           lv_default   TYPE i,
           lv_tag       TYPE string,

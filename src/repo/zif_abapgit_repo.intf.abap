@@ -33,7 +33,7 @@ INTERFACE zif_abapgit_repo
       !iv_ignore_files TYPE abap_bool DEFAULT abap_false
         PREFERRED PARAMETER ii_obj_filter
     RETURNING
-      VALUE(rt_files)  TYPE zif_abapgit_definitions=>ty_files_tt
+      VALUE(rt_files)  TYPE zif_abapgit_git_definitions=>ty_files_tt
     RAISING
       zcx_abapgit_exception .
   METHODS refresh

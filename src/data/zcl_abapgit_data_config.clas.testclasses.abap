@@ -8,7 +8,7 @@ CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
     METHODS double_add_config FOR TESTING RAISING cx_static_check.
     METHODS to_json FOR TESTING RAISING cx_static_check.
     METHODS from_json
-      IMPORTING it_files TYPE zif_abapgit_definitions=>ty_files_tt
+      IMPORTING it_files TYPE zif_abapgit_git_definitions=>ty_files_tt
       RAISING   cx_static_check.
 
 ENDCLASS.
@@ -59,7 +59,7 @@ CLASS ltcl_test IMPLEMENTATION.
   METHOD to_json.
 
     DATA li_config TYPE REF TO zif_abapgit_data_config.
-    DATA lt_files TYPE zif_abapgit_definitions=>ty_files_tt.
+    DATA lt_files TYPE zif_abapgit_git_definitions=>ty_files_tt.
     DATA ls_file LIKE LINE OF lt_files.
     DATA lv_json TYPE string.
 

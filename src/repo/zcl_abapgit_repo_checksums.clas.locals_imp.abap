@@ -129,7 +129,7 @@ CLASS lcl_update_calculator DEFINITION
 
     CLASS-METHODS calculate_updated
       IMPORTING
-        it_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt
+        it_updated_files TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
         it_current_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt
         it_local_files TYPE zif_abapgit_definitions=>ty_files_item_tt
       RETURNING
@@ -139,13 +139,13 @@ CLASS lcl_update_calculator DEFINITION
 
     CLASS-METHODS process_updated_files
       CHANGING
-        ct_update_index TYPE zif_abapgit_definitions=>ty_file_signatures_ts
+        ct_update_index TYPE zif_abapgit_git_definitions=>ty_file_signatures_ts
         ct_checksums    TYPE zif_abapgit_persistence=>ty_local_checksum_by_item_tt.
 
     CLASS-METHODS add_new_files
       IMPORTING
         it_local        TYPE zif_abapgit_definitions=>ty_files_item_tt
-        it_update_index TYPE zif_abapgit_definitions=>ty_file_signatures_ts
+        it_update_index TYPE zif_abapgit_git_definitions=>ty_file_signatures_ts
       CHANGING
         ct_checksums    TYPE zif_abapgit_persistence=>ty_local_checksum_by_item_tt.
 
@@ -155,7 +155,7 @@ CLASS lcl_update_calculator IMPLEMENTATION.
 
   METHOD calculate_updated.
 
-    DATA lt_update_index TYPE zif_abapgit_definitions=>ty_file_signatures_ts.
+    DATA lt_update_index TYPE zif_abapgit_git_definitions=>ty_file_signatures_ts.
     DATA lt_checksums_sorted TYPE zif_abapgit_persistence=>ty_local_checksum_by_item_tt.
 
     lt_checksums_sorted = it_current_checksums.

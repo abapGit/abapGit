@@ -36,14 +36,14 @@ INTERFACE zif_abapgit_popups
       !iv_hide_branch     TYPE zif_abapgit_persistence=>ty_repo-branch_name OPTIONAL
       !iv_hide_head       TYPE abap_bool OPTIONAL
     RETURNING
-      VALUE(rs_branch)    TYPE zif_abapgit_definitions=>ty_git_branch
+      VALUE(rs_branch)    TYPE zif_abapgit_git_definitions=>ty_git_branch
     RAISING
       zcx_abapgit_exception .
   METHODS tag_list_popup
     IMPORTING
       !iv_url       TYPE string
     RETURNING
-      VALUE(rs_tag) TYPE zif_abapgit_definitions=>ty_git_tag
+      VALUE(rs_tag) TYPE zif_abapgit_git_definitions=>ty_git_tag
     RAISING
       zcx_abapgit_exception .
   METHODS commit_list_popup

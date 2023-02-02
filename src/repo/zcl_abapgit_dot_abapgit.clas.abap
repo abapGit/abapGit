@@ -24,7 +24,7 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
         zcx_abapgit_exception .
     METHODS to_file
       RETURNING
-        VALUE(rs_file) TYPE zif_abapgit_definitions=>ty_file
+        VALUE(rs_file) TYPE zif_abapgit_git_definitions=>ty_file
       RAISING
         zcx_abapgit_exception.
     METHODS get_data
@@ -71,7 +71,7 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
         zcx_abapgit_exception .
     METHODS get_signature
       RETURNING
-        VALUE(rs_signature) TYPE zif_abapgit_definitions=>ty_file_signature
+        VALUE(rs_signature) TYPE zif_abapgit_git_definitions=>ty_file_signature
       RAISING
         zcx_abapgit_exception .
     METHODS get_requirements
@@ -84,7 +84,6 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
       RETURNING VALUE(rv_version_constant) TYPE string.
     METHODS set_version_constant
       IMPORTING iv_version_constant TYPE csequence.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: ms_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
@@ -102,7 +101,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
 
   METHOD add_ignore.

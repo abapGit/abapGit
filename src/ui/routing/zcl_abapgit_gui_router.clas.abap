@@ -124,7 +124,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_router IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
 
   METHOD abapgit_services_actions.
@@ -284,7 +284,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
   METHOD get_page_diff.
 
-    DATA: ls_file   TYPE zif_abapgit_definitions=>ty_file,
+    DATA: ls_file   TYPE zif_abapgit_git_definitions=>ty_file,
           ls_object TYPE zif_abapgit_definitions=>ty_item,
           lo_page   TYPE REF TO zcl_abapgit_gui_page_diff,
           lv_key    TYPE zif_abapgit_persistence=>ty_repo-key.
