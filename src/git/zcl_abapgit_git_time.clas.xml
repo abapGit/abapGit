@@ -3,7 +3,7 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOCLASS>
-    <CLSNAME>ZCL_ABAPGIT_TIME</CLSNAME>
+    <CLSNAME>ZCL_ABAPGIT_GIT_TIME</CLSNAME>
     <LANGU>E</LANGU>
     <DESCRIPT>abapGit - Time Helpers</DESCRIPT>
     <STATE>1</STATE>
