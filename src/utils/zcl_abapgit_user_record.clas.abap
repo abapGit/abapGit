@@ -59,7 +59,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_USER_RECORD IMPLEMENTATION.
+CLASS zcl_abapgit_user_record IMPLEMENTATION.
 
 
   METHOD check_user_exists.
