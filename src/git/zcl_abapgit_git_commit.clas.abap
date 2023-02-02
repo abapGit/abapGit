@@ -67,7 +67,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GIT_COMMIT IMPLEMENTATION.
+CLASS zcl_abapgit_git_commit IMPLEMENTATION.
 
 
   METHOD clear_missing_parents.
