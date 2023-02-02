@@ -27,7 +27,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_SMIM IMPLEMENTATION.
+CLASS zcl_abapgit_object_smim IMPLEMENTATION.
 
 
   METHOD build_filename.
