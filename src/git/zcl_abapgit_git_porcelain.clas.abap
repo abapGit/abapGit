@@ -605,7 +605,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
   METHOD receive_pack_push.
 
-    DATA: lv_time   TYPE zcl_abapgit_time=>ty_unixtime,
+    DATA: lv_time   TYPE zcl_abapgit_git_time=>ty_unixtime,
           lv_commit TYPE xstring,
           lv_pack   TYPE xstring,
           ls_object LIKE LINE OF et_new_objects,
@@ -616,7 +616,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
                    <ls_blob> LIKE LINE OF it_blobs.
 
 
-    lv_time = zcl_abapgit_time=>get_unix( ).
+    lv_time = zcl_abapgit_git_time=>get_unix( ).
 
     READ TABLE it_trees ASSIGNING <ls_tree> WITH KEY path = '/'.
     ASSERT sy-subrc = 0.

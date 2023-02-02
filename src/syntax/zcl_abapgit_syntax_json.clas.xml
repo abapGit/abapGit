@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_SYNTAX_JSON</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>JSON Syntax Highlighting</DESCRIPT>
+    <DESCRIPT>abapGit - JSON Syntax Highlighting</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

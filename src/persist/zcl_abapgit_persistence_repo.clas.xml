@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_PERSISTENCE_REPO</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Repo persistence</DESCRIPT>
+    <DESCRIPT>abapGit - Persistence for Repositories</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

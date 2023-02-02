@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_ECATT_HELPER</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>zcl_abapgit_ecatt_download</DESCRIPT>
+    <DESCRIPT>abapGit - ECATT Helper</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

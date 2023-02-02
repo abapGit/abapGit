@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_PERSIST_PACKAGES</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - Package Persistence</DESCRIPT>
+    <DESCRIPT>abapGit - Persistence for SAP Packages</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

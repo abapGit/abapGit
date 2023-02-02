@@ -5,7 +5,7 @@
    <VSEOINTERF>
     <CLSNAME>ZIF_ABAPGIT_REPO_CHECKSUMS</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit repo checksums interface</DESCRIPT>
+    <DESCRIPT>abapGit - Repo Checksums</DESCRIPT>
     <EXPOSURE>2</EXPOSURE>
     <STATE>1</STATE>
     <UNICODE>X</UNICODE>
