@@ -2,13 +2,13 @@
 *&  Include           ZABAPGIT_PASSWORD_DIALOG
 *&---------------------------------------------------------------------*
 
-* Todo, remove comment about Github token usage by 2021-12-31
-
 SELECTION-SCREEN BEGIN OF SCREEN 1002 TITLE sc_title.
+SELECTION-SCREEN SKIP.
 SELECTION-SCREEN BEGIN OF LINE.
 SELECTION-SCREEN COMMENT 1(18) sc_url FOR FIELD p_url.
 PARAMETERS: p_url TYPE string LOWER CASE VISIBLE LENGTH 60 ##SEL_WRONG.
 SELECTION-SCREEN END OF LINE.
+SELECTION-SCREEN SKIP.
 SELECTION-SCREEN BEGIN OF LINE.
 SELECTION-SCREEN COMMENT 1(18) sc_user FOR FIELD p_user.
 PARAMETERS: p_user TYPE string LOWER CASE VISIBLE LENGTH 60 ##SEL_WRONG.
@@ -34,6 +34,7 @@ CLASS lcl_password_dialog DEFINITION FINAL.
 **************
 
   PUBLIC SECTION.
+
     CONSTANTS c_dynnr TYPE c LENGTH 4 VALUE '1002'.
 
     CLASS-METHODS popup
@@ -50,8 +51,8 @@ CLASS lcl_password_dialog DEFINITION FINAL.
         iv_ucomm TYPE sy-ucomm.
 
   PRIVATE SECTION.
+
     CLASS-DATA gv_confirm TYPE abap_bool.
-    CLASS-DATA gv_show_note TYPE abap_bool.
     CLASS-METHODS enrich_title_by_hostname
       IMPORTING
         iv_repo_url TYPE string.
@@ -62,21 +63,24 @@ CLASS lcl_password_dialog IMPLEMENTATION.
 
   METHOD popup.
 
+    DATA ls_position TYPE zcl_abapgit_popups=>ty_popup_position.
+
     CLEAR p_pass.
     p_url      = iv_repo_url.
     p_user     = cv_user.
     gv_confirm = abap_false.
 
-    IF iv_repo_url CP '*github.com*'.
-      p_cmnt = 'GitHub requires using personal tokens (since 8/2021)'.
-      gv_show_note = abap_true.
-    ELSE.
-      gv_show_note = abap_false.
-    ENDIF.
+    p_cmnt = 'Press F1 for Help'.
 
     enrich_title_by_hostname( iv_repo_url ).
 
-    CALL SELECTION-SCREEN c_dynnr STARTING AT 5 5 ENDING AT 80 8.
+    ls_position = zcl_abapgit_popups=>center(
+      iv_width  = 65
+      iv_height = 7 ).
+
+    CALL SELECTION-SCREEN c_dynnr
+      STARTING AT ls_position-start_column ls_position-start_row
+      ENDING AT ls_position-end_column ls_position-end_row.
 
     IF gv_confirm = abap_true.
       cv_user = p_user.
@@ -98,6 +102,7 @@ CLASS lcl_password_dialog IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD on_screen_output.
+
     DATA lt_ucomm TYPE TABLE OF sy-ucomm.
 
     ASSERT sy-dynnr = c_dynnr.
@@ -109,30 +114,23 @@ CLASS lcl_password_dialog IMPLEMENTATION.
         screen-display_3d  = '0'.
         MODIFY SCREEN.
       ENDIF.
-      IF screen-name = 'P_CMNT' OR screen-name = 'S_CMNT'.
-        IF gv_show_note = abap_true.
-          screen-active    = '1'.
-          screen-invisible = '0'.
-        ELSE.
-          screen-active    = '0'.
-          screen-invisible = '1'.
-        ENDIF.
+      IF screen-name = 'P_CMNT' OR screen-name = 'SC_CMNT'.
+        screen-active    = '1'.
+        screen-invisible = '0'.
         MODIFY SCREEN.
       ENDIF.
       IF screen-name = 'P_PASS'.
-        screen-invisible   = '1'.
+        screen-invisible = '1'.
         MODIFY SCREEN.
       ENDIF.
     ENDLOOP.
 
-    " Program RSSYSTDB, GUI Status %_CSP
-    PERFORM set_pf_status IN PROGRAM rsdbrunt IF FOUND.
-    APPEND 'NONE' TO lt_ucomm.  "Button Check
-    APPEND 'SPOS' TO lt_ucomm.  "Save as Variant
+    APPEND 'PICK' TO lt_ucomm.
 
     CALL FUNCTION 'RS_SET_SELSCREEN_STATUS'
       EXPORTING
-        p_status  = sy-pfkey
+        p_status  = 'DETL'
+        p_program = 'RSPFPAR'
       TABLES
         p_exclude = lt_ucomm.
 
@@ -143,20 +141,20 @@ CLASS lcl_password_dialog IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD on_screen_event.
+
     ASSERT sy-dynnr = c_dynnr.
 
-    " CRET   - F8
-    " OTHERS - simulate Enter press
     CASE iv_ucomm.
-      WHEN 'CRET'.
+      WHEN 'OK'. " Enter
         gv_confirm = abap_true.
-      WHEN OTHERS. "TODO REFACTOR !!! A CLUTCH !
-        " This will work unless any new specific logic appear
-        " for other commands. The problem is that the password dialog
-        " does not have Enter event (or I don't know how to activate it ;)
-        " so Enter issues previous command from previous screen
-        " But for now this works :) Fortunately Esc produces another flow
-        gv_confirm = abap_true.
+        LEAVE TO SCREEN 0.
+      WHEN 'HELP'. " F1
+        TRY.
+            zcl_abapgit_services_abapgit=>open_abapgit_wikipage( 'guide-authentication.html' ).
+          CATCH zcx_abapgit_exception ##NO_HANDLER.
+        ENDTRY.
+      WHEN OTHERS. " Escape
+        gv_confirm = abap_false.
         LEAVE TO SCREEN 0.
     ENDCASE.
 

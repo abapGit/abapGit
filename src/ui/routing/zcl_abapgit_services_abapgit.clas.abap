@@ -18,6 +18,8 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS open_abapgit_wikipage
+      IMPORTING
+        iv_page TYPE string OPTIONAL
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS open_dotabap_homepage
@@ -195,7 +197,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
 
 
   METHOD open_abapgit_wikipage.
-    open_url_in_browser( c_abapgit_wikipage ).
+    open_url_in_browser( |{ c_abapgit_wikipage }/{ iv_page }| ).
   ENDMETHOD.
 
 
