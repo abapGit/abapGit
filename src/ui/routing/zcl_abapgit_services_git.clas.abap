@@ -60,8 +60,8 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
     li_user = zcl_abapgit_persistence_user=>get_instance( ).
     li_user->set_repo_git_user_name( iv_url      = io_repo->get_url( )
                                      iv_username = is_commit-committer_name ).
-    li_user->set_repo_git_user_email( iv_url     = io_repo->get_url( )
-                                      iv_email   = is_commit-committer_email ).
+    li_user->set_repo_git_user_email( iv_url   = io_repo->get_url( )
+                                      iv_email = is_commit-committer_email ).
 
     IF is_commit-committer_name IS INITIAL.
       zcx_abapgit_exception=>raise( 'Commit: Committer name empty' ).
@@ -83,6 +83,11 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
       CONCATENATE ls_comment-comment '' is_commit-body
         INTO ls_comment-comment SEPARATED BY zif_abapgit_definitions=>c_newline.
     ENDIF.
+
+    zcl_abapgit_exit=>get_instance(  )->validate_before_push(
+      is_comment = ls_comment
+      io_stage   = io_stage
+      io_repo    = io_repo ).
 
     io_repo->push( is_comment = ls_comment
                    io_stage   = io_stage ).
@@ -110,8 +115,8 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
       EXPORTING
         iv_source_branch_name = lv_source_branch_name
       IMPORTING
-        ev_name   = lv_name
-        ev_cancel = lv_cancel ).
+        ev_name               = lv_name
+        ev_cancel             = lv_cancel ).
 
     IF lv_cancel = abap_true.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
