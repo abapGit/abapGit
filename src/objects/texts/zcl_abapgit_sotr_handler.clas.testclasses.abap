@@ -34,7 +34,7 @@ CLASS ltcl_sotr_handler IMPLEMENTATION.
   ENDMETHOD.
   METHOD sotr_wda_0001.
     CONSTANTS lc_wd_component_name TYPE sobj_name VALUE 'SALV_WD_TEST_TABLE_SIMPLE'.
-    DATA lt_sotr TYPE zif_abapgit_definitions=>ty_sotr_tt.
+    DATA lt_sotr TYPE zcl_abapgit_sotr_handler=>ty_sotr_tt.
     IF is_wd_component_existing( lc_wd_component_name ) = abap_true.
       TRY.
           zcl_abapgit_sotr_handler=>read_sotr(
@@ -52,7 +52,7 @@ CLASS ltcl_sotr_handler IMPLEMENTATION.
   ENDMETHOD.
   METHOD sotr_wda_0003_not_exist.
     CONSTANTS lc_wd_not_exist_component_name TYPE sobj_name VALUE '_NOT_EXISTING'.
-    DATA lt_sotr TYPE zif_abapgit_definitions=>ty_sotr_tt.
+    DATA lt_sotr TYPE zcl_abapgit_sotr_handler=>ty_sotr_tt.
     IF is_wd_component_existing( lc_wd_not_exist_component_name ) <> abap_true.
       TRY.
           zcl_abapgit_sotr_handler=>read_sotr(
@@ -70,7 +70,7 @@ CLASS ltcl_sotr_handler IMPLEMENTATION.
   ENDMETHOD.
   METHOD sotr_wda_0004.
     CONSTANTS lc_wd_component_name TYPE sobj_name VALUE 'SALV_WD_TEST_TABLE_SELECT'.
-    DATA lt_sotr TYPE zif_abapgit_definitions=>ty_sotr_tt.
+    DATA lt_sotr TYPE zcl_abapgit_sotr_handler=>ty_sotr_tt.
     IF is_wd_component_existing( lc_wd_component_name ) = abap_true.
       TRY.
           zcl_abapgit_sotr_handler=>read_sotr(
@@ -89,7 +89,7 @@ CLASS ltcl_sotr_handler IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
   METHOD sotr_cx_0002.
-    DATA lt_sotr TYPE zif_abapgit_definitions=>ty_sotr_tt.
+    DATA lt_sotr TYPE zcl_abapgit_sotr_handler=>ty_sotr_tt.
     TRY.
         zcl_abapgit_sotr_handler=>read_sotr(
           EXPORTING
