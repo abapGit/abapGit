@@ -74,7 +74,7 @@ CLASS ltcl_find_remote_dot_abapgit IMPLEMENTATION.
   METHOD given_dot_abapgit_file.
 
     DATA:
-      lt_files TYPE zif_abapgit_definitions=>ty_files_tt,
+      lt_files TYPE zif_abapgit_git_definitions=>ty_files_tt,
       ls_file  LIKE LINE OF lt_files.
 
     ls_file-path = zif_abapgit_definitions=>c_root_dir.
@@ -136,7 +136,7 @@ CLASS ltcl_find_remote_dot_abapgit IMPLEMENTATION.
 
   METHOD given_repo_has_files.
 
-    DATA: lt_files TYPE zif_abapgit_definitions=>ty_files_tt,
+    DATA: lt_files TYPE zif_abapgit_git_definitions=>ty_files_tt,
           ls_file  LIKE LINE OF lt_files.
 
     ls_file-path = zif_abapgit_definitions=>c_root_dir.

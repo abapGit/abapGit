@@ -11,28 +11,28 @@ CLASS zcl_abapgit_git_transport DEFINITION
         !iv_url          TYPE string
         !iv_branch_name  TYPE string
         !iv_deepen_level TYPE i DEFAULT 1
-        !it_branches     TYPE zif_abapgit_definitions=>ty_git_branch_list_tt OPTIONAL
+        !it_branches     TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt OPTIONAL
       EXPORTING
         !et_objects      TYPE zif_abapgit_definitions=>ty_objects_tt
-        !ev_branch       TYPE zif_abapgit_definitions=>ty_sha1
+        !ev_branch       TYPE zif_abapgit_git_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS upload_pack_by_commit
       IMPORTING
         !iv_url          TYPE string
-        !iv_hash         TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
+        !iv_hash         TYPE zif_abapgit_git_definitions=>ty_sha1 OPTIONAL
         !iv_deepen_level TYPE i DEFAULT 0
       EXPORTING
         !et_objects      TYPE zif_abapgit_definitions=>ty_objects_tt
-        !ev_commit       TYPE zif_abapgit_definitions=>ty_sha1
+        !ev_commit       TYPE zif_abapgit_git_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception .
 * local to remote
     CLASS-METHODS receive_pack
       IMPORTING
         !iv_url         TYPE string
-        !iv_old         TYPE zif_abapgit_definitions=>ty_sha1
-        !iv_new         TYPE zif_abapgit_definitions=>ty_sha1
+        !iv_old         TYPE zif_abapgit_git_definitions=>ty_sha1
+        !iv_new         TYPE zif_abapgit_git_definitions=>ty_sha1
         !iv_branch_name TYPE string
         !iv_pack        TYPE xstring
       RAISING
@@ -74,7 +74,7 @@ CLASS zcl_abapgit_git_transport DEFINITION
         !iv_branch_name TYPE string
       EXPORTING
         !eo_client      TYPE REF TO zcl_abapgit_http_client
-        !ev_branch      TYPE zif_abapgit_definitions=>ty_sha1
+        !ev_branch      TYPE zif_abapgit_git_definitions=>ty_sha1
         !eo_branch_list TYPE REF TO zcl_abapgit_git_branch_list
       RAISING
         zcx_abapgit_exception .
@@ -90,7 +90,7 @@ CLASS zcl_abapgit_git_transport DEFINITION
         !io_client        TYPE REF TO zcl_abapgit_http_client
         !iv_url           TYPE string
         !iv_deepen_level  TYPE i DEFAULT 0
-        !it_hashes        TYPE zif_abapgit_definitions=>ty_sha1_tt
+        !it_hashes        TYPE zif_abapgit_git_definitions=>ty_sha1_tt
       RETURNING
         VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
@@ -384,7 +384,7 @@ CLASS ZCL_ABAPGIT_GIT_TRANSPORT IMPLEMENTATION.
   METHOD upload_pack_by_branch.
 
     DATA: lo_client TYPE REF TO zcl_abapgit_http_client,
-          lt_hashes TYPE zif_abapgit_definitions=>ty_sha1_tt.
+          lt_hashes TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
 
     FIELD-SYMBOLS: <ls_branch> LIKE LINE OF it_branches.
 
@@ -420,7 +420,7 @@ CLASS ZCL_ABAPGIT_GIT_TRANSPORT IMPLEMENTATION.
   METHOD upload_pack_by_commit.
 
     DATA: lo_client TYPE REF TO zcl_abapgit_http_client,
-          lt_hashes TYPE zif_abapgit_definitions=>ty_sha1_tt.
+          lt_hashes TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
 
 
     CLEAR: et_objects,

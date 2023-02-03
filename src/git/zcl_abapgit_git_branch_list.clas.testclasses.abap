@@ -30,7 +30,7 @@ CLASS ltcl_parse IMPLEMENTATION.
   METHOD parse.
 
     DATA: lv_data TYPE string,
-          lt_list TYPE zif_abapgit_definitions=>ty_git_branch_list_tt.
+          lt_list TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
 
     CONCATENATE LINES OF mt_data INTO lv_data SEPARATED BY zif_abapgit_definitions=>c_newline.
 

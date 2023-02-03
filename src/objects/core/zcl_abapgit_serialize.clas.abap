@@ -125,7 +125,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
   METHOD add_apack.
 
-    DATA ls_apack_file TYPE zif_abapgit_definitions=>ty_file.
+    DATA ls_apack_file TYPE zif_abapgit_git_definitions=>ty_file.
 
     FIELD-SYMBOLS <ls_file> LIKE LINE OF ct_files.
 
@@ -141,7 +141,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
   METHOD add_data.
 
-    DATA lt_files TYPE zif_abapgit_definitions=>ty_files_tt.
+    DATA lt_files TYPE zif_abapgit_git_definitions=>ty_files_tt.
     DATA ls_file LIKE LINE OF lt_files.
 
     FIELD-SYMBOLS <ls_return> LIKE LINE OF ct_files.

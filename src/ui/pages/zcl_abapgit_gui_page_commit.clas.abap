@@ -434,7 +434,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
   METHOD validate_form.
 
-    DATA: lt_branches        TYPE zif_abapgit_definitions=>ty_git_branch_list_tt,
+    DATA: lt_branches        TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt,
           lv_new_branch_name TYPE string.
 
     ro_validation_log = mo_form_util->validate( io_form_data ).

@@ -227,7 +227,7 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
 
     CONSTANTS lc_new_repo_size TYPE i VALUE 10.
 
-    DATA lt_remote TYPE zif_abapgit_definitions=>ty_files_tt.
+    DATA lt_remote TYPE zif_abapgit_git_definitions=>ty_files_tt.
 
     lt_remote = mo_repo->get_files_remote( ).
 

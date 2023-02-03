@@ -13,37 +13,37 @@ CLASS zcl_abapgit_stage DEFINITION
         zcx_abapgit_exception .
     METHODS constructor
       IMPORTING
-        !iv_merge_source TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL .
+        !iv_merge_source TYPE zif_abapgit_git_definitions=>ty_sha1 OPTIONAL .
     METHODS add
       IMPORTING
-        !iv_path     TYPE zif_abapgit_definitions=>ty_file-path
-        !iv_filename TYPE zif_abapgit_definitions=>ty_file-filename
+        !iv_path     TYPE zif_abapgit_git_definitions=>ty_file-path
+        !iv_filename TYPE zif_abapgit_git_definitions=>ty_file-filename
         !iv_data     TYPE xstring
         !is_status   TYPE zif_abapgit_definitions=>ty_result OPTIONAL
       RAISING
         zcx_abapgit_exception .
     METHODS reset
       IMPORTING
-        !iv_path     TYPE zif_abapgit_definitions=>ty_file-path
-        !iv_filename TYPE zif_abapgit_definitions=>ty_file-filename
+        !iv_path     TYPE zif_abapgit_git_definitions=>ty_file-path
+        !iv_filename TYPE zif_abapgit_git_definitions=>ty_file-filename
       RAISING
         zcx_abapgit_exception .
     METHODS rm
       IMPORTING
-        !iv_path     TYPE zif_abapgit_definitions=>ty_file-path
-        !iv_filename TYPE zif_abapgit_definitions=>ty_file-filename
+        !iv_path     TYPE zif_abapgit_git_definitions=>ty_file-path
+        !iv_filename TYPE zif_abapgit_git_definitions=>ty_file-filename
         !is_status   TYPE zif_abapgit_definitions=>ty_result OPTIONAL
       RAISING
         zcx_abapgit_exception .
     METHODS ignore
       IMPORTING
-        !iv_path     TYPE zif_abapgit_definitions=>ty_file-path
-        !iv_filename TYPE zif_abapgit_definitions=>ty_file-filename
+        !iv_path     TYPE zif_abapgit_git_definitions=>ty_file-path
+        !iv_filename TYPE zif_abapgit_git_definitions=>ty_file-filename
       RAISING
         zcx_abapgit_exception .
     METHODS get_merge_source
       RETURNING
-        VALUE(rv_source) TYPE zif_abapgit_definitions=>ty_sha1 .
+        VALUE(rv_source) TYPE zif_abapgit_git_definitions=>ty_sha1 .
     METHODS count
       RETURNING
         VALUE(rv_count) TYPE i .
@@ -54,12 +54,12 @@ CLASS zcl_abapgit_stage DEFINITION
   PRIVATE SECTION.
 
     DATA mt_stage TYPE zif_abapgit_definitions=>ty_stage_tt .
-    DATA mv_merge_source TYPE zif_abapgit_definitions=>ty_sha1 .
+    DATA mv_merge_source TYPE zif_abapgit_git_definitions=>ty_sha1 .
 
     METHODS append
       IMPORTING
-        !iv_path     TYPE zif_abapgit_definitions=>ty_file-path
-        !iv_filename TYPE zif_abapgit_definitions=>ty_file-filename
+        !iv_path     TYPE zif_abapgit_git_definitions=>ty_file-path
+        !iv_filename TYPE zif_abapgit_git_definitions=>ty_file-filename
         !iv_method   TYPE zif_abapgit_definitions=>ty_method
         !is_status   TYPE zif_abapgit_definitions=>ty_result OPTIONAL
         !iv_data     TYPE xstring OPTIONAL

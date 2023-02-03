@@ -69,7 +69,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
     METHODS render_file
       IMPORTING
         !iv_context    TYPE string
-        !is_file       TYPE zif_abapgit_definitions=>ty_file
+        !is_file       TYPE zif_abapgit_git_definitions=>ty_file
         !is_item       TYPE zif_abapgit_definitions=>ty_item OPTIONAL
         !is_status     TYPE zif_abapgit_definitions=>ty_result
         !iv_changed_by TYPE syuname OPTIONAL
@@ -152,7 +152,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
   METHOD check_selected.
 
     DATA:
-      ls_file    TYPE zif_abapgit_definitions=>ty_file,
+      ls_file    TYPE zif_abapgit_git_definitions=>ty_file,
       lv_pattern TYPE string,
       lv_msg     TYPE string.
 
@@ -721,7 +721,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
   METHOD stage_selected.
 
-    DATA ls_file  TYPE zif_abapgit_definitions=>ty_file.
+    DATA ls_file  TYPE zif_abapgit_git_definitions=>ty_file.
     DATA lo_files TYPE REF TO zcl_abapgit_string_map.
 
     FIELD-SYMBOLS:

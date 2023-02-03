@@ -15,7 +15,7 @@ INTERFACE zif_abapgit_persistence PUBLIC.
 
   TYPES: BEGIN OF ty_local_checksum,
            item  TYPE zif_abapgit_definitions=>ty_item_signature,
-           files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
+           files TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt,
          END OF ty_local_checksum.
 
   TYPES:
@@ -38,7 +38,7 @@ INTERFACE zif_abapgit_persistence PUBLIC.
   TYPES: BEGIN OF ty_repo_xml,
            url             TYPE string,
            branch_name     TYPE string,
-           selected_commit TYPE zif_abapgit_definitions=>ty_sha1,
+           selected_commit TYPE zif_abapgit_git_definitions=>ty_sha1,
            package         TYPE devclass,
            created_by      TYPE syuname,
            created_at      TYPE timestampl,

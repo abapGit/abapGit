@@ -15,7 +15,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
     DATA li_cut TYPE REF TO zif_abapgit_data_deserializer.
     DATA li_config TYPE REF TO zif_abapgit_data_config.
-    DATA lt_files TYPE zif_abapgit_definitions=>ty_files_tt.
+    DATA lt_files TYPE zif_abapgit_git_definitions=>ty_files_tt.
     DATA ls_config TYPE zif_abapgit_data_config=>ty_config.
 
     CREATE OBJECT li_cut TYPE zcl_abapgit_data_deserializer.

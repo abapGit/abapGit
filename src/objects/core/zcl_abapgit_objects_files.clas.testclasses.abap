@@ -43,7 +43,7 @@ ENDCLASS.
 CLASS ltcl_objects_files IMPLEMENTATION.
 
   METHOD setup.
-    DATA: lt_files TYPE zif_abapgit_definitions=>ty_files_tt,
+    DATA: lt_files TYPE zif_abapgit_git_definitions=>ty_files_tt,
           ls_item  TYPE zif_abapgit_definitions=>ty_item.
     FIELD-SYMBOLS: <ls_files> LIKE LINE OF lt_files.
 

@@ -18,7 +18,7 @@ CLASS zcl_abapgit_merge DEFINITION
     TYPES:
       ty_ancestor_tt TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_ancestor WITH DEFAULT KEY .
     TYPES:
-      ty_visit_tt TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_sha1 WITH DEFAULT KEY .
+      ty_visit_tt TYPE STANDARD TABLE OF zif_abapgit_git_definitions=>ty_sha1 WITH DEFAULT KEY .
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
     DATA ms_merge TYPE zif_abapgit_merge=>ty_merge .
@@ -28,7 +28,7 @@ CLASS zcl_abapgit_merge DEFINITION
 
     METHODS visit
       IMPORTING
-        !iv_parent TYPE zif_abapgit_definitions=>ty_sha1
+        !iv_parent TYPE zif_abapgit_git_definitions=>ty_sha1
       CHANGING
         !ct_visit  TYPE ty_visit_tt .
     METHODS all_files
@@ -44,7 +44,7 @@ CLASS zcl_abapgit_merge DEFINITION
         zcx_abapgit_exception .
     METHODS find_ancestors
       IMPORTING
-        !iv_commit          TYPE zif_abapgit_definitions=>ty_sha1
+        !iv_commit          TYPE zif_abapgit_git_definitions=>ty_sha1
       RETURNING
         VALUE(rt_ancestors) TYPE ty_ancestor_tt
       RAISING
@@ -247,7 +247,7 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
   METHOD fetch_git.
 
     DATA: lo_branch_list TYPE REF TO zcl_abapgit_git_branch_list,
-          lt_upload      TYPE zif_abapgit_definitions=>ty_git_branch_list_tt.
+          lt_upload      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
 
     lo_branch_list = zcl_abapgit_git_transport=>branches( ms_merge-repo->get_url( ) ).
 

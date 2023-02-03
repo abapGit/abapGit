@@ -12,7 +12,7 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
       IMPORTING
         !iv_branch_name  TYPE clike
       RETURNING
-        VALUE(rs_branch) TYPE zif_abapgit_definitions=>ty_git_branch
+        VALUE(rs_branch) TYPE zif_abapgit_git_definitions=>ty_git_branch
       RAISING
         zcx_abapgit_exception .
     METHODS get_head_symref
@@ -20,17 +20,17 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
         VALUE(rv_head_symref) TYPE string .
     METHODS get_all
       RETURNING
-        VALUE(rt_branches) TYPE zif_abapgit_definitions=>ty_git_branch_list_tt
+        VALUE(rt_branches) TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
       RAISING
         zcx_abapgit_exception .
     METHODS get_branches_only
       RETURNING
-        VALUE(rt_branches) TYPE zif_abapgit_definitions=>ty_git_branch_list_tt
+        VALUE(rt_branches) TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
       RAISING
         zcx_abapgit_exception .
     METHODS get_tags_only             " For potential future use
       RETURNING
-        VALUE(rt_tags) TYPE zif_abapgit_definitions=>ty_git_branch_list_tt
+        VALUE(rt_tags) TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS get_display_name
@@ -44,7 +44,7 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
         !it_result            TYPE string_table OPTIONAL
         !iv_current_row_index TYPE sy-tabix OPTIONAL
       RETURNING
-        VALUE(rv_type)        TYPE zif_abapgit_definitions=>ty_git_branch_type .
+        VALUE(rv_type)        TYPE zif_abapgit_git_definitions=>ty_git_branch_type .
     CLASS-METHODS complete_heads_branch_name
       IMPORTING
         !iv_branch_name TYPE clike
@@ -58,7 +58,7 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    DATA mt_branches TYPE zif_abapgit_definitions=>ty_git_branch_list_tt .
+    DATA mt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt .
     DATA mv_head_symref TYPE string .
 
     CLASS-METHODS skip_first_pkt
@@ -72,14 +72,14 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
       IMPORTING
         !iv_branch_name  TYPE string
       RETURNING
-        VALUE(rs_branch) TYPE zif_abapgit_definitions=>ty_git_branch
+        VALUE(rs_branch) TYPE zif_abapgit_git_definitions=>ty_git_branch
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS parse_branch_list
       IMPORTING
         !iv_data        TYPE string
       EXPORTING
-        !et_list        TYPE zif_abapgit_definitions=>ty_git_branch_list_tt
+        !et_list        TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
         !ev_head_symref TYPE string
       RAISING
         zcx_abapgit_exception .
@@ -249,7 +249,7 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
   METHOD parse_branch_list.
 
     DATA: lt_result            TYPE TABLE OF string,
-          lv_hash              TYPE zif_abapgit_definitions=>ty_sha1,
+          lv_hash              TYPE zif_abapgit_git_definitions=>ty_sha1,
           lv_name              TYPE string,
           lv_head_params       TYPE string,
           lv_char              TYPE c,

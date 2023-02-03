@@ -109,7 +109,7 @@ CLASS zcl_abapgit_news IMPLEMENTATION.
       lc_log_filename_up TYPE string VALUE 'CHANGELOG*'.
 
     DATA: lo_apack            TYPE REF TO zcl_abapgit_apack_reader,
-          lt_remote           TYPE zif_abapgit_definitions=>ty_files_tt,
+          lt_remote           TYPE zif_abapgit_git_definitions=>ty_files_tt,
           lv_version          TYPE string,
           lv_last_seen        TYPE string,
           lv_url              TYPE string,

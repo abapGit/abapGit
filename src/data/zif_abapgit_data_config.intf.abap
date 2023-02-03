@@ -32,7 +32,7 @@ INTERFACE zif_abapgit_data_config
       zcx_abapgit_exception .
   METHODS from_json
     IMPORTING
-      !it_files TYPE zif_abapgit_definitions=>ty_files_tt
+      !it_files TYPE zif_abapgit_git_definitions=>ty_files_tt
     RAISING
       zcx_abapgit_exception .
   METHODS get_configs
@@ -45,7 +45,7 @@ INTERFACE zif_abapgit_data_config
       zcx_abapgit_exception .
   METHODS to_json
     RETURNING
-      VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
+      VALUE(rt_files) TYPE zif_abapgit_git_definitions=>ty_files_tt
     RAISING
       zcx_abapgit_exception .
   METHODS update_config

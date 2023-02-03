@@ -3,7 +3,7 @@ INTERFACE zif_abapgit_objects
 
   TYPES:
     BEGIN OF ty_serialization,
-      files TYPE zif_abapgit_definitions=>ty_files_tt,
+      files TYPE zif_abapgit_git_definitions=>ty_files_tt,
       item  TYPE zif_abapgit_definitions=>ty_item,
     END OF ty_serialization .
   TYPES:

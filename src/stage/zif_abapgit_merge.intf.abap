@@ -3,8 +3,8 @@ INTERFACE zif_abapgit_merge PUBLIC .
   TYPES:
     BEGIN OF ty_merge,
       repo     TYPE REF TO zcl_abapgit_repo_online,
-      source   TYPE zif_abapgit_definitions=>ty_git_branch,
-      target   TYPE zif_abapgit_definitions=>ty_git_branch,
+      source   TYPE zif_abapgit_git_definitions=>ty_git_branch,
+      target   TYPE zif_abapgit_git_definitions=>ty_git_branch,
       common   TYPE zif_abapgit_definitions=>ty_ancestor,
       stree    TYPE zif_abapgit_definitions=>ty_expanded_tt,
       ttree    TYPE zif_abapgit_definitions=>ty_expanded_tt,
@@ -17,11 +17,11 @@ INTERFACE zif_abapgit_merge PUBLIC .
     BEGIN OF ty_merge_conflict,
       path        TYPE string,
       filename    TYPE string,
-      source_sha1 TYPE zif_abapgit_definitions=>ty_sha1,
+      source_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1,
       source_data TYPE xstring,
-      target_sha1 TYPE zif_abapgit_definitions=>ty_sha1,
+      target_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1,
       target_data TYPE xstring,
-      result_sha1 TYPE zif_abapgit_definitions=>ty_sha1,
+      result_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1,
       result_data TYPE xstring,
     END OF ty_merge_conflict .
   TYPES:

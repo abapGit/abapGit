@@ -72,7 +72,7 @@ CLASS zcl_abapgit_gui_page_sett_info DEFINITION
     METHODS read_stats_files
       EXPORTING
         !et_local  TYPE zif_abapgit_definitions=>ty_files_item_tt
-        !et_remote TYPE zif_abapgit_definitions=>ty_files_tt
+        !et_remote TYPE zif_abapgit_git_definitions=>ty_files_tt
       RAISING
         zcx_abapgit_exception .
     METHODS read_stats_state
@@ -81,7 +81,7 @@ CLASS zcl_abapgit_gui_page_sett_info DEFINITION
     METHODS read_stats_size_lines_sloc
       IMPORTING
         !it_local        TYPE zif_abapgit_definitions=>ty_files_item_tt
-        !it_remote       TYPE zif_abapgit_definitions=>ty_files_tt
+        !it_remote       TYPE zif_abapgit_git_definitions=>ty_files_tt
       EXPORTING
         !et_local_items  TYPE zif_abapgit_definitions=>ty_items_tt
         !et_remote_items TYPE zif_abapgit_definitions=>ty_items_tt
@@ -89,7 +89,7 @@ CLASS zcl_abapgit_gui_page_sett_info DEFINITION
         zcx_abapgit_exception .
     METHODS read_stats_file
       IMPORTING
-        !is_file       TYPE zif_abapgit_definitions=>ty_file
+        !is_file       TYPE zif_abapgit_git_definitions=>ty_file
       RETURNING
         VALUE(rs_info) TYPE ty_infos .
     METHODS read_stats_objects
@@ -343,7 +343,7 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
 
     DATA:
       lt_local        TYPE zif_abapgit_definitions=>ty_files_item_tt,
-      lt_remote       TYPE zif_abapgit_definitions=>ty_files_tt,
+      lt_remote       TYPE zif_abapgit_git_definitions=>ty_files_tt,
       lt_local_items  TYPE zif_abapgit_definitions=>ty_items_tt,
       lt_remote_items TYPE zif_abapgit_definitions=>ty_items_tt.
 
@@ -407,7 +407,7 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
   METHOD read_stats_files.
 
     DATA ls_stats TYPE ty_stats.
-    DATA lt_remote_wo_ignored TYPE zif_abapgit_definitions=>ty_files_tt.
+    DATA lt_remote_wo_ignored TYPE zif_abapgit_git_definitions=>ty_files_tt.
 
     et_local = mo_repo->get_files_local( ).
 

@@ -7,10 +7,10 @@ CLASS zcl_abapgit_item_state DEFINITION
 
     METHODS local
       RETURNING
-        VALUE(rv_state) TYPE zif_abapgit_definitions=>ty_item_state.
+        VALUE(rv_state) TYPE zif_abapgit_git_definitions=>ty_item_state.
     METHODS remote
       RETURNING
-        VALUE(rv_state) TYPE zif_abapgit_definitions=>ty_item_state.
+        VALUE(rv_state) TYPE zif_abapgit_git_definitions=>ty_item_state.
     METHODS is_reassigned
       RETURNING
         VALUE(rv_is_reassigned) TYPE abap_bool.
@@ -23,20 +23,18 @@ CLASS zcl_abapgit_item_state DEFINITION
     METHODS sum_with_status_item
       IMPORTING
         !is_status_item TYPE zif_abapgit_definitions=>ty_result.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
-    DATA mv_lstate TYPE zif_abapgit_definitions=>ty_item_state.
-    DATA mv_rstate TYPE zif_abapgit_definitions=>ty_item_state.
+    DATA mv_lstate TYPE zif_abapgit_git_definitions=>ty_item_state.
+    DATA mv_rstate TYPE zif_abapgit_git_definitions=>ty_item_state.
     DATA mv_is_reassigned TYPE abap_bool.
 
     CLASS-METHODS reduce
       IMPORTING
-        iv_prev       TYPE zif_abapgit_definitions=>ty_item_state
-        iv_cur        TYPE zif_abapgit_definitions=>ty_item_state
+        iv_prev       TYPE zif_abapgit_git_definitions=>ty_item_state
+        iv_cur        TYPE zif_abapgit_git_definitions=>ty_item_state
       RETURNING
-        VALUE(rv_new) TYPE zif_abapgit_definitions=>ty_item_state.
-
+        VALUE(rv_new) TYPE zif_abapgit_git_definitions=>ty_item_state.
 ENDCLASS.
 
 

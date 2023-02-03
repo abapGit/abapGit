@@ -13,7 +13,7 @@ CLASS zcl_abapgit_data_deserializer DEFINITION
 
     METHODS convert_json_to_itab
       IMPORTING
-        !is_file TYPE zif_abapgit_definitions=>ty_file
+        !is_file TYPE zif_abapgit_git_definitions=>ty_file
         !ir_data TYPE REF TO data
       RAISING
         zcx_abapgit_exception .

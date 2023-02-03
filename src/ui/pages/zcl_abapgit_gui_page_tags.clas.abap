@@ -55,7 +55,7 @@ CLASS zcl_abapgit_gui_page_tags DEFINITION
     DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
     DATA mo_repo TYPE REF TO zcl_abapgit_repo_online.
     DATA mo_settings TYPE REF TO zcl_abapgit_settings.
-    DATA ms_tag TYPE zif_abapgit_definitions=>ty_git_tag.
+    DATA ms_tag TYPE zif_abapgit_git_definitions=>ty_git_tag.
 
     METHODS get_form_schema
       IMPORTING
@@ -290,7 +290,7 @@ CLASS zcl_abapgit_gui_page_tags IMPLEMENTATION.
   METHOD validate_form.
 
     DATA:
-      lt_tags         TYPE zif_abapgit_definitions=>ty_git_branch_list_tt,
+      lt_tags         TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt,
       lv_new_tag_name TYPE string.
 
     ro_validation_log = mo_form_util->validate( io_form_data ).
@@ -323,7 +323,7 @@ CLASS zcl_abapgit_gui_page_tags IMPLEMENTATION.
 
     DATA:
       lx_error  TYPE REF TO zcx_abapgit_exception,
-      lv_commit TYPE zif_abapgit_definitions=>ty_sha1,
+      lv_commit TYPE zif_abapgit_git_definitions=>ty_sha1,
       lv_text   TYPE string.
 
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).

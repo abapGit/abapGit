@@ -1121,8 +1121,8 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
   METHOD render_repo_top_commit_hash.
 
-    DATA: lv_commit_hash       TYPE zif_abapgit_definitions=>ty_sha1,
-          lv_commit_short_hash TYPE zif_abapgit_definitions=>ty_sha1,
+    DATA: lv_commit_hash       TYPE zif_abapgit_git_definitions=>ty_sha1,
+          lv_commit_short_hash TYPE zif_abapgit_git_definitions=>ty_sha1,
           lv_display_url       TYPE zif_abapgit_persistence=>ty_repo-url,
           lo_url               TYPE REF TO zcl_abapgit_git_url,
           lv_icon_commit       TYPE string.

@@ -49,7 +49,7 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
     METHODS set_files_remote
       IMPORTING
-        !it_files TYPE zif_abapgit_definitions=>ty_files_tt .
+        !it_files TYPE zif_abapgit_git_definitions=>ty_files_tt .
     METHODS set_local_settings
       IMPORTING
         !is_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings
@@ -96,7 +96,7 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
     METHODS remove_ignored_files
       CHANGING
-        ct_files TYPE zif_abapgit_definitions=>ty_files_tt
+        ct_files TYPE zif_abapgit_git_definitions=>ty_files_tt
       RAISING
         zcx_abapgit_exception .
     METHODS check_and_create_package
@@ -107,7 +107,7 @@ CLASS zcl_abapgit_repo DEFINITION
   PROTECTED SECTION.
 
     DATA mt_local TYPE zif_abapgit_definitions=>ty_files_item_tt .
-    DATA mt_remote TYPE zif_abapgit_definitions=>ty_files_tt .
+    DATA mt_remote TYPE zif_abapgit_git_definitions=>ty_files_tt .
     DATA mv_request_local_refresh TYPE abap_bool .
     DATA mv_request_remote_refresh TYPE abap_bool .
     DATA mt_status TYPE zif_abapgit_definitions=>ty_results_tt .
@@ -654,7 +654,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD zif_abapgit_repo~deserialize.
 
-    DATA: lt_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
+    DATA: lt_updated_files TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt,
           lt_result        TYPE zif_abapgit_data_deserializer=>ty_results,
           lx_error         TYPE REF TO zcx_abapgit_exception.
 

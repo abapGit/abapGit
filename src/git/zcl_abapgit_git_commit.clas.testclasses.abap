@@ -115,12 +115,12 @@ CLASS ltc_parent_handling DEFINITION FINAL FOR TESTING
     METHODS missing_parent1_cleared FOR TESTING RAISING cx_static_check.
     METHODS missing_parent2_cleared FOR TESTING RAISING cx_static_check.
     METHODS matched_parent1_remains FOR TESTING RAISING cx_static_check.
-    METHODS given_commit_sha1 IMPORTING iv_sha1 TYPE zif_abapgit_definitions=>ty_sha1.
-    METHODS parent_should_be_missing IMPORTING iv_sha1 TYPE zif_abapgit_definitions=>ty_sha1.
-    METHODS parent_should_not_be_missing IMPORTING iv_sha1 TYPE zif_abapgit_definitions=>ty_sha1.
-    METHODS given_commit IMPORTING iv_sha1    TYPE zif_abapgit_definitions=>ty_sha1
-                                   iv_parent1 TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
-                                   iv_parent2 TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL.
+    METHODS given_commit_sha1 IMPORTING iv_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
+    METHODS parent_should_be_missing IMPORTING iv_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
+    METHODS parent_should_not_be_missing IMPORTING iv_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
+    METHODS given_commit IMPORTING iv_sha1    TYPE zif_abapgit_git_definitions=>ty_sha1
+                                   iv_parent1 TYPE zif_abapgit_git_definitions=>ty_sha1 OPTIONAL
+                                   iv_parent2 TYPE zif_abapgit_git_definitions=>ty_sha1 OPTIONAL.
 ENDCLASS.
 
 

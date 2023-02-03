@@ -54,7 +54,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
   METHOD commit.
 
-    DATA: ls_comment TYPE zif_abapgit_definitions=>ty_comment,
+    DATA: ls_comment TYPE zif_abapgit_git_definitions=>ty_comment,
           li_user    TYPE REF TO zif_abapgit_persist_user.
 
     li_user = zcl_abapgit_persistence_user=>get_instance( ).
@@ -134,7 +134,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
   METHOD delete_branch.
 
     DATA: lo_repo   TYPE REF TO zcl_abapgit_repo_online,
-          ls_branch TYPE zif_abapgit_definitions=>ty_git_branch,
+          ls_branch TYPE zif_abapgit_git_definitions=>ty_git_branch,
           lv_msg    TYPE string,
           li_popups TYPE REF TO zif_abapgit_popups.
 
@@ -162,7 +162,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
   METHOD delete_tag.
 
     DATA: lo_repo TYPE REF TO zcl_abapgit_repo_online,
-          ls_tag  TYPE zif_abapgit_definitions=>ty_git_tag,
+          ls_tag  TYPE zif_abapgit_git_definitions=>ty_git_tag,
           lv_text TYPE string.
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
@@ -199,7 +199,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
   METHOD switch_branch.
 
     DATA: lo_repo   TYPE REF TO zcl_abapgit_repo_online,
-          ls_branch TYPE zif_abapgit_definitions=>ty_git_branch.
+          ls_branch TYPE zif_abapgit_git_definitions=>ty_git_branch.
 
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
@@ -230,7 +230,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
   METHOD switch_tag.
 
     DATA: lo_repo TYPE REF TO zcl_abapgit_repo_online,
-          ls_tag  TYPE zif_abapgit_definitions=>ty_git_tag,
+          ls_tag  TYPE zif_abapgit_git_definitions=>ty_git_tag,
           lv_text TYPE string.
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).

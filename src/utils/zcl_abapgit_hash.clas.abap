@@ -8,55 +8,55 @@ CLASS zcl_abapgit_hash DEFINITION
       IMPORTING
         !iv_xstring        TYPE xstring
       RETURNING
-        VALUE(rv_checksum) TYPE zif_abapgit_definitions=>ty_adler32 .
+        VALUE(rv_checksum) TYPE zif_abapgit_git_definitions=>ty_adler32 .
     CLASS-METHODS sha1
       IMPORTING
-        !iv_type       TYPE zif_abapgit_definitions=>ty_type
+        !iv_type       TYPE zif_abapgit_git_definitions=>ty_type
         !iv_data       TYPE xstring
       RETURNING
-        VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
+        VALUE(rv_sha1) TYPE zif_abapgit_git_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS sha1_commit
       IMPORTING
         !iv_data       TYPE xstring
       RETURNING
-        VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
+        VALUE(rv_sha1) TYPE zif_abapgit_git_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS sha1_tree
       IMPORTING
         !iv_data       TYPE xstring
       RETURNING
-        VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
+        VALUE(rv_sha1) TYPE zif_abapgit_git_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS sha1_tag
       IMPORTING
         !iv_data       TYPE xstring
       RETURNING
-        VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
+        VALUE(rv_sha1) TYPE zif_abapgit_git_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS sha1_blob
       IMPORTING
         !iv_data       TYPE xstring
       RETURNING
-        VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
+        VALUE(rv_sha1) TYPE zif_abapgit_git_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS sha1_raw
       IMPORTING
         !iv_data       TYPE xstring
       RETURNING
-        VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
+        VALUE(rv_sha1) TYPE zif_abapgit_git_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS sha1_string
       IMPORTING
         !iv_data       TYPE string
       RETURNING
-        VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
+        VALUE(rv_sha1) TYPE zif_abapgit_git_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception .
   PROTECTED SECTION.

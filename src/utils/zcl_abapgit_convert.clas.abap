@@ -13,7 +13,7 @@ CLASS zcl_abapgit_convert DEFINITION
       IMPORTING
         !iv_x             TYPE x
       RETURNING
-        VALUE(rv_bitbyte) TYPE zif_abapgit_definitions=>ty_bitbyte .
+        VALUE(rv_bitbyte) TYPE zif_abapgit_git_definitions=>ty_bitbyte .
     CLASS-METHODS string_to_xstring_utf8
       IMPORTING
         !iv_string        TYPE string

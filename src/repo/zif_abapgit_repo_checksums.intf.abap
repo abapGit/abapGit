@@ -7,7 +7,7 @@ INTERFACE zif_abapgit_repo_checksums
 
   METHODS get_checksums_per_file
     RETURNING
-      VALUE(rt_checksums) TYPE zif_abapgit_definitions=>ty_file_signatures_tt .
+      VALUE(rt_checksums) TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt .
 
   METHODS rebuild
     IMPORTING
@@ -17,7 +17,7 @@ INTERFACE zif_abapgit_repo_checksums
 
   METHODS update
     IMPORTING
-      !it_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt
+      !it_updated_files TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
     RAISING
       zcx_abapgit_exception.
 
