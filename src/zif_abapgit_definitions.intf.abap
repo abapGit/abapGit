@@ -152,15 +152,6 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     ty_tpool_tt TYPE STANDARD TABLE OF ty_tpool WITH DEFAULT KEY .
   TYPES:
-    BEGIN OF ty_sotr,
-      header  TYPE sotr_head,
-      entries TYPE sotr_text_tt,
-    END OF ty_sotr .
-  TYPES:
-    ty_sotr_tt TYPE STANDARD TABLE OF ty_sotr WITH DEFAULT KEY .
-  TYPES:
-    ty_sotr_use_tt TYPE STANDARD TABLE OF sotr_use WITH DEFAULT KEY .
-  TYPES:
     BEGIN OF ty_obj_attribute,
       cmpname   TYPE seocmpname,
       attkeyfld TYPE seokeyfld,

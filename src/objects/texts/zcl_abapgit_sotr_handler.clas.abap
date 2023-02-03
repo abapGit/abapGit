@@ -5,6 +5,16 @@ CLASS zcl_abapgit_sotr_handler DEFINITION
 
   PUBLIC SECTION.
 
+    TYPES:
+      BEGIN OF ty_sotr,
+        header  TYPE sotr_head,
+        entries TYPE sotr_text_tt,
+      END OF ty_sotr .
+    TYPES:
+      ty_sotr_tt TYPE STANDARD TABLE OF ty_sotr WITH DEFAULT KEY .
+    TYPES:
+      ty_sotr_use_tt TYPE STANDARD TABLE OF sotr_use WITH DEFAULT KEY .
+
     CLASS-METHODS read_sotr
       IMPORTING
         !iv_pgmid    TYPE pgmid DEFAULT 'R3TR'
@@ -13,8 +23,8 @@ CLASS zcl_abapgit_sotr_handler DEFINITION
         !io_xml      TYPE REF TO zif_abapgit_xml_output OPTIONAL
         !iv_language TYPE spras OPTIONAL
       EXPORTING
-        !et_sotr     TYPE zif_abapgit_definitions=>ty_sotr_tt
-        !et_sotr_use TYPE zif_abapgit_definitions=>ty_sotr_use_tt
+        !et_sotr     TYPE ty_sotr_tt
+        !et_sotr_use TYPE ty_sotr_use_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS create_sotr
@@ -26,8 +36,8 @@ CLASS zcl_abapgit_sotr_handler DEFINITION
     CLASS-METHODS create_sotr_from_data
       IMPORTING
         !iv_package  TYPE devclass
-        !it_sotr     TYPE zif_abapgit_definitions=>ty_sotr_tt
-        !it_sotr_use TYPE zif_abapgit_definitions=>ty_sotr_use_tt
+        !it_sotr     TYPE ty_sotr_tt
+        !it_sotr_use TYPE ty_sotr_use_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS delete_sotr
@@ -49,13 +59,13 @@ CLASS zcl_abapgit_sotr_handler DEFINITION
         !iv_object         TYPE trobjtype
         !iv_obj_name       TYPE csequence
       RETURNING
-        VALUE(rt_sotr_use) TYPE zif_abapgit_definitions=>ty_sotr_use_tt.
+        VALUE(rt_sotr_use) TYPE ty_sotr_use_tt.
 
     CLASS-METHODS get_sotr_4_concept
       IMPORTING
         !iv_concept    TYPE sotr_conc
       RETURNING
-        VALUE(rs_sotr) TYPE zif_abapgit_definitions=>ty_sotr .
+        VALUE(rs_sotr) TYPE ty_sotr .
   PRIVATE SECTION.
 ENDCLASS.
 
@@ -67,8 +77,8 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
   METHOD create_sotr.
 
     DATA:
-      lt_sotr     TYPE zif_abapgit_definitions=>ty_sotr_tt,
-      lt_sotr_use TYPE zif_abapgit_definitions=>ty_sotr_use_tt.
+      lt_sotr     TYPE ty_sotr_tt,
+      lt_sotr_use TYPE ty_sotr_use_tt.
 
     io_xml->read( EXPORTING iv_name = 'SOTR'
                   CHANGING cg_data = lt_sotr ).
@@ -159,7 +169,7 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
 
   METHOD delete_sotr.
 
-    DATA lt_sotr_use TYPE zif_abapgit_definitions=>ty_sotr_use_tt.
+    DATA lt_sotr_use TYPE ty_sotr_use_tt.
 
     FIELD-SYMBOLS <ls_sotr_use> LIKE LINE OF lt_sotr_use.
 
@@ -261,9 +271,9 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
 
   METHOD get_sotr_4_concept.
 
-    DATA: ls_header  TYPE zif_abapgit_definitions=>ty_sotr-header,
+    DATA: ls_header  TYPE ty_sotr-header,
           lv_paket   LIKE ls_header-alias_name,
-          lt_entries TYPE zif_abapgit_definitions=>ty_sotr-entries.
+          lt_entries TYPE ty_sotr-entries.
 
     FIELD-SYMBOLS: <ls_entry> LIKE LINE OF lt_entries.
 
@@ -345,7 +355,7 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_sotr_use> LIKE LINE OF et_sotr_use.
 
-    DATA: lv_sotr            TYPE zif_abapgit_definitions=>ty_sotr,
+    DATA: lv_sotr            TYPE ty_sotr,
           lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
     " SOTR usage (see LSOTR_SYSTEM_SETTINGSF01, FORM GET_OBJECT_TABLE)
