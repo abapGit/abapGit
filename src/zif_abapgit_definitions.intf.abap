@@ -286,14 +286,6 @@ INTERFACE zif_abapgit_definitions
       prerelase_patch TYPE i,
     END OF ty_version.
   TYPES:
-    BEGIN OF ty_alv_column,
-      name      TYPE string,
-      text      TYPE string,
-      length    TYPE lvc_outlen,
-      show_icon TYPE abap_bool,
-    END OF ty_alv_column,
-    ty_alv_column_tt TYPE TABLE OF ty_alv_column WITH DEFAULT KEY.
-  TYPES:
     ty_deserialization_step TYPE string.
   TYPES:
     ty_deserialization_step_tt TYPE STANDARD TABLE OF ty_deserialization_step

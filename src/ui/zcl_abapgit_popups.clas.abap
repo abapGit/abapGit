@@ -776,11 +776,11 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       lt_commits         TYPE zif_abapgit_definitions=>ty_commit_tt,
       lt_value_tab       TYPE ty_commit_value_tab_tt,
       lt_selected_values TYPE ty_commit_value_tab_tt,
-      lt_columns         TYPE zif_abapgit_definitions=>ty_alv_column_tt.
+      lt_columns         TYPE zif_abapgit_popups=>ty_alv_column_tt.
 
     FIELD-SYMBOLS:
       <ls_value_tab> TYPE ty_commit_value_tab,
-      <ls_column>    TYPE zif_abapgit_definitions=>ty_alv_column.
+      <ls_column>    TYPE zif_abapgit_popups=>ty_alv_column.
 
     commit_list_build(
       EXPORTING
@@ -1120,7 +1120,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
           lo_table_header TYPE REF TO cl_salv_form_text.
 
     FIELD-SYMBOLS: <lt_table>             TYPE STANDARD TABLE,
-                   <ls_column_to_display> TYPE zif_abapgit_definitions=>ty_alv_column,
+                   <ls_column_to_display> TYPE zif_abapgit_popups=>ty_alv_column,
                    <lv_row>               TYPE i,
                    <ls_line>              TYPE any,
                    <lv_selected>          TYPE data.
@@ -1270,7 +1270,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       ls_label              LIKE LINE OF lt_all_labels,
       lt_current_labels     TYPE string_table,
       lt_selected_labels    LIKE lt_all_labels,
-      lt_columns_to_display TYPE zif_abapgit_definitions=>ty_alv_column_tt,
+      lt_columns_to_display TYPE zif_abapgit_popups=>ty_alv_column_tt,
       lt_preselected_rows   TYPE zif_abapgit_popups=>ty_rows,
       ls_columns_to_display LIKE LINE OF lt_columns_to_display,
       lv_save_tabix         TYPE i,

@@ -6,6 +6,15 @@ INTERFACE zif_abapgit_popups
     ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY,
     ty_rows    TYPE SORTED TABLE OF i WITH UNIQUE KEY table_line.
 
+  TYPES:
+    BEGIN OF ty_alv_column,
+      name      TYPE string,
+      text      TYPE string,
+      length    TYPE lvc_outlen,
+      show_icon TYPE abap_bool,
+    END OF ty_alv_column,
+    ty_alv_column_tt TYPE TABLE OF ty_alv_column WITH DEFAULT KEY.
+
   CONSTANTS c_new_branch_label TYPE string VALUE '+ create new ...' ##NO_TEXT.
 
   METHODS popup_search_help
@@ -99,7 +108,7 @@ INTERFACE zif_abapgit_popups
       !iv_optimize_col_width TYPE abap_bool DEFAULT abap_true
       !iv_selection_mode     TYPE salv_de_constant DEFAULT if_salv_c_selection_mode=>multiple
       !iv_select_column_text TYPE csequence DEFAULT space
-      !it_columns_to_display TYPE zif_abapgit_definitions=>ty_alv_column_tt
+      !it_columns_to_display TYPE ty_alv_column_tt
       !it_preselected_rows   TYPE ty_rows OPTIONAL
     EXPORTING
       VALUE(et_list)         TYPE STANDARD TABLE
