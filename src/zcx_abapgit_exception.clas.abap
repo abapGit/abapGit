@@ -165,7 +165,7 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
 
   METHOD get_source_position.
 
-    FIELD-SYMBOLS: <ls_callstack> TYPE abap_callstack_line.
+    FIELD-SYMBOLS: <ls_callstack> LIKE LINE OF mt_callstack.
 
     READ TABLE mt_callstack ASSIGNING <ls_callstack>
                             INDEX 1.
@@ -413,7 +413,7 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
 
   METHOD save_callstack.
 
-    FIELD-SYMBOLS: <ls_callstack> TYPE abap_callstack_line.
+    FIELD-SYMBOLS: <ls_callstack> LIKE LINE OF mt_callstack.
 
     CALL FUNCTION 'SYSTEM_CALLSTACK'
       IMPORTING
