@@ -214,6 +214,9 @@ CLASS ltc_parent_handling IMPLEMENTATION.
 
 ENDCLASS.
 
+CLASS ltcl_extract_author_data DEFINITION DEFERRED.
+CLASS zcl_abapgit_git_commit DEFINITION LOCAL FRIENDS ltcl_extract_author_data.
+
 CLASS ltcl_extract_author_data DEFINITION FINAL
   FOR TESTING
   DURATION SHORT
