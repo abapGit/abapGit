@@ -63,12 +63,36 @@ CLASS zcl_abapgit_git_commit DEFINITION
         iv_sha1          TYPE zif_abapgit_git_definitions=>ty_sha1
       RETURNING
         VALUE(rv_result) TYPE abap_bool.
+
+    CLASS-METHODS extract_author_data
+      IMPORTING
+        !iv_author TYPE string
+      EXPORTING
+        !ev_author TYPE zif_abapgit_definitions=>ty_commit-author
+        !ev_email  TYPE zif_abapgit_definitions=>ty_commit-email
+        !ev_time   TYPE zif_abapgit_definitions=>ty_commit-time
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_git_commit IMPLEMENTATION.
 
+  METHOD extract_author_data.
+
+    " unix time stamps are in same time zone, so ignore the zone
+    FIND REGEX zif_abapgit_definitions=>c_author_regex IN iv_author
+      SUBMATCHES
+      ev_author
+      ev_email
+      ev_time.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error author regex value='{ iv_author }'| ).
+    ENDIF.
+
+  ENDMETHOD.
 
   METHOD clear_missing_parents.
 
@@ -238,7 +262,7 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
         INSERT <lv_body> INTO TABLE ls_commit-body.
       ENDLOOP.
 
-      zcl_abapgit_utils=>extract_author_data(
+      extract_author_data(
         EXPORTING
           iv_author = ls_raw-author
         IMPORTING
