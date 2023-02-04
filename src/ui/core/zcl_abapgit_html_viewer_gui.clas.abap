@@ -16,7 +16,7 @@ CLASS zcl_abapgit_html_viewer_gui DEFINITION
     DATA mo_html_viewer TYPE REF TO cl_gui_html_viewer .
 
     METHODS on_event
-      FOR EVENT sapevent OF cl_gui_html_viewer
+        FOR EVENT sapevent OF cl_gui_html_viewer
       IMPORTING
         !action
         !frame
@@ -96,11 +96,6 @@ CLASS zcl_abapgit_html_viewer_gui IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_html_viewer~get_viewer.
-    ro_result = mo_html_viewer.
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_html_viewer~load_data.
 
     DATA lv_url TYPE c LENGTH 250.
@@ -129,6 +124,20 @@ CLASS zcl_abapgit_html_viewer_gui IMPLEMENTATION.
     ENDIF.
     ev_assigned_url = lv_assigned.
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_html_viewer~set_focus.
+    cl_gui_control=>set_focus(
+      EXPORTING
+        control           = mo_html_viewer
+      EXCEPTIONS
+        cntl_error        = 1
+        cntl_system_error = 2
+        OTHERS            = 3 ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error in: cl_gui_control=>set_focus - SUBRC = { sy-subrc }| ).
+    ENDIF.
   ENDMETHOD.
 
 
