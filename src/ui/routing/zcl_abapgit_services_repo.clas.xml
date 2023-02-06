@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_SERVICES_REPO</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - UI Repository Services</DESCRIPT>
+    <DESCRIPT>abapGit - GUI Repository Services</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

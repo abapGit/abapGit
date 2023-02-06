@@ -5,7 +5,7 @@
    <VSEOINTERF>
     <CLSNAME>ZIF_ABAPGIT_SERVICES_REPO</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - UI Repository Services</DESCRIPT>
+    <DESCRIPT>abapGit - GUI Repository Services</DESCRIPT>
     <EXPOSURE>2</EXPOSURE>
     <STATE>1</STATE>
     <UNICODE>X</UNICODE>
