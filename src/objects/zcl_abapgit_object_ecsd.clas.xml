@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECT_ECSD</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>ECSD - eCATT System Data Container</DESCRIPT>
+    <DESCRIPT>abapGit - ECSD - eCATT System Data Container</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

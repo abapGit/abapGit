@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECT_BDEF</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>BDEF - Behaviour Definition</DESCRIPT>
+    <DESCRIPT>abapGit - BDEF - Behaviour Definition</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

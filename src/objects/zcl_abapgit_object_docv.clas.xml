@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECT_DOCV</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>DOCV - Documentation (Independent)</DESCRIPT>
+    <DESCRIPT>abapGit - DOCV - Documentation (Independent)</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

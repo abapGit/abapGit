@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECT_SUSO</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>SUSO - Authorization object</DESCRIPT>
+    <DESCRIPT>abapGit - SUSO - Authorization object</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

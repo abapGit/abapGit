@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECT_AUTH</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>AUTH - Authorization Check Fields</DESCRIPT>
+    <DESCRIPT>abapGit - AUTH - Authorization Check Fields</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

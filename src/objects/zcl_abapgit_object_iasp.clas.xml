@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECT_IASP</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>IASP - Parameters of an IAC service</DESCRIPT>
+    <DESCRIPT>abapGit - IASP - Parameters of an IAC service</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

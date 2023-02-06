@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECT_SFSW</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>SFSW - Switch + Assignment of Objects to the Switch</DESCRIPT>
+    <DESCRIPT>abapGit - SFSW - Switch + Assignment of Objects to the Switc</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
