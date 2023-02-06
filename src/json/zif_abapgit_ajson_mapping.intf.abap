@@ -37,8 +37,8 @@ INTERFACE zif_abapgit_ajson_mapping
 
   METHODS rename_node
     IMPORTING
-      !is_node TYPE zif_abapgit_ajson=>ty_node
+      !is_node TYPE zif_abapgit_ajson_types=>ty_node
     CHANGING
-      !cv_name TYPE zif_abapgit_ajson=>ty_node-name.
+      !cv_name TYPE zif_abapgit_ajson_types=>ty_node-name.
 
 ENDINTERFACE.

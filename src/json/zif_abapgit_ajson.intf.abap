@@ -6,41 +6,6 @@ INTERFACE zif_abapgit_ajson
   CONSTANTS license TYPE string VALUE 'MIT'. "#EC NOTEXT
 
   TYPES:
-    ty_node_type TYPE string.
-
-  CONSTANTS:
-    BEGIN OF node_type,
-      boolean TYPE ty_node_type VALUE 'bool',
-      string  TYPE ty_node_type VALUE 'str',
-      number  TYPE ty_node_type VALUE 'num',
-      null    TYPE ty_node_type VALUE 'null',
-      array   TYPE ty_node_type VALUE 'array',
-      object  TYPE ty_node_type VALUE 'object',
-    END OF node_type.
-
-  TYPES:
-    BEGIN OF ty_node,
-      path TYPE string,
-      name TYPE string,
-      type TYPE ty_node_type,
-      value TYPE string,
-      index TYPE i,
-      order TYPE i,
-      children TYPE i,
-    END OF ty_node .
-  TYPES:
-    ty_nodes_tt TYPE STANDARD TABLE OF ty_node WITH KEY path name .
-  TYPES:
-    ty_nodes_ts TYPE SORTED TABLE OF ty_node
-      WITH UNIQUE KEY path name
-      WITH NON-UNIQUE SORTED KEY array_index COMPONENTS path index
-      WITH NON-UNIQUE SORTED KEY item_order COMPONENTS path order .
-  TYPES:
-    BEGIN OF ty_path_name,
-      path TYPE string,
-      name TYPE string,
-    END OF ty_path_name.
-  TYPES:
     BEGIN OF ty_opts,
       read_only TYPE abap_bool,
       keep_item_order TYPE abap_bool,
@@ -49,9 +14,10 @@ INTERFACE zif_abapgit_ajson
 
   " DATA
 
-  DATA mt_json_tree TYPE ty_nodes_ts READ-ONLY.
+  DATA mt_json_tree TYPE zif_abapgit_ajson_types=>ty_nodes_ts READ-ONLY.
 
   " CLONING
+
   METHODS clone
     RETURNING
       VALUE(ri_json) TYPE REF TO zif_abapgit_ajson
@@ -115,7 +81,7 @@ INTERFACE zif_abapgit_ajson
     IMPORTING
       iv_path TYPE string
     RETURNING
-      VALUE(rv_node_type) TYPE ty_node_type.
+      VALUE(rv_node_type) TYPE zif_abapgit_ajson_types=>ty_node_type.
 
   METHODS get_boolean
     IMPORTING
@@ -184,7 +150,7 @@ INTERFACE zif_abapgit_ajson
       iv_path TYPE string
       iv_val TYPE any
       iv_ignore_empty TYPE abap_bool DEFAULT abap_true
-      iv_node_type TYPE ty_node_type OPTIONAL
+      iv_node_type TYPE zif_abapgit_ajson_types=>ty_node_type OPTIONAL
     RETURNING
       VALUE(ri_json) TYPE REF TO zif_abapgit_ajson
     RAISING

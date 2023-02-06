@@ -54,7 +54,7 @@ class ltcl_error implementation.
   method raise_w_node.
 
     data lx type ref to zcx_abapgit_ajson_error.
-    data ls_node type zif_abapgit_ajson=>ty_node.
+    data ls_node type zif_abapgit_ajson_types=>ty_node.
 
     ls_node-path = '/x/'.
     ls_node-name = 'y'.

@@ -13,7 +13,7 @@ INTERFACE zif_abapgit_ajson_filter
 
   METHODS keep_node
     IMPORTING
-      is_node TYPE zif_abapgit_ajson=>ty_node
+      is_node TYPE zif_abapgit_ajson_types=>ty_node
       iv_visit TYPE ty_visit_type DEFAULT visit_type-value
     RETURNING
       VALUE(rv_keep) TYPE abap_bool
