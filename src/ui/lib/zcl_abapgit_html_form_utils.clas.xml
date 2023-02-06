@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_HTML_FORM_UTILS</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapgit - HTML form component</DESCRIPT>
+    <DESCRIPT>abapGit - GUI HTML Form Utilities</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

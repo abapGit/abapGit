@@ -5,7 +5,7 @@
    <VSEOINTERF>
     <CLSNAME>ZIF_ABAPGIT_COMPARATOR</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Comparison result</DESCRIPT>
+    <DESCRIPT>abapGit - Object Comparison Interface</DESCRIPT>
     <EXPOSURE>2</EXPOSURE>
     <STATE>1</STATE>
     <UNICODE>X</UNICODE>

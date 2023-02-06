@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_GUI_PAGE_SETT_REPO</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - Repository Settings</DESCRIPT>
+    <DESCRIPT>abapGit - GUI Repository Settings - General</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

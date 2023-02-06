@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_SERVICES_BASIS</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit basis services</DESCRIPT>
+    <DESCRIPT>abapGit - UI Basis Services</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_GUI_PAGE_SETT_PERS</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - Personal Settings</DESCRIPT>
+    <DESCRIPT>abapGit - GUI Personal Settings</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
