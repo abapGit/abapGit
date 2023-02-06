@@ -5,7 +5,7 @@
    <VSEOINTERF>
     <CLSNAME>ZIF_ABAPGIT_GUI_EVENT_HANDLER</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit GUI components with event handler</DESCRIPT>
+    <DESCRIPT>abapGit - GUI Event Handler</DESCRIPT>
     <EXPOSURE>2</EXPOSURE>
     <STATE>1</STATE>
     <UNICODE>X</UNICODE>

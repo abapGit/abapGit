@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_PERSIST_SETTINGS</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - Pesistence for Settings</DESCRIPT>
+    <DESCRIPT>abapGit - Persistence for Settings</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

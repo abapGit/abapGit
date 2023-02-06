@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_GUI_EVENT</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit html event abstraction</DESCRIPT>
+    <DESCRIPT>abapGit - GUI HTML Event</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_GUI_PAGE_HOC</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit GUI page HOC component</DESCRIPT>
+    <DESCRIPT>abapGit - GUI Page Higher Order Component</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECTS_SUPER</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Objects super</DESCRIPT>
+    <DESCRIPT>abapGit - Object Serializer Super</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

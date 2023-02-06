@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_GUI_PAGE_RUN_BCKG</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - Settings Background</DESCRIPT>
+    <DESCRIPT>abapGit - GUI Background Runs</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
