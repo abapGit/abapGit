@@ -85,6 +85,23 @@ CLASS zcl_abapgit_ajson_mapping IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD create_compound_mapper.
+
+    DATA lt_queue TYPE zif_abapgit_ajson_mapping=>ty_table_of.
+
+    APPEND ii_mapper1 TO lt_queue.
+    APPEND ii_mapper2 TO lt_queue.
+    APPEND ii_mapper3 TO lt_queue.
+    APPEND LINES OF it_more TO lt_queue.
+    DELETE lt_queue WHERE table_line IS INITIAL.
+
+    CREATE OBJECT ri_mapping TYPE lcl_compound_mapper
+      EXPORTING
+        it_queue = lt_queue.
+
+  ENDMETHOD.
+
+
   METHOD create_field_mapping.
 
     CREATE OBJECT ri_mapping TYPE lcl_mapping_fields
@@ -102,29 +119,6 @@ CLASS zcl_abapgit_ajson_mapping IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD create_compound_mapper.
-
-    DATA lt_queue TYPE zif_abapgit_ajson_mapping=>ty_table_of.
-
-    APPEND ii_mapper1 TO lt_queue.
-    APPEND ii_mapper2 TO lt_queue.
-    APPEND ii_mapper3 TO lt_queue.
-    APPEND LINES OF it_more TO lt_queue.
-    DELETE lt_queue WHERE table_line IS INITIAL.
-
-    CREATE OBJECT ri_mapping TYPE lcl_compound_mapper
-      EXPORTING
-        it_queue = lt_queue.
-
-  ENDMETHOD.
-
-  METHOD create_upper_case.
-
-    CREATE OBJECT ri_mapping TYPE lcl_mapping_to_upper
-      EXPORTING
-        it_mapping_fields = it_mapping_fields.
-
-  ENDMETHOD.
 
   METHOD create_rename.
 
@@ -135,11 +129,6 @@ CLASS zcl_abapgit_ajson_mapping IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD create_to_snake_case.
-
-    CREATE OBJECT ri_mapping TYPE lcl_to_snake.
-
-  ENDMETHOD.
 
   METHOD create_to_camel_case.
 
@@ -149,4 +138,19 @@ CLASS zcl_abapgit_ajson_mapping IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD create_to_snake_case.
+
+    CREATE OBJECT ri_mapping TYPE lcl_to_snake.
+
+  ENDMETHOD.
+
+
+  METHOD create_upper_case.
+
+    CREATE OBJECT ri_mapping TYPE lcl_mapping_to_upper
+      EXPORTING
+        it_mapping_fields = it_mapping_fields.
+
+  ENDMETHOD.
 ENDCLASS.

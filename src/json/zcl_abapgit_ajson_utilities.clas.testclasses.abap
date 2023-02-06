@@ -5,14 +5,14 @@
 CLASS lcl_nodes_helper DEFINITION FINAL.
   PUBLIC SECTION.
 
-    DATA mt_nodes TYPE zif_abapgit_ajson=>ty_nodes_tt READ-ONLY.
+    DATA mt_nodes TYPE zif_abapgit_ajson_types=>ty_nodes_tt READ-ONLY.
 
     METHODS add
       IMPORTING
         iv_str TYPE string.
     METHODS sorted
       RETURNING
-        VALUE(rt_nodes) TYPE zif_abapgit_ajson=>ty_nodes_ts.
+        VALUE(rt_nodes) TYPE zif_abapgit_ajson_types=>ty_nodes_ts.
 
 ENDCLASS.
 
