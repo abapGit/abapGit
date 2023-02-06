@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECT_IWVB</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - IWVB - SAP Gateway Business Suite Enablement - Voc</DESCRIPT>
+    <DESCRIPT>abapGit - IWVB - SAP Gateway BSE Vocabulary Annotation</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
