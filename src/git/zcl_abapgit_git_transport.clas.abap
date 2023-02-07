@@ -99,7 +99,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GIT_TRANSPORT IMPLEMENTATION.
+CLASS zcl_abapgit_git_transport IMPLEMENTATION.
 
 
   METHOD branches.
@@ -169,7 +169,7 @@ CLASS ZCL_ABAPGIT_GIT_TRANSPORT IMPLEMENTATION.
       lv_error = 'Missing pkt length for unpack status'.
     ELSE.
       lv_string = lv_string+4.
-      SPLIT lv_string AT zif_abapgit_definitions=>c_newline INTO lv_unpack_status lv_string.
+      SPLIT lv_string AT cl_abap_char_utilities=>newline INTO lv_unpack_status lv_string.
       SPLIT lv_unpack_status AT space INTO lv_unpack_text lv_unpack_code.
 
       IF lv_unpack_text <> 'unpack'.
@@ -182,7 +182,7 @@ CLASS ZCL_ABAPGIT_GIT_TRANSPORT IMPLEMENTATION.
         lv_error = 'Missing pkt length for command status'.
       ELSE.
         lv_string = lv_string+4.
-        SPLIT lv_string AT zif_abapgit_definitions=>c_newline INTO lv_commnd_status lv_string.
+        SPLIT lv_string AT cl_abap_char_utilities=>newline INTO lv_commnd_status lv_string.
         SPLIT lv_commnd_status AT space INTO lv_commnd_code lv_commnd_text.
 
         IF lv_commnd_code <> 'ok'. "=ng
@@ -315,7 +315,7 @@ CLASS ZCL_ABAPGIT_GIT_TRANSPORT IMPLEMENTATION.
               zcl_abapgit_git_utils=>get_null( ) &&
               ` ` &&
               lv_cap_list &&
-              zif_abapgit_definitions=>c_newline.
+              cl_abap_char_utilities=>newline.
     lv_cmd_pkt = zcl_abapgit_git_utils=>pkt_string( lv_line ).
 
     lv_buffer = lv_cmd_pkt && '0000'.
@@ -350,22 +350,22 @@ CLASS ZCL_ABAPGIT_GIT_TRANSPORT IMPLEMENTATION.
       IF sy-tabix = 1.
         lv_capa = 'side-band-64k no-progress multi_ack'.
         lv_line = 'want' && ` ` && <lv_hash>
-          && ` ` && lv_capa && zif_abapgit_definitions=>c_newline.
+          && ` ` && lv_capa && cl_abap_char_utilities=>newline.
       ELSE.
         lv_line = 'want' && ` ` && <lv_hash>
-          && zif_abapgit_definitions=>c_newline.
+          && cl_abap_char_utilities=>newline.
       ENDIF.
       lv_buffer = lv_buffer && zcl_abapgit_git_utils=>pkt_string( lv_line ).
     ENDLOOP.
 
     IF iv_deepen_level > 0.
       lv_buffer = lv_buffer && zcl_abapgit_git_utils=>pkt_string( |deepen { iv_deepen_level }| &&
-        zif_abapgit_definitions=>c_newline ).
+        cl_abap_char_utilities=>newline ).
     ENDIF.
 
     lv_buffer = lv_buffer
              && '0000'
-             && '0009done' && zif_abapgit_definitions=>c_newline.
+             && '0009done' && cl_abap_char_utilities=>newline.
 
     lv_xstring = io_client->send_receive_close( zcl_abapgit_convert=>string_to_xstring_utf8( lv_buffer ) ).
 

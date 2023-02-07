@@ -473,8 +473,8 @@ CLASS ltcl_pack IMPLEMENTATION.
     ls_commit-author    = 'larshp <larshp@hotmail.com> 1387823471 +0100'.
     ls_commit-committer = 'larshp <larshp@hotmail.com> 1387823471 +0100'.
     ls_commit-body      = 'very informative'
-                        && zif_abapgit_definitions=>c_newline
-                        && zif_abapgit_definitions=>c_newline.
+                        && cl_abap_char_utilities=>newline
+                        && cl_abap_char_utilities=>newline.
 
     lv_data = zcl_abapgit_git_pack=>encode_commit( ls_commit ).
     ls_result = zcl_abapgit_git_pack=>decode_commit( lv_data ).
@@ -497,7 +497,7 @@ CLASS ltcl_pack IMPLEMENTATION.
     ls_commit-committer = 'larshp <larshp@hotmail.com> 1387823471 +0100'.
     ls_commit-body      = 'very informative'.
     ls_commit-gpgsig    = '-----END PGP SIGNATURE-----'
-                          && |{ zif_abapgit_definitions=>c_newline } { zif_abapgit_definitions=>c_newline }|.
+                          && |{ cl_abap_char_utilities=>newline } { cl_abap_char_utilities=>newline }|.
 
     lv_data = zcl_abapgit_git_pack=>encode_commit( ls_commit ).
     ls_result = zcl_abapgit_git_pack=>decode_commit( lv_data ).
@@ -544,7 +544,7 @@ CLASS ltcl_git_pack_decode_commit IMPLEMENTATION.
 
   METHOD add.
 
-    CONCATENATE mv_str iv_string zif_abapgit_definitions=>c_newline INTO mv_str.
+    CONCATENATE mv_str iv_string cl_abap_char_utilities=>newline INTO mv_str.
 
   ENDMETHOD.
 
