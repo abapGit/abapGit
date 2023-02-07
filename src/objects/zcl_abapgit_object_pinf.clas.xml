@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECT_PINF</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>PINF - Package interface</DESCRIPT>
+    <DESCRIPT>abapGit - PINF - Package interface</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
