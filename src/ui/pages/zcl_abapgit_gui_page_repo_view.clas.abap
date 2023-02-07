@@ -14,7 +14,6 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
 
     CONSTANTS:
       BEGIN OF c_actions,
-        repo_list         TYPE string VALUE 'abapgit_home' ##NO_TEXT,
         change_dir        TYPE string VALUE 'change_dir' ##NO_TEXT,
         toggle_hide_files TYPE string VALUE 'toggle_hide_files' ##NO_TEXT,
         toggle_folders    TYPE string VALUE 'toggle_folders' ##NO_TEXT,

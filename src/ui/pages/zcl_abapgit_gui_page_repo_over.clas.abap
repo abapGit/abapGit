@@ -52,7 +52,6 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
                    WITH NON-UNIQUE DEFAULT KEY.
     CONSTANTS:
       BEGIN OF c_action,
-        abapgit_home TYPE string VALUE 'abapgit_home',
         select       TYPE string VALUE 'select',
         apply_filter TYPE string VALUE 'apply_filter',
         label_filter TYPE string VALUE 'label_filter',
