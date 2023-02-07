@@ -312,12 +312,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
         IF is_active( ) = abap_false.
           " as DDIC-object e.g. are not deserialized in active state, activation must be performed
-          CALL FUNCTION 'RS_INSERT_INTO_WORKING_AREA'
-            EXPORTING
-              object   = ms_item-obj_type
-              obj_name = lv_name
-            EXCEPTIONS
-              OTHERS   = 0.
+          zcl_abapgit_objects_activation=>add_item( ms_item ).
         ENDIF.
 
         tadir_insert( ms_item-devclass ).
