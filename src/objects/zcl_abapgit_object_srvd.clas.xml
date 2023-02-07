@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECT_SRVD</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>SRVD - Service Definition</DESCRIPT>
+    <DESCRIPT>abapGit - SRVD - Service Definition</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

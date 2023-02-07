@@ -576,8 +576,8 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
     ls_tag-tagger_name  = is_tag-tagger_name.
     ls_tag-tagger_email = is_tag-tagger_email.
     ls_tag-message      = is_tag-message
-                      && |{ zif_abapgit_definitions=>c_newline }|
-                      && |{ zif_abapgit_definitions=>c_newline }|
+                      && |{ cl_abap_char_utilities=>newline }|
+                      && |{ cl_abap_char_utilities=>newline }|
                       && is_tag-body.
 
     lv_tag = zcl_abapgit_git_pack=>encode_tag( ls_tag ).

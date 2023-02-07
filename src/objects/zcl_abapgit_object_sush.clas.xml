@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECT_SUSH</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>SUSH - Assignment: Service to Authorization Objects</DESCRIPT>
+    <DESCRIPT>abapGit - SUSH - Assignment: Service to Authorization Object</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

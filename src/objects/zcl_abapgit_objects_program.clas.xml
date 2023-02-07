@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECTS_PROGRAM</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Objects program</DESCRIPT>
+    <DESCRIPT>abapGit - Program Object Helper</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

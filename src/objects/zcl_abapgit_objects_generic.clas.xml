@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECTS_GENERIC</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Generic object helper</DESCRIPT>
+    <DESCRIPT>abapGit - Generic Object Helper</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

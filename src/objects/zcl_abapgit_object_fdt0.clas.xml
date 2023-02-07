@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECT_FDT0</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>FDT0 - BRF+ System Application</DESCRIPT>
+    <DESCRIPT>abapGit - FDT0 - BRF+ System Application</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

@@ -247,7 +247,7 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
       ls_commit-parent1 = ls_raw-parent.
       ls_commit-parent2 = ls_raw-parent2.
 
-      SPLIT ls_raw-body AT zif_abapgit_definitions=>c_newline INTO TABLE lt_body.
+      SPLIT ls_raw-body AT cl_abap_char_utilities=>newline INTO TABLE lt_body.
 
       READ TABLE lt_body WITH KEY table_line = ' -----END PGP SIGNATURE-----' TRANSPORTING NO FIELDS.
       IF sy-subrc = 0.

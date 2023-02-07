@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_GUI_PAGE_SETT_GLOB</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - Global Settings</DESCRIPT>
+    <DESCRIPT>abapGit - GUI Global Settings</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

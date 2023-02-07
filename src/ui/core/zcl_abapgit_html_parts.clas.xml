@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_HTML_PARTS</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapgit html parts collects</DESCRIPT>
+    <DESCRIPT>abapGit - GUI HTML Part Collection</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

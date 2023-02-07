@@ -77,9 +77,9 @@ CLASS ltcl_git_transport IMPLEMENTATION.
     DATA lv_status TYPE string.
 
     lv_status = `000eunpack ok` &&
-      zif_abapgit_definitions=>c_newline &&
+      cl_abap_char_utilities=>newline &&
       `0017ok refs/heads/main` &&
-      zif_abapgit_definitions=>c_newline &&
+      cl_abap_char_utilities=>newline &&
       `00000000`.
     TRY.
         zcl_abapgit_git_transport=>check_report_status( lv_status ).
@@ -95,7 +95,7 @@ CLASS ltcl_git_transport IMPLEMENTATION.
     DATA lx_error TYPE REF TO zcx_abapgit_exception.
 
     lv_status = `0012unpack failed` &&
-      zif_abapgit_definitions=>c_newline &&
+      cl_abap_char_utilities=>newline &&
       `00000000`.
 
     TRY.
@@ -116,10 +116,10 @@ CLASS ltcl_git_transport IMPLEMENTATION.
     DATA lx_error TYPE REF TO zcx_abapgit_exception.
 
     lv_status = `000eunpack ok` &&
-      zif_abapgit_definitions=>c_newline &&
+      cl_abap_char_utilities=>newline &&
       `009fng refs/heads/main cannot lock ref 'refs/heads/main':` &&
       ` is at 625990aec9a9ebacbb99021804ce07bb6c350d05 but expected 77d2cfba9595de4c247d26b12cd40ce6cb75d61e` &&
-      zif_abapgit_definitions=>c_newline &&
+      cl_abap_char_utilities=>newline &&
       `00000000`.
 
     TRY.
@@ -140,9 +140,9 @@ CLASS ltcl_git_transport IMPLEMENTATION.
     DATA lx_error TYPE REF TO zcx_abapgit_exception.
 
     lv_status = `000eunpack ok` &&
-      zif_abapgit_definitions=>c_newline &&
+      cl_abap_char_utilities=>newline &&
       `0017ok refs/heads/main` &&
-      zif_abapgit_definitions=>c_newline &&
+      cl_abap_char_utilities=>newline &&
       '0020ok refs/heads/main'. " example for more data instead of flush
 
     TRY.
@@ -164,9 +164,9 @@ CLASS ltcl_git_transport IMPLEMENTATION.
     DATA lv_status TYPE string.
 
     lv_status = `000eunpack ok` &&
-      zif_abapgit_definitions=>c_newline &&
+      cl_abap_char_utilities=>newline &&
       `0019ok refs/heads/master` &&
-      zif_abapgit_definitions=>c_newline &&
+      cl_abap_char_utilities=>newline &&
       `0000`.
 
     TRY.
