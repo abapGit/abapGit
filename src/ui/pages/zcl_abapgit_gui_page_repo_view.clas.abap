@@ -1113,7 +1113,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-go_repo. " Switch to another repo
-        rs_handled-page  = zcl_abapgit_gui_page_repo_view=>create( |{ ii_event->query( )->get( 'KEY' ) }| ).
+        rs_handled-page  = create( |{ ii_event->query( )->get( 'KEY' ) }| ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
 
       WHEN c_actions-go_data.
