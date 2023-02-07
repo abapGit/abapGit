@@ -261,7 +261,7 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
     CLEAR: et_list, ev_head_symref.
 
     lv_data = skip_first_pkt( iv_data ).
-    SPLIT lv_data AT zif_abapgit_definitions=>c_newline INTO TABLE lt_result.
+    SPLIT lv_data AT cl_abap_char_utilities=>newline INTO TABLE lt_result.
 
     LOOP AT lt_result INTO lv_data.
       lv_current_row_index = sy-tabix.
