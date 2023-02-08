@@ -22,6 +22,9 @@ CLASS zcl_abapgit_gui_buttons DEFINITION
     CLASS-METHODS settings
       RETURNING VALUE(rv_html_string) TYPE string.
 
+    CLASS-METHODS experimental
+      RETURNING VALUE(rv_html_string) TYPE string.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -33,6 +36,11 @@ CLASS zcl_abapgit_gui_buttons IMPLEMENTATION.
 
   METHOD advanced.
     rv_html_string = `<i class="icon icon-tools-solid"></i>`.
+  ENDMETHOD.
+
+
+  METHOD experimental.
+    rv_html_string = `<i class="icon icon-vial-solid red"></i>`.
   ENDMETHOD.
 
 
