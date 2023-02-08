@@ -58,23 +58,9 @@ CLASS zcl_abapgit_git_utils IMPLEMENTATION.
 
     lv_xstring = iv_data(4).
 
-    IF go_convert_in IS INITIAL.
-      go_convert_in = cl_abap_conv_in_ce=>create( encoding = 'UTF-8' ).
-    ENDIF.
-
-    TRY.
-        go_convert_in->convert(
-          EXPORTING
-            input = lv_xstring
-            n     = 4
-          IMPORTING
-            data  = lv_char4 ).
-
-      CATCH cx_sy_codepage_converter_init
-            cx_sy_conversion_codepage
-            cx_parameter_invalid_type.
-        zcx_abapgit_exception=>raise( 'error converting to hex, LENGTH_UTF8_HEX' ).
-    ENDTRY.
+    lv_char4 = zcl_abapgit_convert=>xstring_to_string_utf8(
+      iv_data   = lv_xstring
+      iv_length = 4 ).
 
     TRANSLATE lv_char4 TO UPPER CASE.
     lv_x = lv_char4.
