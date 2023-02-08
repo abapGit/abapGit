@@ -1,10 +1,11 @@
 /**********************************************************
- * ABAPGIT JS function library
+ * abapGit JavaScript Function Library
  **********************************************************/
 
 /**********************************************************
   Global variables used from outside
  **********************************************************/
+
 /* exported setInitialFocus */
 /* exported setInitialFocusWithQuerySelector */
 /* exported submitFormById */
@@ -34,22 +35,22 @@
 
 // Bind polyfill (for IE7), taken from https://developer.mozilla.org/
 if (!Function.prototype.bind) {
-  Function.prototype.bind = function(oThis) {
+  Function.prototype.bind = function (oThis) {
     if (typeof this !== "function") {
       throw new TypeError("Function.prototype.bind - subject is not callable");
     }
 
-    var aArgs   = Array.prototype.slice.call(arguments, 1),
+    var aArgs = Array.prototype.slice.call(arguments, 1),
       fToBind = this,
-      fNOP    = function() {},
-      fBound  = function() {
+      fNOP = function () { },
+      fBound = function () {
         return fToBind.apply(
           this instanceof fNOP
             ? this
             : oThis,
           aArgs.concat(Array.prototype.slice.call(arguments))
         );
-      };
+      }
 
     if (this.prototype) {
       fNOP.prototype = this.prototype;
@@ -57,12 +58,12 @@ if (!Function.prototype.bind) {
     fBound.prototype = new fNOP();
 
     return fBound;
-  };
+  }
 }
 
 // String includes polyfill, taken from https://developer.mozilla.org
 if (!String.prototype.includes) {
-  String.prototype.includes = function(search, start) {
+  String.prototype.includes = function (search, start) {
     "use strict";
     if (typeof start !== "number") {
       start = 0;
@@ -73,13 +74,13 @@ if (!String.prototype.includes) {
     } else {
       return this.indexOf(search, start) !== -1;
     }
-  };
+  }
 }
 
 // String startsWith polyfill, taken from https://developer.mozilla.org
 if (!String.prototype.startsWith) {
   Object.defineProperty(String.prototype, "startsWith", {
-    value: function(search, pos) {
+    value: function (search, pos) {
       pos = !pos || pos < 0 ? 0 : +pos;
       return this.substring(pos, pos + search.length) === search;
     }
@@ -98,8 +99,8 @@ if (window.NodeList && !NodeList.prototype.forEach) {
 
 // Output text to the debug div
 function debugOutput(text, dstID) {
-  var stdout       = document.getElementById(dstID || "debug-output");
-  var wrapped      = "<p>" + text + "</p>";
+  var stdout = document.getElementById(dstID || "debug-output");
+  var wrapped = "<p>" + text + "</p>";
   stdout.innerHTML = stdout.innerHTML + wrapped;
 }
 
@@ -108,7 +109,7 @@ function debugOutput(text, dstID) {
 function submitSapeventForm(params, action, method, form) {
 
   function getSapeventPrefix() {
-    if (document.querySelector('a[href*="file:///SAPEVENT:"]'))  {
+    if (document.querySelector('a[href*="file:///SAPEVENT:"]')) {
       return "file:///"; //Prefix for chromium based browser control
     } else {
       return "";
@@ -118,17 +119,17 @@ function submitSapeventForm(params, action, method, form) {
   var stub_form_id = "form_" + action;
 
   form = form
-      || document.getElementById(stub_form_id)
-      || document.createElement("form");
+    || document.getElementById(stub_form_id)
+    || document.createElement("form");
 
   form.setAttribute("method", method || "post");
-  if (/sapevent/i.test(action)){
+  if (/sapevent/i.test(action)) {
     form.setAttribute("action", action);
   } else {
     form.setAttribute("action", getSapeventPrefix() + "SAPEVENT:" + action);
   }
 
-  for(var key in params) {
+  for (var key in params) {
     var hiddenField = document.createElement("input");
     hiddenField.setAttribute("type", "hidden");
     hiddenField.setAttribute("name", key);
@@ -161,7 +162,6 @@ function setInitialFocusWithQuerySelector(sSelector, bFocusParent) {
       oSelected.focus();
     }
   }
-
 }
 
 // Submit an existing form
@@ -171,7 +171,7 @@ function submitFormById(id) {
 
 // JS error stub
 function errorStub(event) {
-  var element    = event.target || event.srcElement;
+  var element = event.target || event.srcElement;
   var targetName = element.id || element.name || "???";
   alert("JS Error, please log an issue (@" + targetName + ")");
 }
@@ -192,10 +192,10 @@ function confirmInitialized() {
 var gPerf = [];
 
 function perfOut(prefix) {
-  var totals = {};
+  var totals = {}
   for (var i = gPerf.length - 1; i >= 0; i--) {
-    if (!totals[gPerf[i].name]) totals[gPerf[i].name] = {count: 0, time: 0};
-    totals[gPerf[i].name].time  += gPerf[i].time;
+    if (!totals[gPerf[i].name]) totals[gPerf[i].name] = { count: 0, time: 0 }
+    totals[gPerf[i].name].time += gPerf[i].time;
     totals[gPerf[i].name].count += 1;
   }
 
@@ -204,12 +204,12 @@ function perfOut(prefix) {
     console.log(prefix
       + " " + keys[j] + ": "
       + totals[keys[j]].time.toFixed(3) + "ms"
-      + " (" + totals[keys[j]].count.toFixed() +")");
+      + " (" + totals[keys[j]].count.toFixed() + ")");
   }
 }
 
 function perfLog(name, startTime) {
-  gPerf.push({name: name, time: window.performance.now() - startTime});
+  gPerf.push({ name: name, time: window.performance.now() - startTime });
 }
 
 function perfClear() {
@@ -217,20 +217,13 @@ function perfClear() {
 }
 
 /**********************************************************
- * TAG PAGE Logic
- **********************************************************/
-function onTagTypeChange(oSelectObject){
-  var sValue = oSelectObject.value;
-  submitSapeventForm({ type: sValue }, "change_tag_type", "post");
-}
-
-/**********************************************************
  * Repo Overview Logic
  **********************************************************/
+
 function findStyleSheetByName(name) {
   for (var s = 0; s < document.styleSheets.length; s++) {
     var styleSheet = document.styleSheets[s];
-    var classes    = styleSheet.cssRules || styleSheet.rules;
+    var classes = styleSheet.cssRules || styleSheet.rules;
     for (var i = 0; i < classes.length; i++) {
       if (classes[i].selectorText === name) return classes[i];
     }
@@ -264,7 +257,7 @@ function RepoOverViewHelper(opts) {
 
 RepoOverViewHelper.prototype.setHooks = function () {
   window.onload = this.onPageLoad.bind(this);
-};
+}
 
 RepoOverViewHelper.prototype.onPageLoad = function () {
   var data = window.localStorage && JSON.parse(window.localStorage.getItem(this.pageId));
@@ -278,11 +271,11 @@ RepoOverViewHelper.prototype.onPageLoad = function () {
       this.selectRowByIndex(0);
     }
   }
-};
+}
 
-RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
+RepoOverViewHelper.prototype.registerKeyboardShortcuts = function () {
   var self = this;
-  document.addEventListener("keypress", function(event) {
+  document.addEventListener("keypress", function (event) {
     if (document.activeElement.id === "filter") {
       return;
     }
@@ -313,13 +306,13 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
       self.selectRowByIndex(indexOfSelected + 1);
     }
   });
-};
+}
 
 RepoOverViewHelper.prototype.openSelectedRepo = function () {
   this.selectedRepoKey = document.querySelector(".repo-overview tr.selected").dataset.key;
   this.saveLocalStorage();
   document.querySelector(".repo-overview tr.selected td.ro-go a").click();
-};
+}
 
 RepoOverViewHelper.prototype.selectRowByIndex = function (index) {
   var rows = this.getVisibleRows();
@@ -335,7 +328,7 @@ RepoOverViewHelper.prototype.selectRowByIndex = function (index) {
     this.updateActionLinks(selectedRow);
     this.saveLocalStorage();
   }
-};
+}
 
 RepoOverViewHelper.prototype.selectRowByRepoKey = function (key) {
   var attributeQuery = "[data-key='" + key + "']";
@@ -350,7 +343,7 @@ RepoOverViewHelper.prototype.selectRowByRepoKey = function (key) {
   this.selectedRepoKey = key;
   this.updateActionLinks(row);
   this.saveLocalStorage();
-};
+}
 
 RepoOverViewHelper.prototype.updateActionLinks = function (selectedRow) {
   // now we have a repo selected, determine which action buttons are relevant
@@ -383,17 +376,17 @@ RepoOverViewHelper.prototype.updateActionLinks = function (selectedRow) {
       link.parentElement.classList.add("enabled");
     }
   });
-};
+}
 
 RepoOverViewHelper.prototype.deselectAllRows = function () {
   document.querySelectorAll(".repo-overview tbody tr").forEach(function (x) {
     x.classList.remove("selected");
   });
-};
+}
 
 RepoOverViewHelper.prototype.getVisibleRows = function () {
   return document.querySelectorAll(".repo-overview tbody tr:not(.nodisplay)");
-};
+}
 
 RepoOverViewHelper.prototype.registerRowSelection = function () {
   var self = this;
@@ -410,14 +403,14 @@ RepoOverViewHelper.prototype.registerRowSelection = function () {
       self.openSelectedRepo();
     });
   });
-};
+}
 
 RepoOverViewHelper.prototype.toggleRepoListDetail = function (forceDisplay) {
   if (this.detailCssClass) {
     this.toggleItemsDetail(forceDisplay);
     this.saveLocalStorage();
   }
-};
+}
 
 RepoOverViewHelper.prototype.toggleItemsDetail = function (forceDisplay) {
   if (this.detailCssClass) {
@@ -436,7 +429,7 @@ RepoOverViewHelper.prototype.toggleItemsDetail = function (forceDisplay) {
     var icon = document.getElementById("icon-filter-detail");
     this.toggleFilterIcon(icon, this.isDetailsDisplayed);
   }
-};
+}
 
 RepoOverViewHelper.prototype.toggleFilterIcon = function (icon, isEnabled) {
   if (isEnabled) {
@@ -446,7 +439,7 @@ RepoOverViewHelper.prototype.toggleFilterIcon = function (icon, isEnabled) {
     icon.classList.remove("blue");
     icon.classList.add("grey");
   }
-};
+}
 
 RepoOverViewHelper.prototype.saveLocalStorage = function () {
   if (!window.localStorage) return;
@@ -454,71 +447,70 @@ RepoOverViewHelper.prototype.saveLocalStorage = function () {
     isDetailsDisplayed: this.isDetailsDisplayed,
     isOnlyFavoritesDisplayed: this.isOnlyFavoritesDisplayed,
     selectedRepoKey: this.selectedRepoKey,
-  };
+  }
   window.localStorage.setItem(this.pageId, JSON.stringify(data));
-};
-
+}
 
 /**********************************************************
- * STAGE PAGE Logic
+ * Staging Logic
  **********************************************************/
 
 // Stage helper constructor
 function StageHelper(params) {
-  this.pageSeed        = params.seed;
-  this.formAction      = params.formAction;
-  this.patchAction     = params.patchAction;
-  this.user            = params.user;
-  this.ids             = params.ids;
-  this.selectedCount   = 0;
-  this.filteredCount   = 0;
+  this.pageSeed = params.seed;
+  this.formAction = params.formAction;
+  this.patchAction = params.patchAction;
+  this.user = params.user;
+  this.ids = params.ids;
+  this.selectedCount = 0;
+  this.filteredCount = 0;
   this.lastFilterValue = "";
-  this.focusFilterKey  = params.focusFilterKey;
+  this.focusFilterKey = params.focusFilterKey;
 
   // DOM nodes
   this.dom = {
-    stageTab:          document.getElementById(params.ids.stageTab),
-    commitAllBtn:      document.getElementById(params.ids.commitAllBtn),
+    stageTab: document.getElementById(params.ids.stageTab),
+    commitAllBtn: document.getElementById(params.ids.commitAllBtn),
     commitSelectedBtn: document.getElementById(params.ids.commitSelectedBtn),
     commitFilteredBtn: document.getElementById(params.ids.commitFilteredBtn),
-    patchBtn:          document.getElementById(params.ids.patchBtn),
-    objectSearch:      document.getElementById(params.ids.objectSearch),
-    selectedCounter:   null,
-    filteredCounter:   null,
-  };
+    patchBtn: document.getElementById(params.ids.patchBtn),
+    objectSearch: document.getElementById(params.ids.objectSearch),
+    selectedCounter: null,
+    filteredCounter: null,
+  }
   this.findCounters();
 
   // Table columns (autodetection)
-  this.colIndex      = this.detectColumns();
+  this.colIndex = this.detectColumns();
   this.filterTargets = ["name", "user", "transport"];
 
   // Constants
   this.HIGHLIGHT_STYLE = "highlight";
   this.STATUS = {
-    add:    "A",
+    add: "A",
     remove: "R",
     ignore: "I",
-    reset:  "?",
+    reset: "?",
     isValid: function (status) { return "ARI?".indexOf(status) == -1 }
-  };
+  }
 
   this.TEMPLATES = {
-    cmdReset:  "<a>reset</a>",
-    cmdLocal:  "<a>add</a>",
+    cmdReset: "<a>reset</a>",
+    cmdLocal: "<a>add</a>",
     cmdRemote: "<a>ignore</a><a>remove</a>"
-  };
+  }
 
   this.setHooks();
   if (this.user) this.injectFilterMe();
   Hotkeys.addHotkeyToHelpSheet("^Enter", "Commit");
 }
 
-StageHelper.prototype.findCounters = function() {
+StageHelper.prototype.findCounters = function () {
   this.dom.selectedCounter = this.dom.commitSelectedBtn.querySelector("span.counter");
   this.dom.filteredCounter = this.dom.commitFilteredBtn.querySelector("span.counter");
-};
+}
 
-StageHelper.prototype.injectFilterMe = function() {
+StageHelper.prototype.injectFilterMe = function () {
   var tabFirstHead = this.dom.stageTab.tHead.rows[0];
   if (!tabFirstHead || tabFirstHead.className !== "local") {
     return; // for the case only "remove part" is displayed
@@ -531,27 +523,27 @@ StageHelper.prototype.injectFilterMe = function() {
   a.href = "#";
   changedByHead.appendChild(a);
   changedByHead.appendChild(document.createTextNode(")"));
-};
+}
 
-StageHelper.prototype.onFilterMe = function() {
+StageHelper.prototype.onFilterMe = function () {
   this.dom.objectSearch.value = this.user;
   this.onFilter({ type: "keypress", which: 13, target: this.dom.objectSearch });
-};
+}
 
 // Hook global click listener on table, load/unload actions
-StageHelper.prototype.setHooks = function() {
-  window.onkeypress                  = this.onCtrlEnter.bind(this);
-  this.dom.stageTab.onclick          = this.onTableClick.bind(this);
+StageHelper.prototype.setHooks = function () {
+  window.onkeypress = this.onCtrlEnter.bind(this);
+  this.dom.stageTab.onclick = this.onTableClick.bind(this);
   this.dom.commitSelectedBtn.onclick = this.submit.bind(this);
   this.dom.commitFilteredBtn.onclick = this.submitVisible.bind(this);
-  this.dom.patchBtn.onclick          = this.submitPatch.bind(this);
-  this.dom.objectSearch.oninput      = this.onFilter.bind(this);
-  this.dom.objectSearch.onkeypress   = this.onFilter.bind(this);
-  window.onbeforeunload              = this.onPageUnload.bind(this);
-  window.onload                      = this.onPageLoad.bind(this);
+  this.dom.patchBtn.onclick = this.submitPatch.bind(this);
+  this.dom.objectSearch.oninput = this.onFilter.bind(this);
+  this.dom.objectSearch.onkeypress = this.onFilter.bind(this);
+  window.onbeforeunload = this.onPageUnload.bind(this);
+  window.onload = this.onPageLoad.bind(this);
 
   var self = this;
-  document.addEventListener("keypress", function(event) {
+  document.addEventListener("keypress", function (event) {
     if (document.activeElement.id !== self.ids.objectSearch
       && self.focusFilterKey && event.key === self.focusFilterKey
       && !CommandPalette.isVisible()) {
@@ -560,31 +552,30 @@ StageHelper.prototype.setHooks = function() {
       event.preventDefault();
     }
   });
-
-};
+}
 
 // Detect column index
-StageHelper.prototype.detectColumns = function() {
-  var dataRow  = this.dom.stageTab.tBodies[0].rows[0];
-  var colIndex = {};
+StageHelper.prototype.detectColumns = function () {
+  var dataRow = this.dom.stageTab.tBodies[0].rows[0];
+  var colIndex = {}
 
   for (var i = dataRow.cells.length - 1; i >= 0; i--) {
     if (dataRow.cells[i].className) colIndex[dataRow.cells[i].className] = i;
   }
 
   return colIndex;
-};
+}
 
 // Store table state on leaving the page
-StageHelper.prototype.onPageUnload = function() {
+StageHelper.prototype.onPageUnload = function () {
   if (!window.sessionStorage) return;
 
   var data = this.collectData();
   window.sessionStorage.setItem(this.pageSeed, JSON.stringify(data));
-};
+}
 
 // Re-store table state on entering the page
-StageHelper.prototype.onPageLoad = function() {
+StageHelper.prototype.onPageLoad = function () {
   var data = window.sessionStorage && JSON.parse(window.sessionStorage.getItem(this.pageSeed));
 
   this.iterateStageTab(true, function (row) {
@@ -596,7 +587,7 @@ StageHelper.prototype.onPageLoad = function() {
   if (this.dom.objectSearch.value) {
     this.applyFilterValue(this.dom.objectSearch.value);
   }
-};
+}
 
 // Table event handler, change status
 StageHelper.prototype.onTableClick = function (event) {
@@ -613,9 +604,9 @@ StageHelper.prototype.onTableClick = function (event) {
     } else return;
   } else return;
 
-  if (["TD","TH"].indexOf(td.tagName) == -1 || td.className != "cmd") return;
+  if (["TD", "TH"].indexOf(td.tagName) == -1 || td.className != "cmd") return;
 
-  var status    = this.STATUS[target.innerText]; // Convert anchor text to status
+  var status = this.STATUS[target.innerText]; // Convert anchor text to status
   var targetRow = td.parentNode;
 
   if (td.tagName === "TD") {
@@ -631,42 +622,40 @@ StageHelper.prototype.onTableClick = function (event) {
   }
 
   this.updateMenu();
-};
+}
 
 StageHelper.prototype.onCtrlEnter = function (e) {
-  if (e.ctrlKey && (e.which === 10 || e.key === "Enter")){
+  if (e.ctrlKey && (e.which === 10 || e.key === "Enter")) {
     var clickMap = {
-      "default":  this.dom.commitAllBtn,
+      "default": this.dom.commitAllBtn,
       "selected": this.dom.commitSelectedBtn,
       "filtered": this.dom.commitFilteredBtn
-    };
+    }
     clickMap[this.calculateActiveCommitCommand()].click();
   }
-};
+}
 
 // Search object
 StageHelper.prototype.onFilter = function (e) {
   if ( // Enter hit or clear, IE SUCKS !
     e.type === "input" && !e.target.value && this.lastFilterValue
-    || e.type === "keypress" && (e.which === 13 || e.key === "Enter") && !e.ctrlKey ) {
+    || e.type === "keypress" && (e.which === 13 || e.key === "Enter") && !e.ctrlKey) {
 
     this.applyFilterValue(e.target.value);
     submitSapeventForm({ filterValue: e.target.value }, "stage_filter", "post");
   }
-};
+}
 
-StageHelper.prototype.applyFilterValue = function(sFilterValue) {
-
+StageHelper.prototype.applyFilterValue = function (sFilterValue) {
   this.lastFilterValue = sFilterValue;
   this.filteredCount = this.iterateStageTab(true, this.applyFilterToRow, sFilterValue);
   this.updateMenu();
-
-};
+}
 
 // Apply filter to a single stage line - hide or show
 StageHelper.prototype.applyFilterToRow = function (row, filter) {
   // Collect data cells
-  var targets = this.filterTargets.map(function(attr) {
+  var targets = this.filterTargets.map(function (attr) {
     // Get the innermost tag with the text we want to filter
     // <td>text</td>: elem = td-tag
     // <td><span><i></i><a>text</a></span></td>: elem = a-tag
@@ -674,10 +663,10 @@ StageHelper.prototype.applyFilterToRow = function (row, filter) {
     var elemA = elem.getElementsByTagName("A")[0];
     if (elemA) elem = elemA;
     return {
-      elem:      elem,
+      elem: elem,
       plainText: elem.innerText.replace(/ /g, "\u00a0"), // without tags, with encoded spaces
-      curHtml:   elem.innerHTML
-    };
+      curHtml: elem.innerHTML
+    }
   }, this);
 
   var isVisible = false;
@@ -686,12 +675,12 @@ StageHelper.prototype.applyFilterToRow = function (row, filter) {
   for (var i = targets.length - 1; i >= 0; i--) {
     var target = targets[i];
     // Ignore case of filter
-    var regFilter = new RegExp("("+filter+")", "gi");
+    var regFilter = new RegExp("(" + filter + ")", "gi");
     target.newHtml = (filter)
       ? target.plainText.replace(regFilter, "<mark>$1</mark>")
       : target.plainText;
     target.isChanged = target.newHtml !== target.curHtml;
-    isVisible        = isVisible || !filter || target.newHtml !== target.plainText;
+    isVisible = isVisible || !filter || target.newHtml !== target.plainText;
   }
 
   // Update DOM
@@ -700,18 +689,18 @@ StageHelper.prototype.applyFilterToRow = function (row, filter) {
     if (targets[j].isChanged) targets[j].elem.innerHTML = targets[j].newHtml;
   }
   return isVisible ? 1 : 0;
-};
+}
 
 // Get how status should affect object counter
 StageHelper.prototype.getStatusImpact = function (status) {
   if (typeof status !== "string"
     || status.length !== 1
-    || this.STATUS.isValid(status) ) {
+    || this.STATUS.isValid(status)) {
     alert("Unknown status");
   } else {
     return (status !== this.STATUS.reset) ? 1 : 0;
   }
-};
+}
 
 // Update table line
 StageHelper.prototype.updateRow = function (row, newStatus) {
@@ -725,7 +714,7 @@ StageHelper.prototype.updateRow = function (row, newStatus) {
   }
 
   this.selectedCount += this.getStatusImpact(newStatus) - this.getStatusImpact(oldStatus);
-};
+}
 
 // Update Status cell (render set of commands)
 StageHelper.prototype.updateRowStatus = function (row, status) {
@@ -735,7 +724,7 @@ StageHelper.prototype.updateRowStatus = function (row, status) {
   } else {
     row.cells[this.colIndex["status"]].classList.add(this.HIGHLIGHT_STYLE);
   }
-};
+}
 
 // Update Command cell (render set of commands)
 StageHelper.prototype.updateRowCommand = function (row, status) {
@@ -747,7 +736,7 @@ StageHelper.prototype.updateRowCommand = function (row, status) {
   } else {
     cell.innerHTML = this.TEMPLATES.cmdReset;
   }
-};
+}
 
 StageHelper.prototype.calculateActiveCommitCommand = function () {
   var active;
@@ -759,7 +748,7 @@ StageHelper.prototype.calculateActiveCommitCommand = function () {
     active = "default";
   }
   return active;
-};
+}
 
 // Update menu items visibility
 StageHelper.prototype.updateMenu = function () {
@@ -767,33 +756,33 @@ StageHelper.prototype.updateMenu = function () {
   if (display === "selected") this.dom.selectedCounter.innerText = this.selectedCount.toString();
   if (display === "filtered") this.dom.filteredCounter.innerText = this.filteredCount.toString();
 
-  this.dom.commitAllBtn.style.display      = display === "default" ? "" : "none";
+  this.dom.commitAllBtn.style.display = display === "default" ? "" : "none";
   this.dom.commitSelectedBtn.style.display = display === "selected" ? "" : "none";
   this.dom.commitFilteredBtn.style.display = display === "filtered" ? "" : "none";
-};
+}
 
 // Submit stage state to the server
 StageHelper.prototype.submit = function () {
   submitSapeventForm(this.collectData(), this.formAction);
-};
+}
 
 StageHelper.prototype.submitVisible = function () {
   this.markVisiblesAsAdded();
   submitSapeventForm(this.collectData(), this.formAction);
-};
+}
 
-StageHelper.prototype.submitPatch = function(){
+StageHelper.prototype.submitPatch = function () {
   submitSapeventForm(this.collectData(), this.patchAction);
-};
+}
 
 // Extract data from the table
 StageHelper.prototype.collectData = function () {
-  var data  = {};
+  var data = {}
   this.iterateStageTab(false, function (row) {
     data[row.cells[this.colIndex["name"]].innerText] = row.cells[this.colIndex["status"]].innerText;
   });
   return data;
-};
+}
 
 StageHelper.prototype.markVisiblesAsAdded = function () {
   this.iterateStageTab(false, function (row) {
@@ -804,12 +793,12 @@ StageHelper.prototype.markVisiblesAsAdded = function () {
       this.updateRow(row, this.STATUS.reset);
     }
   });
-};
+}
 
 // Table iteration helper
 StageHelper.prototype.iterateStageTab = function (changeMode, cb /*, ...*/) {
   var restArgs = Array.prototype.slice.call(arguments, 2);
-  var table    = this.dom.stageTab;
+  var table = this.dom.stageTab;
   var retTotal = 0;
 
   if (changeMode) {
@@ -832,20 +821,20 @@ StageHelper.prototype.iterateStageTab = function (changeMode, cb /*, ...*/) {
   }
 
   return retTotal;
-};
+}
 
 /**********************************************************
- * Check list wrapper
+ * Check List Wrapper
  **********************************************************/
 
 function CheckListWrapper(id, cbAction, cbActionOnlyMyChanges) {
-  this.id         = document.getElementById(id);
-  this.cbAction   = cbAction;
+  this.id = document.getElementById(id);
+  this.cbAction = cbAction;
   this.cbActionOnlyMyChanges = cbActionOnlyMyChanges;
   this.id.onclick = this.onClick.bind(this);
 }
 
-CheckListWrapper.prototype.onClick = function(e) { // eslint-disable-line no-unused-vars
+CheckListWrapper.prototype.onClick = function (e) { // eslint-disable-line no-unused-vars
   // Get nodes
   var target = event.target || event.srcElement;
   if (!target) return;
@@ -853,13 +842,13 @@ CheckListWrapper.prototype.onClick = function(e) { // eslint-disable-line no-unu
   if (target.tagName !== "A") return;
   if (target.parentNode.tagName !== "LI") return;
 
-  var nodeA    = target;
-  var nodeLi   = target.parentNode;
+  var nodeA = target;
+  var nodeLi = target.parentNode;
   var nodeIcon = target.children[0];
   if (!nodeIcon.classList.contains("icon")) return;
 
   // Node updates
-  var option   = nodeA.innerText;
+  var option = nodeA.innerText;
   var oldState = nodeLi.getAttribute("data-check");
   if (oldState === null) return; // no data-check attribute - non-checkbox
   var newState = oldState === "X" ? false : true;
@@ -875,30 +864,30 @@ CheckListWrapper.prototype.onClick = function(e) { // eslint-disable-line no-unu
   }
 
   // Action callback, special handling for "Only My Changes"
-  if(option === "Only my changes") {
+  if (option === "Only my changes") {
     this.cbActionOnlyMyChanges(nodeLi.getAttribute("data-aux"), newState);
 
     // hide "Changed By" menu
   } else {
     this.cbAction(nodeLi.getAttribute("data-aux"), option, newState);
   }
-};
+}
 
 /**********************************************************
- * Diff page logic
+ * Diff Page Logic
  **********************************************************/
 
 // Diff helper constructor
 function DiffHelper(params) {
-  this.pageSeed    = params.seed;
-  this.counter     = 0;
+  this.pageSeed = params.seed;
+  this.counter = 0;
   this.stageAction = params.stageAction;
 
   // DOM nodes
   this.dom = {
-    diffList:    document.getElementById(params.ids.diffList),
+    diffList: document.getElementById(params.ids.diffList),
     stageButton: document.getElementById(params.ids.stageButton)
-  };
+  }
 
   this.repoKey = this.dom.diffList.getAttribute("data-repo-key");
   if (!this.repoKey) return; // Unexpected
@@ -914,35 +903,35 @@ function DiffHelper(params) {
 
   // Hijack stage command
   if (this.dom.stageButton) {
-    this.dom.stageButton.href    = "#";
+    this.dom.stageButton.href = "#";
     this.dom.stageButton.onclick = this.onStage.bind(this);
   }
 }
 
 // Action on jump click
-DiffHelper.prototype.onJump = function(e){
+DiffHelper.prototype.onJump = function (e) {
   var text = ((e.target && e.target.text) || e);
   if (!text) return;
 
   var elFile = document.querySelector("[data-file*='" + text + "']");
   if (!elFile) return;
 
-  setTimeout(function(){
+  setTimeout(function () {
     elFile.scrollIntoView();
   }, 100);
-};
+}
 
 // Action on filter click
-DiffHelper.prototype.onFilter = function(attr, target, state) {
+DiffHelper.prototype.onFilter = function (attr, target, state) {
   this.applyFilter(attr, target, state);
   this.highlightButton(state);
-};
+}
 
-DiffHelper.prototype.onFilterOnlyMyChanges = function(username, state) {
+DiffHelper.prototype.onFilterOnlyMyChanges = function (username, state) {
   this.applyOnlyMyChangesFilter(username, state);
   this.counter = 0;
 
-  if(state) {
+  if (state) {
     this.dom.filterButton.classList.add("bgorange");
   } else {
     this.dom.filterButton.classList.remove("bgorange");
@@ -952,15 +941,15 @@ DiffHelper.prototype.onFilterOnlyMyChanges = function(username, state) {
   var changedByListItems = Array.prototype.slice.call(document.querySelectorAll("[data-aux*=changed-by]"));
 
   changedByListItems
-    .map(function(item) {
+    .map(function (item) {
       var nodeIcon = item.children[0].children[0];
 
       if (state === true) {
-        if(item.innerText === username) { // current user
+        if (item.innerText === username) { // current user
           item.style.display = "";
           item.setAttribute("data-check", "X");
 
-          if(nodeIcon) {
+          if (nodeIcon) {
             nodeIcon.classList.remove("grey");
             nodeIcon.classList.add("blue");
           }
@@ -972,19 +961,19 @@ DiffHelper.prototype.onFilterOnlyMyChanges = function(username, state) {
         item.style.display = "";
         item.setAttribute("data-check", "X");
 
-        if(nodeIcon) {
+        if (nodeIcon) {
           nodeIcon.classList.remove("grey");
           nodeIcon.classList.add("blue");
         }
       }
     });
-};
+}
 
 DiffHelper.prototype.applyOnlyMyChangesFilter = function (username, state) {
 
   var jumpListItems = Array.prototype.slice.call(document.querySelectorAll("[id*=li_jump]"));
 
-  this.iterateDiffList(function(div) {
+  this.iterateDiffList(function (div) {
     if (state === true) { // switching on "Only my changes" filter
       if (div.getAttribute("data-changed-by") === username) {
         div.style.display = state ? "" : "none";
@@ -998,28 +987,28 @@ DiffHelper.prototype.applyOnlyMyChangesFilter = function (username, state) {
     // hide the file in the jump list
     var dataFile = div.getAttribute("data-file");
     jumpListItems
-      .filter(function(item){ return dataFile.includes(item.text) })
-      .map(function(item){ item.style.display = div.style.display });
+      .filter(function (item) { return dataFile.includes(item.text) })
+      .map(function (item) { item.style.display = div.style.display });
   });
-};
+}
 
 // Hide/show diff based on params
 DiffHelper.prototype.applyFilter = function (attr, target, state) {
 
   var jumpListItems = Array.prototype.slice.call(document.querySelectorAll("[id*=li_jump]"));
 
-  this.iterateDiffList(function(div) {
-    if (div.getAttribute("data-"+attr) === target) {
+  this.iterateDiffList(function (div) {
+    if (div.getAttribute("data-" + attr) === target) {
       div.style.display = state ? "" : "none";
 
       // hide the file in the jump list
       var dataFile = div.getAttribute("data-file");
       jumpListItems
-        .filter(function(item){ return dataFile.includes(item.text) })
-        .map(function(item){ item.style.display = div.style.display });
+        .filter(function (item) { return dataFile.includes(item.text) })
+        .map(function (item) { item.style.display = div.style.display });
     }
   });
-};
+}
 
 // Action on stage -> save visible diffs as state for stage page
 DiffHelper.prototype.onStage = function (e) { // eslint-disable-line no-unused-vars
@@ -1027,21 +1016,21 @@ DiffHelper.prototype.onStage = function (e) { // eslint-disable-line no-unused-v
     var data = this.buildStageCache();
     window.sessionStorage.setItem(this.pageSeed, JSON.stringify(data));
   }
-  var getParams = {key: this.repoKey, seed: this.pageSeed};
+  var getParams = { key: this.repoKey, seed: this.pageSeed }
   submitSapeventForm(getParams, this.stageAction, "get");
-};
+}
 
 // Collect visible diffs
 DiffHelper.prototype.buildStageCache = function () {
-  var list = {};
-  this.iterateDiffList(function(div) {
+  var list = {}
+  this.iterateDiffList(function (div) {
     var filename = div.getAttribute("data-file");
     if (!div.style.display && filename) { // No display override - visible !!
       list[filename] = "A"; // Add
     }
   });
   return list;
-};
+}
 
 // Table iterator
 DiffHelper.prototype.iterateDiffList = function (cb /*, ...*/) {
@@ -1054,25 +1043,25 @@ DiffHelper.prototype.iterateDiffList = function (cb /*, ...*/) {
     var args = [div].concat(restArgs);
     cb.apply(this, args); // callback
   }
-};
+}
 
-// Highlight Filter button if filter is activate
-DiffHelper.prototype.highlightButton = function(state) {
+// Highlight filter button if filter is activate
+DiffHelper.prototype.highlightButton = function (state) {
   this.counter += state ? -1 : 1;
   if (this.counter > 0) {
     this.dom.filterButton.classList.add("bgorange");
   } else {
     this.dom.filterButton.classList.remove("bgorange");
   }
-};
+}
 
-//Collapse/Expand diffs
+// Collapse or expand diffs
 function onDiffCollapse(event) {
   var source = event.target || event.srcElement;
   var nextDiffContent = source.parentElement.nextElementSibling;
   var hide;
 
-  if(source.classList.contains("icon-chevron-down")){
+  if (source.classList.contains("icon-chevron-down")) {
     source.classList.remove("icon-chevron-down");
     source.classList.add("icon-chevron-right");
     hide = true;
@@ -1085,14 +1074,13 @@ function onDiffCollapse(event) {
   hide ? nextDiffContent.classList.add("nodisplay") : nextDiffContent.classList.remove("nodisplay");
 }
 
-// Add Bottom margin, so that we can scroll to the top of the last file
-function addMarginBottom(){
+// Add bottom margin, so that we can scroll to the top of the last file
+function addMarginBottom() {
   document.getElementsByTagName("body")[0].style.marginBottom = screen.height + "px";
 }
 
-
 /**********************************************************
- * Diff page logic of column selection
+ * Diff Page Column Selection
  **********************************************************/
 
 function DiffColumnSelection() {
@@ -1103,7 +1091,7 @@ function DiffColumnSelection() {
   document.addEventListener("copy", this.copyEventListener.bind(this));
 }
 
-DiffColumnSelection.prototype.mousedownEventListener = function(e) {
+DiffColumnSelection.prototype.mousedownEventListener = function (e) {
   // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
   // (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
   // Process mousedown event for all TD elements -> apply CSS class at TABLE level.
@@ -1130,7 +1118,7 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
   if (td.classList.contains("diff_left")) {
     table.classList.remove("diff_select_right");
     table.classList.add("diff_select_left");
-    if ( window.getSelection() && this.selectedColumnIdx != splitCodeLeftColumnIdx + patchColumnCount ) {
+    if (window.getSelection() && this.selectedColumnIdx != splitCodeLeftColumnIdx + patchColumnCount) {
       // De-select to avoid effect of dragging selection in case the right column was first selected
       if (document.body.createTextRange) { // All IE but Edge
         // document.getSelection().removeAllRanges() may trigger error
@@ -1141,14 +1129,15 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
         range.select();
       } else {
         document.getSelection().removeAllRanges();
-      }}
+      }
+    }
     this.selectedColumnIdx = splitCodeLeftColumnIdx + patchColumnCount;
     this.lineNumColumnIdx = splitLineNumLeftColumnIdx + patchColumnCount;
 
   } else if (td.classList.contains("diff_right")) {
     table.classList.remove("diff_select_left");
     table.classList.add("diff_select_right");
-    if ( window.getSelection() && this.selectedColumnIdx != splitCodeRightColumnIdx + patchColumnCount ) {
+    if (window.getSelection() && this.selectedColumnIdx != splitCodeRightColumnIdx + patchColumnCount) {
       if (document.body.createTextRange) { // All IE but Edge
         // document.getSelection().removeAllRanges() may trigger error
         // so use this code which is equivalent but does not fail
@@ -1158,7 +1147,8 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
         range.select();
       } else {
         document.getSelection().removeAllRanges();
-      }}
+      }
+    }
     this.selectedColumnIdx = splitCodeRightColumnIdx + patchColumnCount;
     this.lineNumColumnIdx = splitLineNumRightColumnIdx + patchColumnCount;
 
@@ -1170,24 +1160,24 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
     this.selectedColumnIdx = -1;
     this.lineNumColumnIdx = -1;
   }
-};
+}
 
-DiffColumnSelection.prototype.copyEventListener = function(e) {
+DiffColumnSelection.prototype.copyEventListener = function (e) {
   // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
   // (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
   var td = e.target;
   while (td != undefined && td.tagName != "TD" && td.tagName != "TBODY") td = td.parentElement;
-  if(td != undefined){
+  if (td != undefined) {
     // Use window.clipboardData instead of e.clipboardData
     // (https://stackoverflow.com/questions/23470958/ie-10-copy-paste-issue)
-    var clipboardData = ( e.clipboardData == undefined ? window.clipboardData : e.clipboardData );
+    var clipboardData = (e.clipboardData == undefined ? window.clipboardData : e.clipboardData);
     var text = this.getSelectedText();
     clipboardData.setData("text", text);
     e.preventDefault();
   }
-};
+}
 
-DiffColumnSelection.prototype.getSelectedText = function() {
+DiffColumnSelection.prototype.getSelectedText = function () {
   // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
   // (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
   var sel = window.getSelection(),
@@ -1200,36 +1190,43 @@ DiffColumnSelection.prototype.getSelectedText = function() {
   } else {
     var newline = "",
       realThis = this;
-    [].forEach.call(nodes, function(tr, i) {
-      var cellIdx = ( i==0 ? 0 : realThis.selectedColumnIdx );
+    [].forEach.call(nodes, function (tr, i) {
+      var cellIdx = (i == 0 ? 0 : realThis.selectedColumnIdx);
       if (tr.cells.length > cellIdx) {
         var tdSelected = tr.cells[cellIdx];
         var tdLineNum = tr.cells[realThis.lineNumColumnIdx];
         // copy is interesting for remote code, don't copy lines which exist only locally
-        if (i==0 || tdLineNum.getAttribute("line-num")!="") {
+        if (i == 0 || tdLineNum.getAttribute("line-num") != "") {
           text += newline + tdSelected.textContent;
           // special processing for TD tag which sometimes contains newline
           // (expl: /src/ui/zabapgit_js_common.w3mi.data.js) so don't add newline again in that case.
-          var lastChar = tdSelected.textContent[ tdSelected.textContent.length - 1 ];
-          if ( lastChar == "\n" ) newline = "";
+          var lastChar = tdSelected.textContent[tdSelected.textContent.length - 1];
+          if (lastChar == "\n") newline = "";
           else newline = "\n";
-        }}});}
+        }
+      }
+    });
+  }
   return text;
-};
+}
 
 /**********************************************************
- * Other functions
+ * Display Helper
  **********************************************************/
 
-// News announcement
+// Toggle display of changelog (news) and message popups
 function toggleDisplay(divId) {
   var div = document.getElementById(divId);
   if (div) div.style.display = (div.style.display) ? "" : "none";
 }
 
+/**********************************************************
+ * Keyboard Navigation
+ **********************************************************/
+
 function KeyNavigation() { }
 
-KeyNavigation.prototype.onkeydown = function(event) {
+KeyNavigation.prototype.onkeydown = function (event) {
   if (event.defaultPrevented) return;
 
   // navigate with arrows through list items and support pressing links with enter and space
@@ -1245,7 +1242,7 @@ KeyNavigation.prototype.onkeydown = function(event) {
   }
 
   if (isHandled) event.preventDefault();
-};
+}
 
 KeyNavigation.prototype.onEnterOrSpace = function () {
   if (document.activeElement.nodeName !== "A") return;
@@ -1254,26 +1251,26 @@ KeyNavigation.prototype.onEnterOrSpace = function () {
   if (anchor.href.replace(/#$/, "") === document.location.href.replace(/#$/, "")
     && !anchor.onclick
     && anchor.parentElement
-    && anchor.parentElement.nodeName === "LI" ) {
+    && anchor.parentElement.nodeName === "LI") {
     anchor.parentElement.classList.toggle("force-nav-hover");
   } else {
     anchor.click();
   }
   return true;
-};
+}
 
 KeyNavigation.prototype.focusListItem = function (li) {
   var anchor = li.firstElementChild;
   if (!anchor || anchor.nodeName !== "A") return false;
   anchor.focus();
   return true;
-};
+}
 
 KeyNavigation.prototype.closeDropdown = function (dropdownLi) {
   dropdownLi.classList.remove("force-nav-hover");
   if (dropdownLi.firstElementChild.nodeName === "A") dropdownLi.firstElementChild.focus();
   return true;
-};
+}
 
 KeyNavigation.prototype.onBackspace = function () {
   var activeElement = document.activeElement;
@@ -1297,7 +1294,7 @@ KeyNavigation.prototype.onBackspace = function () {
     && activeElement.parentElement.parentElement.parentElement.classList.contains("force-nav-hover")) {
     return this.closeDropdown(activeElement.parentElement.parentElement.parentElement);
   }
-};
+}
 
 KeyNavigation.prototype.onArrowDown = function () {
   var activeElement = document.activeElement;
@@ -1322,7 +1319,7 @@ KeyNavigation.prototype.onArrowDown = function () {
     && activeElement.parentElement.nextElementSibling.nodeName === "LI") {
     return this.focusListItem(activeElement.parentElement.nextElementSibling);
   }
-};
+}
 
 KeyNavigation.prototype.onArrowUp = function () {
   var activeElement = document.activeElement;
@@ -1335,11 +1332,11 @@ KeyNavigation.prototype.onArrowUp = function () {
     && activeElement.parentElement.previousElementSibling.nodeName === "LI") {
     return this.focusListItem(activeElement.parentElement.previousElementSibling);
   }
-};
+}
 
 KeyNavigation.prototype.getHandler = function () {
   return this.onkeydown.bind(this);
-};
+}
 
 // this functions enables the navigation with arrows through list items (li)
 // e.g. in dropdown menus
@@ -1347,18 +1344,20 @@ function enableArrowListNavigation() {
   document.addEventListener("keydown", new KeyNavigation().getHandler());
 }
 
-/* LINK HINTS - Vimium like link hints */
+/**********************************************************
+ * Link Hints (Vimium-like)
+ **********************************************************/
 
-function LinkHints(linkHintHotKey){
-  this.linkHintHotKey    = linkHintHotKey;
+function LinkHints(linkHintHotKey) {
+  this.linkHintHotKey = linkHintHotKey;
   this.areHintsDisplayed = false;
-  this.pendingPath       = ""; // already typed code prefix
-  this.hintsMap          = this.deployHintContainers();
+  this.pendingPath = ""; // already typed code prefix
+  this.hintsMap = this.deployHintContainers();
   this.activatedDropdown = null;
-  this.yankModeActive    = false;
+  this.yankModeActive = false;
 }
 
-LinkHints.prototype.getHintStartValue = function(targetsCount){
+LinkHints.prototype.getHintStartValue = function (targetsCount) {
   // e.g. if we have 89 tooltips we start from 10
   //      if we have 90 tooltips we start from 100
   //      if we have 900 tooltips we start from 1000
@@ -1366,13 +1365,13 @@ LinkHints.prototype.getHintStartValue = function(targetsCount){
     baseLength = Math.pow(10, targetsCount.toString().length - 1),
     maxHintStringLength = (targetsCount + baseLength).toString().length;
   return Math.pow(10, maxHintStringLength - 1);
-};
+}
 
-LinkHints.prototype.deployHintContainers = function() {
+LinkHints.prototype.deployHintContainers = function () {
 
   var hintTargets = document.querySelectorAll("a, input, textarea, i");
   var codeCounter = this.getHintStartValue(hintTargets.length);
-  var hintsMap    = { first: codeCounter };
+  var hintsMap = { first: codeCounter }
 
   // <span class="link-hint" data-code="123">
   //   <span class="pending">12</span><span>3</span>
@@ -1383,19 +1382,19 @@ LinkHints.prototype.deployHintContainers = function() {
       continue;
     }
 
-    var hint = {};
-    hint.container     = document.createElement("span");
-    hint.pendingSpan   = document.createElement("span");
+    var hint = {}
+    hint.container = document.createElement("span");
+    hint.pendingSpan = document.createElement("span");
     hint.remainingSpan = document.createElement("span");
-    hint.parent        = hintTargets[i];
-    hint.code          = codeCounter.toString();
+    hint.parent = hintTargets[i];
+    hint.code = codeCounter.toString();
 
     hint.container.appendChild(hint.pendingSpan);
     hint.container.appendChild(hint.remainingSpan);
 
     hint.pendingSpan.classList.add("pending");
     hint.container.classList.add("link-hint");
-    if (hint.parent.nodeName === "INPUT" || hint.parent.nodeName === "TEXTAREA"){
+    if (hint.parent.nodeName === "INPUT" || hint.parent.nodeName === "TEXTAREA") {
       hint.container.classList.add("link-hint-input");
     } else if (hint.parent.nodeName === "A") {
       hint.container.classList.add("link-hint-a");
@@ -1411,7 +1410,7 @@ LinkHints.prototype.deployHintContainers = function() {
     if (hintTargets[i].nodeName === "INPUT" || hintTargets[i].nodeName === "TEXTAREA") {
       // does not work if inside the input node
       if (hintTargets[i].type === "checkbox" || hintTargets[i].type === "radio") {
-        if (hintTargets[i].nextElementSibling && hintTargets[i].nextElementSibling.nodeName === "LABEL" ) {
+        if (hintTargets[i].nextElementSibling && hintTargets[i].nextElementSibling.nodeName === "LABEL") {
           // insert at end of label
           hintTargets[i].nextElementSibling.appendChild(hint.container);
         } else {
@@ -1430,13 +1429,13 @@ LinkHints.prototype.deployHintContainers = function() {
 
   hintsMap.last = codeCounter - 1;
   return hintsMap;
-};
+}
 
-LinkHints.prototype.getHandler = function() {
+LinkHints.prototype.getHandler = function () {
   return this.handleKey.bind(this);
-};
+}
 
-LinkHints.prototype.handleKey = function(event){
+LinkHints.prototype.handleKey = function (event) {
 
   if (event.defaultPrevented) {
     return;
@@ -1465,7 +1464,7 @@ LinkHints.prototype.handleKey = function(event){
       this.displayHints(false);
       event.preventDefault();
       if (this.yankModeActive) {
-        submitSapeventForm({ clipboard : hint.parent.firstChild.textContent },"yank_to_clipboard");
+        submitSapeventForm({ clipboard: hint.parent.firstChild.textContent }, "yank_to_clipboard");
         this.yankModeActive = false;
       } else {
         this.hintActivate(hint);
@@ -1480,33 +1479,33 @@ LinkHints.prototype.handleKey = function(event){
       }
     }
   }
-};
+}
 
-LinkHints.prototype.closeActivatedDropdown = function() {
+LinkHints.prototype.closeActivatedDropdown = function () {
   if (!this.activatedDropdown) return;
   this.activatedDropdown.classList.remove("force-nav-hover");
   this.activatedDropdown = null;
-};
+}
 
-LinkHints.prototype.displayHints = function(isActivate) {
+LinkHints.prototype.displayHints = function (isActivate) {
   this.areHintsDisplayed = isActivate;
   for (var i = this.hintsMap.first; i <= this.hintsMap.last; i++) {
     var hint = this.hintsMap[i];
     if (isActivate) {
       hint.container.classList.remove("nodisplay");
-      hint.pendingSpan.innerText   = "";
+      hint.pendingSpan.innerText = "";
       hint.remainingSpan.innerText = hint.code;
     } else {
       hint.container.classList.add("nodisplay");
     }
   }
-};
+}
 
 LinkHints.prototype.hintActivate = function (hint) {
   if (hint.parent.nodeName === "A"
-    // hint.parent.href doesn't have a # at the end while accessing dropdowns the first time.
-    // Seems like a idiosyncrasy of SAPGUI's IE. So let's ignore the last character.
-    && ( hint.parent.href.substr(0, hint.parent.href.length - 1) === document.location.href ) // href is #
+    // hint.parent.href doesn`t have a # at the end while accessing dropdowns the first time.
+    // Seems like a idiosyncrasy of SAPGUI`s IE. So let`s ignore the last character.
+    && (hint.parent.href.substr(0, hint.parent.href.length - 1) === document.location.href) // href is #
     && !hint.parent.onclick                         // no handler
     && hint.parent.parentElement && hint.parent.parentElement.nodeName === "LI") {
     // probably it is a dropdown ...
@@ -1525,7 +1524,7 @@ LinkHints.prototype.hintActivate = function (hint) {
     hint.parent.click();
     if (this.activatedDropdown) this.closeActivatedDropdown();
   }
-};
+}
 
 LinkHints.prototype.toggleCheckbox = function (hint) {
   var checked = hint.parent.checked;
@@ -1534,26 +1533,26 @@ LinkHints.prototype.toggleCheckbox = function (hint) {
     // fallback if no handler is registered
     hint.parent.checked = !hint.parent.checked;
   }
-};
+}
 
-LinkHints.prototype.toggleRadioButton = function(hint) {
+LinkHints.prototype.toggleRadioButton = function (hint) {
   this.triggerClickHandler(hint.parent);
-};
+}
 
-LinkHints.prototype.triggerClickHandler = function(el){
+LinkHints.prototype.triggerClickHandler = function (el) {
   // ensures that onclick handler is executed
   // https://stackoverflow.com/questions/41981509/trigger-an-event-when-a-checkbox-is-changed-programmatically-via-javascript
   var event = document.createEvent("HTMLEvents");
   event.initEvent("click", false, true);
   el.dispatchEvent(event);
-};
+}
 
 LinkHints.prototype.filterHints = function () {
   var visibleHints = 0;
   for (var i = this.hintsMap.first; i <= this.hintsMap.last; i++) {
     var hint = this.hintsMap[i];
     if (i.toString().startsWith(this.pendingPath)) {
-      hint.pendingSpan.innerText   = this.pendingPath;
+      hint.pendingSpan.innerText = this.pendingPath;
       hint.remainingSpan.innerText = hint.code.substring(this.pendingPath.length);
       // hint.container.classList.remove("nodisplay"); // for backspace
       visibleHints++;
@@ -1562,7 +1561,7 @@ LinkHints.prototype.filterHints = function () {
     }
   }
   return visibleHints;
-};
+}
 
 function activateLinkHints(linkHintHotKey) {
   if (!linkHintHotKey) return;
@@ -1570,25 +1569,27 @@ function activateLinkHints(linkHintHotKey) {
   document.addEventListener("keypress", oLinkHint.getHandler());
 }
 
-/* HOTKEYS */
+/**********************************************************
+ * Hotkeys
+ **********************************************************/
 
-function Hotkeys(oKeyMap){
+function Hotkeys(oKeyMap) {
 
-  this.oKeyMap = oKeyMap || {};
+  this.oKeyMap = oKeyMap || {}
 
   // these are the hotkeys provided by the backend
-  Object.keys(this.oKeyMap).forEach(function(sKey){
+  Object.keys(this.oKeyMap).forEach(function (sKey) {
 
     var action = this.oKeyMap[sKey];
 
     // add a tooltip/title with the hotkey, currently only sapevents are supported
-    this.getAllSapEventsForSapEventName(action).forEach(function(elAnchor) {
+    this.getAllSapEventsForSapEventName(action).forEach(function (elAnchor) {
       elAnchor.title = elAnchor.title + " [" + sKey + "]";
     });
 
     // We replace the actions with callback functions to unify
     // the hotkey execution
-    this.oKeyMap[sKey] = function(oEvent) {
+    this.oKeyMap[sKey] = function (oEvent) {
 
       // gHelper is only valid for diff page
       var diffHelper = (window.gHelper || {});
@@ -1600,13 +1601,13 @@ function Hotkeys(oKeyMap){
       }
 
       // Or a method of the helper object for the diff page
-      if (diffHelper[action]){
+      if (diffHelper[action]) {
         diffHelper[action].call(diffHelper);
         return;
       }
 
       // Or a global function
-      if (window[action] && typeof(window[action]) === "function") {
+      if (window[action] && typeof (window[action]) === "function") {
         window[action].call(this);
         return;
       }
@@ -1635,88 +1636,84 @@ function Hotkeys(oKeyMap){
         return;
       }
 
-    };
+    }
 
   }.bind(this));
-
 }
 
-Hotkeys.prototype.showHotkeys = function() {
+Hotkeys.prototype.showHotkeys = function () {
   var elHotkeys = document.querySelector("#hotkeys");
 
   if (elHotkeys) {
     elHotkeys.style.display = (elHotkeys.style.display) ? "" : "none";
   }
-};
+}
 
-Hotkeys.prototype.getAllSapEventsForSapEventName = function(sSapEvent) {
+Hotkeys.prototype.getAllSapEventsForSapEventName = function (sSapEvent) {
   return [].slice.call(
     document.querySelectorAll('a[href*="sapevent:' + sSapEvent + '"],'
-                            + 'a[href*="SAPEVENT:' + sSapEvent + '"],'
-                            + 'input[formaction*="sapevent:' + sSapEvent + '"],'
-                            + 'input[formaction*="SAPEVENT:' + sSapEvent + '"],'
-                            + 'form[action*="sapevent:' + sSapEvent + '"] input[type="submit"].main,'
-                            + 'form[action*="SAPEVENT:' + sSapEvent + '"] input[type="submit"].main'));
-};
+      + 'a[href*="SAPEVENT:' + sSapEvent + '"],'
+      + 'input[formaction*="sapevent:' + sSapEvent + '"],'
+      + 'input[formaction*="SAPEVENT:' + sSapEvent + '"],'
+      + 'form[action*="sapevent:' + sSapEvent + '"] input[type="submit"].main,'
+      + 'form[action*="SAPEVENT:' + sSapEvent + '"] input[type="submit"].main'));
+}
 
-Hotkeys.prototype.getSapEventHref = function(sSapEvent) {
+Hotkeys.prototype.getSapEventHref = function (sSapEvent) {
 
   return this.getAllSapEventsForSapEventName(sSapEvent)
-    .filter(function(el){
+    .filter(function (el) {
       // only anchors
       return (!!el.href);
     })
-    .map(function(oSapEvent){
+    .map(function (oSapEvent) {
       return oSapEvent.href;
     })
     .filter(this.eliminateSapEventFalsePositives(sSapEvent))
     .pop();
+}
 
-};
-
-Hotkeys.prototype.getSapEventInputAction = function(sSapEvent) {
+Hotkeys.prototype.getSapEventInputAction = function (sSapEvent) {
 
   return this.getAllSapEventsForSapEventName(sSapEvent)
-    .filter(function(el){
+    .filter(function (el) {
       // input forms
       return (el.type === "submit");
     })
-    .map(function(oSapEvent){
+    .map(function (oSapEvent) {
       return oSapEvent.formAction;
     })
     .filter(this.eliminateSapEventFalsePositives(sSapEvent))
     .pop();
+}
 
-};
-
-Hotkeys.prototype.getSapEventForm = function(sSapEvent) {
+Hotkeys.prototype.getSapEventForm = function (sSapEvent) {
 
   return this.getAllSapEventsForSapEventName(sSapEvent)
-    .filter(function(el){
+    .filter(function (el) {
       // forms
       var parentForm = el.parentNode.parentNode.parentNode;
       return (el.type === "submit" && parentForm.nodeName === "FORM");
     })
-    .map(function(oSapEvent){
+    .map(function (oSapEvent) {
       return oSapEvent.parentNode.parentNode.parentNode;
     })
     .pop();
+}
 
-};
-
-Hotkeys.prototype.eliminateSapEventFalsePositives = function(sapEvent){
-  return function(sapEventAttr) {
+Hotkeys.prototype.eliminateSapEventFalsePositives = function (sapEvent) {
+  return function (sapEventAttr) {
     return sapEventAttr.match(new RegExp("\\b" + sapEvent + "\\b"));
-  };
-};
+  }
+}
 
-Hotkeys.prototype.onkeydown = function(oEvent){
+Hotkeys.prototype.onkeydown = function (oEvent) {
 
   if (oEvent.defaultPrevented) {
     return;
   }
 
-  if (!Hotkeys.isHotkeyCallPossible()){
+  if (!Hotkeys.isHotkeyCallPossible()) {
     return;
   }
 
@@ -1727,56 +1724,55 @@ Hotkeys.prototype.onkeydown = function(oEvent){
   if (fnHotkey) {
     fnHotkey.call(this, oEvent);
   }
-};
+}
 
-Hotkeys.isHotkeyCallPossible = function(){
+Hotkeys.isHotkeyCallPossible = function () {
 
   var activeElementType = ((document.activeElement && document.activeElement.nodeName) || "");
   var activeElementReadOnly = ((document.activeElement && document.activeElement.readOnly) || false);
 
-  return (activeElementReadOnly || ( activeElementType !== "INPUT" && activeElementType !== "TEXTAREA" ));
-};
+  return (activeElementReadOnly || (activeElementType !== "INPUT" && activeElementType !== "TEXTAREA"));
+}
 
-Hotkeys.addHotkeyToHelpSheet = function(key, description) {
+Hotkeys.addHotkeyToHelpSheet = function (key, description) {
   var hotkeysUl = document.querySelector("#hotkeys ul.hotkeys");
   if (!hotkeysUl) return;
 
-  var li              = document.createElement("li");
-  var spanId          = document.createElement("span");
-  spanId.className    = "key-id";
-  spanId.innerText    = key;
-  var spanDescr       = document.createElement("span");
+  var li = document.createElement("li");
+  var spanId = document.createElement("span");
+  spanId.className = "key-id";
+  spanId.innerText = key;
+  var spanDescr = document.createElement("span");
   spanDescr.className = "key-descr";
   spanDescr.innerText = description;
   li.appendChild(spanId);
   li.appendChild(spanDescr);
 
   hotkeysUl.appendChild(li);
-};
+}
 
-function setKeyBindings(oKeyMap){
+function setKeyBindings(oKeyMap) {
 
   var oHotkeys = new Hotkeys(oKeyMap);
 
   document.addEventListener("keypress", oHotkeys.onkeydown.bind(oHotkeys));
-  setTimeout(function(){
+  setTimeout(function () {
     var div = document.getElementById("hotkeys-hint");
     if (div) div.style.opacity = 0.2;
   }, 4900);
-  setTimeout(function(){ toggleDisplay("hotkeys-hint") }, 5000);
+  setTimeout(function () { toggleDisplay("hotkeys-hint") }, 5000);
 }
 
-/*
-  Patch / git add -p
-  */
+/**********************************************************
+ * Patch Logic (git add -p)
+ **********************************************************/
 
 /*
   We have three type of cascading checkboxes.
   Which means that by clicking a file or section checkbox all corresponding line checkboxes are checked.
 
   The id of the checkbox indicates its semantics and its membership.
-
-  */
+*/
 
 /*
   1) file links
@@ -1791,14 +1787,13 @@ function setKeyBindings(oKeyMap){
           |
           |
       constant prefix
+*/
 
-  */
-
-function PatchFile(sId){
+function PatchFile(sId) {
   var oRegex = new RegExp("(" + this.ID + ")_(.*$)");
   var oMatch = sId.match(oRegex);
-  this.id        = sId;
-  this.prefix    = oMatch[1];
+  this.id = sId;
+  this.prefix = oMatch[1];
   this.file_name = oMatch[2];
 }
 
@@ -1817,16 +1812,15 @@ PatchFile.prototype.ID = "patch_file";
             |                                       ------ section
             |
       constant prefix
+*/
 
-    */
-
-function PatchSection(sId){
+function PatchSection(sId) {
   var oRegex = new RegExp("(" + this.ID + ")_(.*)_(\\d+$)");
   var oMatch = sId.match(oRegex);
-  this.id        = sId;
-  this.prefix    = oMatch[1];
+  this.id = sId;
+  this.prefix = oMatch[1];
   this.file_name = oMatch[2];
-  this.section   = oMatch[3];
+  this.section = oMatch[3];
 }
 
 PatchSection.prototype.ID = "patch_section";
@@ -1845,10 +1839,9 @@ PatchSection.prototype.ID = "patch_section";
             |
             |
       constant prefix
+*/
 
-  */
-function PatchLine(){
-}
+function PatchLine() { }
 
 PatchLine.prototype.ID = "patch_line";
 
@@ -1856,138 +1849,133 @@ function Patch() { }
 
 Patch.prototype.ID = {
   STAGE: "stage"
-};
+}
 
 Patch.prototype.ACTION = {
   PATCH_STAGE: "patch_stage",
   REFRESH_LOCAL: "refresh_local",
   REFRESH_ALL: "refresh_all"
-};
+}
 
-Patch.prototype.escape = function(sFileName){
+Patch.prototype.escape = function (sFileName) {
   return sFileName
     .replace(/\./g, "\\.")
     .replace(/#/g, "\\#");
-};
+}
 
-Patch.prototype.preparePatch = function(){
-
+Patch.prototype.preparePatch = function () {
   this.registerClickHandlerForFiles();
   this.registerClickHandlerForSections();
   this.registerClickHandlerForLines();
+}
 
-};
-
-Patch.prototype.buildSelectorInputStartsWithId = function(sId){
+Patch.prototype.buildSelectorInputStartsWithId = function (sId) {
   return "input[id^='" + sId + "']";
-};
+}
 
-Patch.prototype.registerClickHandlerForFiles = function(){
+Patch.prototype.registerClickHandlerForFiles = function () {
   this.registerClickHandlerForSelectorParent(this.buildSelectorInputStartsWithId(PatchFile.prototype.ID), this.onClickFileCheckbox);
-};
+}
 
-Patch.prototype.registerClickHandlerForSections = function(){
+Patch.prototype.registerClickHandlerForSections = function () {
   this.registerClickHandlerForSelectorParent(this.buildSelectorInputStartsWithId(PatchSection.prototype.ID), this.onClickSectionCheckbox);
-};
+}
 
-Patch.prototype.registerClickHandlerForLines = function(){
+Patch.prototype.registerClickHandlerForLines = function () {
   this.registerClickHandlerForSelectorParent(this.buildSelectorInputStartsWithId(PatchLine.prototype.ID), this.onClickLineCheckbox);
-};
+}
 
-Patch.prototype.registerClickHandlerForSelectorParent = function(sSelector, fnCallback){
+Patch.prototype.registerClickHandlerForSelectorParent = function (sSelector, fnCallback) {
 
   var elAll = document.querySelectorAll(sSelector);
 
-  [].forEach.call(elAll, function(elem){
+  [].forEach.call(elAll, function (elem) {
     elem.parentElement.addEventListener("click", fnCallback.bind(this));
   }.bind(this));
+}
 
-};
-
-Patch.prototype.getAllLineCheckboxesForFile = function(oFile){
+Patch.prototype.getAllLineCheckboxesForFile = function (oFile) {
   return this.getAllLineCheckboxesForId(oFile.id, PatchFile.prototype.ID);
-};
+}
 
-Patch.prototype.getAllSectionCheckboxesForFile = function(oFile){
+Patch.prototype.getAllSectionCheckboxesForFile = function (oFile) {
   return this.getAllSectionCheckboxesForId(oFile.id, PatchFile.prototype.ID);
-};
+}
 
-Patch.prototype.getAllLineCheckboxesForSection = function(oSection){
+Patch.prototype.getAllLineCheckboxesForSection = function (oSection) {
   return this.getAllLineCheckboxesForId(oSection.id, PatchSection.prototype.ID);
-};
+}
 
-Patch.prototype.getAllLineCheckboxesForId = function(sId, sIdPrefix){
-  return this.getAllCheckboxesForId(sId, sIdPrefix,PatchLine.prototype.ID);
-};
+Patch.prototype.getAllLineCheckboxesForId = function (sId, sIdPrefix) {
+  return this.getAllCheckboxesForId(sId, sIdPrefix, PatchLine.prototype.ID);
+}
 
-Patch.prototype.getAllSectionCheckboxesForId = function(sId, sIdPrefix){
+Patch.prototype.getAllSectionCheckboxesForId = function (sId, sIdPrefix) {
   return this.getAllCheckboxesForId(sId, sIdPrefix, PatchSection.prototype.ID);
-};
+}
 
-Patch.prototype.getAllCheckboxesForId = function(sId, sIdPrefix, sNewIdPrefix){
+Patch.prototype.getAllCheckboxesForId = function (sId, sIdPrefix, sNewIdPrefix) {
   var oRegex = new RegExp("^" + sIdPrefix);
   sId = sId.replace(oRegex, sNewIdPrefix);
   return document.querySelectorAll(this.buildSelectorInputStartsWithId(this.escape(sId)));
-};
+}
 
-Patch.prototype.getToggledCheckbox = function(oEvent){
+Patch.prototype.getToggledCheckbox = function (oEvent) {
 
   var elCheckbox = null;
 
   // We have either an input element or any element with input child
   // in the latter case we have to toggle the checkbox manually
-  if (oEvent.srcElement.nodeName === "INPUT"){
+  if (oEvent.srcElement.nodeName === "INPUT") {
     elCheckbox = oEvent.srcElement;
   } else {
     elCheckbox = this.toggleCheckbox(oEvent.srcElement.querySelector("INPUT"));
   }
 
   return elCheckbox;
-};
+}
 
-Patch.prototype.toggleCheckbox = function(elCheckbox) {
+Patch.prototype.toggleCheckbox = function (elCheckbox) {
   elCheckbox.checked = !elCheckbox.checked;
   return elCheckbox;
-};
+}
 
-Patch.prototype.onClickFileCheckbox = function(oEvent) {
+Patch.prototype.onClickFileCheckbox = function (oEvent) {
 
   var elCheckbox = this.getToggledCheckbox(oEvent);
   var oFile = new PatchFile(elCheckbox.id);
   var elAllLineCheckboxesOfFile = this.getAllLineCheckboxesForFile(oFile);
   var elAllSectionCheckboxesOfFile = this.getAllSectionCheckboxesForFile(oFile);
 
-  [].forEach.call(elAllLineCheckboxesOfFile,function(elem){
+  [].forEach.call(elAllLineCheckboxesOfFile, function (elem) {
     elem.checked = elCheckbox.checked;
   }.bind(this));
 
-  [].forEach.call(elAllSectionCheckboxesOfFile,function(elem){
+  [].forEach.call(elAllSectionCheckboxesOfFile, function (elem) {
     elem.checked = elCheckbox.checked;
   }.bind(this));
+}
 
-};
-
-Patch.prototype.onClickSectionCheckbox = function(oEvent){
+Patch.prototype.onClickSectionCheckbox = function (oEvent) {
   var elSrcElement = this.getToggledCheckbox(oEvent);
   var oSection = new PatchSection(elSrcElement.id);
   this.clickAllLineCheckboxesInSection(oSection, elSrcElement.checked);
-};
+}
 
-Patch.prototype.onClickLineCheckbox = function(oEvent){
+Patch.prototype.onClickLineCheckbox = function (oEvent) {
   this.getToggledCheckbox(oEvent);
-};
+}
 
-Patch.prototype.clickAllLineCheckboxesInSection = function(oSection, bChecked){
+Patch.prototype.clickAllLineCheckboxesInSection = function (oSection, bChecked) {
 
   var elAllLineCheckboxesOfSection = this.getAllLineCheckboxesForSection(oSection);
 
-  [].forEach.call(elAllLineCheckboxesOfSection,function(elem){
+  [].forEach.call(elAllLineCheckboxesOfSection, function (elem) {
     elem.checked = bChecked;
   }.bind(this));
+}
 
-};
-
-Patch.prototype.registerStagePatch = function (){
+Patch.prototype.registerStagePatch = function () {
 
   var elStage = document.querySelector("#" + this.ID.STAGE);
   var REFRESH_PREFIX = "refresh";
@@ -1995,148 +1983,67 @@ Patch.prototype.registerStagePatch = function (){
   elStage.addEventListener("click", this.submitPatch.bind(this, this.ACTION.PATCH_STAGE));
 
   var aRefresh = document.querySelectorAll("[id*=" + REFRESH_PREFIX + "]");
-  [].forEach.call( aRefresh, function(el) {
+  [].forEach.call(aRefresh, function (el) {
     el.addEventListener("click", memorizeScrollPosition(this.submitPatch.bind(this, el.id)).bind(this));
   }.bind(this));
 
   // for hotkeys
-  window.stagePatch = function(){
+  window.stagePatch = function () {
     this.submitPatch(this.ACTION.PATCH_STAGE);
   }.bind(this);
 
-  window.refreshLocal = memorizeScrollPosition(function(){
+  window.refreshLocal = memorizeScrollPosition(function () {
     this.submitPatch(this.ACTION.REFRESH_LOCAL);
   }.bind(this));
 
-  window.refreshAll = memorizeScrollPosition(function(){
+  window.refreshAll = memorizeScrollPosition(function () {
     this.submitPatch(this.ACTION.REFRESH_ALL);
   }.bind(this));
+}
 
-};
-
-Patch.prototype.submitPatch = function(action) {
+Patch.prototype.submitPatch = function (action) {
   // Collect add and remove info and submit to backend
 
-  var aAddPatch = this.collectElementsForCheckboxId( PatchLine.prototype.ID, true);
-  var aRemovePatch = this.collectElementsForCheckboxId( PatchLine.prototype.ID, false);
+  var aAddPatch = this.collectElementsForCheckboxId(PatchLine.prototype.ID, true);
+  var aRemovePatch = this.collectElementsForCheckboxId(PatchLine.prototype.ID, false);
 
   submitSapeventForm({ add: aAddPatch, remove: aRemovePatch }, action, "post");
-};
+}
 
-Patch.prototype.collectElementsForCheckboxId = function(sId, bChecked){
+Patch.prototype.collectElementsForCheckboxId = function (sId, bChecked) {
 
   var sSelector = this.buildSelectorInputStartsWithId(sId);
 
   return [].slice.call(document.querySelectorAll(sSelector))
-    .filter(function(elem){
+    .filter(function (elem) {
       return (elem.checked === bChecked);
-    }).map(function(elem){
+    }).map(function (elem) {
       return elem.id;
     });
+}
 
-};
-
-function preparePatch(){
+function preparePatch() {
   var oPatch = new Patch();
   oPatch.preparePatch();
 }
 
-function registerStagePatch(){
+function registerStagePatch() {
   var oPatch = new Patch();
   oPatch.registerStagePatch();
 }
 
 /**********************************************************
- * Page branch overview
- *
- * Hovering a commit node in the branch overview will show
- * a popup with the commit details. Single click on a node
- * will fix the popup, so that users can select text. The
- * fixation is removed when any node is hovered or the popup
- * is closed via 'X'.
- *
- **********************************************************/
-
-function BranchOverview() {
-  this.bFixed = false;
-  this.elCurrentCommit = {
-    style : {
-      display: "none"
-    }
-  };
-}
-
-BranchOverview.prototype.toggleCommit = function(sSha1, bFixPopup) {
-
-  // If the popup is fixed, we just remove the fixation.
-  // The popup will then be hidden by the next call of hideCommit
-  if (this.bFixed) {
-    this.bFixed = false;
-    return;
-  }
-
-  // We hide the previous shown commit popup
-  this.elCurrentCommit.style.display = "none";
-
-  // Display the new commit popup if sha1 is supplied
-  if (sSha1){
-    this.elCurrentCommit = document.getElementById(sSha1);
-    this.elCurrentCommit.style.display = "";
-
-    // and fix the popup so that the next hideCommit won't hide it.
-    this.bFixed = bFixPopup;
-
-  }
-
-};
-
-// called by onClick of commit nodes in branch overview
-BranchOverview.prototype.onCommitClick = function(commit){
-  this.toggleCommit(commit.sha1, true);
-};
-
-// Called by commit:mouseover
-BranchOverview.prototype.showCommit = function(event){
-  this.toggleCommit(event.data.sha1);
-};
-
-// Called by commit:mouseout
-BranchOverview.prototype.hideCommit = function (){
-  this.toggleCommit();
-};
-
-// Initialize Top Horizontal Scroller on GitGraph
-function setGitGraphScroller(){ // eslint-disable-line no-unused-vars
-
-  // Get gitGraph Element Canvas Width
-  var gitGraphEl = document.getElementById("gitGraph");
-  var gitGraphWidth = gitGraphEl.offsetWidth;
-
-  // Initialize gitGraph-HTopScroller Element width as gitGraph
-  var HTopScrollerEl = document.querySelector(".gitGraph-HTopScroller");
-  HTopScrollerEl.style.width = gitGraphWidth + "px";
-
-}
-
-// Setup Top Horizontal Scroller on GitGraph event
-function GitGraphScroller() { // eslint-disable-line no-unused-vars
-  var gitGraphWrapperEl = document.querySelector(".gitGraph-Wrapper");
-  var gitGraphscrollWrapperEl = document.querySelector(".gitGraph-scrollWrapper");
-  gitGraphWrapperEl.scrollLeft = gitGraphscrollWrapperEl.scrollLeft;
-}
-
-/**********************************************************
- * Ctrl + P - command palette
+ * Command Palette (Ctrl + P)
  **********************************************************/
 
 // fuzzy match helper
 // return non empty marked string in case it fits the filter
 // abc + b = a<mark>b</mark>c
-function fuzzyMatchAndMark(str, filter){
-  var markedStr   = "";
+function fuzzyMatchAndMark(str, filter) {
+  var markedStr = "";
   var filterLower = filter.toLowerCase();
-  var strLower    = str.toLowerCase();
-  var cur         = 0;
+  var strLower = str.toLowerCase();
+  var cur = 0;
 
   for (var i = 0; i < filter.length; i++) {
     while (filterLower[i] !== strLower[cur] && cur < str.length) {
@@ -2165,21 +2072,21 @@ function CommandPalette(commandEnumerator, opts) {
 
   if (opts.toggleKey[0] === "^") {
     this.toggleKeyCtrl = true;
-    this.toggleKey     = opts.toggleKey.substring(1);
+    this.toggleKey = opts.toggleKey.substring(1);
     if (!this.toggleKey) throw Error("Incorrect toggleKey");
   } else {
     this.toggleKeyCtrl = false;
-    this.toggleKey     = opts.toggleKey;
+    this.toggleKey = opts.toggleKey;
   }
 
   this.hotkeyDescription = opts.hotkeyDescription;
   this.elements = {
     palette: null,
-    ul:      null,
-    input:   null
-  };
-  this.selectIndex       = -1; // not selected
-  this.filter            = "";
+    ul: null,
+    input: null
+  }
+  this.selectIndex = -1; // not selected
+  this.filter = "";
   this.renderAndBindElements();
   this.hookEvents();
   Hotkeys.addHotkeyToHelpSheet(opts.toggleKey, opts.hotkeyDescription);
@@ -2190,51 +2097,51 @@ function CommandPalette(commandEnumerator, opts) {
   CommandPalette.instances.push(this);
 }
 
-CommandPalette.prototype.hookEvents = function(){
+CommandPalette.prototype.hookEvents = function () {
   document.addEventListener("keydown", this.handleToggleKey.bind(this));
   this.elements.input.addEventListener("keyup", this.handleInputKey.bind(this));
   this.elements.ul.addEventListener("click", this.handleUlClick.bind(this));
-};
+}
 
-CommandPalette.prototype.renderCommandItem = function(cmd){
+CommandPalette.prototype.renderCommandItem = function (cmd) {
   var li = document.createElement("li");
   if (cmd.iconClass) {
-    var icon       = document.createElement("i");
+    var icon = document.createElement("i");
     icon.className = cmd.iconClass;
     li.appendChild(icon);
   }
   var titleSpan = document.createElement("span");
   li.appendChild(titleSpan);
-  cmd.element   = li;
+  cmd.element = li;
   cmd.titleSpan = titleSpan;
   return li;
-};
+}
 
-CommandPalette.prototype.renderAndBindElements = function(){
-  var div           = document.createElement("div");
-  div.className     = "cmd-palette";
+CommandPalette.prototype.renderAndBindElements = function () {
+  var div = document.createElement("div");
+  div.className = "cmd-palette";
   div.style.display = "none";
-  var input         = document.createElement("input");
+  var input = document.createElement("input");
   input.placeholder = this.hotkeyDescription;
-  var ul            = document.createElement("ul");
+  var ul = document.createElement("ul");
   for (var i = 0; i < this.commands.length; i++) ul.appendChild(this.renderCommandItem(this.commands[i]));
   div.appendChild(input);
   div.appendChild(ul);
 
   this.elements.palette = div;
-  this.elements.input   = input;
-  this.elements.ul      = ul;
+  this.elements.input = input;
+  this.elements.ul = ul;
   document.body.appendChild(div);
-};
+}
 
-CommandPalette.prototype.handleToggleKey = function(event){
+CommandPalette.prototype.handleToggleKey = function (event) {
   if (event.key !== this.toggleKey) return;
   if (this.toggleKeyCtrl && !event.ctrlKey) return;
   this.toggleDisplay();
   event.preventDefault();
-};
+}
 
-CommandPalette.prototype.handleInputKey = function(event){
+CommandPalette.prototype.handleInputKey = function (event) {
   if (event.key === "ArrowUp" || event.key === "Up") {
     this.selectPrev();
   } else if (event.key === "ArrowDown" || event.key === "Down") {
@@ -2249,27 +2156,27 @@ CommandPalette.prototype.handleInputKey = function(event){
     this.selectFirst();
   }
   event.preventDefault();
-};
+}
 
-CommandPalette.prototype.applyFilter = function(){
+CommandPalette.prototype.applyFilter = function () {
   for (var i = 0; i < this.commands.length; i++) {
     var cmd = this.commands[i];
     if (!this.filter) {
       cmd.element.style.display = "";
-      cmd.titleSpan.innerText   = cmd.title;
+      cmd.titleSpan.innerText = cmd.title;
     } else {
       var matchedTitle = fuzzyMatchAndMark(cmd.title, this.filter);
       if (matchedTitle) {
-        cmd.titleSpan.innerHTML   = matchedTitle;
+        cmd.titleSpan.innerHTML = matchedTitle;
         cmd.element.style.display = "";
       } else {
         cmd.element.style.display = "none";
       }
     }
   }
-};
+}
 
-CommandPalette.prototype.applySelectIndex = function(newIndex){
+CommandPalette.prototype.applySelectIndex = function (newIndex) {
   if (newIndex !== this.selectIndex) {
     if (this.selectIndex >= 0) this.commands[this.selectIndex].element.classList.remove("selected");
     var newCmd = this.commands[newIndex];
@@ -2277,60 +2184,60 @@ CommandPalette.prototype.applySelectIndex = function(newIndex){
     this.selectIndex = newIndex;
     this.adjustScrollPosition(newCmd.element);
   }
-};
+}
 
-CommandPalette.prototype.selectFirst = function(){
+CommandPalette.prototype.selectFirst = function () {
   for (var i = 0; i < this.commands.length; i++) {
     if (this.commands[i].element.style.display === "none") continue; // skip hidden
     this.applySelectIndex(i);
     break;
   }
-};
+}
 
-CommandPalette.prototype.selectNext = function(){
+CommandPalette.prototype.selectNext = function () {
   for (var i = this.selectIndex + 1; i < this.commands.length; i++) {
     if (this.commands[i].element.style.display === "none") continue; // skip hidden
     this.applySelectIndex(i);
     break;
   }
-};
+}
 
-CommandPalette.prototype.selectPrev = function(){
+CommandPalette.prototype.selectPrev = function () {
   for (var i = this.selectIndex - 1; i >= 0; i--) {
     if (this.commands[i].element.style.display === "none") continue; // skip hidden
     this.applySelectIndex(i);
     break;
   }
-};
+}
 
-CommandPalette.prototype.getSelected = function(){
+CommandPalette.prototype.getSelected = function () {
   return this.commands[this.selectIndex];
-};
+}
 
-CommandPalette.prototype.adjustScrollPosition = function(itemElement){
-  var bItem         = itemElement.getBoundingClientRect();
-  var bContainer    = this.elements.ul.getBoundingClientRect();
-  bItem.top         = Math.round(bItem.top);
-  bItem.bottom      = Math.round(bItem.bottom);
-  bItem.height      = Math.round(bItem.height);
-  bItem.mid         = Math.round(bItem.top + bItem.height / 2);
-  bContainer.top    = Math.round(bContainer.top);
+CommandPalette.prototype.adjustScrollPosition = function (itemElement) {
+  var bItem = itemElement.getBoundingClientRect();
+  var bContainer = this.elements.ul.getBoundingClientRect();
+  bItem.top = Math.round(bItem.top);
+  bItem.bottom = Math.round(bItem.bottom);
+  bItem.height = Math.round(bItem.height);
+  bItem.mid = Math.round(bItem.top + bItem.height / 2);
+  bContainer.top = Math.round(bContainer.top);
   bContainer.bottom = Math.round(bContainer.bottom);
 
-  if ( bItem.mid > bContainer.bottom - 2 ) {
+  if (bItem.mid > bContainer.bottom - 2) {
     this.elements.ul.scrollTop += bItem.bottom - bContainer.bottom;
-  } else if ( bItem.mid < bContainer.top + 2 ) {
+  } else if (bItem.mid < bContainer.top + 2) {
     this.elements.ul.scrollTop += bItem.top - bContainer.top;
   }
-};
+}
 
-CommandPalette.prototype.toggleDisplay = function(forceState) {
+CommandPalette.prototype.toggleDisplay = function (forceState) {
   var isDisplayed = (this.elements.palette.style.display !== "none");
   var tobeDisplayed = (forceState !== undefined) ? forceState : !isDisplayed;
 
   if (tobeDisplayed) {
     // auto close other command palettes
-    CommandPalette.instances.forEach(function(instance){
+    CommandPalette.instances.forEach(function (instance) {
       instance.elements.palette.style.display = "none";
     });
   }
@@ -2342,54 +2249,55 @@ CommandPalette.prototype.toggleDisplay = function(forceState) {
     this.applyFilter();
     this.selectFirst();
   }
+}
 
-};
-
-CommandPalette.prototype.getCommandByElement = function(element) {
+CommandPalette.prototype.getCommandByElement = function (element) {
   for (var i = 0; i < this.commands.length; i++) {
     if (this.commands[i].element === element) return this.commands[i];
   }
-};
+}
 
-CommandPalette.prototype.handleUlClick = function(event) {
+CommandPalette.prototype.handleUlClick = function (event) {
   var element = event.target || event.srcElement;
   if (!element) return;
   if (element.nodeName === "SPAN") element = element.parentNode;
   if (element.nodeName === "I") element = element.parentNode;
   if (element.nodeName !== "LI") return;
   this.exec(this.getCommandByElement(element));
-};
+}
 
-CommandPalette.prototype.exec = function(cmd) {
+CommandPalette.prototype.exec = function (cmd) {
   if (!cmd) return;
   this.toggleDisplay(false);
-  if (typeof cmd.action === "function"){
+  if (typeof cmd.action === "function") {
     cmd.action();
   } else {
     submitSapeventForm(null, cmd.action);
   }
-};
+}
 
 // Is any command palette visible?
-CommandPalette.isVisible = function(){
-  return CommandPalette.instances.reduce(function(result, instance){ return result || instance.elements.palette.style.display !== "none" }, false);
-};
+CommandPalette.isVisible = function () {
+  return CommandPalette.instances.reduce(function (result, instance) { return result || instance.elements.palette.style.display !== "none" }, false);
+}
 
-/* COMMAND ENUMERATORS */
+/**********************************************************
+ * Command Enumerators
+ **********************************************************/
 
 function createRepoCatalogEnumerator(catalog, action) {
   // expecting [{ key, isOffline, displayName }]
-  return function() {
-    return catalog.map(function(i) {
+  return function () {
+    return catalog.map(function (i) {
       return {
-        action:    action + "?key=" + i.key,
+        action: action + "?key=" + i.key,
         iconClass: i.isOffline
           ? "icon icon-plug darkgrey"
           : "icon icon-cloud-upload-alt blue",
         title: i.displayName
-      };
+      }
     });
-  };
+  }
 }
 
 function enumerateUiActions() {
@@ -2399,7 +2307,7 @@ function enumerateUiActions() {
     for (var i = 0; i < ulNode.children.length; i++) {
       var item = ulNode.children[i];
       if (item.nodeName !== "LI") continue; // unexpected node
-      if (item.children.length >=2 && item.children[1].nodeName === "UL") {
+      if (item.children.length >= 2 && item.children[1].nodeName === "UL") {
         // submenu detected
         var menutext = item.children[0].innerText;
         // special treatment for menus without text
@@ -2416,49 +2324,49 @@ function enumerateUiActions() {
 
   // toolbars
   [].slice.call(document.querySelectorAll("[id*=toolbar]"))
-    .filter(function(toolbar){
+    .filter(function (toolbar) {
       return (toolbar && toolbar.nodeName === "UL");
-    }).forEach(function(toolbar){
+    }).forEach(function (toolbar) {
       processUL(toolbar);
     });
 
-  items = items.map(function(item) {
+  items = items.map(function (item) {
     var action = "";
     var anchor = item[0];
     if (anchor.href.includes("#")) {
-      action = function(){
+      action = function () {
         anchor.click();
-      };
+      }
     } else {
       action = anchor.href.replace("sapevent:", "");
     }
     var prefix = item[1];
     return {
-      action:    action,
-      title:     (prefix ? prefix + ": " : "") + anchor.innerText.trim()
-    };
+      action: action,
+      title: (prefix ? prefix + ": " : "") + anchor.innerText.trim()
+    }
   });
 
   // forms
   [].slice.call(document.querySelectorAll("input[type='submit']"))
-    .forEach(function(input){
+    .forEach(function (input) {
       items.push({
-        action: function(){
-          if (input.form.action.includes(input.formAction)){
+        action: function () {
+          if (input.form.action.includes(input.formAction)) {
             input.form.submit();
           } else {
             submitSapeventForm({}, input.formAction, "post", input.form);
           }
         },
-        title: input.value + " " + input.title.replace(/\[.*\]/,"")
+        title: input.value + " " + input.title.replace(/\[.*\]/, "")
       });
     });
 
   // radio buttons
   [].slice.call(document.querySelectorAll("input[type='radio']"))
-    .forEach(function(input){
+    .forEach(function (input) {
       items.push({
-        action: function(){
+        action: function () {
           input.click();
         },
         title: document.querySelector("label[for='" + input.id + "']").textContent
@@ -2471,14 +2379,14 @@ function enumerateUiActions() {
   // - command links
   // - other header links
   [].slice.call(document.querySelectorAll("form a, a.command, #header ul:not([id*='toolbar']) a"))
-    .filter(function(anchor){
+    .filter(function (anchor) {
       return !!anchor.title || !!anchor.text;
-    }).forEach(function(anchor){
+    }).forEach(function (anchor) {
       items.push({
-        action: function(){
+        action: function () {
           anchor.click();
         },
-        title: (function(){
+        title: (function () {
           var result = anchor.title + anchor.text;
           if (anchor.href.includes("label")) {
             result = "Label: " + result;
@@ -2497,29 +2405,32 @@ function enumerateJumpAllFiles() {
 
   return Array
     .prototype.slice.call(root.children)
-    .filter(function(elem) { return elem.nodeName === "LI" })
-    .map(function(listItem) {
+    .filter(function (elem) { return elem.nodeName === "LI" })
+    .map(function (listItem) {
       var title = listItem.children[0].childNodes[0].textContent;
       return {
         action: root.onclick.bind(null, title),
-        title:  title
-      };});
+        title: title
+      }
+    });
 }
 
-/* Save Scroll Position for Diff/Patch Page */
+/**********************************************************
+ * Save Scroll Position
+ **********************************************************/
 
-function saveScrollPosition(){
+function saveScrollPosition() {
   // Not supported by Java GUI
   try { if (!window.sessionStorage) { return } }
-  catch(err) { return }
+  catch (err) { return }
 
   window.sessionStorage.setItem("scrollTop", document.querySelector("html").scrollTop);
 }
 
-function restoreScrollPosition(){
+function restoreScrollPosition() {
   // Not supported by Java GUI
   try { if (!window.sessionStorage) { return } }
-  catch(err) { return }
+  catch (err) { return }
 
   var scrollTop = window.sessionStorage.getItem("scrollTop");
   if (scrollTop) {
@@ -2528,20 +2439,22 @@ function restoreScrollPosition(){
   window.sessionStorage.setItem("scrollTop", 0);
 }
 
-function memorizeScrollPosition(fn){
-  return function(){
+function memorizeScrollPosition(fn) {
+  return function () {
     saveScrollPosition();
     return fn.call(this, fn.args);
   }.bind(this);
 }
 
-/* STICKY HEADERS */
+/**********************************************************
+ * Sticky Header
+ **********************************************************/
 
 /* https://www.w3schools.com/howto/howto_js_navbar_sticky.asp */
 /* Note: We have to use JS since IE does not support CSS position:sticky */
 
 // When the user scrolls the page, execute toggleSticky
-window.onscroll = function() { toggleSticky() };
+window.onscroll = function () { toggleSticky() }
 
 // Add the sticky class to the navbar when you reach its scroll position.
 // Remove "sticky" when you leave the scroll position
@@ -2556,8 +2469,8 @@ function toggleSticky() {
   }
 
   if (window.pageYOffset >= sticky) {
-    header.classList.add( stickyClass );
+    header.classList.add(stickyClass);
   } else {
-    header.classList.remove( stickyClass );
+    header.classList.remove(stickyClass);
   }
 }
