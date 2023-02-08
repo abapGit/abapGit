@@ -24,6 +24,7 @@ CLASS zcl_abapgit_convert DEFINITION
     CLASS-METHODS xstring_to_string_utf8
       IMPORTING
         !iv_data         TYPE xsequence
+        !iv_length       TYPE i OPTIONAL
       RETURNING
         VALUE(rv_string) TYPE string
       RAISING
@@ -278,7 +279,13 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
 
   METHOD xstring_to_string_utf8.
 
-    DATA lx_error TYPE REF TO cx_root.
+    DATA lx_error  TYPE REF TO cx_root.
+    DATA lv_length TYPE i.
+
+    lv_length = iv_length.
+    IF lv_length <= 0.
+      lv_length = xstrlen( iv_data ).
+    ENDIF.
 
     TRY.
         IF go_convert_in IS INITIAL.
@@ -288,7 +295,7 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
         go_convert_in->convert(
           EXPORTING
             input = iv_data
-            n     = xstrlen( iv_data )
+            n     = lv_length
           IMPORTING
             data  = rv_string ).
 
