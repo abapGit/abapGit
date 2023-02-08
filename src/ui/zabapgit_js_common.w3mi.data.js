@@ -50,7 +50,7 @@ if (!Function.prototype.bind) {
             : oThis,
           aArgs.concat(Array.prototype.slice.call(arguments))
         );
-      }
+      };
 
     if (this.prototype) {
       fNOP.prototype = this.prototype;
@@ -58,7 +58,7 @@ if (!Function.prototype.bind) {
     fBound.prototype = new fNOP();
 
     return fBound;
-  }
+  };
 }
 
 // String includes polyfill, taken from https://developer.mozilla.org
@@ -74,7 +74,7 @@ if (!String.prototype.includes) {
     } else {
       return this.indexOf(search, start) !== -1;
     }
-  }
+  };
 }
 
 // String startsWith polyfill, taken from https://developer.mozilla.org
@@ -192,9 +192,9 @@ function confirmInitialized() {
 var gPerf = [];
 
 function perfOut(prefix) {
-  var totals = {}
+  var totals = {};
   for (var i = gPerf.length - 1; i >= 0; i--) {
-    if (!totals[gPerf[i].name]) totals[gPerf[i].name] = { count: 0, time: 0 }
+    if (!totals[gPerf[i].name]) totals[gPerf[i].name] = { count: 0, time: 0 };
     totals[gPerf[i].name].time += gPerf[i].time;
     totals[gPerf[i].name].count += 1;
   }
@@ -257,7 +257,7 @@ function RepoOverViewHelper(opts) {
 
 RepoOverViewHelper.prototype.setHooks = function () {
   window.onload = this.onPageLoad.bind(this);
-}
+};
 
 RepoOverViewHelper.prototype.onPageLoad = function () {
   var data = window.localStorage && JSON.parse(window.localStorage.getItem(this.pageId));
@@ -271,7 +271,7 @@ RepoOverViewHelper.prototype.onPageLoad = function () {
       this.selectRowByIndex(0);
     }
   }
-}
+};
 
 RepoOverViewHelper.prototype.registerKeyboardShortcuts = function () {
   var self = this;
@@ -306,13 +306,13 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function () {
       self.selectRowByIndex(indexOfSelected + 1);
     }
   });
-}
+};
 
 RepoOverViewHelper.prototype.openSelectedRepo = function () {
   this.selectedRepoKey = document.querySelector(".repo-overview tr.selected").dataset.key;
   this.saveLocalStorage();
   document.querySelector(".repo-overview tr.selected td.ro-go a").click();
-}
+};
 
 RepoOverViewHelper.prototype.selectRowByIndex = function (index) {
   var rows = this.getVisibleRows();
@@ -328,7 +328,7 @@ RepoOverViewHelper.prototype.selectRowByIndex = function (index) {
     this.updateActionLinks(selectedRow);
     this.saveLocalStorage();
   }
-}
+};
 
 RepoOverViewHelper.prototype.selectRowByRepoKey = function (key) {
   var attributeQuery = "[data-key='" + key + "']";
@@ -343,7 +343,7 @@ RepoOverViewHelper.prototype.selectRowByRepoKey = function (key) {
   this.selectedRepoKey = key;
   this.updateActionLinks(row);
   this.saveLocalStorage();
-}
+};
 
 RepoOverViewHelper.prototype.updateActionLinks = function (selectedRow) {
   // now we have a repo selected, determine which action buttons are relevant
@@ -376,17 +376,17 @@ RepoOverViewHelper.prototype.updateActionLinks = function (selectedRow) {
       link.parentElement.classList.add("enabled");
     }
   });
-}
+};
 
 RepoOverViewHelper.prototype.deselectAllRows = function () {
   document.querySelectorAll(".repo-overview tbody tr").forEach(function (x) {
     x.classList.remove("selected");
   });
-}
+};
 
 RepoOverViewHelper.prototype.getVisibleRows = function () {
   return document.querySelectorAll(".repo-overview tbody tr:not(.nodisplay)");
-}
+};
 
 RepoOverViewHelper.prototype.registerRowSelection = function () {
   var self = this;
@@ -403,14 +403,14 @@ RepoOverViewHelper.prototype.registerRowSelection = function () {
       self.openSelectedRepo();
     });
   });
-}
+};
 
 RepoOverViewHelper.prototype.toggleRepoListDetail = function (forceDisplay) {
   if (this.detailCssClass) {
     this.toggleItemsDetail(forceDisplay);
     this.saveLocalStorage();
   }
-}
+};
 
 RepoOverViewHelper.prototype.toggleItemsDetail = function (forceDisplay) {
   if (this.detailCssClass) {
@@ -429,7 +429,7 @@ RepoOverViewHelper.prototype.toggleItemsDetail = function (forceDisplay) {
     var icon = document.getElementById("icon-filter-detail");
     this.toggleFilterIcon(icon, this.isDetailsDisplayed);
   }
-}
+};
 
 RepoOverViewHelper.prototype.toggleFilterIcon = function (icon, isEnabled) {
   if (isEnabled) {
@@ -439,7 +439,7 @@ RepoOverViewHelper.prototype.toggleFilterIcon = function (icon, isEnabled) {
     icon.classList.remove("blue");
     icon.classList.add("grey");
   }
-}
+};
 
 RepoOverViewHelper.prototype.saveLocalStorage = function () {
   if (!window.localStorage) return;
@@ -449,7 +449,7 @@ RepoOverViewHelper.prototype.saveLocalStorage = function () {
     selectedRepoKey: this.selectedRepoKey,
   }
   window.localStorage.setItem(this.pageId, JSON.stringify(data));
-}
+};
 
 /**********************************************************
  * Staging Logic
@@ -477,7 +477,7 @@ function StageHelper(params) {
     objectSearch: document.getElementById(params.ids.objectSearch),
     selectedCounter: null,
     filteredCounter: null,
-  }
+  };
   this.findCounters();
 
   // Table columns (autodetection)
@@ -492,13 +492,13 @@ function StageHelper(params) {
     ignore: "I",
     reset: "?",
     isValid: function (status) { return "ARI?".indexOf(status) == -1 }
-  }
+  };
 
   this.TEMPLATES = {
     cmdReset: "<a>reset</a>",
     cmdLocal: "<a>add</a>",
     cmdRemote: "<a>ignore</a><a>remove</a>"
-  }
+  };
 
   this.setHooks();
   if (this.user) this.injectFilterMe();
@@ -508,7 +508,7 @@ function StageHelper(params) {
 StageHelper.prototype.findCounters = function () {
   this.dom.selectedCounter = this.dom.commitSelectedBtn.querySelector("span.counter");
   this.dom.filteredCounter = this.dom.commitFilteredBtn.querySelector("span.counter");
-}
+};
 
 StageHelper.prototype.injectFilterMe = function () {
   var tabFirstHead = this.dom.stageTab.tHead.rows[0];
@@ -523,12 +523,12 @@ StageHelper.prototype.injectFilterMe = function () {
   a.href = "#";
   changedByHead.appendChild(a);
   changedByHead.appendChild(document.createTextNode(")"));
-}
+};
 
 StageHelper.prototype.onFilterMe = function () {
   this.dom.objectSearch.value = this.user;
   this.onFilter({ type: "keypress", which: 13, target: this.dom.objectSearch });
-}
+};
 
 // Hook global click listener on table, load/unload actions
 StageHelper.prototype.setHooks = function () {
@@ -552,19 +552,19 @@ StageHelper.prototype.setHooks = function () {
       event.preventDefault();
     }
   });
-}
+};
 
 // Detect column index
 StageHelper.prototype.detectColumns = function () {
   var dataRow = this.dom.stageTab.tBodies[0].rows[0];
-  var colIndex = {}
+  var colIndex = {};
 
   for (var i = dataRow.cells.length - 1; i >= 0; i--) {
     if (dataRow.cells[i].className) colIndex[dataRow.cells[i].className] = i;
   }
 
   return colIndex;
-}
+};
 
 // Store table state on leaving the page
 StageHelper.prototype.onPageUnload = function () {
@@ -572,7 +572,7 @@ StageHelper.prototype.onPageUnload = function () {
 
   var data = this.collectData();
   window.sessionStorage.setItem(this.pageSeed, JSON.stringify(data));
-}
+};
 
 // Re-store table state on entering the page
 StageHelper.prototype.onPageLoad = function () {
@@ -587,7 +587,7 @@ StageHelper.prototype.onPageLoad = function () {
   if (this.dom.objectSearch.value) {
     this.applyFilterValue(this.dom.objectSearch.value);
   }
-}
+};
 
 // Table event handler, change status
 StageHelper.prototype.onTableClick = function (event) {
@@ -622,7 +622,7 @@ StageHelper.prototype.onTableClick = function (event) {
   }
 
   this.updateMenu();
-}
+};
 
 StageHelper.prototype.onCtrlEnter = function (e) {
   if (e.ctrlKey && (e.which === 10 || e.key === "Enter")) {
@@ -630,10 +630,10 @@ StageHelper.prototype.onCtrlEnter = function (e) {
       "default": this.dom.commitAllBtn,
       "selected": this.dom.commitSelectedBtn,
       "filtered": this.dom.commitFilteredBtn
-    }
+    };
     clickMap[this.calculateActiveCommitCommand()].click();
   }
-}
+};
 
 // Search object
 StageHelper.prototype.onFilter = function (e) {
@@ -644,13 +644,13 @@ StageHelper.prototype.onFilter = function (e) {
     this.applyFilterValue(e.target.value);
     submitSapeventForm({ filterValue: e.target.value }, "stage_filter", "post");
   }
-}
+};
 
 StageHelper.prototype.applyFilterValue = function (sFilterValue) {
   this.lastFilterValue = sFilterValue;
   this.filteredCount = this.iterateStageTab(true, this.applyFilterToRow, sFilterValue);
   this.updateMenu();
-}
+};
 
 // Apply filter to a single stage line - hide or show
 StageHelper.prototype.applyFilterToRow = function (row, filter) {
@@ -666,7 +666,7 @@ StageHelper.prototype.applyFilterToRow = function (row, filter) {
       elem: elem,
       plainText: elem.innerText.replace(/ /g, "\u00a0"), // without tags, with encoded spaces
       curHtml: elem.innerHTML
-    }
+    };
   }, this);
 
   var isVisible = false;
@@ -689,7 +689,7 @@ StageHelper.prototype.applyFilterToRow = function (row, filter) {
     if (targets[j].isChanged) targets[j].elem.innerHTML = targets[j].newHtml;
   }
   return isVisible ? 1 : 0;
-}
+};
 
 // Get how status should affect object counter
 StageHelper.prototype.getStatusImpact = function (status) {
@@ -700,7 +700,7 @@ StageHelper.prototype.getStatusImpact = function (status) {
   } else {
     return (status !== this.STATUS.reset) ? 1 : 0;
   }
-}
+};
 
 // Update table line
 StageHelper.prototype.updateRow = function (row, newStatus) {
@@ -714,7 +714,7 @@ StageHelper.prototype.updateRow = function (row, newStatus) {
   }
 
   this.selectedCount += this.getStatusImpact(newStatus) - this.getStatusImpact(oldStatus);
-}
+};
 
 // Update Status cell (render set of commands)
 StageHelper.prototype.updateRowStatus = function (row, status) {
@@ -724,7 +724,7 @@ StageHelper.prototype.updateRowStatus = function (row, status) {
   } else {
     row.cells[this.colIndex["status"]].classList.add(this.HIGHLIGHT_STYLE);
   }
-}
+};
 
 // Update Command cell (render set of commands)
 StageHelper.prototype.updateRowCommand = function (row, status) {
@@ -736,7 +736,7 @@ StageHelper.prototype.updateRowCommand = function (row, status) {
   } else {
     cell.innerHTML = this.TEMPLATES.cmdReset;
   }
-}
+};
 
 StageHelper.prototype.calculateActiveCommitCommand = function () {
   var active;
@@ -748,7 +748,7 @@ StageHelper.prototype.calculateActiveCommitCommand = function () {
     active = "default";
   }
   return active;
-}
+};
 
 // Update menu items visibility
 StageHelper.prototype.updateMenu = function () {
@@ -759,30 +759,30 @@ StageHelper.prototype.updateMenu = function () {
   this.dom.commitAllBtn.style.display = display === "default" ? "" : "none";
   this.dom.commitSelectedBtn.style.display = display === "selected" ? "" : "none";
   this.dom.commitFilteredBtn.style.display = display === "filtered" ? "" : "none";
-}
+};
 
 // Submit stage state to the server
 StageHelper.prototype.submit = function () {
   submitSapeventForm(this.collectData(), this.formAction);
-}
+};
 
 StageHelper.prototype.submitVisible = function () {
   this.markVisiblesAsAdded();
   submitSapeventForm(this.collectData(), this.formAction);
-}
+};
 
 StageHelper.prototype.submitPatch = function () {
   submitSapeventForm(this.collectData(), this.patchAction);
-}
+};
 
 // Extract data from the table
 StageHelper.prototype.collectData = function () {
-  var data = {}
+  var data = {};
   this.iterateStageTab(false, function (row) {
     data[row.cells[this.colIndex["name"]].innerText] = row.cells[this.colIndex["status"]].innerText;
   });
   return data;
-}
+};
 
 StageHelper.prototype.markVisiblesAsAdded = function () {
   this.iterateStageTab(false, function (row) {
@@ -793,7 +793,7 @@ StageHelper.prototype.markVisiblesAsAdded = function () {
       this.updateRow(row, this.STATUS.reset);
     }
   });
-}
+};
 
 // Table iteration helper
 StageHelper.prototype.iterateStageTab = function (changeMode, cb /*, ...*/) {
@@ -821,7 +821,7 @@ StageHelper.prototype.iterateStageTab = function (changeMode, cb /*, ...*/) {
   }
 
   return retTotal;
-}
+};
 
 /**********************************************************
  * Check List Wrapper
@@ -871,7 +871,7 @@ CheckListWrapper.prototype.onClick = function (e) { // eslint-disable-line no-un
   } else {
     this.cbAction(nodeLi.getAttribute("data-aux"), option, newState);
   }
-}
+};
 
 /**********************************************************
  * Diff Page Logic
@@ -887,7 +887,7 @@ function DiffHelper(params) {
   this.dom = {
     diffList: document.getElementById(params.ids.diffList),
     stageButton: document.getElementById(params.ids.stageButton)
-  }
+  };
 
   this.repoKey = this.dom.diffList.getAttribute("data-repo-key");
   if (!this.repoKey) return; // Unexpected
@@ -919,13 +919,13 @@ DiffHelper.prototype.onJump = function (e) {
   setTimeout(function () {
     elFile.scrollIntoView();
   }, 100);
-}
+};
 
 // Action on filter click
 DiffHelper.prototype.onFilter = function (attr, target, state) {
   this.applyFilter(attr, target, state);
   this.highlightButton(state);
-}
+};
 
 DiffHelper.prototype.onFilterOnlyMyChanges = function (username, state) {
   this.applyOnlyMyChangesFilter(username, state);
@@ -967,7 +967,7 @@ DiffHelper.prototype.onFilterOnlyMyChanges = function (username, state) {
         }
       }
     });
-}
+};
 
 DiffHelper.prototype.applyOnlyMyChangesFilter = function (username, state) {
 
@@ -990,7 +990,7 @@ DiffHelper.prototype.applyOnlyMyChangesFilter = function (username, state) {
       .filter(function (item) { return dataFile.includes(item.text) })
       .map(function (item) { item.style.display = div.style.display });
   });
-}
+};
 
 // Hide/show diff based on params
 DiffHelper.prototype.applyFilter = function (attr, target, state) {
@@ -1008,7 +1008,7 @@ DiffHelper.prototype.applyFilter = function (attr, target, state) {
         .map(function (item) { item.style.display = div.style.display });
     }
   });
-}
+};
 
 // Action on stage -> save visible diffs as state for stage page
 DiffHelper.prototype.onStage = function (e) { // eslint-disable-line no-unused-vars
@@ -1016,13 +1016,13 @@ DiffHelper.prototype.onStage = function (e) { // eslint-disable-line no-unused-v
     var data = this.buildStageCache();
     window.sessionStorage.setItem(this.pageSeed, JSON.stringify(data));
   }
-  var getParams = { key: this.repoKey, seed: this.pageSeed }
+  var getParams = { key: this.repoKey, seed: this.pageSeed };
   submitSapeventForm(getParams, this.stageAction, "get");
-}
+};
 
 // Collect visible diffs
 DiffHelper.prototype.buildStageCache = function () {
-  var list = {}
+  var list = {};
   this.iterateDiffList(function (div) {
     var filename = div.getAttribute("data-file");
     if (!div.style.display && filename) { // No display override - visible !!
@@ -1030,7 +1030,7 @@ DiffHelper.prototype.buildStageCache = function () {
     }
   });
   return list;
-}
+};
 
 // Table iterator
 DiffHelper.prototype.iterateDiffList = function (cb /*, ...*/) {
@@ -1043,7 +1043,7 @@ DiffHelper.prototype.iterateDiffList = function (cb /*, ...*/) {
     var args = [div].concat(restArgs);
     cb.apply(this, args); // callback
   }
-}
+};
 
 // Highlight filter button if filter is activate
 DiffHelper.prototype.highlightButton = function (state) {
@@ -1053,7 +1053,7 @@ DiffHelper.prototype.highlightButton = function (state) {
   } else {
     this.dom.filterButton.classList.remove("bgorange");
   }
-}
+};
 
 // Collapse or expand diffs
 function onDiffCollapse(event) {
@@ -1160,7 +1160,7 @@ DiffColumnSelection.prototype.mousedownEventListener = function (e) {
     this.selectedColumnIdx = -1;
     this.lineNumColumnIdx = -1;
   }
-}
+};
 
 DiffColumnSelection.prototype.copyEventListener = function (e) {
   // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
@@ -1175,7 +1175,7 @@ DiffColumnSelection.prototype.copyEventListener = function (e) {
     clipboardData.setData("text", text);
     e.preventDefault();
   }
-}
+};
 
 DiffColumnSelection.prototype.getSelectedText = function () {
   // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
@@ -1208,7 +1208,7 @@ DiffColumnSelection.prototype.getSelectedText = function () {
     });
   }
   return text;
-}
+};
 
 /**********************************************************
  * Display Helper
@@ -1242,7 +1242,7 @@ KeyNavigation.prototype.onkeydown = function (event) {
   }
 
   if (isHandled) event.preventDefault();
-}
+};
 
 KeyNavigation.prototype.onEnterOrSpace = function () {
   if (document.activeElement.nodeName !== "A") return;
@@ -1257,20 +1257,20 @@ KeyNavigation.prototype.onEnterOrSpace = function () {
     anchor.click();
   }
   return true;
-}
+};
 
 KeyNavigation.prototype.focusListItem = function (li) {
   var anchor = li.firstElementChild;
   if (!anchor || anchor.nodeName !== "A") return false;
   anchor.focus();
   return true;
-}
+};
 
 KeyNavigation.prototype.closeDropdown = function (dropdownLi) {
   dropdownLi.classList.remove("force-nav-hover");
   if (dropdownLi.firstElementChild.nodeName === "A") dropdownLi.firstElementChild.focus();
   return true;
-}
+};
 
 KeyNavigation.prototype.onBackspace = function () {
   var activeElement = document.activeElement;
@@ -1294,7 +1294,7 @@ KeyNavigation.prototype.onBackspace = function () {
     && activeElement.parentElement.parentElement.parentElement.classList.contains("force-nav-hover")) {
     return this.closeDropdown(activeElement.parentElement.parentElement.parentElement);
   }
-}
+};
 
 KeyNavigation.prototype.onArrowDown = function () {
   var activeElement = document.activeElement;
@@ -1319,7 +1319,7 @@ KeyNavigation.prototype.onArrowDown = function () {
     && activeElement.parentElement.nextElementSibling.nodeName === "LI") {
     return this.focusListItem(activeElement.parentElement.nextElementSibling);
   }
-}
+};
 
 KeyNavigation.prototype.onArrowUp = function () {
   var activeElement = document.activeElement;
@@ -1332,11 +1332,11 @@ KeyNavigation.prototype.onArrowUp = function () {
     && activeElement.parentElement.previousElementSibling.nodeName === "LI") {
     return this.focusListItem(activeElement.parentElement.previousElementSibling);
   }
-}
+};
 
 KeyNavigation.prototype.getHandler = function () {
   return this.onkeydown.bind(this);
-}
+};
 
 // this functions enables the navigation with arrows through list items (li)
 // e.g. in dropdown menus
@@ -1365,13 +1365,13 @@ LinkHints.prototype.getHintStartValue = function (targetsCount) {
     baseLength = Math.pow(10, targetsCount.toString().length - 1),
     maxHintStringLength = (targetsCount + baseLength).toString().length;
   return Math.pow(10, maxHintStringLength - 1);
-}
+};
 
 LinkHints.prototype.deployHintContainers = function () {
 
   var hintTargets = document.querySelectorAll("a, input, textarea, i");
   var codeCounter = this.getHintStartValue(hintTargets.length);
-  var hintsMap = { first: codeCounter }
+  var hintsMap = { first: codeCounter };
 
   // <span class="link-hint" data-code="123">
   //   <span class="pending">12</span><span>3</span>
@@ -1382,7 +1382,7 @@ LinkHints.prototype.deployHintContainers = function () {
       continue;
     }
 
-    var hint = {}
+    var hint = {};
     hint.container = document.createElement("span");
     hint.pendingSpan = document.createElement("span");
     hint.remainingSpan = document.createElement("span");
@@ -1429,11 +1429,11 @@ LinkHints.prototype.deployHintContainers = function () {
 
   hintsMap.last = codeCounter - 1;
   return hintsMap;
-}
+};
 
 LinkHints.prototype.getHandler = function () {
   return this.handleKey.bind(this);
-}
+};
 
 LinkHints.prototype.handleKey = function (event) {
 
@@ -1479,13 +1479,13 @@ LinkHints.prototype.handleKey = function (event) {
       }
     }
   }
-}
+};
 
 LinkHints.prototype.closeActivatedDropdown = function () {
   if (!this.activatedDropdown) return;
   this.activatedDropdown.classList.remove("force-nav-hover");
   this.activatedDropdown = null;
-}
+};
 
 LinkHints.prototype.displayHints = function (isActivate) {
   this.areHintsDisplayed = isActivate;
@@ -1499,7 +1499,7 @@ LinkHints.prototype.displayHints = function (isActivate) {
       hint.container.classList.add("nodisplay");
     }
   }
-}
+};
 
 LinkHints.prototype.hintActivate = function (hint) {
   if (hint.parent.nodeName === "A"
@@ -1524,7 +1524,7 @@ LinkHints.prototype.hintActivate = function (hint) {
     hint.parent.click();
     if (this.activatedDropdown) this.closeActivatedDropdown();
   }
-}
+};
 
 LinkHints.prototype.toggleCheckbox = function (hint) {
   var checked = hint.parent.checked;
@@ -1533,11 +1533,11 @@ LinkHints.prototype.toggleCheckbox = function (hint) {
     // fallback if no handler is registered
     hint.parent.checked = !hint.parent.checked;
   }
-}
+};
 
 LinkHints.prototype.toggleRadioButton = function (hint) {
   this.triggerClickHandler(hint.parent);
-}
+};
 
 LinkHints.prototype.triggerClickHandler = function (el) {
   // ensures that onclick handler is executed
@@ -1545,7 +1545,7 @@ LinkHints.prototype.triggerClickHandler = function (el) {
   var event = document.createEvent("HTMLEvents");
   event.initEvent("click", false, true);
   el.dispatchEvent(event);
-}
+};
 
 LinkHints.prototype.filterHints = function () {
   var visibleHints = 0;
@@ -1561,7 +1561,7 @@ LinkHints.prototype.filterHints = function () {
     }
   }
   return visibleHints;
-}
+};
 
 function activateLinkHints(linkHintHotKey) {
   if (!linkHintHotKey) return;
@@ -1575,7 +1575,7 @@ function activateLinkHints(linkHintHotKey) {
 
 function Hotkeys(oKeyMap) {
 
-  this.oKeyMap = oKeyMap || {}
+  this.oKeyMap = oKeyMap || {};
 
   // these are the hotkeys provided by the backend
   Object.keys(this.oKeyMap).forEach(function (sKey) {
@@ -1636,7 +1636,7 @@ function Hotkeys(oKeyMap) {
         return;
       }
 
-    }
+    };
 
   }.bind(this));
 }
@@ -1647,7 +1647,7 @@ Hotkeys.prototype.showHotkeys = function () {
   if (elHotkeys) {
     elHotkeys.style.display = (elHotkeys.style.display) ? "" : "none";
   }
-}
+};
 
 Hotkeys.prototype.getAllSapEventsForSapEventName = function (sSapEvent) {
   return [].slice.call(
@@ -1657,7 +1657,7 @@ Hotkeys.prototype.getAllSapEventsForSapEventName = function (sSapEvent) {
       + 'input[formaction*="SAPEVENT:' + sSapEvent + '"],'
       + 'form[action*="sapevent:' + sSapEvent + '"] input[type="submit"].main,'
       + 'form[action*="SAPEVENT:' + sSapEvent + '"] input[type="submit"].main'));
-}
+};
 
 Hotkeys.prototype.getSapEventHref = function (sSapEvent) {
 
@@ -1671,7 +1671,7 @@ Hotkeys.prototype.getSapEventHref = function (sSapEvent) {
     })
     .filter(this.eliminateSapEventFalsePositives(sSapEvent))
     .pop();
-}
+};
 
 Hotkeys.prototype.getSapEventInputAction = function (sSapEvent) {
 
@@ -1685,7 +1685,7 @@ Hotkeys.prototype.getSapEventInputAction = function (sSapEvent) {
     })
     .filter(this.eliminateSapEventFalsePositives(sSapEvent))
     .pop();
-}
+};
 
 Hotkeys.prototype.getSapEventForm = function (sSapEvent) {
 
@@ -1699,13 +1699,13 @@ Hotkeys.prototype.getSapEventForm = function (sSapEvent) {
       return oSapEvent.parentNode.parentNode.parentNode;
     })
     .pop();
-}
+};
 
 Hotkeys.prototype.eliminateSapEventFalsePositives = function (sapEvent) {
   return function (sapEventAttr) {
     return sapEventAttr.match(new RegExp("\\b" + sapEvent + "\\b"));
-  }
-}
+  };
+};
 
 Hotkeys.prototype.onkeydown = function (oEvent) {
 
@@ -1724,7 +1724,7 @@ Hotkeys.prototype.onkeydown = function (oEvent) {
   if (fnHotkey) {
     fnHotkey.call(this, oEvent);
   }
-}
+};
 
 Hotkeys.isHotkeyCallPossible = function () {
 
@@ -1732,7 +1732,7 @@ Hotkeys.isHotkeyCallPossible = function () {
   var activeElementReadOnly = ((document.activeElement && document.activeElement.readOnly) || false);
 
   return (activeElementReadOnly || (activeElementType !== "INPUT" && activeElementType !== "TEXTAREA"));
-}
+};
 
 Hotkeys.addHotkeyToHelpSheet = function (key, description) {
   var hotkeysUl = document.querySelector("#hotkeys ul.hotkeys");
@@ -1749,7 +1749,7 @@ Hotkeys.addHotkeyToHelpSheet = function (key, description) {
   li.appendChild(spanDescr);
 
   hotkeysUl.appendChild(li);
-}
+};
 
 function setKeyBindings(oKeyMap) {
 
@@ -1849,41 +1849,41 @@ function Patch() { }
 
 Patch.prototype.ID = {
   STAGE: "stage"
-}
+};
 
 Patch.prototype.ACTION = {
   PATCH_STAGE: "patch_stage",
   REFRESH_LOCAL: "refresh_local",
   REFRESH_ALL: "refresh_all"
-}
+};
 
 Patch.prototype.escape = function (sFileName) {
   return sFileName
     .replace(/\./g, "\\.")
     .replace(/#/g, "\\#");
-}
+};
 
 Patch.prototype.preparePatch = function () {
   this.registerClickHandlerForFiles();
   this.registerClickHandlerForSections();
   this.registerClickHandlerForLines();
-}
+};
 
 Patch.prototype.buildSelectorInputStartsWithId = function (sId) {
   return "input[id^='" + sId + "']";
-}
+};
 
 Patch.prototype.registerClickHandlerForFiles = function () {
   this.registerClickHandlerForSelectorParent(this.buildSelectorInputStartsWithId(PatchFile.prototype.ID), this.onClickFileCheckbox);
-}
+};
 
 Patch.prototype.registerClickHandlerForSections = function () {
   this.registerClickHandlerForSelectorParent(this.buildSelectorInputStartsWithId(PatchSection.prototype.ID), this.onClickSectionCheckbox);
-}
+};
 
 Patch.prototype.registerClickHandlerForLines = function () {
   this.registerClickHandlerForSelectorParent(this.buildSelectorInputStartsWithId(PatchLine.prototype.ID), this.onClickLineCheckbox);
-}
+};
 
 Patch.prototype.registerClickHandlerForSelectorParent = function (sSelector, fnCallback) {
 
@@ -1892,33 +1892,33 @@ Patch.prototype.registerClickHandlerForSelectorParent = function (sSelector, fnC
   [].forEach.call(elAll, function (elem) {
     elem.parentElement.addEventListener("click", fnCallback.bind(this));
   }.bind(this));
-}
+};
 
 Patch.prototype.getAllLineCheckboxesForFile = function (oFile) {
   return this.getAllLineCheckboxesForId(oFile.id, PatchFile.prototype.ID);
-}
+};
 
 Patch.prototype.getAllSectionCheckboxesForFile = function (oFile) {
   return this.getAllSectionCheckboxesForId(oFile.id, PatchFile.prototype.ID);
-}
+};
 
 Patch.prototype.getAllLineCheckboxesForSection = function (oSection) {
   return this.getAllLineCheckboxesForId(oSection.id, PatchSection.prototype.ID);
-}
+};
 
 Patch.prototype.getAllLineCheckboxesForId = function (sId, sIdPrefix) {
   return this.getAllCheckboxesForId(sId, sIdPrefix, PatchLine.prototype.ID);
-}
+};
 
 Patch.prototype.getAllSectionCheckboxesForId = function (sId, sIdPrefix) {
   return this.getAllCheckboxesForId(sId, sIdPrefix, PatchSection.prototype.ID);
-}
+};
 
 Patch.prototype.getAllCheckboxesForId = function (sId, sIdPrefix, sNewIdPrefix) {
   var oRegex = new RegExp("^" + sIdPrefix);
   sId = sId.replace(oRegex, sNewIdPrefix);
   return document.querySelectorAll(this.buildSelectorInputStartsWithId(this.escape(sId)));
-}
+};
 
 Patch.prototype.getToggledCheckbox = function (oEvent) {
 
@@ -1933,12 +1933,12 @@ Patch.prototype.getToggledCheckbox = function (oEvent) {
   }
 
   return elCheckbox;
-}
+};
 
 Patch.prototype.toggleCheckbox = function (elCheckbox) {
   elCheckbox.checked = !elCheckbox.checked;
   return elCheckbox;
-}
+};
 
 Patch.prototype.onClickFileCheckbox = function (oEvent) {
 
@@ -1954,17 +1954,17 @@ Patch.prototype.onClickFileCheckbox = function (oEvent) {
   [].forEach.call(elAllSectionCheckboxesOfFile, function (elem) {
     elem.checked = elCheckbox.checked;
   }.bind(this));
-}
+};
 
 Patch.prototype.onClickSectionCheckbox = function (oEvent) {
   var elSrcElement = this.getToggledCheckbox(oEvent);
   var oSection = new PatchSection(elSrcElement.id);
   this.clickAllLineCheckboxesInSection(oSection, elSrcElement.checked);
-}
+};
 
 Patch.prototype.onClickLineCheckbox = function (oEvent) {
   this.getToggledCheckbox(oEvent);
-}
+};
 
 Patch.prototype.clickAllLineCheckboxesInSection = function (oSection, bChecked) {
 
@@ -1973,7 +1973,7 @@ Patch.prototype.clickAllLineCheckboxesInSection = function (oSection, bChecked) 
   [].forEach.call(elAllLineCheckboxesOfSection, function (elem) {
     elem.checked = bChecked;
   }.bind(this));
-}
+};
 
 Patch.prototype.registerStagePatch = function () {
 
@@ -1999,7 +1999,7 @@ Patch.prototype.registerStagePatch = function () {
   window.refreshAll = memorizeScrollPosition(function () {
     this.submitPatch(this.ACTION.REFRESH_ALL);
   }.bind(this));
-}
+};
 
 Patch.prototype.submitPatch = function (action) {
   // Collect add and remove info and submit to backend
@@ -2008,7 +2008,7 @@ Patch.prototype.submitPatch = function (action) {
   var aRemovePatch = this.collectElementsForCheckboxId(PatchLine.prototype.ID, false);
 
   submitSapeventForm({ add: aAddPatch, remove: aRemovePatch }, action, "post");
-}
+};
 
 Patch.prototype.collectElementsForCheckboxId = function (sId, bChecked) {
 
@@ -2020,7 +2020,7 @@ Patch.prototype.collectElementsForCheckboxId = function (sId, bChecked) {
     }).map(function (elem) {
       return elem.id;
     });
-}
+};
 
 function preparePatch() {
   var oPatch = new Patch();
@@ -2084,7 +2084,7 @@ function CommandPalette(commandEnumerator, opts) {
     palette: null,
     ul: null,
     input: null
-  }
+  };
   this.selectIndex = -1; // not selected
   this.filter = "";
   this.renderAndBindElements();
@@ -2101,7 +2101,7 @@ CommandPalette.prototype.hookEvents = function () {
   document.addEventListener("keydown", this.handleToggleKey.bind(this));
   this.elements.input.addEventListener("keyup", this.handleInputKey.bind(this));
   this.elements.ul.addEventListener("click", this.handleUlClick.bind(this));
-}
+};
 
 CommandPalette.prototype.renderCommandItem = function (cmd) {
   var li = document.createElement("li");
@@ -2115,7 +2115,7 @@ CommandPalette.prototype.renderCommandItem = function (cmd) {
   cmd.element = li;
   cmd.titleSpan = titleSpan;
   return li;
-}
+};
 
 CommandPalette.prototype.renderAndBindElements = function () {
   var div = document.createElement("div");
@@ -2132,14 +2132,14 @@ CommandPalette.prototype.renderAndBindElements = function () {
   this.elements.input = input;
   this.elements.ul = ul;
   document.body.appendChild(div);
-}
+};
 
 CommandPalette.prototype.handleToggleKey = function (event) {
   if (event.key !== this.toggleKey) return;
   if (this.toggleKeyCtrl && !event.ctrlKey) return;
   this.toggleDisplay();
   event.preventDefault();
-}
+};
 
 CommandPalette.prototype.handleInputKey = function (event) {
   if (event.key === "ArrowUp" || event.key === "Up") {
@@ -2156,7 +2156,7 @@ CommandPalette.prototype.handleInputKey = function (event) {
     this.selectFirst();
   }
   event.preventDefault();
-}
+};
 
 CommandPalette.prototype.applyFilter = function () {
   for (var i = 0; i < this.commands.length; i++) {
@@ -2174,7 +2174,7 @@ CommandPalette.prototype.applyFilter = function () {
       }
     }
   }
-}
+};
 
 CommandPalette.prototype.applySelectIndex = function (newIndex) {
   if (newIndex !== this.selectIndex) {
@@ -2184,7 +2184,7 @@ CommandPalette.prototype.applySelectIndex = function (newIndex) {
     this.selectIndex = newIndex;
     this.adjustScrollPosition(newCmd.element);
   }
-}
+};
 
 CommandPalette.prototype.selectFirst = function () {
   for (var i = 0; i < this.commands.length; i++) {
@@ -2192,7 +2192,7 @@ CommandPalette.prototype.selectFirst = function () {
     this.applySelectIndex(i);
     break;
   }
-}
+};
 
 CommandPalette.prototype.selectNext = function () {
   for (var i = this.selectIndex + 1; i < this.commands.length; i++) {
@@ -2200,7 +2200,7 @@ CommandPalette.prototype.selectNext = function () {
     this.applySelectIndex(i);
     break;
   }
-}
+};
 
 CommandPalette.prototype.selectPrev = function () {
   for (var i = this.selectIndex - 1; i >= 0; i--) {
@@ -2208,11 +2208,11 @@ CommandPalette.prototype.selectPrev = function () {
     this.applySelectIndex(i);
     break;
   }
-}
+};
 
 CommandPalette.prototype.getSelected = function () {
   return this.commands[this.selectIndex];
-}
+};
 
 CommandPalette.prototype.adjustScrollPosition = function (itemElement) {
   var bItem = itemElement.getBoundingClientRect();
@@ -2229,7 +2229,7 @@ CommandPalette.prototype.adjustScrollPosition = function (itemElement) {
   } else if (bItem.mid < bContainer.top + 2) {
     this.elements.ul.scrollTop += bItem.top - bContainer.top;
   }
-}
+};
 
 CommandPalette.prototype.toggleDisplay = function (forceState) {
   var isDisplayed = (this.elements.palette.style.display !== "none");
@@ -2249,13 +2249,13 @@ CommandPalette.prototype.toggleDisplay = function (forceState) {
     this.applyFilter();
     this.selectFirst();
   }
-}
+};
 
 CommandPalette.prototype.getCommandByElement = function (element) {
   for (var i = 0; i < this.commands.length; i++) {
     if (this.commands[i].element === element) return this.commands[i];
   }
-}
+};
 
 CommandPalette.prototype.handleUlClick = function (event) {
   var element = event.target || event.srcElement;
@@ -2264,7 +2264,7 @@ CommandPalette.prototype.handleUlClick = function (event) {
   if (element.nodeName === "I") element = element.parentNode;
   if (element.nodeName !== "LI") return;
   this.exec(this.getCommandByElement(element));
-}
+};
 
 CommandPalette.prototype.exec = function (cmd) {
   if (!cmd) return;
@@ -2274,12 +2274,12 @@ CommandPalette.prototype.exec = function (cmd) {
   } else {
     submitSapeventForm(null, cmd.action);
   }
-}
+};
 
 // Is any command palette visible?
 CommandPalette.isVisible = function () {
   return CommandPalette.instances.reduce(function (result, instance) { return result || instance.elements.palette.style.display !== "none" }, false);
-}
+};
 
 /**********************************************************
  * Command Enumerators
@@ -2295,9 +2295,9 @@ function createRepoCatalogEnumerator(catalog, action) {
           ? "icon icon-plug darkgrey"
           : "icon icon-cloud-upload-alt blue",
         title: i.displayName
-      }
+      };
     });
-  }
+  };
 }
 
 function enumerateUiActions() {
@@ -2336,7 +2336,7 @@ function enumerateUiActions() {
     if (anchor.href.includes("#")) {
       action = function () {
         anchor.click();
-      }
+      };
     } else {
       action = anchor.href.replace("sapevent:", "");
     }
@@ -2344,7 +2344,7 @@ function enumerateUiActions() {
     return {
       action: action,
       title: (prefix ? prefix + ": " : "") + anchor.innerText.trim()
-    }
+    };
   });
 
   // forms
@@ -2411,7 +2411,7 @@ function enumerateJumpAllFiles() {
       return {
         action: root.onclick.bind(null, title),
         title: title
-      }
+      };
     });
 }
 
@@ -2454,7 +2454,7 @@ function memorizeScrollPosition(fn) {
 /* Note: We have to use JS since IE does not support CSS position:sticky */
 
 // When the user scrolls the page, execute toggleSticky
-window.onscroll = function () { toggleSticky() }
+window.onscroll = function () { toggleSticky() };
 
 // Add the sticky class to the navbar when you reach its scroll position.
 // Remove "sticky" when you leave the scroll position
