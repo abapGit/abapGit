@@ -545,6 +545,8 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
         deserialize_pre_ddic(
           ii_xml     = io_xml
           iv_package = iv_package ).
+      ELSE.
+        corr_insert( iv_package ).
       ENDIF.
 
     ENDIF.
