@@ -1423,6 +1423,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ENDTRY.
 
     register_deferred_script( render_scripts( ) ).
+    register_hotkeys( ).
 
   ENDMETHOD.
 ENDCLASS.
