@@ -5,7 +5,7 @@
    <VSEOINTERF>
     <CLSNAME>ZIF_ABAPGIT_GUI_HOTKEYS</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit page hotkey definitions</DESCRIPT>
+    <DESCRIPT>abapGit - GUI Hotkeys</DESCRIPT>
     <EXPOSURE>2</EXPOSURE>
     <STATE>1</STATE>
     <UNICODE>X</UNICODE>

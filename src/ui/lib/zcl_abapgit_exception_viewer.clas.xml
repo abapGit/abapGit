@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_EXCEPTION_VIEWER</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit exception viewer</DESCRIPT>
+    <DESCRIPT>abapGit - GUI Exception Viewer</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

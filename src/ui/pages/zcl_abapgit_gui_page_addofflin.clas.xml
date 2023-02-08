@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_GUI_PAGE_ADDOFFLIN</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - New Offline Repository</DESCRIPT>
+    <DESCRIPT>abapGit - GUI New Offline Repository</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

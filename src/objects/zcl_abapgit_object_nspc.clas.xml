@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECT_NSPC</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>NSPC - Namespace in R/3 Repository</DESCRIPT>
+    <DESCRIPT>abapGit - NSPC - Namespace in R/3 Repository</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_GUI_PAGE_MERGE_RES</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>GUI - Resolving Conflicts page</DESCRIPT>
+    <DESCRIPT>abapGit - GUI Merge Conflict Resolution</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

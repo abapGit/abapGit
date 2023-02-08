@@ -310,6 +310,11 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           ENDIF.
         ENDLOOP.
 
+        IF is_active( ) = abap_false.
+          " as DDIC-object e.g. are not deserialized in active state, activation must be performed
+          zcl_abapgit_objects_activation=>add_item( ms_item ).
+        ENDIF.
+
         tadir_insert( ms_item-devclass ).
 
       CATCH cx_root INTO lx_exception.

@@ -302,7 +302,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
     lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_data ).
 
-    SPLIT lv_string AT zif_abapgit_definitions=>c_newline INTO TABLE lt_string.
+    SPLIT lv_string AT cl_abap_char_utilities=>newline INTO TABLE lt_string.
 
     LOOP AT lt_string ASSIGNING <lv_string>.
       lv_length = strlen( <lv_string> ) + 1.
@@ -398,7 +398,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
     lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_data ).
 
-    SPLIT lv_string AT zif_abapgit_definitions=>c_newline INTO TABLE lt_string.
+    SPLIT lv_string AT cl_abap_char_utilities=>newline INTO TABLE lt_string.
 
     LOOP AT lt_string ASSIGNING <lv_string>.
 
@@ -433,7 +433,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
           ELSE.
 
             IF rs_tag-body IS NOT INITIAL.
-              rs_tag-body = rs_tag-body && zif_abapgit_definitions=>c_newline.
+              rs_tag-body = rs_tag-body && cl_abap_char_utilities=>newline.
             ENDIF.
 
             rs_tag-body = rs_tag-body && <lv_string>.
@@ -693,7 +693,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
     lv_string = ''.
 
     CONCATENATE 'tree' lv_tree_lower INTO lv_tmp SEPARATED BY space.
-    CONCATENATE lv_string lv_tmp zif_abapgit_definitions=>c_newline INTO lv_string.
+    CONCATENATE lv_string lv_tmp cl_abap_char_utilities=>newline INTO lv_string.
 
     IF NOT is_commit-parent IS INITIAL.
       lv_parent_lower = is_commit-parent.
@@ -701,7 +701,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
       CONCATENATE 'parent' lv_parent_lower
         INTO lv_tmp SEPARATED BY space.
-      CONCATENATE lv_string lv_tmp zif_abapgit_definitions=>c_newline INTO lv_string.
+      CONCATENATE lv_string lv_tmp cl_abap_char_utilities=>newline INTO lv_string.
     ENDIF.
 
     IF NOT is_commit-parent2 IS INITIAL.
@@ -710,16 +710,16 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
       CONCATENATE 'parent' lv_parent_lower
         INTO lv_tmp SEPARATED BY space.
-      CONCATENATE lv_string lv_tmp zif_abapgit_definitions=>c_newline INTO lv_string.
+      CONCATENATE lv_string lv_tmp cl_abap_char_utilities=>newline INTO lv_string.
     ENDIF.
 
     CONCATENATE 'author' is_commit-author
       INTO lv_tmp SEPARATED BY space.
-    CONCATENATE lv_string lv_tmp zif_abapgit_definitions=>c_newline INTO lv_string.
+    CONCATENATE lv_string lv_tmp cl_abap_char_utilities=>newline INTO lv_string.
 
     CONCATENATE 'committer' is_commit-committer
       INTO lv_tmp SEPARATED BY space.
-    CONCATENATE lv_string lv_tmp zif_abapgit_definitions=>c_newline INTO lv_string.
+    CONCATENATE lv_string lv_tmp cl_abap_char_utilities=>newline INTO lv_string.
 
     IF NOT is_commit-gpgsig IS INITIAL.
       CONCATENATE 'gpgsig' is_commit-gpgsig
@@ -727,7 +727,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
       CONCATENATE lv_string lv_tmp INTO lv_string.
     ENDIF.
 
-    CONCATENATE lv_string zif_abapgit_definitions=>c_newline is_commit-body INTO lv_string.
+    CONCATENATE lv_string cl_abap_char_utilities=>newline is_commit-body INTO lv_string.
 
     rv_data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ).
 
@@ -741,12 +741,12 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
     lv_time = zcl_abapgit_git_time=>get_unix( ).
 
-    lv_string = |object { is_tag-object }{ zif_abapgit_definitions=>c_newline }|
-             && |type { is_tag-type }{ zif_abapgit_definitions=>c_newline }|
-             && |tag { zcl_abapgit_git_tag=>remove_tag_prefix( is_tag-tag ) }{ zif_abapgit_definitions=>c_newline }|
+    lv_string = |object { is_tag-object }{ cl_abap_char_utilities=>newline }|
+             && |type { is_tag-type }{ cl_abap_char_utilities=>newline }|
+             && |tag { zcl_abapgit_git_tag=>remove_tag_prefix( is_tag-tag ) }{ cl_abap_char_utilities=>newline }|
              && |tagger { is_tag-tagger_name } <{ is_tag-tagger_email }> { lv_time }|
-             && |{ zif_abapgit_definitions=>c_newline }|
-             && |{ zif_abapgit_definitions=>c_newline }|
+             && |{ cl_abap_char_utilities=>newline }|
+             && |{ cl_abap_char_utilities=>newline }|
              && |{ is_tag-message }|.
 
     rv_data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ).

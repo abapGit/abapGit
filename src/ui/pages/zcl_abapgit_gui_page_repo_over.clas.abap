@@ -2,24 +2,33 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_gui_component
   FINAL
-  CREATE PUBLIC .
+  CREATE PRIVATE.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_gui_renderable .
-    INTERFACES zif_abapgit_gui_hotkeys.
-    INTERFACES zif_abapgit_gui_event_handler.
+    INTERFACES:
+      zif_abapgit_gui_event_handler,
+      zif_abapgit_gui_hotkeys,
+      zif_abapgit_gui_menu_provider,
+      zif_abapgit_gui_renderable.
+
+    CLASS-METHODS create
+      IMPORTING
+        !iv_only_favorites TYPE abap_bool
+      RETURNING
+        VALUE(ri_page)     TYPE REF TO zif_abapgit_gui_renderable
+      RAISING
+        zcx_abapgit_exception.
 
     METHODS constructor
       IMPORTING
-        iv_only_favorites TYPE abap_bool
+        !iv_only_favorites TYPE abap_bool
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
-
-
   PRIVATE SECTION.
+
     TYPES:
       BEGIN OF ty_overview,
         favorite            TYPE string,
@@ -48,7 +57,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
         label_filter TYPE string VALUE 'label_filter',
       END OF c_action,
       c_label_filter_prefix TYPE string VALUE `label:`,
-      c_raw_field_suffix TYPE string VALUE `_RAW` ##NO_TEXT.
+      c_raw_field_suffix    TYPE string VALUE `_RAW` ##NO_TEXT.
 
     DATA: mv_order_descending TYPE abap_bool,
           mv_only_favorites   TYPE abap_bool,
@@ -74,7 +83,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
 
       map_repo_list_to_overview
         IMPORTING
-          it_repo_obj_list TYPE zif_abapgit_repo_srv=>ty_repo_list
+          it_repo_obj_list   TYPE zif_abapgit_repo_srv=>ty_repo_list
         RETURNING
           VALUE(rt_overview) TYPE ty_overviews
         RAISING
@@ -146,7 +155,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
 
     METHODS collect_all_labels
       IMPORTING
-        it_overview TYPE ty_overviews
+        it_overview    TYPE ty_overviews
       RETURNING
         VALUE(rt_list) TYPE string_table.
 
@@ -332,6 +341,22 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     super->constructor( ).
     mv_order_by = |NAME|.
     mv_only_favorites = iv_only_favorites.
+
+  ENDMETHOD.
+
+
+  METHOD create.
+
+    DATA lo_component TYPE REF TO zcl_abapgit_gui_page_repo_over.
+
+    CREATE OBJECT lo_component
+      EXPORTING
+        iv_only_favorites = iv_only_favorites.
+
+    ri_page = zcl_abapgit_gui_page_hoc=>create(
+      iv_page_title         = 'Repository Overview'
+      ii_page_menu_provider = lo_component
+      ii_child_component    = lo_component ).
 
   ENDMETHOD.
 
@@ -831,9 +856,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
           CATCH zcx_abapgit_exception ##NO_HANDLER.
         ENDTRY.
 
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_repo_view
-          EXPORTING
-            iv_key = lv_key.
+        rs_handled-page  = zcl_abapgit_gui_page_repo_view=>create( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN zif_abapgit_definitions=>c_action-change_order_by.
@@ -932,6 +955,38 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ls_hotkey_action-action = `####`.
     ls_hotkey_action-hotkey = |f|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_menu_provider~get_menu.
+
+    CREATE OBJECT ro_toolbar EXPORTING iv_id = 'toolbar-main'.
+
+    ro_toolbar->add(
+      iv_txt = zcl_abapgit_gui_buttons=>new_online( )
+      iv_act = zif_abapgit_definitions=>c_action-repo_newonline
+    )->add(
+      iv_txt = zcl_abapgit_gui_buttons=>new_offline( )
+      iv_act = zif_abapgit_definitions=>c_action-repo_newoffline
+    )->add(
+      iv_txt = zcl_abapgit_gui_buttons=>settings( )
+      iv_act = zif_abapgit_definitions=>c_action-go_settings
+    )->add(
+      iv_txt = zcl_abapgit_gui_buttons=>advanced( )
+      iv_title = 'Utilities'
+      io_sub = zcl_abapgit_gui_chunk_lib=>advanced_submenu( )
+    )->add(
+      iv_txt = zcl_abapgit_gui_buttons=>help( )
+      iv_title = 'Help'
+      io_sub = zcl_abapgit_gui_chunk_lib=>help_submenu( ) ).
+
+    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
+      ro_toolbar->add(
+        iv_txt   = zcl_abapgit_gui_buttons=>experimental( )
+        iv_title = 'Experimental Features are Enabled'
+        iv_act   = zif_abapgit_definitions=>c_action-go_settings ).
+    ENDIF.
 
   ENDMETHOD.
 

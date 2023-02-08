@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_GUI_PAGE_SETT_REMO</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - Repository Settings for Remote</DESCRIPT>
+    <DESCRIPT>abapGit - GUI Repository Settings - Remote</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

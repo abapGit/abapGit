@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECT_SOTS</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>SOTS - All Concepts (OTR) of a Package - Long Texts</DESCRIPT>
+    <DESCRIPT>abapGit - SOTS - All Concepts (OTR) of a Package - Long Text</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

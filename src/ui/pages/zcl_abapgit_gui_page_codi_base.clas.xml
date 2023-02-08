@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_GUI_PAGE_CODI_BASE</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>base class for code inspector</DESCRIPT>
+    <DESCRIPT>abapGit - GUI Code Inspector Base</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
