@@ -447,7 +447,7 @@ RepoOverViewHelper.prototype.saveLocalStorage = function () {
     isDetailsDisplayed: this.isDetailsDisplayed,
     isOnlyFavoritesDisplayed: this.isOnlyFavoritesDisplayed,
     selectedRepoKey: this.selectedRepoKey,
-  }
+  };
   window.localStorage.setItem(this.pageId, JSON.stringify(data));
 };
 
