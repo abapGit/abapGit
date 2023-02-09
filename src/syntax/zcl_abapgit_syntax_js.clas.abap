@@ -28,7 +28,7 @@ CLASS zcl_abapgit_syntax_js DEFINITION
         " comments /* ... */ or //
         comment TYPE string VALUE '\/\*.*\*\/|\/\*|\*\/|\/\/', "#EC NOTEXT
         " single or double quoted strings
-        text    TYPE string VALUE '"|''',                   "#EC NOTEXT
+        text    TYPE string VALUE '"|''|`',                   "#EC NOTEXT
         " in general keywords don't contain numbers (except -ms-scrollbar-3dlight-color)
         keyword TYPE string VALUE '\b[a-z-]+\b',            "#EC NOTEXT
       END OF c_regex .

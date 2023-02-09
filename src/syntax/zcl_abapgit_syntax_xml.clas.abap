@@ -7,27 +7,27 @@ CLASS zcl_abapgit_syntax_xml DEFINITION
 
     CONSTANTS:
       BEGIN OF c_css,
-        xml_tag  TYPE string VALUE 'xml_tag',               "#EC NOTEXT
-        attr     TYPE string VALUE 'attr',                  "#EC NOTEXT
-        attr_val TYPE string VALUE 'attr_val',              "#EC NOTEXT
-        comment  TYPE string VALUE 'comment',               "#EC NOTEXT
+        xml_tag  TYPE string VALUE 'xml_tag',
+        attr     TYPE string VALUE 'attr',
+        attr_val TYPE string VALUE 'attr_val',
+        comment  TYPE string VALUE 'comment',
       END OF c_css .
     CONSTANTS:
       BEGIN OF c_token,
-        xml_tag  TYPE c VALUE 'X',                          "#EC NOTEXT
-        attr     TYPE c VALUE 'A',                          "#EC NOTEXT
-        attr_val TYPE c VALUE 'V',                          "#EC NOTEXT
-        comment  TYPE c VALUE 'C',                          "#EC NOTEXT
+        xml_tag  TYPE c VALUE 'X',
+        attr     TYPE c VALUE 'A',
+        attr_val TYPE c VALUE 'V',
+        comment  TYPE c VALUE 'C',
       END OF c_token .
     CONSTANTS:
       BEGIN OF c_regex,
         "for XML tags, we will use a submatch
         " main pattern includes quoted strings so we can ignore < and > in attr values
-        xml_tag  TYPE string VALUE '(?:"[^"]*")|(?:''[^'']*'')|([<>])', "#EC NOTEXT
-        attr     TYPE string VALUE '(?:^|\s)[-a-z:_0-9]+\s*(?==\s*["|''])', "#EC NOTEXT
-        attr_val TYPE string VALUE '("[^"]*")|(''[^'']*'')', "#EC NOTEXT
+        xml_tag  TYPE string VALUE '(?:"[^"]*")|(?:''[^'']*'')|(?:`[^`]*`)|([<>])',
+        attr     TYPE string VALUE '(?:^|\s)[-a-z:_0-9]+\s*(?==\s*["|''|`])',
+        attr_val TYPE string VALUE '("[^"]*")|(''[^'']*'')|(`[^`]*`)',
         " comments <!-- ... -->
-        comment  TYPE string VALUE '[\<]!--.*--[\>]|[\<]!--|--[\>]', "#EC NOTEXT
+        comment  TYPE string VALUE '[\<]!--.*--[\>]|[\<]!--|--[\>]',
       END OF c_regex .
 
     METHODS constructor .
