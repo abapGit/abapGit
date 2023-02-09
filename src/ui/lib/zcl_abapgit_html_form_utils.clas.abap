@@ -133,8 +133,8 @@ CLASS zcl_abapgit_html_form_utils IMPLEMENTATION.
           ENDDO.
         ENDDO.
       ELSEIF <ls_field>-type = zif_abapgit_html_form=>c_field_type-textarea.
-        REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>c_crlf IN lv_value WITH ''.
-        REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>c_newline IN lv_value WITH ''.
+        REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>cr_lf IN lv_value WITH ''.
+        REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>newline IN lv_value WITH ''.
         rv_empty = boolc( lv_value IS INITIAL ).
       ELSE.
         rv_empty = boolc( lv_value IS INITIAL ).
@@ -204,12 +204,12 @@ CLASS zcl_abapgit_html_form_utils IMPLEMENTATION.
           iv_key = |{ <ls_field>-name }-{ zif_abapgit_html_form=>c_rows }|
           iv_val = |{ lv_rows }| ).
       ELSEIF <ls_field>-type = zif_abapgit_html_form=>c_field_type-textarea.
-        REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>c_crlf IN lv_value
-          WITH zif_abapgit_definitions=>c_newline.
+        REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>cr_lf IN lv_value
+          WITH cl_abap_char_utilities=>newline.
 
         " Remove last line if empty (ie 2x newline)
         lv_len = strlen( lv_value ) - 2.
-        IF lv_len >= 0 AND lv_value+lv_len(1) = zif_abapgit_definitions=>c_newline.
+        IF lv_len >= 0 AND lv_value+lv_len(1) = cl_abap_char_utilities=>newline.
           lv_len = lv_len + 1.
           lv_value = lv_value(lv_len).
         ENDIF.

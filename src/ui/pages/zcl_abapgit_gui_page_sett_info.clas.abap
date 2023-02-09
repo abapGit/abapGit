@@ -389,7 +389,7 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
         CATCH zcx_abapgit_exception ##NO_HANDLER.
       ENDTRY.
 
-      SPLIT lv_code AT zif_abapgit_definitions=>c_newline INTO TABLE lt_code.
+      SPLIT lv_code AT cl_abap_char_utilities=>newline INTO TABLE lt_code.
 
       rs_info-line = lines( lt_code ).
 
