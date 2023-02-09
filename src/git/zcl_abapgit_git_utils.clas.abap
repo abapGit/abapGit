@@ -26,7 +26,6 @@ CLASS zcl_abapgit_git_utils DEFINITION
         zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
-    CLASS-DATA go_convert_in TYPE REF TO cl_abap_conv_in_ce.
 ENDCLASS.
 
 
