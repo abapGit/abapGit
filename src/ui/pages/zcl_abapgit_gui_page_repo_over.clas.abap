@@ -908,7 +908,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
 
-    ls_hotkey_action-ui_component = 'Main'.
+    ls_hotkey_action-ui_component = 'Repo overview'.
 
     ls_hotkey_action-description   = |New Online Repository|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_newonline.
@@ -924,8 +924,6 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_settings.
     ls_hotkey_action-hotkey = |x|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-    ls_hotkey_action-ui_component = 'Repo overview'.
 
     ls_hotkey_action-description = |Stage|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_stage.
