@@ -77,7 +77,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_GLOB IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -191,7 +191,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_GLOB IMPLEMENTATION.
 
     lt_proxy_bypass = mo_settings->get_proxy_bypass( ).
     LOOP AT lt_proxy_bypass INTO ls_proxy_bypass.
-      lv_val = lv_val && ls_proxy_bypass-low && zif_abapgit_definitions=>c_newline.
+      lv_val = lv_val && ls_proxy_bypass-low && cl_abap_char_utilities=>newline.
     ENDLOOP.
 
     mo_form_data->set(

@@ -50,7 +50,7 @@ CLASS ltcl_objects_files IMPLEMENTATION.
     " filenames are lower case
     APPEND INITIAL LINE TO lt_files ASSIGNING <ls_files>.
     <ls_files>-filename = 'zlf.prog.abap'.
-    <ls_files>-data = get_program_data( zif_abapgit_definitions=>c_newline ).
+    <ls_files>-data = get_program_data( cl_abap_char_utilities=>newline ).
     APPEND INITIAL LINE TO lt_files ASSIGNING <ls_files>.
     <ls_files>-filename = 'zlf.prog.xml'.
     <ls_files>-data = get_xml_data( ).
