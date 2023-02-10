@@ -160,14 +160,15 @@ CLASS ltcl_syntax_cases DEFINITION FINAL FOR TESTING RISK LEVEL HARMLESS
                                 iv_offset   TYPE i
                                 iv_length   TYPE i
                                 iv_text_tag TYPE string,
-      test_xml_01  FOR TESTING,
-      test_xml_02  FOR TESTING,
-      test_xml_03  FOR TESTING,
-      test_xml_04  FOR TESTING,
-      test_xml_05  FOR TESTING,
-      test_xml_06  FOR TESTING,
-      test_xml_07  FOR TESTING,
-      test_xml_08  FOR TESTING.
+      test_xml_01 FOR TESTING,
+      test_xml_02 FOR TESTING,
+      test_xml_03 FOR TESTING,
+      test_xml_04 FOR TESTING,
+      test_xml_05 FOR TESTING,
+      test_xml_06 FOR TESTING,
+      test_xml_07 FOR TESTING,
+      test_xml_08 FOR TESTING,
+      test_xml_09 FOR TESTING.
 
 ENDCLASS.
 *----------------------------------------------------------------------*
@@ -689,7 +690,6 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD test_xml_08.
     "invalid XML characters in a string
     DATA lv_line TYPE string.
@@ -728,6 +728,70 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_offset   = 10
                      iv_length   = 5
                      iv_text_tag = '' ).
+
+    do_test( lv_line ).
+
+  ENDMETHOD.
+
+  METHOD test_xml_09.
+    "back quotes used for attribute values (HTML)
+    DATA lv_line TYPE string.
+
+    lv_line = '<tag attribute=`value`/>'.
+
+    " Generate table with expected values after parsing
+    generate_parse( iv_token  = 'X'
+                    iv_offset = 0
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'A'
+                    iv_offset = 4
+                    iv_length = 10 ).
+    generate_parse( iv_token  = 'V'
+                    iv_offset = 15
+                    iv_length = 7 ).
+    generate_parse( iv_token  = 'X'
+                    iv_offset = 23
+                    iv_length = 1 ).
+
+    " Generate table with expected values after ordering
+    generate_order( iv_token    = 'X'
+                    iv_offset   = 0
+                    iv_length   = 4
+                    iv_text_tag = '<' ).
+    generate_order( iv_token    = 'A'
+                    iv_offset   = 4
+                    iv_length   = 10
+                    iv_text_tag = '' ).
+    generate_order( iv_token    = 'V'
+                    iv_offset   = 15
+                    iv_length   = 7
+                    iv_text_tag = '' ).
+    generate_order( iv_token    = 'X'
+                    iv_offset   = 22
+                    iv_length   = 2
+                    iv_text_tag = '>' ).
+
+    " Generate table with expected values after extending
+    generate_extend( iv_token    = 'X'
+                     iv_offset   = 0
+                     iv_length   = 4
+                     iv_text_tag = '<' ).
+    generate_extend( iv_token    = 'A'
+                     iv_offset   = 4
+                     iv_length   = 10
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 14
+                     iv_length   = 1
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'V'
+                     iv_offset   = 15
+                     iv_length   = 7
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'X'
+                     iv_offset   = 22
+                     iv_length   = 2
+                     iv_text_tag = '>' ).
 
     do_test( lv_line ).
 
