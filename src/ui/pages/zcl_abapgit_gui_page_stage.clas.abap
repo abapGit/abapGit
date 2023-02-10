@@ -124,7 +124,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -368,6 +368,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
                                                              ii_obj_filter = mi_obj_filter ).
 
     IF lines( ms_files-local ) = 0 AND lines( ms_files-remote ) = 0.
+      mo_repo->refresh( ).
       zcx_abapgit_exception=>raise( 'There are no changes that could be staged' ).
     ENDIF.
   ENDMETHOD.

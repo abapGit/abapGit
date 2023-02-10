@@ -114,7 +114,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
 
   METHOD branch_name_to_internal.
@@ -488,9 +488,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
           mo_form_data->to_abap( CHANGING cs_container = ms_commit ).
 
           REPLACE ALL OCCURRENCES
-            OF zif_abapgit_definitions=>c_crlf
+            OF cl_abap_char_utilities=>cr_lf
             IN ms_commit-body
-            WITH zif_abapgit_definitions=>c_newline.
+            WITH cl_abap_char_utilities=>newline.
 
           lv_new_branch_name = mo_form_data->get( c_id-new_branch_name ).
           " create new branch and commit to it if branch name is not empty

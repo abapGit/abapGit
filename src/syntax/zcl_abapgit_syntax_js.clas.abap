@@ -11,26 +11,26 @@ CLASS zcl_abapgit_syntax_js DEFINITION
       " 2) Variable types
       " 3) HTML Tags
       BEGIN OF c_css,
-        keyword   TYPE string VALUE 'keyword',              "#EC NOTEXT
-        text      TYPE string VALUE 'text',                 "#EC NOTEXT
-        comment   TYPE string VALUE 'comment',              "#EC NOTEXT
-        variables TYPE string VALUE 'variables',            "#EC NOTEXT
+        keyword   TYPE string VALUE 'keyword',
+        text      TYPE string VALUE 'text',
+        comment   TYPE string VALUE 'comment',
+        variables TYPE string VALUE 'variables',
       END OF c_css .
     CONSTANTS:
       BEGIN OF c_token,
-        keyword   TYPE c VALUE 'K',                         "#EC NOTEXT
-        text      TYPE c VALUE 'T',                         "#EC NOTEXT
-        comment   TYPE c VALUE 'C',                         "#EC NOTEXT
-        variables TYPE c VALUE 'V',                         "#EC NOTEXT
+        keyword   TYPE c VALUE 'K',
+        text      TYPE c VALUE 'T',
+        comment   TYPE c VALUE 'C',
+        variables TYPE c VALUE 'V',
       END OF c_token .
     CONSTANTS:
       BEGIN OF c_regex,
         " comments /* ... */ or //
-        comment TYPE string VALUE '\/\*.*\*\/|\/\*|\*\/|\/\/', "#EC NOTEXT
+        comment TYPE string VALUE '\/\*.*\*\/|\/\*|\*\/|\/\/',
         " single or double quoted strings
-        text    TYPE string VALUE '"|''',                   "#EC NOTEXT
+        text    TYPE string VALUE '"|''|`',
         " in general keywords don't contain numbers (except -ms-scrollbar-3dlight-color)
-        keyword TYPE string VALUE '\b[a-z-]+\b',            "#EC NOTEXT
+        keyword TYPE string VALUE '\b[a-z-]+\b',
       END OF c_regex .
 
     CLASS-METHODS class_constructor .

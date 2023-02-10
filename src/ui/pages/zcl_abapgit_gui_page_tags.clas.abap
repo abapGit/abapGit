@@ -358,9 +358,9 @@ CLASS zcl_abapgit_gui_page_tags IMPLEMENTATION.
           mo_form_data->to_abap( CHANGING cs_container = ms_tag ).
 
           REPLACE ALL OCCURRENCES
-            OF zif_abapgit_definitions=>c_crlf
+            OF cl_abap_char_utilities=>cr_lf
             IN ms_tag-body
-            WITH zif_abapgit_definitions=>c_newline.
+            WITH cl_abap_char_utilities=>newline.
 
           ms_tag-name = zcl_abapgit_git_tag=>add_tag_prefix( ms_tag-name ).
           ASSERT ms_tag-name CP zif_abapgit_definitions=>c_git_branch-tags.
