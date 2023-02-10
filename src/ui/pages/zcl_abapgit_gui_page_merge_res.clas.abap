@@ -122,7 +122,7 @@ CLASS zcl_abapgit_gui_page_merge_res IMPLEMENTATION.
     lv_merge_content = ii_event->form_data( )->get( 'MERGE_CONTENT' ).
 
     REPLACE ALL OCCURRENCES
-      OF zif_abapgit_definitions=>c_crlf IN lv_merge_content WITH zif_abapgit_definitions=>c_newline.
+      OF cl_abap_char_utilities=>cr_lf IN lv_merge_content WITH cl_abap_char_utilities=>newline.
 
     lv_new_file_content = zcl_abapgit_convert=>string_to_xstring_utf8( lv_merge_content ).
 

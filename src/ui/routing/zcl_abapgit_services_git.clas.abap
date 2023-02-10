@@ -81,7 +81,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     IF NOT is_commit-body IS INITIAL.
       CONCATENATE ls_comment-comment '' is_commit-body
-        INTO ls_comment-comment SEPARATED BY zif_abapgit_definitions=>c_newline.
+        INTO ls_comment-comment SEPARATED BY cl_abap_char_utilities=>newline.
     ENDIF.
 
     zcl_abapgit_exit=>get_instance(  )->validate_before_push(

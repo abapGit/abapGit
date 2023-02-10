@@ -235,7 +235,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
 
     lv_ignore = concat_lines_of(
       table = ls_dot-ignore
-      sep   = zif_abapgit_definitions=>c_newline ).
+      sep   = cl_abap_char_utilities=>newline ).
 
     mo_form_data->set(
       iv_key = c_id-ignore
