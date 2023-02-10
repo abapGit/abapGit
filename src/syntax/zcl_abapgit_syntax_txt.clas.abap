@@ -29,7 +29,9 @@ CLASS zcl_abapgit_syntax_txt IMPLEMENTATION.
 
   METHOD process_line.
 
-    rv_line = show_hidden_chars( iv_line ).
+    rv_line = apply_style(
+      iv_line  = iv_line
+      iv_class = '' ).
 
   ENDMETHOD.
 ENDCLASS.
