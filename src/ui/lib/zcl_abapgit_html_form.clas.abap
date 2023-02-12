@@ -1,6 +1,7 @@
 CLASS zcl_abapgit_html_form DEFINITION
   PUBLIC
   FINAL
+  INHERITING FROM zcl_abapgit_gui_component
   CREATE PRIVATE .
 
   PUBLIC SECTION.
@@ -188,7 +189,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_html_form IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
 
 
   METHOD checkbox.
@@ -443,9 +444,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     ri_html->add( |</form>| ).
     ri_html->add( |</div>| ).
 
-    zcl_abapgit_ui_factory=>get_gui_services(
-      )->get_hotkeys_ctl(
-      )->register_hotkeys( zif_abapgit_gui_hotkeys~get_hotkey_actions( ) ).
+    register_handlers( ).
 
   ENDMETHOD.
 

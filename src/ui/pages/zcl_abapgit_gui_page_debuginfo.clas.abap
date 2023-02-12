@@ -68,7 +68,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
 
 
   METHOD build_toolbar.
@@ -438,7 +438,7 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    gui_services( )->register_event_handler( me ).
+    register_handlers( ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
