@@ -409,11 +409,12 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_services~cache_asset.
 
-    TYPES: ty_hex TYPE x LENGTH 200.
+    TYPES ty_hex TYPE x LENGTH 200.
+    TYPES ty_char TYPE c LENGTH 200.
 
     DATA: lt_xdata TYPE STANDARD TABLE OF ty_hex WITH DEFAULT KEY,
           lv_size  TYPE i,
-          lt_html  TYPE w3htmltab.
+          lt_html  TYPE STANDARD TABLE OF ty_char WITH DEFAULT KEY.
 
     ASSERT iv_text IS SUPPLIED OR iv_xdata IS SUPPLIED.
 
