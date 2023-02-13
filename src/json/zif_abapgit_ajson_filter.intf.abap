@@ -1,7 +1,7 @@
 INTERFACE zif_abapgit_ajson_filter
   PUBLIC.
 
-  TYPES ty_filter_tab TYPE STANDARD TABLE OF REF TO zif_abapgit_ajson_filter WITH DEFAULT KEY.
+  TYPES ty_filter_tab TYPE STANDARD TABLE OF REF TO zif_abapgit_ajson_filter WITH KEY table_line.
   TYPES ty_visit_type TYPE i.
 
   CONSTANTS:
