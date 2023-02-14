@@ -14,33 +14,6 @@
     <MSG_ID>SY</MSG_ID>
     <WITH_UNIT_TESTS>X</WITH_UNIT_TESTS>
    </VSEOCLASS>
-   <DESCRIPTIONS>
-    <SEOCOMPOTX>
-     <CMPNAME>A1</CMPNAME>
-     <LANGU>E</LANGU>
-     <DESCRIPT>Message Variable</DESCRIPT>
-    </SEOCOMPOTX>
-    <SEOCOMPOTX>
-     <CMPNAME>A2</CMPNAME>
-     <LANGU>E</LANGU>
-     <DESCRIPT>Message Variable</DESCRIPT>
-    </SEOCOMPOTX>
-    <SEOCOMPOTX>
-     <CMPNAME>A3</CMPNAME>
-     <LANGU>E</LANGU>
-     <DESCRIPT>Message Variable</DESCRIPT>
-    </SEOCOMPOTX>
-    <SEOCOMPOTX>
-     <CMPNAME>A4</CMPNAME>
-     <LANGU>E</LANGU>
-     <DESCRIPT>Message Variable</DESCRIPT>
-    </SEOCOMPOTX>
-    <SEOCOMPOTX>
-     <CMPNAME>CONSTRUCTOR</CMPNAME>
-     <LANGU>E</LANGU>
-     <DESCRIPT>CONSTRUCTOR</DESCRIPT>
-    </SEOCOMPOTX>
-   </DESCRIPTIONS>
   </asx:values>
  </asx:abap>
 </abapGit>

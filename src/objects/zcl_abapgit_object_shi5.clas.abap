@@ -43,21 +43,85 @@ CLASS zcl_abapgit_object_shi5 IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: ls_message             TYPE hier_mess,
-          lv_deletion_successful TYPE hier_yesno.
+    DATA:
+      ls_msg              TYPE hier_mess,
+      lv_found_users      TYPE hier_yesno,
+      ls_check_extensions TYPE treenamesp,
+      lt_check_extensions TYPE TABLE OF treenamesp,
+      lv_obj_name         TYPE ko200-obj_name.
 
-    corr_insert( iv_package ).
+    " STREE_EXTENSION_DELETE shows a popup so do the same here
 
-    CALL FUNCTION 'STREE_EXTENSION_DELETE'
-      EXPORTING
-        extension           = mv_extension
+    ls_check_extensions-extension = mv_extension.
+    INSERT ls_check_extensions INTO TABLE lt_check_extensions.
+
+    CALL FUNCTION 'STREE_CHECK_EXTENSION'
       IMPORTING
-        message             = ls_message
-        deletion_successful = lv_deletion_successful.
+        message         = ls_msg
+      TABLES
+        check_extension = lt_check_extensions.
 
-    IF lv_deletion_successful = abap_false.
-      zcx_abapgit_exception=>raise( ls_message-msgtxt ).
+    READ TABLE lt_check_extensions INTO ls_check_extensions INDEX 1.
+    IF ls_check_extensions-original = abap_false.
+      zcx_abapgit_exception=>raise( 'Delete enhancement ID in your source system' ).
     ENDIF.
+
+    lv_obj_name = mv_extension.
+
+    CALL FUNCTION 'STREE_TRANSPORT_CHECK'
+      EXPORTING
+        object   = 'SHI5'
+        obj_name = lv_obj_name
+      IMPORTING
+        message  = ls_msg.
+
+    IF ls_msg-msgty = 'E'.
+      MESSAGE ID ls_msg-msgid TYPE ls_msg-msgty NUMBER ls_msg-msgno
+        WITH ls_msg-msgv1 ls_msg-msgv2 ls_msg-msgv3 ls_msg-msgv4 INTO zcx_abapgit_exception=>null.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    CALL FUNCTION 'STREE_EXTENSION_USAGE'
+      EXPORTING
+        extension         = mv_extension
+        no_display        = abap_true
+      IMPORTING
+        message           = ls_msg
+        extension_is_used = lv_found_users.
+
+    IF ls_msg-msgty = 'E'.
+      MESSAGE ID ls_msg-msgid TYPE ls_msg-msgty NUMBER ls_msg-msgno
+        WITH ls_msg-msgv1 ls_msg-msgv2 ls_msg-msgv3 ls_msg-msgv4 INTO zcx_abapgit_exception=>null.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    IF lv_found_users = abap_true.
+      zcx_abapgit_exception=>raise( 'Enhancement ID is still used' ).
+    ENDIF.
+
+    CALL FUNCTION 'STREE_TRANSPORT_INSERT'
+      EXPORTING
+        object   = 'SHI5'
+        obj_name = lv_obj_name
+      IMPORTING
+        message  = ls_msg.
+
+    IF ls_msg-msgty = 'E'.
+      MESSAGE ID ls_msg-msgid TYPE ls_msg-msgty NUMBER ls_msg-msgno
+        WITH ls_msg-msgv1 ls_msg-msgv2 ls_msg-msgv3 ls_msg-msgv4 INTO zcx_abapgit_exception=>null.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    DELETE FROM ttree_ext WHERE extension = mv_extension.
+    DELETE FROM ttree_extt WHERE extension = mv_extension.
+
+    IF ls_check_extensions-transport = abap_false.
+      " no transportable Devclass -> delete TADIR
+      tadir_delete( ).
+    ENDIF.
+
+    " reset some internal tables
+    CALL FUNCTION 'STREE_RESET_FUGR_SHI5_TABLES'.
 
   ENDMETHOD.
 

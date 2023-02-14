@@ -1329,7 +1329,7 @@ CLASS ltcl_json_to_abap DEFINITION
         a TYPE string,
         b TYPE i,
       END OF ty_struc,
-      tty_struc TYPE STANDARD TABLE OF ty_struc WITH DEFAULT KEY,
+      tty_struc TYPE STANDARD TABLE OF ty_struc WITH KEY a,
       tty_struc_sorted TYPE SORTED TABLE OF ty_struc WITH UNIQUE KEY a,
       tty_struc_hashed TYPE HASHED TABLE OF ty_struc WITH UNIQUE KEY a,
       BEGIN OF ty_complex,
@@ -2352,7 +2352,7 @@ CLASS ltcl_writer_test IMPLEMENTATION.
     DATA lo_nodes TYPE REF TO lcl_nodes_helper.
     DATA lo_cut TYPE REF TO zcl_abapgit_ajson.
     DATA li_writer TYPE REF TO zif_abapgit_ajson.
-    DATA lt_tab TYPE HASHED TABLE OF string WITH UNIQUE DEFAULT KEY.
+    DATA lt_tab TYPE HASHED TABLE OF string WITH UNIQUE KEY table_line.
 
     lo_cut = zcl_abapgit_ajson=>create_empty( ).
     li_writer = lo_cut.
@@ -2387,7 +2387,7 @@ CLASS ltcl_writer_test IMPLEMENTATION.
         INCLUDE TYPE ty_include.
     TYPES: dat TYPE xstring,
       END OF ty_struct,
-      ty_tab TYPE STANDARD TABLE OF ty_struct WITH DEFAULT KEY.
+      ty_tab TYPE STANDARD TABLE OF ty_struct WITH KEY str.
 
     DATA lo_nodes TYPE REF TO lcl_nodes_helper.
     DATA li_cut TYPE REF TO zif_abapgit_ajson.
@@ -3237,7 +3237,7 @@ CLASS ltcl_integrated DEFINITION
         start TYPE ty_loc,
         end TYPE ty_loc,
       END OF ty_issue,
-      tt_issues TYPE STANDARD TABLE OF ty_issue WITH DEFAULT KEY,
+      tt_issues TYPE STANDARD TABLE OF ty_issue WITH KEY message key,
       BEGIN OF ty_target,
         string TYPE string,
         number TYPE i,
@@ -3602,7 +3602,7 @@ CLASS ltcl_abap_to_json DEFINITION
         c TYPE abap_bool,
         d TYPE xsdboolean,
       END OF ty_struc,
-      tt_struc TYPE STANDARD TABLE OF ty_struc WITH DEFAULT KEY,
+      tt_struc TYPE STANDARD TABLE OF ty_struc WITH KEY a,
       BEGIN OF ty_struc_complex.
         INCLUDE TYPE ty_struc.
     TYPES:
