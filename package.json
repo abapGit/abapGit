@@ -28,8 +28,8 @@
   "devDependencies": {
     "@abaplint/cli": "^2.95.15",
     "@abaplint/database-sqlite": "^2.4.14",
-    "@abaplint/runtime": "^2.4.15",
-    "@abaplint/transpiler-cli": "^2.4.15",
+    "@abaplint/runtime": "^2.4.17",
+    "@abaplint/transpiler-cli": "^2.4.17",
     "abapmerge": "^0.14.8",
     "c8": "^7.12.0",
     "eslint": "^8.34.0"
