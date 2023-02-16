@@ -67,33 +67,37 @@ CLASS ltcl_xml IMPLEMENTATION.
 
     lv_to_xml = render_xml( 'FOO' ).
 
-    cl_abap_unit_assert=>assert_equals(
+    cl_abap_unit_assert=>assert_char_cp(
       act = lv_to_xml
-      exp = lv_from_xml ).
+      exp = |*{ lv_from_xml }*| ).
 
   ENDMETHOD.
 
   METHOD render_xml.
 
-    DATA: li_element       TYPE REF TO if_ixml_element,
-          li_ostream       TYPE REF TO if_ixml_ostream,
-          li_streamfactory TYPE REF TO if_ixml_stream_factory.
+* this code replicates the functionality in ZCL_ABAPGIT_XML_OUTPUT,
 
-    li_element = mo_xml->mi_xml_doc->find_from_path( |/{ mo_xml->c_abapgit_tag }/{ iv_name }| ).
+    DATA: li_ostream       TYPE REF TO if_ixml_ostream,
+          li_renderer      TYPE REF TO if_ixml_renderer,
+          li_streamfactory TYPE REF TO if_ixml_stream_factory.
 
     li_streamfactory = mo_xml->mi_ixml->create_stream_factory( ).
 
     li_ostream = li_streamfactory->create_ostream_cstring( rv_xml ).
 
-    li_element->render( ostream = li_ostream ).
+    li_renderer = mo_xml->mi_ixml->create_renderer(
+      ostream  = li_ostream
+      document = mo_xml->mi_xml_doc ).
+
+    li_renderer->render( ).
 
   ENDMETHOD.
 
   METHOD bad_version_raises_exc.
 
-    DATA: lv_xml TYPE string,
+    DATA: lv_xml   TYPE string,
           lo_error TYPE REF TO zcx_abapgit_exception,
-          lv_text TYPE string.
+          lv_text  TYPE string.
 
     lv_xml = |<?xml version="1.0"?>|
           && |<{ mo_xml->c_abapgit_tag } { mo_xml->c_attr_version }="v9.8.7">|
@@ -115,9 +119,9 @@ CLASS ltcl_xml IMPLEMENTATION.
 
   METHOD bad_xml_raises_exc.
 
-    DATA: lv_xml TYPE string,
+    DATA: lv_xml   TYPE string,
           lo_error TYPE REF TO zcx_abapgit_exception,
-          lv_text TYPE string.
+          lv_text  TYPE string.
 
     lv_xml = |<?xml version="1.0"?>|
           && |<{ mo_xml->c_abapgit_tag } { mo_xml->c_attr_version }="{ zif_abapgit_version=>c_xml_version }">|
