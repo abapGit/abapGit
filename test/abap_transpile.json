@@ -77,7 +77,7 @@
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_t100", "method": "text6", "note": "uses MSAG from database"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_t100", "method": "text7", "note": "uses MSAG from database"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_t100", "method": "text8", "note": "uses MSAG from database"},
-      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_general", "method": "direct_text"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_general", "method": "direct_text", "note": "wip"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_longtext", "method": "empty_longtext"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_longtext", "method": "longtext"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_longtext", "method": "multiline_longtext"},
