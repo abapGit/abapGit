@@ -269,8 +269,8 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         zcl_abapgit_services_abapgit=>open_abapgit_homepage( 'sponsor.html' ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
       WHEN zif_abapgit_definitions=>c_action-show_hotkeys.                    " show hotkeys
-        zcl_abapgit_ui_factory=>get_gui(
-                             )->zif_abapgit_gui_services~get_hotkeys_ctl(
+        zcl_abapgit_ui_factory=>get_gui_services(
+                             )->get_hotkeys_ctl(
                              )->set_visible( abap_true ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDCASE.
