@@ -2,6 +2,7 @@
   "input_folder": "{test,src,deps}",
   "input_filter": [
     "deps/",
+    "\\.w3mi.",
     "src/ui/zcl_abapgit_e",
     "src/zcl_abapgit_e",
     "zcl_abapgit_adt_link",
