@@ -8,7 +8,7 @@ CLASS ltcl_base DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT ABSTRA
       get_t100_text IMPORTING is_message     TYPE symsg
                     RETURNING VALUE(rv_text) TYPE string.
   PROTECTED SECTION.
-    CLASS-DATA:
+    CONSTANTS:
       BEGIN OF gs_test_data,
         text       TYPE string VALUE `This is a test error message.`,
         empty_text TYPE string VALUE ``,
@@ -33,8 +33,6 @@ CLASS ltcl_base DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT ABSTRA
       then_the_longtext_should_equal IMPORTING iv_longtext TYPE csequence,
       then_the_prev_exc_should_equal IMPORTING ix_exception TYPE REF TO cx_root.
   PRIVATE SECTION.
-    CLASS-METHODS:
-      class_teardown.
     METHODS:
       teardown.
 ENDCLASS.
@@ -111,10 +109,6 @@ CLASS ltcl_base IMPLEMENTATION.
                                         act = mo_cut->previous ).
   ENDMETHOD.
 
-  METHOD class_teardown.
-    CLEAR gs_test_data.
-  ENDMETHOD.
-
   METHOD teardown.
     CLEAR ms_given.
     FREE mo_cut.
@@ -185,8 +179,7 @@ CLASS ltcl_t100 DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS INHERI
         message8 TYPE symsg,
       END OF gs_t100_test_data.
     CLASS-METHODS:
-      class_setup,
-      class_teardown.
+      class_setup.
 ENDCLASS.
 
 CLASS ltcl_t100 IMPLEMENTATION.
@@ -278,9 +271,6 @@ CLASS ltcl_t100 IMPLEMENTATION.
     gs_t100_test_data-message8-msgno = '002'.
   ENDMETHOD.
 
-  METHOD class_teardown.
-    CLEAR gs_t100_test_data.
-  ENDMETHOD.
 ENDCLASS.
 
 CLASS ltcl_get_t100_longtext DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
@@ -447,8 +437,7 @@ CLASS ltcl_longtext DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT IN
         t100_with_longtext    TYPE symsg,
       END OF gs_longtext_test_data.
     CLASS-METHODS:
-      class_setup,
-      class_teardown.
+      class_setup.
 ENDCLASS.
 
 CLASS ltcl_longtext IMPLEMENTATION.
@@ -528,7 +517,4 @@ CLASS ltcl_longtext IMPLEMENTATION.
     gs_longtext_test_data-t100_with_longtext-msgno = '002'.
   ENDMETHOD.
 
-  METHOD class_teardown.
-    CLEAR gs_longtext_test_data.
-  ENDMETHOD.
 ENDCLASS.
