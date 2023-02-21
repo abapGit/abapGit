@@ -78,7 +78,6 @@
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_t100",     "method": "text7", "note": "uses MSAG from database"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_t100",     "method": "text8", "note": "uses MSAG from database"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_longtext", "method": "empty_longtext", "note": "implement function module DOCU_GET, open-abap"},
-      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_longtext", "method": "longtext"},
 
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty1",           "note": "open-abap does not add the byte order mark"},
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "pretty2",           "note": "open-abap does not add the byte order mark"},
