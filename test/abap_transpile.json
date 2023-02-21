@@ -122,8 +122,6 @@
       {"object": "ZCL_ABAPGIT_REQUIREMENT_HELPER", "class": "ltcl_formats", "method": "shorter_patch", "note": "Void type: CVERS_SDU"},
       {"object": "ZCL_ABAPGIT_REQUIREMENT_HELPER", "class": "ltcl_formats", "method": "higher_patch", "note": "Void type: CVERS_SDU"},
 
-      {"object": "ZCL_ABAPGIT_GUI_CSS_PROCESSOR", "class": "ltcl_multiple_files",            "method": "test_overwrite", "note": "??"},
-
       {"object": "ZCL_ABAPGIT_XML", "class": "ltcl_xml", "method": "space_leading_trailing", "note": "close to working, https://github.com/open-abap/open-abap-core/pull/557 "},
       {"object": "ZCL_ABAPGIT_XML", "class": "ltcl_xml", "method": "bad_xml_raises_exc", "note": "handling of xml parser errors, cl_ixml, test method parse_negative"},
       {"object": "ZCL_ABAPGIT_XML_OUTPUT", "class": "ltcl_xml_output", "method": "render_xml_string", "note": "kernel_call_transformation.mi_writer.get(...).if_sxml_writer$open_element is not a function"},
