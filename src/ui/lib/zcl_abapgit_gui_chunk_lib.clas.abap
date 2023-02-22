@@ -876,8 +876,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ENDIF.
 
     IF iv_suppress_title = abap_false.
-      SELECT SINGLE ctext FROM tdevct INTO lv_title
-        WHERE devclass = iv_package AND spras = sy-langu ##SUBRC_OK.
+      lv_title = zcl_abapgit_factory=>get_sap_package( iv_package )->read_description( ).
     ENDIF.
 
     lv_obj_name = iv_package.
