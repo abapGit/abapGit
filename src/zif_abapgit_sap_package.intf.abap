@@ -26,6 +26,11 @@ INTERFACE zif_abapgit_sap_package
       VALUE(rv_parentcl) TYPE tdevc-parentcl
     RAISING
       zcx_abapgit_exception .
+  METHODS read_description
+    RETURNING
+      VALUE(rv_description) TYPE string
+    RAISING
+      zcx_abapgit_exception .
   METHODS create_child
     IMPORTING
       !iv_child TYPE devclass
