@@ -36,7 +36,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_hotkey_ctl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_HOTKEY_CTL IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -146,7 +146,7 @@ CLASS zcl_abapgit_gui_hotkey_ctl IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_hotkey> LIKE LINE OF lt_registered_hotkeys.
 
-    zif_abapgit_gui_hotkey_ctl~register_hotkeys( zif_abapgit_gui_hotkeys~get_hotkey_actions( ) ).
+    register_handlers( ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 

@@ -50,7 +50,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_ex_pckage IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_EX_PCKAGE IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -160,7 +160,7 @@ CLASS zcl_abapgit_gui_page_ex_pckage IMPLEMENTATION.
 
 
   METHOD zif_abapgit_gui_renderable~render.
-    gui_services( )->register_event_handler( me ).
+    register_handlers( ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 

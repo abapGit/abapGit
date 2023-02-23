@@ -23,14 +23,24 @@ CLASS zcl_abapgit_gui_component DEFINITION
         VALUE(ri_gui_services) TYPE REF TO zif_abapgit_gui_services
       RAISING
         zcx_abapgit_exception.
+    METHODS register_handlers
+      RAISING
+        zcx_abapgit_exception.
+
+  PRIVATE SECTION.
+    DATA mi_gui_services TYPE REF TO zif_abapgit_gui_services.
+
+    METHODS register_event_handler
+      IMPORTING
+        ii_event_handler TYPE REF TO zif_abapgit_gui_event_handler OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
     METHODS register_hotkeys
       IMPORTING
         ii_hotkey_provider TYPE REF TO zif_abapgit_gui_hotkeys OPTIONAL
       RAISING
         zcx_abapgit_exception.
 
-  PRIVATE SECTION.
-    DATA mi_gui_services TYPE REF TO zif_abapgit_gui_services.
 ENDCLASS.
 
 
@@ -50,6 +60,31 @@ CLASS ZCL_ABAPGIT_GUI_COMPONENT IMPLEMENTATION.
     gui_services( )->get_html_parts( )->add_part(
       iv_collection = c_html_parts-scripts
       ii_part       = ii_part ).
+  ENDMETHOD.
+
+
+  METHOD register_event_handler.
+
+    DATA li_event_handler TYPE REF TO zif_abapgit_gui_event_handler.
+
+    IF ii_event_handler IS BOUND.
+      li_event_handler = ii_event_handler.
+    ELSE.
+      TRY.
+          li_event_handler ?= me.
+        CATCH cx_root.
+          RETURN.
+      ENDTRY.
+    ENDIF.
+
+    gui_services( )->register_event_handler( li_event_handler ).
+
+  ENDMETHOD.
+
+
+  METHOD register_handlers.
+    register_event_handler( ).
+    register_hotkeys( ).
   ENDMETHOD.
 
 

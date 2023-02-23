@@ -87,7 +87,54 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
+
+
+  METHOD choose_check_variant.
+
+    DATA: lv_check_variant TYPE sci_chkv.
+
+    lv_check_variant = zcl_abapgit_ui_factory=>get_popups( )->choose_code_insp_check_variant( ).
+
+    IF lv_check_variant IS NOT INITIAL.
+      mo_form_data->set(
+        iv_key = c_id-code_inspector_check_variant
+        iv_val = lv_check_variant ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD choose_labels.
+
+    DATA:
+      lv_old_labels TYPE string,
+      lv_new_labels TYPE string.
+
+    lv_old_labels = mo_form_data->get( c_id-labels ).
+
+    lv_new_labels = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_labels( lv_old_labels ).
+
+    mo_form_data->set(
+      iv_key = c_id-labels
+      iv_val = lv_new_labels ).
+
+  ENDMETHOD.
+
+
+  METHOD choose_transport_request.
+
+    DATA: lv_transport_request TYPE trkorr.
+
+    lv_transport_request = zcl_abapgit_ui_factory=>get_popups( )->popup_transport_request( ).
+
+    IF lv_transport_request IS NOT INITIAL.
+      mo_form_data->set(
+          iv_key = c_id-transport_request
+          iv_val = lv_transport_request ).
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -346,7 +393,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    gui_services( )->register_event_handler( me ).
+    register_handlers( ).
 
     IF mo_form_util->is_empty( mo_form_data ) = abap_true.
       read_settings( ).
@@ -368,52 +415,4 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
     ri_html->add( `</div>` ).
 
   ENDMETHOD.
-
-
-  METHOD choose_labels.
-
-    DATA:
-      lv_old_labels TYPE string,
-      lv_new_labels TYPE string.
-
-    lv_old_labels = mo_form_data->get( c_id-labels ).
-
-    lv_new_labels = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_labels( lv_old_labels ).
-
-    mo_form_data->set(
-      iv_key = c_id-labels
-      iv_val = lv_new_labels ).
-
-  ENDMETHOD.
-
-
-  METHOD choose_check_variant.
-
-    DATA: lv_check_variant TYPE sci_chkv.
-
-    lv_check_variant = zcl_abapgit_ui_factory=>get_popups( )->choose_code_insp_check_variant( ).
-
-    IF lv_check_variant IS NOT INITIAL.
-      mo_form_data->set(
-        iv_key = c_id-code_inspector_check_variant
-        iv_val = lv_check_variant ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD choose_transport_request.
-
-    DATA: lv_transport_request TYPE trkorr.
-
-    lv_transport_request = zcl_abapgit_ui_factory=>get_popups( )->popup_transport_request( ).
-
-    IF lv_transport_request IS NOT INITIAL.
-      mo_form_data->set(
-          iv_key = c_id-transport_request
-          iv_val = lv_transport_request ).
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.
