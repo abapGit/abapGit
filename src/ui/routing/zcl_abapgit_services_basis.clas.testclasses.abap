@@ -274,6 +274,10 @@ CLASS ltcl_sap_package_mock IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~read_responsible.
+    RETURN.
+  ENDMETHOD.
+
   METHOD zif_abapgit_sap_package~read_description.
 
   ENDMETHOD.
