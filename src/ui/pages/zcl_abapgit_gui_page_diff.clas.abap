@@ -270,7 +270,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
 
   METHOD add_filter_sub_menu.
@@ -874,7 +874,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     li_progress->off( ).
 
-    gui_services( )->get_hotkeys_ctl( )->register_hotkeys( zif_abapgit_gui_hotkeys~get_hotkey_actions( ) ).
+    register_handlers( ).
 
   ENDMETHOD.
 

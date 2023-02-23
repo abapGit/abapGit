@@ -164,7 +164,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_EX_OBJECT IMPLEMENTATION.
 
 
   METHOD zif_abapgit_gui_renderable~render.
-    gui_services( )->register_event_handler( me ).
+    register_handlers( ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
