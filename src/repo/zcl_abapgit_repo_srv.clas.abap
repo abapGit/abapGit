@@ -669,9 +669,8 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     zcl_abapgit_sap_package=>validate_name( iv_package ).
 
     " Check if package owned by SAP is allowed (new packages are ok, since they are created automatically)
-    SELECT SINGLE as4user FROM tdevc
-      INTO lv_as4user
-      WHERE devclass = iv_package.                      "#EC CI_GENBUFF
+    lv_as4user = zcl_abapgit_factory=>get_sap_package( iv_package )->read_responsible( ).
+
     IF sy-subrc = 0 AND lv_as4user = 'SAP' AND
       zcl_abapgit_factory=>get_environment( )->is_sap_object_allowed( ) = abap_false.
       zcx_abapgit_exception=>raise( |Package { iv_package } not allowed, responsible user = 'SAP'| ).

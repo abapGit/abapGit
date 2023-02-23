@@ -403,7 +403,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
   METHOD zif_abapgit_sap_package~read_responsible.
     SELECT SINGLE as4user FROM tdevc
       INTO rv_responsible
-      WHERE devclass = mv_package ##SUBRC_OK.
+      WHERE devclass = mv_package ##SUBRC_OK. "#EC CI_GENBUFF
   ENDMETHOD.
 
 ENDCLASS.
