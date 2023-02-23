@@ -399,4 +399,11 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~read_responsible.
+    SELECT SINGLE as4user FROM tdevc
+      INTO rv_responsible
+      WHERE devclass = mv_package ##SUBRC_OK.
+  ENDMETHOD.
+
 ENDCLASS.
