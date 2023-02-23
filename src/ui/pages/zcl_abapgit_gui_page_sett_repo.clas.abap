@@ -73,7 +73,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -426,7 +426,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    gui_services( )->register_event_handler( me ).
+    register_handlers( ).
 
     IF mo_form_util->is_empty( mo_form_data ) = abap_true.
       read_settings( ).

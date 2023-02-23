@@ -91,7 +91,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -351,7 +351,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
       lv_end    TYPE i,
       lv_total  TYPE ty_time.
 
-    gui_services( )->register_event_handler( me ).
+    register_handlers( ).
 
     GET RUN TIME FIELD lv_start.
 

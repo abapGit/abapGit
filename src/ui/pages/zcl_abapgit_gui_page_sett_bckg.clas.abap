@@ -65,7 +65,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_sett_bckg IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_BCKG IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -327,7 +327,7 @@ CLASS zcl_abapgit_gui_page_sett_bckg IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    gui_services( )->register_event_handler( me ).
+    register_handlers( ).
 
     read_settings( ).
 
