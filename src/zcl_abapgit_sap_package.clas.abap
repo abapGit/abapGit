@@ -382,6 +382,14 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_sap_package~read_description.
+
+    SELECT SINGLE ctext FROM tdevct INTO rv_description
+      WHERE devclass = mv_package AND spras = sy-langu ##SUBRC_OK.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_sap_package~read_parent.
 
     SELECT SINGLE parentcl FROM tdevc INTO rv_parentcl
