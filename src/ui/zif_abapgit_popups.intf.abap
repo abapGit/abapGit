@@ -15,6 +15,14 @@ INTERFACE zif_abapgit_popups
     END OF ty_alv_column,
     ty_alv_column_tt TYPE TABLE OF ty_alv_column WITH DEFAULT KEY.
 
+  TYPES:
+    BEGIN OF ty_popup_position,
+      start_column LIKE  sy-cucol,
+      start_row    LIKE  sy-curow,
+      end_column   LIKE  sy-cucol,
+      end_row      LIKE  sy-curow,
+    END OF ty_popup_position.
+
   CONSTANTS c_new_branch_label TYPE string VALUE '+ create new ...' ##NO_TEXT.
 
   METHODS popup_search_help
