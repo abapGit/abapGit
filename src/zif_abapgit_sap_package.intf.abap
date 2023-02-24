@@ -31,6 +31,11 @@ INTERFACE zif_abapgit_sap_package
       VALUE(rv_description) TYPE string
     RAISING
       zcx_abapgit_exception .
+  METHODS read_responsible
+    RETURNING
+      VALUE(rv_responsible) TYPE usnam
+    RAISING
+      zcx_abapgit_exception .
   METHODS create_child
     IMPORTING
       !iv_child TYPE devclass
