@@ -37,7 +37,7 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS detect_unsupported_languages
       IMPORTING
-        !it_languages TYPE zif_abapgit_definitions=>ty_languages
+        !it_languages                   TYPE zif_abapgit_definitions=>ty_languages
       RETURNING
         VALUE(rt_unsupported_languages) TYPE zif_abapgit_definitions=>ty_languages
       RAISING
@@ -45,6 +45,18 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
 
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    TYPES:
+      BEGIN OF ty_lxe_i18n,
+        source_lang TYPE lxeisolang,
+        target_lang TYPE lxeisolang,
+        custmnr     TYPE lxecustmnr,
+        objtype     TYPE trobjtype,
+        objname     TYPE lxeobjname,
+        text_pairs  TYPE STANDARD TABLE OF lxe_pcx_s1 WITH DEFAULT KEY,
+      END OF ty_lxe_i18n .
+    TYPES:
+      ty_tlxe_i18n TYPE STANDARD TABLE OF ty_lxe_i18n WITH DEFAULT KEY .
 
     CLASS-DATA gt_installed_languages_cache TYPE zif_abapgit_definitions=>ty_languages.
 
@@ -73,7 +85,7 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
           iv_objname               TYPE lxeobjname
           iv_read_only             TYPE abap_bool DEFAULT abap_true
         RETURNING
-          VALUE(rt_text_pairs_tmp) TYPE zif_abapgit_lxe_texts=>ty_lxe_i18n-text_pairs
+          VALUE(rt_text_pairs_tmp) TYPE ty_lxe_i18n-text_pairs
         RAISING
           zcx_abapgit_exception.
     METHODS
@@ -84,14 +96,14 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
           iv_custmnr TYPE lxecustmnr
           iv_objtype TYPE trobjtype
           iv_objname TYPE lxeobjname
-          it_pcx_s1  TYPE zif_abapgit_lxe_texts=>ty_lxe_i18n-text_pairs
+          it_pcx_s1  TYPE ty_lxe_i18n-text_pairs
         RAISING
           zcx_abapgit_exception.
 
     CLASS-METHODS
       langu_to_laiso_safe
         IMPORTING
-          iv_langu TYPE sy-langu
+          iv_langu        TYPE sy-langu
         RETURNING
           VALUE(rv_laiso) TYPE laiso
         RAISING
@@ -99,11 +111,11 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
     CLASS-METHODS
       check_langs_versus_installed
         IMPORTING
-          it_languages TYPE zif_abapgit_definitions=>ty_languages
-          it_installed TYPE zif_abapgit_definitions=>ty_languages
+          it_languages    TYPE zif_abapgit_definitions=>ty_languages
+          it_installed    TYPE zif_abapgit_definitions=>ty_languages
         EXPORTING
           et_intersection TYPE zif_abapgit_definitions=>ty_languages
-          et_missfits TYPE zif_abapgit_definitions=>ty_languages.
+          et_missfits     TYPE zif_abapgit_definitions=>ty_languages.
 ENDCLASS.
 
 
@@ -134,8 +146,8 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
   METHOD convert_lang_string_to_table.
 
     DATA:
-      lt_langs_str TYPE string_table,
-      lv_laiso     TYPE laiso,
+      lt_langs_str          TYPE string_table,
+      lv_laiso              TYPE laiso,
       lv_skip_main_lang_iso TYPE laiso.
 
     FIELD-SYMBOLS:
@@ -420,8 +432,8 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
   METHOD zif_abapgit_lxe_texts~deserialize.
 
     DATA:
-      lt_lxe_texts      TYPE zif_abapgit_lxe_texts=>ty_tlxe_i18n,
-      ls_lxe_item       TYPE zif_abapgit_lxe_texts=>ty_lxe_i18n,
+      lt_lxe_texts      TYPE ty_tlxe_i18n,
+      ls_lxe_item       TYPE ty_lxe_i18n,
       lt_text_pairs_tmp LIKE ls_lxe_item-text_pairs.
 
     ii_xml->read( EXPORTING iv_name = iv_lxe_text_name
@@ -458,8 +470,8 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
       lt_obj_list      TYPE lxe_tt_colob,
       lv_main_lang     TYPE lxeisolang,
       lt_languages     TYPE zif_abapgit_definitions=>ty_languages,
-      lt_lxe_texts     TYPE zif_abapgit_lxe_texts=>ty_tlxe_i18n,
-      ls_lxe_text_item TYPE zif_abapgit_lxe_texts=>ty_lxe_i18n.
+      lt_lxe_texts     TYPE ty_tlxe_i18n,
+      ls_lxe_text_item TYPE ty_lxe_i18n.
 
     FIELD-SYMBOLS:
       <lv_language>   LIKE LINE OF lt_languages,
