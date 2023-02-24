@@ -1,10 +1,10 @@
 CLASS lcl_object_descision_list DEFINITION FINAL.
   PUBLIC SECTION.
 
-    CONSTANTS c_default_column TYPE abap_componentdescr-name VALUE `DEFAULT_COLUMN` ##NO_TEXT.
-    CONSTANTS c_fieldname_selected TYPE abap_componentdescr-name VALUE `SELECTED` ##NO_TEXT.
-    CONSTANTS c_answer_cancel      TYPE c LENGTH 1 VALUE 'A' ##NO_TEXT.
-    CONSTANTS c_fieldname_obj_type TYPE abap_componentdescr-name VALUE `OBJ_TYPE` ##NO_TEXT.
+    CONSTANTS c_default_column TYPE abap_componentdescr-name VALUE `DEFAULT_COLUMN`.
+    CONSTANTS c_fieldname_selected TYPE abap_componentdescr-name VALUE `SELECTED`.
+    CONSTANTS c_answer_cancel      TYPE c LENGTH 1 VALUE 'A'.
+    CONSTANTS c_fieldname_obj_type TYPE abap_componentdescr-name VALUE `OBJ_TYPE`.
 
     METHODS constructor
       IMPORTING
@@ -104,8 +104,6 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
 
   METHOD get_selected.
 
-    CLEAR et_list.
-
     DATA:
       lv_condition     TYPE string,
       lr_exporting     TYPE REF TO data,
@@ -120,6 +118,8 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
       <lg_value>        TYPE any,
       <lv_selected>     TYPE abap_bool,
       <lv_selected_row> TYPE LINE OF salv_t_row.
+
+    CLEAR et_list.
 
     ASSIGN mr_table->* TO <lt_table>.
     ASSERT sy-subrc = 0.
@@ -229,7 +229,7 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
         TRY.
             lo_columns->get_column( |{ c_fieldname_obj_type }| ).
             lv_object_list = abap_true.
-          CATCH CX_SALV_NOT_FOUND.
+          CATCH cx_salv_not_found.
         ENDTRY.
 
         setup_columns(
@@ -237,10 +237,6 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
           iv_selection_mode     = iv_selection_mode
           iv_select_column_text = iv_select_column_text
           it_columns_to_display = it_columns_to_display ).
-
-*        data lo_functions type ref to cl_salv_functions_list.
-*        lo_functions = mo_alv->get_functions( ).
-*        lo_functions->set_all( abap_true ).
 
         set_pfstatus(
           iv_object_list    = lv_object_list
