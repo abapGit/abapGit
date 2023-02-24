@@ -1237,8 +1237,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    SELECT SINGLE as4text FROM e07t INTO lv_title
-      WHERE trkorr = iv_transport AND langu = sy-langu ##SUBRC_OK.
+    lv_title = zcl_abapgit_factory=>get_cts_api( )->read_description( iv_transport ).
 
     lv_jump = |{ zif_abapgit_definitions=>c_action-jump_transport }?transport={ iv_transport }|.
 
