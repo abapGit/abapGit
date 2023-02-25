@@ -180,6 +180,8 @@ CLASS zcl_abapgit_object_cus0 IMPLEMENTATION.
       DELETE ls_img_activity-texts WHERE spras <> mv_language.
     ENDIF.
 
+    SORT ls_img_activity-texts.
+
     io_xml->add( iv_name = 'CUS0'
                  ig_data = ls_img_activity ).
 
