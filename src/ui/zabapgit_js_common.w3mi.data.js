@@ -40,14 +40,14 @@ if (!Function.prototype.bind) {
       throw new TypeError("Function.prototype.bind - subject is not callable");
     }
 
-    var aArgs = Array.prototype.slice.call(arguments, 1),
-      fToBind = this,
-      fNOP = function() { },
-      fBound = function() {
+    var aArgs   = Array.prototype.slice.call(arguments, 1),
+        fToBind = this,
+        fNOP    = function() { },
+        fBound  = function() {
         return fToBind.apply(
           this instanceof fNOP
             ? this
-            : oThis,
+            :  oThis,
           aArgs.concat(Array.prototype.slice.call(arguments))
         );
       };
@@ -82,6 +82,7 @@ if (!String.prototype.startsWith) {
   Object.defineProperty(String.prototype, "startsWith", {
     value: function(search, pos) {
       pos = !pos || pos < 0 ? 0 : +pos;
+
       return this.substring(pos, pos + search.length) === search;
     }
   });
@@ -99,8 +100,9 @@ if (window.NodeList && !NodeList.prototype.forEach) {
 
 // Output text to the debug div
 function debugOutput(text, dstID) {
-  var stdout = document.getElementById(dstID || "debug-output");
+  var stdout  = document.getElementById(dstID || "debug-output");
   var wrapped = "<p>" + text + "</p>";
+
   stdout.innerHTML = stdout.innerHTML + wrapped;
 }
 
@@ -110,7 +112,7 @@ function submitSapeventForm(params, action, method, form) {
 
   function getSapeventPrefix() {
     if (document.querySelector('a[href*="file:///SAPEVENT:"]')) {
-      return "file:///"; //Prefix for chromium based browser control
+      return "file:///";//Prefix for chromium based browser control
     } else {
       return "";
     }
@@ -171,7 +173,7 @@ function submitFormById(id) {
 
 // JS error stub
 function errorStub(event) {
-  var element = event.target || event.srcElement;
+  var element    = event.target || event.srcElement;
   var targetName = element.id || element.name || "???";
   alert("JS Error, please log an issue (@" + targetName + ")");
 }
@@ -182,7 +184,7 @@ function confirmInitialized() {
   if (errorBanner) {
     errorBanner.style.display = "none";
   }
-  debugOutput("js: OK"); // Final final confirmation :)
+  debugOutput("js: OK");// Final final confirmation :)
 }
 
 /**********************************************************
@@ -195,7 +197,8 @@ function perfOut(prefix) {
   var totals = {};
   for (var i = gPerf.length - 1; i >= 0; i--) {
     if (!totals[gPerf[i].name]) totals[gPerf[i].name] = { count: 0, time: 0 };
-    totals[gPerf[i].name].time += gPerf[i].time;
+
+    totals[gPerf[i].name].time  += gPerf[i].time;
     totals[gPerf[i].name].count += 1;
   }
 
@@ -223,7 +226,7 @@ function perfClear() {
 function findStyleSheetByName(name) {
   for (var s = 0; s < document.styleSheets.length; s++) {
     var styleSheet = document.styleSheets[s];
-    var classes = styleSheet.cssRules || styleSheet.rules;
+    var classes    = styleSheet.cssRules || styleSheet.rules;
     for (var i = 0; i < classes.length; i++) {
       if (classes[i].selectorText === name) return classes[i];
     }
@@ -232,7 +235,7 @@ function findStyleSheetByName(name) {
 
 function getIndocStyleSheet() {
   for (var s = 0; s < document.styleSheets.length; s++) {
-    if (!document.styleSheets[s].href) return document.styleSheets[s]; // One with empty href
+    if (!document.styleSheets[s].href) return document.styleSheets[s];// One with empty href
   }
   // None found ? create one
   var style = document.createElement("style");
@@ -245,10 +248,11 @@ function RepoOverViewHelper(opts) {
     this.focusFilterKey = opts.focusFilterKey;
   }
   this.setHooks();
-  this.pageId = "RepoOverViewHelperState"; // constant is OK for this case
-  this.isDetailsDisplayed = false;
+  this.pageId                   = "RepoOverViewHelperState"; // constant is OK for this case
+  this.isDetailsDisplayed       = false;
   this.isOnlyFavoritesDisplayed = false;
-  this.detailCssClass = findStyleSheetByName(".repo-overview .ro-detail");
+  this.detailCssClass           = findStyleSheetByName(".repo-overview .ro-detail");
+
   var icon = document.getElementById("icon-filter-detail");
   this.toggleFilterIcon(icon, this.isDetailsDisplayed);
   this.registerRowSelection();
@@ -286,11 +290,11 @@ RepoOverViewHelper.prototype.registerKeyboardShortcuts = function() {
       return;
     }
 
-    var keycode = event.keyCode;
-    var rows = Array.prototype.slice.call(self.getVisibleRows());
-    var selected = document.querySelector(".repo-overview tr.selected");
+    var keycode         = event.keyCode;
+    var rows            = Array.prototype.slice.call(self.getVisibleRows());
+    var selected        = document.querySelector(".repo-overview tr.selected");
     var indexOfSelected = rows.indexOf(selected);
-    var lastRow = rows.length - 1;
+    var lastRow         = rows.length - 1;
 
     if (keycode == 13 && document.activeElement.tagName.toLowerCase() != "input") {
       // "enter" to open, unless command field has focus
@@ -332,7 +336,7 @@ RepoOverViewHelper.prototype.selectRowByIndex = function(index) {
 
 RepoOverViewHelper.prototype.selectRowByRepoKey = function(key) {
   var attributeQuery = "[data-key='" + key + "']";
-  var row = document.querySelector(".repo-overview tbody tr" + attributeQuery);
+  var row            = document.querySelector(".repo-overview tbody tr" + attributeQuery);
   // navigation to already selected repo
   if (row.dataset.key === key && row.classList.contains("selected")) {
     return;
@@ -347,7 +351,7 @@ RepoOverViewHelper.prototype.selectRowByRepoKey = function(key) {
 
 RepoOverViewHelper.prototype.updateActionLinks = function(selectedRow) {
   // now we have a repo selected, determine which action buttons are relevant
-  var selectedRepoKey = selectedRow.dataset.key;
+  var selectedRepoKey       = selectedRow.dataset.key;
   var selectedRepoIsOffline = selectedRow.dataset.offline === "X";
 
   var actionLinks = document.querySelectorAll("a.action_link");
@@ -425,8 +429,8 @@ RepoOverViewHelper.prototype.toggleItemsDetail = function(forceDisplay) {
       document.body.classList.remove("full_width");
     }
 
-    this.detailCssClass.style.display = this.isDetailsDisplayed ? "" : "none";
-    var icon = document.getElementById("icon-filter-detail");
+        this.detailCssClass.style.display = this.isDetailsDisplayed ? "" : "none";
+    var icon                              = document.getElementById("icon-filter-detail");
     this.toggleFilterIcon(icon, this.isDetailsDisplayed);
   }
 };
@@ -444,9 +448,9 @@ RepoOverViewHelper.prototype.toggleFilterIcon = function(icon, isEnabled) {
 RepoOverViewHelper.prototype.saveLocalStorage = function() {
   if (!window.localStorage) return;
   var data = {
-    isDetailsDisplayed: this.isDetailsDisplayed,
+    isDetailsDisplayed      : this.isDetailsDisplayed,
     isOnlyFavoritesDisplayed: this.isOnlyFavoritesDisplayed,
-    selectedRepoKey: this.selectedRepoKey,
+    selectedRepoKey         : this.selectedRepoKey,
   };
   window.localStorage.setItem(this.pageId, JSON.stringify(data));
 };
@@ -457,46 +461,46 @@ RepoOverViewHelper.prototype.saveLocalStorage = function() {
 
 // Stage helper constructor
 function StageHelper(params) {
-  this.pageSeed = params.seed;
-  this.formAction = params.formAction;
-  this.patchAction = params.patchAction;
-  this.user = params.user;
-  this.ids = params.ids;
-  this.selectedCount = 0;
-  this.filteredCount = 0;
+  this.pageSeed        = params.seed;
+  this.formAction      = params.formAction;
+  this.patchAction     = params.patchAction;
+  this.user            = params.user;
+  this.ids             = params.ids;
+  this.selectedCount   = 0;
+  this.filteredCount   = 0;
   this.lastFilterValue = "";
-  this.focusFilterKey = params.focusFilterKey;
+  this.focusFilterKey  = params.focusFilterKey;
 
   // DOM nodes
   this.dom = {
-    stageTab: document.getElementById(params.ids.stageTab),
-    commitAllBtn: document.getElementById(params.ids.commitAllBtn),
+    stageTab         : document.getElementById(params.ids.stageTab),
+    commitAllBtn     : document.getElementById(params.ids.commitAllBtn),
     commitSelectedBtn: document.getElementById(params.ids.commitSelectedBtn),
     commitFilteredBtn: document.getElementById(params.ids.commitFilteredBtn),
-    patchBtn: document.getElementById(params.ids.patchBtn),
-    objectSearch: document.getElementById(params.ids.objectSearch),
-    selectedCounter: null,
-    filteredCounter: null,
+    patchBtn         : document.getElementById(params.ids.patchBtn),
+    objectSearch     : document.getElementById(params.ids.objectSearch),
+    selectedCounter  : null,
+    filteredCounter  : null,
   };
   this.findCounters();
 
   // Table columns (autodetection)
-  this.colIndex = this.detectColumns();
+  this.colIndex      = this.detectColumns();
   this.filterTargets = ["name", "user", "transport"];
 
   // Constants
   this.HIGHLIGHT_STYLE = "highlight";
-  this.STATUS = {
-    add: "A",
+  this.STATUS          = {
+    add   : "A",
     remove: "R",
     ignore: "I",
-    reset: "?",
+    reset : "?",
     isValid: function(status) { return "ARI?".indexOf(status) == -1 }
   };
 
   this.TEMPLATES = {
-    cmdReset: "<a>reset</a>",
-    cmdLocal: "<a>add</a>",
+    cmdReset : "<a>reset</a>",
+    cmdLocal : "<a>add</a>",
     cmdRemote: "<a>ignore</a><a>remove</a>"
   };
 
@@ -513,14 +517,14 @@ StageHelper.prototype.findCounters = function() {
 StageHelper.prototype.injectFilterMe = function() {
   var tabFirstHead = this.dom.stageTab.tHead.rows[0];
   if (!tabFirstHead || tabFirstHead.className !== "local") {
-    return; // for the case only "remove part" is displayed
+    return;// for the case only "remove part" is displayed
   }
-  var changedByHead = tabFirstHead.cells[this.colIndex.user];
-  changedByHead.innerText = changedByHead.innerText + " (";
-  var a = document.createElement("A");
+  var changedByHead           = tabFirstHead.cells[this.colIndex.user];
+      changedByHead.innerText = changedByHead.innerText + " (";
+  var a                       = document.createElement("A");
   a.appendChild(document.createTextNode("me"));
   a.onclick = this.onFilterMe.bind(this);
-  a.href = "#";
+  a.href    = "#";
   changedByHead.appendChild(a);
   changedByHead.appendChild(document.createTextNode(")"));
 };
@@ -532,15 +536,15 @@ StageHelper.prototype.onFilterMe = function() {
 
 // Hook global click listener on table, load/unload actions
 StageHelper.prototype.setHooks = function() {
-  window.onkeypress = this.onCtrlEnter.bind(this);
-  this.dom.stageTab.onclick = this.onTableClick.bind(this);
+  window.onkeypress                  = this.onCtrlEnter.bind(this);
+  this.dom.stageTab.onclick          = this.onTableClick.bind(this);
   this.dom.commitSelectedBtn.onclick = this.submit.bind(this);
   this.dom.commitFilteredBtn.onclick = this.submitVisible.bind(this);
-  this.dom.patchBtn.onclick = this.submitPatch.bind(this);
-  this.dom.objectSearch.oninput = this.onFilter.bind(this);
-  this.dom.objectSearch.onkeypress = this.onFilter.bind(this);
-  window.onbeforeunload = this.onPageUnload.bind(this);
-  window.onload = this.onPageLoad.bind(this);
+  this.dom.patchBtn.onclick          = this.submitPatch.bind(this);
+  this.dom.objectSearch.oninput      = this.onFilter.bind(this);
+  this.dom.objectSearch.onkeypress   = this.onFilter.bind(this);
+  window.onbeforeunload              = this.onPageUnload.bind(this);
+  window.onload                      = this.onPageLoad.bind(this);
 
   var self = this;
   document.addEventListener("keypress", function(event) {
@@ -556,7 +560,7 @@ StageHelper.prototype.setHooks = function() {
 
 // Detect column index
 StageHelper.prototype.detectColumns = function() {
-  var dataRow = this.dom.stageTab.tBodies[0].rows[0];
+  var dataRow  = this.dom.stageTab.tBodies[0].rows[0];
   var colIndex = {};
 
   for (var i = dataRow.cells.length - 1; i >= 0; i--) {
@@ -606,7 +610,7 @@ StageHelper.prototype.onTableClick = function(event) {
 
   if (["TD", "TH"].indexOf(td.tagName) == -1 || td.className != "cmd") return;
 
-  var status = this.STATUS[target.innerText]; // Convert anchor text to status
+  var status    = this.STATUS[target.innerText]; // Convert anchor text to status
   var targetRow = td.parentNode;
 
   if (td.tagName === "TD") {
@@ -627,7 +631,7 @@ StageHelper.prototype.onTableClick = function(event) {
 StageHelper.prototype.onCtrlEnter = function(e) {
   if (e.ctrlKey && (e.which === 10 || e.key === "Enter")) {
     var clickMap = {
-      "default": this.dom.commitAllBtn,
+      "default" : this.dom.commitAllBtn,
       "selected": this.dom.commitSelectedBtn,
       "filtered": this.dom.commitFilteredBtn
     };
@@ -638,7 +642,7 @@ StageHelper.prototype.onCtrlEnter = function(e) {
 // Search object
 StageHelper.prototype.onFilter = function(e) {
   if ( // Enter hit or clear, IE SUCKS !
-    e.type === "input" && !e.target.value && this.lastFilterValue
+       e.type === "input" && !e.target.value && this.lastFilterValue
     || e.type === "keypress" && (e.which === 13 || e.key === "Enter") && !e.ctrlKey) {
 
     this.applyFilterValue(e.target.value);
@@ -648,7 +652,7 @@ StageHelper.prototype.onFilter = function(e) {
 
 StageHelper.prototype.applyFilterValue = function(sFilterValue) {
   this.lastFilterValue = sFilterValue;
-  this.filteredCount = this.iterateStageTab(true, this.applyFilterToRow, sFilterValue);
+  this.filteredCount   = this.iterateStageTab(true, this.applyFilterToRow, sFilterValue);
   this.updateMenu();
 };
 
@@ -659,13 +663,14 @@ StageHelper.prototype.applyFilterToRow = function(row, filter) {
     // Get the innermost tag with the text we want to filter
     // <td>text</td>: elem = td-tag
     // <td><span><i></i><a>text</a></span></td>: elem = a-tag
-    var elem = row.cells[this.colIndex[attr]];
+    var elem  = row.cells[this.colIndex[attr]];
     var elemA = elem.getElementsByTagName("A")[0];
+
     if (elemA) elem = elemA;
     return {
-      elem: elem,
+      elem     : elem,
       plainText: elem.innerText.replace(/ /g, "\u00a0"), // without tags, with encoded spaces
-      curHtml: elem.innerHTML
+      curHtml  : elem.innerHTML
     };
   }, this);
 
@@ -675,12 +680,12 @@ StageHelper.prototype.applyFilterToRow = function(row, filter) {
   for (var i = targets.length - 1; i >= 0; i--) {
     var target = targets[i];
     // Ignore case of filter
-    var regFilter = new RegExp("(" + filter + ")", "gi");
-    target.newHtml = (filter)
+    var regFilter      = new RegExp("(" + filter + ")", "gi");
+        target.newHtml = (filter)
       ? target.plainText.replace(regFilter, "<mark>$1</mark>")
-      : target.plainText;
-    target.isChanged = target.newHtml !== target.curHtml;
-    isVisible = isVisible || !filter || target.newHtml !== target.plainText;
+      :  target.plainText;
+    target.isChanged = target.newHtml                         !== target.curHtml;
+    isVisible        = isVisible || !filter || target.newHtml !== target.plainText;
   }
 
   // Update DOM
@@ -688,7 +693,7 @@ StageHelper.prototype.applyFilterToRow = function(row, filter) {
   for (var j = targets.length - 1; j >= 0; j--) {
     if (targets[j].isChanged) targets[j].elem.innerHTML = targets[j].newHtml;
   }
-  return isVisible ? 1 : 0;
+  return isVisible ? 1: 0;
 };
 
 // Get how status should affect object counter
@@ -698,7 +703,7 @@ StageHelper.prototype.getStatusImpact = function(status) {
     || this.STATUS.isValid(status)) {
     alert("Unknown status");
   } else {
-    return (status !== this.STATUS.reset) ? 1 : 0;
+    return (status !== this.STATUS.reset) ? 1: 0;
   }
 };
 
@@ -710,7 +715,7 @@ StageHelper.prototype.updateRow = function(row, newStatus) {
     this.updateRowStatus(row, newStatus);
     this.updateRowCommand(row, newStatus);
   } else if (!row.cells[this.colIndex["cmd"]].children.length) {
-    this.updateRowCommand(row, newStatus); // For initial run
+    this.updateRowCommand(row, newStatus);// For initial run
   }
 
   this.selectedCount += this.getStatusImpact(newStatus) - this.getStatusImpact(oldStatus);
@@ -732,7 +737,7 @@ StageHelper.prototype.updateRowCommand = function(row, status) {
   if (status === this.STATUS.reset) {
     cell.innerHTML = (row.className == "local")
       ? this.TEMPLATES.cmdLocal
-      : this.TEMPLATES.cmdRemote;
+      :  this.TEMPLATES.cmdRemote;
   } else {
     cell.innerHTML = this.TEMPLATES.cmdReset;
   }
@@ -753,10 +758,11 @@ StageHelper.prototype.calculateActiveCommitCommand = function() {
 // Update menu items visibility
 StageHelper.prototype.updateMenu = function() {
   var display = this.calculateActiveCommitCommand();
+
   if (display === "selected") this.dom.selectedCounter.innerText = this.selectedCount.toString();
   if (display === "filtered") this.dom.filteredCounter.innerText = this.filteredCount.toString();
 
-  this.dom.commitAllBtn.style.display = display === "default" ? "" : "none";
+  this.dom.commitAllBtn.style.display      = display === "default" ? "" : "none";
   this.dom.commitSelectedBtn.style.display = display === "selected" ? "" : "none";
   this.dom.commitFilteredBtn.style.display = display === "filtered" ? "" : "none";
 };
@@ -798,19 +804,21 @@ StageHelper.prototype.markVisiblesAsAdded = function() {
 // Table iteration helper
 StageHelper.prototype.iterateStageTab = function(changeMode, cb /*, ...*/) {
   var restArgs = Array.prototype.slice.call(arguments, 2);
-  var table = this.dom.stageTab;
+  var table    = this.dom.stageTab;
   var retTotal = 0;
 
   if (changeMode) {
     var scrollOffset = window.pageYOffset;
+
     this.dom.stageTab.style.display = "none";
   }
 
   for (var b = 0, bN = table.tBodies.length; b < bN; b++) {
     var tbody = table.tBodies[b];
     for (var r = 0, rN = tbody.rows.length; r < rN; r++) {
-      var args = [tbody.rows[r]].concat(restArgs);
+      var args   = [tbody.rows[r]].concat(restArgs);
       var retVal = cb.apply(this, args); // callback
+
       if (typeof retVal === "number") retTotal += retVal;
     }
   }
@@ -828,29 +836,29 @@ StageHelper.prototype.iterateStageTab = function(changeMode, cb /*, ...*/) {
  **********************************************************/
 
 function CheckListWrapper(id, cbAction, cbActionOnlyMyChanges) {
-  this.id = document.getElementById(id);
-  this.cbAction = cbAction;
+  this.id                    = document.getElementById(id);
+  this.cbAction              = cbAction;
   this.cbActionOnlyMyChanges = cbActionOnlyMyChanges;
-  this.id.onclick = this.onClick.bind(this);
+  this.id.onclick            = this.onClick.bind(this);
 }
 
 CheckListWrapper.prototype.onClick = function(e) { // eslint-disable-line no-unused-vars
   // Get nodes
   var target = event.target || event.srcElement;
   if (!target) return;
-  if (target.tagName !== "A") { target = target.parentNode } // icon clicked
+  if (target.tagName !== "A") { target = target.parentNode }// icon clicked
   if (target.tagName !== "A") return;
   if (target.parentNode.tagName !== "LI") return;
 
-  var nodeA = target;
-  var nodeLi = target.parentNode;
+  var nodeA    = target;
+  var nodeLi   = target.parentNode;
   var nodeIcon = target.children[0];
   if (!nodeIcon.classList.contains("icon")) return;
 
   // Node updates
-  var option = nodeA.innerText;
+  var option   = nodeA.innerText;
   var oldState = nodeLi.getAttribute("data-check");
-  if (oldState === null) return; // no data-check attribute - non-checkbox
+  if (oldState === null) return;// no data-check attribute - non-checkbox
   var newState = oldState === "X" ? false : true;
 
   if (newState) {
@@ -879,31 +887,31 @@ CheckListWrapper.prototype.onClick = function(e) { // eslint-disable-line no-unu
 
 // Diff helper constructor
 function DiffHelper(params) {
-  this.pageSeed = params.seed;
-  this.counter = 0;
+  this.pageSeed    = params.seed;
+  this.counter     = 0;
   this.stageAction = params.stageAction;
 
   // DOM nodes
   this.dom = {
-    diffList: document.getElementById(params.ids.diffList),
+    diffList   : document.getElementById(params.ids.diffList),
     stageButton: document.getElementById(params.ids.stageButton)
   };
 
   this.repoKey = this.dom.diffList.getAttribute("data-repo-key");
-  if (!this.repoKey) return; // Unexpected
+  if (!this.repoKey) return;// Unexpected
 
-  this.dom.jump = document.getElementById(params.ids.jump);
+  this.dom.jump         = document.getElementById(params.ids.jump);
   this.dom.jump.onclick = this.onJump.bind(this);
 
   // Checklist wrapper
   if (document.getElementById(params.ids.filterMenu)) {
-    this.checkList = new CheckListWrapper(params.ids.filterMenu, this.onFilter.bind(this), this.onFilterOnlyMyChanges.bind(this));
+    this.checkList        = new CheckListWrapper(params.ids.filterMenu, this.onFilter.bind(this), this.onFilterOnlyMyChanges.bind(this));
     this.dom.filterButton = document.getElementById(params.ids.filterMenu).parentNode;
   }
 
   // Hijack stage command
   if (this.dom.stageButton) {
-    this.dom.stageButton.href = "#";
+    this.dom.stageButton.href    = "#";
     this.dom.stageButton.onclick = this.onStage.bind(this);
   }
 }
@@ -970,7 +978,6 @@ DiffHelper.prototype.onFilterOnlyMyChanges = function(username, state) {
 };
 
 DiffHelper.prototype.applyOnlyMyChangesFilter = function(username, state) {
-
   var jumpListItems = Array.prototype.slice.call(document.querySelectorAll("[id*=li_jump]"));
 
   this.iterateDiffList(function(div) {
@@ -994,7 +1001,6 @@ DiffHelper.prototype.applyOnlyMyChangesFilter = function(username, state) {
 
 // Hide/show diff based on params
 DiffHelper.prototype.applyFilter = function(attr, target, state) {
-
   var jumpListItems = Array.prototype.slice.call(document.querySelectorAll("[id*=li_jump]"));
 
   this.iterateDiffList(function(div) {
@@ -1041,7 +1047,7 @@ DiffHelper.prototype.iterateDiffList = function(cb /*, ...*/) {
     var div = diffList.children[i];
     if (div.className !== "diff") continue;
     var args = [div].concat(restArgs);
-    cb.apply(this, args); // callback
+    cb.apply(this, args);// callback
   }
 };
 
@@ -1057,7 +1063,7 @@ DiffHelper.prototype.highlightButton = function(state) {
 
 // Collapse or expand diffs
 function onDiffCollapse(event) {
-  var source = event.target || event.srcElement;
+  var source          = event.target || event.srcElement;
   var nextDiffContent = source.parentElement.nextElementSibling;
   var hide;
 
@@ -1071,7 +1077,7 @@ function onDiffCollapse(event) {
     hide = false;
   }
 
-  hide ? nextDiffContent.classList.add("nodisplay") : nextDiffContent.classList.remove("nodisplay");
+  hide ? nextDiffContent.classList.add("nodisplay"): nextDiffContent.classList.remove("nodisplay");
 }
 
 // Add bottom margin, so that we can scroll to the top of the last file
@@ -1085,7 +1091,7 @@ function addMarginBottom() {
 
 function DiffColumnSelection() {
   this.selectedColumnIdx = -1;
-  this.lineNumColumnIdx = -1;
+  this.lineNumColumnIdx  = -1;
   //https://stackoverflow.com/questions/2749244/javascript-setinterval-and-this-solution
   document.addEventListener("mousedown", this.mousedownEventListener.bind(this));
   document.addEventListener("copy", this.copyEventListener.bind(this));
@@ -1096,16 +1102,17 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
   // (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
   // Process mousedown event for all TD elements -> apply CSS class at TABLE level.
   // (https://stackoverflow.com/questions/40956717/how-to-addeventlistener-to-multiple-elements-in-a-single-line)
-  var unifiedLineNumColumnIdx = 0;
-  var unifiedCodeColumnIdx = 3;
-  var splitLineNumLeftColumnIdx = 0;
-  var splitCodeLeftColumnIdx = 2;
+  var unifiedLineNumColumnIdx    = 0;
+  var unifiedCodeColumnIdx       = 3;
+  var splitLineNumLeftColumnIdx  = 0;
+  var splitCodeLeftColumnIdx     = 2;
   var splitLineNumRightColumnIdx = 3;
-  var splitCodeRightColumnIdx = 5;
+  var splitCodeRightColumnIdx    = 5;
 
-  if (e.button !== 0) return; // function is only valid for left button, not right button
+  if (e.button !== 0) return;// function is only valid for left button, not right button
 
   var td = e.target;
+
   while (td != undefined && td.tagName != "TD" && td.tagName != "TBODY") td = td.parentElement;
   if (td == undefined) return;
   var table = td.parentElement.parentElement;
@@ -1132,7 +1139,7 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
       }
     }
     this.selectedColumnIdx = splitCodeLeftColumnIdx + patchColumnCount;
-    this.lineNumColumnIdx = splitLineNumLeftColumnIdx + patchColumnCount;
+    this.lineNumColumnIdx  = splitLineNumLeftColumnIdx + patchColumnCount;
 
   } else if (td.classList.contains("diff_right")) {
     table.classList.remove("diff_select_left");
@@ -1150,15 +1157,15 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
       }
     }
     this.selectedColumnIdx = splitCodeRightColumnIdx + patchColumnCount;
-    this.lineNumColumnIdx = splitLineNumRightColumnIdx + patchColumnCount;
+    this.lineNumColumnIdx  = splitLineNumRightColumnIdx + patchColumnCount;
 
   } else if (td.classList.contains("diff_unified")) {
     this.selectedColumnIdx = unifiedCodeColumnIdx;
-    this.lineNumColumnIdx = unifiedLineNumColumnIdx;
+    this.lineNumColumnIdx  = unifiedLineNumColumnIdx;
 
   } else {
     this.selectedColumnIdx = -1;
-    this.lineNumColumnIdx = -1;
+    this.lineNumColumnIdx  = -1;
   }
 };
 
@@ -1166,12 +1173,13 @@ DiffColumnSelection.prototype.copyEventListener = function(e) {
   // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
   // (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
   var td = e.target;
+
   while (td != undefined && td.tagName != "TD" && td.tagName != "TBODY") td = td.parentElement;
   if (td != undefined) {
     // Use window.clipboardData instead of e.clipboardData
     // (https://stackoverflow.com/questions/23470958/ie-10-copy-paste-issue)
     var clipboardData = (e.clipboardData == undefined ? window.clipboardData : e.clipboardData);
-    var text = this.getSelectedText();
+    var text          = this.getSelectedText();
     clipboardData.setData("text", text);
     e.preventDefault();
   }
@@ -1180,28 +1188,30 @@ DiffColumnSelection.prototype.copyEventListener = function(e) {
 DiffColumnSelection.prototype.getSelectedText = function() {
   // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
   // (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
-  var sel = window.getSelection(),
-    range = sel.getRangeAt(0),
-    doc = range.cloneContents(),
-    nodes = doc.querySelectorAll("tr"),
-    text = "";
+  var sel   = window.getSelection(),
+      range = sel.getRangeAt(0),
+      doc   = range.cloneContents(),
+      nodes = doc.querySelectorAll("tr"),
+      text  = "";
   if (nodes.length === 0) {
     text = doc.textContent;
   } else {
-    var newline = "",
-      realThis = this;
+    var newline  = "",
+        realThis = this;
     [].forEach.call(nodes, function(tr, i) {
       var cellIdx = (i == 0 ? 0 : realThis.selectedColumnIdx);
       if (tr.cells.length > cellIdx) {
         var tdSelected = tr.cells[cellIdx];
-        var tdLineNum = tr.cells[realThis.lineNumColumnIdx];
+        var tdLineNum  = tr.cells[realThis.lineNumColumnIdx];
         // copy is interesting for remote code, don't copy lines which exist only locally
         if (i == 0 || tdLineNum.getAttribute("line-num") != "") {
           text += newline + tdSelected.textContent;
           // special processing for TD tag which sometimes contains newline
           // (expl: /src/ui/zabapgit_js_common.w3mi.data.js) so don't add newline again in that case.
           var lastChar = tdSelected.textContent[tdSelected.textContent.length - 1];
+
           if (lastChar == "\n") newline = "";
+
           else newline = "\n";
         }
       }
@@ -1217,6 +1227,7 @@ DiffColumnSelection.prototype.getSelectedText = function() {
 // Toggle display of changelog (news) and message popups
 function toggleDisplay(divId) {
   var div = document.getElementById(divId);
+
   if (div) div.style.display = (div.style.display) ? "" : "none";
 }
 
@@ -1303,7 +1314,7 @@ KeyNavigation.prototype.onArrowDown = function() {
   if (activeElement.nodeName === "A"
     && activeElement.parentElement
     && activeElement.parentElement.nodeName === "LI"
-    && activeElement.parentElement.classList.contains("force-nav-hover") // opened dropdown
+    && activeElement.parentElement.classList.contains("force-nav-hover")// opened dropdown
     && activeElement.nextElementSibling
     && activeElement.nextElementSibling.nodeName === "UL"
     && activeElement.nextElementSibling.firstElementChild
@@ -1349,12 +1360,12 @@ function enableArrowListNavigation() {
  **********************************************************/
 
 function LinkHints(linkHintHotKey) {
-  this.linkHintHotKey = linkHintHotKey;
+  this.linkHintHotKey    = linkHintHotKey;
   this.areHintsDisplayed = false;
-  this.pendingPath = ""; // already typed code prefix
-  this.hintsMap = this.deployHintContainers();
+  this.pendingPath       = ""; // already typed code prefix
+  this.hintsMap          = this.deployHintContainers();
   this.activatedDropdown = null;
-  this.yankModeActive = false;
+  this.yankModeActive    = false;
 }
 
 LinkHints.prototype.getHintStartValue = function(targetsCount) {
@@ -1362,7 +1373,7 @@ LinkHints.prototype.getHintStartValue = function(targetsCount) {
   //      if we have 90 tooltips we start from 100
   //      if we have 900 tooltips we start from 1000
   var
-    baseLength = Math.pow(10, targetsCount.toString().length - 1),
+    baseLength          = Math.pow(10, targetsCount.toString().length - 1),
     maxHintStringLength = (targetsCount + baseLength).toString().length;
   return Math.pow(10, maxHintStringLength - 1);
 };
@@ -1371,7 +1382,7 @@ LinkHints.prototype.deployHintContainers = function() {
 
   var hintTargets = document.querySelectorAll("a, input, textarea, i");
   var codeCounter = this.getHintStartValue(hintTargets.length);
-  var hintsMap = { first: codeCounter };
+  var hintsMap    = { first: codeCounter };
 
   // <span class="link-hint" data-code="123">
   //   <span class="pending">12</span><span>3</span>
@@ -1382,12 +1393,12 @@ LinkHints.prototype.deployHintContainers = function() {
       continue;
     }
 
-    var hint = {};
-    hint.container = document.createElement("span");
-    hint.pendingSpan = document.createElement("span");
-    hint.remainingSpan = document.createElement("span");
-    hint.parent = hintTargets[i];
-    hint.code = codeCounter.toString();
+    var hint               = {};
+        hint.container     = document.createElement("span");
+        hint.pendingSpan   = document.createElement("span");
+        hint.remainingSpan = document.createElement("span");
+        hint.parent        = hintTargets[i];
+        hint.code          = codeCounter.toString();
 
     hint.container.appendChild(hint.pendingSpan);
     hint.container.appendChild(hint.remainingSpan);
@@ -1404,8 +1415,8 @@ LinkHints.prototype.deployHintContainers = function() {
       continue;
     }
 
-    hint.container.classList.add("nodisplay");            // hide by default
-    hint.container.dataset.code = codeCounter.toString(); // not really needed, more for debug
+    hint.container.classList.add("nodisplay");// hide by default
+    hint.container.dataset.code  = codeCounter.toString();// not really needed, more for debug
 
     if (hintTargets[i].nodeName === "INPUT" || hintTargets[i].nodeName === "TEXTAREA") {
       // does not work if inside the input node
@@ -1436,7 +1447,6 @@ LinkHints.prototype.getHandler = function() {
 };
 
 LinkHints.prototype.handleKey = function(event) {
-
   if (event.defaultPrevented) {
     return;
   }
@@ -1458,6 +1468,7 @@ LinkHints.prototype.handleKey = function(event) {
 
     // the user tries to reach a hint
     this.pendingPath += event.key;
+
     var hint = this.hintsMap[this.pendingPath];
 
     if (hint) { // we are there, we have a fully specified tooltip. Let's activate or yank it
@@ -1493,7 +1504,7 @@ LinkHints.prototype.displayHints = function(isActivate) {
     var hint = this.hintsMap[i];
     if (isActivate) {
       hint.container.classList.remove("nodisplay");
-      hint.pendingSpan.innerText = "";
+      hint.pendingSpan.innerText   = "";
       hint.remainingSpan.innerText = hint.code;
     } else {
       hint.container.classList.add("nodisplay");
@@ -1505,8 +1516,8 @@ LinkHints.prototype.hintActivate = function(hint) {
   if (hint.parent.nodeName === "A"
     // hint.parent.href doesn`t have a # at the end while accessing dropdowns the first time.
     // Seems like a idiosyncrasy of SAPGUI`s IE. So let`s ignore the last character.
-    && (hint.parent.href.substr(0, hint.parent.href.length - 1) === document.location.href) // href is #
-    && !hint.parent.onclick                         // no handler
+    && (hint.parent.href.substr(0, hint.parent.href.length - 1) === document.location.href)// href is #
+    && !hint.parent.onclick// no handler
     && hint.parent.parentElement && hint.parent.parentElement.nodeName === "LI") {
     // probably it is a dropdown ...
     this.activatedDropdown = hint.parent.parentElement;
@@ -1552,7 +1563,7 @@ LinkHints.prototype.filterHints = function() {
   for (var i = this.hintsMap.first; i <= this.hintsMap.last; i++) {
     var hint = this.hintsMap[i];
     if (i.toString().startsWith(this.pendingPath)) {
-      hint.pendingSpan.innerText = this.pendingPath;
+      hint.pendingSpan.innerText   = this.pendingPath;
       hint.remainingSpan.innerText = hint.code.substring(this.pendingPath.length);
       // hint.container.classList.remove("nodisplay"); // for backspace
       visibleHints++;
@@ -1574,7 +1585,6 @@ function activateLinkHints(linkHintHotKey) {
  **********************************************************/
 
 function Hotkeys(oKeyMap) {
-
   this.oKeyMap = oKeyMap || {};
 
   // these are the hotkeys provided by the backend
@@ -1660,7 +1670,6 @@ Hotkeys.prototype.getAllSapEventsForSapEventName = function(sSapEvent) {
 };
 
 Hotkeys.prototype.getSapEventHref = function(sSapEvent) {
-
   return this.getAllSapEventsForSapEventName(sSapEvent)
     .filter(function(el) {
       // only anchors
@@ -1674,7 +1683,6 @@ Hotkeys.prototype.getSapEventHref = function(sSapEvent) {
 };
 
 Hotkeys.prototype.getSapEventInputAction = function(sSapEvent) {
-
   return this.getAllSapEventsForSapEventName(sSapEvent)
     .filter(function(el) {
       // input forms
@@ -1688,7 +1696,6 @@ Hotkeys.prototype.getSapEventInputAction = function(sSapEvent) {
 };
 
 Hotkeys.prototype.getSapEventForm = function(sSapEvent) {
-
   return this.getAllSapEventsForSapEventName(sSapEvent)
     .filter(function(el) {
       // forms
@@ -1708,7 +1715,6 @@ Hotkeys.prototype.eliminateSapEventFalsePositives = function(sapEvent) {
 };
 
 Hotkeys.prototype.onkeydown = function(oEvent) {
-
   if (oEvent.defaultPrevented) {
     return;
   }
@@ -1718,7 +1724,7 @@ Hotkeys.prototype.onkeydown = function(oEvent) {
   }
 
   var
-    sKey = oEvent.key || String.fromCharCode(oEvent.keyCode),
+    sKey     = oEvent.key || String.fromCharCode(oEvent.keyCode),
     fnHotkey = this.oKeyMap[sKey];
 
   if (fnHotkey) {
@@ -1727,8 +1733,7 @@ Hotkeys.prototype.onkeydown = function(oEvent) {
 };
 
 Hotkeys.isHotkeyCallPossible = function() {
-
-  var activeElementType = ((document.activeElement && document.activeElement.nodeName) || "");
+  var activeElementType     = ((document.activeElement && document.activeElement.nodeName) || "");
   var activeElementReadOnly = ((document.activeElement && document.activeElement.readOnly) || false);
 
   return (activeElementReadOnly || (activeElementType !== "INPUT" && activeElementType !== "TEXTAREA"));
@@ -1738,13 +1743,13 @@ Hotkeys.addHotkeyToHelpSheet = function(key, description) {
   var hotkeysUl = document.querySelector("#hotkeys ul.hotkeys");
   if (!hotkeysUl) return;
 
-  var li = document.createElement("li");
-  var spanId = document.createElement("span");
-  spanId.className = "key-id";
-  spanId.innerText = key;
-  var spanDescr = document.createElement("span");
-  spanDescr.className = "key-descr";
-  spanDescr.innerText = description;
+  var li                  = document.createElement("li");
+  var spanId              = document.createElement("span");
+      spanId.className    = "key-id";
+      spanId.innerText    = key;
+  var spanDescr           = document.createElement("span");
+      spanDescr.className = "key-descr";
+      spanDescr.innerText = description;
   li.appendChild(spanId);
   li.appendChild(spanDescr);
 
@@ -1752,13 +1757,12 @@ Hotkeys.addHotkeyToHelpSheet = function(key, description) {
 };
 
 function setKeyBindings(oKeyMap) {
-
   var oHotkeys = new Hotkeys(oKeyMap);
 
   document.addEventListener("keypress", oHotkeys.onkeydown.bind(oHotkeys));
   setTimeout(function() {
-    var div = document.getElementById("hotkeys-hint");
-    if (div) div.style.opacity = 0.2;
+    var div                     = document.getElementById("hotkeys-hint");
+    if  (div) div.style.opacity = 0.2;
   }, 4900);
   setTimeout(function() { toggleDisplay("hotkeys-hint") }, 5000);
 }
@@ -1792,8 +1796,9 @@ function setKeyBindings(oKeyMap) {
 function PatchFile(sId) {
   var oRegex = new RegExp("(" + this.ID + ")_(.*$)");
   var oMatch = sId.match(oRegex);
-  this.id = sId;
-  this.prefix = oMatch[1];
+
+  this.id        = sId;
+  this.prefix    = oMatch[1];
   this.file_name = oMatch[2];
 }
 
@@ -1817,10 +1822,11 @@ PatchFile.prototype.ID = "patch_file";
 function PatchSection(sId) {
   var oRegex = new RegExp("(" + this.ID + ")_(.*)_(\\d+$)");
   var oMatch = sId.match(oRegex);
-  this.id = sId;
-  this.prefix = oMatch[1];
+
+  this.id        = sId;
+  this.prefix    = oMatch[1];
   this.file_name = oMatch[2];
-  this.section = oMatch[3];
+  this.section   = oMatch[3];
 }
 
 PatchSection.prototype.ID = "patch_section";
@@ -1852,9 +1858,9 @@ Patch.prototype.ID = {
 };
 
 Patch.prototype.ACTION = {
-  PATCH_STAGE: "patch_stage",
+  PATCH_STAGE  : "patch_stage",
   REFRESH_LOCAL: "refresh_local",
-  REFRESH_ALL: "refresh_all"
+  REFRESH_ALL  : "refresh_all"
 };
 
 Patch.prototype.escape = function(sFileName) {
@@ -1886,7 +1892,6 @@ Patch.prototype.registerClickHandlerForLines = function() {
 };
 
 Patch.prototype.registerClickHandlerForSelectorParent = function(sSelector, fnCallback) {
-
   var elAll = document.querySelectorAll(sSelector);
 
   [].forEach.call(elAll, function(elem) {
@@ -1916,12 +1921,12 @@ Patch.prototype.getAllSectionCheckboxesForId = function(sId, sIdPrefix) {
 
 Patch.prototype.getAllCheckboxesForId = function(sId, sIdPrefix, sNewIdPrefix) {
   var oRegex = new RegExp("^" + sIdPrefix);
+
   sId = sId.replace(oRegex, sNewIdPrefix);
   return document.querySelectorAll(this.buildSelectorInputStartsWithId(this.escape(sId)));
 };
 
 Patch.prototype.getToggledCheckbox = function(oEvent) {
-
   var elCheckbox = null;
 
   // We have either an input element or any element with input child
@@ -1941,10 +1946,9 @@ Patch.prototype.toggleCheckbox = function(elCheckbox) {
 };
 
 Patch.prototype.onClickFileCheckbox = function(oEvent) {
-
-  var elCheckbox = this.getToggledCheckbox(oEvent);
-  var oFile = new PatchFile(elCheckbox.id);
-  var elAllLineCheckboxesOfFile = this.getAllLineCheckboxesForFile(oFile);
+  var elCheckbox                   = this.getToggledCheckbox(oEvent);
+  var oFile                        = new PatchFile(elCheckbox.id);
+  var elAllLineCheckboxesOfFile    = this.getAllLineCheckboxesForFile(oFile);
   var elAllSectionCheckboxesOfFile = this.getAllSectionCheckboxesForFile(oFile);
 
   [].forEach.call(elAllLineCheckboxesOfFile, function(elem) {
@@ -1958,7 +1962,7 @@ Patch.prototype.onClickFileCheckbox = function(oEvent) {
 
 Patch.prototype.onClickSectionCheckbox = function(oEvent) {
   var elSrcElement = this.getToggledCheckbox(oEvent);
-  var oSection = new PatchSection(elSrcElement.id);
+  var oSection     = new PatchSection(elSrcElement.id);
   this.clickAllLineCheckboxesInSection(oSection, elSrcElement.checked);
 };
 
@@ -1967,7 +1971,6 @@ Patch.prototype.onClickLineCheckbox = function(oEvent) {
 };
 
 Patch.prototype.clickAllLineCheckboxesInSection = function(oSection, bChecked) {
-
   var elAllLineCheckboxesOfSection = this.getAllLineCheckboxesForSection(oSection);
 
   [].forEach.call(elAllLineCheckboxesOfSection, function(elem) {
@@ -1976,8 +1979,7 @@ Patch.prototype.clickAllLineCheckboxesInSection = function(oSection, bChecked) {
 };
 
 Patch.prototype.registerStagePatch = function() {
-
-  var elStage = document.querySelector("#" + this.ID.STAGE);
+  var elStage        = document.querySelector("#" + this.ID.STAGE);
   var REFRESH_PREFIX = "refresh";
 
   elStage.addEventListener("click", this.submitPatch.bind(this, this.ACTION.PATCH_STAGE));
@@ -2003,15 +2005,13 @@ Patch.prototype.registerStagePatch = function() {
 
 Patch.prototype.submitPatch = function(action) {
   // Collect add and remove info and submit to backend
-
-  var aAddPatch = this.collectElementsForCheckboxId(PatchLine.prototype.ID, true);
+  var aAddPatch    = this.collectElementsForCheckboxId(PatchLine.prototype.ID, true);
   var aRemovePatch = this.collectElementsForCheckboxId(PatchLine.prototype.ID, false);
 
   submitSapeventForm({ add: aAddPatch, remove: aRemovePatch }, action, "post");
 };
 
 Patch.prototype.collectElementsForCheckboxId = function(sId, bChecked) {
-
   var sSelector = this.buildSelectorInputStartsWithId(sId);
 
   return [].slice.call(document.querySelectorAll(sSelector))
@@ -2040,10 +2040,10 @@ function registerStagePatch() {
 // return non empty marked string in case it fits the filter
 // abc + b = a<mark>b</mark>c
 function fuzzyMatchAndMark(str, filter) {
-  var markedStr = "";
+  var markedStr   = "";
   var filterLower = filter.toLowerCase();
-  var strLower = str.toLowerCase();
-  var cur = 0;
+  var strLower    = str.toLowerCase();
+  var cur         = 0;
 
   for (var i = 0; i < filter.length; i++) {
     while (filterLower[i] !== strLower[cur] && cur < str.length) {
@@ -2054,8 +2054,9 @@ function fuzzyMatchAndMark(str, filter) {
   }
 
   var matched = i === filter.length;
+
   if (matched && cur < str.length) markedStr += str.substring(cur);
-  return matched ? markedStr : null;
+  return matched ? markedStr: null;
 }
 
 function CommandPalette(commandEnumerator, opts) {
@@ -2072,21 +2073,21 @@ function CommandPalette(commandEnumerator, opts) {
 
   if (opts.toggleKey[0] === "^") {
     this.toggleKeyCtrl = true;
-    this.toggleKey = opts.toggleKey.substring(1);
+    this.toggleKey     = opts.toggleKey.substring(1);
     if (!this.toggleKey) throw Error("Incorrect toggleKey");
   } else {
     this.toggleKeyCtrl = false;
-    this.toggleKey = opts.toggleKey;
+    this.toggleKey     = opts.toggleKey;
   }
 
   this.hotkeyDescription = opts.hotkeyDescription;
-  this.elements = {
+  this.elements          = {
     palette: null,
-    ul: null,
-    input: null
+    ul     : null,
+    input  : null
   };
   this.selectIndex = -1; // not selected
-  this.filter = "";
+  this.filter      = "";
   this.renderAndBindElements();
   this.hookEvents();
   Hotkeys.addHotkeyToHelpSheet(opts.toggleKey, opts.hotkeyDescription);
@@ -2106,31 +2107,31 @@ CommandPalette.prototype.hookEvents = function() {
 CommandPalette.prototype.renderCommandItem = function(cmd) {
   var li = document.createElement("li");
   if (cmd.iconClass) {
-    var icon = document.createElement("i");
-    icon.className = cmd.iconClass;
+    var icon           = document.createElement("i");
+        icon.className = cmd.iconClass;
     li.appendChild(icon);
   }
   var titleSpan = document.createElement("span");
   li.appendChild(titleSpan);
-  cmd.element = li;
+  cmd.element   = li;
   cmd.titleSpan = titleSpan;
   return li;
 };
 
 CommandPalette.prototype.renderAndBindElements = function() {
-  var div = document.createElement("div");
-  div.className = "cmd-palette";
-  div.style.display = "none";
-  var input = document.createElement("input");
-  input.placeholder = this.hotkeyDescription;
-  var ul = document.createElement("ul");
+  var div               = document.createElement("div");
+      div.className     = "cmd-palette";
+      div.style.display = "none";
+  var input             = document.createElement("input");
+      input.placeholder = this.hotkeyDescription;
+  var ul                = document.createElement("ul");
   for (var i = 0; i < this.commands.length; i++) ul.appendChild(this.renderCommandItem(this.commands[i]));
   div.appendChild(input);
   div.appendChild(ul);
 
   this.elements.palette = div;
-  this.elements.input = input;
-  this.elements.ul = ul;
+  this.elements.input   = input;
+  this.elements.ul      = ul;
   document.body.appendChild(div);
 };
 
@@ -2163,11 +2164,11 @@ CommandPalette.prototype.applyFilter = function() {
     var cmd = this.commands[i];
     if (!this.filter) {
       cmd.element.style.display = "";
-      cmd.titleSpan.innerText = cmd.title;
+      cmd.titleSpan.innerText   = cmd.title;
     } else {
       var matchedTitle = fuzzyMatchAndMark(cmd.title, this.filter);
       if (matchedTitle) {
-        cmd.titleSpan.innerHTML = matchedTitle;
+        cmd.titleSpan.innerHTML   = matchedTitle;
         cmd.element.style.display = "";
       } else {
         cmd.element.style.display = "none";
@@ -2188,7 +2189,7 @@ CommandPalette.prototype.applySelectIndex = function(newIndex) {
 
 CommandPalette.prototype.selectFirst = function() {
   for (var i = 0; i < this.commands.length; i++) {
-    if (this.commands[i].element.style.display === "none") continue; // skip hidden
+    if (this.commands[i].element.style.display === "none") continue;// skip hidden
     this.applySelectIndex(i);
     break;
   }
@@ -2196,7 +2197,7 @@ CommandPalette.prototype.selectFirst = function() {
 
 CommandPalette.prototype.selectNext = function() {
   for (var i = this.selectIndex + 1; i < this.commands.length; i++) {
-    if (this.commands[i].element.style.display === "none") continue; // skip hidden
+    if (this.commands[i].element.style.display === "none") continue;// skip hidden
     this.applySelectIndex(i);
     break;
   }
@@ -2204,7 +2205,7 @@ CommandPalette.prototype.selectNext = function() {
 
 CommandPalette.prototype.selectPrev = function() {
   for (var i = this.selectIndex - 1; i >= 0; i--) {
-    if (this.commands[i].element.style.display === "none") continue; // skip hidden
+    if (this.commands[i].element.style.display === "none") continue;// skip hidden
     this.applySelectIndex(i);
     break;
   }
@@ -2215,14 +2216,14 @@ CommandPalette.prototype.getSelected = function() {
 };
 
 CommandPalette.prototype.adjustScrollPosition = function(itemElement) {
-  var bItem = itemElement.getBoundingClientRect();
-  var bContainer = this.elements.ul.getBoundingClientRect();
-  bItem.top = Math.round(bItem.top);
-  bItem.bottom = Math.round(bItem.bottom);
-  bItem.height = Math.round(bItem.height);
-  bItem.mid = Math.round(bItem.top + bItem.height / 2);
-  bContainer.top = Math.round(bContainer.top);
-  bContainer.bottom = Math.round(bContainer.bottom);
+  var bItem             = itemElement.getBoundingClientRect();
+  var bContainer        = this.elements.ul.getBoundingClientRect();
+      bItem.top         = Math.round(bItem.top);
+      bItem.bottom      = Math.round(bItem.bottom);
+      bItem.height      = Math.round(bItem.height);
+      bItem.mid         = Math.round(bItem.top + bItem.height / 2);
+      bContainer.top    = Math.round(bContainer.top);
+      bContainer.bottom = Math.round(bContainer.bottom);
 
   if (bItem.mid > bContainer.bottom - 2) {
     this.elements.ul.scrollTop += bItem.bottom - bContainer.bottom;
@@ -2232,7 +2233,7 @@ CommandPalette.prototype.adjustScrollPosition = function(itemElement) {
 };
 
 CommandPalette.prototype.toggleDisplay = function(forceState) {
-  var isDisplayed = (this.elements.palette.style.display !== "none");
+  var isDisplayed   = (this.elements.palette.style.display !== "none");
   var tobeDisplayed = (forceState !== undefined) ? forceState : !isDisplayed;
 
   if (tobeDisplayed) {
@@ -2261,7 +2262,7 @@ CommandPalette.prototype.handleUlClick = function(event) {
   var element = event.target || event.srcElement;
   if (!element) return;
   if (element.nodeName === "SPAN") element = element.parentNode;
-  if (element.nodeName === "I") element = element.parentNode;
+  if (element.nodeName === "I") element    = element.parentNode;
   if (element.nodeName !== "LI") return;
   this.exec(this.getCommandByElement(element));
 };
@@ -2290,10 +2291,10 @@ function createRepoCatalogEnumerator(catalog, action) {
   return function() {
     return catalog.map(function(i) {
       return {
-        action: action + "?key=" + i.key,
+        action   : action + "?key=" + i.key,
         iconClass: i.isOffline
           ? "icon icon-plug darkgrey"
-          : "icon icon-cloud-upload-alt blue",
+             :  "icon icon-cloud-upload-alt blue",
         title: i.displayName
       };
     });
@@ -2301,12 +2302,11 @@ function createRepoCatalogEnumerator(catalog, action) {
 }
 
 function enumerateUiActions() {
-
   var items = [];
   function processUL(ulNode, prefix) {
     for (var i = 0; i < ulNode.children.length; i++) {
       var item = ulNode.children[i];
-      if (item.nodeName !== "LI") continue; // unexpected node
+      if (item.nodeName !== "LI") continue;// unexpected node
       if (item.children.length >= 2 && item.children[1].nodeName === "UL") {
         // submenu detected
         var menutext = item.children[0].innerText;
@@ -2343,7 +2343,7 @@ function enumerateUiActions() {
     var prefix = item[1];
     return {
       action: action,
-      title: (prefix ? prefix + ": " : "") + anchor.innerText.trim()
+      title : (prefix ? prefix + ": " : "") + anchor.innerText.trim()
     };
   });
 
@@ -2410,7 +2410,7 @@ function enumerateJumpAllFiles() {
       var title = listItem.children[0].childNodes[0].textContent;
       return {
         action: root.onclick.bind(null, title),
-        title: title
+        title : title
       };
     });
 }
@@ -2459,7 +2459,7 @@ window.onscroll = function() { toggleSticky() };
 // Add the sticky class to the navbar when you reach its scroll position.
 // Remove "sticky" when you leave the scroll position
 function toggleSticky() {
-  var body = document.getElementsByTagName("body")[0];
+  var body   = document.getElementsByTagName("body")[0];
   var header = document.getElementById("header");
   var sticky = header.offsetTop;
 
