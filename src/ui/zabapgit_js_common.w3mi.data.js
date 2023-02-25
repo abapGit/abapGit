@@ -40,17 +40,17 @@ if (!Function.prototype.bind) {
       throw new TypeError("Function.prototype.bind - subject is not callable");
     }
 
-    var aArgs   = Array.prototype.slice.call(arguments, 1),
-        fToBind = this,
-        fNOP    = function() { },
-        fBound  = function() {
-        return fToBind.apply(
-          this instanceof fNOP
-            ? this
-            :  oThis,
-          aArgs.concat(Array.prototype.slice.call(arguments))
-        );
-      };
+    var aArgs   = Array.prototype.slice.call(arguments, 1);
+    var fToBind = this;
+    var fNOP    = function() { };
+    var fBound  = function() {
+      return fToBind.apply(
+        this instanceof fNOP
+          ? this
+          :      oThis,
+        aArgs.concat(Array.prototype.slice.call(arguments))
+      );
+    };
 
     if (this.prototype) {
       fNOP.prototype = this.prototype;
@@ -112,7 +112,7 @@ function submitSapeventForm(params, action, method, form) {
 
   function getSapeventPrefix() {
     if (document.querySelector('a[href*="file:///SAPEVENT:"]')) {
-      return "file:///";//Prefix for chromium based browser control
+      return "file:///"; //Prefix for chromium based browser control
     } else {
       return "";
     }
@@ -178,13 +178,13 @@ function errorStub(event) {
   alert("JS Error, please log an issue (@" + targetName + ")");
 }
 
-// confirm JS initilization
+// Confirm JS initilization
 function confirmInitialized() {
   var errorBanner = document.getElementById("js-error-banner");
   if (errorBanner) {
     errorBanner.style.display = "none";
   }
-  debugOutput("js: OK");// Final final confirmation :)
+  debugOutput("js: OK"); // Final final confirmation :)
 }
 
 /**********************************************************
@@ -235,7 +235,7 @@ function findStyleSheetByName(name) {
 
 function getIndocStyleSheet() {
   for (var s = 0; s < document.styleSheets.length; s++) {
-    if (!document.styleSheets[s].href) return document.styleSheets[s];// One with empty href
+    if (!document.styleSheets[s].href) return document.styleSheets[s]; // One with empty href
   }
   // None found ? create one
   var style = document.createElement("style");
@@ -429,8 +429,9 @@ RepoOverViewHelper.prototype.toggleItemsDetail = function(forceDisplay) {
       document.body.classList.remove("full_width");
     }
 
-        this.detailCssClass.style.display = this.isDetailsDisplayed ? "" : "none";
-    var icon                              = document.getElementById("icon-filter-detail");
+    this.detailCssClass.style.display = this.isDetailsDisplayed ? "" : "none";
+
+    var icon = document.getElementById("icon-filter-detail");
     this.toggleFilterIcon(icon, this.isDetailsDisplayed);
   }
 };
@@ -491,10 +492,10 @@ function StageHelper(params) {
   // Constants
   this.HIGHLIGHT_STYLE = "highlight";
   this.STATUS          = {
-    add   : "A",
-    remove: "R",
-    ignore: "I",
-    reset : "?",
+    add    : "A",
+    remove : "R",
+    ignore : "I",
+    reset  : "?",
     isValid: function(status) { return "ARI?".indexOf(status) == -1 }
   };
 
@@ -517,11 +518,13 @@ StageHelper.prototype.findCounters = function() {
 StageHelper.prototype.injectFilterMe = function() {
   var tabFirstHead = this.dom.stageTab.tHead.rows[0];
   if (!tabFirstHead || tabFirstHead.className !== "local") {
-    return;// for the case only "remove part" is displayed
+    return; // for the case only "remove part" is displayed
   }
-  var changedByHead           = tabFirstHead.cells[this.colIndex.user];
-      changedByHead.innerText = changedByHead.innerText + " (";
-  var a                       = document.createElement("A");
+  var changedByHead = tabFirstHead.cells[this.colIndex.user];
+
+  changedByHead.innerText = changedByHead.innerText + " (";
+
+  var a = document.createElement("A");
   a.appendChild(document.createTextNode("me"));
   a.onclick = this.onFilterMe.bind(this);
   a.href    = "#";
@@ -617,8 +620,8 @@ StageHelper.prototype.onTableClick = function(event) {
     this.updateRow(targetRow, status);
   } else { // TH
     this.iterateStageTab(true, function(row) {
-      if (row.style.display !== "none"            // Not filtered out
-        && row.className === targetRow.className  // Same context as header
+      if (row.style.display !== "none"           // Not filtered out
+        && row.className === targetRow.className // Same context as header
       ) {
         this.updateRow(row, status);
       }
@@ -642,7 +645,7 @@ StageHelper.prototype.onCtrlEnter = function(e) {
 // Search object
 StageHelper.prototype.onFilter = function(e) {
   if ( // Enter hit or clear, IE SUCKS !
-       e.type === "input" && !e.target.value && this.lastFilterValue
+    e.type === "input" && !e.target.value && this.lastFilterValue
     || e.type === "keypress" && (e.which === 13 || e.key === "Enter") && !e.ctrlKey) {
 
     this.applyFilterValue(e.target.value);
@@ -680,11 +683,12 @@ StageHelper.prototype.applyFilterToRow = function(row, filter) {
   for (var i = targets.length - 1; i >= 0; i--) {
     var target = targets[i];
     // Ignore case of filter
-    var regFilter      = new RegExp("(" + filter + ")", "gi");
-        target.newHtml = (filter)
+    var regFilter = new RegExp("(" + filter + ")", "gi");
+
+    target.newHtml = (filter)
       ? target.plainText.replace(regFilter, "<mark>$1</mark>")
-      :  target.plainText;
-    target.isChanged = target.newHtml                         !== target.curHtml;
+      : target.plainText;
+    target.isChanged = target.newHtml !== target.curHtml;
     isVisible        = isVisible || !filter || target.newHtml !== target.plainText;
   }
 
@@ -693,7 +697,7 @@ StageHelper.prototype.applyFilterToRow = function(row, filter) {
   for (var j = targets.length - 1; j >= 0; j--) {
     if (targets[j].isChanged) targets[j].elem.innerHTML = targets[j].newHtml;
   }
-  return isVisible ? 1: 0;
+  return isVisible ? 1 : 0;
 };
 
 // Get how status should affect object counter
@@ -715,7 +719,7 @@ StageHelper.prototype.updateRow = function(row, newStatus) {
     this.updateRowStatus(row, newStatus);
     this.updateRowCommand(row, newStatus);
   } else if (!row.cells[this.colIndex["cmd"]].children.length) {
-    this.updateRowCommand(row, newStatus);// For initial run
+    this.updateRowCommand(row, newStatus); // For initial run
   }
 
   this.selectedCount += this.getStatusImpact(newStatus) - this.getStatusImpact(oldStatus);
@@ -737,7 +741,7 @@ StageHelper.prototype.updateRowCommand = function(row, status) {
   if (status === this.STATUS.reset) {
     cell.innerHTML = (row.className == "local")
       ? this.TEMPLATES.cmdLocal
-      :  this.TEMPLATES.cmdRemote;
+      :     this.TEMPLATES.cmdRemote;
   } else {
     cell.innerHTML = this.TEMPLATES.cmdReset;
   }
@@ -846,7 +850,7 @@ CheckListWrapper.prototype.onClick = function(e) { // eslint-disable-line no-unu
   // Get nodes
   var target = event.target || event.srcElement;
   if (!target) return;
-  if (target.tagName !== "A") { target = target.parentNode }// icon clicked
+  if (target.tagName !== "A") { target = target.parentNode } // icon clicked
   if (target.tagName !== "A") return;
   if (target.parentNode.tagName !== "LI") return;
 
@@ -858,7 +862,7 @@ CheckListWrapper.prototype.onClick = function(e) { // eslint-disable-line no-unu
   // Node updates
   var option   = nodeA.innerText;
   var oldState = nodeLi.getAttribute("data-check");
-  if (oldState === null) return;// no data-check attribute - non-checkbox
+  if (oldState === null) return; // no data-check attribute - non-checkbox
   var newState = oldState === "X" ? false : true;
 
   if (newState) {
@@ -898,7 +902,7 @@ function DiffHelper(params) {
   };
 
   this.repoKey = this.dom.diffList.getAttribute("data-repo-key");
-  if (!this.repoKey) return;// Unexpected
+  if (!this.repoKey) return; // Unexpected
 
   this.dom.jump         = document.getElementById(params.ids.jump);
   this.dom.jump.onclick = this.onJump.bind(this);
@@ -945,7 +949,7 @@ DiffHelper.prototype.onFilterOnlyMyChanges = function(username, state) {
     this.dom.filterButton.classList.remove("bgorange");
   }
 
-  // apply logic on Changed By list items
+   // apply logic on Changed By list items
   var changedByListItems = Array.prototype.slice.call(document.querySelectorAll("[data-aux*=changed-by]"));
 
   changedByListItems
@@ -1109,7 +1113,7 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
   var splitLineNumRightColumnIdx = 3;
   var splitCodeRightColumnIdx    = 5;
 
-  if (e.button !== 0) return;// function is only valid for left button, not right button
+  if (e.button !== 0) return; // function is only valid for left button, not right button
 
   var td = e.target;
 
@@ -1188,11 +1192,11 @@ DiffColumnSelection.prototype.copyEventListener = function(e) {
 DiffColumnSelection.prototype.getSelectedText = function() {
   // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
   // (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
-  var sel   = window.getSelection(),
-      range = sel.getRangeAt(0),
-      doc   = range.cloneContents(),
-      nodes = doc.querySelectorAll("tr"),
-      text  = "";
+  var sel   = window.getSelection();
+  var range = sel.getRangeAt(0);
+  var doc   = range.cloneContents();
+  var nodes = doc.querySelectorAll("tr");
+  var text  = "";
   if (nodes.length === 0) {
     text = doc.textContent;
   } else {
@@ -1314,7 +1318,7 @@ KeyNavigation.prototype.onArrowDown = function() {
   if (activeElement.nodeName === "A"
     && activeElement.parentElement
     && activeElement.parentElement.nodeName === "LI"
-    && activeElement.parentElement.classList.contains("force-nav-hover")// opened dropdown
+    && activeElement.parentElement.classList.contains("force-nav-hover") // opened dropdown
     && activeElement.nextElementSibling
     && activeElement.nextElementSibling.nodeName === "UL"
     && activeElement.nextElementSibling.firstElementChild
@@ -1393,12 +1397,13 @@ LinkHints.prototype.deployHintContainers = function() {
       continue;
     }
 
-    var hint               = {};
-        hint.container     = document.createElement("span");
-        hint.pendingSpan   = document.createElement("span");
-        hint.remainingSpan = document.createElement("span");
-        hint.parent        = hintTargets[i];
-        hint.code          = codeCounter.toString();
+    var hint = {};
+
+    hint.container     = document.createElement("span");
+    hint.pendingSpan   = document.createElement("span");
+    hint.remainingSpan = document.createElement("span");
+    hint.parent        = hintTargets[i];
+    hint.code          = codeCounter.toString();
 
     hint.container.appendChild(hint.pendingSpan);
     hint.container.appendChild(hint.remainingSpan);
@@ -1415,8 +1420,8 @@ LinkHints.prototype.deployHintContainers = function() {
       continue;
     }
 
-    hint.container.classList.add("nodisplay");// hide by default
-    hint.container.dataset.code  = codeCounter.toString();// not really needed, more for debug
+    hint.container.classList.add("nodisplay"); // hide by default
+    hint.container.dataset.code = codeCounter.toString(); // not really needed, more for debug
 
     if (hintTargets[i].nodeName === "INPUT" || hintTargets[i].nodeName === "TEXTAREA") {
       // does not work if inside the input node
@@ -2189,7 +2194,7 @@ CommandPalette.prototype.applySelectIndex = function(newIndex) {
 
 CommandPalette.prototype.selectFirst = function() {
   for (var i = 0; i < this.commands.length; i++) {
-    if (this.commands[i].element.style.display === "none") continue;// skip hidden
+    if (this.commands[i].element.style.display === "none") continue; // skip hidden
     this.applySelectIndex(i);
     break;
   }
@@ -2197,7 +2202,7 @@ CommandPalette.prototype.selectFirst = function() {
 
 CommandPalette.prototype.selectNext = function() {
   for (var i = this.selectIndex + 1; i < this.commands.length; i++) {
-    if (this.commands[i].element.style.display === "none") continue;// skip hidden
+    if (this.commands[i].element.style.display === "none") continue; // skip hidden
     this.applySelectIndex(i);
     break;
   }
@@ -2205,7 +2210,7 @@ CommandPalette.prototype.selectNext = function() {
 
 CommandPalette.prototype.selectPrev = function() {
   for (var i = this.selectIndex - 1; i >= 0; i--) {
-    if (this.commands[i].element.style.display === "none") continue;// skip hidden
+    if (this.commands[i].element.style.display === "none") continue; // skip hidden
     this.applySelectIndex(i);
     break;
   }
@@ -2216,14 +2221,15 @@ CommandPalette.prototype.getSelected = function() {
 };
 
 CommandPalette.prototype.adjustScrollPosition = function(itemElement) {
-  var bItem             = itemElement.getBoundingClientRect();
-  var bContainer        = this.elements.ul.getBoundingClientRect();
-      bItem.top         = Math.round(bItem.top);
-      bItem.bottom      = Math.round(bItem.bottom);
-      bItem.height      = Math.round(bItem.height);
-      bItem.mid         = Math.round(bItem.top + bItem.height / 2);
-      bContainer.top    = Math.round(bContainer.top);
-      bContainer.bottom = Math.round(bContainer.bottom);
+  var bItem      = itemElement.getBoundingClientRect();
+  var bContainer = this.elements.ul.getBoundingClientRect();
+
+  bItem.top         = Math.round(bItem.top);
+  bItem.bottom      = Math.round(bItem.bottom);
+  bItem.height      = Math.round(bItem.height);
+  bItem.mid         = Math.round(bItem.top + bItem.height / 2);
+  bContainer.top    = Math.round(bContainer.top);
+  bContainer.bottom = Math.round(bContainer.bottom);
 
   if (bItem.mid > bContainer.bottom - 2) {
     this.elements.ul.scrollTop += bItem.bottom - bContainer.bottom;
@@ -2262,7 +2268,9 @@ CommandPalette.prototype.handleUlClick = function(event) {
   var element = event.target || event.srcElement;
   if (!element) return;
   if (element.nodeName === "SPAN") element = element.parentNode;
-  if (element.nodeName === "I") element    = element.parentNode;
+
+  if (element.nodeName === "I") element = element.parentNode;
+
   if (element.nodeName !== "LI") return;
   this.exec(this.getCommandByElement(element));
 };
@@ -2292,10 +2300,8 @@ function createRepoCatalogEnumerator(catalog, action) {
     return catalog.map(function(i) {
       return {
         action   : action + "?key=" + i.key,
-        iconClass: i.isOffline
-          ? "icon icon-plug darkgrey"
-             :  "icon icon-cloud-upload-alt blue",
-        title: i.displayName
+        iconClass: i.isOffline ? "icon icon-plug darkgrey" : "icon icon-cloud-upload-alt blue",
+        title    : i.displayName
       };
     });
   };
@@ -2306,7 +2312,7 @@ function enumerateUiActions() {
   function processUL(ulNode, prefix) {
     for (var i = 0; i < ulNode.children.length; i++) {
       var item = ulNode.children[i];
-      if (item.nodeName !== "LI") continue;// unexpected node
+      if (item.nodeName !== "LI") continue; // unexpected node
       if (item.children.length >= 2 && item.children[1].nodeName === "UL") {
         // submenu detected
         var menutext = item.children[0].innerText;
