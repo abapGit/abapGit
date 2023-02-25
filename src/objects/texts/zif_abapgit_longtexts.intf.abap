@@ -12,7 +12,7 @@ INTERFACE zif_abapgit_longtexts
 
   METHODS changed_by
     IMPORTING
-      !iv_object_name TYPE sobj_name
+      !iv_object_name TYPE tadir-obj_name
       !iv_longtext_id TYPE dokil-id
       !it_dokil       TYPE zif_abapgit_definitions=>ty_dokil_tt OPTIONAL
     RETURNING
@@ -41,7 +41,7 @@ INTERFACE zif_abapgit_longtexts
       zcx_abapgit_exception .
   METHODS delete
     IMPORTING
-      !iv_object_name TYPE sobj_name
+      !iv_object_name TYPE tadir-obj_name
       !iv_longtext_id TYPE dokil-id
     RAISING
       zcx_abapgit_exception .
