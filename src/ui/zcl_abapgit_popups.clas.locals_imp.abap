@@ -420,8 +420,6 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
       ls_selection TYPE spopli,
       lt_selection TYPE TABLE OF spopli.
 
-    ls_selection-varoption = 'All objects'.
-    APPEND ls_selection TO lt_selection.
     ls_selection-varoption = 'Packages'.
     APPEND ls_selection TO lt_selection.
     ls_selection-varoption = 'DDIC objects'.
@@ -482,8 +480,6 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
       ASSERT sy-subrc = 0.
 
       CASE iv_category.
-        WHEN 'All objects'.
-          " Just mark
         WHEN 'Packages'.
           IF <lv_obj_type> <> 'DEVC'.
             CONTINUE.
