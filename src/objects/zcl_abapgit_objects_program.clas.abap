@@ -38,6 +38,21 @@ CLASS zcl_abapgit_objects_program DEFINITION
         ldbname TYPE progdir-ldbname,
         uccheck TYPE progdir-uccheck,
       END OF ty_progdir.
+    TYPES:
+      BEGIN OF ty_cua,
+        adm TYPE rsmpe_adm,
+        sta TYPE STANDARD TABLE OF rsmpe_stat WITH DEFAULT KEY,
+        fun TYPE STANDARD TABLE OF rsmpe_funt WITH DEFAULT KEY,
+        men TYPE STANDARD TABLE OF rsmpe_men WITH DEFAULT KEY,
+        mtx TYPE STANDARD TABLE OF rsmpe_mnlt WITH DEFAULT KEY,
+        act TYPE STANDARD TABLE OF rsmpe_act WITH DEFAULT KEY,
+        but TYPE STANDARD TABLE OF rsmpe_but WITH DEFAULT KEY,
+        pfk TYPE STANDARD TABLE OF rsmpe_pfk WITH DEFAULT KEY,
+        set TYPE STANDARD TABLE OF rsmpe_staf WITH DEFAULT KEY,
+        doc TYPE STANDARD TABLE OF rsmpe_atrt WITH DEFAULT KEY,
+        tit TYPE STANDARD TABLE OF rsmpe_titt WITH DEFAULT KEY,
+        biv TYPE STANDARD TABLE OF rsmpe_buts WITH DEFAULT KEY,
+      END OF ty_cua.
 
     METHODS serialize_program
       IMPORTING
@@ -75,21 +90,6 @@ CLASS zcl_abapgit_objects_program DEFINITION
       END OF ty_dynpro .
     TYPES:
       ty_dynpro_tt TYPE STANDARD TABLE OF ty_dynpro WITH DEFAULT KEY .
-    TYPES:
-      BEGIN OF ty_cua,
-        adm TYPE rsmpe_adm,
-        sta TYPE STANDARD TABLE OF rsmpe_stat WITH DEFAULT KEY,
-        fun TYPE STANDARD TABLE OF rsmpe_funt WITH DEFAULT KEY,
-        men TYPE STANDARD TABLE OF rsmpe_men WITH DEFAULT KEY,
-        mtx TYPE STANDARD TABLE OF rsmpe_mnlt WITH DEFAULT KEY,
-        act TYPE STANDARD TABLE OF rsmpe_act WITH DEFAULT KEY,
-        but TYPE STANDARD TABLE OF rsmpe_but WITH DEFAULT KEY,
-        pfk TYPE STANDARD TABLE OF rsmpe_pfk WITH DEFAULT KEY,
-        set TYPE STANDARD TABLE OF rsmpe_staf WITH DEFAULT KEY,
-        doc TYPE STANDARD TABLE OF rsmpe_atrt WITH DEFAULT KEY,
-        tit TYPE STANDARD TABLE OF rsmpe_titt WITH DEFAULT KEY,
-        biv TYPE STANDARD TABLE OF rsmpe_buts WITH DEFAULT KEY,
-      END OF ty_cua .
 
     METHODS strip_generation_comments
       CHANGING
@@ -200,7 +200,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_program IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 
 
   METHOD add_tpool.

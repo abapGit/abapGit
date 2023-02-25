@@ -19,12 +19,56 @@ CLASS zcl_abapgit_persist_migrate DEFINITION PUBLIC CREATE PUBLIC.
     CLASS-METHODS lock_exists
       RETURNING
         VALUE(rv_exists) TYPE abap_bool.
+    CLASS-METHODS gui_status_create
+      RAISING
+        zcx_abapgit_exception.
+    CLASS-METHODS gui_status_exists
+      RETURNING
+        VALUE(rv_exists) TYPE abap_bool.
 
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_persist_migrate IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
+
+
+  METHOD gui_status_create.
+
+    DATA ls_cua TYPE zcl_abapgit_objects_program=>ty_cua.
+
+    IF gui_status_exists( ) = abap_true.
+      RETURN.
+    ENDIF.
+
+    ls_cua = lcl_own_cua_provider=>get( ).
+
+    IF ls_cua IS INITIAL. " Full version or Something wrong with abapmerged version
+      RETURN.
+    ENDIF.
+
+    TRY.
+        lcl_cua_interface=>new( )->put_own_cua( ls_cua ).
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD gui_status_exists.
+
+    DATA ls_cua TYPE zcl_abapgit_objects_program=>ty_cua.
+
+    TRY.
+        ls_cua = lcl_cua_interface=>new( )->get_own_cua( ).
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
+
+    rv_exists = boolc( ls_cua IS NOT INITIAL ).
+
+    " TODO compare structures
+
+  ENDMETHOD.
 
 
   METHOD lock_create.
@@ -135,6 +179,10 @@ CLASS zcl_abapgit_persist_migrate IMPLEMENTATION.
       lock_create( ).
     ENDIF.
 
+    IF gui_status_exists( ) = abap_false.
+      gui_status_create( ).
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -242,5 +290,4 @@ CLASS zcl_abapgit_persist_migrate IMPLEMENTATION.
     rv_exists = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
-
 ENDCLASS.
