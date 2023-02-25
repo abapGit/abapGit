@@ -45,9 +45,7 @@ if (!Function.prototype.bind) {
     var fNOP    = function() { };
     var fBound  = function() {
       return fToBind.apply(
-        this instanceof fNOP
-          ? this
-          :      oThis,
+        this instanceof fNOP ? this : oThis,
         aArgs.concat(Array.prototype.slice.call(arguments))
       );
     };
