@@ -438,12 +438,12 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    call function 'LVC_FILTER_APPLY'
-      exporting
+    CALL FUNCTION 'LVC_FILTER_APPLY'
+      EXPORTING
         it_filter                    = lt_lvc_t_filt
-      importing
+      IMPORTING
         et_filter_index_inside       = lt_visible
-      tables
+      TABLES
         it_data                      = <lt_table>.
 
     LOOP AT lt_visible INTO lv_index.
