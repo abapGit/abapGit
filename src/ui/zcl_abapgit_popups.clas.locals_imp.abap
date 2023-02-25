@@ -437,7 +437,7 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
     CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
       EXPORTING
         titel      = 'Selection'
-        textline1  = 'Which objects should be selected?'
+        textline1  = 'Which objects should be added to the selection?'
         start_col  = ls_position-start_column
         start_row  = ls_position-start_row
         cursorline = 1
@@ -480,8 +480,6 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
 
       ASSIGN COMPONENT c_fieldname_selected OF STRUCTURE <ls_line> TO <lv_selected>.
       ASSERT sy-subrc = 0.
-
-      <lv_selected> = abap_false. " Reset
 
       CASE iv_category.
         WHEN 'All objects'.
