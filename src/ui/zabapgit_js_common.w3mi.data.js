@@ -947,7 +947,7 @@ DiffHelper.prototype.onFilterOnlyMyChanges = function(username, state) {
     this.dom.filterButton.classList.remove("bgorange");
   }
 
-   // apply logic on Changed By list items
+  // apply logic on Changed By list items
   var changedByListItems = Array.prototype.slice.call(document.querySelectorAll("[data-aux*=changed-by]"));
 
   changedByListItems
@@ -1198,8 +1198,8 @@ DiffColumnSelection.prototype.getSelectedText = function() {
   if (nodes.length === 0) {
     text = doc.textContent;
   } else {
-    var newline  = "",
-        realThis = this;
+    var newline  = "";
+    var realThis = this;
     [].forEach.call(nodes, function(tr, i) {
       var cellIdx = (i == 0 ? 0 : realThis.selectedColumnIdx);
       if (tr.cells.length > cellIdx) {
@@ -1746,13 +1746,14 @@ Hotkeys.addHotkeyToHelpSheet = function(key, description) {
   var hotkeysUl = document.querySelector("#hotkeys ul.hotkeys");
   if (!hotkeysUl) return;
 
-  var li                  = document.createElement("li");
-  var spanId              = document.createElement("span");
-      spanId.className    = "key-id";
-      spanId.innerText    = key;
-  var spanDescr           = document.createElement("span");
-      spanDescr.className = "key-descr";
-      spanDescr.innerText = description;
+  var li        = document.createElement("li");
+  var spanId    = document.createElement("span");
+  var spanDescr = document.createElement("span");
+
+  spanId.className    = "key-id";
+  spanId.innerText    = key;
+  spanDescr.className = "key-descr";
+  spanDescr.innerText = description;
   li.appendChild(spanId);
   li.appendChild(spanDescr);
 
@@ -2110,8 +2111,9 @@ CommandPalette.prototype.hookEvents = function() {
 CommandPalette.prototype.renderCommandItem = function(cmd) {
   var li = document.createElement("li");
   if (cmd.iconClass) {
-    var icon           = document.createElement("i");
-        icon.className = cmd.iconClass;
+    var icon = document.createElement("i");
+
+    icon.className = cmd.iconClass;
     li.appendChild(icon);
   }
   var titleSpan = document.createElement("span");
@@ -2122,12 +2124,13 @@ CommandPalette.prototype.renderCommandItem = function(cmd) {
 };
 
 CommandPalette.prototype.renderAndBindElements = function() {
-  var div               = document.createElement("div");
-      div.className     = "cmd-palette";
-      div.style.display = "none";
-  var input             = document.createElement("input");
-      input.placeholder = this.hotkeyDescription;
-  var ul                = document.createElement("ul");
+  var div   = document.createElement("div");
+  var input = document.createElement("input");
+  var ul    = document.createElement("ul");
+
+  div.className     = "cmd-palette";
+  div.style.display = "none";
+  input.placeholder = this.hotkeyDescription;
   for (var i = 0; i < this.commands.length; i++) ul.appendChild(this.renderCommandItem(this.commands[i]));
   div.appendChild(input);
   div.appendChild(ul);
