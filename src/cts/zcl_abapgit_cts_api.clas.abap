@@ -211,6 +211,27 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_cts_api~get_r3tr_obj_for_limu_obj.
+
+    CLEAR ev_object.
+    CLEAR ev_obj_name.
+
+    CALL FUNCTION 'GET_R3TR_OBJECT_FROM_LIMU_OBJ'
+      EXPORTING
+        p_limu_objtype = iv_object
+        p_limu_objname = iv_obj_name
+      IMPORTING
+        p_r3tr_objtype = ev_object
+        p_r3tr_objname = ev_obj_name
+      EXCEPTIONS
+        no_mapping     = 1
+        OTHERS         = 2.
+    IF sy-subrc <> 0 OR ev_obj_name IS INITIAL.
+      zcx_abapgit_exception=>raise( |No R3TR Object found for { iv_object } { iv_obj_name }| ).
+    ENDIF.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_cts_api~get_transports_for_list.
 
     DATA lv_request TYPE trkorr.
@@ -306,24 +327,12 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_cts_api~get_r3tr_obj_for_limu_obj.
+  METHOD zif_abapgit_cts_api~read_description.
 
-    CLEAR ev_object.
-    CLEAR ev_obj_name.
+    SELECT SINGLE as4text FROM e07t
+      INTO rv_description
+      WHERE trkorr = iv_trkorr
+      AND langu = sy-langu ##SUBRC_OK.
 
-    CALL FUNCTION 'GET_R3TR_OBJECT_FROM_LIMU_OBJ'
-      EXPORTING
-        p_limu_objtype = iv_object
-        p_limu_objname = iv_obj_name
-      IMPORTING
-        p_r3tr_objtype = ev_object
-        p_r3tr_objname = ev_obj_name
-      EXCEPTIONS
-        no_mapping     = 1
-        OTHERS         = 2.
-    IF sy-subrc <> 0 OR ev_obj_name IS INITIAL.
-      zcx_abapgit_exception=>raise( |No R3TR Object found for { iv_object } { iv_obj_name }| ).
-    ENDIF.
   ENDMETHOD.
-
 ENDCLASS.

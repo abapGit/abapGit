@@ -64,7 +64,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
 
   METHOD ask_user_for_check_variant.
@@ -171,7 +171,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    gui_services( )->get_hotkeys_ctl( )->register_hotkeys( zif_abapgit_gui_hotkeys~get_hotkey_actions( ) ).
+    register_handlers( ).
 
     ri_html->add( render_variant( mv_check_variant ) ).
 

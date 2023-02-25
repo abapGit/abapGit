@@ -26,7 +26,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_run_bckg IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_RUN_BCKG IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -84,7 +84,7 @@ CLASS zcl_abapgit_gui_page_run_bckg IMPLEMENTATION.
 
     DATA: lv_text LIKE LINE OF mt_text.
 
-    gui_services( )->register_event_handler( me ).
+    register_handlers( ).
 
     run( ).
 

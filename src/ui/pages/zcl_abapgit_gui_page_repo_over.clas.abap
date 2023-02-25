@@ -167,7 +167,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -1028,10 +1028,9 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       it_overview = lt_overview ).
     ri_html->add( |</div>| ).
 
-    gui_services( )->register_event_handler( me ).
     register_deferred_script( render_scripts( ) ).
     register_deferred_script( zcl_abapgit_gui_chunk_lib=>render_repo_palette( c_action-select ) ).
-    register_hotkeys( ).
+    register_handlers( ).
 
   ENDMETHOD.
 ENDCLASS.
