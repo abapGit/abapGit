@@ -91,8 +91,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_SEL IMPLEMENTATION.
 
   METHOD get_form_schema.
 
-    DATA lv_name TYPE string.
-
     FIELD-SYMBOLS <ls_branch> LIKE LINE OF mt_branches.
 
     ro_form = zcl_abapgit_html_form=>create(
