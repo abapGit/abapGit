@@ -186,7 +186,8 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
     IF rv_display_name CP zif_abapgit_definitions=>c_git_branch-heads.
       REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-heads_prefix IN rv_display_name WITH ''.
     ELSEIF rv_display_name CP zif_abapgit_definitions=>c_git_branch-tags.
-      rv_display_name = zcl_abapgit_git_tag=>remove_tag_prefix( zcl_abapgit_git_tag=>remove_peel( rv_display_name ) ).
+      REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-prefix IN rv_display_name WITH ''.
+      rv_display_name = zcl_abapgit_git_tag=>remove_peel( rv_display_name ).
     ENDIF.
 
   ENDMETHOD.
