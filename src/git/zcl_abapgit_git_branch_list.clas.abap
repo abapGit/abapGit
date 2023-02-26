@@ -141,13 +141,9 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
 
   METHOD find_tag_by_name.
 
-    DATA: lv_branch_name TYPE string.
-
-    lv_branch_name = iv_branch_name && '^{}'.
-
     READ TABLE mt_branches INTO rs_branch
         WITH TABLE KEY name_key
-        COMPONENTS name = lv_branch_name.
+        COMPONENTS name = zcl_abapgit_git_tag=>add_peel( iv_branch_name ).
     IF sy-subrc <> 0.
 
       READ TABLE mt_branches INTO rs_branch
@@ -186,7 +182,7 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
     IF rv_display_name CP zif_abapgit_definitions=>c_git_branch-heads.
       REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-heads_prefix IN rv_display_name WITH ''.
     ELSEIF rv_display_name CP zif_abapgit_definitions=>c_git_branch-tags.
-      REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-prefix IN rv_display_name WITH ''.
+      rv_display_name = zcl_abapgit_git_tag=>remove_tag_prefix( zcl_abapgit_git_tag=>remove_peel( rv_display_name ) ).
     ENDIF.
 
   ENDMETHOD.
@@ -211,8 +207,6 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
 
   METHOD get_type.
 
-    DATA: lv_annotated_tag_with_suffix TYPE string.
-
     FIELD-SYMBOLS: <lv_result> TYPE LINE OF string_table.
 
     rv_type = zif_abapgit_definitions=>c_git_branch_type-other.
@@ -223,11 +217,9 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
 
     ELSEIF iv_branch_name CP zif_abapgit_definitions=>c_git_branch-tags.
 
-      lv_annotated_tag_with_suffix = iv_branch_name && '^{}'.
-
       READ TABLE it_result ASSIGNING <lv_result>
                            INDEX iv_current_row_index + 1.
-      IF sy-subrc = 0 AND <lv_result> CP '*' && lv_annotated_tag_with_suffix.
+      IF sy-subrc = 0 AND <lv_result> CP '*' && zcl_abapgit_git_tag=>add_peel( iv_branch_name ).
         rv_type = zif_abapgit_definitions=>c_git_branch_type-annotated_tag.
       ELSE.
         rv_type = zif_abapgit_definitions=>c_git_branch_type-lightweight_tag.

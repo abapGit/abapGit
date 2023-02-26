@@ -176,7 +176,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
       iv_url = lo_repo->get_url( )
       is_tag = ls_tag ).
 
-    lv_text = |Tag { zcl_abapgit_git_tag=>remove_tag_prefix( ls_tag-name ) } deleted|.
+    lv_text = |Tag { ls_tag-display_name } deleted|.
 
     MESSAGE lv_text TYPE 'S'.
 
@@ -240,13 +240,11 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    REPLACE '^{}' IN ls_tag-name WITH ''.
-
-    lo_repo->select_branch( ls_tag-name ).
+    lo_repo->select_branch( zcl_abapgit_git_tag=>remove_peel( ls_tag-name ) ).
 
     COMMIT WORK AND WAIT.
 
-    lv_text = |Tag switched to { zcl_abapgit_git_tag=>remove_tag_prefix( ls_tag-name ) } |.
+    lv_text = |Tag switched to { ls_tag-display_name } |.
 
     MESSAGE lv_text TYPE 'S'.
 
