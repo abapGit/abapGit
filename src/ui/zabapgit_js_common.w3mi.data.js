@@ -1,5 +1,5 @@
 /**********************************************************
- * ABAPGIT JS function library
+ * abapGit JavaScript Function Library
  **********************************************************/
 
 /**********************************************************
@@ -176,7 +176,7 @@ function errorStub(event) {
   alert("JS Error, please log an issue (@" + targetName + ")");
 }
 
-// confirm JS initilization
+// Confirm JS initilization
 function confirmInitialized() {
   var errorBanner = document.getElementById("js-error-banner");
   if (errorBanner) {
@@ -452,7 +452,7 @@ RepoOverViewHelper.prototype.saveLocalStorage = function () {
 
 
 /**********************************************************
- * STAGE PAGE Logic
+ * Staging Logic
  **********************************************************/
 
 // Stage helper constructor
@@ -827,7 +827,7 @@ StageHelper.prototype.iterateStageTab = function (changeMode, cb /*, ...*/) {
 };
 
 /**********************************************************
- * Check list wrapper
+ * Check List Wrapper
  **********************************************************/
 
 function CheckListWrapper(id, cbAction, cbActionOnlyMyChanges) {
@@ -877,7 +877,7 @@ CheckListWrapper.prototype.onClick = function(e) { // eslint-disable-line no-unu
 };
 
 /**********************************************************
- * Diff page logic
+ * Diff Page Logic
  **********************************************************/
 
 // Diff helper constructor
@@ -1048,7 +1048,7 @@ DiffHelper.prototype.iterateDiffList = function (cb /*, ...*/) {
   }
 };
 
-// Highlight Filter button if filter is activate
+// Highlight filter button if filter is activate
 DiffHelper.prototype.highlightButton = function(state) {
   this.counter += state ? -1 : 1;
   if (this.counter > 0) {
@@ -1058,7 +1058,7 @@ DiffHelper.prototype.highlightButton = function(state) {
   }
 };
 
-//Collapse/Expand diffs
+// Collapse or expand diffs
 function onDiffCollapse(event) {
   var source = event.target || event.srcElement;
   var nextDiffContent = source.parentElement.nextElementSibling;
@@ -1077,14 +1077,13 @@ function onDiffCollapse(event) {
   hide ? nextDiffContent.classList.add("nodisplay") : nextDiffContent.classList.remove("nodisplay");
 }
 
-// Add Bottom margin, so that we can scroll to the top of the last file
+// Add bottom margin, so that we can scroll to the top of the last file
 function addMarginBottom(){
   document.getElementsByTagName("body")[0].style.marginBottom = screen.height + "px";
 }
 
-
 /**********************************************************
- * Diff page logic of column selection
+ * Diff Page Column Selection
  **********************************************************/
 
 function DiffColumnSelection() {
@@ -1210,14 +1209,18 @@ DiffColumnSelection.prototype.getSelectedText = function() {
 };
 
 /**********************************************************
- * Other functions
+ * Display Helper
  **********************************************************/
 
-// News announcement
+// Toggle display of changelog (news) and message popups
 function toggleDisplay(divId) {
   var div = document.getElementById(divId);
   if (div) div.style.display = (div.style.display) ? "" : "none";
 }
+
+/**********************************************************
+ * Keyboard Navigation
+ **********************************************************/
 
 function KeyNavigation() { }
 
@@ -1339,7 +1342,9 @@ function enableArrowListNavigation() {
   document.addEventListener("keydown", new KeyNavigation().getHandler());
 }
 
-/* LINK HINTS - Vimium like link hints */
+/**********************************************************
+ * Link Hints (Vimium-like)
+ **********************************************************/
 
 function LinkHints(linkHintHotKey){
   this.linkHintHotKey    = linkHintHotKey;
@@ -1496,10 +1501,10 @@ LinkHints.prototype.displayHints = function(isActivate) {
 
 LinkHints.prototype.hintActivate = function (hint) {
   if (hint.parent.nodeName === "A"
-    // hint.parent.href doesn't have a # at the end while accessing dropdowns the first time.
-    // Seems like a idiosyncrasy of SAPGUI's IE. So let's ignore the last character.
-    && ( hint.parent.href.substr(0, hint.parent.href.length - 1) === document.location.href ) // href is #
-    && !hint.parent.onclick                         // no handler
+    // hint.parent.href doesn`t have a # at the end while accessing dropdowns the first time.
+    // Seems like a idiosyncrasy of SAPGUI`s IE. So let`s ignore the last character.
+    && (hint.parent.href.substr(0, hint.parent.href.length - 1) === document.location.href)// href is #
+    && !hint.parent.onclick // no handler
     && hint.parent.parentElement && hint.parent.parentElement.nodeName === "LI") {
     // probably it is a dropdown ...
     this.activatedDropdown = hint.parent.parentElement;
@@ -1562,7 +1567,9 @@ function activateLinkHints(linkHintHotKey) {
   document.addEventListener("keypress", oLinkHint.getHandler());
 }
 
-/* HOTKEYS */
+/**********************************************************
+ * Hotkeys
+ **********************************************************/
 
 function Hotkeys(oKeyMap){
 
@@ -1758,17 +1765,16 @@ function setKeyBindings(oKeyMap){
   setTimeout(function(){ toggleDisplay("hotkeys-hint") }, 5000);
 }
 
-/*
-  Patch / git add -p
-  */
+/**********************************************************
+ * Patch Logic (git add -p)
+ **********************************************************/
 
 /*
   We have three type of cascading checkboxes.
   Which means that by clicking a file or section checkbox all corresponding line checkboxes are checked.
 
   The id of the checkbox indicates its semantics and its membership.
-
-  */
+*/
 
 /*
   1) file links
@@ -1783,8 +1789,7 @@ function setKeyBindings(oKeyMap){
           |
           |
       constant prefix
-
-  */
+*/
 
 function PatchFile(sId){
   var oRegex = new RegExp("(" + this.ID + ")_(.*$)");
@@ -1809,8 +1814,7 @@ PatchFile.prototype.ID = "patch_file";
             |                                       ------ section
             |
       constant prefix
-
-    */
+*/
 
 function PatchSection(sId){
   var oRegex = new RegExp("(" + this.ID + ")_(.*)_(\\d+$)");
@@ -1837,8 +1841,8 @@ PatchSection.prototype.ID = "patch_section";
             |
             |
       constant prefix
+*/
 
-  */
 function PatchLine(){
 }
 
@@ -2039,7 +2043,7 @@ function registerStagePatch(){
 }
 
 /**********************************************************
- * Ctrl + P - command palette
+ * Command Palette (Ctrl + P)
  **********************************************************/
 
 // fuzzy match helper
@@ -2288,7 +2292,9 @@ CommandPalette.isVisible = function(){
   return CommandPalette.instances.reduce(function(result, instance){ return result || instance.elements.palette.style.display !== "none" }, false);
 };
 
-/* COMMAND ENUMERATORS */
+/**********************************************************
+ * Command Enumerators
+ **********************************************************/
 
 function createRepoCatalogEnumerator(catalog, action) {
   // expecting [{ key, isOffline, displayName }]
@@ -2419,7 +2425,9 @@ function enumerateJumpAllFiles() {
       };});
 }
 
-/* Save Scroll Position for Diff/Patch Page */
+/**********************************************************
+ * Save Scroll Position
+ **********************************************************/
 
 function saveScrollPosition(){
   // Not supported by Java GUI
@@ -2448,7 +2456,9 @@ function memorizeScrollPosition(fn){
   }.bind(this);
 }
 
-/* STICKY HEADERS */
+/**********************************************************
+ * Sticky Header
+ **********************************************************/
 
 /* https://www.w3schools.com/howto/howto_js_navbar_sticky.asp */
 /* Note: We have to use JS since IE does not support CSS position:sticky */

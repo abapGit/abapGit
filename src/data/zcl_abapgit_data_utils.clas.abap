@@ -25,6 +25,12 @@ CLASS zcl_abapgit_data_utils DEFINITION
         zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
+    TYPES ty_names TYPE STANDARD TABLE OF abap_compname WITH DEFAULT KEY .
+    CLASS-METHODS list_key_fields
+      IMPORTING
+        !iv_name TYPE tadir-obj_name
+      RETURNING
+        VALUE(rt_names) TYPE ty_names .
 ENDCLASS.
 
 
@@ -40,17 +46,62 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD list_key_fields.
+    DATA lo_obj        TYPE REF TO object.
+    DATA lv_tabname    TYPE c LENGTH 16.
+    DATA lr_ddfields   TYPE REF TO data.
+    DATA lv_workaround TYPE c LENGTH 20.
+    DATA lr_struct     TYPE REF TO cl_abap_structdescr.
+    FIELD-SYMBOLS <lg_any> TYPE any.
+    FIELD-SYMBOLS <lv_field> TYPE simple.
+    FIELD-SYMBOLS <lt_ddfields> TYPE ANY TABLE.
+
+* convert to correct type,
+    lv_tabname = iv_name.
+
+    TRY.
+        CALL METHOD ('XCO_CP_ABAP_DICTIONARY')=>database_table
+          EXPORTING
+            iv_name           = lv_tabname
+          RECEIVING
+            ro_database_table = lo_obj.
+        ASSIGN lo_obj->('IF_XCO_DATABASE_TABLE~FIELDS->IF_XCO_DBT_FIELDS_FACTORY~KEY') TO <lg_any>.
+        ASSERT sy-subrc = 0.
+        lo_obj = <lg_any>.
+        CALL METHOD lo_obj->('IF_XCO_DBT_FIELDS~GET_NAMES')
+          RECEIVING
+            rt_names = rt_names.
+      CATCH cx_sy_dyn_call_illegal_class.
+        lv_workaround = 'DDFIELDS'.
+        CREATE DATA lr_ddfields TYPE (lv_workaround).
+        ASSIGN lr_ddfields->* TO <lt_ddfields>.
+        ASSERT sy-subrc = 0.
+        lr_struct ?= cl_abap_typedescr=>describe_by_name( lv_tabname ).
+        <lt_ddfields> = lr_struct->get_ddic_field_list( ).
+        LOOP AT <lt_ddfields> ASSIGNING <lg_any>.
+          ASSIGN COMPONENT 'KEYFLAG' OF STRUCTURE <lg_any> TO <lv_field>.
+          IF sy-subrc <> 0 OR <lv_field> <> abap_true.
+            CONTINUE.
+          ENDIF.
+          ASSIGN COMPONENT 'FIELDNAME' OF STRUCTURE <lg_any> TO <lv_field>.
+          ASSERT sy-subrc = 0.
+          APPEND <lv_field> TO rt_names.
+        ENDLOOP.
+    ENDTRY.
+
+  ENDMETHOD.
 
   METHOD build_table_itab.
 
-    DATA lo_type TYPE REF TO cl_abap_typedescr.
-    DATA lo_data TYPE REF TO cl_abap_structdescr.
-    DATA lo_table TYPE REF TO cl_abap_tabledescr.
+    DATA lo_type   TYPE REF TO cl_abap_typedescr.
+    DATA lo_data   TYPE REF TO cl_abap_structdescr.
+    DATA lo_table  TYPE REF TO cl_abap_tabledescr.
     DATA lt_fields TYPE ddfields.
-    DATA lt_keys TYPE abap_table_keydescr_tab.
+    DATA lt_keys   TYPE abap_table_keydescr_tab.
+    DATA lt_names  TYPE ty_names.
 
-    FIELD-SYMBOLS <ls_field> LIKE LINE OF lt_fields.
-    FIELD-SYMBOLS <ls_key> LIKE LINE OF lt_keys.
+    FIELD-SYMBOLS <lv_name>      LIKE LINE OF lt_names.
+    FIELD-SYMBOLS <ls_key>       LIKE LINE OF lt_keys.
     FIELD-SYMBOLS <ls_component> LIKE LINE OF <ls_key>-components.
 
     cl_abap_structdescr=>describe_by_name(
@@ -69,16 +120,7 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
 
         " Get primary key to ensure unique entries
         IF lo_data->is_ddic_type( ) = abap_true.
-          lo_data->get_ddic_field_list(
-            RECEIVING
-              p_field_list             = lt_fields
-            EXCEPTIONS
-              not_found                = 1
-              no_ddic_type             = 2
-              OTHERS                   = 3 ).
-          IF sy-subrc <> 0.
-            zcx_abapgit_exception=>raise( |Table { iv_name } not found for data serialization| ).
-          ENDIF.
+          lt_names = list_key_fields( iv_name ).
 
           APPEND INITIAL LINE TO lt_keys ASSIGNING <ls_key>.
           <ls_key>-access_kind = cl_abap_tabledescr=>tablekind_sorted.
@@ -86,13 +128,13 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
           <ls_key>-is_primary  = abap_true.
           <ls_key>-is_unique   = abap_true.
 
-          LOOP AT lt_fields ASSIGNING <ls_field> WHERE keyflag = abap_true.
+          LOOP AT lt_names ASSIGNING <lv_name>.
             APPEND INITIAL LINE TO <ls_key>-components ASSIGNING <ls_component>.
-            <ls_component>-name = <ls_field>-fieldname.
+            <ls_component>-name = <lv_name>.
           ENDLOOP.
         ENDIF.
 
-        IF lt_fields IS INITIAL.
+        IF lines( lt_names ) = 0.
           lo_table = cl_abap_tabledescr=>get( lo_data ).
         ELSE.
           lo_table = cl_abap_tabledescr=>get_with_keys(
