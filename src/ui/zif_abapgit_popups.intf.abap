@@ -109,7 +109,7 @@ INTERFACE zif_abapgit_popups
       !iv_title              TYPE lvc_title DEFAULT space
       !iv_header_text        TYPE csequence DEFAULT space
       !iv_start_column       TYPE i DEFAULT 10
-      !iv_end_column         TYPE i DEFAULT 90
+      !iv_end_column         TYPE i DEFAULT 110
       !iv_start_line         TYPE i DEFAULT 8
       !iv_end_line           TYPE i DEFAULT 25
       !iv_striped_pattern    TYPE abap_bool DEFAULT abap_false
