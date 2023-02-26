@@ -110,8 +110,6 @@ CLASS zcl_abapgit_persistence_db IMPLEMENTATION.
 
   METHOD delete.
 
-    DATA lv_data TYPE string.
-
     lock( iv_type  = iv_type
           iv_value = iv_value ).
 
