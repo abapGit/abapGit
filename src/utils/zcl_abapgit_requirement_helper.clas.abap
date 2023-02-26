@@ -54,7 +54,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
 
 
   METHOD get_requirement_met_status.
@@ -188,7 +188,7 @@ CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
           lt_color_negative TYPE lvc_t_scol,
           lt_color_positive TYPE lvc_t_scol,
           ls_color          TYPE lvc_s_scol,
-          ls_position       TYPE zcl_abapgit_popups=>ty_popup_position,
+          ls_position       TYPE zif_abapgit_popups=>ty_popup_position,
           lx_ex             TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <ls_line>        TYPE ty_color_line,

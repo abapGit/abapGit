@@ -63,7 +63,7 @@ CLASS lcl_password_dialog IMPLEMENTATION.
 
   METHOD popup.
 
-    DATA ls_position TYPE zcl_abapgit_popups=>ty_popup_position.
+    DATA ls_position TYPE zif_abapgit_popups=>ty_popup_position.
 
     CLEAR p_pass.
     p_url      = iv_repo_url.
