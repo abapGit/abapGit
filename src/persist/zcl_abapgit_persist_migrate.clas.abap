@@ -209,7 +209,7 @@ CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
       lock_create( ).
     ENDIF.
 
-    IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true and gui_status_exists( ) = abap_false.
+    IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true AND gui_status_exists( ) = abap_false.
       gui_status_create( ).
     ENDIF.
 
