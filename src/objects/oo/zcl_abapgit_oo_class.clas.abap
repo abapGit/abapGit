@@ -313,7 +313,7 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
       IF sy-subrc <> 0.
         DELETE lt_redefinitions INDEX lv_tabix.
         lv_update = abap_true.
-      ELSEIF ( <ls_redef>-exposure <> lv_exposure ).
+      ELSEIF <ls_redef>-exposure <> lv_exposure.
         <ls_redef>-exposure = lv_exposure.
         lv_update = abap_true.
       ELSEIF lv_local_component = abap_true AND <ls_redef>-attvalue IS INITIAL AND
