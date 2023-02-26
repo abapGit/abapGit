@@ -70,6 +70,7 @@
     "addFilenames": true,
     "addCommonJS": true,
     "unknownTypes": "runtimeError",
+    "keywords": ["return", "in", "class"],
     "extraSetup": "../test/setup.mjs",
     "skip": [
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_get_t100_longtext", "method": "test01", "note": "implement function module DOCU_GET, open-abap"},
@@ -100,11 +101,7 @@
 
       {"object": "ZCL_ABAPGIT_PERSIST_PACKAGES", "class": "ltcl_packages", "method": "test_package", "note": "ZABAPGIT table not existing, error cx_sy_dynamic_osql_semantics"},
 
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_serializer_test", "method": "escape_string",        "note": "ASSERT failed, ??"},
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_json_to_abap", "method": "to_abap_array_of_arrays", "note": "Expected table to contain 2 rows, got 4"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "set_tab_hashed",           "note": "Expected table to contain 4 rows, got 3"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_integrated", "method": "reader",                    "note": "Path not found @/false, keywords?"},
-      {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_writer_test", "method": "setx_float",                    "note": "DecFloat34"},
 
       {"object": "ZCL_ABAPGIT_REQUIREMENT_HELPER", "class": "ltcl_lower_release", "method": "empty_patch", "note": "Void type: CVERS_SDU"},
       {"object": "ZCL_ABAPGIT_REQUIREMENT_HELPER", "class": "ltcl_lower_release", "method": "lower_patch", "note": "Void type: CVERS_SDU"},
