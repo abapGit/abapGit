@@ -176,6 +176,18 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         iv_url TYPE string
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS delete_annotated_tag
+      IMPORTING
+        !iv_url TYPE string
+        !is_tag TYPE zif_abapgit_git_definitions=>ty_git_tag
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS delete_lightweight_tag
+      IMPORTING
+        !iv_url TYPE string
+        !is_tag TYPE zif_abapgit_git_definitions=>ty_git_tag
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -319,40 +331,70 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD delete_annotated_tag.
+
+    DATA:
+      lo_branches TYPE REF TO zcl_abapgit_git_branch_list,
+      lv_tag      TYPE string,
+      ls_tag      TYPE zif_abapgit_git_definitions=>ty_git_branch,
+      lt_tags     TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
+
+    " For annotated tags, find the correct commit
+    lo_branches = zcl_abapgit_git_transport=>branches( iv_url ).
+    lt_tags     = lo_branches->get_tags_only( ).
+    lv_tag      = zcl_abapgit_git_tag=>remove_peel( is_tag-name ).
+
+    READ TABLE lt_tags INTO ls_tag WITH KEY name_key COMPONENTS name = lv_tag.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Annotated tag { lv_tag } not found| ).
+    ENDIF.
+
+    zcl_abapgit_git_transport=>receive_pack(
+      iv_url         = iv_url
+      iv_old         = ls_tag-sha1
+      iv_new         = c_zero
+      iv_branch_name = ls_tag-name ).
+
+  ENDMETHOD.
+
+
   METHOD delete_branch.
-
-    DATA: lv_pack TYPE xstring.
-
-
-* "client MUST send an empty packfile"
-* https://github.com/git/git/blob/master/Documentation/technical/pack-protocol.txt#L514
 
     zcl_abapgit_git_transport=>receive_pack(
       iv_url         = iv_url
       iv_old         = is_branch-sha1
       iv_new         = c_zero
-      iv_branch_name = is_branch-name
-      iv_pack        = lv_pack ).
+      iv_branch_name = is_branch-name ).
+
+  ENDMETHOD.
+
+
+  METHOD delete_lightweight_tag.
+
+    zcl_abapgit_git_transport=>receive_pack(
+      iv_url         = iv_url
+      iv_old         = is_tag-sha1
+      iv_new         = c_zero
+      iv_branch_name = is_tag-name ).
 
   ENDMETHOD.
 
 
   METHOD delete_tag.
 
-    DATA: lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt,
-          lv_pack    TYPE xstring.
+    IF is_tag-name CS zif_abapgit_definitions=>c_git_branch-peel.
 
+      delete_annotated_tag(
+        is_tag = is_tag
+        iv_url = iv_url ).
 
-* "client MUST send an empty packfile"
-* https://github.com/git/git/blob/master/Documentation/technical/pack-protocol.txt#L514
-    lv_pack = zcl_abapgit_git_pack=>encode( lt_objects ).
+    ELSE.
 
-    zcl_abapgit_git_transport=>receive_pack(
-      iv_url         = iv_url
-      iv_old         = is_tag-sha1
-      iv_new         = c_zero
-      iv_branch_name = is_tag-name
-      iv_pack        = lv_pack ).
+      delete_lightweight_tag(
+        is_tag = is_tag
+        iv_url = iv_url ).
+
+    ENDIF.
 
   ENDMETHOD.
 

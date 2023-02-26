@@ -314,6 +314,7 @@ INTERFACE zif_abapgit_definitions
       heads        TYPE string VALUE 'refs/heads/*',
       tags_prefix  TYPE string VALUE 'refs/tags/',
       tags         TYPE string VALUE 'refs/tags/*',
+      peel         TYPE string VALUE '^{}',
     END OF c_git_branch.
   CONSTANTS:
     BEGIN OF c_diff,

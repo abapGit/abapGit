@@ -96,7 +96,6 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
     DATA lo_type   TYPE REF TO cl_abap_typedescr.
     DATA lo_data   TYPE REF TO cl_abap_structdescr.
     DATA lo_table  TYPE REF TO cl_abap_tabledescr.
-    DATA lt_fields TYPE ddfields.
     DATA lt_keys   TYPE abap_table_keydescr_tab.
     DATA lt_names  TYPE ty_names.
 

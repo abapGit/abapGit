@@ -193,9 +193,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
       lv_row          TYPE i,
       lv_val          TYPE string.
 
-    FIELD-SYMBOLS:
-      <lv_ignore> TYPE string.
-
     " Get settings from DB
     lo_dot = mo_repo->get_dot_abapgit( ).
     ls_dot = lo_dot->get_data( ).

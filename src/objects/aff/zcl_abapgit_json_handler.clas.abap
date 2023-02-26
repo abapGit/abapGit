@@ -94,7 +94,6 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
   METHOD deserialize.
     DATA lv_json    TYPE string.
     DATA lo_ajson   TYPE REF TO zif_abapgit_ajson.
-    DATA lo_mapping TYPE REF TO zif_abapgit_ajson_mapping.
 
     CLEAR ev_data.
 
@@ -233,7 +232,6 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
   METHOD serialize.
     DATA: lt_st_source      TYPE abap_trans_srcbind_tab,
-          lo_mapping        TYPE REF TO zif_abapgit_ajson_mapping,
           lv_json           TYPE string,
           lo_ajson          TYPE REF TO zif_abapgit_ajson,
           lo_filter         TYPE REF TO lcl_aff_filter.
