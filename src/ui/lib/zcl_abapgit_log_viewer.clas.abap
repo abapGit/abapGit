@@ -91,7 +91,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_log_viewer IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_LOG_VIEWER IMPLEMENTATION.
 
 
   METHOD calculate_cell_type.
@@ -289,7 +289,7 @@ CLASS zcl_abapgit_log_viewer IMPLEMENTATION.
           lo_columns     TYPE REF TO cl_salv_columns_table,
           lo_column      TYPE REF TO cl_salv_column,
           lo_functions   TYPE REF TO cl_salv_functions_list,
-          ls_position    TYPE zcl_abapgit_popups=>ty_popup_position,
+          ls_position    TYPE zif_abapgit_popups=>ty_popup_position,
           lv_add_obj_col TYPE abap_bool,
           lo_event       TYPE REF TO cl_salv_events_table.
 
