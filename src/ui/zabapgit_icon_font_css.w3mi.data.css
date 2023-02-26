@@ -71,9 +71,10 @@
 .icon-sliders-h:before { content: "\f129"; }
 .icon-snowflake:before { content: "\f12a"; }
 .icon-star:before { content: "\f12b"; }
-.icon-times-solid:before { content: "\f12c"; }
-.icon-tools-solid:before { content: "\f12d"; }
-.icon-truck-solid:before { content: "\f12e"; }
-.icon-user-cog-solid:before { content: "\f12f"; }
-.icon-user-solid:before { content: "\f130"; }
-.icon-vial-solid:before { content: "\f131"; }
+.icon-tag-solid:before { content: "\f12c"; }
+.icon-times-solid:before { content: "\f12d"; }
+.icon-tools-solid:before { content: "\f12e"; }
+.icon-truck-solid:before { content: "\f12f"; }
+.icon-user-cog-solid:before { content: "\f130"; }
+.icon-user-solid:before { content: "\f131"; }
+.icon-vial-solid:before { content: "\f132"; }
