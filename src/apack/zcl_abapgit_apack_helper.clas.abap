@@ -80,7 +80,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_APACK_HELPER IMPLEMENTATION.
 
 
   METHOD are_dependencies_met.
@@ -275,7 +275,7 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
           lt_columns      TYPE salv_t_column_ref,
           ls_column       LIKE LINE OF lt_columns,
           lt_color_table  TYPE ty_color_tab,
-          ls_position     TYPE zcl_abapgit_popups=>ty_popup_position,
+          ls_position     TYPE zif_abapgit_popups=>ty_popup_position,
           lx_ex           TYPE REF TO cx_root.
 
     IF it_dependencies IS INITIAL.
