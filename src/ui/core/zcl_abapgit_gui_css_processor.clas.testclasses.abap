@@ -211,7 +211,6 @@ CLASS ltcl_multiple_files IMPLEMENTATION.
   METHOD test_simple.
     DATA: lv_file1    TYPE string,
           lv_file2    TYPE string,
-          lv_act      TYPE string,
           lv_expected TYPE string.
 
     lv_file1 =

@@ -920,8 +920,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
   METHOD render_item_command.
 
-    DATA: lv_difflink TYPE string,
-          ls_file     LIKE LINE OF is_item-files.
+    DATA lv_difflink TYPE string.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
