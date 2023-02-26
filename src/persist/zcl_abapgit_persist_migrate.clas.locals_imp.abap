@@ -65,6 +65,6 @@ ENDCLASS.
 
 CLASS lcl_own_cua_provider IMPLEMENTATION.
   METHOD get.
-    " TODO abapmerge stuff
+    " @@abapmerge include-cua zabapgit.prog.xml > rs_cua
   ENDMETHOD.
 ENDCLASS.
