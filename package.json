@@ -2,7 +2,7 @@
   "license": "MIT",
   "scripts": {
     "test": "npm run eslint && npm run abaplint",
-    "merge": "abapmerge -f src/zabapgit.prog.abap -c zabapgit_standalone > zabapgit.abap",
+    "merge": "abapmerge -f src/zabapgit.prog.abap -c zabapgit_standalone -o zabapgit.abap",
     "merge.ci": "cp zabapgit.abap ci/zabapgit_standalone.prog.abap && cd ci && abaplint --format codeframe && cd ..",
     "build": "rm -rf output && abap_transpile test/abap_transpile.json",
     "unit": "npm run build && echo RUNNING && node output/index.mjs",
