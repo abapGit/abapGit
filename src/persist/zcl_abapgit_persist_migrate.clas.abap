@@ -41,6 +41,10 @@ CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
       RETURN.
     ENDIF.
 
+    IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_false.
+      RETURN. " No autocreation for full version
+    ENDIF.
+
     ls_cua = lcl_own_cua_provider=>get( ).
 
     IF ls_cua IS INITIAL. " Full version or Something wrong with abapmerged version
