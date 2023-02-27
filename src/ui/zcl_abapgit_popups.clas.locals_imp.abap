@@ -420,9 +420,10 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
   METHOD mark_visible.
 
     DATA:
-      lt_lvc_t_filt TYPE lvc_t_filt,
-      lt_visible    TYPE lvc_t_fidx,
-      lv_index      LIKE LINE OF lt_visible.
+      lo_selection  TYPE REF TO cl_salv_selections,
+      lt_filters    TYPE lvc_t_filt,
+      lt_scope      TYPE lvc_t_fidx,
+      lv_index      LIKE LINE OF lt_scope.
 
     FIELD-SYMBOLS:
       <lt_table>    TYPE STANDARD TABLE,
@@ -432,21 +433,28 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
     ASSIGN mr_table->* TO <lt_table>.
     ASSERT sy-subrc = 0.
 
-    lt_lvc_t_filt = cl_salv_controller_metadata=>get_lvc_filter( mo_alv->get_filters( ) ).
-    IF lines( lt_lvc_t_filt ) = 0.
-      mark_all( abap_true ).
-      RETURN.
+    " First get selection
+    lo_selection = mo_alv->get_selections( ).
+    lt_scope = lo_selection->get_selected_rows( ).
+
+    IF lines( lt_scope ) = 0.
+      " If nothing selected, select all VISIBLE
+      lt_filters = cl_salv_controller_metadata=>get_lvc_filter( mo_alv->get_filters( ) ).
+      IF lines( lt_filters ) = 0.
+        mark_all( abap_true ). " No filters - just select all
+        RETURN.
+      ENDIF.
+
+      CALL FUNCTION 'LVC_FILTER_APPLY'
+        EXPORTING
+          it_filter                    = lt_filters
+        IMPORTING
+          et_filter_index_inside       = lt_scope
+        TABLES
+          it_data                      = <lt_table>.
     ENDIF.
 
-    CALL FUNCTION 'LVC_FILTER_APPLY'
-      EXPORTING
-        it_filter                    = lt_lvc_t_filt
-      IMPORTING
-        et_filter_index_inside       = lt_visible
-      TABLES
-        it_data                      = <lt_table>.
-
-    LOOP AT lt_visible INTO lv_index.
+    LOOP AT lt_scope INTO lv_index.
 
       READ TABLE <lt_table> ASSIGNING <ls_line> INDEX lv_index.
       CHECK sy-subrc = 0.
