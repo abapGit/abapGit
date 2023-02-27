@@ -356,6 +356,8 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       lv_selected_commit  TYPE string,
       lv_commit_short_sha TYPE string,
       lv_text             TYPE string,
+      lv_icon             TYPE string,
+      lv_hint             TYPE string,
       lv_class            TYPE string.
 
     IF iv_repo_key IS NOT INITIAL.
@@ -383,16 +385,26 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Either iv_branch or io_repo must be supplied' ).
     ENDIF.
 
-    IF zcl_abapgit_git_branch_list=>get_type( lv_branch ) = zif_abapgit_definitions=>c_git_branch_type-branch.
-      lv_class = 'branch branch_branch'.
-    ELSE.
-      lv_class = 'branch'.
-    ENDIF.
+    CASE zcl_abapgit_git_branch_list=>get_type( lv_branch ).
+      WHEN zif_abapgit_definitions=>c_git_branch_type-branch.
+        lv_class = 'branch branch_branch'.
+        lv_icon  = 'code-branch/grey70'.
+        lv_hint  = 'Current branch'.
+      WHEN zif_abapgit_definitions=>c_git_branch_type-annotated_tag
+        OR zif_abapgit_definitions=>c_git_branch_type-lightweight_tag.
+        lv_class = 'branch'.
+        lv_icon  = 'tag-solid/grey70'.
+        lv_hint  = 'Current tag'.
+      WHEN OTHERS.
+        lv_class = 'branch branch_branch'.
+        lv_icon  = 'code-branch/grey70'.
+        lv_hint  = 'Current commit'.
+    ENDCASE.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     ri_html->add( |<span class="{ lv_class }">| ).
-    ri_html->add_icon( iv_name = 'code-branch/grey70'
-                       iv_hint = 'Current branch' ).
+    ri_html->add_icon( iv_name = lv_icon
+                       iv_hint = lv_hint ).
     IF iv_interactive = abap_true.
       ri_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?key={ lv_key }|
                       iv_txt = lv_text ).
