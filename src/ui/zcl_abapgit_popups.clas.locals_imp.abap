@@ -621,6 +621,10 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
             lo_column->set_icon( abap_true ).
           ENDIF.
 
+          IF <ls_column_to_display>-center = abap_true.
+            lo_column->set_alignment( if_salv_c_alignment=>centered ).
+          ENDIF.
+
         WHEN OTHERS.
           lo_column->set_technical( abap_true ). " Hide column
 
