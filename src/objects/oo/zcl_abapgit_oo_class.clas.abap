@@ -104,6 +104,11 @@ CLASS zcl_abapgit_oo_class DEFINITION
         !is_key TYPE seoclskey
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS repair_redefinitions
+      IMPORTING
+        !is_key TYPE seoclskey
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -251,6 +256,105 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
         OTHERS       = 2.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error repairing class { is_key-clsname }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD repair_redefinitions.
+
+    " Same logic as SE24 > Utilities > Clean-up > lt_redefinitions (LSEODCCO)
+
+    DATA:
+      lt_inheritance     TYPE vseoextend,
+      lt_redefinitions   TYPE seor_redefinitions_r,
+      ls_cpdkey          TYPE seocpdkey,
+      lv_tabix           TYPE sy-tabix,
+      lv_exposure        TYPE n LENGTH 1,
+      lv_update          TYPE abap_bool,
+      lv_local_component TYPE abap_bool.
+
+    FIELD-SYMBOLS <ls_redef> TYPE seoredef.
+
+    CALL FUNCTION 'SEO_CLASS_TYPEINFO_GET'
+      EXPORTING
+        clskey        = is_key
+        version       = seoc_version_active
+      IMPORTING
+        inheritance   = lt_inheritance
+        redefinitions = lt_redefinitions
+      EXCEPTIONS
+        not_existing  = 1
+        is_interface  = 2
+        model_only    = 3
+        OTHERS        = 4.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    " check redefinitions validity
+    LOOP AT lt_redefinitions ASSIGNING <ls_redef>.
+      lv_tabix = sy-tabix.
+
+      ls_cpdkey-clsname = is_key-clsname.
+      ls_cpdkey-cpdname = <ls_redef>-mtdname.
+
+      CALL FUNCTION 'SEO_COMPONENT_BY_INHERITANCE'
+        EXPORTING
+          cpdkey             = ls_cpdkey
+          version            = seoc_version_active
+        IMPORTING
+          exposure           = lv_exposure
+          is_local_component = lv_local_component
+        EXCEPTIONS
+          not_existing       = 1
+          model_only         = 2
+          OTHERS             = 3.
+      IF sy-subrc <> 0.
+        DELETE lt_redefinitions INDEX lv_tabix.
+        lv_update = abap_true.
+      ELSEIF <ls_redef>-exposure <> lv_exposure.
+        <ls_redef>-exposure = lv_exposure.
+        lv_update = abap_true.
+      ELSEIF lv_local_component = abap_true AND <ls_redef>-attvalue IS INITIAL AND
+             <ls_redef>-mtdabstrct IS INITIAL AND <ls_redef>-mtdfinal IS INITIAL.
+        DELETE lt_redefinitions INDEX lv_tabix.
+        lv_update = abap_true.
+      ENDIF.
+    ENDLOOP.
+
+    IF lv_update = abap_true.
+      CALL FUNCTION 'SEO_INHERITANC_CHANGE_F_DATA'
+        EXPORTING
+          save            = abap_false
+        CHANGING
+          inheritance     = lt_inheritance
+          redefinitions   = lt_redefinitions
+        EXCEPTIONS
+          not_existing    = 1
+          deleted         = 2
+          is_comprising   = 3
+          is_implementing = 4
+          not_changed     = 5
+          db_error        = 6
+          OTHERS          = 7.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |Error repairing redefinitions for { is_key-clsname }| ).
+      ENDIF.
+
+      CALL FUNCTION 'SEO_CLIF_SAVE_ALL'
+        EXPORTING
+          cifkey                   = is_key
+        EXCEPTIONS
+          not_existing             = 1
+          nothing_to_do            = 2
+          access_error             = 3
+          db_error                 = 4
+          error_in_code_generation = 5
+          OTHERS                   = 6.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |Error repairing redefinitions for { is_key-clsname }| ).
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.
@@ -634,6 +738,7 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
     " which will delete the obsolete includes
     IF lt_incls IS NOT INITIAL.
       repair_classpool( is_key ).
+      repair_redefinitions( is_key ).
     ENDIF.
 
     update_source_index(
