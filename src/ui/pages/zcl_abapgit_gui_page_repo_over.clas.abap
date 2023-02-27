@@ -167,7 +167,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -282,7 +282,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       iv_allow_order_by = abap_true
     )->add_column(
       iv_tech_name      = 'BRANCH'
-      iv_display_name   = 'Branch'
+      iv_display_name   = 'Branch/Tag'
       iv_allow_order_by = abap_true
     )->add_column(
       iv_tech_name      = 'DESERIALIZED_BY'
