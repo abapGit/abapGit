@@ -1,7 +1,6 @@
 CLASS zcl_abapgit_sap_package DEFINITION
   PUBLIC
   CREATE PRIVATE
-
   GLOBAL FRIENDS zcl_abapgit_factory .
 
   PUBLIC SECTION.
@@ -19,7 +18,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
+CLASS zcl_abapgit_sap_package IMPLEMENTATION.
 
 
   METHOD constructor.

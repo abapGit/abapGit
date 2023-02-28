@@ -30,6 +30,10 @@ CLASS ltcl_sap_package IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~validate_name.
+    RETURN.
+  ENDMETHOD.
+
   METHOD zif_abapgit_sap_package~read_description.
     RETURN.
   ENDMETHOD.
