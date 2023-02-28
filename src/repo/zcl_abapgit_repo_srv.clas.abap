@@ -666,7 +666,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
           li_repo    TYPE REF TO zif_abapgit_repo,
           lv_reason  TYPE string.
 
-    zcl_abapgit_sap_package=>validate_name( iv_package ).
+    zcl_abapgit_factory=>get_sap_package( iv_package )->validate_name( ).
 
     " Check if package owned by SAP is allowed (new packages are ok, since they are created automatically)
     lv_as4user = zcl_abapgit_factory=>get_sap_package( iv_package )->read_responsible( ).

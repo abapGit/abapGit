@@ -1,20 +1,15 @@
 CLASS zcl_abapgit_sap_package DEFINITION
-    PUBLIC CREATE PRIVATE
-    GLOBAL FRIENDS zcl_abapgit_factory.
+  PUBLIC
+  CREATE PRIVATE
+  GLOBAL FRIENDS zcl_abapgit_factory .
 
   PUBLIC SECTION.
-    METHODS:
-      constructor
-        IMPORTING iv_package TYPE devclass.
 
-    INTERFACES: zif_abapgit_sap_package.
+    INTERFACES zif_abapgit_sap_package .
 
-    CLASS-METHODS validate_name
+    METHODS constructor
       IMPORTING
-        !iv_package TYPE devclass
-      RAISING
-        zcx_abapgit_exception .
-
+        !iv_package TYPE devclass .
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: mv_package TYPE devclass.
@@ -28,32 +23,6 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
 
   METHOD constructor.
     mv_package = iv_package.
-  ENDMETHOD.
-
-
-  METHOD validate_name.
-
-    IF iv_package IS INITIAL.
-      zcx_abapgit_exception=>raise( 'Package name must not be empty' ).
-    ENDIF.
-
-    IF iv_package = '$TMP'.
-      zcx_abapgit_exception=>raise( 'It is not possible to use $TMP, use a different (local) package' ).
-    ENDIF.
-
-    " Check if package name is allowed
-    cl_package_helper=>check_package_name(
-      EXPORTING
-        i_package_name       = iv_package
-      EXCEPTIONS
-        undefined_name       = 1
-        wrong_name_prefix    = 2
-        reserved_local_name  = 3
-        invalid_package_name = 4 ).
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Package name { iv_package } is not valid| ).
-    ENDIF.
-
   ENDMETHOD.
 
 
@@ -400,10 +369,36 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD zif_abapgit_sap_package~read_responsible.
     SELECT SINGLE as4user FROM tdevc
       INTO rv_responsible
-      WHERE devclass = mv_package ##SUBRC_OK. "#EC CI_GENBUFF
+      WHERE devclass = mv_package ##SUBRC_OK.           "#EC CI_GENBUFF
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_sap_package~validate_name.
+
+    IF mv_package IS INITIAL.
+      zcx_abapgit_exception=>raise( 'Package name must not be empty' ).
+    ENDIF.
+
+    IF mv_package = '$TMP'.
+      zcx_abapgit_exception=>raise( 'It is not possible to use $TMP, use a different (local) package' ).
+    ENDIF.
+
+    " Check if package name is allowed
+    cl_package_helper=>check_package_name(
+      EXPORTING
+        i_package_name       = mv_package
+      EXCEPTIONS
+        undefined_name       = 1
+        wrong_name_prefix    = 2
+        reserved_local_name  = 3
+        invalid_package_name = 4 ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Package name { mv_package } is not valid| ).
+    ENDIF.
+
+  ENDMETHOD.
 ENDCLASS.

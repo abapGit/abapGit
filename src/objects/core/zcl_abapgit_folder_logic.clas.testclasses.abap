@@ -68,6 +68,10 @@ CLASS ltcl_folder_logic_package IMPLEMENTATION.
     INSERT lv_devclass INTO TABLE rt_list.
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~validate_name.
+    RETURN.
+  ENDMETHOD.
+
   METHOD zif_abapgit_sap_package~read_responsible.
     RETURN.
   ENDMETHOD.
@@ -159,7 +163,11 @@ CLASS ltcl_folder_logic IMPLEMENTATION.
     INSERT lv_devclass INTO TABLE rt_list.
   ENDMETHOD.
 
-  METHOD zif_abapgit_sap_package~read_responsible.
+  METHOD zif_abapgit_sap_package~validate_name.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~read_description.
     RETURN.
   ENDMETHOD.
 
@@ -167,7 +175,7 @@ CLASS ltcl_folder_logic IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
-  METHOD zif_abapgit_sap_package~read_description.
+  METHOD zif_abapgit_sap_package~read_responsible.
     RETURN.
   ENDMETHOD.
 
@@ -373,6 +381,10 @@ CLASS ltcl_folder_logic_namespaces IMPLEMENTATION.
     INSERT lv_devclass INTO TABLE rt_list.
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~validate_name.
+    RETURN.
+  ENDMETHOD.
+
   METHOD zif_abapgit_sap_package~read_responsible.
     RETURN.
   ENDMETHOD.
@@ -507,6 +519,10 @@ CLASS ltcl_folder_logic_no_parent DEFINITION FOR TESTING RISK LEVEL HARMLESS DUR
 ENDCLASS.
 
 CLASS ltcl_folder_logic_no_parent IMPLEMENTATION.
+
+  METHOD zif_abapgit_sap_package~validate_name.
+    RETURN.
+  ENDMETHOD.
 
   METHOD zif_abapgit_sap_package~read_responsible.
     RETURN.
