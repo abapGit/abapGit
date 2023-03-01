@@ -4,24 +4,28 @@ CLASS zcl_abapgit_json_handler DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+
     TYPES:
       BEGIN OF ty_json_abap_mapping,
         json TYPE string,
         abap TYPE string,
-      END OF ty_json_abap_mapping,
-      ty_json_abap_mappings TYPE STANDARD TABLE OF ty_json_abap_mapping WITH DEFAULT KEY,
+      END OF ty_json_abap_mapping .
+    TYPES:
+      ty_json_abap_mappings TYPE STANDARD TABLE OF ty_json_abap_mapping WITH DEFAULT KEY .
+    TYPES:
       BEGIN OF ty_enum_mapping,
         path     TYPE string,
         mappings TYPE ty_json_abap_mappings,
-      END OF ty_enum_mapping,
-      ty_enum_mappings TYPE TABLE OF ty_enum_mapping WITH DEFAULT KEY.
-
+      END OF ty_enum_mapping .
+    TYPES:
+      ty_enum_mappings TYPE TABLE OF ty_enum_mapping WITH DEFAULT KEY .
     TYPES:
       BEGIN OF ty_path_value_pair,
         path  TYPE string,
         value TYPE string,
-      END OF ty_path_value_pair,
-      ty_skip_paths TYPE STANDARD TABLE OF ty_path_value_pair WITH KEY path.
+      END OF ty_path_value_pair .
+    TYPES:
+      ty_skip_paths TYPE STANDARD TABLE OF ty_path_value_pair WITH KEY path .
 
     "! Serializes data to xstring. Type of data is specified in the
     "! implementing class.
@@ -31,12 +35,14 @@ CLASS zcl_abapgit_json_handler DEFINITION
     "! @parameter iv_skip_paths | path/value pairs to be skipped during serialization
     "! @parameter rv_result | serialized data
     METHODS serialize
-      IMPORTING iv_data          TYPE data
-                iv_enum_mappings TYPE ty_enum_mappings
-                iv_skip_paths    TYPE ty_skip_paths
-      RETURNING VALUE(rv_result) TYPE xstring
-      RAISING   cx_static_check.
-
+      IMPORTING
+        !iv_data          TYPE data
+        !iv_enum_mappings TYPE ty_enum_mappings OPTIONAL
+        !iv_skip_paths    TYPE ty_skip_paths OPTIONAL
+      RETURNING
+        VALUE(rv_result)  TYPE xstring
+      RAISING
+        cx_static_check .
     "! Deserializes xstring into data. The type of data is specified in
     "! the implementing class
     "!
@@ -44,13 +50,14 @@ CLASS zcl_abapgit_json_handler DEFINITION
     "! @parameter iv_defaults | path-value pairs that apply if value is initial
     "! @parameter ev_data | data of the xstring
     METHODS deserialize
-      IMPORTING iv_content       TYPE xstring
-                iv_defaults      TYPE ty_skip_paths
-                iv_enum_mappings TYPE ty_enum_mappings
-      EXPORTING ev_data          TYPE data
-      RAISING   cx_static_check.
-
-
+      IMPORTING
+        !iv_content       TYPE xstring
+        !iv_defaults      TYPE ty_skip_paths
+        !iv_enum_mappings TYPE ty_enum_mappings
+      EXPORTING
+        !ev_data          TYPE data
+      RAISING
+        cx_static_check .
   PROTECTED SECTION.
 
   PRIVATE SECTION.
@@ -88,7 +95,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_json_handler IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_JSON_HANDLER IMPLEMENTATION.
 
 
   METHOD deserialize.
@@ -231,10 +238,10 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
 
   METHOD serialize.
-    DATA: lt_st_source      TYPE abap_trans_srcbind_tab,
-          lv_json           TYPE string,
-          lo_ajson          TYPE REF TO zif_abapgit_ajson,
-          lo_filter         TYPE REF TO lcl_aff_filter.
+    DATA: lt_st_source TYPE abap_trans_srcbind_tab,
+          lv_json      TYPE string,
+          lo_ajson     TYPE REF TO zif_abapgit_ajson,
+          lo_filter    TYPE REF TO lcl_aff_filter.
 
     FIELD-SYMBOLS: <lg_source> LIKE LINE OF lt_st_source.
 
