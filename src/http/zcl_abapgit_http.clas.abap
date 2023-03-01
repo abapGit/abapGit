@@ -48,7 +48,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_http IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
 
 
   METHOD acquire_login_details.
@@ -119,6 +119,7 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
 
     DATA: lv_uri                 TYPE string,
           lv_scheme              TYPE string,
+          lv_authorization       TYPE string,
           li_client              TYPE REF TO if_http_client,
           lo_proxy_configuration TYPE REF TO zcl_abapgit_proxy_config,
           lv_text                TYPE string.
@@ -188,9 +189,13 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
     " Disable internal auth dialog (due to its unclarity)
     li_client->propertytype_logon_popup = if_http_client=>co_disabled.
 
-    zcl_abapgit_login_manager=>load(
-      iv_uri    = iv_url
-      ii_client = li_client ).
+    lv_authorization = zcl_abapgit_login_manager=>load( iv_url ).
+    IF lv_authorization IS NOT INITIAL.
+      li_client->request->set_header_field(
+        name  = 'authorization'
+        value = lv_authorization ).
+      li_client->propertytype_logon_popup = li_client->co_disabled.
+    ENDIF.
 
     zcl_abapgit_exit=>get_instance( )->http_client(
       iv_url    = iv_url
@@ -206,8 +211,9 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
     ro_client->check_http_200( ).
 
     IF lv_scheme <> c_scheme-digest.
-      zcl_abapgit_login_manager=>save( iv_uri    = iv_url
-                                       ii_client = li_client ).
+      zcl_abapgit_login_manager=>save(
+        iv_uri           = iv_url
+        iv_authorization = li_client->request->get_header_field( 'authorization' ) ).
     ENDIF.
 
   ENDMETHOD.

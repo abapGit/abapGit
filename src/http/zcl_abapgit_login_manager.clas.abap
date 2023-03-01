@@ -8,15 +8,14 @@ CLASS zcl_abapgit_login_manager DEFINITION
     CLASS-METHODS load
       IMPORTING
         !iv_uri                 TYPE string
-        !ii_client              TYPE REF TO if_http_client OPTIONAL
       RETURNING
         VALUE(rv_authorization) TYPE string
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS save
       IMPORTING
-        !iv_uri    TYPE string
-        !ii_client TYPE REF TO if_http_client
+        !iv_uri           TYPE string
+        !iv_authorization TYPE string
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS clear .
@@ -97,18 +96,11 @@ CLASS ZCL_ABAPGIT_LOGIN_MANAGER IMPLEMENTATION.
 
   METHOD load.
 
-    DATA: ls_auth LIKE LINE OF gt_auth.
+    DATA ls_auth LIKE LINE OF gt_auth.
 
     READ TABLE gt_auth INTO ls_auth WITH KEY uri = zcl_abapgit_url=>host( iv_uri ).
     IF sy-subrc = 0.
       rv_authorization = ls_auth-authorization.
-
-      IF NOT ii_client IS INITIAL.
-        ii_client->request->set_header_field(
-          name  = 'authorization'
-          value = ls_auth-authorization ).
-        ii_client->propertytype_logon_popup = ii_client->co_disabled.
-      ENDIF.
     ENDIF.
 
   ENDMETHOD.
@@ -116,13 +108,9 @@ CLASS ZCL_ABAPGIT_LOGIN_MANAGER IMPLEMENTATION.
 
   METHOD save.
 
-    DATA: lv_auth TYPE string.
-
-    lv_auth = ii_client->request->get_header_field( 'authorization' ).
-
-    IF NOT lv_auth IS INITIAL.
+    IF NOT iv_authorization IS INITIAL.
       append( iv_uri  = iv_uri
-              iv_auth = lv_auth ).
+              iv_auth = iv_authorization ).
     ENDIF.
 
   ENDMETHOD.
