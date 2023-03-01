@@ -52,8 +52,8 @@ CLASS zcl_abapgit_json_handler DEFINITION
     METHODS deserialize
       IMPORTING
         !iv_content       TYPE xstring
-        !iv_defaults      TYPE ty_skip_paths
-        !iv_enum_mappings TYPE ty_enum_mappings
+        !iv_defaults      TYPE ty_skip_paths OPTIONAL
+        !iv_enum_mappings TYPE ty_enum_mappings OPTIONAL
       EXPORTING
         !ev_data          TYPE data
       RAISING
