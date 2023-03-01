@@ -398,6 +398,10 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
     <ls_column>-name = 'DEVCLASS'.
     APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'STATE'.
+    <ls_column>-text = 'State'.
+    <ls_column>-length = 3.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
     <ls_column>-name = 'ICON'.
     <ls_column>-text = 'Action'.
     <ls_column>-show_icon = abap_true.
@@ -456,6 +460,10 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     <ls_column>-name = 'OBJ_NAME'.
     APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
     <ls_column>-name = 'DEVCLASS'.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'STATE'.
+    <ls_column>-text = 'State'.
+    <ls_column>-length = 3.
     APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
     <ls_column>-name = 'ICON'.
     <ls_column>-text = 'Action'.

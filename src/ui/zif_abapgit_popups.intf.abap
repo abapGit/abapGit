@@ -12,6 +12,7 @@ INTERFACE zif_abapgit_popups
       text      TYPE string,
       length    TYPE lvc_outlen,
       show_icon TYPE abap_bool,
+      center    TYPE abap_bool,
     END OF ty_alv_column,
     ty_alv_column_tt TYPE TABLE OF ty_alv_column WITH DEFAULT KEY.
 
@@ -109,9 +110,9 @@ INTERFACE zif_abapgit_popups
       !iv_title              TYPE lvc_title DEFAULT space
       !iv_header_text        TYPE csequence DEFAULT space
       !iv_start_column       TYPE i DEFAULT 10
-      !iv_end_column         TYPE i DEFAULT 110
-      !iv_start_line         TYPE i DEFAULT 8
-      !iv_end_line           TYPE i DEFAULT 25
+      !iv_end_column         TYPE i DEFAULT 125
+      !iv_start_line         TYPE i DEFAULT 10
+      !iv_end_line           TYPE i DEFAULT 30
       !iv_striped_pattern    TYPE abap_bool DEFAULT abap_false
       !iv_optimize_col_width TYPE abap_bool DEFAULT abap_true
       !iv_selection_mode     TYPE salv_de_constant DEFAULT if_salv_c_selection_mode=>multiple
