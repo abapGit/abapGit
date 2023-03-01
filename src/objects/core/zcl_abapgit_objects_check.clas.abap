@@ -68,7 +68,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_check IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS_CHECK IMPLEMENTATION.
 
 
   METHOD checks_adjust.
@@ -231,6 +231,8 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
         <ls_changes>-text   = 'Change package assignment'.
       ELSE.
         CONCATENATE <ls_result>-lstate <ls_result>-rstate INTO lv_status RESPECTING BLANKS.
+        <ls_changes>-state = lv_status.
+        REPLACE ALL OCCURRENCES OF ` ` IN <ls_changes>-state WITH '_'.
 
         CASE lv_status.
           WHEN '  '. " no changes
@@ -354,6 +356,8 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
       IF NOT ls_tadir IS INITIAL AND ls_tadir-devclass <> lv_package.
 * overwriting object from different package than expected
         CLEAR ls_overwrite.
+        CONCATENATE <ls_result>-lstate <ls_result>-rstate INTO ls_overwrite-state RESPECTING BLANKS.
+        REPLACE ALL OCCURRENCES OF ` ` IN ls_overwrite-state WITH '_'.
         ls_overwrite-obj_type = <ls_result>-obj_type.
         ls_overwrite-obj_name = <ls_result>-obj_name.
         ls_overwrite-devclass = ls_tadir-devclass.
