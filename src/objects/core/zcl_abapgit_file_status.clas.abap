@@ -285,8 +285,8 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
   METHOD calculate_status.
 
     DATA:
-      lt_remote    LIKE it_remote,
-      lt_items     TYPE zif_abapgit_definitions=>ty_items_tt,
+      lt_remote        LIKE it_remote,
+      lt_items         TYPE zif_abapgit_definitions=>ty_items_tt,
       lt_items_by_obj  TYPE zif_abapgit_definitions=>ty_items_ts, " Sorted by obj_type+obj_name
       lt_state_by_file TYPE zif_abapgit_git_definitions=>ty_file_signatures_ts. " Sorted by path+filename
 
@@ -313,7 +313,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       EXPORTING
         it_unprocessed_remote = lt_remote
       CHANGING
-        ct_items    = lt_items ).
+        ct_items              = lt_items ).
 
     " The item list was not unique by now, just collected as "mention" list
     SORT lt_items DESCENDING. " Default key - type, name, pkg, ...
@@ -323,12 +323,12 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
     " Process new remote files (marked above with empty SHA1)
     process_remote(
       EXPORTING
-        it_local     = it_local
+        it_local              = it_local
         it_unprocessed_remote = lt_remote
-        it_state_idx = lt_state_by_file
-        it_items_idx = lt_items_by_obj
+        it_state_idx          = lt_state_by_file
+        it_items_idx          = lt_items_by_obj
       CHANGING
-        ct_results   = rt_results ).
+        ct_results            = rt_results ).
 
     SORT rt_results BY
       obj_type ASCENDING
@@ -626,7 +626,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       IF ls_item-devclass IS NOT INITIAL AND mv_root_package <> ls_item-devclass.
         IF lv_sub_fetched = abap_false.
           lt_sub_packages = zcl_abapgit_factory=>get_sap_package( mv_root_package )->list_subpackages( ).
-          lv_sub_fetched = abap_true.
+          lv_sub_fetched  = abap_true.
         ENDIF.
 
         " Make sure the package is under the repo main package
@@ -742,7 +742,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
             path     = <ls_remote>-path
             filename = <ls_remote>-filename.
         IF sy-subrc = 0.
-          <ls_result>-match = abap_false.
+          <ls_result>-match  = abap_false.
           <ls_result>-lstate = zif_abapgit_definitions=>c_state-deleted.
         ENDIF.
       ENDIF.
