@@ -38,6 +38,7 @@ CLASS ltcl_run_checks DEFINITION FOR TESTING RISK LEVEL HARMLESS
 
   PRIVATE SECTION.
     DATA: mt_results TYPE zif_abapgit_definitions=>ty_results_tt,
+          mo_instance TYPE REF TO zcl_abapgit_file_status,
           mo_dot     TYPE REF TO zcl_abapgit_dot_abapgit,
           mi_log     TYPE REF TO zif_abapgit_log.
 
@@ -150,6 +151,11 @@ CLASS ltcl_run_checks IMPLEMENTATION.
     zcl_abapgit_injector=>set_sap_package( iv_package     = '$MAIN_SUB'
                                            ii_sap_package = me ).
 
+    CREATE OBJECT mo_instance
+      EXPORTING
+        iv_root_package = '$Z$'
+        io_dot          = mo_dot.
+
   ENDMETHOD.
 
   METHOD positive.
@@ -191,12 +197,9 @@ CLASS ltcl_run_checks IMPLEMENTATION.
                    iv_path     = '/'
                    iv_filename = 'zdoma2.doma.xml' ).
 
-
-    zcl_abapgit_file_status=>run_checks(
+    mo_instance->run_checks(
       ii_log     = mi_log
-      it_results = mt_results
-      io_dot     = mo_dot
-      iv_top     = '$Z$' ).
+      it_results = mt_results ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mi_log->count( )
@@ -243,11 +246,9 @@ CLASS ltcl_run_checks IMPLEMENTATION.
                    iv_path     = '/'
                    iv_filename = 'zdoma2.doma.xml' ).
 
-    zcl_abapgit_file_status=>run_checks(
+    mo_instance->run_checks(
       ii_log     = mi_log
-      it_results = mt_results
-      io_dot     = mo_dot
-      iv_top     = '$Z$' ).
+      it_results = mt_results ).
 
     " This one is not pure - incorrect path also triggers path vs package check
     cl_abap_unit_assert=>assert_equals(
@@ -299,11 +300,9 @@ CLASS ltcl_run_checks IMPLEMENTATION.
                    iv_path     = '/'
                    iv_filename = '$$zdoma2.doma.xml' ).
 
-    zcl_abapgit_file_status=>run_checks(
+    mo_instance->run_checks(
       ii_log     = mi_log
-      it_results = mt_results
-      io_dot     = mo_dot
-      iv_top     = '$Z$' ).
+      it_results = mt_results ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mi_log->count( )
@@ -354,11 +353,9 @@ CLASS ltcl_run_checks IMPLEMENTATION.
                    iv_path     = '/'
                    iv_filename = '$$zdoma1.doma.xml' ).
 
-    zcl_abapgit_file_status=>run_checks(
+    mo_instance->run_checks(
       ii_log     = mi_log
-      it_results = mt_results
-      io_dot     = mo_dot
-      iv_top     = '$Z$' ).
+      it_results = mt_results ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mi_log->count( )
@@ -400,11 +397,9 @@ CLASS ltcl_run_checks IMPLEMENTATION.
                    iv_path     = '/'
                    iv_filename = '' ).
 
-    zcl_abapgit_file_status=>run_checks(
+    mo_instance->run_checks(
       ii_log     = mi_log
-      it_results = mt_results
-      io_dot     = mo_dot
-      iv_top     = '$Z$' ).
+      it_results = mt_results ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mi_log->count( )
@@ -479,11 +474,9 @@ CLASS ltcl_run_checks IMPLEMENTATION.
                    iv_filename = 'zdoma1.doma.xml'
                    iv_packmove = 'X' ).
 
-    zcl_abapgit_file_status=>run_checks(
+    mo_instance->run_checks(
       ii_log     = mi_log
-      it_results = mt_results
-      io_dot     = mo_dot
-      iv_top     = '$Z$' ).
+      it_results = mt_results ).
 
     " Three files, but only two msg (for two changed objects)
     cl_abap_unit_assert=>assert_equals(
@@ -508,11 +501,14 @@ CLASS ltcl_run_checks IMPLEMENTATION.
                    iv_path     = '/'
                    iv_filename = '#notexist#zclass1.clas.xml' ).
 
-    zcl_abapgit_file_status=>run_checks(
+    CREATE OBJECT mo_instance
+      EXPORTING
+        iv_root_package = '/NOTEXIST/Z'
+        io_dot          = mo_dot.
+
+    mo_instance->run_checks(
       ii_log     = mi_log
-      it_results = mt_results
-      io_dot     = mo_dot
-      iv_top     = '/NOTEXIST/Z' ).
+      it_results = mt_results ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mi_log->count( )
@@ -544,11 +540,14 @@ CLASS ltcl_run_checks IMPLEMENTATION.
                    iv_path     = ''
                    iv_filename = 'package.devc.xml' ).
 
-    zcl_abapgit_file_status=>run_checks(
+    CREATE OBJECT mo_instance
+      EXPORTING
+        iv_root_package = '$MAIN'
+        io_dot          = mo_dot.
+
+    mo_instance->run_checks(
       ii_log     = mi_log
-      it_results = mt_results
-      io_dot     = mo_dot
-      iv_top     = '$MAIN' ).
+      it_results = mt_results ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mi_log->count( )
@@ -749,16 +748,19 @@ CLASS ltcl_status_helper IMPLEMENTATION.
 
   METHOD run.
 
-    DATA: lt_results TYPE zif_abapgit_definitions=>ty_results_tt,
-          lo_dot     TYPE REF TO zcl_abapgit_dot_abapgit.
-
+    DATA: lt_results  TYPE zif_abapgit_definitions=>ty_results_tt,
+          lo_instance TYPE REF TO zcl_abapgit_file_status,
+          lo_dot      TYPE REF TO zcl_abapgit_dot_abapgit.
 
     lo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
     lo_dot->set_starting_folder( '/' ). " assumed by unit tests
 
-    lt_results = zcl_abapgit_file_status=>calculate_status(
-      iv_devclass  = iv_devclass
-      io_dot       = lo_dot
+    CREATE OBJECT lo_instance
+      EXPORTING
+        iv_root_package = iv_devclass
+        io_dot          = lo_dot.
+
+    lt_results = lo_instance->calculate_status(
       it_local     = mt_local
       it_remote    = mt_remote
       it_cur_state = mt_state ).
@@ -893,6 +895,8 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
 
   METHOD diff.
 
+    " Modified both
+    CREATE OBJECT mo_helper.
     mo_helper->add_local(
       iv_obj_type = 'DOMA'
       iv_obj_name = '$$ZDOMA1'
@@ -903,6 +907,10 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
       iv_filename = '$$zdoma1.doma.xml'
       iv_sha1     = '54321' ).
 
+    mo_helper->add_state(
+      iv_filename = '$$zdoma1.doma.xml'
+      iv_sha1     = 'xxx' ).
+
     mo_result = mo_helper->run( ).
 
     mo_result->assert_lines( 1 ).
@@ -910,6 +918,62 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = mo_result->get_line( 1 )-lstate
       exp = zif_abapgit_definitions=>c_state-modified ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_result->get_line( 1 )-rstate
+      exp = zif_abapgit_definitions=>c_state-modified ).
+
+    " Modified local only
+    CREATE OBJECT mo_helper.
+    mo_helper->add_local(
+      iv_obj_type = 'DOMA'
+      iv_obj_name = '$$ZDOMA1'
+      iv_filename = '$$zdoma1.doma.xml'
+      iv_sha1     = '12345' ).
+
+    mo_helper->add_remote(
+      iv_filename = '$$zdoma1.doma.xml'
+      iv_sha1     = '54321' ).
+
+    mo_helper->add_state(
+      iv_filename = '$$zdoma1.doma.xml'
+      iv_sha1     = '54321' ).
+
+    mo_result = mo_helper->run( ).
+
+    mo_result->assert_lines( 1 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_result->get_line( 1 )-lstate
+      exp = zif_abapgit_definitions=>c_state-modified ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_result->get_line( 1 )-rstate
+      exp = zif_abapgit_definitions=>c_state-unchanged ).
+
+    " Modified remote only
+    CREATE OBJECT mo_helper.
+    mo_helper->add_local(
+      iv_obj_type = 'DOMA'
+      iv_obj_name = '$$ZDOMA1'
+      iv_filename = '$$zdoma1.doma.xml'
+      iv_sha1     = '12345' ).
+
+    mo_helper->add_remote(
+      iv_filename = '$$zdoma1.doma.xml'
+      iv_sha1     = '54321' ).
+
+    mo_helper->add_state(
+      iv_filename = '$$zdoma1.doma.xml'
+      iv_sha1     = '12345' ).
+
+    mo_result = mo_helper->run( ).
+
+    mo_result->assert_lines( 1 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_result->get_line( 1 )-lstate
+      exp = zif_abapgit_definitions=>c_state-unchanged ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_result->get_line( 1 )-rstate
