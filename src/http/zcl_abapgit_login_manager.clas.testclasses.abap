@@ -1,16 +1,15 @@
 CLASS ltcl_login_manager DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PRIVATE SECTION.
-    CONSTANTS: c_username TYPE string VALUE 'Aladdin' ,
-               c_password TYPE string VALUE 'OpenSesame' .
+    CONSTANTS: c_username TYPE string VALUE 'Aladdin',
+               c_password TYPE string VALUE 'OpenSesame'.
 
     METHODS:
       setup,
       teardown,
-      encoding FOR TESTING
-        RAISING zcx_abapgit_exception,
-      same_server FOR TESTING
-        RAISING zcx_abapgit_exception.
+      encoding FOR TESTING RAISING zcx_abapgit_exception,
+      save FOR TESTING RAISING zcx_abapgit_exception,
+      same_server FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -24,9 +23,24 @@ CLASS ltcl_login_manager IMPLEMENTATION.
     zcl_abapgit_login_manager=>clear( ).
   ENDMETHOD.
 
+  METHOD save.
+
+    CONSTANTS lc_uri TYPE string VALUE 'https://abapgit.org/foo/bar'.
+    CONSTANTS lc_auth TYPE string VALUE 'foobar'.
+
+    zcl_abapgit_login_manager=>save(
+      iv_uri           = lc_uri
+      iv_authorization = lc_auth ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_login_manager=>get( lc_uri )
+      exp = lc_auth ).
+
+  ENDMETHOD.
+
   METHOD encoding.
 
-    DATA: lv_auth TYPE string.
+    DATA lv_auth TYPE string.
 
     lv_auth = zcl_abapgit_login_manager=>set(
       iv_uri      = 'https://github.com/abapGit/abapGit.git'
