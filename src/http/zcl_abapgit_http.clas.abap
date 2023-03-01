@@ -211,8 +211,9 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
     ro_client->check_http_200( ).
 
     IF lv_scheme <> c_scheme-digest.
-      zcl_abapgit_login_manager=>save( iv_uri    = iv_url
-                                       ii_client = li_client ).
+      zcl_abapgit_login_manager=>save(
+        iv_uri           = iv_url
+        iv_authorization = li_client->request->get_header_field( 'authorization' ) ).
     ENDIF.
 
   ENDMETHOD.
