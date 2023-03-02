@@ -374,9 +374,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_INFO IMPLEMENTATION.
 
   METHOD read_stats_file.
 
+    TYPES ty_char255 TYPE c LENGTH 255.
+
     DATA:
       lv_code TYPE string,
-      lt_code TYPE abaptxt255_tab.
+      lt_code TYPE STANDARD TABLE OF ty_char255 WITH DEFAULT KEY.
 
     FIELD-SYMBOLS:
       <ls_code> LIKE LINE OF lt_code.
@@ -394,8 +396,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_INFO IMPLEMENTATION.
       rs_info-line = lines( lt_code ).
 
       LOOP AT lt_code ASSIGNING <ls_code> WHERE table_line IS NOT INITIAL AND table_line(1) <> '*'.
-        SHIFT <ls_code>-line LEFT DELETING LEADING space.
-        IF <ls_code>-line(1) <> '"'.
+        SHIFT <ls_code> LEFT DELETING LEADING space.
+        IF <ls_code>(1) <> '"'.
           rs_info-sloc = rs_info-sloc + 1.
         ENDIF.
       ENDLOOP.
