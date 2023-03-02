@@ -20,6 +20,18 @@ CLASS zcl_abapgit_filename_logic DEFINITION
       END OF c_json_file.
 
 
+    CLASS-METHODS detect_obj_definition
+      IMPORTING
+        !iv_type     TYPE string
+        !iv_ext      TYPE string
+      EXPORTING
+        !ev_is_xml   TYPE abap_bool
+        !ev_is_json  TYPE abap_bool.
+    CLASS-METHODS is_obj_definition_file
+      IMPORTING
+        !iv_filename TYPE string
+      RETURNING
+        VALUE(rv_yes) TYPE abap_bool.
     CLASS-METHODS file_to_object
       IMPORTING
         !iv_filename TYPE string
@@ -48,7 +60,15 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_FILENAME_LOGIC IMPLEMENTATION.
+
+
+  METHOD detect_obj_definition.
+
+    ev_is_xml  = boolc( iv_ext = to_upper( c_package_file-extension ) AND strlen( iv_type ) = 4 ).
+    ev_is_json = boolc( iv_ext = to_upper( c_json_file-extension ) AND strlen( iv_type ) = 4 ).
+
+  ENDMETHOD.
 
 
   METHOD file_to_object.
@@ -89,8 +109,37 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
     CLEAR es_item.
     es_item-obj_type = lv_type.
     es_item-obj_name = lv_name.
-    ev_is_xml        = boolc( lv_ext = to_upper( c_package_file-extension ) AND strlen( lv_type ) = 4 ).
-    ev_is_json       = boolc( lv_ext = to_upper( c_json_file-extension ) AND strlen( lv_type ) = 4 ).
+    detect_obj_definition(
+      EXPORTING
+        iv_ext  = lv_ext
+        iv_type = lv_type
+      IMPORTING
+        ev_is_xml  = ev_is_xml
+        ev_is_json = ev_is_json ).
+
+  ENDMETHOD.
+
+
+  METHOD is_obj_definition_file.
+
+    DATA:
+      lv_xml  TYPE abap_bool,
+      lv_json TYPE abap_bool,
+      lv_name TYPE string,
+      lv_type TYPE string,
+      lv_ext  TYPE string.
+
+    SPLIT to_upper( iv_filename ) AT '.' INTO lv_name lv_type lv_ext.
+
+    detect_obj_definition(
+      EXPORTING
+        iv_ext  = lv_ext
+        iv_type = lv_type
+      IMPORTING
+        ev_is_xml  = lv_xml
+        ev_is_json = lv_json ).
+
+    rv_yes = boolc( lv_json = abap_true OR lv_xml = abap_true ).
 
   ENDMETHOD.
 
