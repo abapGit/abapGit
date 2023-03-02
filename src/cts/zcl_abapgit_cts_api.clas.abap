@@ -80,7 +80,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_cts_api IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
 
 
   METHOD get_current_transport_for_obj.
@@ -333,6 +333,14 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
       INTO rv_description
       WHERE trkorr = iv_trkorr
       AND langu = sy-langu ##SUBRC_OK.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_cts_api~read_user.
+
+    SELECT SINGLE as4user FROM e070 INTO rv_uname
+      WHERE trkorr = iv_trkorr ##SUBRC_OK.
 
   ENDMETHOD.
 ENDCLASS.
