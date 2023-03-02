@@ -151,7 +151,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
+CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
 
   METHOD build_existing.
@@ -317,7 +317,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
     " The item list was not unique by now, just collected as "mention" list
     SORT lt_items DESCENDING. " Default key - type, name, pkg, ...
-    DELETE ADJACENT DUPLICATES FROM lt_items COMPARING obj_type obj_name devclass.
+    DELETE ADJACENT DUPLICATES FROM lt_items COMPARING obj_type obj_name.
     lt_items_by_obj = lt_items.
 
     " Process new remote files (marked above with empty SHA1)
