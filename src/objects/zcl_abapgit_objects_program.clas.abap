@@ -1076,6 +1076,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
     ls_progdir_new-sqlx    = is_progdir-sqlx.
     ls_progdir_new-uccheck = is_progdir-uccheck.
     ls_progdir_new-clas    = is_progdir-clas.
+    ls_progdir_new-secu    = is_progdir-secu.
 
     CALL FUNCTION 'UPDATE_PROGDIR'
       EXPORTING
