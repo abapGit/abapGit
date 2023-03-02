@@ -19,12 +19,86 @@ CLASS zcl_abapgit_persist_migrate DEFINITION PUBLIC CREATE PUBLIC.
     CLASS-METHODS lock_exists
       RETURNING
         VALUE(rv_exists) TYPE abap_bool.
+    CLASS-METHODS gui_status_create
+      RAISING
+        zcx_abapgit_exception.
+    CLASS-METHODS gui_status_exists
+      RETURNING
+        VALUE(rv_exists) TYPE abap_bool.
 
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_persist_migrate IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
+
+
+  METHOD gui_status_create.
+
+    DATA ls_cua TYPE zcl_abapgit_objects_program=>ty_cua.
+
+    IF gui_status_exists( ) = abap_true.
+      RETURN.
+    ENDIF.
+
+    IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_false.
+      RETURN. " No autocreation for full version
+    ENDIF.
+
+    ls_cua = lcl_own_cua_provider=>get( ).
+
+    IF ls_cua IS INITIAL. " Full version or Something wrong with abapmerged version
+      RETURN.
+    ENDIF.
+
+    TRY.
+        lcl_cua_interface=>new( )->put_own_cua( ls_cua ).
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD gui_status_exists.
+
+    DATA ls_own_cua TYPE zcl_abapgit_objects_program=>ty_cua.
+    DATA ls_new_cua TYPE zcl_abapgit_objects_program=>ty_cua.
+    DATA lv_x_own TYPE xstring.
+    DATA lv_x_new TYPE xstring.
+    DATA lv_h_own TYPE zif_abapgit_git_definitions=>ty_sha1.
+    DATA lv_h_new TYPE zif_abapgit_git_definitions=>ty_sha1.
+
+    TRY.
+        ls_own_cua = lcl_cua_interface=>new( )->get_own_cua( ).
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
+
+    IF ls_own_cua IS INITIAL.
+      rv_exists = abap_false.
+      RETURN.
+    ENDIF.
+
+    ls_new_cua = lcl_own_cua_provider=>get( ).
+    IF ls_new_cua IS INITIAL.
+      rv_exists = abap_true. " own exists and new is not - nothing to compare with
+      RETURN.
+    ENDIF.
+
+    EXPORT data = ls_own_cua TO DATA BUFFER lv_x_own.
+    EXPORT data = ls_new_cua TO DATA BUFFER lv_x_new.
+
+    TRY.
+        lv_h_own = zcl_abapgit_hash=>sha1_raw( lv_x_own ).
+        lv_h_new = zcl_abapgit_hash=>sha1_raw( lv_x_new ).
+      CATCH zcx_abapgit_exception.
+        rv_exists = abap_true. " own exists and some issue with calculating hash ... assume own is OK
+        RETURN.
+    ENDTRY.
+
+    " New exists and differs from own - then it is really new, needs to be installed
+    rv_exists = boolc( lv_h_own = lv_h_new ).
+
+  ENDMETHOD.
 
 
   METHOD lock_create.
@@ -135,6 +209,10 @@ CLASS zcl_abapgit_persist_migrate IMPLEMENTATION.
       lock_create( ).
     ENDIF.
 
+    IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true AND gui_status_exists( ) = abap_false.
+      gui_status_create( ).
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -242,5 +320,4 @@ CLASS zcl_abapgit_persist_migrate IMPLEMENTATION.
     rv_exists = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
-
 ENDCLASS.

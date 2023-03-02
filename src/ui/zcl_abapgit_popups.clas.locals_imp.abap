@@ -1,10 +1,11 @@
 CLASS lcl_object_descision_list DEFINITION FINAL.
   PUBLIC SECTION.
 
-    CONSTANTS c_default_column TYPE abap_componentdescr-name VALUE `DEFAULT_COLUMN`.
-    CONSTANTS c_fieldname_selected TYPE abap_componentdescr-name VALUE `SELECTED`.
+    CONSTANTS c_default_column TYPE abap_componentdescr-name VALUE 'DEFAULT_COLUMN'.
+    CONSTANTS c_fieldname_selected TYPE abap_componentdescr-name VALUE 'SELECTED'.
     CONSTANTS c_answer_cancel      TYPE c LENGTH 1 VALUE 'A'.
-    CONSTANTS c_fieldname_obj_type TYPE abap_componentdescr-name VALUE `OBJ_TYPE`.
+    CONSTANTS c_fieldname_obj_type TYPE abap_componentdescr-name VALUE 'OBJ_TYPE'.
+    CONSTANTS c_own_pfstatus TYPE sy-pfkey VALUE 'DECIDE_DIALOG'.
 
     METHODS constructor
       IMPORTING
@@ -74,7 +75,7 @@ CLASS lcl_object_descision_list DEFINITION FINAL.
         it_columns_to_display TYPE zif_abapgit_popups=>ty_alv_column_tt
       RAISING
         cx_salv_msg.
-    METHODS set_pfstatus
+    METHODS setup_toolbar
       IMPORTING
         !iv_selection_mode TYPE salv_de_constant
         !iv_object_list    TYPE abap_bool.
@@ -84,9 +85,10 @@ CLASS lcl_object_descision_list DEFINITION FINAL.
     METHODS mark_category
       IMPORTING
         iv_category TYPE string.
-    METHODS mark_all_to
+    METHODS mark_all
       IMPORTING
         iv_selected TYPE abap_bool.
+    METHODS mark_visible.
 
 ENDCLASS.
 
@@ -149,7 +151,6 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
     CREATE DATA lr_exporting LIKE LINE OF et_list.
     ASSIGN lr_exporting->* TO <lg_exporting>.
 
-*    mo_table_descr ?= cl_abap_tabledescr=>describe_by_data( et_list ). " different export structure ?
     lo_data_descr = mo_table_descr->get_table_line_type( ).
 
     LOOP AT <lt_table> ASSIGNING <ls_line> WHERE (lv_condition).
@@ -238,7 +239,7 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
           iv_select_column_text = iv_select_column_text
           it_columns_to_display = it_columns_to_display ).
 
-        set_pfstatus(
+        setup_toolbar(
           iv_object_list    = lv_object_list
           iv_selection_mode = iv_selection_mode ).
 
@@ -361,7 +362,7 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
 
   METHOD on_select_list_function_click.
 
-    " Work for functions of SAPMSVIM and SAPLSEDI_POPUPS
+    " Work for functions of SAPMSVIM and OWN
     CASE e_salv_function.
       WHEN 'O.K.' OR 'OK'.
         mv_cancel = abap_false.
@@ -373,14 +374,18 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
         mo_alv->close_screen( ).
 
       WHEN 'SALL' OR 'SEL_ALL'.
-        mark_all_to( abap_true ).
+        mark_all( abap_true ).
         mo_alv->refresh( ).
 
       WHEN 'DSEL' OR 'SEL_DEL'.
-        mark_all_to( abap_false ).
+        mark_all( abap_false ).
         mo_alv->refresh( ).
 
       WHEN 'SEL_KEY'.
+        mark_visible( ).
+        mo_alv->refresh( ).
+
+      WHEN 'SEL_CAT'.
         mark_category( ask_user_for_obj_category( ) ).
         mo_alv->refresh( ).
 
@@ -392,7 +397,7 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD mark_all_to.
+  METHOD mark_all.
 
     FIELD-SYMBOLS:
       <lt_table>    TYPE STANDARD TABLE,
@@ -407,6 +412,56 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
       ASSIGN COMPONENT c_fieldname_selected OF STRUCTURE <ls_line> TO <lv_selected>.
       ASSERT sy-subrc = 0.
       <lv_selected> = iv_selected.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD mark_visible.
+
+    DATA:
+      lo_selection  TYPE REF TO cl_salv_selections,
+      lt_filters    TYPE lvc_t_filt,
+      lt_scope      TYPE lvc_t_fidx,
+      lv_index      LIKE LINE OF lt_scope.
+
+    FIELD-SYMBOLS:
+      <lt_table>    TYPE STANDARD TABLE,
+      <ls_line>     TYPE any,
+      <lv_selected> TYPE abap_bool.
+
+    ASSIGN mr_table->* TO <lt_table>.
+    ASSERT sy-subrc = 0.
+
+    " First get selection
+    lo_selection = mo_alv->get_selections( ).
+    lt_scope = lo_selection->get_selected_rows( ).
+
+    IF lines( lt_scope ) = 0.
+      " If nothing selected, select all VISIBLE
+      lt_filters = cl_salv_controller_metadata=>get_lvc_filter( mo_alv->get_filters( ) ).
+      IF lines( lt_filters ) = 0.
+        mark_all( abap_true ). " No filters - just select all
+        RETURN.
+      ENDIF.
+
+      CALL FUNCTION 'LVC_FILTER_APPLY'
+        EXPORTING
+          it_filter                    = lt_filters
+        IMPORTING
+          et_filter_index_inside       = lt_scope
+        TABLES
+          it_data                      = <lt_table>.
+    ENDIF.
+
+    LOOP AT lt_scope INTO lv_index.
+
+      READ TABLE <lt_table> ASSIGNING <ls_line> INDEX lv_index.
+      CHECK sy-subrc = 0.
+
+      ASSIGN COMPONENT c_fieldname_selected OF STRUCTURE <ls_line> TO <lv_selected>.
+      ASSERT sy-subrc = 0.
+      <lv_selected> = abap_true.
 
     ENDLOOP.
 
@@ -574,9 +629,12 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
             lo_column->set_icon( abap_true ).
           ENDIF.
 
+          IF <ls_column_to_display>-center = abap_true.
+            lo_column->set_alignment( if_salv_c_alignment=>centered ).
+          ENDIF.
+
         WHEN OTHERS.
-          " Hide column
-          lo_column->set_technical( abap_true ).
+          lo_column->set_technical( abap_true ). " Hide column
 
       ENDCASE.
 
@@ -584,39 +642,59 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD set_pfstatus.
+  METHOD setup_toolbar.
 
     DATA:
       lv_report         TYPE sy-repid,
-      lv_pfstatus       TYPE sy-pfkey.
+      lv_pfstatus       TYPE sy-pfkey,
+      lo_functions      TYPE REF TO cl_salv_functions_list,
+      lt_func_list      TYPE salv_t_ui_func,
+      lv_fn             TYPE string,
+      ls_func           LIKE LINE OF lt_func_list.
 
-    lv_report  = 'SAPMSVIM'.
+    CALL FUNCTION 'RS_CUA_STATUS_CHECK'
+      EXPORTING
+        program          = sy-cprog
+        objectname       = c_own_pfstatus
+      EXCEPTIONS
+        object_not_found = 1
+        OTHERS           = 2.
 
-    IF iv_selection_mode = if_salv_c_selection_mode=>single.
-      lv_pfstatus = '110'.
+    IF sy-subrc = 0.
+
+      mo_alv->set_screen_status(
+        report   = sy-cprog
+        pfstatus = c_own_pfstatus ).
+
     ELSE.
-      lv_pfstatus = '102'.
 
-      IF iv_object_list = abap_true.
-        " For object lists with multiple selections, try to use a PFSTATUS that includes
-        " an additional button to show other selection options
-        CALL FUNCTION 'RS_CUA_STATUS_CHECK'
-          EXPORTING
-            objectname       = 'SELECT_MULTI_WK'
-            program          = 'SAPLSEDI_POPUPS'
-          EXCEPTIONS
-            object_not_found = 1
-            OTHERS           = 2.
-        IF sy-subrc = 0.
-          lv_report   = 'SAPLSEDI_POPUPS'.
-          lv_pfstatus = 'SELECT_MULTI_WK'.
-        ENDIF.
+      lv_report  = 'SAPMSVIM'.
+
+      IF iv_selection_mode = if_salv_c_selection_mode=>single.
+        lv_pfstatus = '110'.
+      ELSE.
+        lv_pfstatus = '102'.
       ENDIF.
+
+      mo_alv->set_screen_status(
+        report   = lv_report
+        pfstatus = lv_pfstatus ).
+
     ENDIF.
 
-    mo_alv->set_screen_status(
-      pfstatus = lv_pfstatus
-      report   = lv_report ).
+    lo_functions = mo_alv->get_functions( ).
+
+    lt_func_list = lo_functions->get_functions( ).
+    LOOP AT lt_func_list INTO ls_func.
+      lv_fn = ls_func-r_function->get_name( ).
+      IF lv_fn = 'OK' OR lv_fn = 'CANCEL'.
+        ls_func-r_function->set_visible( abap_true ).
+      ELSEIF iv_object_list = abap_true.
+        ls_func-r_function->set_visible( abap_true ).
+      ELSE.
+        ls_func-r_function->set_visible( abap_false ).
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 

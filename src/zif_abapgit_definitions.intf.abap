@@ -36,6 +36,7 @@ INTERFACE zif_abapgit_definitions
     BEGIN OF ty_overwrite.
       INCLUDE TYPE ty_item.
   TYPES:
+      state    TYPE c LENGTH 2,
       action   TYPE i,
       icon     TYPE icon_d,
       text     TYPE string,
