@@ -10,8 +10,6 @@ INTERFACE zif_abapgit_repo_checksums
       VALUE(rt_checksums) TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt .
 
   METHODS rebuild
-    IMPORTING
-      iv_branches_equal TYPE abap_bool DEFAULT abap_false
     RAISING
       zcx_abapgit_exception.
 
