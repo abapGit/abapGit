@@ -243,7 +243,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
           lt_changed_by_remote LIKE rt_changed_by,
           ls_item              TYPE zif_abapgit_definitions=>ty_item,
           lv_transport         LIKE LINE OF it_transports,
-          lv_user              TYPE e070-as4user.
+          lv_user              TYPE uname.
 
     FIELD-SYMBOLS: <ls_changed_by> LIKE LINE OF rt_changed_by.
 
@@ -279,9 +279,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
         obj_name = <ls_changed_by>-item-obj_name
         INTO lv_transport.
       IF sy-subrc = 0.
-        SELECT SINGLE as4user FROM e070 INTO lv_user
-          WHERE trkorr = lv_transport-trkorr.
-        IF sy-subrc = 0.
+        lv_user = zcl_abapgit_factory=>get_cts_api( )->read_user( lv_transport-trkorr ).
+        IF lv_user IS NOT INITIAL.
           <ls_changed_by>-name = lv_user.
         ENDIF.
       ENDIF.
