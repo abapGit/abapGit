@@ -192,11 +192,11 @@ CLASS lcl_status_consistency_checks IMPLEMENTATION.
     li_namespace = zcl_abapgit_factory=>get_sap_namespace( ).
 
     LOOP AT lt_namespace INTO lv_namespace.
-      IF li_namespace->namespace_exists( lv_namespace ) = abap_false.
+      IF li_namespace->exists( lv_namespace ) = abap_false.
         mi_log->add(
           iv_msg  = |Namespace { lv_namespace } does not exist. Create it in transaction SE03|
           iv_type = 'W' ).
-      ELSEIF li_namespace->namespace_is_editable( lv_namespace ) = abap_false.
+      ELSEIF li_namespace->is_editable( lv_namespace ) = abap_false.
         mi_log->add(
           iv_msg  = |Namespace { lv_namespace } is not modifiable. Check it in transaction SE03|
           iv_type = 'W' ).

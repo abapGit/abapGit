@@ -119,11 +119,11 @@ CLASS ltcl_run_checks IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
-  METHOD zif_abapgit_sap_namespace~namespace_exists.
+  METHOD zif_abapgit_sap_namespace~exists.
     rv_yes = boolc( iv_namespace <> 'NOTEXIST' ).
   ENDMETHOD.
 
-  METHOD zif_abapgit_sap_namespace~namespace_is_editable.
+  METHOD zif_abapgit_sap_namespace~is_editable.
   ENDMETHOD.
 
   METHOD append_result.
