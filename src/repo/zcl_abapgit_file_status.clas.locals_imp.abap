@@ -68,12 +68,10 @@ CLASS lcl_status_consistency_checks IMPLEMENTATION.
     CREATE OBJECT mi_log TYPE zcl_abapgit_log.
 
     " Find all objects which were assigned to a different package
-    check_package_move(
-      it_results = it_results ).
+    check_package_move( it_results ).
 
     " Check files for one object is in the same folder
-    check_files_folder(
-      it_results = it_results ).
+    check_files_folder( it_results ).
 
     " Check that sub packages are included in the package hierarchy
     check_package_sub_package(
@@ -87,12 +85,10 @@ CLASS lcl_status_consistency_checks IMPLEMENTATION.
       iv_top     = mv_root_package ).
 
     " Check for multiple files with same filename
-    check_multiple_files(
-      it_results = it_results ).
+    check_multiple_files( it_results ).
 
     " Check if namespaces exist already
-    check_namespace(
-      it_results = it_results ).
+    check_namespace( it_results ).
 
     ri_log = mi_log.
 

@@ -154,7 +154,7 @@ CLASS ZCL_ABAPGIT_FACTORY IMPLEMENTATION.
   METHOD get_sap_namespace.
 
     IF gi_sap_namespace IS NOT BOUND.
-*      CREATE OBJECT gi_sap_namespace TYPE zcl_abapgit_cts_api.
+      CREATE OBJECT gi_sap_namespace TYPE zcl_abapgit_sap_namespace.
     ENDIF.
 
     ri_namespace = gi_sap_namespace.
