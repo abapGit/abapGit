@@ -34,7 +34,8 @@ CLASS ltcl_run_checks DEFINITION FOR TESTING RISK LEVEL HARMLESS
   DURATION SHORT FINAL.
 
   PUBLIC SECTION.
-    INTERFACES: zif_abapgit_sap_package.
+    INTERFACES zif_abapgit_sap_package.
+    INTERFACES zif_abapgit_sap_namespace.
 
   PRIVATE SECTION.
     DATA: mt_results  TYPE zif_abapgit_definitions=>ty_results_tt,
@@ -118,6 +119,13 @@ CLASS ltcl_run_checks IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_namespace~namespace_exists.
+    rv_yes = boolc( iv_namespace <> 'NOTEXIST' ).
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_namespace~namespace_is_editable.
+  ENDMETHOD.
+
   METHOD append_result.
 
     DATA ls_result LIKE LINE OF mt_results.
@@ -150,6 +158,8 @@ CLASS ltcl_run_checks IMPLEMENTATION.
 
     zcl_abapgit_injector=>set_sap_package( iv_package     = '$MAIN_SUB'
                                            ii_sap_package = me ).
+
+    zcl_abapgit_injector=>set_sap_namespace( me ).
 
     CREATE OBJECT mo_instance
       EXPORTING

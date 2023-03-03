@@ -33,13 +33,17 @@ CLASS zcl_abapgit_injector DEFINITION
     CLASS-METHODS set_lxe_texts
       IMPORTING
         !ii_lxe_texts TYPE REF TO zif_abapgit_lxe_texts .
+    CLASS-METHODS set_sap_namespace
+      IMPORTING
+        !ii_namespace TYPE REF TO zif_abapgit_sap_namespace .
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_injector IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_INJECTOR IMPLEMENTATION.
 
 
   METHOD set_code_inspector.
@@ -87,6 +91,11 @@ CLASS zcl_abapgit_injector IMPLEMENTATION.
 
   METHOD set_lxe_texts.
     zcl_abapgit_factory=>gi_lxe_texts = ii_lxe_texts.
+  ENDMETHOD.
+
+
+  METHOD set_sap_namespace.
+    zcl_abapgit_factory=>gi_sap_namespace = ii_namespace.
   ENDMETHOD.
 
 

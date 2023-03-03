@@ -178,9 +178,9 @@ CLASS lcl_status_consistency_checks IMPLEMENTATION.
   METHOD check_namespace.
 
     DATA:
+      li_namespace TYPE REF TO zif_abapgit_sap_namespace,
       lv_namespace TYPE namespace,
-      lt_namespace TYPE TABLE OF namespace,
-      ls_trnspace  TYPE trnspace.
+      lt_namespace TYPE TABLE OF namespace.
 
     FIELD-SYMBOLS <ls_result> LIKE LINE OF it_results.
 
@@ -193,14 +193,17 @@ CLASS lcl_status_consistency_checks IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
+    li_namespace = zcl_abapgit_factory=>get_sap_namespace( ).
+
     LOOP AT lt_namespace INTO lv_namespace.
-      SELECT SINGLE editflag FROM trnspace INTO ls_trnspace-editflag WHERE namespace = lv_namespace.
-      IF sy-subrc <> 0.
-        mi_log->add( iv_msg  = |Namespace { lv_namespace } does not exist. Create it in transaction SE03|
-                     iv_type = 'W' ).
-      ELSEIF ls_trnspace-editflag <> 'X'.
-        mi_log->add( iv_msg  = |Namespace { lv_namespace } is not modifiable. Check it in transaction SE03|
-                     iv_type = 'W' ).
+      IF li_namespace->namespace_exists( lv_namespace ) = abap_false.
+        mi_log->add(
+          iv_msg  = |Namespace { lv_namespace } does not exist. Create it in transaction SE03|
+          iv_type = 'W' ).
+      ELSEIF li_namespace->namespace_is_editable( lv_namespace ) = abap_false.
+        mi_log->add(
+          iv_msg  = |Namespace { lv_namespace } is not modifiable. Check it in transaction SE03|
+          iv_type = 'W' ).
       ENDIF.
     ENDLOOP.
 
