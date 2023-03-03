@@ -68,12 +68,12 @@ jobs:
       with:
         repository: abapGit/build
         path: build
+        ssh-key: ${{ secrets.DEPLOY_ABAPGIT_BUILD }}
     - uses: actions/checkout@v3
       with:
         path: abapGit
     - name: mirror tag to the artifact
       env:
-        GITHUB_API_KEY: ${{ secrets.DEPLOY_ABAPGIT_BUILD }}
         GIT_USER_NAME: 'github-actions[bot]'
         GIT_USER_EMAIL: 'github-actions[bot]@users.noreply.github.com'
       run: |
