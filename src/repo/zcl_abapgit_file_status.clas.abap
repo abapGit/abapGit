@@ -417,7 +417,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
         iv_filename = <ls_local>-file-filename ) = abap_false.
 
       IF <ls_local>-item IS NOT INITIAL
-        AND zcl_abapgit_filename_logic=>is_obj_definition_file( <ls_local>-file-filename ).
+        AND zcl_abapgit_filename_logic=>is_obj_definition_file( <ls_local>-file-filename ) = abap_true.
         " Collect for item index
         APPEND <ls_local>-item TO ct_items.
       ENDIF.
