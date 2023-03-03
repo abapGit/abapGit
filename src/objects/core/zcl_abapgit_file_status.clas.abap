@@ -350,6 +350,10 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       <ls_result>     LIKE LINE OF it_results,
       <ls_result_idx> LIKE LINE OF it_results.
 
+    " TODO optimize ?
+    " sort by obj, path
+    " loop, and compare to first object record
+
     " Collect object index
     lt_res_sort = it_results.
     SORT lt_res_sort BY obj_type ASCENDING obj_name ASCENDING.
@@ -494,23 +498,26 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
   METHOD check_package_move.
 
-    DATA:
-      lt_move_idx LIKE it_results.
+    DATA lt_move_idx LIKE it_results.
 
     FIELD-SYMBOLS:
       <ls_result>      LIKE LINE OF it_results,
       <ls_result_move> LIKE LINE OF it_results.
 
+    " TODO: optimize ?
+    " delete where packmove = false, delete adj duplicates and fire messages ?
     LOOP AT it_results ASSIGNING <ls_result>
       WHERE lstate = zif_abapgit_definitions=>c_state-added AND packmove = abap_true.
 
       READ TABLE lt_move_idx TRANSPORTING NO FIELDS
-        WITH KEY obj_type = <ls_result>-obj_type obj_name = <ls_result>-obj_name
+        WITH KEY
+          obj_type = <ls_result>-obj_type
+          obj_name = <ls_result>-obj_name
         BINARY SEARCH. " Sorted since it_result is sorted
       IF sy-subrc <> 0.
-        ii_log->add( iv_msg  = |Changed package assignment for object {
-                               <ls_result>-obj_type } { <ls_result>-obj_name }|
-                     iv_type = 'W' ).
+        ii_log->add(
+          iv_msg  = |Changed package assignment for object { <ls_result>-obj_type } { <ls_result>-obj_name }|
+          iv_type = 'W' ).
         APPEND INITIAL LINE TO lt_move_idx ASSIGNING <ls_result_move>.
         <ls_result_move>-obj_type = <ls_result>-obj_type.
         <ls_result_move>-obj_name = <ls_result>-obj_name.
@@ -688,6 +695,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
           WITH KEY file
           COMPONENTS filename = <ls_local>-file-filename.
         IF sy-subrc = 0 AND <ls_local>-file-sha1 = <ls_remote>-sha1.
+          " If yes, then it was probably moved
           <ls_result>-packmove = abap_true.
         ELSEIF sy-subrc = 4.
           " Check if file existed before and was deleted remotely
@@ -701,7 +709,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
             ELSE.
               <ls_result>-lstate = zif_abapgit_definitions=>c_state-modified.
             ENDIF.
-            <ls_result>-rstate = zif_abapgit_definitions=>c_state-deleted.
+            <ls_result>-rstate = zif_abapgit_definitions=>c_state-deleted. " ??
           ENDIF.
         ENDIF.
       ENDIF.
