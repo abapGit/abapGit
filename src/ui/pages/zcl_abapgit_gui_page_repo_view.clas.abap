@@ -15,6 +15,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
     CONSTANTS:
       BEGIN OF c_actions,
         change_dir        TYPE string VALUE 'change_dir' ##NO_TEXT,
+        show_local_state  TYPE string VALUE 'show_local_state' ##NO_TEXT,
         toggle_hide_files TYPE string VALUE 'toggle_hide_files' ##NO_TEXT,
         toggle_folders    TYPE string VALUE 'toggle_folders' ##NO_TEXT,
         toggle_changes    TYPE string VALUE 'toggle_changes' ##NO_TEXT,
@@ -52,6 +53,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
     DATA mv_order_by TYPE string .
     DATA mv_order_descending TYPE abap_bool .
     DATA mv_diff_first TYPE abap_bool .
+    DATA mv_show_local_state TYPE abap_bool .
     DATA mv_key TYPE zif_abapgit_persistence=>ty_value .
     DATA mv_are_changes_recorded_in_tr TYPE abap_bool .
 
@@ -564,6 +566,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
       iv_chk = mv_show_folders
       iv_act = c_actions-toggle_folders ).
 
+    IF mo_repo->is_offline( ) = abap_true.
+      ro_toolbar->add(
+        iv_txt = 'Show Local State'
+        iv_chk = mv_show_local_state
+        iv_act = c_actions-show_local_state ).
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -798,13 +807,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
     ri_html->add( '<div>' ).
     IF is_file-is_changed = abap_true.
-      lv_difflink = zcl_abapgit_html_action_utils=>file_encode(
-        iv_key  = mo_repo->get_key( )
-        ig_file = is_file ).
-      ri_html->add_a( iv_txt = 'diff'
-                      iv_act = |{ zif_abapgit_definitions=>c_action-go_file_diff }?{ lv_difflink }| ).
-      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state( iv_lstate = is_file-lstate
-                                                                  iv_rstate = is_file-rstate ) ).
+      IF mo_repo->has_remote_source( ) = abap_true. " Has source to compare with
+        lv_difflink = zcl_abapgit_html_action_utils=>file_encode(
+          iv_key  = mo_repo->get_key( )
+          ig_file = is_file ).
+        ri_html->add_a(
+          iv_txt = 'diff'
+          iv_act = |{ zif_abapgit_definitions=>c_action-go_file_diff }?{ lv_difflink }| ).
+      ENDIF.
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state(
+        iv_lstate = is_file-lstate
+        iv_rstate = is_file-rstate ) ).
     ELSE.
       ri_html->add( '&nbsp;' ).
     ENDIF.
@@ -894,7 +907,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
     " Command
     ri_html->add( '<td class="cmd">' ).
-    IF mo_repo->has_remote_source( ) = abap_true.
+    IF mo_repo->has_remote_source( ) = abap_true OR mv_show_local_state = abap_true.
       ri_html->add( render_item_command( is_item ) ).
     ENDIF.
     ri_html->add( '</td>' ).
@@ -927,22 +940,30 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
     IF is_item-is_dir = abap_true. " Directory
       ri_html->add( '<div>' ).
       ri_html->add( |<span class="grey">{ is_item-changes } changes</span>| ).
-      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state( iv_lstate = is_item-lstate
-                                                                  iv_rstate = is_item-rstate ) ).
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state(
+        iv_lstate = is_item-lstate
+        iv_rstate = is_item-rstate ) ).
       ri_html->add( '</div>' ).
 
     ELSEIF is_item-changes > 0.
       IF mv_hide_files = abap_true AND is_item-obj_name IS NOT INITIAL.
 
-        lv_difflink = zcl_abapgit_html_action_utils=>obj_encode(
-          iv_key    = mo_repo->get_key( )
-          ig_object = is_item ).
-
         ri_html->add( '<div>' ).
-        ri_html->add_a( iv_txt = |diff ({ is_item-changes })|
-                        iv_act = |{ zif_abapgit_definitions=>c_action-go_file_diff }?{ lv_difflink }| ).
-        ri_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state( iv_lstate = is_item-lstate
-                                                                    iv_rstate = is_item-rstate ) ).
+
+        IF mo_repo->has_remote_source( ) = abap_true. " There is a source to diff with
+          lv_difflink = zcl_abapgit_html_action_utils=>obj_encode(
+            iv_key    = mo_repo->get_key( )
+            ig_object = is_item ).
+          ri_html->add_a(
+            iv_txt = |diff ({ is_item-changes })|
+            iv_act = |{ zif_abapgit_definitions=>c_action-go_file_diff }?{ lv_difflink }| ).
+        ELSE.
+          ri_html->add( |({ is_item-changes })| ).
+        ENDIF.
+        ri_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state(
+          iv_lstate = is_item-lstate
+          iv_rstate = is_item-rstate ) ).
+
         ri_html->add( '</div>' ).
 
       ENDIF.
@@ -992,7 +1013,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
       " Command
       ri_html->add( '<td class="cmd">' ).
-      IF mo_repo->has_remote_source( ) = abap_true.
+      IF mo_repo->has_remote_source( ) = abap_true OR mv_show_local_state = abap_true.
         ri_html->add( render_file_command( ls_file ) ).
       ENDIF.
       ri_html->add( '</td>' ).
@@ -1150,6 +1171,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
       WHEN c_actions-toggle_diff_first.
         mv_diff_first = zcl_abapgit_persistence_user=>get_instance( )->set_diff_first(
           boolc( mv_diff_first = abap_false ) ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+
+      WHEN c_actions-show_local_state.    " Show local state for offline package
+        mv_show_local_state = boolc( mv_show_local_state = abap_false ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-display_more.      " Increase MAX lines limit
@@ -1315,10 +1340,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
           EXPORTING
             io_repo = mo_repo.
 
-        lt_repo_items = lo_browser->list( iv_path         = mv_cur_dir
-                                          iv_by_folders   = mv_show_folders
-                                          iv_changes_only = mv_changes_only
-                                          iv_transports   = mv_are_changes_recorded_in_tr ).
+        lt_repo_items = lo_browser->list(
+          iv_path             = mv_cur_dir
+          iv_by_folders       = mv_show_folders
+          iv_changes_only     = mv_changes_only
+          iv_show_local_state = mv_show_local_state
+          iv_transports       = mv_are_changes_recorded_in_tr ).
 
         apply_order_by( CHANGING ct_repo_items = lt_repo_items ).
 
@@ -1336,8 +1363,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
         ENDIF.
 
         ri_html->add( '<div class="repo_container">' ).
-
-        CLEAR lv_msg.
 
         IF lines( lt_repo_items ) = 0.
           IF mv_changes_only = abap_true.
@@ -1370,8 +1395,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
               lv_max = abap_true.
               EXIT. " current loop
             ENDIF.
-            ri_html->add( render_item( is_item = <ls_item>
-                                       iv_render_transports = mv_are_changes_recorded_in_tr ) ).
+            ri_html->add( render_item(
+              is_item = <ls_item>
+              iv_render_transports = mv_are_changes_recorded_in_tr ) ).
           ENDLOOP.
 
           IF mv_changes_only = abap_true.

@@ -5,18 +5,25 @@ CLASS zcl_abapgit_repo_content_list DEFINITION
 
   PUBLIC SECTION.
     METHODS constructor
-      IMPORTING io_repo TYPE REF TO zcl_abapgit_repo.
+      IMPORTING
+        io_repo TYPE REF TO zcl_abapgit_repo.
 
     METHODS list
-      IMPORTING iv_path              TYPE string
-                iv_by_folders        TYPE abap_bool OPTIONAL
-                iv_changes_only      TYPE abap_bool OPTIONAL
-                iv_transports        TYPE abap_bool OPTIONAL
-      RETURNING VALUE(rt_repo_items) TYPE zif_abapgit_definitions=>ty_repo_item_tt
-      RAISING   zcx_abapgit_exception.
+      IMPORTING
+        iv_path              TYPE string
+        iv_by_folders        TYPE abap_bool DEFAULT abap_false
+        iv_changes_only      TYPE abap_bool DEFAULT abap_false
+        iv_transports        TYPE abap_bool DEFAULT abap_false
+        iv_show_local_state  TYPE abap_bool DEFAULT abap_false
+      RETURNING
+        VALUE(rt_repo_items) TYPE zif_abapgit_definitions=>ty_repo_item_tt
+      RAISING
+        zcx_abapgit_exception.
 
     METHODS get_log
-      RETURNING VALUE(ri_log) TYPE REF TO zif_abapgit_log.
+      RETURNING
+        VALUE(ri_log) TYPE REF TO zif_abapgit_log.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS: BEGIN OF c_sortkey,
@@ -57,7 +64,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
 
 
   METHOD build_folders.
@@ -310,7 +317,7 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
 
     mi_log->clear( ).
 
-    IF mo_repo->has_remote_source( ) = abap_true.
+    IF mo_repo->has_remote_source( ) = abap_true OR iv_show_local_state = abap_true.
       rt_repo_items = build_repo_items_with_remote( ).
       check_repo_size( ).
     ELSE.
