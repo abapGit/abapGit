@@ -112,11 +112,6 @@ CLASS zcl_abapgit_gui_router DEFINITION
         !ii_event       TYPE REF TO zif_abapgit_gui_event
       RETURNING
         VALUE(rv_state) TYPE i .
-    METHODS get_state_db_edit
-      IMPORTING
-        ii_event        TYPE REF TO zif_abapgit_gui_event
-      RETURNING
-        VALUE(rv_state) TYPE i .
     METHODS main_page
       RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING   zcx_abapgit_exception.
@@ -153,15 +148,13 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-db_edit.
         lo_query->to_abap( CHANGING cs_container = ls_db_key ).
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_db_edit
-          EXPORTING
-            is_key = ls_db_key.
-        rs_handled-state = get_state_db_edit( ii_event ).
+        rs_handled-page  = zcl_abapgit_gui_page_db_record=>create(
+          is_key       = ls_db_key
+          iv_edit_mode = abap_true ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-db_display.
         lo_query->to_abap( CHANGING cs_container = ls_db_key ).
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_db_dis
-          EXPORTING
-            is_key = ls_db_key.
+        rs_handled-page  = zcl_abapgit_gui_page_db_record=>create( ls_db_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
     ENDCASE.
 
@@ -392,18 +385,6 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
       ri_page = zcl_abapgit_gui_page_repo_view=>create( lo_repo->get_key( ) ).
 
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD get_state_db_edit.
-
-    " In display mode, replace the page
-    IF ii_event->mv_current_page_name = 'ZCL_ABAPGIT_GUI_PAGE_DB_DIS'.
-      rv_state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
-    ELSE.
-      rv_state = zcl_abapgit_gui=>c_event_state-new_page.
     ENDIF.
 
   ENDMETHOD.
