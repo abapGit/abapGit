@@ -26,19 +26,33 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
         restore TYPE string VALUE 'restore',
       END OF c_action.
 
+    TYPES:
+      BEGIN OF ty_explanation,
+        value TYPE string,
+        extra TYPE string,
+      END OF ty_explanation.
+
     DATA mt_methods TYPE zcl_abapgit_background=>ty_methods.
 
-    CLASS-METHODS backup
+    METHODS render_table
+      IMPORTING
+        ii_html TYPE REF TO zif_abapgit_html
+        it_db_entries TYPE zif_abapgit_persistence=>ty_contents
       RAISING
         zcx_abapgit_exception.
-    CLASS-METHODS delete
+
+    CLASS-METHODS do_backup_db
+      RAISING
+        zcx_abapgit_exception.
+    CLASS-METHODS do_delete_entry
       IMPORTING
         !is_key TYPE zif_abapgit_persistence=>ty_content
       RAISING
         zcx_abapgit_exception.
-    CLASS-METHODS restore
+    CLASS-METHODS do_restore_db
       RAISING
         zcx_abapgit_exception.
+
     METHODS explain_content
       IMPORTING
         !is_data       TYPE zif_abapgit_persistence=>ty_content
@@ -49,25 +63,22 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
     METHODS explain_content_repo
       IMPORTING
         !is_data  TYPE zif_abapgit_persistence=>ty_content
-      EXPORTING
-        !ev_value TYPE string
-        !ev_extra TYPE string
+      RETURNING
+        VALUE(rs_expl) TYPE ty_explanation
       RAISING
         zcx_abapgit_exception.
     METHODS explain_content_repo_cs
       IMPORTING
         !is_data  TYPE zif_abapgit_persistence=>ty_content
-      EXPORTING
-        !ev_value TYPE string
-        !ev_extra TYPE string
+      RETURNING
+        VALUE(rs_expl) TYPE ty_explanation
       RAISING
         zcx_abapgit_exception.
     METHODS explain_content_background
       IMPORTING
         !is_data  TYPE zif_abapgit_persistence=>ty_content
-      EXPORTING
-        !ev_value TYPE string
-        !ev_extra TYPE string
+      RETURNING
+        VALUE(rs_expl) TYPE ty_explanation
       RAISING
         zcx_abapgit_exception.
 ENDCLASS.
@@ -77,7 +88,21 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
 
 
-  METHOD backup.
+  METHOD create.
+
+    DATA lo_component TYPE REF TO zcl_abapgit_gui_page_db.
+
+    CREATE OBJECT lo_component.
+
+    ri_page = zcl_abapgit_gui_page_hoc=>create(
+      iv_page_title         = 'Database Utility'
+      ii_page_menu_provider = lo_component
+      ii_child_component    = lo_component ).
+
+  ENDMETHOD.
+
+
+  METHOD do_backup_db.
 
     DATA:
       lt_data     TYPE zif_abapgit_persistence=>ty_contents,
@@ -96,8 +121,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
 
     LOOP AT lt_data ASSIGNING <ls_data>.
       CONCATENATE <ls_data>-type '_' <ls_data>-value '.xml' INTO lv_filename.
-      lo_zip->add( name    = lv_filename
-                   content = zcl_abapgit_convert=>string_to_xstring_utf8( <ls_data>-data_str ) ).
+      lo_zip->add(
+        name    = lv_filename
+        content = zcl_abapgit_convert=>string_to_xstring_utf8( <ls_data>-data_str ) ).
     ENDLOOP.
 
     lv_zip = lo_zip->save( ).
@@ -120,23 +146,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD create.
+  METHOD do_delete_entry.
 
-    DATA lo_component TYPE REF TO zcl_abapgit_gui_page_db.
-
-    CREATE OBJECT lo_component.
-
-    ri_page = zcl_abapgit_gui_page_hoc=>create(
-      iv_page_title         = 'Database Utility'
-      ii_page_menu_provider = lo_component
-      ii_child_component    = lo_component ).
-
-  ENDMETHOD.
-
-
-  METHOD delete.
-
-    DATA: lv_answer TYPE c LENGTH 1.
+    DATA lv_answer TYPE c LENGTH 1.
 
     ASSERT is_key-type IS NOT INITIAL.
 
@@ -167,6 +179,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
 
       " Initialize repo list
       zcl_abapgit_repo_srv=>get_instance( )->init( ).
+      " TODO: think how to remove this code,
+      " maybe implement subscription in persistence_db,
+      " so that repo_srv receive a notification on add/delete
     ENDIF.
 
     COMMIT WORK.
@@ -174,172 +189,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD explain_content.
-
-    DATA:
-          lv_descr  TYPE string,
-          lv_value  TYPE string,
-          lv_extra  TYPE string.
-
-    CASE is_data-type.
-      WHEN zcl_abapgit_persistence_db=>c_type_repo.
-        lv_descr = 'Repo Settings'.
-
-        explain_content_repo(
-          EXPORTING
-            is_data  = is_data
-          IMPORTING
-            ev_value = lv_value
-            ev_extra = lv_extra ).
-
-      WHEN zcl_abapgit_persistence_db=>c_type_background.
-        lv_descr = 'Background Settings'.
-
-        explain_content_background(
-          EXPORTING
-            is_data  = is_data
-          IMPORTING
-            ev_value = lv_value
-            ev_extra = lv_extra ).
-
-      WHEN zcl_abapgit_persistence_db=>c_type_user.
-        lv_descr = 'Personal Settings'.
-        lv_value = zcl_abapgit_user_record=>get_instance( is_data-value )->get_name( ).
-      WHEN zcl_abapgit_persistence_db=>c_type_settings.
-        lv_descr = 'Global Settings'.
-      WHEN zcl_abapgit_persistence_db=>c_type_packages.
-        lv_descr = 'Local Package Details'.
-      WHEN zcl_abapgit_persistence_db=>c_type_repo_csum.
-        lv_descr = 'Repo Checksums'.
-
-        explain_content_repo_cs(
-          EXPORTING
-            is_data  = is_data
-          IMPORTING
-            ev_value = lv_value
-            ev_extra = lv_extra ).
-
-      WHEN OTHERS.
-        IF strlen( is_data-data_str ) >= 250.
-          lv_value = is_data-data_str(250).
-        ELSE.
-          lv_value = is_data-data_str.
-        ENDIF.
-
-        lv_value = escape(
-          val    = lv_value
-          format = cl_abap_format=>e_html_attr ).
-
-        lv_value = |<pre>{ lv_value }</pre>|.
-    ENDCASE.
-
-    IF lv_value IS NOT INITIAL.
-      lv_descr = |{ lv_descr }: |.
-    ENDIF.
-
-    IF lv_extra IS NOT INITIAL.
-      lv_extra = | ({ lv_extra })|.
-    ENDIF.
-
-    rv_text = |{ lv_descr }<strong>{ lv_value }</strong>{ lv_extra }|.
-
-    IF strlen( rv_text ) >= 250.
-      rv_text = rv_text(250) && '...'.
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD explain_content_background.
-
-    DATA:
-      ls_result TYPE match_result,
-      ls_match  TYPE submatch_result,
-      lv_class  TYPE string,
-      ls_method LIKE LINE OF mt_methods.
-
-    ev_value = |{ zcl_abapgit_repo_srv=>get_instance( )->get( is_data-value )->get_name( ) }|.
-
-    FIND FIRST OCCURRENCE OF REGEX '<METHOD>(.*)</METHOD>'
-      IN is_data-data_str IGNORING CASE RESULTS ls_result.
-    READ TABLE ls_result-submatches INTO ls_match INDEX 1.
-    IF sy-subrc = 0.
-      lv_class = is_data-data_str+ls_match-offset(ls_match-length).
-    ENDIF.
-
-    IF mt_methods IS INITIAL.
-      mt_methods = zcl_abapgit_background=>list_methods( ).
-    ENDIF.
-
-    READ TABLE mt_methods INTO ls_method WITH TABLE KEY class = lv_class.
-    IF sy-subrc = 0.
-      ev_extra = ls_method-description.
-    ELSE.
-      ev_extra = lv_class.
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD explain_content_repo.
-
-    DATA:
-      ls_result TYPE match_result,
-      ls_match  TYPE submatch_result,
-      lv_cnt    TYPE i.
-
-    FIND FIRST OCCURRENCE OF REGEX '<OFFLINE/>'
-      IN is_data-data_str IGNORING CASE MATCH COUNT lv_cnt.
-    IF lv_cnt > 0.
-      ev_extra = 'Online'.
-    ELSE.
-      ev_extra = 'Offline'.
-    ENDIF.
-
-    FIND FIRST OCCURRENCE OF REGEX '<DISPLAY_NAME>(.*)</DISPLAY_NAME>'
-      IN is_data-data_str IGNORING CASE RESULTS ls_result.
-    READ TABLE ls_result-submatches INTO ls_match INDEX 1.
-    IF sy-subrc = 0.
-      ev_value = is_data-data_str+ls_match-offset(ls_match-length).
-    ENDIF.
-
-    IF ev_value IS INITIAL.
-      FIND FIRST OCCURRENCE OF REGEX '<URL>(.*)</URL>'
-        IN is_data-data_str IGNORING CASE RESULTS ls_result.
-      READ TABLE ls_result-submatches INTO ls_match INDEX 1.
-      IF sy-subrc = 0.
-        ev_value = is_data-data_str+ls_match-offset(ls_match-length).
-        IF lv_cnt > 0.
-          ev_value = zcl_abapgit_url=>name( ev_value ).
-        ENDIF.
-      ENDIF.
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD explain_content_repo_cs.
-
-    DATA:
-      lt_lines  TYPE string_table.
-
-    IF strlen( is_data-data_str ) > 0.
-      SPLIT is_data-data_str AT cl_abap_char_utilities=>newline INTO TABLE lt_lines.
-      ev_extra = |{ lines( lt_lines ) } lines|.
-
-      READ TABLE lt_lines INDEX 1 INTO ev_value.
-      IF sy-subrc = 0.
-        REPLACE '#repo_name#' IN ev_value WITH ''.
-        ev_value = escape(
-          val    = ev_value
-          format = cl_abap_format=>e_html_attr ).
-      ENDIF.
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD restore.
+  METHOD do_restore_db.
 
     DATA:
       lv_answer   TYPE c LENGTH 1,
@@ -384,13 +234,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
       SPLIT lv_filename AT '_' INTO ls_data-type ls_data-value.
 
       " Validate DB key
-      IF ls_data-type <> zcl_abapgit_persistence_db=>c_type_repo AND
-         ls_data-type <> zcl_abapgit_persistence_db=>c_type_user AND
-         ls_data-type <> zcl_abapgit_persistence_db=>c_type_settings AND
-         ls_data-type <> zcl_abapgit_persistence_db=>c_type_background AND
-         ls_data-type <> zcl_abapgit_persistence_db=>c_type_packages.
-        zcx_abapgit_exception=>raise( |Invalid DB key. This is not an abapGit Backup| ).
-      ENDIF.
+      TRY.
+        zcl_abapgit_persistence_db=>validate_entry_type( ls_data-type ).
+      CATCH zcx_abapgit_exception.
+        zcx_abapgit_exception=>raise( |Invalid DB entry type. This is not an abapGit Backup| ).
+      ENDTRY.
 
       lo_zip->get(
         EXPORTING
@@ -446,6 +294,202 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD explain_content.
+
+    DATA lv_descr TYPE string.
+    DATA ls_explanation TYPE ty_explanation.
+
+    CASE is_data-type.
+      WHEN zcl_abapgit_persistence_db=>c_type_repo.
+        lv_descr       = 'Repo Settings'.
+        ls_explanation = explain_content_repo( is_data ).
+
+      WHEN zcl_abapgit_persistence_db=>c_type_background.
+        lv_descr       = 'Background Settings'.
+        ls_explanation = explain_content_background( is_data ).
+
+      WHEN zcl_abapgit_persistence_db=>c_type_user.
+        lv_descr       = 'Personal Settings'.
+        ls_explanation-value = zcl_abapgit_user_record=>get_instance( is_data-value )->get_name( ).
+
+      WHEN zcl_abapgit_persistence_db=>c_type_settings.
+        lv_descr       = 'Global Settings'.
+
+      WHEN zcl_abapgit_persistence_db=>c_type_packages.
+        lv_descr       = 'Local Package Details'.
+
+      WHEN zcl_abapgit_persistence_db=>c_type_repo_csum.
+        lv_descr       = 'Repo Checksums'.
+        ls_explanation = explain_content_repo_cs( is_data ).
+
+      WHEN OTHERS.
+        IF strlen( is_data-data_str ) >= 250.
+          ls_explanation-value = is_data-data_str(250).
+        ELSE.
+          ls_explanation-value = is_data-data_str.
+        ENDIF.
+
+        ls_explanation-value = escape(
+          val    = ls_explanation-value
+          format = cl_abap_format=>e_html_attr ).
+        ls_explanation-value = |<pre>{ ls_explanation-value }</pre>|.
+
+    ENDCASE.
+
+    IF ls_explanation-value IS NOT INITIAL.
+      lv_descr = |{ lv_descr }: |.
+    ENDIF.
+
+    IF ls_explanation-extra IS NOT INITIAL.
+      ls_explanation-extra = | ({ ls_explanation-extra })|.
+    ENDIF.
+
+    rv_text = |{ lv_descr }<strong>{ ls_explanation-value }</strong>{ ls_explanation-extra }|.
+
+    IF strlen( rv_text ) >= 250.
+      rv_text = rv_text(250) && '...'.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD explain_content_background.
+
+    DATA:
+      ls_result TYPE match_result,
+      ls_match  TYPE submatch_result,
+      lv_class  TYPE string,
+      ls_method LIKE LINE OF mt_methods.
+
+    rs_expl-value = |{ zcl_abapgit_repo_srv=>get_instance( )->get( is_data-value )->get_name( ) }|.
+
+    FIND FIRST OCCURRENCE OF REGEX '<METHOD>(.*)</METHOD>'
+      IN is_data-data_str IGNORING CASE RESULTS ls_result.
+    READ TABLE ls_result-submatches INTO ls_match INDEX 1.
+    IF sy-subrc = 0.
+      lv_class = is_data-data_str+ls_match-offset(ls_match-length).
+    ENDIF.
+
+    IF mt_methods IS INITIAL.
+      mt_methods = zcl_abapgit_background=>list_methods( ).
+    ENDIF.
+
+    READ TABLE mt_methods INTO ls_method WITH TABLE KEY class = lv_class.
+    IF sy-subrc = 0.
+      rs_expl-extra = ls_method-description.
+    ELSE.
+      rs_expl-extra = lv_class.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD explain_content_repo.
+
+    DATA:
+      ls_result TYPE match_result,
+      ls_match  TYPE submatch_result,
+      lv_cnt    TYPE i.
+
+    FIND FIRST OCCURRENCE OF REGEX '<OFFLINE/>'
+      IN is_data-data_str IGNORING CASE MATCH COUNT lv_cnt.
+    IF lv_cnt > 0.
+      rs_expl-extra = 'Online'.
+    ELSE.
+      rs_expl-extra = 'Offline'.
+    ENDIF.
+
+    FIND FIRST OCCURRENCE OF REGEX '<DISPLAY_NAME>(.*)</DISPLAY_NAME>'
+      IN is_data-data_str IGNORING CASE RESULTS ls_result.
+    READ TABLE ls_result-submatches INTO ls_match INDEX 1.
+    IF sy-subrc = 0.
+      rs_expl-value = is_data-data_str+ls_match-offset(ls_match-length).
+    ENDIF.
+
+    IF rs_expl-value IS INITIAL.
+      FIND FIRST OCCURRENCE OF REGEX '<URL>(.*)</URL>'
+        IN is_data-data_str IGNORING CASE RESULTS ls_result.
+      READ TABLE ls_result-submatches INTO ls_match INDEX 1.
+      IF sy-subrc = 0.
+        rs_expl-value = is_data-data_str+ls_match-offset(ls_match-length).
+        IF lv_cnt > 0.
+          rs_expl-value = zcl_abapgit_url=>name( rs_expl-value ).
+        ENDIF.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD explain_content_repo_cs.
+
+    DATA lt_lines TYPE string_table.
+
+    IF strlen( is_data-data_str ) > 0.
+      SPLIT is_data-data_str AT cl_abap_char_utilities=>newline INTO TABLE lt_lines.
+      rs_expl-extra = |{ lines( lt_lines ) } lines|.
+
+      READ TABLE lt_lines INDEX 1 INTO rs_expl-value.
+      IF sy-subrc = 0.
+        REPLACE '#repo_name#' IN rs_expl-value WITH ''.
+        rs_expl-value = escape(
+          val    = rs_expl-value
+          format = cl_abap_format=>e_html_attr ).
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD render_table.
+
+    DATA:
+      lv_action  TYPE string,
+      lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
+
+    FIELD-SYMBOLS <ls_data> LIKE LINE OF it_db_entries.
+
+    ii_html->add( '<table class="db_tab">' ).
+
+    " Header
+    ii_html->add( '<thead>' ).
+    ii_html->add( '<tr>' ).
+    ii_html->add( '<th>Type</th>' ).
+    ii_html->add( '<th>Key</th>' ).
+    ii_html->add( '<th>Data</th>' ).
+    ii_html->add( '<th></th>' ).
+    ii_html->add( '</tr>' ).
+    ii_html->add( '</thead>' ).
+
+    " Lines
+    ii_html->add( '<tbody>' ).
+    LOOP AT it_db_entries ASSIGNING <ls_data>.
+      lv_action  = zcl_abapgit_html_action_utils=>dbkey_encode( <ls_data> ).
+
+      CREATE OBJECT lo_toolbar.
+      lo_toolbar->add( iv_txt = 'Display'
+                       iv_act = |{ zif_abapgit_definitions=>c_action-db_display }?{ lv_action }| ).
+      lo_toolbar->add( iv_txt = 'Edit'
+                       iv_act = |{ zif_abapgit_definitions=>c_action-db_edit }?{ lv_action }| ).
+      lo_toolbar->add( iv_txt = 'Delete'
+                       iv_act = |{ c_action-delete }?{ lv_action }| ).
+
+      ii_html->add( |<tr>| ).
+      ii_html->add( |<td>{ <ls_data>-type }</td>| ).
+      ii_html->add( |<td>{ <ls_data>-value }</td>| ).
+      ii_html->add( |<td class="data">{ explain_content( <ls_data> ) }</td>| ).
+      ii_html->add( '<td>' ).
+      ii_html->add( lo_toolbar->render( ) ).
+      ii_html->add( '</td>' ).
+      ii_html->add( '</tr>' ).
+    ENDLOOP.
+    ii_html->add( '</tbody>' ).
+
+    ii_html->add( '</table>' ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA ls_db TYPE zif_abapgit_persistence=>ty_content.
@@ -455,13 +499,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN c_action-delete.
         lo_query->to_abap( CHANGING cs_container = ls_db ).
-        delete( ls_db ).
+        do_delete_entry( ls_db ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-backup.
-        backup( ).
+        do_backup_db( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-restore.
-        restore( ).
+        do_restore_db( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDCASE.
 
@@ -475,7 +519,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
     ro_toolbar->add(
       iv_txt = 'Backup'
       iv_act = c_action-backup ).
-
     ro_toolbar->add(
       iv_txt = 'Restore'
       iv_act = c_action-restore ).
@@ -485,61 +528,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    DATA: lt_data    TYPE zif_abapgit_persistence=>ty_contents,
-          lv_action  TYPE string,
-          lv_trclass TYPE string,
-          lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
+    DATA lt_db_entries TYPE zif_abapgit_persistence=>ty_contents.
 
-    FIELD-SYMBOLS: <ls_data> LIKE LINE OF lt_data.
-
-
-    lt_data = zcl_abapgit_persistence_db=>get_instance( )->list( ).
+    lt_db_entries = zcl_abapgit_persistence_db=>get_instance( )->list( ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( '<div class="db_list">' ).
-    ri_html->add( '<table class="db_tab">' ).
-
-    " Header
-    ri_html->add( '<thead>' ).
-    ri_html->add( '<tr>' ).
-    ri_html->add( '<th>Type</th>' ).
-    ri_html->add( '<th>Key</th>' ).
-    ri_html->add( '<th>Data</th>' ).
-    ri_html->add( '<th></th>' ).
-    ri_html->add( '</tr>' ).
-    ri_html->add( '</thead>' ).
-    ri_html->add( '<tbody>' ).
-
-    " Lines
-    LOOP AT lt_data ASSIGNING <ls_data>.
-      CLEAR lv_trclass.
-      IF sy-tabix = 1.
-        lv_trclass = ' class="firstrow"'.
-      ENDIF.
-
-      lv_action  = zcl_abapgit_html_action_utils=>dbkey_encode( <ls_data> ).
-
-      CREATE OBJECT lo_toolbar.
-      lo_toolbar->add( iv_txt = 'Display'
-                       iv_act = |{ zif_abapgit_definitions=>c_action-db_display }?{ lv_action }| ).
-      lo_toolbar->add( iv_txt = 'Edit'
-                       iv_act = |{ zif_abapgit_definitions=>c_action-db_edit }?{ lv_action }| ).
-      lo_toolbar->add( iv_txt = 'Delete'
-                       iv_act = |{ c_action-delete }?{ lv_action }| ).
-
-      ri_html->add( |<tr{ lv_trclass }>| ).
-      ri_html->add( |<td>{ <ls_data>-type }</td>| ).
-      ri_html->add( |<td>{ <ls_data>-value }</td>| ).
-      ri_html->add( |<td class="data">{ explain_content( <ls_data> ) }</td>| ).
-      ri_html->add( '<td>' ).
-      ri_html->add( lo_toolbar->render( ) ).
-      ri_html->add( '</td>' ).
-      ri_html->add( '</tr>' ).
-    ENDLOOP.
-
-    ri_html->add( '</tbody>' ).
-    ri_html->add( '</table>' ).
+    render_table(
+      ii_html       = ri_html
+      it_db_entries = lt_db_entries ).
     ri_html->add( '</div>' ).
 
   ENDMETHOD.
