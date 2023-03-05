@@ -9,6 +9,7 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
     INTERFACES zif_abapgit_gui_event_handler.
     INTERFACES zif_abapgit_gui_renderable.
     INTERFACES zif_abapgit_gui_menu_provider.
+    INTERFACES zif_abapgit_html_table.
 
     CLASS-METHODS create
       RETURNING
@@ -443,49 +444,25 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
 
   METHOD render_table.
 
-    DATA:
-      lv_action  TYPE string,
-      lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
+    DATA lo_tab TYPE REF TO zcl_abapgit_html_table.
 
-    FIELD-SYMBOLS <ls_data> LIKE LINE OF it_db_entries.
+    lo_tab = zcl_abapgit_html_table=>create( ii_renderer = me
+      )->define_column(
+        iv_column_id = 'type'
+        iv_column_title = 'Type'
+      )->define_column(
+        iv_column_id = 'value'
+        iv_column_title = 'Key'
+      )->define_column(
+        iv_column_id = 'expl'
+        iv_column_title = 'Data'
+      )->define_column(
+        iv_column_id = 'cmd'
+      ).
 
-    ii_html->add( '<table class="db_tab">' ).
-
-    " Header
-    ii_html->add( '<thead>' ).
-    ii_html->add( '<tr>' ).
-    ii_html->add( '<th>Type</th>' ).
-    ii_html->add( '<th>Key</th>' ).
-    ii_html->add( '<th>Data</th>' ).
-    ii_html->add( '<th></th>' ).
-    ii_html->add( '</tr>' ).
-    ii_html->add( '</thead>' ).
-
-    " Lines
-    ii_html->add( '<tbody>' ).
-    LOOP AT it_db_entries ASSIGNING <ls_data>.
-      lv_action  = zcl_abapgit_html_action_utils=>dbkey_encode( <ls_data> ).
-
-      CREATE OBJECT lo_toolbar.
-      lo_toolbar->add( iv_txt = 'Display'
-                       iv_act = |{ zif_abapgit_definitions=>c_action-db_display }?{ lv_action }| ).
-      lo_toolbar->add( iv_txt = 'Edit'
-                       iv_act = |{ zif_abapgit_definitions=>c_action-db_edit }?{ lv_action }| ).
-      lo_toolbar->add( iv_txt = 'Delete'
-                       iv_act = |{ c_action-delete }?{ lv_action }| ).
-
-      ii_html->add( |<tr>| ).
-      ii_html->add( |<td>{ <ls_data>-type }</td>| ).
-      ii_html->add( |<td>{ <ls_data>-value }</td>| ).
-      ii_html->add( |<td class="data">{ explain_content( <ls_data> ) }</td>| ).
-      ii_html->add( '<td>' ).
-      ii_html->add( lo_toolbar->render( ) ).
-      ii_html->add( '</td>' ).
-      ii_html->add( '</tr>' ).
-    ENDLOOP.
-    ii_html->add( '</tbody>' ).
-
-    ii_html->add( '</table>' ).
+    ii_html->add( lo_tab->render(
+      iv_css_class = 'db_tab'
+      it_data      = it_db_entries ) ).
 
   ENDMETHOD.
 
@@ -530,6 +507,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
 
     DATA lt_db_entries TYPE zif_abapgit_persistence=>ty_contents.
 
+    register_handlers( ).
+
     lt_db_entries = zcl_abapgit_persistence_db=>get_instance( )->list( ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
@@ -539,6 +518,40 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
       ii_html       = ri_html
       it_db_entries = lt_db_entries ).
     ri_html->add( '</div>' ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_html_table~get_row_attrs.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_html_table~render_cell.
+
+    DATA lv_action  TYPE string.
+    DATA lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
+
+    CASE iv_column_id.
+      WHEN 'type' OR 'value'.
+        rs_render-content = |{ iv_value }|.
+      WHEN 'expl'.
+        rs_render-content   = explain_content( is_row ).
+        rs_render-css_class = 'data'.
+      WHEN 'cmd'.
+        lv_action  = zcl_abapgit_html_action_utils=>dbkey_encode( is_row ).
+        lo_toolbar = zcl_abapgit_html_toolbar=>create(
+          )->add(
+            iv_txt = 'Display'
+            iv_act = |{ zif_abapgit_definitions=>c_action-db_display }?{ lv_action }|
+          )->add(
+            iv_txt = 'Edit'
+            iv_act = |{ zif_abapgit_definitions=>c_action-db_edit }?{ lv_action }|
+          )->add(
+            iv_txt = 'Delete'
+            iv_act = |{ c_action-delete }?{ lv_action }| ).
+        rs_render-html = lo_toolbar->render( ).
+
+    ENDCASE.
 
   ENDMETHOD.
 ENDCLASS.

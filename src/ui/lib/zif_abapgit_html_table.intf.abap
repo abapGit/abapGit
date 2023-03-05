@@ -10,7 +10,7 @@ INTERFACE zif_abapgit_html_table
     BEGIN OF ty_cell_render,
       css_class TYPE string,
       content TYPE string,
-      " html_obj zif_html ?
+      html TYPE REF TO zif_abapgit_html,
     END OF ty_cell_render.
 
   METHODS get_row_attrs
@@ -26,7 +26,7 @@ INTERFACE zif_abapgit_html_table
     IMPORTING
       iv_row_index TYPE i
       is_row TYPE any
-      iv_column TYPE string
+      iv_column_id TYPE string
       iv_value TYPE any
     RETURNING
       VALUE(rs_render) TYPE ty_cell_render

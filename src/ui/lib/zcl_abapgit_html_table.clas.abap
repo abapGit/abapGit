@@ -15,8 +15,9 @@ CLASS zcl_abapgit_html_table DEFINITION
     " maybe auto class for td
     METHODS define_column
       IMPORTING
-        !iv_column_name  TYPE abap_compname
+        !iv_column_id  TYPE string
         !iv_column_title TYPE string OPTIONAL
+        !iv_from_field TYPE abap_compname OPTIONAL
       RETURNING
         VALUE(ro_self)  TYPE REF TO zcl_abapgit_html_table .
     " Maybe also data_provider
@@ -25,7 +26,7 @@ CLASS zcl_abapgit_html_table DEFINITION
       IMPORTING
         !iv_id         TYPE csequence OPTIONAL
         !iv_css_class  TYPE csequence OPTIONAL
-        !it_data       TYPE STANDARD TABLE   " Maybe sorted also, but not hashed ? Needs a real example
+        !it_data       TYPE ANY TABLE
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
@@ -36,10 +37,11 @@ CLASS zcl_abapgit_html_table DEFINITION
 
     TYPES:
       BEGIN OF ty_column,
-        column_name  TYPE abap_compname,
+        column_id TYPE string,
         column_title TYPE string,
+        from_field  TYPE abap_compname,
       END OF ty_column,
-      ty_columns TYPE STANDARD TABLE OF ty_column WITH KEY column_name.
+      ty_columns TYPE STANDARD TABLE OF ty_column WITH KEY column_id.
 
 
     DATA mi_renderer TYPE REF TO zif_abapgit_html_table.
@@ -52,7 +54,7 @@ CLASS zcl_abapgit_html_table DEFINITION
 
     METHODS render_tbody
       IMPORTING
-        it_data TYPE STANDARD TABLE
+        it_data TYPE ANY TABLE
       RAISING
         zcx_abapgit_exception .
 
@@ -67,24 +69,30 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_html_table IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
+
+
   METHOD create.
     ASSERT ii_renderer IS BOUND.
     CREATE OBJECT ro_instance.
     ro_instance->mi_renderer = ii_renderer.
   ENDMETHOD.
 
+
   METHOD define_column.
 
     FIELD-SYMBOLS <ls_c> LIKE LINE OF mt_columns.
 
+    ASSERT iv_column_id IS NOT INITIAL.
     ro_self = me.
 
     APPEND INITIAL LINE TO mt_columns ASSIGNING <ls_c>.
-    <ls_c>-column_name  = to_upper( iv_column_name ).
+    <ls_c>-column_id    = iv_column_id.
     <ls_c>-column_title = iv_column_title.
+    <ls_c>-from_field   = to_upper( iv_from_field ).
 
   ENDMETHOD.
+
 
   METHOD render.
 
@@ -101,12 +109,50 @@ CLASS zcl_abapgit_html_table IMPLEMENTATION.
     CREATE OBJECT mi_html TYPE zcl_abapgit_html.
     ri_html = mi_html.
 
-    mi_html->add( |<table>{ lv_attrs }| ).
+    mi_html->add( |<table{ lv_attrs }>| ).
     render_thead( ).
     render_tbody( it_data ).
     mi_html->add( '</table>' ).
 
   ENDMETHOD.
+
+
+  METHOD render_row.
+
+    DATA ls_render TYPE zif_abapgit_html_table=>ty_cell_render.
+    DATA lv_dummy TYPE string.
+    FIELD-SYMBOLS <ls_col> LIKE LINE OF mt_columns.
+    FIELD-SYMBOLS <lv_val> TYPE ANY.
+
+    LOOP AT mt_columns ASSIGNING <ls_col>.
+      IF <ls_col>-from_field IS NOT INITIAL AND <ls_col>-from_field <> '-'.
+        ASSIGN COMPONENT <ls_col>-from_field OF STRUCTURE is_row TO <lv_val>.
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise( |html_table: cannot assign field [{ <ls_col>-from_field }]| ).
+        ENDIF.
+      ELSEIF <ls_col>-from_field <> '-'.
+        <ls_col>-from_field = to_upper( <ls_col>-column_id ). " Try column_id
+        ASSIGN COMPONENT <ls_col>-from_field OF STRUCTURE is_row TO <lv_val>.
+        IF sy-subrc <> 0.
+          <ls_col>-from_field = '-'. " Don't try assignments anymore
+          ASSIGN lv_dummy TO <lv_val>.
+        ENDIF.
+      ELSE.
+        ASSIGN lv_dummy TO <lv_val>.
+      ENDIF.
+      ls_render = mi_renderer->render_cell(
+        iv_row_index = iv_row_index
+        is_row       = is_row
+        iv_column_id = <ls_col>-column_id
+        iv_value     = <lv_val> ).
+      mi_html->td(
+        iv_content = ls_render-content
+        ii_content = ls_render-html
+        iv_class   = ls_render-css_class ).
+    ENDLOOP.
+
+  ENDMETHOD.
+
 
   METHOD render_tbody.
 
@@ -138,6 +184,7 @@ CLASS zcl_abapgit_html_table IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD render_thead.
 
     FIELD-SYMBOLS <ls_col> LIKE LINE OF mt_columns.
@@ -153,28 +200,4 @@ CLASS zcl_abapgit_html_table IMPLEMENTATION.
     mi_html->add( '</thead>' ).
 
   ENDMETHOD.
-
-  METHOD render_row.
-
-    DATA ls_render TYPE zif_abapgit_html_table=>ty_cell_render.
-    FIELD-SYMBOLS <ls_col> LIKE LINE OF mt_columns.
-    FIELD-SYMBOLS <lv_val> TYPE ANY.
-
-    LOOP AT mt_columns ASSIGNING <ls_col>.
-      ASSIGN COMPONENT <ls_col>-column_name OF STRUCTURE is_row TO <lv_val>.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |html_table: cannot assign field [{ <ls_col>-column_name }]| ).
-      ENDIF.
-      ls_render = mi_renderer->render_cell(
-        iv_row_index = iv_row_index
-        is_row       = is_row
-        iv_column    = |{ <ls_col>-column_name }|
-        iv_value     = <lv_val> ).
-      mi_html->td(
-        iv_content = ls_render-content
-        iv_class   = ls_render-css_class ).
-    ENDLOOP.
-
-  ENDMETHOD.
-
 ENDCLASS.
