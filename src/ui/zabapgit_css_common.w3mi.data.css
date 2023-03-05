@@ -669,11 +669,10 @@ li.action_link:not(enabled){
 
 /* DB ENTRY DISPLAY */
 
-div.db_entry {
+.db-entry {
   padding: 0.5em;
 }
-
-div.db_entry pre {
+.db-entry pre {
   display: block;
   font-size: 10pt;
   overflow: hidden;
@@ -685,22 +684,28 @@ div.db_entry pre {
   margin: 0.5em 0em;
   width: 98%;
 }
-
-div.db_entry textarea {
+.db-entry textarea {
   margin: 0.5em 0em;
   width: 98%;
 }
-div.db_entry table.toolbar {
-  width: 100%;
+.db-entry .toolbar {
+  padding-left: 0.5em;
+  padding-right: 0.5em;
 }
-
-table.tag {
+.db-entry dl.entry-tag div {
   display: inline-block;
-  border: 1px  solid;
+  border: 1px solid;
   border-radius: 3px;
   margin-right: 0.5em;
 }
-table.tag td { padding: 0.2em 0.5em; }
+.db-entry dl.entry-tag div:last-child {
+  margin-right: 0px;
+}
+.db-entry dt, .db-entry dd {
+  display: inline-block;
+  margin-left: 0px;
+  padding: 2px 5px;
+}
 
 /* TUTORIAL */
 

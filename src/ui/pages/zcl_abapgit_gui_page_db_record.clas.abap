@@ -34,23 +34,35 @@ CLASS zcl_abapgit_gui_page_db_record DEFINITION
         switch_mode TYPE string VALUE 'switch_mode',
       END OF c_action .
 
+    CONSTANTS c_edit_form_id TYPE string VALUE `db_form`.
+
     DATA ms_key TYPE zif_abapgit_persistence=>ty_content.
     DATA mv_edit_mode TYPE abap_bool.
 
     METHODS render_view
-      RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      IMPORTING
+        iv_raw_db_value TYPE zif_abapgit_persistence=>ty_content-data_str
+        ii_html TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception.
 
     METHODS render_edit
-      RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      IMPORTING
+        iv_raw_db_value TYPE zif_abapgit_persistence=>ty_content-data_str
+        ii_html TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception.
 
+    METHODS render_header
+      IMPORTING
+        ii_html TYPE REF TO zif_abapgit_html
+        io_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
 
-    CLASS-METHODS render_record_banner
+    METHODS build_toolbar
+      RETURNING
+        VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar.
+
+    CLASS-METHODS render_entry_tag
       IMPORTING
         is_key         TYPE zif_abapgit_persistence=>ty_content
       RETURNING
@@ -75,6 +87,25 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_GUI_PAGE_DB_RECORD IMPLEMENTATION.
+
+
+  METHOD build_toolbar.
+
+    CREATE OBJECT ro_toolbar.
+
+    IF mv_edit_mode = abap_true.
+      ro_toolbar->add(
+        iv_act = |submitFormById('{ c_edit_form_id }');|
+        iv_txt = 'Save'
+        iv_typ = zif_abapgit_html=>c_action_type-onclick
+        iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+    ELSE.
+      ro_toolbar->add(
+        iv_act = |{ c_action-switch_mode }|
+        iv_txt = 'Edit' ).
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -137,92 +168,53 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_RECORD IMPLEMENTATION.
 
   METHOD render_edit.
 
-    DATA: lv_data    TYPE zif_abapgit_persistence=>ty_content-data_str,
-          lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
+    DATA lv_formatted TYPE string.
 
-    TRY.
-        lv_data = zcl_abapgit_persistence_db=>get_instance( )->read(
-          iv_type  = ms_key-type
-          iv_value = ms_key-value ).
-      CATCH zcx_abapgit_not_found ##NO_HANDLER.
-    ENDTRY.
-
-    zcl_abapgit_persistence_db=>get_instance( )->lock(
-      iv_type  = ms_key-type
-      iv_value = ms_key-value ).
-
-    lv_data = escape( val    = zcl_abapgit_xml_pretty=>print( lv_data )
-                      format = cl_abap_format=>e_html_attr ).
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-    CREATE OBJECT lo_toolbar.
-    lo_toolbar->add( iv_act = 'submitFormById(''db_form'');'
-                     iv_txt = 'Save'
-                     iv_typ = zif_abapgit_html=>c_action_type-onclick
-                     iv_opt = zif_abapgit_html=>c_html_opt-strong ).
-
-    ri_html->add( '<div class="db_entry">' ).
-
-    " Banners & Toolbar
-    ri_html->add( '<table class="toolbar"><tr><td>' ).
-    ri_html->add( render_record_banner( ms_key ) ).
-    ri_html->add( '</td><td>' ).
-    ri_html->add( lo_toolbar->render( iv_right = abap_true ) ).
-    ri_html->add( '</td></tr></table>' ).
+    lv_formatted = escape(
+      val    = zcl_abapgit_xml_pretty=>print( iv_raw_db_value )
+      format = cl_abap_format=>e_html_attr ).
 
     " Form
-    ri_html->add( |<form id="db_form" method="post" action="sapevent:{ c_action-update }">| ).
-    ri_html->add( |<input type="hidden" name="type" value="{ ms_key-type }">| ).
-    ri_html->add( |<input type="hidden" name="value" value="{ ms_key-value }">| ).
-    ri_html->add( |<textarea rows="20" cols="100" name="xmldata">{ lv_data }</textarea>| ).
-    ri_html->add( '</form>' ).
-
-    ri_html->add( '</div>' ). "db_entry
+    ii_html->add( |<form id="{ c_edit_form_id }" method="post" action="sapevent:{ c_action-update }">| ).
+    ii_html->add( |<input type="hidden" name="type" value="{ ms_key-type }">| ).
+    ii_html->add( |<input type="hidden" name="value" value="{ ms_key-value }">| ).
+    ii_html->add( |<textarea rows="20" cols="100" name="xmldata">{ lv_formatted }</textarea>| ).
+    ii_html->add( '</form>' ).
 
   ENDMETHOD.
 
 
-  METHOD render_record_banner.
-    rv_html = |<table class="tag"><tr><td class="label">Type:</td>|
-           && | <td>{ is_key-type }</td></tr></table>\n|
-           && |<table class="tag"><tr><td class="label">Key:</td>|
-           && |  <td>{ is_key-value }</td></tr></table>|.
+  METHOD render_entry_tag.
+
+    rv_html =
+      |<dl class="entry-tag">| &&
+      |<div><dt>Type:</dt><dd>{ is_key-type }</dd></div>| &&
+      |<div><dt>Key:</dt><dd>{ is_key-value }</dd></div>| &&
+      |</dl>|.
+
+  ENDMETHOD.
+
+
+  METHOD render_header.
+
+    ii_html->add( '<div class="toolbar">' ).
+    ii_html->add( io_toolbar->render( iv_right = abap_true ) ).
+    ii_html->add( render_entry_tag( ms_key ) ).
+    ii_html->add( '</div>' ).
+
   ENDMETHOD.
 
 
   METHOD render_view.
 
-    DATA:
-      lo_highlighter TYPE REF TO zcl_abapgit_syntax_highlighter,
-      lo_toolbar     TYPE REF TO zcl_abapgit_html_toolbar,
-      lv_data        TYPE zif_abapgit_persistence=>ty_content-data_str,
-      ls_action      TYPE zif_abapgit_persistence=>ty_content.
-
-    TRY.
-        lv_data = zcl_abapgit_persistence_db=>get_instance( )->read(
-          iv_type = ms_key-type
-          iv_value = ms_key-value ).
-      CATCH zcx_abapgit_not_found ##NO_HANDLER.
-    ENDTRY.
+    DATA lo_highlighter TYPE REF TO zcl_abapgit_syntax_highlighter.
+    DATA lv_formatted   TYPE string.
 
     " Create syntax highlighter
-    lo_highlighter  = zcl_abapgit_syntax_factory=>create( '*.xml' ).
-    lv_data         = lo_highlighter->process_line( zcl_abapgit_xml_pretty=>print( lv_data ) ).
+    lo_highlighter = zcl_abapgit_syntax_factory=>create( '*.xml' ).
+    lv_formatted   = lo_highlighter->process_line( zcl_abapgit_xml_pretty=>print( iv_raw_db_value ) ).
 
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-    CREATE OBJECT lo_toolbar.
-    lo_toolbar->add( iv_act = |{ c_action-switch_mode }|
-                     iv_txt = 'Edit' ).
-
-    ri_html->add( '<div class="db_entry">' ).
-    ri_html->add( '<table class="toolbar"><tr><td>' ).
-    ri_html->add( render_record_banner( ms_key ) ).
-    ri_html->add( '</td><td>' ).
-    ri_html->add( lo_toolbar->render( iv_right = abap_true ) ).
-    ri_html->add( '</td></tr></table>' ).
-
-    ri_html->add( |<pre class="syntax-hl">{ lv_data }</pre>| ).
-    ri_html->add( '</div>' ).
+    ii_html->add( |<pre class="syntax-hl">{ lv_formatted }</pre>| ).
 
   ENDMETHOD.
 
@@ -243,13 +235,39 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_RECORD IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
+    DATA lv_raw_db_value TYPE zif_abapgit_persistence=>ty_content-data_str.
+
     register_handlers( ).
 
+    TRY.
+        lv_raw_db_value = zcl_abapgit_persistence_db=>get_instance( )->read(
+          iv_type  = ms_key-type
+          iv_value = ms_key-value ).
+      CATCH zcx_abapgit_not_found ##NO_HANDLER.
+    ENDTRY.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    ri_html->add( '<div class="db-entry">' ).
+
+    render_header(
+      ii_html    = ri_html
+      io_toolbar = build_toolbar( ) ).
+
     IF mv_edit_mode = abap_true.
-      ri_html = render_edit( ).
+      zcl_abapgit_persistence_db=>get_instance( )->lock(
+        iv_type  = ms_key-type
+        iv_value = ms_key-value ).
+      render_edit(
+        iv_raw_db_value = lv_raw_db_value
+        ii_html         = ri_html ).
     ELSE.
-      ri_html = render_view( ).
+      render_view(
+        iv_raw_db_value = lv_raw_db_value
+        ii_html         = ri_html ).
     ENDIF.
+
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 ENDCLASS.

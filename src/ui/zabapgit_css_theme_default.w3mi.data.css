@@ -369,18 +369,20 @@ table.db_tab a.remote_repo:hover { color: var(--theme-link-color); }
 
 /* DB ENTRY DISPLAY */
 
-div.db_entry {
+.db-entry {
   background-color: var(--theme-container-background-color);
 }
-div.db_entry pre {
+.db-entry pre {
   background-color: #fcfcfc;
   border-color: #eaeaea;
 }
-table.tag {
-  border-color: #b3c1cc;
-  background-color: #eee;
+.db-entry dl.entry-tag div {
+  border-color: hsl(206, 20%, 75%);
+  background-color: hsl(206, 20%, 90%);
 }
-table.tag td.label { background-color: #b3c1cc; }
+.db-entry dt {
+  background-color: hsl(206, 20%, 75%);
+}
 
 /* TUTORIAL */
 
