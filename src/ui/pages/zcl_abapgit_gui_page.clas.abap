@@ -21,10 +21,11 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
 
     TYPES:
       BEGIN OF ty_control,
-        page_layout TYPE string,
-        page_title TYPE string,
-        page_menu  TYPE REF TO zcl_abapgit_html_toolbar,
-        page_menu_provider TYPE REF TO zif_abapgit_gui_menu_provider,
+        page_layout         TYPE string,
+        page_title          TYPE string,
+        page_menu           TYPE REF TO zcl_abapgit_html_toolbar,
+        page_menu_provider  TYPE REF TO zif_abapgit_gui_menu_provider,
+        page_title_provider TYPE REF TO zif_abapgit_gui_page_title,
       END OF  ty_control .
 
     DATA ms_control TYPE ty_control .
@@ -276,10 +277,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
   METHOD title.
 
     DATA lo_page_menu LIKE ms_control-page_menu.
+    DATA lv_page_title TYPE string.
 
     lo_page_menu = ms_control-page_menu.
     IF lo_page_menu IS NOT BOUND AND ms_control-page_menu_provider IS BOUND.
       lo_page_menu = ms_control-page_menu_provider->get_menu( ).
+    ENDIF.
+
+    lv_page_title = ms_control-page_title.
+    IF ms_control-page_title_provider IS BOUND.
+      lv_page_title = ms_control-page_title_provider->get_page_title( ).
     ENDIF.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
@@ -287,13 +294,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ri_html->add( '<div id="header">' ).
 
     ri_html->add( '<div class="logo">' ).
-    ri_html->add_a( iv_act = zif_abapgit_definitions=>c_action-abapgit_home
-                    iv_txt = ri_html->icon( 'git-alt' ) ).
-    ri_html->add_a( iv_act = zif_abapgit_definitions=>c_action-abapgit_home
-                    iv_txt = ri_html->icon( 'abapgit' ) ).
+    ri_html->add_a(
+      iv_act = zif_abapgit_definitions=>c_action-abapgit_home
+      iv_txt = ri_html->icon( 'git-alt' ) ).
+    ri_html->add_a(
+      iv_act = zif_abapgit_definitions=>c_action-abapgit_home
+      iv_txt = ri_html->icon( 'abapgit' ) ).
     ri_html->add( '</div>' ).
 
-    ri_html->add( |<div class="page-title"><span class="spacer">&#x25BA;</span>{ ms_control-page_title }</div>| ).
+    ri_html->add( |<div class="page-title"><span class="spacer">&#x25BA;</span>{ lv_page_title }</div>| ).
 
     IF lo_page_menu IS BOUND.
       ri_html->add( '<div class="float-right">' ).

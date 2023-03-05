@@ -8,6 +8,7 @@ CLASS zcl_abapgit_gui_page_db_record DEFINITION
 
     INTERFACES zif_abapgit_gui_event_handler .
     INTERFACES zif_abapgit_gui_renderable .
+    INTERFACES zif_abapgit_gui_page_title .
 
     CLASS-METHODS create
       IMPORTING
@@ -109,23 +110,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_RECORD IMPLEMENTATION.
 
 
   METHOD constructor.
+
     super->constructor( ).
     mv_edit_mode = iv_edit_mode.
     ms_key       = is_key.
+
   ENDMETHOD.
 
 
   METHOD create.
 
     DATA lo_component TYPE REF TO zcl_abapgit_gui_page_db_record.
-    DATA lv_page_title TYPE string.
-
-    IF iv_edit_mode = abap_true.
-      lv_page_title = 'Config Edit'.
-    ELSE.
-      lv_page_title = 'Config Display'.
-    ENDIF.
-
 
     CREATE OBJECT lo_component
       EXPORTING
@@ -133,8 +128,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_RECORD IMPLEMENTATION.
         is_key       = is_key.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
-      iv_page_title      = lv_page_title " TODO title provider
-      ii_child_component = lo_component ).
+      ii_page_title_provider = lo_component
+      ii_child_component     = lo_component ).
 
   ENDMETHOD.
 
@@ -229,6 +224,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_RECORD IMPLEMENTATION.
         do_update( dbcontent_decode( ii_event->form_data( ) ) ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_title~get_page_title.
+
+    IF mv_edit_mode = abap_true.
+      rv_title = 'Config Edit'.
+    ELSE.
+      rv_title = 'Config Display'.
+    ENDIF.
 
   ENDMETHOD.
 
