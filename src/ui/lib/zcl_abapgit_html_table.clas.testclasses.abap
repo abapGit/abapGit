@@ -60,30 +60,18 @@ CLASS ltcl_test_simple_table IMPLEMENTATION.
       '<table> id="tabid" class="tabclass"' )->add(
       '<thead>' )->add(
       '<tr>' )->add(
-      '<th>' )->add(
-      'Col 1' )->add(
-      '</th>' )->add(
-      '<th>' )->add(
-      'Col 2' )->add(
-      '</th>' )->add(
+      '<th>Col 1</th>' )->add(
+      '<th>Col 2</th>' )->add(
       '</tr>' )->add(
       '</thead>' )->add(
       '<tbody>' )->add(
       '<tr class="r1">' )->add(
-      '<td class="cell">' )->add(
-      'Hello' )->add(
-      '</td>' )->add(
-      '<td class="cell">' )->add(
-      '1' )->add(
-      '</td>' )->add(
+      '<td class="cell">Hello</td>' )->add(
+      '<td class="cell">1</td>' )->add(
       '</tr>' )->add(
       '<tr class="r2">' )->add(
-      '<td class="cell">' )->add(
-      'World' )->add(
-      '</td>' )->add(
-      '<td class="cell">' )->add(
-      '2' )->add(
-      '</td>' )->add(
+      '<td class="cell">World</td>' )->add(
+      '<td class="cell">2</td>' )->add(
       '</tr>' )->add(
       '</tbody>' )->add(
       '</table>' ).
