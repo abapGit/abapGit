@@ -183,8 +183,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_RECORD IMPLEMENTATION.
 
     rv_html =
       |<dl class="entry-tag">| &&
-      |<div><dt>Type:</dt><dd>{ is_key-type }</dd></div>| &&
-      |<div><dt>Key:</dt><dd>{ is_key-value }</dd></div>| &&
+      |<div><dt>Type</dt><dd>{ is_key-type }</dd></div>| &&
+      |<div><dt>Key</dt><dd>{ is_key-value }</dd></div>| &&
       |</dl>|.
 
   ENDMETHOD.

@@ -706,6 +706,7 @@ li.action_link:not(enabled){
   margin-left: 0px;
   padding: 2px 5px;
 }
+.db-entry dt::after {  content: ":" }
 
 /* TUTORIAL */
 
