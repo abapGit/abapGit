@@ -74,7 +74,7 @@
     "extraSetup": "../test/setup.mjs",
     "skip": [
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_get_t100_longtext", "method": "test01", "note": "implement function module DOCU_GET, open-abap"},
-      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_z", "note": "some bug in fm TEXT_SPLIT in open-abaå"},
+      {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_split_text", "method": "test_set_msg_z", "note": "some bug in fm TEXT_SPLIT in open-abap"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_t100",     "method": "text6", "note": "uses MSAG from database"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_t100",     "method": "text7", "note": "uses MSAG from database"},
       {"object": "ZCX_ABAPGIT_EXCEPTION", "class": "ltcl_t100",     "method": "text8", "note": "uses MSAG from database"},
