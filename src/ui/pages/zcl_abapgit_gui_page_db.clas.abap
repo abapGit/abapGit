@@ -1,20 +1,22 @@
 CLASS zcl_abapgit_gui_page_db DEFINITION
   PUBLIC
-  INHERITING FROM zcl_abapgit_gui_page
+  INHERITING FROM zcl_abapgit_gui_component
   FINAL
   CREATE PUBLIC .
 
   PUBLIC SECTION.
 
-    METHODS constructor
-      RAISING zcx_abapgit_exception.
+    INTERFACES zif_abapgit_gui_event_handler.
+    INTERFACES zif_abapgit_gui_renderable.
+    INTERFACES zif_abapgit_gui_menu_provider.
 
-    METHODS zif_abapgit_gui_event_handler~on_event
-        REDEFINITION .
+    CLASS-METHODS create
+      RETURNING
+        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
-
-    METHODS render_content
-        REDEFINITION .
   PRIVATE SECTION.
 
     CONSTANTS:
@@ -44,9 +46,6 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
         VALUE(rv_text) TYPE string
       RAISING
         zcx_abapgit_exception.
-    METHODS build_menu
-      RETURNING
-        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
     METHODS explain_content_repo
       IMPORTING
         !is_data  TYPE zif_abapgit_persistence=>ty_content
@@ -75,7 +74,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
 
 
   METHOD backup.
@@ -121,23 +120,17 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD build_menu.
+  METHOD create.
 
-    CREATE OBJECT ro_menu.
+    DATA lo_component TYPE REF TO zcl_abapgit_gui_page_db.
 
-    ro_menu->add( iv_txt = 'Backup'
-                  iv_act = c_action-backup ).
+    CREATE OBJECT lo_component.
 
-    ro_menu->add( iv_txt = 'Restore'
-                  iv_act = c_action-restore ).
+    ri_page = zcl_abapgit_gui_page_hoc=>create(
+      iv_page_title         = 'Database Utility'
+      ii_page_menu_provider = lo_component
+      ii_child_component    = lo_component ).
 
-  ENDMETHOD.
-
-
-  METHOD constructor.
-    super->constructor( ).
-    ms_control-page_title = 'Database Utility'.
-    ms_control-page_menu  = build_menu( ).
   ENDMETHOD.
 
 
@@ -346,68 +339,6 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_content.
-
-    DATA: lt_data    TYPE zif_abapgit_persistence=>ty_contents,
-          lv_action  TYPE string,
-          lv_trclass TYPE string,
-          lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
-
-    FIELD-SYMBOLS: <ls_data> LIKE LINE OF lt_data.
-
-
-    lt_data = zcl_abapgit_persistence_db=>get_instance( )->list( ).
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    ri_html->add( '<div class="db_list">' ).
-    ri_html->add( '<table class="db_tab">' ).
-
-    " Header
-    ri_html->add( '<thead>' ).
-    ri_html->add( '<tr>' ).
-    ri_html->add( '<th>Type</th>' ).
-    ri_html->add( '<th>Key</th>' ).
-    ri_html->add( '<th>Data</th>' ).
-    ri_html->add( '<th></th>' ).
-    ri_html->add( '</tr>' ).
-    ri_html->add( '</thead>' ).
-    ri_html->add( '<tbody>' ).
-
-    " Lines
-    LOOP AT lt_data ASSIGNING <ls_data>.
-      CLEAR lv_trclass.
-      IF sy-tabix = 1.
-        lv_trclass = ' class="firstrow"'.
-      ENDIF.
-
-      lv_action  = zcl_abapgit_html_action_utils=>dbkey_encode( <ls_data> ).
-
-      CREATE OBJECT lo_toolbar.
-      lo_toolbar->add( iv_txt = 'Display'
-                       iv_act = |{ zif_abapgit_definitions=>c_action-db_display }?{ lv_action }| ).
-      lo_toolbar->add( iv_txt = 'Edit'
-                       iv_act = |{ zif_abapgit_definitions=>c_action-db_edit }?{ lv_action }| ).
-      lo_toolbar->add( iv_txt = 'Delete'
-                       iv_act = |{ c_action-delete }?{ lv_action }| ).
-
-      ri_html->add( |<tr{ lv_trclass }>| ).
-      ri_html->add( |<td>{ <ls_data>-type }</td>| ).
-      ri_html->add( |<td>{ <ls_data>-value }</td>| ).
-      ri_html->add( |<td class="data">{ explain_content( <ls_data> ) }</td>| ).
-      ri_html->add( '<td>' ).
-      ri_html->add( lo_toolbar->render( ) ).
-      ri_html->add( '</td>' ).
-      ri_html->add( '</tr>' ).
-    ENDLOOP.
-
-    ri_html->add( '</tbody>' ).
-    ri_html->add( '</table>' ).
-    ri_html->add( '</div>' ).
-
-  ENDMETHOD.
-
-
   METHOD restore.
 
     DATA:
@@ -532,9 +463,84 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
       WHEN c_action-restore.
         restore( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN OTHERS.
-        rs_handled = super->zif_abapgit_gui_event_handler~on_event( ii_event ).
     ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_menu_provider~get_menu.
+
+    CREATE OBJECT ro_toolbar.
+
+    ro_toolbar->add(
+      iv_txt = 'Backup'
+      iv_act = c_action-backup ).
+
+    ro_toolbar->add(
+      iv_txt = 'Restore'
+      iv_act = c_action-restore ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_renderable~render.
+
+    DATA: lt_data    TYPE zif_abapgit_persistence=>ty_contents,
+          lv_action  TYPE string,
+          lv_trclass TYPE string,
+          lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
+
+    FIELD-SYMBOLS: <ls_data> LIKE LINE OF lt_data.
+
+
+    lt_data = zcl_abapgit_persistence_db=>get_instance( )->list( ).
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    ri_html->add( '<div class="db_list">' ).
+    ri_html->add( '<table class="db_tab">' ).
+
+    " Header
+    ri_html->add( '<thead>' ).
+    ri_html->add( '<tr>' ).
+    ri_html->add( '<th>Type</th>' ).
+    ri_html->add( '<th>Key</th>' ).
+    ri_html->add( '<th>Data</th>' ).
+    ri_html->add( '<th></th>' ).
+    ri_html->add( '</tr>' ).
+    ri_html->add( '</thead>' ).
+    ri_html->add( '<tbody>' ).
+
+    " Lines
+    LOOP AT lt_data ASSIGNING <ls_data>.
+      CLEAR lv_trclass.
+      IF sy-tabix = 1.
+        lv_trclass = ' class="firstrow"'.
+      ENDIF.
+
+      lv_action  = zcl_abapgit_html_action_utils=>dbkey_encode( <ls_data> ).
+
+      CREATE OBJECT lo_toolbar.
+      lo_toolbar->add( iv_txt = 'Display'
+                       iv_act = |{ zif_abapgit_definitions=>c_action-db_display }?{ lv_action }| ).
+      lo_toolbar->add( iv_txt = 'Edit'
+                       iv_act = |{ zif_abapgit_definitions=>c_action-db_edit }?{ lv_action }| ).
+      lo_toolbar->add( iv_txt = 'Delete'
+                       iv_act = |{ c_action-delete }?{ lv_action }| ).
+
+      ri_html->add( |<tr{ lv_trclass }>| ).
+      ri_html->add( |<td>{ <ls_data>-type }</td>| ).
+      ri_html->add( |<td>{ <ls_data>-value }</td>| ).
+      ri_html->add( |<td class="data">{ explain_content( <ls_data> ) }</td>| ).
+      ri_html->add( '<td>' ).
+      ri_html->add( lo_toolbar->render( ) ).
+      ri_html->add( '</td>' ).
+      ri_html->add( '</tr>' ).
+    ENDLOOP.
+
+    ri_html->add( '</tbody>' ).
+    ri_html->add( '</table>' ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 ENDCLASS.

@@ -119,7 +119,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_router IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
 
   METHOD abapgit_services_actions.
@@ -209,7 +209,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
         ENDIF.
       WHEN zif_abapgit_definitions=>c_action-go_db.                          " Go DB util page
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_db.
+        rs_handled-page  = zcl_abapgit_gui_page_db=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-go_debuginfo.                   " Go debug info
         rs_handled-page  = zcl_abapgit_gui_page_debuginfo=>create( ).
