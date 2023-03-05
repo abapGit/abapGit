@@ -89,7 +89,6 @@
 
       {"object": "ZCL_ABAPGIT_ZLIB",       "class": "ltcl_zlib", "method": "dynamic"},
 
-      {"object": "ZCL_ABAPGIT_SERIALIZE", "class": "ltcl_determine_max_threads", "method": "determine_max_threads", "note": "TypeError: abap.FunctionModules.FUNCTION_EXISTS is not a function"},
       {"object": "ZCL_ABAPGIT_SERIALIZE", "class": "ltcl_serialize", "method": "test",        "note": "Void type: KO100"},
       {"object": "ZCL_ABAPGIT_SERIALIZE", "class": "ltcl_serialize", "method": "unsupported", "note": "Void type: KO100"},
       {"object": "ZCL_ABAPGIT_SERIALIZE", "class": "ltcl_serialize", "method": "ignored",     "note": "Void type: KO100"},
