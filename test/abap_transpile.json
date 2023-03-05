@@ -88,7 +88,6 @@
       {"object": "ZCL_ABAPGIT_XML_PRETTY", "class": "ltcl_test", "method": "dont_ignore_error", "note": "infinite loop"},
 
       {"object": "ZCL_ABAPGIT_ZLIB",       "class": "ltcl_zlib", "method": "dynamic"},
-      {"object": "ZCL_ABAPGIT_ZLIB",       "class": "ltcl_zlib", "method": "fixed"},
 
       {"object": "ZCL_ABAPGIT_SERIALIZE", "class": "ltcl_determine_max_threads", "method": "determine_max_threads", "note": "TypeError: abap.FunctionModules.FUNCTION_EXISTS is not a function"},
       {"object": "ZCL_ABAPGIT_SERIALIZE", "class": "ltcl_serialize", "method": "test",        "note": "Void type: KO100"},
