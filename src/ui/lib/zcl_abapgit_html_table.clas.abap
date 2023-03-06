@@ -176,7 +176,7 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
       mi_html->add( |<tr{ lv_row_attrs }>| ).
       render_row(
         iv_row_index = lv_index
-        is_row = <ls_i> ).
+        is_row       = <ls_i> ).
       mi_html->add( '</tr>' ).
     ENDLOOP.
 

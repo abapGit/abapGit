@@ -37,8 +37,9 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
 
     METHODS render_table
       IMPORTING
-        ii_html TYPE REF TO zif_abapgit_html
         it_db_entries TYPE zif_abapgit_persistence=>ty_contents
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception.
 
@@ -444,9 +445,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
 
   METHOD render_table.
 
-    DATA lo_tab TYPE REF TO zcl_abapgit_html_table.
-
-    lo_tab = zcl_abapgit_html_table=>create( ii_renderer = me
+    ri_html = zcl_abapgit_html_table=>create( ii_renderer = me
       )->define_column(
         iv_column_id = 'type'
         iv_column_title = 'Type'
@@ -456,13 +455,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
       )->define_column(
         iv_column_id = 'expl'
         iv_column_title = 'Data'
-      )->define_column(
-        iv_column_id = 'cmd'
-      ).
-
-    ii_html->add( lo_tab->render(
-      iv_css_class = 'db_tab'
-      it_data      = it_db_entries ) ).
+      )->define_column( 'cmd'
+      )->render( it_db_entries ).
 
   ENDMETHOD.
 
@@ -513,10 +507,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ri_html->add( '<div class="db_list">' ).
-    render_table(
-      ii_html       = ri_html
-      it_db_entries = lt_db_entries ).
+    ri_html->add( '<div class="db-list">' ).
+    ri_html->add( render_table( lt_db_entries ) ).
     ri_html->add( '</div>' ).
 
   ENDMETHOD.

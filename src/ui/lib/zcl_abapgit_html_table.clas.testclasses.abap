@@ -50,9 +50,7 @@ CLASS ltcl_test_simple_table IMPLEMENTATION.
         iv_column_id = 'col2'
         iv_column_title = 'Col 2'
         iv_from_field = 'col3'
-      )->define_column(
-        iv_column_id = 'colX'
-      ).
+      )->define_column( 'colX' ).
 
     APPEND INITIAL LINE TO lt_dummy_data ASSIGNING <ls_i>.
     <ls_i>-col1 = 'Hello'.
