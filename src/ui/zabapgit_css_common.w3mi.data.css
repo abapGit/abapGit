@@ -616,15 +616,12 @@ div.debug_container p {
 
 /* DB ENTRIES */
 
-div.db_list {
+.db-list {
   padding: 0.5em;
   overflow-x: auto;
 }
-
-table.db_tab {
-  table-layout: fixed;
-}
-table.db_tab pre {
+.db-list table { table-layout: fixed; }
+.db-list table pre {
   display: inline-block;
   overflow: hidden;
   word-wrap:break-word;
@@ -632,28 +629,19 @@ table.db_tab pre {
   margin: 0px;
   width: 30em;
 }
-table.db_tab tr.firstrow td { padding-top: 0.5em; }
-table.db_tab th {
+.db-list table th {
   text-align: left;
   padding: 0.5em;
 }
-table.db_tab thead tr {
-  border-bottom: 1px solid;
-}
-table.db_tab tfoot tr {
-  border-top: 1px solid;
-}
-table.db_tab td {
-  padding: 4px 8px;
+.db-list table thead tr { border-bottom: 1px solid; }
+.db-list table td {
+  padding: 4px 0.5em;
   vertical-align: middle;
   word-break: break-all;
 }
-table.db_tab th.package {
-    width: 45ch;
-}
-table.db_tab td.data {
-  font-style: italic;
-}
+.db-list table td.data { font-style: italic; }
+
+/* *** */
 
 li.action_link.enabled{
   visibility: visible;

@@ -346,26 +346,13 @@ div.debug_container {
 
 /* DB ENTRIES */
 
-div.db_list { background-color: #fff; }
-table.db_tab td      { color: #333; }
-table.db_tab td.data { color: #888; }
-table.db_tab tbody tr:hover td {
-  background-image: linear-gradient(rgba(0, 0, 0, 0.075), rgba(0, 0, 0, 0.075));
-}
-table.db_tab tbody tr:active td {
-  background-color: #f4f4f4;
-}
-table.db_tab th {
-  color: var(--theme-link-color);
-}
-table.db_tab thead tr,
-table.db_tab tfoot tr {
-  border-color: #ddd;
-}
-table.db_tab a.remote_repo {
-  color: var(--theme-primary-font-color-reduced);
-}
-table.db_tab a.remote_repo:hover { color: var(--theme-link-color); }
+.db-list { background-color: white; }
+.db-list table td      { color: var(--theme-primary-font-color); }
+.db-list table td.data { color: var(--theme-greyscale-dark); }
+.db-list table tbody tr:hover td  { background-color: rgba(0, 0, 0, 0.075); }
+.db-list table tbody tr:active td { background-color: #f4f4f4; }
+.db-list table th { color: var(--theme-link-color); }
+.db-list table thead tr { border-color: var(--theme-table-border-color); }
 
 /* DB ENTRY DISPLAY */
 
