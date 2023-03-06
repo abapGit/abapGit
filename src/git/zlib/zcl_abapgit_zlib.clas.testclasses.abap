@@ -6,6 +6,7 @@ CLASS ltcl_zlib DEFINITION FOR TESTING
   PRIVATE SECTION.
     METHODS:
       fixed FOR TESTING RAISING cx_dynamic_check,
+      dynamic_simple FOR TESTING RAISING cx_dynamic_check zcx_abapgit_exception,
       dynamic FOR TESTING RAISING cx_dynamic_check zcx_abapgit_exception,
       not_compressed FOR TESTING RAISING cx_dynamic_check.
 
@@ -45,6 +46,25 @@ CLASS ltcl_zlib IMPLEMENTATION.
     cl_abap_unit_assert=>assert_not_initial( ls_data-raw ).
     cl_abap_unit_assert=>assert_equals( act = ls_data-raw
                                         exp = lc_raw ).
+
+  ENDMETHOD.
+
+  METHOD dynamic_simple.
+
+    DATA: ls_data       TYPE zcl_abapgit_zlib=>ty_decompress,
+          lv_compressed TYPE xstring,
+          lv_decoded    TYPE xstring.
+
+
+    lv_compressed = |05804109000008C4AA184EC1C7E0C08FF5C70EA43E470B1A0B045D|.
+
+    lv_decoded = zcl_abapgit_convert=>string_to_xstring_utf8( |hello world| ).
+
+    ls_data = zcl_abapgit_zlib=>decompress( lv_compressed ).
+
+    cl_abap_unit_assert=>assert_not_initial( ls_data-raw ).
+    cl_abap_unit_assert=>assert_equals( act = ls_data-raw
+                                        exp = lv_decoded ).
 
   ENDMETHOD.
 
