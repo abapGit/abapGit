@@ -254,9 +254,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
 
       " Validate DB key
       TRY.
-        zcl_abapgit_persistence_db=>validate_entry_type( ls_data-type ).
-      CATCH zcx_abapgit_exception.
-        zcx_abapgit_exception=>raise( |Invalid DB entry type. This is not an abapGit Backup| ).
+          zcl_abapgit_persistence_db=>validate_entry_type( ls_data-type ).
+        CATCH zcx_abapgit_exception.
+          zcx_abapgit_exception=>raise( |Invalid DB entry type. This is not an abapGit Backup| ).
       ENDTRY.
 
       lo_zip->get(

@@ -61,7 +61,7 @@ CLASS zcl_abapgit_html_table DEFINITION
     METHODS render_row
       IMPORTING
         iv_row_index TYPE i
-        is_row TYPE ANY
+        is_row TYPE any
       RAISING
         zcx_abapgit_exception .
 
@@ -122,7 +122,7 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
     DATA ls_render TYPE zif_abapgit_html_table=>ty_cell_render.
     DATA lv_dummy TYPE string.
     FIELD-SYMBOLS <ls_col> LIKE LINE OF mt_columns.
-    FIELD-SYMBOLS <lv_val> TYPE ANY.
+    FIELD-SYMBOLS <lv_val> TYPE any.
 
     LOOP AT mt_columns ASSIGNING <ls_col>.
       IF <ls_col>-from_field IS NOT INITIAL AND <ls_col>-from_field <> '-'.
@@ -160,7 +160,7 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
     DATA lv_row_attrs TYPE string.
     DATA lv_index TYPE i.
 
-    FIELD-SYMBOLS <ls_i> TYPE ANY.
+    FIELD-SYMBOLS <ls_i> TYPE any.
 
     mi_html->add( '<tbody>' ).
 
