@@ -273,12 +273,12 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
   METHOD validate_entry_type.
 
     IF NOT (
-      iv_type = zcl_abapgit_persistence_db=>c_type_repo OR
-      iv_type = zcl_abapgit_persistence_db=>c_type_repo_csum OR
-      iv_type = zcl_abapgit_persistence_db=>c_type_user OR
-      iv_type = zcl_abapgit_persistence_db=>c_type_settings OR
-      iv_type = zcl_abapgit_persistence_db=>c_type_background OR
-      iv_type = zcl_abapgit_persistence_db=>c_type_packages ).
+      iv_type = c_type_repo OR
+      iv_type = c_type_repo_csum OR
+      iv_type = c_type_user OR
+      iv_type = c_type_settings OR
+      iv_type = c_type_background OR
+      iv_type = c_type_packages ).
       zcx_abapgit_exception=>raise( |Invalid DB entry type [{ iv_type }]| ).
     ENDIF.
 
