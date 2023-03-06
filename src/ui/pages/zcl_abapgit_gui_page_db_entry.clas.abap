@@ -1,4 +1,4 @@
-CLASS zcl_abapgit_gui_page_db_record DEFINITION
+CLASS zcl_abapgit_gui_page_db_entry DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_gui_component
   FINAL
@@ -12,17 +12,16 @@ CLASS zcl_abapgit_gui_page_db_record DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        is_key TYPE zif_abapgit_persistence=>ty_content
-        iv_edit_mode TYPE abap_bool DEFAULT abap_false
+        !is_key        TYPE zif_abapgit_persistence=>ty_content
+        !iv_edit_mode  TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception .
-
     METHODS constructor
       IMPORTING
-        is_key TYPE zif_abapgit_persistence=>ty_content
-        iv_edit_mode TYPE abap_bool DEFAULT abap_false
+        !is_key       TYPE zif_abapgit_persistence=>ty_content
+        !iv_edit_mode TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception .
 
@@ -48,20 +47,20 @@ CLASS zcl_abapgit_gui_page_db_record DEFINITION
     METHODS render_view
       IMPORTING
         iv_raw_db_value TYPE zif_abapgit_persistence=>ty_content-data_str
-        ii_html TYPE REF TO zif_abapgit_html
+        ii_html         TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception.
 
     METHODS render_edit
       IMPORTING
         iv_raw_db_value TYPE zif_abapgit_persistence=>ty_content-data_str
-        ii_html TYPE REF TO zif_abapgit_html
+        ii_html         TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception.
 
     METHODS render_header
       IMPORTING
-        ii_html TYPE REF TO zif_abapgit_html
+        ii_html    TYPE REF TO zif_abapgit_html
         io_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
 
     METHODS build_toolbar
@@ -76,7 +75,7 @@ CLASS zcl_abapgit_gui_page_db_record DEFINITION
 
     CLASS-METHODS dbcontent_decode
       IMPORTING
-        io_form_data TYPE REF TO zcl_abapgit_string_map
+        io_form_data      TYPE REF TO zcl_abapgit_string_map
       RETURNING
         VALUE(rs_content) TYPE zif_abapgit_persistence=>ty_content
       RAISING
@@ -92,7 +91,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_DB_RECORD IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_DB_ENTRY IMPLEMENTATION.
 
 
   METHOD build_toolbar.
@@ -126,7 +125,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_RECORD IMPLEMENTATION.
 
   METHOD create.
 
-    DATA lo_component TYPE REF TO zcl_abapgit_gui_page_db_record.
+    DATA lo_component TYPE REF TO zcl_abapgit_gui_page_db_entry.
 
     CREATE OBJECT lo_component
       EXPORTING
@@ -134,8 +133,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_RECORD IMPLEMENTATION.
         is_key       = is_key.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
-      ii_page_title_provider = lo_component
       iv_extra_css_url       = c_css_url
+      ii_page_title_provider = lo_component
       ii_child_component     = lo_component ).
 
   ENDMETHOD.

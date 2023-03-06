@@ -148,13 +148,13 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-db_edit.
         lo_query->to_abap( CHANGING cs_container = ls_db_key ).
-        rs_handled-page  = zcl_abapgit_gui_page_db_record=>create(
+        rs_handled-page  = zcl_abapgit_gui_page_db_entry=>create(
           is_key       = ls_db_key
           iv_edit_mode = abap_true ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-db_display.
         lo_query->to_abap( CHANGING cs_container = ls_db_key ).
-        rs_handled-page  = zcl_abapgit_gui_page_db_record=>create( ls_db_key ).
+        rs_handled-page  = zcl_abapgit_gui_page_db_entry=>create( ls_db_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
     ENDCASE.
 
