@@ -34,9 +34,7 @@ CLASS zcl_abapgit_repo_checksums DEFINITION
 
     METHODS build_checksums_from_files
       IMPORTING
-        it_remote    TYPE zif_abapgit_git_definitions=>ty_files_tt
         it_local     TYPE ty_local_files_by_item_tt
-        iv_branches_equal TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rt_checksums) TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
 
@@ -79,12 +77,15 @@ CLASS ZCL_ABAPGIT_REPO_CHECKSUMS IMPLEMENTATION.
     DATA ls_last_item TYPE zif_abapgit_definitions=>ty_item.
 
     FIELD-SYMBOLS:
-      <ls_checksum> LIKE LINE OF rt_checksums,
-      <ls_local>    LIKE LINE OF it_local.
-
-    FIELD-SYMBOLS:
-      <ls_remote_file> LIKE LINE OF it_remote,
+      <ls_checksum>    LIKE LINE OF rt_checksums,
+      <ls_local>       LIKE LINE OF it_local,
       <ls_cs_file_sig> LIKE LINE OF <ls_checksum>-files.
+
+    " This methods is run at repo creation moment or manually by user
+    " In the first case it assumes that the local state is the CURRENT state
+    " Thus the idea is to copy local state to checksums
+    " The second case is an exception, when we acknoledge that the state is unknown
+    " Thus copying the local to checksums is the "best guess"
 
     LOOP AT it_local ASSIGNING <ls_local>.
       IF ls_last_item <> <ls_local>-item OR sy-tabix = 1. " First or New item reached ?
@@ -93,25 +94,8 @@ CLASS ZCL_ABAPGIT_REPO_CHECKSUMS IMPLEMENTATION.
         ls_last_item       = <ls_local>-item.
       ENDIF.
 
-      READ TABLE it_remote ASSIGNING <ls_remote_file>
-        WITH TABLE KEY file_path
-        COMPONENTS
-          path     = <ls_local>-file-path
-          filename = <ls_local>-file-filename.
-      IF sy-subrc <> 0.  " Ignore new local ones
-        CONTINUE.
-      ENDIF.
-
       APPEND INITIAL LINE TO <ls_checksum>-files ASSIGNING <ls_cs_file_sig>.
       MOVE-CORRESPONDING <ls_local>-file TO <ls_cs_file_sig>.
-
-      " If hashes are equal -> local sha1 is OK already (no change)
-      " Else
-      "   if branches equal -> assume changes were local, state - remote sha1
-      "   if remote branch is ahead (not equal) -> assume changes were remote, state - local sha1 (no change)
-      IF <ls_local>-file-sha1 <> <ls_remote_file>-sha1 AND iv_branches_equal = abap_true.
-        <ls_cs_file_sig>-sha1 = <ls_remote_file>-sha1.
-      ENDIF.
 
     ENDLOOP.
 
@@ -208,20 +192,13 @@ CLASS ZCL_ABAPGIT_REPO_CHECKSUMS IMPLEMENTATION.
 
   METHOD zif_abapgit_repo_checksums~rebuild.
 
-    DATA lt_remote    TYPE zif_abapgit_git_definitions=>ty_files_tt.
     DATA lt_local     TYPE ty_local_files_by_item_tt.
     DATA lt_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
 
     lt_local  = mi_repo->get_files_local( ).
-    lt_remote = mi_repo->get_files_remote( ).
-
     remove_non_code_related_files( CHANGING ct_local_files = lt_local ).
 
-    lt_checksums = build_checksums_from_files(
-      it_remote         = lt_remote
-      it_local          = lt_local
-      iv_branches_equal = iv_branches_equal ).
-
+    lt_checksums = build_checksums_from_files( lt_local ).
     save_checksums( lt_checksums ).
 
   ENDMETHOD.
