@@ -48,9 +48,9 @@
 .db-entry {
   background-color: var(--theme-container-background-color);
 }
-.db-entry pre {
-  background-color: #fcfcfc;
-  border-color: #eaeaea;
+.db-entry pre, .db-entry textarea {
+  background-color: var(--theme-table-background-color);
+  border-color: var(--theme-container-border-color);
 }
 .db-entry dl.entry-tag div {
   border-color: hsl(206, 20%, 75%);

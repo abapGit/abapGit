@@ -344,23 +344,6 @@ div.debug_container {
 .repo-overview tbody tr:hover td { background-color: hsla(214, 50%, 50%, 0.05); }
 .repo-overview tbody tr.selected { background-color: hsla(214, 50%, 75%, 0.33); }
 
-/* DB ENTRY DISPLAY */
-
-.db-entry {
-  background-color: var(--theme-container-background-color);
-}
-.db-entry pre {
-  background-color: #fcfcfc;
-  border-color: #eaeaea;
-}
-.db-entry dl.entry-tag div {
-  border-color: hsl(206, 20%, 75%);
-  background-color: hsl(206, 20%, 90%);
-}
-.db-entry dt {
-  background-color: hsl(206, 20%, 75%);
-}
-
 /* TUTORIAL */
 
 div.tutorial { background-color: var(--theme-container-background-color); }
