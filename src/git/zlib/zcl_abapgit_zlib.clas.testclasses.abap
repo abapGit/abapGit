@@ -6,6 +6,8 @@ CLASS ltcl_zlib DEFINITION FOR TESTING
   PRIVATE SECTION.
     METHODS:
       fixed FOR TESTING RAISING cx_dynamic_check,
+      dynamic_simple FOR TESTING RAISING cx_dynamic_check zcx_abapgit_exception,
+      dynamic_another FOR TESTING RAISING cx_dynamic_check zcx_abapgit_exception,
       dynamic FOR TESTING RAISING cx_dynamic_check zcx_abapgit_exception,
       not_compressed FOR TESTING RAISING cx_dynamic_check.
 
@@ -45,6 +47,49 @@ CLASS ltcl_zlib IMPLEMENTATION.
     cl_abap_unit_assert=>assert_not_initial( ls_data-raw ).
     cl_abap_unit_assert=>assert_equals( act = ls_data-raw
                                         exp = lc_raw ).
+
+  ENDMETHOD.
+
+  METHOD dynamic_simple.
+
+    DATA: ls_data       TYPE zcl_abapgit_zlib=>ty_decompress,
+          lv_compressed TYPE xstring,
+          lv_decoded    TYPE xstring.
+
+
+    lv_compressed = |05804109000008C4AA184EC1C7E0C08FF5C70EA43E470B1A0B045D|.
+
+    lv_decoded = zcl_abapgit_convert=>string_to_xstring_utf8( |hello world| ).
+
+    ls_data = zcl_abapgit_zlib=>decompress( lv_compressed ).
+
+    cl_abap_unit_assert=>assert_not_initial( ls_data-raw ).
+    cl_abap_unit_assert=>assert_equals( act = ls_data-raw
+                                        exp = lv_decoded ).
+
+  ENDMETHOD.
+
+  METHOD dynamic_another.
+
+    DATA: ls_data       TYPE zcl_abapgit_zlib=>ty_decompress,
+          lv_compressed TYPE xstring,
+          lv_decoded    TYPE xstring.
+
+
+    lv_compressed = |25CCD10903310C04D156B680904AD284628963C1929D93D4FF| &&
+      |19F23DBCF9ACDB1CDCD90E5D73DD4816C4AD5E182BD24659F50D516EE6605CB0| &&
+      |C913D3F400183B7D29CA7C1FCC18546A47A10B53BE670FABFFDAE0728540267F| &&
+      |2DEF07|.
+
+    lv_decoded = zcl_abapgit_convert=>string_to_xstring_utf8(
+      |Lorem ipsum dolor sit amet, consectetur adipiscing elit, | &&
+      |sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.| ).
+
+    ls_data = zcl_abapgit_zlib=>decompress( lv_compressed ).
+
+    cl_abap_unit_assert=>assert_not_initial( ls_data-raw ).
+    cl_abap_unit_assert=>assert_equals( act = ls_data-raw
+                                        exp = lv_decoded ).
 
   ENDMETHOD.
 
