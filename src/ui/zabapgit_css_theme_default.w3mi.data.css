@@ -344,16 +344,6 @@ div.debug_container {
 .repo-overview tbody tr:hover td { background-color: hsla(214, 50%, 50%, 0.05); }
 .repo-overview tbody tr.selected { background-color: hsla(214, 50%, 75%, 0.33); }
 
-/* DB ENTRIES */
-
-.db-list { background-color: white; }
-.db-list table td      { color: var(--theme-primary-font-color); }
-.db-list table td.data { color: var(--theme-greyscale-dark); }
-.db-list table tbody tr:hover td  { background-color: rgba(0, 0, 0, 0.075); }
-.db-list table tbody tr:active td { background-color: #f4f4f4; }
-.db-list table th { color: var(--theme-link-color); }
-.db-list table thead tr { border-color: var(--theme-table-border-color); }
-
 /* DB ENTRY DISPLAY */
 
 .db-entry {

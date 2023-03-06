@@ -17,6 +17,10 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    METHODS constructor
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -27,6 +31,8 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
         restore TYPE string VALUE 'restore',
       END OF c_action.
 
+    CONSTANTS c_css_url TYPE string VALUE 'css/page_db.css'.
+
     TYPES:
       BEGIN OF ty_explanation,
         value TYPE string,
@@ -34,6 +40,10 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
       END OF ty_explanation.
 
     DATA mt_methods TYPE zcl_abapgit_background=>ty_methods.
+
+    METHODS register_stylesheet
+      RAISING
+        zcx_abapgit_exception.
 
     METHODS render_table
       IMPORTING
@@ -90,6 +100,12 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
 
 
+  METHOD constructor.
+    super->constructor( ).
+    register_stylesheet( ).
+  ENDMETHOD.
+
+
   METHOD create.
 
     DATA lo_component TYPE REF TO zcl_abapgit_gui_page_db.
@@ -98,6 +114,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title         = 'Database Utility'
+      iv_extra_css_url      = c_css_url
       ii_page_menu_provider = lo_component
       ii_child_component    = lo_component ).
 
@@ -439,6 +456,22 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
           format = cl_abap_format=>e_html_attr ).
       ENDIF.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD register_stylesheet.
+
+    DATA lo_buf TYPE REF TO zcl_abapgit_string_buffer.
+
+    CREATE OBJECT lo_buf.
+
+    " @@abapmerge include zabapgit_css_page_db.w3mi.data.css > lo_buf->add( '$$' ).
+    gui_services( )->register_page_asset(
+      iv_url       = c_css_url
+      iv_type      = 'text/css'
+      iv_mime_name = 'ZABAPGIT_CSS_PAGE_DB'
+      iv_inline    = lo_buf->join_w_newline_and_flush( ) ).
 
   ENDMETHOD.
 

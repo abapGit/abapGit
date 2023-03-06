@@ -614,33 +614,6 @@ div.debug_container p {
   margin: 0px;
 }
 
-/* DB ENTRIES */
-
-.db-list {
-  padding: 0.5em;
-  overflow-x: auto;
-}
-.db-list table { table-layout: fixed; }
-.db-list table pre {
-  display: inline-block;
-  overflow: hidden;
-  word-wrap:break-word;
-  white-space: pre-wrap;
-  margin: 0px;
-  width: 30em;
-}
-.db-list table th {
-  text-align: left;
-  padding: 0.5em;
-}
-.db-list table thead tr { border-bottom: 1px solid; }
-.db-list table td {
-  padding: 4px 0.5em;
-  vertical-align: middle;
-  word-break: break-all;
-}
-.db-list table td.data { font-style: italic; }
-
 /* *** */
 
 li.action_link.enabled{
