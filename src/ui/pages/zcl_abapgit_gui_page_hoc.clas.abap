@@ -13,6 +13,8 @@ CLASS zcl_abapgit_gui_page_hoc DEFINITION
         !io_page_menu       TYPE REF TO zcl_abapgit_html_toolbar OPTIONAL
         !ii_page_menu_provider TYPE REF TO zif_abapgit_gui_menu_provider OPTIONAL
         !ii_page_title_provider TYPE REF TO zif_abapgit_gui_page_title OPTIONAL
+        !iv_extra_css_url       TYPE string OPTIONAL
+        !iv_extra_js_url        TYPE string OPTIONAL
       RETURNING
         VALUE(ri_page_wrap) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
@@ -41,7 +43,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_HOC IMPLEMENTATION.
     lo_page->ms_control-page_menu           = io_page_menu.
     lo_page->ms_control-page_menu_provider  = ii_page_menu_provider.
     lo_page->ms_control-page_title_provider = ii_page_title_provider.
-    lo_page->mi_child = ii_child_component.
+    lo_page->ms_control-extra_css_url       = iv_extra_css_url.
+    lo_page->ms_control-extra_js_url        = iv_extra_js_url.
+    lo_page->mi_child                       = ii_child_component.
 
     ri_page_wrap = lo_page.
 
