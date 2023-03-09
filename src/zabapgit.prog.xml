@@ -177,7 +177,7 @@
       <PFK_CODE>000001</PFK_CODE>
       <CODE>0001</CODE>
       <NO>11</NO>
-      <PFNO>02</PFNO>
+      <PFNO>08</PFNO>
      </RSMPE_BUT>
      <RSMPE_BUT>
       <PFK_CODE>000001</PFK_CODE>
@@ -201,12 +201,6 @@
      </RSMPE_PFK>
      <RSMPE_PFK>
       <CODE>000001</CODE>
-      <PFNO>02</PFNO>
-      <FUNCODE>SEL_CAT</FUNCODE>
-      <FUNNO>001</FUNNO>
-     </RSMPE_PFK>
-     <RSMPE_PFK>
-      <CODE>000001</CODE>
       <PFNO>05</PFNO>
       <FUNCODE>SEL_ALL</FUNCODE>
       <FUNNO>001</FUNNO>
@@ -221,6 +215,12 @@
       <CODE>000001</CODE>
       <PFNO>07</PFNO>
       <FUNCODE>SEL_KEY</FUNCODE>
+      <FUNNO>001</FUNNO>
+     </RSMPE_PFK>
+     <RSMPE_PFK>
+      <CODE>000001</CODE>
+      <PFNO>08</PFNO>
+      <FUNCODE>SEL_CAT</FUNCODE>
       <FUNNO>001</FUNNO>
      </RSMPE_PFK>
      <RSMPE_PFK>
