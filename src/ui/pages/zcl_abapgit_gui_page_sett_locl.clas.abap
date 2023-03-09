@@ -87,7 +87,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
 
 
   METHOD choose_check_variant.
@@ -243,6 +243,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
 
   METHOD read_settings.
 
+    DATA: li_package TYPE REF TO zif_abapgit_sap_package.
+
+    li_package = zcl_abapgit_factory=>get_sap_package( mo_repo->get_package( ) ).
+
     " Get settings from DB
     ms_settings = mo_repo->get_local_settings( ).
 
@@ -250,9 +254,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
     mo_form_data->set(
       iv_key = c_id-display_name
       iv_val = ms_settings-display_name ).
-    mo_form_data->set(
-      iv_key = c_id-transport_request
-      iv_val = ms_settings-transport_request ).
+
+    IF li_package->are_changes_recorded_in_tr_req( ) = abap_true.
+      mo_form_data->set(
+        iv_key = c_id-transport_request
+        iv_val = ms_settings-transport_request ).
+    ENDIF.
+
     mo_form_data->set(
       iv_key = c_id-labels
       iv_val = ms_settings-labels ).
