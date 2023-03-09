@@ -166,7 +166,9 @@ CLASS zcl_abapgit_html_form_utils IMPLEMENTATION.
     ENDIF.
 
     lt_fields = mo_form->get_fields( ).
-    LOOP AT lt_fields ASSIGNING <ls_field> WHERE type <> zif_abapgit_html_form=>c_field_type-field_group.
+    LOOP AT lt_fields ASSIGNING <ls_field> WHERE type <> zif_abapgit_html_form=>c_field_type-field_group
+      AND type <> zif_abapgit_html_form=>c_field_type-hidden.
+
       CLEAR lv_value.
       lv_value = io_form_data->get( <ls_field>-name ).
       IF <ls_field>-condense = abap_true.
