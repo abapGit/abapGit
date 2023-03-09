@@ -35,7 +35,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_data_utils IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_DATA_UTILS IMPLEMENTATION.
 
 
   METHOD build_filename.
@@ -45,6 +45,7 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
     REPLACE ALL OCCURRENCES OF '/' IN rv_filename WITH '#'.
 
   ENDMETHOD.
+
 
   METHOD list_key_fields.
     DATA lo_obj        TYPE REF TO object.
@@ -71,7 +72,7 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
         CALL METHOD lo_obj->('IF_XCO_DBT_FIELDS~GET_NAMES')
           RECEIVING
             rt_names = rt_names.
-      CATCH cx_sy_dyn_call_illegal_class.
+      CATCH cx_sy_dyn_call_illegal_class cx_xco_news_exception.
         lv_workaround = 'DDFIELDS'.
         CREATE DATA lr_ddfields TYPE (lv_workaround).
         ASSIGN lr_ddfields->* TO <lt_ddfields>.
@@ -90,6 +91,7 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
+
 
   METHOD build_table_itab.
 
