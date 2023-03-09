@@ -496,7 +496,6 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
     DATA: li_package      TYPE REF TO if_package,
-          ls_msg          TYPE bal_s_msg,
           ls_package_data TYPE scompkdtln,
           ls_data_sign    TYPE scompksign,
           lt_usage_data   TYPE scomppdata,
