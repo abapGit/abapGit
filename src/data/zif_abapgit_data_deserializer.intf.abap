@@ -1,27 +1,27 @@
-interface ZIF_ABAPGIT_DATA_DESERIALIZER
-  public .
+INTERFACE zif_abapgit_data_deserializer
+  PUBLIC .
 
 
-  types:
+  TYPES:
     BEGIN OF ty_result,
-           table   TYPE tadir-obj_name,
-           deletes TYPE REF TO data,
-           updates TYPE REF TO data,
-           inserts TYPE REF TO data,
-         END OF ty_result .
-  types:
+      table   TYPE tadir-obj_name,
+      deletes TYPE REF TO data,
+      updates TYPE REF TO data,
+      inserts TYPE REF TO data,
+    END OF ty_result .
+  TYPES:
     ty_results TYPE STANDARD TABLE OF ty_result WITH KEY table .
 
-  methods DESERIALIZE
-    importing
-      !II_CONFIG type ref to ZIF_ABAPGIT_DATA_CONFIG
-      !IT_FILES type ZIF_ABAPGIT_GIT_DEFINITIONS=>TY_FILES_TT
-      !IS_CHECKS type ZIF_ABAPGIT_DEFINITIONS=>TY_DESERIALIZE_CHECKS
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods ACTUALIZE
-    importing
-      !IT_RESULT type TY_RESULTS
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-endinterface.
+  METHODS deserialize
+    IMPORTING
+      !ii_config TYPE REF TO zif_abapgit_data_config
+      !it_files  TYPE zif_abapgit_git_definitions=>ty_files_tt
+      !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
+    RAISING
+      zcx_abapgit_exception .
+  METHODS actualize
+    IMPORTING
+      !it_result TYPE ty_results
+    RAISING
+      zcx_abapgit_exception .
+ENDINTERFACE.
