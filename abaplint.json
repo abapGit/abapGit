@@ -148,6 +148,7 @@
         "^cl_abap_syst",
         "^SABP_T_TADIR_KEYS$",
         "^CL_OO_SOURCE$",
+        "^cx_xco_news_exception$",
         "^CL_SAUNIT_INTERNAL_RESULT$",
         "^CL_AUCV_TEST_RUNNER_ABSTRACT$",
         "^IF_SAUNIT_INTERNAL_RESULT$",
