@@ -26,7 +26,6 @@ CLASS ltcl_test IMPLEMENTATION.
 
     li_config->add_config( ls_config ).
 
-    DATA ls_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks.
     li_cut->deserialize(
       ii_config = li_config
       it_files  = lt_files ).

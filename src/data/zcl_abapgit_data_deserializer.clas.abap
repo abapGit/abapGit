@@ -9,44 +9,44 @@ CLASS zcl_abapgit_data_deserializer DEFINITION
 
   PROTECTED SECTION.
 
-  PRIVATE SECTION.
+private section.
 
-    METHODS convert_json_to_itab
-      IMPORTING
-        !is_file TYPE zif_abapgit_git_definitions=>ty_file
-        !ir_data TYPE REF TO data
-      RAISING
-        zcx_abapgit_exception .
-    METHODS preview_database_changes
-      IMPORTING
-        !iv_name         TYPE tadir-obj_name
-        !it_where        TYPE string_table
-        !ir_data         TYPE REF TO data
-      RETURNING
-        VALUE(rs_result) TYPE zif_abapgit_data_deserializer=>ty_result
-      RAISING
-        zcx_abapgit_exception .
-    METHODS write_database_table
-      IMPORTING
-        !iv_name TYPE tadir-obj_name
-        !ir_del  TYPE REF TO data
-        !ir_ins  TYPE REF TO data
-      RAISING
-        zcx_abapgit_exception .
-    METHODS read_database_table
-      IMPORTING
-        !iv_name       TYPE tadir-obj_name
-        !it_where      TYPE string_table
-      RETURNING
-        VALUE(rr_data) TYPE REF TO data
-      RAISING
-        zcx_abapgit_exception .
-
-    METHODS is_table_allowed_to_edit
-      IMPORTING
-                !table_name               TYPE tabname
-                !is_checks                TYPE zif_abapgit_definitions=>ty_deserialize_checks
-      RETURNING VALUE(is_allowed_to_edit) TYPE abap_bool.
+  methods CONVERT_JSON_TO_ITAB
+    importing
+      !IS_FILE type ZIF_ABAPGIT_GIT_DEFINITIONS=>TY_FILE
+      !IR_DATA type ref to DATA
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods PREVIEW_DATABASE_CHANGES
+    importing
+      !IV_NAME type TADIR-OBJ_NAME
+      !IT_WHERE type STRING_TABLE
+      !IR_DATA type ref to DATA
+    returning
+      value(RS_RESULT) type ZIF_ABAPGIT_DATA_DESERIALIZER=>TY_RESULT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods WRITE_DATABASE_TABLE
+    importing
+      !IV_NAME type TADIR-OBJ_NAME
+      !IR_DEL type ref to DATA
+      !IR_INS type ref to DATA
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods READ_DATABASE_TABLE
+    importing
+      !IV_NAME type TADIR-OBJ_NAME
+      !IT_WHERE type STRING_TABLE
+    returning
+      value(RR_DATA) type ref to DATA
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods IS_TABLE_ALLOWED_TO_EDIT
+    importing
+      !IV_TABLE_NAME type TABNAME
+      !IS_CHECKS type ZIF_ABAPGIT_DEFINITIONS=>TY_DESERIALIZE_CHECKS
+    returning
+      value(IS_ALLOWED_TO_EDIT) type ABAP_BOOL .
 ENDCLASS.
 
 
@@ -164,14 +164,18 @@ CLASS ZCL_ABAPGIT_DATA_DESERIALIZER IMPLEMENTATION.
 
 * this method updates the database
 
-    DATA ls_result      LIKE LINE OF it_result.
-    DATA lt_tables      TYPE tredt_objects.
-    DATA lt_table_keys  TYPE STANDARD TABLE OF e071k.
-    DATA db_table_name  TYPE tabname.
+    DATA ls_result        LIKE LINE OF it_result.
+    DATA lt_tables        TYPE tredt_objects.
+    DATA lt_table_keys    TYPE STANDARD TABLE OF e071k.
+    DATA lv_table_name    TYPE tabname.
+    DATA lt_tadir_entries TYPE scts_tadir.
 
     LOOP AT it_result INTO ls_result.
-      db_table_name = ls_result-table.
-      CHECK is_table_allowed_to_edit( table_name = db_table_name is_checks = is_checks ).
+      lv_table_name = ls_result-table.
+
+      IF NOT is_table_allowed_to_edit( iv_table_name = lv_table_name is_checks = is_checks ).
+        CONTINUE.
+      ENDIF.
 
       write_database_table(
         iv_name = ls_result-table
@@ -183,14 +187,13 @@ CLASS ZCL_ABAPGIT_DATA_DESERIALIZER IMPLEMENTATION.
           it_table_ins = ls_result-inserts->*
           it_table_upd = ls_result-updates->*
           it_table_del = ls_result-deletes->*
-          iv_tabname   = db_table_name
+          iv_tabname   = lv_table_name
         CHANGING
           ct_e071      = lt_tables
           ct_e071k     = lt_table_keys ).
 
     ENDLOOP.
 
-    DATA lt_tadir_entries TYPE scts_tadir.
     cl_table_utilities_brf=>write_transport_entries(
       CHANGING
         ct_e071  = lt_tables
@@ -241,7 +244,7 @@ CLASS ZCL_ABAPGIT_DATA_DESERIALIZER IMPLEMENTATION.
   METHOD is_table_allowed_to_edit.
 
     "Did the user flagged this table for update?
-    CHECK line_exists( is_checks-overwrite[ obj_name = table_name decision = zif_abapgit_definitions=>c_yes ] ).
+    CHECK line_exists( is_checks-overwrite[ obj_name = iv_table_name decision = zif_abapgit_definitions=>c_yes ] ).
 
     "For safety reasons only customer dependend customizing tables are allowed to update
     SELECT SINGLE @abap_true
@@ -250,7 +253,7 @@ CLASS ZCL_ABAPGIT_DATA_DESERIALIZER IMPLEMENTATION.
         AND dd09l~as4local = dd02l~as4local
         AND dd09l~as4vers = dd02l~as4vers
       INTO @is_allowed_to_edit
-      WHERE dd09l~tabname = @table_name
+      WHERE dd09l~tabname = @iv_table_name
         AND dd09l~tabart = 'APPL2'
         AND dd09l~as4user <> 'SAP'
         AND dd09l~as4local = @cl_wer_const=>c_db_table_version_active
