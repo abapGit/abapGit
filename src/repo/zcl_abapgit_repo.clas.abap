@@ -655,6 +655,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   METHOD zif_abapgit_repo~deserialize.
 
     DATA: lt_updated_files TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt,
+          lt_result        TYPE zif_abapgit_data_deserializer=>ty_results,
           lx_error         TYPE REF TO zcx_abapgit_exception.
 
     find_remote_dot_abapgit( ).
@@ -692,10 +693,14 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     zif_abapgit_repo~checksums( )->update( lt_updated_files ).
 
-    " Deserialize data (save to DB and add entries to transport requests)
-    zcl_abapgit_data_factory=>get_deserializer( )->deserialize(
+    "Deserialize data
+    lt_result = zcl_abapgit_data_factory=>get_deserializer( )->deserialize(
       ii_config  = get_data_config( )
-      it_files   = get_files_remote( )
+      it_files   = get_files_remote( ) ).
+
+    "Save deserialized data to DB and add entries to transport requests)
+    zcl_abapgit_data_factory=>get_deserializer( )->actualize(
+      it_result = lt_result
       is_checks = is_checks ).
 
     CLEAR: mt_local.

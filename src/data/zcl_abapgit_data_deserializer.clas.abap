@@ -164,70 +164,76 @@ CLASS ZCL_ABAPGIT_DATA_DESERIALIZER IMPLEMENTATION.
 
 * this method updates the database
 
-    DATA ls_result LIKE LINE OF it_result.
+    DATA ls_result      LIKE LINE OF it_result.
+    DATA lt_tables      TYPE tredt_objects.
+    DATA lt_table_keys  TYPE STANDARD TABLE OF e071k.
+    DATA db_table_name  TYPE tabname.
 
     LOOP AT it_result INTO ls_result.
+      db_table_name = ls_result-table.
+      CHECK is_table_allowed_to_edit( table_name = db_table_name is_checks = is_checks ).
+
       write_database_table(
         iv_name = ls_result-table
         ir_del  = ls_result-deletes
         ir_ins  = ls_result-inserts ).
+
+      cl_table_utilities_brf=>create_transport_entries(
+        EXPORTING
+          it_table_ins = ls_result-inserts->*
+          it_table_upd = ls_result-updates->*
+          it_table_del = ls_result-deletes->*
+          iv_tabname   = db_table_name
+        CHANGING
+          ct_e071      = lt_tables
+          ct_e071k     = lt_table_keys ).
+
     ENDLOOP.
+
+    DATA lt_tadir_entries TYPE scts_tadir.
+    cl_table_utilities_brf=>write_transport_entries(
+      CHANGING
+        ct_e071  = lt_tables
+        ct_e071k = lt_table_keys
+        ct_tadir = lt_tadir_entries ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_data_deserializer~deserialize.
 
-    DATA result         TYPE zif_abapgit_data_deserializer=>ty_results.
-    DATA tables         TYPE tredt_objects.
-    DATA table_keys     TYPE STANDARD TABLE OF e071k.
-    DATA db_table_name  TYPE tabname.
+* this method does not persist any changes to the database
 
-    LOOP AT ii_config->get_configs( ) REFERENCE INTO DATA(config).
-      db_table_name = config->name.
+    DATA lt_configs TYPE zif_abapgit_data_config=>ty_config_tt.
+    DATA ls_config LIKE LINE OF lt_configs.
+    DATA lr_data  TYPE REF TO data.
+    DATA ls_file LIKE LINE OF it_files.
+    DATA ls_result LIKE LINE OF rt_result.
 
-      CHECK is_table_allowed_to_edit( table_name = db_table_name is_checks = is_checks ).
+    lt_configs = ii_config->get_configs( ).
 
-      DATA(lr_data) = zcl_abapgit_data_utils=>build_table_itab( config->name ).
+    LOOP AT lt_configs INTO ls_config.
 
-      READ TABLE it_files REFERENCE INTO DATA(ls_file)
+      lr_data = zcl_abapgit_data_utils=>build_table_itab( ls_config-name ).
+
+      READ TABLE it_files INTO ls_file
         WITH KEY file_path
         COMPONENTS path     = zif_abapgit_data_config=>c_default_path
-                   filename = zcl_abapgit_data_utils=>build_filename( config->* ).
-      CHECK sy-subrc = 0.
+                   filename = zcl_abapgit_data_utils=>build_filename( ls_config ).
+      IF sy-subrc = 0.
+        convert_json_to_itab(
+          ir_data = lr_data
+          is_file = ls_file ).
 
-      convert_json_to_itab(
-        ir_data = lr_data
-        is_file = ls_file->* ).
+        ls_result = preview_database_changes(
+          iv_name  = ls_config-name
+          it_where = ls_config-where
+          ir_data  = lr_data ).
 
-      DATA(table_changes) = preview_database_changes(
-        iv_name  = config->name
-        it_where = config->where
-        ir_data  = lr_data ).
-
-      cl_table_utilities_brf=>create_transport_entries(
-        EXPORTING
-          it_table_ins = table_changes-inserts->*
-          it_table_upd = table_changes-updates->*
-          it_table_del = table_changes-deletes->*
-          iv_tabname   = db_table_name
-        CHANGING
-          ct_e071      = tables
-          ct_e071k     = table_keys ).
-
-      write_database_table(
-        iv_name = table_changes-table
-        ir_del  = table_changes-deletes
-        ir_ins  = table_changes-inserts ).
+        INSERT ls_result INTO TABLE rt_result.
+      ENDIF.
 
     ENDLOOP.
-
-    DATA tadir_entries TYPE scts_tadir.
-    cl_table_utilities_brf=>write_transport_entries(
-      CHANGING
-        ct_e071  = tables
-        ct_e071k = table_keys
-        ct_tadir = tadir_entries ).
 
   ENDMETHOD.
 
@@ -239,12 +245,16 @@ CLASS ZCL_ABAPGIT_DATA_DESERIALIZER IMPLEMENTATION.
 
     "For safety reasons only customer dependend customizing tables are allowed to update
     SELECT SINGLE @abap_true
-      FROM dd09l
+      FROM dd09l JOIN dd02l
+        ON dd09l~tabname = dd02l~tabname
+        AND dd09l~as4local = dd02l~as4local
+        AND dd09l~as4vers = dd02l~as4vers
       INTO @is_allowed_to_edit
-      WHERE tabname = @table_name
-        AND tabart = 'APPL2'
-        AND as4user <> 'SAP'
-        AND as4local = @cl_wer_const=>c_db_table_version_active.
+      WHERE dd09l~tabname = @table_name
+        AND dd09l~tabart = 'APPL2'
+        AND dd09l~as4user <> 'SAP'
+        AND dd09l~as4local = @cl_wer_const=>c_db_table_version_active
+        AND dd02l~contflag = @cl_axt_dbtable=>gc_deliv_class_cust.
 
   ENDMETHOD.
 ENDCLASS.

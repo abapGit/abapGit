@@ -29,8 +29,7 @@ CLASS ltcl_test IMPLEMENTATION.
     DATA ls_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks.
     li_cut->deserialize(
       ii_config = li_config
-      it_files  = lt_files
-      is_checks = ls_checks ).
+      it_files  = lt_files ).
 
   ENDMETHOD.
 
