@@ -280,7 +280,7 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
     DATA ls_msg TYPE bal_s_msg.
 
     " Remember message since unlock overwrites it (for example with XT465)
-    MOVE-CORRESPONDING syst TO ls_msg.
+    MOVE-CORRESPONDING sy TO ls_msg.
 
     set_lock( ii_package = ii_package
               iv_lock    = abap_false ).
