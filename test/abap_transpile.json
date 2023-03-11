@@ -191,9 +191,7 @@
       {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "raise_error_if_package_exists", "note": "Void type: SCOMPKDTLN"},
       {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_given_in_popup",        "note": "Void type: SCOMPKDTLN"},
       {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_not_created_when_canc", "note": "Void type: SCOMPKDTLN"},
-      {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_created_when_confirm",  "note": "Void type: SCOMPKDTLN"},
-
-      {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_test_checksums", "method": "rebuild_simple", "note": " https://github.com/abaplint/transpiler/pull/1132 "}
+      {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_created_when_confirm",  "note": "Void type: SCOMPKDTLN"}
     ]
   }
 }
