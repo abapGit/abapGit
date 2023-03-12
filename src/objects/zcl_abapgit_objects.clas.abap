@@ -184,6 +184,14 @@ CLASS zcl_abapgit_objects DEFINITION
       IMPORTING
         !is_item TYPE zif_abapgit_definitions=>ty_item
         !ii_log  TYPE REF TO zif_abapgit_log .
+    CLASS-METHODS determine_i18n_params
+      IMPORTING
+        !io_dot TYPE REF TO zcl_abapgit_dot_abapgit
+        !iv_main_language_only TYPE abap_bool
+      RETURNING
+        VALUE(rs_i18n_params) TYPE zif_abapgit_definitions=>ty_i18n_params
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -637,18 +645,9 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     check_objects_locked( iv_language = io_repo->get_dot_abapgit( )->get_main_language( )
                           it_items    = lt_items ).
 
-    " Determine I18N parameters
-    IF io_repo->get_dot_abapgit( ) IS BOUND.
-      ls_i18n_params-main_language         = io_repo->get_dot_abapgit( )->get_main_language( ).
-      ls_i18n_params-main_language_only    = io_repo->get_local_settings( )-main_language_only.
-      ls_i18n_params-translation_languages = zcl_abapgit_lxe_texts=>get_translation_languages(
-        iv_main_language  = io_repo->get_dot_abapgit( )->get_main_language( )
-        it_i18n_languages = io_repo->get_dot_abapgit( )->get_i18n_languages( ) ).
-    ENDIF.
-
-    IF ls_i18n_params-main_language IS INITIAL.
-      ls_i18n_params-main_language = sy-langu.
-    ENDIF.
+    ls_i18n_params = determine_i18n_params(
+      io_dot = io_repo->get_dot_abapgit( )
+      iv_main_language_only = io_repo->get_local_settings( )-main_language_only ).
 
     IF lines( lt_items ) = 1.
       ii_log->add_info( |>>> Deserializing 1 object| ).
@@ -855,6 +854,23 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     li_exit->deserialize_postprocess( is_step = is_step
                                       ii_log  = ii_log ).
+
+  ENDMETHOD.
+
+
+  METHOD determine_i18n_params.
+
+    IF io_dot IS BOUND.
+      rs_i18n_params-main_language         = io_dot->get_main_language( ).
+      rs_i18n_params-main_language_only    = iv_main_language_only.
+      rs_i18n_params-translation_languages = zcl_abapgit_lxe_texts=>get_translation_languages(
+        iv_main_language  = io_dot->get_main_language( )
+        it_i18n_languages = io_dot->get_i18n_languages( ) ).
+    ENDIF.
+
+    IF rs_i18n_params-main_language IS INITIAL.
+      rs_i18n_params-main_language = sy-langu.
+    ENDIF.
 
   ENDMETHOD.
 

@@ -968,9 +968,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    CLEAR: ls_dd02v-as4user,
-           ls_dd02v-as4date,
-           ls_dd02v-as4time.
+    CLEAR: ls_dd02v-as4user, ls_dd02v-as4date, ls_dd02v-as4time.
 
 * reset numeric field, so XML does not crash
     IF ls_dd02v-prozpuff = ''.
@@ -986,9 +984,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
       CLEAR ls_dd02v-datavg.
     ENDIF.
 
-    CLEAR: ls_dd09l-as4user,
-           ls_dd09l-as4date,
-           ls_dd09l-as4time.
+    CLEAR: ls_dd09l-as4user, ls_dd09l-as4date, ls_dd09l-as4time.
 
     ASSIGN COMPONENT 'ROWORCOLST' OF STRUCTURE ls_dd09l TO <lg_roworcolst>.
     IF sy-subrc = 0 AND <lg_roworcolst> = 'C'.
