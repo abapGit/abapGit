@@ -14,14 +14,18 @@ CLASS zcl_abapgit_xml_input DEFINITION
       RAISING
         zcx_abapgit_exception .
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
-    METHODS: fix_xml.
+
+    DATA ms_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params.
+
+    METHODS fix_xml.
 
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_xml_input IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_XML_INPUT IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -56,6 +60,17 @@ CLASS zcl_abapgit_xml_input IMPLEMENTATION.
 
   METHOD zif_abapgit_xml_input~get_raw.
     ri_raw = mi_xml_doc.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_xml_input~i18n_params.
+
+    IF is_i18n_params IS SUPPLIED.
+      ms_i18n_params = is_i18n_params.
+    ENDIF.
+
+    rs_i18n_params = ms_i18n_params.
+
   ENDMETHOD.
 
 
