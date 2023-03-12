@@ -9,53 +9,11 @@ CLASS zcl_abapgit_object_para DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       IMPORTING
         !iv_paramid TYPE memoryid .
 
-    METHODS serialize_texts
-      IMPORTING
-        io_xml TYPE REF TO zif_abapgit_xml_output
-      RAISING
-        zcx_abapgit_exception.
-
-    METHODS deserialize_texts
-      IMPORTING
-        io_xml TYPE REF TO zif_abapgit_xml_input
-      RAISING
-        zcx_abapgit_exception.
-
 ENDCLASS.
 
 
 
 CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
-
-
-  METHOD deserialize_texts.
-
-    DATA ls_tparat TYPE tparat.
-
-    io_xml->read(
-      EXPORTING iv_name = 'TPARAT'
-      CHANGING  cg_data = ls_tparat ).
-
-    MODIFY tparat FROM ls_tparat.                         "#EC CI_SUBRC
-    ASSERT sy-subrc = 0.
-
-  ENDMETHOD.
-
-
-  METHOD serialize_texts.
-
-    DATA ls_tparat TYPE tparat.
-
-    " Why just 1 language ?
-    SELECT SINGLE * FROM tparat INTO ls_tparat
-      WHERE paramid = ms_item-obj_name
-      AND sprache = mv_language.          "#EC CI_GENBUFF "#EC CI_SUBRC
-
-    io_xml->add(
-      iv_name = 'TPARAT'
-      ig_data = ls_tparat ).
-
-  ENDMETHOD.
 
 
   METHOD unlock.
@@ -160,7 +118,8 @@ CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
 * see fm RS_PARAMETER_ADD and RS_PARAMETER_EDIT
 
     DATA: lv_mode   TYPE c LENGTH 1,
-          ls_tpara  TYPE tpara.
+          ls_tpara  TYPE tpara,
+          ls_tparat TYPE tparat.
 
     SELECT SINGLE * FROM tpara INTO ls_tpara
       WHERE paramid = ms_item-obj_name.                 "#EC CI_GENBUFF
@@ -194,8 +153,16 @@ CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
     MODIFY tpara FROM ls_tpara.                           "#EC CI_SUBRC
     ASSERT sy-subrc = 0.
 
-    deserialize_texts( io_xml ).
-    deserialize_lxe_texts( io_xml ).
+    io_xml->read(
+      EXPORTING iv_name = 'TPARAT'
+      CHANGING  cg_data = ls_tparat ).
+
+    MODIFY tparat FROM ls_tparat.                         "#EC CI_SUBRC
+    ASSERT sy-subrc = 0.
+
+    IF io_xml->i18n_params( )-translation_languages IS NOT INITIAL.
+      deserialize_lxe_texts( io_xml ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -253,7 +220,8 @@ CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA ls_tpara TYPE tpara.
+    DATA: ls_tpara  TYPE tpara,
+          ls_tparat TYPE tparat.
 
     SELECT SINGLE * FROM tpara INTO ls_tpara
       WHERE paramid = ms_item-obj_name.                 "#EC CI_GENBUFF
@@ -261,13 +229,22 @@ CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
       RETURN.
     ENDIF.
 
+    SELECT SINGLE * FROM tparat INTO ls_tparat
+      WHERE paramid = ms_item-obj_name
+      AND sprache = mv_language.          "#EC CI_GENBUFF "#EC CI_SUBRC
+
     io_xml->add( iv_name = 'TPARA'
                  ig_data = ls_tpara ).
 
-    serialize_texts( io_xml ).
+    io_xml->add(
+      iv_name = 'TPARAT'
+      ig_data = ls_tparat ).
     " Here only the original language is serialized,
     " so it should be present for the moment. LXEs are just translations
-    serialize_lxe_texts( io_xml ).
+
+    IF io_xml->i18n_params( )-translation_languages IS NOT INITIAL.
+      serialize_lxe_texts( io_xml ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
