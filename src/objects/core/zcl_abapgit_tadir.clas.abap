@@ -316,8 +316,9 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
     " Exclude object types with tadir entries that are included elsewhere
     ls_exclude-sign   = 'I'.
     ls_exclude-option = 'EQ'.
-    ls_exclude-low    = 'SOTR'. " automatically create for sap packages (DEVC)
+    ls_exclude-low    = 'SOTR'. " automatically created for SAP packages (DEVC)
     APPEND ls_exclude TO lt_excludes.
+    " Todo: once all OTR long texts are handled by object-specific class, exclude SOTS (just like SOTR)
     ls_exclude-low    = 'SFB1'. " covered by business function sets (SFBS)
     APPEND ls_exclude TO lt_excludes.
     ls_exclude-low    = 'SFB2'. " covered by business functions (SFBF)

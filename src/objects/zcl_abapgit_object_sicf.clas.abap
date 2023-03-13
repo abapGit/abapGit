@@ -36,6 +36,17 @@ CLASS zcl_abapgit_object_sicf DEFINITION
         icfparguid TYPE icfservice-icfparguid,
       END OF ty_sicf_key .
 
+    METHODS serialize_otr
+      IMPORTING
+        !io_xml TYPE REF TO zif_abapgit_xml_output
+      RAISING
+        zcx_abapgit_exception .
+    METHODS deserialize_otr
+      IMPORTING
+        !iv_package TYPE devclass
+        !io_xml     TYPE REF TO zif_abapgit_xml_input
+      RAISING
+        zcx_abapgit_exception .
     METHODS read
       IMPORTING
         !iv_clear      TYPE abap_bool DEFAULT abap_true
@@ -44,6 +55,7 @@ CLASS zcl_abapgit_object_sicf DEFINITION
         !es_icfdocu    TYPE icfdocu
         !et_icfhandler TYPE ty_icfhandler_tt
         !ev_url        TYPE string
+        !ev_obj_name   TYPE sobj_name
       RAISING
         zcx_abapgit_exception .
     METHODS insert_sicf
@@ -150,6 +162,35 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD deserialize_otr.
+
+    DATA:
+      lv_obj_name TYPE sobj_name,
+      lt_sots     TYPE zcl_abapgit_sots_handler=>ty_sots_tt,
+      lt_sots_use TYPE zcl_abapgit_sots_handler=>ty_sots_use_tt.
+
+    FIELD-SYMBOLS:
+      <ls_sots_use> LIKE LINE OF lt_sots_use.
+
+    read( IMPORTING ev_obj_name = lv_obj_name ).
+
+    io_xml->read( EXPORTING iv_name = 'SOTS'
+                  CHANGING cg_data = lt_sots ).
+    io_xml->read( EXPORTING iv_name = 'SOTS_USE'
+                  CHANGING cg_data = lt_sots_use ).
+
+    LOOP AT lt_sots_use ASSIGNING <ls_sots_use>.
+      <ls_sots_use>-obj_name = lv_obj_name.
+    ENDLOOP.
+
+    zcl_abapgit_sots_handler=>create_sots_from_data(
+      iv_package  = iv_package
+      it_sots     = lt_sots
+      it_sots_use = lt_sots_use ).
+
+  ENDMETHOD.
+
+
   METHOD find_parent.
 
     cl_icf_tree=>if_icf_tree~service_from_url(
@@ -250,6 +291,7 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
     CLEAR ev_url.
 
     ls_key = read_tadir_sicf( ms_item-obj_name )-obj_name.
+    ev_obj_name = ls_key.
 
     cl_icf_tree=>if_icf_tree~get_info_from_serv(
       EXPORTING
@@ -357,6 +399,38 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD serialize_otr.
+
+    DATA:
+      lv_obj_name TYPE sobj_name,
+      lt_sots     TYPE zcl_abapgit_sots_handler=>ty_sots_tt,
+      lt_sots_use TYPE zcl_abapgit_sots_handler=>ty_sots_use_tt.
+
+    FIELD-SYMBOLS:
+      <ls_sots_use> LIKE LINE OF lt_sots_use.
+
+    read( IMPORTING ev_obj_name = lv_obj_name ).
+
+    zcl_abapgit_sots_handler=>read_sots(
+      EXPORTING
+        iv_object   = ms_item-obj_type
+        iv_obj_name = lv_obj_name
+      IMPORTING
+        et_sots     = lt_sots
+        et_sots_use = lt_sots_use ).
+
+    LOOP AT lt_sots_use ASSIGNING <ls_sots_use>.
+      CLEAR <ls_sots_use>-obj_name.
+    ENDLOOP.
+
+    io_xml->add( iv_name = 'SOTS'
+                 ig_data = lt_sots ).
+    io_xml->add( iv_name = 'SOTS_USE'
+                 ig_data = lt_sots_use ).
+
+  ENDMETHOD.
+
+
   METHOD to_icfhndlist.
 
     FIELD-SYMBOLS: <ls_list> LIKE LINE OF it_list.
@@ -389,9 +463,12 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA ls_icfservice TYPE icfservice.
+    DATA:
+      ls_icfservice TYPE icfservice,
+      lv_obj_name   TYPE sobj_name.
 
-    read( IMPORTING es_icfservice = ls_icfservice ).
+    read( IMPORTING es_icfservice = ls_icfservice
+                    ev_obj_name   = lv_obj_name ).
 
     IF ls_icfservice IS INITIAL.
       " It seems that the ICF service doesn't exist anymore.
@@ -406,12 +483,20 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'SICF - cannot delete root node, delete node manually' ).
     ENDIF.
 
+    " OTR short and long texts
+    zcl_abapgit_sotr_handler=>delete_sotr(
+      iv_object   = ms_item-obj_type
+      iv_obj_name = lv_obj_name ).
+    zcl_abapgit_sots_handler=>delete_sots(
+      iv_object   = ms_item-obj_type
+      iv_obj_name = lv_obj_name ).
+
     " Delete Application Customizing Data the hard way, as it isn't done by the API.
     " If we wouldn't we would get errors from the API if entrys exist.
     " Transaction SICF does the same.
     DELETE FROM icfapplcust
-           WHERE icf_name = ls_icfservice-icf_name
-           AND icfparguid = ls_icfservice-icfparguid.
+      WHERE icf_name = ls_icfservice-icf_name
+      AND icfparguid = ls_icfservice-icfparguid.
 
     cl_icf_tree=>if_icf_tree~delete_node(
       EXPORTING
@@ -473,6 +558,11 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
                    iv_package    = iv_package
                    iv_parent     = ls_read-icfparguid ).
     ENDIF.
+
+    " OTR short and long texts
+    deserialize_otr(
+      iv_package = iv_package
+      io_xml     = io_xml ).
 
   ENDMETHOD.
 
@@ -590,6 +680,9 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
                  ig_data = ls_icfdocu ).
     io_xml->add( iv_name = 'ICFHANDLER_TABLE'
                  ig_data = lt_icfhandler ).
+
+    " OTR short and long texts
+    serialize_otr( io_xml ).
 
   ENDMETHOD.
 ENDCLASS.
