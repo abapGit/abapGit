@@ -483,10 +483,7 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'SICF - cannot delete root node, delete node manually' ).
     ENDIF.
 
-    " OTR short and long texts
-    zcl_abapgit_sotr_handler=>delete_sotr(
-      iv_object   = ms_item-obj_type
-      iv_obj_name = lv_obj_name ).
+    " OTR long texts
     zcl_abapgit_sots_handler=>delete_sots(
       iv_object   = ms_item-obj_type
       iv_obj_name = lv_obj_name ).
@@ -532,7 +529,6 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
           lv_exists     TYPE abap_bool,
           lt_icfhandler TYPE TABLE OF icfhandler.
 
-
     io_xml->read( EXPORTING iv_name = 'URL'
                   CHANGING cg_data = lv_url ).
     io_xml->read( EXPORTING iv_name = 'ICFSERVICE'
@@ -541,7 +537,6 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
                   CHANGING cg_data = ls_icfdocu ).
     io_xml->read( EXPORTING iv_name = 'ICFHANDLER_TABLE'
                   CHANGING cg_data = lt_icfhandler ).
-
 
     lv_exists = zif_abapgit_object~exists( ).
     IF lv_exists = abap_false.
@@ -559,7 +554,7 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
                    iv_parent     = ls_read-icfparguid ).
     ENDIF.
 
-    " OTR short and long texts
+    " OTR long texts
     deserialize_otr(
       iv_package = iv_package
       io_xml     = io_xml ).
@@ -652,11 +647,11 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
           lv_url        TYPE string,
           lt_icfhandler TYPE TABLE OF icfhandler.
 
-
     read( IMPORTING es_icfservice = ls_icfservice
                     es_icfdocu    = ls_icfdocu
                     et_icfhandler = lt_icfhandler
                     ev_url        = lv_url ).
+
     IF ls_icfservice IS INITIAL.
       RETURN.
     ENDIF.
@@ -681,7 +676,7 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
     io_xml->add( iv_name = 'ICFHANDLER_TABLE'
                  ig_data = lt_icfhandler ).
 
-    " OTR short and long texts
+    " OTR long texts
     serialize_otr( io_xml ).
 
   ENDMETHOD.
