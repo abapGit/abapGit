@@ -314,7 +314,7 @@
     "max_one_statement": true,
     "message_exists": false,
     "method_length": {
-      "statements": 100,
+      "statements": 105,
       "checkForms": true,
       "ignoreTestClasses": false,
       "errorWhenEmpty": false

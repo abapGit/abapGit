@@ -48,7 +48,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_msag IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
 
 
   METHOD delete_documentation.
@@ -407,7 +407,11 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
     deserialize_longtexts( ii_xml         = io_xml
                            iv_longtext_id = c_longtext_id_msag ).
 
-    deserialize_texts( io_xml ).
+    IF io_xml->i18n_params( )-translation_languages IS INITIAL.
+      deserialize_texts( io_xml ).
+    ELSE.
+      deserialize_lxe_texts( io_xml ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -496,7 +500,11 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
     serialize_longtexts_msag( it_t100 = lt_source
                               ii_xml  = io_xml ).
 
-    serialize_texts( io_xml ).
+    IF io_xml->i18n_params( )-translation_languages IS INITIAL.
+      serialize_texts( io_xml ).
+    ELSE.
+      serialize_lxe_texts( io_xml ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
