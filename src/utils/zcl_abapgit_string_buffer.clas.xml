@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_STRING_BUFFER</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit string buffer util</DESCRIPT>
+    <DESCRIPT>abapGit - String Buffer</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

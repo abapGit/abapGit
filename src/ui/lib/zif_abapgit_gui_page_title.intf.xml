@@ -5,7 +5,7 @@
    <VSEOINTERF>
     <CLSNAME>ZIF_ABAPGIT_GUI_PAGE_TITLE</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit page title provider</DESCRIPT>
+    <DESCRIPT>abapGit - GUI Page Title Provider</DESCRIPT>
     <EXPOSURE>2</EXPOSURE>
     <STATE>1</STATE>
     <UNICODE>X</UNICODE>
