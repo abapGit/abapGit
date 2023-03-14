@@ -197,7 +197,7 @@
 
       {"object": "ZCL_ABAPGIT_TIMER", "class": "ltcl_timer", "method": "run_timer", "note": "WAIT UP TO 1 SECOND ?"},
       {"object": "ZCL_ABAPGIT_TIMER", "class": "ltcl_timer", "method": "run_timer_with_count", "note": "WAIT UP TO 1 SECOND ?"},
-      {"object": "ZCL_ABAPGIT_TIMER", "class": "ltcl_timer", "method": "run_timerrun_timer_with_text", "note": "WAIT UP TO 1 SECOND ?"}
+      {"object": "ZCL_ABAPGIT_TIMER", "class": "ltcl_timer", "method": "run_timer_with_text", "note": "WAIT UP TO 1 SECOND ?"}
     ]
   }
 }
