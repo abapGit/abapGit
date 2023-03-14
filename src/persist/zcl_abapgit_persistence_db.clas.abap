@@ -71,6 +71,12 @@ CLASS zcl_abapgit_persistence_db DEFINITION
         !iv_data  TYPE zif_abapgit_persistence=>ty_content-data_str
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS validate_entry_type
+      IMPORTING
+        !iv_type  TYPE zif_abapgit_persistence=>ty_type
+      RAISING
+        zcx_abapgit_exception .
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -91,13 +97,14 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_persistence_db IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
 
 
   METHOD add.
 
     DATA ls_table TYPE zif_abapgit_persistence=>ty_content.
 
+    validate_entry_type( iv_type ).
     ls_table-type  = iv_type.
     ls_table-value = iv_value.
     ls_table-data_str = iv_data.
@@ -259,6 +266,21 @@ CLASS zcl_abapgit_persistence_db IMPLEMENTATION.
       iv_xml           = iv_xml
       iv_unpretty      = abap_true
       iv_ignore_errors = abap_false ).
+
+  ENDMETHOD.
+
+
+  METHOD validate_entry_type.
+
+    IF NOT (
+      iv_type = c_type_repo OR
+      iv_type = c_type_repo_csum OR
+      iv_type = c_type_user OR
+      iv_type = c_type_settings OR
+      iv_type = c_type_background OR
+      iv_type = c_type_packages ).
+      zcx_abapgit_exception=>raise( |Invalid DB entry type [{ iv_type }]| ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

@@ -4,6 +4,11 @@ CLASS zcl_abapgit_html_toolbar DEFINITION
 
   PUBLIC SECTION.
 
+    CLASS-METHODS create
+      IMPORTING
+        !iv_id TYPE string OPTIONAL
+      RETURNING
+        VALUE(ro_instance) TYPE REF TO zcl_abapgit_html_toolbar.
     METHODS constructor
       IMPORTING
         !iv_id TYPE string OPTIONAL .
@@ -113,6 +118,12 @@ CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
 
   METHOD constructor.
     mv_id = iv_id.
+  ENDMETHOD.
+
+  METHOD create.
+    CREATE OBJECT ro_instance
+      EXPORTING
+        iv_id = iv_id.
   ENDMETHOD.
 
 

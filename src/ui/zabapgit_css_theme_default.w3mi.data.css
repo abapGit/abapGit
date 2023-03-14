@@ -344,44 +344,6 @@ div.debug_container {
 .repo-overview tbody tr:hover td { background-color: hsla(214, 50%, 50%, 0.05); }
 .repo-overview tbody tr.selected { background-color: hsla(214, 50%, 75%, 0.33); }
 
-/* DB ENTRIES */
-
-div.db_list { background-color: #fff; }
-table.db_tab td      { color: #333; }
-table.db_tab td.data { color: #888; }
-table.db_tab tbody tr:hover td {
-  background-image: linear-gradient(rgba(0, 0, 0, 0.075), rgba(0, 0, 0, 0.075));
-}
-table.db_tab tbody tr:active td {
-  background-color: #f4f4f4;
-}
-table.db_tab th {
-  color: var(--theme-link-color);
-}
-table.db_tab thead tr,
-table.db_tab tfoot tr {
-  border-color: #ddd;
-}
-table.db_tab a.remote_repo {
-  color: var(--theme-primary-font-color-reduced);
-}
-table.db_tab a.remote_repo:hover { color: var(--theme-link-color); }
-
-/* DB ENTRY DISPLAY */
-
-div.db_entry {
-  background-color: var(--theme-container-background-color);
-}
-div.db_entry pre {
-  background-color: #fcfcfc;
-  border-color: #eaeaea;
-}
-table.tag {
-  border-color: #b3c1cc;
-  background-color: #eee;
-}
-table.tag td.label { background-color: #b3c1cc; }
-
 /* TUTORIAL */
 
 div.tutorial { background-color: var(--theme-container-background-color); }

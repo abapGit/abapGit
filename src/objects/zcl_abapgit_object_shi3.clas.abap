@@ -47,7 +47,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
 
 
   METHOD clear_fields.
@@ -315,6 +315,10 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
       MODIFY ttree FROM ls_ttree.
     ENDIF.
 
+    IF io_xml->i18n_params( )-translation_languages IS NOT INITIAL.
+      deserialize_lxe_texts( io_xml ).
+    ENDIF.
+
     IF zcl_abapgit_factory=>get_sap_package( iv_package )->are_changes_recorded_in_tr_req( ) = abap_true.
       " Add necessary SHI6, SHI7, and TABU entries to transport (SAP Note 455542)
       insert_transport( iv_transport ).
@@ -412,12 +416,13 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
       TABLES
         description      = lt_titles.
 
-    lv_all_languages = abap_false.
 
-    IF io_xml->i18n_params( )-main_language_only = abap_false.
-      lv_all_languages = abap_true.
-    ELSE.
+    IF io_xml->i18n_params( )-main_language_only = abap_true
+      OR io_xml->i18n_params( )-translation_languages IS NOT INITIAL.
+      lv_all_languages = abap_false.
       DELETE lt_titles WHERE spras <> mv_language.
+    ELSE.
+      lv_all_languages = abap_true.
     ENDIF.
 
     CALL FUNCTION 'STREE_HIERARCHY_READ'
@@ -452,6 +457,10 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
                  ig_data = lt_refs ).
     io_xml->add( iv_name = 'TREE_TEXTS'
                  ig_data = lt_texts ).
+
+    IF io_xml->i18n_params( )-translation_languages IS NOT INITIAL.
+      serialize_lxe_texts( io_xml ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

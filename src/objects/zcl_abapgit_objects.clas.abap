@@ -184,11 +184,19 @@ CLASS zcl_abapgit_objects DEFINITION
       IMPORTING
         !is_item TYPE zif_abapgit_definitions=>ty_item
         !ii_log  TYPE REF TO zif_abapgit_log .
+    CLASS-METHODS determine_i18n_params
+      IMPORTING
+        !io_dot TYPE REF TO zcl_abapgit_dot_abapgit
+        !iv_main_language_only TYPE abap_bool
+      RETURNING
+        VALUE(rs_i18n_params) TYPE zif_abapgit_definitions=>ty_i18n_params
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -595,7 +603,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           lt_steps_id TYPE zif_abapgit_definitions=>ty_deserialization_step_tt,
           lt_steps    TYPE zif_abapgit_objects=>ty_step_data_tt,
           lx_exc      TYPE REF TO zcx_abapgit_exception.
-    DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
+    DATA lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
+    DATA ls_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params.
 
     FIELD-SYMBOLS: <ls_result>  TYPE zif_abapgit_definitions=>ty_result,
                    <lv_step_id> TYPE LINE OF zif_abapgit_definitions=>ty_deserialization_step_tt,
@@ -635,6 +644,10 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     check_objects_locked( iv_language = io_repo->get_dot_abapgit( )->get_main_language( )
                           it_items    = lt_items ).
+
+    ls_i18n_params = determine_i18n_params(
+      io_dot = io_repo->get_dot_abapgit( )
+      iv_main_language_only = io_repo->get_local_settings( )-main_language_only ).
 
     IF lines( lt_items ) = 1.
       ii_log->add_info( |>>> Deserializing 1 object| ).
@@ -690,6 +703,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           IF lo_files->is_json_metadata( ) = abap_false.
             "analyze XML in order to instantiate the proper serializer
             lo_xml = lo_files->read_xml( ).
+            lo_xml->i18n_params( ls_i18n_params ).
             ls_metadata = lo_xml->get_metadata( ).
           ELSE.
             " there's no XML and metadata for JSON format
@@ -840,6 +854,23 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     li_exit->deserialize_postprocess( is_step = is_step
                                       ii_log  = ii_log ).
+
+  ENDMETHOD.
+
+
+  METHOD determine_i18n_params.
+
+    IF io_dot IS BOUND.
+      rs_i18n_params-main_language         = io_dot->get_main_language( ).
+      rs_i18n_params-main_language_only    = iv_main_language_only.
+      rs_i18n_params-translation_languages = zcl_abapgit_lxe_texts=>get_translation_languages(
+        iv_main_language  = io_dot->get_main_language( )
+        it_i18n_languages = io_dot->get_i18n_languages( ) ).
+    ENDIF.
+
+    IF rs_i18n_params-main_language IS INITIAL.
+      rs_i18n_params-main_language = sy-langu.
+    ENDIF.
 
   ENDMETHOD.
 

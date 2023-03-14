@@ -10,6 +10,7 @@ CLASS ltcl_abapgit_gui_asset_manager DEFINITION
     METHODS get_mime_asset FOR TESTING RAISING zcx_abapgit_exception.
     METHODS get_base64_asset FOR TESTING RAISING zcx_abapgit_exception.
     METHODS get_all FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS register_and_overwrite FOR TESTING RAISING zcx_abapgit_exception.
 ENDCLASS.
 
 CLASS ltcl_abapgit_gui_asset_manager IMPLEMENTATION.
@@ -124,13 +125,38 @@ CLASS ltcl_abapgit_gui_asset_manager IMPLEMENTATION.
       iv_base64 = 'QEE=' ).
 
     lo_assetman->register_asset(
-      iv_url    = 'css/common.css'
+      iv_url    = 'css/common2.css'
       iv_type   = 'text/css'
       iv_inline = 'ABC' ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lines( lo_assetman->zif_abapgit_gui_asset_manager~get_all_assets( ) )
       exp = 2 ).
+
+  ENDMETHOD.
+
+  METHOD register_and_overwrite.
+
+    DATA lo_assetman TYPE REF TO zcl_abapgit_gui_asset_manager.
+    CREATE OBJECT lo_assetman.
+
+    lo_assetman->register_asset(
+      iv_url    = 'css/common.css'
+      iv_type   = 'text/css'
+      iv_inline = 'XYZ' ).
+
+    lo_assetman->register_asset(
+      iv_url    = 'css/common.css'
+      iv_type   = 'text/css'
+      iv_inline = 'ABC' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( lo_assetman->zif_abapgit_gui_asset_manager~get_all_assets( ) )
+      exp = 1 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_assetman->zif_abapgit_gui_asset_manager~get_text_asset( 'css/common.css' )
+      exp = 'ABC' ).
 
   ENDMETHOD.
 

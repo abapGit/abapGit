@@ -62,7 +62,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_doma IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
 
 
   METHOD adjust_exit.
@@ -386,9 +386,14 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    deserialize_texts( ii_xml   = io_xml
-                       is_dd01v = ls_dd01v
-                       it_dd07v = lt_dd07v ).
+    IF io_xml->i18n_params( )-translation_languages IS INITIAL.
+      deserialize_texts(
+        ii_xml   = io_xml
+        is_dd01v = ls_dd01v
+        it_dd07v = lt_dd07v ).
+    ELSE.
+      deserialize_lxe_texts( io_xml ).
+    ENDIF.
 
     deserialize_longtexts( ii_xml         = io_xml
                            iv_longtext_id = c_longtext_id_doma ).
@@ -504,8 +509,13 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
     io_xml->add( iv_name = 'DD07V_TAB'
                  ig_data = lt_dd07v ).
 
-    serialize_texts( ii_xml   = io_xml
-                     it_dd07v = lt_dd07v ).
+    IF io_xml->i18n_params( )-translation_languages IS INITIAL.
+      serialize_texts(
+        ii_xml   = io_xml
+        it_dd07v = lt_dd07v ).
+    ELSE.
+      serialize_lxe_texts( io_xml ).
+    ENDIF.
 
     serialize_longtexts( ii_xml         = io_xml
                          iv_longtext_id = c_longtext_id_doma ).
