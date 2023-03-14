@@ -605,7 +605,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           lx_exc      TYPE REF TO zcx_abapgit_exception.
     DATA lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
     DATA ls_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params.
-    data lo_timer TYPE REF TO zcl_abapgit_timer.
+    DATA lo_timer TYPE REF TO zcl_abapgit_timer.
 
     FIELD-SYMBOLS: <ls_result>  TYPE zif_abapgit_definitions=>ty_result,
                    <lv_step_id> TYPE LINE OF zif_abapgit_definitions=>ty_deserialization_step_tt,
