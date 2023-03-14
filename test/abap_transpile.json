@@ -193,7 +193,11 @@
       {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_not_created_when_canc", "note": "Void type: SCOMPKDTLN"},
       {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "package_created_when_confirm",  "note": "Void type: SCOMPKDTLN"},
 
-      {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_test_checksums", "method": "rebuild_simple", "note": "??"}
+      {"object": "ZCL_ABAPGIT_REPO_CHECKSUMS", "class": "ltcl_test_checksums", "method": "rebuild_simple", "note": "??"},
+
+      {"object": "ZCL_ABAPGIT_TIMER", "class": "ltcl_timer", "method": "run_timer", "note": "WAIT UP TO 1 SECOND ?"},
+      {"object": "ZCL_ABAPGIT_TIMER", "class": "ltcl_timer", "method": "run_timer_with_count", "note": "WAIT UP TO 1 SECOND ?"},
+      {"object": "ZCL_ABAPGIT_TIMER", "class": "ltcl_timer", "method": "run_timerrun_timer_with_text", "note": "WAIT UP TO 1 SECOND ?"}
     ]
   }
 }
