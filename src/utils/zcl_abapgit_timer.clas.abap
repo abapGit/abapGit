@@ -61,28 +61,32 @@ CLASS zcl_abapgit_timer IMPLEMENTATION.
     DATA:
       lv_timestamp TYPE timestampl,
       lv_runtime   TYPE timestampl,
-      lv_sec       TYPE p LENGTH 10 DECIMALS 2.
+      lv_sec       TYPE p LENGTH 11 DECIMALS 2.
 
-    GET TIME STAMP FIELD lv_timestamp.
+    IF mv_timer IS INITIAL.
+      rv_result = 'Runtime measurement has not been started'.
+    ELSE.
+      GET TIME STAMP FIELD lv_timestamp.
 
-    TRY.
-        lv_runtime = cl_abap_tstmp=>subtract(
-          tstmp1 = lv_timestamp
-          tstmp2 = mv_timer ).
-      CATCH cx_parameter_invalid.
-        rv_result = 'Error getting runtime measurement'.
-        RETURN.
-    ENDTRY.
+      TRY.
+          lv_runtime = cl_abap_tstmp=>subtract(
+            tstmp1 = lv_timestamp
+            tstmp2 = mv_timer ).
 
-    lv_sec = lv_runtime. " round to 2 decimal places
+          lv_sec = lv_runtime. " round to 2 decimal places
 
-    IF mv_count = 1.
-      rv_result = |1 object, |.
-    ELSEIF mv_count > 1.
-      rv_result = |{ mv_count } objects, |.
+          IF mv_count = 1.
+            rv_result = |1 object, |.
+          ELSEIF mv_count > 1.
+            rv_result = |{ mv_count } objects, |.
+          ENDIF.
+
+          rv_result = rv_result && |{ lv_sec } seconds|.
+
+        CATCH cx_parameter_invalid.
+          rv_result = 'Error getting runtime measurement'.
+      ENDTRY.
     ENDIF.
-
-    rv_result = rv_result && |{ lv_sec } seconds|.
 
     IF iv_output_as_status_message = abap_true.
       MESSAGE s000(oo) WITH mv_text rv_result.
