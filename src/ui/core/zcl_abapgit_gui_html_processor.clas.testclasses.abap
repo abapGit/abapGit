@@ -31,6 +31,8 @@ CLASS ltcl_gui_mock IMPLEMENTATION.
   ENDMETHOD.
   METHOD zif_abapgit_gui_services~get_log.
   ENDMETHOD.
+  METHOD zif_abapgit_gui_services~register_page_asset.
+  ENDMETHOD.
 
   METHOD get_asset.
     rs_asset = ms_last_cache_signature.

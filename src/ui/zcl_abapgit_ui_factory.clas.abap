@@ -48,12 +48,12 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_UI_FACTORY IMPLEMENTATION.
 
 
   METHOD get_asset_manager.
 
-    DATA lo_buf TYPE REF TO lcl_string_buffer.
+    DATA lo_buf TYPE REF TO zcl_abapgit_string_buffer.
     DATA lo_asset_man TYPE REF TO zcl_abapgit_gui_asset_manager.
 
     CREATE OBJECT lo_buf.
