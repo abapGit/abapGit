@@ -21,7 +21,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
     FIND REGEX iv_regex IN iv_result.
 
-    cl_aunit_assert=>assert_subrc(
+    cl_abap_unit_assert=>assert_subrc(
       act = sy-subrc
       msg = 'Did not return right measurement' ).
 
@@ -37,7 +37,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
     check_result(
       iv_result = lo_timer->end( )
-      iv_regex  = '1.[0-9][0-9] seconds' ).
+      iv_regex  = '1.0[0-9] seconds' ).
 
   ENDMETHOD.
 
@@ -51,7 +51,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
     check_result(
       iv_result = lo_timer->end( )
-      iv_regex  = '1 object, 1.[0-9][0-9] seconds' ).
+      iv_regex  = '1 object, 1.0[0-9] seconds' ).
 
     lo_timer = zcl_abapgit_timer=>create( iv_count = 1234 )->start( ).
 
@@ -59,7 +59,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
     check_result(
       iv_result = lo_timer->end( )
-      iv_regex  = '1234 objects, 1.[0-9][0-9] seconds' ).
+      iv_regex  = '1234 objects, 1.0[0-9] seconds' ).
 
   ENDMETHOD.
 
@@ -75,7 +75,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
     check_result(
       iv_result = lo_timer->end( )
-      iv_regex  = |{ lc_total } 1.[0-9][0-9] seconds| ).
+      iv_regex  = |{ lc_total } 1.0[0-9] seconds| ).
 
   ENDMETHOD.
 ENDCLASS.
