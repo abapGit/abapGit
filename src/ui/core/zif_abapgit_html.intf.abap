@@ -96,6 +96,7 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_id      TYPE string OPTIONAL
       !iv_class   TYPE string OPTIONAL
       !iv_hint    TYPE string OPTIONAL
+      !iv_format_single_line TYPE abap_bool DEFAULT abap_false
     RETURNING
       VALUE(ri_self) TYPE REF TO zif_abapgit_html.
 
@@ -106,6 +107,7 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_id      TYPE string OPTIONAL
       !iv_class   TYPE string OPTIONAL
       !iv_hint    TYPE string OPTIONAL
+      !iv_format_single_line TYPE abap_bool DEFAULT abap_true
       PREFERRED PARAMETER iv_content
     RETURNING
       VALUE(ri_self) TYPE REF TO zif_abapgit_html.
@@ -117,6 +119,7 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_id      TYPE string OPTIONAL
       !iv_class   TYPE string OPTIONAL
       !iv_hint    TYPE string OPTIONAL
+      !iv_format_single_line TYPE abap_bool DEFAULT abap_true
       PREFERRED PARAMETER iv_content
     RETURNING
       VALUE(ri_self) TYPE REF TO zif_abapgit_html.
