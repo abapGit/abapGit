@@ -34,13 +34,14 @@ CLASS ltcl_run_checks DEFINITION FOR TESTING RISK LEVEL HARMLESS
   DURATION SHORT FINAL.
 
   PUBLIC SECTION.
-    INTERFACES: zif_abapgit_sap_package.
+    INTERFACES zif_abapgit_sap_package.
+    INTERFACES zif_abapgit_sap_namespace.
 
   PRIVATE SECTION.
-    DATA: mt_results TYPE zif_abapgit_definitions=>ty_results_tt,
-          mo_instance TYPE REF TO zcl_abapgit_file_status,
-          mo_dot     TYPE REF TO zcl_abapgit_dot_abapgit,
-          mi_log     TYPE REF TO zif_abapgit_log.
+    DATA: mt_results  TYPE zif_abapgit_definitions=>ty_results_tt,
+          mo_instance TYPE REF TO lcl_status_consistency_checks,
+          mo_dot      TYPE REF TO zcl_abapgit_dot_abapgit,
+          mi_log      TYPE REF TO zif_abapgit_log.
 
     METHODS:
       append_result IMPORTING iv_obj_type TYPE trobjtype
@@ -118,6 +119,13 @@ CLASS ltcl_run_checks IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_namespace~exists.
+    rv_yes = boolc( iv_namespace <> 'NOTEXIST' ).
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_namespace~is_editable.
+  ENDMETHOD.
+
   METHOD append_result.
 
     DATA ls_result LIKE LINE OF mt_results.
@@ -150,6 +158,8 @@ CLASS ltcl_run_checks IMPLEMENTATION.
 
     zcl_abapgit_injector=>set_sap_package( iv_package     = '$MAIN_SUB'
                                            ii_sap_package = me ).
+
+    zcl_abapgit_injector=>set_sap_namespace( me ).
 
     CREATE OBJECT mo_instance
       EXPORTING
@@ -197,9 +207,7 @@ CLASS ltcl_run_checks IMPLEMENTATION.
                    iv_path     = '/'
                    iv_filename = 'zdoma2.doma.xml' ).
 
-    mo_instance->run_checks(
-      ii_log     = mi_log
-      it_results = mt_results ).
+    mi_log = mo_instance->run_checks( mt_results ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mi_log->count( )
@@ -246,9 +254,7 @@ CLASS ltcl_run_checks IMPLEMENTATION.
                    iv_path     = '/'
                    iv_filename = 'zdoma2.doma.xml' ).
 
-    mo_instance->run_checks(
-      ii_log     = mi_log
-      it_results = mt_results ).
+    mi_log = mo_instance->run_checks( mt_results ).
 
     " This one is not pure - incorrect path also triggers path vs package check
     cl_abap_unit_assert=>assert_equals(
@@ -300,9 +306,7 @@ CLASS ltcl_run_checks IMPLEMENTATION.
                    iv_path     = '/'
                    iv_filename = '$$zdoma2.doma.xml' ).
 
-    mo_instance->run_checks(
-      ii_log     = mi_log
-      it_results = mt_results ).
+    mi_log = mo_instance->run_checks( mt_results ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mi_log->count( )
@@ -353,9 +357,7 @@ CLASS ltcl_run_checks IMPLEMENTATION.
                    iv_path     = '/'
                    iv_filename = '$$zdoma1.doma.xml' ).
 
-    mo_instance->run_checks(
-      ii_log     = mi_log
-      it_results = mt_results ).
+    mi_log = mo_instance->run_checks( mt_results ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mi_log->count( )
@@ -397,9 +399,7 @@ CLASS ltcl_run_checks IMPLEMENTATION.
                    iv_path     = '/'
                    iv_filename = '' ).
 
-    mo_instance->run_checks(
-      ii_log     = mi_log
-      it_results = mt_results ).
+    mi_log = mo_instance->run_checks( mt_results ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mi_log->count( )
@@ -474,9 +474,7 @@ CLASS ltcl_run_checks IMPLEMENTATION.
                    iv_filename = 'zdoma1.doma.xml'
                    iv_packmove = 'X' ).
 
-    mo_instance->run_checks(
-      ii_log     = mi_log
-      it_results = mt_results ).
+    mi_log = mo_instance->run_checks( mt_results ).
 
     " Three files, but only two msg (for two changed objects)
     cl_abap_unit_assert=>assert_equals(
@@ -506,9 +504,7 @@ CLASS ltcl_run_checks IMPLEMENTATION.
         iv_root_package = '/NOTEXIST/Z'
         io_dot          = mo_dot.
 
-    mo_instance->run_checks(
-      ii_log     = mi_log
-      it_results = mt_results ).
+    mi_log = mo_instance->run_checks( mt_results ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mi_log->count( )
@@ -545,9 +541,7 @@ CLASS ltcl_run_checks IMPLEMENTATION.
         iv_root_package = '$MAIN'
         io_dot          = mo_dot.
 
-    mo_instance->run_checks(
-      ii_log     = mi_log
-      it_results = mt_results ).
+    mi_log = mo_instance->run_checks( mt_results ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mi_log->count( )

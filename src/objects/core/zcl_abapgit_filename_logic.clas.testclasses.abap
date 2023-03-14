@@ -9,6 +9,7 @@ CLASS ltcl_run_checks DEFINITION FOR TESTING RISK LEVEL HARMLESS
 
     METHODS:
       setup,
+      is_obj_def_file FOR TESTING,
       dot_abapgit FOR TESTING RAISING zcx_abapgit_exception,
       file_to_object FOR TESTING RAISING zcx_abapgit_exception,
       object_to_file FOR TESTING RAISING zcx_abapgit_exception,
@@ -42,6 +43,26 @@ CLASS ltcl_run_checks IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = abap_false
       act = lv_is_xml ).
+
+  ENDMETHOD.
+
+  METHOD is_obj_def_file.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_filename_logic=>is_obj_definition_file( zif_abapgit_definitions=>c_dot_abapgit )
+      exp = abap_false ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_filename_logic=>is_obj_definition_file( 'ztest.prog.xml' )
+      exp = abap_true ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_filename_logic=>is_obj_definition_file( 'ztest.prog.json' )
+      exp = abap_true ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_filename_logic=>is_obj_definition_file( 'ztest.prog.abap' )
+      exp = abap_false ).
 
   ENDMETHOD.
 

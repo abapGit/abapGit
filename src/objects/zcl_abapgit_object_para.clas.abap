@@ -8,11 +8,12 @@ CLASS zcl_abapgit_object_para DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS unlock
       IMPORTING
         !iv_paramid TYPE memoryid .
+
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_para IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
 
 
   METHOD unlock.
@@ -120,7 +121,6 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
           ls_tpara  TYPE tpara,
           ls_tparat TYPE tparat.
 
-
     SELECT SINGLE * FROM tpara INTO ls_tpara
       WHERE paramid = ms_item-obj_name.                 "#EC CI_GENBUFF
     IF sy-subrc = 0.
@@ -131,8 +131,6 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
 
     io_xml->read( EXPORTING iv_name = 'TPARA'
                   CHANGING cg_data = ls_tpara ).
-    io_xml->read( EXPORTING iv_name = 'TPARAT'
-                  CHANGING cg_data = ls_tparat ).
 
     CALL FUNCTION 'RS_CORR_INSERT'
       EXPORTING
@@ -155,8 +153,16 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
     MODIFY tpara FROM ls_tpara.                           "#EC CI_SUBRC
     ASSERT sy-subrc = 0.
 
+    io_xml->read(
+      EXPORTING iv_name = 'TPARAT'
+      CHANGING  cg_data = ls_tparat ).
+
     MODIFY tparat FROM ls_tparat.                         "#EC CI_SUBRC
     ASSERT sy-subrc = 0.
+
+    IF io_xml->i18n_params( )-translation_languages IS NOT INITIAL.
+      deserialize_lxe_texts( io_xml ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -217,7 +223,6 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
     DATA: ls_tpara  TYPE tpara,
           ls_tparat TYPE tparat.
 
-
     SELECT SINGLE * FROM tpara INTO ls_tpara
       WHERE paramid = ms_item-obj_name.                 "#EC CI_GENBUFF
     IF sy-subrc <> 0.
@@ -230,8 +235,16 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
 
     io_xml->add( iv_name = 'TPARA'
                  ig_data = ls_tpara ).
-    io_xml->add( iv_name = 'TPARAT'
-                 ig_data = ls_tparat ).
+
+    io_xml->add(
+      iv_name = 'TPARAT'
+      ig_data = ls_tparat ).
+    " Here only the original language is serialized,
+    " so it should be present for the moment. LXEs are just translations
+
+    IF io_xml->i18n_params( )-translation_languages IS NOT INITIAL.
+      serialize_lxe_texts( io_xml ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

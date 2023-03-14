@@ -30,24 +30,24 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
+CLASS zcl_abapgit_persist_migrate IMPLEMENTATION.
 
 
   METHOD gui_status_create.
 
     DATA ls_cua TYPE zcl_abapgit_objects_program=>ty_cua.
 
-    IF gui_status_exists( ) = abap_true.
-      RETURN.
-    ENDIF.
-
     IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_false.
       RETURN. " No autocreation for full version
     ENDIF.
 
+    IF gui_status_exists( ) = abap_true.
+      RETURN.
+    ENDIF.
+
     ls_cua = lcl_own_cua_provider=>get( ).
 
-    IF ls_cua IS INITIAL. " Full version or Something wrong with abapmerged version
+    IF ls_cua IS INITIAL. " Full version or something wrong with abapmerged version
       RETURN.
     ENDIF.
 
@@ -209,9 +209,7 @@ CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
       lock_create( ).
     ENDIF.
 
-    IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true AND gui_status_exists( ) = abap_false.
-      gui_status_create( ).
-    ENDIF.
+    gui_status_create( ).
 
   ENDMETHOD.
 
