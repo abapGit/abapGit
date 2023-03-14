@@ -651,7 +651,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
         iv_current = sy-tabix
         iv_text    = |Serialize { <ls_tadir>-obj_name }, { lv_max } threads| ).
 
-      IF lv_max = 1 OR lv_count = 1.
+      IF lv_max = 1.
         run_sequential( <ls_tadir> ).
       ELSE.
         run_parallel(
