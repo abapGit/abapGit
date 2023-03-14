@@ -37,8 +37,6 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
         zcx_abapgit_exception .
   PRIVATE SECTION.
 
-    TYPES: ty_time TYPE p LENGTH 10 DECIMALS 2.
-
     DATA mo_settings TYPE REF TO zcl_abapgit_settings .
     DATA mx_error TYPE REF TO zcx_abapgit_exception .
     DATA mo_exception_viewer TYPE REF TO zcl_abapgit_exception_viewer .
@@ -59,7 +57,7 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
         zcx_abapgit_exception .
     METHODS footer
       IMPORTING
-        !iv_time       TYPE ty_time
+        !iv_time       TYPE string
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS render_link_hints
@@ -91,7 +89,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -131,7 +129,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
                     iv_txt = ri_html->icon( 'git-alt' ) ).
     ri_html->add_a( iv_act = zif_abapgit_definitions=>c_action-homepage
                     iv_txt = ri_html->icon( iv_name = 'abapgit'
-                                            iv_hint = |{ iv_time } sec| ) ).
+                                            iv_hint = iv_time ) ).
     ri_html->add( '</div>' ).
     ri_html->add( |<div class="version">{ zif_abapgit_version=>c_abap_version }{ lv_version_detail }</div>| ).
     ri_html->add( '</td>' ).
@@ -347,13 +345,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     DATA:
       li_script TYPE REF TO zif_abapgit_html,
-      lv_start  TYPE i,
-      lv_end    TYPE i,
-      lv_total  TYPE ty_time.
+      lo_timer  TYPE REF TO zcl_abapgit_timer.
 
     register_handlers( ).
 
-    GET RUN TIME FIELD lv_start.
+    lo_timer = zcl_abapgit_timer=>create( )->start( ).
 
     " Real page
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
@@ -376,10 +372,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
       ii_html          = ri_html
       iv_part_category = c_html_parts-hidden_forms ).
 
-    GET RUN TIME FIELD lv_end.
-    lv_total = ( lv_end - lv_start ) / 1000 / 1000.
-
-    ri_html->add( footer( lv_total ) ).
+    ri_html->add( footer( lo_timer->end( ) ) ).
 
     ri_html->add( '</div>' ).
 
