@@ -614,46 +614,7 @@ div.debug_container p {
   margin: 0px;
 }
 
-/* DB ENTRIES */
-
-div.db_list {
-  padding: 0.5em;
-  overflow-x: auto;
-}
-
-table.db_tab {
-  table-layout: fixed;
-}
-table.db_tab pre {
-  display: inline-block;
-  overflow: hidden;
-  word-wrap:break-word;
-  white-space: pre-wrap;
-  margin: 0px;
-  width: 30em;
-}
-table.db_tab tr.firstrow td { padding-top: 0.5em; }
-table.db_tab th {
-  text-align: left;
-  padding: 0.5em;
-}
-table.db_tab thead tr {
-  border-bottom: 1px solid;
-}
-table.db_tab tfoot tr {
-  border-top: 1px solid;
-}
-table.db_tab td {
-  padding: 4px 8px;
-  vertical-align: middle;
-  word-break: break-all;
-}
-table.db_tab th.package {
-    width: 45ch;
-}
-table.db_tab td.data {
-  font-style: italic;
-}
+/* *** */
 
 li.action_link.enabled{
   visibility: visible;
@@ -666,41 +627,6 @@ li.action_link:not(enabled){
   position: fixed; /* so it does not take up space when hidden */
   display: none;
 }
-
-/* DB ENTRY DISPLAY */
-
-div.db_entry {
-  padding: 0.5em;
-}
-
-div.db_entry pre {
-  display: block;
-  font-size: 10pt;
-  overflow: hidden;
-  word-wrap:break-word;
-  white-space: pre-wrap;
-  border: 1px  solid;
-  border-radius: 3px;
-  padding: 0.5em;
-  margin: 0.5em 0em;
-  width: 98%;
-}
-
-div.db_entry textarea {
-  margin: 0.5em 0em;
-  width: 98%;
-}
-div.db_entry table.toolbar {
-  width: 100%;
-}
-
-table.tag {
-  display: inline-block;
-  border: 1px  solid;
-  border-radius: 3px;
-  margin-right: 0.5em;
-}
-table.tag td { padding: 0.2em 0.5em; }
 
 /* TUTORIAL */
 

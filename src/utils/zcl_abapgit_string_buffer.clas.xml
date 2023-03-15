@@ -3,9 +3,9 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOCLASS>
-    <CLSNAME>ZCL_ABAPGIT_GUI_PAGE_DB_EDIT</CLSNAME>
+    <CLSNAME>ZCL_ABAPGIT_STRING_BUFFER</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - GUI Database Edit</DESCRIPT>
+    <DESCRIPT>abapGit - String Buffer</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

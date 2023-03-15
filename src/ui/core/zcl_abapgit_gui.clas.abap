@@ -109,7 +109,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
 
   METHOD back.
@@ -505,5 +505,20 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
   METHOD zif_abapgit_gui_services~register_event_handler.
     ASSERT ii_event_handler IS BOUND.
     INSERT ii_event_handler INTO mt_event_handlers INDEX 1.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_services~register_page_asset.
+
+    " Maybe forbid registering cachable existing assets, maybe this is the right place (see also asset_man commments)
+
+    mi_asset_man->register_asset(
+      iv_url = iv_url
+      iv_type = iv_type
+      iv_mime_name = iv_mime_name
+      iv_inline = iv_inline
+      " This registering will happen after initialization so all cachable already cached
+      iv_cachable = abap_false ).
+
   ENDMETHOD.
 ENDCLASS.
