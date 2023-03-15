@@ -1,0 +1,40 @@
+/*
+ * PAGE DB CSS
+ */
+
+/* LAYOUT */
+
+.db-list {
+  padding: 0.5em;
+  overflow-x: auto;
+}
+.db-list table { table-layout: fixed; }
+.db-list table pre {
+  display: inline-block;
+  overflow: hidden;
+  word-wrap:break-word;
+  white-space: pre-wrap;
+  margin: 0px;
+  width: 30em;
+}
+.db-list table th {
+  text-align: left;
+  padding: 0.5em;
+}
+.db-list table thead tr { border-bottom: 1px solid; }
+.db-list table td {
+  padding: 4px 0.5em;
+  vertical-align: middle;
+  word-break: break-all;
+}
+.db-list table td.data { font-style: italic; }
+
+/* COLORS */
+
+.db-list { background-color: var(--theme-table-background-color); }
+.db-list table td      { color: var(--theme-primary-font-color); }
+.db-list table td.data { color: var(--theme-greyscale-dark); }
+.db-list table tbody tr:hover td  { background-color: rgba(0, 0, 0, 0.075); }
+.db-list table tbody tr:active td { background-color: #f4f4f4; } /* Needed? */
+.db-list table th { color: var(--theme-link-color); }
+.db-list table thead tr { border-color: var(--theme-table-border-color); }
