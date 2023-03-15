@@ -6,28 +6,23 @@ CLASS ltcl_test_base DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT A
                          iv_content TYPE string OPTIONAL
                RAISING   zcx_abapgit_exception.
     DATA:
-      mo_asset_manager TYPE REF TO zcl_abapgit_gui_asset_manager,
+      mi_asset_manager TYPE REF TO zif_abapgit_gui_asset_manager,
       mo_cut           TYPE REF TO zcl_abapgit_gui_css_processor.
   PRIVATE SECTION.
     METHODS:
-      setup,
-      teardown.
+      setup.
 ENDCLASS.
 
 CLASS ltcl_test_base IMPLEMENTATION.
   METHOD setup.
-    CREATE OBJECT mo_asset_manager.
+    mi_asset_manager = zcl_abapgit_gui_asset_manager=>create( ).
     CREATE OBJECT mo_cut
       EXPORTING
-        ii_asset_manager = mo_asset_manager.
-  ENDMETHOD.
-
-  METHOD teardown.
-    FREE: mo_cut, mo_asset_manager.
+        ii_asset_manager = mi_asset_manager.
   ENDMETHOD.
 
   METHOD add_file.
-    mo_asset_manager->register_asset(
+    mi_asset_manager->register_asset(
       iv_url = iv_url
       iv_type = 'text/css'
       iv_inline = iv_content ).

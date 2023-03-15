@@ -61,6 +61,7 @@ CLASS ltcl_run_checks DEFINITION FOR TESTING RISK LEVEL HARMLESS
       neg_empty_filenames FOR TESTING RAISING zcx_abapgit_exception,
       package_move FOR TESTING RAISING zcx_abapgit_exception,
       check_namespace FOR TESTING RAISING zcx_abapgit_exception,
+      check_namespace_aff FOR TESTING RAISING zcx_abapgit_exception,
       check_sub_package FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
@@ -498,6 +499,35 @@ CLASS ltcl_run_checks IMPLEMENTATION.
                    iv_package  = '/NOTEXIST/Z'
                    iv_path     = '/'
                    iv_filename = '#notexist#zclass1.clas.xml' ).
+
+    CREATE OBJECT mo_instance
+      EXPORTING
+        iv_root_package = '/NOTEXIST/Z'
+        io_dot          = mo_dot.
+
+    mi_log = mo_instance->run_checks( mt_results ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mi_log->count( )
+      exp = 1 ).
+
+    ltcl_util=>check_contains(
+      ii_log     = mi_log
+      iv_pattern = |Namespace *| ).
+
+  ENDMETHOD.
+
+  METHOD check_namespace_aff.
+
+    " 6 Missing namespace
+    append_result( iv_obj_type = 'CLAS'
+                   iv_obj_name = '/NOTEXIST/ZCLASS1'
+                   iv_match    = ' '
+                   iv_lstate   = ' '
+                   iv_rstate   = 'A'
+                   iv_package  = '/NOTEXIST/Z'
+                   iv_path     = '/'
+                   iv_filename = '(notexist)zclass1.clas.json' ).
 
     CREATE OBJECT mo_instance
       EXPORTING
