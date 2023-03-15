@@ -4,8 +4,9 @@ CLASS zcl_abapgit_gui_asset_manager DEFINITION PUBLIC FINAL CREATE PUBLIC .
 
     INTERFACES zif_abapgit_gui_asset_manager.
 
-    ALIASES:
-      register_asset FOR zif_abapgit_gui_asset_manager~register_asset.
+    CLASS-METHODS create
+      RETURNING
+        VALUE(ro_asset_manager) TYPE REF TO zcl_abapgit_gui_asset_manager.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -40,7 +41,12 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
+CLASS zcl_abapgit_gui_asset_manager IMPLEMENTATION.
+
+
+  METHOD create.
+    CREATE OBJECT ro_asset_manager.
+  ENDMETHOD.
 
 
   METHOD get_mime_asset.
