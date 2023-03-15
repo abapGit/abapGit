@@ -1,0 +1,61 @@
+/*
+ * PAGE DB ENTRY CSS
+ */
+
+/* LAYOUT */
+
+.db-entry {
+  padding: 0.5em;
+}
+.db-entry pre {
+  display: block;
+  font-size: 10pt;
+  overflow: hidden;
+  word-wrap:break-word;
+  white-space: pre-wrap;
+  border: 1px  solid;
+  border-radius: 3px;
+  padding: 0.5em;
+  margin: 0.5em 0em;
+  width: 98%;
+}
+.db-entry textarea {
+  margin: 0.5em 0em;
+  width: 98%;
+}
+.db-entry .toolbar {
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+}
+.db-entry dl.entry-tag div {
+  display: inline-block;
+  border: 1px solid;
+  border-radius: 3px;
+  margin-right: 0.5em;
+}
+.db-entry dl.entry-tag div:last-child {
+  margin-right: 0px;
+}
+.db-entry dt, .db-entry dd {
+  display: inline-block;
+  margin-left: 0px;
+  padding: 2px 5px;
+}
+.db-entry dt::after {  content: ":" }
+
+/* COLORS */
+
+.db-entry {
+  background-color: var(--theme-container-background-color);
+}
+.db-entry pre, .db-entry textarea {
+  background-color: var(--theme-table-background-color);
+  border-color: var(--theme-container-border-color);
+}
+.db-entry dl.entry-tag div {
+  border-color: hsl(206, 20%, 75%);
+  background-color: hsl(206, 20%, 90%);
+}
+.db-entry dt {
+  background-color: hsl(206, 20%, 75%);
+}

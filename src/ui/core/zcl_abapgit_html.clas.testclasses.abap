@@ -125,9 +125,13 @@ CLASS ltcl_html IMPLEMENTATION.
   METHOD td.
 
     mo_html->td( 'Hello' ).
+    mo_html->td(
+      iv_format_single_line = abap_false
+      iv_content = 'Hello' ).
     cl_abap_unit_assert=>assert_equals(
       act = mo_html->render( )
       exp =
+        '<td>Hello</td>' && cl_abap_char_utilities=>newline &&
         '<td>' && cl_abap_char_utilities=>newline &&
         '  Hello' && cl_abap_char_utilities=>newline &&
         '</td>' ).
@@ -137,9 +141,13 @@ CLASS ltcl_html IMPLEMENTATION.
   METHOD th.
 
     mo_html->th( 'Hello' ).
+    mo_html->th(
+      iv_format_single_line = abap_false
+      iv_content = 'Hello' ).
     cl_abap_unit_assert=>assert_equals(
       act = mo_html->render( )
       exp =
+        '<th>Hello</th>' && cl_abap_char_utilities=>newline &&
         '<th>' && cl_abap_char_utilities=>newline &&
         '  Hello' && cl_abap_char_utilities=>newline &&
         '</th>' ).
@@ -173,6 +181,10 @@ CLASS ltcl_html IMPLEMENTATION.
       iv_hint    = 'hint'
       iv_id      = 'id'
       iv_content = 'Hello' ).
+    mo_html->wrap(
+      iv_tag     = 'td'
+      iv_content = 'Hello'
+      iv_format_single_line = abap_true ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_html->render( )
@@ -183,7 +195,8 @@ CLASS ltcl_html IMPLEMENTATION.
         '</td>' && cl_abap_char_utilities=>newline &&
         '<td id="id" class="class" title="hint">' && cl_abap_char_utilities=>newline &&
         '  Hello' && cl_abap_char_utilities=>newline &&
-        '</td>' ).
+        '</td>' && cl_abap_char_utilities=>newline &&
+        '<td>Hello</td>' ).
 
   ENDMETHOD.
 
