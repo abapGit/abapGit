@@ -613,8 +613,10 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 * serializes only objects
 
     DATA: lv_max      TYPE i,
+          lv_count    TYPE i,
           li_progress TYPE REF TO zif_abapgit_progress,
           li_exit     TYPE REF TO zif_abapgit_exit,
+          lo_timer    TYPE REF TO zcl_abapgit_timer,
           lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
@@ -635,7 +637,13 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       CHANGING
         ct_tadir   = lt_tadir ).
 
-    li_progress = zcl_abapgit_progress=>get_instance( lines( lt_tadir ) ).
+    lv_count = lines( lt_tadir ).
+
+    li_progress = zcl_abapgit_progress=>get_instance( lv_count ).
+
+    lo_timer = zcl_abapgit_timer=>create(
+      iv_text  = 'Serialize:'
+      iv_count = lv_count )->start( ).
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
 
@@ -653,6 +661,8 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
+    li_progress->off( ).
+
     WAIT UNTIL mv_free = lv_max UP TO 120 SECONDS.
     rt_files = mt_files.
     FREE mt_files.
@@ -666,6 +676,8 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
         ii_log     = ii_log
       CHANGING
         ct_files   = rt_files ).
+
+    lo_timer->end( abap_true ).
 
   ENDMETHOD.
 ENDCLASS.

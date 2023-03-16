@@ -196,7 +196,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
+CLASS zcl_abapgit_objects IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -605,6 +605,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           lx_exc      TYPE REF TO zcx_abapgit_exception.
     DATA lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
     DATA ls_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params.
+    DATA lo_timer TYPE REF TO zcl_abapgit_timer.
 
     FIELD-SYMBOLS: <ls_result>  TYPE zif_abapgit_definitions=>ty_result,
                    <lv_step_id> TYPE LINE OF zif_abapgit_definitions=>ty_deserialization_step_tt,
@@ -641,6 +642,10 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     li_progress = zcl_abapgit_progress=>get_instance( lines( lt_results ) ).
 
     lt_items = map_results_to_items( lt_results ).
+
+    lo_timer = zcl_abapgit_timer=>create(
+      iv_text  = 'Deserialize:'
+      iv_count = lines( lt_items ) )->start( ).
 
     check_objects_locked( iv_language = io_repo->get_dot_abapgit( )->get_main_language( )
                           it_items    = lt_items ).
@@ -773,6 +778,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     DELETE ADJACENT DUPLICATES FROM rt_accessed_files. " Just in case
 
     zcl_abapgit_default_transport=>get_instance( )->reset( ).
+
+    lo_timer->end( abap_true ).
 
   ENDMETHOD.
 
