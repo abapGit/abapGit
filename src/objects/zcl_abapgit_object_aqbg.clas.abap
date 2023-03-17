@@ -36,8 +36,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AQBG IMPLEMENTATION.
     )->add(
       iv_table     = 'AQGDBBG'
       iv_field     = 'BGUNAM'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
-    ).
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user ).
 
     ro_result->add(
       iv_table     = 'AQGDBBG'
@@ -46,8 +45,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AQBG IMPLEMENTATION.
     )->add(
       iv_table     = 'AQGDBBG'
       iv_field     = 'BGUDAT'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-date
-    ).
+      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-date ).
 
     ro_result->add(
       iv_table     = 'AQGDBBG'
