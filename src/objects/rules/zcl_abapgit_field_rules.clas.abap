@@ -23,18 +23,39 @@ CLASS zcl_abapgit_field_rules DEFINITION
 
     METHODS fill_value
       IMPORTING
-        iv_rule  TYPE zif_abapgit_field_rules=>ty_fill_rule
+        iv_rule    TYPE zif_abapgit_field_rules=>ty_fill_rule
+        iv_package TYPE devclass
       CHANGING
-        cv_value TYPE any.
+        cv_value   TYPE any.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_field_rules IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_FIELD_RULES IMPLEMENTATION.
+
 
   METHOD create.
     CREATE OBJECT ro_result TYPE zcl_abapgit_field_rules.
   ENDMETHOD.
+
+
+  METHOD fill_value.
+    CASE iv_rule.
+      WHEN zif_abapgit_field_rules=>c_fill_rule-date.
+        cv_value = sy-datum.
+      WHEN zif_abapgit_field_rules=>c_fill_rule-time.
+        cv_value = sy-uzeit.
+      WHEN zif_abapgit_field_rules=>c_fill_rule-timestamp.
+        GET TIME STAMP FIELD cv_value.
+      WHEN zif_abapgit_field_rules=>c_fill_rule-user.
+        cv_value = sy-uname.
+      WHEN zif_abapgit_field_rules=>c_fill_rule-client.
+        cv_value = sy-mandt.
+      WHEN zif_abapgit_field_rules=>c_fill_rule-package.
+        cv_value = iv_package.
+    ENDCASE.
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_field_rules~add.
     DATA ls_item TYPE ty_item.
@@ -68,6 +89,7 @@ CLASS zcl_abapgit_field_rules IMPLEMENTATION.
     ENDLOOP.
   ENDMETHOD.
 
+
   METHOD zif_abapgit_field_rules~apply_fill_logic.
     DATA ls_item TYPE ty_item.
 
@@ -82,27 +104,14 @@ CLASS zcl_abapgit_field_rules IMPLEMENTATION.
       LOOP AT mt_item INTO ls_item WHERE tabname = iv_table.
         ASSIGN COMPONENT ls_item-fieldname OF STRUCTURE <ls_data> TO <lv_value>.
         IF sy-subrc = 0.
-          fill_value( EXPORTING iv_rule  = ls_item-fill_rule
-                      CHANGING  cv_value = <lv_value> ).
+          fill_value(
+            EXPORTING
+              iv_rule    = ls_item-fill_rule
+              iv_package = iv_package
+            CHANGING
+              cv_value   = <lv_value> ).
         ENDIF.
       ENDLOOP.
     ENDLOOP.
   ENDMETHOD.
-
-
-  METHOD fill_value.
-    CASE iv_rule.
-      WHEN zif_abapgit_field_rules=>c_fill_rule-date.
-        cv_value = sy-datum.
-      WHEN zif_abapgit_field_rules=>c_fill_rule-time.
-        cv_value = sy-uzeit.
-      WHEN zif_abapgit_field_rules=>c_fill_rule-timestamp.
-        GET TIME STAMP FIELD cv_value.
-      WHEN zif_abapgit_field_rules=>c_fill_rule-user.
-        cv_value = sy-uname.
-      WHEN zif_abapgit_field_rules=>c_fill_rule-client.
-        cv_value = sy-mandt.
-    ENDCASE.
-  ENDMETHOD.
-
 ENDCLASS.
