@@ -56,7 +56,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AQBG IMPLEMENTATION.
 
 
   METHOD get_generic.
-* transaction SQ03
+    " transaction SQ03
     CREATE OBJECT ro_generic
       EXPORTING
         is_item        = ms_item
@@ -129,6 +129,26 @@ CLASS ZCL_ABAPGIT_OBJECT_AQBG IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
+
+    DATA lt_bdcdata TYPE TABLE OF bdcdata.
+
+    FIELD-SYMBOLS <ls_bdcdata> LIKE LINE OF lt_bdcdata.
+
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-program  = 'SAPMS38S'.
+    <ls_bdcdata>-dynpro   = '0050'.
+    <ls_bdcdata>-dynbegin = abap_true.
+
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-fnam = 'RS38S-BGNUM'.
+    <ls_bdcdata>-fval = ms_item-obj_name.
+
+    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+      iv_tcode      = 'SQ03'
+      it_bdcdata    = lt_bdcdata ).
+
+    rv_exit = abap_true.
+
   ENDMETHOD.
 
 
