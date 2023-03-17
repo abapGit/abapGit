@@ -334,17 +334,17 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
       CREATE DATA lr_ref TYPE STANDARD TABLE OF (<ls_table>-tobj_name).
       ASSIGN lr_ref->* TO <lt_data>.
 
+      io_xml->read(
+        EXPORTING
+          iv_name = <ls_table>-tobj_name
+        CHANGING
+          cg_data = <lt_data> ).
       apply_fill_logic(
         EXPORTING
           iv_table   = <ls_table>-tobj_name
           iv_package = iv_package
         CHANGING
           ct_data    = <lt_data> ).
-      io_xml->read(
-        EXPORTING
-          iv_name = <ls_table>-tobj_name
-        CHANGING
-          cg_data = <lt_data> ).
 
       INSERT (<ls_table>-tobj_name) FROM TABLE <lt_data>.
       IF sy-subrc <> 0.
