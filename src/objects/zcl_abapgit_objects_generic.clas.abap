@@ -59,7 +59,8 @@ CLASS zcl_abapgit_objects_generic DEFINITION
         zcx_abapgit_exception .
     METHODS deserialize_data
       IMPORTING
-        !io_xml TYPE REF TO zif_abapgit_xml_input
+        !io_xml     TYPE REF TO zif_abapgit_xml_input
+        !iv_package TYPE devclass
       RAISING
         zcx_abapgit_exception .
     METHODS distribute_name_to_components
@@ -106,23 +107,25 @@ CLASS zcl_abapgit_objects_generic DEFINITION
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
-    DATA mo_field_rules TYPE REF TO zif_abapgit_field_rules.
+
+    DATA mo_field_rules TYPE REF TO zif_abapgit_field_rules .
 
     METHODS apply_clear_logic
       IMPORTING
-        iv_table TYPE objsl-tobj_name
+        !iv_table TYPE objsl-tobj_name
       CHANGING
-        ct_data  TYPE STANDARD TABLE.
+        !ct_data  TYPE STANDARD TABLE .
     METHODS apply_fill_logic
       IMPORTING
-        iv_table TYPE objsl-tobj_name
+        !iv_table   TYPE objsl-tobj_name
+        !iv_package TYPE devclass
       CHANGING
-        ct_data  TYPE STANDARD TABLE.
+        !ct_data    TYPE STANDARD TABLE .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
 
 
   METHOD after_import.
@@ -169,8 +172,12 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
 
   METHOD apply_fill_logic.
     IF mo_field_rules IS BOUND.
-      mo_field_rules->apply_fill_logic( EXPORTING iv_table = |{ iv_table }|
-                                        CHANGING  ct_data  = ct_data ).
+      mo_field_rules->apply_fill_logic(
+        EXPORTING
+          iv_table   = |{ iv_table }|
+          iv_package = iv_package
+        CHANGING
+          ct_data    = ct_data ).
     ENDIF.
   ENDMETHOD.
 
@@ -303,7 +310,9 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
 
     delete( iv_package ).
 
-    deserialize_data( io_xml ).
+    deserialize_data(
+      io_xml     = io_xml
+      iv_package = iv_package ).
 
     after_import( ).
 
@@ -325,8 +334,12 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
       CREATE DATA lr_ref TYPE STANDARD TABLE OF (<ls_table>-tobj_name).
       ASSIGN lr_ref->* TO <lt_data>.
 
-      apply_fill_logic( EXPORTING iv_table = <ls_table>-tobj_name
-                        CHANGING  ct_data  = <lt_data> ).
+      apply_fill_logic(
+        EXPORTING
+          iv_table   = <ls_table>-tobj_name
+          iv_package = iv_package
+        CHANGING
+          ct_data    = <lt_data> ).
       io_xml->read(
         EXPORTING
           iv_name = <ls_table>-tobj_name

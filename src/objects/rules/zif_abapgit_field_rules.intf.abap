@@ -8,6 +8,7 @@ INTERFACE zif_abapgit_field_rules
       timestamp TYPE ty_fill_rule VALUE 'TS',
       user      TYPE ty_fill_rule VALUE 'UR',
       client    TYPE ty_fill_rule VALUE 'CT',
+      package   TYPE ty_fill_rule VALUE 'PK',
     END OF c_fill_rule.
 
   METHODS add
@@ -24,7 +25,8 @@ INTERFACE zif_abapgit_field_rules
       ct_data  TYPE STANDARD TABLE.
   METHODS apply_fill_logic
     IMPORTING
-      iv_table TYPE tabname
+      iv_table   TYPE tabname
+      iv_package TYPE devclass
     CHANGING
-      ct_data  TYPE STANDARD TABLE.
+      ct_data    TYPE STANDARD TABLE.
 ENDINTERFACE.
