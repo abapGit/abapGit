@@ -217,6 +217,10 @@ ENDCLASS.
 CLASS ltcl_i18n DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
 
   PRIVATE SECTION.
+    CONSTANTS:
+      c_english TYPE sy-langu VALUE 'E',
+      c_german  TYPE sy-langu VALUE 'D'.
+
     DATA:
       mo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit,
       mo_cut         TYPE REF TO zcl_abapgit_serialize.
@@ -235,8 +239,8 @@ CLASS ltcl_i18n IMPLEMENTATION.
     DATA ls_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
 
     " Main language: English, Translations: German
-    ls_data-master_language = 'E'.
-    INSERT 'DE' INTO TABLE ls_data-i18n_languages.
+    ls_data-master_language = c_english.
+    " ls_data-i18n_languages needs to be initial to get classic I18N data
 
     TRY.
         CREATE OBJECT mo_dot_abapgit
@@ -291,14 +295,14 @@ CLASS ltcl_i18n IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = ls_dd02v-ddlanguage
-      exp = 'E' ).
+      exp = c_english ).
 
     lo_input->zif_abapgit_xml_input~read( EXPORTING iv_name = 'I18N_LANGS'
                                           CHANGING  cg_data = lt_i18n_langs ).
 
     cl_abap_unit_assert=>assert_not_initial( lt_i18n_langs ).
 
-    READ TABLE lt_i18n_langs ASSIGNING <ls_i18n_langs> WITH KEY table_line = 'D'.
+    READ TABLE lt_i18n_langs ASSIGNING <ls_i18n_langs> WITH KEY table_line = c_german.
     cl_abap_unit_assert=>assert_subrc( ).
 
   ENDMETHOD.

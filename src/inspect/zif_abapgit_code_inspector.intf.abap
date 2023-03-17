@@ -10,7 +10,12 @@ INTERFACE zif_abapgit_code_inspector
       VALUE(rt_list) TYPE scit_alvlist
     RAISING
       zcx_abapgit_exception .
+
   METHODS is_successful
     RETURNING
       VALUE(rv_success) TYPE abap_bool .
+
+  METHODS get_summary
+    RETURNING
+      VALUE(rv_summary) TYPE string.
 ENDINTERFACE.

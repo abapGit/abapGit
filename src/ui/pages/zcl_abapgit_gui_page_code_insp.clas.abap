@@ -64,7 +64,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
 
   METHOD ask_user_for_check_variant.
@@ -173,7 +173,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
     register_handlers( ).
 
-    ri_html->add( render_variant( mv_check_variant ) ).
+    ri_html->add( render_variant(
+      iv_variant = mv_check_variant
+      iv_summary = mv_summary ) ).
 
     IF lines( mt_result ) = 0.
       ri_html->add( '<div class="dummydiv success">' ).
@@ -198,6 +200,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
     mt_result = li_code_inspector->run(
       iv_variant = |{ mv_check_variant }|
       iv_save    = abap_true ).
+
+    mv_summary = li_code_inspector->get_summary( ).
 
     DELETE mt_result WHERE kind = 'N'.
 
