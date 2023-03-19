@@ -13,6 +13,11 @@ CLASS zcl_abapgit_data_serializer DEFINITION
 
     CONSTANTS c_max_records TYPE i VALUE 20000 ##NO_TEXT.
 
+    METHODS does_table_exist
+      IMPORTING
+        !iv_name         TYPE tadir-obj_name
+      RETURNING
+        VALUE(rv_exists) TYPE abap_bool .
     METHODS convert_itab_to_json
       IMPORTING
         !ir_data         TYPE REF TO data
@@ -69,6 +74,19 @@ CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD does_table_exist.
+
+    cl_abap_typedescr=>describe_by_name(
+      EXPORTING
+        p_name         = iv_name
+      EXCEPTIONS
+        type_not_found = 1
+        OTHERS         = 2 ).
+    rv_exists = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.
+
+
   METHOD read_database_table.
 
     DATA lv_records TYPE i.
@@ -105,9 +123,11 @@ CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
   METHOD zif_abapgit_data_serializer~serialize.
 
     DATA lt_configs TYPE zif_abapgit_data_config=>ty_config_tt.
-    DATA ls_config LIKE LINE OF lt_configs.
-    DATA ls_file LIKE LINE OF rt_files.
-    DATA lr_data TYPE REF TO data.
+    DATA ls_config  LIKE LINE OF lt_configs.
+    DATA ls_file    LIKE LINE OF rt_files.
+    DATA lr_data    TYPE REF TO data.
+    DATA lv_exists  TYPE abap_bool.
+
 
     ls_file-path = zif_abapgit_data_config=>c_default_path.
     lt_configs = ii_config->get_configs( ).
@@ -116,18 +136,18 @@ CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
       ASSERT ls_config-type = zif_abapgit_data_config=>c_data_type-tabu. " todo
       ASSERT ls_config-name IS NOT INITIAL.
 
-      TRY.
-          lr_data = read_database_table(
-            iv_name  = ls_config-name
-            it_where = ls_config-where ).
+      lv_exists = does_table_exist( ls_config-name ).
+      IF lv_exists = abap_true.
+        lr_data = read_database_table(
+          iv_name  = ls_config-name
+          it_where = ls_config-where ).
 
-          ls_file-data = convert_itab_to_json(
-            ir_data         = lr_data
-            iv_skip_initial = ls_config-skip_initial ).
-        CATCH zcx_abapgit_exception.
-          " DB table might not yet exist
-          ls_file-data = zcl_abapgit_convert=>string_to_xstring_utf8( '[]' ).
-      ENDTRY.
+        ls_file-data = convert_itab_to_json(
+          ir_data         = lr_data
+          iv_skip_initial = ls_config-skip_initial ).
+      ELSE.
+        ls_file-data = zcl_abapgit_convert=>string_to_xstring_utf8( '[]' ).
+      ENDIF.
 
       ls_file-filename = zcl_abapgit_data_utils=>build_filename( ls_config ).
       ls_file-sha1 = zcl_abapgit_hash=>sha1_blob( ls_file-data ).
