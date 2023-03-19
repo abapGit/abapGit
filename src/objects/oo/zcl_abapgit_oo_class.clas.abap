@@ -263,7 +263,7 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
   METHOD repair_redefinitions.
 
-    " Same logic as SE24 > Utilities > Clean-up > lt_redefinitions (LSEODCCO)
+    " Same logic as SE24 > Utilities > Clean-up > Redefinitions (LSEODCCO)
 
     DATA:
       lt_inheritance     TYPE vseoextend,
