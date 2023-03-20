@@ -35,7 +35,7 @@ CLASS ZCL_ABAPGIT_OBJECT_GSMP IMPLEMENTATION.
             WHERE provider_id = lv_name AND version = 'A'.
         ENDIF.
 
-        rv_user = lv_user .
+        rv_user = lv_user.
       CATCH cx_root INTO lx_root.
         zcx_abapgit_exception=>raise( iv_text     = lx_root->get_text( )
                                      ix_previous = lx_root ).
