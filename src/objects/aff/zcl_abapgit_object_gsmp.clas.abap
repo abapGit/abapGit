@@ -18,27 +18,24 @@ CLASS ZCL_ABAPGIT_OBJECT_GSMP IMPLEMENTATION.
   METHOD zif_abapgit_object~changed_by.
 
     DATA lv_name TYPE c LENGTH 180.
-
+    DATA lv_user  TYPE string.
     DATA lx_root TYPE REF TO cx_root.
 
 
     TRY.
         lv_name = ms_item-obj_name.
 
-        SELECT SINGLE changed_by FROM ('GSM_MD_PRV_W')
-          WHERE provider_id = @lv_name AND
-          version = 'I'
-          INTO @rv_user.
+        SELECT SINGLE changed_by INTO lv_user
+          FROM ('GSM_MD_PRV_W')
+          WHERE provider_id = lv_name AND version = 'I'.
 
-        IF sy-subrc = 0.
-          RETURN.
-        ENDIF.
+        IF lv_user IS INITIAL.
+          SELECT SINGLE changed_by INTO lv_user
+            FROM ('GSM_MD_PRV_W')
+            WHERE provider_id = lv_name AND version = 'A'.
+        endif.
 
-        SELECT SINGLE changed_by FROM ('GSM_MD_PRV_W')
-          WHERE provider_id = @lv_name AND
-          version = 'A'
-          INTO @rv_user.
-
+        rv_user = lv_user .
       CATCH cx_root INTO lx_root.
         zcx_abapgit_exception=>raise( iv_text     = lx_root->get_text( )
                                      ix_previous = lx_root ).
