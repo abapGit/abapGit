@@ -30,7 +30,7 @@ CLASS ZCL_ABAPGIT_OBJECT_GSMP IMPLEMENTATION.
         SELECT SINGLE changed_by FROM ('GSM_MD_PRV_W')
           WHERE provider_id = @lv_name AND
           version = 'I'
-          INTO @rv_user.                                    
+          INTO @rv_user.
 
         IF sy-subrc = 0.
           RETURN.
