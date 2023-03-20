@@ -9,49 +9,49 @@ CLASS zcl_abapgit_data_deserializer DEFINITION
 
   PROTECTED SECTION.
 
-private section.
+  PRIVATE SECTION.
 
-  methods CONVERT_JSON_TO_ITAB
-    importing
-      !IS_FILE type ZIF_ABAPGIT_GIT_DEFINITIONS=>TY_FILE
-      !IR_DATA type ref to DATA
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods PREVIEW_DATABASE_CHANGES
-    importing
-      !IV_NAME type TADIR-OBJ_NAME
-      !IT_WHERE type STRING_TABLE
-      !IR_DATA type ref to DATA
-    returning
-      value(RS_RESULT) type ZIF_ABAPGIT_DATA_DESERIALIZER=>TY_RESULT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods WRITE_DATABASE_TABLE
-    importing
-      !IV_NAME type TADIR-OBJ_NAME
-      !IR_DEL type ref to DATA
-      !IR_INS type ref to DATA
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods READ_DATABASE_TABLE
-    importing
-      !IV_NAME type TADIR-OBJ_NAME
-      !IT_WHERE type STRING_TABLE
-    returning
-      value(RR_DATA) type ref to DATA
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods IS_TABLE_ALLOWED_TO_EDIT
-    importing
-      !IV_TABLE_NAME type TABNAME
-      !IS_CHECKS type ZIF_ABAPGIT_DEFINITIONS=>TY_DESERIALIZE_CHECKS
-    returning
-      value(IS_ALLOWED_TO_EDIT) type ABAP_BOOL .
+    METHODS convert_json_to_itab
+      IMPORTING
+        !is_file TYPE zif_abapgit_git_definitions=>ty_file
+        !ir_data TYPE REF TO data
+      RAISING
+        zcx_abapgit_exception .
+    METHODS preview_database_changes
+      IMPORTING
+        !iv_name         TYPE tadir-obj_name
+        !it_where        TYPE string_table
+        !ir_data         TYPE REF TO data
+      RETURNING
+        VALUE(rs_result) TYPE zif_abapgit_data_deserializer=>ty_result
+      RAISING
+        zcx_abapgit_exception .
+    METHODS write_database_table
+      IMPORTING
+        !iv_name TYPE tadir-obj_name
+        !ir_del  TYPE REF TO data
+        !ir_ins  TYPE REF TO data
+      RAISING
+        zcx_abapgit_exception .
+    METHODS read_database_table
+      IMPORTING
+        !iv_name       TYPE tadir-obj_name
+        !it_where      TYPE string_table
+      RETURNING
+        VALUE(rr_data) TYPE REF TO data
+      RAISING
+        zcx_abapgit_exception .
+    METHODS is_table_allowed_to_edit
+      IMPORTING
+        !iv_table_name            TYPE tabname
+        !is_checks                TYPE zif_abapgit_definitions=>ty_deserialize_checks
+      RETURNING
+        VALUE(is_allowed_to_edit) TYPE abap_bool .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DATA_DESERIALIZER IMPLEMENTATION.
+CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 
 
   METHOD convert_json_to_itab.

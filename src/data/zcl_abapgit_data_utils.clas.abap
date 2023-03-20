@@ -28,14 +28,14 @@ CLASS zcl_abapgit_data_utils DEFINITION
     TYPES ty_names TYPE STANDARD TABLE OF abap_compname WITH DEFAULT KEY .
     CLASS-METHODS list_key_fields
       IMPORTING
-        !iv_name TYPE tadir-obj_name
+        !iv_name        TYPE tadir-obj_name
       RETURNING
         VALUE(rt_names) TYPE ty_names .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DATA_UTILS IMPLEMENTATION.
+CLASS zcl_abapgit_data_utils IMPLEMENTATION.
 
 
   METHOD build_filename.
