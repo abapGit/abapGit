@@ -22,5 +22,7 @@ CLASS lcl_gui_services_dummy IMPLEMENTATION.
   ENDMETHOD.
   METHOD zif_abapgit_gui_services~get_log.
   ENDMETHOD.
+  METHOD zif_abapgit_gui_services~register_page_asset.
+  ENDMETHOD.
 
 ENDCLASS.

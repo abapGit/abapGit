@@ -40,6 +40,7 @@ CLASS zcl_abapgit_code_inspector DEFINITION
   PRIVATE SECTION.
 
     DATA mv_success TYPE abap_bool .
+    DATA mv_summary TYPE string.
 
     TYPES: ty_run_mode TYPE c LENGTH 1.
 
@@ -333,6 +334,11 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_code_inspector~get_summary.
+    rv_summary = mv_summary.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_code_inspector~is_successful.
 
     rv_success = mv_success.
@@ -344,16 +350,20 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
 
     DATA: lo_set     TYPE REF TO cl_ci_objectset,
           lo_variant TYPE REF TO cl_ci_checkvariant,
+          lv_count   TYPE i,
+          lo_timer   TYPE REF TO zcl_abapgit_timer,
           lx_error   TYPE REF TO zcx_abapgit_exception.
-
 
     TRY.
         lo_set = create_objectset( ).
 
-        IF lines( lo_set->iobjlst-objects ) = 0.
+        lv_count = lines( lo_set->iobjlst-objects ).
+        IF lv_count = 0.
           " no objects, nothing to check
           RETURN.
         ENDIF.
+
+        lo_timer = zcl_abapgit_timer=>create( iv_count = lv_count )->start( ).
 
         lo_variant = create_variant( iv_variant ).
 
@@ -377,6 +387,8 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
 
     ENDTRY.
+
+    mv_summary = lo_timer->end( ).
 
   ENDMETHOD.
 ENDCLASS.

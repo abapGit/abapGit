@@ -17,10 +17,12 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION PUBLIC ABSTRACT INHERITING FROM 
       END OF c_actions .
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
     DATA mt_result TYPE scit_alvlist .
+    DATA mv_summary TYPE string.
 
     METHODS render_variant
       IMPORTING
         !iv_variant    TYPE sci_chkv
+        !iv_summary    TYPE string
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS render_result
@@ -277,7 +279,8 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( '<div class="ci-head">' ).
-    ri_html->add( |Code inspector check variant: <span class="ci-variant">{ iv_variant }</span>| ).
+    ri_html->add( |Code inspector check variant <span class="ci-variant">{ iv_variant }</span>|
+               && | completed ({ iv_summary })| ).
     ri_html->add( `</div>` ).
 
   ENDMETHOD.

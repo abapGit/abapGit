@@ -21,23 +21,24 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
 
     TYPES:
       BEGIN OF ty_control,
-        page_layout TYPE string,
-        page_title TYPE string,
-        page_menu  TYPE REF TO zcl_abapgit_html_toolbar,
-        page_menu_provider TYPE REF TO zif_abapgit_gui_menu_provider,
+        page_layout         TYPE string,
+        page_title          TYPE string,
+        page_menu           TYPE REF TO zcl_abapgit_html_toolbar,
+        page_menu_provider  TYPE REF TO zif_abapgit_gui_menu_provider,
+        page_title_provider TYPE REF TO zif_abapgit_gui_page_title,
+        extra_css_url       TYPE string,
+        extra_js_url        TYPE string,
       END OF  ty_control .
 
     DATA ms_control TYPE ty_control .
 
-    METHODS render_content
+    METHODS render_content " TODO refactor, render child directly
       ABSTRACT
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
-
-    TYPES: ty_time TYPE p LENGTH 10 DECIMALS 2.
 
     DATA mo_settings TYPE REF TO zcl_abapgit_settings .
     DATA mx_error TYPE REF TO zcx_abapgit_exception .
@@ -52,6 +53,12 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
     METHODS html_head
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+    METHODS header_stylesheet_links
+      IMPORTING
+        ii_html TYPE REF TO zif_abapgit_html .
+    METHODS header_script_links
+      IMPORTING
+        ii_html TYPE REF TO zif_abapgit_html .
     METHODS title
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
@@ -59,7 +66,7 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
         zcx_abapgit_exception .
     METHODS footer
       IMPORTING
-        !iv_time       TYPE ty_time
+        !iv_time       TYPE string
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS render_link_hints
@@ -91,7 +98,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -131,7 +138,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
                     iv_txt = ri_html->icon( 'git-alt' ) ).
     ri_html->add_a( iv_act = zif_abapgit_definitions=>c_action-homepage
                     iv_txt = ri_html->icon( iv_name = 'abapgit'
-                                            iv_hint = |{ iv_time } sec| ) ).
+                                            iv_hint = iv_time ) ).
     ri_html->add( '</div>' ).
     ri_html->add( |<div class="version">{ zif_abapgit_version=>c_abap_version }{ lv_version_detail }</div>| ).
     ri_html->add( '</td>' ).
@@ -140,6 +147,39 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     ri_html->add( '</tr></table>' ).
     ri_html->add( '</div>' ).
+
+  ENDMETHOD.
+
+
+  METHOD header_script_links.
+
+    ii_html->add( '<script src="js/common.js"></script>' ).
+
+    IF ms_control-extra_js_url IS NOT INITIAL.
+      ii_html->add( |<script src="{ ms_control-extra_js_url }"></script>| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD header_stylesheet_links.
+
+    ii_html->add( '<link rel="stylesheet" type="text/css" href="css/common.css">' ).
+    ii_html->add( '<link rel="stylesheet" type="text/css" href="css/ag-icons.css">' ).
+
+    " Themes
+    ii_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-default.css">' ). " Theme basis
+    CASE mo_settings->get_ui_theme( ).
+      WHEN zcl_abapgit_settings=>c_ui_theme-dark.
+        ii_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-dark.css">' ).
+      WHEN zcl_abapgit_settings=>c_ui_theme-belize.
+        ii_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-belize-blue.css">' ).
+    ENDCASE.
+
+    " Page stylesheets
+    IF ms_control-extra_css_url IS NOT INITIAL.
+      ii_html->add( |<link rel="stylesheet" type="text/css" href="{ ms_control-extra_css_url }">| ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -154,19 +194,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ri_html->add( '<meta http-equiv="X-UA-Compatible" content="IE=11,10,9,8" />' ).
 
     ri_html->add( '<title>abapGit</title>' ).
-    ri_html->add( '<link rel="stylesheet" type="text/css" href="css/common.css">' ).
-    ri_html->add( '<link rel="stylesheet" type="text/css" href="css/ag-icons.css">' ).
 
-    " Themes
-    ri_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-default.css">' ). " Theme basis
-    CASE mo_settings->get_ui_theme( ).
-      WHEN zcl_abapgit_settings=>c_ui_theme-dark.
-        ri_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-dark.css">' ).
-      WHEN zcl_abapgit_settings=>c_ui_theme-belize.
-        ri_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-belize-blue.css">' ).
-    ENDCASE.
-
-    ri_html->add( '<script src="js/common.js"></script>' ).
+    header_stylesheet_links( ri_html ).
+    header_script_links( ri_html ).
 
     CASE mo_settings->get_icon_scaling( ). " Enforce icon scaling
       WHEN mo_settings->c_icon_scaling-large.
@@ -276,10 +306,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
   METHOD title.
 
     DATA lo_page_menu LIKE ms_control-page_menu.
+    DATA lv_page_title TYPE string.
 
     lo_page_menu = ms_control-page_menu.
     IF lo_page_menu IS NOT BOUND AND ms_control-page_menu_provider IS BOUND.
       lo_page_menu = ms_control-page_menu_provider->get_menu( ).
+    ENDIF.
+
+    lv_page_title = ms_control-page_title.
+    IF ms_control-page_title_provider IS BOUND.
+      lv_page_title = ms_control-page_title_provider->get_page_title( ).
     ENDIF.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
@@ -287,13 +323,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ri_html->add( '<div id="header">' ).
 
     ri_html->add( '<div class="logo">' ).
-    ri_html->add_a( iv_act = zif_abapgit_definitions=>c_action-abapgit_home
-                    iv_txt = ri_html->icon( 'git-alt' ) ).
-    ri_html->add_a( iv_act = zif_abapgit_definitions=>c_action-abapgit_home
-                    iv_txt = ri_html->icon( 'abapgit' ) ).
+    ri_html->add_a(
+      iv_act = zif_abapgit_definitions=>c_action-abapgit_home
+      iv_txt = ri_html->icon( 'git-alt' ) ).
+    ri_html->add_a(
+      iv_act = zif_abapgit_definitions=>c_action-abapgit_home
+      iv_txt = ri_html->icon( 'abapgit' ) ).
     ri_html->add( '</div>' ).
 
-    ri_html->add( |<div class="page-title"><span class="spacer">&#x25BA;</span>{ ms_control-page_title }</div>| ).
+    ri_html->add( |<div class="page-title"><span class="spacer">&#x25BA;</span>{ lv_page_title }</div>| ).
 
     IF lo_page_menu IS BOUND.
       ri_html->add( '<div class="float-right">' ).
@@ -347,13 +385,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     DATA:
       li_script TYPE REF TO zif_abapgit_html,
-      lv_start  TYPE i,
-      lv_end    TYPE i,
-      lv_total  TYPE ty_time.
+      lo_timer  TYPE REF TO zcl_abapgit_timer.
 
     register_handlers( ).
 
-    GET RUN TIME FIELD lv_start.
+    lo_timer = zcl_abapgit_timer=>create( )->start( ).
 
     " Real page
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
@@ -376,10 +412,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
       ii_html          = ri_html
       iv_part_category = c_html_parts-hidden_forms ).
 
-    GET RUN TIME FIELD lv_end.
-    lv_total = ( lv_end - lv_start ) / 1000 / 1000.
-
-    ri_html->add( footer( lv_total ) ).
+    ri_html->add( footer( lo_timer->end( ) ) ).
 
     ri_html->add( '</div>' ).
 
