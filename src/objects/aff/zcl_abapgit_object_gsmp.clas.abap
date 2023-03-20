@@ -8,8 +8,6 @@ CLASS zcl_abapgit_object_gsmp DEFINITION
     METHODS zif_abapgit_object~changed_by REDEFINITION.
   PROTECTED SECTION.
   PRIVATE SECTION.
-
-    CLASS-DATA: sv_emsgty TYPE sychar01 VALUE 'S'.          "#EC NOTEXT
 ENDCLASS.
 
 
