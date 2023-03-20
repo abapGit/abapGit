@@ -39,7 +39,7 @@ CLASS ZCL_ABAPGIT_OBJECT_GSMP IMPLEMENTATION.
         SELECT SINGLE changed_by FROM ('GSM_MD_PRV_W')
           WHERE provider_id = @lv_name AND
           version = 'A'
-          INTO @rv_user.                                    "#EC NOTEXT
+          INTO @rv_user.                                    
 
       CATCH cx_root INTO lx_root.
         zcx_abapgit_exception=>raise( iv_text     = lx_root->get_text( )
