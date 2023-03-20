@@ -33,7 +33,7 @@ CLASS ZCL_ABAPGIT_OBJECT_GSMP IMPLEMENTATION.
           SELECT SINGLE changed_by INTO lv_user
             FROM ('GSM_MD_PRV_W')
             WHERE provider_id = lv_name AND version = 'A'.
-        endif.
+        ENDIF.
 
         rv_user = lv_user .
       CATCH cx_root INTO lx_root.
