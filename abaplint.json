@@ -161,7 +161,7 @@
         "^if_aff_",
         "^if_saunit_internal_result_type$",
         "^if_saunit_internal_result$",
-        "^if_srvd_types$", "^xubname$",
+        "^if_srvd_types$",
         "^if_wb_adt_plugin_resource_co$",
         "^if_wb_object_data_selection_co$",
         "^if_wb_object_operator$",
@@ -177,7 +177,8 @@
         "^sylangu$",
         "^syrepid$",
         "^syst_title$",
-        "^syuzeit$"
+        "^syuzeit$",
+        "^xubname$"
       ]
     },
     "forbidden_identifier": true,
