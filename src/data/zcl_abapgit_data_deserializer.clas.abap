@@ -173,7 +173,7 @@ CLASS ZCL_ABAPGIT_DATA_DESERIALIZER IMPLEMENTATION.
     LOOP AT it_result INTO ls_result.
       lv_table_name = ls_result-table.
 
-      IF NOT is_table_allowed_to_edit( iv_table_name = lv_table_name is_checks = is_checks ).
+      IF is_table_allowed_to_edit( iv_table_name = lv_table_name is_checks = is_checks ) = abap_false.
         CONTINUE.
       ENDIF.
 
@@ -244,20 +244,24 @@ CLASS ZCL_ABAPGIT_DATA_DESERIALIZER IMPLEMENTATION.
   METHOD is_table_allowed_to_edit.
 
     "Did the user flagged this table for update?
-    CHECK line_exists( is_checks-overwrite[ obj_name = iv_table_name decision = zif_abapgit_definitions=>c_yes ] ).
+    READ TABLE is_checks-overwrite TRANSPORTING NO FIELDS WITH KEY obj_name = iv_table_name decision = zif_abapgit_definitions=>c_yes.
+    IF sy-subrc <>  0.
+      RETURN.
+    ENDIF.
 
     "For safety reasons only customer dependend customizing tables are allowed to update
-    SELECT SINGLE @abap_true
+    DATA lv_tabname TYPE dd02l-tabname.
+    SELECT SINGLE dd02l~tabname
       FROM dd09l JOIN dd02l
         ON dd09l~tabname = dd02l~tabname
         AND dd09l~as4local = dd02l~as4local
         AND dd09l~as4vers = dd02l~as4vers
-      INTO @is_allowed_to_edit
-      WHERE dd09l~tabname = @iv_table_name
+      INTO lv_tabname
+      WHERE dd09l~tabname = iv_table_name
         AND dd09l~tabart = 'APPL2'
         AND dd09l~as4user <> 'SAP'
-        AND dd09l~as4local = @cl_wer_const=>c_db_table_version_active
-        AND dd02l~contflag = @cl_axt_dbtable=>gc_deliv_class_cust.
-
+        AND dd09l~as4local = cl_wer_const=>c_db_table_version_active
+        AND dd02l~contflag = cl_axt_dbtable=>gc_deliv_class_cust.
+    is_allowed_to_edit = boolc( sy-subrc = 0 ).
   ENDMETHOD.
 ENDCLASS.

@@ -77,8 +77,8 @@ CLASS ltcl_test IMPLEMENTATION.
 
     TRY.
         mi_cut->serialize( mi_config ).
-        cl_abap_unit_assert=>fail( ).
       CATCH zcx_abapgit_exception.
+        cl_abap_unit_assert=>fail( ).
     ENDTRY.
 
   ENDMETHOD.

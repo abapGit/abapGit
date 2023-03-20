@@ -5,6 +5,24 @@
    <MASTER_LANGUAGE>E</MASTER_LANGUAGE>
    <STARTING_FOLDER>/src/</STARTING_FOLDER>
    <FOLDER_LOGIC>PREFIX</FOLDER_LOGIC>
+   <IGNORE>
+    <item>/src/objects/zcl_abapgit_object_aqbg.clas.abap</item>
+    <item>/src/objects/zcl_abapgit_object_aqbg.clas.xml</item>
+    <item>/src/ui/lib/zcl_abapgit_html_table.clas.abap</item>
+    <item>/src/ui/lib/zcl_abapgit_html_table.clas.testclasses.abap</item>
+    <item>/src/ui/lib/zcl_abapgit_html_table.clas.xml</item>
+    <item>/src/ui/lib/zif_abapgit_gui_page_title.intf.abap</item>
+    <item>/src/ui/lib/zif_abapgit_gui_page_title.intf.xml</item>
+    <item>/src/ui/lib/zif_abapgit_html_table.intf.abap</item>
+    <item>/src/ui/lib/zif_abapgit_html_table.intf.xml</item>
+    <item>/src/ui/pages/zcl_abapgit_gui_page_db_entry.clas.abap</item>
+    <item>/src/ui/pages/zcl_abapgit_gui_page_db_entry.clas.xml</item>
+    <item>/src/utils/zcl_abapgit_string_buffer.clas.abap</item>
+    <item>/src/utils/zcl_abapgit_string_buffer.clas.xml</item>
+    <item>/src/utils/zcl_abapgit_timer.clas.abap</item>
+    <item>/src/utils/zcl_abapgit_timer.clas.testclasses.abap</item>
+    <item>/src/utils/zcl_abapgit_timer.clas.xml</item>
+   </IGNORE>
    <VERSION_CONSTANT>ZIF_ABAPGIT_VERSION=&gt;C_ABAP_VERSION</VERSION_CONSTANT>
   </DATA>
  </asx:values>
