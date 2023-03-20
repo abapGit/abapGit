@@ -147,6 +147,8 @@
         "^if_wb_object_operator$",
         "^cl_abap_syst",
         "^SABP_T_TADIR_KEYS$",
+        "^CL_WER_CONST$",
+        "^cl_axt_dbtable$",
         "^CL_OO_SOURCE$",
         "^cx_xco_news_exception$",
         "^CL_SAUNIT_INTERNAL_RESULT$",
