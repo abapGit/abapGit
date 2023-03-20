@@ -72,7 +72,7 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
         CALL METHOD lo_obj->('IF_XCO_DBT_FIELDS~GET_NAMES')
           RECEIVING
             rt_names = rt_names.
-      CATCH cx_sy_dyn_call_illegal_class cx_xco_news_exception. "XCO exception might be thrown in newer SAP releases
+        CATCH cx_sy_dyn_call_illegal_class cx_xco_runtime_exception. "XCO exception might be thrown in newer SAP releases
         lv_workaround = 'DDFIELDS'.
         CREATE DATA lr_ddfields TYPE (lv_workaround).
         ASSIGN lr_ddfields->* TO <lt_ddfields>.

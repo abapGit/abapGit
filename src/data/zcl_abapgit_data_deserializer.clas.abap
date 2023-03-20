@@ -173,7 +173,9 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
     LOOP AT it_result INTO ls_result.
       lv_table_name = ls_result-table.
 
-      IF is_table_allowed_to_edit( iv_table_name = lv_table_name is_checks = is_checks ) = abap_false.
+      IF is_table_allowed_to_edit(
+        iv_table_name   = lv_table_name
+        is_checks       = is_checks ) = abap_false.
         CONTINUE.
       ENDIF.
 
@@ -243,14 +245,16 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 
   METHOD is_table_allowed_to_edit.
 
+    DATA lv_tabname TYPE dd02l-tabname.
+
     "Did the user flagged this table for update?
-    READ TABLE is_checks-overwrite TRANSPORTING NO FIELDS WITH KEY obj_name = iv_table_name decision = zif_abapgit_definitions=>c_yes.
+    READ TABLE is_checks-overwrite TRANSPORTING NO FIELDS
+      WITH KEY obj_name = iv_table_name decision = zif_abapgit_definitions=>c_yes.
     IF sy-subrc <>  0.
       RETURN.
     ENDIF.
 
     "For safety reasons only customer dependend customizing tables are allowed to update
-    DATA lv_tabname TYPE dd02l-tabname.
     SELECT SINGLE dd02l~tabname
       FROM dd09l JOIN dd02l
         ON dd09l~tabname = dd02l~tabname
