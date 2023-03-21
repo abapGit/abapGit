@@ -89,6 +89,11 @@ CLASS zcl_abapgit_objects_super DEFINITION
         !ii_xml TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception .
+    METHODS serialize_lxe_texts_as_po
+      IMPORTING
+        !ii_files TYPE REF TO zcl_abapgit_objects_files
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
 ENDCLASS.
 
@@ -315,6 +320,27 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD serialize_lxe_texts_as_po.
+
+    IF ii_files->i18n_params( )-main_language_only = abap_true OR
+       ii_files->i18n_params( )-translation_languages IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    DATA lt_po_files TYPE zif_abapgit_i18n_file=>ty_table_of.
+    FIELD-SYMBOLS <li_file> LIKE LINE OF lt_po_files.
+
+    lt_po_files = zcl_abapgit_factory=>get_lxe_texts( )->serialize_as_po(
+      iv_object_type = ms_item-obj_type
+      iv_object_name = ms_item-obj_name
+      is_i18n_params = ii_files->i18n_params( ) ).
+
+    LOOP AT lt_po_files ASSIGNING <li_file>.
+      ii_files->add_i18n_file( <li_file> ).
+    ENDLOOP.
+
+  ENDMETHOD.
+
 
   METHOD set_default_package.
 
@@ -430,4 +456,5 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
 ENDCLASS.
