@@ -1170,6 +1170,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ls_i18n_params-use_lxe               = iv_use_lxe.
 
     li_xml->i18n_params( ls_i18n_params ).
+    lo_files->i18n_params( ls_i18n_params ).
 
     TRY.
         li_obj->serialize( li_xml ).

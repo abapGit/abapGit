@@ -89,6 +89,15 @@ CLASS zcl_abapgit_objects_files DEFINITION
     METHODS is_json_metadata
       RETURNING
         VALUE(rv_result) TYPE abap_bool.
+    METHODS add_i18n_file
+      IMPORTING
+        !ii_i18n_file TYPE REF TO zif_abapgit_i18n_file.
+    METHODS i18n_params
+      IMPORTING
+        !is_i18n_params       TYPE zif_abapgit_definitions=>ty_i18n_params OPTIONAL
+      RETURNING
+        VALUE(rs_i18n_params) TYPE zif_abapgit_definitions=>ty_i18n_params .
+
   PROTECTED SECTION.
 
     METHODS read_file
@@ -105,11 +114,23 @@ CLASS zcl_abapgit_objects_files DEFINITION
     DATA mt_accessed_files TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt .
     DATA mt_files TYPE zif_abapgit_git_definitions=>ty_files_tt .
     DATA mv_path TYPE string .
+    DATA ms_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params.
+
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_files IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
+
+  METHOD i18n_params.
+
+    IF is_i18n_params IS SUPPLIED.
+      ms_i18n_params = is_i18n_params.
+    ENDIF.
+
+    rs_i18n_params = ms_i18n_params.
+
+  ENDMETHOD.
 
 
   METHOD add.
@@ -133,6 +154,22 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
       iv_extra = iv_extra
       iv_ext   = 'abap' ).
     ls_file-data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_source ).
+
+    APPEND ls_file TO mt_files.
+
+  ENDMETHOD.
+
+
+  METHOD add_i18n_file.
+
+    DATA ls_file TYPE zif_abapgit_git_definitions=>ty_file.
+
+    ls_file-path     = '/'.
+    ls_file-data     = ii_i18n_file->render( ).
+    ls_file-filename = zcl_abapgit_filename_logic=>object_to_file(
+      is_item  = ms_item
+      iv_extra = |i18n.{ ii_i18n_file->lang( ) }|
+      iv_ext   = ii_i18n_file->ext( ) ).
 
     APPEND ls_file TO mt_files.
 
