@@ -22,7 +22,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_AQSG IMPLEMENTATION.
+CLASS zcl_abapgit_object_aqsg IMPLEMENTATION.
 
 
   METHOD get_field_rules.
@@ -52,16 +52,12 @@ CLASS ZCL_ABAPGIT_OBJECT_AQSG IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    set_default_transport( iv_transport ).
-
     get_generic( )->delete( iv_package ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
-
-    set_default_transport( iv_transport ).
 
     get_generic( )->deserialize(
       iv_package = iv_package
