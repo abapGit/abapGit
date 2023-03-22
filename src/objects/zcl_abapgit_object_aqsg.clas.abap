@@ -46,10 +46,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AQSG IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-*    SELECT SINGLE bgunam FROM aqgdbbg INTO rv_user WHERE num = ms_item-obj_name.
-*    IF sy-subrc <> 0.
     rv_user = zcl_abapgit_objects_super=>c_user_unknown.
-*    ENDIF.
   ENDMETHOD.
 
 
