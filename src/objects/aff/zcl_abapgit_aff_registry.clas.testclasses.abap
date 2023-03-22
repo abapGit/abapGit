@@ -15,6 +15,7 @@ CLASS ltcl_aff_registry DEFINITION FINAL FOR TESTING
       chko FOR TESTING RAISING cx_static_check,
       chkv FOR TESTING RAISING cx_static_check,
       evtb FOR TESTING RAISING cx_static_check,
+      gsmp FOR TESTING RAISING cx_static_check,
       intf_not_supported FOR TESTING RAISING cx_static_check,
       intf_experimental FOR TESTING RAISING cx_static_check,
       smbc FOR TESTING RAISING cx_static_check.
@@ -62,6 +63,11 @@ CLASS ltcl_aff_registry IMPLEMENTATION.
 
   METHOD evtb.
     assert_that( iv_obj_type = 'EVTB'
+                 iv_is_supported = abap_true ).
+  ENDMETHOD.
+
+  METHOD gsmp.
+    assert_that( iv_obj_type = 'GSMP'
                  iv_is_supported = abap_true ).
   ENDMETHOD.
 
