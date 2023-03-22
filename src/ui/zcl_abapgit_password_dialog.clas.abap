@@ -24,6 +24,8 @@ CLASS zcl_abapgit_password_dialog IMPLEMENTATION.
 
   METHOD popup.
 
+    DATA: lx_error TYPE REF TO cx_sy_dyn_call_illegal_form.
+
     IF zcl_abapgit_ui_factory=>get_frontend_services( )->gui_is_available( ) = abap_true.
 
       TRY.
@@ -31,7 +33,7 @@ CLASS zcl_abapgit_password_dialog IMPLEMENTATION.
             IN PROGRAM (sy-cprog)
             USING iv_repo_url
             CHANGING cv_user cv_pass.
-        CATCH cx_sy_dyn_call_illegal_form INTO DATA(lx_error).
+        CATCH cx_sy_dyn_call_illegal_form INTO lx_error.
           " abapGit was called via API and either wrong or no username/password
           " was supplied. It's not possible to call abapGit password popup in
           " this case.
