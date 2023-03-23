@@ -30,6 +30,7 @@ CLASS zcl_abapgit_gui_page_sett_repo DEFINITION
         dot              TYPE string VALUE 'dot',
         main_language    TYPE string VALUE 'main_language',
         i18n_langs       TYPE string VALUE 'i18n_langs',
+        use_lxe          TYPE string VALUE 'use_lxe',
         starting_folder  TYPE string VALUE 'starting_folder',
         folder_logic     TYPE string VALUE 'folder_logic',
         ignore           TYPE string VALUE 'ignore',
@@ -125,8 +126,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
       iv_readonly    = abap_true
     )->text(
       iv_name        = c_id-i18n_langs
-      iv_label       = 'Serialize Translations (experimental LXE approach)'
+      iv_label       = 'Serialize Translations for these languages'
       iv_hint        = 'Comma-separate 2-letter ISO language codes e.g. "DE,ES,..." - should not include main language'
+    )->checkbox(
+      iv_name        = c_id-use_lxe
+      iv_label       = 'Use experimental LXE approach for translations'
     )->radio(
       iv_name        = c_id-folder_logic
       iv_default_value = zif_abapgit_dot_abapgit=>c_folder_logic-prefix
@@ -212,6 +216,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
       iv_key = c_id-i18n_langs
       iv_val = zcl_abapgit_lxe_texts=>convert_table_to_lang_string( lo_dot->get_i18n_languages( ) ) ).
     mo_form_data->set(
+      iv_key = c_id-use_lxe
+      iv_val = lo_dot->use_lxe( ) ).
+    mo_form_data->set(
       iv_key = c_id-folder_logic
       iv_val = ls_dot-folder_logic ).
     mo_form_data->set(
@@ -295,6 +302,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
       zcl_abapgit_lxe_texts=>convert_lang_string_to_table(
         iv_langs              = mo_form_data->get( c_id-i18n_langs )
         iv_skip_main_language = lo_dot->get_main_language( ) ) ).
+    lo_dot->use_lxe( boolc( mo_form_data->get( c_id-use_lxe ) is not initial ) ).
 
     " Remove all ignores
     lt_ignore = lo_dot->get_data( )-ignore.
