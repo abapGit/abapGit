@@ -243,6 +243,10 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
     SORT lt_i18n_langs.
     DELETE ADJACENT DUPLICATES FROM lt_i18n_langs.
 
+    lt_i18n_langs = zcl_abapgit_lxe_texts=>trim_saplangu_by_iso(
+      it_sap_langs = lt_i18n_langs
+      it_iso_filter = ii_xml->i18n_params( )-translation_languages ).
+
     LOOP AT lt_i18n_langs ASSIGNING <lv_lang>.
       lv_index = sy-tabix.
 
