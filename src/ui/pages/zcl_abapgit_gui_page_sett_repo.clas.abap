@@ -302,7 +302,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
       zcl_abapgit_lxe_texts=>convert_lang_string_to_table(
         iv_langs              = mo_form_data->get( c_id-i18n_langs )
         iv_skip_main_language = lo_dot->get_main_language( ) ) ).
-    lo_dot->use_lxe( boolc( mo_form_data->get( c_id-use_lxe ) is not initial ) ).
+    lo_dot->use_lxe( boolc( mo_form_data->get( c_id-use_lxe ) = 'X' ) ).
 
     " Remove all ignores
     lt_ignore = lo_dot->get_data( )-ignore.
