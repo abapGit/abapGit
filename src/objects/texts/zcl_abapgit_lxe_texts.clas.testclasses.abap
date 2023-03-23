@@ -2,6 +2,7 @@ CLASS ltcl_lxe_texts DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
 
   PRIVATE SECTION.
     METHODS:
+      filter_sap_langs FOR TESTING RAISING zcx_abapgit_exception,
       check_langs_versus_installed FOR TESTING RAISING zcx_abapgit_exception,
       lang_string_to_table FOR TESTING,
       table_to_lang_string FOR TESTING.
@@ -126,6 +127,47 @@ CLASS ltcl_lxe_texts IMPLEMENTATION.
       CATCH zcx_abapgit_exception.
         cl_abap_unit_assert=>fail( ).
     ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD filter_sap_langs.
+
+    DATA lt_act TYPE zif_abapgit_definitions=>ty_sap_langu_tab.
+    DATA lt_exp TYPE zif_abapgit_definitions=>ty_sap_langu_tab.
+    DATA lt_filter TYPE zif_abapgit_definitions=>ty_languages.
+
+    APPEND 'E' TO lt_act.
+    APPEND 'D' TO lt_act.
+    APPEND 'S' TO lt_act.
+
+    APPEND 'DE' TO lt_filter.
+    APPEND 'EN' TO lt_filter.
+
+    APPEND 'E' TO lt_exp.
+    APPEND 'D' TO lt_exp.
+
+    lt_act = zcl_abapgit_lxe_texts=>trim_saplangu_by_iso(
+      it_iso_filter = lt_filter
+      it_sap_langs  = lt_act ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_act
+      exp = lt_exp ).
+
+    CLEAR: lt_act, lt_exp, lt_filter. " Empty filter
+    APPEND 'E' TO lt_act.
+    APPEND 'D' TO lt_act.
+
+    APPEND 'E' TO lt_exp.
+    APPEND 'D' TO lt_exp.
+
+    lt_act = zcl_abapgit_lxe_texts=>trim_saplangu_by_iso(
+      it_iso_filter = lt_filter
+      it_sap_langs  = lt_act ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_act
+      exp = lt_exp ).
 
   ENDMETHOD.
 

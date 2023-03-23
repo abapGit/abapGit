@@ -42,6 +42,14 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
         VALUE(rt_unsupported_languages) TYPE zif_abapgit_definitions=>ty_languages
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS trim_saplangu_by_iso
+      IMPORTING
+        it_iso_filter TYPE zif_abapgit_definitions=>ty_languages
+        it_sap_langs TYPE zif_abapgit_definitions=>ty_sap_langu_tab
+      RETURNING
+        VALUE(rt_filtered_sap_langs) TYPE zif_abapgit_definitions=>ty_sap_langu_tab
+      RAISING
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -387,6 +395,38 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
             lt_pcx_s1 = rt_text_pairs_tmp.
 
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD trim_saplangu_by_iso.
+
+    DATA lv_langu TYPE sy-langu.
+    DATA lv_laiso TYPE laiso.
+
+    IF it_iso_filter IS INITIAL.
+      rt_filtered_sap_langs = it_sap_langs.
+      RETURN.
+    ENDIF.
+
+    LOOP AT it_sap_langs INTO lv_langu.
+      cl_i18n_languages=>sap1_to_sap2(
+        EXPORTING
+          im_lang_sap1  = lv_langu
+        RECEIVING
+          re_lang_sap2  = lv_laiso
+        EXCEPTIONS
+          no_assignment = 1
+          OTHERS        = 2 ).
+      IF sy-subrc <> 0.
+        CONTINUE.
+      ENDIF.
+
+      READ TABLE it_iso_filter TRANSPORTING NO FIELDS WITH KEY table_line = lv_laiso.
+      IF sy-subrc = 0.
+        APPEND lv_langu TO rt_filtered_sap_langs.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 

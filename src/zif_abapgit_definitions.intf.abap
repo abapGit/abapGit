@@ -455,6 +455,8 @@ INTERFACE zif_abapgit_definitions
     END OF c_method .
 
   TYPES:
+    ty_sap_langu_tab TYPE STANDARD TABLE OF langu WITH DEFAULT KEY.
+  TYPES:
     ty_languages TYPE STANDARD TABLE OF laiso WITH DEFAULT KEY.
   TYPES:
     BEGIN OF ty_i18n_params,
