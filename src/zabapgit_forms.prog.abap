@@ -90,22 +90,6 @@ FORM exit.
 
 ENDFORM.
 
-FORM password_popup
-      USING
-        pv_repo_url TYPE string
-      CHANGING
-        cv_user     TYPE string
-        cv_pass     TYPE string.
-
-  lcl_password_dialog=>popup(
-    EXPORTING
-      iv_repo_url     = pv_repo_url
-    CHANGING
-      cv_user         = cv_user
-      cv_pass         = cv_pass ).
-
-ENDFORM.
-
 FORM adjust_toolbar USING pv_dynnr TYPE sy-dynnr.
 
   DATA: ls_header               TYPE rpy_dyhead,
