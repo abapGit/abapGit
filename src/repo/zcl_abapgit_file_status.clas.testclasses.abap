@@ -1275,10 +1275,13 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
 
     DO 26 TIMES.
       ls_line = mo_result->get_line( sy-index ).
+      WRITE '@KERNEL console.dir(ls_line.get());'.
+      WRITE '@KERNEL console.dir(lv_act.get());'.
       lv_act+0(1) = ls_line-match.
       lv_act+1(1) = ls_line-lstate.
       lv_act+2(1) = ls_line-rstate.
       lv_act+3(1) = ls_line-packmove.
+      WRITE '@KERNEL console.dir(lv_act.get());'.
       CASE sy-index.
         WHEN 1.
           lv_exp = 'X  '. " no changes
