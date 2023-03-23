@@ -204,7 +204,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    IF io_xml->i18n_params( )-translation_languages IS INITIAL.
+    IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
       deserialize_texts(
         ii_xml   = io_xml
         is_dd04v = ls_dd04v ).
@@ -331,7 +331,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
     io_xml->add( iv_name = 'DD04V'
                  ig_data = ls_dd04v ).
 
-    IF io_xml->i18n_params( )-translation_languages IS INITIAL.
+    IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
       serialize_texts( io_xml ).
     ELSE.
       serialize_lxe_texts( io_xml ).

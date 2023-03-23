@@ -315,7 +315,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
       MODIFY ttree FROM ls_ttree.
     ENDIF.
 
-    IF io_xml->i18n_params( )-translation_languages IS NOT INITIAL.
+    IF io_xml->i18n_params( )-translation_languages IS NOT INITIAL AND io_xml->i18n_params( )-use_lxe = abap_true.
       deserialize_lxe_texts( io_xml ).
     ENDIF.
 
@@ -418,7 +418,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
 
 
     IF io_xml->i18n_params( )-main_language_only = abap_true
-      OR io_xml->i18n_params( )-translation_languages IS NOT INITIAL.
+      OR io_xml->i18n_params( )-translation_languages IS NOT INITIAL AND io_xml->i18n_params( )-use_lxe = abap_true.
       lv_all_languages = abap_false.
       DELETE lt_titles WHERE spras <> mv_language.
     ELSE.
@@ -458,7 +458,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
     io_xml->add( iv_name = 'TREE_TEXTS'
                  ig_data = lt_texts ).
 
-    IF io_xml->i18n_params( )-translation_languages IS NOT INITIAL.
+    IF io_xml->i18n_params( )-translation_languages IS NOT INITIAL AND io_xml->i18n_params( )-use_lxe = abap_true.
       serialize_lxe_texts( io_xml ).
     ENDIF.
 

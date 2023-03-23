@@ -821,7 +821,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
       deserialize_indexes( io_xml ).
 
-      IF io_xml->i18n_params( )-translation_languages IS INITIAL.
+      IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
         deserialize_texts(
           io_xml   = io_xml
           is_dd02v = ls_dd02v ).
@@ -1056,7 +1056,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
     io_xml->add( iv_name = 'DD36M'
                  ig_data = lt_dd36m ).
 
-    IF io_xml->i18n_params( )-translation_languages IS INITIAL.
+    IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
       serialize_texts( io_xml ).
     ELSE.
       serialize_lxe_texts( io_xml ).

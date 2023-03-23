@@ -689,7 +689,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
       ii_xml     = ii_xml
       iv_clsname = ls_clskey-clsname ).
 
-    IF ii_xml->i18n_params( )-translation_languages IS INITIAL.
+    IF ii_xml->i18n_params( )-translation_languages IS INITIAL OR ii_xml->i18n_params( )-use_lxe = abap_false.
       serialize_tpool_i18n(
         ii_xml              = ii_xml
         it_langu_additional = lt_langu_additional
@@ -807,7 +807,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
 
       deserialize_tpool( io_xml ).
 
-      IF io_xml->i18n_params( )-translation_languages IS INITIAL.
+      IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
         deserialize_tpool_i18n( io_xml ).
       ELSE.
         deserialize_lxe_texts( io_xml ).

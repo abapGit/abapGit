@@ -765,7 +765,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
                            it_authorizations = lt_tstca ).
     ENDIF.
 
-    IF io_xml->i18n_params( )-translation_languages IS INITIAL.
+    IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
       deserialize_texts( io_xml ).
     ELSE.
       deserialize_lxe_texts( io_xml ).
@@ -895,7 +895,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
     io_xml->add( iv_name = 'AUTHORIZATIONS'
                  ig_data = lt_tstca ).
 
-    IF io_xml->i18n_params( )-translation_languages IS INITIAL.
+    IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
       serialize_texts( io_xml ).
     ELSE.
       serialize_lxe_texts( io_xml ).

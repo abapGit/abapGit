@@ -40,7 +40,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_prog IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
 
 
   METHOD deserialize_texts.
@@ -331,7 +331,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
                        io_files = zif_abapgit_object~mo_files ).
 
     " Texts serializing (translations)
-    IF io_xml->i18n_params( )-translation_languages IS INITIAL.
+    IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
       " Old I18N option
       serialize_texts( io_xml ).
     ELSE.
