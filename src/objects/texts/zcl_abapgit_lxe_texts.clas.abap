@@ -129,7 +129,7 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
         iv_main_language TYPE zif_abapgit_definitions=>ty_i18n_params-main_language
         it_languages     TYPE zif_abapgit_definitions=>ty_i18n_params-translation_languages
       RETURNING
-        VALUE(lt_text_items) TYPE ty_tlxe_i18n
+        VALUE(rt_text_items) TYPE ty_tlxe_i18n
       RAISING
         zcx_abapgit_exception.
 
@@ -577,7 +577,6 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
     DATA:
       lt_obj_list      TYPE lxe_tt_colob,
       lv_main_lang     TYPE lxeisolang,
-      lt_lxe_texts     TYPE ty_tlxe_i18n,
       ls_lxe_text_item TYPE ty_lxe_i18n.
 
     FIELD-SYMBOLS:
@@ -616,10 +615,48 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
                                           iv_objname   = ls_lxe_text_item-objname ).
 
         IF ls_lxe_text_item-text_pairs IS NOT INITIAL.
-          APPEND ls_lxe_text_item TO lt_lxe_texts.
+          APPEND ls_lxe_text_item TO rt_text_items.
         ENDIF.
       ENDLOOP.
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD write_lxe_object_text_pair.
+
+    DATA:
+      lv_error TYPE lxestring.
+
+    TRY.
+        CALL FUNCTION 'LXE_OBJ_TEXT_PAIR_WRITE'
+          EXPORTING
+            s_lang    = iv_s_lang
+            t_lang    = iv_t_lang
+            custmnr   = iv_custmnr
+            objtype   = iv_objtype
+            objname   = iv_objname
+          IMPORTING
+            err_msg   = lv_error  " doesn't exist in NW <= 750
+          TABLES
+            lt_pcx_s1 = it_pcx_s1.
+        IF lv_error IS NOT INITIAL.
+          zcx_abapgit_exception=>raise( lv_error ).
+        ENDIF.
+
+      CATCH cx_sy_dyn_call_param_not_found.
+
+        CALL FUNCTION 'LXE_OBJ_TEXT_PAIR_WRITE'
+          EXPORTING
+            s_lang    = iv_s_lang
+            t_lang    = iv_t_lang
+            custmnr   = iv_custmnr
+            objtype   = iv_objtype
+            objname   = iv_objname
+          TABLES
+            lt_pcx_s1 = it_pcx_s1.
+
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -677,11 +714,12 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD zif_abapgit_lxe_texts~serialize_as_po.
 
     DATA lt_lxe_texts TYPE ty_tlxe_i18n.
     DATA li_po_file LIKE LINE OF rt_po_files.
-    FIELD-SYMBOLS <lv_lang> LIKE LINE OF is_i18n_params-translation_languages.
+    FIELD-SYMBOLS <ls_lang_texts> LIKE LINE OF lt_lxe_texts.
 
     lt_lxe_texts = read_text_items(
       iv_object_name   = iv_object_name
@@ -689,14 +727,12 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
       iv_main_language = is_i18n_params-main_language
       it_languages     = is_i18n_params-translation_languages ).
 
-    LOOP AT is_i18n_params-translation_languages ASSIGNING <lv_lang>.
-      CREATE OBJECT li_po_file TYPE zcl_abapgit_po_file
-        EXPORTING
-          iv_lang = <lv_lang>.
+    LOOP AT lt_lxe_texts ASSIGNING <ls_lang_texts>.
+*      CREATE OBJECT li_po_file TYPE zcl_abapgit_po_file
+*        EXPORTING
+*          iv_lang = <lv_lang>.
       APPEND li_po_file TO rt_po_files.
     ENDLOOP.
 
   ENDMETHOD.
-
-
 ENDCLASS.
