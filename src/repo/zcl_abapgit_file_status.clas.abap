@@ -425,7 +425,6 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
       ENDIF.
 
       APPEND INITIAL LINE TO ct_results ASSIGNING <ls_result>.
-      <ls_result>-inactive = <ls_local>-item-inactive.
 
       " Find a match in remote
       READ TABLE ct_remote ASSIGNING <ls_remote>
