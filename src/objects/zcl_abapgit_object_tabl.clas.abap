@@ -555,17 +555,16 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
     " Collect additional languages, skip main lang - it was serialized already
     lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
+
+    zcl_abapgit_lxe_texts=>apply_iso_langs_to_lang_filter(
+      EXPORTING it_iso_filter      = ii_xml->i18n_params( )-translation_languages
+      CHANGING  ct_language_filter = lt_language_filter ).
+
     SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
       FROM dd02v
       WHERE tabname = lv_name
       AND ddlanguage IN lt_language_filter
       AND ddlanguage <> mv_language.                      "#EC CI_SUBRC
-
-    zcl_abapgit_lxe_texts=>trim_saplangu_by_iso(
-      EXPORTING
-        it_iso_filter = ii_xml->i18n_params( )-translation_languages
-      CHANGING
-        ct_sap_langs = lt_i18n_langs ).
 
     LOOP AT lt_i18n_langs ASSIGNING <lv_lang>.
       lv_index = sy-tabix.
