@@ -126,7 +126,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
       iv_readonly    = abap_true
     )->text(
       iv_name        = c_id-i18n_langs
-      iv_label       = 'Serialize Translations for these languages'
+      iv_label       = 'Serialize Translations for these languages (Experimental)'
       iv_hint        = 'Comma-separate 2-letter ISO language codes e.g. "DE,ES,..." - should not include main language'
     )->checkbox(
       iv_name        = c_id-use_lxe
