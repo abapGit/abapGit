@@ -58,7 +58,7 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
         ct_tab TYPE STANDARD TABLE
       RAISING
         zcx_abapgit_exception.
-    CLASS-METHODS apply_iso_langs_to_lang_filter
+    CLASS-METHODS add_iso_langs_to_lang_filter
       IMPORTING
         it_iso_filter TYPE zif_abapgit_definitions=>ty_languages
       CHANGING
@@ -146,7 +146,7 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
 
 
-  METHOD apply_iso_langs_to_lang_filter.
+  METHOD add_iso_langs_to_lang_filter.
 
     DATA lv_laiso LIKE LINE OF it_iso_filter.
     DATA lv_langu TYPE sy-langu.

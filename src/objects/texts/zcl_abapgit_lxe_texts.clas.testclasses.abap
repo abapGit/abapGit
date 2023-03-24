@@ -280,7 +280,7 @@ CLASS ltcl_lxe_texts IMPLEMENTATION.
     ls_range-low    = 'D'.
     APPEND ls_range TO lt_exp.
 
-    zcl_abapgit_lxe_texts=>apply_iso_langs_to_lang_filter(
+    zcl_abapgit_lxe_texts=>add_iso_langs_to_lang_filter(
       EXPORTING
         it_iso_filter = lt_filter
       CHANGING

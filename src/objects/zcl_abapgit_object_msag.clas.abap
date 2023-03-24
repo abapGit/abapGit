@@ -228,7 +228,7 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
     " Skip main lang - it has been already serialized and also technical languages
     lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
 
-    zcl_abapgit_lxe_texts=>apply_iso_langs_to_lang_filter(
+    zcl_abapgit_lxe_texts=>add_iso_langs_to_lang_filter(
       EXPORTING it_iso_filter      = ii_xml->i18n_params( )-translation_languages
       CHANGING  ct_language_filter = lt_language_filter ).
 
