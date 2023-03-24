@@ -97,6 +97,11 @@ CLASS lcl_object_descision_list DEFINITION FINAL.
         iv_selected TYPE abap_bool DEFAULT abap_true
         iv_invert TYPE abap_bool DEFAULT abap_false
         it_scope TYPE lvc_t_fidx.
+    METHODS are_all_marked
+      IMPORTING
+        it_scope TYPE lvc_t_fidx
+      RETURNING
+        VALUE(rv_yes) TYPE abap_bool.
 
 ENDCLASS.
 
@@ -425,6 +430,37 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD are_all_marked.
+
+    DATA lv_index LIKE LINE OF it_scope.
+
+    FIELD-SYMBOLS:
+      <lt_table>    TYPE STANDARD TABLE,
+      <ls_line>     TYPE any,
+      <lv_selected> TYPE abap_bool.
+
+    ASSIGN mr_table->* TO <lt_table>.
+    ASSERT sy-subrc = 0.
+
+    LOOP AT it_scope INTO lv_index.
+
+      READ TABLE <lt_table> ASSIGNING <ls_line> INDEX lv_index.
+      CHECK sy-subrc = 0.
+
+      ASSIGN COMPONENT c_fieldname_selected OF STRUCTURE <ls_line> TO <lv_selected>.
+      ASSERT sy-subrc = 0.
+
+      IF <lv_selected> = abap_true.
+        rv_yes = abap_true.
+      ELSE.
+        rv_yes = abap_false.
+        RETURN.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
   METHOD mark_selected.
 
     DATA lt_clear TYPE salv_t_row.
@@ -434,8 +470,8 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
 
     IF lines( lt_scope ) > 0.
       mark_indexed(
-        it_scope  = lt_scope
-        iv_invert = abap_true ).
+        it_scope    = lt_scope
+        iv_selected = boolc( are_all_marked( lt_scope ) = abap_false ) ).
       mo_alv->get_selections( )->set_selected_rows( lt_clear ).
     ELSE.
       MESSAGE 'Select rows first to mark them' TYPE 'S'.
