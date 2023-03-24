@@ -114,6 +114,12 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
       AND ddlanguage IN lt_language_filter
       AND ddlanguage <> mv_language.                      "#EC CI_SUBRC
 
+    zcl_abapgit_lxe_texts=>trim_saplangu_by_iso(
+      EXPORTING
+        it_iso_filter = ii_xml->i18n_params( )-translation_languages
+      CHANGING
+        ct_sap_langs = lt_i18n_langs ).
+
     LOOP AT lt_i18n_langs ASSIGNING <lv_lang>.
       lv_index = sy-tabix.
       CALL FUNCTION 'DDIF_DTEL_GET'

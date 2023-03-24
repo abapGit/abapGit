@@ -235,10 +235,17 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
 
     SORT lt_i18n_langs ASCENDING.
 
+    zcl_abapgit_lxe_texts=>trim_saplangu_by_iso(
+      EXPORTING
+        it_iso_filter = ii_xml->i18n_params( )-translation_languages
+      CHANGING
+        ct_sap_langs = lt_i18n_langs ).
+
     IF lines( lt_i18n_langs ) > 0.
 
       SELECT * FROM t100t INTO CORRESPONDING FIELDS OF TABLE lt_t100t
-        WHERE sprsl <> mv_language
+        FOR ALL ENTRIES IN lt_i18n_langs
+        WHERE sprsl = lt_i18n_langs-table_line
         AND arbgb = lv_msg_id.                          "#EC CI_GENBUFF
 
       SELECT * FROM t100 INTO CORRESPONDING FIELDS OF TABLE lt_t100_texts
