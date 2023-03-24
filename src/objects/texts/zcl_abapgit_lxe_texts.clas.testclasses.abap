@@ -3,6 +3,7 @@ CLASS ltcl_lxe_texts DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
   PRIVATE SECTION.
     METHODS:
       filter_sap_langs FOR TESTING RAISING zcx_abapgit_exception,
+      filter_sap_langs_tab FOR TESTING RAISING zcx_abapgit_exception,
       check_langs_versus_installed FOR TESTING RAISING zcx_abapgit_exception,
       lang_string_to_table FOR TESTING,
       table_to_lang_string FOR TESTING.
@@ -136,19 +137,21 @@ CLASS ltcl_lxe_texts IMPLEMENTATION.
     DATA lt_exp TYPE zif_abapgit_definitions=>ty_sap_langu_tab.
     DATA lt_filter TYPE zif_abapgit_definitions=>ty_languages.
 
+    APPEND 'DE' TO lt_filter.
+    APPEND 'EN' TO lt_filter.
+
     APPEND 'E' TO lt_act.
     APPEND 'D' TO lt_act.
     APPEND 'S' TO lt_act.
 
-    APPEND 'DE' TO lt_filter.
-    APPEND 'EN' TO lt_filter.
-
     APPEND 'E' TO lt_exp.
     APPEND 'D' TO lt_exp.
 
-    lt_act = zcl_abapgit_lxe_texts=>trim_saplangu_by_iso(
-      it_iso_filter = lt_filter
-      it_sap_langs  = lt_act ).
+    zcl_abapgit_lxe_texts=>trim_saplangu_by_iso(
+      EXPORTING
+        it_iso_filter = lt_filter
+      CHANGING
+        ct_sap_langs  = lt_act ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lt_act
@@ -161,9 +164,75 @@ CLASS ltcl_lxe_texts IMPLEMENTATION.
     APPEND 'E' TO lt_exp.
     APPEND 'D' TO lt_exp.
 
-    lt_act = zcl_abapgit_lxe_texts=>trim_saplangu_by_iso(
-      it_iso_filter = lt_filter
-      it_sap_langs  = lt_act ).
+    zcl_abapgit_lxe_texts=>trim_saplangu_by_iso(
+      EXPORTING
+        it_iso_filter = lt_filter
+      CHANGING
+        ct_sap_langs  = lt_act ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_act
+      exp = lt_exp ).
+
+  ENDMETHOD.
+
+  METHOD filter_sap_langs_tab.
+
+    DATA:
+      BEGIN OF ls_i,
+        spras TYPE sy-langu,
+        stuff TYPE string,
+      END OF ls_i.
+
+    DATA lt_act LIKE TABLE OF ls_i.
+    DATA lt_exp LIKE TABLE OF ls_i.
+    DATA lt_filter TYPE zif_abapgit_definitions=>ty_languages.
+
+    APPEND 'DE' TO lt_filter.
+    APPEND 'EN' TO lt_filter.
+
+    ls_i-spras = 'E'.
+    APPEND ls_i TO lt_act.
+    ls_i-spras = 'D'.
+    APPEND ls_i TO lt_act.
+    ls_i-spras = 'S'.
+    APPEND ls_i TO lt_act.
+
+    ls_i-spras = 'E'.
+    APPEND ls_i TO lt_exp.
+    ls_i-spras = 'D'.
+    APPEND ls_i TO lt_exp.
+
+    zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
+      EXPORTING
+        it_iso_filter = lt_filter
+        iv_lang_field_name = 'SPRAS'
+      CHANGING
+        ct_tab = lt_act ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_act
+      exp = lt_exp ).
+
+    CLEAR: lt_act, lt_exp, lt_filter. " Empty filter
+    ls_i-spras = 'E'.
+    APPEND ls_i TO lt_act.
+    ls_i-spras = 'D'.
+    APPEND ls_i TO lt_act.
+    ls_i-spras = 'S'.
+    APPEND ls_i TO lt_act.
+
+    ls_i-spras = 'E'.
+    APPEND ls_i TO lt_exp.
+    ls_i-spras = 'D'.
+    APPEND ls_i TO lt_exp.
+
+    zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
+      EXPORTING
+        it_iso_filter = lt_filter
+        iv_lang_field_name = 'SPRAS'
+      CHANGING
+        ct_tab = lt_act ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lt_act
