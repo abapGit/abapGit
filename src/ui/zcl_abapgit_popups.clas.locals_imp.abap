@@ -88,7 +88,14 @@ CLASS lcl_object_descision_list DEFINITION FINAL.
     METHODS mark_all
       IMPORTING
         iv_selected TYPE abap_bool.
-    METHODS mark_visible.
+    METHODS mark_visible
+      IMPORTING
+        iv_selected TYPE abap_bool.
+    METHODS mark_selected.
+    METHODS mark_indexed
+      IMPORTING
+        iv_selected TYPE abap_bool DEFAULT abap_true
+        it_scope TYPE lvc_t_fidx.
 
 ENDCLASS.
 
@@ -374,15 +381,15 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
         mo_alv->close_screen( ).
 
       WHEN 'SALL' OR 'SEL_ALL'.
-        mark_all( abap_true ).
+        mark_visible( abap_true ).
         mo_alv->refresh( ).
 
       WHEN 'DSEL' OR 'SEL_DEL'.
-        mark_all( abap_false ).
+        mark_visible( abap_false ).
         mo_alv->refresh( ).
 
       WHEN 'SEL_KEY'.
-        mark_visible( ).
+        mark_selected( ).
         mo_alv->refresh( ).
 
       WHEN 'SEL_CAT'.
@@ -417,13 +424,56 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD mark_selected.
+
+    DATA lt_clear TYPE salv_t_row.
+    DATA lt_scope TYPE lvc_t_fidx.
+
+    lt_scope = mo_alv->get_selections( )->get_selected_rows( ).
+
+    IF lines( lt_scope ) > 0.
+      mark_indexed( lt_scope ).
+      mo_alv->get_selections( )->set_selected_rows( lt_clear ).
+    ELSE.
+      MESSAGE 'Select rows first to mark them' TYPE 'S'.
+    ENDIF.
+
+  ENDMETHOD.
+
   METHOD mark_visible.
 
-    DATA:
-      lo_selection  TYPE REF TO cl_salv_selections,
-      lt_filters    TYPE lvc_t_filt,
-      lt_scope      TYPE lvc_t_fidx,
-      lv_index      LIKE LINE OF lt_scope.
+    DATA lt_filters TYPE lvc_t_filt.
+    DATA lt_scope   TYPE lvc_t_fidx.
+
+    FIELD-SYMBOLS <lt_table> TYPE STANDARD TABLE.
+
+    ASSIGN mr_table->* TO <lt_table>.
+    ASSERT sy-subrc = 0.
+
+    " If nothing selected, select all VISIBLE
+    lt_filters = cl_salv_controller_metadata=>get_lvc_filter( mo_alv->get_filters( ) ).
+    IF lines( lt_filters ) = 0.
+      mark_all( iv_selected ). " No filters - just select all
+      RETURN.
+    ENDIF.
+
+    CALL FUNCTION 'LVC_FILTER_APPLY'
+      EXPORTING
+        it_filter                    = lt_filters
+      IMPORTING
+        et_filter_index_inside       = lt_scope
+      TABLES
+        it_data                      = <lt_table>.
+
+    mark_indexed(
+      it_scope    = lt_scope
+      iv_selected = iv_selected ).
+
+  ENDMETHOD.
+
+  METHOD mark_indexed.
+
+    DATA lv_index LIKE LINE OF it_scope.
 
     FIELD-SYMBOLS:
       <lt_table>    TYPE STANDARD TABLE,
@@ -433,35 +483,14 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
     ASSIGN mr_table->* TO <lt_table>.
     ASSERT sy-subrc = 0.
 
-    " First get selection
-    lo_selection = mo_alv->get_selections( ).
-    lt_scope = lo_selection->get_selected_rows( ).
-
-    IF lines( lt_scope ) = 0.
-      " If nothing selected, select all VISIBLE
-      lt_filters = cl_salv_controller_metadata=>get_lvc_filter( mo_alv->get_filters( ) ).
-      IF lines( lt_filters ) = 0.
-        mark_all( abap_true ). " No filters - just select all
-        RETURN.
-      ENDIF.
-
-      CALL FUNCTION 'LVC_FILTER_APPLY'
-        EXPORTING
-          it_filter                    = lt_filters
-        IMPORTING
-          et_filter_index_inside       = lt_scope
-        TABLES
-          it_data                      = <lt_table>.
-    ENDIF.
-
-    LOOP AT lt_scope INTO lv_index.
+    LOOP AT it_scope INTO lv_index.
 
       READ TABLE <lt_table> ASSIGNING <ls_line> INDEX lv_index.
       CHECK sy-subrc = 0.
 
       ASSIGN COMPONENT c_fieldname_selected OF STRUCTURE <ls_line> TO <lv_selected>.
       ASSERT sy-subrc = 0.
-      <lv_selected> = abap_true.
+      <lv_selected> = iv_selected.
 
     ENDLOOP.
 
