@@ -416,13 +416,19 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
       TABLES
         description      = lt_titles.
 
-
     IF io_xml->i18n_params( )-main_language_only = abap_true
       OR io_xml->i18n_params( )-translation_languages IS NOT INITIAL AND io_xml->i18n_params( )-use_lxe = abap_true.
       lv_all_languages = abap_false.
       DELETE lt_titles WHERE spras <> mv_language.
     ELSE.
       lv_all_languages = abap_true.
+      zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
+        EXPORTING
+          it_iso_filter = io_xml->i18n_params( )-translation_languages
+          iv_lang_field_name = 'SPRAS'
+          iv_keep_master_lang = mv_language
+        CHANGING
+          ct_tab = lt_titles ).
     ENDIF.
 
     CALL FUNCTION 'STREE_HIERARCHY_READ'
@@ -446,6 +452,14 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
 
     SORT lt_texts BY spras.
     DELETE ADJACENT DUPLICATES FROM lt_texts COMPARING spras node_id.
+
+    zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
+      EXPORTING
+        it_iso_filter = io_xml->i18n_params( )-translation_languages
+        iv_lang_field_name = 'SPRAS'
+        iv_keep_master_lang = mv_language
+      CHANGING
+        ct_tab = lt_texts ).
 
     io_xml->add( iv_name = 'TREE_HEAD'
                  ig_data = ls_head ).

@@ -983,6 +983,13 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
       AND prog = iv_prog_name
       AND language <> mv_language ##TOO_MANY_ITAB_FIELDS.
 
+    zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
+      EXPORTING
+        it_iso_filter = ii_xml->i18n_params( )-translation_languages
+        iv_lang_field_name = 'LANGUAGE'
+      CHANGING
+        ct_tab = lt_tpool_i18n ).
+
     SORT lt_tpool_i18n BY language ASCENDING.
     LOOP AT lt_tpool_i18n ASSIGNING <ls_tpool>.
       READ TEXTPOOL iv_prog_name
@@ -1306,11 +1313,10 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
     ls_progdir = read_progdir( lv_program_name ).
 
     IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
-      " Old I18N option
-      serialize_texts( iv_prog_name = lv_program_name
-                       ii_xml       = io_xml ).
+      serialize_texts(
+        iv_prog_name = lv_program_name
+        ii_xml       = io_xml ).
     ELSE.
-      " New LXE option
       serialize_lxe_texts( io_xml ).
     ENDIF.
 

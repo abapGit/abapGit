@@ -76,7 +76,7 @@ CLASS zcl_abapgit_object_tran DEFINITION
         !cg_value TYPE any .
     METHODS serialize_texts
       IMPORTING
-        !io_xml TYPE REF TO zif_abapgit_xml_output
+        !ii_xml TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize_texts
@@ -396,7 +396,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
 
     DATA lt_tpool_i18n TYPE TABLE OF tstct.
 
-    IF io_xml->i18n_params( )-main_language_only = abap_true.
+    IF ii_xml->i18n_params( )-main_language_only = abap_true.
       RETURN.
     ENDIF.
 
@@ -408,9 +408,16 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
       WHERE sprsl <> mv_language
       AND   tcode = ms_item-obj_name ##TOO_MANY_ITAB_FIELDS. "#EC CI_GENBUFF
 
+    zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
+      EXPORTING
+        it_iso_filter = ii_xml->i18n_params( )-translation_languages
+        iv_lang_field_name = 'SPRSL'
+      CHANGING
+        ct_tab = lt_tpool_i18n ).
+
     IF lines( lt_tpool_i18n ) > 0.
       SORT lt_tpool_i18n BY sprsl ASCENDING.
-      io_xml->add( iv_name = 'I18N_TPOOL'
+      ii_xml->add( iv_name = 'I18N_TPOOL'
                    ig_data = lt_tpool_i18n ).
     ENDIF.
 
