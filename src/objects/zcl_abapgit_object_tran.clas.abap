@@ -81,7 +81,7 @@ CLASS zcl_abapgit_object_tran DEFINITION
         zcx_abapgit_exception .
     METHODS deserialize_texts
       IMPORTING
-        !io_xml TYPE REF TO zif_abapgit_xml_input
+        !ii_xml TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize_oo_transaction
@@ -346,10 +346,16 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
 
-
     " Read XML-files data
-    io_xml->read( EXPORTING iv_name = 'I18N_TPOOL'
+    ii_xml->read( EXPORTING iv_name = 'I18N_TPOOL'
                   CHANGING  cg_data = lt_tpool_i18n ).
+
+    zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
+      EXPORTING
+        it_iso_filter = ii_xml->i18n_params( )-translation_languages
+        iv_lang_field_name = 'SPRSL'
+      CHANGING
+        ct_tab = lt_tpool_i18n ).
 
     " Force t-code name (security reasons)
     LOOP AT lt_tpool_i18n ASSIGNING <ls_tpool>.

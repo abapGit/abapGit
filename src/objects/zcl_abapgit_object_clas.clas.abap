@@ -353,6 +353,13 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
     ii_xml->read( EXPORTING iv_name = 'I18N_TPOOL'
                   CHANGING  cg_data = lt_i18n_tpool ).
 
+    zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
+      EXPORTING
+        it_iso_filter = ii_xml->i18n_params( )-translation_languages
+        iv_lang_field_name = 'LANGUAGE'
+      CHANGING
+        ct_tab = lt_i18n_tpool ).
+
     LOOP AT lt_i18n_tpool INTO ls_i18n_tpool.
       lt_tpool = read_tpool( ls_i18n_tpool-textpool ).
       mi_object_oriented_object_fct->insert_text_pool(

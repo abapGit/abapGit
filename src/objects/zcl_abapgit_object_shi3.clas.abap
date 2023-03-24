@@ -275,6 +275,19 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'TREE_TEXTS'
                   CHANGING  cg_data = lt_texts ).
 
+    zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
+      EXPORTING
+        it_iso_filter = io_xml->i18n_params( )-translation_languages
+        iv_lang_field_name = 'SPRAS'
+      CHANGING
+        ct_tab = lt_titles ).
+    zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
+      EXPORTING
+        it_iso_filter = io_xml->i18n_params( )-translation_languages
+        iv_lang_field_name = 'SPRAS'
+      CHANGING
+        ct_tab = lt_texts ).
+
     IF zif_abapgit_object~exists( ) = abap_true.
       delete_tree_structure( mv_tree_id ).
     ENDIF.

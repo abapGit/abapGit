@@ -54,7 +54,7 @@ CLASS zcl_abapgit_object_view DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
       deserialize_texts
         IMPORTING
-          io_xml   TYPE REF TO zif_abapgit_xml_input
+          ii_xml   TYPE REF TO zif_abapgit_xml_input
           is_dd25v TYPE dd25v
         RAISING
           zcx_abapgit_exception.
@@ -80,11 +80,15 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
 
     lv_name = ms_item-obj_name.
 
-    io_xml->read( EXPORTING iv_name = 'I18N_LANGS'
+    ii_xml->read( EXPORTING iv_name = 'I18N_LANGS'
                   CHANGING  cg_data = lt_i18n_langs ).
 
-    io_xml->read( EXPORTING iv_name = 'DD25_TEXTS'
+    ii_xml->read( EXPORTING iv_name = 'DD25_TEXTS'
                   CHANGING  cg_data = lt_dd25_texts ).
+
+   zcl_abapgit_lxe_texts=>trim_saplangu_by_iso(
+      EXPORTING it_iso_filter = ii_xml->i18n_params( )-translation_languages
+      CHANGING ct_sap_langs   = lt_i18n_langs ).
 
     SORT lt_i18n_langs.
     SORT lt_dd25_texts BY ddlanguage.
@@ -306,7 +310,7 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
 
     IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
       deserialize_texts(
-        io_xml   = io_xml
+        ii_xml   = io_xml
         is_dd25v = ls_dd25v ).
     ELSE.
       deserialize_lxe_texts( io_xml ).
