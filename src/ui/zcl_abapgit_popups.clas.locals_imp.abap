@@ -95,6 +95,7 @@ CLASS lcl_object_descision_list DEFINITION FINAL.
     METHODS mark_indexed
       IMPORTING
         iv_selected TYPE abap_bool DEFAULT abap_true
+        iv_invert TYPE abap_bool DEFAULT abap_false
         it_scope TYPE lvc_t_fidx.
 
 ENDCLASS.
@@ -432,7 +433,9 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
     lt_scope = mo_alv->get_selections( )->get_selected_rows( ).
 
     IF lines( lt_scope ) > 0.
-      mark_indexed( lt_scope ).
+      mark_indexed(
+        it_scope  = lt_scope
+        iv_invert = abap_true ).
       mo_alv->get_selections( )->set_selected_rows( lt_clear ).
     ELSE.
       MESSAGE 'Select rows first to mark them' TYPE 'S'.
@@ -490,7 +493,12 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
 
       ASSIGN COMPONENT c_fieldname_selected OF STRUCTURE <ls_line> TO <lv_selected>.
       ASSERT sy-subrc = 0.
-      <lv_selected> = iv_selected.
+
+      IF iv_invert = abap_true.
+        <lv_selected> = boolc( <lv_selected> = abap_false ).
+      ELSE.
+        <lv_selected> = iv_selected.
+      ENDIF.
 
     ENDLOOP.
 
