@@ -1,0 +1,24 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: abapGit
+Upstream-Contact: Lars Hvam
+Source: https://github.com/abapGit/abapGit
+
+Files: *
+Copyright: 2014 abapGit Contributors <https://abapgit.org>
+License: MIT
+
+Files: src/ui/zabapgit_icon_font.*
+Copyright: 2021 Font Awesome <https://fontawesome.com/>
+License: OFL-1.1-RFN
+
+Files: src/ui/zabapgit_icon_font_css.*
+Copyright: 2021 Font Awesome <https://fontawesome.com/>
+License: CC0-1.0
+
+Files: src/json/*
+Copyright: 2020 Alexander Tsybulsky <https://github.com/sbcgua/ajson>
+License: MIT
+
+Files: src/stringmap/*
+Copyright: 2020 Alexander Tsybulsky <https://github.com/sbcgua/abap-string-map>
+License: MIT
