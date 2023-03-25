@@ -65,4 +65,6 @@ For questions/comments/bugs/feature requests/wishes please create an [issue](htt
 
 ## Credits and References
 
-Icons used in abapGit are created from [Font Awesome](https://fontawesome.com/) free icon set ([CC BY 4.0 License](https://fontawesome.com/license/free)).
+- Icons used in abapGit are created from [Font Awesome](https://fontawesome.com/) free icon set ([CC-BY-4.0](LICENSES/CC-BY-4.0.txt))
+- [AJSON](https://github.com/sbcgua/ajson) and [String-Map](https://github.com/sbcgua/abap-string-map) are developed by Alexander Tsybulsky ([MIT](LICENSES/MIT.txt))
+
