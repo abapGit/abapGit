@@ -662,7 +662,8 @@ CLASS ltcl_status_helper DEFINITION FOR TESTING.
           iv_sha1     TYPE zif_abapgit_git_definitions=>ty_sha1
           iv_obj_type TYPE tadir-object OPTIONAL
           iv_obj_name TYPE tadir-obj_name OPTIONAL
-          iv_devclass TYPE devclass DEFAULT '$Z$',
+          iv_devclass TYPE devclass DEFAULT '$Z$'
+          iv_inactive TYPE abap_bool DEFAULT abap_false,
       add_state
         IMPORTING
           iv_path     TYPE string DEFAULT '/'
@@ -753,6 +754,7 @@ CLASS ltcl_status_helper IMPLEMENTATION.
     <ls_local>-item-obj_type = iv_obj_type.
     <ls_local>-item-obj_name = iv_obj_name.
     <ls_local>-item-devclass = iv_devclass.
+    <ls_local>-item-inactive = iv_inactive.
     <ls_local>-file-path     = iv_path.
     <ls_local>-file-filename = iv_filename.
     <ls_local>-file-sha1     = iv_sha1.
@@ -818,6 +820,7 @@ CLASS ltcl_calculate_status DEFINITION FOR TESTING RISK LEVEL HARMLESS
       match_file FOR TESTING RAISING zcx_abapgit_exception,
       diff FOR TESTING RAISING zcx_abapgit_exception,
       moved FOR TESTING RAISING zcx_abapgit_exception,
+      inactive FOR TESTING RAISING zcx_abapgit_exception,
       local_outside_main FOR TESTING RAISING zcx_abapgit_exception,
       complete FOR TESTING RAISING zcx_abapgit_exception,
       only_local2 FOR TESTING RAISING zcx_abapgit_exception,
@@ -830,34 +833,6 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
   METHOD setup.
 
     CREATE OBJECT mo_helper.
-
-  ENDMETHOD.
-
-  METHOD moved.
-
-    mo_helper->add_local(
-     iv_obj_type = 'DOMA'
-     iv_obj_name = '$$ZDOMA1'
-     iv_filename = '$$zdoma1.doma.xml'
-     iv_path     = '/foo/'
-     iv_devclass = 'FOO'
-     iv_sha1     = 'D1' ).
-
-    mo_helper->add_remote(
-     iv_filename = '$$zdoma1.doma.xml'
-     iv_path     = '/bar/'
-     iv_sha1     = 'D1' ).
-
-    mo_helper->add_tadir(
-      iv_obj_type = 'DOMA'
-      iv_obj_name = '$$ZDOMA1'
-      iv_devclass = 'FOO' ).
-
-    mo_result = mo_helper->run( iv_devclass = 'FOO' ).
-
-    mo_result->assert_lines(
-      iv_lines = 2
-      iv_msg   = 'there must be a status calculated for both files, they are in different folders' ).
 
   ENDMETHOD.
 
@@ -1002,6 +977,61 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = mo_result->get_line( 1 )-rstate
       exp = zif_abapgit_definitions=>c_state-modified ).
+
+  ENDMETHOD.
+
+  METHOD moved.
+
+    mo_helper->add_local(
+     iv_obj_type = 'DOMA'
+     iv_obj_name = '$$ZDOMA1'
+     iv_filename = '$$zdoma1.doma.xml'
+     iv_path     = '/foo/'
+     iv_devclass = 'FOO'
+     iv_sha1     = 'D1' ).
+
+    mo_helper->add_remote(
+     iv_filename = '$$zdoma1.doma.xml'
+     iv_path     = '/bar/'
+     iv_sha1     = 'D1' ).
+
+    mo_helper->add_tadir(
+      iv_obj_type = 'DOMA'
+      iv_obj_name = '$$ZDOMA1'
+      iv_devclass = 'FOO' ).
+
+    mo_result = mo_helper->run( iv_devclass = 'FOO' ).
+
+    mo_result->assert_lines(
+      iv_lines = 2
+      iv_msg   = 'there must be a status calculated for both files, they are in different folders' ).
+
+  ENDMETHOD.
+
+  METHOD inactive.
+
+    mo_helper->add_local(
+      iv_obj_type = 'DOMA'
+      iv_obj_name = '$$ZDOMA1'
+      iv_inactive = abap_true
+      iv_filename = '$$zdoma1.doma.xml'
+      iv_sha1     = '12345' ).
+
+    mo_helper->add_remote(
+      iv_filename = '$$zdoma1.doma.xml'
+      iv_sha1     = '54321' ).
+
+    mo_helper->add_state(
+      iv_filename = '$$zdoma1.doma.xml'
+      iv_sha1     = 'xxx' ).
+
+    mo_result = mo_helper->run( ).
+
+    mo_result->assert_lines( 1 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_result->get_line( 1 )-inactive
+      exp = abap_true ).
 
   ENDMETHOD.
 
