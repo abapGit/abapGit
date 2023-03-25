@@ -10,8 +10,6 @@ CLASS zcl_abapgit_tadir DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    TYPES ty_excludes TYPE RANGE OF trobjtype.
-
     METHODS check_exists
       IMPORTING
         !it_tadir       TYPE zif_abapgit_definitions=>ty_tadir_tt
@@ -342,7 +340,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
   METHOD select_objects.
 
     DATA:
-      lt_excludes  TYPE ty_excludes,
+      lt_excludes  TYPE RANGE OF trobjtype,
       ls_exclude   LIKE LINE OF lt_excludes,
       lt_srcsystem TYPE RANGE OF tadir-srcsystem,
       ls_srcsystem LIKE LINE OF lt_srcsystem.
