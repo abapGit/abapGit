@@ -90,6 +90,7 @@
       {"object": "ZCL_ABAPGIT_SERIALIZE", "class": "ltcl_serialize", "method": "unsupported", "note": "Void type: KO100"},
       {"object": "ZCL_ABAPGIT_SERIALIZE", "class": "ltcl_serialize", "method": "ignored",     "note": "Void type: KO100"},
       {"object": "ZCL_ABAPGIT_SERIALIZE", "class": "ltcl_i18n", "method": "test",             "note": "Void type: DD02V"},
+      {"object": "ZCL_ABAPGIT_SERIALIZE", "class": "ltcl_determine_max_threads", "method": "determine_max_threads",             "note": "??"},
 
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_calculate_status", "method": "deleted_remote", "note": "READ TABLE subrc 4 vs subrc 8"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_calculate_status", "method": "complete", "note": "READ TABLE subrc 4 vs subrc 8"},
