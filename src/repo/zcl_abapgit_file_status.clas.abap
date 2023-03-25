@@ -106,7 +106,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
+CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
 
   METHOD build_existing.
@@ -118,6 +118,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
     rs_result-obj_name  = is_local-item-obj_name.
     rs_result-package   = is_local-item-devclass.
     rs_result-srcsystem = is_local-item-srcsystem.
+    rs_result-inactive  = is_local-item-inactive.
 
     " File
     rs_result-path     = is_local-file-path.
@@ -161,6 +162,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
     rs_result-obj_name  = is_local-item-obj_name.
     rs_result-package   = is_local-item-devclass.
     rs_result-srcsystem = is_local-item-srcsystem.
+    rs_result-inactive  = is_local-item-inactive.
 
     " File
     rs_result-path     = is_local-file-path.
@@ -423,7 +425,6 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       ENDIF.
 
       APPEND INITIAL LINE TO ct_results ASSIGNING <ls_result>.
-      <ls_result>-inactive = <ls_local>-item-inactive.
 
       " Find a match in remote
       READ TABLE ct_remote ASSIGNING <ls_remote>
