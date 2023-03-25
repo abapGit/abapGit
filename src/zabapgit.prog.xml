@@ -109,7 +109,7 @@
       <TEXT_TYPE>S</TEXT_TYPE>
       <TEXT_NAME>ICON_SELECT_BLOCK</TEXT_NAME>
       <ICON_ID>@4C@</ICON_ID>
-      <FUN_TEXT>Mark/Toggle selected</FUN_TEXT>
+      <FUN_TEXT>Mark/Toggle Selected</FUN_TEXT>
      </RSMPE_FUNT>
     </FUN>
     <BUT>

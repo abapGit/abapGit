@@ -1,11 +1,11 @@
 CLASS lcl_object_descision_list DEFINITION FINAL.
   PUBLIC SECTION.
 
-    CONSTANTS c_default_column TYPE abap_componentdescr-name VALUE 'DEFAULT_COLUMN'.
+    CONSTANTS c_default_column     TYPE abap_componentdescr-name VALUE 'DEFAULT_COLUMN'.
     CONSTANTS c_fieldname_selected TYPE abap_componentdescr-name VALUE 'SELECTED'.
     CONSTANTS c_answer_cancel      TYPE c LENGTH 1 VALUE 'A'.
     CONSTANTS c_fieldname_obj_type TYPE abap_componentdescr-name VALUE 'OBJ_TYPE'.
-    CONSTANTS c_own_pfstatus TYPE sy-pfkey VALUE 'DECIDE_DIALOG'.
+    CONSTANTS c_own_pfstatus       TYPE sy-pfkey VALUE 'DECIDE_DIALOG'.
 
     METHODS constructor
       IMPORTING
@@ -69,7 +69,7 @@ CLASS lcl_object_descision_list DEFINITION FINAL.
         cx_salv_msg.
     METHODS setup_columns
       IMPORTING
-        io_columns TYPE REF TO cl_salv_columns_table
+        io_columns            TYPE REF TO cl_salv_columns_table
         iv_selection_mode     TYPE salv_de_constant
         iv_select_column_text TYPE csequence
         it_columns_to_display TYPE zif_abapgit_popups=>ty_alv_column_tt
@@ -95,11 +95,11 @@ CLASS lcl_object_descision_list DEFINITION FINAL.
     METHODS mark_indexed
       IMPORTING
         iv_selected TYPE abap_bool DEFAULT abap_true
-        iv_invert TYPE abap_bool DEFAULT abap_false
-        it_scope TYPE lvc_t_fidx.
+        iv_invert   TYPE abap_bool DEFAULT abap_false
+        it_scope    TYPE lvc_t_fidx.
     METHODS are_all_marked
       IMPORTING
-        it_scope TYPE lvc_t_fidx
+        it_scope      TYPE lvc_t_fidx
       RETURNING
         VALUE(rv_yes) TYPE abap_bool.
 
@@ -498,11 +498,11 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
 
     CALL FUNCTION 'LVC_FILTER_APPLY'
       EXPORTING
-        it_filter                    = lt_filters
+        it_filter              = lt_filters
       IMPORTING
-        et_filter_index_inside       = lt_scope
+        et_filter_index_inside = lt_scope
       TABLES
-        it_data                      = <lt_table>.
+        it_data                = <lt_table>.
 
     mark_indexed(
       it_scope    = lt_scope
@@ -660,9 +660,9 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
   METHOD setup_columns.
 
     DATA:
-      lt_columns      TYPE salv_t_column_ref,
-      ls_column       TYPE salv_s_column_ref,
-      lo_column       TYPE REF TO cl_salv_column_list.
+      lt_columns TYPE salv_t_column_ref,
+      ls_column  TYPE salv_s_column_ref,
+      lo_column  TYPE REF TO cl_salv_column_list.
 
     FIELD-SYMBOLS <ls_column_to_display> TYPE zif_abapgit_popups=>ty_alv_column.
 
@@ -718,12 +718,12 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
   METHOD setup_toolbar.
 
     DATA:
-      lv_report         TYPE sy-repid,
-      lv_pfstatus       TYPE sy-pfkey,
-      lo_functions      TYPE REF TO cl_salv_functions_list,
-      lt_func_list      TYPE salv_t_ui_func,
-      lv_fn             TYPE string,
-      ls_func           LIKE LINE OF lt_func_list.
+      lv_report    TYPE sy-repid,
+      lv_pfstatus  TYPE sy-pfkey,
+      lo_functions TYPE REF TO cl_salv_functions_list,
+      lt_func_list TYPE salv_t_ui_func,
+      lv_fn        TYPE string,
+      ls_func      LIKE LINE OF lt_func_list.
 
     CALL FUNCTION 'RS_CUA_STATUS_CHECK'
       EXPORTING
