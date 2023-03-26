@@ -1149,6 +1149,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     DATA: lt_objects            TYPE STANDARD TABLE OF ko100,
           ls_item               TYPE zif_abapgit_definitions=>ty_item,
           ls_supported_obj_type TYPE ty_supported_types.
+    DATA lt_types TYPE zif_abapgit_exit=>ty_object_types.
+    DATA lv_type LIKE LINE OF lt_types.
 
     FIELD-SYMBOLS <ls_object> LIKE LINE OF lt_objects.
     FIELD-SYMBOLS <ls_supported_obj_type> TYPE ty_supported_types.
@@ -1170,10 +1172,17 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         OTHERS         = 1 ##FM_SUBRC_OK.
 
     LOOP AT lt_objects ASSIGNING <ls_object> WHERE pgmid = 'R3TR'.
+      INSERT <ls_object>-object INTO TABLE lt_types.
+    ENDLOOP.
 
-      ls_item-obj_type = <ls_object>-object.
+    zcl_abapgit_exit=>get_instance( )->change_object_types(
+      CHANGING
+        ct_types = lt_types ).
 
-      ls_supported_obj_type-obj_type  = <ls_object>-object.
+    LOOP AT lt_types INTO lv_type.
+      ls_item-obj_type = lv_type.
+
+      ls_supported_obj_type-obj_type  = lv_type.
       ls_supported_obj_type-supported = is_supported( ls_item ).
 
       INSERT ls_supported_obj_type INTO TABLE gt_supported_obj_types.
@@ -1181,7 +1190,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       IF ls_supported_obj_type-supported = abap_true.
         INSERT ls_supported_obj_type-obj_type INTO TABLE rt_types.
       ENDIF.
-
     ENDLOOP.
 
     gv_supported_obj_types_loaded = abap_true.
