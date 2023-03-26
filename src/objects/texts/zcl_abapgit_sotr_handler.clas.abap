@@ -358,9 +358,9 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
     DATA: lv_sotr            TYPE ty_sotr,
           lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
-    " SOTR usage (see LSOTR_SYSTEM_SETTINGSF01, FORM GET_OBJECT_TABLE)
+    " OTR short text usage: see TABLE BTFR_OBJ_IDS
     " LIMU: CPUB, WAPP, WDYC, WDYD, WDYV
-    " R3TR: ENHC, ENHD, ENHO, ENHS, ENSC, SCGR, SICF, WDCA, WDCC, WDYA, WEBI, WEBS, XSLT
+    " R3TR: ENHC, ENHO, ENHS, ENSC, SCGR, SMIF, WDCA, WDCC, WEBI, WEBS
 
     et_sotr_use = get_sotr_usage( iv_pgmid    = iv_pgmid
                                   iv_object   = iv_object
