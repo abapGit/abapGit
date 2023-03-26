@@ -1146,11 +1146,12 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
   METHOD supported_list.
 
-    DATA: lt_objects            TYPE STANDARD TABLE OF ko100,
-          ls_item               TYPE zif_abapgit_definitions=>ty_item,
-          ls_supported_obj_type TYPE ty_supported_types.
-    DATA lt_types TYPE zif_abapgit_exit=>ty_object_types.
-    DATA lv_type LIKE LINE OF lt_types.
+    DATA lt_objects            TYPE STANDARD TABLE OF ko100.
+    DATA ls_item               TYPE zif_abapgit_definitions=>ty_item.
+    DATA ls_supported_obj_type TYPE ty_supported_types.
+    DATA lt_types              TYPE zif_abapgit_exit=>ty_object_types.
+    DATA lv_type               LIKE LINE OF lt_types.
+    DATA li_exit               TYPE REF TO zif_abapgit_exit.
 
     FIELD-SYMBOLS <ls_object> LIKE LINE OF lt_objects.
     FIELD-SYMBOLS <ls_supported_obj_type> TYPE ty_supported_types.
@@ -1175,7 +1176,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       INSERT <ls_object>-object INTO TABLE lt_types.
     ENDLOOP.
 
-    zcl_abapgit_exit=>get_instance( )->change_object_types(
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+    li_exit->change_object_types(
       CHANGING
         ct_types = lt_types ).
 
