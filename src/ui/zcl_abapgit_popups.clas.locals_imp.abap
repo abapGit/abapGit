@@ -1,11 +1,11 @@
 CLASS lcl_object_descision_list DEFINITION FINAL.
   PUBLIC SECTION.
 
-    CONSTANTS c_default_column TYPE abap_componentdescr-name VALUE 'DEFAULT_COLUMN'.
+    CONSTANTS c_default_column     TYPE abap_componentdescr-name VALUE 'DEFAULT_COLUMN'.
     CONSTANTS c_fieldname_selected TYPE abap_componentdescr-name VALUE 'SELECTED'.
     CONSTANTS c_answer_cancel      TYPE c LENGTH 1 VALUE 'A'.
     CONSTANTS c_fieldname_obj_type TYPE abap_componentdescr-name VALUE 'OBJ_TYPE'.
-    CONSTANTS c_own_pfstatus TYPE sy-pfkey VALUE 'DECIDE_DIALOG'.
+    CONSTANTS c_own_pfstatus       TYPE sy-pfkey VALUE 'DECIDE_DIALOG'.
 
     METHODS constructor
       IMPORTING
@@ -69,7 +69,7 @@ CLASS lcl_object_descision_list DEFINITION FINAL.
         cx_salv_msg.
     METHODS setup_columns
       IMPORTING
-        io_columns TYPE REF TO cl_salv_columns_table
+        io_columns            TYPE REF TO cl_salv_columns_table
         iv_selection_mode     TYPE salv_de_constant
         iv_select_column_text TYPE csequence
         it_columns_to_display TYPE zif_abapgit_popups=>ty_alv_column_tt
@@ -88,7 +88,20 @@ CLASS lcl_object_descision_list DEFINITION FINAL.
     METHODS mark_all
       IMPORTING
         iv_selected TYPE abap_bool.
-    METHODS mark_visible.
+    METHODS mark_visible
+      IMPORTING
+        iv_selected TYPE abap_bool.
+    METHODS mark_selected.
+    METHODS mark_indexed
+      IMPORTING
+        iv_selected TYPE abap_bool DEFAULT abap_true
+        iv_invert   TYPE abap_bool DEFAULT abap_false
+        it_scope    TYPE lvc_t_fidx.
+    METHODS are_all_marked
+      IMPORTING
+        it_scope      TYPE lvc_t_fidx
+      RETURNING
+        VALUE(rv_yes) TYPE abap_bool.
 
 ENDCLASS.
 
@@ -374,15 +387,15 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
         mo_alv->close_screen( ).
 
       WHEN 'SALL' OR 'SEL_ALL'.
-        mark_all( abap_true ).
+        mark_visible( abap_true ).
         mo_alv->refresh( ).
 
       WHEN 'DSEL' OR 'SEL_DEL'.
-        mark_all( abap_false ).
+        mark_visible( abap_false ).
         mo_alv->refresh( ).
 
       WHEN 'SEL_KEY'.
-        mark_visible( ).
+        mark_selected( ).
         mo_alv->refresh( ).
 
       WHEN 'SEL_CAT'.
@@ -417,13 +430,9 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD mark_visible.
+  METHOD are_all_marked.
 
-    DATA:
-      lo_selection  TYPE REF TO cl_salv_selections,
-      lt_filters    TYPE lvc_t_filt,
-      lt_scope      TYPE lvc_t_fidx,
-      lv_index      LIKE LINE OF lt_scope.
+    DATA lv_index LIKE LINE OF it_scope.
 
     FIELD-SYMBOLS:
       <lt_table>    TYPE STANDARD TABLE,
@@ -433,35 +442,99 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
     ASSIGN mr_table->* TO <lt_table>.
     ASSERT sy-subrc = 0.
 
-    " First get selection
-    lo_selection = mo_alv->get_selections( ).
-    lt_scope = lo_selection->get_selected_rows( ).
-
-    IF lines( lt_scope ) = 0.
-      " If nothing selected, select all VISIBLE
-      lt_filters = cl_salv_controller_metadata=>get_lvc_filter( mo_alv->get_filters( ) ).
-      IF lines( lt_filters ) = 0.
-        mark_all( abap_true ). " No filters - just select all
-        RETURN.
-      ENDIF.
-
-      CALL FUNCTION 'LVC_FILTER_APPLY'
-        EXPORTING
-          it_filter                    = lt_filters
-        IMPORTING
-          et_filter_index_inside       = lt_scope
-        TABLES
-          it_data                      = <lt_table>.
-    ENDIF.
-
-    LOOP AT lt_scope INTO lv_index.
+    LOOP AT it_scope INTO lv_index.
 
       READ TABLE <lt_table> ASSIGNING <ls_line> INDEX lv_index.
       CHECK sy-subrc = 0.
 
       ASSIGN COMPONENT c_fieldname_selected OF STRUCTURE <ls_line> TO <lv_selected>.
       ASSERT sy-subrc = 0.
-      <lv_selected> = abap_true.
+
+      IF <lv_selected> = abap_true.
+        rv_yes = abap_true.
+      ELSE.
+        rv_yes = abap_false.
+        RETURN.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD mark_selected.
+
+    DATA lt_clear TYPE salv_t_row.
+    DATA lt_scope TYPE lvc_t_fidx.
+
+    lt_scope = mo_alv->get_selections( )->get_selected_rows( ).
+
+    IF lines( lt_scope ) > 0.
+      mark_indexed(
+        it_scope    = lt_scope
+        iv_selected = boolc( are_all_marked( lt_scope ) = abap_false ) ).
+      mo_alv->get_selections( )->set_selected_rows( lt_clear ).
+    ELSE.
+      MESSAGE 'Select rows first to mark them' TYPE 'S'.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD mark_visible.
+
+    DATA lt_filters TYPE lvc_t_filt.
+    DATA lt_scope   TYPE lvc_t_fidx.
+
+    FIELD-SYMBOLS <lt_table> TYPE STANDARD TABLE.
+
+    ASSIGN mr_table->* TO <lt_table>.
+    ASSERT sy-subrc = 0.
+
+    " If nothing selected, select all VISIBLE
+    lt_filters = cl_salv_controller_metadata=>get_lvc_filter( mo_alv->get_filters( ) ).
+    IF lines( lt_filters ) = 0.
+      mark_all( iv_selected ). " No filters - just select all
+      RETURN.
+    ENDIF.
+
+    CALL FUNCTION 'LVC_FILTER_APPLY'
+      EXPORTING
+        it_filter              = lt_filters
+      IMPORTING
+        et_filter_index_inside = lt_scope
+      TABLES
+        it_data                = <lt_table>.
+
+    mark_indexed(
+      it_scope    = lt_scope
+      iv_selected = iv_selected ).
+
+  ENDMETHOD.
+
+  METHOD mark_indexed.
+
+    DATA lv_index LIKE LINE OF it_scope.
+
+    FIELD-SYMBOLS:
+      <lt_table>    TYPE STANDARD TABLE,
+      <ls_line>     TYPE any,
+      <lv_selected> TYPE abap_bool.
+
+    ASSIGN mr_table->* TO <lt_table>.
+    ASSERT sy-subrc = 0.
+
+    LOOP AT it_scope INTO lv_index.
+
+      READ TABLE <lt_table> ASSIGNING <ls_line> INDEX lv_index.
+      CHECK sy-subrc = 0.
+
+      ASSIGN COMPONENT c_fieldname_selected OF STRUCTURE <ls_line> TO <lv_selected>.
+      ASSERT sy-subrc = 0.
+
+      IF iv_invert = abap_true.
+        <lv_selected> = boolc( <lv_selected> = abap_false ).
+      ELSE.
+        <lv_selected> = iv_selected.
+      ENDIF.
 
     ENDLOOP.
 
@@ -587,9 +660,9 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
   METHOD setup_columns.
 
     DATA:
-      lt_columns      TYPE salv_t_column_ref,
-      ls_column       TYPE salv_s_column_ref,
-      lo_column       TYPE REF TO cl_salv_column_list.
+      lt_columns TYPE salv_t_column_ref,
+      ls_column  TYPE salv_s_column_ref,
+      lo_column  TYPE REF TO cl_salv_column_list.
 
     FIELD-SYMBOLS <ls_column_to_display> TYPE zif_abapgit_popups=>ty_alv_column.
 
@@ -645,12 +718,12 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
   METHOD setup_toolbar.
 
     DATA:
-      lv_report         TYPE sy-repid,
-      lv_pfstatus       TYPE sy-pfkey,
-      lo_functions      TYPE REF TO cl_salv_functions_list,
-      lt_func_list      TYPE salv_t_ui_func,
-      lv_fn             TYPE string,
-      ls_func           LIKE LINE OF lt_func_list.
+      lv_report    TYPE sy-repid,
+      lv_pfstatus  TYPE sy-pfkey,
+      lo_functions TYPE REF TO cl_salv_functions_list,
+      lt_func_list TYPE salv_t_ui_func,
+      lv_fn        TYPE string,
+      ls_func      LIKE LINE OF lt_func_list.
 
     CALL FUNCTION 'RS_CUA_STATUS_CHECK'
       EXPORTING

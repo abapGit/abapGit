@@ -85,7 +85,7 @@
       <TEXT_TYPE>S</TEXT_TYPE>
       <TEXT_NAME>ICON_SELECT_ALL</TEXT_NAME>
       <ICON_ID>@4B@</ICON_ID>
-      <FUN_TEXT>Select All</FUN_TEXT>
+      <FUN_TEXT>Select All Visible</FUN_TEXT>
      </RSMPE_FUNT>
      <RSMPE_FUNT>
       <CODE>SEL_CAT</CODE>
@@ -101,7 +101,7 @@
       <TEXT_TYPE>S</TEXT_TYPE>
       <TEXT_NAME>ICON_DESELECT_ALL</TEXT_NAME>
       <ICON_ID>@4D@</ICON_ID>
-      <FUN_TEXT>Deselect All</FUN_TEXT>
+      <FUN_TEXT>Deselect All Visible</FUN_TEXT>
      </RSMPE_FUNT>
      <RSMPE_FUNT>
       <CODE>SEL_KEY</CODE>
@@ -109,7 +109,7 @@
       <TEXT_TYPE>S</TEXT_TYPE>
       <TEXT_NAME>ICON_SELECT_BLOCK</TEXT_NAME>
       <ICON_ID>@4C@</ICON_ID>
-      <FUN_TEXT>Mark selected or all visible</FUN_TEXT>
+      <FUN_TEXT>Mark/Toggle Selected</FUN_TEXT>
      </RSMPE_FUNT>
     </FUN>
     <BUT>
