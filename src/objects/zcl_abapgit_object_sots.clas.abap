@@ -121,6 +121,8 @@ CLASS zcl_abapgit_object_sots IMPLEMENTATION.
   METHOD read_sots.
 
     DATA: lt_sotr_head TYPE STANDARD TABLE OF sotr_headu,
+          lt_objects   TYPE sotr_objects,
+          lv_object    LIKE LINE OF lt_objects,
           ls_sots      LIKE LINE OF rt_sots.
 
     FIELD-SYMBOLS: <ls_sotr_head> TYPE sotr_head,
@@ -133,6 +135,24 @@ CLASS zcl_abapgit_object_sots IMPLEMENTATION.
              ORDER BY PRIMARY KEY.
 
     LOOP AT lt_sotr_head ASSIGNING <ls_sotr_head>.
+
+      CALL FUNCTION 'SOTR_OBJECT_GET_OBJECTS'
+        EXPORTING
+          object_vector    = <ls_sotr_head>-objid_vec
+        IMPORTING
+          objects          = lt_objects
+        EXCEPTIONS
+          object_not_found = 1
+          OTHERS           = 2.
+      IF sy-subrc <> 0.
+        CONTINUE.
+      ENDIF.
+
+      READ TABLE lt_objects INDEX 1 INTO lv_object.
+      ASSERT sy-subrc = 0.
+
+      " Handled by object serializer
+      CHECK lv_object <> 'SICF'.
 
       CLEAR: ls_sots.
 
