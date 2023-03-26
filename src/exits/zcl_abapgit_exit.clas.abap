@@ -97,9 +97,7 @@ CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
 
     IF gi_exit IS NOT INITIAL.
       TRY.
-          gi_exit->change_object_types(
-            CHANGING
-              ct_types = ct_types ).
+          gi_exit->change_object_types( CHANGING ct_types = ct_types ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.
