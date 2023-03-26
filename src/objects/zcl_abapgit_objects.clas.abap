@@ -1177,9 +1177,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDLOOP.
 
     li_exit = zcl_abapgit_exit=>get_instance( ).
-    li_exit->change_object_types(
-      CHANGING
-        ct_types = lt_types ).
+    li_exit->change_object_types( CHANGING ct_types = lt_types ).
 
     LOOP AT lt_types INTO lv_type.
       ls_item-obj_type = lv_type.
