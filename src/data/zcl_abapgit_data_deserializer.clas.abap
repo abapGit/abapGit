@@ -46,7 +46,7 @@ CLASS zcl_abapgit_data_deserializer DEFINITION
         !iv_table_name            TYPE tabname
         !is_checks                TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RETURNING
-        VALUE(is_allowed_to_edit) TYPE abap_bool .
+        VALUE(rv_allowed_to_edit) TYPE abap_bool .
 ENDCLASS.
 
 
@@ -266,6 +266,6 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
         AND dd09l~as4user <> 'SAP'
         AND dd09l~as4local = cl_wer_const=>c_db_table_version_active
         AND dd02l~contflag = cl_axt_dbtable=>gc_deliv_class_cust.
-    is_allowed_to_edit = boolc( sy-subrc = 0 ).
+    rv_allowed_to_edit = boolc( sy-subrc = 0 ).
   ENDMETHOD.
 ENDCLASS.
