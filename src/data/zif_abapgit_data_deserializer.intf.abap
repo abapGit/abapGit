@@ -2,15 +2,13 @@ INTERFACE zif_abapgit_data_deserializer
   PUBLIC .
 
 
-  TYPES:
-    BEGIN OF ty_result,
-      table   TYPE tadir-obj_name,
-      deletes TYPE REF TO data,
-      updates TYPE REF TO data,
-      inserts TYPE REF TO data,
-    END OF ty_result .
-  TYPES:
-    ty_results TYPE STANDARD TABLE OF ty_result WITH KEY table .
+  TYPES: BEGIN OF ty_result,
+           table   TYPE tadir-obj_name,
+           deletes TYPE REF TO data,
+           updates TYPE REF TO data,
+           inserts TYPE REF TO data,
+         END OF ty_result.
+  TYPES: ty_results TYPE STANDARD TABLE OF ty_result WITH KEY table.
 
   METHODS deserialize
     IMPORTING
@@ -20,6 +18,7 @@ INTERFACE zif_abapgit_data_deserializer
       VALUE(rt_result) TYPE ty_results
     RAISING
       zcx_abapgit_exception .
+
   METHODS actualize
     IMPORTING
       !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
