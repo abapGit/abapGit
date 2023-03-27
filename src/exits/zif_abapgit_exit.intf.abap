@@ -12,7 +12,7 @@ INTERFACE zif_abapgit_exit
   TYPES:
     ty_object_types TYPE STANDARD TABLE OF tadir-object WITH DEFAULT KEY .
 
-  METHODS change_object_types
+  METHODS change_supported_object_types
     CHANGING
       !ct_types TYPE ty_object_types .
   METHODS adjust_display_commit_url
