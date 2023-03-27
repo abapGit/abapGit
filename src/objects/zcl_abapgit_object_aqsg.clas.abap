@@ -1,4 +1,4 @@
-CLASS zcl_abapgit_object_aqbg DEFINITION
+CLASS zcl_abapgit_object_aqsg DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_objects_super
   CREATE PUBLIC .
@@ -22,41 +22,20 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_aqbg IMPLEMENTATION.
+CLASS zcl_abapgit_object_aqsg IMPLEMENTATION.
 
 
   METHOD get_field_rules.
 
     ro_result = zcl_abapgit_field_rules=>create( ).
 
-    ro_result->add(
-      iv_table     = 'AQGDBBG'
-      iv_field     = 'BGCNAM'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user
-    )->add(
-      iv_table     = 'AQGDBBG'
-      iv_field     = 'BGUNAM'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-user ).
-
-    ro_result->add(
-      iv_table     = 'AQGDBBG'
-      iv_field     = 'BGCDAT'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-date
-    )->add(
-      iv_table     = 'AQGDBBG'
-      iv_field     = 'BGUDAT'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-date ).
-
-    ro_result->add(
-      iv_table     = 'AQGDBBG'
-      iv_field     = 'DEVC'
-      iv_fill_rule = zif_abapgit_field_rules=>c_fill_rule-package ).
+* add rules here if needed
 
   ENDMETHOD.
 
 
   METHOD get_generic.
-    " transaction SQ03
+    " transaction SQ02
     CREATE OBJECT ro_generic
       EXPORTING
         is_item        = ms_item
@@ -67,10 +46,7 @@ CLASS zcl_abapgit_object_aqbg IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    SELECT SINGLE bgunam FROM aqgdbbg INTO rv_user WHERE num = ms_item-obj_name.
-    IF sy-subrc <> 0.
-      rv_user = zcl_abapgit_objects_super=>c_user_unknown.
-    ENDIF.
+    rv_user = zcl_abapgit_objects_super=>c_user_unknown.
   ENDMETHOD.
 
 
@@ -118,39 +94,16 @@ CLASS zcl_abapgit_object_aqbg IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_locked.
-
     rv_is_locked = abap_false.
-
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~jump.
-
-    DATA lt_bdcdata TYPE TABLE OF bdcdata.
-
-    FIELD-SYMBOLS <ls_bdcdata> LIKE LINE OF lt_bdcdata.
-
-    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
-    <ls_bdcdata>-program  = 'SAPMS38S'.
-    <ls_bdcdata>-dynpro   = '0050'.
-    <ls_bdcdata>-dynbegin = abap_true.
-
-    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
-    <ls_bdcdata>-fnam = 'RS38S-BGNUM'.
-    <ls_bdcdata>-fval = ms_item-obj_name.
-
-    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
-      iv_tcode      = 'SQ03'
-      it_bdcdata    = lt_bdcdata ).
-
-    rv_exit = abap_true.
-
+    RETURN.
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
-
     get_generic( )->serialize( io_xml ).
-
   ENDMETHOD.
 ENDCLASS.
