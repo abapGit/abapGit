@@ -816,6 +816,7 @@ CLASS ltcl_calculate_status DEFINITION FOR TESTING RISK LEVEL HARMLESS
       complete_remote,
       complete_state,
       only_remote FOR TESTING RAISING zcx_abapgit_exception,
+      deleted_remote FOR TESTING RAISING zcx_abapgit_exception,
       only_local FOR TESTING RAISING zcx_abapgit_exception,
       match_file FOR TESTING RAISING zcx_abapgit_exception,
       diff FOR TESTING RAISING zcx_abapgit_exception,
@@ -849,6 +850,35 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = mo_result->get_line( 1 )-rstate
       exp = zif_abapgit_definitions=>c_state-added ).
+
+  ENDMETHOD.
+
+  METHOD deleted_remote.
+
+    mo_helper->add_local(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_deleted_remotel.prog.xml'
+      iv_sha1     = '1011' ).
+
+* this remote has to be there, even tho its not related
+* SUBRC = 4 vs SUBRC = 8 during READ TABLE
+    mo_helper->add_remote(
+      iv_path     = '/'
+      iv_filename = 'zzz.xml'
+      iv_sha1     = '1017' ).
+
+    mo_helper->add_state(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_deleted_remotel.prog.xml'
+      iv_sha1     = '1011' ).
+
+    mo_result = mo_helper->run( ).
+
+    mo_result->assert_lines( 2 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_result->get_line( 2 )-rstate
+      exp = zif_abapgit_definitions=>c_state-deleted ).
 
   ENDMETHOD.
 
