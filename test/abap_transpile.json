@@ -153,6 +153,8 @@
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "xslt_before_clas", "note": "hmm, something with promises?"},
       {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "xslt_before_prog", "note": "hmm, something with promises?"},
 
+      {"object": "ZCL_ABAPGIT_OBJECT_INTF", "class": "ltcl_aff_metadata", "method": "serialize_default", "note": "??"},
+
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "identity", "note": " https://github.com/open-abap/open-abap/issues/471 "},
 
       {"object": "ZCL_ABAPGIT_VERSION", "class": "ltcl_version_parse", "method": "abapgit_version",     "note": "Error: ReadReport, transpiler todo"},
