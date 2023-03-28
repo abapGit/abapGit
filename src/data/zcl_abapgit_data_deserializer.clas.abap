@@ -264,8 +264,8 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
       WHERE dd09l~tabname = iv_table_name
         AND dd09l~tabart = 'APPL2'
         AND dd09l~as4user <> 'SAP'
-        AND dd09l~as4local = cl_wer_const=>c_db_table_version_active
-        AND dd02l~contflag = cl_axt_dbtable=>gc_deliv_class_cust.
+        AND dd09l~as4local = 'A' "Only active tables
+        AND dd02l~contflag = 'C'. "Only customizing tables
     rv_allowed_to_edit = boolc( sy-subrc = 0 ).
   ENDMETHOD.
 ENDCLASS.

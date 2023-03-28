@@ -28,7 +28,7 @@ CLASS zcl_abapgit_data_utils DEFINITION
     TYPES ty_names TYPE STANDARD TABLE OF abap_compname WITH DEFAULT KEY .
     CLASS-METHODS list_key_fields
       IMPORTING
-        !iv_name TYPE tadir-obj_name
+        !iv_name        TYPE tadir-obj_name
       RETURNING
         VALUE(rt_names) TYPE ty_names .
 ENDCLASS.
@@ -71,7 +71,7 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
         CALL METHOD lo_obj->('IF_XCO_DBT_FIELDS~GET_NAMES')
           RECEIVING
             rt_names = rt_names.
-      CATCH cx_sy_dyn_call_illegal_class cx_xco_runtime_exception. "Newer SAP releases can throw XCO exception
+      CATCH cx_sy_dyn_call_illegal_class cx_no_check.
         lv_workaround = 'DDFIELDS'.
         CREATE DATA lr_ddfields TYPE (lv_workaround).
         ASSIGN lr_ddfields->* TO <lt_ddfields>.
