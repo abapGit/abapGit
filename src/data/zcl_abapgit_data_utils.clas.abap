@@ -23,6 +23,11 @@ CLASS zcl_abapgit_data_utils DEFINITION
         VALUE(rv_exit) TYPE abap_bool
       RAISING
         zcx_abapgit_exception.
+    CLASS-METHODS does_table_exist
+      IMPORTING
+        !iv_name         TYPE tadir-obj_name
+      RETURNING
+        VALUE(rv_exists) TYPE abap_bool.
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES ty_names TYPE STANDARD TABLE OF abap_compname WITH DEFAULT KEY .
@@ -46,51 +51,6 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD list_key_fields.
-    DATA lo_obj        TYPE REF TO object.
-    DATA lv_tabname    TYPE c LENGTH 16.
-    DATA lr_ddfields   TYPE REF TO data.
-    DATA lv_workaround TYPE c LENGTH 20.
-    DATA lr_struct     TYPE REF TO cl_abap_structdescr.
-    FIELD-SYMBOLS <lg_any> TYPE any.
-    FIELD-SYMBOLS <lv_field> TYPE simple.
-    FIELD-SYMBOLS <lt_ddfields> TYPE ANY TABLE.
-
-* convert to correct type,
-    lv_tabname = iv_name.
-
-    TRY.
-        CALL METHOD ('XCO_CP_ABAP_DICTIONARY')=>database_table
-          EXPORTING
-            iv_name           = lv_tabname
-          RECEIVING
-            ro_database_table = lo_obj.
-        ASSIGN lo_obj->('IF_XCO_DATABASE_TABLE~FIELDS->IF_XCO_DBT_FIELDS_FACTORY~KEY') TO <lg_any>.
-        ASSERT sy-subrc = 0.
-        lo_obj = <lg_any>.
-        CALL METHOD lo_obj->('IF_XCO_DBT_FIELDS~GET_NAMES')
-          RECEIVING
-            rt_names = rt_names.
-      CATCH cx_sy_dyn_call_illegal_class cx_no_check.
-        lv_workaround = 'DDFIELDS'.
-        CREATE DATA lr_ddfields TYPE (lv_workaround).
-        ASSIGN lr_ddfields->* TO <lt_ddfields>.
-        ASSERT sy-subrc = 0.
-        lr_struct ?= cl_abap_typedescr=>describe_by_name( lv_tabname ).
-        <lt_ddfields> = lr_struct->get_ddic_field_list( ).
-        LOOP AT <lt_ddfields> ASSIGNING <lg_any>.
-          ASSIGN COMPONENT 'KEYFLAG' OF STRUCTURE <lg_any> TO <lv_field>.
-          IF sy-subrc <> 0 OR <lv_field> <> abap_true.
-            CONTINUE.
-          ENDIF.
-          ASSIGN COMPONENT 'FIELDNAME' OF STRUCTURE <lg_any> TO <lv_field>.
-          ASSERT sy-subrc = 0.
-          APPEND <lv_field> TO rt_names.
-        ENDLOOP.
-    ENDTRY.
-
-  ENDMETHOD.
-
 
   METHOD build_table_itab.
 
@@ -103,6 +63,11 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
     FIELD-SYMBOLS <lv_name>      LIKE LINE OF lt_names.
     FIELD-SYMBOLS <ls_key>       LIKE LINE OF lt_keys.
     FIELD-SYMBOLS <ls_component> LIKE LINE OF <ls_key>-components.
+
+    " Type names might be buffered so we explicitly check that table exists on DB to avoid dumps
+    IF does_table_exist( iv_name ) = abap_false.
+      zcx_abapgit_exception=>raise( |Database table { iv_name } not found for data serialization| ).
+    ENDIF.
 
     cl_abap_structdescr=>describe_by_name(
       EXPORTING
@@ -151,6 +116,27 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD does_table_exist.
+
+    DATA lv_tabname TYPE tabname.
+    DATA lv_subrc TYPE sy-subrc.
+
+    lv_tabname = iv_name.
+
+    CALL FUNCTION 'DD_EXIST_TABLE'
+      EXPORTING
+        tabname      = lv_tabname
+        status       = 'A'
+      IMPORTING
+        subrc        = lv_subrc
+      EXCEPTIONS
+        wrong_status = 1
+        OTHERS       = 2.
+    rv_exists = boolc( sy-subrc = 0 AND lv_subrc = 0 ).
+
+  ENDMETHOD.
+
+
   METHOD jump.
 
     " Run SE16 with authorization check
@@ -168,6 +154,52 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Table { is_item-obj_name } cannot be displayed| ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD list_key_fields.
+    DATA lo_obj        TYPE REF TO object.
+    DATA lv_tabname    TYPE c LENGTH 16.
+    DATA lr_ddfields   TYPE REF TO data.
+    DATA lv_workaround TYPE c LENGTH 20.
+    DATA lr_struct     TYPE REF TO cl_abap_structdescr.
+    FIELD-SYMBOLS <lg_any> TYPE any.
+    FIELD-SYMBOLS <lv_field> TYPE simple.
+    FIELD-SYMBOLS <lt_ddfields> TYPE ANY TABLE.
+
+* convert to correct type,
+    lv_tabname = iv_name.
+
+    TRY.
+        CALL METHOD ('XCO_CP_ABAP_DICTIONARY')=>database_table
+          EXPORTING
+            iv_name           = lv_tabname
+          RECEIVING
+            ro_database_table = lo_obj.
+        ASSIGN lo_obj->('IF_XCO_DATABASE_TABLE~FIELDS->IF_XCO_DBT_FIELDS_FACTORY~KEY') TO <lg_any>.
+        ASSERT sy-subrc = 0.
+        lo_obj = <lg_any>.
+        CALL METHOD lo_obj->('IF_XCO_DBT_FIELDS~GET_NAMES')
+          RECEIVING
+            rt_names = rt_names.
+      CATCH cx_sy_dyn_call_illegal_class cx_no_check.
+        lv_workaround = 'DDFIELDS'.
+        CREATE DATA lr_ddfields TYPE (lv_workaround).
+        ASSIGN lr_ddfields->* TO <lt_ddfields>.
+        ASSERT sy-subrc = 0.
+        lr_struct ?= cl_abap_typedescr=>describe_by_name( lv_tabname ).
+        <lt_ddfields> = lr_struct->get_ddic_field_list( ).
+        LOOP AT <lt_ddfields> ASSIGNING <lg_any>.
+          ASSIGN COMPONENT 'KEYFLAG' OF STRUCTURE <lg_any> TO <lv_field>.
+          IF sy-subrc <> 0 OR <lv_field> <> abap_true.
+            CONTINUE.
+          ENDIF.
+          ASSIGN COMPONENT 'FIELDNAME' OF STRUCTURE <lg_any> TO <lv_field>.
+          ASSERT sy-subrc = 0.
+          APPEND <lv_field> TO rt_names.
+        ENDLOOP.
+    ENDTRY.
 
   ENDMETHOD.
 ENDCLASS.

@@ -73,6 +73,33 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD is_table_allowed_to_edit.
+
+    DATA lv_tabname TYPE dd02l-tabname.
+
+    "Did the user flagged this table for update?
+    READ TABLE is_checks-overwrite TRANSPORTING NO FIELDS
+      WITH KEY obj_name = iv_table_name decision = zif_abapgit_definitions=>c_yes.
+    IF sy-subrc <>  0.
+      RETURN.
+    ENDIF.
+
+    "For safety reasons only customer dependend customizing tables are allowed to update
+    SELECT SINGLE dd02l~tabname
+      FROM dd09l JOIN dd02l
+        ON dd09l~tabname = dd02l~tabname
+        AND dd09l~as4local = dd02l~as4local
+        AND dd09l~as4vers = dd02l~as4vers
+      INTO lv_tabname
+      WHERE dd09l~tabname = iv_table_name
+        AND dd09l~tabart = 'APPL2'
+        AND dd09l~as4user <> 'SAP'
+        AND dd09l~as4local = 'A' "Only active tables
+        AND dd02l~contflag = 'C'. "Only customizing tables
+    rv_allowed_to_edit = boolc( sy-subrc = 0 ).
+  ENDMETHOD.
+
+
   METHOD preview_database_changes.
 
 * method currently distinguishes between records be deleted and inserted (comparison of complete record)
@@ -140,6 +167,10 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
     FIELD-SYMBOLS <lg_del> TYPE ANY TABLE.
     FIELD-SYMBOLS <lg_ins> TYPE ANY TABLE.
 
+    IF zcl_abapgit_data_utils=>does_table_exist( iv_name ) = abap_false.
+      zcx_abapgit_exception=>raise( |Table { iv_name } not found for data deserialization| ).
+    ENDIF.
+
     ASSIGN ir_del->* TO <lg_del>.
     ASSIGN ir_ins->* TO <lg_ins>.
 
@@ -170,6 +201,11 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
     DATA lv_table_name    TYPE tabname.
     DATA lt_tadir_entries TYPE scts_tadir.
 
+    FIELD-SYMBOLS:
+      <lt_ins> TYPE ANY TABLE,
+      <lt_del> TYPE ANY TABLE,
+      <lt_upd> TYPE ANY TABLE.
+
     LOOP AT it_result INTO ls_result.
       lv_table_name = ls_result-table.
 
@@ -184,11 +220,15 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
         ir_del  = ls_result-deletes
         ir_ins  = ls_result-inserts ).
 
+      ASSIGN ls_result-inserts->* TO <lt_ins>.
+      ASSIGN ls_result-deletes->* TO <lt_del>.
+      ASSIGN ls_result-updates->* TO <lt_upd>.
+
       cl_table_utilities_brf=>create_transport_entries(
         EXPORTING
-          it_table_ins = ls_result-inserts->*
-          it_table_upd = ls_result-updates->*
-          it_table_del = ls_result-deletes->*
+          it_table_ins = <lt_ins>
+          it_table_upd = <lt_upd>
+          it_table_del = <lt_del>
           iv_tabname   = lv_table_name
         CHANGING
           ct_e071      = lt_tables
@@ -240,32 +280,5 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 
     ENDLOOP.
 
-  ENDMETHOD.
-
-
-  METHOD is_table_allowed_to_edit.
-
-    DATA lv_tabname TYPE dd02l-tabname.
-
-    "Did the user flagged this table for update?
-    READ TABLE is_checks-overwrite TRANSPORTING NO FIELDS
-      WITH KEY obj_name = iv_table_name decision = zif_abapgit_definitions=>c_yes.
-    IF sy-subrc <>  0.
-      RETURN.
-    ENDIF.
-
-    "For safety reasons only customer dependend customizing tables are allowed to update
-    SELECT SINGLE dd02l~tabname
-      FROM dd09l JOIN dd02l
-        ON dd09l~tabname = dd02l~tabname
-        AND dd09l~as4local = dd02l~as4local
-        AND dd09l~as4vers = dd02l~as4vers
-      INTO lv_tabname
-      WHERE dd09l~tabname = iv_table_name
-        AND dd09l~tabart = 'APPL2'
-        AND dd09l~as4user <> 'SAP'
-        AND dd09l~as4local = 'A' "Only active tables
-        AND dd02l~contflag = 'C'. "Only customizing tables
-    rv_allowed_to_edit = boolc( sy-subrc = 0 ).
   ENDMETHOD.
 ENDCLASS.
