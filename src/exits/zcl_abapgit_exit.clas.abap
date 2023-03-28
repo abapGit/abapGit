@@ -93,6 +93,18 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_exit~change_supported_object_types.
+
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          gi_exit->change_supported_object_types( CHANGING ct_types = ct_types ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_exit~change_proxy_authentication.
 
     IF gi_exit IS NOT INITIAL.
@@ -207,6 +219,23 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_exit~determine_transport_request.
+
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          gi_exit->determine_transport_request(
+            EXPORTING
+              io_repo              = io_repo
+              iv_transport_type    = iv_transport_type
+            CHANGING
+              cv_transport_request = cv_transport_request ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_exit~get_ci_tests.
 
     IF gi_exit IS NOT INITIAL.
@@ -299,6 +328,21 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_exit~validate_before_push.
+
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          gi_exit->validate_before_push(
+            is_comment = is_comment
+            io_stage   = io_stage
+            io_repo    = io_repo ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_exit~wall_message_list.
 
     IF gi_exit IS NOT INITIAL.
@@ -318,38 +362,6 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
           gi_exit->wall_message_repo(
             is_repo_meta = is_repo_meta
             ii_html      = ii_html ).
-        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
-      ENDTRY.
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_exit~determine_transport_request.
-
-    IF gi_exit IS NOT INITIAL.
-      TRY.
-          gi_exit->determine_transport_request(
-            EXPORTING
-              io_repo              = io_repo
-              iv_transport_type    = iv_transport_type
-            CHANGING
-              cv_transport_request = cv_transport_request ).
-        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
-      ENDTRY.
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_exit~validate_before_push.
-
-    IF gi_exit IS NOT INITIAL.
-      TRY.
-          gi_exit->validate_before_push(
-            is_comment = is_comment
-            io_stage   = io_stage
-            io_repo    = io_repo ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.
