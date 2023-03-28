@@ -1361,6 +1361,9 @@ CLASS ltcl_json_to_abap DEFINITION
     METHODS to_abap_array
       FOR TESTING
       RAISING zcx_abapgit_ajson_error.
+    METHODS to_abap_array_of_arrays_simple
+      FOR TESTING
+      RAISING zcx_abapgit_ajson_error.
     METHODS to_abap_array_of_arrays
       FOR TESTING
       RAISING zcx_abapgit_ajson_error.
@@ -1506,6 +1509,40 @@ CLASS ltcl_json_to_abap IMPLEMENTATION.
 
     APPEND 'One' TO lt_exp.
     APPEND 'Two' TO lt_exp.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_mock
+      exp = lt_exp ).
+
+  ENDMETHOD.
+
+  METHOD to_abap_array_of_arrays_simple.
+
+    DATA lo_cut   TYPE REF TO lcl_json_to_abap.
+    DATA lt_mock  TYPE TABLE OF string_table.
+    DATA lt_exp   TYPE TABLE OF string_table.
+    DATA lt_tmp   TYPE string_table.
+    DATA lo_nodes TYPE REF TO lcl_nodes_helper.
+
+    CREATE OBJECT lo_nodes.
+    lo_nodes->add( '       |           |array    |                    | ' ).
+    lo_nodes->add( '/      |1          |array    |                    |1' ).
+    lo_nodes->add( '/      |2          |array    |                    |2' ).
+    lo_nodes->add( '/1/    |1          |str      |One                 |1' ).
+    lo_nodes->add( '/2/    |1          |str      |Two                 |1' ).
+
+    CREATE OBJECT lo_cut.
+    lo_cut->to_abap(
+      EXPORTING
+        it_nodes    = lo_nodes->sorted( )
+      CHANGING
+        c_container = lt_mock ).
+
+    APPEND 'One' TO lt_tmp.
+    APPEND lt_tmp TO lt_exp.
+    CLEAR lt_tmp.
+    APPEND 'Two' TO lt_tmp.
+    APPEND lt_tmp TO lt_exp.
 
     cl_abap_unit_assert=>assert_equals(
       act = lt_mock
