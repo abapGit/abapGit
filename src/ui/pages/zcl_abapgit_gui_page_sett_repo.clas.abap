@@ -131,6 +131,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
     )->checkbox(
       iv_name        = c_id-use_lxe
       iv_label       = 'Use experimental LXE approach for translations'
+      iv_hint        = 'It''s mandatory to specify the list of languages above in addition to this setting'
     )->radio(
       iv_name        = c_id-folder_logic
       iv_default_value = zif_abapgit_dot_abapgit=>c_folder_logic-prefix
@@ -350,6 +351,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
   METHOD validate_form.
 
     DATA:
+      lt_lang_list        TYPE zif_abapgit_definitions=>ty_languages,
       lv_folder           TYPE string,
       lv_len              TYPE i,
       lv_component        TYPE zif_abapgit_dot_abapgit=>ty_requirement-component,
@@ -402,6 +404,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
           iv_key = c_id-version_constant
           iv_val = lx_exception->get_text( ) ).
     ENDTRY.
+
+    lt_lang_list = zcl_abapgit_lxe_texts=>convert_lang_string_to_table(
+      iv_langs              = io_form_data->get( c_id-i18n_langs )
+      iv_skip_main_language = mo_repo->get_dot_abapgit( )->get_main_language( ) ).
+    IF io_form_data->get( c_id-use_lxe ) = abap_true AND lt_lang_list IS INITIAL.
+      ro_validation_log->set(
+        iv_key = c_id-i18n_langs
+        iv_val = 'The LXE approach supposes a non-empty list of languages to save' ).
+    ENDIF.
 
   ENDMETHOD.
 
