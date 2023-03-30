@@ -35,7 +35,9 @@ CLASS zcl_abapgit_data_utils DEFINITION
       IMPORTING
         !iv_name        TYPE tadir-obj_name
       RETURNING
-        VALUE(rt_names) TYPE ty_names .
+        VALUE(rt_names) TYPE ty_names
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
