@@ -116,11 +116,20 @@ CLASS zcl_abapgit_serialize DEFINITION
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
+    CLASS-METHODS determine_i18n_params
+      IMPORTING
+        !io_dot TYPE REF TO zcl_abapgit_dot_abapgit
+        !iv_main_language_only TYPE abap_bool
+      RETURNING
+        VALUE(rs_i18n_params) TYPE zif_abapgit_definitions=>ty_i18n_params
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_serialize IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
 
   METHOD add_apack.
@@ -261,17 +270,28 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     mo_dot_abapgit = io_dot_abapgit.
     ms_local_settings = is_local_settings.
 
-    " Determine I18N parameters
-    IF io_dot_abapgit IS NOT INITIAL.
-      ms_i18n_params-main_language         = io_dot_abapgit->get_main_language( ).
-      ms_i18n_params-main_language_only    = is_local_settings-main_language_only.
-      ms_i18n_params-translation_languages = zcl_abapgit_lxe_texts=>get_translation_languages(
-        iv_main_language  = io_dot_abapgit->get_main_language( )
-        it_i18n_languages = io_dot_abapgit->get_i18n_languages( ) ).
+    ms_i18n_params = determine_i18n_params(
+      io_dot = io_dot_abapgit
+      iv_main_language_only = is_local_settings-main_language_only ).
+
+  ENDMETHOD.
+
+
+  METHOD determine_i18n_params.
+
+    " TODO: unify with ZCL_ABAPGIT_OBJECTS=>DETERMINE_I18N_PARAMS, same code
+
+    IF io_dot IS BOUND.
+      rs_i18n_params-main_language         = io_dot->get_main_language( ).
+      rs_i18n_params-use_lxe               = io_dot->use_lxe( ).
+      rs_i18n_params-main_language_only    = iv_main_language_only.
+      rs_i18n_params-translation_languages = zcl_abapgit_lxe_texts=>get_translation_languages(
+        iv_main_language  = io_dot->get_main_language( )
+        it_i18n_languages = io_dot->get_i18n_languages( ) ).
     ENDIF.
 
-    IF ms_i18n_params-main_language IS INITIAL.
-      ms_i18n_params-main_language = sy-langu.
+    IF rs_i18n_params-main_language IS INITIAL.
+      rs_i18n_params-main_language = sy-langu.
     ENDIF.
 
   ENDMETHOD.
@@ -557,6 +577,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
           iv_language           = ms_i18n_params-main_language
           iv_main_language_only = ms_i18n_params-main_language_only
           it_translation_langs  = ms_i18n_params-translation_languages
+          iv_use_lxe            = ms_i18n_params-use_lxe
         EXCEPTIONS
           system_failure        = 1 MESSAGE lv_msg
           communication_failure = 2 MESSAGE lv_msg
@@ -593,6 +614,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
           is_item               = ls_file_item-item
           iv_language           = ms_i18n_params-main_language
           iv_main_language_only = ms_i18n_params-main_language_only
+          iv_use_lxe            = ms_i18n_params-use_lxe
           it_translation_langs  = ms_i18n_params-translation_languages ).
 
         add_to_return( is_file_item = ls_file_item

@@ -94,7 +94,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_super IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -303,6 +303,7 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
   METHOD serialize_lxe_texts.
 
     IF ii_xml->i18n_params( )-main_language_only = abap_true OR
+       ii_xml->i18n_params( )-use_lxe = abap_false OR
        ii_xml->i18n_params( )-translation_languages IS INITIAL.
       RETURN.
     ENDIF.

@@ -130,6 +130,19 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
     ii_xml->read( EXPORTING iv_name = 'T100T'
                   CHANGING  cg_data = lt_t100t ).
 
+    zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
+      EXPORTING
+        it_iso_filter = ii_xml->i18n_params( )-translation_languages
+        iv_lang_field_name = 'SPRSL'
+      CHANGING
+        ct_tab = lt_t100_texts ).
+    zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
+      EXPORTING
+        it_iso_filter = ii_xml->i18n_params( )-translation_languages
+        iv_lang_field_name = 'SPRSL'
+      CHANGING
+        ct_tab = lt_t100t ).
+
     MODIFY t100t FROM TABLE lt_t100t.                     "#EC CI_SUBRC
 
     LOOP AT lt_t100_texts ASSIGNING <ls_t100_text>.
@@ -227,6 +240,11 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
     " Collect additional languages
     " Skip main lang - it has been already serialized and also technical languages
     lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
+
+    zcl_abapgit_lxe_texts=>add_iso_langs_to_lang_filter(
+      EXPORTING it_iso_filter      = ii_xml->i18n_params( )-translation_languages
+      CHANGING  ct_language_filter = lt_language_filter ).
+
     SELECT DISTINCT sprsl AS langu INTO TABLE lt_i18n_langs
       FROM t100t
       WHERE arbgb = lv_msg_id
@@ -238,12 +256,13 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
     IF lines( lt_i18n_langs ) > 0.
 
       SELECT * FROM t100t INTO CORRESPONDING FIELDS OF TABLE lt_t100t
-        WHERE sprsl <> mv_language
+*        FOR ALL ENTRIES IN lt_i18n_langs
+        WHERE sprsl IN lt_language_filter " = lt_i18n_langs-table_line
         AND arbgb = lv_msg_id.                          "#EC CI_GENBUFF
 
       SELECT * FROM t100 INTO CORRESPONDING FIELDS OF TABLE lt_t100_texts
-        FOR ALL ENTRIES IN lt_i18n_langs
-        WHERE sprsl = lt_i18n_langs-table_line
+*        FOR ALL ENTRIES IN lt_i18n_langs
+        WHERE sprsl IN lt_language_filter " = lt_i18n_langs-table_line
         AND arbgb = lv_msg_id
         ORDER BY PRIMARY KEY.             "#EC CI_SUBRC "#EC CI_GENBUFF
 
@@ -407,7 +426,7 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
     deserialize_longtexts( ii_xml         = io_xml
                            iv_longtext_id = c_longtext_id_msag ).
 
-    IF io_xml->i18n_params( )-translation_languages IS INITIAL.
+    IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
       deserialize_texts( io_xml ).
     ELSE.
       deserialize_lxe_texts( io_xml ).
@@ -500,7 +519,7 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
     serialize_longtexts_msag( it_t100 = lt_source
                               ii_xml  = io_xml ).
 
-    IF io_xml->i18n_params( )-translation_languages IS INITIAL.
+    IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
       serialize_texts( io_xml ).
     ELSE.
       serialize_lxe_texts( io_xml ).

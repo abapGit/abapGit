@@ -10,6 +10,7 @@ FUNCTION z_abapgit_serialize_parallel.
 *"     VALUE(IV_PATH) TYPE  STRING
 *"     VALUE(IV_MAIN_LANGUAGE_ONLY) TYPE  CHAR1
 *"     VALUE(IT_TRANSLATION_LANGS) TYPE  TFPLAISO
+*"     VALUE(IV_USE_LXE) TYPE  CHAR1
 *"  EXPORTING
 *"     VALUE(EV_RESULT) TYPE  XSTRING
 *"     VALUE(EV_PATH) TYPE  STRING
@@ -31,6 +32,7 @@ FUNCTION z_abapgit_serialize_parallel.
       ls_files = zcl_abapgit_objects=>serialize(
         is_item               = ls_item
         iv_main_language_only = iv_main_language_only
+        iv_use_lxe            = iv_use_lxe
         iv_language           = iv_language
         it_translation_langs  = it_translation_langs ).
 
