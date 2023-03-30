@@ -18,6 +18,7 @@ CLASS zcl_abapgit_objects DEFINITION
         !iv_language             TYPE spras
         !iv_main_language_only   TYPE abap_bool DEFAULT abap_false
         !it_translation_langs    TYPE zif_abapgit_definitions=>ty_languages OPTIONAL
+        !iv_use_lxe              TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rs_files_and_item) TYPE ty_serialization
       RAISING
@@ -196,7 +197,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -867,8 +868,11 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
   METHOD determine_i18n_params.
 
+    " TODO: unify with ZCL_ABAPGIT_SERIALIZE=>DETERMINE_I18N_PARAMS, same code
+
     IF io_dot IS BOUND.
       rs_i18n_params-main_language         = io_dot->get_main_language( ).
+      rs_i18n_params-use_lxe               = io_dot->use_lxe( ).
       rs_i18n_params-main_language_only    = iv_main_language_only.
       rs_i18n_params-translation_languages = zcl_abapgit_lxe_texts=>get_translation_languages(
         iv_main_language  = io_dot->get_main_language( )
@@ -1116,6 +1120,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ls_i18n_params-main_language         = iv_language.
     ls_i18n_params-main_language_only    = iv_main_language_only.
     ls_i18n_params-translation_languages = it_translation_langs.
+    ls_i18n_params-use_lxe               = iv_use_lxe.
 
     li_xml->i18n_params( ls_i18n_params ).
 

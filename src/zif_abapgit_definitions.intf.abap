@@ -455,12 +455,15 @@ INTERFACE zif_abapgit_definitions
     END OF c_method .
 
   TYPES:
+    ty_sap_langu_tab TYPE STANDARD TABLE OF langu WITH DEFAULT KEY.
+  TYPES:
     ty_languages TYPE STANDARD TABLE OF laiso WITH DEFAULT KEY.
   TYPES:
     BEGIN OF ty_i18n_params,
       main_language         TYPE sy-langu,
       main_language_only    TYPE abap_bool,
       translation_languages TYPE ty_languages,
+      use_lxe               TYPE abap_bool,
     END OF ty_i18n_params .
   TYPES ty_trrngtrkor_tt TYPE RANGE OF trkorr.
 ENDINTERFACE.
