@@ -64,11 +64,6 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
     FIELD-SYMBOLS <ls_key>       LIKE LINE OF lt_keys.
     FIELD-SYMBOLS <ls_component> LIKE LINE OF <ls_key>-components.
 
-    " Type names might be buffered so we explicitly check that table exists on DB to avoid dumps
-    IF does_table_exist( iv_name ) = abap_false.
-      zcx_abapgit_exception=>raise( |Database table { iv_name } not found for data serialization| ).
-    ENDIF.
-
     cl_abap_structdescr=>describe_by_name(
       EXPORTING
         p_name         = iv_name
@@ -118,21 +113,13 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
 
   METHOD does_table_exist.
 
-    DATA lv_tabname TYPE tabname.
-    DATA lv_subrc TYPE sy-subrc.
-
-    lv_tabname = iv_name.
-
-    CALL FUNCTION 'DD_EXIST_TABLE'
-      EXPORTING
-        tabname      = lv_tabname
-        status       = 'A'
-      IMPORTING
-        subrc        = lv_subrc
-      EXCEPTIONS
-        wrong_status = 1
-        OTHERS       = 2.
-    rv_exists = boolc( sy-subrc = 0 AND lv_subrc = 0 ).
+    " This is slow but ensures that the table actually exists and is not just buffered by RTTI
+    " If we just rely on RTTI, uninstalling and reinstalling a table in the same session will lead to dumps
+    TRY.
+        build_table_itab( iv_name ).
+        rv_exists = abap_true.
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -189,7 +176,15 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
         ASSIGN lr_ddfields->* TO <lt_ddfields>.
         ASSERT sy-subrc = 0.
         lr_struct ?= cl_abap_typedescr=>describe_by_name( lv_tabname ).
-        <lt_ddfields> = lr_struct->get_ddic_field_list( ).
+        lr_struct->get_ddic_field_list(
+          RECEIVING
+            p_field_list = <lt_ddfields>
+          EXCEPTIONS
+            not_found    = 1
+            no_ddic_type = 2 ).
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise( |Table { iv_name } not found| ).
+        ENDIF.
         LOOP AT <lt_ddfields> ASSIGNING <lg_any>.
           ASSIGN COMPONENT 'KEYFLAG' OF STRUCTURE <lg_any> TO <lv_field>.
           IF sy-subrc <> 0 OR <lv_field> <> abap_true.

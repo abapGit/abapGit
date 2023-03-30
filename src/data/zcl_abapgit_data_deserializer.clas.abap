@@ -43,10 +43,15 @@ CLASS zcl_abapgit_data_deserializer DEFINITION
         zcx_abapgit_exception .
     METHODS is_table_allowed_to_edit
       IMPORTING
-        !iv_table_name            TYPE tabname
+        !is_result                TYPE zif_abapgit_data_deserializer=>ty_result
         !is_checks                TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RETURNING
         VALUE(rv_allowed_to_edit) TYPE abap_bool .
+    METHODS is_customizing_table
+      IMPORTING
+        !iv_name              TYPE tadir-obj_name
+      RETURNING
+        VALUE(rv_customizing) TYPE abap_bool .
 ENDCLASS.
 
 
@@ -73,30 +78,36 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD is_customizing_table.
+
+    DATA lv_contflag TYPE c LENGTH 1.
+
+    SELECT SINGLE contflag FROM dd02l INTO lv_contflag WHERE tabname = iv_name.
+    IF sy-subrc = 0 AND lv_contflag = 'C'.
+      rv_customizing = abap_true.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD is_table_allowed_to_edit.
 
-    DATA lv_tabname TYPE dd02l-tabname.
-
-    "Did the user flagged this table for update?
+    " Did the user flagged this object for update?
     READ TABLE is_checks-overwrite TRANSPORTING NO FIELDS
-      WITH KEY obj_name = iv_table_name decision = zif_abapgit_definitions=>c_yes.
+      WITH KEY object_type_and_name
+      COMPONENTS
+        obj_type = is_result-type
+        obj_name = is_result-name
+        decision = zif_abapgit_definitions=>c_yes.
     IF sy-subrc <>  0.
       RETURN.
     ENDIF.
 
-    "For safety reasons only customer dependend customizing tables are allowed to update
-    SELECT SINGLE dd02l~tabname
-      FROM dd09l JOIN dd02l
-        ON dd09l~tabname = dd02l~tabname
-        AND dd09l~as4local = dd02l~as4local
-        AND dd09l~as4vers = dd02l~as4vers
-      INTO lv_tabname
-      WHERE dd09l~tabname = iv_table_name
-        AND dd09l~tabart = 'APPL2'
-        AND dd09l~as4user <> 'SAP'
-        AND dd09l~as4local = 'A' "Only active tables
-        AND dd02l~contflag = 'C'. "Only customizing tables
-    rv_allowed_to_edit = boolc( sy-subrc = 0 ).
+    " Is the object supported (by default or based on exit)?
+    rv_allowed_to_edit = zcl_abapgit_data_factory=>get_supporter( )->is_object_supported(
+      iv_type = is_result-type
+      iv_name = is_result-name ).
+
   ENDMETHOD.
 
 
@@ -121,7 +132,8 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
     ASSIGN lr_data->* TO <lg_old>.
     ASSIGN ir_data->* TO <lg_new>.
 
-    rs_result-table = iv_name.
+    rs_result-type = zif_abapgit_data_config=>c_data_type-tabu.
+    rs_result-name = iv_name.
     rs_result-deletes = zcl_abapgit_data_utils=>build_table_itab( iv_name ).
     rs_result-inserts = zcl_abapgit_data_utils=>build_table_itab( iv_name ).
     rs_result-updates = zcl_abapgit_data_utils=>build_table_itab( iv_name ).
@@ -207,16 +219,17 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
       <lt_upd> TYPE ANY TABLE.
 
     LOOP AT it_result INTO ls_result.
-      lv_table_name = ls_result-table.
+      ASSERT ls_result-type = zif_abapgit_data_config=>c_data_type-tabu. " todo
+      ASSERT ls_result-name IS NOT INITIAL.
 
       IF is_table_allowed_to_edit(
-        iv_table_name   = lv_table_name
-        is_checks       = is_checks ) = abap_false.
-        CONTINUE.
+        is_result = ls_result
+        is_checks = is_checks ) = abap_false.
+        zcx_abapgit_exception=>raise( |Table { ls_result-name } not supported for updating data| ).
       ENDIF.
 
       write_database_table(
-        iv_name = ls_result-table
+        iv_name = ls_result-name
         ir_del  = ls_result-deletes
         ir_ins  = ls_result-inserts ).
 
@@ -224,23 +237,27 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
       ASSIGN ls_result-deletes->* TO <lt_del>.
       ASSIGN ls_result-updates->* TO <lt_upd>.
 
-      cl_table_utilities_brf=>create_transport_entries(
-        EXPORTING
-          it_table_ins = <lt_ins>
-          it_table_upd = <lt_upd>
-          it_table_del = <lt_del>
-          iv_tabname   = lv_table_name
-        CHANGING
-          ct_e071      = lt_tables
-          ct_e071k     = lt_table_keys ).
+      IF is_customizing_table( ls_result-name ) = abap_true.
+        cl_table_utilities_brf=>create_transport_entries(
+          EXPORTING
+            it_table_ins = <lt_ins>
+            it_table_upd = <lt_upd>
+            it_table_del = <lt_del>
+            iv_tabname   = |{ ls_result-name }|
+          CHANGING
+            ct_e071      = lt_tables
+            ct_e071k     = lt_table_keys ).
+      ENDIF.
 
     ENDLOOP.
 
-    cl_table_utilities_brf=>write_transport_entries(
-      CHANGING
-        ct_e071  = lt_tables
-        ct_e071k = lt_table_keys
-        ct_tadir = lt_tadir_entries ).
+    IF lt_tables IS NOT INITIAL AND lt_table_keys IS NOT INITIAL.
+      cl_table_utilities_brf=>write_transport_entries(
+        CHANGING
+          ct_e071  = lt_tables
+          ct_e071k = lt_table_keys
+          ct_tadir = lt_tadir_entries ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -258,6 +275,8 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
     lt_configs = ii_config->get_configs( ).
 
     LOOP AT lt_configs INTO ls_config.
+      ASSERT ls_config-type = zif_abapgit_data_config=>c_data_type-tabu. " todo
+      ASSERT ls_config-name IS NOT INITIAL.
 
       lr_data = zcl_abapgit_data_utils=>build_table_itab( ls_config-name ).
 
