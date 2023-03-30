@@ -44,7 +44,6 @@ CLASS zcl_abapgit_data_deserializer DEFINITION
     METHODS is_table_allowed_to_edit
       IMPORTING
         !is_result                TYPE zif_abapgit_data_deserializer=>ty_result
-        !is_checks                TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RETURNING
         VALUE(rv_allowed_to_edit) TYPE abap_bool .
     METHODS is_customizing_table
@@ -91,17 +90,6 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 
 
   METHOD is_table_allowed_to_edit.
-
-    " Did the user flagged this object for update?
-    READ TABLE is_checks-overwrite TRANSPORTING NO FIELDS
-      WITH KEY object_type_and_name
-      COMPONENTS
-        obj_type = is_result-type
-        obj_name = is_result-name
-        decision = zif_abapgit_definitions=>c_yes.
-    IF sy-subrc <>  0.
-      RETURN.
-    ENDIF.
 
     " Is the object supported (by default or based on exit)?
     rv_allowed_to_edit = zcl_abapgit_data_factory=>get_supporter( )->is_object_supported(
@@ -222,9 +210,18 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
       ASSERT ls_result-type = zif_abapgit_data_config=>c_data_type-tabu. " todo
       ASSERT ls_result-name IS NOT INITIAL.
 
-      IF is_table_allowed_to_edit(
-        is_result = ls_result
-        is_checks = is_checks ) = abap_false.
+      " Did the user flagged this object for update?
+      READ TABLE is_checks-overwrite TRANSPORTING NO FIELDS
+        WITH KEY object_type_and_name
+        COMPONENTS
+          obj_type = ls_result-type
+          obj_name = ls_result-name
+          decision = zif_abapgit_definitions=>c_yes.
+      IF sy-subrc <>  0.
+        RETURN.
+      ENDIF.
+
+      IF is_table_allowed_to_edit( ls_result ) = abap_false.
         zcx_abapgit_exception=>raise( |Table { ls_result-name } not supported for updating data| ).
       ENDIF.
 
