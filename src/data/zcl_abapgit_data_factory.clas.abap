@@ -57,7 +57,7 @@ CLASS zcl_abapgit_data_factory IMPLEMENTATION.
   ENDMETHOD.
 
 
-    METHOD get_supporter.
+  METHOD get_supporter.
 
     IF gi_supporter IS INITIAL.
       CREATE OBJECT gi_supporter TYPE zcl_abapgit_data_supporter.
