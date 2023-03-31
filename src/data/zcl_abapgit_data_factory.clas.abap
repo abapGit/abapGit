@@ -5,6 +5,9 @@ CLASS zcl_abapgit_data_factory DEFINITION
 
   PUBLIC SECTION.
 
+    CLASS-METHODS get_supporter
+      RETURNING
+        VALUE(ri_supporter) TYPE REF TO zif_abapgit_data_supporter .
     CLASS-METHODS get_serializer
       RETURNING
         VALUE(ri_serializer) TYPE REF TO zif_abapgit_data_serializer .
@@ -17,13 +20,14 @@ CLASS zcl_abapgit_data_factory DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
+    CLASS-DATA gi_supporter TYPE REF TO zif_abapgit_data_supporter .
     CLASS-DATA gi_serializer TYPE REF TO zif_abapgit_data_serializer .
     CLASS-DATA gi_deserializer TYPE REF TO zif_abapgit_data_deserializer .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DATA_FACTORY IMPLEMENTATION.
+CLASS zcl_abapgit_data_factory IMPLEMENTATION.
 
 
   METHOD get_config.
@@ -49,6 +53,17 @@ CLASS ZCL_ABAPGIT_DATA_FACTORY IMPLEMENTATION.
     ENDIF.
 
     ri_serializer = gi_serializer.
+
+  ENDMETHOD.
+
+
+  METHOD get_supporter.
+
+    IF gi_supporter IS INITIAL.
+      CREATE OBJECT gi_supporter TYPE zcl_abapgit_data_supporter.
+    ENDIF.
+
+    ri_supporter = gi_supporter.
 
   ENDMETHOD.
 ENDCLASS.
