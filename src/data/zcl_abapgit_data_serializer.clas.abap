@@ -13,11 +13,6 @@ CLASS zcl_abapgit_data_serializer DEFINITION
 
     CONSTANTS c_max_records TYPE i VALUE 20000 ##NO_TEXT.
 
-    METHODS does_table_exist
-      IMPORTING
-        !iv_name         TYPE tadir-obj_name
-      RETURNING
-        VALUE(rv_exists) TYPE abap_bool .
     METHODS convert_itab_to_json
       IMPORTING
         !ir_data         TYPE REF TO data
@@ -38,7 +33,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
+CLASS zcl_abapgit_data_serializer IMPLEMENTATION.
 
 
   METHOD convert_itab_to_json.
@@ -70,19 +65,6 @@ CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
     ENDTRY.
 
     rv_data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ).
-
-  ENDMETHOD.
-
-
-  METHOD does_table_exist.
-
-    cl_abap_typedescr=>describe_by_name(
-      EXPORTING
-        p_name         = iv_name
-      EXCEPTIONS
-        type_not_found = 1
-        OTHERS         = 2 ).
-    rv_exists = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
@@ -126,8 +108,6 @@ CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
     DATA ls_config  LIKE LINE OF lt_configs.
     DATA ls_file    LIKE LINE OF rt_files.
     DATA lr_data    TYPE REF TO data.
-    DATA lv_exists  TYPE abap_bool.
-
 
     ls_file-path = zif_abapgit_data_config=>c_default_path.
     lt_configs = ii_config->get_configs( ).
@@ -136,8 +116,7 @@ CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
       ASSERT ls_config-type = zif_abapgit_data_config=>c_data_type-tabu. " todo
       ASSERT ls_config-name IS NOT INITIAL.
 
-      lv_exists = does_table_exist( ls_config-name ).
-      IF lv_exists = abap_true.
+      IF zcl_abapgit_data_utils=>does_table_exist( ls_config-name ) = abap_true.
         lr_data = read_database_table(
           iv_name  = ls_config-name
           it_where = ls_config-where ).
