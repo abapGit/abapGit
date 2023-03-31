@@ -74,6 +74,11 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
         VALUE(rs_signature) TYPE zif_abapgit_git_definitions=>ty_file_signature
       RAISING
         zcx_abapgit_exception .
+    METHODS use_lxe
+      IMPORTING
+        iv_yes TYPE abap_bool DEFAULT abap_undefined
+      RETURNING
+        VALUE(rv_yes) TYPE abap_bool.
     METHODS get_requirements
       RETURNING
         VALUE(rt_requirements) TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt .
@@ -101,7 +106,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
 
   METHOD add_ignore.
@@ -337,6 +342,17 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
       IN rv_xml
       WITH '<?xml version="1.0" encoding="utf-8"?>'.
     ASSERT sy-subrc = 0.
+
+  ENDMETHOD.
+
+
+  METHOD use_lxe.
+
+    IF iv_yes <> abap_undefined.
+      ms_data-use_lxe = iv_yes.
+    ENDIF.
+
+    rv_yes = ms_data-use_lxe.
 
   ENDMETHOD.
 ENDCLASS.

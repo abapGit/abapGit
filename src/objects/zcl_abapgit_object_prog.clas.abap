@@ -40,7 +40,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_prog IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
 
 
   METHOD deserialize_texts.
@@ -124,6 +124,11 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
     " Select all active translations of program texts
     " Skip main language - it was already serialized
     lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
+
+    zcl_abapgit_lxe_texts=>add_iso_langs_to_lang_filter(
+      EXPORTING it_iso_filter      = ii_xml->i18n_params( )-translation_languages
+      CHANGING  ct_language_filter = lt_language_filter ).
+
     SELECT DISTINCT language
       INTO CORRESPONDING FIELDS OF TABLE lt_tpool_i18n
       FROM d010tinf
@@ -331,11 +336,9 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
                        io_files = zif_abapgit_object~mo_files ).
 
     " Texts serializing (translations)
-    IF io_xml->i18n_params( )-translation_languages IS INITIAL.
-      " Old I18N option
+    IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
       serialize_texts( io_xml ).
     ELSE.
-      " New LXE option
       serialize_lxe_texts( io_xml ).
     ENDIF.
 
