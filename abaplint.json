@@ -49,6 +49,11 @@
     "globalMacros": []
   },
   "rules": {
+    "cds_comment_style": true,
+    "change_if_to_case": false,
+    "expand_macros": true,
+    "unnecessary_return": false,
+    "fully_type_itabs": false,
     "cds_legacy_view": true,
     "superfluous_value": true,
     "classic_exceptions_overlap": true,
