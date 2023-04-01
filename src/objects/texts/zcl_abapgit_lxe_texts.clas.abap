@@ -455,6 +455,57 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD read_text_items.
+
+    DATA:
+      lt_obj_list      TYPE lxe_tt_colob,
+      lv_main_lang     TYPE lxeisolang,
+      ls_lxe_text_item TYPE ty_lxe_i18n.
+
+    FIELD-SYMBOLS:
+      <lv_language>   LIKE LINE OF it_languages,
+      <lv_lxe_object> LIKE LINE OF lt_obj_list.
+
+    lt_obj_list = get_lxe_object_list(
+      iv_object_name = iv_object_name
+      iv_object_type = iv_object_type ).
+
+    IF lt_obj_list IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    " Get list of languages that need to be serialized (already resolves * and installed languages)
+    lv_main_lang = get_lang_iso4( langu_to_laiso_safe( iv_main_language ) ).
+
+    LOOP AT lt_obj_list ASSIGNING <lv_lxe_object>.
+      CLEAR ls_lxe_text_item.
+      ls_lxe_text_item-custmnr = <lv_lxe_object>-custmnr.
+      ls_lxe_text_item-objtype = <lv_lxe_object>-objtype.
+      ls_lxe_text_item-objname = <lv_lxe_object>-objname.
+
+      LOOP AT it_languages ASSIGNING <lv_language>.
+        ls_lxe_text_item-source_lang = lv_main_lang.
+        ls_lxe_text_item-target_lang = get_lang_iso4( <lv_language> ).
+        IF ls_lxe_text_item-source_lang = ls_lxe_text_item-target_lang.
+          CONTINUE. " if source = target -> skip
+        ENDIF.
+
+        ls_lxe_text_item-text_pairs = read_lxe_object_text_pair(
+                                          iv_s_lang    = ls_lxe_text_item-source_lang
+                                          iv_t_lang    = ls_lxe_text_item-target_lang
+                                          iv_custmnr   = ls_lxe_text_item-custmnr
+                                          iv_objtype   = ls_lxe_text_item-objtype
+                                          iv_objname   = ls_lxe_text_item-objname ).
+
+        IF ls_lxe_text_item-text_pairs IS NOT INITIAL.
+          APPEND ls_lxe_text_item TO rt_text_items.
+        ENDIF.
+      ENDLOOP.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD trim_saplangu_by_iso.
 
     DATA lv_langu TYPE sy-langu.
@@ -530,94 +581,6 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
       IF sy-subrc <> 0.
         DELETE ct_tab INDEX lv_index.
       ENDIF.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD write_lxe_object_text_pair.
-
-    DATA:
-      lv_error TYPE lxestring.
-
-    TRY.
-        CALL FUNCTION 'LXE_OBJ_TEXT_PAIR_WRITE'
-          EXPORTING
-            s_lang    = iv_s_lang
-            t_lang    = iv_t_lang
-            custmnr   = iv_custmnr
-            objtype   = iv_objtype
-            objname   = iv_objname
-          IMPORTING
-            err_msg   = lv_error  " doesn't exist in NW <= 750
-          TABLES
-            lt_pcx_s1 = it_pcx_s1.
-        IF lv_error IS NOT INITIAL.
-          zcx_abapgit_exception=>raise( lv_error ).
-        ENDIF.
-
-      CATCH cx_sy_dyn_call_param_not_found.
-
-        CALL FUNCTION 'LXE_OBJ_TEXT_PAIR_WRITE'
-          EXPORTING
-            s_lang    = iv_s_lang
-            t_lang    = iv_t_lang
-            custmnr   = iv_custmnr
-            objtype   = iv_objtype
-            objname   = iv_objname
-          TABLES
-            lt_pcx_s1 = it_pcx_s1.
-
-    ENDTRY.
-
-  ENDMETHOD.
-
-  METHOD read_text_items.
-
-    DATA:
-      lt_obj_list      TYPE lxe_tt_colob,
-      lv_main_lang     TYPE lxeisolang,
-      ls_lxe_text_item TYPE ty_lxe_i18n.
-
-    FIELD-SYMBOLS:
-      <lv_language>   LIKE LINE OF it_languages,
-      <lv_lxe_object> LIKE LINE OF lt_obj_list.
-
-    lt_obj_list = get_lxe_object_list(
-      iv_object_name = iv_object_name
-      iv_object_type = iv_object_type ).
-
-    IF lt_obj_list IS INITIAL.
-      RETURN.
-    ENDIF.
-
-    " Get list of languages that need to be serialized (already resolves * and installed languages)
-    lv_main_lang = get_lang_iso4( langu_to_laiso_safe( iv_main_language ) ).
-
-    LOOP AT lt_obj_list ASSIGNING <lv_lxe_object>.
-      CLEAR ls_lxe_text_item.
-      ls_lxe_text_item-custmnr = <lv_lxe_object>-custmnr.
-      ls_lxe_text_item-objtype = <lv_lxe_object>-objtype.
-      ls_lxe_text_item-objname = <lv_lxe_object>-objname.
-
-      LOOP AT it_languages ASSIGNING <lv_language>.
-        ls_lxe_text_item-source_lang = lv_main_lang.
-        ls_lxe_text_item-target_lang = get_lang_iso4( <lv_language> ).
-        IF ls_lxe_text_item-source_lang = ls_lxe_text_item-target_lang.
-          CONTINUE. " if source = target -> skip
-        ENDIF.
-
-        ls_lxe_text_item-text_pairs = read_lxe_object_text_pair(
-                                          iv_s_lang    = ls_lxe_text_item-source_lang
-                                          iv_t_lang    = ls_lxe_text_item-target_lang
-                                          iv_custmnr   = ls_lxe_text_item-custmnr
-                                          iv_objtype   = ls_lxe_text_item-objtype
-                                          iv_objname   = ls_lxe_text_item-objname ).
-
-        IF ls_lxe_text_item-text_pairs IS NOT INITIAL.
-          APPEND ls_lxe_text_item TO rt_text_items.
-        ENDIF.
-      ENDLOOP.
     ENDLOOP.
 
   ENDMETHOD.
