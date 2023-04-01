@@ -256,13 +256,13 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
     IF lines( lt_i18n_langs ) > 0.
 
       SELECT * FROM t100t INTO CORRESPONDING FIELDS OF TABLE lt_t100t
-*        FOR ALL ENTRIES IN lt_i18n_langs
-        WHERE sprsl IN lt_language_filter " = lt_i18n_langs-table_line
+        WHERE sprsl IN lt_language_filter
+        AND sprsl <> mv_language
         AND arbgb = lv_msg_id.                          "#EC CI_GENBUFF
 
       SELECT * FROM t100 INTO CORRESPONDING FIELDS OF TABLE lt_t100_texts
-*        FOR ALL ENTRIES IN lt_i18n_langs
-        WHERE sprsl IN lt_language_filter " = lt_i18n_langs-table_line
+        WHERE sprsl IN lt_language_filter
+        AND sprsl <> mv_language
         AND arbgb = lv_msg_id
         ORDER BY PRIMARY KEY.             "#EC CI_SUBRC "#EC CI_GENBUFF
 
