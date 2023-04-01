@@ -1,6 +1,9 @@
 INTERFACE zif_abapgit_lxe_texts
   PUBLIC .
 
+  TYPES:
+    ty_text_pairs TYPE STANDARD TABLE OF lxe_pcx_s1 WITH DEFAULT KEY.
+
   METHODS serialize
     IMPORTING
       !iv_lxe_text_name TYPE string DEFAULT 'LXE_TEXTS'

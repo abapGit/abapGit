@@ -91,7 +91,9 @@ CLASS zcl_abapgit_objects_files DEFINITION
         VALUE(rv_result) TYPE abap_bool.
     METHODS add_i18n_file
       IMPORTING
-        !ii_i18n_file TYPE REF TO zif_abapgit_i18n_file.
+        !ii_i18n_file TYPE REF TO zif_abapgit_i18n_file
+      RAISING
+        zcx_abapgit_exception .
     METHODS i18n_params
       IMPORTING
         !is_i18n_params       TYPE zif_abapgit_definitions=>ty_i18n_params OPTIONAL
@@ -121,16 +123,6 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
-
-  METHOD i18n_params.
-
-    IF is_i18n_params IS SUPPLIED.
-      ms_i18n_params = is_i18n_params.
-    ENDIF.
-
-    rs_i18n_params = ms_i18n_params.
-
-  ENDMETHOD.
 
 
   METHOD add.
@@ -164,8 +156,12 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
     DATA ls_file TYPE zif_abapgit_git_definitions=>ty_file.
 
+    ls_file-data = ii_i18n_file->render( ).
+    IF ls_file-data IS INITIAL.
+      RETURN. " Don't add empty files
+    ENDIF.
+
     ls_file-path     = '/'.
-    ls_file-data     = ii_i18n_file->render( ).
     ls_file-filename = zcl_abapgit_filename_logic=>object_to_file(
       is_item  = ms_item
       iv_extra = |i18n.{ ii_i18n_file->lang( ) }|
@@ -283,6 +279,17 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
     " Escape special characters for use with 'covers pattern' (CP)
     REPLACE ALL OCCURRENCES OF '#' IN rv_pattern WITH '##'.
     REPLACE ALL OCCURRENCES OF '+' IN rv_pattern WITH '#+'.
+  ENDMETHOD.
+
+
+  METHOD i18n_params.
+
+    IF is_i18n_params IS SUPPLIED.
+      ms_i18n_params = is_i18n_params.
+    ENDIF.
+
+    rs_i18n_params = ms_i18n_params.
+
   ENDMETHOD.
 
 
