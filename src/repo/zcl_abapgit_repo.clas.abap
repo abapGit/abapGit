@@ -693,10 +693,15 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     zif_abapgit_repo~checksums( )->update( lt_updated_files ).
 
-    " Deserialize data (no save to database, just test for now)
+    "Deserialize data
     lt_result = zcl_abapgit_data_factory=>get_deserializer( )->deserialize(
       ii_config  = get_data_config( )
       it_files   = get_files_remote( ) ).
+
+    "Save deserialized data to DB and add entries to transport requests)
+    zcl_abapgit_data_factory=>get_deserializer( )->actualize(
+      it_result = lt_result
+      is_checks = is_checks ).
 
     CLEAR: mt_local.
 

@@ -12,9 +12,6 @@ INTERFACE zif_abapgit_exit
   TYPES:
     ty_object_types TYPE STANDARD TABLE OF tadir-object WITH DEFAULT KEY .
 
-  METHODS change_supported_object_types
-    CHANGING
-      !ct_types TYPE ty_object_types .
   METHODS adjust_display_commit_url
     IMPORTING
       !iv_repo_url    TYPE csequence
@@ -51,6 +48,12 @@ INTERFACE zif_abapgit_exit
       !iv_repo_url  TYPE csequence
     CHANGING
       !cv_proxy_url TYPE string .
+  METHODS change_supported_data_objects
+    CHANGING
+      !ct_objects TYPE zif_abapgit_data_supporter=>ty_objects.
+  METHODS change_supported_object_types
+    CHANGING
+      !ct_types TYPE ty_object_types .
   METHODS change_tadir
     IMPORTING
       !iv_package TYPE devclass
