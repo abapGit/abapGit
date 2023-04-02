@@ -79,10 +79,31 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 
   METHOD is_customizing_table.
 
-    DATA lv_contflag TYPE c LENGTH 1.
+    DATA lv_contflag       TYPE c LENGTH 1.
+    DATA lo_table          TYPE REF TO object.
+    DATA lo_content        TYPE REF TO object.
+    DATA lo_delivery_class TYPE REF TO object.
+    FIELD-SYMBOLS <ls_any> TYPE any.
 
-    SELECT SINGLE contflag FROM dd02l INTO lv_contflag WHERE tabname = iv_name.
-    IF sy-subrc = 0 AND lv_contflag = 'C'.
+    TRY.
+        CALL METHOD ('XCO_CP_ABAP_DICTIONARY')=>database_table
+          EXPORTING
+            iv_name           = iv_name
+          RECEIVING
+            ro_database_table = lo_table.
+        CALL METHOD lo_table->('IF_XCO_DATABASE_TABLE~CONTENT')
+          RECEIVING
+            ro_content = lo_content.
+        CALL METHOD lo_content->('IF_XCO_DBT_CONTENT~GET_DELIVERY_CLASS')
+          RECEIVING
+            ro_delivery_class = lo_delivery_class.
+        ASSIGN lo_delivery_class->('VALUE') TO <ls_any>.
+        lv_contflag = <ls_any>.
+      CATCH cx_sy_dyn_call_illegal_class.
+        SELECT SINGLE contflag FROM ('DD02L') INTO lv_contflag WHERE tabname = iv_name.
+    ENDTRY.
+
+    IF lv_contflag = 'C'.
       rv_customizing = abap_true.
     ENDIF.
 
