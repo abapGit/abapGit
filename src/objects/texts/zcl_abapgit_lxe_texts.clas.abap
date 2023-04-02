@@ -705,7 +705,10 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
           iv_lang = lv_lang.
       LOOP AT lt_lxe_texts ASSIGNING <ls_translation>.
         IF iso4_to_iso2( <ls_translation>-target_lang ) = lv_lang.
-          lo_po_file->push_text_pairs( <ls_translation>-text_pairs ).
+          lo_po_file->push_text_pairs(
+            iv_objtype    = <ls_translation>-objtype
+            iv_objname    = <ls_translation>-objname
+            it_text_pairs = <ls_translation>-text_pairs ).
         ENDIF.
       ENDLOOP.
       APPEND lo_po_file TO rt_po_files.
