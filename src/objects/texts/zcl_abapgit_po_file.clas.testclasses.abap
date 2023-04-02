@@ -32,7 +32,7 @@ CLASS ltcl_po_file IMPLEMENTATION.
     <ls_p>-s_text  = 'Hello'.
     <ls_p>-t_text  = 'Hello DE'.
     APPEND INITIAL LINE TO lt_lxe_pairs ASSIGNING <ls_p>.
-    <ls_p>-textkey = 'K2    X'.
+    <ls_p>-textkey = 'K2    X'. " To condense
     <ls_p>-unitmlt = 11.
     <ls_p>-s_text  = 'Hello'. " Intentional duplicate !
     <ls_p>-t_text  = 'Hello DE 2'.
@@ -40,7 +40,7 @@ CLASS ltcl_po_file IMPLEMENTATION.
     <ls_p>-textkey = 'K3'.
     <ls_p>-unitmlt = 12.
     <ls_p>-s_text  = 'World'.
-    <ls_p>-t_text  = 'World DE'.
+    <ls_p>-t_text  = 'World "DE"'.
 
     lo_po->push_text_pairs(
       iv_objtype = 'T1'
@@ -58,7 +58,7 @@ CLASS ltcl_po_file IMPLEMENTATION.
     lo_buf->add( '' ).
     lo_buf->add( '#: T1/OBJ1/K3, maxlen=12' ).
     lo_buf->add( 'msgid "World"' ).
-    lo_buf->add( 'msgstr "World DE"' ).
+    lo_buf->add( 'msgstr "World \"DE\""' ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_act
@@ -69,10 +69,32 @@ CLASS ltcl_po_file IMPLEMENTATION.
   METHOD simple_parse.
 
     DATA lo_po TYPE REF TO zcl_abapgit_po_file.
-    DATA lt_lxe_pairs TYPE zif_abapgit_lxe_texts=>ty_text_pairs.
+    DATA lt_lxe_pairs_act TYPE zif_abapgit_lxe_texts=>ty_text_pairs.
+    DATA lt_lxe_pairs_exp TYPE zif_abapgit_lxe_texts=>ty_text_pairs.
     DATA lo_buf TYPE REF TO zcl_abapgit_string_buffer.
 
-    FIELD-SYMBOLS <ls_p> LIKE LINE OF lt_lxe_pairs.
+    FIELD-SYMBOLS <ls_p> LIKE LINE OF lt_lxe_pairs_act.
+
+    APPEND INITIAL LINE TO lt_lxe_pairs_exp ASSIGNING <ls_p>.
+    <ls_p>-textkey = 'K1'.
+    <ls_p>-unitmlt = 10.
+    <ls_p>-s_text  = 'Hello'. " Intentional duplicate ! same translation is applied
+    <ls_p>-t_text  = 'Hello DE 2'.
+    APPEND INITIAL LINE TO lt_lxe_pairs_exp ASSIGNING <ls_p>.
+    <ls_p>-textkey = 'K2    X'.
+    <ls_p>-unitmlt = 11.
+    <ls_p>-s_text  = 'Hello'. " Intentional duplicate !
+    <ls_p>-t_text  = 'Hello DE 2'.
+    APPEND INITIAL LINE TO lt_lxe_pairs_exp ASSIGNING <ls_p>.
+    <ls_p>-textkey = 'K3'.
+    <ls_p>-unitmlt = 12.
+    <ls_p>-s_text  = 'World'.
+    <ls_p>-t_text  = 'World DE'.
+
+    lt_lxe_pairs_act = lt_lxe_pairs_exp.
+    LOOP AT lt_lxe_pairs_act ASSIGNING <ls_p>.
+      CLEAR <ls_p>-t_text.
+    ENDLOOP.
 
     CREATE OBJECT lo_buf.
 
@@ -91,6 +113,11 @@ CLASS ltcl_po_file IMPLEMENTATION.
 
     CREATE OBJECT lo_po EXPORTING iv_lang = 'xx'.
     lo_po->parse_po( lo_buf->join_w_newline_and_flush( ) ).
+    lo_po->zif_abapgit_i18n_file~translate( CHANGING ct_text_pairs = lt_lxe_pairs_act ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_lxe_pairs_act
+      exp = lt_lxe_pairs_exp ).
 
   ENDMETHOD.
 
