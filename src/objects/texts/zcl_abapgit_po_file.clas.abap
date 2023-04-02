@@ -70,7 +70,12 @@ CLASS zcl_abapgit_po_file DEFINITION
       RETURNING
         VALUE(rv_marker) TYPE string.
 
-    CLASS-METHODS escape_text
+    CLASS-METHODS quote
+      IMPORTING
+        iv_text        TYPE string
+      RETURNING
+        VALUE(rv_text) TYPE string.
+    CLASS-METHODS unquote
       IMPORTING
         iv_text        TYPE string
       RETURNING
@@ -102,8 +107,8 @@ CLASS ZCL_ABAPGIT_PO_FILE IMPLEMENTATION.
         ro_buf->add( |#{ get_comment_marker( <ls_comment>-kind ) } { <ls_comment>-text }| ).
       ENDLOOP.
 
-      ro_buf->add( |msgid "{ escape_text( <ls_pair>-source ) }"| ).
-      ro_buf->add( |msgstr "{ escape_text( <ls_pair>-target ) }"| ).
+      ro_buf->add( |msgid { quote( <ls_pair>-source ) }| ).
+      ro_buf->add( |msgstr { quote( <ls_pair>-target ) }| ).
     ENDLOOP.
 
   ENDMETHOD.
@@ -130,11 +135,6 @@ CLASS ZCL_ABAPGIT_PO_FILE IMPLEMENTATION.
 
   METHOD constructor.
     mv_lang = to_lower( iv_lang ).
-  ENDMETHOD.
-
-
-  METHOD escape_text.
-    rv_text = iv_text. " TODO
   ENDMETHOD.
 
 
@@ -167,6 +167,58 @@ CLASS ZCL_ABAPGIT_PO_FILE IMPLEMENTATION.
 
   METHOD parse_po.
 
+    CONSTANTS:
+      BEGIN OF c_state,
+        wait_id  TYPE i VALUE 0,
+        wait_str TYPE i VALUE 1,
+        wait_eos TYPE i VALUE 2,
+        " TODO msgctx
+      END OF c_state.
+
+    DATA lv_state TYPE i VALUE c_state-wait_id.
+    DATA lt_lines TYPE string_table.
+    DATA ls_pair LIKE LINE OF mt_pairs.
+    DATA lv_whitespace TYPE c LENGTH 2.
+    FIELD-SYMBOLS <lv_i> TYPE string.
+
+    lv_whitespace = `` && cl_abap_char_utilities=>horizontal_tab.
+
+    SPLIT iv_data AT cl_abap_char_utilities=>newline INTO TABLE lt_lines.
+    APPEND '' TO lt_lines. " terminator
+
+    LOOP AT lt_lines ASSIGNING <lv_i>.
+      IF lv_state = c_state-wait_eos AND strlen( <lv_i> ) >= 1 AND <lv_i>+0(1) = '"'.
+        " parse "" and add to current
+        CONTINUE.
+      ELSE.
+        lv_state = c_state-wait_id.
+      ENDIF.
+
+      CASE lv_state.
+        WHEN c_state-wait_id.
+          IF <lv_i> IS INITIAL
+            OR <lv_i>+0(1) = '#' " TODO, potentially parse comments in future
+            OR <lv_i> CO lv_whitespace.
+            CONTINUE.
+          ENDIF.
+          IF strlen( <lv_i> ) >= 6 AND <lv_i>+0(6) = 'msgid'. " w/trailing space
+            " parse ""
+            lv_state = c_state-wait_str.
+          ELSE.
+            zcx_abapgit_exception=>raise( 'PO file format error: expected msgid' ).
+          ENDIF.
+
+        WHEN c_state-wait_str.
+          IF strlen( <lv_i> ) >= 7 AND <lv_i>+0(7) = 'msgstr'. " w/trailing space
+            " parse ""
+            lv_state = c_state-wait_eos.
+          ELSE.
+            zcx_abapgit_exception=>raise( 'PO file format error: expected msgstr' ).
+          ENDIF.
+
+      ENDCASE.
+    ENDLOOP.
+
   ENDMETHOD.
 
 
@@ -198,6 +250,28 @@ CLASS ZCL_ABAPGIT_PO_FILE IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD quote.
+    rv_text = '"' && replace(
+      val  = iv_text
+      sub  = '"'
+      with = '\"'
+      occ  = 0 ) && '"'.
+  ENDMETHOD.
+
+
+  METHOD unquote.
+
+    " trim trailing space " Measure perf ?
+    " trim starting space
+    " ensure starting " and ending "
+    " ensure ending " is not an escape
+    " substring
+    " replace \" to "
+    " theoretically there can be unescaped " - is it a problem ? check standard
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_i18n_file~ext.
     rv_ext = 'po'.
   ENDMETHOD.
@@ -223,6 +297,23 @@ CLASS ZCL_ABAPGIT_PO_FILE IMPLEMENTATION.
         && cl_abap_char_utilities=>newline. " Trailing LF
       rv_data = zcl_abapgit_convert=>string_to_xstring_utf8_bom( lv_str ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_i18n_file~translate.
+
+    FIELD-SYMBOLS <ls_lxe> LIKE LINE OF ct_text_pairs.
+    FIELD-SYMBOLS <ls_tr> LIKE LINE OF mt_pairs.
+
+    LOOP AT ct_text_pairs ASSIGNING <ls_lxe>.
+      CHECK <ls_lxe>-s_text IS NOT INITIAL.
+
+      READ TABLE mt_pairs ASSIGNING <ls_tr> WITH KEY source = <ls_lxe>-s_text.
+      IF sy-subrc = 0.
+        <ls_lxe>-t_text = <ls_tr>-target.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 ENDCLASS.
