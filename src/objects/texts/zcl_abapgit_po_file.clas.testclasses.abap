@@ -6,7 +6,9 @@ CLASS ltcl_po_file DEFINITION FINAL
   PRIVATE SECTION.
 
     METHODS po_body FOR TESTING RAISING zcx_abapgit_exception.
-    METHODS simple_parse FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS parse_happy_path FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS parse_negative FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS unquote FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -51,14 +53,14 @@ CLASS ltcl_po_file IMPLEMENTATION.
 
     CREATE OBJECT lo_buf.
 
-    lo_buf->add( '#: T1/OBJ1/K1, maxlen=10' ).
-    lo_buf->add( '#: T1/OBJ1/K2 X, maxlen=11' ).
-    lo_buf->add( 'msgid "Hello"' ).
-    lo_buf->add( 'msgstr "Hello DE 2"' ).
-    lo_buf->add( '' ).
-    lo_buf->add( '#: T1/OBJ1/K3, maxlen=12' ).
-    lo_buf->add( 'msgid "World"' ).
-    lo_buf->add( 'msgstr "World \"DE\""' ).
+    lo_buf->add( '#: T1/OBJ1/K1, maxlen=10'
+      )->add( '#: T1/OBJ1/K2 X, maxlen=11'
+      )->add( 'msgid "Hello"'
+      )->add( 'msgstr "Hello DE 2"'
+      )->add( ''
+      )->add( '#: T1/OBJ1/K3, maxlen=12'
+      )->add( 'msgid "World"'
+      )->add( 'msgstr "World \"DE\""' ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_act
@@ -66,7 +68,7 @@ CLASS ltcl_po_file IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD simple_parse.
+  METHOD parse_happy_path.
 
     DATA lo_po TYPE REF TO zcl_abapgit_po_file.
     DATA lt_lxe_pairs_act TYPE zif_abapgit_lxe_texts=>ty_text_pairs.
@@ -98,18 +100,18 @@ CLASS ltcl_po_file IMPLEMENTATION.
 
     CREATE OBJECT lo_buf.
 
-    lo_buf->add( 'msgid ""' ).
-    lo_buf->add( 'msgstr ""' ).
-    lo_buf->add( '"some header stuff"' ).
-    lo_buf->add( '' ).
-    lo_buf->add( '#: T1/OBJ1/K1, maxlen=10' ).
-    lo_buf->add( '#: T1/OBJ1/K2 X, maxlen=11' ).
-    lo_buf->add( 'msgid "Hello"' ).
-    lo_buf->add( 'msgstr "Hello DE 2"' ).
-    lo_buf->add( '' ).
-    lo_buf->add( '#: T1/OBJ1/K3, maxlen=12' ).
-    lo_buf->add( 'msgid "World"' ).
-    lo_buf->add( 'msgstr "World DE"' ).
+    lo_buf->add( 'msgid ""'
+      )->add( 'msgstr ""'
+      )->add( '"some header stuff"'
+      )->add( ''
+      )->add( '#: T1/OBJ1/K1, maxlen=10'
+      )->add( '#: T1/OBJ1/K2 X, maxlen=11'
+      )->add( 'msgid "Hello"'
+      )->add( 'msgstr "Hello DE 2"'
+      )->add( ''
+      )->add( '#: T1/OBJ1/K3, maxlen=12'
+      )->add( 'msgid "World"'
+      )->add( 'msgstr "World DE"' ).
 
     CREATE OBJECT lo_po EXPORTING iv_lang = 'xx'.
     lo_po->parse_po( lo_buf->join_w_newline_and_flush( ) ).
@@ -118,6 +120,100 @@ CLASS ltcl_po_file IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lt_lxe_pairs_act
       exp = lt_lxe_pairs_exp ).
+
+  ENDMETHOD.
+
+  METHOD parse_negative.
+
+    DATA lo_po TYPE REF TO zcl_abapgit_po_file.
+    DATA lo_buf TYPE REF TO zcl_abapgit_string_buffer.
+
+    CREATE OBJECT lo_buf.
+    CREATE OBJECT lo_po EXPORTING iv_lang = 'xx'.
+
+    TRY.
+        lo_po->parse_po( lo_buf->add(
+                  'wrong'
+          )->add( 'format'
+          )->join_w_newline_and_flush( ) ).
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
+
+    TRY.
+        lo_po->parse_po( lo_buf->add(
+                  'msgid "a"'
+          )->add( 'wrong tag'
+          )->join_w_newline_and_flush( ) ).
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
+
+    TRY.
+        lo_po->parse_po( lo_buf->add(
+                  '""'
+          )->add( ''
+          )->join_w_newline_and_flush( ) ).
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
+
+    TRY.
+        lo_po->parse_po( lo_buf->add(
+                  'msgid "a"'
+          )->add( '# comment'
+          )->add( 'msgstr "b"'
+          )->join_w_newline_and_flush( ) ).
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
+
+    TRY.
+        lo_po->parse_po( lo_buf->add(
+                  'msgid "a"'
+          )->add( 'msgstr "'
+          )->join_w_newline_and_flush( ) ).
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
+
+    TRY.
+        lo_po->parse_po( lo_buf->add(
+                  'msgid"a"'
+          )->add( 'msgstr"b"'
+          )->join_w_newline_and_flush( ) ).
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD unquote.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_po_file=>unquote( ` "abc \"123" ` )
+      exp = 'abc "123' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_po_file=>unquote( ` "" ` )
+      exp = '' ).
+
+    TRY.
+        zcl_abapgit_po_file=>unquote( `abc \"123"` ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
+
+    TRY.
+        zcl_abapgit_po_file=>unquote( `"abc \"123` ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
+
+    TRY.
+        zcl_abapgit_po_file=>unquote( `"abc \"` ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
+
+    TRY.
+        zcl_abapgit_po_file=>unquote( `"` ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
 
   ENDMETHOD.
 
