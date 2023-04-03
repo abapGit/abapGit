@@ -79,7 +79,9 @@ CLASS zcl_abapgit_po_file DEFINITION
       IMPORTING
         iv_text        TYPE string
       RETURNING
-        VALUE(rv_text) TYPE string.
+        VALUE(rv_text) TYPE string
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -181,36 +183,42 @@ CLASS ZCL_ABAPGIT_PO_FILE IMPLEMENTATION.
     DATA lv_whitespace TYPE c LENGTH 2.
     FIELD-SYMBOLS <lv_i> TYPE string.
 
-    lv_whitespace = `` && cl_abap_char_utilities=>horizontal_tab.
+    lv_whitespace = ` ` && cl_abap_char_utilities=>horizontal_tab.
 
     SPLIT iv_data AT cl_abap_char_utilities=>newline INTO TABLE lt_lines.
     APPEND '' TO lt_lines. " terminator
 
     LOOP AT lt_lines ASSIGNING <lv_i>.
-      IF lv_state = c_state-wait_eos AND strlen( <lv_i> ) >= 1 AND <lv_i>+0(1) = '"'.
-        " parse "" and add to current
-        CONTINUE.
-      ELSE.
-        lv_state = c_state-wait_id.
+      IF lv_state = c_state-wait_eos.
+        IF strlen( <lv_i> ) >= 1 AND <lv_i>+0(1) = '"'.
+          ls_pair-target = ls_pair-target && cl_abap_char_utilities=>newline && unquote( <lv_i> ).
+          CONTINUE.
+        ELSE.
+          lv_state = c_state-wait_id.
+          IF ls_pair-source IS NOT INITIAL. " skip header entry for now
+            INSERT ls_pair INTO TABLE mt_pairs. " Sorted, duplicates will not be inserted
+          ENDIF.
+          CLEAR ls_pair.
+        ENDIF.
       ENDIF.
 
       CASE lv_state.
         WHEN c_state-wait_id.
           IF <lv_i> IS INITIAL
-            OR <lv_i>+0(1) = '#' " TODO, potentially parse comments in future
+            OR <lv_i>+0(1) = '#' " TODO, potentially parse comments in future, to re-integrate
             OR <lv_i> CO lv_whitespace.
             CONTINUE.
           ENDIF.
-          IF strlen( <lv_i> ) >= 6 AND <lv_i>+0(6) = 'msgid'. " w/trailing space
-            " parse ""
+          IF strlen( <lv_i> ) >= 6 AND <lv_i>+0(6) = `msgid `. " w/trailing space
+            ls_pair-source = unquote( substring( val = <lv_i> off = 6 ) ).
             lv_state = c_state-wait_str.
           ELSE.
             zcx_abapgit_exception=>raise( 'PO file format error: expected msgid' ).
           ENDIF.
 
         WHEN c_state-wait_str.
-          IF strlen( <lv_i> ) >= 7 AND <lv_i>+0(7) = 'msgstr'. " w/trailing space
-            " parse ""
+          IF strlen( <lv_i> ) >= 7 AND <lv_i>+0(7) = `msgstr `. " w/trailing space
+            ls_pair-target = unquote( substring( val = <lv_i> off = 7 ) ).
             lv_state = c_state-wait_eos.
           ELSE.
             zcx_abapgit_exception=>raise( 'PO file format error: expected msgstr' ).
@@ -261,13 +269,39 @@ CLASS ZCL_ABAPGIT_PO_FILE IMPLEMENTATION.
 
   METHOD unquote.
 
-    " trim trailing space " Measure perf ?
-    " trim starting space
-    " ensure starting " and ending "
-    " ensure ending " is not an escape
-    " substring
-    " replace \" to "
-    " theoretically there can be unescaped " - is it a problem ? check standard
+    DATA lv_len TYPE i.
+    DATA lv_prev_char TYPE i.
+
+    rv_text = iv_text.
+    SHIFT rv_text RIGHT DELETING TRAILING space. " Measure perf ? Could be slowish, maybe use find
+    SHIFT rv_text LEFT DELETING LEADING space.
+    lv_len = strlen( rv_text ).
+
+    IF lv_len < 2.
+      zcx_abapgit_exception=>raise( 'PO file format error: bad quoting' ).
+    ENDIF.
+
+    lv_prev_char = lv_len - 1.
+    IF rv_text+0(1) <> '"' OR rv_text+lv_prev_char(1) <> '"'.
+      zcx_abapgit_exception=>raise( 'PO file format error: bad quoting' ).
+    ENDIF.
+
+    lv_prev_char = lv_prev_char - 1.
+    IF lv_len >= 3 AND rv_text+lv_prev_char(1) = '\'. " escaped quote
+      zcx_abapgit_exception=>raise( 'PO file format error: bad quoting' ).
+    ENDIF.
+
+    rv_text = replace(
+      val = substring(
+        val = rv_text
+        off = 1
+        len = lv_len - 2 )
+      sub  = '\"'
+      with = '"'
+      occ  = 0 ).
+
+    " TODO: theoretically there can be unescaped " - is it a problem ? check standard
+    " TODO: also decide what to do with \n
 
   ENDMETHOD.
 
@@ -285,8 +319,6 @@ CLASS ZCL_ABAPGIT_PO_FILE IMPLEMENTATION.
   METHOD zif_abapgit_i18n_file~render.
 
     DATA lv_str TYPE string.
-
-    " TODO header, check if not empty, then return empty string
 
     lv_str = build_po_body( )->join_w_newline_and_flush( ).
 
