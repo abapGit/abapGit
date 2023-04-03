@@ -25,9 +25,18 @@ INTERFACE zif_abapgit_lxe_texts
     IMPORTING
       !iv_object_type   TYPE tadir-object
       !iv_object_name   TYPE tadir-obj_name
-      !is_i18n_params      TYPE zif_abapgit_definitions=>ty_i18n_params
+      !is_i18n_params   TYPE zif_abapgit_definitions=>ty_i18n_params
     RETURNING
       VALUE(rt_po_files) TYPE zif_abapgit_i18n_file=>ty_table_of
+    RAISING
+      zcx_abapgit_exception .
+
+  METHODS deserialize_from_po
+    IMPORTING
+      !iv_object_type   TYPE tadir-object
+      !iv_object_name   TYPE tadir-obj_name
+      !is_i18n_params   TYPE zif_abapgit_definitions=>ty_i18n_params
+      !it_po_files      TYPE zif_abapgit_i18n_file=>ty_table_of
     RAISING
       zcx_abapgit_exception .
 

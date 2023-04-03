@@ -730,6 +730,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
             "analyze XML in order to instantiate the proper serializer
             lo_xml = lo_files->read_xml( ).
             lo_xml->i18n_params( ls_i18n_params ).
+            lo_files->i18n_params( ls_i18n_params ).
             ls_metadata = lo_xml->get_metadata( ).
           ELSE.
             " there's no XML and metadata for JSON format

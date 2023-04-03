@@ -94,6 +94,12 @@ CLASS zcl_abapgit_objects_super DEFINITION
         !ii_files TYPE REF TO zcl_abapgit_objects_files
       RAISING
         zcx_abapgit_exception .
+    METHODS deserialize_lxe_texts_from_po
+      IMPORTING
+        !ii_files TYPE REF TO zcl_abapgit_objects_files
+      RAISING
+        zcx_abapgit_exception .
+
   PRIVATE SECTION.
 ENDCLASS.
 
@@ -232,6 +238,21 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD deserialize_lxe_texts_from_po.
+
+    DATA lt_po_files TYPE zif_abapgit_i18n_file=>ty_table_of.
+
+    lt_po_files = ii_files->read_i18n_files( ).
+
+    zcl_abapgit_factory=>get_lxe_texts( )->deserialize_from_po(
+      iv_object_type = ms_item-obj_type
+      iv_object_name = ms_item-obj_name
+      is_i18n_params = ii_files->i18n_params( )
+      it_po_files    = lt_po_files ).
+
+  ENDMETHOD.
+
+
   METHOD exists_a_lock_entry_for.
 
     DATA: lt_lock_entries TYPE STANDARD TABLE OF seqg3.
@@ -295,9 +316,6 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
   METHOD serialize_lxe_texts.
 
-*    DATA lt_po_files TYPE zif_abapgit_i18n_file=>ty_table_of.
-*    FIELD-SYMBOLS <li_po> LIKE LINE OF lt_po_files.
-
     IF ii_xml->i18n_params( )-main_language_only = abap_true OR
        ii_xml->i18n_params( )-use_lxe = abap_false OR
        ii_xml->i18n_params( )-translation_languages IS INITIAL.
@@ -309,33 +327,25 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
       iv_object_name = ms_item-obj_name
       ii_xml         = ii_xml ).
 
-*    lt_po_files = zcl_abapgit_factory=>get_lxe_texts( )->serialize_as_po(
-*      iv_object_type = ms_item-obj_type
-*      iv_object_name = ms_item-obj_name
-*      is_i18n_params = ii_xml->i18n_params( ) ).
-*
 *    FIELD-SYMBOLS <lo_files> LIKE zif_abapgit_object=>mo_files.
 *    ASSIGN me->('ZIF_ABAPGIT_OBJECT~MO_FILES') TO <lo_files>.
-*    IF sy-subrc <> 0.
-*      RETURN.
+*    IF sy-subrc = 0.
+*      serialize_lxe_texts_as_po( <lo_files> ).
 *    ENDIF.
-*
-*    LOOP AT lt_po_files ASSIGNING <li_po>.
-*      <lo_files>->add_i18n_file( <li_po> ).
-*    ENDLOOP.
 
   ENDMETHOD.
 
 
   METHOD serialize_lxe_texts_as_po.
 
+    DATA lt_po_files TYPE zif_abapgit_i18n_file=>ty_table_of.
+    FIELD-SYMBOLS <li_file> LIKE LINE OF lt_po_files.
+
     IF ii_files->i18n_params( )-main_language_only = abap_true OR
+       ii_files->i18n_params( )-use_lxe = abap_false OR
        ii_files->i18n_params( )-translation_languages IS INITIAL.
       RETURN.
     ENDIF.
-
-    DATA lt_po_files TYPE zif_abapgit_i18n_file=>ty_table_of.
-    FIELD-SYMBOLS <li_file> LIKE LINE OF lt_po_files.
 
     lt_po_files = zcl_abapgit_factory=>get_lxe_texts( )->serialize_as_po(
       iv_object_type = ms_item-obj_type

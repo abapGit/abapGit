@@ -26,25 +26,20 @@ CLASS ltcl_objects_files DEFINITION FOR TESTING
       RETURNING
         VALUE(rt_result) TYPE abaptxt255_tab.
 
-    METHODS read_abap FOR TESTING
-      RAISING
-        cx_static_check.
-
-    METHODS read_xml FOR TESTING
-      RAISING
-        cx_static_check.
-
+    METHODS read_abap FOR TESTING RAISING cx_static_check.
+    METHODS read_xml FOR TESTING RAISING cx_static_check.
     METHODS get_file_pattern FOR TESTING.
-
     METHODS is_json_metadata FOR TESTING.
     METHODS is_not_json_metadata FOR TESTING.
+    METHODS read_i18n_files FOR TESTING RAISING cx_static_check.
 ENDCLASS.
 
 CLASS ltcl_objects_files IMPLEMENTATION.
 
   METHOD setup.
-    DATA: lt_files TYPE zif_abapgit_git_definitions=>ty_files_tt,
-          ls_item  TYPE zif_abapgit_definitions=>ty_item.
+
+    DATA lt_files TYPE zif_abapgit_git_definitions=>ty_files_tt.
+    DATA ls_item  TYPE zif_abapgit_definitions=>ty_item.
     FIELD-SYMBOLS: <ls_files> LIKE LINE OF lt_files.
 
     " filenames are lower case
@@ -54,6 +49,12 @@ CLASS ltcl_objects_files IMPLEMENTATION.
     APPEND INITIAL LINE TO lt_files ASSIGNING <ls_files>.
     <ls_files>-filename = 'zlf.prog.xml'.
     <ls_files>-data = get_xml_data( ).
+    APPEND INITIAL LINE TO lt_files ASSIGNING <ls_files>.
+    <ls_files>-filename = 'zlf.prog.i18n.de.po'.
+    APPEND INITIAL LINE TO lt_files ASSIGNING <ls_files>.
+    <ls_files>-filename = 'zlf.prog.i18n.es.po'.
+    APPEND INITIAL LINE TO lt_files ASSIGNING <ls_files>.
+    <ls_files>-filename = 'zlf.prog.i18n.cz.other'.
 
     " object type and name are upper case
     ls_item-obj_type = 'PROG'.
@@ -186,6 +187,36 @@ CLASS ltcl_objects_files IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = abap_false
       act = mo_cut->is_json_metadata( ) ).
+
+  ENDMETHOD.
+
+  METHOD read_i18n_files.
+
+    DATA lt_i18n_files TYPE zif_abapgit_i18n_file=>ty_table_of.
+    DATA li_f LIKE LINE OF lt_i18n_files.
+
+    lt_i18n_files = mo_cut->read_i18n_files( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( lt_i18n_files )
+      exp = 2 ).
+
+    LOOP AT lt_i18n_files INTO li_f.
+      CASE sy-tabix.
+        WHEN 1.
+          cl_abap_unit_assert=>assert_equals(
+            act = li_f->lang( )
+            exp = 'de' ).
+        WHEN 2.
+          cl_abap_unit_assert=>assert_equals(
+            act = li_f->lang( )
+            exp = 'es' ).
+      ENDCASE.
+    ENDLOOP.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( mo_cut->get_accessed_files( ) )
+      exp = 2 ).
 
   ENDMETHOD.
 
