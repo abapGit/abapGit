@@ -450,7 +450,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
              utime TYPE reposrc-utime,
            END OF ty_reposrc.
 
-    DATA: lt_reposrc  TYPE HASHED TABLE OF ty_reposrc,
+    DATA: lt_reposrc  TYPE STANDARD TABLE OF ty_reposrc,
           ls_reposrc  LIKE LINE OF lt_reposrc,
           lt_includes TYPE STANDARD TABLE OF ty_includes.
 
