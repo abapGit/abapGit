@@ -69,6 +69,9 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
+    CONSTANTS c_custmnr TYPE lxecustmnr VALUE '999999'.
+    " The value for ABAP system translation is always 999999 (from lxecustmnr docs)
+
     TYPES:
       BEGIN OF ty_lxe_translation,
         source_lang TYPE lxeisolang,
@@ -155,7 +158,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
+CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
 
 
   METHOD add_iso_langs_to_lang_filter.
@@ -498,11 +501,11 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
         ENDIF.
 
         ls_lxe_text_item-text_pairs = read_lxe_object_text_pair(
-                                          iv_s_lang    = ls_lxe_text_item-source_lang
-                                          iv_t_lang    = ls_lxe_text_item-target_lang
-                                          iv_custmnr   = ls_lxe_text_item-custmnr
-                                          iv_objtype   = ls_lxe_text_item-objtype
-                                          iv_objname   = ls_lxe_text_item-objname ).
+          iv_s_lang    = ls_lxe_text_item-source_lang
+          iv_t_lang    = ls_lxe_text_item-target_lang
+          iv_custmnr   = ls_lxe_text_item-custmnr
+          iv_objtype   = ls_lxe_text_item-objtype
+          iv_objname   = ls_lxe_text_item-objname ).
 
         IF ls_lxe_text_item-text_pairs IS NOT INITIAL.
           APPEND ls_lxe_text_item TO rt_text_items.
@@ -638,28 +641,91 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
       ls_lxe_item       LIKE LINE OF lt_lxe_texts,
       lt_text_pairs_tmp LIKE ls_lxe_item-text_pairs.
 
-    ii_xml->read( EXPORTING iv_name = iv_lxe_text_name
-                  CHANGING  cg_data = lt_lxe_texts ).
+    ii_xml->read(
+      EXPORTING iv_name = iv_lxe_text_name
+      CHANGING  cg_data = lt_lxe_texts ).
 
     LOOP AT lt_lxe_texts INTO ls_lxe_item.
       " Call Read first for buffer prefill
 
       lt_text_pairs_tmp = read_lxe_object_text_pair(
-                             iv_s_lang    = ls_lxe_item-source_lang
-                             iv_t_lang    = ls_lxe_item-target_lang
-                             iv_custmnr   = ls_lxe_item-custmnr
-                             iv_objtype   = ls_lxe_item-objtype
-                             iv_objname   = ls_lxe_item-objname
-                             iv_read_only = abap_false ).
+        iv_s_lang    = ls_lxe_item-source_lang
+        iv_t_lang    = ls_lxe_item-target_lang
+        iv_custmnr   = ls_lxe_item-custmnr
+        iv_objtype   = ls_lxe_item-objtype
+        iv_objname   = ls_lxe_item-objname
+        iv_read_only = abap_false ).
 
       "Call actual Write FM
       write_lxe_object_text_pair(
-          iv_s_lang  = ls_lxe_item-source_lang
-          iv_t_lang  = ls_lxe_item-target_lang
-          iv_custmnr = ls_lxe_item-custmnr
-          iv_objtype = ls_lxe_item-objtype
-          iv_objname = ls_lxe_item-objname
-          it_pcx_s1  = ls_lxe_item-text_pairs ).
+        iv_s_lang  = ls_lxe_item-source_lang
+        iv_t_lang  = ls_lxe_item-target_lang
+        iv_custmnr = ls_lxe_item-custmnr
+        iv_objtype = ls_lxe_item-objtype
+        iv_objname = ls_lxe_item-objname
+        it_pcx_s1  = ls_lxe_item-text_pairs ).
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_lxe_texts~deserialize_from_po.
+
+    DATA lv_lang LIKE LINE OF is_i18n_params-translation_languages.
+    DATA li_po TYPE REF TO zif_abapgit_i18n_file.
+    DATA lt_text_pairs_tmp TYPE ty_lxe_translation-text_pairs.
+    DATA lt_obj_list TYPE lxe_tt_colob.
+    DATA lv_main_lang TYPE lxeisolang.
+    DATA lv_target_lang TYPE lxeisolang.
+
+    FIELD-SYMBOLS <lv_lxe_object> LIKE LINE OF lt_obj_list.
+
+    lt_obj_list = get_lxe_object_list(
+      iv_object_name = iv_object_name
+      iv_object_type = iv_object_type ).
+
+    IF lt_obj_list IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    lv_main_lang = get_lang_iso4( langu_to_laiso_safe( is_i18n_params-main_language ) ).
+
+    LOOP AT is_i18n_params-translation_languages INTO lv_lang.
+      lv_target_lang = get_lang_iso4( lv_lang ).
+
+      LOOP AT it_po_files INTO li_po.
+        IF li_po->lang( ) = to_lower( lv_lang ). " Not quite efficient but the list is presumably very short
+          EXIT.
+        ELSE.
+          CLEAR li_po.
+        ENDIF.
+      ENDLOOP.
+
+      CHECK li_po IS BOUND. " Ignore missing files, missing translation is not a crime
+
+      LOOP AT lt_obj_list ASSIGNING <lv_lxe_object>.
+
+        lt_text_pairs_tmp = read_lxe_object_text_pair(
+          iv_s_lang    = lv_main_lang
+          iv_t_lang    = lv_target_lang
+          iv_custmnr   = <lv_lxe_object>-custmnr
+          iv_objtype   = <lv_lxe_object>-objtype
+          iv_objname   = <lv_lxe_object>-objname
+          iv_read_only = abap_false ).
+
+        li_po->translate( CHANGING ct_text_pairs = lt_text_pairs_tmp ).
+        " TODO maybe optimize, check if values have changed
+
+        write_lxe_object_text_pair(
+          iv_s_lang  = lv_main_lang
+          iv_t_lang  = lv_target_lang
+          iv_custmnr = <lv_lxe_object>-custmnr
+          iv_objtype = <lv_lxe_object>-objtype
+          iv_objname = <lv_lxe_object>-objname
+          it_pcx_s1  = lt_text_pairs_tmp ).
+
+      ENDLOOP.
 
     ENDLOOP.
 

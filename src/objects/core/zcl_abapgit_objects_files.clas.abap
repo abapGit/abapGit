@@ -94,6 +94,11 @@ CLASS zcl_abapgit_objects_files DEFINITION
         !ii_i18n_file TYPE REF TO zif_abapgit_i18n_file
       RAISING
         zcx_abapgit_exception .
+    METHODS read_i18n_files
+      RETURNING
+        VALUE(rt_i18n_files) TYPE zif_abapgit_i18n_file=>ty_table_of
+      RAISING
+        zcx_abapgit_exception .
     METHODS i18n_params
       IMPORTING
         !is_i18n_params       TYPE zif_abapgit_definitions=>ty_i18n_params OPTIONAL
@@ -118,11 +123,16 @@ CLASS zcl_abapgit_objects_files DEFINITION
     DATA mv_path TYPE string .
     DATA ms_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params.
 
+    METHODS mark_accessed
+      IMPORTING
+        !iv_path TYPE zif_abapgit_git_definitions=>ty_file-path
+        !iv_file TYPE zif_abapgit_git_definitions=>ty_file-filename.
+
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
+CLASS zcl_abapgit_objects_files IMPLEMENTATION.
 
 
   METHOD add.
@@ -282,6 +292,37 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD read_i18n_files.
+
+    DATA lv_lang TYPE laiso.
+    DATA lv_ext TYPE string.
+    DATA lo_po TYPE REF TO zcl_abapgit_po_file.
+    FIELD-SYMBOLS <ls_file> LIKE LINE OF mt_files.
+
+    LOOP AT mt_files ASSIGNING <ls_file>.
+
+      " TODO: Maybe this should be in zcl_abapgit_filename_logic
+      FIND FIRST OCCURRENCE OF REGEX 'i18n\.([^.]{2})\.([^.]+)$' IN <ls_file>-filename SUBMATCHES lv_lang lv_ext.
+      CHECK sy-subrc = 0.
+
+      CASE lv_ext.
+        WHEN 'po'.
+          CREATE OBJECT lo_po EXPORTING iv_lang = lv_lang.
+          lo_po->parse( <ls_file>-data ).
+          APPEND lo_po TO rt_i18n_files.
+        WHEN OTHERS.
+          CONTINUE. " Unsupported i18n file type
+      ENDCASE.
+
+      mark_accessed(
+        iv_path = <ls_file>-path
+        iv_file = <ls_file>-filename ).
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD i18n_params.
 
     IF is_i18n_params IS SUPPLIED.
@@ -305,6 +346,21 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
       rv_result = abap_true.
       EXIT.
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD mark_accessed.
+
+    FIELD-SYMBOLS <ls_accessed> LIKE LINE OF mt_accessed_files.
+
+    READ TABLE mt_accessed_files TRANSPORTING NO FIELDS
+      WITH KEY path = iv_path filename = iv_file.
+    IF sy-subrc > 0. " Not found ? -> Add
+      APPEND INITIAL LINE TO mt_accessed_files ASSIGNING <ls_accessed>.
+      <ls_accessed>-path     = iv_path.
+      <ls_accessed>-filename = iv_file.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -337,9 +393,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
   METHOD read_file.
 
-    FIELD-SYMBOLS: <ls_file>     LIKE LINE OF mt_files,
-                   <ls_accessed> LIKE LINE OF mt_accessed_files.
-
+    FIELD-SYMBOLS <ls_file>     LIKE LINE OF mt_files.
 
     IF mv_path IS NOT INITIAL.
       READ TABLE mt_files ASSIGNING <ls_file>
@@ -361,12 +415,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
     ENDIF.
 
     " Update access table
-    READ TABLE mt_accessed_files TRANSPORTING NO FIELDS
-      WITH KEY path = <ls_file>-path filename = <ls_file>-filename.
-    IF sy-subrc > 0. " Not found ? -> Add
-      APPEND INITIAL LINE TO mt_accessed_files ASSIGNING <ls_accessed>.
-      MOVE-CORRESPONDING <ls_file> TO <ls_accessed>.
-    ENDIF.
+    mark_accessed(
+      iv_path = <ls_file>-path
+      iv_file = <ls_file>-filename ).
 
     rv_data = <ls_file>-data.
 

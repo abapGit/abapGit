@@ -158,9 +158,16 @@ CLASS ZCL_ABAPGIT_PO_FILE IMPLEMENTATION.
 
   METHOD parse.
 
+    DATA lv_xdata TYPE xstring.
     DATA lv_data TYPE string.
 
-    lv_data = zcl_abapgit_convert=>xstring_to_string_utf8( iv_xdata ).
+    IF xstrlen( iv_xdata ) > 3 AND iv_xdata(3) = cl_abap_char_utilities=>byte_order_mark_utf8.
+      lv_xdata = iv_xdata+3.
+    ELSE.
+      lv_xdata = iv_xdata.
+    ENDIF.
+
+    lv_data = zcl_abapgit_convert=>xstring_to_string_utf8( lv_xdata ).
 
     parse_po( lv_data ).
 
