@@ -230,10 +230,17 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
   METHOD deserialize_lxe_texts.
 
-    zcl_abapgit_factory=>get_lxe_texts( )->deserialize(
-      iv_object_type = ms_item-obj_type
-      iv_object_name = ms_item-obj_name
-      ii_xml         = ii_xml ).
+    FIELD-SYMBOLS <lo_files> LIKE zif_abapgit_object=>mo_files.
+
+*    zcl_abapgit_factory=>get_lxe_texts( )->deserialize(
+*      iv_object_type = ms_item-obj_type
+*      iv_object_name = ms_item-obj_name
+*      ii_xml         = ii_xml ).
+
+    ASSIGN me->('ZIF_ABAPGIT_OBJECT~MO_FILES') TO <lo_files>.
+    IF sy-subrc = 0.
+      serialize_lxe_texts_as_po( <lo_files> ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -316,22 +323,23 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
   METHOD serialize_lxe_texts.
 
+    FIELD-SYMBOLS <lo_files> LIKE zif_abapgit_object=>mo_files.
+
     IF ii_xml->i18n_params( )-main_language_only = abap_true OR
        ii_xml->i18n_params( )-use_lxe = abap_false OR
        ii_xml->i18n_params( )-translation_languages IS INITIAL.
       RETURN.
     ENDIF.
 
-    zcl_abapgit_factory=>get_lxe_texts( )->serialize(
-      iv_object_type = ms_item-obj_type
-      iv_object_name = ms_item-obj_name
-      ii_xml         = ii_xml ).
+*    zcl_abapgit_factory=>get_lxe_texts( )->serialize(
+*      iv_object_type = ms_item-obj_type
+*      iv_object_name = ms_item-obj_name
+*      ii_xml         = ii_xml ).
 
-*    FIELD-SYMBOLS <lo_files> LIKE zif_abapgit_object=>mo_files.
-*    ASSIGN me->('ZIF_ABAPGIT_OBJECT~MO_FILES') TO <lo_files>.
-*    IF sy-subrc = 0.
-*      serialize_lxe_texts_as_po( <lo_files> ).
-*    ENDIF.
+    ASSIGN me->('ZIF_ABAPGIT_OBJECT~MO_FILES') TO <lo_files>.
+    IF sy-subrc = 0.
+      serialize_lxe_texts_as_po( <lo_files> ).
+    ENDIF.
 
   ENDMETHOD.
 

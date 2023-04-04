@@ -413,8 +413,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
     IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
       deserialize_texts( io_xml ).
     ELSE.
-*      deserialize_lxe_texts( io_xml ).
-      deserialize_lxe_texts_from_po( zif_abapgit_object~mo_files ).
+      deserialize_lxe_texts( io_xml ).
     ENDIF.
 
   ENDMETHOD.
@@ -522,8 +521,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
     IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
       serialize_texts( io_xml ).
     ELSE.
-      serialize_lxe_texts_as_po( zif_abapgit_object~mo_files ).
-*      serialize_lxe_texts( io_xml ).
+      serialize_lxe_texts( io_xml ).
     ENDIF.
 
   ENDMETHOD.

@@ -45,7 +45,6 @@ CLASS zcl_abapgit_po_file DEFINITION
         source   TYPE string,
         target   TYPE string,
         comments TYPE STANDARD TABLE OF ty_comment WITH KEY kind text,
-*          WITH NON-UNIQUE SORTED KEY by_kind COMPONENTS kind,
       END OF ty_msg_pair.
 
 
@@ -198,7 +197,7 @@ CLASS ZCL_ABAPGIT_PO_FILE IMPLEMENTATION.
     LOOP AT lt_lines ASSIGNING <lv_i>.
       IF lv_state = c_state-wait_eos.
         IF strlen( <lv_i> ) >= 1 AND <lv_i>+0(1) = '"'.
-          ls_pair-target = ls_pair-target && cl_abap_char_utilities=>newline && unquote( <lv_i> ).
+          ls_pair-target = ls_pair-target && unquote( <lv_i> ).
           CONTINUE.
         ELSE.
           lv_state = c_state-wait_id.
@@ -254,7 +253,10 @@ CLASS ZCL_ABAPGIT_PO_FILE IMPLEMENTATION.
         ASSERT sy-subrc = 0.
       ENDIF.
 
-      <ls_out>-target = <ls_in>-t_text.
+      IF <ls_out>-target IS INITIAL. " For a case of orig text duplication
+        <ls_out>-target = <ls_in>-t_text.
+      ENDIF.
+
       ls_comment-kind = c_comment-reference.
       ls_comment-text = condense( |{ iv_objtype }/{ iv_objname }/{ <ls_in>-textkey }| )
         && |, maxlen={ <ls_in>-unitmlt }|.
@@ -298,17 +300,24 @@ CLASS ZCL_ABAPGIT_PO_FILE IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'PO file format error: bad quoting' ).
     ENDIF.
 
+    rv_text = substring(
+      val = rv_text
+      off = 1
+      len = lv_len - 2 ).
+
     rv_text = replace(
-      val = substring(
-        val = rv_text
-        off = 1
-        len = lv_len - 2 )
+      val  = rv_text
       sub  = '\"'
       with = '"'
       occ  = 0 ).
 
+    rv_text = replace(
+      val  = rv_text
+      sub  = '\n'
+      with = cl_abap_char_utilities=>newline
+      occ  = 0 ).
+
     " TODO: theoretically there can be unescaped " - is it a problem ? check standard
-    " TODO: also decide what to do with \n
 
   ENDMETHOD.
 

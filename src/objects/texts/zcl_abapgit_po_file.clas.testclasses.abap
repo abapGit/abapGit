@@ -9,6 +9,7 @@ CLASS ltcl_po_file DEFINITION FINAL
     METHODS parse_happy_path FOR TESTING RAISING zcx_abapgit_exception.
     METHODS parse_negative FOR TESTING RAISING zcx_abapgit_exception.
     METHODS unquote FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS multiline_parsing FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -190,6 +191,9 @@ CLASS ltcl_po_file IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = zcl_abapgit_po_file=>unquote( ` "" ` )
       exp = '' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_po_file=>unquote( ` "\n" ` )
+      exp = |{ cl_abap_char_utilities=>newline }| ).
 
     TRY.
         zcl_abapgit_po_file=>unquote( `abc \"123"` ).
@@ -214,6 +218,46 @@ CLASS ltcl_po_file IMPLEMENTATION.
         cl_abap_unit_assert=>fail( ).
       CATCH zcx_abapgit_exception.
     ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD multiline_parsing.
+
+    DATA lo_po TYPE REF TO zcl_abapgit_po_file.
+    FIELD-SYMBOLS <ls_p> LIKE LINE OF lo_po->mt_pairs.
+
+    CREATE OBJECT lo_po EXPORTING iv_lang = 'xx'.
+    lo_po->parse_po( zcl_abapgit_string_buffer=>create(
+      )->add( 'msgid "a"'
+      )->add( 'msgstr "1\n"'
+      )->add( '"2"'
+      )->join_w_newline_and_flush( ) ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( lo_po->mt_pairs )
+      exp = 1 ).
+    READ TABLE lo_po->mt_pairs INDEX 1 ASSIGNING <ls_p>.
+    cl_abap_unit_assert=>assert_subrc( ).
+    cl_abap_unit_assert=>assert_equals(
+      act = <ls_p>-target
+      exp = |1{ cl_abap_char_utilities=>newline }2| ).
+
+    CREATE OBJECT lo_po EXPORTING iv_lang = 'xx'.
+    lo_po->parse_po( zcl_abapgit_string_buffer=>create(
+      )->add( 'msgid "a"'
+      )->add( 'msgstr ""'
+      )->add( '"2\n"'
+      )->add( '"3"'
+      )->join_w_newline_and_flush( ) ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( lo_po->mt_pairs )
+      exp = 1 ).
+    READ TABLE lo_po->mt_pairs INDEX 1 ASSIGNING <ls_p>.
+    cl_abap_unit_assert=>assert_subrc( ).
+    cl_abap_unit_assert=>assert_equals(
+      act = <ls_p>-target
+      exp = |2{ cl_abap_char_utilities=>newline }3| ).
 
   ENDMETHOD.
 
