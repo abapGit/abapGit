@@ -60,4 +60,11 @@ INTERFACE zif_abapgit_cts_api
     RETURNING
       VALUE(rv_uname) TYPE uname.
 
+  METHODS create_transport_entries
+    IMPORTING
+      it_table_ins TYPE ANY TABLE
+      it_table_upd TYPE ANY TABLE
+      it_table_del TYPE ANY TABLE
+      iv_tabname   TYPE tabname.
+
 ENDINTERFACE.

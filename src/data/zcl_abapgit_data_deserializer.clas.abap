@@ -79,10 +79,31 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 
   METHOD is_customizing_table.
 
-    DATA lv_contflag TYPE c LENGTH 1.
+    DATA lv_contflag       TYPE c LENGTH 1.
+    DATA lo_table          TYPE REF TO object.
+    DATA lo_content        TYPE REF TO object.
+    DATA lo_delivery_class TYPE REF TO object.
+    FIELD-SYMBOLS <ls_any> TYPE any.
 
-    SELECT SINGLE contflag FROM dd02l INTO lv_contflag WHERE tabname = iv_name.
-    IF sy-subrc = 0 AND lv_contflag = 'C'.
+    TRY.
+        CALL METHOD ('XCO_CP_ABAP_DICTIONARY')=>database_table
+          EXPORTING
+            iv_name           = iv_name
+          RECEIVING
+            ro_database_table = lo_table.
+        CALL METHOD lo_table->('IF_XCO_DATABASE_TABLE~CONTENT')
+          RECEIVING
+            ro_content = lo_content.
+        CALL METHOD lo_content->('IF_XCO_DBT_CONTENT~GET_DELIVERY_CLASS')
+          RECEIVING
+            ro_delivery_class = lo_delivery_class.
+        ASSIGN lo_delivery_class->('VALUE') TO <ls_any>.
+        lv_contflag = <ls_any>.
+      CATCH cx_sy_dyn_call_illegal_class.
+        SELECT SINGLE contflag FROM ('DD02L') INTO lv_contflag WHERE tabname = iv_name.
+    ENDTRY.
+
+    IF lv_contflag = 'C'.
       rv_customizing = abap_true.
     ENDIF.
 
@@ -195,16 +216,15 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 
 * this method updates the database
 
-    DATA ls_result        LIKE LINE OF it_result.
-    DATA lt_tables        TYPE tredt_objects.
-    DATA lt_table_keys    TYPE STANDARD TABLE OF e071k.
-    DATA lv_table_name    TYPE tabname.
-    DATA lt_tadir_entries TYPE scts_tadir.
+    DATA ls_result  LIKE LINE OF it_result.
+    DATA li_cts_api TYPE REF TO zif_abapgit_cts_api.
 
     FIELD-SYMBOLS:
       <lt_ins> TYPE ANY TABLE,
       <lt_del> TYPE ANY TABLE,
       <lt_upd> TYPE ANY TABLE.
+
+    li_cts_api = zcl_abapgit_factory=>get_cts_api( ).
 
     LOOP AT it_result INTO ls_result.
       ASSERT ls_result-type = zif_abapgit_data_config=>c_data_type-tabu. " todo
@@ -235,26 +255,14 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
       ASSIGN ls_result-updates->* TO <lt_upd>.
 
       IF is_customizing_table( ls_result-name ) = abap_true.
-        cl_table_utilities_brf=>create_transport_entries(
-          EXPORTING
-            it_table_ins = <lt_ins>
-            it_table_upd = <lt_upd>
-            it_table_del = <lt_del>
-            iv_tabname   = |{ ls_result-name }|
-          CHANGING
-            ct_e071      = lt_tables
-            ct_e071k     = lt_table_keys ).
+        li_cts_api->create_transport_entries(
+          it_table_ins = <lt_ins>
+          it_table_upd = <lt_upd>
+          it_table_del = <lt_del>
+          iv_tabname   = |{ ls_result-name }| ).
       ENDIF.
 
     ENDLOOP.
-
-    IF lt_tables IS NOT INITIAL AND lt_table_keys IS NOT INITIAL.
-      cl_table_utilities_brf=>write_transport_entries(
-        CHANGING
-          ct_e071  = lt_tables
-          ct_e071k = lt_table_keys
-          ct_tadir = lt_tadir_entries ).
-    ENDIF.
 
   ENDMETHOD.
 
