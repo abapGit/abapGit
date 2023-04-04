@@ -4,9 +4,12 @@ CLASS zcl_abapgit_string_buffer DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+    CLASS-METHODS create
+      RETURNING
+        VALUE(ro_instance) TYPE REF TO zcl_abapgit_string_buffer.
     METHODS add
       IMPORTING
-        iv_str TYPE string
+        iv_str       TYPE string
       RETURNING
         VALUE(ro_me) TYPE REF TO zcl_abapgit_string_buffer.
     METHODS join_and_flush
@@ -23,12 +26,17 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_STRING_BUFFER IMPLEMENTATION.
+CLASS zcl_abapgit_string_buffer IMPLEMENTATION.
 
 
   METHOD add.
     APPEND iv_str TO mt_buffer.
     ro_me = me.
+  ENDMETHOD.
+
+
+  METHOD create.
+    CREATE OBJECT ro_instance.
   ENDMETHOD.
 
 

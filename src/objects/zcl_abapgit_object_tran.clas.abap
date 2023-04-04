@@ -911,8 +911,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
     IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
       serialize_texts( io_xml ).
     ELSE.
-*      serialize_lxe_texts( io_xml ).
-      serialize_lxe_texts_as_po( zif_abapgit_object~mo_files ).
+      serialize_lxe_texts( io_xml ).
     ENDIF.
 
   ENDMETHOD.
