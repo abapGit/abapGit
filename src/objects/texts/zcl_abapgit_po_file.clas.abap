@@ -216,7 +216,9 @@ CLASS ZCL_ABAPGIT_PO_FILE IMPLEMENTATION.
             CONTINUE.
           ENDIF.
           IF strlen( <lv_i> ) >= 6 AND <lv_i>+0(6) = `msgid `. " w/trailing space
-            ls_pair-source = unquote( substring( val = <lv_i> off = 6 ) ).
+            ls_pair-source = unquote( substring(
+              val = <lv_i>
+              off = 6 ) ).
             lv_state = c_state-wait_str.
           ELSE.
             zcx_abapgit_exception=>raise( 'PO file format error: expected msgid' ).
@@ -224,7 +226,9 @@ CLASS ZCL_ABAPGIT_PO_FILE IMPLEMENTATION.
 
         WHEN c_state-wait_str.
           IF strlen( <lv_i> ) >= 7 AND <lv_i>+0(7) = `msgstr `. " w/trailing space
-            ls_pair-target = unquote( substring( val = <lv_i> off = 7 ) ).
+            ls_pair-target = unquote( substring(
+              val = <lv_i>
+              off = 7 ) ).
             lv_state = c_state-wait_eos.
           ELSE.
             zcx_abapgit_exception=>raise( 'PO file format error: expected msgstr' ).

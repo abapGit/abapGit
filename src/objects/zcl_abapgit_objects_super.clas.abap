@@ -249,9 +249,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
 *      iv_object_name = ms_item-obj_name
 *      ii_xml         = ii_xml ).
 
-    ASSIGN me->('ZIF_ABAPGIT_OBJECT~MO_FILES') TO <lo_files>.
+    ASSIGN me->('ZIF_ABAPGIT_OBJECT~MO_FILES') TO <lo_files>. " TODO, refactor
     IF sy-subrc = 0.
-      serialize_lxe_texts_as_po( <lo_files> ).
+      deserialize_lxe_texts_from_po( <lo_files> ).
     ENDIF.
 
   ENDMETHOD.
@@ -348,7 +348,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
 *      iv_object_name = ms_item-obj_name
 *      ii_xml         = ii_xml ).
 
-    ASSIGN me->('ZIF_ABAPGIT_OBJECT~MO_FILES') TO <lo_files>.
+    ASSIGN me->('ZIF_ABAPGIT_OBJECT~MO_FILES') TO <lo_files>. " TODO, refactor
     IF sy-subrc = 0.
       serialize_lxe_texts_as_po( <lo_files> ).
     ENDIF.

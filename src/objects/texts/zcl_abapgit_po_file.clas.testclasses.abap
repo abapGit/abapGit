@@ -127,38 +127,36 @@ CLASS ltcl_po_file IMPLEMENTATION.
   METHOD parse_negative.
 
     DATA lo_po TYPE REF TO zcl_abapgit_po_file.
-    DATA lo_buf TYPE REF TO zcl_abapgit_string_buffer.
 
-    CREATE OBJECT lo_buf.
     CREATE OBJECT lo_po EXPORTING iv_lang = 'xx'.
 
     TRY.
-        lo_po->parse_po( lo_buf->add(
-                  'wrong'
+        lo_po->parse_po( zcl_abapgit_string_buffer=>create(
+          )->add( 'wrong'
           )->add( 'format'
           )->join_w_newline_and_flush( ) ).
       CATCH zcx_abapgit_exception.
     ENDTRY.
 
     TRY.
-        lo_po->parse_po( lo_buf->add(
-                  'msgid "a"'
+        lo_po->parse_po( zcl_abapgit_string_buffer=>create(
+          )->add( 'msgid "a"'
           )->add( 'wrong tag'
           )->join_w_newline_and_flush( ) ).
       CATCH zcx_abapgit_exception.
     ENDTRY.
 
     TRY.
-        lo_po->parse_po( lo_buf->add(
-                  '""'
+        lo_po->parse_po( zcl_abapgit_string_buffer=>create(
+          )->add( '""'
           )->add( ''
           )->join_w_newline_and_flush( ) ).
       CATCH zcx_abapgit_exception.
     ENDTRY.
 
     TRY.
-        lo_po->parse_po( lo_buf->add(
-                  'msgid "a"'
+        lo_po->parse_po( zcl_abapgit_string_buffer=>create(
+          )->add( 'msgid "a"'
           )->add( '# comment'
           )->add( 'msgstr "b"'
           )->join_w_newline_and_flush( ) ).
@@ -166,16 +164,16 @@ CLASS ltcl_po_file IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        lo_po->parse_po( lo_buf->add(
-                  'msgid "a"'
+        lo_po->parse_po( zcl_abapgit_string_buffer=>create(
+          )->add( 'msgid "a"'
           )->add( 'msgstr "'
           )->join_w_newline_and_flush( ) ).
       CATCH zcx_abapgit_exception.
     ENDTRY.
 
     TRY.
-        lo_po->parse_po( lo_buf->add(
-                  'msgid"a"'
+        lo_po->parse_po( zcl_abapgit_string_buffer=>create(
+          )->add( 'msgid"a"'
           )->add( 'msgstr"b"'
           )->join_w_newline_and_flush( ) ).
       CATCH zcx_abapgit_exception.
