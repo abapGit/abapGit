@@ -49,6 +49,7 @@
     "globalMacros": []
   },
   "rules": {
+    "strict_sql": false,
     "cds_comment_style": true,
     "change_if_to_case": false,
     "expand_macros": true,
