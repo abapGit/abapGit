@@ -85,7 +85,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
 
 
   METHOD add_via_transport.
@@ -119,6 +119,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
       CLEAR ls_config.
       ls_config-type = zif_abapgit_data_config=>c_data_type-tabu.
       ls_config-name = to_upper( ls_key-objname ).
+      ls_config-is_customizing = zcl_abapgit_data_utils=>is_customizing_table( ls_config-name ).
       lv_where = concatenated_key_to_where(
         iv_table  = ls_key-objname
         iv_tabkey = ls_key-tabkey ).
@@ -133,8 +134,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
 
     CREATE OBJECT ro_menu.
 
-    ro_menu->add( iv_txt = 'Add via transport'
+    ro_menu->add( iv_txt = 'Add Via Transport'
                   iv_act = c_event-add_via_transport ).
+    ro_menu->add( iv_txt = 'Back'
+                  iv_act = zif_abapgit_definitions=>c_action-go_back ).
 
   ENDMETHOD.
 
@@ -206,10 +209,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
 
     lo_map = ii_event->form_data( ).
 
-    ls_config-type = zif_abapgit_data_config=>c_data_type-tabu.
-    ls_config-name = to_upper( lo_map->get( c_id-table ) ).
-    ls_config-skip_initial = lo_map->get( c_id-skip_initial ).
-    ls_config-where = build_where( lo_map ).
+    ls_config-type           = zif_abapgit_data_config=>c_data_type-tabu.
+    ls_config-name           = to_upper( lo_map->get( c_id-table ) ).
+    ls_config-skip_initial   = lo_map->get( c_id-skip_initial ).
+    ls_config-is_customizing = zcl_abapgit_data_utils=>is_customizing_table( ls_config-name ).
+    ls_config-where          = build_where( lo_map ).
 
     mi_config->add_config( ls_config ).
 
@@ -238,10 +242,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
 
     lo_map = ii_event->form_data( ).
 
-    ls_config-type = zif_abapgit_data_config=>c_data_type-tabu.
-    ls_config-name = to_upper( lo_map->get( c_id-table ) ).
-    ls_config-skip_initial = lo_map->has( to_upper( c_id-skip_initial ) ).
-    ls_config-where = build_where( lo_map ).
+    ls_config-type           = zif_abapgit_data_config=>c_data_type-tabu.
+    ls_config-name           = to_upper( lo_map->get( c_id-table ) ).
+    ls_config-skip_initial   = lo_map->has( to_upper( c_id-skip_initial ) ).
+    ls_config-is_customizing = zcl_abapgit_data_utils=>is_customizing_table( ls_config-name ).
+    ls_config-where          = build_where( lo_map ).
 
     mi_config->update_config( ls_config ).
 
@@ -263,7 +268,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
       iv_required = abap_true ).
 
     lo_form->checkbox(
-      iv_label = 'Skip initial values'
+      iv_label = 'Skip Initial Values'
       iv_name  = c_id-skip_initial ).
 
     lo_form->textarea(
@@ -319,7 +324,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
         iv_key = c_id-skip_initial
         iv_val = ls_config-skip_initial ).
       lo_form->checkbox(
-        iv_label = 'Skip initial values'
+        iv_label = 'Skip Initial Values'
         iv_name  = c_id-skip_initial ).
 
       lo_form_data->set(

@@ -128,7 +128,7 @@ CLASS zcl_abapgit_data_serializer IMPLEMENTATION.
         ls_file-data = zcl_abapgit_convert=>string_to_xstring_utf8( '[]' ).
       ENDIF.
 
-      ls_file-filename = zcl_abapgit_data_utils=>build_filename( ls_config ).
+      ls_file-filename = zcl_abapgit_data_utils=>build_data_filename( ls_config ).
       ls_file-sha1 = zcl_abapgit_hash=>sha1_blob( ls_file-data ).
       APPEND ls_file TO rt_files.
     ENDLOOP.

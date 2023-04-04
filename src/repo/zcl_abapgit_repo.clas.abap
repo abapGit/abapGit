@@ -56,7 +56,7 @@ CLASS zcl_abapgit_repo DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS has_remote_source
-          ABSTRACT
+      ABSTRACT
       RETURNING
         VALUE(rv_yes) TYPE abap_bool .
     METHODS status
@@ -101,7 +101,7 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
     METHODS check_and_create_package
       IMPORTING
-         iv_package TYPE devclass
+        iv_package TYPE devclass
       RAISING
         zcx_abapgit_exception .
   PROTECTED SECTION.
@@ -165,7 +165,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
   METHOD bind_listener.
@@ -655,6 +655,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   METHOD zif_abapgit_repo~deserialize.
 
     DATA: lt_updated_files TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt,
+          lt_updated_data  TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt,
           lt_result        TYPE zif_abapgit_data_deserializer=>ty_results,
           lx_error         TYPE REF TO zcx_abapgit_exception.
 
@@ -691,17 +692,19 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     APPEND get_dot_abapgit( )->get_signature( ) TO lt_updated_files.
 
-    zif_abapgit_repo~checksums( )->update( lt_updated_files ).
-
     "Deserialize data
     lt_result = zcl_abapgit_data_factory=>get_deserializer( )->deserialize(
       ii_config  = get_data_config( )
       it_files   = get_files_remote( ) ).
 
-    "Save deserialized data to DB and add entries to transport requests)
-    zcl_abapgit_data_factory=>get_deserializer( )->actualize(
+    "Save deserialized data to DB and add entries to transport requests
+    lt_updated_data = zcl_abapgit_data_factory=>get_deserializer( )->actualize(
       it_result = lt_result
       is_checks = is_checks ).
+
+    INSERT LINES OF lt_updated_data INTO TABLE lt_updated_files.
+
+    zif_abapgit_repo~checksums( )->update( lt_updated_files ).
 
     CLEAR: mt_local.
 
@@ -733,6 +736,10 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     lt_dependencies = get_dot_apack( )->get_manifest_descriptor( )-dependencies.
     rs_checks-dependencies-met = zcl_abapgit_apack_helper=>are_dependencies_met( lt_dependencies ).
+
+    rs_checks-customizing = zcl_abapgit_data_factory=>get_deserializer( )->deserialize_check(
+      io_repo   = me
+      ii_config = get_data_config( ) ).
 
   ENDMETHOD.
 
