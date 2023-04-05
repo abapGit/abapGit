@@ -294,13 +294,16 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
 
 
   METHOD get_ui_theme.
-    DATA: lv_frontend_theme TYPE string.
+    DATA lv_frontend_theme TYPE string.
+    DATA lv_cl_gui TYPE string.
+
+    lv_cl_gui = 'CL_GUI_RESOURCES'.
 
     rv_ui_theme = ms_user_settings-ui_theme.
 
     IF rv_ui_theme = c_ui_theme-synced_with_gui AND iv_resolve_synced = abap_true.
       TRY.
-          CALL METHOD ('CL_GUI_RESOURCES')=>get_themename
+          CALL METHOD (lv_cl_gui)=>get_themename
             IMPORTING
               themename              = lv_frontend_theme
             EXCEPTIONS
