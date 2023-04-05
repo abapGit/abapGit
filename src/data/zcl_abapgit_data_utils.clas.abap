@@ -57,7 +57,8 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
 
   METHOD build_config_filename.
 
-    rv_filename = to_lower( |{ is_config-name }.{ zif_abapgit_data_config=>c_config }.{ zif_abapgit_data_config=>c_default_format }| ).
+    rv_filename = to_lower( |{ is_config-name }.{ zif_abapgit_data_config=>c_config }|
+      && |.{ zif_abapgit_data_config=>c_default_format }| ).
 
     REPLACE ALL OCCURRENCES OF '/' IN rv_filename WITH '#'.
 
@@ -66,7 +67,8 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
 
   METHOD build_data_filename.
 
-    rv_filename = to_lower( |{ is_config-name }.{ is_config-type }.{ zif_abapgit_data_config=>c_default_format }| ).
+    rv_filename = to_lower( |{ is_config-name }.{ is_config-type }|
+      && |.{ zif_abapgit_data_config=>c_default_format }| ).
 
     REPLACE ALL OCCURRENCES OF '/' IN rv_filename WITH '#'.
 

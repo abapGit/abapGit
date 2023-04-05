@@ -81,7 +81,7 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 
   METHOD determine_transport_request.
 
-    DATA: li_exit TYPE REF TO zif_abapgit_exit.
+    DATA li_exit TYPE REF TO zif_abapgit_exit.
 
     li_exit = zcl_abapgit_exit=>get_instance( ).
 
@@ -313,32 +313,10 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
   METHOD zif_abapgit_data_deserializer~deserialize_check.
 
     DATA lt_configs TYPE zif_abapgit_data_config=>ty_config_tt.
-    DATA ls_config LIKE LINE OF lt_configs.
-    DATA lv_is_customizing TYPE abap_bool.
-    DATA lv_required TYPE abap_bool.
 
     lt_configs = ii_config->get_configs( ).
 
-    LOOP AT lt_configs INTO ls_config.
-      ASSERT ls_config-type = zif_abapgit_data_config=>c_data_type-tabu. " todo
-      ASSERT ls_config-name IS NOT INITIAL.
-
-      lv_is_customizing = zcl_abapgit_data_utils=>is_customizing_table( ls_config-name ).
-
-      IF ls_config-is_customizing = abap_true AND lv_is_customizing = abap_false.
-        zcx_abapgit_exception=>raise( |Table { ls_config-name } is | &&
-          |not a customizing table but marked for customizing in repo| ).
-      ELSEIF ls_config-is_customizing = abap_false AND lv_is_customizing = abap_true.
-        zcx_abapgit_exception=>raise( |Table { ls_config-name } is | &&
-          |a customizing table but not marked for customizing in repo| ).
-      ENDIF.
-
-      IF ls_config-is_customizing = abap_true.
-        lv_required = abap_true.
-      ENDIF.
-    ENDLOOP.
-
-    IF lv_required = abap_true.
+    IF lt_configs IS NOT INITIAL.
       rs_checks-required     = abap_true.
       rs_checks-type-request = zif_abapgit_cts_api=>c_transport_type-cust_request.
       rs_checks-type-task    = zif_abapgit_cts_api=>c_transport_type-cust_task.
