@@ -63,8 +63,8 @@ CLASS zcl_abapgit_object_clas DEFINITION
           zcx_abapgit_exception,
       serialize_tpool
         IMPORTING
-          !ii_xml              TYPE REF TO zif_abapgit_xml_output
-          !iv_clsname          TYPE seoclsname
+          !ii_xml         TYPE REF TO zif_abapgit_xml_output
+          !iv_clsname     TYPE seoclsname
         RETURNING
           VALUE(rt_tpool) TYPE textpool_table
         RAISING
@@ -111,26 +111,26 @@ CLASS zcl_abapgit_object_clas DEFINITION
         types      TYPE dokil-id VALUE 'CT',
       END OF c_longtext_id.
 
-    METHODS has_sadl_superclass
-      RETURNING
-        VALUE(rv_result) TYPE abap_bool.
     METHODS deserialize_pre_ddic
       IMPORTING
         !ii_xml     TYPE REF TO zif_abapgit_xml_input
         !iv_package TYPE devclass
       RAISING
         zcx_abapgit_exception.
+
     METHODS is_class_locked
       RETURNING
         VALUE(rv_is_class_locked) TYPE abap_bool
       RAISING
         zcx_abapgit_exception.
+
     METHODS interface_replacement
       IMPORTING
         !iv_from_interface TYPE seoclsname
         !iv_to_interface   TYPE seoclsname
       CHANGING
         !ct_source         TYPE seop_source_string.
+
 ENDCLASS.
 
 
@@ -322,9 +322,9 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
   METHOD deserialize_tpool.
 
-    DATA: lv_clsname    TYPE seoclsname,
-          lt_tpool_ext  TYPE zif_abapgit_definitions=>ty_tpool_tt,
-          lt_tpool      TYPE textpool_table.
+    DATA: lv_clsname   TYPE seoclsname,
+          lt_tpool_ext TYPE zif_abapgit_definitions=>ty_tpool_tt,
+          lt_tpool     TYPE textpool_table.
 
     ii_xml->read( EXPORTING iv_name = 'TPOOL'
                   CHANGING cg_data = lt_tpool_ext ).
@@ -371,17 +371,6 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
         iv_language   = ls_i18n_tpool-language
         iv_state      = 'A' ).
     ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD has_sadl_superclass.
-
-    DATA li_oo_functions TYPE REF TO zif_abapgit_oo_object_fnc.
-
-    li_oo_functions = zcl_abapgit_oo_factory=>make( |{ ms_item-obj_name }| ).
-
-    rv_result = boolc( li_oo_functions->read_superclass( |{ ms_item-obj_name }| ) = 'CL_SADL_GTK_EXPOSURE_MPC' ).
 
   ENDMETHOD.
 
@@ -608,7 +597,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
   METHOD serialize_tpool_i18n.
 
-    DATA: lt_tpool TYPE textpool_table,
+    DATA: lt_tpool      TYPE textpool_table,
           lv_index      TYPE i,
           lv_langu      TYPE sy-langu,
           lt_i18n_tpool TYPE zif_abapgit_lang_definitions=>ty_i18n_tpools,
