@@ -1,7 +1,10 @@
 ![Build](https://github.com/abapGit/abapGit/workflows/main-build/badge.svg)
 ![Test](https://github.com/abapGit/abapGit/workflows/test-pr/badge.svg)
+[![License](https://img.shields.io/github/license/abapGit/abapGit?label=License&color=green)](LICENSE)
+[![REUSE Status](https://api.reuse.software/badge/github.com/abapGit/abapGit?color=success)](https://api.reuse.software/info/github.com/abapGit/abapGit)
 [![Slack](https://img.shields.io/badge/Join-Slack-blue)](https://communityinviter.com/apps/abapgit/abap)
 [![abap package version](https://img.shields.io/endpoint?url=https://shield.abap.space/version-shield-json/github/abapGit/abapGit/src/zif_abapgit_version.intf.abap/c_abap_version&label=version)](https://github.com/abapGit/abapGit/blob/main/src/zif_abapgit_version.intf.abap)
+
 
 <!--
 <picture>
@@ -62,4 +65,6 @@ For questions/comments/bugs/feature requests/wishes please create an [issue](htt
 
 ## Credits and References
 
-Icons used in abapGit are created from [Font Awesome](https://fontawesome.com/) free icon set ([CC BY 4.0 License](https://fontawesome.com/license/free)).
+- Icons used in abapGit are created from [Font Awesome](https://fontawesome.com/) free icon set ([CC-BY-4.0](LICENSES/CC-BY-4.0.txt))
+- [AJSON](https://github.com/sbcgua/ajson) and [String-Map](https://github.com/sbcgua/abap-string-map) are developed by Alexander Tsybulsky ([MIT](LICENSES/MIT.txt))
+
