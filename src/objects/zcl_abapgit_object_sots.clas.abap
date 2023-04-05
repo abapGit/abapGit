@@ -152,7 +152,7 @@ CLASS zcl_abapgit_object_sots IMPLEMENTATION.
       ASSERT sy-subrc = 0.
 
       " Handled by object serializer
-      CHECK lv_object <> 'SICF'.
+      CHECK lv_object <> 'SICF' AND lv_object <> 'CPUB'.
 
       CLEAR: ls_sots.
 
