@@ -129,11 +129,8 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
-      EXPORTING
-        input  = rv_next_repo_id
-      IMPORTING
-        output = rv_next_repo_id.
+    SHIFT rv_next_repo_id RIGHT DELETING TRAILING space.
+    TRANSLATE rv_next_repo_id USING ' 0'.
 
   ENDMETHOD.
 
