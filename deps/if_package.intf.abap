@@ -6,6 +6,8 @@ INTERFACE if_package PUBLIC.
   DATA changed_by            TYPE string READ-ONLY.
 
   METHODS save
+    IMPORTING
+      i_transport_request TYPE trkorr OPTIONAL
     EXCEPTIONS
       object_invalid
       object_not_changeable
