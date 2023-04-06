@@ -8,7 +8,7 @@ Legend
 + : added
 - : removed
 
-2023-04-xx v1.123.0
+2023-04-06 v1.123.0
 -------------------
 
 + New user exit: change allowed object types (#6173)
@@ -22,6 +22,8 @@ Legend
 + Pull enabled for customizing tables (#6138)
 + AQSG, AQQU: Add jump to object (#6184)
 + CLAS: Serialize long texts for exception classes (#6186)
++ TABU: Add customizing request to local settings (#6191)
++ Add runtime measurement to Unit Test page (#6196)
 * CLAS: Fix variable name (#6127)
 * Fix check for unsaved data in local settings (#6139)
 * DEVC: Fix error handling (#6141)
