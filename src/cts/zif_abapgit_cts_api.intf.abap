@@ -1,6 +1,21 @@
 INTERFACE zif_abapgit_cts_api
   PUBLIC .
 
+  CONSTANTS:
+    BEGIN OF c_transport_type,
+      wb_request   TYPE c LENGTH 1 VALUE 'K', "workbench request
+      wb_repair    TYPE c LENGTH 1 VALUE 'R', "workbench repair
+      wb_task      TYPE c LENGTH 1 VALUE 'S', "workbench task
+      cust_request TYPE c LENGTH 1 VALUE 'W', "customizing request
+      cust_task    TYPE c LENGTH 1 VALUE 'Q', "customizing task
+    END OF c_transport_type.
+
+  CONSTANTS:
+    BEGIN OF c_transport_category,
+      workbench   TYPE c LENGTH 4 VALUE 'SYST',
+      customizing TYPE c LENGTH 4 VALUE 'CUST',
+    END OF c_transport_category.
+
   TYPES: BEGIN OF ty_transport,
            obj_type TYPE tadir-object,
            obj_name TYPE tadir-obj_name,
@@ -62,9 +77,12 @@ INTERFACE zif_abapgit_cts_api
 
   METHODS create_transport_entries
     IMPORTING
+      iv_transport TYPE trkorr
       it_table_ins TYPE ANY TABLE
       it_table_upd TYPE ANY TABLE
       it_table_del TYPE ANY TABLE
-      iv_tabname   TYPE tabname.
+      iv_tabname   TYPE tabname
+    RAISING
+      zcx_abapgit_exception.
 
 ENDINTERFACE.

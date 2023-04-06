@@ -80,7 +80,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
+CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
 
   METHOD get_current_transport_for_obj.
@@ -208,6 +208,55 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
         pe_result = lv_type_check_result.
 
     rv_transportable = boolc( lv_type_check_result CA 'RTL' ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_cts_api~create_transport_entries.
+
+    DATA lt_tables      TYPE tredt_objects.
+    DATA lt_table_keys  TYPE STANDARD TABLE OF e071k.
+    DATA lv_with_dialog TYPE abap_bool.
+
+    cl_table_utilities_brf=>create_transport_entries(
+      EXPORTING
+        it_table_ins = it_table_ins
+        it_table_upd = it_table_upd
+        it_table_del = it_table_del
+        iv_tabname   = iv_tabname
+      CHANGING
+        ct_e071      = lt_tables
+        ct_e071k     = lt_table_keys ).
+
+    " cl_table_utilities_brf=>write_transport_entries does not allow passing a request
+
+    CALL FUNCTION 'TR_OBJECTS_CHECK'
+      TABLES
+        wt_ko200                = lt_tables
+      EXCEPTIONS
+        cancel_edit_other_error = 1
+        show_only_other_error   = 2
+        OTHERS                  = 3.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    IF iv_transport IS INITIAL.
+      lv_with_dialog = abap_true.
+    ENDIF.
+
+    CALL FUNCTION 'TRINT_OBJECTS_CHECK_AND_INSERT'
+      EXPORTING
+        iv_order       = iv_transport
+        iv_with_dialog = lv_with_dialog
+      CHANGING
+        ct_ko200       = lt_tables
+        ct_e071k       = lt_table_keys
+      EXCEPTIONS
+        OTHERS         = 1.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -343,29 +392,4 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
       WHERE trkorr = iv_trkorr ##SUBRC_OK.
 
   ENDMETHOD.
-
-  METHOD zif_abapgit_cts_api~create_transport_entries.
-
-    DATA lt_tables        TYPE tredt_objects.
-    DATA lt_table_keys    TYPE STANDARD TABLE OF e071k.
-    DATA lt_tadir_entries TYPE scts_tadir.
-
-    cl_table_utilities_brf=>create_transport_entries(
-      EXPORTING
-        it_table_ins = it_table_ins
-        it_table_upd = it_table_upd
-        it_table_del = it_table_del
-        iv_tabname   = iv_tabname
-      CHANGING
-        ct_e071      = lt_tables
-        ct_e071k     = lt_table_keys ).
-
-    cl_table_utilities_brf=>write_transport_entries(
-      CHANGING
-        ct_e071  = lt_tables
-        ct_e071k = lt_table_keys
-        ct_tadir = lt_tadir_entries ).
-
-  ENDMETHOD.
-
 ENDCLASS.

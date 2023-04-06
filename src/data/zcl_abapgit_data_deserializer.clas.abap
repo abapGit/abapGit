@@ -41,16 +41,18 @@ CLASS zcl_abapgit_data_deserializer DEFINITION
         VALUE(rr_data) TYPE REF TO data
       RAISING
         zcx_abapgit_exception .
+    METHODS determine_transport_request
+      IMPORTING
+        io_repo                     TYPE REF TO zcl_abapgit_repo
+        iv_transport_type           TYPE zif_abapgit_definitions=>ty_transport_type
+      RETURNING
+        VALUE(rv_transport_request) TYPE trkorr.
     METHODS is_table_allowed_to_edit
       IMPORTING
         !is_result                TYPE zif_abapgit_data_deserializer=>ty_result
       RETURNING
         VALUE(rv_allowed_to_edit) TYPE abap_bool .
-    METHODS is_customizing_table
-      IMPORTING
-        !iv_name              TYPE tadir-obj_name
-      RETURNING
-        VALUE(rv_customizing) TYPE abap_bool .
+
 ENDCLASS.
 
 
@@ -77,35 +79,22 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD is_customizing_table.
+  METHOD determine_transport_request.
 
-    DATA lv_contflag       TYPE c LENGTH 1.
-    DATA lo_table          TYPE REF TO object.
-    DATA lo_content        TYPE REF TO object.
-    DATA lo_delivery_class TYPE REF TO object.
-    FIELD-SYMBOLS <ls_any> TYPE any.
+    DATA li_exit TYPE REF TO zif_abapgit_exit.
 
-    TRY.
-        CALL METHOD ('XCO_CP_ABAP_DICTIONARY')=>database_table
-          EXPORTING
-            iv_name           = iv_name
-          RECEIVING
-            ro_database_table = lo_table.
-        CALL METHOD lo_table->('IF_XCO_DATABASE_TABLE~CONTENT')
-          RECEIVING
-            ro_content = lo_content.
-        CALL METHOD lo_content->('IF_XCO_DBT_CONTENT~GET_DELIVERY_CLASS')
-          RECEIVING
-            ro_delivery_class = lo_delivery_class.
-        ASSIGN lo_delivery_class->('VALUE') TO <ls_any>.
-        lv_contflag = <ls_any>.
-      CATCH cx_sy_dyn_call_illegal_class.
-        SELECT SINGLE contflag FROM ('DD02L') INTO lv_contflag WHERE tabname = iv_name.
-    ENDTRY.
+    li_exit = zcl_abapgit_exit=>get_instance( ).
 
-    IF lv_contflag = 'C'.
-      rv_customizing = abap_true.
-    ENDIF.
+    " Use transport from repo settings if maintained, or determine via user exit.
+    " If transport keeps empty here, it'll requested later via popup.
+    rv_transport_request = io_repo->get_local_settings( )-customizing_request.
+
+    li_exit->determine_transport_request(
+      EXPORTING
+        io_repo              = io_repo
+        iv_transport_type    = iv_transport_type
+      CHANGING
+        cv_transport_request = rv_transport_request ).
 
   ENDMETHOD.
 
@@ -218,13 +207,12 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 
     DATA ls_result  LIKE LINE OF it_result.
     DATA li_cts_api TYPE REF TO zif_abapgit_cts_api.
+    DATA ls_file    LIKE LINE OF rt_accessed_files.
 
     FIELD-SYMBOLS:
       <lt_ins> TYPE ANY TABLE,
       <lt_del> TYPE ANY TABLE,
       <lt_upd> TYPE ANY TABLE.
-
-    li_cts_api = zcl_abapgit_factory=>get_cts_api( ).
 
     LOOP AT it_result INTO ls_result.
       ASSERT ls_result-type = zif_abapgit_data_config=>c_data_type-tabu. " todo
@@ -252,16 +240,23 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 
       ASSIGN ls_result-inserts->* TO <lt_ins>.
       ASSIGN ls_result-deletes->* TO <lt_del>.
-      ASSIGN ls_result-updates->* TO <lt_upd>.
+      ASSIGN ls_result-updates->* TO <lt_upd>. " not used
 
-      IF is_customizing_table( ls_result-name ) = abap_true.
+      IF zcl_abapgit_data_utils=>is_customizing_table( ls_result-name ) = abap_true.
+        IF li_cts_api IS INITIAL.
+          li_cts_api = zcl_abapgit_factory=>get_cts_api( ).
+        ENDIF.
+
         li_cts_api->create_transport_entries(
+          iv_transport = is_checks-customizing-transport
           it_table_ins = <lt_ins>
           it_table_upd = <lt_upd>
           it_table_del = <lt_del>
           iv_tabname   = |{ ls_result-name }| ).
       ENDIF.
 
+      INSERT ls_result-file INTO TABLE rt_accessed_files. " data file
+      INSERT ls_result-config INTO TABLE rt_accessed_files. " config file
     ENDLOOP.
 
   ENDMETHOD.
@@ -288,7 +283,7 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
       READ TABLE it_files INTO ls_file
         WITH KEY file_path
         COMPONENTS path     = zif_abapgit_data_config=>c_default_path
-                   filename = zcl_abapgit_data_utils=>build_filename( ls_config ).
+                   filename = zcl_abapgit_data_utils=>build_data_filename( ls_config ).
       IF sy-subrc = 0.
         convert_json_to_itab(
           ir_data = lr_data
@@ -299,10 +294,38 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
           it_where = ls_config-where
           ir_data  = lr_data ).
 
+        MOVE-CORRESPONDING ls_file TO ls_result-file. " data file
+
+        READ TABLE it_files INTO ls_file
+          WITH KEY file_path
+          COMPONENTS path     = zif_abapgit_data_config=>c_default_path
+                     filename = zcl_abapgit_data_utils=>build_config_filename( ls_config ).
+        ASSERT sy-subrc = 0.
+
+        MOVE-CORRESPONDING ls_file TO ls_result-config. " config file
+
         INSERT ls_result INTO TABLE rt_result.
       ENDIF.
 
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_data_deserializer~deserialize_check.
+
+    DATA lt_configs TYPE zif_abapgit_data_config=>ty_config_tt.
+
+    lt_configs = ii_config->get_configs( ).
+
+    IF lt_configs IS NOT INITIAL.
+      rs_checks-required     = abap_true.
+      rs_checks-type-request = zif_abapgit_cts_api=>c_transport_type-cust_request.
+      rs_checks-type-task    = zif_abapgit_cts_api=>c_transport_type-cust_task.
+      rs_checks-transport    = determine_transport_request(
+                                 io_repo           = io_repo
+                                 iv_transport_type = rs_checks-type ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
