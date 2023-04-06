@@ -88,6 +88,9 @@ CLASS lcl_utils IMPLEMENTATION.
   METHOD string_to_xstring_utf8.
 
     DATA lo_conv TYPE REF TO object.
+    DATA lv_out_ce TYPE string.
+
+    lv_out_ce = 'CL_ABAP_CONV_OUT_CE'.
 
     TRY.
         CALL METHOD ('CL_ABAP_CONV_CODEPAGE')=>create_out
@@ -99,7 +102,7 @@ CLASS lcl_utils IMPLEMENTATION.
         RECEIVING
           result = rv_xstr.
       CATCH cx_sy_dyn_call_illegal_class.
-        CALL METHOD ('CL_ABAP_CONV_OUT_CE')=>create
+        CALL METHOD (lv_out_ce)=>create
         EXPORTING
           encoding = 'UTF-8'
         RECEIVING
