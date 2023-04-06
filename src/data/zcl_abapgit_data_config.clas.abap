@@ -22,7 +22,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
+CLASS zcl_abapgit_data_config IMPLEMENTATION.
 
 
   METHOD dump.
@@ -124,7 +124,7 @@ CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
       ls_file-data = dump( ls_config ).
       ls_file-sha1 = zcl_abapgit_hash=>sha1_blob( ls_file-data ).
       ls_config-type = zif_abapgit_data_config=>c_config.
-      ls_file-filename = zcl_abapgit_data_utils=>build_filename( ls_config ).
+      ls_file-filename = zcl_abapgit_data_utils=>build_data_filename( ls_config ).
       APPEND ls_file TO rt_files.
     ENDLOOP.
 
