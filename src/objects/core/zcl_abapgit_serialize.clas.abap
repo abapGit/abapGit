@@ -129,7 +129,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
+CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
 
   METHOD add_apack.
@@ -173,7 +173,7 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
         IMPORTING
           es_item     = <ls_return>-item ).
 
-      <ls_return>-item-obj_type = zif_abapgit_data_config=>c_data_type-tabu.
+      <ls_return>-item-obj_type = zif_abapgit_data_config=>c_data_type-tabu. " todo
     ENDLOOP.
 
     lt_files = zcl_abapgit_data_factory=>get_serializer( )->serialize( ii_data_config ).

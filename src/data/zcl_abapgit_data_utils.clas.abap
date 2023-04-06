@@ -11,7 +11,12 @@ CLASS zcl_abapgit_data_utils DEFINITION
         VALUE(rr_data) TYPE REF TO data
       RAISING
         zcx_abapgit_exception.
-    CLASS-METHODS build_filename
+    CLASS-METHODS build_data_filename
+      IMPORTING
+        !is_config         TYPE zif_abapgit_data_config=>ty_config
+      RETURNING
+        VALUE(rv_filename) TYPE string.
+    CLASS-METHODS build_config_filename
       IMPORTING
         !is_config         TYPE zif_abapgit_data_config=>ty_config
       RETURNING
@@ -28,6 +33,11 @@ CLASS zcl_abapgit_data_utils DEFINITION
         !iv_name         TYPE tadir-obj_name
       RETURNING
         VALUE(rv_exists) TYPE abap_bool.
+    CLASS-METHODS is_customizing_table
+      IMPORTING
+        !iv_name              TYPE tadir-obj_name
+      RETURNING
+        VALUE(rv_customizing) TYPE abap_bool.
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES ty_names TYPE STANDARD TABLE OF abap_compname WITH DEFAULT KEY .
@@ -45,9 +55,20 @@ ENDCLASS.
 CLASS zcl_abapgit_data_utils IMPLEMENTATION.
 
 
-  METHOD build_filename.
+  METHOD build_config_filename.
 
-    rv_filename = to_lower( |{ is_config-name }.{ is_config-type }.{ zif_abapgit_data_config=>c_default_format }| ).
+    rv_filename = to_lower( |{ is_config-name }.{ zif_abapgit_data_config=>c_config }|
+      && |.{ zif_abapgit_data_config=>c_default_format }| ).
+
+    REPLACE ALL OCCURRENCES OF '/' IN rv_filename WITH '#'.
+
+  ENDMETHOD.
+
+
+  METHOD build_data_filename.
+
+    rv_filename = to_lower( |{ is_config-name }.{ is_config-type }|
+      && |.{ zif_abapgit_data_config=>c_default_format }| ).
 
     REPLACE ALL OCCURRENCES OF '/' IN rv_filename WITH '#'.
 
@@ -122,6 +143,43 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
         rv_exists = abap_true.
       CATCH zcx_abapgit_exception ##NO_HANDLER.
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD is_customizing_table.
+
+    DATA lv_contflag       TYPE c LENGTH 1.
+    DATA lo_table          TYPE REF TO object.
+    DATA lo_content        TYPE REF TO object.
+    DATA lo_delivery_class TYPE REF TO object.
+    FIELD-SYMBOLS <ls_any> TYPE any.
+
+    TRY.
+        CALL METHOD ('XCO_CP_ABAP_DICTIONARY')=>database_table
+          EXPORTING
+            iv_name           = iv_name
+          RECEIVING
+            ro_database_table = lo_table.
+        CALL METHOD lo_table->('IF_XCO_DATABASE_TABLE~CONTENT')
+          RECEIVING
+            ro_content = lo_content.
+        CALL METHOD lo_content->('IF_XCO_DBT_CONTENT~GET_DELIVERY_CLASS')
+          RECEIVING
+            ro_delivery_class = lo_delivery_class.
+        ASSIGN lo_delivery_class->('VALUE') TO <ls_any>.
+        lv_contflag = <ls_any>.
+      CATCH cx_sy_dyn_call_illegal_class.
+        SELECT SINGLE contflag FROM ('DD02L') INTO lv_contflag WHERE tabname = iv_name.
+    ENDTRY.
+
+    IF lv_contflag = 'C'.
+      rv_customizing = abap_true.
+    ELSEIF lv_contflag IS NOT INITIAL.
+      rv_customizing = abap_false.
+    ELSE.
+      rv_customizing = abap_undefined. " table does not exist
+    ENDIF.
 
   ENDMETHOD.
 
