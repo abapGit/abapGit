@@ -117,7 +117,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_INFO IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -171,12 +171,18 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_INFO IMPLEMENTATION.
 
   METHOD format_timestamp.
 
+    DATA lv_short TYPE timestamp.
+
     IF iv_timestamp IS INITIAL.
       rv_timestamp = 'n/a'.
       RETURN.
     ENDIF.
 
-    rv_timestamp = |{ iv_timestamp TIMESTAMP = ISO }|.
+    cl_abap_tstmp=>move(
+      EXPORTING source = iv_timestamp
+      IMPORTING target = lv_short ).
+
+    rv_timestamp = |{ lv_short TIMESTAMP = ISO }|.
 
   ENDMETHOD.
 
