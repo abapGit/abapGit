@@ -179,8 +179,8 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
     ENDIF.
 
     cl_abap_tstmp=>move(
-      EXPORTING source = iv_timestamp
-      IMPORTING target = lv_short ).
+      EXPORTING tstmp_src = iv_timestamp
+      IMPORTING tstmp_tgt = lv_short ).
 
     rv_timestamp = |{ lv_short TIMESTAMP = ISO }|.
 
