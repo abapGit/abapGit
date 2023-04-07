@@ -117,7 +117,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_INFO IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -191,9 +191,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_INFO IMPLEMENTATION.
 
   METHOD format_user.
 
-    DATA:
-      ls_user_address TYPE addr3_val,
-      lv_title        TYPE string.
+    DATA lv_title TYPE string.
 
     IF iv_username IS INITIAL.
       rv_user = 'n/a'.
@@ -201,17 +199,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_INFO IMPLEMENTATION.
     ENDIF.
 
     IF iv_username <> zcl_abapgit_objects_super=>c_user_unknown.
-      CALL FUNCTION 'SUSR_USER_ADDRESS_READ'
-        EXPORTING
-          user_name              = iv_username
-        IMPORTING
-          user_address           = ls_user_address
-        EXCEPTIONS
-          user_address_not_found = 1
-          OTHERS                 = 2.
-      IF sy-subrc = 0.
-        lv_title = ls_user_address-name_text.
-      ENDIF.
+      lv_title = zcl_abapgit_user_record=>get_title( iv_username ).
     ENDIF.
 
     rv_user = iv_username.
