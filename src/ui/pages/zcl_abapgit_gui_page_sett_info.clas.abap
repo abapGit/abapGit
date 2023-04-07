@@ -171,20 +171,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_INFO IMPLEMENTATION.
 
   METHOD format_timestamp.
 
-    DATA lv_temp TYPE c LENGTH 30.
-
     IF iv_timestamp IS INITIAL.
       rv_timestamp = 'n/a'.
       RETURN.
     ENDIF.
 
-    CALL FUNCTION 'CONVERSION_EXIT_TIMES_OUTPUT'
-      EXPORTING
-        input  = iv_timestamp
-      IMPORTING
-        output = lv_temp.
-
-    rv_timestamp = lv_temp.
+    rv_timestamp = |{ iv_timestamp TIMESTAMP = ISO }|.
 
   ENDMETHOD.
 
