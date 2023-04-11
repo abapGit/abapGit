@@ -14,6 +14,12 @@ CLASS zcl_abapgit_adt_link DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    CLASS-METHODS link_transport
+      IMPORTING
+        iv_transport TYPE trkorr
+      RETURNING
+        VALUE(rv_link) TYPE string.
+
   PROTECTED SECTION.
 
     CLASS-METHODS generate
@@ -56,6 +62,10 @@ ENDCLASS.
 
 CLASS zcl_abapgit_adt_link IMPLEMENTATION.
 
+  METHOD link_transport.
+* call to CL_CTS_ADT_TM_URI_BUILDER=>CREATE_ADT_URI replaced with logic that works on all systems,
+    rv_link = |adt://{ sy-sysid }/sap/bc/adt/cts/transportrequests/{ iv_transport }|.
+  ENDMETHOD.
 
   METHOD generate.
 
