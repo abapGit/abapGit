@@ -459,27 +459,13 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
   METHOD jump_display_transport.
 
     DATA:
-      lv_transport_adt_uri TYPE string,
-      lv_adt_link          TYPE string,
-      lv_adt_jump_enabled  TYPE abap_bool.
+      lv_adt_link         TYPE string,
+      lv_adt_jump_enabled TYPE abap_bool.
 
     lv_adt_jump_enabled = zcl_abapgit_persist_factory=>get_settings( )->read( )->get_adt_jump_enabled( ).
     IF lv_adt_jump_enabled = abap_true.
-      TRY.
-          CALL METHOD ('CL_CTS_ADT_TM_URI_BUILDER')=>('CREATE_ADT_URI')
-            EXPORTING
-              trnumber = iv_transport
-            RECEIVING
-              result   = lv_transport_adt_uri.
-
-          lv_adt_link = |adt://{ sy-sysid }{ lv_transport_adt_uri }|.
-          zcl_abapgit_ui_factory=>get_frontend_services( )->execute( iv_document = lv_adt_link ).
-
-        CATCH cx_root.
-          CALL FUNCTION 'TR_DISPLAY_REQUEST'
-            EXPORTING
-              i_trkorr = iv_transport.
-      ENDTRY.
+      lv_adt_link = zcl_abapgit_adt_link=>link_transport( iv_transport ).
+      zcl_abapgit_ui_factory=>get_frontend_services( )->execute( iv_document = lv_adt_link ).
     ELSE.
       CALL FUNCTION 'TR_DISPLAY_REQUEST'
         EXPORTING
