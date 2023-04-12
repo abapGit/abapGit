@@ -12,6 +12,7 @@ INTERFACE zif_abapgit_code_inspector
            code     TYPE c LENGTH 10,
            test     TYPE c LENGTH 30,
            text     TYPE string,
+           param1   TYPE c LENGTH 80,
          END OF ty_result.
 
   TYPES ty_results TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY.
