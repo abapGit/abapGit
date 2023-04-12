@@ -16,7 +16,7 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION PUBLIC ABSTRACT INHERITING FROM 
         commit TYPE string VALUE 'commit' ##NO_TEXT,
       END OF c_actions .
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
-    DATA mt_result TYPE scit_alvlist .
+    DATA mt_result TYPE zif_abapgit_code_inspector=>ty_results .
     DATA mv_summary TYPE string.
 
     METHODS render_variant
@@ -28,7 +28,7 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION PUBLIC ABSTRACT INHERITING FROM 
     METHODS render_result
       IMPORTING
         !ii_html   TYPE REF TO zif_abapgit_html
-        !it_result TYPE scit_alvlist .
+        !it_result TYPE zif_abapgit_code_inspector=>ty_results .
     METHODS render_result_line
       IMPORTING
         !ii_html   TYPE REF TO zif_abapgit_html
