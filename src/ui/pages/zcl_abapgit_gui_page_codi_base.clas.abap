@@ -107,7 +107,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
           ls_item             TYPE zif_abapgit_definitions=>ty_item,
           ls_sub_item         TYPE zif_abapgit_definitions=>ty_item.
 
-    FIELD-SYMBOLS: <ls_result> LIKE LINE OF mt_result .
+    FIELD-SYMBOLS: <ls_result> LIKE LINE OF mt_result.
 
 
     IF is_sub_item IS NOT INITIAL.
