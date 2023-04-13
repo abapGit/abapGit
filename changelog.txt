@@ -8,6 +8,33 @@ Legend
 + : added
 - : removed
 
+2023-04-06 v1.123.0
+-------------------
+
++ New user exit: change allowed object types (#6173)
++ LXE: Support more objects (#6144)
++ Show performance metrics for long-running ops (#6148)
++ AQBG support - ABAP Query: User group (#6155)
++ GSMP Object Handler (#6159)
++ AQSG support - ABAP Query: InfoSet (#6161)
++ AQQU support - ABAP Query (#6165)
++ SICF: Add missing error pages (#6145)
++ Pull enabled for customizing tables (#6138)
++ AQSG, AQQU: Add jump to object (#6184)
++ CLAS: Serialize long texts for exception classes (#6186)
++ TABU: Add customizing request to local settings (#6191)
++ Add runtime measurement to Unit Test page (#6196)
+* CLAS: Fix variable name (#6127)
+* Fix check for unsaved data in local settings (#6139)
+* DEVC: Fix error handling (#6141)
+* Improve pull dialog: Usability (#6137)
+* Fix namespace check for AFF (#6146)
+* data: throw error if hitting max (#6157)
+* Improve error handling for password_dialog (#6163)
+* Fix detection of inactive objects (#6167)
+* Improve pull dialog button logic (#6169)
+* USE_LXE settings and serialization of selected languages (in old format) (#6168)
+
 2023-03-03 v1.122.0
 -------------------
 
