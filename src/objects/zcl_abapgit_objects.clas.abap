@@ -197,7 +197,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
+CLASS zcl_abapgit_objects IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -672,15 +672,17 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
       "error handling & logging added
       TRY.
-          " If package does not exist yet, it will be created with this call
-          lv_package = lo_folder_logic->path_to_package(
-            iv_top  = io_repo->get_package( )
-            io_dot  = io_repo->get_dot_abapgit( )
-            iv_path = <ls_result>-path ).
+          IF ls_item-obj_type <> 'NSPC'.
+            " If package does not exist yet, it will be created with this call
+            lv_package = lo_folder_logic->path_to_package(
+              iv_top  = io_repo->get_package( )
+              io_dot  = io_repo->get_dot_abapgit( )
+              iv_path = <ls_result>-path ).
 
-          check_main_package(
-            iv_package  = lv_package
-            iv_obj_type = ls_item-obj_type ).
+            check_main_package(
+              iv_package  = lv_package
+              iv_obj_type = ls_item-obj_type ).
+          ENDIF.
 
           IF ls_item-obj_type = 'DEVC'.
             " Packages have the same filename across different folders. The path needs to be supplied

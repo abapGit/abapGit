@@ -100,7 +100,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
 
   METHOD activate_objects.
@@ -338,10 +338,16 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
     lt_decision = cs_checks-overwrite.
 
-    " Set all new objects to YES
-    LOOP AT lt_decision ASSIGNING <ls_decision> WHERE action = zif_abapgit_objects=>c_deserialize_action-add.
+    " If there's a new namespace, it has to be pulled before all other objects
+    READ TABLE lt_decision ASSIGNING <ls_decision> WITH KEY obj_type = 'NSPC'.
+    IF sy-subrc = 0 AND <ls_decision>-action = zif_abapgit_objects=>c_deserialize_action-add.
       <ls_decision>-decision = zif_abapgit_definitions=>c_yes.
-    ENDLOOP.
+    ELSE.
+      " Set all new objects to YES
+      LOOP AT lt_decision ASSIGNING <ls_decision> WHERE action = zif_abapgit_objects=>c_deserialize_action-add.
+        <ls_decision>-decision = zif_abapgit_definitions=>c_yes.
+      ENDLOOP.
+    ENDIF.
 
     " Ask user what to do
     popup_overwrite( CHANGING ct_overwrite = lt_decision ).
