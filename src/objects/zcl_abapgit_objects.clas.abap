@@ -610,6 +610,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           li_progress TYPE REF TO zif_abapgit_progress,
           lv_path     TYPE string,
           lt_items    TYPE zif_abapgit_definitions=>ty_items_tt,
+          lt_steps_id TYPE zif_abapgit_definitions=>ty_deserialization_step_tt,
           lt_steps    TYPE zif_abapgit_objects=>ty_step_data_tt,
           lx_exc      TYPE REF TO zcx_abapgit_exception.
     DATA lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
@@ -739,7 +740,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           li_obj->mo_files = lo_files.
 
           "get required steps for deserialize the object
-          LOOP AT li_obj->get_deserialize_steps( ) ASSIGNING <lv_step_id>.
+          lt_steps_id = li_obj->get_deserialize_steps( ).
+
+          LOOP AT lt_steps_id ASSIGNING <lv_step_id>.
             READ TABLE lt_steps WITH KEY step_id = <lv_step_id> ASSIGNING <ls_step>.
             ASSERT sy-subrc = 0.
             IF <lv_step_id> = zif_abapgit_object=>gc_step_id-ddic AND
