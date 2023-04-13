@@ -208,7 +208,7 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
     ri_html->add( |<hr><table>| ).
 
     LOOP AT <lt_programs> ASSIGNING <ls_program>.
-      clear ls_item.
+      CLEAR ls_item.
       lv_program_ndx = sy-tabix.
       ASSIGN COMPONENT 'INFO-KEY-OBJ_TYPE' OF STRUCTURE <ls_program> TO <lv_any>.
       IF sy-subrc = 0.
