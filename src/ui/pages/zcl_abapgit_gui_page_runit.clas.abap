@@ -160,6 +160,7 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
     DATA lv_text           TYPE string.
     DATA lv_count          TYPE i.
     DATA lv_params         TYPE string.
+    DATA ls_item           TYPE zif_abapgit_definitions=>ty_repo_item.
 
     FIELD-SYMBOLS <ls_task_data>      TYPE any.
     FIELD-SYMBOLS <lt_programs>       TYPE ANY TABLE.
@@ -190,7 +191,7 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
 
     LOOP AT <lt_indices> ASSIGNING <ls_alert_by_index>.
       ASSIGN COMPONENT 'ALERTS' OF STRUCTURE <ls_alert_by_index> TO <lt_alerts>.
-      LOOP AT <lt_alerts> ASSIGNING <ls_alert> WHERE ('KIND = ''F'' OR KIND = ''S''').  " check level=F(ail?) instead?
+      LOOP AT <lt_alerts> ASSIGNING <ls_alert> WHERE ('KIND = ''F'' OR KIND = ''S'' OR KIND = ''E''').
         ASSIGN COMPONENT 'HEADER-PARAMS' OF STRUCTURE <ls_alert> TO <lt_params>.
         LOOP AT <lt_params> INTO lv_params.
           lv_text = lv_params.
@@ -207,12 +208,15 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
     ri_html->add( |<hr><table>| ).
 
     LOOP AT <lt_programs> ASSIGNING <ls_program>.
+      clear ls_item.
       lv_program_ndx = sy-tabix.
       ASSIGN COMPONENT 'INFO-KEY-OBJ_TYPE' OF STRUCTURE <ls_program> TO <lv_any>.
       IF sy-subrc = 0.
-        ri_html->add( |<tr><td>{ <lv_any> } | ).
+        ls_item-obj_type = <lv_any>.
         ASSIGN COMPONENT 'INFO-KEY-OBJ_NAME' OF STRUCTURE <ls_program> TO <lv_any>.
-        ri_html->add( |{ <lv_any> }</td><td></td></tr>| ).
+        ls_item-obj_name = <lv_any>.
+        ri_html->add( |<tr><td>{ zcl_abapgit_gui_chunk_lib=>get_item_icon( ls_item ) } { ls_item-obj_type }|
+          && | { zcl_abapgit_gui_chunk_lib=>get_item_link( ls_item ) }</td><td></td></tr>| ).
       ELSE.
 * KEY field does not exist in 750
         ASSIGN COMPONENT 'INFO-NAME' OF STRUCTURE <ls_program> TO <lv_any>.
