@@ -239,7 +239,7 @@ CLASS lcl_update_calculator IMPLEMENTATION.
       IF sy-subrc <> 0.
         " The file should be in locals, however:
         " if the deserialization fails, the local file might not be there
-        " in this case now new CS added, and the file will appear to be remote+new
+        " in this case no new CS added, and the file will appear to be remote+new
         CONTINUE.
       ENDIF.
 
