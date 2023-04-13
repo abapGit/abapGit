@@ -189,6 +189,8 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
     ASSIGN COMPONENT 'ALERTS_BY_INDICIES' OF STRUCTURE <ls_task_data> TO <lt_indices>.
     ASSIGN COMPONENT 'PROGRAMS' OF STRUCTURE <ls_task_data> TO <lt_programs>.
 
+    ri_html->add( |<table class="unit_tests">| ).
+
     LOOP AT <lt_indices> ASSIGNING <ls_alert_by_index>.
       ASSIGN COMPONENT 'ALERTS' OF STRUCTURE <ls_alert_by_index> TO <lt_alerts>.
       LOOP AT <lt_alerts> ASSIGNING <ls_alert> WHERE ('KIND = ''F'' OR KIND = ''S'' OR KIND = ''E''').
@@ -196,16 +198,18 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
         LOOP AT <lt_params> INTO lv_params.
           lv_text = lv_params.
         ENDLOOP.
-        ri_html->add( |<span class="boxed red-filled-set">{ lv_text }</span><br>| ).
+        ri_html->add( |<tr><td><span class="boxed red-filled-set">{ lv_text }</span></td></tr>| ).
         lv_count = lv_count + 1.
       ENDLOOP.
     ENDLOOP.
+
+    ri_html->add( '</table>' ).
 
     ri_html->add( '<div class="ci-head">' ).
     ri_html->add( |Unit tests completed with <strong>{ lv_count } errors</strong> ({ mv_summary })| ).
     ri_html->add( `</div>` ).
 
-    ri_html->add( |<hr><table>| ).
+    ri_html->add( |<hr><table class="unit_tests">| ).
 
     LOOP AT <lt_programs> ASSIGNING <ls_program>.
       CLEAR ls_item.
