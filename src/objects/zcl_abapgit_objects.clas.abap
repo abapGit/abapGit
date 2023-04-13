@@ -137,6 +137,15 @@ CLASS zcl_abapgit_objects DEFINITION
         !ii_log    TYPE REF TO zif_abapgit_log
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS deserialize_steps
+      IMPORTING
+        !it_steps     TYPE zif_abapgit_objects=>ty_step_data_tt
+        !ii_log       TYPE REF TO zif_abapgit_log
+        !iv_transport TYPE trkorr
+      CHANGING
+        !ct_files     TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS deserialize_objects
       IMPORTING
         !is_step      TYPE zif_abapgit_objects=>ty_step_data
@@ -187,10 +196,10 @@ CLASS zcl_abapgit_objects DEFINITION
         !ii_log  TYPE REF TO zif_abapgit_log .
     CLASS-METHODS determine_i18n_params
       IMPORTING
-        !io_dot TYPE REF TO zcl_abapgit_dot_abapgit
+        !io_dot                TYPE REF TO zcl_abapgit_dot_abapgit
         !iv_main_language_only TYPE abap_bool
       RETURNING
-        VALUE(rs_i18n_params) TYPE zif_abapgit_definitions=>ty_i18n_params
+        VALUE(rs_i18n_params)  TYPE zif_abapgit_definitions=>ty_i18n_params
       RAISING
         zcx_abapgit_exception.
 ENDCLASS.
@@ -601,7 +610,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           li_progress TYPE REF TO zif_abapgit_progress,
           lv_path     TYPE string,
           lt_items    TYPE zif_abapgit_definitions=>ty_items_tt,
-          lt_steps_id TYPE zif_abapgit_definitions=>ty_deserialization_step_tt,
           lt_steps    TYPE zif_abapgit_objects=>ty_step_data_tt,
           lx_exc      TYPE REF TO zcx_abapgit_exception.
     DATA lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
@@ -731,9 +739,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           li_obj->mo_files = lo_files.
 
           "get required steps for deserialize the object
-          lt_steps_id = li_obj->get_deserialize_steps( ).
-
-          LOOP AT lt_steps_id ASSIGNING <lv_step_id>.
+          LOOP AT li_obj->get_deserialize_steps( ) ASSIGNING <lv_step_id>.
             READ TABLE lt_steps WITH KEY step_id = <lv_step_id> ASSIGNING <ls_step>.
             ASSERT sy-subrc = 0.
             IF <lv_step_id> = zif_abapgit_object=>gc_step_id-ddic AND
@@ -763,22 +769,16 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     li_progress->off( ).
 
-    "run deserialize for all steps and it's objects
-    SORT lt_steps BY order.
-    LOOP AT lt_steps ASSIGNING <ls_step>.
-      deserialize_objects(
-        EXPORTING
-          is_step      = <ls_step>
-          ii_log       = ii_log
-          iv_transport = is_checks-transport-transport
-        CHANGING
-          ct_files     = rt_accessed_files ).
-    ENDLOOP.
+    "run deserialize for all steps and its objects
+    deserialize_steps(
+      EXPORTING
+        it_steps     = lt_steps
+        ii_log       = ii_log
+        iv_transport = is_checks-transport-transport
+      CHANGING
+        ct_files     = rt_accessed_files ).
 
     update_package_tree( io_repo->get_package( ) ).
-
-    SORT rt_accessed_files BY path ASCENDING filename ASCENDING.
-    DELETE ADJACENT DUPLICATES FROM rt_accessed_files. " Just in case
 
     zcl_abapgit_default_transport=>get_instance( )->reset( ).
 
@@ -868,6 +868,26 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD deserialize_steps.
+
+    FIELD-SYMBOLS <ls_step> LIKE LINE OF it_steps.
+
+    LOOP AT it_steps ASSIGNING <ls_step>.
+      deserialize_objects(
+        EXPORTING
+          is_step      = <ls_step>
+          ii_log       = ii_log
+          iv_transport = iv_transport
+        CHANGING
+          ct_files     = ct_files ).
+    ENDLOOP.
+
+    SORT ct_files BY path ASCENDING filename ASCENDING.
+    DELETE ADJACENT DUPLICATES FROM ct_files. " Just in case
+
+  ENDMETHOD.
+
+
   METHOD determine_i18n_params.
 
     " TODO: unify with ZCL_ABAPGIT_SERIALIZE=>DETERMINE_I18N_PARAMS, same code
@@ -942,6 +962,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     <ls_step>-descr        = 'Post-process Objects'.
     <ls_step>-syntax_check = abap_true.
     <ls_step>-order        = 4.
+
+    SORT rt_steps BY order. " ensure correct processing order
   ENDMETHOD.
 
 
