@@ -1094,6 +1094,8 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
+    " Note: CSS classes "new" and "old" are used to enable column-based copy to clipboard
+
     " New line
     lv_mark = ` `.
     IF is_diff_line-result IS NOT INITIAL.
@@ -1160,6 +1162,8 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     FIELD-SYMBOLS <ls_diff_line> LIKE LINE OF mt_delayed_lines.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    " Note: CSS classes "new" and "old" are used to enable column-based copy to clipboard
 
     " Release delayed subsequent update lines
     IF is_diff_line-result <> zif_abapgit_definitions=>c_diff-update.

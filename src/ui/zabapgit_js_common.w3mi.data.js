@@ -1205,7 +1205,6 @@ DiffColumnSelection.prototype.getSelectedText = function() {
       var cellIdx = (i == 0 ? 0 : realThis.selectedColumnIdx);
       if (tr.cells.length > cellIdx) {
         var tdSelected = tr.cells[cellIdx];
-        //var tdLineNum  = tr.cells[realThis.lineNumColumnIdx];
         // decide which side to copy based on first line of selection
         if (i == 0) {
           copySide = (tdSelected.classList.contains("new") ? "new" : "old" );
