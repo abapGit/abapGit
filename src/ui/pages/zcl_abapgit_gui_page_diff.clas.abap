@@ -270,7 +270,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
 
   METHOD add_filter_sub_menu.
@@ -1107,7 +1107,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     ENDIF.
     lv_new = |<td class="num diff_others" line-num="{ is_diff_line-new_num }"></td>|
           && |<td class="mark diff_others">{ lv_mark }</td>|
-          && |<td class="code{ lv_bg } diff_left">{ is_diff_line-new }</td>|.
+          && |<td class="code{ lv_bg } diff_left new">{ is_diff_line-new }</td>|.
 
     " Old line
     CLEAR lv_bg.
@@ -1123,7 +1123,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     ENDIF.
     lv_old = |<td class="num diff_others" line-num="{ is_diff_line-old_num }"></td>|
           && |<td class="mark diff_others">{ lv_mark }</td>|
-          && |<td class="code{ lv_bg } diff_right">{ is_diff_line-old }</td>|.
+          && |<td class="code{ lv_bg } diff_right old">{ is_diff_line-old }</td>|.
 
     " render line, inverse sides if remote is newer
     ri_html->add( '<tr class="diff_line">' ).
@@ -1168,7 +1168,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
         ri_html->add( |<td class="num diff_others" line-num="{ <ls_diff_line>-old_num }"></td>|
                    && |<td class="num diff_others" line-num=""></td>|
                    && |<td class="mark diff_others">-</td>|
-                   && |<td class="code diff_del diff_unified">{ <ls_diff_line>-old }</td>| ).
+                   && |<td class="code diff_del diff_unified old">{ <ls_diff_line>-old }</td>| ).
         ri_html->add( '</tr>' ).
       ENDLOOP.
       LOOP AT mt_delayed_lines ASSIGNING <ls_diff_line>.
@@ -1176,7 +1176,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
         ri_html->add( |<td class="num diff_others" line-num=""></td>|
                    && |<td class="num diff_others" line-num="{ <ls_diff_line>-new_num }"></td>|
                    && |<td class="mark diff_others">+</td>|
-                   && |<td class="code diff_ins diff_others">{ <ls_diff_line>-new }</td>| ).
+                   && |<td class="code diff_ins diff_unified new">{ <ls_diff_line>-new }</td>| ).
         ri_html->add( '</tr>' ).
       ENDLOOP.
       CLEAR mt_delayed_lines.
@@ -1190,12 +1190,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
         ri_html->add( |<td class="num diff_others" line-num=""></td>|
                    && |<td class="num diff_others" line-num="{ is_diff_line-new_num }"></td>|
                    && |<td class="mark diff_others">+</td>|
-                   && |<td class="code diff_ins diff_others">{ is_diff_line-new }</td>| ).
+                   && |<td class="code diff_ins diff_unified new">{ is_diff_line-new }</td>| ).
       WHEN zif_abapgit_definitions=>c_diff-delete.
         ri_html->add( |<td class="num diff_others" line-num="{ is_diff_line-old_num }"></td>|
                    && |<td class="num diff_others" line-num=""></td>|
                    && |<td class="mark diff_others">-</td>|
-                   && |<td class="code diff_del diff_unified">{ is_diff_line-old }</td>| ).
+                   && |<td class="code diff_del diff_unified old">{ is_diff_line-old }</td>| ).
       WHEN OTHERS. "none
         ri_html->add( |<td class="num diff_others" line-num="{ is_diff_line-old_num }"></td>|
                    && |<td class="num diff_others" line-num="{ is_diff_line-new_num }"></td>|
