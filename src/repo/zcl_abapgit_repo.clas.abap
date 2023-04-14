@@ -188,7 +188,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 
   METHOD bind_listener.
@@ -761,9 +761,9 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       CHANGING
         ct_files  = lt_updated_files ).
 
-    zif_abapgit_repo~checksums( )->update( lt_updated_files ).
+    CLEAR mt_local. " Should be before CS update which uses NEW local
 
-    CLEAR: mt_local.
+    zif_abapgit_repo~checksums( )->update( lt_updated_files ).
 
     update_last_deserialize( ).
     reset_status( ).
