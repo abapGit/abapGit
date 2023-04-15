@@ -279,12 +279,14 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
       EXPORTING
         it_iso_filter = io_xml->i18n_params( )-translation_languages
         iv_lang_field_name = 'SPRAS'
+        iv_keep_master_lang = io_xml->i18n_params( )-main_language
       CHANGING
         ct_tab = lt_titles ).
     zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
       EXPORTING
         it_iso_filter = io_xml->i18n_params( )-translation_languages
         iv_lang_field_name = 'SPRAS'
+        iv_keep_master_lang = io_xml->i18n_params( )-main_language
       CHANGING
         ct_tab = lt_texts ).
 
@@ -461,7 +463,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
                            ct_nodes = lt_nodes ).
 
     SORT lt_titles BY id.
-    DELETE ADJACENT DUPLICATES FROM lt_titles COMPARING id.
+    DELETE ADJACENT DUPLICATES FROM lt_titles COMPARING spras id.
 
     SORT lt_texts BY spras.
     DELETE ADJACENT DUPLICATES FROM lt_texts COMPARING spras node_id.
