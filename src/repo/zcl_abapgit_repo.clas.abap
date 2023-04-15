@@ -251,6 +251,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       lv_error_message  TYPE string,
       lv_error_longtext TYPE string.
 
+    " for deserialize, assumes find_remote_dot_abapgit has been called before (or language won't be defined)
     lv_main_language = get_dot_abapgit( )->get_main_language( ).
 
     IF lv_main_language <> sy-langu.
