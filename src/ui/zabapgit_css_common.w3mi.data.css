@@ -1278,6 +1278,12 @@ table.settings_tab input {
 }
 settings_tab tr:first-child td { border-top: 0px; }
 
+/* UNIT TESTS */
+
+table.unit_tests {
+  line-height: 1.5;
+}
+
 /* DIALOGS */
 
 .dialog {
@@ -1491,4 +1497,4 @@ settings_tab tr:first-child td { border-top: 0px; }
 .toolbar-light a:first-child {
   padding-left: 0;
   border-left: none;
-}
+}
