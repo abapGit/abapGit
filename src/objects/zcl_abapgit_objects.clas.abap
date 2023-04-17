@@ -52,11 +52,15 @@ CLASS zcl_abapgit_objects DEFINITION
         !iv_line_number  TYPE i OPTIONAL
         !iv_sub_obj_name TYPE zif_abapgit_definitions=>ty_item-obj_name OPTIONAL
         !iv_sub_obj_type TYPE zif_abapgit_definitions=>ty_item-obj_type OPTIONAL
+        !iv_extra        TYPE string OPTIONAL
+        !iv_ext          TYPE string OPTIONAL
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS changed_by
       IMPORTING
         !is_item       TYPE zif_abapgit_definitions=>ty_item
+        !iv_extra      TYPE string OPTIONAL
+        !iv_ext        TYPE string OPTIONAL
       RETURNING
         VALUE(rv_user) TYPE syuname .
     CLASS-METHODS is_supported
@@ -187,17 +191,17 @@ CLASS zcl_abapgit_objects DEFINITION
         !ii_log  TYPE REF TO zif_abapgit_log .
     CLASS-METHODS determine_i18n_params
       IMPORTING
-        !io_dot TYPE REF TO zcl_abapgit_dot_abapgit
+        !io_dot                TYPE REF TO zcl_abapgit_dot_abapgit
         !iv_main_language_only TYPE abap_bool
       RETURNING
-        VALUE(rs_i18n_params) TYPE zif_abapgit_definitions=>ty_i18n_params
+        VALUE(rs_i18n_params)  TYPE zif_abapgit_definitions=>ty_i18n_params
       RAISING
         zcx_abapgit_exception.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
+CLASS zcl_abapgit_objects IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -213,7 +217,9 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         li_obj = create_object( is_item     = is_item
                                 iv_language = zif_abapgit_definitions=>c_english ).
 
-        rv_user = li_obj->changed_by( ).
+        rv_user = li_obj->changed_by(
+          iv_extra = iv_extra
+          iv_ext   = iv_ext ).
       CATCH zcx_abapgit_exception ##NO_HANDLER.
         " Ignore errors
     ENDTRY.
@@ -1036,7 +1042,9 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     ENDIF.
 
     " First priority object-specific handler
-    lv_exit = li_obj->jump( ).
+    lv_exit = li_obj->jump(
+      iv_extra = iv_extra
+      iv_ext   = iv_ext ).
 
     IF lv_exit = abap_false.
       " Open object in new window with generic jumper
