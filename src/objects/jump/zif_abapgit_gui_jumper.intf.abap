@@ -34,4 +34,11 @@ INTERFACE zif_abapgit_gui_jumper
     RAISING
       zcx_abapgit_exception.
 
+  METHODS jump_abapgit
+    IMPORTING
+      !iv_language TYPE spras
+      !iv_key      TYPE zif_abapgit_persistence=>ty_value
+    RAISING
+      zcx_abapgit_exception.
+
 ENDINTERFACE.
