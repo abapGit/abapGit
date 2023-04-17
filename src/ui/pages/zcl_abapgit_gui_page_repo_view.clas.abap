@@ -656,8 +656,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       ls_item          TYPE zif_abapgit_definitions=>ty_item,
       lv_tcode         TYPE tcode.
 
-    " https://blogs.sap.com/2017/01/13/logon-language-sy-langu-and-rfc/
-
     lv_main_language = mo_repo->get_dot_abapgit( )->get_main_language( ).
     lv_tcode = zcl_abapgit_services_abapgit=>get_abapgit_tcode( ).
     ASSERT lv_tcode IS NOT INITIAL.
