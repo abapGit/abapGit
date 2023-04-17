@@ -1,7 +1,7 @@
 INTERFACE zif_abapgit_object
-  PUBLIC.
+  PUBLIC .
 
-  DATA mo_files TYPE REF TO zcl_abapgit_objects_files.
+  DATA mo_files TYPE REF TO zcl_abapgit_objects_files .
 
   CONSTANTS:
     BEGIN OF gc_step_id,
@@ -9,13 +9,13 @@ INTERFACE zif_abapgit_object
       abap  TYPE zif_abapgit_definitions=>ty_deserialization_step VALUE `ABAP`,
       ddic  TYPE zif_abapgit_definitions=>ty_deserialization_step VALUE `DDIC`,
       late  TYPE zif_abapgit_definitions=>ty_deserialization_step VALUE `LATE`,
-    END OF gc_step_id.
+    END OF gc_step_id .
 
   METHODS serialize
     IMPORTING
       !io_xml TYPE REF TO zif_abapgit_xml_output
     RAISING
-      zcx_abapgit_exception.
+      zcx_abapgit_exception .
 
   METHODS deserialize
     IMPORTING
@@ -25,32 +25,32 @@ INTERFACE zif_abapgit_object
       !ii_log       TYPE REF TO zif_abapgit_log
       !iv_transport TYPE trkorr
     RAISING
-      zcx_abapgit_exception.
+      zcx_abapgit_exception .
 
   METHODS delete
     IMPORTING
       !iv_package   TYPE devclass
       !iv_transport TYPE trkorr
     RAISING
-      zcx_abapgit_exception.
+      zcx_abapgit_exception .
 
   METHODS exists
     RETURNING
       VALUE(rv_bool) TYPE abap_bool
     RAISING
-      zcx_abapgit_exception.
+      zcx_abapgit_exception .
 
   METHODS is_locked
     RETURNING
       VALUE(rv_is_locked) TYPE abap_bool
     RAISING
-      zcx_abapgit_exception.
+      zcx_abapgit_exception .
 
   METHODS is_active
     RETURNING
       VALUE(rv_active) TYPE abap_bool
     RAISING
-      zcx_abapgit_exception.
+      zcx_abapgit_exception .
 
   METHODS changed_by
     IMPORTING
@@ -59,7 +59,7 @@ INTERFACE zif_abapgit_object
     RETURNING
       VALUE(rv_user) TYPE syuname
     RAISING
-      zcx_abapgit_exception.
+      zcx_abapgit_exception .
 
   METHODS jump
     IMPORTING
@@ -68,21 +68,21 @@ INTERFACE zif_abapgit_object
     RETURNING
       VALUE(rv_exit) TYPE abap_bool
     RAISING
-      zcx_abapgit_exception.
+      zcx_abapgit_exception .
 
   METHODS get_metadata
     RETURNING
-      VALUE(rs_metadata) TYPE zif_abapgit_definitions=>ty_metadata.
+      VALUE(rs_metadata) TYPE zif_abapgit_definitions=>ty_metadata .
 
   METHODS get_comparator
     RETURNING
       VALUE(ri_comparator) TYPE REF TO zif_abapgit_comparator
     RAISING
-      zcx_abapgit_exception.
+      zcx_abapgit_exception .
 
   METHODS get_deserialize_steps
     RETURNING
-      VALUE(rt_steps) TYPE zif_abapgit_definitions=>ty_deserialization_step_tt.
+      VALUE(rt_steps) TYPE zif_abapgit_definitions=>ty_deserialization_step_tt .
 
   METHODS get_deserialize_order
     IMPORTING
