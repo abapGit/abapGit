@@ -94,9 +94,9 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     CLASS-METHODS render_repo_palette
       IMPORTING
-        iv_action         TYPE string
+        iv_action      TYPE string
       RETURNING
-        VALUE(ri_html)    TYPE REF TO zif_abapgit_html
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS advanced_submenu
@@ -131,10 +131,10 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS render_repo_url
       IMPORTING
-        iv_url TYPE zif_abapgit_persistence=>ty_repo-url
+        iv_url                        TYPE zif_abapgit_persistence=>ty_repo-url
         iv_render_remote_edit_for_key TYPE zif_abapgit_persistence=>ty_repo-key OPTIONAL
       RETURNING
-        VALUE(ri_html)  TYPE REF TO zif_abapgit_html
+        VALUE(ri_html)                TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS render_package_name
@@ -167,7 +167,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS render_sci_result
       IMPORTING
-        ii_html TYPE REF TO zif_abapgit_html
+        ii_html       TYPE REF TO zif_abapgit_html
         iv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result.
 
     CLASS-METHODS render_path
@@ -181,7 +181,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
 
     CLASS-METHODS render_timestamp
       IMPORTING
-        iv_timestamp TYPE timestampl
+        iv_timestamp       TYPE timestampl
       RETURNING
         VALUE(rv_rendered) TYPE string.
 
@@ -191,7 +191,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         iv_label       TYPE string
         iv_value       TYPE string OPTIONAL
         iv_max_length  TYPE string OPTIONAL
-        iv_autofocus  TYPE abap_bool DEFAULT abap_false
+        iv_autofocus   TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html.
 
@@ -204,15 +204,27 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
 
     CLASS-METHODS render_label_list
       IMPORTING
-        it_labels TYPE string_table
-        io_label_colors TYPE REF TO zcl_abapgit_string_map
+        it_labels           TYPE string_table
+        io_label_colors     TYPE REF TO zcl_abapgit_string_map
         iv_clickable_action TYPE string OPTIONAL
       RETURNING
-        VALUE(rv_html) TYPE string.
+        VALUE(rv_html)      TYPE string.
 
     CLASS-METHODS render_help_hint
       IMPORTING
         iv_text_to_wrap TYPE string
+      RETURNING
+        VALUE(rv_html)  TYPE string.
+
+    CLASS-METHODS get_item_icon
+      IMPORTING
+        !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
+      RETURNING
+        VALUE(rv_html) TYPE string.
+
+    CLASS-METHODS get_item_link
+      IMPORTING
+        !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
       RETURNING
         VALUE(rv_html) TYPE string.
 
@@ -308,6 +320,50 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
             customizing_missing = 1
             OTHERS              = 2.
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD get_item_icon.
+
+    CASE is_item-obj_type.
+      WHEN 'PROG' OR 'CLAS' OR 'FUGR' OR 'INTF' OR 'TYPE'.
+        rv_html = zcl_abapgit_html=>icon( iv_name = 'file-code/darkgrey'
+                                          iv_hint = 'Code' ).
+      WHEN 'W3MI' OR 'W3HT' OR 'SFPF'.
+        rv_html = zcl_abapgit_html=>icon( iv_name = 'file-image/darkgrey'
+                                          iv_hint = 'Binary' ).
+      WHEN 'DEVC'.
+        rv_html = zcl_abapgit_html=>icon( iv_name = 'box/darkgrey'
+                                          iv_hint = 'Package' ).
+      WHEN ''.
+        rv_html = space. " no icon
+      WHEN OTHERS.
+        rv_html = zcl_abapgit_html=>icon( 'file-alt/darkgrey' ).
+    ENDCASE.
+
+    IF is_item-is_dir = abap_true.
+      rv_html = zcl_abapgit_html=>icon( iv_name = 'folder/darkgrey'
+                                        iv_hint = 'Folder' ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_item_link.
+
+    DATA lv_encode TYPE string.
+    DATA li_html TYPE REF TO zif_abapgit_html.
+
+    CREATE OBJECT li_html TYPE zcl_abapgit_html.
+
+    lv_encode = zcl_abapgit_html_action_utils=>jump_encode(
+      iv_obj_type = is_item-obj_type
+      iv_obj_name = is_item-obj_name ).
+
+    rv_html = li_html->a(
+      iv_txt = |{ is_item-obj_name }|
+      iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_encode }| ).
 
   ENDMETHOD.
 
@@ -1287,8 +1343,8 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
   METHOD render_user_name.
 
     DATA:
-      lv_title        TYPE string,
-      lv_jump         TYPE string.
+      lv_title TYPE string,
+      lv_jump  TYPE string.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
