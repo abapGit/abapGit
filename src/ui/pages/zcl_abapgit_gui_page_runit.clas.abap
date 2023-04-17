@@ -143,10 +143,9 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    CASE ii_event->mv_action.
-      WHEN zif_abapgit_definitions=>c_action-go_back .
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
-    ENDCASE.
+    IF ii_event->mv_action = zif_abapgit_definitions=>c_action-go_back.
+      rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
+    ENDIF.
 
   ENDMETHOD.
 
