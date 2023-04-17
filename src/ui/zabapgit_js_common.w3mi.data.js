@@ -1200,20 +1200,22 @@ DiffColumnSelection.prototype.getSelectedText = function() {
   } else {
     var newline  = "";
     var realThis = this;
+    var copySide = "";
     [].forEach.call(nodes, function(tr, i) {
       var cellIdx = (i == 0 ? 0 : realThis.selectedColumnIdx);
       if (tr.cells.length > cellIdx) {
         var tdSelected = tr.cells[cellIdx];
-        var tdLineNum  = tr.cells[realThis.lineNumColumnIdx];
-        // copy is interesting for remote code, don't copy lines which exist only locally
-        if (i == 0 || tdLineNum.getAttribute("line-num") != "") {
+        // decide which side to copy based on first line of selection
+        if (i == 0) {
+          copySide = (tdSelected.classList.contains("new") ? "new" : "old" );
+        }
+        // copy is interesting only for one side of code, do not copy lines which exist on other side
+        if (i == 0 || copySide == "new" && !tdSelected.classList.contains("old") || copySide == "old" && !tdSelected.classList.contains("new")) {
           text += newline + tdSelected.textContent;
           // special processing for TD tag which sometimes contains newline
-          // (expl: /src/ui/zabapgit_js_common.w3mi.data.js) so don't add newline again in that case.
+          // (expl: /src/ui/zabapgit_js_common.w3mi.data.js) so do not add newline again in that case.
           var lastChar = tdSelected.textContent[tdSelected.textContent.length - 1];
-
           if (lastChar == "\n") newline = "";
-
           else newline = "\n";
         }
       }
@@ -1474,7 +1476,7 @@ LinkHints.prototype.handleKey = function(event) {
 
     var hint = this.hintsMap[this.pendingPath];
 
-    if (hint) { // we are there, we have a fully specified tooltip. Let's activate or yank it
+    if (hint) { // we are there, we have a fully specified tooltip. Let us activate or yank it
       this.displayHints(false);
       event.preventDefault();
       if (this.yankModeActive) {
@@ -1484,7 +1486,7 @@ LinkHints.prototype.handleKey = function(event) {
         this.hintActivate(hint);
       }
     } else {
-      // we are not there yet, but let's filter the link so that only
+      // we are not there yet, but let us filter the link so that only
       // the partially matched are shown
       var visibleHints = this.filterHints();
       if (!visibleHints) {
