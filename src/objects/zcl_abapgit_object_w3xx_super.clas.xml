@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECT_W3XX_SUPER</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>W3XX - Web Reporting/Internet Transaction Server</DESCRIPT>
+    <DESCRIPT>abapGit - W3XX - Web Reporting/Internet Transaction Server</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
