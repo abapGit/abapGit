@@ -142,7 +142,12 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
 
 
   METHOD zif_abapgit_gui_event_handler~on_event.
-    RETURN.
+
+    CASE ii_event->mv_action.
+      WHEN zif_abapgit_definitions=>c_action-go_back .
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
+    ENDCASE.
+
   ENDMETHOD.
 
 
@@ -176,6 +181,8 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
     FIELD-SYMBOLS <lv_any>            TYPE any.
     FIELD-SYMBOLS <lt_params>         TYPE string_table.
 
+
+    register_handlers( ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
