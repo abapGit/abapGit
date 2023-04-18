@@ -653,14 +653,8 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     DATA:
       lv_main_language TYPE spras,
-      lt_spagpa        TYPE STANDARD TABLE OF rfc_spagpa,
-      ls_spagpa        LIKE LINE OF lt_spagpa,
       ls_item          TYPE zif_abapgit_definitions=>ty_item,
-      lv_subrc         TYPE syst-subrc,
-      lv_save_sy_langu TYPE sy-langu,
       lv_tcode         TYPE tcode.
-
-    " https://blogs.sap.com/2017/01/13/logon-language-sy-langu-and-rfc/
 
     lv_main_language = mo_repo->get_dot_abapgit( )->get_main_language( ).
     lv_tcode = zcl_abapgit_services_abapgit=>get_abapgit_tcode( ).
@@ -677,36 +671,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Please install the abapGit repository| ).
     ENDIF.
 
-    lv_save_sy_langu = sy-langu.
-    SET LOCALE LANGUAGE lv_main_language.
-
-    ls_spagpa-parid  = zif_abapgit_definitions=>c_spagpa_param_repo_key.
-    ls_spagpa-parval = mo_repo->get_key( ).
-    INSERT ls_spagpa INTO TABLE lt_spagpa.
-
-    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
-      DESTINATION 'NONE'
-      STARTING NEW TASK 'ABAPGIT'
-      EXPORTING
-        tcode                   = lv_tcode
-      TABLES
-        spagpa_tab              = lt_spagpa
-      EXCEPTIONS
-        call_transaction_denied = 1
-        tcode_invalid           = 2
-        communication_failure   = 3
-        system_failure          = 4
-        OTHERS                  = 5.
-
-    lv_subrc = sy-subrc.
-
-    SET LOCALE LANGUAGE lv_save_sy_langu.
-
-    IF lv_subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from ABAP4_CALL_TRANSACTION. Subrc = { lv_subrc }| ).
-    ENDIF.
-
-    MESSAGE 'Repository opened in a new window' TYPE 'S'.
+    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_abapgit(
+      iv_language = lv_main_language
+      iv_key      = mo_repo->get_key( ) ).
 
   ENDMETHOD.
 
