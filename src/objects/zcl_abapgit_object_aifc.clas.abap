@@ -108,7 +108,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
+CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
 
 
   METHOD authorization_check.
@@ -595,5 +595,17 @@ CLASS ZCL_ABAPGIT_OBJECT_AIFC IMPLEMENTATION.
       CATCH cx_root INTO lx_root.
         zcx_abapgit_exception=>raise_with_text( lx_root ).
     ENDTRY.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+    RETURN.
   ENDMETHOD.
 ENDCLASS.
