@@ -55,7 +55,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
 
 
   METHOD build_base_menu.
@@ -140,9 +140,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
           lv_line_number = <ls_result>-line.
 
           zcl_abapgit_objects=>jump(
-            is_item         = ls_item
-            iv_sub_obj_name = ls_sub_item-obj_name
-            iv_line_number  = lv_line_number ).
+            is_item        = ls_item
+            is_sub_item    = ls_sub_item
+            iv_line_number = lv_line_number ).
           RETURN.
 
         ENDIF.

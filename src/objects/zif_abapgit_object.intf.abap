@@ -9,7 +9,7 @@ INTERFACE zif_abapgit_object
       abap  TYPE zif_abapgit_definitions=>ty_deserialization_step VALUE `ABAP`,
       ddic  TYPE zif_abapgit_definitions=>ty_deserialization_step VALUE `DDIC`,
       late  TYPE zif_abapgit_definitions=>ty_deserialization_step VALUE `LATE`,
-    END OF gc_step_id .
+    END OF gc_step_id.
 
   METHODS serialize
     IMPORTING
@@ -54,8 +54,7 @@ INTERFACE zif_abapgit_object
 
   METHODS changed_by
     IMPORTING
-      !iv_extra      TYPE string OPTIONAL
-      !iv_ext        TYPE string OPTIONAL
+      !is_sub_item   TYPE zif_abapgit_definitions=>ty_item OPTIONAL
     RETURNING
       VALUE(rv_user) TYPE syuname
     RAISING
@@ -63,8 +62,7 @@ INTERFACE zif_abapgit_object
 
   METHODS jump
     IMPORTING
-      !iv_extra      TYPE string OPTIONAL
-      !iv_ext        TYPE string OPTIONAL
+      !is_sub_item   TYPE zif_abapgit_definitions=>ty_item OPTIONAL
     RETURNING
       VALUE(rv_exit) TYPE abap_bool
     RAISING
@@ -93,8 +91,8 @@ INTERFACE zif_abapgit_object
   METHODS map_filename_to_object
     IMPORTING
       !iv_filename   TYPE string
-      !iv_path       TYPE string
-      !io_dot        TYPE REF TO zcl_abapgit_dot_abapgit
+      !iv_path       TYPE string OPTIONAL
+      !io_dot        TYPE REF TO zcl_abapgit_dot_abapgit OPTIONAL
     RETURNING
       VALUE(rs_item) TYPE zif_abapgit_definitions=>ty_item
     RAISING
