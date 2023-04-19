@@ -88,7 +88,7 @@ INTERFACE zif_abapgit_object
     RETURNING
       VALUE(rt_objects_before) TYPE zif_abapgit_definitions=>ty_items_tt.
 
-  METHODS map_filename_to_object
+  CLASS-METHODS map_filename_to_object
     IMPORTING
       !iv_filename   TYPE string
       !iv_path       TYPE string OPTIONAL
