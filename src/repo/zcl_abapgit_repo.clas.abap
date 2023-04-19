@@ -188,7 +188,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
   METHOD bind_listener.
@@ -251,9 +251,8 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       lv_error_message  TYPE string,
       lv_error_longtext TYPE string.
 
-    " assumes find_remote_dot_abapgit has been called before
+    " for deserialize, assumes find_remote_dot_abapgit has been called before (or language won't be defined)
     lv_main_language = get_dot_abapgit( )->get_main_language( ).
-
 
     IF lv_main_language <> sy-langu.
 
@@ -311,8 +310,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   METHOD delete_checks.
 
     DATA: li_package TYPE REF TO zif_abapgit_sap_package.
-
-    find_remote_dot_abapgit( ).
 
     check_write_protect( ).
     check_language( ).
