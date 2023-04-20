@@ -90,16 +90,20 @@ INTERFACE zif_abapgit_object
 
   CLASS-METHODS map_filename_to_object
     IMPORTING
-      !iv_filename   TYPE string
-      !iv_path       TYPE string OPTIONAL
-      !io_dot        TYPE REF TO zcl_abapgit_dot_abapgit OPTIONAL
-    RETURNING
-      VALUE(rs_item) TYPE zif_abapgit_definitions=>ty_item
+      !iv_filename TYPE string
+      !iv_path     TYPE string OPTIONAL
+      !io_dot      TYPE REF TO zcl_abapgit_dot_abapgit OPTIONAL
+    CHANGING
+      cs_item      TYPE zif_abapgit_definitions=>ty_item
     RAISING
       zcx_abapgit_exception.
 
-  METHODS map_object_to_filename
-    RETURNING
-      VALUE(rv_filename) TYPE string.
+  CLASS-METHODS map_object_to_filename
+    IMPORTING
+      !is_item    TYPE zif_abapgit_definitions=>ty_item
+    CHANGING
+      cv_filename TYPE string
+    RAISING
+      zcx_abapgit_exception.
 
 ENDINTERFACE.
