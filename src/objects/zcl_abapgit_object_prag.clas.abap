@@ -29,7 +29,7 @@ CLASS zcl_abapgit_object_prag IMPLEMENTATION.
   METHOD zif_abapgit_object~delete.
 
     DATA: lo_pragma TYPE REF TO cl_abap_pragma,
-          lx_error TYPE REF TO cx_root.
+          lx_error  TYPE REF TO cx_root.
 
     TRY.
         lo_pragma = cl_abap_pragma=>get_ref( ms_item-obj_name ).
@@ -148,5 +148,17 @@ CLASS zcl_abapgit_object_prag IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |Pragma { ms_item-obj_name } doesn't exist| ).
     ENDTRY.
 
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+    RETURN.
   ENDMETHOD.
 ENDCLASS.

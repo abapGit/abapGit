@@ -16,6 +16,7 @@ INTERFACE zif_abapgit_object
       !io_xml TYPE REF TO zif_abapgit_xml_output
     RAISING
       zcx_abapgit_exception .
+
   METHODS deserialize
     IMPORTING
       !iv_package   TYPE devclass
@@ -25,46 +26,84 @@ INTERFACE zif_abapgit_object
       !iv_transport TYPE trkorr
     RAISING
       zcx_abapgit_exception .
+
   METHODS delete
     IMPORTING
       !iv_package   TYPE devclass
       !iv_transport TYPE trkorr
     RAISING
       zcx_abapgit_exception .
+
   METHODS exists
     RETURNING
       VALUE(rv_bool) TYPE abap_bool
     RAISING
       zcx_abapgit_exception .
+
   METHODS is_locked
     RETURNING
       VALUE(rv_is_locked) TYPE abap_bool
     RAISING
       zcx_abapgit_exception .
+
   METHODS is_active
     RETURNING
       VALUE(rv_active) TYPE abap_bool
     RAISING
       zcx_abapgit_exception .
+
   METHODS changed_by
+    IMPORTING
+      !is_sub_item   TYPE zif_abapgit_definitions=>ty_item OPTIONAL
     RETURNING
       VALUE(rv_user) TYPE syuname
     RAISING
       zcx_abapgit_exception .
+
   METHODS jump
+    IMPORTING
+      !is_sub_item   TYPE zif_abapgit_definitions=>ty_item OPTIONAL
     RETURNING
       VALUE(rv_exit) TYPE abap_bool
     RAISING
       zcx_abapgit_exception .
+
   METHODS get_metadata
     RETURNING
       VALUE(rs_metadata) TYPE zif_abapgit_definitions=>ty_metadata .
+
   METHODS get_comparator
     RETURNING
       VALUE(ri_comparator) TYPE REF TO zif_abapgit_comparator
     RAISING
       zcx_abapgit_exception .
+
   METHODS get_deserialize_steps
     RETURNING
       VALUE(rt_steps) TYPE zif_abapgit_definitions=>ty_deserialization_step_tt .
+
+  METHODS get_deserialize_order
+    IMPORTING
+      !it_all_objects          TYPE zif_abapgit_definitions=>ty_items_tt
+    RETURNING
+      VALUE(rt_objects_before) TYPE zif_abapgit_definitions=>ty_items_tt.
+
+  CLASS-METHODS map_filename_to_object
+    IMPORTING
+      !iv_filename TYPE string
+      !iv_path     TYPE string OPTIONAL
+      !io_dot      TYPE REF TO zcl_abapgit_dot_abapgit OPTIONAL
+    CHANGING
+      cs_item      TYPE zif_abapgit_definitions=>ty_item
+    RAISING
+      zcx_abapgit_exception.
+
+  CLASS-METHODS map_object_to_filename
+    IMPORTING
+      !is_item    TYPE zif_abapgit_definitions=>ty_item
+    CHANGING
+      cv_filename TYPE string
+    RAISING
+      zcx_abapgit_exception.
+
 ENDINTERFACE.

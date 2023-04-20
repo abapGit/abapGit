@@ -11,11 +11,11 @@ CLASS zcl_abapgit_object_iatu DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RAISING   zcx_abapgit_exception,
       save
         IMPORTING
-          is_attr   TYPE w3tempattr
-          iv_source TYPE string
+                  is_attr   TYPE w3tempattr
+                  iv_source TYPE string
         RAISING   zcx_abapgit_exception,
       w3_api_load
-        IMPORTING is_name     TYPE iacikeyt
+        IMPORTING is_name            TYPE iacikeyt
         RETURNING VALUE(ri_template) TYPE REF TO if_w3_api_template
         RAISING   zcx_abapgit_exception,
       w3_api_set_changeable
@@ -29,16 +29,16 @@ CLASS zcl_abapgit_object_iatu DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         IMPORTING ii_template TYPE REF TO if_w3_api_template
         RAISING   zcx_abapgit_exception,
       w3_api_get_attributes
-        IMPORTING ii_template   TYPE REF TO if_w3_api_template
+        IMPORTING ii_template          TYPE REF TO if_w3_api_template
         RETURNING VALUE(rs_attributes) TYPE w3tempattr
         RAISING   zcx_abapgit_exception,
       w3_api_get_source
-        IMPORTING ii_template TYPE REF TO if_w3_api_template
-        RETURNING VALUE(rt_source)   TYPE w3htmltabtype
+        IMPORTING ii_template      TYPE REF TO if_w3_api_template
+        RETURNING VALUE(rt_source) TYPE w3htmltabtype
         RAISING   zcx_abapgit_exception,
       w3_api_create_new
-        IMPORTING is_template_data TYPE w3tempattr
-        RETURNING VALUE(ri_template)      TYPE REF TO if_w3_api_template
+        IMPORTING is_template_data   TYPE w3tempattr
+        RETURNING VALUE(ri_template) TYPE REF TO if_w3_api_template
         RAISING   zcx_abapgit_exception,
       w3_api_set_attributes
         IMPORTING ii_template TYPE REF TO if_w3_api_template
@@ -407,5 +407,17 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
       iv_ext    = 'html'
       iv_string = lv_source ).
 
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+    RETURN.
   ENDMETHOD.
 ENDCLASS.

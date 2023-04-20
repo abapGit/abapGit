@@ -6,10 +6,10 @@ CLASS zcl_abapgit_object_ucsa DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS:
-    BEGIN OF c_version,
-      active   TYPE r3state VALUE 'A',
-      inactive TYPE r3state VALUE 'I',
-    END OF c_version .
+      BEGIN OF c_version,
+        active   TYPE r3state VALUE 'A',
+        inactive TYPE r3state VALUE 'I',
+      END OF c_version .
 
     TYPES:
       ty_id TYPE c LENGTH 30.
@@ -268,5 +268,17 @@ CLASS zcl_abapgit_object_ucsa IMPLEMENTATION.
         zcx_abapgit_exception=>raise( lv_text ).
     ENDTRY.
 
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+    RETURN.
   ENDMETHOD.
 ENDCLASS.

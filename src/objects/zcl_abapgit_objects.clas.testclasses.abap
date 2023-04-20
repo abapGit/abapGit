@@ -308,6 +308,10 @@ CLASS ltcl_object_ddls_mock IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_object~get_deserialize_order. "##needed
+
+  ENDMETHOD.
+
   METHOD zif_abapgit_object~changed_by. "##needed
 
   ENDMETHOD.
@@ -341,6 +345,14 @@ CLASS ltcl_object_ddls_mock IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~is_active. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~map_filename_to_object. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~map_object_to_filename. "##needed
 
   ENDMETHOD.
 
