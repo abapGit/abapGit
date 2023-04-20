@@ -139,21 +139,6 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
 
     ls_enqueue-objname = mv_name.
     ls_enqueue-secname = mv_id.
-    CALL FUNCTION 'RS_CORR_INSERT'
-      EXPORTING
-        object        = ls_enqueue
-        object_class  = 'DICT'
-        mode          = 'DELETE'
-      IMPORTING
-        transport_key = ls_transp_key
-      EXCEPTIONS
-        OTHERS        = 1.
-
-    IF sy-subrc <> 0.
-      " & was not deleted (correction entry not possible or canceled)
-      MESSAGE s015(e2) WITH lv_concname INTO zcx_abapgit_exception=>null.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
 
     CALL FUNCTION 'DD_LOGNPROT_NAME_GET'
       EXPORTING
@@ -170,6 +155,7 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
 
     lv_del_concname = ls_enqueue-objname.
     lv_del_concname+16 = ls_enqueue-secname.
+
     CALL FUNCTION 'DD_OBJ_DEL'
       EXPORTING
         object_name = lv_del_concname
@@ -199,7 +185,15 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
+    zcl_abapgit_factory=>get_cts_api( )->insert_transport_object(
+      iv_object   = 'DICT'
+      iv_obj_name = ls_e071-obj_name
+      iv_package  = iv_package
+      iv_language = mv_language
+      iv_mode     = zif_abapgit_cts_api=>c_transport_mode-delete ).
+
     ls_e071-object = ls_enqueue-objtype.
+
     CALL FUNCTION 'RS_DELETE_FROM_WORKING_AREA'
       EXPORTING
         object                 = ls_e071-object
@@ -208,8 +202,8 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
         actualize_working_area = 'X'.
 
     xinx_delete_docu(
-        iv_objname = mv_name
-        iv_id      = mv_id ).
+      iv_objname = mv_name
+      iv_id      = mv_id ).
 
     CALL FUNCTION 'RS_TREE_OBJECT_PLACEMENT'
       EXPORTING
@@ -319,6 +313,11 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
@@ -341,6 +340,16 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
 
   METHOD zif_abapgit_object~jump.
     " Covered by ZCL_ABAPGIT_OBJECTS=>JUMP
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+    RETURN.
   ENDMETHOD.
 
 
@@ -375,17 +384,5 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
     serialize_longtexts( ii_xml         = io_xml
                          iv_longtext_id = c_longtext_id_xinx ).
 
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~get_deserialize_order.
-    RETURN.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~map_filename_to_object.
-    RETURN.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~map_object_to_filename.
-    RETURN.
   ENDMETHOD.
 ENDCLASS.

@@ -247,24 +247,7 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
     TRY.
         lock( ).
 
-        CALL FUNCTION 'RS_CORR_INSERT'
-          EXPORTING
-            object              = ms_item-obj_name
-            object_class        = ms_item-obj_type
-            mode                = 'I'
-            global_lock         = abap_true
-            devclass            = iv_package
-            master_language     = mv_language
-            suppress_dialog     = abap_true
-          EXCEPTIONS
-            cancelled           = 1
-            permission_failure  = 2
-            unknown_objectclass = 3
-            OTHERS              = 4.
-
-        IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise( |Error occured while creating { ms_item-obj_type }| ).
-        ENDIF.
+        corr_insert( iv_package ).
 
         mi_appl_obj_data->set_data( <lg_data> ).
 
@@ -307,6 +290,11 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
@@ -331,6 +319,16 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
 
   METHOD zif_abapgit_object~jump.
     " Covered by ZCL_ABAPGIT_OBJECTS=>JUMP
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+    RETURN.
   ENDMETHOD.
 
 
@@ -392,17 +390,5 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
     io_xml->add( iv_name = ms_item-obj_type
                  ig_data = <lg_data> ).
 
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~get_deserialize_order.
-    RETURN.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~map_filename_to_object.
-    RETURN.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~map_object_to_filename.
-    RETURN.
   ENDMETHOD.
 ENDCLASS.

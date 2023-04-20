@@ -79,35 +79,22 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'PARA: Parameter is still used' ).
       ENDIF.
     ENDIF.
-    CALL FUNCTION 'RS_CORR_INSERT'
+
+    zcl_abapgit_factory=>get_cts_api( )->insert_transport_object(
+      iv_object   = 'PARA'
+      iv_obj_name = lv_paramid
+      iv_package  = iv_package
+      iv_language = mv_language
+      iv_mode     = zif_abapgit_cts_api=>c_transport_mode-delete ).
+
+    DELETE FROM tpara WHERE paramid = lv_paramid.
+    DELETE FROM tparat WHERE paramid = lv_paramid.
+
+    CALL FUNCTION 'RS_TREE_OBJECT_PLACEMENT'
       EXPORTING
-        global_lock         = abap_true
-        object              = lv_paramid
-        object_class        = 'PARA'
-        mode                = 'D'
-        suppress_dialog     = abap_true
-      IMPORTING
-        transport_key       = ls_transpkey
-      EXCEPTIONS
-        cancelled           = 01
-        permission_failure  = 02
-        unknown_objectclass = 03.
-
-    IF sy-subrc = 0.
-      DELETE FROM tpara WHERE paramid = lv_paramid.
-      DELETE FROM tparat WHERE paramid = lv_paramid.
-
-      IF sy-subrc = 0.
-        CALL FUNCTION 'RS_TREE_OBJECT_PLACEMENT'
-          EXPORTING
-            object    = lv_paramid
-            operation = 'DELETE'
-            type      = 'CR'.
-      ENDIF.
-    ELSE.
-      unlock( lv_paramid ).
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
+        object    = lv_paramid
+        operation = 'DELETE'
+        type      = 'CR'.
 
     unlock( lv_paramid ).
 
@@ -184,6 +171,11 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
   ENDMETHOD.
@@ -218,6 +210,16 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~serialize.
 
     DATA: ls_tpara  TYPE tpara,
@@ -246,17 +248,5 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
       serialize_lxe_texts( io_xml ).
     ENDIF.
 
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~get_deserialize_order.
-    RETURN.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~map_filename_to_object.
-    RETURN.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~map_object_to_filename.
-    RETURN.
   ENDMETHOD.
 ENDCLASS.

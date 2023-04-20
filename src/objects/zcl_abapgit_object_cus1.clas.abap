@@ -97,23 +97,7 @@ CLASS zcl_abapgit_object_cus1 IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |error from deserialize CUS1 { mv_customizing_activity } S_CUS_ACTIVITY_SAVE| ).
     ENDIF.
 
-    CALL FUNCTION 'RS_CORR_INSERT'
-      EXPORTING
-        object              = ms_item-obj_name
-        object_class        = ms_item-obj_type
-        mode                = 'I'
-        global_lock         = abap_true
-        devclass            = iv_package
-        master_language     = mv_language
-        suppress_dialog     = abap_true
-      EXCEPTIONS
-        cancelled           = 1
-        permission_failure  = 2
-        unknown_objectclass = 3
-        OTHERS              = 4.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
+    corr_insert( iv_package ).
 
   ENDMETHOD.
 
@@ -133,6 +117,11 @@ CLASS zcl_abapgit_object_cus1 IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_deserialize_order.
     RETURN.
   ENDMETHOD.
 
@@ -183,6 +172,16 @@ CLASS zcl_abapgit_object_cus1 IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~serialize.
 
     DATA: ls_customzing_activity TYPE ty_customzing_activity.
@@ -214,17 +213,5 @@ CLASS zcl_abapgit_object_cus1 IMPLEMENTATION.
     io_xml->add( iv_name = 'CUS1'
                  ig_data = ls_customzing_activity ).
 
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~get_deserialize_order.
-    RETURN.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~map_filename_to_object.
-    RETURN.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~map_object_to_filename.
-    RETURN.
   ENDMETHOD.
 ENDCLASS.

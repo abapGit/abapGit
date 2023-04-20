@@ -193,30 +193,20 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
 
   METHOD corr_insert.
 
+    DATA lv_obj_name TYPE tadir-obj_name.
+
     " You are reminded that SUDM - Data Model has no part objects e.g. no LIMU
     " Therefore global lock is always appropriate
 
     " You are reminded that the main language (in TADIR) is taken from MV_LANGUAGE.
+    lv_obj_name = ms_object_type.
 
-    CALL FUNCTION 'RS_CORR_INSERT'
-      EXPORTING
-        object              = ms_object_type
-        object_class        = c_transport_object_class
-        devclass            = iv_package
-        master_language     = mv_language
-        mode                = 'I'
-        global_lock         = abap_true
-        suppress_dialog     = abap_true
-      EXCEPTIONS
-        cancelled           = 1
-        permission_failure  = 2
-        unknown_objectclass = 3
-        OTHERS              = 4.
-    IF sy-subrc = 1.
-      zcx_abapgit_exception=>raise( 'Cancelled' ).
-    ELSEIF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
+    zcl_abapgit_factory=>get_cts_api( )->insert_transport_object(
+      iv_object   = c_transport_object_class
+      iv_obj_name = lv_obj_name
+      iv_package  = iv_package
+      iv_language = mv_language ).
+
   ENDMETHOD.
 
 
@@ -682,6 +672,11 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
@@ -742,6 +737,16 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~serialize.
 
     IF zif_abapgit_object~exists( ) = abap_false.
@@ -753,17 +758,5 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
     serialize_short_texts( io_xml ).
     serialize_long_texts( io_xml ).
 
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~get_deserialize_order.
-    RETURN.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~map_filename_to_object.
-    RETURN.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~map_object_to_filename.
-    RETURN.
   ENDMETHOD.
 ENDCLASS.
