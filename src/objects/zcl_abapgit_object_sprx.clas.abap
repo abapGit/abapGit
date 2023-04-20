@@ -271,12 +271,7 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'SPRX: Error from DELETE_SINGLE_PROXY' ).
     ENDIF.
 
-*    zcl_abapgit_factory=>get_cts_api( )->insert_transport_object(
-*      iv_object   = ms_item-obj_type
-*      iv_obj_name = ms_item-obj_name
-*      iv_package  = iv_package
-*      iv_language = mv_language
-*      iv_mode     = zif_abapgit_cts_api=>c_transport_mode-delete ).
+    corr_insert( iv_package ).
 
   ENDMETHOD.
 
