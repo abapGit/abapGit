@@ -148,6 +148,11 @@ CLASS zcl_abapgit_object_acid IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
@@ -175,6 +180,16 @@ CLASS zcl_abapgit_object_acid IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~serialize.
 
     DATA: lo_aab         TYPE REF TO cl_aab_id,
@@ -194,17 +209,5 @@ CLASS zcl_abapgit_object_acid IMPLEMENTATION.
     io_xml->add( iv_name = 'DESCRIPTION'
                  ig_data = lv_description ).
 
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~get_deserialize_order.
-    RETURN.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~map_filename_to_object.
-    RETURN.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~map_object_to_filename.
-    RETURN.
   ENDMETHOD.
 ENDCLASS.

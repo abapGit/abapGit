@@ -611,6 +611,11 @@ CLASS zcl_abapgit_object_fdt0 IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
@@ -690,6 +695,16 @@ CLASS zcl_abapgit_object_fdt0 IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~serialize.
 
     DATA lo_dexc TYPE REF TO if_fdt_data_exchange.
@@ -723,17 +738,5 @@ CLASS zcl_abapgit_object_fdt0 IMPLEMENTATION.
         zcx_abapgit_exception=>raise_with_text( lx_fdt_input ).
     ENDTRY.
 
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~get_deserialize_order.
-    RETURN.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~map_filename_to_object.
-    RETURN.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~map_object_to_filename.
-    RETURN.
   ENDMETHOD.
 ENDCLASS.

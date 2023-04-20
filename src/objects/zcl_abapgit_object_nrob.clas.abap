@@ -206,6 +206,11 @@ CLASS zcl_abapgit_object_nrob IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
   ENDMETHOD.
@@ -255,6 +260,16 @@ CLASS zcl_abapgit_object_nrob IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~serialize.
 
     DATA: lv_object     TYPE tnro-object,
@@ -285,17 +300,5 @@ CLASS zcl_abapgit_object_nrob IMPLEMENTATION.
     io_xml->add( iv_name = 'TEXT'
                  ig_data = ls_text ).
 
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~get_deserialize_order.
-    RETURN.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~map_filename_to_object.
-    RETURN.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~map_object_to_filename.
-    RETURN.
   ENDMETHOD.
 ENDCLASS.
