@@ -179,7 +179,7 @@ CLASS zcl_abapgit_gui_jumper IMPLEMENTATION.
     " 1) ADT Jump
     rv_exit = zif_abapgit_gui_jumper~jump_adt(
       is_item         = is_item
-      iv_sub_obj_name = iv_sub_obj_name
+      iv_sub_obj_name = is_sub_item-obj_name
       iv_line_number  = iv_line_number ).
 
     IF rv_exit = abap_true.
@@ -189,8 +189,8 @@ CLASS zcl_abapgit_gui_jumper IMPLEMENTATION.
     " 2) WB Jump with Line Number
     rv_exit = jump_wb_line(
       is_item         = is_item
-      iv_sub_obj_name = iv_sub_obj_name
-      iv_sub_obj_type = iv_sub_obj_type
+      iv_sub_obj_name = is_sub_item-obj_name
+      iv_sub_obj_type = is_sub_item-obj_type
       iv_line_number  = iv_line_number
       iv_new_window   = iv_new_window ).
 
@@ -218,6 +218,52 @@ CLASS zcl_abapgit_gui_jumper IMPLEMENTATION.
     rv_exit = jump_bw(
       is_item       = is_item
       iv_new_window = iv_new_window ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_jumper~jump_abapgit.
+
+    DATA lt_spagpa        TYPE STANDARD TABLE OF rfc_spagpa.
+    DATA ls_spagpa        LIKE LINE OF lt_spagpa.
+    DATA lv_save_sy_langu TYPE sy-langu.
+    DATA lv_subrc         TYPE syst-subrc.
+    DATA lv_tcode         TYPE tcode.
+
+    " https://blogs.sap.com/2017/01/13/logon-language-sy-langu-and-rfc/
+
+    lv_tcode = zcl_abapgit_services_abapgit=>get_abapgit_tcode( ).
+
+    lv_save_sy_langu = sy-langu.
+    SET LOCALE LANGUAGE iv_language.
+
+    ls_spagpa-parid  = zif_abapgit_definitions=>c_spagpa_param_repo_key.
+    ls_spagpa-parval = iv_key.
+    INSERT ls_spagpa INTO TABLE lt_spagpa.
+
+    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
+      DESTINATION 'NONE'
+      STARTING NEW TASK 'ABAPGIT'
+      EXPORTING
+        tcode                   = lv_tcode
+      TABLES
+        spagpa_tab              = lt_spagpa
+      EXCEPTIONS
+        call_transaction_denied = 1
+        tcode_invalid           = 2
+        communication_failure   = 3
+        system_failure          = 4
+        OTHERS                  = 5.
+
+    lv_subrc = sy-subrc.
+
+    SET LOCALE LANGUAGE lv_save_sy_langu.
+
+    IF lv_subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from ABAP4_CALL_TRANSACTION. Subrc = { lv_subrc }| ).
+    ENDIF.
+
+    MESSAGE 'Repository opened in a new window' TYPE 'S'.
 
   ENDMETHOD.
 
@@ -281,51 +327,6 @@ CLASS zcl_abapgit_gui_jumper IMPLEMENTATION.
       WHEN 3 OR 4.
         zcx_abapgit_exception=>raise( |Batch input error for transaction { iv_tcode }| ).
     ENDCASE.
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_gui_jumper~jump_abapgit.
-
-    DATA lt_spagpa        TYPE STANDARD TABLE OF rfc_spagpa.
-    DATA ls_spagpa        LIKE LINE OF lt_spagpa.
-    DATA lv_save_sy_langu TYPE sy-langu.
-    DATA lv_subrc         TYPE syst-subrc.
-    DATA lv_tcode         TYPE tcode.
-
-    " https://blogs.sap.com/2017/01/13/logon-language-sy-langu-and-rfc/
-
-    lv_tcode = zcl_abapgit_services_abapgit=>get_abapgit_tcode( ).
-
-    lv_save_sy_langu = sy-langu.
-    SET LOCALE LANGUAGE iv_language.
-
-    ls_spagpa-parid  = zif_abapgit_definitions=>c_spagpa_param_repo_key.
-    ls_spagpa-parval = iv_key.
-    INSERT ls_spagpa INTO TABLE lt_spagpa.
-
-    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
-      DESTINATION 'NONE'
-      STARTING NEW TASK 'ABAPGIT'
-      EXPORTING
-        tcode                   = lv_tcode
-      TABLES
-        spagpa_tab              = lt_spagpa
-      EXCEPTIONS
-        call_transaction_denied = 1
-        tcode_invalid           = 2
-        communication_failure   = 3
-        system_failure          = 4
-        OTHERS                  = 5.
-
-    lv_subrc = sy-subrc.
-
-    SET LOCALE LANGUAGE lv_save_sy_langu.
-
-    IF lv_subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from ABAP4_CALL_TRANSACTION. Subrc = { lv_subrc }| ).
-    ENDIF.
-
-    MESSAGE 'Repository opened in a new window' TYPE 'S'.
 
   ENDMETHOD.
 ENDCLASS.

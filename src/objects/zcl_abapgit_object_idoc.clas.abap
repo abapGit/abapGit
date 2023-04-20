@@ -21,7 +21,7 @@ CLASS zcl_abapgit_object_idoc DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     CLASS-METHODS clear_idoc_segement_field
       IMPORTING iv_fieldname TYPE csequence
-      CHANGING cg_structure TYPE any.
+      CHANGING  cg_structure TYPE any.
 
 ENDCLASS.
 
@@ -247,5 +247,17 @@ CLASS zcl_abapgit_object_idoc IMPLEMENTATION.
     io_xml->add( iv_name = 'IDOC'
                  ig_data = ls_idoc ).
 
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+    RETURN.
   ENDMETHOD.
 ENDCLASS.

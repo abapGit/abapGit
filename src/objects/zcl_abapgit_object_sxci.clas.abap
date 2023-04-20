@@ -274,4 +274,16 @@ CLASS zcl_abapgit_object_sxci IMPLEMENTATION.
                  ig_data = ls_classic_badi_implementation ).
 
   ENDMETHOD.
+
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+    RETURN.
+  ENDMETHOD.
 ENDCLASS.
