@@ -90,7 +90,7 @@ CLASS zcl_abapgit_convert DEFINITION
 
     CLASS-METHODS xstring_remove_bom
       IMPORTING
-        iv_xstr        TYPE xstring
+        iv_xstr        TYPE xsequence
       RETURNING
         VALUE(rv_xstr) TYPE xstring.
 ENDCLASS.
