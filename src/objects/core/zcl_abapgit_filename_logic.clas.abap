@@ -52,9 +52,7 @@ CLASS zcl_abapgit_filename_logic DEFINITION
         !iv_ext            TYPE string
         !iv_extra          TYPE clike OPTIONAL
       RETURNING
-        VALUE(rv_filename) TYPE string
-      RAISING
-        zcx_abapgit_exception.
+        VALUE(rv_filename) TYPE string.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -273,11 +271,14 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
     ENDIF.
 
     " Get mapping specific to object type
-    map_object_to_filename(
-      EXPORTING
-        is_item     = is_item
-      CHANGING
-        cv_filename = rv_filename ).
+    TRY.
+        map_object_to_filename(
+          EXPORTING
+            is_item     = is_item
+          CHANGING
+            cv_filename = rv_filename ).
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
+    ENDTRY.
 
     " Handle namespaces
     CREATE OBJECT go_aff_registry TYPE zcl_abapgit_aff_registry.
