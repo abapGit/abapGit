@@ -80,6 +80,8 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
+    unlock( lv_paramid ).
+
     zcl_abapgit_factory=>get_cts_api( )->insert_transport_object(
       iv_object   = 'PARA'
       iv_obj_name = lv_paramid
@@ -95,8 +97,6 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
         object    = lv_paramid
         operation = 'DELETE'
         type      = 'CR'.
-
-    unlock( lv_paramid ).
 
   ENDMETHOD.
 
