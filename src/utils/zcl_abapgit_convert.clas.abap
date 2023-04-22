@@ -256,7 +256,6 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
     " cl_abap_conv_in_ce does not handle BOM in non-Unicode systems, so we remove it
     IF cl_abap_char_utilities=>charsize = 1 AND xstrlen( rv_xstr ) > 3
       AND rv_xstr(3) = cl_abap_char_utilities=>byte_order_mark_utf8.
-      
       rv_xstr = rv_xstr+3.
       
     ENDIF.
