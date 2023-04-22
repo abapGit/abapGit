@@ -13,7 +13,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
+CLASS zcl_abapgit_object_para IMPLEMENTATION.
 
 
   METHOD unlock.
@@ -184,6 +184,11 @@ CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
   ENDMETHOD.
@@ -215,6 +220,16 @@ CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
 
   METHOD zif_abapgit_object~jump.
     " Covered by ZCL_ABAPGIT_OBJECTS=>JUMP
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+    RETURN.
   ENDMETHOD.
 
 

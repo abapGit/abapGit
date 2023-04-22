@@ -12,15 +12,15 @@ CLASS zcl_abapgit_object_saxx_super DEFINITION
   PROTECTED SECTION.
 
     METHODS get_persistence_class_name
-          ABSTRACT
+      ABSTRACT
       RETURNING
         VALUE(rv_persistence_class_name) TYPE seoclsname .
     METHODS get_data_class_name
-          ABSTRACT
+      ABSTRACT
       RETURNING
         VALUE(rv_data_class_name) TYPE seoclsname .
     METHODS get_data_structure_name
-          ABSTRACT
+      ABSTRACT
       RETURNING
         VALUE(rv_data_structure_name) TYPE string .
 
@@ -307,6 +307,11 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
@@ -331,6 +336,16 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
 
   METHOD zif_abapgit_object~jump.
     " Covered by ZCL_ABAPGIT_OBJECTS=>JUMP
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+    RETURN.
   ENDMETHOD.
 
 

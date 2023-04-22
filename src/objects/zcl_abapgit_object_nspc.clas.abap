@@ -46,7 +46,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_NSPC IMPLEMENTATION.
+CLASS zcl_abapgit_object_nspc IMPLEMENTATION.
 
 
   METHOD add_to_transport.
@@ -260,6 +260,11 @@ CLASS ZCL_ABAPGIT_OBJECT_NSPC IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
@@ -309,11 +314,21 @@ CLASS ZCL_ABAPGIT_OBJECT_NSPC IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~serialize.
 
     DATA:
-      ls_nspc       TYPE ty_nspc,
-      ls_nspc_text  TYPE ty_nspc_text.
+      ls_nspc      TYPE ty_nspc,
+      ls_nspc_text TYPE ty_nspc_text.
 
     SELECT SINGLE * FROM trnspacet INTO CORRESPONDING FIELDS OF ls_nspc
       WHERE namespace = ms_item-obj_name.

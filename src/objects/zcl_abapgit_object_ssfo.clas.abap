@@ -302,6 +302,11 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
@@ -393,17 +398,27 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~serialize.
 * see function module FB_DOWNLOAD_FORM
 
-    DATA: lo_sf                  TYPE REF TO cl_ssf_fb_smart_form,
-          lv_name                TYPE string,
-          li_node                TYPE REF TO if_ixml_node,
-          li_element             TYPE REF TO if_ixml_element,
-          li_iterator            TYPE REF TO if_ixml_node_iterator,
-          lv_formname            TYPE tdsfname,
-          li_ixml                TYPE REF TO if_ixml,
-          li_xml_doc             TYPE REF TO if_ixml_document.
+    DATA: lo_sf       TYPE REF TO cl_ssf_fb_smart_form,
+          lv_name     TYPE string,
+          li_node     TYPE REF TO if_ixml_node,
+          li_element  TYPE REF TO if_ixml_element,
+          li_iterator TYPE REF TO if_ixml_node_iterator,
+          lv_formname TYPE tdsfname,
+          li_ixml     TYPE REF TO if_ixml,
+          li_xml_doc  TYPE REF TO if_ixml_document.
 
     li_ixml = cl_ixml=>create( ).
     li_xml_doc = li_ixml->create_document( ).

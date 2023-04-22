@@ -172,6 +172,11 @@ CLASS zcl_abapgit_objects_bridge IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_deserialize_steps.
 
     DATA ls_meta TYPE ty_metadata.
@@ -221,6 +226,16 @@ CLASS zcl_abapgit_objects_bridge IMPLEMENTATION.
     CALL METHOD mo_plugin->('ZIF_ABAPGITP_PLUGIN~JUMP').
     rv_exit = abap_true.
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+    RETURN.
   ENDMETHOD.
 
 

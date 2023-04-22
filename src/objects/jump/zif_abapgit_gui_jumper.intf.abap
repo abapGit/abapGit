@@ -7,8 +7,7 @@ INTERFACE zif_abapgit_gui_jumper
   METHODS jump
     IMPORTING
       !is_item         TYPE zif_abapgit_definitions=>ty_item
-      !iv_sub_obj_name TYPE zif_abapgit_definitions=>ty_item-obj_name OPTIONAL
-      !iv_sub_obj_type TYPE zif_abapgit_definitions=>ty_item-obj_type OPTIONAL
+      !is_sub_item     TYPE zif_abapgit_definitions=>ty_item OPTIONAL
       !iv_line_number  TYPE i OPTIONAL
       !iv_new_window   TYPE abap_bool DEFAULT abap_true
     RETURNING
@@ -31,6 +30,13 @@ INTERFACE zif_abapgit_gui_jumper
       !iv_tcode      TYPE sy-tcode
       !it_bdcdata    TYPE ty_bdcdata_tt
       !iv_new_window TYPE abap_bool DEFAULT abap_true
+    RAISING
+      zcx_abapgit_exception.
+
+  METHODS jump_abapgit
+    IMPORTING
+      !iv_language TYPE spras
+      !iv_key      TYPE zif_abapgit_persistence=>ty_value
     RAISING
       zcx_abapgit_exception.
 
