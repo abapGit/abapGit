@@ -170,6 +170,7 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
 
     lv_del_concname = ls_enqueue-objname.
     lv_del_concname+16 = ls_enqueue-secname.
+
     CALL FUNCTION 'DD_OBJ_DEL'
       EXPORTING
         object_name = lv_del_concname
@@ -200,6 +201,7 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
     ENDIF.
 
     ls_e071-object = ls_enqueue-objtype.
+
     CALL FUNCTION 'RS_DELETE_FROM_WORKING_AREA'
       EXPORTING
         object                 = ls_e071-object
@@ -208,8 +210,8 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
         actualize_working_area = 'X'.
 
     xinx_delete_docu(
-        iv_objname = mv_name
-        iv_id      = mv_id ).
+      iv_objname = mv_name
+      iv_id      = mv_id ).
 
     CALL FUNCTION 'RS_TREE_OBJECT_PLACEMENT'
       EXPORTING

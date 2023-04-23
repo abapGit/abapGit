@@ -369,6 +369,29 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_cts_api~insert_transport_object.
+
+    CALL FUNCTION 'RS_CORR_INSERT'
+      EXPORTING
+        object              = iv_obj_name
+        object_class        = iv_object
+        devclass            = iv_package
+        master_language     = iv_language
+        mode                = iv_mode
+        global_lock         = abap_true
+        suppress_dialog     = abap_true
+      EXCEPTIONS
+        cancelled           = 1
+        permission_failure  = 2
+        unknown_objectclass = 3
+        OTHERS              = 4.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_cts_api~is_chrec_possible_for_package.
     IF iv_package IS NOT INITIAL.
       rv_possible = zcl_abapgit_factory=>get_sap_package( iv_package )->are_changes_recorded_in_tr_req( ).
