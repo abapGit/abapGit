@@ -129,7 +129,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_serialize IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
 
   METHOD add_apack.
@@ -639,12 +639,15 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
           li_progress TYPE REF TO zif_abapgit_progress,
           li_exit     TYPE REF TO zif_abapgit_exit,
           lo_timer    TYPE REF TO zcl_abapgit_timer,
+          lo_i18n_man TYPE REF TO zcl_abapgit_i18n_manager,
+          lt_po_files TYPE zif_abapgit_i18n_file=>ty_table_of,
           lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
 
 
     CLEAR mt_files.
+    CREATE OBJECT lo_i18n_man.
 
     lv_max = determine_max_threads( iv_force_sequential ).
     mv_free = lv_max.
@@ -681,7 +684,19 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
           iv_task  = |{ sy-tabix }| ).
         WAIT UNTIL mv_free > 0 UP TO 120 SECONDS.
       ENDIF.
+
+      lo_i18n_man->add_object(
+        iv_object_type = <ls_tadir>-object
+        iv_object_name = <ls_tadir>-obj_name ).
+
     ENDLOOP.
+
+    IF ms_i18n_params-main_language_only = abap_false AND
+       ms_i18n_params-use_lxe = abap_true AND
+       ms_i18n_params-translation_languages IS NOT INITIAL.
+      " Intentionally started before the last threads finish
+      lt_po_files = lo_i18n_man->build_po_files( ms_i18n_params ).
+    ENDIF.
 
     li_progress->off( ).
 

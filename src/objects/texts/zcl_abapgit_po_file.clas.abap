@@ -24,6 +24,12 @@ CLASS zcl_abapgit_po_file DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    METHODS union_with
+      IMPORTING
+        io_po TYPE REF TO zcl_abapgit_po_file
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -277,6 +283,28 @@ CLASS ZCL_ABAPGIT_PO_FILE IMPLEMENTATION.
       sub  = '"'
       with = '\"'
       occ  = 0 ) && '"'.
+  ENDMETHOD.
+
+
+  METHOD union_with.
+
+    FIELD-SYMBOLS <ls_in> LIKE LINE OF mt_pairs.
+    FIELD-SYMBOLS <ls_out> LIKE LINE OF mt_pairs.
+
+    ASSERT mv_lang = io_po->mv_lang.
+
+    LOOP AT io_po->mt_pairs ASSIGNING <ls_in>.
+
+      READ TABLE mt_pairs ASSIGNING <ls_out> WITH KEY source = <ls_in>-source.
+      IF sy-subrc = 0.
+        APPEND LINES OF <ls_in>-comments TO <ls_out>-comments.
+      ELSE.
+        INSERT <ls_in> INTO TABLE mt_pairs.
+        ASSERT sy-subrc = 0.
+      ENDIF.
+
+    ENDLOOP.
+
   ENDMETHOD.
 
 
