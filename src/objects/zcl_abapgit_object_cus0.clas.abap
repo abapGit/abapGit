@@ -79,23 +79,7 @@ CLASS zcl_abapgit_object_cus0 IMPLEMENTATION.
         i_description = ls_text
         i_tcode       = ls_img_activity-header-tcode.
 
-    CALL FUNCTION 'RS_CORR_INSERT'
-      EXPORTING
-        object              = ms_item-obj_name
-        object_class        = ms_item-obj_type
-        mode                = 'I'
-        global_lock         = abap_true
-        devclass            = iv_package
-        master_language     = mv_language
-        suppress_dialog     = abap_true
-      EXCEPTIONS
-        cancelled           = 1
-        permission_failure  = 2
-        unknown_objectclass = 3
-        OTHERS              = 4.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
+    corr_insert( iv_package ).
 
   ENDMETHOD.
 

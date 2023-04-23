@@ -79,37 +79,24 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'PARA: Parameter is still used' ).
       ENDIF.
     ENDIF.
-    CALL FUNCTION 'RS_CORR_INSERT'
-      EXPORTING
-        global_lock         = abap_true
-        object              = lv_paramid
-        object_class        = 'PARA'
-        mode                = 'D'
-        suppress_dialog     = abap_true
-      IMPORTING
-        transport_key       = ls_transpkey
-      EXCEPTIONS
-        cancelled           = 01
-        permission_failure  = 02
-        unknown_objectclass = 03.
-
-    IF sy-subrc = 0.
-      DELETE FROM tpara WHERE paramid = lv_paramid.
-      DELETE FROM tparat WHERE paramid = lv_paramid.
-
-      IF sy-subrc = 0.
-        CALL FUNCTION 'RS_TREE_OBJECT_PLACEMENT'
-          EXPORTING
-            object    = lv_paramid
-            operation = 'DELETE'
-            type      = 'CR'.
-      ENDIF.
-    ELSE.
-      unlock( lv_paramid ).
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
 
     unlock( lv_paramid ).
+
+    zcl_abapgit_factory=>get_cts_api( )->insert_transport_object(
+      iv_object   = 'PARA'
+      iv_obj_name = lv_paramid
+      iv_package  = iv_package
+      iv_language = mv_language
+      iv_mode     = zif_abapgit_cts_api=>c_transport_mode-delete ).
+
+    DELETE FROM tpara WHERE paramid = lv_paramid.
+    DELETE FROM tparat WHERE paramid = lv_paramid.
+
+    CALL FUNCTION 'RS_TREE_OBJECT_PLACEMENT'
+      EXPORTING
+        object    = lv_paramid
+        operation = 'DELETE'
+        type      = 'CR'.
 
   ENDMETHOD.
 
