@@ -297,8 +297,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
   METHOD zif_abapgit_object~delete.
     DATA: ls_t100a          TYPE t100a,
           lv_frozen         TYPE abap_bool,
-          lv_message_id     TYPE arbgb,
-          lv_access_granted TYPE abap_bool.
+          lv_message_id     TYPE arbgb.
 
 * parameter SUPPRESS_DIALOG doesnt exist in all versions of FM RS_DELETE_MESSAGE_ID
 * replaced with a copy
@@ -329,31 +328,16 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    lv_access_granted = abap_true.
-
-    CALL FUNCTION 'RS_CORR_INSERT'
-      EXPORTING
-        global_lock        = 'X'
-        object             = lv_message_id
-        object_class       = 'MSAG'
-        mode               = 'D'
-        suppress_dialog    = abap_true
-      EXCEPTIONS
-        cancelled          = 01
-        permission_failure = 02.
-
-    IF sy-subrc <> 0.
-      IF lv_access_granted = abap_true.
-        free_access_permission( lv_message_id ).
-      ENDIF.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
+    zcl_abapgit_factory=>get_cts_api( )->insert_transport_object(
+      iv_object   = 'MSAG'
+      iv_obj_name = lv_message_id
+      iv_package  = iv_package
+      iv_language = mv_language
+      iv_mode     = zif_abapgit_cts_api=>c_transport_mode-delete ).
 
     delete_msgid( lv_message_id ).
 
-    IF lv_access_granted = abap_true.
-      free_access_permission( lv_message_id ).
-    ENDIF.
+    free_access_permission( lv_message_id ).
 
   ENDMETHOD.
 
