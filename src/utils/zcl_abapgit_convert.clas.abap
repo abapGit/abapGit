@@ -87,6 +87,12 @@ CLASS zcl_abapgit_convert DEFINITION
 
     CLASS-DATA go_convert_out TYPE REF TO cl_abap_conv_out_ce .
     CLASS-DATA go_convert_in TYPE REF TO cl_abap_conv_in_ce .
+
+    CLASS-METHODS xstring_remove_bom
+      IMPORTING
+        iv_xstr        TYPE xsequence
+      RETURNING
+        VALUE(rv_xstr) TYPE xstring.
 ENDCLASS.
 
 
@@ -243,6 +249,21 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD xstring_remove_bom.
+
+    rv_xstr = iv_xstr.
+
+    " cl_abap_conv_in_ce does not handle BOM in non-Unicode systems, so we remove it
+    IF cl_abap_char_utilities=>charsize = 1 AND xstrlen( rv_xstr ) > 3
+        AND rv_xstr(3) = cl_abap_char_utilities=>byte_order_mark_utf8.
+
+      rv_xstr = rv_xstr+3.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD xstring_to_bintab.
 
     DATA lv_length TYPE i.
@@ -280,11 +301,15 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
   METHOD xstring_to_string_utf8.
 
     DATA lx_error  TYPE REF TO cx_root.
+    DATA lv_data TYPE xstring.
     DATA lv_length TYPE i.
+
+    " Remove BOM for non-Unicode systems
+    lv_data = xstring_remove_bom( iv_data ).
 
     lv_length = iv_length.
     IF lv_length <= 0.
-      lv_length = xstrlen( iv_data ).
+      lv_length = xstrlen( lv_data ).
     ENDIF.
 
     TRY.
@@ -294,7 +319,7 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
 
         go_convert_in->convert(
           EXPORTING
-            input = iv_data
+            input = lv_data
             n     = lv_length
           IMPORTING
             data  = rv_string ).
