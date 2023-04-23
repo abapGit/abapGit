@@ -25,7 +25,7 @@ CLASS zcl_abapgit_objects_bridge DEFINITION PUBLIC FINAL CREATE PUBLIC INHERITIN
       END OF ty_metadata .
 
     TYPES: BEGIN OF ty_s_objtype_map,
-             obj_typ      TYPE trobjtype,
+             obj_typ      TYPE tadir-object,
              plugin_class TYPE seoclsname,
            END OF ty_s_objtype_map,
            ty_t_objtype_map TYPE SORTED TABLE OF ty_s_objtype_map WITH UNIQUE KEY obj_typ.
@@ -44,7 +44,7 @@ CLASS zcl_abapgit_objects_bridge IMPLEMENTATION.
     DATA lt_plugin_class    TYPE STANDARD TABLE OF seoclsname WITH DEFAULT KEY.
     DATA lv_plugin_class    LIKE LINE OF lt_plugin_class.
     DATA lo_plugin          TYPE REF TO object.
-    DATA lt_plugin_obj_type TYPE objtyptable.
+    DATA lt_plugin_obj_type TYPE STANDARD TABLE OF tadir-object WITH DEFAULT KEY.
     DATA ls_objtype_map     LIKE LINE OF gt_objtype_map.
 
 
