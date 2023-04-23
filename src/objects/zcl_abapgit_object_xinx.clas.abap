@@ -139,6 +139,21 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
 
     ls_enqueue-objname = mv_name.
     ls_enqueue-secname = mv_id.
+    CALL FUNCTION 'RS_CORR_INSERT'
+      EXPORTING
+        object        = ls_enqueue
+        object_class  = 'DICT'
+        mode          = 'DELETE'
+      IMPORTING
+        transport_key = ls_transp_key
+      EXCEPTIONS
+        OTHERS        = 1.
+
+    IF sy-subrc <> 0.
+      " & was not deleted (correction entry not possible or canceled)
+      MESSAGE s015(e2) WITH lv_concname INTO zcx_abapgit_exception=>null.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
 
     CALL FUNCTION 'DD_LOGNPROT_NAME_GET'
       EXPORTING
@@ -184,13 +199,6 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
       MESSAGE i008(e2) WITH 'DD_DD_TO_E071' 'RS_DD_INDX_DELETE' INTO zcx_abapgit_exception=>null.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
-
-    zcl_abapgit_factory=>get_cts_api( )->insert_transport_object(
-      iv_object   = 'DICT'
-      iv_obj_name = ls_e071-obj_name
-      iv_package  = iv_package
-      iv_language = mv_language
-      iv_mode     = zif_abapgit_cts_api=>c_transport_mode-delete ).
 
     ls_e071-object = ls_enqueue-objtype.
 
