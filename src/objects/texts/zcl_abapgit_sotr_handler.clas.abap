@@ -177,6 +177,9 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
                                   iv_object   = iv_object
                                   iv_obj_name = iv_obj_name ).
 
+    " Remove any usage to ensure deletion, see function module BTFR_CHECK
+    DELETE sotr_use FROM TABLE lt_sotr_use ##SUBRC_OK.
+
     LOOP AT lt_sotr_use ASSIGNING <ls_sotr_use> WHERE concept IS NOT INITIAL.
 
       CALL FUNCTION 'SOTR_DELETE_CONCEPT'
