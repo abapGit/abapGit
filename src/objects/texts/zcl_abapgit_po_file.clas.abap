@@ -357,13 +357,17 @@ CLASS ZCL_ABAPGIT_PO_FILE IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_lxe> LIKE LINE OF ct_text_pairs.
     FIELD-SYMBOLS <ls_tr> LIKE LINE OF mt_pairs.
+    DATA lv_idx TYPE i.
 
     LOOP AT ct_text_pairs ASSIGNING <ls_lxe>.
       CHECK <ls_lxe>-s_text IS NOT INITIAL.
+      lv_idx = sy-tabix.
 
       READ TABLE mt_pairs ASSIGNING <ls_tr> WITH KEY source = <ls_lxe>-s_text.
-      IF sy-subrc = 0.
+      IF sy-subrc = 0 AND <ls_tr>-target IS NOT INITIAL.
         <ls_lxe>-t_text = <ls_tr>-target.
+      ELSE.
+        DELETE ct_text_pairs INDEX lv_idx. " Otherwise error in LXE FMs for empty translation
       ENDIF.
     ENDLOOP.
 
