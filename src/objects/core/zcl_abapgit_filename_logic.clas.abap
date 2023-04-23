@@ -52,7 +52,7 @@ CLASS zcl_abapgit_filename_logic DEFINITION
         !iv_ext            TYPE string
         !iv_extra          TYPE clike OPTIONAL
       RETURNING
-        VALUE(rv_filename) TYPE string.
+        VALUE(rv_filename) TYPE string .
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -185,9 +185,10 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
 
     DATA lv_class TYPE seoclsname.
 
-    IF zcl_abapgit_objects=>is_type_supported( cs_item-obj_type ) = abap_false.
-      RETURN.
-    ENDIF.
+    " TODO: Add check for supported object types to avoid calls to non-existing classes
+    " zcl_abapgit_objects=>is_type_supported( is_item-obj_type )
+    " This will trigger class constructor of zcl_abapgit_objects_bridge reading table seometarel
+    " which is currently not supported by abaplint test runner
 
     TRY.
         lv_class = 'ZCL_ABAPGIT_OBJECT_' && cs_item-obj_type.
@@ -200,8 +201,7 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
             iv_package  = iv_package
           CHANGING
             cs_item     = cs_item.
-      CATCH cx_sy_dyn_call_illegal_class.
-        zcx_abapgit_exception=>raise( |Class { lv_class } not found| ).
+      CATCH cx_sy_dyn_call_illegal_class ##NO_HANDLER.
     ENDTRY.
 
   ENDMETHOD.
@@ -211,9 +211,10 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
 
     DATA lv_class TYPE seoclsname.
 
-    IF zcl_abapgit_objects=>is_type_supported( is_item-obj_type ) = abap_false.
-      RETURN.
-    ENDIF.
+    " TODO: Add check for supported object types to avoid calls to non-existing classes
+    " zcl_abapgit_objects=>is_type_supported( is_item-obj_type )
+    " This will trigger class constructor of zcl_abapgit_objects_bridge reading table seometarel
+    " which is currently not supported by abaplint test runner
 
     TRY.
         lv_class = 'ZCL_ABAPGIT_OBJECT_' && is_item-obj_type.
@@ -223,8 +224,7 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
             is_item     = is_item
           CHANGING
             cv_filename = cv_filename.
-      CATCH cx_sy_dyn_call_illegal_class.
-        zcx_abapgit_exception=>raise( |Class { lv_class } not found| ).
+      CATCH cx_sy_dyn_call_illegal_class ##NO_HANDLER.
     ENDTRY.
 
   ENDMETHOD.
