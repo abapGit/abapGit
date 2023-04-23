@@ -641,6 +641,8 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
           lo_timer    TYPE REF TO zcl_abapgit_timer,
           lo_i18n_man TYPE REF TO zcl_abapgit_i18n_manager,
           lt_po_files TYPE zif_abapgit_i18n_file=>ty_table_of,
+          li_po       LIKE LINE OF lt_po_files,
+          ls_file     LIKE LINE OF rt_files,
           lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
@@ -703,6 +705,14 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
     WAIT UNTIL mv_free = lv_max UP TO 120 SECONDS.
     rt_files = mt_files.
     FREE mt_files.
+
+    LOOP AT lt_po_files INTO li_po.
+      ls_file-file-path     = '/translations/'.
+      ls_file-file-filename = |i18n.{ li_po->lang( ) }.{ li_po->ext( ) }|.
+      ls_file-file-data     = li_po->render( ).
+      ls_file-file-sha1     = zcl_abapgit_hash=>sha1_blob( ls_file-file-data ).
+      APPEND ls_file TO rt_files.
+    ENDLOOP.
 
 *   Call postprocessing
     li_exit = zcl_abapgit_exit=>get_instance( ).

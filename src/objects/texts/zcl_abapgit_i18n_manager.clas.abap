@@ -108,7 +108,7 @@ CLASS ZCL_ABAPGIT_I18N_MANAGER IMPLEMENTATION.
     data mv_types type string.
     data mt_types type standard table of tadir-object.
 
-    mv_types = 'PROG CLAS INTF'.
+    mv_types = 'PROG CLAS INTF MSAG DOMA DTEL PARA TRAN TABL SHI3'.
     split mv_types at space into table mt_types.
     mt_supported_obj_types = mt_types.
 

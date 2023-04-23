@@ -367,10 +367,10 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lt_po_files = zcl_abapgit_factory=>get_lxe_texts( )->serialize_as_po(
-      iv_object_type = ms_item-obj_type
-      iv_object_name = ms_item-obj_name
-      is_i18n_params = ii_files->i18n_params( ) ).
+*    lt_po_files = zcl_abapgit_factory=>get_lxe_texts( )->serialize_as_po(
+*      iv_object_type = ms_item-obj_type
+*      iv_object_name = ms_item-obj_name
+*      is_i18n_params = ii_files->i18n_params( ) ).
 
     LOOP AT lt_po_files ASSIGNING <li_file>.
       ii_files->add_i18n_file( <li_file> ).
