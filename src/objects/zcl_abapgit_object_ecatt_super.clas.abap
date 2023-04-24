@@ -189,7 +189,8 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
     clear_element( EXPORTING iv_name     = |TADIR_RESP|
                    CHANGING  ci_document = ci_document ).
 
-    clear_element( EXPORTING iv_name     = |VAR_EXT_PATH|
+    " Clearing just VAR_EXT_PATH will lead to diffs in batch
+    clear_element( EXPORTING iv_name     = |ETVAR_EXT|
                    CHANGING  ci_document = ci_document ).
 
   ENDMETHOD.
