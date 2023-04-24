@@ -269,6 +269,10 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
       rv_ignored = abap_false.
     ENDIF.
 
+    IF iv_path = '/translations/'. " i18n
+      rv_ignored = abap_false.
+    ENDIF.
+
   ENDMETHOD.
 
 
