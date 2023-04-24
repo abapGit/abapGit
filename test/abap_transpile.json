@@ -95,6 +95,9 @@
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_calculate_status", "method": "deleted_remote", "note": "READ TABLE subrc 4 vs subrc 8"},
       {"object": "ZCL_ABAPGIT_FILE_STATUS", "class": "ltcl_calculate_status", "method": "complete", "note": "READ TABLE subrc 4 vs subrc 8"},
 
+      {"object": "ZCL_ABAPGIT_FILENAME_LOGIC", "class": "ltcl_run_checks", "method": "file_to_object_package", "note": "Depends on ZCL_ABAPGIT_OBJECT_DEVC, db access"},
+      {"object": "ZCL_ABAPGIT_FILENAME_LOGIC", "class": "ltcl_run_checks", "method": "object_to_file_package", "note": "Depends on ZCL_ABAPGIT_OBJECT_DEVC, db access"},
+
       {"object": "ZCL_ABAPGIT_PERSIST_PACKAGES", "class": "ltcl_packages", "method": "test_package", "note": "ZABAPGIT table not existing, error cx_sy_dynamic_osql_semantics"},
 
       {"object": "ZCL_ABAPGIT_REQUIREMENT_HELPER", "class": "ltcl_lower_release", "method": "empty_patch", "note": "Void type: CVERS_SDU"},
