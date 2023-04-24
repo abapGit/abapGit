@@ -9,17 +9,23 @@ class zcl_abapgit_i18n_manager definition
 
     methods add_object
       importing
-        !iv_object_type   type tadir-object
-        !iv_object_name   type tadir-obj_name.
+        iv_object_type   type tadir-object
+        iv_object_name   type tadir-obj_name.
 
     methods build_po_files
       importing
-        !is_i18n_params   type zif_abapgit_definitions=>ty_i18n_params
+        is_i18n_params     type zif_abapgit_definitions=>ty_i18n_params
       returning
         value(rt_po_files) type zif_abapgit_i18n_file=>ty_table_of
       raising
         zcx_abapgit_exception.
 
+    methods apply_translations
+      importing
+        is_i18n_params type zif_abapgit_definitions=>ty_i18n_params
+        it_po_files    type zif_abapgit_i18n_file=>ty_table_of
+      raising
+        zcx_abapgit_exception.
 
   protected section.
   private section.
@@ -43,6 +49,26 @@ CLASS ZCL_ABAPGIT_I18N_MANAGER IMPLEMENTATION.
       <ls_obj>-obj_type = iv_object_type.
       <ls_obj>-obj_name = iv_object_name.
     endif.
+
+  endmethod.
+
+
+  method apply_translations.
+
+    data li_lxe type ref to zif_abapgit_lxe_texts.
+    field-symbols <ls_obj> like line of mt_objects.
+
+    create object li_lxe type zcl_abapgit_lxe_texts.
+
+    loop at mt_objects assigning <ls_obj>.
+
+      li_lxe->deserialize_from_po(
+        iv_object_type = <ls_obj>-obj_type
+        iv_object_name = <ls_obj>-obj_name
+        is_i18n_params = is_i18n_params
+        it_po_files    = it_po_files ).
+
+    endloop.
 
   endmethod.
 

@@ -193,6 +193,17 @@ CLASS zcl_abapgit_objects DEFINITION
         VALUE(rs_i18n_params) TYPE zif_abapgit_definitions=>ty_i18n_params
       RAISING
         zcx_abapgit_exception.
+    CLASS-METHODS deserialize_i18n
+      IMPORTING
+        io_i18n_man TYPE REF TO zcl_abapgit_i18n_manager
+        is_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params
+        it_remote TYPE zif_abapgit_git_definitions=>ty_files_tt
+      CHANGING
+        ct_accessed_files TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
+      RAISING
+        zcx_abapgit_exception .
+
+
 ENDCLASS.
 
 
@@ -607,11 +618,14 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     DATA lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
     DATA ls_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params.
     DATA lo_timer TYPE REF TO zcl_abapgit_timer.
+    DATA lo_i18n_man TYPE REF TO zcl_abapgit_i18n_manager.
 
     FIELD-SYMBOLS: <ls_result>  TYPE zif_abapgit_definitions=>ty_result,
                    <lv_step_id> TYPE LINE OF zif_abapgit_definitions=>ty_deserialization_step_tt,
                    <ls_step>    TYPE LINE OF zif_abapgit_objects=>ty_step_data_tt,
                    <ls_deser>   TYPE LINE OF zif_abapgit_objects=>ty_deserialization_tt.
+
+    CREATE OBJECT lo_i18n_man.
 
     lt_steps = get_deserialize_steps( ).
 
@@ -747,6 +761,10 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
             <ls_deser>-package = lv_package.
           ENDLOOP.
 
+          lo_i18n_man->add_object(
+            iv_object_type = ls_item-obj_type
+            iv_object_name = ls_item-obj_name ).
+
           CLEAR: lv_path, lv_package.
 
         CATCH zcx_abapgit_exception INTO lx_exc.
@@ -774,6 +792,20 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           ct_files     = rt_accessed_files ).
     ENDLOOP.
 
+    IF ls_i18n_params-main_language_only = abap_false AND
+       ls_i18n_params-use_lxe = abap_true AND
+       ls_i18n_params-translation_languages IS NOT INITIAL.
+
+      deserialize_i18n(
+        EXPORTING
+          io_i18n_man    = lo_i18n_man
+          is_i18n_params = ls_i18n_params
+          it_remote      = lt_remote
+        CHANGING
+          ct_accessed_files = rt_accessed_files ).
+
+    ENDIF.
+
     update_package_tree( io_repo->get_package( ) ).
 
     SORT rt_accessed_files BY path ASCENDING filename ASCENDING.
@@ -789,6 +821,45 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
   METHOD deserialize_checks.
 
     rs_checks = zcl_abapgit_objects_check=>deserialize_checks( io_repo ).
+
+  ENDMETHOD.
+
+
+  METHOD deserialize_i18n.
+
+    FIELD-SYMBOLS <ls_file> LIKE LINE OF it_remote.
+    FIELD-SYMBOLS <ls_accessed> LIKE LINE OF ct_accessed_files.
+    DATA lv_lang TYPE laiso.
+    DATA lv_ext TYPE string.
+    DATA lo_po TYPE REF TO zcl_abapgit_po_file.
+    DATA lt_po_files type zif_abapgit_i18n_file=>ty_table_of.
+
+    LOOP AT it_remote ASSIGNING <ls_file> USING KEY file_path WHERE path = '/translations/'.
+
+      FIND FIRST OCCURRENCE OF REGEX 'i18n\.([^.]{2})\.([^.]+)$' IN <ls_file>-filename SUBMATCHES lv_lang lv_ext.
+      CHECK sy-subrc = 0.
+
+      CASE lv_ext.
+        WHEN 'po'.
+          CREATE OBJECT lo_po EXPORTING iv_lang = lv_lang.
+          lo_po->parse( <ls_file>-data ).
+          APPEND lo_po TO lt_po_files.
+        WHEN OTHERS.
+          CONTINUE. " Unsupported i18n file type
+      ENDCASE.
+
+      " Mark accessed
+      APPEND INITIAL LINE TO ct_accessed_files ASSIGNING <ls_accessed>.
+      <ls_accessed>-path     = <ls_file>-path.
+      <ls_accessed>-filename = <ls_file>-filename.
+
+    ENDLOOP.
+
+    IF lt_po_files IS NOT INITIAL.
+      io_i18n_man->apply_translations(
+        is_i18n_params = is_i18n_params
+        it_po_files    = lt_po_files ).
+    ENDIF.
 
   ENDMETHOD.
 
