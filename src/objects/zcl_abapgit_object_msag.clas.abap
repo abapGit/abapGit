@@ -74,13 +74,13 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
         suppress_enqueue               = space
         suppress_transport             = space
       EXCEPTIONS
-        header_without_text            = 01
-        index_without_header           = 02
-        no_authority_for_devclass_xxxx = 03
-        no_docu_found                  = 04
-        object_is_already_enqueued     = 05
-        object_is_enqueued_by_corr     = 06
-        user_break                     = 07.
+        header_without_text            = 1
+        index_without_header           = 2
+        no_authority_for_devclass_xxxx = 3
+        no_docu_found                  = 4
+        object_is_already_enqueued     = 5
+        object_is_enqueued_by_corr     = 6
+        user_break                     = 7.
 
   ENDMETHOD.
 
