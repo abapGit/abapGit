@@ -78,7 +78,7 @@ CLASS zcl_abapgit_object_scvi IMPLEMENTATION.
       EXPORTING
         scvariant = ls_screen_variant-shdsvci-scvariant
       EXCEPTIONS
-        OTHERS    = 01.
+        OTHERS    = 1.
     IF sy-subrc <> 0.
       MESSAGE e413(ms) WITH ls_screen_variant-shdsvci-scvariant INTO zcx_abapgit_exception=>null.
       zcx_abapgit_exception=>raise_t100( ).

@@ -77,7 +77,7 @@ CLASS zcl_abapgit_object_stvi IMPLEMENTATION.
       EXPORTING
         tcvariant = ls_transaction_variant-shdtvciu-tcvariant
       EXCEPTIONS
-        OTHERS    = 01.
+        OTHERS    = 1.
     IF sy-subrc <> 0.
       MESSAGE e413(ms) WITH ls_transaction_variant-shdtvciu-tcvariant INTO zcx_abapgit_exception=>null.
       zcx_abapgit_exception=>raise_t100( ).

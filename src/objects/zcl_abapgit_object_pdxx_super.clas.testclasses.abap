@@ -76,8 +76,8 @@ CLASS ltc_lock IMPLEMENTATION.
         _scope         = '2'
         _wait          = ' '
       EXCEPTIONS
-        foreign_lock   = 01
-        system_failure = 02.
+        foreign_lock   = 1
+        system_failure = 2.
 
     cl_abap_unit_assert=>assert_subrc( exp = 0
                                        act = sy-subrc ).
