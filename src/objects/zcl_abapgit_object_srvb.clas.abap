@@ -41,7 +41,7 @@ CLASS zcl_abapgit_object_srvb DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         VALUE(ro_object_data) TYPE REF TO if_wb_object_data_model
       RAISING
         zcx_abapgit_exception .
-    METHODS      is_ai_supported
+    METHODS is_ai_supported
       RETURNING VALUE(rv_ai_supported) TYPE abap_bool.
 
     DATA:
@@ -208,7 +208,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
   METHOD is_ai_supported.
     TRY.
         CREATE OBJECT mr_srvb_svrs_config TYPE ('CL_SRVB_SVRS_CONFIG')
-            EXPORTING iv_objtype = 'SRVB'.
+          EXPORTING iv_objtype = 'SRVB'.
       CATCH cx_sy_create_error.
         rv_ai_supported = abap_false.
     ENDTRY.
@@ -386,32 +386,32 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
         IF mv_is_inactive_supported = abap_true.
           TRY.
               mi_persistence->get(
-            EXPORTING
-              p_object_key     = mv_service_binding_key
-              p_version        = 'I'
-              p_data_selection = 'ST'
-            CHANGING
-              p_object_data    = lo_object_data ).
+                EXPORTING
+                  p_object_key     = mv_service_binding_key
+                  p_version        = 'I'
+                  p_data_selection = 'ST'
+                CHANGING
+                  p_object_data    = lo_object_data ).
 
             CATCH cx_root.
               mi_persistence->get(
+                EXPORTING
+                  p_object_key     = mv_service_binding_key
+                  p_version        = 'A'
+                  p_data_selection = 'ST'
+                CHANGING
+                  p_object_data    = lo_object_data ).
+
+          ENDTRY.
+        ELSE.
+
+          mi_persistence->get(
             EXPORTING
               p_object_key     = mv_service_binding_key
               p_version        = 'A'
               p_data_selection = 'ST'
             CHANGING
               p_object_data    = lo_object_data ).
-
-          ENDTRY.
-        ELSE.
-
-          mi_persistence->get(
-        EXPORTING
-          p_object_key     = mv_service_binding_key
-          p_version        = 'A'
-          p_data_selection = 'ST'
-        CHANGING
-          p_object_data    = lo_object_data ).
 
         ENDIF.
         rv_bool = boolc( lo_object_data IS NOT INITIAL AND lo_object_data->get_object_key( ) IS NOT INITIAL ).
