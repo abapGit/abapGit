@@ -170,6 +170,7 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
 
     lv_del_concname = ls_enqueue-objname.
     lv_del_concname+16 = ls_enqueue-secname.
+
     CALL FUNCTION 'DD_OBJ_DEL'
       EXPORTING
         object_name = lv_del_concname
@@ -200,6 +201,7 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
     ENDIF.
 
     ls_e071-object = ls_enqueue-objtype.
+
     CALL FUNCTION 'RS_DELETE_FROM_WORKING_AREA'
       EXPORTING
         object                 = ls_e071-object
@@ -208,8 +210,8 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
         actualize_working_area = 'X'.
 
     xinx_delete_docu(
-        iv_objname = mv_name
-        iv_id      = mv_id ).
+      iv_objname = mv_name
+      iv_id      = mv_id ).
 
     CALL FUNCTION 'RS_TREE_OBJECT_PLACEMENT'
       EXPORTING
@@ -319,6 +321,11 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
@@ -341,6 +348,16 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
 
   METHOD zif_abapgit_object~jump.
     " Covered by ZCL_ABAPGIT_OBJECTS=>JUMP
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+    RETURN.
   ENDMETHOD.
 
 

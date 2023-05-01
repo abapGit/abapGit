@@ -627,6 +627,18 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
 
   METHOD zif_abapgit_oo_object_fnc~delete.
+
+    " SEO_CLASS_DELETE_COMPLETE deletes OTR usage, only
+    " Use handler to also delete OTR header and texts
+    zcl_abapgit_sotr_handler=>delete_sotr(
+      iv_pgmid    = 'LIMU'
+      iv_object   = 'CPUB'
+      iv_obj_name = is_deletion_key-clsname ).
+    zcl_abapgit_sots_handler=>delete_sots(
+      iv_pgmid    = 'LIMU'
+      iv_object   = 'CPUB'
+      iv_obj_name = is_deletion_key-clsname ).
+
     CALL FUNCTION 'SEO_CLASS_DELETE_COMPLETE'
       EXPORTING
         clskey       = is_deletion_key
@@ -644,6 +656,7 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
     ELSEIF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
+
   ENDMETHOD.
 
 

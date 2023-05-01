@@ -189,7 +189,8 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
     clear_element( EXPORTING iv_name     = |TADIR_RESP|
                    CHANGING  ci_document = ci_document ).
 
-    clear_element( EXPORTING iv_name     = |VAR_EXT_PATH|
+    " Clearing just VAR_EXT_PATH will lead to diffs in batch
+    clear_element( EXPORTING iv_name     = |ETVAR_EXT|
                    CHANGING  ci_document = ci_document ).
 
   ENDMETHOD.
@@ -526,6 +527,11 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
@@ -557,6 +563,16 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
 
   METHOD zif_abapgit_object~jump.
     " Covered by ZCL_ABAPGIT_OBJECTS=>JUMP
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+    RETURN.
   ENDMETHOD.
 
 

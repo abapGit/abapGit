@@ -13,8 +13,8 @@ CLASS ltcl_run_checks DEFINITION FOR TESTING RISK LEVEL HARMLESS
       dot_abapgit FOR TESTING RAISING zcx_abapgit_exception,
       file_to_object FOR TESTING RAISING zcx_abapgit_exception,
       object_to_file FOR TESTING RAISING zcx_abapgit_exception,
-      file_to_object_pack FOR TESTING RAISING zcx_abapgit_exception,
-      object_to_file_pack FOR TESTING RAISING zcx_abapgit_exception.
+      file_to_object_package FOR TESTING RAISING zcx_abapgit_exception,
+      object_to_file_package FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -320,7 +320,7 @@ CLASS ltcl_run_checks IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD file_to_object_pack.
+  METHOD file_to_object_package.
 
     DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
 
@@ -359,7 +359,7 @@ CLASS ltcl_run_checks IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD object_to_file_pack.
+  METHOD object_to_file_package.
 
     DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
     DATA lv_filename TYPE string.

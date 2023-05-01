@@ -48,7 +48,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
+CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 
 
   METHOD delete_documentation.
@@ -74,13 +74,13 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
         suppress_enqueue               = space
         suppress_transport             = space
       EXCEPTIONS
-        header_without_text            = 01
-        index_without_header           = 02
-        no_authority_for_devclass_xxxx = 03
-        no_docu_found                  = 04
-        object_is_already_enqueued     = 05
-        object_is_enqueued_by_corr     = 06
-        user_break                     = 07.
+        header_without_text            = 1
+        index_without_header           = 2
+        no_authority_for_devclass_xxxx = 3
+        no_docu_found                  = 4
+        object_is_already_enqueued     = 5
+        object_is_enqueued_by_corr     = 6
+        user_break                     = 7.
 
   ENDMETHOD.
 
@@ -297,8 +297,7 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
   METHOD zif_abapgit_object~delete.
     DATA: ls_t100a          TYPE t100a,
           lv_frozen         TYPE abap_bool,
-          lv_message_id     TYPE arbgb,
-          lv_access_granted TYPE abap_bool.
+          lv_message_id     TYPE arbgb.
 
 * parameter SUPPRESS_DIALOG doesnt exist in all versions of FM RS_DELETE_MESSAGE_ID
 * replaced with a copy
@@ -329,31 +328,16 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    lv_access_granted = abap_true.
-
-    CALL FUNCTION 'RS_CORR_INSERT'
-      EXPORTING
-        global_lock        = 'X'
-        object             = lv_message_id
-        object_class       = 'MSAG'
-        mode               = 'D'
-        suppress_dialog    = abap_true
-      EXCEPTIONS
-        cancelled          = 01
-        permission_failure = 02.
-
-    IF sy-subrc <> 0.
-      IF lv_access_granted = abap_true.
-        free_access_permission( lv_message_id ).
-      ENDIF.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
+    zcl_abapgit_factory=>get_cts_api( )->insert_transport_object(
+      iv_object   = 'MSAG'
+      iv_obj_name = lv_message_id
+      iv_package  = iv_package
+      iv_language = mv_language
+      iv_mode     = zif_abapgit_cts_api=>c_transport_mode-delete ).
 
     delete_msgid( lv_message_id ).
 
-    IF lv_access_granted = abap_true.
-      free_access_permission( lv_message_id ).
-    ENDIF.
+    free_access_permission( lv_message_id ).
 
   ENDMETHOD.
 
@@ -452,6 +436,11 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
@@ -483,6 +472,16 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
 
   METHOD zif_abapgit_object~jump.
     " Covered by ZCL_ABAPGIT_OBJECTS=>JUMP
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+    RETURN.
   ENDMETHOD.
 
 

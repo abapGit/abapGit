@@ -48,15 +48,15 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS jump
       IMPORTING
-        !is_item         TYPE zif_abapgit_definitions=>ty_item
-        !iv_line_number  TYPE i OPTIONAL
-        !iv_sub_obj_name TYPE zif_abapgit_definitions=>ty_item-obj_name OPTIONAL
-        !iv_sub_obj_type TYPE zif_abapgit_definitions=>ty_item-obj_type OPTIONAL
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !is_sub_item    TYPE zif_abapgit_definitions=>ty_item OPTIONAL
+        !iv_line_number TYPE i OPTIONAL
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS changed_by
       IMPORTING
         !is_item       TYPE zif_abapgit_definitions=>ty_item
+        !is_sub_item   TYPE zif_abapgit_definitions=>ty_item OPTIONAL
       RETURNING
         VALUE(rv_user) TYPE syuname .
     CLASS-METHODS is_supported
@@ -222,7 +222,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         li_obj = create_object( is_item     = is_item
                                 iv_language = zif_abapgit_definitions=>c_english ).
 
-        rv_user = li_obj->changed_by( ).
+        rv_user = li_obj->changed_by( is_sub_item ).
       CATCH zcx_abapgit_exception ##NO_HANDLER.
         " Ignore errors
     ENDTRY.
@@ -1063,15 +1063,14 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDIF.
 
     " First priority object-specific handler
-    lv_exit = li_obj->jump( ).
+    lv_exit = li_obj->jump( is_sub_item ).
 
     IF lv_exit = abap_false.
       " Open object in new window with generic jumper
       lv_exit = zcl_abapgit_ui_factory=>get_gui_jumper( )->jump(
-        is_item         = is_item
-        iv_sub_obj_name = iv_sub_obj_name
-        iv_sub_obj_type = iv_sub_obj_type
-        iv_line_number  = iv_line_number ).
+        is_item        = is_item
+        is_sub_item    = is_sub_item
+        iv_line_number = iv_line_number ).
     ENDIF.
 
     IF lv_exit = abap_false.
