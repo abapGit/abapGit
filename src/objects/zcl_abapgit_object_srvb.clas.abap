@@ -474,7 +474,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
     DATA:
       li_object_data_model  TYPE REF TO if_wb_object_data_model,
       li_wb_object_operator TYPE REF TO object,
-      lx_error              TYPE REF TO cx_swb_exception.
+      lx_error              TYPE REF TO cx_root.
 
     FIELD-SYMBOLS:
       <ls_service_binding> TYPE any.
@@ -497,7 +497,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
 
         clear_fields( CHANGING cs_service_binding = <ls_service_binding> ).
 
-      CATCH cx_swb_exception INTO lx_error.
+      CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
