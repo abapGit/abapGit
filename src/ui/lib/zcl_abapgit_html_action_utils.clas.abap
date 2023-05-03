@@ -38,6 +38,7 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
       IMPORTING
         !iv_obj_type     TYPE tadir-object
         !iv_obj_name     TYPE tadir-obj_name
+        !iv_filename     TYPE string OPTIONAL
       RETURNING
         VALUE(rv_string) TYPE string .
     CLASS-METHODS dir_encode
@@ -222,6 +223,11 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
                          ig_field = iv_obj_type CHANGING ct_field = lt_fields ).
     add_field( EXPORTING iv_name = 'NAME'
                          ig_field = iv_obj_name CHANGING ct_field = lt_fields ).
+
+    IF iv_filename IS NOT INITIAL.
+      add_field( EXPORTING iv_name = 'FILE'
+                           ig_field = iv_filename CHANGING ct_field = lt_fields ).
+    ENDIF.
 
     rv_string = cl_http_utility=>fields_to_string( lt_fields ).
 
