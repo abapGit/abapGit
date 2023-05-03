@@ -6,7 +6,7 @@ CLASS zcl_abapgit_gui_asset_manager DEFINITION PUBLIC FINAL CREATE PUBLIC .
 
     CLASS-METHODS create
       RETURNING
-        VALUE(ro_asset_manager) TYPE REF TO zcl_abapgit_gui_asset_manager.
+        VALUE(ri_asset_manager) TYPE REF TO zif_abapgit_gui_asset_manager.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -45,7 +45,7 @@ CLASS zcl_abapgit_gui_asset_manager IMPLEMENTATION.
 
 
   METHOD create.
-    CREATE OBJECT ro_asset_manager.
+    CREATE OBJECT ri_asset_manager TYPE zcl_abapgit_gui_asset_manager.
   ENDMETHOD.
 
 

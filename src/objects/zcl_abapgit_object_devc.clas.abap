@@ -706,6 +706,11 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
@@ -737,6 +742,31 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
 
   METHOD zif_abapgit_object~jump.
     " Covered by ZCL_ABAPGIT_OBJECTS=>JUMP
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_filename_to_object.
+
+    IF iv_filename <> zcl_abapgit_filename_logic=>c_package_file.
+      zcx_abapgit_exception=>raise( |Unexpected filename for package { cs_item-obj_name }| ).
+    ENDIF.
+
+    " Try to get a unique package name for DEVC by using the path
+    cs_item-obj_name = zcl_abapgit_folder_logic=>get_instance( )->path_to_package(
+      iv_top                  = iv_package
+      io_dot                  = io_dot
+      iv_create_if_not_exists = abap_false
+      iv_path                 = iv_path ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+
+    " Packages have a fixed filename so that the repository can be installed to a different
+    " package(-hierarchy) on the client and not show up as a different package in the repo.
+    cv_filename = zcl_abapgit_filename_logic=>c_package_file.
+
   ENDMETHOD.
 
 

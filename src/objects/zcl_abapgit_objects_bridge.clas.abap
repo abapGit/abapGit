@@ -25,7 +25,7 @@ CLASS zcl_abapgit_objects_bridge DEFINITION PUBLIC FINAL CREATE PUBLIC INHERITIN
       END OF ty_metadata .
 
     TYPES: BEGIN OF ty_s_objtype_map,
-             obj_typ      TYPE trobjtype,
+             obj_typ      TYPE tadir-object,
              plugin_class TYPE seoclsname,
            END OF ty_s_objtype_map,
            ty_t_objtype_map TYPE SORTED TABLE OF ty_s_objtype_map WITH UNIQUE KEY obj_typ.
@@ -44,7 +44,7 @@ CLASS zcl_abapgit_objects_bridge IMPLEMENTATION.
     DATA lt_plugin_class    TYPE STANDARD TABLE OF seoclsname WITH DEFAULT KEY.
     DATA lv_plugin_class    LIKE LINE OF lt_plugin_class.
     DATA lo_plugin          TYPE REF TO object.
-    DATA lt_plugin_obj_type TYPE objtyptable.
+    DATA lt_plugin_obj_type TYPE STANDARD TABLE OF tadir-object WITH DEFAULT KEY.
     DATA ls_objtype_map     LIKE LINE OF gt_objtype_map.
 
 
@@ -172,6 +172,11 @@ CLASS zcl_abapgit_objects_bridge IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_deserialize_steps.
 
     DATA ls_meta TYPE ty_metadata.
@@ -221,6 +226,16 @@ CLASS zcl_abapgit_objects_bridge IMPLEMENTATION.
     CALL METHOD mo_plugin->('ZIF_ABAPGITP_PLUGIN~JUMP').
     rv_exit = abap_true.
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+    RETURN.
   ENDMETHOD.
 
 

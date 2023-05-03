@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_SAP_NAMESPACE</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit sap namespace abstraction</DESCRIPT>
+    <DESCRIPT>abapGit - SAP Namespace</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

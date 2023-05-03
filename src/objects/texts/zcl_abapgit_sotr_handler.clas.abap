@@ -177,6 +177,9 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
                                   iv_object   = iv_object
                                   iv_obj_name = iv_obj_name ).
 
+    " Remove any usage to ensure deletion, see function module BTFR_CHECK
+    DELETE sotr_use FROM TABLE lt_sotr_use ##SUBRC_OK.
+
     LOOP AT lt_sotr_use ASSIGNING <ls_sotr_use> WHERE concept IS NOT INITIAL.
 
       CALL FUNCTION 'SOTR_DELETE_CONCEPT'
@@ -246,22 +249,13 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
             OTHERS                = 1 ##FM_SUBRC_OK.
 
         IF zcl_abapgit_factory=>get_sap_package( iv_package )->are_changes_recorded_in_tr_req( ) = abap_true.
-          CALL FUNCTION 'RS_CORR_INSERT'
-            EXPORTING
-              object              = lv_obj_name
-              object_class        = 'SOTR'
-              mode                = 'D'
-              global_lock         = abap_true
-              devclass            = iv_package
-              suppress_dialog     = abap_true
-            EXCEPTIONS
-              cancelled           = 1
-              permission_failure  = 2
-              unknown_objectclass = 3
-              OTHERS              = 4.
-          IF sy-subrc <> 0.
-            zcx_abapgit_exception=>raise_t100( ).
-          ENDIF.
+
+          zcl_abapgit_factory=>get_cts_api( )->insert_transport_object(
+            iv_object   = 'SOTR'
+            iv_obj_name = lv_obj_name
+            iv_package  = iv_package
+            iv_mode     = zif_abapgit_cts_api=>c_transport_mode-delete ).
+
         ENDIF.
       ENDIF.
     ENDIF.

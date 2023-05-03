@@ -94,11 +94,6 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         iv_is_object_row TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rv_html)   TYPE string .
-    METHODS get_item_icon
-      IMPORTING
-        !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
-      RETURNING
-        VALUE(rv_html) TYPE string .
     METHODS render_item_transport
       IMPORTING
         !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
@@ -111,11 +106,6 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
-    METHODS build_obj_jump_link
-      IMPORTING
-        !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
-      RETURNING
-        VALUE(rv_html) TYPE string .
     METHODS build_dir_jump_link
       IMPORTING
         !iv_path       TYPE string
@@ -198,7 +188,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -491,24 +481,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD build_obj_jump_link.
-
-    DATA lv_encode TYPE string.
-    DATA li_html TYPE REF TO zif_abapgit_html.
-
-    CREATE OBJECT li_html TYPE zcl_abapgit_html.
-
-    lv_encode = zcl_abapgit_html_action_utils=>jump_encode(
-      iv_obj_type = is_item-obj_type
-      iv_obj_name = is_item-obj_name ).
-
-    rv_html = li_html->a(
-      iv_txt = |{ is_item-obj_name }|
-      iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_encode }| ).
-
-  ENDMETHOD.
-
-
   METHOD build_srcsystem_code.
 
     IF is_item-srcsystem IS NOT INITIAL AND is_item-srcsystem <> sy-sysid.
@@ -672,32 +644,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_item_icon.
-
-    CASE is_item-obj_type.
-      WHEN 'PROG' OR 'CLAS' OR 'FUGR' OR 'INTF' OR 'TYPE'.
-        rv_html = zcl_abapgit_html=>icon( iv_name = 'file-code/darkgrey'
-                                          iv_hint = 'Code' ).
-      WHEN 'W3MI' OR 'W3HT' OR 'SFPF'.
-        rv_html = zcl_abapgit_html=>icon( iv_name = 'file-image/darkgrey'
-                                          iv_hint = 'Binary' ).
-      WHEN 'DEVC'.
-        rv_html = zcl_abapgit_html=>icon( iv_name = 'box/darkgrey'
-                                          iv_hint = 'Package' ).
-      WHEN ''.
-        rv_html = space. " no icon
-      WHEN OTHERS.
-        rv_html = zcl_abapgit_html=>icon( 'file-alt/darkgrey' ).
-    ENDCASE.
-
-    IF is_item-is_dir = abap_true.
-      rv_html = zcl_abapgit_html=>icon( iv_name = 'folder/darkgrey'
-                                        iv_hint = 'Folder' ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD is_repo_lang_logon_lang.
     rv_repo_lang_is_logon_lang = boolc( mo_repo->get_dot_abapgit( )->get_main_language( ) = sy-langu ).
   ENDMETHOD.
@@ -707,14 +653,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
     DATA:
       lv_main_language TYPE spras,
-      lt_spagpa        TYPE STANDARD TABLE OF rfc_spagpa,
-      ls_spagpa        LIKE LINE OF lt_spagpa,
       ls_item          TYPE zif_abapgit_definitions=>ty_item,
-      lv_subrc         TYPE syst-subrc,
-      lv_save_sy_langu TYPE sy-langu,
       lv_tcode         TYPE tcode.
-
-    " https://blogs.sap.com/2017/01/13/logon-language-sy-langu-and-rfc/
 
     lv_main_language = mo_repo->get_dot_abapgit( )->get_main_language( ).
     lv_tcode = zcl_abapgit_services_abapgit=>get_abapgit_tcode( ).
@@ -731,36 +671,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Please install the abapGit repository| ).
     ENDIF.
 
-    lv_save_sy_langu = sy-langu.
-    SET LOCALE LANGUAGE lv_main_language.
-
-    ls_spagpa-parid  = zif_abapgit_definitions=>c_spagpa_param_repo_key.
-    ls_spagpa-parval = mo_repo->get_key( ).
-    INSERT ls_spagpa INTO TABLE lt_spagpa.
-
-    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
-      DESTINATION 'NONE'
-      STARTING NEW TASK 'ABAPGIT'
-      EXPORTING
-        tcode                   = lv_tcode
-      TABLES
-        spagpa_tab              = lt_spagpa
-      EXCEPTIONS
-        call_transaction_denied = 1
-        tcode_invalid           = 2
-        communication_failure   = 3
-        system_failure          = 4
-        OTHERS                  = 5.
-
-    lv_subrc = sy-subrc.
-
-    SET LOCALE LANGUAGE lv_save_sy_langu.
-
-    IF lv_subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from ABAP4_CALL_TRANSACTION. Subrc = { lv_subrc }| ).
-    ENDIF.
-
-    MESSAGE 'Repository opened in a new window' TYPE 'S'.
+    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_abapgit(
+      iv_language = lv_main_language
+      iv_key      = mo_repo->get_key( ) ).
 
   ENDMETHOD.
 
@@ -870,13 +783,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
                  && '<i class="grey">non-code and meta files</i>'
                  && '</td>' ).
     ELSE.
-      ri_html->add( |<td class="icon">{ get_item_icon( is_item ) }</td>| ).
+      ri_html->add( |<td class="icon">{ zcl_abapgit_gui_chunk_lib=>get_item_icon( is_item ) }</td>| ).
 
       IF is_item-is_dir = abap_true. " Subdir
         lv_link = build_dir_jump_link( is_item-path ).
         ri_html->add( |<td class="dir" colspan="2">{ lv_link }</td>| ).
       ELSE.
-        lv_link = build_obj_jump_link( is_item ).
+        lv_link = zcl_abapgit_gui_chunk_lib=>get_item_link( is_item ).
         ri_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
         ri_html->add( |<td class="object">{ lv_link } { build_inactive_object_code( is_item )
                       } { build_srcsystem_code( is_item ) }</td>| ).
@@ -1122,9 +1035,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN c_actions-go_unit.
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_runit
-          EXPORTING
-            iv_devclass = mo_repo->get_package( ).
+        rs_handled-page  = zcl_abapgit_gui_page_runit=>create( mo_repo ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN c_actions-toggle_hide_files. " Toggle file diplay

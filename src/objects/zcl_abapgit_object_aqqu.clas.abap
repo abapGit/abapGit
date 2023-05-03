@@ -78,6 +78,11 @@ CLASS zcl_abapgit_object_aqqu IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
   ENDMETHOD.
@@ -99,6 +104,35 @@ CLASS zcl_abapgit_object_aqqu IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
+
+    DATA lt_bdcdata TYPE TABLE OF bdcdata.
+
+    FIELD-SYMBOLS <ls_bdcdata> LIKE LINE OF lt_bdcdata.
+
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-program  = 'SAPMS38R'.
+    <ls_bdcdata>-dynpro   = '0050'.
+    <ls_bdcdata>-dynbegin = abap_true.
+
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-fnam = 'RS38R-QNUM'.
+    <ls_bdcdata>-fval = ms_item-obj_name.
+
+    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+      iv_tcode      = 'SQ01'
+      it_bdcdata    = lt_bdcdata ).
+
+    rv_exit = abap_true.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_object_to_filename.
     RETURN.
   ENDMETHOD.
 

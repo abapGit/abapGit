@@ -8,7 +8,7 @@ CLASS lcl_status_consistency_checks DEFINITION FINAL.
 
     METHODS run_checks
       IMPORTING
-        it_results TYPE zif_abapgit_definitions=>ty_results_tt
+        it_results    TYPE zif_abapgit_definitions=>ty_results_tt
       RETURNING
         VALUE(ri_log) TYPE REF TO zif_abapgit_log
       RAISING
@@ -50,7 +50,8 @@ CLASS lcl_status_consistency_checks DEFINITION FINAL.
         zcx_abapgit_exception .
     METHODS check_namespace
       IMPORTING
-        !it_results TYPE zif_abapgit_definitions=>ty_results_tt
+        !it_results      TYPE zif_abapgit_definitions=>ty_results_tt
+        !iv_root_package TYPE devclass
       RAISING
         zcx_abapgit_exception .
 
@@ -88,7 +89,9 @@ CLASS lcl_status_consistency_checks IMPLEMENTATION.
     check_multiple_files( it_results ).
 
     " Check if namespaces exist already
-    check_namespace( it_results ).
+    check_namespace(
+      it_results      = it_results
+      iv_root_package = mv_root_package ).
 
     ri_log = mi_log.
 
@@ -134,9 +137,8 @@ CLASS lcl_status_consistency_checks IMPLEMENTATION.
         BINARY SEARCH. " Sorted above
 
       IF sy-subrc <> 0 OR <ls_result>-path <> <ls_result_idx>-path. " All paths are same
-        mi_log->add( iv_msg = |Files for object { <ls_result>-obj_type } {
-                              <ls_result>-obj_name } are not placed in the same folder|
-                     iv_type = 'W' ).
+        mi_log->add_warning( |Files for object { <ls_result>-obj_type } { <ls_result>-obj_name }|
+         && | are not placed in the same folder| ).
       ENDIF.
 
     ENDLOOP.
@@ -156,13 +158,11 @@ CLASS lcl_status_consistency_checks IMPLEMENTATION.
 
     LOOP AT lt_res_sort ASSIGNING <ls_result> WHERE obj_type <> 'DEVC' AND packmove = abap_false.
       IF <ls_result>-filename IS NOT INITIAL AND <ls_result>-filename = ls_file-filename.
-        mi_log->add( iv_msg  = |Multiple files with same filename, { <ls_result>-filename }|
-                     iv_type = 'W' ).
+        mi_log->add_warning( |Multiple files with same filename, { <ls_result>-filename }| ).
       ENDIF.
 
       IF <ls_result>-filename IS INITIAL.
-        mi_log->add( iv_msg  = |Filename is empty for object { <ls_result>-obj_type } { <ls_result>-obj_name }|
-                     iv_type = 'W' ).
+        mi_log->add_warning( |Filename is empty for object { <ls_result>-obj_type } { <ls_result>-obj_name }| ).
       ENDIF.
 
       MOVE-CORRESPONDING <ls_result> TO ls_file.
@@ -197,14 +197,17 @@ CLASS lcl_status_consistency_checks IMPLEMENTATION.
     li_namespace = zcl_abapgit_factory=>get_sap_namespace( ).
 
     LOOP AT lt_namespace INTO lv_namespace.
+      IF iv_root_package NS lv_namespace.
+        mi_log->add_error( |Package { iv_root_package } is not in namespace { lv_namespace }.|
+          && | Remove repository and use a different package| ).
+        RETURN.
+      ENDIF.
+
       IF li_namespace->exists( lv_namespace ) = abap_false.
-        mi_log->add(
-          iv_msg  = |Namespace { lv_namespace } does not exist. Create it in transaction SE03|
-          iv_type = 'W' ).
+        mi_log->add_warning( |Namespace { lv_namespace } does not exist.|
+          && | Pull it first (or create it in transaction SE03)| ).
       ELSEIF li_namespace->is_editable( lv_namespace ) = abap_false.
-        mi_log->add(
-          iv_msg  = |Namespace { lv_namespace } is not modifiable. Check it in transaction SE03|
-          iv_type = 'W' ).
+        mi_log->add_warning( |Namespace { lv_namespace } is not modifiable. Check it in transaction SE03| ).
       ENDIF.
     ENDLOOP.
 
@@ -262,9 +265,8 @@ CLASS lcl_status_consistency_checks IMPLEMENTATION.
           obj_name = <ls_result>-obj_name
         BINARY SEARCH. " Sorted since it_result is sorted
       IF sy-subrc <> 0.
-        mi_log->add(
-          iv_msg  = |Changed package assignment for object { <ls_result>-obj_type } { <ls_result>-obj_name }|
-          iv_type = 'W' ).
+        mi_log->add_warning( |Changed package assignment for object|
+          && | { <ls_result>-obj_type } { <ls_result>-obj_name }| ).
         APPEND INITIAL LINE TO lt_move_idx ASSIGNING <ls_result_move>.
         <ls_result_move>-obj_type = <ls_result>-obj_type.
         <ls_result_move>-obj_name = <ls_result>-obj_name.
@@ -295,8 +297,7 @@ CLASS lcl_status_consistency_checks IMPLEMENTATION.
               && |Check your package and folder logic, and either assign { <ls_result>-obj_name } |
               && |to the package hierarchy of { iv_top } or remove package { <ls_result>-obj_name } |
               && |from the repository.|.
-        mi_log->add( iv_msg = lv_msg
-                     iv_type = 'W' ).
+        mi_log->add_warning( lv_msg ).
       ENDIF.
 
     ENDLOOP.

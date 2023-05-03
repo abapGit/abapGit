@@ -116,6 +116,10 @@
        <PARAMETER>IT_TRANSLATION_LANGS</PARAMETER>
        <TYP>TFPLAISO</TYP>
       </RSIMP>
+      <RSIMP>
+       <PARAMETER>IV_USE_LXE</PARAMETER>
+       <TYP>CHAR1</TYP>
+      </RSIMP>
      </IMPORT>
      <EXPORT>
       <RSEXP>
@@ -171,6 +175,11 @@
        <PARAMETER>IT_TRANSLATION_LANGS</PARAMETER>
        <KIND>P</KIND>
        <STEXT>Language Table in ISO Format</STEXT>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>IV_USE_LXE</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>Single-Character Flag</STEXT>
       </RSFDO>
       <RSFDO>
        <PARAMETER>EV_RESULT</PARAMETER>

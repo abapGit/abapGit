@@ -1391,8 +1391,16 @@ CLASS ltcl_json_to_abap DEFINITION
     METHODS to_abap_corresponding_negative
       FOR TESTING
       RAISING zcx_abapgit_ajson_error.
+    METHODS to_abap_corresponding_public
+      FOR TESTING
+      RAISING zcx_abapgit_ajson_error.
+    METHODS to_abap_corresponding_pub_neg
+      FOR TESTING
+      RAISING zcx_abapgit_ajson_error.
 
 ENDCLASS.
+
+CLASS zcl_abapgit_ajson DEFINITION LOCAL FRIENDS ltcl_json_to_abap.
 
 CLASS ltcl_json_to_abap IMPLEMENTATION.
 
@@ -1974,6 +1982,74 @@ CLASS ltcl_json_to_abap IMPLEMENTATION.
           it_nodes    = lo_nodes->sorted( )
         CHANGING
           c_container = ls_act ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_ajson_error INTO lx.
+        cl_abap_unit_assert=>assert_equals(
+        act = lx->message
+        exp = 'Path not found' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD to_abap_corresponding_public.
+
+    DATA lo_cut TYPE REF TO zcl_abapgit_ajson.
+    DATA ls_act TYPE ty_struc.
+    DATA ls_exp  TYPE ty_struc.
+    DATA li_json TYPE REF TO zif_abapgit_ajson.
+    DATA lo_nodes TYPE REF TO lcl_nodes_helper.
+
+    CREATE OBJECT lo_nodes.
+    lo_nodes->add( '       |           |object |                          | ' ).
+    lo_nodes->add( '/      |a          |str    |test                      | ' ).
+    lo_nodes->add( '/      |c          |num    |24022022                  | ' ).
+
+    ls_exp-a  = 'test'.
+
+    CREATE OBJECT lo_cut.
+    lo_cut->mt_json_tree = lo_nodes->mt_nodes.
+
+    lo_cut->to_abap(
+      EXPORTING
+        iv_corresponding = abap_true
+      IMPORTING
+        ev_container     = ls_act ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_act
+      exp = ls_exp ).
+
+    CLEAR ls_act.
+    li_json = lo_cut->to_abap_corresponding_only( ).
+    li_json->to_abap( IMPORTING ev_container = ls_act ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_act
+      exp = ls_exp ).
+
+  ENDMETHOD.
+
+
+  METHOD to_abap_corresponding_pub_neg.
+
+    DATA lo_cut TYPE REF TO zcl_abapgit_ajson.
+    DATA ls_act TYPE ty_struc.
+    DATA ls_exp  TYPE ty_struc.
+    DATA lo_nodes TYPE REF TO lcl_nodes_helper.
+    DATA lx TYPE REF TO zcx_abapgit_ajson_error.
+
+    CREATE OBJECT lo_nodes.
+    lo_nodes->add( '       |           |object |                          | ' ).
+    lo_nodes->add( '/      |a          |str    |test                      | ' ).
+    lo_nodes->add( '/      |c          |num    |24022022                  | ' ).
+
+    ls_exp-a  = 'test'.
+
+    CREATE OBJECT lo_cut.
+    lo_cut->mt_json_tree = lo_nodes->mt_nodes.
+
+    TRY.
+        lo_cut->to_abap( IMPORTING ev_container = ls_act ).
+
         cl_abap_unit_assert=>fail( ).
       CATCH zcx_abapgit_ajson_error INTO lx.
         cl_abap_unit_assert=>assert_equals(

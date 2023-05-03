@@ -38,15 +38,6 @@ CLASS zcl_abapgit_tadir DEFINITION
         !et_tadir              TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
-    METHODS skip_objects
-      IMPORTING
-        !iv_package TYPE tadir-devclass
-        !io_dot     TYPE REF TO zcl_abapgit_dot_abapgit
-        !ii_log     TYPE REF TO zif_abapgit_log OPTIONAL
-      CHANGING
-        !ct_tadir   TYPE zif_abapgit_definitions=>ty_tadir_tt
-      RAISING
-        zcx_abapgit_exception ##NEEDED.
     METHODS add_local_packages
       IMPORTING
         !it_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt
@@ -203,14 +194,6 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
         et_tadir              = rt_tadir
         et_packages           = lt_packages ).
 
-    skip_objects(
-      EXPORTING
-        iv_package = iv_package
-        io_dot     = io_dot
-        ii_log     = ii_log
-      CHANGING
-        ct_tadir   = rt_tadir ).
-
     add_local_packages(
       EXPORTING
         it_packages = lt_packages
@@ -325,7 +308,9 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
       " Check if there are any texts related to objects that do not serialize these texts (yet)
       " If yes, we need to keep processing SOTS
       SELECT COUNT(*) FROM sotr_useu INTO lv_count
-        FOR ALL ENTRIES IN lt_concepts WHERE concept = lt_concepts-table_line AND object <> 'SICF'.
+        FOR ALL ENTRIES IN lt_concepts WHERE concept = lt_concepts-table_line
+        AND NOT ( pgmid = 'R3TR' AND object = 'SICF' )
+        AND NOT ( pgmid = 'LIMU' AND object = 'CPUB' ).
       IF lv_count > 0.
         RETURN.
       ENDIF.
@@ -388,21 +373,6 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
     ENDIF.
 
     SORT et_tadir BY devclass pgmid object obj_name.
-
-  ENDMETHOD.
-
-
-  METHOD skip_objects.
-
-    " Todo, replace with solution that will work with any object type (might depend on iv_package and io_dot)
-
-    DATA lo_skip_objects TYPE REF TO zcl_abapgit_skip_objects.
-
-    CREATE OBJECT lo_skip_objects.
-
-    ct_tadir = lo_skip_objects->skip_sadl_generated_objects(
-      it_tadir = ct_tadir
-      ii_log   = ii_log ).
 
   ENDMETHOD.
 

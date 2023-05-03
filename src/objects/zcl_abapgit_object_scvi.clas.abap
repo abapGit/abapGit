@@ -78,7 +78,7 @@ CLASS zcl_abapgit_object_scvi IMPLEMENTATION.
       EXPORTING
         scvariant = ls_screen_variant-shdsvci-scvariant
       EXCEPTIONS
-        OTHERS    = 01.
+        OTHERS    = 1.
     IF sy-subrc <> 0.
       MESSAGE e413(ms) WITH ls_screen_variant-shdsvci-scvariant INTO zcx_abapgit_exception=>null.
       zcx_abapgit_exception=>raise_t100( ).
@@ -127,6 +127,11 @@ CLASS zcl_abapgit_object_scvi IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
@@ -154,6 +159,16 @@ CLASS zcl_abapgit_object_scvi IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+    RETURN.
   ENDMETHOD.
 
 

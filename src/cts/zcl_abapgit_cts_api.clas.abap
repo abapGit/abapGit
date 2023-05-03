@@ -80,7 +80,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
+CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
 
   METHOD get_current_transport_for_obj.
@@ -211,6 +211,55 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_cts_api~create_transport_entries.
+
+    DATA lt_tables      TYPE tredt_objects.
+    DATA lt_table_keys  TYPE STANDARD TABLE OF e071k.
+    DATA lv_with_dialog TYPE abap_bool.
+
+    cl_table_utilities_brf=>create_transport_entries(
+      EXPORTING
+        it_table_ins = it_table_ins
+        it_table_upd = it_table_upd
+        it_table_del = it_table_del
+        iv_tabname   = iv_tabname
+      CHANGING
+        ct_e071      = lt_tables
+        ct_e071k     = lt_table_keys ).
+
+    " cl_table_utilities_brf=>write_transport_entries does not allow passing a request
+
+    CALL FUNCTION 'TR_OBJECTS_CHECK'
+      TABLES
+        wt_ko200                = lt_tables
+      EXCEPTIONS
+        cancel_edit_other_error = 1
+        show_only_other_error   = 2
+        OTHERS                  = 3.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    IF iv_transport IS INITIAL.
+      lv_with_dialog = abap_true.
+    ENDIF.
+
+    CALL FUNCTION 'TRINT_OBJECTS_CHECK_AND_INSERT'
+      EXPORTING
+        iv_order       = iv_transport
+        iv_with_dialog = lv_with_dialog
+      CHANGING
+        ct_ko200       = lt_tables
+        ct_e071k       = lt_table_keys
+      EXCEPTIONS
+        OTHERS         = 1.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_cts_api~get_r3tr_obj_for_limu_obj.
 
     CLEAR ev_object.
@@ -315,6 +364,29 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
 
       ENDIF.
 
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_cts_api~insert_transport_object.
+
+    CALL FUNCTION 'RS_CORR_INSERT'
+      EXPORTING
+        object              = iv_obj_name
+        object_class        = iv_object
+        devclass            = iv_package
+        master_language     = iv_language
+        mode                = iv_mode
+        global_lock         = abap_true
+        suppress_dialog     = abap_true
+      EXCEPTIONS
+        cancelled           = 1
+        permission_failure  = 2
+        unknown_objectclass = 3
+        OTHERS              = 4.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.

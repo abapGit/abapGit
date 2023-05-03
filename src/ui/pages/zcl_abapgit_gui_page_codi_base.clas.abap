@@ -16,7 +16,7 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION PUBLIC ABSTRACT INHERITING FROM 
         commit TYPE string VALUE 'commit' ##NO_TEXT,
       END OF c_actions .
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
-    DATA mt_result TYPE scit_alvlist .
+    DATA mt_result TYPE zif_abapgit_code_inspector=>ty_results .
     DATA mv_summary TYPE string.
 
     METHODS render_variant
@@ -28,14 +28,14 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION PUBLIC ABSTRACT INHERITING FROM 
     METHODS render_result
       IMPORTING
         !ii_html   TYPE REF TO zif_abapgit_html
-        !it_result TYPE scit_alvlist .
+        !it_result TYPE zif_abapgit_code_inspector=>ty_results .
     METHODS render_result_line
       IMPORTING
         !ii_html   TYPE REF TO zif_abapgit_html
-        !is_result TYPE scir_alvlist .
+        !is_result TYPE zif_abapgit_code_inspector=>ty_result .
     METHODS build_nav_link
       IMPORTING
-        !is_result     TYPE scir_alvlist
+        !is_result     TYPE zif_abapgit_code_inspector=>ty_result
       RETURNING
         VALUE(rv_link) TYPE string .
     METHODS jump
@@ -107,7 +107,7 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
           ls_item             TYPE zif_abapgit_definitions=>ty_item,
           ls_sub_item         TYPE zif_abapgit_definitions=>ty_item.
 
-    FIELD-SYMBOLS: <ls_result> TYPE scir_alvlist.
+    FIELD-SYMBOLS: <ls_result> LIKE LINE OF mt_result.
 
 
     IF is_sub_item IS NOT INITIAL.
@@ -140,9 +140,9 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
           lv_line_number = <ls_result>-line.
 
           zcl_abapgit_objects=>jump(
-            is_item         = ls_item
-            iv_sub_obj_name = ls_sub_item-obj_name
-            iv_line_number  = lv_line_number ).
+            is_item        = ls_item
+            is_sub_item    = ls_sub_item
+            iv_line_number = lv_line_number ).
           RETURN.
 
         ENDIF.
@@ -172,7 +172,7 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
   METHOD render_result.
 
     CONSTANTS: lc_limit TYPE i VALUE 500.
-    FIELD-SYMBOLS: <ls_result> TYPE scir_alvlist.
+    FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_result.
 
     ii_html->add( '<div class="ci-result">' ).
 

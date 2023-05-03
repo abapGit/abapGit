@@ -4,9 +4,6 @@ CLASS zcl_abapgit_user_record DEFINITION
   CREATE PRIVATE.
 
   PUBLIC SECTION.
-
-    CONSTANTS c_cc_category TYPE string VALUE 'C'.
-
     CLASS-METHODS reset.
     CLASS-METHODS get_instance
       IMPORTING
@@ -22,6 +19,11 @@ CLASS zcl_abapgit_user_record DEFINITION
     METHODS get_email
       RETURNING
         VALUE(rv_email) TYPE zif_abapgit_git_definitions=>ty_git_user-email.
+    CLASS-METHODS get_title
+      IMPORTING
+        iv_username     TYPE sy-uname
+      RETURNING
+        VALUE(rv_title) TYPE string.
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES:
@@ -61,6 +63,25 @@ ENDCLASS.
 
 CLASS zcl_abapgit_user_record IMPLEMENTATION.
 
+
+  METHOD get_title.
+* the queried username might not exist, so this method is static
+
+    DATA ls_user_address TYPE addr3_val.
+
+    CALL FUNCTION 'SUSR_USER_ADDRESS_READ'
+      EXPORTING
+        user_name              = iv_username
+      IMPORTING
+        user_address           = ls_user_address
+      EXCEPTIONS
+        user_address_not_found = 1
+        OTHERS                 = 2.
+    IF sy-subrc = 0.
+      rv_title = ls_user_address-name_text.
+    ENDIF.
+
+  ENDMETHOD.
 
   METHOD check_user_exists.
 
@@ -156,13 +177,15 @@ CLASS zcl_abapgit_user_record IMPLEMENTATION.
 
   METHOD get_user_dtls_from_other_clnt.
 
+    CONSTANTS lc_cc_category TYPE string VALUE 'C'.
+
     DATA lt_dev_clients TYPE ty_dev_clients.
 
     FIELD-SYMBOLS: <lv_dev_client> LIKE LINE OF lt_dev_clients.
 
     " Could not find the user Try other development clients
     SELECT mandt FROM t000 INTO TABLE lt_dev_clients
-        WHERE cccategory = c_cc_category AND mandt <> sy-mandt
+        WHERE cccategory = lc_cc_category AND mandt <> sy-mandt
         ORDER BY PRIMARY KEY.
 
     LOOP AT lt_dev_clients ASSIGNING <lv_dev_client>.
