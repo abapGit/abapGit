@@ -49,6 +49,7 @@ CLASS zcl_abapgit_objects DEFINITION
     CLASS-METHODS jump
       IMPORTING
         !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !is_sub_item    TYPE zif_abapgit_definitions=>ty_item OPTIONAL
         !iv_extra       TYPE string OPTIONAL
         !iv_line_number TYPE i OPTIONAL
       RAISING
@@ -56,6 +57,7 @@ CLASS zcl_abapgit_objects DEFINITION
     CLASS-METHODS changed_by
       IMPORTING
         !is_item       TYPE zif_abapgit_definitions=>ty_item
+        !is_sub_item   TYPE zif_abapgit_definitions=>ty_item OPTIONAL
         !iv_extra      TYPE string OPTIONAL
       RETURNING
         VALUE(rv_user) TYPE syuname .
@@ -1042,6 +1044,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       " Open object in new window with generic jumper
       lv_exit = zcl_abapgit_ui_factory=>get_gui_jumper( )->jump(
         is_item        = is_item
+        is_sub_item    = is_sub_item
         iv_line_number = iv_line_number ).
     ENDIF.
 
