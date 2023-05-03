@@ -54,7 +54,7 @@ INTERFACE zif_abapgit_object
 
   METHODS changed_by
     IMPORTING
-      !is_sub_item   TYPE zif_abapgit_definitions=>ty_item OPTIONAL
+      !iv_extra      TYPE string OPTIONAL
     RETURNING
       VALUE(rv_user) TYPE syuname
     RAISING
@@ -62,7 +62,7 @@ INTERFACE zif_abapgit_object
 
   METHODS jump
     IMPORTING
-      !is_sub_item   TYPE zif_abapgit_definitions=>ty_item OPTIONAL
+      !iv_extra      TYPE string OPTIONAL
     RETURNING
       VALUE(rv_exit) TYPE abap_bool
     RAISING
