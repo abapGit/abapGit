@@ -49,6 +49,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DECIDE_LI IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
+    DATA(lo_form) = zcl_abapgit_html_form=>create( ).
+
+    lo_form->radio(
+      iv_name        = 'foo'
+      iv_default_value = zif_abapgit_dot_abapgit=>c_folder_logic-prefix
+      iv_label       = 'Folder Logic'
+      iv_hint        = 'Define how package folders are named in repository' ).
+
+    lo_form->option(
+      iv_label       = 'Prefix'
+      iv_value       = zif_abapgit_dot_abapgit=>c_folder_logic-prefix ).
+
+    ri_html->add( lo_form->render( io_values = new #( ) ) ).
     ri_html->add( `hello world` ).
 
   ENDMETHOD.
