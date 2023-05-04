@@ -132,4 +132,9 @@ INTERFACE zif_abapgit_exit
     IMPORTING
       !is_repo_meta TYPE zif_abapgit_persistence=>ty_repo
       !ii_html      TYPE REF TO zif_abapgit_html .
+  METHODS enhance_repo_toolbar
+    IMPORTING
+      !io_menu TYPE REF TO zcl_abapgit_html_toolbar
+      !iv_key  TYPE zif_abapgit_persistence=>ty_value
+      !iv_act  TYPE string.
 ENDINTERFACE.
