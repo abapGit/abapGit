@@ -47,14 +47,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DECIDE_LI IMPLEMENTATION.
 
   METHOD constructor.
 
-    FIELD-SYMBOLS <tab> TYPE STANDARD TABLE.
+    FIELD-SYMBOLS <lt_tab> TYPE STANDARD TABLE.
 
     super->constructor( ).
 
 * copy contents of table to local scope
     CREATE DATA mr_list LIKE it_list.
-    ASSIGN mr_list->* TO <tab>.
-    APPEND LINES OF it_list TO <tab>.
+    ASSIGN mr_list->* TO <lt_tab>.
+    APPEND LINES OF it_list TO <lt_tab>.
 
     CREATE OBJECT mo_form_data.
     mo_form = get_form_schema( ).
