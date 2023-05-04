@@ -12,10 +12,6 @@ CLASS zcl_abapgit_gui_page_decide_li DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-    METHODS get_selected
-      RETURNING
-        VALUE(rv_index) TYPE i.
-
     METHODS zif_abapgit_gui_event_handler~on_event
         REDEFINITION .
   PROTECTED SECTION.
@@ -30,6 +26,9 @@ CLASS zcl_abapgit_gui_page_decide_li DEFINITION
         choose TYPE string VALUE 'choose',
       END OF c_event .
 
+    DATA mi_callback TYPE REF TO zif_abapgit_gui_page_callback.
+    DATA mr_list TYPE REF TO data.
+
 ENDCLASS.
 
 
@@ -40,14 +39,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DECIDE_LI IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
 
-* todo
-
-  ENDMETHOD.
-
-
-  METHOD get_selected.
-
-* todo
+    mi_callback = ii_callback.
+    GET REFERENCE OF it_list INTO mr_list.
 
   ENDMETHOD.
 
@@ -67,7 +60,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DECIDE_LI IMPLEMENTATION.
       WHEN c_event-back.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
       WHEN c_event-choose.
+* todo: call callback
         BREAK-POINT.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
 
   ENDMETHOD.
