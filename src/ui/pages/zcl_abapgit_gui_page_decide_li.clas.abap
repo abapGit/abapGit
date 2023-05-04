@@ -55,6 +55,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DECIDE_LI IMPLEMENTATION.
   METHOD render_content.
 
     FIELD-SYMBOLS <list> TYPE ANY TABLE.
+    FIELD-SYMBOLS <val> TYPE ANY.
+    FIELD-SYMBOLS <row> TYPE ANY.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -65,17 +67,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DECIDE_LI IMPLEMENTATION.
       iv_label = 'Choose from list' ).
 
     ASSIGN mr_list->* TO <list>.
-    LOOP AT <list> ASSIGNING FIELD-SYMBOL(<row>).
+    LOOP AT <list> ASSIGNING <row>.
 * todo, component configuration via constructor
-      ASSIGN COMPONENT 'TITLE' OF STRUCTURE <row> TO <row>.
+      ASSIGN COMPONENT 'TITLE' OF STRUCTURE <row> TO <val>.
       ASSERT sy-subrc = 0.
       lo_form->option(
-        iv_label = <row>
+        iv_label = <val>
         iv_value = |{ sy-tabix }| ).
     ENDLOOP.
 
     ri_html->add( lo_form->render( io_values = NEW #( ) ) ).
-    ri_html->add( `hello world` ).
 
   ENDMETHOD.
 
