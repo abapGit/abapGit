@@ -26,6 +26,9 @@ CLASS zcl_abapgit_gui_page_decide_li DEFINITION
         choose TYPE string VALUE 'choose',
       END OF c_event .
 
+    CONSTANTS c_radio_name TYPE string VALUE 'radio'.
+
+    DATA mo_form_data TYPE REF TO zcl_abapgit_string_map .
     DATA mi_callback TYPE REF TO zif_abapgit_gui_page_callback.
     DATA mr_list TYPE REF TO data.
 
@@ -42,6 +45,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DECIDE_LI IMPLEMENTATION.
 
     super->constructor( ).
 
+    CREATE OBJECT mo_form_data.
+
     mi_callback = ii_callback.
 
 * copy contents of table to local scope
@@ -55,20 +60,20 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DECIDE_LI IMPLEMENTATION.
   METHOD render_content.
 
     FIELD-SYMBOLS <list> TYPE ANY TABLE.
-    FIELD-SYMBOLS <val> TYPE ANY.
-    FIELD-SYMBOLS <row> TYPE ANY.
+    FIELD-SYMBOLS <val> TYPE any.
+    FIELD-SYMBOLS <row> TYPE any.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     DATA(lo_form) = zcl_abapgit_html_form=>create( ).
 
     lo_form->radio(
-      iv_name  = 'list'
+      iv_name  = c_radio_name
       iv_label = 'Choose from list' ).
 
     ASSIGN mr_list->* TO <list>.
     LOOP AT <list> ASSIGNING <row>.
-* todo, component configuration via constructor
+* todo, component/title configuration via constructor
       ASSIGN COMPONENT 'TITLE' OF STRUCTURE <row> TO <val>.
       ASSERT sy-subrc = 0.
       lo_form->option(
@@ -76,7 +81,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DECIDE_LI IMPLEMENTATION.
         iv_value = |{ sy-tabix }| ).
     ENDLOOP.
 
-    ri_html->add( lo_form->render( io_values = NEW #( ) ) ).
+    lo_form->command(
+      iv_label    = 'Choose'
+      iv_cmd_type = zif_abapgit_html_form=>c_cmd_type-input_main
+      iv_action   = c_event-choose
+    )->command(
+      iv_label    = 'Back'
+      iv_action   = c_event-back ).
+
+    ri_html->add( lo_form->render(
+      io_values = mo_form_data ) ).
 
   ENDMETHOD.
 
@@ -88,6 +102,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DECIDE_LI IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
       WHEN c_event-choose.
 * todo: call callback
+        DATA(val) = mo_form_data->get( c_radio_name ).
+
         BREAK-POINT.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
