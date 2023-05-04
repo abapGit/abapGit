@@ -25,7 +25,6 @@ CLASS lcl_callback_pr IMPLEMENTATION.
     DATA ls_pull LIKE LINE OF lt_pulls.
     DATA lv_pull_request TYPE string.
 
-    BREAK-POINT.
     lt_pulls = it_table.
 
     READ TABLE lt_pulls INDEX iv_index INTO ls_pull.

@@ -71,9 +71,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DECIDE_LI IMPLEMENTATION.
     FIELD-SYMBOLS <val> TYPE any.
     FIELD-SYMBOLS <row> TYPE any.
 
-    DATA(lo_form) = zcl_abapgit_html_form=>create( ).
+    ro_form = zcl_abapgit_html_form=>create( ).
 
-    lo_form->radio(
+    ro_form->radio(
       iv_name  = c_radio_name
       iv_label = 'Choose from list' ).
 
@@ -82,12 +82,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DECIDE_LI IMPLEMENTATION.
 * todo, component/title configuration via constructor
       ASSIGN COMPONENT 'TITLE' OF STRUCTURE <row> TO <val>.
       ASSERT sy-subrc = 0.
-      lo_form->option(
+      ro_form->option(
         iv_label = <val>
-        iv_value = |hello{ sy-tabix }| ).
+        iv_value = |{ sy-tabix }| ).
     ENDLOOP.
 
-    lo_form->command(
+    ro_form->command(
       iv_label    = 'Choose'
       iv_cmd_type = zif_abapgit_html_form=>c_cmd_type-input_main
       iv_action   = c_event-choose
@@ -110,16 +110,21 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DECIDE_LI IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
+    DATA lv_index TYPE i.
+    FIELD-SYMBOLS <table> TYPE STANDARD TABLE.
+
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.
       WHEN c_event-back.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
       WHEN c_event-choose.
-* todo: call callback
-        DATA(val) = mo_form_data->get( c_radio_name ).
-
-        BREAK-POINT.
+        lv_index = mo_form_data->get( c_radio_name ).
+        ASSERT lv_index > 0.
+        ASSIGN mr_list->* TO <table>.
+        mi_callback->row_selected(
+          it_table = <table>
+          iv_index = lv_index ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
 
