@@ -67,9 +67,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DECIDE_LI IMPLEMENTATION.
 
   METHOD get_form_schema.
 
-    FIELD-SYMBOLS <list> TYPE ANY TABLE.
-    FIELD-SYMBOLS <val> TYPE any.
-    FIELD-SYMBOLS <row> TYPE any.
+    FIELD-SYMBOLS <lt_list> TYPE ANY TABLE.
+    FIELD-SYMBOLS <lv_val> TYPE any.
+    FIELD-SYMBOLS <ls_row> TYPE any.
 
     ro_form = zcl_abapgit_html_form=>create( ).
 
@@ -77,13 +77,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DECIDE_LI IMPLEMENTATION.
       iv_name  = c_radio_name
       iv_label = 'Choose from list' ).
 
-    ASSIGN mr_list->* TO <list>.
-    LOOP AT <list> ASSIGNING <row>.
-* todo, component/title configuration via constructor
-      ASSIGN COMPONENT 'TITLE' OF STRUCTURE <row> TO <val>.
+    ASSIGN mr_list->* TO <lt_list>.
+    LOOP AT <lt_list> ASSIGNING <ls_row>.
+      ASSIGN COMPONENT 'TITLE' OF STRUCTURE <ls_row> TO <lv_val>.
       ASSERT sy-subrc = 0.
       ro_form->option(
-        iv_label = <val>
+        iv_label = <lv_val>
         iv_value = |{ sy-tabix }| ).
     ENDLOOP.
 
@@ -102,8 +101,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DECIDE_LI IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ri_html->add( mo_form->render(
-      io_values = mo_form_data ) ).
+    ri_html->add( mo_form->render( io_values = mo_form_data ) ).
 
   ENDMETHOD.
 
@@ -111,7 +109,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DECIDE_LI IMPLEMENTATION.
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA lv_index TYPE i.
-    FIELD-SYMBOLS <table> TYPE STANDARD TABLE.
+    FIELD-SYMBOLS <lt_table> TYPE STANDARD TABLE.
 
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
@@ -121,9 +119,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DECIDE_LI IMPLEMENTATION.
       WHEN c_event-choose.
         lv_index = mo_form_data->get( c_radio_name ).
         ASSERT lv_index > 0.
-        ASSIGN mr_list->* TO <table>.
+        ASSIGN mr_list->* TO <lt_table>.
         mi_callback->row_selected(
-          it_table = <table>
+          it_table = <lt_table>
           iv_index = lv_index ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
