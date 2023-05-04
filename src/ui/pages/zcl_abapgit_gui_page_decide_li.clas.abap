@@ -7,7 +7,8 @@ CLASS zcl_abapgit_gui_page_decide_li DEFINITION
   PUBLIC SECTION.
     METHODS constructor
       IMPORTING
-        ii_list TYPE STANDARD TABLE
+        it_list     TYPE STANDARD TABLE
+        ii_callback TYPE REF TO zif_abapgit_gui_page_callback
       RAISING
         zcx_abapgit_exception.
 

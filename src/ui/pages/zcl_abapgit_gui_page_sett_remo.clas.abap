@@ -152,9 +152,9 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
         VALUE(rv_commit) TYPE ty_remote_settings-commit
       RAISING
         zcx_abapgit_exception.
-    METHODS choose_pull_req
+    METHODS list_pull_req
       RETURNING
-        VALUE(rv_pull_request) TYPE ty_remote_settings-pull_request
+        VALUE(rt_pulls) TYPE zif_abapgit_pr_enum_provider=>ty_pull_requests
       RAISING
         zcx_abapgit_exception.
 
@@ -245,35 +245,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
     rv_commit = li_popups->commit_list_popup(
       iv_repo_url    = lv_url
       iv_branch_name = lv_branch_name )-sha1.
-
-  ENDMETHOD.
-
-
-  METHOD choose_pull_req.
-
-    DATA:
-      lt_pulls TYPE zif_abapgit_pr_enum_provider=>ty_pull_requests,
-      ls_pull  LIKE LINE OF lt_pulls,
-      lv_url   TYPE ty_remote_settings-url.
-
-    IF mo_form_data->get( c_id-offline ) = abap_true.
-      RETURN.
-    ENDIF.
-
-    lv_url = mo_form_data->get( c_id-url ).
-
-    lt_pulls = zcl_abapgit_pr_enumerator=>new( lv_url )->get_pulls( ).
-
-    IF lines( lt_pulls ) = 0.
-      MESSAGE 'No pull requests found' TYPE 'S'.
-      RETURN.
-    ENDIF.
-
-    ls_pull = zcl_abapgit_ui_factory=>get_popups( )->choose_pr_popup( lt_pulls ).
-
-    IF ls_pull IS NOT INITIAL.
-      rv_pull_request = ls_pull-head_url && '@' && ls_pull-head_branch.
-    ENDIF.
 
   ENDMETHOD.
 
@@ -630,6 +601,25 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD list_pull_req.
+
+    DATA lv_url TYPE ty_remote_settings-url.
+
+    IF mo_form_data->get( c_id-offline ) = abap_true.
+      zcx_abapgit_exception=>raise( 'Not possible for offline repositories' ).
+    ENDIF.
+
+    lv_url = mo_form_data->get( c_id-url ).
+
+    rt_pulls = zcl_abapgit_pr_enumerator=>new( lv_url )->get_pulls( ).
+
+    IF lines( rt_pulls ) = 0.
+      zcx_abapgit_exception=>raise( 'No pull requests found' ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD save_settings.
 
     DATA:
@@ -891,6 +881,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
       lv_branch       TYPE ty_remote_settings-branch,
       lv_tag          TYPE ty_remote_settings-tag,
       lv_commit       TYPE ty_remote_settings-commit,
+      li_callback     TYPE REF TO zif_abapgit_gui_page_callback,
       lv_pull_request TYPE ty_remote_settings-pull_request.
 
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
@@ -958,16 +949,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
         ENDIF.
 
       WHEN c_event-choose_pull_request.
-        lv_pull_request = choose_pull_req( ).
 
-        IF lv_pull_request IS INITIAL.
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
-        ELSE.
-          mo_form_data->set(
-            iv_key = c_id-pull_request
-            iv_val = lv_pull_request ).
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-        ENDIF.
+        CREATE OBJECT li_callback TYPE lcl_callback_pr.
+
+        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_decide_li
+          EXPORTING
+            it_list     = list_pull_req( )
+            ii_callback = li_callback.
+
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN c_event-switch.
         switch_online_offline( ).
