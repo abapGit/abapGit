@@ -28,9 +28,15 @@ CLASS zcl_abapgit_gui_page_decide_li DEFINITION
 
     CONSTANTS c_radio_name TYPE string VALUE 'radio'.
 
-    DATA mo_form_data TYPE REF TO zcl_abapgit_string_map .
+    DATA mo_form TYPE REF TO zcl_abapgit_html_form.
+    DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
+    DATA mo_form_util TYPE REF TO zcl_abapgit_html_form_utils.
     DATA mi_callback TYPE REF TO zif_abapgit_gui_page_callback.
     DATA mr_list TYPE REF TO data.
+
+    METHODS get_form_schema
+      RETURNING
+        VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form.
 
 ENDCLASS.
 
@@ -45,25 +51,25 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DECIDE_LI IMPLEMENTATION.
 
     super->constructor( ).
 
-    CREATE OBJECT mo_form_data.
-
-    mi_callback = ii_callback.
-
 * copy contents of table to local scope
     CREATE DATA mr_list LIKE it_list.
     ASSIGN mr_list->* TO <tab>.
     APPEND LINES OF it_list TO <tab>.
 
+    CREATE OBJECT mo_form_data.
+    mo_form = get_form_schema( ).
+    mo_form_util = zcl_abapgit_html_form_utils=>create( mo_form ).
+
+    mi_callback = ii_callback.
+
   ENDMETHOD.
 
 
-  METHOD render_content.
+  METHOD get_form_schema.
 
     FIELD-SYMBOLS <list> TYPE ANY TABLE.
     FIELD-SYMBOLS <val> TYPE any.
     FIELD-SYMBOLS <row> TYPE any.
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     DATA(lo_form) = zcl_abapgit_html_form=>create( ).
 
@@ -78,7 +84,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DECIDE_LI IMPLEMENTATION.
       ASSERT sy-subrc = 0.
       lo_form->option(
         iv_label = <val>
-        iv_value = |{ sy-tabix }| ).
+        iv_value = |hello{ sy-tabix }| ).
     ENDLOOP.
 
     lo_form->command(
@@ -89,13 +95,22 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DECIDE_LI IMPLEMENTATION.
       iv_label    = 'Back'
       iv_action   = c_event-back ).
 
-    ri_html->add( lo_form->render(
+  ENDMETHOD.
+
+
+  METHOD render_content.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    ri_html->add( mo_form->render(
       io_values = mo_form_data ) ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_event_handler~on_event.
+
+    mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.
       WHEN c_event-back.
