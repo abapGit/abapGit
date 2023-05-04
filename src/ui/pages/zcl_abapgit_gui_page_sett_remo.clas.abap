@@ -950,7 +950,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
 
       WHEN c_event-choose_pull_request.
 
-        CREATE OBJECT li_callback TYPE lcl_callback_pr.
+        CREATE OBJECT li_callback TYPE lcl_callback_pr
+          EXPORTING
+            io_form_data = mo_form_data
+            iv_key       = c_id-pull_request.
 
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_decide_li
           EXPORTING
