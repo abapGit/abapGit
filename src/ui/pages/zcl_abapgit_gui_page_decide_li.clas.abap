@@ -37,10 +37,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DECIDE_LI IMPLEMENTATION.
 
 
   METHOD constructor.
+
+    FIELD-SYMBOLS <tab> TYPE STANDARD TABLE.
+
     super->constructor( ).
 
     mi_callback = ii_callback.
-    GET REFERENCE OF it_list INTO mr_list.
+
+* copy contents of table to local scope
+    CREATE DATA mr_list LIKE it_list.
+    ASSIGN mr_list->* TO <tab>.
+    APPEND LINES OF it_list TO <tab>.
 
   ENDMETHOD.
 
@@ -54,14 +61,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DECIDE_LI IMPLEMENTATION.
     DATA(lo_form) = zcl_abapgit_html_form=>create( ).
 
     lo_form->radio(
-      iv_name        = 'list'
-      iv_label       = 'Choose from list' ).
+      iv_name  = 'list'
+      iv_label = 'Choose from list' ).
 
     ASSIGN mr_list->* TO <list>.
     LOOP AT <list> ASSIGNING FIELD-SYMBOL(<row>).
-      break-point.
+* todo, component configuration via constructor
+      ASSIGN COMPONENT 'TITLE' OF STRUCTURE <row> TO <row>.
+      ASSERT sy-subrc = 0.
       lo_form->option(
-        iv_label = 'Prefix'
+        iv_label = <row>
         iv_value = |{ sy-tabix }| ).
     ENDLOOP.
 
