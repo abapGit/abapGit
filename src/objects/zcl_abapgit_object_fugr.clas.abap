@@ -1285,7 +1285,40 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
-    " Covered by ZCL_ABAPGIT_OBJECTS=>JUMP
+
+    DATA:
+      ls_item      TYPE zif_abapgit_definitions=>ty_item,
+      lt_functions TYPE ty_rs38l_incl_tt,
+      lt_includes  TYPE ty_sobj_name_tt.
+
+    FIELD-SYMBOLS:
+      <ls_function> LIKE LINE OF lt_functions,
+      <lv_include>  LIKE LINE OF lt_includes.
+
+    ls_item-obj_type = 'PROG'.
+    ls_item-obj_name = to_upper( iv_extra ).
+
+    lt_functions = functions( ).
+
+    LOOP AT lt_functions ASSIGNING <ls_function> WHERE funcname = ls_item-obj_name.
+      ls_item-obj_name = <ls_function>-include.
+      rv_exit = zcl_abapgit_ui_factory=>get_gui_jumper( )->jump( ls_item ).
+      IF rv_exit = abap_true.
+        RETURN.
+      ENDIF.
+    ENDLOOP.
+
+    lt_includes = includes( ).
+
+    LOOP AT lt_includes ASSIGNING <lv_include> WHERE table_line = ls_item-obj_name.
+      rv_exit = zcl_abapgit_ui_factory=>get_gui_jumper( )->jump( ls_item ).
+      IF rv_exit = abap_true.
+        RETURN.
+      ENDIF.
+    ENDLOOP.
+
+    " Otherwise covered by ZCL_ABAPGIT_OBJECTS=>JUMP
+
   ENDMETHOD.
 
 
