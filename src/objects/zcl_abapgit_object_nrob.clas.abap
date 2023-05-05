@@ -150,11 +150,46 @@ CLASS zcl_abapgit_object_nrob IMPLEMENTATION.
           ls_attributes TYPE tnro,
           ls_text       TYPE tnrot.
 
+    FIELD-SYMBOLS <lv_any> TYPE any.
 
     io_xml->read( EXPORTING iv_name = 'ATTRIBUTES'
                   CHANGING cg_data = ls_attributes ).
     io_xml->read( EXPORTING iv_name = 'TEXT'
                   CHANGING cg_data = ls_text ).
+
+    ASSIGN COMPONENT 'CHANGED_AT' OF STRUCTURE ls_attributes TO <lv_any>.
+    IF sy-subrc = 0.
+      GET TIME STAMP FIELD <lv_any>.
+    ENDIF.
+    ASSIGN COMPONENT 'CHANGED_BY' OF STRUCTURE ls_attributes TO <lv_any>.
+    IF sy-subrc = 0.
+      <lv_any> = sy-uname.
+    ENDIF.
+    ASSIGN COMPONENT 'ENAME' OF STRUCTURE ls_attributes TO <lv_any>.
+    IF sy-subrc = 0.
+      <lv_any> = sy-uname.
+    ENDIF.
+    ASSIGN COMPONENT 'EDATE' OF STRUCTURE ls_attributes TO <lv_any>.
+    IF sy-subrc = 0.
+      <lv_any> = sy-datum.
+    ENDIF.
+    ASSIGN COMPONENT 'ETIME' OF STRUCTURE ls_attributes TO <lv_any>.
+    IF sy-subrc = 0.
+      <lv_any> = sy-uzeit.
+    ENDIF.
+
+    ASSIGN COMPONENT 'ENAME' OF STRUCTURE ls_text TO <lv_any>.
+    IF sy-subrc = 0.
+      <lv_any> = sy-uname.
+    ENDIF.
+    ASSIGN COMPONENT 'EDATE' OF STRUCTURE ls_text TO <lv_any>.
+    IF sy-subrc = 0.
+      <lv_any> = sy-datum.
+    ENDIF.
+    ASSIGN COMPONENT 'ETIME' OF STRUCTURE ls_text TO <lv_any>.
+    IF sy-subrc = 0.
+      <lv_any> = sy-uzeit.
+    ENDIF.
 
     CALL FUNCTION 'NUMBER_RANGE_OBJECT_UPDATE'
       EXPORTING
@@ -276,6 +311,8 @@ CLASS zcl_abapgit_object_nrob IMPLEMENTATION.
           ls_attributes TYPE tnro,
           ls_text       TYPE tnrot.
 
+    FIELD-SYMBOLS <lv_any> TYPE any.
+
 
     lv_object = ms_item-obj_name.
 
@@ -293,6 +330,40 @@ CLASS zcl_abapgit_object_nrob IMPLEMENTATION.
       RETURN.
     ELSEIF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    ASSIGN COMPONENT 'CHANGED_AT' OF STRUCTURE ls_attributes TO <lv_any>.
+    IF sy-subrc = 0.
+      CLEAR <lv_any>.
+    ENDIF.
+    ASSIGN COMPONENT 'CHANGED_BY' OF STRUCTURE ls_attributes TO <lv_any>.
+    IF sy-subrc = 0.
+      CLEAR <lv_any>.
+    ENDIF.
+    ASSIGN COMPONENT 'ENAME' OF STRUCTURE ls_attributes TO <lv_any>.
+    IF sy-subrc = 0.
+      CLEAR <lv_any>.
+    ENDIF.
+    ASSIGN COMPONENT 'EDATE' OF STRUCTURE ls_attributes TO <lv_any>.
+    IF sy-subrc = 0.
+      CLEAR <lv_any>.
+    ENDIF.
+    ASSIGN COMPONENT 'ETIME' OF STRUCTURE ls_attributes TO <lv_any>.
+    IF sy-subrc = 0.
+      CLEAR <lv_any>.
+    ENDIF.
+
+    ASSIGN COMPONENT 'ENAME' OF STRUCTURE ls_text TO <lv_any>.
+    IF sy-subrc = 0.
+      CLEAR <lv_any>.
+    ENDIF.
+    ASSIGN COMPONENT 'EDATE' OF STRUCTURE ls_text TO <lv_any>.
+    IF sy-subrc = 0.
+      CLEAR <lv_any>.
+    ENDIF.
+    ASSIGN COMPONENT 'ETIME' OF STRUCTURE ls_text TO <lv_any>.
+    IF sy-subrc = 0.
+      CLEAR <lv_any>.
     ENDIF.
 
     io_xml->add( iv_name = 'ATTRIBUTES'
