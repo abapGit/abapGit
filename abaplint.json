@@ -196,7 +196,7 @@
     },
     "forbidden_identifier": true,
     "try_without_catch": true,
-    "unused_variables": true,
+    "unused_variables": false,
     "prefix_is_current_class": true,
     "allowed_object_naming": true,
     "check_comments": false,
