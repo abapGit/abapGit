@@ -68,7 +68,13 @@
     "align_parameters": false,
     "cds_parser_error": true,
     "constant_classes": true,
-    "no_aliases": false,
+    "no_aliases": {
+      "exclude": [
+        "/json/",
+        "zcl_abapgit_repo.clas.abap",
+        "zcl_abapgit_repo_online.clas.abap"
+      ]    
+    },
     "nrob_consistency": true,
     "omit_preceding_zeros": true,
     "prefer_corresponding": true,
