@@ -198,7 +198,7 @@ CLASS lcl_status_consistency_checks IMPLEMENTATION.
     li_namespace = zcl_abapgit_factory=>get_sap_namespace( ).
 
     LOOP AT lt_namespace INTO lv_namespace.
-      IF iv_root_package EQ lv_namespace.
+      IF iv_root_package CS lv_namespace.
         lv_namespace_found = abap_true.
       ENDIF.
 
