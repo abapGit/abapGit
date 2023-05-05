@@ -73,7 +73,7 @@
         "/json/",
         "zcl_abapgit_repo.clas.abap",
         "zcl_abapgit_repo_online.clas.abap"
-      ]    
+      ]
     },
     "nrob_consistency": true,
     "omit_preceding_zeros": true,
@@ -196,7 +196,7 @@
     },
     "forbidden_identifier": true,
     "try_without_catch": true,
-    "unused_variables": false,
+    "unused_variables": true,
     "prefix_is_current_class": true,
     "allowed_object_naming": true,
     "check_comments": false,
