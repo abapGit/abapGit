@@ -296,17 +296,20 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
   METHOD render_browser_control_warning.
 
-    DATA li_html TYPE REF TO zif_abapgit_html.
+    DATA li_documentation_link TYPE REF TO zif_abapgit_html.
 
-    CREATE OBJECT li_html TYPE zcl_abapgit_html.
+    CREATE OBJECT li_documentation_link TYPE zcl_abapgit_html.
 
-    li_html->add_a( iv_txt = 'Documentation'
-                    iv_typ = zif_abapgit_html=>c_action_type-url
-                    iv_act =  'https://docs.abapgit.org/guide-sapgui.html#sap-gui-for-windows' ).
+    li_documentation_link->add_a(
+        iv_txt = 'Documentation'
+        iv_typ = zif_abapgit_html=>c_action_type-url
+        iv_act =  'https://docs.abapgit.org/guide-sapgui.html#sap-gui-for-windows' ).
 
     ii_html->add( '<div id="browser-control-warning" class="browser-control-warning">' ).
     ii_html->add( zcl_abapgit_gui_chunk_lib=>render_warning_banner(
-                    |Attention: You use Edge browser control. There are several known malfunctions. See | && li_html->render( ) ) ).
+                    |Attention: You use Edge browser control. |
+                 && |There are several known malfunctions. See |
+                 && li_documentation_link->render( ) ) ).
     ii_html->add( '</div>' ).
 
   ENDMETHOD.
