@@ -1498,3 +1498,8 @@ table.unit_tests {
   padding-left: 0;
   border-left: none;
 }
+
+/* Warning if wrong browser control is used */
+.browser-control-warning {
+  width: 100%;
+}
