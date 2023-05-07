@@ -77,21 +77,44 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
 
 
   METHOD constructor.
+
     super->constructor( ).
     mo_repo = io_repo.
+
+    TRY.
+        CALL METHOD ('\PROGRAM=SAPLSAUCV_GUI_RUNNER\CLASS=PASSPORT')=>get.
+      CATCH cx_root.
+        zcx_abapgit_exception=>raise( |Not supported in your NW release| ).
+    ENDTRY.
+
   ENDMETHOD.
 
 
   METHOD create.
 
     DATA lo_component TYPE REF TO zcl_abapgit_gui_page_runit.
+    DATA lo_page_code_inspector TYPE REF TO zcl_abapgit_gui_page_code_insp.
 
-    CREATE OBJECT lo_component EXPORTING io_repo = io_repo.
+    TRY.
+        CREATE OBJECT lo_component EXPORTING io_repo = io_repo.
 
-    ri_page = zcl_abapgit_gui_page_hoc=>create(
-      iv_page_title         = |Unit Tests|
-      ii_page_menu_provider = lo_component
-      ii_child_component    = lo_component ).
+        ri_page = zcl_abapgit_gui_page_hoc=>create(
+          iv_page_title         = |Unit Tests|
+          ii_page_menu_provider = lo_component
+          ii_child_component    = lo_component ).
+
+      CATCH zcx_abapgit_exception.
+
+        " Fallback as either SAPLSAUCV_GUI_RUNNER is not available in old releases
+        " or passport=>get is private in newer releases NW >= 756
+        CREATE OBJECT lo_page_code_inspector
+          EXPORTING
+            io_repo          = io_repo
+            iv_check_variant = 'SWF_ABAP_UNIT'.
+
+        ri_page = lo_page_code_inspector.
+
+    ENDTRY.
 
   ENDMETHOD.
 
