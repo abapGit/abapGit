@@ -28,6 +28,7 @@
 /* exported enumerateUiActions */
 /* exported onDiffCollapse */
 /* exported restoreScrollPosition */
+/* exported toggleBrowserControlWarning */
 
 /**********************************************************
  * Polyfills
@@ -2481,5 +2482,11 @@ function toggleSticky() {
     header.classList.add(stickyClass);
   } else {
     header.classList.remove(stickyClass);
+  }
+}
+
+function toggleBrowserControlWarning(){
+  if (!navigator.userAgent.includes("Edg")){
+    document.getElementById("browser-control-warning").style.display = "none";
   }
 }
