@@ -105,7 +105,7 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
 
       CATCH zcx_abapgit_exception.
 
-        " Fallback as SAPLSAUCV_GUI_RUNNER is either not available in old releases
+        " Fallback as either SAPLSAUCV_GUI_RUNNER is not available in old releases
         " or passport=>get is private in newer releases NW >= 756
         CREATE OBJECT lo_page_code_inspector
           EXPORTING
