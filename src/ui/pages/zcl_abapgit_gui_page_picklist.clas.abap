@@ -35,6 +35,7 @@ CLASS zcl_abapgit_gui_page_picklist DEFINITION
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
     DATA mo_form_util TYPE REF TO zcl_abapgit_html_form_utils.
     DATA mr_list TYPE REF TO data.
+    DATA mv_selected TYPE i.
 
     METHODS get_form_schema
       RETURNING
@@ -97,7 +98,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PICKLIST IMPLEMENTATION.
 
 
   METHOD get_result.
-    ASSERT 1 = 'todo'.
+    rv_index = mv_selected.
   ENDMETHOD.
 
 
@@ -121,8 +122,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PICKLIST IMPLEMENTATION.
       WHEN c_event-back.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
       WHEN c_event-choose.
-        lv_index = mo_form_data->get( c_radio_name ).
-* todo
+        mv_selected = mo_form_data->get( c_radio_name ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
 
