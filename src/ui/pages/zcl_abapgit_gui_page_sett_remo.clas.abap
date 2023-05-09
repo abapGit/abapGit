@@ -264,21 +264,23 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
           lv_pull_request TYPE ty_remote_settings-pull_request.
 
     lt_pulls = list_pull_req( ).
+
     CREATE OBJECT lo_decide_pr
       EXPORTING
         it_list = lt_pulls.
 
-* todo
+* todo, something like
+* lv_cancel = framework->show_modal( lo_decide_pr ).
 
     IF lv_cancel = abap_true.
       rv_state = zcl_abapgit_gui=>c_event_state-no_more_act.
     ELSE.
-* todo
       lv_index = lo_decide_pr->get_result( ).
       READ TABLE lt_pulls INDEX lv_index INTO ls_pull.
-*          mo_form_data->set(
-*            iv_key = c_id-pull_request
-*            iv_val = lv_pull_request ).
+      ASSERT sy-subrc = 0.
+      mo_form_data->set(
+        iv_key = c_id-pull_request
+        iv_val = ls_pull-head_url && '@' && ls_pull-head_branch ).
       rv_state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDIF.
   ENDMETHOD.
