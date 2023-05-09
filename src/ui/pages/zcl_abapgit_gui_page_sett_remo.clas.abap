@@ -880,7 +880,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
       lv_url          TYPE ty_remote_settings-url,
       lv_branch       TYPE ty_remote_settings-branch,
       lv_tag          TYPE ty_remote_settings-tag,
+      lv_cancel       TYPE abap_bool,
+      lv_index        TYPE i,
       lv_commit       TYPE ty_remote_settings-commit,
+      lo_decide_pr    TYPE REF TO zcl_abapgit_gui_page_picklist,
+      lt_pulls        TYPE zif_abapgit_pr_enum_provider=>ty_pull_requests,
+      ls_pull         LIKE LINE OF lt_pulls,
       lv_pull_request TYPE ty_remote_settings-pull_request.
 
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
@@ -948,17 +953,24 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
         ENDIF.
 
       WHEN c_event-choose_pull_request.
+        lt_pulls = list_pull_req( ).
+        CREATE OBJECT lo_decide_pr
+          EXPORTING
+            it_list = lt_pulls.
+
 * todo
-*        lv_pull_request = choose_pull_req( ).
-*
-*        IF lv_pull_request IS INITIAL.
-*          rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
-*        ELSE.
+
+        IF lv_cancel = abap_true.
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
+        ELSE.
+* todo
+          lv_index = lo_decide_pr->get_result( ).
+          READ TABLE lt_pulls INDEX lv_index INTO ls_pull.
 *          mo_form_data->set(
 *            iv_key = c_id-pull_request
 *            iv_val = lv_pull_request ).
-*          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-*        ENDIF.
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+        ENDIF.
 
       WHEN c_event-switch.
         switch_online_offline( ).
