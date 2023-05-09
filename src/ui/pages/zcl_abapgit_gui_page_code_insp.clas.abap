@@ -7,8 +7,9 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION PUBLIC FINAL CREATE PUBLIC
     METHODS:
       constructor
         IMPORTING
-          io_repo  TYPE REF TO zcl_abapgit_repo
-          io_stage TYPE REF TO zcl_abapgit_stage OPTIONAL
+          io_repo          TYPE REF TO zcl_abapgit_repo
+          io_stage         TYPE REF TO zcl_abapgit_stage OPTIONAL
+          iv_check_variant TYPE sci_chkv OPTIONAL
         RAISING
           zcx_abapgit_exception,
 
@@ -118,6 +119,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
     super->constructor( ).
     mo_repo = io_repo.
     mo_stage = io_stage.
+    mv_check_variant = iv_check_variant.
     ms_control-page_title = 'Code Inspector'.
     determine_check_variant( ).
     run_code_inspector( ).
@@ -125,6 +127,10 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
 
   METHOD determine_check_variant.
+
+    IF mv_check_variant IS NOT INITIAL.
+      RETURN.
+    ENDIF.
 
     mv_check_variant = mo_repo->get_local_settings( )-code_inspector_check_variant.
 
