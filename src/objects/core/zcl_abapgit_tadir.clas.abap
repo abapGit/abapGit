@@ -52,6 +52,14 @@ CLASS zcl_abapgit_tadir DEFINITION
         !ct_tadir   TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
+    METHODS add_namespace
+      IMPORTING
+        !iv_package TYPE devclass
+        !iv_object  TYPE csequence
+      CHANGING
+        !ct_tadir   TYPE zif_abapgit_definitions=>ty_tadir_tt
+      RAISING
+        zcx_abapgit_exception .
     METHODS determine_path
       IMPORTING
         !iv_package TYPE tadir-devclass
@@ -103,52 +111,66 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD add_namespaces.
+  METHOD add_namespace.
 
     DATA:
-      lv_name           TYPE progname,
-      lv_namespace      TYPE namespace,
-      lv_prev_namespace TYPE namespace,
-      lt_tadir_nspc     TYPE zif_abapgit_definitions=>ty_tadir_tt.
+      lv_name      TYPE progname,
+      lv_namespace TYPE namespace.
 
-    FIELD-SYMBOLS:
-      <ls_tadir> LIKE LINE OF ct_tadir,
-      <ls_nspc>  LIKE LINE OF ct_tadir.
+    FIELD-SYMBOLS <ls_tadir> LIKE LINE OF ct_tadir.
 
+    lv_name = iv_object.
 
-    LOOP AT ct_tadir ASSIGNING <ls_tadir> WHERE obj_name(1) = '/'.
+    CALL FUNCTION 'RS_NAME_SPLIT_NAMESPACE'
+      EXPORTING
+        name_with_namespace = lv_name
+      IMPORTING
+        namespace           = lv_namespace
+      EXCEPTIONS
+        delimiter_error     = 1
+        OTHERS              = 2.
 
-      " Namespaces are not in TADIR, but are necessary for creating objects in transportable packages
-      lv_name = <ls_tadir>-obj_name.
+    IF sy-subrc = 0 AND lv_namespace IS NOT INITIAL.
 
-      CALL FUNCTION 'RS_NAME_SPLIT_NAMESPACE'
-        EXPORTING
-          name_with_namespace = lv_name
-        IMPORTING
-          namespace           = lv_namespace
-        EXCEPTIONS
-          delimiter_error     = 1
-          OTHERS              = 2.
-
-      IF sy-subrc = 0 AND lv_namespace IS NOT INITIAL
-         AND lv_namespace <> lv_prev_namespace.
-
-        READ TABLE lt_tadir_nspc TRANSPORTING NO FIELDS
-          WITH KEY pgmid = 'R3TR' object = 'NSPC' obj_name = lv_namespace.
-        IF sy-subrc <> 0.
-          APPEND INITIAL LINE TO ct_tadir ASSIGNING <ls_nspc>.
-          <ls_nspc>-pgmid    = 'R3TR'.
-          <ls_nspc>-object   = 'NSPC'.
-          <ls_nspc>-obj_name = lv_namespace.
-          <ls_nspc>-devclass = iv_package.
-          <ls_nspc>-srcsystem = sy-sysid.
-
-          INSERT <ls_nspc> INTO TABLE lt_tadir_nspc.
-        ENDIF.
-        lv_prev_namespace = lv_namespace.
+      READ TABLE ct_tadir TRANSPORTING NO FIELDS
+        WITH KEY pgmid = 'R3TR' object = 'NSPC' obj_name = lv_namespace.
+      IF sy-subrc <> 0.
+        APPEND INITIAL LINE TO ct_tadir ASSIGNING <ls_tadir>.
+        <ls_tadir>-pgmid     = 'R3TR'.
+        <ls_tadir>-object    = 'NSPC'.
+        <ls_tadir>-obj_name  = lv_namespace.
+        <ls_tadir>-devclass  = iv_package.
+        <ls_tadir>-srcsystem = sy-sysid.
       ENDIF.
 
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD add_namespaces.
+
+    FIELD-SYMBOLS <ls_tadir> LIKE LINE OF ct_tadir.
+
+    " Namespaces are not in TADIR, but are necessary for creating objects in transportable packages
+    LOOP AT ct_tadir ASSIGNING <ls_tadir> WHERE obj_name(1) = '/'.
+      add_namespace(
+        EXPORTING
+          iv_package = iv_package
+          iv_object  = <ls_tadir>-obj_name
+        CHANGING
+          ct_tadir   = ct_tadir ).
     ENDLOOP.
+
+    " Root package of repo might not exist yet but needs to be considered, too
+    IF iv_package CP '/*'.
+      add_namespace(
+        EXPORTING
+          iv_package = iv_package
+          iv_object  = iv_package
+        CHANGING
+          ct_tadir   = ct_tadir ).
+    ENDIF.
 
   ENDMETHOD.
 
