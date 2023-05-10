@@ -521,4 +521,13 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
       iv_cachable = abap_false ).
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_services~show_modal.
+
+    BREAK-POINT.
+
+*    todo, set rv_cancel
+
+  ENDMETHOD.
 ENDCLASS.
