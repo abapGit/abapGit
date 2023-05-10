@@ -153,6 +153,8 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
       RAISING
         zcx_abapgit_exception.
     METHODS choose_pr
+      IMPORTING
+        ii_gui_services TYPE REF TO zif_abapgit_gui_services
       RETURNING
         VALUE(rv_state) TYPE i
       RAISING
@@ -269,8 +271,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
       EXPORTING
         it_list = lt_pulls.
 
-* todo, something like
-* lv_cancel = framework->show_modal( lo_decide_pr ).
+    lv_cancel = ii_gui_services->show_modal( lo_decide_pr ).
 
     IF lv_cancel = abap_true.
       rv_state = zcl_abapgit_gui=>c_event_state-no_more_act.
@@ -984,7 +985,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
         ENDIF.
 
       WHEN c_event-choose_pull_request.
-        rs_handled-state = choose_pr( ).
+        rs_handled-state = choose_pr( ii_event->mi_gui_services ).
 
       WHEN c_event-switch.
         switch_online_offline( ).
