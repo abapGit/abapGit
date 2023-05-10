@@ -23,7 +23,6 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
   METHOD get_instance.
 
     DATA lv_class_name TYPE string.
-    
     lv_class_name = 'ZCL_ABAPGIT_USER_EXIT'.
     
     IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true. 
