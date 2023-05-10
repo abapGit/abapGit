@@ -525,7 +525,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_services~show_modal.
 
-    BREAK-POINT.
+    call_page( ii_renderable ).
 
 *    todo, set rv_cancel
 
