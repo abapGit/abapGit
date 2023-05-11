@@ -927,7 +927,6 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
     ELSE.
       mo_popup->normalize( ii_event->form_data( ) ).
-      mo_popup->validate( ).
     ENDIF.
 
     CASE ii_event->mv_action.
@@ -1012,6 +1011,8 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_popup-pull_request_ok.
+        mo_popup->validate( ).
+
         IF mo_popup->is_valid( ) = abap_true.
           lv_pull_request = get_pull_request( mo_popup->get_value( zcl_abapgit_gui_popup_picklist=>c_selected_row ) ).
         ENDIF.
@@ -1020,13 +1021,13 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
           mo_form_data->set(
             iv_key = c_id-pull_request
             iv_val = lv_pull_request ).
-          CLEAR mo_popup.
+          CLEAR mo_popup. "closes modal
         ENDIF.
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_popup-pull_request_cancel.
-        CLEAR mo_popup.
+        CLEAR mo_popup. "closes modal
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
     ENDCASE.
