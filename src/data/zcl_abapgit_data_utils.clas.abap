@@ -158,7 +158,7 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
     TRY.
         CALL METHOD ('XCO_CP_ABAP_DICTIONARY')=>database_table
           EXPORTING
-            iv_name           = iv_name
+            iv_name           = iv_name(16)
           RECEIVING
             ro_database_table = lo_table.
         CALL METHOD lo_table->('IF_XCO_DATABASE_TABLE~CONTENT')
