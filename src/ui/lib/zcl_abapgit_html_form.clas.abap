@@ -920,7 +920,7 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
     DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
     FIELD-SYMBOLS: <ls_command> TYPE zif_abapgit_html_form=>ty_command.
 
-    ls_hotkey_action-ui_component = 'Form'.
+    ls_hotkey_action-ui_component = |Form-{ mv_form_id }|.
 
     READ TABLE mt_commands WITH KEY cmd_type = zif_abapgit_html_form=>c_cmd_type-input_main
                            ASSIGNING <ls_command>.
