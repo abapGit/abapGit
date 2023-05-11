@@ -225,7 +225,10 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
           RECEIVING
             ro_database_table = lo_obj.
         ASSIGN lo_obj->('IF_XCO_DATABASE_TABLE~FIELDS->IF_XCO_DBT_FIELDS_FACTORY~KEY') TO <lg_any>.
-        ASSERT sy-subrc = 0.
+        IF sy-subrc  <> 0.
+* fallback to RTTI, KEY field does not exist in S/4 2020
+          RAISE EXCEPTION TYPE cx_sy_dyn_call_illegal_class.
+        ENDIF.
         lo_obj = <lg_any>.
         CALL METHOD lo_obj->('IF_XCO_DBT_FIELDS~GET_NAMES')
           RECEIVING
