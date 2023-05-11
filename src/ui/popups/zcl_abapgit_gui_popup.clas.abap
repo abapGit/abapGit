@@ -6,8 +6,8 @@ CLASS zcl_abapgit_gui_popup DEFINITION
 
     CONSTANTS:
       BEGIN OF c_event,
-        ok     TYPE string VALUE 'ok',
-        cancel TYPE string VALUE 'cancel',
+        ok     TYPE string VALUE 'popup-ok',
+        cancel TYPE string VALUE 'popup-cancel',
       END OF c_event.
 
     METHODS constructor

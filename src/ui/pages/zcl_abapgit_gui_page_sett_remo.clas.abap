@@ -965,7 +965,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       lv_tag    TYPE ty_remote_settings-tag,
       lv_commit TYPE ty_remote_settings-commit.
 
-    IF mo_popup IS NOT INITIAL.
+    IF mo_popup IS INITIAL.
       mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
     ENDIF.
 
