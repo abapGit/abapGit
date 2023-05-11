@@ -168,9 +168,9 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
         zcx_abapgit_exception.
     METHODS get_pull_request
       IMPORTING
-        !iv_selected_row TYPE string
+        !iv_selected_row       TYPE string
       RETURNING
-        VALUE(rv_val)    TYPE string
+        VALUE(rv_pull_request) TYPE string
       RAISING
         zcx_abapgit_exception.
 
@@ -484,7 +484,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     READ TABLE mt_pulls INDEX lv_index INTO ls_pull.
     IF sy-subrc = 0.
-      rv_val = ls_pull-head_url && '@' && ls_pull-head_branch.
+      rv_pull_request = ls_pull-head_url && '@' && ls_pull-head_branch.
     ENDIF.
 
   ENDMETHOD.
@@ -832,7 +832,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       lv_branch                TYPE ty_remote_settings-branch,
       lv_url                   TYPE ty_remote_settings-url,
       lv_branch_check_error_id TYPE string,
-      lv_pull_req              TYPE ty_remote_settings-pull_request,
+      lv_pull_request          TYPE ty_remote_settings-pull_request,
       lv_commit                TYPE ty_remote_settings-commit.
 
     ro_validation_log = mo_form_util->validate( io_form_data ).
@@ -878,8 +878,8 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
           CONDENSE lv_branch.
           lv_branch_check_error_id = c_id-tag.
         WHEN c_head_types-pull_request.
-          lv_pull_req = io_form_data->get( c_id-pull_request ).
-          SPLIT lv_pull_req AT '@' INTO lv_url lv_branch.
+          lv_pull_request = io_form_data->get( c_id-pull_request ).
+          SPLIT lv_pull_request AT '@' INTO lv_url lv_branch.
           IF lv_branch IS NOT INITIAL.
             lv_branch = zif_abapgit_definitions=>c_git_branch-heads_prefix && lv_branch.
           ENDIF.
@@ -917,11 +917,11 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA:
-      lv_url      TYPE ty_remote_settings-url,
-      lv_branch   TYPE ty_remote_settings-branch,
-      lv_tag      TYPE ty_remote_settings-tag,
-      lv_commit   TYPE ty_remote_settings-commit,
-      lv_pull_req TYPE ty_remote_settings-pull_request.
+      lv_url          TYPE ty_remote_settings-url,
+      lv_branch       TYPE ty_remote_settings-branch,
+      lv_tag          TYPE ty_remote_settings-tag,
+      lv_commit       TYPE ty_remote_settings-commit,
+      lv_pull_request TYPE ty_remote_settings-pull_request.
 
     IF mo_popup IS INITIAL.
       mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
@@ -1013,13 +1013,13 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
       WHEN c_popup-pull_request_ok.
         IF mo_popup->is_valid( ) = abap_true.
-          lv_pull_req = get_pull_request( mo_popup->get_value( zcl_abapgit_gui_popup_picklist=>c_selected_row ) ).
+          lv_pull_request = get_pull_request( mo_popup->get_value( zcl_abapgit_gui_popup_picklist=>c_selected_row ) ).
         ENDIF.
 
-        IF lv_pull_req IS NOT INITIAL.
+        IF lv_pull_request IS NOT INITIAL.
           mo_form_data->set(
             iv_key = c_id-pull_request
-            iv_val = lv_pull_req ).
+            iv_val = lv_pull_request ).
           CLEAR mo_popup.
         ENDIF.
 

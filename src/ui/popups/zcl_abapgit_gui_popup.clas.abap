@@ -148,13 +148,7 @@ CLASS zcl_abapgit_gui_popup IMPLEMENTATION.
 
   METHOD render.
 
-    DATA:
-      lv_closed TYPE string,
-      lv_style  TYPE string.
-
-*    IF is_valid( ) = abap_true.
-*      lv_closed = ' closed'.
-*    ENDIF.
+    DATA lv_style TYPE string.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -164,7 +158,7 @@ CLASS zcl_abapgit_gui_popup IMPLEMENTATION.
 
     lv_style = |width:{ ms_form-width }px; height:{ ms_form-height }px;|.
 
-    ri_html->add( |<div class="modal{ lv_closed }" id="{ ms_form-id }" style="{ lv_style }">| ).
+    ri_html->add( |<div class="modal" id="{ ms_form-id }" style="{ lv_style }">| ).
     ri_html->add( |<div class="modal-guts">| ).
     ri_html->add( mo_form->render(
                     iv_form_class     = ms_form-class
@@ -172,7 +166,7 @@ CLASS zcl_abapgit_gui_popup IMPLEMENTATION.
                     io_validation_log = mo_validation_log ) ).
     ri_html->add( |</div>| ).
     ri_html->add( |</div>| ).
-    ri_html->add( |<div class="modal-overlay{ lv_closed }" id="{ ms_form-id }-overlay"></div>| ).
+    ri_html->add( |<div class="modal-overlay" id="{ ms_form-id }-overlay"></div>| ).
 
     mo_validation_log->clear( ).
 
