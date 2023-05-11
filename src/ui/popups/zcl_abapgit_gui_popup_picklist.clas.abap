@@ -8,12 +8,6 @@ CLASS zcl_abapgit_gui_popup_picklist DEFINITION
 
     CONSTANTS c_selected_row TYPE string VALUE 'selected_row'.
 
-    CONSTANTS:
-      BEGIN OF c_event,
-        ok     TYPE string VALUE 'ok',
-        cancel TYPE string VALUE 'cancel',
-      END OF c_event.
-
     CLASS-METHODS create
       IMPORTING
         !iv_form_id     TYPE string
@@ -23,8 +17,8 @@ CLASS zcl_abapgit_gui_popup_picklist DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-    METHODS validate
-        REDEFINITION.
+    METHODS validate REDEFINITION.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -79,10 +73,10 @@ CLASS zcl_abapgit_gui_popup_picklist IMPLEMENTATION.
     ro_form->command(
       iv_label    = 'OK'
       iv_cmd_type = zif_abapgit_html_form=>c_cmd_type-input_main
-      iv_action   = |{ iv_form_id }-{ c_event-ok }|
+      iv_action   = |{ zcl_abapgit_gui_popup=>c_event-ok }|
     )->command(
       iv_label    = 'Cancel'
-      iv_action   = |{ iv_form_id }-{ c_event-cancel }| ).
+      iv_action   = |{ zcl_abapgit_gui_popup=>c_event-cancel }| ).
 
   ENDMETHOD.
 

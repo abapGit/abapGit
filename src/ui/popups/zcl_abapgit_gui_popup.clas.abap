@@ -4,6 +4,12 @@ CLASS zcl_abapgit_gui_popup DEFINITION
 
   PUBLIC SECTION.
 
+    CONSTANTS:
+      BEGIN OF c_event,
+        ok     TYPE string VALUE 'ok',
+        cancel TYPE string VALUE 'cancel',
+      END OF c_event.
+
     METHODS constructor
       IMPORTING
         !iv_form_id TYPE string
@@ -50,6 +56,10 @@ CLASS zcl_abapgit_gui_popup DEFINITION
         !iv_key       TYPE string
       RETURNING
         VALUE(rt_val) TYPE string_table.
+
+    METHODS get_form_id
+      RETURNING
+        VALUE(rv_id) TYPE string.
 
   PROTECTED SECTION.
 
@@ -111,6 +121,11 @@ CLASS zcl_abapgit_gui_popup IMPLEMENTATION.
 
     CREATE OBJECT mo_form_data.
     CREATE OBJECT mo_validation_log.
+  ENDMETHOD.
+
+
+  METHOD get_form_id.
+    rv_id = ms_form-id.
   ENDMETHOD.
 
 

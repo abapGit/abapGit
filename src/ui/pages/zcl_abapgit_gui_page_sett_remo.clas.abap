@@ -70,9 +70,7 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
       END OF c_event .
     CONSTANTS:
       BEGIN OF c_popup,
-        pull_request        TYPE string VALUE 'popup_pull_request',
-        pull_request_ok     TYPE string VALUE 'popup_pull_request-ok',
-        pull_request_cancel TYPE string VALUE 'popup_pull_request-cancel',
+        pull_request TYPE string VALUE 'popup_pull_request',
       END OF c_popup.
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
@@ -192,6 +190,14 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
       IMPORTING
         !iv_revert TYPE abap_bool DEFAULT abap_false
         !iv_pull   TYPE string OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS on_popup_event
+      IMPORTING
+        ii_event          TYPE REF TO zif_abapgit_gui_event
+      RETURNING
+        VALUE(rs_handled) TYPE zif_abapgit_gui_event_handler~ty_handling_result
       RAISING
         zcx_abapgit_exception.
 ENDCLASS.
@@ -660,6 +666,43 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD on_popup_event.
+
+    DATA:
+      lv_pull_request TYPE ty_remote_settings-pull_request.
+
+    mo_popup->normalize( ii_event->form_data( ) ).
+
+    CASE ii_event->mv_action.
+      WHEN zcl_abapgit_gui_popup=>c_event-ok.
+        mo_popup->validate( ).
+
+        CASE mo_popup->get_form_id( ).
+          WHEN c_popup-pull_request.
+            IF mo_popup->is_valid( ) = abap_true.
+              lv_pull_request = get_pull_request( mo_popup->get_value( zcl_abapgit_gui_popup_picklist=>c_selected_row ) ).
+            ENDIF.
+
+            IF lv_pull_request IS NOT INITIAL.
+              mo_form_data->set(
+                iv_key = c_id-pull_request
+                iv_val = lv_pull_request ).
+              CLEAR mo_popup. "closes modal
+            ENDIF.
+
+        ENDCASE.
+
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+
+      WHEN zcl_abapgit_gui_popup=>c_event-cancel.
+        CLEAR mo_popup. "closes modal
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+
+    ENDCASE.
+
+  ENDMETHOD.
+
+
   METHOD save_settings.
 
     DATA:
@@ -917,16 +960,13 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA:
-      lv_url          TYPE ty_remote_settings-url,
-      lv_branch       TYPE ty_remote_settings-branch,
-      lv_tag          TYPE ty_remote_settings-tag,
-      lv_commit       TYPE ty_remote_settings-commit,
-      lv_pull_request TYPE ty_remote_settings-pull_request.
+      lv_url    TYPE ty_remote_settings-url,
+      lv_branch TYPE ty_remote_settings-branch,
+      lv_tag    TYPE ty_remote_settings-tag,
+      lv_commit TYPE ty_remote_settings-commit.
 
-    IF mo_popup IS INITIAL.
+    IF mo_popup IS NOT INITIAL.
       mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
-    ELSE.
-      mo_popup->normalize( ii_event->form_data( ) ).
     ENDIF.
 
     CASE ii_event->mv_action.
@@ -1010,25 +1050,8 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
-      WHEN c_popup-pull_request_ok.
-        mo_popup->validate( ).
-
-        IF mo_popup->is_valid( ) = abap_true.
-          lv_pull_request = get_pull_request( mo_popup->get_value( zcl_abapgit_gui_popup_picklist=>c_selected_row ) ).
-        ENDIF.
-
-        IF lv_pull_request IS NOT INITIAL.
-          mo_form_data->set(
-            iv_key = c_id-pull_request
-            iv_val = lv_pull_request ).
-          CLEAR mo_popup. "closes modal
-        ENDIF.
-
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-
-      WHEN c_popup-pull_request_cancel.
-        CLEAR mo_popup. "closes modal
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN OTHERS.
+        rs_handled = on_popup_event( ii_event ).
 
     ENDCASE.
 
