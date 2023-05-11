@@ -45,5 +45,8 @@ INTERFACE zif_abapgit_gui_services
     IMPORTING
       !ii_renderable   TYPE REF TO zif_abapgit_gui_renderable
     RETURNING
-      VALUE(rv_cancel) TYPE abap_bool .
+      VALUE(rv_cancel) TYPE abap_bool
+    RAISING
+      zcx_abapgit_exception .
+
 ENDINTERFACE.
