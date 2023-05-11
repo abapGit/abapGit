@@ -76,6 +76,7 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
     DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map .
     DATA mv_refresh_on_back TYPE abap_bool.
     DATA mv_offline_switch_saved_url TYPE string.
+    DATA mo_choose_pr_modal TYPE REF TO zcl_abapgit_gui_page_picklist.
 
     METHODS init
       IMPORTING
@@ -154,7 +155,7 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
         zcx_abapgit_exception.
     METHODS choose_pr
       IMPORTING
-        ii_gui_services TYPE REF TO zif_abapgit_gui_services
+        iv_is_return TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rv_state) TYPE i
       RAISING
@@ -258,32 +259,37 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
 
   METHOD choose_pr.
 
-    DATA: lv_index        TYPE i,
-          lv_cancel       TYPE abap_bool,
-          lo_decide_pr    TYPE REF TO zcl_abapgit_gui_page_picklist,
-          lt_pulls        TYPE zif_abapgit_pr_enum_provider=>ty_pull_requests,
-          ls_pull         LIKE LINE OF lt_pulls,
-          lv_pull_request TYPE ty_remote_settings-pull_request.
+    DATA ls_pull         TYPE zif_abapgit_pr_enum_provider=>ty_pull_request.
+    DATA lv_pull_request TYPE ty_remote_settings-pull_request.
 
-    lt_pulls = list_pull_req( ).
+    IF iv_is_return = abap_false.
 
-    CREATE OBJECT lo_decide_pr
-      EXPORTING
-        it_list = lt_pulls.
+      CREATE OBJECT mo_choose_pr_modal EXPORTING it_list = list_pull_req( ).
 
-    lv_cancel = ii_gui_services->show_modal( lo_decide_pr ).
+      gui_services( )->show_modal( zcl_abapgit_gui_page_hoc=>create(
+        iv_page_title      = 'Pick Pull Request'
+        ii_child_component = mo_choose_pr_modal ) ).
 
-    IF lv_cancel = abap_true.
       rv_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
     ELSE.
-      lv_index = lo_decide_pr->get_result( ).
-      READ TABLE lt_pulls INDEX lv_index INTO ls_pull.
-      ASSERT sy-subrc = 0.
-      mo_form_data->set(
-        iv_key = c_id-pull_request
-        iv_val = ls_pull-head_url && '@' && ls_pull-head_branch ).
-      rv_state = zcl_abapgit_gui=>c_event_state-re_render.
+
+      IF mo_choose_pr_modal->was_cancelled( ) = abap_true.
+        rv_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+      ELSE.
+        rv_state = zcl_abapgit_gui=>c_event_state-re_render.
+        mo_choose_pr_modal->get_result_item( CHANGING cs_selected = ls_pull ).
+        IF ls_pull IS NOT INITIAL.
+          mo_form_data->set(
+            iv_key = c_id-pull_request
+            iv_val = ls_pull-head_url && '@' && ls_pull-head_branch ).
+        ENDIF.
+      ENDIF.
+
+      CLEAR mo_choose_pr_modal.
+
     ENDIF.
+
   ENDMETHOD.
 
 
@@ -915,12 +921,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA:
+      lo_form_data_raw TYPE REF TO zcl_abapgit_string_map,
       lv_url    TYPE ty_remote_settings-url,
       lv_branch TYPE ty_remote_settings-branch,
       lv_tag    TYPE ty_remote_settings-tag,
       lv_commit TYPE ty_remote_settings-commit.
 
-    mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
+    lo_form_data_raw = ii_event->form_data( ).
+    IF lo_form_data_raw->is_empty( ) = abap_false. " If form-related action
+      mo_form_data = mo_form_util->normalize( lo_form_data_raw ).
+    ENDIF.
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-go_back.
@@ -985,7 +995,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
         ENDIF.
 
       WHEN c_event-choose_pull_request.
-        rs_handled-state = choose_pr( ii_event->mi_gui_services ).
+        rs_handled-state = choose_pr( ).
+
+      WHEN zif_abapgit_definitions=>c_action-return_from_modal.
+        rs_handled-state = choose_pr( iv_is_return = abap_true ).
 
       WHEN c_event-switch.
         switch_online_offline( ).

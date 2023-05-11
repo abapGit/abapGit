@@ -65,10 +65,8 @@ CLASS zcl_abapgit_gui DEFINITION
 
     DATA mv_rollback_on_error TYPE abap_bool .
     DATA mi_cur_page TYPE REF TO zif_abapgit_gui_renderable .
-    DATA:
-      mt_stack             TYPE STANDARD TABLE OF ty_page_stack .
-    DATA:
-      mt_event_handlers    TYPE STANDARD TABLE OF REF TO zif_abapgit_gui_event_handler .
+    DATA mt_stack             TYPE STANDARD TABLE OF ty_page_stack .
+    DATA mt_event_handlers    TYPE STANDARD TABLE OF REF TO zif_abapgit_gui_event_handler .
     DATA mi_router TYPE REF TO zif_abapgit_gui_event_handler .
     DATA mi_asset_man TYPE REF TO zif_abapgit_gui_asset_manager .
     DATA mi_hotkey_ctl TYPE REF TO zif_abapgit_gui_hotkey_ctl .
@@ -76,6 +74,8 @@ CLASS zcl_abapgit_gui DEFINITION
     DATA mi_html_viewer TYPE REF TO zif_abapgit_html_viewer .
     DATA mo_html_parts TYPE REF TO zcl_abapgit_html_parts .
     DATA mi_common_log TYPE REF TO zif_abapgit_log .
+    DATA mv_cur_page_is_modal TYPE abap_bool .
+
 
     METHODS cache_html
       IMPORTING
@@ -146,6 +146,11 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
     mi_cur_page = ls_stack-page. " last page always stays
     render( ).
+
+    IF mv_cur_page_is_modal = abap_true.
+      mv_cur_page_is_modal = abap_false.
+      on_event( action = |{ zif_abapgit_definitions=>c_action-return_from_modal }| ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -260,6 +265,14 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
           ENDIF.
         ENDLOOP.
 
+        IF mv_cur_page_is_modal = abap_true AND NOT (
+          ls_handled-state = c_event_state-re_render OR
+          ls_handled-state = c_event_state-go_back OR
+          ls_handled-state = c_event_state-no_more_act ).
+          ls_handled-state = c_event_state-no_more_act.
+          " Restrict new page switching from modals
+        ENDIF.
+
         CASE ls_handled-state.
           WHEN c_event_state-re_render.
             render( ).
@@ -347,7 +360,8 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     CLEAR mt_event_handlers.
     mo_html_parts->clear( ).
 
-    IF mi_router IS BOUND.
+    IF mi_router IS BOUND AND mv_cur_page_is_modal = abap_false.
+      " No global commands in modals
       APPEND mi_router TO mt_event_handlers.
     ENDIF.
 
@@ -525,9 +539,8 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_services~show_modal.
 
+    mv_cur_page_is_modal = abap_true.
     call_page( ii_renderable ).
-
-*    todo, set rv_cancel
 
   ENDMETHOD.
 ENDCLASS.

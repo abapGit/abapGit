@@ -1,10 +1,13 @@
 CLASS zcl_abapgit_gui_page_picklist DEFINITION
   PUBLIC
   FINAL
-  INHERITING FROM zcl_abapgit_gui_page
+  INHERITING FROM zcl_abapgit_gui_component
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+
+    INTERFACES zif_abapgit_gui_event_handler.
+    INTERFACES zif_abapgit_gui_renderable.
 
     METHODS constructor
       IMPORTING
@@ -12,15 +15,11 @@ CLASS zcl_abapgit_gui_page_picklist DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-    METHODS zif_abapgit_gui_event_handler~on_event
-        REDEFINITION .
-
-    METHODS get_result RETURNING VALUE(rv_index) TYPE i.
+    METHODS get_result_idx RETURNING VALUE(rv_index) TYPE i.
+    METHODS get_result_item CHANGING cs_selected TYPE any.
+    METHODS was_cancelled RETURNING VALUE(rv_yes) TYPE abap_bool.
 
   PROTECTED SECTION.
-
-    METHODS render_content
-        REDEFINITION .
   PRIVATE SECTION.
 
     CONSTANTS:
@@ -36,6 +35,7 @@ CLASS zcl_abapgit_gui_page_picklist DEFINITION
     DATA mo_form_util TYPE REF TO zcl_abapgit_html_form_utils.
     DATA mr_list TYPE REF TO data.
     DATA mv_selected TYPE i.
+    DATA mv_cancelled TYPE abap_bool.
 
     METHODS get_form_schema
       RETURNING
@@ -97,17 +97,28 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PICKLIST IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_result.
+  METHOD get_result_idx.
     rv_index = mv_selected.
   ENDMETHOD.
 
 
-  METHOD render_content.
+  METHOD get_result_item.
 
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    FIELD-SYMBOLS <lt_tab> TYPE STANDARD TABLE.
 
-    ri_html->add( mo_form->render( io_values = mo_form_data ) ).
+    CLEAR cs_selected.
 
+    IF mv_selected > 0.
+      ASSIGN mr_list->* TO <lt_tab>.
+      READ TABLE <lt_tab> INDEX mv_selected INTO cs_selected.
+      ASSERT sy-subrc = 0.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD was_cancelled.
+    rv_yes = mv_cancelled.
   ENDMETHOD.
 
 
@@ -120,11 +131,22 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PICKLIST IMPLEMENTATION.
 
     CASE ii_event->mv_action.
       WHEN c_event-back.
+        mv_cancelled = abap_true.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
       WHEN c_event-choose.
         mv_selected = mo_form_data->get( c_radio_name ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_renderable~render.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    ri_html->add( mo_form->render( io_values = mo_form_data ) ).
+    register_handlers( ).
 
   ENDMETHOD.
 ENDCLASS.
