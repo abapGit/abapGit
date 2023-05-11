@@ -50,7 +50,7 @@ CLASS zcl_abapgit_objects DEFINITION
       IMPORTING
         !is_item        TYPE zif_abapgit_definitions=>ty_item
         !is_sub_item    TYPE zif_abapgit_definitions=>ty_item OPTIONAL
-        !iv_extra       TYPE string OPTIONAL
+        !iv_filename    TYPE string OPTIONAL
         !iv_line_number TYPE i OPTIONAL
       RAISING
         zcx_abapgit_exception .
@@ -58,7 +58,7 @@ CLASS zcl_abapgit_objects DEFINITION
       IMPORTING
         !is_item       TYPE zif_abapgit_definitions=>ty_item
         !is_sub_item   TYPE zif_abapgit_definitions=>ty_item OPTIONAL
-        !iv_extra      TYPE string OPTIONAL
+        !iv_filename   TYPE string OPTIONAL
       RETURNING
         VALUE(rv_user) TYPE syuname .
     CLASS-METHODS is_supported
@@ -204,6 +204,11 @@ CLASS zcl_abapgit_objects DEFINITION
         VALUE(rs_i18n_params)  TYPE zif_abapgit_definitions=>ty_i18n_params
       RAISING
         zcx_abapgit_exception.
+    CLASS-METHODS get_extra_from_filename
+      IMPORTING
+        !iv_filename    TYPE string
+      RETURNING
+        VALUE(rv_extra) TYPE string.
 ENDCLASS.
 
 
@@ -224,7 +229,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         li_obj = create_object( is_item     = is_item
                                 iv_language = zif_abapgit_definitions=>c_english ).
 
-        rv_user = li_obj->changed_by( iv_extra ).
+        rv_user = li_obj->changed_by( get_extra_from_filename( iv_filename ) ).
       CATCH zcx_abapgit_exception ##NO_HANDLER.
         " Ignore errors
     ENDTRY.
@@ -972,6 +977,18 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_extra_from_filename.
+
+    IF iv_filename IS NOT INITIAL.
+      FIND REGEX '\..*\.([\-a-z0-9_%]*)\.' IN iv_filename SUBMATCHES rv_extra.
+      IF sy-subrc = 0.
+        rv_extra = cl_http_utility=>unescape_url( rv_extra ).
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD is_active.
 
     DATA: li_obj TYPE REF TO zif_abapgit_object.
@@ -1065,7 +1082,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDIF.
 
     " First priority object-specific handler
-    lv_exit = li_obj->jump( iv_extra ).
+    lv_exit = li_obj->jump( get_extra_from_filename( iv_filename ) ).
 
     IF lv_exit = abap_false.
       " Open object in new window with generic jumper
