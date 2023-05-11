@@ -6,8 +6,7 @@ CLASS zcl_abapgit_gui_popup_picklist DEFINITION
 
   PUBLIC SECTION.
 
-    CONSTANTS:
-      c_selected_row TYPE string VALUE 'selected_row'.
+    CONSTANTS c_selected_row TYPE string VALUE 'selected_row'.
 
     CONSTANTS:
       BEGIN OF c_event,
@@ -18,12 +17,14 @@ CLASS zcl_abapgit_gui_popup_picklist DEFINITION
     CLASS-METHODS create
       IMPORTING
         !iv_form_id     TYPE string
-        it_list         TYPE STANDARD TABLE
+        !it_list        TYPE STANDARD TABLE
       RETURNING
         VALUE(ro_popup) TYPE REF TO zcl_abapgit_gui_popup_picklist
       RAISING
         zcx_abapgit_exception.
 
+    METHODS validate
+        REDEFINITION.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -82,6 +83,19 @@ CLASS zcl_abapgit_gui_popup_picklist IMPLEMENTATION.
     )->command(
       iv_label    = 'Cancel'
       iv_action   = |{ iv_form_id }-{ c_event-cancel }| ).
+
+  ENDMETHOD.
+
+
+  METHOD validate.
+
+    super->validate( ).
+
+    IF get_value( c_selected_row ) IS INITIAL.
+      add_validation_error(
+        iv_key  = c_selected_row
+        iv_text = |You have to select one item| ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
