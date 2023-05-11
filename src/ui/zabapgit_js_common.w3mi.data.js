@@ -29,6 +29,7 @@
 /* exported onDiffCollapse */
 /* exported restoreScrollPosition */
 /* exported toggleBrowserControlWarning */
+/* exported displayBrowserControlFooter */
 
 /**********************************************************
  * Polyfills
@@ -2485,8 +2486,20 @@ function toggleSticky() {
   }
 }
 
+/**********************************************************
+ * Browser Control
+ **********************************************************/
+
+// Toggle display of warning message when using Edge (based on Chromium) browser control
+// Todo: Remove once https://github.com/abapGit/abapGit/issues/4841 is fixed
 function toggleBrowserControlWarning(){
   if (!navigator.userAgent.includes("Edg")){
     document.getElementById("browser-control-warning").style.display = "none";
   }
+}
+
+// Output type of HTML control in the abapGit footer
+function displayBrowserControlFooter() {
+  var out = document.getElementById("browser-control-footer");
+  out.innerHTML = " - " + ( navigator.userAgent.includes("Edg") ? "Edge" : "IE"  );
 }
