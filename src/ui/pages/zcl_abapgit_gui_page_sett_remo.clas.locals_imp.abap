@@ -1,7 +1,7 @@
 CLASS lcl_pr_renderer DEFINITION FINAL.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_gui_render_item.
-    CLASS-METHODS new RETURNING value(ro_instance) TYPE REF TO lcl_pr_renderer.
+    CLASS-METHODS new RETURNING VALUE(ro_instance) TYPE REF TO lcl_pr_renderer.
 ENDCLASS.
 
 CLASS lcl_pr_renderer IMPLEMENTATION.
