@@ -264,7 +264,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
 
     IF iv_is_return = abap_false.
 
-      CREATE OBJECT mo_choose_pr_modal EXPORTING it_list = get_pull_request_list( ).
+      CREATE OBJECT mo_choose_pr_modal
+        EXPORTING
+          ii_item_renderer = lcl_pr_renderer=>new( )
+          it_list          = get_pull_request_list( ).
 
       rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       rs_handled-page  = zcl_abapgit_gui_page_hoc=>create(
