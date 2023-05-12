@@ -68,6 +68,11 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
         choose_pull_request TYPE string VALUE 'choose_pull_request',
         change_head_type    TYPE string VALUE 'change_head_type',
       END OF c_event .
+    CONSTANTS:
+      BEGIN OF c_popup,
+        pull_request TYPE string VALUE 'popup_pull_request',
+      END OF c_popup.
+
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
     DATA ms_settings_old TYPE ty_remote_settings.
     DATA mo_form TYPE REF TO zcl_abapgit_html_form .
@@ -77,6 +82,7 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
     DATA mv_refresh_on_back TYPE abap_bool.
     DATA mv_offline_switch_saved_url TYPE string.
     DATA mo_choose_pr_modal TYPE REF TO zcl_abapgit_gui_page_picklist.
+    DATA mo_popup TYPE REF TO zcl_abapgit_gui_popup.
 
     METHODS init
       IMPORTING
@@ -187,11 +193,18 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    METHODS on_popup_event
+      IMPORTING
+        ii_event          TYPE REF TO zif_abapgit_gui_event
+      RETURNING
+        VALUE(rs_handled) TYPE zif_abapgit_gui_event_handler~ty_handling_result
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
 
   METHOD check_protection.
@@ -667,6 +680,71 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD list_pull_requests.
+
+    DATA lv_url TYPE ty_remote_settings-url.
+
+    FIELD-SYMBOLS:
+      <lv_pull> LIKE LINE OF rt_pulls,
+      <ls_pull> LIKE LINE OF mt_pulls.
+
+    IF mo_form_data->get( c_id-offline ) = abap_true.
+      zcx_abapgit_exception=>raise( 'Not possible for offline repositories' ).
+    ENDIF.
+
+    lv_url = mo_form_data->get( c_id-url ).
+
+    mt_pulls = zcl_abapgit_pr_enumerator=>new( lv_url )->get_pulls( ).
+
+    IF lines( mt_pulls ) = 0.
+      zcx_abapgit_exception=>raise( 'No pull requests found' ).
+    ENDIF.
+
+    LOOP AT mt_pulls ASSIGNING <ls_pull>.
+      APPEND INITIAL LINE TO rt_pulls ASSIGNING <lv_pull>.
+      <lv_pull> = |{ <ls_pull>-number } - { <ls_pull>-title } @{ <ls_pull>-user }|.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD on_popup_event.
+
+    DATA:
+      lv_pull_req TYPE ty_remote_settings-pull_request.
+
+    mo_popup->normalize( ii_event->form_data( ) ).
+
+    CASE ii_event->mv_action.
+      WHEN zcl_abapgit_gui_popup=>c_event-ok.
+        mo_popup->validate( ).
+
+        IF mo_popup->is_valid( ) = abap_true.
+          CASE mo_popup->get_form_id( ).
+            WHEN c_popup-pull_request.
+              lv_pull_req = get_pull_request( mo_popup->get_value( zcl_abapgit_gui_popup_picklist=>c_selected_row ) ).
+
+              IF lv_pull_req IS NOT INITIAL.
+                mo_form_data->set(
+                  iv_key = c_id-pull_request
+                  iv_val = lv_pull_req ).
+                CLEAR mo_popup. "closes modal
+              ENDIF.
+
+          ENDCASE.
+        ENDIF.
+
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+
+      WHEN zcl_abapgit_gui_popup=>c_event-cancel.
+        CLEAR mo_popup. "closes modal
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+
+    ENDCASE.
+
+  ENDMETHOD.
+
+
   METHOD save_settings.
 
     DATA:
@@ -945,7 +1023,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back_to_bookmark.
 
       WHEN c_event-choose_url.
-
         lv_url = choose_url( ).
 
         IF lv_url IS INITIAL.
@@ -1015,6 +1092,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
         ENDIF.
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+
+      WHEN OTHERS.
+        rs_handled = on_popup_event( ii_event ).
 
     ENDCASE.
 
@@ -1124,6 +1204,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
       io_validation_log = mo_validation_log ) ).
 
     ri_html->add( `</div>` ).
+
+    " Modal HTML Popup
+    IF mo_popup IS NOT INITIAL.
+      ri_html->add( mo_popup->render( ) ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
