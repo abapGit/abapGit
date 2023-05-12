@@ -42,9 +42,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_HOC IMPLEMENTATION.
     DATA lv_implicit_modal TYPE abap_bool.
 
     TRY.
-      li_modal ?= ii_child_component.
-      lv_implicit_modal = li_modal->is_modal( ).
-    CATCH cx_sy_move_cast_error.
+        li_modal ?= ii_child_component.
+        lv_implicit_modal = li_modal->is_modal( ).
+      CATCH cx_sy_move_cast_error.
     ENDTRY.
 
     CREATE OBJECT lo_page.

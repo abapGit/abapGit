@@ -351,9 +351,9 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     ENDIF.
 
     TRY.
-      li_modal ?= ii_page.
-      rv_yes = li_modal->is_modal( ).
-    CATCH cx_sy_move_cast_error.
+        li_modal ?= ii_page.
+        rv_yes = li_modal->is_modal( ).
+      CATCH cx_sy_move_cast_error.
     ENDTRY.
 
   ENDMETHOD.
