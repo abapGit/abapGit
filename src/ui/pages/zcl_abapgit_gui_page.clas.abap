@@ -4,6 +4,7 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
 
   PUBLIC SECTION.
     INTERFACES:
+      zif_abapgit_gui_modal,
       zif_abapgit_gui_renderable,
       zif_abapgit_gui_event_handler,
       zif_abapgit_gui_error_handler.
@@ -28,6 +29,7 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
         page_title_provider TYPE REF TO zif_abapgit_gui_page_title,
         extra_css_url       TYPE string,
         extra_js_url        TYPE string,
+        show_as_modal       TYPE abap_bool,
       END OF  ty_control .
 
     DATA ms_control TYPE ty_control .
@@ -108,7 +110,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -437,6 +439,11 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
     ENDCASE.
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_modal~is_modal.
+    rv_yes = boolc( ms_control-show_as_modal = abap_true ).
   ENDMETHOD.
 
 

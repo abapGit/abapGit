@@ -157,10 +157,10 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
       IMPORTING
         iv_is_return TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(rv_state) TYPE i
+        VALUE(rs_handled) TYPE zif_abapgit_gui_event_handler=>ty_handling_result
       RAISING
         zcx_abapgit_exception.
-    METHODS list_pull_req
+    METHODS get_pull_request_list
       RETURNING
         VALUE(rt_pulls) TYPE zif_abapgit_pr_enum_provider=>ty_pull_requests
       RAISING
@@ -264,20 +264,20 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
 
     IF iv_is_return = abap_false.
 
-      CREATE OBJECT mo_choose_pr_modal EXPORTING it_list = list_pull_req( ).
+      CREATE OBJECT mo_choose_pr_modal EXPORTING it_list = get_pull_request_list( ).
 
-      gui_services( )->show_modal( zcl_abapgit_gui_page_hoc=>create(
+      rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+      rs_handled-page  = zcl_abapgit_gui_page_hoc=>create(
         iv_page_title      = 'Pick Pull Request'
-        ii_child_component = mo_choose_pr_modal ) ).
-
-      rv_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+        iv_show_as_modal   = abap_true
+        ii_child_component = mo_choose_pr_modal ).
 
     ELSE.
 
       IF mo_choose_pr_modal->was_cancelled( ) = abap_true.
-        rv_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
       ELSE.
-        rv_state = zcl_abapgit_gui=>c_event_state-re_render.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
         mo_choose_pr_modal->get_result_item( CHANGING cs_selected = ls_pull ).
         IF ls_pull IS NOT INITIAL.
           mo_form_data->set(
@@ -503,6 +503,25 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_pull_request_list.
+
+    DATA lv_url TYPE ty_remote_settings-url.
+
+    IF mo_form_data->get( c_id-offline ) = abap_true.
+      zcx_abapgit_exception=>raise( 'Not possible for offline repositories' ).
+    ENDIF.
+
+    lv_url = mo_form_data->get( c_id-url ).
+
+    rt_pulls = zcl_abapgit_pr_enumerator=>new( lv_url )->get_pulls( ).
+
+    IF lines( rt_pulls ) = 0.
+      zcx_abapgit_exception=>raise( 'No pull requests found' ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD get_remote_settings_from_form.
     rs_settings-url = io_form_data->get( c_id-url ).
     rs_settings-offline = io_form_data->get( c_id-offline ).
@@ -641,25 +660,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
 
     " Set for is_dirty check
     io_form_util->set_data( io_form_data ).
-
-  ENDMETHOD.
-
-
-  METHOD list_pull_req.
-
-    DATA lv_url TYPE ty_remote_settings-url.
-
-    IF mo_form_data->get( c_id-offline ) = abap_true.
-      zcx_abapgit_exception=>raise( 'Not possible for offline repositories' ).
-    ENDIF.
-
-    lv_url = mo_form_data->get( c_id-url ).
-
-    rt_pulls = zcl_abapgit_pr_enumerator=>new( lv_url )->get_pulls( ).
-
-    IF lines( rt_pulls ) = 0.
-      zcx_abapgit_exception=>raise( 'No pull requests found' ).
-    ENDIF.
 
   ENDMETHOD.
 
@@ -995,10 +995,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
         ENDIF.
 
       WHEN c_event-choose_pull_request.
-        rs_handled-state = choose_pr( ).
+        rs_handled = choose_pr( ).
 
       WHEN zif_abapgit_definitions=>c_action-return_from_modal.
-        rs_handled-state = choose_pr( iv_is_return = abap_true ).
+        rs_handled = choose_pr( iv_is_return = abap_true ).
 
       WHEN c_event-switch.
         switch_online_offline( ).

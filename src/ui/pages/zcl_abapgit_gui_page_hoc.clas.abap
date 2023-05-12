@@ -15,6 +15,7 @@ CLASS zcl_abapgit_gui_page_hoc DEFINITION
         !ii_page_title_provider TYPE REF TO zif_abapgit_gui_page_title OPTIONAL
         !iv_extra_css_url       TYPE string OPTIONAL
         !iv_extra_js_url        TYPE string OPTIONAL
+        !iv_show_as_modal   TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(ri_page_wrap) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
@@ -37,6 +38,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_HOC IMPLEMENTATION.
   METHOD create.
 
     DATA lo_page TYPE REF TO zcl_abapgit_gui_page_hoc.
+    DATA li_modal TYPE REF TO zif_abapgit_gui_modal.
+    DATA lv_implicit_modal TYPE abap_bool.
+
+    TRY.
+      li_modal ?= ii_child_component.
+      lv_implicit_modal = li_modal->is_modal( ).
+    CATCH cx_sy_move_cast_error.
+    ENDTRY.
 
     CREATE OBJECT lo_page.
     lo_page->ms_control-page_title          = iv_page_title.
@@ -45,6 +54,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_HOC IMPLEMENTATION.
     lo_page->ms_control-page_title_provider = ii_page_title_provider.
     lo_page->ms_control-extra_css_url       = iv_extra_css_url.
     lo_page->ms_control-extra_js_url        = iv_extra_js_url.
+    lo_page->ms_control-show_as_modal       = boolc( lv_implicit_modal = abap_true OR iv_show_as_modal = abap_true ).
     lo_page->mi_child                       = ii_child_component.
 
     ri_page_wrap = lo_page.

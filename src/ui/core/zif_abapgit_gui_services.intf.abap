@@ -41,12 +41,5 @@ INTERFACE zif_abapgit_gui_services
       !iv_create_new TYPE abap_bool DEFAULT abap_false
     RETURNING
       VALUE(ri_log)  TYPE REF TO zif_abapgit_log .
-  METHODS show_modal
-    IMPORTING
-      !ii_renderable   TYPE REF TO zif_abapgit_gui_renderable
-    RETURNING
-      VALUE(rv_cancel) TYPE abap_bool
-    RAISING
-      zcx_abapgit_exception .
 
 ENDINTERFACE.
