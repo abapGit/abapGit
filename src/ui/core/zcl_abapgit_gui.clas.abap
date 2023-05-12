@@ -74,7 +74,6 @@ CLASS zcl_abapgit_gui DEFINITION
     DATA mi_html_viewer TYPE REF TO zif_abapgit_html_viewer .
     DATA mo_html_parts TYPE REF TO zcl_abapgit_html_parts .
     DATA mi_common_log TYPE REF TO zif_abapgit_log .
-    DATA mv_cur_page_is_modal TYPE abap_bool .
 
 
     METHODS cache_html
@@ -105,6 +104,11 @@ CLASS zcl_abapgit_gui DEFINITION
     METHODS handle_error
       IMPORTING
         !ix_exception TYPE REF TO zcx_abapgit_exception .
+    METHODS is_page_modal
+      IMPORTING
+        !ii_page      TYPE REF TO zif_abapgit_gui_renderable
+      RETURNING
+        VALUE(rv_yes) TYPE abap_bool .
 ENDCLASS.
 
 
@@ -114,8 +118,9 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
   METHOD back.
 
-    DATA: lv_index TYPE i,
-          ls_stack LIKE LINE OF mt_stack.
+    DATA lv_index TYPE i.
+    DATA ls_stack LIKE LINE OF mt_stack.
+    DATA li_leaving_page TYPE REF TO zif_abapgit_gui_renderable.
 
     " If viewer is showing Internet page, then use browser navigation
     IF mi_html_viewer->get_url( ) CP 'http*'.
@@ -144,11 +149,11 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
       ENDIF.
     ENDDO.
 
+    li_leaving_page = mi_cur_page.
     mi_cur_page = ls_stack-page. " last page always stays
     render( ).
 
-    IF mv_cur_page_is_modal = abap_true.
-      mv_cur_page_is_modal = abap_false.
+    IF is_page_modal( li_leaving_page ) = abap_true.
       on_event( action = |{ zif_abapgit_definitions=>c_action-return_from_modal }| ).
     ENDIF.
 
@@ -265,7 +270,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
           ENDIF.
         ENDLOOP.
 
-        IF mv_cur_page_is_modal = abap_true AND NOT (
+        IF is_page_modal( mi_cur_page ) = abap_true AND NOT (
           ls_handled-state = c_event_state-re_render OR
           ls_handled-state = c_event_state-go_back OR
           ls_handled-state = c_event_state-no_more_act ).
@@ -337,6 +342,23 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD is_page_modal.
+
+    DATA li_modal TYPE REF TO zif_abapgit_gui_modal.
+
+    IF ii_page IS NOT BOUND.
+      RETURN.
+    ENDIF.
+
+    TRY.
+      li_modal ?= ii_page.
+      rv_yes = li_modal->is_modal( ).
+    CATCH cx_sy_move_cast_error.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
   METHOD on_event.
 
     handle_action(
@@ -360,7 +382,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     CLEAR mt_event_handlers.
     mo_html_parts->clear( ).
 
-    IF mi_router IS BOUND AND mv_cur_page_is_modal = abap_false.
+    IF mi_router IS BOUND AND is_page_modal( mi_cur_page ) = abap_false.
       " No global commands in modals
       APPEND mi_router TO mt_event_handlers.
     ENDIF.
@@ -533,14 +555,6 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
       iv_inline = iv_inline
       " This registering will happen after initialization so all cachable already cached
       iv_cachable = abap_false ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_services~show_modal.
-
-    mv_cur_page_is_modal = abap_true.
-    call_page( ii_renderable ).
 
   ENDMETHOD.
 ENDCLASS.

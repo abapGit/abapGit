@@ -4,6 +4,7 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
 
   PUBLIC SECTION.
     INTERFACES:
+      zif_abapgit_gui_modal,
       zif_abapgit_gui_renderable,
       zif_abapgit_gui_event_handler,
       zif_abapgit_gui_error_handler.
@@ -28,6 +29,7 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
         page_title_provider TYPE REF TO zif_abapgit_gui_page_title,
         extra_css_url       TYPE string,
         extra_js_url        TYPE string,
+        show_as_modal       TYPE abap_bool,
       END OF  ty_control .
 
     DATA ms_control TYPE ty_control .
@@ -103,7 +105,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -215,6 +217,27 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_browser_control_warning.
+
+    DATA li_documentation_link TYPE REF TO zif_abapgit_html.
+
+    CREATE OBJECT li_documentation_link TYPE zcl_abapgit_html.
+
+    li_documentation_link->add_a(
+        iv_txt = 'Documentation'
+        iv_typ = zif_abapgit_html=>c_action_type-url
+        iv_act =  'https://docs.abapgit.org/guide-sapgui.html#sap-gui-for-windows' ).
+
+    ii_html->add( '<div id="browser-control-warning" class="browser-control-warning">' ).
+    ii_html->add( zcl_abapgit_gui_chunk_lib=>render_warning_banner(
+                    |Attention: You use Edge browser control. |
+                 && |There are several known malfunctions. See |
+                 && li_documentation_link->render( ) ) ).
+    ii_html->add( '</div>' ).
+
+  ENDMETHOD.
+
+
   METHOD render_command_palettes.
 
     ii_html->add( 'var gCommandPalette = new CommandPalette(enumerateUiActions, {' ).
@@ -290,27 +313,6 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
       ii_html->add( |enableArrowListNavigation();| ).
 
     ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD render_browser_control_warning.
-
-    DATA li_documentation_link TYPE REF TO zif_abapgit_html.
-
-    CREATE OBJECT li_documentation_link TYPE zcl_abapgit_html.
-
-    li_documentation_link->add_a(
-        iv_txt = 'Documentation'
-        iv_typ = zif_abapgit_html=>c_action_type-url
-        iv_act =  'https://docs.abapgit.org/guide-sapgui.html#sap-gui-for-windows' ).
-
-    ii_html->add( '<div id="browser-control-warning" class="browser-control-warning">' ).
-    ii_html->add( zcl_abapgit_gui_chunk_lib=>render_warning_banner(
-                    |Attention: You use Edge browser control. |
-                 && |There are several known malfunctions. See |
-                 && li_documentation_link->render( ) ) ).
-    ii_html->add( '</div>' ).
 
   ENDMETHOD.
 
@@ -407,6 +409,11 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
     ENDCASE.
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_modal~is_modal.
+    rv_yes = boolc( ms_control-show_as_modal = abap_true ).
   ENDMETHOD.
 
 
