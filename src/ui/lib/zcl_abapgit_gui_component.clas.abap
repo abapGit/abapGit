@@ -24,6 +24,8 @@ CLASS zcl_abapgit_gui_component DEFINITION
       RAISING
         zcx_abapgit_exception.
     METHODS register_handlers
+      IMPORTING
+        iv_no_hotkeys TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception.
 
@@ -84,7 +86,9 @@ CLASS ZCL_ABAPGIT_GUI_COMPONENT IMPLEMENTATION.
 
   METHOD register_handlers.
     register_event_handler( ).
-    register_hotkeys( ).
+    IF iv_no_hotkeys = abap_false.
+      register_hotkeys( ).
+    ENDIF.
   ENDMETHOD.
 
 
