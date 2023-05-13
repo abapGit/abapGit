@@ -1514,28 +1514,28 @@ table.unit_tests {
     left: 50%;
     transform: translate(-50%, -50%);
     /* size */
-    width: 680px;
+/*    width: 680px;*/
     max-width: 100%;
-    height: 260px;
+/*    height: 260px;*/
     max-height: 100%;
     /* infront of overlay */
     z-index: 1010;
     /* show by default */
     display: block;
     /* style */
-    background: lightgray;
-    border-radius: 6px;
+/*    background: lightgray;*/
+/*    border-radius: 6px;*/
 }
 
 .modal-guts {
     /* cover the modal */
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+/*    position: absolute;*/
+/*    top: 0;*/
+/*    left: 0;*/
+/*    width: 100%;*/
+/*    height: 100%;*/
     /* spacing as needed */
-    padding: 5px 0px;
+    padding: 6px 6px;
     /* let it scroll */
     overflow: auto;
 }
@@ -1544,6 +1544,7 @@ table.unit_tests {
     margin-top: inherit;
     margin-bottom: inherit;
     padding: inherit;
+    box-shadow: 4px 4px 4px 0px rgba(0,0,0,0.3);
 }
 
 .modal-overlay {
