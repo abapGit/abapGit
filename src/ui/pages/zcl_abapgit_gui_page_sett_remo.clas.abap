@@ -81,8 +81,8 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
     DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map .
     DATA mv_refresh_on_back TYPE abap_bool.
     DATA mv_offline_switch_saved_url TYPE string.
-    DATA mo_choose_pr_modal TYPE REF TO zcl_abapgit_gui_page_picklist.
     DATA mo_popup TYPE REF TO zcl_abapgit_gui_popup.
+    DATA mo_choose_pr_picklist TYPE REF TO zcl_abapgit_gui_page_picklist.
 
     METHODS init
       IMPORTING
@@ -166,11 +166,6 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
         VALUE(rs_handled) TYPE zif_abapgit_gui_event_handler=>ty_handling_result
       RAISING
         zcx_abapgit_exception.
-    METHODS get_pull_request_list
-      RETURNING
-        VALUE(rt_pulls) TYPE zif_abapgit_pr_enum_provider=>ty_pull_requests
-      RAISING
-        zcx_abapgit_exception.
 
     METHODS switch_online_offline
       RAISING
@@ -193,18 +188,11 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-    METHODS on_popup_event
-      IMPORTING
-        ii_event          TYPE REF TO zif_abapgit_gui_event
-      RETURNING
-        VALUE(rs_handled) TYPE zif_abapgit_gui_event_handler~ty_handling_result
-      RAISING
-        zcx_abapgit_exception.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
 
 
   METHOD check_protection.
@@ -274,27 +262,30 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     DATA ls_pull         TYPE zif_abapgit_pr_enum_provider=>ty_pull_request.
     DATA lv_pull_request TYPE ty_remote_settings-pull_request.
+    DATA lv_url TYPE ty_remote_settings-url.
 
     IF iv_is_return = abap_false.
 
-      CREATE OBJECT mo_choose_pr_modal
-        EXPORTING
-          ii_item_renderer = lcl_pr_renderer=>new( )
-          it_list          = get_pull_request_list( ).
+      IF mo_form_data->get( c_id-offline ) = abap_true.
+        zcx_abapgit_exception=>raise( 'Not possible for offline repositories' ).
+      ENDIF.
+      lv_url = mo_form_data->get( c_id-url ).
+
+      mo_choose_pr_picklist = lcl_pr_popup=>new( lv_url )->create_picklist_component( ).
 
       rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       rs_handled-page  = zcl_abapgit_gui_page_hoc=>create(
         iv_page_title      = 'Pick Pull Request'
-        iv_show_as_modal   = abap_true
-        ii_child_component = mo_choose_pr_modal ).
+        ii_child_component = mo_choose_pr_picklist
+        iv_show_as_modal   = abap_true ).
 
     ELSE.
 
-      IF mo_choose_pr_modal->was_cancelled( ) = abap_true.
+      IF mo_choose_pr_picklist->was_cancelled( ) = abap_true.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
       ELSE.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-        mo_choose_pr_modal->get_result_item( CHANGING cs_selected = ls_pull ).
+        mo_choose_pr_picklist->get_result_item( CHANGING cs_selected = ls_pull ).
         IF ls_pull IS NOT INITIAL.
           mo_form_data->set(
             iv_key = c_id-pull_request
@@ -302,7 +293,8 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
         ENDIF.
       ENDIF.
 
-      CLEAR mo_choose_pr_modal.
+      CLEAR mo_choose_pr_picklist.
+      CLEAR mo_popup.
 
     ENDIF.
 
@@ -519,25 +511,6 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_pull_request_list.
-
-    DATA lv_url TYPE ty_remote_settings-url.
-
-    IF mo_form_data->get( c_id-offline ) = abap_true.
-      zcx_abapgit_exception=>raise( 'Not possible for offline repositories' ).
-    ENDIF.
-
-    lv_url = mo_form_data->get( c_id-url ).
-
-    rt_pulls = zcl_abapgit_pr_enumerator=>new( lv_url )->get_pulls( ).
-
-    IF lines( rt_pulls ) = 0.
-      zcx_abapgit_exception=>raise( 'No pull requests found' ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD get_remote_settings_from_form.
     rs_settings-url = io_form_data->get( c_id-url ).
     rs_settings-offline = io_form_data->get( c_id-offline ).
@@ -676,71 +649,6 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     " Set for is_dirty check
     io_form_util->set_data( io_form_data ).
-
-  ENDMETHOD.
-
-
-  METHOD list_pull_requests.
-
-    DATA lv_url TYPE ty_remote_settings-url.
-
-    FIELD-SYMBOLS:
-      <lv_pull> LIKE LINE OF rt_pulls,
-      <ls_pull> LIKE LINE OF mt_pulls.
-
-    IF mo_form_data->get( c_id-offline ) = abap_true.
-      zcx_abapgit_exception=>raise( 'Not possible for offline repositories' ).
-    ENDIF.
-
-    lv_url = mo_form_data->get( c_id-url ).
-
-    mt_pulls = zcl_abapgit_pr_enumerator=>new( lv_url )->get_pulls( ).
-
-    IF lines( mt_pulls ) = 0.
-      zcx_abapgit_exception=>raise( 'No pull requests found' ).
-    ENDIF.
-
-    LOOP AT mt_pulls ASSIGNING <ls_pull>.
-      APPEND INITIAL LINE TO rt_pulls ASSIGNING <lv_pull>.
-      <lv_pull> = |{ <ls_pull>-number } - { <ls_pull>-title } @{ <ls_pull>-user }|.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD on_popup_event.
-
-    DATA:
-      lv_pull_req TYPE ty_remote_settings-pull_request.
-
-    mo_popup->normalize( ii_event->form_data( ) ).
-
-    CASE ii_event->mv_action.
-      WHEN zcl_abapgit_gui_popup=>c_event-ok.
-        mo_popup->validate( ).
-
-        IF mo_popup->is_valid( ) = abap_true.
-          CASE mo_popup->get_form_id( ).
-            WHEN c_popup-pull_request.
-              lv_pull_req = get_pull_request( mo_popup->get_value( zcl_abapgit_gui_popup_picklist=>c_selected_row ) ).
-
-              IF lv_pull_req IS NOT INITIAL.
-                mo_form_data->set(
-                  iv_key = c_id-pull_request
-                  iv_val = lv_pull_req ).
-                CLEAR mo_popup. "closes modal
-              ENDIF.
-
-          ENDCASE.
-        ENDIF.
-
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-
-      WHEN zcl_abapgit_gui_popup=>c_event-cancel.
-        CLEAR mo_popup. "closes modal
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-
-    ENDCASE.
 
   ENDMETHOD.
 
@@ -1094,7 +1002,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN OTHERS.
-        rs_handled = on_popup_event( ii_event ).
+*        rs_handled = on_popup_event( ii_event ).
 
     ENDCASE.
 
@@ -1188,16 +1096,16 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    register_handlers( ).
+    register_handlers( iv_no_hotkeys = boolc( mo_popup IS BOUND ) ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ri_html->add( `<div class="repo">` ).
+    ri_html->add( `<div class="repo">` ). " TODO own setting frame CSS class
 
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
-                    io_repo               = mo_repo
-                    iv_show_commit        = abap_false
-                    iv_interactive_branch = abap_false ) ).
+      io_repo               = mo_repo
+      iv_show_commit        = abap_false
+      iv_interactive_branch = abap_false ) ).
 
     ri_html->add( mo_form->render(
       io_values         = mo_form_data
