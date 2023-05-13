@@ -48,7 +48,7 @@ CLASS zcl_abapgit_gui_picklist DEFINITION
 
     METHODS get_form_schema
       RETURNING
-        value(ro_form) TYPE REF TO zcl_abapgit_html_form
+        VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form
       RAISING
         zcx_abapgit_exception.
 

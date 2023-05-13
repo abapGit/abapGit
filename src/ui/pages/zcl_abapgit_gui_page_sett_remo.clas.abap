@@ -81,7 +81,7 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
     DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map .
     DATA mv_refresh_on_back TYPE abap_bool.
     DATA mv_offline_switch_saved_url TYPE string.
-    DATA mo_popup TYPE REF TO zcl_abapgit_gui_popup.
+    DATA mo_popup TYPE REF TO zif_abapgit_gui_renderable.
     DATA mo_choose_pr_picklist TYPE REF TO zcl_abapgit_gui_picklist.
 
     METHODS init
@@ -294,7 +294,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
       ENDIF.
 
       CLEAR mo_choose_pr_picklist.
-      CLEAR mo_popup.
+*      CLEAR mo_popup.
 
     ENDIF.
 
