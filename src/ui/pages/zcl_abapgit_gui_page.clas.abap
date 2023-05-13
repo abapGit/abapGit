@@ -9,17 +9,6 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
       zif_abapgit_gui_event_handler,
       zif_abapgit_gui_error_handler.
 
-    METHODS:
-      constructor RAISING zcx_abapgit_exception.
-
-  PROTECTED SECTION.
-
-    CONSTANTS:
-      BEGIN OF c_page_layout,
-        centered   TYPE string VALUE `centered`,
-        full_width TYPE string VALUE `full_width`,
-      END OF c_page_layout.
-
     TYPES:
       BEGIN OF ty_control,
         page_layout         TYPE string,
@@ -31,6 +20,16 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
         extra_js_url        TYPE string,
         show_as_modal       TYPE abap_bool,
       END OF  ty_control .
+
+    METHODS constructor RAISING zcx_abapgit_exception.
+
+  PROTECTED SECTION.
+
+    CONSTANTS:
+      BEGIN OF c_page_layout,
+        centered   TYPE string VALUE `centered`,
+        full_width TYPE string VALUE `full_width`,
+      END OF c_page_layout.
 
     DATA ms_control TYPE ty_control .
 

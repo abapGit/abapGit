@@ -23,27 +23,28 @@ CLASS zcl_abapgit_gui_page_hoc DEFINITION
     METHODS get_child
       RETURNING
         VALUE(ri_child) TYPE REF TO zif_abapgit_gui_renderable .
+    METHODS constructor
+      IMPORTING
+        !ii_child_component TYPE REF TO zif_abapgit_gui_renderable
+        !is_control TYPE zcl_abapgit_gui_page=>ty_control
+      RAISING
+        zcx_abapgit_exception .
+
   PROTECTED SECTION.
     METHODS render_content REDEFINITION.
   PRIVATE SECTION.
 
     DATA mi_child TYPE REF TO zif_abapgit_gui_renderable .
 
-    CLASS-METHODS detect_modal
-      IMPORTING
-        ii_child_component TYPE REF TO zif_abapgit_gui_renderable
+    METHODS detect_modal
       RETURNING
         VALUE(rv_is_modal) TYPE abap_bool.
 
-    CLASS-METHODS detect_menu_provider
-      IMPORTING
-        ii_child_component TYPE REF TO zif_abapgit_gui_renderable
+    METHODS detect_menu_provider
       RETURNING
         VALUE(ri_ref) TYPE REF TO zif_abapgit_gui_menu_provider.
 
-    CLASS-METHODS detect_title_provider
-      IMPORTING
-        ii_child_component TYPE REF TO zif_abapgit_gui_renderable
+    METHODS detect_title_provider
       RETURNING
         VALUE(ri_ref) TYPE REF TO zif_abapgit_gui_page_title.
 
@@ -54,32 +55,45 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_GUI_PAGE_HOC IMPLEMENTATION.
 
 
+  METHOD constructor.
+
+    super->constructor( ).
+
+    mi_child = ii_child_component.
+    ms_control = is_control.
+
+    IF ms_control-show_as_modal = abap_false.
+      ms_control-show_as_modal = detect_modal( ).
+    ENDIF.
+
+    IF ms_control-page_menu_provider IS NOT BOUND.
+      ms_control-page_menu_provider = detect_menu_provider( ).
+    ENDIF.
+
+    IF ms_control-page_title_provider IS NOT BOUND.
+      ms_control-page_title_provider = detect_title_provider( ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD create.
 
     DATA lo_page TYPE REF TO zcl_abapgit_gui_page_hoc.
+    DATA ls_control TYPE zcl_abapgit_gui_page=>ty_control.
 
-    CREATE OBJECT lo_page.
+    ls_control-page_title          = iv_page_title.
+    ls_control-page_menu           = io_page_menu.
+    ls_control-page_menu_provider  = ii_page_menu_provider.
+    ls_control-page_title_provider = ii_page_title_provider.
+    ls_control-extra_css_url       = iv_extra_css_url.
+    ls_control-extra_js_url        = iv_extra_js_url.
+    ls_control-show_as_modal       = iv_show_as_modal.
 
-    lo_page->ms_control-show_as_modal = detect_modal( ii_child_component ).
-    IF iv_show_as_modal = abap_true. " TODO, or maybe if supplied ? Should param override implicit detection ?
-      lo_page->ms_control-show_as_modal = abap_true.
-    ENDIF.
-
-    lo_page->ms_control-page_menu_provider = detect_menu_provider( ii_child_component ).
-    IF ii_page_title_provider IS BOUND.
-      lo_page->ms_control-page_menu_provider = ii_page_menu_provider.
-    ENDIF.
-
-    lo_page->ms_control-page_title_provider = detect_title_provider( ii_child_component ).
-    IF ii_page_title_provider IS BOUND.
-      lo_page->ms_control-page_title_provider = ii_page_title_provider.
-    ENDIF.
-
-    lo_page->ms_control-page_title          = iv_page_title.
-    lo_page->ms_control-page_menu           = io_page_menu.
-    lo_page->ms_control-extra_css_url       = iv_extra_css_url.
-    lo_page->ms_control-extra_js_url        = iv_extra_js_url.
-    lo_page->mi_child                       = ii_child_component.
+    CREATE OBJECT lo_page
+      EXPORTING
+        ii_child_component = ii_child_component
+        is_control         = ls_control.
 
     ri_page_wrap = lo_page.
 
@@ -88,7 +102,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_HOC IMPLEMENTATION.
 
   METHOD detect_menu_provider.
     TRY.
-        ri_ref ?= ii_child_component.
+        ri_ref ?= mi_child.
       CATCH cx_sy_move_cast_error.
     ENDTRY.
   ENDMETHOD.
@@ -99,7 +113,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_HOC IMPLEMENTATION.
     DATA li_modal TYPE REF TO zif_abapgit_gui_modal.
 
     TRY.
-        li_modal ?= ii_child_component.
+        li_modal ?= mi_child.
         rv_is_modal = li_modal->is_modal( ).
       CATCH cx_sy_move_cast_error.
     ENDTRY.
@@ -109,7 +123,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_HOC IMPLEMENTATION.
 
   METHOD detect_title_provider.
     TRY.
-        ri_ref ?= ii_child_component.
+        ri_ref ?= mi_child.
       CATCH cx_sy_move_cast_error.
     ENDTRY.
   ENDMETHOD.
