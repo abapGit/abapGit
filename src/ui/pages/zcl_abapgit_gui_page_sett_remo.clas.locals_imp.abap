@@ -11,7 +11,7 @@ CLASS lcl_pr_popup DEFINITION FINAL.
         value(ro_instance) TYPE REF TO lcl_pr_popup.
     METHODS create_picklist_component
       RETURNING
-        VALUE(ro_picklist) TYPE REF TO zcl_abapgit_gui_page_picklist
+        VALUE(ro_picklist) TYPE REF TO zcl_abapgit_gui_picklist
       RAISING
         zcx_abapgit_exception.
 

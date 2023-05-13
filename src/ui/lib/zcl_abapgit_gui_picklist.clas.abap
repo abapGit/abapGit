@@ -1,7 +1,7 @@
-CLASS zcl_abapgit_gui_page_picklist DEFINITION
+CLASS zcl_abapgit_gui_picklist DEFINITION
   PUBLIC
-  FINAL
   INHERITING FROM zcl_abapgit_gui_component
+  FINAL
   CREATE PUBLIC .
 
   PUBLIC SECTION.
@@ -11,15 +11,20 @@ CLASS zcl_abapgit_gui_page_picklist DEFINITION
 
     METHODS constructor
       IMPORTING
-        it_list TYPE STANDARD TABLE
-        iv_attr_name TYPE abap_compname OPTIONAL
-        ii_item_renderer TYPE REF TO zif_abapgit_gui_render_item OPTIONAL
+        !it_list TYPE STANDARD TABLE
+        !iv_attr_name TYPE abap_compname OPTIONAL
+        !ii_item_renderer TYPE REF TO zif_abapgit_gui_render_item OPTIONAL
       RAISING
         zcx_abapgit_exception.
-
-    METHODS get_result_idx RETURNING VALUE(rv_index) TYPE i.
-    METHODS get_result_item CHANGING cs_selected TYPE any.
-    METHODS was_cancelled RETURNING VALUE(rv_yes) TYPE abap_bool.
+    METHODS get_result_idx
+      RETURNING
+        VALUE(rv_index) TYPE i.
+    METHODS get_result_item
+      CHANGING
+        !cs_selected TYPE any.
+    METHODS was_cancelled
+      RETURNING
+        VALUE(rv_yes) TYPE abap_bool.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -28,7 +33,7 @@ CLASS zcl_abapgit_gui_page_picklist DEFINITION
       BEGIN OF c_event,
         back   TYPE string VALUE 'back',
         choose TYPE string VALUE 'choose',
-      END OF c_event .
+      END OF c_event.
 
     CONSTANTS c_radio_name TYPE string VALUE 'radio'.
 
@@ -43,7 +48,7 @@ CLASS zcl_abapgit_gui_page_picklist DEFINITION
 
     METHODS get_form_schema
       RETURNING
-        VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form
+        value(ro_form) TYPE REF TO zcl_abapgit_html_form
       RAISING
         zcx_abapgit_exception.
 
@@ -51,7 +56,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_PICKLIST IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PICKLIST IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -60,7 +65,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PICKLIST IMPLEMENTATION.
 
     super->constructor( ).
 
-* copy contents of table to local scope
+    " copy contents of table to local scope
     CREATE DATA mr_list LIKE it_list.
     ASSIGN mr_list->* TO <lt_tab>.
     APPEND LINES OF it_list TO <lt_tab>.

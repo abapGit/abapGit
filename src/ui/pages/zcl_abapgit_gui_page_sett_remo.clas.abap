@@ -82,7 +82,7 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
     DATA mv_refresh_on_back TYPE abap_bool.
     DATA mv_offline_switch_saved_url TYPE string.
     DATA mo_popup TYPE REF TO zcl_abapgit_gui_popup.
-    DATA mo_choose_pr_picklist TYPE REF TO zcl_abapgit_gui_page_picklist.
+    DATA mo_choose_pr_picklist TYPE REF TO zcl_abapgit_gui_picklist.
 
     METHODS init
       IMPORTING
