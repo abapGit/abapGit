@@ -1,21 +1,21 @@
-class ltcl_test_strbuf definition for testing
-  risk level harmless
-  duration short.
+CLASS ltcl_test_strbuf DEFINITION FOR TESTING
+  RISK LEVEL HARMLESS
+  DURATION SHORT.
 
-  public section.
+  PUBLIC SECTION.
 
-    methods join_space for testing.
+    METHODS join_space FOR TESTING.
 
-endclass.
+ENDCLASS.
 
-class ltcl_test_strbuf implementation.
+CLASS ltcl_test_strbuf IMPLEMENTATION.
 
-  method join_space.
+  METHOD join_space.
 
     cl_abap_unit_assert=>assert_equals(
       act = zcl_abapgit_string_buffer=>new( )->add( 'a' )->add( 'b' )->join_w_space_and_flush( )
       exp = 'a b' ).
 
-  endmethod.
+  ENDMETHOD.
 
-endclass.
+ENDCLASS.

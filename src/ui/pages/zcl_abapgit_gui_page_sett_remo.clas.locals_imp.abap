@@ -8,7 +8,7 @@ CLASS lcl_pr_popup DEFINITION FINAL.
       IMPORTING
         iv_url TYPE string
       RETURNING
-        value(ro_instance) TYPE REF TO lcl_pr_popup.
+        VALUE(ro_instance) TYPE REF TO lcl_pr_popup.
     METHODS create_picklist_component
       RETURNING
         VALUE(ro_picklist) TYPE REF TO zcl_abapgit_gui_picklist
