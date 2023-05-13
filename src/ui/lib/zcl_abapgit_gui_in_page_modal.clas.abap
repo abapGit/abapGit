@@ -1,66 +1,56 @@
-CLASS zcl_abapgit_gui_popup DEFINITION
+CLASS zcl_abapgit_gui_in_page_modal DEFINITION
   PUBLIC
-  CREATE PUBLIC.
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
 
     CONSTANTS:
       BEGIN OF c_event,
-        ok     TYPE string VALUE 'popup-ok',
-        cancel TYPE string VALUE 'popup-cancel',
-      END OF c_event.
+          ok     TYPE string VALUE 'popup-ok',
+          cancel TYPE string VALUE 'popup-cancel',
+        END OF c_event .
 
     METHODS constructor
       IMPORTING
         !iv_form_id TYPE string
-        !iv_class   TYPE string DEFAULT 'modal-dialog'
-        !io_form    TYPE REF TO zcl_abapgit_html_form.
-
+        !iv_class TYPE string DEFAULT 'modal-dialog'
+        !io_form TYPE REF TO zcl_abapgit_html_form .
     METHODS set_dimensions
       IMPORTING
-        !iv_width  TYPE i OPTIONAL
-        !iv_height TYPE i OPTIONAL.
-
+        !iv_width TYPE i OPTIONAL
+        !iv_height TYPE i OPTIONAL .
     METHODS render
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     METHODS normalize
       IMPORTING
         !io_form_data TYPE REF TO zcl_abapgit_string_map
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     METHODS validate
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     METHODS clear
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     METHODS is_valid
       RETURNING
-        VALUE(rv_valid) TYPE string.
-
+        VALUE(rv_valid) TYPE string .
     METHODS get_value
       IMPORTING
-        !iv_key       TYPE string
+        !iv_key TYPE string
       RETURNING
-        VALUE(rv_val) TYPE string.
-
+        VALUE(rv_val) TYPE string .
     METHODS get_values
       IMPORTING
-        !iv_key       TYPE string
+        !iv_key TYPE string
       RETURNING
-        VALUE(rt_val) TYPE string_table.
-
+        VALUE(rt_val) TYPE string_table .
     METHODS get_form_id
       RETURNING
-        VALUE(rv_id) TYPE string.
-
+        VALUE(rv_id) TYPE string .
   PROTECTED SECTION.
 
     METHODS add_validation_error
@@ -95,7 +85,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_popup IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_IN_PAGE_MODAL IMPLEMENTATION.
 
 
   METHOD add_validation_error.
