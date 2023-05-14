@@ -113,7 +113,9 @@ CLASS zcl_abapgit_background_push_au IMPLEMENTATION.
     ls_files = zcl_abapgit_factory=>get_stage_logic( )->get( io_repo ).
 
     LOOP AT ls_files-local ASSIGNING <ls_local>.
-      lv_changed_by = zcl_abapgit_objects=>changed_by( <ls_local>-item ).
+      lv_changed_by = zcl_abapgit_objects=>changed_by(
+        is_item     = <ls_local>-item
+        iv_filename = <ls_local>-file-filename ).
       APPEND lv_changed_by TO lt_users.
       APPEND INITIAL LINE TO lt_changed ASSIGNING <ls_changed>.
       <ls_changed>-changed_by = lv_changed_by.
