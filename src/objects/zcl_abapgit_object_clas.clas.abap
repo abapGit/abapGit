@@ -769,10 +769,6 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
   METHOD zif_abapgit_object~changed_by.
 
-    TYPES: BEGIN OF ty_includes,
-             programm TYPE programm,
-           END OF ty_includes.
-
     TYPES: BEGIN OF ty_reposrc,
              unam  TYPE reposrc-unam,
              udat  TYPE reposrc-udat,
@@ -781,15 +777,32 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     DATA: lt_reposrc  TYPE STANDARD TABLE OF ty_reposrc,
           ls_reposrc  LIKE LINE OF lt_reposrc,
-          lt_includes TYPE STANDARD TABLE OF ty_includes.
+          lv_include  TYPE programm,
+          lt_includes TYPE STANDARD TABLE OF programm.
 
-    lt_includes = mi_object_oriented_object_fct->get_includes( ms_item-obj_name ).
+    CASE iv_extra.
+      WHEN zif_abapgit_oo_object_fnc=>c_parts-locals_def.
+        lv_include = cl_oo_classname_service=>get_ccdef_name( |{ ms_item-obj_name }| ).
+        INSERT lv_include INTO TABLE lt_includes.
+      WHEN zif_abapgit_oo_object_fnc=>c_parts-locals_imp.
+        lv_include = cl_oo_classname_service=>get_ccimp_name( |{ ms_item-obj_name }| ).
+        INSERT lv_include INTO TABLE lt_includes.
+      WHEN zif_abapgit_oo_object_fnc=>c_parts-macros.
+        lv_include = cl_oo_classname_service=>get_ccmac_name( |{ ms_item-obj_name }| ).
+        INSERT lv_include INTO TABLE lt_includes.
+      WHEN zif_abapgit_oo_object_fnc=>c_parts-testclasses.
+        lv_include = cl_oo_classname_service=>get_ccau_name( |{ ms_item-obj_name }| ).
+        INSERT lv_include INTO TABLE lt_includes.
+      WHEN OTHERS.
+        lt_includes = mi_object_oriented_object_fct->get_includes( ms_item-obj_name ).
+    ENDCASE.
+
     ASSERT lines( lt_includes ) > 0.
 
     SELECT unam udat utime FROM reposrc
       INTO TABLE lt_reposrc
       FOR ALL ENTRIES IN lt_includes
-      WHERE progname = lt_includes-programm
+      WHERE progname = lt_includes-table_line
       AND r3state = 'A'.
     IF sy-subrc <> 0.
       rv_user = c_user_unknown.
