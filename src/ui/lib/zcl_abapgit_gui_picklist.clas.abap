@@ -14,6 +14,8 @@ CLASS zcl_abapgit_gui_picklist DEFINITION
         !it_list TYPE STANDARD TABLE
         !iv_attr_name TYPE abap_compname OPTIONAL
         !ii_item_renderer TYPE REF TO zif_abapgit_gui_render_item OPTIONAL
+        !iv_in_page TYPE abap_bool DEFAULT abap_false
+        !iv_id TYPE string OPTIONAL
       RAISING
         zcx_abapgit_exception.
     METHODS get_result_idx
@@ -25,6 +27,12 @@ CLASS zcl_abapgit_gui_picklist DEFINITION
     METHODS was_cancelled
       RETURNING
         VALUE(rv_yes) TYPE abap_bool.
+    METHODS is_fulfilled
+      RETURNING
+        VALUE(rv_yes) TYPE abap_bool.
+    METHODS id
+      RETURNING
+        VALUE(rv_id) TYPE string.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -43,14 +51,20 @@ CLASS zcl_abapgit_gui_picklist DEFINITION
     DATA mr_list TYPE REF TO data.
     DATA mv_selected TYPE i.
     DATA mv_cancelled TYPE abap_bool.
+    DATA mv_fulfilled TYPE abap_bool.
     DATA mv_attr_name TYPE abap_compname.
     DATA mi_item_renderer TYPE REF TO zif_abapgit_gui_render_item.
+    DATA mv_in_page TYPE abap_bool.
+    DATA mv_id TYPE string.
 
     METHODS get_form_schema
       RETURNING
         VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form
       RAISING
         zcx_abapgit_exception.
+    METHODS return_state
+      RETURNING
+        VALUE(rv_state) TYPE zif_abapgit_gui_event_handler=>ty_handling_result-state.
 
 ENDCLASS.
 
@@ -72,6 +86,8 @@ CLASS ZCL_ABAPGIT_GUI_PICKLIST IMPLEMENTATION.
 
     mv_attr_name = to_upper( iv_attr_name ).
     mi_item_renderer = ii_item_renderer.
+    mv_in_page = iv_in_page.
+    mv_id      = iv_id.
 
     IF mi_item_renderer IS NOT BOUND AND mv_attr_name IS INITIAL.
       zcx_abapgit_exception=>raise( 'Renderer or attr name required' ).
@@ -149,6 +165,25 @@ CLASS ZCL_ABAPGIT_GUI_PICKLIST IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD id.
+    rv_id = mv_id.
+  ENDMETHOD.
+
+
+  METHOD is_fulfilled.
+    rv_yes = mv_fulfilled.
+  ENDMETHOD.
+
+
+  METHOD return_state.
+    IF mv_in_page = abap_true.
+      rv_state = zcl_abapgit_gui=>c_event_state-re_render.
+    ELSE.
+      rv_state = zcl_abapgit_gui=>c_event_state-go_back.
+    ENDIF.
+  ENDMETHOD.
+
+
   METHOD was_cancelled.
     rv_yes = mv_cancelled.
   ENDMETHOD.
@@ -156,18 +191,17 @@ CLASS ZCL_ABAPGIT_GUI_PICKLIST IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    DATA lv_index TYPE i.
-    FIELD-SYMBOLS <lt_table> TYPE STANDARD TABLE.
-
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.
       WHEN c_event-back.
+        mv_fulfilled = abap_true.
         mv_cancelled = abap_true.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
+        rs_handled-state = return_state( ).
       WHEN c_event-choose.
-        mv_selected = mo_form_data->get( c_radio_name ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
+        mv_fulfilled = abap_true.
+        mv_selected  = mo_form_data->get( c_radio_name ).
+        rs_handled-state = return_state( ).
     ENDCASE.
 
   ENDMETHOD.
@@ -175,9 +209,7 @@ CLASS ZCL_ABAPGIT_GUI_PICKLIST IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    ri_html->add( mo_form->render( io_values = mo_form_data ) ).
+    ri_html = zcl_abapgit_html=>create( mo_form->render( io_values = mo_form_data ) ).
     register_handlers( ).
 
   ENDMETHOD.

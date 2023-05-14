@@ -6,6 +6,15 @@ CLASS zcl_abapgit_gui_in_page_modal DEFINITION
 
     INTERFACES zif_abapgit_gui_renderable.
 
+    CLASS-METHODS create
+      IMPORTING
+        !ii_child TYPE REF TO zif_abapgit_gui_renderable
+        !iv_width TYPE i OPTIONAL
+        !iv_height TYPE i OPTIONAL
+      RETURNING
+        VALUE(ro_wrap) TYPE REF TO zcl_abapgit_gui_in_page_modal
+      RAISING
+        zcx_abapgit_exception .
     METHODS constructor
       IMPORTING
         !ii_child TYPE REF TO zif_abapgit_gui_renderable
@@ -36,6 +45,15 @@ CLASS ZCL_ABAPGIT_GUI_IN_PAGE_MODAL IMPLEMENTATION.
     ms_attrs-height = iv_height.
     mi_child        = ii_child.
 
+  ENDMETHOD.
+
+
+  METHOD create.
+    CREATE OBJECT ro_wrap
+      EXPORTING
+        ii_child = ii_child
+        iv_width = iv_width
+        iv_height = iv_height.
   ENDMETHOD.
 
 

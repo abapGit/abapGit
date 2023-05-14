@@ -81,8 +81,9 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
     DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map .
     DATA mv_refresh_on_back TYPE abap_bool.
     DATA mv_offline_switch_saved_url TYPE string.
+
     DATA mo_popup TYPE REF TO zif_abapgit_gui_renderable.
-    DATA mo_choose_pr_picklist TYPE REF TO zcl_abapgit_gui_picklist.
+    DATA mo_popup_picklist TYPE REF TO zcl_abapgit_gui_picklist.
 
     METHODS init
       IMPORTING
@@ -145,6 +146,8 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
       RAISING
         zcx_abapgit_exception.
     METHODS choose_branch
+      IMPORTING
+        iv_is_return TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rv_branch) TYPE ty_remote_settings-branch
       RAISING
@@ -209,28 +212,36 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
 
   METHOD choose_branch.
 
-    DATA:
-      lv_url         TYPE zif_abapgit_persistence=>ty_repo-url,
-      lv_branch_name TYPE zif_abapgit_persistence=>ty_repo-branch_name,
-      ls_branch      TYPE zif_abapgit_git_definitions=>ty_git_branch.
+    DATA lv_url         TYPE zif_abapgit_persistence=>ty_repo-url.
+    DATA lv_branch_name TYPE zif_abapgit_persistence=>ty_repo-branch_name.
+*      ls_branch      TYPE zif_abapgit_git_definitions=>ty_git_branch.
 
     IF mo_form_data->get( c_id-offline ) = abap_true.
       RETURN.
     ENDIF.
 
-    lv_url = mo_form_data->get( c_id-url ).
-    lv_branch_name = zif_abapgit_definitions=>c_git_branch-heads_prefix && mo_form_data->get( c_id-branch ).
+    lv_url         = mo_form_data->get( c_id-url ).
+    lv_branch_name = mo_form_data->get( c_id-branch ).
 
-    ls_branch = zcl_abapgit_ui_factory=>get_popups( )->branch_list_popup(
+    mo_popup_picklist = lcl_branch_popup=>new(
+      iv_show_new_option = abap_true " TODO REMOVE
       iv_url             = lv_url
-      iv_default_branch  = lv_branch_name
-      iv_show_new_option = abap_false ).
+      iv_default_branch  = lv_branch_name )->create_picklist_component( ).
 
-    IF ls_branch IS NOT INITIAL.
-      rv_branch = ls_branch-name.
-      REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-heads_prefix IN rv_branch WITH space.
-      CONDENSE rv_branch.
-    ENDIF.
+    mo_popup = zcl_abapgit_gui_page_hoc=>create(
+      ii_child_component = zcl_abapgit_gui_in_page_modal=>create( mo_popup_picklist )
+      iv_show_as_modal   = abap_true ).
+
+*    ls_branch = zcl_abapgit_ui_factory=>get_popups( )->branch_list_popup(
+*      iv_url             = lv_url
+*      iv_default_branch  = lv_branch_name
+*      iv_show_new_option = abap_false ).
+*
+*    IF ls_branch IS NOT INITIAL.
+*      rv_branch = ls_branch-name.
+*      REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-heads_prefix IN rv_branch WITH space.
+*      CONDENSE rv_branch.
+*    ENDIF.
 
   ENDMETHOD.
 
@@ -271,21 +282,20 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
       ENDIF.
       lv_url = mo_form_data->get( c_id-url ).
 
-      mo_choose_pr_picklist = lcl_pr_popup=>new( lv_url )->create_picklist_component( ).
+      mo_popup_picklist = lcl_pr_popup=>new( lv_url )->create_picklist_component( ).
 
       rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       rs_handled-page  = zcl_abapgit_gui_page_hoc=>create(
-        iv_page_title      = 'Pick Pull Request'
-        ii_child_component = mo_choose_pr_picklist
+        ii_child_component = mo_popup_picklist
         iv_show_as_modal   = abap_true ).
 
     ELSE.
 
-      IF mo_choose_pr_picklist->was_cancelled( ) = abap_true.
+      IF mo_popup_picklist->was_cancelled( ) = abap_true.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
       ELSE.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-        mo_choose_pr_picklist->get_result_item( CHANGING cs_selected = ls_pull ).
+        mo_popup_picklist->get_result_item( CHANGING cs_selected = ls_pull ).
         IF ls_pull IS NOT INITIAL.
           mo_form_data->set(
             iv_key = c_id-pull_request
@@ -293,7 +303,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
         ENDIF.
       ENDIF.
 
-      CLEAR mo_choose_pr_picklist.
+      CLEAR mo_popup_picklist.
 *      CLEAR mo_popup.
 
     ENDIF.
@@ -916,6 +926,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
       lv_tag    TYPE ty_remote_settings-tag,
       lv_commit TYPE ty_remote_settings-commit.
 
+    IF mo_popup IS BOUND.
+      RETURN.
+    ENDIF.
+
     lo_form_data_raw = ii_event->form_data( ).
     IF lo_form_data_raw->is_empty( ) = abap_false. " If form-related action
       mo_form_data = mo_form_util->normalize( lo_form_data_raw ).
@@ -947,16 +961,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
         mo_validation_log->clear( ).
 
       WHEN c_event-choose_branch.
-        lv_branch = choose_branch( ).
+        choose_branch( ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
-        IF lv_branch IS INITIAL.
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
-        ELSE.
-          mo_form_data->set(
-            iv_key = c_id-branch
-            iv_val = lv_branch ).
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-        ENDIF.
+*        lv_branch = choose_branch( ).
+
+*        IF lv_branch IS INITIAL.
+*          rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
+*        ELSE.
+*          mo_form_data->set(
+*            iv_key = c_id-branch
+*            iv_val = lv_branch ).
+*          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+*        ENDIF.
 
       WHEN c_event-choose_tag.
         lv_tag = choose_tag( ).
@@ -1096,7 +1113,23 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    register_handlers( iv_no_hotkeys = boolc( mo_popup IS BOUND ) ).
+    IF mo_popup IS NOT BOUND.
+      register_handlers( ).
+    ELSEIF mo_popup_picklist->is_fulfilled( ) = abap_true.
+      " do_return
+      CASE mo_popup_picklist->id( ).
+        WHEN c_event-choose_branch.
+          choose_branch( iv_is_return = abap_true ).
+*        WHEN c_event-choose_tag.
+*          choose_tag( iv_is_return = abap_true ).
+        WHEN OTHERS.
+          zcx_abapgit_exception=>raise( |Unexpected picklist id { mo_popup_picklist->id( ) }| ).
+      ENDCASE.
+      CLEAR mo_popup.
+      CLEAR mo_popup_picklist.
+    ENDIF.
+
+*    register_handlers( iv_no_hotkeys = boolc( mo_popup IS BOUND ) ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
