@@ -12,6 +12,8 @@ CLASS lcl_pr_popup DEFINITION FINAL.
       RETURNING
         VALUE(ro_instance) TYPE REF TO lcl_pr_popup.
     METHODS create_picklist_component
+      IMPORTING
+        iv_id TYPE string OPTIONAL
       RETURNING
         VALUE(ro_picklist) TYPE REF TO zcl_abapgit_gui_picklist
       RAISING
@@ -40,6 +42,7 @@ CLASS lcl_pr_popup IMPLEMENTATION.
 
     CREATE OBJECT ro_picklist
       EXPORTING
+        iv_id            = iv_id
         ii_item_renderer = me
         it_list          = fetch_pull_request_list( ).
 
@@ -100,6 +103,8 @@ CLASS lcl_branch_popup DEFINITION FINAL.
         !iv_show_new_option TYPE abap_bool DEFAULT abap_false.
 
     METHODS create_picklist_component
+      IMPORTING
+        iv_id TYPE string OPTIONAL
       RETURNING
         VALUE(ro_picklist) TYPE REF TO zcl_abapgit_gui_picklist
       RAISING
@@ -136,6 +141,14 @@ CLASS lcl_branch_popup IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD create_picklist_component.
+
+    CREATE OBJECT ro_picklist
+      EXPORTING
+        iv_in_page       = abap_true
+        iv_id            = iv_id
+        ii_item_renderer = me
+        it_list          = fetch_branch_list( ).
+
   ENDMETHOD.
 
   METHOD fetch_branch_list.
