@@ -190,6 +190,18 @@ CLASS zcl_abapgit_object_nrob IMPLEMENTATION.
     IF sy-subrc = 0.
       <lv_any> = sy-uzeit.
     ENDIF.
+    ASSIGN COMPONENT 'ENAME' OF STRUCTURE ls_text TO <lv_any>.
+    IF sy-subrc = 0.
+      <lv_any> = sy-uname.
+    ENDIF.
+    ASSIGN COMPONENT 'EDATE' OF STRUCTURE ls_text TO <lv_any>.
+    IF sy-subrc = 0.
+      <lv_any> = sy-datum.
+    ENDIF.
+    ASSIGN COMPONENT 'ETIME' OF STRUCTURE ls_text TO <lv_any>.
+    IF sy-subrc = 0.
+      <lv_any> = sy-uzeit.
+    ENDIF.
 
     CALL FUNCTION 'NUMBER_RANGE_OBJECT_UPDATE'
       EXPORTING
@@ -362,6 +374,18 @@ CLASS zcl_abapgit_object_nrob IMPLEMENTATION.
       CLEAR <lv_any>.
     ENDIF.
     ASSIGN COMPONENT 'UTIME' OF STRUCTURE ls_text TO <lv_any>.
+    IF sy-subrc = 0.
+      CLEAR <lv_any>.
+    ENDIF.
+    ASSIGN COMPONENT 'ENAME' OF STRUCTURE ls_text TO <lv_any>.
+    IF sy-subrc = 0.
+      CLEAR <lv_any>.
+    ENDIF.
+    ASSIGN COMPONENT 'EDATE' OF STRUCTURE ls_text TO <lv_any>.
+    IF sy-subrc = 0.
+      CLEAR <lv_any>.
+    ENDIF.
+    ASSIGN COMPONENT 'ETIME' OF STRUCTURE ls_text TO <lv_any>.
     IF sy-subrc = 0.
       CLEAR <lv_any>.
     ENDIF.
