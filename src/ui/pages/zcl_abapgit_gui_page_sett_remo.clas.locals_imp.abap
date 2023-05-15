@@ -1,8 +1,17 @@
+INTERFACE lif_popup_ctl.
+  METHODS create_picklist
+    RETURNING
+      VALUE(ro_picklist) TYPE REF TO zcl_abapgit_gui_picklist
+    RAISING
+      zcx_abapgit_exception.
+ENDINTERFACE.
+
 CLASS lcl_pr_popup DEFINITION FINAL.
 
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_gui_render_item.
+    INTERFACES lif_popup_ctl.
 
     CLASS-METHODS new
       IMPORTING
@@ -12,13 +21,6 @@ CLASS lcl_pr_popup DEFINITION FINAL.
     METHODS constructor
       IMPORTING
         iv_url TYPE string.
-    METHODS create_picklist_component
-      IMPORTING
-        iv_id TYPE string OPTIONAL
-      RETURNING
-        VALUE(ro_picklist) TYPE REF TO zcl_abapgit_gui_picklist
-      RAISING
-        zcx_abapgit_exception.
 
   PRIVATE SECTION.
 
@@ -44,13 +46,12 @@ CLASS lcl_pr_popup IMPLEMENTATION.
     mv_repo_url = iv_url.
   ENDMETHOD.
 
-  METHOD create_picklist_component.
+  METHOD lif_popup_ctl~create_picklist.
 
     CREATE OBJECT ro_picklist
       EXPORTING
         iv_title         = 'Choose Pull Request'
         it_list          = fetch_pull_request_list( )
-        iv_id            = iv_id
         ii_item_renderer = me.
 
   ENDMETHOD.
@@ -87,6 +88,7 @@ CLASS lcl_branch_popup DEFINITION FINAL.
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_gui_render_item.
+    INTERFACES lif_popup_ctl.
 
     CLASS-METHODS new
       IMPORTING
@@ -100,14 +102,6 @@ CLASS lcl_branch_popup DEFINITION FINAL.
         !iv_url TYPE string
         !iv_default_branch  TYPE string OPTIONAL
         !iv_show_new_option TYPE abap_bool DEFAULT abap_false.
-
-    METHODS create_picklist_component
-      IMPORTING
-        iv_id TYPE string OPTIONAL
-      RETURNING
-        VALUE(ro_picklist) TYPE REF TO zcl_abapgit_gui_picklist
-      RAISING
-        zcx_abapgit_exception.
 
   PRIVATE SECTION.
 
@@ -139,14 +133,12 @@ CLASS lcl_branch_popup IMPLEMENTATION.
     mv_show_new_option = iv_show_new_option.
   ENDMETHOD.
 
-  METHOD create_picklist_component.
+  METHOD lif_popup_ctl~create_picklist.
 
     CREATE OBJECT ro_picklist
       EXPORTING
         iv_title         = 'Choose Branch'
         it_list          = fetch_branch_list( )
-        iv_in_page       = abap_true
-        iv_id            = iv_id
         ii_item_renderer = me.
 
   ENDMETHOD.
@@ -212,6 +204,7 @@ CLASS lcl_tag_popup DEFINITION FINAL.
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_gui_render_item.
+    INTERFACES lif_popup_ctl.
 
     CLASS-METHODS new
       IMPORTING
@@ -221,13 +214,6 @@ CLASS lcl_tag_popup DEFINITION FINAL.
     METHODS constructor
       IMPORTING
         iv_url TYPE string.
-    METHODS create_picklist_component
-      IMPORTING
-        iv_id TYPE string OPTIONAL
-      RETURNING
-        VALUE(ro_picklist) TYPE REF TO zcl_abapgit_gui_picklist
-      RAISING
-        zcx_abapgit_exception.
 
   PRIVATE SECTION.
 
@@ -253,14 +239,12 @@ CLASS lcl_tag_popup IMPLEMENTATION.
     mv_repo_url = iv_url.
   ENDMETHOD.
 
-  METHOD create_picklist_component.
+  METHOD lif_popup_ctl~create_picklist.
 
     CREATE OBJECT ro_picklist
       EXPORTING
         iv_title         = 'Choose Tag'
         it_list          = fetch_tag_list( )
-        iv_in_page       = abap_true
-        iv_id            = iv_id
         ii_item_renderer = me.
 
   ENDMETHOD.

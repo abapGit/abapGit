@@ -227,7 +227,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
       mo_popup_picklist = lcl_branch_popup=>new(
         iv_show_new_option = abap_false
         iv_url             = lv_url
-        iv_default_branch  = lv_branch_name )->create_picklist_component( c_event-choose_branch ).
+        iv_default_branch  = lv_branch_name
+        )->lif_popup_ctl~create_picklist(
+        )->set_id( c_event-choose_branch
+        )->set_in_page( ).
 
     ELSE.
 
@@ -237,9 +240,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
           mo_form_data->set(
             iv_key = c_id-branch
             iv_val = ls_branch-display_name ).
-*      rv_branch = ls_branch-name.
-*      REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-heads_prefix IN rv_branch WITH space.
-*      CONDENSE rv_branch.
         ENDIF.
       ENDIF.
 
@@ -284,7 +284,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
       ENDIF.
 
       lv_url = mo_form_data->get( c_id-url ).
-      mo_popup_picklist = lcl_pr_popup=>new( lv_url )->create_picklist_component( c_event-choose_pull_request ).
+      mo_popup_picklist = lcl_pr_popup=>new( lv_url
+        )->lif_popup_ctl~create_picklist(
+        )->set_id( c_event-choose_pull_request
+        )->set_in_page( abap_false ). " TODO change to true
 
     ELSE.
 
@@ -317,7 +320,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
       ENDIF.
 
       lv_url = mo_form_data->get( c_id-url ).
-      mo_popup_picklist = lcl_tag_popup=>new( lv_url )->create_picklist_component( c_event-choose_tag ).
+      mo_popup_picklist = lcl_tag_popup=>new( lv_url
+        )->lif_popup_ctl~create_picklist(
+        )->set_id( c_event-choose_tag
+        )->set_in_page( ).
 
     ELSE.
 

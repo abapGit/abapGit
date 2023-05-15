@@ -38,6 +38,16 @@ CLASS zcl_abapgit_gui_picklist DEFINITION
     METHODS is_in_page
       RETURNING
         VALUE(rv_yes) TYPE abap_bool.
+    METHODS set_id
+      IMPORTING
+        iv_id TYPE string
+      RETURNING
+        VALUE(ro_me) TYPE REF TO zcl_abapgit_gui_picklist.
+    METHODS set_in_page
+      IMPORTING
+        iv_in_page TYPE abap_bool DEFAULT abap_true
+      RETURNING
+        VALUE(ro_me) TYPE REF TO zcl_abapgit_gui_picklist.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -193,6 +203,18 @@ CLASS ZCL_ABAPGIT_GUI_PICKLIST IMPLEMENTATION.
     ELSE.
       rv_state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDIF.
+  ENDMETHOD.
+
+
+  METHOD set_id.
+    mv_id = iv_id.
+    ro_me = me.
+  ENDMETHOD.
+
+
+  METHOD set_in_page.
+    mv_in_page = iv_in_page.
+    ro_me = me.
   ENDMETHOD.
 
 
