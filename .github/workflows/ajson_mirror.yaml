@@ -23,7 +23,7 @@ jobs:
     - name: Use Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '16'
+        node-version: '20'
     - name: run
       run: |
         git clone https://github.com/abapGit/ajson_mirror.git

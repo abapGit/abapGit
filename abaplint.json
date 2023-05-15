@@ -73,7 +73,7 @@
         "/json/",
         "zcl_abapgit_repo.clas.abap",
         "zcl_abapgit_repo_online.clas.abap"
-      ]    
+      ]
     },
     "nrob_consistency": true,
     "omit_preceding_zeros": true,
