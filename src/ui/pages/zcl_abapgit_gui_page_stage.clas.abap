@@ -32,11 +32,12 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
 
     TYPES:
       BEGIN OF ty_changed_by,
-        item TYPE zif_abapgit_definitions=>ty_item,
-        name TYPE syuname,
+        item     TYPE zif_abapgit_definitions=>ty_item,
+        filename TYPE string,
+        name     TYPE syuname,
       END OF ty_changed_by .
     TYPES:
-      ty_changed_by_tt TYPE SORTED TABLE OF ty_changed_by WITH UNIQUE KEY item .
+      ty_changed_by_tt TYPE SORTED TABLE OF ty_changed_by WITH UNIQUE KEY item filename.
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
     DATA ms_files TYPE zif_abapgit_definitions=>ty_stage_files .
@@ -124,7 +125,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -245,10 +246,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
           lv_transport         LIKE LINE OF it_transports,
           lv_user              TYPE uname.
 
-    FIELD-SYMBOLS: <ls_changed_by> LIKE LINE OF rt_changed_by.
+    FIELD-SYMBOLS <ls_changed_by> LIKE LINE OF lt_changed_by_remote.
 
     LOOP AT it_files-local INTO ls_local WHERE NOT item IS INITIAL.
       ls_changed_by-item = ls_local-item.
+      ls_changed_by-filename = ls_local-file-filename.
+      ls_changed_by-name = zcl_abapgit_objects=>changed_by(
+        is_item     = ls_local-item
+        iv_filename = ls_local-file-filename ).
       INSERT ls_changed_by INTO TABLE rt_changed_by.
     ENDLOOP.
 
@@ -265,10 +270,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
           INSERT ls_changed_by INTO TABLE lt_changed_by_remote.
         CATCH zcx_abapgit_exception.
       ENDTRY.
-    ENDLOOP.
-
-    LOOP AT rt_changed_by ASSIGNING <ls_changed_by>.
-      <ls_changed_by>-name = zcl_abapgit_objects=>changed_by( <ls_changed_by>-item ).
     ENDLOOP.
 
     LOOP AT lt_changed_by_remote ASSIGNING <ls_changed_by>.
@@ -551,7 +552,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
         ri_html->add( '<tbody>' ).
       ENDAT.
 
-      READ TABLE lt_changed_by INTO ls_changed_by WITH KEY item = <ls_local>-item. "#EC CI_SUBRC
+      READ TABLE lt_changed_by INTO ls_changed_by WITH TABLE KEY
+        item     = <ls_local>-item
+        filename = <ls_local>-file-filename.
+      IF sy-subrc <> 0.
+        READ TABLE lt_changed_by INTO ls_changed_by WITH KEY item = <ls_local>-item.
+      ENDIF.
+
       READ TABLE lt_transports INTO ls_transport WITH KEY
         obj_type = <ls_local>-item-obj_type
         obj_name = <ls_local>-item-obj_name.              "#EC CI_SUBRC
@@ -608,7 +615,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
           READ TABLE lt_transports INTO ls_transport WITH KEY
             obj_type = ls_item_remote-obj_type
             obj_name = ls_item_remote-obj_name.
-          READ TABLE lt_changed_by INTO ls_changed_by WITH KEY item = ls_item_remote.
+
+          READ TABLE lt_changed_by INTO ls_changed_by WITH TABLE KEY
+            item     = ls_item_remote
+            filename = <ls_remote>-filename.
+          IF sy-subrc <> 0.
+            READ TABLE lt_changed_by INTO ls_changed_by WITH KEY item = <ls_local>-item.
+          ENDIF.
         CATCH zcx_abapgit_exception.
           CLEAR ls_transport.
       ENDTRY.

@@ -477,7 +477,9 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     " Changed by
     IF <ls_local>-item-obj_type IS NOT INITIAL.
-      <ls_diff>-changed_by = zcl_abapgit_objects=>changed_by( <ls_local>-item ).
+      <ls_diff>-changed_by = zcl_abapgit_objects=>changed_by(
+        is_item     = <ls_local>-item
+        iv_filename = is_status-filename ).
     ENDIF.
     IF <ls_diff>-changed_by IS INITIAL.
       <ls_diff>-changed_by = zcl_abapgit_objects_super=>c_user_unknown.
