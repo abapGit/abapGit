@@ -11,11 +11,11 @@ CLASS zcl_abapgit_gui_picklist DEFINITION
 
     METHODS constructor
       IMPORTING
-        !it_list TYPE STANDARD TABLE
+        !it_list      TYPE STANDARD TABLE
+        !iv_id        TYPE string OPTIONAL
+        !iv_in_page   TYPE abap_bool DEFAULT abap_false
         !iv_attr_name TYPE abap_compname OPTIONAL
         !ii_item_renderer TYPE REF TO zif_abapgit_gui_render_item OPTIONAL
-        !iv_in_page TYPE abap_bool DEFAULT abap_false
-        !iv_id TYPE string OPTIONAL
       RAISING
         zcx_abapgit_exception.
     METHODS get_result_idx
@@ -33,6 +33,9 @@ CLASS zcl_abapgit_gui_picklist DEFINITION
     METHODS id
       RETURNING
         VALUE(rv_id) TYPE string.
+    METHODS is_in_page
+      RETURNING
+        VALUE(rv_yes) TYPE abap_bool.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -172,6 +175,11 @@ CLASS ZCL_ABAPGIT_GUI_PICKLIST IMPLEMENTATION.
 
   METHOD is_fulfilled.
     rv_yes = mv_fulfilled.
+  ENDMETHOD.
+
+
+  METHOD is_in_page.
+    rv_yes = mv_in_page.
   ENDMETHOD.
 
 
