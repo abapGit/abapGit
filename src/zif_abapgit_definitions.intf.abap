@@ -428,7 +428,6 @@ INTERFACE zif_abapgit_definitions
       clipboard                     TYPE string VALUE 'clipboard',
       yank_to_clipboard             TYPE string VALUE 'yank_to_clipboard',
       show_hotkeys                  TYPE string VALUE 'show_hotkeys',
-      return_from_modal             TYPE string VALUE 'return_from_modal',
     END OF c_action.
   CONSTANTS c_spagpa_param_repo_key TYPE c LENGTH 20 VALUE 'REPO_KEY' ##NO_TEXT.
   CONSTANTS c_spagpa_param_package TYPE c LENGTH 20 VALUE 'PACKAGE' ##NO_TEXT.

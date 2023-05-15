@@ -120,7 +120,6 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
     DATA lv_index TYPE i.
     DATA ls_stack LIKE LINE OF mt_stack.
-    DATA li_leaving_page TYPE REF TO zif_abapgit_gui_renderable.
 
     " If viewer is showing Internet page, then use browser navigation
     IF mi_html_viewer->get_url( ) CP 'http*'.
@@ -149,13 +148,8 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
       ENDIF.
     ENDDO.
 
-    li_leaving_page = mi_cur_page.
     mi_cur_page = ls_stack-page. " last page always stays
     render( ).
-
-    IF is_page_modal( li_leaving_page ) = abap_true.
-      on_event( action = |{ zif_abapgit_definitions=>c_action-return_from_modal }| ).
-    ENDIF.
 
   ENDMETHOD.
 
@@ -274,8 +268,8 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
           ls_handled-state = c_event_state-re_render OR
           ls_handled-state = c_event_state-go_back OR
           ls_handled-state = c_event_state-no_more_act ).
-          ls_handled-state = c_event_state-no_more_act.
           " Restrict new page switching from modals
+          ls_handled-state = c_event_state-no_more_act.
         ENDIF.
 
         CASE ls_handled-state.
@@ -346,13 +340,11 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
     DATA li_modal TYPE REF TO zif_abapgit_gui_modal.
 
-    IF ii_page IS NOT BOUND.
-      RETURN.
-    ENDIF.
-
     TRY.
-        li_modal ?= ii_page.
-        rv_yes = li_modal->is_modal( ).
+        IF ii_page IS BOUND.
+          li_modal ?= ii_page.
+          rv_yes = li_modal->is_modal( ).
+        ENDIF.
       CATCH cx_sy_move_cast_error.
     ENDTRY.
 

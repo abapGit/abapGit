@@ -1541,10 +1541,10 @@ table.unit_tests {
 }
 
 .modal-guts .dialog {
-    margin-top: inherit;
+/*    margin-top: inherit;
     margin-bottom: inherit;
-    padding: inherit;
-    box-shadow: 4px 4px 4px 0px rgba(0,0,0,0.3);
+    padding: inherit;*/
+    box-shadow: 2px 2px 4px 1px rgba(0,0,0,0.3);
 }
 
 .modal-overlay {
