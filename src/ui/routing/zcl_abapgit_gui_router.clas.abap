@@ -471,8 +471,15 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     lv_adt_jump_enabled = zcl_abapgit_persist_factory=>get_settings( )->read( )->get_adt_jump_enabled( ).
     IF lv_adt_jump_enabled = abap_true.
-      lv_adt_link = zcl_abapgit_adt_link=>link_transport( iv_transport ).
-      zcl_abapgit_ui_factory=>get_frontend_services( )->execute( iv_document = lv_adt_link ).
+      TRY.
+          lv_adt_link = zcl_abapgit_adt_link=>link_transport( iv_transport ).
+          zcl_abapgit_ui_factory=>get_frontend_services( )->execute( iv_document = lv_adt_link ).
+        CATCH zcx_abapgit_exception.
+          " Fallback if ADT link execution failed or was cancelled
+          CALL FUNCTION 'TR_DISPLAY_REQUEST'
+            EXPORTING
+              i_trkorr = iv_transport.
+      ENDTRY.
     ELSE.
       CALL FUNCTION 'TR_DISPLAY_REQUEST'
         EXPORTING
