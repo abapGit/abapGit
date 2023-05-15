@@ -211,6 +211,7 @@ CLASS ZCL_ABAPGIT_GUI_PICKLIST IMPLEMENTATION.
         mv_cancelled = abap_true.
         rs_handled-state = return_state( ).
       WHEN c_event-choose.
+        " TODO validate if item was actually choosen: "You have to select one item"
         mv_fulfilled = abap_true.
         mv_selected  = mo_form_data->get( c_radio_name ).
         rs_handled-state = return_state( ).
