@@ -243,7 +243,7 @@ CLASS ltcl_prio_deserialization DEFINITION FINAL FOR TESTING
         IMPORTING
           iv_object_type TYPE string,
       when_deser_is_priorized,
-      then
+      check
         IMPORTING
           iv_exp_object_type TYPE string.
 
@@ -267,120 +267,120 @@ CLASS ltcl_prio_deserialization IMPLEMENTATION.
     given( 'ENSC' ).
     given( 'ENHS' ).
     when_deser_is_priorized( ).
-    then( 'ENHS' ).
-    then( 'ENSC' ).
+    check( 'ENHS' ).
+    check( 'ENSC' ).
   ENDMETHOD.
 
   METHOD ensc_before_enho.
     given( 'ENHO' ).
     given( 'ENSC' ).
     when_deser_is_priorized( ).
-    then( 'ENSC' ).
-    then( 'ENHO' ).
+    check( 'ENSC' ).
+    check( 'ENHO' ).
   ENDMETHOD.
 
   METHOD enho_before_enhc.
     given( 'ENHC' ).
     given( 'ENHO' ).
     when_deser_is_priorized( ).
-    then( 'ENHO' ).
-    then( 'ENHC' ).
+    check( 'ENHO' ).
+    check( 'ENHC' ).
   ENDMETHOD.
 
   METHOD sprx_before_clas.
     given( 'CLAS' ).
     given( 'SPRX' ).
     when_deser_is_priorized( ).
-    then( 'SPRX' ).
-    then( 'CLAS' ).
+    check( 'SPRX' ).
+    check( 'CLAS' ).
   ENDMETHOD.
 
   METHOD sprx_before_intf.
     given( 'INTF' ).
     given( 'SPRX' ).
     when_deser_is_priorized( ).
-    then( 'SPRX' ).
-    then( 'INTF' ).
+    check( 'SPRX' ).
+    check( 'INTF' ).
   ENDMETHOD.
 
   METHOD sprx_before_tabl.
     given( 'TABL' ).
     given( 'SPRX' ).
     when_deser_is_priorized( ).
-    then( 'SPRX' ).
-    then( 'TABL' ).
+    check( 'SPRX' ).
+    check( 'TABL' ).
   ENDMETHOD.
 
   METHOD otgr_before_char.
     given( 'CHAR' ).
     given( 'OTGR' ).
     when_deser_is_priorized( ).
-    then( 'OTGR' ).
-    then( 'CHAR' ).
+    check( 'OTGR' ).
+    check( 'CHAR' ).
   ENDMETHOD.
 
   METHOD pinf_before_devc.
     given( 'DEVC' ).
     given( 'PINF' ).
     when_deser_is_priorized( ).
-    then( 'PINF' ).
-    then( 'DEVC' ).
+    check( 'PINF' ).
+    check( 'DEVC' ).
   ENDMETHOD.
 
   METHOD tobj_before_scp1.
     given( 'SCP1' ).
     given( 'TOBJ' ).
     when_deser_is_priorized( ).
-    then( 'TOBJ' ).
-    then( 'SCP1' ).
+    check( 'TOBJ' ).
+    check( 'SCP1' ).
   ENDMETHOD.
 
   METHOD iobj_before_odso.
     given( 'ODSO' ).
     given( 'IOBJ' ).
     when_deser_is_priorized( ).
-    then( 'IOBJ' ).
-    then( 'ODSO' ).
+    check( 'IOBJ' ).
+    check( 'ODSO' ).
   ENDMETHOD.
 
   METHOD iasp_before_iarp.
     given( 'IARP' ).
     given( 'IASP' ).
     when_deser_is_priorized( ).
-    then( 'IASP' ).
-    then( 'IARP' ).
+    check( 'IASP' ).
+    check( 'IARP' ).
   ENDMETHOD.
 
   METHOD iarp_before_iatu.
     given( 'IATU' ).
     given( 'IARP' ).
     when_deser_is_priorized( ).
-    then( 'IARP' ).
-    then( 'IATU' ).
+    check( 'IARP' ).
+    check( 'IATU' ).
   ENDMETHOD.
 
   METHOD prog_before_iaxu.
     given( 'IAXU' ).
     given( 'PROG' ).
     when_deser_is_priorized( ).
-    then( 'PROG' ).
-    then( 'IAXU' ).
+    check( 'PROG' ).
+    check( 'IAXU' ).
   ENDMETHOD.
 
   METHOD webi_before_sprx.
     given( 'SPRX' ).
     given( 'WEBI' ).
     when_deser_is_priorized( ).
-    then( 'WEBI' ).
-    then( 'SPRX' ).
+    check( 'WEBI' ).
+    check( 'SPRX' ).
   ENDMETHOD.
 
   METHOD clas_before_pinf.
     given( 'PINF' ).
     given( 'CLAS' ).
     when_deser_is_priorized( ).
-    then( 'CLAS' ).
-    then( 'PINF' ).
+    check( 'CLAS' ).
+    check( 'PINF' ).
   ENDMETHOD.
 
   METHOD xslt_before_clas.
@@ -391,20 +391,20 @@ CLASS ltcl_prio_deserialization IMPLEMENTATION.
     given( 'CLAS' ).
     given( 'XSLT' ).
     when_deser_is_priorized( ).
-    then( 'XSLT' ).
-    then( 'XSLT' ).
-    then( 'INTF' ).
-    then( 'INTF' ).
-    then( 'CLAS' ).
-    then( 'CLAS' ).
+    check( 'XSLT' ).
+    check( 'XSLT' ).
+    check( 'INTF' ).
+    check( 'INTF' ).
+    check( 'CLAS' ).
+    check( 'CLAS' ).
   ENDMETHOD.
 
   METHOD xslt_before_prog.
     given( 'PROG' ).
     given( 'XSLT' ).
     when_deser_is_priorized( ).
-    then( 'XSLT' ).
-    then( 'PROG' ).
+    check( 'XSLT' ).
+    check( 'PROG' ).
   ENDMETHOD.
 
   METHOD ddls_before_dcls.
@@ -413,10 +413,10 @@ CLASS ltcl_prio_deserialization IMPLEMENTATION.
     given( 'DCLS' ).
     given( 'DDLS' ).
     when_deser_is_priorized( ).
-    then( 'DDLS' ).
-    then( 'DDLS' ).
-    then( 'DCLS' ).
-    then( 'DCLS' ).
+    check( 'DDLS' ).
+    check( 'DDLS' ).
+    check( 'DCLS' ).
+    check( 'DCLS' ).
   ENDMETHOD.
 
   METHOD given.
@@ -443,7 +443,7 @@ CLASS ltcl_prio_deserialization IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD then.
+  METHOD check.
 
     DATA: ls_output LIKE LINE OF mt_output.
 

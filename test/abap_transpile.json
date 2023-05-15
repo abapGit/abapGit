@@ -132,26 +132,6 @@
 
       {"object": "ZCL_ABAPGIT_ENVIRONMENT", "class": "ltcl_test", "method": "is_repo_object_changes_allowed", "note": "Void type: UVERS"},
 
-      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "clas_before_pinf", "note": "hmm, something with promises? or cyclic requires"},
-      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "ddls_before_dcls", "note": "hmm, something with promises?"},
-      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "enho_before_enhc", "note": "hmm, something with promises?"},
-      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "enhs_before_ensc", "note": "hmm, something with promises?"},
-      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "ensc_before_enho", "note": "hmm, something with promises?"},
-      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "iarp_before_iatu", "note": "hmm, something with promises?"},
-      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "iasp_before_iarp", "note": "hmm, something with promises?"},
-      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "iasp_before_isrp", "note": "hmm, something with promises?"},
-      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "iobj_before_odso", "note": "hmm, something with promises?"},
-      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "otgr_before_char", "note": "hmm, something with promises?"},
-      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "pinf_before_devc", "note": "hmm, something with promises?"},
-      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "prog_before_iaxu", "note": "hmm, something with promises?"},
-      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "sprx_before_clas", "note": "hmm, something with promises?"},
-      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "sprx_before_intf", "note": "hmm, something with promises?"},
-      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "sprx_before_tabl", "note": "hmm, something with promises?"},
-      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "tobj_before_scp1", "note": "hmm, something with promises?"},
-      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "webi_before_sprx", "note": "hmm, something with promises?"},
-      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "xslt_before_clas", "note": "hmm, something with promises?"},
-      {"object": "ZCL_ABAPGIT_FILE_DESERIALIZE", "class": "ltcl_prio_deserialization", "method": "xslt_before_prog", "note": "hmm, something with promises?"},
-
       {"object": "ZCL_ABAPGIT_DOT_ABAPGIT", "class": "ltcl_dot_abapgit", "method": "identity", "note": " https://github.com/open-abap/open-abap/issues/471 "},
 
       {"object": "ZCL_ABAPGIT_AJSON", "class": "ltcl_parser_test", "method": "parse_error", "note": "NodeJS 20 does not set position of parsing error"},
