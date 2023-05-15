@@ -8,12 +8,14 @@ CLASS zcl_abapgit_gui_picklist DEFINITION
 
     INTERFACES zif_abapgit_gui_event_handler.
     INTERFACES zif_abapgit_gui_renderable.
+    INTERFACES zif_abapgit_gui_page_title.
 
     METHODS constructor
       IMPORTING
         !it_list      TYPE STANDARD TABLE
         !iv_id        TYPE string OPTIONAL
         !iv_in_page   TYPE abap_bool DEFAULT abap_false
+        !iv_title     TYPE string DEFAULT 'Choose from list'
         !iv_attr_name TYPE abap_compname OPTIONAL
         !ii_item_renderer TYPE REF TO zif_abapgit_gui_render_item OPTIONAL
       RAISING
@@ -59,6 +61,7 @@ CLASS zcl_abapgit_gui_picklist DEFINITION
     DATA mi_item_renderer TYPE REF TO zif_abapgit_gui_render_item.
     DATA mv_in_page TYPE abap_bool.
     DATA mv_id TYPE string.
+    DATA mv_title TYPE string.
 
     METHODS get_form_schema
       RETURNING
@@ -91,6 +94,7 @@ CLASS ZCL_ABAPGIT_GUI_PICKLIST IMPLEMENTATION.
     mi_item_renderer = ii_item_renderer.
     mv_in_page = iv_in_page.
     mv_id      = iv_id.
+    mv_title   = iv_title.
 
     IF mi_item_renderer IS NOT BOUND AND mv_attr_name IS INITIAL.
       zcx_abapgit_exception=>raise( 'Renderer or attr name required' ).
@@ -115,7 +119,7 @@ CLASS ZCL_ABAPGIT_GUI_PICKLIST IMPLEMENTATION.
 
     ro_form->radio(
       iv_name  = c_radio_name
-      iv_label = 'Choose from list' ).
+      iv_label = mv_title ).
 
     ASSIGN mr_list->* TO <lt_list>.
     LOOP AT <lt_list> ASSIGNING <ls_row>.
@@ -212,6 +216,11 @@ CLASS ZCL_ABAPGIT_GUI_PICKLIST IMPLEMENTATION.
         rs_handled-state = return_state( ).
     ENDCASE.
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_title~get_page_title.
+    rv_title = mv_title.
   ENDMETHOD.
 
 

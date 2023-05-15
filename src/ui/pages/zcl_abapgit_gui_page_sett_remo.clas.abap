@@ -1014,7 +1014,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
       WHEN c_event-choose_pull_request.
         choose_pr( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-        rs_handled-page  = zcl_abapgit_gui_page_hoc=>create( mo_popup_picklist ).
+        rs_handled-page  = zcl_abapgit_gui_page_hoc=>create(
+          ii_child_component = mo_popup_picklist
+          iv_show_as_modal   = abap_true ).
 
       WHEN c_event-choose_commit.
         lv_commit = choose_commit( ).

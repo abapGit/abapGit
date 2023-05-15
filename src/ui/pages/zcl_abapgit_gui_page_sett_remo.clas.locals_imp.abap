@@ -3,14 +3,15 @@ CLASS lcl_pr_popup DEFINITION FINAL.
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_gui_render_item.
-    INTERFACES zif_abapgit_gui_page_title.
-    INTERFACES zif_abapgit_gui_modal.
 
     CLASS-METHODS new
       IMPORTING
         iv_url TYPE string
       RETURNING
         VALUE(ro_instance) TYPE REF TO lcl_pr_popup.
+    METHODS constructor
+      IMPORTING
+        iv_url TYPE string.
     METHODS create_picklist_component
       IMPORTING
         iv_id TYPE string OPTIONAL
@@ -34,14 +35,20 @@ ENDCLASS.
 CLASS lcl_pr_popup IMPLEMENTATION.
 
   METHOD new.
-    CREATE OBJECT ro_instance.
-    ro_instance->mv_repo_url = iv_url.
+    CREATE OBJECT ro_instance
+      EXPORTING
+        iv_url = iv_url.
+  ENDMETHOD.
+
+  METHOD constructor.
+    mv_repo_url = iv_url.
   ENDMETHOD.
 
   METHOD create_picklist_component.
 
     CREATE OBJECT ro_picklist
       EXPORTING
+        iv_title         = 'Choose Pull Request'
         iv_id            = iv_id
         ii_item_renderer = me
         it_list          = fetch_pull_request_list( ).
@@ -69,14 +76,6 @@ CLASS lcl_pr_popup IMPLEMENTATION.
     ri_html = zcl_abapgit_html=>create( |<b>{ <ls_pr>-number
       }</b> - { <ls_pr>-title } @{ <ls_pr>-user }| ).
 
-  ENDMETHOD.
-
-  METHOD zif_abapgit_gui_page_title~get_page_title.
-    rv_title = 'Choose Pull Request'.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_gui_modal~is_modal.
-    rv_yes = abap_true.
   ENDMETHOD.
 
 ENDCLASS.
@@ -135,8 +134,8 @@ CLASS lcl_branch_popup IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD constructor.
-    mv_repo_url = iv_url.
-    mv_default_branch = zif_abapgit_definitions=>c_git_branch-heads_prefix && iv_default_branch.
+    mv_repo_url        = iv_url.
+    mv_default_branch  = zif_abapgit_definitions=>c_git_branch-heads_prefix && iv_default_branch.
     mv_show_new_option = iv_show_new_option.
   ENDMETHOD.
 
@@ -144,6 +143,7 @@ CLASS lcl_branch_popup IMPLEMENTATION.
 
     CREATE OBJECT ro_picklist
       EXPORTING
+        iv_title         = 'Choose Branch'
         iv_in_page       = abap_true
         iv_id            = iv_id
         ii_item_renderer = me
@@ -193,7 +193,7 @@ CLASS lcl_branch_popup IMPLEMENTATION.
     ASSIGN iv_item TO <ls_b>.
     ASSERT sy-subrc = 0.
 
-    " TODO render mv_default_branch properly
+    " TODO render mv_default_branch properly, needs respecting support from the picklist components
 
     IF <ls_b>-is_head = abap_true.
       lv_head_marker = | (<b>{ zif_abapgit_definitions=>c_head_name }</b>)|.
