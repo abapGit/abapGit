@@ -8,10 +8,10 @@ CLASS zcl_abapgit_object_sicf DEFINITION
 
     INTERFACES zif_abapgit_object .
 
-    TYPES: ty_hash TYPE c LENGTH 25.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    TYPES ty_hash TYPE c LENGTH 25.
 
     TYPES:
       ty_icfhandler_tt TYPE STANDARD TABLE OF icfhandler WITH DEFAULT KEY .
