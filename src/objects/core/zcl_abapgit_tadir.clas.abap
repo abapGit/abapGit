@@ -68,14 +68,6 @@ CLASS zcl_abapgit_tadir DEFINITION
         !ct_tadir   TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
-    METHODS adjust_objects
-      IMPORTING
-        !iv_package TYPE tadir-devclass
-        !io_dot     TYPE REF TO zcl_abapgit_dot_abapgit
-      CHANGING
-        !ct_tadir   TYPE zif_abapgit_definitions=>ty_tadir_tt
-      RAISING
-        zcx_abapgit_exception ##NEEDED.
     METHODS is_sots_excluded
       IMPORTING
         !it_packages      TYPE zif_abapgit_sap_package=>ty_devclass_tt
@@ -175,34 +167,6 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD adjust_objects.
-
-    " Todo, replace with solution that will work with any object type (might depend on iv_package and io_dot)
-
-    FIELD-SYMBOLS <ls_tadir> LIKE LINE OF ct_tadir.
-
-    LOOP AT ct_tadir ASSIGNING <ls_tadir>.
-
-      IF <ls_tadir>-object = 'SICF'.
-        " Replace the internal GUID with a hash of the path
-        TRY.
-            CALL METHOD ('ZCL_ABAPGIT_OBJECT_SICF')=>read_sicf_url
-              EXPORTING
-                iv_obj_name = <ls_tadir>-obj_name
-              RECEIVING
-                rv_hash     = <ls_tadir>-obj_name+15.
-
-          CATCH cx_sy_dyn_call_illegal_method ##NO_HANDLER.
-            " SICF might not be supported in some systems, assume this code is not called
-        ENDTRY.
-      ENDIF.
-
-      CLEAR <ls_tadir>-korrnum.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
   METHOD build.
 
     DATA lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
@@ -229,13 +193,6 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
         ct_tadir   = rt_tadir ).
 
     determine_path(
-      EXPORTING
-        iv_package = iv_package
-        io_dot     = io_dot
-      CHANGING
-        ct_tadir   = rt_tadir ).
-
-    adjust_objects(
       EXPORTING
         iv_package = iv_package
         io_dot     = io_dot
@@ -304,8 +261,9 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
       ENDIF.
 
       <ls_tadir>-path = lv_path.
-
+      <ls_tadir>-korrnum = ''.
     ENDLOOP.
+
   ENDMETHOD.
 
 
