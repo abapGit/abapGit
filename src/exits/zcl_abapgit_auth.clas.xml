@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_AUTH</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - Authorizations</DESCRIPT>
+    <DESCRIPT>abapGit - Authorizations Exit</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

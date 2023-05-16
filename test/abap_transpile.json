@@ -5,6 +5,7 @@
     "\\.w3mi.",
     "src/ui/zcl_abapgit_e",
     "src/zcl_abapgit_e",
+    "src/utils/*",    
     "zcl_abapgit_adt_link",
     "zcl_abapgit_aff_registry",
     "zcl_abapgit_ajson*",
