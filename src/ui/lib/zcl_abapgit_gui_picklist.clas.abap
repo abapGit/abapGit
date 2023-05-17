@@ -128,8 +128,9 @@ CLASS ZCL_ABAPGIT_GUI_PICKLIST IMPLEMENTATION.
     ro_form = zcl_abapgit_html_form=>create( ).
 
     ro_form->radio(
-      iv_name  = c_radio_name
-      iv_label = mv_title ).
+      iv_name     = c_radio_name
+      iv_condense = abap_true
+      iv_label    = mv_title ).
 
     ASSIGN mr_list->* TO <lt_list>.
     LOOP AT <lt_list> ASSIGNING <ls_row>.
@@ -228,6 +229,12 @@ CLASS ZCL_ABAPGIT_GUI_PICKLIST IMPLEMENTATION.
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.
+      WHEN zif_abapgit_definitions=>c_action-go_back.
+        IF mv_in_page = abap_true.
+          mv_fulfilled = abap_true.
+          mv_cancelled = abap_true.
+          rs_handled-state = return_state( ).
+        ENDIF.
       WHEN c_event-back.
         mv_fulfilled = abap_true.
         mv_cancelled = abap_true.
