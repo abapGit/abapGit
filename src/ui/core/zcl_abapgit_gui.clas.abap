@@ -29,8 +29,14 @@ CLASS zcl_abapgit_gui DEFINITION
     METHODS back
       IMPORTING
         !iv_to_bookmark TYPE abap_bool DEFAULT abap_false
+        !iv_graceful TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rv_exit)  TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
+    METHODS back_graceful
+      RETURNING
+        VALUE(rv_handled) TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
     METHODS on_event
@@ -134,6 +140,10 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
       RETURN.
     ENDIF.
 
+    IF iv_graceful = abap_true AND back_graceful( ) = abap_true.
+      RETURN.
+    ENDIF.
+
     DO lv_index TIMES.
       READ TABLE mt_stack INDEX lv_index INTO ls_stack.
       ASSERT sy-subrc = 0.
@@ -150,6 +160,25 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
     mi_cur_page = ls_stack-page. " last page always stays
     render( ).
+
+  ENDMETHOD.
+
+
+  METHOD back_graceful.
+
+    DATA li_handler TYPE REF TO zif_abapgit_gui_event_handler.
+    DATA ls_handled TYPE zif_abapgit_gui_event_handler=>ty_handling_result.
+
+    READ TABLE mt_event_handlers INTO li_handler INDEX 1.
+    IF sy-subrc = 0.
+      ls_handled = li_handler->on_event( zcl_abapgit_gui_event=>new(
+        iv_action       = zif_abapgit_definitions=>c_action-go_back
+        ii_gui_services = me ) ).
+      IF ls_handled-state = c_event_state-re_render. " soft exit, probably popup
+        render( ).
+        rv_handled = abap_true.
+      ENDIF.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -288,7 +317,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
           WHEN c_event_state-go_back.
             back( ).
           WHEN c_event_state-go_back_to_bookmark.
-            back( abap_true ).
+            back( iv_to_bookmark = abap_true ).
           WHEN c_event_state-no_more_act.
             " Do nothing, handling completed
           WHEN OTHERS.
