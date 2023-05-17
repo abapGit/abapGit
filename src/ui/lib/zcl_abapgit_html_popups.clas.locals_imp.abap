@@ -55,8 +55,7 @@ CLASS lcl_pr_popup IMPLEMENTATION.
     ASSIGN iv_item TO <ls_pr>.
     ASSERT sy-subrc = 0.
 
-    ri_html = zcl_abapgit_html=>create( |<b>{ <ls_pr>-number
-      }</b> - { <ls_pr>-title } @{ <ls_pr>-user }| ).
+    ri_html = zcl_abapgit_html=>create( |<b>{ <ls_pr>-number }</b> - { <ls_pr>-title } @{ <ls_pr>-user }| ).
 
   ENDMETHOD.
 
