@@ -1557,3 +1557,13 @@ table.unit_tests {
     height: 100%;
     background: rgba(0, 0, 0, 0.3);
 }
+
+.modal .radio-container label {
+  /* hacky, improve later, get rid of !important, hook it to a named style instead */
+  border-radius: 3px !important;
+  border: 1px solid rgba(0, 0, 0, 0.3) !important;
+  margin-bottom: 2px !important;
+}
+.modal .radio-container label:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}

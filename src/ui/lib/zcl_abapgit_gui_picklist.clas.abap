@@ -129,7 +129,6 @@ CLASS ZCL_ABAPGIT_GUI_PICKLIST IMPLEMENTATION.
 
     ro_form->radio(
       iv_name     = c_radio_name
-      iv_condense = abap_true
       iv_label    = mv_title ).
 
     ASSIGN mr_list->* TO <lt_list>.
