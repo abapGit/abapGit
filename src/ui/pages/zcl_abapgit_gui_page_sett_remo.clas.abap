@@ -287,7 +287,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
       mo_popup_picklist = zcl_abapgit_html_popups=>pull_request_list( lv_url
         )->create_picklist(
         )->set_id( c_event-choose_pull_request
-        )->set_in_page( abap_false ). " TODO change to true
+        )->set_in_page( abap_true ).
 
     ELSE.
 
