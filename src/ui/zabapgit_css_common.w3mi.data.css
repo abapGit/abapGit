@@ -1514,36 +1514,20 @@ table.unit_tests {
     left: 50%;
     transform: translate(-50%, -50%);
     /* size */
-/*    width: 680px;*/
     max-width: 100%;
-/*    height: 260px;*/
     max-height: 100%;
     /* infront of overlay */
     z-index: 1010;
-    /* show by default */
     display: block;
-    /* style */
-/*    background: lightgray;*/
-/*    border-radius: 6px;*/
 }
 
 .modal-guts {
-    /* cover the modal */
-/*    position: absolute;*/
-/*    top: 0;*/
-/*    left: 0;*/
-/*    width: 100%;*/
-/*    height: 100%;*/
-    /* spacing as needed */
     padding: 6px 6px;
     /* let it scroll */
     overflow: auto;
 }
 
 .modal-guts .dialog {
-/*    margin-top: inherit;
-    margin-bottom: inherit;
-    padding: inherit;*/
     box-shadow: 2px 2px 4px 1px rgba(0,0,0,0.3);
 }
 
