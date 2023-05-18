@@ -63,6 +63,7 @@ CLASS zcl_abapgit_gui_picklist DEFINITION
     DATA mo_form TYPE REF TO zcl_abapgit_html_form.
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
     DATA mo_form_util TYPE REF TO zcl_abapgit_html_form_utils.
+    DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
     DATA mr_list TYPE REF TO data.
     DATA mv_selected TYPE i.
     DATA mv_cancelled TYPE abap_bool.
@@ -111,6 +112,7 @@ CLASS ZCL_ABAPGIT_GUI_PICKLIST IMPLEMENTATION.
     ENDIF.
 
     CREATE OBJECT mo_form_data.
+    CREATE OBJECT mo_validation_log.
     mo_form = get_form_schema( ).
     mo_form_util = zcl_abapgit_html_form_utils=>create( mo_form ).
 
@@ -226,6 +228,7 @@ CLASS ZCL_ABAPGIT_GUI_PICKLIST IMPLEMENTATION.
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
+    mo_validation_log->clear( ).
 
     CASE ii_event->mv_action.
       WHEN c_event-back OR zif_abapgit_definitions=>c_action-go_back.
@@ -234,10 +237,16 @@ CLASS ZCL_ABAPGIT_GUI_PICKLIST IMPLEMENTATION.
         mv_cancelled = abap_true.
         rs_handled-state = return_state( ).
       WHEN c_event-choose.
-        " TODO validate if item was actually choosen: "You have to select one item"
-        mv_fulfilled = abap_true.
-        mv_selected  = mo_form_data->get( c_radio_name ).
-        rs_handled-state = return_state( ).
+        mv_selected = mo_form_data->get( c_radio_name ).
+        IF mv_selected = 0.
+          mo_validation_log->set(
+            iv_key = c_radio_name
+            iv_val = 'You have to select one item' ).
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+        ELSE.
+          mv_fulfilled = abap_true.
+          rs_handled-state = return_state( ).
+        ENDIF.
     ENDCASE.
 
   ENDMETHOD.
@@ -250,7 +259,9 @@ CLASS ZCL_ABAPGIT_GUI_PICKLIST IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    ri_html = zcl_abapgit_html=>create( mo_form->render( io_values = mo_form_data ) ).
+    ri_html = zcl_abapgit_html=>create( mo_form->render(
+      io_values         = mo_form_data
+      io_validation_log = mo_validation_log ) ).
     register_handlers( ).
 
   ENDMETHOD.
