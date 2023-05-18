@@ -169,6 +169,10 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     DATA li_handler TYPE REF TO zif_abapgit_gui_event_handler.
     DATA ls_handled TYPE zif_abapgit_gui_event_handler=>ty_handling_result.
 
+    " This code can be potentially improved
+    " Why send go_back to the topmost handler only ? It makes sense to notify the whole stack
+    " But than how to handle re-render ? render if at least one handler asks for it ?
+    " Probably that's the way but needs a relevant example. Postponed arch decision.
     READ TABLE mt_event_handlers INTO li_handler INDEX 1.
     IF sy-subrc = 0.
       ls_handled = li_handler->on_event( zcl_abapgit_gui_event=>new(

@@ -600,7 +600,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
 
   METHOD handle_picklist_state.
 
-    IF mo_popup_picklist IS BOUND AND mo_popup_picklist->is_fulfilled( ) = abap_true.
+    IF mo_popup_picklist IS BOUND AND
+      ( mo_popup_picklist->is_fulfilled( ) = abap_true OR mo_popup_picklist->is_in_page( ) = abap_false ).
+      " Picklist is either fullfilled OR
+      " it was on its own page and user went back from it via F3/ESC and the picklist had no "graceful back" handler
       CASE mo_popup_picklist->id( ).
         WHEN c_event-choose_pull_request.
           choose_pr( iv_is_return = abap_true ).
@@ -1128,10 +1131,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
 
     ri_html->add( `</div>` ).
 
-    IF mo_popup_picklist IS NOT BOUND.
+    IF mo_popup_picklist IS NOT BOUND OR mo_popup_picklist->is_in_page( ) = abap_false.
       register_handlers( ).
-      " Edge case: If picklist is a separate page, this page is not rendered at all, so no problem
     ELSEIF mo_popup_picklist->is_in_page( ) = abap_true.
+      " Block usual page events if the popup is an in-page popup
       ri_html->add( zcl_abapgit_gui_in_page_modal=>create( mo_popup_picklist
         )->zif_abapgit_gui_renderable~render( ) ).
     ENDIF.

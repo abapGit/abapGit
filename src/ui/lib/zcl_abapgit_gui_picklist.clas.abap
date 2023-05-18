@@ -228,13 +228,8 @@ CLASS ZCL_ABAPGIT_GUI_PICKLIST IMPLEMENTATION.
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.
-      WHEN zif_abapgit_definitions=>c_action-go_back.
-        IF mv_in_page = abap_true.
-          mv_fulfilled = abap_true.
-          mv_cancelled = abap_true.
-          rs_handled-state = return_state( ).
-        ENDIF.
-      WHEN c_event-back.
+      WHEN c_event-back OR zif_abapgit_definitions=>c_action-go_back.
+        " Handle go_back as a "graceful back" - implicit cancel by F3/ESC
         mv_fulfilled = abap_true.
         mv_cancelled = abap_true.
         rs_handled-state = return_state( ).
