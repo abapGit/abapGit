@@ -982,19 +982,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
         mo_validation_log->clear( ).
 
       WHEN c_event-choose_branch.
-        choose_branch( ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+        choose_branch( ). " Unformly handle state below
 
       WHEN c_event-choose_tag.
-        choose_tag( ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+        choose_tag( ). " Unformly handle state below
 
       WHEN c_event-choose_pull_request.
-        choose_pr( ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-        rs_handled-page  = zcl_abapgit_gui_page_hoc=>create(
-          ii_child_component = mo_popup_picklist
-          iv_show_as_modal   = abap_true ).
+        choose_pr( ). " Unformly handle state below
 
       WHEN c_event-choose_commit.
         lv_commit = choose_commit( ).
@@ -1022,6 +1016,21 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
     ENDCASE.
+
+    IF mo_popup_picklist IS BOUND. " Uniform popup state handling
+      " This should happen only for a new popup because
+      " on the first re-render main component event handling is blocked
+      " and not called again until the popup distruction
+      IF mo_popup_picklist->is_in_page( ) = abap_true.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      ELSE.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+        rs_handled-page  = zcl_abapgit_gui_page_hoc=>create(
+          ii_child_component = mo_popup_picklist
+          iv_show_as_modal   = abap_true ).
+      ENDIF.
+    ENDIF.
+
 
     " If staying on form, initialize it with current settings
     IF rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render AND mo_popup_picklist IS NOT BOUND.
