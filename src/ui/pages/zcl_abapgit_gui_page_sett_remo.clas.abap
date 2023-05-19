@@ -214,6 +214,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
     DATA lv_url         TYPE zif_abapgit_persistence=>ty_repo-url.
     DATA lv_branch_name TYPE zif_abapgit_persistence=>ty_repo-branch_name.
     DATA ls_branch      TYPE zif_abapgit_git_definitions=>ty_git_branch.
+    DATA lv_popup_cancelled TYPE abap_bool.
 
     IF iv_is_return = abap_false.
 
@@ -234,7 +235,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
 
     ELSE.
 
-      IF mo_popup_picklist->was_cancelled( ) = abap_false.
+      lv_popup_cancelled = mo_popup_picklist->was_cancelled( ).
+      IF lv_popup_cancelled = abap_false.
         mo_popup_picklist->get_result_item( CHANGING cs_selected = ls_branch ).
         IF ls_branch IS NOT INITIAL.
           mo_form_data->set(
@@ -276,6 +278,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
     DATA ls_pull         TYPE zif_abapgit_pr_enum_provider=>ty_pull_request.
     DATA lv_pull_request TYPE ty_remote_settings-pull_request.
     DATA lv_url TYPE ty_remote_settings-url.
+    DATA lv_popup_cancelled TYPE abap_bool.
 
     IF iv_is_return = abap_false.
 
@@ -291,7 +294,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
 
     ELSE.
 
-      IF mo_popup_picklist->was_cancelled( ) = abap_false.
+      lv_popup_cancelled = mo_popup_picklist->was_cancelled( ).
+      IF lv_popup_cancelled = abap_false.
         mo_popup_picklist->get_result_item( CHANGING cs_selected = ls_pull ).
         IF ls_pull IS NOT INITIAL.
           mo_form_data->set(
@@ -309,6 +313,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
 
     DATA ls_tag TYPE zif_abapgit_git_definitions=>ty_git_branch.
     DATA lv_url TYPE ty_remote_settings-url.
+    DATA lv_popup_cancelled TYPE abap_bool.
 
     IF iv_is_return = abap_false.
 
@@ -327,7 +332,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
 
     ELSE.
 
-      IF mo_popup_picklist->was_cancelled( ) = abap_false.
+      lv_popup_cancelled = mo_popup_picklist->was_cancelled( ).
+      IF lv_popup_cancelled = abap_false.
         mo_popup_picklist->get_result_item( CHANGING cs_selected = ls_tag ).
         IF ls_tag IS NOT INITIAL.
           mo_form_data->set(
