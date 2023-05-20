@@ -686,7 +686,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     lo_repository ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_repository_key ).
 
     lt_transport_headers = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_transports( ).
-    " Also include objects marked for deletion in transport
+    " Also include deleted objects that are included in transport
     lt_transport_objects = zcl_abapgit_transport=>to_tadir(
       it_transport_headers = lt_transport_headers
       iv_deleted_objects   = abap_true ).
