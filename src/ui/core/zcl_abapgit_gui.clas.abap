@@ -17,11 +17,6 @@ CLASS zcl_abapgit_gui DEFINITION
         go_back_to_bookmark TYPE i VALUE 6,
         new_page_replacing  TYPE i VALUE 7,
       END OF c_event_state .
-    CONSTANTS:
-      BEGIN OF c_action,
-        go_home TYPE string VALUE 'go_home',
-        go_db   TYPE string VALUE 'go_db',
-      END OF c_action .
 
     METHODS go_home
       RAISING
@@ -259,9 +254,9 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
       GET PARAMETER ID 'DBT' FIELD lv_mode.
       CASE lv_mode.
         WHEN 'ZABAPGIT'.
-          on_event( action = |{ c_action-go_db }| ).
+          on_event( action = |{ zif_abapgit_definitions=>c_action-go_db }| ).
         WHEN OTHERS.
-          on_event( action = |{ c_action-go_home }| ).
+          on_event( action = |{ zif_abapgit_definitions=>c_action-go_home }| ).
       ENDCASE.
     ELSE.
       IF lines( mt_stack ) > 0.

@@ -395,6 +395,7 @@ INTERFACE zif_abapgit_definitions
       db_display                    TYPE string VALUE 'db_display',
       db_edit                       TYPE string VALUE 'db_edit',
       bg_update                     TYPE string VALUE 'bg_update',
+      go_home                       TYPE string VALUE 'go_home',
       go_back                       TYPE string VALUE 'go_back',
       go_explore                    TYPE string VALUE 'go_explore',
       go_repo                       TYPE string VALUE 'go_repo',
