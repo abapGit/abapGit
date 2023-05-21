@@ -29,12 +29,18 @@ CLASS zcl_abapgit_gui DEFINITION
     METHODS back
       IMPORTING
         !iv_to_bookmark TYPE abap_bool DEFAULT abap_false
+        !iv_graceful    TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rv_exit)  TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
+    METHODS back_graceful
+      RETURNING
+        VALUE(rv_handled) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
     METHODS on_event
-        FOR EVENT sapevent OF zif_abapgit_html_viewer
+      FOR EVENT sapevent OF zif_abapgit_html_viewer
       IMPORTING
         !action
         !frame
@@ -65,10 +71,8 @@ CLASS zcl_abapgit_gui DEFINITION
 
     DATA mv_rollback_on_error TYPE abap_bool .
     DATA mi_cur_page TYPE REF TO zif_abapgit_gui_renderable .
-    DATA:
-      mt_stack             TYPE STANDARD TABLE OF ty_page_stack .
-    DATA:
-      mt_event_handlers    TYPE STANDARD TABLE OF REF TO zif_abapgit_gui_event_handler .
+    DATA mt_stack             TYPE STANDARD TABLE OF ty_page_stack .
+    DATA mt_event_handlers    TYPE STANDARD TABLE OF REF TO zif_abapgit_gui_event_handler .
     DATA mi_router TYPE REF TO zif_abapgit_gui_event_handler .
     DATA mi_asset_man TYPE REF TO zif_abapgit_gui_asset_manager .
     DATA mi_hotkey_ctl TYPE REF TO zif_abapgit_gui_hotkey_ctl .
@@ -76,6 +80,7 @@ CLASS zcl_abapgit_gui DEFINITION
     DATA mi_html_viewer TYPE REF TO zif_abapgit_html_viewer .
     DATA mo_html_parts TYPE REF TO zcl_abapgit_html_parts .
     DATA mi_common_log TYPE REF TO zif_abapgit_log .
+
 
     METHODS cache_html
       IMPORTING
@@ -105,17 +110,22 @@ CLASS zcl_abapgit_gui DEFINITION
     METHODS handle_error
       IMPORTING
         !ix_exception TYPE REF TO zcx_abapgit_exception .
+    METHODS is_page_modal
+      IMPORTING
+        !ii_page      TYPE REF TO zif_abapgit_gui_renderable
+      RETURNING
+        VALUE(rv_yes) TYPE abap_bool .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
+CLASS zcl_abapgit_gui IMPLEMENTATION.
 
 
   METHOD back.
 
-    DATA: lv_index TYPE i,
-          ls_stack LIKE LINE OF mt_stack.
+    DATA lv_index TYPE i.
+    DATA ls_stack LIKE LINE OF mt_stack.
 
     " If viewer is showing Internet page, then use browser navigation
     IF mi_html_viewer->get_url( ) CP 'http*'.
@@ -127,6 +137,10 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
     IF lv_index = 0.
       rv_exit = abap_true.
+      RETURN.
+    ENDIF.
+
+    IF iv_graceful = abap_true AND back_graceful( ) = abap_true.
       RETURN.
     ENDIF.
 
@@ -146,6 +160,29 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
     mi_cur_page = ls_stack-page. " last page always stays
     render( ).
+
+  ENDMETHOD.
+
+
+  METHOD back_graceful.
+
+    DATA li_handler TYPE REF TO zif_abapgit_gui_event_handler.
+    DATA ls_handled TYPE zif_abapgit_gui_event_handler=>ty_handling_result.
+
+    " This code can be potentially improved
+    " Why send go_back to the topmost handler only ? It makes sense to notify the whole stack
+    " But than how to handle re-render ? render if at least one handler asks for it ?
+    " Probably that's the way but needs a relevant example. Postponed arch decision.
+    READ TABLE mt_event_handlers INTO li_handler INDEX 1.
+    IF sy-subrc = 0.
+      ls_handled = li_handler->on_event( zcl_abapgit_gui_event=>new(
+        iv_action       = zif_abapgit_definitions=>c_action-go_back
+        ii_gui_services = me ) ).
+      IF ls_handled-state = c_event_state-re_render. " soft exit, probably popup
+        render( ).
+        rv_handled = abap_true.
+      ENDIF.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -260,6 +297,14 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
           ENDIF.
         ENDLOOP.
 
+        IF is_page_modal( mi_cur_page ) = abap_true AND NOT (
+          ls_handled-state = c_event_state-re_render OR
+          ls_handled-state = c_event_state-go_back OR
+          ls_handled-state = c_event_state-no_more_act ).
+          " Restrict new page switching from modals
+          ls_handled-state = c_event_state-no_more_act.
+        ENDIF.
+
         CASE ls_handled-state.
           WHEN c_event_state-re_render.
             render( ).
@@ -276,7 +321,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
           WHEN c_event_state-go_back.
             back( ).
           WHEN c_event_state-go_back_to_bookmark.
-            back( abap_true ).
+            back( iv_to_bookmark = abap_true ).
           WHEN c_event_state-no_more_act.
             " Do nothing, handling completed
           WHEN OTHERS.
@@ -324,6 +369,21 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD is_page_modal.
+
+    DATA li_modal TYPE REF TO zif_abapgit_gui_modal.
+
+    TRY.
+        IF ii_page IS BOUND.
+          li_modal ?= ii_page.
+          rv_yes = li_modal->is_modal( ).
+        ENDIF.
+      CATCH cx_sy_move_cast_error.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
   METHOD on_event.
 
     handle_action(
@@ -347,7 +407,8 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     CLEAR mt_event_handlers.
     mo_html_parts->clear( ).
 
-    IF mi_router IS BOUND.
+    IF mi_router IS BOUND AND is_page_modal( mi_cur_page ) = abap_false.
+      " No global commands in modals
       APPEND mi_router TO mt_event_handlers.
     ENDIF.
 
