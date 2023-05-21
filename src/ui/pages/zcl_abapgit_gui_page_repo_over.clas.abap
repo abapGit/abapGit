@@ -344,13 +344,9 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA lo_persistence_user TYPE REF TO zif_abapgit_persist_user.
-
     super->constructor( ).
 
-    lo_persistence_user = zcl_abapgit_persistence_user=>get_instance( ).
-
-    ms_list_settings = lo_persistence_user->get_list_settings( ).
+    ms_list_settings = zcl_abapgit_persistence_user=>get_instance( )->get_list_settings( ).
 
     " Overwrite setting
     IF iv_only_favorites = abap_true.
