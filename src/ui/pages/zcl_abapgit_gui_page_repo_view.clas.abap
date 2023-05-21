@@ -121,6 +121,11 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         !is_item                      TYPE zif_abapgit_definitions=>ty_repo_item
       RETURNING
         VALUE(rv_srcsystem_html_code) TYPE string .
+    METHODS build_origlang_code
+      IMPORTING
+        !is_item                      TYPE zif_abapgit_definitions=>ty_repo_item
+      RETURNING
+        VALUE(rv_html_code) TYPE string .
     METHODS open_in_main_language
       RAISING
         zcx_abapgit_exception .
@@ -481,6 +486,18 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD build_origlang_code.
+
+    IF is_item-origlang IS NOT INITIAL AND is_item-origlang <> mo_repo->get_dot_abapgit( )->get_main_language( ).
+      rv_html_code = zcl_abapgit_html=>icon(
+        iv_name  = 'language-solid/grey'
+        iv_hint  = |Original language: { is_item-origlang }|
+        iv_class = 'cursor-pointer' ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD build_srcsystem_code.
 
     IF is_item-srcsystem IS NOT INITIAL AND is_item-srcsystem <> sy-sysid.
@@ -792,7 +809,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         lv_link = zcl_abapgit_gui_chunk_lib=>get_item_link( is_item ).
         ri_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
         ri_html->add( |<td class="object">{ lv_link } { build_inactive_object_code( is_item )
-                      } { build_srcsystem_code( is_item ) }</td>| ).
+                      } { build_srcsystem_code( is_item ) } { build_origlang_code( is_item ) }</td>| ).
       ENDIF.
     ENDIF.
 

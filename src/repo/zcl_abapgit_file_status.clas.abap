@@ -118,6 +118,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
     rs_result-obj_name  = is_local-item-obj_name.
     rs_result-package   = is_local-item-devclass.
     rs_result-srcsystem = is_local-item-srcsystem.
+    rs_result-origlang  = is_local-item-origlang.
     rs_result-inactive  = is_local-item-inactive.
 
     " File
@@ -162,6 +163,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
     rs_result-obj_name  = is_local-item-obj_name.
     rs_result-package   = is_local-item-devclass.
     rs_result-srcsystem = is_local-item-srcsystem.
+    rs_result-origlang  = is_local-item-origlang.
     rs_result-inactive  = is_local-item-inactive.
 
     " File
@@ -208,6 +210,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
       rs_result-obj_name  = ls_item-obj_name.
       rs_result-package   = ls_item-devclass.
       rs_result-srcsystem = sy-sysid.
+      rs_result-origlang  = sy-langu.
 
       READ TABLE it_state_idx INTO ls_file_sig
         WITH KEY
