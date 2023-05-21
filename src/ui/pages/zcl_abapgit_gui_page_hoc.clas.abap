@@ -8,16 +8,17 @@ CLASS zcl_abapgit_gui_page_hoc DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        !ii_child_component TYPE REF TO zif_abapgit_gui_renderable
-        !iv_page_title      TYPE string OPTIONAL
-        !io_page_menu       TYPE REF TO zcl_abapgit_html_toolbar OPTIONAL
-        !ii_page_menu_provider TYPE REF TO zif_abapgit_gui_menu_provider OPTIONAL
+        !ii_child_component     TYPE REF TO zif_abapgit_gui_renderable
+        !iv_page_title          TYPE string OPTIONAL
+        !iv_page_layout         TYPE string DEFAULT 'centered'
+        !io_page_menu           TYPE REF TO zcl_abapgit_html_toolbar OPTIONAL
+        !ii_page_menu_provider  TYPE REF TO zif_abapgit_gui_menu_provider OPTIONAL
         !ii_page_title_provider TYPE REF TO zif_abapgit_gui_page_title OPTIONAL
         !iv_extra_css_url       TYPE string OPTIONAL
         !iv_extra_js_url        TYPE string OPTIONAL
-        !iv_show_as_modal   TYPE abap_bool DEFAULT abap_false
+        !iv_show_as_modal       TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(ri_page_wrap) TYPE REF TO zif_abapgit_gui_renderable
+        VALUE(ri_page_wrap)     TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception .
     METHODS get_child
@@ -26,7 +27,7 @@ CLASS zcl_abapgit_gui_page_hoc DEFINITION
     METHODS constructor
       IMPORTING
         !ii_child_component TYPE REF TO zif_abapgit_gui_renderable
-        !is_control TYPE zcl_abapgit_gui_page=>ty_control
+        !is_control         TYPE zcl_abapgit_gui_page=>ty_control
       RAISING
         zcx_abapgit_exception .
 
@@ -52,7 +53,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_HOC IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_hoc IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -83,6 +84,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_HOC IMPLEMENTATION.
     DATA ls_control TYPE zcl_abapgit_gui_page=>ty_control.
 
     ls_control-page_title          = iv_page_title.
+    ls_control-page_layout         = iv_page_layout.
     ls_control-page_menu           = io_page_menu.
     ls_control-page_menu_provider  = ii_page_menu_provider.
     ls_control-page_title_provider = ii_page_title_provider.
