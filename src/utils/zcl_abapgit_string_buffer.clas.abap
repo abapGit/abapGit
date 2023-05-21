@@ -10,7 +10,7 @@ CLASS zcl_abapgit_string_buffer DEFINITION
         VALUE(ro_me) TYPE REF TO zcl_abapgit_string_buffer.
     METHODS add
       IMPORTING
-        !iv_str TYPE string
+        !iv_str      TYPE string
       RETURNING
         VALUE(ro_me) TYPE REF TO zcl_abapgit_string_buffer.
     METHODS join_and_flush
@@ -30,7 +30,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_STRING_BUFFER IMPLEMENTATION.
+CLASS zcl_abapgit_string_buffer IMPLEMENTATION.
 
 
   METHOD add.

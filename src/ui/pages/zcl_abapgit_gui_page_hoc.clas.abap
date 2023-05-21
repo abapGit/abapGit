@@ -2,7 +2,7 @@ CLASS zcl_abapgit_gui_page_hoc DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_gui_page
   FINAL
-  CREATE PRIVATE .
+  CREATE PRIVATE.
 
   PUBLIC SECTION.
 
@@ -10,7 +10,7 @@ CLASS zcl_abapgit_gui_page_hoc DEFINITION
       IMPORTING
         !ii_child_component     TYPE REF TO zif_abapgit_gui_renderable
         !iv_page_title          TYPE string OPTIONAL
-        !iv_page_layout         TYPE string DEFAULT 'centered'
+        !iv_page_layout         TYPE string DEFAULT zcl_abapgit_gui_page=>c_page_layout-centered
         !io_page_menu           TYPE REF TO zcl_abapgit_html_toolbar OPTIONAL
         !ii_page_menu_provider  TYPE REF TO zif_abapgit_gui_menu_provider OPTIONAL
         !ii_page_title_provider TYPE REF TO zif_abapgit_gui_page_title OPTIONAL
@@ -20,19 +20,20 @@ CLASS zcl_abapgit_gui_page_hoc DEFINITION
       RETURNING
         VALUE(ri_page_wrap)     TYPE REF TO zif_abapgit_gui_renderable
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS get_child
       RETURNING
-        VALUE(ri_child) TYPE REF TO zif_abapgit_gui_renderable .
+        VALUE(ri_child) TYPE REF TO zif_abapgit_gui_renderable.
     METHODS constructor
       IMPORTING
         !ii_child_component TYPE REF TO zif_abapgit_gui_renderable
         !is_control         TYPE zcl_abapgit_gui_page=>ty_control
       RAISING
-        zcx_abapgit_exception .
-
+        zcx_abapgit_exception.
   PROTECTED SECTION.
-    METHODS render_content REDEFINITION.
+
+    METHODS render_content
+        REDEFINITION.
   PRIVATE SECTION.
 
     DATA mi_child TYPE REF TO zif_abapgit_gui_renderable .

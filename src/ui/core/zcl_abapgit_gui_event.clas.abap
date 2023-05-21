@@ -9,10 +9,10 @@ CLASS zcl_abapgit_gui_event DEFINITION
 
     CLASS-METHODS new
       IMPORTING
-        !ii_gui_services TYPE REF TO zif_abapgit_gui_services OPTIONAL
-        !iv_action       TYPE clike
-        !iv_getdata      TYPE clike OPTIONAL
-        !it_postdata     TYPE zif_abapgit_html_viewer=>ty_post_data OPTIONAL
+        !ii_gui_services   TYPE REF TO zif_abapgit_gui_services OPTIONAL
+        !iv_action         TYPE clike
+        !iv_getdata        TYPE clike OPTIONAL
+        !it_postdata       TYPE zif_abapgit_html_viewer=>ty_post_data OPTIONAL
       RETURNING
         VALUE(ro_instance) TYPE REF TO zcl_abapgit_gui_event.
     METHODS constructor
@@ -38,7 +38,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_EVENT IMPLEMENTATION.
+CLASS zcl_abapgit_gui_event IMPLEMENTATION.
 
 
   METHOD constructor.

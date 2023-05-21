@@ -12,11 +12,11 @@ CLASS zcl_abapgit_gui_picklist DEFINITION
 
     METHODS constructor
       IMPORTING
-        !it_list      TYPE STANDARD TABLE
-        !iv_id        TYPE string OPTIONAL
-        !iv_in_page   TYPE abap_bool DEFAULT abap_false
-        !iv_title     TYPE string DEFAULT 'Choose from list'
-        !iv_attr_name TYPE abap_compname OPTIONAL
+        !it_list          TYPE STANDARD TABLE
+        !iv_id            TYPE string OPTIONAL
+        !iv_in_page       TYPE abap_bool DEFAULT abap_false
+        !iv_title         TYPE string DEFAULT 'Choose from list'
+        !iv_attr_name     TYPE abap_compname OPTIONAL
         !ii_item_renderer TYPE REF TO zif_abapgit_gui_render_item OPTIONAL
       RAISING
         zcx_abapgit_exception.
@@ -40,12 +40,12 @@ CLASS zcl_abapgit_gui_picklist DEFINITION
         VALUE(rv_yes) TYPE abap_bool.
     METHODS set_id
       IMPORTING
-        iv_id TYPE string
+        iv_id        TYPE string
       RETURNING
         VALUE(ro_me) TYPE REF TO zcl_abapgit_gui_picklist.
     METHODS set_in_page
       IMPORTING
-        iv_in_page TYPE abap_bool DEFAULT abap_true
+        iv_in_page   TYPE abap_bool DEFAULT abap_true
       RETURNING
         VALUE(ro_me) TYPE REF TO zcl_abapgit_gui_picklist.
 
@@ -87,7 +87,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PICKLIST IMPLEMENTATION.
+CLASS zcl_abapgit_gui_picklist IMPLEMENTATION.
 
 
   METHOD constructor.

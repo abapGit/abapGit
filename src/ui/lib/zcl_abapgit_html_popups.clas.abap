@@ -7,21 +7,21 @@ CLASS zcl_abapgit_html_popups DEFINITION
 
     CLASS-METHODS branch_list
       IMPORTING
-        !iv_url TYPE string
+        !iv_url             TYPE string
         !iv_default_branch  TYPE string OPTIONAL
         !iv_show_new_option TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(ri_popup) TYPE REF TO zif_abapgit_html_popup.
+        VALUE(ri_popup)     TYPE REF TO zif_abapgit_html_popup.
 
     CLASS-METHODS pull_request_list
       IMPORTING
-        iv_url TYPE string
+        iv_url          TYPE string
       RETURNING
         VALUE(ri_popup) TYPE REF TO zif_abapgit_html_popup.
 
     CLASS-METHODS tag_list
       IMPORTING
-        iv_url TYPE string
+        iv_url          TYPE string
       RETURNING
         VALUE(ri_popup) TYPE REF TO zif_abapgit_html_popup.
 
@@ -31,7 +31,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTML_POPUPS IMPLEMENTATION.
+CLASS zcl_abapgit_html_popups IMPLEMENTATION.
 
 
   METHOD branch_list.

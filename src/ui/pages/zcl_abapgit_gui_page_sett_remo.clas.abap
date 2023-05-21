@@ -194,7 +194,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
 
   METHOD check_protection.
@@ -952,10 +952,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
 
     DATA:
       lo_form_data_raw TYPE REF TO zcl_abapgit_string_map,
-      lv_url    TYPE ty_remote_settings-url,
-      lv_branch TYPE ty_remote_settings-branch,
-      lv_tag    TYPE ty_remote_settings-tag,
-      lv_commit TYPE ty_remote_settings-commit.
+      lv_url           TYPE ty_remote_settings-url,
+      lv_branch        TYPE ty_remote_settings-branch,
+      lv_tag           TYPE ty_remote_settings-tag,
+      lv_commit        TYPE ty_remote_settings-commit.
 
     lo_form_data_raw = ii_event->form_data( ).
     IF lo_form_data_raw->is_empty( ) = abap_false. " If form-related action

@@ -11,7 +11,7 @@ CLASS zcl_abapgit_html DEFINITION
     CLASS-METHODS class_constructor .
     CLASS-METHODS create
       IMPORTING
-        !iv_initial_chunk TYPE any OPTIONAL
+        !iv_initial_chunk  TYPE any OPTIONAL
       RETURNING
         VALUE(ri_instance) TYPE REF TO zif_abapgit_html.
     CLASS-METHODS icon
@@ -73,7 +73,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
+CLASS zcl_abapgit_html IMPLEMENTATION.
 
 
   METHOD checkbox.

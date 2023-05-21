@@ -72,7 +72,7 @@ CLASS lcl_branch_popup DEFINITION FINAL.
 
     METHODS constructor
       IMPORTING
-        !iv_url TYPE string
+        !iv_url             TYPE string
         !iv_default_branch  TYPE string OPTIONAL
         !iv_show_new_option TYPE abap_bool DEFAULT abap_false.
 

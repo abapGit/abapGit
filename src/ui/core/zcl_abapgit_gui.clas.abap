@@ -29,7 +29,7 @@ CLASS zcl_abapgit_gui DEFINITION
     METHODS back
       IMPORTING
         !iv_to_bookmark TYPE abap_bool DEFAULT abap_false
-        !iv_graceful TYPE abap_bool DEFAULT abap_false
+        !iv_graceful    TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rv_exit)  TYPE abap_bool
       RAISING
@@ -40,7 +40,7 @@ CLASS zcl_abapgit_gui DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS on_event
-        FOR EVENT sapevent OF zif_abapgit_html_viewer
+      FOR EVENT sapevent OF zif_abapgit_html_viewer
       IMPORTING
         !action
         !frame
@@ -119,7 +119,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
+CLASS zcl_abapgit_gui IMPLEMENTATION.
 
 
   METHOD back.
