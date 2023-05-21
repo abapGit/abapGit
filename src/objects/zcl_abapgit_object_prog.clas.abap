@@ -19,6 +19,7 @@ CLASS zcl_abapgit_object_prog DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       IMPORTING
         !is_progdir TYPE ty_progdir
         !it_source  TYPE abaptxt255_tab
+        !iv_package TYPE devclass
       RAISING
         zcx_abapgit_exception .
     METHODS serialize_texts
@@ -72,14 +73,13 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
     " https://help.sap.com/doc/abapdocu_755_index_htm/7.55/en-US/index.htm?file=abapinsert_report_internal.htm
     " This e.g. occurs in case of transportable Code Inspector variants (ending with ===VC)
 
-    INSERT REPORT is_progdir-name
-      FROM it_source
-      STATE 'I'
-      EXTENSION TYPE is_progdir-name+30
-      PROGRAM TYPE is_progdir-subc.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from INSERT REPORT .. EXTENSION TYPE' ).
-    ENDIF.
+    zcl_abapgit_factory=>get_sap_report( )->insert_report(
+      iv_name           = is_progdir-name
+      iv_package        = iv_package
+      it_source         = it_source
+      iv_state          = 'I'
+      iv_program_type   = is_progdir-subc
+      iv_extension_type = is_progdir-name+30 ).
 
     CALL FUNCTION 'UPDATE_PROGDIR'
       EXPORTING
@@ -187,7 +187,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
         OTHERS                     = 5.
     IF sy-subrc = 2.
       " Drop also any inactive code that is left in REPOSRC
-      DELETE REPORT lv_program ##SUBRC_OK.
+      zcl_abapgit_factory=>get_sap_report( )->delete_report( lv_program ).
 
       " Remove inactive objects from work area
       lv_obj_name = lv_program.
@@ -242,6 +242,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
       " Objects with extension for example transportable Code Inspector variants (ending with ===VC)
       deserialize_with_ext( is_progdir = ls_progdir
+                            iv_package = iv_package
                             it_source  = lt_source ).
 
     ELSE.

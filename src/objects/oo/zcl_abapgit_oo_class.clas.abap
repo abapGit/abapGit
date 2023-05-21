@@ -43,6 +43,7 @@ CLASS zcl_abapgit_oo_class DEFINITION
       IMPORTING
         !iv_program       TYPE programm
         !it_source        TYPE string_table
+        !iv_package       TYPE devclass
       RETURNING
         VALUE(rv_updated) TYPE abap_bool
       RAISING
@@ -79,21 +80,29 @@ CLASS zcl_abapgit_oo_class DEFINITION
       IMPORTING
         !iv_classname TYPE seoclsname
         !it_source    TYPE string_table
-        !it_methods   TYPE cl_oo_source_scanner_class=>type_method_implementations .
+        !it_methods   TYPE cl_oo_source_scanner_class=>type_method_implementations
+        !iv_package   TYPE devclass
+      RAISING
+        zcx_abapgit_exception.
     CLASS-METHODS create_report
       IMPORTING
         !iv_program      TYPE programm
         !it_source       TYPE string_table
         !iv_extension    TYPE ty_char2
         !iv_program_type TYPE ty_char1
-        !iv_version      TYPE r3state .
+        !iv_version      TYPE r3state
+        !iv_package      TYPE devclass
+      RAISING
+        zcx_abapgit_exception.
     CLASS-METHODS update_cs_number_of_methods
       IMPORTING
         !iv_classname              TYPE seoclsname
         !iv_number_of_impl_methods TYPE i .
     CLASS-METHODS delete_report
       IMPORTING
-        !iv_program TYPE programm .
+        !iv_program TYPE programm
+      RAISING
+        zcx_abapgit_exception.
     CLASS-METHODS get_method_includes
       IMPORTING
         !iv_classname      TYPE seoclsname
@@ -117,13 +126,18 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
 
   METHOD create_report.
-    INSERT REPORT iv_program FROM it_source EXTENSION TYPE iv_extension STATE iv_version PROGRAM TYPE iv_program_type.
-    ASSERT sy-subrc = 0.
+    zcl_abapgit_factory=>get_sap_report( )->insert_report(
+      iv_name           = iv_program
+      iv_package        = iv_package
+      it_source         = it_source
+      iv_state          = iv_version
+      iv_program_type   = iv_program_type
+      iv_extension_type = iv_extension ).
   ENDMETHOD.
 
 
   METHOD delete_report.
-    DELETE REPORT iv_program ##SUBRC_OK.
+    zcl_abapgit_factory=>get_sap_report( )->delete_report( iv_program ).
   ENDMETHOD.
 
 
@@ -402,6 +416,7 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
 
     create_report( iv_program      = cl_oo_classname_service=>get_cs_name( iv_classname )
+                   iv_package      = iv_package
                    it_source       = it_source
                    iv_extension    = lc_class_source_extension
                    iv_program_type = lc_include_program_type
@@ -490,22 +505,10 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
 
   METHOD update_report.
-
-    DATA: lt_old TYPE string_table.
-
-    READ REPORT iv_program INTO lt_old.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Fatal error. Include { iv_program } should have been created previously!| ).
-    ENDIF.
-
-    IF lt_old <> it_source.
-      INSERT REPORT iv_program FROM it_source.
-      ASSERT sy-subrc = 0.
-      rv_updated = abap_true.
-    ELSE.
-      rv_updated = abap_false.
-    ENDIF.
-
+    rv_updated = zcl_abapgit_factory=>get_sap_report( )->update_report(
+      iv_name    = iv_program
+      iv_package = iv_package
+      it_source  = it_source ).
   ENDMETHOD.
 
 
@@ -688,6 +691,7 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
     IF lt_public IS NOT INITIAL.
       lv_program = cl_oo_classname_service=>get_pubsec_name( is_key-clsname ).
       lv_updated = update_report( iv_program = lv_program
+                                  iv_package = iv_package
                                   it_source  = lt_public ).
       IF lv_updated = abap_true.
         update_meta( iv_name     = is_key-clsname
@@ -701,6 +705,7 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
     IF lt_source IS NOT INITIAL.
       lv_program = cl_oo_classname_service=>get_prosec_name( is_key-clsname ).
       lv_updated = update_report( iv_program = lv_program
+                                  iv_package = iv_package
                                   it_source  = lt_source ).
       IF lv_updated = abap_true.
         update_meta( iv_name     = is_key-clsname
@@ -714,6 +719,7 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
     IF lt_source IS NOT INITIAL.
       lv_program = cl_oo_classname_service=>get_prisec_name( is_key-clsname ).
       lv_updated = update_report( iv_program = lv_program
+                                  iv_package = iv_package
                                   it_source  = lt_source ).
       IF lv_updated = abap_true.
         update_meta( iv_name     = is_key-clsname
@@ -739,6 +745,7 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
       update_report(
         iv_program = lv_program
+        iv_package = iv_package
         it_source  = lt_source ).
 
       " If method was implemented before, remove from list
@@ -747,6 +754,7 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
 * full class include
     update_full_class_include( iv_classname = is_key-clsname
+                               iv_package   = iv_package
                                it_source    = it_source
                                it_methods   = lt_methods ).
 
@@ -786,24 +794,28 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
     IF lines( it_local_definitions ) > 0.
       lv_program = cl_oo_classname_service=>get_ccdef_name( is_key-clsname ).
       update_report( iv_program = lv_program
+                     iv_package = iv_package
                      it_source  = it_local_definitions ).
     ENDIF.
 
     IF lines( it_local_implementations ) > 0.
       lv_program = cl_oo_classname_service=>get_ccimp_name( is_key-clsname ).
       update_report( iv_program = lv_program
+                     iv_package = iv_package
                      it_source  = it_local_implementations ).
     ENDIF.
 
     IF lines( it_local_macros ) > 0.
       lv_program = cl_oo_classname_service=>get_ccmac_name( is_key-clsname ).
       update_report( iv_program = lv_program
+                     iv_package = iv_package
                      it_source  = it_local_macros ).
     ENDIF.
 
     lv_program = cl_oo_classname_service=>get_ccau_name( is_key-clsname ).
     IF lines( it_local_test_classes ) > 0.
       update_report( iv_program = lv_program
+                     iv_package = iv_package
                      it_source  = it_local_test_classes ).
     ELSE.
       " Drop the include to remove left-over test classes

@@ -35,12 +35,14 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
         it_local_implementations TYPE seop_source_string OPTIONAL
         it_local_macros          TYPE seop_source_string OPTIONAL
         it_local_test_classes    TYPE seop_source_string OPTIONAL
+        iv_package               TYPE devclass
       RAISING
         zcx_abapgit_exception,
     deserialize_source
       IMPORTING
-        is_key    TYPE seoclskey
-        it_source TYPE zif_abapgit_definitions=>ty_string_tt
+        is_key     TYPE seoclskey
+        it_source  TYPE zif_abapgit_definitions=>ty_string_tt
+        iv_package TYPE devclass
       RAISING
         zcx_abapgit_exception
         cx_sy_dyn_call_error,

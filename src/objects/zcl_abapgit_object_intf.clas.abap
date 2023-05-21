@@ -523,8 +523,9 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
         ls_clskey-clsname = ms_item-obj_name.
         lt_source = zif_abapgit_object~mo_files->read_abap( ).
         mi_object_oriented_object_fct->deserialize_source(
-          is_key    = ls_clskey
-          it_source = lt_source ).
+          is_key     = ls_clskey
+          iv_package = iv_package
+          it_source  = lt_source ).
 
         deserialize_descriptions( it_description = ls_intf-description ).
 

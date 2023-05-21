@@ -600,17 +600,19 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       " For cases that standard function does not handle (like FUGR),
       " we save active and inactive version of source with the given PROGRAM TYPE.
       " Without the active version, the code will not be visible in case of activation errors.
-      INSERT REPORT is_progdir-name
-        FROM it_source
-        STATE 'A'
-        PROGRAM TYPE is_progdir-subc.
-      INSERT REPORT is_progdir-name
-        FROM it_source
-        STATE 'I'
-        PROGRAM TYPE is_progdir-subc.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'Error from INSERT REPORT .. PROGRAM TYPE' ).
-      ENDIF.
+      zcl_abapgit_factory=>get_sap_report( )->insert_report(
+        iv_name         = is_progdir-name
+        iv_package      = iv_package
+        it_source       = it_source
+        iv_state        = 'A'
+        iv_program_type = is_progdir-subc ).
+
+      zcl_abapgit_factory=>get_sap_report( )->insert_report(
+        iv_name         = is_progdir-name
+        iv_package      = iv_package
+        it_source       = it_source
+        iv_state        = 'I'
+        iv_program_type = is_progdir-subc ).
 
     ELSEIF sy-subrc > 0.
       zcx_abapgit_exception=>raise_t100( ).

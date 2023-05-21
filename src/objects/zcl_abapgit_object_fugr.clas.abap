@@ -75,6 +75,7 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       IMPORTING
         !it_functions TYPE ty_function_tt
         !ii_log       TYPE REF TO zif_abapgit_log
+        !iv_package   TYPE devclass
         !iv_transport TYPE trkorr
       RAISING
         zcx_abapgit_exception .
@@ -318,7 +319,11 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         CONTINUE.  "with next function module
       ENDIF.
 
-      INSERT REPORT lv_include FROM lt_source.
+      zcl_abapgit_factory=>get_sap_report( )->insert_report(
+        iv_name    = lv_include
+        iv_package = iv_package
+        it_source  = lt_source ).
+
       ii_log->add_success( iv_msg = |Function module { <ls_func>-funcname } imported|
                            is_item = ms_item ).
     ENDLOOP.
@@ -1212,6 +1217,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     deserialize_functions(
       it_functions = lt_functions
       ii_log       = ii_log
+      iv_package   = iv_package
       iv_transport = iv_transport ).
 
     deserialize_includes(

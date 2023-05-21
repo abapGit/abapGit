@@ -204,6 +204,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     mi_object_oriented_object_fct->generate_locals(
       is_key                   = ls_class_key
+      iv_package               = iv_package
       it_local_definitions     = lt_local_definitions
       it_local_implementations = lt_local_implementations
       it_local_macros          = lt_local_macros
@@ -211,8 +212,9 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     repo_apack_replacement( CHANGING ct_source = lt_source ).
     mi_object_oriented_object_fct->deserialize_source(
-      is_key    = ls_class_key
-      it_source = lt_source ).
+      is_key     = ls_class_key
+      iv_package = iv_package
+      it_source  = lt_source ).
 
     ii_xml->read( EXPORTING iv_name = 'DESCRIPTIONS'
                   CHANGING cg_data = lt_descriptions ).
