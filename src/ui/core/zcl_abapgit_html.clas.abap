@@ -10,6 +10,8 @@ CLASS zcl_abapgit_html DEFINITION
 
     CLASS-METHODS class_constructor .
     CLASS-METHODS create
+      IMPORTING
+        !iv_initial_chunk  TYPE any OPTIONAL
       RETURNING
         VALUE(ri_instance) TYPE REF TO zif_abapgit_html.
     CLASS-METHODS icon
@@ -107,6 +109,9 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
 
   METHOD create.
     CREATE OBJECT ri_instance TYPE zcl_abapgit_html.
+    IF iv_initial_chunk IS NOT INITIAL.
+      ri_instance->add( iv_initial_chunk ).
+    ENDIF.
   ENDMETHOD.
 
 
