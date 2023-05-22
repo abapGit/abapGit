@@ -77,18 +77,11 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
     DATA ms_settings_old TYPE ty_remote_settings.
     DATA mo_form TYPE REF TO zcl_abapgit_html_form .
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map .
-    DATA mo_form_util TYPE REF TO zcl_abapgit_html_form_utils .
     DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map .
     DATA mv_refresh_on_back TYPE abap_bool.
     DATA mv_offline_switch_saved_url TYPE string.
 
     DATA mo_popup_picklist TYPE REF TO zcl_abapgit_gui_picklist.
-
-    METHODS init
-      IMPORTING
-        !io_repo TYPE REF TO zcl_abapgit_repo
-      RAISING
-        zcx_abapgit_exception.
 
     METHODS get_remote_settings_from_repo
       IMPORTING
@@ -108,18 +101,13 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
 
     METHODS get_form_schema
       IMPORTING
-        is_settings    TYPE ty_remote_settings
-        io_form_data   TYPE REF TO zcl_abapgit_string_map OPTIONAL
+        io_existing_form_data TYPE REF TO zcl_abapgit_string_map OPTIONAL
       RETURNING
         VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form
       RAISING
         zcx_abapgit_exception.
 
     METHODS initialize_form_data
-      IMPORTING
-        is_settings  TYPE ty_remote_settings
-        io_form_data TYPE REF TO zcl_abapgit_string_map
-        io_form_util TYPE REF TO zcl_abapgit_html_form_utils
       RAISING
         zcx_abapgit_exception.
 
@@ -194,7 +182,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
 
 
   METHOD check_protection.
@@ -358,15 +346,13 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
   METHOD constructor.
 
     super->constructor( ).
-    init( io_repo ).
-    CREATE OBJECT mo_validation_log.
-    CREATE OBJECT mo_form_data.
+    mo_repo = io_repo.
+    ms_settings_old = get_remote_settings_from_repo( mo_repo ).
 
-    mo_form = get_form_schema( ms_settings_old ).
-    mo_form_util = zcl_abapgit_html_form_utils=>create( mo_form ).
-    initialize_form_data( io_form_data = mo_form_data
-                          is_settings  = ms_settings_old
-                          io_form_util = mo_form_util ).
+    CREATE OBJECT mo_validation_log.
+
+    mo_form = get_form_schema( ).
+    initialize_form_data( ).
 
   ENDMETHOD.
 
@@ -400,14 +386,14 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       lv_offline     TYPE abap_bool,
       lv_head_type   TYPE ty_head_type.
 
-    IF io_form_data IS BOUND AND io_form_data->is_empty( ) = abap_false.
-      lv_offline = io_form_data->get( c_id-offline ).
+    IF io_existing_form_data IS BOUND AND io_existing_form_data->is_empty( ) = abap_false.
+      lv_offline = io_existing_form_data->get( c_id-offline ).
       IF lv_offline = abap_false.
-        lv_head_type = io_form_data->get( c_id-head_type ).
+        lv_head_type = io_existing_form_data->get( c_id-head_type ).
       ENDIF.
     ELSE.
-      lv_offline = is_settings-offline.
-      lv_head_type = is_settings-head_type.
+      lv_offline = ms_settings_old-offline.
+      lv_head_type = ms_settings_old-head_type.
     ENDIF.
 
     ro_form = zcl_abapgit_html_form=>create(
@@ -627,13 +613,6 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD init.
-    mo_repo = io_repo.
-    ms_settings_old = get_remote_settings_from_repo( mo_repo ).
-    FREE mo_form_data.
-  ENDMETHOD.
-
-
   METHOD initialize_form_data.
 
     DATA:
@@ -641,55 +620,57 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       lv_url  TYPE ty_remote_settings-url,
       lv_head TYPE string.
 
-    lv_type = 'Online repository'.
-    lv_url = is_settings-url.
+    CREATE OBJECT mo_form_data.
 
-    IF is_settings-offline = abap_true.
+    lv_type = 'Online repository'.
+    lv_url  = ms_settings_old-url.
+
+    IF ms_settings_old-offline = abap_true.
       lv_type = 'Offline repository'.
     ENDIF.
 
-    io_form_data->set(
+    mo_form_data->set(
       iv_key = c_id-offline
-      iv_val = is_settings-offline ).
+      iv_val = ms_settings_old-offline ).
 
-    io_form_data->set(
+    mo_form_data->set(
       iv_key = c_id-repo_type
       iv_val = lv_type ).
-    io_form_data->set(
+    mo_form_data->set(
       iv_key = c_id-url
       iv_val = lv_url ).
 
-    IF is_settings-offline = abap_false.
-      io_form_data->set(
+    IF ms_settings_old-offline = abap_false.
+      mo_form_data->set(
         iv_key = c_id-head_type
-        iv_val = is_settings-head_type ).
+        iv_val = ms_settings_old-head_type ).
 
       " When pull request is selected the previously selected branch/tag is also loaded to be able to switch back to it
-      lv_head = is_settings-branch.
+      lv_head = ms_settings_old-branch.
       REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-heads_prefix IN lv_head WITH space.
       CONDENSE lv_head.
-      io_form_data->set(
+      mo_form_data->set(
         iv_key = c_id-branch
         iv_val = lv_head ).
 
-      lv_head = is_settings-tag.
+      lv_head = ms_settings_old-tag.
       REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-heads_prefix IN lv_head WITH space.
       CONDENSE lv_head.
-      io_form_data->set(
+      mo_form_data->set(
         iv_key = c_id-tag
         iv_val = lv_head ).
 
-      io_form_data->set(
+      mo_form_data->set(
         iv_key = c_id-commit
-        iv_val = is_settings-commit ).
+        iv_val = ms_settings_old-commit ).
 
-      io_form_data->set(
+      mo_form_data->set(
         iv_key = c_id-pull_request
-        iv_val = is_settings-pull_request ).
+        iv_val = ms_settings_old-pull_request ).
     ENDIF.
 
     " Set for is_dirty check
-    io_form_util->set_data( io_form_data ).
+    zcl_abapgit_html_form_utils=>create( mo_form )->set_data( mo_form_data ).
 
   ENDMETHOD.
 
@@ -748,7 +729,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     MESSAGE 'Settings succesfully saved' TYPE 'S'.
 
     mv_refresh_on_back = abap_true.
-    init( mo_repo ).
+    ms_settings_old    = get_remote_settings_from_repo( mo_repo ).
     FREE mo_form_data.
 
   ENDMETHOD.
@@ -869,7 +850,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       lv_pull_request          TYPE ty_remote_settings-pull_request,
       lv_commit                TYPE ty_remote_settings-commit.
 
-    ro_validation_log = mo_form_util->validate( io_form_data ).
+    ro_validation_log = zcl_abapgit_html_form_utils=>create( mo_form )->validate( io_form_data ).
     lv_offline = io_form_data->get( c_id-offline ).
     lv_url = io_form_data->get( c_id-url ).
 
@@ -952,14 +933,14 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     DATA:
       lo_form_data_raw TYPE REF TO zcl_abapgit_string_map,
-      lv_url           TYPE ty_remote_settings-url,
-      lv_branch        TYPE ty_remote_settings-branch,
-      lv_tag           TYPE ty_remote_settings-tag,
-      lv_commit        TYPE ty_remote_settings-commit.
+      lv_url    TYPE ty_remote_settings-url,
+      lv_branch TYPE ty_remote_settings-branch,
+      lv_tag    TYPE ty_remote_settings-tag,
+      lv_commit TYPE ty_remote_settings-commit.
 
     lo_form_data_raw = ii_event->form_data( ).
     IF lo_form_data_raw->is_empty( ) = abap_false. " If form-related action
-      mo_form_data = mo_form_util->normalize( lo_form_data_raw ).
+      mo_form_data = zcl_abapgit_html_form_utils=>create( mo_form )->normalize( lo_form_data_raw ).
     ENDIF.
 
     CASE ii_event->mv_action.
@@ -1041,18 +1022,11 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     " If staying on form, initialize it with current settings
     IF rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render AND mo_popup_picklist IS NOT BOUND.
       " TODO refactor: same as in constructor
-      mo_form = get_form_schema(
-        is_settings  = ms_settings_old
-        io_form_data = mo_form_data ).
-      mo_form_util = zcl_abapgit_html_form_utils=>create( mo_form ).
+      mo_form = get_form_schema( io_existing_form_data = mo_form_data ).
+      initialize_form_data( ).
 
-      IF mo_form_data IS NOT BOUND.
-        CREATE OBJECT mo_form_data.
-        initialize_form_data(
-          io_form_data = mo_form_data
-          is_settings  = ms_settings_old
-          io_form_util = mo_form_util ).
-      ENDIF.
+*      IF mo_form_data IS NOT BOUND.
+*      ENDIF.
     ENDIF.
 
   ENDMETHOD.
