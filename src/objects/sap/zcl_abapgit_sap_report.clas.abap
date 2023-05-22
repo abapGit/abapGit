@@ -67,11 +67,15 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
 
     ASSERT iv_version CA ' X25'.
 
-    " TODO: Determine ABAP Language Version (https://github.com/abapGit/abapGit/issues/6154)
-    " Something like zcl_abapgit_factory=>get_sap_package( iv_package )->get_language_version( )
+    " TODO: Determine ABAP Language Version
+    " https://github.com/abapGit/abapGit/issues/6154#issuecomment-1503566920)
 
     " For now, use default for ABAP source code
-    rv_version = 'X'.
+    IF zcl_abapgit_factory=>get_environment( )->is_sap_cloud_platform( ) = abap_true.
+      rv_version = '5'. " abap_for_cloud_development
+    ELSE.
+      rv_version = 'X'. " standard_abap
+    ENDIF.
 
   ENDMETHOD.
 
@@ -115,19 +119,17 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
       INSERT REPORT iv_name FROM it_source
         STATE   iv_state
         VERSION lv_version.
+    ELSEIF iv_extension_type IS INITIAL.
+      INSERT REPORT iv_name FROM it_source
+        STATE        iv_state
+        PROGRAM TYPE iv_program_type
+        VERSION      lv_version.
     ELSE.
-      IF iv_extension_type IS INITIAL.
-        INSERT REPORT iv_name FROM it_source
-          STATE        iv_state
-          PROGRAM TYPE iv_program_type
-          VERSION      lv_version.
-      ELSE.
-        INSERT REPORT iv_name FROM it_source
-          STATE          iv_state
-          EXTENSION TYPE iv_extension_type
-          PROGRAM TYPE   iv_program_type
-          VERSION        lv_version.
-      ENDIF.
+      INSERT REPORT iv_name FROM it_source
+        STATE          iv_state
+        EXTENSION TYPE iv_extension_type
+        PROGRAM TYPE   iv_program_type
+        VERSION        lv_version.
     ENDIF.
 
     IF sy-subrc <> 0.
