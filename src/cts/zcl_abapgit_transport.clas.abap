@@ -16,9 +16,10 @@ CLASS zcl_abapgit_transport DEFINITION
 
     CLASS-METHODS to_tadir
       IMPORTING
-        it_transport_headers TYPE trwbo_request_headers
+        !it_transport_headers TYPE trwbo_request_headers
+        !iv_deleted_objects   TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(rt_tadir)      TYPE zif_abapgit_definitions=>ty_tadir_tt
+        VALUE(rt_tadir)       TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
 
@@ -60,9 +61,10 @@ CLASS zcl_abapgit_transport DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS resolve
       IMPORTING
-        !it_requests    TYPE trwbo_requests
+        !it_requests        TYPE trwbo_requests
+        !iv_deleted_objects TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(rt_tadir) TYPE zif_abapgit_definitions=>ty_tadir_tt
+        VALUE(rt_tadir)     TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
@@ -322,7 +324,7 @@ CLASS zcl_abapgit_transport IMPLEMENTATION.
           iv_object   = lv_object
           iv_obj_name = lv_obj_name ).
 
-        IF ls_tadir-delflag IS INITIAL.
+        IF ls_tadir-delflag IS INITIAL OR iv_deleted_objects = abap_true.
           APPEND ls_tadir TO rt_tadir.
         ENDIF.
       ENDLOOP.
@@ -370,7 +372,10 @@ CLASS zcl_abapgit_transport IMPLEMENTATION.
     ENDIF.
 
     lt_requests = read_requests( it_transport_headers ).
-    rt_tadir = resolve( lt_requests ).
+    rt_tadir = resolve(
+      it_requests        = lt_requests
+      iv_deleted_objects = iv_deleted_objects ).
+
   ENDMETHOD.
 
 
