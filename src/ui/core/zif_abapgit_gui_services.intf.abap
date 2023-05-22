@@ -13,18 +13,17 @@ INTERFACE zif_abapgit_gui_services
       VALUE(rv_url) TYPE string
     RAISING
       zcx_abapgit_exception .
+  " Notes:
+  " - page_asset is supposed to be not cachable
+  " - add mime64 if needed (supposedly won't be needed)
   METHODS register_page_asset
     IMPORTING
       !iv_url       TYPE string
       !iv_type      TYPE string
       !iv_mime_name TYPE wwwdatatab-objid OPTIONAL
       !iv_inline    TYPE string OPTIONAL
-      " Notes:
-      " - page_asset is supposed to be not cachable
-      " - add mime64 if needed (supposedly won't be needed)
     RAISING
-      zcx_abapgit_exception.
-
+      zcx_abapgit_exception .
   METHODS register_event_handler
     IMPORTING
       !ii_event_handler TYPE REF TO zif_abapgit_gui_event_handler .
@@ -39,7 +38,8 @@ INTERFACE zif_abapgit_gui_services
       VALUE(ro_parts) TYPE REF TO zcl_abapgit_html_parts .
   METHODS get_log
     IMPORTING
-      iv_create_new TYPE abap_bool DEFAULT abap_false
+      !iv_create_new TYPE abap_bool DEFAULT abap_false
     RETURNING
-      VALUE(ri_log) TYPE REF TO zif_abapgit_log.
+      VALUE(ri_log)  TYPE REF TO zif_abapgit_log .
+
 ENDINTERFACE.

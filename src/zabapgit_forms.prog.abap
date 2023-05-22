@@ -78,7 +78,7 @@ FORM exit.
   TRY.
       CASE sy-ucomm.
         WHEN 'CBAC' OR 'CCAN'.  "Back & Escape
-          IF zcl_abapgit_ui_factory=>get_gui( )->back( ) = abap_true. " end of stack
+          IF zcl_abapgit_ui_factory=>get_gui( )->back( iv_graceful = abap_true ) = abap_true. " end of stack
             zcl_abapgit_ui_factory=>get_gui( )->free( ). " Graceful shutdown
           ELSE.
             LEAVE TO SCREEN 1001.

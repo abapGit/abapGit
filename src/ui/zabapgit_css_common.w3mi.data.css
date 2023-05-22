@@ -1502,4 +1502,52 @@ table.unit_tests {
 /* Warning if wrong browser control is used */
 .browser-control-warning {
   width: 100%;
-}
+}
+
+/* MODAL POPUP */
+/* https://css-tricks.com/considerations-styling-modal/ */
+
+.modal {
+    /* center on screen */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* size */
+    max-width: 100%;
+    max-height: 100%;
+    /* infront of overlay */
+    z-index: 1010;
+    display: block;
+}
+
+.modal-guts {
+    padding: 6px 6px;
+    /* let it scroll */
+    overflow: auto;
+}
+
+.modal-guts .dialog {
+    box-shadow: 2px 2px 4px 1px rgba(0,0,0,0.3);
+}
+
+.modal-overlay {
+    /* darken and prevent interactions with background */
+    z-index: 1000;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.modal .radio-container label {
+  /* hacky, improve later, get rid of !important, hook it to a named style instead */
+  border-radius: 3px !important;
+  border: 1px solid rgba(0, 0, 0, 0.3) !important;
+  margin-bottom: 2px !important;
+}
+.modal .radio-container label:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
