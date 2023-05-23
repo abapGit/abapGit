@@ -205,7 +205,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     lv_key = ii_event->query( )->get( 'KEY' ).
 
     CASE ii_event->mv_action.
-      WHEN zcl_abapgit_gui=>c_action-go_home.
+      WHEN zif_abapgit_definitions=>c_action-go_home.
         lv_last_repo_key = zcl_abapgit_persistence_user=>get_instance( )->get_repo_show( ).
 
         IF lv_last_repo_key IS NOT INITIAL.
