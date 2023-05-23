@@ -19,10 +19,9 @@ CLASS zcl_abapgit_gui DEFINITION
       END OF c_event_state .
     CONSTANTS:
       BEGIN OF c_action,
-        go_home TYPE string VALUE 'go_home',
-        go_db   TYPE string VALUE 'go_db',
+        go_home TYPE string VALUE zif_abapgit_definitions=>c_action-go_home,
+        go_db   TYPE string VALUE zif_abapgit_definitions=>c_action-go_db,
       END OF c_action .
-
     METHODS go_home
       RAISING
         zcx_abapgit_exception .
