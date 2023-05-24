@@ -132,7 +132,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
   METHOD abapgit_services_actions.
 
     IF ii_event->mv_action = zif_abapgit_definitions=>c_action-abapgit_home.
-      rs_handled-page  = zcl_abapgit_gui_page_repo_over=>create( abap_true ).
+      rs_handled-page  = zcl_abapgit_gui_page_repo_over=>create( ).
       rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
     ENDIF.
 
@@ -205,7 +205,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     lv_key = ii_event->query( )->get( 'KEY' ).
 
     CASE ii_event->mv_action.
-      WHEN zcl_abapgit_gui=>c_action-go_home.
+      WHEN zif_abapgit_definitions=>c_action-go_home.
         lv_last_repo_key = zcl_abapgit_persistence_user=>get_instance( )->get_repo_show( ).
 
         IF lv_last_repo_key IS NOT INITIAL.
@@ -536,23 +536,15 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
   METHOD main_page.
 
-    DATA lt_repo_fav_list TYPE zif_abapgit_repo_srv=>ty_repo_list.
     DATA lt_repo_all_list TYPE zif_abapgit_repo_srv=>ty_repo_list.
 
-    " for performance reasons, only load favorites
-    lt_repo_fav_list = zcl_abapgit_repo_srv=>get_instance( )->list_favorites( ).
-    IF lt_repo_fav_list IS INITIAL.
-      " if there are no favorites, check if there are any repositories at all
-      " if not, go to tutorial where the user can create the first repository
-      lt_repo_all_list = zcl_abapgit_repo_srv=>get_instance( )->list( ).
-      IF lt_repo_all_list IS NOT INITIAL.
-        ri_page = zcl_abapgit_gui_page_repo_over=>create( abap_false ).
-      ELSE.
-        ri_page = zcl_abapgit_gui_page_tutorial=>create( ).
-      ENDIF.
-
+    " if there are no favorites, check if there are any repositories at all
+    " if not, go to tutorial where the user can create the first repository
+    lt_repo_all_list = zcl_abapgit_repo_srv=>get_instance( )->list( ).
+    IF lt_repo_all_list IS NOT INITIAL.
+      ri_page = zcl_abapgit_gui_page_repo_over=>create( ).
     ELSE.
-      ri_page  = zcl_abapgit_gui_page_repo_over=>create( abap_true ).
+      ri_page = zcl_abapgit_gui_page_tutorial=>create( ).
     ENDIF.
 
   ENDMETHOD.
@@ -618,11 +610,11 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-repo_purge.                      " Repo purge all objects (uninstall)
         zcl_abapgit_services_repo=>purge( lv_key ).
-        rs_handled-page  = zcl_abapgit_gui_page_repo_over=>create( abap_true ).
+        rs_handled-page  = zcl_abapgit_gui_page_repo_over=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
       WHEN zif_abapgit_definitions=>c_action-repo_remove.                     " Repo remove
         zcl_abapgit_services_repo=>remove( lv_key ).
-        rs_handled-page  = zcl_abapgit_gui_page_repo_over=>create( abap_true ).
+        rs_handled-page  = zcl_abapgit_gui_page_repo_over=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
       WHEN zif_abapgit_definitions=>c_action-repo_activate_objects.           " Repo activate objects
         zcl_abapgit_services_repo=>activate_objects( lv_key ).

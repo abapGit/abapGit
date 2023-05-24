@@ -6,8 +6,6 @@ CLASS zcl_abapgit_persistence_user DEFINITION
 
     INTERFACES zif_abapgit_persist_user .
 
-    TYPES ty_favorites TYPE zif_abapgit_persistence=>ty_repo_keys .
-
     CLASS-METHODS get_instance
       IMPORTING
         !iv_user       TYPE sy-uname DEFAULT sy-uname
@@ -42,10 +40,11 @@ CLASS zcl_abapgit_persistence_user DEFINITION
         order_descending TYPE abap_bool,
         diff_first       TYPE abap_bool,
         diff_unified     TYPE abap_bool,
-        favorites        TYPE ty_favorites,
+        favorites        TYPE zif_abapgit_persist_user=>ty_favorites,
         repo_config      TYPE ty_repo_configs,
         settings         TYPE zif_abapgit_definitions=>ty_s_user_settings,
         show_folders     TYPE abap_bool,
+        list_settings    TYPE zif_abapgit_definitions=>ty_list_settings,
       END OF ty_user .
 
     DATA mv_user TYPE sy-uname .
@@ -243,6 +242,22 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_persist_user~get_list_settings.
+
+    rs_list_settings = ms_user-list_settings.
+
+    IF rs_list_settings IS INITIAL.
+      " for performance reasons, set "only favorites" as a default
+      IF zcl_abapgit_repo_srv=>get_instance( )->list_favorites( ) IS NOT INITIAL.
+        rs_list_settings-only_favorites = abap_true.
+      ENDIF.
+
+      rs_list_settings-order_by = |NAME|.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_persist_user~get_order_by.
     rv_order_by = ms_user-order_by.
   ENDMETHOD.
@@ -347,6 +362,12 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
     ms_user-diff_first = iv_diff_first.
     update( ).
     rv_diff_first = ms_user-diff_first.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_persist_user~set_list_settings.
+    ms_user-list_settings = is_list_settings.
+    update( ).
   ENDMETHOD.
 
 

@@ -188,5 +188,15 @@ INTERFACE zif_abapgit_persist_user
       is_user_settings TYPE zif_abapgit_definitions=>ty_s_user_settings
     RAISING
       zcx_abapgit_exception.
+  METHODS get_list_settings
+    RETURNING
+      VALUE(rs_list_settings) TYPE zif_abapgit_definitions=>ty_list_settings
+    RAISING
+      zcx_abapgit_exception.
+  METHODS set_list_settings
+    IMPORTING
+      is_list_settings TYPE zif_abapgit_definitions=>ty_list_settings
+    RAISING
+      zcx_abapgit_exception.
 
 ENDINTERFACE.

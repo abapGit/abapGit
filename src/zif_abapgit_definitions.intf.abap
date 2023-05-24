@@ -263,6 +263,14 @@ INTERFACE zif_abapgit_definitions
       label_colors           TYPE string,
     END OF ty_s_user_settings .
   TYPES:
+    BEGIN OF ty_list_settings,
+      filter           TYPE string,
+      only_favorites   TYPE abap_bool,
+      show_details     TYPE abap_bool,
+      order_by         TYPE string,
+      order_descending TYPE abap_bool,
+    END OF ty_list_settings.
+  TYPES:
     ty_dokil_tt TYPE STANDARD TABLE OF dokil
                          WITH NON-UNIQUE DEFAULT KEY .
   TYPES:
@@ -395,6 +403,7 @@ INTERFACE zif_abapgit_definitions
       db_display                    TYPE string VALUE 'db_display',
       db_edit                       TYPE string VALUE 'db_edit',
       bg_update                     TYPE string VALUE 'bg_update',
+      go_home                       TYPE string VALUE 'go_home',
       go_back                       TYPE string VALUE 'go_back',
       go_explore                    TYPE string VALUE 'go_explore',
       go_repo                       TYPE string VALUE 'go_repo',
