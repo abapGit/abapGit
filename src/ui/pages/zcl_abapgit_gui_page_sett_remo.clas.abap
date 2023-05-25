@@ -463,8 +463,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
           iv_label       = 'Branch'
           iv_required    = abap_true
           iv_side_action = c_event-choose_branch ).
-      ELSE.
-        ro_form->hidden( c_id-branch ).
       ENDIF.
 
       IF lv_head_type = c_head_types-tag.
@@ -473,8 +471,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
           iv_label       = 'Tag'
           iv_required    = abap_true
           iv_side_action = c_event-choose_tag ).
-      ELSE.
-        ro_form->hidden( c_id-tag ).
       ENDIF.
 
       IF lv_head_type = c_head_types-commit.
@@ -485,8 +481,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
           iv_min         = 40
           iv_max         = 40
           iv_side_action = c_event-choose_commit ).
-      ELSE.
-        ro_form->hidden( c_id-commit ).
       ENDIF.
 
       IF lv_head_type = c_head_types-pull_request.
@@ -495,16 +489,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
           iv_label       = 'Pull Request'
           iv_required    = abap_true
           iv_side_action = c_event-choose_pull_request ).
-      ELSE.
-        ro_form->hidden( c_id-pull_request ).
       ENDIF.
 
-    ELSE.
-      ro_form->hidden( c_id-head_type ).
-      ro_form->hidden( c_id-branch ).
-      ro_form->hidden( c_id-tag ).
-      ro_form->hidden( c_id-commit ).
-      ro_form->hidden( c_id-pull_request ).
     ENDIF.
 
     ro_form->command(
