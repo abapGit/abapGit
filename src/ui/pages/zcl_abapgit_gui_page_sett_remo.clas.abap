@@ -734,8 +734,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
     MESSAGE 'Settings succesfully saved' TYPE 'S'.
 
     mv_refresh_on_back = abap_true.
-    ms_settings_snapshot    = get_remote_settings_from_repo( mo_repo ).
-    FREE mo_form_data.
+    ms_settings_snapshot = get_remote_settings_from_repo( mo_repo ).
 
   ENDMETHOD.
 
@@ -951,7 +950,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
           mo_repo->refresh( ).
         ENDIF.
 
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back_to_bookmark.
+        rs_handled-state = zcl_abapgit_html_form_utils=>create( mo_form )->exit(
+          io_form_data = mo_form_data
+          io_check_changes_versus = initialize_form_data( ) ).
+
+*        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back_to_bookmark.
 
       WHEN c_event-choose_url.
         lv_url = choose_url( ).

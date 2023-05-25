@@ -118,7 +118,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
 
   METHOD back.
@@ -179,6 +179,8 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
         ii_gui_services = me ) ).
       IF ls_handled-state = c_event_state-re_render. " soft exit, probably popup
         render( ).
+        rv_handled = abap_true.
+      ELSEIF ls_handled-state = c_event_state-no_more_act. " soft exit, probably GUI popup
         rv_handled = abap_true.
       ENDIF.
     ENDIF.
