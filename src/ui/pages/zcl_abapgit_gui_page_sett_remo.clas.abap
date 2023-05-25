@@ -1108,8 +1108,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
       register_handlers( ).
     ELSEIF mo_popup_picklist->is_in_page( ) = abap_true.
       " Block usual page events if the popup is an in-page popup
-      ri_html->add( zcl_abapgit_gui_in_page_modal=>create( mo_popup_picklist
-        )->zif_abapgit_gui_renderable~render( ) ).
+      ri_html->add( zcl_abapgit_gui_in_page_modal=>create( mo_popup_picklist ) ).
     ENDIF.
 
   ENDMETHOD.

@@ -13,7 +13,10 @@ CLASS zcl_abapgit_html DEFINITION
       IMPORTING
         !iv_initial_chunk  TYPE any OPTIONAL
       RETURNING
-        VALUE(ri_instance) TYPE REF TO zif_abapgit_html.
+        VALUE(ri_instance) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
+
     CLASS-METHODS icon
       IMPORTING
         !iv_name      TYPE string
@@ -73,7 +76,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_html IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
 
   METHOD checkbox.
@@ -364,6 +367,7 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
   METHOD zif_abapgit_html~add.
 
     DATA: lv_type TYPE c,
+          li_renderable TYPE REF TO zif_abapgit_gui_renderable,
           lo_html TYPE REF TO zcl_abapgit_html.
 
     FIELD-SYMBOLS: <lt_tab> TYPE string_table.
@@ -381,7 +385,12 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
         TRY.
             lo_html ?= ig_chunk.
           CATCH cx_sy_move_cast_error.
-            ASSERT 1 = 0. " Dev mistake
+            TRY.
+                li_renderable ?= ig_chunk.
+                lo_html ?= li_renderable->render( ).
+              CATCH cx_sy_move_cast_error.
+                ASSERT 1 = 0. " Dev mistake
+            ENDTRY.
         ENDTRY.
         APPEND LINES OF lo_html->mt_buffer TO mt_buffer.
       WHEN OTHERS.

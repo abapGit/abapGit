@@ -25,19 +25,25 @@ INTERFACE zif_abapgit_html PUBLIC.
       iv_title TYPE string
     RETURNING
       VALUE(ri_self) TYPE REF TO zif_abapgit_html.
+
   METHODS add
     IMPORTING
       !ig_chunk TYPE any
     RETURNING
-      VALUE(ri_self) TYPE REF TO zif_abapgit_html.
+      VALUE(ri_self) TYPE REF TO zif_abapgit_html
+    RAISING
+      zcx_abapgit_exception.
+
   METHODS render
     IMPORTING
       !iv_no_indent_jscss TYPE abap_bool OPTIONAL
     RETURNING
       VALUE(rv_html)      TYPE string .
+
   METHODS is_empty
     RETURNING
       VALUE(rv_yes) TYPE abap_bool .
+
   METHODS add_a
     IMPORTING
       !iv_txt   TYPE string
@@ -50,13 +56,19 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_style TYPE string OPTIONAL
       !iv_title TYPE string OPTIONAL
     RETURNING
-      VALUE(ri_self) TYPE REF TO zif_abapgit_html.
+      VALUE(ri_self) TYPE REF TO zif_abapgit_html
+    RAISING
+      zcx_abapgit_exception.
+
   METHODS add_checkbox
     IMPORTING
       iv_id      TYPE string
       iv_checked TYPE abap_bool OPTIONAL
     RETURNING
-      VALUE(ri_self) TYPE REF TO zif_abapgit_html.
+      VALUE(ri_self) TYPE REF TO zif_abapgit_html
+    RAISING
+      zcx_abapgit_exception.
+
   METHODS a
     IMPORTING
       !iv_txt       TYPE string
@@ -70,6 +82,7 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_title     TYPE string OPTIONAL
     RETURNING
       VALUE(rv_str) TYPE string .
+
   METHODS icon
     IMPORTING
       !iv_name      TYPE string
@@ -86,7 +99,9 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_class   TYPE string OPTIONAL
       !iv_onclick TYPE string OPTIONAL
     RETURNING
-      VALUE(ri_self) TYPE REF TO zif_abapgit_html.
+      VALUE(ri_self) TYPE REF TO zif_abapgit_html
+    RAISING
+      zcx_abapgit_exception.
 
   METHODS wrap
     IMPORTING
@@ -98,7 +113,9 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_hint    TYPE string OPTIONAL
       !iv_format_single_line TYPE abap_bool DEFAULT abap_false
     RETURNING
-      VALUE(ri_self) TYPE REF TO zif_abapgit_html.
+      VALUE(ri_self) TYPE REF TO zif_abapgit_html
+    RAISING
+      zcx_abapgit_exception.
 
   METHODS td
     IMPORTING
@@ -110,7 +127,9 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_format_single_line TYPE abap_bool DEFAULT abap_true
       PREFERRED PARAMETER iv_content
     RETURNING
-      VALUE(ri_self) TYPE REF TO zif_abapgit_html.
+      VALUE(ri_self) TYPE REF TO zif_abapgit_html
+    RAISING
+      zcx_abapgit_exception.
 
   METHODS th
     IMPORTING
@@ -122,6 +141,8 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_format_single_line TYPE abap_bool DEFAULT abap_true
       PREFERRED PARAMETER iv_content
     RETURNING
-      VALUE(ri_self) TYPE REF TO zif_abapgit_html.
+      VALUE(ri_self) TYPE REF TO zif_abapgit_html
+    RAISING
+      zcx_abapgit_exception.
 
 ENDINTERFACE.
