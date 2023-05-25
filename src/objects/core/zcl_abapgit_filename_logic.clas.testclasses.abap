@@ -1,6 +1,21 @@
 CLASS ltcl_run_checks DEFINITION DEFERRED.
 CLASS zcl_abapgit_filename_logic DEFINITION LOCAL FRIENDS ltcl_run_checks.
 
+CLASS lcl_memory_settings DEFINITION.
+  PUBLIC SECTION.
+    INTERFACES zif_abapgit_persist_settings.
+ENDCLASS.
+
+CLASS lcl_memory_settings IMPLEMENTATION.
+  METHOD zif_abapgit_persist_settings~modify.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_persist_settings~read.
+    CREATE OBJECT ro_settings.
+  ENDMETHOD.
+ENDCLASS.
+
 CLASS ltcl_run_checks DEFINITION FOR TESTING RISK LEVEL HARMLESS
   DURATION SHORT FINAL.
 
@@ -22,8 +37,13 @@ CLASS ltcl_run_checks IMPLEMENTATION.
 
   METHOD setup.
 
+    DATA li_memory TYPE REF TO lcl_memory_settings.
+
     " Assume for unit tests that starting folder is /src/ with prefix logic
     mo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
+
+    CREATE OBJECT li_memory.
+    zcl_abapgit_persist_injector=>set_settings( li_memory ).
 
   ENDMETHOD.
 
