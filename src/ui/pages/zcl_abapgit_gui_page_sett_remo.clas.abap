@@ -954,8 +954,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
           io_form_data = mo_form_data
           io_check_changes_versus = initialize_form_data( ) ).
 
-*        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back_to_bookmark.
-
       WHEN c_event-choose_url.
         lv_url = choose_url( ).
 
