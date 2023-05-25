@@ -74,7 +74,7 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
       END OF c_popup.
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
-    DATA ms_settings_old TYPE ty_remote_settings.
+    DATA ms_settings_snapshot TYPE ty_remote_settings.
     DATA mo_form TYPE REF TO zcl_abapgit_html_form .
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map .
     DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map .
@@ -108,6 +108,8 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
         zcx_abapgit_exception.
 
     METHODS initialize_form_data
+      RETURNING
+        VALUE(ro_form_data) TYPE REF TO zcl_abapgit_string_map
       RAISING
         zcx_abapgit_exception.
 
@@ -346,13 +348,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
   METHOD constructor.
 
     super->constructor( ).
-    mo_repo = io_repo.
-    ms_settings_old = get_remote_settings_from_repo( mo_repo ).
-
+    mo_repo              = io_repo.
+    ms_settings_snapshot = get_remote_settings_from_repo( mo_repo ).
+    mo_form              = get_form_schema( ).
+    mo_form_data         = initialize_form_data( ).
     CREATE OBJECT mo_validation_log.
-
-    mo_form = get_form_schema( ).
-    initialize_form_data( ).
 
   ENDMETHOD.
 
@@ -392,8 +392,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
         lv_head_type = io_existing_form_data->get( c_id-head_type ).
       ENDIF.
     ELSE.
-      lv_offline = ms_settings_old-offline.
-      lv_head_type = ms_settings_old-head_type.
+      lv_offline   = ms_settings_snapshot-offline.
+      lv_head_type = ms_settings_snapshot-head_type.
     ENDIF.
 
     ro_form = zcl_abapgit_html_form=>create(
@@ -617,60 +617,53 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
 
     DATA:
       lv_type TYPE string,
-      lv_url  TYPE ty_remote_settings-url,
       lv_head TYPE string.
 
-    CREATE OBJECT mo_form_data.
+    CREATE OBJECT ro_form_data.
 
-    lv_type = 'Online repository'.
-    lv_url  = ms_settings_old-url.
-
-    IF ms_settings_old-offline = abap_true.
+    IF ms_settings_snapshot-offline = abap_true.
       lv_type = 'Offline repository'.
+    ELSE.
+      lv_type = 'Online repository'.
     ENDIF.
 
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-offline
-      iv_val = ms_settings_old-offline ).
-
-    mo_form_data->set(
+      iv_val = ms_settings_snapshot-offline ).
+    ro_form_data->set(
       iv_key = c_id-repo_type
       iv_val = lv_type ).
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-url
-      iv_val = lv_url ).
+      iv_val = ms_settings_snapshot-url ).
 
-    IF ms_settings_old-offline = abap_false.
-      mo_form_data->set(
+    IF ms_settings_snapshot-offline = abap_false.
+      ro_form_data->set(
         iv_key = c_id-head_type
-        iv_val = ms_settings_old-head_type ).
+        iv_val = ms_settings_snapshot-head_type ).
 
       " When pull request is selected the previously selected branch/tag is also loaded to be able to switch back to it
-      lv_head = ms_settings_old-branch.
-      REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-heads_prefix IN lv_head WITH space.
-      CONDENSE lv_head.
-      mo_form_data->set(
+      lv_head = zcl_abapgit_git_branch_list=>get_display_name( ms_settings_snapshot-branch ).
+      ro_form_data->set(
         iv_key = c_id-branch
         iv_val = lv_head ).
 
-      lv_head = ms_settings_old-tag.
-      REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-heads_prefix IN lv_head WITH space.
-      CONDENSE lv_head.
-      mo_form_data->set(
+      lv_head = zcl_abapgit_git_branch_list=>get_display_name( ms_settings_snapshot-tag ).
+      ro_form_data->set(
         iv_key = c_id-tag
         iv_val = lv_head ).
 
-      mo_form_data->set(
+      ro_form_data->set(
         iv_key = c_id-commit
-        iv_val = ms_settings_old-commit ).
+        iv_val = ms_settings_snapshot-commit ).
 
-      mo_form_data->set(
+      ro_form_data->set(
         iv_key = c_id-pull_request
-        iv_val = ms_settings_old-pull_request ).
+        iv_val = ms_settings_snapshot-pull_request ).
     ENDIF.
 
     " Set for is_dirty check
-    zcl_abapgit_html_form_utils=>create( mo_form )->set_data( mo_form_data ).
+    zcl_abapgit_html_form_utils=>create( mo_form )->set_data( ro_form_data ).
 
   ENDMETHOD.
 
@@ -685,7 +678,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
     ls_settings_new = get_remote_settings_from_form( mo_form_data ).
 
     " Switch online / offline
-    IF ls_settings_new-offline <> ms_settings_old-offline.
+    IF ls_settings_new-offline <> ms_settings_snapshot-offline.
       " Remember key, switch, retrieve new instance (todo, refactor #2244)
       mo_repo->switch_repo_type( ls_settings_new-offline ).
       mo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
@@ -729,7 +722,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
     MESSAGE 'Settings succesfully saved' TYPE 'S'.
 
     mv_refresh_on_back = abap_true.
-    ms_settings_old    = get_remote_settings_from_repo( mo_repo ).
+    ms_settings_snapshot    = get_remote_settings_from_repo( mo_repo ).
     FREE mo_form_data.
 
   ENDMETHOD.
@@ -932,16 +925,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA:
-      lo_form_data_raw TYPE REF TO zcl_abapgit_string_map,
       lv_url    TYPE ty_remote_settings-url,
       lv_branch TYPE ty_remote_settings-branch,
       lv_tag    TYPE ty_remote_settings-tag,
       lv_commit TYPE ty_remote_settings-commit.
 
-    lo_form_data_raw = ii_event->form_data( ).
-    IF lo_form_data_raw->is_empty( ) = abap_false. " If form-related action
-      mo_form_data = zcl_abapgit_html_form_utils=>create( mo_form )->normalize( lo_form_data_raw ).
-    ENDIF.
+    mo_form_data->merge( zcl_abapgit_html_form_utils=>create( mo_form )->normalize( ii_event->form_data( ) ) ).
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-go_back.
@@ -1018,15 +1007,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-
     " If staying on form, initialize it with current settings
     IF rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render AND mo_popup_picklist IS NOT BOUND.
-      " TODO refactor: same as in constructor
+      " Switching tabs must change the form layout
       mo_form = get_form_schema( io_existing_form_data = mo_form_data ).
-      initialize_form_data( ).
-
-*      IF mo_form_data IS NOT BOUND.
-*      ENDIF.
     ENDIF.
 
   ENDMETHOD.
@@ -1044,9 +1028,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
         lv_head_type = mo_form_data->get( c_id-head_type ).
       ENDIF.
     ELSE.
-      lv_offline = ms_settings_old-offline.
+      lv_offline = ms_settings_snapshot-offline.
       IF lv_offline = abap_false.
-        lv_head_type = ms_settings_old-head_type.
+        lv_head_type = ms_settings_snapshot-head_type.
       ENDIF.
     ENDIF.
 
