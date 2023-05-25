@@ -61,6 +61,7 @@ CLASS zcl_abapgit_html DEFINITION
     CLASS-DATA go_single_tags_re TYPE REF TO cl_abap_regex .
     DATA mt_buffer TYPE string_table .
     CLASS-DATA gv_spaces TYPE string .
+    CLASS-DATA gv_debug_mode TYPE abap_bool .
 
     METHODS indent_line
       CHANGING
@@ -98,6 +99,9 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
 
   METHOD class_constructor.
+
+    DATA lv_mode TYPE tabname.
+
     CREATE OBJECT go_single_tags_re
       EXPORTING
         pattern     = '<(AREA|BASE|BR|COL|COMMAND|EMBED|HR|IMG|INPUT|LINK|META|PARAM|SOURCE|!)'
@@ -106,6 +110,9 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     gv_spaces = repeat(
       val = ` `
       occ = 200 ).
+
+    GET PARAMETER ID 'DBT' FIELD lv_mode.
+    gv_debug_mode = boolc( lv_mode = 'HREF' ).
 
   ENDMETHOD.
 
@@ -297,7 +304,6 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
           lv_act   TYPE string,
           lv_style TYPE string,
           lv_title TYPE string.
-    DATA lv_mode TYPE tabname.
 
     lv_class = iv_class.
 
@@ -351,8 +357,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     ENDIF.
 
     " Debug option to display href-link on hover
-    GET PARAMETER ID 'DBT' FIELD lv_mode.
-    IF lv_mode = 'HREF'.
+    IF gv_debug_mode = abap_true.
       lv_title = | title="{ escape(
         val    = lv_href
         format = cl_abap_format=>e_html_attr ) }"|.
