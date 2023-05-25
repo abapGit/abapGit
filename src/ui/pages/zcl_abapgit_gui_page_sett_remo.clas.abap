@@ -180,6 +180,12 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    METHODS render_content
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -516,6 +522,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
 
 
   METHOD get_remote_settings_from_form.
+
     rs_settings-url = io_form_data->get( c_id-url ).
     rs_settings-offline = io_form_data->get( c_id-offline ).
 
@@ -534,10 +541,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
           rs_settings-pull_request = io_form_data->get( c_id-pull_request ).
       ENDCASE.
     ENDIF.
+
   ENDMETHOD.
 
 
   METHOD get_remote_settings_from_repo.
+
     DATA: lo_repo_online  TYPE REF TO zcl_abapgit_repo_online,
           lo_repo_offline TYPE REF TO zcl_abapgit_repo_offline,
           lv_branch       TYPE ty_remote_settings-branch.
@@ -587,6 +596,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
       rs_settings-url = lo_repo_offline->get_name( ).
       rs_settings-offline = abap_true.
     ENDIF.
+
   ENDMETHOD.
 
 
@@ -668,6 +678,22 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_content.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
+      io_repo               = mo_repo
+      iv_show_commit        = abap_false
+      iv_interactive_branch = abap_false ) ).
+
+    ri_html->add( mo_form->render(
+      io_values         = mo_form_data
+      io_validation_log = mo_validation_log ) ).
+
+  ENDMETHOD.
+
+
   METHOD save_settings.
 
     DATA:
@@ -729,6 +755,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
 
 
   METHOD switch_online_offline.
+
     DATA: lv_offline_new TYPE abap_bool,
           lv_url         TYPE ty_remote_settings-url,
           lv_branch      TYPE ty_remote_settings-branch.
@@ -772,6 +799,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
         ENDTRY.
       ENDIF.
     ENDIF.
+
   ENDMETHOD.
 
 
@@ -780,9 +808,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
     DATA lo_repo TYPE REF TO zcl_abapgit_repo_online.
 
     check_protection( ).
-
     lo_repo ?= mo_repo.
-
     lo_repo->select_branch( iv_name ).
 
   ENDMETHOD.
@@ -1091,18 +1117,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ri_html->add( `<div class="repo">` ). " TODO own setting frame CSS class
-
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
-      io_repo               = mo_repo
-      iv_show_commit        = abap_false
-      iv_interactive_branch = abap_false ) ).
-
-    ri_html->add( mo_form->render(
-      io_values         = mo_form_data
-      io_validation_log = mo_validation_log ) ).
-
-    ri_html->add( `</div>` ).
+    ri_html->wrap(
+      iv_tag     = 'div'
+      iv_class   = 'repo' " It's OK because it's repo settings ... for now
+      ii_content = render_content( ) ).
 
     IF mo_popup_picklist IS NOT BOUND OR mo_popup_picklist->is_in_page( ) = abap_false.
       register_handlers( ).
