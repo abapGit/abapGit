@@ -28,6 +28,7 @@ FUNCTION z_abapgit_serialize_parallel.
       ls_item-obj_name  = iv_obj_name.
       ls_item-devclass  = iv_devclass.
       ls_item-srcsystem = iv_srcsystem.
+      ls_item-origlang  = iv_language.
 
       ls_files = zcl_abapgit_objects=>serialize(
         is_item               = ls_item

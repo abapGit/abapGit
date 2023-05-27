@@ -608,6 +608,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     ls_file_item-item-obj_name  = is_tadir-obj_name.
     ls_file_item-item-devclass  = is_tadir-devclass.
     ls_file_item-item-srcsystem = is_tadir-srcsystem.
+    ls_file_item-item-origlang  = is_tadir-masterlang.
 
     TRY.
         ls_file_item = zcl_abapgit_objects=>serialize(

@@ -91,11 +91,12 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
       " Local packages are not in TADIR, only in TDEVC, act as if they were
       IF <lv_package> CP '$*'. " OR <package> CP 'T*' ).
         APPEND INITIAL LINE TO ct_tadir ASSIGNING <ls_tadir>.
-        <ls_tadir>-pgmid    = 'R3TR'.
-        <ls_tadir>-object   = 'DEVC'.
-        <ls_tadir>-obj_name = <lv_package>.
-        <ls_tadir>-devclass = <lv_package>.
-        <ls_tadir>-srcsystem = sy-sysid.
+        <ls_tadir>-pgmid      = 'R3TR'.
+        <ls_tadir>-object     = 'DEVC'.
+        <ls_tadir>-obj_name   = <lv_package>.
+        <ls_tadir>-devclass   = <lv_package>.
+        <ls_tadir>-srcsystem  = sy-sysid.
+        <ls_tadir>-masterlang = sy-langu.
       ENDIF.
 
     ENDLOOP.
@@ -128,11 +129,12 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
         WITH KEY pgmid = 'R3TR' object = 'NSPC' obj_name = lv_namespace.
       IF sy-subrc <> 0.
         APPEND INITIAL LINE TO ct_tadir ASSIGNING <ls_tadir>.
-        <ls_tadir>-pgmid     = 'R3TR'.
-        <ls_tadir>-object    = 'NSPC'.
-        <ls_tadir>-obj_name  = lv_namespace.
-        <ls_tadir>-devclass  = iv_package.
-        <ls_tadir>-srcsystem = sy-sysid.
+        <ls_tadir>-pgmid      = 'R3TR'.
+        <ls_tadir>-object     = 'NSPC'.
+        <ls_tadir>-obj_name   = lv_namespace.
+        <ls_tadir>-devclass   = iv_package.
+        <ls_tadir>-srcsystem  = sy-sysid.
+        <ls_tadir>-masterlang = sy-langu.
       ENDIF.
 
     ENDIF.
@@ -367,13 +369,14 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
       iv_object   = iv_object
       iv_obj_name = iv_obj_name ).
 
-    IF ls_tadir-delflag = 'X'.
+    IF ls_tadir-delflag = abap_true.
       RETURN. "Mark for deletion -> return nothing
     ENDIF.
 
     ls_item-obj_type = ls_tadir-object.
     ls_item-obj_name = ls_tadir-obj_name.
     ls_item-devclass = ls_tadir-devclass.
+
     IF zcl_abapgit_objects=>exists( ls_item ) = abap_false.
       RETURN.
     ENDIF.
