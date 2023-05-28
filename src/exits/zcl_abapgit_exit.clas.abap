@@ -214,7 +214,7 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
     IF gi_exit IS NOT INITIAL.
       TRY.
           rt_source = gi_exit->custom_serialize_abap_clif(
-            is_class_key = is_class_key
+            iv_class_key = iv_class_key
             it_source    = it_source ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
