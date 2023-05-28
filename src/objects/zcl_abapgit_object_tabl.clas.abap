@@ -46,6 +46,7 @@ CLASS zcl_abapgit_object_tabl DEFINITION
     "! @parameter rv_deserialized | It's a segment and was desserialized
     "! @raising zcx_abapgit_exception | Exceptions
     METHODS deserialize_idoc_segment IMPORTING io_xml                 TYPE REF TO zif_abapgit_xml_input
+                                               iv_transport           TYPE trkorr
                                                iv_package             TYPE devclass
                                      RETURNING VALUE(rv_deserialized) TYPE abap_bool
                                      RAISING   zcx_abapgit_exception.
@@ -244,6 +245,9 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
     DATA lt_segment_definitions TYPE ty_segment_definitions.
     DATA lv_package             TYPE devclass.
     DATA lv_uname               TYPE sy-uname.
+    DATA lv_transport           TYPE trkorr.
+    DATA ls_edisdef             TYPE edisdef.
+    DATA ls_segment_definition  TYPE ty_segment_definition.
     FIELD-SYMBOLS <ls_segment_definition> TYPE ty_segment_definition.
 
     rv_deserialized = abap_false.
@@ -264,14 +268,16 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
     rv_deserialized = abap_true.
 
     lv_package = iv_package.
+    lv_transport = iv_transport.
 
     LOOP AT lt_segment_definitions ASSIGNING <ls_segment_definition>.
+      ls_segment_definition = <ls_segment_definition>.
       <ls_segment_definition>-segmentheader-presp = sy-uname.
       <ls_segment_definition>-segmentheader-pwork = sy-uname.
 
       CALL FUNCTION 'SEGMENT_READ'
         EXPORTING
-          segmenttyp = <ls_segment_definition>-segmentheader-segtyp
+          segmenttyp = <ls_segment_definition>-segmentdefinition-segtyp
         IMPORTING
           result     = lv_result
         EXCEPTIONS
@@ -310,6 +316,33 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
+      IF ls_segment_definition-segmentdefinition-closed = abap_true.
+        IF lv_transport IS NOT INITIAL.
+          CALL FUNCTION 'SEGMENTDEFINITION_CLOSE'
+            EXPORTING
+              segmenttyp = ls_segment_definition-segmentdefinition-segtyp
+            CHANGING
+              order      = lv_transport
+            EXCEPTIONS
+              OTHERS     = 1.
+          IF sy-subrc <> 0.
+            zcx_abapgit_exception=>raise_t100( ).
+          ENDIF.
+        ENDIF.
+
+        " SEGMENTDEFINITION_CLOSE saves current release but it should be same as in repo
+        SELECT SINGLE * FROM edisdef INTO ls_edisdef
+          WHERE segtyp  = ls_segment_definition-segmentdefinition-segtyp
+            AND version = ls_segment_definition-segmentdefinition-version.
+        ls_edisdef-released = ls_segment_definition-segmentdefinition-released.
+        ls_edisdef-applrel  = ls_segment_definition-segmentdefinition-applrel.
+        ls_edisdef-closed   = ls_segment_definition-segmentdefinition-closed.
+        UPDATE edisdef FROM ls_edisdef.
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise( |Error updating IDOC segment {
+            <ls_segment_definition>-segmentdefinition-segtyp }| ).
+        ENDIF.
+      ENDIF.
     ENDLOOP.
 
     lv_uname = sy-uname.
@@ -742,6 +775,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
     lv_name = ms_item-obj_name. " type conversion
 
     IF deserialize_idoc_segment( io_xml     = io_xml
+                                 iv_transport = iv_transport
                                  iv_package = iv_package ) = abap_false.
 
       io_xml->read( EXPORTING iv_name = 'DD02V'
