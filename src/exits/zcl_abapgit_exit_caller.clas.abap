@@ -33,7 +33,9 @@ CLASS zcl_abapgit_exit_caller IMPLEMENTATION.
 
     DATA lv_clsname TYPE seoclsname.
 
-    CHECK gv_init IS INITIAL.
+    IF gv_init = abap_true.
+      RETURN.
+    ENDIF.
 
     " Get all classes that inherit from abapGit default exit implementation
     SELECT clsname FROM seometarel INTO lv_clsname
