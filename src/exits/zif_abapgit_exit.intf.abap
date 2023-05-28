@@ -69,7 +69,7 @@ INTERFACE zif_abapgit_exit
       zcx_abapgit_exception .
   METHODS custom_serialize_abap_clif
     IMPORTING
-      !is_class_key    TYPE seoclskey
+      !is_class_key    TYPE abap_classname
       !it_source       TYPE zif_abapgit_definitions=>ty_string_tt OPTIONAL
     RETURNING
       VALUE(rt_source) TYPE zif_abapgit_definitions=>ty_string_tt
