@@ -46,17 +46,17 @@ CLASS zcl_abapgit_html_form_utils DEFINITION
         !io_form_data TYPE REF TO zcl_abapgit_string_map .
     METHODS exit
       IMPORTING
-        !io_form_data   TYPE REF TO zcl_abapgit_string_map
+        !io_form_data            TYPE REF TO zcl_abapgit_string_map
         !io_check_changes_versus TYPE REF TO zcl_abapgit_string_map OPTIONAL
       RETURNING
-        VALUE(rv_state) TYPE i
+        VALUE(rv_state)          TYPE i
       RAISING
         zcx_abapgit_exception .
 
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    DATA mo_form TYPE REF TO zcl_abapgit_html_form .
+    DATA mo_form      TYPE REF TO zcl_abapgit_html_form .
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map .
 
 ENDCLASS.
