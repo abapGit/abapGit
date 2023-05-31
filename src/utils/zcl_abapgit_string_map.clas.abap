@@ -158,12 +158,12 @@ CLASS ZCL_ABAPGIT_STRING_MAP IMPLEMENTATION.
 
   METHOD merge.
 
-    FIELD-SYMBOLS <entry> LIKE LINE OF mt_entries.
+    FIELD-SYMBOLS <ls_entry> LIKE LINE OF mt_entries.
 
-    LOOP AT io_string_map->mt_entries ASSIGNING <entry>.
+    LOOP AT io_string_map->mt_entries ASSIGNING <ls_entry>.
       set(
-        iv_key = <entry>-k
-        iv_val = <entry>-v ).
+        iv_key = <ls_entry>-k
+        iv_val = <ls_entry>-v ).
     ENDLOOP.
 
   ENDMETHOD.
