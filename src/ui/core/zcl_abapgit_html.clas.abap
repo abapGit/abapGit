@@ -13,9 +13,7 @@ CLASS zcl_abapgit_html DEFINITION
       IMPORTING
         !iv_initial_chunk  TYPE any OPTIONAL
       RETURNING
-        VALUE(ri_instance) TYPE REF TO zif_abapgit_html
-      RAISING
-        zcx_abapgit_exception.
+        VALUE(ri_instance) TYPE REF TO zif_abapgit_html.
 
     CLASS-METHODS icon
       IMPORTING

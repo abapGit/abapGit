@@ -30,9 +30,7 @@ INTERFACE zif_abapgit_html PUBLIC.
     IMPORTING
       !ig_chunk TYPE any
     RETURNING
-      VALUE(ri_self) TYPE REF TO zif_abapgit_html
-    RAISING
-      zcx_abapgit_exception.
+      VALUE(ri_self) TYPE REF TO zif_abapgit_html.
 
   METHODS render
     IMPORTING
@@ -56,18 +54,14 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_style TYPE string OPTIONAL
       !iv_title TYPE string OPTIONAL
     RETURNING
-      VALUE(ri_self) TYPE REF TO zif_abapgit_html
-    RAISING
-      zcx_abapgit_exception.
+      VALUE(ri_self) TYPE REF TO zif_abapgit_html.
 
   METHODS add_checkbox
     IMPORTING
       iv_id      TYPE string
       iv_checked TYPE abap_bool OPTIONAL
     RETURNING
-      VALUE(ri_self) TYPE REF TO zif_abapgit_html
-    RAISING
-      zcx_abapgit_exception.
+      VALUE(ri_self) TYPE REF TO zif_abapgit_html.
 
   METHODS a
     IMPORTING
@@ -99,9 +93,7 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_class   TYPE string OPTIONAL
       !iv_onclick TYPE string OPTIONAL
     RETURNING
-      VALUE(ri_self) TYPE REF TO zif_abapgit_html
-    RAISING
-      zcx_abapgit_exception.
+      VALUE(ri_self) TYPE REF TO zif_abapgit_html.
 
   METHODS wrap
     IMPORTING
@@ -113,9 +105,7 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_hint    TYPE string OPTIONAL
       !iv_format_single_line TYPE abap_bool DEFAULT abap_false
     RETURNING
-      VALUE(ri_self) TYPE REF TO zif_abapgit_html
-    RAISING
-      zcx_abapgit_exception.
+      VALUE(ri_self) TYPE REF TO zif_abapgit_html.
 
   METHODS td
     IMPORTING
@@ -127,9 +117,7 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_format_single_line TYPE abap_bool DEFAULT abap_true
       PREFERRED PARAMETER iv_content
     RETURNING
-      VALUE(ri_self) TYPE REF TO zif_abapgit_html
-    RAISING
-      zcx_abapgit_exception.
+      VALUE(ri_self) TYPE REF TO zif_abapgit_html.
 
   METHODS th
     IMPORTING
@@ -141,8 +129,6 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_format_single_line TYPE abap_bool DEFAULT abap_true
       PREFERRED PARAMETER iv_content
     RETURNING
-      VALUE(ri_self) TYPE REF TO zif_abapgit_html
-    RAISING
-      zcx_abapgit_exception.
+      VALUE(ri_self) TYPE REF TO zif_abapgit_html.
 
 ENDINTERFACE.
