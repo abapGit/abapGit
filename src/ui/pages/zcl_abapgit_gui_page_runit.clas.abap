@@ -225,7 +225,6 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
     LOOP AT <lt_indices> ASSIGNING <ls_alert_by_index>.
       ASSIGN COMPONENT 'ALERTS' OF STRUCTURE <ls_alert_by_index> TO <lt_alerts>.
       LOOP AT <lt_alerts> ASSIGNING <ls_alert> WHERE ('KIND = ''F'' OR KIND = ''S'' OR KIND = ''E'' OR KIND = ''W''').
-        BREAK-POINT.
         CLEAR lv_text.
         ASSIGN COMPONENT 'HEADER-PARAMS' OF STRUCTURE <ls_alert> TO <lt_params>.
         LOOP AT <lt_params> INTO lv_params.
