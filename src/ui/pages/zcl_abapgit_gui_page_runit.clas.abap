@@ -53,7 +53,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
 
 
   METHOD build_tadir.
