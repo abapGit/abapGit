@@ -373,6 +373,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
     DATA: lv_type TYPE c,
           li_renderable TYPE REF TO zif_abapgit_gui_renderable,
+          lx_error TYPE REF TO zcx_abapgit_exception,
           lo_html TYPE REF TO zcl_abapgit_html.
 
     FIELD-SYMBOLS: <lt_tab> TYPE string_table.
@@ -395,6 +396,8 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
                 lo_html ?= li_renderable->render( ).
               CATCH cx_sy_move_cast_error.
                 ASSERT 1 = 0. " Dev mistake
+              CATCH zcx_abapgit_exception INTO lx_error.
+                lo_html ?= create( |<span class="error">Render error: { lx_error->get_text( ) }</span>| ).
             ENDTRY.
         ENDTRY.
         APPEND LINES OF lo_html->mt_buffer TO mt_buffer.
