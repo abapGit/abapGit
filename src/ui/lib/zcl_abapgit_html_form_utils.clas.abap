@@ -85,6 +85,7 @@ CLASS ZCL_ABAPGIT_HTML_FORM_UTILS IMPLEMENTATION.
 
     lo_compare_with = io_check_changes_versus.
     IF lo_compare_with IS NOT BOUND.
+      " TODO: remove this if and make io_check_changes_versus mandatory once all forms are converted
       lo_compare_with = mo_form_data.
     ENDIF.
 
