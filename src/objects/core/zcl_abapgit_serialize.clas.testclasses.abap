@@ -96,6 +96,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
     <ls_tadir>-obj_name = 'RSABAPPROGRAM'.
     <ls_tadir>-devclass = 'PACKAGE'.
     <ls_tadir>-path     = 'foobar'.
+    <ls_tadir>-masterlang = sy-langu.
 
     lt_sequential = mo_cut->serialize(
       it_tadir            = lt_tadir

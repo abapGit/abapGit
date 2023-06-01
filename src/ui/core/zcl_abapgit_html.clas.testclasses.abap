@@ -1,3 +1,23 @@
+CLASS lcl_good_renderable DEFINITION FINAL.
+  PUBLIC SECTION.
+    INTERFACES zif_abapgit_gui_renderable.
+ENDCLASS.
+CLASS lcl_good_renderable IMPLEMENTATION.
+  METHOD zif_abapgit_gui_renderable~render.
+    ri_html = zcl_abapgit_html=>create( 'Hello' ).
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS lcl_bad_renderable DEFINITION FINAL.
+  PUBLIC SECTION.
+    INTERFACES zif_abapgit_gui_renderable.
+ENDCLASS.
+CLASS lcl_bad_renderable IMPLEMENTATION.
+  METHOD zif_abapgit_gui_renderable~render.
+    zcx_abapgit_exception=>raise( 'Fail!' ).
+  ENDMETHOD.
+ENDCLASS.
+
 CLASS ltcl_html DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
 
   PRIVATE SECTION.
@@ -5,6 +25,7 @@ CLASS ltcl_html DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
 
     METHODS:
       wrap    FOR TESTING RAISING zcx_abapgit_exception,
+      add_renderable FOR TESTING RAISING zcx_abapgit_exception,
       td      FOR TESTING RAISING zcx_abapgit_exception,
       th      FOR TESTING RAISING zcx_abapgit_exception,
       wrap_ii FOR TESTING RAISING zcx_abapgit_exception,
@@ -197,6 +218,24 @@ CLASS ltcl_html IMPLEMENTATION.
         '  Hello' && cl_abap_char_utilities=>newline &&
         '</td>' && cl_abap_char_utilities=>newline &&
         '<td>Hello</td>' ).
+
+  ENDMETHOD.
+
+  METHOD add_renderable.
+
+    DATA lo_good TYPE REF TO lcl_good_renderable.
+    DATA lo_bad TYPE REF TO lcl_bad_renderable.
+
+    CREATE OBJECT lo_good.
+    CREATE OBJECT lo_bad.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_html=>create( lo_good )->render( )
+      exp = 'Hello' ).
+
+    cl_abap_unit_assert=>assert_char_cp(
+      act = zcl_abapgit_html=>create( lo_bad )->render( )
+      exp = '<span*Fail!*' ).
 
   ENDMETHOD.
 

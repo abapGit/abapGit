@@ -136,6 +136,11 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
 
     CLEAR et_list.
 
+    " Make sure we don't accidentally return anything
+    IF mv_cancel = abap_true.
+      RETURN.
+    ENDIF.
+
     ASSIGN mr_table->* TO <lt_table>.
     ASSERT sy-subrc = 0.
 
