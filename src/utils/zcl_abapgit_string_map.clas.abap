@@ -66,6 +66,14 @@ CLASS zcl_abapgit_string_map DEFINITION
       RETURNING
         VALUE(ro_instance) TYPE REF TO zcl_abapgit_string_map .
     METHODS freeze .
+    METHODS merge
+      IMPORTING
+        !io_string_map TYPE REF TO zcl_abapgit_string_map
+      RETURNING
+        VALUE(ro_instance) TYPE REF TO zcl_abapgit_string_map
+      RAISING
+        zcx_abapgit_exception .
+
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA mv_read_only TYPE abap_bool.
@@ -145,6 +153,19 @@ CLASS ZCL_ABAPGIT_STRING_MAP IMPLEMENTATION.
 
   METHOD is_empty.
     rv_yes = boolc( lines( mt_entries ) = 0 ).
+  ENDMETHOD.
+
+
+  METHOD merge.
+
+    FIELD-SYMBOLS <ls_entry> LIKE LINE OF mt_entries.
+
+    LOOP AT io_string_map->mt_entries ASSIGNING <ls_entry>.
+      set(
+        iv_key = <ls_entry>-k
+        iv_val = <ls_entry>-v ).
+    ENDLOOP.
+
   ENDMETHOD.
 
 

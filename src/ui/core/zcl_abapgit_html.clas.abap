@@ -14,6 +14,7 @@ CLASS zcl_abapgit_html DEFINITION
         !iv_initial_chunk  TYPE any OPTIONAL
       RETURNING
         VALUE(ri_instance) TYPE REF TO zif_abapgit_html.
+
     CLASS-METHODS icon
       IMPORTING
         !iv_name      TYPE string
@@ -58,6 +59,7 @@ CLASS zcl_abapgit_html DEFINITION
     CLASS-DATA go_single_tags_re TYPE REF TO cl_abap_regex .
     DATA mt_buffer TYPE string_table .
     CLASS-DATA gv_spaces TYPE string .
+    CLASS-DATA gv_debug_mode TYPE abap_bool .
 
     METHODS indent_line
       CHANGING
@@ -73,7 +75,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_html IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
 
   METHOD checkbox.
@@ -95,6 +97,9 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
 
 
   METHOD class_constructor.
+
+    DATA lv_mode TYPE tabname.
+
     CREATE OBJECT go_single_tags_re
       EXPORTING
         pattern     = '<(AREA|BASE|BR|COL|COMMAND|EMBED|HR|IMG|INPUT|LINK|META|PARAM|SOURCE|!)'
@@ -103,6 +108,9 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
     gv_spaces = repeat(
       val = ` `
       occ = 200 ).
+
+    GET PARAMETER ID 'DBT' FIELD lv_mode.
+    gv_debug_mode = boolc( lv_mode = 'HREF' ).
 
   ENDMETHOD.
 
@@ -294,7 +302,6 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
           lv_act   TYPE string,
           lv_style TYPE string,
           lv_title TYPE string.
-    DATA lv_mode TYPE tabname.
 
     lv_class = iv_class.
 
@@ -348,8 +355,7 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
     ENDIF.
 
     " Debug option to display href-link on hover
-    GET PARAMETER ID 'DBT' FIELD lv_mode.
-    IF lv_mode = 'HREF'.
+    IF gv_debug_mode = abap_true.
       lv_title = | title="{ escape(
         val    = lv_href
         format = cl_abap_format=>e_html_attr ) }"|.
@@ -364,6 +370,8 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
   METHOD zif_abapgit_html~add.
 
     DATA: lv_type TYPE c,
+          li_renderable TYPE REF TO zif_abapgit_gui_renderable,
+          lx_error TYPE REF TO zcx_abapgit_exception,
           lo_html TYPE REF TO zcl_abapgit_html.
 
     FIELD-SYMBOLS: <lt_tab> TYPE string_table.
@@ -381,7 +389,14 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
         TRY.
             lo_html ?= ig_chunk.
           CATCH cx_sy_move_cast_error.
-            ASSERT 1 = 0. " Dev mistake
+            TRY.
+                li_renderable ?= ig_chunk.
+                lo_html ?= li_renderable->render( ).
+              CATCH cx_sy_move_cast_error.
+                ASSERT 1 = 0. " Dev mistake
+              CATCH zcx_abapgit_exception INTO lx_error.
+                lo_html ?= create( |<span class="error">Render error: { lx_error->get_text( ) }</span>| ).
+            ENDTRY.
         ENDTRY.
         APPEND LINES OF lo_html->mt_buffer TO mt_buffer.
       WHEN OTHERS.

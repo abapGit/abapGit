@@ -25,19 +25,23 @@ INTERFACE zif_abapgit_html PUBLIC.
       iv_title TYPE string
     RETURNING
       VALUE(ri_self) TYPE REF TO zif_abapgit_html.
+
   METHODS add
     IMPORTING
       !ig_chunk TYPE any
     RETURNING
       VALUE(ri_self) TYPE REF TO zif_abapgit_html.
+
   METHODS render
     IMPORTING
       !iv_no_indent_jscss TYPE abap_bool OPTIONAL
     RETURNING
       VALUE(rv_html)      TYPE string .
+
   METHODS is_empty
     RETURNING
       VALUE(rv_yes) TYPE abap_bool .
+
   METHODS add_a
     IMPORTING
       !iv_txt   TYPE string
@@ -51,12 +55,14 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_title TYPE string OPTIONAL
     RETURNING
       VALUE(ri_self) TYPE REF TO zif_abapgit_html.
+
   METHODS add_checkbox
     IMPORTING
       iv_id      TYPE string
       iv_checked TYPE abap_bool OPTIONAL
     RETURNING
       VALUE(ri_self) TYPE REF TO zif_abapgit_html.
+
   METHODS a
     IMPORTING
       !iv_txt       TYPE string
@@ -70,6 +76,7 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_title     TYPE string OPTIONAL
     RETURNING
       VALUE(rv_str) TYPE string .
+
   METHODS icon
     IMPORTING
       !iv_name      TYPE string
