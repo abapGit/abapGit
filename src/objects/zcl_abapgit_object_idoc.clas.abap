@@ -23,6 +23,9 @@ CLASS zcl_abapgit_object_idoc DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       IMPORTING iv_fieldname TYPE csequence
       CHANGING  cg_structure TYPE any.
 
+    METHODS is_closed
+      RETURNING
+        VALUE(rv_closed) TYPE abap_bool.
 ENDCLASS.
 
 
@@ -69,6 +72,25 @@ CLASS zcl_abapgit_object_idoc IMPLEMENTATION.
                         iv_language = iv_language ).
 
     mv_idoctyp = ms_item-obj_name.
+
+  ENDMETHOD.
+
+
+  METHOD is_closed.
+
+    DATA ls_idoc TYPE ty_idoc.
+
+    CALL FUNCTION 'IDOCTYPE_READ'
+      EXPORTING
+        pi_idoctyp       = mv_idoctyp
+      IMPORTING
+        pe_attributes    = ls_idoc-attributes
+      EXCEPTIONS
+        object_not_found = 1
+        db_error         = 2
+        no_authority     = 3
+        OTHERS           = 4.
+    rv_closed = boolc( sy-subrc = 0 AND ls_idoc-attributes-closed = abap_true ).
 
   ENDMETHOD.
 
@@ -121,6 +143,8 @@ CLASS zcl_abapgit_object_idoc IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 
     DATA: ls_idoc       TYPE ty_idoc,
+          lv_transport  TYPE trkorr,
+          ls_edbas      TYPE edbas,
           ls_attributes TYPE edi_iapi05.
 
     io_xml->read(
@@ -131,18 +155,89 @@ CLASS zcl_abapgit_object_idoc IMPLEMENTATION.
 
     MOVE-CORRESPONDING ls_idoc-attributes TO ls_attributes.
 
-    CALL FUNCTION 'IDOCTYPE_CREATE'
-      EXPORTING
-        pi_idoctyp    = mv_idoctyp
-        pi_devclass   = iv_package
-        pi_attributes = ls_attributes
-      TABLES
-        pt_syntax     = ls_idoc-t_syntax
-      EXCEPTIONS
-        OTHERS        = 1.
+    IF zif_abapgit_object~exists( ) = abap_false.
+      CALL FUNCTION 'IDOCTYPE_CREATE'
+        EXPORTING
+          pi_idoctyp       = mv_idoctyp
+          pi_devclass      = iv_package
+          pi_attributes    = ls_attributes
+        TABLES
+          pt_syntax        = ls_idoc-t_syntax
+        EXCEPTIONS
+          object_not_found = 1
+          object_exists    = 2
+          syntax_error     = 3
+          segment_error    = 4
+          transport_error  = 5
+          db_error         = 6
+          no_authority     = 7
+          OTHERS           = 8.
+    ELSE.
+      IF is_closed( ) = abap_true.
+        CALL FUNCTION 'IDOCTYPE_UNCLOSE'
+          EXPORTING
+            pi_idoctyp          = mv_idoctyp
+          EXCEPTIONS
+            object_not_found    = 1
+            action_not_possible = 2
+            db_error            = 3
+            no_authority        = 4
+            OTHERS              = 5.
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise_t100( ).
+        ENDIF.
+      ENDIF.
+
+      CALL FUNCTION 'IDOCTYPE_UPDATE'
+        EXPORTING
+          pi_idoctyp       = mv_idoctyp
+          pi_attributes    = ls_attributes
+        TABLES
+          pt_syntax        = ls_idoc-t_syntax
+        EXCEPTIONS
+          object_not_found = 1
+          object_exists    = 2
+          syntax_error     = 3
+          segment_error    = 4
+          transport_error  = 5
+          db_error         = 6
+          no_authority     = 7
+          OTHERS           = 8.
+    ENDIF.
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    IF ls_idoc-attributes-closed = abap_true.
+      IF iv_transport IS NOT INITIAL.
+        lv_transport = iv_transport.
+
+        CALL FUNCTION 'IDOCTYPE_CLOSE'
+          EXPORTING
+            pi_idoctyp          = mv_idoctyp
+          CHANGING
+            pc_order            = lv_transport
+          EXCEPTIONS
+            object_not_found    = 1
+            action_not_possible = 2
+            db_error            = 3
+            no_authority        = 4
+            OTHERS              = 5.
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise_t100( ).
+        ENDIF.
+      ENDIF.
+
+      " IDOCTYPE_CLOSE saves current release but it should be same as in repo
+      SELECT SINGLE * FROM edbas INTO ls_edbas WHERE idoctyp = mv_idoctyp.
+      ls_edbas-released = ls_idoc-attributes-released.
+      ls_edbas-applrel  = ls_idoc-attributes-applrel.
+      ls_edbas-closed   = ls_idoc-attributes-closed.
+      UPDATE edbas FROM ls_edbas.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |Error updating IDOC { mv_idoctyp }| ).
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.
@@ -150,14 +245,13 @@ CLASS zcl_abapgit_object_idoc IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    CALL FUNCTION 'IDOCTYPE_READ'
+    CALL FUNCTION 'IDOCTYPE_EXISTENCE_CHECK'
       EXPORTING
         pi_idoctyp       = mv_idoctyp
       EXCEPTIONS
         object_not_found = 1
         db_error         = 2
-        no_authority     = 3
-        OTHERS           = 4.
+        OTHERS           = 3.
 
     rv_bool = boolc( sy-subrc = 0 ).
 
