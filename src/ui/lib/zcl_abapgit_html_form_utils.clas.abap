@@ -5,14 +5,21 @@ CLASS zcl_abapgit_html_form_utils DEFINITION
 
   PUBLIC SECTION.
 
-    METHODS constructor
-      IMPORTING
-        !io_form TYPE REF TO zcl_abapgit_html_form .
     CLASS-METHODS create
       IMPORTING
         !io_form            TYPE REF TO zcl_abapgit_html_form
       RETURNING
         VALUE(ro_form_util) TYPE REF TO zcl_abapgit_html_form_utils .
+    CLASS-METHODS is_dirty
+      IMPORTING
+        !io_form_data    TYPE REF TO zcl_abapgit_string_map
+        !io_compare_with TYPE REF TO zcl_abapgit_string_map
+      RETURNING
+        VALUE(rv_dirty) TYPE abap_bool .
+
+    METHODS constructor
+      IMPORTING
+        !io_form TYPE REF TO zcl_abapgit_html_form .
     METHODS normalize
       IMPORTING
         !io_form_data       TYPE REF TO zcl_abapgit_string_map
@@ -39,27 +46,24 @@ CLASS zcl_abapgit_html_form_utils DEFINITION
         !io_form_data TYPE REF TO zcl_abapgit_string_map .
     METHODS exit
       IMPORTING
-        !io_form_data   TYPE REF TO zcl_abapgit_string_map
+        !io_form_data            TYPE REF TO zcl_abapgit_string_map
+        !io_check_changes_versus TYPE REF TO zcl_abapgit_string_map OPTIONAL
       RETURNING
-        VALUE(rv_state) TYPE i
+        VALUE(rv_state)          TYPE i
       RAISING
         zcx_abapgit_exception .
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    DATA mo_form TYPE REF TO zcl_abapgit_html_form .
+    DATA mo_form      TYPE REF TO zcl_abapgit_html_form .
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map .
 
-    METHODS is_dirty
-      IMPORTING
-        !io_form_data   TYPE REF TO zcl_abapgit_string_map
-      RETURNING
-        VALUE(rv_dirty) TYPE abap_bool .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_html_form_utils IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_HTML_FORM_UTILS IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -77,8 +81,17 @@ CLASS zcl_abapgit_html_form_utils IMPLEMENTATION.
   METHOD exit.
 
     DATA lv_answer TYPE c LENGTH 1.
+    DATA lo_compare_with LIKE io_check_changes_versus.
 
-    IF is_dirty( io_form_data ) = abap_true.
+    lo_compare_with = io_check_changes_versus.
+    IF lo_compare_with IS NOT BOUND.
+      " TODO: remove this if and make io_check_changes_versus mandatory once all forms are converted
+      lo_compare_with = mo_form_data.
+    ENDIF.
+
+    IF is_dirty(
+      io_form_data    = io_form_data
+      io_compare_with = lo_compare_with ) = abap_true.
       lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
         iv_titlebar       = 'abapGit - Unsaved Changes'
         iv_text_question  = 'There are unsaved changes. Do you want to exit the form?'
@@ -97,7 +110,7 @@ CLASS zcl_abapgit_html_form_utils IMPLEMENTATION.
 
 
   METHOD is_dirty.
-    rv_dirty = boolc( io_form_data->mt_entries <> mo_form_data->mt_entries ).
+    rv_dirty = boolc( io_form_data->mt_entries <> io_compare_with->mt_entries ).
   ENDMETHOD.
 
 
