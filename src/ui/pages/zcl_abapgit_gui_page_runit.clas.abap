@@ -53,7 +53,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
 
 
   METHOD build_tadir.
@@ -238,8 +238,10 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
             lv_text = lv_text && lv_params.
           ENDLOOP.
         ENDLOOP.
-        ri_html->add( |<tr><td><span class="boxed red-filled-set">{ lv_text }</span></td></tr>| ).
-        lv_count = lv_count + 1.
+        IF lv_text NP '*SAUNIT_NO_TEST_CLASS*'.
+          ri_html->add( |<tr><td><span class="boxed red-filled-set">{ lv_text }</span></td></tr>| ).
+          lv_count = lv_count + 1.
+        ENDIF.
       ENDLOOP.
     ENDLOOP.
 
