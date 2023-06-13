@@ -23,7 +23,7 @@ CLASS zcl_abapgit_item_graph DEFINITION
     TYPES:
       BEGIN OF ty_vertex.
         INCLUDE TYPE zif_abapgit_definitions=>ty_item AS item.
-      TYPES:
+    TYPES:
         has_inbound_edge TYPE abap_bool,
       END OF ty_vertex,
       BEGIN OF ty_edge,
@@ -43,7 +43,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ITEM_GRAPH IMPLEMENTATION.
+CLASS zcl_abapgit_item_graph IMPLEMENTATION.
 
 
   METHOD add_edge.
@@ -57,7 +57,7 @@ CLASS ZCL_ABAPGIT_ITEM_GRAPH IMPLEMENTATION.
 
 
   METHOD constructor.
-    MOVE-CORRESPONDING it_items TO mt_vertices.
+    mt_vertices = it_items.
   ENDMETHOD.
 
 
@@ -65,7 +65,7 @@ CLASS ZCL_ABAPGIT_ITEM_GRAPH IMPLEMENTATION.
 * find a vertex with no inbound edges, if it does not exist pick anything
 
     DATA lv_index  TYPE i.
-    FIELD-SYMBOLS: <ls_vertex> TYPE zcl_abapgit_item_graph=>ty_vertex.
+    FIELD-SYMBOLS: <ls_vertex> TYPE ty_vertex.
 
     LOOP AT mt_vertices ASSIGNING <ls_vertex>
                         WHERE has_inbound_edge = abap_false.
