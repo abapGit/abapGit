@@ -140,7 +140,9 @@ INTERFACE zif_abapgit_definitions
       origlang  TYPE tadir-masterlang,
     END OF ty_result .
   TYPES:
-    ty_results_tt TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY .
+    ty_results_tt TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY
+                       WITH NON-UNIQUE SORTED KEY sec_key
+                       COMPONENTS obj_type obj_name.
   TYPES:
     ty_results_ts_path TYPE HASHED TABLE OF ty_result WITH UNIQUE KEY path filename .
   TYPES:
