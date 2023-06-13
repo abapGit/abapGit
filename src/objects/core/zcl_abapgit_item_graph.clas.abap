@@ -20,18 +20,12 @@ CLASS zcl_abapgit_item_graph DEFINITION
       RETURNING
         VALUE(rs_item) TYPE zif_abapgit_definitions=>ty_item .
   PRIVATE SECTION.
-    TYPES:
-      BEGIN OF ty_vertex.
-        INCLUDE TYPE zif_abapgit_definitions=>ty_item AS item.
-    TYPES:
-        has_inbound_edge TYPE abap_bool,
-      END OF ty_vertex,
-      BEGIN OF ty_edge,
-        from TYPE zif_abapgit_definitions=>ty_item,
-        to   TYPE zif_abapgit_definitions=>ty_item,
-      END OF ty_edge.
+    TYPES: BEGIN OF ty_edge,
+             from TYPE zif_abapgit_definitions=>ty_item,
+             to   TYPE zif_abapgit_definitions=>ty_item,
+           END OF ty_edge.
 
-    DATA mt_vertices TYPE STANDARD TABLE OF ty_vertex WITH DEFAULT KEY.
+    DATA mt_vertices TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_item WITH DEFAULT KEY.
     DATA mt_edges TYPE STANDARD TABLE OF ty_edge WITH DEFAULT KEY
                        WITH NON-UNIQUE SORTED KEY sec_key
                        COMPONENTS to.
@@ -64,20 +58,17 @@ CLASS zcl_abapgit_item_graph IMPLEMENTATION.
   METHOD get_next.
 * find a vertex with no inbound edges, if it does not exist pick anything
 
+    DATA ls_vertex LIKE LINE OF mt_vertices.
     DATA lv_index  TYPE i.
-    FIELD-SYMBOLS: <ls_vertex> TYPE ty_vertex.
 
-    LOOP AT mt_vertices ASSIGNING <ls_vertex>
-                        WHERE has_inbound_edge = abap_false.
+    LOOP AT mt_vertices INTO ls_vertex.
       lv_index = sy-tabix.
       READ TABLE mt_edges WITH KEY sec_key COMPONENTS
-        to-obj_type = <ls_vertex>-obj_type
-        to-obj_name = <ls_vertex>-obj_name
+        to-obj_type = ls_vertex-obj_type
+        to-obj_name = ls_vertex-obj_name
         TRANSPORTING NO FIELDS.
-      IF sy-subrc = 0.
-        <ls_vertex>-has_inbound_edge = abap_true.
-      ELSE.
-        rs_item = <ls_vertex>-item.
+      IF sy-subrc <> 0.
+        rs_item = ls_vertex.
         remove_vertex( lv_index ).
         RETURN.
       ENDIF.
