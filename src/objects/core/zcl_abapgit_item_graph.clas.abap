@@ -37,7 +37,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_item_graph IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_ITEM_GRAPH IMPLEMENTATION.
 
 
   METHOD add_edge.
@@ -51,7 +51,7 @@ CLASS zcl_abapgit_item_graph IMPLEMENTATION.
 
 
   METHOD constructor.
-    mt_vertices = it_items.
+    INSERT LINES OF it_items INTO TABLE mt_vertices.
   ENDMETHOD.
 
 
@@ -68,8 +68,8 @@ CLASS zcl_abapgit_item_graph IMPLEMENTATION.
         to-obj_name = ls_vertex-obj_name
         TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
-        rs_item = ls_vertex.
         remove_vertex( lv_index ).
+        rs_item = ls_vertex.
         RETURN.
       ENDIF.
     ENDLOOP.
