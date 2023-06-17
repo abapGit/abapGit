@@ -581,6 +581,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     ELSEIF is_object IS NOT INITIAL.  " Diff for whole object
 
       LOOP AT lt_status ASSIGNING <ls_status>
+          USING KEY sec_key
           WHERE obj_type = is_object-obj_type
           AND obj_name = is_object-obj_name
           AND match IS INITIAL.

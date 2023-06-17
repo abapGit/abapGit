@@ -26,7 +26,9 @@ CLASS zcl_abapgit_item_graph DEFINITION
            END OF ty_edge.
 
     DATA mt_vertices TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_item WITH DEFAULT KEY.
-    DATA mt_edges TYPE STANDARD TABLE OF ty_edge WITH DEFAULT KEY.
+    DATA mt_edges TYPE STANDARD TABLE OF ty_edge WITH DEFAULT KEY
+                       WITH NON-UNIQUE SORTED KEY sec_key
+                       COMPONENTS to.
     DATA mv_warning TYPE abap_bool.
 
     METHODS remove_vertex IMPORTING iv_index TYPE i.
@@ -61,7 +63,7 @@ CLASS ZCL_ABAPGIT_ITEM_GRAPH IMPLEMENTATION.
 
     LOOP AT mt_vertices INTO ls_vertex.
       lv_index = sy-tabix.
-      READ TABLE mt_edges WITH KEY
+      READ TABLE mt_edges WITH KEY sec_key COMPONENTS
         to-obj_type = ls_vertex-obj_type
         to-obj_name = ls_vertex-obj_name
         TRANSPORTING NO FIELDS.
