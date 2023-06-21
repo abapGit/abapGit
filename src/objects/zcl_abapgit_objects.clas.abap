@@ -1292,8 +1292,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
              v4 TYPE symsgv,
            END OF ty_s_message.
 
-    TYPES ty_t_messages TYPE STANDARD TABLE OF ty_s_message.
-
     DATA ls_message TYPE ty_s_message.
 
     FIELD-SYMBOLS: <lt_confirmed_messages> TYPE STANDARD TABLE.
