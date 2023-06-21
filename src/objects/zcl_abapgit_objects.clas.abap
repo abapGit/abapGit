@@ -87,6 +87,12 @@ CLASS zcl_abapgit_objects DEFINITION
         VALUE(rv_active) TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS confirm_transport_message
+      IMPORTING
+        !iv_msgid                   TYPE symsgid
+        !iv_msgno                   TYPE symsgno
+      RETURNING
+        VALUE(rv_message_confirmed) TYPE abap_bool .
   PROTECTED SECTION.
 
   PRIVATE SECTION.
@@ -110,6 +116,7 @@ CLASS zcl_abapgit_objects DEFINITION
     CLASS-DATA gt_obj_serializer_map TYPE ty_obj_serializer_map .
     CLASS-DATA gt_supported_obj_types TYPE ty_supported_types_tt .
     CLASS-DATA gv_supported_obj_types_loaded TYPE abap_bool .
+    CLASS-DATA gv_confirm_trans_msg_possible TYPE zif_abapgit_definitions=>ty_yes_no .
 
     CLASS-METHODS check_duplicates
       IMPORTING
@@ -209,6 +216,7 @@ CLASS zcl_abapgit_objects DEFINITION
         !iv_filename    TYPE string
       RETURNING
         VALUE(rv_extra) TYPE string.
+    CLASS-METHODS confirm_transport_messages .
 ENDCLASS.
 
 
@@ -663,6 +671,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     lo_timer = zcl_abapgit_timer=>create(
       iv_text  = 'Deserialize:'
       iv_count = lines( lt_items ) )->start( ).
+
+    confirm_transport_messages( ).
 
     check_objects_locked( iv_language = io_repo->get_dot_abapgit( )->get_main_language( )
                           it_items    = lt_items ).
@@ -1266,6 +1276,73 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           without_crossreference = abap_true
           with_tcode_index       = abap_true.
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD confirm_transport_message.
+
+    TYPES: BEGIN OF ty_s_message,
+             id TYPE symsgid,
+             ty TYPE symsgty,
+             no TYPE symsgno,
+             v1 TYPE symsgv,
+             v2 TYPE symsgv,
+             v3 TYPE symsgv,
+             v4 TYPE symsgv,
+           END OF ty_s_message.
+
+    TYPES ty_t_messages TYPE STANDARD TABLE OF ty_s_message.
+
+    DATA ls_message TYPE ty_s_message.
+
+    FIELD-SYMBOLS: <lt_confirmed_messages> TYPE ty_t_messages.
+
+    CHECK gv_confirm_trans_msg_possible <> zif_abapgit_definitions=>c_no.
+    " auto-confirmation of transport messages is not possible in this system.
+
+    IF gv_confirm_trans_msg_possible IS INITIAL.
+      " Auto-confirm certain messages (requires SAP Note 1609940)
+      PERFORM dummy IN PROGRAM saplstrd IF FOUND.  "load function group STRD once into memory
+    ENDIF.
+
+    ASSIGN ('(SAPLSTRD)GT_CONFIRMED_MESSAGES') TO <lt_confirmed_messages>.
+
+    IF sy-subrc = 0.
+      gv_confirm_trans_msg_possible = zif_abapgit_definitions=>c_yes.
+    ELSE.
+      gv_confirm_trans_msg_possible = zif_abapgit_definitions=>c_no.
+      RETURN. ">>>>>>>>>>>>>>
+    ENDIF.
+
+    ls_message-id = iv_msgid.
+    ls_message-no = iv_msgno.
+    COLLECT ls_message INTO <lt_confirmed_messages>.
+
+    rv_message_confirmed = abap_true.
+
+  ENDMETHOD.
+
+
+  METHOD confirm_transport_messages.
+
+    CHECK confirm_transport_message( " Object can only be created in package of namespace
+                                     iv_msgid = 'TR'
+                                     iv_msgno = '007' ) = abap_true.
+
+    " no need to confirm others when messages cannot be auto-confirmed (SAP Note 1609940 probably missing)
+
+    confirm_transport_message(: " Original system set to "SAP"
+                                iv_msgid = 'TR'
+                                iv_msgno = '013' ),
+
+                                " Make repairs in foreign namespaces only if they are urgent
+                                iv_msgid = 'TR'
+                                iv_msgno = '852' ),
+
+                                " Make repairs in foreign namespaces only if they are urgent
+                                iv_msgid = 'TK'
+                                iv_msgno = '016' ).
 
   ENDMETHOD.
 ENDCLASS.
