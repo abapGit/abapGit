@@ -1296,10 +1296,12 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     DATA ls_message TYPE ty_s_message.
 
-    FIELD-SYMBOLS: <lt_confirmed_messages> TYPE ty_t_messages.
+    FIELD-SYMBOLS: <lt_confirmed_messages> TYPE STANDARD TABLE.
 
-    CHECK gv_confirm_trans_msg_possible <> zif_abapgit_definitions=>c_no.
-    " auto-confirmation of transport messages is not possible in this system.
+    IF gv_confirm_trans_msg_possible = zif_abapgit_definitions=>c_no.
+      " auto-confirmation of transport messages is not possible in this system.
+      RETURN. ">>>>>>>>>
+    ENDIF.
 
     IF gv_confirm_trans_msg_possible IS INITIAL.
       " Auto-confirm certain messages (requires SAP Note 1609940)
@@ -1326,23 +1328,24 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
   METHOD confirm_transport_messages.
 
-    CHECK confirm_transport_message( " Object can only be created in package of namespace
+    IF confirm_transport_message( " Object can only be created in package of namespace
                                      iv_msgid = 'TR'
-                                     iv_msgno = '007' ) = abap_true.
+                                     iv_msgno = '007' ) = abap_false.
+      " no need to confirm others when messages cannot be auto-confirmed (SAP Note 1609940 probably missing)
+      RETURN. " >>>>>>>>>>>>>>>>>>>>
+    ENDIF.
 
-    " no need to confirm others when messages cannot be auto-confirmed (SAP Note 1609940 probably missing)
+    " Original system set to "SAP"
+    confirm_transport_message( iv_msgid = 'TR'
+                               iv_msgno = '013' ).
 
-    confirm_transport_message(: " Original system set to "SAP"
-                                iv_msgid = 'TR'
-                                iv_msgno = '013' ),
+    " Make repairs in foreign namespaces only if they are urgent
+    confirm_transport_message( iv_msgid = 'TR'
+                               iv_msgno = '852' ).
 
-                                " Make repairs in foreign namespaces only if they are urgent
-                                iv_msgid = 'TR'
-                                iv_msgno = '852' ),
-
-                                " Make repairs in foreign namespaces only if they are urgent
-                                iv_msgid = 'TK'
-                                iv_msgno = '016' ).
+    " Make repairs in foreign namespaces only if they are urgent
+    confirm_transport_message( iv_msgid = 'TK'
+                               iv_msgno = '016' ).
 
   ENDMETHOD.
 ENDCLASS.
