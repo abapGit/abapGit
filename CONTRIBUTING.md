@@ -30,4 +30,4 @@ https://docs.abapgit.org/development-guide/
 
 ## Building/Creating a PR
 
-https://github.com/abapGit/abapGit/edit/main/CONTRIBUTING.md
+https://docs.abapgit.org/development-guide/read-first/contributing.html
