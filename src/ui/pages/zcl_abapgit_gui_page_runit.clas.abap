@@ -53,7 +53,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
 
 
   METHOD build_tadir.
@@ -201,6 +201,8 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
     FIELD-SYMBOLS <ls_class>          TYPE any.
     FIELD-SYMBOLS <ls_method>         TYPE any.
     FIELD-SYMBOLS <lv_any>            TYPE any.
+    FIELD-SYMBOLS <lt_text_info>      TYPE ANY TABLE.
+    FIELD-SYMBOLS <ls_text_info>      TYPE any.
     FIELD-SYMBOLS <lt_params>         TYPE string_table.
 
 
@@ -222,13 +224,24 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
 
     LOOP AT <lt_indices> ASSIGNING <ls_alert_by_index>.
       ASSIGN COMPONENT 'ALERTS' OF STRUCTURE <ls_alert_by_index> TO <lt_alerts>.
-      LOOP AT <lt_alerts> ASSIGNING <ls_alert> WHERE ('KIND = ''F'' OR KIND = ''S'' OR KIND = ''E''').
+      LOOP AT <lt_alerts> ASSIGNING <ls_alert> WHERE ('KIND = ''F'' OR KIND = ''S'' OR KIND = ''E'' OR KIND = ''W''').
+        CLEAR lv_text.
         ASSIGN COMPONENT 'HEADER-PARAMS' OF STRUCTURE <ls_alert> TO <lt_params>.
         LOOP AT <lt_params> INTO lv_params.
-          lv_text = lv_params.
+          lv_text = lv_text && lv_params.
         ENDLOOP.
-        ri_html->add( |<tr><td><span class="boxed red-filled-set">{ lv_text }</span></td></tr>| ).
-        lv_count = lv_count + 1.
+
+        ASSIGN COMPONENT 'TEXT_INFOS' OF STRUCTURE <ls_alert> TO <lt_text_info>.
+        LOOP AT <lt_text_info> ASSIGNING <ls_text_info>.
+          ASSIGN COMPONENT 'PARAMS' OF STRUCTURE <ls_text_info> TO <lt_params>.
+          LOOP AT <lt_params> INTO lv_params.
+            lv_text = lv_text && lv_params.
+          ENDLOOP.
+        ENDLOOP.
+        IF lv_text NP '*SAUNIT_NO_TEST_CLASS*'.
+          ri_html->add( |<tr><td><span class="boxed red-filled-set">{ lv_text }</span></td></tr>| ).
+          lv_count = lv_count + 1.
+        ENDIF.
       ENDLOOP.
     ENDLOOP.
 

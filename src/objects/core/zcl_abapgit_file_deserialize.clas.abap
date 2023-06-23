@@ -87,7 +87,8 @@ CLASS zcl_abapgit_file_deserialize IMPLEMENTATION.
     DELETE rt_results WHERE obj_type IS INITIAL.
     "log objects w/o object type
     IF sy-subrc = 0 AND ii_log IS BOUND.
-      LOOP AT lt_objects REFERENCE INTO lr_object WHERE obj_type IS INITIAL.
+      LOOP AT lt_objects REFERENCE INTO lr_object USING KEY sec_key
+                         WHERE obj_type IS INITIAL.
         CHECK lr_object->obj_name IS NOT INITIAL.
         ls_item-devclass = lr_object->package.
         ls_item-obj_type = lr_object->obj_type.
@@ -255,7 +256,7 @@ CLASS zcl_abapgit_file_deserialize IMPLEMENTATION.
 
     WHILE lo_graph->has_vertices( ) = abap_true.
       ls_item = lo_graph->get_next( ii_log ).
-      READ TABLE it_results INTO ls_result WITH KEY
+      READ TABLE it_results INTO ls_result WITH KEY sec_key COMPONENTS
         obj_name = ls_item-obj_name
         obj_type = ls_item-obj_type.
       ASSERT sy-subrc = 0.

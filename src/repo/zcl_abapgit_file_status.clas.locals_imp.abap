@@ -288,7 +288,8 @@ CLASS lcl_status_consistency_checks IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_result> LIKE LINE OF it_results.
 
-    LOOP AT it_results ASSIGNING <ls_result> WHERE package IS INITIAL AND obj_type = 'DEVC'.
+    LOOP AT it_results ASSIGNING <ls_result> USING KEY sec_key
+                       WHERE package IS INITIAL AND obj_type = 'DEVC'.
 
       IF zcl_abapgit_factory=>get_sap_package( |{ <ls_result>-obj_name }| )->exists( ) = abap_true.
         " If package already exist but is not included in the package hierarchy of
