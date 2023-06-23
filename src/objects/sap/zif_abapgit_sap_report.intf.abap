@@ -6,7 +6,7 @@ INTERFACE zif_abapgit_sap_report
 
   METHODS read_report
     IMPORTING
-      iv_name          TYPE programm
+      iv_name          TYPE syrepid
       iv_state         TYPE r3state OPTIONAL
       is_item          TYPE zif_abapgit_definitions=>ty_item OPTIONAL
     RETURNING
@@ -16,7 +16,7 @@ INTERFACE zif_abapgit_sap_report
 
   METHODS insert_report
     IMPORTING
-      iv_name           TYPE programm
+      iv_name           TYPE syrepid
       it_source         TYPE STANDARD TABLE
       iv_state          TYPE r3state OPTIONAL
       iv_program_type   TYPE c OPTIONAL
@@ -29,7 +29,7 @@ INTERFACE zif_abapgit_sap_report
 
   METHODS update_report
     IMPORTING
-      iv_name           TYPE programm
+      iv_name           TYPE syrepid
       it_source         TYPE STANDARD TABLE
       iv_state          TYPE r3state OPTIONAL
       iv_program_type   TYPE c OPTIONAL
@@ -44,7 +44,7 @@ INTERFACE zif_abapgit_sap_report
 
   METHODS delete_report
     IMPORTING
-      iv_name        TYPE programm
+      iv_name        TYPE syrepid
       iv_raise_error TYPE abap_bool DEFAULT abap_false
       iv_version     TYPE ty_abap_language_version OPTIONAL
       is_item        TYPE zif_abapgit_definitions=>ty_item OPTIONAL
