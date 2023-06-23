@@ -15,10 +15,7 @@ CLASS zcl_abapgit_objects DEFINITION
     CLASS-METHODS serialize
       IMPORTING
         !is_item                 TYPE zif_abapgit_definitions=>ty_item
-        !iv_language             TYPE spras
-        !iv_main_language_only   TYPE abap_bool DEFAULT abap_false
-        !it_translation_langs    TYPE zif_abapgit_definitions=>ty_languages OPTIONAL
-        !iv_use_lxe              TYPE abap_bool DEFAULT abap_false
+        !io_i18n_params          TYPE REF TO zcl_abapgit_i18n_params
       RETURNING
         VALUE(rs_files_and_item) TYPE ty_serialization
       RAISING
@@ -1141,8 +1138,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     DATA: li_obj         TYPE REF TO zif_abapgit_object,
           lx_error       TYPE REF TO zcx_abapgit_exception,
           li_xml         TYPE REF TO zif_abapgit_xml_output,
-          lo_files       TYPE REF TO zcl_abapgit_objects_files,
-          ls_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params.
+          lo_files       TYPE REF TO zcl_abapgit_objects_files.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF rs_files_and_item-files.
 
@@ -1159,19 +1155,14 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         is_item = rs_files_and_item-item.
 
     li_obj = create_object( is_item     = rs_files_and_item-item
-                            iv_language = iv_language ).
+                            iv_language = io_i18n_params->ms_params-main_language ).
 
     li_obj->mo_files = lo_files.
 
     CREATE OBJECT li_xml TYPE zcl_abapgit_xml_output.
 
-    ls_i18n_params-main_language         = iv_language.
-    ls_i18n_params-main_language_only    = iv_main_language_only.
-    ls_i18n_params-translation_languages = it_translation_langs.
-    ls_i18n_params-use_lxe               = iv_use_lxe.
-
-    li_xml->i18n_params( ls_i18n_params ).
-    lo_files->i18n_params( ls_i18n_params ).
+    li_xml->i18n_params( io_i18n_params->ms_params ).
+    lo_files->i18n_params( io_i18n_params->ms_params ).
 
     TRY.
         li_obj->serialize( li_xml ).
