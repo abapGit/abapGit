@@ -41,7 +41,7 @@ CLASS zcl_abapgit_oo_class DEFINITION
         !io_scanner TYPE REF TO cl_oo_source_scanner_class .
     CLASS-METHODS update_report
       IMPORTING
-        !iv_program       TYPE programm
+        !iv_program       TYPE syrepid
         !it_source        TYPE string_table
         !iv_package       TYPE devclass
       RETURNING
@@ -65,7 +65,7 @@ CLASS zcl_abapgit_oo_class DEFINITION
         !iv_name          TYPE seoclsname
         !iv_method        TYPE seocpdname
       RETURNING
-        VALUE(rv_program) TYPE programm
+        VALUE(rv_program) TYPE syrepid
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS init_scanner
@@ -86,7 +86,7 @@ CLASS zcl_abapgit_oo_class DEFINITION
         zcx_abapgit_exception.
     CLASS-METHODS create_report
       IMPORTING
-        !iv_program      TYPE programm
+        !iv_program      TYPE syrepid
         !it_source       TYPE string_table
         !iv_extension    TYPE ty_char2
         !iv_program_type TYPE ty_char1
@@ -100,7 +100,7 @@ CLASS zcl_abapgit_oo_class DEFINITION
         !iv_number_of_impl_methods TYPE i .
     CLASS-METHODS delete_report
       IMPORTING
-        !iv_program TYPE programm
+        !iv_program TYPE syrepid
       RAISING
         zcx_abapgit_exception.
     CLASS-METHODS get_method_includes
@@ -789,7 +789,7 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
   METHOD zif_abapgit_oo_object_fnc~generate_locals.
 
-    DATA: lv_program TYPE programm.
+    DATA: lv_program TYPE syrepid.
 
     IF lines( it_local_definitions ) > 0.
       lv_program = cl_oo_classname_service=>get_ccdef_name( is_key-clsname ).

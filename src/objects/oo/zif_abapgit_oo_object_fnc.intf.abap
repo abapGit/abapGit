@@ -9,7 +9,7 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
     END OF c_parts.
 
   TYPES: BEGIN OF ty_includes,
-           programm TYPE programm,
+           programm TYPE syrepid,
          END OF ty_includes,
          ty_includes_tt TYPE STANDARD TABLE OF ty_includes WITH DEFAULT KEY.
 

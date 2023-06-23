@@ -132,7 +132,7 @@ CLASS zcl_abapgit_oo_serializer IMPLEMENTATION.
   METHOD read_include.
 
     DATA: ls_include TYPE progstruc.
-    DATA lv_program TYPE programm.
+    DATA lv_program TYPE syrepid.
     DATA lt_source TYPE abaptxt255_tab.
 
     ASSERT iv_type = seop_ext_class_locals_def

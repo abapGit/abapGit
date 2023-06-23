@@ -216,7 +216,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: lv_program_name TYPE programm,
+    DATA: lv_program_name TYPE syrepid,
           ls_progdir      TYPE ty_progdir,
           lt_tpool        TYPE textpool_table,
           lt_dynpros      TYPE ty_dynpro_tt,

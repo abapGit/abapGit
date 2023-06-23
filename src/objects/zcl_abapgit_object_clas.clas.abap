@@ -779,8 +779,8 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     DATA: lt_reposrc  TYPE STANDARD TABLE OF ty_reposrc,
           ls_reposrc  LIKE LINE OF lt_reposrc,
-          lv_include  TYPE programm,
-          lt_includes TYPE STANDARD TABLE OF programm.
+          lv_include  TYPE syrepid,
+          lt_includes TYPE STANDARD TABLE OF syrepid.
 
     CASE iv_extra.
       WHEN zif_abapgit_oo_object_fnc=>c_parts-locals_def.

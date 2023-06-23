@@ -93,7 +93,7 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
 
     DATA: lt_includes TYPE enhnewmeth_tabincl_plus_enha,
           lt_source   TYPE TABLE OF abaptxt255,
-          lv_include  TYPE programm.
+          lv_include  TYPE syrepid.
 
     FIELD-SYMBOLS: <ls_include> LIKE LINE OF lt_includes.
 

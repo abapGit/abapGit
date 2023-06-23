@@ -22,7 +22,7 @@ CLASS zcl_abapgit_oo_interface DEFINITION
 
     CLASS-METHODS update_report
       IMPORTING
-        !iv_program       TYPE programm
+        !iv_program       TYPE syrepid
         !it_source        TYPE string_table
         !iv_package       TYPE devclass
       RETURNING

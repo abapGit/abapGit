@@ -441,7 +441,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
   METHOD zif_abapgit_object~changed_by.
     TYPES: BEGIN OF ty_includes,
-             programm TYPE programm,
+             programm TYPE syrepid,
            END OF ty_includes.
 
     TYPES: BEGIN OF ty_reposrc,
