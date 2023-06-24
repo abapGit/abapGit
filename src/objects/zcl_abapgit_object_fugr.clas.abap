@@ -75,19 +75,20 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       IMPORTING
         !it_functions TYPE ty_function_tt
         !ii_log       TYPE REF TO zif_abapgit_log
+        !iv_package   TYPE devclass
         !iv_transport TYPE trkorr
       RAISING
         zcx_abapgit_exception .
     METHODS serialize_function_docs
       IMPORTING
-        !iv_prog_name TYPE programm
+        !iv_prog_name TYPE syrepid
         !it_functions TYPE ty_function_tt
         !ii_xml       TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize_function_docs
       IMPORTING
-        !iv_prog_name TYPE programm
+        !iv_prog_name TYPE syrepid
         !it_functions TYPE ty_function_tt
         !ii_xml       TYPE REF TO zif_abapgit_xml_input
       RAISING
@@ -142,13 +143,13 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         !iv_short_text TYPE tftit-stext .
     METHODS serialize_texts
       IMPORTING
-        !iv_prog_name TYPE programm
+        !iv_prog_name TYPE syrepid
         !ii_xml       TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize_texts
       IMPORTING
-        !iv_prog_name TYPE programm
+        !iv_prog_name TYPE syrepid
         !ii_xml       TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception .
@@ -318,7 +319,11 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         CONTINUE.  "with next function module
       ENDIF.
 
-      INSERT REPORT lv_include FROM lt_source.
+      zcl_abapgit_factory=>get_sap_report( )->insert_report(
+        iv_name    = lv_include
+        iv_package = iv_package
+        it_source  = lt_source ).
+
       ii_log->add_success( iv_msg = |Function module { <ls_func>-funcname } imported|
                            is_item = ms_item ).
     ENDLOOP.
@@ -1196,7 +1201,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: lv_program_name TYPE programm,
+    DATA: lv_program_name TYPE syrepid,
           lt_functions    TYPE ty_function_tt,
           lt_dynpros      TYPE ty_dynpro_tt,
           ls_cua          TYPE ty_cua.
@@ -1212,6 +1217,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     deserialize_functions(
       it_functions = lt_functions
       ii_log       = ii_log
+      iv_package   = iv_package
       iv_transport = iv_transport ).
 
     deserialize_includes(
@@ -1362,7 +1368,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
     DATA: lt_functions    TYPE ty_function_tt,
           ls_progdir      TYPE ty_progdir,
-          lv_program_name TYPE programm,
+          lv_program_name TYPE syrepid,
           lt_dynpros      TYPE ty_dynpro_tt,
           ls_cua          TYPE ty_cua.
 

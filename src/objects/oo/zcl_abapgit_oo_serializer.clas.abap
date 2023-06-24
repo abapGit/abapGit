@@ -76,7 +76,9 @@ CLASS zcl_abapgit_oo_serializer DEFINITION
         !is_clskey       TYPE seoclskey
         !iv_type         TYPE seop_include_ext_app
       RETURNING
-        VALUE(rt_source) TYPE seop_source_string .
+        VALUE(rt_source) TYPE seop_source_string
+      RAISING
+        zcx_abapgit_exception.
     METHODS reduce
       CHANGING
         !ct_source TYPE zif_abapgit_definitions=>ty_string_tt .
@@ -130,7 +132,8 @@ CLASS zcl_abapgit_oo_serializer IMPLEMENTATION.
   METHOD read_include.
 
     DATA: ls_include TYPE progstruc.
-
+    DATA lv_program TYPE syrepid.
+    DATA lt_source TYPE abaptxt255_tab.
 
     ASSERT iv_type = seop_ext_class_locals_def
       OR iv_type = seop_ext_class_locals_imp
@@ -145,7 +148,9 @@ CLASS zcl_abapgit_oo_serializer IMPLEMENTATION.
 * it looks like there is an issue in function module SEO_CLASS_GET_INCLUDE_SOURCE
 * on 750 kernels, where the READ REPORT without STATE addition does not
 * return the active version, this method is a workaround for this issue
-    READ REPORT ls_include INTO rt_source STATE 'A'.
+    lv_program = ls_include.
+    lt_source = zcl_abapgit_factory=>get_sap_report( )->read_report( lv_program ).
+    rt_source = lt_source.
 
   ENDMETHOD.
 
