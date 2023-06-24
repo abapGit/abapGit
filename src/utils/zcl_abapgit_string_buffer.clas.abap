@@ -30,17 +30,12 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_string_buffer IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_STRING_BUFFER IMPLEMENTATION.
 
 
   METHOD add.
     APPEND iv_str TO mt_buffer.
     ro_me = me.
-  ENDMETHOD.
-
-
-  METHOD create.
-    CREATE OBJECT ro_instance.
   ENDMETHOD.
 
 
