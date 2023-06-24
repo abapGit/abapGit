@@ -591,7 +591,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
           ls_item    TYPE zif_abapgit_definitions=>ty_item,
           lv_msg     TYPE string,
           lv_error   TYPE c LENGTH 1,
-          lv_include TYPE programm.
+          lv_include TYPE syrepid.
 
     LOOP AT gt_classes INTO ls_class.
       CASE ls_class-object.

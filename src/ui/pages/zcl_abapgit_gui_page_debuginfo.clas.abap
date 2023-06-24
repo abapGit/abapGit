@@ -20,7 +20,7 @@ CLASS zcl_abapgit_gui_page_debuginfo DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CONSTANTS c_exit_standalone TYPE c LENGTH 30 VALUE 'ZABAPGIT_USER_EXIT' ##NO_TEXT.
+    CONSTANTS c_exit_standalone TYPE syrepid VALUE 'ZABAPGIT_USER_EXIT' ##NO_TEXT.
     CONSTANTS c_exit_class TYPE c LENGTH 30 VALUE 'ZCL_ABAPGIT_USER_EXIT' ##NO_TEXT.
     CONSTANTS c_exit_interface TYPE c LENGTH 30 VALUE 'ZIF_ABAPGIT_EXIT' ##NO_TEXT.
     CONSTANTS:
@@ -68,7 +68,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
 
 
   METHOD build_toolbar.
@@ -198,7 +198,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
 
     IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true.
       " Standalone version
-      READ REPORT c_exit_standalone INTO lt_source.
+      lt_source = zcl_abapgit_factory=>get_sap_report( )->read_report( c_exit_standalone ).
       IF sy-subrc = 0.
         ri_html->add( |<div>User exits are active (include { get_jump_object(
           iv_obj_type = 'PROG'

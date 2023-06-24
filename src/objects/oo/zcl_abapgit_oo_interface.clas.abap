@@ -22,8 +22,9 @@ CLASS zcl_abapgit_oo_interface DEFINITION
 
     CLASS-METHODS update_report
       IMPORTING
-        !iv_program       TYPE programm
+        !iv_program       TYPE syrepid
         !it_source        TYPE string_table
+        !iv_package       TYPE devclass
       RETURNING
         VALUE(rv_updated) TYPE abap_bool
       RAISING
@@ -142,22 +143,10 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
 
 
   METHOD update_report.
-
-    DATA: lt_old TYPE string_table.
-
-    READ REPORT iv_program INTO lt_old.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Fatal error. Include { iv_program } should have been created previously!| ).
-    ENDIF.
-
-    IF lt_old <> it_source.
-      INSERT REPORT iv_program FROM it_source.
-      ASSERT sy-subrc = 0.
-      rv_updated = abap_true.
-    ELSE.
-      rv_updated = abap_false.
-    ENDIF.
-
+    rv_updated = zcl_abapgit_factory=>get_sap_report( )->update_report(
+      iv_name    = iv_program
+      iv_package = iv_package
+      it_source  = it_source ).
   ENDMETHOD.
 
 
@@ -275,6 +264,7 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
     IF lt_public IS NOT INITIAL.
       lv_program = cl_oo_classname_service=>get_intfsec_name( is_key-clsname ).
       lv_updated = update_report( iv_program = lv_program
+                                  iv_package = iv_package
                                   it_source  = lt_public ).
       IF lv_updated = abap_true.
         update_meta( iv_name   = is_key-clsname

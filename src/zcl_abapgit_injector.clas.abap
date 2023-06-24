@@ -36,6 +36,9 @@ CLASS zcl_abapgit_injector DEFINITION
     CLASS-METHODS set_sap_namespace
       IMPORTING
         !ii_namespace TYPE REF TO zif_abapgit_sap_namespace .
+    CLASS-METHODS set_sap_report
+      IMPORTING
+        !ii_report TYPE REF TO zif_abapgit_sap_report.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -43,7 +46,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_INJECTOR IMPLEMENTATION.
+CLASS zcl_abapgit_injector IMPLEMENTATION.
 
 
   METHOD set_code_inspector.
@@ -119,6 +122,11 @@ CLASS ZCL_ABAPGIT_INJECTOR IMPLEMENTATION.
 
     <ls_sap_package>-instance = ii_sap_package.
 
+  ENDMETHOD.
+
+
+  METHOD set_sap_report.
+    zcl_abapgit_factory=>gi_sap_report = ii_report.
   ENDMETHOD.
 
 
