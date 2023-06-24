@@ -47,7 +47,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
 
 
   METHOD clear_fields.
@@ -446,15 +446,14 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
       TABLES
         description      = lt_titles.
 
-    IF io_xml->i18n_params( )-main_language_only = abap_true
-      OR io_xml->i18n_params( )-translation_languages IS NOT INITIAL AND io_xml->i18n_params( )-use_lxe = abap_true.
+    IF mo_i18n_params->ms_params-main_language_only = abap_true OR mo_i18n_params->is_lxe_applicable( ) = abap_true.
       lv_all_languages = abap_false.
       DELETE lt_titles WHERE spras <> mv_language.
     ELSE.
       lv_all_languages = abap_true.
       zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
         EXPORTING
-          it_iso_filter = io_xml->i18n_params( )-translation_languages
+          it_iso_filter = mo_i18n_params->ms_params-translation_languages
           iv_lang_field_name = 'SPRAS'
           iv_keep_master_lang = mv_language
         CHANGING
@@ -485,7 +484,7 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
 
     zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
       EXPORTING
-        it_iso_filter = io_xml->i18n_params( )-translation_languages
+        it_iso_filter = mo_i18n_params->ms_params-translation_languages
         iv_lang_field_name = 'SPRAS'
         iv_keep_master_lang = mv_language
       CHANGING
@@ -502,7 +501,7 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
     io_xml->add( iv_name = 'TREE_TEXTS'
                  ig_data = lt_texts ).
 
-    IF io_xml->i18n_params( )-translation_languages IS NOT INITIAL AND io_xml->i18n_params( )-use_lxe = abap_true.
+    IF mo_i18n_params->is_lxe_applicable( ) = abap_true.
       serialize_lxe_texts( io_xml ).
     ENDIF.
 

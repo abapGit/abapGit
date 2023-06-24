@@ -41,7 +41,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_prog IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
 
 
   METHOD deserialize_texts.
@@ -116,18 +116,14 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
 
-    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+    IF mo_i18n_params->ms_params-main_language_only = abap_true.
       RETURN.
     ENDIF.
 
     " Table d010tinf stores info. on languages in which program is maintained
     " Select all active translations of program texts
     " Skip main language - it was already serialized
-    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
-
-    zcl_abapgit_lxe_texts=>add_iso_langs_to_lang_filter(
-      EXPORTING it_iso_filter      = ii_xml->i18n_params( )-translation_languages
-      CHANGING  ct_language_filter = lt_language_filter ).
+    lt_language_filter = mo_i18n_params->build_language_filter( ).
 
     SELECT DISTINCT language
       INTO CORRESPONDING FIELDS OF TABLE lt_tpool_i18n
@@ -352,7 +348,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
                        io_files = zif_abapgit_object~mo_files ).
 
     " Texts serializing (translations)
-    IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
+    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       serialize_texts( io_xml ).
     ELSE.
       serialize_lxe_texts( io_xml ).

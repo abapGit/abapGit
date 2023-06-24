@@ -13,7 +13,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_para IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
 
 
   METHOD unlock.
@@ -244,7 +244,7 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
     " Here only the original language is serialized,
     " so it should be present for the moment. LXEs are just translations
 
-    IF io_xml->i18n_params( )-translation_languages IS NOT INITIAL AND io_xml->i18n_params( )-use_lxe = abap_true.
+    IF mo_i18n_params->is_lxe_applicable( ) = abap_true.
       serialize_lxe_texts( io_xml ).
     ENDIF.
 

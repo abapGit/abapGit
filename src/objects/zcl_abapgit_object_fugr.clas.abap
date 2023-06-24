@@ -162,7 +162,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
 
   METHOD check_rfc_parameters.
@@ -928,6 +928,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     zcl_abapgit_factory=>get_longtexts( )->serialize(
       iv_longtext_id = c_longtext_id_prog
       iv_object_name = iv_prog_name
+      io_i18n_params = mo_i18n_params
       ii_xml         = ii_xml ).
 
     LOOP AT it_functions ASSIGNING <ls_func>.
@@ -935,11 +936,13 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         iv_longtext_name = |LONGTEXTS_{ <ls_func>-funcname }|
         iv_longtext_id   = c_longtext_id_func
         iv_object_name   = <ls_func>-funcname
+        io_i18n_params   = mo_i18n_params
         ii_xml           = ii_xml ).
       zcl_abapgit_factory=>get_longtexts( )->serialize(
         iv_longtext_name = |LONGTEXTS_{ <ls_func>-funcname }___EXC|
         iv_longtext_id   = c_longtext_id_func_exc
         iv_object_name   = <ls_func>-funcname
+        io_i18n_params   = mo_i18n_params
         ii_xml           = ii_xml ).
     ENDLOOP.
 
@@ -974,7 +977,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
 
-    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+    IF mo_i18n_params->ms_params-main_language_only = abap_true.
       RETURN.
     ENDIF.
 
@@ -990,7 +993,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
     zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
       EXPORTING
-        it_iso_filter = ii_xml->i18n_params( )-translation_languages
+        it_iso_filter = mo_i18n_params->ms_params-translation_languages
         iv_lang_field_name = 'LANGUAGE'
       CHANGING
         ct_tab = lt_tpool_i18n ).
@@ -1388,7 +1391,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     lv_program_name = main_name( ).
     ls_progdir = read_progdir( lv_program_name ).
 
-    IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
+    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       serialize_texts(
         iv_prog_name = lv_program_name
         ii_xml       = io_xml ).

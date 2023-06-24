@@ -99,11 +99,6 @@ CLASS zcl_abapgit_objects_files DEFINITION
         VALUE(rt_i18n_files) TYPE zif_abapgit_i18n_file=>ty_table_of
       RAISING
         zcx_abapgit_exception .
-    METHODS i18n_params
-      IMPORTING
-        !is_i18n_params       TYPE zif_abapgit_definitions=>ty_i18n_params OPTIONAL
-      RETURNING
-        VALUE(rs_i18n_params) TYPE zif_abapgit_definitions=>ty_i18n_params .
 
   PROTECTED SECTION.
 
@@ -121,7 +116,6 @@ CLASS zcl_abapgit_objects_files DEFINITION
     DATA mt_accessed_files TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt .
     DATA mt_files TYPE zif_abapgit_git_definitions=>ty_files_tt .
     DATA mv_path TYPE string .
-    DATA ms_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params.
 
     METHODS mark_accessed
       IMPORTING
@@ -132,7 +126,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_files IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
 
   METHOD add.
@@ -292,48 +286,6 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD read_i18n_files.
-
-    DATA lv_lang TYPE laiso.
-    DATA lv_ext TYPE string.
-    DATA lo_po TYPE REF TO zcl_abapgit_po_file.
-    FIELD-SYMBOLS <ls_file> LIKE LINE OF mt_files.
-
-    LOOP AT mt_files ASSIGNING <ls_file>.
-
-      " TODO: Maybe this should be in zcl_abapgit_filename_logic
-      FIND FIRST OCCURRENCE OF REGEX 'i18n\.([^.]{2})\.([^.]+)$' IN <ls_file>-filename SUBMATCHES lv_lang lv_ext.
-      CHECK sy-subrc = 0.
-
-      CASE lv_ext.
-        WHEN 'po'.
-          CREATE OBJECT lo_po EXPORTING iv_lang = lv_lang.
-          lo_po->parse( <ls_file>-data ).
-          APPEND lo_po TO rt_i18n_files.
-        WHEN OTHERS.
-          CONTINUE. " Unsupported i18n file type
-      ENDCASE.
-
-      mark_accessed(
-        iv_path = <ls_file>-path
-        iv_file = <ls_file>-filename ).
-
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD i18n_params.
-
-    IF is_i18n_params IS SUPPLIED.
-      ms_i18n_params = is_i18n_params.
-    ENDIF.
-
-    rs_i18n_params = ms_i18n_params.
-
-  ENDMETHOD.
-
-
   METHOD is_json_metadata.
 
     DATA lv_pattern TYPE string.
@@ -420,6 +372,37 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
       iv_file = <ls_file>-filename ).
 
     rv_data = <ls_file>-data.
+
+  ENDMETHOD.
+
+
+  METHOD read_i18n_files.
+
+    DATA lv_lang TYPE laiso.
+    DATA lv_ext TYPE string.
+    DATA lo_po TYPE REF TO zcl_abapgit_po_file.
+    FIELD-SYMBOLS <ls_file> LIKE LINE OF mt_files.
+
+    LOOP AT mt_files ASSIGNING <ls_file>.
+
+      " TODO: Maybe this should be in zcl_abapgit_filename_logic
+      FIND FIRST OCCURRENCE OF REGEX 'i18n\.([^.]{2})\.([^.]+)$' IN <ls_file>-filename SUBMATCHES lv_lang lv_ext.
+      CHECK sy-subrc = 0.
+
+      CASE lv_ext.
+        WHEN 'po'.
+          CREATE OBJECT lo_po EXPORTING iv_lang = lv_lang.
+          lo_po->parse( <ls_file>-data ).
+          APPEND lo_po TO rt_i18n_files.
+        WHEN OTHERS.
+          CONTINUE. " Unsupported i18n file type
+      ENDCASE.
+
+      mark_accessed(
+        iv_path = <ls_file>-path
+        iv_file = <ls_file>-filename ).
+
+    ENDLOOP.
 
   ENDMETHOD.
 

@@ -62,7 +62,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_doma IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
 
 
   METHOD adjust_exit.
@@ -224,18 +224,14 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
                    <ls_dd01_text> LIKE LINE OF lt_dd01_texts,
                    <ls_dd07_text> LIKE LINE OF lt_dd07_texts.
 
-    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+    IF mo_i18n_params->ms_params-main_language_only = abap_true.
       RETURN.
     ENDIF.
 
     lv_name = ms_item-obj_name.
 
     " Collect additional languages, skip main lang - it was serialized already
-    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
-
-    zcl_abapgit_lxe_texts=>add_iso_langs_to_lang_filter(
-      EXPORTING it_iso_filter      = ii_xml->i18n_params( )-translation_languages
-      CHANGING  ct_language_filter = lt_language_filter ).
+    lt_language_filter = mo_i18n_params->build_language_filter( ).
 
     SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
       FROM dd01v
@@ -533,7 +529,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
     io_xml->add( iv_name = 'DD07V_TAB'
                  ig_data = lt_dd07v ).
 
-    IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
+    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       serialize_texts(
         ii_xml   = io_xml
         it_dd07v = lt_dd07v ).

@@ -163,7 +163,7 @@ CLASS zcl_abapgit_objects DEFINITION
     CLASS-METHODS create_object
       IMPORTING
         !is_item        TYPE zif_abapgit_definitions=>ty_item
-        !iv_language    TYPE spras
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params
         !is_metadata    TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
         !iv_native_only TYPE abap_bool DEFAULT abap_false
       RETURNING
@@ -210,7 +210,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -223,8 +223,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDIF.
 
     TRY.
-        li_obj = create_object( is_item     = is_item
-                                iv_language = zif_abapgit_definitions=>c_english ).
+        li_obj = create_object(
+          is_item        = is_item
+          io_i18n_params = zcl_abapgit_i18n_params=>new_english( ) ).
 
         rv_user = li_obj->changed_by( get_extra_from_filename( iv_filename ) ).
       CATCH zcx_abapgit_exception ##NO_HANDLER.
@@ -333,8 +334,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         CONTINUE.
       ENDIF.
 
-      li_obj = create_object( is_item     = <ls_item>
-                              iv_language = iv_language ).
+      li_obj = create_object(
+        is_item        = <ls_item>
+        io_i18n_params = zcl_abapgit_i18n_params=>new( iv_main_language = iv_language ) ).
 
       IF li_obj->is_locked( ) = abap_true.
         zcx_abapgit_exception=>raise( |Object { <ls_item>-obj_type } { <ls_item>-obj_name } |
@@ -432,6 +434,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     DATA: lv_message            TYPE string,
           lv_class_name         TYPE string,
           ls_obj_serializer_map LIKE LINE OF gt_obj_serializer_map.
+    DATA lo_obj_base TYPE REF TO zcl_abapgit_objects_super.
 
 
     READ TABLE gt_obj_serializer_map
@@ -462,7 +465,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         CREATE OBJECT ri_obj TYPE (lv_class_name)
           EXPORTING
             is_item     = is_item
-            iv_language = iv_language.
+            iv_language = io_i18n_params->ms_params-main_language.
       CATCH cx_sy_create_object_error.
         lv_message = |Object type { is_item-obj_type } is not supported by this system|.
         IF iv_native_only = abap_false.
@@ -477,6 +480,11 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           zcx_abapgit_exception=>raise( lv_message ).
         ENDIF.
     ENDTRY.
+
+    IF ri_obj IS BOUND.
+      lo_obj_base ?= ri_obj.
+      lo_obj_base->mo_i18n_params = io_i18n_params.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -592,8 +600,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    li_obj = create_object( is_item     = is_item
-                            iv_language = zif_abapgit_definitions=>c_english ).
+    li_obj = create_object(
+      is_item        = is_item
+      io_i18n_params = zcl_abapgit_i18n_params=>new_english( ) ).
 
     li_obj->delete( iv_package   = iv_package
                     iv_transport = iv_transport ).
@@ -727,16 +736,17 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
             "analyze XML in order to instantiate the proper serializer
             lo_xml = lo_files->read_xml( ).
             lo_xml->i18n_params( ls_i18n_params ).
-            lo_files->i18n_params( ls_i18n_params ).
             ls_metadata = lo_xml->get_metadata( ).
           ELSE.
             " there's no XML and metadata for JSON format
             CLEAR: lo_xml, ls_metadata.
           ENDIF.
 
-          li_obj = create_object( is_item     = ls_item
-                                  iv_language = io_repo->get_dot_abapgit( )->get_main_language( )
-                                  is_metadata = ls_metadata ).
+          li_obj = create_object(
+            is_item        = ls_item
+            is_metadata    = ls_metadata
+            io_i18n_params =
+              zcl_abapgit_i18n_params=>new( iv_main_language = io_repo->get_dot_abapgit( )->get_main_language( ) ) ).
 
           compare_remote_to_local(
             ii_object = li_obj
@@ -934,8 +944,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDIF.
 
     TRY.
-        li_obj = create_object( is_item     = is_item
-                                iv_language = zif_abapgit_definitions=>c_english ).
+        li_obj = create_object(
+          is_item        = is_item
+          io_i18n_params = zcl_abapgit_i18n_params=>new_english( ) ).
 
         rv_bool = li_obj->exists( ).
       CATCH zcx_abapgit_exception.
@@ -1000,8 +1011,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDIF.
 
     TRY.
-        li_obj = create_object( is_item     = is_item
-                                iv_language = zif_abapgit_definitions=>c_english ).
+        li_obj = create_object(
+          is_item        = is_item
+          io_i18n_params = zcl_abapgit_i18n_params=>new_english( ) ).
 
         rv_active = li_obj->is_active( ).
       CATCH cx_sy_dyn_call_illegal_method
@@ -1017,9 +1029,10 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
   METHOD is_supported.
 
     TRY.
-        create_object( is_item        = is_item
-                       iv_language    = zif_abapgit_definitions=>c_english
-                       iv_native_only = iv_native_only ).
+        create_object(
+          is_item        = is_item
+          iv_native_only = iv_native_only
+          io_i18n_params = zcl_abapgit_i18n_params=>new_english( ) ).
         rv_bool = abap_true.
       CATCH zcx_abapgit_exception.
         rv_bool = abap_false.
@@ -1074,8 +1087,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDIF.
 
     " Nothing to do if object does not exist
-    li_obj = create_object( is_item     = is_item
-                            iv_language = zif_abapgit_definitions=>c_english ).
+    li_obj = create_object(
+      is_item        = is_item
+      io_i18n_params = zcl_abapgit_i18n_params=>new_english( ) ).
 
     IF li_obj->exists( ) = abap_false.
       zcx_abapgit_exception=>raise( |Object { is_item-obj_type } { is_item-obj_name } doesn't exist| ).
@@ -1150,19 +1164,16 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         rs_files_and_item-item-obj_name }| ).
     ENDIF.
 
-    CREATE OBJECT lo_files
-      EXPORTING
-        is_item = rs_files_and_item-item.
+    li_obj = create_object(
+      is_item        = rs_files_and_item-item
+      io_i18n_params = io_i18n_params ).
 
-    li_obj = create_object( is_item     = rs_files_and_item-item
-                            iv_language = io_i18n_params->ms_params-main_language ).
-
+    CREATE OBJECT lo_files EXPORTING is_item = rs_files_and_item-item.
     li_obj->mo_files = lo_files.
 
     CREATE OBJECT li_xml TYPE zcl_abapgit_xml_output.
 
     li_xml->i18n_params( io_i18n_params->ms_params ).
-    lo_files->i18n_params( io_i18n_params->ms_params ).
 
     TRY.
         li_obj->serialize( li_xml ).

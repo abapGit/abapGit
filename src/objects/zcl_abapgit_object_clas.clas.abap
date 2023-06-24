@@ -135,7 +135,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_clas IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -460,7 +460,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
           lv_language        TYPE spras,
           lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
-    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+    IF mo_i18n_params->ms_params-main_language_only = abap_true.
       lv_language = mv_language.
     ENDIF.
 
@@ -472,7 +472,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       RETURN.
     ENDIF.
     " Remove technical languages
-    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
+    lt_language_filter = mo_i18n_params->build_language_filter( ).
     DELETE lt_descriptions WHERE NOT langu IN lt_language_filter.
 
     ii_xml->add( iv_name = 'DESCRIPTIONS'
@@ -487,7 +487,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
           lv_language        TYPE spras,
           lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
-    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+    IF mo_i18n_params->ms_params-main_language_only = abap_true.
       lv_language = mv_language.
     ENDIF.
 
@@ -499,7 +499,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       RETURN.
     ENDIF.
     " Remove technical languages
-    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
+    lt_language_filter = mo_i18n_params->build_language_filter( ).
     DELETE lt_descriptions WHERE NOT langu IN lt_language_filter.
 
     ii_xml->add( iv_name = 'DESCRIPTIONS_SUB'
@@ -527,7 +527,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
                    ig_data = lt_lines ).
     ENDIF.
 
-    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+    IF mo_i18n_params->ms_params-main_language_only = abap_true.
       RETURN.
     ENDIF.
 
@@ -578,6 +578,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
   METHOD serialize_sotr.
     mi_object_oriented_object_fct->read_sotr(
       iv_object_name = ms_item-obj_name
+      io_i18n_params = mo_i18n_params
       ii_xml         = ii_xml ).
   ENDMETHOD.
 
@@ -609,7 +610,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     DATA lt_tpool_main LIKE SORTED TABLE OF <ls_tpool> WITH UNIQUE KEY id key.
 
-    IF ii_xml->i18n_params( )-main_language_only = abap_true OR lines( it_tpool_main ) = 0.
+    IF mo_i18n_params->ms_params-main_language_only = abap_true OR lines( it_tpool_main ) = 0.
       RETURN.
     ENDIF.
 
@@ -685,11 +686,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     " Table d010tinf stores info. on languages in which program is maintained
     " Select all active translations of program texts
     " Skip main language - it was already serialized
-    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
-
-    zcl_abapgit_lxe_texts=>add_iso_langs_to_lang_filter(
-      EXPORTING it_iso_filter      = ii_xml->i18n_params( )-translation_languages
-      CHANGING  ct_language_filter = lt_language_filter ).
+    lt_language_filter = mo_i18n_params->build_language_filter( ).
 
     SELECT DISTINCT language
       INTO TABLE lt_langu_additional
@@ -706,7 +703,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       ii_xml     = ii_xml
       iv_clsname = ls_clskey-clsname ).
 
-    IF ii_xml->i18n_params( )-translation_languages IS INITIAL OR ii_xml->i18n_params( )-use_lxe = abap_false.
+    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       serialize_tpool_i18n(
         ii_xml              = ii_xml
         it_langu_additional = lt_langu_additional

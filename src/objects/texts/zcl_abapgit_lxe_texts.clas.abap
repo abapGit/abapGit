@@ -58,13 +58,6 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
         ct_tab              TYPE STANDARD TABLE
       RAISING
         zcx_abapgit_exception.
-    CLASS-METHODS add_iso_langs_to_lang_filter
-      IMPORTING
-        it_iso_filter      TYPE zif_abapgit_definitions=>ty_languages
-      CHANGING
-        ct_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter
-      RAISING
-        zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -158,38 +151,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
-
-
-  METHOD add_iso_langs_to_lang_filter.
-
-    DATA lv_laiso LIKE LINE OF it_iso_filter.
-    DATA lv_langu TYPE sy-langu.
-    DATA ls_range LIKE LINE OF ct_language_filter.
-
-    ls_range-sign = 'I'.
-    ls_range-option = 'EQ'.
-
-    LOOP AT it_iso_filter INTO lv_laiso.
-
-      cl_i18n_languages=>sap2_to_sap1(
-        EXPORTING
-          im_lang_sap2  = lv_laiso
-        RECEIVING
-          re_lang_sap1  = lv_langu
-        EXCEPTIONS
-          no_assignment = 1
-          OTHERS        = 2 ).
-      IF sy-subrc <> 0.
-        CONTINUE.
-      ENDIF.
-
-      ls_range-low = lv_langu.
-      APPEND ls_range TO ct_language_filter.
-
-    ENDLOOP.
-
-  ENDMETHOD.
+CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
 
 
   METHOD check_langs_versus_installed.

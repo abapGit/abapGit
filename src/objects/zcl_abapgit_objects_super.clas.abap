@@ -1,7 +1,8 @@
 CLASS zcl_abapgit_objects_super DEFINITION
   PUBLIC
   ABSTRACT
-  CREATE PUBLIC .
+  CREATE PUBLIC
+  GLOBAL FRIENDS zcl_abapgit_objects .
 
   PUBLIC SECTION.
 
@@ -14,6 +15,7 @@ CLASS zcl_abapgit_objects_super DEFINITION
   PROTECTED SECTION.
 
     DATA ms_item TYPE zif_abapgit_definitions=>ty_item .
+    DATA mo_i18n_params TYPE REF TO zcl_abapgit_i18n_params .
     DATA mv_language TYPE spras .
 
     METHODS get_metadata
@@ -105,7 +107,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_super IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -254,7 +256,7 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
     zcl_abapgit_factory=>get_lxe_texts( )->deserialize_from_po(
       iv_object_type = ms_item-obj_type
       iv_object_name = ms_item-obj_name
-      is_i18n_params = ii_files->i18n_params( )
+      is_i18n_params = mo_i18n_params->ms_params
       it_po_files    = lt_po_files ).
 
   ENDMETHOD.
@@ -316,6 +318,7 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
         iv_longtext_name = iv_longtext_name
         iv_longtext_id   = iv_longtext_id
         it_dokil         = it_dokil
+        io_i18n_params   = mo_i18n_params
         ii_xml           = ii_xml  ).
 
   ENDMETHOD.
@@ -325,9 +328,7 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
     FIELD-SYMBOLS <lo_files> LIKE zif_abapgit_object=>mo_files.
 
-    IF ii_xml->i18n_params( )-main_language_only = abap_true OR
-       ii_xml->i18n_params( )-use_lxe = abap_false OR
-       ii_xml->i18n_params( )-translation_languages IS INITIAL.
+    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       RETURN.
     ENDIF.
 
@@ -349,16 +350,14 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
     DATA lt_po_files TYPE zif_abapgit_i18n_file=>ty_table_of.
     FIELD-SYMBOLS <li_file> LIKE LINE OF lt_po_files.
 
-    IF ii_files->i18n_params( )-main_language_only = abap_true OR
-       ii_files->i18n_params( )-use_lxe = abap_false OR
-       ii_files->i18n_params( )-translation_languages IS INITIAL.
+    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       RETURN.
     ENDIF.
 
     lt_po_files = zcl_abapgit_factory=>get_lxe_texts( )->serialize_as_po(
       iv_object_type = ms_item-obj_type
       iv_object_name = ms_item-obj_name
-      is_i18n_params = ii_files->i18n_params( ) ).
+      is_i18n_params = mo_i18n_params->ms_params ).
 
     LOOP AT lt_po_files ASSIGNING <li_file>.
       ii_files->add_i18n_file( <li_file> ).

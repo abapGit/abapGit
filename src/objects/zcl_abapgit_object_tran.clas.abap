@@ -106,7 +106,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_tran IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
 
 
   METHOD add_data.
@@ -402,7 +402,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
     DATA lt_tpool_i18n TYPE TABLE OF tstct.
 
-    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+    IF mo_i18n_params->ms_params-main_language_only = abap_true.
       RETURN.
     ENDIF.
 
@@ -416,7 +416,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
     zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
       EXPORTING
-        it_iso_filter = ii_xml->i18n_params( )-translation_languages
+        it_iso_filter = mo_i18n_params->ms_params-translation_languages
         iv_lang_field_name = 'SPRSL'
       CHANGING
         ct_tab = lt_tpool_i18n ).
@@ -923,7 +923,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
     io_xml->add( iv_name = 'AUTHORIZATIONS'
                  ig_data = lt_tstca ).
 
-    IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
+    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       serialize_texts( io_xml ).
     ELSE.
       serialize_lxe_texts( io_xml ).

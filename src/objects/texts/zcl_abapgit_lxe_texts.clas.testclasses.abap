@@ -4,7 +4,6 @@ CLASS ltcl_lxe_texts DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
     METHODS:
       filter_sap_langs FOR TESTING RAISING zcx_abapgit_exception,
       filter_sap_langs_tab FOR TESTING RAISING zcx_abapgit_exception,
-      apply_iso_langs_to_lang_filter FOR TESTING RAISING zcx_abapgit_exception,
       check_langs_versus_installed FOR TESTING RAISING zcx_abapgit_exception,
       lang_string_to_table FOR TESTING,
       table_to_lang_string FOR TESTING.
@@ -250,41 +249,6 @@ CLASS ltcl_lxe_texts IMPLEMENTATION.
         iv_lang_field_name = 'SPRAS'
       CHANGING
         ct_tab = lt_act ).
-
-    cl_abap_unit_assert=>assert_equals(
-      act = lt_act
-      exp = lt_exp ).
-
-  ENDMETHOD.
-
-  METHOD apply_iso_langs_to_lang_filter.
-
-    DATA lt_filter TYPE zif_abapgit_definitions=>ty_languages.
-    DATA lt_act TYPE zif_abapgit_environment=>ty_system_language_filter.
-    DATA lt_exp TYPE zif_abapgit_environment=>ty_system_language_filter.
-    DATA ls_range LIKE LINE OF lt_act.
-
-    APPEND 'EN' TO lt_filter.
-    APPEND 'DE' TO lt_filter.
-
-    ls_range-sign   = 'E'.
-    ls_range-option = 'EQ'.
-    ls_range-low    = '!'.
-    APPEND ls_range TO lt_act.
-    APPEND ls_range TO lt_exp.
-
-    ls_range-sign   = 'I'.
-    ls_range-option = 'EQ'.
-    ls_range-low    = 'E'.
-    APPEND ls_range TO lt_exp.
-    ls_range-low    = 'D'.
-    APPEND ls_range TO lt_exp.
-
-    zcl_abapgit_lxe_texts=>add_iso_langs_to_lang_filter(
-      EXPORTING
-        it_iso_filter = lt_filter
-      CHANGING
-        ct_language_filter = lt_act ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lt_act
