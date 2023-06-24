@@ -1170,7 +1170,6 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     li_obj->mo_files = lo_files. " TODO move into create_object
 
     CREATE OBJECT li_xml TYPE zcl_abapgit_xml_output.
-    li_xml->i18n_params( io_i18n_params->ms_params ).
 
     rs_files_and_item-item = is_item.
 
