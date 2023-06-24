@@ -81,19 +81,9 @@ CLASS zcl_abapgit_objects_super DEFINITION
         VALUE(iv_no_ask_delete_append) TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception .
-    METHODS serialize_lxe_texts
-      IMPORTING
-        !ii_xml TYPE REF TO zif_abapgit_xml_output
-      RAISING
-        zcx_abapgit_exception .
     METHODS deserialize_lxe_texts
       IMPORTING
         !ii_xml TYPE REF TO zif_abapgit_xml_input
-      RAISING
-        zcx_abapgit_exception .
-    METHODS serialize_lxe_texts_as_po
-      IMPORTING
-        !ii_files TYPE REF TO zcl_abapgit_objects_files
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize_lxe_texts_from_po
@@ -320,48 +310,6 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
         it_dokil         = it_dokil
         io_i18n_params   = mo_i18n_params
         ii_xml           = ii_xml  ).
-
-  ENDMETHOD.
-
-
-  METHOD serialize_lxe_texts.
-
-    FIELD-SYMBOLS <lo_files> LIKE zif_abapgit_object=>mo_files.
-
-    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
-      RETURN.
-    ENDIF.
-
-*    zcl_abapgit_factory=>get_lxe_texts( )->serialize(
-*      iv_object_type = ms_item-obj_type
-*      iv_object_name = ms_item-obj_name
-*      ii_xml         = ii_xml ).
-
-    ASSIGN me->('ZIF_ABAPGIT_OBJECT~MO_FILES') TO <lo_files>. " TODO, refactor
-    IF sy-subrc = 0.
-      serialize_lxe_texts_as_po( <lo_files> ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD serialize_lxe_texts_as_po.
-
-    DATA lt_po_files TYPE zif_abapgit_i18n_file=>ty_table_of.
-    FIELD-SYMBOLS <li_file> LIKE LINE OF lt_po_files.
-
-    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
-      RETURN.
-    ENDIF.
-
-    lt_po_files = zcl_abapgit_factory=>get_lxe_texts( )->serialize_as_po(
-      iv_object_type = ms_item-obj_type
-      iv_object_name = ms_item-obj_name
-      is_i18n_params = mo_i18n_params->ms_params ).
-
-    LOOP AT lt_po_files ASSIGNING <li_file>.
-      ii_files->add_i18n_file( <li_file> ).
-    ENDLOOP.
 
   ENDMETHOD.
 

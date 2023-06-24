@@ -533,8 +533,6 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
       serialize_texts(
         ii_xml   = io_xml
         it_dd07v = lt_dd07v ).
-    ELSE.
-      serialize_lxe_texts( io_xml ).
     ENDIF.
 
     serialize_longtexts( ii_xml         = io_xml

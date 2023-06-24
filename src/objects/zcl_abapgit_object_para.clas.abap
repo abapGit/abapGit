@@ -244,9 +244,5 @@ CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
     " Here only the original language is serialized,
     " so it should be present for the moment. LXEs are just translations
 
-    IF mo_i18n_params->is_lxe_applicable( ) = abap_true.
-      serialize_lxe_texts( io_xml ).
-    ENDIF.
-
   ENDMETHOD.
 ENDCLASS.

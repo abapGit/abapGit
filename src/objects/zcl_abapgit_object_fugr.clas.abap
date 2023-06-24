@@ -1395,8 +1395,6 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
       serialize_texts(
         iv_prog_name = lv_program_name
         ii_xml       = io_xml ).
-    ELSE.
-      serialize_lxe_texts( io_xml ).
     ENDIF.
 
     IF ls_progdir-subc = 'F'.

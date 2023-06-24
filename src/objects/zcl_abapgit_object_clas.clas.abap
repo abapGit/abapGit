@@ -709,8 +709,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
         it_langu_additional = lt_langu_additional
         it_tpool_main       = lt_tpool
         iv_clsname          = ls_clskey-clsname ).
-    ELSE.
-      serialize_lxe_texts( ii_xml ).
     ENDIF.
 
     IF ls_vseoclass-category = seoc_category_exception.

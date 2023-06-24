@@ -7,6 +7,7 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
 
     INTERFACES zif_abapgit_lxe_texts .
 
+    CLASS-METHODS class_constructor.
     CLASS-METHODS get_translation_languages
       IMPORTING
         !iv_main_language   TYPE spras
@@ -78,6 +79,26 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
       ty_lxe_translations TYPE STANDARD TABLE OF ty_lxe_translation WITH DEFAULT KEY .
 
     CLASS-DATA gt_installed_languages_cache TYPE zif_abapgit_definitions=>ty_languages.
+    CLASS-DATA gt_supported_obj_types TYPE STANDARD TABLE OF tadir-object.
+
+    DATA mo_i18n_params TYPE REF TO zcl_abapgit_i18n_params.
+    DATA mi_xml         TYPE REF TO zif_abapgit_xml_output.
+    DATA mo_files       TYPE REF TO zcl_abapgit_objects_files.
+
+    METHODS serialize_xml
+      IMPORTING
+        !iv_lxe_text_name TYPE string DEFAULT 'LXE_TEXTS'
+        !iv_object_type   TYPE tadir-object
+        !iv_object_name   TYPE tadir-obj_name
+      RAISING
+        zcx_abapgit_exception .
+
+    METHODS serialize_as_po
+      IMPORTING
+        !iv_object_type   TYPE tadir-object
+        !iv_object_name   TYPE tadir-obj_name
+      RAISING
+        zcx_abapgit_exception .
 
     METHODS get_lang_iso4
       IMPORTING
@@ -118,8 +139,6 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
       IMPORTING
         iv_object_type       TYPE tadir-object
         iv_object_name       TYPE tadir-obj_name
-        iv_main_language     TYPE zif_abapgit_definitions=>ty_i18n_params-main_language
-        it_languages         TYPE zif_abapgit_definitions=>ty_i18n_params-translation_languages
       RETURNING
         VALUE(rt_text_items) TYPE ty_lxe_translations
       RAISING
@@ -170,6 +189,23 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
         APPEND <lv_lang> TO et_missfits.
       ENDIF.
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD class_constructor.
+
+    APPEND 'CLAS' TO gt_supported_obj_types.
+    APPEND 'DOMA' TO gt_supported_obj_types.
+    APPEND 'DTEL' TO gt_supported_obj_types.
+    APPEND 'FUGR' TO gt_supported_obj_types.
+    APPEND 'MSAG' TO gt_supported_obj_types.
+    APPEND 'PARA' TO gt_supported_obj_types.
+    APPEND 'PROG' TO gt_supported_obj_types.
+    APPEND 'SHI3' TO gt_supported_obj_types.
+    APPEND 'TABL' TO gt_supported_obj_types.
+    APPEND 'TRAN' TO gt_supported_obj_types.
+    APPEND 'VIEW' TO gt_supported_obj_types.
 
   ENDMETHOD.
 
@@ -435,7 +471,7 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
       ls_lxe_text_item LIKE LINE OF rt_text_items.
 
     FIELD-SYMBOLS:
-      <lv_language>   LIKE LINE OF it_languages,
+      <lv_language>   LIKE LINE OF mo_i18n_params->ms_params-translation_languages,
       <lv_lxe_object> LIKE LINE OF lt_obj_list.
 
     lt_obj_list = get_lxe_object_list(
@@ -447,7 +483,7 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
     ENDIF.
 
     " Get list of languages that need to be serialized (already resolves * and installed languages)
-    lv_main_lang = get_lang_iso4( langu_to_laiso_safe( iv_main_language ) ).
+    lv_main_lang = get_lang_iso4( langu_to_laiso_safe( mo_i18n_params->ms_params-main_language ) ).
 
     LOOP AT lt_obj_list ASSIGNING <lv_lxe_object>.
       CLEAR ls_lxe_text_item.
@@ -455,7 +491,7 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
       ls_lxe_text_item-objtype = <lv_lxe_object>-objtype.
       ls_lxe_text_item-objname = <lv_lxe_object>-objname.
 
-      LOOP AT it_languages ASSIGNING <lv_language>.
+      LOOP AT mo_i18n_params->ms_params-translation_languages ASSIGNING <lv_language>.
         ls_lxe_text_item-source_lang = lv_main_lang.
         ls_lxe_text_item-target_lang = get_lang_iso4( <lv_language> ).
         IF ls_lxe_text_item-source_lang = ls_lxe_text_item-target_lang.
@@ -474,6 +510,53 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
         ENDIF.
       ENDLOOP.
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD serialize_as_po.
+
+    DATA lt_lxe_texts TYPE ty_lxe_translations.
+    DATA lo_po_file TYPE REF TO zcl_abapgit_po_file.
+    DATA lv_lang LIKE LINE OF mo_i18n_params->ms_params-translation_languages.
+    FIELD-SYMBOLS <ls_translation> LIKE LINE OF lt_lxe_texts.
+
+    lt_lxe_texts = read_text_items(
+      iv_object_name   = iv_object_name
+      iv_object_type   = iv_object_type ).
+
+    LOOP AT mo_i18n_params->ms_params-translation_languages INTO lv_lang.
+      lv_lang = to_lower( lv_lang ).
+      CREATE OBJECT lo_po_file
+        EXPORTING
+          iv_lang = lv_lang.
+      LOOP AT lt_lxe_texts ASSIGNING <ls_translation>.
+        IF iso4_to_iso2( <ls_translation>-target_lang ) = lv_lang.
+          lo_po_file->push_text_pairs(
+            iv_objtype    = <ls_translation>-objtype
+            iv_objname    = <ls_translation>-objname
+            it_text_pairs = <ls_translation>-text_pairs ).
+        ENDIF.
+      ENDLOOP.
+      mo_files->add_i18n_file( lo_po_file ).
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD serialize_xml.
+
+    DATA lt_lxe_texts TYPE ty_lxe_translations.
+
+    lt_lxe_texts = read_text_items(
+      iv_object_name   = iv_object_name
+      iv_object_type   = iv_object_type ).
+
+    IF lines( lt_lxe_texts ) > 0.
+      mi_xml->add(
+        iv_name = iv_lxe_text_name
+        ig_data = lt_lxe_texts ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -696,51 +779,17 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
 
   METHOD zif_abapgit_lxe_texts~serialize.
 
-    DATA lt_lxe_texts TYPE ty_lxe_translations.
 
-    lt_lxe_texts = read_text_items(
-      iv_object_name   = iv_object_name
-      iv_object_type   = iv_object_type
-      iv_main_language = ii_xml->i18n_params( )-main_language
-      it_languages     = ii_xml->i18n_params( )-translation_languages ).
-
-    IF lines( lt_lxe_texts ) > 0.
-      ii_xml->add(
-        iv_name = iv_lxe_text_name
-        ig_data = lt_lxe_texts ).
+    READ TABLE gt_supported_obj_types TRANSPORTING NO FIELDS WITH KEY table_line = iv_object_type.
+    IF sy-subrc <> 0.
+      RETURN.
     ENDIF.
 
-  ENDMETHOD.
+    mo_i18n_params = io_i18n_params.
+    mi_xml         = ii_xml.
+    mo_files       = io_files.
 
-
-  METHOD zif_abapgit_lxe_texts~serialize_as_po.
-
-    DATA lt_lxe_texts TYPE ty_lxe_translations.
-    DATA lo_po_file TYPE REF TO zcl_abapgit_po_file.
-    DATA lv_lang LIKE LINE OF is_i18n_params-translation_languages.
-    FIELD-SYMBOLS <ls_translation> LIKE LINE OF lt_lxe_texts.
-
-    lt_lxe_texts = read_text_items(
-      iv_object_name   = iv_object_name
-      iv_object_type   = iv_object_type
-      iv_main_language = is_i18n_params-main_language
-      it_languages     = is_i18n_params-translation_languages ).
-
-    LOOP AT is_i18n_params-translation_languages INTO lv_lang.
-      lv_lang = to_lower( lv_lang ).
-      CREATE OBJECT lo_po_file
-        EXPORTING
-          iv_lang = lv_lang.
-      LOOP AT lt_lxe_texts ASSIGNING <ls_translation>.
-        IF iso4_to_iso2( <ls_translation>-target_lang ) = lv_lang.
-          lo_po_file->push_text_pairs(
-            iv_objtype    = <ls_translation>-objtype
-            iv_objname    = <ls_translation>-objname
-            it_text_pairs = <ls_translation>-text_pairs ).
-        ENDIF.
-      ENDLOOP.
-      APPEND lo_po_file TO rt_po_files.
-    ENDLOOP.
+    " TODO
 
   ENDMETHOD.
 ENDCLASS.

@@ -1154,26 +1154,25 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           li_xml         TYPE REF TO zif_abapgit_xml_output,
           lo_files       TYPE REF TO zcl_abapgit_objects_files.
 
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF rs_files_and_item-files.
+    FIELD-SYMBOLS <ls_file> LIKE LINE OF rs_files_and_item-files.
 
-    rs_files_and_item-item = is_item.
-
-    IF is_type_supported( rs_files_and_item-item-obj_type ) = abap_false.
+    IF is_type_supported( is_item-obj_type ) = abap_false.
       zcx_abapgit_exception=>raise( |Object type ignored, not supported: {
-        rs_files_and_item-item-obj_type }-{
-        rs_files_and_item-item-obj_name }| ).
+        is_item-obj_type }-{
+        is_item-obj_name }| ).
     ENDIF.
 
     li_obj = create_object(
-      is_item        = rs_files_and_item-item
+      is_item        = is_item
       io_i18n_params = io_i18n_params ).
 
-    CREATE OBJECT lo_files EXPORTING is_item = rs_files_and_item-item.
-    li_obj->mo_files = lo_files.
+    CREATE OBJECT lo_files EXPORTING is_item = is_item.
+    li_obj->mo_files = lo_files. " TODO move into create_object
 
     CREATE OBJECT li_xml TYPE zcl_abapgit_xml_output.
-
     li_xml->i18n_params( io_i18n_params->ms_params ).
+
+    rs_files_and_item-item = is_item.
 
     TRY.
         li_obj->serialize( li_xml ).
@@ -1182,9 +1181,19 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         RAISE EXCEPTION lx_error.
     ENDTRY.
 
+    IF io_i18n_params->is_lxe_applicable( ) = abap_true.
+      zcl_abapgit_factory=>get_lxe_texts( )->serialize(
+        iv_object_type = is_item-obj_type
+        iv_object_name = is_item-obj_name
+        io_i18n_params = io_i18n_params
+        io_files       = lo_files
+        ii_xml         = li_xml ).
+    ENDIF.
+
     IF lo_files->is_json_metadata( ) = abap_false.
-      lo_files->add_xml( ii_xml      = li_xml
-                         is_metadata = li_obj->get_metadata( ) ).
+      lo_files->add_xml(
+        ii_xml      = li_xml
+        is_metadata = li_obj->get_metadata( ) ).
     ENDIF.
 
     rs_files_and_item-files = lo_files->get_files( ).

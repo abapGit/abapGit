@@ -501,9 +501,5 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
     io_xml->add( iv_name = 'TREE_TEXTS'
                  ig_data = lt_texts ).
 
-    IF mo_i18n_params->is_lxe_applicable( ) = abap_true.
-      serialize_lxe_texts( io_xml ).
-    ENDIF.
-
   ENDMETHOD.
 ENDCLASS.
