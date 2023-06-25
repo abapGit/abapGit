@@ -12,26 +12,40 @@ CLASS zcl_abapgit_i18n_params DEFINITION
         VALUE(ro_instance) TYPE REF TO zcl_abapgit_i18n_params .
     CLASS-METHODS new
       IMPORTING
-        !iv_main_language TYPE spras OPTIONAL
+        !iv_main_language      TYPE spras DEFAULT zif_abapgit_definitions=>c_english
         !iv_main_language_only TYPE abap_bool DEFAULT abap_false
-        !it_translation_langs TYPE zif_abapgit_definitions=>ty_languages OPTIONAL
-        !iv_use_lxe TYPE abap_bool DEFAULT abap_false
-        !is_params TYPE zif_abapgit_definitions=>ty_i18n_params OPTIONAL
+        !it_translation_langs  TYPE zif_abapgit_definitions=>ty_languages OPTIONAL
+        !iv_use_lxe            TYPE abap_bool DEFAULT abap_false
+        !is_params             TYPE zif_abapgit_definitions=>ty_i18n_params OPTIONAL
       RETURNING
         VALUE(ro_instance) TYPE REF TO zcl_abapgit_i18n_params .
     METHODS constructor
       IMPORTING
-        !iv_main_language TYPE spras OPTIONAL
+        !iv_main_language      TYPE spras DEFAULT zif_abapgit_definitions=>c_english
         !iv_main_language_only TYPE abap_bool DEFAULT abap_false
-        !it_translation_langs TYPE zif_abapgit_definitions=>ty_languages OPTIONAL
-        !iv_use_lxe TYPE abap_bool DEFAULT abap_false
-        !is_params TYPE zif_abapgit_definitions=>ty_i18n_params OPTIONAL .
+        !it_translation_langs  TYPE zif_abapgit_definitions=>ty_languages OPTIONAL
+        !iv_use_lxe            TYPE abap_bool DEFAULT abap_false
+        !is_params             TYPE zif_abapgit_definitions=>ty_i18n_params OPTIONAL .
+
     METHODS is_lxe_applicable
       RETURNING
         VALUE(rv_yes) TYPE abap_bool .
     METHODS build_language_filter
       RETURNING
         VALUE(rt_language_filter) TYPE zif_abapgit_environment=>ty_system_language_filter .
+    METHODS trim_saplang_list
+      CHANGING
+        ct_sap_langs  TYPE zif_abapgit_definitions=>ty_sap_langu_tab
+      RAISING
+        zcx_abapgit_exception.
+    METHODS trim_saplang_keyed_table
+      IMPORTING
+        iv_lang_field_name  TYPE abap_compname
+        iv_keep_master_lang TYPE abap_bool DEFAULT abap_false  "sy-langu OPTIONAL
+      CHANGING
+        ct_tab              TYPE STANDARD TABLE
+      RAISING
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -131,5 +145,85 @@ CLASS ZCL_ABAPGIT_I18N_PARAMS IMPLEMENTATION.
     CREATE OBJECT ro_instance
       EXPORTING
         iv_main_language = zif_abapgit_definitions=>c_english.
+  ENDMETHOD.
+
+
+  METHOD trim_saplang_keyed_table.
+
+    DATA lv_laiso TYPE laiso.
+    DATA lv_index TYPE i.
+
+    FIELD-SYMBOLS <ls_i> TYPE any.
+    FIELD-SYMBOLS <lv_langu> TYPE sy-langu.
+
+    IF ms_params-translation_languages IS INITIAL OR iv_lang_field_name IS INITIAL.
+      RETURN. " Nothing to filter
+    ENDIF.
+
+    LOOP AT ct_tab ASSIGNING <ls_i>.
+      lv_index = sy-tabix.
+      ASSIGN COMPONENT iv_lang_field_name OF STRUCTURE <ls_i> TO <lv_langu>.
+      ASSERT sy-subrc = 0.
+
+      IF iv_keep_master_lang = abap_true AND <lv_langu> = ms_params-main_language.
+        CONTINUE. " Just keep it
+      ENDIF.
+
+      cl_i18n_languages=>sap1_to_sap2(
+        EXPORTING
+          im_lang_sap1  = <lv_langu>
+        RECEIVING
+          re_lang_sap2  = lv_laiso
+        EXCEPTIONS
+          no_assignment = 1
+          OTHERS        = 2 ).
+      IF sy-subrc <> 0.
+        DELETE ct_tab INDEX lv_index. " Not in the list anyway ...
+        CONTINUE.
+      ENDIF.
+
+      " Not a sorted table, but presumably the list is small, so no significant performance flow
+      READ TABLE ms_params-translation_languages TRANSPORTING NO FIELDS WITH KEY table_line = lv_laiso.
+      IF sy-subrc <> 0.
+        DELETE ct_tab INDEX lv_index.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD trim_saplang_list.
+
+    DATA lv_langu TYPE sy-langu.
+    DATA lv_laiso TYPE laiso.
+    DATA lv_index TYPE i.
+
+    IF ms_params-translation_languages IS INITIAL.
+      RETURN. " Nothing to filter
+    ENDIF.
+
+    LOOP AT ct_sap_langs INTO lv_langu.
+      lv_index = sy-tabix.
+
+      cl_i18n_languages=>sap1_to_sap2(
+        EXPORTING
+          im_lang_sap1  = lv_langu
+        RECEIVING
+          re_lang_sap2  = lv_laiso
+        EXCEPTIONS
+          no_assignment = 1
+          OTHERS        = 2 ).
+      IF sy-subrc <> 0.
+        DELETE ct_sap_langs INDEX lv_index. " Not in the list anyway ...
+        CONTINUE.
+      ENDIF.
+
+      " Not a sorted table, but presumably the list is small, so no significant performance flow
+      READ TABLE ms_params-translation_languages TRANSPORTING NO FIELDS WITH KEY table_line = lv_laiso.
+      IF sy-subrc <> 0.
+        DELETE ct_sap_langs INDEX lv_index.
+      ENDIF.
+    ENDLOOP.
+
   ENDMETHOD.
 ENDCLASS.

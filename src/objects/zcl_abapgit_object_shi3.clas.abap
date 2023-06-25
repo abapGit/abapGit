@@ -275,18 +275,16 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'TREE_TEXTS'
                   CHANGING  cg_data = lt_texts ).
 
-    zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
+    mo_i18n_params->trim_saplang_keyed_table(
       EXPORTING
-        it_iso_filter = io_xml->i18n_params( )-translation_languages
         iv_lang_field_name = 'SPRAS'
-        iv_keep_master_lang = io_xml->i18n_params( )-main_language
+        iv_keep_master_lang = abap_true
       CHANGING
         ct_tab = lt_titles ).
-    zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
+    mo_i18n_params->trim_saplang_keyed_table(
       EXPORTING
-        it_iso_filter = io_xml->i18n_params( )-translation_languages
         iv_lang_field_name = 'SPRAS'
-        iv_keep_master_lang = io_xml->i18n_params( )-main_language
+        iv_keep_master_lang = abap_true
       CHANGING
         ct_tab = lt_texts ).
 
@@ -447,11 +445,10 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
       DELETE lt_titles WHERE spras <> mv_language.
     ELSE.
       lv_all_languages = abap_true.
-      zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
-        EXPORTING
-          it_iso_filter = mo_i18n_params->ms_params-translation_languages
+    mo_i18n_params->trim_saplang_keyed_table(
+      EXPORTING
           iv_lang_field_name = 'SPRAS'
-          iv_keep_master_lang = mv_language
+          iv_keep_master_lang = abap_true
         CHANGING
           ct_tab = lt_titles ).
     ENDIF.
@@ -478,11 +475,10 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
     SORT lt_texts BY spras.
     DELETE ADJACENT DUPLICATES FROM lt_texts COMPARING spras node_id.
 
-    zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
+    mo_i18n_params->trim_saplang_keyed_table(
       EXPORTING
-        it_iso_filter = mo_i18n_params->ms_params-translation_languages
         iv_lang_field_name = 'SPRAS'
-        iv_keep_master_lang = mv_language
+        iv_keep_master_lang = abap_true
       CHANGING
         ct_tab = lt_texts ).
 

@@ -43,22 +43,6 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
         VALUE(rt_unsupported_languages) TYPE zif_abapgit_definitions=>ty_languages
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS trim_saplangu_by_iso
-      IMPORTING
-        it_iso_filter TYPE zif_abapgit_definitions=>ty_languages
-      CHANGING
-        ct_sap_langs  TYPE zif_abapgit_definitions=>ty_sap_langu_tab
-      RAISING
-        zcx_abapgit_exception.
-    CLASS-METHODS trim_tab_w_saplang_by_iso
-      IMPORTING
-        it_iso_filter       TYPE zif_abapgit_definitions=>ty_languages
-        iv_lang_field_name  TYPE abap_compname
-        iv_keep_master_lang TYPE sy-langu OPTIONAL
-      CHANGING
-        ct_tab              TYPE STANDARD TABLE
-      RAISING
-        zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -557,86 +541,6 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
         iv_name = iv_lxe_text_name
         ig_data = lt_lxe_texts ).
     ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD trim_saplangu_by_iso.
-
-    DATA lv_langu TYPE sy-langu.
-    DATA lv_laiso TYPE laiso.
-    DATA lv_index TYPE i.
-
-    IF it_iso_filter IS INITIAL.
-      RETURN. " Nothing to filter
-    ENDIF.
-
-    LOOP AT ct_sap_langs INTO lv_langu.
-      lv_index = sy-tabix.
-
-      cl_i18n_languages=>sap1_to_sap2(
-        EXPORTING
-          im_lang_sap1  = lv_langu
-        RECEIVING
-          re_lang_sap2  = lv_laiso
-        EXCEPTIONS
-          no_assignment = 1
-          OTHERS        = 2 ).
-      IF sy-subrc <> 0.
-        DELETE ct_sap_langs INDEX lv_index. " Not in the list anyway ...
-        CONTINUE.
-      ENDIF.
-
-      " Not a sorted table, but presumably the list is small, so no significant performance flow
-      READ TABLE it_iso_filter TRANSPORTING NO FIELDS WITH KEY table_line = lv_laiso.
-      IF sy-subrc <> 0.
-        DELETE ct_sap_langs INDEX lv_index.
-      ENDIF.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD trim_tab_w_saplang_by_iso.
-
-    DATA lv_laiso TYPE laiso.
-    DATA lv_index TYPE i.
-
-    FIELD-SYMBOLS <ls_i> TYPE any.
-    FIELD-SYMBOLS <lv_langu> TYPE sy-langu.
-
-    IF it_iso_filter IS INITIAL OR iv_lang_field_name IS INITIAL.
-      RETURN. " Nothing to filter
-    ENDIF.
-
-    LOOP AT ct_tab ASSIGNING <ls_i>.
-      lv_index = sy-tabix.
-      ASSIGN COMPONENT iv_lang_field_name OF STRUCTURE <ls_i> TO <lv_langu>.
-      ASSERT sy-subrc = 0.
-
-      IF <lv_langu> = iv_keep_master_lang.
-        CONTINUE. " Just keep it
-      ENDIF.
-
-      cl_i18n_languages=>sap1_to_sap2(
-        EXPORTING
-          im_lang_sap1  = <lv_langu>
-        RECEIVING
-          re_lang_sap2  = lv_laiso
-        EXCEPTIONS
-          no_assignment = 1
-          OTHERS        = 2 ).
-      IF sy-subrc <> 0.
-        DELETE ct_tab INDEX lv_index. " Not in the list anyway ...
-        CONTINUE.
-      ENDIF.
-
-      " Not a sorted table, but presumably the list is small, so no significant performance flow
-      READ TABLE it_iso_filter TRANSPORTING NO FIELDS WITH KEY table_line = lv_laiso.
-      IF sy-subrc <> 0.
-        DELETE ct_tab INDEX lv_index.
-      ENDIF.
-    ENDLOOP.
 
   ENDMETHOD.
 
