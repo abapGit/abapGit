@@ -42,7 +42,7 @@ CLASS ltcl_sotr_handler IMPLEMENTATION.
               iv_pgmid    = 'LIMU'
               iv_object   = 'WDYV'
               iv_obj_name = lc_wd_component_name
-              io_i18n_params = zcl_abapgit_i18n_params=>new_english( )
+              io_i18n_params = zcl_abapgit_i18n_params=>new( )
             IMPORTING
               et_sotr     = lt_sotr ).
           cl_abap_unit_assert=>assert_not_initial( lt_sotr ).
@@ -61,7 +61,7 @@ CLASS ltcl_sotr_handler IMPLEMENTATION.
               iv_pgmid    = 'LIMU'
               iv_object   = 'WDYV'
               iv_obj_name = lc_wd_not_exist_component_name
-              io_i18n_params = zcl_abapgit_i18n_params=>new_english( )
+              io_i18n_params = zcl_abapgit_i18n_params=>new( )
             IMPORTING
               et_sotr     = lt_sotr ).
           cl_abap_unit_assert=>assert_initial( lt_sotr ).
@@ -80,7 +80,7 @@ CLASS ltcl_sotr_handler IMPLEMENTATION.
               iv_pgmid    = 'LIMU'
               iv_object   = 'WDYV'
               iv_obj_name = lc_wd_component_name
-              io_i18n_params = zcl_abapgit_i18n_params=>new_english( )
+              io_i18n_params = zcl_abapgit_i18n_params=>new( )
             IMPORTING
               et_sotr     = lt_sotr ).
           IF lines( lt_sotr ) < 50.
@@ -99,7 +99,7 @@ CLASS ltcl_sotr_handler IMPLEMENTATION.
             iv_pgmid    = 'LIMU'
             iv_object   = 'CPUB'
             iv_obj_name = 'CX_ABAP_INVALID_NAME'
-            io_i18n_params = zcl_abapgit_i18n_params=>new_english( )
+            io_i18n_params = zcl_abapgit_i18n_params=>new( )
           IMPORTING
             et_sotr     = lt_sotr ).
         cl_abap_unit_assert=>assert_not_initial( lt_sotr ).

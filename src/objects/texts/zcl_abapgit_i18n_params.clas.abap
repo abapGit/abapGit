@@ -7,9 +7,6 @@ CLASS zcl_abapgit_i18n_params DEFINITION
 
     DATA ms_params TYPE zif_abapgit_definitions=>ty_i18n_params READ-ONLY .
 
-    CLASS-METHODS new_english
-      RETURNING
-        VALUE(ro_instance) TYPE REF TO zcl_abapgit_i18n_params .
     CLASS-METHODS new
       IMPORTING
         !iv_main_language      TYPE spras DEFAULT zif_abapgit_definitions=>c_english
@@ -138,13 +135,6 @@ CLASS ZCL_ABAPGIT_I18N_PARAMS IMPLEMENTATION.
         it_translation_langs  = it_translation_langs
         iv_use_lxe            = iv_use_lxe
         is_params             = is_params.
-  ENDMETHOD.
-
-
-  METHOD new_english.
-    CREATE OBJECT ro_instance
-      EXPORTING
-        iv_main_language = zif_abapgit_definitions=>c_english.
   ENDMETHOD.
 
 

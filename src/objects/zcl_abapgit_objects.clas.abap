@@ -435,7 +435,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     IF io_i18n_params IS BOUND.
       lo_i18n_params = io_i18n_params.
     ELSE.
-      lo_i18n_params = zcl_abapgit_i18n_params=>new_english( ).
+      lo_i18n_params = zcl_abapgit_i18n_params=>new( ). " All defaults
     ENDIF.
 
     READ TABLE gt_obj_serializer_map
