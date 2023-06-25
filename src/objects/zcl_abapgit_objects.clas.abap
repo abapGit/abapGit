@@ -625,7 +625,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           lt_steps    TYPE zif_abapgit_objects=>ty_step_data_tt,
           lx_exc      TYPE REF TO zcx_abapgit_exception.
     DATA lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
-    DATA ls_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params.
+    DATA lo_i18n_params TYPE REF TO zcl_abapgit_i18n_params.
     DATA lo_timer TYPE REF TO zcl_abapgit_timer.
 
     FIELD-SYMBOLS: <ls_result>  TYPE zif_abapgit_definitions=>ty_result,
@@ -673,9 +673,9 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     check_objects_locked( iv_language = io_repo->get_dot_abapgit( )->get_main_language( )
                           it_items    = lt_items ).
 
-    ls_i18n_params = determine_i18n_params(
-      io_dot = io_repo->get_dot_abapgit( )
-      iv_main_language_only = io_repo->get_local_settings( )-main_language_only ).
+    lo_i18n_params = zcl_abapgit_i18n_params=>new( is_params = determine_i18n_params(
+      io_dot                = io_repo->get_dot_abapgit( )
+      iv_main_language_only = io_repo->get_local_settings( )-main_language_only ) ).
 
     IF lines( lt_items ) = 1.
       ii_log->add_info( |>>> Deserializing 1 object| ).
@@ -742,8 +742,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           li_obj = create_object(
             is_item        = ls_item
             is_metadata    = ls_metadata
-            io_i18n_params =
-              zcl_abapgit_i18n_params=>new( iv_main_language = io_repo->get_dot_abapgit( )->get_main_language( ) ) ).
+            io_i18n_params = lo_i18n_params ).
 
           compare_remote_to_local(
             ii_object = li_obj
@@ -794,6 +793,50 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         iv_transport = is_checks-transport-transport
       CHANGING
         ct_files     = rt_accessed_files ).
+
+    " upload LXE translations (objects has been activated by now, above)
+    IF lo_i18n_params->is_lxe_applicable( ) = abap_true.
+      li_progress = zcl_abapgit_progress=>get_instance( lines( lt_results ) ).
+      " TODO it is not ALL, it is just supported
+
+      LOOP AT lt_results ASSIGNING <ls_result>.
+        li_progress->show(
+          iv_current = sy-tabix
+          iv_text    = |Applying translations: { <ls_result>-obj_type } { <ls_result>-obj_name }| ).
+        CHECK zcl_abapgit_lxe_texts=>is_object_supported( <ls_result>-obj_type ) = abap_true.
+
+        CLEAR ls_item.
+        ls_item-obj_type = <ls_result>-obj_type.
+        ls_item-obj_name = <ls_result>-obj_name.
+
+        IF ls_item-obj_type = 'DEVC'.
+          " Packages have the same filename across different folders. The path needs to be supplied
+          " to find the correct file.
+          lv_path = <ls_result>-path.
+        ENDIF.
+
+        " Create or update object
+        CREATE OBJECT lo_files
+          EXPORTING
+            is_item = ls_item
+            iv_path = lv_path.
+
+        lo_files->set_files( lt_remote ).
+
+        DATA lt_po_files TYPE zif_abapgit_i18n_file=>ty_table_of.
+
+        lt_po_files = lo_files->read_i18n_files( ).
+
+        zcl_abapgit_factory=>get_lxe_texts( )->deserialize_from_po(
+          iv_object_type = ls_item-obj_type
+          iv_object_name = ls_item-obj_name
+          is_i18n_params = lo_i18n_params->ms_params
+          it_po_files    = lt_po_files ).
+
+      ENDLOOP.
+
+      li_progress->off( ).
+    ENDIF.
 
     update_package_tree( io_repo->get_package( ) ).
 
