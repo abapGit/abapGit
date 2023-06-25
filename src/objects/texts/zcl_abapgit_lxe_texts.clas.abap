@@ -779,7 +779,6 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
 
   METHOD zif_abapgit_lxe_texts~serialize.
 
-
     READ TABLE gt_supported_obj_types TRANSPORTING NO FIELDS WITH KEY table_line = iv_object_type.
     IF sy-subrc <> 0.
       RETURN.
@@ -789,7 +788,21 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
     mi_xml         = ii_xml.
     mo_files       = io_files.
 
-    " TODO
+    " MAYBE TODO
+    " if other formats are needed, including the old in-XML approach
+    " here is the place to implement it. Supposed architecture:
+    " I18N_PARAMS should contain an option which format to use
+    " The option should be originally maintained in dot_abapgit structures (e.g. `translation_storage_format`)
+    " Consequently it comes here
+    " The serialize method can read it and call a corresponding submethod,
+    " e.g. serialize_xml or serialize_as_po or ...
+    " both ii_xml and io_files are accessible intentionally to enable both XML based or file based formats
+    " access to json can be easily added too,
+    " or maybe (maybe) some kind of zif_ag_object_ctl with all DAO instead
+
+    serialize_as_po(
+      iv_object_type = iv_object_type
+      iv_object_name = iv_object_name ).
 
   ENDMETHOD.
 ENDCLASS.

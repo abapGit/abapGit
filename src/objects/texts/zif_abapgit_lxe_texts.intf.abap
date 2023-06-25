@@ -6,7 +6,6 @@ INTERFACE zif_abapgit_lxe_texts
 
   METHODS serialize
     IMPORTING
-      !iv_lxe_text_name TYPE string DEFAULT 'LXE_TEXTS'
       !iv_object_type   TYPE tadir-object
       !iv_object_name   TYPE tadir-obj_name
       !io_i18n_params   TYPE REF TO zcl_abapgit_i18n_params
