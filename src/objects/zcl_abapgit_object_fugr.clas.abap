@@ -1230,10 +1230,10 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
     lv_program_name = main_name( ).
 
-    deserialize_texts( iv_prog_name = lv_program_name
-                       ii_xml       = io_xml ).
-
-    deserialize_lxe_texts( io_xml ).
+    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
+      deserialize_texts( iv_prog_name = lv_program_name
+                         ii_xml       = io_xml ).
+    ENDIF.
 
     io_xml->read( EXPORTING iv_name = 'DYNPROS'
                   CHANGING cg_data = lt_dynpros ).

@@ -262,8 +262,9 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
                             it_tpool   = lt_tpool ).
 
       " Texts deserializing (translations)
-      deserialize_texts( io_xml ).
-      deserialize_lxe_texts( io_xml ).
+      IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
+        deserialize_texts( io_xml ).
+      ENDIF.
 
       deserialize_longtexts( ii_xml         = io_xml
                              iv_longtext_id = c_longtext_id_prog ).

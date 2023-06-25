@@ -147,10 +147,6 @@ CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
     MODIFY tparat FROM ls_tparat.                         "#EC CI_SUBRC
     ASSERT sy-subrc = 0.
 
-    IF io_xml->i18n_params( )-translation_languages IS NOT INITIAL AND io_xml->i18n_params( )-use_lxe = abap_true.
-      deserialize_lxe_texts( io_xml ).
-    ENDIF.
-
   ENDMETHOD.
 
 

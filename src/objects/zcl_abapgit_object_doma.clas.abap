@@ -391,13 +391,11 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
+    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       deserialize_texts(
         ii_xml   = io_xml
         is_dd01v = ls_dd01v
         it_dd07v = lt_dd07v ).
-    ELSE.
-      deserialize_lxe_texts( io_xml ).
     ENDIF.
 
     deserialize_longtexts( ii_xml         = io_xml

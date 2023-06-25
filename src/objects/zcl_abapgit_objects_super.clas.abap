@@ -81,16 +81,6 @@ CLASS zcl_abapgit_objects_super DEFINITION
         VALUE(iv_no_ask_delete_append) TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception .
-    METHODS deserialize_lxe_texts
-      IMPORTING
-        !ii_xml TYPE REF TO zif_abapgit_xml_input
-      RAISING
-        zcx_abapgit_exception .
-    METHODS deserialize_lxe_texts_from_po
-      IMPORTING
-        !ii_files TYPE REF TO zcl_abapgit_objects_files
-      RAISING
-        zcx_abapgit_exception .
 
   PRIVATE SECTION.
 ENDCLASS.
@@ -216,38 +206,6 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
       iv_object_name   = ms_item-obj_name
       iv_longtext_id   = iv_longtext_id
       iv_main_language = mv_language ).
-
-  ENDMETHOD.
-
-
-  METHOD deserialize_lxe_texts.
-
-    FIELD-SYMBOLS <lo_files> LIKE zif_abapgit_object=>mo_files.
-
-*    zcl_abapgit_factory=>get_lxe_texts( )->deserialize(
-*      iv_object_type = ms_item-obj_type
-*      iv_object_name = ms_item-obj_name
-*      ii_xml         = ii_xml ).
-
-    ASSIGN me->('ZIF_ABAPGIT_OBJECT~MO_FILES') TO <lo_files>. " TODO, refactor
-    IF sy-subrc = 0.
-      deserialize_lxe_texts_from_po( <lo_files> ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD deserialize_lxe_texts_from_po.
-
-    DATA lt_po_files TYPE zif_abapgit_i18n_file=>ty_table_of.
-
-    lt_po_files = ii_files->read_i18n_files( ).
-
-    zcl_abapgit_factory=>get_lxe_texts( )->deserialize_from_po(
-      iv_object_type = ms_item-obj_type
-      iv_object_name = ms_item-obj_name
-      is_i18n_params = mo_i18n_params->ms_params
-      it_po_files    = lt_po_files ).
 
   ENDMETHOD.
 

@@ -330,10 +330,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
       MODIFY ttree FROM ls_ttree.
     ENDIF.
 
-    IF io_xml->i18n_params( )-translation_languages IS NOT INITIAL AND io_xml->i18n_params( )-use_lxe = abap_true.
-      deserialize_lxe_texts( io_xml ).
-    ENDIF.
-
     IF zcl_abapgit_factory=>get_sap_package( iv_package )->are_changes_recorded_in_tr_req( ) = abap_true.
       " Add necessary SHI6, SHI7, and TABU entries to transport (SAP Note 455542)
       insert_transport( iv_transport ).

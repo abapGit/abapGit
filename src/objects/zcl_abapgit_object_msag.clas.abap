@@ -406,10 +406,8 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
     deserialize_longtexts( ii_xml         = io_xml
                            iv_longtext_id = c_longtext_id_msag ).
 
-    IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
+    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       deserialize_texts( io_xml ).
-    ELSE.
-      deserialize_lxe_texts( io_xml ).
     ENDIF.
 
   ENDMETHOD.

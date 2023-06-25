@@ -832,10 +832,8 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
 
       deserialize_tpool( io_xml ).
 
-      IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
+      IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
         deserialize_tpool_i18n( io_xml ).
-      ELSE.
-        deserialize_lxe_texts( io_xml ).
       ENDIF.
 
       deserialize_sotr( ii_xml     = io_xml
