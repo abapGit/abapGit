@@ -43,6 +43,11 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
         VALUE(rt_unsupported_languages) TYPE zif_abapgit_definitions=>ty_languages
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS is_object_supported
+      IMPORTING
+        iv_object_type TYPE tadir-object
+      RETURNING
+        VALUE(rv_yes) TYPE abap_bool.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -390,6 +395,12 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD is_object_supported.
+    READ TABLE gt_supported_obj_types TRANSPORTING NO FIELDS WITH KEY table_line = iv_object_type.
+    rv_yes = boolc( sy-subrc = 0 ).
+  ENDMETHOD.
+
+
   METHOD langu_to_laiso_safe.
 
     cl_i18n_languages=>sap1_to_sap2(
@@ -683,8 +694,7 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
 
   METHOD zif_abapgit_lxe_texts~serialize.
 
-    READ TABLE gt_supported_obj_types TRANSPORTING NO FIELDS WITH KEY table_line = iv_object_type.
-    IF sy-subrc <> 0.
+    IF is_object_supported( iv_object_type ) = abap_false.
       RETURN.
     ENDIF.
 
