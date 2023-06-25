@@ -59,13 +59,13 @@ CLASS zcl_abapgit_objects_program DEFINITION
         !io_xml     TYPE REF TO zif_abapgit_xml_output OPTIONAL
         !is_item    TYPE zif_abapgit_definitions=>ty_item
         !io_files   TYPE REF TO zcl_abapgit_objects_files
-        !iv_program TYPE programm OPTIONAL
+        !iv_program TYPE syrepid OPTIONAL
         !iv_extra   TYPE clike OPTIONAL
       RAISING
         zcx_abapgit_exception.
     METHODS read_progdir
       IMPORTING
-        !iv_program       TYPE programm
+        !iv_program       TYPE syrepid
       RETURNING
         VALUE(rs_progdir) TYPE ty_progdir.
     METHODS deserialize_program
@@ -96,14 +96,14 @@ CLASS zcl_abapgit_objects_program DEFINITION
         ct_source TYPE STANDARD TABLE. " tab of string or charX
     METHODS serialize_dynpros
       IMPORTING
-        !iv_program_name TYPE programm
+        !iv_program_name TYPE syrepid
       RETURNING
         VALUE(rt_dynpro) TYPE ty_dynpro_tt
       RAISING
         zcx_abapgit_exception .
     METHODS serialize_cua
       IMPORTING
-        !iv_program_name TYPE programm
+        !iv_program_name TYPE syrepid
       RETURNING
         VALUE(rs_cua)    TYPE ty_cua
       RAISING
@@ -115,7 +115,7 @@ CLASS zcl_abapgit_objects_program DEFINITION
         zcx_abapgit_exception .
     METHODS deserialize_textpool
       IMPORTING
-        !iv_program    TYPE programm
+        !iv_program    TYPE syrepid
         !it_tpool      TYPE textpool_table
         !iv_language   TYPE sy-langu OPTIONAL
         !iv_is_include TYPE abap_bool DEFAULT abap_false
@@ -123,27 +123,27 @@ CLASS zcl_abapgit_objects_program DEFINITION
         zcx_abapgit_exception .
     METHODS deserialize_cua
       IMPORTING
-        !iv_program_name TYPE programm
+        !iv_program_name TYPE syrepid
         !is_cua          TYPE ty_cua
       RAISING
         zcx_abapgit_exception .
     METHODS is_any_dynpro_locked
       IMPORTING
-        !iv_program                    TYPE programm
+        !iv_program                    TYPE syrepid
       RETURNING
         VALUE(rv_is_any_dynpro_locked) TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
     METHODS is_cua_locked
       IMPORTING
-        !iv_program             TYPE programm
+        !iv_program             TYPE syrepid
       RETURNING
         VALUE(rv_is_cua_locked) TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
     METHODS is_text_locked
       IMPORTING
-        !iv_program              TYPE programm
+        !iv_program              TYPE syrepid
       RETURNING
         VALUE(rv_is_text_locked) TYPE abap_bool
       RAISING
@@ -600,17 +600,19 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       " For cases that standard function does not handle (like FUGR),
       " we save active and inactive version of source with the given PROGRAM TYPE.
       " Without the active version, the code will not be visible in case of activation errors.
-      INSERT REPORT is_progdir-name
-        FROM it_source
-        STATE 'A'
-        PROGRAM TYPE is_progdir-subc.
-      INSERT REPORT is_progdir-name
-        FROM it_source
-        STATE 'I'
-        PROGRAM TYPE is_progdir-subc.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'Error from INSERT REPORT .. PROGRAM TYPE' ).
-      ENDIF.
+      zcl_abapgit_factory=>get_sap_report( )->insert_report(
+        iv_name         = is_progdir-name
+        iv_package      = iv_package
+        it_source       = it_source
+        iv_state        = 'A'
+        iv_program_type = is_progdir-subc ).
+
+      zcl_abapgit_factory=>get_sap_report( )->insert_report(
+        iv_name         = is_progdir-name
+        iv_package      = iv_package
+        it_source       = it_source
+        iv_state        = 'I'
+        iv_program_type = is_progdir-subc ).
 
     ELSEIF sy-subrc > 0.
       zcx_abapgit_exception=>raise_t100( ).
@@ -877,7 +879,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
   METHOD serialize_program.
 
     DATA: ls_progdir      TYPE ty_progdir,
-          lv_program_name TYPE programm,
+          lv_program_name TYPE syrepid,
           lt_dynpros      TYPE ty_dynpro_tt,
           ls_cua          TYPE ty_cua,
           lt_source       TYPE TABLE OF abaptxt255,

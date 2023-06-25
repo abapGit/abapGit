@@ -139,7 +139,11 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
               iv_devclass = iv_package ).
     ELSE.
       CONCATENATE c_prefix lv_typegroup INTO lv_progname.
-      INSERT REPORT lv_progname FROM lt_source STATE 'I'.
+
+      zcl_abapgit_factory=>get_sap_report( )->insert_report(
+        iv_name    = lv_progname
+        iv_package = iv_package
+        it_source  = lt_source ).
     ENDIF.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
