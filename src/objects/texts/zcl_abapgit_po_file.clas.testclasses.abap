@@ -131,7 +131,7 @@ CLASS ltcl_po_file IMPLEMENTATION.
     CREATE OBJECT lo_po EXPORTING iv_lang = 'xx'.
 
     TRY.
-        lo_po->parse_po( zcl_abapgit_string_buffer=>create(
+        lo_po->parse_po( zcl_abapgit_string_buffer=>new(
           )->add( 'wrong'
           )->add( 'format'
           )->join_w_newline_and_flush( ) ).
@@ -139,7 +139,7 @@ CLASS ltcl_po_file IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        lo_po->parse_po( zcl_abapgit_string_buffer=>create(
+        lo_po->parse_po( zcl_abapgit_string_buffer=>new(
           )->add( 'msgid "a"'
           )->add( 'wrong tag'
           )->join_w_newline_and_flush( ) ).
@@ -147,7 +147,7 @@ CLASS ltcl_po_file IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        lo_po->parse_po( zcl_abapgit_string_buffer=>create(
+        lo_po->parse_po( zcl_abapgit_string_buffer=>new(
           )->add( '""'
           )->add( ''
           )->join_w_newline_and_flush( ) ).
@@ -155,7 +155,7 @@ CLASS ltcl_po_file IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        lo_po->parse_po( zcl_abapgit_string_buffer=>create(
+        lo_po->parse_po( zcl_abapgit_string_buffer=>new(
           )->add( 'msgid "a"'
           )->add( '# comment'
           )->add( 'msgstr "b"'
@@ -164,7 +164,7 @@ CLASS ltcl_po_file IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        lo_po->parse_po( zcl_abapgit_string_buffer=>create(
+        lo_po->parse_po( zcl_abapgit_string_buffer=>new(
           )->add( 'msgid "a"'
           )->add( 'msgstr "'
           )->join_w_newline_and_flush( ) ).
@@ -172,7 +172,7 @@ CLASS ltcl_po_file IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        lo_po->parse_po( zcl_abapgit_string_buffer=>create(
+        lo_po->parse_po( zcl_abapgit_string_buffer=>new(
           )->add( 'msgid"a"'
           )->add( 'msgstr"b"'
           )->join_w_newline_and_flush( ) ).
@@ -225,7 +225,7 @@ CLASS ltcl_po_file IMPLEMENTATION.
     FIELD-SYMBOLS <ls_p> LIKE LINE OF lo_po->mt_pairs.
 
     CREATE OBJECT lo_po EXPORTING iv_lang = 'xx'.
-    lo_po->parse_po( zcl_abapgit_string_buffer=>create(
+    lo_po->parse_po( zcl_abapgit_string_buffer=>new(
       )->add( 'msgid "a"'
       )->add( 'msgstr "1\n"'
       )->add( '"2"'
@@ -241,7 +241,7 @@ CLASS ltcl_po_file IMPLEMENTATION.
       exp = |1{ cl_abap_char_utilities=>newline }2| ).
 
     CREATE OBJECT lo_po EXPORTING iv_lang = 'xx'.
-    lo_po->parse_po( zcl_abapgit_string_buffer=>create(
+    lo_po->parse_po( zcl_abapgit_string_buffer=>new(
       )->add( 'msgid "a"'
       )->add( 'msgstr ""'
       )->add( '"2\n"'
