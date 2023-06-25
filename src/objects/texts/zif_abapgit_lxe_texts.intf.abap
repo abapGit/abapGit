@@ -15,20 +15,11 @@ INTERFACE zif_abapgit_lxe_texts
       zcx_abapgit_exception .
   METHODS deserialize
     IMPORTING
-      !iv_lxe_text_name TYPE string DEFAULT 'LXE_TEXTS'
       !iv_object_type   TYPE tadir-object OPTIONAL
       !iv_object_name   TYPE tadir-obj_name OPTIONAL
+      !io_i18n_params   TYPE REF TO zcl_abapgit_i18n_params
       !ii_xml           TYPE REF TO zif_abapgit_xml_input
-    RAISING
-      zcx_abapgit_exception .
-
-
-  METHODS deserialize_from_po
-    IMPORTING
-      !iv_object_type   TYPE tadir-object
-      !iv_object_name   TYPE tadir-obj_name
-      !is_i18n_params   TYPE zif_abapgit_definitions=>ty_i18n_params
-      !it_po_files      TYPE zif_abapgit_i18n_file=>ty_table_of
+      !io_files         TYPE REF TO zcl_abapgit_objects_files
     RAISING
       zcx_abapgit_exception .
 

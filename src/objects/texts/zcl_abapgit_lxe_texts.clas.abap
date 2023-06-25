@@ -71,7 +71,8 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
     CLASS-DATA gt_supported_obj_types TYPE STANDARD TABLE OF tadir-object.
 
     DATA mo_i18n_params TYPE REF TO zcl_abapgit_i18n_params.
-    DATA mi_xml         TYPE REF TO zif_abapgit_xml_output.
+    DATA mi_xml_out     TYPE REF TO zif_abapgit_xml_output.
+    DATA mi_xml_in      TYPE REF TO zif_abapgit_xml_input.
     DATA mo_files       TYPE REF TO zcl_abapgit_objects_files.
 
     METHODS serialize_xml
@@ -83,6 +84,21 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
         zcx_abapgit_exception .
 
     METHODS serialize_as_po
+      IMPORTING
+        !iv_object_type   TYPE tadir-object
+        !iv_object_name   TYPE tadir-obj_name
+      RAISING
+        zcx_abapgit_exception .
+
+    METHODS deserialize_xml
+      IMPORTING
+        !iv_lxe_text_name TYPE string DEFAULT 'LXE_TEXTS'
+        !iv_object_type   TYPE tadir-object OPTIONAL
+        !iv_object_name   TYPE tadir-obj_name OPTIONAL
+      RAISING
+        zcx_abapgit_exception .
+
+    METHODS deserialize_from_po
       IMPORTING
         !iv_object_type   TYPE tadir-object
         !iv_object_name   TYPE tadir-obj_name
@@ -257,6 +273,106 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
     ENDLOOP.
 
     CONCATENATE LINES OF lt_langs_str INTO rv_langs SEPARATED BY ','.
+
+  ENDMETHOD.
+
+
+  METHOD deserialize_from_po.
+
+    DATA lv_lang LIKE LINE OF mo_i18n_params->ms_params-translation_languages.
+    DATA lt_po_files TYPE zif_abapgit_i18n_file=>ty_table_of.
+    DATA li_po LIKE LINE OF lt_po_files.
+    DATA lt_text_pairs_tmp TYPE ty_lxe_translation-text_pairs.
+    DATA lt_obj_list TYPE lxe_tt_colob.
+    DATA lv_main_lang TYPE lxeisolang.
+    DATA lv_target_lang TYPE lxeisolang.
+
+    FIELD-SYMBOLS <lv_lxe_object> LIKE LINE OF lt_obj_list.
+
+    lt_obj_list = get_lxe_object_list(
+      iv_object_name = iv_object_name
+      iv_object_type = iv_object_type ).
+
+    IF lt_obj_list IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    lt_po_files  = mo_files->read_i18n_files( ).
+    lv_main_lang = get_lang_iso4( langu_to_laiso_safe( mo_i18n_params->ms_params-main_language ) ).
+
+    LOOP AT mo_i18n_params->ms_params-translation_languages INTO lv_lang.
+      lv_target_lang = get_lang_iso4( lv_lang ).
+
+      LOOP AT lt_po_files INTO li_po.
+        IF li_po->lang( ) = to_lower( lv_lang ). " Not quite efficient but the list is presumably very short
+          EXIT.
+        ELSE.
+          CLEAR li_po.
+        ENDIF.
+      ENDLOOP.
+
+      CHECK li_po IS BOUND. " Ignore missing files, missing translation is not a crime
+
+      LOOP AT lt_obj_list ASSIGNING <lv_lxe_object>.
+
+        lt_text_pairs_tmp = read_lxe_object_text_pair(
+          iv_s_lang    = lv_main_lang
+          iv_t_lang    = lv_target_lang
+          iv_custmnr   = <lv_lxe_object>-custmnr
+          iv_objtype   = <lv_lxe_object>-objtype
+          iv_objname   = <lv_lxe_object>-objname
+          iv_read_only = abap_false ).
+
+        li_po->translate( CHANGING ct_text_pairs = lt_text_pairs_tmp ).
+        " TODO maybe optimize, check if values have changed
+
+        write_lxe_object_text_pair(
+          iv_s_lang  = lv_main_lang
+          iv_t_lang  = lv_target_lang
+          iv_custmnr = <lv_lxe_object>-custmnr
+          iv_objtype = <lv_lxe_object>-objtype
+          iv_objname = <lv_lxe_object>-objname
+          it_pcx_s1  = lt_text_pairs_tmp ).
+
+      ENDLOOP.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD deserialize_xml.
+
+    DATA:
+      lt_lxe_texts      TYPE ty_lxe_translations,
+      ls_lxe_item       LIKE LINE OF lt_lxe_texts,
+      lt_text_pairs_tmp LIKE ls_lxe_item-text_pairs.
+
+    mi_xml_in->read(
+      EXPORTING iv_name = iv_lxe_text_name
+      CHANGING  cg_data = lt_lxe_texts ).
+
+    LOOP AT lt_lxe_texts INTO ls_lxe_item.
+      " Call Read first for buffer prefill
+
+      lt_text_pairs_tmp = read_lxe_object_text_pair(
+        iv_s_lang    = ls_lxe_item-source_lang
+        iv_t_lang    = ls_lxe_item-target_lang
+        iv_custmnr   = ls_lxe_item-custmnr
+        iv_objtype   = ls_lxe_item-objtype
+        iv_objname   = ls_lxe_item-objname
+        iv_read_only = abap_false ).
+
+      "Call actual Write FM
+      write_lxe_object_text_pair(
+        iv_s_lang  = ls_lxe_item-source_lang
+        iv_t_lang  = ls_lxe_item-target_lang
+        iv_custmnr = ls_lxe_item-custmnr
+        iv_objtype = ls_lxe_item-objtype
+        iv_objname = ls_lxe_item-objname
+        it_pcx_s1  = ls_lxe_item-text_pairs ).
+
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -548,7 +664,7 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
       iv_object_type   = iv_object_type ).
 
     IF lines( lt_lxe_texts ) > 0.
-      mi_xml->add(
+      mi_xml_out->add(
         iv_name = iv_lxe_text_name
         ig_data = lt_lxe_texts ).
     ENDIF.
@@ -596,98 +712,25 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
 
   METHOD zif_abapgit_lxe_texts~deserialize.
 
-    DATA:
-      lt_lxe_texts      TYPE ty_lxe_translations,
-      ls_lxe_item       LIKE LINE OF lt_lxe_texts,
-      lt_text_pairs_tmp LIKE ls_lxe_item-text_pairs.
-
-    ii_xml->read(
-      EXPORTING iv_name = iv_lxe_text_name
-      CHANGING  cg_data = lt_lxe_texts ).
-
-    LOOP AT lt_lxe_texts INTO ls_lxe_item.
-      " Call Read first for buffer prefill
-
-      lt_text_pairs_tmp = read_lxe_object_text_pair(
-        iv_s_lang    = ls_lxe_item-source_lang
-        iv_t_lang    = ls_lxe_item-target_lang
-        iv_custmnr   = ls_lxe_item-custmnr
-        iv_objtype   = ls_lxe_item-objtype
-        iv_objname   = ls_lxe_item-objname
-        iv_read_only = abap_false ).
-
-      "Call actual Write FM
-      write_lxe_object_text_pair(
-        iv_s_lang  = ls_lxe_item-source_lang
-        iv_t_lang  = ls_lxe_item-target_lang
-        iv_custmnr = ls_lxe_item-custmnr
-        iv_objtype = ls_lxe_item-objtype
-        iv_objname = ls_lxe_item-objname
-        it_pcx_s1  = ls_lxe_item-text_pairs ).
-
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_lxe_texts~deserialize_from_po.
-
-    DATA lv_lang LIKE LINE OF is_i18n_params-translation_languages.
-    DATA li_po TYPE REF TO zif_abapgit_i18n_file.
-    DATA lt_text_pairs_tmp TYPE ty_lxe_translation-text_pairs.
-    DATA lt_obj_list TYPE lxe_tt_colob.
-    DATA lv_main_lang TYPE lxeisolang.
-    DATA lv_target_lang TYPE lxeisolang.
-
-    FIELD-SYMBOLS <lv_lxe_object> LIKE LINE OF lt_obj_list.
-
-    lt_obj_list = get_lxe_object_list(
-      iv_object_name = iv_object_name
-      iv_object_type = iv_object_type ).
-
-    IF lt_obj_list IS INITIAL.
+    IF is_object_supported( iv_object_type ) = abap_false.
       RETURN.
     ENDIF.
 
-    lv_main_lang = get_lang_iso4( langu_to_laiso_safe( is_i18n_params-main_language ) ).
+    mo_i18n_params = io_i18n_params.
+    mi_xml_in      = ii_xml.
+    mo_files       = io_files.
 
-    LOOP AT is_i18n_params-translation_languages INTO lv_lang.
-      lv_target_lang = get_lang_iso4( lv_lang ).
+    " MAYBE TODO: see comment in serialize
 
-      LOOP AT it_po_files INTO li_po.
-        IF li_po->lang( ) = to_lower( lv_lang ). " Not quite efficient but the list is presumably very short
-          EXIT.
-        ELSE.
-          CLEAR li_po.
-        ENDIF.
-      ENDLOOP.
-
-      CHECK li_po IS BOUND. " Ignore missing files, missing translation is not a crime
-
-      LOOP AT lt_obj_list ASSIGNING <lv_lxe_object>.
-
-        lt_text_pairs_tmp = read_lxe_object_text_pair(
-          iv_s_lang    = lv_main_lang
-          iv_t_lang    = lv_target_lang
-          iv_custmnr   = <lv_lxe_object>-custmnr
-          iv_objtype   = <lv_lxe_object>-objtype
-          iv_objname   = <lv_lxe_object>-objname
-          iv_read_only = abap_false ).
-
-        li_po->translate( CHANGING ct_text_pairs = lt_text_pairs_tmp ).
-        " TODO maybe optimize, check if values have changed
-
-        write_lxe_object_text_pair(
-          iv_s_lang  = lv_main_lang
-          iv_t_lang  = lv_target_lang
-          iv_custmnr = <lv_lxe_object>-custmnr
-          iv_objtype = <lv_lxe_object>-objtype
-          iv_objname = <lv_lxe_object>-objname
-          it_pcx_s1  = lt_text_pairs_tmp ).
-
-      ENDLOOP.
-
-    ENDLOOP.
+    IF 1 = 1.
+      deserialize_from_po(
+        iv_object_type = iv_object_type
+        iv_object_name = iv_object_name ).
+    ELSE.
+      deserialize_xml(
+        iv_object_type = iv_object_type
+        iv_object_name = iv_object_name ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -699,7 +742,7 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
     ENDIF.
 
     mo_i18n_params = io_i18n_params.
-    mi_xml         = ii_xml.
+    mi_xml_out     = ii_xml.
     mo_files       = io_files.
 
     " MAYBE TODO

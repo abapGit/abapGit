@@ -770,6 +770,16 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
             <ls_deser>-package = lv_package.
           ENDLOOP.
 
+          " LXE, TODO refactor and move below activation
+          IF lo_i18n_params->is_lxe_applicable( ) = abap_true.
+            zcl_abapgit_factory=>get_lxe_texts( )->deserialize(
+              iv_object_type = ls_item-obj_type
+              iv_object_name = ls_item-obj_name
+              io_i18n_params = lo_i18n_params
+              ii_xml         = lo_xml
+              io_files       = lo_files ).
+          ENDIF.
+
           CLEAR: lv_path, lv_package.
 
         CATCH zcx_abapgit_exception INTO lx_exc.
@@ -794,49 +804,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       CHANGING
         ct_files     = rt_accessed_files ).
 
-    " upload LXE translations (objects has been activated by now, above)
-    IF lo_i18n_params->is_lxe_applicable( ) = abap_true.
-      li_progress = zcl_abapgit_progress=>get_instance( lines( lt_results ) ).
-      " TODO it is not ALL, it is just supported
-
-      LOOP AT lt_results ASSIGNING <ls_result>.
-        li_progress->show(
-          iv_current = sy-tabix
-          iv_text    = |Applying translations: { <ls_result>-obj_type } { <ls_result>-obj_name }| ).
-        CHECK zcl_abapgit_lxe_texts=>is_object_supported( <ls_result>-obj_type ) = abap_true.
-
-        CLEAR ls_item.
-        ls_item-obj_type = <ls_result>-obj_type.
-        ls_item-obj_name = <ls_result>-obj_name.
-
-        IF ls_item-obj_type = 'DEVC'.
-          " Packages have the same filename across different folders. The path needs to be supplied
-          " to find the correct file.
-          lv_path = <ls_result>-path.
-        ENDIF.
-
-        " Create or update object
-        CREATE OBJECT lo_files
-          EXPORTING
-            is_item = ls_item
-            iv_path = lv_path.
-
-        lo_files->set_files( lt_remote ).
-
-        DATA lt_po_files TYPE zif_abapgit_i18n_file=>ty_table_of.
-
-        lt_po_files = lo_files->read_i18n_files( ).
-
-        zcl_abapgit_factory=>get_lxe_texts( )->deserialize_from_po(
-          iv_object_type = ls_item-obj_type
-          iv_object_name = ls_item-obj_name
-          is_i18n_params = lo_i18n_params->ms_params
-          it_po_files    = lt_po_files ).
-
-      ENDLOOP.
-
-      li_progress->off( ).
-    ENDIF.
+    " TODO: LXE translations (objects has been activated by now)
 
     update_package_tree( io_repo->get_package( ) ).
 
