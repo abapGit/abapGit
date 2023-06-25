@@ -45,6 +45,7 @@ CLASS ltcl_i18n_params_test IMPLEMENTATION.
     DATA lt_act TYPE zif_abapgit_definitions=>ty_sap_langu_tab.
     DATA lt_exp TYPE zif_abapgit_definitions=>ty_sap_langu_tab.
     DATA lt_filter TYPE zif_abapgit_definitions=>ty_languages.
+    DATA lo_p TYPE REF TO zcl_abapgit_i18n_params.
 
     APPEND 'DE' TO lt_filter.
     APPEND 'EN' TO lt_filter.
@@ -56,10 +57,10 @@ CLASS ltcl_i18n_params_test IMPLEMENTATION.
     APPEND 'E' TO lt_exp.
     APPEND 'D' TO lt_exp.
 
-    zcl_abapgit_i18n_params=>new(
+    lo_p = zcl_abapgit_i18n_params=>new(
       iv_main_language = '?'
-      it_translation_langs = lt_filter
-    )->trim_saplang_list( CHANGING ct_sap_langs = lt_act ).
+      it_translation_langs = lt_filter ).
+    lo_p->trim_saplang_list( CHANGING ct_sap_langs = lt_act ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lt_act
@@ -73,10 +74,10 @@ CLASS ltcl_i18n_params_test IMPLEMENTATION.
     APPEND 'E' TO lt_exp.
     APPEND 'D' TO lt_exp.
 
-    zcl_abapgit_i18n_params=>new(
+    lo_p = zcl_abapgit_i18n_params=>new(
       iv_main_language = '?'
-      it_translation_langs = lt_filter
-    )->trim_saplang_list( CHANGING ct_sap_langs = lt_act ).
+      it_translation_langs = lt_filter ).
+    lo_p->trim_saplang_list( CHANGING ct_sap_langs = lt_act ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lt_act
@@ -95,6 +96,7 @@ CLASS ltcl_i18n_params_test IMPLEMENTATION.
     DATA lt_act LIKE TABLE OF ls_i.
     DATA lt_exp LIKE TABLE OF ls_i.
     DATA lt_filter TYPE zif_abapgit_definitions=>ty_languages.
+    DATA lo_p TYPE REF TO zcl_abapgit_i18n_params.
 
     APPEND 'DE' TO lt_filter.
     APPEND 'EN' TO lt_filter.
@@ -111,10 +113,10 @@ CLASS ltcl_i18n_params_test IMPLEMENTATION.
     ls_i-spras = 'D'.
     APPEND ls_i TO lt_exp.
 
-    zcl_abapgit_i18n_params=>new(
+    lo_p = zcl_abapgit_i18n_params=>new(
       iv_main_language = '?'
-      it_translation_langs = lt_filter
-    )->trim_saplang_keyed_table(
+      it_translation_langs = lt_filter ).
+    lo_p->trim_saplang_keyed_table(
       EXPORTING
         iv_lang_field_name = 'SPRAS'
       CHANGING
@@ -128,10 +130,10 @@ CLASS ltcl_i18n_params_test IMPLEMENTATION.
     CLEAR lt_filter.
     APPEND 'DE' TO lt_filter.
 
-    zcl_abapgit_i18n_params=>new(
+    lo_p = zcl_abapgit_i18n_params=>new(
       iv_main_language = 'E'
-      it_translation_langs = lt_filter
-    )->trim_saplang_keyed_table(
+      it_translation_langs = lt_filter ).
+    lo_p->trim_saplang_keyed_table(
       EXPORTING
         iv_lang_field_name  = 'SPRAS'
         iv_keep_master_lang = abap_true
@@ -154,10 +156,10 @@ CLASS ltcl_i18n_params_test IMPLEMENTATION.
     ls_i-spras = 'D'.
     APPEND ls_i TO lt_exp.
 
-    zcl_abapgit_i18n_params=>new(
+    lo_p = zcl_abapgit_i18n_params=>new(
       iv_main_language = '?'
-      it_translation_langs = lt_filter
-    )->trim_saplang_keyed_table(
+      it_translation_langs = lt_filter ).
+    lo_p->trim_saplang_keyed_table(
       EXPORTING
         iv_lang_field_name = 'SPRAS'
       CHANGING

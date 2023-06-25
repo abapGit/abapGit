@@ -445,12 +445,12 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
       DELETE lt_titles WHERE spras <> mv_language.
     ELSE.
       lv_all_languages = abap_true.
-    mo_i18n_params->trim_saplang_keyed_table(
-      EXPORTING
-          iv_lang_field_name = 'SPRAS'
-          iv_keep_master_lang = abap_true
-        CHANGING
-          ct_tab = lt_titles ).
+      mo_i18n_params->trim_saplang_keyed_table(
+        EXPORTING
+            iv_lang_field_name = 'SPRAS'
+            iv_keep_master_lang = abap_true
+          CHANGING
+            ct_tab = lt_titles ).
     ENDIF.
 
     CALL FUNCTION 'STREE_HIERARCHY_READ'

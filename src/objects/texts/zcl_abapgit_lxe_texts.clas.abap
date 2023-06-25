@@ -714,9 +714,15 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
     " access to json can be easily added too,
     " or maybe (maybe) some kind of zif_ag_object_ctl with all DAO instead
 
-    serialize_as_po(
-      iv_object_type = iv_object_type
-      iv_object_name = iv_object_name ).
+    IF 1 = 1.
+      serialize_as_po(
+        iv_object_type = iv_object_type
+        iv_object_name = iv_object_name ).
+    ELSE.
+      serialize_xml(
+        iv_object_type = iv_object_type
+        iv_object_name = iv_object_name ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
