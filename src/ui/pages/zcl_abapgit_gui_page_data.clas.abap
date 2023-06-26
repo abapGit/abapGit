@@ -364,6 +364,8 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
         add_via_transport( ).
         mo_repo->refresh( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-go_back.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
 
   ENDMETHOD.
