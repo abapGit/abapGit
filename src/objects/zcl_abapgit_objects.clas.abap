@@ -664,6 +664,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       iv_text  = 'Deserialize:'
       iv_count = lines( lt_items ) )->start( ).
 
+    zcl_abapgit_factory=>get_cts_api( )->confirm_transport_messages( ).
+
     check_objects_locked( iv_language = io_repo->get_dot_abapgit( )->get_main_language( )
                           it_items    = lt_items ).
 
