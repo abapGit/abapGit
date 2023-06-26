@@ -11,6 +11,8 @@ CLASS zcl_abapgit_cts_api DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
+    DATA: gv_confirm_transp_msgs_called TYPE abap_bool.
+
     "! Returns the transport request / task the object is currently locked in
     "! @parameter iv_program_id | Program ID
     "! @parameter iv_object_type | Object type
@@ -432,6 +434,14 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
     DATA ls_message TYPE ty_s_message.
 
     FIELD-SYMBOLS: <lt_confirmed_messages> TYPE STANDARD TABLE.
+
+    IF gv_confirm_transp_msgs_called = abap_true.
+      RETURN.
+    ENDIF.
+
+    " remember the call to avoid duplicates in GT_CONFIRMED_MESSAGES
+    gv_confirm_transp_msgs_called = abap_true.
+
 
     " Auto-confirm certain messages (requires SAP Note 1609940)
     PERFORM dummy IN PROGRAM saplstrd IF FOUND.  "load function group STRD once into memory
