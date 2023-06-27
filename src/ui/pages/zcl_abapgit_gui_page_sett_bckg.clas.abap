@@ -41,7 +41,6 @@ CLASS zcl_abapgit_gui_page_sett_bckg DEFINITION
       END OF c_event .
     DATA mo_form TYPE REF TO zcl_abapgit_html_form .
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map .
-    DATA mo_form_util TYPE REF TO zcl_abapgit_html_form_utils .
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
     DATA mv_settings_count TYPE i .
 
@@ -51,6 +50,8 @@ CLASS zcl_abapgit_gui_page_sett_bckg DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS read_settings
+      RETURNING
+        VALUE(ro_form_data) TYPE REF TO zcl_abapgit_string_map
       RAISING
         zcx_abapgit_exception .
     METHODS read_persist
@@ -74,9 +75,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_BCKG IMPLEMENTATION.
     CREATE OBJECT mo_form_data.
     mo_repo = io_repo.
     mo_form = get_form_schema( ).
-    mo_form_util = zcl_abapgit_html_form_utils=>create( mo_form ).
-
-    read_settings( ).
+    mo_form_data = read_settings( ).
 
   ENDMETHOD.
 
@@ -197,9 +196,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_BCKG IMPLEMENTATION.
       ls_settings LIKE LINE OF ls_per-settings.
 
     ls_per = read_persist( ).
+    CREATE OBJECT ro_form_data.
 
     " Mode Selection
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-method
       iv_val = ls_per-method ).
 
@@ -224,7 +224,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_BCKG IMPLEMENTATION.
             WHEN 2.
               lv_val = ls_settings-value.
           ENDCASE.
-          mo_form_data->set(
+          ro_form_data->set(
             iv_key = |{ c_id-settings }-{ lv_row }-{ sy-index }|
             iv_val = lv_val ).
         ENDDO.
@@ -234,20 +234,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_BCKG IMPLEMENTATION.
 
     mv_settings_count = lv_row.
 
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = |{ c_id-settings }-{ zif_abapgit_html_form=>c_rows }|
       iv_val = |{ mv_settings_count }| ).
 
     " Authentication
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-username
       iv_val = ls_per-username ).
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-password
       iv_val = ls_per-password ).
-
-    " Set for is_dirty check
-    mo_form_util->set_data( mo_form_data ).
 
   ENDMETHOD.
 
@@ -303,18 +300,20 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_BCKG IMPLEMENTATION.
 
     MESSAGE 'Settings succesfully saved' TYPE 'S'.
 
-    read_settings( ).
+    mo_form_data = read_settings( ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
+    mo_form_data->merge( zcl_abapgit_html_form_utils=>create( mo_form )->normalize( ii_event->form_data( ) ) ).
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-go_back.
-        rs_handled-state = mo_form_util->exit( mo_form_data ).
+        rs_handled-state = zcl_abapgit_html_form_utils=>create( mo_form )->exit(
+          io_form_data            = mo_form_data
+          io_check_changes_versus = read_settings( ) ).
 
       WHEN c_event-save.
         save_settings( ).
@@ -328,8 +327,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_BCKG IMPLEMENTATION.
   METHOD zif_abapgit_gui_renderable~render.
 
     register_handlers( ).
-
-    read_settings( ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
