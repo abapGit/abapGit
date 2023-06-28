@@ -97,7 +97,7 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
 
   METHOD zif_abapgit_sap_report~insert_report.
 
-    DATA lv_version TYPE zif_abapgit_sap_report=>ty_abap_language_version.
+    DATA lv_version TYPE zif_abapgit_sap_report=>ty_abap_language_version ##NEEDED.
     DATA lv_obj_name TYPE e071-obj_name.
 
     ASSERT iv_state CA ' AI'.
@@ -112,24 +112,25 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
       is_item    = is_item
       iv_version = lv_version ).
 
+    " TODO: Add `VERSION lv_version` but it's not supported in lower releases
     IF iv_state IS INITIAL.
-      INSERT REPORT iv_name FROM it_source
-        VERSION lv_version.
+      INSERT REPORT iv_name FROM it_source.
+        "VERSION lv_version.
     ELSEIF iv_program_type IS INITIAL AND iv_extension_type IS INITIAL.
       INSERT REPORT iv_name FROM it_source
-        STATE   iv_state
-        VERSION lv_version.
+        STATE   iv_state.
+        "VERSION lv_version.
     ELSEIF iv_extension_type IS INITIAL.
       INSERT REPORT iv_name FROM it_source
         STATE        iv_state
-        PROGRAM TYPE iv_program_type
-        VERSION      lv_version.
+        PROGRAM TYPE iv_program_type.
+        "VERSION      lv_version.
     ELSE.
       INSERT REPORT iv_name FROM it_source
         STATE          iv_state
         EXTENSION TYPE iv_extension_type
-        PROGRAM TYPE   iv_program_type
-        VERSION        lv_version.
+        PROGRAM TYPE   iv_program_type.
+        "VERSION        lv_version.
     ENDIF.
 
     IF sy-subrc <> 0.
