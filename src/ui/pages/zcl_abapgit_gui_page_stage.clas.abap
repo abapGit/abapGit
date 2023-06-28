@@ -620,7 +620,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
             item     = ls_item_remote
             filename = <ls_remote>-filename.
           IF sy-subrc <> 0.
-            READ TABLE lt_changed_by INTO ls_changed_by WITH KEY item = <ls_local>-item.
+            READ TABLE lt_changed_by INTO ls_changed_by WITH KEY item = ls_item_remote.
           ENDIF.
         CATCH zcx_abapgit_exception.
           CLEAR ls_transport.
