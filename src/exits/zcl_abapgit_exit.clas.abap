@@ -5,8 +5,9 @@ CLASS zcl_abapgit_exit DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_exit .
+
   types:
-    BEGIN OF ts_rfc_definition,
+    BEGIN OF ty_s_rfc_definition,
         destination             TYPE  rfcdes-rfcdest,
         servicenr               TYPE rfcdisplay-rfcsysid,
         server                  TYPE rfcdisplay-rfchost,
@@ -48,11 +49,11 @@ CLASS zcl_abapgit_exit DEFINITION
         oauth_config            TYPE oa2c_configuration,
         created_by              TYPE rfcattrib-cuname,
         modified_by             TYPE rfcattrib-muname,
-      END OF ts_rfc_definition .
+      END OF ty_s_rfc_definition .
   types:
-    tt_rfc_definition TYPE SORTED TABLE OF ts_rfc_definition WITH UNIQUE KEY destination .
+    ty_t_rfc_definitions TYPE SORTED TABLE OF ty_s_rfc_definition WITH UNIQUE KEY destination .
 
-  class-data GT_RFC_DESTinations type tt_rfc_definition read-only .
+  class-data GT_RFC_DESTinations type ty_t_rfc_definitions read-only .
   class-methods CLASS_CONSTRUCTOR .
   class-methods FIND_RFC_DEST_FROM_URI
     importing
@@ -66,7 +67,7 @@ CLASS zcl_abapgit_exit DEFINITION
       !IV_USER type SYST-UNAME default '*'
     returning
       value(R_DESTINATION) type RFCDEST .
-	  
+
     CLASS-METHODS get_instance
       RETURNING
         VALUE(ri_exit) TYPE REF TO zif_abapgit_exit .
@@ -78,7 +79,8 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_exit IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
+
 
 METHOD class_constructor.
   SELECT d~rfcdest AS destination, u~cuname AS created_by, u~muname AS modified_by
@@ -148,6 +150,7 @@ METHOD class_constructor.
 
 ENDMETHOD.
 
+
   METHOD find_rfc_dest_from_uri.
 * Goal : Split URI Into Server and Path
 * not working get http or https prefix not real host name.
@@ -169,6 +172,7 @@ ENDMETHOD.
     ENDIF.
   ENDMETHOD.
 
+
   METHOD find_rfc_dest_from_host_path.
 * Look into preloaded RFC destination for external RFC
 * BOTH server and PATH MUST Match!
@@ -182,20 +186,12 @@ ENDMETHOD.
     ENDLOOP.
   ENDMETHOD.
 
+
   METHOD get_instance.
-
-    DATA lv_class_name TYPE string.
-
-    lv_class_name = 'ZCL_ABAPGIT_USER_EXIT'.
-
-    IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true.
-      " Prevent accidental usage of exit handlers in the developer version
-      lv_class_name = |\\PROGRAM={ sy-repid }\\CLASS={ lv_class_name }|.
-    ENDIF.
 
     IF gi_exit IS INITIAL.
       TRY.
-          CREATE OBJECT gi_exit TYPE (lv_class_name).
+          CREATE OBJECT gi_exit TYPE ('ZCL_ABAPGIT_USER_EXIT').
         CATCH cx_sy_create_object_error ##NO_HANDLER.
       ENDTRY.
     ENDIF.
@@ -211,12 +207,12 @@ ENDMETHOD.
       TRY.
           gi_exit->adjust_display_commit_url(
             EXPORTING
-              iv_repo_url    = iv_repo_url
-              iv_repo_name   = iv_repo_name
-              iv_repo_key    = iv_repo_key
-              iv_commit_hash = iv_commit_hash
+              iv_repo_url           = iv_repo_url
+              iv_repo_name          = iv_repo_name
+              iv_repo_key           = iv_repo_key
+              iv_commit_hash        = iv_commit_hash
             CHANGING
-              cv_display_url = cv_display_url ).
+              cv_display_url        = cv_display_url ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.
@@ -312,30 +308,6 @@ ENDMETHOD.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_exit~change_supported_data_objects.
-
-    IF gi_exit IS NOT INITIAL.
-      TRY.
-          gi_exit->change_supported_data_objects( CHANGING ct_objects = ct_objects ).
-        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
-      ENDTRY.
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_exit~change_supported_object_types.
-
-    IF gi_exit IS NOT INITIAL.
-      TRY.
-          gi_exit->change_supported_object_types( CHANGING ct_types = ct_types ).
-        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
-      ENDTRY.
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_exit~change_tadir.
 
     IF gi_exit IS NOT INITIAL.
@@ -358,34 +330,34 @@ ENDMETHOD.
     IF gi_exit IS NOT INITIAL.
       TRY.
           ri_client = gi_exit->create_http_client( iv_url ).
-		  RETUNR.
+          RETURN.
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.
-	
+
 *DEFAULT Implementation: look to the proper RFC destination (for the user). See #1841
-	DATA(lv_destination) = find_rfc_dest_from_uri( iv_url ).
+    DATA(lv_destination) = find_rfc_dest_from_uri( iv_url ).
 
-  IF lv_destination IS INITIAL.
-    RETURN.
-  ENDIF.
+    IF lv_destination IS INITIAL.
+      RETURN.
+    ENDIF.
 
-  cl_http_client=>create_by_destination(
-    EXPORTING
-      destination              = lv_destination
-    IMPORTING
-      client                   = ri_client
-    EXCEPTIONS
-      argument_not_found       = 1
-      destination_not_found    = 2
-      destination_no_authority = 3
-      plugin_not_active        = 4
-      internal_error           = 5
-      OTHERS                   = 6 ).
+    cl_http_client=>create_by_destination(
+      EXPORTING
+        destination              = lv_destination
+      IMPORTING
+        client                   = ri_client
+      EXCEPTIONS
+        argument_not_found       = 1
+        destination_not_found    = 2
+        destination_no_authority = 3
+        plugin_not_active        = 4
+        internal_error           = 5
+        OTHERS                   = 6 ).
 
-  IF sy-subrc <> 0.
-    zcx_abapgit_exception=>raise_t100(  ).
-  ENDIF.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100(  ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -420,23 +392,6 @@ ENDMETHOD.
       TRY.
           gi_exit->deserialize_postprocess( is_step = is_step
                                             ii_log  = ii_log ).
-        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
-      ENDTRY.
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_exit~determine_transport_request.
-
-    IF gi_exit IS NOT INITIAL.
-      TRY.
-          gi_exit->determine_transport_request(
-            EXPORTING
-              io_repo              = io_repo
-              iv_transport_type    = iv_transport_type
-            CHANGING
-              cv_transport_request = cv_transport_request ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.
@@ -510,8 +465,8 @@ ENDMETHOD.
             EXPORTING
               is_repo_meta = is_repo_meta
             CHANGING
-              ct_local     = ct_local
-              ct_remote    = ct_remote ).
+              ct_local  = ct_local
+              ct_remote = ct_remote ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.
@@ -529,21 +484,6 @@ ENDMETHOD.
               ii_log     = ii_log
             CHANGING
               ct_files   = ct_files ).
-        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
-      ENDTRY.
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_exit~validate_before_push.
-
-    IF gi_exit IS NOT INITIAL.
-      TRY.
-          gi_exit->validate_before_push(
-            is_comment = is_comment
-            io_stage   = io_stage
-            io_repo    = io_repo ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.
@@ -574,16 +514,5 @@ ENDMETHOD.
       ENDTRY.
     ENDIF.
 
-  ENDMETHOD.
-  METHOD zif_abapgit_exit~enhance_repo_toolbar.
-    IF gi_exit IS NOT INITIAL.
-      TRY.
-          gi_exit->enhance_repo_toolbar(
-            io_menu = io_menu
-            iv_key  = iv_key
-            iv_act  = iv_act ).
-        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
-      ENDTRY.
-    ENDIF.
   ENDMETHOD.
 ENDCLASS.
