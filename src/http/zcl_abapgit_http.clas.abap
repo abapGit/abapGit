@@ -133,7 +133,7 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
 
       cl_http_client=>create_by_url(
         EXPORTING
-          url                = zcl_abapgit_url=>host( iv_url )
+          url                = zcl_abapgit_url=>host( iv_url ) " Note IV_URL provide the same result faster
           ssl_id             = zcl_abapgit_exit=>get_instance( )->get_ssl_id( )
           proxy_host         = lo_proxy_configuration->get_proxy_url( iv_url )
           proxy_service      = lo_proxy_configuration->get_proxy_port( iv_url )
@@ -178,7 +178,9 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
     li_client->request->set_header_field(
         name  = 'user-agent'
         value = get_agent( ) ).
-    lv_uri = zcl_abapgit_url=>path_name( iv_url ) &&
+* RFC destination may contains Prefix PATH
+    lv_uri = COND string( WHEN li_client->path_prefix IS INITIAL THEN zcl_abapgit_url=>path_name( iv_url )
+                          ELSE || ) &&
              '/info/refs?service=git-' &&
              iv_service &&
              '-pack'.

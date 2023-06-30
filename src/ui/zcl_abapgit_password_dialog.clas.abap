@@ -5,6 +5,8 @@ CLASS zcl_abapgit_password_dialog DEFINITION
 
   PUBLIC SECTION.
 
+  class-data GV_NO_DIALOG type ABAP_BOOL .
+  
     CLASS-METHODS popup
       IMPORTING
         !iv_repo_url TYPE string
@@ -26,7 +28,7 @@ CLASS zcl_abapgit_password_dialog IMPLEMENTATION.
 
     DATA: lx_error TYPE REF TO cx_sy_dyn_call_illegal_form.
 
-    IF zcl_abapgit_ui_factory=>get_frontend_services( )->gui_is_available( ) = abap_true.
+    IF zcl_abapgit_ui_factory=>get_frontend_services( )->gui_is_available( ) = abap_true AND GV_NO_DIALOG IS INITIAL.
 
       TRY.
           PERFORM password_popup

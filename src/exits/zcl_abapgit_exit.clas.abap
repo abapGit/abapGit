@@ -5,7 +5,68 @@ CLASS zcl_abapgit_exit DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_exit .
+  types:
+    BEGIN OF ts_rfc_definition,
+        destination             TYPE  rfcdes-rfcdest,
+        servicenr               TYPE rfcdisplay-rfcsysid,
+        server                  TYPE rfcdisplay-rfchost,
+        trace                   TYPE rfcdisplay-rfctrace,
+        language                TYPE rfcdisplay-rfclang,
+        client                  TYPE rfcdisplay-rfcclient,
+        user                    TYPE rfcdisplay-rfcalias,
+        password                TYPE rfcdisplay-rfcexec,
+        description             TYPE rfcdoc-rfcdoc1,
+        proxy_host              TYPE rfcdisplay-rfcgwhost,
+        proxy_service           TYPE rfcdisplay-rfcgwserv,
+        proxy_user              TYPE rfcdisplay-proxyuser,
+        proxy_password          TYPE string,
+        sslapplic               TYPE rfcdisplay-sslapplic,
+        path_prefix             TYPE string,
+        destlock                TYPE rfcdisplay-rfclock,
+        authority               TYPE destauth,
+        slogin                  TYPE rfcdisplay-rfcslogin,
+        sameusr                 TYPE rfcdisplay-rfcsameusr,
+        ssl                     TYPE rfcdisplay-rfcsnc,
+        http_timeout            TYPE i,
+        http_version            TYPE rfcdisplay-rfctype,
+        http_compress           TYPE rfcdisplay-rfctype,
+        compressreply           TYPE rfcdisplay-rfctype,
+        cookie_accept           TYPE rfcdisplay-rfctype,
+        sso_ticket              TYPE rfcdisplay-rfctsysopt,
+        category                TYPE rfcdisplay-rfccategory,
+        assertion_ticket        TYPE assertion_ticket,
+        assertion_ticket_sysid  TYPE assertion_ticket_sysid,
+        assertion_ticket_client TYPE assertion_ticket_client,
+        user_long254            TYPE rfcdisplaz-http_ext_user,
+        scc_enabled             TYPE rfcdisplay-scc_enabled,
+        mqtt_user               TYPE rfcdisplay-mqttuser,
+        mqtt_pw                 TYPE rfcdisplay-mqttpw,
+        scc_location_id         TYPE rfcdisplay-scc_location_id,
+        no_client_cert          TYPE rfcdisplay-noccert,
+        oauth_used              TYPE char1,
+        oauth_profile           TYPE oa2c_profile,
+        oauth_config            TYPE oa2c_configuration,
+        created_by              TYPE rfcattrib-cuname,
+        modified_by             TYPE rfcattrib-muname,
+      END OF ts_rfc_definition .
+  types:
+    tt_rfc_definition TYPE SORTED TABLE OF ts_rfc_definition WITH UNIQUE KEY destination .
 
+  class-data GT_RFC_DESTinations type tt_rfc_definition read-only .
+  class-methods CLASS_CONSTRUCTOR .
+  class-methods FIND_RFC_DEST_FROM_URI
+    importing
+      !IV_URL type STRING
+    returning
+      value(R_DESTINATION) type RFCDEST .
+  class-methods FIND_RFC_DEST_FROM_HOST_PATH
+    importing
+      !IV_HOST type STRING
+      !IV_PATH_NAME type STRING
+      !IV_USER type SYST-UNAME default '*'
+    returning
+      value(R_DESTINATION) type RFCDEST .
+	  
     CLASS-METHODS get_instance
       RETURNING
         VALUE(ri_exit) TYPE REF TO zif_abapgit_exit .
@@ -19,6 +80,107 @@ ENDCLASS.
 
 CLASS zcl_abapgit_exit IMPLEMENTATION.
 
+METHOD class_constructor.
+  SELECT d~rfcdest AS destination, u~cuname AS created_by, u~muname AS modified_by
+    INTO CORRESPONDING FIELDS OF TABLE @gt_rfc_destinations
+    FROM rfcdes AS d LEFT JOIN rfcattrib AS u ON u~rfcdest = d~rfcdest
+    WHERE d~rfctype = 'G'.
+
+  LOOP AT gt_rfc_destinations ASSIGNING FIELD-SYMBOL(<d>).
+    CALL FUNCTION 'RFC_READ_HTTP_DESTINATION'
+      EXPORTING
+        destination             = <d>-destination
+*       AUTHORITY_CHECK         = 'X'
+*       BYPASS_BUF              =
+      IMPORTING
+*        rfctype                 = <d>-rfctype
+        servicenr               = <d>-servicenr
+        server                  = <d>-server
+        trace                   = <d>-trace
+        language                = <d>-language
+        client                  = <d>-client
+        user                    = <d>-user
+        password                = <d>-password
+        description             = <d>-description
+        proxy_host              = <d>-proxy_host
+        proxy_service           = <d>-proxy_service
+        proxy_user              = <d>-proxy_user
+        proxy_password          = <d>-proxy_password
+        sslapplic               = <d>-sslapplic
+        path_prefix             = <d>-path_prefix
+        destlock                = <d>-destlock
+        authority               = <d>-authority
+        slogin                  = <d>-slogin
+        sameusr                 = <d>-sameusr
+        ssl                     = <d>-ssl
+        http_timeout            = <d>-http_timeout
+        http_version            = <d>-http_version
+        http_compress           = <d>-http_compress
+        compressreply           = <d>-compressreply
+        cookie_accept           = <d>-cookie_accept
+        sso_ticket              = <d>-sso_ticket
+        category                = <d>-category
+        assertion_ticket        = <d>-assertion_ticket
+        assertion_ticket_sysid  = <d>-assertion_ticket_sysid
+        assertion_ticket_client = <d>-assertion_ticket_client
+        user_long254            = <d>-user_long254
+        scc_enabled             = <d>-scc_enabled
+        mqtt_user               = <d>-mqtt_user
+        mqtt_pw                 = <d>-mqtt_pw
+        scc_location_id         = <d>-scc_location_id
+        no_client_cert          = <d>-no_client_cert
+        oauth_used              = <d>-oauth_used
+        oauth_profile           = <d>-oauth_profile
+        oauth_config            = <d>-oauth_config
+      EXCEPTIONS
+        authority_not_available = 1
+        destination_not_exist   = 2
+        information_failure     = 3
+        internal_failure        = 4
+        no_http_destination     = 5
+        OTHERS                  = 6.
+    IF sy-subrc <> 0.
+      CONTINUE.
+    ENDIF.
+  ENDLOOP.
+
+  DELETE gt_rfc_destinations WHERE server IS INITIAL.
+
+ENDMETHOD.
+
+  METHOD find_rfc_dest_from_uri.
+* Goal : Split URI Into Server and Path
+* not working get http or https prefix not real host name.
+*    DATA(lv_host) = zcl_abapgit_url=>host( iv_url ).
+*    DATA(lv_path_name) = zcl_abapgit_url=>path_name( iv_url ).
+*    DATA(lv_name) = zcl_abapgit_url=>name( iv_url ).
+* Replaced by REGEX derived from zcl_abapgit_url=>path_name
+    DATA: lv_prot TYPE string ##NEEDED.
+    DATA: lv_host TYPE string.
+    DATA: lv_path_name TYPE string.
+    FIND REGEX '(http[s]?)://([^/]*)(.*)' IN iv_url
+      SUBMATCHES lv_prot lv_host lv_path_name.
+    r_destination = find_rfc_dest_from_host_path( iv_host = lv_host
+                                             iv_path_name = lv_path_name
+                                                  iv_user = sy-uname ).
+    IF r_destination IS INITIAL.
+      r_destination = find_rfc_dest_from_host_path( iv_host = lv_host
+                                               iv_path_name = lv_path_name ).
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD find_rfc_dest_from_host_path.
+* Look into preloaded RFC destination for external RFC
+* BOTH server and PATH MUST Match!
+* Need adjustment in zcl_abapgit_http=>create_by_url( )
+    LOOP AT gt_rfc_destinations ASSIGNING FIELD-SYMBOL(<d>)
+      WHERE server = iv_host
+        AND path_prefix = iv_path_name
+        AND ( created_by CS iv_user OR modified_by CS iv_user ).
+      r_destination = <d>-destination.
+      EXIT.
+    ENDLOOP.
+  ENDMETHOD.
 
   METHOD get_instance.
 
@@ -196,9 +358,34 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
     IF gi_exit IS NOT INITIAL.
       TRY.
           ri_client = gi_exit->create_http_client( iv_url ).
+		  RETUNR.
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.
+	
+*DEFAULT Implementation: look to the proper RFC destination (for the user). See #1841
+	DATA(lv_destination) = find_rfc_dest_from_uri( iv_url ).
+
+  IF lv_destination IS INITIAL.
+    RETURN.
+  ENDIF.
+
+  cl_http_client=>create_by_destination(
+    EXPORTING
+      destination              = lv_destination
+    IMPORTING
+      client                   = ri_client
+    EXCEPTIONS
+      argument_not_found       = 1
+      destination_not_found    = 2
+      destination_no_authority = 3
+      plugin_not_active        = 4
+      internal_error           = 5
+      OTHERS                   = 6 ).
+
+  IF sy-subrc <> 0.
+    zcx_abapgit_exception=>raise_t100(  ).
+  ENDIF.
 
   ENDMETHOD.
 
