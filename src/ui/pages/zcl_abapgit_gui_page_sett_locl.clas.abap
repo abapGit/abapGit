@@ -51,7 +51,6 @@ CLASS zcl_abapgit_gui_page_sett_locl DEFINITION
 
     DATA mo_form TYPE REF TO zcl_abapgit_html_form .
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map .
-    DATA mo_form_util TYPE REF TO zcl_abapgit_html_form_utils .
     DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map .
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
@@ -70,6 +69,8 @@ CLASS zcl_abapgit_gui_page_sett_locl DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS read_settings
+      RETURNING
+        VALUE(ro_form_data) TYPE REF TO zcl_abapgit_string_map
       RAISING
         zcx_abapgit_exception .
     METHODS save_settings
@@ -97,7 +98,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
 
 
   METHOD choose_check_variant.
@@ -174,9 +175,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
     CREATE OBJECT mo_form_data.
     mo_repo = io_repo.
     mo_form = get_form_schema( ).
-    mo_form_util = zcl_abapgit_html_form_utils=>create( mo_form ).
-
-    read_settings( ).
+    mo_form_data = read_settings( ).
 
   ENDMETHOD.
 
@@ -302,48 +301,46 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
 
     " Get settings from DB
     ms_settings = mo_repo->get_local_settings( ).
+    CREATE OBJECT ro_form_data.
 
     " Local Settings
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-display_name
       iv_val = ms_settings-display_name ).
 
     IF li_package->are_changes_recorded_in_tr_req( ) = abap_true.
-      mo_form_data->set(
+      ro_form_data->set(
         iv_key = c_id-transport_request
         iv_val = ms_settings-transport_request ).
     ENDIF.
 
     IF is_customizing_included( ) = abap_true.
-      mo_form_data->set(
+      ro_form_data->set(
         iv_key = c_id-customizing_request
         iv_val = ms_settings-customizing_request ).
     ENDIF.
 
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-labels
       iv_val = ms_settings-labels ).
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-ignore_subpackages
       iv_val = boolc( ms_settings-ignore_subpackages = abap_true ) ) ##TYPE.
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-main_language_only
       iv_val = boolc( ms_settings-main_language_only = abap_true ) ) ##TYPE.
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-write_protected
       iv_val = boolc( ms_settings-write_protected = abap_true ) ) ##TYPE.
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-only_local_objects
       iv_val = boolc( ms_settings-only_local_objects = abap_true ) ) ##TYPE.
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-code_inspector_check_variant
       iv_val = |{ ms_settings-code_inspector_check_variant }| ).
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-block_commit
       iv_val = boolc( ms_settings-block_commit = abap_true ) ) ##TYPE.
-
-    " Set for is_dirty check
-    mo_form_util->set_data( mo_form_data ).
 
   ENDMETHOD.
 
@@ -367,7 +364,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
 
     MESSAGE 'Settings succesfully saved' TYPE 'S'.
 
-    read_settings( ).
+    mo_form_data = read_settings( ).
 
   ENDMETHOD.
 
@@ -380,7 +377,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
       lv_customizing_request TYPE trkorr,
       lv_check_variant       TYPE sci_chkv.
 
-    ro_validation_log = mo_form_util->validate( io_form_data ).
+    ro_validation_log = zcl_abapgit_html_form_utils=>create( mo_form )->validate( io_form_data ).
 
     lv_transport_request = io_form_data->get( c_id-transport_request ).
     IF lv_transport_request IS NOT INITIAL.
@@ -434,11 +431,13 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
+    mo_form_data->merge( zcl_abapgit_html_form_utils=>create( mo_form )->normalize( ii_event->form_data( ) ) ).
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-go_back.
-        rs_handled-state = mo_form_util->exit( mo_form_data ).
+        rs_handled-state = zcl_abapgit_html_form_utils=>create( mo_form )->exit(
+          io_form_data            = mo_form_data
+          io_check_changes_versus = read_settings( ) ).
 
       WHEN c_event-choose_transport_request.
 
@@ -478,10 +477,6 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
   METHOD zif_abapgit_gui_renderable~render.
 
     register_handlers( ).
-
-    IF mo_form_util->is_empty( mo_form_data ) = abap_true.
-      read_settings( ).
-    ENDIF.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 

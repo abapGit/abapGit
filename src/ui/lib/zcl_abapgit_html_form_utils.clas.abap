@@ -93,6 +93,7 @@ CLASS ZCL_ABAPGIT_HTML_FORM_UTILS IMPLEMENTATION.
       io_form_data    = io_form_data
       io_compare_with = lo_compare_with ) = abap_true.
       lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
+        iv_display_cancel_button = abap_false
         iv_titlebar       = 'abapGit - Unsaved Changes'
         iv_text_question  = 'There are unsaved changes. Do you want to exit the form?'
         iv_default_button = '2' ).

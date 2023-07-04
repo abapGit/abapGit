@@ -658,9 +658,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
         iv_val = ms_settings_snapshot-pull_request ).
     ENDIF.
 
-    " Set for is_dirty check
-    zcl_abapgit_html_form_utils=>create( mo_form )->set_data( ro_form_data ).
-
   ENDMETHOD.
 
 
