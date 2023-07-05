@@ -46,7 +46,6 @@ CLASS zcl_abapgit_gui_page_sett_repo DEFINITION
 
     DATA mo_form TYPE REF TO zcl_abapgit_html_form .
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map .
-    DATA mo_form_util TYPE REF TO zcl_abapgit_html_form_utils .
     DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map .
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
@@ -65,6 +64,8 @@ CLASS zcl_abapgit_gui_page_sett_repo DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS read_settings
+      RETURNING
+        VALUE(ro_form_data) TYPE REF TO zcl_abapgit_string_map
       RAISING
         zcx_abapgit_exception .
     METHODS save_settings
@@ -74,7 +75,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -84,9 +85,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
     CREATE OBJECT mo_form_data.
     mo_repo = io_repo.
     mo_form = get_form_schema( ).
-    mo_form_util = zcl_abapgit_html_form_utils=>create( mo_form ).
-
-    read_settings( ).
+    mo_form_data = read_settings( ).
 
   ENDMETHOD.
 
@@ -202,6 +201,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
     lo_dot = mo_repo->get_dot_abapgit( ).
     ls_dot = lo_dot->get_data( ).
     lv_main_lang = lo_dot->get_main_language( ).
+    CREATE OBJECT ro_form_data.
 
     " Repository Settings
     SELECT SINGLE sptxt INTO lv_language FROM t002t
@@ -210,30 +210,30 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
       lv_language = 'Unknown language; Check your .abapgit.xml file'.
     ENDIF.
 
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-main_language
       iv_val = |{ lv_main_lang } ({ lv_language })| ).
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-i18n_langs
       iv_val = zcl_abapgit_lxe_texts=>convert_table_to_lang_string( lo_dot->get_i18n_languages( ) ) ).
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-use_lxe
       iv_val = boolc( lo_dot->use_lxe( ) = abap_true ) ) ##TYPE.
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-folder_logic
       iv_val = ls_dot-folder_logic ).
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-starting_folder
       iv_val = ls_dot-starting_folder ).
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-version_constant
       iv_val = ls_dot-version_constant ).
     TRY.
-        mo_form_data->set(
+        ro_form_data->set(
           iv_key = c_id-version_value
           iv_val = zcl_abapgit_version=>get_version_constant_value( ls_dot-version_constant ) ).
       CATCH zcx_abapgit_exception.
-        mo_form_data->set(
+        ro_form_data->set(
           iv_key = c_id-version_value
           iv_val = '' ).
     ENDTRY.
@@ -242,7 +242,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
       table = ls_dot-ignore
       sep   = cl_abap_char_utilities=>newline ).
 
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-ignore
       iv_val = lv_ignore ).
 
@@ -257,7 +257,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
           WHEN 3.
             lv_val = ls_requirements-min_patch.
         ENDCASE.
-        mo_form_data->set(
+        ro_form_data->set(
           iv_key = |{ c_id-requirements }-{ lv_row }-{ sy-index }|
           iv_val = lv_val ).
       ENDDO.
@@ -266,7 +266,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
     DO c_empty_rows TIMES.
       lv_row = lv_row + 1.
       DO 3 TIMES.
-        mo_form_data->set(
+        ro_form_data->set(
           iv_key = |{ c_id-requirements }-{ lv_row }-{ sy-index }|
           iv_val = '' ).
       ENDDO.
@@ -274,12 +274,9 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
 
     mv_requirements_count = lv_row.
 
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = |{ c_id-requirements }-{ zif_abapgit_html_form=>c_rows }|
       iv_val = |{ mv_requirements_count }| ).
-
-    " Set for is_dirty check
-    mo_form_util->set_data( mo_form_data ).
 
   ENDMETHOD.
 
@@ -343,7 +340,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
 
     MESSAGE 'Settings succesfully saved' TYPE 'S'.
 
-    read_settings( ).
+    mo_form_data = read_settings( ).
 
   ENDMETHOD.
 
@@ -360,7 +357,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
       lv_version_constant TYPE string,
       lx_exception        TYPE REF TO zcx_abapgit_exception.
 
-    ro_validation_log = mo_form_util->validate( io_form_data ).
+    ro_validation_log = zcl_abapgit_html_form_utils=>create( mo_form )->validate( io_form_data ).
 
     lv_folder = io_form_data->get( c_id-starting_folder ).
     lv_len = strlen( lv_folder ) - 1.
@@ -419,11 +416,13 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
+    mo_form_data->merge( zcl_abapgit_html_form_utils=>create( mo_form )->normalize( ii_event->form_data( ) ) ).
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-go_back.
-        rs_handled-state = mo_form_util->exit( mo_form_data ).
+        rs_handled-state = zcl_abapgit_html_form_utils=>create( mo_form )->exit(
+          io_form_data            = mo_form_data
+          io_check_changes_versus = read_settings( ) ).
 
       WHEN c_event-save.
         " Validate all form entries
@@ -443,10 +442,6 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
   METHOD zif_abapgit_gui_renderable~render.
 
     register_handlers( ).
-
-    IF mo_form_util->is_empty( mo_form_data ) = abap_true.
-      read_settings( ).
-    ENDIF.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 

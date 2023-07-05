@@ -105,4 +105,8 @@ INTERFACE zif_abapgit_cts_api
     RAISING
       zcx_abapgit_exception.
 
+  METHODS confirm_transport_messages
+    RETURNING
+      VALUE(rv_messages_confirmed) TYPE abap_bool .
+
 ENDINTERFACE.
