@@ -57,7 +57,8 @@
     "zif_abapgit_s",
     "zif_abapgit_t",
     "zif_abapgit_v",
-    "zif_abapgit_x"
+    "zif_abapgit_x",
+    "zif_abapgit_i18n_file"
   ],
   "output_folder": "output",
   "libs": [
