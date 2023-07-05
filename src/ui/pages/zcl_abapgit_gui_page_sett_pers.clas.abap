@@ -47,7 +47,6 @@ CLASS zcl_abapgit_gui_page_sett_pers DEFINITION
 
     DATA mo_form TYPE REF TO zcl_abapgit_html_form.
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
-    DATA mo_form_util TYPE REF TO zcl_abapgit_html_form_utils.
     DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
 
     DATA mo_settings TYPE REF TO zcl_abapgit_settings.
@@ -64,6 +63,8 @@ CLASS zcl_abapgit_gui_page_sett_pers DEFINITION
       RETURNING
         VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form.
     METHODS read_settings
+      RETURNING
+        VALUE(ro_form_data) TYPE REF TO zcl_abapgit_string_map
       RAISING
         zcx_abapgit_exception.
     METHODS save_settings
@@ -85,9 +86,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
     CREATE OBJECT mo_validation_log.
     CREATE OBJECT mo_form_data.
     mo_form = get_form_schema( ).
-    mo_form_util = zcl_abapgit_html_form_utils=>create( mo_form ).
-
-    read_settings( ).
+    mo_form_data = read_settings( ).
 
   ENDMETHOD.
 
@@ -210,47 +209,45 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
     " Get settings from DB
     mo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
     ms_settings = mo_settings->get_user_settings( ).
+    CREATE OBJECT ro_form_data.
 
     " Startup
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-show_default_repo
       iv_val = |{ ms_settings-show_default_repo }| ).
 
     " UI
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-ui_theme
       iv_val = ms_settings-ui_theme ).
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-icon_scaling
       iv_val = |{ ms_settings-icon_scaling }| ).
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-max_lines
       iv_val = |{ ms_settings-max_lines }| ).
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-label_colors
       iv_val = ms_settings-label_colors ).
 
     " Interaction
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-activate_wo_popup
       iv_val = boolc( ms_settings-activate_wo_popup = abap_true ) ) ##TYPE.
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-adt_jump_enabled
       iv_val = boolc( ms_settings-adt_jump_enabled = abap_true ) ) ##TYPE.
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-link_hints_enabled
       iv_val = boolc( ms_settings-link_hints_enabled = abap_true ) ) ##TYPE.
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-link_hint_key
       iv_val = |{ ms_settings-link_hint_key }| ).
 
     " Resources
-    mo_form_data->set(
+    ro_form_data->set(
       iv_key = c_id-parallel_proc_disabled
       iv_val = boolc( ms_settings-parallel_proc_disabled = abap_true ) ) ##TYPE.
-
-    " Set for is_dirty check
-    mo_form_util->set_data( mo_form_data ).
 
   ENDMETHOD.
 
@@ -350,7 +347,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
 
     MESSAGE 'Settings succesfully saved' TYPE 'S'.
 
-    read_settings( ).
+    mo_form_data = read_settings( ).
 
   ENDMETHOD.
 
@@ -359,7 +356,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
 
     DATA lx_error TYPE REF TO zcx_abapgit_exception.
 
-    ro_validation_log = mo_form_util->validate( io_form_data ).
+    ro_validation_log = zcl_abapgit_html_form_utils=>create( mo_form )->validate( io_form_data ).
 
     TRY.
         zcl_abapgit_repo_labels=>validate_colors( io_form_data->get( c_id-label_colors ) ).
@@ -374,11 +371,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
+    mo_form_data->merge( zcl_abapgit_html_form_utils=>create( mo_form )->normalize( ii_event->form_data( ) ) ).
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-go_back.
-        rs_handled-state = mo_form_util->exit( mo_form_data ).
+        rs_handled-state = zcl_abapgit_html_form_utils=>create( mo_form )->exit(
+          io_form_data            = mo_form_data
+          io_check_changes_versus = read_settings( ) ).
 
       WHEN c_event-save.
         " Validate form entries before saving
@@ -399,15 +398,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
 
     register_handlers( ).
 
-    IF mo_form_util->is_empty( mo_form_data ) = abap_true.
-      read_settings( ).
-    ENDIF.
-
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     ri_html->add( '<div class="form-container">' ).
     ri_html->add( mo_form->render(
       io_values         = mo_form_data
       io_validation_log = mo_validation_log ) ).
     ri_html->add( '</div>' ).
+
   ENDMETHOD.
 ENDCLASS.
