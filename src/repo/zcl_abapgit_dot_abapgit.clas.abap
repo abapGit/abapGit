@@ -1,125 +1,122 @@
-class ZCL_ABAPGIT_DOT_ABAPGIT definition
-  public
-  create public .
+CLASS zcl_abapgit_dot_abapgit DEFINITION
+  PUBLIC
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  class-methods BUILD_DEFAULT
-    returning
-      value(RO_DOT_ABAPGIT) type ref to ZCL_ABAPGIT_DOT_ABAPGIT .
-  class-methods DESERIALIZE
-    importing
-      !IV_XSTR type XSTRING
-    returning
-      value(RO_DOT_ABAPGIT) type ref to ZCL_ABAPGIT_DOT_ABAPGIT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods CONSTRUCTOR
-    importing
-      !IS_DATA type ZIF_ABAPGIT_DOT_ABAPGIT=>TY_DOT_ABAPGIT .
-  methods SERIALIZE
-    returning
-      value(RV_XSTR) type XSTRING
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods TO_FILE
-    returning
-      value(RS_FILE) type ZIF_ABAPGIT_GIT_DEFINITIONS=>TY_FILE
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods GET_DATA
-    returning
-      value(RS_DATA) type ZIF_ABAPGIT_DOT_ABAPGIT=>TY_DOT_ABAPGIT .
-  methods ADD_IGNORE
-    importing
-      !IV_PATH type STRING
-      !IV_FILENAME type STRING .
-  methods IS_IGNORED
-    importing
-      !IV_PATH type STRING
-      !IV_FILENAME type STRING
-    returning
-      value(RV_IGNORED) type ABAP_BOOL .
-  methods REMOVE_IGNORE
-    importing
-      !IV_PATH type STRING
-      !IV_FILENAME type STRING .
-  methods GET_STARTING_FOLDER
-    returning
-      value(RV_PATH) type STRING .
-  methods GET_FOLDER_LOGIC
-    returning
-      value(RV_LOGIC) type STRING .
-  methods SET_FOLDER_LOGIC
-    importing
-      !IV_LOGIC type STRING .
-  methods SET_STARTING_FOLDER
-    importing
-      !IV_PATH type STRING .
-  methods GET_MAIN_LANGUAGE
-    returning
-      value(RV_LANGUAGE) type SPRAS .
-  methods GET_I18N_LANGUAGES
-    returning
-      value(RT_LANGUAGES) type ZIF_ABAPGIT_DEFINITIONS=>TY_LANGUAGES
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods SET_I18N_LANGUAGES
-    importing
-      value(IT_LANGUAGES) type ZIF_ABAPGIT_DEFINITIONS=>TY_LANGUAGES
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods GET_SIGNATURE
-    returning
-      value(RS_SIGNATURE) type ZIF_ABAPGIT_GIT_DEFINITIONS=>TY_FILE_SIGNATURE
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods USE_LXE
-    importing
-      !IV_YES type ABAP_BOOL default ABAP_UNDEFINED
-    returning
-      value(RV_YES) type ABAP_BOOL .
-  methods GET_REQUIREMENTS
-    returning
-      value(RT_REQUIREMENTS) type ZIF_ABAPGIT_DOT_ABAPGIT=>TY_REQUIREMENT_TT .
-  methods SET_REQUIREMENTS
-    importing
-      !IT_REQUIREMENTS type ZIF_ABAPGIT_DOT_ABAPGIT=>TY_REQUIREMENT_TT .
-  methods GET_VERSION_CONSTANT
-    returning
-      value(RV_VERSION_CONSTANT) type STRING .
-  methods SET_VERSION_CONSTANT
-    importing
-      !IV_VERSION_CONSTANT type CSEQUENCE .
-  methods GET_ABAP_LANGUAGE_VERSION
-    returning
-      value(RV_ABAP_LANGUAGE_VERSION) type STRING .
-  methods SET_ABAP_LANGUAGE_VERSION
-    importing
-      !IV_ABAP_LANGUAGE_VERSION type STRING .
+    CLASS-METHODS build_default
+      RETURNING
+        VALUE(ro_dot_abapgit) TYPE REF TO zcl_abapgit_dot_abapgit .
+    CLASS-METHODS deserialize
+      IMPORTING
+        !iv_xstr              TYPE xstring
+      RETURNING
+        VALUE(ro_dot_abapgit) TYPE REF TO zcl_abapgit_dot_abapgit
+      RAISING
+        zcx_abapgit_exception .
+    METHODS constructor
+      IMPORTING
+        !is_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit .
+    METHODS serialize
+      RETURNING
+        VALUE(rv_xstr) TYPE xstring
+      RAISING
+        zcx_abapgit_exception .
+    METHODS to_file
+      RETURNING
+        VALUE(rs_file) TYPE zif_abapgit_git_definitions=>ty_file
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_data
+      RETURNING
+        VALUE(rs_data) TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit .
+    METHODS add_ignore
+      IMPORTING
+        !iv_path     TYPE string
+        !iv_filename TYPE string .
+    METHODS is_ignored
+      IMPORTING
+        !iv_path          TYPE string
+        !iv_filename      TYPE string
+      RETURNING
+        VALUE(rv_ignored) TYPE abap_bool .
+    METHODS remove_ignore
+      IMPORTING
+        !iv_path     TYPE string
+        !iv_filename TYPE string .
+    METHODS get_starting_folder
+      RETURNING
+        VALUE(rv_path) TYPE string .
+    METHODS get_folder_logic
+      RETURNING
+        VALUE(rv_logic) TYPE string .
+    METHODS set_folder_logic
+      IMPORTING
+        !iv_logic TYPE string .
+    METHODS set_starting_folder
+      IMPORTING
+        !iv_path TYPE string .
+    METHODS get_main_language
+      RETURNING
+        VALUE(rv_language) TYPE spras .
+    METHODS get_i18n_languages
+      RETURNING
+        VALUE(rt_languages) TYPE zif_abapgit_definitions=>ty_languages
+      RAISING
+        zcx_abapgit_exception .
+    METHODS set_i18n_languages
+      IMPORTING
+        VALUE(it_languages) TYPE zif_abapgit_definitions=>ty_languages
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_signature
+      RETURNING
+        VALUE(rs_signature) TYPE zif_abapgit_git_definitions=>ty_file_signature
+      RAISING
+        zcx_abapgit_exception .
+    METHODS use_lxe
+      IMPORTING
+        !iv_yes       TYPE abap_bool DEFAULT abap_undefined
+      RETURNING
+        VALUE(rv_yes) TYPE abap_bool .
+    METHODS get_requirements
+      RETURNING
+        VALUE(rt_requirements) TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt .
+    METHODS set_requirements
+      IMPORTING
+        !it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt .
+    METHODS get_version_constant
+      RETURNING
+        VALUE(rv_version_constant) TYPE string .
+    METHODS set_version_constant
+      IMPORTING
+        !iv_version_constant TYPE csequence .
+    METHODS get_abap_language_version
+      RETURNING
+        VALUE(rv_abap_language_version) TYPE string .
+    METHODS set_abap_language_version
+      IMPORTING
+        !iv_abap_language_version TYPE string .
   PROTECTED SECTION.
-private section.
+  PRIVATE SECTION.
 
-  data MS_DATA type ZIF_ABAPGIT_DOT_ABAPGIT=>TY_DOT_ABAPGIT .
+    DATA ms_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit .
 
-  class-methods TO_XML
-    importing
-      !IS_DATA type ZIF_ABAPGIT_DOT_ABAPGIT=>TY_DOT_ABAPGIT
-    returning
-      value(RV_XML) type STRING
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  class-methods FROM_XML
-    importing
-      !IV_XML type STRING
-    returning
-      value(RS_DATA) type ZIF_ABAPGIT_DOT_ABAPGIT=>TY_DOT_ABAPGIT .
+    CLASS-METHODS to_xml
+      IMPORTING
+        !is_data      TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit
+      RETURNING
+        VALUE(rv_xml) TYPE string
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS from_xml
+      IMPORTING
+        !iv_xml        TYPE string
+      RETURNING
+        VALUE(rs_data) TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit .
 ENDCLASS.
 
-
-
 CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
-
 
   METHOD add_ignore.
 
@@ -140,7 +137,6 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD build_default.
 
     DATA: ls_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
@@ -157,11 +153,9 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD constructor.
     ms_data = is_data.
   ENDMETHOD.
-
 
   METHOD deserialize.
 
@@ -178,7 +172,6 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
         is_data = ls_data.
 
   ENDMETHOD.
-
 
   METHOD from_xml.
 
@@ -198,31 +191,25 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD get_data.
     rs_data = ms_data.
   ENDMETHOD.
-
 
   METHOD get_folder_logic.
     rv_logic = ms_data-folder_logic.
   ENDMETHOD.
 
-
   METHOD get_i18n_languages.
     rt_languages = ms_data-i18n_languages.
   ENDMETHOD.
-
 
   METHOD get_main_language.
     rv_language = ms_data-master_language.
   ENDMETHOD.
 
-
   METHOD get_requirements.
     rt_requirements = ms_data-requirements.
   ENDMETHOD.
-
 
   METHOD get_signature.
 
@@ -232,16 +219,13 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD get_starting_folder.
     rv_path = ms_data-starting_folder.
   ENDMETHOD.
 
-
   METHOD get_version_constant.
     rv_version_constant = ms_data-version_constant.
   ENDMETHOD.
-
 
   METHOD is_ignored.
 
@@ -284,7 +268,6 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD remove_ignore.
 
     DATA: lv_name TYPE string.
@@ -296,7 +279,6 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD serialize.
 
     DATA lv_xml TYPE string.
@@ -307,31 +289,25 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD set_folder_logic.
     ms_data-folder_logic = iv_logic.
   ENDMETHOD.
-
 
   METHOD set_i18n_languages.
     ms_data-i18n_languages = it_languages.
   ENDMETHOD.
 
-
   METHOD set_requirements.
     ms_data-requirements = it_requirements.
   ENDMETHOD.
-
 
   METHOD set_starting_folder.
     ms_data-starting_folder = iv_path.
   ENDMETHOD.
 
-
   METHOD set_version_constant.
     ms_data-version_constant = iv_version_constant.
   ENDMETHOD.
-
 
   METHOD to_file.
     rs_file-path     = zif_abapgit_definitions=>c_root_dir.
@@ -339,7 +315,6 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
     rs_file-data     = serialize( ).
     rs_file-sha1     = zcl_abapgit_hash=>sha1_blob( rs_file-data ).
   ENDMETHOD.
-
 
   METHOD to_xml.
 
@@ -358,7 +333,6 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD use_lxe.
 
     IF iv_yes <> abap_undefined.
@@ -369,11 +343,9 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
   ENDMETHOD.
 
-
-  method GET_ABAP_LANGUAGE_VERSION.
-   rv_abap_language_version = ms_data-abap_language_version.
-  endmethod.
-
+  METHOD get_abap_language_version.
+    rv_abap_language_version = ms_data-abap_language_version.
+  ENDMETHOD.
 
   METHOD set_abap_language_version.
     ms_data-abap_language_version = iv_abap_language_version.
