@@ -215,8 +215,6 @@ CLASS zcl_abapgit_oo_serializer IMPLEMENTATION.
 
 
   METHOD serialize_abap_clif_source.
-    DATA lv_class_key TYPE abap_classname.
-
     rt_source = zcl_abapgit_exit=>get_instance( )->custom_serialize_abap_clif( is_class_key ).
     IF rt_source IS NOT INITIAL.
       RETURN.
@@ -229,9 +227,8 @@ CLASS zcl_abapgit_oo_serializer IMPLEMENTATION.
     ENDTRY.
 
     " Call exit again for optional post-processing
-    lv_class_key = is_class_key-clsname.
     rt_source = zcl_abapgit_exit=>get_instance( )->custom_serialize_abap_clif(
-      iv_class_key = lv_class_key
+      is_class_key = is_class_key
       it_source    = rt_source ).
   ENDMETHOD.
 

@@ -67,9 +67,12 @@ INTERFACE zif_abapgit_exit
       VALUE(ri_client) TYPE REF TO if_http_client
     RAISING
       zcx_abapgit_exception .
+  TYPES: BEGIN OF ty_class_key,
+           clsname TYPE abap_classname,
+         END OF ty_class_key.
   METHODS custom_serialize_abap_clif
     IMPORTING
-      !iv_class_key    TYPE abap_classname
+      !is_class_key    TYPE ty_class_key
       !it_source       TYPE zif_abapgit_definitions=>ty_string_tt OPTIONAL
     RETURNING
       VALUE(rt_source) TYPE zif_abapgit_definitions=>ty_string_tt
