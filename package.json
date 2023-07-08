@@ -1,5 +1,6 @@
 {
   "license": "MIT",
+  "private": true,
   "scripts": {
     "test": "npm run eslint && npm run abaplint",
     "merge": "abapmerge -f src/zabapgit.prog.abap -c zabapgit_standalone -o zabapgit.abap",
