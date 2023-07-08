@@ -57,7 +57,7 @@ CLASS ltcl_po_file IMPLEMENTATION.
     lo_buf->add( '#: T1/OBJ1/K1, maxlen=10'
       )->add( '#: T1/OBJ1/K2 X, maxlen=11'
       )->add( 'msgid "Hello"'
-      )->add( 'msgstr "Hello DE 2"'
+      )->add( 'msgstr "Hello DE"'
       )->add( ''
       )->add( '#: T1/OBJ1/K3, maxlen=12'
       )->add( 'msgid "World"'
