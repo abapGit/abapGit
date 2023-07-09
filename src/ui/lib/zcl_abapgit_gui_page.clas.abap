@@ -505,9 +505,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
   METHOD is_edge_control_warning_needed.
 
     DATA:
-      lv_gui_release TYPE zif_abapgit_frontend_services=>ty_gui_release,
-      lv_gui_sp      TYPE zif_abapgit_frontend_services=>ty_gui_sp,
-      lv_gui_patch   TYPE zif_abapgit_frontend_services=>ty_gui_patch.
+      lv_gui_release       TYPE zif_abapgit_frontend_services=>ty_gui_release,
+      lv_gui_sp            TYPE zif_abapgit_frontend_services=>ty_gui_sp,
+      lv_gui_patch         TYPE zif_abapgit_frontend_services=>ty_gui_patch,
+      li_frontend_services TYPE REF TO zif_abapgit_frontend_services.
 
     " With SAGUI 8.00 PL3 edge browser control is basically working.
     " For lower releases we rendere the browser control warning
@@ -516,7 +517,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     rv_result = abap_true.
 
     TRY.
-        zcl_abapgit_ui_factory=>get_frontend_services( )->get_gui_version(
+        li_frontend_services = zcl_abapgit_ui_factory=>get_frontend_services( ).
+        li_frontend_services->get_gui_version(
           IMPORTING
             ev_gui_release        = lv_gui_release
             ev_gui_sp             = lv_gui_sp

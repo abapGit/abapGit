@@ -130,9 +130,7 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
 
     lo_frontend_serv = zcl_abapgit_ui_factory=>get_frontend_services( ).
     TRY.
-        lo_frontend_serv->get_gui_version(
-          IMPORTING
-            ev_gui_version_string = lv_gui_version ).
+        lo_frontend_serv->get_gui_version( IMPORTING ev_gui_version_string = lv_gui_version ).
       CATCH zcx_abapgit_exception ##NO_HANDLER.
         " Continue rendering even if this fails
     ENDTRY.
