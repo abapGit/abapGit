@@ -296,7 +296,7 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
     READ TABLE lt_version_table INTO ls_version INDEX 3. " gui patch
     ev_gui_patch = ls_version-filename.
 
-    ev_gui_version_string = |{ ev_gui_release }.{ ev_gui_sp }.{ ev_gui_patch }|.
+    ev_gui_version_string = |{ ev_gui_release }.{ condense( ev_gui_sp ) }.{ condense( ev_gui_patch ) }|.
 
   ENDMETHOD.
 
