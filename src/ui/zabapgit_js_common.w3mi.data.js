@@ -2494,7 +2494,10 @@ function toggleSticky() {
 // Todo: Remove once https://github.com/abapGit/abapGit/issues/4841 is fixed
 function toggleBrowserControlWarning(){
   if (!navigator.userAgent.includes("Edg")){
-    document.getElementById("browser-control-warning").style.display = "none";
+    var elBrowserControlWarning = document.getElementById("browser-control-warning");
+    if (elBrowserControlWarning) {
+      elBrowserControlWarning.style.display = "none";
+    }
   }
 }
 
