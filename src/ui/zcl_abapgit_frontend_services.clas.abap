@@ -271,7 +271,7 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
     DATA:
       lt_version_table TYPE filetable,
       lv_rc            TYPE i,
-      ls_version       TYPE file_table.
+      ls_version       LIKE LINE OF lt_version_table.
 
     cl_gui_frontend_services=>get_gui_version(
       CHANGING
