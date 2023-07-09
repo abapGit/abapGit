@@ -510,7 +510,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
       lv_gui_patch         TYPE zif_abapgit_frontend_services=>ty_gui_patch,
       li_frontend_services TYPE REF TO zif_abapgit_frontend_services.
 
-    " With SAGUI 8.00 PL3 edge browser control is basically working.
+    " With SAGUI 8.00 PL3 and 7.70 PL13 edge browser control is basically working.
     " For lower releases we render the browser control warning
     " an toggle it via JS function toggleBrowserControlWarning.
 
@@ -528,9 +528,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
         RETURN.
     ENDTRY.
 
-    IF  lv_gui_release >= '8000'
-    AND lv_gui_sp >= '1'
-    AND lv_gui_patch >= '3'.
+    IF lv_gui_release >= '7700' AND lv_gui_sp >= '1' AND lv_gui_patch >= '13'
+    OR lv_gui_release >= '8000' AND lv_gui_sp >= '1' AND lv_gui_patch >= '3'.
       rv_result = abap_false.
     ENDIF.
 
