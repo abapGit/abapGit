@@ -226,7 +226,7 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
           obj_name = ls_result-name
           decision = zif_abapgit_definitions=>c_yes.
       IF sy-subrc <>  0.
-        RETURN.
+        CONTINUE.
       ENDIF.
 
       IF is_table_allowed_to_edit( ls_result ) = abap_false.
