@@ -268,10 +268,15 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
 
   METHOD zif_abapgit_frontend_services~get_gui_version.
 
+    DATA:
+      lt_version_table TYPE filetable,
+      lv_rc            TYPE i,
+      ls_version       TYPE file_table.
+
     cl_gui_frontend_services=>get_gui_version(
       CHANGING
-        version_table            = ct_version_table
-        rc                       = cv_rc
+        version_table            = lt_version_table
+        rc                       = lv_rc
       EXCEPTIONS
         get_gui_version_failed   = 1
         cant_write_version_table = 2
@@ -283,6 +288,15 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
+
+    READ TABLE lt_version_table INTO ls_version INDEX 1. " gui release
+    ev_gui_release = ls_version-filename.
+    READ TABLE lt_version_table INTO ls_version INDEX 2. " gui sp
+    ev_gui_sp = ls_version-filename.
+    READ TABLE lt_version_table INTO ls_version INDEX 3. " gui patch
+    ev_gui_patch = ls_version-filename.
+
+    ev_gui_version_string = |{ ev_gui_release }.{ ev_gui_sp }.{ ev_gui_patch }|.
 
   ENDMETHOD.
 

@@ -123,27 +123,19 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
 
   METHOD render_debug_info.
 
-    DATA: lt_ver_tab       TYPE filetable,
-          lv_rc            TYPE i,
-          ls_release       TYPE zif_abapgit_environment=>ty_release_sp,
+    DATA: ls_release       TYPE zif_abapgit_environment=>ty_release_sp,
           lv_gui_version   TYPE string,
-          ls_version       LIKE LINE OF lt_ver_tab,
           lv_devclass      TYPE devclass,
           lo_frontend_serv TYPE REF TO zif_abapgit_frontend_services.
 
     lo_frontend_serv = zcl_abapgit_ui_factory=>get_frontend_services( ).
     TRY.
-        lo_frontend_serv->get_gui_version( CHANGING ct_version_table = lt_ver_tab cv_rc = lv_rc ).
+        lo_frontend_serv->get_gui_version(
+          IMPORTING
+            ev_gui_version_string = lv_gui_version ).
       CATCH zcx_abapgit_exception ##NO_HANDLER.
         " Continue rendering even if this fails
     ENDTRY.
-
-    READ TABLE lt_ver_tab INTO ls_version INDEX 1. " gui release
-    lv_gui_version = ls_version-filename.
-    READ TABLE lt_ver_tab INTO ls_version INDEX 2. " gui sp
-    lv_gui_version = |{ lv_gui_version }.{ ls_version-filename }|.
-    READ TABLE lt_ver_tab INTO ls_version INDEX 3. " gui patch
-    lv_gui_version = |{ lv_gui_version }.{ ls_version-filename }|.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
