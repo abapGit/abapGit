@@ -511,7 +511,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
       li_frontend_services TYPE REF TO zif_abapgit_frontend_services.
 
     " With SAGUI 8.00 PL3 edge browser control is basically working.
-    " For lower releases we rendere the browser control warning
+    " For lower releases we render the browser control warning
     " an toggle it via JS function toggleBrowserControlWarning.
 
     rv_result = abap_true.
