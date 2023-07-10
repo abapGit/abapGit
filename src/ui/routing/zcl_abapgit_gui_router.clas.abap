@@ -122,6 +122,11 @@ CLASS zcl_abapgit_gui_router DEFINITION
     METHODS main_page
       RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING   zcx_abapgit_exception.
+    METHODS call_url
+      IMPORTING
+        ii_event TYPE REF TO zif_abapgit_gui_event
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -142,6 +147,20 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
   METHOD call_browser.
 
     zcl_abapgit_ui_factory=>get_frontend_services( )->execute( iv_document = |{ iv_url }| ).
+
+  ENDMETHOD.
+
+
+  METHOD call_url.
+
+    DATA:
+      lv_short_url TYPE string,
+      lv_url       TYPE string.
+
+    " Urls are shortened. Let's translate them back via the repo and call them.
+    lv_short_url = ii_event->query( )->get( 'URL' ).
+    lv_url = zcl_abapgit_ui_factory=>get_short_url_repo( )->get( lv_short_url ).
+    call_browser( lv_url ).
 
   ENDMETHOD.
 
@@ -675,7 +694,8 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
       WHEN zif_abapgit_definitions=>c_action-url.
-        call_browser( ii_event->query( )->get( 'URL' ) ).
+
+        call_url( ii_event ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
     ENDCASE.

@@ -71,11 +71,16 @@ CLASS zcl_abapgit_html DEFINITION
         !is_context      TYPE ty_indent_context
       RETURNING
         VALUE(rs_result) TYPE ty_study_result .
+    METHODS prepare_action
+      IMPORTING
+        iv_act        TYPE string
+      RETURNING
+        VALUE(rv_act) TYPE string.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
+CLASS zcl_abapgit_html IMPLEMENTATION.
 
 
   METHOD checkbox.
@@ -410,9 +415,14 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
   METHOD zif_abapgit_html~add_a.
 
+    DATA:
+      lv_act LIKE iv_act.
+
+    lv_act = prepare_action( iv_act ).
+
     zif_abapgit_html~add( zif_abapgit_html~a(
       iv_txt   = iv_txt
-      iv_act   = iv_act
+      iv_act   = lv_act
       iv_query = iv_query
       iv_typ   = iv_typ
       iv_opt   = iv_opt
@@ -564,4 +574,30 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     ri_self = me.
 
   ENDMETHOD.
+
+
+  METHOD prepare_action.
+
+    DATA:
+      lo_short_url_repo TYPE REF TO zcl_abapgit_gui_short_url_repo,
+      lv_url            TYPE string.
+
+    rv_act = iv_act.
+
+    " As there are problems with urls with the new edge browser control
+    " we shorten these kind of urls and store them in a repo.
+    " If the url is clicked on the UI the short url is translated back via the repo.
+    " See #6339 and zcl_abapgit_gui_router / call_url
+
+    lv_url = substring_after(
+                 val = iv_act
+                 sub = |{ zif_abapgit_definitions=>c_action-url }?url=| ).
+
+    IF lv_url IS NOT INITIAL.
+      lo_short_url_repo = zcl_abapgit_ui_factory=>get_short_url_repo( ).
+      rv_act = |{ zif_abapgit_definitions=>c_action-url }?url={  lo_short_url_repo->set( lv_url ) }|.
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.
