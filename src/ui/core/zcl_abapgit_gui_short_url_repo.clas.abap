@@ -49,6 +49,7 @@ CLASS zcl_abapgit_gui_short_url_repo IMPLEMENTATION.
 
       CATCH zcx_abapgit_exception.
         " Can only happen if string_map is read-only or hash calc doesn't work.
+        " We're in trouble then anyway.
         ASSERT 1 = 2.
     ENDTRY.
 
