@@ -2513,4 +2513,4 @@ function toggleBrowserControlWarning(){
 function displayBrowserControlFooter() {
   var out = document.getElementById("browser-control-footer");
   out.innerHTML = " - " + ( navigator.userAgent.includes("Edg") ? "Edge" : "IE"  );
-}
+}
