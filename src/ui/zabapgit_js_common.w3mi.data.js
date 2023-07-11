@@ -1672,15 +1672,15 @@ Hotkeys.prototype.getAllSapEventsForSapEventName = function (sSapEvent) {
     return [];
   }
 
+  var includesSapEvent = function(text){
+    return (text.includes("sapevent") || text.includes("SAPEVENT"));
+  };
+
   return [].slice
     .call(document.querySelectorAll("a[href*="+ sSapEvent +"], input[formaction*="+ sSapEvent+"]"))
     .filter(function (elem) {
-      switch (elem.nodeName) {
-      case "A":
-        return (elem.href.includes("sapevent") || elem.href.includes("SAPEVENT"));
-      case "INPUT":
-        return (elem.formAction.includes("sapevent") || elem.formAction.includes("SAPEVENT"));
-      }
+      return (elem.nodeName === "A" && includesSapEvent(elem.href)
+          || (elem.nodeName === "INPUT" && includesSapEvent(elem.formAction)));
     });
 };
 
