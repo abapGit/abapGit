@@ -1666,14 +1666,22 @@ Hotkeys.prototype.showHotkeys = function() {
   }
 };
 
-Hotkeys.prototype.getAllSapEventsForSapEventName = function(sSapEvent) {
-  return [].slice.call(
-    document.querySelectorAll('a[href*="sapevent:' + sSapEvent + '"],'
-      + 'a[href*="SAPEVENT:' + sSapEvent + '"],'
-      + 'input[formaction*="sapevent:' + sSapEvent + '"],'
-      + 'input[formaction*="SAPEVENT:' + sSapEvent + '"],'
-      + 'form[action*="sapevent:' + sSapEvent + '"] input[type="submit"].main,'
-      + 'form[action*="SAPEVENT:' + sSapEvent + '"] input[type="submit"].main'));
+Hotkeys.prototype.getAllSapEventsForSapEventName = function (sSapEvent) {
+  if (/^#+$/.test(sSapEvent)){
+    // sSapEvent contains only #. Nothing sensible can be done here
+    return [];
+  }
+
+  return [].slice
+    .call(document.querySelectorAll("a[href*="+ sSapEvent +"], input[formaction*="+ sSapEvent+"]"))
+    .filter(function (elem) {
+      switch (elem.nodeName) {
+      case "A":
+        return (elem.href.includes("sapevent") || elem.href.includes("SAPEVENT"));
+      case "INPUT":
+        return (elem.formAction.includes("sapevent") || elem.formAction.includes("SAPEVENT"));
+      }
+    });
 };
 
 Hotkeys.prototype.getSapEventHref = function(sSapEvent) {
@@ -2505,4 +2513,4 @@ function toggleBrowserControlWarning(){
 function displayBrowserControlFooter() {
   var out = document.getElementById("browser-control-footer");
   out.innerHTML = " - " + ( navigator.userAgent.includes("Edg") ? "Edge" : "IE"  );
-}
+}
