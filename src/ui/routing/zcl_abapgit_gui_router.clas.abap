@@ -159,7 +159,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     " Urls are shortened. Let's translate them back via the repo and call them.
     lv_short_url = ii_event->query( )->get( 'URL' ).
-    lv_url = zcl_abapgit_ui_factory=>get_short_url_repo( )->get( lv_short_url ).
+    lv_url = zcl_abapgit_ui_factory=>get_short_url_repo( )->conv_short_to_long_url( lv_short_url ).
     call_browser( lv_url ).
 
   ENDMETHOD.

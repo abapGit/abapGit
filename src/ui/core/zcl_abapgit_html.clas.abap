@@ -595,7 +595,7 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
 
     IF lv_url IS NOT INITIAL.
       lo_short_url_repo = zcl_abapgit_ui_factory=>get_short_url_repo( ).
-      rv_act = |{ zif_abapgit_definitions=>c_action-url }?url={  lo_short_url_repo->set( lv_url ) }|.
+      rv_act = |{ zif_abapgit_definitions=>c_action-url }?url={  lo_short_url_repo->conv_long_to_short_url( lv_url ) }|.
     ENDIF.
 
   ENDMETHOD.
