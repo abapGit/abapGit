@@ -35,9 +35,9 @@ CLASS zcl_abapgit_ui_factory DEFINITION
     CLASS-METHODS get_gui_jumper
       RETURNING
         VALUE(ri_gui_jumper) TYPE REF TO zif_abapgit_gui_jumper .
-    CLASS-METHODS get_short_url_repo
+    CLASS-METHODS get_url_parameter_repo
       RETURNING
-        VALUE(ro_repo) TYPE REF TO zcl_abapgit_gui_short_url_repo.
+        VALUE(ro_repo) TYPE REF TO zcl_abapgit_gui_url_param_repo.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -47,7 +47,7 @@ CLASS zcl_abapgit_ui_factory DEFINITION
     CLASS-DATA gi_fe_services TYPE REF TO zif_abapgit_frontend_services .
     CLASS-DATA gi_gui_services TYPE REF TO zif_abapgit_gui_services .
     CLASS-DATA gi_gui_jumper TYPE REF TO zif_abapgit_gui_jumper .
-    CLASS-DATA go_short_url_repo TYPE REF TO zcl_abapgit_gui_short_url_repo.
+    CLASS-DATA go_url_param_repo TYPE REF TO zcl_abapgit_gui_url_param_repo.
 ENDCLASS.
 
 
@@ -207,13 +207,13 @@ CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_short_url_repo.
+  METHOD get_url_parameter_repo.
 
-    IF go_short_url_repo IS NOT BOUND.
-      CREATE OBJECT go_short_url_repo.
+    IF go_url_param_repo IS NOT BOUND.
+      CREATE OBJECT go_url_param_repo.
     ENDIF.
 
-    ro_repo = go_short_url_repo.
+    ro_repo = go_url_param_repo.
 
   ENDMETHOD.
 

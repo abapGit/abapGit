@@ -374,10 +374,10 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
 
   METHOD zif_abapgit_html~add.
 
-    DATA: lv_type TYPE c,
+    DATA: lv_type       TYPE c,
           li_renderable TYPE REF TO zif_abapgit_gui_renderable,
-          lx_error TYPE REF TO zcx_abapgit_exception,
-          lo_html TYPE REF TO zcl_abapgit_html.
+          lx_error      TYPE REF TO zcx_abapgit_exception,
+          lo_html       TYPE REF TO zcl_abapgit_html.
 
     FIELD-SYMBOLS: <lt_tab> TYPE string_table.
 
@@ -579,23 +579,25 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
   METHOD prepare_action.
 
     DATA:
-      lo_short_url_repo TYPE REF TO zcl_abapgit_gui_short_url_repo,
-      lv_url            TYPE string.
+      lo_url_parameter_repo TYPE REF TO zcl_abapgit_gui_url_param_repo,
+      lv_action             TYPE string,
+      lv_params             TYPE string.
+
+    IF iv_act IS INITIAL.
+      RETURN.
+    ENDIF.
 
     rv_act = iv_act.
 
-    " As there are problems with urls with the new edge browser control
-    " we shorten these kind of urls and store them in a repo.
-    " If the url is clicked on the UI the short url is translated back via the repo.
-    " See #6339 and zcl_abapgit_gui_router / call_url
+    " As there are problems with url parameters with the new edge browser control
+    " we shorten these parameters and store them in a repo.
+    " If the data is sent back the shortened parameters are translated back via the repo.
+    " See #6339 and zcl_abapgit_gui_event / constructor
 
-    lv_url = substring_after(
-                 val = iv_act
-                 sub = |{ zif_abapgit_definitions=>c_action-url }?url=| ).
-
-    IF lv_url IS NOT INITIAL.
-      lo_short_url_repo = zcl_abapgit_ui_factory=>get_short_url_repo( ).
-      rv_act = |{ zif_abapgit_definitions=>c_action-url }?url={  lo_short_url_repo->conv_long_to_short_url( lv_url ) }|.
+    SPLIT iv_act AT '?' INTO lv_action lv_params.
+    IF sy-subrc = 0.
+      lo_url_parameter_repo = zcl_abapgit_ui_factory=>get_url_parameter_repo( ).
+      rv_act = |{ lv_action }?{  lo_url_parameter_repo->encode( lv_params ) }|.
     ENDIF.
 
   ENDMETHOD.
