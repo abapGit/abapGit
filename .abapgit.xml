@@ -5,10 +5,6 @@
    <MASTER_LANGUAGE>E</MASTER_LANGUAGE>
    <STARTING_FOLDER>/src/</STARTING_FOLDER>
    <FOLDER_LOGIC>PREFIX</FOLDER_LOGIC>
-   <IGNORE>
-    <item>/src/ui/core/zcl_abapgit_gui_short_url_repo.clas.abap</item>
-    <item>/src/ui/core/zcl_abapgit_gui_short_url_repo.clas.xml</item>
-   </IGNORE>
    <VERSION_CONSTANT>ZIF_ABAPGIT_VERSION=&gt;C_ABAP_VERSION</VERSION_CONSTANT>
   </DATA>
  </asx:values>
