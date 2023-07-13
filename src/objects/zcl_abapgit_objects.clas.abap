@@ -764,11 +764,9 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
             <ls_deser>-obj     = li_obj.
             <ls_deser>-xml     = lo_xml.
             <ls_deser>-package = lv_package.
-            IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
-              <ls_deser>-item-abap_language_version = NEW zcl_abapgit_abap_language_vers( )->get_abap_language_vers_by_objt( iv_object_type = ls_item-obj_type
+            <ls_deser>-item-abap_language_version = NEW zcl_abapgit_abap_language_vers( )->get_abap_language_vers_by_objt( iv_object_type = ls_item-obj_type
                                                                                                                              io_repo = io_repo
                                                                                                                              iv_package = lv_package ).
-            ENDIF.
           ENDLOOP.
 
           CLEAR: lv_path, lv_package.
