@@ -623,6 +623,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     DATA lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
     DATA ls_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params.
     DATA lo_timer TYPE REF TO zcl_abapgit_timer.
+    DATA lo_abap_language_vers TYPE REF TO zcl_abapgit_abap_language_vers.
 
     FIELD-SYMBOLS: <ls_result>  TYPE zif_abapgit_definitions=>ty_result,
                    <lv_step_id> TYPE LINE OF zif_abapgit_definitions=>ty_deserialization_step_tt,
@@ -678,6 +679,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     ELSE.
       ii_log->add_info( |>>> Deserializing { lines( lt_items ) } objects| ).
     ENDIF.
+
+    create object lo_abap_language_vers.
 
     lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
     LOOP AT lt_results ASSIGNING <ls_result>.
@@ -764,9 +767,9 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
             <ls_deser>-obj     = li_obj.
             <ls_deser>-xml     = lo_xml.
             <ls_deser>-package = lv_package.
-            <ls_deser>-item-abap_language_version = NEW zcl_abapgit_abap_language_vers( )->get_abap_language_vers_by_objt( iv_object_type = ls_item-obj_type
-                                                                                                                             io_repo = io_repo
-                                                                                                                             iv_package = lv_package ).
+            <ls_deser>-item-abap_language_version = lo_abap_language_vers->get_abap_language_vers_by_objt( iv_object_type = ls_item-obj_type
+                                                                                                           io_repo = io_repo
+                                                                                                           iv_package = lv_package ).
           ENDLOOP.
 
           CLEAR: lv_path, lv_package.
