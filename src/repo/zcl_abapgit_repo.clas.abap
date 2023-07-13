@@ -1,109 +1,120 @@
-CLASS zcl_abapgit_repo DEFINITION
-  PUBLIC
-  ABSTRACT
-  CREATE PUBLIC .
+class ZCL_ABAPGIT_REPO definition
+  public
+  abstract
+  create public .
 
-  PUBLIC SECTION.
+public section.
 
-    INTERFACES zif_abapgit_repo.
+  interfaces ZIF_ABAPGIT_REPO .
 
-    ALIASES ms_data FOR zif_abapgit_repo~ms_data.
-    ALIASES:
-      get_key FOR zif_abapgit_repo~get_key,
-      get_name FOR zif_abapgit_repo~get_name,
-      is_offline FOR zif_abapgit_repo~is_offline,
-      get_package FOR zif_abapgit_repo~get_package,
-      get_files_local FOR zif_abapgit_repo~get_files_local,
-      get_files_remote FOR zif_abapgit_repo~get_files_remote,
-      get_local_settings FOR zif_abapgit_repo~get_local_settings,
-      refresh FOR zif_abapgit_repo~refresh,
-      get_dot_abapgit FOR zif_abapgit_repo~get_dot_abapgit,
-      set_dot_abapgit FOR zif_abapgit_repo~set_dot_abapgit,
-      deserialize FOR zif_abapgit_repo~deserialize,
-      deserialize_checks FOR zif_abapgit_repo~deserialize_checks.
+  aliases MS_DATA
+    for ZIF_ABAPGIT_REPO~MS_DATA .
+  aliases DESERIALIZE
+    for ZIF_ABAPGIT_REPO~DESERIALIZE .
+  aliases DESERIALIZE_CHECKS
+    for ZIF_ABAPGIT_REPO~DESERIALIZE_CHECKS .
+  aliases GET_DOT_ABAPGIT
+    for ZIF_ABAPGIT_REPO~GET_DOT_ABAPGIT .
+  aliases GET_FILES_LOCAL
+    for ZIF_ABAPGIT_REPO~GET_FILES_LOCAL .
+  aliases GET_FILES_REMOTE
+    for ZIF_ABAPGIT_REPO~GET_FILES_REMOTE .
+  aliases GET_KEY
+    for ZIF_ABAPGIT_REPO~GET_KEY .
+  aliases GET_LOCAL_SETTINGS
+    for ZIF_ABAPGIT_REPO~GET_LOCAL_SETTINGS .
+  aliases GET_NAME
+    for ZIF_ABAPGIT_REPO~GET_NAME .
+  aliases GET_PACKAGE
+    for ZIF_ABAPGIT_REPO~GET_PACKAGE .
+  aliases IS_OFFLINE
+    for ZIF_ABAPGIT_REPO~IS_OFFLINE .
+  aliases REFRESH
+    for ZIF_ABAPGIT_REPO~REFRESH .
+  aliases SET_DOT_ABAPGIT
+    for ZIF_ABAPGIT_REPO~SET_DOT_ABAPGIT .
 
-    METHODS constructor
-      IMPORTING
-        !is_data TYPE zif_abapgit_persistence=>ty_repo .
-
-    METHODS bind_listener
-      IMPORTING
-        !ii_listener TYPE REF TO zif_abapgit_repo_listener .
-    METHODS delete_checks
-      RETURNING
-        VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_delete_checks
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_dot_apack
-      RETURNING
-        VALUE(ro_dot_apack) TYPE REF TO zcl_abapgit_apack_reader .
-    METHODS get_data_config
-      RETURNING
-        VALUE(ri_config) TYPE REF TO zif_abapgit_data_config
-      RAISING
-        zcx_abapgit_exception .
-    METHODS find_remote_dot_abapgit
-      RETURNING
-        VALUE(ro_dot) TYPE REF TO zcl_abapgit_dot_abapgit
-      RAISING
-        zcx_abapgit_exception .
-    METHODS set_files_remote
-      IMPORTING
-        !it_files TYPE zif_abapgit_git_definitions=>ty_files_tt .
-    METHODS set_local_settings
-      IMPORTING
-        !is_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings
-      RAISING
-        zcx_abapgit_exception .
-    METHODS has_remote_source
-      ABSTRACT
-      RETURNING
-        VALUE(rv_yes) TYPE abap_bool .
-    METHODS status
-      IMPORTING
-        !ii_log           TYPE REF TO zif_abapgit_log OPTIONAL
-      RETURNING
-        VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
-      RAISING
-        zcx_abapgit_exception .
-    METHODS switch_repo_type
-      IMPORTING
-        !iv_offline TYPE abap_bool
-      RAISING
-        zcx_abapgit_exception .
-    METHODS create_new_log
-      IMPORTING
-        !iv_title     TYPE string OPTIONAL
-      RETURNING
-        VALUE(ri_log) TYPE REF TO zif_abapgit_log .
-    METHODS get_log
-      RETURNING
-        VALUE(ri_log) TYPE REF TO zif_abapgit_log .
-    METHODS refresh_local_object
-      IMPORTING
-        !iv_obj_type TYPE tadir-object
-        !iv_obj_name TYPE tadir-obj_name
-      RAISING
-        zcx_abapgit_exception .
-    METHODS refresh_local_objects
-      RAISING
-        zcx_abapgit_exception .
-    METHODS reset_status .
-    METHODS get_unsupported_objects_local
-      RETURNING
-        VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_items_tt
-      RAISING
-        zcx_abapgit_exception .
-    METHODS remove_ignored_files
-      CHANGING
-        ct_files TYPE zif_abapgit_git_definitions=>ty_files_tt
-      RAISING
-        zcx_abapgit_exception .
-    METHODS check_and_create_package
-      IMPORTING
-        iv_package TYPE devclass
-      RAISING
-        zcx_abapgit_exception .
+  methods BIND_LISTENER
+    importing
+      !II_LISTENER type ref to ZIF_ABAPGIT_REPO_LISTENER .
+  methods CHECK_AND_CREATE_PACKAGE
+    importing
+      !IV_PACKAGE type DEVCLASS
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods CONSTRUCTOR
+    importing
+      !IS_DATA type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO .
+  methods CREATE_NEW_LOG
+    importing
+      !IV_TITLE type STRING optional
+    returning
+      value(RI_LOG) type ref to ZIF_ABAPGIT_LOG .
+  methods DELETE_CHECKS
+    returning
+      value(RS_CHECKS) type ZIF_ABAPGIT_DEFINITIONS=>TY_DELETE_CHECKS
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods FIND_REMOTE_DOT_ABAPGIT
+    returning
+      value(RO_DOT) type ref to ZCL_ABAPGIT_DOT_ABAPGIT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods GET_DATA_CONFIG
+    returning
+      value(RI_CONFIG) type ref to ZIF_ABAPGIT_DATA_CONFIG
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods GET_DOT_APACK
+    returning
+      value(RO_DOT_APACK) type ref to ZCL_ABAPGIT_APACK_READER .
+  methods GET_LOG
+    returning
+      value(RI_LOG) type ref to ZIF_ABAPGIT_LOG .
+  methods GET_UNSUPPORTED_OBJECTS_LOCAL
+    returning
+      value(RT_OBJECTS) type ZIF_ABAPGIT_DEFINITIONS=>TY_ITEMS_TT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods HAS_REMOTE_SOURCE
+  abstract
+    returning
+      value(RV_YES) type ABAP_BOOL .
+  methods REFRESH_LOCAL_OBJECT
+    importing
+      !IV_OBJ_TYPE type TADIR-OBJECT
+      !IV_OBJ_NAME type TADIR-OBJ_NAME
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods REFRESH_LOCAL_OBJECTS
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods REMOVE_IGNORED_FILES
+    changing
+      !CT_FILES type ZIF_ABAPGIT_GIT_DEFINITIONS=>TY_FILES_TT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods RESET_STATUS .
+  methods SET_FILES_REMOTE
+    importing
+      !IT_FILES type ZIF_ABAPGIT_GIT_DEFINITIONS=>TY_FILES_TT .
+  methods SET_LOCAL_SETTINGS
+    importing
+      !IS_SETTINGS type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-LOCAL_SETTINGS
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods STATUS
+    importing
+      !II_LOG type ref to ZIF_ABAPGIT_LOG optional
+    returning
+      value(RT_RESULTS) type ZIF_ABAPGIT_DEFINITIONS=>TY_RESULTS_TT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods SWITCH_REPO_TYPE
+    importing
+      !IV_OFFLINE type ABAP_BOOL
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
   PROTECTED SECTION.
 
     DATA mt_local TYPE zif_abapgit_definitions=>ty_files_item_tt .
@@ -121,11 +132,7 @@ CLASS zcl_abapgit_repo DEFINITION
         VALUE(ro_dot) TYPE REF TO zcl_abapgit_apack_reader
       RAISING
         zcx_abapgit_exception .
-    METHODS set_dot_apack
-      IMPORTING
-        !io_dot_apack TYPE REF TO zcl_abapgit_apack_reader
-      RAISING
-        zcx_abapgit_exception .
+    METHODS reset_remote .
     METHODS set
       IMPORTING
         !iv_url             TYPE zif_abapgit_persistence=>ty_repo-url OPTIONAL
@@ -140,55 +147,59 @@ CLASS zcl_abapgit_repo DEFINITION
         !iv_switched_origin TYPE zif_abapgit_persistence=>ty_repo-switched_origin OPTIONAL
       RAISING
         zcx_abapgit_exception .
-    METHODS reset_remote .
-  PRIVATE SECTION.
-
-    METHODS deserialize_dot_abapgit
-      CHANGING
-        ct_files TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
-      RAISING
-        zcx_abapgit_exception.
-
-    METHODS deserialize_objects
+    METHODS set_dot_apack
       IMPORTING
-        !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
-        !ii_log    TYPE REF TO zif_abapgit_log
-      CHANGING
-        ct_files   TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
+        !io_dot_apack TYPE REF TO zcl_abapgit_apack_reader
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
+private section.
 
-    METHODS deserialize_data
-      IMPORTING
-        !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
-      CHANGING
-        ct_files   TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
-      RAISING
-        zcx_abapgit_exception.
-
-    METHODS notify_listener
-      IMPORTING
-        !is_change_mask TYPE zif_abapgit_persistence=>ty_repo_meta_mask
-      RAISING
-        zcx_abapgit_exception .
-    METHODS update_last_deserialize
-      RAISING
-        zcx_abapgit_exception .
-    METHODS check_for_restart .
-    METHODS check_write_protect
-      RAISING
-        zcx_abapgit_exception .
-    METHODS check_language
-      RAISING
-        zcx_abapgit_exception .
-    METHODS normalize_local_settings
-      CHANGING
-        cs_local_settings TYPE zif_abapgit_persistence=>ty_local_settings.
+  methods CHECK_FOR_RESTART .
+  methods CHECK_LANGUAGE
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods CHECK_WRITE_PROTECT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods DESERIALIZE_DATA
+    importing
+      !IS_CHECKS type ZIF_ABAPGIT_DEFINITIONS=>TY_DESERIALIZE_CHECKS
+    changing
+      !CT_FILES type ZIF_ABAPGIT_GIT_DEFINITIONS=>TY_FILE_SIGNATURES_TT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods DESERIALIZE_DOT_ABAPGIT
+    changing
+      !CT_FILES type ZIF_ABAPGIT_GIT_DEFINITIONS=>TY_FILE_SIGNATURES_TT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods DESERIALIZE_OBJECTS
+    importing
+      !IS_CHECKS type ZIF_ABAPGIT_DEFINITIONS=>TY_DESERIALIZE_CHECKS
+      !II_LOG type ref to ZIF_ABAPGIT_LOG
+    changing
+      !CT_FILES type ZIF_ABAPGIT_GIT_DEFINITIONS=>TY_FILE_SIGNATURES_TT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods NORMALIZE_LOCAL_SETTINGS
+    changing
+      !CS_LOCAL_SETTINGS type ZIF_ABAPGIT_PERSISTENCE=>TY_LOCAL_SETTINGS .
+  methods NOTIFY_LISTENER
+    importing
+      !IS_CHANGE_MASK type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO_META_MASK
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods UPDATE_LAST_DESERIALIZE
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods CHECK_ABAP_LANGUAGE_VERSION
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 
   METHOD bind_listener.
@@ -782,6 +793,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     check_write_protect( ).
     check_language( ).
+    check_abap_language_version( ).
 
     rs_checks = zcl_abapgit_objects=>deserialize_checks( me ).
 
@@ -909,5 +921,12 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
   METHOD zif_abapgit_repo~set_dot_abapgit.
     set( is_dot_abapgit = io_dot_abapgit->get_data( ) ).
+  ENDMETHOD.
+
+
+  METHOD check_abap_language_version.
+    IF NEW zcl_abapgit_abap_language_vers( )->is_import_allowed( io_repo = me iv_package = ms_data-package ) = abap_false.
+      zcx_abapgit_exception=>raise( iv_text = 'Repository cannot be imported. ABAP Language Version of linked package is not compatible with repository settings' ).
+    endif.
   ENDMETHOD.
 ENDCLASS.
