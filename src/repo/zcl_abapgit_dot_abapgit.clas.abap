@@ -145,7 +145,6 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
     ls_data-master_language = sy-langu.
     ls_data-starting_folder = '/src/'.
     ls_data-folder_logic    = zif_abapgit_dot_abapgit=>c_folder_logic-prefix.
-    ls_data-abap_language_version = zif_abapgit_dot_abapgit=>c_abap_language_version-undefined.
 
     CREATE OBJECT ro_dot_abapgit
       EXPORTING
