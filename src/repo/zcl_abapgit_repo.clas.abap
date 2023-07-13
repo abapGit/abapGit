@@ -927,11 +927,12 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   METHOD check_abap_language_version.
 
     DATA lo_abapgit_abap_language_vers TYPE REF TO zcl_abapgit_abap_language_vers.
-    DATA lv_text TYPE string.
+    data lv_text type string.
     CREATE OBJECT lo_abapgit_abap_language_vers.
 
     IF lo_abapgit_abap_language_vers->is_import_allowed( io_repo = me iv_package = ms_data-package ) = abap_false.
-      lv_text = 'Repository cannot be imported. ABAP Language Version of linked package is not compatible with repository settings'.
+      lv_text = |Repository cannot be imported. | &&
+                |ABAP Language Version of linked package is not compatible with repository settings.|.
       zcx_abapgit_exception=>raise( iv_text = lv_text ).
     ENDIF.
   ENDMETHOD.
