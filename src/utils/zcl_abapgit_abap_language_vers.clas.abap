@@ -105,7 +105,7 @@ CLASS ZCL_ABAPGIT_ABAP_LANGUAGE_VERS IMPLEMENTATION.
             rv_default_version = rv_allowed_abap_langu_version.
 
       CATCH cx_root.
-        rv_allowed_abap_langu_version =  zcl_abapgit_abap_language_vers=>c_allowed_abap_langu_version-standard.
+        rv_allowed_abap_langu_version =  c_allowed_abap_langu_version-standard.
     ENDTRY.
 
   ENDMETHOD.
