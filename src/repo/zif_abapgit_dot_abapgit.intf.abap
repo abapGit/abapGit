@@ -30,10 +30,10 @@ INTERFACE zif_abapgit_dot_abapgit PUBLIC.
     END OF c_folder_logic,
 
     BEGIN OF c_abap_language_version,
-      standard         TYPE string VALUE 'standard',
-      keyuser          TYPE string VALUE 'keyUser',
-      clouddevelopment TYPE string VALUE 'cloudDevelopment',
-      undefined        TYPE string VALUE 'undefined',
+      standard          TYPE string VALUE 'standard',
+      key_user          TYPE string VALUE 'keyUser',
+      cloud_development TYPE string VALUE 'cloudDevelopment',
+      undefined         TYPE string VALUE 'undefined',
     END OF c_abap_language_version.
 
 ENDINTERFACE.
