@@ -105,7 +105,7 @@ CLASS ZCL_ABAPGIT_ABAP_LANGUAGE_VERS IMPLEMENTATION.
             rv_default_version = rv_allowed_abap_langu_version.
 
       CATCH cx_root.
-        rv_allowed_abap_langu_version =  c_allowed_abap_langu_version-standard.
+        rv_allowed_abap_langu_version =  zcl_abapgit_abap_language_vers=>c_allowed_abap_langu_version-standard.
     ENDTRY.
 
   ENDMETHOD.
@@ -129,8 +129,9 @@ CLASS ZCL_ABAPGIT_ABAP_LANGUAGE_VERS IMPLEMENTATION.
         IF get_abap_language_vers_by_repo( io_repo ) = get_abap_language_vers_by_devc( iv_package ).
           rv_allowed = abap_true.
           RETURN.
-        ELSEIF get_abap_language_vers_by_devc( iv_package ) = zif_abapgit_dot_abapgit=>c_abap_language_version-undefined AND
-               get_abap_language_vers_by_repo( io_repo )    = zif_abapgit_dot_abapgit=>c_abap_language_version-standard.
+        ELSEIF
+        get_abap_language_vers_by_devc( iv_package ) = zif_abapgit_dot_abapgit=>c_abap_language_version-undefined AND
+        get_abap_language_vers_by_repo( io_repo )    = zif_abapgit_dot_abapgit=>c_abap_language_version-standard.
           rv_allowed = abap_true.
           RETURN.
         ELSE.
