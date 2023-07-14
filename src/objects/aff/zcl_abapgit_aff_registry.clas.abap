@@ -53,6 +53,7 @@ CLASS zcl_abapgit_aff_registry IMPLEMENTATION.
     register( iv_obj_type = 'CHKO' ).
     register( iv_obj_type = 'CHKV' ).
     register( iv_obj_type = 'EVTB' ).
+    register( iv_obj_type = 'EEEC' ).
     register( iv_obj_type = 'GSMP' ).
     register( iv_obj_type     = 'INTF'
               iv_experimental = abap_true ).
