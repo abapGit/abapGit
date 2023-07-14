@@ -72,7 +72,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
     lv_name = ms_item-obj_name.
 
     TRY.
-       CALL METHOD get_object_handler
+        get_object_handler( RECEIVING result = lo_object_handler ).
          RECEIVING
            result   = lo_object_handler.
 
