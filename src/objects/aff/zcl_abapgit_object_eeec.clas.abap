@@ -64,13 +64,11 @@ CLASS zcl_abapgit_object_eeec IMPLEMENTATION.
 
     DATA lx_error TYPE REF TO cx_root.
 
-    CALL METHOD super->get_object_handler
-      RECEIVING
-        result = result.
+    ro_object_handler = super->get_object_handler( ).
 
-    IF result IS NOT BOUND.
+    IF ro_object_handler IS NOT BOUND.
       TRY.
-          CREATE OBJECT result TYPE ('/IWXBE/CL_EEEC_AFF_OBJECTHANDL').
+          CREATE OBJECT ro_object_handler TYPE ('/IWXBE/CL_EEEC_AFF_OBJECTHANDL').
         CATCH cx_root INTO lx_error.
           zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
                                         ix_previous = lx_error ).

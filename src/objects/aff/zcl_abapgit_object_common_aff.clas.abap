@@ -19,7 +19,7 @@ CLASS zcl_abapgit_object_common_aff DEFINITION
       RETURNING VALUE(rv_additional_extensions) TYPE ty_extension_mapper_pairs.
     METHODS get_object_handler
       RETURNING
-        VALUE(result) TYPE REF TO object
+        VALUE(ro_object_handler) TYPE REF TO object
       RAISING
         zcx_abapgit_exception.
 
@@ -53,15 +53,15 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lr_intf_aff_obj    TYPE REF TO data,
-          lr_intf_aff_log    TYPE REF TO data,
-          lr_messages        TYPE REF TO data,
-          lo_object_handler  TYPE REF TO object,
-          lo_object_aff      TYPE REF TO object,
-          lo_aff_factory     TYPE REF TO object,
-          lv_name            TYPE c LENGTH 120,
-          lx_error           TYPE REF TO cx_root,
-          lo_aff_log         TYPE REF TO object.
+    DATA: lr_intf_aff_obj   TYPE REF TO data,
+          lr_intf_aff_log   TYPE REF TO data,
+          lr_messages       TYPE REF TO data,
+          lo_object_handler TYPE REF TO object,
+          lo_object_aff     TYPE REF TO object,
+          lo_aff_factory    TYPE REF TO object,
+          lv_name           TYPE c LENGTH 120,
+          lx_error          TYPE REF TO cx_root,
+          lo_aff_log        TYPE REF TO object.
 
     FIELD-SYMBOLS: <ls_intf_aff_obj> TYPE any,
                    <ls_intf_aff_log> TYPE any,
@@ -72,9 +72,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
     lv_name = ms_item-obj_name.
 
     TRY.
-        get_object_handler( RECEIVING result = lo_object_handler ).
-         RECEIVING
-           result   = lo_object_handler.
+        lo_object_handler = get_object_handler( ).
 
         CREATE OBJECT lo_object_aff TYPE ('CL_AFF_OBJ')
            EXPORTING
@@ -181,9 +179,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
     " beyond here there will be dragons....
     TRY.
-        CALL METHOD get_object_handler
-         RECEIVING
-           result   = lo_object_handler.
+        lo_object_handler = get_object_handler( ).
 
         CREATE OBJECT lo_object_aff TYPE ('CL_AFF_OBJ')
           EXPORTING
@@ -332,7 +328,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
       EXPORTING
         object_type = ms_item-obj_type
       RECEIVING
-        result      = result.
+        result      = ro_object_handler.
 
   ENDMETHOD.
 
@@ -348,9 +344,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
     lv_name = ms_item-obj_name.
 
     TRY.
-        CALL METHOD get_object_handler
-          RECEIVING
-            result   = lo_object_handler.
+        lo_object_handler = get_object_handler( ).
 
         CREATE OBJECT lo_object_aff TYPE ('CL_AFF_OBJ')
            EXPORTING
@@ -462,9 +456,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
     lv_name = ms_item-obj_name.
 
     TRY.
-        CALL METHOD get_object_handler
-         RECEIVING
-           result   = lo_object_handler.
+        lo_object_handler = get_object_handler( ).
 
         CREATE OBJECT lo_object_aff TYPE ('CL_AFF_OBJ')
            EXPORTING
