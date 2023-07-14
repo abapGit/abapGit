@@ -7,6 +7,9 @@ CLASS zcl_abapgit_object_eeec DEFINITION
   PUBLIC SECTION.
     METHODS:
       zif_abapgit_object~changed_by REDEFINITION .
+
+  PROTECTED SECTION.
+    METHODS: get_object_handler REDEFINITION.
 ENDCLASS.
 
 
@@ -54,6 +57,25 @@ CLASS zcl_abapgit_object_eeec IMPLEMENTATION.
         zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
                                       ix_previous = lx_error ).
     ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD get_object_handler.
+
+    DATA lx_error TYPE REF TO cx_root.
+
+    CALL METHOD super->get_object_handler
+      RECEIVING
+        result = result.
+
+    IF result IS NOT BOUND.
+      TRY.
+          CREATE OBJECT result TYPE ('/IWXBE/CL_EEEC_AFF_OBJECTHANDL').
+        CATCH cx_root INTO lx_error.
+          zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
+                                        ix_previous = lx_error ).
+      ENDTRY.
+    ENDIF.
 
   ENDMETHOD.
 
