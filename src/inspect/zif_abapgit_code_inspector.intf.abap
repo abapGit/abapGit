@@ -18,8 +18,8 @@ INTERFACE zif_abapgit_code_inspector
   TYPES ty_results TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY.
 
   TYPES: BEGIN OF ty_variant,
-           variant TYPE sci_chkv,
-           text    TYPE string,
+           name        TYPE sci_chkv,
+           description TYPE string,
          END OF ty_variant.
 
   TYPES ty_variants TYPE STANDARD TABLE OF ty_variant WITH DEFAULT KEY.

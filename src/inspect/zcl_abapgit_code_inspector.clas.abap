@@ -81,7 +81,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
 
 
   METHOD cleanup.
@@ -312,24 +312,6 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_code_inspector~validate_check_variant.
-
-    cl_ci_checkvariant=>get_ref(
-      EXPORTING
-        p_user                   = ''
-        p_name                   = iv_check_variant_name
-      EXCEPTIONS
-        chkv_not_exists          = 1
-        missing_parameter        = 2
-        OTHERS                   = 3 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |No valid check variant { iv_check_variant_name  }| ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_code_inspector~get_summary.
     rv_summary = mv_summary.
   ENDMETHOD.
@@ -338,6 +320,25 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
   METHOD zif_abapgit_code_inspector~is_successful.
 
     rv_success = mv_success.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_code_inspector~list_global_variants.
+
+    DATA lt_result TYPE if_satc_ci_variant_access=>ty_variant_infos.
+    FIELD-SYMBOLS <ls_result> LIKE LINE OF lt_result.
+    FIELD-SYMBOLS <ls_list> LIKE LINE OF rt_list.
+
+    lt_result = cl_satc_db_access=>get_ci_variants_with_filter( sy-langu ).
+    SORT lt_result BY name.
+
+* convert types
+    LOOP AT lt_result ASSIGNING <ls_result>.
+      APPEND INITIAL LINE TO rt_list ASSIGNING <ls_list>.
+      <ls_list>-name = <ls_result>-name.
+      <ls_list>-description = <ls_result>-description.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -396,12 +397,21 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_code_inspector~list_global_variants.
 
-    SELECT checkvname AS variant text FROM scichkv_hd
-      INTO CORRESPONDING FIELDS OF TABLE rt_list
-      WHERE ciuser = ''
-      ORDER BY PRIMARY KEY.
+  METHOD zif_abapgit_code_inspector~validate_check_variant.
+
+    cl_ci_checkvariant=>get_ref(
+      EXPORTING
+        p_user                   = ''
+        p_name                   = iv_check_variant_name
+      EXCEPTIONS
+        chkv_not_exists          = 1
+        missing_parameter        = 2
+        OTHERS                   = 3 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |No valid check variant { iv_check_variant_name  }| ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
