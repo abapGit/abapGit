@@ -12,11 +12,7 @@ CLASS zcl_abapgit_code_inspector DEFINITION
         !iv_package TYPE devclass
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS validate_check_variant
-      IMPORTING
-        !iv_check_variant_name TYPE sci_chkv
-      RAISING
-        zcx_abapgit_exception .
+
   PROTECTED SECTION.
     DATA mv_package TYPE devclass .
 
@@ -316,7 +312,7 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD validate_check_variant.
+  METHOD zif_abapgit_code_inspector~validate_check_variant.
 
     cl_ci_checkvariant=>get_ref(
       EXPORTING
@@ -397,6 +393,15 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
     ENDTRY.
 
     mv_summary = lo_timer->end( ).
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_code_inspector~list_global_variants.
+
+    SELECT checkvname AS variant text FROM scichkv_hd
+      INTO CORRESPONDING FIELDS OF TABLE rt_list
+      WHERE ciuser = ''
+      ORDER BY PRIMARY KEY.
 
   ENDMETHOD.
 ENDCLASS.
