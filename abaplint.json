@@ -45,8 +45,7 @@
       "wdyn_limu_component_controller",
       "wdyn_limu_component_definition",
       "wdyn_limu_component_view"
-    ],
-    "globalMacros": []
+    ]
   },
   "rules": {
     "select_single_full_key": false,
@@ -55,6 +54,10 @@
     "change_if_to_case": false,
     "expand_macros": true,
     "unnecessary_return": false,
+    "easy_to_find_messages": true,
+    "prefer_pragmas": false,
+    "smim_consistency": true,
+    "sql_value_conversion": true,
     "fully_type_itabs": false,
     "cds_legacy_view": true,
     "superfluous_value": true,
@@ -255,6 +258,8 @@
       "testSeams": true,
       "defaultKey": false,
       "describeLines": true,
+      "exportToDatabase": true,
+      "exportToMemory": false,
       "break": true,
       "statics": true
     },
