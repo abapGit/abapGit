@@ -26,6 +26,7 @@ INTERFACE zif_abapgit_longtexts
       !iv_longtext_id     TYPE dokil-id
       !it_dokil           TYPE zif_abapgit_definitions=>ty_dokil_tt OPTIONAL
       !ii_xml             TYPE REF TO zif_abapgit_xml_output
+      !io_i18n_params     TYPE REF TO zcl_abapgit_i18n_params
     RETURNING
       VALUE(rt_longtexts) TYPE ty_longtexts
     RAISING

@@ -46,7 +46,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_nspc IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_NSPC IMPLEMENTATION.
 
 
   METHOD add_to_transport.
@@ -113,7 +113,7 @@ CLASS zcl_abapgit_object_nspc IMPLEMENTATION.
       <lv_lang>      LIKE LINE OF lt_i18n_langs,
       <ls_nspc_text> LIKE LINE OF lt_nspc_texts.
 
-    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+    IF mo_i18n_params->ms_params-main_language_only = abap_true.
       RETURN.
     ENDIF.
 

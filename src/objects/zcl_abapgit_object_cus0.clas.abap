@@ -21,7 +21,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_cus0 IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_CUS0 IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -175,7 +175,7 @@ CLASS zcl_abapgit_object_cus0 IMPLEMENTATION.
            ls_img_activity-header-ldate,
            ls_img_activity-header-ltime.
 
-    IF io_xml->i18n_params( )-main_language_only = abap_true.
+    IF mo_i18n_params->ms_params-main_language_only = abap_true.
       DELETE ls_img_activity-texts WHERE spras <> mv_language.
     ENDIF.
 

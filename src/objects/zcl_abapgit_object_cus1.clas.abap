@@ -32,7 +32,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_cus1 IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_CUS1 IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -202,7 +202,7 @@ CLASS zcl_abapgit_object_cus1 IMPLEMENTATION.
            ls_customzing_activity-activity_header-ldatetime,
            ls_customzing_activity-activity_header-luser.
 
-    IF io_xml->i18n_params( )-main_language_only = abap_true.
+    IF mo_i18n_params->ms_params-main_language_only = abap_true.
       DELETE ls_customzing_activity-activity_title WHERE spras <> mv_language.
     ENDIF.
 
