@@ -198,7 +198,6 @@
     },
     "forbidden_identifier": true,
     "try_without_catch": true,
-    "unused_variables": false,
     "prefix_is_current_class": true,
     "allowed_object_naming": true,
     "check_comments": false,
@@ -441,5 +440,8 @@
     "use_new": true,
     "when_others_last": true,
     "whitespace_end": true
+  },
+  "targetRules": {
+    "unused_variables": false
   }
 }
