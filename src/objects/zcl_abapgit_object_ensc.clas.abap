@@ -7,7 +7,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_ensc IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_ENSC IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -238,6 +238,7 @@ CLASS zcl_abapgit_object_ensc IMPLEMENTATION.
           iv_pgmid    = 'R3TR'
           iv_object   = ms_item-obj_type
           iv_obj_name = ms_item-obj_name
+          io_i18n_params = mo_i18n_params
           io_xml      = io_xml ).
 
       CATCH cx_enh_root INTO lx_root.

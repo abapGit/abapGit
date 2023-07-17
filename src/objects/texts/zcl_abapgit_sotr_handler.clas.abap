@@ -21,7 +21,7 @@ CLASS zcl_abapgit_sotr_handler DEFINITION
         !iv_object   TYPE trobjtype
         !iv_obj_name TYPE csequence
         !io_xml      TYPE REF TO zif_abapgit_xml_output OPTIONAL
-        !iv_language TYPE spras OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params
       EXPORTING
         !et_sotr     TYPE ty_sotr_tt
         !et_sotr_use TYPE ty_sotr_use_tt
@@ -71,7 +71,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
 
 
   METHOD create_sotr.
@@ -363,13 +363,11 @@ CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
     LOOP AT et_sotr_use ASSIGNING <ls_sotr_use> WHERE concept IS NOT INITIAL.
       lv_sotr = get_sotr_4_concept( <ls_sotr_use>-concept ).
 
-      IF io_xml IS BOUND AND
-         io_xml->i18n_params( )-main_language_only = abap_true AND
-         iv_language IS SUPPLIED.
-        DELETE lv_sotr-entries WHERE langu <> iv_language.
+      IF io_xml IS BOUND AND io_i18n_params->ms_params-main_language_only = abap_true.
+        DELETE lv_sotr-entries WHERE langu <> io_i18n_params->ms_params-main_language.
         CHECK lv_sotr-entries IS NOT INITIAL.
       ENDIF.
-      lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
+      lt_language_filter = io_i18n_params->build_language_filter( ).
       DELETE lv_sotr-entries WHERE NOT langu IN lt_language_filter.
       CHECK lv_sotr-entries IS NOT INITIAL.
 
