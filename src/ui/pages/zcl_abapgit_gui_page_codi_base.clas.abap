@@ -302,12 +302,12 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
     IF lv_temp <> ii_event->mv_action. " CI navigation request detected
 
       SPLIT lv_temp AT c_object_separator INTO lv_main_object lv_sub_object lv_line_number_s.
-      ls_item-obj_type = lv_main_object(4).
-      ls_item-obj_name = lv_main_object+4(*).
+      ls_item-obj_type = to_upper( lv_main_object(4) ).
+      ls_item-obj_name = to_upper( lv_main_object+4(*) ).
 
       IF lv_sub_object IS NOT INITIAL.
-        ls_sub_item-obj_type = lv_sub_object(4).
-        ls_sub_item-obj_name = lv_sub_object+4(*).
+        ls_sub_item-obj_type = to_upper( lv_sub_object(4) ).
+        ls_sub_item-obj_name = to_upper( lv_sub_object+4(*) ).
       ENDIF.
 
       lv_line_number = lv_line_number_s.

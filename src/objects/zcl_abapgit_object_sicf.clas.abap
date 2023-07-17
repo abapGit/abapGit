@@ -84,7 +84,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
 
 
   METHOD change_sicf.
@@ -380,6 +380,7 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
       EXPORTING
         iv_object   = ms_item-obj_type
         iv_obj_name = ms_item-obj_name
+        io_i18n_params = mo_i18n_params
       IMPORTING
         et_sots     = lt_sots
         et_sots_use = lt_sots_use ).

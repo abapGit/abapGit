@@ -159,9 +159,10 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
     ls_files_item-item-obj_name = ls_tadir-obj_name.
 
     ls_files_item = zcl_abapgit_objects=>serialize(
-      iv_main_language_only = iv_main_language_only
-      is_item               = ls_files_item-item
-      iv_language           = sy-langu ).
+      is_item        = ls_files_item-item
+      io_i18n_params = zcl_abapgit_i18n_params=>new(
+        iv_main_language_only = iv_main_language_only
+        iv_main_language      = sy-langu ) ).
 
     IF lines( ls_files_item-files ) = 0.
       zcx_abapgit_exception=>raise( 'Empty' ).

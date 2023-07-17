@@ -38,7 +38,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_DSYS IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -239,6 +239,7 @@ CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
     zcl_abapgit_factory=>get_longtexts( )->serialize(
       iv_object_name = mv_doc_object
       iv_longtext_id = c_id
+      io_i18n_params = mo_i18n_params
       ii_xml         = io_xml ).
 
   ENDMETHOD.

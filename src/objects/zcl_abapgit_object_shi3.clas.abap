@@ -47,7 +47,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
 
 
   METHOD clear_fields.
@@ -275,18 +275,16 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'TREE_TEXTS'
                   CHANGING  cg_data = lt_texts ).
 
-    zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
+    mo_i18n_params->trim_saplang_keyed_table(
       EXPORTING
-        it_iso_filter = io_xml->i18n_params( )-translation_languages
         iv_lang_field_name = 'SPRAS'
-        iv_keep_master_lang = io_xml->i18n_params( )-main_language
+        iv_keep_master_lang = abap_true
       CHANGING
         ct_tab = lt_titles ).
-    zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
+    mo_i18n_params->trim_saplang_keyed_table(
       EXPORTING
-        it_iso_filter = io_xml->i18n_params( )-translation_languages
         iv_lang_field_name = 'SPRAS'
-        iv_keep_master_lang = io_xml->i18n_params( )-main_language
+        iv_keep_master_lang = abap_true
       CHANGING
         ct_tab = lt_texts ).
 
@@ -328,10 +326,6 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
       ls_ttree-buffermode = ls_head-buffermode.
       ls_ttree-buffervar  = ls_head-buffervar.
       MODIFY ttree FROM ls_ttree.
-    ENDIF.
-
-    IF io_xml->i18n_params( )-translation_languages IS NOT INITIAL AND io_xml->i18n_params( )-use_lxe = abap_true.
-      deserialize_lxe_texts( io_xml ).
     ENDIF.
 
     IF zcl_abapgit_factory=>get_sap_package( iv_package )->are_changes_recorded_in_tr_req( ) = abap_true.
@@ -446,19 +440,17 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
       TABLES
         description      = lt_titles.
 
-    IF io_xml->i18n_params( )-main_language_only = abap_true
-      OR io_xml->i18n_params( )-translation_languages IS NOT INITIAL AND io_xml->i18n_params( )-use_lxe = abap_true.
+    IF mo_i18n_params->ms_params-main_language_only = abap_true OR mo_i18n_params->is_lxe_applicable( ) = abap_true.
       lv_all_languages = abap_false.
       DELETE lt_titles WHERE spras <> mv_language.
     ELSE.
       lv_all_languages = abap_true.
-      zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
+      mo_i18n_params->trim_saplang_keyed_table(
         EXPORTING
-          it_iso_filter = io_xml->i18n_params( )-translation_languages
-          iv_lang_field_name = 'SPRAS'
-          iv_keep_master_lang = mv_language
-        CHANGING
-          ct_tab = lt_titles ).
+            iv_lang_field_name = 'SPRAS'
+            iv_keep_master_lang = abap_true
+          CHANGING
+            ct_tab = lt_titles ).
     ENDIF.
 
     CALL FUNCTION 'STREE_HIERARCHY_READ'
@@ -483,11 +475,10 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
     SORT lt_texts BY spras.
     DELETE ADJACENT DUPLICATES FROM lt_texts COMPARING spras node_id.
 
-    zcl_abapgit_lxe_texts=>trim_tab_w_saplang_by_iso(
+    mo_i18n_params->trim_saplang_keyed_table(
       EXPORTING
-        it_iso_filter = io_xml->i18n_params( )-translation_languages
         iv_lang_field_name = 'SPRAS'
-        iv_keep_master_lang = mv_language
+        iv_keep_master_lang = abap_true
       CHANGING
         ct_tab = lt_texts ).
 
@@ -501,10 +492,6 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
                  ig_data = lt_refs ).
     io_xml->add( iv_name = 'TREE_TEXTS'
                  ig_data = lt_texts ).
-
-    IF io_xml->i18n_params( )-translation_languages IS NOT INITIAL AND io_xml->i18n_params( )-use_lxe = abap_true.
-      serialize_lxe_texts( io_xml ).
-    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

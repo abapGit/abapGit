@@ -20,7 +20,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_xml_output IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_XML_OUTPUT IMPLEMENTATION.
 
 
   METHOD build_asx_node.
@@ -90,17 +90,6 @@ CLASS zcl_abapgit_xml_output IMPLEMENTATION.
     li_element->append_child( ii_xml ).
 
     mi_xml_doc->get_root( )->get_first_child( )->get_first_child( )->append_child( li_element ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_xml_output~i18n_params.
-
-    IF is_i18n_params IS SUPPLIED.
-      ms_i18n_params = is_i18n_params.
-    ENDIF.
-
-    rs_i18n_params = ms_i18n_params.
 
   ENDMETHOD.
 
