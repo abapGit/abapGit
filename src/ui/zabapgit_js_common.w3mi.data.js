@@ -1666,14 +1666,22 @@ Hotkeys.prototype.showHotkeys = function() {
   }
 };
 
-Hotkeys.prototype.getAllSapEventsForSapEventName = function(sSapEvent) {
-  return [].slice.call(
-    document.querySelectorAll('a[href*="sapevent:' + sSapEvent + '"],'
-      + 'a[href*="SAPEVENT:' + sSapEvent + '"],'
-      + 'input[formaction*="sapevent:' + sSapEvent + '"],'
-      + 'input[formaction*="SAPEVENT:' + sSapEvent + '"],'
-      + 'form[action*="sapevent:' + sSapEvent + '"] input[type="submit"].main,'
-      + 'form[action*="SAPEVENT:' + sSapEvent + '"] input[type="submit"].main'));
+Hotkeys.prototype.getAllSapEventsForSapEventName = function (sSapEvent) {
+  if (/^#+$/.test(sSapEvent)){
+    // sSapEvent contains only #. Nothing sensible can be done here
+    return [];
+  }
+
+  var includesSapEvent = function(text){
+    return (text.includes("sapevent") || text.includes("SAPEVENT"));
+  };
+
+  return [].slice
+    .call(document.querySelectorAll("a[href*="+ sSapEvent +"], input[formaction*="+ sSapEvent+"]"))
+    .filter(function (elem) {
+      return (elem.nodeName === "A" && includesSapEvent(elem.href)
+          || (elem.nodeName === "INPUT" && includesSapEvent(elem.formAction)));
+    });
 };
 
 Hotkeys.prototype.getSapEventHref = function(sSapEvent) {
