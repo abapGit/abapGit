@@ -122,7 +122,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_oo_class IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
 
 
   METHOD create_report.
@@ -927,11 +927,13 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
       iv_pgmid    = 'LIMU'
       iv_object   = 'CPUB'
       iv_obj_name = iv_object_name
+      io_i18n_params = io_i18n_params
       io_xml      = ii_xml ).
     zcl_abapgit_sots_handler=>read_sots(
       iv_pgmid    = 'LIMU'
       iv_object   = 'CPUB'
       iv_obj_name = iv_object_name
+      io_i18n_params = io_i18n_params
       io_xml      = ii_xml ).
   ENDMETHOD.
 

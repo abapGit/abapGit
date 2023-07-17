@@ -28,14 +28,14 @@ FUNCTION z_abapgit_serialize_parallel.
       ls_item-obj_name  = iv_obj_name.
       ls_item-devclass  = iv_devclass.
       ls_item-srcsystem = iv_srcsystem.
-      ls_item-origlang  = iv_language.
 
       ls_files = zcl_abapgit_objects=>serialize(
-        is_item               = ls_item
-        iv_main_language_only = iv_main_language_only
-        iv_use_lxe            = iv_use_lxe
-        iv_language           = iv_language
-        it_translation_langs  = it_translation_langs ).
+        is_item        = ls_item
+        io_i18n_params = zcl_abapgit_i18n_params=>new(
+          iv_main_language      = iv_language
+          iv_main_language_only = iv_main_language_only
+          iv_use_lxe            = iv_use_lxe
+          it_translation_langs  = it_translation_langs ) ).
 
       EXPORT data = ls_files TO DATA BUFFER ev_result.
       ev_path = iv_path.

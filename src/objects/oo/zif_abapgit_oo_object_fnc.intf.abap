@@ -145,6 +145,7 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
       IMPORTING
         iv_object_name TYPE sobj_name
         ii_xml         TYPE REF TO zif_abapgit_xml_output
+        io_i18n_params TYPE REF TO zcl_abapgit_i18n_params
       RAISING
         zcx_abapgit_exception,
     read_descriptions

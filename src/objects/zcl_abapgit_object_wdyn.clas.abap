@@ -79,7 +79,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
 
 
   METHOD add_fm_exception.
@@ -953,6 +953,7 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
         iv_pgmid    = 'LIMU'
         iv_object   = 'WDYV'
         iv_obj_name = ms_item-obj_name
+        io_i18n_params = mo_i18n_params
         io_xml      = io_xml ).
     ENDIF.
 
@@ -967,7 +968,7 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
     ENDLOOP.
 
     IF lt_object IS NOT INITIAL.
-      IF io_xml->i18n_params( )-main_language_only = abap_true.
+      IF mo_i18n_params->ms_params-main_language_only = abap_true.
         SELECT * FROM dokil INTO TABLE lt_dokil
           FOR ALL ENTRIES IN lt_object
           WHERE id = c_longtext_id_wc AND object = lt_object-table_line AND masterlang = abap_true
