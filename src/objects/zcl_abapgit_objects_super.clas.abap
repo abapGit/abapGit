@@ -1,7 +1,8 @@
 CLASS zcl_abapgit_objects_super DEFINITION
   PUBLIC
   ABSTRACT
-  CREATE PUBLIC .
+  CREATE PUBLIC
+  GLOBAL FRIENDS zcl_abapgit_objects .
 
   PUBLIC SECTION.
 
@@ -14,6 +15,7 @@ CLASS zcl_abapgit_objects_super DEFINITION
   PROTECTED SECTION.
 
     DATA ms_item TYPE zif_abapgit_definitions=>ty_item .
+    DATA mo_i18n_params TYPE REF TO zcl_abapgit_i18n_params .
     DATA mv_language TYPE spras .
 
     METHODS get_metadata
@@ -79,22 +81,13 @@ CLASS zcl_abapgit_objects_super DEFINITION
         VALUE(iv_no_ask_delete_append) TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception .
-    METHODS serialize_lxe_texts
-      IMPORTING
-        !ii_xml TYPE REF TO zif_abapgit_xml_output
-      RAISING
-        zcx_abapgit_exception .
-    METHODS deserialize_lxe_texts
-      IMPORTING
-        !ii_xml TYPE REF TO zif_abapgit_xml_input
-      RAISING
-        zcx_abapgit_exception .
+
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_super IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -217,16 +210,6 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD deserialize_lxe_texts.
-
-    zcl_abapgit_factory=>get_lxe_texts( )->deserialize(
-      iv_object_type = ms_item-obj_type
-      iv_object_name = ms_item-obj_name
-      ii_xml         = ii_xml ).
-
-  ENDMETHOD.
-
-
   METHOD exists_a_lock_entry_for.
 
     DATA: lt_lock_entries TYPE STANDARD TABLE OF seqg3.
@@ -283,23 +266,8 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
         iv_longtext_name = iv_longtext_name
         iv_longtext_id   = iv_longtext_id
         it_dokil         = it_dokil
+        io_i18n_params   = mo_i18n_params
         ii_xml           = ii_xml  ).
-
-  ENDMETHOD.
-
-
-  METHOD serialize_lxe_texts.
-
-    IF ii_xml->i18n_params( )-main_language_only = abap_true OR
-       ii_xml->i18n_params( )-use_lxe = abap_false OR
-       ii_xml->i18n_params( )-translation_languages IS INITIAL.
-      RETURN.
-    ENDIF.
-
-    zcl_abapgit_factory=>get_lxe_texts( )->serialize(
-      iv_object_type = ms_item-obj_type
-      iv_object_name = ms_item-obj_name
-      ii_xml         = ii_xml ).
 
   ENDMETHOD.
 

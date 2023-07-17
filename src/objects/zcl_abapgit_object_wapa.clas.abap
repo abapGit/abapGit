@@ -53,7 +53,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_WAPA IMPLEMENTATION.
 
 
   METHOD create_new_application.
@@ -664,6 +664,7 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
       iv_pgmid    = 'LIMU'
       iv_object   = 'WAPP'
       iv_obj_name = ms_item-obj_name
+      io_i18n_params = mo_i18n_params
       io_xml      = io_xml ).
 
   ENDMETHOD.

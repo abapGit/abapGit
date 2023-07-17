@@ -504,7 +504,6 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     DATA:
       ls_item        TYPE zif_abapgit_definitions=>ty_item,
-      lv_extra       TYPE string,
       lx_error       TYPE REF TO zcx_abapgit_exception,
       li_html_viewer TYPE REF TO zif_abapgit_html_viewer.
 

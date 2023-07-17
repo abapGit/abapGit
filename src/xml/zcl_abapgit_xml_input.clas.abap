@@ -63,17 +63,6 @@ CLASS ZCL_ABAPGIT_XML_INPUT IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_xml_input~i18n_params.
-
-    IF is_i18n_params IS SUPPLIED.
-      ms_i18n_params = is_i18n_params.
-    ENDIF.
-
-    rs_i18n_params = ms_i18n_params.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_xml_input~read.
 
     DATA: lx_error TYPE REF TO cx_transformation_error,
