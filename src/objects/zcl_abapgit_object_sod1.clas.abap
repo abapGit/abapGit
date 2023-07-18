@@ -21,11 +21,11 @@ CLASS zcl_abapgit_object_sod1 DEFINITION
 
     METHODS create_wb_object_operator
       IMPORTING
-        object_type                  TYPE wbobjtype
-        object_key                   TYPE seu_objkey
-        transport_request            TYPE trkorr OPTIONAL
-        do_commits                   TYPE abap_bool DEFAULT abap_true
-        run_in_test_mode             TYPE abap_bool DEFAULT abap_false
+        is_object_type               TYPE wbobjtype
+        iv_object_key                TYPE seu_objkey
+        iv_transport_request         TYPE trkorr OPTIONAL
+        iv_do_commits                TYPE abap_bool DEFAULT abap_true
+        iv_run_in_test_mode          TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(ro_wb_object_operator) TYPE REF TO object
       RAISING
@@ -33,9 +33,9 @@ CLASS zcl_abapgit_object_sod1 DEFINITION
 
     METHODS get_wb_object_operator
       IMPORTING
-        object_type                  TYPE wbobjtype
-        object_key                   TYPE seu_objkey
-        transport_request            TYPE trkorr OPTIONAL
+        is_object_type               TYPE wbobjtype
+        iv_object_key                TYPE seu_objkey
+        iv_transport_request         TYPE trkorr OPTIONAL
       RETURNING
         VALUE(ro_wb_object_operator) TYPE REF TO object
       RAISING
@@ -73,9 +73,9 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
 
     TRY.
 
-        lo_factory = get_wb_object_operator( object_type       = ls_object_type
-                                             object_key        = lv_object_key
-                                             transport_request = iv_transport ).
+        lo_factory = get_wb_object_operator( is_object_type       = ls_object_type
+                                             iv_object_key        = lv_object_key
+                                             iv_transport_request = iv_transport ).
 
         CALL METHOD lo_factory->('IF_WB_OBJECT_OPERATOR~DELETE').
 
@@ -100,7 +100,11 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
           lv_transport_request TYPE trkorr,
           lo_logger            TYPE REF TO cl_wb_checklist,
           lx_create_error      TYPE REF TO cx_root,
-          lx_error             TYPE REF TO cx_root.
+          lx_error             TYPE REF TO cx_root,
+          lt_msgs              TYPE TABLE OF string,
+          lt_error_msgs_create TYPE swbme_error_tab,
+          ls_error_msg_create  LIKE LINE OF lt_error_msgs_create,
+          lv_error_msg         TYPE string.
 
     FIELD-SYMBOLS <ls_data> TYPE any.
 
@@ -108,7 +112,7 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
 
     lo_data_model->get_datatype_name(
       EXPORTING
-        p_data_selection = if_wb_object_data_selection_co=>c_all_data
+        p_data_selection = 'AL' " if_wb_object_data_selection_co=>c_all_data
       RECEIVING
        result            = lv_data_type_name ).
 
@@ -121,7 +125,7 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
       CHANGING
         cg_data = <ls_data> ).
 
-    lo_data_model->set_selected_data( p_data_selection = if_wb_object_data_selection_co=>c_all_data
+    lo_data_model->set_selected_data( p_data_selection = 'AL' " if_wb_object_data_selection_co=>c_all_data
                                       p_data           = <ls_data> ).
 
     TRY.
@@ -129,8 +133,8 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
         ls_object_type-objtype_tr = ms_item-obj_type.
         lv_object_key             = ms_item-obj_name.
 
-        lo_factory = get_wb_object_operator( object_type = ls_object_type
-                                             object_key  = lv_object_key ).
+        lo_factory = get_wb_object_operator( is_object_type = ls_object_type
+                                             iv_object_key  = lv_object_key ).
 
         lv_transport_request = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
 
@@ -161,15 +165,9 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
               " Check for error messages from Workbench API to provide more error infos to user
               IF lo_logger->has_error_messages( ) = abap_true.
 
-                DATA: lt_msgs              TYPE TABLE OF string,
-                      lt_error_msgs_create TYPE swbme_error_tab,
-                      ls_error_msg_create  LIKE LINE OF lt_error_msgs_create,
-                      lv_error_msg         TYPE string.
-
                 lo_logger->get_error_messages(
                   IMPORTING
-                    p_error_tab = lt_error_msgs_create
-                ).
+                    p_error_tab = lt_error_msgs_create ).
 
                 LOOP AT lt_error_msgs_create INTO ls_error_msg_create.
 
@@ -213,8 +211,8 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
         ls_object_type-objtype_tr = ms_item-obj_type.
         lv_object_key             = ms_item-obj_name.
 
-        lo_factory = get_wb_object_operator( object_type = ls_object_type
-                                             object_key  = lv_object_key ).
+        lo_factory = get_wb_object_operator( is_object_type = ls_object_type
+                                             iv_object_key  = lv_object_key ).
 
         CALL METHOD lo_factory->('IF_WB_OBJECT_OPERATOR~CHECK_EXISTENCE')
           RECEIVING
@@ -268,9 +266,7 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
 
   METHOD zif_abapgit_object~jump.
 
-    zcl_abapgit_objects=>jump(
-      is_item = ms_item
-    ).
+    zcl_abapgit_objects=>jump( is_item = ms_item ).
 
     rv_exit = abap_true.
 
@@ -286,13 +282,16 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
           lv_object_key     TYPE seu_objkey,
           lx_error          TYPE REF TO cx_root.
 
+    DATA ls_data TYPE REF TO data.
+    FIELD-SYMBOLS <ls_data> TYPE any.
+
     TRY.
 
         ls_object_type-objtype_tr = ms_item-obj_type.
         lv_object_key             = ms_item-obj_name.
 
-        lo_factory = create_wb_object_operator( object_type = ls_object_type
-                                                object_key  = lv_object_key ).
+        lo_factory = create_wb_object_operator( is_object_type = ls_object_type
+                                                iv_object_key  = lv_object_key ).
 
         CALL METHOD lo_factory->('IF_WB_OBJECT_OPERATOR~READ')
           IMPORTING
@@ -303,12 +302,9 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
         lo_data_model->set_created_by( p_user_name = '' ).
         lo_data_model->set_created_on( p_date      = sy-datum ).
 
-        DATA ls_data TYPE REF TO data.
-        FIELD-SYMBOLS <ls_data> TYPE any.
-
         lo_data_model->get_datatype_name(
           EXPORTING
-            p_data_selection = if_wb_object_data_selection_co=>c_all_data
+            p_data_selection = 'AL' " if_wb_object_data_selection_co=>c_all_data
           RECEIVING
            result            = lv_data_type_name ).
 
@@ -317,10 +313,9 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
 
         lo_data_model->get_selected_data(
           EXPORTING
-            p_data_selection = if_wb_object_data_selection_co=>c_all_data
+            p_data_selection = 'AL' " if_wb_object_data_selection_co=>c_all_data
           IMPORTING
-            p_data           = <ls_data>
-        ).
+            p_data           = <ls_data> ).
 
         io_xml->add( iv_name = cv_xml_transformation_name
                      ig_data = <ls_data> ).
@@ -342,11 +337,11 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
 
         CALL METHOD ('CL_WB_OBJECT_OPERATOR_FACTORY')=>('CREATE_OBJECT_OPERATOR')
           EXPORTING
-            object_type       = object_type
-            object_key        = object_key
-            transport_request = transport_request
-            do_commits        = do_commits
-            run_in_test_mode  = run_in_test_mode
+            object_type       = is_object_type
+            object_key        = iv_object_key
+            transport_request = iv_transport_request
+            do_commits        = iv_do_commits
+            run_in_test_mode  = iv_run_in_test_mode
           RECEIVING
             result            = ro_wb_object_operator.
 
@@ -366,9 +361,9 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
 
         CALL METHOD ('CL_WB_OBJECT_OPERATOR_FACTORY')=>('GET_OBJECT_OPERATOR')
           EXPORTING
-            object_type       = object_type
-            object_key        = object_key
-            transport_request = transport_request
+            object_type       = is_object_type
+            object_key        = iv_object_key
+            transport_request = iv_transport_request
           RECEIVING
             result            = ro_wb_object_operator.
 
@@ -379,6 +374,5 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
-
 
 ENDCLASS.
