@@ -50,7 +50,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
     DATA:
       lv_is_supported TYPE abap_bool,
       li_aff_registry TYPE REF TO zif_abapgit_aff_registry,
-      lo_factory      TYPE REF TO object.
+      lo_handler      TYPE REF TO object.
 
     super->constructor(
       is_item     = is_item
@@ -58,7 +58,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
     " Check if AFF handler exists and if object type is registered and supported
     TRY.
-        CREATE OBJECT lo_factory TYPE ('CL_AFF_OBJECT_HANDLER_FACTORY').
+        lo_handler = get_object_handler( ).
 
         CREATE OBJECT li_aff_registry TYPE zcl_abapgit_aff_registry.
 
@@ -76,6 +76,21 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
   METHOD get_additional_extensions.
     RETURN.
+  ENDMETHOD.
+
+
+  METHOD get_object_handler.
+
+    DATA lo_handler_factory TYPE REF TO object.
+
+    CREATE OBJECT lo_handler_factory TYPE ('CL_AFF_OBJECT_HANDLER_FACTORY').
+
+    CALL METHOD lo_handler_factory->('IF_AFF_OBJECT_HANDLER_FACTORY~GET_OBJECT_HANDLER')
+      EXPORTING
+        object_type = ms_item-obj_type
+      RECEIVING
+        result      = ro_object_handler.
+
   ENDMETHOD.
 
 
@@ -355,19 +370,6 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
     ENDTRY.
   ENDMETHOD.
 
-  METHOD get_object_handler.
-
-    DATA lo_handler_factory TYPE REF TO object.
-
-    CREATE OBJECT lo_handler_factory TYPE ('CL_AFF_OBJECT_HANDLER_FACTORY').
-
-    CALL METHOD lo_handler_factory->('IF_AFF_OBJECT_HANDLER_FACTORY~GET_OBJECT_HANDLER')
-      EXPORTING
-        object_type = ms_item-obj_type
-      RECEIVING
-        result      = ro_object_handler.
-
-  ENDMETHOD.
 
   METHOD zif_abapgit_object~exists.
     DATA: lr_intf_aff_obj    TYPE REF TO data,
