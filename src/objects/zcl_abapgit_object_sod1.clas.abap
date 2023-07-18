@@ -91,21 +91,27 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: lo_factory        TYPE REF TO object,
-          lo_data_model     TYPE REF TO if_wb_object_data_model,
-          lv_data_type_name TYPE string,
-          ls_data           TYPE REF TO data,
-          ls_object_type    TYPE wbobjtype,
-          lv_object_key     TYPE seu_objkey,
-          lo_logger         TYPE REF TO cl_wb_checklist,
-          lx_create_error   TYPE REF TO cx_root,
-          lx_error          TYPE REF TO cx_root.
+    DATA: lo_factory           TYPE REF TO object,
+          lo_data_model        TYPE REF TO if_wb_object_data_model,
+          lv_data_type_name    TYPE string,
+          ls_data              TYPE REF TO data,
+          ls_object_type       TYPE wbobjtype,
+          lv_object_key        TYPE seu_objkey,
+          lv_transport_request TYPE trkorr,
+          lo_logger            TYPE REF TO cl_wb_checklist,
+          lx_create_error      TYPE REF TO cx_root,
+          lx_error             TYPE REF TO cx_root.
 
     FIELD-SYMBOLS <ls_data> TYPE any.
 
     CREATE OBJECT lo_data_model TYPE (cv_data_model_class_name).
 
-    lv_data_type_name = lo_data_model->get_datatype_name( p_data_selection = if_wb_object_data_selection_co=>c_all_data ).
+    lo_data_model->get_datatype_name(
+      EXPORTING
+        p_data_selection = if_wb_object_data_selection_co=>c_all_data
+      RECEIVING
+       result            = lv_data_type_name ).
+
     CREATE DATA ls_data TYPE (lv_data_type_name).
     ASSIGN ls_data->* TO <ls_data>.
 
@@ -126,7 +132,7 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
         lo_factory = get_wb_object_operator( object_type = ls_object_type
                                              object_key  = lv_object_key ).
 
-        DATA(lv_transport_request) = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
+        lv_transport_request = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
 
         IF zif_abapgit_object~exists( ) = abap_true.
 
@@ -300,7 +306,12 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
         DATA ls_data TYPE REF TO data.
         FIELD-SYMBOLS <ls_data> TYPE any.
 
-        lv_data_type_name = lo_data_model->get_datatype_name( p_data_selection = if_wb_object_data_selection_co=>c_all_data ).
+        lo_data_model->get_datatype_name(
+          EXPORTING
+            p_data_selection = if_wb_object_data_selection_co=>c_all_data
+          RECEIVING
+           result            = lv_data_type_name ).
+
         CREATE DATA ls_data TYPE (lv_data_type_name).
         ASSIGN ls_data->* TO <ls_data>.
 
