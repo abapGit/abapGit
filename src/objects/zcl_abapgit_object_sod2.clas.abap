@@ -19,6 +19,28 @@ CLASS zcl_abapgit_object_sod2 DEFINITION
     CONSTANTS: cv_xml_transformation_name TYPE string VALUE 'SOD2',
                cv_data_model_class_name   TYPE string VALUE 'CL_APS_ODA_WBI_SOD2_DATA_MODEL'.
 
+    METHODS create_wb_object_operator
+      IMPORTING
+        object_type                  TYPE wbobjtype
+        object_key                   TYPE seu_objkey
+        transport_request            TYPE trkorr OPTIONAL
+        do_commits                   TYPE abap_bool DEFAULT abap_true
+        run_in_test_mode             TYPE abap_bool DEFAULT abap_false
+      RETURNING
+        VALUE(ro_wb_object_operator) TYPE REF TO object
+      RAISING
+        zcx_abapgit_exception .
+
+    METHODS get_wb_object_operator
+      IMPORTING
+        object_type                  TYPE wbobjtype
+        object_key                   TYPE seu_objkey
+        transport_request            TYPE trkorr OPTIONAL
+      RETURNING
+        VALUE(ro_wb_object_operator) TYPE REF TO object
+      RAISING
+        zcx_abapgit_exception .
+
 ENDCLASS.
 
 
@@ -41,14 +63,23 @@ CLASS zcl_abapgit_object_sod2 IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
+    DATA: ls_object_type TYPE wbobjtype,
+          lv_object_key  TYPE seu_objkey,
+          lo_factory     TYPE REF TO object,
+          lx_error       TYPE REF TO cx_root.
+
+    ls_object_type-objtype_tr = ms_item-obj_type.
+    lv_object_key             = ms_item-obj_name.
+
     TRY.
 
-        DATA(lo_factory) = cl_wb_object_operator_factory=>get_object_operator( object_type = VALUE #( objtype_tr = ms_item-obj_type )
-                                                                               object_key  = CONV #( ms_item-obj_name ) ).
+        lo_factory = get_wb_object_operator( object_type       = ls_object_type
+                                             object_key        = lv_object_key
+                                             transport_request = iv_transport ).
 
-        lo_factory->delete( ).
+        CALL METHOD lo_factory->('IF_WB_OBJECT_OPERATOR~DELETE').
 
-      CATCH cx_root INTO DATA(lx_error).
+      CATCH cx_root INTO lx_error.
 
         zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
                                       ix_previous = lx_error->previous ).
@@ -60,15 +91,22 @@ CLASS zcl_abapgit_object_sod2 IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: lo_data_model TYPE REF TO if_wb_object_data_model,
-          ls_data       TYPE REF TO data.
+    DATA: lo_factory        TYPE REF TO object,
+          lo_data_model     TYPE REF TO if_wb_object_data_model,
+          lv_data_type_name TYPE string,
+          ls_data           TYPE REF TO data,
+          ls_object_type    TYPE wbobjtype,
+          lv_object_key     TYPE seu_objkey,
+          lo_logger         TYPE REF TO cl_wb_checklist,
+          lx_create_error   TYPE REF TO cx_root,
+          lx_error          TYPE REF TO cx_root.
 
     FIELD-SYMBOLS <ls_data> TYPE any.
 
     CREATE OBJECT lo_data_model TYPE (cv_data_model_class_name).
 
-    DATA(lv_type) = lo_data_model->get_datatype_name( p_data_selection = if_wb_object_data_selection_co=>c_all_data ).
-    CREATE DATA ls_data TYPE (lv_type).
+    lv_data_type_name = lo_data_model->get_datatype_name( p_data_selection = if_wb_object_data_selection_co=>c_all_data ).
+    CREATE DATA ls_data TYPE (lv_data_type_name).
     ASSIGN ls_data->* TO <ls_data>.
 
     io_xml->read(
@@ -82,45 +120,27 @@ CLASS zcl_abapgit_object_sod2 IMPLEMENTATION.
 
     TRY.
 
-        DATA(lo_factory) = cl_wb_object_operator_factory=>get_object_operator( object_type = VALUE #( objtype_tr = ms_item-obj_type )
-                                                                               object_key  = CONV #( ms_item-obj_name ) ).
+        ls_object_type-objtype_tr = ms_item-obj_type.
+        lv_object_key             = ms_item-obj_name.
+
+        lo_factory = get_wb_object_operator( object_type = ls_object_type
+                                             object_key  = lv_object_key ).
 
         DATA(lv_transport_request) = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
 
         IF zif_abapgit_object~exists( ) = abap_true.
 
-*          lo_factory->read(
-*            IMPORTING
-*              eo_object_data = DATA(lo_existing_obj)
-*          ).
-
-*          lo_data_model->set_created_by( p_user_name = lo_existing_obj->get_created_by( ) ).
-*
-*          lo_existing_obj->get_created_on(
-*            IMPORTING
-*              p_date = DATA(lt_created_on_date)
-*              p_time = DATA(lt_created_on_time)
-*          ).
-*
-*          lo_data_model->set_created_on( p_date = lt_created_on_date
-*                                         p_time = lt_created_on_time ).
-*
-*          lo_data_model->set_changed_by( p_user_name = sy-uname ).
-*          lo_data_model->set_changed_on( p_date = sy-datlo
-*                                         p_time = sy-timlo ).
-
-          lo_factory->update(
+          CALL METHOD lo_factory->('IF_WB_OBJECT_OPERATOR~UPDATE')
             EXPORTING
               io_object_data    = lo_data_model
               version           = 'A'
-              transport_request = lv_transport_request
-          ).
+              transport_request = lv_transport_request.
 
         ELSE.
 
           TRY.
 
-              lo_factory->create(
+              CALL METHOD lo_factory->('IF_WB_OBJECT_OPERATOR~CREATE')
                 EXPORTING
                   io_object_data        = lo_data_model
                   version               = 'A'
@@ -128,27 +148,30 @@ CLASS zcl_abapgit_object_sod2 IMPLEMENTATION.
                   abap_language_version = lo_data_model->get_abap_language_version( )
                   transport_request     = lv_transport_request
                 IMPORTING
-                  logger                = DATA(lo_logger)
-              ).
+                  logger                = lo_logger.
 
-            CATCH cx_wb_object_operation_error INTO DATA(lx_create_error).
+            CATCH cx_wb_object_operation_error INTO lx_create_error.
 
               " Check for error messages from Workbench API to provide more error infos to user
               IF lo_logger->has_error_messages( ).
 
-                DATA lt_msgs TYPE TABLE OF string.
+                DATA: lt_msgs              TYPE TABLE OF string,
+                      lt_error_msgs_create TYPE swbme_error_tab,
+                      ls_error_msg_create  LIKE LINE OF lt_error_msgs_create,
+                      lv_error_msg         TYPE string.
+
                 lo_logger->get_error_messages(
                   IMPORTING
-                    p_error_tab = DATA(lt_error_msgs_create)
+                    p_error_tab = lt_error_msgs_create
                 ).
 
-                LOOP AT lt_error_msgs_create INTO DATA(ls_error_msg_create).
-                  LOOP AT ls_error_msg_create-mtext INTO DATA(ls_mtext).
-                    APPEND ls_mtext TO lt_msgs.
-                  ENDLOOP.
+                LOOP AT lt_error_msgs_create INTO ls_error_msg_create.
+
+                  APPEND LINES OF ls_error_msg_create-mtext TO lt_msgs.
+
                 ENDLOOP.
 
-                CONCATENATE LINES OF lt_msgs INTO DATA(lv_error_msg) SEPARATED BY '; '.
+                CONCATENATE LINES OF lt_msgs INTO lv_error_msg SEPARATED BY '; '.
                 zcx_abapgit_exception=>raise( iv_text     = lv_error_msg
                                               ix_previous = lx_create_error ).
 
@@ -163,7 +186,7 @@ CLASS zcl_abapgit_object_sod2 IMPLEMENTATION.
 
         ENDIF.
 
-      CATCH cx_root INTO DATA(lx_error).
+      CATCH cx_root INTO lx_error.
 
         zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
                                       ix_previous = lx_error->previous ).
@@ -174,14 +197,24 @@ CLASS zcl_abapgit_object_sod2 IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
+    DATA: lo_factory     TYPE REF TO object,
+          ls_object_type TYPE wbobjtype,
+          lv_object_key  TYPE seu_objkey,
+          lx_error       TYPE REF TO cx_root.
+
     TRY.
 
-        DATA(lo_factory) = cl_wb_object_operator_factory=>get_object_operator( object_type = VALUE #( objtype_tr = ms_item-obj_type )
-                                                                               object_key  = CONV #( ms_item-obj_name ) ).
+        ls_object_type-objtype_tr = ms_item-obj_type.
+        lv_object_key             = ms_item-obj_name.
 
-        rv_bool = lo_factory->check_existence( ).
+        lo_factory = get_wb_object_operator( object_type = ls_object_type
+                                             object_key  = lv_object_key ).
 
-      CATCH cx_root INTO DATA(lx_error).
+        CALL METHOD lo_factory->('IF_WB_OBJECT_OPERATOR~CHECK_EXISTENCE')
+          RECEIVING
+            r_result = rv_bool.
+
+      CATCH cx_root INTO lx_error.
 
         zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
                                       ix_previous = lx_error->previous ).
@@ -230,7 +263,7 @@ CLASS zcl_abapgit_object_sod2 IMPLEMENTATION.
   METHOD zif_abapgit_object~jump.
 
     zcl_abapgit_objects=>jump(
-      is_item         = ms_item
+      is_item = ms_item
     ).
 
     rv_exit = abap_true.
@@ -240,26 +273,35 @@ CLASS zcl_abapgit_object_sod2 IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
+    DATA: lo_data_model     TYPE REF TO if_wb_object_data_model,
+          lv_data_type_name TYPE string,
+          lo_factory        TYPE REF TO object,
+          ls_object_type    TYPE wbobjtype,
+          lv_object_key     TYPE seu_objkey,
+          lx_error          TYPE REF TO cx_root.
+
     TRY.
 
-        DATA(lo_factory) = cl_wb_object_operator_factory=>create_object_operator( object_type = VALUE #( objtype_tr = ms_item-obj_type )
-                                                                                  object_key  = CONV #( ms_item-obj_name ) ).
+        ls_object_type-objtype_tr = ms_item-obj_type.
+        lv_object_key             = ms_item-obj_name.
 
-        lo_factory->read(
+        lo_factory = create_wb_object_operator( object_type = ls_object_type
+                                                object_key  = lv_object_key ).
+
+        CALL METHOD lo_factory->('IF_WB_OBJECT_OPERATOR~READ')
           IMPORTING
-            eo_object_data = DATA(lo_data_model)
-        ).
+            eo_object_data = lo_data_model.
 
         lo_data_model->set_changed_by( p_user_name = '' ).
-        lo_data_model->set_changed_on( p_date = sy-datum ).
+        lo_data_model->set_changed_on( p_date      = sy-datum ).
         lo_data_model->set_created_by( p_user_name = '' ).
-        lo_data_model->set_created_on( p_date = sy-datum ).
+        lo_data_model->set_created_on( p_date      = sy-datum ).
 
         DATA ls_data TYPE REF TO data.
         FIELD-SYMBOLS <ls_data> TYPE any.
 
-        DATA(lv_type) = lo_data_model->get_datatype_name( p_data_selection = if_wb_object_data_selection_co=>c_all_data ).
-        CREATE DATA ls_data TYPE (lv_type).
+        lv_data_type_name = lo_data_model->get_datatype_name( p_data_selection = if_wb_object_data_selection_co=>c_all_data ).
+        CREATE DATA ls_data TYPE (lv_data_type_name).
         ASSIGN ls_data->* TO <ls_data>.
 
         lo_data_model->get_selected_data(
@@ -272,10 +314,56 @@ CLASS zcl_abapgit_object_sod2 IMPLEMENTATION.
         io_xml->add( iv_name = cv_xml_transformation_name
                      ig_data = <ls_data> ).
 
-      CATCH cx_root INTO DATA(lx_error).
+      CATCH cx_root INTO lx_error.
 
         zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
                                       ix_previous = lx_error->previous ).
+
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD create_wb_object_operator.
+
+    DATA lx_error TYPE REF TO cx_root.
+
+    TRY.
+
+        CALL METHOD ('CL_WB_OBJECT_OPERATOR_FACTORY')=>('CREATE_OBJECT_OPERATOR')
+          EXPORTING
+            object_type       = object_type
+            object_key        = object_key
+            transport_request = transport_request
+            do_commits        = do_commits
+            run_in_test_mode  = run_in_test_mode
+          RECEIVING
+            result            = ro_wb_object_operator.
+
+      CATCH cx_root INTO lx_error.
+
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
+
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD get_wb_object_operator.
+
+    DATA lx_error TYPE REF TO cx_root.
+
+    TRY.
+
+        CALL METHOD ('CL_WB_OBJECT_OPERATOR_FACTORY')=>('GET_OBJECT_OPERATOR')
+          EXPORTING
+            object_type       = object_type
+            object_key        = object_key
+            transport_request = transport_request
+          RECEIVING
+            result            = ro_wb_object_operator.
+
+      CATCH cx_root INTO lx_error.
+
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
 
     ENDTRY.
 
