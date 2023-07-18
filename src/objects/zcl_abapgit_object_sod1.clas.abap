@@ -159,7 +159,7 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
             CATCH cx_wb_object_operation_error INTO lx_create_error.
 
               " Check for error messages from Workbench API to provide more error infos to user
-              IF lo_logger->has_error_messages( ).
+              IF lo_logger->has_error_messages( ) = abap_true.
 
                 DATA: lt_msgs              TYPE TABLE OF string,
                       lt_error_msgs_create TYPE swbme_error_tab,
