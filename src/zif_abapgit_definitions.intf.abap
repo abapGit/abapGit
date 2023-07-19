@@ -16,7 +16,7 @@ INTERFACE zif_abapgit_definitions
       srcsystem             TYPE tadir-srcsystem,
       origlang              TYPE tadir-masterlang,
       inactive              TYPE abap_bool,
-      abap_language_version TYPE c LENGTH 1,
+      abap_language_version TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version,
     END OF ty_item .
   TYPES:
     ty_items_tt TYPE STANDARD TABLE OF ty_item WITH DEFAULT KEY .

@@ -5,16 +5,13 @@ CLASS zcl_abapgit_abap_language_vers DEFINITION
 
   PUBLIC SECTION.
 
-    TYPES:
-      ty_allowed_abap_langu_version TYPE c LENGTH 1 .
-
     METHODS get_abap_language_vers_by_objt
       IMPORTING
         !iv_object_type                      TYPE trobjtype
         !io_repo                             TYPE REF TO zif_abapgit_repo
         !iv_package                          TYPE devclass
       RETURNING
-        VALUE(rv_allowed_abap_langu_version) TYPE ty_allowed_abap_langu_version .
+        VALUE(rv_allowed_abap_langu_version) TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version.
     METHODS is_import_allowed
       IMPORTING
         !io_repo          TYPE REF TO zif_abapgit_repo
@@ -23,14 +20,6 @@ CLASS zcl_abapgit_abap_language_vers DEFINITION
         VALUE(rv_allowed) TYPE abap_bool .
   PROTECTED SECTION.
   PRIVATE SECTION.
-
-    CONSTANTS:
-      BEGIN OF c_allowed_abap_langu_version,
-        standard             TYPE ty_allowed_abap_langu_version VALUE space,
-        standard_source_code TYPE ty_allowed_abap_langu_version VALUE 'X',
-        key_user             TYPE ty_allowed_abap_langu_version VALUE '2',
-        cloud_development    TYPE ty_allowed_abap_langu_version VALUE '5',
-      END OF c_allowed_abap_langu_version .
 
     METHODS get_abap_language_vers_by_devc
       IMPORTING
@@ -51,7 +40,7 @@ CLASS ZCL_ABAPGIT_ABAP_LANGUAGE_VERS IMPLEMENTATION.
 
   METHOD get_abap_language_vers_by_devc.
 
-    DATA lv_abap_lang_version_swc TYPE string.
+    DATA lv_abap_lang_version_devc TYPE string.
     DATA lo_abap_language_version_cfg TYPE REF TO object.
 
     TRY.
@@ -65,16 +54,14 @@ CLASS ZCL_ABAPGIT_ABAP_LANGUAGE_VERS IMPLEMENTATION.
           EXPORTING
             iv_package_name             = iv_package
           RECEIVING
-            rv_default_language_version = lv_abap_lang_version_swc.
+            rv_default_language_version = lv_abap_lang_version_devc.
 
-        CASE lv_abap_lang_version_swc.
-          WHEN  c_allowed_abap_langu_version-standard.
+        CASE lv_abap_lang_version_devc.
+          WHEN zif_abapgit_aff_types_v1=>co_abap_language_version-standard.
             rv_abap_language_version = zif_abapgit_dot_abapgit=>c_abap_language_version-standard.
-          WHEN c_allowed_abap_langu_version-standard_source_code.
-            rv_abap_language_version = zif_abapgit_dot_abapgit=>c_abap_language_version-standard.
-          WHEN c_allowed_abap_langu_version-key_user.
+          WHEN zif_abapgit_aff_types_v1=>co_abap_language_version-key_user.
             rv_abap_language_version = zif_abapgit_dot_abapgit=>c_abap_language_version-key_user.
-          WHEN c_allowed_abap_langu_version-cloud_development.
+          WHEN zif_abapgit_aff_types_v1=>co_abap_language_version-cloud_development.
             rv_abap_language_version = zif_abapgit_dot_abapgit=>c_abap_language_version-cloud_development.
           WHEN OTHERS.
             rv_abap_language_version = zif_abapgit_dot_abapgit=>c_abap_language_version-undefined.
@@ -105,7 +92,8 @@ CLASS ZCL_ABAPGIT_ABAP_LANGUAGE_VERS IMPLEMENTATION.
             rv_default_version = rv_allowed_abap_langu_version.
 
       CATCH cx_root.
-        rv_allowed_abap_langu_version =  c_allowed_abap_langu_version-standard.
+        rv_allowed_abap_langu_version = zif_abapgit_aff_types_v1=>co_abap_language_version-standard.
+        "to do: here we need to differentiate between source code object and non-source code objects
     ENDTRY.
 
   ENDMETHOD.
