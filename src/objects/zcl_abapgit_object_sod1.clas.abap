@@ -110,11 +110,8 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
 
     CREATE OBJECT lo_data_model TYPE (cv_data_model_class_name).
 
-    lo_data_model->get_datatype_name(
-      EXPORTING
-        p_data_selection = 'AL' " if_wb_object_data_selection_co=>c_all_data
-      RECEIVING
-       result            = lv_data_type_name ).
+    " if_wb_object_data_selection_co=>c_all_data
+    lv_data_type_name = lo_data_model->get_datatype_name( p_data_selection = 'AL' ).
 
     CREATE DATA ls_data TYPE (lv_data_type_name).
     ASSIGN ls_data->* TO <ls_data>.
@@ -165,9 +162,7 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
               " Check for error messages from Workbench API to provide more error infos to user
               IF lo_logger->has_error_messages( ) = abap_true.
 
-                lo_logger->get_error_messages(
-                  IMPORTING
-                    p_error_tab = lt_error_msgs_create ).
+                lo_logger->get_error_messages( IMPORTING p_error_tab = lt_error_msgs_create ).
 
                 LOOP AT lt_error_msgs_create INTO ls_error_msg_create.
 
@@ -302,11 +297,8 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
         lo_data_model->set_created_by( p_user_name = '' ).
         lo_data_model->set_created_on( p_date      = sy-datum ).
 
-        lo_data_model->get_datatype_name(
-          EXPORTING
-            p_data_selection = 'AL' " if_wb_object_data_selection_co=>c_all_data
-          RECEIVING
-           result            = lv_data_type_name ).
+        " if_wb_object_data_selection_co=>c_all_data
+        lv_data_type_name = lo_data_model->get_datatype_name( p_data_selection = 'AL' ).
 
         CREATE DATA ls_data TYPE (lv_data_type_name).
         ASSIGN ls_data->* TO <ls_data>.
