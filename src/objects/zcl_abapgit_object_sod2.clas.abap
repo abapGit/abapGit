@@ -41,6 +41,20 @@ CLASS zcl_abapgit_object_sod2 DEFINITION
       RAISING
         zcx_abapgit_exception .
 
+    METHODS clear_metadata_fields
+      CHANGING
+        !cs_data TYPE any .
+
+    METHODS clear_content_fields
+      CHANGING
+        !cs_data TYPE any .
+
+    METHODS clear_field
+      IMPORTING
+        !iv_fieldname TYPE csequence
+      CHANGING
+        !cs_metadata  TYPE any .
+
 ENDCLASS.
 
 
@@ -292,11 +306,6 @@ CLASS zcl_abapgit_object_sod2 IMPLEMENTATION.
           IMPORTING
             eo_object_data = lo_data_model.
 
-        lo_data_model->set_changed_by( p_user_name = '' ).
-        lo_data_model->set_changed_on( p_date      = sy-datum ).
-        lo_data_model->set_created_by( p_user_name = '' ).
-        lo_data_model->set_created_on( p_date      = sy-datum ).
-
         " if_wb_object_data_selection_co=>c_all_data
         lv_data_type_name = lo_data_model->get_datatype_name( p_data_selection = 'AL' ).
 
@@ -308,6 +317,11 @@ CLASS zcl_abapgit_object_sod2 IMPLEMENTATION.
             p_data_selection = 'AL' " if_wb_object_data_selection_co=>c_all_data
           IMPORTING
             p_data           = <ls_data> ).
+
+        clear_metadata_fields( CHANGING cs_data = <ls_data> ).
+        clear_content_fields( CHANGING cs_data = <ls_data> ).
+        clear_field( EXPORTING iv_fieldname = 'PLUGIN_CONFIG'
+                     CHANGING  cs_metadata  = <ls_data> ).
 
         io_xml->add( iv_name = cv_xml_transformation_name
                      ig_data = <ls_data> ).
@@ -364,6 +378,116 @@ CLASS zcl_abapgit_object_sod2 IMPLEMENTATION.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
 
     ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD clear_field.
+
+    FIELD-SYMBOLS: <lv_value> TYPE data.
+
+    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_metadata TO <lv_value>.
+    IF sy-subrc = 0.
+      CLEAR: <lv_value>.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD clear_metadata_fields.
+
+    FIELD-SYMBOLS <ls_metadata> TYPE any.
+
+    ASSIGN COMPONENT 'METADATA' OF STRUCTURE cs_data TO <ls_metadata>.
+
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'VERSION'
+      CHANGING
+        cs_metadata  = <ls_metadata> ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'CREATED_AT'
+      CHANGING
+        cs_metadata  = <ls_metadata> ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'CREATED_BY'
+      CHANGING
+        cs_metadata  = <ls_metadata> ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'CHANGED_AT'
+      CHANGING
+        cs_metadata  = <ls_metadata> ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'CHANGED_BY'
+      CHANGING
+        cs_metadata  = <ls_metadata> ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'RESPONSIBLE'
+      CHANGING
+        cs_metadata  = <ls_metadata> ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'PACKAGE_REF'
+      CHANGING
+        cs_metadata  = <ls_metadata> ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'MASTER_SYSTEM'
+      CHANGING
+        cs_metadata  = <ls_metadata> ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'DT_UUID'
+      CHANGING
+        cs_metadata  = <ls_metadata> ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'ABAP_LANGU_VERSION'
+      CHANGING
+        cs_metadata  = <ls_metadata> ).
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'ABAP_LANGU_VERSION'
+      CHANGING
+        cs_metadata  = <ls_metadata> ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'LINKS'
+      CHANGING
+        cs_metadata  = <ls_metadata> ).
+
+  ENDMETHOD.
+
+  METHOD clear_content_fields.
+
+    FIELD-SYMBOLS <ls_content_data> TYPE any.
+
+    ASSIGN COMPONENT 'CONTENT' OF STRUCTURE cs_data TO <ls_content_data>.
+
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'CHANGE_USER'
+      CHANGING
+        cs_metadata  = <ls_content_data> ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname = 'CHANGE_TIMESTAMP'
+      CHANGING
+        cs_metadata  = <ls_content_data> ).
 
   ENDMETHOD.
 
