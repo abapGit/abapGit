@@ -160,7 +160,7 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
                 IMPORTING
                   logger                = lo_logger.
 
-            CATCH cx_wb_object_operation_error INTO lx_create_error.
+            CATCH cx_root INTO lx_create_error.
 
               " Check for error messages from Workbench API to provide more error infos to user
               IF lo_logger->has_error_messages( ) = abap_true.
@@ -373,6 +373,18 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
 
     ENDTRY.
 
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~get_deserialize_order.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~map_filename_to_object.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~map_object_to_filename.
+    RETURN.
   ENDMETHOD.
 
 ENDCLASS.
