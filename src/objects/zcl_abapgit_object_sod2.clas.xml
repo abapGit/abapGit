@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECT_SOD2</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - SOD2 - Authorization object</DESCRIPT>
+    <DESCRIPT>abapGit - SOD2 - API Package Assignment</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
