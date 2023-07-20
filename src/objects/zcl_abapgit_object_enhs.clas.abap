@@ -17,7 +17,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_enhs IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_ENHS IMPLEMENTATION.
 
 
   METHOD factory.
@@ -221,8 +221,8 @@ CLASS zcl_abapgit_object_enhs IMPLEMENTATION.
       iv_pgmid    = 'R3TR'
       iv_object   = ms_item-obj_type
       iv_obj_name = ms_item-obj_name
-      io_xml      = io_xml
-      iv_language = mv_language ).
+      io_i18n_params = mo_i18n_params
+      io_xml      = io_xml ).
 
   ENDMETHOD.
 ENDCLASS.

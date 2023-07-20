@@ -1,6 +1,10 @@
 INTERFACE zif_abapgit_frontend_services PUBLIC.
 
-  TYPES ty_char1 TYPE c LENGTH 1.
+  TYPES:
+    ty_char1       TYPE c LENGTH 1,
+    ty_gui_release TYPE n LENGTH 4,
+    ty_gui_sp      TYPE n LENGTH 2,
+    ty_gui_patch   TYPE n LENGTH 2.
 
   METHODS file_upload
     IMPORTING
@@ -79,9 +83,11 @@ INTERFACE zif_abapgit_frontend_services PUBLIC.
       zcx_abapgit_exception.
 
   METHODS get_gui_version
-    CHANGING
-      ct_version_table TYPE filetable
-      cv_rc            TYPE i
+    EXPORTING
+      ev_gui_release        TYPE ty_gui_release
+      ev_gui_sp             TYPE ty_gui_sp
+      ev_gui_patch          TYPE ty_gui_patch
+      ev_gui_version_string TYPE string
     RAISING
       zcx_abapgit_exception.
 

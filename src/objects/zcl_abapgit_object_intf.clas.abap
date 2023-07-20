@@ -105,7 +105,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_intf IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -280,7 +280,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
           lv_language        TYPE spras,
           lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
-    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+    IF mo_i18n_params->ms_params-main_language_only = abap_true.
       lv_language = mv_language.
     ENDIF.
 
@@ -289,7 +289,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       iv_language    = lv_language ).
 
     " Remove technical languages
-    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
+    lt_language_filter = mo_i18n_params->build_language_filter( ).
     DELETE lt_descriptions WHERE NOT langu IN lt_language_filter.
 
     IF lines( lt_descriptions ) = 0.
@@ -307,7 +307,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
           lv_language        TYPE spras,
           lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
-    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+    IF mo_i18n_params->ms_params-main_language_only = abap_true.
       lv_language = mv_language.
     ENDIF.
 
@@ -316,7 +316,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       iv_language    = lv_language ).
 
     " Remove technical languages
-    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
+    lt_language_filter = mo_i18n_params->build_language_filter( ).
     DELETE lt_descriptions WHERE NOT langu IN lt_language_filter.
 
     IF lines( lt_descriptions ) = 0.
@@ -345,7 +345,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     rs_docu-lines = lt_lines.
 
-    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+    IF mo_i18n_params->ms_params-main_language_only = abap_true.
       RETURN.
     ENDIF.
 

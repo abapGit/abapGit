@@ -75,6 +75,7 @@ CLASS ltcl_parser_test DEFINITION FINAL
 
     METHODS setup.
     METHODS parse FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS parse_keeping_order FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS parse_string FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS parse_number FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS parse_float FOR TESTING RAISING zcx_abapgit_ajson_error.
@@ -341,6 +342,67 @@ CLASS ltcl_parser_test IMPLEMENTATION.
       exp = lo_nodes->mt_nodes ).
 
     lt_act = lo_cut->parse( sample_json( |{ cl_abap_char_utilities=>cr_lf }| ) ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_act
+      exp = lo_nodes->mt_nodes ).
+
+  ENDMETHOD.
+
+  METHOD parse_keeping_order.
+
+    DATA lo_cut TYPE REF TO lcl_json_parser.
+    DATA lt_act TYPE zif_abapgit_ajson_types=>ty_nodes_tt.
+    DATA lo_nodes TYPE REF TO lcl_nodes_helper.
+
+    CREATE OBJECT lo_nodes.
+    lo_nodes->add( '                 |         |object |                        |  |8 |0' ).
+    lo_nodes->add( '/                |string   |str    |abc                     |  |0 |1' ).
+    lo_nodes->add( '/                |number   |num    |123                     |  |0 |2' ).
+    lo_nodes->add( '/                |float    |num    |123.45                  |  |0 |3' ).
+    lo_nodes->add( '/                |boolean  |bool   |true                    |  |0 |4' ).
+    lo_nodes->add( '/                |false    |bool   |false                   |  |0 |5' ).
+    lo_nodes->add( '/                |null     |null   |                        |  |0 |6' ).
+    lo_nodes->add( '/                |date     |str    |2020-03-15              |  |0 |7' ).
+    lo_nodes->add( '/                |issues   |array  |                        |  |2 |8' ).
+    lo_nodes->add( '/issues/         |1        |object |                        |1 |5 |0' ).
+    lo_nodes->add( '/issues/1/       |message  |str    |Indentation problem ... |  |0 |1' ).
+    lo_nodes->add( '/issues/1/       |key      |str    |indentation             |  |0 |2' ).
+    lo_nodes->add( '/issues/1/       |start    |object |                        |  |2 |3' ).
+    lo_nodes->add( '/issues/1/start/ |row      |num    |4                       |  |0 |1' ).
+    lo_nodes->add( '/issues/1/start/ |col      |num    |3                       |  |0 |2' ).
+    lo_nodes->add( '/issues/1/       |end      |object |                        |  |2 |4' ).
+    lo_nodes->add( '/issues/1/end/   |row      |num    |4                       |  |0 |1' ).
+    lo_nodes->add( '/issues/1/end/   |col      |num    |26                      |  |0 |2' ).
+    lo_nodes->add( '/issues/1/       |filename |str    |./zxxx.prog.abap        |  |0 |5' ).
+    lo_nodes->add( '/issues/         |2        |object |                        |2 |5 |0' ).
+    lo_nodes->add( '/issues/2/       |message  |str    |Remove space before XXX |  |0 |1' ).
+    lo_nodes->add( '/issues/2/       |key      |str    |space_before_dot        |  |0 |2' ).
+    lo_nodes->add( '/issues/2/       |start    |object |                        |  |2 |3' ).
+    lo_nodes->add( '/issues/2/start/ |row      |num    |3                       |  |0 |1' ).
+    lo_nodes->add( '/issues/2/start/ |col      |num    |21                      |  |0 |2' ).
+    lo_nodes->add( '/issues/2/       |end      |object |                        |  |2 |4' ).
+    lo_nodes->add( '/issues/2/end/   |row      |num    |3                       |  |0 |1' ).
+    lo_nodes->add( '/issues/2/end/   |col      |num    |22                      |  |0 |2' ).
+    lo_nodes->add( '/issues/2/       |filename |str    |./zxxx.prog.abap        |  |0 |5' ).
+
+    CREATE OBJECT lo_cut.
+    lt_act = lo_cut->parse(
+      iv_json = sample_json( )
+      iv_keep_item_order = abap_true ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_act
+      exp = lo_nodes->mt_nodes ).
+
+    lt_act = lo_cut->parse(
+      iv_json = sample_json( |{ cl_abap_char_utilities=>newline }| )
+      iv_keep_item_order = abap_true ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_act
+      exp = lo_nodes->mt_nodes ).
+
+    lt_act = lo_cut->parse(
+      iv_json = sample_json( |{ cl_abap_char_utilities=>cr_lf }| )
+      iv_keep_item_order = abap_true ).
     cl_abap_unit_assert=>assert_equals(
       act = lt_act
       exp = lo_nodes->mt_nodes ).
@@ -2101,6 +2163,7 @@ CLASS ltcl_writer_test DEFINITION FINAL
     METHODS setx FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS setx_float FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS setx_complex FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS setx_complex_w_keep_order FOR TESTING RAISING zcx_abapgit_ajson_error.
 
     METHODS set_with_type_slice
       IMPORTING
@@ -3321,6 +3384,43 @@ CLASS ltcl_writer_test IMPLEMENTATION.
         cl_abap_unit_assert=>fail( ).
       CATCH zcx_abapgit_ajson_error.
     ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD setx_complex_w_keep_order.
+
+    DATA li_cut TYPE REF TO zif_abapgit_ajson.
+    DATA:
+      BEGIN OF ls_dummy,
+        f TYPE i VALUE 5,
+        e TYPE i VALUE 6,
+      END OF ls_dummy.
+
+    li_cut = zcl_abapgit_ajson=>new( iv_keep_item_order = abap_true ).
+    li_cut->setx( '/c:3' ).
+    li_cut->set(
+      iv_path = '/b'
+      iv_val  = ls_dummy ).
+    li_cut->setx( '/a:1' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = li_cut->stringify( )
+      exp = '{"c":3,"b":{"f":5,"e":6},"a":1}' ).
+
+    li_cut->setx( '/b:{"z":9,"y":8}' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = li_cut->stringify( )
+      exp = '{"c":3,"b":{"z":9,"y":8},"a":1}' ).
+    " TODO: a subtle bug here. The '/b:{"z":9,"y":8}' creates a json internally
+    " without the ordering. It's just by chance that this UT passes, but the implementation
+    " does not guarantee it. The parser should be instructed to keep the order of the parsed json
+
+    li_cut->setx( '/0:9' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = li_cut->stringify( )
+      exp = '{"c":3,"b":{"z":9,"y":8},"a":1,"0":9}' ).
 
   ENDMETHOD.
 

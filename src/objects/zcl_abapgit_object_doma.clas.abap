@@ -62,7 +62,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_doma IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
 
 
   METHOD adjust_exit.
@@ -130,9 +130,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
     ii_xml->read( EXPORTING iv_name = 'DD07_TEXTS'
                   CHANGING  cg_data = lt_dd07_texts ).
 
-    zcl_abapgit_lxe_texts=>trim_saplangu_by_iso(
-      EXPORTING it_iso_filter = ii_xml->i18n_params( )-translation_languages
-      CHANGING ct_sap_langs   = lt_i18n_langs ).
+    mo_i18n_params->trim_saplang_list( CHANGING ct_sap_langs = lt_i18n_langs ).
 
     SORT lt_i18n_langs.
     SORT lt_dd07_texts BY ddlanguage. " Optimization
@@ -224,18 +222,14 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
                    <ls_dd01_text> LIKE LINE OF lt_dd01_texts,
                    <ls_dd07_text> LIKE LINE OF lt_dd07_texts.
 
-    IF ii_xml->i18n_params( )-main_language_only = abap_true.
+    IF mo_i18n_params->ms_params-main_language_only = abap_true.
       RETURN.
     ENDIF.
 
     lv_name = ms_item-obj_name.
 
     " Collect additional languages, skip main lang - it was serialized already
-    lt_language_filter = zcl_abapgit_factory=>get_environment( )->get_system_language_filter( ).
-
-    zcl_abapgit_lxe_texts=>add_iso_langs_to_lang_filter(
-      EXPORTING it_iso_filter      = ii_xml->i18n_params( )-translation_languages
-      CHANGING  ct_language_filter = lt_language_filter ).
+    lt_language_filter = mo_i18n_params->build_language_filter( ).
 
     SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
       FROM dd01v
@@ -395,13 +389,11 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
+    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       deserialize_texts(
         ii_xml   = io_xml
         is_dd01v = ls_dd01v
         it_dd07v = lt_dd07v ).
-    ELSE.
-      deserialize_lxe_texts( io_xml ).
     ENDIF.
 
     deserialize_longtexts( ii_xml         = io_xml
@@ -533,12 +525,10 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
     io_xml->add( iv_name = 'DD07V_TAB'
                  ig_data = lt_dd07v ).
 
-    IF io_xml->i18n_params( )-translation_languages IS INITIAL OR io_xml->i18n_params( )-use_lxe = abap_false.
+    IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       serialize_texts(
         ii_xml   = io_xml
         it_dd07v = lt_dd07v ).
-    ELSE.
-      serialize_lxe_texts( io_xml ).
     ENDIF.
 
     serialize_longtexts( ii_xml         = io_xml
