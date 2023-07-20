@@ -13,7 +13,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_para IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
 
 
   METHOD unlock.
@@ -147,10 +147,6 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
     MODIFY tparat FROM ls_tparat.                         "#EC CI_SUBRC
     ASSERT sy-subrc = 0.
 
-    IF io_xml->i18n_params( )-translation_languages IS NOT INITIAL AND io_xml->i18n_params( )-use_lxe = abap_true.
-      deserialize_lxe_texts( io_xml ).
-    ENDIF.
-
   ENDMETHOD.
 
 
@@ -243,10 +239,6 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
       ig_data = ls_tparat ).
     " Here only the original language is serialized,
     " so it should be present for the moment. LXEs are just translations
-
-    IF io_xml->i18n_params( )-translation_languages IS NOT INITIAL AND io_xml->i18n_params( )-use_lxe = abap_true.
-      serialize_lxe_texts( io_xml ).
-    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
