@@ -1,22 +1,22 @@
-class ZCL_ABAPGIT_ABAP_LANGUAGE_VERS definition
-  public
-  final
-  create public .
+CLASS zcl_abapgit_abap_language_vers DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
 
-  public section.
+  PUBLIC SECTION.
 
-    methods GET_ABAP_LANGUAGE_VERS_BY_OBJT
-    importing
-      !IV_OBJECT_TYPE type TROBJTYPE
-      !IV_PACKAGE type DEVCLASS
-    returning
-      value(RV_ALLOWED_ABAP_LANGU_VERSION) type ZIF_ABAPGIT_AFF_TYPES_V1=>TY_ABAP_LANGUAGE_VERSION .
-  methods IS_IMPORT_ALLOWED
-    importing
-      !IO_REPO type ref to ZIF_ABAPGIT_REPO
-      !IV_PACKAGE type DEVCLASS
-    returning
-      value(RV_ALLOWED) type ABAP_BOOL .
+    METHODS get_abap_language_vers_by_objt
+      IMPORTING
+        !iv_object_type                      TYPE trobjtype
+        !iv_package                          TYPE devclass
+      RETURNING
+        VALUE(rv_allowed_abap_langu_version) TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version .
+    METHODS is_import_allowed
+      IMPORTING
+        !io_repo          TYPE REF TO zif_abapgit_repo
+        !iv_package       TYPE devclass
+      RETURNING
+        VALUE(rv_allowed) TYPE abap_bool .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
