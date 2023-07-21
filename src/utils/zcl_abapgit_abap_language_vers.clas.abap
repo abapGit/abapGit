@@ -5,7 +5,7 @@ class ZCL_ABAPGIT_ABAP_LANGUAGE_VERS definition
 
   public section.
 
-  methods GET_ABAP_LANGUAGE_VERS_BY_OBJT
+    methods GET_ABAP_LANGUAGE_VERS_BY_OBJT
     importing
       !IV_OBJECT_TYPE type TROBJTYPE
       !IV_PACKAGE type DEVCLASS
