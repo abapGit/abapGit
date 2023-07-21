@@ -532,20 +532,18 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
         IF ls_item-obj_type = zif_abapgit_data_config=>c_data_type-tabu.
           zcl_abapgit_data_utils=>jump( ls_item ).
+        ELSEIF lv_line_number IS INITIAL OR ls_sub_item IS INITIAL.
+          zcl_abapgit_objects=>jump(
+            is_item       = ls_item
+            iv_filename   = iv_filename
+            iv_new_window = lv_new_window ).
         ELSE.
-          IF lv_line_number IS INITIAL OR ls_sub_item IS INITIAL.
-            zcl_abapgit_objects=>jump(
-              is_item       = ls_item
-              iv_filename   = iv_filename
-              iv_new_window = lv_new_window ).
-          ELSE.
-            zcl_abapgit_objects=>jump(
-              is_item        = ls_item
-              is_sub_item    = ls_sub_item
-              iv_filename    = iv_filename
-              iv_line_number = lv_line_number
-              iv_new_window  = lv_new_window ).
-          ENDIF.
+          zcl_abapgit_objects=>jump(
+            is_item        = ls_item
+            is_sub_item    = ls_sub_item
+            iv_filename    = iv_filename
+            iv_line_number = lv_line_number
+            iv_new_window  = lv_new_window ).
         ENDIF.
 
         li_html_viewer->set_visiblity( abap_true ).
