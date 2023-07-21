@@ -3,7 +3,7 @@ class ZCL_ABAPGIT_ABAP_LANGUAGE_VERS definition
   final
   create public .
 
-public section.
+  public section.
 
   methods GET_ABAP_LANGUAGE_VERS_BY_OBJT
     importing
