@@ -716,6 +716,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           ENDIF.
 
           ls_item-devclass = lv_package.
+          ls_item-abap_language_version = lo_abap_language_vers->get_abap_language_vers_by_objt( iv_object_type = ls_item-obj_type
+                                                                                                 iv_package = lv_package ).
 
           IF <ls_result>-packmove = abap_true.
             " Move object to new package
@@ -771,10 +773,6 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
             <ls_deser>-obj     = li_obj.
             <ls_deser>-xml     = lo_xml.
             <ls_deser>-package = lv_package.
-            <ls_deser>-item-abap_language_version = lo_abap_language_vers->get_abap_language_vers_by_objt(
-                                                                              iv_object_type = ls_item-obj_type
-                                                                              io_repo = io_repo
-                                                                              iv_package = lv_package ).
           ENDLOOP.
 
           " LXE, TODO refactor and move below activation
