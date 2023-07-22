@@ -18,7 +18,7 @@ CLASS ltcl_tree IMPLEMENTATION.
           lt_result TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
 
     CLEAR ls_node.
-    ls_node-chmod = zif_abapgit_definitions=>c_chmod-file.
+    ls_node-chmod = zif_abapgit_git_definitions=>c_chmod-file.
     ls_node-name = 'foobar.txt'.
     ls_node-sha1 = '5f46cb3c4b7f0b3600b64f744cde614a283a88dc'.
     APPEND ls_node TO lt_nodes.
@@ -40,13 +40,13 @@ CLASS ltcl_tree IMPLEMENTATION.
           lt_result TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
 
     CLEAR ls_node.
-    ls_node-chmod = zif_abapgit_definitions=>c_chmod-file.
+    ls_node-chmod = zif_abapgit_git_definitions=>c_chmod-file.
     ls_node-name = 'foobar.txt'.
     ls_node-sha1 = '5f46cb3c4b7f0b3600b64f744cde614a283a88dc'.
     APPEND ls_node TO lt_nodes.
 
     CLEAR ls_node.
-    ls_node-chmod = zif_abapgit_definitions=>c_chmod-file.
+    ls_node-chmod = zif_abapgit_git_definitions=>c_chmod-file.
     ls_node-name = 'something.md'.
     ls_node-sha1 = '1236cb3c4b7f0b3600b64f744cde614a283a88dc'.
     APPEND ls_node TO lt_nodes.
@@ -68,7 +68,7 @@ CLASS ltcl_tree IMPLEMENTATION.
           lt_result TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
 
     CLEAR ls_node.
-    ls_node-chmod = zif_abapgit_definitions=>c_chmod-file.
+    ls_node-chmod = zif_abapgit_git_definitions=>c_chmod-file.
     ls_node-name = 'foobar.txt'.
     ls_node-sha1 = '0000003c4b7f0b3600b64f744cde614a28000000'.
     APPEND ls_node TO lt_nodes.
@@ -261,12 +261,12 @@ CLASS ltcl_pack IMPLEMENTATION.
 
 
     APPEND INITIAL LINE TO lt_tree ASSIGNING <ls_tree>.
-    <ls_tree>-chmod = zif_abapgit_definitions=>c_chmod-file.
+    <ls_tree>-chmod = zif_abapgit_git_definitions=>c_chmod-file.
     <ls_tree>-name  = 'b.txt'.
     <ls_tree>-sha1  = '0123'.
 
     APPEND INITIAL LINE TO lt_tree ASSIGNING <ls_tree>.
-    <ls_tree>-chmod = zif_abapgit_definitions=>c_chmod-file.
+    <ls_tree>-chmod = zif_abapgit_git_definitions=>c_chmod-file.
     <ls_tree>-name  = 'a.txt'.
     <ls_tree>-sha1  = '0123'.
 
@@ -289,12 +289,12 @@ CLASS ltcl_pack IMPLEMENTATION.
 
 
     APPEND INITIAL LINE TO lt_tree ASSIGNING <ls_tree>.
-    <ls_tree>-chmod = zif_abapgit_definitions=>c_chmod-file.
+    <ls_tree>-chmod = zif_abapgit_git_definitions=>c_chmod-file.
     <ls_tree>-name  = 'foo.txt'.
     <ls_tree>-sha1  = '0123'.
 
     APPEND INITIAL LINE TO lt_tree ASSIGNING <ls_tree>.
-    <ls_tree>-chmod = zif_abapgit_definitions=>c_chmod-dir.
+    <ls_tree>-chmod = zif_abapgit_git_definitions=>c_chmod-dir.
     <ls_tree>-name  = 'foo'.
     <ls_tree>-sha1  = '0123'.
 

@@ -5,7 +5,7 @@ CLASS zcl_abapgit_git_pack DEFINITION
   PUBLIC SECTION.
     TYPES:
       BEGIN OF ty_node,
-        chmod TYPE zif_abapgit_definitions=>ty_chmod,
+        chmod TYPE zif_abapgit_git_definitions=>ty_chmod,
         name  TYPE string,
         sha1  TYPE zif_abapgit_git_definitions=>ty_sha1,
       END OF ty_node .
@@ -152,7 +152,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
+CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 
 
   METHOD decode.
@@ -453,7 +453,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
                lc_null       TYPE x VALUE '00'.
 
     DATA: lv_xstring TYPE xstring,
-          lv_chmod   TYPE zif_abapgit_definitions=>ty_chmod,
+          lv_chmod   TYPE zif_abapgit_git_definitions=>ty_chmod,
           lv_name    TYPE string,
           lv_string  TYPE string,
           lv_len     TYPE i,
@@ -478,10 +478,10 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
       CLEAR ls_node.
       ls_node-chmod = lv_chmod.
-      IF ls_node-chmod <> zif_abapgit_definitions=>c_chmod-dir
-          AND ls_node-chmod <> zif_abapgit_definitions=>c_chmod-file
-          AND ls_node-chmod <> zif_abapgit_definitions=>c_chmod-executable
-          AND ls_node-chmod <> zif_abapgit_definitions=>c_chmod-submodule.
+      IF ls_node-chmod <> zif_abapgit_git_definitions=>c_chmod-dir
+          AND ls_node-chmod <> zif_abapgit_git_definitions=>c_chmod-file
+          AND ls_node-chmod <> zif_abapgit_git_definitions=>c_chmod-executable
+          AND ls_node-chmod <> zif_abapgit_git_definitions=>c_chmod-submodule.
         zcx_abapgit_exception=>raise( |Unknown chmod| ).
       ENDIF.
 
@@ -855,7 +855,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
     LOOP AT it_nodes ASSIGNING <ls_node>.
       APPEND INITIAL LINE TO lt_sort ASSIGNING <ls_sort>.
-      IF <ls_node>-chmod = zif_abapgit_definitions=>c_chmod-dir.
+      IF <ls_node>-chmod = zif_abapgit_git_definitions=>c_chmod-dir.
         CONCATENATE <ls_node>-name '/' INTO <ls_sort>-sort.
       ELSE.
         <ls_sort>-sort = <ls_node>-name.

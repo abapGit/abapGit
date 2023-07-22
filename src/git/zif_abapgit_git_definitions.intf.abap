@@ -73,4 +73,25 @@ INTERFACE zif_abapgit_git_definitions
       comment   TYPE string,
     END OF ty_comment .
 
+  TYPES:
+    ty_chmod TYPE c LENGTH 6 .
+
+  CONSTANTS:
+    BEGIN OF c_chmod,
+      file       TYPE ty_chmod VALUE '100644',
+      executable TYPE ty_chmod VALUE '100755',
+      dir        TYPE ty_chmod VALUE '40000 ',
+      submodule  TYPE ty_chmod VALUE '160000',
+    END OF c_chmod .
+
+  TYPES:
+    BEGIN OF ty_expanded,
+      path  TYPE string,
+      name  TYPE string,
+      sha1  TYPE ty_sha1,
+      chmod TYPE ty_chmod,
+    END OF ty_expanded .
+  TYPES:
+    ty_expanded_tt TYPE STANDARD TABLE OF ty_expanded WITH DEFAULT KEY .
+
 ENDINTERFACE.

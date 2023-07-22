@@ -96,8 +96,6 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     ty_repo_file_tt TYPE STANDARD TABLE OF ty_repo_file WITH DEFAULT KEY .
   TYPES:
-    ty_chmod TYPE c LENGTH 6 .
-  TYPES:
     BEGIN OF ty_object,
       sha1    TYPE zif_abapgit_git_definitions=>ty_sha1,
       type    TYPE zif_abapgit_git_definitions=>ty_type,
@@ -218,15 +216,6 @@ INTERFACE zif_abapgit_definitions
       delete TYPE i,
       update TYPE i,
     END OF ty_count .
-  TYPES:
-    BEGIN OF ty_expanded,
-      path  TYPE string,
-      name  TYPE string,
-      sha1  TYPE zif_abapgit_git_definitions=>ty_sha1,
-      chmod TYPE ty_chmod,
-    END OF ty_expanded .
-  TYPES:
-    ty_expanded_tt TYPE STANDARD TABLE OF ty_expanded WITH DEFAULT KEY .
   TYPES:
     BEGIN OF ty_ancestor,
       commit TYPE zif_abapgit_git_definitions=>ty_sha1,
@@ -355,13 +344,6 @@ INTERFACE zif_abapgit_definitions
       deleted   TYPE zif_abapgit_git_definitions=>ty_item_state VALUE 'D',
       mixed     TYPE zif_abapgit_git_definitions=>ty_item_state VALUE '*',
     END OF c_state .
-  CONSTANTS:
-    BEGIN OF c_chmod,
-      file       TYPE ty_chmod VALUE '100644',
-      executable TYPE ty_chmod VALUE '100755',
-      dir        TYPE ty_chmod VALUE '40000 ',
-      submodule  TYPE ty_chmod VALUE '160000',
-    END OF c_chmod .
   CONSTANTS c_english TYPE spras VALUE 'E' ##NO_TEXT.
   CONSTANTS c_root_dir TYPE string VALUE '/' ##NO_TEXT.
   CONSTANTS c_dot_abapgit TYPE string VALUE '.abapgit.xml' ##NO_TEXT.

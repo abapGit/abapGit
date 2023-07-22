@@ -33,7 +33,7 @@ CLASS zcl_abapgit_merge DEFINITION
         !ct_visit  TYPE ty_visit_tt .
     METHODS all_files
       RETURNING
-        VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_expanded_tt .
+        VALUE(rt_files) TYPE zif_abapgit_git_definitions=>ty_expanded_tt .
     METHODS calculate_result
       RAISING
         zcx_abapgit_exception .
@@ -61,7 +61,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
+CLASS zcl_abapgit_merge IMPLEMENTATION.
 
 
   METHOD all_files.
@@ -77,7 +77,7 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
 
   METHOD calculate_result.
 
-    DATA: lt_files        TYPE zif_abapgit_definitions=>ty_expanded_tt,
+    DATA: lt_files        TYPE zif_abapgit_git_definitions=>ty_expanded_tt,
           lv_found_source TYPE abap_bool,
           lv_found_target TYPE abap_bool,
           lv_found_common TYPE abap_bool.
