@@ -17,7 +17,7 @@ CLASS zcl_abapgit_objects_injector IMPLEMENTATION.
 
   METHOD set_gui_jumper.
 
-    zcl_abapgit_ui_factory=>gi_gui_jumper = ii_gui_jumper.
+    zcl_abapgit_objects_factory=>gi_gui_jumper = ii_gui_jumper.
 
   ENDMETHOD.
 
