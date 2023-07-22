@@ -49,6 +49,7 @@ CLASS zcl_abapgit_objects DEFINITION
         !is_sub_item    TYPE zif_abapgit_definitions=>ty_item OPTIONAL
         !iv_filename    TYPE string OPTIONAL
         !iv_line_number TYPE i OPTIONAL
+        !iv_new_window  TYPE abap_bool DEFAULT abap_true
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS changed_by
@@ -210,7 +211,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
+CLASS zcl_abapgit_objects IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -1108,7 +1109,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       lv_exit = zcl_abapgit_ui_factory=>get_gui_jumper( )->jump(
         is_item        = is_item
         is_sub_item    = is_sub_item
-        iv_line_number = iv_line_number ).
+        iv_line_number = iv_line_number
+        iv_new_window  = iv_new_window ).
     ENDIF.
 
     IF lv_exit = abap_false.
@@ -1154,10 +1156,10 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
   METHOD serialize.
 
-    DATA: li_obj         TYPE REF TO zif_abapgit_object,
-          lx_error       TYPE REF TO zcx_abapgit_exception,
-          li_xml         TYPE REF TO zif_abapgit_xml_output,
-          lo_files       TYPE REF TO zcl_abapgit_objects_files.
+    DATA: li_obj   TYPE REF TO zif_abapgit_object,
+          lx_error TYPE REF TO zcx_abapgit_exception,
+          li_xml   TYPE REF TO zif_abapgit_xml_output,
+          lo_files TYPE REF TO zcl_abapgit_objects_files.
 
     FIELD-SYMBOLS <ls_file> LIKE LINE OF rs_files_and_item-files.
 
