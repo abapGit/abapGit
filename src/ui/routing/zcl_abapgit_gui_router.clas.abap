@@ -89,9 +89,13 @@ CLASS zcl_abapgit_gui_router DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS jump_object
       IMPORTING
-        !iv_obj_type TYPE string
-        !iv_obj_name TYPE string
-        !iv_filename TYPE string
+        !iv_obj_type   TYPE string
+        !iv_obj_name   TYPE string
+        !iv_filename   TYPE string
+        !iv_sub_type   TYPE string OPTIONAL
+        !iv_sub_name   TYPE string OPTIONAL
+        !iv_line       TYPE string OPTIONAL
+        !iv_new_window TYPE string DEFAULT 'X'
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS jump_display_transport
@@ -465,11 +469,21 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     DATA:
       ls_item        TYPE zif_abapgit_definitions=>ty_item,
+      ls_sub_item    TYPE zif_abapgit_definitions=>ty_item,
       lx_error       TYPE REF TO zcx_abapgit_exception,
+      lv_line_number TYPE i,
+      lv_new_window  TYPE abap_bool,
       li_html_viewer TYPE REF TO zif_abapgit_html_viewer.
 
     ls_item-obj_type = cl_http_utility=>unescape_url( |{ iv_obj_type }| ).
     ls_item-obj_name = cl_http_utility=>unescape_url( |{ iv_obj_name }| ).
+    ls_sub_item-obj_type = cl_http_utility=>unescape_url( |{ iv_sub_type }| ).
+    ls_sub_item-obj_name = cl_http_utility=>unescape_url( |{ iv_sub_name }| ).
+
+    IF iv_line CO '0123456789'.
+      lv_line_number = iv_line.
+    ENDIF.
+    lv_new_window = boolc( iv_new_window IS NOT INITIAL ).
 
     TRY.
         li_html_viewer = zcl_abapgit_ui_factory=>get_html_viewer( ).
@@ -479,10 +493,18 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
         IF ls_item-obj_type = zif_abapgit_data_config=>c_data_type-tabu.
           zcl_abapgit_data_utils=>jump( ls_item ).
+        ELSEIF lv_line_number IS INITIAL OR ls_sub_item IS INITIAL.
+          zcl_abapgit_objects=>jump(
+            is_item       = ls_item
+            iv_filename   = iv_filename
+            iv_new_window = lv_new_window ).
         ELSE.
           zcl_abapgit_objects=>jump(
-            is_item     = ls_item
-            iv_filename = iv_filename ).
+            is_item        = ls_item
+            is_sub_item    = ls_sub_item
+            iv_filename    = iv_filename
+            iv_line_number = lv_line_number
+            iv_new_window  = lv_new_window ).
         ENDIF.
 
         li_html_viewer->set_visiblity( abap_true ).
@@ -620,9 +642,13 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-jump.                          " Open object editor
         jump_object(
-          iv_obj_type = ii_event->query( )->get( 'TYPE' )
-          iv_obj_name = ii_event->query( )->get( 'NAME' )
-          iv_filename = ii_event->query( )->get( 'FILE' ) ).
+          iv_obj_type   = ii_event->query( )->get( 'TYPE' )
+          iv_obj_name   = ii_event->query( )->get( 'NAME' )
+          iv_filename   = ii_event->query( )->get( 'FILE' )
+          iv_sub_type   = ii_event->query( )->get( 'SUBTYPE' )
+          iv_sub_name   = ii_event->query( )->get( 'SUBNAME' )
+          iv_line       = ii_event->query( )->get( 'LINE' )
+          iv_new_window = ii_event->query( )->get( 'NEW_WINDOW' ) ).
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
