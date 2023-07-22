@@ -115,7 +115,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
 
   METHOD back.
@@ -254,7 +254,7 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
       CLEAR: mt_stack, mt_event_handlers.
       APPEND mi_router TO mt_event_handlers.
 
-      on_event( action = iv_action ).
+      on_event( action = |{ iv_action }| ).
     ELSE.
       IF lines( mt_stack ) > 0.
         READ TABLE mt_stack INTO ls_stack INDEX 1.
