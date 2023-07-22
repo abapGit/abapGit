@@ -205,7 +205,7 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
       get_length( IMPORTING ev_length = lv_expected
                   CHANGING cv_data = lv_data ).
 
-      IF lv_type = zif_abapgit_definitions=>c_type-ref_d.
+      IF lv_type = zif_abapgit_git_definitions=>c_type-ref_d.
         lv_ref_delta = lv_data(20).
         lv_data = lv_data+20.
       ENDIF.
@@ -260,7 +260,7 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
       ls_object-adler32 = lv_data(4).
       lv_data = lv_data+4. " skip adler checksum
 
-      IF lv_type = zif_abapgit_definitions=>c_type-ref_d.
+      IF lv_type = zif_abapgit_git_definitions=>c_type-ref_d.
         ls_object-sha1 = lv_ref_delta.
         TRANSLATE ls_object-sha1 TO LOWER CASE.
       ELSE.
@@ -362,13 +362,13 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 
     LOOP AT ct_objects INTO ls_object
         USING KEY type
-        WHERE type = zif_abapgit_definitions=>c_type-ref_d.
+        WHERE type = zif_abapgit_git_definitions=>c_type-ref_d.
       INSERT ls_object INTO TABLE lt_deltas.
     ENDLOOP.
 
     DELETE ct_objects
       USING KEY type
-      WHERE type = zif_abapgit_definitions=>c_type-ref_d.
+      WHERE type = zif_abapgit_git_definitions=>c_type-ref_d.
 
     "Restore correct Delta Order
     SORT lt_deltas BY index.
@@ -530,7 +530,7 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
       WITH KEY sha COMPONENTS sha1 = is_object-sha1.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Base not found, { is_object-sha1 }| ).
-    ELSEIF <ls_object>-type = zif_abapgit_definitions=>c_type-ref_d.
+    ELSEIF <ls_object>-type = zif_abapgit_git_definitions=>c_type-ref_d.
 * sanity check
       zcx_abapgit_exception=>raise( |Delta, base eq delta| ).
     ENDIF.
@@ -824,15 +824,15 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 
     CASE lv_xtype.
       WHEN 16.
-        rv_type = zif_abapgit_definitions=>c_type-commit.
+        rv_type = zif_abapgit_git_definitions=>c_type-commit.
       WHEN 32.
-        rv_type = zif_abapgit_definitions=>c_type-tree.
+        rv_type = zif_abapgit_git_definitions=>c_type-tree.
       WHEN 48.
-        rv_type = zif_abapgit_definitions=>c_type-blob.
+        rv_type = zif_abapgit_git_definitions=>c_type-blob.
       WHEN 64.
-        rv_type = zif_abapgit_definitions=>c_type-tag.
+        rv_type = zif_abapgit_git_definitions=>c_type-tag.
       WHEN 112.
-        rv_type = zif_abapgit_definitions=>c_type-ref_d.
+        rv_type = zif_abapgit_git_definitions=>c_type-ref_d.
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( |Todo, unknown git pack type| ).
     ENDCASE.
@@ -883,15 +883,15 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 
 
     CASE iv_type.
-      WHEN zif_abapgit_definitions=>c_type-commit.
+      WHEN zif_abapgit_git_definitions=>c_type-commit.
         lv_type = 16.
-      WHEN zif_abapgit_definitions=>c_type-tree.
+      WHEN zif_abapgit_git_definitions=>c_type-tree.
         lv_type = 32.
-      WHEN zif_abapgit_definitions=>c_type-blob.
+      WHEN zif_abapgit_git_definitions=>c_type-blob.
         lv_type = 48.
-      WHEN zif_abapgit_definitions=>c_type-tag.
+      WHEN zif_abapgit_git_definitions=>c_type-tag.
         lv_type = 64.
-      WHEN zif_abapgit_definitions=>c_type-ref_d.
+      WHEN zif_abapgit_git_definitions=>c_type-ref_d.
         lv_type = 112.
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( |Unexpected object type while encoding pack| ).

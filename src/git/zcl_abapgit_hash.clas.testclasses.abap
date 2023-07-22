@@ -32,7 +32,7 @@ CLASS ltcl_test IMPLEMENTATION.
     DATA: lv_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
 
     lv_sha1 = zcl_abapgit_hash=>sha1(
-      iv_type = zif_abapgit_definitions=>c_type-commit
+      iv_type = zif_abapgit_git_definitions=>c_type-commit
       iv_data = '112211221122' ).
 
     cl_abap_unit_assert=>assert_equals(

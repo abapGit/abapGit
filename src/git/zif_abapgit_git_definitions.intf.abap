@@ -118,4 +118,13 @@ INTERFACE zif_abapgit_git_definitions
   TYPES:
     ty_commit_tt TYPE STANDARD TABLE OF ty_commit WITH DEFAULT KEY .
 
+  CONSTANTS:
+    BEGIN OF c_type,
+      commit TYPE ty_type VALUE 'commit',                   "#EC NOTEXT
+      tree   TYPE ty_type VALUE 'tree',                     "#EC NOTEXT
+      ref_d  TYPE ty_type VALUE 'ref_d',                    "#EC NOTEXT
+      tag    TYPE ty_type VALUE 'tag',                      "#EC NOTEXT
+      blob   TYPE ty_type VALUE 'blob',                     "#EC NOTEXT
+    END OF c_type .
+
 ENDINTERFACE.

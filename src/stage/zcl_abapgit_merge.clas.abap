@@ -139,7 +139,7 @@ CLASS zcl_abapgit_merge IMPLEMENTATION.
 * added in source
         READ TABLE mt_objects ASSIGNING <ls_object>
           WITH KEY type COMPONENTS
-            type = zif_abapgit_definitions=>c_type-blob
+            type = zif_abapgit_git_definitions=>c_type-blob
             sha1 = <ls_source>-sha1.
         ASSERT sy-subrc = 0.
 
@@ -164,14 +164,14 @@ CLASS zcl_abapgit_merge IMPLEMENTATION.
         <ls_conflict>-source_sha1 = <ls_source>-sha1.
         READ TABLE mt_objects ASSIGNING <ls_object>
           WITH KEY type COMPONENTS
-            type = zif_abapgit_definitions=>c_type-blob
+            type = zif_abapgit_git_definitions=>c_type-blob
             sha1 = <ls_source>-sha1.
         <ls_conflict>-source_data = <ls_object>-data.
 
         <ls_conflict>-target_sha1 = <ls_target>-sha1.
         READ TABLE mt_objects ASSIGNING <ls_object>
           WITH KEY type COMPONENTS
-            type = zif_abapgit_definitions=>c_type-blob
+            type = zif_abapgit_git_definitions=>c_type-blob
             sha1 = <ls_target>-sha1.
         <ls_conflict>-target_data = <ls_object>-data.
 
@@ -194,7 +194,7 @@ CLASS zcl_abapgit_merge IMPLEMENTATION.
 * changed in source
         READ TABLE mt_objects ASSIGNING <ls_object>
           WITH KEY type COMPONENTS
-            type = zif_abapgit_definitions=>c_type-blob
+            type = zif_abapgit_git_definitions=>c_type-blob
             sha1 = <ls_source>-sha1.
         ASSERT sy-subrc = 0.
 
@@ -214,14 +214,14 @@ CLASS zcl_abapgit_merge IMPLEMENTATION.
         <ls_conflict>-source_sha1 = <ls_source>-sha1.
         READ TABLE mt_objects ASSIGNING <ls_object>
           WITH KEY type COMPONENTS
-            type = zif_abapgit_definitions=>c_type-blob
+            type = zif_abapgit_git_definitions=>c_type-blob
             sha1 = <ls_source>-sha1.
         <ls_conflict>-source_data = <ls_object>-data.
 
         <ls_conflict>-target_sha1 = <ls_target>-sha1.
         READ TABLE mt_objects ASSIGNING <ls_object>
           WITH KEY type COMPONENTS
-            type = zif_abapgit_definitions=>c_type-blob
+            type = zif_abapgit_git_definitions=>c_type-blob
             sha1 = <ls_target>-sha1.
         <ls_conflict>-target_data = <ls_object>-data.
 
@@ -287,7 +287,7 @@ CLASS zcl_abapgit_merge IMPLEMENTATION.
     LOOP AT lt_visit INTO lv_commit.
       READ TABLE mt_objects ASSIGNING <ls_object>
         WITH KEY type COMPONENTS
-          type = zif_abapgit_definitions=>c_type-commit
+          type = zif_abapgit_git_definitions=>c_type-commit
           sha1 = lv_commit.
       ASSERT sy-subrc = 0.
 

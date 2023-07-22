@@ -176,7 +176,7 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
         ev_branch       = rs_pull_result-commit
         et_objects      = lt_objects ).
 
-    DELETE lt_objects WHERE type <> zif_abapgit_definitions=>c_type-commit.
+    DELETE lt_objects WHERE type <> zif_abapgit_git_definitions=>c_type-commit.
 
     rs_pull_result-commits = parse_commits( lt_objects ).
 
@@ -206,7 +206,7 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
       IMPORTING
         et_objects      = lt_objects ).
 
-    DELETE lt_objects WHERE type <> zif_abapgit_definitions=>c_type-commit.
+    DELETE lt_objects WHERE type <> zif_abapgit_git_definitions=>c_type-commit.
 
     rt_commits = parse_commits( lt_objects ).
     sort_commits( CHANGING ct_commits = rt_commits ).
@@ -239,7 +239,7 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
 
 
     LOOP AT it_objects ASSIGNING <ls_object> USING KEY type
-        WHERE type = zif_abapgit_definitions=>c_type-commit.
+        WHERE type = zif_abapgit_git_definitions=>c_type-commit.
       ls_raw = zcl_abapgit_git_pack=>decode_commit( <ls_object>-data ).
 
       CLEAR ls_commit.

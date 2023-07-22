@@ -25,7 +25,7 @@ CLASS ltcl_test IMPLEMENTATION.
           ls_object  LIKE LINE OF lt_objects.
 
 
-    ls_object-type = zif_abapgit_definitions=>c_type-commit.
+    ls_object-type = zif_abapgit_git_definitions=>c_type-commit.
     ls_object-data = '7472656520396335376238613931336465306539' &&
       '3735333630633261306330643638363037306162' &&
       '61343965650A706172656E742036393532346462' &&
@@ -62,7 +62,7 @@ CLASS ltcl_test IMPLEMENTATION.
           ls_git_pack_commit TYPE zcl_abapgit_git_pack=>ty_commit.
 
 
-    ls_object-type = zif_abapgit_definitions=>c_type-commit.
+    ls_object-type = zif_abapgit_git_definitions=>c_type-commit.
     ls_git_pack_commit-tree      = 'dummy'.
     ls_git_pack_commit-committer = 'dummy'.
 
