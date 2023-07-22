@@ -90,7 +90,7 @@ CLASS zcl_abapgit_gui_page_tags DEFINITION
 
     METHODS choose_commit
       RETURNING
-        VALUE(rv_commit) TYPE zif_abapgit_definitions=>ty_commit-sha1
+        VALUE(rv_commit) TYPE zif_abapgit_git_definitions=>ty_commit-sha1
       RAISING
         zcx_abapgit_exception.
 
@@ -98,7 +98,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_TAGS IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_tags IMPLEMENTATION.
 
 
   METHOD choose_commit.
