@@ -17,12 +17,9 @@ CLASS zcl_abapgit_gui DEFINITION
         go_back_to_bookmark TYPE i VALUE 6,
         new_page_replacing  TYPE i VALUE 7,
       END OF c_event_state .
-    CONSTANTS:
-      BEGIN OF c_action,
-        go_home TYPE string VALUE zif_abapgit_definitions=>c_action-go_home,
-        go_db   TYPE string VALUE zif_abapgit_definitions=>c_action-go_db,
-      END OF c_action .
     METHODS go_home
+      IMPORTING
+        iv_action TYPE string
       RAISING
         zcx_abapgit_exception .
     METHODS back
@@ -118,7 +115,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
+CLASS zcl_abapgit_gui IMPLEMENTATION.
 
 
   METHOD back.
@@ -256,14 +253,8 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     IF mi_router IS BOUND.
       CLEAR: mt_stack, mt_event_handlers.
       APPEND mi_router TO mt_event_handlers.
-      " on_event doesn't accept strings directly
-      GET PARAMETER ID 'DBT' FIELD lv_mode.
-      CASE lv_mode.
-        WHEN 'ZABAPGIT'.
-          on_event( action = |{ c_action-go_db }| ).
-        WHEN OTHERS.
-          on_event( action = |{ c_action-go_home }| ).
-      ENDCASE.
+
+      on_event( action = iv_action ).
     ELSE.
       IF lines( mt_stack ) > 0.
         READ TABLE mt_stack INTO ls_stack INDEX 1.
