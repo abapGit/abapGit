@@ -35,9 +35,9 @@ FORM open_gui RAISING zcx_abapgit_exception.
     GET PARAMETER ID 'DBT' FIELD lv_mode.
     CASE lv_mode.
       WHEN 'ZABAPGIT'.
-        lv_action = |{ c_action-go_db }|.
+        lv_action = zif_abapgit_definitions=>c_action-go_db.
       WHEN OTHERS.
-        lv_action = |{ c_action-go_home }|.
+        lv_action = zif_abapgit_definitions=>c_action-go_home.
     ENDCASE.
 
     zcl_abapgit_services_abapgit=>prepare_gui_startup( ).
