@@ -18,7 +18,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_DOCT IMPLEMENTATION.
+CLASS zcl_abapgit_object_doct IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -150,7 +150,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DOCT IMPLEMENTATION.
     ls_bcdata-fval = '=SHOW'.
     APPEND ls_bcdata TO lt_bcdata.
 
-    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+    zcl_abapgit_objects_factory=>get_gui_jumper( )->jump_batch_input(
       iv_tcode   = 'SE61'
       it_bdcdata = lt_bcdata ).
 

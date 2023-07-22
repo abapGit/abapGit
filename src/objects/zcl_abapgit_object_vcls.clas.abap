@@ -239,7 +239,7 @@ CLASS zcl_abapgit_object_vcls IMPLEMENTATION.
     ls_bcdata-fval = '=CLSH'.
     APPEND ls_bcdata TO lt_bcdata.
 
-    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+    zcl_abapgit_objects_factory=>get_gui_jumper( )->jump_batch_input(
       iv_tcode   = 'SE54'
       it_bdcdata = lt_bcdata ).
 

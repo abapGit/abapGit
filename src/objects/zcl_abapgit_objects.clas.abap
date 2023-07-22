@@ -1100,7 +1100,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     IF lv_exit = abap_false.
       " Open object in new window with generic jumper
-      lv_exit = zcl_abapgit_ui_factory=>get_gui_jumper( )->jump(
+      lv_exit = zcl_abapgit_objects_factory=>get_gui_jumper( )->jump(
         is_item        = is_item
         is_sub_item    = is_sub_item
         iv_line_number = iv_line_number
