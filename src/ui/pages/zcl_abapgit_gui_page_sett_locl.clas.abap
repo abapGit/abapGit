@@ -25,6 +25,8 @@ CLASS zcl_abapgit_gui_page_sett_locl DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
+    DATA mo_popup_picklist TYPE REF TO zcl_abapgit_gui_picklist.
+
     CONSTANTS:
       BEGIN OF c_id,
         local                        TYPE string VALUE 'local',
@@ -48,11 +50,9 @@ CLASS zcl_abapgit_gui_page_sett_locl DEFINITION
         choose_labels              TYPE string VALUE 'choose-labels',
         choose_check_variant       TYPE string VALUE 'choose_check_variant',
       END OF c_event .
-
     DATA mo_form TYPE REF TO zcl_abapgit_html_form .
     DATA mo_form_data TYPE REF TO zcl_abapgit_string_map .
     DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map .
-
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
     DATA ms_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings .
 
@@ -78,39 +78,57 @@ CLASS zcl_abapgit_gui_page_sett_locl DEFINITION
         zcx_abapgit_exception .
     METHODS choose_labels
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS choose_check_variant
+      IMPORTING
+        iv_is_return TYPE abap_bool DEFAULT abap_false
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS choose_transport_request
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS choose_customizing_request
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS is_customizing_included
       RETURNING
         VALUE(rv_result) TYPE abap_bool
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
+    METHODS handle_picklist_state
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
 
 
   METHOD choose_check_variant.
 
-    DATA: lv_check_variant TYPE sci_chkv.
+    DATA ls_variant         TYPE zif_abapgit_code_inspector=>ty_variant.
+    DATA lv_popup_cancelled TYPE abap_bool.
 
-    lv_check_variant = zcl_abapgit_ui_factory=>get_popups( )->choose_code_insp_check_variant( ).
+    IF iv_is_return = abap_false.
 
-    IF lv_check_variant IS NOT INITIAL.
-      mo_form_data->set(
-        iv_key = c_id-code_inspector_check_variant
-        iv_val = lv_check_variant ).
+      mo_popup_picklist = zcl_abapgit_ui_pop_code_insp=>create(
+        )->create_picklist(
+        )->set_id( c_event-choose_check_variant
+        )->set_in_page( abap_true ).
+
+    ELSE.
+
+      lv_popup_cancelled = mo_popup_picklist->was_cancelled( ).
+      IF lv_popup_cancelled = abap_false.
+        mo_popup_picklist->get_result_item( CHANGING cs_selected = ls_variant ).
+        IF ls_variant IS NOT INITIAL.
+          mo_form_data->set(
+            iv_key = c_id-code_inspector_check_variant
+            iv_val = ls_variant-name ).
+        ENDIF.
+      ENDIF.
+
     ENDIF.
 
   ENDMETHOD.
@@ -274,6 +292,25 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
     )->command(
       iv_label       = 'Back'
       iv_action      = zif_abapgit_definitions=>c_action-go_back ).
+
+  ENDMETHOD.
+
+
+  METHOD handle_picklist_state.
+
+    IF mo_popup_picklist IS BOUND AND
+      ( mo_popup_picklist->is_fulfilled( ) = abap_true OR mo_popup_picklist->is_in_page( ) = abap_false ).
+      " Picklist is either fullfilled OR
+      " it was on its own page and user went back from it via F3/ESC and the picklist had no "graceful back" handler
+      CASE mo_popup_picklist->id( ).
+        WHEN c_event-choose_check_variant.
+          choose_check_variant( iv_is_return = abap_true ).
+        WHEN OTHERS.
+          zcx_abapgit_exception=>raise( |Unexpected picklist id { mo_popup_picklist->id( ) }| ).
+      ENDCASE.
+
+      CLEAR mo_popup_picklist.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -458,7 +495,6 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
       WHEN c_event-choose_check_variant.
 
         choose_check_variant( ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_event-save.
         " Validate form entries before saving
@@ -472,12 +508,26 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
 
     ENDCASE.
 
+    IF mo_popup_picklist IS BOUND. " Uniform popup state handling
+      " This should happen only for a new popup because
+      " on the first re-render main component event handling is blocked
+      " and not called again until the popup distruction
+      IF mo_popup_picklist->is_in_page( ) = abap_true.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      ELSE.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+        rs_handled-page  = zcl_abapgit_gui_page_hoc=>create(
+          ii_child_component = mo_popup_picklist
+          iv_show_as_modal   = abap_true ).
+      ENDIF.
+    ENDIF.
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    register_handlers( ).
+    handle_picklist_state( ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -493,6 +543,13 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
       io_validation_log = mo_validation_log ) ).
 
     ri_html->add( `</div>` ).
+
+    IF mo_popup_picklist IS NOT BOUND OR mo_popup_picklist->is_in_page( ) = abap_false.
+      register_handlers( ).
+    ELSEIF mo_popup_picklist->is_in_page( ) = abap_true.
+      " Block usual page events if the popup is an in-page popup
+      ri_html->add( zcl_abapgit_gui_in_page_modal=>create( mo_popup_picklist ) ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
