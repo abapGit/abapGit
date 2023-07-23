@@ -399,7 +399,7 @@ CLASS ltcl_split_text IMPLEMENTATION.
         v1 TYPE sy-msgv1 VALUE `Here is a very long text more than 200 characters`,
         v2 TYPE sy-msgv2 VALUE ` and we have to invent a nice story about abapGit`,
         v3 TYPE sy-msgv3 VALUE ` to fill this long message. abapGit is simply the`,
-        v4 TYPE sy-msgv4 VALUE ` greatest! #abapGit #awesome #community`,
+        v4 TYPE sy-msgv4 VALUE ` greatest! #abapGit #awesome #community #opensourc`,
       END OF lc_msg_z.
     test_set_msg_vars( iv_text = lc_text_x && lc_text_y && lc_text_z
                        is_msg  = lc_msg_z ).
