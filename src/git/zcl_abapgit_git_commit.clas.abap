@@ -5,7 +5,7 @@ CLASS zcl_abapgit_git_commit DEFINITION
   PUBLIC SECTION.
     TYPES:
       BEGIN OF ty_pull_result,
-        commits TYPE zif_abapgit_definitions=>ty_commit_tt,
+        commits TYPE zif_abapgit_git_definitions=>ty_commit_tt,
         commit  TYPE zif_abapgit_git_definitions=>ty_sha1,
       END OF ty_pull_result .
 
@@ -25,25 +25,25 @@ CLASS zcl_abapgit_git_commit DEFINITION
         !iv_repo_url      TYPE string
         !iv_deepen_level  TYPE i
       RETURNING
-        VALUE(rt_commits) TYPE zif_abapgit_definitions=>ty_commit_tt
+        VALUE(rt_commits) TYPE zif_abapgit_git_definitions=>ty_commit_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS parse_commits
       IMPORTING
         !it_objects       TYPE zif_abapgit_definitions=>ty_objects_tt
       RETURNING
-        VALUE(rt_commits) TYPE zif_abapgit_definitions=>ty_commit_tt
+        VALUE(rt_commits) TYPE zif_abapgit_git_definitions=>ty_commit_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS sort_commits
       CHANGING
-        !ct_commits TYPE zif_abapgit_definitions=>ty_commit_tt
+        !ct_commits TYPE zif_abapgit_git_definitions=>ty_commit_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS reverse_sort_order
       CHANGING
-        !ct_commits TYPE zif_abapgit_definitions=>ty_commit_tt .
-    CLASS-METHODS clear_missing_parents CHANGING ct_commits TYPE zif_abapgit_definitions=>ty_commit_tt .
+        !ct_commits TYPE zif_abapgit_git_definitions=>ty_commit_tt .
+    CLASS-METHODS clear_missing_parents CHANGING ct_commits TYPE zif_abapgit_git_definitions=>ty_commit_tt .
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: ty_sha1_range TYPE RANGE OF zif_abapgit_git_definitions=>ty_sha1 .
@@ -53,13 +53,13 @@ CLASS zcl_abapgit_git_commit DEFINITION
         it_commit_sha1s TYPE ty_sha1_range
       EXPORTING
         et_commit_sha1s TYPE ty_sha1_range
-        es_1st_commit   TYPE zif_abapgit_definitions=>ty_commit
+        es_1st_commit   TYPE zif_abapgit_git_definitions=>ty_commit
       CHANGING
-        ct_commits      TYPE zif_abapgit_definitions=>ty_commit_tt .
+        ct_commits      TYPE zif_abapgit_git_definitions=>ty_commit_tt .
 
     CLASS-METHODS is_missing
       IMPORTING
-        it_commits       TYPE zif_abapgit_definitions=>ty_commit_tt
+        it_commits       TYPE zif_abapgit_git_definitions=>ty_commit_tt
         iv_sha1          TYPE zif_abapgit_git_definitions=>ty_sha1
       RETURNING
         VALUE(rv_result) TYPE abap_bool.
@@ -68,9 +68,9 @@ CLASS zcl_abapgit_git_commit DEFINITION
       IMPORTING
         !iv_author TYPE string
       EXPORTING
-        !ev_author TYPE zif_abapgit_definitions=>ty_commit-author
-        !ev_email  TYPE zif_abapgit_definitions=>ty_commit-email
-        !ev_time   TYPE zif_abapgit_definitions=>ty_commit-time
+        !ev_author TYPE zif_abapgit_git_definitions=>ty_commit-author
+        !ev_email  TYPE zif_abapgit_git_definitions=>ty_commit-email
+        !ev_time   TYPE zif_abapgit_git_definitions=>ty_commit-time
       RAISING
         zcx_abapgit_exception .
 ENDCLASS.
@@ -98,7 +98,7 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
 
     "Part of #4719 to handle cut commit sequences, todo
 
-    FIELD-SYMBOLS: <ls_commit> TYPE zif_abapgit_definitions=>ty_commit.
+    FIELD-SYMBOLS: <ls_commit> TYPE zif_abapgit_git_definitions=>ty_commit.
 
     LOOP AT ct_commits ASSIGNING <ls_commit>.
 
@@ -119,11 +119,11 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
 
   METHOD get_1st_child_commit.
 
-    DATA: lt_1stchild_commits TYPE zif_abapgit_definitions=>ty_commit_tt,
+    DATA: lt_1stchild_commits TYPE zif_abapgit_git_definitions=>ty_commit_tt,
           ls_parent           LIKE LINE OF it_commit_sha1s,
           lt_commit_sha1s     LIKE it_commit_sha1s.
 
-    FIELD-SYMBOLS: <ls_child_commit> TYPE zif_abapgit_definitions=>ty_commit.
+    FIELD-SYMBOLS: <ls_child_commit> TYPE zif_abapgit_git_definitions=>ty_commit.
 
     CLEAR: es_1st_commit.
 
@@ -176,7 +176,7 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
         ev_branch       = rs_pull_result-commit
         et_objects      = lt_objects ).
 
-    DELETE lt_objects WHERE type <> zif_abapgit_definitions=>c_type-commit.
+    DELETE lt_objects WHERE type <> zif_abapgit_git_definitions=>c_type-commit.
 
     rs_pull_result-commits = parse_commits( lt_objects ).
 
@@ -206,7 +206,7 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
       IMPORTING
         et_objects      = lt_objects ).
 
-    DELETE lt_objects WHERE type <> zif_abapgit_definitions=>c_type-commit.
+    DELETE lt_objects WHERE type <> zif_abapgit_git_definitions=>c_type-commit.
 
     rt_commits = parse_commits( lt_objects ).
     sort_commits( CHANGING ct_commits = rt_commits ).
@@ -230,7 +230,7 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
 
   METHOD parse_commits.
 
-    DATA: ls_commit TYPE zif_abapgit_definitions=>ty_commit,
+    DATA: ls_commit TYPE zif_abapgit_git_definitions=>ty_commit,
           lt_body   TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
           ls_raw    TYPE zcl_abapgit_git_pack=>ty_commit.
 
@@ -239,7 +239,7 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
 
 
     LOOP AT it_objects ASSIGNING <ls_object> USING KEY type
-        WHERE type = zif_abapgit_definitions=>c_type-commit.
+        WHERE type = zif_abapgit_git_definitions=>c_type-commit.
       ls_raw = zcl_abapgit_git_pack=>decode_commit( <ls_object>-data ).
 
       CLEAR ls_commit.
@@ -279,8 +279,8 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
 
   METHOD reverse_sort_order.
 
-    DATA: lt_commits           TYPE zif_abapgit_definitions=>ty_commit_tt.
-    FIELD-SYMBOLS: <ls_commit> TYPE zif_abapgit_definitions=>ty_commit.
+    DATA: lt_commits           TYPE zif_abapgit_git_definitions=>ty_commit_tt.
+    FIELD-SYMBOLS: <ls_commit> TYPE zif_abapgit_git_definitions=>ty_commit.
 
     LOOP AT ct_commits ASSIGNING <ls_commit>.
       INSERT <ls_commit> INTO lt_commits INDEX 1.
@@ -293,12 +293,12 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
 
   METHOD sort_commits.
 
-    DATA: lt_sorted_commits TYPE zif_abapgit_definitions=>ty_commit_tt,
-          ls_next_commit    TYPE zif_abapgit_definitions=>ty_commit,
+    DATA: lt_sorted_commits TYPE zif_abapgit_git_definitions=>ty_commit_tt,
+          ls_next_commit    TYPE zif_abapgit_git_definitions=>ty_commit,
           lt_parents        TYPE ty_sha1_range,
           ls_parent         LIKE LINE OF lt_parents.
 
-    FIELD-SYMBOLS: <ls_initial_commit> TYPE zif_abapgit_definitions=>ty_commit.
+    FIELD-SYMBOLS: <ls_initial_commit> TYPE zif_abapgit_git_definitions=>ty_commit.
 
     " find initial commit
     READ TABLE ct_commits ASSIGNING <ls_initial_commit> WITH KEY parent1 = space.

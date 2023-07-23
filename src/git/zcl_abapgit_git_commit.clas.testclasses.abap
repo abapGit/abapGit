@@ -20,12 +20,12 @@ CLASS ltcl_test IMPLEMENTATION.
   METHOD parse_commits.
 
     DATA: lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt,
-          lt_commits TYPE zif_abapgit_definitions=>ty_commit_tt,
+          lt_commits TYPE zif_abapgit_git_definitions=>ty_commit_tt,
           ls_commit  LIKE LINE OF lt_commits,
           ls_object  LIKE LINE OF lt_objects.
 
 
-    ls_object-type = zif_abapgit_definitions=>c_type-commit.
+    ls_object-type = zif_abapgit_git_definitions=>c_type-commit.
     ls_object-data = '7472656520396335376238613931336465306539' &&
       '3735333630633261306330643638363037306162' &&
       '61343965650A706172656E742036393532346462' &&
@@ -57,12 +57,12 @@ CLASS ltcl_test IMPLEMENTATION.
   METHOD check_author_regex.
 
     DATA: lt_objects         TYPE zif_abapgit_definitions=>ty_objects_tt,
-          lt_commits         TYPE zif_abapgit_definitions=>ty_commit_tt,
+          lt_commits         TYPE zif_abapgit_git_definitions=>ty_commit_tt,
           ls_object          LIKE LINE OF lt_objects,
           ls_git_pack_commit TYPE zcl_abapgit_git_pack=>ty_commit.
 
 
-    ls_object-type = zif_abapgit_definitions=>c_type-commit.
+    ls_object-type = zif_abapgit_git_definitions=>c_type-commit.
     ls_git_pack_commit-tree      = 'dummy'.
     ls_git_pack_commit-committer = 'dummy'.
 
@@ -107,7 +107,7 @@ CLASS ltc_parent_handling DEFINITION FINAL FOR TESTING
   RISK LEVEL HARMLESS.
 
   PRIVATE SECTION.
-    DATA mt_commits TYPE zif_abapgit_definitions=>ty_commit_tt.
+    DATA mt_commits TYPE zif_abapgit_git_definitions=>ty_commit_tt.
     METHODS blank_not_missing FOR TESTING RAISING cx_static_check.
     METHODS parent_is_missing FOR TESTING RAISING cx_static_check.
     METHODS parent_is_found FOR TESTING RAISING cx_static_check.
@@ -142,7 +142,7 @@ CLASS ltc_parent_handling IMPLEMENTATION.
 
   METHOD missing_parent1_cleared.
 
-    DATA ls_commit TYPE zif_abapgit_definitions=>ty_commit.
+    DATA ls_commit TYPE zif_abapgit_git_definitions=>ty_commit.
 
     given_commit( iv_sha1 = 'F00'
                   iv_parent1 = 'BA5' ).
@@ -155,7 +155,7 @@ CLASS ltc_parent_handling IMPLEMENTATION.
 
   METHOD missing_parent2_cleared.
 
-    DATA ls_commit TYPE zif_abapgit_definitions=>ty_commit.
+    DATA ls_commit TYPE zif_abapgit_git_definitions=>ty_commit.
 
     given_commit( iv_sha1 = 'F00'
                   iv_parent2 = 'BA5' ).
@@ -169,7 +169,7 @@ CLASS ltc_parent_handling IMPLEMENTATION.
 
   METHOD matched_parent1_remains.
 
-    DATA ls_commit TYPE zif_abapgit_definitions=>ty_commit.
+    DATA ls_commit TYPE zif_abapgit_git_definitions=>ty_commit.
 
     given_commit( iv_sha1 = 'F00' ).
     given_commit( iv_sha1 = 'BA5'
@@ -184,7 +184,7 @@ CLASS ltc_parent_handling IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD given_commit_sha1.
-    DATA ls_commit TYPE zif_abapgit_definitions=>ty_commit.
+    DATA ls_commit TYPE zif_abapgit_git_definitions=>ty_commit.
 
     ls_commit-sha1 = iv_sha1.
     APPEND ls_commit TO mt_commits.
@@ -205,7 +205,7 @@ CLASS ltc_parent_handling IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD given_commit.
-    FIELD-SYMBOLS: <ls_commit> TYPE zif_abapgit_definitions=>ty_commit.
+    FIELD-SYMBOLS: <ls_commit> TYPE zif_abapgit_git_definitions=>ty_commit.
     APPEND INITIAL LINE TO mt_commits ASSIGNING <ls_commit>.
     <ls_commit>-sha1 = iv_sha1.
     <ls_commit>-parent1 = iv_parent1.

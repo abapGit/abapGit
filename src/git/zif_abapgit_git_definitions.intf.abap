@@ -73,4 +73,58 @@ INTERFACE zif_abapgit_git_definitions
       comment   TYPE string,
     END OF ty_comment .
 
+  TYPES:
+    ty_chmod TYPE c LENGTH 6 .
+
+  CONSTANTS:
+    BEGIN OF c_chmod,
+      file       TYPE ty_chmod VALUE '100644',
+      executable TYPE ty_chmod VALUE '100755',
+      dir        TYPE ty_chmod VALUE '40000 ',
+      submodule  TYPE ty_chmod VALUE '160000',
+    END OF c_chmod .
+
+  TYPES:
+    BEGIN OF ty_expanded,
+      path  TYPE string,
+      name  TYPE string,
+      sha1  TYPE ty_sha1,
+      chmod TYPE ty_chmod,
+    END OF ty_expanded .
+  TYPES:
+    ty_expanded_tt TYPE STANDARD TABLE OF ty_expanded WITH DEFAULT KEY .
+
+  TYPES:
+    BEGIN OF ty_create,
+      name   TYPE string,
+      parent TYPE string,
+    END OF ty_create .
+  TYPES:
+    BEGIN OF ty_commit,
+      sha1       TYPE ty_sha1,
+      parent1    TYPE ty_sha1,
+      parent2    TYPE ty_sha1,
+      author     TYPE string,
+      email      TYPE string,
+      time       TYPE string,
+      message    TYPE string,
+      body       TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+      branch     TYPE string,
+      merge      TYPE string,
+      tags       TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+      create     TYPE STANDARD TABLE OF ty_create WITH DEFAULT KEY,
+      compressed TYPE abap_bool,
+    END OF ty_commit .
+  TYPES:
+    ty_commit_tt TYPE STANDARD TABLE OF ty_commit WITH DEFAULT KEY .
+
+  CONSTANTS:
+    BEGIN OF c_type,
+      commit TYPE ty_type VALUE 'commit',                   "#EC NOTEXT
+      tree   TYPE ty_type VALUE 'tree',                     "#EC NOTEXT
+      ref_d  TYPE ty_type VALUE 'ref_d',                    "#EC NOTEXT
+      tag    TYPE ty_type VALUE 'tag',                      "#EC NOTEXT
+      blob   TYPE ty_type VALUE 'blob',                     "#EC NOTEXT
+    END OF c_type .
+
 ENDINTERFACE.
