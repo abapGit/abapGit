@@ -443,52 +443,13 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
 
   METHOD split_text_to_symsg.
 
-    CONSTANTS:
-      lc_length_of_msgv           TYPE i VALUE 50,
-      lc_offset_of_last_character TYPE i VALUE 49.
+    DATA ls_msg TYPE symsg.
 
-    DATA:
-      lv_text    TYPE c LENGTH 200,
-      lv_rest    TYPE c LENGTH 200,
-      ls_msg     TYPE symsg,
-      lv_msg_var TYPE c LENGTH lc_length_of_msgv,
-      lv_index   TYPE sy-index.
-
-    lv_text = iv_text.
-
-    DO 4 TIMES.
-
-      lv_index = sy-index.
-
-      CALL FUNCTION 'TEXT_SPLIT'
-        EXPORTING
-          length = lc_length_of_msgv
-          text   = lv_text
-        IMPORTING
-          line   = lv_msg_var
-          rest   = lv_rest.
-
-      IF lv_msg_var+lc_offset_of_last_character(1) = space OR
-         lv_text+lc_length_of_msgv(1) = space.
-        " keep the space at the beginning of the rest
-        " because otherwise it's lost
-        lv_rest = | { lv_rest }|.
-      ENDIF.
-
-      lv_text = lv_rest.
-
-      CASE lv_index.
-        WHEN 1.
-          ls_msg-msgv1 = lv_msg_var.
-        WHEN 2.
-          ls_msg-msgv2 = lv_msg_var.
-        WHEN 3.
-          ls_msg-msgv3 = lv_msg_var.
-        WHEN 4.
-          ls_msg-msgv4 = lv_msg_var.
-      ENDCASE.
-
-    ENDDO.
+    cl_message_helper=>set_msg_vars_for_clike( iv_text ).
+    ls_msg-msgv1 = sy-msgv1.
+    ls_msg-msgv2 = sy-msgv2.
+    ls_msg-msgv3 = sy-msgv3.
+    ls_msg-msgv4 = sy-msgv4.
 
     " Set syst using generic error message
     MESSAGE e001(00) WITH ls_msg-msgv1 ls_msg-msgv2 ls_msg-msgv3 ls_msg-msgv4 INTO null.
