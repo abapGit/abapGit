@@ -352,7 +352,7 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
     ls_bdcdata-fval = '=DISP'.
     APPEND ls_bdcdata TO lt_bdcdata.
 
-    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+    zcl_abapgit_objects_factory=>get_gui_jumper( )->jump_batch_input(
       iv_tcode   = 'SCDO'
       it_bdcdata = lt_bdcdata ).
 
