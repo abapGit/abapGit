@@ -628,6 +628,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     DATA lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
     DATA lo_i18n_params TYPE REF TO zcl_abapgit_i18n_params.
     DATA lo_timer TYPE REF TO zcl_abapgit_timer.
+    DATA lo_abap_language_vers TYPE REF TO zcl_abapgit_abap_language_vers.
 
     FIELD-SYMBOLS: <ls_result>  TYPE zif_abapgit_definitions=>ty_result,
                    <lv_step_id> TYPE LINE OF zif_abapgit_definitions=>ty_deserialization_step_tt,
@@ -684,6 +685,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       ii_log->add_info( |>>> Deserializing { lines( lt_items ) } objects| ).
     ENDIF.
 
+    CREATE OBJECT lo_abap_language_vers.
+
     lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
     LOOP AT lt_results ASSIGNING <ls_result>.
       li_progress->show( iv_current = sy-tabix
@@ -714,6 +717,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           ENDIF.
 
           ls_item-devclass = lv_package.
+          ls_item-abap_language_version = lo_abap_language_vers->get_abap_language_vers_by_objt(
+                                                                    iv_object_type = ls_item-obj_type
+                                                                    iv_package = lv_package ).
 
           IF <ls_result>-packmove = abap_true.
             " Move object to new package
