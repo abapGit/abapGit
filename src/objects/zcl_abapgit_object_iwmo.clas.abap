@@ -150,7 +150,7 @@ CLASS zcl_abapgit_object_iwmo IMPLEMENTATION.
     <ls_bdcdata>-fnam = 'GS_MODEL_SCREEN_100-VERSION'.
     <ls_bdcdata>-fval = lv_version.
 
-    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+    zcl_abapgit_objects_factory=>get_gui_jumper( )->jump_batch_input(
       iv_tcode   = '/IWBEP/REG_MODEL'
       it_bdcdata = lt_bdcdata ).
 

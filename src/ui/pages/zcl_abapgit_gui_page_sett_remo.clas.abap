@@ -32,7 +32,7 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
         url             TYPE zif_abapgit_persistence=>ty_repo-url,
         branch          TYPE zif_abapgit_git_definitions=>ty_git_branch-name,
         tag             TYPE zif_abapgit_git_definitions=>ty_git_tag-name,
-        commit          TYPE zif_abapgit_definitions=>ty_commit-sha1,
+        commit          TYPE zif_abapgit_git_definitions=>ty_commit-sha1,
         pull_request    TYPE string,
         head_type       TYPE ty_head_type,
         switched_origin TYPE zif_abapgit_persistence=>ty_repo-switched_origin,
@@ -190,7 +190,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REMO IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
 
   METHOD check_protection.

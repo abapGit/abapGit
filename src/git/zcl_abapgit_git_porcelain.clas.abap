@@ -79,7 +79,7 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         !it_objects        TYPE zif_abapgit_definitions=>ty_objects_tt
         !iv_parent         TYPE zif_abapgit_git_definitions=>ty_sha1
       RETURNING
-        VALUE(rt_expanded) TYPE zif_abapgit_definitions=>ty_expanded_tt
+        VALUE(rt_expanded) TYPE zif_abapgit_git_definitions=>ty_expanded_tt
       RAISING
         zcx_abapgit_exception .
   PROTECTED SECTION.
@@ -107,14 +107,14 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
 
     CLASS-METHODS build_trees
       IMPORTING
-        !it_expanded    TYPE zif_abapgit_definitions=>ty_expanded_tt
+        !it_expanded    TYPE zif_abapgit_git_definitions=>ty_expanded_tt
       RETURNING
         VALUE(rt_trees) TYPE ty_trees_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS find_folders
       IMPORTING
-        !it_expanded      TYPE zif_abapgit_definitions=>ty_expanded_tt
+        !it_expanded      TYPE zif_abapgit_git_definitions=>ty_expanded_tt
       RETURNING
         VALUE(rt_folders) TYPE ty_folders_tt .
     CLASS-METHODS pull
@@ -140,7 +140,7 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         !iv_tree           TYPE zif_abapgit_git_definitions=>ty_sha1
         !iv_base           TYPE string
       RETURNING
-        VALUE(rt_expanded) TYPE zif_abapgit_definitions=>ty_expanded_tt
+        VALUE(rt_expanded) TYPE zif_abapgit_git_definitions=>ty_expanded_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS receive_pack_push
@@ -228,7 +228,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
         lv_len = strlen( <ls_folder>-path ).
         IF strlen( <ls_sub>-path ) > lv_len AND <ls_sub>-path(lv_len) = <ls_folder>-path.
           APPEND INITIAL LINE TO lt_nodes ASSIGNING <ls_node>.
-          <ls_node>-chmod = zif_abapgit_definitions=>c_chmod-dir.
+          <ls_node>-chmod = zif_abapgit_git_definitions=>c_chmod-dir.
 
 * extract folder name, this can probably be done easier using regular expressions
           <ls_node>-name = <ls_sub>-path+lv_len.
@@ -262,7 +262,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
 * new tag
     ls_tag-object       = is_tag-sha1.
-    ls_tag-type         = zif_abapgit_definitions=>c_type-commit.
+    ls_tag-type         = zif_abapgit_git_definitions=>c_type-commit.
     ls_tag-tag          = is_tag-name.
     ls_tag-tagger_name  = is_tag-tagger_name.
     ls_tag-tagger_email = is_tag-tagger_email.
@@ -276,7 +276,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
     lv_new_tag_sha1 = zcl_abapgit_hash=>sha1_tag( lv_tag ).
 
     ls_object-sha1  = lv_new_tag_sha1.
-    ls_object-type  = zif_abapgit_definitions=>c_type-tag.
+    ls_object-type  = zif_abapgit_git_definitions=>c_type-tag.
     ls_object-data  = lv_tag.
     ls_object-index = 1.
     APPEND ls_object TO lt_objects.
@@ -477,7 +477,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
     READ TABLE it_objects INTO ls_object
       WITH KEY type COMPONENTS
-        type = zif_abapgit_definitions=>c_type-commit
+        type = zif_abapgit_git_definitions=>c_type-commit
         sha1 = iv_parent.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'commit not found' ).
@@ -498,7 +498,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
     READ TABLE it_objects INTO ls_object
       WITH KEY type COMPONENTS
-        type = zif_abapgit_definitions=>c_type-commit
+        type = zif_abapgit_git_definitions=>c_type-commit
         sha1 = iv_commit.
 
     IF sy-subrc <> 0.
@@ -551,7 +551,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
   METHOD push.
 
-    DATA: lt_expanded TYPE zif_abapgit_definitions=>ty_expanded_tt,
+    DATA: lt_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt,
           lt_blobs    TYPE zif_abapgit_git_definitions=>ty_files_tt,
           lv_sha1     TYPE zif_abapgit_git_definitions=>ty_sha1,
           lv_new_tree TYPE zif_abapgit_git_definitions=>ty_sha1,
@@ -584,7 +584,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
             APPEND INITIAL LINE TO lt_expanded ASSIGNING <ls_exp>.
             <ls_exp>-name  = <ls_stage>-file-filename.
             <ls_exp>-path  = <ls_stage>-file-path.
-            <ls_exp>-chmod = zif_abapgit_definitions=>c_chmod-file.
+            <ls_exp>-chmod = zif_abapgit_git_definitions=>c_chmod-file.
           ENDIF.
 
           lv_sha1 = zcl_abapgit_hash=>sha1_blob( <ls_stage>-file-data ).
@@ -668,7 +668,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
     lv_commit = zcl_abapgit_git_pack=>encode_commit( ls_commit ).
 
     ls_object-sha1 = zcl_abapgit_hash=>sha1_commit( lv_commit ).
-    ls_object-type = zif_abapgit_definitions=>c_type-commit.
+    ls_object-type = zif_abapgit_git_definitions=>c_type-commit.
     ls_object-data = lv_commit.
     APPEND ls_object TO et_new_objects.
 
@@ -678,7 +678,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
       READ TABLE et_new_objects
         WITH KEY type COMPONENTS
-          type = zif_abapgit_definitions=>c_type-tree
+          type = zif_abapgit_git_definitions=>c_type-tree
           sha1 = ls_object-sha1
         TRANSPORTING NO FIELDS.
       IF sy-subrc = 0.
@@ -686,7 +686,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
         CONTINUE.
       ENDIF.
 
-      ls_object-type = zif_abapgit_definitions=>c_type-tree.
+      ls_object-type = zif_abapgit_git_definitions=>c_type-tree.
       ls_object-data = <ls_tree>-data.
       lv_uindex = lv_uindex + 1.
       ls_object-index = lv_uindex.
@@ -699,7 +699,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
       READ TABLE et_new_objects
         WITH KEY type COMPONENTS
-          type = zif_abapgit_definitions=>c_type-blob
+          type = zif_abapgit_git_definitions=>c_type-blob
           sha1 = ls_object-sha1
         TRANSPORTING NO FIELDS.
       IF sy-subrc = 0.
@@ -707,7 +707,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
         CONTINUE.
       ENDIF.
 
-      ls_object-type = zif_abapgit_definitions=>c_type-blob.
+      ls_object-type = zif_abapgit_git_definitions=>c_type-blob.
 * note <ls_blob>-data can be empty, #1857 allow empty files - some more checks needed?
       ls_object-data = <ls_blob>-data.
       lv_uindex = lv_uindex + 1.
@@ -744,7 +744,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
     READ TABLE it_objects ASSIGNING <ls_tree>
       WITH KEY type COMPONENTS
-        type = zif_abapgit_definitions=>c_type-tree
+        type = zif_abapgit_git_definitions=>c_type-tree
         sha1 = iv_sha1.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'Walk, tree not found' ).
@@ -753,10 +753,10 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
     lt_nodes = zcl_abapgit_git_pack=>decode_tree( <ls_tree>-data ).
 
     LOOP AT lt_nodes ASSIGNING <ls_node>.
-      IF <ls_node>-chmod = zif_abapgit_definitions=>c_chmod-file.
+      IF <ls_node>-chmod = zif_abapgit_git_definitions=>c_chmod-file.
         READ TABLE it_objects ASSIGNING <ls_blob>
           WITH KEY type COMPONENTS
-            type = zif_abapgit_definitions=>c_type-blob
+            type = zif_abapgit_git_definitions=>c_type-blob
             sha1 = <ls_node>-sha1.
         IF sy-subrc <> 0.
           zcx_abapgit_exception=>raise( 'Walk, blob not found' ).
@@ -771,7 +771,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    LOOP AT lt_nodes ASSIGNING <ls_node> WHERE chmod = zif_abapgit_definitions=>c_chmod-dir.
+    LOOP AT lt_nodes ASSIGNING <ls_node> WHERE chmod = zif_abapgit_git_definitions=>c_chmod-dir.
       CONCATENATE iv_path <ls_node>-name '/' INTO lv_path.
 
       walk( EXPORTING it_objects = it_objects
@@ -795,7 +795,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
     READ TABLE it_objects INTO ls_object
       WITH KEY type COMPONENTS
-        type = zif_abapgit_definitions=>c_type-tree
+        type = zif_abapgit_git_definitions=>c_type-tree
         sha1 = iv_tree.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'tree not found' ).
@@ -804,15 +804,15 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
     LOOP AT lt_nodes ASSIGNING <ls_node>.
       CASE <ls_node>-chmod.
-        WHEN zif_abapgit_definitions=>c_chmod-file
-            OR zif_abapgit_definitions=>c_chmod-executable
-            OR zif_abapgit_definitions=>c_chmod-submodule.
+        WHEN zif_abapgit_git_definitions=>c_chmod-file
+            OR zif_abapgit_git_definitions=>c_chmod-executable
+            OR zif_abapgit_git_definitions=>c_chmod-submodule.
           APPEND INITIAL LINE TO rt_expanded ASSIGNING <ls_exp>.
           <ls_exp>-path  = iv_base.
           <ls_exp>-name  = <ls_node>-name.
           <ls_exp>-sha1  = <ls_node>-sha1.
           <ls_exp>-chmod = <ls_node>-chmod.
-        WHEN zif_abapgit_definitions=>c_chmod-dir.
+        WHEN zif_abapgit_git_definitions=>c_chmod-dir.
           lt_expanded = walk_tree(
             it_objects = it_objects
             iv_tree    = <ls_node>-sha1

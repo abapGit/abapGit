@@ -31,10 +31,10 @@ CLASS zcl_abapgit_gui_page_merge DEFINITION
 
     METHODS show_file
       IMPORTING
-        !it_expanded TYPE zif_abapgit_definitions=>ty_expanded_tt
+        !it_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt
         !ii_html     TYPE REF TO zif_abapgit_html
-        !is_file     TYPE zif_abapgit_definitions=>ty_expanded
-        !is_result   TYPE zif_abapgit_definitions=>ty_expanded .
+        !is_file     TYPE zif_abapgit_git_definitions=>ty_expanded
+        !is_result   TYPE zif_abapgit_git_definitions=>ty_expanded .
     METHODS build_menu
       IMPORTING
         VALUE(iv_with_conflict) TYPE abap_bool OPTIONAL

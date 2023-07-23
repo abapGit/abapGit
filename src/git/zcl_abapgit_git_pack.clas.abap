@@ -5,7 +5,7 @@ CLASS zcl_abapgit_git_pack DEFINITION
   PUBLIC SECTION.
     TYPES:
       BEGIN OF ty_node,
-        chmod TYPE zif_abapgit_definitions=>ty_chmod,
+        chmod TYPE zif_abapgit_git_definitions=>ty_chmod,
         name  TYPE string,
         sha1  TYPE zif_abapgit_git_definitions=>ty_sha1,
       END OF ty_node .
@@ -152,7 +152,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
+CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 
 
   METHOD decode.
@@ -205,7 +205,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
       get_length( IMPORTING ev_length = lv_expected
                   CHANGING cv_data = lv_data ).
 
-      IF lv_type = zif_abapgit_definitions=>c_type-ref_d.
+      IF lv_type = zif_abapgit_git_definitions=>c_type-ref_d.
         lv_ref_delta = lv_data(20).
         lv_data = lv_data+20.
       ENDIF.
@@ -260,7 +260,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
       ls_object-adler32 = lv_data(4).
       lv_data = lv_data+4. " skip adler checksum
 
-      IF lv_type = zif_abapgit_definitions=>c_type-ref_d.
+      IF lv_type = zif_abapgit_git_definitions=>c_type-ref_d.
         ls_object-sha1 = lv_ref_delta.
         TRANSLATE ls_object-sha1 TO LOWER CASE.
       ELSE.
@@ -362,13 +362,13 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
     LOOP AT ct_objects INTO ls_object
         USING KEY type
-        WHERE type = zif_abapgit_definitions=>c_type-ref_d.
+        WHERE type = zif_abapgit_git_definitions=>c_type-ref_d.
       INSERT ls_object INTO TABLE lt_deltas.
     ENDLOOP.
 
     DELETE ct_objects
       USING KEY type
-      WHERE type = zif_abapgit_definitions=>c_type-ref_d.
+      WHERE type = zif_abapgit_git_definitions=>c_type-ref_d.
 
     "Restore correct Delta Order
     SORT lt_deltas BY index.
@@ -453,7 +453,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
                lc_null       TYPE x VALUE '00'.
 
     DATA: lv_xstring TYPE xstring,
-          lv_chmod   TYPE zif_abapgit_definitions=>ty_chmod,
+          lv_chmod   TYPE zif_abapgit_git_definitions=>ty_chmod,
           lv_name    TYPE string,
           lv_string  TYPE string,
           lv_len     TYPE i,
@@ -478,10 +478,10 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
       CLEAR ls_node.
       ls_node-chmod = lv_chmod.
-      IF ls_node-chmod <> zif_abapgit_definitions=>c_chmod-dir
-          AND ls_node-chmod <> zif_abapgit_definitions=>c_chmod-file
-          AND ls_node-chmod <> zif_abapgit_definitions=>c_chmod-executable
-          AND ls_node-chmod <> zif_abapgit_definitions=>c_chmod-submodule.
+      IF ls_node-chmod <> zif_abapgit_git_definitions=>c_chmod-dir
+          AND ls_node-chmod <> zif_abapgit_git_definitions=>c_chmod-file
+          AND ls_node-chmod <> zif_abapgit_git_definitions=>c_chmod-executable
+          AND ls_node-chmod <> zif_abapgit_git_definitions=>c_chmod-submodule.
         zcx_abapgit_exception=>raise( |Unknown chmod| ).
       ENDIF.
 
@@ -530,7 +530,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
       WITH KEY sha COMPONENTS sha1 = is_object-sha1.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Base not found, { is_object-sha1 }| ).
-    ELSEIF <ls_object>-type = zif_abapgit_definitions=>c_type-ref_d.
+    ELSEIF <ls_object>-type = zif_abapgit_git_definitions=>c_type-ref_d.
 * sanity check
       zcx_abapgit_exception=>raise( |Delta, base eq delta| ).
     ENDIF.
@@ -824,15 +824,15 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
     CASE lv_xtype.
       WHEN 16.
-        rv_type = zif_abapgit_definitions=>c_type-commit.
+        rv_type = zif_abapgit_git_definitions=>c_type-commit.
       WHEN 32.
-        rv_type = zif_abapgit_definitions=>c_type-tree.
+        rv_type = zif_abapgit_git_definitions=>c_type-tree.
       WHEN 48.
-        rv_type = zif_abapgit_definitions=>c_type-blob.
+        rv_type = zif_abapgit_git_definitions=>c_type-blob.
       WHEN 64.
-        rv_type = zif_abapgit_definitions=>c_type-tag.
+        rv_type = zif_abapgit_git_definitions=>c_type-tag.
       WHEN 112.
-        rv_type = zif_abapgit_definitions=>c_type-ref_d.
+        rv_type = zif_abapgit_git_definitions=>c_type-ref_d.
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( |Todo, unknown git pack type| ).
     ENDCASE.
@@ -855,7 +855,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
     LOOP AT it_nodes ASSIGNING <ls_node>.
       APPEND INITIAL LINE TO lt_sort ASSIGNING <ls_sort>.
-      IF <ls_node>-chmod = zif_abapgit_definitions=>c_chmod-dir.
+      IF <ls_node>-chmod = zif_abapgit_git_definitions=>c_chmod-dir.
         CONCATENATE <ls_node>-name '/' INTO <ls_sort>-sort.
       ELSE.
         <ls_sort>-sort = <ls_node>-name.
@@ -883,15 +883,15 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
 
     CASE iv_type.
-      WHEN zif_abapgit_definitions=>c_type-commit.
+      WHEN zif_abapgit_git_definitions=>c_type-commit.
         lv_type = 16.
-      WHEN zif_abapgit_definitions=>c_type-tree.
+      WHEN zif_abapgit_git_definitions=>c_type-tree.
         lv_type = 32.
-      WHEN zif_abapgit_definitions=>c_type-blob.
+      WHEN zif_abapgit_git_definitions=>c_type-blob.
         lv_type = 48.
-      WHEN zif_abapgit_definitions=>c_type-tag.
+      WHEN zif_abapgit_git_definitions=>c_type-tag.
         lv_type = 64.
-      WHEN zif_abapgit_definitions=>c_type-ref_d.
+      WHEN zif_abapgit_git_definitions=>c_type-ref_d.
         lv_type = 112.
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( |Unexpected object type while encoding pack| ).
