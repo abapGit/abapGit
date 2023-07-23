@@ -13,9 +13,10 @@ INTERFACE zif_abapgit_definitions
     BEGIN OF ty_item.
       INCLUDE TYPE ty_item_signature.
   TYPES:
-      srcsystem TYPE tadir-srcsystem,
-      origlang  TYPE tadir-masterlang,
-      inactive  TYPE abap_bool,
+      srcsystem             TYPE tadir-srcsystem,
+      origlang              TYPE tadir-masterlang,
+      inactive              TYPE abap_bool,
+      abap_language_version TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version,
     END OF ty_item .
   TYPES:
     ty_items_tt TYPE STANDARD TABLE OF ty_item WITH DEFAULT KEY .
@@ -469,6 +470,13 @@ INTERFACE zif_abapgit_definitions
       ignore TYPE ty_method VALUE 'I',
       skip   TYPE ty_method VALUE '?',
     END OF c_method .
+
+  CONSTANTS:
+    BEGIN OF c_abap_language_version,
+      standard         TYPE c VALUE '',
+      keyuser          TYPE c VALUE '2',
+      clouddevelopment TYPE c VALUE '5',
+    END OF c_abap_language_version.
 
   TYPES:
     ty_sap_langu_tab TYPE STANDARD TABLE OF langu WITH DEFAULT KEY.
