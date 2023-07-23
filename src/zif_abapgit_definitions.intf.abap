@@ -342,11 +342,11 @@ INTERFACE zif_abapgit_definitions
     END OF c_diff .
   CONSTANTS:
     BEGIN OF c_type,
-      commit TYPE zif_abapgit_git_definitions=>ty_type VALUE 'commit', "#EC NOTEXT
-      tree   TYPE zif_abapgit_git_definitions=>ty_type VALUE 'tree', "#EC NOTEXT
-      ref_d  TYPE zif_abapgit_git_definitions=>ty_type VALUE 'ref_d', "#EC NOTEXT
-      tag    TYPE zif_abapgit_git_definitions=>ty_type VALUE 'tag', "#EC NOTEXT
-      blob   TYPE zif_abapgit_git_definitions=>ty_type VALUE 'blob', "#EC NOTEXT
+      commit TYPE zif_abapgit_git_definitions=>ty_type VALUE 'commit',                   "#EC NOTEXT
+      tree   TYPE zif_abapgit_git_definitions=>ty_type VALUE 'tree',                     "#EC NOTEXT
+      ref_d  TYPE zif_abapgit_git_definitions=>ty_type VALUE 'ref_d',                    "#EC NOTEXT
+      tag    TYPE zif_abapgit_git_definitions=>ty_type VALUE 'tag',                      "#EC NOTEXT
+      blob   TYPE zif_abapgit_git_definitions=>ty_type VALUE 'blob',                     "#EC NOTEXT
     END OF c_type .
   CONSTANTS:
     BEGIN OF c_state, " https://git-scm.com/docs/git-status
