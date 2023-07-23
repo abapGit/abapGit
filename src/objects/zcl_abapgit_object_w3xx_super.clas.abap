@@ -387,7 +387,7 @@ CLASS zcl_abapgit_object_w3xx_super IMPLEMENTATION.
     ls_bdcdata-fval = '=ONLI'.
     APPEND ls_bdcdata TO lt_bdcdata.
 
-    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+    zcl_abapgit_objects_factory=>get_gui_jumper( )->jump_batch_input(
       iv_tcode   = 'SMW0'
       it_bdcdata = lt_bdcdata ).
 

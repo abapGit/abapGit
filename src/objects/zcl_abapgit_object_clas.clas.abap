@@ -135,7 +135,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
+CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -927,7 +927,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
     ENDCASE.
 
     IF ls_item-obj_name IS NOT INITIAL.
-      rv_exit = zcl_abapgit_ui_factory=>get_gui_jumper( )->jump( ls_item ).
+      rv_exit = zcl_abapgit_objects_factory=>get_gui_jumper( )->jump( ls_item ).
     ENDIF.
 
     " Otherwise covered by ZCL_ABAPGIT_OBJECTS=>JUMP

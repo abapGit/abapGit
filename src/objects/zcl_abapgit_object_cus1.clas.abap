@@ -32,7 +32,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_CUS1 IMPLEMENTATION.
+CLASS zcl_abapgit_object_cus1 IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -163,7 +163,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CUS1 IMPLEMENTATION.
     <ls_bdc_data>-fnam = 'BDC_OKCODE'.
     <ls_bdc_data>-fval = '=ACT_DISP'.
 
-    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+    zcl_abapgit_objects_factory=>get_gui_jumper( )->jump_batch_input(
       iv_tcode   = 'S_CUS_ACTIVITY'
       it_bdcdata = lt_bdc_data ).
 

@@ -162,7 +162,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
+CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
 
   METHOD check_rfc_parameters.
@@ -1332,7 +1332,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
     LOOP AT lt_functions ASSIGNING <ls_function> WHERE funcname = ls_item-obj_name.
       ls_item-obj_name = <ls_function>-include.
-      rv_exit = zcl_abapgit_ui_factory=>get_gui_jumper( )->jump( ls_item ).
+      rv_exit = zcl_abapgit_objects_factory=>get_gui_jumper( )->jump( ls_item ).
       IF rv_exit = abap_true.
         RETURN.
       ENDIF.
@@ -1341,7 +1341,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
     lt_includes = includes( ).
 
     LOOP AT lt_includes ASSIGNING <lv_include> WHERE table_line = ls_item-obj_name.
-      rv_exit = zcl_abapgit_ui_factory=>get_gui_jumper( )->jump( ls_item ).
+      rv_exit = zcl_abapgit_objects_factory=>get_gui_jumper( )->jump( ls_item ).
       IF rv_exit = abap_true.
         RETURN.
       ENDIF.

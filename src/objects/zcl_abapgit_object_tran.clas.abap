@@ -106,7 +106,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
+CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
 
   METHOD add_data.
@@ -855,7 +855,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
     <ls_bdcdata>-fnam = 'TSTC-TCODE'.
     <ls_bdcdata>-fval = ms_item-obj_name.
 
-    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+    zcl_abapgit_objects_factory=>get_gui_jumper( )->jump_batch_input(
       iv_tcode      = 'SE93'
       it_bdcdata    = lt_bdcdata ).
 

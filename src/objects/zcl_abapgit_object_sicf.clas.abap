@@ -84,7 +84,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
+CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
 
 
   METHOD change_sicf.
@@ -595,7 +595,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
     ls_bcdata-fval = '=ONLI'.
     APPEND ls_bcdata TO lt_bcdata.
 
-    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+    zcl_abapgit_objects_factory=>get_gui_jumper( )->jump_batch_input(
       iv_tcode   = 'SICF'
       it_bdcdata = lt_bcdata ).
 
