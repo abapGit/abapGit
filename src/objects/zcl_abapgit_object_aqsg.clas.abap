@@ -118,7 +118,7 @@ CLASS zcl_abapgit_object_aqsg IMPLEMENTATION.
     <ls_bdcdata>-fnam = 'RS38Q-NAME'.
     <ls_bdcdata>-fval = ms_item-obj_name.
 
-    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+    zcl_abapgit_objects_factory=>get_gui_jumper( )->jump_batch_input(
       iv_tcode      = 'SQ02'
       it_bdcdata    = lt_bdcdata ).
 

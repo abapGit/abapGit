@@ -140,13 +140,13 @@ CLASS zcl_abapgit_hash IMPLEMENTATION.
 
 
   METHOD sha1_blob.
-    rv_sha1 = sha1( iv_type = zif_abapgit_definitions=>c_type-blob
+    rv_sha1 = sha1( iv_type = zif_abapgit_git_definitions=>c_type-blob
                     iv_data = iv_data ).
   ENDMETHOD.
 
 
   METHOD sha1_commit.
-    rv_sha1 = sha1( iv_type = zif_abapgit_definitions=>c_type-commit
+    rv_sha1 = sha1( iv_type = zif_abapgit_git_definitions=>c_type-commit
                     iv_data = iv_data ).
   ENDMETHOD.
 
@@ -196,13 +196,13 @@ CLASS zcl_abapgit_hash IMPLEMENTATION.
 
 
   METHOD sha1_tag.
-    rv_sha1 = sha1( iv_type = zif_abapgit_definitions=>c_type-tag
+    rv_sha1 = sha1( iv_type = zif_abapgit_git_definitions=>c_type-tag
                     iv_data = iv_data ).
   ENDMETHOD.
 
 
   METHOD sha1_tree.
-    rv_sha1 = sha1( iv_type = zif_abapgit_definitions=>c_type-tree
+    rv_sha1 = sha1( iv_type = zif_abapgit_git_definitions=>c_type-tree
                     iv_data = iv_data ).
   ENDMETHOD.
 ENDCLASS.

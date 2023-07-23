@@ -311,7 +311,7 @@ CLASS zcl_abapgit_object_idoc IMPLEMENTATION.
     <ls_bdcdata>-fnam = 'BDC_OKCODE'.
     <ls_bdcdata>-fval = '=DISP'.
 
-    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_batch_input(
+    zcl_abapgit_objects_factory=>get_gui_jumper( )->jump_batch_input(
       iv_tcode   = 'WE30'
       it_bdcdata = lt_bdcdata ).
 

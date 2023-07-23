@@ -69,7 +69,7 @@ INTERFACE zif_abapgit_popups
       !iv_repo_url     TYPE string
       !iv_branch_name  TYPE string OPTIONAL
     RETURNING
-      VALUE(rs_commit) TYPE zif_abapgit_definitions=>ty_commit
+      VALUE(rs_commit) TYPE zif_abapgit_git_definitions=>ty_commit
     RAISING
       zcx_abapgit_exception .
   TYPES ty_char1 TYPE c LENGTH 1.
