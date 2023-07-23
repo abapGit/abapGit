@@ -11,14 +11,15 @@ INTERFACE zif_abapgit_dot_abapgit PUBLIC.
 
   TYPES:
     BEGIN OF ty_dot_abapgit,
-      master_language              TYPE spras,
-      i18n_languages               TYPE zif_abapgit_definitions=>ty_languages,
-      use_lxe                      TYPE abap_bool,
-      starting_folder              TYPE string,
-      folder_logic                 TYPE string,
-      ignore                       TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
-      requirements                 TYPE ty_requirement_tt,
-      version_constant             TYPE string,
+      master_language       TYPE spras,
+      i18n_languages        TYPE zif_abapgit_definitions=>ty_languages,
+      use_lxe               TYPE abap_bool,
+      starting_folder       TYPE string,
+      folder_logic          TYPE string,
+      ignore                TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+      requirements          TYPE ty_requirement_tt,
+      version_constant      TYPE string,
+      abap_language_version TYPE string,
     END OF ty_dot_abapgit .
 
   CONSTANTS:
@@ -26,6 +27,13 @@ INTERFACE zif_abapgit_dot_abapgit PUBLIC.
       prefix TYPE string VALUE 'PREFIX',
       full   TYPE string VALUE 'FULL',
       mixed  TYPE string VALUE 'MIXED',
-    END OF c_folder_logic .
+    END OF c_folder_logic,
+
+    BEGIN OF c_abap_language_version,
+      standard          TYPE string VALUE 'standard',
+      key_user          TYPE string VALUE 'keyUser',
+      cloud_development TYPE string VALUE 'cloudDevelopment',
+      undefined         TYPE string VALUE 'undefined',
+    END OF c_abap_language_version.
 
 ENDINTERFACE.
