@@ -62,7 +62,7 @@ CLASS zcl_abapgit_popups DEFINITION
         !iv_branch_name TYPE string
       EXPORTING
         !et_value_tab   TYPE ty_commit_value_tab_tt
-        !et_commits     TYPE zif_abapgit_definitions=>ty_commit_tt
+        !et_commits     TYPE zif_abapgit_git_definitions=>ty_commit_tt
       RAISING
         zcx_abapgit_exception.
 ENDCLASS.
@@ -126,7 +126,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       lv_time_string TYPE c LENGTH 10.
 
     FIELD-SYMBOLS:
-      <ls_commit>    TYPE zif_abapgit_definitions=>ty_commit,
+      <ls_commit>    TYPE zif_abapgit_git_definitions=>ty_commit,
       <ls_value_tab> TYPE ty_commit_value_tab.
 
     CLEAR: et_commits, et_value_tab.
@@ -339,7 +339,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
   METHOD zif_abapgit_popups~commit_list_popup.
 
     DATA:
-      lt_commits         TYPE zif_abapgit_definitions=>ty_commit_tt,
+      lt_commits         TYPE zif_abapgit_git_definitions=>ty_commit_tt,
       lt_value_tab       TYPE ty_commit_value_tab_tt,
       lt_selected_values TYPE ty_commit_value_tab_tt,
       lt_columns         TYPE zif_abapgit_popups=>ty_alv_column_tt.

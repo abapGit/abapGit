@@ -13,9 +13,10 @@ INTERFACE zif_abapgit_definitions
     BEGIN OF ty_item.
       INCLUDE TYPE ty_item_signature.
   TYPES:
-      srcsystem TYPE tadir-srcsystem,
-      origlang  TYPE tadir-masterlang,
-      inactive  TYPE abap_bool,
+      srcsystem             TYPE tadir-srcsystem,
+      origlang              TYPE tadir-masterlang,
+      inactive              TYPE abap_bool,
+      abap_language_version TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version,
     END OF ty_item .
   TYPES:
     ty_items_tt TYPE STANDARD TABLE OF ty_item WITH DEFAULT KEY .
@@ -96,8 +97,6 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     ty_repo_file_tt TYPE STANDARD TABLE OF ty_repo_file WITH DEFAULT KEY .
   TYPES:
-    ty_chmod TYPE c LENGTH 6 .
-  TYPES:
     BEGIN OF ty_object,
       sha1    TYPE zif_abapgit_git_definitions=>ty_sha1,
       type    TYPE zif_abapgit_git_definitions=>ty_type,
@@ -173,29 +172,7 @@ INTERFACE zif_abapgit_definitions
       branch_name TYPE string,
       commit_text TYPE string,
     END OF ty_transport_to_branch .
-  TYPES:
-    BEGIN OF ty_create,
-      name   TYPE string,
-      parent TYPE string,
-    END OF ty_create .
-  TYPES:
-    BEGIN OF ty_commit,
-      sha1       TYPE zif_abapgit_git_definitions=>ty_sha1,
-      parent1    TYPE zif_abapgit_git_definitions=>ty_sha1,
-      parent2    TYPE zif_abapgit_git_definitions=>ty_sha1,
-      author     TYPE string,
-      email      TYPE string,
-      time       TYPE string,
-      message    TYPE string,
-      body       TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
-      branch     TYPE string,
-      merge      TYPE string,
-      tags       TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
-      create     TYPE STANDARD TABLE OF ty_create WITH DEFAULT KEY,
-      compressed TYPE abap_bool,
-    END OF ty_commit .
-  TYPES:
-    ty_commit_tt TYPE STANDARD TABLE OF ty_commit WITH DEFAULT KEY .
+
   TYPES:
     BEGIN OF ty_diff,
       patch_flag TYPE abap_bool,
@@ -218,15 +195,6 @@ INTERFACE zif_abapgit_definitions
       delete TYPE i,
       update TYPE i,
     END OF ty_count .
-  TYPES:
-    BEGIN OF ty_expanded,
-      path  TYPE string,
-      name  TYPE string,
-      sha1  TYPE zif_abapgit_git_definitions=>ty_sha1,
-      chmod TYPE ty_chmod,
-    END OF ty_expanded .
-  TYPES:
-    ty_expanded_tt TYPE STANDARD TABLE OF ty_expanded WITH DEFAULT KEY .
   TYPES:
     BEGIN OF ty_ancestor,
       commit TYPE zif_abapgit_git_definitions=>ty_sha1,
@@ -340,14 +308,6 @@ INTERFACE zif_abapgit_definitions
       update    TYPE c LENGTH 1 VALUE 'U',
     END OF c_diff .
   CONSTANTS:
-    BEGIN OF c_type,
-      commit TYPE zif_abapgit_git_definitions=>ty_type VALUE 'commit',                   "#EC NOTEXT
-      tree   TYPE zif_abapgit_git_definitions=>ty_type VALUE 'tree',                     "#EC NOTEXT
-      ref_d  TYPE zif_abapgit_git_definitions=>ty_type VALUE 'ref_d',                    "#EC NOTEXT
-      tag    TYPE zif_abapgit_git_definitions=>ty_type VALUE 'tag',                      "#EC NOTEXT
-      blob   TYPE zif_abapgit_git_definitions=>ty_type VALUE 'blob',                     "#EC NOTEXT
-    END OF c_type .
-  CONSTANTS:
     BEGIN OF c_state, " https://git-scm.com/docs/git-status
       unchanged TYPE zif_abapgit_git_definitions=>ty_item_state VALUE '',
       added     TYPE zif_abapgit_git_definitions=>ty_item_state VALUE 'A',
@@ -355,13 +315,6 @@ INTERFACE zif_abapgit_definitions
       deleted   TYPE zif_abapgit_git_definitions=>ty_item_state VALUE 'D',
       mixed     TYPE zif_abapgit_git_definitions=>ty_item_state VALUE '*',
     END OF c_state .
-  CONSTANTS:
-    BEGIN OF c_chmod,
-      file       TYPE ty_chmod VALUE '100644',
-      executable TYPE ty_chmod VALUE '100755',
-      dir        TYPE ty_chmod VALUE '40000 ',
-      submodule  TYPE ty_chmod VALUE '160000',
-    END OF c_chmod .
   CONSTANTS c_english TYPE spras VALUE 'E' ##NO_TEXT.
   CONSTANTS c_root_dir TYPE string VALUE '/' ##NO_TEXT.
   CONSTANTS c_dot_abapgit TYPE string VALUE '.abapgit.xml' ##NO_TEXT.
@@ -469,6 +422,13 @@ INTERFACE zif_abapgit_definitions
       ignore TYPE ty_method VALUE 'I',
       skip   TYPE ty_method VALUE '?',
     END OF c_method .
+
+  CONSTANTS:
+    BEGIN OF c_abap_language_version,
+      standard         TYPE c VALUE '',
+      keyuser          TYPE c VALUE '2',
+      clouddevelopment TYPE c VALUE '5',
+    END OF c_abap_language_version.
 
   TYPES:
     ty_sap_langu_tab TYPE STANDARD TABLE OF langu WITH DEFAULT KEY.

@@ -688,7 +688,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Please install the abapGit repository| ).
     ENDIF.
 
-    zcl_abapgit_ui_factory=>get_gui_jumper( )->jump_abapgit(
+    zcl_abapgit_objects_factory=>get_gui_jumper( )->jump_abapgit(
       iv_language = lv_main_language
       iv_key      = mo_repo->get_key( ) ).
 

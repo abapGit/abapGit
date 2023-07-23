@@ -18,7 +18,7 @@ CLASS ltcl_tree IMPLEMENTATION.
           lt_result TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
 
     CLEAR ls_node.
-    ls_node-chmod = zif_abapgit_definitions=>c_chmod-file.
+    ls_node-chmod = zif_abapgit_git_definitions=>c_chmod-file.
     ls_node-name = 'foobar.txt'.
     ls_node-sha1 = '5f46cb3c4b7f0b3600b64f744cde614a283a88dc'.
     APPEND ls_node TO lt_nodes.
@@ -40,13 +40,13 @@ CLASS ltcl_tree IMPLEMENTATION.
           lt_result TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
 
     CLEAR ls_node.
-    ls_node-chmod = zif_abapgit_definitions=>c_chmod-file.
+    ls_node-chmod = zif_abapgit_git_definitions=>c_chmod-file.
     ls_node-name = 'foobar.txt'.
     ls_node-sha1 = '5f46cb3c4b7f0b3600b64f744cde614a283a88dc'.
     APPEND ls_node TO lt_nodes.
 
     CLEAR ls_node.
-    ls_node-chmod = zif_abapgit_definitions=>c_chmod-file.
+    ls_node-chmod = zif_abapgit_git_definitions=>c_chmod-file.
     ls_node-name = 'something.md'.
     ls_node-sha1 = '1236cb3c4b7f0b3600b64f744cde614a283a88dc'.
     APPEND ls_node TO lt_nodes.
@@ -68,7 +68,7 @@ CLASS ltcl_tree IMPLEMENTATION.
           lt_result TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
 
     CLEAR ls_node.
-    ls_node-chmod = zif_abapgit_definitions=>c_chmod-file.
+    ls_node-chmod = zif_abapgit_git_definitions=>c_chmod-file.
     ls_node-name = 'foobar.txt'.
     ls_node-sha1 = '0000003c4b7f0b3600b64f744cde614a28000000'.
     APPEND ls_node TO lt_nodes.
@@ -95,7 +95,7 @@ CLASS ltcl_type_and_length DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARM
       test
         IMPORTING
           iv_length   TYPE i
-          iv_type     TYPE zif_abapgit_git_definitions=>ty_type DEFAULT zif_abapgit_definitions=>c_type-commit
+          iv_type     TYPE zif_abapgit_git_definitions=>ty_type DEFAULT zif_abapgit_git_definitions=>c_type-commit
           iv_expected TYPE xstring
         RAISING
           zcx_abapgit_exception,
@@ -154,7 +154,7 @@ CLASS ltcl_type_and_length IMPLEMENTATION.
   METHOD type_and_length_90000.
 
     test( iv_length   = 90000
-          iv_type     = zif_abapgit_definitions=>c_type-blob
+          iv_type     = zif_abapgit_git_definitions=>c_type-blob
           iv_expected = 'B0F92B' ).
 
   ENDMETHOD.
@@ -261,12 +261,12 @@ CLASS ltcl_pack IMPLEMENTATION.
 
 
     APPEND INITIAL LINE TO lt_tree ASSIGNING <ls_tree>.
-    <ls_tree>-chmod = zif_abapgit_definitions=>c_chmod-file.
+    <ls_tree>-chmod = zif_abapgit_git_definitions=>c_chmod-file.
     <ls_tree>-name  = 'b.txt'.
     <ls_tree>-sha1  = '0123'.
 
     APPEND INITIAL LINE TO lt_tree ASSIGNING <ls_tree>.
-    <ls_tree>-chmod = zif_abapgit_definitions=>c_chmod-file.
+    <ls_tree>-chmod = zif_abapgit_git_definitions=>c_chmod-file.
     <ls_tree>-name  = 'a.txt'.
     <ls_tree>-sha1  = '0123'.
 
@@ -289,12 +289,12 @@ CLASS ltcl_pack IMPLEMENTATION.
 
 
     APPEND INITIAL LINE TO lt_tree ASSIGNING <ls_tree>.
-    <ls_tree>-chmod = zif_abapgit_definitions=>c_chmod-file.
+    <ls_tree>-chmod = zif_abapgit_git_definitions=>c_chmod-file.
     <ls_tree>-name  = 'foo.txt'.
     <ls_tree>-sha1  = '0123'.
 
     APPEND INITIAL LINE TO lt_tree ASSIGNING <ls_tree>.
-    <ls_tree>-chmod = zif_abapgit_definitions=>c_chmod-dir.
+    <ls_tree>-chmod = zif_abapgit_git_definitions=>c_chmod-dir.
     <ls_tree>-name  = 'foo'.
     <ls_tree>-sha1  = '0123'.
 
@@ -327,7 +327,7 @@ CLASS ltcl_pack IMPLEMENTATION.
     lv_data = lc_data.
     CLEAR ls_object.
     ls_object-sha1 = zcl_abapgit_hash=>sha1_blob( lv_data ).
-    ls_object-type = zif_abapgit_definitions=>c_type-blob.
+    ls_object-type = zif_abapgit_git_definitions=>c_type-blob.
     ls_object-data = lv_data.
     ls_object-index = 1.
     ls_object-adler32 = zcl_abapgit_hash=>adler32( lv_data ).
@@ -343,7 +343,7 @@ CLASS ltcl_pack IMPLEMENTATION.
     lv_data = zcl_abapgit_git_pack=>encode_commit( ls_commit ).
     CLEAR ls_object.
     ls_object-sha1 = zcl_abapgit_hash=>sha1_commit( lv_data ).
-    ls_object-type = zif_abapgit_definitions=>c_type-commit.
+    ls_object-type = zif_abapgit_git_definitions=>c_type-commit.
     ls_object-data = lv_data.
     ls_object-index = 2.
     ls_object-adler32 = zcl_abapgit_hash=>adler32( lv_data ).
@@ -358,7 +358,7 @@ CLASS ltcl_pack IMPLEMENTATION.
     lv_data = zcl_abapgit_git_pack=>encode_tree( lt_nodes ).
     CLEAR ls_object.
     ls_object-sha1 = zcl_abapgit_hash=>sha1_tree( lv_data ).
-    ls_object-type = zif_abapgit_definitions=>c_type-tree.
+    ls_object-type = zif_abapgit_git_definitions=>c_type-tree.
     ls_object-data = lv_data.
     ls_object-index = 3.
     ls_object-adler32 = zcl_abapgit_hash=>adler32( lv_data ).
@@ -378,7 +378,7 @@ CLASS ltcl_pack IMPLEMENTATION.
   METHOD object_blob.
 
     rs_object-sha1 = zcl_abapgit_hash=>sha1_blob( iv_data ).
-    rs_object-type = zif_abapgit_definitions=>c_type-blob.
+    rs_object-type = zif_abapgit_git_definitions=>c_type-blob.
     rs_object-data = iv_data.
     rs_object-index = 1.
     rs_object-adler32 = zcl_abapgit_hash=>adler32( iv_data ).
