@@ -30,6 +30,7 @@ INTERFACE zif_abapgit_objects
   CONSTANTS:
     BEGIN OF c_deserialize_action,
       " also used to determine priority if object has multiple changes, so don't change order
+      no_support TYPE i VALUE -1,
       none       TYPE i VALUE 0,
       add        TYPE i VALUE 1,
       update     TYPE i VALUE 2,
