@@ -1,18 +1,16 @@
-CLASS zcl_abapgit_ui_pop_code_insp DEFINITION
+CLASS zcl_abapgit_popup_code_insp DEFINITION
   PUBLIC
   FINAL
   CREATE PUBLIC .
 
-
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_gui_render_item.
-    INTERFACES zif_abapgit_html_popup.
+    INTERFACES zif_abapgit_gui_render_item .
+    INTERFACES zif_abapgit_html_popup .
 
     CLASS-METHODS create
       RETURNING
-        VALUE(ri_popup) TYPE REF TO zif_abapgit_html_popup.
-
+        VALUE(ri_popup) TYPE REF TO zif_abapgit_html_popup .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -26,11 +24,11 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_UI_POP_CODE_INSP IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_POPUP_CODE_INSP IMPLEMENTATION.
 
 
   METHOD create.
-    CREATE OBJECT ri_popup TYPE zcl_abapgit_ui_pop_code_insp.
+    CREATE OBJECT ri_popup TYPE zcl_abapgit_popup_code_insp.
   ENDMETHOD.
 
 

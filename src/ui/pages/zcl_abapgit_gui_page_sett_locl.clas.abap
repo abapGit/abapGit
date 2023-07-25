@@ -112,7 +112,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
 
     IF iv_is_return = abap_false.
 
-      mo_popup_picklist = zcl_abapgit_ui_pop_code_insp=>create(
+      mo_popup_picklist = zcl_abapgit_popup_code_insp=>create(
         )->create_picklist(
         )->set_id( c_event-choose_check_variant
         )->set_in_page( abap_false ).
