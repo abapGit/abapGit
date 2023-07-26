@@ -221,7 +221,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       lv_url         = mo_form_data->get( c_id-url ).
       lv_branch_name = mo_form_data->get( c_id-branch ).
 
-      mo_popup_picklist = zcl_abapgit_html_popups=>branch_list(
+      mo_popup_picklist = zcl_abapgit_popup_branch_list=>create(
         iv_show_new_option = abap_false
         iv_url             = lv_url
         iv_default_branch  = lv_branch_name
@@ -283,7 +283,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       ENDIF.
 
       lv_url = mo_form_data->get( c_id-url ).
-      mo_popup_picklist = zcl_abapgit_html_popups=>pull_request_list( lv_url
+      mo_popup_picklist = zcl_abapgit_popup_pull_request=>create( lv_url
         )->create_picklist(
         )->set_id( c_event-choose_pull_request
         )->set_in_page( abap_true ).
@@ -321,7 +321,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       ENDIF.
 
       lv_url = mo_form_data->get( c_id-url ).
-      mo_popup_picklist = zcl_abapgit_html_popups=>tag_list( lv_url
+      mo_popup_picklist = zcl_abapgit_popup_tag_list=>create( lv_url
         )->create_picklist(
         )->set_id( c_event-choose_tag
         )->set_in_page( ).
