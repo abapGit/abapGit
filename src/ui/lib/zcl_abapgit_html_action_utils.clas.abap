@@ -16,11 +16,6 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
         !iv_upper_cased  TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rt_fields) TYPE tihttpnvp .
-    CLASS-METHODS parse_fields_upper_case_name
-      IMPORTING
-        !iv_string       TYPE clike
-      RETURNING
-        VALUE(rt_fields) TYPE tihttpnvp .
     CLASS-METHODS jump_encode
       IMPORTING
         !iv_obj_type     TYPE tadir-object
@@ -56,6 +51,11 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
 
     CLASS-DATA gv_non_breaking_space TYPE string .
 
+    CLASS-METHODS parse_fields_upper_case_name
+      IMPORTING
+        !iv_string       TYPE clike
+      RETURNING
+        VALUE(rt_fields) TYPE tihttpnvp .
     CLASS-METHODS translate_postdata
       IMPORTING
         !it_postdata     TYPE zif_abapgit_html_viewer=>ty_post_data
