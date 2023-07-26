@@ -21,12 +21,6 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
         !iv_string       TYPE clike
       RETURNING
         VALUE(rt_fields) TYPE tihttpnvp .
-    CLASS-METHODS translate_postdata
-      IMPORTING
-        !it_postdata     TYPE zif_abapgit_html_viewer=>ty_post_data
-      RETURNING
-        VALUE(rv_string) TYPE string .
-
     CLASS-METHODS get_field
       IMPORTING
         !iv_name   TYPE string
@@ -46,7 +40,6 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
         !iv_path         TYPE string
       RETURNING
         VALUE(rv_string) TYPE string .
-
     CLASS-METHODS file_encode
       IMPORTING
         !iv_key          TYPE zif_abapgit_persistence=>ty_repo-key
@@ -59,18 +52,22 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
         !ig_object       TYPE any
       RETURNING
         VALUE(rv_string) TYPE string .
-
-    CLASS-METHODS class_constructor.
+    CLASS-METHODS class_constructor .
     CLASS-METHODS dbkey_encode
       IMPORTING
         !is_key          TYPE zif_abapgit_persistence=>ty_content
       RETURNING
         VALUE(rv_string) TYPE string .
-
   PROTECTED SECTION.
   PRIVATE SECTION.
-    CLASS-DATA gv_non_breaking_space TYPE string.
 
+    CLASS-DATA gv_non_breaking_space TYPE string .
+
+    CLASS-METHODS translate_postdata
+      IMPORTING
+        !it_postdata     TYPE zif_abapgit_html_viewer=>ty_post_data
+      RETURNING
+        VALUE(rv_string) TYPE string .
     CLASS-METHODS field_keys_to_upper
       CHANGING
         !ct_fields TYPE tihttpnvp .
@@ -89,7 +86,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
 
 
   METHOD add_field.
