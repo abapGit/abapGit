@@ -21,13 +21,6 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
         !iv_string       TYPE clike
       RETURNING
         VALUE(rt_fields) TYPE tihttpnvp .
-    CLASS-METHODS get_field
-      IMPORTING
-        !iv_name   TYPE string
-        !it_field  TYPE tihttpnvp
-        !iv_decode TYPE abap_bool DEFAULT abap_false
-      CHANGING
-        !cg_field  TYPE any .
     CLASS-METHODS jump_encode
       IMPORTING
         !iv_obj_type     TYPE tadir-object
@@ -174,39 +167,6 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
                          ig_field = ig_file CHANGING ct_field = lt_fields ).
 
     rv_string = cl_http_utility=>fields_to_string( lt_fields ).
-
-  ENDMETHOD.
-
-
-  METHOD get_field.
-
-    DATA: lv_value TYPE string.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF it_field,
-                   <lg_dest>  TYPE any.
-
-
-    READ TABLE it_field ASSIGNING <ls_field> WITH KEY name = iv_name.
-    IF sy-subrc IS NOT INITIAL.
-      RETURN.
-    ENDIF.
-
-    lv_value = <ls_field>-value.
-
-    IF iv_decode = abap_true.
-      lv_value = cl_http_utility=>unescape_url( escaped = lv_value ).
-    ENDIF.
-
-    CASE cl_abap_typedescr=>describe_by_data( cg_field )->kind.
-      WHEN cl_abap_typedescr=>kind_elem.
-        cg_field = lv_value.
-      WHEN cl_abap_typedescr=>kind_struct.
-        ASSIGN COMPONENT iv_name OF STRUCTURE cg_field TO <lg_dest>.
-        ASSERT <lg_dest> IS ASSIGNED.
-        <lg_dest> = lv_value.
-      WHEN OTHERS.
-        ASSERT 0 = 1.
-    ENDCASE.
 
   ENDMETHOD.
 
