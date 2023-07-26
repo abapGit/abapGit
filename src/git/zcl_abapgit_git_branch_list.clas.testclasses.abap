@@ -47,7 +47,7 @@ CLASS ltcl_parse IMPLEMENTATION.
       exp = iv_expected_lines ).
 
     READ TABLE lt_list WITH TABLE KEY name_key
-                       COMPONENTS name = zif_abapgit_definitions=>c_git_branch-main
+                       COMPONENTS name = zif_abapgit_git_definitions=>c_git_branch-main
                        TRANSPORTING NO FIELDS.
     cl_abap_unit_assert=>assert_subrc( ).
 

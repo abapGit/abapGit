@@ -450,12 +450,12 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ENDIF.
 
     CASE zcl_abapgit_git_branch_list=>get_type( lv_branch ).
-      WHEN zif_abapgit_definitions=>c_git_branch_type-branch.
+      WHEN zif_abapgit_git_definitions=>c_git_branch_type-branch.
         lv_class = 'branch branch_branch'.
         lv_icon  = 'code-branch/grey70'.
         lv_hint  = 'Current branch'.
-      WHEN zif_abapgit_definitions=>c_git_branch_type-annotated_tag
-        OR zif_abapgit_definitions=>c_git_branch_type-lightweight_tag.
+      WHEN zif_abapgit_git_definitions=>c_git_branch_type-annotated_tag
+        OR zif_abapgit_git_definitions=>c_git_branch_type-lightweight_tag.
         lv_class = 'branch'.
         lv_icon  = 'tag-solid/grey70'.
         lv_hint  = 'Current tag'.

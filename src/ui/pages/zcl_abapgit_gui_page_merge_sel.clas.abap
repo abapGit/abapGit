@@ -57,7 +57,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_SEL IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_merge_sel IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -144,7 +144,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_SEL IMPLEMENTATION.
     lo_branches = zcl_abapgit_git_transport=>branches( mo_repo->get_url( ) ).
     mt_branches = lo_branches->get_branches_only( ).
 
-    DELETE mt_branches WHERE name = zif_abapgit_definitions=>c_head_name.
+    DELETE mt_branches WHERE name = zif_abapgit_git_definitions=>c_head_name.
 
   ENDMETHOD.
 

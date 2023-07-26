@@ -96,10 +96,10 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
 
 
   METHOD complete_heads_branch_name.
-    IF iv_branch_name CP zif_abapgit_definitions=>c_git_branch-heads.
+    IF iv_branch_name CP zif_abapgit_git_definitions=>c_git_branch-heads.
       rv_name = iv_branch_name.
     ELSE.
-      rv_name = zif_abapgit_definitions=>c_git_branch-heads_prefix && iv_branch_name.
+      rv_name = zif_abapgit_git_definitions=>c_git_branch-heads_prefix && iv_branch_name.
     ENDIF.
   ENDMETHOD.
 
@@ -122,7 +122,7 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Branch name empty' ).
     ENDIF.
 
-    IF iv_branch_name CP zif_abapgit_definitions=>c_git_branch-tags.
+    IF iv_branch_name CP zif_abapgit_git_definitions=>c_git_branch-tags.
       rs_branch = find_tag_by_name( iv_branch_name ).
     ELSE.
 
@@ -169,7 +169,7 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
     FIELD-SYMBOLS <ls_branch> LIKE LINE OF mt_branches.
 
     LOOP AT mt_branches ASSIGNING <ls_branch>.
-      IF <ls_branch>-type = zif_abapgit_definitions=>c_git_branch_type-branch.
+      IF <ls_branch>-type = zif_abapgit_git_definitions=>c_git_branch_type-branch.
         APPEND <ls_branch> TO rt_branches.
       ENDIF.
     ENDLOOP.
@@ -179,9 +179,9 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
   METHOD get_display_name.
     rv_display_name = iv_branch_name.
 
-    IF rv_display_name CP zif_abapgit_definitions=>c_git_branch-heads.
-      REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-heads_prefix IN rv_display_name WITH ''.
-    ELSEIF rv_display_name CP zif_abapgit_definitions=>c_git_branch-tags.
+    IF rv_display_name CP zif_abapgit_git_definitions=>c_git_branch-heads.
+      REPLACE FIRST OCCURRENCE OF zif_abapgit_git_definitions=>c_git_branch-heads_prefix IN rv_display_name WITH ''.
+    ELSEIF rv_display_name CP zif_abapgit_git_definitions=>c_git_branch-tags.
       rv_display_name = zcl_abapgit_git_tag=>remove_tag_prefix( zcl_abapgit_git_tag=>remove_peel( rv_display_name ) ).
     ENDIF.
 
@@ -197,8 +197,8 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
     FIELD-SYMBOLS <ls_branch> LIKE LINE OF mt_branches.
 
     LOOP AT mt_branches ASSIGNING <ls_branch>
-        WHERE type = zif_abapgit_definitions=>c_git_branch_type-lightweight_tag
-        OR type = zif_abapgit_definitions=>c_git_branch_type-annotated_tag.
+        WHERE type = zif_abapgit_git_definitions=>c_git_branch_type-lightweight_tag
+        OR type = zif_abapgit_git_definitions=>c_git_branch_type-annotated_tag.
       APPEND <ls_branch> TO rt_tags.
     ENDLOOP.
 
@@ -209,20 +209,20 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
 
     FIELD-SYMBOLS: <lv_result> TYPE LINE OF string_table.
 
-    rv_type = zif_abapgit_definitions=>c_git_branch_type-other.
+    rv_type = zif_abapgit_git_definitions=>c_git_branch_type-other.
 
-    IF iv_branch_name CP zif_abapgit_definitions=>c_git_branch-heads OR
-       iv_branch_name = zif_abapgit_definitions=>c_head_name.
-      rv_type = zif_abapgit_definitions=>c_git_branch_type-branch.
+    IF iv_branch_name CP zif_abapgit_git_definitions=>c_git_branch-heads OR
+       iv_branch_name = zif_abapgit_git_definitions=>c_head_name.
+      rv_type = zif_abapgit_git_definitions=>c_git_branch_type-branch.
 
-    ELSEIF iv_branch_name CP zif_abapgit_definitions=>c_git_branch-tags.
+    ELSEIF iv_branch_name CP zif_abapgit_git_definitions=>c_git_branch-tags.
 
       READ TABLE it_result ASSIGNING <lv_result>
                            INDEX iv_current_row_index + 1.
       IF sy-subrc = 0 AND <lv_result> CP '*' && zcl_abapgit_git_tag=>add_peel( iv_branch_name ).
-        rv_type = zif_abapgit_definitions=>c_git_branch_type-annotated_tag.
+        rv_type = zif_abapgit_git_definitions=>c_git_branch_type-annotated_tag.
       ELSE.
-        rv_type = zif_abapgit_definitions=>c_git_branch_type-lightweight_tag.
+        rv_type = zif_abapgit_git_definitions=>c_git_branch_type-lightweight_tag.
       ENDIF.
 
     ENDIF.
@@ -289,7 +289,7 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
       <ls_branch>-type         = get_type( iv_branch_name       = lv_name
                                            it_result            = lt_result
                                            iv_current_row_index = lv_current_row_index ).
-      IF <ls_branch>-name = zif_abapgit_definitions=>c_head_name OR <ls_branch>-name = ev_head_symref.
+      IF <ls_branch>-name = zif_abapgit_git_definitions=>c_head_name OR <ls_branch>-name = ev_head_symref.
         <ls_branch>-is_head = abap_true.
       ENDIF.
     ENDLOOP.

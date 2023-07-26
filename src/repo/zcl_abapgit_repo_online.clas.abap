@@ -195,7 +195,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
         CATCH zcx_abapgit_exception.
           " branch does not exist, fallback to head
           lv_head = lo_branch_list->get_head_symref( ).
-          IF lo_branch_list->get_type( lv_branch ) = zif_abapgit_definitions=>c_git_branch_type-branch.
+          IF lo_branch_list->get_type( lv_branch ) = zif_abapgit_git_definitions=>c_git_branch_type-branch.
             lv_msg = 'Branch'.
           ELSE.
             lv_msg = 'Tag'.
@@ -214,7 +214,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
     DATA: lv_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
 
-    ASSERT iv_name CP zif_abapgit_definitions=>c_git_branch-heads.
+    ASSERT iv_name CP zif_abapgit_git_definitions=>c_git_branch-heads.
 
     IF iv_from IS INITIAL.
       lv_sha1 = get_current_remote( ).
@@ -270,7 +270,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
           lv_parent TYPE zif_abapgit_git_definitions=>ty_sha1.
 
 
-    IF ms_data-branch_name CP zif_abapgit_definitions=>c_git_branch-tags.
+    IF ms_data-branch_name CP zif_abapgit_git_definitions=>c_git_branch-tags.
       lv_text = |You're working on a tag. Currently it's not |
              && |possible to push on tags. Consider creating a branch instead|.
       zcx_abapgit_exception=>raise( lv_text ).

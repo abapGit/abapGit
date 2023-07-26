@@ -104,9 +104,9 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       rv_name = lo_branch_list->get_head_symref( ).
     ELSEIF -1 = find(
         val = rv_name
-        sub = zif_abapgit_definitions=>c_git_branch-heads_prefix ).
+        sub = zif_abapgit_git_definitions=>c_git_branch-heads_prefix ).
       " Assume short branch name was received
-      rv_name = zif_abapgit_definitions=>c_git_branch-heads_prefix && rv_name.
+      rv_name = zif_abapgit_git_definitions=>c_git_branch-heads_prefix && rv_name.
     ENDIF.
 
   ENDMETHOD.
