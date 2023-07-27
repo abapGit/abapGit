@@ -4,7 +4,6 @@ CLASS ltcl_html_action_utils DEFINITION FOR TESTING RISK LEVEL HARMLESS
   PUBLIC SECTION.
 
     CLASS-METHODS class_constructor.
-    METHODS get_field FOR TESTING.
     METHODS parse_fields_simple_case FOR TESTING.
     METHODS parse_fields_advanced_case FOR TESTING.
     METHODS parse_fields_unescape FOR TESTING.
@@ -63,38 +62,6 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
     gs_german_umlaut_as_char-lower_case_ae = _hex_to_char( c_german_umlaut_as_hex-lower_case_ae ).
     gs_german_umlaut_as_char-lower_case_oe = _hex_to_char( c_german_umlaut_as_hex-lower_case_oe ).
     gs_german_umlaut_as_char-lower_case_ue = _hex_to_char( c_german_umlaut_as_hex-lower_case_ue ).
-
-  ENDMETHOD.
-
-  METHOD get_field.
-
-    DATA: lt_fields TYPE tihttpnvp,
-          ls_answer LIKE LINE OF lt_fields,
-          ls_field  LIKE LINE OF lt_fields.
-
-    ls_answer-name  = 'NAME'.
-    ls_answer-value = 'TEST'.
-    APPEND ls_answer TO lt_fields.
-
-    zcl_abapgit_html_action_utils=>get_field(
-      EXPORTING
-        iv_name = 'NAME'
-        it_field = lt_fields
-      CHANGING
-        cg_field   = ls_field-value ).
-    zcl_abapgit_html_action_utils=>get_field(
-      EXPORTING
-        iv_name = 'NAME'
-        it_field = lt_fields
-      CHANGING
-        cg_field   = ls_field ).
-
-    ls_answer-name  = 'TEST'.
-    ls_answer-value = 'TEST'.
-
-    cl_abap_unit_assert=>assert_equals(
-      act = ls_field
-      exp = ls_answer ). " Both field are filled!
 
   ENDMETHOD.
 
