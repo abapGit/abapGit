@@ -484,6 +484,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           lv_json_as_xstring          TYPE xstring,
           lv_json_as_xstring_wo_alv_x TYPE xstring,
           lv_string                   TYPE string,
+          lv_pattern                  TYPE string,
           lx_exception                TYPE REF TO cx_root,
           lv_name                     TYPE c LENGTH 120,
           lv_file_name                TYPE string,
@@ -599,7 +600,8 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           RECEIVING
             result = lv_string.
 
-        REPLACE FIRST OCCURRENCE OF REGEX ',\n\s*"abapLanguageVersion":\s"(cloudDevelopment|keyUser)"' IN lv_string WITH ''.
+        lv_pattern = ',\n\s*"abapLanguageVersion":\s"(cloudDevelopment|keyUser)"'.
+        REPLACE FIRST OCCURRENCE OF REGEX lv_pattern IN lv_string WITH ''.
 
         IF sy-subrc <> 0.
           lv_json_as_xstring_wo_alv_x = lv_json_as_xstring.
