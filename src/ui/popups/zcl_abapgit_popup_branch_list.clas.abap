@@ -50,7 +50,7 @@ CLASS zcl_abapgit_popup_branch_list IMPLEMENTATION.
 
   METHOD constructor.
     mv_repo_url        = iv_url.
-    mv_default_branch  = zif_abapgit_definitions=>c_git_branch-heads_prefix && iv_default_branch.
+    mv_default_branch  = zif_abapgit_git_definitions=>c_git_branch-heads_prefix && iv_default_branch.
     mv_show_new_option = iv_show_new_option.
   ENDMETHOD.
 
@@ -109,7 +109,7 @@ CLASS zcl_abapgit_popup_branch_list IMPLEMENTATION.
     " TODO render mv_default_branch properly, needs respecting support from the picklist components
 
     IF <ls_b>-is_head = abap_true.
-      lv_head_marker = | (<b>{ zif_abapgit_definitions=>c_head_name }</b>)|.
+      lv_head_marker = | (<b>{ zif_abapgit_git_definitions=>c_head_name }</b>)|.
     ENDIF.
 
     ri_html = zcl_abapgit_html=>create( |{ <ls_b>-display_name }{ lv_head_marker }| ).
