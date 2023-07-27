@@ -125,12 +125,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
     lv_name = ms_item-obj_name.
 
     TRY.
-        CREATE OBJECT lo_handler_factory TYPE ('CL_AFF_OBJECT_HANDLER_FACTORY').
-        CALL METHOD lo_handler_factory->('IF_AFF_OBJECT_HANDLER_FACTORY~GET_OBJECT_HANDLER')
-          EXPORTING
-            object_type = ms_item-obj_type
-          RECEIVING
-            result      = lo_object_handler.
+        lo_object_handler = get_object_handler( ).
 
         CREATE OBJECT lo_object_aff TYPE ('CL_AFF_OBJ')
            EXPORTING
@@ -238,13 +233,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
     " beyond here there will be dragons....
     TRY.
-        CREATE OBJECT lo_handler_factory TYPE ('CL_AFF_OBJECT_HANDLER_FACTORY').
-
-        CALL METHOD lo_handler_factory->('IF_AFF_OBJECT_HANDLER_FACTORY~GET_OBJECT_HANDLER')
-          EXPORTING
-            object_type = ms_item-obj_type
-          RECEIVING
-            result      = lo_object_handler.
+        lo_object_handler = get_object_handler( ).
 
         CREATE OBJECT lo_object_aff TYPE ('CL_AFF_OBJ')
           EXPORTING
@@ -398,13 +387,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
     lv_name = ms_item-obj_name.
 
     TRY.
-        CREATE OBJECT lo_handler_factory TYPE ('CL_AFF_OBJECT_HANDLER_FACTORY').
-
-        CALL METHOD lo_handler_factory->('IF_AFF_OBJECT_HANDLER_FACTORY~GET_OBJECT_HANDLER')
-          EXPORTING
-            object_type = ms_item-obj_type
-          RECEIVING
-            result      = lo_object_handler.
+        lo_object_handler = get_object_handler( ).
 
         CREATE OBJECT lo_object_aff TYPE ('CL_AFF_OBJ')
            EXPORTING
@@ -521,13 +504,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
     lv_name = ms_item-obj_name.
 
     TRY.
-        CREATE OBJECT lo_handler_factory TYPE ('CL_AFF_OBJECT_HANDLER_FACTORY').
-
-        CALL METHOD lo_handler_factory->('IF_AFF_OBJECT_HANDLER_FACTORY~GET_OBJECT_HANDLER')
-          EXPORTING
-            object_type = ms_item-obj_type
-          RECEIVING
-            result      = lo_object_handler.
+        lo_object_handler = get_object_handler( ).
 
         CREATE OBJECT lo_object_aff TYPE ('CL_AFF_OBJ')
            EXPORTING
