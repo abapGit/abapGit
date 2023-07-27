@@ -39,14 +39,14 @@ CLASS zcl_abapgit_git_tag IMPLEMENTATION.
 
   METHOD add_peel.
 
-    rv_text = iv_text && zif_abapgit_definitions=>c_git_branch-peel.
+    rv_text = iv_text && zif_abapgit_git_definitions=>c_git_branch-peel.
 
   ENDMETHOD.
 
 
   METHOD add_tag_prefix.
 
-    rv_text = zif_abapgit_definitions=>c_git_branch-tags_prefix && iv_text.
+    rv_text = zif_abapgit_git_definitions=>c_git_branch-tags_prefix && iv_text.
 
   ENDMETHOD.
 
@@ -55,7 +55,7 @@ CLASS zcl_abapgit_git_tag IMPLEMENTATION.
 
     rv_text = iv_text.
 
-    REPLACE zif_abapgit_definitions=>c_git_branch-peel IN rv_text WITH ''.
+    REPLACE zif_abapgit_git_definitions=>c_git_branch-peel IN rv_text WITH ''.
 
   ENDMETHOD.
 
@@ -64,7 +64,7 @@ CLASS zcl_abapgit_git_tag IMPLEMENTATION.
 
     rv_text = iv_text.
 
-    REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-tags_prefix
+    REPLACE FIRST OCCURRENCE OF zif_abapgit_git_definitions=>c_git_branch-tags_prefix
             IN rv_text
             WITH ''.
 

@@ -69,7 +69,7 @@ CLASS zcl_abapgit_gui_page_merge IMPLEMENTATION.
 
     mo_repo = io_repo.
 
-    io_repo->select_branch( |{ zif_abapgit_definitions=>c_git_branch-heads_prefix }{ iv_target }| ).
+    io_repo->select_branch( |{ zif_abapgit_git_definitions=>c_git_branch-heads_prefix }{ iv_target }| ).
 
     CREATE OBJECT mi_merge TYPE zcl_abapgit_merge
       EXPORTING
