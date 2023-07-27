@@ -23,7 +23,7 @@ CLASS ltcl_event IMPLEMENTATION.
 
     CREATE OBJECT li_cut TYPE zcl_abapgit_gui_event
       EXPORTING
-        iv_action = 'XXX'
+        iv_action  = 'XXX'
         iv_getdata = 'not_a_param'.
 
     lo_map = li_cut->query( ).
@@ -56,7 +56,7 @@ CLASS ltcl_event IMPLEMENTATION.
 
     CREATE OBJECT li_cut TYPE zcl_abapgit_gui_event
       EXPORTING
-        iv_action = 'XXX'
+        iv_action  = 'XXX'
         iv_getdata = 'a=b&b=c'.
 
     " Cross check just in case
@@ -219,7 +219,7 @@ CLASS ltcl_html_action_utils DEFINITION FOR TESTING RISK LEVEL HARMLESS
 
 ENDCLASS.
 
-CLASS zcl_abapgit_html_action_utils DEFINITION LOCAL FRIENDS ltcl_html_action_utils.
+CLASS zcl_abapgit_gui_event DEFINITION LOCAL FRIENDS ltcl_html_action_utils.
 
 CLASS ltcl_html_action_utils IMPLEMENTATION.
 
