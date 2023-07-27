@@ -95,7 +95,7 @@ CLASS lcl_branch_popup IMPLEMENTATION.
 
   METHOD constructor.
     mv_repo_url        = iv_url.
-    mv_default_branch  = zif_abapgit_definitions=>c_git_branch-heads_prefix && iv_default_branch.
+    mv_default_branch  = zif_abapgit_git_definitions=>c_git_branch-heads_prefix && iv_default_branch.
     mv_show_new_option = iv_show_new_option.
   ENDMETHOD.
 
@@ -154,7 +154,7 @@ CLASS lcl_branch_popup IMPLEMENTATION.
     " TODO render mv_default_branch properly, needs respecting support from the picklist components
 
     IF <ls_b>-is_head = abap_true.
-      lv_head_marker = | (<b>{ zif_abapgit_definitions=>c_head_name }</b>)|.
+      lv_head_marker = | (<b>{ zif_abapgit_git_definitions=>c_head_name }</b>)|.
     ENDIF.
 
     ri_html = zcl_abapgit_html=>create( |{ <ls_b>-display_name }{ lv_head_marker }| ).
@@ -213,7 +213,7 @@ CLASS lcl_tag_popup IMPLEMENTATION.
     lo_branches = zcl_abapgit_git_transport=>branches( mv_repo_url ).
     rt_tags     = lo_branches->get_tags_only( ).
 
-    DELETE rt_tags WHERE name CP '*' && zif_abapgit_definitions=>c_git_branch-peel.
+    DELETE rt_tags WHERE name CP '*' && zif_abapgit_git_definitions=>c_git_branch-peel.
 
     IF lines( rt_tags ) = 0.
       zcx_abapgit_exception=>raise( 'No tags are available to select' ).

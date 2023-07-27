@@ -258,7 +258,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     ENDIF.
 
     lv_url = mo_form_data->get( c_id-url ).
-    lv_branch_name = zif_abapgit_definitions=>c_git_branch-heads_prefix && mo_form_data->get( c_id-branch ).
+    lv_branch_name = zif_abapgit_git_definitions=>c_git_branch-heads_prefix && mo_form_data->get( c_id-branch ).
 
     li_popups = zcl_abapgit_ui_factory=>get_popups( ).
 
@@ -517,11 +517,14 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
       CASE rs_settings-head_type.
         WHEN c_head_types-branch.
-          rs_settings-branch = zif_abapgit_definitions=>c_git_branch-heads_prefix && io_form_data->get( c_id-branch ).
+          rs_settings-branch = zif_abapgit_git_definitions=>c_git_branch-heads_prefix &&
+            io_form_data->get( c_id-branch ).
         WHEN c_head_types-tag.
-          rs_settings-tag = zif_abapgit_definitions=>c_git_branch-tags_prefix && io_form_data->get( c_id-tag ).
+          rs_settings-tag = zif_abapgit_git_definitions=>c_git_branch-tags_prefix &&
+            io_form_data->get( c_id-tag ).
         WHEN c_head_types-commit.
-          rs_settings-branch = zif_abapgit_definitions=>c_git_branch-heads_prefix && io_form_data->get( c_id-branch ).
+          rs_settings-branch = zif_abapgit_git_definitions=>c_git_branch-heads_prefix &&
+            io_form_data->get( c_id-branch ).
           rs_settings-commit = io_form_data->get( c_id-commit ).
         WHEN c_head_types-pull_request.
           rs_settings-pull_request = io_form_data->get( c_id-pull_request ).
@@ -555,13 +558,13 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
         rs_settings-switched_origin = lo_repo_online->get_switched_origin( ).
         SPLIT rs_settings-switched_origin AT '@' INTO rs_settings-url rs_settings-branch.
-        IF rs_settings-branch CP zif_abapgit_definitions=>c_git_branch-tags.
+        IF rs_settings-branch CP zif_abapgit_git_definitions=>c_git_branch-tags.
           rs_settings-tag = rs_settings-branch.
           CLEAR rs_settings-branch.
         ENDIF.
 
         lv_branch = lo_repo_online->get_selected_branch( ).
-        REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-heads_prefix IN lv_branch WITH space.
+        REPLACE FIRST OCCURRENCE OF zif_abapgit_git_definitions=>c_git_branch-heads_prefix IN lv_branch WITH space.
         CONDENSE lv_branch.
         rs_settings-pull_request = |{ lo_repo_online->get_url( ) }@{ lv_branch }|.
         rs_settings-head_type = c_head_types-pull_request.
@@ -569,7 +572,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
         rs_settings-branch = lo_repo_online->get_selected_branch( ).
         rs_settings-head_type = c_head_types-branch.
 
-        IF rs_settings-branch CP zif_abapgit_definitions=>c_git_branch-tags.
+        IF rs_settings-branch CP zif_abapgit_git_definitions=>c_git_branch-tags.
           rs_settings-head_type = c_head_types-tag.
           rs_settings-tag = rs_settings-branch.
           CLEAR rs_settings-branch.
@@ -831,7 +834,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       SPLIT iv_pull AT '@' INTO lv_url lv_branch.
       lo_repo->switch_origin(
         iv_url    = lv_url
-        iv_branch = zif_abapgit_definitions=>c_git_branch-heads_prefix && lv_branch ).
+        iv_branch = zif_abapgit_git_definitions=>c_git_branch-heads_prefix && lv_branch ).
     ENDIF.
 
   ENDMETHOD.
@@ -886,18 +889,18 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
       CASE lv_head_type.
         WHEN c_head_types-branch.
-          lv_branch = zif_abapgit_definitions=>c_git_branch-heads_prefix && io_form_data->get( c_id-branch ).
+          lv_branch = zif_abapgit_git_definitions=>c_git_branch-heads_prefix && io_form_data->get( c_id-branch ).
           CONDENSE lv_branch.
           lv_branch_check_error_id = c_id-branch.
         WHEN c_head_types-tag.
-          lv_branch = zif_abapgit_definitions=>c_git_branch-tags_prefix && io_form_data->get( c_id-tag ).
+          lv_branch = zif_abapgit_git_definitions=>c_git_branch-tags_prefix && io_form_data->get( c_id-tag ).
           CONDENSE lv_branch.
           lv_branch_check_error_id = c_id-tag.
         WHEN c_head_types-pull_request.
           lv_pull_request = io_form_data->get( c_id-pull_request ).
           SPLIT lv_pull_request AT '@' INTO lv_url lv_branch.
           IF lv_branch IS NOT INITIAL.
-            lv_branch = zif_abapgit_definitions=>c_git_branch-heads_prefix && lv_branch.
+            lv_branch = zif_abapgit_git_definitions=>c_git_branch-heads_prefix && lv_branch.
           ENDIF.
           lv_branch_check_error_id = c_id-pull_request.
         WHEN c_head_types-commit.
