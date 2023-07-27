@@ -25,7 +25,6 @@
       "cssf_formtype_text",
       "seok_access_free",
       "seok_access_modify",
-      "seok_pgmid_r3tr",
       "sews_c_vif_version",
       "skwfc_obtype_folder",
       "skwfc_obtype_loio",
@@ -260,8 +259,6 @@
       "exportToDatabase": true,
       "exportToMemory": false,
       "describeLines": true,
-      "exportToDatabase": true,
-      "exportToMemory": false,
       "break": true,
       "statics": true
     },
