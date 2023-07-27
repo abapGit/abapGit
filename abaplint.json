@@ -233,6 +233,7 @@
     "7bit_ascii": {
       "exclude": [
         "zcl_abapgit_git_commit.clas.testclasses.abap",
+        "zcl_abapgit_gui_event.clas.testclasses.abap",
         "zcl_abapgit_html_action_utils.clas.testclasses.abap"
       ]
     },
