@@ -327,7 +327,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         zcx_abapgit_exception=>raise( `Staging is only possible for online repositories.` ).
     ENDTRY.
 
-    IF lo_repo->get_selected_branch( ) CP zif_abapgit_definitions=>c_git_branch-tags.
+    IF lo_repo->get_selected_branch( ) CP zif_abapgit_git_definitions=>c_git_branch-tags.
       zcx_abapgit_exception=>raise( |You are working on a tag, must be on branch| ).
     ELSEIF lo_repo->get_selected_commit( ) IS NOT INITIAL.
       zcx_abapgit_exception=>raise( |You are working on a commit, must be on branch| ).

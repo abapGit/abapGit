@@ -328,13 +328,13 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
     ENDIF.
 
     CASE is_tag-type.
-      WHEN zif_abapgit_definitions=>c_git_branch_type-annotated_tag.
+      WHEN zif_abapgit_git_definitions=>c_git_branch_type-annotated_tag.
 
         create_annotated_tag(
           is_tag = is_tag
           iv_url = iv_url ).
 
-      WHEN zif_abapgit_definitions=>c_git_branch_type-lightweight_tag.
+      WHEN zif_abapgit_git_definitions=>c_git_branch_type-lightweight_tag.
 
         create_lightweight_tag(
           is_tag = is_tag
@@ -400,7 +400,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
   METHOD delete_tag.
 
-    IF is_tag-name CS zif_abapgit_definitions=>c_git_branch-peel.
+    IF is_tag-name CS zif_abapgit_git_definitions=>c_git_branch-peel.
 
       delete_annotated_tag(
         is_tag = is_tag

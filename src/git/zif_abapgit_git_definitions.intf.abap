@@ -127,4 +127,23 @@ INTERFACE zif_abapgit_git_definitions
       blob   TYPE ty_type VALUE 'blob',                     "#EC NOTEXT
     END OF c_type .
 
+  CONSTANTS:
+    BEGIN OF c_git_branch_type,
+      branch          TYPE ty_git_branch_type VALUE 'HD',
+      lightweight_tag TYPE ty_git_branch_type VALUE 'TG',
+      annotated_tag   TYPE ty_git_branch_type VALUE 'AT',
+      other           TYPE ty_git_branch_type VALUE 'ZZ',
+    END OF c_git_branch_type .
+  CONSTANTS c_head_name TYPE string VALUE 'HEAD' ##NO_TEXT.
+  CONSTANTS:
+    BEGIN OF c_git_branch,
+      main         TYPE string VALUE 'refs/heads/main',
+      prefix       TYPE string VALUE 'refs/',
+      heads_prefix TYPE string VALUE 'refs/heads/',
+      heads        TYPE string VALUE 'refs/heads/*',
+      tags_prefix  TYPE string VALUE 'refs/tags/',
+      tags         TYPE string VALUE 'refs/tags/*',
+      peel         TYPE string VALUE '^{}',
+    END OF c_git_branch.
+
 ENDINTERFACE.

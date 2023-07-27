@@ -69,7 +69,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
 
 
   METHOD choose_labels.
@@ -295,7 +295,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
             iv_key = c_id-branch_name
             iv_val = replace( " strip technical
               val = mo_form_data->get( c_id-branch_name )
-              sub = zif_abapgit_definitions=>c_git_branch-heads_prefix
+              sub = zif_abapgit_git_definitions=>c_git_branch-heads_prefix
               with = '' ) ).
           rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
         ENDIF.
