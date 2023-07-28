@@ -590,11 +590,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
             result = lv_json_as_xstring.
 
         " ABAP Language Version should not be serialized, remove it from lv_json_as_xstring
-        zcl_abapgit_convert=>xstring_to_string_utf8(
-          EXPORTING
-            iv_data   = lv_json_as_xstring
-          RECEIVING
-            rv_string = lv_string  ).
+        lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_data = lv_json_as_xstring ).
 
         lv_pattern = ',\n\s*"abapLanguageVersion":\s"(cloudDevelopment|keyUser)"'.
         REPLACE FIRST OCCURRENCE OF REGEX lv_pattern IN lv_string WITH ''.
@@ -602,11 +598,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
         IF sy-subrc <> 0.
           lv_json_as_xstring_wo_alv_x = lv_json_as_xstring.
         ELSE.
-          zcl_abapgit_convert=>string_to_xstring_utf8(
-            EXPORTING
-              iv_string  = lv_string
-            RECEIVING
-              rv_xstring = lv_json_as_xstring_wo_alv_x  ).
+          lv_json_as_xstring_wo_alv_x = zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ).
         ENDIF.
 
         zif_abapgit_object~mo_files->add_raw(
