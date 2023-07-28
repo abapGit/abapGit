@@ -590,15 +590,11 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
             result = lv_json_as_xstring.
 
         " ABAP Language Version should not be serialized, remove it from lv_json_as_xstring
-        CALL METHOD ('CL_ABAP_CONV_CODEPAGE')=>create_in
-          RECEIVING
-            instance = lo_abap_conv_codepage_in.
-
-        CALL METHOD lo_abap_conv_codepage_in->('IF_ABAP_CONV_IN~CONVERT')
+        zcl_abapgit_convert=>xstring_to_string_utf8(
           EXPORTING
-            source = lv_json_as_xstring
+            iv_data   = lv_json_as_xstring
           RECEIVING
-            result = lv_string.
+            rv_string = lv_string  ).
 
         lv_pattern = ',\n\s*"abapLanguageVersion":\s"(cloudDevelopment|keyUser)"'.
         REPLACE FIRST OCCURRENCE OF REGEX lv_pattern IN lv_string WITH ''.
@@ -606,15 +602,11 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
         IF sy-subrc <> 0.
           lv_json_as_xstring_wo_alv_x = lv_json_as_xstring.
         ELSE.
-          CALL METHOD ('CL_ABAP_CONV_CODEPAGE')=>create_out
-            RECEIVING
-              instance = lo_abap_conv_codepage_out.
-
-          CALL METHOD lo_abap_conv_codepage_out->('IF_ABAP_CONV_OUT~CONVERT')
+          zcl_abapgit_convert=>string_to_xstring_utf8(
             EXPORTING
-              source = lv_string
+              iv_string  = lv_string
             RECEIVING
-              result = lv_json_as_xstring_wo_alv_x.
+              rv_xstring = lv_json_as_xstring_wo_alv_x  ).
         ENDIF.
 
         zif_abapgit_object~mo_files->add_raw(
