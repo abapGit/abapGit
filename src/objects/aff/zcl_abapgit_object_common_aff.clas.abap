@@ -105,15 +105,15 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lr_intf_aff_obj    TYPE REF TO data,
-          lr_intf_aff_log    TYPE REF TO data,
-          lr_messages        TYPE REF TO data,
-          lo_object_handler  TYPE REF TO object,
-          lo_object_aff      TYPE REF TO object,
-          lo_aff_factory     TYPE REF TO object,
-          lv_name            TYPE c LENGTH 120,
-          lx_error           TYPE REF TO cx_root,
-          lo_aff_log         TYPE REF TO object.
+    DATA: lr_intf_aff_obj   TYPE REF TO data,
+          lr_intf_aff_log   TYPE REF TO data,
+          lr_messages       TYPE REF TO data,
+          lo_object_handler TYPE REF TO object,
+          lo_object_aff     TYPE REF TO object,
+          lo_aff_factory    TYPE REF TO object,
+          lv_name           TYPE c LENGTH 120,
+          lx_error          TYPE REF TO cx_root,
+          lo_aff_log        TYPE REF TO object.
 
     FIELD-SYMBOLS: <ls_intf_aff_obj> TYPE any,
                    <ls_intf_aff_log> TYPE any,
@@ -373,11 +373,11 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~exists.
-    DATA: lr_intf_aff_obj    TYPE REF TO data,
-          lo_object_handler  TYPE REF TO object,
-          lo_object_aff      TYPE REF TO object,
-          lv_name            TYPE c LENGTH 120,
-          lx_error           TYPE REF TO cx_root.
+    DATA: lr_intf_aff_obj   TYPE REF TO data,
+          lo_object_handler TYPE REF TO object,
+          lo_object_aff     TYPE REF TO object,
+          lv_name           TYPE c LENGTH 120,
+          lx_error          TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <ls_intf_aff_obj> TYPE any.
 
