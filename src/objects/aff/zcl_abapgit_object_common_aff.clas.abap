@@ -108,7 +108,6 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
     DATA: lr_intf_aff_obj    TYPE REF TO data,
           lr_intf_aff_log    TYPE REF TO data,
           lr_messages        TYPE REF TO data,
-          lo_handler_factory TYPE REF TO object,
           lo_object_handler  TYPE REF TO object,
           lo_object_aff      TYPE REF TO object,
           lo_aff_factory     TYPE REF TO object,
@@ -198,7 +197,6 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           lr_intf_files_container  TYPE REF TO data,
           lr_intf_aff_log          TYPE REF TO data,
           lr_intf_aff_settings     TYPE REF TO data,
-          lo_handler_factory       TYPE REF TO object,
           lo_object_handler        TYPE REF TO object,
           lo_object_aff            TYPE REF TO object,
           lo_object_json_file      TYPE REF TO object,
@@ -376,7 +374,6 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
     DATA: lr_intf_aff_obj    TYPE REF TO data,
-          lo_handler_factory TYPE REF TO object,
           lo_object_handler  TYPE REF TO object,
           lo_object_aff      TYPE REF TO object,
           lv_name            TYPE c LENGTH 120,
@@ -472,7 +469,6 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           lr_intf_aff_log             TYPE REF TO data,
           lr_intf_aff_settings        TYPE REF TO data,
           lr_messages                 TYPE REF TO data,
-          lo_handler_factory          TYPE REF TO object,
           lo_object_handler           TYPE REF TO object,
           lo_object_aff               TYPE REF TO object,
           lo_object_json_file         TYPE REF TO object,
@@ -490,9 +486,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           lv_file_name                TYPE string,
           lo_file_name_mapper         TYPE REF TO object,
           ls_additional_extensions    TYPE ty_extension_mapper_pairs,
-          lv_file_as_xstring          TYPE xstring,
-          lo_abap_conv_codepage_in    TYPE REF TO object,
-          lo_abap_conv_codepage_out   TYPE REF TO object.
+          lv_file_as_xstring          TYPE xstring.
 
     FIELD-SYMBOLS: <ls_intf_aff_obj>          TYPE any,
                    <ls_intf_aff_log>          TYPE any,
