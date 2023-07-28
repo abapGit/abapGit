@@ -137,7 +137,7 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
     FIELD-SYMBOLS <ls_object_method> LIKE LINE OF mt_object_method.
 
 
-    ls_cts_object_entry-pgmid    = seok_pgmid_r3tr.
+    ls_cts_object_entry-pgmid    = 'R3TR'.
     ls_cts_object_entry-object   = ms_item-obj_type.
     ls_cts_object_entry-obj_name = ms_item-obj_name.
     INSERT ls_cts_object_entry INTO TABLE lt_cts_object_entry.
@@ -200,7 +200,7 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
     IF sy-subrc = 0.
       lv_client = sy-mandt.
 
-      ls_cts_object_entry-pgmid    = seok_pgmid_r3tr.
+      ls_cts_object_entry-pgmid    = 'R3TR'.
       ls_cts_object_entry-object   = ms_item-obj_type.
       ls_cts_object_entry-obj_name = ms_item-obj_name.
       INSERT ls_cts_object_entry INTO TABLE lt_cts_object_entry.
