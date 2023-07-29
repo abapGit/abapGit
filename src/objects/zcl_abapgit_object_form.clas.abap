@@ -106,13 +106,9 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
 
   METHOD build_extra_from_header.
 
-    DATA: lv_tdspras TYPE laiso.
+    DATA lv_tdspras TYPE laiso.
 
-    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_OUTPUT'
-      EXPORTING
-        input  = is_header-tdspras
-      IMPORTING
-        output = lv_tdspras.
+    lv_tdspras = zcl_abapgit_convert=>conversion_exit_isola_output( is_header-tdspras ).
 
     rv_result = c_objectname_tdlines && '_' && lv_tdspras.
 
