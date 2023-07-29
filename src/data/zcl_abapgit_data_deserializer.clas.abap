@@ -31,6 +31,7 @@ CLASS zcl_abapgit_data_deserializer DEFINITION
         !iv_name TYPE tadir-obj_name
         !ir_del  TYPE REF TO data
         !ir_ins  TYPE REF TO data
+        !ir_upd  TYPE REF TO data
       RAISING
         zcx_abapgit_exception .
     METHODS read_database_table
@@ -120,8 +121,10 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
     FIELD-SYMBOLS <lg_new> TYPE ANY TABLE.
     FIELD-SYMBOLS <ls_del> TYPE any.
     FIELD-SYMBOLS <ls_ins> TYPE any.
+    FIELD-SYMBOLS <ls_upd> TYPE any.
     FIELD-SYMBOLS <lg_del> TYPE ANY TABLE.
     FIELD-SYMBOLS <lg_ins> TYPE ANY TABLE.
+    FIELD-SYMBOLS <lg_upd> TYPE ANY TABLE.
 
     lr_data = read_database_table(
       iv_name  = iv_name
@@ -137,6 +140,7 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
     rs_result-updates = zcl_abapgit_data_utils=>build_table_itab( iv_name ).
     ASSIGN rs_result-deletes->* TO <lg_del>.
     ASSIGN rs_result-inserts->* TO <lg_ins>.
+    ASSIGN rs_result-updates->* TO <lg_upd>.
 
     <lg_del> = <lg_old>.
     <lg_ins> = <lg_new>.
@@ -145,6 +149,10 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
     LOOP AT <lg_del> ASSIGNING <ls_del>.
       READ TABLE <lg_ins> ASSIGNING <ls_ins> FROM <ls_del>.
       IF sy-subrc = 0.
+        IF <ls_del> <> <ls_ins>.
+          " Identical key but not identical component values
+          INSERT <ls_ins> INTO TABLE <lg_upd>.
+        ENDIF.
         DELETE TABLE <lg_del> FROM <ls_del>.
         DELETE TABLE <lg_ins> FROM <ls_ins>.
       ENDIF.
@@ -176,6 +184,7 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 
     FIELD-SYMBOLS <lg_del> TYPE ANY TABLE.
     FIELD-SYMBOLS <lg_ins> TYPE ANY TABLE.
+    FIELD-SYMBOLS <lg_upd> TYPE ANY TABLE.
 
     IF zcl_abapgit_data_utils=>does_table_exist( iv_name ) = abap_false.
       zcx_abapgit_exception=>raise( |Table { iv_name } not found for data deserialization| ).
@@ -183,6 +192,7 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 
     ASSIGN ir_del->* TO <lg_del>.
     ASSIGN ir_ins->* TO <lg_ins>.
+    ASSIGN ir_upd->* TO <lg_upd>.
 
     IF lines( <lg_del> ) > 0.
       DELETE (iv_name) FROM TABLE <lg_del>.
@@ -195,6 +205,13 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
       INSERT (iv_name) FROM TABLE <lg_ins>.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( |Error inserting { lines( <lg_ins> ) } records into table { iv_name }| ).
+      ENDIF.
+    ENDIF.
+
+    IF lines( <lg_upd> ) > 0.
+      UPDATE (iv_name) FROM TABLE <lg_upd>.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |Error updating { lines( <lg_upd> ) } records into table { iv_name }| ).
       ENDIF.
     ENDIF.
 
@@ -236,11 +253,12 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
       write_database_table(
         iv_name = ls_result-name
         ir_del  = ls_result-deletes
-        ir_ins  = ls_result-inserts ).
+        ir_ins  = ls_result-inserts
+        ir_upd  = ls_result-updates ).
 
       ASSIGN ls_result-inserts->* TO <lt_ins>.
       ASSIGN ls_result-deletes->* TO <lt_del>.
-      ASSIGN ls_result-updates->* TO <lt_upd>. " not used
+      ASSIGN ls_result-updates->* TO <lt_upd>.
 
       IF zcl_abapgit_data_utils=>is_customizing_table( ls_result-name ) = abap_true.
         IF li_cts_api IS INITIAL.
