@@ -48,7 +48,7 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
           ls_cts_object_entry LIKE LINE OF lt_cts_object_entry,
           lt_errormsg         TYPE STANDARD TABLE OF sprot_u WITH DEFAULT KEY.
 
-    ls_cts_object_entry-pgmid    = seok_pgmid_r3tr.
+    ls_cts_object_entry-pgmid    = 'R3TR'.
     ls_cts_object_entry-object   = ms_item-obj_type.
     ls_cts_object_entry-obj_name = ms_item-obj_name.
     INSERT ls_cts_object_entry INTO TABLE lt_cts_object_entry.
