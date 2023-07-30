@@ -39,7 +39,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
   METHOD preview_database_changes_ins.
 
-    CONSTANTS: lc_msgnr TYPE msgnr VALUE '999'.
+    CONSTANTS: lc_msgnr TYPE c LENGTH 3 VALUE '999'.
 
     DATA: li_cut     TYPE REF TO zcl_abapgit_data_deserializer,
           ls_config  TYPE zif_abapgit_data_config=>ty_config,
@@ -102,7 +102,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
   METHOD preview_database_changes_upd.
 
-    CONSTANTS: lc_msgnr TYPE msgnr VALUE '999'.
+    CONSTANTS: lc_msgnr TYPE c LENGTH 3 VALUE '999'.
 
     DATA: li_cut     TYPE REF TO zcl_abapgit_data_deserializer,
           ls_config  TYPE zif_abapgit_data_config=>ty_config,
