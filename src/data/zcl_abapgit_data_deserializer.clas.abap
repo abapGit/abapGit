@@ -21,7 +21,8 @@ CLASS zcl_abapgit_data_deserializer DEFINITION
       IMPORTING
         !iv_name         TYPE tadir-obj_name
         !it_where        TYPE string_table
-        !ir_data         TYPE REF TO data
+        !ir_lc_data      TYPE REF TO data
+        !ir_db_data      TYPE REF TO data
       RETURNING
         VALUE(rs_result) TYPE zif_abapgit_data_deserializer=>ty_result
       RAISING
@@ -113,9 +114,6 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
   METHOD preview_database_changes.
 
 * method currently distinguishes between records be deleted and inserted (comparison of complete record)
-* to-do: compare records based on database key of table to determine updates to existing records
-
-    DATA lr_data TYPE REF TO data.
 
     FIELD-SYMBOLS <lg_old> TYPE ANY TABLE.
     FIELD-SYMBOLS <lg_new> TYPE ANY TABLE.
@@ -126,12 +124,8 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
     FIELD-SYMBOLS <lg_ins> TYPE ANY TABLE.
     FIELD-SYMBOLS <lg_upd> TYPE ANY TABLE.
 
-    lr_data = read_database_table(
-      iv_name  = iv_name
-      it_where = it_where ).
-
-    ASSIGN lr_data->* TO <lg_old>.
-    ASSIGN ir_data->* TO <lg_new>.
+    ASSIGN ir_db_data->* TO <lg_old>.
+    ASSIGN ir_lc_data->* TO <lg_new>.
 
     rs_result-type = zif_abapgit_data_config=>c_data_type-tabu.
     rs_result-name = iv_name.
@@ -285,10 +279,11 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 * this method does not persist any changes to the database
 
     DATA lt_configs TYPE zif_abapgit_data_config=>ty_config_tt.
-    DATA ls_config LIKE LINE OF lt_configs.
-    DATA lr_data  TYPE REF TO data.
-    DATA ls_file LIKE LINE OF it_files.
-    DATA ls_result LIKE LINE OF rt_result.
+    DATA ls_config  LIKE LINE OF lt_configs.
+    DATA lr_lc_data TYPE REF TO data.
+    DATA lr_db_data TYPE REF TO data.
+    DATA ls_file    LIKE LINE OF it_files.
+    DATA ls_result  LIKE LINE OF rt_result.
 
     lt_configs = ii_config->get_configs( ).
 
@@ -296,7 +291,7 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
       ASSERT ls_config-type = zif_abapgit_data_config=>c_data_type-tabu. " todo
       ASSERT ls_config-name IS NOT INITIAL.
 
-      lr_data = zcl_abapgit_data_utils=>build_table_itab( ls_config-name ).
+      lr_lc_data = zcl_abapgit_data_utils=>build_table_itab( ls_config-name ).
 
       READ TABLE it_files INTO ls_file
         WITH KEY file_path
@@ -304,13 +299,18 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
                    filename = zcl_abapgit_data_utils=>build_data_filename( ls_config ).
       IF sy-subrc = 0.
         convert_json_to_itab(
-          ir_data = lr_data
+          ir_data = lr_lc_data
           is_file = ls_file ).
 
-        ls_result = preview_database_changes(
+        lr_db_data = read_database_table(
           iv_name  = ls_config-name
-          it_where = ls_config-where
-          ir_data  = lr_data ).
+          it_where = ls_config-where ).
+
+        ls_result = preview_database_changes(
+          iv_name    = ls_config-name
+          it_where   = ls_config-where
+          ir_lc_data = lr_lc_data
+          ir_db_data = lr_db_data ).
 
         MOVE-CORRESPONDING ls_file TO ls_result-file. " data file
 

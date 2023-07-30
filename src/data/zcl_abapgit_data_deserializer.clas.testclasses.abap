@@ -5,6 +5,7 @@ CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
 
   PRIVATE SECTION.
     METHODS test1 FOR TESTING RAISING cx_static_check.
+    METHODS test_ins_upd_del FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
 
@@ -30,6 +31,105 @@ CLASS ltcl_test IMPLEMENTATION.
     li_cut->deserialize(
       ii_config = li_config
       it_files  = lt_files ).
+
+  ENDMETHOD.
+
+
+  METHOD test_ins_upd_del.
+
+    CONSTANTS: lc_msgnr_ins TYPE msgnr VALUE '999',
+               lc_msgnr_upd TYPE msgnr VALUE '998',
+               lc_msgnr_del TYPE msgnr VALUE '997'.
+
+    DATA: li_cut     TYPE REF TO zcl_abapgit_data_deserializer,
+          ls_config  TYPE zif_abapgit_data_config=>ty_config,
+          lr_db_data TYPE REF TO data,
+          lr_lc_data TYPE REF TO data,
+          ls_t100    TYPE t100,
+          ls_result  TYPE zif_abapgit_data_deserializer=>ty_result.
+
+    FIELD-SYMBOLS: <lt_db_data> TYPE ANY TABLE,
+                   <lt_lc_data> TYPE ANY TABLE,
+                   <lg_ins>     TYPE ANY TABLE,
+                   <ls_ins>     TYPE t100,
+                   <lg_upd>     TYPE ANY TABLE,
+                   <ls_upd>     TYPE t100,
+                   <lg_del>     TYPE ANY TABLE,
+                   <ls_del>     TYPE t100.
+
+    ls_config-type = zif_abapgit_data_config=>c_data_type-tabu.
+    ls_config-name = 'T100'.
+
+    lr_db_data = zcl_abapgit_data_utils=>build_table_itab( ls_config-name ).
+    ASSIGN lr_db_data->* TO <lt_db_data>.
+    lr_lc_data = zcl_abapgit_data_utils=>build_table_itab( ls_config-name ).
+    ASSIGN lr_lc_data->* TO <lt_lc_data>.
+
+    " Create test data for INSERT
+    ls_t100-sprsl = sy-langu.
+    ls_t100-arbgb = 'AUNIT_ABAPGIT'.
+    ls_t100-msgnr = lc_msgnr_ins.
+    ls_t100-text  = |abapGit aunit test INSERT|.
+    INSERT ls_t100 INTO TABLE <lt_lc_data>.
+
+    " Create test data for UPDATE
+    ls_t100-sprsl = sy-langu.
+    ls_t100-arbgb = |AUNIT_ABAPGIT|.
+    ls_t100-msgnr = lc_msgnr_upd.
+    ls_t100-text  = |abapGit aunit test|.
+    INSERT ls_t100 INTO TABLE <lt_db_data>.
+
+    ls_t100-sprsl = sy-langu.
+    ls_t100-arbgb = 'AUNIT_ABAPGIT'.
+    ls_t100-msgnr = lc_msgnr_upd.
+    ls_t100-text  = |abapGit aunit test UPDATE|.
+    INSERT ls_t100 INTO TABLE <lt_lc_data>.
+
+    " Create test data for DELETE
+    ls_t100-sprsl = sy-langu.
+    ls_t100-arbgb = 'AUNIT_ABAPGIT'.
+    ls_t100-msgnr = lc_msgnr_del.
+    ls_t100-text  = |abapGit aunit test DELETE|.
+    INSERT ls_t100 INTO TABLE <lt_db_data>.
+
+    CREATE OBJECT li_cut TYPE zcl_abapgit_data_deserializer.
+    ls_result = li_cut->preview_database_changes(
+      iv_name    = ls_config-name
+      it_where   = ls_config-where
+      ir_db_data = lr_db_data
+      ir_lc_data = lr_lc_data ).
+
+    ASSIGN ls_result-inserts->* TO <lg_ins>.
+    ASSIGN ls_result-updates->* TO <lg_upd>.
+    ASSIGN ls_result-deletes->* TO <lg_del>.
+
+    cl_aunit_assert=>assert_equals(
+      exp = 1
+      act = lines( <lg_ins> ) ).
+    cl_aunit_assert=>assert_equals(
+      exp = 1
+      act = lines( <lg_upd> ) ).
+    cl_aunit_assert=>assert_equals(
+      exp = 1
+      act = lines( <lg_del> ) ).
+
+    LOOP AT <lg_ins> ASSIGNING <ls_ins>.
+      cl_aunit_assert=>assert_equals(
+        exp = lc_msgnr_ins
+        act = <ls_ins>-msgnr ).
+    ENDLOOP.
+
+    LOOP AT <lg_upd> ASSIGNING <ls_upd>.
+      cl_aunit_assert=>assert_equals(
+        exp = lc_msgnr_upd
+        act = <ls_upd>-msgnr ).
+    ENDLOOP.
+
+    LOOP AT <lg_del> ASSIGNING <ls_del>.
+      cl_aunit_assert=>assert_equals(
+        exp = lc_msgnr_del
+        act = <ls_del>-msgnr ).
+    ENDLOOP.
 
   ENDMETHOD.
 
