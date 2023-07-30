@@ -81,18 +81,18 @@ CLASS ltcl_test IMPLEMENTATION.
     ASSIGN ls_result-updates->* TO <lg_upd>.
     ASSIGN ls_result-deletes->* TO <lg_del>.
 
-    cl_aunit_assert=>assert_equals(
+    cl_abap_unit_assert=>assert_equals(
       exp = 1
       act = lines( <lg_ins> ) ).
-    cl_aunit_assert=>assert_equals(
+    cl_abap_unit_assert=>assert_equals(
       exp = 0
       act = lines( <lg_upd> ) ).
-    cl_aunit_assert=>assert_equals(
+    cl_abap_unit_assert=>assert_equals(
       exp = 0
       act = lines( <lg_del> ) ).
 
     LOOP AT <lg_ins> ASSIGNING <ls_ins>.
-      cl_aunit_assert=>assert_equals(
+      cl_abap_unit_assert=>assert_equals(
         exp = lc_msgnr
         act = <ls_ins>-msgnr ).
     ENDLOOP.
@@ -150,18 +150,18 @@ CLASS ltcl_test IMPLEMENTATION.
     ASSIGN ls_result-updates->* TO <lg_upd>.
     ASSIGN ls_result-deletes->* TO <lg_del>.
 
-    cl_aunit_assert=>assert_equals(
+    cl_abap_unit_assert=>assert_equals(
       exp = 0
       act = lines( <lg_ins> ) ).
-    cl_aunit_assert=>assert_equals(
+    cl_abap_unit_assert=>assert_equals(
       exp = 1
       act = lines( <lg_upd> ) ).
-    cl_aunit_assert=>assert_equals(
+    cl_abap_unit_assert=>assert_equals(
       exp = 0
       act = lines( <lg_del> ) ).
 
     LOOP AT <lg_upd> ASSIGNING <ls_upd>.
-      cl_aunit_assert=>assert_equals(
+      cl_abap_unit_assert=>assert_equals(
         exp = lc_msgnr
         act = <ls_upd>-msgnr ).
     ENDLOOP.
@@ -213,18 +213,18 @@ CLASS ltcl_test IMPLEMENTATION.
     ASSIGN ls_result-updates->* TO <lg_upd>.
     ASSIGN ls_result-deletes->* TO <lg_del>.
 
-    cl_aunit_assert=>assert_equals(
+    cl_abap_unit_assert=>assert_equals(
       exp = 0
       act = lines( <lg_ins> ) ).
-    cl_aunit_assert=>assert_equals(
+    cl_abap_unit_assert=>assert_equals(
       exp = 0
       act = lines( <lg_upd> ) ).
-    cl_aunit_assert=>assert_equals(
+    cl_abap_unit_assert=>assert_equals(
       exp = 1
       act = lines( <lg_del> ) ).
 
     LOOP AT <lg_del> ASSIGNING <ls_del>.
-      cl_aunit_assert=>assert_equals(
+      cl_abap_unit_assert=>assert_equals(
         exp = lc_msgnr
         act = <ls_del>-msgnr ).
     ENDLOOP.
