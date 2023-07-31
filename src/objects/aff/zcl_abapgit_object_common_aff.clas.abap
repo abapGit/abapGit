@@ -631,7 +631,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
     lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_data = iv_json_as_xstring ).
 
-    lv_pattern = ',\n\s*"abapLanguageVersion":\s"(cloudDevelopment|keyUser)"'.
+    lv_pattern = ',\s*"abapLanguageVersion"\s*:\s*"[^"]+"'.
     " Replace the first occurence of "abapLanguageVersion" (in the header) only, so that
     " further fields in the content can be still have the name "abapLanguageVersion"
     REPLACE FIRST OCCURRENCE OF REGEX lv_pattern IN lv_string WITH ''.
