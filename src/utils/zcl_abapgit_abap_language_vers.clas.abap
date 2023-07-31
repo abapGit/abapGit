@@ -34,18 +34,21 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ABAP_LANGUAGE_VERS IMPLEMENTATION.
+CLASS zcl_abapgit_abap_language_vers IMPLEMENTATION.
 
 
   METHOD get_abap_language_vers_by_devc.
 
+    DATA lv_class TYPE string.
     DATA lv_abap_lang_version_devc TYPE string.
     DATA lo_abap_language_version_cfg TYPE REF TO object.
+
+    lv_class = 'CL_ABAP_LANGUAGE_VERSION_CFG'.
 
     TRY.
         CREATE OBJECT lo_abap_language_version_cfg TYPE ('IF_ABAP_LANGUAGE_VERSION_CFG').
 
-        CALL METHOD ('CL_ABAP_LANGUAGE_VERSION_CFG')=>('GET_INSTANCE')
+        CALL METHOD (lv_class)=>('GET_INSTANCE')
           RECEIVING
             ro_instance = lo_abap_language_version_cfg.
 
@@ -73,13 +76,16 @@ CLASS ZCL_ABAPGIT_ABAP_LANGUAGE_VERS IMPLEMENTATION.
 
   METHOD get_abap_language_vers_by_objt.
 
+    DATA lv_class TYPE string.
     DATA lo_abap_language_version TYPE REF TO object.
+
+    lv_class = 'CL_ABAP_LANGUAGE_VERSION_CFG'.
 
     TRY.
 
         CREATE OBJECT lo_abap_language_version TYPE ('IF_ABAP_LANGUAGE_VERSION').
 
-        CALL METHOD ('CL_ABAP_LANGUAGE_VERSION')=>('GET_INSTANCE')
+        CALL METHOD (lv_class)=>('GET_INSTANCE')
           RECEIVING
             ro_instance = lo_abap_language_version.
 
