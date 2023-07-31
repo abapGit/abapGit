@@ -135,7 +135,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_clas IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -472,7 +472,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     ENDIF.
     " Remove technical languages
     lt_language_filter = mo_i18n_params->build_language_filter( ).
-    DELETE lt_descriptions WHERE NOT langu IN lt_language_filter.
+    DELETE lt_descriptions WHERE NOT langu IN lt_language_filter AND langu <> mv_language.
 
     ii_xml->add( iv_name = 'DESCRIPTIONS'
                  ig_data = lt_descriptions ).
@@ -499,7 +499,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     ENDIF.
     " Remove technical languages
     lt_language_filter = mo_i18n_params->build_language_filter( ).
-    DELETE lt_descriptions WHERE NOT langu IN lt_language_filter.
+    DELETE lt_descriptions WHERE NOT langu IN lt_language_filter AND langu <> mv_language.
 
     ii_xml->add( iv_name = 'DESCRIPTIONS_SUB'
                  ig_data = lt_descriptions ).
