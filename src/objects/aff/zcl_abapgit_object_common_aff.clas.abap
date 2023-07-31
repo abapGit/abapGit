@@ -38,6 +38,14 @@ CLASS zcl_abapgit_object_common_aff DEFINITION
       RETURNING
         VALUE(rv_is_empty)  TYPE abap_bool.
 
+    METHODS remove_abap_language_version
+      IMPORTING
+        iv_json_as_xstring               TYPE xstring
+      RETURNING
+        VALUE(rv_json_as_xstring_wo_alv) TYPE xstring
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -464,29 +472,26 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~serialize.
-
-    DATA: lr_intf_aff_obj             TYPE REF TO data,
-          lr_intf_aff_log             TYPE REF TO data,
-          lr_intf_aff_settings        TYPE REF TO data,
-          lr_messages                 TYPE REF TO data,
-          lo_object_handler           TYPE REF TO object,
-          lo_object_aff               TYPE REF TO object,
-          lo_object_json_file         TYPE REF TO object,
-          lo_files_container          TYPE REF TO object,
-          lo_settings                 TYPE REF TO object,
-          lo_aff_log                  TYPE REF TO object,
-          lo_aff_factory              TYPE REF TO object,
-          lo_object_file              TYPE REF TO object,
-          lv_json_as_xstring          TYPE xstring,
-          lv_json_as_xstring_wo_alv_x TYPE xstring,
-          lv_string                   TYPE string,
-          lv_pattern                  TYPE string,
-          lx_exception                TYPE REF TO cx_root,
-          lv_name                     TYPE c LENGTH 120,
-          lv_file_name                TYPE string,
-          lo_file_name_mapper         TYPE REF TO object,
-          ls_additional_extensions    TYPE ty_extension_mapper_pairs,
-          lv_file_as_xstring          TYPE xstring.
+    DATA: lr_intf_aff_obj           TYPE REF TO data,
+          lr_intf_aff_log           TYPE REF TO data,
+          lr_intf_aff_settings      TYPE REF TO data,
+          lr_messages               TYPE REF TO data,
+          lo_object_handler         TYPE REF TO object,
+          lo_object_aff             TYPE REF TO object,
+          lo_object_json_file       TYPE REF TO object,
+          lo_files_container        TYPE REF TO object,
+          lo_settings               TYPE REF TO object,
+          lo_aff_log                TYPE REF TO object,
+          lo_aff_factory            TYPE REF TO object,
+          lo_object_file            TYPE REF TO object,
+          lv_json_as_xstring        TYPE xstring,
+          lv_json_as_xstring_wo_alv TYPE xstring,
+          lx_exception              TYPE REF TO cx_root,
+          lv_name                   TYPE c LENGTH 120,
+          lv_file_name              TYPE string,
+          lo_file_name_mapper       TYPE REF TO object,
+          ls_additional_extensions  TYPE ty_extension_mapper_pairs,
+          lv_file_as_xstring        TYPE xstring.
 
     FIELD-SYMBOLS: <ls_intf_aff_obj>          TYPE any,
                    <ls_intf_aff_log>          TYPE any,
@@ -583,21 +588,11 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           RECEIVING
             result = lv_json_as_xstring.
 
-        " ABAP Language Version should not be serialized, remove it from lv_json_as_xstring
-        lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_data = lv_json_as_xstring ).
-
-        lv_pattern = ',\n\s*"abapLanguageVersion":\s"(cloudDevelopment|keyUser)"'.
-        REPLACE FIRST OCCURRENCE OF REGEX lv_pattern IN lv_string WITH ''.
-
-        IF sy-subrc <> 0.
-          lv_json_as_xstring_wo_alv_x = lv_json_as_xstring.
-        ELSE.
-          lv_json_as_xstring_wo_alv_x = zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ).
-        ENDIF.
+        lv_json_as_xstring_wo_alv = remove_abap_language_version( lv_json_as_xstring ).
 
         zif_abapgit_object~mo_files->add_raw(
           iv_ext  = 'json'
-          iv_data = lv_json_as_xstring_wo_alv_x ).
+          iv_data = lv_json_as_xstring_wo_alv ).
 
         ls_additional_extensions = get_additional_extensions( ).
 
@@ -628,6 +623,24 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
       CATCH cx_root INTO lx_exception.
         zcx_abapgit_exception=>raise_with_text( lx_exception ).
     ENDTRY.
-
   ENDMETHOD.
+
+  METHOD remove_abap_language_version.
+    DATA lv_pattern TYPE string.
+    DATA lv_string TYPE string.
+
+    lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_data = iv_json_as_xstring ).
+
+    lv_pattern = ',\n\s*"abapLanguageVersion":\s"(cloudDevelopment|keyUser)"'.
+    " Replace the first occurence of "abapLanguageVersion" (in the header) only, so that
+    " further fields in the content can be still have the name "abapLanguageVersion"
+    REPLACE FIRST OCCURRENCE OF REGEX lv_pattern IN lv_string WITH ''.
+
+    IF sy-subrc <> 0.
+      rv_json_as_xstring_wo_alv = iv_json_as_xstring.
+    ELSE.
+      rv_json_as_xstring_wo_alv = zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ).
+    ENDIF.
+  ENDMETHOD.
+
 ENDCLASS.
