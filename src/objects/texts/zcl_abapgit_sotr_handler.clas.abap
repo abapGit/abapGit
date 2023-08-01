@@ -368,7 +368,8 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
         CHECK lv_sotr-entries IS NOT INITIAL.
       ENDIF.
       lt_language_filter = io_i18n_params->build_language_filter( ).
-      DELETE lv_sotr-entries WHERE NOT langu IN lt_language_filter.
+      DELETE lv_sotr-entries WHERE NOT langu IN lt_language_filter
+        AND langu <> io_i18n_params->ms_params-main_language.
       CHECK lv_sotr-entries IS NOT INITIAL.
 
       INSERT lv_sotr INTO TABLE et_sotr.
