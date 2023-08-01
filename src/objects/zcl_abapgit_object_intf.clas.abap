@@ -290,7 +290,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
     " Remove technical languages
     lt_language_filter = mo_i18n_params->build_language_filter( ).
-    DELETE lt_descriptions WHERE NOT langu IN lt_language_filter.
+    DELETE lt_descriptions WHERE NOT langu IN lt_language_filter AND langu <> mv_language.
 
     IF lines( lt_descriptions ) = 0.
       RETURN.
@@ -317,7 +317,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
     " Remove technical languages
     lt_language_filter = mo_i18n_params->build_language_filter( ).
-    DELETE lt_descriptions WHERE NOT langu IN lt_language_filter.
+    DELETE lt_descriptions WHERE NOT langu IN lt_language_filter AND langu <> mv_language.
 
     IF lines( lt_descriptions ) = 0.
       RETURN.
