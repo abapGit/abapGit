@@ -18,7 +18,7 @@ CLASS ltcl_remove_abap_lang_version DEFINITION FOR TESTING RISK LEVEL HARMLESS D
 
 ENDCLASS.
 
-CLASS zcl_abapgit_object_common_aff DEFINITION LOCAL FRIENDS ltcl_remove_abap_lang_version .
+CLASS zcl_abapgit_object_common_aff DEFINITION LOCAL FRIENDS ltcl_remove_abap_lang_version.
 CLASS ltcl_remove_abap_lang_version IMPLEMENTATION.
 
   METHOD assert_abap_lang_vers_removed.
@@ -50,8 +50,7 @@ CLASS ltcl_remove_abap_lang_version IMPLEMENTATION.
                     |    "description": "Category",\n| &
                     |    "originalLanguage": "en"\n| &
                     |  \}\n| &
-                    |\}|
-    ).
+                    |\}| ).
   ENDMETHOD.
 
   METHOD no_abap_lang_vers_in_header.
@@ -69,8 +68,7 @@ CLASS ltcl_remove_abap_lang_version IMPLEMENTATION.
                     |    "description": "Category",\n| &
                     |    "originalLanguage": "en"\n| &
                     |  \}\n| &
-                    |\}|
-    ).
+                    |\}| ).
   ENDMETHOD.
 
   METHOD at_begin_of_header.
@@ -89,8 +87,7 @@ CLASS ltcl_remove_abap_lang_version IMPLEMENTATION.
                     |    "description": "Category",\n| &
                     |    "originalLanguage": "en"\n| &
                     |  \}\n| &
-                    |\}|
-    ).
+                    |\}| ).
   ENDMETHOD.
 
   METHOD only_abap_lang_vers_in_header.
@@ -104,8 +101,7 @@ CLASS ltcl_remove_abap_lang_version IMPLEMENTATION.
       iv_json_exp = |\{\n| &
                     |  "formatVersion": "1",\n| &
                     |  "header": \{\}\n| &
-                    |\}|
-    ).
+                    |\}| ).
   ENDMETHOD.
 
   METHOD other_abap_lang_vers_fld.
@@ -126,8 +122,7 @@ CLASS ltcl_remove_abap_lang_version IMPLEMENTATION.
                     |    "originalLanguage": "en"\n| &
                     |  \},\n| &
                     |  "abapLanguageVersion": "someOtherConent"\n| &
-                    |\}|
-    ).
+                    |\}| ).
   ENDMETHOD.
 
   METHOD only_other_abap_lang_vers_fld.
@@ -147,8 +142,7 @@ CLASS ltcl_remove_abap_lang_version IMPLEMENTATION.
                     |    "originalLanguage": "en"\n| &
                     |  \},\n| &
                     |  "abapLanguageVersion": "someOtherConent"\n| &
-                    |\}|
-    ).
+                    |\}| ).
   ENDMETHOD.
 
 
@@ -169,8 +163,7 @@ CLASS ltcl_remove_abap_lang_version IMPLEMENTATION.
                     |    "y": "secondFieldInObject"\n| &
                     |  \},\n| &
                     |  "a": "lastField"\n| &
-                    |\}|
-    ).
+                    |\}| ).
   ENDMETHOD.
 
 ENDCLASS.
