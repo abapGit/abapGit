@@ -31,7 +31,7 @@ CLASS ltcl_remove_abap_lang_version IMPLEMENTATION.
     lv_json_act_x = zcl_abapgit_object_common_aff=>remove_abap_language_version( lv_json_x ).
 
     lv_json_act = zcl_abapgit_convert=>xstring_to_string_utf8( lv_json_act_x ).
-    cl_abap_unit_assert=>assert_equals( act = lv_json_act 
+    cl_abap_unit_assert=>assert_equals( act = lv_json_act
                                         exp = iv_json_exp ).
   ENDMETHOD.
 

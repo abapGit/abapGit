@@ -634,7 +634,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
     lv_json = zcl_abapgit_convert=>xstring_to_string_utf8( iv_data = iv_json_as_xstring ).
 
     TRY.
-        li_json = zcl_abapgit_ajson=>parse( iv_json            = lv_json 
+        li_json = zcl_abapgit_ajson=>parse( iv_json            = lv_json
                                             iv_keep_item_order = abap_true ).
         li_json->delete( '/header/abapLanguageVersion' ).
         lv_json_wo_alv = li_json->stringify( iv_indent = 2 ).
