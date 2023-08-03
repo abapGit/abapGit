@@ -38,7 +38,7 @@ CLASS zcl_abapgit_object_common_aff DEFINITION
       RETURNING
         VALUE(rv_is_empty)  TYPE abap_bool.
 
-    METHODS remove_abap_language_version
+    CLASS-METHODS remove_abap_language_version
       IMPORTING
         iv_json_as_xstring               TYPE xstring
       RETURNING
@@ -625,22 +625,24 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
     ENDTRY.
   ENDMETHOD.
 
+  
   METHOD remove_abap_language_version.
-    DATA lv_pattern TYPE string.
-    DATA lv_string TYPE string.
+    DATA lv_json TYPE string.
+    DATA lv_json_wo_alv TYPE string.
+    DATA li_json TYPE REF TO zif_abapgit_ajson.
 
-    lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_data = iv_json_as_xstring ).
+    lv_json = zcl_abapgit_convert=>xstring_to_string_utf8( iv_data = iv_json_as_xstring ).
 
-    lv_pattern = ',\s*"abapLanguageVersion"\s*:\s*"[^"]+"'.
-    " Replace the first occurence of "abapLanguageVersion" (in the header) only, so that
-    " further fields in the content can be still have the name "abapLanguageVersion"
-    REPLACE FIRST OCCURRENCE OF REGEX lv_pattern IN lv_string WITH ''.
+    TRY.
+        li_json = zcl_abapgit_ajson=>parse( iv_json = lv_json iv_keep_item_order = abap_true ).
+        li_json->delete( '/header/abapLanguageVersion' ).
+        lv_json_wo_alv = li_json->stringify( iv_indent = 2 ).
 
-    IF sy-subrc <> 0.
-      rv_json_as_xstring_wo_alv = iv_json_as_xstring.
-    ELSE.
-      rv_json_as_xstring_wo_alv = zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ).
-    ENDIF.
+        rv_json_as_xstring_wo_alv = zcl_abapgit_convert=>string_to_xstring_utf8( lv_json_wo_alv ).
+
+      CATCH zcx_abapgit_ajson_error.
+        rv_json_as_xstring_wo_alv = iv_json_as_xstring.
+    ENDTRY.
+
   ENDMETHOD.
-
 ENDCLASS.
