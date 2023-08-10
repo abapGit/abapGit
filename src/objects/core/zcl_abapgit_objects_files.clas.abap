@@ -120,13 +120,14 @@ CLASS zcl_abapgit_objects_files DEFINITION
     METHODS mark_accessed
       IMPORTING
         !iv_path TYPE zif_abapgit_git_definitions=>ty_file-path
-        !iv_file TYPE zif_abapgit_git_definitions=>ty_file-filename.
+        !iv_file TYPE zif_abapgit_git_definitions=>ty_file-filename
+        !iv_sha1 TYPE zif_abapgit_git_definitions=>ty_file-sha1.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
+CLASS zcl_abapgit_objects_files IMPLEMENTATION.
 
 
   METHOD add.
@@ -312,6 +313,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
       APPEND INITIAL LINE TO mt_accessed_files ASSIGNING <ls_accessed>.
       <ls_accessed>-path     = iv_path.
       <ls_accessed>-filename = iv_file.
+      <ls_accessed>-sha1     = iv_sha1.
     ENDIF.
 
   ENDMETHOD.
@@ -369,7 +371,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
     " Update access table
     mark_accessed(
       iv_path = <ls_file>-path
-      iv_file = <ls_file>-filename ).
+      iv_file = <ls_file>-filename
+      iv_sha1 = <ls_file>-sha1 ).
 
     rv_data = <ls_file>-data.
 
@@ -400,7 +403,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
       mark_accessed(
         iv_path = <ls_file>-path
-        iv_file = <ls_file>-filename ).
+        iv_file = <ls_file>-filename
+        iv_sha1 = <ls_file>-sha1 ).
 
     ENDLOOP.
 
