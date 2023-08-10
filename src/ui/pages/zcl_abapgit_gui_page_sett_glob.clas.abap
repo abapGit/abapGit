@@ -171,7 +171,7 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
       )->text(
         iv_name        = c_id-experimental_features
         iv_label       = 'Experimental Features'
-        iv_hint        = 'Set to "X" to enable all features or add feature values as a comma-separated list').
+        iv_hint        = 'Set to "X" to enable all features or add feature values as a comma-separated list' ).
     ENDIF.
 
     ro_form->command(
