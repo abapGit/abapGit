@@ -92,7 +92,9 @@ INTERFACE zif_abapgit_git_definitions
       chmod TYPE ty_chmod,
     END OF ty_expanded .
   TYPES:
-    ty_expanded_tt TYPE STANDARD TABLE OF ty_expanded WITH DEFAULT KEY .
+    ty_expanded_tt TYPE STANDARD TABLE OF ty_expanded WITH DEFAULT KEY
+      WITH NON-UNIQUE SORTED KEY path_name COMPONENTS name path
+      WITH NON-UNIQUE SORTED KEY path COMPONENTS path.
 
   TYPES:
     BEGIN OF ty_create,
