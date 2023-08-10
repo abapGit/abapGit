@@ -76,6 +76,7 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
         events     TYPE dokil-id VALUE 'IE',
       END OF c_longtext_id.
 
+    DATA mv_aff_enabled TYPE abap_bool.
     DATA mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc .
 
     METHODS deserialize_pre_ddic
@@ -101,9 +102,6 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
       RETURNING VALUE(rs_intf) TYPE ty_intf
       RAISING
                 zcx_abapgit_exception.
-    METHODS is_aff_enabled
-      RETURNING
-        VALUE(rv_enabled) TYPE abap_bool.
 ENDCLASS.
 
 
@@ -116,6 +114,9 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       is_item     = is_item
       iv_language = iv_language ).
     mi_object_oriented_object_fct = zcl_abapgit_oo_factory=>make( ms_item-obj_type ).
+
+    mv_aff_enabled = zcl_abapgit_persist_factory=>get_settings( )->read( )->is_feature_enabled(
+      zcl_abapgit_aff_registry=>c_aff_feature ).
   ENDMETHOD.
 
 
@@ -190,7 +191,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     DATA ls_intf TYPE ty_intf.
 
-    IF is_aff_enabled( ) = abap_true.
+    IF mv_aff_enabled = abap_true.
       ls_intf = read_json( ).
     ELSE.
       ii_xml->read( EXPORTING iv_name = 'VSEOINTERF'
@@ -246,13 +247,6 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
-
-
-METHOD is_aff_enabled.
-  DATA lo_settings TYPE REF TO zcl_abapgit_settings.
-  lo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
-  rv_enabled = lo_settings->is_feature_enabled( zcl_abapgit_aff_registry=>c_aff_feature ).
-ENDMETHOD.
 
 
   METHOD read_json.
@@ -412,7 +406,7 @@ ENDMETHOD.
                                                    iv_clsname = ls_clskey-clsname ).
 
     " HERE: switch with feature flag for XML or JSON file format
-    IF is_aff_enabled( ) = abap_true.
+    IF mv_aff_enabled = abap_true.
       lv_serialized_data = lcl_aff_metadata_handler=>serialize( ls_intf ).
       zif_abapgit_object~mo_files->add_raw( iv_ext  = 'json'
                                             iv_data = lv_serialized_data ).
@@ -512,7 +506,7 @@ ENDMETHOD.
 
     IF iv_step = zif_abapgit_object=>gc_step_id-abap.
       " HERE: switch with feature flag between XML and JSON file format
-      IF is_aff_enabled( ) = abap_true.
+      IF mv_aff_enabled = abap_true.
         ls_intf = read_json( ).
       ELSE.
         ls_intf = read_xml( io_xml ).
