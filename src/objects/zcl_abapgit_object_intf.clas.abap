@@ -101,11 +101,14 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
       RETURNING VALUE(rs_intf) TYPE ty_intf
       RAISING
                 zcx_abapgit_exception.
+    METHODS is_aff_enabled
+      RETURNING
+        VALUE(rv_enabled) TYPE abap_bool.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
+CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -187,7 +190,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
     DATA ls_intf TYPE ty_intf.
 
-    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
+    IF is_aff_enabled( ) = abap_true.
       ls_intf = read_json( ).
     ELSE.
       ii_xml->read( EXPORTING iv_name = 'VSEOINTERF'
@@ -243,6 +246,13 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
+
+
+METHOD is_aff_enabled.
+  DATA lo_settings TYPE REF TO zcl_abapgit_settings.
+  lo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
+  rv_enabled = lo_settings->is_feature_enabled( zcl_abapgit_aff_registry=>c_aff_feature ).
+ENDMETHOD.
 
 
   METHOD read_json.
@@ -402,7 +412,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
                                                    iv_clsname = ls_clskey-clsname ).
 
     " HERE: switch with feature flag for XML or JSON file format
-    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
+    IF is_aff_enabled( ) = abap_true.
       lv_serialized_data = lcl_aff_metadata_handler=>serialize( ls_intf ).
       zif_abapgit_object~mo_files->add_raw( iv_ext  = 'json'
                                             iv_data = lv_serialized_data ).
@@ -502,7 +512,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
     IF iv_step = zif_abapgit_object=>gc_step_id-abap.
       " HERE: switch with feature flag between XML and JSON file format
-      IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
+      IF is_aff_enabled( ) = abap_true.
         ls_intf = read_json( ).
       ELSE.
         ls_intf = read_xml( io_xml ).
