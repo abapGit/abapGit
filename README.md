@@ -30,7 +30,7 @@ Works with: [GitHub](https://github.com/),
 [Azure DevOps](https://azure.microsoft.com/en-us/services/devops) and 
 [more](https://git.wiki.kernel.org/index.php/GitHosting).
 
-ABAP Version: 702 or higher
+ABAP Version: 702 SP 8 or higher
 
 Latest build: [zabapgit_standalone.prog.abap](https://raw.githubusercontent.com/abapGit/build/main/zabapgit_standalone.prog.abap)
 
