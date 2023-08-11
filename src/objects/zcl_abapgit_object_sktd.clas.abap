@@ -30,11 +30,6 @@ CLASS zcl_abapgit_object_sktd DEFINITION
         !iv_fieldname TYPE csequence
       CHANGING
         !cs_data      TYPE any .
-    METHODS fill_metadata_from_db
-      CHANGING
-        !cs_dependency_rule TYPE any
-      RAISING
-        zcx_abapgit_exception .
     METHODS get_wb_object_operator
       RETURNING
         VALUE(ri_wb_object_operator) TYPE REF TO object
@@ -163,66 +158,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SKTD IMPLEMENTATION.
       CATCH cx_sy_create_error.
         zcx_abapgit_exception=>raise( |SKTD not supported by your NW release| ).
     ENDTRY.
-
-  ENDMETHOD.
-
-
-  METHOD fill_metadata_from_db.
-
-    DATA:
-      li_wb_object_operator          TYPE REF TO object,
-      lr_dependency_rule_old         TYPE REF TO data,
-      lv_drul_object_data_clas_exist TYPE c LENGTH 1.
-
-    FIELD-SYMBOLS:
-      <ls_dependency_rule_old> TYPE any,
-      <lv_created_at>          TYPE xsddatetime_z,
-      <lv_created_by>          TYPE syuname,
-      <lv_created_at_old>      TYPE xsddatetime_z,
-      <lv_created_by_old>      TYPE syuname.
-
-    li_wb_object_operator = get_wb_object_operator( ).
-
-    CREATE DATA lr_dependency_rule_old TYPE ('CL_BLUE_SOURCE_OBJECT_DATA2=>TY_OBJECT_DATA').
-    CALL FUNCTION 'CHECK_EXIST_CLAS'
-      EXPORTING
-        name            = 'CL_DRUL_WB_OBJECT_DATA'
-      IMPORTING
-        exist           = lv_drul_object_data_clas_exist
-      EXCEPTIONS
-        tr_invalid_type = 1
-        OTHERS          = 2.
-
-    IF sy-subrc = 0 AND lv_drul_object_data_clas_exist = abap_true.
-      CREATE DATA lr_dependency_rule_old TYPE ('CL_DRUL_WB_OBJECT_DATA=>TY_OBJECT_DATA').
-    ELSE.
-      CREATE DATA lr_dependency_rule_old TYPE ('CL_BLUE_SOURCE_OBJECT_DATA=>TY_OBJECT_DATA').
-    ENDIF.
-    ASSIGN lr_dependency_rule_old->* TO <ls_dependency_rule_old>.
-    ASSERT sy-subrc = 0.
-
-    CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
-      IMPORTING
-        data = <ls_dependency_rule_old>.
-
-    ASSIGN COMPONENT 'METADATA-CREATED_BY' OF STRUCTURE cs_dependency_rule
-           TO <lv_created_by>.
-    ASSERT sy-subrc = 0.
-
-    ASSIGN COMPONENT 'METADATA-CREATED_AT' OF STRUCTURE cs_dependency_rule
-           TO <lv_created_at>.
-    ASSERT sy-subrc = 0.
-
-    ASSIGN COMPONENT 'METADATA-CREATED_BY' OF STRUCTURE <ls_dependency_rule_old>
-           TO <lv_created_by_old>.
-    ASSERT sy-subrc = 0.
-
-    ASSIGN COMPONENT 'METADATA-CREATED_AT' OF STRUCTURE <ls_dependency_rule_old>
-           TO <lv_created_at_old>.
-    ASSERT sy-subrc = 0.
-
-    <lv_created_at> = <lv_created_at_old>.
-    <lv_created_by> = <lv_created_by_old>.
 
   ENDMETHOD.
 
