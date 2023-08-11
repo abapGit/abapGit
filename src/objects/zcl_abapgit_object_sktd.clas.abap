@@ -75,6 +75,12 @@ CLASS ZCL_ABAPGIT_OBJECT_SKTD IMPLEMENTATION.
 
     clear_field(
       EXPORTING
+        iv_fieldname          = 'METADATA-MASTER_SYSTEM'
+      CHANGING
+        cs_data = cs_data ).
+
+    clear_field(
+      EXPORTING
         iv_fieldname          = 'METADATA-VERSION'
       CHANGING
         cs_data = cs_data ).
@@ -328,7 +334,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SKTD IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_deserialize_steps.
-    APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
   ENDMETHOD.
 
 
@@ -344,8 +350,9 @@ CLASS ZCL_ABAPGIT_OBJECT_SKTD IMPLEMENTATION.
 
   METHOD zif_abapgit_object~is_locked.
 
-    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESWB_EO'
-                                            iv_argument    = |{ ms_item-obj_type }{ ms_item-obj_name }| ).
+    rv_is_locked = exists_a_lock_entry_for(
+      iv_lock_object = 'WBS_ENQUEUE_STRU'
+      iv_argument    = |{ ms_item-obj_type }{ ms_item-obj_name }| ).
 
   ENDMETHOD.
 
