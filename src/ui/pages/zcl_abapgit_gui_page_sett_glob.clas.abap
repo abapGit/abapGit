@@ -81,7 +81,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_GLOB IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -168,9 +168,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_GLOB IMPLEMENTATION.
       )->checkbox(
         iv_name        = c_id-run_critical_tests
         iv_label       = 'Enable Critical Unit Tests'
-      )->checkbox(
+      )->text(
         iv_name        = c_id-experimental_features
-        iv_label       = 'Enable Experimental Features' ).
+        iv_label       = 'Experimental Features'
+        iv_hint        = 'Set to "X" to enable all features or add feature values as a comma-separated list' ).
     ENDIF.
 
     ro_form->command(
@@ -245,7 +246,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_GLOB IMPLEMENTATION.
         iv_val = boolc( mo_settings->get_run_critical_tests( ) = abap_true ) ) ##TYPE.
       ro_form_data->set(
         iv_key = c_id-experimental_features
-        iv_val = boolc( mo_settings->get_experimental_features( ) = abap_true ) ) ##TYPE.
+        iv_val = mo_settings->get_experimental_features( ) ).
     ENDIF.
 
   ENDMETHOD.
@@ -299,7 +300,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_GLOB IMPLEMENTATION.
     " Dev Internal
     IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_false.
       mo_settings->set_run_critical_tests( boolc( mo_form_data->get( c_id-run_critical_tests ) = abap_true ) ).
-      mo_settings->set_experimental_features( boolc( mo_form_data->get( c_id-experimental_features ) = abap_true ) ).
+      mo_settings->set_experimental_features( mo_form_data->get( c_id-experimental_features ) ).
     ENDIF.
 
     " Store in DB
