@@ -122,7 +122,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SKTD IMPLEMENTATION.
     mv_object_key = ms_item-obj_name.
 
     TRY.
-        CREATE DATA mr_data TYPE ('CL_BLUE_SOURCE_OBJECT_DATA=>TY_OBJECT_DATA').
+        CREATE DATA mr_data TYPE ('CL_KTD_OBJECT_DATA=>TY_KTD_DATA').
         CREATE OBJECT mi_persistence TYPE ('CL_KTD_OBJECT_PERSIST').
 
       CATCH cx_sy_create_error.
@@ -202,8 +202,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SKTD IMPLEMENTATION.
       ri_wb_object_operator = mi_wb_object_operator.
     ENDIF.
 
-    ls_object_type-objtype_tr = 'DRUL'.
-    ls_object_type-subtype_wb = 'DRL'.
+    ls_object_type-objtype_tr = 'SKTD'.
+    ls_object_type-subtype_wb = 'TYP'.
 
     TRY.
         CALL METHOD ('CL_WB_OBJECT_OPERATOR')=>('CREATE_INSTANCE')
@@ -232,7 +232,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SKTD IMPLEMENTATION.
     TRY.
         li_wb_object_operator = get_wb_object_operator( ).
 
-        CALL METHOD li_object_data_model->('IF_WB_OBJECT_OPERATOR~READ')
+        CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
           IMPORTING
             eo_object_data = li_object_data_model.
 
@@ -345,10 +345,10 @@ CLASS ZCL_ABAPGIT_OBJECT_SKTD IMPLEMENTATION.
       lv_source             TYPE string.
 
     FIELD-SYMBOLS:
-      <ls_dependency_rule> TYPE any,
-      <lv_source>          TYPE string.
+      <ls_data>   TYPE any,
+      <lv_source> TYPE string.
 
-    ASSIGN mr_data->* TO <ls_dependency_rule>.
+    ASSIGN mr_data->* TO <ls_data>.
     ASSERT sy-subrc = 0.
 
     li_wb_object_operator = get_wb_object_operator( ).
@@ -358,29 +358,28 @@ CLASS ZCL_ABAPGIT_OBJECT_SKTD IMPLEMENTATION.
           EXPORTING
             version        = 'A'
           IMPORTING
-            data           = <ls_dependency_rule>
+            data           = <ls_data>
             eo_object_data = li_object_data_model.
 
-        BREAK-POINT.
-        ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <ls_dependency_rule>
-               TO <lv_source>.
-        ASSERT sy-subrc = 0.
-
-        lv_source = <lv_source>.
-
-        clear_fields( CHANGING cs_dependency_rule = <ls_dependency_rule> ).
-
+*        ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <ls_dependency_rule>
+*               TO <lv_source>.
+*        ASSERT sy-subrc = 0.
+*
+*        lv_source = <lv_source>.
+*
+*        clear_fields( CHANGING cs_dependency_rule = <ls_dependency_rule> ).
+*
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
     io_xml->add(
-        iv_name = 'DRUL'
-        ig_data = <ls_dependency_rule> ).
-
-    zif_abapgit_object~mo_files->add_string(
-        iv_ext    = 'asdrul'
-        iv_string = lv_source ).
+        iv_name = 'SKTD'
+        ig_data = <ls_data> ).
+*
+*    zif_abapgit_object~mo_files->add_string(
+*        iv_ext    = 'asdrul'
+*        iv_string = lv_source ).
 
   ENDMETHOD.
 ENDCLASS.
