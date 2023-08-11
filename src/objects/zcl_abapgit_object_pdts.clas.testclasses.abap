@@ -13,7 +13,7 @@ CLASS ltc_ci IMPLEMENTATION.
 
     DATA lv_repo_url TYPE string.
 
-    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_false.
+    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->is_feature_enabled( 'PDTS' ) = abap_false.
       RETURN.
     ENDIF.
 
@@ -53,7 +53,7 @@ CLASS ltc_smoke_test IMPLEMENTATION.
 
     DATA  ls_item   TYPE zif_abapgit_definitions=>ty_item.
 
-    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_false.
+    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->is_feature_enabled( 'PDTS' ) = abap_false.
       RETURN.
     ENDIF.
 
@@ -73,7 +73,7 @@ CLASS ltc_smoke_test IMPLEMENTATION.
 
   METHOD run_simple_methods.
 
-    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_false.
+    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->is_feature_enabled( 'PDTS' ) = abap_false.
       RETURN.
     ENDIF.
 

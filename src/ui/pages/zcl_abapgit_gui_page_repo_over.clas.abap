@@ -1017,7 +1017,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_title = 'Help'
       io_sub = zcl_abapgit_gui_chunk_lib=>help_submenu( ) ).
 
-    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
+    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) IS NOT INITIAL.
       ro_toolbar->add(
         iv_txt   = zcl_abapgit_gui_buttons=>experimental( )
         iv_title = 'Experimental Features are Enabled'
