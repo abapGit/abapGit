@@ -237,7 +237,53 @@ CLASS ZCL_ABAPGIT_OBJECT_SKTD IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    ASSERT 1 = 'todo'.
+    DATA li_wb_object_operator TYPE REF TO object.
+    DATA li_object_data_model  TYPE REF TO if_wb_object_data_model.
+
+    FIELD-SYMBOLS <ls_data> TYPE any.
+
+    ASSIGN mr_data->* TO <ls_data>.
+    ASSERT sy-subrc = 0.
+
+    io_xml->read(
+      EXPORTING
+        iv_name = 'SKTD'
+      CHANGING
+        cg_data = <ls_data> ).
+
+    li_wb_object_operator = get_wb_object_operator( ).
+
+    CREATE OBJECT li_object_data_model TYPE ('CL_KTD_OBJECT_DATA').
+    li_object_data_model->set_data( <ls_data> ).
+
+    tadir_insert( iv_package ).
+
+    IF zif_abapgit_object~exists( ) = abap_true.
+
+      CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~UPDATE')
+        EXPORTING
+          io_object_data    = li_object_data_model
+          transport_request = iv_transport.
+
+    ELSE.
+
+      CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~CREATE')
+        EXPORTING
+          io_object_data    = li_object_data_model
+          data_selection    = 'P' " if_wb_object_data_selection_co=>c_properties
+          package           = iv_package
+          transport_request = iv_transport.
+
+      CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~UPDATE')
+        EXPORTING
+          io_object_data    = li_object_data_model
+          data_selection    = 'D' " if_wb_object_data_selection_co=>c_data_content
+          transport_request = iv_transport.
+    ENDIF.
+
+    CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~ACTIVATE').
+
+    corr_insert( iv_package ).
 
   ENDMETHOD.
 
