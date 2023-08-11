@@ -16,9 +16,25 @@ CLASS zcl_abapgit_object_apis DEFINITION
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-    METHODS initialize.
+    TYPES: BEGIN OF ty_state,
+             sub_object_type           TYPE c LENGTH 20,
+             sub_object_name           TYPE c LENGTH 120,
+             compatibility_contract    TYPE c LENGTH 2,
+             release_state             TYPE c LENGTH 40,
+             use_in_key_user_apps      TYPE c LENGTH 1,
+             use_in_sap_cloud_platform TYPE c LENGTH 1,
+           END OF ty_state.
+
+    TYPES: BEGIN OF ty_apis,
+             object_id   TYPE c LENGTH 36,
+             object_type TYPE tadir-object,
+             object_name TYPE tadir-obj_name,
+             api_states  TYPE STANDARD TABLE OF ty_state WITH DEFAULT KEY,
+           END OF ty_apis.
 
     DATA mo_handler TYPE REF TO object.
+
+    METHODS initialize.
 
 ENDCLASS.
 
@@ -51,7 +67,19 @@ CLASS ZCL_ABAPGIT_OBJECT_APIS IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    ASSERT 1 = 'todo'.
+    DATA lx_error TYPE REF TO cx_static_check.
+
+    initialize( ).
+
+    TRY.
+        CALL METHOD mo_handler->('IF_ARS_API_ABAPGIT~DELETE_API_STATE')
+          EXPORTING
+            iv_request = iv_transport.
+      CATCH cx_static_check INTO lx_error.
+        RAISE EXCEPTION TYPE zcx_abapgit_exception
+          EXPORTING
+            previous = lx_error.
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -99,16 +127,12 @@ CLASS ZCL_ABAPGIT_OBJECT_APIS IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_active.
-
     rv_active = zif_abapgit_object~exists( ).
-
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~is_locked.
-
     ASSERT 1 = 'todo'.
-
   ENDMETHOD.
 
 
@@ -129,7 +153,17 @@ CLASS ZCL_ABAPGIT_OBJECT_APIS IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    ASSERT 1 = 'todo'.
+    DATA ls_apis TYPE ty_apis.
+
+    initialize( ).
+
+    CALL METHOD mo_handler->('IF_ARS_API_ABAPGIT~GET_API_STATE')
+      RECEIVING
+        rs_apis_object = ls_apis.
+
+    io_xml->add( iv_name = 'APIS'
+                 ig_data = ls_apis ).
+
   ENDMETHOD.
 
 
