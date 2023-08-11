@@ -2,54 +2,56 @@ CLASS zcl_abapgit_object_sod1 DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_objects_super
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_object .
+    INTERFACES zif_abapgit_object.
+
+    METHODS constructor
+      IMPORTING
+        !is_item     TYPE zif_abapgit_definitions=>ty_item
+        !iv_language TYPE spras
+      RAISING
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CONSTANTS: c_xml_transformation_name TYPE string VALUE 'SOD1',
-               c_data_model_class_name   TYPE string VALUE 'CL_APS_ODA_WBI_SOD1_DATA_MODEL'.
+    CONSTANTS c_xml_transformation_name TYPE string VALUE 'SOD1' ##NO_TEXT.
+    CONSTANTS c_data_model_class_name TYPE string VALUE 'CL_APS_ODA_WBI_SOD1_DATA_MODEL' ##NO_TEXT.
 
     METHODS create_wb_object_operator
       IMPORTING
-        is_object_type               TYPE wbobjtype
-        iv_object_key                TYPE seu_objkey
-        iv_transport_request         TYPE trkorr OPTIONAL
-        iv_do_commits                TYPE abap_bool DEFAULT abap_true
-        iv_run_in_test_mode          TYPE abap_bool DEFAULT abap_false
+        !is_object_type              TYPE wbobjtype
+        !iv_object_key               TYPE seu_objkey
+        !iv_transport_request        TYPE trkorr OPTIONAL
+        !iv_do_commits               TYPE abap_bool DEFAULT abap_true
+        !iv_run_in_test_mode         TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(ro_wb_object_operator) TYPE REF TO object
       RAISING
-        zcx_abapgit_exception .
-
+        zcx_abapgit_exception.
     METHODS get_wb_object_operator
       IMPORTING
-        is_object_type               TYPE wbobjtype
-        iv_object_key                TYPE seu_objkey
-        iv_transport_request         TYPE trkorr OPTIONAL
+        !is_object_type              TYPE wbobjtype
+        !iv_object_key               TYPE seu_objkey
+        !iv_transport_request        TYPE trkorr OPTIONAL
       RETURNING
         VALUE(ro_wb_object_operator) TYPE REF TO object
       RAISING
-        zcx_abapgit_exception .
-
+        zcx_abapgit_exception.
     METHODS clear_metadata_fields
       CHANGING
-        !cs_data TYPE any .
-
+        !cs_data TYPE any.
     METHODS clear_content_fields
       CHANGING
-        !cs_data TYPE any .
-
+        !cs_data TYPE any.
     METHODS clear_field
       IMPORTING
         !iv_fieldname TYPE csequence
       CHANGING
-        !cs_metadata  TYPE any .
-
+        !cs_metadata  TYPE any.
 ENDCLASS.
 
 
@@ -170,6 +172,23 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD constructor.
+
+    DATA lo_data_model TYPE REF TO object.
+
+    super->constructor(
+      is_item     = is_item
+      iv_language = iv_language ).
+
+    TRY.
+        CREATE OBJECT lo_data_model TYPE (c_data_model_class_name).
+      CATCH cx_root.
+        zcx_abapgit_exception=>raise( |Object type { is_item-obj_type } is not supported by this system| ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+
   METHOD create_wb_object_operator.
 
     DATA lx_error TYPE REF TO cx_root.
@@ -219,7 +238,56 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown.
+
+    DATA: lo_data_model     TYPE REF TO if_wb_object_data_model,
+          lv_data_type_name TYPE string,
+          lo_factory        TYPE REF TO object,
+          lo_data           TYPE REF TO data,
+          ls_object_type    TYPE wbobjtype,
+          lv_object_key     TYPE seu_objkey,
+          lx_error          TYPE REF TO cx_root.
+
+    FIELD-SYMBOLS:
+      <ls_data> TYPE any,
+      <lv_user> TYPE any.
+
+    TRY.
+
+        ls_object_type-objtype_tr = ms_item-obj_type.
+        lv_object_key             = ms_item-obj_name.
+
+        lo_factory = create_wb_object_operator( is_object_type = ls_object_type
+                                                iv_object_key  = lv_object_key ).
+
+        CALL METHOD lo_factory->('IF_WB_OBJECT_OPERATOR~READ')
+          IMPORTING
+            eo_object_data = lo_data_model.
+
+        " if_wb_object_data_selection_co=>c_all_data
+        CALL METHOD lo_data_model->('GET_DATATYPE_NAME')
+          EXPORTING
+            p_data_selection = 'AL'
+          RECEIVING
+            result           = lv_data_type_name.
+
+        CREATE DATA lo_data TYPE (lv_data_type_name).
+        ASSIGN lo_data->* TO <ls_data>.
+
+        CALL METHOD lo_data_model->('GET_SELECTED_DATA')
+          EXPORTING
+            p_data_selection = 'AL' " if_wb_object_data_selection_co=>c_all_data
+          IMPORTING
+            p_data           = <ls_data>.
+
+        ASSIGN COMPONENT 'METADATA-CHANGED_BY' OF STRUCTURE <ls_data> TO <lv_user>.
+        IF sy-subrc = 0.
+          rv_user = <lv_user>.
+        ENDIF.
+
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
+    ENDTRY.
+
   ENDMETHOD.
 
 
