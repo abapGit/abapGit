@@ -51,10 +51,15 @@ CLASS zcl_abapgit_settings DEFINITION
         VALUE(rv_run) TYPE abap_bool .
     METHODS set_experimental_features
       IMPORTING
-        !iv_run TYPE abap_bool .
+        !iv_features TYPE string.
     METHODS get_experimental_features
       RETURNING
-        VALUE(rv_run) TYPE abap_bool .
+        VALUE(rv_features) TYPE string.
+    METHODS is_feature_enabled
+      IMPORTING
+        !iv_feature   TYPE string OPTIONAL
+      RETURNING
+        VALUE(rv_run) TYPE abap_bool.
     METHODS set_max_lines
       IMPORTING
         !iv_lines TYPE i .
@@ -164,7 +169,7 @@ CLASS zcl_abapgit_settings DEFINITION
              proxy_auth               TYPE string,
              proxy_bypass             TYPE zif_abapgit_definitions=>ty_range_proxy_bypass_url,
              run_critical_tests       TYPE abap_bool,
-             experimental_features    TYPE abap_bool,
+             experimental_features    TYPE string,
              commitmsg_comment_length TYPE i,
              commitmsg_comment_deflt  TYPE string,
              commitmsg_body_size      TYPE i,
@@ -216,7 +221,7 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
 
   METHOD get_experimental_features.
     IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_false.
-      rv_run = ms_settings-experimental_features.
+      rv_features = ms_settings-experimental_features.
     ENDIF.
   ENDMETHOD.
 
@@ -333,6 +338,19 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD is_feature_enabled.
+    DATA lt_features TYPE string_table.
+    IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_false.
+      rv_run = boolc( ms_settings-experimental_features = abap_true ).
+      IF iv_feature IS NOT INITIAL.
+        SPLIT ms_settings-experimental_features AT ',' INTO TABLE lt_features.
+        READ TABLE lt_features TRANSPORTING NO FIELDS WITH TABLE KEY table_line = iv_feature.
+        rv_run = boolc( rv_run = abap_true OR sy-subrc = 0 ).
+      ENDIF.
+    ENDIF.
+  ENDMETHOD.
+
+
   METHOD set_activate_wo_popup.
     ms_user_settings-activate_wo_popup = iv_act_wo_popup.
   ENDMETHOD.
@@ -369,7 +387,7 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
 
     set_proxy_authentication( abap_false ).
     set_run_critical_tests( abap_false ).
-    set_experimental_features( abap_false ).
+    set_experimental_features( '' ).
     set_max_lines( 500 ).
     set_adt_jump_enanbled( abap_true ).
     set_show_default_repo( abap_false ).
@@ -388,7 +406,7 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
 
 
   METHOD set_experimental_features.
-    ms_settings-experimental_features = iv_run.
+    ms_settings-experimental_features = iv_features.
   ENDMETHOD.
 
 
