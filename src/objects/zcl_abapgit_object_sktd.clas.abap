@@ -24,12 +24,12 @@ CLASS zcl_abapgit_object_sktd DEFINITION
 
     METHODS clear_fields
       CHANGING
-        !cs_dependency_rule TYPE any .
+        !cs_data TYPE any .
     METHODS clear_field
       IMPORTING
-        !iv_fieldname       TYPE csequence
+        !iv_fieldname TYPE csequence
       CHANGING
-        !cs_dependency_rule TYPE any .
+        !cs_data      TYPE any .
     METHODS fill_metadata_from_db
       CHANGING
         !cs_dependency_rule TYPE any
@@ -49,13 +49,12 @@ CLASS ZCL_ABAPGIT_OBJECT_SKTD IMPLEMENTATION.
 
   METHOD clear_field.
 
-    FIELD-SYMBOLS: <lv_value> TYPE data.
+    FIELD-SYMBOLS <lv_value> TYPE data.
 
-    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_dependency_rule
-           TO <lv_value>.
+    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_data TO <lv_value>.
     ASSERT sy-subrc = 0.
 
-    CLEAR: <lv_value>.
+    CLEAR <lv_value>.
 
   ENDMETHOD.
 
@@ -64,51 +63,81 @@ CLASS ZCL_ABAPGIT_OBJECT_SKTD IMPLEMENTATION.
 
     clear_field(
       EXPORTING
+        iv_fieldname          = 'METADATA-NAME'
+      CHANGING
+        cs_data = cs_data ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'METADATA-TYPE'
+      CHANGING
+        cs_data = cs_data ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'METADATA-VERSION'
+      CHANGING
+        cs_data = cs_data ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'REF_OBJECT-URI'
+      CHANGING
+        cs_data = cs_data ).
+
+    clear_field(
+      EXPORTING
+        iv_fieldname          = 'REF_OBJECT-DESCRIPTION'
+      CHANGING
+        cs_data = cs_data ).
+
+    clear_field(
+      EXPORTING
         iv_fieldname          = 'METADATA-CREATED_AT'
       CHANGING
-        cs_dependency_rule = cs_dependency_rule ).
+        cs_data = cs_data ).
 
     clear_field(
       EXPORTING
         iv_fieldname          = 'METADATA-CREATED_BY'
       CHANGING
-        cs_dependency_rule = cs_dependency_rule ).
+        cs_data = cs_data ).
 
     clear_field(
       EXPORTING
         iv_fieldname          = 'METADATA-CHANGED_AT'
       CHANGING
-        cs_dependency_rule = cs_dependency_rule ).
+        cs_data = cs_data ).
 
     clear_field(
       EXPORTING
         iv_fieldname          = 'METADATA-CHANGED_BY'
       CHANGING
-        cs_dependency_rule = cs_dependency_rule ).
+        cs_data = cs_data ).
 
     clear_field(
       EXPORTING
         iv_fieldname          = 'METADATA-MASTER_LANGUAGE'
       CHANGING
-        cs_dependency_rule = cs_dependency_rule ).
+        cs_data = cs_data ).
 
     clear_field(
       EXPORTING
         iv_fieldname          = 'METADATA-RESPONSIBLE'
       CHANGING
-        cs_dependency_rule = cs_dependency_rule ).
+        cs_data = cs_data ).
 
     clear_field(
       EXPORTING
         iv_fieldname          = 'METADATA-PACKAGE_REF'
       CHANGING
-        cs_dependency_rule = cs_dependency_rule ).
+        cs_data = cs_data ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'CONTENT-SOURCE'
+        iv_fieldname          = 'METADATA-LINKS'
       CHANGING
-        cs_dependency_rule = cs_dependency_rule ).
+        cs_data = cs_data ).
 
   ENDMETHOD.
 
@@ -344,9 +373,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SKTD IMPLEMENTATION.
       lx_error              TYPE REF TO cx_root,
       lv_source             TYPE string.
 
-    FIELD-SYMBOLS:
-      <ls_data>   TYPE any,
-      <lv_source> TYPE string.
+    FIELD-SYMBOLS <ls_data> TYPE any.
 
     ASSIGN mr_data->* TO <ls_data>.
     ASSERT sy-subrc = 0.
@@ -361,25 +388,15 @@ CLASS ZCL_ABAPGIT_OBJECT_SKTD IMPLEMENTATION.
             data           = <ls_data>
             eo_object_data = li_object_data_model.
 
-*        ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <ls_dependency_rule>
-*               TO <lv_source>.
-*        ASSERT sy-subrc = 0.
-*
-*        lv_source = <lv_source>.
-*
-*        clear_fields( CHANGING cs_dependency_rule = <ls_dependency_rule> ).
-*
+        clear_fields( CHANGING cs_data = <ls_data> ).
+
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
     io_xml->add(
-        iv_name = 'SKTD'
-        ig_data = <ls_data> ).
-*
-*    zif_abapgit_object~mo_files->add_string(
-*        iv_ext    = 'asdrul'
-*        iv_string = lv_source ).
+      iv_name = 'SKTD'
+      ig_data = <ls_data> ).
 
   ENDMETHOD.
 ENDCLASS.
