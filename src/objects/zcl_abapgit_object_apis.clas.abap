@@ -16,6 +16,9 @@ CLASS zcl_abapgit_object_apis DEFINITION
 
   PROTECTED SECTION.
   PRIVATE SECTION.
+    METHODS initialize.
+
+    DATA mo_handler TYPE REF TO object.
 
 ENDCLASS.
 
@@ -33,7 +36,15 @@ CLASS ZCL_ABAPGIT_OBJECT_APIS IMPLEMENTATION.
 
   METHOD zif_abapgit_object~changed_by.
 
-    ASSERT 1 = 'todo'.
+    initialize( ).
+
+    TRY.
+        CALL METHOD mo_handler->('IF_ARS_API_ABAPGIT~GET_CHANGED_BY')
+          RECEIVING
+            rv_changed_by = rv_user.
+      CATCH cx_root.
+        rv_user = c_user_unknown.
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -54,7 +65,15 @@ CLASS ZCL_ABAPGIT_OBJECT_APIS IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    ASSERT 1 = 'todo'.
+    TRY.
+        initialize( ).
+        CALL METHOD mo_handler->('IF_ARS_API_ABAPGIT~CHECK_EXISTS')
+          RECEIVING
+            rv_api_exists = rv_bool.
+      CATCH cx_root.
+        rv_bool = abap_false.
+    ENDTRY.
+
   ENDMETHOD.
 
 
@@ -112,5 +131,16 @@ CLASS ZCL_ABAPGIT_OBJECT_APIS IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     ASSERT 1 = 'todo'.
+  ENDMETHOD.
+
+
+  METHOD initialize.
+
+    IF mo_handler IS NOT BOUND.
+      CREATE OBJECT mo_handler TYPE ('CL_ARS_API_ABAPGIT')
+        EXPORTING
+          iv_api_object_name = ms_item-obj_name.
+    ENDIF.
+
   ENDMETHOD.
 ENDCLASS.
