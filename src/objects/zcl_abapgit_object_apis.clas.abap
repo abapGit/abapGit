@@ -89,7 +89,6 @@ CLASS ZCL_ABAPGIT_OBJECT_APIS IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
-
   ENDMETHOD.
 
 
@@ -101,7 +100,7 @@ CLASS ZCL_ABAPGIT_OBJECT_APIS IMPLEMENTATION.
 
   METHOD zif_abapgit_object~is_active.
 
-    ASSERT 1 = 'todo'.
+    rv_active = zif_abapgit_object~exists( ).
 
   ENDMETHOD.
 
