@@ -262,33 +262,14 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS ltcl_object_ddls_mock DEFINITION FOR TESTING.
+CLASS ltcl_object_ddls_mock DEFINITION INHERITING FROM zcl_abapgit_objects_super FOR TESTING.
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
-    METHODS:
-      constructor
-        IMPORTING
-          is_item     TYPE zif_abapgit_definitions=>ty_item
-          iv_language TYPE spras.
-
-  PRIVATE SECTION.
-    DATA ms_item TYPE zif_abapgit_definitions=>ty_item.
 
 ENDCLASS.
 
 CLASS ltcl_object_ddls_mock IMPLEMENTATION.
-
-  METHOD constructor.
-
-    ms_item = is_item.
-
-* dummy use of variable
-    IF iv_language = 'E'.
-      RETURN.
-    ENDIF.
-
-  ENDMETHOD.
 
   METHOD zif_abapgit_object~is_locked.
 
