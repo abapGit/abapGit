@@ -30,13 +30,13 @@ CLASS ZCL_ABAPGIT_OBJECT_APIS IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA mr_data TYPE REF TO data.
+    DATA lr_data TYPE REF TO data.
 
     super->constructor( is_item     = is_item
                         iv_language = iv_language ).
 
     TRY.
-        CREATE DATA mr_data TYPE (gc_model).
+        CREATE DATA lr_data TYPE (gc_model).
       CATCH cx_sy_create_error.
         zcx_abapgit_exception=>raise( |APIS not supported by your NW release| ).
     ENDTRY.
@@ -86,13 +86,14 @@ CLASS ZCL_ABAPGIT_OBJECT_APIS IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
+* IF_ARS_API_ABAPGIT~SAVE_API_STATE dumps in some package checks
+
     DATA lr_data TYPE REF TO data.
     FIELD-SYMBOLS <ls_data> TYPE any.
 
+
     CREATE DATA lr_data TYPE (gc_model).
     ASSIGN lr_data->* TO <ls_data>.
-
-    initialize( ).
 
     io_xml->read(
       EXPORTING
@@ -100,11 +101,7 @@ CLASS ZCL_ABAPGIT_OBJECT_APIS IMPLEMENTATION.
       CHANGING
         cg_data = <ls_data> ).
 
-    CALL METHOD mo_handler->('IF_ARS_API_ABAPGIT~SAVE_API_STATE')
-      EXPORTING
-        is_api_state = <ls_data>
-        iv_package   = iv_package
-        iv_request   = iv_transport.
+* todo
 
   ENDMETHOD.
 
