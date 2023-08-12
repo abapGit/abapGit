@@ -312,7 +312,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                                iv_act = |{ zif_abapgit_definitions=>c_action-repo_refresh_checksums }?key={ mv_key }|
                                iv_opt = get_crossout( zif_abapgit_auth=>c_authorization-update_local_checksum ) ).
 
-    ro_advanced_dropdown->add( iv_txt = 'Beta - Data'
+    ro_advanced_dropdown->add( iv_txt = 'Data Config'
                                iv_act = |{ c_actions-go_data }?key={ mv_key }| ).
 
     IF is_repo_lang_logon_lang( ) = abap_false AND zcl_abapgit_services_abapgit=>get_abapgit_tcode( ) IS NOT INITIAL.
@@ -1042,13 +1042,11 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-go_repo. " Switch to another repo
-        rs_handled-page  = create( |{ ii_event->query( )->get( 'KEY' ) }| ).
+        rs_handled-page  = create( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
 
       WHEN c_actions-go_data.
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_data
-          EXPORTING
-            iv_key = |{ ii_event->query( )->get( 'KEY' ) }|.
+        rs_handled-page  = zcl_abapgit_gui_page_data=>create( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN c_actions-go_unit.
@@ -1185,7 +1183,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       iv_title = 'Help'
       io_sub = zcl_abapgit_gui_chunk_lib=>help_submenu( ) ).
 
-    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) = abap_true.
+    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) IS NOT INITIAL.
       ro_toolbar->add(
         iv_txt   = zcl_abapgit_gui_buttons=>experimental( )
         iv_title = 'Experimental Features are Enabled'
