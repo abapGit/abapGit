@@ -433,8 +433,12 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
 
     DATA lv_lang_iso639 TYPE laiso.
     DATA lv_country     TYPE land1.
+    DATA lv_class       TYPE string.
 
-    cl_i18n_languages=>sap2_to_iso639_1(
+    lv_class = 'CL_I18N_LANGUAGES'.
+
+" cannot find a way to do this in Steampunk, so dynamic for now,
+    CALL METHOD (lv_class)=>sap2_to_iso639_1
       EXPORTING
         im_lang_sap2   = iv_src
       IMPORTING
@@ -442,7 +446,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
         ex_country     = lv_country
       EXCEPTIONS
         no_assignment  = 1
-        OTHERS         = 2 ).
+        OTHERS         = 2.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Failed to convert [{ iv_src }] lang to iso639| ).
     ENDIF.
