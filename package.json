@@ -33,6 +33,6 @@
     "@abaplint/transpiler-cli": "^2.7.73",
     "abapmerge": "^0.16.0",
     "c8": "^8.0.1",
-    "eslint": "^8.46.0"
+    "eslint": "^8.47.0"
   }
 }
