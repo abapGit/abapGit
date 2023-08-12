@@ -2,11 +2,18 @@ CLASS zcl_abapgit_object_sod2 DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_objects_super
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_object .
+    INTERFACES zif_abapgit_object.
+
+    METHODS constructor
+      IMPORTING
+        !is_item     TYPE zif_abapgit_definitions=>ty_item
+        !iv_language TYPE spras
+      RAISING
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -16,39 +23,39 @@ CLASS zcl_abapgit_object_sod2 DEFINITION
 
     METHODS create_wb_object_operator
       IMPORTING
-        is_object_type               TYPE wbobjtype
-        iv_object_key                TYPE seu_objkey
-        iv_transport_request         TYPE trkorr OPTIONAL
-        iv_do_commits                TYPE abap_bool DEFAULT abap_true
-        iv_run_in_test_mode          TYPE abap_bool DEFAULT abap_false
+        !is_object_type              TYPE wbobjtype
+        !iv_object_key               TYPE seu_objkey
+        !iv_transport_request        TYPE trkorr OPTIONAL
+        !iv_do_commits               TYPE abap_bool DEFAULT abap_true
+        !iv_run_in_test_mode         TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(ro_wb_object_operator) TYPE REF TO object
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 
     METHODS get_wb_object_operator
       IMPORTING
-        is_object_type               TYPE wbobjtype
-        iv_object_key                TYPE seu_objkey
-        iv_transport_request         TYPE trkorr OPTIONAL
+        !is_object_type              TYPE wbobjtype
+        !iv_object_key               TYPE seu_objkey
+        !iv_transport_request        TYPE trkorr OPTIONAL
       RETURNING
         VALUE(ro_wb_object_operator) TYPE REF TO object
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 
     METHODS clear_metadata_fields
       CHANGING
-        !cs_data TYPE any .
+        !cs_data TYPE any.
 
     METHODS clear_content_fields
       CHANGING
-        !cs_data TYPE any .
+        !cs_data TYPE any.
 
     METHODS clear_field
       IMPORTING
         !iv_fieldname TYPE csequence
       CHANGING
-        !cs_metadata  TYPE any .
+        !cs_metadata  TYPE any.
 
 ENDCLASS.
 
@@ -170,6 +177,23 @@ CLASS zcl_abapgit_object_sod2 IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD constructor.
+
+    DATA lo_data_model TYPE REF TO object.
+
+    super->constructor(
+      is_item     = is_item
+      iv_language = iv_language ).
+
+    TRY.
+        CREATE OBJECT lo_data_model TYPE (c_data_model_class_name).
+      CATCH cx_root.
+        zcx_abapgit_exception=>raise( |Object type { is_item-obj_type } is not supported by this system| ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+
   METHOD create_wb_object_operator.
 
     DATA lx_error TYPE REF TO cx_root.
@@ -219,7 +243,31 @@ CLASS zcl_abapgit_object_sod2 IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown.
+
+    DATA: lo_data_model  TYPE REF TO if_wb_object_data_model,
+          lo_factory     TYPE REF TO object,
+          ls_object_type TYPE wbobjtype,
+          lv_object_key  TYPE seu_objkey,
+          lx_error       TYPE REF TO cx_root.
+
+    TRY.
+
+        ls_object_type-objtype_tr = ms_item-obj_type.
+        lv_object_key             = ms_item-obj_name.
+
+        lo_factory = create_wb_object_operator( is_object_type = ls_object_type
+                                                iv_object_key  = lv_object_key ).
+
+        CALL METHOD lo_factory->('IF_WB_OBJECT_OPERATOR~READ')
+          IMPORTING
+            eo_object_data = lo_data_model.
+
+        rv_user = lo_data_model->get_changed_by( ).
+
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
+    ENDTRY.
+
   ENDMETHOD.
 
 
