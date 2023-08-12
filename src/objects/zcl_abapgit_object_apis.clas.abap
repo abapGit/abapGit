@@ -44,6 +44,17 @@ CLASS ZCL_ABAPGIT_OBJECT_APIS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD initialize.
+
+    IF mo_handler IS NOT BOUND.
+      CREATE OBJECT mo_handler TYPE ('CL_ARS_API_ABAPGIT')
+        EXPORTING
+          iv_api_object_name = ms_item-obj_name.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~changed_by.
 
     initialize( ).
@@ -73,7 +84,7 @@ CLASS ZCL_ABAPGIT_OBJECT_APIS IMPLEMENTATION.
     <ls_api_key> = ms_item-obj_name.
     ASSERT <ls_api_key> IS NOT INITIAL.
 
-    CALL METHOD cl_ars_state_db_access=>('GET_INSTANCE')
+    CALL METHOD ('CL_ARS_STATE_DB_ACCESS')=>('GET_INSTANCE')
       RECEIVING
         ro_state_db_access = lo_db.
 
@@ -143,7 +154,7 @@ CLASS ZCL_ABAPGIT_OBJECT_APIS IMPLEMENTATION.
       INSERT <ls_row> INTO TABLE <lt_states>.
     ENDLOOP.
 
-    CALL METHOD cl_ars_state_db_access=>('GET_INSTANCE')
+    CALL METHOD ('CL_ARS_STATE_DB_ACCESS')=>('GET_INSTANCE')
       RECEIVING
         ro_state_db_access = lo_db.
 
@@ -237,17 +248,6 @@ CLASS ZCL_ABAPGIT_OBJECT_APIS IMPLEMENTATION.
 
     io_xml->add( iv_name = 'APIS'
                  ig_data = <ls_data> ).
-
-  ENDMETHOD.
-
-
-  METHOD initialize.
-
-    IF mo_handler IS NOT BOUND.
-      CREATE OBJECT mo_handler TYPE ('CL_ARS_API_ABAPGIT')
-        EXPORTING
-          iv_api_object_name = ms_item-obj_name.
-    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
