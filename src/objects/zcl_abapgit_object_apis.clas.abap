@@ -88,12 +88,23 @@ CLASS ZCL_ABAPGIT_OBJECT_APIS IMPLEMENTATION.
 
 * IF_ARS_API_ABAPGIT~SAVE_API_STATE dumps in some package checks
 
-    DATA lr_data TYPE REF TO data.
-    FIELD-SYMBOLS <ls_data> TYPE any.
+    DATA lr_data              TYPE REF TO data.
+    DATA lo_db                TYPE REF TO object.
+    FIELD-SYMBOLS <ls_data>   TYPE any.
+    FIELD-SYMBOLS <lt_data_states> TYPE ANY TABLE.
+    FIELD-SYMBOLS <ls_header> TYPE any.
+    FIELD-SYMBOLS <lt_states> TYPE ANY TABLE.
+    FIELD-SYMBOLS <ls_state>  TYPE any.
+    FIELD-SYMBOLS <ls_row>    TYPE any.
+    FIELD-SYMBOLS <lv_simple> TYPE simple.
 
 
     CREATE DATA lr_data TYPE (gc_model).
     ASSIGN lr_data->* TO <ls_data>.
+    CREATE DATA lr_data TYPE ('IF_ARS_STATE_DB_ACCESS=>TY_S_HEADER').
+    ASSIGN lr_data->* TO <ls_header>.
+    CREATE DATA lr_data TYPE ('IF_ARS_STATE_DB_ACCESS=>TY_T_STATE').
+    ASSIGN lr_data->* TO <lt_states>.
 
     io_xml->read(
       EXPORTING
@@ -101,7 +112,49 @@ CLASS ZCL_ABAPGIT_OBJECT_APIS IMPLEMENTATION.
       CHANGING
         cg_data = <ls_data> ).
 
-* todo
+    MOVE-CORRESPONDING <ls_data> TO <ls_header>.
+
+    ASSIGN COMPONENT 'API_STATES' OF STRUCTURE <ls_data> TO <lt_data_states>.
+    ASSERT sy-subrc = 0.
+
+* the state table is sorted,
+    LOOP AT <lt_data_states> ASSIGNING <ls_state>.
+      CREATE DATA lr_data TYPE ('IF_ARS_STATE_DB_ACCESS=>TY_S_STATE').
+      ASSIGN lr_data->* TO <ls_row>.
+      MOVE-CORRESPONDING <ls_state> TO <ls_row>.
+      MOVE-CORRESPONDING <ls_header> TO <ls_row>.
+
+      ASSIGN COMPONENT 'SOFTWARE_RELEASE_NAME' OF STRUCTURE <ls_row> TO <lv_simple>.
+      ASSERT sy-subrc = 0.
+      <lv_simple> = '1908'.
+      ASSIGN COMPONENT 'CREATED_AT' OF STRUCTURE <ls_row> TO <lv_simple>.
+      ASSERT sy-subrc = 0.
+      <lv_simple> = sy-datum.
+      ASSIGN COMPONENT 'CREATED_BY' OF STRUCTURE <ls_row> TO <lv_simple>.
+      ASSERT sy-subrc = 0.
+      <lv_simple> = sy-uname.
+      ASSIGN COMPONENT 'LAST_CHANGED_AT' OF STRUCTURE <ls_row> TO <lv_simple>.
+      ASSERT sy-subrc = 0.
+      <lv_simple> = sy-datum.
+      ASSIGN COMPONENT 'LAST_CHANGED_BY' OF STRUCTURE <ls_row> TO <lv_simple>.
+      ASSERT sy-subrc = 0.
+      <lv_simple> = sy-uname.
+
+      INSERT <ls_row> INTO TABLE <lt_states>.
+    ENDLOOP.
+
+    CALL METHOD cl_ars_state_db_access=>('GET_INSTANCE')
+      RECEIVING
+        ro_state_db_access = lo_db.
+
+    CALL METHOD lo_db->('IF_ARS_STATE_DB_ACCESS~SAVE')
+      EXPORTING
+        is_header         = <ls_header>
+        it_release_states = <lt_states>.
+
+    tadir_insert( iv_package ).
+
+    corr_insert( iv_package ).
 
   ENDMETHOD.
 
