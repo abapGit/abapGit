@@ -12,14 +12,15 @@ CLASS zcl_abapgit_object_apis DEFINITION
       constructor
         IMPORTING
           is_item     TYPE zif_abapgit_definitions=>ty_item
-          iv_language TYPE spras.
+          iv_language TYPE spras
+        RAISING
+          zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
+    CONSTANTS gc_model TYPE string VALUE 'ARS_S_API_ABAPGIT'.
     DATA mo_handler TYPE REF TO object.
-
     METHODS initialize.
-
 ENDCLASS.
 
 
@@ -28,8 +29,17 @@ CLASS ZCL_ABAPGIT_OBJECT_APIS IMPLEMENTATION.
 
 
   METHOD constructor.
+
+    DATA mr_data TYPE REF TO data.
+
     super->constructor( is_item     = is_item
                         iv_language = iv_language ).
+
+    TRY.
+        CREATE DATA mr_data TYPE (gc_model).
+      CATCH cx_sy_create_error.
+        zcx_abapgit_exception=>raise( |APIS not supported by your NW release| ).
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -51,16 +61,26 @@ CLASS ZCL_ABAPGIT_OBJECT_APIS IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-* IF_ARS_API_ABAPGIT~DELETE_API_STATE dumps and fails checks, even tho I as a developer can delete it
+* IF_ARS_API_ABAPGIT~DELETE_API_STATE dumps and checks fail, even tho I as a developer can delete it
 
-    DATA lo_generic TYPE REF TO zcl_abapgit_objects_generic.
+    DATA lo_db   TYPE REF TO object.
+    DATA lr_data TYPE REF TO data.
+    FIELD-SYMBOLS <ls_api_key> TYPE any.
 
-    CREATE OBJECT lo_generic
+
+    CREATE DATA lr_data TYPE ('IF_ARS_STATE_DB_ACCESS=>TY_S_API_KEY').
+    ASSIGN lr_data->* TO <ls_api_key>.
+    <ls_api_key> = ms_item-obj_name.
+    ASSERT <ls_api_key> IS NOT INITIAL.
+    BREAK-POINT.
+
+    CALL METHOD cl_ars_state_db_access=>('GET_INSTANCE')
+      RECEIVING
+        ro_state_db_access = lo_db.
+
+    CALL METHOD lo_db->('IF_ARS_STATE_DB_ACCESS~DELETE')
       EXPORTING
-        is_item     = ms_item
-        iv_language = mv_language.
-
-    lo_generic->delete( iv_package ).
+        is_api_key = <ls_api_key>.
 
   ENDMETHOD.
 
@@ -70,7 +90,7 @@ CLASS ZCL_ABAPGIT_OBJECT_APIS IMPLEMENTATION.
     DATA lr_data TYPE REF TO data.
     FIELD-SYMBOLS <ls_data> TYPE any.
 
-    CREATE DATA lr_data TYPE ('ARS_S_API_ABAPGIT').
+    CREATE DATA lr_data TYPE (gc_model).
     ASSIGN lr_data->* TO <ls_data>.
 
     initialize( ).
@@ -157,7 +177,7 @@ CLASS ZCL_ABAPGIT_OBJECT_APIS IMPLEMENTATION.
     DATA lr_data TYPE REF TO data.
     FIELD-SYMBOLS <ls_data> TYPE any.
 
-    CREATE DATA lr_data TYPE ('ARS_S_API_ABAPGIT').
+    CREATE DATA lr_data TYPE (gc_model).
     ASSIGN lr_data->* TO <ls_data>.
 
     initialize( ).
