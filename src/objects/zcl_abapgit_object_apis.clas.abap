@@ -72,7 +72,6 @@ CLASS ZCL_ABAPGIT_OBJECT_APIS IMPLEMENTATION.
     ASSIGN lr_data->* TO <ls_api_key>.
     <ls_api_key> = ms_item-obj_name.
     ASSERT <ls_api_key> IS NOT INITIAL.
-    BREAK-POINT.
 
     CALL METHOD cl_ars_state_db_access=>('GET_INSTANCE')
       RECEIVING
