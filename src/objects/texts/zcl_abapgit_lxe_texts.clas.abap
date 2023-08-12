@@ -175,7 +175,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
+CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
 
 
   METHOD check_langs_versus_installed.
@@ -519,7 +519,7 @@ CLASS ZCL_ABAPGIT_LXE_TEXTS IMPLEMENTATION.
 
   METHOD langu_to_laiso_safe.
 
-    cl_i18n_languages=>sap1_to_sap2(
+    zcl_abapgit_convert=>language_sap1_to_sap2(
       EXPORTING
         im_lang_sap1  = iv_langu
       RECEIVING
