@@ -53,7 +53,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
 
 
   METHOD build_tadir.
@@ -220,6 +220,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
     ASSIGN COMPONENT 'ALERTS_BY_INDICIES' OF STRUCTURE <ls_task_data> TO <lt_indices>.
     ASSIGN COMPONENT 'PROGRAMS' OF STRUCTURE <ls_task_data> TO <lt_programs>.
 
+    IF <lt_programs> IS INITIAL.
+      ri_html->add( '<div class="ci-head">' ).
+      ri_html->add( 'No unit tests found' ).
+      ri_html->add( '</div>' ).
+      RETURN.
+    ENDIF.
+
     ri_html->add( |<table class="unit_tests">| ).
 
     LOOP AT <lt_indices> ASSIGNING <ls_alert_by_index>.
@@ -249,7 +256,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
 
     ri_html->add( '<div class="ci-head">' ).
     ri_html->add( |Unit tests completed with <strong>{ lv_count } errors</strong> ({ mv_summary })| ).
-    ri_html->add( `</div>` ).
+    ri_html->add( '</div>' ).
 
     ri_html->add( |<hr><table class="unit_tests">| ).
 

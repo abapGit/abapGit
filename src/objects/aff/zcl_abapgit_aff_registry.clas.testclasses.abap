@@ -32,7 +32,11 @@ CLASS ltcl_aff_registry IMPLEMENTATION.
 
 
     CREATE OBJECT lo_settings_stub.
-    lo_settings_stub->set_experimental_features( iv_experimental ).
+    IF iv_experimental = abap_true.
+      lo_settings_stub->set_experimental_features( zcl_abapgit_aff_registry=>c_aff_feature ).
+    ELSE.
+      lo_settings_stub->set_experimental_features( '' ).
+    ENDIF.
     CREATE OBJECT lo_cut TYPE zcl_abapgit_aff_registry
       EXPORTING
         io_settings = lo_settings_stub.
