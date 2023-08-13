@@ -82,6 +82,23 @@ CLASS zcl_abapgit_convert DEFINITION
       EXPORTING
         !ev_size   TYPE i
         !et_bintab TYPE STANDARD TABLE .
+
+    CLASS-METHODS language_sap1_to_sap2
+      IMPORTING
+        im_lang_sap1        TYPE sy-langu
+      RETURNING
+        VALUE(re_lang_sap2) TYPE string
+      EXCEPTIONS
+        no_assignment.
+
+    CLASS-METHODS language_sap2_to_sap1
+      IMPORTING
+        im_lang_sap2 TYPE laiso
+      RETURNING
+        VALUE(re_lang_sap1) TYPE sy-langu
+      EXCEPTIONS
+        no_assignment.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -347,5 +364,59 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
     GET BIT 7 OF iv_x INTO rv_bitbyte+6(1).
     GET BIT 8 OF iv_x INTO rv_bitbyte+7(1).
 
+  ENDMETHOD.
+
+  METHOD language_sap1_to_sap2.
+
+    DATA lv_class TYPE string.
+
+    TRY.
+        SELECT SINGLE languageisocode FROM ('I_LANGUAGE')
+          INTO re_lang_sap2
+          WHERE language = im_lang_sap1.
+        IF sy-subrc <> 0.
+          RAISE no_assignment.
+        ENDIF.
+      CATCH cx_sy_dynamic_osql_error.
+        lv_class = 'CL_I18N_LANGUAGES'.
+        CALL METHOD (lv_class)=>sap1_to_sap2
+          EXPORTING
+            im_lang_sap1  = im_lang_sap1
+          RECEIVING
+            re_lang_sap2  = re_lang_sap2
+          EXCEPTIONS
+            no_assignment = 1
+            OTHERS        = 2.
+        IF sy-subrc = 1.
+          RAISE no_assignment.
+        ENDIF.
+    ENDTRY.
+  ENDMETHOD.
+
+  METHOD language_sap2_to_sap1.
+
+    DATA lv_class TYPE string.
+
+    TRY.
+        SELECT SINGLE language FROM ('I_LANGUAGE')
+          INTO re_lang_sap1
+          WHERE languageisocode = im_lang_sap2.
+        IF sy-subrc <> 0.
+          RAISE no_assignment.
+        ENDIF.
+      CATCH cx_sy_dynamic_osql_error.
+        lv_class = 'CL_I18N_LANGUAGES'.
+        CALL METHOD (lv_class)=>sap2_to_sap1
+          EXPORTING
+            im_lang_sap2  = im_lang_sap2
+          RECEIVING
+            re_lang_sap1  = re_lang_sap1
+          EXCEPTIONS
+            no_assignment = 1
+            OTHERS        = 2.
+        IF sy-subrc = 1.
+          RAISE no_assignment.
+        ENDIF.
+    ENDTRY.
   ENDMETHOD.
 ENDCLASS.
