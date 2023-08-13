@@ -232,7 +232,7 @@ CLASS zcl_abapgit_object_drul IMPLEMENTATION.
     TRY.
         li_wb_object_operator = get_wb_object_operator( ).
 
-        CALL METHOD li_object_data_model->('IF_WB_OBJECT_OPERATOR~READ')
+        CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
           IMPORTING
             eo_object_data = li_object_data_model.
 
