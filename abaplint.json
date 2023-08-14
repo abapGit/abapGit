@@ -94,7 +94,9 @@
     "max_one_method_parameter_per_line": true,
     "unused_ddic": true,
     "prefer_raise_exception_new": true,
-    "use_class_based_exceptions": true,
+    "use_class_based_exceptions": {
+      "exclude": ["zcl_abapgit_convert.clas.abap"]
+    },
     "uncaught_exception": true,
     "intf_referencing_clas": false,
     "method_implemented_twice": true,
