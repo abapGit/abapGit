@@ -102,7 +102,6 @@ CLASS zcl_abapgit_convert DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CLASS-DATA go_convert_out TYPE REF TO cl_abap_conv_out_ce .
     CLASS-DATA go_convert_in TYPE REF TO cl_abap_conv_in_ce .
 
     CLASS-METHODS xstring_remove_bom
@@ -228,18 +227,34 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
   METHOD string_to_xstring_utf8.
 
     DATA lx_error TYPE REF TO cx_root.
+    DATA lv_class TYPE string.
+    DATA lo_conv  TYPE REF TO object.
 
     TRY.
-        IF go_convert_out IS INITIAL.
-          go_convert_out = cl_abap_conv_out_ce=>create( encoding = 'UTF-8' ).
-        ENDIF.
+        TRY.
+            CALL METHOD ('CL_ABAP_CONV_CODEPAGE')=>create_out
+              RECEIVING
+                instance = lo_conv.
 
-        go_convert_out->convert(
-          EXPORTING
-            data   = iv_string
-          IMPORTING
-            buffer = rv_xstring ).
+            CALL METHOD lo_conv->('IF_ABAP_CONV_OUT~CONVERT')
+              EXPORTING
+                source = iv_string
+              RECEIVING
+                result = rv_xstring.
+          CATCH cx_sy_dyn_call_illegal_class.
+            lv_class = 'CL_ABAP_CONV_OUT_CE'.
+            CALL METHOD (lv_class)=>create
+              EXPORTING
+                encoding = 'UTF-8'
+              RECEIVING
+                conv     = lo_conv.
 
+            CALL METHOD lo_conv->('CONVERT')
+              EXPORTING
+                data   = iv_string
+              IMPORTING
+                buffer = rv_xstring.
+        ENDTRY.
       CATCH cx_parameter_invalid_range
             cx_sy_codepage_converter_init
             cx_sy_conversion_codepage
