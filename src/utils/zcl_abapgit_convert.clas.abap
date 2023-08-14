@@ -101,9 +101,6 @@ CLASS zcl_abapgit_convert DEFINITION
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-
-    CLASS-DATA go_convert_in TYPE REF TO cl_abap_conv_in_ce .
-
     CLASS-METHODS xstring_remove_bom
       IMPORTING
         iv_xstr        TYPE xsequence
@@ -334,7 +331,9 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
   METHOD xstring_to_string_utf8.
 
     DATA lx_error  TYPE REF TO cx_root.
-    DATA lv_data TYPE xstring.
+    DATA lv_data   TYPE xstring.
+    DATA lo_conv   TYPE REF TO object.
+    DATA lv_class  TYPE string.
     DATA lv_length TYPE i.
 
     " Remove BOM for non-Unicode systems
@@ -346,17 +345,32 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
     ENDIF.
 
     TRY.
-        IF go_convert_in IS INITIAL.
-          go_convert_in = cl_abap_conv_in_ce=>create( encoding = 'UTF-8' ).
-        ENDIF.
+        TRY.
+            CALL METHOD ('CL_ABAP_CONV_CODEPAGE')=>create_in
+              RECEIVING
+                instance = lo_conv.
 
-        go_convert_in->convert(
-          EXPORTING
-            input = lv_data
-            n     = lv_length
-          IMPORTING
-            data  = rv_string ).
+            CALL METHOD lo_conv->('IF_ABAP_CONV_IN~CONVERT')
+              EXPORTING
+                source = lv_data
+              RECEIVING
+                result = rv_string.
+            rv_string = rv_string(lv_length).
+          CATCH cx_sy_dyn_call_illegal_class.
+            lv_class = 'CL_ABAP_CONV_IN_CE'.
+            CALL METHOD (lv_class)=>create
+              EXPORTING
+                encoding = 'UTF-8'
+              RECEIVING
+                conv     = lo_conv.
 
+            CALL METHOD lo_conv->('CONVERT')
+              EXPORTING
+                input = lv_data
+                n     = lv_length
+              IMPORTING
+                data  = rv_string.
+        ENDTRY.
       CATCH cx_parameter_invalid_range
             cx_sy_codepage_converter_init
             cx_sy_conversion_codepage
