@@ -206,7 +206,7 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
 
     APPEND INITIAL LINE TO et_tab ASSIGNING <lg_line>.
     <lg_line> = iv_str.
-    lv_length = cl_abap_typedescr=>describe_by_data( <lg_line> )->length.
+    lv_length = cl_abap_typedescr=>describe_by_data( <lg_line> )->length / cl_abap_char_utilities=>charsize.
     lv_iterations = ev_size DIV lv_length.
 
     DO lv_iterations TIMES.
