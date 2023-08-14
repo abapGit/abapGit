@@ -152,11 +152,14 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
 
   METHOD conversion_exit_isola_output.
 
-    cl_gdt_conversion=>language_code_outbound(
+    language_sap1_to_sap2(
       EXPORTING
-        im_value = iv_spras
-      IMPORTING
-        ex_value = rv_spras ).
+        im_lang_sap1  = iv_spras
+      RECEIVING
+        re_lang_sap2  = rv_spras
+      EXCEPTIONS
+        no_assignment = 1
+        OTHERS        = 2 ). "#EC CI_SUBRC
 
     TRANSLATE rv_spras TO UPPER CASE.
 
