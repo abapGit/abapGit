@@ -1,19 +1,30 @@
 CLASS zcl_abapgit_gui_page_data DEFINITION
   PUBLIC
-  INHERITING FROM zcl_abapgit_gui_page
+  INHERITING FROM zcl_abapgit_gui_component
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
+
+    INTERFACES:
+      zif_abapgit_gui_event_handler,
+      zif_abapgit_gui_menu_provider,
+      zif_abapgit_gui_renderable.
+
+    CLASS-METHODS create
+      IMPORTING
+        !iv_key        TYPE zif_abapgit_persistence=>ty_repo-key
+      RETURNING
+        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
+      RAISING
+        zcx_abapgit_exception.
 
     METHODS constructor
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 
-    METHODS zif_abapgit_gui_event_handler~on_event
-        REDEFINITION .
   PROTECTED SECTION.
 
     CONSTANTS:
@@ -22,19 +33,15 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
         update            TYPE string VALUE 'update',
         remove            TYPE string VALUE 'remove',
         add_via_transport TYPE string VALUE 'add_via_transport',
-      END OF c_event .
-
+      END OF c_event.
     CONSTANTS:
       BEGIN OF c_id,
         table        TYPE string VALUE 'table',
         where        TYPE string VALUE 'where',
         skip_initial TYPE string VALUE 'skip_initial',
-      END OF c_id .
+      END OF c_id.
+    DATA mi_config TYPE REF TO zif_abapgit_data_config.
 
-    DATA mi_config TYPE REF TO zif_abapgit_data_config .
-
-    METHODS render_content
-        REDEFINITION .
   PRIVATE SECTION.
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
@@ -48,9 +55,6 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
     METHODS add_via_transport
       RAISING
         zcx_abapgit_exception .
-    METHODS build_menu
-      RETURNING
-        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
     METHODS build_where
       IMPORTING
         !io_map         TYPE REF TO zcl_abapgit_string_map
@@ -129,18 +133,6 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD build_menu.
-
-    CREATE OBJECT ro_menu.
-
-    ro_menu->add( iv_txt = 'Add Via Transport'
-                  iv_act = c_event-add_via_transport ).
-    ro_menu->add( iv_txt = 'Back'
-                  iv_act = zif_abapgit_definitions=>c_action-go_back ).
-
-  ENDMETHOD.
-
-
   METHOD build_where.
 
     DATA lv_where LIKE LINE OF rt_where.
@@ -192,11 +184,24 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
 
     super->constructor( ).
 
-    ms_control-page_title = 'Data'.
-    ms_control-page_menu = build_menu( ).
-
     mo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     mi_config = mo_repo->get_data_config( ).
+
+  ENDMETHOD.
+
+
+  METHOD create.
+
+    DATA lo_component TYPE REF TO zcl_abapgit_gui_page_data.
+
+    CREATE OBJECT lo_component
+      EXPORTING
+        iv_key = iv_key.
+
+    ri_page = zcl_abapgit_gui_page_hoc=>create(
+      iv_page_title         = 'Data Config'
+      ii_page_menu_provider = lo_component
+      ii_child_component    = lo_component ).
 
   ENDMETHOD.
 
@@ -282,17 +287,6 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_content.
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-    ri_html->add( '<div class="repo">' ).
-    ri_html->add( render_existing( ) ).
-    ri_html->add( render_add( ) ).
-    ri_html->add( '</div>' ).
-
-  ENDMETHOD.
-
-
   METHOD render_existing.
 
     DATA lo_form TYPE REF TO zcl_abapgit_html_form.
@@ -367,6 +361,31 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-go_back.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_menu_provider~get_menu.
+
+    CREATE OBJECT ro_toolbar.
+
+    ro_toolbar->add( iv_txt = 'Add Via Transport'
+                     iv_act = c_event-add_via_transport ).
+    ro_toolbar->add( iv_txt = 'Back'
+                     iv_act = zif_abapgit_definitions=>c_action-go_back ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_renderable~render.
+
+    register_handlers( ).
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    ri_html->add( '<div class="repo">' ).
+    ri_html->add( render_existing( ) ).
+    ri_html->add( render_add( ) ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 ENDCLASS.

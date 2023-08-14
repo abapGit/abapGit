@@ -111,10 +111,16 @@ function debugOutput(text, dstID) {
 function submitSapeventForm(params, action, method, form) {
 
   function getSapeventPrefix() {
+    // Depending on the used browser control and its version, different URL schemes
+    // are used which we distinguish here
     if (document.querySelector('a[href*="file:///SAPEVENT:"]')) {
-      return "file:///"; //Prefix for chromium based browser control
+      // Prefix for old (SAPGUI <= 8.00 PL3) chromium based browser control
+      return "file:///";
+    } else if (document.querySelector('a[href^="sap-cust"]')) {
+      // Prefix for new (SAPGUI >= 8.00 PL3 Hotfix 1) chromium based browser control
+      return "sap-cust://sap-place-holder/";
     } else {
-      return "";
+      return ""; // No prefix for old IE control
     }
   }
 
