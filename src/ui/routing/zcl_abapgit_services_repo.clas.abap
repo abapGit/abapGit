@@ -62,7 +62,7 @@ CLASS zcl_abapgit_services_repo DEFINITION
       RETURNING
         VALUE(ri_log) TYPE REF TO zif_abapgit_log
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     CLASS-METHODS create_package
       IMPORTING
         !iv_prefill_package TYPE devclass OPTIONAL
