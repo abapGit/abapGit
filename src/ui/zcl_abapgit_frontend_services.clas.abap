@@ -354,6 +354,26 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_frontend_services~open_ie_devtools.
+
+    DATA: lv_system_directory TYPE string,
+          lv_exe_full_path    TYPE string.
+
+    IF zif_abapgit_frontend_services~is_sapgui_for_windows( ) = abap_false.
+      zcx_abapgit_exception=>raise( |IE DevTools not supported on frontend OS| ).
+    ENDIF.
+
+    zif_abapgit_frontend_services~get_system_directory( CHANGING cv_system_directory = lv_system_directory ).
+
+    cl_gui_cfw=>flush( ).
+
+    lv_exe_full_path = lv_system_directory && `\F12\IEChooser.exe`.
+
+    zif_abapgit_frontend_services~execute( iv_application = lv_exe_full_path ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_frontend_services~show_file_open_dialog.
 
     DATA:
