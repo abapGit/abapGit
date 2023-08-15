@@ -3825,6 +3825,13 @@ CLASS ltcl_abap_to_json DEFINITION
         stab TYPE string_table,
       END OF ty_struc_complex.
 
+    TYPES
+      BEGIN OF ty_named_include.
+        INCLUDE TYPE ty_struc AS named_with_suffix RENAMING WITH SUFFIX _suf.
+    TYPES:
+        el TYPE string,
+      END OF ty_named_include.
+
     METHODS set_ajson FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_value_number FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_value_string FOR TESTING RAISING zcx_abapgit_ajson_error.
@@ -3837,6 +3844,7 @@ CLASS ltcl_abap_to_json DEFINITION
     METHODS set_obj FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_array FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_complex_obj FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS set_include_with_suffix FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS prefix FOR TESTING RAISING zcx_abapgit_ajson_error.
 
 ENDCLASS.
@@ -4108,6 +4116,34 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
     lo_nodes_exp->add( '/      |stab  |array  |     | |2' ).
     lo_nodes_exp->add( '/stab/ |1     |str    |hello|1|0' ).
     lo_nodes_exp->add( '/stab/ |2     |str    |world|2|0' ).
+
+    lt_nodes = lcl_abap_to_json=>convert( iv_data = ls_struc ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_nodes
+      exp = lo_nodes_exp->mt_nodes ).
+
+  ENDMETHOD.
+
+  METHOD set_include_with_suffix.
+
+    DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
+    DATA ls_struc TYPE ty_named_include.
+    DATA lt_nodes TYPE zif_abapgit_ajson_types=>ty_nodes_tt.
+
+    ls_struc-a_suf = 'abc'.
+    ls_struc-b_suf = 10.
+    ls_struc-c_suf = abap_true.
+    ls_struc-d_suf = 'X'.
+    ls_struc-el    = 'elem'.
+
+    CREATE OBJECT lo_nodes_exp.
+    lo_nodes_exp->add( '       |      |object |     ||5' ).
+    lo_nodes_exp->add( '/      |a_suf |str    |abc  ||0' ).
+    lo_nodes_exp->add( '/      |b_suf |num    |10   ||0' ).
+    lo_nodes_exp->add( '/      |c_suf |bool   |true ||0' ).
+    lo_nodes_exp->add( '/      |d_suf |bool   |true ||0' ).
+    lo_nodes_exp->add( '/      |el    |str    |elem ||0' ).
 
     lt_nodes = lcl_abap_to_json=>convert( iv_data = ls_struc ).
 
