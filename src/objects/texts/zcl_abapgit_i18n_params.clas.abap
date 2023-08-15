@@ -58,7 +58,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_I18N_PARAMS IMPLEMENTATION.
+CLASS zcl_abapgit_i18n_params IMPLEMENTATION.
 
 
   METHOD build_language_filter.
@@ -98,7 +98,7 @@ CLASS ZCL_ABAPGIT_I18N_PARAMS IMPLEMENTATION.
 
     LOOP AT it_iso_filter INTO lv_laiso.
 
-      cl_i18n_languages=>sap2_to_sap1(
+      zcl_abapgit_convert=>language_sap2_to_sap1(
         EXPORTING
           im_lang_sap2  = lv_laiso
         RECEIVING
@@ -159,7 +159,7 @@ CLASS ZCL_ABAPGIT_I18N_PARAMS IMPLEMENTATION.
         CONTINUE. " Just keep it
       ENDIF.
 
-      cl_i18n_languages=>sap1_to_sap2(
+      zcl_abapgit_convert=>language_sap1_to_sap2(
         EXPORTING
           im_lang_sap1  = <lv_langu>
         RECEIVING
@@ -195,7 +195,7 @@ CLASS ZCL_ABAPGIT_I18N_PARAMS IMPLEMENTATION.
     LOOP AT ct_sap_langs INTO lv_langu.
       lv_index = sy-tabix.
 
-      cl_i18n_languages=>sap1_to_sap2(
+      zcl_abapgit_convert=>language_sap1_to_sap2(
         EXPORTING
           im_lang_sap1  = lv_langu
         RECEIVING

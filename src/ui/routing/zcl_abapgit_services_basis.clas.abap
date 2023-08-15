@@ -12,9 +12,6 @@ CLASS zcl_abapgit_services_basis DEFINITION
         VALUE(rv_package)   TYPE devclass
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS open_ie_devtools
-      RAISING
-        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-METHODS raise_error_if_package_exists
@@ -52,26 +49,6 @@ CLASS zcl_abapgit_services_basis IMPLEMENTATION.
       COMMIT WORK.
     ENDIF.
 
-  ENDMETHOD.
-
-
-  METHOD open_ie_devtools.
-    DATA: lv_system_directory TYPE string,
-          lv_exe_full_path    TYPE string,
-          lo_frontend_serv    TYPE REF TO zif_abapgit_frontend_services.
-
-    lo_frontend_serv = zcl_abapgit_ui_factory=>get_frontend_services( ).
-
-    IF lo_frontend_serv->is_sapgui_for_windows( ) = abap_false.
-      zcx_abapgit_exception=>raise( |IE DevTools not supported on frontend OS| ).
-    ENDIF.
-
-    lo_frontend_serv->get_system_directory( CHANGING cv_system_directory = lv_system_directory ).
-
-    cl_gui_cfw=>flush( ).
-
-    lv_exe_full_path = lv_system_directory && `\F12\IEChooser.exe`.
-    lo_frontend_serv->execute( iv_application = lv_exe_full_path ).
   ENDMETHOD.
 
 
