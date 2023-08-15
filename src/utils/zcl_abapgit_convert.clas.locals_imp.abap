@@ -7,7 +7,7 @@ CLASS lcl_in DEFINITION.
       RETURNING
         VALUE(rv_string) TYPE string
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
   PRIVATE SECTION.
     CLASS-DATA go_conv_new TYPE REF TO object.
     CLASS-DATA go_conv_old TYPE REF TO object.
@@ -68,7 +68,7 @@ CLASS lcl_out DEFINITION.
       RETURNING
         VALUE(rv_xstring) TYPE xstring
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
   PRIVATE SECTION.
     CLASS-DATA go_conv_new TYPE REF TO object.
     CLASS-DATA go_conv_old TYPE REF TO object.
