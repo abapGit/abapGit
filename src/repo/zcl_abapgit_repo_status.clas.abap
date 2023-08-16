@@ -13,12 +13,15 @@ CLASS zcl_abapgit_repo_status DEFINITION
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
         zcx_abapgit_exception.
+
     METHODS constructor
       IMPORTING
         !iv_root_package TYPE devclass
         !io_dot          TYPE REF TO zcl_abapgit_dot_abapgit.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
+
     DATA mv_root_package TYPE devclass.
     DATA mo_dot          TYPE REF TO zcl_abapgit_dot_abapgit.
 
@@ -30,7 +33,8 @@ CLASS zcl_abapgit_repo_status DEFINITION
       RETURNING
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+
     METHODS process_local
       IMPORTING
         !it_local     TYPE zif_abapgit_definitions=>ty_files_item_tt
@@ -40,36 +44,41 @@ CLASS zcl_abapgit_repo_status DEFINITION
         !ct_items     TYPE zif_abapgit_definitions=>ty_items_tt
         !ct_results   TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+
     METHODS process_items
       IMPORTING
         !it_unprocessed_remote TYPE zif_abapgit_git_definitions=>ty_files_tt
       CHANGING
-        !ct_items    TYPE zif_abapgit_definitions=>ty_items_tt
+        !ct_items              TYPE zif_abapgit_definitions=>ty_items_tt
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+
     METHODS process_remote
       IMPORTING
-        !it_local     TYPE zif_abapgit_definitions=>ty_files_item_tt
+        !it_local              TYPE zif_abapgit_definitions=>ty_files_item_tt
         !it_unprocessed_remote TYPE zif_abapgit_git_definitions=>ty_files_tt
-        !it_state_idx TYPE zif_abapgit_git_definitions=>ty_file_signatures_ts
-        !it_items_idx TYPE zif_abapgit_definitions=>ty_items_ts
+        !it_state_idx          TYPE zif_abapgit_git_definitions=>ty_file_signatures_ts
+        !it_items_idx          TYPE zif_abapgit_definitions=>ty_items_ts
       CHANGING
-        !ct_results   TYPE zif_abapgit_definitions=>ty_results_tt
+        !ct_results            TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+
     CLASS-METHODS build_existing
       IMPORTING
         !is_local        TYPE zif_abapgit_definitions=>ty_file_item
         !is_remote       TYPE zif_abapgit_git_definitions=>ty_file
         !it_state        TYPE zif_abapgit_git_definitions=>ty_file_signatures_ts
       RETURNING
-        VALUE(rs_result) TYPE zif_abapgit_definitions=>ty_result .
+        VALUE(rs_result) TYPE zif_abapgit_definitions=>ty_result.
+
     CLASS-METHODS build_new_local
       IMPORTING
         !is_local        TYPE zif_abapgit_definitions=>ty_file_item
       RETURNING
-        VALUE(rs_result) TYPE zif_abapgit_definitions=>ty_result .
+        VALUE(rs_result) TYPE zif_abapgit_definitions=>ty_result.
+
     METHODS build_new_remote
       IMPORTING
         !is_remote       TYPE zif_abapgit_git_definitions=>ty_file
@@ -78,7 +87,8 @@ CLASS zcl_abapgit_repo_status DEFINITION
       RETURNING
         VALUE(rs_result) TYPE zif_abapgit_definitions=>ty_result
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+
     CLASS-METHODS get_object_package
       IMPORTING
         !iv_object         TYPE tadir-object
@@ -86,17 +96,19 @@ CLASS zcl_abapgit_repo_status DEFINITION
       RETURNING
         VALUE(rv_devclass) TYPE devclass
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+
     CLASS-METHODS check_local_remote_consistency
       IMPORTING
-        !is_local        TYPE zif_abapgit_definitions=>ty_file_item
-        !is_remote       TYPE zif_abapgit_git_definitions=>ty_file
+        !is_local  TYPE zif_abapgit_definitions=>ty_file_item
+        !is_remote TYPE zif_abapgit_git_definitions=>ty_file
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+
     CLASS-METHODS ensure_state
       IMPORTING
-        !it_local         TYPE zif_abapgit_definitions=>ty_files_item_tt
-        !it_cur_state     TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
+        !it_local       TYPE zif_abapgit_definitions=>ty_files_item_tt
+        !it_cur_state   TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
       RETURNING
         VALUE(rt_state) TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt.
 
@@ -107,7 +119,7 @@ ENDCLASS.
 CLASS zcl_abapgit_repo_status IMPLEMENTATION.
 
 
-  METHOD BUILD_EXISTING.
+  METHOD build_existing.
 
     DATA ls_file_sig LIKE LINE OF it_state.
 
@@ -154,7 +166,7 @@ CLASS zcl_abapgit_repo_status IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD BUILD_NEW_LOCAL.
+  METHOD build_new_local.
 
     " Item
     rs_result-obj_type  = is_local-item-obj_type.
@@ -175,7 +187,7 @@ CLASS zcl_abapgit_repo_status IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD BUILD_NEW_REMOTE.
+  METHOD build_new_remote.
 
     DATA ls_item     LIKE LINE OF it_items_idx.
     DATA ls_file_sig LIKE LINE OF it_state_idx.
@@ -240,7 +252,7 @@ CLASS zcl_abapgit_repo_status IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD CALCULATE_STATUS.
+  METHOD calculate_status.
 
     DATA:
       lt_remote        LIKE it_remote,
@@ -297,7 +309,7 @@ CLASS zcl_abapgit_repo_status IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD CHECK_LOCAL_REMOTE_CONSISTENCY.
+  METHOD check_local_remote_consistency.
     IF is_remote-sha1 IS INITIAL.
       IF is_local-file-filename = zcl_abapgit_filename_logic=>c_package_file.
         zcx_abapgit_exception=>raise(
@@ -312,13 +324,13 @@ CLASS zcl_abapgit_repo_status IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD CONSTRUCTOR.
+  METHOD constructor.
     mv_root_package = iv_root_package.
     mo_dot          = io_dot.
   ENDMETHOD.
 
 
-  METHOD ENSURE_STATE.
+  METHOD ensure_state.
 
     FIELD-SYMBOLS <ls_state> LIKE LINE OF rt_state.
     FIELD-SYMBOLS <ls_local> LIKE LINE OF it_local.
@@ -337,7 +349,7 @@ CLASS zcl_abapgit_repo_status IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD GET_OBJECT_PACKAGE.
+  METHOD get_object_package.
     DATA: lv_name    TYPE devclass,
           li_package TYPE REF TO zif_abapgit_sap_package.
 
@@ -355,7 +367,7 @@ CLASS zcl_abapgit_repo_status IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD PROCESS_ITEMS.
+  METHOD process_items.
 
     DATA:
       ls_item         LIKE LINE OF ct_items,
@@ -405,7 +417,7 @@ CLASS zcl_abapgit_repo_status IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD PROCESS_LOCAL.
+  METHOD process_local.
 
     FIELD-SYMBOLS:
       <ls_remote> LIKE LINE OF ct_remote,
@@ -472,7 +484,7 @@ CLASS zcl_abapgit_repo_status IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD PROCESS_REMOTE.
+  METHOD process_remote.
 
     FIELD-SYMBOLS:
       <ls_remote> LIKE LINE OF it_unprocessed_remote,
@@ -514,7 +526,7 @@ CLASS zcl_abapgit_repo_status IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD STATUS.
+  METHOD status.
 
     DATA lt_local TYPE zif_abapgit_definitions=>ty_files_item_tt.
     DATA lt_remote TYPE zif_abapgit_git_definitions=>ty_files_tt.
