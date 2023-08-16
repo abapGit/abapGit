@@ -680,7 +680,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   METHOD status.
 
     IF lines( mt_status ) = 0.
-      mt_status = zcl_abapgit_file_status=>status( io_repo = me
+      mt_status = zcl_abapgit_repo_status=>status( io_repo = me
                                                    ii_log  = ii_log ).
 
     ENDIF.
