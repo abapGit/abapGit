@@ -5,7 +5,7 @@ CLASS zcl_abapgit_repo_status DEFINITION
 
   PUBLIC SECTION.
 
-    CLASS-METHODS status
+    CLASS-METHODS calculate
       IMPORTING
         !io_repo          TYPE REF TO zcl_abapgit_repo
         !ii_log           TYPE REF TO zif_abapgit_log OPTIONAL
@@ -247,6 +247,56 @@ CLASS zcl_abapgit_repo_status IMPLEMENTATION.
 
     ELSE. " Completely unknown file, probably non-abapgit
       ASSERT 1 = 1. " No action, just follow defaults
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD calculate.
+
+    DATA lt_local TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA lt_remote TYPE zif_abapgit_git_definitions=>ty_files_tt.
+    DATA li_exit TYPE REF TO zif_abapgit_exit.
+    DATA lo_instance TYPE REF TO zcl_abapgit_repo_status.
+    DATA lo_consistency_checks TYPE REF TO lcl_status_consistency_checks.
+
+    lt_local = io_repo->get_files_local( ii_log = ii_log ).
+
+    IF lines( lt_local ) <= 2.
+      " Less equal two means that we have only the .abapgit.xml and the package in
+      " our local repository. In this case we have to update our local .abapgit.xml
+      " from the remote one. Otherwise we get errors when e.g. the folder starting
+      " folder is different.
+      io_repo->find_remote_dot_abapgit( ).
+    ENDIF.
+
+    lt_remote = io_repo->get_files_remote( iv_ignore_files = abap_true ).
+
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+    li_exit->pre_calculate_repo_status(
+      EXPORTING
+        is_repo_meta = io_repo->ms_data
+      CHANGING
+        ct_local  = lt_local
+        ct_remote = lt_remote ).
+
+    CREATE OBJECT lo_instance
+      EXPORTING
+        iv_root_package = io_repo->get_package( )
+        io_dot          = io_repo->get_dot_abapgit( ).
+
+    rt_results = lo_instance->calculate_status(
+      it_local     = lt_local
+      it_remote    = lt_remote
+      it_cur_state = io_repo->zif_abapgit_repo~checksums( )->get_checksums_per_file( ) ).
+
+    IF ii_log IS BOUND.
+      " This method just adds messages to the log. No log, nothing to do here
+      CREATE OBJECT lo_consistency_checks
+        EXPORTING
+          iv_root_package = io_repo->get_package( )
+          io_dot          = io_repo->get_dot_abapgit( ).
+      ii_log->merge_with( lo_consistency_checks->run_checks( rt_results ) ).
     ENDIF.
 
   ENDMETHOD.
@@ -522,56 +572,6 @@ CLASS zcl_abapgit_repo_status IMPLEMENTATION.
         ENDIF.
       ENDIF.
     ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD status.
-
-    DATA lt_local TYPE zif_abapgit_definitions=>ty_files_item_tt.
-    DATA lt_remote TYPE zif_abapgit_git_definitions=>ty_files_tt.
-    DATA li_exit TYPE REF TO zif_abapgit_exit.
-    DATA lo_instance TYPE REF TO zcl_abapgit_repo_status.
-    DATA lo_consistency_checks TYPE REF TO lcl_status_consistency_checks.
-
-    lt_local = io_repo->get_files_local( ii_log = ii_log ).
-
-    IF lines( lt_local ) <= 2.
-      " Less equal two means that we have only the .abapgit.xml and the package in
-      " our local repository. In this case we have to update our local .abapgit.xml
-      " from the remote one. Otherwise we get errors when e.g. the folder starting
-      " folder is different.
-      io_repo->find_remote_dot_abapgit( ).
-    ENDIF.
-
-    lt_remote = io_repo->get_files_remote( iv_ignore_files = abap_true ).
-
-    li_exit = zcl_abapgit_exit=>get_instance( ).
-    li_exit->pre_calculate_repo_status(
-      EXPORTING
-        is_repo_meta = io_repo->ms_data
-      CHANGING
-        ct_local  = lt_local
-        ct_remote = lt_remote ).
-
-    CREATE OBJECT lo_instance
-      EXPORTING
-        iv_root_package = io_repo->get_package( )
-        io_dot          = io_repo->get_dot_abapgit( ).
-
-    rt_results = lo_instance->calculate_status(
-      it_local     = lt_local
-      it_remote    = lt_remote
-      it_cur_state = io_repo->zif_abapgit_repo~checksums( )->get_checksums_per_file( ) ).
-
-    IF ii_log IS BOUND.
-      " This method just adds messages to the log. No log, nothing to do here
-      CREATE OBJECT lo_consistency_checks
-        EXPORTING
-          iv_root_package = io_repo->get_package( )
-          io_dot          = io_repo->get_dot_abapgit( ).
-      ii_log->merge_with( lo_consistency_checks->run_checks( rt_results ) ).
-    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
