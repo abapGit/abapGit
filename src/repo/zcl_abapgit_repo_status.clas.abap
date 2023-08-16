@@ -1,7 +1,7 @@
-CLASS zcl_abapgit_file_status DEFINITION
+CLASS zcl_abapgit_repo_status DEFINITION
   PUBLIC
   FINAL
-  CREATE PRIVATE .
+  CREATE PRIVATE.
 
   PUBLIC SECTION.
 
@@ -12,13 +12,11 @@ CLASS zcl_abapgit_file_status DEFINITION
       RETURNING
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
-        zcx_abapgit_exception .
-
+        zcx_abapgit_exception.
     METHODS constructor
       IMPORTING
         !iv_root_package TYPE devclass
         !io_dot          TYPE REF TO zcl_abapgit_dot_abapgit.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA mv_root_package TYPE devclass.
@@ -106,10 +104,10 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_file_status IMPLEMENTATION.
+CLASS zcl_abapgit_repo_status IMPLEMENTATION.
 
 
-  METHOD build_existing.
+  METHOD BUILD_EXISTING.
 
     DATA ls_file_sig LIKE LINE OF it_state.
 
@@ -156,7 +154,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD build_new_local.
+  METHOD BUILD_NEW_LOCAL.
 
     " Item
     rs_result-obj_type  = is_local-item-obj_type.
@@ -177,7 +175,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD build_new_remote.
+  METHOD BUILD_NEW_REMOTE.
 
     DATA ls_item     LIKE LINE OF it_items_idx.
     DATA ls_file_sig LIKE LINE OF it_state_idx.
@@ -242,7 +240,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD calculate_status.
+  METHOD CALCULATE_STATUS.
 
     DATA:
       lt_remote        LIKE it_remote,
@@ -299,7 +297,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD check_local_remote_consistency.
+  METHOD CHECK_LOCAL_REMOTE_CONSISTENCY.
     IF is_remote-sha1 IS INITIAL.
       IF is_local-file-filename = zcl_abapgit_filename_logic=>c_package_file.
         zcx_abapgit_exception=>raise(
@@ -314,13 +312,13 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD constructor.
+  METHOD CONSTRUCTOR.
     mv_root_package = iv_root_package.
     mo_dot          = io_dot.
   ENDMETHOD.
 
 
-  METHOD ensure_state.
+  METHOD ENSURE_STATE.
 
     FIELD-SYMBOLS <ls_state> LIKE LINE OF rt_state.
     FIELD-SYMBOLS <ls_local> LIKE LINE OF it_local.
@@ -339,7 +337,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_object_package.
+  METHOD GET_OBJECT_PACKAGE.
     DATA: lv_name    TYPE devclass,
           li_package TYPE REF TO zif_abapgit_sap_package.
 
@@ -357,7 +355,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD process_items.
+  METHOD PROCESS_ITEMS.
 
     DATA:
       ls_item         LIKE LINE OF ct_items,
@@ -407,7 +405,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD process_local.
+  METHOD PROCESS_LOCAL.
 
     FIELD-SYMBOLS:
       <ls_remote> LIKE LINE OF ct_remote,
@@ -474,7 +472,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD process_remote.
+  METHOD PROCESS_REMOTE.
 
     FIELD-SYMBOLS:
       <ls_remote> LIKE LINE OF it_unprocessed_remote,
@@ -516,12 +514,12 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD status.
+  METHOD STATUS.
 
     DATA lt_local TYPE zif_abapgit_definitions=>ty_files_item_tt.
     DATA lt_remote TYPE zif_abapgit_git_definitions=>ty_files_tt.
     DATA li_exit TYPE REF TO zif_abapgit_exit.
-    DATA lo_instance TYPE REF TO zcl_abapgit_file_status.
+    DATA lo_instance TYPE REF TO zcl_abapgit_repo_status.
     DATA lo_consistency_checks TYPE REF TO lcl_status_consistency_checks.
 
     lt_local = io_repo->get_files_local( ii_log = ii_log ).

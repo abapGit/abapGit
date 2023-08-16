@@ -134,7 +134,7 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
           li_package TYPE REF TO zif_abapgit_sap_package.
 
     " get unfiltered status to evaluate properly which warnings are required
-    lt_results = zcl_abapgit_file_status=>status( io_repo ).
+    lt_results = zcl_abapgit_repo_status=>status( io_repo ).
 
     check_multiple_files( lt_results ).
 

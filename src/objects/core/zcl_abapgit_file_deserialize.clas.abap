@@ -139,7 +139,7 @@ CLASS zcl_abapgit_file_deserialize IMPLEMENTATION.
     DATA lt_results TYPE zif_abapgit_definitions=>ty_results_tt.
 
     lt_results = filter_files_to_deserialize(
-      it_results = zcl_abapgit_file_status=>status( io_repo )
+      it_results = zcl_abapgit_repo_status=>status( io_repo )
       ii_log     = ii_log ).
 
     rt_results = prioritize_deser(
