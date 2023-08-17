@@ -41,7 +41,6 @@ CLASS lcl_in IMPLEMENTATION.
               source = iv_data
             RECEIVING
               result = rv_string.
-          rv_string = rv_string(iv_length).
         ELSE.
           CALL METHOD go_conv_old->('CONVERT')
             EXPORTING
