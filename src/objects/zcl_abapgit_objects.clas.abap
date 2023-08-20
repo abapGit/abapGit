@@ -747,6 +747,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
                          iv_text    = |Prepare Deserialize: { <ls_result>-obj_type } { <ls_result>-obj_name }| ).
 
       CLEAR ls_item.
+      CLEAR: lv_path, lv_package.
+
       ls_item-obj_type = <ls_result>-obj_type.
       ls_item-obj_name = <ls_result>-obj_name.
 
@@ -840,8 +842,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
               ii_xml         = lo_xml
               io_files       = lo_files ).
           ENDIF.
-
-
 
         CATCH zcx_abapgit_exception INTO lx_exc.
           ii_log->add_exception( ix_exc = lx_exc
@@ -1446,7 +1446,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD prepare_deserialize_obj.
-    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
     DATA lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
     DATA lv_package  TYPE devclass.
     DATA lv_path TYPE string.
@@ -1474,7 +1473,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           zcx_abapgit_exception=>raise( |Object { ir_deserialized_object->item-obj_type } { ir_deserialized_object->item-obj_name } has no files |  ).
         ENDIF.
 
-        IF ir_deserialized_object->item <> 'NSPC'.
+        IF ir_deserialized_object->item-obj_type <> 'NSPC'.
           " If package does not exist yet, it will be created with this call
           lv_package = lo_folder_logic->path_to_package(
             iv_top  = iv_top_package
@@ -1486,22 +1485,21 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
             iv_obj_type = ir_deserialized_object->item-obj_type ).
         ENDIF.
 
-        IF ls_item-obj_type = 'DEVC'.
+        IF ir_deserialized_object->item-obj_type = 'DEVC'.
           " Packages have the same filename across different folders. The path needs to be supplied
           " to find the correct file.
           lv_path = lr_file->path.
         ENDIF.
 
         IF ir_deserialized_object->item-devclass IS INITIAL.
-
           ir_deserialized_object->item-devclass = lv_package.
-
         ENDIF.
-        IF       ir_deserialized_object->item-abap_language_version IS INITIAL.
-          ir_deserialized_object->item-abap_language_version = lo_abap_language_vers->get_abap_language_vers_by_objt(
-                                                                    iv_object_type = ls_item-obj_type
-                                                                    iv_package = ir_deserialized_object->item-devclass ).
 
+        IF ir_deserialized_object->item-abap_language_version IS INITIAL.
+          CREATE OBJECT lo_abap_language_vers.
+          ir_deserialized_object->item-abap_language_version = lo_abap_language_vers->get_abap_language_vers_by_objt(
+                                                                    iv_object_type = ir_deserialized_object->item-obj_type
+                                                                    iv_package = ir_deserialized_object->item-devclass ).
         ENDIF.
 
         IF ir_deserialized_object->only_package_move = abap_true.
@@ -1531,7 +1529,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
 
         li_obj = create_object(
-                 is_item        = ls_item
+                 is_item        = ir_deserialized_object->item
                  is_metadata    = ls_metadata
                  io_i18n_params = io_i18n_params ).
 
@@ -1569,20 +1567,18 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         " LXE, TODO refactor and move below activation
         IF io_i18n_params->is_lxe_applicable( ) = abap_true.
           zcl_abapgit_factory=>get_lxe_texts( )->deserialize(
-            iv_object_type = ls_item-obj_type
-            iv_object_name = ls_item-obj_name
+            iv_object_type = ir_deserialized_object->item-obj_type
+            iv_object_name = ir_deserialized_object->item-obj_name
             io_i18n_params = io_i18n_params
             ii_xml         = lo_xml
             io_files       = lo_files ).
         ENDIF.
 
-        CLEAR: lv_path, lv_package.
-
       CATCH zcx_abapgit_exception INTO lx_exc.
         ii_log->add_exception( ix_exc = lx_exc
-                               is_item = ls_item ).
-        ii_log->add_error( iv_msg = |Import of object { ls_item-obj_name } failed|
-                           is_item = ls_item ).
+                               is_item = ir_deserialized_object->item ).
+        ii_log->add_error( iv_msg = |Import of object { ir_deserialized_object->item-obj_name } failed|
+                           is_item = ir_deserialized_object->item ).
         "object should not be part of any deserialization step
 
     ENDTRY.

@@ -364,7 +364,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       lx_error         TYPE REF TO zcx_abapgit_exception.
 
     TRY.
-        lt_updated_files = zcl_abapgit_objects=>deserialize(
+        lt_updated_files = zcl_abapgit_deserialize_repo=>deserialize(
           io_repo   = me
           is_checks = is_checks
           ii_log    = ii_log ).

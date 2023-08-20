@@ -35,6 +35,7 @@ CLASS zcl_abapgit_deserialize_repo IMPLEMENTATION.
     DATA ls_deserialized_object  TYPE zcl_abapgit_objects=>ty_deserialization.
     DATA lo_files    TYPE REF TO zcl_abapgit_objects_files.
     DATA ls_item     TYPE zif_abapgit_definitions=>ty_item.
+    DATA lv_path TYPE string.
 
     lv_package = io_repo->get_package( ).
 
@@ -61,6 +62,7 @@ CLASS zcl_abapgit_deserialize_repo IMPLEMENTATION.
 
     LOOP AT lt_results REFERENCE INTO lr_result.
       CLEAR ls_deserialized_object.
+
       ls_deserialized_object-item-obj_type = lr_result->obj_type.
       ls_deserialized_object-item-obj_name = lr_result->obj_name.
       ls_deserialized_object-main_filename = lr_result->filename.
@@ -70,10 +72,18 @@ CLASS zcl_abapgit_deserialize_repo IMPLEMENTATION.
       ls_item-obj_type = lr_result->obj_type.
       ls_item-obj_name = lr_result->obj_name.
 
+
+      CLEAR lv_path.
+      IF ls_item-obj_type = 'DEVC'.
+        " Packages have the same filename across different folders. The path needs to be supplied
+        " to find the correct file.
+        lv_path = lr_result->path.
+      ENDIF.
+
       CREATE OBJECT lo_files
         EXPORTING
           is_item = ls_item
-          iv_path = lr_result->path.
+          iv_path = lv_path.
 
       lo_files->set_files( lt_remote ).
 
