@@ -12,6 +12,21 @@ CLASS zcl_abapgit_objects DEFINITION
         item  TYPE zif_abapgit_definitions=>ty_item,
       END OF ty_serialization .
 
+    TYPES:
+      ty_serialization_tt TYPE STANDARD TABLE OF ty_serialization WITH DEFAULT KEY .
+
+
+    TYPES
+      BEGIN OF ty_deserialization.
+    INCLUDE TYPE ty_serialization.
+    TYPES:
+      only_package_move TYPE abap_bool,
+      main_filename     TYPE string,
+      END OF ty_deserialization .
+
+    TYPES:
+      ty_deserialization_tt TYPE STANDARD TABLE OF ty_deserialization WITH DEFAULT KEY .
+
     CLASS-METHODS serialize
       IMPORTING
         !is_item                 TYPE zif_abapgit_definitions=>ty_item
@@ -85,6 +100,36 @@ CLASS zcl_abapgit_objects DEFINITION
         VALUE(rv_active) TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
+
+    CLASS-METHODS deserialize_central
+      IMPORTING
+        !iv_transport          TYPE trkorr
+        !iv_main_language_only TYPE abap_bool DEFAULT abap_false
+        !io_dot                TYPE REF TO zcl_abapgit_dot_abapgit
+        !ii_log                TYPE REF TO zif_abapgit_log
+      EXPORTING
+        et_accessed_files      TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
+      CHANGING
+        !ct_serialized_objects TYPE ty_serialization_tt
+      RAISING
+        zcx_abapgit_exception.
+
+    CLASS-METHODS prepare_deserialize_obj
+      IMPORTING
+        !iv_transport           TYPE trkorr
+        !iv_main_language_only  TYPE abap_bool DEFAULT abap_false
+        !io_dot                 TYPE REF TO zcl_abapgit_dot_abapgit
+        !ii_log                 TYPE REF TO zif_abapgit_log
+        !ii_progress            TYPE REF TO zif_abapgit_progress
+        !ir_deserialized_object TYPE REF TO ty_deserialization
+        !iv_index_cur_obj       TYPE sy-tabix
+        !iv_top_package         TYPE devclass
+        !io_i18n_params         TYPE REF TO zcl_abapgit_i18n_params
+      CHANGING
+        ct_steps                TYPE zif_abapgit_objects=>ty_step_data_tt
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
 
   PRIVATE SECTION.
@@ -157,8 +202,7 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS check_objects_locked
       IMPORTING
-        !iv_language TYPE spras
-        !it_items    TYPE zif_abapgit_definitions=>ty_items_tt
+        !it_items TYPE zif_abapgit_definitions=>ty_items_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS create_object
@@ -528,8 +572,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
         lt_items = map_tadir_to_items( lt_tadir ).
 
-        check_objects_locked( iv_language = zif_abapgit_definitions=>c_english
-                              it_items    = lt_items ).
+        check_objects_locked( it_items    = lt_items ).
 
       CATCH zcx_abapgit_exception INTO lx_error.
         zcl_abapgit_default_transport=>get_instance( )->reset( ).
@@ -672,7 +715,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     zcl_abapgit_factory=>get_cts_api( )->confirm_transport_messages( ).
 
-    check_objects_locked( iv_language = io_repo->get_dot_abapgit( )->get_main_language( )
+    check_objects_locked( " iv_language = io_repo->get_dot_abapgit( )->get_main_language( )
                           it_items    = lt_items ).
 
     lo_i18n_params = zcl_abapgit_i18n_params=>new( is_params = determine_i18n_params(
@@ -1289,4 +1332,194 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
+  METHOD deserialize_central.
+
+    DATA lo_timer TYPE REF TO zcl_abapgit_timer.
+    DATA li_progress TYPE REF TO zif_abapgit_progress.
+    DATA lo_serialized_objects TYPE REF TO ty_serialization.
+    DATA lt_items TYPE zif_abapgit_definitions=>ty_items_tt.
+    DATA lo_i18n_params TYPE REF TO zcl_abapgit_i18n_params.
+    zcl_abapgit_objects_activation=>clear( ).
+
+    li_progress = zcl_abapgit_progress=>get_instance( lines( ct_serialized_objects ) ).
+
+    IF NOT iv_transport IS INITIAL.
+      zcl_abapgit_default_transport=>get_instance( )->set( iv_transport ).
+    ENDIF.
+
+    lo_timer = zcl_abapgit_timer=>create(
+       iv_text  = 'Deserialize:'
+       iv_count = lines( ct_serialized_objects ) )->start( ).
+
+    zcl_abapgit_factory=>get_cts_api( )->confirm_transport_messages( ).
+
+    LOOP AT ct_serialized_objects REFERENCE INTO lo_serialized_objects.
+
+      INSERT lo_serialized_objects->item INTO TABLE lt_items.
+
+    ENDLOOP.
+
+    check_objects_locked( it_items = lt_items ).
+
+    lo_i18n_params = zcl_abapgit_i18n_params=>new( is_params = determine_i18n_params(
+      io_dot                = io_dot
+      iv_main_language_only = iv_main_language_only ) ).
+
+
+    IF lines( lt_items ) = 1.
+      ii_log->add_info( |>>> Deserializing 1 object| ).
+    ELSE.
+      ii_log->add_info( |>>> Deserializing { lines( lt_items ) } objects| ).
+    ENDIF.
+
+    LOOP AT ct_serialized_objects REFERENCE INTO lo_serialized_objects.
+
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD prepare_deserialize_obj.
+    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
+    DATA lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
+    DATA lv_package  TYPE devclass.
+    DATA lv_path TYPE string.
+    DATA lr_file TYPE REF TO zif_abapgit_git_definitions=>ty_file.
+    DATA lo_abap_language_vers TYPE REF TO zcl_abapgit_abap_language_vers.
+    DATA lo_files TYPE REF TO zcl_abapgit_objects_files.
+    DATA lo_xml      TYPE REF TO zif_abapgit_xml_input.
+    DATA ls_metadata TYPE zif_abapgit_definitions=>ty_metadata.
+    DATA li_obj      TYPE REF TO zif_abapgit_object.
+    DATA lt_steps_id TYPE zif_abapgit_definitions=>ty_deserialization_step_tt.
+    DATA lr_step_id TYPE REF TO zif_abapgit_definitions=>ty_deserialization_step.
+    DATA lr_step TYPE REF TO zif_abapgit_objects=>ty_step_data.
+    DATA lr_deser TYPE REF TO zif_abapgit_objects=>ty_deserialization.
+    DATA lx_exc   TYPE REF TO zcx_abapgit_exception.
+
+
+    ii_progress->show( iv_current = iv_index_cur_obj
+            iv_text = |Prepare Deserialize: {  ir_deserialized_object->item-obj_type } { ir_deserialized_object->item-obj_name }| ).
+
+    TRY.
+        lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
+
+        READ TABLE ir_deserialized_object->files INDEX 1 REFERENCE INTO lr_file.
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise( |Object { ir_deserialized_object->item-obj_type } { ir_deserialized_object->item-obj_name } has no files |  ).
+        ENDIF.
+
+        IF ir_deserialized_object->item <> 'NSPC'.
+          " If package does not exist yet, it will be created with this call
+          lv_package = lo_folder_logic->path_to_package(
+            iv_top  = iv_top_package
+            io_dot  = io_dot
+            iv_path = lr_file->path ).
+
+          check_main_package(
+            iv_package  = lv_package
+            iv_obj_type = ir_deserialized_object->item-obj_type ).
+        ENDIF.
+
+        IF ls_item-obj_type = 'DEVC'.
+          " Packages have the same filename across different folders. The path needs to be supplied
+          " to find the correct file.
+          lv_path = lr_file->path.
+        ENDIF.
+
+        IF ir_deserialized_object->item-devclass IS INITIAL.
+
+          ir_deserialized_object->item-devclass = lv_package.
+
+        ENDIF.
+        IF       ir_deserialized_object->item-abap_language_version IS INITIAL.
+          ir_deserialized_object->item-abap_language_version = lo_abap_language_vers->get_abap_language_vers_by_objt(
+                                                                    iv_object_type = ls_item-obj_type
+                                                                    iv_package = ir_deserialized_object->item-devclass ).
+
+        ENDIF.
+
+        IF ir_deserialized_object->only_package_move = abap_true.
+          " Move object to new package
+          change_package_assignments( is_item = ir_deserialized_object->item
+                                      ii_log  = ii_log ).
+          " No other changes required
+          RETURN.
+        ENDIF.
+
+        " Create or update object
+        CREATE OBJECT lo_files
+          EXPORTING
+            is_item = ir_deserialized_object->item
+            iv_path = lv_path.
+
+        lo_files->set_files( ir_deserialized_object->files ).
+
+        IF lo_files->is_json_metadata( ) = abap_false.
+          "analyze XML in order to instantiate the proper serializer
+          lo_xml = lo_files->read_xml( ).
+          ls_metadata = lo_xml->get_metadata( ).
+        ELSE.
+          " there's no XML and metadata for JSON format
+          CLEAR: lo_xml, ls_metadata.
+        ENDIF.
+
+
+        li_obj = create_object(
+                 is_item        = ls_item
+                 is_metadata    = ls_metadata
+                 io_i18n_params = io_i18n_params ).
+
+        "@todo adjust compare remote to local
+*          compare_remote_to_local(
+*            ii_object = li_obj
+*            it_remote = lt_remote
+*            is_result = <ls_result>
+*            ii_log    = ii_log ).
+
+        li_obj->mo_files = lo_files.
+
+        "get required steps for deserialize the object
+        lt_steps_id = li_obj->get_deserialize_steps( ).
+
+
+        LOOP AT lt_steps_id REFERENCE INTO lr_step_id.
+          READ TABLE ct_steps WITH KEY step_id = lr_step_id->* REFERENCE INTO lr_step.
+          ASSERT sy-subrc = 0.
+          IF lr_step_id->* = zif_abapgit_object=>gc_step_id-ddic AND
+             zcl_abapgit_objects_activation=>is_ddic_type( ir_deserialized_object->item-obj_type ) = abap_false.
+            " DDIC only for DDIC objects
+            zcx_abapgit_exception=>raise( |Step { lr_step_id->* } is only for DDIC objects| ).
+          ENDIF.
+          INSERT INITIAL LINE INTO TABLE lr_step->objects REFERENCE INTO lr_deser.
+          lr_deser->item    = ir_deserialized_object->item.
+          lr_deser->obj     = li_obj.
+          lr_deser->xml     = lo_xml.
+          lr_deser->package = ir_deserialized_object->item-devclass.
+
+        ENDLOOP.
+
+        " LXE, TODO refactor and move below activation
+        IF io_i18n_params->is_lxe_applicable( ) = abap_true.
+          zcl_abapgit_factory=>get_lxe_texts( )->deserialize(
+            iv_object_type = ls_item-obj_type
+            iv_object_name = ls_item-obj_name
+            io_i18n_params = io_i18n_params
+            ii_xml         = lo_xml
+            io_files       = lo_files ).
+        ENDIF.
+
+        CLEAR: lv_path, lv_package.
+
+      CATCH zcx_abapgit_exception INTO lx_exc.
+        ii_log->add_exception( ix_exc = lx_exc
+                               is_item = ls_item ).
+        ii_log->add_error( iv_msg = |Import of object { ls_item-obj_name } failed|
+                           is_item = ls_item ).
+        "object should not be part of any deserialization step
+
+
+
+    ENDTRY.
+  ENDMETHOD.
+
 ENDCLASS.
