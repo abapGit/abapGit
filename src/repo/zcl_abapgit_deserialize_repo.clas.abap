@@ -72,7 +72,6 @@ CLASS zcl_abapgit_deserialize_repo IMPLEMENTATION.
       ls_item-obj_type = lr_result->obj_type.
       ls_item-obj_name = lr_result->obj_name.
 
-
       CLEAR lv_path.
       IF ls_item-obj_type = 'DEVC'.
         " Packages have the same filename across different folders. The path needs to be supplied
