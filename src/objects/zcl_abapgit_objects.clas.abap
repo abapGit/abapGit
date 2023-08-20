@@ -12,10 +12,6 @@ CLASS zcl_abapgit_objects DEFINITION
         item  TYPE zif_abapgit_definitions=>ty_item,
       END OF ty_serialization .
 
-    TYPES:
-      ty_serialization_tt TYPE STANDARD TABLE OF ty_serialization WITH DEFAULT KEY .
-
-
     TYPES
       BEGIN OF ty_deserialization.
     INCLUDE TYPE ty_serialization.
@@ -726,8 +722,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     zcl_abapgit_factory=>get_cts_api( )->confirm_transport_messages( ).
 
-    check_objects_locked( " iv_language = io_repo->get_dot_abapgit( )->get_main_language( )
-                          it_items    = lt_items ).
+    check_objects_locked( it_items = lt_items ).
 
     lo_i18n_params = zcl_abapgit_i18n_params=>new( is_params = determine_i18n_params(
       io_dot                = io_repo->get_dot_abapgit( )
@@ -1404,8 +1399,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           io_i18n_params         = lo_i18n_params
           iv_conf_diff_wo_warn   = iv_conf_diff_wo_warn
         CHANGING
-          ct_steps               = lt_steps
-      ).
+          ct_steps               = lt_steps ).
 
       IF iv_top_package IS INITIAL.
         INSERT lr_deserialized_objects->item-devclass INTO TABLE lt_devclass.
@@ -1461,16 +1455,17 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     DATA lr_deser TYPE REF TO zif_abapgit_objects=>ty_deserialization.
     DATA lx_exc   TYPE REF TO zcx_abapgit_exception.
 
-
     ii_progress->show( iv_current = iv_index_cur_obj
-            iv_text = |Prepare Deserialize: {  ir_deserialized_object->item-obj_type } { ir_deserialized_object->item-obj_name }| ).
+                       iv_text =
+    |Prepare Deserialize: {  ir_deserialized_object->item-obj_type } { ir_deserialized_object->item-obj_name }| ).
 
     TRY.
         lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
 
         READ TABLE ir_deserialized_object->files INDEX 1 REFERENCE INTO lr_file.
         IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise( |Object { ir_deserialized_object->item-obj_type } { ir_deserialized_object->item-obj_name } has no files |  ).
+          zcx_abapgit_exception=>raise(
+           |Object { ir_deserialized_object->item-obj_type } { ir_deserialized_object->item-obj_name } has no files | ).
         ENDIF.
 
         IF ir_deserialized_object->item-obj_type <> 'NSPC'.
@@ -1498,8 +1493,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         IF ir_deserialized_object->item-abap_language_version IS INITIAL.
           CREATE OBJECT lo_abap_language_vers.
           ir_deserialized_object->item-abap_language_version = lo_abap_language_vers->get_abap_language_vers_by_objt(
-                                                                    iv_object_type = ir_deserialized_object->item-obj_type
-                                                                    iv_package = ir_deserialized_object->item-devclass ).
+                                                                 iv_object_type = ir_deserialized_object->item-obj_type
+                                                                 iv_package = ir_deserialized_object->item-devclass ).
         ENDIF.
 
         IF ir_deserialized_object->only_package_move = abap_true.
@@ -1535,12 +1530,10 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
         "Check for changes that needs a confirmation
         compare_obj_remote_to_local(
-          EXPORTING
             ir_deserialized_object = ir_deserialized_object
             ii_object              = li_obj
             ii_log                 = ii_log
-            iv_conf_diff_wo_warn   = iv_conf_diff_wo_warn
-        ).
+            iv_conf_diff_wo_warn   = iv_conf_diff_wo_warn ).
 
         li_obj->mo_files = lo_files.
 
@@ -1652,7 +1645,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           ENDIF.
         ELSE.
           zcx_abapgit_exception=>raise( |Deserialization for object { ir_deserialized_object->item-obj_name } | &
-                                        |(type { ir_deserialized_object->item-obj_type }) aborted, user descision required| ).
+                                  |(type { ir_deserialized_object->item-obj_type }) aborted, user descision required| ).
         ENDIF.
       ENDIF.
     ENDIF.

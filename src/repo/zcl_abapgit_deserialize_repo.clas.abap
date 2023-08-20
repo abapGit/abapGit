@@ -102,8 +102,7 @@ CLASS zcl_abapgit_deserialize_repo IMPLEMENTATION.
       IMPORTING
         et_accessed_files       = rt_accessed_files
       CHANGING
-        ct_deserialized_objects = lt_deserialized_objects
-    ).
+        ct_deserialized_objects = lt_deserialized_objects ).
 
   ENDMETHOD.
 
