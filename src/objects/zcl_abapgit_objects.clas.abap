@@ -841,7 +841,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
               io_files       = lo_files ).
           ENDIF.
 
-          CLEAR: lv_path, lv_package.
+
 
         CATCH zcx_abapgit_exception INTO lx_exc.
           ii_log->add_exception( ix_exc = lx_exc
