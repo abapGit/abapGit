@@ -103,30 +103,16 @@ CLASS zcl_abapgit_objects DEFINITION
 
     CLASS-METHODS deserialize_central
       IMPORTING
-        !iv_transport          TYPE trkorr
-        !iv_main_language_only TYPE abap_bool DEFAULT abap_false
-        !io_dot                TYPE REF TO zcl_abapgit_dot_abapgit
-        !ii_log                TYPE REF TO zif_abapgit_log
+        !iv_transport            TYPE trkorr
+        !iv_main_language_only   TYPE abap_bool DEFAULT abap_false
+        !io_dot                  TYPE REF TO zcl_abapgit_dot_abapgit
+        !ii_log                  TYPE REF TO zif_abapgit_log
+        !iv_conf_diff_wo_warn    TYPE abap_bool DEFAULT abap_false
+        !iv_top_package          TYPE devclass
       EXPORTING
-        et_accessed_files      TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
+        et_accessed_files        TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
       CHANGING
-        !ct_serialized_objects TYPE ty_serialization_tt
-      RAISING
-        zcx_abapgit_exception.
-
-    CLASS-METHODS prepare_deserialize_obj
-      IMPORTING
-        !iv_transport           TYPE trkorr
-        !iv_main_language_only  TYPE abap_bool DEFAULT abap_false
-        !io_dot                 TYPE REF TO zcl_abapgit_dot_abapgit
-        !ii_log                 TYPE REF TO zif_abapgit_log
-        !ii_progress            TYPE REF TO zif_abapgit_progress
-        !ir_deserialized_object TYPE REF TO ty_deserialization
-        !iv_index_cur_obj       TYPE sy-tabix
-        !iv_top_package         TYPE devclass
-        !io_i18n_params         TYPE REF TO zcl_abapgit_i18n_params
-      CHANGING
-        ct_steps                TYPE zif_abapgit_objects=>ty_step_data_tt
+        !ct_deserialized_objects TYPE ty_deserialization_tt
       RAISING
         zcx_abapgit_exception.
 
@@ -174,6 +160,17 @@ CLASS zcl_abapgit_objects DEFINITION
         !iv_transport TYPE trkorr
       RAISING
         zcx_abapgit_exception .
+
+    CLASS-METHODS compare_obj_remote_to_local
+      IMPORTING
+        !ir_deserialized_object TYPE REF TO ty_deserialization
+        !ii_object              TYPE REF TO zif_abapgit_object
+        !ii_log                 TYPE REF TO zif_abapgit_log
+        !iv_conf_diff_wo_warn   TYPE abap_bool DEFAULT abap_false
+      RAISING
+        zcx_abapgit_exception .
+
+
     CLASS-METHODS compare_remote_to_local
       IMPORTING
         !ii_object TYPE REF TO zif_abapgit_object
@@ -248,9 +245,23 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception.
     CLASS-METHODS get_extra_from_filename
       IMPORTING
-        !iv_filename    TYPE string
+        iv_filename     TYPE string
       RETURNING
         VALUE(rv_extra) TYPE string.
+    CLASS-METHODS prepare_deserialize_obj
+      IMPORTING
+        iv_main_language_only  TYPE abap_bool DEFAULT abap_false
+        io_dot                 TYPE REF TO zcl_abapgit_dot_abapgit
+        ii_log                 TYPE REF TO zif_abapgit_log
+        ii_progress            TYPE REF TO zif_abapgit_progress
+        ir_deserialized_object TYPE REF TO ty_deserialization
+        iv_index_cur_obj       TYPE sy-tabix
+        iv_top_package         TYPE devclass
+        io_i18n_params         TYPE REF TO zcl_abapgit_i18n_params
+        iv_conf_diff_wo_warn   TYPE abap_bool DEFAULT abap_false
+      CHANGING
+        ct_steps               TYPE zif_abapgit_objects=>ty_step_data_tt.
+
 ENDCLASS.
 
 
@@ -1336,26 +1347,32 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     DATA lo_timer TYPE REF TO zcl_abapgit_timer.
     DATA li_progress TYPE REF TO zif_abapgit_progress.
-    DATA lo_serialized_objects TYPE REF TO ty_serialization.
+    DATA lr_deserialized_objects TYPE REF TO ty_deserialization.
     DATA lt_items TYPE zif_abapgit_definitions=>ty_items_tt.
     DATA lo_i18n_params TYPE REF TO zcl_abapgit_i18n_params.
+    DATA lt_steps TYPE zif_abapgit_objects=>ty_step_data_tt.
+    DATA lt_devclass TYPE STANDARD TABLE OF devclass.
+    DATA lr_devclass TYPE REF TO devclass.
+
+    lt_steps = get_deserialize_steps( ).
+
     zcl_abapgit_objects_activation=>clear( ).
 
-    li_progress = zcl_abapgit_progress=>get_instance( lines( ct_serialized_objects ) ).
+    li_progress = zcl_abapgit_progress=>get_instance( lines( ct_deserialized_objects ) ).
 
-    IF NOT iv_transport IS INITIAL.
+    IF iv_transport IS NOT INITIAL.
       zcl_abapgit_default_transport=>get_instance( )->set( iv_transport ).
     ENDIF.
 
     lo_timer = zcl_abapgit_timer=>create(
        iv_text  = 'Deserialize:'
-       iv_count = lines( ct_serialized_objects ) )->start( ).
+       iv_count = lines( ct_deserialized_objects ) )->start( ).
 
     zcl_abapgit_factory=>get_cts_api( )->confirm_transport_messages( ).
 
-    LOOP AT ct_serialized_objects REFERENCE INTO lo_serialized_objects.
+    LOOP AT ct_deserialized_objects REFERENCE INTO lr_deserialized_objects.
 
-      INSERT lo_serialized_objects->item INTO TABLE lt_items.
+      INSERT lr_deserialized_objects->item INTO TABLE lt_items.
 
     ENDLOOP.
 
@@ -1372,11 +1389,60 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       ii_log->add_info( |>>> Deserializing { lines( lt_items ) } objects| ).
     ENDIF.
 
-    LOOP AT ct_serialized_objects REFERENCE INTO lo_serialized_objects.
+    "Prepare (register) deserialization for each object and create the package structure
+    LOOP AT ct_deserialized_objects REFERENCE INTO lr_deserialized_objects.
 
+      prepare_deserialize_obj(
+        EXPORTING
+          iv_main_language_only  = iv_main_language_only
+          io_dot                 = io_dot
+          ii_log                 = ii_log
+          ii_progress            = li_progress
+          ir_deserialized_object = lr_deserialized_objects
+          iv_index_cur_obj       = sy-tabix
+          iv_top_package         = iv_top_package
+          io_i18n_params         = lo_i18n_params
+          iv_conf_diff_wo_warn   = iv_conf_diff_wo_warn
+        CHANGING
+          ct_steps               = lt_steps
+      ).
+
+      IF iv_top_package IS INITIAL.
+        INSERT lr_deserialized_objects->item-devclass INTO TABLE lt_devclass.
+      ENDIF.
 
     ENDLOOP.
 
+    li_progress->off( ).
+
+    "run deserialize for all steps and its objects
+    deserialize_steps(
+      EXPORTING
+        it_steps     = lt_steps
+        ii_log       = ii_log
+        iv_transport = iv_transport
+      CHANGING
+        ct_files     = et_accessed_files ).
+
+
+    IF iv_top_package IS NOT INITIAL.
+      "Only top package needs a tree refresh
+      CLEAR lt_devclass.
+      INSERT iv_top_package INTO TABLE lt_devclass.
+
+    ELSE.
+      "Refresh tree of all packages, because we could have multiple top packages
+      SORT lt_devclass.
+      DELETE ADJACENT DUPLICATES FROM lt_devclass.
+    ENDIF.
+
+    LOOP AT lt_devclass REFERENCE INTO lr_devclass.
+      update_package_tree( lr_devclass->* ).
+    ENDLOOP.
+
+    zcl_abapgit_default_transport=>get_instance( )->reset( ).
+
+    lo_timer->end( abap_true ).
   ENDMETHOD.
 
   METHOD prepare_deserialize_obj.
@@ -1469,12 +1535,14 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
                  is_metadata    = ls_metadata
                  io_i18n_params = io_i18n_params ).
 
-        "@todo adjust compare remote to local
-*          compare_remote_to_local(
-*            ii_object = li_obj
-*            it_remote = lt_remote
-*            is_result = <ls_result>
-*            ii_log    = ii_log ).
+        "Check for changes that needs a confirmation
+        compare_obj_remote_to_local(
+          EXPORTING
+            ir_deserialized_object = ir_deserialized_object
+            ii_object              = li_obj
+            ii_log                 = ii_log
+            iv_conf_diff_wo_warn   = iv_conf_diff_wo_warn
+        ).
 
         li_obj->mo_files = lo_files.
 
@@ -1517,9 +1585,81 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
                            is_item = ls_item ).
         "object should not be part of any deserialization step
 
-
-
     ENDTRY.
+  ENDMETHOD.
+
+  METHOD compare_obj_remote_to_local.
+* this method is used for comparing local with remote objects
+* before pull, this is useful eg. when overwriting a TABL object.
+* only the main XML file is used for comparison
+
+    DATA: ls_remote_file    TYPE zif_abapgit_git_definitions=>ty_file,
+          li_remote_version TYPE REF TO zif_abapgit_xml_input,
+          lv_count          TYPE i,
+          ls_result         TYPE zif_abapgit_comparator=>ty_result,
+          lv_answer         TYPE string,
+          li_comparator     TYPE REF TO zif_abapgit_comparator,
+          ls_item           TYPE zif_abapgit_definitions=>ty_item.
+
+    FIND ALL OCCURRENCES OF '.' IN ir_deserialized_object->main_filename MATCH COUNT lv_count.
+
+    IF ir_deserialized_object->main_filename CS '.XML' AND lv_count = 2.
+      IF ii_object->exists( ) = abap_false.
+        RETURN.
+      ENDIF.
+
+      READ TABLE ir_deserialized_object->files WITH KEY file
+        COMPONENTS filename = ir_deserialized_object->main_filename INTO ls_remote_file.
+      IF sy-subrc <> 0. "if file does not exist in remote, we don't need to validate
+        RETURN.
+      ENDIF.
+
+      li_comparator = ii_object->get_comparator( ).
+      IF NOT li_comparator IS BOUND.
+        RETURN.
+      ENDIF.
+
+      CREATE OBJECT li_remote_version
+        TYPE zcl_abapgit_xml_input
+        EXPORTING
+          iv_xml      = zcl_abapgit_convert=>xstring_to_string_utf8( ls_remote_file-data )
+          iv_filename = ls_remote_file-filename.
+
+      ls_result = li_comparator->compare( ii_remote = li_remote_version
+                                          ii_log = ii_log ).
+      IF ls_result-text IS INITIAL.
+        RETURN.
+      ENDIF.
+
+      "log comparison result
+      ls_item-obj_type = ir_deserialized_object->item-obj_type.
+      ls_item-obj_name = ir_deserialized_object->item-obj_name.
+      ii_log->add_warning( iv_msg = ls_result-text
+                           is_item = ls_item ).
+
+      "continue or abort?
+      IF iv_conf_diff_wo_warn = abap_false.
+        IF zcl_abapgit_ui_factory=>get_frontend_services( )->gui_is_available( ) = abap_true.
+          lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
+            iv_titlebar              = 'Warning'
+            iv_text_question         = ls_result-text
+            iv_text_button_1         = 'Pull Anyway'
+            iv_icon_button_1         = 'ICON_OKAY'
+            iv_text_button_2         = 'Cancel'
+            iv_icon_button_2         = 'ICON_CANCEL'
+            iv_default_button        = '2'
+            iv_display_cancel_button = abap_false ).
+
+          IF lv_answer = '2'.
+            zcx_abapgit_exception=>raise( |Deserialization for object { ir_deserialized_object->item-obj_name } | &
+                                          |(type { ir_deserialized_object->item-obj_type }) aborted by user| ).
+          ENDIF.
+        ELSE.
+          zcx_abapgit_exception=>raise( |Deserialization for object { ir_deserialized_object->item-obj_name } | &
+                                        |(type { ir_deserialized_object->item-obj_type }) aborted, user descision required| ).
+        ENDIF.
+      ENDIF.
+    ENDIF.
   ENDMETHOD.
 
 ENDCLASS.
