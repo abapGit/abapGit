@@ -67,6 +67,7 @@ CLASS zcl_abapgit_deserialize_repo IMPLEMENTATION.
       ls_deserialized_object-item-obj_name = lr_result->obj_name.
       ls_deserialized_object-main_filename = lr_result->filename.
       ls_deserialized_object-only_package_move = lr_result->packmove.
+      ls_deserialized_object-top_package = lv_package.
 
       CLEAR ls_item.
       ls_item-obj_type = lr_result->obj_type.
@@ -97,7 +98,6 @@ CLASS zcl_abapgit_deserialize_repo IMPLEMENTATION.
         io_dot                  = io_repo->get_dot_abapgit( )
         ii_log                  = ii_log
 *    iv_conf_diff_wo_warn    = abap_false
-        iv_top_package          = lv_package
       IMPORTING
         et_accessed_files       = rt_accessed_files
       CHANGING
