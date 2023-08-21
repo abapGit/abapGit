@@ -401,4 +401,18 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+  METHOD zif_abapgit_sap_package~get_top_package.
+
+    DATA lv_parent TYPE parentcl.
+
+    lv_parent =  zif_abapgit_sap_package~read_parent( ).
+
+    IF lv_parent IS NOT INITIAL.
+      rv_top_package = zcl_abapgit_factory=>get_sap_package( lv_parent )->get_top_package( ).
+    ELSE.
+      rv_top_package = mv_package.
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.

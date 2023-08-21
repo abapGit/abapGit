@@ -116,6 +116,10 @@ CLASS ltcl_folder_logic_package IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~get_top_package.
+    RETURN.
+  ENDMETHOD.
+
 ENDCLASS.
 
 CLASS ltcl_folder_logic DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
@@ -344,6 +348,10 @@ CLASS ltcl_folder_logic IMPLEMENTATION.
       iv_path     = '/src/top_foo/top_bar/' ).
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~get_top_package.
+    RETURN.
+  ENDMETHOD.
+
 ENDCLASS.
 
 CLASS ltcl_folder_logic_namespaces DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
@@ -496,6 +504,10 @@ CLASS ltcl_folder_logic_namespaces IMPLEMENTATION.
       iv_path     = '/src/#test#t1/' ).
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~get_top_package.
+    RETURN.
+  ENDMETHOD.
+
 ENDCLASS.
 
 CLASS ltcl_folder_logic_no_parent DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
@@ -613,4 +625,8 @@ CLASS ltcl_folder_logic_no_parent IMPLEMENTATION.
   METHOD full.
     test( zif_abapgit_dot_abapgit=>c_folder_logic-full ).
   ENDMETHOD.
+  METHOD zif_abapgit_sap_package~get_top_package.
+    RETURN.
+  ENDMETHOD.
+
 ENDCLASS.
