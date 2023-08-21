@@ -510,6 +510,10 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
         ls_intf = read_json( ).
       ELSE.
         ls_intf = read_xml( io_xml ).
+        if ms_item-abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version-standard.
+          ms_item-abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
+        endif.
+        ls_intf-vseointerf-unicode = ms_item-abap_language_version.
       ENDIF.
 
       IF ls_intf-vseointerf-clsproxy = abap_true.
