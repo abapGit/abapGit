@@ -135,7 +135,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_clas IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -223,14 +223,14 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       it_source  = lt_source ).
 
     ii_xml->read( EXPORTING iv_name = 'DESCRIPTIONS'
-                  CHANGING  cg_data = lt_descriptions ).
+                  CHANGING cg_data = lt_descriptions ).
 
     mi_object_oriented_object_fct->update_descriptions(
       is_key          = ls_class_key
       it_descriptions = lt_descriptions ).
 
     ii_xml->read( EXPORTING iv_name = 'DESCRIPTIONS_SUB'
-                  CHANGING  cg_data = lt_descriptions_sub ).
+                  CHANGING cg_data = lt_descriptions_sub ).
 
     mi_object_oriented_object_fct->update_descriptions_sub(
       is_key          = ls_class_key
@@ -249,7 +249,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
           ls_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_line.
 
     ii_xml->read( EXPORTING iv_name = 'LINES'
-                  CHANGING  cg_data = lt_lines ).
+                  CHANGING cg_data = lt_lines ).
 
     lv_object = ms_item-obj_name.
 
@@ -268,7 +268,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       iv_language    = mv_language ).
 
     ii_xml->read( EXPORTING iv_name = 'I18N_LINES'
-                  CHANGING  cg_data = lt_i18n_lines ).
+                  CHANGING cg_data = lt_i18n_lines ).
 
     LOOP AT lt_i18n_lines INTO ls_i18n_lines.
       mi_object_oriented_object_fct->create_documentation(
@@ -335,7 +335,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
           lt_tpool     TYPE textpool_table.
 
     ii_xml->read( EXPORTING iv_name = 'TPOOL'
-                  CHANGING  cg_data = lt_tpool_ext ).
+                  CHANGING cg_data = lt_tpool_ext ).
     lt_tpool = read_tpool( lt_tpool_ext ).
 
     IF lines( lt_tpool ) = 0.
@@ -368,7 +368,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       EXPORTING
         iv_lang_field_name = 'LANGUAGE'
       CHANGING
-        ct_tab             = lt_i18n_tpool ).
+        ct_tab = lt_i18n_tpool ).
 
     LOOP AT lt_i18n_tpool INTO ls_i18n_tpool.
       lt_tpool = read_tpool( ls_i18n_tpool-textpool ).
@@ -999,8 +999,8 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     ENDIF.
 
     lt_source = mi_object_oriented_object_fct->serialize_abap(
-      is_class_key = ls_class_key
-      iv_type      = seop_ext_class_testclasses ).
+      is_class_key            = ls_class_key
+      iv_type                 = seop_ext_class_testclasses ).
 
     mv_skip_testclass = mi_object_oriented_object_fct->get_skip_test_classes( ).
     IF lines( lt_source ) > 0 AND mv_skip_testclass = abap_false.
