@@ -511,7 +511,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       ELSE.
         ls_intf = read_xml( io_xml ).
         IF ms_item-abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version-standard.
-          ms_item-abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
+          CLEAR ms_item-abap_language_version.
         ENDIF.
         ls_intf-vseointerf-unicode = ms_item-abap_language_version.
       ENDIF.
