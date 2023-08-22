@@ -11,13 +11,28 @@ CLASS zcl_abapgit_objects_check DEFINITION
         VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RAISING
         zcx_abapgit_exception .
+
+    CLASS-METHODS deserialize_checks_wo_repo
+      IMPORTING
+        !iv_top_package  TYPE devclass
+        !io_dot          TYPE REF TO zcl_abapgit_dot_abapgit
+        !it_remote       TYPE zif_abapgit_git_definitions=>ty_files_tt
+        !it_filter       TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
+        !iv_transport    TYPE trkorr OPTIONAL
+      RETURNING
+        VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
+      RAISING
+        zcx_abapgit_exception .
+
+
     CLASS-METHODS class_constructor.
     CLASS-METHODS checks_adjust
       IMPORTING
-        !io_repo    TYPE REF TO zcl_abapgit_repo
-        !is_checks  TYPE zif_abapgit_definitions=>ty_deserialize_checks
+        !iv_top_package TYPE devclass
+        !io_dot         TYPE REF TO zcl_abapgit_dot_abapgit
+        !is_checks      TYPE zif_abapgit_definitions=>ty_deserialize_checks
       CHANGING
-        !ct_results TYPE zif_abapgit_definitions=>ty_results_tt
+        !ct_results     TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
         zcx_abapgit_exception .
   PROTECTED SECTION.
@@ -39,16 +54,18 @@ CLASS zcl_abapgit_objects_check DEFINITION
         VALUE(rt_overwrite) TYPE zif_abapgit_definitions=>ty_overwrite_tt.
     CLASS-METHODS warning_package_adjust
       IMPORTING
-        !io_repo      TYPE REF TO zcl_abapgit_repo
-        !it_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
+        !iv_top_package TYPE devclass
+        !io_dot         TYPE REF TO zcl_abapgit_dot_abapgit
+        !it_overwrite   TYPE zif_abapgit_definitions=>ty_overwrite_tt
       CHANGING
-        !ct_results   TYPE zif_abapgit_definitions=>ty_results_tt
+        !ct_results     TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
         zcx_abapgit_exception.
     CLASS-METHODS warning_package_find
       IMPORTING
         !it_results         TYPE zif_abapgit_definitions=>ty_results_tt
-        !io_repo            TYPE REF TO zcl_abapgit_repo
+        !iv_top_package     TYPE devclass
+        !io_dot             TYPE REF TO zcl_abapgit_dot_abapgit
       RETURNING
         VALUE(rt_overwrite) TYPE zif_abapgit_definitions=>ty_overwrite_tt
       RAISING
@@ -81,7 +98,8 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
 
     warning_package_adjust(
       EXPORTING
-        io_repo      = io_repo
+        iv_top_package = iv_top_package
+        io_dot         = io_dot
         it_overwrite = is_checks-warning_package
       CHANGING
         ct_results   = ct_results ).
@@ -141,7 +159,8 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
     rs_checks-overwrite = warning_overwrite_find( lt_results ).
 
     rs_checks-warning_package = warning_package_find(
-      io_repo    = io_repo
+      io_dot    = io_repo->get_dot_abapgit( )
+      iv_top_package    = io_repo->get_package( )
       it_results = lt_results ).
 
     IF lines( lt_results ) > 0.
@@ -152,6 +171,54 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
         rs_checks-transport-transport = determine_transport_request(
                                             io_repo           = io_repo
                                             iv_transport_type = rs_checks-transport-type ).
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD deserialize_checks_wo_repo.
+
+    DATA: lt_results TYPE zif_abapgit_definitions=>ty_results_tt,
+          li_package TYPE REF TO zif_abapgit_sap_package.
+    DATA lr_serialize TYPE REF TO zcl_abapgit_serialize.
+    DATA lt_local  TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA li_log TYPE REF TO zif_abapgit_log.
+    " get unfiltered status to evaluate properly which warnings are required
+
+    CREATE OBJECT lr_serialize
+      EXPORTING
+        io_dot_abapgit = io_dot.
+
+    CREATE OBJECT li_log TYPE zcl_abapgit_log.
+
+    lt_local = lr_serialize->files_local(
+        iv_package     = iv_top_package
+        it_filter      = it_filter
+        ii_log         = li_log ).
+
+
+    lt_results = zcl_abapgit_file_status=>status_wo_repo(
+                   iv_root_package = iv_top_package
+                   io_dot          = io_dot
+                   ii_log          = li_log
+                   it_local        = lt_local
+                   it_remote       = it_remote ).
+
+    check_multiple_files( lt_results ).
+
+    rs_checks-overwrite = warning_overwrite_find( lt_results ).
+
+    rs_checks-warning_package = warning_package_find(
+      io_dot    = io_dot
+      iv_top_package    = iv_top_package
+      it_results = lt_results ).
+
+    IF lines( lt_results ) > 0.
+      li_package = zcl_abapgit_factory=>get_sap_package( iv_top_package ).
+      rs_checks-transport-required = li_package->are_changes_recorded_in_tr_req( ).
+      IF NOT rs_checks-transport-required IS INITIAL.
+        rs_checks-transport-type = li_package->get_transport_type( ).
+        rs_checks-transport-transport = iv_transport.
       ENDIF.
     ENDIF.
 
@@ -306,11 +373,11 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF lt_overwrite.
 
-
-* make sure to get the current status, as something might have changed in the meanwhile
+    "make sure to get the current status, as something might have changed in the meanwhile
     lt_overwrite = warning_package_find(
       it_results   = ct_results
-      io_repo      = io_repo ).
+      io_dot    = io_dot
+      iv_top_package    = iv_top_package ).
 
     LOOP AT lt_overwrite ASSIGNING <ls_overwrite>.
 
@@ -351,8 +418,8 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
     LOOP AT it_results ASSIGNING <ls_result> WHERE match IS INITIAL AND packmove IS INITIAL.
 
       lv_package = lo_folder_logic->path_to_package(
-        iv_top  = io_repo->get_package( )
-        io_dot  = io_repo->get_dot_abapgit( )
+        iv_top  = iv_top_package
+        io_dot  = io_dot
         iv_path = <ls_result>-path
         iv_create_if_not_exists = abap_false ).
 

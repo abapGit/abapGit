@@ -55,7 +55,8 @@ CLASS zcl_abapgit_deserialize_repo IMPLEMENTATION.
 
     zcl_abapgit_objects_check=>checks_adjust(
       EXPORTING
-        io_repo    = io_repo
+        io_dot    = io_repo->get_dot_abapgit( )
+        iv_top_package    = io_repo->get_package( )
         is_checks  = is_checks
       CHANGING
         ct_results = lt_results ).
