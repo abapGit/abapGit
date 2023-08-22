@@ -412,6 +412,9 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
                                             iv_data = lv_serialized_data ).
 
     ELSE.
+      " always serialiaze w. standard ABAP language version of source code objects
+      ls_intf-vseointerf-unicode = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
+
       io_xml->add( iv_name = 'VSEOINTERF'
                    ig_data = ls_intf-vseointerf ).
       io_xml->add( iv_name = 'DESCRIPTIONS'
