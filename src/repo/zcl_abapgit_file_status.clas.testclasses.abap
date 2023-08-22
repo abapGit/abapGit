@@ -583,10 +583,6 @@ CLASS ltcl_run_checks IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_sap_package~get_top_package.
-    RETURN.
-  ENDMETHOD.
-
 ENDCLASS.
 
 CLASS lcl_status_result DEFINITION.
