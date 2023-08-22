@@ -194,6 +194,12 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
       CLEAR lt_test_classes.
     ENDIF.
 
+    ls_vseoclass-unicode = ms_item-abap_language_version.
+
+    IF ls_vseoclass-unicode = zif_abapgit_aff_types_v1=>co_abap_language_version-standard.
+      ls_vseoclass-unicode = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
+    ENDIF.
+
     mi_object_oriented_object_fct->create(
       EXPORTING
         iv_check      = abap_true
@@ -670,6 +676,9 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
 
     TRY.
         ls_vseoclass = mi_object_oriented_object_fct->get_class_properties( ls_clskey ).
+
+        " always serialiaze w. standard ABAP language version of source code objects
+        ls_vseoclass-unicode = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
 
       CLEANUP.
         zcl_abapgit_language=>restore_login_language( ).
