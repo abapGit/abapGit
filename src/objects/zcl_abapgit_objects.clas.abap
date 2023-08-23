@@ -1642,8 +1642,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
   METHOD get_deserialized_objects.
 
     DATA lr_result TYPE REF TO zif_abapgit_definitions=>ty_result.
-    DATA lt_deserialized_objects  TYPE zcl_abapgit_objects=>ty_deserialization_tt.
-    DATA ls_deserialized_object  TYPE zcl_abapgit_objects=>ty_deserialization.
+    DATA lt_deserialized_objects  TYPE ty_deserialization_tt.
+    DATA ls_deserialized_object  TYPE ty_deserialization.
     DATA lo_files    TYPE REF TO zcl_abapgit_objects_files.
     DATA ls_item     TYPE zif_abapgit_definitions=>ty_item.
     DATA lv_path TYPE string.
