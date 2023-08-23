@@ -11,6 +11,8 @@
                  base64_data TYPE string,
                END OF ty_web_file.
 
+        TYPES: ty_web_files_tt TYPE STANDARD TABLE OF ty_web_file WITH DEFAULT KEY.
+
         TYPES: BEGIN OF ty_web_file_item,
                  web_file TYPE ty_web_file,
                  item     TYPE zif_abapgit_definitions=>ty_item,
@@ -52,6 +54,18 @@
                     et_accessed_files     TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
           RAISING   zcx_abapgit_exception.
 
+        CLASS-METHODS deserialize_web_objects
+          IMPORTING iv_top_package        TYPE devclass
+                    is_dot_data           TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit OPTIONAL
+                    it_web_files          TYPE ty_web_files_tt
+                    it_objs_del           TYPE zif_abapgit_definitions=>ty_obj_tt OPTIONAL
+                    iv_transport          TYPE trkorr OPTIONAL
+                    iv_conf_diff_wo_warn  TYPE abap_bool DEFAULT abap_false
+                    iv_main_language_only TYPE abap_bool DEFAULT abap_false
+          EXPORTING ei_log                TYPE REF TO zif_abapgit_log
+                    et_accessed_files     TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
+          RAISING   zcx_abapgit_exception.
+
 
       PROTECTED SECTION.
       PRIVATE SECTION.
@@ -78,6 +92,12 @@
           IMPORTING it_files                 TYPE zif_abapgit_definitions=>ty_files_item_tt
           RETURNING VALUE(rt_web_files_item) TYPE ty_web_files_item_tt
           RAISING   zcx_abapgit_exception .
+
+        CLASS-METHODS conv_web_files_to_remote_files
+          IMPORTING it_web_files     TYPE ty_web_files_tt
+          RETURNING VALUE(rt_remote) TYPE zif_abapgit_git_definitions=>ty_files_tt
+          RAISING   zcx_abapgit_exception .
+
 
         CLASS-METHODS delete_unnecessary_objects
           IMPORTING
@@ -223,15 +243,32 @@
           ls_web_file_item-item = lr_files->item.
           ls_web_file_item-web_file-filename = lr_files->file-filename.
           ls_web_file_item-web_file-path = lr_files->file-path.
+
           lv_data = zcl_abapgit_convert=>xstring_to_string_utf8( lr_files->file-data ).
 
-          cl_http_utility=>encode_base64( EXPORTING
-                                            unencoded = lv_data
-                                          RECEIVING
-                                            encoded   = ls_web_file_item-web_file-base64_data ).
+          ls_web_file_item-web_file-base64_data = cl_http_utility=>encode_base64( lv_data ).
 
           INSERT ls_web_file_item INTO TABLE rt_web_files_item.
 
+        ENDLOOP.
+
+      ENDMETHOD.
+
+      METHOD conv_web_files_to_remote_files.
+        DATA lr_web_file  TYPE REF TO ty_web_file.
+        DATA ls_remote TYPE zif_abapgit_git_definitions=>ty_file.
+        DATA lv_data TYPE string.
+
+        LOOP AT it_web_files REFERENCE INTO lr_web_file.
+          CLEAR ls_remote.
+          ls_remote-filename = lr_web_file->filename.
+          ls_remote-path = lr_web_file->path.
+
+          lv_data = cl_http_utility=>decode_base64(  lr_web_file->base64_data ).
+
+          ls_remote-data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_data ).
+          ls_remote-sha1 = zcl_abapgit_hash=>sha1_blob( ls_remote-data ).
+          INSERT ls_remote INTO TABLE rt_remote.
         ENDLOOP.
 
       ENDMETHOD.
@@ -244,6 +281,9 @@
         DATA lr_overwrite TYPE REF TO zif_abapgit_definitions=>ty_overwrite.
         DATA lt_results  TYPE zif_abapgit_definitions=>ty_results_tt.
         DATA lt_deserialized_objects TYPE zcl_abapgit_objects=>ty_deserialization_tt.
+
+        CLEAR ei_log.
+        CLEAR et_accessed_files.
 
         IF iv_top_package IS INITIAL.
           zcx_abapgit_exception=>raise( |Please enter top package| ).
@@ -287,11 +327,13 @@
             ii_log    = ei_log
             is_checks = ls_checks ).
 
-        lt_results = zcl_abapgit_file_deserialize=>prioritize_deser(
-          EXPORTING
-            ii_log     = ei_log
-            it_results = lt_results ).
+        lt_results = zcl_abapgit_file_deserialize=>get_results(
+                       it_results = lt_results
+                       ii_log     = ei_log ).
 
+        IF lt_results IS INITIAL.
+          RETURN.
+        ENDIF.
 
         lt_deserialized_objects = zcl_abapgit_objects=>get_deserialized_objects(
             it_remote   = it_remote
@@ -416,5 +458,31 @@
           zcx_abapgit_exception=>raise( |No transport request was supplied| ).
         ENDIF.
       ENDMETHOD.
+
+      METHOD deserialize_web_objects.
+
+        DATA lt_remote  TYPE zif_abapgit_git_definitions=>ty_files_tt.
+
+        CLEAR ei_log.
+        CLEAR et_accessed_files.
+
+        lt_remote = conv_web_files_to_remote_files( it_web_files = it_web_files  ).
+
+        deserialize_objects(
+          EXPORTING
+            iv_top_package        = iv_top_package
+            is_dot_data           = is_dot_data
+            it_remote             = lt_remote
+            it_objs_del           = it_objs_del
+            iv_transport          = iv_transport
+            iv_conf_diff_wo_warn  = iv_conf_diff_wo_warn
+            iv_main_language_only = iv_main_language_only
+          IMPORTING
+            ei_log                = ei_log
+            et_accessed_files     = et_accessed_files ).
+
+      ENDMETHOD.
+
+
 
     ENDCLASS.
