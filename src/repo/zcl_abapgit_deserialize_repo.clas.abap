@@ -55,7 +55,8 @@ CLASS zcl_abapgit_deserialize_repo IMPLEMENTATION.
 
     zcl_abapgit_objects_check=>checks_adjust(
       EXPORTING
-        io_repo    = io_repo
+        io_dot    = io_repo->get_dot_abapgit( )
+        iv_top_package    = io_repo->get_package( )
         is_checks  = is_checks
       CHANGING
         ct_results = lt_results ).
@@ -67,7 +68,6 @@ CLASS zcl_abapgit_deserialize_repo IMPLEMENTATION.
       ls_deserialized_object-item-obj_name = lr_result->obj_name.
       ls_deserialized_object-main_filename = lr_result->filename.
       ls_deserialized_object-only_package_move = lr_result->packmove.
-      ls_deserialized_object-top_package = lv_package.
 
       CLEAR ls_item.
       ls_item-obj_type = lr_result->obj_type.
@@ -93,6 +93,7 @@ CLASS zcl_abapgit_deserialize_repo IMPLEMENTATION.
 
     zcl_abapgit_objects=>deserialize_central(
       EXPORTING
+        iv_top_package    = io_repo->get_package( )
         iv_transport            = lv_transport
         iv_main_language_only   = io_repo->get_local_settings( )-main_language_only
         io_dot                  = io_repo->get_dot_abapgit( )

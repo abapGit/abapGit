@@ -14,6 +14,19 @@ CLASS zcl_abapgit_file_status DEFINITION
       RAISING
         zcx_abapgit_exception .
 
+    CLASS-METHODS status_wo_repo
+      IMPORTING
+        !iv_root_package  TYPE devclass
+        !io_dot           TYPE REF TO zcl_abapgit_dot_abapgit
+        !ii_log           TYPE REF TO zif_abapgit_log OPTIONAL
+        !it_local         TYPE zif_abapgit_definitions=>ty_files_item_tt
+        !it_remote        TYPE zif_abapgit_git_definitions=>ty_files_tt
+        !it_cur_state     TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt OPTIONAL
+      RETURNING
+        VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
+      RAISING
+        zcx_abapgit_exception .
+
     METHODS constructor
       IMPORTING
         !iv_root_package TYPE devclass
@@ -47,17 +60,17 @@ CLASS zcl_abapgit_file_status DEFINITION
       IMPORTING
         !it_unprocessed_remote TYPE zif_abapgit_git_definitions=>ty_files_tt
       CHANGING
-        !ct_items    TYPE zif_abapgit_definitions=>ty_items_tt
+        !ct_items              TYPE zif_abapgit_definitions=>ty_items_tt
       RAISING
         zcx_abapgit_exception .
     METHODS process_remote
       IMPORTING
-        !it_local     TYPE zif_abapgit_definitions=>ty_files_item_tt
+        !it_local              TYPE zif_abapgit_definitions=>ty_files_item_tt
         !it_unprocessed_remote TYPE zif_abapgit_git_definitions=>ty_files_tt
-        !it_state_idx TYPE zif_abapgit_git_definitions=>ty_file_signatures_ts
-        !it_items_idx TYPE zif_abapgit_definitions=>ty_items_ts
+        !it_state_idx          TYPE zif_abapgit_git_definitions=>ty_file_signatures_ts
+        !it_items_idx          TYPE zif_abapgit_definitions=>ty_items_ts
       CHANGING
-        !ct_results   TYPE zif_abapgit_definitions=>ty_results_tt
+        !ct_results            TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS build_existing
@@ -91,14 +104,14 @@ CLASS zcl_abapgit_file_status DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS check_local_remote_consistency
       IMPORTING
-        !is_local        TYPE zif_abapgit_definitions=>ty_file_item
-        !is_remote       TYPE zif_abapgit_git_definitions=>ty_file
+        !is_local  TYPE zif_abapgit_definitions=>ty_file_item
+        !is_remote TYPE zif_abapgit_git_definitions=>ty_file
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS ensure_state
       IMPORTING
-        !it_local         TYPE zif_abapgit_definitions=>ty_files_item_tt
-        !it_cur_state     TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
+        !it_local       TYPE zif_abapgit_definitions=>ty_files_item_tt
+        !it_cur_state   TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
       RETURNING
         VALUE(rt_state) TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt.
 
@@ -544,24 +557,38 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
         ct_local  = lt_local
         ct_remote = lt_remote ).
 
+    rt_results = status_wo_repo(
+                  iv_root_package = io_repo->get_package( )
+                  io_dot          = io_repo->get_dot_abapgit( )
+                  ii_log          = ii_log
+                  it_local        = lt_local
+                  it_remote       = lt_remote
+                  it_cur_state    = io_repo->zif_abapgit_repo~checksums( )->get_checksums_per_file( ) ).
+
+  ENDMETHOD.
+
+  METHOD status_wo_repo.
+    DATA lo_instance TYPE REF TO zcl_abapgit_file_status.
+    DATA lo_consistency_checks TYPE REF TO lcl_status_consistency_checks.
+
     CREATE OBJECT lo_instance
       EXPORTING
-        iv_root_package = io_repo->get_package( )
-        io_dot          = io_repo->get_dot_abapgit( ).
+        iv_root_package = iv_root_package
+        io_dot          = io_dot.
 
     rt_results = lo_instance->calculate_status(
-      it_local     = lt_local
-      it_remote    = lt_remote
-      it_cur_state = io_repo->zif_abapgit_repo~checksums( )->get_checksums_per_file( ) ).
+      it_local     = it_local
+      it_remote    = it_remote
+      it_cur_state = it_cur_state ).
 
     IF ii_log IS BOUND.
       " This method just adds messages to the log. No log, nothing to do here
       CREATE OBJECT lo_consistency_checks
         EXPORTING
-          iv_root_package = io_repo->get_package( )
-          io_dot          = io_repo->get_dot_abapgit( ).
+          iv_root_package = iv_root_package
+          io_dot          = io_dot.
       ii_log->merge_with( lo_consistency_checks->run_checks( rt_results ) ).
     ENDIF.
-
   ENDMETHOD.
+
 ENDCLASS.

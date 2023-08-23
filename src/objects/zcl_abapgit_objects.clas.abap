@@ -18,7 +18,6 @@ CLASS zcl_abapgit_objects DEFINITION
     TYPES:
       only_package_move TYPE abap_bool,
       main_filename     TYPE string,
-      top_package       TYPE devclass,
       END OF ty_deserialization .
 
     TYPES:
@@ -100,6 +99,7 @@ CLASS zcl_abapgit_objects DEFINITION
 
     CLASS-METHODS deserialize_central
       IMPORTING
+        !iv_top_package          TYPE devclass
         !iv_transport            TYPE trkorr
         !iv_main_language_only   TYPE abap_bool DEFAULT abap_false
         !io_dot                  TYPE REF TO zcl_abapgit_dot_abapgit
@@ -246,6 +246,7 @@ CLASS zcl_abapgit_objects DEFINITION
         VALUE(rv_extra) TYPE string.
     CLASS-METHODS prepare_deserialize_obj
       IMPORTING
+        iv_top_package         TYPE devclass
         iv_main_language_only  TYPE abap_bool DEFAULT abap_false
         io_dot                 TYPE REF TO zcl_abapgit_dot_abapgit
         ii_log                 TYPE REF TO zif_abapgit_log
@@ -707,7 +708,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     zcl_abapgit_objects_check=>checks_adjust(
       EXPORTING
-        io_repo    = io_repo
+        io_dot    = io_repo->get_dot_abapgit( )
+        iv_top_package    = io_repo->get_package( )
         is_checks  = is_checks
       CHANGING
         ct_results = lt_results ).
@@ -1346,8 +1348,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     DATA lt_items TYPE zif_abapgit_definitions=>ty_items_tt.
     DATA lo_i18n_params TYPE REF TO zcl_abapgit_i18n_params.
     DATA lt_steps TYPE zif_abapgit_objects=>ty_step_data_tt.
-    DATA lt_devclass TYPE STANDARD TABLE OF devclass.
-    DATA lr_devclass TYPE REF TO devclass.
     DATA lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
     DATA lv_prev_top_package TYPE devclass.
 
@@ -1386,19 +1386,12 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       ii_log->add_info( |>>> Deserializing { lines( lt_items ) } objects| ).
     ENDIF.
 
-    "Folder logic buffers sub packages so we need for each top package a new instance
-    SORT ct_deserialized_objects BY top_package item-obj_type item-obj_name.
-
-    "Prepare (register) deserialization for each object and create the package structure
+    CREATE OBJECT lo_folder_logic.
     LOOP AT ct_deserialized_objects REFERENCE INTO lr_deserialized_objects.
-
-      IF lv_prev_top_package <> lr_deserialized_objects->top_package OR lv_prev_top_package IS INITIAL.
-        CREATE OBJECT lo_folder_logic.
-        lv_prev_top_package = lr_deserialized_objects->top_package.
-      ENDIF.
 
       prepare_deserialize_obj(
         EXPORTING
+          iv_top_package         = iv_top_package
           iv_main_language_only  = iv_main_language_only
           io_dot                 = io_dot
           ii_log                 = ii_log
@@ -1410,8 +1403,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           io_folder_logic        = lo_folder_logic
         CHANGING
           ct_steps               = lt_steps ).
-
-      INSERT lr_deserialized_objects->top_package INTO TABLE lt_devclass.
 
     ENDLOOP.
 
@@ -1426,14 +1417,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       CHANGING
         ct_files     = et_accessed_files ).
 
-
-    "Refresh tree of all top packages
-    SORT lt_devclass.
-    DELETE ADJACENT DUPLICATES FROM lt_devclass.
-
-    LOOP AT lt_devclass REFERENCE INTO lr_devclass.
-      update_package_tree( lr_devclass->* ).
-    ENDLOOP.
+    update_package_tree( iv_top_package ).
 
     zcl_abapgit_default_transport=>get_instance( )->reset( ).
 
@@ -1469,7 +1453,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         IF ir_deserialized_object->item-obj_type <> 'NSPC'.
           " If package does not exist yet, it will be created with this call
           lv_package = io_folder_logic->path_to_package(
-            iv_top  = ir_deserialized_object->top_package
+            iv_top  = iv_top_package
             io_dot  = io_dot
             iv_path = lr_file->path ).
 
