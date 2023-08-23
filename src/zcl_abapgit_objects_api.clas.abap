@@ -92,8 +92,8 @@
                     it_filter      TYPE zif_abapgit_definitions=>ty_tadir_tt
                     it_remote      TYPE zif_abapgit_git_definitions=>ty_files_tt OPTIONAL
                     iv_transport   TYPE trkorr OPTIONAL
-          EXPORTING ei_log         TYPE REF TO zif_abapgit_log
-                    es_checks      TYPE zif_abapgit_definitions=>ty_deserialize_checks
+                    ii_log         TYPE REF TO zif_abapgit_log
+          EXPORTING es_checks      TYPE zif_abapgit_definitions=>ty_deserialize_checks
                     et_results     TYPE zif_abapgit_definitions=>ty_results_tt
           RAISING   zcx_abapgit_exception.
 
@@ -251,6 +251,8 @@
 
         lo_dot = get_dot( is_dot_data ).
 
+        CREATE OBJECT ei_log TYPE zcl_abapgit_log.
+
         lt_filter = get_filter_deserialize(
             it_objs_del    = it_objs_del
             it_remote      = it_remote
@@ -265,10 +267,14 @@
             it_filter      = lt_filter
             it_remote      = it_remote
             iv_transport   = iv_transport
+            ii_log         = ei_log
           IMPORTING
-            ei_log         = ei_log
             es_checks      = ls_checks
             et_results     = lt_results ).
+
+        "We want to handle only objects so delete the not relevant files
+        DELETE lt_results WHERE filename = zif_abapgit_definitions=>c_dot_abapgit
+                           OR filename = zif_abapgit_apack_definitions=>c_dot_apack_manifest.
 
         "Set all overwrite decisions to true (without gui)
         LOOP AT ls_checks-overwrite REFERENCE INTO lr_overwrite.
@@ -389,6 +395,7 @@
                  it_remote      = it_remote
                  it_filter      = it_filter
                  iv_transport   = iv_transport
+                 ii_log         = ii_log
                IMPORTING
                  es_checks      = es_checks
                  et_results     = et_results ).
