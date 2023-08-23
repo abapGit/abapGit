@@ -1,9 +1,34 @@
-CLASS zcl_abapgit_web_objects_api DEFINITION
+    CLASS zcl_abapgit_objects_api DEFINITION
   PUBLIC
   FINAL
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+
+    TYPES: BEGIN OF ty_web_file,
+             path        TYPE string,
+             filename    TYPE string,
+             base64_data TYPE string,
+           END OF ty_web_file.
+
+    TYPES: BEGIN OF ty_web_file_item,
+             web_file TYPE ty_web_file,
+             item     TYPE zif_abapgit_definitions=>ty_item,
+           END OF ty_web_file_item.
+
+    TYPES ty_web_files_item_tt TYPE STANDARD TABLE OF ty_web_file_item WITH DEFAULT KEY .
+
+    CLASS-METHODS serialize_web_objects
+      IMPORTING
+        iv_top_package    TYPE devclass
+        it_objs           TYPE zif_abapgit_definitions=>ty_obj_tt
+        is_dot_data       TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit OPTIONAL
+      EXPORTING
+        ei_log            TYPE REF TO zif_abapgit_log
+        et_web_files_item TYPE ty_web_files_item_tt
+      RAISING
+        zcx_abapgit_exception .
+
     CLASS-METHODS serialize_objects
       IMPORTING
         iv_top_package TYPE devclass
@@ -14,6 +39,7 @@ CLASS zcl_abapgit_web_objects_api DEFINITION
         et_files       TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
         zcx_abapgit_exception .
+
 
 
   PROTECTED SECTION.
@@ -28,18 +54,21 @@ CLASS zcl_abapgit_web_objects_api DEFINITION
       IMPORTING it_objs          TYPE zif_abapgit_definitions=>ty_obj_tt
       RETURNING VALUE(rt_filter) TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
+    CLASS-METHODS conv_files_to_web_files_item
+      IMPORTING it_files                 TYPE zif_abapgit_definitions=>ty_files_item_tt
+      RETURNING VALUE(rt_web_files_item) TYPE ty_web_files_item_tt
+      RAISING   zcx_abapgit_exception .
 
 ENDCLASS.
 
 
-CLASS zcl_abapgit_web_objects_api IMPLEMENTATION.
+CLASS zcl_abapgit_objects_api IMPLEMENTATION.
 
   METHOD serialize_objects.
 
     DATA lo_dot TYPE REF TO zcl_abapgit_dot_abapgit.
     DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
     DATA lo_serialize TYPE REF TO zcl_abapgit_serialize.
-    DATA lt_files  TYPE zif_abapgit_definitions=>ty_files_item_tt.
 
     CLEAR ei_log.
     CLEAR et_files.
@@ -58,15 +87,15 @@ CLASS zcl_abapgit_web_objects_api IMPLEMENTATION.
       EXPORTING
         io_dot_abapgit = lo_dot.
 
-    lt_files =  lo_serialize->files_local(
+    et_files =  lo_serialize->files_local(
       EXPORTING
         iv_package     = iv_top_package
         ii_log         = ei_log
         it_filter      = lt_filter ).
 
     "We want to handle only objects so delete the not relevant files
-    DELETE et_files WHERE file-filename = zif_abapgit_definitions=>c_dot_abapgit.
-    DELETE et_files WHERE file-filename = zif_abapgit_apack_definitions=>c_dot_apack_manifest.
+    DELETE et_files WHERE file-filename = zif_abapgit_definitions=>c_dot_abapgit
+                       OR file-filename = zif_abapgit_apack_definitions=>c_dot_apack_manifest.
   ENDMETHOD.
 
   METHOD get_dot.
@@ -126,6 +155,47 @@ CLASS zcl_abapgit_web_objects_api IMPLEMENTATION.
       ls_filter-object = lr_obj->obj_type.
       ls_filter-obj_name = lr_obj->obj_name.
       INSERT ls_filter INTO TABLE rt_filter.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD serialize_web_objects.
+    DATA lt_files  TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    serialize_objects(
+      EXPORTING
+        iv_top_package = iv_top_package
+        it_objs        = it_objs
+        is_dot_data    = is_dot_data
+      IMPORTING
+        ei_log         = ei_log
+        et_files       = lt_files
+    ).
+
+    et_web_files_item = conv_files_to_web_files_item( it_files = lt_files ).
+
+
+  ENDMETHOD.
+
+  METHOD conv_files_to_web_files_item.
+    DATA lr_files TYPE REF TO zif_abapgit_definitions=>ty_file_item.
+    DATA ls_web_file_item TYPE ty_web_file_item.
+    DATA lv_data TYPE string.
+
+
+    LOOP AT it_files REFERENCE INTO lr_files.
+      CLEAR ls_web_file_item.
+      ls_web_file_item-item = lr_files->item.
+      ls_web_file_item-web_file-filename = lr_files->file-filename.
+      ls_web_file_item-web_file-path = lr_files->file-path.
+      lv_data = zcl_abapgit_convert=>xstring_to_string_utf8( lr_files->file-data ).
+
+      cl_http_utility=>encode_base64( EXPORTING
+                                        unencoded = lv_data
+                                      RECEIVING
+                                        encoded   = ls_web_file_item-web_file-base64_data ).
+
+      INSERT ls_web_file_item INTO TABLE rt_web_files_item.
+
     ENDLOOP.
 
   ENDMETHOD.
