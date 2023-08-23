@@ -45,8 +45,9 @@ CLASS zcl_abapgit_deserialize_repo IMPLEMENTATION.
 
     lt_remote = io_repo->get_files_remote( iv_ignore_files = abap_true ).
 
+    "Get results to deserialize
     lt_results = zcl_abapgit_file_deserialize=>get_results(
-      io_repo = io_repo
+      it_results = zcl_abapgit_file_status=>status( io_repo )
       ii_log = ii_log ).
 
     IF lt_results IS INITIAL.
