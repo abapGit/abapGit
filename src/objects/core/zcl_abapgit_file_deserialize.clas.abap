@@ -31,10 +31,10 @@ CLASS zcl_abapgit_file_deserialize DEFINITION
         VALUE(rt_items) TYPE zif_abapgit_definitions=>ty_items_tt .
     CLASS-METHODS prioritize_deser
       IMPORTING
-         ii_log           TYPE REF TO zif_abapgit_log
-         it_results       TYPE zif_abapgit_definitions=>ty_results_tt
+        ii_log            TYPE REF TO zif_abapgit_log
+        it_results        TYPE zif_abapgit_definitions=>ty_results_tt
       RETURNING
-        value(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt .
+        VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt .
 ENDCLASS.
 
 
