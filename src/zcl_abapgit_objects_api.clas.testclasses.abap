@@ -83,9 +83,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 *    is_dot_data       =
         it_objs           = lt_objs
       IMPORTING
-        et_web_files_item = lt_web_files_item
-    ).
-
+        et_web_files_item = lt_web_files_item ).
 
     cl_abap_unit_assert=>assert_not_initial( lt_web_files_item ).
 
@@ -112,11 +110,7 @@ CLASS ltcl_file_conv DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT F
 
   PRIVATE SECTION.
 
-    METHODS:
-
-      check_conv FOR TESTING RAISING zcx_abapgit_exception.
-
-
+    METHODS check_conv FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
