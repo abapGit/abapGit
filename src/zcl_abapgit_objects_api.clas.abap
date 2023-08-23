@@ -481,6 +481,5 @@ CLASS zcl_abapgit_objects_api IMPLEMENTATION.
 
   ENDMETHOD.
 
-
-
 ENDCLASS.
+
