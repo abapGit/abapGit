@@ -553,7 +553,6 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     ls_repo-local_settings-labels = iv_labels.
 
     lo_repo->set_local_settings( ls_repo-local_settings ).
-    lo_repo->check_and_create_package( iv_package ).
 
     ri_repo = lo_repo.
 
@@ -615,9 +614,9 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     ls_repo-local_settings-labels = iv_labels.
 
     lo_repo->set_local_settings( ls_repo-local_settings ).
+
     lo_repo->refresh( ).
     lo_repo->find_remote_dot_abapgit( ).
-    lo_repo->check_and_create_package( iv_package ).
 
     ri_repo = lo_repo.
 
