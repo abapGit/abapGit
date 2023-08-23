@@ -14,13 +14,14 @@ CLASS zcl_abapgit_objects_check DEFINITION
 
     CLASS-METHODS deserialize_checks_wo_repo
       IMPORTING
-        !iv_top_package  TYPE devclass
-        !io_dot          TYPE REF TO zcl_abapgit_dot_abapgit
-        !it_remote       TYPE zif_abapgit_git_definitions=>ty_files_tt
-        !it_filter       TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
-        !iv_transport    TYPE trkorr OPTIONAL
-      RETURNING
-        VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
+        !iv_top_package TYPE devclass
+        !io_dot         TYPE REF TO zcl_abapgit_dot_abapgit
+        !it_remote      TYPE zif_abapgit_git_definitions=>ty_files_tt
+        !it_filter      TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
+        !iv_transport   TYPE trkorr OPTIONAL
+      EXPORTING
+        es_checks       TYPE zif_abapgit_definitions=>ty_deserialize_checks
+        et_results      TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
         zcx_abapgit_exception .
 
@@ -178,11 +179,14 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
 
   METHOD deserialize_checks_wo_repo.
 
-    DATA: lt_results TYPE zif_abapgit_definitions=>ty_results_tt,
-          li_package TYPE REF TO zif_abapgit_sap_package.
+    DATA li_package TYPE REF TO zif_abapgit_sap_package.
     DATA lr_serialize TYPE REF TO zcl_abapgit_serialize.
     DATA lt_local  TYPE zif_abapgit_definitions=>ty_files_item_tt.
     DATA li_log TYPE REF TO zif_abapgit_log.
+
+    CLEAR et_results.
+    CLEAR es_checks.
+
     " get unfiltered status to evaluate properly which warnings are required
 
     CREATE OBJECT lr_serialize
@@ -197,28 +201,28 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
         ii_log         = li_log ).
 
 
-    lt_results = zcl_abapgit_file_status=>status_wo_repo(
+    et_results = zcl_abapgit_file_status=>status_wo_repo(
                    iv_root_package = iv_top_package
                    io_dot          = io_dot
                    ii_log          = li_log
                    it_local        = lt_local
                    it_remote       = it_remote ).
 
-    check_multiple_files( lt_results ).
+    check_multiple_files( et_results ).
 
-    rs_checks-overwrite = warning_overwrite_find( lt_results ).
+    es_checks-overwrite = warning_overwrite_find( et_results ).
 
-    rs_checks-warning_package = warning_package_find(
+    es_checks-warning_package = warning_package_find(
       io_dot    = io_dot
       iv_top_package    = iv_top_package
-      it_results = lt_results ).
+      it_results = et_results ).
 
-    IF lines( lt_results ) > 0.
+    IF lines( et_results ) > 0.
       li_package = zcl_abapgit_factory=>get_sap_package( iv_top_package ).
-      rs_checks-transport-required = li_package->are_changes_recorded_in_tr_req( ).
-      IF NOT rs_checks-transport-required IS INITIAL.
-        rs_checks-transport-type = li_package->get_transport_type( ).
-        rs_checks-transport-transport = iv_transport.
+      es_checks-transport-required = li_package->are_changes_recorded_in_tr_req( ).
+      IF NOT es_checks-transport-required IS INITIAL.
+        es_checks-transport-type = li_package->get_transport_type( ).
+        es_checks-transport-transport = iv_transport.
       ENDIF.
     ENDIF.
 
