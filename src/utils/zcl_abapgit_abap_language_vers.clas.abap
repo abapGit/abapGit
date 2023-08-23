@@ -79,7 +79,7 @@ CLASS zcl_abapgit_abap_language_vers IMPLEMENTATION.
     DATA lv_class TYPE string.
     DATA lo_abap_language_version TYPE REF TO object.
 
-    lv_class = 'CL_ABAP_LANGUAGE_VERSION_CFG'.
+    lv_class = 'CL_ABAP_LANGUAGE_VERSION'.
 
     TRY.
 
