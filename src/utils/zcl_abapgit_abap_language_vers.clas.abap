@@ -46,7 +46,6 @@ CLASS zcl_abapgit_abap_language_vers IMPLEMENTATION.
     lv_class = 'CL_ABAP_LANGUAGE_VERSION_CFG'.
 
     TRY.
-        CREATE OBJECT lo_abap_language_version_cfg TYPE ('IF_ABAP_LANGUAGE_VERSION_CFG').
 
         CALL METHOD (lv_class)=>('GET_INSTANCE')
           RECEIVING
