@@ -535,7 +535,7 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
     FIELD-SYMBOLS:
       <ls_result> LIKE LINE OF lt_results.
 
-    lt_results = zcl_abapgit_file_status=>status( mo_repo ).
+    lt_results = zcl_abapgit_repo_status=>calculate( mo_repo ).
 
     DO 3 TIMES.
       CLEAR ls_stats.
