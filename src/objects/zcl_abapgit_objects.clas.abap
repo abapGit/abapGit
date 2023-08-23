@@ -112,6 +112,11 @@ CLASS zcl_abapgit_objects DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    CLASS-METHODS get_deserialized_objects
+      IMPORTING !it_remote                     TYPE zif_abapgit_git_definitions=>ty_files_tt
+                !it_results                    TYPE zif_abapgit_definitions=>ty_results_tt
+      RETURNING VALUE(rt_deserialized_objects) TYPE ty_deserialization_tt.
+
   PROTECTED SECTION.
 
   PRIVATE SECTION.
@@ -1631,6 +1636,46 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         ENDIF.
       ENDIF.
     ENDIF.
+  ENDMETHOD.
+
+  METHOD get_deserialized_objects.
+
+    DATA lr_result TYPE REF TO zif_abapgit_definitions=>ty_result.
+    DATA lt_deserialized_objects  TYPE zcl_abapgit_objects=>ty_deserialization_tt.
+    DATA ls_deserialized_object  TYPE zcl_abapgit_objects=>ty_deserialization.
+    DATA lo_files    TYPE REF TO zcl_abapgit_objects_files.
+    DATA ls_item     TYPE zif_abapgit_definitions=>ty_item.
+    DATA lv_path TYPE string.
+
+    LOOP AT it_results REFERENCE INTO lr_result.
+      CLEAR ls_deserialized_object.
+
+      ls_deserialized_object-item-obj_type = lr_result->obj_type.
+      ls_deserialized_object-item-obj_name = lr_result->obj_name.
+      ls_deserialized_object-main_filename = lr_result->filename.
+      ls_deserialized_object-only_package_move = lr_result->packmove.
+
+      CLEAR ls_item.
+      ls_item-obj_type = lr_result->obj_type.
+      ls_item-obj_name = lr_result->obj_name.
+
+      CLEAR lv_path.
+      IF ls_item-obj_type = 'DEVC'.
+        " Packages have the same filename across different folders. The path needs to be supplied
+        " to find the correct file.
+        lv_path = lr_result->path.
+      ENDIF.
+
+      CREATE OBJECT lo_files
+        EXPORTING
+          is_item = ls_item
+          iv_path = lv_path.
+
+      lo_files->set_files( it_remote ).
+
+      ls_deserialized_object-files = lo_files->get_files( ).
+      INSERT ls_deserialized_object INTO TABLE rt_deserialized_objects.
+    ENDLOOP.
   ENDMETHOD.
 
 ENDCLASS.
