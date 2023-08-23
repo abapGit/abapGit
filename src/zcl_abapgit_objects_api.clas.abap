@@ -41,12 +41,15 @@
             zcx_abapgit_exception .
 
         CLASS-METHODS deserialize_objects
-          IMPORTING iv_top_package TYPE devclass
-                    is_dot_data    TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit OPTIONAL
-                    it_remote      TYPE zif_abapgit_git_definitions=>ty_files_tt
-                    it_objs_del    TYPE zif_abapgit_definitions=>ty_obj_tt OPTIONAL
-                    iv_transport   TYPE trkorr OPTIONAL
-          EXPORTING ei_log         TYPE REF TO zif_abapgit_log
+          IMPORTING iv_top_package        TYPE devclass
+                    is_dot_data           TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit OPTIONAL
+                    it_remote             TYPE zif_abapgit_git_definitions=>ty_files_tt OPTIONAL
+                    it_objs_del           TYPE zif_abapgit_definitions=>ty_obj_tt OPTIONAL
+                    iv_transport          TYPE trkorr OPTIONAL
+                    iv_conf_diff_wo_warn  TYPE abap_bool DEFAULT abap_false
+                    iv_main_language_only TYPE abap_bool DEFAULT abap_false
+          EXPORTING ei_log                TYPE REF TO zif_abapgit_log
+                    et_accessed_files     TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
           RAISING   zcx_abapgit_exception.
 
 
@@ -62,6 +65,15 @@
           IMPORTING it_objs          TYPE zif_abapgit_definitions=>ty_obj_tt
           RETURNING VALUE(rt_filter) TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
+
+        CLASS-METHODS get_filter_deserialize
+          IMPORTING it_objs_del      TYPE zif_abapgit_definitions=>ty_obj_tt OPTIONAL
+                    it_remote        TYPE zif_abapgit_git_definitions=>ty_files_tt OPTIONAL
+                    iv_top_package   TYPE devclass
+                    io_dot           TYPE REF TO zcl_abapgit_dot_abapgit
+          RETURNING VALUE(rt_filter) TYPE zif_abapgit_definitions=>ty_tadir_tt
+          RAISING   zcx_abapgit_exception .
+
         CLASS-METHODS conv_files_to_web_files_item
           IMPORTING it_files                 TYPE zif_abapgit_definitions=>ty_files_item_tt
           RETURNING VALUE(rt_web_files_item) TYPE ty_web_files_item_tt
@@ -69,10 +81,21 @@
 
         CLASS-METHODS delete_unnecessary_objects
           IMPORTING
-            !ii_log    TYPE REF TO zif_abapgit_log
-            !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
+            ii_log    TYPE REF TO zif_abapgit_log
+            is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
           RAISING
             zcx_abapgit_exception .
+
+        CLASS-METHODS deserialize_objects_checks
+          IMPORTING iv_top_package TYPE devclass
+                    io_dot         TYPE REF TO zcl_abapgit_dot_abapgit
+                    it_filter      TYPE zif_abapgit_definitions=>ty_tadir_tt
+                    it_remote      TYPE zif_abapgit_git_definitions=>ty_files_tt OPTIONAL
+                    iv_transport   TYPE trkorr OPTIONAL
+          EXPORTING ei_log         TYPE REF TO zif_abapgit_log
+                    es_checks      TYPE zif_abapgit_definitions=>ty_deserialize_checks
+                    et_results     TYPE zif_abapgit_definitions=>ty_results_tt
+          RAISING   zcx_abapgit_exception.
 
     ENDCLASS.
 
@@ -183,11 +206,9 @@
             is_dot_data    = is_dot_data
           IMPORTING
             ei_log         = ei_log
-            et_files       = lt_files
-        ).
+            et_files       = lt_files ).
 
         et_web_files_item = conv_files_to_web_files_item( it_files = lt_files ).
-
 
       ENDMETHOD.
 
@@ -219,75 +240,35 @@
 
         DATA lo_dot TYPE REF TO zcl_abapgit_dot_abapgit.
         DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
-        DATA lr_remote  TYPE REF TO  zif_abapgit_git_definitions=>ty_file.
-        DATA lt_objs  TYPE zif_abapgit_definitions=>ty_obj_tt.
-        DATA ls_obj TYPE zif_abapgit_definitions=>ty_obj.
-        DATA ls_item  TYPE zif_abapgit_definitions=>ty_item.
         DATA ls_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks.
-        DATA lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
-        DATA lt_dependencies TYPE zif_abapgit_apack_definitions=>ty_dependencies.
         DATA lr_overwrite TYPE REF TO zif_abapgit_definitions=>ty_overwrite.
+        DATA lt_results  TYPE zif_abapgit_definitions=>ty_results_tt.
+        DATA lt_deserialized_objects TYPE zcl_abapgit_objects=>ty_deserialization_tt.
 
         IF iv_top_package IS INITIAL.
           zcx_abapgit_exception=>raise( |Please enter top package| ).
         ENDIF.
 
         lo_dot = get_dot( is_dot_data ).
-        lt_objs = it_objs_del.
 
-        "Get Objects from remote files
-        LOOP AT it_remote REFERENCE INTO lr_remote.
+        lt_filter = get_filter_deserialize(
+            it_objs_del    = it_objs_del
+            it_remote      = it_remote
+            iv_top_package = iv_top_package
+            io_dot         = lo_dot ).
 
-          zcl_abapgit_filename_logic=>file_to_object(
-                EXPORTING
-                  iv_filename = lr_remote->filename
-                  iv_path     = lr_remote->path
-                  io_dot      = lo_dot
-                  iv_devclass = iv_top_package
-                IMPORTING
-                  es_item     = ls_item ).
 
-          ls_obj-obj_name = ls_item-obj_name.
-          ls_obj-obj_type = ls_item-obj_type.
-
-          INSERT ls_obj INTO TABLE lt_objs.
-
-        ENDLOOP.
-
-        SORT lt_objs.
-        DELETE ADJACENT DUPLICATES FROM lt_objs.
-        IF lt_objs IS INITIAL.
-          zcx_abapgit_exception=>raise( |Please enter the objects to delete or the modified files| ).
-        ENDIF.
-
-        "Use filter to delete only relevant objects
-        lt_filter = get_filter( it_objs = lt_objs  ).
-
-        zcl_abapgit_objects_check=>deserialize_checks_wo_repo(
+        deserialize_objects_checks(
           EXPORTING
             iv_top_package = iv_top_package
             io_dot         = lo_dot
-            it_remote      = it_remote
             it_filter      = lt_filter
+            it_remote      = it_remote
             iv_transport   = iv_transport
-          RECEIVING
-            rs_checks      = ls_checks
-        ).
-        IF ls_checks-overwrite IS INITIAL.
-          zcx_abapgit_exception=>raise(
-            'There is nothing to deserialize. The local state completely matches the remote repository.' ).
-        ENDIF.
-
-        lt_requirements = lo_dot->get_data( )-requirements.
-        ls_checks-requirements-met = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements ).
-
-        IF ls_checks-requirements-met = zif_abapgit_definitions=>c_no.
-          zcx_abapgit_exception=>raise( 'Requirements not met' ).
-        ENDIF.
-
-        IF ls_checks-transport-required = abap_true AND ls_checks-transport-transport IS INITIAL.
-          zcx_abapgit_exception=>raise( |No transport request was supplied| ).
-        ENDIF.
+          IMPORTING
+            ei_log         = ei_log
+            es_checks      = ls_checks
+            et_results     = lt_results ).
 
         "Set all overwrite decisions to true (without gui)
         LOOP AT ls_checks-overwrite REFERENCE INTO lr_overwrite.
@@ -298,9 +279,30 @@
         delete_unnecessary_objects(
           EXPORTING
             ii_log    = ei_log
-            is_checks = ls_checks
-        ).
+            is_checks = ls_checks ).
 
+        lt_results = zcl_abapgit_file_deserialize=>prioritize_deser(
+          EXPORTING
+            ii_log     = ei_log
+            it_results = lt_results ).
+
+
+        lt_deserialized_objects = zcl_abapgit_objects=>get_deserialized_objects(
+            it_remote   = it_remote
+            it_results  = lt_results ).
+
+        zcl_abapgit_objects=>deserialize_central(
+          EXPORTING
+            iv_top_package    = iv_top_package
+            iv_transport            = ls_checks-transport-transport
+            iv_main_language_only   = iv_main_language_only
+            io_dot                  = lo_dot
+            ii_log                  = ei_log
+            iv_conf_diff_wo_warn    = abap_true
+          IMPORTING
+            et_accessed_files       = et_accessed_files
+          CHANGING
+            ct_deserialized_objects = lt_deserialized_objects ).
 
       ENDMETHOD.
 
@@ -337,6 +339,75 @@
 
         ENDIF.
 
+      ENDMETHOD.
+
+      METHOD get_filter_deserialize.
+        DATA lt_objs  TYPE zif_abapgit_definitions=>ty_obj_tt.
+        DATA ls_obj TYPE zif_abapgit_definitions=>ty_obj.
+        DATA ls_item  TYPE zif_abapgit_definitions=>ty_item.
+        DATA lr_remote  TYPE REF TO  zif_abapgit_git_definitions=>ty_file.
+
+        lt_objs = it_objs_del.
+
+        "Get Objects from remote files
+        LOOP AT it_remote REFERENCE INTO lr_remote.
+
+          zcl_abapgit_filename_logic=>file_to_object(
+                EXPORTING
+                  iv_filename = lr_remote->filename
+                  iv_path     = lr_remote->path
+                  io_dot      = io_dot
+                  iv_devclass = iv_top_package
+                IMPORTING
+                  es_item     = ls_item ).
+
+          ls_obj-obj_name = ls_item-obj_name.
+          ls_obj-obj_type = ls_item-obj_type.
+
+          INSERT ls_obj INTO TABLE lt_objs.
+
+        ENDLOOP.
+
+        SORT lt_objs.
+        DELETE ADJACENT DUPLICATES FROM lt_objs.
+        IF lt_objs IS INITIAL.
+          zcx_abapgit_exception=>raise( |Please enter the objects to delete or the modified files| ).
+        ENDIF.
+
+        "Use filter to delete only relevant objects
+        rt_filter = get_filter( it_objs = lt_objs  ).
+
+      ENDMETHOD.
+
+      METHOD deserialize_objects_checks.
+        DATA lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
+
+        zcl_abapgit_objects_check=>deserialize_checks_wo_repo(
+               EXPORTING
+                 iv_top_package = iv_top_package
+                 io_dot         = io_dot
+                 it_remote      = it_remote
+                 it_filter      = it_filter
+                 iv_transport   = iv_transport
+               IMPORTING
+                 es_checks      = es_checks
+                 et_results     = et_results ).
+
+        IF es_checks-overwrite IS INITIAL.
+          zcx_abapgit_exception=>raise(
+            'There is nothing to deserialize. The local state completely matches the remote repository.' ).
+        ENDIF.
+
+        lt_requirements = io_dot->get_data( )-requirements.
+        es_checks-requirements-met = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements ).
+
+        IF es_checks-requirements-met = zif_abapgit_definitions=>c_no.
+          zcx_abapgit_exception=>raise( 'Requirements not met' ).
+        ENDIF.
+
+        IF es_checks-transport-required = abap_true AND es_checks-transport-transport IS INITIAL.
+          zcx_abapgit_exception=>raise( |No transport request was supplied| ).
+        ENDIF.
       ENDMETHOD.
 
     ENDCLASS.
