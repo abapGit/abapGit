@@ -195,10 +195,10 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
         et_tadir              = rt_tadir
         et_packages           = lt_packages ).
 
-    READ TABLE it_filter TRANSPORTING NO FIELDS
+    READ TABLE lt_filter TRANSPORTING NO FIELDS
     WITH KEY obj_type = 'DEVC'
     BINARY SEARCH.
-    IF sy-subrc = 0 OR it_filter IS INITIAL.
+    IF sy-subrc = 0 OR lt_filter IS INITIAL.
       lv_add_pack_or_nspc = abap_true.
       add_local_packages(
         EXPORTING
@@ -207,10 +207,10 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
           ct_tadir    = rt_tadir ).
     ENDIF.
 
-    READ TABLE it_filter TRANSPORTING NO FIELDS
+    READ TABLE lt_filter TRANSPORTING NO FIELDS
     WITH KEY obj_type = 'NSPC'
     BINARY SEARCH.
-    IF sy-subrc = 0 OR it_filter IS INITIAL.
+    IF sy-subrc = 0 OR lt_filter IS INITIAL.
       lv_add_pack_or_nspc = abap_true.
       add_namespaces(
         EXPORTING
@@ -219,9 +219,9 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
           ct_tadir   = rt_tadir ).
     ENDIF.
 
-    IF it_filter IS NOT INITIAL AND lv_add_pack_or_nspc = abap_true.
+    IF lt_filter IS NOT INITIAL AND lv_add_pack_or_nspc = abap_true.
       LOOP AT rt_tadir REFERENCE INTO lr_tadir.
-        READ TABLE it_filter TRANSPORTING NO FIELDS
+        READ TABLE lt_filter TRANSPORTING NO FIELDS
            WITH KEY obj_type = lr_tadir->object
                     obj_name = lr_tadir->obj_name
            BINARY SEARCH.
