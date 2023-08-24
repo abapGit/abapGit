@@ -24,7 +24,7 @@ CLASS zcl_abapgit_tadir DEFINITION
         !iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
         !iv_only_local_objects TYPE abap_bool DEFAULT abap_false
         !ii_log                TYPE REF TO zif_abapgit_log OPTIONAL
-        !it_filter             TYPE zif_abapgit_definitions=>ty_obj_tt OPTIONAL
+        !it_filter             TYPE zif_abapgit_definitions=>ty_obj_ts OPTIONAL
       RETURNING
         VALUE(rt_tadir)        TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
@@ -34,7 +34,7 @@ CLASS zcl_abapgit_tadir DEFINITION
         !iv_package            TYPE tadir-devclass
         !iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
         !iv_only_local_objects TYPE abap_bool
-        !it_filter             TYPE zif_abapgit_definitions=>ty_obj_tt OPTIONAL
+        !it_filter             TYPE zif_abapgit_definitions=>ty_obj_ts OPTIONAL
       EXPORTING
         !et_packages           TYPE zif_abapgit_sap_package=>ty_devclass_tt
         !et_tadir              TYPE zif_abapgit_definitions=>ty_tadir_tt
@@ -178,27 +178,23 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
   METHOD build.
 
     DATA lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
-    DATA lt_filter TYPE  zif_abapgit_definitions=>ty_obj_tt.
     DATA lr_tadir TYPE REF TO zif_abapgit_definitions=>ty_tadir.
     DATA lv_add_pack_or_nspc TYPE abap_bool.
-
-    lt_filter = it_filter.
-    SORT lt_filter BY obj_type obj_name.
 
     select_objects(
       EXPORTING
         iv_package            = iv_package
         iv_ignore_subpackages = iv_ignore_subpackages
         iv_only_local_objects = iv_only_local_objects
-        it_filter             = lt_filter
+        it_filter             = it_filter
       IMPORTING
         et_tadir              = rt_tadir
         et_packages           = lt_packages ).
 
-    READ TABLE lt_filter TRANSPORTING NO FIELDS
-    WITH KEY obj_type = 'DEVC'
-    BINARY SEARCH.
-    IF sy-subrc = 0 OR lt_filter IS INITIAL.
+    READ TABLE it_filter TRANSPORTING NO FIELDS
+    WITH TABLE KEY obj_type = 'DEVC'.
+
+    IF sy-subrc = 0 OR it_filter IS INITIAL.
       lv_add_pack_or_nspc = abap_true.
       add_local_packages(
         EXPORTING
@@ -207,10 +203,10 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
           ct_tadir    = rt_tadir ).
     ENDIF.
 
-    READ TABLE lt_filter TRANSPORTING NO FIELDS
-    WITH KEY obj_type = 'NSPC'
-    BINARY SEARCH.
-    IF sy-subrc = 0 OR lt_filter IS INITIAL.
+    READ TABLE it_filter TRANSPORTING NO FIELDS
+    WITH TABLE KEY obj_type = 'NSPC'.
+
+    IF sy-subrc = 0 OR it_filter IS INITIAL.
       lv_add_pack_or_nspc = abap_true.
       add_namespaces(
         EXPORTING
@@ -219,12 +215,12 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
           ct_tadir   = rt_tadir ).
     ENDIF.
 
-    IF lt_filter IS NOT INITIAL AND lv_add_pack_or_nspc = abap_true.
+    IF it_filter IS NOT INITIAL AND lv_add_pack_or_nspc = abap_true.
       LOOP AT rt_tadir REFERENCE INTO lr_tadir.
-        READ TABLE lt_filter TRANSPORTING NO FIELDS
-           WITH KEY obj_type = lr_tadir->object
-                    obj_name = lr_tadir->obj_name
-           BINARY SEARCH.
+        READ TABLE it_filter TRANSPORTING NO FIELDS
+          WITH TABLE KEY obj_type_obj_name
+          COMPONENTS obj_type = lr_tadir->object
+                     obj_name = lr_tadir->obj_name.
         IF sy-subrc <> 0.
           DELETE rt_tadir.
         ENDIF.

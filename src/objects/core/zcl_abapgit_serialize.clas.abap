@@ -210,7 +210,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
           lv_force      TYPE abap_bool,
           lt_found      LIKE ct_files,
           lt_tadir      TYPE zif_abapgit_definitions=>ty_tadir_tt,
-          lt_obj_filter TYPE zif_abapgit_definitions=>ty_obj_tt,
+          lt_obj_filter TYPE zif_abapgit_definitions=>ty_obj_ts,
           ls_obj_filter TYPE zif_abapgit_definitions=>ty_obj,
           lr_filter     TYPE REF TO zif_abapgit_definitions=>ty_tadir.
 
