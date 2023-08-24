@@ -158,7 +158,7 @@ CLASS ltcl_build IMPLEMENTATION.
 
   METHOD class_teardown.
     IF NOT gi_environment IS INITIAL.
-    "  gi_environment->destroy( ).
+      gi_environment->destroy( ).
     ENDIF.
   ENDMETHOD.
 
