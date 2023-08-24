@@ -69,7 +69,7 @@ CLASS ltcl_build IMPLEMENTATION.
     DATA lo_ex TYPE REF TO zcx_abapgit_exception.
     DATA lo_ex_cast TYPE REF TO cx_sy_move_cast_error.
     DATA lv_top_package TYPE devclass.
-
+    create_envoirment( ).
     lv_top_package = 'BASIS'.
     TRY.
         CREATE OBJECT li_log TYPE zcl_abapgit_log.
@@ -153,7 +153,7 @@ CLASS ltcl_build IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD class_setup.
-    create_envoirment( ).
+    RETURN.
   ENDMETHOD.
 
   METHOD class_teardown.
