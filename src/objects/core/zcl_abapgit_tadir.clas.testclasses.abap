@@ -25,8 +25,8 @@ CLASS ltcl_build IMPLEMENTATION.
 
         lo_tadir ?= zcl_abapgit_factory=>get_tadir( ).
         lt_tadir = lo_tadir->build(
-                               iv_package = 'BASIS'
-                                   io_dot =  lo_dot ).
+                     iv_package = 'BASIS'
+                     io_dot     =  lo_dot ).
 
         cl_abap_unit_assert=>assert_not_initial( lt_tadir ).
 
