@@ -18,6 +18,7 @@ CLASS ltcl_build IMPLEMENTATION.
     DATA lr_ex TYPE REF TO zcx_abapgit_exception.
     DATA lo_tadir TYPE REF TO zcl_abapgit_tadir.
     DATA lo_ex TYPE REF TO zcx_abapgit_exception.
+    DATA lo_ex_cast TYPE REF TO cx_sy_move_cast_error.
     DATA lv_top_package TYPE devclass.
 
     lv_top_package = 'BASIS'.
@@ -34,10 +35,12 @@ CLASS ltcl_build IMPLEMENTATION.
 
         cl_abap_unit_assert=>assert_not_initial( lt_tadir ).
 
-      CATCH zcx_abapgit_exception INTO lo_ex.
 
+      CATCH zcx_abapgit_exception  INTO lo_ex.
         cl_abap_unit_assert=>fail( msg = lo_ex->get_text( ) ).
 
+      CATCH cx_sy_move_cast_error INTO lo_ex_cast.
+        cl_abap_unit_assert=>fail( msg = lo_ex_cast->get_text( ) ).
     ENDTRY.
   ENDMETHOD.
 
@@ -49,6 +52,7 @@ CLASS ltcl_build IMPLEMENTATION.
     DATA lv_runtime TYPE i.
     DATA lr_ex TYPE REF TO zcx_abapgit_exception.
     DATA lo_tadir TYPE REF TO zcl_abapgit_tadir.
+    DATA lo_ex_cast TYPE REF TO cx_sy_move_cast_error.
     DATA lo_ex TYPE REF TO zcx_abapgit_exception.
     DATA lv_top_package TYPE devclass.
     DATA lt_filter TYPE zif_abapgit_definitions=>ty_obj_tt.
@@ -94,10 +98,11 @@ CLASS ltcl_build IMPLEMENTATION.
             act = lines( lt_filter )
             exp = lines( lt_tadir ) ).
 
-      CATCH zcx_abapgit_exception INTO lo_ex.
-
+      CATCH zcx_abapgit_exception  INTO lo_ex.
         cl_abap_unit_assert=>fail( msg = lo_ex->get_text( ) ).
 
+      CATCH cx_sy_move_cast_error INTO lo_ex_cast.
+        cl_abap_unit_assert=>fail( msg = lo_ex_cast->get_text( ) ).
     ENDTRY.
   ENDMETHOD.
 
