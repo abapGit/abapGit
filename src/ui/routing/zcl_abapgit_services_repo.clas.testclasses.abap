@@ -1,4 +1,3 @@
-*"* use this source file for your ABAP unit test classes
 CLASS ltcl_sap_package_mock DEFINITION FINAL FOR TESTING
   DURATION SHORT
   RISK LEVEL HARMLESS.
@@ -90,7 +89,7 @@ CLASS ltcl_create_package DEFINITION FINAL FOR TESTING
       setup,
 
       raise_error_if_package_exists FOR TESTING RAISING cx_static_check,
-      package_given_in_popup      FOR TESTING RAISING cx_static_check,
+      package_given_in_popup        FOR TESTING RAISING cx_static_check,
       package_not_created_when_canc FOR TESTING RAISING cx_static_check,
       package_created_when_confirm  FOR TESTING RAISING cx_static_check,
 
@@ -177,7 +176,7 @@ CLASS ltcl_create_package IMPLEMENTATION.
         ii_sap_package = mo_sap_package_mock ).
 
     TRY.
-        mv_created_package = zcl_abapgit_services_basis=>create_package( mv_package ).
+        mv_created_package = zcl_abapgit_services_repo=>create_package( mv_package ).
       CATCH zcx_abapgit_exception INTO mx_error.
     ENDTRY.
 
