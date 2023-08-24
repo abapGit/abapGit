@@ -1,6 +1,4 @@
-CLASS ltcl_build DEFINITION DEFERRED.
-
-CLASS ltcl_build DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
+CLASS ltcl_build DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION MEDIUM FINAL.
   PRIVATE SECTION.
 
     CLASS-DATA gi_environment TYPE REF TO if_osql_test_environment.
@@ -13,7 +11,6 @@ ENDCLASS.
 CLASS ltcl_build IMPLEMENTATION.
 
   METHOD create_envoirment.
-
 
     DATA lt_tables TYPE if_osql_test_environment=>ty_t_sobjnames.
     DATA ls_tadir TYPE tadir.
@@ -91,8 +88,6 @@ CLASS ltcl_build IMPLEMENTATION.
       CATCH zcx_abapgit_exception  INTO lo_ex.
         cl_abap_unit_assert=>fail( msg = lo_ex->get_text( ) ).
 
-      CATCH cx_sy_move_cast_error INTO lo_ex_cast.
-        cl_abap_unit_assert=>fail( msg = lo_ex_cast->get_text( ) ).
     ENDTRY.
   ENDMETHOD.
 
@@ -106,7 +101,7 @@ CLASS ltcl_build IMPLEMENTATION.
     DATA lo_ex_cast TYPE REF TO cx_sy_move_cast_error.
     DATA lo_ex TYPE REF TO zcx_abapgit_exception.
     DATA lv_top_package TYPE devclass.
-    DATA lt_filter TYPE zif_abapgit_definitions=>ty_obj_tt.
+    DATA lt_filter TYPE zif_abapgit_definitions=>ty_obj_ts.
     DATA ls_filter TYPE  zif_abapgit_definitions=>ty_obj.
     DATA lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
@@ -142,7 +137,8 @@ CLASS ltcl_build IMPLEMENTATION.
         lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
                    iv_package = lv_top_package
                    io_dot     = lo_dot
-                   iv_check_exists       = abap_false ).
+                   it_filter  = lt_filter
+                   iv_check_exists = abap_false ).
 
         cl_abap_unit_assert=>assert_not_initial( lt_tadir ).
 
@@ -153,8 +149,6 @@ CLASS ltcl_build IMPLEMENTATION.
       CATCH zcx_abapgit_exception  INTO lo_ex.
         cl_abap_unit_assert=>fail( msg = lo_ex->get_text( ) ).
 
-      CATCH cx_sy_move_cast_error INTO lo_ex_cast.
-        cl_abap_unit_assert=>fail( msg = lo_ex_cast->get_text( ) ).
     ENDTRY.
   ENDMETHOD.
 
@@ -163,7 +157,9 @@ CLASS ltcl_build IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD class_teardown.
-    gi_environment->destroy(  ).
+    IF NOT gi_environment IS INITIAL.
+      gi_environment->destroy(  ).
+    ENDIF.
   ENDMETHOD.
 
 ENDCLASS.
