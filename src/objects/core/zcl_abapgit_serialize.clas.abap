@@ -118,10 +118,10 @@ CLASS zcl_abapgit_serialize DEFINITION
   PRIVATE SECTION.
     CLASS-METHODS determine_i18n_params
       IMPORTING
-        !io_dot TYPE REF TO zcl_abapgit_dot_abapgit
+        !io_dot                TYPE REF TO zcl_abapgit_dot_abapgit
         !iv_main_language_only TYPE abap_bool
       RETURNING
-        VALUE(rs_i18n_params) TYPE zif_abapgit_definitions=>ty_i18n_params
+        VALUE(rs_i18n_params)  TYPE zif_abapgit_definitions=>ty_i18n_params
       RAISING
         zcx_abapgit_exception.
 
@@ -206,23 +206,36 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
   METHOD add_objects.
 
-    DATA: lo_filter TYPE REF TO zcl_abapgit_repo_filter,
-          lv_force  TYPE abap_bool,
-          lt_found  LIKE ct_files,
-          lt_tadir  TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA: lo_filter     TYPE REF TO zcl_abapgit_repo_filter,
+          lv_force      TYPE abap_bool,
+          lt_found      LIKE ct_files,
+          lt_tadir      TYPE zif_abapgit_definitions=>ty_tadir_tt,
+          lt_obj_filter TYPE zif_abapgit_definitions=>ty_obj_tt,
+          ls_obj_filter TYPE zif_abapgit_definitions=>ty_obj,
+          lr_filter     TYPE REF TO zif_abapgit_definitions=>ty_tadir.
+
+    LOOP AT it_filter REFERENCE INTO lr_filter.
+      ls_obj_filter-obj_name = lr_filter->obj_name.
+      ls_obj_filter-obj_type = lr_filter->object.
+      INSERT ls_obj_filter INTO TABLE lt_obj_filter.
+    ENDLOOP.
 
     lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
       iv_package            = iv_package
       iv_ignore_subpackages = ms_local_settings-ignore_subpackages
       iv_only_local_objects = ms_local_settings-only_local_objects
       io_dot                = mo_dot_abapgit
+      it_filter             = lt_obj_filter
       ii_log                = ii_log ).
 
-    CREATE OBJECT lo_filter.
+    IF it_filter IS INITIAL.
+      "Apply empty filter to remove generated TADIR entries
+      CREATE OBJECT lo_filter.
 
-    lo_filter->apply( EXPORTING it_filter = it_filter
-                      CHANGING  ct_tadir  = lt_tadir ).
+      lo_filter->apply( EXPORTING it_filter = it_filter
+                        CHANGING  ct_tadir  = lt_tadir ).
 
+    ENDIF.
 * if there are less than 10 objects run in single thread
 * this helps a lot when debugging, plus performance gain
 * with low number of objects does not matter much

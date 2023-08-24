@@ -24,6 +24,7 @@ CLASS zcl_abapgit_tadir DEFINITION
         !iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
         !iv_only_local_objects TYPE abap_bool DEFAULT abap_false
         !ii_log                TYPE REF TO zif_abapgit_log OPTIONAL
+        !it_filter             TYPE zif_abapgit_definitions=>ty_obj_tt OPTIONAL
       RETURNING
         VALUE(rt_tadir)        TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
@@ -33,6 +34,7 @@ CLASS zcl_abapgit_tadir DEFINITION
         !iv_package            TYPE tadir-devclass
         !iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
         !iv_only_local_objects TYPE abap_bool
+        !it_filter             TYPE zif_abapgit_definitions=>ty_obj_tt OPTIONAL
       EXPORTING
         !et_packages           TYPE zif_abapgit_sap_package=>ty_devclass_tt
         !et_tadir              TYPE zif_abapgit_definitions=>ty_tadir_tt
@@ -54,10 +56,11 @@ CLASS zcl_abapgit_tadir DEFINITION
         zcx_abapgit_exception .
     METHODS add_namespace
       IMPORTING
-        !iv_package TYPE devclass
-        !iv_object  TYPE csequence
+        !iv_package    TYPE devclass
+        !iv_object     TYPE csequence
       CHANGING
-        !ct_tadir   TYPE zif_abapgit_definitions=>ty_tadir_tt
+        !ct_tadir      TYPE zif_abapgit_definitions=>ty_tadir_tt
+        !ct_tadir_nspc TYPE  zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
     METHODS determine_path
@@ -110,7 +113,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
       lv_name      TYPE progname,
       lv_namespace TYPE namespace.
 
-    FIELD-SYMBOLS <ls_tadir> LIKE LINE OF ct_tadir.
+    DATA ls_tadir  TYPE zif_abapgit_definitions=>ty_tadir.
 
     lv_name = iv_object.
 
@@ -125,16 +128,17 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
     IF sy-subrc = 0 AND lv_namespace IS NOT INITIAL.
 
-      READ TABLE ct_tadir TRANSPORTING NO FIELDS
+      READ TABLE ct_tadir_nspc TRANSPORTING NO FIELDS
         WITH KEY pgmid = 'R3TR' object = 'NSPC' obj_name = lv_namespace.
       IF sy-subrc <> 0.
-        APPEND INITIAL LINE TO ct_tadir ASSIGNING <ls_tadir>.
-        <ls_tadir>-pgmid      = 'R3TR'.
-        <ls_tadir>-object     = 'NSPC'.
-        <ls_tadir>-obj_name   = lv_namespace.
-        <ls_tadir>-devclass   = iv_package.
-        <ls_tadir>-srcsystem  = sy-sysid.
-        <ls_tadir>-masterlang = sy-langu.
+        ls_tadir-pgmid      = 'R3TR'.
+        ls_tadir-object     = 'NSPC'.
+        ls_tadir-obj_name   = lv_namespace.
+        ls_tadir-devclass   = iv_package.
+        ls_tadir-srcsystem  = sy-sysid.
+        ls_tadir-masterlang = sy-langu.
+        INSERT ls_tadir INTO TABLE ct_tadir.
+        INSERT ls_tadir INTO TABLE ct_tadir_nspc.
       ENDIF.
 
     ENDIF.
@@ -145,7 +149,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
   METHOD add_namespaces.
 
     FIELD-SYMBOLS <ls_tadir> LIKE LINE OF ct_tadir.
-
+    DATA lt_tadir_nspc TYPE  zif_abapgit_definitions=>ty_tadir_tt.
     " Namespaces are not in TADIR, but are necessary for creating objects in transportable packages
     LOOP AT ct_tadir ASSIGNING <ls_tadir> WHERE obj_name(1) = '/'.
       add_namespace(
@@ -153,7 +157,8 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
           iv_package = iv_package
           iv_object  = <ls_tadir>-obj_name
         CHANGING
-          ct_tadir   = ct_tadir ).
+          ct_tadir   = ct_tadir
+          ct_tadir_nspc = lt_tadir_nspc ).
     ENDLOOP.
 
     " Root package of repo might not exist yet but needs to be considered, too
@@ -163,7 +168,8 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
           iv_package = iv_package
           iv_object  = iv_package
         CHANGING
-          ct_tadir   = ct_tadir ).
+          ct_tadir   = ct_tadir
+          ct_tadir_nspc = lt_tadir_nspc ).
     ENDIF.
 
   ENDMETHOD.
@@ -172,27 +178,58 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
   METHOD build.
 
     DATA lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
+    DATA lt_filter TYPE  zif_abapgit_definitions=>ty_obj_tt.
+    DATA lr_tadir TYPE REF TO zif_abapgit_definitions=>ty_tadir.
+    DATA lv_add_pack_or_nspc TYPE abap_bool.
+
+    lt_filter = it_filter.
+    SORT lt_filter BY obj_type obj_name.
 
     select_objects(
       EXPORTING
         iv_package            = iv_package
         iv_ignore_subpackages = iv_ignore_subpackages
         iv_only_local_objects = iv_only_local_objects
+        it_filter             = lt_filter
       IMPORTING
         et_tadir              = rt_tadir
         et_packages           = lt_packages ).
 
-    add_local_packages(
-      EXPORTING
-        it_packages = lt_packages
-      CHANGING
-        ct_tadir    = rt_tadir ).
+    READ TABLE it_filter TRANSPORTING NO FIELDS
+    WITH KEY obj_type = 'DEVC'
+    BINARY SEARCH.
+    IF sy-subrc = 0 OR it_filter IS INITIAL.
+      lv_add_pack_or_nspc = abap_true.
+      add_local_packages(
+        EXPORTING
+          it_packages = lt_packages
+        CHANGING
+          ct_tadir    = rt_tadir ).
+    ENDIF.
 
-    add_namespaces(
-      EXPORTING
-        iv_package = iv_package
-      CHANGING
-        ct_tadir   = rt_tadir ).
+    READ TABLE it_filter TRANSPORTING NO FIELDS
+    WITH KEY obj_type = 'NSPC'
+    BINARY SEARCH.
+    IF sy-subrc = 0 OR it_filter IS INITIAL.
+      lv_add_pack_or_nspc = abap_true.
+      add_namespaces(
+        EXPORTING
+          iv_package = iv_package
+        CHANGING
+          ct_tadir   = rt_tadir ).
+    ENDIF.
+
+    IF it_filter IS NOT INITIAL AND lv_add_pack_or_nspc = abap_true.
+      LOOP AT rt_tadir REFERENCE INTO lr_tadir.
+        READ TABLE it_filter TRANSPORTING NO FIELDS
+           WITH KEY obj_type = lr_tadir->object
+                    obj_name = lr_tadir->obj_name
+           BINARY SEARCH.
+        IF sy-subrc <> 0.
+          DELETE rt_tadir.
+        ENDIF.
+      ENDLOOP.
+    ENDIF.
 
     determine_path(
       EXPORTING
@@ -307,10 +344,13 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
   METHOD select_objects.
 
     DATA:
-      lt_excludes  TYPE RANGE OF trobjtype,
-      ls_exclude   LIKE LINE OF lt_excludes,
-      lt_srcsystem TYPE RANGE OF tadir-srcsystem,
-      ls_srcsystem LIKE LINE OF lt_srcsystem.
+      lt_excludes   TYPE RANGE OF trobjtype,
+      ls_exclude    LIKE LINE OF lt_excludes,
+      lt_srcsystem  TYPE RANGE OF tadir-srcsystem,
+      ls_srcsystem  LIKE LINE OF lt_srcsystem,
+      lt_r_packages TYPE RANGE OF devclass,
+      ls_r_package  LIKE LINE OF lt_r_packages,
+      lr_package    TYPE REF TO devclass.
 
     " Determine packages to read
     IF iv_ignore_subpackages = abap_false.
@@ -344,14 +384,38 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
     ENDIF.
 
     IF et_packages IS NOT INITIAL.
-      SELECT * FROM tadir INTO CORRESPONDING FIELDS OF TABLE et_tadir
-        FOR ALL ENTRIES IN et_packages
-        WHERE devclass = et_packages-table_line
-        AND pgmid      = 'R3TR'
-        AND object     NOT IN lt_excludes
-        AND delflag    = abap_false
-        AND srcsystem  IN lt_srcsystem
-        ORDER BY PRIMARY KEY ##TOO_MANY_ITAB_FIELDS. "#EC CI_GENBUFF "#EC CI_SUBRC
+      IF it_filter IS INITIAL.
+
+        SELECT * FROM tadir INTO CORRESPONDING FIELDS OF TABLE et_tadir
+          FOR ALL ENTRIES IN et_packages
+          WHERE devclass = et_packages-table_line
+          AND pgmid      = 'R3TR'
+          AND object     NOT IN lt_excludes
+          AND delflag    = abap_false
+          AND srcsystem  IN lt_srcsystem
+          ORDER BY PRIMARY KEY ##TOO_MANY_ITAB_FIELDS. "#EC CI_GENBUFF "#EC CI_SUBRC
+      ELSE.
+
+        CLEAR ls_r_package.
+        ls_r_package-sign = 'I'.
+        ls_r_package-option = 'EQ'.
+        LOOP AT et_packages REFERENCE INTO lr_package.
+          ls_r_package-low = lr_package->*.
+          INSERT ls_r_package INTO TABLE lt_r_packages.
+        ENDLOOP.
+
+        SELECT * FROM tadir INTO CORRESPONDING FIELDS OF TABLE et_tadir
+                FOR ALL ENTRIES IN it_filter
+                WHERE object = it_filter-obj_type
+                AND obj_name = it_filter-obj_name
+                AND devclass IN lt_r_packages
+                AND pgmid      = 'R3TR'
+                AND object     NOT IN lt_excludes
+                AND delflag    = abap_false
+                AND srcsystem  IN lt_srcsystem
+                ORDER BY PRIMARY KEY ##TOO_MANY_ITAB_FIELDS. "#EC CI_GENBUFF "#EC CI_SUBRC
+
+      ENDIF.
     ENDIF.
 
     SORT et_tadir BY devclass pgmid object obj_name.
@@ -397,7 +461,8 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
       io_dot                = io_dot
       iv_ignore_subpackages = iv_ignore_subpackages
       iv_only_local_objects = iv_only_local_objects
-      ii_log                = ii_log ).
+      ii_log                = ii_log
+      it_filter             = it_filter ).
 
     li_exit = zcl_abapgit_exit=>get_instance( ).
     li_exit->change_tadir(
