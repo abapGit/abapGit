@@ -66,7 +66,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_ADDOFFLIN IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
 
 
   METHOD choose_labels.
@@ -220,7 +220,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDOFFLIN IMPLEMENTATION.
 
         mo_form_data->set(
           iv_key = c_id-package
-          iv_val = zcl_abapgit_services_basis=>create_package(
+          iv_val = zcl_abapgit_services_repo=>create_package(
             iv_prefill_package = |{ mo_form_data->get( c_id-package ) }| ) ).
         IF mo_form_data->get( c_id-package ) IS NOT INITIAL.
           mo_validation_log = validate_form( mo_form_data ).
