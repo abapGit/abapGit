@@ -82,12 +82,25 @@ CLASS zcl_abapgit_convert DEFINITION
       EXPORTING
         !ev_size   TYPE i
         !et_bintab TYPE STANDARD TABLE .
+
+    CLASS-METHODS language_sap1_to_sap2
+      IMPORTING
+        im_lang_sap1        TYPE sy-langu
+      RETURNING
+        VALUE(re_lang_sap2) TYPE string
+      EXCEPTIONS
+        no_assignment.
+
+    CLASS-METHODS language_sap2_to_sap1
+      IMPORTING
+        im_lang_sap2 TYPE laiso
+      RETURNING
+        VALUE(re_lang_sap1) TYPE sy-langu
+      EXCEPTIONS
+        no_assignment.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
-
-    CLASS-DATA go_convert_out TYPE REF TO cl_abap_conv_out_ce .
-    CLASS-DATA go_convert_in TYPE REF TO cl_abap_conv_in_ce .
-
     CLASS-METHODS xstring_remove_bom
       IMPORTING
         iv_xstr        TYPE xsequence
@@ -97,7 +110,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_convert IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
 
 
   METHOD base64_to_xstring.
@@ -139,11 +152,14 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
 
   METHOD conversion_exit_isola_output.
 
-    cl_gdt_conversion=>language_code_outbound(
+    language_sap1_to_sap2(
       EXPORTING
-        im_value = iv_spras
-      IMPORTING
-        ex_value = rv_spras ).
+        im_lang_sap1  = iv_spras
+      RECEIVING
+        re_lang_sap2  = rv_spras
+      EXCEPTIONS
+        no_assignment = 1
+        OTHERS        = 2 ). "#EC CI_SUBRC
 
     TRANSLATE rv_spras TO UPPER CASE.
 
@@ -158,6 +174,62 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
     lv_x = iv_i.
     rv_xstring = lv_x.
 
+  ENDMETHOD.
+
+
+  METHOD language_sap1_to_sap2.
+
+    DATA lv_class TYPE string.
+
+    TRY.
+        SELECT SINGLE languageisocode FROM ('I_LANGUAGE')
+          INTO re_lang_sap2
+          WHERE language = im_lang_sap1.
+        IF sy-subrc <> 0.
+          RAISE no_assignment.
+        ENDIF.
+      CATCH cx_sy_dynamic_osql_error.
+        lv_class = 'CL_I18N_LANGUAGES'.
+        CALL METHOD (lv_class)=>sap1_to_sap2
+          EXPORTING
+            im_lang_sap1  = im_lang_sap1
+          RECEIVING
+            re_lang_sap2  = re_lang_sap2
+          EXCEPTIONS
+            no_assignment = 1
+            OTHERS        = 2.
+        IF sy-subrc = 1.
+          RAISE no_assignment.
+        ENDIF.
+    ENDTRY.
+  ENDMETHOD.
+
+
+  METHOD language_sap2_to_sap1.
+
+    DATA lv_class TYPE string.
+
+    TRY.
+        SELECT SINGLE language FROM ('I_LANGUAGE')
+          INTO re_lang_sap1
+          WHERE languageisocode = im_lang_sap2.
+        IF sy-subrc <> 0.
+          RAISE no_assignment.
+        ENDIF.
+      CATCH cx_sy_dynamic_osql_error.
+        lv_class = 'CL_I18N_LANGUAGES'.
+        CALL METHOD (lv_class)=>sap2_to_sap1
+          EXPORTING
+            im_lang_sap2  = im_lang_sap2
+          RECEIVING
+            re_lang_sap1  = re_lang_sap1
+          EXCEPTIONS
+            no_assignment = 1
+            OTHERS        = 2.
+        IF sy-subrc = 1.
+          RAISE no_assignment.
+        ENDIF.
+    ENDTRY.
   ENDMETHOD.
 
 
@@ -189,7 +261,7 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
 
     APPEND INITIAL LINE TO et_tab ASSIGNING <lg_line>.
     <lg_line> = iv_str.
-    DESCRIBE FIELD <lg_line> LENGTH lv_length IN CHARACTER MODE.
+    lv_length = cl_abap_typedescr=>describe_by_data( <lg_line> )->length / cl_abap_char_utilities=>charsize.
     lv_iterations = ev_size DIV lv_length.
 
     DO lv_iterations TIMES.
@@ -210,25 +282,7 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
 
   METHOD string_to_xstring_utf8.
 
-    DATA lx_error TYPE REF TO cx_root.
-
-    TRY.
-        IF go_convert_out IS INITIAL.
-          go_convert_out = cl_abap_conv_out_ce=>create( encoding = 'UTF-8' ).
-        ENDIF.
-
-        go_convert_out->convert(
-          EXPORTING
-            data   = iv_string
-          IMPORTING
-            buffer = rv_xstring ).
-
-      CATCH cx_parameter_invalid_range
-            cx_sy_codepage_converter_init
-            cx_sy_conversion_codepage
-            cx_parameter_invalid_type INTO lx_error.
-        zcx_abapgit_exception=>raise_with_text( lx_error ).
-    ENDTRY.
+    rv_xstring = lcl_out=>convert( iv_string ).
 
   ENDMETHOD.
 
@@ -278,7 +332,8 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
 
     APPEND INITIAL LINE TO et_bintab ASSIGNING <lg_line>.
     <lg_line> = iv_xstr.
-    DESCRIBE FIELD <lg_line> LENGTH lv_length IN BYTE MODE.
+
+    lv_length = cl_abap_typedescr=>describe_by_data( <lg_line> )->length.
     lv_iterations = ev_size DIV lv_length.
 
     DO lv_iterations TIMES.
@@ -300,8 +355,7 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
 
   METHOD xstring_to_string_utf8.
 
-    DATA lx_error  TYPE REF TO cx_root.
-    DATA lv_data TYPE xstring.
+    DATA lv_data   TYPE xstring.
     DATA lv_length TYPE i.
 
     " Remove BOM for non-Unicode systems
@@ -312,24 +366,9 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
       lv_length = xstrlen( lv_data ).
     ENDIF.
 
-    TRY.
-        IF go_convert_in IS INITIAL.
-          go_convert_in = cl_abap_conv_in_ce=>create( encoding = 'UTF-8' ).
-        ENDIF.
-
-        go_convert_in->convert(
-          EXPORTING
-            input = lv_data
-            n     = lv_length
-          IMPORTING
-            data  = rv_string ).
-
-      CATCH cx_parameter_invalid_range
-            cx_sy_codepage_converter_init
-            cx_sy_conversion_codepage
-            cx_parameter_invalid_type INTO lx_error.
-        zcx_abapgit_exception=>raise_with_text( lx_error ).
-    ENDTRY.
+    rv_string = lcl_in=>convert(
+      iv_data   = lv_data
+      iv_length = lv_length ).
 
   ENDMETHOD.
 

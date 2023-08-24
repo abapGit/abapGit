@@ -57,7 +57,13 @@ CLASS zcl_abapgit_object_iwpr IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = zcl_abapgit_objects_super=>c_user_unknown.
+
+    SELECT SINGLE last_chg_user_id FROM ('/IWBEP/I_SBD_PR') INTO rv_user
+      WHERE project = ms_item-obj_name.
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ENDIF.
+
   ENDMETHOD.
 
 

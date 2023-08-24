@@ -95,7 +95,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_JSON_HANDLER IMPLEMENTATION.
+CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
 
   METHOD deserialize.
@@ -225,11 +225,7 @@ CLASS ZCL_ABAPGIT_JSON_HANDLER IMPLEMENTATION.
 
     lv_original_language = co_ajson->get_string( '/header/originalLanguage' ).
 
-    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_OUTPUT'
-      EXPORTING
-        input  = lv_original_language
-      IMPORTING
-        output = lv_iso_language.
+    lv_iso_language = zcl_abapgit_convert=>conversion_exit_isola_output( lv_original_language ).
 
     TRANSLATE lv_iso_language TO LOWER CASE.
     co_ajson->set_string( iv_path = '/header/originalLanguage'

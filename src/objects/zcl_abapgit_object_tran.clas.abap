@@ -634,8 +634,20 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-* looks like "changed by user" is not stored in the database
-    rv_user = c_user_unknown.
+    " Changed-by-user is not stored in transaction metadata
+    " Instead, use owner of last transport or object directory
+
+    DATA lv_transport TYPE trkorr.
+
+    lv_transport = zcl_abapgit_factory=>get_cts_api( )->get_transport_for_object( ms_item ).
+
+    IF lv_transport IS NOT INITIAL.
+      SELECT SINGLE as4user FROM e070 INTO rv_user WHERE trkorr = lv_transport.
+    ELSE.
+      SELECT SINGLE author FROM tadir INTO rv_user
+        WHERE pgmid = 'R3TR' AND object = ms_item-obj_type AND obj_name = ms_item-obj_name.
+    ENDIF.
+
   ENDMETHOD.
 
 

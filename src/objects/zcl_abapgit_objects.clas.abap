@@ -693,6 +693,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
                          iv_text    = |Prepare Deserialize: { <ls_result>-obj_type } { <ls_result>-obj_name }| ).
 
       CLEAR ls_item.
+      CLEAR: lv_path, lv_package.
+
       ls_item-obj_type = <ls_result>-obj_type.
       ls_item-obj_name = <ls_result>-obj_name.
 
@@ -787,7 +789,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
               io_files       = lo_files ).
           ENDIF.
 
-          CLEAR: lv_path, lv_package.
 
         CATCH zcx_abapgit_exception INTO lx_exc.
           ii_log->add_exception( ix_exc = lx_exc
