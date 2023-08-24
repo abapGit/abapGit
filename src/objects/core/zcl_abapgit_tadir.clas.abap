@@ -472,7 +472,9 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
       CHANGING
         ct_tadir   = rt_tadir ).
 
-    rt_tadir = check_exists( rt_tadir ).
+    IF iv_check_exists = abap_true.
+      rt_tadir = check_exists( rt_tadir ).
+    ENDIF.
 
   ENDMETHOD.
 
