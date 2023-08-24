@@ -4,9 +4,7 @@ CLASS zcl_abapgit_tadir DEFINITION LOCAL FRIENDS ltcl_build.
 CLASS ltcl_build DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
   PRIVATE SECTION.
 
-    METHODS:
-
-      check_build_wo_filter FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS check_build_wo_filter FOR TESTING RAISING zcx_abapgit_exception.
 ENDCLASS.
 CLASS ltcl_build IMPLEMENTATION.
 
@@ -26,25 +24,15 @@ CLASS ltcl_build IMPLEMENTATION.
         lo_dot->set_folder_logic( iv_logic = zif_abapgit_dot_abapgit=>c_folder_logic-full ).
 
         lo_tadir ?= zcl_abapgit_factory=>get_tadir( ).
-        lo_tadir->build(
-          EXPORTING
-            iv_package            = 'BASIS'
-            io_dot                =  lo_dot
-*          iv_ignore_subpackages = abap_false
-*          iv_only_local_objects = abap_false
-*          ii_log                =
-*          it_filter             =
-          RECEIVING
-            rt_tadir              = lt_tadir
-        ).
+        lt_tadir = lo_tadir->build(
+                               iv_package = 'BASIS'
+                                   io_dot =  lo_dot ).
 
         cl_abap_unit_assert=>assert_not_initial( lt_tadir ).
 
       CATCH zcx_abapgit_exception INTO lo_ex.
 
-        cl_abap_unit_assert=>fail(
-          EXPORTING
-            msg    = lo_ex->get_text( ) ).
+        cl_abap_unit_assert=>fail( msg = lo_ex->get_text( ) ).
 
     ENDTRY.
   ENDMETHOD.
