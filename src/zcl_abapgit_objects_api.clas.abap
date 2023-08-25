@@ -410,8 +410,14 @@ CLASS zcl_abapgit_objects_api IMPLEMENTATION.
       ls_obj-obj_name = ls_item-obj_name.
       ls_obj-obj_type = ls_item-obj_type.
 
-      INSERT ls_obj INTO TABLE lt_objs.
+      "Avoid duplicate entries dump
+      READ TABLE lt_objs TRANSPORTING NO FIELDS
+      WITH TABLE KEY obj_type_obj_name COMPONENTS obj_type = ls_obj-obj_type
+                                                  obj_name = ls_obj-obj_name.
+      IF sy-subrc <> 0.
 
+        INSERT ls_obj INTO TABLE lt_objs.
+      ENDIF.
     ENDLOOP.
 
     IF lt_objs IS INITIAL.
