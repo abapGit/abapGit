@@ -414,8 +414,6 @@ CLASS zcl_abapgit_objects_api IMPLEMENTATION.
 
     ENDLOOP.
 
-    SORT lt_objs.
-    DELETE ADJACENT DUPLICATES FROM lt_objs.
     IF lt_objs IS INITIAL.
       zcx_abapgit_exception=>raise( |Please enter the objects to delete or the modified files| ).
     ENDIF.
