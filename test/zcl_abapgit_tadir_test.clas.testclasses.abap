@@ -42,7 +42,7 @@ CLASS ltcl_build IMPLEMENTATION.
     INSERT ls_tadir INTO TABLE lt_tadir.
 
     gi_environment->insert_test_data( lt_tadir ).
-    RETURN.
+   
     ls_tdevc-devclass = 'BASIS'.
     INSERT ls_tdevc INTO TABLE lt_tdevc.
 
