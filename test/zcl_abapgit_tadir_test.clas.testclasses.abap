@@ -127,22 +127,22 @@ CLASS ltcl_build IMPLEMENTATION.
         CREATE OBJECT li_log TYPE zcl_abapgit_log.
 
         lo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
-        lo_dot->set_folder_logic( iv_logic = zif_abapgit_dot_abapgit=>c_folder_logic-full ).
+        lo_dot->set_folder_logic( zif_abapgit_dot_abapgit=>c_folder_logic-full ).
 
         lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
-                   iv_package = lv_top_package
-                   io_dot     = lo_dot
-                   it_filter  = lt_filter
-                   iv_check_exists = abap_false ).
+          iv_package      = lv_top_package
+          io_dot          = lo_dot
+          it_filter       = lt_filter
+          iv_check_exists = abap_false ).
 
         cl_abap_unit_assert=>assert_not_initial( lt_tadir ).
 
         cl_abap_unit_assert=>assert_equals(
-            act = lines( lt_tadir )
-            exp = lines( lt_filter ) ).
+          act = lines( lt_tadir )
+          exp = lines( lt_filter ) ).
 
       CATCH zcx_abapgit_exception  INTO lo_ex.
-        cl_abap_unit_assert=>fail( msg = lo_ex->get_text( ) ).
+        cl_abap_unit_assert=>fail( lo_ex->get_text( ) ).
 
     ENDTRY.
   ENDMETHOD.
