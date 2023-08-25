@@ -47,7 +47,7 @@ CLASS zcl_abapgit_deserialize_repo IMPLEMENTATION.
 
     "Get results to deserialize
     lt_results = zcl_abapgit_file_deserialize=>get_results(
-      it_results = zcl_abapgit_file_status=>status( io_repo )
+      it_results = zcl_abapgit_repo_status=>calculate( io_repo )
       ii_log = ii_log ).
 
     IF lt_results IS INITIAL.
