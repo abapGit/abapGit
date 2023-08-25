@@ -24,7 +24,7 @@ CLASS zcl_abapgit_objects_api DEFINITION
       IMPORTING
         iv_top_package    TYPE devclass
         is_dot_data       TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit OPTIONAL
-        it_objs           TYPE zif_abapgit_definitions=>ty_obj_tt
+        it_objs           TYPE zif_abapgit_definitions=>ty_obj_ts
       EXPORTING
         ei_log            TYPE REF TO zif_abapgit_log
         et_web_files_item TYPE ty_web_files_item_tt
@@ -35,7 +35,7 @@ CLASS zcl_abapgit_objects_api DEFINITION
       IMPORTING
         iv_top_package TYPE devclass
         is_dot_data    TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit OPTIONAL
-        it_objs        TYPE zif_abapgit_definitions=>ty_obj_tt
+        it_objs        TYPE zif_abapgit_definitions=>ty_obj_ts
       EXPORTING
         ei_log         TYPE REF TO zif_abapgit_log
         et_files       TYPE zif_abapgit_definitions=>ty_files_item_tt
@@ -46,7 +46,7 @@ CLASS zcl_abapgit_objects_api DEFINITION
       IMPORTING iv_top_package        TYPE devclass
                 is_dot_data           TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit OPTIONAL
                 it_remote             TYPE zif_abapgit_git_definitions=>ty_files_tt OPTIONAL
-                it_objs_del           TYPE zif_abapgit_definitions=>ty_obj_tt OPTIONAL
+                it_objs_del           TYPE zif_abapgit_definitions=>ty_obj_ts OPTIONAL
                 iv_transport          TYPE trkorr OPTIONAL
                 iv_conf_diff_wo_warn  TYPE abap_bool DEFAULT abap_false
                 iv_main_language_only TYPE abap_bool DEFAULT abap_false
@@ -58,7 +58,7 @@ CLASS zcl_abapgit_objects_api DEFINITION
       IMPORTING iv_top_package        TYPE devclass
                 is_dot_data           TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit OPTIONAL
                 it_web_files          TYPE ty_web_files_tt
-                it_objs_del           TYPE zif_abapgit_definitions=>ty_obj_tt OPTIONAL
+                it_objs_del           TYPE zif_abapgit_definitions=>ty_obj_ts OPTIONAL
                 iv_transport          TYPE trkorr OPTIONAL
                 iv_conf_diff_wo_warn  TYPE abap_bool DEFAULT abap_false
                 iv_main_language_only TYPE abap_bool DEFAULT abap_false
@@ -76,12 +76,12 @@ CLASS zcl_abapgit_objects_api DEFINITION
 
 
     CLASS-METHODS get_filter
-      IMPORTING it_objs          TYPE zif_abapgit_definitions=>ty_obj_tt
+      IMPORTING it_objs          TYPE zif_abapgit_definitions=>ty_obj_ts
       RETURNING VALUE(rt_filter) TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
 
     CLASS-METHODS get_filter_deserialize
-      IMPORTING it_objs_del      TYPE zif_abapgit_definitions=>ty_obj_tt OPTIONAL
+      IMPORTING it_objs_del      TYPE zif_abapgit_definitions=>ty_obj_ts OPTIONAL
                 it_remote        TYPE zif_abapgit_git_definitions=>ty_files_tt OPTIONAL
                 iv_top_package   TYPE devclass
                 io_dot           TYPE REF TO zcl_abapgit_dot_abapgit
@@ -388,7 +388,7 @@ CLASS zcl_abapgit_objects_api IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD get_filter_deserialize.
-    DATA lt_objs  TYPE zif_abapgit_definitions=>ty_obj_tt.
+    DATA lt_objs  TYPE zif_abapgit_definitions=>ty_obj_ts.
     DATA ls_obj TYPE zif_abapgit_definitions=>ty_obj.
     DATA ls_item  TYPE zif_abapgit_definitions=>ty_item.
     DATA lr_remote  TYPE REF TO  zif_abapgit_git_definitions=>ty_file.

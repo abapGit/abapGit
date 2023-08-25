@@ -6,8 +6,8 @@ CLASS zcl_abapgit_file_deserialize DEFINITION
 
     CLASS-METHODS get_results
       IMPORTING
-         it_results       TYPE zif_abapgit_definitions=>ty_results_tt
-         ii_log           TYPE REF TO zif_abapgit_log OPTIONAL
+        it_results        TYPE zif_abapgit_definitions=>ty_results_tt
+        ii_log            TYPE REF TO zif_abapgit_log OPTIONAL
       RETURNING
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
@@ -24,17 +24,19 @@ CLASS zcl_abapgit_file_deserialize DEFINITION
       RETURNING
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt .
 
-    CLASS-METHODS map_results_to_items
-      IMPORTING
-         it_results     TYPE zif_abapgit_definitions=>ty_results_tt
-      RETURNING
-        VALUE(rt_items) TYPE zif_abapgit_definitions=>ty_items_tt .
     CLASS-METHODS prioritize_deser
       IMPORTING
         ii_log            TYPE REF TO zif_abapgit_log
         it_results        TYPE zif_abapgit_definitions=>ty_results_tt
       RETURNING
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt .
+
+    CLASS-METHODS map_results_to_items
+      IMPORTING
+        !it_results      TYPE zif_abapgit_definitions=>ty_results_tt
+      RETURNING
+        VALUE(rt_items) TYPE zif_abapgit_definitions=>ty_items_tt .
+
 ENDCLASS.
 
 

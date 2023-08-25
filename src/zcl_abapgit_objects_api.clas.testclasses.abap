@@ -71,7 +71,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     DATA: ls_files_item TYPE zcl_abapgit_objects=>ty_serialization.
 
-    DATA lt_objs  TYPE zif_abapgit_definitions=>ty_obj_tt.
+    DATA lt_objs  TYPE zif_abapgit_definitions=>ty_obj_ts.
     DATA lt_web_files_item  TYPE zcl_abapgit_objects_api=>ty_web_files_item_tt.
     DATA lr_web_file_item TYPE REF TO zcl_abapgit_objects_api=>ty_web_file_item.
 
@@ -122,7 +122,7 @@ CLASS ltcl_file_conv IMPLEMENTATION.
 
     DATA: ls_obj  TYPE zif_abapgit_definitions=>ty_obj.
     DATA: ls_files_item TYPE zcl_abapgit_objects=>ty_serialization.
-    DATA lt_objs  TYPE zif_abapgit_definitions=>ty_obj_tt.
+    DATA lt_objs  TYPE zif_abapgit_definitions=>ty_obj_ts.
     DATA lt_web_files_item  TYPE zcl_abapgit_objects_api=>ty_web_files_item_tt.
     DATA lr_web_file_item TYPE REF TO zcl_abapgit_objects_api=>ty_web_file_item.
     DATA lt_files  TYPE zif_abapgit_definitions=>ty_files_item_tt.
