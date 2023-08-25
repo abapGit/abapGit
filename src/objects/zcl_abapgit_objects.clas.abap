@@ -705,7 +705,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     "Get results to deserialize
     lt_results = zcl_abapgit_file_deserialize=>get_results(
-      it_results = zcl_abapgit_file_status=>status( io_repo )
+      it_results = zcl_abapgit_repo_status=>calculate( io_repo )
       ii_log = ii_log ).
 
     IF lt_results IS INITIAL.
@@ -750,8 +750,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
                          iv_text    = |Prepare Deserialize: { <ls_result>-obj_type } { <ls_result>-obj_name }| ).
 
       CLEAR ls_item.
-      CLEAR: lv_path, lv_package.
-
       CLEAR: lv_path, lv_package.
 
       ls_item-obj_type = <ls_result>-obj_type.
@@ -847,7 +845,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
               ii_xml         = lo_xml
               io_files       = lo_files ).
           ENDIF.
-
 
         CATCH zcx_abapgit_exception INTO lx_exc.
           ii_log->add_exception( ix_exc = lx_exc

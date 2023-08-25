@@ -199,7 +199,7 @@ CLASS zcl_abapgit_objects_check IMPLEMENTATION.
         ii_log         = ii_log ).
 
 
-    et_results = zcl_abapgit_file_status=>status_wo_repo(
+    et_results = zcl_abapgit_repo_status=>calculate_wo_repo(
                    iv_root_package = iv_top_package
                    io_dot          = io_dot
                    ii_log          = ii_log
