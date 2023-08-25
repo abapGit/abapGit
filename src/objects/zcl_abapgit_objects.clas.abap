@@ -752,6 +752,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       CLEAR ls_item.
       CLEAR: lv_path, lv_package.
 
+      CLEAR: lv_path, lv_package.
+
       ls_item-obj_type = <ls_result>-obj_type.
       ls_item-obj_name = <ls_result>-obj_name.
 
@@ -845,6 +847,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
               ii_xml         = lo_xml
               io_files       = lo_files ).
           ENDIF.
+
 
         CATCH zcx_abapgit_exception INTO lx_exc.
           ii_log->add_exception( ix_exc = lx_exc
