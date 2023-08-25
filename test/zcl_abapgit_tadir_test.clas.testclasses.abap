@@ -35,7 +35,6 @@ CLASS ltcl_build IMPLEMENTATION.
     ls_tadir-devclass = '/STMC/FND'.
     INSERT ls_tadir INTO TABLE lt_tadir.
 
-
     ls_tadir-pgmid = 'R3TR'.
     ls_tadir-object = 'DTEL'.
     ls_tadir-obj_name = 'DEVCLASS'.
