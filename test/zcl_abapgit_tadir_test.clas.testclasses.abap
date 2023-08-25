@@ -41,6 +41,12 @@ CLASS ltcl_build IMPLEMENTATION.
     ls_tadir-devclass = 'BASIS'. "not in reality
     INSERT ls_tadir INTO TABLE lt_tadir.
 
+    ls_tadir-pgmid = 'R3TR'.
+    ls_tadir-object = 'DTEL'.
+    ls_tadir-obj_name = 'MATNR'.
+    ls_tadir-devclass = 'BASIS'. "not in reality
+    INSERT ls_tadir INTO TABLE lt_tadir.
+
     gi_environment->insert_test_data( lt_tadir ).
 
     ls_tdevc-devclass = 'BASIS'.
@@ -90,15 +96,15 @@ CLASS ltcl_build IMPLEMENTATION.
 
     DATA lo_dot TYPE REF TO zcl_abapgit_dot_abapgit.
     DATA li_log TYPE REF TO zif_abapgit_log.
-    DATA lv_runtime TYPE i.
     DATA lr_ex TYPE REF TO zcx_abapgit_exception.
     DATA lo_tadir TYPE REF TO zcl_abapgit_tadir.
-    DATA lo_ex_cast TYPE REF TO cx_sy_move_cast_error.
     DATA lo_ex TYPE REF TO zcx_abapgit_exception.
     DATA lv_top_package TYPE devclass.
     DATA lt_filter TYPE zif_abapgit_definitions=>ty_obj_ts.
     DATA ls_filter TYPE  zif_abapgit_definitions=>ty_obj.
     DATA lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lr_tadir TYPE REF TO zif_abapgit_definitions=>ty_tadir.
+    DATA lv_msg TYPE string.
 
     lv_top_package = 'BASIS'.
 
@@ -137,10 +143,17 @@ CLASS ltcl_build IMPLEMENTATION.
 
         cl_abap_unit_assert=>assert_not_initial( lt_tadir ).
 
-        cl_abap_unit_assert=>assert_equals(
-          act = lines( lt_tadir )
-          exp = lines( lt_filter ) ).
+        IF lines( lt_tadir ) <>  lines( lt_filter ).
+          lv_msg = 'To less objects found. the following objects has been found:'.
+          LOOP AT lt_tadir REFERENCE INTO lr_tadir.
+            CONCATENATE lv_msg lr_tadir->obj_name INTO lv_msg SEPARATED BY ' | '.
+          ENDLOOP.
 
+          cl_abap_unit_assert=>assert_equals(
+            act = lines( lt_tadir )
+            exp = lines( lt_filter )
+            msg = lv_msg ).
+        ENDIF.
       CATCH zcx_abapgit_exception  INTO lo_ex.
         cl_abap_unit_assert=>fail( lo_ex->get_text( ) ).
 
