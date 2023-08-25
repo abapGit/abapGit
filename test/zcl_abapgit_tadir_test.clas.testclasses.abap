@@ -102,6 +102,7 @@ CLASS ltcl_build IMPLEMENTATION.
     DATA lv_top_package TYPE devclass.
     DATA lt_filter TYPE zif_abapgit_definitions=>ty_obj_ts.
     DATA ls_filter TYPE  zif_abapgit_definitions=>ty_obj.
+    DATA lr_filter TYPE REF TO zif_abapgit_definitions=>ty_obj.
     DATA lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
     DATA lr_tadir TYPE REF TO zif_abapgit_definitions=>ty_tadir.
     DATA lv_msg TYPE string.
@@ -144,9 +145,14 @@ CLASS ltcl_build IMPLEMENTATION.
         cl_abap_unit_assert=>assert_not_initial( lt_tadir ).
 
         IF lines( lt_tadir ) <>  lines( lt_filter ).
-          lv_msg = 'To less objects found. the following objects has been found:'.
+          lv_msg = 'To less objects found. The following objects has been found:'.
           LOOP AT lt_tadir REFERENCE INTO lr_tadir.
             CONCATENATE lv_msg lr_tadir->obj_name INTO lv_msg SEPARATED BY ' | '.
+          ENDLOOP.
+
+          CONCATENATE lv_msg 'requested:' INTO lv_msg SEPARATED BY space.
+          LOOP AT lt_filter REFERENCE INTO lr_filter.
+            CONCATENATE lv_msg lr_filter->obj_name INTO lv_msg SEPARATED BY ' | '.
           ENDLOOP.
 
           cl_abap_unit_assert=>assert_equals(
