@@ -20,6 +20,7 @@ CLASS ltcl_build IMPLEMENTATION.
 
     APPEND 'TADIR' TO lt_tables.
     APPEND 'TDEVC' TO lt_tables.
+    APPEND 'SOTR_HEADU' TO lt_tables.
     gi_environment = cl_osql_test_environment=>create( lt_tables ).
 
     ls_tadir-pgmid = 'R3TR'.
