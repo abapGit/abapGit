@@ -42,7 +42,7 @@ CLASS ltcl_build IMPLEMENTATION.
     INSERT ls_tadir INTO TABLE lt_tadir.
 
     gi_environment->insert_test_data( lt_tadir ).
-
+    RETURN.
     ls_tdevc-devclass = 'BASIS'.
     INSERT ls_tdevc INTO TABLE lt_tdevc.
 
@@ -99,7 +99,7 @@ CLASS ltcl_build IMPLEMENTATION.
     DATA lt_filter TYPE zif_abapgit_definitions=>ty_obj_ts.
     DATA ls_filter TYPE  zif_abapgit_definitions=>ty_obj.
     DATA lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
-
+    RETURN.
     lv_top_package = 'BASIS'.
 
     ls_filter-obj_type = 'NSPC'.
