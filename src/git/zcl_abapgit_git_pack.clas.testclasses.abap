@@ -1,4 +1,4 @@
-CLASS lcl_progress_double DEFINITION CREATE PUBLIC FOR TESTING.
+CLASS ltcl_progress_double DEFINITION CREATE PUBLIC FOR TESTING.
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_progress.
@@ -7,7 +7,7 @@ CLASS lcl_progress_double DEFINITION CREATE PUBLIC FOR TESTING.
 
 ENDCLASS.
 
-CLASS lcl_progress_double IMPLEMENTATION.
+CLASS ltcl_progress_double IMPLEMENTATION.
 
   METHOD zif_abapgit_progress~set_total.
     RETURN.
@@ -281,8 +281,8 @@ ENDCLASS.
 CLASS ltcl_pack IMPLEMENTATION.
 
   METHOD setup.
-    DATA lo_progress_double TYPE REF TO lcl_progress_double.
-    CREATE OBJECT lo_progress_double TYPE lcl_progress_double.
+    DATA lo_progress_double TYPE REF TO ltcl_progress_double.
+    CREATE OBJECT lo_progress_double TYPE ltcl_progress_double.
 
     zcl_abapgit_progress=>set_instance( lo_progress_double ).
   ENDMETHOD.
