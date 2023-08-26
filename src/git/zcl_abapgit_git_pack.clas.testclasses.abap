@@ -1,3 +1,24 @@
+CLASS lcl_progress_double DEFINITION CREATE PUBLIC FOR TESTING.
+
+  PUBLIC SECTION.
+    INTERFACES zif_abapgit_progress PARTIALLY IMPLEMENTED.
+  PROTECTED SECTION.
+  PRIVATE SECTION.
+
+ENDCLASS.
+
+CLASS lcl_progress_double IMPLEMENTATION.
+
+  METHOD zif_abapgit_progress~set_total.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_progress~show.
+    RETURN.
+  ENDMETHOD.
+
+ENDCLASS.
+
 CLASS ltcl_tree DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
 
   PRIVATE SECTION.
@@ -226,6 +247,8 @@ CLASS ltcl_pack DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
 
     CONSTANTS: c_sha TYPE zif_abapgit_git_definitions=>ty_sha1 VALUE '5f46cb3c4b7f0b3600b64f744cde614a283a88dc'.
 
+    METHODS setup.
+
     METHODS:
       commit FOR TESTING
         RAISING zcx_abapgit_exception,
@@ -252,6 +275,13 @@ ENDCLASS.
 
 
 CLASS ltcl_pack IMPLEMENTATION.
+
+  METHOD setup.
+    DATA lo_progress_double TYPE REF TO lcl_progress_double.
+    CREATE OBJECT lo_progress_double TYPE lcl_progress_double.
+
+    zcl_abapgit_progress=>set_instance( lo_progress_double ).
+  ENDMETHOD.
 
   METHOD sort_tree1.
 
