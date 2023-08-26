@@ -1,7 +1,7 @@
 CLASS lcl_progress_double DEFINITION CREATE PUBLIC FOR TESTING.
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_progress PARTIALLY IMPLEMENTED.
+    INTERFACES zif_abapgit_progress.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -14,6 +14,10 @@ CLASS lcl_progress_double IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_progress~show.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_progress~off.
     RETURN.
   ENDMETHOD.
 
