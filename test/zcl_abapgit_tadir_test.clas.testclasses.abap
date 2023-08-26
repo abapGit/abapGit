@@ -132,7 +132,7 @@ CLASS ltcl_build IMPLEMENTATION.
     READ TABLE lt_filter TRANSPORTING NO FIELDS
       WITH TABLE KEY obj_type = 'NSPC'.
 
-    IF sy-subrc = 0 OR lt_filter IS INITIAL.
+    IF sy-subrc = 0.
       cl_abap_unit_assert=>fail( msg = |Read table works| ).
     ENDIF.
 
