@@ -645,10 +645,10 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
     li_progress = zcl_abapgit_progress=>get_instance( lv_objects_total ).
 
     LOOP AT it_objects ASSIGNING <ls_object>.
-      IF sy-tabix MOD 200 = 0.
+      IF sy-tabix MOD 200 = 0 OR sy-tabix = 1.
         li_progress->show(
           iv_current = sy-tabix
-          iv_text    = |Encoding objects ( { sy-tabix } of { lv_objects_total } )| ).
+          iv_text    = |Encoding objects ({ lv_objects_total } total)| ).
       ENDIF.
 
       lv_xstring = type_and_length(
