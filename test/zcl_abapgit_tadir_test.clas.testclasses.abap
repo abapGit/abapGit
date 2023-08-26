@@ -129,10 +129,6 @@ CLASS ltcl_build IMPLEMENTATION.
     ls_filter-obj_name = '$SWF_RUN_CNT'.
     INSERT ls_filter INTO TABLE lt_filter.
 
-    IF lt_filter IS INITIAL.
-      cl_abap_unit_assert=>fail( msg = |lt_filter is initial| ).
-    ENDIF.
-
     READ TABLE lt_filter TRANSPORTING NO FIELDS
       WITH TABLE KEY obj_type = 'NSPC'.
 
