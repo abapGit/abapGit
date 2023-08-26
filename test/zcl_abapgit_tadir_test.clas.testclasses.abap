@@ -129,6 +129,25 @@ CLASS ltcl_build IMPLEMENTATION.
     ls_filter-obj_name = '$SWF_RUN_CNT'.
     INSERT ls_filter INTO TABLE lt_filter.
 
+    READ TABLE lt_filter TRANSPORTING NO FIELDS
+      WITH TABLE KEY obj_type = 'NSPC'.
+
+    IF sy-subrc <> 0.
+
+      cl_abap_unit_assert=>fail(
+          msg = |Read table lt_filter with table key obj_type = 'NSPC' failed'| ).
+
+    ENDIF.
+
+    READ TABLE lt_filter TRANSPORTING NO FIELDS
+      WITH TABLE KEY obj_type = 'DEVC'.
+
+    IF sy-subrc <> 0.
+
+      cl_abap_unit_assert=>fail(
+          msg = |Read table lt_filter with table key obj_type = 'DEVC' failed'| ).
+
+    ENDIF.
 
     TRY.
         CREATE OBJECT li_log TYPE zcl_abapgit_log.
