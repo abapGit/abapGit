@@ -103,11 +103,14 @@ CLASS zcl_abapgit_merge IMPLEMENTATION.
       UNASSIGN <ls_common>.
 
       READ TABLE ms_merge-stree ASSIGNING <ls_source>
-        WITH KEY path = <ls_file>-path name = <ls_file>-name. "#EC CI_SUBRC
+        WITH KEY path_name
+        COMPONENTS path = <ls_file>-path name = <ls_file>-name. "#EC CI_SUBRC
       READ TABLE ms_merge-ttree ASSIGNING <ls_target>
-        WITH KEY path = <ls_file>-path name = <ls_file>-name. "#EC CI_SUBRC
+        WITH KEY path_name
+        COMPONENTS path = <ls_file>-path name = <ls_file>-name. "#EC CI_SUBRC
       READ TABLE ms_merge-ctree ASSIGNING <ls_common>
-        WITH KEY path = <ls_file>-path name = <ls_file>-name. "#EC CI_SUBRC
+        WITH KEY path_name
+        COMPONENTS path = <ls_file>-path name = <ls_file>-name. "#EC CI_SUBRC
 
       lv_found_source = boolc( <ls_source> IS ASSIGNED ).
       lv_found_target = boolc( <ls_target> IS ASSIGNED ).
@@ -383,8 +386,9 @@ CLASS zcl_abapgit_merge IMPLEMENTATION.
       READ TABLE mt_conflicts ASSIGNING <ls_conflict> WITH KEY path = is_conflict-path
                                                                filename = is_conflict-filename.
       IF sy-subrc = 0.
-        READ TABLE ms_merge-result ASSIGNING <ls_result> WITH KEY path = is_conflict-path
-                                                                  name = is_conflict-filename.
+        READ TABLE ms_merge-result ASSIGNING <ls_result>
+          WITH KEY path_name
+          COMPONENTS path = is_conflict-path name = is_conflict-filename.
         IF sy-subrc = 0.
           <ls_result>-sha1 = is_conflict-result_sha1.
 
