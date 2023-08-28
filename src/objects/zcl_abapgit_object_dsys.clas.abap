@@ -63,7 +63,9 @@ CLASS ZCL_ABAPGIT_OBJECT_DSYS IMPLEMENTATION.
 
       mv_doc_object = ms_item-obj_name.
     ENDIF.
+
   ENDMETHOD.
+
 
   METHOD deserialize_dsys.
 
