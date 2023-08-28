@@ -1,5 +1,5 @@
 CLASS ltcl_run_checks DEFINITION DEFERRED.
-CLASS zcl_abapgit_file_status DEFINITION LOCAL FRIENDS ltcl_run_checks.
+CLASS zcl_abapgit_repo_status DEFINITION LOCAL FRIENDS ltcl_run_checks.
 
 CLASS ltcl_util DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
   PUBLIC SECTION.
@@ -635,7 +635,7 @@ CLASS lcl_status_result IMPLEMENTATION.
 ENDCLASS.
 
 CLASS ltcl_status_helper DEFINITION DEFERRED.
-CLASS zcl_abapgit_file_status DEFINITION LOCAL FRIENDS ltcl_status_helper.
+CLASS zcl_abapgit_repo_status DEFINITION LOCAL FRIENDS ltcl_status_helper.
 
 CLASS ltcl_status_helper DEFINITION FOR TESTING.
 
@@ -644,7 +644,6 @@ CLASS ltcl_status_helper DEFINITION FOR TESTING.
       zif_abapgit_tadir.
 
     METHODS:
-      constructor,
       add_tadir
         IMPORTING
           iv_obj_type TYPE tadir-object
@@ -694,12 +693,6 @@ CLASS ltcl_status_helper DEFINITION FOR TESTING.
 ENDCLASS.
 
 CLASS ltcl_status_helper IMPLEMENTATION.
-
-  METHOD constructor.
-
-    zcl_abapgit_injector=>set_tadir( me ).
-
-  ENDMETHOD.
 
   METHOD add_tadir.
 
@@ -775,7 +768,7 @@ CLASS ltcl_status_helper IMPLEMENTATION.
   METHOD run.
 
     DATA: lt_results  TYPE zif_abapgit_definitions=>ty_results_tt,
-          lo_instance TYPE REF TO zcl_abapgit_file_status,
+          lo_instance TYPE REF TO zcl_abapgit_repo_status,
           lo_dot      TYPE REF TO zcl_abapgit_dot_abapgit.
 
     lo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
@@ -800,7 +793,7 @@ CLASS ltcl_status_helper IMPLEMENTATION.
 ENDCLASS.
 
 CLASS ltcl_calculate_status DEFINITION DEFERRED.
-CLASS zcl_abapgit_file_status DEFINITION LOCAL FRIENDS ltcl_calculate_status.
+CLASS zcl_abapgit_repo_status DEFINITION LOCAL FRIENDS ltcl_calculate_status.
 
 CLASS ltcl_calculate_status DEFINITION FOR TESTING RISK LEVEL HARMLESS
   DURATION SHORT FINAL.
@@ -812,6 +805,7 @@ CLASS ltcl_calculate_status DEFINITION FOR TESTING RISK LEVEL HARMLESS
 
     METHODS:
       setup,
+      teardown,
       complete_local,
       complete_remote,
       complete_state,
@@ -834,6 +828,14 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
   METHOD setup.
 
     CREATE OBJECT mo_helper.
+    zcl_abapgit_injector=>set_tadir( mo_helper ).
+
+  ENDMETHOD.
+
+  METHOD teardown.
+
+    DATA li_tadir TYPE REF TO zif_abapgit_tadir.
+    zcl_abapgit_injector=>set_tadir( li_tadir ).
 
   ENDMETHOD.
 

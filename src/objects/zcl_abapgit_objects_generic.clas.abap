@@ -125,7 +125,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
 
 
   METHOD after_import.
@@ -240,6 +240,9 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
 * only unique tables
     SORT mt_object_table BY tobj_name ASCENDING.
     DELETE ADJACENT DUPLICATES FROM mt_object_table COMPARING tobj_name.
+
+* back to primary key table sorting,
+    SORT mt_object_table BY objectname objecttype trwcount.
 
 * object methods
     SELECT * FROM objm INTO TABLE mt_object_method
