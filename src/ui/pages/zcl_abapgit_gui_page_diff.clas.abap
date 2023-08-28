@@ -555,8 +555,8 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     lt_remote = mo_repo->get_files_remote( ).
     lt_local  = mo_repo->get_files_local( ).
-    mo_repo->reset_status( ).
-    lt_status = mo_repo->status( ).
+
+    lt_status = zcl_abapgit_repo_status=>calculate( mo_repo ).
 
     li_exit = zcl_abapgit_exit=>get_instance( ).
     li_exit->pre_calculate_repo_status(

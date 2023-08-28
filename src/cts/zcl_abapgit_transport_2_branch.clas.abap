@@ -32,7 +32,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_TRANSPORT_2_BRANCH IMPLEMENTATION.
+CLASS zcl_abapgit_transport_2_branch IMPLEMENTATION.
 
 
   METHOD create.
@@ -52,7 +52,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT_2_BRANCH IMPLEMENTATION.
 
     ls_stage_objects = zcl_abapgit_factory=>get_stage_logic( )->get( io_repository ).
 
-    lt_object_statuses = io_repository->status( ).
+    lt_object_statuses = zcl_abapgit_repo_status=>calculate( io_repository ).
 
     stage_transport_objects(
        it_transport_objects = it_transport_objects

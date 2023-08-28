@@ -89,20 +89,12 @@ CLASS zcl_abapgit_repo DEFINITION
         !ct_files TYPE zif_abapgit_git_definitions=>ty_files_tt
       RAISING
         zcx_abapgit_exception .
-    METHODS reset_status .
     METHODS set_files_remote
       IMPORTING
         !it_files TYPE zif_abapgit_git_definitions=>ty_files_tt .
     METHODS set_local_settings
       IMPORTING
         !is_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings
-      RAISING
-        zcx_abapgit_exception .
-    METHODS status
-      IMPORTING
-        !ii_log           TYPE REF TO zif_abapgit_log OPTIONAL
-      RETURNING
-        VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
         zcx_abapgit_exception .
     METHODS switch_repo_type
@@ -116,7 +108,6 @@ CLASS zcl_abapgit_repo DEFINITION
     DATA mt_remote TYPE zif_abapgit_git_definitions=>ty_files_tt .
     DATA mv_request_local_refresh TYPE abap_bool .
     DATA mv_request_remote_refresh TYPE abap_bool .
-    DATA mt_status TYPE zif_abapgit_definitions=>ty_results_tt .
     DATA mi_log TYPE REF TO zif_abapgit_log .
     DATA mi_listener TYPE REF TO zif_abapgit_repo_listener .
     DATA mo_apack_reader TYPE REF TO zcl_abapgit_apack_reader .
@@ -560,12 +551,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   METHOD reset_remote.
     CLEAR mt_remote.
     mv_request_remote_refresh = abap_true.
-    reset_status( ).
-  ENDMETHOD.
-
-
-  METHOD reset_status.
-    CLEAR mt_status.
   ENDMETHOD.
 
 
@@ -662,18 +647,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD status.
-
-    IF lines( mt_status ) = 0.
-      mt_status = zcl_abapgit_repo_status=>calculate( io_repo = me
-                                                      ii_log  = ii_log ).
-    ENDIF.
-
-    rt_results = mt_status.
-
-  ENDMETHOD.
-
-
   METHOD switch_repo_type.
 
     IF iv_offline = ms_data-offline.
@@ -758,7 +731,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     zif_abapgit_repo~checksums( )->update( lt_updated_files ).
 
     update_last_deserialize( ).
-    reset_status( ).
 
     COMMIT WORK AND WAIT.
 
