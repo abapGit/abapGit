@@ -163,7 +163,7 @@ CLASS ltcl_build IMPLEMENTATION.
             CONCATENATE lv_msg lr_tadir->obj_name INTO lv_msg SEPARATED BY ' | '.
           ENDLOOP.
 
-          CONCATENATE lv_msg 'requested:' INTO lv_msg SEPARATED BY space.
+          CONCATENATE lv_msg '; requested:' INTO lv_msg SEPARATED BY space.
           LOOP AT lt_filter REFERENCE INTO lr_filter.
             CONCATENATE lv_msg lr_filter->obj_name INTO lv_msg SEPARATED BY ' | '.
           ENDLOOP.
