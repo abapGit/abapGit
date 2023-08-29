@@ -13,11 +13,13 @@ CLASS ltcl_check_split_by_name IMPLEMENTATION.
     DATA lv_namespace             TYPE trnspace-namespace.
     DATA lv_obj_without_namespace TYPE tadir-obj_name.
     DATA lr_ex TYPE REF TO zcx_abapgit_exception.
+    DATA li_namespace TYPE REF TO zif_abapgit_sap_namespace.
 
     lv_obj_with_namespace = '/BLA12345/TEST/123'.
 
     TRY.
-        zcl_abapgit_factory=>get_sap_namespace( )->split_by_name(
+        li_namespace = zcl_abapgit_factory=>get_sap_namespace( ).
+        li_namespace->split_by_name(
           EXPORTING
             iv_obj_with_namespace    =  lv_obj_with_namespace
           IMPORTING
@@ -29,14 +31,12 @@ CLASS ltcl_check_split_by_name IMPLEMENTATION.
     ENDTRY.
 
     cl_abap_unit_assert=>assert_equals(
-      EXPORTING
-        act                  = lv_namespace
-        exp                  = '/BLA12345/' ).
+       act = lv_namespace
+       exp = '/BLA12345/' ).
 
     cl_abap_unit_assert=>assert_equals(
-      EXPORTING
-       act                  = lv_obj_without_namespace
-       exp                  = 'TEST/123' ).
+      act = lv_obj_without_namespace
+      exp = 'TEST/123' ).
 
 
   ENDMETHOD.
@@ -46,11 +46,13 @@ CLASS ltcl_check_split_by_name IMPLEMENTATION.
     DATA lv_namespace             TYPE trnspace-namespace.
     DATA lv_obj_without_namespace TYPE tadir-obj_name.
     DATA lr_ex TYPE REF TO zcx_abapgit_exception.
+    DATA li_namespace TYPE REF TO zif_abapgit_sap_namespace.
 
     lv_obj_with_namespace = 'ZCL_ABAPGIT_SAP_NAMESP'.
 
     TRY.
-        zcl_abapgit_factory=>get_sap_namespace( )->split_by_name(
+        li_namespace = zcl_abapgit_factory=>get_sap_namespace( ).
+        li_namespace->split_by_name(
           EXPORTING
             iv_obj_with_namespace    =  lv_obj_with_namespace
           IMPORTING
@@ -62,14 +64,12 @@ CLASS ltcl_check_split_by_name IMPLEMENTATION.
     ENDTRY.
 
     cl_abap_unit_assert=>assert_equals(
-      EXPORTING
-        act                  = lv_namespace
-        exp                  = '' ).
+       act = lv_namespace
+       exp = '' ).
 
     cl_abap_unit_assert=>assert_equals(
-      EXPORTING
-       act                  = lv_obj_without_namespace
-       exp                  = 'ZCL_ABAPGIT_SAP_NAMESP' ).
+       act = lv_obj_without_namespace
+       exp = 'ZCL_ABAPGIT_SAP_NAMESP' ).
 
   ENDMETHOD.
 
@@ -78,11 +78,13 @@ CLASS ltcl_check_split_by_name IMPLEMENTATION.
     DATA lv_obj_with_namespace    TYPE tadir-obj_name.
     DATA lv_namespace             TYPE trnspace-namespace.
     DATA lv_obj_without_namespace TYPE tadir-obj_name.
+    DATA li_namespace TYPE REF TO zif_abapgit_sap_namespace.
 
     lv_obj_with_namespace = '/TEST12345/BLA'.
 
     TRY.
-        zcl_abapgit_factory=>get_sap_namespace( )->split_by_name(
+        li_namespace = zcl_abapgit_factory=>get_sap_namespace( ).
+        li_namespace->split_by_name(
           EXPORTING
             iv_obj_with_namespace    =  lv_obj_with_namespace
           IMPORTING

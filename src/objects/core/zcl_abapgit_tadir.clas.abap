@@ -111,12 +111,19 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
     DATA lv_namespace TYPE namespace.
     DATA ls_tadir  TYPE zif_abapgit_definitions=>ty_tadir.
+    DATA li_namespace TYPE REF TO zif_abapgit_sap_namespace.
 
-    zcl_abapgit_factory=>get_sap_namespace( )->split_by_name(
-      EXPORTING
-        iv_obj_with_namespace    = iv_object
-      IMPORTING
-        ev_namespace             = lv_namespace ).
+    li_namespace = zcl_abapgit_factory=>get_sap_namespace( ).
+    TRY.
+        li_namespace->split_by_name(
+          EXPORTING
+            iv_obj_with_namespace    = iv_object
+          IMPORTING
+            ev_namespace             = lv_namespace ).
+      CATCH zcx_abapgit_exception.
+        "Ignore the exception like before the replacement of the FM RS_NAME_SPLIT_NAMESPACE
+        RETURN.
+    ENDTRY.
 
     IF lv_namespace IS NOT INITIAL.
 
