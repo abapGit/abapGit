@@ -1,4 +1,4 @@
-CLASS ltcl_check_split_by_name DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
+CLASS ltcl_check_split_by_name DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION MEDIUM FINAL.
   PRIVATE SECTION.
     METHODS check_with_namespace FOR TESTING RAISING zcx_abapgit_exception.
     METHODS check_without_namespace FOR TESTING RAISING zcx_abapgit_exception.
