@@ -9,6 +9,11 @@ INTERFACE zif_abapgit_definitions
       obj_name TYPE tadir-obj_name,
     END OF ty_obj.
   TYPES:
+    BEGIN OF ty_obj_namespace,
+      namespace TYPE trnspace-namespace,
+      obj_without_namespace  TYPE tadir-obj_name,
+    END OF ty_obj_namespace.
+  TYPES:
     ty_obj_ts TYPE SORTED TABLE OF ty_obj
     WITH NON-UNIQUE KEY obj_type
     WITH UNIQUE HASHED KEY obj_type_obj_name COMPONENTS obj_type obj_name.

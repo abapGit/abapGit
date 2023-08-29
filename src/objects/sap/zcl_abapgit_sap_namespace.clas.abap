@@ -34,8 +34,6 @@ CLASS zcl_abapgit_sap_namespace IMPLEMENTATION.
     DATA lv_length TYPE i.
     DATA lr_ex TYPE REF TO cx_root.
 
-    CLEAR ev_obj_without_namespace.
-    CLEAR ev_namespace.
     lv_regex =  '^\/[^\/]{1,8}\/'.
 
     TRY.
@@ -45,13 +43,13 @@ CLASS zcl_abapgit_sap_namespace IMPLEMENTATION.
     ENDTRY.
 
     IF sy-subrc = 0 AND lv_length > 1.
-      ev_namespace = iv_obj_with_namespace(lv_length).
-      ev_obj_without_namespace = iv_obj_with_namespace+lv_length.
+      rs_obj_namespace-namespace = iv_obj_with_namespace(lv_length).
+      rs_obj_namespace-obj_without_namespace = iv_obj_with_namespace+lv_length.
     ELSE.
       IF iv_obj_with_namespace(1) = '/'.
         zcx_abapgit_exception=>raise( |The object { iv_obj_with_namespace } has an invalid namespace| ).
       ENDIF.
-      ev_obj_without_namespace = iv_obj_with_namespace.
+      rs_obj_namespace-obj_without_namespace = iv_obj_with_namespace.
     ENDIF.
   ENDMETHOD.
 
