@@ -11,7 +11,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SAP_NAMESPACE IMPLEMENTATION.
+CLASS zcl_abapgit_sap_namespace IMPLEMENTATION.
 
 
   METHOD zif_abapgit_sap_namespace~exists.
@@ -26,4 +26,33 @@ CLASS ZCL_ABAPGIT_SAP_NAMESPACE IMPLEMENTATION.
     SELECT SINGLE editflag FROM trnspace INTO lv_editflag WHERE namespace = iv_namespace.
     rv_yes = boolc( sy-subrc = 0 AND lv_editflag = 'X' ).
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_sap_namespace~split_by_name.
+    DATA lv_regex TYPE string.
+    DATA lv_object TYPE string.
+    DATA lv_length TYPE i.
+    DATA lr_ex TYPE REF TO cx_dynamic_check.
+
+    CLEAR ev_obj_without_namespace.
+    CLEAR ev_namespace.
+    lv_regex =  '^\/[^\/]{1,8}\/'.
+
+    TRY.
+        FIND REGEX lv_regex IN iv_obj_with_namespace MATCH LENGTH lv_length.
+      CATCH cx_dynamic_check INTO lr_ex.
+        zcx_abapgit_exception=>raise( lr_ex->get_text( ) ).
+    ENDTRY.
+
+    IF sy-subrc = 0 AND lv_length > 1.
+      ev_namespace = iv_obj_with_namespace(lv_length).
+      ev_obj_without_namespace = iv_obj_with_namespace+lv_length.
+    ELSE.
+      IF iv_obj_with_namespace(1) = '/'.
+        zcx_abapgit_exception=>raise( |The object { iv_obj_with_namespace } has an invalid namespace| ).
+      ENDIF.
+      ev_obj_without_namespace = iv_obj_with_namespace.
+    ENDIF.
+  ENDMETHOD.
+
 ENDCLASS.

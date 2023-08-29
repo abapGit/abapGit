@@ -127,6 +127,9 @@ CLASS ltcl_run_checks IMPLEMENTATION.
   METHOD zif_abapgit_sap_namespace~is_editable.
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_namespace~split_by_name.
+  ENDMETHOD.
+
   METHOD append_result.
 
     DATA ls_result LIKE LINE OF mt_results.

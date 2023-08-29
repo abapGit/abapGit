@@ -109,24 +109,16 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
   METHOD add_namespace.
 
-    DATA:
-      lv_name      TYPE progname,
-      lv_namespace TYPE namespace.
-
+    DATA lv_namespace TYPE namespace.
     DATA ls_tadir  TYPE zif_abapgit_definitions=>ty_tadir.
 
-    lv_name = iv_object.
-
-    CALL FUNCTION 'RS_NAME_SPLIT_NAMESPACE'
+    zcl_abapgit_factory=>get_sap_namespace( )->split_by_name(
       EXPORTING
-        name_with_namespace = lv_name
+        iv_obj_with_namespace    = iv_object
       IMPORTING
-        namespace           = lv_namespace
-      EXCEPTIONS
-        delimiter_error     = 1
-        OTHERS              = 2.
+        ev_namespace             = lv_namespace ).
 
-    IF sy-subrc = 0 AND lv_namespace IS NOT INITIAL.
+    IF lv_namespace IS NOT INITIAL.
 
       READ TABLE ct_tadir_nspc TRANSPORTING NO FIELDS
         WITH KEY pgmid = 'R3TR' object = 'NSPC' obj_name = lv_namespace.
