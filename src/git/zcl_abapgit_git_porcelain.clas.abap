@@ -216,7 +216,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
       CLEAR lt_nodes.
 
 * files
-      LOOP AT it_expanded ASSIGNING <ls_exp> USING KEY path WHERE path = <ls_folder>-path.
+      LOOP AT it_expanded ASSIGNING <ls_exp> USING KEY path_name WHERE path = <ls_folder>-path.
         APPEND INITIAL LINE TO lt_nodes ASSIGNING <ls_node>.
         <ls_node>-chmod = <ls_exp>-chmod.
         <ls_node>-name  = <ls_exp>-name.

@@ -133,8 +133,6 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
     ls_data = from_xml( lv_xml ).
 
     ro_manifest_reader = create_instance( iv_package_name ).
-
-    ro_manifest_reader = create_instance( iv_package_name ).
     ro_manifest_reader->set_manifest_descriptor( ls_data ).
 
   ENDMETHOD.

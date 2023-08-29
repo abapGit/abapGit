@@ -144,7 +144,8 @@ CLASS zcl_abapgit_gui_page_merge IMPLEMENTATION.
     LOOP AT lt_files ASSIGNING <ls_file>.
       CLEAR ls_result.
       READ TABLE ls_merge-result INTO ls_result
-        WITH KEY path = <ls_file>-path name = <ls_file>-name.
+        WITH KEY path_name
+        COMPONENTS path = <ls_file>-path name = <ls_file>-name.
 
       ri_html->add( '<tr>' ).
       show_file( it_expanded = ls_merge-stree
@@ -181,9 +182,8 @@ CLASS zcl_abapgit_gui_page_merge IMPLEMENTATION.
 
 
     READ TABLE it_expanded ASSIGNING <ls_show>
-        WITH KEY
-        path = is_file-path
-        name = is_file-name.
+      WITH KEY path_name
+      COMPONENTS path = is_file-path name = is_file-name.
     IF sy-subrc = 0.
       IF <ls_show>-sha1 = is_result-sha1.
         ii_html->add( |<td>{ <ls_show>-path }{ <ls_show>-name }</td><td><b>{ <ls_show>-sha1(7) }</b></td>| ).
