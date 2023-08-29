@@ -29,6 +29,7 @@ CLASS zcl_abapgit_sap_namespace IMPLEMENTATION.
 
 
   METHOD zif_abapgit_sap_namespace~split_by_name.
+* use this method instead of function module RS_NAME_SPLIT_NAMESPACE
     DATA lv_regex TYPE string.
     DATA lv_object TYPE string.
     DATA lv_length TYPE i.
