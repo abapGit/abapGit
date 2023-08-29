@@ -54,6 +54,7 @@ CLASS ltcl_run_checks DEFINITION FOR TESTING RISK LEVEL HARMLESS
                               iv_filename TYPE string
                               iv_packmove TYPE abap_bool OPTIONAL,
       setup,
+      teardown,
       positive FOR TESTING RAISING zcx_abapgit_exception,
       neg_diff_path_for_same_obj FOR TESTING RAISING zcx_abapgit_exception,
       neg_incorrect_path_vs_pack FOR TESTING RAISING zcx_abapgit_exception,
@@ -170,6 +171,11 @@ CLASS ltcl_run_checks IMPLEMENTATION.
         iv_root_package = '$Z$'
         io_dot          = mo_dot.
 
+  ENDMETHOD.
+
+  METHOD teardown.
+    DATA li_empty TYPE REF TO zif_abapgit_sap_namespace.
+    zcl_abapgit_injector=>set_sap_namespace( li_empty ).
   ENDMETHOD.
 
   METHOD positive.
