@@ -32,7 +32,7 @@ CLASS zcl_abapgit_sap_namespace IMPLEMENTATION.
     DATA lv_regex TYPE string.
     DATA lv_object TYPE string.
     DATA lv_length TYPE i.
-    DATA lr_ex TYPE REF TO cx_dynamic_check.
+    DATA lr_ex TYPE REF TO cx_root.
 
     CLEAR ev_obj_without_namespace.
     CLEAR ev_namespace.
@@ -40,7 +40,7 @@ CLASS zcl_abapgit_sap_namespace IMPLEMENTATION.
 
     TRY.
         FIND REGEX lv_regex IN iv_obj_with_namespace MATCH LENGTH lv_length.
-      CATCH cx_dynamic_check INTO lr_ex.
+      CATCH cx_root INTO lr_ex.
         zcx_abapgit_exception=>raise( lr_ex->get_text( ) ).
     ENDTRY.
 
