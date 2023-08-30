@@ -348,7 +348,6 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     " Make sure there're no leftovers from previous repos
     ro_repo->zif_abapgit_repo~checksums( )->rebuild( ).
-    ro_repo->reset_status( ). " TODO refactor later
 
     toggle_favorite( ro_repo->get_key( ) ).
 
@@ -381,7 +380,6 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     " Make sure there're no leftovers from previous repos
     ro_repo->zif_abapgit_repo~checksums( )->rebuild( ).
-    ro_repo->reset_status( ). " TODO refactor later
 
     toggle_favorite( ro_repo->get_key( ) ).
 
@@ -696,7 +694,6 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     ENDIF.
 
     lo_repo->zif_abapgit_repo~checksums( )->rebuild( ).
-    lo_repo->reset_status( ). " TODO refactor later
 
     COMMIT WORK AND WAIT.
 
