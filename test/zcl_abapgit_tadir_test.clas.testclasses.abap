@@ -4,6 +4,7 @@ CLASS ltcl_build DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION MEDIUM FINA
     CLASS-METHODS class_setup.
     CLASS-METHODS class_teardown.
     CLASS-METHODS create_envoirment.
+    METHODS check_get_package FOR TESTING RAISING zcx_abapgit_exception.
     METHODS check_build_wo_filter FOR TESTING RAISING zcx_abapgit_exception.
     METHODS check_build_w_filter FOR TESTING RAISING zcx_abapgit_exception.
 ENDCLASS.
@@ -61,6 +62,19 @@ CLASS ltcl_build IMPLEMENTATION.
     INSERT ls_tdevc INTO TABLE lt_tdevc.
 
     gi_environment->insert_test_data( lt_tdevc ).
+
+  ENDMETHOD.
+
+
+  METHOD check_get_package.
+    DATA lt_packages  TYPE zif_abapgit_sap_package=>ty_devclass_tt.
+    lt_packages = zcl_abapgit_factory=>get_sap_package( 'BASIS' )->list_subpackages( ).
+
+    READ TABLE lt_packages TRANSPORTING NO FIELDS
+    WITH KEY table_line =  '$SWF_RUN_CNT'.
+    IF sy-subrc <> 0.
+      cl_abap_unit_assert=>fail( |Package $SWF_RUN_CNT not found as sub package| ).
+    ENDIF.
 
   ENDMETHOD.
 
