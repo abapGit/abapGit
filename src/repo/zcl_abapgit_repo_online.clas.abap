@@ -311,8 +311,6 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
     zif_abapgit_repo~checksums( )->update( ls_push-updated_files ).
 
-    reset_status( ).
-
   ENDMETHOD.
 
 

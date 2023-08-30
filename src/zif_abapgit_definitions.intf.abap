@@ -10,6 +10,11 @@ INTERFACE zif_abapgit_definitions
       devclass TYPE devclass,
     END OF ty_item_signature .
   TYPES:
+    BEGIN OF ty_obj_namespace,
+      namespace TYPE trnspace-namespace,
+      obj_without_namespace  TYPE tadir-obj_name,
+    END OF ty_obj_namespace.
+  TYPES:
     BEGIN OF ty_item.
       INCLUDE TYPE ty_item_signature.
   TYPES:
