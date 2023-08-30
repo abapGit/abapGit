@@ -16,8 +16,10 @@ INTERFACE zif_abapgit_sap_namespace
   METHODS split_by_name
     IMPORTING
       iv_obj_with_namespace   TYPE tadir-obj_name
+      iv_allow_slash_in_name  TYPE abap_bool DEFAULT abap_true
     RETURNING
       VALUE(rs_obj_namespace) TYPE zif_abapgit_definitions=>ty_obj_namespace
     RAISING
       zcx_abapgit_exception.
+
 ENDINTERFACE.

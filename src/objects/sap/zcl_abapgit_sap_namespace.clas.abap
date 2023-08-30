@@ -29,6 +29,7 @@ CLASS zcl_abapgit_sap_namespace IMPLEMENTATION.
 
 
   METHOD zif_abapgit_sap_namespace~split_by_name.
+* use this method instead of function module RS_NAME_SPLIT_NAMESPACE
     DATA lv_regex TYPE string.
     DATA lv_object TYPE string.
     DATA lv_length TYPE i.
@@ -50,6 +51,11 @@ CLASS zcl_abapgit_sap_namespace IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |The object { iv_obj_with_namespace } has an invalid namespace| ).
       ENDIF.
       rs_obj_namespace-obj_without_namespace = iv_obj_with_namespace.
+    ENDIF.
+
+    IF iv_allow_slash_in_name = abap_false AND rs_obj_namespace-obj_without_namespace CA '/'.
+      zcx_abapgit_exception=>raise(
+       |Object without namespace { rs_obj_namespace-obj_without_namespace } contains a '/'| ).
     ENDIF.
   ENDMETHOD.
 
