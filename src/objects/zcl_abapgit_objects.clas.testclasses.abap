@@ -395,8 +395,7 @@ CLASS ltcl_check_objects_locked IMPLEMENTATION.
     DATA: lx_error TYPE REF TO zcx_abapgit_exception.
 
     TRY.
-        zcl_abapgit_objects=>check_objects_locked( iv_language = 'E'
-                                                   it_items    = mt_given_items ).
+        zcl_abapgit_objects=>check_objects_locked( it_items = mt_given_items ).
 
       CATCH zcx_abapgit_exception INTO lx_error.
         mv_exception_text = lx_error->get_text( ).

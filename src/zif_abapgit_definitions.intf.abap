@@ -4,6 +4,15 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     ty_string_tt TYPE STANDARD TABLE OF string WITH DEFAULT KEY .
   TYPES:
+    BEGIN OF ty_obj,
+      obj_type TYPE tadir-object,
+      obj_name TYPE tadir-obj_name,
+    END OF ty_obj.
+  TYPES:
+    ty_obj_ts TYPE SORTED TABLE OF ty_obj
+    WITH NON-UNIQUE KEY obj_type
+    WITH UNIQUE HASHED KEY obj_type_obj_name COMPONENTS obj_type obj_name.
+  TYPES:
     BEGIN OF ty_item_signature,
       obj_type TYPE tadir-object,
       obj_name TYPE tadir-obj_name,

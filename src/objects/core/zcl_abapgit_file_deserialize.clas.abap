@@ -6,12 +6,13 @@ CLASS zcl_abapgit_file_deserialize DEFINITION
 
     CLASS-METHODS get_results
       IMPORTING
-        !io_repo          TYPE REF TO zcl_abapgit_repo
-        !ii_log           TYPE REF TO zif_abapgit_log OPTIONAL
+        it_results        TYPE zif_abapgit_definitions=>ty_results_tt
+        ii_log            TYPE REF TO zif_abapgit_log OPTIONAL
       RETURNING
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
         zcx_abapgit_exception .
+
   PROTECTED SECTION.
 
   PRIVATE SECTION.
@@ -22,17 +23,20 @@ CLASS zcl_abapgit_file_deserialize DEFINITION
         !ii_log           TYPE REF TO zif_abapgit_log OPTIONAL
       RETURNING
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt .
+
     CLASS-METHODS prioritize_deser
       IMPORTING
-        !ii_log           TYPE REF TO zif_abapgit_log
-        !it_results       TYPE zif_abapgit_definitions=>ty_results_tt
+        ii_log            TYPE REF TO zif_abapgit_log
+        it_results        TYPE zif_abapgit_definitions=>ty_results_tt
       RETURNING
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt .
+
     CLASS-METHODS map_results_to_items
       IMPORTING
-        !it_results     TYPE zif_abapgit_definitions=>ty_results_tt
+        !it_results      TYPE zif_abapgit_definitions=>ty_results_tt
       RETURNING
         VALUE(rt_items) TYPE zif_abapgit_definitions=>ty_items_tt .
+
 ENDCLASS.
 
 
@@ -139,7 +143,7 @@ CLASS zcl_abapgit_file_deserialize IMPLEMENTATION.
     DATA lt_results TYPE zif_abapgit_definitions=>ty_results_tt.
 
     lt_results = filter_files_to_deserialize(
-      it_results = zcl_abapgit_repo_status=>calculate( io_repo )
+      it_results = it_results
       ii_log     = ii_log ).
 
     rt_results = prioritize_deser(
