@@ -52,6 +52,10 @@ CLASS zcl_abapgit_sap_namespace IMPLEMENTATION.
       ENDIF.
       rs_obj_namespace-obj_without_namespace = iv_obj_with_namespace.
     ENDIF.
+
+    IF iv_allow_slash_in_name = abap_false AND rs_obj_namespace-obj_without_namespace CA '/'.
+      zcx_abapgit_exception=>raise( |Object without namespace { rs_obj_namespace-obj_without_namespace } contains a '/'| ).
+    ENDIF.
   ENDMETHOD.
 
 ENDCLASS.
