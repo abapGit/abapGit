@@ -213,7 +213,9 @@ CLASS ltcl_create_package IMPLEMENTATION.
 
   METHOD then_popup_is_shown.
 
-    cl_abap_unit_assert=>assert_true( mo_popups_mock->was_create_package_popup_shown( )  ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_popups_mock->was_create_package_popup_shown( )
+      exp = abap_true ).
 
   ENDMETHOD.
 
@@ -227,7 +229,9 @@ CLASS ltcl_create_package IMPLEMENTATION.
 
   METHOD then_no_package_is_created.
 
-    cl_abap_unit_assert=>assert_false( mo_sap_package_mock->was_create_called( ) ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_sap_package_mock->was_create_called( )
+      exp = abap_false ).
 
   ENDMETHOD.
 
@@ -241,10 +245,13 @@ CLASS ltcl_create_package IMPLEMENTATION.
 
   METHOD then_package_is_created.
 
-    cl_abap_unit_assert=>assert_true( mo_sap_package_mock->was_create_called( ) ).
     cl_abap_unit_assert=>assert_equals(
-        exp = mv_package
-        act = mv_created_package ).
+      act = mo_sap_package_mock->was_create_called( )
+      exp = abap_true ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = mv_package
+      act = mv_created_package ).
 
   ENDMETHOD.
 

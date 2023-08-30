@@ -54,6 +54,7 @@ CLASS ltcl_run_checks DEFINITION FOR TESTING RISK LEVEL HARMLESS
                               iv_filename TYPE string
                               iv_packmove TYPE abap_bool OPTIONAL,
       setup,
+      teardown,
       positive FOR TESTING RAISING zcx_abapgit_exception,
       neg_diff_path_for_same_obj FOR TESTING RAISING zcx_abapgit_exception,
       neg_incorrect_path_vs_pack FOR TESTING RAISING zcx_abapgit_exception,
@@ -167,6 +168,11 @@ CLASS ltcl_run_checks IMPLEMENTATION.
         iv_root_package = '$Z$'
         io_dot          = mo_dot.
 
+  ENDMETHOD.
+
+  METHOD teardown.
+    DATA li_empty TYPE REF TO zif_abapgit_sap_namespace.
+    zcl_abapgit_injector=>set_sap_namespace( li_empty ).
   ENDMETHOD.
 
   METHOD positive.
@@ -644,7 +650,6 @@ CLASS ltcl_status_helper DEFINITION FOR TESTING.
       zif_abapgit_tadir.
 
     METHODS:
-      constructor,
       add_tadir
         IMPORTING
           iv_obj_type TYPE tadir-object
@@ -694,12 +699,6 @@ CLASS ltcl_status_helper DEFINITION FOR TESTING.
 ENDCLASS.
 
 CLASS ltcl_status_helper IMPLEMENTATION.
-
-  METHOD constructor.
-
-    zcl_abapgit_injector=>set_tadir( me ).
-
-  ENDMETHOD.
 
   METHOD add_tadir.
 
@@ -812,6 +811,7 @@ CLASS ltcl_calculate_status DEFINITION FOR TESTING RISK LEVEL HARMLESS
 
     METHODS:
       setup,
+      teardown,
       complete_local,
       complete_remote,
       complete_state,
@@ -834,6 +834,14 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
   METHOD setup.
 
     CREATE OBJECT mo_helper.
+    zcl_abapgit_injector=>set_tadir( mo_helper ).
+
+  ENDMETHOD.
+
+  METHOD teardown.
+
+    DATA li_tadir TYPE REF TO zif_abapgit_tadir.
+    zcl_abapgit_injector=>set_tadir( li_tadir ).
 
   ENDMETHOD.
 

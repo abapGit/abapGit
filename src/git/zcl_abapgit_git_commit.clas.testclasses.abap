@@ -193,15 +193,17 @@ CLASS ltc_parent_handling IMPLEMENTATION.
 
 
   METHOD parent_should_be_missing.
-    cl_abap_unit_assert=>assert_true(
-        zcl_abapgit_git_commit=>is_missing( it_commits = mt_commits
-                                            iv_sha1    = iv_sha1 ) ).
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_git_commit=>is_missing( it_commits = mt_commits
+                                                iv_sha1    = iv_sha1 )
+      exp = abap_true ).
   ENDMETHOD.
 
   METHOD parent_should_not_be_missing.
-    cl_abap_unit_assert=>assert_false(
-        zcl_abapgit_git_commit=>is_missing( it_commits = mt_commits
-                                            iv_sha1    = iv_sha1 ) ).
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_git_commit=>is_missing( it_commits = mt_commits
+                                                iv_sha1    = iv_sha1 )
+      exp = abap_false ).
   ENDMETHOD.
 
   METHOD given_commit.

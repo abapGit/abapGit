@@ -1,13 +1,11 @@
 CLASS ltcl_abapgit_tadir_mock DEFINITION FOR TESTING.
 
   PUBLIC SECTION.
-    INTERFACES: zif_abapgit_tadir.
+    INTERFACES zif_abapgit_tadir.
 
 ENDCLASS.
 
-CLASS ltcl_no_dependency_injection DEFINITION FOR TESTING
-                              RISK LEVEL HARMLESS
-                              DURATION SHORT.
+CLASS ltcl_no_dependency_injection DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
 
   PRIVATE SECTION.
     METHODS:
@@ -15,13 +13,12 @@ CLASS ltcl_no_dependency_injection DEFINITION FOR TESTING
 
 ENDCLASS.
 
-CLASS ltcl_simple_dependency_inject DEFINITION FOR TESTING
-                                  RISK LEVEL HARMLESS
-                                  DURATION SHORT.
+CLASS ltcl_simple_dependency_inject DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
 
   PRIVATE SECTION.
     METHODS:
       setup,
+      teardown,
       simple_injection FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
@@ -65,12 +62,17 @@ CLASS ltcl_simple_dependency_inject IMPLEMENTATION.
 
   METHOD setup.
 
-    DATA: lo_tadir_mock  TYPE REF TO ltcl_abapgit_tadir_mock.
+    DATA lo_tadir_mock TYPE REF TO ltcl_abapgit_tadir_mock.
 
     CREATE OBJECT lo_tadir_mock.
 
     zcl_abapgit_injector=>set_tadir( lo_tadir_mock ).
 
+  ENDMETHOD.
+
+  METHOD teardown.
+    DATA li_tadir TYPE REF TO zif_abapgit_tadir.
+    zcl_abapgit_injector=>set_tadir( li_tadir ).
   ENDMETHOD.
 
   METHOD simple_injection.
