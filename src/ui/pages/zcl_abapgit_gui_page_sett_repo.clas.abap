@@ -125,11 +125,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
       iv_readonly    = abap_true
     )->text(
       iv_name        = c_id-i18n_langs
-      iv_label       = 'Serialize Translations for These Languages'
+      iv_label       = 'Serialize Translations for Additional Languages'
       iv_hint        = 'Comma-separate 2-letter ISO language codes e.g. "DE,ES,..." - should not include main language'
     )->checkbox(
       iv_name        = c_id-use_lxe
-      iv_label       = 'Use experimental LXE approach for translations'
+      iv_label       = 'Use Experimental LXE Approach for Translations'
       iv_hint        = 'It''s mandatory to specify the list of languages above in addition to this setting'
     )->radio(
       iv_name        = c_id-folder_logic
@@ -408,7 +408,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
     IF io_form_data->get( c_id-use_lxe ) = abap_true AND lt_lang_list IS INITIAL.
       ro_validation_log->set(
         iv_key = c_id-i18n_langs
-        iv_val = 'LXE approach requires a non-empy list of languages' ).
+        iv_val = 'LXE approach requires a non-empty list of languages' ).
     ENDIF.
 
   ENDMETHOD.
