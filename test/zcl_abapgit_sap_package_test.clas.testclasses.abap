@@ -73,35 +73,35 @@ CLASS ltcl_test IMPLEMENTATION.
     DATA lt_list3 TYPE zif_abapgit_sap_package=>ty_devclass_tt.
 
     SELECT devclass FROM tdevc
-    INTO TABLE lt_list
-    WHERE parentcl = 'BASIS'
-    ORDER BY PRIMARY KEY.                 "#EC CI_SUBRC "#EC CI_GENBUFF
+      INTO TABLE lt_list
+      WHERE parentcl = 'BASIS'
+      ORDER BY PRIMARY KEY.                 "#EC CI_SUBRC "#EC CI_GENBUFF
 
     READ TABLE lt_list TRANSPORTING NO FIELDS
-    WITH KEY table_line =  '/STMC/FND'.
+      WITH KEY table_line = '/STMC/FND'.
     IF sy-subrc <> 0.
       cl_abap_unit_assert=>fail( |Package /STMC/FND not found as sub package of BASIS| ).
     ENDIF.
 
     SELECT devclass FROM tdevc
-    INTO TABLE lt_list2
-    WHERE parentcl = '/STMC/FND'
-    ORDER BY PRIMARY KEY.                 "#EC CI_SUBRC "#EC CI_GENBUFF
+      INTO TABLE lt_list2
+      WHERE parentcl = '/STMC/FND'
+      ORDER BY PRIMARY KEY.                 "#EC CI_SUBRC "#EC CI_GENBUFF
 
     READ TABLE lt_list2 TRANSPORTING NO FIELDS
-    WITH KEY table_line =  '$SWF_RUN_CNT'.
+      WITH KEY table_line = '$SWF_RUN_CNT'.
     IF sy-subrc <> 0.
       cl_abap_unit_assert=>fail( |Package $SWF_RUN_CNT not found as sub package of /STMC/FND| ).
     ENDIF.
 
     SELECT devclass FROM tdevc
-          INTO TABLE lt_list3
-          FOR ALL ENTRIES IN lt_list
-          WHERE parentcl = lt_list-table_line
-          ORDER BY PRIMARY KEY.           "#EC CI_SUBRC "#EC CI_GENBUFF
+      INTO TABLE lt_list3
+      FOR ALL ENTRIES IN lt_list
+      WHERE parentcl = lt_list-table_line
+      ORDER BY PRIMARY KEY.           "#EC CI_SUBRC "#EC CI_GENBUFF
 
     READ TABLE lt_list3 TRANSPORTING NO FIELDS
-    WITH KEY table_line =  '$SWF_RUN_CNT'.
+      WITH KEY table_line = '$SWF_RUN_CNT'.
     IF sy-subrc <> 0.
       cl_abap_unit_assert=>fail( |Package $SWF_RUN_CNT not found as sub package of /STMC/FND with for all entries| ).
     ENDIF.
@@ -109,7 +109,7 @@ CLASS ltcl_test IMPLEMENTATION.
     lt_packages = zcl_abapgit_factory=>get_sap_package( 'BASIS' )->list_subpackages( ).
 
     READ TABLE lt_packages TRANSPORTING NO FIELDS
-    WITH KEY table_line =  '$SWF_RUN_CNT'.
+      WITH KEY table_line = '$SWF_RUN_CNT'.
     IF sy-subrc <> 0.
       cl_abap_unit_assert=>fail( |Package $SWF_RUN_CNT not found as sub package with method list_subpackages| ).
     ENDIF.
