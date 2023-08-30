@@ -86,6 +86,54 @@ CLASS ltcl_build IMPLEMENTATION.
 
         cl_abap_unit_assert=>assert_not_initial( lt_tadir ).
 
+        READ TABLE lt_tadir TRANSPORTING NO FIELDS
+        WITH KEY object   = 'DEVC'
+                 obj_name = '$SWF_RUN_CNT'.
+
+        IF sy-subrc <> 0.
+          cl_abap_unit_assert=>fail( |Object DEVC $SWF_RUN_CNT missing| ).
+        ENDIF.
+
+        READ TABLE lt_tadir TRANSPORTING NO FIELDS
+        WITH KEY object   = 'DEVC'
+                 obj_name = 'BASIS'.
+
+        IF sy-subrc <> 0.
+          cl_abap_unit_assert=>fail( |Object DEVC BASIS missing| ).
+        ENDIF.
+
+        READ TABLE lt_tadir TRANSPORTING NO FIELDS
+        WITH KEY object   = 'DEVC'
+                 obj_name = '/STMC/FND'.
+
+        IF sy-subrc <> 0.
+          cl_abap_unit_assert=>fail( |Object DEVC /STMC/FND missing| ).
+        ENDIF.
+
+        READ TABLE lt_tadir TRANSPORTING NO FIELDS
+        WITH KEY object   = 'DTEL'
+                 obj_name = 'DEVCLASS'.
+
+        IF sy-subrc <> 0.
+          cl_abap_unit_assert=>fail( |Object DTEL DEVCLASS missing| ).
+        ENDIF.
+
+        READ TABLE lt_tadir TRANSPORTING NO FIELDS
+        WITH KEY object   = 'DTEL'
+                 obj_name = 'MATNR'.
+
+        IF sy-subrc <> 0.
+          cl_abap_unit_assert=>fail( |Object DTEL MATNR missing| ).
+        ENDIF.
+
+        READ TABLE lt_tadir TRANSPORTING NO FIELDS
+        WITH KEY object   = 'NSPC'
+                 obj_name = '/STMC/'.
+
+        IF sy-subrc <> 0.
+          cl_abap_unit_assert=>fail( |Object NSPC /STMC/ missing| ).
+        ENDIF.
+
       CATCH zcx_abapgit_exception INTO lo_ex.
         cl_abap_unit_assert=>fail( lo_ex->get_text( ) ).
 
