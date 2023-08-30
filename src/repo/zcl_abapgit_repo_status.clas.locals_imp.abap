@@ -174,10 +174,9 @@ CLASS lcl_status_consistency_checks IMPLEMENTATION.
   METHOD check_namespace.
 
     DATA:
-      li_namespace       TYPE REF TO zif_abapgit_sap_namespace,
-      lv_namespace       TYPE namespace,
-      lt_namespace       TYPE TABLE OF namespace,
-      lv_namespace_found TYPE abap_bool.
+      li_namespace TYPE REF TO zif_abapgit_sap_namespace,
+      lv_namespace TYPE namespace,
+      lt_namespace TYPE TABLE OF namespace.
 
     FIELD-SYMBOLS <ls_result> LIKE LINE OF it_results.
 
@@ -198,10 +197,6 @@ CLASS lcl_status_consistency_checks IMPLEMENTATION.
     li_namespace = zcl_abapgit_factory=>get_sap_namespace( ).
 
     LOOP AT lt_namespace INTO lv_namespace.
-      IF iv_root_package CS lv_namespace.
-        lv_namespace_found = abap_true.
-      ENDIF.
-
       IF li_namespace->exists( lv_namespace ) = abap_false.
         mi_log->add_warning( |Namespace { lv_namespace } does not exist.|
           && | Pull it first (or create it in transaction SE03)| ).
@@ -209,11 +204,6 @@ CLASS lcl_status_consistency_checks IMPLEMENTATION.
         mi_log->add_warning( |Namespace { lv_namespace } is not modifiable. Check it in transaction SE03| ).
       ENDIF.
     ENDLOOP.
-
-    IF lt_namespace IS NOT INITIAL AND lv_namespace_found = abap_false.
-      mi_log->add_error( |Package { iv_root_package } is not part of the contained namespaces.|
-          && | Remove repository and use a different package| ).
-    ENDIF.
 
   ENDMETHOD.
 
