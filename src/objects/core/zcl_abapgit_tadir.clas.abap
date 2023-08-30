@@ -106,32 +106,27 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
   METHOD add_namespace.
 
-    DATA:
-      lv_name      TYPE progname,
-      lv_namespace TYPE namespace.
+    DATA ls_tadir  TYPE zif_abapgit_definitions=>ty_tadir.
+    DATA ls_obj_with_namespace TYPE zif_abapgit_definitions=>ty_obj_namespace.
 
     FIELD-SYMBOLS <ls_tadir> LIKE LINE OF ct_tadir.
 
-    lv_name = iv_object.
+    TRY.
+        ls_obj_with_namespace = zcl_abapgit_factory=>get_sap_namespace(  )->split_by_name( iv_object ).
+      CATCH zcx_abapgit_exception.
+        "Ignore the exception like before the replacement of the FM RS_NAME_SPLIT_NAMESPACE
+        RETURN.
+    ENDTRY.
 
-    CALL FUNCTION 'RS_NAME_SPLIT_NAMESPACE'
-      EXPORTING
-        name_with_namespace = lv_name
-      IMPORTING
-        namespace           = lv_namespace
-      EXCEPTIONS
-        delimiter_error     = 1
-        OTHERS              = 2.
-
-    IF sy-subrc = 0 AND lv_namespace IS NOT INITIAL.
+    IF ls_obj_with_namespace-namespace IS NOT INITIAL.
 
       READ TABLE ct_tadir TRANSPORTING NO FIELDS
-        WITH KEY pgmid = 'R3TR' object = 'NSPC' obj_name = lv_namespace.
+        WITH KEY pgmid = 'R3TR' object = 'NSPC' obj_name = ls_obj_with_namespace-namespace.
       IF sy-subrc <> 0.
         APPEND INITIAL LINE TO ct_tadir ASSIGNING <ls_tadir>.
         <ls_tadir>-pgmid      = 'R3TR'.
         <ls_tadir>-object     = 'NSPC'.
-        <ls_tadir>-obj_name   = lv_namespace.
+        <ls_tadir>-obj_name   = ls_obj_with_namespace-namespace.
         <ls_tadir>-devclass   = iv_package.
         <ls_tadir>-srcsystem  = sy-sysid.
         <ls_tadir>-masterlang = sy-langu.
