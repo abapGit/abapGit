@@ -23,7 +23,7 @@ CLASS ltcl_timer IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_subrc(
       act = sy-subrc
-      msg = |Did not return right measurement, got: { iv_result }| ).
+      msg = 'Did not return right measurement' ).
 
   ENDMETHOD.
 
