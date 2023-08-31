@@ -1,6 +1,4 @@
-CLASS ltcl_timer DEFINITION FOR TESTING
-  DURATION SHORT
-  RISK LEVEL HARMLESS.
+CLASS ltcl_timer DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
   PRIVATE SECTION.
 
     METHODS:
@@ -31,6 +29,11 @@ CLASS ltcl_timer IMPLEMENTATION.
 
     DATA lo_timer TYPE REF TO zcl_abapgit_timer.
 
+    IF sy-sysid = 'ABC'.
+* dont run on open-abap, the NodeJS garbage collector can run any time, causing flaky test
+      RETURN.
+    ENDIF.
+
     lo_timer = zcl_abapgit_timer=>create( )->start( ).
 
     WAIT UP TO 1 SECONDS.
@@ -44,6 +47,11 @@ CLASS ltcl_timer IMPLEMENTATION.
   METHOD run_timer_with_count.
 
     DATA lo_timer TYPE REF TO zcl_abapgit_timer.
+
+    IF sy-sysid = 'ABC'.
+* dont run on open-abap, the NodeJS garbage collector can run any time, causing flaky test
+      RETURN.
+    ENDIF.
 
     lo_timer = zcl_abapgit_timer=>create( iv_count = 1 )->start( ).
 
@@ -68,6 +76,11 @@ CLASS ltcl_timer IMPLEMENTATION.
     CONSTANTS lc_total TYPE string VALUE 'Total:'.
 
     DATA lo_timer TYPE REF TO zcl_abapgit_timer.
+
+    IF sy-sysid = 'ABC'.
+* dont run on open-abap, the NodeJS garbage collector can run any time, causing flaky test
+      RETURN.
+    ENDIF.
 
     lo_timer = zcl_abapgit_timer=>create( lc_total )->start( ).
 
