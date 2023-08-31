@@ -416,7 +416,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         ENDIF.
       ELSE.
         zcx_abapgit_exception=>raise( |Deserialization for object { ir_deserialized_object->item-obj_name } | &
-                                      |(type { ir_deserialized_object->item-obj_type }) aborted, user descision required| ).
+                        |(type { ir_deserialized_object->item-obj_type }) aborted, user descision required| ).
       ENDIF.
     ENDIF.
 
@@ -695,12 +695,13 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
       READ TABLE lr_deserialized_object->files INDEX 1 REFERENCE INTO lr_file.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise(
-         |Object { lr_deserialized_object->item-obj_type } { lr_deserialized_object->item-obj_name } has no files | ).
+        zcx_abapgit_exception=>raise( |Object { lr_deserialized_object->item-obj_type }| &
+                                      | { lr_deserialized_object->item-obj_name } has no files | ).
       ENDIF.
 
       li_progress->show( iv_current = sy-tabix
-                         iv_text    = |Prepare Deserialize: { lr_deserialized_object->item-obj_type } { lr_deserialized_object->item-obj_name }| ).
+                         iv_text    = |Prepare Deserialize: { lr_deserialized_object->item-obj_type }| &
+                                      | { lr_deserialized_object->item-obj_name }| ).
 
       CLEAR ls_item.
       CLEAR: lv_path, lv_package.
