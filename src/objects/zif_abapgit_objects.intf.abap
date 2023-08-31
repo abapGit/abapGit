@@ -40,4 +40,14 @@ INTERFACE zif_abapgit_objects
       packmove   TYPE i VALUE 6,
     END OF c_deserialize_action.
 
+  TYPES
+    BEGIN OF ty_deserialize_obj.
+  INCLUDE TYPE ty_serialization.
+  TYPES:
+    only_package_move TYPE abap_bool,
+    main_filename     TYPE string,
+    END OF ty_deserialize_obj .
+
+  TYPES:
+    ty_deserialize_obj_tt TYPE STANDARD TABLE OF ty_deserialize_obj WITH DEFAULT KEY .
 ENDINTERFACE.
