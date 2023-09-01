@@ -142,7 +142,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
           lv_folder        TYPE string,
           lv_fullpath      TYPE string,
           lv_sep           TYPE c LENGTH 1,
-          ls_files_item    TYPE zcl_abapgit_objects=>ty_serialization,
+          ls_files_item    TYPE zif_abapgit_objects=>ty_serialization,
           lo_frontend_serv TYPE REF TO zif_abapgit_frontend_services.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF ls_files_item-files.
