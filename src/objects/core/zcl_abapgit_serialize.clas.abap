@@ -221,6 +221,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     IF it_filter IS INITIAL.
       "Apply empty filter to delete generated objects
+      "If it_filter is filled, then it is already applied in the read method above
       CREATE OBJECT lo_filter.
 
       lo_filter->apply( EXPORTING it_filter = it_filter
