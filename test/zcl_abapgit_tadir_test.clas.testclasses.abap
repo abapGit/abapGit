@@ -208,7 +208,7 @@ CLASS ltcl_build IMPLEMENTATION.
         cl_abap_unit_assert=>assert_not_initial( lt_tadir ).
 
         IF lines( lt_tadir ) <>  lines( lt_filter ).
-          lv_msg = 'To less objects found. The following objects has been found:'.
+          lv_msg = 'Differnt number of objects found than filtered:'.
           LOOP AT lt_tadir REFERENCE INTO lr_tadir.
             CONCATENATE lv_msg lr_tadir->obj_name INTO lv_msg SEPARATED BY ' | '.
           ENDLOOP.
