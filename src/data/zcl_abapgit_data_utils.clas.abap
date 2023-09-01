@@ -106,7 +106,7 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
           lt_names = list_key_fields( iv_name ).
 
           APPEND INITIAL LINE TO lt_keys ASSIGNING <ls_key>.
-          <ls_key>-access_kind = cl_abap_tabledescr=>tablekind_sorted.
+          <ls_key>-access_kind = cl_abap_tabledescr=>tablekind_hashed.
           <ls_key>-key_kind    = cl_abap_tabledescr=>keydefkind_user.
           <ls_key>-is_primary  = abap_true.
           <ls_key>-is_unique   = abap_true.
