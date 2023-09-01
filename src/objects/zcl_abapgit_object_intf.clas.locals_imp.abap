@@ -599,7 +599,7 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
     lt_values_for_initial = get_paths_to_skip( ).
 
     lt_default_abap_langu_version-path  = '/header/abap_language_version'.
-    lt_default_abap_langu_version-value = 'standard'.
+    lt_default_abap_langu_version-value = zif_abapgit_dot_abapgit=>c_abap_language_version-standard.
     APPEND lt_default_abap_langu_version TO lt_values_for_initial.
 
     lt_enum_mappings = get_mappings( ).
