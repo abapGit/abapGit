@@ -76,11 +76,6 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_environment~compare_with_inactive.
-    rv_result = zif_abapgit_environment~is_sap_cloud_platform( ).
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_environment~get_basis_release.
 
     SELECT SINGLE release extrelease FROM cvers INTO (rs_result-release, rs_result-sp)
@@ -88,72 +83,6 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
 
   ENDMETHOD.
 
-
-  METHOD zif_abapgit_environment~is_merged.
-    DATA lr_marker TYPE REF TO data ##NEEDED.
-
-    IF mv_is_merged = abap_undefined.
-      TRY.
-          CREATE DATA lr_marker TYPE REF TO ('LIF_ABAPMERGE_MARKER').
-          "No exception --> marker found
-          mv_is_merged = abap_true.
-
-        CATCH cx_sy_create_data_error.
-          mv_is_merged = abap_false.
-      ENDTRY.
-    ENDIF.
-    rv_result = mv_is_merged.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_environment~is_repo_object_changes_allowed.
-    IF mv_modifiable = abap_undefined.
-      mv_modifiable = is_system_changes_allowed( ).
-    ENDIF.
-    rv_result = mv_modifiable.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_environment~is_restart_required.
-    " This method will be used in the context of SAP Cloud Platform:
-    " Pull/Push operations are executed in background jobs.
-    " In case of the respective application server needs to be restarted,
-    " it is required to terminate the background job and reschedule again.
-    rv_result = abap_false.
-    TRY.
-        CALL METHOD ('CL_APJ_SCP_TOOLS')=>('IS_RESTART_REQUIRED')
-          RECEIVING
-            restart_required = rv_result.
-      CATCH cx_sy_dyn_call_illegal_method cx_sy_dyn_call_illegal_class.
-        rv_result = abap_false.
-    ENDTRY.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_environment~is_sap_cloud_platform.
-    IF mv_cloud = abap_undefined.
-      TRY.
-          CALL METHOD ('CL_COS_UTILITIES')=>('IS_SAP_CLOUD_PLATFORM')
-            RECEIVING
-              rv_is_sap_cloud_platform = mv_cloud.
-        CATCH cx_sy_dyn_call_error.
-          mv_cloud = abap_false.
-      ENDTRY.
-    ENDIF.
-    rv_result = mv_cloud.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_environment~is_sap_object_allowed.
-
-    rv_allowed = cl_enh_badi_def_utility=>is_sap_system( ).
-    IF rv_allowed = abap_true.
-      RETURN.
-    ENDIF.
-
-    rv_allowed = zcl_abapgit_exit=>get_instance( )->allow_sap_objects( ).
-
-  ENDMETHOD.
 
   METHOD zif_abapgit_environment~get_system_language_filter.
     DATA lv_translation_detective_lang TYPE spras.
@@ -200,6 +129,75 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_environment~is_cloud.
+    IF mv_cloud = abap_undefined.
+      TRY.
+          " IS_SAP_CLOUD_PLATFORM deprecated, use IS_CLOUD instead
+          CALL METHOD ('CL_COS_UTILITIES')=>('IS_CLOUD')
+            RECEIVING
+              rv_is_cloud = mv_cloud.
+        CATCH cx_sy_dyn_call_error.
+          mv_cloud = abap_false.
+      ENDTRY.
+    ENDIF.
+    rv_result = mv_cloud.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_environment~is_merged.
+    DATA lr_marker TYPE REF TO data ##NEEDED.
+
+    IF mv_is_merged = abap_undefined.
+      TRY.
+          CREATE DATA lr_marker TYPE REF TO ('LIF_ABAPMERGE_MARKER').
+          "No exception --> marker found
+          mv_is_merged = abap_true.
+
+        CATCH cx_sy_create_data_error.
+          mv_is_merged = abap_false.
+      ENDTRY.
+    ENDIF.
+    rv_result = mv_is_merged.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_environment~is_repo_object_changes_allowed.
+    IF mv_modifiable = abap_undefined.
+      mv_modifiable = is_system_changes_allowed( ).
+    ENDIF.
+    rv_result = mv_modifiable.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_environment~is_restart_required.
+    " This method will be used in the context of SAP Cloud Platform:
+    " Pull/Push operations are executed in background jobs.
+    " In case of the respective application server needs to be restarted,
+    " it is required to terminate the background job and reschedule again.
+    rv_result = abap_false.
+    TRY.
+        CALL METHOD ('CL_APJ_SCP_TOOLS')=>('IS_RESTART_REQUIRED')
+          RECEIVING
+            restart_required = rv_result.
+      CATCH cx_sy_dyn_call_illegal_method cx_sy_dyn_call_illegal_class.
+        rv_result = abap_false.
+    ENDTRY.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_environment~is_sap_object_allowed.
+
+    rv_allowed = cl_enh_badi_def_utility=>is_sap_system( ).
+    IF rv_allowed = abap_true.
+      RETURN.
+    ENDIF.
+
+    rv_allowed = zcl_abapgit_exit=>get_instance( )->allow_sap_objects( ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_environment~is_variant_maintenance.
 
     DATA:
@@ -212,5 +210,4 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
     rv_is_variant_maintenance = boolc( lines( lt_variscreens ) > 0 ).
 
   ENDMETHOD.
-
 ENDCLASS.

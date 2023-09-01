@@ -327,7 +327,7 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
 
         li_persistence = get_persistence( ).
 
-        IF zcl_abapgit_factory=>get_environment( )->compare_with_inactive( ) = abap_true.
+        IF zcl_abapgit_factory=>get_environment( )->is_cloud( ) = abap_true.
           "Retrieve inactive version
           li_persistence->get(
             EXPORTING
