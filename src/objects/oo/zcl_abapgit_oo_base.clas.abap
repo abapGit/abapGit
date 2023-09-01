@@ -278,14 +278,16 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
      AND alias = seox_false.
 
     IF lt_components IS NOT INITIAL.
-      SELECT SINGLE masterlang FROM tadir INTO l_lang WHERE pgmid = 'R3TR' AND ( object = 'CLAS' OR object = 'INTF' ) AND "#EC CI_GENBUFF
-                                                            obj_name = is_key-clsname.
+      SELECT SINGLE masterlang FROM tadir INTO l_lang
+        WHERE pgmid = 'R3TR' AND ( object = 'CLAS' OR object = 'INTF' ) AND "#EC CI_GENBUFF
+              obj_name = is_key-clsname.
       IF sy-subrc <> 0.
         l_lang = sy-langu.
       ENDIF.
 
       LOOP AT lt_components ASSIGNING FIELD-SYMBOL(<fs_component>).
-        READ TABLE lt_descriptions TRANSPORTING NO FIELDS WITH KEY clsname = is_key-clsname cmpname = <fs_component>-cmpname.
+        READ TABLE lt_descriptions TRANSPORTING NO FIELDS WITH KEY clsname = is_key-clsname
+                                                                   cmpname = <fs_component>-cmpname.
         IF sy-subrc <> 0.
           l_description-clsname = is_key-clsname.
           l_description-cmpname = <fs_component>-cmpname.
@@ -320,14 +322,16 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
        AND version <> seoc_version_deleted.
 
     IF lt_subcomponents IS NOT INITIAL.
-      SELECT SINGLE masterlang FROM tadir INTO l_lang WHERE pgmid = 'R3TR' AND ( object = 'CLAS' OR object = 'INTF' ) AND "#EC CI_GENBUFF
-                                                            obj_name = is_key-clsname.
+      SELECT SINGLE masterlang FROM tadir INTO l_lang
+        WHERE pgmid = 'R3TR' AND ( object = 'CLAS' OR object = 'INTF' ) AND "#EC CI_GENBUFF
+              obj_name = is_key-clsname.
       IF sy-subrc <> 0.
         l_lang = sy-langu.
       ENDIF.
 
       LOOP AT lt_subcomponents ASSIGNING FIELD-SYMBOL(<fs_subcomponent>).
-        READ TABLE lt_descriptions TRANSPORTING NO FIELDS WITH KEY clsname = is_key-clsname cmpname = <fs_subcomponent>-cmpname
+        READ TABLE lt_descriptions TRANSPORTING NO FIELDS WITH KEY clsname = is_key-clsname
+                                                                   cmpname = <fs_subcomponent>-cmpname
                                                                    sconame = <fs_subcomponent>-sconame.
         IF sy-subrc <> 0.
           l_description-clsname = is_key-clsname.
