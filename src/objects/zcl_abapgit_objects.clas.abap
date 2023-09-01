@@ -635,12 +635,17 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
                    <ls_deser>   TYPE LINE OF zif_abapgit_objects=>ty_deserialization_tt.
 
     lt_steps = get_deserialize_steps( ).
+
     lv_package = io_repo->get_package( ).
+
     IF is_checks-transport-required = abap_true.
       zcl_abapgit_default_transport=>get_instance( )->set( is_checks-transport-transport ).
     ENDIF.
+
     zcl_abapgit_objects_activation=>clear( ).
+
     lt_remote = io_repo->get_files_remote( iv_ignore_files = abap_true ).
+
     lt_results = zcl_abapgit_file_deserialize=>get_results(
       io_repo = io_repo
       ii_log = ii_log ).
