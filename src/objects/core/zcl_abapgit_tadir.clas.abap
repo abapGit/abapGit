@@ -139,7 +139,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
   METHOD add_namespaces.
 
-    DATA lt_tadir_nspc TYPE  zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lt_tadir_nspc TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
     FIELD-SYMBOLS <ls_tadir> LIKE LINE OF ct_tadir.
 
