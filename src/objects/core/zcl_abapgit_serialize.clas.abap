@@ -118,10 +118,10 @@ CLASS zcl_abapgit_serialize DEFINITION
   PRIVATE SECTION.
     CLASS-METHODS determine_i18n_params
       IMPORTING
-        !io_dot                TYPE REF TO zcl_abapgit_dot_abapgit
+        !io_dot TYPE REF TO zcl_abapgit_dot_abapgit
         !iv_main_language_only TYPE abap_bool
       RETURNING
-        VALUE(rs_i18n_params)  TYPE zif_abapgit_definitions=>ty_i18n_params
+        VALUE(rs_i18n_params) TYPE zif_abapgit_definitions=>ty_i18n_params
       RAISING
         zcx_abapgit_exception.
 
@@ -219,15 +219,11 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       ii_log                = ii_log
       it_filter             = it_filter ).
 
-    IF it_filter IS INITIAL.
-      "Apply empty filter to delete generated objects
-      "If it_filter is filled, then it is already applied in the read method above
-      CREATE OBJECT lo_filter.
+    CREATE OBJECT lo_filter.
 
-      lo_filter->apply( EXPORTING it_filter = it_filter
-                        CHANGING  ct_tadir  = lt_tadir ).
+    lo_filter->apply( EXPORTING it_filter = it_filter
+                      CHANGING  ct_tadir  = lt_tadir ).
 
-    ENDIF.
 * if there are less than 10 objects run in single thread
 * this helps a lot when debugging, plus performance gain
 * with low number of objects does not matter much
