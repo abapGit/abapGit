@@ -58,7 +58,7 @@ CLASS zcl_abapgit_tadir DEFINITION
         !iv_object     TYPE csequence
       CHANGING
         !ct_tadir      TYPE zif_abapgit_definitions=>ty_tadir_tt
-        !ct_tadir_nspc TYPE  zif_abapgit_definitions=>ty_tadir_tt
+        !ct_tadir_nspc TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
     METHODS determine_path
@@ -107,7 +107,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
   METHOD add_namespace.
 
-    DATA ls_tadir  TYPE zif_abapgit_definitions=>ty_tadir.
+    DATA ls_tadir TYPE zif_abapgit_definitions=>ty_tadir.
     DATA ls_obj_with_namespace TYPE zif_abapgit_definitions=>ty_obj_namespace.
 
     TRY.
@@ -139,16 +139,18 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
   METHOD add_namespaces.
 
-    FIELD-SYMBOLS <ls_tadir> LIKE LINE OF ct_tadir.
     DATA lt_tadir_nspc TYPE  zif_abapgit_definitions=>ty_tadir_tt.
+
+    FIELD-SYMBOLS <ls_tadir> LIKE LINE OF ct_tadir.
+
     " Namespaces are not in TADIR, but are necessary for creating objects in transportable packages
     LOOP AT ct_tadir ASSIGNING <ls_tadir> WHERE obj_name(1) = '/'.
       add_namespace(
         EXPORTING
-          iv_package = iv_package
-          iv_object  = <ls_tadir>-obj_name
+          iv_package    = iv_package
+          iv_object     = <ls_tadir>-obj_name
         CHANGING
-          ct_tadir   = ct_tadir
+          ct_tadir      = ct_tadir
           ct_tadir_nspc = lt_tadir_nspc ).
     ENDLOOP.
 
@@ -156,10 +158,10 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
     IF iv_package CP '/*'.
       add_namespace(
         EXPORTING
-          iv_package = iv_package
-          iv_object  = iv_package
+          iv_package    = iv_package
+          iv_object     = iv_package
         CHANGING
-          ct_tadir   = ct_tadir
+          ct_tadir      = ct_tadir
           ct_tadir_nspc = lt_tadir_nspc ).
     ENDIF.
 
