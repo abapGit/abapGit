@@ -54,10 +54,10 @@ CLASS zcl_abapgit_tadir DEFINITION
         zcx_abapgit_exception .
     METHODS add_namespace
       IMPORTING
-        !iv_package TYPE devclass
-        !iv_object  TYPE csequence
+        !iv_package    TYPE devclass
+        !iv_object     TYPE csequence
       CHANGING
-        !ct_tadir   TYPE zif_abapgit_definitions=>ty_tadir_tt
+        !ct_tadir      TYPE zif_abapgit_definitions=>ty_tadir_tt
         !ct_tadir_nspc TYPE  zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
@@ -105,7 +105,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
   ENDMETHOD.
 
 
-   METHOD add_namespace.
+  METHOD add_namespace.
 
     DATA ls_tadir  TYPE zif_abapgit_definitions=>ty_tadir.
     DATA ls_obj_with_namespace TYPE zif_abapgit_definitions=>ty_obj_namespace.
