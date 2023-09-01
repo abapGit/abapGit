@@ -33,11 +33,15 @@ INTERFACE zif_abapgit_repo_srv
     RAISING
       zcx_abapgit_exception .
   METHODS list
+    IMPORTING
+      !iv_offline    TYPE abap_bool DEFAULT abap_undefined
     RETURNING
       VALUE(rt_list) TYPE ty_repo_list
     RAISING
       zcx_abapgit_exception .
   METHODS list_favorites
+    IMPORTING
+      !iv_offline    TYPE abap_bool DEFAULT abap_undefined
     RETURNING
       VALUE(rt_list) TYPE ty_repo_list
     RAISING
