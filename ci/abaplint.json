@@ -43,6 +43,7 @@
       "seoc_exposure_public",
       "seoc_state_implemented",
       "seoc_version_active",
+      "seoc_version_deleted",
       "seoc_version_inactive",
       "seok_access_free",
       "seok_access_modify",
