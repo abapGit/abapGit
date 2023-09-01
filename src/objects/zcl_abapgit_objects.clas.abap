@@ -856,9 +856,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
   ENDMETHOD.
 
-
-
-
   METHOD deserialize_checks.
 
     rs_checks = zcl_abapgit_objects_check=>deserialize_checks( io_repo ).
