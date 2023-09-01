@@ -259,25 +259,87 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
 
   METHOD zif_abapgit_oo_object_fnc~update_descriptions.
     DATA lt_descriptions LIKE it_descriptions.
+    DATA lt_components   TYPE seo_components.
+    DATA l_description   LIKE LINE OF it_descriptions.
+    DATA l_lang          TYPE tadir-masterlang.
+
     FIELD-SYMBOLS <ls_description> LIKE LINE OF it_descriptions.
 
     lt_descriptions = it_descriptions.
     LOOP AT lt_descriptions ASSIGNING <ls_description>.
       <ls_description>-clsname = is_key-clsname.
     ENDLOOP.
+
+    " make sure to not damage VSEO* views by deleting texts of all components - an empty text must be kept!!
+    SELECT * FROM vseocompdf INTO TABLE lt_components  " components
+     WHERE clsname = is_key-clsname
+     AND version <> seoc_version_deleted
+     AND state = seoc_state_implemented
+     AND alias = seox_false.
+
+    IF lt_components IS NOT INITIAL.
+      SELECT SINGLE masterlang FROM tadir INTO l_lang WHERE pgmid = 'R3TR' AND ( object = 'CLAS' OR object = 'INTF' ) AND "#EC CI_GENBUFF
+                                                            obj_name = is_key-clsname.
+      IF sy-subrc <> 0.
+        l_lang = sy-langu.
+      ENDIF.
+
+      LOOP AT lt_components ASSIGNING FIELD-SYMBOL(<fs_component>).
+        READ TABLE lt_descriptions TRANSPORTING NO FIELDS WITH KEY clsname = is_key-clsname cmpname = <fs_component>-cmpname.
+        IF sy-subrc <> 0.
+          l_description-clsname = is_key-clsname.
+          l_description-cmpname = <fs_component>-cmpname.
+          l_description-langu  = l_lang.
+          l_description-descript = space.
+          APPEND l_description TO lt_descriptions.
+        ENDIF.
+      ENDLOOP.
+    ENDIF.
+
     DELETE FROM seocompotx WHERE clsname = is_key-clsname. "#EC CI_SUBRC
     INSERT seocompotx FROM TABLE lt_descriptions.         "#EC CI_SUBRC
   ENDMETHOD.
 
 
   METHOD zif_abapgit_oo_object_fnc~update_descriptions_sub.
-    DATA lt_descriptions LIKE it_descriptions.
+    DATA lt_descriptions  LIKE it_descriptions.
+    DATA lt_SUBCOMPONENTS TYPE seo_subcomponents.
+    DATA l_description    LIKE LINE OF it_descriptions.
+    DATA l_lang           TYPE tadir-masterlang.
+
     FIELD-SYMBOLS <ls_description> LIKE LINE OF it_descriptions.
 
     lt_descriptions = it_descriptions.
     LOOP AT lt_descriptions ASSIGNING <ls_description>.
       <ls_description>-clsname = is_key-clsname.
     ENDLOOP.
+
+    " make sure to not damage VSEO* views by deleting texts of all subcomponents - an empty text must be kept!!
+    SELECT * FROM vseosubcdf INTO TABLE lt_subcomponents  " subcomponents
+     WHERE clsname = is_key-clsname
+       AND version <> seoc_version_deleted.
+
+    IF lt_subcomponents IS NOT INITIAL.
+      SELECT SINGLE masterlang FROM tadir INTO l_lang WHERE pgmid = 'R3TR' AND ( object = 'CLAS' OR object = 'INTF' ) AND "#EC CI_GENBUFF
+                                                            obj_name = is_key-clsname.
+      IF sy-subrc <> 0.
+        l_lang = sy-langu.
+      ENDIF.
+
+      LOOP AT lt_subcomponents ASSIGNING FIELD-SYMBOL(<fs_subcomponent>).
+        READ TABLE lt_descriptions TRANSPORTING NO FIELDS WITH KEY clsname = is_key-clsname cmpname = <fs_subcomponent>-cmpname
+                                                                   sconame = <fs_subcomponent>-sconame.
+        IF sy-subrc <> 0.
+          l_description-clsname = is_key-clsname.
+          l_description-cmpname = <fs_subcomponent>-cmpname.
+          l_description-sconame = <fs_subcomponent>-sconame.
+          l_description-langu  = l_lang.
+          l_description-descript = space.
+          APPEND l_description TO lt_descriptions.
+        ENDIF.
+      ENDLOOP.
+    ENDIF.
+
     DELETE FROM seosubcotx WHERE clsname = is_key-clsname. "#EC CI_SUBRC
     INSERT seosubcotx FROM TABLE lt_descriptions.         "#EC CI_SUBRC
   ENDMETHOD.
