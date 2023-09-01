@@ -21,7 +21,7 @@ FUNCTION z_abapgit_serialize_parallel.
   DATA: ls_item  TYPE zif_abapgit_definitions=>ty_item,
         lx_error TYPE REF TO zcx_abapgit_exception,
         lv_text  TYPE c LENGTH 200,
-        ls_files TYPE zcl_abapgit_objects=>ty_serialization.
+        ls_files TYPE zif_abapgit_objects=>ty_serialization.
 
   TRY.
       ls_item-obj_type  = iv_obj_type.

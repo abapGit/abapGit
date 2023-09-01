@@ -248,7 +248,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
   METHOD check.
 
-    DATA: ls_files_item TYPE zcl_abapgit_objects=>ty_serialization.
+    DATA: ls_files_item TYPE zif_abapgit_objects=>ty_serialization.
 
     ls_files_item = zcl_abapgit_objects=>serialize(
       is_item        = is_item

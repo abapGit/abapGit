@@ -6,18 +6,13 @@ CLASS zcl_abapgit_objects DEFINITION
 
     TYPES:
       ty_types_tt TYPE SORTED TABLE OF tadir-object WITH UNIQUE KEY table_line .
-    TYPES:
-      BEGIN OF ty_serialization,
-        files TYPE zif_abapgit_git_definitions=>ty_files_tt,
-        item  TYPE zif_abapgit_definitions=>ty_item,
-      END OF ty_serialization .
 
     CLASS-METHODS serialize
       IMPORTING
         !is_item                 TYPE zif_abapgit_definitions=>ty_item
         !io_i18n_params          TYPE REF TO zcl_abapgit_i18n_params
       RETURNING
-        VALUE(rs_files_and_item) TYPE ty_serialization
+        VALUE(rs_files_and_item) TYPE zif_abapgit_objects=>ty_serialization
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS deserialize
