@@ -260,10 +260,11 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
   METHOD zif_abapgit_oo_object_fnc~update_descriptions.
     DATA lt_descriptions LIKE it_descriptions.
     DATA lt_components   TYPE seo_components.
-    DATA l_description   LIKE LINE OF it_descriptions.
-    DATA l_lang          TYPE tadir-masterlang.
+    DATA ls_description  LIKE LINE OF it_descriptions.
+    DATA lv_lang         TYPE tadir-masterlang.
 
     FIELD-SYMBOLS <ls_description> LIKE LINE OF it_descriptions.
+    FIELD-SYMBOLS: <ls_component> TYPE vseocompdf.
 
     lt_descriptions = it_descriptions.
     LOOP AT lt_descriptions ASSIGNING <ls_description>.
@@ -278,22 +279,22 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
      AND alias = seox_false.
 
     IF lt_components IS NOT INITIAL.
-      SELECT SINGLE masterlang FROM tadir INTO l_lang
+      SELECT SINGLE masterlang FROM tadir INTO lv_lang
         WHERE pgmid = 'R3TR' AND ( object = 'CLAS' OR object = 'INTF' ) AND "#EC CI_GENBUFF
               obj_name = is_key-clsname.
       IF sy-subrc <> 0.
-        l_lang = sy-langu.
+        lv_lang = sy-langu.
       ENDIF.
 
-      LOOP AT lt_components ASSIGNING FIELD-SYMBOL(<fs_component>).
+      LOOP AT lt_components ASSIGNING <ls_component>.
         READ TABLE lt_descriptions TRANSPORTING NO FIELDS WITH KEY clsname = is_key-clsname
-                                                                   cmpname = <fs_component>-cmpname.
+                                                                   cmpname = <ls_component>-cmpname.
         IF sy-subrc <> 0.
-          l_description-clsname = is_key-clsname.
-          l_description-cmpname = <fs_component>-cmpname.
-          l_description-langu  = l_lang.
-          l_description-descript = space.
-          APPEND l_description TO lt_descriptions.
+          ls_description-clsname = is_key-clsname.
+          ls_description-cmpname = <ls_component>-cmpname.
+          ls_description-langu  = lv_lang.
+          ls_description-descript = space.
+          APPEND ls_description TO lt_descriptions.
         ENDIF.
       ENDLOOP.
     ENDIF.
@@ -305,11 +306,12 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
 
   METHOD zif_abapgit_oo_object_fnc~update_descriptions_sub.
     DATA lt_descriptions  LIKE it_descriptions.
-    DATA lt_SUBCOMPONENTS TYPE seo_subcomponents.
-    DATA l_description    LIKE LINE OF it_descriptions.
-    DATA l_lang           TYPE tadir-masterlang.
+    DATA lt_subcomponents TYPE seo_subcomponents.
+    DATA ls_description   LIKE LINE OF it_descriptions.
+    DATA lv_lang          TYPE tadir-masterlang.
 
     FIELD-SYMBOLS <ls_description> LIKE LINE OF it_descriptions.
+    FIELD-SYMBOLS: <ls_subcomponent> TYPE vseocompdf.
 
     lt_descriptions = it_descriptions.
     LOOP AT lt_descriptions ASSIGNING <ls_description>.
@@ -322,24 +324,24 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
        AND version <> seoc_version_deleted.
 
     IF lt_subcomponents IS NOT INITIAL.
-      SELECT SINGLE masterlang FROM tadir INTO l_lang
+      SELECT SINGLE masterlang FROM tadir INTO lv_lang
         WHERE pgmid = 'R3TR' AND ( object = 'CLAS' OR object = 'INTF' ) AND "#EC CI_GENBUFF
               obj_name = is_key-clsname.
       IF sy-subrc <> 0.
-        l_lang = sy-langu.
+        lv_lang = sy-langu.
       ENDIF.
 
-      LOOP AT lt_subcomponents ASSIGNING FIELD-SYMBOL(<fs_subcomponent>).
+      LOOP AT lt_subcomponents ASSIGNING <ls_subcomponent>.
         READ TABLE lt_descriptions TRANSPORTING NO FIELDS WITH KEY clsname = is_key-clsname
-                                                                   cmpname = <fs_subcomponent>-cmpname
-                                                                   sconame = <fs_subcomponent>-sconame.
+                                                                   cmpname = <ls_subcomponent>-cmpname
+                                                                   sconame = <ls_subcomponent>-sconame.
         IF sy-subrc <> 0.
-          l_description-clsname = is_key-clsname.
-          l_description-cmpname = <fs_subcomponent>-cmpname.
-          l_description-sconame = <fs_subcomponent>-sconame.
-          l_description-langu  = l_lang.
-          l_description-descript = space.
-          APPEND l_description TO lt_descriptions.
+          ls_description-clsname = is_key-clsname.
+          ls_description-cmpname = <ls_subcomponent>-cmpname.
+          ls_description-sconame = <ls_subcomponent>-sconame.
+          ls_description-langu  = lv_lang.
+          ls_description-descript = space.
+          APPEND ls_description TO lt_descriptions.
         ENDIF.
       ENDLOOP.
     ENDIF.
