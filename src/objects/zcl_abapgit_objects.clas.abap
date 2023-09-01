@@ -202,9 +202,20 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception.
     CLASS-METHODS get_extra_from_filename
       IMPORTING
-        !iv_filename    TYPE string
+        iv_filename     TYPE string
       RETURNING
         VALUE(rv_extra) TYPE string.
+
+    CLASS-METHODS reg_obj_in_deserialize_steps
+      IMPORTING
+        is_item     TYPE zif_abapgit_definitions=>ty_item
+        ii_obj      TYPE REF TO zif_abapgit_object
+        iv_package  TYPE devclass
+        io_xml      TYPE REF TO zif_abapgit_xml_input
+      CHANGING
+        ct_steps    TYPE zif_abapgit_objects=>ty_step_data_tt
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -619,7 +630,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           li_progress TYPE REF TO zif_abapgit_progress,
           lv_path     TYPE string,
           lt_items    TYPE zif_abapgit_definitions=>ty_items_tt,
-          lt_steps_id TYPE zif_abapgit_definitions=>ty_deserialization_step_tt,
           lt_steps    TYPE zif_abapgit_objects=>ty_step_data_tt,
           lx_exc      TYPE REF TO zcx_abapgit_exception.
     DATA lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
@@ -629,10 +639,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     DATA lt_deserialized_objects TYPE zif_abapgit_objects=>ty_deserialize_obj_tt.
     DATA lr_deserialized_object TYPE REF TO zif_abapgit_objects=>ty_deserialize_obj.
     DATA lr_file TYPE REF TO zif_abapgit_git_definitions=>ty_file.
-    FIELD-SYMBOLS: <ls_result>  TYPE zif_abapgit_definitions=>ty_result,
-                   <lv_step_id> TYPE LINE OF zif_abapgit_definitions=>ty_deserialization_step_tt,
-                   <ls_step>    TYPE LINE OF zif_abapgit_objects=>ty_step_data_tt,
-                   <ls_deser>   TYPE LINE OF zif_abapgit_objects=>ty_deserialization_tt.
 
     lt_steps = get_deserialize_steps( ).
 
@@ -771,23 +777,14 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
           li_obj->mo_files = lo_files.
 
-          "get required steps for deserialize the object
-          lt_steps_id = li_obj->get_deserialize_steps( ).
-
-          LOOP AT lt_steps_id ASSIGNING <lv_step_id>.
-            READ TABLE lt_steps WITH KEY step_id = <lv_step_id> ASSIGNING <ls_step>.
-            ASSERT sy-subrc = 0.
-            IF <lv_step_id> = zif_abapgit_object=>gc_step_id-ddic AND
-               zcl_abapgit_objects_activation=>is_ddic_type( ls_item-obj_type ) = abap_false.
-              " DDIC only for DDIC objects
-              zcx_abapgit_exception=>raise( |Step { <lv_step_id> } is only for DDIC objects| ).
-            ENDIF.
-            APPEND INITIAL LINE TO <ls_step>-objects ASSIGNING <ls_deser>.
-            <ls_deser>-item    = ls_item.
-            <ls_deser>-obj     = li_obj.
-            <ls_deser>-xml     = lo_xml.
-            <ls_deser>-package = lv_package.
-          ENDLOOP.
+          reg_obj_in_deserialize_steps(
+            EXPORTING
+              is_item     = ls_item
+              ii_obj      = li_obj
+              iv_package  = lv_package
+              io_xml      = lo_xml
+            CHANGING
+              ct_steps    = lt_steps ).
 
           " LXE, TODO refactor and move below activation
           IF lo_i18n_params->is_lxe_applicable( ) = abap_true.
@@ -831,6 +828,35 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     lo_timer->end( abap_true ).
 
   ENDMETHOD.
+
+  METHOD reg_obj_in_deserialize_steps.
+
+    FIELD-SYMBOLS <lv_step_id> TYPE zif_abapgit_definitions=>ty_deserialization_step.
+    FIELD-SYMBOLS <ls_step> TYPE zif_abapgit_objects=>ty_step_data.
+    FIELD-SYMBOLS <ls_deser> TYPE zif_abapgit_objects=>ty_deserialization.
+    DATA lt_steps_id TYPE zif_abapgit_definitions=>ty_deserialization_step_tt.
+
+    "get required steps for deserialize the object
+    lt_steps_id = ii_obj->get_deserialize_steps( ).
+
+    LOOP AT lt_steps_id ASSIGNING <lv_step_id>.
+      READ TABLE ct_steps WITH KEY step_id = <lv_step_id> ASSIGNING <ls_step>.
+      ASSERT sy-subrc = 0.
+      IF <lv_step_id> = zif_abapgit_object=>gc_step_id-ddic AND
+         zcl_abapgit_objects_activation=>is_ddic_type( is_item-obj_type ) = abap_false.
+        " DDIC only for DDIC objects
+        zcx_abapgit_exception=>raise( |Step { <lv_step_id> } is only for DDIC objects| ).
+      ENDIF.
+      APPEND INITIAL LINE TO <ls_step>-objects ASSIGNING <ls_deser>.
+      <ls_deser>-item    = is_item.
+      <ls_deser>-obj     = ii_obj.
+      <ls_deser>-xml     = io_xml.
+      <ls_deser>-package = iv_package.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
 
 
   METHOD deserialize_checks.
