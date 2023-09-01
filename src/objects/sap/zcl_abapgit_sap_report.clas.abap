@@ -71,7 +71,7 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
     " https://github.com/abapGit/abapGit/issues/6154#issuecomment-1503566920)
 
     " For now, use default for ABAP source code
-    IF zcl_abapgit_factory=>get_environment( )->is_sap_cloud_platform( ) = abap_true.
+    IF zcl_abapgit_factory=>get_environment( )->is_cloud( ) = abap_true.
       rv_version = '5'. " abap_for_cloud_development
     ELSE.
       rv_version = 'X'. " standard_abap
