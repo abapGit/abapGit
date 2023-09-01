@@ -7,8 +7,6 @@ CLASS zcl_abapgit_sap_report DEFINITION
 
     INTERFACES zif_abapgit_sap_report.
 
-    METHODS constructor.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -61,11 +59,6 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-  ENDMETHOD.
-
-
-  METHOD constructor.
-    mo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
   ENDMETHOD.
 
 
