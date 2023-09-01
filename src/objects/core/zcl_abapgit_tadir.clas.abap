@@ -385,7 +385,6 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
     DATA: li_exit TYPE REF TO zif_abapgit_exit.
     DATA: lr_tadir TYPE REF TO zif_abapgit_definitions=>ty_tadir.
-    DATA: lo_filter TYPE REF TO zcl_abapgit_repo_filter.
     DATA: lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
     " Start recursion
@@ -404,8 +403,6 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
         ii_log     = ii_log
       CHANGING
         ct_tadir   = rt_tadir ).
-
-    CREATE OBJECT lo_filter.
 
     IF it_filter IS NOT INITIAL.
       "Apply filter manually instead of calling zcl_abapgit_repo_filter->apply,
