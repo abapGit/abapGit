@@ -23,6 +23,7 @@
       "abap_func_exporting",
       "abap_func_tables",
       "cssf_formtype_text",
+      "seoc_version_deleted",
       "seok_access_free",
       "seok_access_modify",
       "sews_c_vif_version",
