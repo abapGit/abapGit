@@ -189,9 +189,9 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
       OR lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version-standard.
       lv_enum_json = zif_abapgit_dot_abapgit=>c_abap_language_version-standard.
     ELSEIF lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version-cloud_development.
-      lv_enum_json = zif_abapgit_dot_abapgit=>c_abap_language_version-cloudDevelopment.
+      lv_enum_json = zif_abapgit_dot_abapgit=>c_abap_language_version-cloud_development.
     ELSEIF lv_enum_abap = zif_abapgit_aff_types_v1=>co_abap_language_version-key_user.
-      lv_enum_json = zif_abapgit_dot_abapgit=>c_abap_language_version-keyUser.
+      lv_enum_json = zif_abapgit_dot_abapgit=>c_abap_language_version-key_user.
     ENDIF.
 
     co_ajson->set_string( iv_path = '/header/abapLanguageVersion'
