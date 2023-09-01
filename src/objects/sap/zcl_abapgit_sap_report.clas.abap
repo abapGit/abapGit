@@ -12,8 +12,6 @@ CLASS zcl_abapgit_sap_report DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    DATA mo_settings TYPE REF TO zcl_abapgit_settings.
-
     METHODS get_language_version
       IMPORTING
         iv_package        TYPE devclass
@@ -73,27 +71,10 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
 
   METHOD get_language_version.
 
-    DATA lo_abap_language_vers TYPE REF TO zcl_abapgit_abap_language_vers.
-
-    IF mo_settings->is_feature_enabled( zcl_abapgit_abap_language_vers=>c_feature_flag ) = abap_true.
-
-      " Determine ABAP Language Version for source code
-      " https://github.com/abapGit/abapGit/issues/6154#issuecomment-1503566920)
-      CREATE OBJECT lo_abap_language_vers.
-
-      rv_version = lo_abap_language_vers->get_abap_language_vers_by_objt(
-        iv_object_type = 'CLAS'  " placeholder for source code supported by standard and cloud
-        iv_package     = iv_package ).
-
-    ENDIF.
-
-    " Fallback for ABAP source code based on environment
-    IF rv_version IS INITIAL.
-      IF zcl_abapgit_factory=>get_environment( )->is_cloud( ) = abap_true.
-        rv_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-cloud_development.
-      ELSE.
-        rv_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
-      ENDIF.
+    IF zcl_abapgit_factory=>get_environment( )->is_cloud( ) = abap_true.
+      rv_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-cloud_development.
+    ELSE.
+      rv_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
     ENDIF.
 
   ENDMETHOD.
@@ -184,11 +165,6 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
            rs_progdir-varcl,
            rs_progdir-state.
 
-    " Don't serialize ABAP language version
-    IF mo_settings->is_feature_enabled( zcl_abapgit_abap_language_vers=>c_feature_flag ) = abap_true.
-      CLEAR rs_progdir-uccheck.
-    ENDIF.
-
   ENDMETHOD.
 
 
@@ -237,16 +213,10 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
     ls_progdir_new-fixpt   = is_progdir-fixpt.
     ls_progdir_new-appl    = is_progdir-appl.
     ls_progdir_new-rstat   = is_progdir-rstat.
+    ls_progdir_new-uccheck = is_progdir-uccheck.
     ls_progdir_new-sqlx    = is_progdir-sqlx.
     ls_progdir_new-clas    = is_progdir-clas.
     ls_progdir_new-secu    = is_progdir-secu.
-
-    " Update ABAP language version
-    IF mo_settings->is_feature_enabled( zcl_abapgit_abap_language_vers=>c_feature_flag ) = abap_true.
-      ls_progdir_new-uccheck = get_language_version( iv_package ).
-    ELSE.
-      ls_progdir_new-uccheck = is_progdir-uccheck.
-    ENDIF.
 
     CALL FUNCTION 'UPDATE_PROGDIR'
       EXPORTING
