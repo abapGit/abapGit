@@ -1388,7 +1388,8 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     serialize_includes( ).
 
     lv_program_name = main_name( ).
-    ls_progdir = read_progdir( lv_program_name ).
+
+    ls_progdir = zcl_abapgit_factory=>get_sap_report( )->read_progdir( lv_program_name ).
 
     IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       serialize_texts(

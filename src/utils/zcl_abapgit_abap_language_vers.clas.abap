@@ -1,22 +1,26 @@
 CLASS zcl_abapgit_abap_language_vers DEFINITION
   PUBLIC
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
+
+    CONSTANTS c_feature_flag TYPE string VALUE 'ALAV'.
 
     METHODS get_abap_language_vers_by_objt
       IMPORTING
         !iv_object_type                      TYPE trobjtype
         !iv_package                          TYPE devclass
       RETURNING
-        VALUE(rv_allowed_abap_langu_version) TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version .
+        VALUE(rv_allowed_abap_langu_version) TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version.
+
     METHODS is_import_allowed
       IMPORTING
         !io_repo          TYPE REF TO zif_abapgit_repo
         !iv_package       TYPE devclass
       RETURNING
-        VALUE(rv_allowed) TYPE abap_bool .
+        VALUE(rv_allowed) TYPE abap_bool.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -24,12 +28,14 @@ CLASS zcl_abapgit_abap_language_vers DEFINITION
       IMPORTING
         !iv_package                     TYPE devclass
       RETURNING
-        VALUE(rv_abap_language_version) TYPE string .
+        VALUE(rv_abap_language_version) TYPE string.
+
     METHODS get_abap_language_vers_by_repo
       IMPORTING
         !io_repo                        TYPE REF TO zif_abapgit_repo
       RETURNING
-        VALUE(rv_abap_language_version) TYPE string .
+        VALUE(rv_abap_language_version) TYPE string.
+
 ENDCLASS.
 
 
@@ -70,6 +76,7 @@ CLASS zcl_abapgit_abap_language_vers IMPLEMENTATION.
       CATCH cx_root.
         rv_abap_language_version = zif_abapgit_dot_abapgit=>c_abap_language_version-undefined.
     ENDTRY.
+
   ENDMETHOD.
 
 

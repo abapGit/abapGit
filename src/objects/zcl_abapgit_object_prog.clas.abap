@@ -41,7 +41,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
+CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
 
   METHOD deserialize_texts.
@@ -81,17 +81,10 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
       iv_program_type   = is_progdir-subc
       iv_extension_type = is_progdir-name+30 ).
 
-    CALL FUNCTION 'UPDATE_PROGDIR'
-      EXPORTING
-        i_progdir    = is_progdir
-        i_progname   = is_progdir-name
-        i_state      = 'I'
-      EXCEPTIONS
-        not_executed = 1
-        OTHERS       = 2.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error updating program directory' ).
-    ENDIF.
+    zcl_abapgit_factory=>get_sap_report( )->update_progdir(
+      is_progdir = is_progdir
+      iv_state   = 'I'
+      iv_package = iv_package ).
 
     zcl_abapgit_objects_activation=>add(
       iv_type = 'REPS'
