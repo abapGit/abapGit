@@ -118,10 +118,10 @@ CLASS zcl_abapgit_serialize DEFINITION
   PRIVATE SECTION.
     CLASS-METHODS determine_i18n_params
       IMPORTING
-        !io_dot TYPE REF TO zcl_abapgit_dot_abapgit
+        !io_dot                TYPE REF TO zcl_abapgit_dot_abapgit
         !iv_main_language_only TYPE abap_bool
       RETURNING
-        VALUE(rs_i18n_params) TYPE zif_abapgit_definitions=>ty_i18n_params
+        VALUE(rs_i18n_params)  TYPE zif_abapgit_definitions=>ty_i18n_params
       RAISING
         zcx_abapgit_exception.
 
@@ -216,13 +216,17 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       iv_ignore_subpackages = ms_local_settings-ignore_subpackages
       iv_only_local_objects = ms_local_settings-only_local_objects
       io_dot                = mo_dot_abapgit
-      ii_log                = ii_log ).
+      ii_log                = ii_log
+      it_filter             = it_filter ).
 
-    CREATE OBJECT lo_filter.
+    IF it_filter IS INITIAL.
+      "Apply empty filter to delete generated objects
+      CREATE OBJECT lo_filter.
 
-    lo_filter->apply( EXPORTING it_filter = it_filter
-                      CHANGING  ct_tadir  = lt_tadir ).
+      lo_filter->apply( EXPORTING it_filter = it_filter
+                        CHANGING  ct_tadir  = lt_tadir ).
 
+    ENDIF.
 * if there are less than 10 objects run in single thread
 * this helps a lot when debugging, plus performance gain
 * with low number of objects does not matter much
