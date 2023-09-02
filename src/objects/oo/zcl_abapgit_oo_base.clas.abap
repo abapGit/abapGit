@@ -264,7 +264,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
     DATA lv_lang         TYPE tadir-masterlang.
 
     FIELD-SYMBOLS <ls_description> LIKE LINE OF it_descriptions.
-    FIELD-SYMBOLS: <ls_component> TYPE vseocompdf.
+    FIELD-SYMBOLS <ls_component> TYPE vseocompdf.
 
     lt_descriptions = it_descriptions.
     LOOP AT lt_descriptions ASSIGNING <ls_description>.
@@ -272,23 +272,24 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
     ENDLOOP.
 
     " make sure to not damage VSEO* views by deleting texts of all components - an empty text must be kept!!
-    SELECT * FROM vseocompdf INTO TABLE lt_components  " components
-     WHERE clsname = is_key-clsname
-     AND version <> seoc_version_deleted
-     AND state = seoc_state_implemented
-     AND alias = seox_false.
+    SELECT * FROM vseocompdf INTO TABLE lt_components 
+      WHERE clsname = is_key-clsname
+        AND version <> seoc_version_deleted
+        AND state = seoc_state_implemented
+        AND alias = seox_false.
 
     IF lt_components IS NOT INITIAL.
       SELECT SINGLE masterlang FROM tadir INTO lv_lang
-        WHERE pgmid = 'R3TR' AND ( object = 'CLAS' OR object = 'INTF' ) AND "#EC CI_GENBUFF
-              obj_name = is_key-clsname.
+        WHERE pgmid = 'R3TR' AND ( object = 'CLAS' OR object = 'INTF' ) 
+          AND obj_name = is_key-clsname.                  "#EC CI_GENBUFF
       IF sy-subrc <> 0.
         lv_lang = sy-langu.
       ENDIF.
 
       LOOP AT lt_components ASSIGNING <ls_component>.
-        READ TABLE lt_descriptions TRANSPORTING NO FIELDS WITH KEY clsname = is_key-clsname
-                                                                   cmpname = <ls_component>-cmpname.
+        READ TABLE lt_descriptions TRANSPORTING NO FIELDS WITH KEY 
+          clsname = is_key-clsname
+          cmpname = <ls_component>-cmpname.
         IF sy-subrc <> 0.
           ls_description-clsname = is_key-clsname.
           ls_description-cmpname = <ls_component>-cmpname.
@@ -299,7 +300,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-    DELETE FROM seocompotx WHERE clsname = is_key-clsname. "#EC CI_SUBRC
+    DELETE FROM seocompotx WHERE clsname = is_key-clsname."#EC CI_SUBRC
     INSERT seocompotx FROM TABLE lt_descriptions.         "#EC CI_SUBRC
   ENDMETHOD.
 
@@ -311,7 +312,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
     DATA lv_lang          TYPE tadir-masterlang.
 
     FIELD-SYMBOLS <ls_description> LIKE LINE OF it_descriptions.
-    FIELD-SYMBOLS: <ls_subcomponent> TYPE vseocompdf.
+    FIELD-SYMBOLS <ls_subcomponent> TYPE vseocompdf.
 
     lt_descriptions = it_descriptions.
     LOOP AT lt_descriptions ASSIGNING <ls_description>.
@@ -319,22 +320,23 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
     ENDLOOP.
 
     " make sure to not damage VSEO* views by deleting texts of all subcomponents - an empty text must be kept!!
-    SELECT * FROM vseosubcdf INTO TABLE lt_subcomponents  " subcomponents
-     WHERE clsname = is_key-clsname
-       AND version <> seoc_version_deleted.
+    SELECT * FROM vseosubcdf INTO TABLE lt_subcomponents  
+      WHERE clsname = is_key-clsname
+        AND version <> seoc_version_deleted.
 
     IF lt_subcomponents IS NOT INITIAL.
       SELECT SINGLE masterlang FROM tadir INTO lv_lang
-        WHERE pgmid = 'R3TR' AND ( object = 'CLAS' OR object = 'INTF' ) AND "#EC CI_GENBUFF
-              obj_name = is_key-clsname.
+        WHERE pgmid = 'R3TR' AND ( object = 'CLAS' OR object = 'INTF' ) 
+          AND obj_name = is_key-clsname.                   "#EC CI_GENBUFF
       IF sy-subrc <> 0.
         lv_lang = sy-langu.
       ENDIF.
 
       LOOP AT lt_subcomponents ASSIGNING <ls_subcomponent>.
-        READ TABLE lt_descriptions TRANSPORTING NO FIELDS WITH KEY clsname = is_key-clsname
-                                                                   cmpname = <ls_subcomponent>-cmpname
-                                                                   sconame = <ls_subcomponent>-sconame.
+        READ TABLE lt_descriptions TRANSPORTING NO FIELDS WITH KEY 
+          clsname = is_key-clsname
+          cmpname = <ls_subcomponent>-cmpname
+          sconame = <ls_subcomponent>-sconame.
         IF sy-subrc <> 0.
           ls_description-clsname = is_key-clsname.
           ls_description-cmpname = <ls_subcomponent>-cmpname.
@@ -346,7 +348,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-    DELETE FROM seosubcotx WHERE clsname = is_key-clsname. "#EC CI_SUBRC
+    DELETE FROM seosubcotx WHERE clsname = is_key-clsname."#EC CI_SUBRC
     INSERT seosubcotx FROM TABLE lt_descriptions.         "#EC CI_SUBRC
   ENDMETHOD.
 ENDCLASS.
