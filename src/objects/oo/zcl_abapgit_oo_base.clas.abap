@@ -280,14 +280,14 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
 
     IF lt_components IS NOT INITIAL.
       SELECT SINGLE masterlang FROM tadir INTO lv_lang
-        WHERE pgmid = 'R3TR' AND ( object = 'CLAS' OR object = 'INTF' ) 
+        WHERE pgmid = 'R3TR' AND ( object = 'CLAS' OR object = 'INTF' )
           AND obj_name = is_key-clsname.                  "#EC CI_GENBUFF
       IF sy-subrc <> 0.
         lv_lang = sy-langu.
       ENDIF.
 
       LOOP AT lt_components ASSIGNING <ls_component>.
-        READ TABLE lt_descriptions TRANSPORTING NO FIELDS WITH KEY 
+        READ TABLE lt_descriptions TRANSPORTING NO FIELDS WITH KEY
           clsname = is_key-clsname
           cmpname = <ls_component>-cmpname.
         IF sy-subrc <> 0.
@@ -320,20 +320,20 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
     ENDLOOP.
 
     " make sure to not damage VSEO* views by deleting texts of all subcomponents - an empty text must be kept!!
-    SELECT * FROM vseosubcdf INTO TABLE lt_subcomponents  
+    SELECT * FROM vseosubcdf INTO TABLE lt_subcomponents
       WHERE clsname = is_key-clsname
         AND version <> seoc_version_deleted.
 
     IF lt_subcomponents IS NOT INITIAL.
       SELECT SINGLE masterlang FROM tadir INTO lv_lang
-        WHERE pgmid = 'R3TR' AND ( object = 'CLAS' OR object = 'INTF' ) 
+        WHERE pgmid = 'R3TR' AND ( object = 'CLAS' OR object = 'INTF' )
           AND obj_name = is_key-clsname.                   "#EC CI_GENBUFF
       IF sy-subrc <> 0.
         lv_lang = sy-langu.
       ENDIF.
 
       LOOP AT lt_subcomponents ASSIGNING <ls_subcomponent>.
-        READ TABLE lt_descriptions TRANSPORTING NO FIELDS WITH KEY 
+        READ TABLE lt_descriptions TRANSPORTING NO FIELDS WITH KEY
           clsname = is_key-clsname
           cmpname = <ls_subcomponent>-cmpname
           sconame = <ls_subcomponent>-sconame.
