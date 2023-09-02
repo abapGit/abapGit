@@ -216,7 +216,8 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       iv_ignore_subpackages = ms_local_settings-ignore_subpackages
       iv_only_local_objects = ms_local_settings-only_local_objects
       io_dot                = mo_dot_abapgit
-      ii_log                = ii_log ).
+      ii_log                = ii_log
+      it_filter             = it_filter ).
 
     CREATE OBJECT lo_filter.
 
