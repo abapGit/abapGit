@@ -272,7 +272,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
     ENDLOOP.
 
     " make sure to not damage VSEO* views by deleting texts of all components - an empty text must be kept!!
-    SELECT * FROM vseocompdf INTO TABLE lt_components 
+    SELECT * FROM vseocompdf INTO TABLE lt_components
       WHERE clsname = is_key-clsname
         AND version <> seoc_version_deleted
         AND state = seoc_state_implemented
