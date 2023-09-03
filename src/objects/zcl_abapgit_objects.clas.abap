@@ -81,10 +81,7 @@ CLASS zcl_abapgit_objects DEFINITION
       RAISING
         zcx_abapgit_exception .
 
-    CLASS-METHODS get_deserialized_objects
-      IMPORTING !it_remote                     TYPE zif_abapgit_git_definitions=>ty_files_tt
-                !it_results                    TYPE zif_abapgit_definitions=>ty_results_tt
-      RETURNING VALUE(rt_deserialized_objects) TYPE zif_abapgit_objects=>ty_deserialize_obj_tt.
+
   PROTECTED SECTION.
 
   PRIVATE SECTION.
@@ -208,14 +205,20 @@ CLASS zcl_abapgit_objects DEFINITION
 
     CLASS-METHODS reg_obj_in_deserialize_steps
       IMPORTING
-        is_item     TYPE zif_abapgit_definitions=>ty_item
-        ii_obj      TYPE REF TO zif_abapgit_object
-        iv_package  TYPE devclass
-        io_xml      TYPE REF TO zif_abapgit_xml_input
+        is_item    TYPE zif_abapgit_definitions=>ty_item
+        ii_obj     TYPE REF TO zif_abapgit_object
+        iv_package TYPE devclass
+        io_xml     TYPE REF TO zif_abapgit_xml_input
       CHANGING
-        ct_steps    TYPE zif_abapgit_objects=>ty_step_data_tt
+        ct_steps   TYPE zif_abapgit_objects=>ty_step_data_tt
       RAISING
         zcx_abapgit_exception.
+
+    CLASS-METHODS get_deserialized_objects
+      IMPORTING it_remote                      TYPE zif_abapgit_git_definitions=>ty_files_tt
+                it_results                     TYPE zif_abapgit_definitions=>ty_results_tt
+      RETURNING VALUE(rt_deserialized_objects) TYPE zif_abapgit_objects=>ty_deserialize_obj_tt.
+
 ENDCLASS.
 
 
