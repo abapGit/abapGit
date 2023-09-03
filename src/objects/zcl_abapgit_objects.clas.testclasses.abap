@@ -248,7 +248,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
   METHOD check.
 
-    DATA: ls_files_item TYPE zcl_abapgit_objects=>ty_serialization.
+    DATA: ls_files_item TYPE zif_abapgit_objects=>ty_serialization.
 
     ls_files_item = zcl_abapgit_objects=>serialize(
       is_item        = is_item
@@ -395,9 +395,7 @@ CLASS ltcl_check_objects_locked IMPLEMENTATION.
     DATA: lx_error TYPE REF TO zcx_abapgit_exception.
 
     TRY.
-        zcl_abapgit_objects=>check_objects_locked( iv_language = 'E'
-                                                   it_items    = mt_given_items ).
-
+        zcl_abapgit_objects=>check_objects_locked( mt_given_items ).
       CATCH zcx_abapgit_exception INTO lx_error.
         mv_exception_text = lx_error->get_text( ).
     ENDTRY.

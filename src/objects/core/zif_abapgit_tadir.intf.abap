@@ -18,6 +18,8 @@ INTERFACE zif_abapgit_tadir
       !iv_only_local_objects TYPE abap_bool DEFAULT abap_false
       !io_dot                TYPE REF TO zcl_abapgit_dot_abapgit OPTIONAL
       !ii_log                TYPE REF TO zif_abapgit_log OPTIONAL
+      !it_filter             TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
+      !iv_check_exists       TYPE abap_bool DEFAULT abap_true
     RETURNING
       VALUE(rt_tadir)        TYPE zif_abapgit_definitions=>ty_tadir_tt
     RAISING

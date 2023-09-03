@@ -475,11 +475,17 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
   METHOD zif_abapgit_repo_srv~list.
 
+    DATA li_repo TYPE REF TO zif_abapgit_repo.
+
     IF mv_init = abap_false OR mv_only_favorites = abap_true.
       refresh_all( ).
     ENDIF.
 
-    rt_list = mt_list.
+    LOOP AT mt_list INTO li_repo.
+      IF iv_offline = abap_undefined OR li_repo->is_offline( ) = iv_offline.
+        INSERT li_repo INTO TABLE rt_list.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -500,7 +506,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       READ TABLE lt_user_favorites
         TRANSPORTING NO FIELDS
         WITH KEY table_line = li_repo->get_key( ).
-      IF sy-subrc = 0.
+      IF sy-subrc = 0 AND ( iv_offline = abap_undefined OR li_repo->is_offline( ) = iv_offline ).
         APPEND li_repo TO rt_list.
       ENDIF.
     ENDLOOP.

@@ -6,18 +6,13 @@ CLASS zcl_abapgit_objects DEFINITION
 
     TYPES:
       ty_types_tt TYPE SORTED TABLE OF tadir-object WITH UNIQUE KEY table_line .
-    TYPES:
-      BEGIN OF ty_serialization,
-        files TYPE zif_abapgit_git_definitions=>ty_files_tt,
-        item  TYPE zif_abapgit_definitions=>ty_item,
-      END OF ty_serialization .
 
     CLASS-METHODS serialize
       IMPORTING
         !is_item                 TYPE zif_abapgit_definitions=>ty_item
         !io_i18n_params          TYPE REF TO zcl_abapgit_i18n_params
       RETURNING
-        VALUE(rs_files_and_item) TYPE ty_serialization
+        VALUE(rs_files_and_item) TYPE zif_abapgit_objects=>ty_serialization
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS deserialize
@@ -157,7 +152,6 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS check_objects_locked
       IMPORTING
-        !iv_language TYPE spras
         !it_items    TYPE zif_abapgit_definitions=>ty_items_tt
       RAISING
         zcx_abapgit_exception .
@@ -528,8 +522,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
         lt_items = map_tadir_to_items( lt_tadir ).
 
-        check_objects_locked( iv_language = zif_abapgit_definitions=>c_english
-                              it_items    = lt_items ).
+        check_objects_locked( lt_items ).
 
       CATCH zcx_abapgit_exception INTO lx_error.
         zcl_abapgit_default_transport=>get_instance( )->reset( ).
@@ -672,8 +665,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     zcl_abapgit_factory=>get_cts_api( )->confirm_transport_messages( ).
 
-    check_objects_locked( iv_language = io_repo->get_dot_abapgit( )->get_main_language( )
-                          it_items    = lt_items ).
+    check_objects_locked( lt_items ).
 
     lo_i18n_params = zcl_abapgit_i18n_params=>new( is_params = determine_i18n_params(
       io_dot                = io_repo->get_dot_abapgit( )
