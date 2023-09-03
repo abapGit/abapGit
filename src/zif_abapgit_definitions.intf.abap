@@ -410,13 +410,6 @@ INTERFACE zif_abapgit_definitions
       skip   TYPE ty_method VALUE '?',
     END OF c_method .
 
-  CONSTANTS:
-    BEGIN OF c_abap_language_version,
-      standard         TYPE c VALUE '',
-      keyuser          TYPE c VALUE '2',
-      clouddevelopment TYPE c VALUE '5',
-    END OF c_abap_language_version.
-
   TYPES:
     ty_sap_langu_tab TYPE STANDARD TABLE OF langu WITH DEFAULT KEY.
   TYPES:

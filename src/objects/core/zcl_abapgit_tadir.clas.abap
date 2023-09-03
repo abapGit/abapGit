@@ -54,10 +54,11 @@ CLASS zcl_abapgit_tadir DEFINITION
         zcx_abapgit_exception .
     METHODS add_namespace
       IMPORTING
-        !iv_package TYPE devclass
-        !iv_object  TYPE csequence
+        !iv_package    TYPE devclass
+        !iv_object     TYPE csequence
       CHANGING
-        !ct_tadir   TYPE zif_abapgit_definitions=>ty_tadir_tt
+        !ct_tadir      TYPE zif_abapgit_definitions=>ty_tadir_tt
+        !ct_tadir_nspc TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
     METHODS determine_path
@@ -106,10 +107,8 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
   METHOD add_namespace.
 
-    DATA ls_tadir  TYPE zif_abapgit_definitions=>ty_tadir.
+    DATA ls_tadir TYPE zif_abapgit_definitions=>ty_tadir.
     DATA ls_obj_with_namespace TYPE zif_abapgit_definitions=>ty_obj_namespace.
-
-    FIELD-SYMBOLS <ls_tadir> LIKE LINE OF ct_tadir.
 
     TRY.
         ls_obj_with_namespace = zcl_abapgit_factory=>get_sap_namespace(  )->split_by_name( iv_object ).
@@ -120,16 +119,17 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
     IF ls_obj_with_namespace-namespace IS NOT INITIAL.
 
-      READ TABLE ct_tadir TRANSPORTING NO FIELDS
+      READ TABLE ct_tadir_nspc TRANSPORTING NO FIELDS
         WITH KEY pgmid = 'R3TR' object = 'NSPC' obj_name = ls_obj_with_namespace-namespace.
       IF sy-subrc <> 0.
-        APPEND INITIAL LINE TO ct_tadir ASSIGNING <ls_tadir>.
-        <ls_tadir>-pgmid      = 'R3TR'.
-        <ls_tadir>-object     = 'NSPC'.
-        <ls_tadir>-obj_name   = ls_obj_with_namespace-namespace.
-        <ls_tadir>-devclass   = iv_package.
-        <ls_tadir>-srcsystem  = sy-sysid.
-        <ls_tadir>-masterlang = sy-langu.
+        ls_tadir-pgmid      = 'R3TR'.
+        ls_tadir-object     = 'NSPC'.
+        ls_tadir-obj_name   = ls_obj_with_namespace-namespace.
+        ls_tadir-devclass   = iv_package.
+        ls_tadir-srcsystem  = sy-sysid.
+        ls_tadir-masterlang = sy-langu.
+        INSERT ls_tadir INTO TABLE ct_tadir.
+        INSERT ls_tadir INTO TABLE ct_tadir_nspc.
       ENDIF.
 
     ENDIF.
@@ -139,26 +139,30 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
   METHOD add_namespaces.
 
+    DATA lt_tadir_nspc TYPE zif_abapgit_definitions=>ty_tadir_tt.
+
     FIELD-SYMBOLS <ls_tadir> LIKE LINE OF ct_tadir.
 
     " Namespaces are not in TADIR, but are necessary for creating objects in transportable packages
     LOOP AT ct_tadir ASSIGNING <ls_tadir> WHERE obj_name(1) = '/'.
       add_namespace(
         EXPORTING
-          iv_package = iv_package
-          iv_object  = <ls_tadir>-obj_name
+          iv_package    = iv_package
+          iv_object     = <ls_tadir>-obj_name
         CHANGING
-          ct_tadir   = ct_tadir ).
+          ct_tadir      = ct_tadir
+          ct_tadir_nspc = lt_tadir_nspc ).
     ENDLOOP.
 
     " Root package of repo might not exist yet but needs to be considered, too
     IF iv_package CP '/*'.
       add_namespace(
         EXPORTING
-          iv_package = iv_package
-          iv_object  = iv_package
+          iv_package    = iv_package
+          iv_object     = iv_package
         CHANGING
-          ct_tadir   = ct_tadir ).
+          ct_tadir      = ct_tadir
+          ct_tadir_nspc = lt_tadir_nspc ).
     ENDIF.
 
   ENDMETHOD.
@@ -384,6 +388,8 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
   METHOD zif_abapgit_tadir~read.
 
     DATA: li_exit TYPE REF TO zif_abapgit_exit.
+    DATA: lr_tadir TYPE REF TO zif_abapgit_definitions=>ty_tadir.
+    DATA: lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
     " Start recursion
     " hmm, some problems here, should TADIR also build path?
@@ -402,8 +408,26 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
       CHANGING
         ct_tadir   = rt_tadir ).
 
-    rt_tadir = check_exists( rt_tadir ).
+    IF it_filter IS NOT INITIAL.
+      "Apply filter manually instead of calling zcl_abapgit_repo_filter->apply,
+      "so that we can execute a unit test. The method applies addition filtering
+      "and does therefore additional selects
+      lt_filter = it_filter.
+      SORT lt_filter BY object obj_name.
+      LOOP AT rt_tadir REFERENCE INTO lr_tadir.
+        READ TABLE lt_filter TRANSPORTING NO FIELDS
+                 WITH KEY object = lr_tadir->object
+                          obj_name = lr_tadir->obj_name
+                          BINARY SEARCH.
+        IF sy-subrc <> 0.
+          DELETE rt_tadir.
+        ENDIF.
+      ENDLOOP.
+    ENDIF.
 
+    IF iv_check_exists = abap_true.
+      rt_tadir = check_exists( rt_tadir ).
+    ENDIF.
   ENDMETHOD.
 
 
