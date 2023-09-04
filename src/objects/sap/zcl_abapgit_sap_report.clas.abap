@@ -64,6 +64,10 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
 
   METHOD get_language_version.
 
+    " TODO: Determine ABAP Language Version
+    " https://github.com/abapGit/abapGit/issues/6154#issuecomment-1503566920)
+
+    " For now, use default for ABAP source code
     IF zcl_abapgit_factory=>get_environment( )->is_sap_cloud_platform( ) = abap_true.
       rv_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-cloud_development.
     ELSE.
