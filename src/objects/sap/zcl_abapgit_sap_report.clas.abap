@@ -64,7 +64,7 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
 
   METHOD get_language_version.
 
-    IF zcl_abapgit_factory=>get_environment( )->is_cloud( ) = abap_true.
+    IF zcl_abapgit_factory=>get_environment( )->is_sap_cloud_platform( ) = abap_true.
       rv_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-cloud_development.
     ELSE.
       rv_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
