@@ -312,7 +312,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
     DATA lv_lang          TYPE tadir-masterlang.
 
     FIELD-SYMBOLS <ls_description> LIKE LINE OF it_descriptions.
-    FIELD-SYMBOLS <ls_subcomponent> TYPE vseocompdf.
+    FIELD-SYMBOLS <ls_subcomponent> TYPE vseosubcdf.
 
     lt_descriptions = it_descriptions.
     LOOP AT lt_descriptions ASSIGNING <ls_description>.
