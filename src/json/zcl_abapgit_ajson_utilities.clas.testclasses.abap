@@ -513,30 +513,35 @@ CLASS ltcl_json_utils IMPLEMENTATION.
 
   METHOD is_equal.
 
-    cl_abap_unit_assert=>assert_true(
-      zcl_abapgit_ajson_utilities=>new( )->is_equal(
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_ajson_utilities=>new( )->is_equal(
         ii_json_a = zcl_abapgit_ajson=>parse( '{"a":1,"b":2}' )
-        ii_json_b = zcl_abapgit_ajson=>parse( '{"a":1,"b":2}' ) ) ).
+        ii_json_b = zcl_abapgit_ajson=>parse( '{"a":1,"b":2}' ) )
+      exp = abap_true ).
 
-    cl_abap_unit_assert=>assert_true(
-      zcl_abapgit_ajson_utilities=>new( )->is_equal(
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_ajson_utilities=>new( )->is_equal(
         iv_json_a = '{"a":1,"b":2}'
-        iv_json_b = '{"a":1,"b":2}' ) ).
+        iv_json_b = '{"a":1,"b":2}' )
+      exp = abap_true ).
 
-    cl_abap_unit_assert=>assert_false(
-      zcl_abapgit_ajson_utilities=>new( )->is_equal(
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_ajson_utilities=>new( )->is_equal(
         iv_json_a = '{"a":1,"b":2}'
-        iv_json_b = '{"a":1,"b":3}' ) ).
+        iv_json_b = '{"a":1,"b":3}' )
+      exp = abap_false ).
 
-    cl_abap_unit_assert=>assert_false(
-      zcl_abapgit_ajson_utilities=>new( )->is_equal(
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_ajson_utilities=>new( )->is_equal(
         iv_json_a = '{"a":1,"b":2}'
-        iv_json_b = '{"a":1,"b":2,"c":3}' ) ).
+        iv_json_b = '{"a":1,"b":2,"c":3}' )
+      exp = abap_false ).
 
-    cl_abap_unit_assert=>assert_false(
-      zcl_abapgit_ajson_utilities=>new( )->is_equal(
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_ajson_utilities=>new( )->is_equal(
         iv_json_a = '{"a":1,"b":2,"c":3}'
-        iv_json_b = '{"a":1,"b":2}' ) ).
+        iv_json_b = '{"a":1,"b":2}' )
+      exp = abap_false ).
 
   ENDMETHOD.
 
