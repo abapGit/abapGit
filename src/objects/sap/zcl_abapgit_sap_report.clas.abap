@@ -162,6 +162,8 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
            rs_progdir-varcl,
            rs_progdir-state.
 
+    " TODO: Clear UCCHECK
+
   ENDMETHOD.
 
 
@@ -210,7 +212,7 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
     ls_progdir_new-fixpt   = is_progdir-fixpt.
     ls_progdir_new-appl    = is_progdir-appl.
     ls_progdir_new-rstat   = is_progdir-rstat.
-    ls_progdir_new-uccheck = is_progdir-uccheck.
+    ls_progdir_new-uccheck = is_progdir-uccheck. " TODO: replace with get_language_version()
     ls_progdir_new-sqlx    = is_progdir-sqlx.
     ls_progdir_new-clas    = is_progdir-clas.
     ls_progdir_new-secu    = is_progdir-secu.
