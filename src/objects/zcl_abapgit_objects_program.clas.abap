@@ -6,39 +6,6 @@ CLASS zcl_abapgit_objects_program DEFINITION
   PUBLIC SECTION.
 
     TYPES:
-      BEGIN OF ty_progdir,
-        name    TYPE progdir-name,
-        state   TYPE progdir-state,
-        sqlx    TYPE progdir-sqlx,
-        edtx    TYPE progdir-edtx,
-        varcl   TYPE progdir-varcl,
-        dbapl   TYPE progdir-dbapl,
-        dbna    TYPE progdir-dbna,
-        clas    TYPE progdir-clas,
-        type    TYPE progdir-type,
-        occurs  TYPE progdir-occurs,
-        subc    TYPE progdir-subc,
-        appl    TYPE progdir-appl,
-        secu    TYPE progdir-secu,
-        cnam    TYPE progdir-cnam,
-        cdat    TYPE progdir-cdat,
-        unam    TYPE progdir-unam,
-        udat    TYPE progdir-udat,
-        vern    TYPE progdir-vern,
-        levl    TYPE progdir-levl,
-        rstat   TYPE progdir-rstat,
-        rmand   TYPE progdir-rmand,
-        rload   TYPE progdir-rload,
-        fixpt   TYPE progdir-fixpt,
-        sset    TYPE progdir-sset,
-        sdate   TYPE progdir-sdate,
-        stime   TYPE progdir-stime,
-        idate   TYPE progdir-idate,
-        itime   TYPE progdir-itime,
-        ldbname TYPE progdir-ldbname,
-        uccheck TYPE progdir-uccheck,
-      END OF ty_progdir.
-    TYPES:
       BEGIN OF ty_cua,
         adm TYPE rsmpe_adm,
         sta TYPE STANDARD TABLE OF rsmpe_stat WITH DEFAULT KEY,
@@ -65,7 +32,7 @@ CLASS zcl_abapgit_objects_program DEFINITION
         zcx_abapgit_exception.
     METHODS deserialize_program
       IMPORTING
-        !is_progdir TYPE ty_progdir
+        !is_progdir TYPE zif_abapgit_sap_report=>ty_progdir
         !it_source  TYPE abaptxt255_tab
         !it_tpool   TYPE textpool_table
         !iv_package TYPE devclass
@@ -173,7 +140,7 @@ CLASS zcl_abapgit_objects_program DEFINITION
         VALUE(rv_title) TYPE repti .
     METHODS insert_program
       IMPORTING
-        !is_progdir TYPE ty_progdir
+        !is_progdir TYPE zif_abapgit_sap_report=>ty_progdir
         !it_source  TYPE abaptxt255_tab
         !iv_title   TYPE repti
         !iv_package TYPE devclass
@@ -181,7 +148,7 @@ CLASS zcl_abapgit_objects_program DEFINITION
         zcx_abapgit_exception .
     METHODS update_program
       IMPORTING
-        !is_progdir TYPE ty_progdir
+        !is_progdir TYPE zif_abapgit_sap_report=>ty_progdir
         !it_source  TYPE abaptxt255_tab
         !iv_title   TYPE repti
       RAISING
@@ -839,7 +806,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
   METHOD serialize_program.
 
-    DATA: ls_progdir      TYPE ty_progdir,
+    DATA: ls_progdir      TYPE zif_abapgit_sap_report=>ty_progdir,
           lv_program_name TYPE syrepid,
           lt_dynpros      TYPE ty_dynpro_tt,
           ls_cua          TYPE ty_cua,

@@ -17,7 +17,7 @@ CLASS zcl_abapgit_object_prog DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     METHODS deserialize_with_ext
       IMPORTING
-        !is_progdir TYPE ty_progdir
+        !is_progdir TYPE zif_abapgit_sap_report=>ty_progdir
         !it_source  TYPE abaptxt255_tab
         !iv_package TYPE devclass
       RAISING
@@ -206,7 +206,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 
     DATA: lv_program_name TYPE syrepid,
-          ls_progdir      TYPE ty_progdir,
+          ls_progdir      TYPE zif_abapgit_sap_report=>ty_progdir,
           lt_tpool        TYPE textpool_table,
           lt_dynpros      TYPE ty_dynpro_tt,
           lt_tpool_ext    TYPE zif_abapgit_definitions=>ty_tpool_tt,
