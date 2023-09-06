@@ -362,7 +362,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
   METHOD deserialize_includes.
 
     DATA: lo_xml       TYPE REF TO zif_abapgit_xml_input,
-          ls_progdir   TYPE ty_progdir,
+          ls_progdir   TYPE zif_abapgit_sap_report=>ty_progdir,
           lt_includes  TYPE ty_sobj_name_tt,
           lt_tpool     TYPE textpool_table,
           lt_tpool_ext TYPE zif_abapgit_definitions=>ty_tpool_tt,
@@ -548,7 +548,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
   METHOD get_abap_version.
 
     DATA: lt_includes TYPE ty_sobj_name_tt,
-          ls_progdir  TYPE ty_progdir,
+          ls_progdir  TYPE zif_abapgit_sap_report=>ty_progdir,
           lo_xml      TYPE REF TO zif_abapgit_xml_input.
 
     FIELD-SYMBOLS: <lv_include> LIKE LINE OF lt_includes.
@@ -1369,7 +1369,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 * function group SUNI
 
     DATA: lt_functions    TYPE ty_function_tt,
-          ls_progdir      TYPE ty_progdir,
+          ls_progdir      TYPE zif_abapgit_sap_report=>ty_progdir,
           lv_program_name TYPE syrepid,
           lt_dynpros      TYPE ty_dynpro_tt,
           ls_cua          TYPE ty_cua.
@@ -1388,7 +1388,8 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     serialize_includes( ).
 
     lv_program_name = main_name( ).
-    ls_progdir = read_progdir( lv_program_name ).
+
+    ls_progdir = zcl_abapgit_factory=>get_sap_report( )->read_progdir( lv_program_name ).
 
     IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       serialize_texts(
