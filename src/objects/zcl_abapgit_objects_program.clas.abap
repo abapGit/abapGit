@@ -6,39 +6,6 @@ CLASS zcl_abapgit_objects_program DEFINITION
   PUBLIC SECTION.
 
     TYPES:
-      BEGIN OF ty_progdir,
-        name    TYPE progdir-name,
-        state   TYPE progdir-state,
-        sqlx    TYPE progdir-sqlx,
-        edtx    TYPE progdir-edtx,
-        varcl   TYPE progdir-varcl,
-        dbapl   TYPE progdir-dbapl,
-        dbna    TYPE progdir-dbna,
-        clas    TYPE progdir-clas,
-        type    TYPE progdir-type,
-        occurs  TYPE progdir-occurs,
-        subc    TYPE progdir-subc,
-        appl    TYPE progdir-appl,
-        secu    TYPE progdir-secu,
-        cnam    TYPE progdir-cnam,
-        cdat    TYPE progdir-cdat,
-        unam    TYPE progdir-unam,
-        udat    TYPE progdir-udat,
-        vern    TYPE progdir-vern,
-        levl    TYPE progdir-levl,
-        rstat   TYPE progdir-rstat,
-        rmand   TYPE progdir-rmand,
-        rload   TYPE progdir-rload,
-        fixpt   TYPE progdir-fixpt,
-        sset    TYPE progdir-sset,
-        sdate   TYPE progdir-sdate,
-        stime   TYPE progdir-stime,
-        idate   TYPE progdir-idate,
-        itime   TYPE progdir-itime,
-        ldbname TYPE progdir-ldbname,
-        uccheck TYPE progdir-uccheck,
-      END OF ty_progdir.
-    TYPES:
       BEGIN OF ty_cua,
         adm TYPE rsmpe_adm,
         sta TYPE STANDARD TABLE OF rsmpe_stat WITH DEFAULT KEY,
@@ -63,14 +30,9 @@ CLASS zcl_abapgit_objects_program DEFINITION
         !iv_extra   TYPE clike OPTIONAL
       RAISING
         zcx_abapgit_exception.
-    METHODS read_progdir
-      IMPORTING
-        !iv_program       TYPE syrepid
-      RETURNING
-        VALUE(rs_progdir) TYPE ty_progdir.
     METHODS deserialize_program
       IMPORTING
-        !is_progdir TYPE ty_progdir
+        !is_progdir TYPE zif_abapgit_sap_report=>ty_progdir
         !it_source  TYPE abaptxt255_tab
         !it_tpool   TYPE textpool_table
         !iv_package TYPE devclass
@@ -178,7 +140,7 @@ CLASS zcl_abapgit_objects_program DEFINITION
         VALUE(rv_title) TYPE repti .
     METHODS insert_program
       IMPORTING
-        !is_progdir TYPE ty_progdir
+        !is_progdir TYPE zif_abapgit_sap_report=>ty_progdir
         !it_source  TYPE abaptxt255_tab
         !iv_title   TYPE repti
         !iv_package TYPE devclass
@@ -186,14 +148,9 @@ CLASS zcl_abapgit_objects_program DEFINITION
         zcx_abapgit_exception .
     METHODS update_program
       IMPORTING
-        !is_progdir TYPE ty_progdir
+        !is_progdir TYPE zif_abapgit_sap_report=>ty_progdir
         !it_source  TYPE abaptxt255_tab
         !iv_title   TYPE repti
-      RAISING
-        zcx_abapgit_exception .
-    METHODS update_progdir
-      IMPORTING
-        !is_progdir TYPE ty_progdir
       RAISING
         zcx_abapgit_exception .
 ENDCLASS.
@@ -497,7 +454,9 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         iv_package = iv_package ).
     ENDIF.
 
-    update_progdir( is_progdir ).
+    zcl_abapgit_factory=>get_sap_report( )->update_progdir(
+      is_progdir = is_progdir
+      iv_package = iv_package ).
 
     zcl_abapgit_objects_activation=>add(
       iv_type = 'REPS'
@@ -667,37 +626,6 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
     rv_is_text_locked = exists_a_lock_entry_for( iv_lock_object = 'EABAPTEXTE'
                                                  iv_argument    = lv_object ).
-
-  ENDMETHOD.
-
-
-  METHOD read_progdir.
-
-    DATA: ls_sapdir TYPE progdir.
-
-
-    CALL FUNCTION 'READ_PROGDIR'
-      EXPORTING
-        i_progname = iv_program
-        i_state    = 'A'
-      IMPORTING
-        e_progdir  = ls_sapdir.
-    MOVE-CORRESPONDING ls_sapdir TO rs_progdir.
-
-    CLEAR: rs_progdir-edtx,
-           rs_progdir-cnam,
-           rs_progdir-cdat,
-           rs_progdir-unam,
-           rs_progdir-udat,
-           rs_progdir-levl,
-           rs_progdir-vern,
-           rs_progdir-rmand,
-           rs_progdir-sdate,
-           rs_progdir-stime,
-           rs_progdir-idate,
-           rs_progdir-itime,
-           rs_progdir-varcl,
-           rs_progdir-state.
 
   ENDMETHOD.
 
@@ -878,7 +806,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
   METHOD serialize_program.
 
-    DATA: ls_progdir      TYPE ty_progdir,
+    DATA: ls_progdir      TYPE zif_abapgit_sap_report=>ty_progdir,
           lv_program_name TYPE syrepid,
           lt_dynpros      TYPE ty_dynpro_tt,
           ls_cua          TYPE ty_cua,
@@ -919,7 +847,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
     zcl_abapgit_language=>restore_login_language( ).
 
-    ls_progdir = read_progdir( lv_program_name ).
+    ls_progdir = zcl_abapgit_factory=>get_sap_report( )->read_progdir( lv_program_name ).
 
     IF io_xml IS BOUND.
       li_xml = io_xml.
@@ -1035,61 +963,6 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         SHIFT <ls_output>-line RIGHT BY lv_spaces PLACES IN CHARACTER MODE.
       ENDIF.
     ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD update_progdir.
-
-    DATA ls_progdir_new TYPE progdir.
-
-    CALL FUNCTION 'READ_PROGDIR'
-      EXPORTING
-        i_progname = is_progdir-name
-        i_state    = 'I'
-      IMPORTING
-        e_progdir  = ls_progdir_new
-      EXCEPTIONS
-        not_exists = 1
-        OTHERS     = 2.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error reading program directory' ).
-    ENDIF.
-
-    ls_progdir_new-ldbname = is_progdir-ldbname.
-    ls_progdir_new-dbna    = is_progdir-dbna.
-    ls_progdir_new-dbapl   = is_progdir-dbapl.
-    ls_progdir_new-rload   = is_progdir-rload.
-    ls_progdir_new-fixpt   = is_progdir-fixpt.
-    ls_progdir_new-varcl   = is_progdir-varcl.
-    ls_progdir_new-appl    = is_progdir-appl.
-    ls_progdir_new-rstat   = is_progdir-rstat.
-    ls_progdir_new-sqlx    = is_progdir-sqlx.
-    ls_progdir_new-uccheck = is_progdir-uccheck.
-    ls_progdir_new-clas    = is_progdir-clas.
-    ls_progdir_new-secu    = is_progdir-secu.
-
-    CALL FUNCTION 'UPDATE_PROGDIR'
-      EXPORTING
-        i_progdir    = ls_progdir_new
-        i_progname   = ls_progdir_new-name
-        i_state      = ls_progdir_new-state
-      EXCEPTIONS
-        not_executed = 1
-        OTHERS       = 2.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error updating program directory' ).
-    ENDIF.
-
-    " function UPDATE_PROGDIR does not update VARCL, so we do it here
-    SELECT SINGLE * FROM progdir INTO ls_progdir_new
-      WHERE name  = ls_progdir_new-name
-        AND state = ls_progdir_new-state.
-    IF sy-subrc = 0 AND is_progdir-varcl <> ls_progdir_new-varcl.
-      UPDATE progdir SET varcl = is_progdir-varcl
-        WHERE name  = ls_progdir_new-name
-          AND state = ls_progdir_new-state.               "#EC CI_SUBRC
-    ENDIF.
 
   ENDMETHOD.
 

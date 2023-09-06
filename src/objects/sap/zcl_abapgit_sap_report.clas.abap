@@ -13,15 +13,14 @@ CLASS zcl_abapgit_sap_report DEFINITION
     METHODS get_language_version
       IMPORTING
         iv_package        TYPE devclass
-        iv_version        TYPE zif_abapgit_sap_report=>ty_abap_language_version
       RETURNING
-        VALUE(rv_version) TYPE zif_abapgit_sap_report=>ty_abap_language_version.
+        VALUE(rv_version) TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version.
 
     METHODS authorization_check
       IMPORTING
         iv_mode    TYPE csequence
         is_item    TYPE zif_abapgit_definitions=>ty_item
-        iv_version TYPE zif_abapgit_sap_report=>ty_abap_language_version OPTIONAL
+        iv_version TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version OPTIONAL
       RAISING
         zcx_abapgit_exception.
 
@@ -65,16 +64,14 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
 
   METHOD get_language_version.
 
-    ASSERT iv_version CA ' X25'.
-
     " TODO: Determine ABAP Language Version
     " https://github.com/abapGit/abapGit/issues/6154#issuecomment-1503566920)
 
     " For now, use default for ABAP source code
     IF zcl_abapgit_factory=>get_environment( )->is_sap_cloud_platform( ) = abap_true.
-      rv_version = '5'. " abap_for_cloud_development
+      rv_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-cloud_development.
     ELSE.
-      rv_version = 'X'. " standard_abap
+      rv_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
     ENDIF.
 
   ENDMETHOD.
@@ -97,45 +94,75 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
 
   METHOD zif_abapgit_sap_report~insert_report.
 
-    DATA lv_version TYPE zif_abapgit_sap_report=>ty_abap_language_version ##NEEDED.
+    DATA lv_version TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version.
     DATA lv_obj_name TYPE e071-obj_name.
 
     ASSERT iv_state CA ' AI'.
     ASSERT iv_program_type CA ' 1FIJKMST'.
 
-    lv_version = get_language_version(
-      iv_package = iv_package
-      iv_version = iv_version ).
+    lv_version = get_language_version( iv_package ).
 
     authorization_check(
       iv_mode    = 'MODIFY'
       is_item    = is_item
       iv_version = lv_version ).
 
-    " TODO: Add `VERSION lv_version` but it's not supported in lower releases
     IF iv_state IS INITIAL.
       INSERT REPORT iv_name FROM it_source.
-        "VERSION lv_version.
     ELSEIF iv_program_type IS INITIAL AND iv_extension_type IS INITIAL.
       INSERT REPORT iv_name FROM it_source
         STATE   iv_state.
-        "VERSION lv_version.
     ELSEIF iv_extension_type IS INITIAL.
       INSERT REPORT iv_name FROM it_source
         STATE        iv_state
         PROGRAM TYPE iv_program_type.
-        "VERSION      lv_version.
     ELSE.
       INSERT REPORT iv_name FROM it_source
         STATE          iv_state
         EXTENSION TYPE iv_extension_type
         PROGRAM TYPE   iv_program_type.
-        "VERSION        lv_version.
     ENDIF.
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error inserting report { iv_name }| ).
     ENDIF.
+
+    " In lower releases, INSERT REPORT does not support setting ABAP Language version (VERSION)
+    " Therefore, update the flag directly
+    UPDATE progdir SET uccheck = lv_version WHERE name = iv_name AND state = iv_state.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_sap_report~read_progdir.
+
+    DATA ls_sapdir TYPE progdir.
+
+    CALL FUNCTION 'READ_PROGDIR'
+      EXPORTING
+        i_progname = iv_name
+        i_state    = iv_state
+      IMPORTING
+        e_progdir  = ls_sapdir.
+
+    MOVE-CORRESPONDING ls_sapdir TO rs_progdir.
+
+    CLEAR: rs_progdir-edtx,
+           rs_progdir-cnam,
+           rs_progdir-cdat,
+           rs_progdir-unam,
+           rs_progdir-udat,
+           rs_progdir-levl,
+           rs_progdir-vern,
+           rs_progdir-rmand,
+           rs_progdir-sdate,
+           rs_progdir-stime,
+           rs_progdir-idate,
+           rs_progdir-itime,
+           rs_progdir-varcl,
+           rs_progdir-state.
+
+    " TODO: Clear UCCHECK
 
   ENDMETHOD.
 
@@ -161,6 +188,60 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_sap_report~update_progdir.
+
+    DATA ls_progdir_new TYPE progdir.
+
+    CALL FUNCTION 'READ_PROGDIR'
+      EXPORTING
+        i_progname = is_progdir-name
+        i_state    = iv_state
+      IMPORTING
+        e_progdir  = ls_progdir_new
+      EXCEPTIONS
+        not_exists = 1
+        OTHERS     = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Error reading program directory' ).
+    ENDIF.
+
+    ls_progdir_new-ldbname = is_progdir-ldbname.
+    ls_progdir_new-dbna    = is_progdir-dbna.
+    ls_progdir_new-dbapl   = is_progdir-dbapl.
+    ls_progdir_new-rload   = is_progdir-rload.
+    ls_progdir_new-fixpt   = is_progdir-fixpt.
+    ls_progdir_new-appl    = is_progdir-appl.
+    ls_progdir_new-rstat   = is_progdir-rstat.
+    ls_progdir_new-uccheck = is_progdir-uccheck. " TODO: replace with get_language_version()
+    ls_progdir_new-sqlx    = is_progdir-sqlx.
+    ls_progdir_new-clas    = is_progdir-clas.
+    ls_progdir_new-secu    = is_progdir-secu.
+
+    CALL FUNCTION 'UPDATE_PROGDIR'
+      EXPORTING
+        i_progdir    = ls_progdir_new
+        i_progname   = ls_progdir_new-name
+        i_state      = ls_progdir_new-state
+      EXCEPTIONS
+        not_executed = 1
+        OTHERS       = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Error updating program directory' ).
+    ENDIF.
+
+    " Function UPDATE_PROGDIR does not update VARCL, so we do it here
+    SELECT SINGLE * FROM progdir INTO ls_progdir_new
+      WHERE name  = ls_progdir_new-name
+        AND state = ls_progdir_new-state.
+    IF sy-subrc = 0 AND is_progdir-varcl <> ls_progdir_new-varcl.
+      UPDATE progdir SET varcl = is_progdir-varcl
+        WHERE name  = ls_progdir_new-name
+          AND state = ls_progdir_new-state.               "#EC CI_SUBRC
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_sap_report~update_report.
 
     DATA lt_new TYPE string_table.
@@ -171,14 +252,13 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
 
     IF lt_old <> lt_new.
       zif_abapgit_sap_report~insert_report(
-        iv_name            = iv_name
-        it_source          = it_source
-        iv_state           = iv_state
-        iv_program_type    = iv_program_type
-        iv_extension_type  = iv_extension_type
-        iv_package         = iv_package
-        iv_version         = iv_version
-        is_item            = is_item ).
+        iv_name           = iv_name
+        it_source         = it_source
+        iv_state          = iv_state
+        iv_program_type   = iv_program_type
+        iv_extension_type = iv_extension_type
+        iv_package        = iv_package
+        is_item           = is_item ).
 
       rv_updated = abap_true.
     ELSE.
