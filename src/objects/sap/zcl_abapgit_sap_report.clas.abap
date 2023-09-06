@@ -7,14 +7,12 @@ CLASS zcl_abapgit_sap_report DEFINITION
 
     INTERFACES zif_abapgit_sap_report.
 
+    METHODS constructor.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    METHODS get_language_version
-      IMPORTING
-        iv_package        TYPE devclass
-      RETURNING
-        VALUE(rv_version) TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version.
+    DATA mo_settings TYPE REF TO zcl_abapgit_settings.
 
     METHODS authorization_check
       IMPORTING
@@ -34,26 +32,48 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
   METHOD authorization_check.
 
     IF is_item IS NOT INITIAL.
-      " TODO: Check for ABAP Language Version (ABAP_LANGU_VERSION_UPON_INSERT = iv_version)
-      CALL FUNCTION 'RS_ACCESS_PERMISSION'
-        EXPORTING
-          mode                     = iv_mode
-          object                   = is_item-obj_name
-          object_class             = is_item-obj_type
-          suppress_corr_check      = abap_true
-          suppress_language_check  = abap_true
-          suppress_extend_dialog   = abap_true
-        EXCEPTIONS
-          canceled_in_corr         = 1
-          enqueued_by_user         = 2
-          enqueue_system_failure   = 3
-          illegal_parameter_values = 4
-          locked_by_author         = 5
-          no_modify_permission     = 6
-          no_show_permission       = 7
-          permission_failure       = 8
-          request_language_denied  = 9
-          OTHERS                   = 10.
+      TRY.
+          CALL FUNCTION 'RS_ACCESS_PERMISSION'
+            EXPORTING
+              mode                           = iv_mode
+              object                         = is_item-obj_name
+              object_class                   = is_item-obj_type
+              suppress_corr_check            = abap_true
+              suppress_language_check        = abap_true
+              suppress_extend_dialog         = abap_true
+              abap_langu_version_upon_insert = iv_version " does not exist on lower releases
+            EXCEPTIONS
+              canceled_in_corr               = 1
+              enqueued_by_user               = 2
+              enqueue_system_failure         = 3
+              illegal_parameter_values       = 4
+              locked_by_author               = 5
+              no_modify_permission           = 6
+              no_show_permission             = 7
+              permission_failure             = 8
+              request_language_denied        = 9
+              OTHERS                         = 10.
+        CATCH cx_sy_dyn_call_param_not_found.
+          CALL FUNCTION 'RS_ACCESS_PERMISSION'
+            EXPORTING
+              mode                     = iv_mode
+              object                   = is_item-obj_name
+              object_class             = is_item-obj_type
+              suppress_corr_check      = abap_true
+              suppress_language_check  = abap_true
+              suppress_extend_dialog   = abap_true
+            EXCEPTIONS
+              canceled_in_corr         = 1
+              enqueued_by_user         = 2
+              enqueue_system_failure   = 3
+              illegal_parameter_values = 4
+              locked_by_author         = 5
+              no_modify_permission     = 6
+              no_show_permission       = 7
+              permission_failure       = 8
+              request_language_denied  = 9
+              OTHERS                   = 10.
+      ENDTRY.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
@@ -62,18 +82,15 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_language_version.
+  METHOD constructor.
+    mo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
+  ENDMETHOD.
 
-    " TODO: Determine ABAP Language Version
-    " https://github.com/abapGit/abapGit/issues/6154#issuecomment-1503566920)
 
-    " For now, use default for ABAP source code
-    IF zcl_abapgit_factory=>get_environment( )->is_sap_cloud_platform( ) = abap_true.
-      rv_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-cloud_development.
-    ELSE.
-      rv_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
+  METHOD zif_abapgit_sap_report~clear_abap_language_version.
+    IF mo_settings->is_feature_enabled( zcl_abapgit_abap_language_vers=>c_feature_flag ) = abap_true.
+      CLEAR cv_version.
     ENDIF.
-
   ENDMETHOD.
 
 
@@ -92,6 +109,34 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_sap_report~get_abap_language_version.
+
+    DATA lo_abap_language_vers TYPE REF TO zcl_abapgit_abap_language_vers.
+
+    IF mo_settings->is_feature_enabled( zcl_abapgit_abap_language_vers=>c_feature_flag ) = abap_true.
+      " Determine ABAP Language Version for source code
+      " https://github.com/abapGit/abapGit/issues/6154#issuecomment-1503566920)
+      CREATE OBJECT lo_abap_language_vers.
+
+      rv_version = lo_abap_language_vers->get_abap_language_vers_by_objt(
+        iv_object_type = iv_object_type
+        iv_package     = iv_package ).
+    ELSE.
+      rv_version = iv_version.
+    ENDIF.
+
+    " Fallback for ABAP source code based on environment
+    IF rv_version IS INITIAL.
+      IF zcl_abapgit_factory=>get_environment( )->is_sap_cloud_platform( ) = abap_true.
+        rv_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-cloud_development.
+      ELSE.
+        rv_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_sap_report~insert_report.
 
     DATA lv_version TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version.
@@ -100,7 +145,9 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
     ASSERT iv_state CA ' AI'.
     ASSERT iv_program_type CA ' 1FIJKMST'.
 
-    lv_version = get_language_version( iv_package ).
+    lv_version = zif_abapgit_sap_report~get_abap_language_version(
+      iv_object_type = 'PROG'
+      iv_package     = iv_package ).
 
     authorization_check(
       iv_mode    = 'MODIFY'
@@ -162,7 +209,7 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
            rs_progdir-varcl,
            rs_progdir-state.
 
-    " TODO: Clear UCCHECK
+    zif_abapgit_sap_report~clear_abap_language_version( CHANGING cv_version = rs_progdir-uccheck ).
 
   ENDMETHOD.
 
@@ -212,10 +259,14 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
     ls_progdir_new-fixpt   = is_progdir-fixpt.
     ls_progdir_new-appl    = is_progdir-appl.
     ls_progdir_new-rstat   = is_progdir-rstat.
-    ls_progdir_new-uccheck = is_progdir-uccheck. " TODO: replace with get_language_version()
     ls_progdir_new-sqlx    = is_progdir-sqlx.
     ls_progdir_new-clas    = is_progdir-clas.
     ls_progdir_new-secu    = is_progdir-secu.
+
+    ls_progdir_new-uccheck = zif_abapgit_sap_report~get_abap_language_version(
+      iv_object_type = 'PROG'
+      iv_package     = iv_package
+      iv_version     = is_progdir-uccheck ).
 
     CALL FUNCTION 'UPDATE_PROGDIR'
       EXPORTING

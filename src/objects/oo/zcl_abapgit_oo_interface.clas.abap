@@ -181,6 +181,11 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
     ls_properties = cg_properties.
     ls_properties-state = seoc_state_implemented.
 
+    ls_properties-unicode = zcl_abapgit_factory=>get_sap_report( )->get_abap_language_version(
+      iv_object_type = 'INTF'
+      iv_package     = iv_package
+      iv_version     = ls_properties-unicode ).
+
     TRY.
         CALL FUNCTION 'SEO_INTERFACE_CREATE_COMPLETE'
           EXPORTING
@@ -326,5 +331,9 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
       rs_interface_properties-chgdanyon,
       rs_interface_properties-r3release,
       rs_interface_properties-version.
+
+    zcl_abapgit_factory=>get_sap_report( )->clear_abap_language_version(
+      CHANGING cv_version = rs_interface_properties-unicode ).
+
   ENDMETHOD.
 ENDCLASS.

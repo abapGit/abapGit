@@ -122,7 +122,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
+CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
 
   METHOD create_report.
@@ -576,6 +576,11 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
     ls_properties = cg_properties.
     ls_properties-state = seoc_state_implemented.
 
+    ls_properties-unicode = zcl_abapgit_factory=>get_sap_report( )->get_abap_language_version(
+      iv_object_type = 'CLAS'
+      iv_package     = iv_package
+      iv_version     = ls_properties-unicode ).
+
     TRY.
         CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
           EXPORTING
@@ -857,6 +862,10 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
       rs_class_properties-clsabstrct,
       rs_class_properties-exposure,
       rs_class_properties-version.
+
+    zcl_abapgit_factory=>get_sap_report( )->clear_abap_language_version(
+      CHANGING cv_version = rs_class_properties-unicode ).
+
   ENDMETHOD.
 
 

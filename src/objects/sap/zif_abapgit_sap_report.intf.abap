@@ -96,4 +96,16 @@ INTERFACE zif_abapgit_sap_report
     RAISING
       zcx_abapgit_exception.
 
+  METHODS get_abap_language_version
+    IMPORTING
+      iv_object_type    TYPE tadir-object
+      iv_package        TYPE devclass
+      iv_version        TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version OPTIONAL
+    RETURNING
+      VALUE(rv_version) TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version.
+
+  METHODS clear_abap_language_version
+    CHANGING
+      cv_version TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version.
+
 ENDINTERFACE.
