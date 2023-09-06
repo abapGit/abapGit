@@ -262,23 +262,23 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS ltcl_object_ddls_mock DEFINITION INHERITING FROM zcl_abapgit_objects_super FOR TESTING.
+CLASS ltcl_object_tabl_mock DEFINITION INHERITING FROM zcl_abapgit_objects_super FOR TESTING.
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
 
 ENDCLASS.
 
-CLASS ltcl_object_ddls_mock IMPLEMENTATION.
+CLASS ltcl_object_tabl_mock IMPLEMENTATION.
 
   METHOD zif_abapgit_object~is_locked.
 
     CASE ms_item-obj_name.
-      WHEN 'Z_TEST_DDLS'.
+      WHEN 'Z_TEST_TABL'.
 
         rv_is_locked = abap_true.
 
-      WHEN 'Z_TEST_DDLS2'.
+      WHEN 'Z_TEST_TABL_2'.
 
         rv_is_locked = abap_false.
 
@@ -385,7 +385,7 @@ CLASS ltcl_check_objects_locked IMPLEMENTATION.
 
   METHOD given_locked_object.
 
-    given_object( 'Z_TEST_DDLS' ).
+    given_object( 'Z_TEST_TABL' ).
 
   ENDMETHOD.
 
@@ -406,7 +406,7 @@ CLASS ltcl_check_objects_locked IMPLEMENTATION.
   METHOD then_exception_shd_be_raised.
 
     cl_abap_unit_assert=>assert_equals(
-      exp = |Object DDLS Z_TEST_DDLS is locked. Action not possible.|
+      exp = |Object TABL Z_TEST_TABL is locked. Action not possible.|
       act = mv_exception_text ).
 
   ENDMETHOD.
@@ -414,7 +414,7 @@ CLASS ltcl_check_objects_locked IMPLEMENTATION.
 
   METHOD given_not_locked_object.
 
-    given_object( 'Z_TEST_DDLS2' ).
+    given_object( 'Z_TEST_TABL_2' ).
 
   ENDMETHOD.
 
@@ -429,7 +429,7 @@ CLASS ltcl_check_objects_locked IMPLEMENTATION.
   METHOD given_object.
 
     CONSTANTS:
-      lc_obj_type TYPE string VALUE 'DDLS'.
+      lc_obj_type TYPE string VALUE 'TABL'.
 
     DATA:
       ls_item               LIKE LINE OF mt_given_items,
@@ -441,7 +441,7 @@ CLASS ltcl_check_objects_locked IMPLEMENTATION.
 
     ls_obj_serializer_map-item-obj_type = lc_obj_type.
     ls_obj_serializer_map-item-obj_name = iv_object_name.
-    ls_obj_serializer_map-metadata-class = '\CLASS-POOL=ZCL_ABAPGIT_OBJECTS\CLASS=LTCL_OBJECT_DDLS_MOCK'.
+    ls_obj_serializer_map-metadata-class = '\CLASS-POOL=ZCL_ABAPGIT_OBJECTS\CLASS=LTCL_OBJECT_TABL_MOCK'.
     INSERT ls_obj_serializer_map INTO TABLE zcl_abapgit_objects=>gt_obj_serializer_map.
 
   ENDMETHOD.
