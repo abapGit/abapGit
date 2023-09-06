@@ -303,6 +303,9 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
 
 
   METHOD zif_abapgit_oo_object_fnc~get_interface_properties.
+
+    DATA li_sap_report TYPE REF TO zif_abapgit_sap_report.
+
     CALL FUNCTION 'SEO_CLIF_GET'
       EXPORTING
         cifkey       = is_interface_key
@@ -332,8 +335,8 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
       rs_interface_properties-r3release,
       rs_interface_properties-version.
 
-    zcl_abapgit_factory=>get_sap_report( )->clear_abap_language_version(
-      CHANGING cv_version = rs_interface_properties-unicode ).
+    li_sap_report = zcl_abapgit_factory=>get_sap_report( ).
+    li_sap_report->clear_abap_language_version( CHANGING cv_version = rs_interface_properties-unicode ).
 
   ENDMETHOD.
 ENDCLASS.
