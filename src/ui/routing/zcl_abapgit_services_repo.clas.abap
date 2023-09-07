@@ -114,6 +114,9 @@ CLASS zcl_abapgit_services_repo DEFINITION
         iv_devclass TYPE scompkdtln-devclass
       RAISING
         zcx_abapgit_exception.
+    CLASS-METHODS check_for_restart
+      IMPORTING
+        !io_repo TYPE REF TO zif_abapgit_repo.
 ENDCLASS.
 
 
@@ -187,6 +190,37 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
         " If not, prompt to create it
         create_package( iv_package ).
       ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD check_for_restart.
+
+    CONSTANTS:
+      lc_abapgit_prog TYPE progname VALUE `ZABAPGIT`.
+
+    DATA lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
+
+    IF io_repo->is_offline( ) = abap_true.
+      RETURN.
+    ENDIF.
+
+    lo_repo_online ?= io_repo.
+
+    " If abapGit was used to update itself, then restart to avoid LOAD_PROGRAM_&_MISMATCH dumps
+    " because abapGit code was changed at runtime
+    IF zcl_abapgit_ui_factory=>get_frontend_services( )->gui_is_available( ) = abap_true AND
+       zcl_abapgit_url=>is_abapgit_repo( lo_repo_online->get_url( ) ) = abap_true AND
+       sy-batch = abap_false AND
+       sy-cprog = lc_abapgit_prog.
+
+      IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_show_default_repo( ) = abap_false.
+        MESSAGE 'abapGit was updated and will restart itself' TYPE 'I'.
+      ENDIF.
+
+      SUBMIT (sy-cprog).
+
     ENDIF.
 
   ENDMETHOD.
@@ -326,6 +360,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       lv_msg = |Repository { io_repo->get_name( ) } successfully pulled for package { io_repo->get_package( ) }|.
       MESSAGE lv_msg TYPE 'S'.
     ENDIF.
+
+    check_for_restart( io_repo ).
 
   ENDMETHOD.
 
