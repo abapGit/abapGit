@@ -140,7 +140,6 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
   PRIVATE SECTION.
 
-    METHODS check_for_restart .
     METHODS check_language
       RAISING
         zcx_abapgit_exception .
@@ -205,29 +204,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
                 |ABAP Language Version of linked package is not compatible with repository settings.|.
       zcx_abapgit_exception=>raise( iv_text = lv_text ).
     ENDIF.
-  ENDMETHOD.
-
-
-  METHOD check_for_restart.
-
-    CONSTANTS:
-      lc_abapgit_prog TYPE progname VALUE `ZABAPGIT`.
-
-    " If abapGit was used to update itself, then restart to avoid LOAD_PROGRAM_&_MISMATCH dumps
-    " because abapGit code was changed at runtime
-    IF zcl_abapgit_ui_factory=>get_frontend_services( )->gui_is_available( ) = abap_true AND
-       zcl_abapgit_url=>is_abapgit_repo( ms_data-url ) = abap_true AND
-       sy-batch = abap_false AND
-       sy-cprog = lc_abapgit_prog.
-
-      IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_show_default_repo( ) = abap_false.
-        MESSAGE 'abapGit was updated and will restart itself' TYPE 'I'.
-      ENDIF.
-
-      SUBMIT (sy-cprog).
-
-    ENDIF.
-
   ENDMETHOD.
 
 
@@ -733,8 +709,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     update_last_deserialize( ).
 
     COMMIT WORK AND WAIT.
-
-    check_for_restart( ).
 
   ENDMETHOD.
 
