@@ -575,6 +575,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
           iv_obj_name           = is_tadir-obj_name
           iv_devclass           = is_tadir-devclass
           iv_path               = is_tadir-path
+          iv_srcsystem          = is_tadir-srcsystem
           iv_language           = ms_i18n_params-main_language
           iv_main_language_only = ms_i18n_params-main_language_only
           it_translation_langs  = ms_i18n_params-translation_languages
