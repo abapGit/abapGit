@@ -89,7 +89,8 @@ CLASS zcl_abapgit_stage_logic IMPLEMENTATION.
 
     rs_files-local  = io_repo->get_files_local( ii_obj_filter = ii_obj_filter ).
     rs_files-remote = io_repo->get_files_remote( ii_obj_filter ).
-    rs_files-status = zcl_abapgit_repo_status=>calculate( io_repo ).
+    rs_files-status = zcl_abapgit_repo_status=>calculate( io_repo = io_repo
+                                                          ii_obj_filter = ii_obj_filter ).
 
     remove_identical( CHANGING cs_files = rs_files ).
     remove_ignored( EXPORTING io_repo  = io_repo
