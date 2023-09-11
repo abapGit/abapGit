@@ -40,7 +40,7 @@ CLASS ltd_repo_srv DEFINITION FINAL FOR TESTING
       IMPORTING !display_name TYPE csequence.
 
   PRIVATE SECTION.
-    DATA repositories TYPE STANDARD TABLE OF REF TO ltd_repo.
+    DATA mt_repositories TYPE STANDARD TABLE OF REF TO ltd_repo.
 ENDCLASS.
 
 
@@ -51,7 +51,7 @@ CLASS ltcl_render_repo DEFINITION FINAL FOR TESTING
   PRIVATE SECTION.
     DATA:
       mo_chunk_lib TYPE REF TO zcl_abapgit_gui_chunk_lib.
-    DATA repo_srv TYPE REF TO ltd_repo_srv.
+    DATA mo_repo_srv TYPE REF TO ltd_repo_srv.
 
     METHODS:
       setup,
@@ -100,21 +100,21 @@ ENDCLASS.
 CLASS ltd_repo_srv IMPLEMENTATION.
 
   METHOD add_repository.
-    DATA new_repo TYPE REF TO ltd_repo.
+    DATA lo_new_repo TYPE REF TO ltd_repo.
 
-    CREATE OBJECT new_repo.
-    new_repo->set_display_name( display_name ).
+    CREATE OBJECT lo_new_repo.
+    lo_new_repo->set_display_name( display_name ).
 
-    APPEND new_repo TO repositories.
+    APPEND lo_new_repo TO mt_repositories.
   ENDMETHOD.
 
   METHOD zif_abapgit_repo_srv~list.
-    DATA local_repo TYPE REF TO ltd_repo.
-    DATA repo TYPE REF TO zif_abapgit_repo.
+    DATA lo_test_double_repo TYPE REF TO ltd_repo.
+    DATA lo_abapgit_repo TYPE REF TO zif_abapgit_repo.
 
-    LOOP AT repositories INTO local_repo.
-      repo ?= local_repo.
-      APPEND local_repo TO rt_list.
+    LOOP AT mt_repositories INTO lo_test_double_repo.
+      lo_abapgit_repo ?= lo_test_double_repo.
+      APPEND lo_test_double_repo TO rt_list.
     ENDLOOP.
   ENDMETHOD.
 
@@ -237,73 +237,42 @@ ENDCLASS.
 CLASS ltcl_render_repo IMPLEMENTATION.
 
   METHOD setup.
-    CREATE OBJECT repo_srv.
-    zcl_abapgit_repo_srv=>inject_instance( repo_srv ).
+    CREATE OBJECT mo_repo_srv.
+    zcl_abapgit_repo_srv=>inject_instance( mo_repo_srv ).
 
     CREATE OBJECT mo_chunk_lib.
   ENDMETHOD.
 
 
   METHOD render_repo_palette_display_nm.
-    DATA ag_exception TYPE REF TO zcx_abapgit_exception.
-    DATA html_chunk TYPE REF TO zif_abapgit_html.
-    DATA html_string TYPE string.
+    DATA lx_abapgit TYPE REF TO zcx_abapgit_exception.
+    DATA lo_html TYPE REF TO zif_abapgit_html.
+    DATA lv_html_as_string TYPE string.
 
-    repo_srv->add_repository( display_name = |Simple test| ).
+    mo_repo_srv->add_repository( display_name = |Simple test| ).
+    mo_repo_srv->add_repository( display_name = |'Single' quotation marks| ).
+    mo_repo_srv->add_repository( display_name = |"Double quotation marks"| ).
+
     TRY.
-        mo_chunk_lib->render_repo_palette(
-          EXPORTING
-            iv_action = zif_abapgit_definitions=>c_action-go_repo
-          RECEIVING
-            ri_html   = html_chunk ).
-        html_chunk->render(
-          RECEIVING
-            rv_html = html_string ).
+        lo_html = mo_chunk_lib->render_repo_palette(
+                      iv_action = zif_abapgit_definitions=>c_action-go_repo ).
+        lv_html_as_string = lo_html->render( ).
+
         cl_abap_unit_assert=>assert_char_cp(
-            act = html_string
+            act = lv_html_as_string
             exp = |*displayName: "Simple test"*| ).
-      CATCH zcx_abapgit_exception INTO ag_exception.
-        cl_abap_unit_assert=>fail(
-            msg    = 'abapGit exception'
-            detail = ag_exception->get_text( ) ).
-    ENDTRY.
 
-    repo_srv->add_repository( display_name = |'Single' quotation marks| ).
-    TRY.
-        mo_chunk_lib->render_repo_palette(
-          EXPORTING
-            iv_action = zif_abapgit_definitions=>c_action-go_repo
-          RECEIVING
-            ri_html   = html_chunk ).
-        html_chunk->render(
-          RECEIVING
-            rv_html = html_string ).
         cl_abap_unit_assert=>assert_char_cp(
-            act = html_string
+            act = lv_html_as_string
             exp = |*displayName: "\\'Single\\' quotation marks"*| ).
-      CATCH zcx_abapgit_exception INTO ag_exception.
-        cl_abap_unit_assert=>fail(
-            msg    = 'abapGit exception'
-            detail = ag_exception->get_text( ) ).
-    ENDTRY.
 
-    repo_srv->add_repository( display_name = |"Double quotation marks"| ).
-    TRY.
-        mo_chunk_lib->render_repo_palette(
-          EXPORTING
-            iv_action = zif_abapgit_definitions=>c_action-go_repo
-          RECEIVING
-            ri_html   = html_chunk ).
-        html_chunk->render(
-          RECEIVING
-            rv_html = html_string ).
         cl_abap_unit_assert=>assert_char_cp(
-            act = html_string
+            act = lv_html_as_string
             exp = |*displayName: "\\"Double quotation marks\\""*| ).
-      CATCH zcx_abapgit_exception INTO ag_exception.
+      CATCH zcx_abapgit_exception INTO lx_abapgit.
         cl_abap_unit_assert=>fail(
             msg    = 'abapGit exception'
-            detail = ag_exception->get_text( ) ).
+            detail = lx_abapgit->get_text( ) ).
     ENDTRY.
   ENDMETHOD.
 
