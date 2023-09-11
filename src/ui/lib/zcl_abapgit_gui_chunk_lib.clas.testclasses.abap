@@ -100,7 +100,9 @@ ENDCLASS.
 CLASS ltd_repo_srv IMPLEMENTATION.
 
   METHOD add_repository.
-    DATA(new_repo) = NEW ltd_repo( ).
+    DATA new_repo TYPE REF TO ltd_repo.
+
+    CREATE OBJECT new_repo.
     new_repo->set_display_name( display_name ).
 
     APPEND new_repo TO repositories.
@@ -133,6 +135,7 @@ CLASS ltcl_render_repo IMPLEMENTATION.
   METHOD setup.
     CREATE OBJECT repo_srv.
     zcl_abapgit_repo_srv=>inject_instance( ii_srv = repo_srv ).
+
     CREATE OBJECT mo_chunk_lib.
   ENDMETHOD.
 
