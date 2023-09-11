@@ -163,7 +163,7 @@ CLASS zcl_abapgit_abap_language_vers IMPLEMENTATION.
     ELSE.
       " Differentiate between source code object and non-source code objects
       CASE iv_object_type.
-        WHEN 'BDEF' OR 'CLAS' OR 'FUGR' OR 'FUGS' OR 'INTF' OR 'PROG'.
+        WHEN 'BDEF' OR 'CLAS' OR 'FUGR' OR 'FUGS' OR 'INTF' OR 'PROG' OR 'TYPE'.
           rv_default_abap_langu_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
         WHEN OTHERS.
           rv_default_abap_langu_version = zif_abapgit_aff_types_v1=>co_abap_language_version-standard.

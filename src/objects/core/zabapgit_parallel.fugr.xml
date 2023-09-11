@@ -102,7 +102,7 @@
       </RSIMP>
       <RSIMP>
        <PARAMETER>IV_ABAP_LANGUAGE_VERS</PARAMETER>
-       <TYP>CHAR1</TYP>
+       <TYP>UCCHECK</TYP>
       </RSIMP>
       <RSIMP>
        <PARAMETER>IV_LANGUAGE</PARAMETER>
@@ -174,6 +174,7 @@
       <RSFDO>
        <PARAMETER>IV_PATH</PARAMETER>
        <KIND>P</KIND>
+       <STEXT>Path</STEXT>
       </RSFDO>
       <RSFDO>
        <PARAMETER>IV_MAIN_LANGUAGE_ONLY</PARAMETER>
