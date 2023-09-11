@@ -25,7 +25,7 @@ CLASS ltd_repo DEFINITION FINAL FOR TESTING
     DATA ms_data TYPE zif_abapgit_persistence=>ty_repo READ-ONLY.
 
     METHODS set_display_name
-      IMPORTING !display_name TYPE csequence.
+      IMPORTING !iv_display_name TYPE csequence.
 ENDCLASS.
 
 
@@ -176,7 +176,7 @@ ENDCLASS.
 CLASS ltd_repo IMPLEMENTATION.
 
   METHOD set_display_name.
-    ms_data-local_settings-display_name = display_name.
+    ms_data-local_settings-display_name = iv_display_name.
   ENDMETHOD.
 
   METHOD zif_abapgit_repo~get_name.
