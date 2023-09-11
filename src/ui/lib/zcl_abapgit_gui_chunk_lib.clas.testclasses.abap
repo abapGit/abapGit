@@ -20,7 +20,7 @@ CLASS ltd_repo DEFINITION FINAL FOR TESTING
   RISK LEVEL HARMLESS.
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_repo PARTIALLY IMPLEMENTED.
+    INTERFACES zif_abapgit_repo.
 
     DATA ms_data TYPE zif_abapgit_persistence=>ty_repo READ-ONLY.
 
@@ -34,7 +34,7 @@ CLASS ltd_repo_srv DEFINITION FINAL FOR TESTING
   RISK LEVEL HARMLESS.
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_repo_srv PARTIALLY IMPLEMENTED.
+    INTERFACES zif_abapgit_repo_srv.
 
     METHODS add_repository
       IMPORTING !display_name TYPE csequence.
@@ -118,6 +118,58 @@ CLASS ltd_repo_srv IMPLEMENTATION.
     ENDLOOP.
   ENDMETHOD.
 
+  METHOD zif_abapgit_repo_srv~delete.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_srv~get.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_srv~get_label_list.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_srv~get_repo_from_package.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_srv~get_repo_from_url.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_srv~init.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_srv~is_repo_installed.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_srv~list_favorites.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_srv~new_offline.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_srv~new_online.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_srv~purge.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_srv~validate_package.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo_srv~validate_url.
+
+  ENDMETHOD.
+
 ENDCLASS.
 
 
@@ -129,6 +181,54 @@ CLASS ltd_repo IMPLEMENTATION.
 
   METHOD zif_abapgit_repo~get_name.
     rv_name = ms_data-local_settings-display_name.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~checksums.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~deserialize.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~deserialize_checks.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_dot_abapgit.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_files_local.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_files_remote.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_key.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_local_settings.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_package.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~is_offline.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~refresh.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~set_dot_abapgit.
+
   ENDMETHOD.
 
 ENDCLASS.
