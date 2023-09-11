@@ -1043,7 +1043,8 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     LOOP AT lt_repo_list ASSIGNING <ls_repo>.
       lv_repo_json = |\{ key: "{ <ls_repo>-key
         }", isOffline: "{ <ls_repo>-offline
-        }", displayName: "{ <ls_repo>-local_settings-display_name }"  \}|.
+        }", displayName: "{ escape( val = <ls_repo>-local_settings-display_name
+                                    format = cl_abap_format=>e_html_js ) }"  \}|.
       IF sy-tabix < lv_size.
         lv_repo_json = lv_repo_json && ','.
       ENDIF.
