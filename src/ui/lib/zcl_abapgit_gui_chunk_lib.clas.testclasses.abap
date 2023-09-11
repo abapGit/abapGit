@@ -55,7 +55,7 @@ CLASS ltcl_render_repo DEFINITION FINAL FOR TESTING
 
     METHODS:
       setup,
-      render_repo_palette FOR TESTING RAISING cx_static_check.
+      render_repo_palette_display_nm FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
 
@@ -109,8 +109,12 @@ CLASS ltd_repo_srv IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_repo_srv~list.
-    LOOP AT repositories INTO DATA(repo).
-      APPEND CAST #( repo ) TO rt_list.
+    DATA local_repo TYPE REF TO ltd_repo.
+    DATA repo TYPE REF TO zif_abapgit_repo.
+
+    LOOP AT repositories INTO local_repo.
+      repo ?= local_repo.
+      APPEND local_repo TO rt_list.
     ENDLOOP.
   ENDMETHOD.
 
@@ -134,13 +138,13 @@ CLASS ltcl_render_repo IMPLEMENTATION.
 
   METHOD setup.
     CREATE OBJECT repo_srv.
-    zcl_abapgit_repo_srv=>inject_instance( ii_srv = repo_srv ).
+    zcl_abapgit_repo_srv=>inject_instance( repo_srv ).
 
     CREATE OBJECT mo_chunk_lib.
   ENDMETHOD.
 
 
-  METHOD render_repo_palette.
+  METHOD render_repo_palette_display_nm.
     DATA ag_exception TYPE REF TO zcx_abapgit_exception.
     DATA html_chunk TYPE REF TO zif_abapgit_html.
     DATA html_string TYPE string.
