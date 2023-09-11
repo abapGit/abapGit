@@ -37,7 +37,7 @@ CLASS ltd_repo_srv DEFINITION FINAL FOR TESTING
     INTERFACES zif_abapgit_repo_srv.
 
     METHODS add_repository
-      IMPORTING !display_name TYPE csequence.
+      IMPORTING !iv_display_name TYPE csequence.
 
   PRIVATE SECTION.
     DATA mt_repositories TYPE STANDARD TABLE OF REF TO ltd_repo.
@@ -103,7 +103,7 @@ CLASS ltd_repo_srv IMPLEMENTATION.
     DATA lo_new_repo TYPE REF TO ltd_repo.
 
     CREATE OBJECT lo_new_repo.
-    lo_new_repo->set_display_name( display_name ).
+    lo_new_repo->set_display_name( iv_display_name ).
 
     APPEND lo_new_repo TO mt_repositories.
   ENDMETHOD.
@@ -249,13 +249,12 @@ CLASS ltcl_render_repo IMPLEMENTATION.
     DATA lo_html TYPE REF TO zif_abapgit_html.
     DATA lv_html_as_string TYPE string.
 
-    mo_repo_srv->add_repository( display_name = |Simple test| ).
-    mo_repo_srv->add_repository( display_name = |'Single' quotation marks| ).
-    mo_repo_srv->add_repository( display_name = |"Double quotation marks"| ).
+    mo_repo_srv->add_repository( |Simple test| ).
+    mo_repo_srv->add_repository( |'Single' quotation marks| ).
+    mo_repo_srv->add_repository( |"Double quotation marks"| ).
 
     TRY.
-        lo_html = mo_chunk_lib->render_repo_palette(
-                      iv_action = zif_abapgit_definitions=>c_action-go_repo ).
+        lo_html = mo_chunk_lib->render_repo_palette( zif_abapgit_definitions=>c_action-go_repo ).
         lv_html_as_string = lo_html->render( ).
 
         cl_abap_unit_assert=>assert_char_cp(
@@ -269,6 +268,7 @@ CLASS ltcl_render_repo IMPLEMENTATION.
         cl_abap_unit_assert=>assert_char_cp(
             act = lv_html_as_string
             exp = |*displayName: "\\"Double quotation marks\\""*| ).
+
       CATCH zcx_abapgit_exception INTO lx_abapgit.
         cl_abap_unit_assert=>fail(
             msg    = 'abapGit exception'
