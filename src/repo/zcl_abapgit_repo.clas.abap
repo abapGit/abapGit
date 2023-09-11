@@ -196,10 +196,12 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     DATA lo_abapgit_abap_language_vers TYPE REF TO zcl_abapgit_abap_language_vers.
     DATA lv_text TYPE string.
-    CREATE OBJECT lo_abapgit_abap_language_vers.
 
-    IF lo_abapgit_abap_language_vers->is_import_allowed( io_repo = me
-                                                         iv_package = ms_data-package ) = abap_false.
+    CREATE OBJECT lo_abapgit_abap_language_vers
+      EXPORTING
+        io_dot_abapgit = get_dot_abapgit( ).
+
+    IF lo_abapgit_abap_language_vers->is_import_allowed( ms_data-package ) = abap_false.
       lv_text = |Repository cannot be imported. | &&
                 |ABAP Language Version of linked package is not compatible with repository settings.|.
       zcx_abapgit_exception=>raise( iv_text = lv_text ).

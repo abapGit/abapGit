@@ -64,7 +64,7 @@ CLASS zcl_abapgit_abap_language_vers IMPLEMENTATION.
 
     lo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
 
-    IF lo_settings->is_feature_enabled( zcl_abapgit_abap_language_vers=>c_feature_flag ) = abap_false.
+    IF lo_settings->is_feature_enabled( c_feature_flag ) = abap_false.
       mv_feature_enabled = abap_false.
     ELSEIF get_abap_language_vers_by_repo( ) = zif_abapgit_dot_abapgit=>c_abap_language_version-undefined.
       mv_feature_enabled = abap_false.
