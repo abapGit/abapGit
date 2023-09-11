@@ -146,6 +146,7 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
     rv_updated = zcl_abapgit_factory=>get_sap_report( )->update_report(
       iv_name    = iv_program
       iv_package = iv_package
+      iv_version = 'X' "TODO
       it_source  = it_source ).
   ENDMETHOD.
 
@@ -180,11 +181,6 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
     " Hardcode STATE (#2612)
     ls_properties = cg_properties.
     ls_properties-state = seoc_state_implemented.
-
-    ls_properties-unicode = zcl_abapgit_factory=>get_sap_report( )->get_abap_language_version(
-      iv_object_type = 'INTF'
-      iv_package     = iv_package
-      iv_version     = ls_properties-unicode ).
 
     TRY.
         CALL FUNCTION 'SEO_INTERFACE_CREATE_COMPLETE'
@@ -304,8 +300,6 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
 
   METHOD zif_abapgit_oo_object_fnc~get_interface_properties.
 
-    DATA li_sap_report TYPE REF TO zif_abapgit_sap_report.
-
     CALL FUNCTION 'SEO_CLIF_GET'
       EXPORTING
         cifkey       = is_interface_key
@@ -334,9 +328,6 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
       rs_interface_properties-chgdanyon,
       rs_interface_properties-r3release,
       rs_interface_properties-version.
-
-    li_sap_report = zcl_abapgit_factory=>get_sap_report( ).
-    li_sap_report->clear_abap_language_version( CHANGING cv_version = rs_interface_properties-unicode ).
 
   ENDMETHOD.
 ENDCLASS.

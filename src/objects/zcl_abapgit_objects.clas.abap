@@ -677,7 +677,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       ii_log->add_info( |>>> Deserializing { lines( lt_items ) } objects| ).
     ENDIF.
 
-    CREATE OBJECT lo_abap_language_vers.
+    CREATE OBJECT lo_abap_language_vers
+      EXPORTING
+        io_dot_abapgit = io_repo->get_dot_abapgit( ).
 
     lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
     LOOP AT lt_results ASSIGNING <ls_result>.
@@ -711,9 +713,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           ENDIF.
 
           ls_item-devclass = lv_package.
-          ls_item-abap_language_version = lo_abap_language_vers->get_abap_language_vers_by_objt(
-                                                                    iv_object_type = ls_item-obj_type
-                                                                    iv_package = lv_package ).
+          ls_item-abap_language_version = lo_abap_language_vers->get_abap_language_version(
+            iv_object_type = ls_item-obj_type
+            iv_package     = lv_package ).
 
           IF <ls_result>-packmove = abap_true.
             " Move object to new package

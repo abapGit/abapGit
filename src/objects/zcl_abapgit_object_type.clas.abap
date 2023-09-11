@@ -143,6 +143,7 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
       zcl_abapgit_factory=>get_sap_report( )->insert_report(
         iv_name    = lv_progname
         iv_package = iv_package
+        iv_version = 'X'
         it_source  = lt_source ).
     ENDIF.
 

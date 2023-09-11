@@ -101,6 +101,10 @@
        <TYP>TADIR-SRCSYSTEM</TYP>
       </RSIMP>
       <RSIMP>
+       <PARAMETER>IV_ABAP_LANGUAGE_VERS</PARAMETER>
+       <TYP>CHAR1</TYP>
+      </RSIMP>
+      <RSIMP>
        <PARAMETER>IV_LANGUAGE</PARAMETER>
        <TYP>SY-LANGU</TYP>
       </RSIMP>
@@ -156,6 +160,11 @@
        <PARAMETER>IV_SRCSYSTEM</PARAMETER>
        <KIND>P</KIND>
        <STEXT>Original System of Object</STEXT>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>IV_ABAP_LANGUAGE_VERS</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>ABAP Language Version</STEXT>
       </RSFDO>
       <RSFDO>
        <PARAMETER>IV_LANGUAGE</PARAMETER>

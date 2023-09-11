@@ -7,18 +7,13 @@ CLASS zcl_abapgit_sap_report DEFINITION
 
     INTERFACES zif_abapgit_sap_report.
 
-    METHODS constructor.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
-
-    DATA mo_settings TYPE REF TO zcl_abapgit_settings.
 
     METHODS authorization_check
       IMPORTING
         iv_mode    TYPE csequence
         is_item    TYPE zif_abapgit_definitions=>ty_item
-        iv_version TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version OPTIONAL
       RAISING
         zcx_abapgit_exception.
 
@@ -41,7 +36,7 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
               suppress_corr_check            = abap_true
               suppress_language_check        = abap_true
               suppress_extend_dialog         = abap_true
-              abap_langu_version_upon_insert = iv_version " does not exist on lower releases
+              abap_langu_version_upon_insert = is_item-abap_language_version " does not exist on lower releases
             EXCEPTIONS
               canceled_in_corr               = 1
               enqueued_by_user               = 2
@@ -82,18 +77,6 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD constructor.
-    mo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_sap_report~clear_abap_language_version.
-    IF mo_settings->is_feature_enabled( zcl_abapgit_abap_language_vers=>c_feature_flag ) = abap_true.
-      CLEAR cv_version.
-    ENDIF.
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_sap_report~delete_report.
 
     authorization_check(
@@ -109,56 +92,20 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_sap_report~get_abap_language_version.
-
-    DATA lo_abap_language_vers TYPE REF TO zcl_abapgit_abap_language_vers.
-
-    IF mo_settings->is_feature_enabled( zcl_abapgit_abap_language_vers=>c_feature_flag ) = abap_true.
-      " Determine ABAP Language Version for source code
-      " https://github.com/abapGit/abapGit/issues/6154#issuecomment-1503566920)
-      CREATE OBJECT lo_abap_language_vers.
-
-      rv_version = lo_abap_language_vers->get_abap_language_vers_by_objt(
-        iv_object_type = iv_object_type
-        iv_package     = iv_package ).
-    ELSE.
-      rv_version = iv_version.
-    ENDIF.
-
-    " Fallback for ABAP source code based on environment
-    IF rv_version IS INITIAL.
-      IF zcl_abapgit_factory=>get_environment( )->is_sap_cloud_platform( ) = abap_true.
-        rv_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-cloud_development.
-      ELSE.
-        rv_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
-      ENDIF.
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_sap_report~insert_report.
-
-    DATA lv_version TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version.
-    DATA lv_obj_name TYPE e071-obj_name.
 
     ASSERT iv_state CA ' AI'.
     ASSERT iv_program_type CA ' 1FIJKMST'.
 
-    lv_version = zif_abapgit_sap_report~get_abap_language_version(
-      iv_object_type = 'PROG'
-      iv_package     = iv_package ).
-
     authorization_check(
-      iv_mode    = 'MODIFY'
-      is_item    = is_item
-      iv_version = lv_version ).
+      iv_mode = 'MODIFY'
+      is_item = is_item ).
 
     IF iv_state IS INITIAL.
       INSERT REPORT iv_name FROM it_source.
     ELSEIF iv_program_type IS INITIAL AND iv_extension_type IS INITIAL.
       INSERT REPORT iv_name FROM it_source
-        STATE   iv_state.
+        STATE iv_state.
     ELSEIF iv_extension_type IS INITIAL.
       INSERT REPORT iv_name FROM it_source
         STATE        iv_state
@@ -176,7 +123,7 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
 
     " In lower releases, INSERT REPORT does not support setting ABAP Language version (VERSION)
     " Therefore, update the flag directly
-    UPDATE progdir SET uccheck = lv_version WHERE name = iv_name AND state = iv_state.
+    UPDATE progdir SET uccheck = iv_version WHERE name = iv_name AND state = iv_state.
 
   ENDMETHOD.
 
@@ -208,8 +155,6 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
            rs_progdir-itime,
            rs_progdir-varcl,
            rs_progdir-state.
-
-    zif_abapgit_sap_report~clear_abap_language_version( CHANGING cv_version = rs_progdir-uccheck ).
 
   ENDMETHOD.
 
@@ -259,14 +204,10 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
     ls_progdir_new-fixpt   = is_progdir-fixpt.
     ls_progdir_new-appl    = is_progdir-appl.
     ls_progdir_new-rstat   = is_progdir-rstat.
+    ls_progdir_new-uccheck = is_progdir-uccheck.
     ls_progdir_new-sqlx    = is_progdir-sqlx.
     ls_progdir_new-clas    = is_progdir-clas.
     ls_progdir_new-secu    = is_progdir-secu.
-
-    ls_progdir_new-uccheck = zif_abapgit_sap_report~get_abap_language_version(
-      iv_object_type = 'PROG'
-      iv_package     = iv_package
-      iv_version     = is_progdir-uccheck ).
 
     CALL FUNCTION 'UPDATE_PROGDIR'
       EXPORTING
@@ -309,6 +250,7 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
         iv_program_type   = iv_program_type
         iv_extension_type = iv_extension_type
         iv_package        = iv_package
+        iv_version        = iv_version
         is_item           = is_item ).
 
       rv_updated = abap_true.

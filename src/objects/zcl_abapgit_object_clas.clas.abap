@@ -186,6 +186,8 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     ii_xml->read( EXPORTING iv_name = 'VSEOCLASS'
                   CHANGING  cg_data = ls_vseoclass ).
 
+    ls_vseoclass-unicode = ms_item-abap_language_version.
+
     ii_xml->read( EXPORTING iv_name = 'ATTRIBUTES'
                   CHANGING  cg_data = lt_attributes ).
 
@@ -205,15 +207,18 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     mi_object_oriented_object_fct->generate_locals(
       is_key                   = ls_class_key
       iv_package               = iv_package
+      iv_version               = ls_vseoclass-unicode
       it_local_definitions     = lt_local_definitions
       it_local_implementations = lt_local_implementations
       it_local_macros          = lt_local_macros
       it_local_test_classes    = lt_test_classes ).
 
     repo_apack_replacement( CHANGING ct_source = lt_source ).
+
     mi_object_oriented_object_fct->deserialize_source(
       is_key     = ls_class_key
       iv_package = iv_package
+      iv_version = ls_vseoclass-unicode
       it_source  = lt_source ).
 
     ii_xml->read( EXPORTING iv_name = 'DESCRIPTIONS'
@@ -302,6 +307,8 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     ii_xml->read( EXPORTING iv_name = 'VSEOCLASS'
                   CHANGING  cg_data = ls_vseoclass ).
+
+    ls_vseoclass-unicode = ms_item-abap_language_version.
 
     mi_object_oriented_object_fct->create(
       EXPORTING
@@ -670,6 +677,8 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     TRY.
         ls_vseoclass = mi_object_oriented_object_fct->get_class_properties( ls_clskey ).
+
+        ls_vseoclass-unicode = ms_item-abap_language_version.
 
       CLEANUP.
         zcl_abapgit_language=>restore_login_language( ).
