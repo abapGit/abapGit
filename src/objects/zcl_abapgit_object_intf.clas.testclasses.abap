@@ -135,7 +135,7 @@ CLASS ltcl_unit_test IMPLEMENTATION.
 
     ms_item-obj_name = 'ZIF_ABAPGIT_TEST_INTF'.
     ms_item-obj_type = 'INTF'.
-    ms_item-abap_language_version = 'X'.
+    ms_item-abap_language_version = 'X'. " assume standard ABAP
 
     CREATE OBJECT lo_cut
       EXPORTING

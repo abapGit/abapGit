@@ -13,10 +13,10 @@ CLASS zcl_abapgit_abap_language_vers DEFINITION
 
     METHODS get_abap_language_vers_by_objt
       IMPORTING
-        !iv_object_type                 TYPE trobjtype
-        !iv_package                     TYPE devclass
+        !iv_object_type                      TYPE trobjtype
+        !iv_package                          TYPE devclass
       RETURNING
-        VALUE(rv_abap_language_version) TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version.
+        VALUE(rv_allowed_abap_langu_version) TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version.
 
     METHODS get_repo_abap_language_version
       RETURNING
@@ -127,29 +127,28 @@ CLASS zcl_abapgit_abap_language_vers IMPLEMENTATION.
     DATA lo_abap_language_version TYPE REF TO object.
 
     IF mv_has_abap_language_vers = abap_false.
-      rv_abap_language_version = get_default_abap_language_vers( iv_object_type ).
-    ELSE.
-
-      lv_class = 'CL_ABAP_LANGUAGE_VERSION'.
-
-      TRY.
-
-          CALL METHOD (lv_class)=>('GET_INSTANCE')
-            RECEIVING
-              ro_version_handler = lo_abap_language_version.
-
-          CALL METHOD lo_abap_language_version->('IF_ABAP_LANGUAGE_VERSION~GET_DEFAULT_VERSION')
-            EXPORTING
-              iv_object_type     = iv_object_type
-              iv_package         = iv_package
-            RECEIVING
-              rv_default_version = rv_abap_language_version.
-
-        CATCH cx_root.
-          rv_abap_language_version = get_default_abap_language_vers( iv_object_type ).
-      ENDTRY.
-
+      rv_allowed_abap_langu_version = get_default_abap_language_vers( iv_object_type ).
+      RETURN. ">>>
     ENDIF.
+
+    lv_class = 'CL_ABAP_LANGUAGE_VERSION'.
+
+    TRY.
+
+        CALL METHOD (lv_class)=>('GET_INSTANCE')
+          RECEIVING
+            ro_version_handler = lo_abap_language_version.
+
+        CALL METHOD lo_abap_language_version->('IF_ABAP_LANGUAGE_VERSION~GET_DEFAULT_VERSION')
+          EXPORTING
+            iv_object_type     = iv_object_type
+            iv_package         = iv_package
+          RECEIVING
+            rv_default_version = rv_allowed_abap_langu_version.
+
+      CATCH cx_root.
+        rv_allowed_abap_langu_version = get_default_abap_language_vers( iv_object_type ).
+    ENDTRY.
 
   ENDMETHOD.
 
