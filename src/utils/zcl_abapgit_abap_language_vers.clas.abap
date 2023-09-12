@@ -11,7 +11,7 @@ CLASS zcl_abapgit_abap_language_vers DEFINITION
       IMPORTING
         !io_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit.
 
-    METHODS get_objt_abap_language_version
+    METHODS get_abap_language_vers_by_objt
       IMPORTING
         !iv_object_type                 TYPE trobjtype
         !iv_package                     TYPE devclass
@@ -121,33 +121,7 @@ CLASS zcl_abapgit_abap_language_vers IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_abap_language_vers_by_repo.
-    rv_abap_language_version = mo_dot_abapgit->get_abap_language_version( ).
-    IF rv_abap_language_version IS INITIAL.
-      rv_abap_language_version = zif_abapgit_dot_abapgit=>c_abap_language_version-undefined.
-    ENDIF.
-  ENDMETHOD.
-
-
-  METHOD get_default_abap_language_vers.
-
-    IF zcl_abapgit_factory=>get_environment( )->is_sap_cloud_platform( ) = abap_true.
-      " On BTP, default to ABAP for Cloud Development
-      rv_abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version_cloud-cloud_development.
-    ELSE.
-      " Differentiate between source code object and non-source code objects
-      CASE iv_object_type.
-        WHEN 'BDEF' OR 'CLAS' OR 'FUGR' OR 'FUGS' OR 'INTF' OR 'PROG' OR 'TYPE'.
-          rv_abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
-        WHEN OTHERS.
-          rv_abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version-standard.
-      ENDCASE.
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD get_objt_abap_language_version.
+  METHOD get_abap_language_vers_by_objt.
 
     DATA lv_class TYPE string.
     DATA lo_abap_language_version TYPE REF TO object.
@@ -175,6 +149,32 @@ CLASS zcl_abapgit_abap_language_vers IMPLEMENTATION.
           rv_abap_language_version = get_default_abap_language_vers( iv_object_type ).
       ENDTRY.
 
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_abap_language_vers_by_repo.
+    rv_abap_language_version = mo_dot_abapgit->get_abap_language_version( ).
+    IF rv_abap_language_version IS INITIAL.
+      rv_abap_language_version = zif_abapgit_dot_abapgit=>c_abap_language_version-undefined.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD get_default_abap_language_vers.
+
+    IF zcl_abapgit_factory=>get_environment( )->is_sap_cloud_platform( ) = abap_true.
+      " On BTP, default to ABAP for Cloud Development
+      rv_abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version_cloud-cloud_development.
+    ELSE.
+      " Differentiate between source code object and non-source code objects
+      CASE iv_object_type.
+        WHEN 'BDEF' OR 'CLAS' OR 'FUGR' OR 'FUGS' OR 'INTF' OR 'PROG' OR 'TYPE'.
+          rv_abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
+        WHEN OTHERS.
+          rv_abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version-standard.
+      ENDCASE.
     ENDIF.
 
   ENDMETHOD.

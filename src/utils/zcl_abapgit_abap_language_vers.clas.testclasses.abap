@@ -236,14 +236,14 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
 
     " source code
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->get_objt_abap_language_version(
+      act = mo_cut->get_abap_language_vers_by_objt(
               iv_object_type = 'INTF'
               iv_package     = '$TMP' )
       exp = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard ).
 
     " non-source code
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->get_objt_abap_language_version(
+      act = mo_cut->get_abap_language_vers_by_objt(
               iv_object_type = 'TABL'
               iv_package     = '$TMP' )
       exp = zif_abapgit_aff_types_v1=>co_abap_language_version-standard ).
@@ -253,14 +253,14 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
 
     " source code
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->get_objt_abap_language_version(
+      act = mo_cut->get_abap_language_vers_by_objt(
               iv_object_type = 'INTF'
               iv_package     = c_cloud_package )
       exp = zif_abapgit_aff_types_v1=>co_abap_language_version_src-cloud_development ).
 
     " non-source code
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->get_objt_abap_language_version(
+      act = mo_cut->get_abap_language_vers_by_objt(
               iv_object_type = 'TABL'
               iv_package     = c_cloud_package )
       exp = zif_abapgit_aff_types_v1=>co_abap_language_version-cloud_development ).
