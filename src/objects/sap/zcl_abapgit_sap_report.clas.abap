@@ -12,8 +12,8 @@ CLASS zcl_abapgit_sap_report DEFINITION
 
     METHODS authorization_check
       IMPORTING
-        iv_mode    TYPE csequence
-        is_item    TYPE zif_abapgit_definitions=>ty_item
+        iv_mode TYPE csequence
+        is_item TYPE zif_abapgit_definitions=>ty_item
       RAISING
         zcx_abapgit_exception.
 
