@@ -18,9 +18,8 @@ CLASS zcl_abapgit_sap_report DEFINITION
 
     METHODS authorization_check
       IMPORTING
-        iv_mode    TYPE csequence
-        is_item    TYPE zif_abapgit_definitions=>ty_item
-        iv_version TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version OPTIONAL
+        iv_mode TYPE csequence
+        is_item TYPE zif_abapgit_definitions=>ty_item
       RAISING
         zcx_abapgit_exception.
 
@@ -34,26 +33,48 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
   METHOD authorization_check.
 
     IF is_item IS NOT INITIAL.
-      " TODO: Check for ABAP Language Version (ABAP_LANGU_VERSION_UPON_INSERT = iv_version)
-      CALL FUNCTION 'RS_ACCESS_PERMISSION'
-        EXPORTING
-          mode                     = iv_mode
-          object                   = is_item-obj_name
-          object_class             = is_item-obj_type
-          suppress_corr_check      = abap_true
-          suppress_language_check  = abap_true
-          suppress_extend_dialog   = abap_true
-        EXCEPTIONS
-          canceled_in_corr         = 1
-          enqueued_by_user         = 2
-          enqueue_system_failure   = 3
-          illegal_parameter_values = 4
-          locked_by_author         = 5
-          no_modify_permission     = 6
-          no_show_permission       = 7
-          permission_failure       = 8
-          request_language_denied  = 9
-          OTHERS                   = 10.
+      TRY.
+          CALL FUNCTION 'RS_ACCESS_PERMISSION'
+            EXPORTING
+              mode                           = iv_mode
+              object                         = is_item-obj_name
+              object_class                   = is_item-obj_type
+              suppress_corr_check            = abap_true
+              suppress_language_check        = abap_true
+              suppress_extend_dialog         = abap_true
+              abap_langu_version_upon_insert = is_item-abap_language_version " does not exist on lower releases
+            EXCEPTIONS
+              canceled_in_corr               = 1
+              enqueued_by_user               = 2
+              enqueue_system_failure         = 3
+              illegal_parameter_values       = 4
+              locked_by_author               = 5
+              no_modify_permission           = 6
+              no_show_permission             = 7
+              permission_failure             = 8
+              request_language_denied        = 9
+              OTHERS                         = 10.
+        CATCH cx_sy_dyn_call_param_not_found.
+          CALL FUNCTION 'RS_ACCESS_PERMISSION'
+            EXPORTING
+              mode                     = iv_mode
+              object                   = is_item-obj_name
+              object_class             = is_item-obj_type
+              suppress_corr_check      = abap_true
+              suppress_language_check  = abap_true
+              suppress_extend_dialog   = abap_true
+            EXCEPTIONS
+              canceled_in_corr         = 1
+              enqueued_by_user         = 2
+              enqueue_system_failure   = 3
+              illegal_parameter_values = 4
+              locked_by_author         = 5
+              no_modify_permission     = 6
+              no_show_permission       = 7
+              permission_failure       = 8
+              request_language_denied  = 9
+              OTHERS                   = 10.
+      ENDTRY.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
@@ -103,9 +124,8 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
     lv_version = get_language_version( iv_package ).
 
     authorization_check(
-      iv_mode    = 'MODIFY'
-      is_item    = is_item
-      iv_version = lv_version ).
+      iv_mode = 'MODIFY'
+      is_item = is_item ).
 
     IF iv_state IS INITIAL.
       INSERT REPORT iv_name FROM it_source.
@@ -162,8 +182,6 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
            rs_progdir-varcl,
            rs_progdir-state.
 
-    " TODO: Clear UCCHECK
-
   ENDMETHOD.
 
 
@@ -212,7 +230,7 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
     ls_progdir_new-fixpt   = is_progdir-fixpt.
     ls_progdir_new-appl    = is_progdir-appl.
     ls_progdir_new-rstat   = is_progdir-rstat.
-    ls_progdir_new-uccheck = is_progdir-uccheck. " TODO: replace with get_language_version()
+    ls_progdir_new-uccheck = is_progdir-uccheck.
     ls_progdir_new-sqlx    = is_progdir-sqlx.
     ls_progdir_new-clas    = is_progdir-clas.
     ls_progdir_new-secu    = is_progdir-secu.
