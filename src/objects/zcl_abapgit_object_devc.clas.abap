@@ -495,6 +495,7 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~deserialize.
+
     DATA: li_package      TYPE REF TO if_package,
           ls_package_data TYPE scompkdtln,
           ls_data_sign    TYPE scompksign,
@@ -502,7 +503,6 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
           ls_save_sign    TYPE paksavsign.
 
     FIELD-SYMBOLS: <ls_usage_data> TYPE scomppdtln.
-
 
     mv_local_devclass = iv_package.
 
@@ -540,6 +540,8 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
     " the hierarchy before.
     CLEAR ls_package_data-parentcl.
 
+    set_abap_language_version( CHANGING cv_abap_language_version = ls_package_data-packkind ).
+
 * Fields not set:
 * korrflag
 * dlvunit
@@ -553,6 +555,7 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
     ls_data_sign-component        = abap_true.
     ls_data_sign-perminher        = abap_true.
     ls_data_sign-packtype         = abap_true.
+    ls_data_sign-packkind         = abap_true. " TODO: check if this exists in 702
     ls_data_sign-restricted       = abap_true.
     ls_data_sign-mainpack         = abap_true.
     ls_data_sign-srv_check        = abap_true.
@@ -656,10 +659,11 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
     update_pinf_usages( ii_package    = li_package
                         it_usage_data = lt_usage_data ).
 
-    ls_save_sign-pack = abap_true.
+    ls_save_sign-pack   = abap_true.
     ls_save_sign-permis = abap_true.
-    ls_save_sign-elems = abap_true.
+    ls_save_sign-elems  = abap_true.
     ls_save_sign-interf = abap_true.
+
     li_package->save_generic(
       EXPORTING
         i_save_sign           = ls_save_sign
@@ -861,6 +865,8 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
     ENDIF.
 
     CLEAR: ls_package_data-korrflag.
+
+    clear_abap_language_version( CHANGING cv_abap_language_version = ls_package_data-packkind ).
 
     io_xml->add( iv_name = 'DEVC'
                  ig_data = ls_package_data ).
