@@ -54,7 +54,6 @@ CLASS zcl_abapgit_serialize DEFINITION
     DATA mo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit.
     DATA ms_local_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings.
     DATA ms_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params.
-    DATA mo_abap_language_version TYPE REF TO zcl_abapgit_abap_language_vers.
 
     METHODS add_apack
       IMPORTING
@@ -275,10 +274,6 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     ms_i18n_params = determine_i18n_params(
       io_dot = io_dot_abapgit
       iv_main_language_only = is_local_settings-main_language_only ).
-
-    CREATE OBJECT mo_abap_language_version
-      EXPORTING
-        io_dot_abapgit = mo_dot_abapgit.
 
   ENDMETHOD.
 
@@ -569,8 +564,6 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     ASSERT mv_free > 0.
 
-    lv_abap_language_version = mo_abap_language_version->get_repo_abap_language_version( ).
-
     DO.
       lv_task = |{ iv_task }-{ sy-index }|.
       CALL FUNCTION 'Z_ABAPGIT_SERIALIZE_PARALLEL'
@@ -617,7 +610,6 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     ls_file_item-item-obj_name  = is_tadir-obj_name.
     ls_file_item-item-devclass  = is_tadir-devclass.
     ls_file_item-item-srcsystem = is_tadir-srcsystem.
-    ls_file_item-item-abap_language_version = mo_abap_language_version->get_repo_abap_language_version( ).
 
     TRY.
         ls_file_item = zcl_abapgit_objects=>serialize(
