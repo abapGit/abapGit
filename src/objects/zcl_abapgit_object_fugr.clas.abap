@@ -324,7 +324,6 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       zcl_abapgit_factory=>get_sap_report( )->insert_report(
         iv_name    = lv_include
         iv_package = iv_package
-        iv_version = iv_version
         it_source  = lt_source ).
 
       ii_log->add_success( iv_msg = |Function module { <ls_func>-funcname } imported|
