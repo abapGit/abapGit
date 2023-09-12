@@ -6,7 +6,6 @@ CLASS zcl_abapgit_oo_base DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_oo_object_fnc .
-
   PROTECTED SECTION.
     CLASS-METHODS:
       convert_attrib_to_vseoattrib
@@ -196,8 +195,8 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
 
 
   METHOD zif_abapgit_oo_object_fnc~read_documentation.
-    DATA: lv_state TYPE dokstate,
-          lt_lines TYPE tlinetab.
+    DATA: lv_state  TYPE dokstate,
+          lt_lines  TYPE tlinetab.
 
     CALL FUNCTION 'DOCU_GET'
       EXPORTING
@@ -282,7 +281,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
     IF lt_components IS NOT INITIAL.
       SELECT SINGLE masterlang FROM tadir INTO lv_lang
         WHERE pgmid = 'R3TR' AND ( object = 'CLAS' OR object = 'INTF' )
-          AND obj_name = is_key-clsname.                "#EC CI_GENBUFF
+          AND obj_name = is_key-clsname.                  "#EC CI_GENBUFF
       IF sy-subrc <> 0.
         lv_lang = sy-langu.
       ENDIF.
@@ -301,7 +300,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-    DELETE FROM seocompotx WHERE clsname = is_key-clsname. "#EC CI_SUBRC
+    DELETE FROM seocompotx WHERE clsname = is_key-clsname."#EC CI_SUBRC
     INSERT seocompotx FROM TABLE lt_descriptions.         "#EC CI_SUBRC
   ENDMETHOD.
 
@@ -328,7 +327,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
     IF lt_subcomponents IS NOT INITIAL.
       SELECT SINGLE masterlang FROM tadir INTO lv_lang
         WHERE pgmid = 'R3TR' AND ( object = 'CLAS' OR object = 'INTF' )
-          AND obj_name = is_key-clsname.                "#EC CI_GENBUFF
+          AND obj_name = is_key-clsname.                   "#EC CI_GENBUFF
       IF sy-subrc <> 0.
         lv_lang = sy-langu.
       ENDIF.
@@ -349,7 +348,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-    DELETE FROM seosubcotx WHERE clsname = is_key-clsname. "#EC CI_SUBRC
+    DELETE FROM seosubcotx WHERE clsname = is_key-clsname."#EC CI_SUBRC
     INSERT seosubcotx FROM TABLE lt_descriptions.         "#EC CI_SUBRC
   ENDMETHOD.
 ENDCLASS.
