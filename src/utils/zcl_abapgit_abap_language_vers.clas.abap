@@ -5,7 +5,7 @@ CLASS zcl_abapgit_abap_language_vers DEFINITION
 
   PUBLIC SECTION.
 
-    CONSTANTS c_feature_flag TYPE string VALUE 'ALAV' ##NO_TEXT.
+    CONSTANTS c_feature_flag TYPE string VALUE 'ALAV'.
 
     METHODS constructor
       IMPORTING
