@@ -841,7 +841,6 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
 
   METHOD zif_abapgit_oo_object_fnc~get_class_properties.
-
     CALL FUNCTION 'SEO_CLIF_GET'
       EXPORTING
         cifkey       = is_class_key
@@ -873,7 +872,6 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
       rs_class_properties-clsabstrct,
       rs_class_properties-exposure,
       rs_class_properties-version.
-
   ENDMETHOD.
 
 

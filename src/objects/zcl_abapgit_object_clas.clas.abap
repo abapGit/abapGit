@@ -186,7 +186,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     ii_xml->read( EXPORTING iv_name = 'VSEOCLASS'
                   CHANGING  cg_data = ls_vseoclass ).
 
-    ls_vseoclass-unicode = ms_item-abap_language_version.
+    set_abap_language_version( CHANGING cv_abap_language_version = ls_vseoclass-unicode ).
 
     ii_xml->read( EXPORTING iv_name = 'ATTRIBUTES'
                   CHANGING  cg_data = lt_attributes ).

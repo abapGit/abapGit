@@ -301,7 +301,6 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
 
 
   METHOD zif_abapgit_oo_object_fnc~get_interface_properties.
-
     CALL FUNCTION 'SEO_CLIF_GET'
       EXPORTING
         cifkey       = is_interface_key
@@ -330,6 +329,5 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
       rs_interface_properties-chgdanyon,
       rs_interface_properties-r3release,
       rs_interface_properties-version.
-
   ENDMETHOD.
 ENDCLASS.

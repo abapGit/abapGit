@@ -198,7 +198,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
                     CHANGING  cg_data = ls_intf-vseointerf ).
     ENDIF.
 
-    ls_intf-vseointerf-unicode = ms_item-abap_language_version.
+    set_abap_language_version( CHANGING cv_abap_language_version = ls_intf-vseointerf-unicode ).
 
     mi_object_oriented_object_fct->create(
       EXPORTING
