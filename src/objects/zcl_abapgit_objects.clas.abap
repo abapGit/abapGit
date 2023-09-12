@@ -714,8 +714,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
           ls_item-devclass = lv_package.
           ls_item-abap_language_version = lo_abap_language_vers->get_abap_language_vers_by_objt(
-            iv_object_type = ls_item-obj_type
-            iv_package     = lv_package ).
+                                                                    iv_object_type = ls_item-obj_type
+                                                                    iv_package = lv_package ).
 
           IF <ls_result>-packmove = abap_true.
             " Move object to new package
