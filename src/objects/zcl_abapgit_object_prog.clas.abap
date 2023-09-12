@@ -228,7 +228,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'PROGDIR'
                   CHANGING cg_data  = ls_progdir ).
 
-    ls_progdir-uccheck = ms_item-abap_language_version.
+    set_abap_language_version( CHANGING cv_abap_language_version = ls_progdir-uccheck ).
 
     IF strlen( lv_program_name ) > 30.
 

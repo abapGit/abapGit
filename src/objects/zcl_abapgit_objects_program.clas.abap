@@ -871,7 +871,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
     ls_progdir = zcl_abapgit_factory=>get_sap_report( )->read_progdir( lv_program_name ).
 
-    ls_progdir-uccheck = is_item-abap_language_version.
+    clear_abap_language_version( CHANGING cv_abap_language_version = ls_progdir-uccheck ).
 
     IF io_xml IS BOUND.
       li_xml = io_xml.

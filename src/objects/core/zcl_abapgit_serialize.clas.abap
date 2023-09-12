@@ -569,10 +569,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     ASSERT mv_free > 0.
 
-    lv_abap_language_version = mo_abap_language_version->get_abap_language_version(
-      iv_object_type    = is_tadir-object
-      iv_package        = is_tadir-devclass
-      iv_serialize_flag = abap_true ).
+    lv_abap_language_version = mo_abap_language_version->get_repo_abap_language_version( ).
 
     DO.
       lv_task = |{ iv_task }-{ sy-index }|.
@@ -620,11 +617,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     ls_file_item-item-obj_name  = is_tadir-obj_name.
     ls_file_item-item-devclass  = is_tadir-devclass.
     ls_file_item-item-srcsystem = is_tadir-srcsystem.
-
-    ls_file_item-item-abap_language_version = mo_abap_language_version->get_abap_language_version(
-      iv_object_type    = is_tadir-object
-      iv_package        = is_tadir-devclass
-      iv_serialize_flag = abap_true ).
+    ls_file_item-item-abap_language_version = mo_abap_language_version->get_repo_abap_language_version( ).
 
     TRY.
         ls_file_item = zcl_abapgit_objects=>serialize(

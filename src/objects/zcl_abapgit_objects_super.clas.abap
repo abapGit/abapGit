@@ -81,13 +81,27 @@ CLASS zcl_abapgit_objects_super DEFINITION
         VALUE(iv_no_ask_delete_append) TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception .
-
+    METHODS set_abap_language_version
+      CHANGING
+        !cv_abap_language_version TYPE uccheck.
+    METHODS clear_abap_language_version
+      CHANGING
+        !cv_abap_language_version TYPE uccheck.
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
+CLASS zcl_abapgit_objects_super IMPLEMENTATION.
+
+
+  METHOD clear_abap_language_version.
+    " Used during serializing objects
+    IF ms_item-abap_language_version IS NOT INITIAL.
+      " ABAP language is defined in repo setting so there's no need to serialize it
+      CLEAR cv_abap_language_version.
+    ENDIF.
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -269,6 +283,12 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
         io_i18n_params   = mo_i18n_params
         ii_xml           = ii_xml  ).
 
+  ENDMETHOD.
+
+
+  METHOD set_abap_language_version.
+    " Used during deserializing objects
+    cv_abap_language_version = ms_item-abap_language_version.
   ENDMETHOD.
 
 

@@ -388,7 +388,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     ls_intf-vseointerf = mi_object_oriented_object_fct->get_interface_properties( ls_clskey ).
 
-    ls_intf-vseointerf-unicode = ms_item-abap_language_version.
+    clear_abap_language_version( CHANGING cv_abap_language_version = ls_intf-vseointerf-unicode ).
 
     " Select all active translations of documentation
     " Skip main language - it was already serialized
@@ -516,7 +516,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
         ls_intf = read_xml( io_xml ).
       ENDIF.
 
-      ls_intf-vseointerf-unicode = ms_item-abap_language_version.
+      set_abap_language_version( CHANGING cv_abap_language_version = ls_intf-vseointerf-unicode ).
 
       IF ls_intf-vseointerf-clsproxy = abap_true.
         " Proxy interfaces are managed via SPRX

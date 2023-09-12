@@ -308,7 +308,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     ii_xml->read( EXPORTING iv_name = 'VSEOCLASS'
                   CHANGING  cg_data = ls_vseoclass ).
 
-    ls_vseoclass-unicode = ms_item-abap_language_version.
+    set_abap_language_version( CHANGING cv_abap_language_version = ls_vseoclass-unicode ).
 
     mi_object_oriented_object_fct->create(
       EXPORTING
@@ -678,7 +678,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     TRY.
         ls_vseoclass = mi_object_oriented_object_fct->get_class_properties( ls_clskey ).
 
-        ls_vseoclass-unicode = ms_item-abap_language_version.
+        clear_abap_language_version( CHANGING cv_abap_language_version = ls_vseoclass-unicode ).
 
       CLEANUP.
         zcl_abapgit_language=>restore_login_language( ).
