@@ -525,7 +525,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       ELSE.
         mi_object_oriented_object_fct->create(
           EXPORTING
-            iv_check      = abap_false
+            iv_check      = abap_true
             iv_package    = iv_package
           CHANGING
             cg_properties = ls_intf-vseointerf ).
