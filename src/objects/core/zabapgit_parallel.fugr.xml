@@ -101,6 +101,10 @@
        <TYP>TADIR-SRCSYSTEM</TYP>
       </RSIMP>
       <RSIMP>
+       <PARAMETER>IV_ABAP_LANGUAGE_VERS</PARAMETER>
+       <TYP>UCCHECK</TYP>
+      </RSIMP>
+      <RSIMP>
        <PARAMETER>IV_LANGUAGE</PARAMETER>
        <TYP>SY-LANGU</TYP>
       </RSIMP>
@@ -158,6 +162,11 @@
        <STEXT>Original System of Object</STEXT>
       </RSFDO>
       <RSFDO>
+       <PARAMETER>IV_ABAP_LANGUAGE_VERS</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>ABAP Language Version</STEXT>
+      </RSFDO>
+      <RSFDO>
        <PARAMETER>IV_LANGUAGE</PARAMETER>
        <KIND>P</KIND>
        <STEXT>ABAP System Field: Language Key of Text Environment</STEXT>
@@ -165,6 +174,7 @@
       <RSFDO>
        <PARAMETER>IV_PATH</PARAMETER>
        <KIND>P</KIND>
+       <STEXT>Path</STEXT>
       </RSFDO>
       <RSFDO>
        <PARAMETER>IV_MAIN_LANGUAGE_ONLY</PARAMETER>
