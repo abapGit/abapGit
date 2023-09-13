@@ -118,10 +118,10 @@ CLASS zcl_abapgit_serialize DEFINITION
   PRIVATE SECTION.
     CLASS-METHODS determine_i18n_params
       IMPORTING
-        !io_dot TYPE REF TO zcl_abapgit_dot_abapgit
+        !io_dot                TYPE REF TO zcl_abapgit_dot_abapgit
         !iv_main_language_only TYPE abap_bool
       RETURNING
-        VALUE(rs_i18n_params) TYPE zif_abapgit_definitions=>ty_i18n_params
+        VALUE(rs_i18n_params)  TYPE zif_abapgit_definitions=>ty_i18n_params
       RAISING
         zcx_abapgit_exception.
 
@@ -560,7 +560,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     DATA: lv_msg  TYPE c LENGTH 100,
           lv_task TYPE c LENGTH 32,
           lv_free LIKE mv_free.
-
+    DATA lv_abap_language_version TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version.
 
     ASSERT mv_free > 0.
 
@@ -576,6 +576,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
           iv_devclass           = is_tadir-devclass
           iv_path               = is_tadir-path
           iv_srcsystem          = is_tadir-srcsystem
+          iv_abap_language_vers = lv_abap_language_version
           iv_language           = ms_i18n_params-main_language
           iv_main_language_only = ms_i18n_params-main_language_only
           it_translation_langs  = ms_i18n_params-translation_languages
@@ -604,7 +605,6 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     DATA: lx_error     TYPE REF TO zcx_abapgit_exception,
           ls_file_item TYPE zif_abapgit_objects=>ty_serialization.
-
 
     ls_file_item-item-obj_type  = is_tadir-object.
     ls_file_item-item-obj_name  = is_tadir-obj_name.
