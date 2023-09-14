@@ -595,6 +595,8 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
           IMPORTING
             ex_version_info = lt_version_info ).
 
+        SORT lt_version_info BY version.
+
         li_document = cl_ixml=>create( )->create_document( ).
 
         serialize_versions(
