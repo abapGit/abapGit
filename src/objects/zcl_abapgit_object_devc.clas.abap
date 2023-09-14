@@ -503,6 +503,7 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
           ls_save_sign    TYPE paksavsign.
 
     FIELD-SYMBOLS: <ls_usage_data> TYPE scomppdtln.
+    FIELD-SYMBOLS: <lg_field> TYPE any.
 
     mv_local_devclass = iv_package.
 
@@ -540,7 +541,14 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
     " the hierarchy before.
     CLEAR ls_package_data-parentcl.
 
-    set_abap_language_version( CHANGING cv_abap_language_version = ls_package_data-packkind ).
+    ASSIGN COMPONENT 'PACKKIND' OF STRUCTURE ls_package_data TO <lg_field>.
+    IF sy-subrc = 0.
+      set_abap_language_version( CHANGING cv_abap_language_version = <lg_field> ).
+    ENDIF.
+    ASSIGN COMPONENT 'PACKKIND' OF STRUCTURE ls_data_sign TO <lg_field>.
+    IF sy-subrc = 0.
+      <lg_field> = abap_true.
+    ENDIF.
 
 * Fields not set:
 * korrflag
@@ -555,7 +563,6 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
     ls_data_sign-component        = abap_true.
     ls_data_sign-perminher        = abap_true.
     ls_data_sign-packtype         = abap_true.
-    ls_data_sign-packkind         = abap_true. " TODO: check if this exists in 702
     ls_data_sign-restricted       = abap_true.
     ls_data_sign-mainpack         = abap_true.
     ls_data_sign-srv_check        = abap_true.
@@ -866,7 +873,10 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
 
     CLEAR: ls_package_data-korrflag.
 
-    clear_abap_language_version( CHANGING cv_abap_language_version = ls_package_data-packkind ).
+    ASSIGN COMPONENT 'PACKKIND' OF STRUCTURE ls_package_data TO <lg_field>.
+    IF sy-subrc = 0.
+      clear_abap_language_version( CHANGING cv_abap_language_version = <lg_field> ).
+    ENDIF.
 
     io_xml->add( iv_name = 'DEVC'
                  ig_data = ls_package_data ).
