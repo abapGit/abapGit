@@ -120,6 +120,12 @@ CLASS zcl_abapgit_object_ecatt_super DEFINITION
         CHANGING
           ci_document TYPE REF TO if_ixml_document,
 
+      clear_element_collection
+        IMPORTING
+          iv_name     TYPE csequence
+        CHANGING
+          ci_document TYPE REF TO if_ixml_document,
+
       serialize_versions
         IMPORTING
           it_version_info TYPE etversinfo_tabtype
@@ -192,6 +198,30 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
     " Clearing just VAR_EXT_PATH will lead to diffs in batch
     clear_element( EXPORTING iv_name     = |ETVAR_EXT|
                    CHANGING  ci_document = ci_document ).
+
+    " SORTLNR is part of ETPAR_VARI and causing diffs
+    " We can clear it since it's automatically filled during deserialize
+    clear_element_collection( EXPORTING iv_name     = |SORTLNR|
+                              CHANGING  ci_document = ci_document ).
+
+  ENDMETHOD.
+
+
+  METHOD clear_element_collection.
+
+    DATA:
+      lo_node_collection TYPE REF TO if_ixml_node_collection,
+      lo_node            TYPE REF TO if_ixml_node,
+      lv_index           TYPE i.
+
+    lo_node_collection = ci_document->get_elements_by_tag_name( iv_name ).
+
+    lv_index = 0.
+    WHILE lv_index < lo_node_collection->get_length( ).
+      lo_node = lo_node_collection->get_item( lv_index ).
+      lo_node->set_value( '' ).
+      lv_index = lv_index + 1.
+    ENDWHILE.
 
   ENDMETHOD.
 
