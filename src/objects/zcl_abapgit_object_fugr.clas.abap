@@ -75,6 +75,7 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       IMPORTING
         !it_functions TYPE ty_function_tt
         !ii_log       TYPE REF TO zif_abapgit_log
+        !iv_version   TYPE uccheck
         !iv_package   TYPE devclass
         !iv_transport TYPE trkorr
       RAISING
@@ -101,6 +102,7 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS deserialize_xml
       IMPORTING
         !ii_xml       TYPE REF TO zif_abapgit_xml_input
+        !iv_version   TYPE uccheck
         !iv_package   TYPE devclass
         !iv_transport TYPE trkorr
       RAISING
@@ -440,14 +442,12 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
   METHOD deserialize_xml.
 
-    DATA: lv_complete     TYPE rs38l-area,
-          lv_namespace    TYPE rs38l-namespace,
-          lv_areat        TYPE tlibt-areat,
-          lv_stext        TYPE tftit-stext,
-          lv_group        TYPE rs38l-area,
-          lv_abap_version TYPE trdir-uccheck.
+    DATA: lv_complete  TYPE rs38l-area,
+          lv_namespace TYPE rs38l-namespace,
+          lv_areat     TYPE tlibt-areat,
+          lv_stext     TYPE tftit-stext,
+          lv_group     TYPE rs38l-area.
 
-    lv_abap_version = get_abap_version( ii_xml ).
     lv_complete = ms_item-obj_name.
 
     CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
@@ -483,7 +483,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         short_text              = lv_stext
         namespace               = lv_namespace
         devclass                = iv_package
-        unicode_checks          = lv_abap_version
+        unicode_checks          = iv_version
         corrnum                 = iv_transport
         suppress_corr_check     = abap_false
       EXCEPTIONS
@@ -1204,12 +1204,16 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 
     DATA: lv_program_name TYPE syrepid,
+          lv_abap_version TYPE trdir-uccheck,
           lt_functions    TYPE ty_function_tt,
           lt_dynpros      TYPE ty_dynpro_tt,
           ls_cua          TYPE ty_cua.
 
+    lv_abap_version = get_abap_version( io_xml ).
+
     deserialize_xml(
       ii_xml       = io_xml
+      iv_version   = lv_abap_version
       iv_package   = iv_package
       iv_transport = iv_transport ).
 
@@ -1219,6 +1223,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     deserialize_functions(
       it_functions = lt_functions
       ii_log       = ii_log
+      iv_version   = lv_abap_version
       iv_package   = iv_package
       iv_transport = iv_transport ).
 
