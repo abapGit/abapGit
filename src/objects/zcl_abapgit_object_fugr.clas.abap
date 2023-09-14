@@ -445,12 +445,11 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
   METHOD deserialize_xml.
 
-    DATA: lv_complete     TYPE rs38l-area,
-          lv_namespace    TYPE rs38l-namespace,
-          lv_areat        TYPE tlibt-areat,
-          lv_stext        TYPE tftit-stext,
-          lv_group        TYPE rs38l-area,
-          lv_abap_version TYPE trdir-uccheck.
+    DATA: lv_complete  TYPE rs38l-area,
+          lv_namespace TYPE rs38l-namespace,
+          lv_areat     TYPE tlibt-areat,
+          lv_stext     TYPE tftit-stext,
+          lv_group     TYPE rs38l-area.
 
     lv_complete = ms_item-obj_name.
 
