@@ -184,7 +184,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
         iv_label       = 'ABAP Language Version'
         iv_hint        = 'Define the ABAP language version for objects in the repository'
       )->option(
-        iv_label       = 'Undefined'
+        iv_label       = 'Any (Object-specific ABAP Language Version)'
         iv_value       = ''
       )->option(
         iv_label       = 'Standard'
