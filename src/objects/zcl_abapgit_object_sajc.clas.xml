@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECT_SAJC</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - SAJC - Job Catalog Entry</DESCRIPT>
+    <DESCRIPT>abapGit - SAJC - Application Job Catalog Entry</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
