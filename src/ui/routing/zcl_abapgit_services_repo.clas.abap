@@ -25,6 +25,7 @@ CLASS zcl_abapgit_services_repo DEFINITION
     CLASS-METHODS purge
       IMPORTING
         !iv_key       TYPE zif_abapgit_persistence=>ty_repo-key
+        !iv_keep_repo TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(ri_log) TYPE REF TO zif_abapgit_log
       RAISING
@@ -655,8 +656,9 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     ENDIF.
 
     ri_log = zcl_abapgit_repo_srv=>get_instance( )->purge(
-      ii_repo   = lo_repo
-      is_checks = ls_checks ).
+      ii_repo      = lo_repo
+      is_checks    = ls_checks
+      iv_keep_repo = iv_keep_repo ).
 
     COMMIT WORK.
 

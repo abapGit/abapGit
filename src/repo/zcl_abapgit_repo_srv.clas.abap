@@ -660,7 +660,12 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
         RAISE EXCEPTION lx_error.
     ENDTRY.
 
-    zif_abapgit_repo_srv~delete( ii_repo ).
+    IF iv_keep_repo = abap_true.
+      ii_repo->refresh( ).
+      ii_repo->checksums( )->rebuild( ).
+    ELSE.
+      zif_abapgit_repo_srv~delete( ii_repo ).
+    ENDIF.
 
   ENDMETHOD.
 
