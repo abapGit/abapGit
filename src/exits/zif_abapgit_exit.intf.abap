@@ -140,4 +140,7 @@ INTERFACE zif_abapgit_exit
       !io_menu TYPE REF TO zcl_abapgit_html_toolbar
       !iv_key  TYPE zif_abapgit_persistence=>ty_value
       !iv_act  TYPE string.
+  METHODS change_rfc_server_group
+    CHANGING
+      cv_group TYPE rzlli_apcl.
 ENDINTERFACE.

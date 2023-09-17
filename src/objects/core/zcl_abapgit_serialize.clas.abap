@@ -267,6 +267,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     ENDIF.
 
     mv_group = 'parallel_generators'.
+    zcl_abapgit_exit=>get_instance( )->change_rfc_server_group( CHANGING cv_group = mv_group ).
 
     mo_dot_abapgit = io_dot_abapgit.
     ms_local_settings = is_local_settings.
