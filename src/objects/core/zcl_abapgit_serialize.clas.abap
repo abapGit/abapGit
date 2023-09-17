@@ -257,7 +257,8 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA lo_settings TYPE REF TO zcl_abapgit_settings.
+    DATA: lo_settings TYPE REF TO zcl_abapgit_settings,
+          li_exit     TYPE REF TO zif_abapgit_exit.
 
     lo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
 
@@ -267,7 +268,8 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     ENDIF.
 
     mv_group = 'parallel_generators'.
-    zcl_abapgit_exit=>get_instance( )->change_rfc_server_group( CHANGING cv_group = mv_group ).
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+    li_exit->change_rfc_server_group( CHANGING cv_group = mv_group ).
 
     mo_dot_abapgit = io_dot_abapgit.
     ms_local_settings = is_local_settings.
