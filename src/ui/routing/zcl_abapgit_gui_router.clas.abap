@@ -676,8 +676,6 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    rs_handled = zcl_abapgit_exit=>get_instance( )->on_event( ii_event ).
-
     IF rs_handled-state IS INITIAL.
       rs_handled = general_page_routing( ii_event ).
     ENDIF.

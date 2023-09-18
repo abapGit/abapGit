@@ -282,12 +282,16 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
         it_postdata     = it_postdata.
 
     TRY.
-        LOOP AT mt_event_handlers INTO li_handler.
-          ls_handled = li_handler->on_event( li_event ).
-          IF ls_handled-state IS NOT INITIAL AND ls_handled-state <> c_event_state-not_handled. " is handled
-            EXIT.
-          ENDIF.
-        ENDLOOP.
+        ls_handled = zcl_abapgit_exit=>get_instance( )->on_event( li_event ).
+
+        IF ls_handled-state = c_event_state-not_handled.
+          LOOP AT mt_event_handlers INTO li_handler.
+            ls_handled = li_handler->on_event( li_event ).
+            IF ls_handled-state IS NOT INITIAL AND ls_handled-state <> c_event_state-not_handled. " is handled
+              EXIT.
+            ENDIF.
+          ENDLOOP.
+        ENDIF.
 
         IF is_page_modal( mi_cur_page ) = abap_true AND NOT (
           ls_handled-state = c_event_state-re_render OR
