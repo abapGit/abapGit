@@ -187,7 +187,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
         iv_label       = 'Any (Object-specific ABAP Language Version)'
         iv_value       = ''
       )->option(
-        iv_label       = 'Standard'
+        iv_label       = 'Standard ABAP'
         iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-standard
       )->option(
         iv_label       = 'ABAP for Key Users'
