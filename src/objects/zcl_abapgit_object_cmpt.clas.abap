@@ -92,7 +92,9 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 
     DATA: lr_template TYPE REF TO data.
-    FIELD-SYMBOLS: <lg_template> TYPE any.
+    FIELD-SYMBOLS: <lg_template> TYPE any,
+                   <lg_header>   TYPE any,
+                   <lg_field>    TYPE any.
 
     TRY.
         CREATE DATA lr_template TYPE ('IF_CMP_TEMPLATE_DB=>TYP_TEMPLATE').
@@ -103,6 +105,18 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
             iv_name = 'CMPT'
           CHANGING
             cg_data = <lg_template> ).
+
+        ASSIGN COMPONENT 'STR_HEADER' OF STRUCTURE <lg_template> TO <lg_header>.
+        IF sy-subrc = 0.
+          ASSIGN COMPONENT 'NAME' OF STRUCTURE <lg_header> TO <lg_field>.
+          IF sy-subrc = 0.
+            <lg_field> = ms_item-obj_name.
+          ENDIF.
+          ASSIGN COMPONENT 'VERSION' OF STRUCTURE <lg_header> TO <lg_field>.
+          IF sy-subrc = 0.
+            <lg_field> = 'A'.
+          ENDIF.
+        ENDIF.
 
         CALL METHOD mo_cmp_db->('IF_CMP_TEMPLATE_DB~SAVE_TEMPLATE')
           EXPORTING
@@ -193,7 +207,9 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     DATA: lr_template TYPE REF TO data.
-    FIELD-SYMBOLS: <lg_template> TYPE any.
+    FIELD-SYMBOLS: <lg_template> TYPE any,
+                   <lg_header>   TYPE any,
+                   <lg_field>    TYPE any.
 
     TRY.
         CREATE DATA lr_template TYPE ('IF_CMP_TEMPLATE_DB=>TYP_TEMPLATE').
@@ -205,6 +221,30 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
             i_version  = 'A'
           RECEIVING
             r_template = <lg_template>.
+
+        ASSIGN COMPONENT 'STR_HEADER' OF STRUCTURE <lg_template> TO <lg_header>.
+        IF sy-subrc = 0.
+          ASSIGN COMPONENT 'NAME' OF STRUCTURE <lg_header> TO <lg_field>.
+          IF sy-subrc = 0.
+            CLEAR <lg_field>.
+          ENDIF.
+          ASSIGN COMPONENT 'VERSION' OF STRUCTURE <lg_header> TO <lg_field>.
+          IF sy-subrc = 0.
+            CLEAR <lg_field>.
+          ENDIF.
+          ASSIGN COMPONENT 'CHANGED_ON' OF STRUCTURE <lg_header> TO <lg_field>.
+          IF sy-subrc = 0.
+            CLEAR <lg_field>.
+          ENDIF.
+          ASSIGN COMPONENT 'CHANGED_BY' OF STRUCTURE <lg_header> TO <lg_field>.
+          IF sy-subrc = 0.
+            CLEAR <lg_field>.
+          ENDIF.
+          ASSIGN COMPONENT 'CHANGED_TS' OF STRUCTURE <lg_header> TO <lg_field>.
+          IF sy-subrc = 0.
+            CLEAR <lg_field>.
+          ENDIF.
+        ENDIF.
 
         io_xml->add( iv_name = 'CMPT'
                      ig_data = <lg_template> ).
