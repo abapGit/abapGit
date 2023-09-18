@@ -397,7 +397,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
           lo_xml->read( EXPORTING iv_name = 'PROGDIR'
                         CHANGING cg_data = ls_progdir ).
 
-          ls_progdir-uccheck = ms_item-abap_language_version.
+          set_abap_language_version( CHANGING cv_abap_language_version = ls_progdir-uccheck ).
 
           lo_xml->read( EXPORTING iv_name = 'TPOOL'
                         CHANGING cg_data = lt_tpool_ext ).

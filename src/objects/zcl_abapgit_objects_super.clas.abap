@@ -96,7 +96,7 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
 
   METHOD clear_abap_language_version.
-    " Used during serializing objects
+    " Used during serializing of objects
     IF ms_item-abap_language_version IS NOT INITIAL.
       " ABAP language is defined in repo setting so there's no need to serialize it
       CLEAR cv_abap_language_version.
@@ -287,8 +287,11 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
 
   METHOD set_abap_language_version.
-    " Used during deserializing objects
-    cv_abap_language_version = ms_item-abap_language_version.
+    " Used during deserializing of objects
+    IF ms_item-abap_language_version IS NOT INITIAL.
+      " ABAP language is defined in repo setting so set it accordingly
+      cv_abap_language_version = ms_item-abap_language_version.
+    ENDIF.
   ENDMETHOD.
 
 
