@@ -324,14 +324,19 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ro_advanced_dropdown->add( iv_txt = 'Danger'
                                iv_typ = zif_abapgit_html=>c_action_type-separator ).
 
-    ro_advanced_dropdown->add( iv_txt   = 'Remove'
+    ro_advanced_dropdown->add( iv_txt   = 'Remove Repository'
                                iv_title = `Remove abapGit's records of the repository (the system's `
                                           && `development objects will remain unaffected)`
                                iv_act   = |{ zif_abapgit_definitions=>c_action-repo_remove }?key={ mv_key }| ).
 
+    ro_advanced_dropdown->add( iv_txt   = 'Remove Objects'
+                               iv_title = `Delete all development objects belonging to this package `
+                                          && `(and subpackages) from the system, but keep repository in abapGit`
+                               iv_act   = |{ zif_abapgit_definitions=>c_action-repo_delete_objects }?key={ mv_key }| ).
+
     ro_advanced_dropdown->add( iv_txt   = 'Uninstall'
                                iv_title = `Delete all development objects belonging to this package `
-                                          && `(and subpackages) from the system`
+                                          && `(and subpackages) from the system, and remove the repository from abapGit`
                                iv_act   = |{ zif_abapgit_definitions=>c_action-repo_purge }?key={ mv_key }|
                                iv_opt   = get_crossout(
                                             iv_authorization = zif_abapgit_auth=>c_authorization-uninstall
