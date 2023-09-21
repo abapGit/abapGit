@@ -513,7 +513,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_typ = zif_abapgit_html=>c_action_type-separator ).
 
     lo_toolbar_more_sub->add(
-      iv_txt   = |Remove|
+      iv_txt   = |Remove Repository|
       iv_title = |Remove abapGit's records of the repository (the system's |
               && |development objects will remain unaffected)|
       iv_act   = |{ zif_abapgit_definitions=>c_action-repo_remove }{ lc_dummy_key }|
@@ -521,9 +521,17 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_li_class = |{ lc_action_class }| ).
 
     lo_toolbar_more_sub->add(
+      iv_txt      = |Remove Objects|
+      iv_title    = |Delete all development objects belonging to this package |
+                 && |(and subpackages) from the system, but keep repository in abapGit|
+      iv_act      = |{ zif_abapgit_definitions=>c_action-repo_delete_objects }{ lc_dummy_key }|
+      iv_class    = |{ lc_action_class }|
+      iv_li_class = |{ lc_action_class }| ).
+
+    lo_toolbar_more_sub->add(
       iv_txt      = |Uninstall|
       iv_title    = |Delete all development objects belonging to this package |
-                 && |(and subpackages) from the system|
+                 && |(and subpackages) from the system, and remove the repository from abapGit|
       iv_act      = |{ zif_abapgit_definitions=>c_action-repo_purge }{ lc_dummy_key }|
       iv_class    = |{ lc_action_class }|
       iv_li_class = |{ lc_action_class }| ).
