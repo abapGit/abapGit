@@ -37,6 +37,7 @@ CLASS zcl_abapgit_gui_page_sett_repo DEFINITION
         requirements     TYPE string VALUE 'requirements',
         version_constant TYPE string VALUE 'version_constant',
         version_value    TYPE string VALUE 'version_value',
+        abap_langu_vers  TYPE string VALUE 'abap_langu_vers',
       END OF c_id.
     CONSTANTS:
       BEGIN OF c_event,
@@ -50,6 +51,7 @@ CLASS zcl_abapgit_gui_page_sett_repo DEFINITION
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
     DATA mv_requirements_count TYPE i .
+    DATA mv_feature_enabled TYPE abap_bool.
 
     METHODS validate_form
       IMPORTING
@@ -75,12 +77,19 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
 
 
   METHOD constructor.
 
+    DATA lo_settings TYPE REF TO zcl_abapgit_settings.
+
     super->constructor( ).
+
+    " Feature for ABAP Language Version
+    lo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
+    mv_feature_enabled = lo_settings->is_feature_enabled( zcl_abapgit_abap_language_vers=>c_feature_flag ).
+
     CREATE OBJECT mo_validation_log.
     CREATE OBJECT mo_form_data.
     mo_repo = io_repo.
@@ -165,16 +174,30 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
       iv_width       = '30%'
     )->column(
       iv_label       = 'Minimum Patch'
-      iv_width       = '30%'
-    )->text(
-      iv_name        = c_id-version_constant
-      iv_label       = 'Version Constant'
-      iv_placeholder = 'ZVERSION_CLASS=>VERSION_CONSTANT'
-    )->text(
-      iv_name        = c_id-version_value
-      iv_label       = 'Version Value'
-      iv_readonly    = abap_true
-    )->command(
+      iv_width       = '30%' ).
+
+    IF mv_feature_enabled = abap_true.
+      ro_form->radio(
+        iv_name        = c_id-abap_langu_vers
+        iv_default_value = ''
+        iv_condense    = abap_true
+        iv_label       = 'ABAP Language Version'
+        iv_hint        = 'Define the ABAP language version for objects in the repository'
+      )->option(
+        iv_label       = 'Any (Object-specific ABAP Language Version)'
+        iv_value       = ''
+      )->option(
+        iv_label       = 'Standard ABAP'
+        iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-standard
+      )->option(
+        iv_label       = 'ABAP for Key Users'
+        iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-key_user
+      )->option(
+        iv_label       = 'ABAP for Cloud Development'
+        iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-cloud_development ).
+    ENDIF.
+
+    ro_form->command(
       iv_label       = 'Save Settings'
       iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
       iv_action      = c_event-save
@@ -278,6 +301,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
       iv_key = |{ c_id-requirements }-{ zif_abapgit_html_form=>c_rows }|
       iv_val = |{ mv_requirements_count }| ).
 
+    IF mv_feature_enabled = abap_true.
+      ro_form_data->set(
+        iv_key = c_id-abap_langu_vers
+        iv_val = ls_dot-abap_language_version ).
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -295,6 +324,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_REPO IMPLEMENTATION.
     lo_dot->set_folder_logic( mo_form_data->get( c_id-folder_logic ) ).
     lo_dot->set_starting_folder( mo_form_data->get( c_id-starting_folder ) ).
     lo_dot->set_version_constant( mo_form_data->get( c_id-version_constant ) ).
+
+    IF mv_feature_enabled = abap_true.
+      lo_dot->set_abap_language_version( mo_form_data->get( c_id-abap_langu_vers ) ).
+    ENDIF.
 
     lo_dot->set_i18n_languages(
       zcl_abapgit_lxe_texts=>convert_lang_string_to_table(
