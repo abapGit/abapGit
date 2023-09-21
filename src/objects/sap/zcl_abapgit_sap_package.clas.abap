@@ -48,7 +48,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
         rv_are_changes_rec_in_tr_req = li_package->wbo_korr_flag.
       WHEN 1.
         " For new packages, derive from package name
-        rv_are_changes_rec_in_tr_req = boolc( mv_package(1) <> '$' ).
+        rv_are_changes_rec_in_tr_req = boolc( mv_package(1) <> '$' AND mv_package(1) <> 'T' ).
       WHEN OTHERS.
         zcx_abapgit_exception=>raise_t100( ).
     ENDCASE.
