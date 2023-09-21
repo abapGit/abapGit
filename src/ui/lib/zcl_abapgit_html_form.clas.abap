@@ -656,7 +656,8 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
         lv_checked = ' checked'.
       ENDIF.
 
-      CLEAR lv_onclick.
+      " With edge browser control radio buttons aren't checked automatically when
+      " activated with link hints. Therefore we need to check them manually.
       IF is_field-click IS NOT INITIAL.
         lv_onclick = |onclick="|
                   && |var form = document.getElementById('{ mv_form_id }');|
