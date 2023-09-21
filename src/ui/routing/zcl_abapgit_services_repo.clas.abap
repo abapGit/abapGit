@@ -616,7 +616,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
           lv_answer    TYPE c LENGTH 1,
           lo_repo      TYPE REF TO zcl_abapgit_repo,
           lv_package   TYPE devclass,
-          lv_question  TYPE c LENGTH 100,
+          lv_title     TYPE c LENGTH 20,
+          lv_question  TYPE c LENGTH 150,
           ls_checks    TYPE zif_abapgit_definitions=>ty_delete_checks,
           lv_repo_name TYPE string,
           lv_message   TYPE string.
@@ -633,14 +634,23 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       lv_question = |This will DELETE all objects in package { lv_package
         } including subpackages ({ lines( lt_tadir ) } objects) from the system|.
 
+      IF iv_keep_repo = abap_true.
+        lv_title = 'Remove Objects'.
+        lv_question = lv_question && ', but keep the reference to the repository'.
+      ELSE.
+        lv_title = 'Uninstall'.
+        lv_question = lv_question && ' and remove the reference to the repository'.
+      ENDIF.
+
       lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
-        iv_titlebar              = 'Uninstall'
+        iv_titlebar              = lv_title
         iv_text_question         = lv_question
         iv_text_button_1         = 'Delete'
         iv_icon_button_1         = 'ICON_DELETE'
         iv_text_button_2         = 'Cancel'
         iv_icon_button_2         = 'ICON_CANCEL'
         iv_default_button        = '2'
+        iv_popup_type            = 'ICON_MESSAGE_WARNING'
         iv_display_cancel_button = abap_false ).
 
       IF lv_answer = '2'.
@@ -755,7 +765,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       }. All objects will safely remain in the system.|.
 
     lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
-      iv_titlebar              = 'Remove'
+      iv_titlebar              = 'Remove Repository'
       iv_text_question         = lv_question
       iv_text_button_1         = 'Remove'
       iv_icon_button_1         = 'ICON_WF_UNLINK'

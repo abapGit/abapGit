@@ -84,6 +84,7 @@ INTERFACE zif_abapgit_popups
       !iv_icon_button_2         TYPE ty_icon DEFAULT space
       !iv_default_button        TYPE ty_char1 DEFAULT '1'
       !iv_display_cancel_button TYPE ty_char1 DEFAULT abap_true
+      !iv_popup_type            TYPE clike DEFAULT 'ICON_MESSAGE_QUESTION'
     RETURNING
       VALUE(rv_answer)          TYPE ty_char1
     RAISING

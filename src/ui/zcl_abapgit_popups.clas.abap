@@ -591,6 +591,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
         icon_button_2         = iv_icon_button_2
         default_button        = iv_default_button
         display_cancel_button = iv_display_cancel_button
+        popup_type            = iv_popup_type
         start_column          = ms_position-start_column
         start_row             = ms_position-start_row
       IMPORTING
