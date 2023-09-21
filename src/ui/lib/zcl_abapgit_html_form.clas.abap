@@ -646,6 +646,8 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
     ii_html->add( |<div class="radio-container">| ).
 
     LOOP AT is_field-subitems ASSIGNING <ls_opt>.
+
+      lv_opt_id = |{ is_field-name }{ sy-tabix }|.
       lv_opt_value = escape( val    = <ls_opt>-value
                              format = cl_abap_format=>e_html_attr ).
 
@@ -656,11 +658,15 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
 
       CLEAR lv_onclick.
       IF is_field-click IS NOT INITIAL.
-        lv_onclick = |onclick="document.getElementById('{ mv_form_id }').action = 'sapevent:|
-                  && |{ is_field-click }'; document.getElementById('{ mv_form_id }').submit()"|.
+        lv_onclick = |onclick="|
+                  && |var form = document.getElementById('{ mv_form_id }');|
+                  && |document.getElementById('{ lv_opt_id }').checked = true;|
+                  && |form.action = 'sapevent:{ is_field-click }';|
+                  && |form.submit();"|.
+      ELSE.
+        lv_onclick = |onclick="document.getElementById('{ lv_opt_id }').checked = true;"|.
       ENDIF.
 
-      lv_opt_id = |{ is_field-name }{ sy-tabix }|.
       IF is_field-condense = abap_true.
         ii_html->add( '<div>' ).
       ENDIF.
