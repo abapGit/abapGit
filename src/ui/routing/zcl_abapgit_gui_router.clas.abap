@@ -590,10 +590,15 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
           EXPORTING
             io_repo = lo_repo.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-      WHEN zif_abapgit_definitions=>c_action-repo_purge.                      " Repo purge all objects (uninstall)
+      WHEN zif_abapgit_definitions=>c_action-repo_purge.                      " Purge all objects and repo (uninstall)
         zcl_abapgit_services_repo=>purge( lv_key ).
         rs_handled-page  = zcl_abapgit_gui_page_repo_over=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
+      WHEN zif_abapgit_definitions=>c_action-repo_delete_objects.             " Purge all objects (uninstall)
+        zcl_abapgit_services_repo=>purge(
+          iv_key       = lv_key
+          iv_keep_repo = abap_true ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-repo_remove.                     " Repo remove
         zcl_abapgit_services_repo=>remove( lv_key ).
         rs_handled-page  = zcl_abapgit_gui_page_repo_over=>create( ).
@@ -670,8 +675,6 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
 
   METHOD zif_abapgit_gui_event_handler~on_event.
-
-    rs_handled = zcl_abapgit_exit=>get_instance( )->on_event( ii_event ).
 
     IF rs_handled-state IS INITIAL.
       rs_handled = general_page_routing( ii_event ).
