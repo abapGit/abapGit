@@ -76,6 +76,7 @@ INTERFACE zif_abapgit_repo_srv
     IMPORTING
       !ii_repo      TYPE REF TO zif_abapgit_repo
       !is_checks    TYPE zif_abapgit_definitions=>ty_delete_checks
+      !iv_keep_repo TYPE abap_bool DEFAULT abap_false
     RETURNING
       VALUE(ri_log) TYPE REF TO zif_abapgit_log
     RAISING
