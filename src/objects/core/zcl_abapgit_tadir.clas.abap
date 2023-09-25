@@ -308,16 +308,22 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
   METHOD select_objects.
 
     DATA:
+      lv_package   TYPE devclass,
+      lt_users     TYPE zcl_abapgit_tmp_package=>ty_users,
       lt_excludes  TYPE RANGE OF trobjtype,
       ls_exclude   LIKE LINE OF lt_excludes,
       lt_srcsystem TYPE RANGE OF tadir-srcsystem,
       ls_srcsystem LIKE LINE OF lt_srcsystem.
 
+    " Convert special package for local user objects and add filter for user
+    lv_package = zcl_abapgit_tmp_package=>map_package_name( iv_package ).
+    lt_users   = zcl_abapgit_tmp_package=>get_user_filter( iv_package ).
+
     " Determine packages to read
     IF iv_ignore_subpackages = abap_false.
-      et_packages = zcl_abapgit_factory=>get_sap_package( iv_package )->list_subpackages( ).
+      et_packages = zcl_abapgit_factory=>get_sap_package( lv_package )->list_subpackages( ).
     ENDIF.
-    INSERT iv_package INTO et_packages INDEX 1.
+    INSERT lv_package INTO et_packages INDEX 1.
 
     " Exclude object types with tadir entries that are included elsewhere
     ls_exclude-sign   = 'I'.
@@ -352,6 +358,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
         AND object     NOT IN lt_excludes
         AND delflag    = abap_false
         AND srcsystem  IN lt_srcsystem
+        AND author     IN lt_users
         ORDER BY PRIMARY KEY ##TOO_MANY_ITAB_FIELDS. "#EC CI_GENBUFF "#EC CI_SUBRC
     ENDIF.
 
