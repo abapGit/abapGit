@@ -416,8 +416,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     ENDIF.
 
     lo_sub_view->add( iv_txt = lv_txt
-                      iv_act = c_actions-toggle_hide_diffs
-                      iv_chk = ms_view-hide_diffs ).
+                      iv_act = c_actions-toggle_hide_diffs ).
 
     lo_sub_view->add( iv_txt = 'Show Hidden Characters'
                       iv_act = c_actions-toggle_hidden_chars
