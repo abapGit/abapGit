@@ -5,6 +5,7 @@ CLASS zcl_abapgit_abap_language_vers DEFINITION
 
   PUBLIC SECTION.
 
+    CONSTANTS c_any_abap_language_version TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version VALUE '*'.
     CONSTANTS c_feature_flag TYPE string VALUE 'ALAV'.
 
     METHODS constructor
@@ -127,7 +128,7 @@ CLASS zcl_abapgit_abap_language_vers IMPLEMENTATION.
     DATA lo_abap_language_version TYPE REF TO object.
 
     IF mv_has_abap_language_vers = abap_false.
-      rv_allowed_abap_langu_version = get_default_abap_language_vers( iv_object_type ).
+      rv_allowed_abap_langu_version = c_any_abap_language_version.
       RETURN. ">>>
     ENDIF.
 
@@ -195,7 +196,7 @@ CLASS zcl_abapgit_abap_language_vers IMPLEMENTATION.
       WHEN zif_abapgit_dot_abapgit=>c_abap_language_version-cloud_development.
         rv_abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-cloud_development.
       WHEN OTHERS. " undefined or feature off
-        rv_abap_language_version = ''.
+        rv_abap_language_version = c_any_abap_language_version.
     ENDCASE.
 
   ENDMETHOD.

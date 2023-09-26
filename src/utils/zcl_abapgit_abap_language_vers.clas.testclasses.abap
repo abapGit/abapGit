@@ -100,7 +100,11 @@ CLASS ltcl_abap_language_version DEFINITION FOR TESTING RISK LEVEL HARMLESS
           iv_exp     TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version,
       object_type_test
         IMPORTING
-          iv_version TYPE string,
+          iv_version      TYPE string
+          iv_standard     TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version
+          iv_standard_src TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version
+          iv_cloud        TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version
+          iv_cloud_src    TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version,
       is_import_allowed_test
         IMPORTING
           iv_version  TYPE string
@@ -158,14 +162,16 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_cut->get_repo_abap_language_version( )
-      exp = iv_exp ).
+      exp = iv_exp
+      msg = |ABAP Language Version: { iv_version }, On-prem| ).
 
-    " Assume on-prem (no cloud)
+    " Assume cloud platform
     set_environment( abap_true ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_cut->get_repo_abap_language_version( )
-      exp = iv_exp ).
+      exp = iv_exp
+      msg = |ABAP Language Version: { iv_version }, Cloud| ).
 
 
   ENDMETHOD.
@@ -181,7 +187,7 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
 
       repo_setting_test(
         iv_version = lv_version
-        iv_exp     = '' ).
+        iv_exp     = zcl_abapgit_abap_language_vers=>c_any_abap_language_version ).
 
     ENDLOOP.
 
@@ -201,7 +207,7 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
 
           repo_setting_test(
             iv_version = lv_version
-            iv_exp     = '' ).
+            iv_exp     = zcl_abapgit_abap_language_vers=>c_any_abap_language_version ).
 
         WHEN zif_abapgit_dot_abapgit=>c_abap_language_version-standard.
 
@@ -239,14 +245,16 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
       act = mo_cut->get_abap_language_vers_by_objt(
               iv_object_type = 'INTF'
               iv_package     = '$TMP' )
-      exp = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard ).
+      exp = iv_standard_src
+      msg = |ABAP Language Version: { iv_version }, On-prem| ).
 
     " non-source code
     cl_abap_unit_assert=>assert_equals(
       act = mo_cut->get_abap_language_vers_by_objt(
               iv_object_type = 'TABL'
               iv_package     = '$TMP' )
-      exp = zif_abapgit_aff_types_v1=>co_abap_language_version-standard ).
+      exp = iv_standard
+      msg = |ABAP Language Version: { iv_version }, On-prem| ).
 
     " Assume cloud platform
     set_environment( abap_true ).
@@ -256,14 +264,16 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
       act = mo_cut->get_abap_language_vers_by_objt(
               iv_object_type = 'INTF'
               iv_package     = c_cloud_package )
-      exp = zif_abapgit_aff_types_v1=>co_abap_language_version_src-cloud_development ).
+      exp = iv_cloud_src
+      msg = |ABAP Language Version: { iv_version }, Cloud| ).
 
     " non-source code
     cl_abap_unit_assert=>assert_equals(
       act = mo_cut->get_abap_language_vers_by_objt(
               iv_object_type = 'TABL'
               iv_package     = c_cloud_package )
-      exp = zif_abapgit_aff_types_v1=>co_abap_language_version-cloud_development ).
+      exp = iv_cloud
+      msg = |ABAP Language Version: { iv_version }, Cloud| ).
 
   ENDMETHOD.
 
@@ -276,7 +286,12 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
 
     LOOP AT mt_versions INTO lv_version.
 
-      object_type_test( lv_version ).
+      object_type_test(
+        iv_version      = lv_version
+        iv_standard     = zcl_abapgit_abap_language_vers=>c_any_abap_language_version
+        iv_standard_src = zcl_abapgit_abap_language_vers=>c_any_abap_language_version
+        iv_cloud        = zcl_abapgit_abap_language_vers=>c_any_abap_language_version
+        iv_cloud_src    = zcl_abapgit_abap_language_vers=>c_any_abap_language_version ).
 
     ENDLOOP.
 
@@ -291,7 +306,26 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
 
     LOOP AT mt_versions INTO lv_version.
 
-      object_type_test( lv_version ).
+      CASE lv_version.
+        WHEN zif_abapgit_dot_abapgit=>c_abap_language_version-undefined.
+
+          object_type_test(
+            iv_version      = lv_version
+            iv_standard     = zcl_abapgit_abap_language_vers=>c_any_abap_language_version
+            iv_standard_src = zcl_abapgit_abap_language_vers=>c_any_abap_language_version
+            iv_cloud        = zcl_abapgit_abap_language_vers=>c_any_abap_language_version
+            iv_cloud_src    = zcl_abapgit_abap_language_vers=>c_any_abap_language_version ).
+
+        WHEN OTHERS.
+
+          object_type_test(
+            iv_version      = lv_version
+            iv_standard     = zif_abapgit_aff_types_v1=>co_abap_language_version-standard
+            iv_standard_src = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard
+            iv_cloud        = zif_abapgit_aff_types_v1=>co_abap_language_version-cloud_development
+            iv_cloud_src    = zif_abapgit_aff_types_v1=>co_abap_language_version_src-cloud_development ).
+
+      ENDCASE.
 
     ENDLOOP.
 
