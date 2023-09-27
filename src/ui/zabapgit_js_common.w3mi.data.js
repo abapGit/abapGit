@@ -2377,7 +2377,7 @@ function enumerateUiActions() {
     .forEach(function(input) {
       items.push({
         action: function() {
-          if (input.form.action.includes(input.formAction)) {
+          if (input.form.action.includes(input.formAction) || input.classList.contains("main")) {
             input.form.submit();
           } else {
             submitSapeventForm({}, input.formAction, "post", input.form);
