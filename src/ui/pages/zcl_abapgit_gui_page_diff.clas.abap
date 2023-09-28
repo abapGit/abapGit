@@ -49,6 +49,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
     CONSTANTS:
       BEGIN OF c_actions,
         toggle_unified         TYPE string VALUE 'toggle_unified',
+        toggle_hide_diffs      TYPE string VALUE 'toggle_hide_diffs',
         toggle_hidden_chars    TYPE string VALUE 'toggle_hidden_chars',
         toggle_ignore_indent   TYPE string VALUE 'toggle_ignore_indent',
         toggle_ignore_comments TYPE string VALUE 'toggle_ignore_comments',
@@ -164,6 +165,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
   PRIVATE SECTION.
     TYPES:
       BEGIN OF ty_view,
+        hide_diffs      TYPE abap_bool,
         hidden_chars    TYPE abap_bool,
         ignore_indent   TYPE abap_bool,
         ignore_comments TYPE abap_bool,
@@ -403,8 +405,18 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
   METHOD add_view_sub_menu.
 
     DATA lo_sub_view TYPE REF TO zcl_abapgit_html_toolbar.
+    DATA lv_txt TYPE string.
 
     CREATE OBJECT lo_sub_view EXPORTING iv_id = 'diff-view'.
+
+    IF ms_view-hide_diffs = abap_true.
+      lv_txt = 'Expand All Diffs'.
+    ELSE.
+      lv_txt = 'Collapse All Diffs'.
+    ENDIF.
+
+    lo_sub_view->add( iv_txt = lv_txt
+                      iv_act = c_actions-toggle_hide_diffs ).
 
     lo_sub_view->add( iv_txt = 'Show Hidden Characters'
                       iv_act = c_actions-toggle_hidden_chars
@@ -884,6 +896,8 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
   METHOD render_diff.
 
+    DATA lv_display TYPE string.
+
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( |<div class="diff" data-extension="{ is_diff-type
@@ -893,8 +907,12 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     ri_html->add( render_diff_head( is_diff ) ).
 
     " Content
+    IF ms_view-hide_diffs = abap_true.
+      lv_display = ' nodisplay'.
+    ENDIF.
+
     IF is_diff-type <> 'binary'.
-      ri_html->add( '<div class="diff_content">' ).
+      ri_html->add( |<div class="diff_content{ lv_display }">| ).
       ri_html->add( |<table class="diff_tab syntax-hl" id="{ is_diff-filename }">| ).
       ri_html->add( render_table_head( is_diff ) ).
       ri_html->add( render_lines( is_diff ) ).
@@ -914,6 +932,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
   METHOD render_diff_head.
 
     DATA: ls_stats TYPE zif_abapgit_definitions=>ty_count,
+          lv_icon  TYPE string,
           lv_jump  TYPE string,
           lv_link  TYPE string.
 
@@ -921,8 +940,14 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     ri_html->add( '<div class="diff_head">' ).
 
+    IF ms_view-hide_diffs = abap_true.
+      lv_icon = 'chevron-right'.
+    ELSE.
+      lv_icon = 'chevron-down'.
+    ENDIF.
+
     ri_html->add_icon(
-      iv_name    = 'chevron-down'
+      iv_name    = lv_icon
       iv_hint    = 'Collapse/Expand'
       iv_class   = 'cursor-pointer'
       iv_onclick = 'onDiffCollapse(event)' ).
@@ -1319,6 +1344,10 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
         set_layout( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
+      WHEN c_actions-toggle_hide_diffs. " Toggle display of diffs
+
+        ms_view-hide_diffs = boolc( ms_view-hide_diffs = abap_false ).
+
       WHEN c_actions-toggle_hidden_chars. " Toggle display of hidden characters
 
         ms_view-hidden_chars = boolc( ms_view-hidden_chars = abap_false ).
@@ -1352,7 +1381,9 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     " If view has changed, refresh local files recalculating diff, and update menu
     IF ms_view <> ls_view.
-      refresh( c_actions-refresh_local ).
+      IF ms_view-hide_diffs = ls_view-hide_diffs.
+        refresh( c_actions-refresh_local ).
+      ENDIF.
       ms_control-page_menu = build_menu( ).
       rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDIF.
