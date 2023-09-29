@@ -42,6 +42,12 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
         !ig_field TYPE any
       CHANGING
         !ct_field TYPE tihttpnvp .
+
+    CLASS-METHODS fields_to_string
+      IMPORTING
+        !it_fields TYPE tihttpnvp
+      RETURNING
+        VALUE(rv_string) TYPE string.
 ENDCLASS.
 
 
@@ -72,34 +78,39 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD fields_to_string.
+
+    rv_string = cl_http_utility=>fields_to_string( it_fields ).
+
+  ENDMETHOD.
 
   METHOD dbkey_encode.
 
-    DATA: lt_fields TYPE tihttpnvp.
+    DATA lt_fields TYPE tihttpnvp.
 
     add_field( EXPORTING iv_name = 'TYPE'
                          ig_field = is_key-type CHANGING ct_field = lt_fields ).
     add_field( EXPORTING iv_name = 'VALUE'
                          ig_field = is_key-value CHANGING ct_field = lt_fields ).
 
-    rv_string = cl_http_utility=>fields_to_string( lt_fields ).
+    rv_string = fields_to_string( lt_fields ).
 
   ENDMETHOD.
 
 
   METHOD dir_encode.
 
-    DATA: lt_fields TYPE tihttpnvp.
+    DATA lt_fields TYPE tihttpnvp.
     add_field( EXPORTING iv_name = 'PATH'
                          ig_field = iv_path CHANGING ct_field = lt_fields ).
-    rv_string = cl_http_utility=>fields_to_string( lt_fields ).
+    rv_string = fields_to_string( lt_fields ).
 
   ENDMETHOD.
 
 
   METHOD file_encode.
 
-    DATA: lt_fields TYPE tihttpnvp.
+    DATA lt_fields TYPE tihttpnvp.
 
 
     add_field( EXPORTING iv_name = 'KEY'
@@ -109,14 +120,14 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
     add_field( EXPORTING iv_name = 'FILENAME'
                          ig_field = ig_file CHANGING ct_field = lt_fields ).
 
-    rv_string = cl_http_utility=>fields_to_string( lt_fields ).
+    rv_string = fields_to_string( lt_fields ).
 
   ENDMETHOD.
 
 
   METHOD jump_encode.
 
-    DATA: lt_fields TYPE tihttpnvp.
+    DATA lt_fields TYPE tihttpnvp.
 
 
     add_field( EXPORTING iv_name = 'TYPE'
@@ -129,14 +140,14 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
                            ig_field = iv_filename CHANGING ct_field = lt_fields ).
     ENDIF.
 
-    rv_string = cl_http_utility=>fields_to_string( lt_fields ).
+    rv_string = fields_to_string( lt_fields ).
 
   ENDMETHOD.
 
 
   METHOD obj_encode.
 
-    DATA: lt_fields TYPE tihttpnvp.
+    DATA lt_fields TYPE tihttpnvp.
 
 
     add_field( EXPORTING iv_name = 'KEY'
@@ -146,7 +157,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
     add_field( EXPORTING iv_name = 'OBJ_NAME'
                          ig_field = ig_object CHANGING ct_field = lt_fields ).
 
-    rv_string = cl_http_utility=>fields_to_string( lt_fields ).
+    rv_string = fields_to_string( lt_fields ).
 
   ENDMETHOD.
 
