@@ -54,7 +54,7 @@ CLASS ltcl_convert IMPLEMENTATION.
 
   METHOD xstring_to_bintab_with_field.
 
-    DATA lt_bintab TYPE w3mimetabtype. " contains one field named 'LINE'
+    DATA lt_bintab TYPE TABLE OF w3mime. " contains one field named 'LINE'
     DATA lv_size TYPE i.
 
     zcl_abapgit_convert=>xstring_to_bintab(
