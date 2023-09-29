@@ -52,7 +52,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
+CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
 
 
   METHOD add_field.
@@ -105,7 +105,21 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
 
   METHOD fields_to_string.
 
-    rv_string = cl_http_utility=>fields_to_string( it_fields ).
+* There is no equivalent to cl_http_utility=>fields_to_string released in ABAP Cloud,
+* see cl_web_http_utility
+
+    DATA lt_tab   TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
+    DATA lv_str   TYPE string.
+    DATA ls_field LIKE LINE OF it_fields.
+
+    LOOP AT it_fields INTO ls_field.
+      ls_field-value = cl_http_utility=>escape_url( ls_field-value ).
+      lv_str = ls_field-name && '=' && ls_field-value.
+      APPEND lv_str TO lt_tab.
+    ENDLOOP.
+    rv_string = concat_lines_of(
+      table = lt_tab
+      sep   = '&' ).
 
   ENDMETHOD.
 
