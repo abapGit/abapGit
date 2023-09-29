@@ -45,14 +45,14 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
 
     CLASS-METHODS fields_to_string
       IMPORTING
-        !it_fields TYPE tihttpnvp
+        !it_fields       TYPE tihttpnvp
       RETURNING
         VALUE(rv_string) TYPE string.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
 
 
   METHOD add_field.
@@ -78,11 +78,6 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD fields_to_string.
-
-    rv_string = cl_http_utility=>fields_to_string( it_fields ).
-
-  ENDMETHOD.
 
   METHOD dbkey_encode.
 
@@ -104,6 +99,13 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
     add_field( EXPORTING iv_name = 'PATH'
                          ig_field = iv_path CHANGING ct_field = lt_fields ).
     rv_string = fields_to_string( lt_fields ).
+
+  ENDMETHOD.
+
+
+  METHOD fields_to_string.
+
+    rv_string = cl_http_utility=>fields_to_string( it_fields ).
 
   ENDMETHOD.
 
@@ -160,5 +162,4 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
     rv_string = fields_to_string( lt_fields ).
 
   ENDMETHOD.
-
 ENDCLASS.
