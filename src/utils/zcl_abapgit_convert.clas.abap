@@ -332,7 +332,8 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
     ev_size = xstrlen( iv_xstr ).
 
     APPEND INITIAL LINE TO et_bintab ASSIGNING <lg_line>.
-    lv_struct = boolc( cl_abap_typedescr=>describe_by_data( <lg_line> )->type_kind = cl_abap_typedescr=>typekind_struct1 ).
+    lv_struct = boolc(
+      cl_abap_typedescr=>describe_by_data( <lg_line> )->type_kind = cl_abap_typedescr=>typekind_struct1 ).
     IF lv_struct = abap_true.
       ASSIGN COMPONENT 1 OF STRUCTURE <lg_line> TO <lg_line>.
     ENDIF.

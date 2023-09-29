@@ -53,10 +53,10 @@ CLASS zcl_abapgit_object_iamu IMPLEMENTATION.
   METHOD get_extension.
 
     CONSTANTS:
-      c_jpg TYPE xstring VALUE 'FFD8FF',
-      c_png TYPE xstring VALUE '89504E470D0A1A0A',
-      c_gif TYPE xstring VALUE '47494638',
-      c_bmp TYPE xstring VALUE '424D'.
+      lc_jpg TYPE xstring VALUE 'FFD8FF',
+      lc_png TYPE xstring VALUE '89504E470D0A1A0A',
+      lc_gif TYPE xstring VALUE '47494638',
+      lc_bmp TYPE xstring VALUE '424D'.
 
     DATA lv_len TYPE i.
 
@@ -64,24 +64,22 @@ CLASS zcl_abapgit_object_iamu IMPLEMENTATION.
     FIND REGEX '\.(\w)$' IN iv_name SUBMATCHES rv_extension.
     IF sy-subrc = 0.
       rv_extension = to_lower( rv_extension ).
-    ELSE.
+    ELSEIF zcl_abapgit_utils=>is_binary( iv_data ) = abap_true.
       " Use magic numbers to detect common file types
-      IF zcl_abapgit_utils=>is_binary( iv_data ) = abap_true.
-        lv_len = xstrlen( iv_data ).
-        IF lv_len > 3 AND iv_data(3) = c_jpg.
-          rv_extension = 'jpg'.
-        ELSEIF lv_len > 8 AND iv_data(8) = c_png.
-          rv_extension = 'png'.
-        ELSEIF lv_len > 4 AND iv_data(4) = c_gif.
-          rv_extension = 'git'.
-        ELSEIF lv_len > 2 AND iv_data(2) = c_bmp.
-          rv_extension = 'bmp'.
-        ELSE.
-          rv_extension = 'bin'.
-        ENDIF.
+      lv_len = xstrlen( iv_data ).
+      IF lv_len > 3 AND iv_data(3) = lc_jpg.
+        rv_extension = 'jpg'.
+      ELSEIF lv_len > 8 AND iv_data(8) = lc_png.
+        rv_extension = 'png'.
+      ELSEIF lv_len > 4 AND iv_data(4) = lc_gif.
+        rv_extension = 'git'.
+      ELSEIF lv_len > 2 AND iv_data(2) = lc_bmp.
+        rv_extension = 'bmp'.
       ELSE.
-        rv_extension = 'txt'.
+        rv_extension = 'bin'.
       ENDIF.
+    ELSE.
+      rv_extension = 'txt'.
     ENDIF.
 
   ENDMETHOD.
