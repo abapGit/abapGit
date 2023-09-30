@@ -38,7 +38,8 @@ CLASS zcl_abapgit_objects_super DEFINITION
     METHODS exists_a_lock_entry_for
       IMPORTING
         !iv_lock_object               TYPE string
-        !iv_argument                  TYPE seqg3-garg OPTIONAL
+        !iv_argument                  TYPE csequence OPTIONAL
+        !iv_prefix                    TYPE csequence OPTIONAL
       RETURNING
         VALUE(rv_exists_a_lock_entry) TYPE abap_bool
       RAISING
@@ -213,11 +214,20 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
   METHOD exists_a_lock_entry_for.
 
     DATA: lt_lock_entries TYPE STANDARD TABLE OF seqg3.
+    DATA: lv_argument TYPE seqg3-garg.
+
+    IF iv_prefix IS INITIAL.
+      lv_argument = iv_argument.
+    ELSE.
+      lv_argument = |{ iv_prefix  }{ iv_argument }|.
+      OVERLAY lv_argument WITH '                                          '.
+      lv_argument = lv_argument && '*'.
+    ENDIF.
 
     CALL FUNCTION 'ENQUEUE_READ'
       EXPORTING
         guname                = '*'
-        garg                  = iv_argument
+        garg                  = lv_argument
       TABLES
         enq                   = lt_lock_entries
       EXCEPTIONS
