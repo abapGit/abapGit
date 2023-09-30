@@ -117,7 +117,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
+CLASS zcl_abapgit_convert IMPLEMENTATION.
 
 
   METHOD base64_to_xstring.
@@ -330,6 +330,7 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
     DATA lv_length TYPE i.
     DATA lv_iterations TYPE i.
     DATA lv_offset TYPE i.
+    DATA lv_struct TYPE abap_bool.
 
     FIELD-SYMBOLS <lg_line> TYPE any.
 
@@ -338,6 +339,11 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
     ev_size = xstrlen( iv_xstr ).
 
     APPEND INITIAL LINE TO et_bintab ASSIGNING <lg_line>.
+    lv_struct = boolc(
+      cl_abap_typedescr=>describe_by_data( <lg_line> )->type_kind = cl_abap_typedescr=>typekind_struct1 ).
+    IF lv_struct = abap_true.
+      ASSIGN COMPONENT 1 OF STRUCTURE <lg_line> TO <lg_line>.
+    ENDIF.
     <lg_line> = iv_xstr.
 
     lv_length = cl_abap_typedescr=>describe_by_data( <lg_line> )->length.
@@ -346,6 +352,9 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
     DO lv_iterations TIMES.
       lv_offset = sy-index * lv_length.
       APPEND INITIAL LINE TO et_bintab ASSIGNING <lg_line>.
+      IF lv_struct = abap_true.
+        ASSIGN COMPONENT 1 OF STRUCTURE <lg_line> TO <lg_line>.
+      ENDIF.
       <lg_line> = iv_xstr+lv_offset.
     ENDDO.
 
