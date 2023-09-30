@@ -15,10 +15,10 @@ CLASS zcl_abapgit_user_record DEFINITION
         !iv_user TYPE sy-uname.
     METHODS get_name
       RETURNING
-        VALUE(rv_name) TYPE zif_abapgit_git_definitions=>ty_git_user-name.
+        VALUE(rv_name) TYPE string.
     METHODS get_email
       RETURNING
-        VALUE(rv_email) TYPE zif_abapgit_git_definitions=>ty_git_user-email.
+        VALUE(rv_email) TYPE string.
     CLASS-METHODS get_title
       IMPORTING
         iv_username     TYPE sy-uname
@@ -32,18 +32,15 @@ CLASS zcl_abapgit_user_record DEFINITION
         o_user TYPE REF TO zcl_abapgit_user_record,
       END OF ty_user.
 
-    TYPES:
-      ty_smtp TYPE STANDARD TABLE OF bapiadsmtp WITH DEFAULT KEY.
+    TYPES ty_smtp TYPE STANDARD TABLE OF bapiadsmtp WITH DEFAULT KEY.
+    TYPES ty_dev_clients TYPE SORTED TABLE OF sy-mandt WITH UNIQUE KEY table_line.
 
-    TYPES:
-      ty_dev_clients TYPE SORTED TABLE OF sy-mandt WITH UNIQUE KEY table_line.
+    CLASS-DATA gt_user TYPE HASHED TABLE OF ty_user WITH UNIQUE KEY user.
 
-    CLASS-DATA:
-      gt_user TYPE HASHED TABLE OF ty_user
-                   WITH UNIQUE KEY user.
-
-    DATA:
-      ms_user TYPE zif_abapgit_git_definitions=>ty_git_user.
+    DATA: BEGIN OF ms_user,
+            name  TYPE string,
+            email TYPE string,
+          END OF ms_user .
 
     METHODS check_user_exists
       IMPORTING
@@ -178,10 +175,8 @@ CLASS zcl_abapgit_user_record IMPLEMENTATION.
   METHOD get_user_dtls_from_other_clnt.
 
     CONSTANTS lc_cc_category TYPE string VALUE 'C'.
-
     DATA lt_dev_clients TYPE ty_dev_clients.
-
-    FIELD-SYMBOLS: <lv_dev_client> LIKE LINE OF lt_dev_clients.
+    FIELD-SYMBOLS <lv_dev_client> LIKE LINE OF lt_dev_clients.
 
     " Could not find the user Try other development clients
     SELECT mandt FROM t000 INTO TABLE lt_dev_clients
@@ -189,7 +184,7 @@ CLASS zcl_abapgit_user_record IMPLEMENTATION.
         ORDER BY PRIMARY KEY.
 
     LOOP AT lt_dev_clients ASSIGNING <lv_dev_client>.
-      SELECT SINGLE p~name_text a~smtp_addr INTO (ms_user-name,ms_user-email)
+      SELECT SINGLE p~name_text a~smtp_addr INTO (ms_user-name, ms_user-email)
           FROM usr21 AS u
           INNER JOIN adrp AS p ON p~persnumber = u~persnumber
                               AND p~client     = u~mandt
