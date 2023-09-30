@@ -672,7 +672,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
   METHOD zif_abapgit_repo_srv~validate_package.
 
-    DATA: lv_as4user TYPE tdevc-as4user,
+    DATA: lv_as4user TYPE usnam,
           li_repo    TYPE REF TO zif_abapgit_repo,
           lv_reason  TYPE string.
 
