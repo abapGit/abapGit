@@ -18,6 +18,7 @@ CLASS ltcl_convert DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FIN
     METHODS string_to_tab FOR TESTING.
     METHODS string_to_xstring FOR TESTING RAISING zcx_abapgit_exception.
     METHODS xstring_to_bintab FOR TESTING.
+    METHODS xstring_to_bintab_with_field FOR TESTING.
 
 ENDCLASS.
 
@@ -50,6 +51,29 @@ CLASS ltcl_convert IMPLEMENTATION.
       exp = 2 ).
 
   ENDMETHOD.
+
+  METHOD xstring_to_bintab_with_field.
+
+    DATA lt_bintab TYPE TABLE OF w3mime. " contains one field named 'LINE'
+    DATA lv_size TYPE i.
+
+    zcl_abapgit_convert=>xstring_to_bintab(
+      EXPORTING
+        iv_xstr   = '1122334455'
+      IMPORTING
+        ev_size   = lv_size
+        et_bintab = lt_bintab ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_size
+      exp = 5 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( lt_bintab )
+      exp = 1 ).
+
+  ENDMETHOD.
+
 
   METHOD string_to_xstring.
 
