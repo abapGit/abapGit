@@ -29,6 +29,7 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
         delete  TYPE string VALUE 'delete',
         backup  TYPE string VALUE 'backup',
         restore TYPE string VALUE 'restore',
+        back    TYPE string VALUE 'back',
       END OF c_action.
 
     CONSTANTS c_css_url TYPE string VALUE 'css/page_db.css'.
@@ -97,7 +98,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -511,6 +512,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
       WHEN c_action-restore.
         do_restore_db( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_action-back.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
 
   ENDMETHOD.
@@ -526,6 +529,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
     ro_toolbar->add(
       iv_txt = 'Restore'
       iv_act = c_action-restore ).
+    ro_toolbar->add(
+      iv_txt = 'Back'
+      iv_act = c_action-back ).
 
   ENDMETHOD.
 
