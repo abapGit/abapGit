@@ -77,11 +77,12 @@ CLASS ltcl_abap_language_version DEFINITION FOR TESTING RISK LEVEL HARMLESS
     CONSTANTS c_cloud_package TYPE devclass VALUE 'TEST_LANGUAGE_VERSION_SCP'.
 
     DATA:
-      mt_versions    TYPE string_table,
-      mo_environment TYPE REF TO lcl_environment,
-      mi_persistency TYPE REF TO zif_abapgit_persist_settings,
-      mo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit,
-      mo_cut         TYPE REF TO zcl_abapgit_abap_language_vers.
+      mt_versions          TYPE string_table,
+      mv_has_cloud_package TYPE abap_bool,
+      mo_environment       TYPE REF TO lcl_environment,
+      mi_persistency       TYPE REF TO zif_abapgit_persist_settings,
+      mo_dot_abapgit       TYPE REF TO zcl_abapgit_dot_abapgit,
+      mo_cut               TYPE REF TO zcl_abapgit_abap_language_vers.
 
     METHODS:
       setup,
@@ -134,6 +135,8 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
     APPEND zif_abapgit_dot_abapgit=>c_abap_language_version-standard TO mt_versions.
     APPEND zif_abapgit_dot_abapgit=>c_abap_language_version-key_user TO mt_versions.
     APPEND zif_abapgit_dot_abapgit=>c_abap_language_version-cloud_development TO mt_versions.
+
+    mv_has_cloud_package = zcl_abapgit_factory=>get_sap_package( c_cloud_package )->exists( ).
   ENDMETHOD.
 
   METHOD init.
@@ -257,6 +260,10 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
       msg = |ABAP Language Version: { iv_version }, On-prem| ).
 
     " Assume cloud platform
+    IF mv_has_cloud_package = abap_false.
+      RETURN.
+    ENDIF.
+
     set_environment( abap_true ).
 
     " source code
@@ -342,9 +349,11 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
       act = mo_cut->is_import_allowed( '$TMP' ) " existing standard package
       exp = iv_standard ).
 
-    cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->is_import_allowed( c_cloud_package ) " existing cloud package
-      exp = iv_cloud ).
+    IF mv_has_cloud_package = abap_true.
+      cl_abap_unit_assert=>assert_equals(
+        act = mo_cut->is_import_allowed( c_cloud_package ) " existing cloud package
+        exp = iv_cloud ).
+    ENDIF.
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_cut->is_import_allowed( 'Z_FOO_BAR' ) " non-existing package
@@ -357,9 +366,11 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
       act = mo_cut->is_import_allowed( '$TMP' ) " existing standard package
       exp = iv_standard ).
 
-    cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->is_import_allowed( c_cloud_package ) " existing cloud package
-      exp = iv_cloud ).
+    IF mv_has_cloud_package = abap_true.
+      cl_abap_unit_assert=>assert_equals(
+        act = mo_cut->is_import_allowed( c_cloud_package ) " existing cloud package
+        exp = iv_cloud ).
+    ENDIF.
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_cut->is_import_allowed( 'Z_FOO_BAR' ) " non-existing package
