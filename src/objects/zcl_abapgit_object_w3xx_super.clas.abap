@@ -28,8 +28,6 @@ CLASS zcl_abapgit_object_w3xx_super DEFINITION
     TYPES ty_bdcdata TYPE STANDARD TABLE OF bdcdata
                            WITH NON-UNIQUE DEFAULT KEY.
 
-    METHODS get_metadata REDEFINITION.
-
     METHODS change_bdc_jump_data ABSTRACT
       CHANGING
         ct_bdcdata TYPE ty_bdcdata.
@@ -94,12 +92,6 @@ CLASS zcl_abapgit_object_w3xx_super IMPLEMENTATION.
                          iv_name = c_param_names-fileext ).
     SHIFT rv_ext LEFT DELETING LEADING '.'.
 
-  ENDMETHOD.
-
-
-  METHOD get_metadata.
-    rs_metadata         = super->get_metadata( ).
-    rs_metadata-version = 'v2.0.0'. " Serialization v2, separate data file
   ENDMETHOD.
 
 
@@ -332,7 +324,8 @@ CLASS zcl_abapgit_object_w3xx_super IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_metadata.
-    rs_metadata = get_metadata( ).
+    rs_metadata         = get_metadata( ).
+    rs_metadata-version = 'v2.0.0'. " Serialization v2, separate data file
   ENDMETHOD.
 
 
