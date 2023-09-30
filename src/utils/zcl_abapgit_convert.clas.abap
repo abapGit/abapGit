@@ -36,6 +36,13 @@ CLASS zcl_abapgit_convert DEFINITION
         VALUE(rv_xstring) TYPE xstring
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS xstring_to_string_utf8_bom
+      IMPORTING
+        !iv_xstring      TYPE xstring
+      RETURNING
+        VALUE(rv_string) TYPE string
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS xstring_to_int
       IMPORTING
         !iv_xstring TYPE xstring
@@ -93,7 +100,7 @@ CLASS zcl_abapgit_convert DEFINITION
 
     CLASS-METHODS language_sap2_to_sap1
       IMPORTING
-        im_lang_sap2 TYPE laiso
+        im_lang_sap2        TYPE laiso
       RETURNING
         VALUE(re_lang_sap1) TYPE sy-langu
       EXCEPTIONS
@@ -159,7 +166,7 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
         re_lang_sap2  = rv_spras
       EXCEPTIONS
         no_assignment = 1
-        OTHERS        = 2 ). "#EC CI_SUBRC
+        OTHERS        = 2 ).                              "#EC CI_SUBRC
 
     TRANSLATE rv_spras TO UPPER CASE.
 
@@ -369,6 +376,25 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
     rv_string = lcl_in=>convert(
       iv_data   = lv_data
       iv_length = lv_length ).
+
+  ENDMETHOD.
+
+
+  METHOD xstring_to_string_utf8_bom.
+
+    DATA lv_xstring TYPE xstring.
+
+    IF iv_xstring IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    lv_xstring = iv_xstring.
+    " Add UTF-8 BOM
+    IF xstrlen( lv_xstring ) < 3 OR lv_xstring(3) <> cl_abap_char_utilities=>byte_order_mark_utf8.
+      lv_xstring = cl_abap_char_utilities=>byte_order_mark_utf8 && lv_xstring.
+    ENDIF.
+
+    rv_string = xstring_to_string_utf8( lv_xstring ).
 
   ENDMETHOD.
 
