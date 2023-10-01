@@ -16,6 +16,7 @@ CLASS zcl_abapgit_object_sfbf DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     DATA mv_bf TYPE sfw_bfunction.
 
     METHODS:
+      unlock,
       activate
         RAISING zcx_abapgit_exception,
       create
@@ -93,6 +94,19 @@ CLASS zcl_abapgit_object_sfbf IMPLEMENTATION.
       CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
         zcx_abapgit_exception=>raise( 'Error from CL_SFW_BF=>GET_BF' ).
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD unlock.
+
+    CALL FUNCTION 'DEQUEUE_EEUDB'
+      EXPORTING
+        relid     = 'SF'
+        name      = ms_item-obj_name
+        _synchron = 'X'
+        _scope    = '1'
+        mode_eudb = abap_true.
 
   ENDMETHOD.
 
@@ -204,6 +218,8 @@ CLASS zcl_abapgit_object_sfbf IMPLEMENTATION.
 
     lo_bf->save_all( ).
 
+    unlock( ).
+
     deserialize_longtexts( ii_xml         = io_xml
                            iv_longtext_id = c_longtext_id_sfbf ).
 
@@ -261,9 +277,9 @@ CLASS zcl_abapgit_object_sfbf IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_locked.
-
-    rv_is_locked = abap_false.
-
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'EEUDB'
+                                            iv_argument    = ms_item-obj_name
+                                            iv_prefix      = 'SF' ).
   ENDMETHOD.
 
 
