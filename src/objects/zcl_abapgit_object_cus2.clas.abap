@@ -94,6 +94,8 @@ CLASS zcl_abapgit_object_cus2 IMPLEMENTATION.
 
     corr_insert( iv_package ).
 
+    tadir_insert( iv_package ).
+
   ENDMETHOD.
 
 
