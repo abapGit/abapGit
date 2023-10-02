@@ -188,10 +188,6 @@
       {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_check_objects_locked", "method": "throw_excp_if_object_is_locked", "note": "no such table: seometarel"},
       {"object": "ZCL_ABAPGIT_OBJECTS", "class": "ltcl_check_objects_locked", "method": "no_excp_if_obj_is_not_locked", "note": "no such table: seometarel"},
 
-      {"object": "ZCL_ABAPGIT_ABAP_LANGUAGE_VERS", "class": "ltcl_abap_language_version", "method": "repo_setting_feature_off", "note": "CL_ABAP_LANGUAGE_VERSION/_CFG"},
-      {"object": "ZCL_ABAPGIT_ABAP_LANGUAGE_VERS", "class": "ltcl_abap_language_version", "method": "repo_setting_feature_on",  "note": "CL_ABAP_LANGUAGE_VERSION/_CFG"},
-      {"object": "ZCL_ABAPGIT_ABAP_LANGUAGE_VERS", "class": "ltcl_abap_language_version", "method": "object_type_feature_off",  "note": "CL_ABAP_LANGUAGE_VERSION/_CFG"},
-      {"object": "ZCL_ABAPGIT_ABAP_LANGUAGE_VERS", "class": "ltcl_abap_language_version", "method": "object_type_feature_on",   "note": "CL_ABAP_LANGUAGE_VERSION/_CFG"},
       {"object": "ZCL_ABAPGIT_ABAP_LANGUAGE_VERS", "class": "ltcl_abap_language_version", "method": "is_import_allowed",        "note": "CL_ABAP_LANGUAGE_VERSION/_CFG"},
 
       {"object": "ZCL_ABAPGIT_SERVICES_BASIS", "class": "ltcl_create_package", "method": "raise_error_if_package_exists", "note": "Void type: SCOMPKDTLN"},
