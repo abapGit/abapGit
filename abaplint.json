@@ -47,7 +47,6 @@
     ]
   },
   "rules": {
-    "select_single_full_key": false,
     "strict_sql": false,
     "cds_comment_style": true,
     "change_if_to_case": false,
@@ -65,8 +64,6 @@
     "no_external_form_calls": false,
     "no_inline_in_optional_branches": true,
     "pragma_style": true,
-    "slow_parameter_passing": false,
-    "unnecessary_pragma": false,
     "align_parameters": false,
     "cds_parser_error": true,
     "constant_classes": true,
@@ -87,7 +84,6 @@
     "modify_only_own_db_tables": false,
     "no_yoda_conditions": false,
     "no_chained_assignment": true,
-    "select_add_order_by": false,
     "dangerous_statement": false,
     "db_operation_in_loop": false,
     "select_performance": false,
@@ -114,7 +110,6 @@
         "zif_abapgit_log.intf.abap"
       ]
     },
-    "omit_parameter_name": false,
     "omit_receiving": true,
     "unused_methods": true,
     "identical_contents": false,
@@ -290,7 +285,6 @@
     "description_empty": {
       "exclude": ["/test/"]
     },
-    "double_space": false,
     "empty_line_in_statement": {
       "allowChained": true
     },
@@ -445,6 +439,14 @@
     "whitespace_end": true
   },
   "targetRules": {
-    "unused_variables": false
+    "double_space": true,
+    "omit_parameter_name": true,
+    "unnecessary_pragma": {
+      "allowNoTextGlobal": true
+    },
+    "select_add_order_by": true,
+    "slow_parameter_passing": true,
+    "select_single_full_key": true,
+    "unused_variables": true
   }
 }
