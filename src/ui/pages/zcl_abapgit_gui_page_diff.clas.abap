@@ -807,8 +807,8 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     IF sy-subrc = 0.
       mo_repo->refresh_local_object(
-          iv_obj_type = lv_obj_type
-          iv_obj_name = lv_obj_name ).
+        iv_obj_type = to_upper( lv_obj_type )
+        iv_obj_name = to_upper( lv_obj_name ) ).
     ELSE.
       zcx_abapgit_exception=>raise( |Invalid refresh action { iv_action }| ).
     ENDIF.
