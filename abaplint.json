@@ -270,7 +270,7 @@
       "ignoreLocal": false,
       "constants": "^C_.*$",
       "instance": "^M._.*$",
-      "exclude": ["zif_abapgit_objects"]
+      "exclude": ["zif_abapgit_objects", "/json/"]
     },
     "cloud_types": true,
     "colon_missing_space": true,
