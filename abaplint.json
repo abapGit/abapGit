@@ -268,8 +268,9 @@
       "ignoreInterfaces": false,
       "statics": "^G._.*$",
       "ignoreLocal": false,
-      "constants": "",
-      "instance": "^M._.*$"
+      "constants": "^C_.*$",
+      "instance": "^M._.*$",
+      "exclude": ["zif_abapgit_objects"]
     },
     "cloud_types": true,
     "colon_missing_space": true,
