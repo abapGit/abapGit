@@ -509,10 +509,10 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       LOOP AT lt_unsupported_count ASSIGNING <ls_unsupported_count>.
         IF <ls_unsupported_count>-count = 1.
           mi_log->add_error( |Object type { <ls_unsupported_count>-obj_type } not supported, | &&
-                             |<ls_unsupported_count>-obj_name } ignored| ).
+                             |{ <ls_unsupported_count>-obj_name } ignored| ).
         ELSE.
           mi_log->add_error( |Object type { <ls_unsupported_count>-obj_type } not supported, | &&
-                             |<ls_unsupported_count>-count } objects ignored| ).
+                             |{ <ls_unsupported_count>-count } objects ignored| ).
         ENDIF.
       ENDLOOP.
     ENDIF.
