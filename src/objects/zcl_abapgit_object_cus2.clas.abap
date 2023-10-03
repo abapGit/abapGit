@@ -32,7 +32,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_CUS2 IMPLEMENTATION.
+CLASS zcl_abapgit_object_cus2 IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -91,6 +91,10 @@ CLASS ZCL_ABAPGIT_OBJECT_CUS2 IMPLEMENTATION.
     IF ls_message-msgty <> 'S'.
       zcx_abapgit_exception=>raise( |error from deserialize CUS2 { mv_img_attribute } S_CUS_ATTRIBUTES_SAVE| ).
     ENDIF.
+
+    corr_insert( iv_package ).
+
+    tadir_insert( iv_package ).
 
   ENDMETHOD.
 
