@@ -247,8 +247,7 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
 
   METHOD go_home.
 
-    DATA: ls_stack LIKE LINE OF mt_stack,
-          lv_mode  TYPE tabname.
+    DATA ls_stack LIKE LINE OF mt_stack.
 
     IF mi_router IS BOUND.
       CLEAR: mt_stack, mt_event_handlers.
@@ -413,7 +412,7 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
     ENDIF.
 
     li_html = mi_cur_page->render( ).
-    lv_html = li_html->render( iv_no_indent_jscss = abap_true ).
+    lv_html = li_html->render( abap_true ).
 
     IF mi_html_processor IS BOUND.
       lv_html = mi_html_processor->process(

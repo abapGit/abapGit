@@ -198,7 +198,7 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
     ENDIF.
 
     CREATE OBJECT ro_object_data TYPE ('CL_SRVD_WB_OBJECT_DATA').
-    ro_object_data->set_data( p_data = <lg_data>  ).
+    ro_object_data->set_data( p_data = <lg_data> ).
 
   ENDMETHOD.
 
