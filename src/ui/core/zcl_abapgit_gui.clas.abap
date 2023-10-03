@@ -115,7 +115,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
+CLASS zcl_abapgit_gui IMPLEMENTATION.
 
 
   METHOD back.
@@ -325,7 +325,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
         ENDCASE.
 
       CATCH zcx_abapgit_cancel ##NO_HANDLER.
-        " Do nothing = gc_event_state-no_more_act
+        " Do nothing = c_event_state-no_more_act
       CATCH zcx_abapgit_exception INTO lx_exception.
         handle_error( lx_exception ).
     ENDTRY.
@@ -454,7 +454,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-    ls_event-eventid    = mi_html_viewer->m_id_sapevent.
+    ls_event-eventid    = mi_html_viewer->c_id_sapevent.
     ls_event-appl_event = abap_true.
     APPEND ls_event TO lt_events.
 

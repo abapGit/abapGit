@@ -3,7 +3,7 @@ CLASS zcl_abapgit_diff DEFINITION
   CREATE PUBLIC.
 
   PUBLIC SECTION.
-    CONSTANTS co_starting_beacon TYPE i VALUE 1.
+    CONSTANTS c_starting_beacon TYPE i VALUE 1.
 
 * assumes data is UTF8 based with newlines
     METHODS constructor
@@ -352,7 +352,7 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
 
   METHOD map_beacons.
 
-    DATA: lv_beacon_idx  TYPE i VALUE co_starting_beacon,
+    DATA: lv_beacon_idx  TYPE i VALUE c_starting_beacon,
           lv_offs        TYPE i,
           lv_beacon_str  TYPE string,
           lv_beacon_2lev TYPE string,

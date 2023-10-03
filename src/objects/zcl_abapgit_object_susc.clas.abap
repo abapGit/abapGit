@@ -4,7 +4,7 @@ CLASS zcl_abapgit_object_susc DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
   PROTECTED SECTION.
 
-    CONSTANTS transobjecttype_class TYPE c LENGTH 1 VALUE 'C' ##NO_TEXT.
+    CONSTANTS c_transobjecttype_class TYPE c LENGTH 1 VALUE 'C' ##NO_TEXT.
 
     METHODS has_authorization
       IMPORTING
@@ -88,7 +88,7 @@ CLASS zcl_abapgit_object_susc IMPLEMENTATION.
     CALL FUNCTION 'SUSR_COMMEDITCHECK'
       EXPORTING
         objectname       = lv_tr_object_name
-        transobjecttype  = transobjecttype_class
+        transobjecttype  = c_transobjecttype_class
       IMPORTING
         return_from_korr = lv_tr_return.
 
@@ -173,7 +173,7 @@ CLASS zcl_abapgit_object_susc IMPLEMENTATION.
     CALL FUNCTION 'SUSR_COMMEDITCHECK'
       EXPORTING
         objectname      = lv_objectname
-        transobjecttype = transobjecttype_class.
+        transobjecttype = c_transobjecttype_class.
 
     INSERT tobc FROM ls_tobc.                             "#EC CI_SUBRC
 * ignore sy-subrc as all fields are key fields
