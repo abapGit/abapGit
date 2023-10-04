@@ -18,7 +18,7 @@ CLASS ltcl_diff DEFINITION FOR TESTING
                              iv_old_num TYPE zif_abapgit_definitions=>ty_diff-old_num
                              iv_old     TYPE zif_abapgit_definitions=>ty_diff-old
                              iv_beacon  TYPE zif_abapgit_definitions=>ty_diff-beacon
-                               DEFAULT zcl_abapgit_diff=>co_starting_beacon.
+                               DEFAULT zcl_abapgit_diff=>c_starting_beacon.
 
     METHODS: setup.
 

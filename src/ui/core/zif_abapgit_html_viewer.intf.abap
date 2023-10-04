@@ -14,7 +14,7 @@ INTERFACE zif_abapgit_html_viewer
   TYPES:
     ty_query_table TYPE STANDARD TABLE OF ty_name_value WITH DEFAULT KEY .
 
-  CONSTANTS m_id_sapevent TYPE i VALUE 1 ##NO_TEXT.
+  CONSTANTS c_id_sapevent TYPE i VALUE 1 ##NO_TEXT.
 
   EVENTS sapevent
     EXPORTING

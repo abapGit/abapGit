@@ -54,6 +54,7 @@ CLASS zcl_abapgit_serialize DEFINITION
     DATA mo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit.
     DATA ms_local_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings.
     DATA ms_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params.
+    DATA mo_abap_language_version TYPE REF TO zcl_abapgit_abap_language_vers.
 
     METHODS add_apack
       IMPORTING
@@ -275,6 +276,10 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       io_dot = io_dot_abapgit
       iv_main_language_only = is_local_settings-main_language_only ).
 
+    CREATE OBJECT mo_abap_language_version
+      EXPORTING
+        io_dot_abapgit = mo_dot_abapgit.
+
   ENDMETHOD.
 
 
@@ -443,7 +448,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
         CLEAR: <ls_ignored_count>-obj_name.
         <ls_ignored_count>-count = <ls_ignored_count>-count + 1.
       ENDIF.
-      " init object so we can remove these entries afterwards
+      " init object so we can remove these entries afterward
       CLEAR <ls_tadir>-object.
     ENDLOOP.
     IF lt_ignored_count IS INITIAL.
@@ -455,11 +460,10 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     LOOP AT lt_ignored_count ASSIGNING <ls_ignored_count>.
       IF <ls_ignored_count>-count = 1.
-        mi_log->add_warning( iv_msg  = |Object { <ls_ignored_count>-obj_type } {
-                                       <ls_ignored_count>-obj_name } ignored| ).
+        mi_log->add_warning( |Object { <ls_ignored_count>-obj_type } { <ls_ignored_count>-obj_name } ignored| ).
       ELSE.
-        mi_log->add_warning( iv_msg  = |Object type { <ls_ignored_count>-obj_type } with {
-                                       <ls_ignored_count>-count } objects ignored| ).
+        mi_log->add_warning( |Object type { <ls_ignored_count>-obj_type } with | &&
+                             |{ <ls_ignored_count>-count } objects ignored| ).
       ENDIF.
     ENDLOOP.
 
@@ -504,11 +508,11 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     IF mi_log IS BOUND.
       LOOP AT lt_unsupported_count ASSIGNING <ls_unsupported_count>.
         IF <ls_unsupported_count>-count = 1.
-          mi_log->add_error( iv_msg  = |Object type { <ls_unsupported_count>-obj_type } not supported, {
-                                       <ls_unsupported_count>-obj_name } ignored| ).
+          mi_log->add_error( |Object type { <ls_unsupported_count>-obj_type } not supported, | &&
+                             |{ <ls_unsupported_count>-obj_name } ignored| ).
         ELSE.
-          mi_log->add_error( iv_msg  = |Object type { <ls_unsupported_count>-obj_type } not supported, {
-                                       <ls_unsupported_count>-count } objects ignored| ).
+          mi_log->add_error( |Object type { <ls_unsupported_count>-obj_type } not supported, | &&
+                             |{ <ls_unsupported_count>-count } objects ignored| ).
         ENDIF.
       ENDLOOP.
     ENDIF.
@@ -564,6 +568,8 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     ASSERT mv_free > 0.
 
+    lv_abap_language_version = mo_abap_language_version->get_repo_abap_language_version( ).
+
     DO.
       lv_task = |{ iv_task }-{ sy-index }|.
       CALL FUNCTION 'Z_ABAPGIT_SERIALIZE_PARALLEL'
@@ -610,6 +616,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     ls_file_item-item-obj_name  = is_tadir-obj_name.
     ls_file_item-item-devclass  = is_tadir-devclass.
     ls_file_item-item-srcsystem = is_tadir-srcsystem.
+    ls_file_item-item-abap_language_version = mo_abap_language_version->get_repo_abap_language_version( ).
 
     TRY.
         ls_file_item = zcl_abapgit_objects=>serialize(
