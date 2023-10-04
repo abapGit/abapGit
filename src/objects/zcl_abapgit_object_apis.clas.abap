@@ -18,14 +18,14 @@ CLASS zcl_abapgit_object_apis DEFINITION
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-    CONSTANTS gc_model TYPE string VALUE 'ARS_S_API_ABAPGIT'.
+    CONSTANTS c_model TYPE string VALUE 'ARS_S_API_ABAPGIT'.
     DATA mo_handler TYPE REF TO object.
     METHODS initialize.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_APIS IMPLEMENTATION.
+CLASS zcl_abapgit_object_apis IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -36,7 +36,7 @@ CLASS ZCL_ABAPGIT_OBJECT_APIS IMPLEMENTATION.
                         iv_language = iv_language ).
 
     TRY.
-        CREATE DATA lr_data TYPE (gc_model).
+        CREATE DATA lr_data TYPE (c_model).
       CATCH cx_sy_create_error.
         zcx_abapgit_exception=>raise( |APIS not supported by your NW release| ).
     ENDTRY.
@@ -110,7 +110,7 @@ CLASS ZCL_ABAPGIT_OBJECT_APIS IMPLEMENTATION.
     FIELD-SYMBOLS <lv_simple> TYPE simple.
 
 
-    CREATE DATA lr_data TYPE (gc_model).
+    CREATE DATA lr_data TYPE (c_model).
     ASSIGN lr_data->* TO <ls_data>.
     CREATE DATA lr_data TYPE ('IF_ARS_STATE_DB_ACCESS=>TY_S_HEADER').
     ASSIGN lr_data->* TO <ls_header>.
@@ -237,7 +237,7 @@ CLASS ZCL_ABAPGIT_OBJECT_APIS IMPLEMENTATION.
     DATA lr_data TYPE REF TO data.
     FIELD-SYMBOLS <ls_data> TYPE any.
 
-    CREATE DATA lr_data TYPE (gc_model).
+    CREATE DATA lr_data TYPE (c_model).
     ASSIGN lr_data->* TO <ls_data>.
 
     initialize( ).
