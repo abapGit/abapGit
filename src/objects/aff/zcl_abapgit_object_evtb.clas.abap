@@ -10,26 +10,28 @@ CLASS zcl_abapgit_object_evtb DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS:
-    co_table_name TYPE tabname VALUE 'EVTB_HEADER'.
+      c_table_name TYPE tabname VALUE 'EVTB_HEADER'.
 ENDCLASS.
+
 
 
 CLASS zcl_abapgit_object_evtb IMPLEMENTATION.
 
+
   METHOD zif_abapgit_object~changed_by.
 
-    DATA: lv_user                TYPE string,
-          lx_error               TYPE REF TO cx_root.
+    DATA: lv_user  TYPE string,
+          lx_error TYPE REF TO cx_root.
 
     TRY.
 
         SELECT SINGLE changed_by INTO lv_user
-            FROM (co_table_name)
+            FROM (c_table_name)
             WHERE evtb_name = ms_item-obj_name AND version = 'I'.
 
         IF lv_user IS INITIAL.
           SELECT SINGLE changed_by INTO lv_user
-            FROM (co_table_name)
+            FROM (c_table_name)
             WHERE evtb_name = ms_item-obj_name AND version = 'A'.
         ENDIF.
 
@@ -40,6 +42,4 @@ CLASS zcl_abapgit_object_evtb IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
-
 ENDCLASS.
-

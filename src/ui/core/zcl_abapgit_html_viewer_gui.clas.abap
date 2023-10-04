@@ -42,7 +42,7 @@ CLASS zcl_abapgit_html_viewer_gui IMPLEMENTATION.
         query_table_disabled = iv_disable_query_table
         parent               = io_container.
 
-    ls_event-eventid    = zif_abapgit_html_viewer=>m_id_sapevent.
+    ls_event-eventid    = zif_abapgit_html_viewer=>c_id_sapevent.
     ls_event-appl_event = abap_true.
     APPEND ls_event TO lt_events.
 
