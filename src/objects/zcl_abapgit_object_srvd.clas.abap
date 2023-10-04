@@ -16,8 +16,8 @@ CLASS zcl_abapgit_object_srvd DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     DATA mv_service_definition_key TYPE seu_objkey .
     DATA mr_service_definition TYPE REF TO data .
-    CONSTANTS mc_source_file TYPE string VALUE 'srvdsrv' ##NO_TEXT.
-    CONSTANTS mc_xml_parent_name TYPE string VALUE 'SRVD' ##NO_TEXT.
+    CONSTANTS c_source_file TYPE string VALUE 'srvdsrv' ##NO_TEXT.
+    CONSTANTS c_xml_parent_name TYPE string VALUE 'SRVD' ##NO_TEXT.
     DATA mo_object_operator TYPE REF TO object .
 
     METHODS clear_fields
@@ -183,7 +183,7 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
 
     io_xml->read(
       EXPORTING
-        iv_name = mc_xml_parent_name
+        iv_name = c_xml_parent_name
       CHANGING
         cg_data = <ls_metadata> ).
 
@@ -192,13 +192,13 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
     ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <lg_data> TO <lv_source>.
     ASSERT sy-subrc = 0.
 
-    <lv_source> = zif_abapgit_object~mo_files->read_string( mc_source_file ).
+    <lv_source> = zif_abapgit_object~mo_files->read_string( c_source_file ).
     IF <lv_source> IS INITIAL.
       <lv_source> = zif_abapgit_object~mo_files->read_string( 'assrvd' ).
     ENDIF.
 
     CREATE OBJECT ro_object_data TYPE ('CL_SRVD_WB_OBJECT_DATA').
-    ro_object_data->set_data( p_data = <lg_data>  ).
+    ro_object_data->set_data( p_data = <lg_data> ).
 
   ENDMETHOD.
 
@@ -557,11 +557,11 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
         lv_source = <lv_source>.
 
         io_xml->add(
-          iv_name = mc_xml_parent_name
+          iv_name = c_xml_parent_name
           ig_data = <lv_metadata> ).
 
         zif_abapgit_object~mo_files->add_string(
-          iv_ext    = mc_source_file
+          iv_ext    = c_source_file
           iv_string = lv_source ).
 
       CATCH cx_root INTO lx_error.

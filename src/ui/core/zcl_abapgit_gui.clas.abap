@@ -115,7 +115,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
+CLASS zcl_abapgit_gui IMPLEMENTATION.
 
 
   METHOD back.
@@ -247,8 +247,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
   METHOD go_home.
 
-    DATA: ls_stack LIKE LINE OF mt_stack,
-          lv_mode  TYPE tabname.
+    DATA ls_stack LIKE LINE OF mt_stack.
 
     IF mi_router IS BOUND.
       CLEAR: mt_stack, mt_event_handlers.
@@ -325,7 +324,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
         ENDCASE.
 
       CATCH zcx_abapgit_cancel ##NO_HANDLER.
-        " Do nothing = gc_event_state-no_more_act
+        " Do nothing = c_event_state-no_more_act
       CATCH zcx_abapgit_exception INTO lx_exception.
         handle_error( lx_exception ).
     ENDTRY.
@@ -413,7 +412,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     ENDIF.
 
     li_html = mi_cur_page->render( ).
-    lv_html = li_html->render( iv_no_indent_jscss = abap_true ).
+    lv_html = li_html->render( abap_true ).
 
     IF mi_html_processor IS BOUND.
       lv_html = mi_html_processor->process(
@@ -454,7 +453,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-    ls_event-eventid    = mi_html_viewer->m_id_sapevent.
+    ls_event-eventid    = mi_html_viewer->c_id_sapevent.
     ls_event-appl_event = abap_true.
     APPEND ls_event TO lt_events.
 
