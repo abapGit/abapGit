@@ -25,12 +25,36 @@ CLASS zcl_abapgit_background DEFINITION
     CLASS-METHODS dequeue.
   PROTECTED SECTION.
   PRIVATE SECTION.
-    CONSTANTS gc_enq_type TYPE c LENGTH 12 VALUE 'BACKGROUND'.
+    CONSTANTS c_enq_type TYPE c LENGTH 12 VALUE 'BACKGROUND'.
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_background IMPLEMENTATION.
+
+
+  METHOD dequeue.
+    CALL FUNCTION 'DEQUEUE_EZABAPGIT'
+      EXPORTING
+        type = c_enq_type.
+  ENDMETHOD.
+
+
+  METHOD enqueue.
+    CALL FUNCTION 'ENQUEUE_EZABAPGIT'
+      EXPORTING
+        mode_zabapgit  = 'E'
+        type           = c_enq_type
+        _scope         = '3'
+      EXCEPTIONS
+        foreign_lock   = 1
+        system_failure = 2
+        OTHERS         = 3.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+  ENDMETHOD.
 
 
   METHOD list_methods.
@@ -136,27 +160,4 @@ CLASS zcl_abapgit_background IMPLEMENTATION.
     dequeue( ).
 
   ENDMETHOD.
-
-  METHOD enqueue.
-    CALL FUNCTION 'ENQUEUE_EZABAPGIT'
-      EXPORTING
-        mode_zabapgit  = 'E'
-        type           = gc_enq_type
-        _scope         = '3'
-      EXCEPTIONS
-        foreign_lock   = 1
-        system_failure = 2
-        OTHERS         = 3.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
-  ENDMETHOD.
-
-  METHOD dequeue.
-    CALL FUNCTION 'DEQUEUE_EZABAPGIT'
-      EXPORTING
-        type = gc_enq_type.
-  ENDMETHOD.
-
 ENDCLASS.
