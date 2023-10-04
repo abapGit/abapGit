@@ -86,8 +86,6 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
 
     corr_insert( iv_package ).
 
-    tadir_delete( ).
-
   ENDMETHOD.
 
 
