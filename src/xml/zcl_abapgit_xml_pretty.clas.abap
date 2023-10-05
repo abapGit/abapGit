@@ -29,6 +29,8 @@ CLASS ZCL_ABAPGIT_XML_PRETTY IMPLEMENTATION.
           li_stream_factory TYPE REF TO if_ixml_stream_factory,
           li_istream        TYPE REF TO if_ixml_istream,
           li_parser         TYPE REF TO if_ixml_parser,
+          lv_xstring        TYPE xstring,
+          li_encoding       TYPE REF TO if_ixml_encoding,
           li_ostream        TYPE REF TO if_ixml_ostream,
           li_renderer       TYPE REF TO if_ixml_renderer.
 
@@ -39,7 +41,8 @@ CLASS ZCL_ABAPGIT_XML_PRETTY IMPLEMENTATION.
     li_xml_doc = li_ixml->create_document( ).
 
     li_stream_factory = li_ixml->create_stream_factory( ).
-    li_istream        = li_stream_factory->create_istream_string( iv_xml ).
+    li_istream        = li_stream_factory->create_istream_xstring(
+      zcl_abapgit_convert=>string_to_xstring_utf8( iv_xml ) ).
     li_parser         = li_ixml->create_parser( stream_factory = li_stream_factory
                                                 istream        = li_istream
                                                 document       = li_xml_doc ).
@@ -55,14 +58,22 @@ CLASS ZCL_ABAPGIT_XML_PRETTY IMPLEMENTATION.
     li_istream->close( ).
 
 
-    li_ostream  = li_stream_factory->create_ostream_cstring( rv_xml ).
+    li_ostream  = li_stream_factory->create_ostream_xstring( lv_xstring ).
 
+    li_encoding = li_ixml->create_encoding(
+      character_set = 'utf-8'
+      byte_order    = if_ixml_encoding=>co_big_endian ).
+
+    li_xml_doc->set_encoding( li_encoding ).
     li_renderer = li_ixml->create_renderer( ostream  = li_ostream
                                             document = li_xml_doc ).
 
     li_renderer->set_normalizing( boolc( iv_unpretty = abap_false ) ).
 
     li_renderer->render( ).
+
+    rv_xml = zcl_abapgit_convert=>xstring_to_string_utf8_bom( lv_xstring ).
+    REPLACE FIRST OCCURRENCE OF 'utf-8' IN rv_xml WITH 'utf-16'.
 
   ENDMETHOD.
 ENDCLASS.
