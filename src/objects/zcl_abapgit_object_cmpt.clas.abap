@@ -84,7 +84,7 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Error deleting CMPT { ms_item-obj_name }| ).
     ENDIF.
 
-    tadir_delete( ).
+    corr_insert( iv_package ).
 
   ENDMETHOD.
 
