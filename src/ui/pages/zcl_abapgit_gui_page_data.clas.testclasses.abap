@@ -74,6 +74,11 @@ CLASS ltcl_test IMPLEMENTATION.
 
     DATA lv_where TYPE string.
 
+    IF sy-sysid = 'ABC'.
+* dont run on open-abap
+      RETURN.
+    ENDIF.
+
     lv_where = zcl_abapgit_gui_page_data=>concatenated_key_to_where(
       iv_table  = 'USR02'
       iv_tabkey = '100ASDF' ).
