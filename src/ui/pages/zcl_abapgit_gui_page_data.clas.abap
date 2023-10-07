@@ -91,7 +91,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
 
 
   METHOD add_via_transport.
@@ -158,17 +158,24 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
     DATA lo_typedescr   TYPE REF TO cl_abap_typedescr.
     DATA lt_fields      TYPE zcl_abapgit_data_utils=>ty_names.
     DATA lv_field       LIKE LINE OF lt_fields.
+    DATA lv_table       TYPE tadir-obj_name.
+    DATA lv_length      TYPE i.
+    DATA lv_tabix       TYPE i.
     DATA lv_key         TYPE c LENGTH 900.
 
     lv_key = iv_tabkey.
     lo_structdescr ?= cl_abap_typedescr=>describe_by_name( iv_table ).
 
-    lt_fields = zcl_abapgit_data_utils=>list_key_fields( iv_table ).
+    lv_table = iv_table.
+    lt_fields = zcl_abapgit_data_utils=>list_key_fields( lv_table ).
 
     LOOP AT lt_fields INTO lv_field.
+      lv_tabix = sy-tabix.
       lo_typedescr = cl_abap_typedescr=>describe_by_name( |{ iv_table }-{ lv_field }| ).
-      IF sy-tabix = 1 AND lo_typedescr->get_relative_name( ) = 'MANDT'.
-        lv_key = lv_key+lo_typedescr->leng.
+      lv_length = lo_typedescr->length / cl_abap_char_utilities=>charsize.
+
+      IF lv_tabix = 1 AND lo_typedescr->get_relative_name( ) = 'MANDT'.
+        lv_key = lv_key+lv_length.
         CONTINUE.
       ENDIF.
 
@@ -178,8 +185,8 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
       IF NOT rv_where IS INITIAL.
         rv_where = |{ rv_where } AND |.
       ENDIF.
-      rv_where = |{ rv_where }{ to_lower( lv_field ) } = '{ lv_key(lo_typedescr->leng) }'|.
-      lv_key = lv_key+lo_typedescr->leng.
+      rv_where = |{ rv_where }{ to_lower( lv_field ) } = '{ lv_key(lv_length) }'|.
+      lv_key = lv_key+lv_length.
     ENDLOOP.
 
   ENDMETHOD.
