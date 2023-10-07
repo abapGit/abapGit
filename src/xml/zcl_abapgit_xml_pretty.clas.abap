@@ -55,7 +55,6 @@ CLASS ZCL_ABAPGIT_XML_PRETTY IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'error parsing xml' ).
       ENDIF.
     ENDIF.
-    li_istream->close( ).
 
 
     li_ostream  = li_stream_factory->create_ostream_xstring( lv_xstring ).
