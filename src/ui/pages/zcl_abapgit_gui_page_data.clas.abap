@@ -51,7 +51,9 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
         !iv_table       TYPE tabname
         !iv_tabkey      TYPE clike
       RETURNING
-        VALUE(rv_where) TYPE string .
+        VALUE(rv_where) TYPE string
+      RAISING
+        zcx_abapgit_exception.
     METHODS add_via_transport
       RAISING
         zcx_abapgit_exception .
@@ -153,28 +155,31 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
   METHOD concatenated_key_to_where.
 
     DATA lo_structdescr TYPE REF TO cl_abap_structdescr.
-    DATA lt_fields      TYPE ddfields.
-    DATA ls_field       LIKE LINE OF lt_fields.
+    DATA lo_typedescr   TYPE REF TO cl_abap_typedescr.
+    DATA lt_fields      TYPE zcl_abapgit_data_utils=>ty_names.
+    DATA lv_field       LIKE LINE OF lt_fields.
     DATA lv_key         TYPE c LENGTH 900.
 
     lv_key = iv_tabkey.
     lo_structdescr ?= cl_abap_typedescr=>describe_by_name( iv_table ).
 
-    lt_fields = lo_structdescr->get_ddic_field_list( ).
+    lt_fields = zcl_abapgit_data_utils=>list_key_fields( iv_table ).
 
-    LOOP AT lt_fields INTO ls_field WHERE keyflag = abap_true.
-      IF ls_field-position = '0001' AND ls_field-datatype = 'CLNT'.
-        lv_key = lv_key+ls_field-leng.
+    LOOP AT lt_fields INTO lv_field.
+      lo_typedescr = cl_abap_typedescr=>describe_by_name( |{ iv_table }-{ lv_field }| ).
+      IF sy-tabix = 1 AND lo_typedescr->get_relative_name( ) = 'MANDT'.
+        lv_key = lv_key+lo_typedescr->leng.
         CONTINUE.
       ENDIF.
+
       IF lv_key = |*|.
         EXIT. " current loop
       ENDIF.
       IF NOT rv_where IS INITIAL.
         rv_where = |{ rv_where } AND |.
       ENDIF.
-      rv_where = |{ rv_where }{ to_lower( ls_field-fieldname ) } = '{ lv_key(ls_field-leng) }'|.
-      lv_key = lv_key+ls_field-leng.
+      rv_where = |{ rv_where }{ to_lower( lv_field ) } = '{ lv_key(lo_typedescr->leng) }'|.
+      lv_key = lv_key+lo_typedescr->leng.
     ENDLOOP.
 
   ENDMETHOD.
