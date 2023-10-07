@@ -91,7 +91,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
 
 
   METHOD add_via_transport.
@@ -312,7 +312,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DATA IMPLEMENTATION.
     lt_configs = mi_config->get_configs( ).
 
     LOOP AT lt_configs INTO ls_config.
-      lo_form = zcl_abapgit_html_form=>create(  ).
+      lo_form = zcl_abapgit_html_form=>create( ).
       CREATE OBJECT lo_form_data.
 
       lo_form_data->set(
