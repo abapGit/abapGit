@@ -24,8 +24,6 @@ CLASS zcl_abapgit_data_utils DEFINITION
     CLASS-METHODS jump
       IMPORTING
         !is_item       TYPE zif_abapgit_definitions=>ty_item
-      RETURNING
-        VALUE(rv_exit) TYPE abap_bool
       RAISING
         zcx_abapgit_exception.
     CLASS-METHODS does_table_exist
