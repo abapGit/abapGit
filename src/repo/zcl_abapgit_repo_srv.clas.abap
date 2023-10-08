@@ -309,6 +309,8 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     FIELD-SYMBOLS: <li_repo> LIKE LINE OF mt_list.
 
+    ASSERT iv_key IS NOT INITIAL.
+
     IF mv_init = abap_false.
       refresh_all( ).
     ENDIF.

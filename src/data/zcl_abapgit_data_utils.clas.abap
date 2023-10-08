@@ -3,7 +3,7 @@ CLASS zcl_abapgit_data_utils DEFINITION
   CREATE PUBLIC.
 
   PUBLIC SECTION.
-
+    TYPES ty_names TYPE STANDARD TABLE OF abap_compname WITH DEFAULT KEY .
     CLASS-METHODS build_table_itab
       IMPORTING
         !iv_name       TYPE tadir-obj_name
@@ -24,8 +24,6 @@ CLASS zcl_abapgit_data_utils DEFINITION
     CLASS-METHODS jump
       IMPORTING
         !is_item       TYPE zif_abapgit_definitions=>ty_item
-      RETURNING
-        VALUE(rv_exit) TYPE abap_bool
       RAISING
         zcx_abapgit_exception.
     CLASS-METHODS does_table_exist
@@ -38,9 +36,6 @@ CLASS zcl_abapgit_data_utils DEFINITION
         !iv_name              TYPE tadir-obj_name
       RETURNING
         VALUE(rv_customizing) TYPE abap_bool.
-  PROTECTED SECTION.
-  PRIVATE SECTION.
-    TYPES ty_names TYPE STANDARD TABLE OF abap_compname WITH DEFAULT KEY .
     CLASS-METHODS list_key_fields
       IMPORTING
         !iv_name        TYPE tadir-obj_name
@@ -48,6 +43,8 @@ CLASS zcl_abapgit_data_utils DEFINITION
         VALUE(rt_names) TYPE ty_names
       RAISING
         zcx_abapgit_exception.
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 ENDCLASS.
 
 

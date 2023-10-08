@@ -8,6 +8,7 @@ CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
     METHODS concatenated_key_to_where2 FOR TESTING RAISING cx_static_check.
     METHODS concatenated_key_to_where3 FOR TESTING RAISING cx_static_check.
     METHODS concatenated_key_to_where4 FOR TESTING RAISING cx_static_check.
+    METHODS with_mandt FOR TESTING RAISING cx_static_check.
 ENDCLASS.
 
 
@@ -66,6 +67,25 @@ CLASS ltcl_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lv_where
       exp = |sprsl = 'E' AND arbgb = 'SHORT' AND msgnr = '0'| ).
+
+  ENDMETHOD.
+
+  METHOD with_mandt.
+
+    DATA lv_where TYPE string.
+
+    IF sy-sysid = 'ABC'.
+* dont run on open-abap
+      RETURN.
+    ENDIF.
+
+    lv_where = zcl_abapgit_gui_page_data=>concatenated_key_to_where(
+      iv_table  = 'USR02'
+      iv_tabkey = '100ASDF' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_where
+      exp = |bname = 'ASDF'| ).
 
   ENDMETHOD.
 
