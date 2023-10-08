@@ -135,6 +135,7 @@ CLASS ltcl_unit_test IMPLEMENTATION.
 
     ms_item-obj_name = 'ZIF_ABAPGIT_TEST_INTF'.
     ms_item-obj_type = 'INTF'.
+    ms_item-abap_language_version = 'X'. " assume standard ABAP
 
     CREATE OBJECT lo_cut
       EXPORTING
@@ -190,8 +191,6 @@ CLASS ltcl_unit_test IMPLEMENTATION.
                                         act = mo_object_fnc->ms_create_vseointerf ).
 
     ls_expected_clskey-clsname = 'ZIF_ABAPGIT_TEST_INTF'.
-    cl_abap_unit_assert=>assert_equals( exp = ls_expected_clskey
-                                        act = mo_object_fnc->ms_deserialize_key ).
     cl_abap_unit_assert=>assert_equals( exp = ls_expected_clskey
                                         act = mo_object_fnc->ms_deserialize_key ).
 

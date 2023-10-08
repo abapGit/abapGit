@@ -10,12 +10,6 @@ CLASS zcl_abapgit_sap_report DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    METHODS get_language_version
-      IMPORTING
-        iv_package        TYPE devclass
-      RETURNING
-        VALUE(rv_version) TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version.
-
     METHODS authorization_check
       IMPORTING
         iv_mode TYPE csequence
@@ -83,21 +77,6 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_language_version.
-
-    " TODO: Determine ABAP Language Version
-    " https://github.com/abapGit/abapGit/issues/6154#issuecomment-1503566920)
-
-    " For now, use default for ABAP source code
-    IF zcl_abapgit_factory=>get_environment( )->is_sap_cloud_platform( ) = abap_true.
-      rv_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-cloud_development.
-    ELSE.
-      rv_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_sap_report~delete_report.
 
     authorization_check(
@@ -115,13 +94,8 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
 
   METHOD zif_abapgit_sap_report~insert_report.
 
-    DATA lv_version TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version.
-    DATA lv_obj_name TYPE e071-obj_name.
-
     ASSERT iv_state CA ' AI'.
     ASSERT iv_program_type CA ' 1FIJKMST'.
-
-    lv_version = get_language_version( iv_package ).
 
     authorization_check(
       iv_mode = 'MODIFY'
@@ -131,7 +105,7 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
       INSERT REPORT iv_name FROM it_source.
     ELSEIF iv_program_type IS INITIAL AND iv_extension_type IS INITIAL.
       INSERT REPORT iv_name FROM it_source
-        STATE   iv_state.
+        STATE iv_state.
     ELSEIF iv_extension_type IS INITIAL.
       INSERT REPORT iv_name FROM it_source
         STATE        iv_state
@@ -149,7 +123,7 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
 
     " In lower releases, INSERT REPORT does not support setting ABAP Language version (VERSION)
     " Therefore, update the flag directly
-    UPDATE progdir SET uccheck = lv_version WHERE name = iv_name AND state = iv_state.
+    UPDATE progdir SET uccheck = iv_version WHERE name = iv_name AND state = iv_state.
 
   ENDMETHOD.
 
@@ -276,6 +250,7 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
         iv_program_type   = iv_program_type
         iv_extension_type = iv_extension_type
         iv_package        = iv_package
+        iv_version        = iv_version
         is_item           = is_item ).
 
       rv_updated = abap_true.

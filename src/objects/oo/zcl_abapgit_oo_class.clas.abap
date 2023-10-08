@@ -44,6 +44,7 @@ CLASS zcl_abapgit_oo_class DEFINITION
         !iv_program       TYPE syrepid
         !it_source        TYPE string_table
         !iv_package       TYPE devclass
+        !iv_version       TYPE uccheck
       RETURNING
         VALUE(rv_updated) TYPE abap_bool
       RAISING
@@ -82,6 +83,7 @@ CLASS zcl_abapgit_oo_class DEFINITION
         !it_source    TYPE string_table
         !it_methods   TYPE cl_oo_source_scanner_class=>type_method_implementations
         !iv_package   TYPE devclass
+        !iv_version   TYPE uccheck
       RAISING
         zcx_abapgit_exception.
     CLASS-METHODS create_report
@@ -90,8 +92,9 @@ CLASS zcl_abapgit_oo_class DEFINITION
         !it_source       TYPE string_table
         !iv_extension    TYPE ty_char2
         !iv_program_type TYPE ty_char1
-        !iv_version      TYPE r3state
+        !iv_state        TYPE r3state
         !iv_package      TYPE devclass
+        !iv_version      TYPE uccheck
       RAISING
         zcx_abapgit_exception.
     CLASS-METHODS update_cs_number_of_methods
@@ -122,7 +125,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
+CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
 
   METHOD create_report.
@@ -130,7 +133,8 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
       iv_name           = iv_program
       iv_package        = iv_package
       it_source         = it_source
-      iv_state          = iv_version
+      iv_state          = iv_state
+      iv_version        = iv_version
       iv_program_type   = iv_program_type
       iv_extension_type = iv_extension ).
   ENDMETHOD.
@@ -420,7 +424,8 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
                    it_source       = it_source
                    iv_extension    = lc_class_source_extension
                    iv_program_type = lc_include_program_type
-                   iv_version      = lc_active_version ).
+                   iv_state        = lc_active_version
+                   iv_version      = iv_version ).
 
     " Assuming that all methods that were scanned are implemented
     update_cs_number_of_methods( iv_classname              = iv_classname
@@ -508,6 +513,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
     rv_updated = zcl_abapgit_factory=>get_sap_report( )->update_report(
       iv_name    = iv_program
       iv_package = iv_package
+      iv_version = iv_version
       it_source  = it_source ).
   ENDMETHOD.
 
@@ -692,6 +698,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
       lv_program = cl_oo_classname_service=>get_pubsec_name( is_key-clsname ).
       lv_updated = update_report( iv_program = lv_program
                                   iv_package = iv_package
+                                  iv_version = iv_version
                                   it_source  = lt_public ).
       IF lv_updated = abap_true.
         update_meta( iv_name     = is_key-clsname
@@ -706,6 +713,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
       lv_program = cl_oo_classname_service=>get_prosec_name( is_key-clsname ).
       lv_updated = update_report( iv_program = lv_program
                                   iv_package = iv_package
+                                  iv_version = iv_version
                                   it_source  = lt_source ).
       IF lv_updated = abap_true.
         update_meta( iv_name     = is_key-clsname
@@ -720,6 +728,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
       lv_program = cl_oo_classname_service=>get_prisec_name( is_key-clsname ).
       lv_updated = update_report( iv_program = lv_program
                                   iv_package = iv_package
+                                  iv_version = iv_version
                                   it_source  = lt_source ).
       IF lv_updated = abap_true.
         update_meta( iv_name     = is_key-clsname
@@ -746,6 +755,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
       update_report(
         iv_program = lv_program
         iv_package = iv_package
+        iv_version = iv_version
         it_source  = lt_source ).
 
       " If method was implemented before, remove from list
@@ -755,6 +765,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
 * full class include
     update_full_class_include( iv_classname = is_key-clsname
                                iv_package   = iv_package
+                               iv_version   = iv_version
                                it_source    = it_source
                                it_methods   = lt_methods ).
 
@@ -795,6 +806,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
       lv_program = cl_oo_classname_service=>get_ccdef_name( is_key-clsname ).
       update_report( iv_program = lv_program
                      iv_package = iv_package
+                     iv_version = iv_version
                      it_source  = it_local_definitions ).
     ENDIF.
 
@@ -802,6 +814,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
       lv_program = cl_oo_classname_service=>get_ccimp_name( is_key-clsname ).
       update_report( iv_program = lv_program
                      iv_package = iv_package
+                     iv_version = iv_version
                      it_source  = it_local_implementations ).
     ENDIF.
 
@@ -809,6 +822,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
       lv_program = cl_oo_classname_service=>get_ccmac_name( is_key-clsname ).
       update_report( iv_program = lv_program
                      iv_package = iv_package
+                     iv_version = iv_version
                      it_source  = it_local_macros ).
     ENDIF.
 
@@ -816,6 +830,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
     IF lines( it_local_test_classes ) > 0.
       update_report( iv_program = lv_program
                      iv_package = iv_package
+                     iv_version = iv_version
                      it_source  = it_local_test_classes ).
     ELSE.
       " Drop the include to remove left-over test classes

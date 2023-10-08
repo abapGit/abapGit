@@ -198,6 +198,8 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
                     CHANGING  cg_data = ls_intf-vseointerf ).
     ENDIF.
 
+    set_abap_language_version( CHANGING cv_abap_language_version = ls_intf-vseointerf-unicode ).
+
     mi_object_oriented_object_fct->create(
       EXPORTING
         iv_check      = abap_false
@@ -386,6 +388,8 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     ls_intf-vseointerf = mi_object_oriented_object_fct->get_interface_properties( ls_clskey ).
 
+    clear_abap_language_version( CHANGING cv_abap_language_version = ls_intf-vseointerf-unicode ).
+
     " Select all active translations of documentation
     " Skip main language - it was already serialized
     SELECT DISTINCT langu
@@ -512,6 +516,8 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
         ls_intf = read_xml( io_xml ).
       ENDIF.
 
+      set_abap_language_version( CHANGING cv_abap_language_version = ls_intf-vseointerf-unicode ).
+
       IF ls_intf-vseointerf-clsproxy = abap_true.
         " Proxy interfaces are managed via SPRX
         deserialize_proxy( iv_transport ).
@@ -526,9 +532,11 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
         ls_clskey-clsname = ms_item-obj_name.
         lt_source = zif_abapgit_object~mo_files->read_abap( ).
+
         mi_object_oriented_object_fct->deserialize_source(
           is_key     = ls_clskey
           iv_package = iv_package
+          iv_version = ls_intf-vseointerf-unicode
           it_source  = lt_source ).
 
         deserialize_descriptions( it_description = ls_intf-description ).
@@ -668,5 +676,6 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     zif_abapgit_object~mo_files->add_abap( lt_source ).
 
     serialize_xml( io_xml ).
+
   ENDMETHOD.
 ENDCLASS.

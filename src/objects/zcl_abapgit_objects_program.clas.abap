@@ -538,22 +538,42 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
   METHOD insert_program.
 
-    CALL FUNCTION 'RPY_PROGRAM_INSERT'
-      EXPORTING
-        development_class = iv_package
-        program_name      = is_progdir-name
-        program_type      = is_progdir-subc
-        title_string      = iv_title
-        save_inactive     = 'I'
-        suppress_dialog   = abap_true
-      TABLES
-        source_extended   = it_source
-      EXCEPTIONS
-        already_exists    = 1
-        cancelled         = 2
-        name_not_allowed  = 3
-        permission_error  = 4
-        OTHERS            = 5.
+    TRY.
+        CALL FUNCTION 'RPY_PROGRAM_INSERT'
+          EXPORTING
+            development_class = iv_package
+            program_name      = is_progdir-name
+            program_type      = is_progdir-subc
+            title_string      = iv_title
+            save_inactive     = 'I'
+            suppress_dialog   = abap_true
+            uccheck           = is_progdir-uccheck " does not exist on lower releases
+          TABLES
+            source_extended   = it_source
+          EXCEPTIONS
+            already_exists    = 1
+            cancelled         = 2
+            name_not_allowed  = 3
+            permission_error  = 4
+            OTHERS            = 5.
+      CATCH cx_sy_dyn_call_param_not_found.
+        CALL FUNCTION 'RPY_PROGRAM_INSERT'
+          EXPORTING
+            development_class = iv_package
+            program_name      = is_progdir-name
+            program_type      = is_progdir-subc
+            title_string      = iv_title
+            save_inactive     = 'I'
+            suppress_dialog   = abap_true
+          TABLES
+            source_extended   = it_source
+          EXCEPTIONS
+            already_exists    = 1
+            cancelled         = 2
+            name_not_allowed  = 3
+            permission_error  = 4
+            OTHERS            = 5.
+    ENDTRY.
     IF sy-subrc = 3.
 
       " For cases that standard function does not handle (like FUGR),
@@ -564,6 +584,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         iv_package      = iv_package
         it_source       = it_source
         iv_state        = 'A'
+        iv_version      = is_progdir-uccheck
         iv_program_type = is_progdir-subc ).
 
       zcl_abapgit_factory=>get_sap_report( )->insert_report(
@@ -571,6 +592,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         iv_package      = iv_package
         it_source       = it_source
         iv_state        = 'I'
+        iv_version      = is_progdir-uccheck
         iv_program_type = is_progdir-subc ).
 
     ELSEIF sy-subrc > 0.
@@ -848,6 +870,8 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     zcl_abapgit_language=>restore_login_language( ).
 
     ls_progdir = zcl_abapgit_factory=>get_sap_report( )->read_progdir( lv_program_name ).
+
+    clear_abap_language_version( CHANGING cv_abap_language_version = ls_progdir-uccheck ).
 
     IF io_xml IS BOUND.
       li_xml = io_xml.

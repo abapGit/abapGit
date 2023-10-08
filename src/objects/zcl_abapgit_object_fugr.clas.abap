@@ -324,6 +324,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       zcl_abapgit_factory=>get_sap_report( )->insert_report(
         iv_name    = lv_include
         iv_package = iv_package
+        iv_version = iv_version
         it_source  = lt_source ).
 
       ii_log->add_success( iv_msg = |Function module { <ls_func>-funcname } imported|
@@ -395,6 +396,8 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
           lo_xml->read( EXPORTING iv_name = 'PROGDIR'
                         CHANGING cg_data = ls_progdir ).
+
+          set_abap_language_version( CHANGING cv_abap_language_version = ls_progdir-uccheck ).
 
           lo_xml->read( EXPORTING iv_name = 'TPOOL'
                         CHANGING cg_data = lt_tpool_ext ).
@@ -575,7 +578,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     ENDLOOP.
 
     IF rv_abap_version IS INITIAL.
-      rv_abap_version = 'X'.
+      set_abap_language_version( CHANGING cv_abap_language_version = rv_abap_version ).
     ENDIF.
 
   ENDMETHOD.

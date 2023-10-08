@@ -25,6 +25,7 @@ CLASS zcl_abapgit_oo_interface DEFINITION
         !iv_program       TYPE syrepid
         !it_source        TYPE string_table
         !iv_package       TYPE devclass
+        !iv_version       TYPE uccheck
       RETURNING
         VALUE(rv_updated) TYPE abap_bool
       RAISING
@@ -146,6 +147,7 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
     rv_updated = zcl_abapgit_factory=>get_sap_report( )->update_report(
       iv_name    = iv_program
       iv_package = iv_package
+      iv_version = iv_version
       it_source  = it_source ).
   ENDMETHOD.
 
@@ -265,6 +267,7 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
       lv_program = cl_oo_classname_service=>get_intfsec_name( is_key-clsname ).
       lv_updated = update_report( iv_program = lv_program
                                   iv_package = iv_package
+                                  iv_version = iv_version
                                   it_source  = lt_public ).
       IF lv_updated = abap_true.
         update_meta( iv_name   = is_key-clsname
