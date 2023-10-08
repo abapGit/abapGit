@@ -358,7 +358,7 @@ INTERFACE zif_abapgit_definitions
       go_background                 TYPE string VALUE 'go_background',
       go_background_run             TYPE string VALUE 'go_background_run',
       go_repo_diff                  TYPE string VALUE 'go_repo_diff',
-      go_file_diff                  TYPE string VALUE 'go_fill_diff',
+      go_file_diff                  TYPE string VALUE 'go_file_diff',
       go_stage                      TYPE string VALUE 'go_stage',
       go_stage_transport            TYPE string VALUE 'go_stage_transport',
       go_commit                     TYPE string VALUE 'go_commit',
