@@ -27,6 +27,11 @@ CLASS zcl_abapgit_gui_page_runit DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
+    CONSTANTS:
+      BEGIN OF c_actions,
+        rerun TYPE string VALUE 'rerun' ##NO_TEXT,
+      END OF c_actions .
+
     TYPES:
       BEGIN OF ty_key,
         obj_name TYPE tadir-obj_name,
@@ -53,7 +58,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
 
 
   METHOD build_tadir.
@@ -166,15 +171,29 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    IF ii_event->mv_action = zif_abapgit_definitions=>c_action-go_back.
-      rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
-    ENDIF.
+    CASE ii_event->mv_action.
+      WHEN zif_abapgit_definitions=>c_action-go_back.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
+      WHEN c_actions-rerun.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+    ENDCASE.
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_menu_provider~get_menu.
-    ro_toolbar = zcl_abapgit_gui_chunk_lib=>back_toolbar( ).
+
+    CREATE OBJECT ro_toolbar.
+
+    ro_toolbar->add(
+      iv_txt = 'Re-Run'
+      iv_act = c_actions-rerun
+      iv_cur = abap_false ).
+
+    ro_toolbar->add(
+      iv_txt = 'Back'
+      iv_act = zif_abapgit_definitions=>c_action-go_back ).
+
   ENDMETHOD.
 
 
