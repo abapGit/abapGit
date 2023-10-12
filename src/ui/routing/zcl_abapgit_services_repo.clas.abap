@@ -77,7 +77,6 @@ CLASS zcl_abapgit_services_repo DEFINITION
         !it_remote  TYPE zif_abapgit_git_definitions=>ty_files_tt
       RAISING
         zcx_abapgit_exception.
-  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CLASS-METHODS delete_unnecessary_objects
@@ -377,6 +376,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       iv_package        = is_repo_params-package
       iv_folder_logic   = is_repo_params-folder_logic
       iv_labels         = is_repo_params-labels
+      iv_ign_subpkg     = is_repo_params-ignore_subpackages
       iv_main_lang_only = is_repo_params-main_lang_only ).
 
     check_and_create_package(
