@@ -27,25 +27,24 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
 
     DATA lv_class_name TYPE string.
 
-    IF gi_global_exit IS INITIAL.
-
-      lv_class_name = 'ZCL_ABAPGIT_USER_EXIT'.
-
-      IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true.
-        " Prevent accidental usage of exit handlers in the developer version
-        lv_class_name = |\\PROGRAM={ sy-repid }\\CLASS={ lv_class_name }|.
-      ENDIF.
-
-      IF gi_exit IS INITIAL.
-        TRY.
-            CREATE OBJECT gi_exit TYPE (lv_class_name).
-          CATCH cx_sy_create_object_error ##NO_HANDLER.
-        ENDTRY.
-      ENDIF.
-
-      CREATE OBJECT gi_global_exit TYPE zcl_abapgit_exit. " this class
-
+    IF gi_global_exit IS NOT INITIAL.
+      ri_exit = gi_global_exit.
+      RETURN.
     ENDIF.
+
+    lv_class_name = 'ZCL_ABAPGIT_USER_EXIT'.
+
+    IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true.
+      " Prevent accidental usage of exit handlers in the developer version
+      lv_class_name = |\\PROGRAM={ sy-repid }\\CLASS={ lv_class_name }|.
+    ENDIF.
+
+    TRY.
+        CREATE OBJECT gi_exit TYPE (lv_class_name).
+      CATCH cx_sy_create_object_error ##NO_HANDLER.
+    ENDTRY.
+
+    CREATE OBJECT gi_global_exit TYPE zcl_abapgit_exit. " this class
 
     ri_exit = gi_global_exit.
 
