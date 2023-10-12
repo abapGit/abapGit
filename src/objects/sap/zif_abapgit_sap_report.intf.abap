@@ -63,7 +63,6 @@ INTERFACE zif_abapgit_sap_report
       iv_name           TYPE syrepid
       it_source         TYPE STANDARD TABLE
       iv_state          TYPE r3state OPTIONAL
-      iv_program_type   TYPE c OPTIONAL
       iv_extension_type TYPE c OPTIONAL
       iv_package        TYPE devclass
       iv_version        TYPE uccheck
