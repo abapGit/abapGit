@@ -9,6 +9,8 @@ CLASS zcl_abapgit_sap_report DEFINITION
 
   PROTECTED SECTION.
   PRIVATE SECTION.
+    CONSTANTS c_include_program_type TYPE c LENGTH 1 VALUE 'I'.
+    CONSTANTS c_ip_program_type      TYPE c LENGTH 1 VALUE 'J'.
 
     METHODS authorization_check
       IMPORTING
@@ -238,16 +240,24 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
 
     DATA lt_new TYPE string_table.
     DATA lt_old TYPE string_table.
+    DATA lv_program_type TYPE c LENGTH 1.
 
     lt_new = it_source.
     lt_old = zif_abapgit_sap_report~read_report( iv_name ).
 
     IF lt_old <> lt_new.
+
+      lv_program_type = c_include_program_type.
+
+      IF iv_name+30 = srext_ext_interface_pool.
+        lv_program_type = c_ip_program_type.
+      ENDIF.
+
       zif_abapgit_sap_report~insert_report(
         iv_name           = iv_name
         it_source         = it_source
         iv_state          = iv_state
-        iv_program_type   = iv_program_type
+        iv_program_type   = lv_program_type
         iv_extension_type = iv_extension_type
         iv_package        = iv_package
         iv_version        = iv_version
