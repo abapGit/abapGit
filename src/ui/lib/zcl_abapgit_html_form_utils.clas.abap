@@ -15,7 +15,7 @@ CLASS zcl_abapgit_html_form_utils DEFINITION
         !io_form_data    TYPE REF TO zcl_abapgit_string_map
         !io_compare_with TYPE REF TO zcl_abapgit_string_map
       RETURNING
-        VALUE(rv_dirty) TYPE abap_bool .
+        VALUE(rv_dirty)  TYPE abap_bool .
 
     METHODS constructor
       IMPORTING
@@ -46,10 +46,10 @@ CLASS zcl_abapgit_html_form_utils DEFINITION
         !io_form_data TYPE REF TO zcl_abapgit_string_map .
     METHODS exit
       IMPORTING
-        !io_form_data            TYPE REF TO zcl_abapgit_string_map
-        !io_check_changes_versus TYPE REF TO zcl_abapgit_string_map
+        !io_form_data    TYPE REF TO zcl_abapgit_string_map
+        !io_compare_with TYPE REF TO zcl_abapgit_string_map
       RETURNING
-        VALUE(rv_state)          TYPE i
+        VALUE(rv_state)  TYPE i
       RAISING
         zcx_abapgit_exception .
 
@@ -84,7 +84,7 @@ CLASS zcl_abapgit_html_form_utils IMPLEMENTATION.
 
     IF is_dirty(
       io_form_data    = io_form_data
-      io_compare_with = io_check_changes_versus ) = abap_true.
+      io_compare_with = io_compare_with ) = abap_true.
       lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
         iv_display_cancel_button = abap_false
         iv_titlebar       = 'abapGit - Unsaved Changes'

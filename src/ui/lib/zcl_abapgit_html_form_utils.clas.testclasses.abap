@@ -565,8 +565,8 @@ CLASS ltcl_test_form IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = lo_cut->exit(
-              io_form_data            = lo_form_orig
-              io_check_changes_versus = lo_form_data )
+              io_form_data    = lo_form_orig
+              io_compare_with = lo_form_data )
       exp = zcl_abapgit_gui=>c_event_state-go_back_to_bookmark ).
 
     cl_abap_unit_assert=>assert_equals(
@@ -605,8 +605,8 @@ CLASS ltcl_test_form IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = lo_cut->exit(
-              io_form_data            = lo_form_orig
-              io_check_changes_versus = lo_form_data )
+              io_form_data    = lo_form_orig
+              io_compare_with = lo_form_data )
       exp = zcl_abapgit_gui=>c_event_state-go_back_to_bookmark ).
 
     cl_abap_unit_assert=>assert_equals(
@@ -645,8 +645,8 @@ CLASS ltcl_test_form IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = lo_cut->exit(
-              io_form_data            = lo_form_orig
-              io_check_changes_versus = lo_form_data )
+              io_form_data    = lo_form_orig
+              io_compare_with = lo_form_data )
       exp = zcl_abapgit_gui=>c_event_state-no_more_act ).
 
     cl_abap_unit_assert=>assert_equals(
