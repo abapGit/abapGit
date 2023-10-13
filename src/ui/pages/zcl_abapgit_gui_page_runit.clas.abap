@@ -58,7 +58,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
 
 
   METHOD build_tadir.
@@ -207,6 +207,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
     DATA lv_count          TYPE i.
     DATA lv_params         TYPE string.
     DATA ls_item           TYPE zif_abapgit_definitions=>ty_repo_item.
+    DATA lv_runtime        TYPE timestampl.
+    DATA lv_msec           TYPE string.
 
     FIELD-SYMBOLS <ls_task_data>      TYPE any.
     FIELD-SYMBOLS <lt_programs>       TYPE ANY TABLE.
@@ -223,6 +225,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
     FIELD-SYMBOLS <lt_text_info>      TYPE ANY TABLE.
     FIELD-SYMBOLS <ls_text_info>      TYPE any.
     FIELD-SYMBOLS <lt_params>         TYPE string_table.
+    FIELD-SYMBOLS <lv_start>          TYPE timestampl.
+    FIELD-SYMBOLS <lv_end>            TYPE timestampl.
 
 
     register_handlers( ).
@@ -320,8 +324,28 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUNIT IMPLEMENTATION.
             ENDLOOP.
           ENDIF.
 
+          CLEAR: lv_msec, lv_runtime.
+          ASSIGN COMPONENT 'INFO-START_ON' OF STRUCTURE <ls_method> TO <lv_start>.
+          IF sy-subrc = 0.
+            ASSIGN COMPONENT 'INFO-END_ON' OF STRUCTURE <ls_method> TO <lv_end>.
+            IF sy-subrc = 0.
+              TRY.
+                  lv_runtime = cl_abap_tstmp=>subtract(
+                    tstmp1 = <lv_end>
+                    tstmp2 = <lv_start> ) * 1000.
+                  lv_msec = |{ lv_runtime  DECIMALS = 0 } ms|.
+                CATCH cx_parameter_invalid ##NO_HANDLER. "ignore
+              ENDTRY.
+            ENDIF.
+          ENDIF.
+
           IF lv_text IS INITIAL.
             lv_text = |<span class="boxed green-filled-set">PASSED</span>|.
+            IF lv_runtime > 100.
+              lv_text = lv_text && | <span class="red">{ lv_msec }</span>|.
+            ELSE.
+              lv_text = lv_text && | { lv_msec }|.
+            ENDIF.
           ELSE.
             lv_text = |<span class="boxed red-filled-set">{ lv_text }</span>|.
           ENDIF.
