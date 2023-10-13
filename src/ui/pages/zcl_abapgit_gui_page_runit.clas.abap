@@ -54,6 +54,16 @@ CLASS zcl_abapgit_gui_page_runit DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    METHODS get_text_for_method
+      IMPORTING
+        !is_method      TYPE any
+        !it_indices     TYPE ANY TABLE
+        !iv_program_ndx TYPE sy-tabix
+        !iv_class_ndx   TYPE sy-tabix
+        !iv_method_ndx  TYPE sy-tabix
+      RETURNING
+        VALUE(rv_text)  TYPE string.
+
 ENDCLASS.
 
 
@@ -120,6 +130,67 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
         ri_page = lo_page_code_inspector.
 
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD get_text_for_method.
+
+    DATA lv_params         TYPE string.
+    DATA lv_runtime        TYPE timestampl.
+    DATA lv_msec           TYPE string.
+
+    FIELD-SYMBOLS <ls_alert_by_index> TYPE any.
+    FIELD-SYMBOLS <lt_alerts>         TYPE ANY TABLE.
+    FIELD-SYMBOLS <ls_alert>          TYPE any.
+    FIELD-SYMBOLS <lt_params>         TYPE string_table.
+    FIELD-SYMBOLS <lv_any>            TYPE any.
+    FIELD-SYMBOLS <lv_start>          TYPE timestampl.
+    FIELD-SYMBOLS <lv_end>            TYPE timestampl.
+
+    READ TABLE it_indices WITH KEY
+      ('PROGRAM_NDX') = iv_program_ndx
+      ('CLASS_NDX')   = iv_class_ndx
+      ('METHOD_NDX')  = iv_method_ndx
+      ASSIGNING <ls_alert_by_index>.
+    IF sy-subrc = 0.
+      ASSIGN COMPONENT 'ALERTS' OF STRUCTURE <ls_alert_by_index> TO <lt_alerts>.
+      LOOP AT <lt_alerts> ASSIGNING <ls_alert>.
+        ASSIGN COMPONENT 'HEADER-PARAMS' OF STRUCTURE <ls_alert> TO <lt_params>.
+        LOOP AT <lt_params> INTO lv_params.
+          rv_text = lv_params.
+        ENDLOOP.
+      ENDLOOP.
+    ENDIF.
+
+    CLEAR: lv_msec, lv_runtime.
+    ASSIGN COMPONENT 'INFO-START_ON' OF STRUCTURE is_method TO <lv_start>.
+    IF sy-subrc = 0.
+      ASSIGN COMPONENT 'INFO-END_ON' OF STRUCTURE is_method TO <lv_end>.
+      IF sy-subrc = 0.
+        TRY.
+            lv_runtime = cl_abap_tstmp=>subtract(
+              tstmp1 = <lv_end>
+              tstmp2 = <lv_start> ) * 1000.
+            lv_msec = |{ lv_runtime  DECIMALS = 0 } ms|.
+          CATCH cx_parameter_invalid ##NO_HANDLER. "ignore
+        ENDTRY.
+      ENDIF.
+    ENDIF.
+
+    IF rv_text IS INITIAL.
+      rv_text = |<span class="boxed green-filled-set">PASSED</span>|.
+      IF lv_runtime > 100.
+        rv_text = rv_text && | <span class="red">{ lv_msec }</span>|.
+      ELSE.
+        rv_text = rv_text && | { lv_msec }|.
+      ENDIF.
+    ELSE.
+      rv_text = |<span class="boxed red-filled-set">{ rv_text }</span>|.
+    ENDIF.
+
+    ASSIGN COMPONENT 'INFO-NAME' OF STRUCTURE is_method TO <lv_any>.
+    rv_text = |<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <lv_any> }</td><td>{ rv_text }</td></tr>|.
 
   ENDMETHOD.
 
@@ -207,8 +278,6 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
     DATA lv_count          TYPE i.
     DATA lv_params         TYPE string.
     DATA ls_item           TYPE zif_abapgit_definitions=>ty_repo_item.
-    DATA lv_runtime        TYPE timestampl.
-    DATA lv_msec           TYPE string.
 
     FIELD-SYMBOLS <ls_task_data>      TYPE any.
     FIELD-SYMBOLS <lt_programs>       TYPE ANY TABLE.
@@ -225,8 +294,6 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
     FIELD-SYMBOLS <lt_text_info>      TYPE ANY TABLE.
     FIELD-SYMBOLS <ls_text_info>      TYPE any.
     FIELD-SYMBOLS <lt_params>         TYPE string_table.
-    FIELD-SYMBOLS <lv_start>          TYPE timestampl.
-    FIELD-SYMBOLS <lv_end>            TYPE timestampl.
 
 
     register_handlers( ).
@@ -286,6 +353,7 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
     LOOP AT <lt_programs> ASSIGNING <ls_program>.
       CLEAR ls_item.
       lv_program_ndx = sy-tabix.
+
       ASSIGN COMPONENT 'INFO-KEY-OBJ_TYPE' OF STRUCTURE <ls_program> TO <lv_any>.
       IF sy-subrc = 0.
         ls_item-obj_type = <lv_any>.
@@ -294,65 +362,29 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
         ri_html->add( |<tr><td>{ zcl_abapgit_gui_chunk_lib=>get_item_icon( ls_item ) } { ls_item-obj_type }|
           && | { zcl_abapgit_gui_chunk_lib=>get_item_link( ls_item ) }</td><td></td></tr>| ).
       ELSE.
-* KEY field does not exist in 750
+        " KEY field does not exist in 750
         ASSIGN COMPONENT 'INFO-NAME' OF STRUCTURE <ls_program> TO <lv_any>.
         ri_html->add( |<tr><td>{ <lv_any> }</td><td></td></tr>| ).
       ENDIF.
+
       ASSIGN COMPONENT 'CLASSES' OF STRUCTURE <ls_program> TO <lt_classes>.
+
       LOOP AT <lt_classes> ASSIGNING <ls_class>.
         lv_class_ndx = sy-tabix.
 
         ASSIGN COMPONENT 'INFO-NAME' OF STRUCTURE <ls_class> TO <lv_any>.
         ri_html->add( |<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;{ <lv_any> }</td><td></td></tr>| ).
         ASSIGN COMPONENT 'METHODS' OF STRUCTURE <ls_class> TO <lt_methods>.
+
         LOOP AT <lt_methods> ASSIGNING <ls_method>.
-          lv_method_ndx = sy-tabix.
 
-          CLEAR lv_text.
-          READ TABLE <lt_indices> WITH KEY
-            ('PROGRAM_NDX') = lv_program_ndx
-            ('CLASS_NDX') = lv_class_ndx
-            ('METHOD_NDX') = lv_method_ndx
-            ASSIGNING <ls_alert_by_index>.
-          IF sy-subrc = 0.
-            ASSIGN COMPONENT 'ALERTS' OF STRUCTURE <ls_alert_by_index> TO <lt_alerts>.
-            LOOP AT <lt_alerts> ASSIGNING <ls_alert>.
-              ASSIGN COMPONENT 'HEADER-PARAMS' OF STRUCTURE <ls_alert> TO <lt_params>.
-              LOOP AT <lt_params> INTO lv_params.
-                lv_text = lv_params.
-              ENDLOOP.
-            ENDLOOP.
-          ENDIF.
+          ri_html->add( get_text_for_method(
+            is_method      = <ls_method>
+            it_indices     = <lt_indices>
+            iv_program_ndx = lv_program_ndx
+            iv_class_ndx   = lv_class_ndx
+            iv_method_ndx  = sy-tabix ) ).
 
-          CLEAR: lv_msec, lv_runtime.
-          ASSIGN COMPONENT 'INFO-START_ON' OF STRUCTURE <ls_method> TO <lv_start>.
-          IF sy-subrc = 0.
-            ASSIGN COMPONENT 'INFO-END_ON' OF STRUCTURE <ls_method> TO <lv_end>.
-            IF sy-subrc = 0.
-              TRY.
-                  lv_runtime = cl_abap_tstmp=>subtract(
-                    tstmp1 = <lv_end>
-                    tstmp2 = <lv_start> ) * 1000.
-                  lv_msec = |{ lv_runtime  DECIMALS = 0 } ms|.
-                CATCH cx_parameter_invalid ##NO_HANDLER. "ignore
-              ENDTRY.
-            ENDIF.
-          ENDIF.
-
-          IF lv_text IS INITIAL.
-            lv_text = |<span class="boxed green-filled-set">PASSED</span>|.
-            IF lv_runtime > 100.
-              lv_text = lv_text && | <span class="red">{ lv_msec }</span>|.
-            ELSE.
-              lv_text = lv_text && | { lv_msec }|.
-            ENDIF.
-          ELSE.
-            lv_text = |<span class="boxed red-filled-set">{ lv_text }</span>|.
-          ENDIF.
-
-          ASSIGN COMPONENT 'INFO-NAME' OF STRUCTURE <ls_method> TO <lv_any>.
-          ri_html->add( |<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{
-            <lv_any> }</td><td>{ lv_text }</td></tr>| ).
         ENDLOOP.
       ENDLOOP.
     ENDLOOP.
