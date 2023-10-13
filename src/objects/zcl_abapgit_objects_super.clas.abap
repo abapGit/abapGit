@@ -77,9 +77,9 @@ CLASS zcl_abapgit_objects_super DEFINITION
         zcx_abapgit_exception .
     METHODS delete_ddic
       IMPORTING
-        VALUE(iv_objtype)              TYPE string
-        VALUE(iv_no_ask)               TYPE abap_bool DEFAULT abap_true
-        VALUE(iv_no_ask_delete_append) TYPE abap_bool DEFAULT abap_false
+        !iv_objtype              TYPE string
+        !iv_no_ask               TYPE abap_bool DEFAULT abap_true
+        !iv_no_ask_delete_append TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception .
     METHODS set_abap_language_version
@@ -209,8 +209,8 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
   METHOD delete_longtexts.
 
     zcl_abapgit_factory=>get_longtexts( )->delete(
-        iv_longtext_id = iv_longtext_id
-        iv_object_name = ms_item-obj_name  ).
+      iv_longtext_id = iv_longtext_id
+      iv_object_name = ms_item-obj_name ).
 
   ENDMETHOD.
 
@@ -288,12 +288,12 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
   METHOD serialize_longtexts.
 
     zcl_abapgit_factory=>get_longtexts( )->serialize(
-        iv_object_name   = ms_item-obj_name
-        iv_longtext_name = iv_longtext_name
-        iv_longtext_id   = iv_longtext_id
-        it_dokil         = it_dokil
-        io_i18n_params   = mo_i18n_params
-        ii_xml           = ii_xml  ).
+      iv_object_name   = ms_item-obj_name
+      iv_longtext_name = iv_longtext_name
+      iv_longtext_id   = iv_longtext_id
+      it_dokil         = it_dokil
+      io_i18n_params   = mo_i18n_params
+      ii_xml           = ii_xml ).
 
   ENDMETHOD.
 
