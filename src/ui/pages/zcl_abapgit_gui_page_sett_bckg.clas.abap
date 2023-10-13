@@ -66,7 +66,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_BCKG IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_sett_bckg IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -312,8 +312,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_BCKG IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-go_back.
         rs_handled-state = zcl_abapgit_html_form_utils=>create( mo_form )->exit(
-          io_form_data            = mo_form_data
-          io_check_changes_versus = read_settings( ) ).
+          io_form_data    = mo_form_data
+          io_compare_with = read_settings( ) ).
 
       WHEN c_event-save.
         save_settings( ).
