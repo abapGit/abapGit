@@ -15,6 +15,9 @@ CLASS zcl_abapgit_oo_base DEFINITION
 
   PRIVATE SECTION.
     CONSTANTS c_docu_state_active TYPE dokstate VALUE 'A'. " See include SDOC_CONSTANTS
+    CONSTANTS c_include_program_type TYPE c LENGTH 1 VALUE 'I'.
+    CONSTANTS c_ip_program_type TYPE c LENGTH 1 VALUE 'J'.
+    CONSTANTS c_cp_program_type TYPE c LENGTH 1 VALUE 'K'.
     DATA mv_skip_test_classes TYPE abap_bool .
 
 ENDCLASS.
