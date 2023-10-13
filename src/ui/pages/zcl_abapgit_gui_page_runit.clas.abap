@@ -273,7 +273,6 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
     DATA lo_result         TYPE REF TO object.
     DATA lv_program_ndx    TYPE i.
     DATA lv_class_ndx      TYPE i.
-    DATA lv_method_ndx     TYPE i.
     DATA lv_text           TYPE string.
     DATA lv_count          TYPE i.
     DATA lv_params         TYPE string.
