@@ -469,7 +469,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     ENDIF.
 
     IF cs_checks-transport-required = abap_true AND cs_checks-transport-transport IS INITIAL.
-      cs_checks-transport-transport = 
+      cs_checks-transport-transport =
         zcl_abapgit_ui_factory=>get_popups( )->popup_transport_request( cs_checks-transport-type ).
     ENDIF.
 
