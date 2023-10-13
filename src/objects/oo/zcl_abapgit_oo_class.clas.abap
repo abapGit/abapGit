@@ -510,12 +510,12 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
 
   METHOD update_report.
-    DATA lc_type TYPE c LENGTH 1.
+    DATA lv_type TYPE c LENGTH 1.
 
-    lc_type = zcl_abapgit_oo_base=>c_include_program_type.
+    lv_type = zcl_abapgit_oo_base=>c_include_program_type.
 
     IF iv_program+30 = srext_ext_class_pool.
-      lc_type = zcl_abapgit_oo_base=>c_cp_program_type.
+      lv_type = zcl_abapgit_oo_base=>c_cp_program_type.
     ENDIF.
 
     rv_updated = zcl_abapgit_factory=>get_sap_report( )->update_report(
@@ -523,7 +523,7 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
       iv_package      = iv_package
       iv_version      = iv_version
       it_source       = it_source
-      iv_program_type = lc_type ).
+      iv_program_type = lv_type ).
   ENDMETHOD.
 
 
