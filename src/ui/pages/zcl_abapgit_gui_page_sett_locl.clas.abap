@@ -304,7 +304,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
       " it was on its own page and user went back from it via F3/ESC and the picklist had no "graceful back" handler
       CASE mo_popup_picklist->id( ).
         WHEN c_event-choose_check_variant.
-          choose_check_variant( iv_is_return = abap_true ).
+          choose_check_variant( abap_true ).
         WHEN OTHERS.
           zcx_abapgit_exception=>raise( |Unexpected picklist id { mo_popup_picklist->id( ) }| ).
       ENDCASE.

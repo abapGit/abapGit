@@ -326,7 +326,7 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
     ms_settings-ui_theme = mo_form_data->get( c_id-ui_theme ).
     ms_settings-icon_scaling = mo_form_data->get( c_id-icon_scaling ).
     ms_settings-max_lines = mo_form_data->get( c_id-max_lines ).
-    ms_settings-label_colors = zcl_abapgit_repo_labels=>normalize_colors( mo_form_data->get(  c_id-label_colors ) ).
+    ms_settings-label_colors = zcl_abapgit_repo_labels=>normalize_colors( mo_form_data->get( c_id-label_colors ) ).
 
     " Interaction
     ms_settings-activate_wo_popup = mo_form_data->get( c_id-activate_wo_popup ).
