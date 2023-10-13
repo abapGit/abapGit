@@ -21,6 +21,7 @@ CLASS zcl_abapgit_gui_page_sett_bckg DEFINITION
         !io_repo TYPE REF TO zcl_abapgit_repo
       RAISING
         zcx_abapgit_exception .
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CONSTANTS:
