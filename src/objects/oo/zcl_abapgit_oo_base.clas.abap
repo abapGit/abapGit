@@ -279,7 +279,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
       WHERE clsname = is_key-clsname
         AND version <> seoc_version_deleted
         AND state = seoc_state_implemented
-        AND alias = seox_false order by primary key.
+        AND alias = seox_false ORDER BY PRIMARY KEY.
 
     IF lt_components IS NOT INITIAL.
       SELECT SINGLE masterlang FROM tadir INTO lv_lang
