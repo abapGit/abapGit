@@ -22,7 +22,6 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
         !io_repo TYPE REF TO zcl_abapgit_repo
       RAISING
         zcx_abapgit_exception.
-  PROTECTED SECTION.
   PRIVATE SECTION.
 
     TYPES:
@@ -103,7 +102,7 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
       IMPORTING
         io_existing_form_data TYPE REF TO zcl_abapgit_string_map OPTIONAL
       RETURNING
-        VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form
+        VALUE(ro_form)        TYPE REF TO zcl_abapgit_html_form
       RAISING
         zcx_abapgit_exception.
 
@@ -951,8 +950,8 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
         ENDIF.
 
         rs_handled-state = zcl_abapgit_html_form_utils=>create( mo_form )->exit(
-          io_form_data = mo_form_data
-          io_check_changes_versus = initialize_form_data( ) ).
+          io_form_data    = mo_form_data
+          io_compare_with = initialize_form_data( ) ).
 
       WHEN c_event-choose_url.
         lv_url = choose_url( ).

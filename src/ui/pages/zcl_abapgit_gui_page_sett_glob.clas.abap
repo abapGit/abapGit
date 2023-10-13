@@ -18,7 +18,6 @@ CLASS zcl_abapgit_gui_page_sett_glob DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CONSTANTS:
@@ -344,8 +343,8 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-go_back.
         rs_handled-state = zcl_abapgit_html_form_utils=>create( mo_form )->exit(
-          io_form_data            = mo_form_data
-          io_check_changes_versus = read_settings( ) ).
+          io_form_data    = mo_form_data
+          io_compare_with = read_settings( ) ).
 
       WHEN c_event-save.
         " Validate form entries before saving
