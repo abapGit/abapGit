@@ -1,18 +1,21 @@
 CLASS zcl_abapgit_exit DEFINITION
   PUBLIC
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_exit .
+    INTERFACES zif_abapgit_exit.
 
     CLASS-METHODS get_instance
       RETURNING
-        VALUE(ri_exit) TYPE REF TO zif_abapgit_exit .
+        VALUE(ri_exit) TYPE REF TO zif_abapgit_exit.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CLASS-DATA gi_exit TYPE REF TO zif_abapgit_exit .
+    CLASS-DATA gi_global_exit TYPE REF TO zif_abapgit_exit.
+    CLASS-DATA gi_exit TYPE REF TO zif_abapgit_exit.
+
 ENDCLASS.
 
 
@@ -24,6 +27,11 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
 
     DATA lv_class_name TYPE string.
 
+    IF gi_global_exit IS NOT INITIAL.
+      ri_exit = gi_global_exit.
+      RETURN.
+    ENDIF.
+
     lv_class_name = 'ZCL_ABAPGIT_USER_EXIT'.
 
     IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true.
@@ -31,14 +39,14 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
       lv_class_name = |\\PROGRAM={ sy-repid }\\CLASS={ lv_class_name }|.
     ENDIF.
 
-    IF gi_exit IS INITIAL.
-      TRY.
-          CREATE OBJECT gi_exit TYPE (lv_class_name).
-        CATCH cx_sy_create_object_error ##NO_HANDLER.
-      ENDTRY.
-    ENDIF.
+    TRY.
+        CREATE OBJECT gi_exit TYPE (lv_class_name).
+      CATCH cx_sy_create_object_error ##NO_HANDLER.
+    ENDTRY.
 
-    CREATE OBJECT ri_exit TYPE zcl_abapgit_exit.
+    CREATE OBJECT gi_global_exit TYPE zcl_abapgit_exit. " this class
+
+    ri_exit = gi_global_exit.
 
   ENDMETHOD.
 
@@ -257,6 +265,21 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_exit~enhance_repo_toolbar.
+
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          gi_exit->enhance_repo_toolbar(
+            io_menu = io_menu
+            iv_key  = iv_key
+            iv_act  = iv_act ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_exit~get_ci_tests.
 
     IF gi_exit IS NOT INITIAL.
@@ -387,16 +410,5 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
       ENDTRY.
     ENDIF.
 
-  ENDMETHOD.
-  METHOD zif_abapgit_exit~enhance_repo_toolbar.
-    IF gi_exit IS NOT INITIAL.
-      TRY.
-          gi_exit->enhance_repo_toolbar(
-            io_menu = io_menu
-            iv_key  = iv_key
-            iv_act  = iv_act ).
-        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
-      ENDTRY.
-    ENDIF.
   ENDMETHOD.
 ENDCLASS.
