@@ -684,32 +684,32 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
           WHERE progname = rt_includes-table_line
           AND r3state = 'A'.
       ENDIF.
-        SORT lt_reposrc BY progname ASCENDING.
-      ENDIF.
+      SORT lt_reposrc BY progname ASCENDING.
+    ENDIF.
 
-      LOOP AT rt_includes ASSIGNING <lv_include>.
-        lv_tabix = sy-tabix.
+    LOOP AT rt_includes ASSIGNING <lv_include>.
+      lv_tabix = sy-tabix.
 
 * make sure the include exists
-        READ TABLE lt_reposrc INTO ls_reposrc
-          WITH KEY progname = <lv_include> BINARY SEARCH.
-        IF sy-subrc <> 0.
-          DELETE rt_includes INDEX lv_tabix.
-          CONTINUE.
-        ENDIF.
+      READ TABLE lt_reposrc INTO ls_reposrc
+        WITH KEY progname = <lv_include> BINARY SEARCH.
+      IF sy-subrc <> 0.
+        DELETE rt_includes INDEX lv_tabix.
+        CONTINUE.
+      ENDIF.
 
-        "Make sure that the include does not belong to another function group
-        IF is_part_of_other_fugr( <lv_include> ) = abap_true.
-          DELETE rt_includes.
-        ENDIF.
-      ENDLOOP.
+      "Make sure that the include does not belong to another function group
+      IF is_part_of_other_fugr( <lv_include> ) = abap_true.
+        DELETE rt_includes.
+      ENDIF.
+    ENDLOOP.
 
-      APPEND lv_program TO rt_includes.
-      SORT rt_includes.
+    APPEND lv_program TO rt_includes.
+    SORT rt_includes.
 
-      mt_includes_cache = rt_includes.
+    mt_includes_cache = rt_includes.
 
-    ENDMETHOD.
+  ENDMETHOD.
 
 
   METHOD is_any_function_module_locked.
@@ -1038,7 +1038,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     "   FORM GROUP_CHANGE
 
     UPDATE tlibt SET areat = iv_short_text
-      WHERE spras = mv_language AND area  = iv_group.
+      WHERE spras = mv_language AND area = iv_group.
 
   ENDMETHOD.
 

@@ -702,7 +702,8 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       WHERE r3state  = 'A'
         AND prog     = mv_classpool_name
         AND language IN lt_language_filter
-        AND language <> mv_language.
+        AND language <> mv_language
+      ORDER BY language.
 
     ii_xml->add( iv_name = 'VSEOCLASS'
                  ig_data = ls_vseoclass ).
@@ -729,7 +730,8 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       WHERE id     = 'CL'
         AND object = ls_clskey-clsname
         AND langu IN lt_language_filter
-        AND langu <> mv_language.
+        AND langu <> mv_language
+      ORDER BY langu.
 
     serialize_docu( ii_xml              = ii_xml
                     iv_clsname          = ls_clskey-clsname
