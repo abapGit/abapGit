@@ -6,6 +6,9 @@ CLASS zcl_abapgit_oo_base DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_oo_object_fnc .
+    CONSTANTS c_cp_program_type TYPE c LENGTH 1 VALUE 'K'.
+    CONSTANTS c_include_program_type TYPE c LENGTH 1 VALUE 'I'.
+    CONSTANTS c_ip_program_type TYPE c LENGTH 1 VALUE 'J'.
   PROTECTED SECTION.
     CLASS-METHODS:
       convert_attrib_to_vseoattrib
@@ -15,6 +18,7 @@ CLASS zcl_abapgit_oo_base DEFINITION
 
   PRIVATE SECTION.
     CONSTANTS c_docu_state_active TYPE dokstate VALUE 'A'. " See include SDOC_CONSTANTS
+
     DATA mv_skip_test_classes TYPE abap_bool .
 
 ENDCLASS.
@@ -276,7 +280,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
       WHERE clsname = is_key-clsname
         AND version <> seoc_version_deleted
         AND state = seoc_state_implemented
-        AND alias = seox_false.
+        AND alias = seox_false ORDER BY PRIMARY KEY.
 
     IF lt_components IS NOT INITIAL.
       SELECT SINGLE masterlang FROM tadir INTO lv_lang
@@ -322,7 +326,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
     " make sure to not damage VSEO* views by deleting texts of all subcomponents - an empty text must be kept!!
     SELECT * FROM vseosubcdf INTO TABLE lt_subcomponents
       WHERE clsname = is_key-clsname
-        AND version <> seoc_version_deleted.
+        AND version <> seoc_version_deleted ORDER BY PRIMARY KEY.
 
     IF lt_subcomponents IS NOT INITIAL.
       SELECT SINGLE masterlang FROM tadir INTO lv_lang
