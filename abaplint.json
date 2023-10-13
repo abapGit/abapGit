@@ -29,6 +29,7 @@
       "skwfc_obtype_folder",
       "skwfc_obtype_loio",
       "so2_controller",
+      "srext_ext_class_pool",
       "srext_ext_interface_pool",
       "ststc_c_type_dialog",
       "ststc_c_type_object",
