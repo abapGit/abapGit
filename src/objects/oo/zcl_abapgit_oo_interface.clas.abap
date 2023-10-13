@@ -143,13 +143,25 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD update_report.
+  method update_report.
+    data lc_include_program_type type c length 1 value 'I'.
+    data lc_ip_program_type      type c length 1 value 'J'.
+    data lc_type                 type c length 1.
+
+    lc_type = lc_include_program_type.
+
+    if iv_program+30 = srext_ext_interface_pool.
+      lc_type = lc_ip_program_type.
+    endif.
+
     rv_updated = zcl_abapgit_factory=>get_sap_report( )->update_report(
       iv_name    = iv_program
       iv_package = iv_package
       iv_version = iv_version
-      it_source  = it_source ).
-  ENDMETHOD.
+      it_source  = it_source
+      iv_program_type = lc_type ).
+
+  endmethod.
 
 
   METHOD zif_abapgit_oo_object_fnc~create.
