@@ -27,16 +27,15 @@ CLASS lth_oo_object_fnc IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_oo_object_fnc~create.
-    mv_create_package = iv_package.
+    mv_create_package    = iv_package.
     ms_create_vseointerf = cg_properties.
   ENDMETHOD.
 
   METHOD zif_abapgit_oo_object_fnc~create_documentation.
-    mt_docu_lines = it_lines.
-    mv_docu_id = iv_id.
+    mt_docu_lines       = it_lines.
+    mv_docu_id          = iv_id.
     mv_docu_object_name = iv_object_name.
-    mv_docu_langu =   iv_language.
-
+    mv_docu_langu       = iv_language.
   ENDMETHOD.
 
   METHOD zif_abapgit_oo_object_fnc~create_sotr.
@@ -48,7 +47,7 @@ CLASS lth_oo_object_fnc IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_oo_object_fnc~deserialize_source.
-    ms_deserialize_key = is_key.
+    ms_deserialize_key    = is_key.
     mt_deserialize_source = it_source.
   ENDMETHOD.
 
@@ -99,7 +98,7 @@ CLASS lth_oo_object_fnc IMPLEMENTATION.
 
   METHOD zif_abapgit_oo_object_fnc~update_descriptions.
     ms_descriptions_key = is_key.
-    mt_descriptions = it_descriptions.
+    mt_descriptions     = it_descriptions.
   ENDMETHOD.
 
   METHOD zif_abapgit_oo_object_fnc~update_descriptions_sub.

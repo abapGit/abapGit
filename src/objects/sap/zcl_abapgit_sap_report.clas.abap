@@ -108,13 +108,13 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
         STATE iv_state.
     ELSEIF iv_extension_type IS INITIAL.
       INSERT REPORT iv_name FROM it_source
-        STATE        iv_state
+        STATE iv_state
         PROGRAM TYPE iv_program_type.
     ELSE.
       INSERT REPORT iv_name FROM it_source
-        STATE          iv_state
+        STATE iv_state
         EXTENSION TYPE iv_extension_type
-        PROGRAM TYPE   iv_program_type.
+        PROGRAM TYPE iv_program_type.
     ENDIF.
 
     IF sy-subrc <> 0.

@@ -159,7 +159,9 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
     ENDIF.
 
     " Clean-up sub packages first
-    SELECT devclass FROM tdevc INTO TABLE lt_pack WHERE parentcl = iv_package_name.
+    SELECT devclass FROM tdevc INTO TABLE lt_pack
+      WHERE parentcl = iv_package_name
+      ORDER BY PRIMARY KEY.
 
     LOOP AT lt_pack INTO lv_pack.
       remove_obsolete_tadir( lv_pack ).
@@ -167,7 +169,8 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
 
     " Remove TADIR entries for objects that do not exist anymore
     SELECT * FROM tadir INTO CORRESPONDING FIELDS OF TABLE lt_tadir
-      WHERE devclass = iv_package_name ##TOO_MANY_ITAB_FIELDS.
+      WHERE devclass = iv_package_name
+      ORDER BY PRIMARY KEY ##TOO_MANY_ITAB_FIELDS.
 
     LOOP AT lt_tadir INTO ls_tadir.
       ls_item-obj_type = ls_tadir-object.

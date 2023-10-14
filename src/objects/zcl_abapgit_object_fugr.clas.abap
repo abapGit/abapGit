@@ -985,7 +985,8 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       FROM d010tinf
       WHERE r3state = 'A'
       AND prog = iv_prog_name
-      AND language <> mv_language ##TOO_MANY_ITAB_FIELDS.
+      AND language <> mv_language
+      ORDER BY language ##TOO_MANY_ITAB_FIELDS.
 
     mo_i18n_params->trim_saplang_keyed_table(
       EXPORTING
@@ -1037,8 +1038,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     "   FORM GROUP_CHANGE
 
     UPDATE tlibt SET areat = iv_short_text
-                 WHERE spras = mv_language
-                 AND   area  = iv_group.
+      WHERE spras = mv_language AND area = iv_group.
 
   ENDMETHOD.
 
@@ -1121,26 +1121,29 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     SELECT unam AS user udat AS date utime AS time FROM reposrc
       APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
       WHERE progname = lv_program
-      AND   r3state = 'A'.                                "#EC CI_SUBRC
+      AND r3state = 'A'
+      ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
 
     IF mt_includes_all IS NOT INITIAL AND lv_found = abap_false.
       SELECT unam AS user udat AS date utime AS time FROM reposrc
         APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
         FOR ALL ENTRIES IN mt_includes_all
         WHERE progname = mt_includes_all-table_line
-        AND   r3state = 'A'.                              "#EC CI_SUBRC
+        AND r3state = 'A'.                                "#EC CI_SUBRC
     ENDIF.
 
     SELECT unam AS user udat AS date utime AS time FROM repotext " Program text pool
       APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
       WHERE progname = lv_program
-      AND   r3state = 'A'.                                "#EC CI_SUBRC
+      AND r3state = 'A'
+      ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
 
     SELECT vautor AS user vdatum AS date vzeit AS time FROM eudb         " GUI
       APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
       WHERE relid = 'CU'
-      AND   name  = lv_program
-      AND   srtf2 = 0 ##TOO_MANY_ITAB_FIELDS.
+      AND name = lv_program
+      AND srtf2 = 0
+      ORDER BY PRIMARY KEY ##TOO_MANY_ITAB_FIELDS.
 
 * Screens: username not stored in D020S database table
 
