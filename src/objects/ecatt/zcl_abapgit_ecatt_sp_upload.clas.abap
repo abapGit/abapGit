@@ -27,7 +27,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_ECATT_SP_UPLOAD IMPLEMENTATION.
 
 
   METHOD get_ecatt_sp.
@@ -165,7 +165,7 @@ CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
 * Devesh,C5129871  18.07.2011  Releasing enqueu after uploading
 *begin
     TRY.
-        ecatt_object->close_object( 'X' ).
+        ecatt_object->close_object( im_suppress_events = 'X' ).
       CATCH cx_ecatt_apl INTO lx_ecatt.
     ENDTRY.
 *end
