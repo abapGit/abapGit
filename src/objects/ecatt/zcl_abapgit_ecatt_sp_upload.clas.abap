@@ -27,7 +27,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_ECATT_SP_UPLOAD IMPLEMENTATION.
 
 
   METHOD get_ecatt_sp.
@@ -51,7 +51,7 @@ CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
           li_ixml = cl_ixml=>create( ).
           li_dom  = li_ixml->create_document( ).
           li_root ?= li_section->clone( ).
-          li_dom->append_child( new_child = li_root ).
+          li_dom->append_child( li_root ).
           CALL FUNCTION 'SDIXML_DOM_TO_XML'
             EXPORTING
               document      = li_dom

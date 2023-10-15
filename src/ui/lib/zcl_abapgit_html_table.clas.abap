@@ -193,7 +193,7 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
     mi_html->add( '<tr>' ).
 
     LOOP AT mt_columns ASSIGNING <ls_col>.
-      mi_html->th( iv_content = <ls_col>-column_title ).
+      mi_html->th( <ls_col>-column_title ).
     ENDLOOP.
 
     mi_html->add( '</tr>' ).

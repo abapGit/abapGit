@@ -177,7 +177,7 @@ CLASS zcl_abapgit_object_filter_tran IMPLEMENTATION.
     DATA lr_list TYPE REF TO devclass.
     DATA ls_filter TYPE zif_abapgit_definitions=>ty_tadir.
 
-    li_package = zcl_abapgit_factory=>get_sap_package( iv_package = iv_package ).
+    li_package = zcl_abapgit_factory=>get_sap_package( iv_package ).
     lt_list = li_package->list_subpackages( ).
     LOOP AT lt_list REFERENCE INTO lr_list.
       ls_filter-pgmid = 'R3TR'.

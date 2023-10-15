@@ -106,7 +106,7 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
 
     lv_json = zcl_abapgit_convert=>xstring_to_string_utf8( iv_content ).
 
-    lo_ajson = zcl_abapgit_ajson=>parse( iv_json = lv_json
+    lo_ajson = zcl_abapgit_ajson=>parse( lv_json
       )->map( zcl_abapgit_ajson_mapping=>create_to_snake_case( ) ).
 
     map2abap_original_language( CHANGING co_ajson = lo_ajson ).

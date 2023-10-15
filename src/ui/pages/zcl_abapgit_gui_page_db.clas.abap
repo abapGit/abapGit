@@ -479,7 +479,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
 
   METHOD render_table.
 
-    ri_html = zcl_abapgit_html_table=>create( ii_renderer = me
+    ri_html = zcl_abapgit_html_table=>create( me
       )->define_column(
         iv_column_id = 'type'
         iv_column_title = 'Type'

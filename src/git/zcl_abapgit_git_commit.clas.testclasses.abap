@@ -171,7 +171,7 @@ CLASS ltc_parent_handling IMPLEMENTATION.
 
     DATA ls_commit TYPE zif_abapgit_git_definitions=>ty_commit.
 
-    given_commit( iv_sha1 = 'F00' ).
+    given_commit( 'F00' ).
     given_commit( iv_sha1 = 'BA5'
                   iv_parent1 = 'F00' ).
 

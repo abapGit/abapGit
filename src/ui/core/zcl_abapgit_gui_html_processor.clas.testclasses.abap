@@ -217,7 +217,7 @@ CLASS ltcl_html_processor_test IMPLEMENTATION.
 
     "when
     TRY.
-        lv_head_end = mo_cut->find_head_offset( iv_html = lv_html ).
+        lv_head_end = mo_cut->find_head_offset( lv_html ).
       CATCH zcx_abapgit_exception.
         cl_abap_unit_assert=>fail( msg = 'HEAD closing tag could not be found' ).
     ENDTRY.

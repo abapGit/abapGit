@@ -106,7 +106,7 @@ CLASS zcl_abapgit_ecatt_system_downl IMPLEMENTATION.
           OTHERS       = 2.
       ASSERT sy-subrc = 0.
 
-      etpar_node->append_child( new_child = li_item ).
+      etpar_node->append_child( li_item ).
 
     ENDLOOP.
 
