@@ -2259,7 +2259,7 @@ CLASS ltcl_writer_test IMPLEMENTATION.
     lo_nodes_exp->add( '        |      |object |     ||1' ).
     lo_nodes_exp->add( '/       |a     |object |     ||0' ).
 
-    lo_cut->zif_abapgit_ajson~delete( '/a/b' ).
+    lo_cut->zif_abapgit_ajson~delete( iv_path = '/a/b' ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lo_cut->mt_json_tree
@@ -2278,7 +2278,7 @@ CLASS ltcl_writer_test IMPLEMENTATION.
     lo_nodes_exp->add( '        |      |object |     ||1' ).
     lo_nodes_exp->add( '/       |a     |object |     ||0' ).
 
-    lo_cut->zif_abapgit_ajson~delete( '/a/b/' ).
+    lo_cut->zif_abapgit_ajson~delete( iv_path = '/a/b/' ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lo_cut->mt_json_tree
@@ -2616,7 +2616,7 @@ CLASS ltcl_writer_test IMPLEMENTATION.
     lo_nodes_exp->add( '        |      |object |     | |1' ).
     lo_nodes_exp->add( '/       |a     |array  |     | |0' ).
 
-    li_writer->touch_array( '/a' ).
+    li_writer->touch_array( iv_path = '/a' ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lo_cut->mt_json_tree
@@ -2658,7 +2658,7 @@ CLASS ltcl_writer_test IMPLEMENTATION.
       exp = lo_nodes_exp->sorted( ) ).
 
     " re-touch
-    li_writer->touch_array( '/a' ).
+    li_writer->touch_array( iv_path = '/a' ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lo_cut->mt_json_tree
@@ -2706,7 +2706,7 @@ CLASS ltcl_writer_test IMPLEMENTATION.
     lo_cut = zcl_abapgit_ajson=>create_empty( ).
     li_writer = lo_cut.
 
-    li_writer->touch_array( '/a' ).
+    li_writer->touch_array( iv_path = '/a' ).
     li_writer->push(
       iv_path = '/a'
       iv_val = 123 ).
@@ -2714,7 +2714,7 @@ CLASS ltcl_writer_test IMPLEMENTATION.
     " touch another node
     DATA lx TYPE REF TO zcx_abapgit_ajson_error.
     TRY.
-        li_writer->touch_array( '/a/1' ).
+        li_writer->touch_array( iv_path = '/a/1' ).
         cl_abap_unit_assert=>fail( ).
       CATCH zcx_abapgit_ajson_error INTO lx.
         cl_abap_unit_assert=>assert_equals(
@@ -2830,7 +2830,7 @@ CLASS ltcl_writer_test IMPLEMENTATION.
     lo_nodes_exp->add( '/       |1     |str    |hello|1|0' ).
 
     li_writer->clear( ).
-    li_writer->touch_array( '' ).
+    li_writer->touch_array( iv_path = '' ).
     li_writer->push(
       iv_path = ''
       iv_val  = 'hello' ).
@@ -3058,7 +3058,7 @@ CLASS ltcl_writer_test IMPLEMENTATION.
     li_writer->set(
       iv_path = '/a'
       iv_val  = 'abc' ).
-    li_writer->touch_array( '/b' ).
+    li_writer->touch_array( iv_path = '/b' ).
     li_writer->push(
       iv_path = '/b'
       iv_val  = 'abc' ).
@@ -3074,7 +3074,7 @@ CLASS ltcl_writer_test IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        li_writer->touch_array( '/d' ).
+        li_writer->touch_array( iv_path = '/d' ).
         cl_abap_unit_assert=>fail( ).
       CATCH zcx_abapgit_ajson_error.
     ENDTRY.
@@ -3088,7 +3088,7 @@ CLASS ltcl_writer_test IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        li_writer->delete( '/a' ).
+        li_writer->delete( iv_path = '/a' ).
         cl_abap_unit_assert=>fail( ).
       CATCH zcx_abapgit_ajson_error.
     ENDTRY.
@@ -3122,7 +3122,7 @@ CLASS ltcl_writer_test IMPLEMENTATION.
     lo_cut = zcl_abapgit_ajson=>create_empty( ).
     li_writer = lo_cut.
 
-    li_writer->touch_array( '/issues' ).
+    li_writer->touch_array( iv_path = '/issues' ).
     li_writer->set(
       iv_path = '/issues/1/end/col'
       iv_val  = 26 ).
@@ -3601,7 +3601,7 @@ CLASS ltcl_integrated IMPLEMENTATION.
     li_writer->set(
       iv_path = '/c'
       iv_val  = abap_true ).
-    li_writer->set_null( '/d' ).
+    li_writer->set_null( iv_path = '/d' ).
 
     " simple test
     lv_exp = '{"a":1,"b":"B","c":true,"d":null}'.
@@ -3609,8 +3609,8 @@ CLASS ltcl_integrated IMPLEMENTATION.
       act = lo_cut->stringify( )
       exp = lv_exp ).
 
-    li_writer->touch_array( '/e' ).
-    li_writer->touch_array( '/f' ).
+    li_writer->touch_array( iv_path = '/e' ).
+    li_writer->touch_array( iv_path = '/f' ).
     li_writer->push(
       iv_path = '/f'
       iv_val  = 5 ).
@@ -3867,7 +3867,7 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
     lo_src->mt_json_tree = lo_nodes->mt_nodes.
 
     DATA lt_nodes TYPE zif_abapgit_ajson_types=>ty_nodes_tt.
-    lt_nodes = lcl_abap_to_json=>convert( lo_src ).
+    lt_nodes = lcl_abap_to_json=>convert( iv_data = lo_src ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lt_nodes
@@ -3884,7 +3884,7 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
     CREATE OBJECT lo_nodes_exp.
     lo_nodes_exp->add( '        |      |num |1     ||' ).
 
-    lt_nodes = lcl_abap_to_json=>convert( 1 ).
+    lt_nodes = lcl_abap_to_json=>convert( iv_data = 1 ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lt_nodes
@@ -3901,7 +3901,7 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
     CREATE OBJECT lo_nodes_exp.
     lo_nodes_exp->add( '        |      |str |abc     ||' ).
 
-    lt_nodes = lcl_abap_to_json=>convert( 'abc' ).
+    lt_nodes = lcl_abap_to_json=>convert( iv_data = 'abc' ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lt_nodes
@@ -3918,7 +3918,7 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
     CREATE OBJECT lo_nodes_exp.
     lo_nodes_exp->add( '        |      |bool |true     ||' ).
 
-    lt_nodes = lcl_abap_to_json=>convert( abap_true ).
+    lt_nodes = lcl_abap_to_json=>convert( iv_data = abap_true ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lt_nodes
@@ -3935,7 +3935,7 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
     CREATE OBJECT lo_nodes_exp.
     lo_nodes_exp->add( '        |      |bool |false    ||' ).
 
-    lt_nodes = lcl_abap_to_json=>convert( abap_false ).
+    lt_nodes = lcl_abap_to_json=>convert( iv_data = abap_false ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lt_nodes
@@ -3953,7 +3953,7 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
     lo_nodes_exp->add( '        |      |bool |true     ||' ).
 
     lv_xsdboolean = 'X'.
-    lt_nodes = lcl_abap_to_json=>convert( lv_xsdboolean ).
+    lt_nodes = lcl_abap_to_json=>convert( iv_data = lv_xsdboolean ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lt_nodes
@@ -3971,7 +3971,7 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
     CREATE OBJECT lo_nodes_exp.
     lo_nodes_exp->add( '       |      |null |null ||' ).
 
-    lt_nodes = lcl_abap_to_json=>convert( lv_null_ref ).
+    lt_nodes = lcl_abap_to_json=>convert( iv_data = lv_null_ref ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lt_nodes
@@ -4056,7 +4056,7 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
     lo_nodes_exp->add( '/      |c     |bool   |true ||0' ).
     lo_nodes_exp->add( '/      |d     |bool   |true ||0' ).
 
-    lt_nodes = lcl_abap_to_json=>convert( ls_struc ).
+    lt_nodes = lcl_abap_to_json=>convert( iv_data = ls_struc ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lt_nodes
@@ -4117,7 +4117,7 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
     lo_nodes_exp->add( '/stab/ |1     |str    |hello|1|0' ).
     lo_nodes_exp->add( '/stab/ |2     |str    |world|2|0' ).
 
-    lt_nodes = lcl_abap_to_json=>convert( ls_struc ).
+    lt_nodes = lcl_abap_to_json=>convert( iv_data = ls_struc ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lt_nodes
@@ -4145,7 +4145,7 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
     lo_nodes_exp->add( '/      |d_suf |bool   |true ||0' ).
     lo_nodes_exp->add( '/      |el    |str    |elem ||0' ).
 
-    lt_nodes = lcl_abap_to_json=>convert( ls_struc ).
+    lt_nodes = lcl_abap_to_json=>convert( iv_data = ls_struc ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lt_nodes
@@ -4181,7 +4181,7 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
     lo_nodes_exp->add( '/2/    |c     |bool   |false| |0' ).
     lo_nodes_exp->add( '/2/    |d     |bool   |false| |0' ).
 
-    lt_nodes = lcl_abap_to_json=>convert( lt_tab ).
+    lt_nodes = lcl_abap_to_json=>convert( iv_data = lt_tab ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lt_nodes
@@ -4196,7 +4196,7 @@ CLASS ltcl_abap_to_json IMPLEMENTATION.
     lo_nodes_exp->add( '/      |1     |str    |abc  |1|0' ).
     lo_nodes_exp->add( '/      |2     |str    |bcd  |2|0' ).
 
-    lt_nodes = lcl_abap_to_json=>convert( lt_strtab ).
+    lt_nodes = lcl_abap_to_json=>convert( iv_data = lt_strtab ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lt_nodes
@@ -4474,7 +4474,7 @@ CLASS ltcl_mapper_test IMPLEMENTATION.
     DATA lo_nodes_exp TYPE REF TO lcl_nodes_helper.
 
     lo_json = zcl_abapgit_ajson=>create_empty( ).
-    lo_json->touch_array( '/' ).
+    lo_json->touch_array( iv_path = '/' ).
     lo_json->set(
       iv_path = '/1/ab'
       iv_val  = 1 ).

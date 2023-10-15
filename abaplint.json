@@ -439,7 +439,9 @@
     "unreachable_code": true,
     "use_new": true,
     "when_others_last": true,
-    "omit_parameter_name": true,
+    "omit_parameter_name": {
+      "exclude": ["/json/"]
+    },
     "whitespace_end": true
   },
   "targetRules": {

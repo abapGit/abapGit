@@ -93,7 +93,7 @@ class ltcl_error implementation.
     endtry.
 
     try.
-      zcx_abapgit_ajson_error=>raise( 'a' ).
+      zcx_abapgit_ajson_error=>raise( iv_msg = 'a' ).
       cl_abap_unit_assert=>fail( ).
     catch zcx_abapgit_ajson_error into lx.
       cl_abap_unit_assert=>assert_equals(
