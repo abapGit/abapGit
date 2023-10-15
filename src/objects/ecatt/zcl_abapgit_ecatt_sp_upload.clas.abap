@@ -73,7 +73,7 @@ CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
     ENDTRY.
 
     IF lv_exception_occurred = 'X'.
-      raise_upload_exception( exception_to_raise ).
+      raise_upload_exception( previous = exception_to_raise ).
     ENDIF.
   ENDMETHOD.
 
@@ -182,7 +182,7 @@ CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
         CLEAR ls_tadir.
     ENDTRY.
     IF lv_exc_occ = 'X'.
-      raise_upload_exception( lx_ecatt ).
+      raise_upload_exception( previous = lx_ecatt ).
     ENDIF.
 
   ENDMETHOD.
