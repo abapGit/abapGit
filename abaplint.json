@@ -447,7 +447,9 @@
     "unnecessary_pragma": {
       "allowNoTextGlobal": true
     },
-    "select_add_order_by": true,
+    "select_add_order_by": {
+      "skipForAllEntries": true
+    },
     "slow_parameter_passing": true,
     "select_single_full_key": true,
     "unused_variables": true
