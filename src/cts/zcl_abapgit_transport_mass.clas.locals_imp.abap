@@ -165,7 +165,7 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD does_folder_exist.
-    rv_folder_exist = zcl_abapgit_ui_factory=>get_frontend_services( )->directory_exist( iv_directory = iv_folder ).
+    rv_folder_exist = zcl_abapgit_ui_factory=>get_frontend_services( )->directory_exist( iv_folder ).
   ENDMETHOD.
 
   METHOD get_full_folder.

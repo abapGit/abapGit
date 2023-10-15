@@ -534,7 +534,7 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
     DATA lv_objname         TYPE lxeobjname.
 
 
-    ls_dokvl-object = build_text_name( iv_id = iv_id ).
+    ls_dokvl-object = build_text_name( iv_id ).
 
     SELECT id object langu
       FROM dokvl

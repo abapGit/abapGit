@@ -136,7 +136,7 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
       WITH '<?xml version="1.0"?>'.
     ASSERT sy-subrc = 0.
 
-    lv_xml_xstring = zcl_abapgit_convert=>string_to_xstring( iv_str = lv_xml_string ).
+    lv_xml_xstring = zcl_abapgit_convert=>string_to_xstring( lv_xml_string ).
     ls_orig_config-xcontent = lv_xml_xstring.
 
     ASSIGN COMPONENT 'PARENT' OF STRUCTURE ls_orig_config TO <lv_data>.
@@ -403,7 +403,7 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
     io_xml->add( iv_name = 'RELID'
                  ig_data =  ls_orig_config-relid ).
 
-    lv_xml_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_data = lv_xml_xstring ).
+    lv_xml_string = zcl_abapgit_convert=>xstring_to_string_utf8( lv_xml_xstring ).
     IF lv_xml_string IS NOT INITIAL.
       TRY.
           lv_xml_string = zcl_abapgit_xml_pretty=>print(

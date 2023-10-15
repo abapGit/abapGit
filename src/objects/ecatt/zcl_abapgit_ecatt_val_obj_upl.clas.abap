@@ -79,7 +79,7 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
     ENDTRY.
 
     IF lv_exception_occurred = 'X'.
-      raise_upload_exception( previous = exception_to_raise ).
+      raise_upload_exception( exception_to_raise ).
     ENDIF.
 
   ENDMETHOD.
@@ -126,7 +126,7 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
     ENDTRY.
 
     IF lv_exception_occurred = 'X'.
-      raise_upload_exception( previous = exception_to_raise ).
+      raise_upload_exception( exception_to_raise ).
     ENDIF.
 
   ENDMETHOD.
@@ -199,7 +199,7 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
     ENDTRY.
 
     IF lv_exception_occurred = 'X'.
-      raise_upload_exception( previous = exception_to_raise ).
+      raise_upload_exception( exception_to_raise ).
     ENDIF.
 
   ENDMETHOD.
@@ -333,7 +333,7 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
         CLEAR ls_tadir.
     ENDTRY.
     IF lv_exc_occ = 'X'.
-      raise_upload_exception( previous = lx_ex ).
+      raise_upload_exception( lx_ex ).
     ENDIF.
 
   ENDMETHOD.

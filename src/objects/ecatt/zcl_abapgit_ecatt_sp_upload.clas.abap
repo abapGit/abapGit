@@ -51,7 +51,7 @@ CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
           li_ixml = cl_ixml=>create( ).
           li_dom  = li_ixml->create_document( ).
           li_root ?= li_section->clone( ).
-          li_dom->append_child( new_child = li_root ).
+          li_dom->append_child( li_root ).
           CALL FUNCTION 'SDIXML_DOM_TO_XML'
             EXPORTING
               document      = li_dom
@@ -73,7 +73,7 @@ CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
     ENDTRY.
 
     IF lv_exception_occurred = 'X'.
-      raise_upload_exception( previous = exception_to_raise ).
+      raise_upload_exception( exception_to_raise ).
     ENDIF.
   ENDMETHOD.
 
@@ -165,7 +165,7 @@ CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
 * Devesh,C5129871  18.07.2011  Releasing enqueu after uploading
 *begin
     TRY.
-        ecatt_object->close_object( im_suppress_events = 'X' ).
+        ecatt_object->close_object( 'X' ).
       CATCH cx_ecatt_apl INTO lx_ecatt.
     ENDTRY.
 *end
@@ -182,7 +182,7 @@ CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
         CLEAR ls_tadir.
     ENDTRY.
     IF lv_exc_occ = 'X'.
-      raise_upload_exception( previous = lx_ecatt ).
+      raise_upload_exception( lx_ecatt ).
     ENDIF.
 
   ENDMETHOD.

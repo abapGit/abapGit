@@ -297,7 +297,7 @@ CLASS zcl_abapgit_object_wdca IMPLEMENTATION.
           WITH '<?xml version="1.0"?>'.
         ASSERT sy-subrc = 0.
 
-        lv_xml_xstring = zcl_abapgit_convert=>string_to_xstring( iv_str = lv_xml_string ).
+        lv_xml_xstring = zcl_abapgit_convert=>string_to_xstring( lv_xml_string ).
         UPDATE wdy_config_appl
           SET xcontent = lv_xml_xstring
           WHERE config_id   = ls_outline-config_id
@@ -411,7 +411,7 @@ CLASS zcl_abapgit_object_wdca IMPLEMENTATION.
       WHERE config_id = ls_outline-config_id
         AND config_type = ls_outline-config_type
         AND config_var = ls_outline-config_var.
-    lv_xml_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_data = lv_xml_xstring ).
+    lv_xml_string = zcl_abapgit_convert=>xstring_to_string_utf8( lv_xml_xstring ).
     IF lv_xml_string IS NOT INITIAL.
       TRY.
           lv_xml_string = zcl_abapgit_xml_pretty=>print(

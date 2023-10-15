@@ -439,11 +439,11 @@
     "unreachable_code": true,
     "use_new": true,
     "when_others_last": true,
+    "omit_parameter_name": true,
     "whitespace_end": true
   },
   "targetRules": {
     "double_space": true,
-    "omit_parameter_name": true,
     "unnecessary_pragma": {
       "allowNoTextGlobal": true
     },

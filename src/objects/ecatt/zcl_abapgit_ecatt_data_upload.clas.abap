@@ -43,7 +43,7 @@ CLASS ZCL_ABAPGIT_ECATT_DATA_UPLOAD IMPLEMENTATION.
     ENDTRY.
 
     IF mx_ecatt_apl IS BOUND.
-      raise_upload_exception( previous = mx_ecatt_apl ).
+      raise_upload_exception( mx_ecatt_apl ).
     ENDIF.
   ENDMETHOD.
 

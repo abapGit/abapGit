@@ -483,7 +483,7 @@ CLASS lcl_json_serializer IMPLEMENTATION.
 
     stringify_node( <n> ).
 
-    rv_json_string = concat_lines_of( table = mt_buffer ).
+    rv_json_string = concat_lines_of( mt_buffer ).
 
   ENDMETHOD.
 
@@ -1769,7 +1769,7 @@ CLASS lcl_filter_runner IMPLEMENTATION.
     GET REFERENCE OF it_source_tree INTO mr_source_tree.
     GET REFERENCE OF et_dest_tree INTO mr_dest_tree.
 
-    walk( iv_path = '' ).
+    walk( '' ).
 
   ENDMETHOD.
 

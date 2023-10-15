@@ -54,7 +54,7 @@ CLASS ltcl_changed_by IMPLEMENTATION.
 
     when_changed_is_checked( ).
 
-    then_should_be( iv_exp_change_more_recent = abap_true ).
+    then_should_be( abap_true ).
 
   ENDMETHOD.
 
@@ -69,7 +69,7 @@ CLASS ltcl_changed_by IMPLEMENTATION.
 
     when_changed_is_checked( ).
 
-    then_should_be( iv_exp_change_more_recent = abap_false ).
+    then_should_be( abap_false ).
 
   ENDMETHOD.
 
@@ -84,7 +84,7 @@ CLASS ltcl_changed_by IMPLEMENTATION.
 
     when_changed_is_checked( ).
 
-    then_should_be( iv_exp_change_more_recent = abap_true ).
+    then_should_be( abap_true ).
 
   ENDMETHOD.
 
@@ -99,7 +99,7 @@ CLASS ltcl_changed_by IMPLEMENTATION.
 
     when_changed_is_checked( ).
 
-    then_should_be( iv_exp_change_more_recent = abap_false ).
+    then_should_be( abap_false ).
 
   ENDMETHOD.
 
