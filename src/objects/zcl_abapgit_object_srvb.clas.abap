@@ -146,7 +146,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |SRVB not supported by your NW release| ).
     ENDTRY.
 
-    mv_is_inactive_supported = is_ai_supported(  ).
+    mv_is_inactive_supported = is_ai_supported( ).
 
   ENDMETHOD.
 
@@ -175,7 +175,7 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
     <lv_language> = mv_language.
 
     CREATE OBJECT ro_object_data TYPE ('CL_SRVB_OBJECT_DATA').
-    ro_object_data->set_data( p_data = <ls_service_binding>  ).
+    ro_object_data->set_data( p_data = <ls_service_binding> ).
 
   ENDMETHOD.
 
