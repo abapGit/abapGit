@@ -121,6 +121,11 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
       CHANGING
       cs_service_binding = cs_service_binding ).
 
+     clear_field(
+        EXPORTING
+        iv_fieldname          = 'METADATA-LINKS'
+        CHANGING
+        cs_service_binding = cs_service_binding ).
 
   ENDMETHOD.
 
