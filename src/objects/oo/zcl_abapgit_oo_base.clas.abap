@@ -280,7 +280,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
       WHERE clsname = is_key-clsname
         AND version <> seoc_version_deleted
         AND state = seoc_state_implemented
-        AND alias = seox_false ORDER BY PRIMARY KEY.
+        AND alias = seox_false ORDER BY clsname cmpname version.
 
     IF lt_components IS NOT INITIAL.
       SELECT SINGLE masterlang FROM tadir INTO lv_lang
@@ -326,7 +326,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
     " make sure to not damage VSEO* views by deleting texts of all subcomponents - an empty text must be kept!!
     SELECT * FROM vseosubcdf INTO TABLE lt_subcomponents
       WHERE clsname = is_key-clsname
-        AND version <> seoc_version_deleted ORDER BY PRIMARY KEY.
+        AND version <> seoc_version_deleted ORDER BY clsname cmpname sconame version.
 
     IF lt_subcomponents IS NOT INITIAL.
       SELECT SINGLE masterlang FROM tadir INTO lv_lang
