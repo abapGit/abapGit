@@ -134,7 +134,7 @@ CLASS ltcl_unit_test IMPLEMENTATION.
 
     ms_item-obj_name = 'ZIF_ABAPGIT_TEST_INTF'.
     ms_item-obj_type = 'INTF'.
-    ms_item-abap_language_version = 'X'. " assume standard ABAP
+    ms_item-abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
 
     CREATE OBJECT lo_cut
       EXPORTING
@@ -185,7 +185,7 @@ CLASS ltcl_unit_test IMPLEMENTATION.
     ls_expected_vseointerf-descript = 'Test interface for abap git'.
     ls_expected_vseointerf-exposure = '2'.
     ls_expected_vseointerf-state = '1'.
-    ls_expected_vseointerf-unicode = 'X'.
+    ls_expected_vseointerf-unicode = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
     cl_abap_unit_assert=>assert_equals( exp = ls_expected_vseointerf
                                         act = mo_object_fnc->ms_create_vseointerf ).
 
@@ -232,7 +232,7 @@ CLASS ltcl_unit_test IMPLEMENTATION.
     '        <DESCRIPT>Test interface for abap git</DESCRIPT>' &&
     '        <EXPOSURE>2</EXPOSURE>' &&
     '        <STATE>1</STATE>' &&
-    '        <UNICODE>X</UNICODE>' &&
+    '        <UNICODE>' && zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard && '</UNICODE>' &&
     '      </VSEOINTERF>' &&
     '      <DESCRIPTIONS>' &&
     '        <SEOCOMPOTX>' &&
@@ -340,7 +340,8 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
       `  "header": {` && cl_abap_char_utilities=>newline &&
       `    "description": "abc",` && cl_abap_char_utilities=>newline &&
       `    "originalLanguage": "fr",` && cl_abap_char_utilities=>newline &&
-      `    "abapLanguageVersion": "keyUser"` && cl_abap_char_utilities=>newline &&
+      `    "abapLanguageVersion": "` && zif_abapgit_dot_abapgit=>c_abap_language_version-key_user && `"`
+        && cl_abap_char_utilities=>newline &&
       `  },` && cl_abap_char_utilities=>newline &&
       `  "category": "dbProcedureProxy",` && cl_abap_char_utilities=>newline &&
       `  "proxy": true` && cl_abap_char_utilities=>newline &&
@@ -404,7 +405,8 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
       `  "header": {` && cl_abap_char_utilities=>newline &&
       `    "description": "abc",` && cl_abap_char_utilities=>newline &&
       `    "originalLanguage": "fr",` && cl_abap_char_utilities=>newline &&
-      `    "abapLanguageVersion": "keyUser"` && cl_abap_char_utilities=>newline &&
+      `    "abapLanguageVersion": "` && zif_abapgit_dot_abapgit=>c_abap_language_version-key_user && `"`
+        && cl_abap_char_utilities=>newline &&
       `  },` && cl_abap_char_utilities=>newline &&
       `  "category": "dbProcedureProxy",` && cl_abap_char_utilities=>newline &&
       `  "proxy": true,` && cl_abap_char_utilities=>newline &&
