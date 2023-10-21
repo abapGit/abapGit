@@ -1041,7 +1041,7 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
       iv_obj_name = '$$ZDOMA1'
       iv_devclass = 'FOO' ).
 
-    mo_result = mo_helper->run( iv_devclass = 'FOO' ).
+    mo_result = mo_helper->run( 'FOO' ).
 
     mo_result->assert_lines(
       iv_lines = 2
@@ -1443,7 +1443,7 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
       iv_filename = 'zcl_clas.clas.locals_imp.abap'
       iv_sha1     = '1111' ).
 
-    mo_result = mo_helper->run( iv_devclass = '$DIFFERENT' ).
+    mo_result = mo_helper->run( '$DIFFERENT' ).
 
     mo_result->assert_lines( 2 ).
 
@@ -1478,7 +1478,7 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
       iv_filename = 'package.devc.xml'
       iv_sha1     = '112233' ).
 
-    mo_result = mo_helper->run( iv_devclass = '$DIFFERENT' ).
+    mo_result = mo_helper->run( '$DIFFERENT' ).
 
     mo_result->assert_lines( 2 ).
 

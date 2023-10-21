@@ -36,7 +36,7 @@ CLASS lcl_cua_interface IMPLEMENTATION.
 
   METHOD get_own_cua.
 
-    rs_cua = serialize_cua( iv_program_name = sy-cprog ).
+    rs_cua = serialize_cua( sy-cprog ).
 
   ENDMETHOD.
 
@@ -49,7 +49,7 @@ CLASS lcl_cua_interface IMPLEMENTATION.
       iv_program_name = ms_item-obj_name ).
 
     CREATE OBJECT li_log TYPE zcl_abapgit_log.
-    zcl_abapgit_objects_activation=>activate( ii_log = li_log ).
+    zcl_abapgit_objects_activation=>activate( li_log ).
     zcl_abapgit_objects_activation=>clear( ).
 
   ENDMETHOD.

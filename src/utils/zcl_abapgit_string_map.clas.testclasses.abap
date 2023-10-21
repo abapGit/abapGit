@@ -150,7 +150,7 @@ CLASS ltcl_sm_test IMPLEMENTATION.
   METHOD case_insensitive.
 
     DATA lo_cut TYPE REF TO zcl_abapgit_string_map.
-    lo_cut = zcl_abapgit_string_map=>create( iv_case_insensitive = abap_true ).
+    lo_cut = zcl_abapgit_string_map=>create( abap_true ).
 
     lo_cut->set(
       iv_key = 'A'

@@ -110,7 +110,7 @@ CLASS ltcl_parse IMPLEMENTATION.
     APPEND '000000f7e6e5b066fb4177bf0780bf343ab2de06368dd973 refs/heads/main' TO mt_data.
     APPEND '0000' TO mt_data.
 
-    parse( iv_expected_lines = 1 ).
+    parse( 1 ).
 
   ENDMETHOD.
 

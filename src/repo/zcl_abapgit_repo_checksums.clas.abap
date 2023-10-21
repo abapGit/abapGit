@@ -162,7 +162,7 @@ CLASS ZCL_ABAPGIT_REPO_CHECKSUMS IMPLEMENTATION.
     DATA lv_cs_blob TYPE string.
 
     TRY.
-        lv_cs_blob = zcl_abapgit_persist_factory=>get_repo_cs( )->read( iv_key = mv_repo_key ).
+        lv_cs_blob = zcl_abapgit_persist_factory=>get_repo_cs( )->read( mv_repo_key ).
       CATCH zcx_abapgit_exception zcx_abapgit_not_found.
         " Ignore currently, it's not critical for execution, just return empty
         RETURN.

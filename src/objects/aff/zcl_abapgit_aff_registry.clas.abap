@@ -52,17 +52,17 @@ CLASS zcl_abapgit_aff_registry IMPLEMENTATION.
 
 
   METHOD initialize_registry_table.
-    register( iv_obj_type = 'CHKC' ).
-    register( iv_obj_type = 'CHKO' ).
-    register( iv_obj_type = 'CHKV' ).
-    register( iv_obj_type = 'EVTB' ).
-    register( iv_obj_type = 'EEEC' ).
-    register( iv_obj_type = 'GSMP' ).
+    register( 'CHKC' ).
+    register( 'CHKO' ).
+    register( 'CHKV' ).
+    register( 'EVTB' ).
+    register( 'EEEC' ).
+    register( 'GSMP' ).
     register( iv_obj_type     = 'INTF'
               iv_experimental = abap_true ).
-    register( iv_obj_type = 'SMBC' ).
-    register( iv_obj_type = 'NONT' ).
-    register( iv_obj_type = 'RONT' ).
+    register( 'SMBC' ).
+    register( 'NONT' ).
+    register( 'RONT' ).
   ENDMETHOD.
 
 

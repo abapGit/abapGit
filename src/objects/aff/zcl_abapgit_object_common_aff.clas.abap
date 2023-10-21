@@ -234,7 +234,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
                    <ls_msg>                   TYPE symsg,
                    <ls_extension_mapper_pair> LIKE LINE OF ls_additional_extensions.
 
-    lv_json_as_xstring = zif_abapgit_object~mo_files->read_raw( iv_ext = 'json' ).
+    lv_json_as_xstring = zif_abapgit_object~mo_files->read_raw( 'json' ).
     lv_name = ms_item-obj_name.
 
     " beyond here there will be dragons....
@@ -290,7 +290,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
         LOOP AT ls_additional_extensions ASSIGNING <ls_extension_mapper_pair>.
 
-          lv_file_as_xstring = zif_abapgit_object~mo_files->read_raw( iv_ext = <ls_extension_mapper_pair>-extension ).
+          lv_file_as_xstring = zif_abapgit_object~mo_files->read_raw( <ls_extension_mapper_pair>-extension ).
 
           CALL METHOD <ls_extension_mapper_pair>-file_name_mapper->('IF_AFF_FILE_NAME_MAPPER~GET_FILE_NAME_FROM_OBJECT')
             EXPORTING
@@ -631,13 +631,13 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
     DATA lv_json_wo_alv TYPE string.
     DATA li_json TYPE REF TO zif_abapgit_ajson.
 
-    lv_json = zcl_abapgit_convert=>xstring_to_string_utf8( iv_data = iv_json_as_xstring ).
+    lv_json = zcl_abapgit_convert=>xstring_to_string_utf8( iv_json_as_xstring ).
 
     TRY.
         li_json = zcl_abapgit_ajson=>parse( iv_json            = lv_json
                                             iv_keep_item_order = abap_true ).
         li_json->delete( '/header/abapLanguageVersion' ).
-        lv_json_wo_alv = li_json->stringify( iv_indent = 2 ).
+        lv_json_wo_alv = li_json->stringify( 2 ).
 
         rv_json_as_xstring_wo_alv = zcl_abapgit_convert=>string_to_xstring_utf8( lv_json_wo_alv ).
 

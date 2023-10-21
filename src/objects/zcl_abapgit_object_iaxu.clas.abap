@@ -64,9 +64,9 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
 
     DATA: lo_xml_api TYPE REF TO object.
 
-    lo_xml_api = w3_api_create_new( is_attr = is_attr ).
+    lo_xml_api = w3_api_create_new( is_attr ).
 
-    w3_api_save( io_xml_api = lo_xml_api ).
+    w3_api_save( lo_xml_api ).
 
     w3_api_set_changeable( io_xml_api    = lo_xml_api
                            iv_changeable = abap_false ).
@@ -222,9 +222,9 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
     w3_api_set_changeable( io_xml_api    = lo_xml_api
                            iv_changeable = abap_true ).
 
-    w3_api_delete( io_xml_api = lo_xml_api ).
+    w3_api_delete( lo_xml_api ).
 
-    w3_api_save( io_xml_api = lo_xml_api ).
+    w3_api_save( lo_xml_api ).
 
   ENDMETHOD.
 
@@ -244,7 +244,7 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
                                  iv_transport = iv_transport ).
     ENDIF.
 
-    save( is_attr = ls_attr ).
+    save( ls_attr ).
 
   ENDMETHOD.
 

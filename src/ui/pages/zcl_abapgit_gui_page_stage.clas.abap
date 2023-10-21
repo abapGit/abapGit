@@ -769,7 +769,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
           filename = ls_file-filename.
       IF sy-subrc <> 0.
 * see https://github.com/abapGit/abapGit/issues/3073
-        zcx_abapgit_exception=>raise( iv_text =
+        zcx_abapgit_exception=>raise(
           |Unable to stage { ls_file-filename }. If the filename contains spaces, this is a known issue.| &&
           | Consider ignoring or staging the file at a later time.| ).
       ENDIF.

@@ -146,7 +146,7 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_DOWN IMPLEMENTATION.
 
     li_insert_objects ?= template_over_all->find_from_name( 'BUSINESS_MESSAGES' ).
 
-    li_insert_objects->append_child( new_child = li_element ).
+    li_insert_objects->append_child( li_element ).
 
   ENDMETHOD.
 
@@ -193,7 +193,7 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_DOWN IMPLEMENTATION.
 
     li_insert_objects ?= template_over_all->find_from_name( 'VO_FLAGS' ).
 
-    li_insert_objects->append_child( new_child = li_element ).
+    li_insert_objects->append_child( li_element ).
 
     CALL METHOD lo_ecatt_vo->('GET_ERROR_PRIORITY')
       RECEIVING
@@ -217,7 +217,7 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_DOWN IMPLEMENTATION.
 
     li_insert_objects = template_over_all->find_from_name( 'VO_FLAGS' ).
 
-    li_insert_objects->append_child( new_child = li_element ).
+    li_insert_objects->append_child( li_element ).
 
   ENDMETHOD.
 
@@ -264,7 +264,7 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_DOWN IMPLEMENTATION.
 
     li_insert_objects = template_over_all->find_from_name( 'IMPL_DETAILS' ).
 
-    li_insert_objects->append_child( new_child = li_element ).
+    li_insert_objects->append_child( li_element ).
 
   ENDMETHOD.
 

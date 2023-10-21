@@ -204,7 +204,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     IF lo_abapgit_abap_language_vers->is_import_allowed( ms_data-package ) = abap_false.
       lv_text = |Repository cannot be imported. | &&
                 |ABAP Language Version of linked package is not compatible with repository settings.|.
-      zcx_abapgit_exception=>raise( iv_text = lv_text ).
+      zcx_abapgit_exception=>raise( lv_text ).
     ENDIF.
   ENDMETHOD.
 

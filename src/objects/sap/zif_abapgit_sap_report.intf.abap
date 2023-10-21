@@ -53,6 +53,7 @@ INTERFACE zif_abapgit_sap_report
       iv_program_type   TYPE c OPTIONAL
       iv_extension_type TYPE c OPTIONAL
       iv_package        TYPE devclass
+      iv_version        TYPE uccheck
       is_item           TYPE zif_abapgit_definitions=>ty_item OPTIONAL
     RAISING
       zcx_abapgit_exception.
@@ -65,6 +66,7 @@ INTERFACE zif_abapgit_sap_report
       iv_program_type   TYPE c OPTIONAL
       iv_extension_type TYPE c OPTIONAL
       iv_package        TYPE devclass
+      iv_version        TYPE uccheck
       is_item           TYPE zif_abapgit_definitions=>ty_item OPTIONAL
     RETURNING
       VALUE(rv_updated) TYPE abap_bool

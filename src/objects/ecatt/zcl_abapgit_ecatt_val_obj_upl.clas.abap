@@ -35,7 +35,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
+CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
 
 
   METHOD get_business_msgs_from_dom.

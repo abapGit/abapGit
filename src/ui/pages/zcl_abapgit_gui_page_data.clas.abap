@@ -51,7 +51,9 @@ CLASS zcl_abapgit_gui_page_data DEFINITION
         !iv_table       TYPE tabname
         !iv_tabkey      TYPE clike
       RETURNING
-        VALUE(rv_where) TYPE string .
+        VALUE(rv_where) TYPE string
+      RAISING
+        zcx_abapgit_exception.
     METHODS add_via_transport
       RAISING
         zcx_abapgit_exception .
@@ -153,28 +155,38 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
   METHOD concatenated_key_to_where.
 
     DATA lo_structdescr TYPE REF TO cl_abap_structdescr.
-    DATA lt_fields      TYPE ddfields.
-    DATA ls_field       LIKE LINE OF lt_fields.
+    DATA lo_typedescr   TYPE REF TO cl_abap_typedescr.
+    DATA lt_fields      TYPE zcl_abapgit_data_utils=>ty_names.
+    DATA lv_field       LIKE LINE OF lt_fields.
+    DATA lv_table       TYPE tadir-obj_name.
+    DATA lv_length      TYPE i.
+    DATA lv_tabix       TYPE i.
     DATA lv_key         TYPE c LENGTH 900.
 
     lv_key = iv_tabkey.
     lo_structdescr ?= cl_abap_typedescr=>describe_by_name( iv_table ).
 
-    lt_fields = lo_structdescr->get_ddic_field_list( ).
+    lv_table = iv_table.
+    lt_fields = zcl_abapgit_data_utils=>list_key_fields( lv_table ).
 
-    LOOP AT lt_fields INTO ls_field WHERE keyflag = abap_true.
-      IF ls_field-position = '0001' AND ls_field-datatype = 'CLNT'.
-        lv_key = lv_key+ls_field-leng.
+    LOOP AT lt_fields INTO lv_field.
+      lv_tabix = sy-tabix.
+      lo_typedescr = cl_abap_typedescr=>describe_by_name( |{ iv_table }-{ lv_field }| ).
+      lv_length = lo_typedescr->length / cl_abap_char_utilities=>charsize.
+
+      IF lv_tabix = 1 AND lo_typedescr->get_relative_name( ) = 'MANDT'.
+        lv_key = lv_key+lv_length.
         CONTINUE.
       ENDIF.
+
       IF lv_key = |*|.
         EXIT. " current loop
       ENDIF.
       IF NOT rv_where IS INITIAL.
         rv_where = |{ rv_where } AND |.
       ENDIF.
-      rv_where = |{ rv_where }{ to_lower( ls_field-fieldname ) } = '{ lv_key(ls_field-leng) }'|.
-      lv_key = lv_key+ls_field-leng.
+      rv_where = |{ rv_where }{ to_lower( lv_field ) } = '{ lv_key(lv_length) }'|.
+      lv_key = lv_key+lv_length.
     ENDLOOP.
 
   ENDMETHOD.
@@ -300,7 +312,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
     lt_configs = mi_config->get_configs( ).
 
     LOOP AT lt_configs INTO ls_config.
-      lo_form = zcl_abapgit_html_form=>create(  ).
+      lo_form = zcl_abapgit_html_form=>create( ).
       CREATE OBJECT lo_form_data.
 
       lo_form_data->set(

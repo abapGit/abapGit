@@ -27,16 +27,15 @@ CLASS lth_oo_object_fnc IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_oo_object_fnc~create.
-    mv_create_package = iv_package.
+    mv_create_package    = iv_package.
     ms_create_vseointerf = cg_properties.
   ENDMETHOD.
 
   METHOD zif_abapgit_oo_object_fnc~create_documentation.
-    mt_docu_lines = it_lines.
-    mv_docu_id = iv_id.
+    mt_docu_lines       = it_lines.
+    mv_docu_id          = iv_id.
     mv_docu_object_name = iv_object_name.
-    mv_docu_langu =   iv_language.
-
+    mv_docu_langu       = iv_language.
   ENDMETHOD.
 
   METHOD zif_abapgit_oo_object_fnc~create_sotr.
@@ -48,7 +47,7 @@ CLASS lth_oo_object_fnc IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_oo_object_fnc~deserialize_source.
-    ms_deserialize_key = is_key.
+    ms_deserialize_key    = is_key.
     mt_deserialize_source = it_source.
   ENDMETHOD.
 
@@ -99,7 +98,7 @@ CLASS lth_oo_object_fnc IMPLEMENTATION.
 
   METHOD zif_abapgit_oo_object_fnc~update_descriptions.
     ms_descriptions_key = is_key.
-    mt_descriptions = it_descriptions.
+    mt_descriptions     = it_descriptions.
   ENDMETHOD.
 
   METHOD zif_abapgit_oo_object_fnc~update_descriptions_sub.
@@ -135,6 +134,7 @@ CLASS ltcl_unit_test IMPLEMENTATION.
 
     ms_item-obj_name = 'ZIF_ABAPGIT_TEST_INTF'.
     ms_item-obj_type = 'INTF'.
+    ms_item-abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
 
     CREATE OBJECT lo_cut
       EXPORTING
@@ -185,13 +185,11 @@ CLASS ltcl_unit_test IMPLEMENTATION.
     ls_expected_vseointerf-descript = 'Test interface for abap git'.
     ls_expected_vseointerf-exposure = '2'.
     ls_expected_vseointerf-state = '1'.
-    ls_expected_vseointerf-unicode = 'X'.
+    ls_expected_vseointerf-unicode = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
     cl_abap_unit_assert=>assert_equals( exp = ls_expected_vseointerf
                                         act = mo_object_fnc->ms_create_vseointerf ).
 
     ls_expected_clskey-clsname = 'ZIF_ABAPGIT_TEST_INTF'.
-    cl_abap_unit_assert=>assert_equals( exp = ls_expected_clskey
-                                        act = mo_object_fnc->ms_deserialize_key ).
     cl_abap_unit_assert=>assert_equals( exp = ls_expected_clskey
                                         act = mo_object_fnc->ms_deserialize_key ).
 
@@ -234,7 +232,7 @@ CLASS ltcl_unit_test IMPLEMENTATION.
     '        <DESCRIPT>Test interface for abap git</DESCRIPT>' &&
     '        <EXPOSURE>2</EXPOSURE>' &&
     '        <STATE>1</STATE>' &&
-    '        <UNICODE>X</UNICODE>' &&
+    '        <UNICODE>' && zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard && '</UNICODE>' &&
     '      </VSEOINTERF>' &&
     '      <DESCRIPTIONS>' &&
     '        <SEOCOMPOTX>' &&
@@ -342,7 +340,8 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
       `  "header": {` && cl_abap_char_utilities=>newline &&
       `    "description": "abc",` && cl_abap_char_utilities=>newline &&
       `    "originalLanguage": "fr",` && cl_abap_char_utilities=>newline &&
-      `    "abapLanguageVersion": "keyUser"` && cl_abap_char_utilities=>newline &&
+      `    "abapLanguageVersion": "` && zif_abapgit_dot_abapgit=>c_abap_language_version-key_user && `"`
+        && cl_abap_char_utilities=>newline &&
       `  },` && cl_abap_char_utilities=>newline &&
       `  "category": "dbProcedureProxy",` && cl_abap_char_utilities=>newline &&
       `  "proxy": true` && cl_abap_char_utilities=>newline &&
@@ -406,7 +405,8 @@ CLASS ltcl_aff_metadata IMPLEMENTATION.
       `  "header": {` && cl_abap_char_utilities=>newline &&
       `    "description": "abc",` && cl_abap_char_utilities=>newline &&
       `    "originalLanguage": "fr",` && cl_abap_char_utilities=>newline &&
-      `    "abapLanguageVersion": "keyUser"` && cl_abap_char_utilities=>newline &&
+      `    "abapLanguageVersion": "` && zif_abapgit_dot_abapgit=>c_abap_language_version-key_user && `"`
+        && cl_abap_char_utilities=>newline &&
       `  },` && cl_abap_char_utilities=>newline &&
       `  "category": "dbProcedureProxy",` && cl_abap_char_utilities=>newline &&
       `  "proxy": true,` && cl_abap_char_utilities=>newline &&

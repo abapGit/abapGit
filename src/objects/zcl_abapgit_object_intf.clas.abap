@@ -34,7 +34,6 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
         zcx_abapgit_exception .
     METHODS serialize_docu
       IMPORTING
-                !ii_xml              TYPE REF TO zif_abapgit_xml_output
                 !it_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus OPTIONAL
                 !iv_clsname          TYPE seoclsname
       RETURNING VALUE(rs_docu)       TYPE ty_docu
@@ -42,14 +41,12 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
                 zcx_abapgit_exception.
     METHODS serialize_descr
       IMPORTING
-                !ii_xml               TYPE REF TO zif_abapgit_xml_output
                 !iv_clsname           TYPE seoclsname
       RETURNING VALUE(rs_description) TYPE ty_intf-description
       RAISING
                 zcx_abapgit_exception.
     METHODS serialize_descr_sub
       IMPORTING
-                !ii_xml               TYPE REF TO zif_abapgit_xml_output
                 !iv_clsname           TYPE seoclsname
       RETURNING VALUE(rs_description) TYPE ty_intf-description_sub
       RAISING
@@ -198,6 +195,8 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
                     CHANGING  cg_data = ls_intf-vseointerf ).
     ENDIF.
 
+    set_abap_language_version( CHANGING cv_abap_language_version = ls_intf-vseointerf-unicode ).
+
     mi_object_oriented_object_fct->create(
       EXPORTING
         iv_check      = abap_false
@@ -254,7 +253,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     DATA ls_intf_aff TYPE zif_abapgit_aff_intf_v1=>ty_main.
     DATA lo_aff_mapper TYPE REF TO zif_abapgit_aff_type_mapping.
 
-    lv_json_data = zif_abapgit_object~mo_files->read_raw( iv_ext = 'json' ).
+    lv_json_data = zif_abapgit_object~mo_files->read_raw( 'json' ).
     ls_intf_aff = lcl_aff_metadata_handler=>deserialize( lv_json_data ).
 
     CREATE OBJECT lo_aff_mapper TYPE lcl_aff_type_mapping.
@@ -386,6 +385,8 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     ls_intf-vseointerf = mi_object_oriented_object_fct->get_interface_properties( ls_clskey ).
 
+    clear_abap_language_version( CHANGING cv_abap_language_version = ls_intf-vseointerf-unicode ).
+
     " Select all active translations of documentation
     " Skip main language - it was already serialized
     SELECT DISTINCT langu
@@ -393,17 +394,15 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       FROM dokhl
       WHERE id     = c_longtext_id-interface
         AND object = ls_clskey-clsname
-        AND langu  <> mv_language.
+        AND langu  <> mv_language
+      ORDER BY langu.
 
     ls_intf-docu = serialize_docu(
-      ii_xml              = io_xml
       iv_clsname          = ls_clskey-clsname
       it_langu_additional = lt_langu_additional ).
 
-    ls_intf-description = serialize_descr( ii_xml     = io_xml
-                                           iv_clsname = ls_clskey-clsname ).
-    ls_intf-description_sub = serialize_descr_sub( ii_xml     = io_xml
-                                                   iv_clsname = ls_clskey-clsname ).
+    ls_intf-description = serialize_descr( ls_clskey-clsname ).
+    ls_intf-description_sub = serialize_descr_sub( ls_clskey-clsname ).
 
     " HERE: switch with feature flag for XML or JSON file format
     IF mv_aff_enabled = abap_true.
@@ -512,6 +511,8 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
         ls_intf = read_xml( io_xml ).
       ENDIF.
 
+      set_abap_language_version( CHANGING cv_abap_language_version = ls_intf-vseointerf-unicode ).
+
       IF ls_intf-vseointerf-clsproxy = abap_true.
         " Proxy interfaces are managed via SPRX
         deserialize_proxy( iv_transport ).
@@ -526,14 +527,16 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
         ls_clskey-clsname = ms_item-obj_name.
         lt_source = zif_abapgit_object~mo_files->read_abap( ).
+
         mi_object_oriented_object_fct->deserialize_source(
           is_key     = ls_clskey
           iv_package = iv_package
+          iv_version = ls_intf-vseointerf-unicode
           it_source  = lt_source ).
 
-        deserialize_descriptions( it_description = ls_intf-description ).
+        deserialize_descriptions( ls_intf-description ).
 
-        deserialize_descr_sub( it_description = ls_intf-description_sub ).
+        deserialize_descr_sub( ls_intf-description_sub ).
 
         deserialize_docu(
           is_docu = ls_intf-docu
@@ -668,5 +671,6 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     zif_abapgit_object~mo_files->add_abap( lt_source ).
 
     serialize_xml( io_xml ).
+
   ENDMETHOD.
 ENDCLASS.

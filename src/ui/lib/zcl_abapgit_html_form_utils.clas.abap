@@ -15,7 +15,7 @@ CLASS zcl_abapgit_html_form_utils DEFINITION
         !io_form_data    TYPE REF TO zcl_abapgit_string_map
         !io_compare_with TYPE REF TO zcl_abapgit_string_map
       RETURNING
-        VALUE(rv_dirty) TYPE abap_bool .
+        VALUE(rv_dirty)  TYPE abap_bool .
 
     METHODS constructor
       IMPORTING
@@ -46,10 +46,10 @@ CLASS zcl_abapgit_html_form_utils DEFINITION
         !io_form_data TYPE REF TO zcl_abapgit_string_map .
     METHODS exit
       IMPORTING
-        !io_form_data            TYPE REF TO zcl_abapgit_string_map
-        !io_check_changes_versus TYPE REF TO zcl_abapgit_string_map OPTIONAL
+        !io_form_data    TYPE REF TO zcl_abapgit_string_map
+        !io_compare_with TYPE REF TO zcl_abapgit_string_map
       RETURNING
-        VALUE(rv_state)          TYPE i
+        VALUE(rv_state)  TYPE i
       RAISING
         zcx_abapgit_exception .
 
@@ -63,7 +63,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTML_FORM_UTILS IMPLEMENTATION.
+CLASS zcl_abapgit_html_form_utils IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -81,17 +81,10 @@ CLASS ZCL_ABAPGIT_HTML_FORM_UTILS IMPLEMENTATION.
   METHOD exit.
 
     DATA lv_answer TYPE c LENGTH 1.
-    DATA lo_compare_with LIKE io_check_changes_versus.
-
-    lo_compare_with = io_check_changes_versus.
-    IF lo_compare_with IS NOT BOUND.
-      " TODO: remove this if and make io_check_changes_versus mandatory once all forms are converted
-      lo_compare_with = mo_form_data.
-    ENDIF.
 
     IF is_dirty(
       io_form_data    = io_form_data
-      io_compare_with = lo_compare_with ) = abap_true.
+      io_compare_with = io_compare_with ) = abap_true.
       lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
         iv_display_cancel_button = abap_false
         iv_titlebar       = 'abapGit - Unsaved Changes'

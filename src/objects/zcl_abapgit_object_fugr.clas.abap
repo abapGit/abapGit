@@ -324,6 +324,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       zcl_abapgit_factory=>get_sap_report( )->insert_report(
         iv_name    = lv_include
         iv_package = iv_package
+        iv_version = iv_version
         it_source  = lt_source ).
 
       ii_log->add_success( iv_msg = |Function module { <ls_func>-funcname } imported|
@@ -395,6 +396,8 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
           lo_xml->read( EXPORTING iv_name = 'PROGDIR'
                         CHANGING cg_data = ls_progdir ).
+
+          set_abap_language_version( CHANGING cv_abap_language_version = ls_progdir-uccheck ).
 
           lo_xml->read( EXPORTING iv_name = 'TPOOL'
                         CHANGING cg_data = lt_tpool_ext ).
@@ -575,7 +578,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     ENDLOOP.
 
     IF rv_abap_version IS INITIAL.
-      rv_abap_version = 'X'.
+      set_abap_language_version( CHANGING cv_abap_language_version = rv_abap_version ).
     ENDIF.
 
   ENDMETHOD.
@@ -982,7 +985,8 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       FROM d010tinf
       WHERE r3state = 'A'
       AND prog = iv_prog_name
-      AND language <> mv_language ##TOO_MANY_ITAB_FIELDS.
+      AND language <> mv_language
+      ORDER BY language ##TOO_MANY_ITAB_FIELDS.
 
     mo_i18n_params->trim_saplang_keyed_table(
       EXPORTING
@@ -1034,8 +1038,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     "   FORM GROUP_CHANGE
 
     UPDATE tlibt SET areat = iv_short_text
-                 WHERE spras = mv_language
-                 AND   area  = iv_group.
+      WHERE spras = mv_language AND area = iv_group.
 
   ENDMETHOD.
 
@@ -1118,26 +1121,29 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     SELECT unam AS user udat AS date utime AS time FROM reposrc
       APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
       WHERE progname = lv_program
-      AND   r3state = 'A'.                                "#EC CI_SUBRC
+      AND r3state = 'A'
+      ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
 
     IF mt_includes_all IS NOT INITIAL AND lv_found = abap_false.
       SELECT unam AS user udat AS date utime AS time FROM reposrc
         APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
         FOR ALL ENTRIES IN mt_includes_all
         WHERE progname = mt_includes_all-table_line
-        AND   r3state = 'A'.                              "#EC CI_SUBRC
+        AND r3state = 'A'.                                "#EC CI_SUBRC
     ENDIF.
 
     SELECT unam AS user udat AS date utime AS time FROM repotext " Program text pool
       APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
       WHERE progname = lv_program
-      AND   r3state = 'A'.                                "#EC CI_SUBRC
+      AND r3state = 'A'
+      ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
 
     SELECT vautor AS user vdatum AS date vzeit AS time FROM eudb         " GUI
       APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
       WHERE relid = 'CU'
-      AND   name  = lv_program
-      AND   srtf2 = 0 ##TOO_MANY_ITAB_FIELDS.
+      AND name = lv_program
+      AND srtf2 = 0
+      ORDER BY PRIMARY KEY ##TOO_MANY_ITAB_FIELDS.
 
 * Screens: username not stored in D020S database table
 

@@ -322,6 +322,10 @@ CLASS zcl_abapgit_object_tobj IMPLEMENTATION.
     CLEAR: ls_objh-luser,
            ls_objh-ldate.
 
+    SORT lt_objs BY objectname objecttype tabname.
+    SORT lt_objsl BY objectname objecttype trwcount.
+    SORT lt_objm BY objectname objecttype method.
+
     io_xml->add( iv_name = 'OBJH'
                  ig_data = ls_objh ).
     io_xml->add( iv_name = 'OBJT'

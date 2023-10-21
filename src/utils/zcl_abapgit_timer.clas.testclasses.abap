@@ -1,7 +1,10 @@
 CLASS ltcl_timer DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
   PRIVATE SECTION.
 
+    DATA mv_disabled TYPE abap_bool.
+
     METHODS:
+      setup,
       check_result
         IMPORTING
           iv_result TYPE string
@@ -14,6 +17,13 @@ CLASS ltcl_timer DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
 ENDCLASS.
 
 CLASS ltcl_timer IMPLEMENTATION.
+
+  METHOD setup.
+    DATA lv_skip TYPE c LENGTH 30.
+    GET PARAMETER ID 'TSE' FIELD lv_skip.
+    mv_disabled = boolc( sy-sysid = 'ABC' OR lv_skip CS 'SKIP_TIMER' ).
+  ENDMETHOD.
+
 
   METHOD check_result.
 
@@ -29,8 +39,7 @@ CLASS ltcl_timer IMPLEMENTATION.
 
     DATA lo_timer TYPE REF TO zcl_abapgit_timer.
 
-    IF sy-sysid = 'ABC'.
-* dont run on open-abap, the NodeJS garbage collector can run any time, causing flaky test
+    IF mv_disabled = abap_true.
       RETURN.
     ENDIF.
 
@@ -48,8 +57,7 @@ CLASS ltcl_timer IMPLEMENTATION.
 
     DATA lo_timer TYPE REF TO zcl_abapgit_timer.
 
-    IF sy-sysid = 'ABC'.
-* dont run on open-abap, the NodeJS garbage collector can run any time, causing flaky test
+    IF mv_disabled = abap_true.
       RETURN.
     ENDIF.
 
@@ -77,8 +85,7 @@ CLASS ltcl_timer IMPLEMENTATION.
 
     DATA lo_timer TYPE REF TO zcl_abapgit_timer.
 
-    IF sy-sysid = 'ABC'.
-* dont run on open-abap, the NodeJS garbage collector can run any time, causing flaky test
+    IF mv_disabled = abap_true.
       RETURN.
     ENDIF.
 

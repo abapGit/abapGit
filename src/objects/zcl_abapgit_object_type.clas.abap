@@ -52,7 +52,7 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
     ENDIF.
 
     CONCATENATE c_prefix lv_typegroup INTO lv_progname.
-    UPDATE progdir SET uccheck = abap_true
+    UPDATE progdir SET uccheck = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard
       WHERE name = lv_progname.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'error setting uccheck' ).
@@ -143,6 +143,7 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
       zcl_abapgit_factory=>get_sap_report( )->insert_report(
         iv_name    = lv_progname
         iv_package = iv_package
+        iv_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard
         it_source  = lt_source ).
     ENDIF.
 

@@ -32,6 +32,7 @@ CLASS zcl_abapgit_gui_page_db_entry DEFINITION
       BEGIN OF c_action,
         update      TYPE string VALUE 'update',
         switch_mode TYPE string VALUE 'switch_mode',
+        back        TYPE string VALUE 'back',
       END OF c_action .
 
     CONSTANTS c_edit_form_id TYPE string VALUE `db_form`.
@@ -86,7 +87,6 @@ CLASS zcl_abapgit_gui_page_db_entry DEFINITION
         is_content TYPE zif_abapgit_persistence=>ty_content
       RAISING
         zcx_abapgit_exception .
-
 ENDCLASS.
 
 
@@ -109,6 +109,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_ENTRY IMPLEMENTATION.
         iv_act = |{ c_action-switch_mode }|
         iv_txt = 'Edit' ).
     ENDIF.
+
+    ro_toolbar->add(
+      iv_act = |{ c_action-back }|
+      iv_txt = 'Back' ).
 
   ENDMETHOD.
 
@@ -244,6 +248,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_ENTRY IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-update.
         do_update( dbcontent_decode( ii_event->form_data( ) ) ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
+      WHEN c_action-back.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
 

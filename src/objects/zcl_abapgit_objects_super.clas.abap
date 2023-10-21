@@ -77,18 +77,34 @@ CLASS zcl_abapgit_objects_super DEFINITION
         zcx_abapgit_exception .
     METHODS delete_ddic
       IMPORTING
-        VALUE(iv_objtype)              TYPE string
-        VALUE(iv_no_ask)               TYPE abap_bool DEFAULT abap_true
-        VALUE(iv_no_ask_delete_append) TYPE abap_bool DEFAULT abap_false
+        !iv_objtype              TYPE string
+        !iv_no_ask               TYPE abap_bool DEFAULT abap_true
+        !iv_no_ask_delete_append TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception .
-
+    METHODS set_abap_language_version
+      CHANGING
+        !cv_abap_language_version TYPE uccheck.
+    METHODS clear_abap_language_version
+      CHANGING
+        !cv_abap_language_version TYPE uccheck.
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
+CLASS zcl_abapgit_objects_super IMPLEMENTATION.
+
+
+  METHOD clear_abap_language_version.
+
+    " Used during serializing of objects
+    IF ms_item-abap_language_version <> zcl_abapgit_abap_language_vers=>c_any_abap_language_version.
+      " ABAP language is defined in repo setting so there's no need to serialize it
+      CLEAR cv_abap_language_version.
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -193,8 +209,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
   METHOD delete_longtexts.
 
     zcl_abapgit_factory=>get_longtexts( )->delete(
-        iv_longtext_id = iv_longtext_id
-        iv_object_name = ms_item-obj_name  ).
+      iv_longtext_id = iv_longtext_id
+      iv_object_name = ms_item-obj_name ).
 
   ENDMETHOD.
 
@@ -272,12 +288,23 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
   METHOD serialize_longtexts.
 
     zcl_abapgit_factory=>get_longtexts( )->serialize(
-        iv_object_name   = ms_item-obj_name
-        iv_longtext_name = iv_longtext_name
-        iv_longtext_id   = iv_longtext_id
-        it_dokil         = it_dokil
-        io_i18n_params   = mo_i18n_params
-        ii_xml           = ii_xml  ).
+      iv_object_name   = ms_item-obj_name
+      iv_longtext_name = iv_longtext_name
+      iv_longtext_id   = iv_longtext_id
+      it_dokil         = it_dokil
+      io_i18n_params   = mo_i18n_params
+      ii_xml           = ii_xml ).
+
+  ENDMETHOD.
+
+
+  METHOD set_abap_language_version.
+
+    " Used during deserializing of objects
+    IF ms_item-abap_language_version <> zcl_abapgit_abap_language_vers=>c_any_abap_language_version.
+      " ABAP language is defined in repo setting so set it accordingly
+      cv_abap_language_version = ms_item-abap_language_version.
+    ENDIF.
 
   ENDMETHOD.
 

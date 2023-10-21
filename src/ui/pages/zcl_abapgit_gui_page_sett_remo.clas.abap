@@ -68,10 +68,6 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
         choose_pull_request TYPE string VALUE 'choose_pull_request',
         change_head_type    TYPE string VALUE 'change_head_type',
       END OF c_event .
-    CONSTANTS:
-      BEGIN OF c_popup,
-        pull_request TYPE string VALUE 'popup_pull_request',
-      END OF c_popup.
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
     DATA ms_settings_snapshot TYPE ty_remote_settings.
@@ -103,7 +99,7 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
       IMPORTING
         io_existing_form_data TYPE REF TO zcl_abapgit_string_map OPTIONAL
       RETURNING
-        VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form
+        VALUE(ro_form)        TYPE REF TO zcl_abapgit_html_form
       RAISING
         zcx_abapgit_exception.
 
@@ -272,7 +268,6 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
   METHOD choose_pr.
 
     DATA ls_pull         TYPE zif_abapgit_pr_enum_provider=>ty_pull_request.
-    DATA lv_pull_request TYPE ty_remote_settings-pull_request.
     DATA lv_url TYPE ty_remote_settings-url.
     DATA lv_popup_cancelled TYPE abap_bool.
 
@@ -597,11 +592,11 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       " it was on its own page and user went back from it via F3/ESC and the picklist had no "graceful back" handler
       CASE mo_popup_picklist->id( ).
         WHEN c_event-choose_pull_request.
-          choose_pr( iv_is_return = abap_true ).
+          choose_pr( abap_true ).
         WHEN c_event-choose_branch.
-          choose_branch( iv_is_return = abap_true ).
+          choose_branch( abap_true ).
         WHEN c_event-choose_tag.
-          choose_tag( iv_is_return = abap_true ).
+          choose_tag( abap_true ).
         WHEN OTHERS.
           zcx_abapgit_exception=>raise( |Unexpected picklist id { mo_popup_picklist->id( ) }| ).
       ENDCASE.
@@ -937,8 +932,6 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     DATA:
       lv_url    TYPE ty_remote_settings-url,
-      lv_branch TYPE ty_remote_settings-branch,
-      lv_tag    TYPE ty_remote_settings-tag,
       lv_commit TYPE ty_remote_settings-commit.
 
     mo_form_data->merge( zcl_abapgit_html_form_utils=>create( mo_form )->normalize( ii_event->form_data( ) ) ).
@@ -951,8 +944,8 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
         ENDIF.
 
         rs_handled-state = zcl_abapgit_html_form_utils=>create( mo_form )->exit(
-          io_form_data = mo_form_data
-          io_check_changes_versus = initialize_form_data( ) ).
+          io_form_data    = mo_form_data
+          io_compare_with = initialize_form_data( ) ).
 
       WHEN c_event-choose_url.
         lv_url = choose_url( ).
@@ -1023,7 +1016,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     " If staying on form, initialize it with current settings
     IF rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render AND mo_popup_picklist IS NOT BOUND.
       " Switching tabs must change the form layout
-      mo_form = get_form_schema( io_existing_form_data = mo_form_data ).
+      mo_form = get_form_schema( mo_form_data ).
     ENDIF.
 
   ENDMETHOD.

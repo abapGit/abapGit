@@ -662,7 +662,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     APPEND `</div>` TO lt_fragments.
     APPEND `</div>` TO lt_fragments.
 
-    rv_html = concat_lines_of( table = lt_fragments ).
+    rv_html = concat_lines_of( lt_fragments ).
 
   ENDMETHOD.
 
@@ -810,7 +810,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     APPEND `</ul>` TO lt_fragments.
 
-    rv_html = concat_lines_of( table = lt_fragments ).
+    rv_html = concat_lines_of( lt_fragments ).
 
   ENDMETHOD.
 

@@ -42,7 +42,7 @@ CLASS ltcl_test_simple_table IMPLEMENTATION.
     DATA li_html_exp TYPE REF TO zif_abapgit_html.
     FIELD-SYMBOLS <ls_i> LIKE LINE OF lt_dummy_data.
 
-    lo_tab = zcl_abapgit_html_table=>create( ii_renderer = me
+    lo_tab = zcl_abapgit_html_table=>create( me
       )->define_column(
         iv_column_id = 'col1'
         iv_column_title = 'Col 1'

@@ -70,7 +70,7 @@ CLASS zcl_abapgit_object_fdt0 IMPLEMENTATION.
       name      = 'DevelopmentPackage'
       namespace = 'FDTNS' ).
     IF lo_node_package IS BOUND.
-      lo_node_package->set_value( value = |{ iv_package }| ).
+      lo_node_package->set_value( |{ iv_package }| ).
     ENDIF.
 
     lo_node_id = co_dom_tree->find_from_name(
@@ -231,7 +231,7 @@ CLASS zcl_abapgit_object_fdt0 IMPLEMENTATION.
     lo_components_node = co_ixml_element->find_from_name( name      = 'ComponentReleases'
                                                           namespace = 'FDTNS' ).
     IF lo_components_node IS BOUND.
-      co_ixml_element->remove_child( old_child = lo_components_node ).
+      co_ixml_element->remove_child( lo_components_node ).
     ENDIF.
 
     " Clear user/time/system-specific fields

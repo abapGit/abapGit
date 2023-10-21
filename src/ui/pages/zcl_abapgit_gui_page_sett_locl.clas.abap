@@ -102,7 +102,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
 
 
   METHOD choose_check_variant.
@@ -304,7 +304,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
       " it was on its own page and user went back from it via F3/ESC and the picklist had no "graceful back" handler
       CASE mo_popup_picklist->id( ).
         WHEN c_event-choose_check_variant.
-          choose_check_variant( iv_is_return = abap_true ).
+          choose_check_variant( abap_true ).
         WHEN OTHERS.
           zcx_abapgit_exception=>raise( |Unexpected picklist id { mo_popup_picklist->id( ) }| ).
       ENDCASE.
@@ -474,8 +474,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_LOCL IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-go_back.
         rs_handled-state = zcl_abapgit_html_form_utils=>create( mo_form )->exit(
-          io_form_data            = mo_form_data
-          io_check_changes_versus = read_settings( ) ).
+          io_form_data    = mo_form_data
+          io_compare_with = read_settings( ) ).
 
       WHEN c_event-choose_transport_request.
 

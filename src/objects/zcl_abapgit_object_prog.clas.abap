@@ -78,6 +78,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
       iv_package        = iv_package
       it_source         = it_source
       iv_state          = 'I'
+      iv_version        = is_progdir-uccheck
       iv_program_type   = is_progdir-subc
       iv_extension_type = is_progdir-name+30 ).
 
@@ -124,7 +125,8 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
       WHERE r3state = 'A'
       AND prog = ms_item-obj_name
       AND language <> mv_language
-      AND language IN lt_language_filter ##TOO_MANY_ITAB_FIELDS.
+      AND language IN lt_language_filter
+      ORDER BY language ##TOO_MANY_ITAB_FIELDS.
 
     SORT lt_tpool_i18n BY language ASCENDING.
     LOOP AT lt_tpool_i18n ASSIGNING <ls_tpool>.
@@ -226,6 +228,8 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
     io_xml->read( EXPORTING iv_name = 'PROGDIR'
                   CHANGING cg_data  = ls_progdir ).
+
+    set_abap_language_version( CHANGING cv_abap_language_version = ls_progdir-uccheck ).
 
     IF strlen( lv_program_name ) > 30.
 
