@@ -341,12 +341,12 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
         " RZ12, SM50, SM21, SARFC
         gv_max_processes = 1.
       ENDIF.
+
+      IF gv_max_processes > 1.
+        gv_max_processes = gv_max_processes - 1.
+      ENDIF.
     ELSE.
       gv_max_processes = 1.
-    ENDIF.
-
-    IF gv_max_processes > 1.
-      gv_max_processes = gv_max_processes - 1.
     ENDIF.
 
     ASSERT gv_max_processes >= 1.
