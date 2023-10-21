@@ -420,4 +420,17 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
       ENDTRY.
     ENDIF.
   ENDMETHOD.
+
+  METHOD zif_abapgit_exit~change_max_parallel_processes.
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          gi_exit->change_max_parallel_processes(
+            EXPORTING
+              iv_package       = iv_package
+            CHANGING
+              cv_max_processes = cv_max_processes ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+  ENDMETHOD.
 ENDCLASS.

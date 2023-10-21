@@ -143,4 +143,9 @@ INTERFACE zif_abapgit_exit
   METHODS change_rfc_server_group
     CHANGING
       cv_group TYPE rzlli_apcl.
+  METHODS change_max_parallel_processes
+    IMPORTING
+      iv_package       TYPE devclass
+    CHANGING
+      cv_max_processes TYPE i.
 ENDINTERFACE.
