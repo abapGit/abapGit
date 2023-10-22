@@ -323,6 +323,8 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       " multiple times in same session
       rv_processes = gv_max_processes.
     ELSEIF mv_group IS NOT INITIAL.
+      " The function module below should always exist here as is_merged evaluated to false above. It does however
+      " not exist in the transpiled version which then causes unit tests to fail. Therefore the check needs to stay.
       CALL FUNCTION 'FUNCTION_EXISTS'
         EXPORTING
           funcname           = 'Z_ABAPGIT_SERIALIZE_PARALLEL'
