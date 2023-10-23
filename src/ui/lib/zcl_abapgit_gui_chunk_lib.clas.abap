@@ -1091,10 +1091,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     IF io_repo->is_offline( ) = abap_false.
       lo_repo_online ?= io_repo.
 
-      ri_html->add_a( iv_txt   = lo_repo_online->get_url( )
-                      iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url=|
-                              && |{ lo_repo_online->get_url( ) }|
-                      iv_class = |url| ).
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_url( lo_repo_online->get_url( ) ) ).
     ENDIF.
 
     IF iv_show_edit = abap_true.
@@ -1226,7 +1223,8 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ri_html = zcl_abapgit_html=>create( )->add_a(
       iv_txt   = shorten_repo_url( iv_url )
       iv_title = iv_url
-      iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ iv_url }| ).
+      iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ iv_url }|
+      iv_class = 'url' ).
 
     IF iv_render_remote_edit_for_key IS NOT INITIAL.
       ri_html->add_a(
