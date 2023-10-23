@@ -1293,7 +1293,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     CONVERT TIME STAMP iv_timestamp
       TIME ZONE gv_time_zone
       INTO DATE lv_date
-      TIME      lv_time.
+      TIME lv_time.
 
     rv_rendered = |{ lv_date DATE = USER } { lv_time TIME = USER }|.
 
@@ -1415,7 +1415,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       iv_act = |{ zif_abapgit_definitions=>c_action-repo_infos }?key={ iv_key }|
       iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_infos ) ).
 
-    zcl_abapgit_exit=>get_instance(  )->enhance_repo_toolbar(
+    zcl_abapgit_exit=>get_instance( )->enhance_repo_toolbar(
        io_menu = ro_menu
        iv_key  = iv_key
        iv_act  = iv_act ).
