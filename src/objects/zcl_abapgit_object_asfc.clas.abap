@@ -32,7 +32,7 @@ CLASS zcl_abapgit_object_asfc IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown.
+    rv_user = c_user_unknown. " not stored by SAP
   ENDMETHOD.
 
 

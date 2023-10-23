@@ -166,7 +166,20 @@ CLASS zcl_abapgit_object_sqsc IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown.
+
+    DATA lx_error TYPE REF TO cx_root.
+
+    TRY.
+        CALL METHOD mo_proxy->('IF_DBPROC_PROXY_UI~READ_FROM_SOURCE')
+          EXPORTING
+            if_version     = 'A'
+          IMPORTING
+            ef_change_user = rv_user.
+
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise_with_text( lx_error ).
+    ENDTRY.
+
   ENDMETHOD.
 
 

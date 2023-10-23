@@ -205,7 +205,7 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown. " todo
+    rv_user = read( )-chname.
   ENDMETHOD.
 
 
