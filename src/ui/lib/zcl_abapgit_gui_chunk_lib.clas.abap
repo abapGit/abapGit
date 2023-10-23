@@ -1091,7 +1091,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     IF io_repo->is_offline( ) = abap_false.
       lo_repo_online ?= io_repo.
 
-      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_url( lo_repo_online->get_url( ) ) ).
+      ri_html->add( render_repo_url( lo_repo_online->get_url( ) ) ).
     ENDIF.
 
     IF iv_show_edit = abap_true.
