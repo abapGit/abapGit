@@ -58,6 +58,8 @@ CLASS zcl_abapgit_object_filter_tran DEFINITION
         VALUE(rt_filter) TYPE zif_abapgit_definitions=>ty_tadir_tt.
 ENDCLASS.
 
+
+
 CLASS zcl_abapgit_object_filter_tran IMPLEMENTATION.
 
 
@@ -78,20 +80,24 @@ CLASS zcl_abapgit_object_filter_tran IMPLEMENTATION.
       it_e071_filter = lt_e071_filter ).
   ENDMETHOD.
 
+
   METHOD get_filter_values.
     et_r_trkorr = mt_r_trkorr.
     ev_package = mv_package.
   ENDMETHOD.
 
+
   METHOD zif_abapgit_object_filter~get_filter.
     rt_filter = mt_filter.
   ENDMETHOD.
+
 
   METHOD init.
     CLEAR mt_filter.
     CLEAR mt_r_trkorr.
     CLEAR mv_package.
   ENDMETHOD.
+
 
   METHOD set_filter_values.
     init( ).
@@ -104,6 +110,7 @@ CLASS zcl_abapgit_object_filter_tran IMPLEMENTATION.
 
     ENDIF.
   ENDMETHOD.
+
 
   METHOD adjust_local_filter.
 
@@ -170,6 +177,7 @@ CLASS zcl_abapgit_object_filter_tran IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD get_all_sub_packages.
 
     DATA li_package TYPE REF TO zif_abapgit_sap_package.
@@ -187,5 +195,4 @@ CLASS zcl_abapgit_object_filter_tran IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
-
 ENDCLASS.

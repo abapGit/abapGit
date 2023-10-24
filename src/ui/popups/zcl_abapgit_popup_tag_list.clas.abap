@@ -33,15 +33,18 @@ ENDCLASS.
 
 CLASS zcl_abapgit_popup_tag_list IMPLEMENTATION.
 
+
   METHOD create.
     CREATE OBJECT ri_popup TYPE zcl_abapgit_popup_tag_list
       EXPORTING
         iv_url = iv_url.
   ENDMETHOD.
 
+
   METHOD constructor.
     mv_repo_url = iv_url.
   ENDMETHOD.
+
 
   METHOD zif_abapgit_html_popup~create_picklist.
 
@@ -52,6 +55,7 @@ CLASS zcl_abapgit_popup_tag_list IMPLEMENTATION.
         ii_item_renderer = me.
 
   ENDMETHOD.
+
 
   METHOD fetch_tag_list.
 
@@ -81,5 +85,4 @@ CLASS zcl_abapgit_popup_tag_list IMPLEMENTATION.
     ri_html = zcl_abapgit_html=>create( |{ <ls_tag>-display_name }| ).
 
   ENDMETHOD.
-
 ENDCLASS.

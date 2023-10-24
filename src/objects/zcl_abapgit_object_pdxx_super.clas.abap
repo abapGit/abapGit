@@ -20,7 +20,9 @@ CLASS zcl_abapgit_object_pdxx_super DEFINITION
 ENDCLASS.
 
 
+
 CLASS zcl_abapgit_object_pdxx_super IMPLEMENTATION.
+
 
   METHOD check_subrc_for.
     IF sy-subrc <> 0.
@@ -48,6 +50,7 @@ CLASS zcl_abapgit_object_pdxx_super IMPLEMENTATION.
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
+
 
   METHOD zif_abapgit_object~changed_by.
 
@@ -147,5 +150,4 @@ CLASS zcl_abapgit_object_pdxx_super IMPLEMENTATION.
     ms_objkey-objid = ms_item-obj_name.
 
   ENDMETHOD.
-
 ENDCLASS.

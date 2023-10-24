@@ -33,6 +33,7 @@ ENDCLASS.
 
 CLASS zcl_abapgit_popup_pull_request IMPLEMENTATION.
 
+
   METHOD create.
 
     CREATE OBJECT ri_popup TYPE zcl_abapgit_popup_pull_request
@@ -41,9 +42,11 @@ CLASS zcl_abapgit_popup_pull_request IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD constructor.
     mv_repo_url = iv_url.
   ENDMETHOD.
+
 
   METHOD zif_abapgit_html_popup~create_picklist.
 
@@ -54,6 +57,7 @@ CLASS zcl_abapgit_popup_pull_request IMPLEMENTATION.
         ii_item_renderer = me.
 
   ENDMETHOD.
+
 
   METHOD fetch_pull_request_list.
 
@@ -76,5 +80,4 @@ CLASS zcl_abapgit_popup_pull_request IMPLEMENTATION.
     ri_html = zcl_abapgit_html=>create( |<b>{ <ls_pr>-number }</b> - { <ls_pr>-title } @{ <ls_pr>-user }| ).
 
   ENDMETHOD.
-
 ENDCLASS.
