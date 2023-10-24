@@ -110,6 +110,22 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_exit~change_max_parallel_processes.
+
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          gi_exit->change_max_parallel_processes(
+            EXPORTING
+              iv_package       = iv_package
+            CHANGING
+              cv_max_processes = cv_max_processes ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_exit~change_proxy_authentication.
 
     IF gi_exit IS NOT INITIAL.
@@ -151,6 +167,18 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
               iv_repo_url  = iv_repo_url
             CHANGING
               cv_proxy_url = cv_proxy_url ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_exit~change_rfc_server_group.
+
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          gi_exit->change_rfc_server_group( CHANGING cv_group = cv_group ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.

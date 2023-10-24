@@ -33,6 +33,11 @@ INTERFACE zif_abapgit_exit
   METHODS change_local_host
     CHANGING
       !ct_hosts TYPE zif_abapgit_definitions=>ty_string_tt .
+  METHODS change_max_parallel_processes
+    IMPORTING
+      iv_package       TYPE devclass
+    CHANGING
+      cv_max_processes TYPE i.
   METHODS change_proxy_authentication
     IMPORTING
       !iv_repo_url             TYPE csequence
@@ -48,6 +53,9 @@ INTERFACE zif_abapgit_exit
       !iv_repo_url  TYPE csequence
     CHANGING
       !cv_proxy_url TYPE string .
+  METHODS change_rfc_server_group
+    CHANGING
+      cv_group TYPE rzlli_apcl.
   METHODS change_supported_data_objects
     CHANGING
       !ct_objects TYPE zif_abapgit_data_supporter=>ty_objects.
@@ -88,6 +96,11 @@ INTERFACE zif_abapgit_exit
       !iv_transport_type    TYPE zif_abapgit_definitions=>ty_transport_type
     CHANGING
       !cv_transport_request TYPE trkorr .
+  METHODS enhance_repo_toolbar
+    IMPORTING
+      !io_menu TYPE REF TO zcl_abapgit_html_toolbar
+      !iv_key  TYPE zif_abapgit_persistence=>ty_value
+      !iv_act  TYPE string.
   METHODS get_ci_tests
     IMPORTING
       !iv_object   TYPE tadir-object
@@ -135,9 +148,4 @@ INTERFACE zif_abapgit_exit
     IMPORTING
       !is_repo_meta TYPE zif_abapgit_persistence=>ty_repo
       !ii_html      TYPE REF TO zif_abapgit_html .
-  METHODS enhance_repo_toolbar
-    IMPORTING
-      !io_menu TYPE REF TO zcl_abapgit_html_toolbar
-      !iv_key  TYPE zif_abapgit_persistence=>ty_value
-      !iv_act  TYPE string.
 ENDINTERFACE.

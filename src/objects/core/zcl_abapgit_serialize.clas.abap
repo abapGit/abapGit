@@ -46,7 +46,7 @@ CLASS zcl_abapgit_serialize DEFINITION
     TYPES:
       ty_char32 TYPE c LENGTH 32 .
 
-    CLASS-DATA gv_max_threads TYPE i .
+    CLASS-DATA gv_max_processes TYPE i .
     DATA mt_files TYPE zif_abapgit_definitions=>ty_files_item_tt .
     DATA mv_free TYPE i .
     DATA mi_log TYPE REF TO zif_abapgit_log .
@@ -99,11 +99,12 @@ CLASS zcl_abapgit_serialize DEFINITION
         VALUE(ct_files) TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
         zcx_abapgit_exception .
-    METHODS determine_max_threads
+    METHODS determine_max_processes
       IMPORTING
         !iv_force_sequential TYPE abap_bool DEFAULT abap_false
+        iv_package           TYPE devclass
       RETURNING
-        VALUE(rv_threads)    TYPE i
+        VALUE(rv_processes)  TYPE i
       RAISING
         zcx_abapgit_exception .
     METHODS filter_unsupported_objects
@@ -258,16 +259,11 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA lo_settings TYPE REF TO zcl_abapgit_settings.
-
-    lo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
-
-    IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true
-        OR lo_settings->get_parallel_proc_disabled( ) = abap_true.
-      gv_max_threads = 1.
-    ENDIF.
+    DATA li_exit TYPE REF TO zif_abapgit_exit.
 
     mv_group = 'parallel_generators'.
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+    li_exit->change_rfc_server_group( CHANGING cv_group = mv_group ).
 
     mo_dot_abapgit = io_dot_abapgit.
     ms_local_settings = is_local_settings.
@@ -303,63 +299,83 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD determine_max_threads.
+  METHOD determine_max_processes.
+    DATA: lo_settings TYPE REF TO zcl_abapgit_settings,
+          li_exit     TYPE REF TO zif_abapgit_exit.
 
     IF iv_force_sequential = abap_true.
-      rv_threads = 1.
+      rv_processes = 1.
       RETURN.
     ENDIF.
 
-    IF gv_max_threads >= 1.
-* SPBT_INITIALIZE gives error PBT_ENV_ALREADY_INITIALIZED if called
-* multiple times in same session
-      rv_threads = gv_max_threads.
-      RETURN.
-    ENDIF.
+    IF gv_max_processes IS INITIAL.
+      lo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
 
-    CALL FUNCTION 'FUNCTION_EXISTS'
-      EXPORTING
-        funcname           = 'Z_ABAPGIT_SERIALIZE_PARALLEL'
-      EXCEPTIONS
-        function_not_exist = 1
-        OTHERS             = 2.
-    IF sy-subrc <> 0.
-      gv_max_threads = 1.
-    ELSE.
-* todo, add possibility to set group name in user exit
-      CALL FUNCTION 'SPBT_INITIALIZE'
-        EXPORTING
-          group_name                     = mv_group
-        IMPORTING
-          free_pbt_wps                   = gv_max_threads
-        EXCEPTIONS
-          invalid_group_name             = 1
-          internal_error                 = 2
-          pbt_env_already_initialized    = 3
-          currently_no_resources_avail   = 4
-          no_pbt_resources_found         = 5
-          cant_init_different_pbt_groups = 6
-          OTHERS                         = 7.
-      IF sy-subrc <> 0.
-*   fallback to running sequentially. If SPBT_INITIALIZE fails, check transactions
-*   RZ12, SM50, SM21, SARFC
-        gv_max_threads = 1.
+      IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true
+          OR lo_settings->get_parallel_proc_disabled( ) = abap_true.
+        gv_max_processes = 1.
+        RETURN.
       ENDIF.
     ENDIF.
 
-    IF gv_max_threads > 1.
-      gv_max_threads = gv_max_threads - 1.
+    IF gv_max_processes >= 1.
+      " SPBT_INITIALIZE gives error PBT_ENV_ALREADY_INITIALIZED if called
+      " multiple times in same session
+      rv_processes = gv_max_processes.
+    ELSEIF mv_group IS NOT INITIAL.
+      " The function module below should always exist here as is_merged evaluated to false above. It does however
+      " not exist in the transpiled version which then causes unit tests to fail. Therefore the check needs to stay.
+      CALL FUNCTION 'FUNCTION_EXISTS'
+        EXPORTING
+          funcname           = 'Z_ABAPGIT_SERIALIZE_PARALLEL'
+        EXCEPTIONS
+          function_not_exist = 1
+          OTHERS             = 2.
+      IF sy-subrc <> 0.
+        gv_max_processes = 1.
+      ELSE.
+        CALL FUNCTION 'SPBT_INITIALIZE'
+          EXPORTING
+            group_name                     = mv_group
+          IMPORTING
+            free_pbt_wps                   = gv_max_processes
+          EXCEPTIONS
+            invalid_group_name             = 1
+            internal_error                 = 2
+            pbt_env_already_initialized    = 3
+            currently_no_resources_avail   = 4
+            no_pbt_resources_found         = 5
+            cant_init_different_pbt_groups = 6
+            OTHERS                         = 7.
+        IF sy-subrc <> 0.
+          " fallback to running sequentially. If SPBT_INITIALIZE fails, check transactions
+          " RZ12, SM50, SM21, SARFC
+          gv_max_processes = 1.
+        ENDIF.
+      ENDIF.
+
+      IF gv_max_processes > 1.
+        gv_max_processes = gv_max_processes - 1.
+      ENDIF.
+    ELSE.
+      gv_max_processes = 1.
     ENDIF.
 
-    ASSERT gv_max_threads >= 1.
+    ASSERT gv_max_processes >= 1.
 
-    IF gv_max_threads > 32.
-* https://en.wikipedia.org/wiki/Amdahl%27s_law
-      gv_max_threads = 32.
+    IF gv_max_processes > 32.
+      " https://en.wikipedia.org/wiki/Amdahl%27s_law
+      gv_max_processes = 32.
     ENDIF.
 
-    rv_threads = gv_max_threads.
+    rv_processes = gv_max_processes.
 
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+    li_exit->change_max_parallel_processes(
+      EXPORTING
+        iv_package       = iv_package
+      CHANGING
+        cv_max_processes = rv_processes ).
   ENDMETHOD.
 
 
@@ -652,7 +668,8 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     CLEAR mt_files.
 
-    lv_max = determine_max_threads( iv_force_sequential ).
+    lv_max = determine_max_processes( iv_force_sequential = iv_force_sequential
+                                      iv_package          = iv_package ).
     mv_free = lv_max.
     mi_log = ii_log.
 
