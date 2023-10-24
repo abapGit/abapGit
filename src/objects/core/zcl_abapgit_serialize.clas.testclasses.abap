@@ -188,22 +188,22 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
 
   METHOD force.
 
-    DATA: lv_threads TYPE i.
+    DATA: lv_processes TYPE i.
 
-    lv_threads = mo_cut->determine_max_processes( iv_force_sequential = abap_true
-                                                  iv_package          = 'ZDUMMY' ).
+    lv_processes = mo_cut->determine_max_processes( iv_force_sequential = abap_true
+                                                    iv_package          = 'ZDUMMY' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = lv_threads
+      act = lv_processes
       exp = 1 ).
 
     given_parallel_proc_disabled( abap_true ).
 
-    lv_threads = mo_cut->determine_max_processes( iv_force_sequential = abap_true
-                                                  iv_package          = 'ZDUMMY' ).
+    lv_processes = mo_cut->determine_max_processes( iv_force_sequential = abap_true
+                                                   iv_package          = 'ZDUMMY' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = lv_threads
+      act = lv_processes
       exp = 1 ).
 
   ENDMETHOD.
