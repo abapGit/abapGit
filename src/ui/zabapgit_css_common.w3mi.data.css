@@ -1323,7 +1323,6 @@ table.unit_tests {
   text-decoration: none;
   padding: 6px 12px;
   border-radius: 3px;
-  font-size: smaller;
 }
 .dialog li.dialog-commands input[type="button"],
 .dialog li.dialog-commands input[type="submit"] {
@@ -1332,6 +1331,7 @@ table.unit_tests {
   border-radius: 3px;
   cursor: pointer;
 }
+.dialog li.dialog-commands a.main,
 .dialog li.dialog-commands input[type="submit"].main {
   border: 1px solid transparent;
 }
