@@ -213,4 +213,25 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_environment~init_parallel_processing.
+
+    " SPBT_INITIALIZE gives error PBT_ENV_ALREADY_INITIALIZED if called
+    " multiple times in same session
+    CALL FUNCTION 'SPBT_INITIALIZE'
+      EXPORTING
+        group_name                     = iv_group
+      IMPORTING
+        free_pbt_wps                   = rv_free_work_processes
+      EXCEPTIONS
+        invalid_group_name             = 1
+        internal_error                 = 2
+        pbt_env_already_initialized    = 3
+        currently_no_resources_avail   = 4
+        no_pbt_resources_found         = 5
+        cant_init_different_pbt_groups = 6
+        OTHERS                         = 7.
+    " If SPBT_INITIALIZE fails, check transactions RZ12, SM50, SM21, SARFC
+
+  ENDMETHOD.
+
 ENDCLASS.

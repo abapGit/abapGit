@@ -20,6 +20,7 @@ CLASS ltd_settings DEFINITION FINAL FOR TESTING
 
 ENDCLASS.
 
+
 CLASS ltd_settings IMPLEMENTATION.
 
   METHOD constructor.
@@ -27,14 +28,31 @@ CLASS ltd_settings IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_persist_settings~modify.
-
   ENDMETHOD.
 
   METHOD zif_abapgit_persist_settings~read.
-
     CREATE OBJECT ro_settings.
     ro_settings->set_parallel_proc_disabled( ms_settings-parallel_proc_disabled ).
+  ENDMETHOD.
 
+ENDCLASS.
+
+
+CLASS ltd_function_module DEFINITION FINAL FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
+
+  PUBLIC SECTION.
+    INTERFACES:
+      zif_abapgit_function_module.
+
+ENDCLASS.
+
+
+CLASS ltd_function_module IMPLEMENTATION.
+
+  METHOD zif_abapgit_function_module~function_exists.
+    rv_exists = abap_true.
   ENDMETHOD.
 
 ENDCLASS.
@@ -51,11 +69,13 @@ CLASS ltd_environment DEFINITION FINAL FOR TESTING
     METHODS:
       constructor
         IMPORTING
-          iv_is_merged TYPE abap_bool.
+          iv_is_merged           TYPE abap_bool
+          iv_free_work_processes TYPE i.
 
   PRIVATE SECTION.
     DATA:
-      mv_is_merged TYPE abap_bool.
+      mv_is_merged           TYPE abap_bool,
+      mv_free_work_processes TYPE i.
 
 ENDCLASS.
 
@@ -64,18 +84,16 @@ CLASS ltd_environment IMPLEMENTATION.
 
   METHOD constructor.
     mv_is_merged = iv_is_merged.
+    mv_free_work_processes = iv_free_work_processes.
   ENDMETHOD.
 
   METHOD zif_abapgit_environment~compare_with_inactive.
-
   ENDMETHOD.
 
   METHOD zif_abapgit_environment~get_basis_release.
-
   ENDMETHOD.
 
   METHOD zif_abapgit_environment~get_system_language_filter.
-
   ENDMETHOD.
 
   METHOD zif_abapgit_environment~is_merged.
@@ -83,23 +101,22 @@ CLASS ltd_environment IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_environment~is_repo_object_changes_allowed.
-
   ENDMETHOD.
 
   METHOD zif_abapgit_environment~is_restart_required.
-
   ENDMETHOD.
 
   METHOD zif_abapgit_environment~is_sap_cloud_platform.
-
   ENDMETHOD.
 
   METHOD zif_abapgit_environment~is_sap_object_allowed.
-
   ENDMETHOD.
 
   METHOD zif_abapgit_environment~is_variant_maintenance.
+  ENDMETHOD.
 
+  METHOD zif_abapgit_environment~init_parallel_processing.
+    rv_free_work_processes = mv_free_work_processes.
   ENDMETHOD.
 
 ENDCLASS.
@@ -109,7 +126,12 @@ CLASS ltcl_determine_max_processes DEFINITION FOR TESTING DURATION SHORT RISK LE
 
   PRIVATE SECTION.
     DATA:
-      mo_cut TYPE REF TO zcl_abapgit_serialize.
+      mo_cut TYPE REF TO zcl_abapgit_serialize,
+      BEGIN OF ms_given,
+        is_merged           TYPE abap_bool,
+        free_work_processes TYPE i,
+      END OF ms_given,
+      mv_processes TYPE i.
 
     METHODS:
       setup,
@@ -124,10 +146,25 @@ CLASS ltcl_determine_max_processes DEFINITION FOR TESTING DURATION SHORT RISK LE
         IMPORTING
           iv_is_merged TYPE abap_bool,
 
-      determine_max_processes FOR TESTING RAISING zcx_abapgit_exception,
+      given_free_work_processes
+        IMPORTING
+          iv_free_work_processes TYPE i,
+
+      determine_max_processes_free FOR TESTING RAISING zcx_abapgit_exception,
+      det_max_processes_not_free FOR TESTING RAISING zcx_abapgit_exception,
+      det_max_proc_amdahls_law FOR TESTING RAISING zcx_abapgit_exception,
       determine_max_processes_no_pp FOR TESTING RAISING zcx_abapgit_exception,
       determine_max_processes_merged FOR TESTING RAISING zcx_abapgit_exception,
-      force FOR TESTING RAISING zcx_abapgit_exception.
+      force FOR TESTING RAISING zcx_abapgit_exception,
+      when_determine_max_processes
+        IMPORTING
+          iv_force_sequential TYPE abap_bool OPTIONAL
+        RAISING
+          zcx_abapgit_exception,
+      prepare_test_environment,
+      then_we_shd_have_n_processes
+        IMPORTING
+          iv_exp_processes TYPE i.
 
 ENDCLASS.
 
@@ -148,64 +185,74 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD determine_max_processes.
-
-    DATA: lv_processes TYPE i.
+  METHOD determine_max_processes_free.
 
     given_parallel_proc_disabled( abap_false ).
     given_is_merged( abap_false ).
+    given_free_work_processes( 10 ).
 
-    lv_processes = mo_cut->determine_max_processes( 'ZDUMMY' ).
+    when_determine_max_processes( ).
 
-    cl_abap_unit_assert=>assert_differs(
-      act = lv_processes
-      exp = 0 ).
+    then_we_shd_have_n_processes( 9 ).
+
+  ENDMETHOD.
+
+
+  METHOD det_max_processes_not_free.
+
+    given_parallel_proc_disabled( abap_false ).
+    given_is_merged( abap_false ).
+    given_free_work_processes( 0 ).
+
+    when_determine_max_processes( ).
+
+    then_we_shd_have_n_processes( 1 ).
+
+  ENDMETHOD.
+
+
+  METHOD det_max_proc_amdahls_law.
+
+    given_parallel_proc_disabled( abap_false ).
+    given_is_merged( abap_false ).
+    given_free_work_processes( 50 ).
+
+    when_determine_max_processes( ).
+
+    then_we_shd_have_n_processes( 32 ).
 
   ENDMETHOD.
 
 
   METHOD determine_max_processes_no_pp.
 
-    DATA: lv_processes TYPE i.
-
     given_parallel_proc_disabled( abap_true ).
     given_is_merged( abap_false ).
 
-    lv_processes = mo_cut->determine_max_processes( 'ZDUMMY' ).
+    when_determine_max_processes( ).
 
-    cl_abap_unit_assert=>assert_differs(
-      act = lv_processes
-      exp = 0 ).
+    then_we_shd_have_n_processes( 1 ).
 
   ENDMETHOD.
 
 
   METHOD determine_max_processes_merged.
 
-    DATA: lv_processes TYPE i.
-
     given_parallel_proc_disabled( abap_false ).
     given_is_merged( abap_true ).
 
-    lv_processes = mo_cut->determine_max_processes( 'ZDUMMY' ).
+    when_determine_max_processes( ).
 
-    cl_abap_unit_assert=>assert_differs(
-      act = lv_processes
-      exp = 0 ).
+    then_we_shd_have_n_processes( 1 ).
 
   ENDMETHOD.
 
 
   METHOD force.
 
-    DATA: lv_processes TYPE i.
+    when_determine_max_processes( abap_true ).
 
-    lv_processes = mo_cut->determine_max_processes( iv_force_sequential = abap_true
-                                                    iv_package          = 'ZDUMMY' ).
-
-    cl_abap_unit_assert=>assert_equals(
-      act = lv_processes
-      exp = 1 ).
+    then_we_shd_have_n_processes( 1 ).
 
   ENDMETHOD.
 
@@ -226,14 +273,53 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
 
   METHOD given_is_merged.
 
+    ms_given-is_merged = iv_is_merged.
+
+  ENDMETHOD.
+
+
+  METHOD given_free_work_processes.
+
+    ms_given-free_work_processes = iv_free_work_processes.
+
+  ENDMETHOD.
+
+
+  METHOD when_determine_max_processes.
+
+    prepare_test_environment( ).
+
+    mv_processes = mo_cut->determine_max_processes( iv_force_sequential = iv_force_sequential
+                                                    iv_package          = 'ZDUMMY' ).
+
+  ENDMETHOD.
+
+
+  METHOD prepare_test_environment.
+
     DATA:
-      lo_environment_double TYPE REF TO ltd_environment.
+      lo_environment_double TYPE REF TO ltd_environment,
+      lo_function_module    TYPE REF TO ltd_function_module.
 
     CREATE OBJECT lo_environment_double
       EXPORTING
-        iv_is_merged = iv_is_merged.
+        iv_is_merged           = ms_given-is_merged
+        iv_free_work_processes = ms_given-free_work_processes.
 
     zcl_abapgit_injector=>set_environment( lo_environment_double ).
+
+    CREATE OBJECT lo_function_module.
+
+    zcl_abapgit_injector=>set_function_module( lo_function_module ).
+
+  ENDMETHOD.
+
+
+  METHOD then_we_shd_have_n_processes.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mv_processes
+      exp = iv_exp_processes ).
 
   ENDMETHOD.
 
