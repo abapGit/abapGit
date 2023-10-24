@@ -7,14 +7,17 @@ CLASS ltd_settings DEFINITION FINAL FOR TESTING
 
   PUBLIC SECTION.
     INTERFACES:
-      zif_abapgit_persist_settings .
+      zif_abapgit_persist_settings.
+
     METHODS:
       constructor
         IMPORTING
           iv_parallel_proc_disabled TYPE abap_bool.
+
   PRIVATE SECTION.
     DATA:
       ms_settings TYPE zif_abapgit_definitions=>ty_s_user_settings.
+
 ENDCLASS.
 
 CLASS ltd_settings IMPLEMENTATION.
@@ -44,6 +47,7 @@ CLASS ltd_environment DEFINITION FINAL FOR TESTING
   PUBLIC SECTION.
     INTERFACES:
       zif_abapgit_environment.
+
     METHODS:
       constructor
         IMPORTING
