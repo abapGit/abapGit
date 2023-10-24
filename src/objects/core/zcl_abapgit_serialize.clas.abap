@@ -314,7 +314,6 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true
           OR lo_settings->get_parallel_proc_disabled( ) = abap_true.
         gv_max_processes = 1.
-        RETURN.
       ENDIF.
     ENDIF.
 
