@@ -21,7 +21,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_CUS0 IMPLEMENTATION.
+CLASS zcl_abapgit_object_cus0 IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -35,7 +35,17 @@ CLASS ZCL_ABAPGIT_OBJECT_CUS0 IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown.
+
+    DATA ls_header TYPE ty_img_activity-header.
+
+    CALL FUNCTION 'S_CUS_IMG_ACTIVITY_READ'
+      EXPORTING
+        img_activity        = mv_img_activity
+      IMPORTING
+        img_activity_header = ls_header.
+
+    rv_user = ls_header-luser.
+
   ENDMETHOD.
 
 

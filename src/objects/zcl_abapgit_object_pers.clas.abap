@@ -69,7 +69,13 @@ CLASS zcl_abapgit_object_pers IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown.
+
+    SELECT SINGLE author FROM spers_reg INTO rv_user
+      WHERE pers_key = ms_item-obj_name.
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ENDIF.
+
   ENDMETHOD.
 
 

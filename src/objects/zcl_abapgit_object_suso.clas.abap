@@ -178,7 +178,11 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown. " todo
+    SELECT SINGLE modifier FROM tobjvor INTO rv_user
+      WHERE objct = mv_objectname.
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ENDIF.
   ENDMETHOD.
 
 
