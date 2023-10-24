@@ -112,11 +112,11 @@ CLASS ltcl_determine_max_processes DEFINITION FOR TESTING DURATION SHORT RISK LE
 
       teardown,
 
-      given_settings
+      given_parallel_proc_disabled
         IMPORTING
           iv_parallel_proc_disabled TYPE abap_bool,
 
-      given_environment
+      given_is_merged
         IMPORTING
           iv_is_merged TYPE abap_bool,
 
@@ -160,7 +160,7 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
 
     DATA: lv_processes TYPE i.
 
-    given_settings( iv_parallel_proc_disabled = abap_true ).
+    given_parallel_proc_disabled( abap_true ).
 
     lv_processes = mo_cut->determine_max_processes( 'ZDUMMY' ).
 
@@ -175,7 +175,7 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
 
     DATA: lv_processes TYPE i.
 
-    given_environment( iv_is_merged = abap_true ).
+    given_is_merged( abap_true ).
 
     lv_processes = mo_cut->determine_max_processes( 'ZDUMMY' ).
 
@@ -197,7 +197,7 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
       act = lv_threads
       exp = 1 ).
 
-    given_settings( iv_parallel_proc_disabled = abap_true ).
+    given_parallel_proc_disabled( abap_true ).
 
     lv_threads = mo_cut->determine_max_processes( iv_force_sequential = abap_true
                                                   iv_package          = 'ZDUMMY' ).
@@ -209,7 +209,7 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD given_settings.
+  METHOD given_parallel_proc_disabled.
 
     DATA:
       lo_settings_double TYPE REF TO ltd_settings.
@@ -223,7 +223,7 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD given_environment.
+  METHOD given_is_merged.
 
     DATA:
       lo_environment_double TYPE REF TO ltd_environment.
