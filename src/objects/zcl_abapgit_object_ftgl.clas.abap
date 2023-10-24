@@ -64,7 +64,7 @@ CLASS zcl_abapgit_object_ftgl IMPLEMENTATION.
 
   METHOD zif_abapgit_object~changed_by.
 
-    SELECT SINGLE changedby FROM ftgl_id INTO rv_user
+    SELECT SINGLE changedby FROM ('FTGL_ID') INTO rv_user
       WHERE feature_id = ms_item-obj_name AND version = 'A'.
     IF sy-subrc <> 0.
       rv_user = c_user_unknown.
