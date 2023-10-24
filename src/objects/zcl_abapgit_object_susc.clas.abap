@@ -121,7 +121,7 @@ CLASS zcl_abapgit_object_susc IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown. " todo
+    rv_user = c_user_unknown. " not stored by SAP
   ENDMETHOD.
 
 

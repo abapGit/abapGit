@@ -302,7 +302,13 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown. " todo
+
+    DATA ls_attributes TYPE w3tempattr.
+
+    read( IMPORTING es_attr = ls_attributes ).
+
+    rv_user = ls_attributes-chname.
+
   ENDMETHOD.
 
 

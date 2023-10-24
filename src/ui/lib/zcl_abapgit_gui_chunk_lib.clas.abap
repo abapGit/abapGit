@@ -1091,10 +1091,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     IF io_repo->is_offline( ) = abap_false.
       lo_repo_online ?= io_repo.
 
-      ri_html->add_a( iv_txt   = lo_repo_online->get_url( )
-                      iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url=|
-                              && |{ lo_repo_online->get_url( ) }|
-                      iv_class = |url| ).
+      ri_html->add( render_repo_url( lo_repo_online->get_url( ) ) ).
     ENDIF.
 
     IF iv_show_edit = abap_true.
@@ -1226,7 +1223,8 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ri_html = zcl_abapgit_html=>create( )->add_a(
       iv_txt   = shorten_repo_url( iv_url )
       iv_title = iv_url
-      iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ iv_url }| ).
+      iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ iv_url }|
+      iv_class = 'url' ).
 
     IF iv_render_remote_edit_for_key IS NOT INITIAL.
       ri_html->add_a(
@@ -1295,7 +1293,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     CONVERT TIME STAMP iv_timestamp
       TIME ZONE gv_time_zone
       INTO DATE lv_date
-      TIME      lv_time.
+      TIME lv_time.
 
     rv_rendered = |{ lv_date DATE = USER } { lv_time TIME = USER }|.
 
@@ -1417,10 +1415,10 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       iv_act = |{ zif_abapgit_definitions=>c_action-repo_infos }?key={ iv_key }|
       iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_infos ) ).
 
-    zcl_abapgit_exit=>get_instance(  )->enhance_repo_toolbar(
-       io_menu = ro_menu
-       iv_key  = iv_key
-       iv_act  = iv_act ).
+    zcl_abapgit_exit=>get_instance( )->enhance_repo_toolbar(
+      io_menu = ro_menu
+      iv_key  = iv_key
+      iv_act  = iv_act ).
 
   ENDMETHOD.
 

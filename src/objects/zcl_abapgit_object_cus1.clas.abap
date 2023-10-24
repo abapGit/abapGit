@@ -46,7 +46,17 @@ CLASS zcl_abapgit_object_cus1 IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown.
+
+    DATA ls_header TYPE ty_customzing_activity-activity_header.
+
+    CALL FUNCTION 'S_CUS_ACTIVITY_READ'
+      EXPORTING
+        activity        = mv_customizing_activity
+      IMPORTING
+        activity_header = ls_header.
+
+    rv_user = ls_header-luser.
+
   ENDMETHOD.
 
 

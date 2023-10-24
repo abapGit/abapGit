@@ -46,7 +46,17 @@ CLASS zcl_abapgit_object_cus2 IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown.
+
+    DATA ls_header TYPE ty_customizing_attribute-header.
+
+    CALL FUNCTION 'S_CUS_ATTRIBUTES_READ'
+      EXPORTING
+        img_attribute    = mv_img_attribute
+      IMPORTING
+        attribute_header = ls_header.
+
+    rv_user = ls_header-luser.
+
   ENDMETHOD.
 
 
