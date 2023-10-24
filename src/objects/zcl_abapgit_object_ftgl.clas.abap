@@ -63,7 +63,13 @@ CLASS zcl_abapgit_object_ftgl IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown.
+
+    SELECT SINGLE changedby FROM ftgl_id INTO rv_user
+      WHERE feature_id = ms_item-obj_name AND version = 'A'.
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -80,7 +86,7 @@ CLASS zcl_abapgit_object_ftgl IMPLEMENTATION.
 
     IF lv_return_code <> 0.
       zcx_abapgit_exception=>raise( |Cannot delete feature toggle { mv_toggle_id }. |
-                                 && |Error {  sy-subrc } from cl_feature_toggle_object=>delete| ).
+                                 && |Error { sy-subrc } from cl_feature_toggle_object=>delete| ).
     ENDIF.
 
     corr_insert( iv_package ).
