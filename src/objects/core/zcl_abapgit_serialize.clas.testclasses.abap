@@ -1,7 +1,7 @@
-CLASS ltcl_determine_max_threads DEFINITION DEFERRED.
-CLASS zcl_abapgit_serialize DEFINITION LOCAL FRIENDS ltcl_determine_max_threads.
+CLASS ltcl_determine_max_processes DEFINITION DEFERRED.
+CLASS zcl_abapgit_serialize DEFINITION LOCAL FRIENDS ltcl_determine_max_processes.
 
-CLASS ltcl_determine_max_threads DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
+CLASS ltcl_determine_max_processes DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
 
   PRIVATE SECTION.
     DATA:
@@ -15,7 +15,7 @@ CLASS ltcl_determine_max_threads DEFINITION FOR TESTING DURATION SHORT RISK LEVE
 ENDCLASS.
 
 
-CLASS ltcl_determine_max_threads IMPLEMENTATION.
+CLASS ltcl_determine_max_processes IMPLEMENTATION.
 
   METHOD setup.
     TRY.
@@ -29,7 +29,7 @@ CLASS ltcl_determine_max_threads IMPLEMENTATION.
 
     DATA: lv_threads TYPE i.
 
-    lv_threads = mo_cut->determine_max_threads( ).
+    lv_threads = mo_cut->determine_max_processes( 'ZDUMMY' ).
 
     cl_abap_unit_assert=>assert_differs(
       act = lv_threads
@@ -41,7 +41,8 @@ CLASS ltcl_determine_max_threads IMPLEMENTATION.
 
     DATA: lv_threads TYPE i.
 
-    lv_threads = mo_cut->determine_max_threads( abap_true ).
+    lv_threads = mo_cut->determine_max_processes( iv_force_sequential = abap_true
+                                                  iv_package          = 'ZDUMMY' ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_threads
