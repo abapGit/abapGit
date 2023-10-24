@@ -51,7 +51,6 @@ CLASS lcl_status_consistency_checks DEFINITION FINAL.
     METHODS check_namespace
       IMPORTING
         !it_results      TYPE zif_abapgit_definitions=>ty_results_tt
-        !iv_root_package TYPE devclass
       RAISING
         zcx_abapgit_exception .
 
@@ -89,9 +88,7 @@ CLASS lcl_status_consistency_checks IMPLEMENTATION.
     check_multiple_files( it_results ).
 
     " Check if namespaces exist already
-    check_namespace(
-      it_results      = it_results
-      iv_root_package = mv_root_package ).
+    check_namespace( it_results ).
 
     ri_log = mi_log.
 

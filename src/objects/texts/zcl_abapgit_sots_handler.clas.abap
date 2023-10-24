@@ -187,9 +187,7 @@ CLASS ZCL_ABAPGIT_SOTS_HANDLER IMPLEMENTATION.
 
   METHOD delete_sots.
 
-    DATA:
-      ls_sots     TYPE ty_sots,
-      lt_sots_use TYPE ty_sots_use_tt.
+    DATA lt_sots_use TYPE ty_sots_use_tt.
 
     FIELD-SYMBOLS <ls_sots_use> LIKE LINE OF lt_sots_use.
 

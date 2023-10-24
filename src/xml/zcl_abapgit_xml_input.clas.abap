@@ -17,8 +17,6 @@ CLASS zcl_abapgit_xml_input DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    DATA ms_i18n_params TYPE zif_abapgit_definitions=>ty_i18n_params.
-
     METHODS fix_xml.
 
 ENDCLASS.

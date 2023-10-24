@@ -358,8 +358,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SKTD IMPLEMENTATION.
     DATA:
       li_wb_object_operator TYPE REF TO object,
       li_object_data_model  TYPE REF TO if_wb_object_data_model,
-      lx_error              TYPE REF TO cx_root,
-      lv_source             TYPE string.
+      lx_error              TYPE REF TO cx_root.
 
     FIELD-SYMBOLS <ls_data> TYPE any.
 

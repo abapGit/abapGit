@@ -50,7 +50,6 @@ CLASS zcl_abapgit_objects DEFINITION
     CLASS-METHODS changed_by
       IMPORTING
         !is_item       TYPE zif_abapgit_definitions=>ty_item
-        !is_sub_item   TYPE zif_abapgit_definitions=>ty_item OPTIONAL
         !iv_filename   TYPE string OPTIONAL
       RETURNING
         VALUE(rv_user) TYPE syuname .

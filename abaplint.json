@@ -442,6 +442,7 @@
     "omit_parameter_name": {
       "exclude": ["/json/"]
     },
+    "unused_variables": true,
     "whitespace_end": true
   },
   "targetRules": {
@@ -453,7 +454,6 @@
       "skipForAllEntries": true
     },
     "slow_parameter_passing": true,
-    "select_single_full_key": true,
-    "unused_variables": true
+    "select_single_full_key": true
   }
 }

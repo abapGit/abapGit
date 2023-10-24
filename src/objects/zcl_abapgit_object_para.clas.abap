@@ -38,8 +38,7 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
     " We can't use FM RS_PARAMETER_DELETE because of the popup to confirm
     "Therefore we have to reimplement most of the FMs logic
 
-    DATA: lv_paramid   TYPE tpara-paramid,
-          ls_transpkey TYPE trkey.
+    DATA lv_paramid TYPE tpara-paramid.
 
     lv_paramid = ms_item-obj_name.
 
