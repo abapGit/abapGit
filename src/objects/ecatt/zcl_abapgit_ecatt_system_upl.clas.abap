@@ -19,7 +19,8 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_ecatt_system_upl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_ECATT_SYSTEM_UPL IMPLEMENTATION.
+
 
   METHOD upload_data_from_stream.
 
@@ -35,5 +36,4 @@ CLASS zcl_abapgit_ecatt_system_upl IMPLEMENTATION.
     mv_external_xml = iv_xml.
 
   ENDMETHOD.
-
 ENDCLASS.
