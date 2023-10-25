@@ -98,7 +98,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
 
     DATA lt_trkorr  TYPE trwbo_request_headers.
     DATA ls_trkorr  LIKE LINE OF lt_trkorr.
-    DATA ls_request TYPE trwbo_request.
+    DATA ls_request TYPE zif_abapgit_cts_api=>ty_transport_data.
     DATA ls_key     LIKE LINE OF ls_request-keys.
     DATA lv_where   TYPE string.
     DATA ls_config  TYPE zif_abapgit_data_config=>ty_config.
