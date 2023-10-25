@@ -624,13 +624,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
 
   METHOD use_new_activation_logic.
 
-    CALL FUNCTION 'FUNCTION_EXISTS'
-      EXPORTING
-        funcname           = 'DD_MASS_ACT_C3'
-      EXCEPTIONS
-        function_not_exist = 1
-        OTHERS             = 2.
-    IF sy-subrc = 0.
+    IF zcl_abapgit_factory=>get_function_module( )->function_exists( 'DD_MASS_ACT_C3' ) = abap_true.
       rv_use_new_activation_logic = abap_true.
     ENDIF.
 

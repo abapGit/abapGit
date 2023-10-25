@@ -324,13 +324,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     ELSEIF mv_group IS NOT INITIAL.
       " The function module below should always exist here as is_merged evaluated to false above. It does however
       " not exist in the transpiled version which then causes unit tests to fail. Therefore the check needs to stay.
-      CALL FUNCTION 'FUNCTION_EXISTS'
-        EXPORTING
-          funcname           = 'Z_ABAPGIT_SERIALIZE_PARALLEL'
-        EXCEPTIONS
-          function_not_exist = 1
-          OTHERS             = 2.
-      IF sy-subrc <> 0.
+      IF zcl_abapgit_factory=>get_function_module( )->function_exists( 'Z_ABAPGIT_SERIALIZE_PARALLEL' ) = abap_false.
         gv_max_processes = 1.
       ELSE.
         CALL FUNCTION 'SPBT_INITIALIZE'

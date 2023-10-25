@@ -146,13 +146,7 @@ CLASS zcl_abapgit_object_auth IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
-    CALL FUNCTION 'FUNCTION_EXISTS'
-      EXPORTING
-        funcname           = 'SU20_MAINTAIN_SNGL'
-      EXCEPTIONS
-        function_not_exist = 1
-        OTHERS             = 2.
-    IF sy-subrc = 0.
+    IF zcl_abapgit_factory=>get_function_module( )->function_exists( 'SU20_MAINTAIN_SNGL' ) = abap_true.
       " this function module does not exist in 740
       CALL FUNCTION 'SU20_MAINTAIN_SNGL'
         EXPORTING
