@@ -60,7 +60,7 @@ CLASS lcl_own_cua_provider DEFINITION FINAL.
   PUBLIC SECTION.
     CLASS-METHODS get
       RETURNING
-        VALUE(rs_cua) TYPE zcl_abapgit_objects_program=>ty_cua.
+        VALUE(rs_cua) TYPE zcl_abapgit_objects_program=>ty_cua ##NEEDED.
 ENDCLASS.
 
 CLASS lcl_own_cua_provider IMPLEMENTATION.

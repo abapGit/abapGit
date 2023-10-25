@@ -146,8 +146,6 @@ CLASS ltcl_build IMPLEMENTATION.
 
     DATA lo_dot TYPE REF TO zcl_abapgit_dot_abapgit.
     DATA li_log TYPE REF TO zif_abapgit_log.
-    DATA lr_ex TYPE REF TO zcx_abapgit_exception.
-    DATA lo_tadir TYPE REF TO zcl_abapgit_tadir.
     DATA lo_ex TYPE REF TO zcx_abapgit_exception.
     DATA lv_top_package TYPE devclass.
     DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
