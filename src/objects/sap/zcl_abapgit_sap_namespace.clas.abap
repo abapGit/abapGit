@@ -11,7 +11,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_sap_namespace IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SAP_NAMESPACE IMPLEMENTATION.
 
 
   METHOD zif_abapgit_sap_namespace~exists.
@@ -90,5 +90,4 @@ CLASS zcl_abapgit_sap_namespace IMPLEMENTATION.
        |Object without namespace { rs_obj_namespace-obj_without_namespace } contains a '/'| ).
     ENDIF.
   ENDMETHOD.
-
 ENDCLASS.

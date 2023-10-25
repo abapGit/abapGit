@@ -199,7 +199,7 @@ CLASS ltcl_warning_overwrite_find IMPLEMENTATION.
 
     TRY.
         mo_objects->check_multiple_files( mt_result ).
-      CATCH zcx_abapgit_exception ##NO_HANDLER.
+      CATCH zcx_abapgit_exception.
         cl_abap_unit_assert=>fail( ).
     ENDTRY.
 
@@ -213,7 +213,7 @@ CLASS ltcl_warning_overwrite_find IMPLEMENTATION.
 
     TRY.
         mo_objects->check_multiple_files( mt_result ).
-      CATCH zcx_abapgit_exception ##NO_HANDLER.
+      CATCH zcx_abapgit_exception.
         cl_abap_unit_assert=>fail( ).
     ENDTRY.
 

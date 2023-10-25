@@ -37,6 +37,7 @@ CLASS ZCL_ABAPGIT_PERSIST_FACTORY IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD get_repo_cs.
 
     IF gi_repo_cs IS INITIAL.
@@ -46,6 +47,7 @@ CLASS ZCL_ABAPGIT_PERSIST_FACTORY IMPLEMENTATION.
     ri_repo_cs = gi_repo_cs.
 
   ENDMETHOD.
+
 
   METHOD get_settings.
 
