@@ -34,11 +34,13 @@ CLASS ZCL_ABAPGIT_PERSIST_INJECTOR IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD set_repo_cs.
 
     zcl_abapgit_persist_factory=>gi_repo_cs = ii_repo_cs.
 
   ENDMETHOD.
+
 
   METHOD set_settings.
 

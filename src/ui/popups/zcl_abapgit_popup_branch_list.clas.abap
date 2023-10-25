@@ -40,6 +40,7 @@ ENDCLASS.
 
 CLASS zcl_abapgit_popup_branch_list IMPLEMENTATION.
 
+
   METHOD create.
     CREATE OBJECT ri_popup TYPE zcl_abapgit_popup_branch_list
       EXPORTING
@@ -48,11 +49,13 @@ CLASS zcl_abapgit_popup_branch_list IMPLEMENTATION.
         iv_show_new_option = iv_show_new_option.
   ENDMETHOD.
 
+
   METHOD constructor.
     mv_repo_url        = iv_url.
     mv_default_branch  = zif_abapgit_git_definitions=>c_git_branch-heads_prefix && iv_default_branch.
     mv_show_new_option = iv_show_new_option.
   ENDMETHOD.
+
 
   METHOD zif_abapgit_html_popup~create_picklist.
 
@@ -63,6 +66,7 @@ CLASS zcl_abapgit_popup_branch_list IMPLEMENTATION.
         ii_item_renderer = me.
 
   ENDMETHOD.
+
 
   METHOD fetch_branch_list.
 
@@ -98,6 +102,7 @@ CLASS zcl_abapgit_popup_branch_list IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD zif_abapgit_gui_render_item~render.
 
     DATA lv_head_marker TYPE string.
@@ -115,5 +120,4 @@ CLASS zcl_abapgit_popup_branch_list IMPLEMENTATION.
     ri_html = zcl_abapgit_html=>create( |{ <ls_b>-display_name }{ lv_head_marker }| ).
 
   ENDMETHOD.
-
 ENDCLASS.

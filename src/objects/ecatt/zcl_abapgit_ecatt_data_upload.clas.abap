@@ -28,6 +28,8 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_ecatt_data_upload IMPLEMENTATION.
+
+
   METHOD upload.
     SET HANDLER on_ev_object_saved FOR ALL INSTANCES.
 
@@ -47,6 +49,7 @@ CLASS zcl_abapgit_ecatt_data_upload IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
+
   METHOD upload_data_from_stream.
 
     " Downport
@@ -61,6 +64,7 @@ CLASS zcl_abapgit_ecatt_data_upload IMPLEMENTATION.
     mv_external_xml = iv_xml.
 
   ENDMETHOD.
+
 
   METHOD on_ev_object_saved.
     DATA lo_ecatt_td TYPE REF TO cl_apl_ecatt_test_data.
