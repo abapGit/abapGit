@@ -14,6 +14,9 @@ CLASS zcl_abapgit_ui_factory DEFINITION
       RETURNING
         VALUE(ri_popups) TYPE REF TO zif_abapgit_popups .
     CLASS-METHODS get_gui
+      IMPORTING
+        !ii_asset_man TYPE REF TO zif_abapgit_gui_asset_manager OPTIONAL
+        !ii_router    TYPE REF TO zif_abapgit_gui_event_handler OPTIONAL
       RETURNING
         VALUE(ro_gui) TYPE REF TO zcl_abapgit_gui
       RAISING
@@ -134,13 +137,22 @@ CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
     DATA lo_html_preprocessor TYPE REF TO zcl_abapgit_gui_html_processor.
 
     IF go_gui IS INITIAL.
-      li_asset_man = get_asset_manager( ).
+      IF ii_asset_man IS INITIAL.
+        li_asset_man = get_asset_manager( ).
+      ELSE.
+        li_asset_man = ii_asset_man.
+      ENDIF.
 
       CREATE OBJECT lo_html_preprocessor EXPORTING ii_asset_man = li_asset_man.
       lo_html_preprocessor->preserve_css( 'css/ag-icons.css' ).
       lo_html_preprocessor->preserve_css( 'css/common.css' ).
 
-      CREATE OBJECT li_router TYPE zcl_abapgit_gui_router.
+      IF ii_router IS INITIAL.
+        CREATE OBJECT li_router TYPE zcl_abapgit_gui_router.
+      ELSE.
+        li_router = ii_router.
+      ENDIF.
+
       CREATE OBJECT li_hotkey_ctl TYPE zcl_abapgit_gui_hotkey_ctl.
 
       CREATE OBJECT go_gui
