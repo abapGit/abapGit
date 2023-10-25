@@ -98,7 +98,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
 
     DATA lt_trkorr  TYPE trwbo_request_headers.
     DATA ls_trkorr  LIKE LINE OF lt_trkorr.
-    DATA ls_request TYPE trwbo_request.
+    DATA ls_request TYPE zif_abapgit_cts_api=>ty_transport_data.
     DATA ls_key     LIKE LINE OF ls_request-keys.
     DATA lv_where   TYPE string.
     DATA ls_config  TYPE zif_abapgit_data_config=>ty_config.
@@ -112,7 +112,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
     READ TABLE lt_trkorr INDEX 1 INTO ls_trkorr.
     ASSERT sy-subrc = 0.
 
-    ls_request = zcl_abapgit_transport=>read( ls_trkorr ).
+    ls_request = zcl_abapgit_factory=>get_cts_api( )->read( ls_trkorr-trkorr ).
 
     IF lines( ls_request-keys ) = 0.
       zcx_abapgit_exception=>raise( |No keys found, select task| ).

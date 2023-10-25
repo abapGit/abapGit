@@ -29,20 +29,6 @@ CLASS zcl_abapgit_transport DEFINITION
       RAISING
         zcx_abapgit_exception .
 
-    CLASS-METHODS read
-      IMPORTING
-        !is_trkorr        TYPE trwbo_request_header OPTIONAL
-      RETURNING
-        VALUE(rs_request) TYPE trwbo_request
-      RAISING
-        zcx_abapgit_exception .
-
-    CLASS-METHODS validate_transport_request
-      IMPORTING
-        iv_transport_request TYPE trkorr
-      RAISING
-        zcx_abapgit_exception.
-
   PROTECTED SECTION.
 
     CLASS-METHODS read_requests
@@ -242,31 +228,6 @@ CLASS zcl_abapgit_transport IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD read.
-
-    rs_request-h-trkorr = is_trkorr-trkorr.
-
-    CALL FUNCTION 'TRINT_READ_REQUEST'
-      EXPORTING
-        iv_read_e070       = abap_true
-        iv_read_e07t       = abap_true
-        iv_read_e070c      = abap_true
-        iv_read_e070m      = abap_true
-        iv_read_objs_keys  = abap_true
-        iv_read_objs       = abap_true
-        iv_read_attributes = abap_true
-      CHANGING
-        cs_request         = rs_request
-      EXCEPTIONS
-        error_occured      = 1
-        OTHERS             = 2.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD read_requests.
     DATA lt_requests LIKE rt_requests.
     FIELD-SYMBOLS <ls_trkorr> LIKE LINE OF it_trkorr.
@@ -375,35 +336,6 @@ CLASS zcl_abapgit_transport IMPLEMENTATION.
     rt_tadir = resolve(
       it_requests        = lt_requests
       iv_deleted_objects = iv_deleted_objects ).
-
-  ENDMETHOD.
-
-
-  METHOD validate_transport_request.
-
-    CONSTANTS:
-      BEGIN OF c_tr_status,
-        modifiable                   TYPE trstatus VALUE 'D',
-        modifiable_protected         TYPE trstatus VALUE 'L',
-        release_started              TYPE trstatus VALUE 'O',
-        released                     TYPE trstatus VALUE 'R',
-        released_with_import_protect TYPE trstatus VALUE 'N', " Released (with Import Protection for Repaired Objects)
-      END OF c_tr_status.
-
-    DATA:
-      ls_trkorr  TYPE trwbo_request_header,
-      ls_request TYPE trwbo_request.
-
-    ls_trkorr-trkorr = iv_transport_request.
-
-    ls_request = read( ls_trkorr ).
-
-    IF  ls_request-h-trstatus <> c_tr_status-modifiable
-    AND ls_request-h-trstatus <> c_tr_status-modifiable_protected.
-      " Task/request &1 has already been released
-      MESSAGE e064(tk) WITH iv_transport_request INTO zcx_abapgit_exception=>null.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
 
   ENDMETHOD.
 
