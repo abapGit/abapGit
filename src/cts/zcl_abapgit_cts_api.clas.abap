@@ -475,4 +475,53 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
     rv_messages_confirmed = abap_true.
 
   ENDMETHOD.
+
+  METHOD zif_abapgit_cts_api~read.
+
+    rs_request-h-trkorr = iv_trkorr.
+
+    CALL FUNCTION 'TRINT_READ_REQUEST'
+      EXPORTING
+        iv_read_e070       = abap_true
+        iv_read_e07t       = abap_true
+        iv_read_e070c      = abap_true
+        iv_read_e070m      = abap_true
+        iv_read_objs_keys  = abap_true
+        iv_read_objs       = abap_true
+        iv_read_attributes = abap_true
+      CHANGING
+        cs_request         = rs_request
+      EXCEPTIONS
+        error_occured      = 1
+        OTHERS             = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_cts_api~validate_transport_request.
+
+    CONSTANTS:
+      BEGIN OF c_tr_status,
+        modifiable                   TYPE trstatus VALUE 'D',
+        modifiable_protected         TYPE trstatus VALUE 'L',
+        release_started              TYPE trstatus VALUE 'O',
+        released                     TYPE trstatus VALUE 'R',
+        released_with_import_protect TYPE trstatus VALUE 'N', " Released (with Import Protection for Repaired Objects)
+      END OF c_tr_status.
+
+    DATA ls_request TYPE trwbo_request.
+
+    ls_request = zif_abapgit_cts_api~read( iv_transport_request ).
+
+    IF  ls_request-h-trstatus <> c_tr_status-modifiable
+    AND ls_request-h-trstatus <> c_tr_status-modifiable_protected.
+      " Task/request &1 has already been released
+      MESSAGE e064(tk) WITH iv_transport_request INTO zcx_abapgit_exception=>null.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.

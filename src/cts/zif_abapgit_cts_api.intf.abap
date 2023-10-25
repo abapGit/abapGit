@@ -109,4 +109,18 @@ INTERFACE zif_abapgit_cts_api
     RETURNING
       VALUE(rv_messages_confirmed) TYPE abap_bool .
 
+  METHODS read
+    IMPORTING
+      !iv_trkorr        TYPE trkorr
+    RETURNING
+      VALUE(rs_request) TYPE trwbo_request
+    RAISING
+      zcx_abapgit_exception .
+
+  METHODS validate_transport_request
+    IMPORTING
+      iv_transport_request TYPE trkorr
+    RAISING
+      zcx_abapgit_exception.
+
 ENDINTERFACE.

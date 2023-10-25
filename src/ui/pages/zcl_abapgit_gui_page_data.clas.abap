@@ -112,7 +112,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
     READ TABLE lt_trkorr INDEX 1 INTO ls_trkorr.
     ASSERT sy-subrc = 0.
 
-    ls_request = zcl_abapgit_transport=>read( ls_trkorr ).
+    ls_request = zcl_abapgit_factory=>get_cts_api( )->read( ls_trkorr ).
 
     IF lines( ls_request-keys ) = 0.
       zcx_abapgit_exception=>raise( |No keys found, select task| ).
