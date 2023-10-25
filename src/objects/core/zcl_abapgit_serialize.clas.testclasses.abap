@@ -152,11 +152,15 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
 
     DATA: lv_processes TYPE i.
 
+    given_parallel_proc_disabled( abap_false ).
+    given_is_merged( abap_false ).
+
     lv_processes = mo_cut->determine_max_processes( 'ZDUMMY' ).
 
     cl_abap_unit_assert=>assert_differs(
       act = lv_processes
       exp = 0 ).
+
   ENDMETHOD.
 
 
@@ -165,6 +169,7 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
     DATA: lv_processes TYPE i.
 
     given_parallel_proc_disabled( abap_true ).
+    given_is_merged( abap_false ).
 
     lv_processes = mo_cut->determine_max_processes( 'ZDUMMY' ).
 
@@ -179,6 +184,7 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
 
     DATA: lv_processes TYPE i.
 
+    given_parallel_proc_disabled( abap_false ).
     given_is_merged( abap_true ).
 
     lv_processes = mo_cut->determine_max_processes( 'ZDUMMY' ).
@@ -196,15 +202,6 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
 
     lv_processes = mo_cut->determine_max_processes( iv_force_sequential = abap_true
                                                     iv_package          = 'ZDUMMY' ).
-
-    cl_abap_unit_assert=>assert_equals(
-      act = lv_processes
-      exp = 1 ).
-
-    given_parallel_proc_disabled( abap_true ).
-
-    lv_processes = mo_cut->determine_max_processes( iv_force_sequential = abap_true
-                                                   iv_package          = 'ZDUMMY' ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_processes

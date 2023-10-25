@@ -15,7 +15,8 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_factory IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS_FACTORY IMPLEMENTATION.
+
 
   METHOD get_gui_jumper.
 
@@ -26,5 +27,4 @@ CLASS zcl_abapgit_objects_factory IMPLEMENTATION.
     ri_gui_jumper = gi_gui_jumper.
 
   ENDMETHOD.
-
 ENDCLASS.

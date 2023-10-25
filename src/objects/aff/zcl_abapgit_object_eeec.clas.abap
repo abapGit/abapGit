@@ -16,6 +16,7 @@ ENDCLASS.
 
 CLASS zcl_abapgit_object_eeec IMPLEMENTATION.
 
+
   METHOD zif_abapgit_object~changed_by.
 
     DATA: lr_data             TYPE REF TO data,
@@ -60,6 +61,7 @@ CLASS zcl_abapgit_object_eeec IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD get_object_handler.
 
     DATA lx_error TYPE REF TO cx_root.
@@ -76,5 +78,4 @@ CLASS zcl_abapgit_object_eeec IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
 ENDCLASS.
