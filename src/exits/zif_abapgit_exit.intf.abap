@@ -24,6 +24,7 @@ INTERFACE zif_abapgit_exit
       zcx_abapgit_exception .
   METHODS adjust_display_filename
     IMPORTING
+      !is_repo_meta      TYPE zif_abapgit_persistence=>ty_repo
       !iv_filename       TYPE string
     RETURNING
       VALUE(rv_filename) TYPE string .
