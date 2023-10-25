@@ -321,9 +321,9 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
       IF lv_type_check_result = 'L'.
         LOOP AT lt_tlock ASSIGNING <ls_tlock>
-            WHERE object =  ls_lock_key-obj
-            AND   hikey  >= ls_lock_key-low
-            AND   lokey  <= ls_lock_key-hi.               "#EC PORTABLE
+            WHERE object = ls_lock_key-obj
+            AND hikey >= ls_lock_key-low
+            AND lokey <= ls_lock_key-hi.               "#EC PORTABLE
           lv_request = <ls_tlock>-trkorr.
           EXIT.
         ENDLOOP.
@@ -504,19 +504,16 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
     CONSTANTS:
       BEGIN OF c_tr_status,
-        modifiable                   TYPE trstatus VALUE 'D',
-        modifiable_protected         TYPE trstatus VALUE 'L',
-        release_started              TYPE trstatus VALUE 'O',
-        released                     TYPE trstatus VALUE 'R',
-        released_with_import_protect TYPE trstatus VALUE 'N', " Released (with Import Protection for Repaired Objects)
+        modifiable           TYPE trstatus VALUE 'D',
+        modifiable_protected TYPE trstatus VALUE 'L',
       END OF c_tr_status.
 
     DATA ls_request TYPE trwbo_request.
 
     ls_request = zif_abapgit_cts_api~read( iv_transport_request ).
 
-    IF  ls_request-h-trstatus <> c_tr_status-modifiable
-    AND ls_request-h-trstatus <> c_tr_status-modifiable_protected.
+    IF ls_request-h-trstatus <> c_tr_status-modifiable
+        AND ls_request-h-trstatus <> c_tr_status-modifiable_protected.
       " Task/request &1 has already been released
       MESSAGE e064(tk) WITH iv_transport_request INTO zcx_abapgit_exception=>null.
       zcx_abapgit_exception=>raise_t100( ).
