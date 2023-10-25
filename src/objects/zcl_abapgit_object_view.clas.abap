@@ -17,18 +17,6 @@ CLASS zcl_abapgit_object_view DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
              ddtext     TYPE dd25t-ddtext,
            END OF ty_dd25_text ,
            ty_dd25_texts TYPE STANDARD TABLE OF ty_dd25_text.
-    CONSTANTS: BEGIN OF co_viewclass,
-                 help         TYPE viewclass VALUE 'H',
-                 database     TYPE viewclass VALUE 'D',
-                 projection   TYPE viewclass VALUE 'P',
-                 structure    TYPE viewclass VALUE 'S',
-                 maintenance  TYPE viewclass VALUE 'C',
-                 entity       TYPE viewclass VALUE 'E',
-                 view_variant TYPE viewclass VALUE 'V',
-                 append       TYPE viewclass VALUE 'A',
-                 external     TYPE viewclass VALUE 'X',
-                 replication  TYPE viewclass VALUE 'R',
-               END OF co_viewclass.
     CONSTANTS c_longtext_id_view TYPE dokil-id VALUE 'VW'.
 
     METHODS:

@@ -123,7 +123,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         VALUE(rv_srcsystem_html_code) TYPE string .
     METHODS build_origlang_code
       IMPORTING
-        !is_item                      TYPE zif_abapgit_definitions=>ty_repo_item
+        !is_item            TYPE zif_abapgit_definitions=>ty_repo_item
       RETURNING
         VALUE(rv_html_code) TYPE string .
     METHODS open_in_main_language
@@ -891,6 +891,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     DATA: ls_file LIKE LINE OF is_item-files.
     DATA li_exit TYPE REF TO zif_abapgit_exit.
+    DATA lv_filename TYPE string.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -909,10 +910,16 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       ri_html->add( |<td class="filename darkgrey">| ).
 
       IF mv_show_folders = abap_true.
-        ri_html->add( |<div>{ li_exit->adjust_display_filename( ls_file-filename ) }</div>| ).
+        lv_filename = ls_file-filename.
       ELSE.
-        ri_html->add( |<div>{ li_exit->adjust_display_filename( ls_file-path && ls_file-filename ) }</div>| ).
+        lv_filename = ls_file-path && ls_file-filename.
       ENDIF.
+
+      lv_filename = li_exit->adjust_display_filename(
+        is_repo_meta = mo_repo->ms_data
+        iv_filename  = lv_filename ).
+
+      ri_html->add( |<div>{ lv_filename }</div>| ).
 
       ri_html->add( |</td>| ).
 

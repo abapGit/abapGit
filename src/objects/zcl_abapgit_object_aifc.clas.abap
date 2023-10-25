@@ -59,8 +59,6 @@ CLASS zcl_abapgit_object_aifc DEFINITION
       RAISING
         zcx_abapgit_exception.
     METHODS authorization_check
-      IMPORTING
-        !io_log           TYPE REF TO zif_abapgit_log
       RETURNING
         VALUE(rv_success) TYPE abap_bool
       RAISING
@@ -82,7 +80,6 @@ CLASS zcl_abapgit_object_aifc DEFINITION
     METHODS compress_interface
       IMPORTING
         !is_ifkeys        TYPE ty_aif_key_s
-        !io_log           TYPE REF TO zif_abapgit_log
       RETURNING
         VALUE(rv_success) TYPE abap_bool
       RAISING
@@ -357,7 +354,7 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
                               iv_package = iv_package ).
 
 
-        IF authorization_check( ii_log ) = abap_false.
+        IF authorization_check( ) = abap_false.
           RETURN.
         ENDIF.
 
@@ -365,8 +362,7 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
           RETURN.
         ENDIF.
 
-        IF compress_interface( is_ifkeys = ls_ifkey
-                               io_log    = ii_log ) = abap_false.
+        IF compress_interface( ls_ifkey ) = abap_false.
           RETURN.
         ENDIF.
 
