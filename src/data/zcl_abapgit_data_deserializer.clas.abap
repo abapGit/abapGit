@@ -20,13 +20,12 @@ CLASS zcl_abapgit_data_deserializer DEFINITION
     METHODS preview_database_changes
       IMPORTING
         !iv_name         TYPE tadir-obj_name
-        !it_where        TYPE string_table
         !ir_lc_data      TYPE REF TO data
         !ir_db_data      TYPE REF TO data
       RETURNING
         VALUE(rs_result) TYPE zif_abapgit_data_deserializer=>ty_result
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS write_database_table
       IMPORTING
         !iv_name TYPE tadir-obj_name
@@ -119,7 +118,6 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
     FIELD-SYMBOLS <lg_new> TYPE ANY TABLE.
     FIELD-SYMBOLS <ls_del> TYPE any.
     FIELD-SYMBOLS <ls_ins> TYPE any.
-    FIELD-SYMBOLS <ls_upd> TYPE any.
     FIELD-SYMBOLS <lg_del> TYPE ANY TABLE.
     FIELD-SYMBOLS <lg_ins> TYPE ANY TABLE.
     FIELD-SYMBOLS <lg_upd> TYPE ANY TABLE.
@@ -218,7 +216,6 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 
     DATA ls_result  LIKE LINE OF it_result.
     DATA li_cts_api TYPE REF TO zif_abapgit_cts_api.
-    DATA ls_file    LIKE LINE OF rt_accessed_files.
 
     FIELD-SYMBOLS:
       <lt_ins> TYPE ANY TABLE,
@@ -308,7 +305,6 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
 
         ls_result = preview_database_changes(
           iv_name    = ls_config-name
-          it_where   = ls_config-where
           ir_lc_data = lr_lc_data
           ir_db_data = lr_db_data ).
 

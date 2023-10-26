@@ -23,8 +23,9 @@ CLASS zcl_abapgit_object_common_aff DEFINITION
            END OF ty_extension_mapper_pair,
            ty_extension_mapper_pairs TYPE STANDARD TABLE OF ty_extension_mapper_pair WITH DEFAULT KEY.
 
+    " Can be redefined in subclasses
     METHODS get_additional_extensions
-      RETURNING VALUE(rv_additional_extensions) TYPE ty_extension_mapper_pairs.
+      RETURNING VALUE(rv_additional_extensions) TYPE ty_extension_mapper_pairs ##NEEDED.
     METHODS get_object_handler
       RETURNING
         VALUE(ro_object_handler) TYPE REF TO object

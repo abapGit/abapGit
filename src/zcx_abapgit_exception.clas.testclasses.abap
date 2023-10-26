@@ -66,7 +66,7 @@ CLASS ltcl_base IMPLEMENTATION.
                                       ix_previous = ms_given-previous_exception
                                       iv_longtext = ms_given-longtext ).
         cl_abap_unit_assert=>fail( ).
-      CATCH zcx_abapgit_exception INTO mo_cut ##NEEDED.
+      CATCH zcx_abapgit_exception INTO mo_cut ##NO_HANDLER.
     ENDTRY.
   ENDMETHOD.
 
@@ -81,7 +81,7 @@ CLASS ltcl_base IMPLEMENTATION.
                                            ix_previous = ms_given-previous_exception
                                            iv_longtext = ms_given-longtext ).
         cl_abap_unit_assert=>fail( ).
-      CATCH zcx_abapgit_exception INTO mo_cut ##NEEDED.
+      CATCH zcx_abapgit_exception INTO mo_cut ##NO_HANDLER.
     ENDTRY.
   ENDMETHOD.
 
@@ -90,7 +90,7 @@ CLASS ltcl_base IMPLEMENTATION.
         zcx_abapgit_exception=>raise_with_text( ix_previous = ms_given-previous_exception
                                                 iv_longtext = ms_given-longtext ).
         cl_abap_unit_assert=>fail( ).
-      CATCH zcx_abapgit_exception INTO mo_cut ##NEEDED.
+      CATCH zcx_abapgit_exception INTO mo_cut ##NO_HANDLER.
     ENDTRY.
   ENDMETHOD.
 

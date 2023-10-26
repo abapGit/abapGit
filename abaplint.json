@@ -442,18 +442,18 @@
     "omit_parameter_name": {
       "exclude": ["/json/"]
     },
+    "unused_variables": true,
+    "unnecessary_pragma": {
+      "allowNoTextGlobal": true
+    },
     "whitespace_end": true
   },
   "targetRules": {
     "double_space": true,
-    "unnecessary_pragma": {
-      "allowNoTextGlobal": true
-    },
     "select_add_order_by": {
       "skipForAllEntries": true
     },
     "slow_parameter_passing": true,
-    "select_single_full_key": true,
-    "unused_variables": true
+    "select_single_full_key": true
   }
 }

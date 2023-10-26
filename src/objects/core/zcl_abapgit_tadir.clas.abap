@@ -23,7 +23,6 @@ CLASS zcl_abapgit_tadir DEFINITION
         !io_dot                TYPE REF TO zcl_abapgit_dot_abapgit
         !iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
         !iv_only_local_objects TYPE abap_bool DEFAULT abap_false
-        !ii_log                TYPE REF TO zif_abapgit_log OPTIONAL
       RETURNING
         VALUE(rt_tadir)        TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
@@ -397,8 +396,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
       iv_package            = iv_package
       io_dot                = io_dot
       iv_ignore_subpackages = iv_ignore_subpackages
-      iv_only_local_objects = iv_only_local_objects
-      ii_log                = ii_log ).
+      iv_only_local_objects = iv_only_local_objects ).
 
     li_exit = zcl_abapgit_exit=>get_instance( ).
     li_exit->change_tadir(

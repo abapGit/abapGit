@@ -137,7 +137,13 @@ CLASS zcl_abapgit_sap_report IMPLEMENTATION.
         i_progname = iv_name
         i_state    = iv_state
       IMPORTING
-        e_progdir  = ls_sapdir.
+        e_progdir  = ls_sapdir
+      EXCEPTIONS
+        not_exists = 1
+        OTHERS     = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
 
     MOVE-CORRESPONDING ls_sapdir TO rs_progdir.
 

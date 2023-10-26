@@ -73,7 +73,6 @@ CLASS ltcl_test IMPLEMENTATION.
     CREATE OBJECT li_cut TYPE zcl_abapgit_data_deserializer.
     ls_result = li_cut->preview_database_changes(
       iv_name    = ls_config-name
-      it_where   = ls_config-where
       ir_db_data = lr_db_data
       ir_lc_data = lr_lc_data ).
 
@@ -142,7 +141,6 @@ CLASS ltcl_test IMPLEMENTATION.
     CREATE OBJECT li_cut TYPE zcl_abapgit_data_deserializer.
     ls_result = li_cut->preview_database_changes(
       iv_name    = ls_config-name
-      it_where   = ls_config-where
       ir_db_data = lr_db_data
       ir_lc_data = lr_lc_data ).
 
@@ -205,7 +203,6 @@ CLASS ltcl_test IMPLEMENTATION.
     CREATE OBJECT li_cut TYPE zcl_abapgit_data_deserializer.
     ls_result = li_cut->preview_database_changes(
       iv_name    = ls_config-name
-      it_where   = ls_config-where
       ir_db_data = lr_db_data
       ir_lc_data = lr_lc_data ).
 

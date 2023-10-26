@@ -22,7 +22,6 @@ CLASS ltcl_po_file IMPLEMENTATION.
     DATA lo_po TYPE REF TO zcl_abapgit_po_file.
     DATA lt_lxe_pairs TYPE zif_abapgit_lxe_texts=>ty_text_pairs.
     DATA lv_act TYPE string.
-    DATA lv_exp TYPE string.
     DATA lo_buf TYPE REF TO zcl_abapgit_string_buffer.
 
     FIELD-SYMBOLS <ls_p> LIKE LINE OF lt_lxe_pairs.
