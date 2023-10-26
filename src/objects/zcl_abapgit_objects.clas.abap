@@ -305,7 +305,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       WHEN 2.
         zcx_abapgit_exception=>raise( |Object type { iv_obj_type } not allowed for package { iv_package }| ).
       WHEN OTHERS.
-        zcx_abapgit_exception=>raise_t100(  ).
+        zcx_abapgit_exception=>raise_t100( ).
     ENDCASE.
 
   ENDMETHOD.

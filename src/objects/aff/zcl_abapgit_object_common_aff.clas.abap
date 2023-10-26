@@ -151,7 +151,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
             result = lo_aff_log.
 
         CREATE DATA lr_intf_aff_log TYPE REF TO ('IF_AFF_LOG').
-        ASSIGN lr_intf_aff_log->* TO  <ls_intf_aff_log>.
+        ASSIGN lr_intf_aff_log->* TO <ls_intf_aff_log>.
         <ls_intf_aff_log> ?= lo_aff_log.
 
         CALL METHOD lo_object_handler->('IF_AFF_OBJECT_HANDLER~DELETE')
@@ -324,7 +324,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
         <ls_intf_files_container> ?= lo_files_container.
 
         CREATE DATA lr_intf_aff_log TYPE REF TO ('IF_AFF_LOG').
-        ASSIGN lr_intf_aff_log->* TO  <ls_intf_aff_log>.
+        ASSIGN lr_intf_aff_log->* TO <ls_intf_aff_log>.
         <ls_intf_aff_log> ?= lo_aff_log.
 
         CREATE DATA lr_intf_aff_settings TYPE REF TO ('IF_AFF_SETTINGS_DESERIALIZE').

@@ -233,7 +233,7 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
           obj_type = ls_result-type
           obj_name = ls_result-name
           decision = zif_abapgit_definitions=>c_yes.
-      IF sy-subrc <>  0.
+      IF sy-subrc <> 0.
         CONTINUE.
       ENDIF.
 
