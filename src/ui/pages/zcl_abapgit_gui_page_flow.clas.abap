@@ -83,6 +83,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       li_online ?= li_favorite.
       ri_html->add( '<u>' && li_favorite->get_name( ) && '<u><br>' ).
 
+* todo, exclude 'main' ?
       lt_branches = zcl_abapgit_git_transport=>branches( li_online->get_url( ) )->get_branches_only( ).
       LOOP AT lt_branches INTO ls_branch WHERE is_head = abap_false.
         ri_html->add( ls_branch-display_name && '<br>' ).
