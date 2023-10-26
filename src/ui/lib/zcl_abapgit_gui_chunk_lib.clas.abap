@@ -50,14 +50,6 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS render_commit_popup
-      IMPORTING
-        !iv_content    TYPE csequence
-        !iv_id         TYPE csequence
-      RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html
-      RAISING
-        zcx_abapgit_exception .
     CLASS-METHODS render_error_message_box
       IMPORTING
         !ix_error      TYPE REF TO zcx_abapgit_exception
@@ -99,26 +91,6 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS advanced_submenu
-      RETURNING
-        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
-    CLASS-METHODS help_submenu
-      RETURNING
-        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
-    CLASS-METHODS back_toolbar
-      RETURNING
-        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
-    CLASS-METHODS settings_toolbar
-      IMPORTING
-        !iv_act        TYPE string
-      RETURNING
-        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
-    CLASS-METHODS settings_repo_toolbar
-      IMPORTING
-        !iv_key        TYPE zif_abapgit_persistence=>ty_repo-key
-        !iv_act        TYPE string
-      RETURNING
-        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
     CLASS-METHODS render_branch_name
       IMPORTING
         !iv_branch      TYPE string OPTIONAL
@@ -195,13 +167,6 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html.
 
-    CLASS-METHODS shorten_repo_url
-      IMPORTING
-        iv_full_url         TYPE string
-        iv_max_length       TYPE i DEFAULT 60
-      RETURNING
-        VALUE(rv_shortened) TYPE string.
-
     CLASS-METHODS render_label_list
       IMPORTING
         it_labels           TYPE string_table
@@ -252,55 +217,18 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
       RETURNING
         VALUE(rv_normalized_program_name) TYPE string .
 
+    CLASS-METHODS shorten_repo_url
+      IMPORTING
+        iv_full_url         TYPE string
+        iv_max_length       TYPE i DEFAULT 60
+      RETURNING
+        VALUE(rv_shortened) TYPE string.
+
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
-
-
-  METHOD advanced_submenu.
-
-    DATA lv_supports_ie_devtools TYPE abap_bool.
-
-    lv_supports_ie_devtools = zcl_abapgit_ui_factory=>get_frontend_services( )->is_sapgui_for_windows( ).
-
-    CREATE OBJECT ro_menu.
-
-    ro_menu->add(
-      iv_txt = 'Database Utility'
-      iv_act = zif_abapgit_definitions=>c_action-go_db
-    )->add(
-      iv_txt = 'Package to ZIP'
-      iv_act = zif_abapgit_definitions=>c_action-zip_package
-    )->add(
-      iv_txt = 'Transport to ZIP'
-      iv_act = zif_abapgit_definitions=>c_action-zip_transport
-    )->add(
-      iv_txt = 'Object to Files'
-      iv_act = zif_abapgit_definitions=>c_action-zip_object
-    )->add(
-      iv_txt = 'Debug Info'
-      iv_act = zif_abapgit_definitions=>c_action-go_debuginfo ).
-
-    IF lv_supports_ie_devtools = abap_true.
-      ro_menu->add(
-        iv_txt = 'Open IE DevTools'
-        iv_act = zif_abapgit_definitions=>c_action-ie_devtools ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD back_toolbar.
-
-    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-back'.
-
-    ro_menu->add(
-      iv_txt = 'Back'
-      iv_act = zif_abapgit_definitions=>c_action-go_back ).
-
-  ENDMETHOD.
 
 
   METHOD class_constructor.
@@ -380,29 +308,6 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD help_submenu.
-
-    CREATE OBJECT ro_menu.
-
-    ro_menu->add(
-      iv_txt = 'Tutorial'
-      iv_act = zif_abapgit_definitions=>c_action-go_tutorial
-    )->add(
-      iv_txt = 'Documentation'
-      iv_act = zif_abapgit_definitions=>c_action-documentation
-    )->add(
-      iv_txt = 'Explore'
-      iv_act = zif_abapgit_definitions=>c_action-go_explore
-    )->add(
-      iv_txt = 'Changelog'
-      iv_act = zif_abapgit_definitions=>c_action-changelog
-    )->add(
-      iv_txt = 'Hotkeys'
-      iv_act = zif_abapgit_definitions=>c_action-show_hotkeys ).
-
-  ENDMETHOD.
-
-
   METHOD normalize_program_name.
 
     rv_normalized_program_name = substring_before(
@@ -476,24 +381,6 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       ri_html->add( lv_text ).
     ENDIF.
     ri_html->add( '</span>' ).
-
-  ENDMETHOD.
-
-
-  METHOD render_commit_popup.
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    ri_html->add( '<ul class="hotkeys">' ).
-    ri_html->add( |<li>| && |<span>{ iv_content }</span>| && |</li>| ).
-    ri_html->add( '</ul>' ).
-
-    ri_html = render_infopanel(
-      iv_div_id     = |{ iv_id }|
-      iv_title      = 'Commit details'
-      iv_hide       = abap_true
-      iv_scrollable = abap_false
-      io_content    = ri_html ).
 
   ENDMETHOD.
 
@@ -1386,55 +1273,6 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ri_html->add( '<div class="dummydiv warning">' ).
     ri_html->add( |{ ri_html->icon( 'exclamation-triangle/yellow' ) } { iv_text }| ).
     ri_html->add( '</div>' ).
-
-  ENDMETHOD.
-
-
-  METHOD settings_repo_toolbar.
-
-    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-repo-settings'.
-
-    ro_menu->add(
-      iv_txt = 'Repository'
-      iv_act = |{ zif_abapgit_definitions=>c_action-repo_settings }?key={ iv_key }|
-      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_settings )
-    )->add(
-      iv_txt = 'Local'
-      iv_act = |{ zif_abapgit_definitions=>c_action-repo_local_settings }?key={ iv_key }|
-      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_local_settings )
-    )->add(
-      iv_txt = 'Remote'
-      iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_settings }?key={ iv_key }|
-      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_remote_settings )
-    )->add(
-      iv_txt = 'Background'
-      iv_act = |{ zif_abapgit_definitions=>c_action-repo_background }?key={ iv_key }|
-      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_background )
-    )->add(
-      iv_txt = 'Stats'
-      iv_act = |{ zif_abapgit_definitions=>c_action-repo_infos }?key={ iv_key }|
-      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-repo_infos ) ).
-
-    zcl_abapgit_exit=>get_instance( )->enhance_repo_toolbar(
-      io_menu = ro_menu
-      iv_key  = iv_key
-      iv_act  = iv_act ).
-
-  ENDMETHOD.
-
-
-  METHOD settings_toolbar.
-
-    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-settings'.
-
-    ro_menu->add(
-      iv_txt = 'Global'
-      iv_act = zif_abapgit_definitions=>c_action-go_settings
-      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-go_settings )
-    )->add(
-      iv_txt = 'Personal'
-      iv_act = zif_abapgit_definitions=>c_action-go_settings_personal
-      iv_cur = boolc( iv_act = zif_abapgit_definitions=>c_action-go_settings_personal ) ).
 
   ENDMETHOD.
 

@@ -18,7 +18,6 @@ CLASS zcl_abapgit_gui_page_sett_pers DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CONSTANTS:
@@ -99,8 +98,7 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title      = 'Personal Settings'
-      io_page_menu       = zcl_abapgit_gui_chunk_lib=>settings_toolbar(
-        zif_abapgit_definitions=>c_action-go_settings_personal )
+      io_page_menu       = zcl_abapgit_gui_menus=>settings( zif_abapgit_definitions=>c_action-go_settings_personal )
       ii_child_component = lo_component ).
 
   ENDMETHOD.

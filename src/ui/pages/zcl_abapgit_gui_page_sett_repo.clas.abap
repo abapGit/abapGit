@@ -22,7 +22,6 @@ CLASS zcl_abapgit_gui_page_sett_repo DEFINITION
       RAISING
         zcx_abapgit_exception .
 
-  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CONSTANTS:
@@ -109,7 +108,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title      = 'Repository Settings'
-      io_page_menu       = zcl_abapgit_gui_chunk_lib=>settings_repo_toolbar(
+      io_page_menu       = zcl_abapgit_gui_menus=>repo_settings(
                              iv_key = io_repo->get_key( )
                              iv_act = zif_abapgit_definitions=>c_action-repo_settings )
       ii_child_component = lo_component ).

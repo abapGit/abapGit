@@ -13,7 +13,6 @@ CLASS zcl_abapgit_gui_page_tutorial DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-  PROTECTED SECTION.
 
   PRIVATE SECTION.
 
@@ -25,7 +24,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_TUTORIAL IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_tutorial IMPLEMENTATION.
 
 
   METHOD build_main_menu.
@@ -42,16 +41,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TUTORIAL IMPLEMENTATION.
       iv_txt = zcl_abapgit_gui_buttons=>new_offline( )
       iv_act = zif_abapgit_definitions=>c_action-repo_newoffline
     )->add(
-      iv_txt = zcl_abapgit_gui_buttons=>settings( )
-      iv_act = zif_abapgit_definitions=>c_action-go_settings
-    )->add(
-      iv_txt = zcl_abapgit_gui_buttons=>advanced( )
-      iv_title = 'Utilities'
-      io_sub = zcl_abapgit_gui_chunk_lib=>advanced_submenu( )
-    )->add(
       iv_txt = zcl_abapgit_gui_buttons=>help( )
-      iv_title = 'Help'
-      io_sub = zcl_abapgit_gui_chunk_lib=>help_submenu( ) ).
+      io_sub = zcl_abapgit_gui_menus=>help( ) ).
 
   ENDMETHOD.
 
