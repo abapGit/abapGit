@@ -37,9 +37,9 @@ CLASS zcl_abapgit_gui_page_merge DEFINITION
         !is_result   TYPE zif_abapgit_git_definitions=>ty_expanded .
     METHODS build_menu
       IMPORTING
-        VALUE(iv_with_conflict) TYPE abap_bool OPTIONAL
+        !iv_with_conflict TYPE abap_bool OPTIONAL
       RETURNING
-        VALUE(ro_menu)          TYPE REF TO zcl_abapgit_html_toolbar .
+        VALUE(ro_menu)    TYPE REF TO zcl_abapgit_html_toolbar .
 ENDCLASS.
 
 

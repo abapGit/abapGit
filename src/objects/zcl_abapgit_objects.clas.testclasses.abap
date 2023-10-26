@@ -66,7 +66,7 @@ CLASS ltcl_serialize DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT F
 
     METHODS:
       check
-        IMPORTING VALUE(is_item) TYPE zif_abapgit_definitions=>ty_item
+        IMPORTING is_item TYPE zif_abapgit_definitions=>ty_item
         RAISING   zcx_abapgit_exception,
       serialize_tabl FOR TESTING RAISING zcx_abapgit_exception,
       serialize_shlp FOR TESTING RAISING zcx_abapgit_exception,
