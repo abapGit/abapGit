@@ -50,6 +50,14 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS render_commit_popup
+      IMPORTING
+        !iv_content    TYPE csequence
+        !iv_id         TYPE csequence
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS render_error_message_box
       IMPORTING
         !ix_error      TYPE REF TO zcx_abapgit_exception
@@ -167,6 +175,13 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html.
 
+    CLASS-METHODS shorten_repo_url
+      IMPORTING
+        iv_full_url         TYPE string
+        iv_max_length       TYPE i DEFAULT 60
+      RETURNING
+        VALUE(rv_shortened) TYPE string.
+
     CLASS-METHODS render_label_list
       IMPORTING
         it_labels           TYPE string_table
@@ -216,13 +231,6 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !iv_program_name                  TYPE sy-repid
       RETURNING
         VALUE(rv_normalized_program_name) TYPE string .
-
-    CLASS-METHODS shorten_repo_url
-      IMPORTING
-        iv_full_url         TYPE string
-        iv_max_length       TYPE i DEFAULT 60
-      RETURNING
-        VALUE(rv_shortened) TYPE string.
 
 ENDCLASS.
 
@@ -381,6 +389,24 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       ri_html->add( lv_text ).
     ENDIF.
     ri_html->add( '</span>' ).
+
+  ENDMETHOD.
+
+
+  METHOD render_commit_popup.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    ri_html->add( '<ul class="hotkeys">' ).
+    ri_html->add( |<li>| && |<span>{ iv_content }</span>| && |</li>| ).
+    ri_html->add( '</ul>' ).
+
+    ri_html = render_infopanel(
+      iv_div_id     = |{ iv_id }|
+      iv_title      = 'Commit details'
+      iv_hide       = abap_true
+      iv_scrollable = abap_false
+      io_content    = ri_html ).
 
   ENDMETHOD.
 
