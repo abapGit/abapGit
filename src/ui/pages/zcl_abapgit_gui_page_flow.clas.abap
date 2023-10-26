@@ -70,7 +70,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
     register_handlers( ).
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-    ri_html->add( 'hello' ).
+    ri_html->add( '<div class="repo-overview">' ).
 
 * list branches on favorite repos
     lt_favorites = zcl_abapgit_repo_srv=>get_instance( )->list_favorites( abap_false ).
@@ -86,6 +86,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
 * list open transports
 * todo
+
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 
