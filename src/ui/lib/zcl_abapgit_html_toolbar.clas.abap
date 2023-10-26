@@ -233,15 +233,15 @@ CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
 
       IF <ls_item>-cur = abap_true.
         IF <ls_item>-li_class IS INITIAL.
-          lv_class_value =  'current-menu-item'.
+          lv_class_value = 'current-menu-item'.
         ELSE.
-          lv_class_value =  |current-menu-item { <ls_item>-li_class }|.
+          lv_class_value = |current-menu-item { <ls_item>-li_class }|.
         ENDIF.
       ELSE.
-        lv_class_value =  <ls_item>-li_class.
+        lv_class_value = <ls_item>-li_class.
       ENDIF.
       IF lv_class_value IS NOT INITIAL.
-        lv_class =   | class="{ lv_class_value }"|.
+        lv_class = | class="{ lv_class_value }"|.
       ENDIF.
       IF <ls_item>-aux IS NOT INITIAL.
         lv_aux = | data-aux="{ <ls_item>-aux }"|.

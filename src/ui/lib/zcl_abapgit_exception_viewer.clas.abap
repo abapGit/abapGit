@@ -286,7 +286,7 @@ CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
           lo_event   TYPE REF TO cl_salv_events_table,
           lo_columns TYPE REF TO cl_salv_columns_table,
           lo_alv     TYPE REF TO cl_salv_table.
-    DATA  ls_position TYPE zif_abapgit_popups=>ty_popup_position.
+    DATA ls_position TYPE zif_abapgit_popups=>ty_popup_position.
 
     TRY.
         cl_salv_table=>factory(

@@ -154,7 +154,7 @@ CLASS zcl_abapgit_gui_page_tags IMPLEMENTATION.
       ms_tag-type = io_form_data->get( c_id-tag_type ).
     ENDIF.
 
-    lv_commitmsg_comment_length =  mo_settings->get_commitmsg_comment_length( ).
+    lv_commitmsg_comment_length = mo_settings->get_commitmsg_comment_length( ).
 
     ro_form = zcl_abapgit_html_form=>create(
                 iv_form_id   = 'create-tag-form'

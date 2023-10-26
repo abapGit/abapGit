@@ -258,7 +258,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     li_documentation_link->add_a(
         iv_txt = 'Documentation'
         iv_typ = zif_abapgit_html=>c_action_type-url
-        iv_act =  'https://docs.abapgit.org/guide-sapgui.html#sap-gui-for-windows' ).
+        iv_act = 'https://docs.abapgit.org/guide-sapgui.html#sap-gui-for-windows' ).
 
     ii_html->add( '<div id="browser-control-warning" class="browser-control-warning">' ).
     ii_html->add( zcl_abapgit_gui_chunk_lib=>render_warning_banner(
