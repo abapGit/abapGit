@@ -233,7 +233,7 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    DATA  lx_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
+    DATA lx_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
 
     DATA ls_icd_data_key TYPE ty_icd_data_key.
     ls_icd_data_key-depl_scenario = ms_icd_data_key-depl_scenario.
@@ -305,7 +305,7 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
 
           CLEAR lr_tabledescr.
           lr_structdescr ?= cl_abap_typedescr=>describe_by_name( p_name = lr_content->tabname ).
-          lr_tabledescr =  cl_abap_tabledescr=>create( p_line_type = lr_structdescr ).
+          lr_tabledescr = cl_abap_tabledescr=>create( p_line_type = lr_structdescr ).
 
           CREATE DATA lr_table TYPE HANDLE lr_tabledescr.
           ASSIGN lr_table->* TO <lt_table>.
@@ -327,19 +327,19 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
             ASSIGN COMPONENT 'NS' OF STRUCTURE <ls_table> TO <lv_value>.
             IF <lv_value> IS ASSIGNED.
               ls_ifkey-ns = <lv_value>.
-              UNASSIGN  <lv_value>.
+              UNASSIGN <lv_value>.
             ENDIF.
 
             ASSIGN COMPONENT 'IFNAME' OF STRUCTURE <ls_table> TO <lv_value>.
             IF <lv_value> IS ASSIGNED.
               ls_ifkey-ifname = <lv_value>.
-              UNASSIGN  <lv_value>.
+              UNASSIGN <lv_value>.
             ENDIF.
 
             ASSIGN COMPONENT 'IFVERSION' OF STRUCTURE <ls_table> TO <lv_value>.
             IF <lv_value> IS ASSIGNED.
               ls_ifkey-ifver = <lv_value>.
-              UNASSIGN  <lv_value>.
+              UNASSIGN <lv_value>.
             ENDIF.
           ENDIF.
 
@@ -481,7 +481,7 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
 
     TRY.
 
-        ASSIGN  lr_data TO <ls_data>.
+        ASSIGN lr_data TO <ls_data>.
         IF NOT <ls_data> IS ASSIGNED.
           RETURN.
         ENDIF.
@@ -561,7 +561,7 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
     DATA: lx_root TYPE REF TO cx_root.
 
     lr_structdescr ?= cl_abap_typedescr=>describe_by_name( p_name = '/AIF/T_FINF' ).
-    lr_tabledescr =  cl_abap_tabledescr=>create( p_line_type = lr_structdescr ).
+    lr_tabledescr = cl_abap_tabledescr=>create( p_line_type = lr_structdescr ).
 
     CREATE DATA lr_table TYPE HANDLE lr_tabledescr.
     ASSIGN lr_table->* TO <lt_table>.
