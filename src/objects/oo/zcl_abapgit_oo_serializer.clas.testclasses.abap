@@ -83,7 +83,7 @@ CLASS ltcl_oo_serialize IMPLEMENTATION.
   METHOD two_line_include.
 
     _given_source_is( `*"* use this source file for your ABAP unit test classes` ).
-    _given_source_is( ``                                                         ).
+    _given_source_is( `` ).
 
     _when_skip_is_calculated( ).
 
@@ -94,7 +94,7 @@ CLASS ltcl_oo_serialize IMPLEMENTATION.
   METHOD two_line_include_2.
 
     _given_source_is( `*"* use this source file for your ABAP unit test classes` ).
-    _given_source_is( `write: 'This is ABAP'.`                                   ).
+    _given_source_is( `write: 'This is ABAP'.` ).
 
     _when_skip_is_calculated( ).
 
@@ -104,7 +104,7 @@ CLASS ltcl_oo_serialize IMPLEMENTATION.
 
   METHOD two_line_include_3.
 
-    _given_source_is( ` `                                                        ).
+    _given_source_is( ` ` ).
     _given_source_is( `*"* use this source file for your ABAP unit test classes` ).
 
     _when_skip_is_calculated( ).
@@ -116,22 +116,22 @@ CLASS ltcl_oo_serialize IMPLEMENTATION.
   METHOD more_than_two_lines.
 
     _given_source_is( `*"* use this source file for your ABAP unit test classes` ).
-    _given_source_is( `CLASS ltcl_test DEFINITION FINAL FOR TESTING`             ).
-    _given_source_is( `  DURATION SHORT`                                         ).
-    _given_source_is( `  RISK LEVEL HARMLESS.`                                   ).
-    _given_source_is( ` `                                                        ).
-    _given_source_is( `  PRIVATE SECTION.`                                       ).
-    _given_source_is( `    METHODS:`                                             ).
-    _given_source_is( `      first_test FOR TESTING RAISING cx_static_check.`    ).
-    _given_source_is( `ENDCLASS.`                                                ).
-    _given_source_is( ` `                                                        ).
-    _given_source_is( `CLASS ltcl_test IMPLEMENTATION.`                          ).
-    _given_source_is( ` `                                                        ).
-    _given_source_is( `  METHOD first_test.`                                     ).
-    _given_source_is( `    cl_abap_unit_assert=>fail( 'This is a real test' ).`  ).
-    _given_source_is( `  ENDMETHOD.`                                             ).
-    _given_source_is( ` `                                                        ).
-    _given_source_is( `ENDCLASS.`                                                ).
+    _given_source_is( `CLASS ltcl_test DEFINITION FINAL FOR TESTING` ).
+    _given_source_is( `  DURATION SHORT` ).
+    _given_source_is( `  RISK LEVEL HARMLESS.` ).
+    _given_source_is( ` ` ).
+    _given_source_is( `  PRIVATE SECTION.` ).
+    _given_source_is( `    METHODS:` ).
+    _given_source_is( `      first_test FOR TESTING RAISING cx_static_check.` ).
+    _given_source_is( `ENDCLASS.` ).
+    _given_source_is( ` ` ).
+    _given_source_is( `CLASS ltcl_test IMPLEMENTATION.` ).
+    _given_source_is( ` ` ).
+    _given_source_is( `  METHOD first_test.` ).
+    _given_source_is( `    cl_abap_unit_assert=>fail( 'This is a real test' ).` ).
+    _given_source_is( `  ENDMETHOD.` ).
+    _given_source_is( ` ` ).
+    _given_source_is( `ENDCLASS.` ).
 
     _when_skip_is_calculated( ).
 

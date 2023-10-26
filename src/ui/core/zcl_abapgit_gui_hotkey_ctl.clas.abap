@@ -112,8 +112,8 @@ CLASS ZCL_ABAPGIT_GUI_HOTKEY_CTL IMPLEMENTATION.
         DELETE mt_hotkeys INDEX sy-tabix. " Later registered commands enjoys the priority
       ENDIF.
 
-      IF  ms_user_settings-link_hints_enabled = abap_true
-      AND ms_user_settings-link_hint_key      = <ls_hotkey>-hotkey.
+      IF ms_user_settings-link_hints_enabled = abap_true AND
+         ms_user_settings-link_hint_key      = <ls_hotkey>-hotkey.
         " Link hint activation key is more important
         CONTINUE.
       ENDIF.
