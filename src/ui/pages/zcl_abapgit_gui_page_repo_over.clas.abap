@@ -1023,11 +1023,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_txt = zcl_abapgit_gui_buttons=>help( )
       io_sub = zcl_abapgit_gui_menus=>help( ) ).
 
-    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) IS NOT INITIAL.
-      ro_toolbar->add(
-        iv_txt = zcl_abapgit_gui_buttons=>experimental( )
-        iv_act = zif_abapgit_definitions=>c_action-go_settings ).
-    ENDIF.
+    zcl_abapgit_gui_menus=>experimental( ro_toolbar ).
 
   ENDMETHOD.
 

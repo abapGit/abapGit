@@ -30,6 +30,10 @@ CLASS zcl_abapgit_gui_menus DEFINITION
       RETURNING
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
 
+    CLASS-METHODS experimental
+      IMPORTING
+        io_menu TYPE REF TO zcl_abapgit_html_toolbar.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -75,6 +79,17 @@ CLASS zcl_abapgit_gui_menus IMPLEMENTATION.
     ro_menu->add(
       iv_txt = 'Back'
       iv_act = zif_abapgit_definitions=>c_action-go_back ).
+
+  ENDMETHOD.
+
+
+  METHOD experimental.
+
+    IF zcl_abapgit_persist_factory=>get_settings( )->read( )->get_experimental_features( ) IS NOT INITIAL.
+      io_menu->add(
+        iv_txt = zcl_abapgit_gui_buttons=>experimental( )
+        iv_act = zif_abapgit_definitions=>c_action-go_settings ).
+    ENDIF.
 
   ENDMETHOD.
 
