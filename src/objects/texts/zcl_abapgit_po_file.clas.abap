@@ -253,7 +253,7 @@ CLASS ZCL_ABAPGIT_PO_FILE IMPLEMENTATION.
       READ TABLE mt_pairs ASSIGNING <ls_out> WITH KEY source = <ls_in>-s_text.
       IF sy-subrc <> 0.
         ls_out-source = <ls_in>-s_text.
-        INSERT ls_out INTO  TABLE mt_pairs ASSIGNING <ls_out>.
+        INSERT ls_out INTO TABLE mt_pairs ASSIGNING <ls_out>.
         ASSERT sy-subrc = 0.
       ENDIF.
 

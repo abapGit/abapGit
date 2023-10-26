@@ -149,7 +149,7 @@ CLASS ltcl_build IMPLEMENTATION.
     DATA lo_ex TYPE REF TO zcx_abapgit_exception.
     DATA lv_top_package TYPE devclass.
     DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA ls_filter TYPE  zif_abapgit_definitions=>ty_tadir.
+    DATA ls_filter TYPE zif_abapgit_definitions=>ty_tadir.
     DATA lr_filter TYPE REF TO zif_abapgit_definitions=>ty_tadir.
     DATA lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
     DATA lr_tadir TYPE REF TO zif_abapgit_definitions=>ty_tadir.
@@ -205,7 +205,7 @@ CLASS ltcl_build IMPLEMENTATION.
 
         cl_abap_unit_assert=>assert_not_initial( lt_tadir ).
 
-        IF lines( lt_tadir ) <>  lines( lt_filter ).
+        IF lines( lt_tadir ) <> lines( lt_filter ).
           lv_msg = 'Differnt number of objects found than filtered:'.
           LOOP AT lt_tadir REFERENCE INTO lr_tadir.
             CONCATENATE lv_msg lr_tadir->obj_name INTO lv_msg SEPARATED BY ' | '.

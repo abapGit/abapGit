@@ -51,7 +51,7 @@ CLASS ltc_smoke_test IMPLEMENTATION.
 
   METHOD setup.
 
-    DATA  ls_item   TYPE zif_abapgit_definitions=>ty_item.
+    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
 
     IF zcl_abapgit_persist_factory=>get_settings( )->read( )->is_feature_enabled( 'PDTS' ) = abap_false.
       RETURN.

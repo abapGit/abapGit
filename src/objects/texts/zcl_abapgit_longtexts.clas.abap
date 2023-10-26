@@ -168,8 +168,7 @@ CLASS ZCL_ABAPGIT_LONGTEXTS IMPLEMENTATION.
 
     SELECT * FROM dokil
       INTO TABLE lt_dokil
-      WHERE id     = iv_longtext_id
-      AND   object LIKE lv_object ESCAPE '#'.
+      WHERE id = iv_longtext_id AND object LIKE lv_object ESCAPE '#'.
 
     LOOP AT lt_dokil ASSIGNING <ls_dokil>.
 
@@ -232,8 +231,7 @@ CLASS ZCL_ABAPGIT_LONGTEXTS IMPLEMENTATION.
     " If not, delete the texts
     SELECT * FROM dokil
       INTO TABLE lt_dokil
-      WHERE id     = iv_longtext_id
-      AND   object LIKE lv_object ESCAPE '#'.
+      WHERE id = iv_longtext_id AND object LIKE lv_object ESCAPE '#'.
 
     LOOP AT lt_dokil ASSIGNING <ls_dokil>.
 
