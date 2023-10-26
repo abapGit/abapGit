@@ -248,7 +248,7 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
 
     CREATE OBJECT ro_object_data TYPE ('CL_BLUE_SOURCE_OBJECT_DATA').
 
-    ro_object_data->set_data(  p_data = <lg_data>  ).
+    ro_object_data->set_data( p_data = <lg_data> ).
 
   ENDMETHOD.
 

@@ -107,11 +107,11 @@ CLASS zcl_abapgit_object_iasp IMPLEMENTATION.
 
     w3_api_set_attributes(
         ii_service    = li_service
-        is_attributes = is_attr  ).
+        is_attributes = is_attr ).
 
     w3_api_set_parameters(
         ii_service    = li_service
-        it_parameters = it_parameters  ).
+        it_parameters = it_parameters ).
 
     w3_api_save( li_service ).
 

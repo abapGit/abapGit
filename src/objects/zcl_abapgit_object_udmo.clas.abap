@@ -169,7 +169,7 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
 
   METHOD constructor.
 
-    super->constructor( is_item  =  is_item
+    super->constructor( is_item  = is_item
                         iv_language = iv_language ).
 
 
@@ -261,8 +261,8 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
       INTO ls_header-tdversion
       FROM dokhl
       WHERE id = c_lxe_text_type
-      AND   object = mv_text_object
-      AND   langu = ls_udmo_long_text-language.
+      AND object = mv_text_object
+      AND langu  = ls_udmo_long_text-language.
 
       " Increment the version
       ls_header-tdversion = ls_header-tdversion + 1.
@@ -335,9 +335,9 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
       SELECT SINGLE *
         FROM dm40t
         INTO ls_dm40t
-        WHERE sprache  = ls_udmo_text-sprache
-        AND   dmoid    = ls_udmo_text-dmoid
-        AND   as4local = mv_activation_state.
+        WHERE sprache = ls_udmo_text-sprache
+        AND dmoid     = ls_udmo_text-dmoid
+        AND as4local  = mv_activation_state.
 
       IF sy-subrc = 0.
         " There is already an active description for this language
@@ -454,7 +454,7 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
       FROM dm40t
       INTO TABLE lt_udmo_languages
       WHERE dmoid    = mv_data_model
-      AND   as4local = mv_activation_state
+      AND as4local = mv_activation_state
       ORDER BY sprache ASCENDING.                       "#EC CI_NOFIRST
 
     " For every language for which a short text is maintained,
@@ -510,7 +510,7 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
     FROM dm40l
     INTO ls_dm40l
     WHERE dmoid    = mv_data_model
-    AND   as4local = mv_activation_state.
+    AND as4local = mv_activation_state.
 
 
     IF sy-subrc <> 0.
@@ -542,7 +542,7 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
       FROM dm40t
       INTO CORRESPONDING FIELDS OF TABLE lt_udmo_texts
       WHERE dmoid    = mv_data_model
-      AND   as4local = mv_activation_state
+      AND as4local = mv_activation_state
       ORDER BY sprache ASCENDING.                       "#EC CI_NOFIRST
 
     " You are reminded that descriptions in other languages do not have to be in existence.
@@ -656,9 +656,8 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
 
     "  See Function Module SDU_MODEL_EXISTS
 
-    SELECT COUNT( * ) FROM  dm40l
-           WHERE  dmoid     = mv_data_model
-           AND    as4local  = mv_activation_state.
+    SELECT COUNT( * ) FROM dm40l
+      WHERE dmoid = mv_data_model AND as4local = mv_activation_state.
 
     rv_bool = boolc( sy-subrc = 0 ).
 

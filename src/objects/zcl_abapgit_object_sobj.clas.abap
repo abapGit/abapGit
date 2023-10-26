@@ -100,7 +100,7 @@ CLASS zcl_abapgit_object_sobj IMPLEMENTATION.
 
 
   METHOD is_locked.
-    rv_is_locked = boolc( is_objtype_locked( ) = abap_true OR is_program_locked(  ) = abap_true ).
+    rv_is_locked = boolc( is_objtype_locked( ) = abap_true OR is_program_locked( ) = abap_true ).
   ENDMETHOD.
 
 
@@ -134,7 +134,7 @@ CLASS zcl_abapgit_object_sobj IMPLEMENTATION.
     DATA lv_progname TYPE progname.
 
     rv_is_locked = abap_false.
-    lv_progname = get_program(  ).
+    lv_progname = get_program( ).
 
     IF lv_progname IS NOT INITIAL.
       CALL FUNCTION 'ENQUEUE_ESRDIRE'
@@ -226,7 +226,7 @@ CLASS zcl_abapgit_object_sobj IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_locked.
-    rv_is_locked = is_locked(  ).
+    rv_is_locked = is_locked( ).
   ENDMETHOD.
 
 
