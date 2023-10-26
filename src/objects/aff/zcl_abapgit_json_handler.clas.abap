@@ -114,7 +114,7 @@ CLASS zcl_abapgit_json_handler IMPLEMENTATION.
                   CHANGING  co_ajson    = lo_ajson ).
     map2abap_abap_language_version( CHANGING co_ajson = lo_ajson ).
     map2abap_custom_enum( EXPORTING it_enum_mappings = iv_enum_mappings
-                          CHANGING co_ajson          = lo_ajson  ).
+                          CHANGING co_ajson          = lo_ajson ).
 
     lo_ajson->to_abap( IMPORTING ev_container = ev_data ).
 

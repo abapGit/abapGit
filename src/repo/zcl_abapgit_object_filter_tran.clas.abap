@@ -181,7 +181,7 @@ CLASS zcl_abapgit_object_filter_tran IMPLEMENTATION.
   METHOD get_all_sub_packages.
 
     DATA li_package TYPE REF TO zif_abapgit_sap_package.
-    DATA lt_list TYPE  zif_abapgit_sap_package=>ty_devclass_tt.
+    DATA lt_list TYPE zif_abapgit_sap_package=>ty_devclass_tt.
     DATA lr_list TYPE REF TO devclass.
     DATA ls_filter TYPE zif_abapgit_definitions=>ty_tadir.
 
