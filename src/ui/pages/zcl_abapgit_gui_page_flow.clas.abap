@@ -62,9 +62,31 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_gui_renderable~render.
+    DATA lt_favorites TYPE zif_abapgit_repo_srv=>ty_repo_list.
+    DATA li_favorite  LIKE LINE OF lt_favorites.
+    DATA lt_branches  TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
+    DATA ls_branch    LIKE LINE OF lt_branches.
+    DATA li_online    TYPE REF TO zif_abapgit_repo_online.
+
     register_handlers( ).
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-    ri_html->add( '<div class="form-container">hello</div>' ).
+    ri_html->add( 'hello' ).
+
+* list branches on favorite repos
+    lt_favorites = zcl_abapgit_repo_srv=>get_instance( )->list_favorites( abap_false ).
+    LOOP AT lt_favorites INTO li_favorite.
+      li_online ?= li_favorite.
+      ri_html->add( li_favorite->get_name( ) && '<br>' ).
+
+      lt_branches = zcl_abapgit_git_transport=>branches( li_online->get_url( ) )->get_branches_only( ).
+      LOOP AT lt_branches INTO ls_branch.
+        ri_html->add( ls_branch-display_name && '<br>' ).
+      ENDLOOP.
+    ENDLOOP.
+
+* list open transports
+* todo
+
   ENDMETHOD.
 
 ENDCLASS.
