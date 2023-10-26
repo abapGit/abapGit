@@ -8,6 +8,7 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
 
     INTERFACES zif_abapgit_gui_event_handler.
     INTERFACES zif_abapgit_gui_renderable.
+    INTERFACES zif_abapgit_gui_menu_provider.
 
     CLASS-METHODS create
       RETURNING
@@ -35,13 +36,24 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     CREATE OBJECT lo_component.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
-      iv_page_title      = 'Flow'
-      ii_child_component = lo_component ).
+      iv_page_title         = 'Flow'
+      ii_page_menu_provider = lo_component
+      ii_child_component    = lo_component ).
 
   ENDMETHOD.
 
   METHOD constructor.
     super->constructor( ).
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_gui_menu_provider~get_menu.
+
+    CREATE OBJECT ro_toolbar EXPORTING iv_id = 'toolbar-main'.
+
+    ro_toolbar->add(
+      iv_txt = zcl_abapgit_gui_buttons=>repo_list( )
+      iv_act = zif_abapgit_definitions=>c_action-abapgit_home ).
 
   ENDMETHOD.
 
