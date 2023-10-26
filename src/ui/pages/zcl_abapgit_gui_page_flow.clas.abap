@@ -50,7 +50,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_gui_renderable~render.
-    RETURN. " todo, implement method
+    register_handlers( ).
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    ri_html->add( '<div class="form-container">hello</div>' ).
   ENDMETHOD.
 
 ENDCLASS.
