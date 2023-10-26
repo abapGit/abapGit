@@ -72,19 +72,24 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     ri_html->add( '<div class="repo-overview">' ).
 
-* list branches on favorite repos
+* list branches on favorite transported repos
     lt_favorites = zcl_abapgit_repo_srv=>get_instance( )->list_favorites( abap_false ).
     LOOP AT lt_favorites INTO li_favorite.
+      IF zcl_abapgit_factory=>get_sap_package( li_favorite->get_package( )
+          )->are_changes_recorded_in_tr_req( ) = abap_false.
+        CONTINUE.
+      ENDIF.
+
       li_online ?= li_favorite.
-      ri_html->add( li_favorite->get_name( ) && '<br>' ).
+      ri_html->add( '<u>' && li_favorite->get_name( ) && '<u><br>' ).
 
       lt_branches = zcl_abapgit_git_transport=>branches( li_online->get_url( ) )->get_branches_only( ).
-      LOOP AT lt_branches INTO ls_branch.
+      LOOP AT lt_branches INTO ls_branch WHERE is_head = abap_false.
         ri_html->add( ls_branch-display_name && '<br>' ).
       ENDLOOP.
     ENDLOOP.
 
-* list open transports
+* list open transports for current user
 * todo
 
     ri_html->add( '</div>' ).
