@@ -63,15 +63,15 @@ CLASS zcx_abapgit_exception DEFINITION
     "! @raising zcx_abapgit_exception | Exception
     CLASS-METHODS raise_t100
       IMPORTING
-        VALUE(iv_msgid) TYPE symsgid DEFAULT sy-msgid
-        VALUE(iv_msgno) TYPE symsgno DEFAULT sy-msgno
-        VALUE(iv_msgv1) TYPE symsgv DEFAULT sy-msgv1
-        VALUE(iv_msgv2) TYPE symsgv DEFAULT sy-msgv2
-        VALUE(iv_msgv3) TYPE symsgv DEFAULT sy-msgv3
-        VALUE(iv_msgv4) TYPE symsgv DEFAULT sy-msgv4
-        !ii_log         TYPE REF TO zif_abapgit_log OPTIONAL
-        !ix_previous    TYPE REF TO cx_root OPTIONAL
-        !iv_longtext    TYPE csequence OPTIONAL
+        !iv_msgid    TYPE symsgid DEFAULT sy-msgid
+        !iv_msgno    TYPE symsgno DEFAULT sy-msgno
+        !iv_msgv1    TYPE symsgv DEFAULT sy-msgv1
+        !iv_msgv2    TYPE symsgv DEFAULT sy-msgv2
+        !iv_msgv3    TYPE symsgv DEFAULT sy-msgv3
+        !iv_msgv4    TYPE symsgv DEFAULT sy-msgv4
+        !ii_log      TYPE REF TO zif_abapgit_log OPTIONAL
+        !ix_previous TYPE REF TO cx_root OPTIONAL
+        !iv_longtext TYPE csequence OPTIONAL
       RAISING
         zcx_abapgit_exception .
     "! Raise with text from previous exception

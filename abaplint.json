@@ -446,6 +446,7 @@
     "unnecessary_pragma": {
       "allowNoTextGlobal": true
     },
+    "slow_parameter_passing": true,
     "double_space": true,
     "whitespace_end": true
   },
@@ -453,7 +454,6 @@
     "select_add_order_by": {
       "skipForAllEntries": true
     },
-    "slow_parameter_passing": true,
     "select_single_full_key": true
   }
 }
