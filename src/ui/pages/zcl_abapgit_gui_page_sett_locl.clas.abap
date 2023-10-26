@@ -22,6 +22,7 @@ CLASS zcl_abapgit_gui_page_sett_locl DEFINITION
       RAISING
         zcx_abapgit_exception .
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     DATA mo_popup_picklist TYPE REF TO zcl_abapgit_gui_picklist.

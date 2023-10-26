@@ -26,6 +26,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     TYPES:

@@ -17,6 +17,7 @@ CLASS zcl_abapgit_gui_page_run_bckg DEFINITION
     METHODS constructor
       RAISING
         zcx_abapgit_exception .
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: mt_text TYPE TABLE OF string.
 

@@ -25,6 +25,8 @@ CLASS zcl_abapgit_gui_buttons DEFINITION
     CLASS-METHODS experimental
       RETURNING VALUE(rv_html_string) TYPE string.
 
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 ENDCLASS.
 
 

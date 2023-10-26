@@ -13,6 +13,7 @@ CLASS zcl_abapgit_gui_page_tutorial DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+  PROTECTED SECTION.
 
   PRIVATE SECTION.
 
