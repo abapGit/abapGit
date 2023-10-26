@@ -248,7 +248,7 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
             val = lv_source
             del = ` ` ) ).
           SPLIT lv_method AT '~' INTO lv_rest lv_method.
-          ri_html->add( |<tr><td>{ lv_method }</td><td class="center">|  ).
+          ri_html->add( |<tr><td>{ lv_method }</td><td class="center">| ).
           IF lv_source IS INITIAL OR lv_source = 'RETURN.' OR lv_source = 'EXIT.'.
             ri_html->add( 'No' ).
           ELSE.

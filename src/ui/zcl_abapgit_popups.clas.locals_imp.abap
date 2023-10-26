@@ -677,8 +677,8 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
 
       lo_column ?= ls_column-r_column.
 
-      IF    iv_selection_mode    = if_salv_c_selection_mode=>multiple
-        AND ls_column-columnname = c_fieldname_selected.
+      IF iv_selection_mode    = if_salv_c_selection_mode=>multiple AND
+         ls_column-columnname = c_fieldname_selected.
         lo_column->set_cell_type( if_salv_c_cell_type=>checkbox_hotspot ).
         lo_column->set_output_length( 20 ).
         lo_column->set_short_text( |{ iv_select_column_text }| ).

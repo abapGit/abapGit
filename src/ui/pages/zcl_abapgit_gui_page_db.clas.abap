@@ -21,7 +21,6 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CONSTANTS:
@@ -48,7 +47,7 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
 
     METHODS render_table
       IMPORTING
-        it_db_entries TYPE zif_abapgit_persistence=>ty_contents
+        it_db_entries  TYPE zif_abapgit_persistence=>ty_contents
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
@@ -75,21 +74,21 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
         zcx_abapgit_exception.
     METHODS explain_content_repo
       IMPORTING
-        !is_data  TYPE zif_abapgit_persistence=>ty_content
+        !is_data       TYPE zif_abapgit_persistence=>ty_content
       RETURNING
         VALUE(rs_expl) TYPE ty_explanation
       RAISING
         zcx_abapgit_exception.
     METHODS explain_content_repo_cs
       IMPORTING
-        !is_data  TYPE zif_abapgit_persistence=>ty_content
+        !is_data       TYPE zif_abapgit_persistence=>ty_content
       RETURNING
         VALUE(rs_expl) TYPE ty_explanation
       RAISING
         zcx_abapgit_exception.
     METHODS explain_content_background
       IMPORTING
-        !is_data  TYPE zif_abapgit_persistence=>ty_content
+        !is_data       TYPE zif_abapgit_persistence=>ty_content
       RETURNING
         VALUE(rs_expl) TYPE ty_explanation
       RAISING
