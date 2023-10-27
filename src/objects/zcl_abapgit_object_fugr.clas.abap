@@ -247,14 +247,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         CONTINUE. "with next function module
       ENDIF.
 
-      CALL FUNCTION 'FUNCTION_EXISTS'
-        EXPORTING
-          funcname           = <ls_func>-funcname
-        IMPORTING
-          include            = lv_include
-        EXCEPTIONS
-          function_not_exist = 1.
-      IF sy-subrc = 0.
+      IF zcl_abapgit_factory=>get_function_module( )->function_exists( <ls_func>-funcname ) = abap_true.
 * delete the function module to make sure the parameters are updated
 * havent found a nice way to update the paramters
         CALL FUNCTION 'FUNCTION_DELETE'
