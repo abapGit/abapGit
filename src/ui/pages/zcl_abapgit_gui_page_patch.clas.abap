@@ -1,45 +1,55 @@
 CLASS zcl_abapgit_gui_page_patch DEFINITION
   PUBLIC
-  INHERITING FROM zcl_abapgit_gui_page_diff
+  INHERITING FROM zcl_abapgit_gui_page_diff_base
   CREATE PUBLIC.
 
-
   PUBLIC SECTION.
+
+    CLASS-METHODS create
+      IMPORTING
+        !iv_key        TYPE zif_abapgit_persistence=>ty_repo-key
+        !is_file       TYPE zif_abapgit_git_definitions=>ty_file OPTIONAL
+        !is_object     TYPE zif_abapgit_definitions=>ty_item OPTIONAL
+        !it_files      TYPE zif_abapgit_definitions=>ty_stage_tt OPTIONAL
+      RETURNING
+        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS constructor
+      IMPORTING
+        !iv_key    TYPE zif_abapgit_persistence=>ty_repo-key
+        !is_file   TYPE zif_abapgit_git_definitions=>ty_file OPTIONAL
+        !is_object TYPE zif_abapgit_definitions=>ty_item OPTIONAL
+        !it_files  TYPE zif_abapgit_definitions=>ty_stage_tt OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
+
+    CLASS-METHODS get_patch_data
+      IMPORTING
+        !iv_patch      TYPE string
+      EXPORTING
+        !ev_filename   TYPE string
+        !ev_line_index TYPE string
+      RAISING
+        zcx_abapgit_exception.
+
     METHODS:
-      constructor
-        IMPORTING
-          iv_key    TYPE zif_abapgit_persistence=>ty_repo-key
-          is_file   TYPE zif_abapgit_git_definitions=>ty_file OPTIONAL
-          is_object TYPE zif_abapgit_definitions=>ty_item OPTIONAL
-          it_files  TYPE zif_abapgit_definitions=>ty_stage_tt OPTIONAL
-        RAISING
-          zcx_abapgit_exception,
-
       zif_abapgit_gui_event_handler~on_event REDEFINITION,
-      zif_abapgit_gui_renderable~render REDEFINITION,
-      zif_abapgit_gui_hotkeys~get_hotkey_actions REDEFINITION.
-
-    CLASS-METHODS:
-      get_patch_data
-        IMPORTING
-          iv_patch      TYPE string
-        EXPORTING
-          ev_filename   TYPE string
-          ev_line_index TYPE string
-        RAISING
-          zcx_abapgit_exception.
+      zif_abapgit_gui_hotkeys~get_hotkey_actions REDEFINITION,
+      zif_abapgit_gui_renderable~render REDEFINITION.
 
   PROTECTED SECTION.
 
     METHODS:
       add_menu_begin REDEFINITION,
       add_menu_end REDEFINITION,
-      render_table_head_non_unified REDEFINITION,
+      insert_nav REDEFINITION,
+      refresh REDEFINITION,
       render_beacon_begin_of_row REDEFINITION,
       render_diff_head_after_state REDEFINITION,
-      insert_nav REDEFINITION,
       render_line_split_row REDEFINITION,
-      refresh REDEFINITION.
+      render_table_head_non_unified REDEFINITION.
 
   PRIVATE SECTION.
 
@@ -346,6 +356,26 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
     " While patching we always want to be in split mode
     CLEAR: mv_unified.
     CREATE OBJECT mo_stage.
+
+  ENDMETHOD.
+
+
+  METHOD create.
+
+    DATA lo_component TYPE REF TO zcl_abapgit_gui_page_patch.
+
+    CREATE OBJECT lo_component
+      EXPORTING
+        iv_key    = iv_key
+        is_file   = is_file
+        is_object = is_object
+        it_files  = it_files.
+
+    ri_page = zcl_abapgit_gui_page_hoc=>create(
+      iv_page_title         = 'Patch'
+      iv_page_layout        = zcl_abapgit_gui_page=>c_page_layout-full_width
+      ii_page_menu_provider = lo_component
+      ii_child_component    = lo_component ).
 
   ENDMETHOD.
 

@@ -324,8 +324,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     ls_object-obj_type = ii_event->query( )->get( 'OBJ_TYPE' ).
     ls_object-obj_name = ii_event->query( )->get( 'OBJ_NAME' ). " unescape ?
 
-    ri_page = zcl_abapgit_gui_page_diff=>create(
-      iv_patch  = abap_true
+    ri_page = zcl_abapgit_gui_page_patch=>create(
       iv_key    = lv_key
       is_file   = ls_file
       is_object = ls_object ).

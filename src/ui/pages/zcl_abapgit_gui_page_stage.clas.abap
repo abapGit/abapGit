@@ -352,8 +352,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     DELETE lt_files WHERE method <> zif_abapgit_definitions=>c_method-add
                       AND method <> zif_abapgit_definitions=>c_method-rm.
 
-    ri_page  = zcl_abapgit_gui_page_diff=>create(
-      iv_patch = abap_true
+    ri_page  = zcl_abapgit_gui_page_patch=>create(
       iv_key   = lv_key
       it_files = lt_files ).
 
