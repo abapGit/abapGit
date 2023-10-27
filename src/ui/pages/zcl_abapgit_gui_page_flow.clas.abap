@@ -27,7 +27,14 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
+
+
+  METHOD constructor.
+    super->constructor( ).
+
+  ENDMETHOD.
+
 
   METHOD create.
 
@@ -42,10 +49,11 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD constructor.
-    super->constructor( ).
 
+  METHOD zif_abapgit_gui_event_handler~on_event.
+    RETURN. " todo, implement method
   ENDMETHOD.
+
 
   METHOD zif_abapgit_gui_menu_provider~get_menu.
 
@@ -57,9 +65,6 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_gui_event_handler~on_event.
-    RETURN. " todo, implement method
-  ENDMETHOD.
 
   METHOD zif_abapgit_gui_renderable~render.
     DATA lt_favorites TYPE zif_abapgit_repo_srv=>ty_repo_list.
@@ -67,6 +72,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     DATA lt_branches  TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
     DATA ls_branch    LIKE LINE OF lt_branches.
     DATA li_online    TYPE REF TO zif_abapgit_repo_online.
+    DATA lt_expanded  TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
+
 
     register_handlers( ).
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
@@ -81,14 +88,17 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       " todo, ENDIF.
 
       li_online ?= li_favorite.
-      ri_html->add( '<u>' && li_favorite->get_name( ) && '<u><br>' ).
+      ri_html->add( '<u>' && li_favorite->get_name( ) && '</u><br>' ).
 
       lt_branches = zcl_abapgit_gitv2_porcelain=>list_branches(
         iv_url    = li_online->get_url( )
-*        iv_prefix = 'refs/heads'
-        )->get_all( ).
+        iv_prefix = 'refs/heads/' )->get_all( ).
       LOOP AT lt_branches INTO ls_branch WHERE is_head = abap_false.
         ri_html->add( ls_branch-display_name && '<br>' ).
+
+        lt_expanded = zcl_abapgit_gitv2_porcelain=>list_no_blobs(
+          iv_url  = li_online->get_url( )
+          iv_sha1 = ls_branch-sha1 ).
       ENDLOOP.
     ENDLOOP.
 
@@ -98,5 +108,4 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     ri_html->add( '</div>' ).
 
   ENDMETHOD.
-
 ENDCLASS.
