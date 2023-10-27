@@ -35,36 +35,42 @@ CLASS zcl_abapgit_gui_buttons IMPLEMENTATION.
 
 
   METHOD advanced.
-    rv_html_string = `<i class="icon icon-tools-solid"></i>`.
+    rv_html_string = zcl_abapgit_html=>icon(
+      iv_name = 'tools-solid'
+      iv_hint = 'Utilities' ).
   ENDMETHOD.
 
 
   METHOD experimental.
-    rv_html_string = `<i class="icon icon-vial-solid red"></i>`.
+    rv_html_string = zcl_abapgit_html=>icon(
+      iv_name = 'vial-solid/red'
+      iv_hint = 'Experimental Features are Enabled' ).
   ENDMETHOD.
 
 
   METHOD help.
-    rv_html_string = `<i class="icon icon-question-circle-solid"></i>`.
+    rv_html_string = zcl_abapgit_html=>icon(
+      iv_name = 'question-circle-solid'
+      iv_hint = 'Help' ).
   ENDMETHOD.
 
 
   METHOD new_offline.
-    rv_html_string = `<i class="icon icon-plug"></i> New Offline`.
+    rv_html_string = zcl_abapgit_html=>icon( 'plug' ) && ' New Offline'.
   ENDMETHOD.
 
 
   METHOD new_online.
-    rv_html_string = `<i class="icon icon-cloud-upload-alt"></i> New Online`.
+    rv_html_string = zcl_abapgit_html=>icon( 'cloud-upload-alt' ) && ' New Online'.
   ENDMETHOD.
 
 
   METHOD repo_list.
-    rv_html_string = `<i class="icon icon-bars"></i> Repository List`.
+    rv_html_string = zcl_abapgit_html=>icon( 'bars' ) && ' Repository List'.
   ENDMETHOD.
 
 
   METHOD settings.
-    rv_html_string = `<i class="icon icon-cog"></i> Settings`.
+    rv_html_string = zcl_abapgit_html=>icon( 'cog' ) && ' Settings'.
   ENDMETHOD.
 ENDCLASS.

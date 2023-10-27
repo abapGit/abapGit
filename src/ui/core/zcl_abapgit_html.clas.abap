@@ -75,7 +75,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
+CLASS zcl_abapgit_html IMPLEMENTATION.
 
 
   METHOD checkbox.
@@ -148,6 +148,8 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       lv_color = | { lv_color }|.
     ENDIF.
 
+    " Automatic icon scaling (could be overwritten by personal setting)
+    " see zcl_abapgit_gui_page->html_head
     lv_xpixel = cl_gui_cfw=>compute_pixel_from_metric( x_or_y = 'X'
                                                        in = 1 ).
     IF lv_xpixel >= 2.
