@@ -13,7 +13,11 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
           is_object TYPE zif_abapgit_definitions=>ty_item OPTIONAL
           it_files  TYPE zif_abapgit_definitions=>ty_stage_tt OPTIONAL
         RAISING
-          zcx_abapgit_exception.
+          zcx_abapgit_exception,
+
+      zif_abapgit_gui_event_handler~on_event REDEFINITION,
+      zif_abapgit_gui_renderable~render REDEFINITION,
+      zif_abapgit_gui_hotkeys~get_hotkey_actions REDEFINITION.
 
     CLASS-METHODS:
       get_patch_data
@@ -24,11 +28,6 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
           ev_line_index TYPE string
         RAISING
           zcx_abapgit_exception.
-
-    METHODS:
-      zif_abapgit_gui_event_handler~on_event REDEFINITION,
-      zif_abapgit_gui_renderable~render REDEFINITION,
-      zif_abapgit_gui_hotkeys~get_hotkey_actions REDEFINITION.
 
   PROTECTED SECTION.
 

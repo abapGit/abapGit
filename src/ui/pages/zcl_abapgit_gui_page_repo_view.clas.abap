@@ -1109,12 +1109,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         open_in_main_language( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
-      WHEN zif_abapgit_definitions=>c_action-go_patch.
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_patch
-          EXPORTING
-            iv_key = lv_key.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
-
     ENDCASE.
 
   ENDMETHOD.
