@@ -100,9 +100,10 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
     CREATE OBJECT lo_component
       EXPORTING
-        io_repo          = io_repo
-        io_stage         = io_stage
-        iv_check_variant = iv_check_variant.
+        io_repo                  = io_repo
+        io_stage                 = io_stage
+        iv_check_variant         = iv_check_variant
+        iv_raise_when_no_results = iv_raise_when_no_results.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title         = 'Code Inspector'
