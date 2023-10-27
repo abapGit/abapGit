@@ -103,8 +103,7 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title      = 'Global Settings'
-      io_page_menu       = zcl_abapgit_gui_chunk_lib=>settings_toolbar(
-                             zif_abapgit_definitions=>c_action-go_settings )
+      io_page_menu       = zcl_abapgit_gui_menus=>settings( zif_abapgit_definitions=>c_action-go_settings )
       ii_child_component = lo_component ).
 
   ENDMETHOD.
