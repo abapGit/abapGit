@@ -10,7 +10,11 @@ CLASS ltcl_test IMPLEMENTATION.
 
   METHOD test01.
 
-    zcl_abapgit_gitv2_porcelain=>list_branches( 'https://github.com/abapGit/abapGit.git' ).
+    zcl_abapgit_gitv2_porcelain=>list_branches(
+      iv_url    = 'https://github.com/abapGit/abapGit.git'
+      iv_prefix = 'refs/heads' ).
+
+* todo, check response
 
   ENDMETHOD.
 
