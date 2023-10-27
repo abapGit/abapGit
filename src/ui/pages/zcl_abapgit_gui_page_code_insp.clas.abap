@@ -271,17 +271,19 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
       ro_toolbar->add( iv_txt = 'Commit'
                        iv_act = c_actions-commit
-                       iv_cur = abap_false
                        iv_opt = lv_opt ).
 
     ELSE.
 
       ro_toolbar->add( iv_txt = 'Stage'
                        iv_act = c_actions-stage
-                       iv_cur = abap_false
                        iv_opt = lv_opt ).
 
     ENDIF.
+
+    ro_toolbar->add(
+      iv_txt = 'Back'
+      iv_act = zif_abapgit_definitions=>c_action-go_back ).
 
   ENDMETHOD.
 

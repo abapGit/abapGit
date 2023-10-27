@@ -119,6 +119,10 @@ CLASS zcl_abapgit_gui_page_syntax IMPLEMENTATION.
 
     ro_toolbar = build_base_menu( ).
 
+    ro_toolbar->add(
+      iv_txt = 'Back'
+      iv_act = zif_abapgit_definitions=>c_action-go_back ).
+
   ENDMETHOD.
 
 
