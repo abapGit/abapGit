@@ -39,6 +39,9 @@ CLASS zcl_abapgit_injector DEFINITION
     CLASS-METHODS set_sap_report
       IMPORTING
         !ii_report TYPE REF TO zif_abapgit_sap_report.
+    CLASS-METHODS set_function_module
+      IMPORTING
+        ii_function_module TYPE REF TO zif_abapgit_function_module.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -140,4 +143,12 @@ CLASS zcl_abapgit_injector IMPLEMENTATION.
   METHOD set_tadir.
     zcl_abapgit_factory=>gi_tadir = ii_tadir.
   ENDMETHOD.
+
+
+  METHOD set_function_module.
+
+    zcl_abapgit_factory=>gi_function_module = ii_function_module.
+
+  ENDMETHOD.
+
 ENDCLASS.
