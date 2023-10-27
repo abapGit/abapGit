@@ -1,23 +1,26 @@
-CLASS zcl_abapgit_gitv2_porcelain DEFINITION PUBLIC.
-  PUBLIC SECTION.
-    CLASS-METHODS list_branches
-      IMPORTING
-        iv_url    TYPE string
-        iv_prefix TYPE string OPTIONAL
-      RETURNING
-        VALUE(ro_list) TYPE REF TO zcl_abapgit_git_branch_list
-      RAISING
-        zcx_abapgit_exception.
+class ZCL_ABAPGIT_GITV2_PORCELAIN definition
+  public
+  create public .
 
-    CLASS-METHODS list_no_blobs
-      IMPORTING
-        iv_url    TYPE string
-        iv_sha1   TYPE zif_abapgit_git_definitions=>ty_sha1
-      RETURNING
-        VALUE(rt_expanded) TYPE zif_abapgit_git_definitions=>ty_expanded_tt
-      RAISING
-        zcx_abapgit_exception.
+public section.
 
+  class-methods LIST_BRANCHES
+    importing
+      !IV_URL type STRING
+      !IV_PREFIX type STRING optional
+    returning
+      value(RO_LIST) type ref to ZCL_ABAPGIT_GIT_BRANCH_LIST
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods LIST_NO_BLOBS
+    importing
+      !IV_URL type STRING
+      !IV_SHA1 type ZIF_ABAPGIT_GIT_DEFINITIONS=>TY_SHA1
+    returning
+      value(RT_EXPANDED) type ZIF_ABAPGIT_GIT_DEFINITIONS=>TY_EXPANDED_TT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+protected section.
   PRIVATE SECTION.
     CONSTANTS:
       BEGIN OF c_service,
@@ -40,7 +43,10 @@ CLASS zcl_abapgit_gitv2_porcelain DEFINITION PUBLIC.
         zcx_abapgit_exception.
 ENDCLASS.
 
-CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
+
+
+CLASS ZCL_ABAPGIT_GITV2_PORCELAIN IMPLEMENTATION.
+
 
   METHOD list_branches.
     DATA lv_xstring   TYPE xstring.
@@ -67,6 +73,60 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
         iv_data = lv_data.
 
   ENDMETHOD.
+
+
+  METHOD list_no_blobs.
+
+    DATA lv_xstring   TYPE xstring.
+    DATA lt_arguments TYPE string_table.
+    DATA lv_argument  TYPE string.
+    DATA lv_contents  TYPE xstring.
+    DATA lv_pack      TYPE xstring.
+    DATA lv_pktlen    TYPE i.
+    DATA lv_hex4      TYPE xstring.
+    DATA lt_objects   TYPE zif_abapgit_definitions=>ty_objects_tt.
+
+
+    APPEND 'deepen 1' TO lt_arguments.
+    lv_argument = |want { iv_sha1 }|.
+    APPEND lv_argument TO lt_arguments.
+    APPEND 'filter blob:none' TO lt_arguments.
+    APPEND 'no-progress' TO lt_arguments.
+    APPEND 'done' TO lt_arguments.
+
+    lv_xstring = send_command(
+      iv_url       = iv_url
+      iv_service   = c_service-upload
+      iv_command   = |fetch|
+      it_arguments = lt_arguments ).
+
+* The data transfer of the packfile is always multiplexed, using the same semantics of the
+* side-band-64k capability from protocol version 1
+    WHILE xstrlen( lv_xstring ) > 0.
+      lv_hex4 = lv_xstring(4).
+      lv_pktlen = zcl_abapgit_git_utils=>length_utf8_hex( lv_hex4 ).
+      IF lv_pktlen = 0.
+        EXIT.
+      ELSEIF lv_pktlen = 1.
+* its a delimiter package
+        lv_xstring = lv_xstring+4.
+        CONTINUE.
+      ENDIF.
+      lv_contents = lv_xstring(lv_pktlen).
+      IF lv_contents+4(1) = '01'.
+        CONCATENATE lv_pack lv_contents+5 INTO lv_pack IN BYTE MODE.
+      ENDIF.
+      lv_xstring = lv_xstring+lv_pktlen.
+    ENDWHILE.
+
+    lt_objects = zcl_abapgit_git_pack=>decode( lv_pack ).
+
+    rt_expanded = zcl_abapgit_git_porcelain=>full_tree(
+      it_objects = lt_objects
+      iv_parent  = iv_sha1 ).
+
+  ENDMETHOD.
+
 
   METHOD send_command.
 
@@ -121,55 +181,4 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
     rv_response = lo_client->send_receive_close( zcl_abapgit_convert=>string_to_xstring_utf8( lv_cmd_pkt ) ).
 
   ENDMETHOD.
-
-  METHOD list_no_blobs.
-
-    DATA lv_xstring   TYPE xstring.
-    DATA lt_arguments TYPE string_table.
-    DATA lv_argument  TYPE string.
-    DATA lv_contents  TYPE xstring.
-    DATA lv_pack      TYPE xstring.
-    DATA lv_pktlen    TYPE i.
-    DATA lt_objects   TYPE zif_abapgit_definitions=>ty_objects_tt.
-
-
-    APPEND 'deepen 1' TO lt_arguments.
-    lv_argument = |want { iv_sha1 }|.
-    APPEND lv_argument TO lt_arguments.
-    APPEND 'filter blob:none' TO lt_arguments.
-    APPEND 'no-progress' TO lt_arguments.
-    APPEND 'done' TO lt_arguments.
-
-    lv_xstring = send_command(
-      iv_url       = iv_url
-      iv_service   = c_service-upload
-      iv_command   = |fetch|
-      it_arguments = lt_arguments ).
-
-* The data transfer of the packfile is always multiplexed, using the same semantics of the
-* side-band-64k capability from protocol version 1
-    WHILE xstrlen( lv_xstring ) > 0.
-      lv_pktlen = zcl_abapgit_git_utils=>length_utf8_hex( lv_xstring(4) ).
-      IF lv_pktlen = 0.
-        EXIT.
-      ELSEIF lv_pktlen = 1.
-* its a delimiter package
-        lv_xstring = lv_xstring+4.
-        CONTINUE.
-      ENDIF.
-      lv_contents = lv_xstring(lv_pktlen).
-      IF lv_contents+4(1) = '01'.
-        CONCATENATE lv_pack lv_contents+5 INTO lv_pack IN BYTE MODE.
-      ENDIF.
-      lv_xstring = lv_xstring+lv_pktlen.
-    ENDWHILE.
-
-    lt_objects = zcl_abapgit_git_pack=>decode( lv_pack ).
-
-    rt_expanded = zcl_abapgit_git_porcelain=>full_tree(
-      it_objects = lt_objects
-      iv_parent  = iv_sha1 ).
-
-  ENDMETHOD.
-
 ENDCLASS.
