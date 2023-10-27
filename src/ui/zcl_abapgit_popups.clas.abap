@@ -607,13 +607,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
 
   METHOD zif_abapgit_popups~popup_to_create_package.
-    CALL FUNCTION 'FUNCTION_EXISTS'
-      EXPORTING
-        funcname           = 'PB_POPUP_PACKAGE_CREATE'
-      EXCEPTIONS
-        function_not_exist = 1
-        OTHERS             = 2.
-    IF sy-subrc = 1.
+    IF zcl_abapgit_factory=>get_function_module( )->function_exists( 'PB_POPUP_PACKAGE_CREATE' ) = abap_false.
 * looks like the function module used does not exist on all
 * versions since 702, so show an error
       zcx_abapgit_exception=>raise( 'Your system does not support automatic creation of packages.' &&

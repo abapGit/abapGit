@@ -141,13 +141,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
   METHOD get_update_function.
     IF mv_update_function IS INITIAL.
       mv_update_function = 'CALL_V1_PING'.
-      CALL FUNCTION 'FUNCTION_EXISTS'
-        EXPORTING
-          funcname = mv_update_function
-        EXCEPTIONS
-          OTHERS   = 2.
-
-      IF sy-subrc <> 0.
+      IF zcl_abapgit_factory=>get_function_module( )->function_exists( mv_update_function ) = abap_false.
         mv_update_function = 'BANK_OBJ_WORKL_RELEASE_LOCKS'.
       ENDIF.
     ENDIF.
