@@ -112,7 +112,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -237,7 +237,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     header_stylesheet_links( ri_html ).
     header_script_links( ri_html ).
 
-    CASE mo_settings->get_icon_scaling( ). " Enforce icon scaling
+    " Overwrite the automatic icon scaling done in zcl_abapgit_html=>icon
+    CASE mo_settings->get_icon_scaling( ).
       WHEN mo_settings->c_icon_scaling-large.
         ri_html->add( '<style>.icon { font-size: 200% }</style>' ).
       WHEN mo_settings->c_icon_scaling-small.
@@ -245,6 +246,40 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ENDCASE.
 
     ri_html->add( '</head>' ).
+
+  ENDMETHOD.
+
+
+  METHOD is_edge_control_warning_needed.
+
+    DATA:
+      lv_gui_release       TYPE zif_abapgit_frontend_services=>ty_gui_release,
+      lv_gui_sp            TYPE zif_abapgit_frontend_services=>ty_gui_sp,
+      lv_gui_patch         TYPE zif_abapgit_frontend_services=>ty_gui_patch,
+      li_frontend_services TYPE REF TO zif_abapgit_frontend_services.
+
+    " With SAGUI 8.00 PL3 and 7.70 PL13 edge browser control is basically working.
+    " For lower releases we render the browser control warning
+    " an toggle it via JS function toggleBrowserControlWarning.
+
+    rv_result = abap_true.
+
+    TRY.
+        li_frontend_services = zcl_abapgit_ui_factory=>get_frontend_services( ).
+        li_frontend_services->get_gui_version(
+          IMPORTING
+            ev_gui_release        = lv_gui_release
+            ev_gui_sp             = lv_gui_sp
+            ev_gui_patch          = lv_gui_patch ).
+
+      CATCH zcx_abapgit_exception.
+        RETURN.
+    ENDTRY.
+
+    IF lv_gui_release >= '7700' AND lv_gui_sp >= '1' AND lv_gui_patch >= '13'
+    OR lv_gui_release >= '8000' AND lv_gui_sp >= '1' AND lv_gui_patch >= '3'.
+      rv_result = abap_false.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -498,40 +533,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     ri_html->add( '</body>' ).
     ri_html->add( '</html>' ).
-
-  ENDMETHOD.
-
-
-  METHOD is_edge_control_warning_needed.
-
-    DATA:
-      lv_gui_release       TYPE zif_abapgit_frontend_services=>ty_gui_release,
-      lv_gui_sp            TYPE zif_abapgit_frontend_services=>ty_gui_sp,
-      lv_gui_patch         TYPE zif_abapgit_frontend_services=>ty_gui_patch,
-      li_frontend_services TYPE REF TO zif_abapgit_frontend_services.
-
-    " With SAGUI 8.00 PL3 and 7.70 PL13 edge browser control is basically working.
-    " For lower releases we render the browser control warning
-    " an toggle it via JS function toggleBrowserControlWarning.
-
-    rv_result = abap_true.
-
-    TRY.
-        li_frontend_services = zcl_abapgit_ui_factory=>get_frontend_services( ).
-        li_frontend_services->get_gui_version(
-          IMPORTING
-            ev_gui_release        = lv_gui_release
-            ev_gui_sp             = lv_gui_sp
-            ev_gui_patch          = lv_gui_patch ).
-
-      CATCH zcx_abapgit_exception.
-        RETURN.
-    ENDTRY.
-
-    IF lv_gui_release >= '7700' AND lv_gui_sp >= '1' AND lv_gui_patch >= '13'
-    OR lv_gui_release >= '8000' AND lv_gui_sp >= '1' AND lv_gui_patch >= '3'.
-      rv_result = abap_false.
-    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
