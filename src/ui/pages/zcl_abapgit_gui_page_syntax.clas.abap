@@ -128,6 +128,8 @@ CLASS zcl_abapgit_gui_page_syntax IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
+    register_handlers( ).
+
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( `<div class="repo">` ).

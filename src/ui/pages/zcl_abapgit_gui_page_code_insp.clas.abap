@@ -290,6 +290,8 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
+    register_handlers( ).
+
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( `<div class="repo">` ).
@@ -301,8 +303,6 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
       ri_html->add( zcl_abapgit_gui_chunk_lib=>render_error( iv_error = 'No check variant supplied.' ) ).
       RETURN.
     ENDIF.
-
-    register_handlers( ).
 
     ri_html->add( render_variant(
       iv_variant = mv_check_variant
