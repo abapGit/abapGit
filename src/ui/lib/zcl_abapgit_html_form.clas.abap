@@ -123,6 +123,7 @@ CLASS zcl_abapgit_html_form DEFINITION
     METHODS get_fields
       RETURNING
         VALUE(rt_fields) TYPE zif_abapgit_html_form=>ty_fields .
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     TYPES:
