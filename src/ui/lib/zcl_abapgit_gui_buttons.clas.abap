@@ -69,7 +69,7 @@ CLASS zcl_abapgit_gui_buttons IMPLEMENTATION.
 
 
   METHOD flow.
-    rv_html_string = `<i class="icon icon-flow"></i> Flow`.
+    rv_html_string = zcl_abapgit_html=>icon( 'flow' ) && ' Flow'.
   ENDMETHOD.
 
 
