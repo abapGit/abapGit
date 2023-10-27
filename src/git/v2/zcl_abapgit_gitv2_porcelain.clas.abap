@@ -8,7 +8,11 @@ CLASS zcl_abapgit_gitv2_porcelain DEFINITION PUBLIC.
         zcx_abapgit_exception.
 
     CLASS-METHODS list_no_blobs
-      RAISING zcx_abapgit_exception.
+      IMPORTING
+        iv_url    TYPE string
+        iv_sha1   TYPE zif_abapgit_git_definitions=>ty_sha1
+      RAISING
+        zcx_abapgit_exception.
 
   PRIVATE SECTION.
     CONSTANTS:
@@ -25,7 +29,7 @@ CLASS zcl_abapgit_gitv2_porcelain DEFINITION PUBLIC.
         iv_url       TYPE string
         iv_service   TYPE string
         iv_command   TYPE string
-        iv_arguments TYPE string OPTIONAL
+        it_arguments TYPE string_table OPTIONAL
       RETURNING
         VALUE(rv_response) TYPE xstring
       RAISING
@@ -36,30 +40,33 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
 
   METHOD list_branches.
     DATA lv_xstring   TYPE xstring.
-    DATA lv_arguments TYPE string.
+    DATA lt_arguments TYPE string_table.
+    DATA lv_argument  TYPE string.
 
     IF iv_prefix IS NOT INITIAL.
-      lv_arguments = |ref-prefix { iv_prefix }|.
+      lv_argument = |ref-prefix { iv_prefix }|.
+      APPEND lv_argument TO lt_arguments.
     ENDIF.
 
     lv_xstring = send_command(
       iv_url       = iv_url
       iv_service   = c_service-upload
-      iv_arguments = lv_arguments
-      iv_command   = |command=ls-refs| ).
+      iv_command   = |ls-refs|
+      it_arguments = lt_arguments ).
 
 * todo: parse response, this is probably like in v1?
-    WRITE / zcl_abapgit_convert=>xstring_to_string_utf8( lv_xstring ).
+* sdf    WRITE / zcl_abapgit_convert=>xstring_to_string_utf8( lv_xstring ).
   ENDMETHOD.
 
   METHOD send_command.
 
     CONSTANTS lc_content_regex TYPE string VALUE '^[0-9a-f]{4}#'.
 
-    DATA lo_client  TYPE REF TO zcl_abapgit_http_client.
-    DATA lv_cmd_pkt TYPE string.
-    DATA lt_headers TYPE zcl_abapgit_http=>ty_headers.
-    DATA ls_header  LIKE LINE OF lt_headers.
+    DATA lo_client   TYPE REF TO zcl_abapgit_http_client.
+    DATA lv_cmd_pkt  TYPE string.
+    DATA lt_headers  TYPE zcl_abapgit_http=>ty_headers.
+    DATA ls_header   LIKE LINE OF lt_headers.
+    DATA lv_argument TYPE string.
 
 
     ls_header-key = 'Git-Protocol'.
@@ -75,11 +82,13 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
       iv_expected_content_type = |application/x-git-{ iv_service }-pack-advertisement|
       iv_content_regex         = lc_content_regex ).
 
-    lv_cmd_pkt = zcl_abapgit_git_utils=>pkt_string( |{ iv_command }\n| )
+    lv_cmd_pkt = zcl_abapgit_git_utils=>pkt_string( |command={ iv_command }\n| )
       && zcl_abapgit_git_utils=>pkt_string( |agent={ zcl_abapgit_http=>get_agent( ) }\n| ).
-    IF iv_arguments IS NOT INITIAL.
+    IF lines( it_arguments ) > 0.
       lv_cmd_pkt = lv_cmd_pkt && c_delim_pkt.
-      lv_cmd_pkt = lv_cmd_pkt && zcl_abapgit_git_utils=>pkt_string( iv_arguments ).
+      LOOP AT it_arguments INTO lv_argument.
+        lv_cmd_pkt = lv_cmd_pkt && zcl_abapgit_git_utils=>pkt_string( lv_argument ).
+      ENDLOOP.
     ENDIF.
     lv_cmd_pkt = lv_cmd_pkt && c_flush_pkt.
 
@@ -104,7 +113,26 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD list_no_blobs.
-* todo
+
+    DATA lv_xstring   TYPE xstring.
+    DATA lt_arguments TYPE string_table.
+    DATA lv_argument  TYPE string.
+
+    APPEND 'deepen 1' TO lt_arguments.
+    lv_argument = |want { iv_sha1 }|.
+    APPEND lv_argument TO lt_arguments.
+    APPEND 'filter blob:none' TO lt_arguments.
+    APPEND 'done' TO lt_arguments.
+
+    lv_xstring = send_command(
+      iv_url       = iv_url
+      iv_service   = c_service-upload
+      iv_command   = |fetch|
+      it_arguments = lt_arguments ).
+
+    WRITE / xstrlen( lv_xstring ).
+    WRITE /.
+
   ENDMETHOD.
 
 ENDCLASS.
