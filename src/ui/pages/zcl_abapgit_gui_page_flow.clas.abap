@@ -75,16 +75,18 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 * list branches on favorite transported repos
     lt_favorites = zcl_abapgit_repo_srv=>get_instance( )->list_favorites( abap_false ).
     LOOP AT lt_favorites INTO li_favorite.
-      IF zcl_abapgit_factory=>get_sap_package( li_favorite->get_package( )
-          )->are_changes_recorded_in_tr_req( ) = abap_false.
-        CONTINUE.
-      ENDIF.
+      " todo, IF zcl_abapgit_factory=>get_sap_package( li_favorite->get_package( )
+      " todo,     )->are_changes_recorded_in_tr_req( ) = abap_false.
+      " todo,   CONTINUE.
+      " todo, ENDIF.
 
       li_online ?= li_favorite.
       ri_html->add( '<u>' && li_favorite->get_name( ) && '<u><br>' ).
 
-* todo, exclude 'main' ?
-      lt_branches = zcl_abapgit_git_transport=>branches( li_online->get_url( ) )->get_branches_only( ).
+      lt_branches = zcl_abapgit_gitv2_porcelain=>list_branches(
+        iv_url    = li_online->get_url( )
+*        iv_prefix = 'refs/heads'
+        )->get_all( ).
       LOOP AT lt_branches INTO ls_branch WHERE is_head = abap_false.
         ri_html->add( ls_branch-display_name && '<br>' ).
       ENDLOOP.
