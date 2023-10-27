@@ -113,7 +113,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
+CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
 
   METHOD clear_dd03p_fields.
@@ -369,8 +369,10 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
   METHOD deserialize_indexes.
 
     DATA:
-      lv_tname     TYPE trobj_name,
+      lv_name      TYPE ddobjname,
+      lv_subrc     TYPE sy-subrc,
       lt_dd12v     TYPE dd12vtab,
+      lt_dd12v_db  TYPE dd12vtab,
       ls_dd12v     LIKE LINE OF lt_dd12v,
       lt_dd17v     TYPE dd17vtab,
       ls_dd17v     LIKE LINE OF lt_dd17v,
@@ -381,6 +383,41 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'DD17V'
                   CHANGING cg_data = lt_dd17v ).
 
+    lv_name = ms_item-obj_name.
+
+    " Get existing indexes and drop the ones that are not included in remote
+    CALL FUNCTION 'DDIF_TABL_GET'
+      EXPORTING
+        name          = lv_name
+        langu         = mv_language
+      TABLES
+        dd12v_tab     = lt_dd12v_db
+      EXCEPTIONS
+        illegal_input = 1
+        OTHERS        = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from DDIF_TABL_GET' ).
+    ENDIF.
+
+    LOOP AT lt_dd12v_db INTO ls_dd12v.
+      READ TABLE lt_dd12v TRANSPORTING NO FIELDS WITH KEY
+        sqltab    = ls_dd12v-sqltab
+        indexname = ls_dd12v-indexname.
+      IF sy-subrc <> 0.
+        CALL FUNCTION 'DD_INDX_DEL'
+          EXPORTING
+            sqltab    = ls_dd12v-sqltab
+            indexname = ls_dd12v-indexname
+            del_state = 'M'     "all states
+          IMPORTING
+            rc        = lv_subrc.
+        IF lv_subrc <> 0.
+          zcx_abapgit_exception=>raise( |Error deleting index { ls_dd12v-sqltab }~{ ls_dd12v-indexname }| ).
+        ENDIF.
+      ENDIF.
+    ENDLOOP.
+
+    " Create new or update existing indexes
     LOOP AT lt_dd12v INTO ls_dd12v.
 
       CLEAR lt_secondary.
@@ -407,17 +444,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
-      CALL FUNCTION 'DD_DD_TO_E071'
-        EXPORTING
-          type     = 'INDX'
-          name     = ls_dd12v-sqltab
-          id       = ls_dd12v-indexname
-        IMPORTING
-          obj_name = lv_tname.
-
       " Secondary indexes are automatically activated as part of R3TR TABL
       " So there's no need to add them to activation queue
-
     ENDLOOP.
 
   ENDMETHOD.
