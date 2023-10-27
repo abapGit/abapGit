@@ -51,7 +51,7 @@ CLASS zcl_abapgit_data_supporter IMPLEMENTATION.
     " The list of supported objects can be enhanced using an exit
     " Name patterns are allowed. For example, TABU T009*
     li_exit = zcl_abapgit_exit=>get_instance( ).
-    li_exit->change_supported_data_objects( CHANGING ct_objects =  mt_supported_objects ).
+    li_exit->change_supported_data_objects( CHANGING ct_objects = mt_supported_objects ).
 
   ENDMETHOD.
 

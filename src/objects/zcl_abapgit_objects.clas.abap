@@ -50,7 +50,6 @@ CLASS zcl_abapgit_objects DEFINITION
     CLASS-METHODS changed_by
       IMPORTING
         !is_item       TYPE zif_abapgit_definitions=>ty_item
-        !is_sub_item   TYPE zif_abapgit_definitions=>ty_item OPTIONAL
         !iv_filename   TYPE string OPTIONAL
       RETURNING
         VALUE(rv_user) TYPE syuname .
@@ -306,7 +305,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       WHEN 2.
         zcx_abapgit_exception=>raise( |Object type { iv_obj_type } not allowed for package { iv_package }| ).
       WHEN OTHERS.
-        zcx_abapgit_exception=>raise_t100(  ).
+        zcx_abapgit_exception=>raise_t100( ).
     ENDCASE.
 
   ENDMETHOD.

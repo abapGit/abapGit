@@ -142,10 +142,10 @@ CLASS ZCL_ABAPGIT_SOTS_HANDLER IMPLEMENTATION.
       lv_concept = <ls_sots>-header-concept.
 
       PERFORM btfr_create IN PROGRAM saplsotr_db_string
-        USING    lv_object
-                 sy-langu
-                 abap_false
-                 abap_true
+        USING lv_object
+              sy-langu
+              abap_false
+              abap_true
         CHANGING lt_text_tab
                  lt_string_tab
                  ls_header
@@ -187,9 +187,7 @@ CLASS ZCL_ABAPGIT_SOTS_HANDLER IMPLEMENTATION.
 
   METHOD delete_sots.
 
-    DATA:
-      ls_sots     TYPE ty_sots,
-      lt_sots_use TYPE ty_sots_use_tt.
+    DATA lt_sots_use TYPE ty_sots_use_tt.
 
     FIELD-SYMBOLS <ls_sots_use> LIKE LINE OF lt_sots_use.
 

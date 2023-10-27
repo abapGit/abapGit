@@ -27,8 +27,6 @@ CLASS ltcl_xml DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
         RAISING
           zcx_abapgit_exception,
       render_xml
-        IMPORTING
-          iv_name       TYPE string
         RETURNING
           VALUE(rv_xml) TYPE string.
 
@@ -65,7 +63,7 @@ CLASS ltcl_xml IMPLEMENTATION.
 
     parse_xml( lv_from_xml ).
 
-    lv_to_xml = render_xml( 'FOO' ).
+    lv_to_xml = render_xml( ).
 
     cl_abap_unit_assert=>assert_char_cp(
       act = lv_to_xml

@@ -109,4 +109,29 @@ INTERFACE zif_abapgit_cts_api
     RETURNING
       VALUE(rv_messages_confirmed) TYPE abap_bool .
 
+  TYPES: BEGIN OF ty_transport_key,
+           object  TYPE e071k-object,
+           objname TYPE e071k-objname,
+           tabkey  TYPE e071k-tabkey,
+         END OF ty_transport_key.
+
+  TYPES: BEGIN OF ty_transport_data,
+           trstatus TYPE e070-trstatus,
+           keys     TYPE STANDARD TABLE OF ty_transport_key WITH DEFAULT KEY,
+         END OF ty_transport_data.
+
+  METHODS read
+    IMPORTING
+      !iv_trkorr        TYPE trkorr
+    RETURNING
+      VALUE(rs_request) TYPE ty_transport_data
+    RAISING
+      zcx_abapgit_exception .
+
+  METHODS validate_transport_request
+    IMPORTING
+      iv_transport_request TYPE trkorr
+    RAISING
+      zcx_abapgit_exception.
+
 ENDINTERFACE.

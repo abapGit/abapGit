@@ -351,7 +351,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     lt_files = io_stage->get_all( ).
 
     DELETE lt_files WHERE method <> zif_abapgit_definitions=>c_method-add
-                    AND   method <> zif_abapgit_definitions=>c_method-rm.
+                      AND method <> zif_abapgit_definitions=>c_method-rm.
 
     CREATE OBJECT lo_page
       EXPORTING
@@ -499,7 +499,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     ENDCASE.
 
     ri_html->add( '<td class="user">' ).
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_user_name( iv_changed_by  ) ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_user_name( iv_changed_by ) ).
     ri_html->add( '</td>' ).
 
     ri_html->add( '<td class="transport">' ).

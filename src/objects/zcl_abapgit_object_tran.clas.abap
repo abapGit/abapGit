@@ -710,7 +710,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
     lv_dynpro = ls_tstc-dypno.
 
-    IF     ls_tstc-cinfo O lc_hex_rep.
+    IF ls_tstc-cinfo O lc_hex_rep.
       lv_type = c_variant_type-report.
     ELSEIF ls_tstc-cinfo O lc_hex_obj.
       lv_type = c_variant_type-object.

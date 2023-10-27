@@ -70,7 +70,7 @@ CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |SMTG not supported| ).
     ENDIF.
 
-    ls_component-name =  iv_fielname.
+    ls_component-name = iv_fielname.
     ls_component-type ?= lo_typedescr.
     INSERT ls_component INTO TABLE ct_components.
 

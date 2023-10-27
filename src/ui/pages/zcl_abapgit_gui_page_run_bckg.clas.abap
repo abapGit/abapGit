@@ -26,7 +26,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_RUN_BCKG IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_run_bckg IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -44,7 +44,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_RUN_BCKG IMPLEMENTATION.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title      = 'Background Run'
-      io_page_menu       = zcl_abapgit_gui_chunk_lib=>back_toolbar( )
+      io_page_menu       = zcl_abapgit_gui_menus=>back( )
       ii_child_component = lo_component ).
 
   ENDMETHOD.

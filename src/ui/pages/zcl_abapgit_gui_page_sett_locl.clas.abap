@@ -208,7 +208,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title      = 'Local Settings & Checks'
-      io_page_menu       = zcl_abapgit_gui_chunk_lib=>settings_repo_toolbar(
+      io_page_menu       = zcl_abapgit_gui_menus=>repo_settings(
                              iv_key = io_repo->get_key( )
                              iv_act = zif_abapgit_definitions=>c_action-repo_local_settings )
       ii_child_component = lo_component ).
@@ -419,7 +419,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
     lv_transport_request = io_form_data->get( c_id-transport_request ).
     IF lv_transport_request IS NOT INITIAL.
       TRY.
-          zcl_abapgit_transport=>validate_transport_request( lv_transport_request ).
+          zcl_abapgit_factory=>get_cts_api( )->validate_transport_request( lv_transport_request ).
         CATCH zcx_abapgit_exception INTO lx_error.
           ro_validation_log->set(
             iv_key = c_id-transport_request
@@ -430,7 +430,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
     lv_customizing_request = io_form_data->get( c_id-customizing_request ).
     IF lv_customizing_request IS NOT INITIAL.
       TRY.
-          zcl_abapgit_transport=>validate_transport_request( lv_customizing_request ).
+          zcl_abapgit_factory=>get_cts_api( )->validate_transport_request( lv_customizing_request ).
         CATCH zcx_abapgit_exception INTO lx_error.
           ro_validation_log->set(
             iv_key = c_id-customizing_request

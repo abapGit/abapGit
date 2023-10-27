@@ -474,7 +474,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
                    io_dot     = get_dot_abapgit( ) ).
 
     DELETE mt_local WHERE item-obj_type = iv_obj_type
-                    AND   item-obj_name = iv_obj_name.
+                      AND item-obj_name = iv_obj_name.
 
     READ TABLE lt_tadir INTO ls_tadir
                         WITH KEY object   = iv_obj_type

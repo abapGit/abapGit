@@ -52,7 +52,7 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CONSTANTS c_custmnr TYPE lxecustmnr VALUE '999999'.
+    CONSTANTS c_custmnr TYPE lxecustmnr VALUE '999999' ##NEEDED.
     " The value for ABAP system translation is always 999999 (from lxecustmnr docs)
 
     TYPES:
@@ -90,13 +90,14 @@ CLASS zcl_abapgit_lxe_texts DEFINITION
       RAISING
         zcx_abapgit_exception .
 
+    " Implementation of deserialize_xml is not complete (but kept as future option)
     METHODS deserialize_xml
       IMPORTING
         !iv_lxe_text_name TYPE string DEFAULT 'LXE_TEXTS'
         !iv_object_type   TYPE tadir-object OPTIONAL
         !iv_object_name   TYPE tadir-obj_name OPTIONAL
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception ##NEEDED.
 
     METHODS deserialize_from_po
       IMPORTING

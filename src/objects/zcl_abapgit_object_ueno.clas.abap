@@ -34,7 +34,7 @@ CLASS zcl_abapgit_object_ueno DEFINITION
 
 
     METHODS build_text_name
-      IMPORTING VALUE(iv_id)     TYPE tdid
+      IMPORTING iv_id            TYPE tdid
       RETURNING VALUE(rv_result) TYPE doku_obj.
 
     METHODS is_name_permitted
@@ -85,7 +85,7 @@ CLASS zcl_abapgit_object_ueno DEFINITION
         zcx_abapgit_exception.
 
     METHODS serialize_docu_xxxx
-      IMPORTING VALUE(iv_id)     TYPE tdid
+      IMPORTING iv_id            TYPE tdid
       RETURNING VALUE(rt_result) TYPE ty_docu_lines.
 
     METHODS serialize_docu_usp
@@ -137,7 +137,7 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
 
   METHOD constructor.
 
-    super->constructor( is_item  =  is_item
+    super->constructor( is_item     = is_item
                         iv_language = iv_language ).
 
     mv_entity_id = is_item-obj_name.

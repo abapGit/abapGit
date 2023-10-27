@@ -166,6 +166,8 @@ CLASS ZCL_ABAPGIT_STRING_MAP IMPLEMENTATION.
         iv_val = <ls_entry>-v ).
     ENDLOOP.
 
+    ro_instance = me.
+
   ENDMETHOD.
 
 

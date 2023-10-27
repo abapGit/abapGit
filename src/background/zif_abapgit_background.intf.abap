@@ -15,7 +15,7 @@ INTERFACE zif_abapgit_background
       VALUE(rv_description) TYPE string .
   CLASS-METHODS get_settings
     CHANGING
-      VALUE(ct_settings) TYPE ty_settings_tt .
+      ct_settings TYPE ty_settings_tt .
   METHODS run
     IMPORTING
       !io_repo     TYPE REF TO zcl_abapgit_repo_online

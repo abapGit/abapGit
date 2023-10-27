@@ -142,7 +142,7 @@ CLASS zcl_abapgit_object_otgr IMPLEMENTATION.
 
     IF <lt_parents> IS ASSIGNED.
       io_xml->read( EXPORTING iv_name = 'PARENTS'
-                    CHANGING  cg_data = <lt_parents>  ).
+                    CHANGING  cg_data = <lt_parents> ).
 
       LOOP AT <lt_parents> ASSIGNING <ls_parent>.
         ASSIGN COMPONENT 'ACTIVATION_STATE' OF STRUCTURE <ls_parent> TO <lv_field>.
