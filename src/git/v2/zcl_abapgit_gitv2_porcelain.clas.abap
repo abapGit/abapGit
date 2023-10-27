@@ -125,11 +125,16 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
     DATA lv_xstring   TYPE xstring.
     DATA lt_arguments TYPE string_table.
     DATA lv_argument  TYPE string.
+    DATA lv_contents  TYPE xstring.
+    DATA lv_pack      TYPE xstring.
+    DATA lv_pktlen    TYPE i.
+    DATA lt_objects   TYPE zif_abapgit_definitions=>ty_objects_tt.
 
     APPEND 'deepen 1' TO lt_arguments.
     lv_argument = |want { iv_sha1 }|.
     APPEND lv_argument TO lt_arguments.
     APPEND 'filter blob:none' TO lt_arguments.
+    APPEND 'no-progress' TO lt_arguments.
     APPEND 'done' TO lt_arguments.
 
     lv_xstring = send_command(
@@ -138,8 +143,25 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
       iv_command   = |fetch|
       it_arguments = lt_arguments ).
 
-    WRITE / xstrlen( lv_xstring ).
-    WRITE /.
+* The data transfer of the packfile is always multiplexed, using the same semantics of the
+* side-band-64k capability from protocol version 1
+    WHILE xstrlen( lv_xstring ) > 0.
+      lv_pktlen = zcl_abapgit_git_utils=>length_utf8_hex( lv_xstring(4) ).
+      IF lv_pktlen = 0.
+        EXIT.
+      ELSEIF lv_pktlen = 1.
+* its a delimiter package
+        lv_xstring = lv_xstring+4.
+        CONTINUE.
+      ENDIF.
+      lv_contents = lv_xstring(lv_pktlen).
+      IF lv_contents+4(1) = '01'.
+        CONCATENATE lv_pack lv_contents+5 INTO lv_pack IN BYTE MODE.
+      ENDIF.
+      lv_xstring = lv_xstring+lv_pktlen.
+    ENDWHILE.
+
+    lt_objects = zcl_abapgit_git_pack=>decode( lv_pack ).
 
   ENDMETHOD.
 
