@@ -32,7 +32,7 @@ CLASS zcl_abapgit_html DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CONSTANTS gc_max_indent TYPE i VALUE 200.
+    CONSTANTS c_max_indent TYPE i VALUE 200.
 
     TYPES:
       BEGIN OF ty_indent_context,
@@ -109,7 +109,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
     gv_spaces = repeat(
       val = ` `
-      occ = gc_max_indent ).
+      occ = c_max_indent ).
 
     GET PARAMETER ID 'DBT' FIELD lv_mode.
     gv_debug_mode = boolc( lv_mode = 'HREF' ).
@@ -189,7 +189,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
         OR ls_study-tag_close = abap_true )
         AND cs_context-indent > 0.
       lv_spaces = ( cs_context-indent - 1 ) * c_indent_size.
-      IF lv_spaces <= gc_max_indent.
+      IF lv_spaces <= c_max_indent.
         cv_line  = gv_spaces(lv_spaces) && cv_line.
       ENDIF.
     ELSE.
@@ -218,7 +218,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
         cs_context-indent = cs_context-indent - 1.
       ENDIF.
       lv_spaces = cs_context-indent * c_indent_size.
-      IF lv_spaces <= gc_max_indent.
+      IF lv_spaces <= c_max_indent.
         cs_context-indent_str = gv_spaces(lv_spaces).
       ENDIF.
     ENDIF.
