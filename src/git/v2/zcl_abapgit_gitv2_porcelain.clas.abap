@@ -156,8 +156,8 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
 
   METHOD list_no_blobs.
 
-    DATA lt_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
-    DATA lt_objects  TYPE zif_abapgit_definitions=>ty_objects_tt.
+    DATA lt_sha1    TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
+    DATA lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
 
     ASSERT iv_sha1 IS NOT INITIAL.
     APPEND iv_sha1 TO lt_sha1.
