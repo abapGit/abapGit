@@ -14,7 +14,7 @@ CLASS zcl_abapgit_function_module IMPLEMENTATION.
 
   METHOD zif_abapgit_function_module~function_exists.
 
-    DATA: lv_function_module_name TYPE rs38l-name.
+    DATA: lv_function_module_name TYPE c LENGTH 30.
 
     lv_function_module_name = iv_function_module_name.
 
