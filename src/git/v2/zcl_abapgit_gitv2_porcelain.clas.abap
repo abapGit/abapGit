@@ -4,6 +4,8 @@ CLASS zcl_abapgit_gitv2_porcelain DEFINITION PUBLIC.
       IMPORTING
         iv_url    TYPE string
         iv_prefix TYPE string OPTIONAL
+      RETURNING
+        VALUE(ro_list) TYPE REF TO zcl_abapgit_git_branch_list
       RAISING
         zcx_abapgit_exception.
 
@@ -42,6 +44,7 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
     DATA lv_xstring   TYPE xstring.
     DATA lt_arguments TYPE string_table.
     DATA lv_argument  TYPE string.
+    DATA lv_data      TYPE string.
 
     IF iv_prefix IS NOT INITIAL.
       lv_argument = |ref-prefix { iv_prefix }|.
@@ -54,8 +57,13 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
       iv_command   = |ls-refs|
       it_arguments = lt_arguments ).
 
-* todo: parse response, this is probably like in v1?
-* sdf    WRITE / zcl_abapgit_convert=>xstring_to_string_utf8( lv_xstring ).
+" add dummy packet so the v1 branch parsing can be reused
+    lv_data = |0004\n{ zcl_abapgit_convert=>xstring_to_string_utf8( lv_xstring ) }|.
+
+    CREATE OBJECT ro_list
+      EXPORTING
+        iv_data = lv_data.
+
   ENDMETHOD.
 
   METHOD send_command.
