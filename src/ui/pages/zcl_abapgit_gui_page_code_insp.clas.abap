@@ -14,26 +14,24 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        io_repo          TYPE REF TO zcl_abapgit_repo
-        io_stage         TYPE REF TO zcl_abapgit_stage OPTIONAL
-        iv_check_variant TYPE sci_chkv OPTIONAL
+        io_repo                  TYPE REF TO zcl_abapgit_repo
+        io_stage                 TYPE REF TO zcl_abapgit_stage OPTIONAL
+        iv_check_variant         TYPE sci_chkv OPTIONAL
+        iv_raise_when_no_results TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(ri_page)   TYPE REF TO zif_abapgit_gui_renderable
+        VALUE(ri_page)           TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception.
 
     METHODS:
       constructor
         IMPORTING
-          io_repo          TYPE REF TO zcl_abapgit_repo
-          io_stage         TYPE REF TO zcl_abapgit_stage OPTIONAL
-          iv_check_variant TYPE sci_chkv OPTIONAL
+          io_repo                  TYPE REF TO zcl_abapgit_repo
+          io_stage                 TYPE REF TO zcl_abapgit_stage OPTIONAL
+          iv_check_variant         TYPE sci_chkv OPTIONAL
+          iv_raise_when_no_results TYPE abap_bool DEFAULT abap_false
         RAISING
-          zcx_abapgit_exception,
-
-      is_nothing_to_display
-        RETURNING
-          VALUE(rv_yes) TYPE abap_bool.
+          zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -89,6 +87,10 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
     mv_check_variant = iv_check_variant.
     determine_check_variant( ).
     run_code_inspector( ).
+
+    IF mt_result IS INITIAL AND iv_raise_when_no_results = abap_true.
+      zcx_abapgit_exception=>raise( 'No results' ).
+    ENDIF.
   ENDMETHOD.
 
 
@@ -131,11 +133,6 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
                          WITH KEY kind = 'E'.
     rv_has_inspection_errors = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.
-
-
-  METHOD is_nothing_to_display.
-    rv_yes = boolc( lines( mt_result ) = 0 ).
   ENDMETHOD.
 
 
