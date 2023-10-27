@@ -33,6 +33,7 @@ CLASS ltcl_html DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
       indent2 FOR TESTING RAISING zcx_abapgit_exception,
       indent3 FOR TESTING RAISING zcx_abapgit_exception,
       indent4 FOR TESTING RAISING zcx_abapgit_exception,
+      indent5 FOR TESTING RAISING zcx_abapgit_exception,
       style1  FOR TESTING RAISING zcx_abapgit_exception.
 
     METHODS:
@@ -116,6 +117,16 @@ CLASS ltcl_html IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = mo_html->render( )
       exp = lv_exp ).
+
+  ENDMETHOD.
+
+  METHOD indent5.
+* dont dump if something messes up or the nesting gets too wide
+    DO 300 TIMES.
+      mo_html->add( '<td>' ).
+    ENDDO.
+
+    mo_html->render( ).
 
   ENDMETHOD.
 
