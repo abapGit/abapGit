@@ -1,31 +1,31 @@
-class ZCL_ABAPGIT_GITV2_PORCELAIN definition
-  public
-  create public .
+CLASS zcl_abapgit_gitv2_porcelain DEFINITION
+  PUBLIC
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  class-methods LIST_BRANCHES
-    importing
-      !IV_URL type STRING
-      !IV_PREFIX type STRING optional
-    returning
-      value(RO_LIST) type ref to ZCL_ABAPGIT_GIT_BRANCH_LIST
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  class-methods LIST_NO_BLOBS
-    importing
-      !IV_URL type STRING
-      !IV_SHA1 type ZIF_ABAPGIT_GIT_DEFINITIONS=>TY_SHA1
-    returning
-      value(RT_EXPANDED) type ZIF_ABAPGIT_GIT_DEFINITIONS=>TY_EXPANDED_TT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-protected section.
+    CLASS-METHODS list_branches
+      IMPORTING
+        !iv_url        TYPE string
+        !iv_prefix     TYPE string OPTIONAL
+      RETURNING
+        VALUE(ro_list) TYPE REF TO zcl_abapgit_git_branch_list
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS list_no_blobs
+      IMPORTING
+        !iv_url            TYPE string
+        !iv_sha1           TYPE zif_abapgit_git_definitions=>ty_sha1
+      RETURNING
+        VALUE(rt_expanded) TYPE zif_abapgit_git_definitions=>ty_expanded_tt
+      RAISING
+        zcx_abapgit_exception .
+  PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS:
       BEGIN OF c_service,
-        receive TYPE string VALUE 'receive',                  "#EC NOTEXT
-        upload  TYPE string VALUE 'upload',                   "#EC NOTEXT
+        receive TYPE string VALUE 'receive',                "#EC NOTEXT
+        upload  TYPE string VALUE 'upload',                 "#EC NOTEXT
       END OF c_service .
 
     CONSTANTS c_flush_pkt TYPE c LENGTH 4 VALUE '0000'.
@@ -33,10 +33,10 @@ protected section.
 
     CLASS-METHODS send_command
       IMPORTING
-        iv_url       TYPE string
-        iv_service   TYPE string
-        iv_command   TYPE string
-        it_arguments TYPE string_table OPTIONAL
+        iv_url             TYPE string
+        iv_service         TYPE string
+        iv_command         TYPE string
+        it_arguments       TYPE string_table OPTIONAL
       RETURNING
         VALUE(rv_response) TYPE xstring
       RAISING
@@ -65,7 +65,7 @@ CLASS ZCL_ABAPGIT_GITV2_PORCELAIN IMPLEMENTATION.
       iv_command   = |ls-refs|
       it_arguments = lt_arguments ).
 
-" add dummy packet so the v1 branch parsing can be reused
+    " add dummy packet so the v1 branch parsing can be reused
     lv_data = |0004\n{ zcl_abapgit_convert=>xstring_to_string_utf8( lv_xstring ) }|.
 
     CREATE OBJECT ro_list
