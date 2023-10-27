@@ -1,11 +1,16 @@
 CLASS zcl_abapgit_gui_page_diff DEFINITION
   PUBLIC
-  INHERITING FROM zcl_abapgit_gui_page
-  CREATE PUBLIC.
+  INHERITING FROM zcl_abapgit_gui_component
+  CREATE PRIVATE
+  GLOBAL FRIENDS zcl_abapgit_gui_page_patch.
 
   PUBLIC SECTION.
+
     INTERFACES:
-      zif_abapgit_gui_hotkeys.
+      zif_abapgit_gui_event_handler,
+      zif_abapgit_gui_hotkeys,
+      zif_abapgit_gui_menu_provider,
+      zif_abapgit_gui_renderable.
 
     TYPES:
       BEGIN OF ty_file_diff,
@@ -33,6 +38,18 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         both   TYPE c LENGTH 1 VALUE 'B',
       END OF c_fstate.
 
+    CLASS-METHODS create
+      IMPORTING
+        !iv_patch      TYPE abap_bool DEFAULT abap_false
+        !iv_key        TYPE zif_abapgit_persistence=>ty_repo-key
+        !is_file       TYPE zif_abapgit_git_definitions=>ty_file OPTIONAL
+        !is_object     TYPE zif_abapgit_definitions=>ty_item OPTIONAL
+        !it_files      TYPE zif_abapgit_definitions=>ty_stage_tt OPTIONAL
+      RETURNING
+        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
+      RAISING
+        zcx_abapgit_exception.
+
     METHODS constructor
       IMPORTING
         !iv_key    TYPE zif_abapgit_persistence=>ty_repo-key
@@ -42,8 +59,6 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-    METHODS zif_abapgit_gui_event_handler~on_event
-        REDEFINITION.
   PROTECTED SECTION.
 
     CONSTANTS:
@@ -126,10 +141,6 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         !iv_old       TYPE string
       RAISING
         zcx_abapgit_exception .
-    METHODS build_menu
-      RETURNING
-        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
-    METHODS set_layout.
     METHODS refresh
       IMPORTING
         iv_action TYPE clike
@@ -160,8 +171,6 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
       IMPORTING
         io_menu TYPE REF TO zcl_abapgit_html_toolbar .
 
-    METHODS render_content
-        REDEFINITION .
   PRIVATE SECTION.
     TYPES:
       BEGIN OF ty_view,
@@ -541,18 +550,6 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD build_menu.
-
-    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-main'.
-
-    add_menu_begin( ro_menu ).
-    add_jump_sub_menu( ro_menu ).
-    add_filter_sub_menu( ro_menu ).
-    add_menu_end( ro_menu ).
-
-  ENDMETHOD.
-
-
   METHOD calculate_diff.
 
     DATA: lt_remote TYPE zif_abapgit_git_definitions=>ty_files_tt,
@@ -630,11 +627,9 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     DATA: lv_ts TYPE timestamp.
 
     super->constructor( ).
-    ms_control-page_title = 'Diff'.
-    mv_unified            = zcl_abapgit_persistence_user=>get_instance( )->get_diff_unified( ).
-    set_layout( ).
-    mv_repo_key           = iv_key.
-    mo_repo              ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    mv_unified  = zcl_abapgit_persistence_user=>get_instance( )->get_diff_unified( ).
+    mv_repo_key = iv_key.
+    mo_repo    ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
     GET TIME STAMP FIELD lv_ts.
     mv_seed = |diff{ lv_ts }|. " Generate based on time
@@ -651,7 +646,49 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
         'There are no differences to show. The local state completely matches the remote repository.' ).
     ENDIF.
 
-    ms_control-page_menu = build_menu( ).
+  ENDMETHOD.
+
+
+  METHOD create.
+
+    DATA:
+      lo_diff        TYPE REF TO zcl_abapgit_gui_page_diff,
+      lo_patch       TYPE REF TO zcl_abapgit_gui_page_patch,
+      lv_page_layout TYPE string.
+
+    IF zcl_abapgit_persistence_user=>get_instance( )->get_diff_unified( ) = abap_true.
+      lv_page_layout = zcl_abapgit_gui_page=>c_page_layout-centered.
+    ELSE.
+      lv_page_layout = zcl_abapgit_gui_page=>c_page_layout-full_width.
+    ENDIF.
+
+    IF iv_patch IS INITIAL.
+      CREATE OBJECT lo_diff
+        EXPORTING
+          iv_key    = iv_key
+          is_file   = is_file
+          is_object = is_object
+          it_files  = it_files.
+
+      ri_page = zcl_abapgit_gui_page_hoc=>create(
+        iv_page_title         = 'Diff'
+        iv_page_layout        = lv_page_layout
+        ii_page_menu_provider = lo_diff
+        ii_child_component    = lo_diff ).
+    ELSE.
+      CREATE OBJECT lo_patch
+        EXPORTING
+          iv_key    = iv_key
+          is_file   = is_file
+          is_object = is_object
+          it_files  = it_files.
+
+      ri_page = zcl_abapgit_gui_page_hoc=>create(
+        iv_page_title         = 'Patch'
+        iv_page_layout        = lv_page_layout
+        ii_page_menu_provider = lo_patch
+        ii_child_component    = lo_patch ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -854,42 +891,6 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
   METHOD render_beacon_begin_of_row.
 
     ii_html->add( '<th class="num"></th>' ).
-
-  ENDMETHOD.
-
-
-  METHOD render_content.
-
-    DATA: ls_diff_file LIKE LINE OF mt_diff_files,
-          li_progress  TYPE REF TO zif_abapgit_progress.
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    li_progress = zcl_abapgit_progress=>get_instance( lines( mt_diff_files ) ).
-
-    ri_html->add( `<div class="repo">` ).
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mo_repo ) ).
-    ri_html->add( `</div>` ).
-
-    ri_html->add( |<div id="diff-list" data-repo-key="{ mv_repo_key }">| ).
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_js_error_banner( ) ).
-    LOOP AT mt_diff_files INTO ls_diff_file.
-      li_progress->show(
-        iv_current = sy-tabix
-        iv_text    = |Render Diff - { ls_diff_file-filename }| ).
-
-      ri_html->add( render_diff( ls_diff_file ) ).
-    ENDLOOP.
-    IF sy-subrc <> 0.
-      ri_html->add( |No more diffs| ).
-    ENDIF.
-    ri_html->add( '</div>' ).
-
-    register_deferred_script( render_scripts( ) ).
-
-    li_progress->off( ).
-
-    register_handlers( ).
 
   ENDMETHOD.
 
@@ -1320,17 +1321,6 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD set_layout.
-
-    IF mv_unified = abap_true.
-      ms_control-page_layout = c_page_layout-centered.
-    ELSE.
-      ms_control-page_layout = c_page_layout-full_width.
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA ls_view LIKE ms_view.
@@ -1340,8 +1330,6 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN c_actions-toggle_unified. " Toggle file diplay
 
-        mv_unified = zcl_abapgit_persistence_user=>get_instance( )->toggle_diff_unified( ).
-        set_layout( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-toggle_hide_diffs. " Toggle display of diffs
@@ -1371,10 +1359,6 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
           refresh( ii_event->mv_action ).
           rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
-        ELSE.
-
-          rs_handled = super->zif_abapgit_gui_event_handler~on_event( ii_event ).
-
         ENDIF.
 
     ENDCASE.
@@ -1384,7 +1368,6 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
       IF ms_view-hide_diffs = ls_view-hide_diffs.
         refresh( c_actions-refresh_local ).
       ENDIF.
-      ms_control-page_menu = build_menu( ).
       rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDIF.
 
@@ -1416,6 +1399,54 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     ls_hotkey_action-action      = c_actions-toggle_hidden_chars.
     ls_hotkey_action-hotkey      = |h|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_menu_provider~get_menu.
+
+    CREATE OBJECT ro_toolbar EXPORTING iv_id = 'toolbar-main'.
+
+    add_menu_begin( ro_toolbar ).
+    add_jump_sub_menu( ro_toolbar ).
+    add_filter_sub_menu( ro_toolbar ).
+    add_menu_end( ro_toolbar ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_renderable~render.
+
+    DATA: ls_diff_file LIKE LINE OF mt_diff_files,
+          li_progress  TYPE REF TO zif_abapgit_progress.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    li_progress = zcl_abapgit_progress=>get_instance( lines( mt_diff_files ) ).
+
+    ri_html->add( `<div class="repo">` ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mo_repo ) ).
+    ri_html->add( `</div>` ).
+
+    ri_html->add( |<div id="diff-list" data-repo-key="{ mv_repo_key }">| ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_js_error_banner( ) ).
+    LOOP AT mt_diff_files INTO ls_diff_file.
+      li_progress->show(
+        iv_current = sy-tabix
+        iv_text    = |Render Diff - { ls_diff_file-filename }| ).
+
+      ri_html->add( render_diff( ls_diff_file ) ).
+    ENDLOOP.
+    IF sy-subrc <> 0.
+      ri_html->add( |No more diffs| ).
+    ENDIF.
+    ri_html->add( '</div>' ).
+
+    register_deferred_script( render_scripts( ) ).
+
+    li_progress->off( ).
+
+    register_handlers( ).
 
   ENDMETHOD.
 ENDCLASS.

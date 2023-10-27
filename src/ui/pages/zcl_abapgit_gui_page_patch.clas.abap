@@ -1,22 +1,19 @@
 CLASS zcl_abapgit_gui_page_patch DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_gui_page_diff
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
 
   PUBLIC SECTION.
     METHODS:
       constructor
         IMPORTING
-          iv_key        TYPE zif_abapgit_persistence=>ty_repo-key
-          is_file       TYPE zif_abapgit_git_definitions=>ty_file OPTIONAL
-          is_object     TYPE zif_abapgit_definitions=>ty_item OPTIONAL
-          it_files      TYPE zif_abapgit_definitions=>ty_stage_tt OPTIONAL
+          iv_key    TYPE zif_abapgit_persistence=>ty_repo-key
+          is_file   TYPE zif_abapgit_git_definitions=>ty_file OPTIONAL
+          is_object TYPE zif_abapgit_definitions=>ty_item OPTIONAL
+          it_files  TYPE zif_abapgit_definitions=>ty_stage_tt OPTIONAL
         RAISING
-          zcx_abapgit_exception,
-
-      zif_abapgit_gui_event_handler~on_event REDEFINITION,
-      zif_abapgit_gui_hotkeys~get_hotkey_actions REDEFINITION.
+          zcx_abapgit_exception.
 
     CLASS-METHODS:
       get_patch_data
@@ -27,9 +24,12 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
           ev_line_index TYPE string
         RAISING
           zcx_abapgit_exception.
+
+    METHODS zif_abapgit_gui_event_handler~on_event REDEFINITION.
+    METHODS zif_abapgit_gui_renderable~render REDEFINITION.
+
   PROTECTED SECTION.
     METHODS:
-      render_content REDEFINITION,
       add_menu_begin REDEFINITION,
       add_menu_end REDEFINITION,
       render_table_head_non_unified REDEFINITION,
@@ -45,7 +45,7 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
 
     CONSTANTS:
       BEGIN OF c_patch_actions,
-        stage TYPE string VALUE 'patch_stage',
+        patch_stage TYPE string VALUE 'patch_stage',
       END OF c_patch_actions .
     CONSTANTS:
       BEGIN OF c_patch_action,
@@ -134,7 +134,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
 
   METHOD add_menu_begin.
@@ -159,7 +159,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
   METHOD add_menu_end.
 
     io_menu->add( iv_txt = 'Stage'
-                  iv_act = c_patch_actions-stage
+                  iv_act = c_patch_actions-patch_stage
                   iv_id  = 'stage'
                   iv_typ = zif_abapgit_html=>c_action_type-dummy ).
 
@@ -343,11 +343,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
 
     " While patching we always want to be in split mode
     CLEAR: mv_unified.
-    set_layout( ).
     CREATE OBJECT mo_stage.
-
-    ms_control-page_title = 'Patch'.
-    ms_control-page_menu = build_menu( ).
 
   ENDMETHOD.
 
@@ -443,25 +439,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
     ii_html->add( |<th class="patch">| ).
     ii_html->add_checkbox( |patch_section_{ get_normalized_fname_with_path( is_diff ) }_{ mv_section_count }| ).
     ii_html->add( '</th>' ).
-
-  ENDMETHOD.
-
-
-  METHOD render_content.
-
-    CLEAR: mv_section_count.
-
-    IF mv_pushed = abap_true.
-      refresh_full( ).
-      calculate_diff( ).
-      CLEAR: mv_pushed.
-    ENDIF.
-
-    register_handlers( ).
-
-    ri_html = super->render_content( ).
-
-    register_deferred_script( render_scripts( ) ).
 
   ENDMETHOD.
 
@@ -626,7 +603,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     CASE ii_event->mv_action.
-      WHEN c_patch_actions-stage.
+      WHEN c_patch_actions-patch_stage.
 
         start_staging( ii_event ).
 
@@ -649,32 +626,26 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
           rs_handled = super->zif_abapgit_gui_event_handler~on_event( ii_event ).
 
         ENDIF.
-
     ENDCASE.
 
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_hotkeys~get_hotkey_actions.
+  METHOD zif_abapgit_gui_renderable~render.
 
-    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
+    CLEAR: mv_section_count.
 
-    ls_hotkey_action-ui_component = 'Patch'.
+    IF mv_pushed = abap_true.
+      refresh_full( ).
+      calculate_diff( ).
+      CLEAR: mv_pushed.
+    ENDIF.
 
-    ls_hotkey_action-description = |Stage Changes|.
-    ls_hotkey_action-action      = |stagePatch|.
-    ls_hotkey_action-hotkey      = |s|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+    register_handlers( ).
 
-    ls_hotkey_action-description = |Refresh Local|.
-    ls_hotkey_action-action      = |refreshLocal|.
-    ls_hotkey_action-hotkey      = |r|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+    ri_html = super->zif_abapgit_gui_renderable~render( ).
 
-    ls_hotkey_action-description = |Refresh All|.
-    ls_hotkey_action-action      = |refreshAll|.
-    ls_hotkey_action-hotkey      = |a|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+    register_deferred_script( render_scripts( ) ).
 
   ENDMETHOD.
 ENDCLASS.
