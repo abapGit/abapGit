@@ -137,7 +137,7 @@ CLASS zcl_abapgit_gui_page_sett_info IMPLEMENTATION.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title      = 'Repository Stats'
-      io_page_menu       = zcl_abapgit_gui_chunk_lib=>settings_repo_toolbar(
+      io_page_menu       = zcl_abapgit_gui_menus=>repo_settings(
                              iv_key = io_repo->get_key( )
                              iv_act = zif_abapgit_definitions=>c_action-repo_infos )
       ii_child_component = lo_component ).
