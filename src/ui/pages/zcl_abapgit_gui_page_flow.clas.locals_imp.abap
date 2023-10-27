@@ -33,12 +33,13 @@ CLASS lcl_helper IMPLEMENTATION.
       iv_url  = io_online->get_url( )
       it_sha1 = lt_sha1 ).
 
-    lv_starting_folder = io_online->get_dot_abapgit( )->get_starting_folder( ).
+    lv_starting_folder = io_online->get_dot_abapgit( )->get_starting_folder( ) && '*'.
 
     LOOP AT lt_branches INTO ls_branch WHERE is_head = abap_false.
       lt_expanded = zcl_abapgit_git_porcelain=>full_tree(
         it_objects = lt_objects
         iv_parent  = ls_branch-sha1 ).
+      DELETE lt_expanded WHERE path NP lv_starting_folder.
     ENDLOOP.
 
   ENDMETHOD.
