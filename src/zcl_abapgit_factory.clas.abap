@@ -44,6 +44,9 @@ CLASS zcl_abapgit_factory DEFINITION
     CLASS-METHODS get_sap_report
       RETURNING
         VALUE(ri_report) TYPE REF TO zif_abapgit_sap_report.
+    CLASS-METHODS: get_function_module
+        RETURNING
+          VALUE(ri_function_module) TYPE REF TO zif_abapgit_function_module.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -75,6 +78,7 @@ CLASS zcl_abapgit_factory DEFINITION
     CLASS-DATA gi_lxe_texts TYPE REF TO zif_abapgit_lxe_texts .
     CLASS-DATA gi_sap_namespace TYPE REF TO zif_abapgit_sap_namespace .
     CLASS-DATA gi_sap_report TYPE REF TO zif_abapgit_sap_report.
+    CLASS-DATA gi_function_module TYPE REF TO zif_abapgit_function_module.
 ENDCLASS.
 
 
@@ -223,4 +227,16 @@ CLASS zcl_abapgit_factory IMPLEMENTATION.
     ri_tadir = gi_tadir.
 
   ENDMETHOD.
+
+
+  METHOD get_function_module.
+
+    IF gi_function_module IS INITIAL.
+      CREATE OBJECT gi_function_module TYPE zcl_abapgit_function_module.
+    ENDIF.
+
+    ri_function_module = gi_function_module.
+
+  ENDMETHOD.
+
 ENDCLASS.
