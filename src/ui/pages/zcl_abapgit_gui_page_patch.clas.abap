@@ -25,10 +25,13 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
         RAISING
           zcx_abapgit_exception.
 
-    METHODS zif_abapgit_gui_event_handler~on_event REDEFINITION.
-    METHODS zif_abapgit_gui_renderable~render REDEFINITION.
+    METHODS:
+      zif_abapgit_gui_event_handler~on_event REDEFINITION,
+      zif_abapgit_gui_renderable~render REDEFINITION,
+      zif_abapgit_gui_hotkeys~get_hotkey_actions REDEFINITION.
 
   PROTECTED SECTION.
+
     METHODS:
       add_menu_begin REDEFINITION,
       add_menu_end REDEFINITION,
@@ -45,7 +48,7 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
 
     CONSTANTS:
       BEGIN OF c_patch_actions,
-        patch_stage TYPE string VALUE 'patch_stage',
+        stage TYPE string VALUE 'patch_stage',
       END OF c_patch_actions .
     CONSTANTS:
       BEGIN OF c_patch_action,
@@ -159,7 +162,7 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
   METHOD add_menu_end.
 
     io_menu->add( iv_txt = 'Stage'
-                  iv_act = c_patch_actions-patch_stage
+                  iv_act = c_patch_actions-stage
                   iv_id  = 'stage'
                   iv_typ = zif_abapgit_html=>c_action_type-dummy ).
 
@@ -603,7 +606,7 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     CASE ii_event->mv_action.
-      WHEN c_patch_actions-patch_stage.
+      WHEN c_patch_actions-stage.
 
         start_staging( ii_event ).
 
@@ -626,19 +629,44 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
           rs_handled = super->zif_abapgit_gui_event_handler~on_event( ii_event ).
 
         ENDIF.
+
     ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_hotkeys~get_hotkey_actions.
+
+    DATA ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
+
+    ls_hotkey_action-ui_component = 'Patch'.
+
+    ls_hotkey_action-description = |Stage Changes|.
+    ls_hotkey_action-action      = |stagePatch|.
+    ls_hotkey_action-hotkey      = |s|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description = |Refresh Local|.
+    ls_hotkey_action-action      = |refreshLocal|.
+    ls_hotkey_action-hotkey      = |r|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description = |Refresh All|.
+    ls_hotkey_action-action      = |refreshAll|.
+    ls_hotkey_action-hotkey      = |a|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    CLEAR: mv_section_count.
+    CLEAR mv_section_count.
 
     IF mv_pushed = abap_true.
       refresh_full( ).
       calculate_diff( ).
-      CLEAR: mv_pushed.
+      CLEAR mv_pushed.
     ENDIF.
 
     register_handlers( ).
