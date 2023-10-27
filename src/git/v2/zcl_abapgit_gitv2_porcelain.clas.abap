@@ -13,6 +13,8 @@ CLASS zcl_abapgit_gitv2_porcelain DEFINITION PUBLIC.
       IMPORTING
         iv_url    TYPE string
         iv_sha1   TYPE zif_abapgit_git_definitions=>ty_sha1
+      RETURNING
+        VALUE(rt_expanded) TYPE zif_abapgit_git_definitions=>ty_expanded_tt
       RAISING
         zcx_abapgit_exception.
 
@@ -130,6 +132,7 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
     DATA lv_pktlen    TYPE i.
     DATA lt_objects   TYPE zif_abapgit_definitions=>ty_objects_tt.
 
+
     APPEND 'deepen 1' TO lt_arguments.
     lv_argument = |want { iv_sha1 }|.
     APPEND lv_argument TO lt_arguments.
@@ -162,6 +165,10 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
     ENDWHILE.
 
     lt_objects = zcl_abapgit_git_pack=>decode( lv_pack ).
+
+    rt_expanded = zcl_abapgit_git_porcelain=>full_tree(
+      it_objects = lt_objects
+      iv_parent  = iv_sha1 ).
 
   ENDMETHOD.
 

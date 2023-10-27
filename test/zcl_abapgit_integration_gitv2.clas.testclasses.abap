@@ -29,10 +29,16 @@ CLASS ltcl_test IMPLEMENTATION.
 
   METHOD test02.
 
-    zcl_abapgit_gitv2_porcelain=>list_no_blobs(
-       iv_url = 'https://github.com/abapGit/abapGit.git'
+    DATA lt_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
+
+    lt_expanded = zcl_abapgit_gitv2_porcelain=>list_no_blobs(
+       iv_url  = 'https://github.com/abapGit/abapGit.git'
        iv_sha1 = '7bdd8f9f4c6bb0ece461b78c7b559957fad6c3ae' ).
-* todo, check response
+
+    cl_abap_unit_assert=>assert_number_between(
+      number = lines( lt_expanded )
+      lower  = 0
+      upper  = 5000 ).
 
   ENDMETHOD.
 
