@@ -312,6 +312,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
           lv_key                 TYPE zif_abapgit_persistence=>ty_repo-key,
           lv_seed                TYPE string,
           lo_stage_page          TYPE REF TO zcl_abapgit_gui_page_stage,
+          li_page                TYPE REF TO zif_abapgit_gui_renderable,
           lo_code_inspector_page TYPE REF TO zcl_abapgit_gui_page_code_insp,
           lv_sci_result          TYPE zif_abapgit_definitions=>ty_sci_result,
           lx_error               TYPE REF TO cx_sy_move_cast_error.
@@ -334,9 +335,8 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     ENDIF.
 
     IF lo_repo->get_local_settings( )-code_inspector_check_variant IS NOT INITIAL.
-      CREATE OBJECT lo_code_inspector_page
-        EXPORTING
-          io_repo = lo_repo.
+      li_page = zcl_abapgit_gui_page_code_insp=>create( lo_repo ).
+      lo_code_inspector_page ?= li_page.
 
       IF lo_code_inspector_page->is_nothing_to_display( ) = abap_true.
         lv_sci_result = zif_abapgit_definitions=>c_sci_result-passed.
@@ -580,15 +580,11 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-repo_refresh.                    " Repo refresh
         zcl_abapgit_services_repo=>refresh( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN zif_abapgit_definitions=>c_action-repo_syntax_check.
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_syntax " Syntax check
-          EXPORTING
-            io_repo = lo_repo.
+      WHEN zif_abapgit_definitions=>c_action-repo_syntax_check.               " Syntax check
+        rs_handled-page  = zcl_abapgit_gui_page_syntax=>create( lo_repo ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-repo_code_inspector.             " Code inspector
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_code_insp
-          EXPORTING
-            io_repo = lo_repo.
+        rs_handled-page  = zcl_abapgit_gui_page_code_insp=>create( lo_repo ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-repo_purge.                      " Purge all objects and repo (uninstall)
         zcl_abapgit_services_repo=>purge( lv_key ).

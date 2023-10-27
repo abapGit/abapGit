@@ -108,7 +108,6 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
   METHOD create.
 
     DATA lo_component TYPE REF TO zcl_abapgit_gui_page_runit.
-    DATA lo_page_code_inspector TYPE REF TO zcl_abapgit_gui_page_code_insp.
 
     TRY.
         CREATE OBJECT lo_component EXPORTING io_repo = io_repo.
@@ -122,12 +121,9 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
 
         " Fallback as either SAPLSAUCV_GUI_RUNNER is not available in old releases
         " or passport=>get is private in newer releases NW >= 756
-        CREATE OBJECT lo_page_code_inspector
-          EXPORTING
-            io_repo          = io_repo
-            iv_check_variant = 'SWF_ABAP_UNIT'.
-
-        ri_page = lo_page_code_inspector.
+        ri_page = zcl_abapgit_gui_page_code_insp=>create(
+                    io_repo          = io_repo
+                    iv_check_variant = 'SWF_ABAP_UNIT' ).
 
     ENDTRY.
 
