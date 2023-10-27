@@ -240,7 +240,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
           zcx_abapgit_exception=>raise( |Error when activating iobj: { ls_return-message }| ).
         ENDIF.
 
-      CATCH  cx_sy_dyn_call_illegal_func.
+      CATCH cx_sy_dyn_call_illegal_func.
         zcx_abapgit_exception=>raise( |Necessary BW function modules not found| ).
     ENDTRY.
 
@@ -324,7 +324,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
     DATA: lv_object TYPE eqegraarg.
 
-    lv_object =  ms_item-obj_name.
+    lv_object = ms_item-obj_name.
     OVERLAY lv_object WITH '                                          '.
     lv_object = lv_object && '*'.
 

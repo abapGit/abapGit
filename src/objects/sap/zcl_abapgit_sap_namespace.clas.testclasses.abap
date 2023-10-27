@@ -18,10 +18,10 @@ CLASS ltcl_check_split_by_name IMPLEMENTATION.
     lv_obj_with_namespace = '/BLA12345/TEST/123'.
 
     TRY.
-        ls_obj_with_namespace = zcl_abapgit_factory=>get_sap_namespace(  )->split_by_name( lv_obj_with_namespace ).
+        ls_obj_with_namespace = zcl_abapgit_factory=>get_sap_namespace( )->split_by_name( lv_obj_with_namespace ).
 
       CATCH zcx_abapgit_exception INTO lr_ex.
-        cl_abap_unit_assert=>fail( lr_ex->get_text(  ) ).
+        cl_abap_unit_assert=>fail( lr_ex->get_text( ) ).
     ENDTRY.
 
     cl_abap_unit_assert=>assert_equals(
@@ -43,9 +43,9 @@ CLASS ltcl_check_split_by_name IMPLEMENTATION.
     lv_obj_with_namespace = 'ZCL_ABAPGIT_SAP_NAMESP'.
 
     TRY.
-        ls_obj_with_namespace = zcl_abapgit_factory=>get_sap_namespace(  )->split_by_name( lv_obj_with_namespace ).
+        ls_obj_with_namespace = zcl_abapgit_factory=>get_sap_namespace( )->split_by_name( lv_obj_with_namespace ).
       CATCH zcx_abapgit_exception INTO lr_ex.
-        cl_abap_unit_assert=>fail( lr_ex->get_text(  ) ).
+        cl_abap_unit_assert=>fail( lr_ex->get_text( ) ).
     ENDTRY.
 
     cl_abap_unit_assert=>assert_equals(
@@ -64,7 +64,7 @@ CLASS ltcl_check_split_by_name IMPLEMENTATION.
     lv_obj_with_namespace = '/TEST12345/BLA'.
 
     TRY.
-        zcl_abapgit_factory=>get_sap_namespace(  )->split_by_name( lv_obj_with_namespace ).
+        zcl_abapgit_factory=>get_sap_namespace( )->split_by_name( lv_obj_with_namespace ).
 
       CATCH zcx_abapgit_exception.
         RETURN.
@@ -78,7 +78,7 @@ CLASS ltcl_check_split_by_name IMPLEMENTATION.
     lv_obj_with_namespace = '/TEST/TEST/TEST'.
 
     TRY.
-        zcl_abapgit_factory=>get_sap_namespace(  )->split_by_name(
+        zcl_abapgit_factory=>get_sap_namespace( )->split_by_name(
           iv_obj_with_namespace = lv_obj_with_namespace
           iv_allow_slash_in_name  = abap_false ).
 
@@ -94,7 +94,7 @@ CLASS ltcl_check_split_by_name IMPLEMENTATION.
     lv_obj_with_namespace = 'TEST/TEST'.
 
     TRY.
-        zcl_abapgit_factory=>get_sap_namespace(  )->split_by_name(
+        zcl_abapgit_factory=>get_sap_namespace( )->split_by_name(
           iv_obj_with_namespace = lv_obj_with_namespace
           iv_allow_slash_in_name  = abap_false ).
 

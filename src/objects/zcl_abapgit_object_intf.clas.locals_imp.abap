@@ -88,9 +88,9 @@ CLASS lcl_aff_helper IMPLEMENTATION.
     SELECT sub_component~cmpname sub_component~sconame sub_component_text~descript sub_component~scotype
       INTO TABLE lt_sub_components
       FROM seosubco AS sub_component JOIN seosubcotx AS sub_component_text
-      ON  sub_component~clsname = sub_component_text~clsname
-          AND sub_component~cmpname = sub_component_text~cmpname
-          AND sub_component~sconame = sub_component_text~sconame
+      ON sub_component~clsname = sub_component_text~clsname AND
+         sub_component~cmpname = sub_component_text~cmpname AND
+         sub_component~sconame = sub_component_text~sconame
       INNER JOIN seocompodf AS df
       ON sub_component~clsname = df~clsname AND
          sub_component~cmpname = df~cmpname

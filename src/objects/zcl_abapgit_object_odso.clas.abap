@@ -146,26 +146,26 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |ODSO is not supported on this system| ).
     ENDTRY.
 
-    ASSIGN lr_details->*     TO <lg_details>.
+    ASSIGN lr_details->* TO <lg_details>.
     ASSIGN lr_infoobjects->* TO <lt_infoobjects>.
-    ASSIGN lr_navigation->*  TO <lt_navigation>.
-    ASSIGN lr_indexes->*     TO <lt_indexes>.
-    ASSIGN lr_index_iobj->*  TO <lt_index_iobj>.
+    ASSIGN lr_navigation->* TO <lt_navigation>.
+    ASSIGN lr_indexes->* TO <lt_indexes>.
+    ASSIGN lr_index_iobj->* TO <lt_index_iobj>.
 
     io_xml->read( EXPORTING iv_name = 'ODSO'
                   CHANGING  cg_data = <lg_details> ).
 
     io_xml->read( EXPORTING iv_name = 'INFOOBJECTS'
-                  CHANGING  cg_data =  <lt_infoobjects> ).
+                  CHANGING  cg_data = <lt_infoobjects> ).
 
     io_xml->read( EXPORTING iv_name = 'NAVIGATION'
-                  CHANGING  cg_data =  <lt_navigation> ).
+                  CHANGING  cg_data = <lt_navigation> ).
 
     io_xml->read( EXPORTING iv_name = 'INDEXES'
-                  CHANGING  cg_data =  <lt_indexes> ).
+                  CHANGING  cg_data = <lt_indexes> ).
 
     io_xml->read( EXPORTING iv_name = 'INDEX_IOBJ'
-                  CHANGING  cg_data =  <lt_index_iobj> ).
+                  CHANGING  cg_data = <lt_index_iobj> ).
     TRY.
 
         ASSIGN COMPONENT 'ODSOBJECT' OF STRUCTURE <lg_details> TO <lg_odsobject>.
@@ -196,7 +196,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
               return               = lt_return.
         ENDIF.
 
-      CATCH  cx_sy_dyn_call_illegal_func.
+      CATCH cx_sy_dyn_call_illegal_func.
         zcx_abapgit_exception=>raise( |Necessary BW function modules not found or object not supported| ).
     ENDTRY.
 
@@ -284,7 +284,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
 
     DATA: lv_object TYPE eqegraarg.
 
-    lv_object =  ms_item-obj_name.
+    lv_object = ms_item-obj_name.
     OVERLAY lv_object WITH '                                          '.
     lv_object = lv_object && '*'.
 
@@ -336,11 +336,11 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |ODSO is not supported on this system| ).
     ENDTRY.
 
-    ASSIGN lr_details->*     TO <lg_details>.
+    ASSIGN lr_details->* TO <lg_details>.
     ASSIGN lr_infoobjects->* TO <lt_infoobjects>.
-    ASSIGN lr_navigation->*  TO <lt_navigation>.
-    ASSIGN lr_indexes->*     TO <lt_indexes>.
-    ASSIGN lr_index_iobj->*  TO <lt_index_iobj>.
+    ASSIGN lr_navigation->* TO <lt_navigation>.
+    ASSIGN lr_indexes->* TO <lt_indexes>.
+    ASSIGN lr_index_iobj->* TO <lt_index_iobj>.
 
     lv_dsonam = ms_item-obj_name.
 

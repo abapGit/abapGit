@@ -84,7 +84,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
         INTO ls_comment-comment SEPARATED BY cl_abap_char_utilities=>newline.
     ENDIF.
 
-    zcl_abapgit_exit=>get_instance(  )->validate_before_push(
+    zcl_abapgit_exit=>get_instance( )->validate_before_push(
       is_comment = ls_comment
       io_stage   = io_stage
       io_repo    = io_repo ).

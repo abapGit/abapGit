@@ -321,9 +321,9 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
       IF lv_type_check_result = 'L'.
         LOOP AT lt_tlock ASSIGNING <ls_tlock>
-            WHERE object =  ls_lock_key-obj
-            AND   hikey  >= ls_lock_key-low
-            AND   lokey  <= ls_lock_key-hi.               "#EC PORTABLE
+            WHERE object = ls_lock_key-obj
+            AND hikey >= ls_lock_key-low
+            AND lokey <= ls_lock_key-hi.               "#EC PORTABLE
           lv_request = <ls_tlock>-trkorr.
           EXIT.
         ENDLOOP.
@@ -475,4 +475,63 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
     rv_messages_confirmed = abap_true.
 
   ENDMETHOD.
+
+  METHOD zif_abapgit_cts_api~read.
+
+    DATA ls_request TYPE trwbo_request.
+    DATA ls_key     LIKE LINE OF ls_request-keys.
+
+    FIELD-SYMBOLS <ls_key> LIKE LINE OF rs_request-keys.
+
+
+    ls_request-h-trkorr = iv_trkorr.
+
+    CALL FUNCTION 'TRINT_READ_REQUEST'
+      EXPORTING
+        iv_read_e070       = abap_true
+        iv_read_e07t       = abap_true
+        iv_read_e070c      = abap_true
+        iv_read_e070m      = abap_true
+        iv_read_objs_keys  = abap_true
+        iv_read_objs       = abap_true
+        iv_read_attributes = abap_true
+      CHANGING
+        cs_request         = ls_request
+      EXCEPTIONS
+        error_occured      = 1
+        OTHERS             = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+* move to output structure
+    rs_request-trstatus = ls_request-h-trstatus.
+    LOOP AT ls_request-keys INTO ls_key.
+      APPEND INITIAL LINE TO rs_request-keys ASSIGNING <ls_key>.
+      MOVE-CORRESPONDING ls_key TO <ls_key>.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_cts_api~validate_transport_request.
+
+    CONSTANTS:
+      BEGIN OF c_tr_status,
+        modifiable           TYPE trstatus VALUE 'D',
+        modifiable_protected TYPE trstatus VALUE 'L',
+      END OF c_tr_status.
+
+    DATA ls_request TYPE zif_abapgit_cts_api=>ty_transport_data.
+
+    ls_request = zif_abapgit_cts_api~read( iv_transport_request ).
+
+    IF ls_request-trstatus <> c_tr_status-modifiable
+        AND ls_request-trstatus <> c_tr_status-modifiable_protected.
+      " Task/request &1 has already been released
+      MESSAGE e064(tk) WITH iv_transport_request INTO zcx_abapgit_exception=>null.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.

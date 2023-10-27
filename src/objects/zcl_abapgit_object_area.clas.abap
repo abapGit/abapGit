@@ -59,7 +59,7 @@ CLASS zcl_abapgit_object_area IMPLEMENTATION.
       lr_area       TYPE REF TO object.
 
     io_xml->read( EXPORTING iv_name = 'NODENAME'
-                  CHANGING cg_data = lv_nodename  ).
+                  CHANGING cg_data = lv_nodename ).
 
     io_xml->read( EXPORTING iv_name = 'PARENTNAME'
                   CHANGING  cg_data = lv_parentname ).
@@ -261,7 +261,7 @@ CLASS zcl_abapgit_object_area IMPLEMENTATION.
     ASSIGN COMPONENT 'PARENTNAME' OF STRUCTURE <ls_tree> TO <lv_parentname>.
 
     io_xml->add( iv_name = 'NODENAME'
-                 ig_data =  ms_item-obj_name ).
+                 ig_data = ms_item-obj_name ).
 
     io_xml->add( iv_name = 'PARENTNAME'
                  ig_data = <lv_parentname> ).
