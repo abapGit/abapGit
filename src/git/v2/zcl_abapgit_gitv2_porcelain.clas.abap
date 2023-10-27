@@ -156,26 +156,15 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
 
   METHOD list_no_blobs.
 
-    DATA lv_xstring   TYPE xstring.
-    DATA lt_arguments TYPE string_table.
-    DATA lv_argument  TYPE string.
-    DATA lt_objects   TYPE zif_abapgit_definitions=>ty_objects_tt.
+    DATA lt_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
+    DATA lt_objects  TYPE zif_abapgit_definitions=>ty_objects_tt.
 
+    ASSERT iv_sha1 IS NOT INITIAL.
+    APPEND iv_sha1 TO lt_sha1.
 
-    APPEND 'deepen 1' TO lt_arguments.
-    lv_argument = |want { iv_sha1 }|.
-    APPEND lv_argument TO lt_arguments.
-    APPEND 'filter blob:none' TO lt_arguments.
-    APPEND 'no-progress' TO lt_arguments.
-    APPEND 'done' TO lt_arguments.
-
-    lv_xstring = send_command(
-      iv_url       = iv_url
-      iv_service   = c_service-upload
-      iv_command   = |fetch|
-      it_arguments = lt_arguments ).
-
-    lt_objects = decode_pack( lv_xstring ).
+    lt_objects = list_no_blobs_multi(
+      iv_url  = iv_url
+      it_sha1 = lt_sha1 ).
 
     rt_expanded = zcl_abapgit_git_porcelain=>full_tree(
       it_objects = lt_objects
