@@ -193,6 +193,8 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
       lv_spaces = ( cs_context-indent - 1 ) * c_indent_size.
       IF lv_spaces <= c_max_indent.
         cv_line  = gv_spaces(lv_spaces) && cv_line.
+      ELSE.
+        cv_line = gv_spaces && cv_line.
       ENDIF.
     ELSE.
       cv_line = cs_context-indent_str && cv_line.
@@ -222,6 +224,8 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
       lv_spaces = cs_context-indent * c_indent_size.
       IF lv_spaces <= c_max_indent.
         cs_context-indent_str = gv_spaces(lv_spaces).
+      ELSE.
+        cv_line = gv_spaces && cv_line.
       ENDIF.
     ENDIF.
 
