@@ -50,6 +50,10 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    CLASS-METHODS get_page_layout
+      RETURNING
+        VALUE(rv_page_layout) TYPE string.
+
     METHODS constructor
       IMPORTING
         !iv_key    TYPE zif_abapgit_persistence=>ty_repo-key
@@ -672,7 +676,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
       ri_page = zcl_abapgit_gui_page_hoc=>create(
         iv_page_title         = 'Diff'
-        iv_page_layout        = lv_page_layout
+        iv_page_layout        = get_page_layout( )
         ii_page_menu_provider = lo_diff
         ii_child_component    = lo_diff ).
     ELSE.
@@ -685,7 +689,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
       ri_page = zcl_abapgit_gui_page_hoc=>create(
         iv_page_title         = 'Patch'
-        iv_page_layout        = lv_page_layout
+        iv_page_layout        = get_page_layout( )
         ii_page_menu_provider = lo_patch
         ii_child_component    = lo_patch ).
     ENDIF.
@@ -698,6 +702,21 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     rv_filename = normalize_path( is_diff-path )
                && `_`
                && normalize_filename( is_diff-filename ).
+
+  ENDMETHOD.
+
+
+  METHOD get_page_layout.
+
+    TRY.
+        IF zcl_abapgit_persistence_user=>get_instance( )->get_diff_unified( ) = abap_true.
+          rv_page_layout = zcl_abapgit_gui_page=>c_page_layout-centered.
+        ELSE.
+          rv_page_layout = zcl_abapgit_gui_page=>c_page_layout-full_width.
+        ENDIF.
+      CATCH zcx_abapgit_exception.
+        rv_page_layout = zcl_abapgit_gui_page=>c_page_layout-full_width.
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -1330,7 +1349,15 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN c_actions-toggle_unified. " Toggle file diplay
 
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+        mv_unified = zcl_abapgit_persistence_user=>get_instance( )->toggle_diff_unified( ).
+
+        rs_handled-page  = zcl_abapgit_gui_page_hoc=>create(
+          iv_page_title         = 'Diff'
+          iv_page_layout        = get_page_layout( )
+          ii_page_menu_provider = me
+          ii_child_component    = me ).
+
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
 
       WHEN c_actions-toggle_hide_diffs. " Toggle display of diffs
 
