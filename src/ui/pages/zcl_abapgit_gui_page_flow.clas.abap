@@ -69,7 +69,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
   METHOD zif_abapgit_gui_renderable~render.
     DATA lt_favorites TYPE zif_abapgit_repo_srv=>ty_repo_list.
     DATA li_favorite  LIKE LINE OF lt_favorites.
-    DATA li_online    TYPE REF TO zif_abapgit_repo_online.
+    DATA lo_online    TYPE REF TO zcl_abapgit_repo_online.
 
 
     register_handlers( ).
@@ -84,10 +84,10 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       " todo,   CONTINUE.
       " todo, ENDIF.
 
-      li_online ?= li_favorite.
+      lo_online ?= li_favorite.
       ri_html->add( '<u>' && li_favorite->get_name( ) && '</u><br>' ).
 
-      lcl_helper=>list_changes_per_branch( li_online ).
+      lcl_helper=>list_changes_per_branch( lo_online ).
     ENDLOOP.
 
 * list open transports for current user
