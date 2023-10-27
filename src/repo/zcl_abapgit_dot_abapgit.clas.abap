@@ -66,7 +66,7 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
         zcx_abapgit_exception .
     METHODS set_i18n_languages
       IMPORTING
-        VALUE(it_languages) TYPE zif_abapgit_definitions=>ty_languages
+        it_languages TYPE zif_abapgit_definitions=>ty_languages
       RAISING
         zcx_abapgit_exception .
     METHODS get_signature
