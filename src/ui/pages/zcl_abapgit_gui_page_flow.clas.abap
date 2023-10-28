@@ -103,11 +103,11 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
       lo_online ?= li_favorite.
 
-      lt_branches = lcl_helper=>get_branch_information( lo_online ).
+      lt_branches = lcl_helper=>get_information( lo_online ).
       LOOP AT lt_branches INTO ls_branch.
         ri_html->add( '<b><font size="+2">' && li_favorite->get_name( ) && | - | ).
         ri_html->add_icon( 'code-branch' ).
-        ri_html->add( ls_branch-display_name && | - | ).
+        ri_html->add( ls_branch-branch-display_name && | - | ).
         ri_html->add_icon( 'truck-solid' ).
         ri_html->add( '<tt>??</tt></font></b><br>' ).
 
@@ -126,7 +126,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         IF lines( ls_branch-changed_files ) = 0.
           ri_html->add( 'NO CHANGES<br><br>' ).
           CONTINUE.
-        ELSEIF ls_branch-up_to_date = abap_false.
+        ELSEIF ls_branch-branch-up_to_date = abap_false.
           ri_html->add( 'NONONONONO UPDATED<br><br>' ).
           CONTINUE.
         ENDIF.

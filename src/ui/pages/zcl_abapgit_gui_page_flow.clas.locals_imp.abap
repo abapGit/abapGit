@@ -60,9 +60,11 @@ CLASS lcl_helper DEFINITION FINAL.
       ty_path_name_tt TYPE HASHED TABLE OF ty_path_name WITH UNIQUE KEY path name.
 
     TYPES: BEGIN OF ty_branch,
-             display_name    TYPE string,
-             sha1            TYPE zif_abapgit_git_definitions=>ty_sha1,
-             up_to_date      TYPE abap_bool,
+             BEGIN OF branch,
+               display_name    TYPE string,
+               sha1            TYPE zif_abapgit_git_definitions=>ty_sha1,
+               up_to_date      TYPE abap_bool,
+             END OF branch,
              changed_files   TYPE ty_path_name_tt,
              changed_objects TYPE zif_abapgit_definitions=>ty_items_ts,
              BEGIN OF pr,
@@ -73,7 +75,7 @@ CLASS lcl_helper DEFINITION FINAL.
            END OF ty_branch.
     TYPES ty_branches TYPE STANDARD TABLE OF ty_branch WITH DEFAULT KEY.
 
-    CLASS-METHODS get_branch_information
+    CLASS-METHODS get_information
       IMPORTING
         io_online          TYPE REF TO zcl_abapgit_repo_online
       RETURNING
@@ -147,7 +149,7 @@ CLASS lcl_helper IMPLEMENTATION.
     lt_pulls = zcl_abapgit_pr_enumerator=>new( iv_url )->get_pulls( ).
 
     LOOP AT ct_branches ASSIGNING <ls_branch>.
-      READ TABLE lt_pulls INTO ls_pull WITH KEY head_branch = <ls_branch>-display_name.
+      READ TABLE lt_pulls INTO ls_pull WITH KEY head_branch = <ls_branch>-branch-display_name.
       IF sy-subrc = 0.
         <ls_branch>-pr-title = |{ ls_pull-title } #{ ls_pull-number }|.
         <ls_branch>-pr-url = ls_pull-html_url.
@@ -157,7 +159,7 @@ CLASS lcl_helper IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD get_branch_information.
+  METHOD get_information.
 
     DATA lt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
     DATA ls_branch   LIKE LINE OF lt_branches.
@@ -169,8 +171,8 @@ CLASS lcl_helper IMPLEMENTATION.
       iv_prefix = 'refs/heads/' )->get_all( ).
 
     LOOP AT lt_branches INTO ls_branch WHERE display_name <> c_main.
-      ls_result-display_name = ls_branch-display_name.
-      ls_result-sha1 = ls_branch-sha1.
+      ls_result-branch-display_name = ls_branch-display_name.
+      ls_result-branch-sha1 = ls_branch-sha1.
       INSERT ls_result INTO TABLE rt_branches.
     ENDLOOP.
 
@@ -245,19 +247,19 @@ CLASS lcl_helper IMPLEMENTATION.
     ENDWHILE.
 
     LOOP AT ct_branches ASSIGNING <ls_branch>.
-      <ls_branch>-up_to_date = abap_undefined.
-      lo_visit->clear( )->push( <ls_branch>-sha1 ).
+      <ls_branch>-branch-up_to_date = abap_undefined.
+      lo_visit->clear( )->push( <ls_branch>-branch-sha1 ).
 
       WHILE lo_visit->size( ) > 0.
         lv_current = lo_visit->pop( ).
         IF lv_current = ls_main-sha1.
-          <ls_branch>-up_to_date = abap_true.
+          <ls_branch>-branch-up_to_date = abap_true.
           EXIT.
         ENDIF.
 
         READ TABLE lt_main_reachable WITH KEY table_line = lv_current TRANSPORTING NO FIELDS.
         IF sy-subrc = 0.
-          <ls_branch>-up_to_date = abap_false.
+          <ls_branch>-branch-up_to_date = abap_false.
           EXIT.
         ENDIF.
 
@@ -306,10 +308,10 @@ CLASS lcl_helper IMPLEMENTATION.
       iv_parent  = ls_main-sha1 ).
     DELETE lt_main_expanded WHERE path NP lv_starting_folder.
 
-    LOOP AT ct_branches ASSIGNING <ls_branch> WHERE display_name <> c_main.
+    LOOP AT ct_branches ASSIGNING <ls_branch> WHERE branch-display_name <> c_main.
       lt_expanded = zcl_abapgit_git_porcelain=>full_tree(
         it_objects = lt_objects
-        iv_parent  = <ls_branch>-sha1 ).
+        iv_parent  = <ls_branch>-branch-sha1 ).
       DELETE lt_expanded WHERE path NP lv_starting_folder.
 
       <ls_branch>-changed_files = find_changed_files(
