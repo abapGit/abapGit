@@ -65,13 +65,13 @@ CLASS lcl_helper DEFINITION FINAL.
                sha1            TYPE zif_abapgit_git_definitions=>ty_sha1,
                up_to_date      TYPE abap_bool,
              END OF branch,
-             changed_files   TYPE ty_path_name_tt,
-             changed_objects TYPE zif_abapgit_definitions=>ty_items_ts,
              BEGIN OF pr,
                title TYPE string,
                url   TYPE string,
                draft TYPE abap_bool,
              END OF pr,
+             changed_files   TYPE ty_path_name_tt,
+             changed_objects TYPE zif_abapgit_definitions=>ty_items_ts,
            END OF ty_branch.
     TYPES ty_branches TYPE STANDARD TABLE OF ty_branch WITH DEFAULT KEY.
 
