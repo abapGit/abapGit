@@ -56,10 +56,11 @@ CLASS lcl_helper DEFINITION FINAL.
       ty_path_name_tt TYPE HASHED TABLE OF ty_path_name WITH UNIQUE KEY path name.
 
     TYPES: BEGIN OF ty_branch,
-             display_name  TYPE string,
-             sha1          TYPE zif_abapgit_git_definitions=>ty_sha1,
-             up_to_date    TYPE abap_bool,
-             changed_files TYPE ty_path_name_tt,
+             display_name    TYPE string,
+             sha1            TYPE zif_abapgit_git_definitions=>ty_sha1,
+             up_to_date      TYPE abap_bool,
+             changed_files   TYPE ty_path_name_tt,
+             changed_objects TYPE zif_abapgit_definitions=>ty_items_ts,
              BEGIN OF pr,
                title TYPE string,
                url   TYPE string,
@@ -77,6 +78,15 @@ CLASS lcl_helper DEFINITION FINAL.
         zcx_abapgit_exception.
   PRIVATE SECTION.
     CONSTANTS c_main TYPE string VALUE 'main'.
+
+    CLASS-METHODS map_files_to_objects
+      IMPORTING
+        it_files                  TYPE ty_path_name_tt
+        io_online                 TYPE REF TO zcl_abapgit_repo_online
+      RETURNING
+        VALUE(rt_changed_objects) TYPE zif_abapgit_definitions=>ty_items_ts
+      RAISING
+        zcx_abapgit_exception.
 
     CLASS-METHODS find_changed_files_all
       IMPORTING
@@ -287,6 +297,30 @@ CLASS lcl_helper IMPLEMENTATION.
       <ls_branch>-changed_files = find_changed_files(
         it_expanded1 = lt_main_expanded
         it_expanded2 = lt_expanded ).
+
+      <ls_branch>-changed_objects = map_files_to_objects(
+        io_online = io_online
+        it_files  = <ls_branch>-changed_files ).
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD map_files_to_objects.
+
+    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
+
+    FIELD-SYMBOLS <ls_file> LIKE LINE OF it_files.
+
+    LOOP AT it_files ASSIGNING <ls_file>.
+      zcl_abapgit_filename_logic=>file_to_object(
+        EXPORTING
+          iv_filename = <ls_file>-name
+          iv_path     = <ls_file>-path
+          iv_devclass = io_online->get_package( )
+          io_dot      = io_online->get_dot_abapgit( )
+        IMPORTING
+          es_item     = ls_item ).
+      INSERT ls_item INTO TABLE rt_changed_objects.
     ENDLOOP.
 
   ENDMETHOD.
