@@ -28,6 +28,14 @@ CLASS zcl_abapgit_gitv2_porcelain DEFINITION
         VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS commits_last_year
+      IMPORTING
+        !iv_url           TYPE string
+        !it_sha1          TYPE zif_abapgit_git_definitions=>ty_sha1_tt
+      RETURNING
+        VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS:
@@ -91,6 +99,37 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD commits_last_year.
+
+    DATA lv_xstring   TYPE xstring.
+    DATA lt_arguments TYPE string_table.
+    DATA lv_argument  TYPE string.
+    DATA lv_sha1      LIKE LINE OF it_sha1.
+
+
+    ASSERT lines( it_sha1 ) > 0.
+
+    lv_argument = |deepen-since { zcl_abapgit_git_time=>get_one_year_ago( ) }|.
+    APPEND lv_argument TO lt_arguments.
+    LOOP AT it_sha1 INTO lv_sha1.
+      lv_argument = |want { lv_sha1 }|.
+      APPEND lv_argument TO lt_arguments.
+    ENDLOOP.
+* 'filter object:type=commit' doesnt work on github
+    APPEND 'filter blob:none' TO lt_arguments.
+    APPEND 'no-progress' TO lt_arguments.
+    APPEND 'done' TO lt_arguments.
+
+    lv_xstring = send_command(
+      iv_url       = iv_url
+      iv_service   = c_service-upload
+      iv_command   = |fetch|
+      it_arguments = lt_arguments ).
+
+    rt_objects = decode_pack( lv_xstring ).
+    DELETE rt_objects WHERE type <> zif_abapgit_git_definitions=>c_type-commit.
+
+  ENDMETHOD.
 
   METHOD list_no_blobs_multi.
 

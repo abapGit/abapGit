@@ -31,7 +31,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -56,10 +56,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    CASE ii_event->mv_action.
-      WHEN c_action-refresh.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-    ENDCASE.
+    IF ii_event->mv_action = c_action-refresh.
+      rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+    ENDIF.
 
   ENDMETHOD.
 
