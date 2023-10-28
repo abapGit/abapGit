@@ -12,10 +12,18 @@ CLASS zcl_abapgit_http DEFINITION
     CLASS-METHODS get_agent
       RETURNING
         VALUE(rv_agent) TYPE string .
+
+    TYPES: BEGIN OF ty_key_value,
+             key   TYPE string,
+             value TYPE string,
+           END OF ty_key_value.
+    TYPES ty_headers TYPE STANDARD TABLE OF ty_key_value WITH DEFAULT KEY.
+
     CLASS-METHODS create_by_url
       IMPORTING
         !iv_url          TYPE string
         !iv_service      TYPE string
+        it_headers       TYPE ty_headers OPTIONAL
       RETURNING
         VALUE(ro_client) TYPE REF TO zcl_abapgit_http_client
       RAISING
@@ -48,7 +56,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
+CLASS zcl_abapgit_http IMPLEMENTATION.
 
 
   METHOD acquire_login_details.
@@ -121,6 +129,7 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
           lv_scheme              TYPE string,
           lv_authorization       TYPE string,
           li_client              TYPE REF TO if_http_client,
+          ls_header              LIKE LINE OF it_headers,
           lo_proxy_configuration TYPE REF TO zcl_abapgit_proxy_config,
           lv_text                TYPE string.
 
@@ -185,6 +194,12 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
     li_client->request->set_header_field(
         name  = '~request_uri'
         value = lv_uri ).
+
+    LOOP AT it_headers INTO ls_header.
+      li_client->request->set_header_field(
+        name  = ls_header-key
+        value = ls_header-value ).
+    ENDLOOP.
 
     " Disable internal auth dialog (due to its unclarity)
     li_client->propertytype_logon_popup = if_http_client=>co_disabled.
