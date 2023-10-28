@@ -201,6 +201,7 @@ CLASS lcl_helper IMPLEMENTATION.
       iv_url  = iv_url
       it_sha1 = lt_sha1 ).
 
+    CREATE OBJECT lo_visit.
     lo_visit->clear( )->push( ls_main-sha1 ).
     WHILE lo_visit->size( ) > 0.
       lv_current = lo_visit->pop( ).
@@ -215,7 +216,6 @@ CLASS lcl_helper IMPLEMENTATION.
       ENDIF.
     ENDWHILE.
 
-    CREATE OBJECT lo_visit.
     LOOP AT ct_branches ASSIGNING <ls_branch>.
       <ls_branch>-up_to_date = abap_undefined.
       lo_visit->clear( )->push( <ls_branch>-sha1 ).
