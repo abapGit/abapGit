@@ -127,9 +127,13 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
           CONTINUE.
         ENDIF.
 
+        ri_html->add( |<table>| ).
+        ri_html->add( |<tr><td>Filename</td><td>Remote SHA1</td><td>Local SHA1</td><td>Status</td></tr>| ).
         LOOP AT ls_branch-changed_files INTO ls_path_name.
-          ri_html->add( |<tt>{ ls_path_name-path }{ ls_path_name-name }</tt>, { ls_path_name-sha1 }<br>| ).
+          ri_html->add( |<tr><td><tt>{ ls_path_name-path }{ ls_path_name-name }</tt></td><td>{
+            ls_path_name-remote_sha1 }</td><td>?</td><td>?</td></tr>| ).
         ENDLOOP.
+        ri_html->add( |</table>| ).
         LOOP AT ls_branch-changed_objects INTO ls_item.
           ri_html->add( |<tt>{ ls_item-obj_type } { ls_item-obj_name }</tt><br>| ).
         ENDLOOP.
