@@ -31,7 +31,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -104,13 +104,19 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
       lt_branches = lcl_helper=>get_branch_information( lo_online ).
       LOOP AT lt_branches INTO ls_branch.
+        ri_html->add_icon( iv_name = 'code-branch' ).
         ri_html->add( ls_branch-display_name && '<br>' ).
         IF lines( ls_branch-changed_files ) = 0.
-          ri_html->add( 'NO CHANGES<br>' ).
+          ri_html->add( 'NO CHANGES<br><br>' ).
+          CONTINUE.
+        ELSEIF ls_branch-up_to_date = abap_false.
+          ri_html->add( 'NONONONONO UPDATED<br><br>' ).
+          CONTINUE.
         ENDIF.
         LOOP AT ls_branch-changed_files INTO ls_path_name.
           ri_html->add( |<tt>{ ls_path_name-path }{ ls_path_name-name }</tt><br>| ).
         ENDLOOP.
+        ri_html->add( '<br>' ).
       ENDLOOP.
     ENDLOOP.
 
