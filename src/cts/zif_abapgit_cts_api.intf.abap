@@ -30,6 +30,17 @@ INTERFACE zif_abapgit_cts_api
 
   TYPES ty_transport_list TYPE SORTED TABLE OF ty_transport WITH NON-UNIQUE KEY obj_type obj_name.
 
+  TYPES: BEGIN OF ty_transport_key,
+           object  TYPE e071k-object,
+           objname TYPE e071k-objname,
+           tabkey  TYPE e071k-tabkey,
+         END OF ty_transport_key.
+
+  TYPES: BEGIN OF ty_transport_data,
+           trstatus TYPE e070-trstatus,
+           keys     TYPE STANDARD TABLE OF ty_transport_key WITH DEFAULT KEY,
+         END OF ty_transport_data.
+
   "! Returns the transport request / task the object is currently in
   "! @parameter is_item | Object
   "! @parameter rv_transport | Transport request / task
@@ -41,6 +52,7 @@ INTERFACE zif_abapgit_cts_api
       VALUE(rv_transport) TYPE trkorr
     RAISING
       zcx_abapgit_exception .
+
   "! Check if change recording is possible for the given package
   "! @parameter iv_package | Package
   "! @parameter rv_possible | Change recording is possible
@@ -52,6 +64,7 @@ INTERFACE zif_abapgit_cts_api
       VALUE(rv_possible) TYPE abap_bool
     RAISING
       zcx_abapgit_exception .
+
   METHODS get_transports_for_list
     IMPORTING
       !it_items            TYPE zif_abapgit_definitions=>ty_items_tt
@@ -59,6 +72,7 @@ INTERFACE zif_abapgit_cts_api
       VALUE(rt_transports) TYPE ty_transport_list
     RAISING
       zcx_abapgit_exception .
+
   METHODS get_r3tr_obj_for_limu_obj
     IMPORTING
       iv_object   TYPE tadir-object
@@ -108,17 +122,6 @@ INTERFACE zif_abapgit_cts_api
   METHODS confirm_transport_messages
     RETURNING
       VALUE(rv_messages_confirmed) TYPE abap_bool .
-
-  TYPES: BEGIN OF ty_transport_key,
-           object  TYPE e071k-object,
-           objname TYPE e071k-objname,
-           tabkey  TYPE e071k-tabkey,
-         END OF ty_transport_key.
-
-  TYPES: BEGIN OF ty_transport_data,
-           trstatus TYPE e070-trstatus,
-           keys     TYPE STANDARD TABLE OF ty_transport_key WITH DEFAULT KEY,
-         END OF ty_transport_data.
 
   METHODS read
     IMPORTING
