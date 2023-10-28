@@ -23,11 +23,15 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
+    CONSTANTS: BEGIN OF c_action,
+                 refresh TYPE string VALUE 'refresh',
+               END OF c_action.
+
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -51,13 +55,22 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
 
   METHOD zif_abapgit_gui_event_handler~on_event.
-    RETURN. " todo, implement method
+
+    CASE ii_event->mv_action.
+      WHEN c_action-refresh.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+    ENDCASE.
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_menu_provider~get_menu.
 
     CREATE OBJECT ro_toolbar EXPORTING iv_id = 'toolbar-main'.
+
+    ro_toolbar->add(
+      iv_txt = 'Refresh'
+      iv_act = c_action-refresh ).
 
     ro_toolbar->add(
       iv_txt = zcl_abapgit_gui_buttons=>repo_list( )
@@ -70,6 +83,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     DATA lt_favorites TYPE zif_abapgit_repo_srv=>ty_repo_list.
     DATA li_favorite  LIKE LINE OF lt_favorites.
     DATA lo_online    TYPE REF TO zcl_abapgit_repo_online.
+    DATA lt_branches TYPE lcl_helper=>ty_branches.
+    DATA ls_branch LIKE LINE OF lt_branches.
+    DATA ls_path_name LIKE LINE OF ls_branch-changed_files.
 
 
     register_handlers( ).
@@ -87,7 +103,16 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       lo_online ?= li_favorite.
       ri_html->add( '<u>' && li_favorite->get_name( ) && '</u><br>' ).
 
-      lcl_helper=>list_changes_per_branch( lo_online ).
+      lt_branches = lcl_helper=>list_changes_per_branch( lo_online ).
+      LOOP AT lt_branches INTO ls_branch.
+        ri_html->add( ls_branch-display_name && '<br>' ).
+        IF lines( ls_branch-changed_files ) = 0.
+          ri_html->add( 'NO CHANGES<br>' ).
+        ENDIF.
+        LOOP AT ls_branch-changed_files INTO ls_path_name.
+          ri_html->add( |<tt>{ ls_path_name-path }{ ls_path_name-name }</tt><br>| ).
+        ENDLOOP.
+      ENDLOOP.
     ENDLOOP.
 
 * list open transports for current user
