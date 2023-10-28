@@ -105,7 +105,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
       lt_branches = lcl_helper=>get_branch_information( lo_online ).
       LOOP AT lt_branches INTO ls_branch.
-        ri_html->add_icon( iv_name = 'code-branch' ).
+        ri_html->add_icon( 'code-branch' ).
         ri_html->add( ls_branch-display_name ).
         IF ls_branch-pr IS NOT INITIAL.
           ri_html->add( |<a href="{ ls_branch-pr-url }">{ ls_branch-pr-title }</a>| ).
