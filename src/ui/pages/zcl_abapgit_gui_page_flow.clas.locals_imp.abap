@@ -233,10 +233,13 @@ CLASS lcl_helper IMPLEMENTATION.
           EXIT.
         ENDIF.
 
-        ls_raw = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
-        lo_visit->push( ls_raw-parent ).
-        IF ls_raw-parent2 IS NOT INITIAL.
-          lo_visit->push( ls_raw-parent2 ).
+        READ TABLE lt_commits ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = lv_current.
+        IF sy-subrc = 0.
+          ls_raw = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
+          lo_visit->push( ls_raw-parent ).
+          IF ls_raw-parent2 IS NOT INITIAL.
+            lo_visit->push( ls_raw-parent2 ).
+          ENDIF.
         ENDIF.
       ENDWHILE.
 
