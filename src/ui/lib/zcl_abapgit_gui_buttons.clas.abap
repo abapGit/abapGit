@@ -7,6 +7,9 @@ CLASS zcl_abapgit_gui_buttons DEFINITION
     CLASS-METHODS new_online
       RETURNING VALUE(rv_html_string) TYPE string.
 
+    CLASS-METHODS flow
+      RETURNING VALUE(rv_html_string) TYPE string.
+
     CLASS-METHODS new_offline
       RETURNING VALUE(rv_html_string) TYPE string.
 
@@ -62,6 +65,11 @@ CLASS zcl_abapgit_gui_buttons IMPLEMENTATION.
 
   METHOD new_online.
     rv_html_string = zcl_abapgit_html=>icon( 'cloud-upload-alt' ) && ' New Online'.
+  ENDMETHOD.
+
+
+  METHOD flow.
+    rv_html_string = zcl_abapgit_html=>icon( 'flow' ) && ' Flow'.
   ENDMETHOD.
 
 
