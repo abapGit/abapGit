@@ -85,6 +85,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     DATA lt_branches  TYPE lcl_helper=>ty_branches.
     DATA ls_branch    LIKE LINE OF lt_branches.
     DATA ls_path_name LIKE LINE OF ls_branch-changed_files.
+    DATA ls_item      LIKE LINE OF ls_branch-changed_objects.
 
 
     register_handlers( ).
@@ -125,8 +126,12 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
           ri_html->add( 'NONONONONO UPDATED<br><br>' ).
           CONTINUE.
         ENDIF.
+
         LOOP AT ls_branch-changed_files INTO ls_path_name.
           ri_html->add( |<tt>{ ls_path_name-path }{ ls_path_name-name }</tt><br>| ).
+        ENDLOOP.
+        LOOP AT ls_branch-changed_objects INTO ls_item.
+          ri_html->add( |<tt>{ ls_item-obj_type }{ ls_item-obj_name }</tt><br>| ).
         ENDLOOP.
         ri_html->add( '<br>' ).
       ENDLOOP.
