@@ -11,7 +11,7 @@ CLASS zcl_abapgit_cts_api DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    DATA: mv_confirm_transp_msgs_called TYPE abap_bool.
+    DATA mv_confirm_transp_msgs_called TYPE abap_bool.
 
     "! Returns the transport request / task the object is currently locked in
     "! @parameter iv_program_id | Program ID
@@ -530,6 +530,32 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
       " Task/request &1 has already been released
       MESSAGE e064(tk) WITH iv_transport_request INTO zcx_abapgit_exception=>null.
       zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_cts_api~list_open_requests_by_user.
+
+    TYPES: BEGIN OF ty_e070,
+             trkorr     TYPE e070-trkorr,
+             trfunction TYPE e070-trfunction,
+             strkorr    TYPE e070-strkorr,
+           END OF ty_e070.
+    DATA lt_e070 TYPE STANDARD TABLE OF ty_e070 WITH DEFAULT KEY.
+
+* find all tasks first
+    SELECT trkorr trfunction strkorr
+      FROM e070 INTO TABLE lt_e070
+      WHERE as4user = sy-uname
+      AND trstatus = zif_abapgit_cts_api=>c_transport_status-modifiable
+      AND strkorr <> ''
+      ORDER BY PRIMARY KEY.
+
+    IF lines( lt_e070 ) > 0.
+      SELECT trkorr INTO TABLE rt_trkorr
+        FOR ALL ENTRIES IN lt_e070
+        WHERE trkorr = lt_e070-strkorr
+        AND trfunction = zif_abapgit_cts_api=>c_transport_type-wb_request.
     ENDIF.
 
   ENDMETHOD.

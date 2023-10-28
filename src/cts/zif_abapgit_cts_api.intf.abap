@@ -22,6 +22,11 @@ INTERFACE zif_abapgit_cts_api
       delete TYPE c LENGTH 1 VALUE 'D',
     END OF c_transport_mode.
 
+  CONSTANTS:
+    BEGIN OF c_transport_status,
+      modifiable TYPE c LENGTH 1 VALUE 'D',
+    END OF c_transport_status.
+
   TYPES: BEGIN OF ty_transport,
            obj_type TYPE tadir-object,
            obj_name TYPE tadir-obj_name,
@@ -29,6 +34,8 @@ INTERFACE zif_abapgit_cts_api
          END OF ty_transport.
 
   TYPES ty_transport_list TYPE SORTED TABLE OF ty_transport WITH NON-UNIQUE KEY obj_type obj_name.
+
+  TYPES ty_trkorr_tt TYPE STANDARD TABLE OF trkorr WITH DEFAULT KEY.
 
   TYPES: BEGIN OF ty_transport_key,
            object  TYPE e071k-object,
@@ -134,6 +141,14 @@ INTERFACE zif_abapgit_cts_api
   METHODS validate_transport_request
     IMPORTING
       iv_transport_request TYPE trkorr
+    RAISING
+      zcx_abapgit_exception.
+
+  METHODS list_open_requests_by_user
+    IMPORTING
+      iv_user TYPE sy-uname DEFAULT sy-uname
+    RETURNING
+      VALUE(rt_trkorr) TYPE ty_trkorr_tt
     RAISING
       zcx_abapgit_exception.
 
