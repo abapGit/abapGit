@@ -31,7 +31,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -132,7 +132,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
         ENDIF.
 
         ri_html->add( |<table>| ).
-        ri_html->add( |<tr><td><u>Filename</u></td><td><u>Remote SHA1</u></td><td><u>Local SHA1</u></td><td></td></tr>| ).
+        ri_html->add( |<tr><td><u>Filename</u></td><td><u>Remote SHA1</u></td>| &&
+                      |<td><u>Local SHA1</u></td><td></td></tr>| ).
         LOOP AT ls_branch-changed_files INTO ls_path_name.
           lv_status = 'Diff'.
           IF ls_path_name-remote_sha1 = ls_path_name-local_sha1.
