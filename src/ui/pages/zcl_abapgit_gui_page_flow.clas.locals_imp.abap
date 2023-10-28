@@ -52,9 +52,9 @@ CLASS lcl_helper IMPLEMENTATION.
 
   METHOD get_branch_information.
 
-    DATA lt_branches        TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
-    DATA ls_branch          LIKE LINE OF lt_branches.
-    DATA ls_result          LIKE LINE OF rt_branches.
+    DATA lt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
+    DATA ls_branch   LIKE LINE OF lt_branches.
+    DATA ls_result   LIKE LINE OF rt_branches.
 
 
     lt_branches = zcl_abapgit_gitv2_porcelain=>list_branches(
@@ -63,12 +63,13 @@ CLASS lcl_helper IMPLEMENTATION.
 
     LOOP AT lt_branches INTO ls_branch WHERE display_name <> c_main.
       ls_result-display_name = ls_branch-display_name.
+      ls_result-sha1 = ls_branch-sha1.
       INSERT ls_result INTO TABLE rt_branches.
     ENDLOOP.
 
     find_changed_files_all(
       EXPORTING
-        io_online = io_online
+        io_online   = io_online
         it_branches = lt_branches
       CHANGING
         ct_branches = rt_branches ).
