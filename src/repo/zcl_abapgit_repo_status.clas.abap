@@ -261,8 +261,13 @@ CLASS zcl_abapgit_repo_status IMPLEMENTATION.
     DATA lo_instance TYPE REF TO zcl_abapgit_repo_status.
     DATA lo_consistency_checks TYPE REF TO lcl_status_consistency_checks.
 
-    lt_local = io_repo->get_files_local( ii_log = ii_log
-                                         ii_obj_filter = ii_obj_filter ).
+    IF ii_obj_filter IS INITIAL.
+      lt_local = io_repo->get_files_local( ii_log ).
+    ELSE.
+      lt_local = io_repo->get_files_local_filtered(
+        ii_log        = ii_log
+        ii_obj_filter = ii_obj_filter ).
+    ENDIF.
 
     IF lines( lt_local ) <= 2.
       " Less equal two means that we have only the .abapgit.xml and the package in

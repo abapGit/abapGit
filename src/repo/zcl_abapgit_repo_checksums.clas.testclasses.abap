@@ -214,6 +214,9 @@ CLASS lcl_repo_mock IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
+  METHOD zif_abapgit_repo~get_files_local_filtered.
+  ENDMETHOD.
+
   METHOD zif_abapgit_repo~get_files_local.
     rt_files = mt_local_files.
   ENDMETHOD.
