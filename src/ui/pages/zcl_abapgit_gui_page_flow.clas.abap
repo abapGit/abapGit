@@ -31,7 +31,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -108,7 +108,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
         ri_html->add_icon( 'code-branch' ).
         ri_html->add( ls_branch-display_name ).
         IF ls_branch-pr IS NOT INITIAL.
-          ri_html->add( |<a href="{ ls_branch-pr-url }">{ ls_branch-pr-title }</a>| ).
+          ri_html->add_a(
+            iv_txt   = ls_branch-pr-title
+            iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ ls_branch-pr-url }|
+            iv_class = |url| ).
+
           IF ls_branch-pr-draft = abap_true.
             ri_html->add( 'DRAFT' ).
           ENDIF.
