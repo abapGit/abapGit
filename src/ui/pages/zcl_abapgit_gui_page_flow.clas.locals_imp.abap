@@ -137,14 +137,14 @@ CLASS lcl_helper IMPLEMENTATION.
   METHOD find_up_to_date.
 
     TYPES: BEGIN OF ty_commit,
-             commit TYPE zif_abapgit_git_definitions=>ty_sha1,
-             parent    TYPE zif_abapgit_git_definitions=>ty_sha1,
-             parent2   TYPE zif_abapgit_git_definitions=>ty_sha1,
+             commit  TYPE zif_abapgit_git_definitions=>ty_sha1,
+             parent  TYPE zif_abapgit_git_definitions=>ty_sha1,
+             parent2 TYPE zif_abapgit_git_definitions=>ty_sha1,
            END OF ty_commit.
 
     DATA ls_branch  LIKE LINE OF it_branches.
     DATA lt_commits TYPE zif_abapgit_definitions=>ty_objects_tt.
-    DATA ls_main    LIKE LINE OF lt_branches.
+    DATA ls_main    LIKE LINE OF it_branches.
     DATA lv_current TYPE zif_abapgit_git_definitions=>ty_sha1.
     DATA lt_sha1    TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
     DATA lo_visit   TYPE REF TO lcl_sha1_stack.
@@ -181,9 +181,9 @@ CLASS lcl_helper IMPLEMENTATION.
 
         READ TABLE lt_parsed INTO ls_parsed WITH KEY commit = lv_current.
         IF sy-subrc <> 0.
-          READ TABLE lt_commits ASSIGNING <ls_commit> WITH KEY sha1 = lv_current.
+          READ TABLE lt_commits ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = lv_current.
           IF sy-subrc <> 0.
-          " if not found in lt_commits its more than a year old
+            " if not found in lt_commits its more than a year old
             CONTINUE.
           ENDIF.
           ls_raw = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
