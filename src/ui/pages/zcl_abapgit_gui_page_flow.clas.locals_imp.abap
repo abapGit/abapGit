@@ -176,12 +176,6 @@ CLASS lcl_helper IMPLEMENTATION.
 
   METHOD find_up_to_date.
 
-    TYPES: BEGIN OF ty_commit,
-             commit  TYPE zif_abapgit_git_definitions=>ty_sha1,
-             parent  TYPE zif_abapgit_git_definitions=>ty_sha1,
-             parent2 TYPE zif_abapgit_git_definitions=>ty_sha1,
-           END OF ty_commit.
-
     DATA ls_branch  LIKE LINE OF it_branches.
     DATA lt_commits TYPE zif_abapgit_definitions=>ty_objects_tt.
     DATA ls_main    LIKE LINE OF it_branches.
@@ -189,8 +183,8 @@ CLASS lcl_helper IMPLEMENTATION.
     DATA lt_sha1    TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
     DATA lo_visit   TYPE REF TO lcl_sha1_stack.
     DATA ls_raw     TYPE zcl_abapgit_git_pack=>ty_commit.
-    DATA lt_parsed  TYPE HASHED TABLE OF ty_commit WITH UNIQUE KEY commit.
-    DATA ls_parsed  LIKE LINE OF lt_parsed.
+
+    DATA lt_main_reachable TYPE HASHED TABLE OF zif_abapgit_git_definitions=>ty_sha1 WITH UNIQUE KEY table_line.
 
     FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_branches.
     FIELD-SYMBOLS <ls_commit> LIKE LINE OF lt_commits.
@@ -207,9 +201,23 @@ CLASS lcl_helper IMPLEMENTATION.
       iv_url  = iv_url
       it_sha1 = lt_sha1 ).
 
+    lo_visit->clear( )->push( ls_main-sha1 ).
+    WHILE lo_visit->size( ) > 0.
+      lv_current = lo_visit->pop( ).
+      INSERT lv_current INTO TABLE lt_main_reachable.
+      READ TABLE lt_commits ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = lv_current.
+      IF sy-subrc = 0.
+        ls_raw = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
+        lo_visit->push( ls_raw-parent ).
+        IF ls_raw-parent2 IS NOT INITIAL.
+          lo_visit->push( ls_raw-parent2 ).
+        ENDIF.
+      ENDIF.
+    ENDWHILE.
+
     CREATE OBJECT lo_visit.
     LOOP AT ct_branches ASSIGNING <ls_branch>.
-      <ls_branch>-up_to_date = abap_false.
+      <ls_branch>-up_to_date = abap_undefined.
       lo_visit->clear( )->push( <ls_branch>-sha1 ).
 
       WHILE lo_visit->size( ) > 0.
@@ -219,23 +227,16 @@ CLASS lcl_helper IMPLEMENTATION.
           EXIT.
         ENDIF.
 
-        READ TABLE lt_parsed INTO ls_parsed WITH KEY commit = lv_current.
-        IF sy-subrc <> 0.
-          READ TABLE lt_commits ASSIGNING <ls_commit> WITH TABLE KEY sha COMPONENTS sha1 = lv_current.
-          IF sy-subrc <> 0.
-            " if not found in lt_commits its more than a year old
-            CONTINUE.
-          ENDIF.
-          ls_raw = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
-          ls_parsed-commit = lv_current.
-          ls_parsed-parent = ls_raw-parent.
-          ls_parsed-parent2 = ls_raw-parent2.
-          INSERT ls_parsed INTO TABLE lt_parsed.
+        READ TABLE lt_main_reachable WITH KEY table_line = lv_current TRANSPORTING NO FIELDS.
+        IF sy-subrc = 0.
+          <ls_branch>-up_to_date = abap_false.
+          EXIT.
         ENDIF.
 
-        lo_visit->push( ls_parsed-parent ).
-        IF ls_parsed-parent2 IS NOT INITIAL.
-          lo_visit->push( ls_parsed-parent2 ).
+        ls_raw = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
+        lo_visit->push( ls_raw-parent ).
+        IF ls_raw-parent2 IS NOT INITIAL.
+          lo_visit->push( ls_raw-parent2 ).
         ENDIF.
       ENDWHILE.
 
