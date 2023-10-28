@@ -44,14 +44,17 @@ CLASS lcl_sha1_stack IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
+***************************************************
+
 CLASS lcl_helper DEFINITION FINAL.
   PUBLIC SECTION.
 
     TYPES:
       BEGIN OF ty_path_name,
-        path TYPE string,
-        name TYPE string,
+        path        TYPE string,
+        name        TYPE string,
         remote_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1,
+        local_sha1  TYPE zif_abapgit_git_definitions=>ty_sha1,
       END OF ty_path_name.
     TYPES:
       ty_path_name_tt TYPE HASHED TABLE OF ty_path_name WITH UNIQUE KEY path name.
@@ -110,6 +113,14 @@ CLASS lcl_helper DEFINITION FINAL.
     CLASS-METHODS find_prs
       IMPORTING
         iv_url      TYPE string
+      CHANGING
+        ct_branches TYPE ty_branches
+      RAISING
+        zcx_abapgit_exception.
+
+    CLASS-METHODS add_local_status
+      IMPORTING
+        io_online   TYPE REF TO zcl_abapgit_repo_online
       CHANGING
         ct_branches TYPE ty_branches
       RAISING
@@ -180,6 +191,12 @@ CLASS lcl_helper IMPLEMENTATION.
     find_prs(
       EXPORTING
         iv_url      = io_online->get_url( )
+      CHANGING
+        ct_branches = rt_branches ).
+
+    add_local_status(
+      EXPORTING
+        io_online   = io_online
       CHANGING
         ct_branches = rt_branches ).
 
@@ -302,6 +319,30 @@ CLASS lcl_helper IMPLEMENTATION.
       <ls_branch>-changed_objects = map_files_to_objects(
         io_online = io_online
         it_files  = <ls_branch>-changed_files ).
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD add_local_status.
+
+    DATA lt_local TYPE zif_abapgit_definitions=>ty_files_item_tt.
+
+    FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_branches.
+    FIELD-SYMBOLS <ls_local> LIKE LINE OF lt_local.
+    FIELD-SYMBOLS <ls_changed_file> TYPE ty_path_name.
+
+
+    lt_local = io_online->get_files_local( ).
+
+    LOOP AT ct_branches ASSIGNING <ls_branch>.
+      LOOP AT <ls_branch>-changed_files ASSIGNING <ls_changed_file>.
+        READ TABLE lt_local ASSIGNING <ls_local>
+          WITH KEY file-filename = <ls_changed_file>-name
+          file-path = <ls_changed_file>-path.
+        IF sy-subrc = 0.
+          <ls_changed_file>-local_sha1 = <ls_local>-file-sha1.
+        ENDIF.
+      ENDLOOP.
     ENDLOOP.
 
   ENDMETHOD.
