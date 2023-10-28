@@ -8,3 +8,4 @@ ci/*.abap
 allure-report
 coverage
 Heap.*
+list.txt
