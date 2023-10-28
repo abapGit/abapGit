@@ -78,11 +78,11 @@ CLASS lcl_helper IMPLEMENTATION.
 
   METHOD find_changed_files_all.
 
-    DATA ls_branch          LIKE LINE OF lt_branches.
+    DATA ls_branch          LIKE LINE OF it_branches.
     DATA lt_sha1            TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
     DATA lt_objects         TYPE zif_abapgit_definitions=>ty_objects_tt.
     DATA lv_starting_folder TYPE string.
-    DATA ls_main            LIKE LINE OF lt_branches.
+    DATA ls_main            LIKE LINE OF it_branches.
     DATA lt_expanded        TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
     DATA lt_main_expanded   TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
 
