@@ -82,8 +82,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     DATA lt_favorites TYPE zif_abapgit_repo_srv=>ty_repo_list.
     DATA li_favorite  LIKE LINE OF lt_favorites.
     DATA lo_online    TYPE REF TO zcl_abapgit_repo_online.
-    DATA lt_branches TYPE lcl_helper=>ty_branches.
-    DATA ls_branch LIKE LINE OF lt_branches.
+    DATA lt_branches  TYPE lcl_helper=>ty_branches.
+    DATA ls_branch    LIKE LINE OF lt_branches.
     DATA ls_path_name LIKE LINE OF ls_branch-changed_files.
 
 
@@ -100,12 +100,20 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       " todo, ENDIF.
 
       lo_online ?= li_favorite.
-      ri_html->add( '<u>' && li_favorite->get_name( ) && '</u><br>' ).
+      ri_html->add( '<u>' && li_favorite->get_name( ) && '</u>' ).
+      ri_html->add( '<br>' ).
 
       lt_branches = lcl_helper=>get_branch_information( lo_online ).
       LOOP AT lt_branches INTO ls_branch.
         ri_html->add_icon( iv_name = 'code-branch' ).
-        ri_html->add( ls_branch-display_name && '<br>' ).
+        ri_html->add( ls_branch-display_name ).
+        IF ls_branch-pr IS NOT INITIAL.
+          ri_html->add( |<a href="{ ls_branch-pr-url }">{ ls_branch-pr-title }</a>| ).
+          IF ls_branch-pr-draft = abap_true.
+            ri_html->add( 'DRAFT' ).
+          ENDIF.
+        ENDIF.
+        ri_html->add( '<br>' ).
         IF lines( ls_branch-changed_files ) = 0.
           ri_html->add( 'NO CHANGES<br><br>' ).
           CONTINUE.

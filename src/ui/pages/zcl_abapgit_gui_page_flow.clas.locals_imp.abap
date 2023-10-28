@@ -60,6 +60,11 @@ CLASS lcl_helper DEFINITION FINAL.
              sha1          TYPE zif_abapgit_git_definitions=>ty_sha1,
              up_to_date    TYPE abap_bool,
              changed_files TYPE ty_path_name_tt,
+             BEGIN OF pr,
+               title TYPE string,
+               url   TYPE string,
+               draft TYPE abap_bool,
+             END OF pr,
            END OF ty_branch.
     TYPES ty_branches TYPE STANDARD TABLE OF ty_branch WITH DEFAULT KEY.
 
@@ -91,6 +96,14 @@ CLASS lcl_helper DEFINITION FINAL.
       RAISING
         zcx_abapgit_exception.
 
+    CLASS-METHODS find_prs
+      IMPORTING
+        iv_url      TYPE string
+      CHANGING
+        ct_branches TYPE ty_branches
+      RAISING
+        zcx_abapgit_exception.
+
     CLASS-METHODS find_changed_files
       IMPORTING
         it_expanded1    TYPE zif_abapgit_git_definitions=>ty_expanded_tt
@@ -100,6 +113,27 @@ CLASS lcl_helper DEFINITION FINAL.
 ENDCLASS.
 
 CLASS lcl_helper IMPLEMENTATION.
+
+  METHOD find_prs.
+
+    DATA lt_pulls TYPE zif_abapgit_pr_enum_provider=>ty_pull_requests.
+    DATA ls_pull LIKE LINE OF lt_pulls.
+
+    FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_branches.
+
+
+    lt_pulls = zcl_abapgit_pr_enumerator=>new( iv_url )->get_pulls( ).
+
+    LOOP AT ct_branches ASSIGNING <ls_branch>.
+      READ TABLE lt_pulls INTO ls_pull WITH KEY head_branch = <ls_branch>-display_name.
+      IF sy-subrc = 0.
+        <ls_branch>-pr-title = |{ ls_pull-title } #{ ls_pull-number }|.
+        <ls_branch>-pr-url = ls_pull-html_url.
+        <ls_branch>-pr-draft = ls_pull-draft.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
 
   METHOD get_branch_information.
 
@@ -129,6 +163,12 @@ CLASS lcl_helper IMPLEMENTATION.
       EXPORTING
         iv_url      = io_online->get_url( )
         it_branches = lt_branches
+      CHANGING
+        ct_branches = rt_branches ).
+
+    find_prs(
+      EXPORTING
+        iv_url      = io_online->get_url( )
       CHANGING
         ct_branches = rt_branches ).
 

@@ -11,6 +11,8 @@ INTERFACE zif_abapgit_pr_enum_provider
       head_branch     TYPE string,
       created_at      TYPE string, " TODO change to D after date parsing fixed
       is_for_upstream TYPE abap_bool,
+      draft           TYPE abap_bool,
+      html_url        TYPE string,
     END OF ty_pull_request.
   TYPES:
     ty_pull_requests TYPE STANDARD TABLE OF ty_pull_request WITH KEY base_url number.
