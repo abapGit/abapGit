@@ -71,19 +71,19 @@ CLASS lcl_helper DEFINITION FINAL.
                draft TYPE abap_bool,
              END OF pr,
              BEGIN OF transport,
-               trkorr TYPE tkrorr,
+               trkorr TYPE trkorr,
                title  TYPE string,
              END OF transport,
              changed_files   TYPE ty_path_name_tt,
              changed_objects TYPE zif_abapgit_definitions=>ty_items_ts,
            END OF ty_feature.
-    TYPES ty_branches TYPE STANDARD TABLE OF ty_feature WITH DEFAULT KEY.
+    TYPES ty_features TYPE STANDARD TABLE OF ty_feature WITH DEFAULT KEY.
 
     CLASS-METHODS get_information
       IMPORTING
         io_online          TYPE REF TO zcl_abapgit_repo_online
       RETURNING
-        VALUE(rt_branches) TYPE ty_branches
+        VALUE(rt_features) TYPE ty_features
       RAISING
         zcx_abapgit_exception.
   PRIVATE SECTION.
@@ -103,7 +103,7 @@ CLASS lcl_helper DEFINITION FINAL.
         io_online   TYPE REF TO zcl_abapgit_repo_online
         it_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
       CHANGING
-        ct_branches TYPE ty_branches
+        ct_branches TYPE ty_features
       RAISING
         zcx_abapgit_exception.
 
@@ -112,7 +112,7 @@ CLASS lcl_helper DEFINITION FINAL.
         iv_url      TYPE string
         it_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
       CHANGING
-        ct_branches TYPE ty_branches
+        ct_branches TYPE ty_features
       RAISING
         zcx_abapgit_exception.
 
@@ -120,7 +120,7 @@ CLASS lcl_helper DEFINITION FINAL.
       IMPORTING
         iv_url      TYPE string
       CHANGING
-        ct_branches TYPE ty_branches
+        ct_branches TYPE ty_features
       RAISING
         zcx_abapgit_exception.
 
@@ -128,7 +128,7 @@ CLASS lcl_helper DEFINITION FINAL.
       IMPORTING
         io_online   TYPE REF TO zcl_abapgit_repo_online
       CHANGING
-        ct_branches TYPE ty_branches
+        ct_branches TYPE ty_features
       RAISING
         zcx_abapgit_exception.
 
@@ -167,7 +167,7 @@ CLASS lcl_helper IMPLEMENTATION.
 
     DATA lt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
     DATA ls_branch   LIKE LINE OF lt_branches.
-    DATA ls_result   LIKE LINE OF rt_branches.
+    DATA ls_result   LIKE LINE OF rt_features.
 
 
     lt_branches = zcl_abapgit_gitv2_porcelain=>list_branches(
@@ -177,7 +177,7 @@ CLASS lcl_helper IMPLEMENTATION.
     LOOP AT lt_branches INTO ls_branch WHERE display_name <> c_main.
       ls_result-branch-display_name = ls_branch-display_name.
       ls_result-branch-sha1 = ls_branch-sha1.
-      INSERT ls_result INTO TABLE rt_branches.
+      INSERT ls_result INTO TABLE rt_features.
     ENDLOOP.
 
     find_changed_files_all(
@@ -185,26 +185,26 @@ CLASS lcl_helper IMPLEMENTATION.
         io_online   = io_online
         it_branches = lt_branches
       CHANGING
-        ct_branches = rt_branches ).
+        ct_branches = rt_features ).
 
     find_up_to_date(
       EXPORTING
         iv_url      = io_online->get_url( )
         it_branches = lt_branches
       CHANGING
-        ct_branches = rt_branches ).
+        ct_branches = rt_features ).
 
     find_prs(
       EXPORTING
         iv_url      = io_online->get_url( )
       CHANGING
-        ct_branches = rt_branches ).
+        ct_branches = rt_features ).
 
     add_local_status(
       EXPORTING
         io_online   = io_online
       CHANGING
-        ct_branches = rt_branches ).
+        ct_branches = rt_features ).
 
   ENDMETHOD.
 
