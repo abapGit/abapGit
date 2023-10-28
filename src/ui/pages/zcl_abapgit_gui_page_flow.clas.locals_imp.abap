@@ -2,6 +2,48 @@
 *"* local helper classes, interface definitions and type
 *"* declarations
 
+CLASS lcl_sha1_stack DEFINITION.
+  PUBLIC SECTION.
+    METHODS clear
+      RETURNING
+        VALUE(ro_stack) TYPE REF TO lcl_sha1_stack.
+
+    METHODS push
+      IMPORTING
+        iv_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1.
+
+    METHODS pop
+      RETURNING
+        VALUE(rv_sha1) TYPE zif_abapgit_git_definitions=>ty_sha1.
+
+    METHODS size
+      RETURNING
+        VALUE(rv_size) TYPE i.
+  PRIVATE SECTION.
+    DATA mt_list TYPE STANDARD TABLE OF zif_abapgit_git_definitions=>ty_sha1 WITH DEFAULT KEY.
+ENDCLASS.
+
+CLASS lcl_sha1_stack IMPLEMENTATION.
+  METHOD clear.
+    CLEAR mt_list.
+    ro_stack = me.
+  ENDMETHOD.
+
+  METHOD push.
+    INSERT iv_sha1 INTO mt_list INDEX 1.
+  ENDMETHOD.
+
+  METHOD pop.
+    READ TABLE mt_list INDEX 1 INTO rv_sha1.
+    ASSERT sy-subrc = 0.
+    DELETE mt_list INDEX 1.
+  ENDMETHOD.
+
+  METHOD size.
+    rv_size = lines( mt_list ).
+  ENDMETHOD.
+ENDCLASS.
+
 CLASS lcl_helper DEFINITION FINAL.
   PUBLIC SECTION.
 
@@ -9,7 +51,7 @@ CLASS lcl_helper DEFINITION FINAL.
       BEGIN OF ty_path_name,
         path TYPE string,
         name TYPE string,
-      END OF ty_path_name .
+      END OF ty_path_name.
     TYPES:
       ty_path_name_tt TYPE HASHED TABLE OF ty_path_name WITH UNIQUE KEY path name.
 
@@ -33,7 +75,16 @@ CLASS lcl_helper DEFINITION FINAL.
 
     CLASS-METHODS find_changed_files_all
       IMPORTING
-        io_online          TYPE REF TO zcl_abapgit_repo_online
+        io_online   TYPE REF TO zcl_abapgit_repo_online
+        it_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
+      CHANGING
+        ct_branches TYPE ty_branches
+      RAISING
+        zcx_abapgit_exception.
+
+    CLASS-METHODS find_up_to_date
+      IMPORTING
+        iv_url      TYPE string
         it_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
       CHANGING
         ct_branches TYPE ty_branches
@@ -73,6 +124,82 @@ CLASS lcl_helper IMPLEMENTATION.
         it_branches = lt_branches
       CHANGING
         ct_branches = rt_branches ).
+
+    find_up_to_date(
+      EXPORTING
+        iv_url      = io_online->get_url( )
+        it_branches = lt_branches
+      CHANGING
+        ct_branches = rt_branches ).
+
+  ENDMETHOD.
+
+  METHOD find_up_to_date.
+
+    TYPES: BEGIN OF ty_commit,
+             commit TYPE zif_abapgit_git_definitions=>ty_sha1,
+             parent    TYPE zif_abapgit_git_definitions=>ty_sha1,
+             parent2   TYPE zif_abapgit_git_definitions=>ty_sha1,
+           END OF ty_commit.
+
+    DATA ls_branch  LIKE LINE OF it_branches.
+    DATA lt_commits TYPE zif_abapgit_definitions=>ty_objects_tt.
+    DATA ls_main    LIKE LINE OF lt_branches.
+    DATA lv_current TYPE zif_abapgit_git_definitions=>ty_sha1.
+    DATA lt_sha1    TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
+    DATA lo_visit   TYPE REF TO lcl_sha1_stack.
+    DATA ls_raw     TYPE zcl_abapgit_git_pack=>ty_commit.
+    DATA lt_parsed  TYPE HASHED TABLE OF ty_commit WITH UNIQUE KEY commit.
+    DATA ls_parsed  LIKE LINE OF lt_parsed.
+
+    FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_branches.
+    FIELD-SYMBOLS <ls_commit> LIKE LINE OF lt_commits.
+
+
+    READ TABLE it_branches INTO ls_main WITH KEY display_name = c_main.
+    ASSERT sy-subrc = 0.
+
+    LOOP AT it_branches INTO ls_branch WHERE is_head = abap_false.
+      APPEND ls_branch-sha1 TO lt_sha1.
+    ENDLOOP.
+
+    lt_commits = zcl_abapgit_gitv2_porcelain=>commits_last_year(
+      iv_url  = iv_url
+      it_sha1 = lt_sha1 ).
+
+    CREATE OBJECT lo_visit.
+    LOOP AT ct_branches ASSIGNING <ls_branch>.
+      <ls_branch>-up_to_date = abap_false.
+      lo_visit->clear( )->push( <ls_branch>-sha1 ).
+
+      WHILE lo_visit->size( ) > 0.
+        lv_current = lo_visit->pop( ).
+        IF lv_current = ls_main-sha1.
+          <ls_branch>-up_to_date = abap_true.
+          EXIT.
+        ENDIF.
+
+        READ TABLE lt_parsed INTO ls_parsed WITH KEY commit = lv_current.
+        IF sy-subrc <> 0.
+          READ TABLE lt_commits ASSIGNING <ls_commit> WITH KEY sha1 = lv_current.
+          IF sy-subrc <> 0.
+          " if not found in lt_commits its more than a year old
+            CONTINUE.
+          ENDIF.
+          ls_raw = zcl_abapgit_git_pack=>decode_commit( <ls_commit>-data ).
+          ls_parsed-commit = lv_current.
+          ls_parsed-parent = ls_raw-parent.
+          ls_parsed-parent2 = ls_raw-parent2.
+          INSERT ls_parsed INTO TABLE lt_parsed.
+        ENDIF.
+
+        lo_visit->push( ls_parsed-parent ).
+        IF ls_parsed-parent2 IS NOT INITIAL.
+          lo_visit->push( ls_parsed-parent2 ).
+        ENDIF.
+      ENDWHILE.
+
+    ENDLOOP.
 
   ENDMETHOD.
 
