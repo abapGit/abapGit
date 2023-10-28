@@ -1,45 +1,46 @@
-CLASS zcl_abapgit_gui_page_code_insp DEFINITION PUBLIC FINAL CREATE PUBLIC
-    INHERITING FROM zcl_abapgit_gui_page_codi_base.
+CLASS zcl_abapgit_gui_page_code_insp DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_gui_page_codi_base
+  FINAL
+  CREATE PRIVATE.
 
   PUBLIC SECTION.
-    INTERFACES: zif_abapgit_gui_hotkeys.
+
+    INTERFACES:
+      zif_abapgit_gui_event_handler,
+      zif_abapgit_gui_hotkeys,
+      zif_abapgit_gui_menu_provider,
+      zif_abapgit_gui_renderable.
+
+    CLASS-METHODS create
+      IMPORTING
+        io_repo                  TYPE REF TO zcl_abapgit_repo
+        io_stage                 TYPE REF TO zcl_abapgit_stage OPTIONAL
+        iv_check_variant         TYPE sci_chkv OPTIONAL
+        iv_raise_when_no_results TYPE abap_bool DEFAULT abap_false
+      RETURNING
+        VALUE(ri_page)           TYPE REF TO zif_abapgit_gui_renderable
+      RAISING
+        zcx_abapgit_exception.
 
     METHODS:
       constructor
         IMPORTING
-          io_repo          TYPE REF TO zcl_abapgit_repo
-          io_stage         TYPE REF TO zcl_abapgit_stage OPTIONAL
-          iv_check_variant TYPE sci_chkv OPTIONAL
+          io_repo                  TYPE REF TO zcl_abapgit_repo
+          io_stage                 TYPE REF TO zcl_abapgit_stage OPTIONAL
+          iv_check_variant         TYPE sci_chkv OPTIONAL
+          iv_raise_when_no_results TYPE abap_bool DEFAULT abap_false
         RAISING
-          zcx_abapgit_exception,
-
-      is_nothing_to_display
-        RETURNING
-          VALUE(rv_yes) TYPE abap_bool,
-
-      zif_abapgit_gui_event_handler~on_event
-        REDEFINITION,
-
-      zif_abapgit_gui_renderable~render
-        REDEFINITION.
+          zcx_abapgit_exception.
 
   PROTECTED SECTION.
-
-    METHODS:
-      render_content   REDEFINITION.
-
   PRIVATE SECTION.
+
     DATA:
       mo_stage         TYPE REF TO zcl_abapgit_stage,
       mv_check_variant TYPE sci_chkv.
 
     METHODS:
-      build_menu
-        RETURNING
-          VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar
-        RAISING
-          zcx_abapgit_exception,
-
       run_code_inspector
         RAISING
           zcx_abapgit_exception,
@@ -79,50 +80,36 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD build_menu.
-
-    DATA: lv_opt TYPE c LENGTH 1.
-
-    ro_menu = build_base_menu( ).
-
-    IF is_stage_allowed( ) = abap_false.
-      lv_opt = zif_abapgit_html=>c_html_opt-crossout.
-    ENDIF.
-
-    IF mo_repo->is_offline( ) = abap_true.
-      RETURN.
-    ENDIF.
-
-    IF mo_stage IS BOUND.
-
-      " Staging info already available, we can directly
-      " offer to commit
-
-      ro_menu->add( iv_txt = 'Commit'
-                    iv_act = c_actions-commit
-                    iv_cur = abap_false
-                    iv_opt = lv_opt ).
-
-    ELSE.
-
-      ro_menu->add( iv_txt = 'Stage'
-                    iv_act = c_actions-stage
-                    iv_cur = abap_false
-                    iv_opt = lv_opt ).
-
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD constructor.
     super->constructor( ).
     mo_repo = io_repo.
     mo_stage = io_stage.
     mv_check_variant = iv_check_variant.
-    ms_control-page_title = 'Code Inspector'.
     determine_check_variant( ).
     run_code_inspector( ).
+
+    IF mt_result IS INITIAL AND iv_raise_when_no_results = abap_true.
+      zcx_abapgit_exception=>raise( 'No results' ).
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD create.
+
+    DATA lo_component TYPE REF TO zcl_abapgit_gui_page_code_insp.
+
+    CREATE OBJECT lo_component
+      EXPORTING
+        io_repo                  = io_repo
+        io_stage                 = io_stage
+        iv_check_variant         = iv_check_variant
+        iv_raise_when_no_results = iv_raise_when_no_results.
+
+    ri_page = zcl_abapgit_gui_page_hoc=>create(
+      iv_page_title         = 'Code Inspector'
+      ii_page_menu_provider = lo_component
+      ii_child_component    = lo_component ).
+
   ENDMETHOD.
 
 
@@ -150,49 +137,10 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD is_nothing_to_display.
-    rv_yes = boolc( lines( mt_result ) = 0 ).
-  ENDMETHOD.
-
-
   METHOD is_stage_allowed.
 
     rv_is_stage_allowed = boolc( NOT ( mo_repo->get_local_settings( )-block_commit = abap_true
                                            AND has_inspection_errors( ) = abap_true ) ).
-
-  ENDMETHOD.
-
-
-  METHOD render_content.
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    ri_html->add( `<div class="repo">` ).
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( io_repo        = mo_repo
-                                                              iv_show_commit = abap_false ) ).
-    ri_html->add( `</div>` ).
-
-    IF mv_check_variant IS INITIAL.
-      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_error( iv_error = 'No check variant supplied.' ) ).
-      RETURN.
-    ENDIF.
-
-    register_handlers( ).
-
-    ri_html->add( render_variant(
-      iv_variant = mv_check_variant
-      iv_summary = mv_summary ) ).
-
-    IF lines( mt_result ) = 0.
-      ri_html->add( '<div class="dummydiv success">' ).
-      ri_html->add( ri_html->icon( 'check' ) ).
-      ri_html->add( 'No code inspector findings' ).
-      ri_html->add( '</div>' ).
-    ELSE.
-      render_result(
-        ii_html   = ri_html
-        it_result = mt_result ).
-    ENDIF.
 
   ENDMETHOD.
 
@@ -277,7 +225,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN OTHERS.
-        rs_handled = super->zif_abapgit_gui_event_handler~on_event( ii_event ).
+        rs_handled = on_event( ii_event ).
     ENDCASE.
 
   ENDMETHOD.
@@ -287,7 +235,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
     DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
 
-    ls_hotkey_action-ui_component = 'Code inspector'.
+    ls_hotkey_action-ui_component = 'Code Inspector'.
 
     ls_hotkey_action-description = |Stage|.
     ls_hotkey_action-action = c_actions-stage.
@@ -302,10 +250,74 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_gui_menu_provider~get_menu.
+
+    DATA: lv_opt TYPE c LENGTH 1.
+
+    ro_toolbar = build_base_menu( ).
+
+    IF is_stage_allowed( ) = abap_false.
+      lv_opt = zif_abapgit_html=>c_html_opt-crossout.
+    ENDIF.
+
+    IF mo_repo->is_offline( ) = abap_true.
+      RETURN.
+    ENDIF.
+
+    IF mo_stage IS BOUND.
+
+      " Staging info already available, we can directly
+      " offer to commit
+
+      ro_toolbar->add( iv_txt = 'Commit'
+                       iv_act = c_actions-commit
+                       iv_opt = lv_opt ).
+
+    ELSE.
+
+      ro_toolbar->add( iv_txt = 'Stage'
+                       iv_act = c_actions-stage
+                       iv_opt = lv_opt ).
+
+    ENDIF.
+
+    ro_toolbar->add(
+      iv_txt = 'Back'
+      iv_act = zif_abapgit_definitions=>c_action-go_back ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_renderable~render.
 
-    ms_control-page_menu = build_menu( ).
-    ri_html = super->zif_abapgit_gui_renderable~render( ).
+    register_handlers( ).
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    ri_html->add( `<div class="repo">` ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( io_repo        = mo_repo
+                                                              iv_show_commit = abap_false ) ).
+    ri_html->add( `</div>` ).
+
+    IF mv_check_variant IS INITIAL.
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_error( iv_error = 'No check variant supplied.' ) ).
+      RETURN.
+    ENDIF.
+
+    ri_html->add( render_variant(
+      iv_variant = mv_check_variant
+      iv_summary = mv_summary ) ).
+
+    IF lines( mt_result ) = 0.
+      ri_html->add( '<div class="dummydiv success">' ).
+      ri_html->add( ri_html->icon( 'check' ) ).
+      ri_html->add( 'No code inspector findings' ).
+      ri_html->add( '</div>' ).
+    ELSE.
+      render_result(
+        ii_html   = ri_html
+        it_result = mt_result ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
