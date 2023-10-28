@@ -313,8 +313,8 @@ CLASS lcl_helper IMPLEMENTATION.
       DELETE lt_expanded WHERE path NP lv_starting_folder.
 
       <ls_branch>-changed_files = find_changed_files(
-        it_expanded1 = lt_main_expanded
-        it_expanded2 = lt_expanded ).
+        it_expanded1 = lt_expanded
+        it_expanded2 = lt_main_expanded ).
 
       <ls_branch>-changed_objects = map_files_to_objects(
         io_online = io_online

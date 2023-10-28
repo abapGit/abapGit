@@ -31,7 +31,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -86,6 +86,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     DATA ls_branch    LIKE LINE OF lt_branches.
     DATA ls_path_name LIKE LINE OF ls_branch-changed_files.
     DATA ls_item      LIKE LINE OF ls_branch-changed_objects.
+    DATA lv_status TYPE string.
 
 
     register_handlers( ).
@@ -108,8 +109,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         ri_html->add_icon( 'code-branch' ).
         ri_html->add( ls_branch-display_name && | - | ).
         ri_html->add_icon( 'truck-solid' ).
-        ri_html->add( '<tt>??</tt>' ).
-        ri_html->add( '</font></b><br>' ).
+        ri_html->add( '<tt>??</tt></font></b><br>' ).
+
         IF ls_branch-pr IS NOT INITIAL.
           ri_html->add_a(
             iv_txt   = ls_branch-pr-title
@@ -120,6 +121,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
             ri_html->add( 'DRAFT' ).
           ENDIF.
         ENDIF.
+
         ri_html->add( '<br>' ).
         IF lines( ls_branch-changed_files ) = 0.
           ri_html->add( 'NO CHANGES<br><br>' ).
@@ -130,11 +132,15 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         ENDIF.
 
         ri_html->add( |<table>| ).
-        ri_html->add( |<tr><td><u>Filename</u></td><td><u>Remote SHA1</u></td><td><u>Local SHA1</u></td></tr>| ).
+        ri_html->add( |<tr><td><u>Filename</u></td><td><u>Remote SHA1</u></td><td><u>Local SHA1</u></td><td></td></tr>| ).
         LOOP AT ls_branch-changed_files INTO ls_path_name.
+          lv_status = 'Diff'.
+          IF ls_path_name-remote_sha1 = ls_path_name-local_sha1.
+            lv_status = 'Match'.
+          ENDIF.
           ri_html->add( |<tr><td><tt>{ ls_path_name-path }{ ls_path_name-name }</tt></td><td>{
             ls_path_name-remote_sha1(7) }</td><td>{
-            ls_path_name-local_sha1(7) }</td></tr>| ).
+            ls_path_name-local_sha1(7) }</td><td>{ lv_status }</td></tr>| ).
         ENDLOOP.
         ri_html->add( |</table>| ).
         LOOP AT ls_branch-changed_objects INTO ls_item.
