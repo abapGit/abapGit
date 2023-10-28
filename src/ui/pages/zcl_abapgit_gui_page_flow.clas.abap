@@ -31,7 +31,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -101,13 +101,15 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       " todo, ENDIF.
 
       lo_online ?= li_favorite.
-      ri_html->add( '<u>' && li_favorite->get_name( ) && '</u>' ).
-      ri_html->add( '<br>' ).
 
       lt_branches = lcl_helper=>get_branch_information( lo_online ).
       LOOP AT lt_branches INTO ls_branch.
+        ri_html->add( '<b><font size="+2">' && li_favorite->get_name( ) && | - | ).
         ri_html->add_icon( 'code-branch' ).
-        ri_html->add( ls_branch-display_name ).
+        ri_html->add( ls_branch-display_name && | - | ).
+        ri_html->add_icon( 'truck-solid' ).
+        ri_html->add( '<tt>??</tt>' ).
+        ri_html->add( '</font></b><br>' ).
         IF ls_branch-pr IS NOT INITIAL.
           ri_html->add_a(
             iv_txt   = ls_branch-pr-title
@@ -128,10 +130,10 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         ENDIF.
 
         ri_html->add( |<table>| ).
-        ri_html->add( |<tr><td>Filename</td><td>Remote SHA1</td><td>Local SHA1</td><td>Status</td></tr>| ).
+        ri_html->add( |<tr><td><u>Filename</u></td><td><u>Remote SHA1</u></td><td><u>Local SHA1</u></td></tr>| ).
         LOOP AT ls_branch-changed_files INTO ls_path_name.
           ri_html->add( |<tr><td><tt>{ ls_path_name-path }{ ls_path_name-name }</tt></td><td>{
-            ls_path_name-remote_sha1 }</td><td>?</td><td>?</td></tr>| ).
+            ls_path_name-remote_sha1(7) }</td><td>?</td></tr>| ).
         ENDLOOP.
         ri_html->add( |</table>| ).
         LOOP AT ls_branch-changed_objects INTO ls_item.
