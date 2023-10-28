@@ -59,21 +59,25 @@ CLASS lcl_helper DEFINITION FINAL.
     TYPES:
       ty_path_name_tt TYPE HASHED TABLE OF ty_path_name WITH UNIQUE KEY path name.
 
-    TYPES: BEGIN OF ty_branch,
+    TYPES: BEGIN OF ty_feature,
              BEGIN OF branch,
-               display_name    TYPE string,
-               sha1            TYPE zif_abapgit_git_definitions=>ty_sha1,
-               up_to_date      TYPE abap_bool,
+               display_name TYPE string,
+               sha1         TYPE zif_abapgit_git_definitions=>ty_sha1,
+               up_to_date   TYPE abap_bool,
              END OF branch,
              BEGIN OF pr,
                title TYPE string,
                url   TYPE string,
                draft TYPE abap_bool,
              END OF pr,
+             BEGIN OF transport,
+               trkorr TYPE tkrorr,
+               title  TYPE string,
+             END OF transport,
              changed_files   TYPE ty_path_name_tt,
              changed_objects TYPE zif_abapgit_definitions=>ty_items_ts,
-           END OF ty_branch.
-    TYPES ty_branches TYPE STANDARD TABLE OF ty_branch WITH DEFAULT KEY.
+           END OF ty_feature.
+    TYPES ty_branches TYPE STANDARD TABLE OF ty_feature WITH DEFAULT KEY.
 
     CLASS-METHODS get_information
       IMPORTING

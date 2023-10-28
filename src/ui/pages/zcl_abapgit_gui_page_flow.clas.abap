@@ -109,7 +109,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         ri_html->add_icon( 'code-branch' ).
         ri_html->add( ls_branch-branch-display_name && | - | ).
         ri_html->add_icon( 'truck-solid' ).
-        ri_html->add( '<tt>??</tt></font></b><br>' ).
+        ri_html->add( |<tt>{ ls_branch-transport-trkorr }</tt></font></b><br>| ).
 
         IF ls_branch-pr IS NOT INITIAL.
           ri_html->add_a(
