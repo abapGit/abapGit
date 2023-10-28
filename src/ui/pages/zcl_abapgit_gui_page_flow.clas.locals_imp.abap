@@ -103,7 +103,7 @@ CLASS lcl_helper DEFINITION FINAL.
         io_online   TYPE REF TO zcl_abapgit_repo_online
         it_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
       CHANGING
-        ct_branches TYPE ty_features
+        ct_features TYPE ty_features
       RAISING
         zcx_abapgit_exception.
 
@@ -112,7 +112,7 @@ CLASS lcl_helper DEFINITION FINAL.
         iv_url      TYPE string
         it_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
       CHANGING
-        ct_branches TYPE ty_features
+        ct_features TYPE ty_features
       RAISING
         zcx_abapgit_exception.
 
@@ -120,7 +120,7 @@ CLASS lcl_helper DEFINITION FINAL.
       IMPORTING
         iv_url      TYPE string
       CHANGING
-        ct_branches TYPE ty_features
+        ct_features TYPE ty_features
       RAISING
         zcx_abapgit_exception.
 
@@ -128,7 +128,7 @@ CLASS lcl_helper DEFINITION FINAL.
       IMPORTING
         io_online   TYPE REF TO zcl_abapgit_repo_online
       CHANGING
-        ct_branches TYPE ty_features
+        ct_features TYPE ty_features
       RAISING
         zcx_abapgit_exception.
 
@@ -147,12 +147,12 @@ CLASS lcl_helper IMPLEMENTATION.
     DATA lt_pulls TYPE zif_abapgit_pr_enum_provider=>ty_pull_requests.
     DATA ls_pull LIKE LINE OF lt_pulls.
 
-    FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_branches.
+    FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_features.
 
 
     lt_pulls = zcl_abapgit_pr_enumerator=>new( iv_url )->get_pulls( ).
 
-    LOOP AT ct_branches ASSIGNING <ls_branch>.
+    LOOP AT ct_features ASSIGNING <ls_branch>.
       READ TABLE lt_pulls INTO ls_pull WITH KEY head_branch = <ls_branch>-branch-display_name.
       IF sy-subrc = 0.
         <ls_branch>-pr-title = |{ ls_pull-title } #{ ls_pull-number }|.
@@ -185,26 +185,26 @@ CLASS lcl_helper IMPLEMENTATION.
         io_online   = io_online
         it_branches = lt_branches
       CHANGING
-        ct_branches = rt_features ).
+        ct_features = rt_features ).
 
     find_up_to_date(
       EXPORTING
         iv_url      = io_online->get_url( )
         it_branches = lt_branches
       CHANGING
-        ct_branches = rt_features ).
+        ct_features = rt_features ).
 
     find_prs(
       EXPORTING
         iv_url      = io_online->get_url( )
       CHANGING
-        ct_branches = rt_features ).
+        ct_features = rt_features ).
 
     add_local_status(
       EXPORTING
         io_online   = io_online
       CHANGING
-        ct_branches = rt_features ).
+        ct_features = rt_features ).
 
   ENDMETHOD.
 
@@ -220,7 +220,7 @@ CLASS lcl_helper IMPLEMENTATION.
 
     DATA lt_main_reachable TYPE HASHED TABLE OF zif_abapgit_git_definitions=>ty_sha1 WITH UNIQUE KEY table_line.
 
-    FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_branches.
+    FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_features.
     FIELD-SYMBOLS <ls_commit> LIKE LINE OF lt_commits.
 
 
@@ -250,7 +250,7 @@ CLASS lcl_helper IMPLEMENTATION.
       ENDIF.
     ENDWHILE.
 
-    LOOP AT ct_branches ASSIGNING <ls_branch>.
+    LOOP AT ct_features ASSIGNING <ls_branch>.
       <ls_branch>-branch-up_to_date = abap_undefined.
       lo_visit->clear( )->push( <ls_branch>-branch-sha1 ).
 
@@ -291,7 +291,7 @@ CLASS lcl_helper IMPLEMENTATION.
     DATA lt_expanded        TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
     DATA lt_main_expanded   TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
 
-    FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_branches.
+    FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_features.
 
 
     LOOP AT it_branches INTO ls_branch WHERE is_head = abap_false.
@@ -312,7 +312,7 @@ CLASS lcl_helper IMPLEMENTATION.
       iv_parent  = ls_main-sha1 ).
     DELETE lt_main_expanded WHERE path NP lv_starting_folder.
 
-    LOOP AT ct_branches ASSIGNING <ls_branch> WHERE branch-display_name <> c_main.
+    LOOP AT ct_features ASSIGNING <ls_branch> WHERE branch-display_name <> c_main.
       lt_expanded = zcl_abapgit_git_porcelain=>full_tree(
         it_objects = lt_objects
         iv_parent  = <ls_branch>-branch-sha1 ).
@@ -333,14 +333,14 @@ CLASS lcl_helper IMPLEMENTATION.
 
     DATA lt_local TYPE zif_abapgit_definitions=>ty_files_item_tt.
 
-    FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_branches.
+    FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_features.
     FIELD-SYMBOLS <ls_local> LIKE LINE OF lt_local.
     FIELD-SYMBOLS <ls_changed_file> TYPE ty_path_name.
 
 * todo: set filter here,
     lt_local = io_online->get_files_local( ).
 
-    LOOP AT ct_branches ASSIGNING <ls_branch>.
+    LOOP AT ct_features ASSIGNING <ls_branch>.
       LOOP AT <ls_branch>-changed_files ASSIGNING <ls_changed_file>.
         READ TABLE lt_local ASSIGNING <ls_local>
           WITH KEY file-filename = <ls_changed_file>-name
