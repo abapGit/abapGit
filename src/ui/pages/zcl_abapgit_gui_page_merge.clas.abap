@@ -211,10 +211,9 @@ CLASS zcl_abapgit_gui_page_merge IMPLEMENTATION.
 
         IF mo_repo->get_local_settings( )-code_inspector_check_variant IS NOT INITIAL.
 
-          CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_code_insp
-            EXPORTING
-              io_repo  = mo_repo
-              io_stage = mi_merge->get_result( )-stage.
+          rs_handled-page = zcl_abapgit_gui_page_code_insp=>create(
+            io_repo  = mo_repo
+            io_stage = mi_merge->get_result( )-stage ).
 
         ELSE.
 
