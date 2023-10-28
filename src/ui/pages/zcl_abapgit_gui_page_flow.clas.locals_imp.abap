@@ -15,6 +15,7 @@ CLASS lcl_helper DEFINITION FINAL.
 
     TYPES: BEGIN OF ty_branch,
              display_name  TYPE string,
+             sha1          TYPE zif_abapgit_git_definitions=>ty_sha1,
              up_to_date    TYPE abap_bool,
              changed_files TYPE ty_path_name_tt,
            END OF ty_branch.
@@ -30,6 +31,15 @@ CLASS lcl_helper DEFINITION FINAL.
   PRIVATE SECTION.
     CONSTANTS c_main TYPE string VALUE 'main'.
 
+    CLASS-METHODS find_changed_files_all
+      IMPORTING
+        io_online          TYPE REF TO zcl_abapgit_repo_online
+        it_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
+      CHANGING
+        ct_branches TYPE ty_branches
+      RAISING
+        zcx_abapgit_exception.
+
     CLASS-METHODS find_changed_files
       IMPORTING
         it_expanded1    TYPE zif_abapgit_git_definitions=>ty_expanded_tt
@@ -44,12 +54,6 @@ CLASS lcl_helper IMPLEMENTATION.
 
     DATA lt_branches        TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
     DATA ls_branch          LIKE LINE OF lt_branches.
-    DATA ls_main            LIKE LINE OF lt_branches.
-    DATA lt_sha1            TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
-    DATA lt_expanded        TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
-    DATA lt_main_expanded   TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
-    DATA lt_objects         TYPE zif_abapgit_definitions=>ty_objects_tt.
-    DATA lv_starting_folder TYPE string.
     DATA ls_result          LIKE LINE OF rt_branches.
 
 
@@ -57,7 +61,34 @@ CLASS lcl_helper IMPLEMENTATION.
       iv_url    = io_online->get_url( )
       iv_prefix = 'refs/heads/' )->get_all( ).
 
-    LOOP AT lt_branches INTO ls_branch WHERE is_head = abap_false.
+    LOOP AT lt_branches INTO ls_branch WHERE display_name <> c_main.
+      ls_result-display_name = ls_branch-display_name.
+      INSERT ls_result INTO TABLE rt_branches.
+    ENDLOOP.
+
+    find_changed_files_all(
+      EXPORTING
+        io_online = io_online
+        it_branches = lt_branches
+      CHANGING
+        ct_branches = rt_branches ).
+
+  ENDMETHOD.
+
+  METHOD find_changed_files_all.
+
+    DATA ls_branch          LIKE LINE OF lt_branches.
+    DATA lt_sha1            TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
+    DATA lt_objects         TYPE zif_abapgit_definitions=>ty_objects_tt.
+    DATA lv_starting_folder TYPE string.
+    DATA ls_main            LIKE LINE OF lt_branches.
+    DATA lt_expanded        TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
+    DATA lt_main_expanded   TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
+
+    FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_branches.
+
+
+    LOOP AT it_branches INTO ls_branch WHERE is_head = abap_false.
       APPEND ls_branch-sha1 TO lt_sha1.
     ENDLOOP.
 
@@ -67,7 +98,7 @@ CLASS lcl_helper IMPLEMENTATION.
 
     lv_starting_folder = io_online->get_dot_abapgit( )->get_starting_folder( ) && '*'.
 
-    READ TABLE lt_branches INTO ls_main WITH KEY display_name = c_main.
+    READ TABLE it_branches INTO ls_main WITH KEY display_name = c_main.
     ASSERT sy-subrc = 0.
 
     lt_main_expanded = zcl_abapgit_git_porcelain=>full_tree(
@@ -75,17 +106,15 @@ CLASS lcl_helper IMPLEMENTATION.
       iv_parent  = ls_main-sha1 ).
     DELETE lt_main_expanded WHERE path NP lv_starting_folder.
 
-    LOOP AT lt_branches INTO ls_branch WHERE display_name <> c_main.
+    LOOP AT ct_branches ASSIGNING <ls_branch> WHERE display_name <> c_main.
       lt_expanded = zcl_abapgit_git_porcelain=>full_tree(
         it_objects = lt_objects
-        iv_parent  = ls_branch-sha1 ).
+        iv_parent  = <ls_branch>-sha1 ).
       DELETE lt_expanded WHERE path NP lv_starting_folder.
 
-      ls_result-display_name = ls_branch-display_name.
-      ls_result-changed_files = find_changed_files(
+      <ls_branch>-changed_files = find_changed_files(
         it_expanded1 = lt_main_expanded
         it_expanded2 = lt_expanded ).
-      INSERT ls_result INTO TABLE rt_branches.
     ENDLOOP.
 
   ENDMETHOD.
