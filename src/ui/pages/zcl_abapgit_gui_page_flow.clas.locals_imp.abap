@@ -51,6 +51,7 @@ CLASS lcl_helper DEFINITION FINAL.
       BEGIN OF ty_path_name,
         path TYPE string,
         name TYPE string,
+        sha1 TYPE zif_abapgit_git_definitions=>ty_sha1,
       END OF ty_path_name.
     TYPES:
       ty_path_name_tt TYPE HASHED TABLE OF ty_path_name WITH UNIQUE KEY path name.

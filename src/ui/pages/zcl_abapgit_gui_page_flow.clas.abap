@@ -128,7 +128,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         ENDIF.
 
         LOOP AT ls_branch-changed_files INTO ls_path_name.
-          ri_html->add( |<tt>{ ls_path_name-path }{ ls_path_name-name }</tt><br>| ).
+          ri_html->add( |<tt>{ ls_path_name-path }{ ls_path_name-name }</tt>, { ls_path_name-sha1 }<br>| ).
         ENDLOOP.
         LOOP AT ls_branch-changed_objects INTO ls_item.
           ri_html->add( |<tt>{ ls_item-obj_type } { ls_item-obj_name }</tt><br>| ).
