@@ -125,8 +125,8 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
     CONSTANTS lc_content_regex TYPE string VALUE '^[0-9a-f]{4}#'.
     CONSTANTS lc_content_type  TYPE string VALUE 'application/x-git-<service>-pack-advertisement'.
 
-    DATA: lv_data TYPE string.
-    DATA: lv_expected_content_type TYPE string.
+    DATA lv_data                  TYPE string.
+    DATA lv_expected_content_type TYPE string.
 
     eo_client = zcl_abapgit_http=>create_by_url(
       iv_url     = iv_url

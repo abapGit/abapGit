@@ -32,6 +32,8 @@ CLASS zcl_abapgit_html DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
+    CONSTANTS c_max_indent TYPE i VALUE 200.
+
     TYPES:
       BEGIN OF ty_indent_context,
         no_indent_jscss TYPE abap_bool,
@@ -107,7 +109,7 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
 
     gv_spaces = repeat(
       val = ` `
-      occ = 200 ).
+      occ = c_max_indent ).
 
     GET PARAMETER ID 'DBT' FIELD lv_mode.
     gv_debug_mode = boolc( lv_mode = 'HREF' ).
@@ -189,7 +191,11 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
         OR ls_study-tag_close = abap_true )
         AND cs_context-indent > 0.
       lv_spaces = ( cs_context-indent - 1 ) * c_indent_size.
-      cv_line  = gv_spaces(lv_spaces) && cv_line.
+      IF lv_spaces <= c_max_indent.
+        cv_line  = gv_spaces(lv_spaces) && cv_line.
+      ELSE.
+        cv_line = gv_spaces && cv_line.
+      ENDIF.
     ELSE.
       cv_line = cs_context-indent_str && cv_line.
     ENDIF.
@@ -216,7 +222,11 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
         cs_context-indent = cs_context-indent - 1.
       ENDIF.
       lv_spaces = cs_context-indent * c_indent_size.
-      cs_context-indent_str = gv_spaces(lv_spaces).
+      IF lv_spaces <= c_max_indent.
+        cs_context-indent_str = gv_spaces(lv_spaces).
+      ELSE.
+        cv_line = gv_spaces && cv_line.
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.
@@ -371,10 +381,10 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
 
   METHOD zif_abapgit_html~add.
 
-    DATA: lv_type TYPE c,
+    DATA: lv_type       TYPE c,
           li_renderable TYPE REF TO zif_abapgit_gui_renderable,
-          lx_error TYPE REF TO zcx_abapgit_exception,
-          lo_html TYPE REF TO zcl_abapgit_html.
+          lx_error      TYPE REF TO zcx_abapgit_exception,
+          lo_html       TYPE REF TO zcl_abapgit_html.
 
     FIELD-SYMBOLS: <lt_tab> TYPE string_table.
 

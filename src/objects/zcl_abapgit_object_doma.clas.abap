@@ -73,13 +73,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
       lv_function = |CONVERSION_EXIT_{ cv_exit }_INPUT|.
 
       " If exit function does not exist, remove it
-      CALL FUNCTION 'FUNCTION_EXISTS'
-        EXPORTING
-          funcname           = lv_function
-        EXCEPTIONS
-          function_not_exist = 1
-          OTHERS             = 2.
-      IF sy-subrc <> 0.
+      IF zcl_abapgit_factory=>get_function_module( )->function_exists( lv_function ) = abap_false.
         cv_exit = ''.
       ENDIF.
     ENDIF.
