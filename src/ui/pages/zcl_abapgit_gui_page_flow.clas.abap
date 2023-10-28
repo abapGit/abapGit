@@ -102,7 +102,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       lo_online ?= li_favorite.
       ri_html->add( '<u>' && li_favorite->get_name( ) && '</u><br>' ).
 
-      lt_branches = lcl_helper=>list_changes_per_branch( lo_online ).
+      lt_branches = lcl_helper=>get_branch_information( lo_online ).
       LOOP AT lt_branches INTO ls_branch.
         ri_html->add( ls_branch-display_name && '<br>' ).
         IF lines( ls_branch-changed_files ) = 0.

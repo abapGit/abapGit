@@ -15,11 +15,12 @@ CLASS lcl_helper DEFINITION FINAL.
 
     TYPES: BEGIN OF ty_branch,
              display_name  TYPE string,
+             up_to_date    TYPE abap_bool,
              changed_files TYPE ty_path_name_tt,
            END OF ty_branch.
     TYPES ty_branches TYPE STANDARD TABLE OF ty_branch WITH DEFAULT KEY.
 
-    CLASS-METHODS list_changes_per_branch
+    CLASS-METHODS get_branch_information
       IMPORTING
         io_online          TYPE REF TO zcl_abapgit_repo_online
       RETURNING
@@ -39,11 +40,12 @@ ENDCLASS.
 
 CLASS lcl_helper IMPLEMENTATION.
 
-  METHOD list_changes_per_branch.
+  METHOD get_branch_information.
 
-    DATA lt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
-    DATA ls_branch   LIKE LINE OF lt_branches.
-    DATA lt_sha1     TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
+    DATA lt_branches        TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
+    DATA ls_branch          LIKE LINE OF lt_branches.
+    DATA ls_main            LIKE LINE OF lt_branches.
+    DATA lt_sha1            TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
     DATA lt_expanded        TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
     DATA lt_main_expanded   TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
     DATA lt_objects         TYPE zif_abapgit_definitions=>ty_objects_tt.
@@ -54,6 +56,7 @@ CLASS lcl_helper IMPLEMENTATION.
     lt_branches = zcl_abapgit_gitv2_porcelain=>list_branches(
       iv_url    = io_online->get_url( )
       iv_prefix = 'refs/heads/' )->get_all( ).
+
     LOOP AT lt_branches INTO ls_branch WHERE is_head = abap_false.
       APPEND ls_branch-sha1 TO lt_sha1.
     ENDLOOP.
@@ -64,11 +67,12 @@ CLASS lcl_helper IMPLEMENTATION.
 
     lv_starting_folder = io_online->get_dot_abapgit( )->get_starting_folder( ) && '*'.
 
-    READ TABLE lt_branches INTO ls_branch WITH KEY display_name = c_main.
+    READ TABLE lt_branches INTO ls_main WITH KEY display_name = c_main.
     ASSERT sy-subrc = 0.
+
     lt_main_expanded = zcl_abapgit_git_porcelain=>full_tree(
       it_objects = lt_objects
-      iv_parent  = ls_branch-sha1 ).
+      iv_parent  = ls_main-sha1 ).
     DELETE lt_main_expanded WHERE path NP lv_starting_folder.
 
     LOOP AT lt_branches INTO ls_branch WHERE display_name <> c_main.
