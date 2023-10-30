@@ -337,6 +337,10 @@ CLASS lcl_helper IMPLEMENTATION.
     FIELD-SYMBOLS <ls_local> LIKE LINE OF lt_local.
     FIELD-SYMBOLS <ls_changed_file> TYPE ty_path_name.
 
+    IF lines( ct_features ) = 0.
+      RETURN.
+    ENDIF.
+
     io_online->refresh_local_objects( ).
 * todo: set filter here,
     lt_local = io_online->get_files_local( ).

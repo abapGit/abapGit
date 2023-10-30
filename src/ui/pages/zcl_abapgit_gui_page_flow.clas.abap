@@ -31,7 +31,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -96,15 +96,20 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 * list branches on favorite transported repos
     lt_favorites = zcl_abapgit_repo_srv=>get_instance( )->list_favorites( abap_false ).
     LOOP AT lt_favorites INTO li_favorite.
-      " todo, IF zcl_abapgit_factory=>get_sap_package( li_favorite->get_package( )
-      " todo,     )->are_changes_recorded_in_tr_req( ) = abap_false.
-      " todo,   CONTINUE.
-      " todo, ENDIF.
+      IF zcl_abapgit_factory=>get_sap_package( li_favorite->get_package( )
+          )->are_changes_recorded_in_tr_req( ) = abap_false.
+        CONTINUE.
+      ENDIF.
 
       lo_online ?= li_favorite.
 
       lt_features = lcl_helper=>get_information( lo_online ).
       LOOP AT lt_features INTO ls_feature.
+        IF lines( ls_feature-changed_files ) = 0.
+* no changes, eg. only files outside of starting folder changed
+          CONTINUE.
+        ENDIF.
+
         ri_html->add( '<b><font size="+2">' && li_favorite->get_name( ) && | - | ).
         ri_html->add_icon( 'code-branch' ).
         ri_html->add( ls_feature-branch-display_name && | - | ).
@@ -123,10 +128,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
         ENDIF.
 
         ri_html->add( '<br>' ).
-        IF lines( ls_feature-changed_files ) = 0.
-          ri_html->add( 'NO CHANGES<br><br>' ).
-          CONTINUE.
-        ELSEIF ls_feature-branch-up_to_date = abap_false.
+        IF ls_feature-branch-up_to_date = abap_false.
           ri_html->add( 'NONONONONO UPDATED<br><br>' ).
           CONTINUE.
         ENDIF.
