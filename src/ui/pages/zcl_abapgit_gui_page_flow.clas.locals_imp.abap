@@ -60,6 +60,7 @@ CLASS lcl_helper DEFINITION FINAL.
       ty_path_name_tt TYPE HASHED TABLE OF ty_path_name WITH UNIQUE KEY path name.
 
     TYPES: BEGIN OF ty_feature,
+             repo_name       TYPE string,
              BEGIN OF branch,
                display_name TYPE string,
                sha1         TYPE zif_abapgit_git_definitions=>ty_sha1,
@@ -80,8 +81,6 @@ CLASS lcl_helper DEFINITION FINAL.
     TYPES ty_features TYPE STANDARD TABLE OF ty_feature WITH DEFAULT KEY.
 
     CLASS-METHODS get_information
-      IMPORTING
-        io_online          TYPE REF TO zcl_abapgit_repo_online
       RETURNING
         VALUE(rt_features) TYPE ty_features
       RAISING
@@ -132,6 +131,12 @@ CLASS lcl_helper DEFINITION FINAL.
       RAISING
         zcx_abapgit_exception.
 
+    CLASS-METHODS add_open_transports
+      CHANGING
+        ct_features TYPE ty_features
+      RAISING
+        zcx_abapgit_exception.
+
     CLASS-METHODS find_changed_files
       IMPORTING
         it_expanded1    TYPE zif_abapgit_git_definitions=>ty_expanded_tt
@@ -168,43 +173,79 @@ CLASS lcl_helper IMPLEMENTATION.
     DATA lt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
     DATA ls_branch   LIKE LINE OF lt_branches.
     DATA ls_result   LIKE LINE OF rt_features.
+    DATA lt_favorites TYPE zif_abapgit_repo_srv=>ty_repo_list.
+    DATA li_favorite  LIKE LINE OF lt_favorites.
+    DATA lo_online    TYPE REF TO zcl_abapgit_repo_online.
+    DATA lt_features LIKE rt_features.
 
+* list branches on favorite transported repos
+    lt_favorites = zcl_abapgit_repo_srv=>get_instance( )->list_favorites( abap_false ).
+    LOOP AT lt_favorites INTO li_favorite.
+      IF zcl_abapgit_factory=>get_sap_package( li_favorite->get_package( )
+          )->are_changes_recorded_in_tr_req( ) = abap_false.
+        CONTINUE.
+      ENDIF.
 
-    lt_branches = zcl_abapgit_gitv2_porcelain=>list_branches(
-      iv_url    = io_online->get_url( )
-      iv_prefix = 'refs/heads/' )->get_all( ).
+      lo_online ?= li_favorite.
 
-    LOOP AT lt_branches INTO ls_branch WHERE display_name <> c_main.
-      ls_result-branch-display_name = ls_branch-display_name.
-      ls_result-branch-sha1 = ls_branch-sha1.
-      INSERT ls_result INTO TABLE rt_features.
+      lt_branches = zcl_abapgit_gitv2_porcelain=>list_branches(
+        iv_url    = lo_online->get_url( )
+        iv_prefix = 'refs/heads/' )->get_all( ).
+
+      CLEAR lt_features.
+      LOOP AT lt_branches INTO ls_branch WHERE display_name <> c_main.
+        ls_result-repo_name = li_favorite->get_name( ).
+        ls_result-branch-display_name = ls_branch-display_name.
+        ls_result-branch-sha1 = ls_branch-sha1.
+        INSERT ls_result INTO TABLE lt_features.
+      ENDLOOP.
+
+      find_changed_files_all(
+        EXPORTING
+          io_online   = lo_online
+          it_branches = lt_branches
+        CHANGING
+          ct_features = lt_features ).
+
+      find_up_to_date(
+        EXPORTING
+          iv_url      = lo_online->get_url( )
+          it_branches = lt_branches
+        CHANGING
+          ct_features = lt_features ).
+
+      find_prs(
+        EXPORTING
+          iv_url      = lo_online->get_url( )
+        CHANGING
+          ct_features = lt_features ).
+
+      add_local_status(
+        EXPORTING
+          io_online   = lo_online
+        CHANGING
+          ct_features = lt_features ).
+
+      INSERT LINES OF lt_features INTO TABLE rt_features.
     ENDLOOP.
 
-    find_changed_files_all(
-      EXPORTING
-        io_online   = io_online
-        it_branches = lt_branches
+    add_open_transports(
       CHANGING
         ct_features = rt_features ).
 
-    find_up_to_date(
-      EXPORTING
-        iv_url      = io_online->get_url( )
-        it_branches = lt_branches
-      CHANGING
-        ct_features = rt_features ).
+  ENDMETHOD.
 
-    find_prs(
-      EXPORTING
-        iv_url      = io_online->get_url( )
-      CHANGING
-        ct_features = rt_features ).
+  METHOD add_open_transports.
 
-    add_local_status(
-      EXPORTING
-        io_online   = io_online
-      CHANGING
-        ct_features = rt_features ).
+    DATA lt_trkorr TYPE zif_abapgit_cts_api=>ty_trkorr_tt.
+    DATA lv_trkorr LIKE LINE OF lt_trkorr.
+
+
+    lt_trkorr = zcl_abapgit_factory=>get_cts_api( )->list_open_requests_by_user( ).
+    BREAK-POINT.
+* todo
+    LOOP AT lt_trkorr INTO lv_trkorr.
+    ENDLOOP.
 
   ENDMETHOD.
 

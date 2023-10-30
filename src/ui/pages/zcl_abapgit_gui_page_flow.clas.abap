@@ -79,9 +79,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
 
   METHOD zif_abapgit_gui_renderable~render.
-    DATA lt_favorites TYPE zif_abapgit_repo_srv=>ty_repo_list.
-    DATA li_favorite  LIKE LINE OF lt_favorites.
-    DATA lo_online    TYPE REF TO zcl_abapgit_repo_online.
     DATA lt_features  TYPE lcl_helper=>ty_features.
     DATA ls_feature   LIKE LINE OF lt_features.
     DATA ls_path_name LIKE LINE OF ls_feature-changed_files.
@@ -93,68 +90,54 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     ri_html->add( '<div class="repo-overview">' ).
 
-* list branches on favorite transported repos
-    lt_favorites = zcl_abapgit_repo_srv=>get_instance( )->list_favorites( abap_false ).
-    LOOP AT lt_favorites INTO li_favorite.
-      IF zcl_abapgit_factory=>get_sap_package( li_favorite->get_package( )
-          )->are_changes_recorded_in_tr_req( ) = abap_false.
+    lt_features = lcl_helper=>get_information( ).
+    LOOP AT lt_features INTO ls_feature.
+      IF lines( ls_feature-changed_files ) = 0.
+* no changes, eg. only files outside of starting folder changed
         CONTINUE.
       ENDIF.
 
-      lo_online ?= li_favorite.
+      ri_html->add( '<b><font size="+2">' && ls_feature-repo_name && | - | ).
+      ri_html->add_icon( 'code-branch' ).
+      ri_html->add( ls_feature-branch-display_name && | - | ).
+      ri_html->add_icon( 'truck-solid' ).
+      ri_html->add( |<tt>{ ls_feature-transport-trkorr }</tt></font></b><br>| ).
 
-      lt_features = lcl_helper=>get_information( lo_online ).
-      LOOP AT lt_features INTO ls_feature.
-        IF lines( ls_feature-changed_files ) = 0.
-* no changes, eg. only files outside of starting folder changed
-          CONTINUE.
+      IF ls_feature-pr IS NOT INITIAL.
+        ri_html->add_a(
+          iv_txt   = ls_feature-pr-title
+          iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ ls_feature-pr-url }|
+          iv_class = |url| ).
+
+        IF ls_feature-pr-draft = abap_true.
+          ri_html->add( 'DRAFT' ).
         ENDIF.
+      ENDIF.
 
-        ri_html->add( '<b><font size="+2">' && li_favorite->get_name( ) && | - | ).
-        ri_html->add_icon( 'code-branch' ).
-        ri_html->add( ls_feature-branch-display_name && | - | ).
-        ri_html->add_icon( 'truck-solid' ).
-        ri_html->add( |<tt>{ ls_feature-transport-trkorr }</tt></font></b><br>| ).
+      ri_html->add( '<br>' ).
+      IF ls_feature-branch-up_to_date = abap_false.
+        ri_html->add( 'NONONONONO UPDATED<br><br>' ).
+        CONTINUE.
+      ENDIF.
 
-        IF ls_feature-pr IS NOT INITIAL.
-          ri_html->add_a(
-            iv_txt   = ls_feature-pr-title
-            iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ ls_feature-pr-url }|
-            iv_class = |url| ).
-
-          IF ls_feature-pr-draft = abap_true.
-            ri_html->add( 'DRAFT' ).
-          ENDIF.
+      ri_html->add( |<table>| ).
+      ri_html->add( |<tr><td><u>Filename</u></td><td><u>Remote SHA1</u></td>| &&
+                    |<td><u>Local SHA1</u></td><td></td></tr>| ).
+      LOOP AT ls_feature-changed_files INTO ls_path_name.
+        lv_status = 'Diff'.
+        IF ls_path_name-remote_sha1 = ls_path_name-local_sha1.
+          lv_status = 'Match'.
         ENDIF.
-
-        ri_html->add( '<br>' ).
-        IF ls_feature-branch-up_to_date = abap_false.
-          ri_html->add( 'NONONONONO UPDATED<br><br>' ).
-          CONTINUE.
-        ENDIF.
-
-        ri_html->add( |<table>| ).
-        ri_html->add( |<tr><td><u>Filename</u></td><td><u>Remote SHA1</u></td>| &&
-                      |<td><u>Local SHA1</u></td><td></td></tr>| ).
-        LOOP AT ls_feature-changed_files INTO ls_path_name.
-          lv_status = 'Diff'.
-          IF ls_path_name-remote_sha1 = ls_path_name-local_sha1.
-            lv_status = 'Match'.
-          ENDIF.
-          ri_html->add( |<tr><td><tt>{ ls_path_name-path }{ ls_path_name-name }</tt></td><td>{
-            ls_path_name-remote_sha1(7) }</td><td>{
-            ls_path_name-local_sha1(7) }</td><td>{ lv_status }</td></tr>| ).
-        ENDLOOP.
-        ri_html->add( |</table>| ).
-        LOOP AT ls_feature-changed_objects INTO ls_item.
-          ri_html->add( |<tt>{ ls_item-obj_type } { ls_item-obj_name }</tt><br>| ).
-        ENDLOOP.
-        ri_html->add( '<br>' ).
+        ri_html->add( |<tr><td><tt>{ ls_path_name-path }{ ls_path_name-name }</tt></td><td>{
+          ls_path_name-remote_sha1(7) }</td><td>{
+          ls_path_name-local_sha1(7) }</td><td>{ lv_status }</td></tr>| ).
       ENDLOOP.
+      ri_html->add( |</table>| ).
+      LOOP AT ls_feature-changed_objects INTO ls_item.
+        ri_html->add( |<tt>{ ls_item-obj_type } { ls_item-obj_name }</tt><br>| ).
+      ENDLOOP.
+      ri_html->add( '<br>' ).
     ENDLOOP.
-
-* list open transports for current user
-* todo
 
     ri_html->add( '</div>' ).
 
