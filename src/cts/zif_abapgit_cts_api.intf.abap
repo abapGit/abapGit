@@ -22,6 +22,11 @@ INTERFACE zif_abapgit_cts_api
       delete TYPE c LENGTH 1 VALUE 'D',
     END OF c_transport_mode.
 
+  CONSTANTS:
+    BEGIN OF c_transport_status,
+      modifiable TYPE c LENGTH 1 VALUE 'D',
+    END OF c_transport_status.
+
   TYPES: BEGIN OF ty_transport,
            obj_type TYPE tadir-object,
            obj_name TYPE tadir-obj_name,
@@ -29,6 +34,19 @@ INTERFACE zif_abapgit_cts_api
          END OF ty_transport.
 
   TYPES ty_transport_list TYPE SORTED TABLE OF ty_transport WITH NON-UNIQUE KEY obj_type obj_name.
+
+  TYPES ty_trkorr_tt TYPE STANDARD TABLE OF trkorr WITH DEFAULT KEY.
+
+  TYPES: BEGIN OF ty_transport_key,
+           object  TYPE e071k-object,
+           objname TYPE e071k-objname,
+           tabkey  TYPE e071k-tabkey,
+         END OF ty_transport_key.
+
+  TYPES: BEGIN OF ty_transport_data,
+           trstatus TYPE e070-trstatus,
+           keys     TYPE STANDARD TABLE OF ty_transport_key WITH DEFAULT KEY,
+         END OF ty_transport_data.
 
   "! Returns the transport request / task the object is currently in
   "! @parameter is_item | Object
@@ -41,6 +59,7 @@ INTERFACE zif_abapgit_cts_api
       VALUE(rv_transport) TYPE trkorr
     RAISING
       zcx_abapgit_exception .
+
   "! Check if change recording is possible for the given package
   "! @parameter iv_package | Package
   "! @parameter rv_possible | Change recording is possible
@@ -52,6 +71,7 @@ INTERFACE zif_abapgit_cts_api
       VALUE(rv_possible) TYPE abap_bool
     RAISING
       zcx_abapgit_exception .
+
   METHODS get_transports_for_list
     IMPORTING
       !it_items            TYPE zif_abapgit_definitions=>ty_items_tt
@@ -59,6 +79,7 @@ INTERFACE zif_abapgit_cts_api
       VALUE(rt_transports) TYPE ty_transport_list
     RAISING
       zcx_abapgit_exception .
+
   METHODS get_r3tr_obj_for_limu_obj
     IMPORTING
       iv_object   TYPE tadir-object
@@ -109,17 +130,6 @@ INTERFACE zif_abapgit_cts_api
     RETURNING
       VALUE(rv_messages_confirmed) TYPE abap_bool .
 
-  TYPES: BEGIN OF ty_transport_key,
-           object  TYPE e071k-object,
-           objname TYPE e071k-objname,
-           tabkey  TYPE e071k-tabkey,
-         END OF ty_transport_key.
-
-  TYPES: BEGIN OF ty_transport_data,
-           trstatus TYPE e070-trstatus,
-           keys     TYPE STANDARD TABLE OF ty_transport_key WITH DEFAULT KEY,
-         END OF ty_transport_data.
-
   METHODS read
     IMPORTING
       !iv_trkorr        TYPE trkorr
@@ -131,6 +141,14 @@ INTERFACE zif_abapgit_cts_api
   METHODS validate_transport_request
     IMPORTING
       iv_transport_request TYPE trkorr
+    RAISING
+      zcx_abapgit_exception.
+
+  METHODS list_open_requests_by_user
+    IMPORTING
+      iv_user TYPE sy-uname DEFAULT sy-uname
+    RETURNING
+      VALUE(rt_trkorr) TYPE ty_trkorr_tt
     RAISING
       zcx_abapgit_exception.
 
