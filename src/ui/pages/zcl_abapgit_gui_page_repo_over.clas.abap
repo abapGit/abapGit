@@ -669,16 +669,14 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
   METHOD render_table_footer.
 
+    DATA lv_action TYPE string.
+
     IF ms_list_settings-only_favorites = abap_true.
-      ii_html->add( `<tfoot>` ).
-      ii_html->add( `<tr><td colspan="100%">` ).
-      ii_html->add( |(Only favorites are shown. {
-        ii_html->a(
-          iv_txt   = |Show All|
-          iv_act   = |{ zif_abapgit_definitions=>c_action-toggle_favorites }?force_state={ abap_false }| )
-      })| ).
-      ii_html->add( `</td></tr>` ).
-      ii_html->add( `</tfoot>` ).
+      lv_action = ii_html->a(
+        iv_txt = 'Show All'
+        iv_act = |{ zif_abapgit_definitions=>c_action-toggle_favorites }?force_state={ abap_false }| ).
+
+      ii_html->add( zcl_abapgit_gui_chunk_lib=>render_table_footer( |(Only favorites are shown. { lv_action })| ) ).
     ENDIF.
 
   ENDMETHOD.
@@ -686,16 +684,10 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
   METHOD render_table_header.
 
-    ii_html->add( |<thead>| ).
-    ii_html->add( |<tr>| ).
-
-    ii_html->add( zcl_abapgit_gui_chunk_lib=>render_order_by_header_cells(
+    ii_html->add( zcl_abapgit_gui_chunk_lib=>render_table_header(
       it_col_spec         = build_table_scheme( )
       iv_order_by         = ms_list_settings-order_by
       iv_order_descending = ms_list_settings-order_descending ) ).
-
-    ii_html->add( '</tr>' ).
-    ii_html->add( '</thead>' ).
 
   ENDMETHOD.
 
