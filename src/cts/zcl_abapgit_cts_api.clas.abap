@@ -11,7 +11,7 @@ CLASS zcl_abapgit_cts_api DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    DATA: mv_confirm_transp_msgs_called TYPE abap_bool.
+    DATA mv_confirm_transp_msgs_called TYPE abap_bool.
 
     "! Returns the transport request / task the object is currently locked in
     "! @parameter iv_program_id | Program ID
@@ -82,7 +82,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_cts_api IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
 
 
   METHOD get_current_transport_for_obj.
@@ -210,6 +210,64 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
         pe_result = lv_type_check_result.
 
     rv_transportable = boolc( lv_type_check_result CA 'RTL' ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_cts_api~confirm_transport_messages.
+
+    TYPES: BEGIN OF ty_s_message,
+             id TYPE symsgid,
+             ty TYPE symsgty,
+             no TYPE symsgno,
+             v1 TYPE symsgv,
+             v2 TYPE symsgv,
+             v3 TYPE symsgv,
+             v4 TYPE symsgv,
+           END OF ty_s_message.
+
+    DATA ls_message TYPE ty_s_message.
+
+    FIELD-SYMBOLS: <lt_confirmed_messages> TYPE STANDARD TABLE.
+
+    IF mv_confirm_transp_msgs_called = abap_true.
+      RETURN.
+    ENDIF.
+
+    " remember the call to avoid duplicates in GT_CONFIRMED_MESSAGES
+    mv_confirm_transp_msgs_called = abap_true.
+
+
+    " Auto-confirm certain messages (requires SAP Note 1609940)
+    PERFORM dummy IN PROGRAM saplstrd IF FOUND.  "load function group STRD once into memory
+
+    ASSIGN ('(SAPLSTRD)GT_CONFIRMED_MESSAGES') TO <lt_confirmed_messages>.
+
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    " Object can only be created in package of namespace
+    ls_message-id = 'TR'.
+    ls_message-no = '007'.
+    INSERT ls_message INTO TABLE <lt_confirmed_messages>.
+
+    " Original system set to "SAP"
+    ls_message-id = 'TR'.
+    ls_message-no = '013'.
+    INSERT ls_message INTO TABLE <lt_confirmed_messages>.
+
+    " Make repairs in foreign namespaces only if they are urgent
+    ls_message-id = 'TR'.
+    ls_message-no = '852'.
+    INSERT ls_message INTO TABLE <lt_confirmed_messages>.
+
+    " Make repairs in foreign namespaces only if they are urgent
+    ls_message-id = 'TK'.
+    ls_message-no = '016'.
+    INSERT ls_message INTO TABLE <lt_confirmed_messages>.
+
+    rv_messages_confirmed = abap_true.
+
   ENDMETHOD.
 
 
@@ -401,80 +459,33 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_cts_api~read_description.
+  METHOD zif_abapgit_cts_api~list_open_requests_by_user.
 
-    SELECT SINGLE as4text FROM e07t
-      INTO rv_description
-      WHERE trkorr = iv_trkorr
-      AND langu = sy-langu ##SUBRC_OK.
+    TYPES: BEGIN OF ty_e070,
+             trkorr     TYPE e070-trkorr,
+             trfunction TYPE e070-trfunction,
+             strkorr    TYPE e070-strkorr,
+           END OF ty_e070.
+    DATA lt_e070 TYPE STANDARD TABLE OF ty_e070 WITH DEFAULT KEY.
 
-  ENDMETHOD.
+* find all tasks first
+    SELECT trkorr trfunction strkorr
+      FROM e070 INTO TABLE lt_e070
+      WHERE as4user = sy-uname
+      AND trstatus = zif_abapgit_cts_api=>c_transport_status-modifiable
+      AND strkorr <> ''
+      ORDER BY PRIMARY KEY.
 
-
-  METHOD zif_abapgit_cts_api~read_user.
-
-    SELECT SINGLE as4user FROM e070 INTO rv_uname
-      WHERE trkorr = iv_trkorr ##SUBRC_OK.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_cts_api~confirm_transport_messages.
-
-    TYPES: BEGIN OF ty_s_message,
-             id TYPE symsgid,
-             ty TYPE symsgty,
-             no TYPE symsgno,
-             v1 TYPE symsgv,
-             v2 TYPE symsgv,
-             v3 TYPE symsgv,
-             v4 TYPE symsgv,
-           END OF ty_s_message.
-
-    DATA ls_message TYPE ty_s_message.
-
-    FIELD-SYMBOLS: <lt_confirmed_messages> TYPE STANDARD TABLE.
-
-    IF mv_confirm_transp_msgs_called = abap_true.
-      RETURN.
+    IF lines( lt_e070 ) > 0.
+      SELECT trkorr FROM e070
+        INTO TABLE rt_trkorr
+        FOR ALL ENTRIES IN lt_e070
+        WHERE trkorr = lt_e070-strkorr
+        AND trfunction = zif_abapgit_cts_api=>c_transport_type-wb_request.
     ENDIF.
 
-    " remember the call to avoid duplicates in GT_CONFIRMED_MESSAGES
-    mv_confirm_transp_msgs_called = abap_true.
-
-
-    " Auto-confirm certain messages (requires SAP Note 1609940)
-    PERFORM dummy IN PROGRAM saplstrd IF FOUND.  "load function group STRD once into memory
-
-    ASSIGN ('(SAPLSTRD)GT_CONFIRMED_MESSAGES') TO <lt_confirmed_messages>.
-
-    IF sy-subrc <> 0.
-      RETURN.
-    ENDIF.
-
-    " Object can only be created in package of namespace
-    ls_message-id = 'TR'.
-    ls_message-no = '007'.
-    INSERT ls_message INTO TABLE <lt_confirmed_messages>.
-
-    " Original system set to "SAP"
-    ls_message-id = 'TR'.
-    ls_message-no = '013'.
-    INSERT ls_message INTO TABLE <lt_confirmed_messages>.
-
-    " Make repairs in foreign namespaces only if they are urgent
-    ls_message-id = 'TR'.
-    ls_message-no = '852'.
-    INSERT ls_message INTO TABLE <lt_confirmed_messages>.
-
-    " Make repairs in foreign namespaces only if they are urgent
-    ls_message-id = 'TK'.
-    ls_message-no = '016'.
-    INSERT ls_message INTO TABLE <lt_confirmed_messages>.
-
-    rv_messages_confirmed = abap_true.
-
   ENDMETHOD.
+
 
   METHOD zif_abapgit_cts_api~read.
 
@@ -513,6 +524,25 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_cts_api~read_description.
+
+    SELECT SINGLE as4text FROM e07t
+      INTO rv_description
+      WHERE trkorr = iv_trkorr
+      AND langu = sy-langu ##SUBRC_OK.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_cts_api~read_user.
+
+    SELECT SINGLE as4user FROM e070 INTO rv_uname
+      WHERE trkorr = iv_trkorr ##SUBRC_OK.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_cts_api~validate_transport_request.
 
     CONSTANTS:
@@ -533,5 +563,4 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
 ENDCLASS.
