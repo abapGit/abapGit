@@ -99,9 +99,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
       ri_html->add( '<b><font size="+2">' && ls_feature-repo_name && | - | ).
       ri_html->add_icon( 'code-branch' ).
-      ri_html->add( ls_feature-branch-display_name && | - | ).
-      ri_html->add_icon( 'truck-solid' ).
-      ri_html->add( |<tt>{ ls_feature-transport-trkorr }</tt></font></b><br>| ).
+      ri_html->add( ls_feature-branch-display_name ).
+      IF ls_feature-transport-trkorr IS NOT INITIAL.
+        ri_html->add( | - | ).
+        ri_html->add_icon( 'truck-solid' ).
+        ri_html->add( |<tt>{ ls_feature-transport-trkorr }</tt>| ).
+      ENDIF.
+      ri_html->add( |</font></b><br>| ).
 
       IF ls_feature-pr IS NOT INITIAL.
         ri_html->add_a(
@@ -112,6 +116,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
         IF ls_feature-pr-draft = abap_true.
           ri_html->add( 'DRAFT' ).
         ENDIF.
+      ELSE.
+        ri_html->add( |No PR found<br>| ).
+      ENDIF.
+
+      IF ls_feature-transport IS NOT INITIAL.
+        ri_html->add( |<tt>{ ls_feature-transport-trkorr }</tt> - { ls_feature-transport-title }<br>| ).
+      ELSE.
+        ri_html->add( |No corresponding transport found<br>| ).
       ENDIF.
 
       ri_html->add( '<br>' ).

@@ -61,6 +61,7 @@ CLASS lcl_helper DEFINITION FINAL.
 
     TYPES: BEGIN OF ty_feature,
              repo_name       TYPE string,
+             package         TYPE devclass,
              BEGIN OF branch,
                display_name TYPE string,
                sha1         TYPE zif_abapgit_git_definitions=>ty_sha1,
@@ -89,9 +90,10 @@ CLASS lcl_helper DEFINITION FINAL.
     CONSTANTS c_main TYPE string VALUE 'main'.
 
     TYPES: BEGIN OF ty_transport,
-             trkorr  TYPE trkorr,
-             title   TYPE string,
-             objects TYPE zif_abapgit_cts_api=>ty_transport_obj_tt,
+             trkorr   TYPE trkorr,
+             title    TYPE string,
+             object   TYPE e071-object,
+             obj_name TYPE e071-obj_name,
            END OF ty_transport.
 
     TYPES ty_transports_tt TYPE STANDARD TABLE OF ty_transport WITH DEFAULT KEY.
@@ -111,6 +113,13 @@ CLASS lcl_helper DEFINITION FINAL.
         it_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
       CHANGING
         ct_features TYPE ty_features
+      RAISING
+        zcx_abapgit_exception.
+
+    CLASS-METHODS try_matching_transports
+      CHANGING
+        ct_features   TYPE ty_features
+        ct_transports TYPE ty_transports_tt
       RAISING
         zcx_abapgit_exception.
 
@@ -178,15 +187,17 @@ CLASS lcl_helper IMPLEMENTATION.
 
   METHOD get_information.
 
-    DATA lt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
-    DATA ls_branch   LIKE LINE OF lt_branches.
-    DATA ls_result   LIKE LINE OF rt_features.
-    DATA lt_favorites TYPE zif_abapgit_repo_srv=>ty_repo_list.
-    DATA li_favorite  LIKE LINE OF lt_favorites.
-    DATA lo_online    TYPE REF TO zcl_abapgit_repo_online.
-    DATA lt_features LIKE rt_features.
+    DATA lt_branches   TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
+    DATA ls_branch     LIKE LINE OF lt_branches.
+    DATA ls_result     LIKE LINE OF rt_features.
+    DATA lt_favorites  TYPE zif_abapgit_repo_srv=>ty_repo_list.
+    DATA li_favorite   LIKE LINE OF lt_favorites.
+    DATA lo_online     TYPE REF TO zcl_abapgit_repo_online.
+    DATA lt_features   LIKE rt_features.
+    DATA lt_transports TYPE ty_transports_tt.
 
-    find_open_transports( ).
+
+    lt_transports = find_open_transports( ).
 
 * list branches on favorite transported repos
     lt_favorites = zcl_abapgit_repo_srv=>get_instance( )->list_favorites( abap_false ).
@@ -205,6 +216,7 @@ CLASS lcl_helper IMPLEMENTATION.
       CLEAR lt_features.
       LOOP AT lt_branches INTO ls_branch WHERE display_name <> c_main.
         ls_result-repo_name = li_favorite->get_name( ).
+        ls_result-package = li_favorite->get_package( ).
         ls_result-branch-display_name = ls_branch-display_name.
         ls_result-branch-sha1 = ls_branch-sha1.
         INSERT ls_result INTO TABLE lt_features.
@@ -216,6 +228,11 @@ CLASS lcl_helper IMPLEMENTATION.
           it_branches = lt_branches
         CHANGING
           ct_features = lt_features ).
+
+      try_matching_transports(
+        CHANGING
+          ct_transports = lt_transports
+          ct_features   = lt_features ).
 
       find_up_to_date(
         EXPORTING
@@ -241,11 +258,40 @@ CLASS lcl_helper IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD try_matching_transports.
+
+    FIELD-SYMBOLS <ls_feature>   LIKE LINE OF ct_features.
+    FIELD-SYMBOLS <ls_transport> LIKE LINE OF ct_transports.
+    FIELD-SYMBOLS <ls_changed>   LIKE LINE OF <ls_feature>-changed_objects.
+
+
+    SORT ct_transports BY object obj_name.
+
+    LOOP AT ct_features ASSIGNING <ls_feature>.
+      LOOP AT <ls_feature>-changed_objects ASSIGNING <ls_changed>.
+        READ TABLE ct_transports ASSIGNING <ls_transport>
+          WITH KEY object = <ls_changed>-obj_type obj_name = <ls_changed>-obj_name BINARY SEARCH.
+        IF sy-subrc = 0.
+          <ls_feature>-transport-trkorr = <ls_transport>-trkorr.
+          <ls_feature>-transport-title = <ls_transport>-title.
+* todo, fill changed objects/files?
+          EXIT.
+        ENDIF.
+      ENDLOOP.
+    ENDLOOP.
+
+* todo, unmatched transports?
+
+  ENDMETHOD.
+
   METHOD find_open_transports.
 
     DATA lt_trkorr TYPE zif_abapgit_cts_api=>ty_trkorr_tt.
     DATA lv_trkorr LIKE LINE OF lt_trkorr.
     DATA ls_result LIKE LINE OF rt_transports.
+    DATA lt_objects TYPE zif_abapgit_cts_api=>ty_transport_obj_tt.
+
+    FIELD-SYMBOLS <ls_object> LIKE LINE OF lt_objects.
 
 
     lt_trkorr = zcl_abapgit_factory=>get_cts_api( )->list_open_requests_by_user( ).
@@ -253,8 +299,14 @@ CLASS lcl_helper IMPLEMENTATION.
     LOOP AT lt_trkorr INTO lv_trkorr.
       ls_result-trkorr  = lv_trkorr.
       ls_result-title   = zcl_abapgit_factory=>get_cts_api( )->read_description( lv_trkorr ).
-      ls_result-objects = zcl_abapgit_factory=>get_cts_api( )->list_r3tr_by_request( lv_trkorr ).
-      INSERT ls_result INTO TABLE rt_transports.
+
+      lt_objects = zcl_abapgit_factory=>get_cts_api( )->list_r3tr_by_request( lv_trkorr ).
+      LOOP AT lt_objects ASSIGNING <ls_object>.
+        ls_result-object = <ls_object>-object.
+        ls_result-obj_name = <ls_object>-obj_name.
+        INSERT ls_result INTO TABLE rt_transports.
+      ENDLOOP.
+
     ENDLOOP.
 
   ENDMETHOD.
