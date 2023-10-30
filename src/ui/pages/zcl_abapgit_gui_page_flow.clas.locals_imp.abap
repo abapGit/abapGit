@@ -88,6 +88,14 @@ CLASS lcl_helper DEFINITION FINAL.
   PRIVATE SECTION.
     CONSTANTS c_main TYPE string VALUE 'main'.
 
+    TYPES: BEGIN OF ty_transport,
+             trkorr  TYPE trkorr,
+             title   TYPE string,
+             objects TYPE zif_abapgit_cts_api=>ty_transport_obj_tt,
+           END OF ty_transport.
+
+    TYPES ty_transports_tt TYPE STANDARD TABLE OF ty_transport WITH DEFAULT KEY.
+
     CLASS-METHODS map_files_to_objects
       IMPORTING
         it_files                  TYPE ty_path_name_tt
@@ -132,6 +140,8 @@ CLASS lcl_helper DEFINITION FINAL.
         zcx_abapgit_exception.
 
     CLASS-METHODS find_open_transports
+      RETURNING
+        VALUE(rt_transports) TYPE ty_transports_tt
       RAISING
         zcx_abapgit_exception.
 
@@ -175,6 +185,8 @@ CLASS lcl_helper IMPLEMENTATION.
     DATA li_favorite  LIKE LINE OF lt_favorites.
     DATA lo_online    TYPE REF TO zcl_abapgit_repo_online.
     DATA lt_features LIKE rt_features.
+
+    find_open_transports( ).
 
 * list branches on favorite transported repos
     lt_favorites = zcl_abapgit_repo_srv=>get_instance( )->list_favorites( abap_false ).
@@ -227,20 +239,22 @@ CLASS lcl_helper IMPLEMENTATION.
       INSERT LINES OF lt_features INTO TABLE rt_features.
     ENDLOOP.
 
-    find_open_transports( ).
-
   ENDMETHOD.
 
   METHOD find_open_transports.
 
     DATA lt_trkorr TYPE zif_abapgit_cts_api=>ty_trkorr_tt.
     DATA lv_trkorr LIKE LINE OF lt_trkorr.
+    DATA ls_result LIKE LINE OF rt_transports.
 
 
     lt_trkorr = zcl_abapgit_factory=>get_cts_api( )->list_open_requests_by_user( ).
-    BREAK-POINT.
-* todo
+
     LOOP AT lt_trkorr INTO lv_trkorr.
+      ls_result-trkorr  = lv_trkorr.
+      ls_result-title   = zcl_abapgit_factory=>get_cts_api( )->read_description( lv_trkorr ).
+      ls_result-objects = zcl_abapgit_factory=>get_cts_api( )->list_r3tr_by_request( lv_trkorr ).
+      INSERT ls_result INTO TABLE rt_transports.
     ENDLOOP.
 
   ENDMETHOD.
