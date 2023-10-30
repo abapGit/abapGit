@@ -183,6 +183,9 @@ CLASS ltd_repo IMPLEMENTATION.
     rv_name = ms_data-local_settings-display_name.
   ENDMETHOD.
 
+  METHOD zif_abapgit_repo~get_files_local_filtered.
+  ENDMETHOD.
+
   METHOD zif_abapgit_repo~checksums.
 
   ENDMETHOD.
