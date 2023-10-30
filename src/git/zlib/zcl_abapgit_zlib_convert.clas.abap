@@ -16,26 +16,25 @@ CLASS zcl_abapgit_zlib_convert DEFINITION
       RETURNING
         VALUE(rv_int) TYPE i.
 
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_zlib_convert IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_ZLIB_CONVERT IMPLEMENTATION.
 
 
   METHOD bits_to_int.
 
-    DATA: lv_c    TYPE c LENGTH 1,
-          lv_bits TYPE string.
+    DATA lv_i      TYPE i.
+    DATA lv_offset TYPE i.
 
-    lv_bits = iv_bits.
-
-    WHILE NOT lv_bits IS INITIAL.
-      lv_c = lv_bits.
-      rv_int = rv_int * 2.
-      rv_int = rv_int + lv_c.
-      lv_bits = lv_bits+1.
-    ENDWHILE.
+    DO strlen( iv_bits ) TIMES.
+      lv_i = iv_bits+lv_offset(1).
+      rv_int = rv_int * 2 + lv_i.
+      lv_offset = lv_offset + 1.
+    ENDDO.
 
   ENDMETHOD.
 
@@ -60,6 +59,4 @@ CLASS zcl_abapgit_zlib_convert IMPLEMENTATION.
     ENDWHILE.
 
   ENDMETHOD.
-
-
 ENDCLASS.
