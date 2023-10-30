@@ -823,7 +823,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         lo_obj_filter_trans->set_filter_values( iv_package  = lo_repo->get_package( )
                                                 it_r_trkorr = lt_r_trkorr ).
 
-        lv_xstr = zcl_abapgit_zip=>encode_files( lo_repo->get_files_local( ii_obj_filter = lo_obj_filter_trans ) ).
+        lv_xstr = zcl_abapgit_zip=>encode_files( lo_repo->get_files_local_filtered( lo_obj_filter_trans ) ).
         lo_repo->refresh( ).
         file_download( iv_package = lo_repo->get_package( )
                        iv_xstr    = lv_xstr ).

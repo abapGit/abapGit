@@ -17,6 +17,8 @@ CLASS zcl_abapgit_repo DEFINITION
       FOR zif_abapgit_repo~get_dot_abapgit .
     ALIASES get_files_local
       FOR zif_abapgit_repo~get_files_local .
+    ALIASES get_files_local_filtered
+      FOR zif_abapgit_repo~get_files_local_filtered .
     ALIASES get_files_remote
       FOR zif_abapgit_repo~get_files_remote .
     ALIASES get_key
@@ -749,10 +751,31 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_repo~get_files_local.
+  METHOD zif_abapgit_repo~get_files_local_filtered.
 
     DATA lo_serialize TYPE REF TO zcl_abapgit_serialize.
     DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
+
+
+    CREATE OBJECT lo_serialize
+      EXPORTING
+        io_dot_abapgit    = get_dot_abapgit( )
+        is_local_settings = get_local_settings( ).
+
+    lt_filter = ii_obj_filter->get_filter( ).
+
+    rt_files = lo_serialize->files_local(
+      iv_package     = get_package( )
+      ii_data_config = get_data_config( )
+      ii_log         = ii_log
+      it_filter      = lt_filter ).
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_repo~get_files_local.
+
+    DATA lo_serialize TYPE REF TO zcl_abapgit_serialize.
+
     " Serialization happened before and no refresh request
     IF lines( mt_local ) > 0 AND mv_request_local_refresh = abap_false.
       rt_files = mt_local.
@@ -764,15 +787,10 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
         io_dot_abapgit    = get_dot_abapgit( )
         is_local_settings = get_local_settings( ).
 
-    IF ii_obj_filter IS NOT INITIAL.
-      lt_filter = ii_obj_filter->get_filter( ).
-    ENDIF.
-
     rt_files = lo_serialize->files_local(
       iv_package     = get_package( )
       ii_data_config = get_data_config( )
-      ii_log         = ii_log
-      it_filter      = lt_filter ).
+      ii_log         = ii_log ).
 
     mt_local                 = rt_files.
     mv_request_local_refresh = abap_false. " Fulfill refresh
