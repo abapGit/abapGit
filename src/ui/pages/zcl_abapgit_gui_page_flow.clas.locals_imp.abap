@@ -46,6 +46,30 @@ ENDCLASS.
 
 ***************************************************
 
+CLASS lcl_filter DEFINITION FINAL.
+  PUBLIC SECTION.
+    INTERFACES zif_abapgit_object_filter.
+
+    METHODS constructor
+      IMPORTING
+        it_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
+
+  PRIVATE SECTION.
+    DATA mt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
+ENDCLASS.
+
+CLASS lcl_filter IMPLEMENTATION.
+  METHOD constructor.
+    mt_filter = it_filter.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object_filter~get_filter.
+    rt_filter = mt_filter.
+  ENDMETHOD.
+ENDCLASS.
+
+***************************************************
+
 CLASS lcl_helper DEFINITION FINAL.
   PUBLIC SECTION.
 
@@ -171,6 +195,11 @@ CLASS lcl_helper IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_features.
 
+
+    IF lines( ct_features ) = 0.
+      " only main branch
+      RETURN.
+    ENDIF.
 
     lt_pulls = zcl_abapgit_pr_enumerator=>new( iv_url )->get_pulls( ).
 
@@ -327,6 +356,11 @@ CLASS lcl_helper IMPLEMENTATION.
     FIELD-SYMBOLS <ls_commit> LIKE LINE OF lt_commits.
 
 
+    IF lines( it_branches ) = 1.
+      " only main branch
+      RETURN.
+    ENDIF.
+
     READ TABLE it_branches INTO ls_main WITH KEY display_name = c_main.
     ASSERT sy-subrc = 0.
 
@@ -397,6 +431,11 @@ CLASS lcl_helper IMPLEMENTATION.
     FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_features.
 
 
+    IF lines( it_branches ) = 1.
+      " only main branch
+      RETURN.
+    ENDIF.
+
     LOOP AT it_branches INTO ls_branch WHERE is_head = abap_false.
       APPEND ls_branch-sha1 TO lt_sha1.
     ENDLOOP.
@@ -434,19 +473,33 @@ CLASS lcl_helper IMPLEMENTATION.
 
   METHOD add_local_status.
 
-    DATA lt_local TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA lt_local  TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA lo_filter TYPE REF TO lcl_filter.
+    DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
-    FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_features.
-    FIELD-SYMBOLS <ls_local> LIKE LINE OF lt_local.
+    FIELD-SYMBOLS <ls_branch>       LIKE LINE OF ct_features.
+    FIELD-SYMBOLS <ls_local>        LIKE LINE OF lt_local.
     FIELD-SYMBOLS <ls_changed_file> TYPE ty_path_name.
+    FIELD-SYMBOLS <ls_filter>       LIKE LINE OF lt_filter.
+    FIELD-SYMBOLS <ls_object>       LIKE LINE OF <ls_branch>-changed_objects.
 
-    IF lines( ct_features ) = 0.
+
+    LOOP AT ct_features ASSIGNING <ls_branch>.
+      LOOP AT <ls_branch>-changed_objects ASSIGNING <ls_object>.
+        APPEND INITIAL LINE TO lt_filter ASSIGNING <ls_filter>.
+        <ls_filter>-object = <ls_object>-obj_type.
+        <ls_filter>-obj_name = <ls_object>-obj_name.
+      ENDLOOP.
+    ENDLOOP.
+    SORT lt_filter BY object obj_name.
+    DELETE ADJACENT DUPLICATES FROM lt_filter COMPARING object obj_name.
+
+    IF lines( lt_filter ) = 0.
       RETURN.
     ENDIF.
 
-    io_online->refresh_local_objects( ).
-* todo: set filter here,
-    lt_local = io_online->get_files_local( ).
+    CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
+    lt_local = io_online->get_files_local_filtered( lo_filter ).
 
     LOOP AT ct_features ASSIGNING <ls_branch>.
       LOOP AT <ls_branch>-changed_files ASSIGNING <ls_changed_file>.

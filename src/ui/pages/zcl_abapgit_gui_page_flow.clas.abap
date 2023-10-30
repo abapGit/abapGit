@@ -117,8 +117,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
           ri_html->add( 'DRAFT' ).
         ENDIF.
       ELSE.
-        ri_html->add( |No PR found<br>| ).
+        ri_html->add( |No PR found| ).
       ENDIF.
+      ri_html->add( |<br>| ).
 
       IF ls_feature-transport IS NOT INITIAL.
         ri_html->add( |<tt>{ ls_feature-transport-trkorr }</tt> - { ls_feature-transport-title }<br>| ).
