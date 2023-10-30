@@ -131,9 +131,7 @@ CLASS lcl_helper DEFINITION FINAL.
       RAISING
         zcx_abapgit_exception.
 
-    CLASS-METHODS add_open_transports
-      CHANGING
-        ct_features TYPE ty_features
+    CLASS-METHODS find_open_transports
       RAISING
         zcx_abapgit_exception.
 
@@ -229,13 +227,11 @@ CLASS lcl_helper IMPLEMENTATION.
       INSERT LINES OF lt_features INTO TABLE rt_features.
     ENDLOOP.
 
-    add_open_transports(
-      CHANGING
-        ct_features = rt_features ).
+    find_open_transports( ).
 
   ENDMETHOD.
 
-  METHOD add_open_transports.
+  METHOD find_open_transports.
 
     DATA lt_trkorr TYPE zif_abapgit_cts_api=>ty_trkorr_tt.
     DATA lv_trkorr LIKE LINE OF lt_trkorr.
