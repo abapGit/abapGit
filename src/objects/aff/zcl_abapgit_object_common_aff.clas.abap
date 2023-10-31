@@ -1,3 +1,15 @@
+"! Provides common functionality for the abapGit integration of objects based on ABAP File Formats (AFF).
+"! It inherits from {@link ZCL_ABAPGIT_OBJECTS_SUPER} and implements the interface {@link ZIF_ABAPGIT_OBJECT}.
+"! <br/><br/>
+"! Each subclass must implement at least the abstract method ZIF_ABAPGIT_OBJECT~CHANGED_BY.
+"! In case you deal with a DDIC object, the methods GET_METADATA and ZIF_ABAPGIT_OBJECT~GET_DESERIALIZE_STEPS
+"! have to be redefined in the subclass.
+"! <br/><br/>
+"! In case the object has an additional file to the json file, the subclass needs to redefine the method GET_ADDITIONAL_EXTENSIONS.
+"! <br/><br/>
+"! This common class fully relies on the implementation of the object-specific AFF handler (it inherits from {@link CL_AFF_OBJECT_HANDLER}).
+"! Precisely, for the existence check-, serialization-, deserialization- or deletion-functionality, the corresponding
+"! AFF object handler method is called.
 CLASS zcl_abapgit_object_common_aff DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_objects_super
@@ -18,14 +30,18 @@ CLASS zcl_abapgit_object_common_aff DEFINITION
 
   PROTECTED SECTION.
     TYPES: BEGIN OF ty_extension_mapper_pair,
+             "! file extension
              extension        TYPE string,
+             "! instance of {@link CL_AFF_FILE_NAME_MAPPER} providing file names for file extensions
              file_name_mapper TYPE REF TO object,
            END OF ty_extension_mapper_pair,
            ty_extension_mapper_pairs TYPE STANDARD TABLE OF ty_extension_mapper_pair WITH DEFAULT KEY.
 
-    " Can be redefined in subclasses
+    "! Delivers other file extensions than json to be considered at serialize or deserialize of an object
     METHODS get_additional_extensions
-      RETURNING VALUE(rv_additional_extensions) TYPE ty_extension_mapper_pairs ##NEEDED.
+      RETURNING VALUE(rv_additional_extensions) TYPE ty_extension_mapper_pairs.
+
+    "! Delivers an instance of AFF object handler ({@link IF_AFF_OBJECT_HANDLER})
     METHODS get_object_handler
       RETURNING
         VALUE(ro_object_handler) TYPE REF TO object
