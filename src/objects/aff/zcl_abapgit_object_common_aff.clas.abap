@@ -130,6 +130,28 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD remove_abap_language_version.
+    DATA lv_json TYPE string.
+    DATA lv_json_wo_alv TYPE string.
+    DATA li_json TYPE REF TO zif_abapgit_ajson.
+
+    lv_json = zcl_abapgit_convert=>xstring_to_string_utf8( iv_json_as_xstring ).
+
+    TRY.
+        li_json = zcl_abapgit_ajson=>parse( iv_json            = lv_json
+                                            iv_keep_item_order = abap_true ).
+        li_json->delete( '/header/abapLanguageVersion' ).
+        lv_json_wo_alv = li_json->stringify( 2 ).
+
+        rv_json_as_xstring_wo_alv = zcl_abapgit_convert=>string_to_xstring_utf8( lv_json_wo_alv ).
+
+      CATCH zcx_abapgit_ajson_error.
+        rv_json_as_xstring_wo_alv = iv_json_as_xstring.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~delete.
 
     DATA: lr_intf_aff_obj   TYPE REF TO data,
@@ -197,19 +219,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           ENDIF.
         ENDLOOP.
 
-        CALL FUNCTION 'TR_TADIR_INTERFACE'
-          EXPORTING
-            wi_delete_tadir_entry = abap_true
-            wi_tadir_pgmid        = 'R3TR'
-            wi_tadir_object       = ms_item-obj_type
-            wi_tadir_obj_name     = ms_item-obj_name
-            wi_tadir_devclass     = ms_item-devclass
-            wi_test_modus         = abap_false
-          EXCEPTIONS
-            OTHERS                = 1.
-        IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise_t100( ).
-        ENDIF.
+        tadir_delete( ).
 
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
@@ -642,27 +652,5 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
       CATCH cx_root INTO lx_exception.
         zcx_abapgit_exception=>raise_with_text( lx_exception ).
     ENDTRY.
-  ENDMETHOD.
-
-
-  METHOD remove_abap_language_version.
-    DATA lv_json TYPE string.
-    DATA lv_json_wo_alv TYPE string.
-    DATA li_json TYPE REF TO zif_abapgit_ajson.
-
-    lv_json = zcl_abapgit_convert=>xstring_to_string_utf8( iv_json_as_xstring ).
-
-    TRY.
-        li_json = zcl_abapgit_ajson=>parse( iv_json            = lv_json
-                                            iv_keep_item_order = abap_true ).
-        li_json->delete( '/header/abapLanguageVersion' ).
-        lv_json_wo_alv = li_json->stringify( 2 ).
-
-        rv_json_as_xstring_wo_alv = zcl_abapgit_convert=>string_to_xstring_utf8( lv_json_wo_alv ).
-
-      CATCH zcx_abapgit_ajson_error.
-        rv_json_as_xstring_wo_alv = iv_json_as_xstring.
-    ENDTRY.
-
   ENDMETHOD.
 ENDCLASS.
