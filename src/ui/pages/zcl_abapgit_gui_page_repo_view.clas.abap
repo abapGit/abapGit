@@ -129,7 +129,10 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
     METHODS open_in_main_language
       RAISING
         zcx_abapgit_exception .
-    METHODS render_order_by
+    METHODS render_table_header
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+    METHODS render_table_footer
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS apply_order_by
@@ -959,10 +962,52 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_order_by.
+  METHOD render_parent_dir.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    ri_html->add( '<tr class="folder">' ).
+    ri_html->add( |<td class="icon">{ ri_html->icon( 'folder' ) }</td>| ).
+    ri_html->add( |<td class="dir" colspan="4">{ build_dir_jump_link( '..' ) }</td>| ).
+    IF mo_repo->has_remote_source( ) = abap_true.
+      ri_html->add( |<td colspan="1"></td>| ). " Dummy for online
+    ENDIF.
+    ri_html->add( '</tr>' ).
+
+  ENDMETHOD.
+
+
+  METHOD render_scripts.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    ri_html->set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_palette(
+      iv_action = zif_abapgit_definitions=>c_action-go_repo ) ).
+
+  ENDMETHOD.
+
+
+  METHOD render_table_footer.
+
+    DATA lv_action TYPE string.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    IF mv_changes_only = abap_true.
+      lv_action = ri_html->a(
+        iv_txt = 'Show All'
+        iv_act = c_actions-toggle_changes ).
+
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_table_footer( |(Only changes are shown. { lv_action })| ) ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD render_table_header.
 
     DATA:
-      lv_icon     TYPE string,
       lt_col_spec TYPE zif_abapgit_definitions=>ty_col_spec_tt,
       ls_col_spec TYPE zif_abapgit_definitions=>ty_col_spec.
 
@@ -999,48 +1044,10 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ls_col_spec-css_class = 'cmd'.
     APPEND ls_col_spec TO lt_col_spec.
 
-    ri_html->add( |<thead>| ).
-    ri_html->add( |<tr>| ).
-
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_order_by_header_cells(
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_table_header(
       it_col_spec         = lt_col_spec
       iv_order_by         = mv_order_by
       iv_order_descending = mv_order_descending ) ).
-
-    IF mv_diff_first = abap_true.
-      lv_icon = 'check/blue'.
-    ELSE.
-      lv_icon = 'check/grey'.
-    ENDIF.
-
-    ri_html->add( '</tr>' ).
-    ri_html->add( '</thead>' ).
-
-  ENDMETHOD.
-
-
-  METHOD render_parent_dir.
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    ri_html->add( '<tr class="folder">' ).
-    ri_html->add( |<td class="icon">{ ri_html->icon( 'folder' ) }</td>| ).
-    ri_html->add( |<td class="dir" colspan="4">{ build_dir_jump_link( '..' ) }</td>| ).
-    IF mo_repo->has_remote_source( ) = abap_true.
-      ri_html->add( |<td colspan="1"></td>| ). " Dummy for online
-    ENDIF.
-    ri_html->add( '</tr>' ).
-
-  ENDMETHOD.
-
-
-  METHOD render_scripts.
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    ri_html->set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_palette(
-      iv_action = zif_abapgit_definitions=>c_action-go_repo ) ).
 
   ENDMETHOD.
 
@@ -1290,7 +1297,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
           " Repo content table
           ri_html->add( '<table class="repo_tab">' ).
 
-          ri_html->add( render_order_by( ) ).
+          ri_html->add( render_table_header( ) ).
 
           IF zcl_abapgit_path=>is_root( mv_cur_dir ) = abap_false.
             ri_html->add( render_parent_dir( ) ).
@@ -1305,14 +1312,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                                        iv_render_transports = mv_are_changes_recorded_in_tr ) ).
           ENDLOOP.
 
-          IF mv_changes_only = abap_true.
-            ri_html->add( `<tfoot><tr><td class="grey" colspan="5">` ).
-            ri_html->add( `(Only changes are shown. ` ).
-            ri_html->add( ri_html->a(
-              iv_txt   = |Show All|
-              iv_act   = |{ c_actions-toggle_changes }| ) ).
-            ri_html->add( `)</td></tr></tfoot>` ).
-          ENDIF.
+          ri_html->add( render_table_footer( ) ).
 
           ri_html->add( '</table>' ).
         ENDIF.
