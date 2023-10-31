@@ -1125,7 +1125,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     ri_html->add( '<tfoot>' ).
     ri_html->add( '<tr>' ).
-    ri_html->add( '<td class="grey" colspan="100%">' ).
+    ri_html->add( '<td colspan="100%">' ).
 
     ri_html->add( iv_message ).
 
