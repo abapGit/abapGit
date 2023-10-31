@@ -151,8 +151,6 @@ CLASS zcl_abapgit_gui_page_merge_sel IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    DATA lo_merge TYPE REF TO zcl_abapgit_gui_page_merge.
-
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.
@@ -164,13 +162,11 @@ CLASS zcl_abapgit_gui_page_merge_sel IMPLEMENTATION.
           zcx_abapgit_exception=>raise( 'Select different branches' ).
         ENDIF.
 
-        CREATE OBJECT lo_merge
-          EXPORTING
-            io_repo   = mo_repo
-            iv_source = mo_form_data->get( c_id-source )
-            iv_target = mo_form_data->get( c_id-target ).
+        rs_handled-page  = zcl_abapgit_gui_page_merge=>create(
+          io_repo   = mo_repo
+          iv_source = mo_form_data->get( c_id-source )
+          iv_target = mo_form_data->get( c_id-target ) ).
 
-        rs_handled-page = lo_merge.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
     ENDCASE.
