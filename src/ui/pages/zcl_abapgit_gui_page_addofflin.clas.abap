@@ -19,6 +19,7 @@ CLASS zcl_abapgit_gui_page_addofflin DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CONSTANTS:
