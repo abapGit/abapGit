@@ -19,14 +19,23 @@ INTERFACE zif_abapgit_repo
     RETURNING
       VALUE(rs_settings) TYPE zif_abapgit_persistence=>ty_repo-local_settings .
 
-  METHODS get_files_local
+  METHODS get_files_local_filtered
     IMPORTING
+      !ii_obj_filter  TYPE REF TO zif_abapgit_object_filter
       !ii_log         TYPE REF TO zif_abapgit_log OPTIONAL
-      !ii_obj_filter  TYPE REF TO zif_abapgit_object_filter OPTIONAL
     RETURNING
       VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_item_tt
     RAISING
       zcx_abapgit_exception .
+
+  METHODS get_files_local
+    IMPORTING
+      !ii_log         TYPE REF TO zif_abapgit_log OPTIONAL
+    RETURNING
+      VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_item_tt
+    RAISING
+      zcx_abapgit_exception .
+
   METHODS get_files_remote
     IMPORTING
       !ii_obj_filter   TYPE REF TO zif_abapgit_object_filter OPTIONAL
