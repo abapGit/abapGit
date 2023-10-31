@@ -55,11 +55,6 @@ CLASS zcl_abapgit_settings DEFINITION
     METHODS get_experimental_features
       RETURNING
         VALUE(rv_features) TYPE string.
-    METHODS is_feature_enabled
-      IMPORTING
-        !iv_feature   TYPE string OPTIONAL
-      RETURNING
-        VALUE(rv_run) TYPE abap_bool.
     METHODS set_max_lines
       IMPORTING
         !iv_lines TYPE i .
@@ -335,19 +330,6 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
 
   METHOD get_user_settings.
     rs_settings = ms_user_settings.
-  ENDMETHOD.
-
-
-  METHOD is_feature_enabled.
-    DATA lt_features TYPE string_table.
-    IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_false.
-      rv_run = boolc( ms_settings-experimental_features = abap_true ).
-      IF iv_feature IS NOT INITIAL.
-        SPLIT ms_settings-experimental_features AT ',' INTO TABLE lt_features.
-        READ TABLE lt_features TRANSPORTING NO FIELDS WITH TABLE KEY table_line = iv_feature.
-        rv_run = boolc( rv_run = abap_true OR sy-subrc = 0 ).
-      ENDIF.
-    ENDIF.
   ENDMETHOD.
 
 

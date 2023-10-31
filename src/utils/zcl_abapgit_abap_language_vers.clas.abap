@@ -62,13 +62,9 @@ CLASS zcl_abapgit_abap_language_vers IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA lo_settings TYPE REF TO zcl_abapgit_settings.
-
     mo_dot_abapgit = io_dot_abapgit.
 
-    lo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
-
-    IF lo_settings->is_feature_enabled( c_feature_flag ) = abap_false.
+    IF zcl_abapgit_feature=>is_enabled( c_feature_flag ) = abap_false.
       mv_has_abap_language_vers = abap_false.
     ELSEIF get_abap_language_vers_by_repo( ) = zif_abapgit_dot_abapgit=>c_abap_language_version-undefined.
       mv_has_abap_language_vers = abap_false.
