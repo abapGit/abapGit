@@ -26,9 +26,9 @@ CLASS ltcl_test IMPLEMENTATION.
   METHOD test01.
 
     CONSTANTS lc_url TYPE string VALUE 'https://github.com/larshp/Empty.git'.
-    DATA lv_ref TYPE string.
+    DATA lv_ref    TYPE string.
     DATA li_memory TYPE REF TO lcl_memory_settings.
-    DATA ls_pull TYPE zcl_abapgit_git_porcelain=>ty_pull_result.
+    DATA ls_pull   TYPE zcl_abapgit_git_porcelain=>ty_pull_result.
 
 
     CREATE OBJECT li_memory.

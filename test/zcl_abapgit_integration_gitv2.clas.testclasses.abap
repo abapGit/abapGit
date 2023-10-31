@@ -15,7 +15,7 @@ CLASS ltcl_test IMPLEMENTATION.
     DATA lo_list     TYPE REF TO zcl_abapgit_git_branch_list.
     DATA lt_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
 
-    lo_list = zcl_abapgit_gitv2_porcelain=>list_branches(
+    lo_list = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_branches(
       iv_url    = 'https://github.com/abapGit/abapGit.git'
       iv_prefix = 'refs/heads' ).
 
@@ -32,7 +32,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
     DATA lt_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
 
-    lt_expanded = zcl_abapgit_gitv2_porcelain=>list_no_blobs(
+    lt_expanded = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_no_blobs(
        iv_url  = 'https://github.com/abapGit/abapGit.git'
        iv_sha1 = '7bdd8f9f4c6bb0ece461b78c7b559957fad6c3ae' ).
 
@@ -50,7 +50,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
     INSERT '7bdd8f9f4c6bb0ece461b78c7b559957fad6c3ae' INTO TABLE lt_sha1.
 
-    lt_objects = zcl_abapgit_gitv2_porcelain=>commits_last_year(
+    lt_objects = zcl_abapgit_git_factory=>get_v2_porcelain( )->commits_last_year(
       iv_url  = 'https://github.com/abapGit/abapGit.git'
       it_sha1 = lt_sha1 ).
 
