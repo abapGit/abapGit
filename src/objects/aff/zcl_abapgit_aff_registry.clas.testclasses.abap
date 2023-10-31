@@ -30,16 +30,14 @@ CLASS ltcl_aff_registry IMPLEMENTATION.
       lo_settings_stub TYPE REF TO zcl_abapgit_settings,
       lv_act           TYPE abap_bool.
 
-
-    CREATE OBJECT lo_settings_stub.
+    lo_settings_stub = zcl_abapgit_persist_factory=>get_settings( )->read( ).
     IF iv_experimental = abap_true.
       lo_settings_stub->set_experimental_features( zcl_abapgit_aff_registry=>c_aff_feature ).
     ELSE.
       lo_settings_stub->set_experimental_features( '' ).
     ENDIF.
-    CREATE OBJECT lo_cut TYPE zcl_abapgit_aff_registry
-      EXPORTING
-        io_settings = lo_settings_stub.
+
+    CREATE OBJECT lo_cut TYPE zcl_abapgit_aff_registry.
     lv_act = lo_cut->is_supported_object_type( iv_obj_type ).
     cl_abap_unit_assert=>assert_equals( exp = iv_is_supported
                                         act = lv_act ).

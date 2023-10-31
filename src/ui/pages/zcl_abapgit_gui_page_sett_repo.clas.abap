@@ -51,7 +51,6 @@ CLASS zcl_abapgit_gui_page_sett_repo DEFINITION
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
     DATA mv_requirements_count TYPE i .
-    DATA mv_feature_enabled TYPE abap_bool.
 
     METHODS validate_form
       IMPORTING
@@ -88,7 +87,6 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
 
     " Feature for ABAP Language Version
     lo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
-    mv_feature_enabled = lo_settings->is_feature_enabled( zcl_abapgit_abap_language_vers=>c_feature_flag ).
 
     CREATE OBJECT mo_validation_log.
     CREATE OBJECT mo_form_data.
@@ -176,7 +174,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
       iv_label       = 'Minimum Patch'
       iv_width       = '30%' ).
 
-    IF mv_feature_enabled = abap_true.
+    IF zcl_abapgit_feature=>is_enabled( zcl_abapgit_abap_language_vers=>c_feature_flag ) = abap_true.
       ro_form->radio(
         iv_name        = c_id-abap_langu_vers
         iv_default_value = ''
@@ -310,7 +308,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
       iv_key = |{ c_id-requirements }-{ zif_abapgit_html_form=>c_rows }|
       iv_val = |{ mv_requirements_count }| ).
 
-    IF mv_feature_enabled = abap_true.
+    IF zcl_abapgit_feature=>is_enabled( zcl_abapgit_abap_language_vers=>c_feature_flag ) = abap_true.
       ro_form_data->set(
         iv_key = c_id-abap_langu_vers
         iv_val = ls_dot-abap_language_version ).
@@ -334,7 +332,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
     lo_dot->set_starting_folder( mo_form_data->get( c_id-starting_folder ) ).
     lo_dot->set_version_constant( mo_form_data->get( c_id-version_constant ) ).
 
-    IF mv_feature_enabled = abap_true.
+    IF zcl_abapgit_feature=>is_enabled( zcl_abapgit_abap_language_vers=>c_feature_flag ) = abap_true.
       lo_dot->set_abap_language_version( mo_form_data->get( c_id-abap_langu_vers ) ).
     ENDIF.
 
