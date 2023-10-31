@@ -54,7 +54,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
+CLASS zcl_abapgit_zlib IMPLEMENTATION.
 
 
   METHOD copy_out.
@@ -118,7 +118,7 @@ CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
       lv_symbol = decode( go_lencode ).
 
       IF lv_symbol < 256.
-        lv_x = zcl_abapgit_zlib_convert=>int_to_hex( lv_symbol ).
+        lv_x = lv_symbol.
         CONCATENATE gv_out lv_x INTO gv_out IN BYTE MODE.
       ELSEIF lv_symbol = 256.
         EXIT.
