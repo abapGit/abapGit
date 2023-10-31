@@ -154,8 +154,6 @@ CLASS zcl_abapgit_gui_page_merge_sel IMPLEMENTATION.
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.
-      WHEN zif_abapgit_definitions=>c_action-go_back.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
 
       WHEN c_event-merge.
         IF mo_form_data->get( c_id-source ) = mo_form_data->get( c_id-target ).

@@ -419,8 +419,6 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
         MESSAGE 'abapGit Debug Info successfully saved' TYPE 'S'.
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN c_action-back.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
 
   ENDMETHOD.
