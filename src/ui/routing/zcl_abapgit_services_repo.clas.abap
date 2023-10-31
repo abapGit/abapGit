@@ -77,7 +77,6 @@ CLASS zcl_abapgit_services_repo DEFINITION
         !it_remote  TYPE zif_abapgit_git_definitions=>ty_files_tt
       RAISING
         zcx_abapgit_exception.
-  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CLASS-METHODS delete_unnecessary_objects
@@ -374,12 +373,12 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     " create new repo and add to favorites
     ro_repo ?= zcl_abapgit_repo_srv=>get_instance( )->new_offline(
       iv_url            = is_repo_params-url
-      iv_package         = is_repo_params-package
-      iv_folder_logic    = is_repo_params-folder_logic
-      iv_labels          = is_repo_params-labels
-      iv_ign_subpkg      = is_repo_params-ignore_subpackages
-      iv_main_lang_only  = is_repo_params-main_lang_only
-      iv_abap_langu_vers = is_repo_params-abap_langu_vers ).
+      iv_package        = is_repo_params-package
+      iv_folder_logic   = is_repo_params-folder_logic
+      iv_labels         = is_repo_params-labels
+      iv_ign_subpkg     = is_repo_params-ignore_subpackages
+      iv_main_lang_only = is_repo_params-main_lang_only
+      iv_abap_lang_vers = is_repo_params-abap_lang_vers ).
 
     check_and_create_package(
       iv_package = is_repo_params-package
@@ -404,16 +403,15 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     check_package( is_repo_params ).
 
     ro_repo ?= zcl_abapgit_repo_srv=>get_instance( )->new_online(
-      iv_url             = is_repo_params-url
-      iv_branch_name     = is_repo_params-branch_name
-      iv_package         = is_repo_params-package
+      iv_url            = is_repo_params-url
+      iv_branch_name    = is_repo_params-branch_name
+      iv_package        = is_repo_params-package
       iv_display_name   = is_repo_params-display_name
-      iv_display_name    = is_repo_params-display_name
-      iv_folder_logic    = is_repo_params-folder_logic
-      iv_labels          = is_repo_params-labels
-      iv_ign_subpkg      = is_repo_params-ignore_subpackages
-      iv_main_lang_only  = is_repo_params-main_lang_only
-      iv_abap_langu_vers = is_repo_params-abap_langu_vers ).
+      iv_folder_logic   = is_repo_params-folder_logic
+      iv_labels         = is_repo_params-labels
+      iv_ign_subpkg     = is_repo_params-ignore_subpackages
+      iv_main_lang_only = is_repo_params-main_lang_only
+      iv_abap_lang_vers = is_repo_params-abap_lang_vers ).
 
     check_and_create_package(
       iv_package = is_repo_params-package
