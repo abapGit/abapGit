@@ -78,8 +78,7 @@ CLASS zcl_abapgit_object_susc IMPLEMENTATION.
 
     DATA: lv_tr_object_name TYPE e071-obj_name,
           lv_tr_return      TYPE char1,
-          ls_package_info   TYPE tdevc,
-          lv_tadir_obj_name TYPE tadir-obj_name.
+          ls_package_info   TYPE tdevc.
 
 
     lv_tr_object_name = ms_item-obj_name.

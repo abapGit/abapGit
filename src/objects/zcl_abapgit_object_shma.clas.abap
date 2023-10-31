@@ -37,7 +37,6 @@ CLASS zcl_abapgit_object_shma IMPLEMENTATION.
     DATA: lv_request   TYPE i,
           lv_area_name TYPE shm_area_name,
           lv_order     TYPE e070-trkorr,
-          lv_objname   TYPE tadir-obj_name,
           lv_task      TYPE e070-trkorr,
           lv_append    TYPE abap_bool,
           ls_tdevc     TYPE tdevc,
