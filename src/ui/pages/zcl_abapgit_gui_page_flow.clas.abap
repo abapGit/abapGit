@@ -92,14 +92,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
     lt_features = lcl_helper=>get_information( ).
     LOOP AT lt_features INTO ls_feature.
-      IF lines( ls_feature-changed_files ) = 0.
-* no changes, eg. only files outside of starting folder changed
-        CONTINUE.
-      ENDIF.
+*      IF lines( ls_feature-changed_files ) = 0.
+** no changes, eg. only files outside of starting folder changed
+*        CONTINUE.
+*      ENDIF.
 
-      ri_html->add( '<b><font size="+2">' && ls_feature-repo_name && | - | ).
-      ri_html->add_icon( 'code-branch' ).
-      ri_html->add( ls_feature-branch-display_name ).
+      ri_html->add( '<b><font size="+2">' && ls_feature-repo_name ).
+      IF ls_feature-branch IS NOT INITIAL.
+        ri_html->add( | - | ).
+        ri_html->add_icon( 'code-branch' ).
+        ri_html->add( ls_feature-branch-display_name ).
+      ENDIF.
       IF ls_feature-transport-trkorr IS NOT INITIAL.
         ri_html->add( | - | ).
         ri_html->add_icon( 'truck-solid' ).
@@ -107,7 +110,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       ENDIF.
       ri_html->add( |</font></b><br>| ).
 
-      IF ls_feature-pr IS NOT INITIAL.
+      IF ls_feature-branch IS INITIAL.
+        ri_html->add( |No branch found| ).
+      ELSEIF ls_feature-pr IS NOT INITIAL.
         ri_html->add_a(
           iv_txt   = ls_feature-pr-title
           iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ ls_feature-pr-url }|
@@ -128,7 +133,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       ENDIF.
 
       ri_html->add( '<br>' ).
-      IF ls_feature-branch-up_to_date = abap_false.
+      IF ls_feature-branch IS NOT INITIAL AND ls_feature-branch-up_to_date = abap_false.
         ri_html->add( 'NONONONONO UPDATED<br><br>' ).
         CONTINUE.
       ENDIF.

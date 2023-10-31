@@ -118,6 +118,7 @@ CLASS lcl_helper DEFINITION FINAL.
              title    TYPE string,
              object   TYPE e071-object,
              obj_name TYPE e071-obj_name,
+             devclass TYPE tadir-devclass,
            END OF ty_transport.
 
     TYPES ty_transports_tt TYPE STANDARD TABLE OF ty_transport WITH DEFAULT KEY.
@@ -141,6 +142,8 @@ CLASS lcl_helper DEFINITION FINAL.
         zcx_abapgit_exception.
 
     CLASS-METHODS try_matching_transports
+      IMPORTING
+        ii_repo       TYPE REF TO zif_abapgit_repo
       CHANGING
         ct_features   TYPE ty_features
         ct_transports TYPE ty_transports_tt
@@ -261,6 +264,8 @@ CLASS lcl_helper IMPLEMENTATION.
           ct_features = lt_features ).
 
       try_matching_transports(
+      EXPORTING
+        ii_repo = li_favorite
         CHANGING
           ct_transports = lt_transports
           ct_features   = lt_features ).
@@ -291,6 +296,15 @@ CLASS lcl_helper IMPLEMENTATION.
 
   METHOD try_matching_transports.
 
+    DATA lt_trkorr LIKE ct_transports.
+    DATA ls_trkorr LIKE LINE OF lt_trkorr.
+    DATA ls_result LIKE LINE OF ct_features.
+    DATA lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
+    DATA lv_package  LIKE LINE OF lt_packages.
+    DATA lv_found TYPE abap_bool.
+    DATA ls_changed LIKE LINE OF ls_result-changed_objects.
+
+
     FIELD-SYMBOLS <ls_feature>   LIKE LINE OF ct_features.
     FIELD-SYMBOLS <ls_transport> LIKE LINE OF ct_transports.
     FIELD-SYMBOLS <ls_changed>   LIKE LINE OF <ls_feature>-changed_objects.
@@ -305,22 +319,55 @@ CLASS lcl_helper IMPLEMENTATION.
         IF sy-subrc = 0.
           <ls_feature>-transport-trkorr = <ls_transport>-trkorr.
           <ls_feature>-transport-title = <ls_transport>-title.
+
+          DELETE ct_transports WHERE trkorr = <ls_transport>-trkorr.
 * todo, fill changed objects/files?
           EXIT.
         ENDIF.
       ENDLOOP.
     ENDLOOP.
 
-* todo, unmatched transports?
+* unmatched transports
+    lt_trkorr = ct_transports.
+    SORT lt_trkorr BY trkorr.
+    DELETE ADJACENT DUPLICATES FROM lt_trkorr COMPARING trkorr.
+
+    lt_packages = zcl_abapgit_factory=>get_sap_package( ii_repo->get_package( ) )->list_subpackages( ).
+
+    LOOP AT lt_trkorr INTO ls_trkorr.
+      lv_found = abap_false.
+      LOOP AT lt_packages INTO lv_package.
+        READ TABLE ct_transports ASSIGNING <ls_transport> WITH KEY trkorr = ls_trkorr-trkorr devclass = lv_package.
+        IF sy-subrc = 0.
+          lv_found = abap_true.
+        ENDIF.
+      ENDLOOP.
+      IF lv_found = abap_false.
+        CONTINUE.
+      ENDIF.
+
+      CLEAR ls_result.
+      ls_result-repo_name = ii_repo->get_name( ).
+      ls_result-package = ii_repo->get_package( ).
+      ls_result-transport-trkorr = <ls_transport>-trkorr.
+      ls_result-transport-title = <ls_transport>-title.
+      LOOP AT ct_transports ASSIGNING <ls_transport> WHERE trkorr = ls_trkorr-trkorr.
+        ls_changed-obj_type = <ls_transport>-object.
+        ls_changed-obj_name = <ls_transport>-obj_name.
+        INSERT ls_changed INTO TABLE ls_result-changed_objects.
+      ENDLOOP.
+      INSERT ls_result INTO TABLE ct_features.
+    ENDLOOP.
 
   ENDMETHOD.
 
   METHOD find_open_transports.
 
-    DATA lt_trkorr TYPE zif_abapgit_cts_api=>ty_trkorr_tt.
-    DATA lv_trkorr LIKE LINE OF lt_trkorr.
-    DATA ls_result LIKE LINE OF rt_transports.
-    DATA lt_objects TYPE zif_abapgit_cts_api=>ty_transport_obj_tt.
+    DATA lt_trkorr   TYPE zif_abapgit_cts_api=>ty_trkorr_tt.
+    DATA lv_trkorr   LIKE LINE OF lt_trkorr.
+    DATA ls_result   LIKE LINE OF rt_transports.
+    DATA lt_objects  TYPE zif_abapgit_cts_api=>ty_transport_obj_tt.
+    DATA lv_obj_name TYPE tadir-obj_name.
 
     FIELD-SYMBOLS <ls_object> LIKE LINE OF lt_objects.
 
@@ -335,6 +382,11 @@ CLASS lcl_helper IMPLEMENTATION.
       LOOP AT lt_objects ASSIGNING <ls_object>.
         ls_result-object = <ls_object>-object.
         ls_result-obj_name = <ls_object>-obj_name.
+
+        lv_obj_name = <ls_object>-obj_name.
+        ls_result-devclass = zcl_abapgit_factory=>get_tadir( )->read_single(
+          iv_object   = ls_result-object
+          iv_obj_name = lv_obj_name )-devclass.
         INSERT ls_result INTO TABLE rt_transports.
       ENDLOOP.
 
