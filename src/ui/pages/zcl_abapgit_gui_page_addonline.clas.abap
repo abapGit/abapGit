@@ -19,7 +19,6 @@ CLASS zcl_abapgit_gui_page_addonline DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CONSTANTS:
@@ -32,7 +31,7 @@ CLASS zcl_abapgit_gui_page_addonline DEFINITION
         folder_logic       TYPE string VALUE 'folder_logic',
         ignore_subpackages TYPE string VALUE 'ignore_subpackages',
         main_lang_only     TYPE string VALUE 'main_lang_only',
-        abap_langu_vers    TYPE string VALUE 'abap_langu_vers',
+        abap_lang_vers     TYPE string VALUE 'abap_lang_vers',
       END OF c_id.
 
     CONSTANTS:
@@ -173,7 +172,7 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
 
     IF zcl_abapgit_feature=>is_enabled( zcl_abapgit_abap_language_vers=>c_feature_flag ) = abap_true.
       ro_form->radio(
-        iv_name        = c_id-abap_langu_vers
+        iv_name        = c_id-abap_lang_vers
         iv_default_value = ''
         iv_label       = 'ABAP Language Version'
         iv_hint        = 'Define the ABAP language version for objects in the repository'
