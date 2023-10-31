@@ -5,6 +5,9 @@ CLASS zcl_abapgit_feature DEFINITION
 
   PUBLIC SECTION.
 
+    " For dependency injection/testing, use the following
+    " zcl_abapgit_persist_factory=>get_settings( )->read( )->set_experimental_features( )
+
     CLASS-METHODS is_enabled
       IMPORTING
         !iv_feature   TYPE string OPTIONAL
