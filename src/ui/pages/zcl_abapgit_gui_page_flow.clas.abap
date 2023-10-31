@@ -79,11 +79,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
 
   METHOD zif_abapgit_gui_renderable~render.
-    DATA lt_features  TYPE lcl_helper=>ty_features.
-    DATA ls_feature   LIKE LINE OF lt_features.
-    DATA ls_path_name LIKE LINE OF ls_feature-changed_files.
-    DATA ls_item      LIKE LINE OF ls_feature-changed_objects.
-    DATA lv_status    TYPE string.
+    DATA lt_features   TYPE lcl_helper=>ty_features.
+    DATA ls_feature    LIKE LINE OF lt_features.
+    DATA ls_path_name  LIKE LINE OF ls_feature-changed_files.
+    DATA ls_item       LIKE LINE OF ls_feature-changed_objects.
+    DATA lv_status     TYPE string.
+    DATA lv_full_match TYPE abap_bool.
+    DATA li_table      TYPE REF TO zif_abapgit_html.
 
 
     register_handlers( ).
@@ -138,22 +140,35 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
         CONTINUE.
       ENDIF.
 
-      ri_html->add( |<table>| ).
-      ri_html->add( |<tr><td><u>Filename</u></td><td><u>Remote SHA1</u></td>| &&
+      CREATE OBJECT li_table TYPE zcl_abapgit_html.
+      lv_full_match = abap_true.
+
+      li_table->add( |<table>| ).
+      li_table->add( |<tr><td><u>Filename</u></td><td><u>Remote SHA1</u></td>| &&
                     |<td><u>Local SHA1</u></td><td></td></tr>| ).
       LOOP AT ls_feature-changed_files INTO ls_path_name.
-        lv_status = 'Diff'.
+
         IF ls_path_name-remote_sha1 = ls_path_name-local_sha1.
           lv_status = 'Match'.
+        ELSE.
+          lv_full_match = abap_false.
+          lv_status = 'Diff'.
         ENDIF.
-        ri_html->add( |<tr><td><tt>{ ls_path_name-path }{ ls_path_name-name }</tt></td><td>{
+        li_table->add( |<tr><td><tt>{ ls_path_name-path }{ ls_path_name-name }</tt></td><td>{
           ls_path_name-remote_sha1(7) }</td><td>{
           ls_path_name-local_sha1(7) }</td><td>{ lv_status }</td></tr>| ).
       ENDLOOP.
-      ri_html->add( |</table>| ).
+      li_table->add( |</table>| ).
       LOOP AT ls_feature-changed_objects INTO ls_item.
-        ri_html->add( |<tt>{ ls_item-obj_type } { ls_item-obj_name }</tt><br>| ).
+        li_table->add( |<tt>{ ls_item-obj_type } { ls_item-obj_name }</tt><br>| ).
       ENDLOOP.
+
+      IF lv_full_match = abap_true.
+        ri_html->add( |Full Match<br>| ).
+      ELSE.
+        ri_html->add( li_table ).
+      ENDIF.
+
       ri_html->add( '<br>' ).
     ENDLOOP.
 
