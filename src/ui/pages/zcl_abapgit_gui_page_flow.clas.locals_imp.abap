@@ -228,10 +228,12 @@ CLASS lcl_helper IMPLEMENTATION.
 
     lt_transports = find_open_transports( ).
 
-* list branches on favorite transported repos
+* list branches on favorite + flow enabled + transported repos
     lt_favorites = zcl_abapgit_repo_srv=>get_instance( )->list_favorites( abap_false ).
     LOOP AT lt_favorites INTO li_favorite.
-      IF zcl_abapgit_factory=>get_sap_package( li_favorite->get_package( )
+      IF li_favorite->get_local_settings( )-flow = abap_false.
+        CONTINUE.
+      ELSEIF zcl_abapgit_factory=>get_sap_package( li_favorite->get_package( )
           )->are_changes_recorded_in_tr_req( ) = abap_false.
         CONTINUE.
       ENDIF.
