@@ -134,19 +134,22 @@ CLASS lcl_helper DEFINITION FINAL.
 
     CLASS-METHODS find_changed_files_all
       IMPORTING
-        io_online   TYPE REF TO zcl_abapgit_repo_online
-        it_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
+        io_online        TYPE REF TO zcl_abapgit_repo_online
+        it_branches      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
+      EXPORTING
+        et_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt
       CHANGING
-        ct_features TYPE ty_features
+        ct_features      TYPE ty_features
       RAISING
         zcx_abapgit_exception.
 
     CLASS-METHODS try_matching_transports
       IMPORTING
-        ii_repo       TYPE REF TO zif_abapgit_repo
+        ii_repo          TYPE REF TO zif_abapgit_repo
+        it_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt
       CHANGING
-        ct_features   TYPE ty_features
-        ct_transports TYPE ty_transports_tt
+        ct_features      TYPE ty_features
+        ct_transports    TYPE ty_transports_tt
       RAISING
         zcx_abapgit_exception.
 
@@ -227,6 +230,7 @@ CLASS lcl_helper IMPLEMENTATION.
     DATA lo_online     TYPE REF TO zcl_abapgit_repo_online.
     DATA lt_features   LIKE rt_features.
     DATA lt_transports TYPE ty_transports_tt.
+    DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
 
 
     lt_transports = find_open_transports( ).
@@ -260,12 +264,15 @@ CLASS lcl_helper IMPLEMENTATION.
         EXPORTING
           io_online   = lo_online
           it_branches = lt_branches
+        IMPORTING
+          et_main_expanded = lt_main_expanded
         CHANGING
           ct_features = lt_features ).
 
       try_matching_transports(
-      EXPORTING
-        ii_repo = li_favorite
+        EXPORTING
+          ii_repo       = li_favorite
+          it_main_expanded = lt_main_expanded
         CHANGING
           ct_transports = lt_transports
           ct_features   = lt_features ).
@@ -296,18 +303,24 @@ CLASS lcl_helper IMPLEMENTATION.
 
   METHOD try_matching_transports.
 
-    DATA lt_trkorr LIKE ct_transports.
-    DATA ls_trkorr LIKE LINE OF lt_trkorr.
-    DATA ls_result LIKE LINE OF ct_features.
+    DATA lt_trkorr   LIKE ct_transports.
+    DATA ls_trkorr   LIKE LINE OF lt_trkorr.
+    DATA ls_result   LIKE LINE OF ct_features.
     DATA lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
     DATA lv_package  LIKE LINE OF lt_packages.
-    DATA lv_found TYPE abap_bool.
-    DATA ls_changed LIKE LINE OF ls_result-changed_objects.
-
+    DATA lv_found    TYPE abap_bool.
+    DATA ls_changed  LIKE LINE OF ls_result-changed_objects.
+    DATA lo_filter   TYPE REF TO lcl_filter.
+    DATA lt_filter   TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lt_local  TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA ls_changed_file LIKE LINE OF ls_result-changed_files.
 
     FIELD-SYMBOLS <ls_feature>   LIKE LINE OF ct_features.
     FIELD-SYMBOLS <ls_transport> LIKE LINE OF ct_transports.
+    FIELD-SYMBOLS <ls_local>     LIKE LINE OF lt_local.
+    FIELD-SYMBOLS <ls_filter>    LIKE LINE OF lt_filter.
     FIELD-SYMBOLS <ls_changed>   LIKE LINE OF <ls_feature>-changed_objects.
+    FIELD-SYMBOLS <ls_main_expanded> LIKE LINE OF it_main_expanded.
 
 
     SORT ct_transports BY object obj_name.
@@ -347,6 +360,7 @@ CLASS lcl_helper IMPLEMENTATION.
       ENDIF.
 
       CLEAR ls_result.
+      CLEAR lt_filter.
       ls_result-repo_name = ii_repo->get_name( ).
       ls_result-package = ii_repo->get_package( ).
       ls_result-transport-trkorr = <ls_transport>-trkorr.
@@ -355,7 +369,30 @@ CLASS lcl_helper IMPLEMENTATION.
         ls_changed-obj_type = <ls_transport>-object.
         ls_changed-obj_name = <ls_transport>-obj_name.
         INSERT ls_changed INTO TABLE ls_result-changed_objects.
+
+        APPEND INITIAL LINE TO lt_filter ASSIGNING <ls_filter>.
+        <ls_filter>-object = <ls_transport>-object.
+        <ls_filter>-obj_name = <ls_transport>-obj_name.
       ENDLOOP.
+
+      CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
+      lt_local = ii_repo->get_files_local_filtered( lo_filter ).
+      LOOP AT lt_local ASSIGNING <ls_local> WHERE file-filename <> zif_abapgit_definitions=>c_dot_abapgit.
+        ls_changed_file-path       = <ls_local>-file-path.
+        ls_changed_file-name       = <ls_local>-file-filename.
+        ls_changed_file-local_sha1 = <ls_local>-file-sha1.
+
+        READ TABLE it_main_expanded ASSIGNING <ls_main_expanded>
+          WITH TABLE KEY path_name COMPONENTS
+          path = ls_changed_file-path
+          name = ls_changed_file-name.
+        IF sy-subrc = 0.
+          ls_changed_file-remote_sha1 = <ls_main_expanded>-sha1.
+        ENDIF.
+
+        INSERT ls_changed_file INTO TABLE ls_result-changed_files.
+      ENDLOOP.
+
       INSERT ls_result INTO TABLE ct_features.
     ENDLOOP.
 
@@ -480,15 +517,9 @@ CLASS lcl_helper IMPLEMENTATION.
     DATA lv_starting_folder TYPE string.
     DATA ls_main            LIKE LINE OF it_branches.
     DATA lt_expanded        TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
-    DATA lt_main_expanded   TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
 
     FIELD-SYMBOLS <ls_branch> LIKE LINE OF ct_features.
 
-
-    IF lines( it_branches ) = 1.
-      " only main branch
-      RETURN.
-    ENDIF.
 
     LOOP AT it_branches INTO ls_branch WHERE is_head = abap_false.
       APPEND ls_branch-sha1 TO lt_sha1.
@@ -503,10 +534,10 @@ CLASS lcl_helper IMPLEMENTATION.
     READ TABLE it_branches INTO ls_main WITH KEY display_name = c_main.
     ASSERT sy-subrc = 0.
 
-    lt_main_expanded = zcl_abapgit_git_porcelain=>full_tree(
+    et_main_expanded = zcl_abapgit_git_porcelain=>full_tree(
       it_objects = lt_objects
       iv_parent  = ls_main-sha1 ).
-    DELETE lt_main_expanded WHERE path NP lv_starting_folder.
+    DELETE et_main_expanded WHERE path NP lv_starting_folder.
 
     LOOP AT ct_features ASSIGNING <ls_branch> WHERE branch-display_name <> c_main.
       lt_expanded = zcl_abapgit_git_porcelain=>full_tree(
@@ -516,7 +547,7 @@ CLASS lcl_helper IMPLEMENTATION.
 
       <ls_branch>-changed_files = find_changed_files(
         it_expanded1 = lt_expanded
-        it_expanded2 = lt_main_expanded ).
+        it_expanded2 = et_main_expanded ).
 
       <ls_branch>-changed_objects = map_files_to_objects(
         io_online = io_online
