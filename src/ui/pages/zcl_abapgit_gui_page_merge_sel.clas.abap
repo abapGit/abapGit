@@ -167,6 +167,8 @@ CLASS zcl_abapgit_gui_page_merge_sel IMPLEMENTATION.
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
+      WHEN OTHERS.
+        ASSERT 1 = 1.
     ENDCASE.
 
   ENDMETHOD.

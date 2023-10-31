@@ -241,6 +241,8 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN c_actions-rerun.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN OTHERS.
+        ASSERT 1 = 1.
     ENDCASE.
 
   ENDMETHOD.

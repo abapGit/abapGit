@@ -504,6 +504,8 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
         ELSE.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
         ENDIF.
+      WHEN OTHERS.
+        ASSERT 1 = 1.
     ENDCASE.
 
   ENDMETHOD.
