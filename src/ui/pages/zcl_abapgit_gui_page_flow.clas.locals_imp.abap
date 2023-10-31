@@ -247,7 +247,7 @@ CLASS lcl_helper IMPLEMENTATION.
 
       lo_online ?= li_favorite.
 
-      lt_branches = zcl_abapgit_gitv2_porcelain=>list_branches(
+      lt_branches = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_branches(
         iv_url    = lo_online->get_url( )
         iv_prefix = 'refs/heads/' )->get_all( ).
 
@@ -459,7 +459,7 @@ CLASS lcl_helper IMPLEMENTATION.
       APPEND ls_branch-sha1 TO lt_sha1.
     ENDLOOP.
 
-    lt_commits = zcl_abapgit_gitv2_porcelain=>commits_last_year(
+    lt_commits = zcl_abapgit_git_factory=>get_v2_porcelain( )->commits_last_year(
       iv_url  = iv_url
       it_sha1 = lt_sha1 ).
 
@@ -525,7 +525,7 @@ CLASS lcl_helper IMPLEMENTATION.
       APPEND ls_branch-sha1 TO lt_sha1.
     ENDLOOP.
 
-    lt_objects = zcl_abapgit_gitv2_porcelain=>list_no_blobs_multi(
+    lt_objects = zcl_abapgit_git_factory=>get_v2_porcelain( )->list_no_blobs_multi(
       iv_url  = io_online->get_url( )
       it_sha1 = lt_sha1 ).
 
