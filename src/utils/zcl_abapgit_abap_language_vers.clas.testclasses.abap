@@ -176,7 +176,6 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
       exp = iv_exp
       msg = |ABAP Language Version: { iv_version }, Cloud| ).
 
-
   ENDMETHOD.
 
   METHOD repo_setting_feature_off.
