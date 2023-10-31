@@ -10,8 +10,7 @@ CLASS ltcl_test DEFINITION FOR TESTING
     METHODS:
       setup,
       bits_to_int FOR TESTING,
-      hex_to_bits FOR TESTING,
-      int_to_hex FOR TESTING.
+      hex_to_bits FOR TESTING.
 
 ENDCLASS.
 
@@ -43,18 +42,6 @@ CLASS ltcl_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lv_bits
       exp = '0000000100000001' ).
-
-  ENDMETHOD.
-
-  METHOD int_to_hex.
-
-    DATA: lv_hex TYPE xstring.
-
-    lv_hex = mo_cut->int_to_hex( 64 ).
-
-    cl_abap_unit_assert=>assert_equals(
-      act = lv_hex
-      exp = '40' ).
 
   ENDMETHOD.
 

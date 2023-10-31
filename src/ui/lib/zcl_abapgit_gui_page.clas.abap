@@ -23,13 +23,13 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
 
     METHODS constructor RAISING zcx_abapgit_exception.
 
-  PROTECTED SECTION.
-
     CONSTANTS:
       BEGIN OF c_page_layout,
         centered   TYPE string VALUE `centered`,
         full_width TYPE string VALUE `full_width`,
       END OF c_page_layout.
+
+  PROTECTED SECTION.
 
     DATA ms_control TYPE ty_control .
 

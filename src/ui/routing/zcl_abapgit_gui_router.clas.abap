@@ -79,6 +79,13 @@ CLASS zcl_abapgit_gui_router DEFINITION
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception .
+    METHODS get_page_patch
+      IMPORTING
+        !ii_event      TYPE REF TO zif_abapgit_gui_event
+      RETURNING
+        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
+      RAISING
+        zcx_abapgit_exception .
     METHODS get_page_stage
       IMPORTING
         !ii_event      TYPE REF TO zif_abapgit_gui_event
@@ -234,9 +241,12 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-go_background_run.              " Go background run page
         rs_handled-page  = zcl_abapgit_gui_page_run_bckg=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-      WHEN zif_abapgit_definitions=>c_action-go_repo_diff                         " Go Diff page
+      WHEN zif_abapgit_definitions=>c_action-go_repo_diff                    " Go Diff page
         OR zif_abapgit_definitions=>c_action-go_file_diff.
         rs_handled-page  = get_page_diff( ii_event ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
+      WHEN zif_abapgit_definitions=>c_action-go_patch.                       " Go Patch page
+        rs_handled-page  = get_page_patch( ii_event ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
       WHEN zif_abapgit_definitions=>c_action-go_stage.                        " Go Staging page
         rs_handled-page  = get_page_stage( ii_event ).
@@ -286,7 +296,6 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     DATA: ls_file   TYPE zif_abapgit_git_definitions=>ty_file,
           ls_object TYPE zif_abapgit_definitions=>ty_item,
-          lo_page   TYPE REF TO zcl_abapgit_gui_page_diff,
           lv_key    TYPE zif_abapgit_persistence=>ty_repo-key.
 
     lv_key             = ii_event->query( )->get( 'KEY' ).
@@ -295,25 +304,41 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     ls_object-obj_type = ii_event->query( )->get( 'OBJ_TYPE' ).
     ls_object-obj_name = ii_event->query( )->get( 'OBJ_NAME' ). " unescape ?
 
-    CREATE OBJECT lo_page
-      EXPORTING
-        iv_key    = lv_key
-        is_file   = ls_file
-        is_object = ls_object.
+    ri_page = zcl_abapgit_gui_page_diff=>create(
+      iv_key    = lv_key
+      is_file   = ls_file
+      is_object = ls_object ).
 
-    ri_page = lo_page.
+  ENDMETHOD.
+
+
+  METHOD get_page_patch.
+
+    DATA: ls_file   TYPE zif_abapgit_git_definitions=>ty_file,
+          ls_object TYPE zif_abapgit_definitions=>ty_item,
+          lv_key    TYPE zif_abapgit_persistence=>ty_repo-key.
+
+    lv_key             = ii_event->query( )->get( 'KEY' ).
+    ls_file-path       = ii_event->query( )->get( 'PATH' ).
+    ls_file-filename   = ii_event->query( )->get( 'FILENAME' ). " unescape ?
+    ls_object-obj_type = ii_event->query( )->get( 'OBJ_TYPE' ).
+    ls_object-obj_name = ii_event->query( )->get( 'OBJ_NAME' ). " unescape ?
+
+    ri_page = zcl_abapgit_gui_page_patch=>create(
+      iv_key    = lv_key
+      is_file   = ls_file
+      is_object = ls_object ).
 
   ENDMETHOD.
 
 
   METHOD get_page_stage.
 
-    DATA: lo_repo                TYPE REF TO zcl_abapgit_repo_online,
-          lv_key                 TYPE zif_abapgit_persistence=>ty_repo-key,
-          lv_seed                TYPE string,
-          lo_stage_page          TYPE REF TO zcl_abapgit_gui_page_stage,
-          lv_sci_result          TYPE zif_abapgit_definitions=>ty_sci_result,
-          lx_error               TYPE REF TO cx_sy_move_cast_error.
+    DATA: lo_repo       TYPE REF TO zcl_abapgit_repo_online,
+          lv_key        TYPE zif_abapgit_persistence=>ty_repo-key,
+          lv_seed       TYPE string,
+          lv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result,
+          lx_error      TYPE REF TO cx_sy_move_cast_error.
 
     lv_key   = ii_event->query( )->get( 'KEY' ).
     lv_seed  = ii_event->query( )->get( 'SEED' ).
@@ -349,14 +374,11 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       " force refresh on stage, to make sure the latest local and remote files are used
       lo_repo->refresh( ).
 
-      CREATE OBJECT lo_stage_page
-        EXPORTING
-          io_repo       = lo_repo
-          iv_seed       = lv_seed
-          iv_sci_result = lv_sci_result
-          ii_obj_filter = ii_obj_filter.
-
-      ri_page = lo_stage_page.
+      ri_page = zcl_abapgit_gui_page_stage=>create(
+        io_repo       = lo_repo
+        iv_seed       = lv_seed
+        iv_sci_result = lv_sci_result
+        ii_obj_filter = ii_obj_filter ).
     ENDIF.
 
   ENDMETHOD.
@@ -602,7 +624,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-repo_activate_objects.           " Repo activate objects
         zcl_abapgit_services_repo=>activate_objects( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN zif_abapgit_definitions=>c_action-repo_newonline.                  " New offline repo
+      WHEN zif_abapgit_definitions=>c_action-repo_newonline.                  " New online repo
         rs_handled-page  = zcl_abapgit_gui_page_addonline=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-flow.                            " Flow page
@@ -797,7 +819,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         lo_obj_filter_trans->set_filter_values( iv_package  = lo_repo->get_package( )
                                                 it_r_trkorr = lt_r_trkorr ).
 
-        lv_xstr = zcl_abapgit_zip=>encode_files( lo_repo->get_files_local( ii_obj_filter = lo_obj_filter_trans ) ).
+        lv_xstr = zcl_abapgit_zip=>encode_files( lo_repo->get_files_local_filtered( lo_obj_filter_trans ) ).
         lo_repo->refresh( ).
         file_download( iv_package = lo_repo->get_package( )
                        iv_xstr    = lv_xstr ).
