@@ -15,6 +15,7 @@ CLASS zcl_abapgit_repo_srv DEFINITION
       IMPORTING
         ii_srv TYPE REF TO zif_abapgit_repo_srv.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CLASS-DATA gi_ref TYPE REF TO zif_abapgit_repo_srv .
@@ -538,7 +539,6 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     " Repo Settings
     lo_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( ).
     lo_dot_abapgit->set_folder_logic( iv_folder_logic ).
-    lo_dot_abapgit->set_abap_language_version( iv_abap_langu_vers ).
     lo_dot_abapgit->set_abap_language_version( iv_abap_lang_vers ).
 
     lv_key = zcl_abapgit_persist_factory=>get_repo( )->add(
@@ -602,7 +602,6 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     " Repo Settings
     lo_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( ).
     lo_dot_abapgit->set_folder_logic( iv_folder_logic ).
-    lo_dot_abapgit->set_abap_language_version( iv_abap_langu_vers ).
     lo_dot_abapgit->set_abap_language_version( iv_abap_lang_vers ).
 
     lv_key = zcl_abapgit_persist_factory=>get_repo( )->add(
