@@ -63,13 +63,18 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !ix_error      TYPE REF TO zcx_abapgit_exception
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
-    CLASS-METHODS render_order_by_header_cells
+    CLASS-METHODS render_table_header
       IMPORTING
         !it_col_spec         TYPE zif_abapgit_definitions=>ty_col_spec_tt
         !iv_order_by         TYPE string
         !iv_order_descending TYPE abap_bool
       RETURNING
         VALUE(ri_html)       TYPE REF TO zif_abapgit_html .
+    CLASS-METHODS render_table_footer
+      IMPORTING
+        !iv_message    TYPE string
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     CLASS-METHODS render_warning_banner
       IMPORTING
         !iv_text       TYPE string
@@ -786,66 +791,6 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_order_by_header_cells.
-
-    DATA:
-      lv_tmp       TYPE string,
-      lv_disp_name TYPE string.
-
-    FIELD-SYMBOLS <ls_col> LIKE LINE OF it_col_spec.
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    LOOP AT it_col_spec ASSIGNING <ls_col>.
-      " e.g. <th class="ro-detail">Created at [{ gv_time_zone }]</th>
-      lv_tmp = '<th'.
-      IF <ls_col>-css_class IS NOT INITIAL.
-        lv_tmp = lv_tmp && | class="{ <ls_col>-css_class }"|.
-      ENDIF.
-      lv_tmp = lv_tmp && '>'.
-
-      IF <ls_col>-display_name IS NOT INITIAL.
-        lv_disp_name = <ls_col>-display_name.
-        IF <ls_col>-add_tz = abap_true.
-          lv_disp_name = lv_disp_name && | [{ gv_time_zone }]|.
-        ENDIF.
-        IF <ls_col>-tech_name = iv_order_by.
-          IF iv_order_descending = abap_true.
-            lv_tmp = lv_tmp && ri_html->a(
-              iv_txt   = lv_disp_name
-              iv_act   = |{ zif_abapgit_definitions=>c_action-change_order_by }|
-              iv_title = <ls_col>-title ).
-          ELSE.
-            lv_tmp = lv_tmp && ri_html->a(
-              iv_txt   = lv_disp_name
-              iv_act   = |{ zif_abapgit_definitions=>c_action-direction }?direction=DESCENDING|
-              iv_title = <ls_col>-title ).
-          ENDIF.
-        ELSEIF <ls_col>-allow_order_by = abap_true.
-          lv_tmp = lv_tmp && ri_html->a(
-            iv_txt   = lv_disp_name
-            iv_act   = |{ zif_abapgit_definitions=>c_action-change_order_by }?orderBy={ <ls_col>-tech_name }|
-            iv_title = <ls_col>-title ).
-        ELSE.
-          lv_tmp = lv_tmp && lv_disp_name.
-        ENDIF.
-      ENDIF.
-      IF <ls_col>-tech_name = iv_order_by
-      AND iv_order_by IS NOT INITIAL.
-        IF iv_order_descending = abap_true.
-          lv_tmp = lv_tmp && | &#x25BE;|. " arrow down
-        ELSE.
-          lv_tmp = lv_tmp && | &#x25B4;|. " arrow up
-        ENDIF.
-      ENDIF.
-
-      lv_tmp = lv_tmp && '</th>'.
-      ri_html->add( lv_tmp ).
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
   METHOD render_package_name.
 
     DATA:
@@ -1170,6 +1115,89 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       WHEN OTHERS. " Including NO_RUN
         RETURN.
     ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD render_table_footer.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    ri_html->add( '<tfoot>' ).
+    ri_html->add( '<tr>' ).
+    ri_html->add( '<td colspan="100%">' ).
+
+    ri_html->add( iv_message ).
+
+    ri_html->add( '</td>' ).
+    ri_html->add( '</tr>' ).
+    ri_html->add( '</tfoot>' ).
+
+  ENDMETHOD.
+
+
+  METHOD render_table_header.
+
+    DATA:
+      lv_tmp       TYPE string,
+      lv_disp_name TYPE string.
+
+    FIELD-SYMBOLS <ls_col> LIKE LINE OF it_col_spec.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    ri_html->add( '<thead>' ).
+    ri_html->add( '<tr>' ).
+
+    LOOP AT it_col_spec ASSIGNING <ls_col>.
+      " e.g. <th class="ro-detail">Created at [{ gv_time_zone }]</th>
+      lv_tmp = '<th'.
+      IF <ls_col>-css_class IS NOT INITIAL.
+        lv_tmp = lv_tmp && | class="{ <ls_col>-css_class }"|.
+      ENDIF.
+      lv_tmp = lv_tmp && '>'.
+
+      IF <ls_col>-display_name IS NOT INITIAL.
+        lv_disp_name = <ls_col>-display_name.
+        IF <ls_col>-add_tz = abap_true.
+          lv_disp_name = lv_disp_name && | [{ gv_time_zone }]|.
+        ENDIF.
+        IF <ls_col>-tech_name = iv_order_by.
+          IF iv_order_descending = abap_true.
+            lv_tmp = lv_tmp && ri_html->a(
+              iv_txt   = lv_disp_name
+              iv_act   = |{ zif_abapgit_definitions=>c_action-change_order_by }|
+              iv_title = <ls_col>-title ).
+          ELSE.
+            lv_tmp = lv_tmp && ri_html->a(
+              iv_txt   = lv_disp_name
+              iv_act   = |{ zif_abapgit_definitions=>c_action-direction }?direction=DESCENDING|
+              iv_title = <ls_col>-title ).
+          ENDIF.
+        ELSEIF <ls_col>-allow_order_by = abap_true.
+          lv_tmp = lv_tmp && ri_html->a(
+            iv_txt   = lv_disp_name
+            iv_act   = |{ zif_abapgit_definitions=>c_action-change_order_by }?orderBy={ <ls_col>-tech_name }|
+            iv_title = <ls_col>-title ).
+        ELSE.
+          lv_tmp = lv_tmp && lv_disp_name.
+        ENDIF.
+      ENDIF.
+      IF <ls_col>-tech_name = iv_order_by
+      AND iv_order_by IS NOT INITIAL.
+        IF iv_order_descending = abap_true.
+          lv_tmp = lv_tmp && | &#x25BE;|. " arrow down
+        ELSE.
+          lv_tmp = lv_tmp && | &#x25B4;|. " arrow up
+        ENDIF.
+      ENDIF.
+
+      lv_tmp = lv_tmp && '</th>'.
+      ri_html->add( lv_tmp ).
+    ENDLOOP.
+
+    ri_html->add( '</tr>' ).
+    ri_html->add( '</thead>' ).
 
   ENDMETHOD.
 
