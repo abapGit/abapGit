@@ -127,6 +127,17 @@ CLASS lcl_helper DEFINITION FINAL.
       RAISING
         zcx_abapgit_exception.
 
+    CLASS-METHODS add_objects_and_files_from_tr
+      IMPORTING
+        iv_trkorr        TYPE trkorr
+        ii_repo          TYPE REF TO zif_abapgit_repo
+        it_transports    TYPE ty_transports_tt
+        it_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt
+      CHANGING
+        cs_feature       TYPE ty_feature
+      RAISING
+        zcx_abapgit_exception.
+
     CLASS-METHODS find_up_to_date
       IMPORTING
         iv_url      TYPE string
@@ -312,9 +323,16 @@ CLASS lcl_helper IMPLEMENTATION.
           <ls_feature>-transport-trkorr = <ls_transport>-trkorr.
           <ls_feature>-transport-title = <ls_transport>-title.
 
+          add_objects_and_files_from_tr(
+            EXPORTING
+              iv_trkorr        = <ls_transport>-trkorr
+              ii_repo          = ii_repo
+              it_main_expanded = it_main_expanded
+              it_transports    = ct_transports
+            CHANGING
+              cs_feature       = <ls_feature> ).
+
           DELETE ct_transports WHERE trkorr = <ls_transport>-trkorr.
-* todo, fill changed objects/files?
-          BREAK-POINT.
           EXIT.
         ENDIF.
       ENDLOOP.
@@ -341,39 +359,68 @@ CLASS lcl_helper IMPLEMENTATION.
       ENDIF.
 
       CLEAR ls_result.
-      CLEAR lt_filter.
       ls_result-repo = build_repo_data( ii_repo ).
       ls_result-transport-trkorr = <ls_transport>-trkorr.
       ls_result-transport-title = <ls_transport>-title.
-      LOOP AT ct_transports ASSIGNING <ls_transport> WHERE trkorr = ls_trkorr-trkorr.
-        ls_changed-obj_type = <ls_transport>-object.
-        ls_changed-obj_name = <ls_transport>-obj_name.
-        INSERT ls_changed INTO TABLE ls_result-changed_objects.
 
-        APPEND INITIAL LINE TO lt_filter ASSIGNING <ls_filter>.
-        <ls_filter>-object = <ls_transport>-object.
-        <ls_filter>-obj_name = <ls_transport>-obj_name.
-      ENDLOOP.
-
-      CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
-      lt_local = ii_repo->get_files_local_filtered( lo_filter ).
-      LOOP AT lt_local ASSIGNING <ls_local> WHERE file-filename <> zif_abapgit_definitions=>c_dot_abapgit.
-        ls_changed_file-path       = <ls_local>-file-path.
-        ls_changed_file-filename   = <ls_local>-file-filename.
-        ls_changed_file-local_sha1 = <ls_local>-file-sha1.
-
-        READ TABLE it_main_expanded ASSIGNING <ls_main_expanded>
-          WITH TABLE KEY path_name COMPONENTS
-          path = ls_changed_file-path
-          name = ls_changed_file-filename.
-        IF sy-subrc = 0.
-          ls_changed_file-remote_sha1 = <ls_main_expanded>-sha1.
-        ENDIF.
-
-        INSERT ls_changed_file INTO TABLE ls_result-changed_files.
-      ENDLOOP.
+      add_objects_and_files_from_tr(
+        EXPORTING
+          iv_trkorr        = ls_trkorr-trkorr
+          ii_repo          = ii_repo
+          it_main_expanded = it_main_expanded
+          it_transports    = ct_transports
+        CHANGING
+          cs_feature       = ls_result ).
 
       INSERT ls_result INTO TABLE ct_features.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD add_objects_and_files_from_tr.
+
+    DATA lt_trkorr       LIKE it_transports.
+    DATA lt_packages     TYPE zif_abapgit_sap_package=>ty_devclass_tt.
+    DATA lv_package      LIKE LINE OF lt_packages.
+    DATA lv_found        TYPE abap_bool.
+    DATA ls_changed      LIKE LINE OF cs_feature-changed_objects.
+    DATA lo_filter       TYPE REF TO lcl_filter.
+    DATA lt_filter       TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lt_local        TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA ls_changed_file LIKE LINE OF cs_feature-changed_files.
+
+    FIELD-SYMBOLS <ls_transport> LIKE LINE OF it_transports.
+    FIELD-SYMBOLS <ls_local>     LIKE LINE OF lt_local.
+    FIELD-SYMBOLS <ls_filter>    LIKE LINE OF lt_filter.
+    FIELD-SYMBOLS <ls_main_expanded> LIKE LINE OF it_main_expanded.
+
+
+    LOOP AT it_transports ASSIGNING <ls_transport> WHERE trkorr = iv_trkorr.
+      ls_changed-obj_type = <ls_transport>-object.
+      ls_changed-obj_name = <ls_transport>-obj_name.
+      INSERT ls_changed INTO TABLE cs_feature-changed_objects.
+
+      APPEND INITIAL LINE TO lt_filter ASSIGNING <ls_filter>.
+      <ls_filter>-object = <ls_transport>-object.
+      <ls_filter>-obj_name = <ls_transport>-obj_name.
+    ENDLOOP.
+
+    CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
+    lt_local = ii_repo->get_files_local_filtered( lo_filter ).
+    LOOP AT lt_local ASSIGNING <ls_local> WHERE file-filename <> zif_abapgit_definitions=>c_dot_abapgit.
+      ls_changed_file-path       = <ls_local>-file-path.
+      ls_changed_file-filename   = <ls_local>-file-filename.
+      ls_changed_file-local_sha1 = <ls_local>-file-sha1.
+
+      READ TABLE it_main_expanded ASSIGNING <ls_main_expanded>
+        WITH TABLE KEY path_name COMPONENTS
+        path = ls_changed_file-path
+        name = ls_changed_file-filename.
+      IF sy-subrc = 0.
+        ls_changed_file-remote_sha1 = <ls_main_expanded>-sha1.
+      ENDIF.
+
+      INSERT ls_changed_file INTO TABLE cs_feature-changed_files.
     ENDLOOP.
 
   ENDMETHOD.
