@@ -105,7 +105,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
         CONTINUE.
       ENDIF.
 
-      ri_html->add( '<b><font size="+2">' && ls_feature-repo_name ).
+      ri_html->add( '<b><font size="+2">' && ls_feature-repo-name ).
       IF ls_feature-branch IS NOT INITIAL.
         ri_html->add( | - | ).
         ri_html->add_icon( 'code-branch' ).
@@ -159,9 +159,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
         ELSE.
           lv_full_match = abap_false.
 
-          ASSERT ls_feature-repo_key IS NOT INITIAL.
+          ASSERT ls_feature-repo-key IS NOT INITIAL.
           lv_param = zcl_abapgit_html_action_utils=>file_encode(
-            iv_key  = ls_feature-repo_key
+            iv_key  = ls_feature-repo-key
             ig_file = ls_path_name ).
           lv_status = li_table->a(
             iv_txt = 'Diff'

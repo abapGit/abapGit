@@ -91,6 +91,12 @@ CLASS lcl_helper DEFINITION FINAL.
 
     TYPES ty_transports_tt TYPE STANDARD TABLE OF ty_transport WITH DEFAULT KEY.
 
+    CLASS-METHODS build_repo_data
+      IMPORTING
+        io_online      TYPE REF TO zif_abapgit_repo
+      RETURNING
+        VALUE(rs_data) TYPE ty_feature-repo.
+
     CLASS-METHODS map_files_to_objects
       IMPORTING
         it_files                  TYPE ty_path_name_tt
@@ -188,6 +194,12 @@ CLASS lcl_helper IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD build_repo_data.
+    rs_data-name = io_online->get_name( ).
+    rs_data-key = io_online->get_key( ).
+    rs_data-package = io_online->get_package( ).
+  ENDMETHOD.
+
   METHOD get_information.
 
     DATA lt_branches   TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
@@ -221,9 +233,7 @@ CLASS lcl_helper IMPLEMENTATION.
 
       CLEAR lt_features.
       LOOP AT lt_branches INTO ls_branch WHERE display_name <> c_main.
-        ls_result-repo_name = li_favorite->get_name( ).
-        ls_result-repo_key = li_favorite->get_key( ).
-        ls_result-package = li_favorite->get_package( ).
+        ls_result-repo = build_repo_data( lo_online ).
         ls_result-branch-display_name = ls_branch-display_name.
         ls_result-branch-sha1 = ls_branch-sha1.
         INSERT ls_result INTO TABLE lt_features.
@@ -231,12 +241,12 @@ CLASS lcl_helper IMPLEMENTATION.
 
       find_changed_files_all(
         EXPORTING
-          io_online   = lo_online
-          it_branches = lt_branches
+          io_online        = lo_online
+          it_branches      = lt_branches
         IMPORTING
           et_main_expanded = lt_main_expanded
         CHANGING
-          ct_features = lt_features ).
+          ct_features      = lt_features ).
 
       try_matching_transports(
         EXPORTING
@@ -272,16 +282,16 @@ CLASS lcl_helper IMPLEMENTATION.
 
   METHOD try_matching_transports.
 
-    DATA lt_trkorr   LIKE ct_transports.
-    DATA ls_trkorr   LIKE LINE OF lt_trkorr.
-    DATA ls_result   LIKE LINE OF ct_features.
-    DATA lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
-    DATA lv_package  LIKE LINE OF lt_packages.
-    DATA lv_found    TYPE abap_bool.
-    DATA ls_changed  LIKE LINE OF ls_result-changed_objects.
-    DATA lo_filter   TYPE REF TO lcl_filter.
-    DATA lt_filter   TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA lt_local  TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA lt_trkorr       LIKE ct_transports.
+    DATA ls_trkorr       LIKE LINE OF lt_trkorr.
+    DATA ls_result       LIKE LINE OF ct_features.
+    DATA lt_packages     TYPE zif_abapgit_sap_package=>ty_devclass_tt.
+    DATA lv_package      LIKE LINE OF lt_packages.
+    DATA lv_found        TYPE abap_bool.
+    DATA ls_changed      LIKE LINE OF ls_result-changed_objects.
+    DATA lo_filter       TYPE REF TO lcl_filter.
+    DATA lt_filter       TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lt_local        TYPE zif_abapgit_definitions=>ty_files_item_tt.
     DATA ls_changed_file LIKE LINE OF ls_result-changed_files.
 
     FIELD-SYMBOLS <ls_feature>   LIKE LINE OF ct_features.
@@ -304,6 +314,7 @@ CLASS lcl_helper IMPLEMENTATION.
 
           DELETE ct_transports WHERE trkorr = <ls_transport>-trkorr.
 * todo, fill changed objects/files?
+          BREAK-POINT.
           EXIT.
         ENDIF.
       ENDLOOP.
@@ -331,9 +342,7 @@ CLASS lcl_helper IMPLEMENTATION.
 
       CLEAR ls_result.
       CLEAR lt_filter.
-      ls_result-repo_name = ii_repo->get_name( ).
-      ls_result-repo_key = ii_repo->get_key( ).
-      ls_result-package = ii_repo->get_package( ).
+      ls_result-repo = build_repo_data( ii_repo ).
       ls_result-transport-trkorr = <ls_transport>-trkorr.
       ls_result-transport-title = <ls_transport>-title.
       LOOP AT ct_transports ASSIGNING <ls_transport> WHERE trkorr = ls_trkorr-trkorr.
