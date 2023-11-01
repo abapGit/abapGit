@@ -378,7 +378,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       iv_folder_logic   = is_repo_params-folder_logic
       iv_labels         = is_repo_params-labels
       iv_ign_subpkg     = is_repo_params-ignore_subpackages
-      iv_main_lang_only = is_repo_params-main_lang_only ).
+      iv_main_lang_only = is_repo_params-main_lang_only
+      iv_abap_lang_vers = is_repo_params-abap_lang_vers ).
 
     check_and_create_package(
       iv_package = is_repo_params-package
@@ -410,7 +411,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       iv_folder_logic   = is_repo_params-folder_logic
       iv_labels         = is_repo_params-labels
       iv_ign_subpkg     = is_repo_params-ignore_subpackages
-      iv_main_lang_only = is_repo_params-main_lang_only ).
+      iv_main_lang_only = is_repo_params-main_lang_only
+      iv_abap_lang_vers = is_repo_params-abap_lang_vers ).
 
     check_and_create_package(
       iv_package = is_repo_params-package
