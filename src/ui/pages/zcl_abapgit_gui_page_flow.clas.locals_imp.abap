@@ -271,11 +271,11 @@ CLASS lcl_helper IMPLEMENTATION.
 
       try_matching_transports(
         EXPORTING
-          ii_repo       = li_favorite
+          ii_repo          = li_favorite
           it_main_expanded = lt_main_expanded
         CHANGING
-          ct_transports = lt_transports
-          ct_features   = lt_features ).
+          ct_transports    = lt_transports
+          ct_features      = lt_features ).
 
       find_up_to_date(
         EXPORTING
@@ -346,6 +346,7 @@ CLASS lcl_helper IMPLEMENTATION.
     DELETE ADJACENT DUPLICATES FROM lt_trkorr COMPARING trkorr.
 
     lt_packages = zcl_abapgit_factory=>get_sap_package( ii_repo->get_package( ) )->list_subpackages( ).
+    INSERT ii_repo->get_package( ) INTO TABLE lt_packages.
 
     LOOP AT lt_trkorr INTO ls_trkorr.
       lv_found = abap_false.
