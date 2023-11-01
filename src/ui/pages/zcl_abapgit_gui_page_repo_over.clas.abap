@@ -47,6 +47,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
         deserialized_at     TYPE string,
         deserialized_at_raw TYPE timestampl,
         write_protected     TYPE abap_bool,
+        flow                TYPE abap_bool,
       END OF ty_overview,
       ty_overviews TYPE STANDARD TABLE OF ty_overview
                    WITH NON-UNIQUE DEFAULT KEY.
@@ -392,6 +393,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       ls_overview-branch          = <ls_repo>->ms_data-branch_name.
       ls_overview-created_by      = <ls_repo>->ms_data-created_by.
       ls_overview-write_protected = <ls_repo>->ms_data-local_settings-write_protected.
+      ls_overview-flow            = <ls_repo>->ms_data-local_settings-flow.
       ls_overview-created_at_raw  = <ls_repo>->ms_data-created_at.
 
       IF <ls_repo>->ms_data-created_at IS NOT INITIAL.
@@ -741,6 +743,11 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
         iv_name  = 'lock/grey70'
         iv_class = 'm-em5-sides'
         iv_hint  = 'Locked from pulls' ).
+    ENDIF.
+    IF is_repo-flow = abap_true.
+      lv_lock = ii_html->icon(
+        iv_name  = 'flow/grey70'
+        iv_class = 'm-em5-sides' ).
     ENDIF.
 
     ii_html->td(
