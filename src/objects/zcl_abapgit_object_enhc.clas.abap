@@ -94,18 +94,7 @@ CLASS zcl_abapgit_object_enhc IMPLEMENTATION.
     IF sy-subrc = 0.
       " If object exists already, then set TADIR entry to deleted
       " otherwise create_enhancement_composite will fail
-      CALL FUNCTION 'TR_TADIR_INTERFACE'
-        EXPORTING
-          wi_test_modus     = abap_false
-          wi_tadir_pgmid    = 'R3TR'
-          wi_tadir_object   = ms_item-obj_type
-          wi_tadir_obj_name = ms_item-obj_name
-          iv_delflag        = abap_true
-        EXCEPTIONS
-          OTHERS            = 1.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise_t100( ).
-      ENDIF.
+      tadir_delete( ).
     ENDIF.
 
     TRY.

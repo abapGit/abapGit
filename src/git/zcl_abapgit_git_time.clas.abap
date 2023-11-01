@@ -13,6 +13,13 @@ CLASS zcl_abapgit_git_time DEFINITION
         VALUE(rv_time) TYPE ty_unixtime
       RAISING
         zcx_abapgit_exception .
+
+    CLASS-METHODS get_one_year_ago
+      RETURNING
+        VALUE(rv_time) TYPE i
+      RAISING
+        zcx_abapgit_exception .
+
     CLASS-METHODS get_utc
       IMPORTING
         !iv_unix TYPE ty_unixtime
@@ -27,6 +34,20 @@ ENDCLASS.
 
 CLASS zcl_abapgit_git_time IMPLEMENTATION.
 
+
+  METHOD get_one_year_ago.
+* https://www.epochconverter.com
+    CONSTANTS lc_epoch TYPE timestamp VALUE '19700101000000'.
+    DATA lv_time TYPE timestamp.
+
+    GET TIME STAMP FIELD lv_time.
+
+    rv_time = cl_abap_tstmp=>subtract(
+      tstmp1 = lv_time
+      tstmp2 = lc_epoch ).
+
+    rv_time = rv_time - 31536000.
+  ENDMETHOD.
 
   METHOD get_unix.
 * returns seconds since unix epoch, including timezone indicator

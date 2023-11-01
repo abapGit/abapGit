@@ -105,6 +105,8 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
       <ls_p>-head_url        = ii_json->get( |/{ lv_i }/head/repo/clone_url| ).
       <ls_p>-head_branch     = ii_json->get( |/{ lv_i }/head/ref| ).
       <ls_p>-created_at      = ii_json->get( |/{ lv_i }/created_at| ).
+      <ls_p>-draft           = ii_json->get_boolean( |/{ lv_i }/draft| ).
+      <ls_p>-html_url        = ii_json->get( |/{ lv_i }/html_url| ).
     ENDLOOP.
 
   ENDMETHOD.

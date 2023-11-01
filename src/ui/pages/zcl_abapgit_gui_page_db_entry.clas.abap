@@ -91,7 +91,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_DB_ENTRY IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_db_entry IMPLEMENTATION.
 
 
   METHOD build_toolbar.
@@ -248,8 +248,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_ENTRY IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-update.
         do_update( dbcontent_decode( ii_event->form_data( ) ) ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
-      WHEN c_action-back.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
 

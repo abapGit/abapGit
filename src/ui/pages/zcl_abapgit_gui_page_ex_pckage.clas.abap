@@ -28,7 +28,6 @@ CLASS zcl_abapgit_gui_page_ex_pckage DEFINITION
 
     CONSTANTS:
       BEGIN OF c_event,
-        go_back        TYPE string VALUE 'go-back',
         export_package TYPE string VALUE 'export-package',
         choose_package TYPE string VALUE 'choose-object-type',
       END OF c_event.
@@ -50,7 +49,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_EX_PCKAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_ex_pckage IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -121,7 +120,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_EX_PCKAGE IMPLEMENTATION.
       iv_cmd_type      = zif_abapgit_html_form=>c_cmd_type-input_main
     )->command(
       iv_label         = 'Back'
-      iv_action        = c_event-go_back ).
+      iv_action        = zif_abapgit_definitions=>c_action-go_back ).
   ENDMETHOD.
 
 
@@ -129,10 +128,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_EX_PCKAGE IMPLEMENTATION.
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.
-      WHEN c_event-go_back.
-
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
-
       WHEN c_event-export_package.
 
         mo_validation_log = mo_form_util->validate( mo_form_data ).

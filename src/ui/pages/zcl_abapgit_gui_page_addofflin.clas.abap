@@ -30,11 +30,11 @@ CLASS zcl_abapgit_gui_page_addofflin DEFINITION
         labels             TYPE string VALUE 'labels',
         ignore_subpackages TYPE string VALUE 'ignore_subpackages',
         main_lang_only     TYPE string VALUE 'main_lang_only',
+        abap_lang_vers     TYPE string VALUE 'abap_lang_vers',
       END OF c_id .
 
     CONSTANTS:
       BEGIN OF c_event,
-        go_back          TYPE string VALUE 'go-back',
         choose_package   TYPE string VALUE 'choose-package',
         choose_labels    TYPE string VALUE 'choose-labels',
         create_package   TYPE string VALUE 'create-package',
@@ -153,8 +153,29 @@ CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
     )->checkbox(
       iv_name        = c_id-main_lang_only
       iv_label       = 'Serialize Main Language Only'
-      iv_hint        = 'Ignore translations, serialize just main language'
-    )->command(
+      iv_hint        = 'Ignore translations, serialize just main language' ).
+
+    IF zcl_abapgit_feature=>is_enabled( zcl_abapgit_abap_language_vers=>c_feature_flag ) = abap_true.
+      ro_form->radio(
+        iv_name        = c_id-abap_lang_vers
+        iv_default_value = ''
+        iv_label       = 'ABAP Language Version'
+        iv_hint        = 'Define the ABAP language version for objects in the repository'
+      )->option(
+        iv_label       = 'Any'
+        iv_value       = ''
+      )->option(
+        iv_label       = 'Standard'
+        iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-standard
+      )->option(
+        iv_label       = 'For Key Users'
+        iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-key_user
+      )->option(
+        iv_label       = 'For Cloud Development'
+        iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-cloud_development ).
+    ENDIF.
+
+    ro_form->command(
       iv_label       = 'Create Offline Repo'
       iv_cmd_type    = zif_abapgit_html_form=>c_cmd_type-input_main
       iv_action      = c_event-add_offline_repo
@@ -163,7 +184,7 @@ CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
       iv_action      = c_event-create_package
     )->command(
       iv_label       = 'Back'
-      iv_action      = c_event-go_back ).
+      iv_action      = zif_abapgit_definitions=>c_action-go_back ).
 
   ENDMETHOD.
 
@@ -213,9 +234,6 @@ CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.
-      WHEN c_event-go_back.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
-
       WHEN c_event-create_package.
 
         mo_form_data->set(
