@@ -72,44 +72,12 @@ ENDCLASS.
 
 CLASS lcl_helper DEFINITION FINAL.
   PUBLIC SECTION.
-
-    TYPES:
-      BEGIN OF ty_path_name,
-        path        TYPE string,
-        name        TYPE string,
-        remote_sha1 TYPE zif_abapgit_git_definitions=>ty_sha1,
-        local_sha1  TYPE zif_abapgit_git_definitions=>ty_sha1,
-      END OF ty_path_name.
-    TYPES:
-      ty_path_name_tt TYPE HASHED TABLE OF ty_path_name WITH UNIQUE KEY path name.
-
-    TYPES: BEGIN OF ty_feature,
-             repo_name       TYPE string,
-             package         TYPE devclass,
-             BEGIN OF branch,
-               display_name TYPE string,
-               sha1         TYPE zif_abapgit_git_definitions=>ty_sha1,
-               up_to_date   TYPE abap_bool,
-             END OF branch,
-             BEGIN OF pr,
-               title TYPE string,
-               url   TYPE string,
-               draft TYPE abap_bool,
-             END OF pr,
-             BEGIN OF transport,
-               trkorr TYPE trkorr,
-               title  TYPE string,
-             END OF transport,
-             changed_files   TYPE ty_path_name_tt,
-             changed_objects TYPE zif_abapgit_definitions=>ty_items_ts,
-           END OF ty_feature.
-    TYPES ty_features TYPE STANDARD TABLE OF ty_feature WITH DEFAULT KEY.
-
     CLASS-METHODS get_information
       RETURNING
         VALUE(rt_features) TYPE ty_features
       RAISING
         zcx_abapgit_exception.
+
   PRIVATE SECTION.
     CONSTANTS c_main TYPE string VALUE 'main'.
 
@@ -254,6 +222,7 @@ CLASS lcl_helper IMPLEMENTATION.
       CLEAR lt_features.
       LOOP AT lt_branches INTO ls_branch WHERE display_name <> c_main.
         ls_result-repo_name = li_favorite->get_name( ).
+        ls_result-repo_key = li_favorite->get_key( ).
         ls_result-package = li_favorite->get_package( ).
         ls_result-branch-display_name = ls_branch-display_name.
         ls_result-branch-sha1 = ls_branch-sha1.
@@ -363,6 +332,7 @@ CLASS lcl_helper IMPLEMENTATION.
       CLEAR ls_result.
       CLEAR lt_filter.
       ls_result-repo_name = ii_repo->get_name( ).
+      ls_result-repo_key = ii_repo->get_key( ).
       ls_result-package = ii_repo->get_package( ).
       ls_result-transport-trkorr = <ls_transport>-trkorr.
       ls_result-transport-title = <ls_transport>-title.
@@ -380,13 +350,13 @@ CLASS lcl_helper IMPLEMENTATION.
       lt_local = ii_repo->get_files_local_filtered( lo_filter ).
       LOOP AT lt_local ASSIGNING <ls_local> WHERE file-filename <> zif_abapgit_definitions=>c_dot_abapgit.
         ls_changed_file-path       = <ls_local>-file-path.
-        ls_changed_file-name       = <ls_local>-file-filename.
+        ls_changed_file-filename   = <ls_local>-file-filename.
         ls_changed_file-local_sha1 = <ls_local>-file-sha1.
 
         READ TABLE it_main_expanded ASSIGNING <ls_main_expanded>
           WITH TABLE KEY path_name COMPONENTS
           path = ls_changed_file-path
-          name = ls_changed_file-name.
+          name = ls_changed_file-filename.
         IF sy-subrc = 0.
           ls_changed_file-remote_sha1 = <ls_main_expanded>-sha1.
         ENDIF.
@@ -590,7 +560,7 @@ CLASS lcl_helper IMPLEMENTATION.
     LOOP AT ct_features ASSIGNING <ls_branch>.
       LOOP AT <ls_branch>-changed_files ASSIGNING <ls_changed_file>.
         READ TABLE lt_local ASSIGNING <ls_local>
-          WITH KEY file-filename = <ls_changed_file>-name
+          WITH KEY file-filename = <ls_changed_file>-filename
           file-path = <ls_changed_file>-path.
         IF sy-subrc = 0.
           <ls_changed_file>-local_sha1 = <ls_local>-file-sha1.
@@ -609,7 +579,7 @@ CLASS lcl_helper IMPLEMENTATION.
     LOOP AT it_files ASSIGNING <ls_file>.
       zcl_abapgit_filename_logic=>file_to_object(
         EXPORTING
-          iv_filename = <ls_file>-name
+          iv_filename = <ls_file>-filename
           iv_path     = <ls_file>-path
           iv_devclass = io_online->get_package( )
           io_dot      = io_online->get_dot_abapgit( )
@@ -639,6 +609,7 @@ CLASS lcl_helper IMPLEMENTATION.
       ENDIF.
 
       MOVE-CORRESPONDING <ls_expanded1> TO ls_path_name.
+      ls_path_name-filename = <ls_expanded1>-name.
       ls_path_name-remote_sha1 = <ls_expanded1>-sha1.
       INSERT ls_path_name INTO TABLE rt_files.
     ENDLOOP.
@@ -653,6 +624,7 @@ CLASS lcl_helper IMPLEMENTATION.
       ENDIF.
 
       MOVE-CORRESPONDING <ls_expanded2> TO ls_path_name.
+      ls_path_name-filename = <ls_expanded2>-name.
       ls_path_name-remote_sha1 = <ls_expanded2>-sha1.
       INSERT ls_path_name INTO TABLE rt_files.
     ENDLOOP.

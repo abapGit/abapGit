@@ -27,6 +27,7 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
                  refresh TYPE string VALUE 'refresh',
                END OF c_action.
 
+    DATA mt_features TYPE ty_features.
 ENDCLASS.
 
 
@@ -57,6 +58,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     IF ii_event->mv_action = c_action-refresh.
+      CLEAR mt_features.
       rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDIF.
 
@@ -79,12 +81,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
 
   METHOD zif_abapgit_gui_renderable~render.
-    DATA lt_features   TYPE lcl_helper=>ty_features.
-    DATA ls_feature    LIKE LINE OF lt_features.
+
+    DATA ls_feature    LIKE LINE OF mt_features.
     DATA ls_path_name  LIKE LINE OF ls_feature-changed_files.
     DATA ls_item       LIKE LINE OF ls_feature-changed_objects.
     DATA lv_status     TYPE string.
     DATA lv_full_match TYPE abap_bool.
+    DATA lv_param      TYPE string.
     DATA li_table      TYPE REF TO zif_abapgit_html.
 
 
@@ -92,8 +95,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     ri_html->add( '<div class="repo-overview">' ).
 
-    lt_features = lcl_helper=>get_information( ).
-    LOOP AT lt_features INTO ls_feature.
+    IF mt_features IS INITIAL.
+      mt_features = lcl_helper=>get_information( ).
+    ENDIF.
+
+    LOOP AT mt_features INTO ls_feature.
       IF lines( ls_feature-changed_files ) = 0.
 * no changes, eg. only files outside of starting folder changed
         CONTINUE.
@@ -112,7 +118,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       ENDIF.
       ri_html->add( |</font></b><br>| ).
 
-      IF ls_feature-branch IS INITIAL.
+      IF ls_feature-branch-display_name IS INITIAL.
         ri_html->add( |No branch found, comparing with <tt>main</tt>| ).
       ELSEIF ls_feature-pr IS NOT INITIAL.
         ri_html->add_a(
@@ -152,9 +158,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
           lv_status = 'Match'.
         ELSE.
           lv_full_match = abap_false.
-          lv_status = 'Diff'.
+
+          ASSERT ls_feature-repo_key IS NOT INITIAL.
+          lv_param = zcl_abapgit_html_action_utils=>file_encode(
+            iv_key  = ls_feature-repo_key
+            ig_file = ls_path_name ).
+          lv_status = li_table->a(
+            iv_txt = 'Diff'
+            iv_act = |{ zif_abapgit_definitions=>c_action-go_file_diff }?{ lv_param }| ).
         ENDIF.
-        li_table->add( |<tr><td><tt>{ ls_path_name-path }{ ls_path_name-name }</tt></td><td>{
+        li_table->add( |<tr><td><tt>{ ls_path_name-path }{ ls_path_name-filename }</tt></td><td>{
           ls_path_name-remote_sha1(7) }</td><td>{
           ls_path_name-local_sha1(7) }</td><td>{ lv_status }</td></tr>| ).
       ENDLOOP.
