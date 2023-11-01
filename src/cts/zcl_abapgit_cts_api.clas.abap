@@ -381,7 +381,7 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
         LOOP AT lt_tlock ASSIGNING <ls_tlock>
             WHERE object = ls_lock_key-obj
             AND hikey >= ls_lock_key-low
-            AND lokey <= ls_lock_key-hi.               "#EC PORTABLE
+            AND lokey <= ls_lock_key-hi.                  "#EC PORTABLE
           lv_request = <ls_tlock>-trkorr.
           EXIT.
         ENDLOOP.
@@ -483,6 +483,65 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
         WHERE trkorr = lt_e070-strkorr
         AND trfunction = zif_abapgit_cts_api=>c_transport_type-wb_request.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_cts_api~list_r3tr_by_request.
+
+    TYPES: BEGIN OF ty_contents,
+             trkorr   TYPE e071-trkorr,
+             as4pos   TYPE e071-as4pos,
+             pgmid    TYPE e071-pgmid,
+             object   TYPE e071-object,
+             obj_name TYPE e071-obj_name,
+           END OF ty_contents.
+
+    DATA lt_tasks    TYPE STANDARD TABLE OF trkorr WITH DEFAULT KEY.
+    DATA lt_contents TYPE STANDARD TABLE OF ty_contents WITH DEFAULT KEY.
+    DATA ls_contents LIKE LINE OF lt_contents.
+    DATA ls_list     LIKE LINE OF rt_list.
+
+
+    SELECT trkorr FROM e070 INTO TABLE lt_tasks
+      WHERE strkorr = iv_request
+      ORDER BY PRIMARY KEY.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    SELECT trkorr as4pos pgmid object obj_name FROM e071
+      INTO TABLE lt_contents
+      FOR ALL ENTRIES IN lt_tasks
+      WHERE trkorr = lt_tasks-table_line
+      ORDER BY PRIMARY KEY.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    LOOP AT lt_contents INTO ls_contents.
+      CASE ls_contents-pgmid.
+        WHEN 'R3TR'.
+          ls_list-object = ls_contents-object.
+          ls_list-obj_name = ls_contents-obj_name.
+          INSERT ls_list INTO TABLE rt_list.
+        WHEN 'LIMU'.
+          TRY.
+              zif_abapgit_cts_api~get_r3tr_obj_for_limu_obj(
+                EXPORTING
+                  iv_object   = ls_contents-object
+                  iv_obj_name = ls_contents-obj_name
+                IMPORTING
+                  ev_object   = ls_list-object
+                  ev_obj_name = ls_list-obj_name ).
+              INSERT ls_list INTO TABLE rt_list.
+            CATCH zcx_abapgit_exception.
+          ENDTRY.
+      ENDCASE.
+    ENDLOOP.
+
+    SORT rt_list BY object obj_name.
+    DELETE ADJACENT DUPLICATES FROM rt_list COMPARING object obj_name.
 
   ENDMETHOD.
 
