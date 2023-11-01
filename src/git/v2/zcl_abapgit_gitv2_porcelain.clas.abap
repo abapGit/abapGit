@@ -4,30 +4,8 @@ CLASS zcl_abapgit_gitv2_porcelain DEFINITION
 
   PUBLIC SECTION.
 
-    CLASS-METHODS list_branches
-      IMPORTING
-        !iv_url        TYPE string
-        !iv_prefix     TYPE string OPTIONAL
-      RETURNING
-        VALUE(ro_list) TYPE REF TO zcl_abapgit_git_branch_list
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS list_no_blobs
-      IMPORTING
-        !iv_url            TYPE string
-        !iv_sha1           TYPE zif_abapgit_git_definitions=>ty_sha1
-      RETURNING
-        VALUE(rt_expanded) TYPE zif_abapgit_git_definitions=>ty_expanded_tt
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS list_no_blobs_multi
-      IMPORTING
-        !iv_url           TYPE string
-        !it_sha1          TYPE zif_abapgit_git_definitions=>ty_sha1_tt
-      RETURNING
-        VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
-      RAISING
-        zcx_abapgit_exception .
+    INTERFACES zif_abapgit_gitv2_porcelain.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS:
@@ -52,7 +30,7 @@ CLASS zcl_abapgit_gitv2_porcelain DEFINITION
 
     CLASS-METHODS decode_pack
       IMPORTING
-        iv_xstring TYPE xstring
+        iv_xstring        TYPE xstring
       RETURNING
         VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
@@ -62,64 +40,8 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GITV2_PORCELAIN IMPLEMENTATION.
 
-
-  METHOD list_branches.
-    DATA lv_xstring   TYPE xstring.
-    DATA lt_arguments TYPE string_table.
-    DATA lv_argument  TYPE string.
-    DATA lv_data      TYPE string.
-
-    IF iv_prefix IS NOT INITIAL.
-      lv_argument = |ref-prefix { iv_prefix }|.
-      APPEND lv_argument TO lt_arguments.
-    ENDIF.
-
-    lv_xstring = send_command(
-      iv_url       = iv_url
-      iv_service   = c_service-upload
-      iv_command   = |ls-refs|
-      it_arguments = lt_arguments ).
-
-    " add dummy packet so the v1 branch parsing can be reused
-    lv_data = |0004\n{ zcl_abapgit_convert=>xstring_to_string_utf8( lv_xstring ) }|.
-
-    CREATE OBJECT ro_list
-      EXPORTING
-        iv_data = lv_data.
-
-  ENDMETHOD.
-
-
-  METHOD list_no_blobs_multi.
-
-    DATA lv_xstring   TYPE xstring.
-    DATA lt_arguments TYPE string_table.
-    DATA lv_argument  TYPE string.
-    DATA lv_sha1      LIKE LINE OF it_sha1.
-
-
-    ASSERT lines( it_sha1 ) > 0.
-
-    APPEND 'deepen 1' TO lt_arguments.
-    LOOP AT it_sha1 INTO lv_sha1.
-      lv_argument = |want { lv_sha1 }|.
-      APPEND lv_argument TO lt_arguments.
-    ENDLOOP.
-    APPEND 'filter blob:none' TO lt_arguments.
-    APPEND 'no-progress' TO lt_arguments.
-    APPEND 'done' TO lt_arguments.
-
-    lv_xstring = send_command(
-      iv_url       = iv_url
-      iv_service   = c_service-upload
-      iv_command   = |fetch|
-      it_arguments = lt_arguments ).
-
-    rt_objects = decode_pack( lv_xstring ).
-
-  ENDMETHOD.
 
   METHOD decode_pack.
 
@@ -151,24 +73,6 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
     ENDWHILE.
 
     rt_objects = zcl_abapgit_git_pack=>decode( lv_pack ).
-
-  ENDMETHOD.
-
-  METHOD list_no_blobs.
-
-    DATA lt_sha1    TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
-    DATA lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
-
-    ASSERT iv_sha1 IS NOT INITIAL.
-    APPEND iv_sha1 TO lt_sha1.
-
-    lt_objects = list_no_blobs_multi(
-      iv_url  = iv_url
-      it_sha1 = lt_sha1 ).
-
-    rt_expanded = zcl_abapgit_git_porcelain=>full_tree(
-      it_objects = lt_objects
-      iv_parent  = iv_sha1 ).
 
   ENDMETHOD.
 
@@ -224,6 +128,115 @@ CLASS zcl_abapgit_gitv2_porcelain IMPLEMENTATION.
       iv_value = |application/x-git-{ iv_service }-pack-result| ).
 
     rv_response = lo_client->send_receive_close( zcl_abapgit_convert=>string_to_xstring_utf8( lv_cmd_pkt ) ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gitv2_porcelain~commits_last_year.
+
+    DATA lv_xstring   TYPE xstring.
+    DATA lt_arguments TYPE string_table.
+    DATA lv_argument  TYPE string.
+    DATA lv_sha1      LIKE LINE OF it_sha1.
+
+
+    ASSERT lines( it_sha1 ) > 0.
+
+    lv_argument = |deepen-since { zcl_abapgit_git_time=>get_one_year_ago( ) }|.
+    APPEND lv_argument TO lt_arguments.
+    LOOP AT it_sha1 INTO lv_sha1.
+      lv_argument = |want { lv_sha1 }|.
+      APPEND lv_argument TO lt_arguments.
+    ENDLOOP.
+* 'filter object:type=commit' doesnt work on github
+    APPEND 'filter blob:none' TO lt_arguments.
+    APPEND 'no-progress' TO lt_arguments.
+    APPEND 'done' TO lt_arguments.
+
+    lv_xstring = send_command(
+      iv_url       = iv_url
+      iv_service   = c_service-upload
+      iv_command   = |fetch|
+      it_arguments = lt_arguments ).
+
+    rt_objects = decode_pack( lv_xstring ).
+    DELETE rt_objects WHERE type <> zif_abapgit_git_definitions=>c_type-commit.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gitv2_porcelain~list_branches.
+    DATA lv_xstring   TYPE xstring.
+    DATA lt_arguments TYPE string_table.
+    DATA lv_argument  TYPE string.
+    DATA lv_data      TYPE string.
+
+    IF iv_prefix IS NOT INITIAL.
+      lv_argument = |ref-prefix { iv_prefix }|.
+      APPEND lv_argument TO lt_arguments.
+    ENDIF.
+
+    lv_xstring = send_command(
+      iv_url       = iv_url
+      iv_service   = c_service-upload
+      iv_command   = |ls-refs|
+      it_arguments = lt_arguments ).
+
+    " add dummy packet so the v1 branch parsing can be reused
+    lv_data = |0004\n{ zcl_abapgit_convert=>xstring_to_string_utf8( lv_xstring ) }|.
+
+    CREATE OBJECT ro_list
+      EXPORTING
+        iv_data = lv_data.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gitv2_porcelain~list_no_blobs.
+
+    DATA lt_sha1    TYPE zif_abapgit_git_definitions=>ty_sha1_tt.
+    DATA lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
+
+    ASSERT iv_sha1 IS NOT INITIAL.
+    APPEND iv_sha1 TO lt_sha1.
+
+    lt_objects = zif_abapgit_gitv2_porcelain~list_no_blobs_multi(
+      iv_url  = iv_url
+      it_sha1 = lt_sha1 ).
+
+    rt_expanded = zcl_abapgit_git_porcelain=>full_tree(
+      it_objects = lt_objects
+      iv_parent  = iv_sha1 ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gitv2_porcelain~list_no_blobs_multi.
+
+    DATA lv_xstring   TYPE xstring.
+    DATA lt_arguments TYPE string_table.
+    DATA lv_argument  TYPE string.
+    DATA lv_sha1      LIKE LINE OF it_sha1.
+
+
+    ASSERT lines( it_sha1 ) > 0.
+
+    APPEND 'deepen 1' TO lt_arguments.
+    LOOP AT it_sha1 INTO lv_sha1.
+      lv_argument = |want { lv_sha1 }|.
+      APPEND lv_argument TO lt_arguments.
+    ENDLOOP.
+    APPEND 'filter blob:none' TO lt_arguments.
+    APPEND 'no-progress' TO lt_arguments.
+    APPEND 'done' TO lt_arguments.
+
+    lv_xstring = send_command(
+      iv_url       = iv_url
+      iv_service   = c_service-upload
+      iv_command   = |fetch|
+      it_arguments = lt_arguments ).
+
+    rt_objects = decode_pack( lv_xstring ).
 
   ENDMETHOD.
 ENDCLASS.

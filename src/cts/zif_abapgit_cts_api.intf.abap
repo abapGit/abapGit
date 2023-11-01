@@ -1,6 +1,36 @@
 INTERFACE zif_abapgit_cts_api
   PUBLIC .
 
+
+  TYPES:
+    BEGIN OF ty_transport,
+      obj_type TYPE tadir-object,
+      obj_name TYPE tadir-obj_name,
+      trkorr   TYPE trkorr,
+    END OF ty_transport .
+  TYPES:
+    ty_transport_list TYPE SORTED TABLE OF ty_transport WITH NON-UNIQUE KEY obj_type obj_name .
+  TYPES:
+    ty_trkorr_tt TYPE STANDARD TABLE OF trkorr WITH DEFAULT KEY .
+  TYPES:
+    BEGIN OF ty_transport_key,
+      object  TYPE e071k-object,
+      objname TYPE e071k-objname,
+      tabkey  TYPE e071k-tabkey,
+    END OF ty_transport_key .
+  TYPES:
+    BEGIN OF ty_transport_data,
+      trstatus TYPE e070-trstatus,
+      keys     TYPE STANDARD TABLE OF ty_transport_key WITH DEFAULT KEY,
+    END OF ty_transport_data .
+  TYPES:
+    BEGIN OF ty_transport_obj,
+      object   TYPE e071-object,
+      obj_name TYPE e071-obj_name,
+    END OF ty_transport_obj .
+  TYPES:
+    ty_transport_obj_tt TYPE STANDARD TABLE OF ty_transport_obj WITH DEFAULT KEY .
+
   CONSTANTS:
     BEGIN OF c_transport_type,
       wb_request   TYPE c LENGTH 1 VALUE 'K', "workbench request
@@ -8,46 +38,50 @@ INTERFACE zif_abapgit_cts_api
       wb_task      TYPE c LENGTH 1 VALUE 'S', "workbench task
       cust_request TYPE c LENGTH 1 VALUE 'W', "customizing request
       cust_task    TYPE c LENGTH 1 VALUE 'Q', "customizing task
-    END OF c_transport_type.
-
+    END OF c_transport_type .
   CONSTANTS:
     BEGIN OF c_transport_category,
       workbench   TYPE c LENGTH 4 VALUE 'SYST',
       customizing TYPE c LENGTH 4 VALUE 'CUST',
-    END OF c_transport_category.
-
+    END OF c_transport_category .
   CONSTANTS:
     BEGIN OF c_transport_mode,
       insert TYPE c LENGTH 1 VALUE 'I',
       delete TYPE c LENGTH 1 VALUE 'D',
-    END OF c_transport_mode.
-
+    END OF c_transport_mode .
   CONSTANTS:
     BEGIN OF c_transport_status,
       modifiable TYPE c LENGTH 1 VALUE 'D',
-    END OF c_transport_status.
+    END OF c_transport_status .
 
-  TYPES: BEGIN OF ty_transport,
-           obj_type TYPE tadir-object,
-           obj_name TYPE tadir-obj_name,
-           trkorr   TYPE trkorr,
-         END OF ty_transport.
-
-  TYPES ty_transport_list TYPE SORTED TABLE OF ty_transport WITH NON-UNIQUE KEY obj_type obj_name.
-
-  TYPES ty_trkorr_tt TYPE STANDARD TABLE OF trkorr WITH DEFAULT KEY.
-
-  TYPES: BEGIN OF ty_transport_key,
-           object  TYPE e071k-object,
-           objname TYPE e071k-objname,
-           tabkey  TYPE e071k-tabkey,
-         END OF ty_transport_key.
-
-  TYPES: BEGIN OF ty_transport_data,
-           trstatus TYPE e070-trstatus,
-           keys     TYPE STANDARD TABLE OF ty_transport_key WITH DEFAULT KEY,
-         END OF ty_transport_data.
-
+  METHODS confirm_transport_messages
+    RETURNING
+      VALUE(rv_messages_confirmed) TYPE abap_bool .
+  METHODS create_transport_entries
+    IMPORTING
+      !iv_transport TYPE trkorr
+      !it_table_ins TYPE ANY TABLE
+      !it_table_upd TYPE ANY TABLE
+      !it_table_del TYPE ANY TABLE
+      !iv_tabname   TYPE tabname
+    RAISING
+      zcx_abapgit_exception .
+  METHODS get_r3tr_obj_for_limu_obj
+    IMPORTING
+      !iv_object   TYPE tadir-object
+      !iv_obj_name TYPE trobj_name
+    EXPORTING
+      !ev_object   TYPE tadir-object
+      !ev_obj_name TYPE trobj_name
+    RAISING
+      zcx_abapgit_exception .
+  METHODS get_transports_for_list
+    IMPORTING
+      !it_items            TYPE zif_abapgit_definitions=>ty_items_tt
+    RETURNING
+      VALUE(rt_transports) TYPE ty_transport_list
+    RAISING
+      zcx_abapgit_exception .
   "! Returns the transport request / task the object is currently in
   "! @parameter is_item | Object
   "! @parameter rv_transport | Transport request / task
@@ -59,7 +93,19 @@ INTERFACE zif_abapgit_cts_api
       VALUE(rv_transport) TYPE trkorr
     RAISING
       zcx_abapgit_exception .
-
+  METHODS insert_transport_object
+    IMPORTING
+      !iv_pgmid    TYPE tadir-pgmid DEFAULT 'R3TR'
+      !iv_object   TYPE tadir-object
+      !iv_obj_name TYPE csequence
+      !iv_package  TYPE devclass
+      !iv_language TYPE sy-langu DEFAULT sy-langu
+      !iv_mode     TYPE c DEFAULT 'I'
+    EXPORTING
+      !ev_object   TYPE tadir-object
+      !ev_obj_name TYPE trobj_name
+    RAISING
+      zcx_abapgit_exception .
   "! Check if change recording is possible for the given package
   "! @parameter iv_package | Package
   "! @parameter rv_possible | Change recording is possible
@@ -71,65 +117,20 @@ INTERFACE zif_abapgit_cts_api
       VALUE(rv_possible) TYPE abap_bool
     RAISING
       zcx_abapgit_exception .
-
-  METHODS get_transports_for_list
+  METHODS list_open_requests_by_user
     IMPORTING
-      !it_items            TYPE zif_abapgit_definitions=>ty_items_tt
+      !iv_user         TYPE sy-uname DEFAULT sy-uname
     RETURNING
-      VALUE(rt_transports) TYPE ty_transport_list
+      VALUE(rt_trkorr) TYPE ty_trkorr_tt
     RAISING
       zcx_abapgit_exception .
-
-  METHODS get_r3tr_obj_for_limu_obj
+  METHODS list_r3tr_by_request
     IMPORTING
-      iv_object   TYPE tadir-object
-      iv_obj_name TYPE trobj_name
-    EXPORTING
-      ev_object   TYPE tadir-object
-      ev_obj_name TYPE trobj_name
+      !iv_request    TYPE trkorr
+    RETURNING
+      VALUE(rt_list) TYPE ty_transport_obj_tt
     RAISING
       zcx_abapgit_exception .
-
-  METHODS read_description
-    IMPORTING
-      iv_trkorr             TYPE trkorr
-    RETURNING
-      VALUE(rv_description) TYPE string.
-
-  METHODS read_user
-    IMPORTING
-      iv_trkorr       TYPE trkorr
-    RETURNING
-      VALUE(rv_uname) TYPE uname.
-
-  METHODS create_transport_entries
-    IMPORTING
-      iv_transport TYPE trkorr
-      it_table_ins TYPE ANY TABLE
-      it_table_upd TYPE ANY TABLE
-      it_table_del TYPE ANY TABLE
-      iv_tabname   TYPE tabname
-    RAISING
-      zcx_abapgit_exception.
-
-  METHODS insert_transport_object
-    IMPORTING
-      iv_pgmid    TYPE tadir-pgmid DEFAULT 'R3TR'
-      iv_object   TYPE tadir-object
-      iv_obj_name TYPE csequence
-      iv_package  TYPE devclass
-      iv_language TYPE sy-langu DEFAULT sy-langu
-      iv_mode     TYPE c DEFAULT 'I'
-    EXPORTING
-      ev_object   TYPE tadir-object
-      ev_obj_name TYPE trobj_name
-    RAISING
-      zcx_abapgit_exception.
-
-  METHODS confirm_transport_messages
-    RETURNING
-      VALUE(rv_messages_confirmed) TYPE abap_bool .
-
   METHODS read
     IMPORTING
       !iv_trkorr        TYPE trkorr
@@ -137,19 +138,19 @@ INTERFACE zif_abapgit_cts_api
       VALUE(rs_request) TYPE ty_transport_data
     RAISING
       zcx_abapgit_exception .
-
+  METHODS read_description
+    IMPORTING
+      !iv_trkorr            TYPE trkorr
+    RETURNING
+      VALUE(rv_description) TYPE string .
+  METHODS read_user
+    IMPORTING
+      !iv_trkorr      TYPE trkorr
+    RETURNING
+      VALUE(rv_uname) TYPE uname .
   METHODS validate_transport_request
     IMPORTING
-      iv_transport_request TYPE trkorr
+      !iv_transport_request TYPE trkorr
     RAISING
-      zcx_abapgit_exception.
-
-  METHODS list_open_requests_by_user
-    IMPORTING
-      iv_user TYPE sy-uname DEFAULT sy-uname
-    RETURNING
-      VALUE(rt_trkorr) TYPE ty_trkorr_tt
-    RAISING
-      zcx_abapgit_exception.
-
+      zcx_abapgit_exception .
 ENDINTERFACE.
