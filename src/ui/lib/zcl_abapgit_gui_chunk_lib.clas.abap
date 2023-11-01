@@ -998,6 +998,10 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       ri_html->add_icon( iv_name = 'lock/grey70'
                          iv_hint = 'Locked from Pulls' ).
     ENDIF.
+    IF io_repo->get_local_settings( )-flow = abap_true.
+      ri_html->add_icon( iv_name = 'flow/grey70'
+                         iv_hint = 'Flow' ).
+    ENDIF.
 
     " Branch
     IF io_repo->is_offline( ) = abap_false.
