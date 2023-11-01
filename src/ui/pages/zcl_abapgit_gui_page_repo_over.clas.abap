@@ -701,7 +701,8 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       lv_repo_type_icon TYPE string,
       lv_favorite_icon  TYPE string,
       lv_fav_tr_class   TYPE string,
-      lv_lock           TYPE string.
+      lv_lock           TYPE string,
+      lv_flow           TYPE string.
 
     lv_is_online_repo = boolc( is_repo-type = abap_false ).
 
@@ -745,15 +746,16 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
         iv_hint  = 'Locked from pulls' ).
     ENDIF.
     IF is_repo-flow = abap_true.
-      lv_lock = ii_html->icon(
+      lv_flow = ii_html->icon(
         iv_name  = 'flow/grey70'
-        iv_class = 'm-em5-sides' ).
+        iv_class = 'm-em5-sides'
+        iv_hint  = 'Flow' ).
     ENDIF.
 
     ii_html->td(
       ii_html->a(
         iv_txt = is_repo-name
-        iv_act = |{ c_action-select }?key={ is_repo-key }| ) && lv_lock ).
+        iv_act = |{ c_action-select }?key={ is_repo-key }| ) && lv_lock && lv_flow ).
 
     " Labels
     IF mt_all_labels IS NOT INITIAL.
