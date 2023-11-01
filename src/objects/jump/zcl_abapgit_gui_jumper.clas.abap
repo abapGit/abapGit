@@ -230,7 +230,6 @@ CLASS zcl_abapgit_gui_jumper IMPLEMENTATION.
     DATA lv_subrc         TYPE syst-subrc.
     DATA lv_tcode         TYPE tcode.
     DATA lv_langu_text    TYPE string.
-    DATA lv_langu_code    TYPE c LENGTH 2.
     DATA lv_msg           TYPE c LENGTH 200.
 
     " https://blogs.sap.com/2017/01/13/logon-language-sy-langu-and-rfc/
