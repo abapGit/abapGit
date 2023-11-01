@@ -536,8 +536,10 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Missing display name for repo' ).
     ENDIF.
 
+    " Repo Settings
     lo_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( ).
     lo_dot_abapgit->set_folder_logic( iv_folder_logic ).
+    lo_dot_abapgit->set_abap_language_version( iv_abap_lang_vers ).
 
     lv_key = zcl_abapgit_persist_factory=>get_repo( )->add(
       iv_url          = iv_url
@@ -554,6 +556,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     lo_repo ?= instantiate_and_add( ls_repo ).
 
+    " Local Settings
     IF ls_repo-local_settings-ignore_subpackages <> iv_ign_subpkg.
       ls_repo-local_settings-ignore_subpackages = iv_ign_subpkg.
     ENDIF.
@@ -573,7 +576,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
           lo_repo        TYPE REF TO zcl_abapgit_repo_online,
           lv_branch_name LIKE iv_branch_name,
           lv_key         TYPE zif_abapgit_persistence=>ty_repo-key,
-          ls_dot_abapgit TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
+          lo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit,
           lv_url         TYPE string.
 
 
@@ -596,8 +599,10 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       iv_name = iv_branch_name
       iv_url  = lv_url ).
 
-    ls_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( )->get_data( ).
-    ls_dot_abapgit-folder_logic = iv_folder_logic.
+    " Repo Settings
+    lo_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( ).
+    lo_dot_abapgit->set_folder_logic( iv_folder_logic ).
+    lo_dot_abapgit->set_abap_language_version( iv_abap_lang_vers ).
 
     lv_key = zcl_abapgit_persist_factory=>get_repo( )->add(
       iv_url          = lv_url
@@ -605,7 +610,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       iv_display_name = iv_display_name
       iv_package      = iv_package
       iv_offline      = abap_false
-      is_dot_abapgit  = ls_dot_abapgit ).
+      is_dot_abapgit  = lo_dot_abapgit->get_data( ) ).
 
     TRY.
         ls_repo = zcl_abapgit_persist_factory=>get_repo( )->read( lv_key ).
@@ -615,6 +620,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     lo_repo ?= instantiate_and_add( ls_repo ).
 
+    " Local Settings
     IF ls_repo-local_settings-ignore_subpackages <> iv_ign_subpkg.
       ls_repo-local_settings-ignore_subpackages = iv_ign_subpkg.
     ENDIF.

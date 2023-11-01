@@ -11,6 +11,7 @@ INTERFACE zif_abapgit_services_repo
       labels             TYPE string,
       ignore_subpackages TYPE abap_bool,
       main_lang_only     TYPE abap_bool,
+      abap_lang_vers     TYPE string,
     END OF ty_repo_params .
 
 ENDINTERFACE.
