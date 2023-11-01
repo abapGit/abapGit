@@ -299,18 +299,10 @@ CLASS lcl_helper IMPLEMENTATION.
     DATA lt_packages     TYPE zif_abapgit_sap_package=>ty_devclass_tt.
     DATA lv_package      LIKE LINE OF lt_packages.
     DATA lv_found        TYPE abap_bool.
-    DATA ls_changed      LIKE LINE OF ls_result-changed_objects.
-    DATA lo_filter       TYPE REF TO lcl_filter.
-    DATA lt_filter       TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    DATA lt_local        TYPE zif_abapgit_definitions=>ty_files_item_tt.
-    DATA ls_changed_file LIKE LINE OF ls_result-changed_files.
 
     FIELD-SYMBOLS <ls_feature>   LIKE LINE OF ct_features.
     FIELD-SYMBOLS <ls_transport> LIKE LINE OF ct_transports.
-    FIELD-SYMBOLS <ls_local>     LIKE LINE OF lt_local.
-    FIELD-SYMBOLS <ls_filter>    LIKE LINE OF lt_filter.
     FIELD-SYMBOLS <ls_changed>   LIKE LINE OF <ls_feature>-changed_objects.
-    FIELD-SYMBOLS <ls_main_expanded> LIKE LINE OF it_main_expanded.
 
 
     SORT ct_transports BY object obj_name.
@@ -379,10 +371,6 @@ CLASS lcl_helper IMPLEMENTATION.
 
   METHOD add_objects_and_files_from_tr.
 
-    DATA lt_trkorr       LIKE it_transports.
-    DATA lt_packages     TYPE zif_abapgit_sap_package=>ty_devclass_tt.
-    DATA lv_package      LIKE LINE OF lt_packages.
-    DATA lv_found        TYPE abap_bool.
     DATA ls_changed      LIKE LINE OF cs_feature-changed_objects.
     DATA lo_filter       TYPE REF TO lcl_filter.
     DATA lt_filter       TYPE zif_abapgit_definitions=>ty_tadir_tt.
