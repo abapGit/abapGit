@@ -37,11 +37,8 @@ CLASS zcl_abapgit_object_shma IMPLEMENTATION.
     DATA: lv_request   TYPE i,
           lv_area_name TYPE shm_area_name,
           lv_order     TYPE e070-trkorr,
-          lv_korrnum   TYPE tadir-korrnum,
-          lv_objname   TYPE tadir-obj_name,
           lv_task      TYPE e070-trkorr,
           lv_append    TYPE abap_bool,
-          ls_tadir     TYPE tadir,
           ls_tdevc     TYPE tdevc,
           lo_cts_if    TYPE REF TO object.
 
@@ -95,23 +92,9 @@ CLASS zcl_abapgit_object_shma IMPLEMENTATION.
         DELETE FROM shma_attributes  WHERE area_name = lv_area_name.
         DELETE FROM shma_start       WHERE area_name = lv_area_name.
 
-        lv_korrnum = lv_order.
-        lv_objname = lv_area_name.
-
-        CALL FUNCTION 'TR_TADIR_INTERFACE'
-          EXPORTING
-            wi_read_only      = abap_true
-            wi_tadir_pgmid    = 'R3TR'
-            wi_tadir_object   = 'SHMA'
-            wi_tadir_obj_name = lv_objname
-          IMPORTING
-            new_tadir_entry   = ls_tadir
-          EXCEPTIONS
-            OTHERS            = 0.
-
         CALL FUNCTION 'TR_DEVCLASS_GET'
           EXPORTING
-            iv_devclass = ls_tadir-devclass
+            iv_devclass = iv_package
           IMPORTING
             es_tdevc    = ls_tdevc
           EXCEPTIONS
@@ -120,17 +103,7 @@ CLASS zcl_abapgit_object_shma IMPLEMENTATION.
         IF sy-subrc = 0 AND ls_tdevc-korrflag IS INITIAL.
 
           " TADIR entries for local objects must be deleted 'by hand'
-
-          CALL FUNCTION 'TR_TADIR_INTERFACE'
-            EXPORTING
-              wi_test_modus         = abap_false
-              wi_delete_tadir_entry = abap_true
-              wi_tadir_pgmid        = 'R3TR'
-              wi_tadir_object       = 'SHMA'
-              wi_tadir_obj_name     = lv_objname
-              wi_tadir_korrnum      = lv_korrnum
-            EXCEPTIONS
-              OTHERS                = 0.
+          tadir_delete( ).
 
         ENDIF.
 
