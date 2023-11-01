@@ -324,8 +324,6 @@ CLASS zcl_abapgit_gui_page_tags IMPLEMENTATION.
     mo_form_data->merge( zcl_abapgit_html_form_utils=>create( mo_form )->normalize( ii_event->form_data( ) ) ).
 
     CASE ii_event->mv_action.
-      WHEN zif_abapgit_definitions=>c_action-go_back.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
 
       WHEN c_event-choose_commit.
         lv_commit = choose_commit( ).
