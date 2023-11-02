@@ -623,7 +623,8 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       FROM dd02v
       WHERE tabname = lv_name
       AND ddlanguage IN lt_language_filter
-      AND ddlanguage <> mv_language.                      "#EC CI_SUBRC
+      AND ddlanguage <> mv_language
+      ORDER BY langu.                                     "#EC CI_SUBRC
 
     LOOP AT lt_i18n_langs ASSIGNING <lv_lang>.
       lv_index = sy-tabix.
@@ -687,21 +688,24 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       FROM dd02l INTO TABLE lt_data
       WHERE tabname = ms_item-obj_name
       AND as4local = 'A'
-      AND as4vers = '0000'.
+      AND as4vers = '0000'
+      ORDER BY PRIMARY KEY.
 
     SELECT as4user as4date as4time
       APPENDING TABLE lt_data
       FROM dd09l
       WHERE tabname = ms_item-obj_name
       AND as4local = 'A'
-      AND as4vers = '0000'.
+      AND as4vers = '0000'
+      ORDER BY PRIMARY KEY.
 
     SELECT as4user as4date as4time
       APPENDING TABLE lt_data
       FROM dd12l
       WHERE sqltab = ms_item-obj_name
       AND as4local = 'A'
-      AND as4vers = '0000'.
+      AND as4vers = '0000'
+      ORDER BY PRIMARY KEY.
 
     SORT lt_data BY as4date DESCENDING as4time DESCENDING.
 
