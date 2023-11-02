@@ -11,8 +11,8 @@ INTERFACE zif_abapgit_definitions
     END OF ty_item_signature .
   TYPES:
     BEGIN OF ty_obj_namespace,
-      namespace TYPE trnspace-namespace,
-      obj_without_namespace  TYPE tadir-obj_name,
+      namespace             TYPE trnspace-namespace,
+      obj_without_namespace TYPE tadir-obj_name,
     END OF ty_obj_namespace.
   TYPES:
     BEGIN OF ty_item.
@@ -60,7 +60,8 @@ INTERFACE zif_abapgit_definitions
     END OF ty_requirements .
   TYPES:
     BEGIN OF ty_dependencies,
-      met TYPE ty_yes_no,
+      met      TYPE ty_yes_no,
+      decision TYPE ty_yes_no,
     END OF ty_dependencies .
   TYPES:
     BEGIN OF ty_transport_type,
