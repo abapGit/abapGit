@@ -14,9 +14,7 @@ CLASS zcl_abapgit_gui_page_debuginfo DEFINITION
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception .
-    METHODS constructor
-      RAISING
-        zcx_abapgit_exception .
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -26,7 +24,6 @@ CLASS zcl_abapgit_gui_page_debuginfo DEFINITION
     CONSTANTS:
       BEGIN OF c_action,
         save TYPE string VALUE 'save',
-        back TYPE string VALUE 'back',
       END OF c_action.
     DATA mv_html TYPE string .
 
@@ -80,13 +77,8 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
       iv_act = c_action-save ).
     ro_menu->add(
       iv_txt = 'Back'
-      iv_act = c_action-back ).
+      iv_act = zif_abapgit_definitions=>c_action-go_back ).
 
-  ENDMETHOD.
-
-
-  METHOD constructor.
-    super->constructor( ).
   ENDMETHOD.
 
 
@@ -419,8 +411,9 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
         MESSAGE 'abapGit Debug Info successfully saved' TYPE 'S'.
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN c_action-back.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
+
+      WHEN OTHERS.
+        ASSERT 1 = 1.
     ENDCASE.
 
   ENDMETHOD.
