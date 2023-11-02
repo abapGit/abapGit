@@ -57,10 +57,25 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    IF ii_event->mv_action = c_action-refresh.
-      CLEAR mt_features.
-      rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-    ENDIF.
+    DATA lv_key TYPE zif_abapgit_persistence=>ty_value.
+    DATA lv_branch TYPE string.
+    DATA lo_online TYPE REF TO zcl_abapgit_repo_online.
+
+    CASE ii_event->mv_action.
+      WHEN c_action-refresh.
+        CLEAR mt_features.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-go_file_diff.
+        lv_key = ii_event->query( )->get( 'KEY' ).
+        lv_branch = ii_event->query( )->get( 'EXTRA' ).
+        IF lv_branch IS NOT INITIAL.
+          lv_branch = 'refs/heads/' && lv_branch.
+          lo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+          IF lo_online->get_selected_branch( ) <> lv_branch.
+            lo_online->select_branch( lv_branch ).
+          ENDIF.
+        ENDIF.
+    ENDCASE.
 
   ENDMETHOD.
 
@@ -88,6 +103,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     DATA lv_status     TYPE string.
     DATA lv_full_match TYPE abap_bool.
     DATA lv_param      TYPE string.
+    DATA lv_branch     TYPE string.
     DATA li_table      TYPE REF TO zif_abapgit_html.
 
 
@@ -118,8 +134,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       ENDIF.
       ri_html->add( |</font></b><br>| ).
 
+      lv_branch = ls_feature-branch-display_name.
       IF ls_feature-branch-display_name IS INITIAL.
         ri_html->add( |No branch found, comparing with <tt>main</tt>| ).
+        lv_branch = 'main'.
       ELSEIF ls_feature-pr IS NOT INITIAL.
         ri_html->add_a(
           iv_txt   = ls_feature-pr-title
@@ -161,8 +179,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
           ASSERT ls_feature-repo-key IS NOT INITIAL.
           lv_param = zcl_abapgit_html_action_utils=>file_encode(
-            iv_key  = ls_feature-repo-key
-            ig_file = ls_path_name ).
+            iv_key   = ls_feature-repo-key
+            ig_file  = ls_path_name
+            iv_extra = lv_branch ).
           lv_status = li_table->a(
             iv_txt = 'Diff'
             iv_act = |{ zif_abapgit_definitions=>c_action-go_file_diff }?{ lv_param }| ).
