@@ -264,6 +264,9 @@ CLASS zcl_abapgit_gui_jumper IMPLEMENTATION.
         lv_msg = |Communication error { lv_msg }|.
       WHEN 2.
         SELECT SINGLE sptxt FROM t002t INTO lv_langu_text WHERE spras = sy-langu AND sprsl = iv_language.
+        IF sy-subrc <> 0.
+          lv_langu_text = iv_language.
+        ENDIF.
         lv_msg = |Language { lv_langu_text } ({ zcl_abapgit_convert=>language_sap1_to_sap2( iv_language ) })|
               && | is not installed|.
       WHEN 3.
