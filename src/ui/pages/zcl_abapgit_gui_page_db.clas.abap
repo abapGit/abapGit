@@ -127,7 +127,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
 
     DATA:
       lt_data     TYPE zif_abapgit_persistence=>ty_contents,
-      lv_explain  TYPE string,
+      lv_text     TYPE string,
       lt_toc      TYPE string_table,
       lo_zip      TYPE REF TO cl_abap_zip,
       lv_zip      TYPE xstring,
@@ -140,9 +140,12 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
 
     lt_data = zcl_abapgit_persistence_db=>get_instance( )->list( ).
 
-    APPEND |Table of Content\n| TO lt_toc.
-    APPEND |================\n| TO lt_toc.
-    APPEND |\n| TO lt_toc.
+    lv_text = |Table of Content\n|.
+    INSERT lv_text INTO TABLE lt_toc.
+    lv_text = |================\n|.
+    INSERT lv_text INTO TABLE lt_toc.
+    lv_text = |\n|.
+    INSERT lv_text INTO TABLE lt_toc.
 
     CREATE OBJECT lo_zip.
 
@@ -156,10 +159,11 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
         name    = lv_filename
         content = zcl_abapgit_convert=>string_to_xstring_utf8( <ls_data>-data_str ) ).
 
-      lv_explain = explain_content( <ls_data> ).
-      REPLACE '<strong>' IN lv_explain WITH ''.
-      REPLACE '</strong>' IN lv_explain WITH ''.
-      APPEND |{ <ls_data>-type },{ <ls_data>-value }, { lv_explain }\n| TO lt_toc.
+      lv_text = explain_content( <ls_data> ).
+      REPLACE '<strong>' IN lv_text WITH ''.
+      REPLACE '</strong>' IN lv_text WITH ''.
+      lv_text = |{ <ls_data>-type },{ <ls_data>-value },{ lv_text }\n|.
+      INSERT lv_text INTO TABLE lt_toc.
     ENDLOOP.
 
     lo_zip->add(
