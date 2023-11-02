@@ -456,6 +456,9 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     ENDIF.
 
     " Ask user what to do
+    popup_overwrite( CHANGING ct_overwrite = lt_decision ).
+    popup_package_overwrite( CHANGING ct_overwrite = cs_checks-warning_package ).
+
     IF cs_checks-requirements-met = zif_abapgit_definitions=>c_no.
       lt_requirements = io_repo->get_dot_abapgit( )->get_data( )-requirements.
       zcl_abapgit_requirement_helper=>requirements_popup( lt_requirements ).
@@ -467,9 +470,6 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       zcl_abapgit_apack_helper=>dependencies_popup( lt_dependencies ).
       cs_checks-dependencies-decision = zif_abapgit_definitions=>c_yes.
     ENDIF.
-
-    popup_overwrite( CHANGING ct_overwrite = lt_decision ).
-    popup_package_overwrite( CHANGING ct_overwrite = cs_checks-warning_package ).
 
     IF cs_checks-transport-required = abap_true AND cs_checks-transport-transport IS INITIAL.
       cs_checks-transport-transport =
