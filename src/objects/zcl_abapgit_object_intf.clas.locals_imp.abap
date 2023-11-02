@@ -132,7 +132,8 @@ CLASS lcl_aff_helper IMPLEMENTATION.
       LEFT OUTER JOIN seocompotx AS component_text
       ON component~cmpname = component_text~cmpname AND component~clsname    = component_text~clsname
                                                     AND component_text~langu = iv_language
-      WHERE component~clsname = iv_clif_name.          "#EC CI_BUFFJOIN
+      WHERE component~clsname = iv_clif_name
+      ORDER BY component~cmpname.          "#EC CI_BUFFJOIN
 
     SELECT sub_component~cmpname sub_component~sconame sub_component_text~descript sub_component~scotype
       INTO TABLE lt_sub_components
