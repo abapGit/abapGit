@@ -45,16 +45,22 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
 
   METHOD delete_documentation.
 
-    DATA:
-      lv_docu_obj TYPE dokhl-object,
-      lv_dummy    TYPE sy-langu.
+    DATA lv_docu_obj TYPE dokhl-object.
 
     lv_docu_obj  = mv_objectname.
 
-    SELECT SINGLE langu
-           FROM dokil INTO lv_dummy
-           WHERE id   = 'UO'                            "#EC CI_GENBUFF
-           AND object = lv_docu_obj.
+    CALL FUNCTION 'DOCU_EXIST_CHECKS'
+      EXPORTING
+        id                = 'UO'
+        langu             = '*'
+        object            = lv_docu_obj
+        typ               = 'E'
+      EXCEPTIONS
+        no_docu_on_screen = 1
+        no_docu_self_def  = 2
+        no_docu_temp      = 3
+        ret_code          = 4
+        OTHERS            = 5.
 
     IF sy-subrc = 0.
 
@@ -273,11 +279,17 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: lv_objct TYPE tobj-objct.
+    DATA:
+      lv_docu_obj TYPE dokhl-object,
+      lv_dummy    TYPE sy-langu.
 
+    lv_docu_obj  = mv_objectname.
 
-    SELECT SINGLE objct FROM tobj INTO lv_objct
-      WHERE objct = ms_item-obj_name.
+    SELECT SINGLE langu
+           FROM dokil INTO lv_dummy
+           WHERE id   = 'UO'                            "#EC CI_GENBUFF
+           AND object = lv_docu_obj.                    "#EC CI_NOORDER
+
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.

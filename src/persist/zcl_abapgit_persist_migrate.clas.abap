@@ -314,7 +314,7 @@ CLASS zcl_abapgit_persist_migrate IMPLEMENTATION.
     DATA: lv_tabname TYPE dd02l-tabname.
 
     SELECT SINGLE tabname FROM dd02l INTO lv_tabname
-      WHERE tabname = zcl_abapgit_persistence_db=>c_tabname.
+      WHERE tabname = zcl_abapgit_persistence_db=>c_tabname. "#EC CI_NOORDER
     rv_exists = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
