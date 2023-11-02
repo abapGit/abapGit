@@ -28,7 +28,6 @@ CLASS zcl_abapgit_gui_page_ex_object DEFINITION
 
     CONSTANTS:
       BEGIN OF c_event,
-        go_back            TYPE string VALUE 'go-back',
         export             TYPE string VALUE 'export',
         choose_object_type TYPE string VALUE 'choose-object-type',
       END OF c_event.
@@ -50,7 +49,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_EX_OBJECT IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_ex_object IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -130,7 +129,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_EX_OBJECT IMPLEMENTATION.
       iv_action      = c_event-export
     )->command(
       iv_label       = 'Back'
-      iv_action      = c_event-go_back ).
+      iv_action      = zif_abapgit_definitions=>c_action-go_back ).
   ENDMETHOD.
 
 
@@ -138,10 +137,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_EX_OBJECT IMPLEMENTATION.
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.
-      WHEN c_event-go_back.
-
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
-
       WHEN c_event-export.
 
         export_object( ).

@@ -222,8 +222,6 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
       WHEN c_actions-sort_3.
         SORT mt_result BY test code objtype objname sobjtype sobjname line col.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN zif_abapgit_definitions=>c_action-go_back.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
 
     ENDCASE.
 

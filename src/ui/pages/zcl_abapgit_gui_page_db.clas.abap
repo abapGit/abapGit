@@ -21,6 +21,7 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CONSTANTS:
@@ -511,8 +512,6 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
       WHEN c_action-restore.
         do_restore_db( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN c_action-back.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
 
   ENDMETHOD.

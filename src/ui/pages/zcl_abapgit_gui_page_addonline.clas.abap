@@ -37,7 +37,6 @@ CLASS zcl_abapgit_gui_page_addonline DEFINITION
 
     CONSTANTS:
       BEGIN OF c_event,
-        go_back         TYPE string VALUE 'go-back',
         choose_package  TYPE string VALUE 'choose-package',
         create_package  TYPE string VALUE 'create-package',
         choose_branch   TYPE string VALUE 'choose-branch',
@@ -200,7 +199,7 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
       iv_action      = c_event-create_package
     )->command(
       iv_label       = 'Back'
-      iv_action      = c_event-go_back ).
+      iv_action      = zif_abapgit_definitions=>c_action-go_back ).
 
   ENDMETHOD.
 
@@ -268,9 +267,6 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.
-      WHEN c_event-go_back.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
-
       WHEN c_event-create_package.
 
         mo_form_data->set(

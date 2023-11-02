@@ -114,7 +114,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
 
   METHOD branch_name_to_internal.
@@ -468,9 +468,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
     mo_form_data = mo_form_util->normalize( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.
-      WHEN zif_abapgit_definitions=>c_action-go_back.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
-
       WHEN c_event-commit.
         " Validate form entries before committing
         mo_validation_log = validate_form( mo_form_data ).
@@ -507,6 +504,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
         ELSE.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
         ENDIF.
+      WHEN OTHERS.
+        ASSERT 1 = 1.
     ENDCASE.
 
   ENDMETHOD.
