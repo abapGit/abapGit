@@ -164,7 +164,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN c_action-pull.
-        ASSERT 1 = 'todo'.
+        lv_key = ii_event->query( )->get( 'KEY' ).
+        lv_index = ii_event->query( )->get( 'INDEX' ).
+        lo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+
+        READ TABLE mt_features INTO ls_feature INDEX lv_index.
+        ASSERT sy-subrc = 0.
+
+* todo: set filter,
+        zcl_abapgit_services_repo=>gui_deserialize( lo_online ).
     ENDCASE.
 
   ENDMETHOD.
