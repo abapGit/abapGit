@@ -223,6 +223,8 @@ CLASS lcl_helper IMPLEMENTATION.
     DATA lt_transports TYPE ty_transports_tt.
     DATA lt_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt.
 
+    FIELD-SYMBOLS <ls_feature> LIKE LINE OF lt_features.
+    FIELD-SYMBOLS <ls_path_name> LIKE LINE OF <ls_feature>-changed_files.
 
     lt_transports = find_open_transports( ).
 
@@ -285,6 +287,15 @@ CLASS lcl_helper IMPLEMENTATION.
           io_online   = lo_online
         CHANGING
           ct_features = lt_features ).
+
+      LOOP AT lt_features ASSIGNING <ls_feature>.
+        <ls_feature>-full_match = abap_true.
+        LOOP AT <ls_feature>-changed_files ASSIGNING <ls_path_name>.
+          IF <ls_path_name>-remote_sha1 <> <ls_path_name>-local_sha1.
+            <ls_feature>-full_match = abap_false.
+          ENDIF.
+        ENDLOOP.
+      ENDLOOP.
 
       INSERT LINES OF lt_features INTO TABLE rt_features.
     ENDLOOP.

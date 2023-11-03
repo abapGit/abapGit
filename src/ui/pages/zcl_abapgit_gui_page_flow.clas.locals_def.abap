@@ -32,6 +32,7 @@ TYPES: BEGIN OF ty_feature,
            trkorr TYPE trkorr,
            title  TYPE string,
          END OF transport,
+         full_match      TYPE abap_bool,
          changed_files   TYPE ty_path_name_tt,
          changed_objects TYPE zif_abapgit_definitions=>ty_items_ts,
        END OF ty_feature.
