@@ -153,7 +153,8 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
     SELECT *
       FROM dm02l
       INTO TABLE lt_dm02l
-      WHERE entid = mv_entity_id.
+      WHERE entid = mv_entity_id
+      ORDER BY PRIMARY KEY.
 
     LOOP AT lt_dm02l INTO ls_dm02l.
 
@@ -200,7 +201,8 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
     SELECT *
       FROM dm42s
       INTO TABLE lt_dm42s
-      WHERE entidto = mv_entity_id.
+      WHERE entidto = mv_entity_id
+      ORDER BY PRIMARY KEY.
 
     LOOP AT lt_dm42s INTO ls_dm42s.
 
@@ -251,7 +253,8 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
     SELECT *
       FROM dm45l
       INTO TABLE lt_dm45l
-      WHERE entid = ms_item-obj_name.
+      WHERE entid = ms_item-obj_name
+      ORDER BY PRIMARY KEY.
 
     LOOP AT lt_dm45l INTO ls_dm45l.
 
@@ -540,7 +543,8 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
       FROM dokvl
       INTO CORRESPONDING FIELDS OF TABLE lt_dokvl
       WHERE id = c_text_object_type
-      AND   object LIKE ls_dokvl-object ##TOO_MANY_ITAB_FIELDS.
+      AND   object LIKE ls_dokvl-object
+      ORDER BY PRIMARY KEY ##TOO_MANY_ITAB_FIELDS.
 
     LOOP AT lt_dokvl INTO ls_dokvl.
 
