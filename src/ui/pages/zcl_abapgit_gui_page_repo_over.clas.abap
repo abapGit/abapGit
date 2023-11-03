@@ -47,6 +47,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
         deserialized_at     TYPE string,
         deserialized_at_raw TYPE timestampl,
         write_protected     TYPE abap_bool,
+        flow                TYPE abap_bool,
       END OF ty_overview,
       ty_overviews TYPE STANDARD TABLE OF ty_overview
                    WITH NON-UNIQUE DEFAULT KEY.
@@ -392,6 +393,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       ls_overview-branch          = <ls_repo>->ms_data-branch_name.
       ls_overview-created_by      = <ls_repo>->ms_data-created_by.
       ls_overview-write_protected = <ls_repo>->ms_data-local_settings-write_protected.
+      ls_overview-flow            = <ls_repo>->ms_data-local_settings-flow.
       ls_overview-created_at_raw  = <ls_repo>->ms_data-created_at.
 
       IF <ls_repo>->ms_data-created_at IS NOT INITIAL.
@@ -699,7 +701,8 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       lv_repo_type_icon TYPE string,
       lv_favorite_icon  TYPE string,
       lv_fav_tr_class   TYPE string,
-      lv_lock           TYPE string.
+      lv_lock           TYPE string,
+      lv_flow           TYPE string.
 
     lv_is_online_repo = boolc( is_repo-type = abap_false ).
 
@@ -742,11 +745,17 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
         iv_class = 'm-em5-sides'
         iv_hint  = 'Locked from pulls' ).
     ENDIF.
+    IF is_repo-flow = abap_true.
+      lv_flow = ii_html->icon(
+        iv_name  = 'flow/grey70'
+        iv_class = 'm-em5-sides'
+        iv_hint  = 'Flow' ).
+    ENDIF.
 
     ii_html->td(
       ii_html->a(
         iv_txt = is_repo-name
-        iv_act = |{ c_action-select }?key={ is_repo-key }| ) && lv_lock ).
+        iv_act = |{ c_action-select }?key={ is_repo-key }| ) && lv_lock && lv_flow ).
 
     " Labels
     IF mt_all_labels IS NOT INITIAL.
