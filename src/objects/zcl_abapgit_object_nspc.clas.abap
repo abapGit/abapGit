@@ -46,7 +46,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_NSPC IMPLEMENTATION.
+CLASS zcl_abapgit_object_nspc IMPLEMENTATION.
 
 
   METHOD add_to_transport.
@@ -119,7 +119,8 @@ CLASS ZCL_ABAPGIT_OBJECT_NSPC IMPLEMENTATION.
 
     " Collect additional languages, skip main lang - it was serialized already
     SELECT DISTINCT spras AS langu FROM trnspacett INTO TABLE lt_i18n_langs
-      WHERE namespace = ms_item-obj_name AND spras <> mv_language. "#EC CI_SUBRC
+      WHERE namespace = ms_item-obj_name AND spras <> mv_language
+      ORDER BY langu.                                     "#EC CI_SUBRC
 
     LOOP AT lt_i18n_langs ASSIGNING <lv_lang>.
       SELECT SINGLE * FROM trnspacett INTO ls_trnspacett
