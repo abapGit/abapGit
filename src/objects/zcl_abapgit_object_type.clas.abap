@@ -161,7 +161,7 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
     SELECT SINGLE state
       FROM progdir
       INTO lv_state
-      WHERE name = lv_progname.
+      WHERE name = lv_progname.                         "#EC CI_NOORDER
     IF lv_state IS NOT INITIAL.
       rv_bool = abap_true.
     ENDIF.

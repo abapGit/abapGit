@@ -106,7 +106,7 @@ CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
     SELECT SINGLE langu FROM dokil INTO rv_language
       WHERE id = c_id
       AND object = mv_doc_object
-      AND masterlang = abap_true.
+      AND masterlang = abap_true.                       "#EC CI_NOORDER
 
     IF sy-subrc <> 0.
       rv_language = mv_language.
@@ -171,7 +171,7 @@ CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
 
     SELECT SINGLE COUNT( * ) FROM dokil INTO lv_count
            WHERE id   = c_id
-           AND object = mv_doc_object.                  "#EC CI_GENBUFF
+           AND object = mv_doc_object.  "#EC CI_GENBUFF "#EC CI_NOORDER
 
     rv_bool = boolc( lv_count > 0 ).
 
