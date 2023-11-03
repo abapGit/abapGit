@@ -48,7 +48,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
+CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 
 
   METHOD delete_documentation.
@@ -243,7 +243,8 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
       FROM t100t
       WHERE arbgb = lv_msg_id
       AND sprsl IN lt_language_filter
-      AND sprsl <> mv_language.          "#EC CI_BYPASS "#EC CI_GENBUFF
+      AND sprsl <> mv_language
+      ORDER BY langu.                    "#EC CI_BYPASS "#EC CI_GENBUFF
 
     SORT lt_i18n_langs ASCENDING.
 
@@ -252,7 +253,8 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
       SELECT * FROM t100t INTO CORRESPONDING FIELDS OF TABLE lt_t100t
         WHERE sprsl IN lt_language_filter
         AND sprsl <> mv_language
-        AND arbgb = lv_msg_id.                          "#EC CI_GENBUFF
+        AND arbgb = lv_msg_id
+        ORDER BY PRIMARY KEY.                           "#EC CI_GENBUFF
 
       SELECT * FROM t100 INTO CORRESPONDING FIELDS OF TABLE lt_t100_texts
         WHERE sprsl IN lt_language_filter
@@ -289,9 +291,9 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~delete.
-    DATA: ls_t100a          TYPE t100a,
-          lv_frozen         TYPE abap_bool,
-          lv_message_id     TYPE arbgb.
+    DATA: ls_t100a      TYPE t100a,
+          lv_frozen     TYPE abap_bool,
+          lv_message_id TYPE arbgb.
 
 * parameter SUPPRESS_DIALOG doesnt exist in all versions of FM RS_DELETE_MESSAGE_ID
 * replaced with a copy

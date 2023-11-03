@@ -403,7 +403,8 @@ CLASS zcl_abapgit_object_fdt0 IMPLEMENTATION.
 
     SELECT application_id FROM fdt_admn_0000s INTO TABLE lt_application_id
       WHERE object_type = 'AP'
-      AND name = ms_item-obj_name.
+      AND name = ms_item-obj_name
+      ORDER BY application_id.
 
     ls_object_category_sel-system_objects = 'X'.
 

@@ -54,7 +54,7 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
     SELECT SINGLE langu
            FROM dokil INTO lv_dummy
            WHERE id   = 'UO'                            "#EC CI_GENBUFF
-           AND object = lv_docu_obj.
+           AND object = lv_docu_obj.                    "#EC CI_NOORDER
 
     IF sy-subrc = 0.
 
@@ -278,6 +278,7 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
 
     SELECT SINGLE objct FROM tobj INTO lv_objct
       WHERE objct = ms_item-obj_name.
+
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
