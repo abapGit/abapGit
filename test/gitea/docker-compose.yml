@@ -1,7 +1,9 @@
 version: "2"
 
+name: abapgit-gitea
+
 services:
-  server:
+  gitea:
     image: gitea/gitea:1.20.5-rootless
     restart: always
     ports:
