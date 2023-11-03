@@ -9,3 +9,7 @@ allure-report
 coverage
 Heap.*
 list.txt
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

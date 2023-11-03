@@ -1,0 +1,17 @@
+{
+  "name": "gitea",
+  "version": "1.0.0",
+  "private": true,
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "gitea": "docker-compose down && docker-compose up -d && playwright test && sleep 10 && sh create.sh"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.39.0",
+    "@types/node": "^20.8.10"
+  }
+}
