@@ -327,7 +327,8 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
 
     IF iv_object = 'MESS'.
       ev_object = 'MSAG'.
-      ev_obj_name = substring( val = iv_obj_name len = strlen( iv_obj_name ) - 3 ).
+      ev_obj_name = substring( val = iv_obj_name 
+                               len = strlen( iv_obj_name ) - 3 ).
       RETURN.
     ENDIF.
 
