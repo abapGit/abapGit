@@ -26,11 +26,14 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
     CONSTANTS:
       BEGIN OF c_action,
         refresh TYPE string VALUE 'refresh',
+        pull    TYPE string VALUE 'pull',
+        stage   TYPE string VALUE 'stage',
       END OF c_action .
     DATA mt_features TYPE ty_features .
 
     METHODS render_table
       IMPORTING
+        !iv_index      TYPE i
         !is_feature    TYPE ty_feature
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
@@ -100,22 +103,31 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     ENDLOOP.
     ri_html->add( |</table>| ).
 
-* todo, crossout if write protected
-    ri_html->a(
+* todo: crossout if write protected
+    ri_html->add( ri_html->a(
       iv_txt = 'Pull'
-      iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?key={ is_feature-repo-key }| ).
-    ri_html->a(
+      iv_act = |{ c_action-pull }?index={ iv_index }&key={ is_feature-repo-key }| ) ).
+    ri_html->add( ri_html->a(
       iv_txt = 'Stage'
-      iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?key={ is_feature-repo-key }| ).
+      iv_act = |{ c_action-stage }?index={ iv_index }&key={ is_feature-repo-key }| ) ).
+    ri_html->add( |<br>| ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    DATA lv_key TYPE zif_abapgit_persistence=>ty_value.
-    DATA lv_branch TYPE string.
-    DATA lo_online TYPE REF TO zcl_abapgit_repo_online.
+    DATA lv_key     TYPE zif_abapgit_persistence=>ty_value.
+    DATA lv_branch  TYPE string.
+    DATA lo_online  TYPE REF TO zcl_abapgit_repo_online.
+    DATA lo_filter  TYPE REF TO lcl_filter.
+    DATA lt_filter  TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA lv_index   TYPE i.
+    DATA ls_feature LIKE LINE OF mt_features.
+
+    FIELD-SYMBOLS <ls_object> LIKE LINE OF ls_feature-changed_objects.
+    FIELD-SYMBOLS <ls_filter> LIKE LINE OF lt_filter.
+
 
     CASE ii_event->mv_action.
       WHEN c_action-refresh.
@@ -131,6 +143,28 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
             lo_online->select_branch( lv_branch ).
           ENDIF.
         ENDIF.
+      WHEN c_action-stage.
+        lv_key = ii_event->query( )->get( 'KEY' ).
+        lv_index = ii_event->query( )->get( 'INDEX' ).
+        lo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+
+        READ TABLE mt_features INTO ls_feature INDEX lv_index.
+        ASSERT sy-subrc = 0.
+
+        LOOP AT ls_feature-changed_objects ASSIGNING <ls_object>.
+          APPEND INITIAL LINE TO lt_filter ASSIGNING <ls_filter>.
+          <ls_filter>-object = <ls_object>-obj_type.
+          <ls_filter>-obj_name = <ls_object>-obj_name.
+        ENDLOOP.
+        CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
+
+        rs_handled-page = zcl_abapgit_gui_page_stage=>create(
+          io_repo       = lo_online
+          ii_obj_filter = lo_filter ).
+
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+      WHEN c_action-pull.
+        ASSERT 1 = 'todo'.
     ENDCASE.
 
   ENDMETHOD.
@@ -155,6 +189,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
     DATA ls_feature LIKE LINE OF mt_features.
     DATA ls_item    LIKE LINE OF ls_feature-changed_objects.
+    DATA lv_index   TYPE i.
 
 
     register_handlers( ).
@@ -166,13 +201,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     ENDIF.
 
     LOOP AT mt_features INTO ls_feature.
+      lv_index = sy-tabix.
+
       IF lines( ls_feature-changed_files ) = 0.
 * no changes, eg. only files outside of starting folder changed
         CONTINUE.
       ENDIF.
 
       ri_html->add( '<b><font size="+2">' && ls_feature-repo-name ).
-      IF ls_feature-branch IS NOT INITIAL.
+      IF ls_feature-branch-display_name IS NOT INITIAL.
         ri_html->add( | - | ).
         ri_html->add_icon( 'code-branch' ).
         ri_html->add( ls_feature-branch-display_name ).
@@ -215,12 +252,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       IF ls_feature-full_match = abap_true.
         ri_html->add( |Full Match<br>| ).
       ELSE.
-        ri_html->add( render_table( ls_feature ) ).
+        ri_html->add( render_table(
+          is_feature = ls_feature
+          iv_index   = lv_index ) ).
       ENDIF.
 
-      LOOP AT ls_feature-changed_objects INTO ls_item.
-        ri_html->add( |<tt><small>{ ls_item-obj_type } { ls_item-obj_name }</small></tt><br>| ).
-      ENDLOOP.
+* todo      LOOP AT ls_feature-changed_objects INTO ls_item.
+*        ri_html->add( |<tt><small>{ ls_item-obj_type } { ls_item-obj_name }</small></tt><br>| ).
+*      ENDLOOP.
 
       ri_html->add( '<br>' ).
     ENDLOOP.

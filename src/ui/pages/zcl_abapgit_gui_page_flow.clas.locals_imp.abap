@@ -300,6 +300,8 @@ CLASS lcl_helper IMPLEMENTATION.
       INSERT LINES OF lt_features INTO TABLE rt_features.
     ENDLOOP.
 
+    SORT rt_features BY full_match transport-trkorr DESCENDING.
+
   ENDMETHOD.
 
   METHOD try_matching_transports.
