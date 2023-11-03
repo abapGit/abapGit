@@ -101,7 +101,8 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
 * Do not add handlers if they already exist, it will make the below
 * call to SAP standard code raise an exception
     SELECT * FROM icfhandler INTO TABLE lt_existing
-      WHERE icf_name = is_icfservice-icf_name.
+      WHERE icf_name = is_icfservice-icf_name
+      ORDER BY PRIMARY KEY.
     LOOP AT lt_existing ASSIGNING <ls_existing>.
       DELETE TABLE lt_icfhndlist FROM <ls_existing>-icfhandler.
     ENDLOOP.
