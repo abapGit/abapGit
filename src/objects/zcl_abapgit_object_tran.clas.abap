@@ -411,7 +411,8 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
       INTO CORRESPONDING FIELDS OF TABLE lt_tpool_i18n
       FROM tstct
       WHERE sprsl <> mv_language
-      AND   tcode = ms_item-obj_name ##TOO_MANY_ITAB_FIELDS. "#EC CI_GENBUFF
+      AND   tcode = ms_item-obj_name
+      ORDER BY sprsl ##TOO_MANY_ITAB_FIELDS.            "#EC CI_GENBUFF
 
     mo_i18n_params->trim_saplang_keyed_table(
       EXPORTING
@@ -905,7 +906,8 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
       WHERE tcode = lv_transaction.       "#EC CI_SUBRC "#EC CI_GENBUFF
 
     SELECT * FROM tstca INTO TABLE lt_tstca
-      WHERE tcode = lv_transaction.
+      WHERE tcode = lv_transaction
+      ORDER BY PRIMARY KEY.
     IF sy-subrc <> 0.
       CLEAR: lt_tstca.
     ENDIF.
