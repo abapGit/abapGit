@@ -392,6 +392,8 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
         ls_item-obj_name = <ls_message>-object_text+5(*).
       ELSE.
         ls_item-obj_name = <ls_message>-show_req->object_name.
+        SELECT SINGLE tadir FROM euobjedit INTO ls_item-obj_type
+          WHERE type = <ls_message>-show_req->object_type.
       ENDIF.
       LOOP AT <ls_message>-mtext ASSIGNING <lv_msg>.
         ii_log->add_error(
