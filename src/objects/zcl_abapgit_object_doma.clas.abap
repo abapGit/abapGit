@@ -62,7 +62,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
+CLASS zcl_abapgit_object_doma IMPLEMENTATION.
 
 
   METHOD adjust_exit.
@@ -229,13 +229,15 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
       FROM dd01v
       WHERE domname = lv_name
       AND ddlanguage IN lt_language_filter
-      AND ddlanguage <> mv_language.                      "#EC CI_SUBRC
+      AND ddlanguage <> mv_language
+      ORDER BY langu.                                     "#EC CI_SUBRC
 
     SELECT DISTINCT ddlanguage AS langu APPENDING TABLE lt_i18n_langs
       FROM dd07v
       WHERE domname = lv_name
       AND ddlanguage IN lt_language_filter
-      AND ddlanguage <> mv_language.                      "#EC CI_SUBRC
+      AND ddlanguage <> mv_language
+      ORDER BY langu.                                     "#EC CI_SUBRC
 
     SORT lt_i18n_langs.
     DELETE ADJACENT DUPLICATES FROM lt_i18n_langs.
