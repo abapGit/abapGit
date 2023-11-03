@@ -20,6 +20,7 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
       IMPORTING
         !iv_key          TYPE zif_abapgit_persistence=>ty_repo-key
         !ig_file         TYPE any
+        !iv_extra        TYPE clike OPTIONAL
       RETURNING
         VALUE(rv_string) TYPE string .
     CLASS-METHODS obj_encode
@@ -52,7 +53,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
 
 
   METHOD add_field.
@@ -129,12 +130,35 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
     DATA lt_fields TYPE tihttpnvp.
 
 
-    add_field( EXPORTING iv_name = 'KEY'
-                         ig_field = iv_key CHANGING ct_field = lt_fields ).
-    add_field( EXPORTING iv_name = 'PATH'
-                         ig_field = ig_file CHANGING ct_field = lt_fields ).
-    add_field( EXPORTING iv_name = 'FILENAME'
-                         ig_field = ig_file CHANGING ct_field = lt_fields ).
+    add_field(
+      EXPORTING
+        iv_name  = 'KEY'
+        ig_field = iv_key
+      CHANGING
+        ct_field = lt_fields ).
+
+    add_field(
+      EXPORTING
+        iv_name  = 'PATH'
+        ig_field = ig_file
+      CHANGING
+        ct_field = lt_fields ).
+
+    add_field(
+      EXPORTING
+        iv_name  = 'FILENAME'
+        ig_field = ig_file
+      CHANGING
+        ct_field = lt_fields ).
+
+    IF iv_extra IS SUPPLIED.
+      add_field(
+        EXPORTING
+          iv_name  = 'EXTRA'
+          ig_field = iv_extra
+        CHANGING
+          ct_field = lt_fields ).
+    ENDIF.
 
     rv_string = fields_to_string( lt_fields ).
 
