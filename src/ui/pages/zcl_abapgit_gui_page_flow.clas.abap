@@ -100,6 +100,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     ENDLOOP.
     ri_html->add( |</table>| ).
 
+* todo, crossout if write protected
+    ri_html->a(
+      iv_txt = 'Pull'
+      iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?key={ is_feature-repo-key }| ).
+    ri_html->a(
+      iv_txt = 'Stage'
+      iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?key={ is_feature-repo-key }| ).
+
   ENDMETHOD.
 
 
