@@ -325,6 +325,13 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
     CLEAR ev_object.
     CLEAR ev_obj_name.
 
+    IF iv_object = 'MESS'.
+      ev_object = 'MSAG'.
+      ev_obj_name = substring( val = iv_obj_name
+                               len = strlen( iv_obj_name ) - 3 ).
+      RETURN.
+    ENDIF.
+
     CALL FUNCTION 'GET_R3TR_OBJECT_FROM_LIMU_OBJ'
       EXPORTING
         p_limu_objtype = iv_object
