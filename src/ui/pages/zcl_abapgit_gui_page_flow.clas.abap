@@ -188,7 +188,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
   METHOD zif_abapgit_gui_renderable~render.
 
     DATA ls_feature LIKE LINE OF mt_features.
-    DATA ls_item    LIKE LINE OF ls_feature-changed_objects.
     DATA lv_index   TYPE i.
 
 
