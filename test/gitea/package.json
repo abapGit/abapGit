@@ -5,7 +5,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "gitea": "docker-compose down && docker-compose up -d && npx playwright install && playwright test && sleep 10 && sh create.sh"
+    "gitea": "docker-compose down && docker-compose up -d && npx playwright install && playwright test && sleep 20 && sh create.sh"
   },
   "keywords": [],
   "author": "",
