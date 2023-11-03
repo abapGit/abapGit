@@ -169,27 +169,40 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
   METHOD get_manifest_descriptor.
 
     DATA: lo_manifest_provider       TYPE REF TO object,
-          ls_manifest_implementation TYPE ty_s_manifest_declaration.
+          lv_package                 TYPE devclass,
+          lt_packages                TYPE zif_abapgit_sap_package=>ty_devclass_tt,
+          ls_manifest_implementation TYPE ty_s_manifest_declaration,
+          lt_manifest_implementation TYPE STANDARD TABLE OF ty_s_manifest_declaration WITH DEFAULT KEY.
 
-    IF mv_is_cached IS INITIAL AND mv_package_name IS NOT INITIAL.
-      SELECT SINGLE seometarel~clsname tadir~devclass FROM seometarel "#EC CI_NOORDER
+    IF mv_package_name IS NOT INITIAL.
+      lt_packages = zcl_abapgit_factory=>get_sap_package( mv_package_name )->list_subpackages( ).
+      INSERT mv_package_name INTO TABLE lt_packages.
+    ENDIF.
+
+    IF mv_is_cached IS INITIAL AND lt_packages IS NOT INITIAL.
+      " Find all classes that implement customer or SAP version of APACK interface
+      SELECT seometarel~clsname tadir~devclass FROM seometarel "#EC CI_NOORDER
          INNER JOIN tadir ON seometarel~clsname = tadir~obj_name "#EC CI_BUFFJOIN
-         INTO ls_manifest_implementation
+         INTO TABLE lt_manifest_implementation
          WHERE tadir~pgmid = 'R3TR' AND
                tadir~object = 'CLAS' AND
                seometarel~version = '1' AND
-               seometarel~refclsname = zif_abapgit_apack_definitions=>c_apack_interface_cust AND
-               tadir~devclass = mv_package_name.
-      IF ls_manifest_implementation IS INITIAL.
-        SELECT SINGLE seometarel~clsname tadir~devclass FROM seometarel "#EC CI_NOORDER
-           INNER JOIN tadir ON seometarel~clsname = tadir~obj_name "#EC CI_BUFFJOIN
-           INTO ls_manifest_implementation
-           WHERE tadir~pgmid = 'R3TR' AND
-                 tadir~object = 'CLAS' AND
-                 seometarel~version = '1' AND
-                 seometarel~refclsname = zif_abapgit_apack_definitions=>c_apack_interface_sap AND
-                 tadir~devclass = mv_package_name.
-      ENDIF.
+               seometarel~refclsname = zif_abapgit_apack_definitions=>c_apack_interface_cust.
+
+      SELECT seometarel~clsname tadir~devclass FROM seometarel "#EC CI_NOORDER
+         INNER JOIN tadir ON seometarel~clsname = tadir~obj_name "#EC CI_BUFFJOIN
+         APPENDING TABLE lt_manifest_implementation
+         WHERE tadir~pgmid = 'R3TR' AND
+               tadir~object = 'CLAS' AND
+               seometarel~version = '1' AND
+               seometarel~refclsname = zif_abapgit_apack_definitions=>c_apack_interface_sap.
+
+      LOOP AT lt_packages INTO lv_package.
+        READ TABLE lt_manifest_implementation INTO ls_manifest_implementation WITH KEY devclass = lv_package.
+        IF sy-subrc = 0.
+          EXIT.
+        ENDIF.
+      ENDLOOP.
       IF ls_manifest_implementation IS NOT INITIAL.
         TRY.
             CREATE OBJECT lo_manifest_provider TYPE (ls_manifest_implementation-clsname).
