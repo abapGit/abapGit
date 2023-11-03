@@ -28,8 +28,8 @@ CLASS lcl_aff_helper DEFINITION.
         descript TYPE seodescr,
         scotype  TYPE seoscotype,
       END OF ty_sub_component,
-      ty_compontents     TYPE STANDARD TABLE OF ty_component,
-      ty_sub_compontents TYPE STANDARD TABLE OF ty_sub_component.
+      ty_compontents     TYPE SORTED TABLE OF ty_component WITH UNIQUE DEFAULT KEY,
+      ty_sub_compontents TYPE SORTED TABLE OF ty_sub_component WITH UNIQUE DEFAULT KEY.
 
     CLASS-METHODS:
       get_attributes
@@ -129,10 +129,11 @@ CLASS lcl_aff_helper IMPLEMENTATION.
     SELECT component~cmpname component_text~descript component~cmptype
       INTO TABLE lt_components
       FROM seocompo AS component
-     LEFT OUTER JOIN seocompotx AS component_text
+      LEFT OUTER JOIN seocompotx AS component_text
       ON component~cmpname = component_text~cmpname AND component~clsname    = component_text~clsname
                                                     AND component_text~langu = iv_language
-      WHERE component~clsname = iv_clif_name.          "#EC CI_BUFFJOIN
+      WHERE component~clsname = iv_clif_name
+      ORDER BY component~cmpname.          "#EC CI_BUFFJOIN
 
     SELECT sub_component~cmpname sub_component~sconame sub_component_text~descript sub_component~scotype
       INTO TABLE lt_sub_components
