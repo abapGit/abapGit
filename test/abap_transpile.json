@@ -1,5 +1,5 @@
 {
-  "input_folder": "{test,src,deps}",
+  "input_folder": "{test/src,src,deps}",
   "input_filter": [
     "deps/",
     "\\.w3mi.",

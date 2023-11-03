@@ -42,5 +42,8 @@ jobs:
       run: npm run unit
     - name: npm run coverage
       run: npm run coverage
+    - name: start gitea
+      working-directory: test/gitea/
+      run: npm install && npm run gitea
     - name: npm run integration
       run: npm run integration
