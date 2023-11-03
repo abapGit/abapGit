@@ -147,7 +147,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
     DATA ls_feature LIKE LINE OF mt_features.
     DATA ls_item    LIKE LINE OF ls_feature-changed_objects.
-    DATA li_table   TYPE REF TO zif_abapgit_html.
 
 
     register_handlers( ).
