@@ -258,8 +258,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       ENDIF.
 
 * todo      LOOP AT ls_feature-changed_objects INTO ls_item.
-*        ri_html->add( |<tt><small>{ ls_item-obj_type } { ls_item-obj_name }</small></tt><br>| ).
-*      ENDLOOP.
+* todo       ri_html->add( |<tt><small>{ ls_item-obj_type } { ls_item-obj_name }</small></tt><br>| ).
+* todo     ENDLOOP.
 
       ri_html->add( '<br>' ).
     ENDLOOP.
