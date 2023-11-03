@@ -82,7 +82,7 @@ CLASS zcl_abapgit_object_doct IMPLEMENTATION.
 
     SELECT SINGLE id FROM dokil INTO lv_id
       WHERE id         = c_id
-        AND object     = lv_object.                     "#EC CI_GENBUFF
+        AND object     = lv_object.     "#EC CI_GENBUFF "#EC CI_NOORDER
 
     rv_bool = boolc( sy-subrc = 0 ).
 
