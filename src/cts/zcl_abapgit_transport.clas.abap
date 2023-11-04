@@ -31,9 +31,11 @@ CLASS zcl_abapgit_transport DEFINITION
 
   PROTECTED SECTION.
 
+    TYPES ty_trkorr_tt TYPE STANDARD TABLE OF trkorr.
+
     CLASS-METHODS read_requests
       IMPORTING
-        !it_trkorr         TYPE trwbo_request_headers
+        !it_trkorr         TYPE ty_trkorr_tt
       RETURNING
         VALUE(rt_requests) TYPE trwbo_requests
       RAISING
@@ -230,12 +232,12 @@ CLASS zcl_abapgit_transport IMPLEMENTATION.
 
   METHOD read_requests.
     DATA lt_requests LIKE rt_requests.
-    FIELD-SYMBOLS <ls_trkorr> LIKE LINE OF it_trkorr.
+    FIELD-SYMBOLS <lv_trkorr> LIKE LINE OF it_trkorr.
 
-    LOOP AT it_trkorr ASSIGNING <ls_trkorr>.
+    LOOP AT it_trkorr ASSIGNING <lv_trkorr>.
       CALL FUNCTION 'TR_READ_REQUEST_WITH_TASKS'
         EXPORTING
-          iv_trkorr     = <ls_trkorr>-trkorr
+          iv_trkorr     = <lv_trkorr>
         IMPORTING
           et_requests   = lt_requests
         EXCEPTIONS
@@ -347,13 +349,17 @@ CLASS zcl_abapgit_transport IMPLEMENTATION.
           lv_package        TYPE devclass,
           lo_dot_abapgit    TYPE REF TO zcl_abapgit_dot_abapgit,
           ls_local_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings,
-          lt_trkorr         TYPE trwbo_request_headers.
+          lt_trkorr         TYPE ty_trkorr_tt,
+          lv_trkorr         TYPE trkorr.
 
 
     IF is_trkorr IS SUPPLIED.
-      APPEND is_trkorr TO lt_trkorr.
+      APPEND is_trkorr-trkorr TO lt_trkorr.
     ELSE.
-      lt_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_transports( ).
+      lv_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_transport( ).
+      IF lv_trkorr IS NOT INITIAL.
+        APPEND lv_trkorr TO lt_trkorr.
+      ENDIF.
     ENDIF.
 
     IF lines( lt_trkorr ) = 0.

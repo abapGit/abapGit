@@ -104,7 +104,7 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
     DATA ls_config  TYPE zif_abapgit_data_config=>ty_config.
 
 
-    lt_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_transports( ).
+    lt_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_transport( ).
     IF lines( lt_trkorr ) <> 1.
       RETURN.
     ENDIF.
