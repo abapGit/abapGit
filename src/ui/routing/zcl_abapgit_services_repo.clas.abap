@@ -122,7 +122,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_services_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
 
   METHOD activate_objects.
@@ -804,6 +804,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       lo_transport_to_branch TYPE REF TO zcl_abapgit_transport_2_branch,
       lt_transport_headers   TYPE trwbo_request_headers,
       lt_transport_objects   TYPE zif_abapgit_definitions=>ty_tadir_tt,
+      lv_trkorr              TYPE trkorr,
       ls_transport_to_branch TYPE zif_abapgit_definitions=>ty_transport_to_branch.
 
 
@@ -813,11 +814,11 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     lo_repository ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_repository_key ).
 
-    lt_transport_headers = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_transport( ).
+    lv_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_transport( ).
     " Also include deleted objects that are included in transport
     lt_transport_objects = zcl_abapgit_transport=>to_tadir(
-      it_transport_headers = lt_transport_headers
-      iv_deleted_objects   = abap_true ).
+      iv_trkorr          = lv_trkorr
+      iv_deleted_objects = abap_true ).
     IF lt_transport_objects IS INITIAL.
       zcx_abapgit_exception=>raise( 'Canceled or List of objects is empty ' ).
     ENDIF.

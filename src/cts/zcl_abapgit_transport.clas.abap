@@ -16,10 +16,10 @@ CLASS zcl_abapgit_transport DEFINITION
 
     CLASS-METHODS to_tadir
       IMPORTING
-        !it_transport_headers TYPE trwbo_request_headers
-        !iv_deleted_objects   TYPE abap_bool DEFAULT abap_false
+        !iv_trkorr          TYPE trkorr
+        !iv_deleted_objects TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(rt_tadir)       TYPE zif_abapgit_definitions=>ty_tadir_tt
+        VALUE(rt_tadir)     TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
 
@@ -71,7 +71,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_transport IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
 
 
   METHOD add_all_objects_to_trans_req.
@@ -327,14 +327,17 @@ CLASS zcl_abapgit_transport IMPLEMENTATION.
 
 
   METHOD to_tadir.
-    DATA: lt_requests TYPE trwbo_requests.
+    DATA lt_requests TYPE trwbo_requests.
+    DATA lt_trkorr   TYPE ty_trkorr_tt.
 
 
-    IF lines( it_transport_headers ) = 0.
+    IF iv_trkorr IS INITIAL.
       RETURN.
     ENDIF.
 
-    lt_requests = read_requests( it_transport_headers ).
+    INSERT iv_trkorr INTO TABLE lt_trkorr.
+
+    lt_requests = read_requests( lt_trkorr ).
     rt_tadir = resolve(
       it_requests        = lt_requests
       iv_deleted_objects = iv_deleted_objects ).
