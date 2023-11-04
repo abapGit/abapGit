@@ -194,7 +194,7 @@ CLASS zcl_abapgit_object_sots IMPLEMENTATION.
 
   METHOD zif_abapgit_object~changed_by.
     SELECT SINGLE chan_name FROM sotr_headu INTO rv_user
-      WHERE paket = ms_item-obj_name.
+      WHERE paket = ms_item-obj_name.                   "#EC CI_NOORDER
     IF sy-subrc <> 0.
       rv_user = c_user_unknown.
     ENDIF.

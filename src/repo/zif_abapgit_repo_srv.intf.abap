@@ -54,6 +54,7 @@ INTERFACE zif_abapgit_repo_srv
       !iv_labels         TYPE string OPTIONAL
       !iv_ign_subpkg     TYPE abap_bool DEFAULT abap_false
       !iv_main_lang_only TYPE abap_bool DEFAULT abap_false
+      !iv_abap_lang_vers TYPE string OPTIONAL
     RETURNING
       VALUE(ri_repo)     TYPE REF TO zif_abapgit_repo
     RAISING
@@ -68,6 +69,7 @@ INTERFACE zif_abapgit_repo_srv
       !iv_labels         TYPE string OPTIONAL
       !iv_ign_subpkg     TYPE abap_bool DEFAULT abap_false
       !iv_main_lang_only TYPE abap_bool DEFAULT abap_false
+      !iv_abap_lang_vers TYPE string OPTIONAL
     RETURNING
       VALUE(ri_repo)     TYPE REF TO zif_abapgit_repo
     RAISING

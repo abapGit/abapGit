@@ -35,7 +35,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
+CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
 
 
   METHOD deserialize_texts.
@@ -115,7 +115,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
       FROM dd04v
       WHERE rollname = lv_name
       AND ddlanguage IN lt_language_filter
-      AND ddlanguage <> mv_language.                      "#EC CI_SUBRC
+      AND ddlanguage <> mv_language
+      ORDER BY langu.                                     "#EC CI_SUBRC
 
     LOOP AT lt_i18n_langs ASSIGNING <lv_lang>.
       lv_index = sy-tabix.

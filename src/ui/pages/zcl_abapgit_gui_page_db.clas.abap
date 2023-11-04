@@ -21,6 +21,7 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CONSTANTS:
@@ -32,6 +33,7 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
       END OF c_action.
 
     CONSTANTS c_css_url TYPE string VALUE 'css/page_db.css'.
+    CONSTANTS c_toc_filename TYPE string VALUE '#_Table_of_Content_#.txt'.
 
     TYPES:
       BEGIN OF ty_explanation,
@@ -53,7 +55,7 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-    CLASS-METHODS do_backup_db
+    METHODS do_backup_db
       RAISING
         zcx_abapgit_exception.
     CLASS-METHODS do_delete_entry
@@ -125,6 +127,8 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
 
     DATA:
       lt_data     TYPE zif_abapgit_persistence=>ty_contents,
+      lv_text     TYPE string,
+      lt_toc      TYPE string_table,
       lo_zip      TYPE REF TO cl_abap_zip,
       lv_zip      TYPE xstring,
       lv_path     TYPE string,
@@ -136,14 +140,35 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
 
     lt_data = zcl_abapgit_persistence_db=>get_instance( )->list( ).
 
+    lv_text = |Table of Content\n|.
+    INSERT lv_text INTO TABLE lt_toc.
+    lv_text = |================\n|.
+    INSERT lv_text INTO TABLE lt_toc.
+    lv_text = |\n|.
+    INSERT lv_text INTO TABLE lt_toc.
+
     CREATE OBJECT lo_zip.
 
     LOOP AT lt_data ASSIGNING <ls_data>.
-      CONCATENATE <ls_data>-type '_' <ls_data>-value '.xml' INTO lv_filename.
+      IF <ls_data>-type = zcl_abapgit_persistence_db=>c_type_repo_csum.
+        CONCATENATE <ls_data>-type '_' <ls_data>-value '.txt' INTO lv_filename.
+      ELSE.
+        CONCATENATE <ls_data>-type '_' <ls_data>-value '.xml' INTO lv_filename.
+      ENDIF.
       lo_zip->add(
         name    = lv_filename
         content = zcl_abapgit_convert=>string_to_xstring_utf8( <ls_data>-data_str ) ).
+
+      lv_text = explain_content( <ls_data> ).
+      REPLACE '<strong>' IN lv_text WITH ''.
+      REPLACE '</strong>' IN lv_text WITH ''.
+      lv_text = |{ <ls_data>-type },{ <ls_data>-value },{ lv_text }\n|.
+      INSERT lv_text INTO TABLE lt_toc.
     ENDLOOP.
+
+    lo_zip->add(
+      name    = c_toc_filename
+      content = zcl_abapgit_convert=>string_to_xstring_utf8( concat_lines_of( lt_toc ) ) ).
 
     lv_zip = lo_zip->save( ).
 
@@ -246,11 +271,17 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Error loading ZIP file' ).
     ENDIF.
 
-    LOOP AT lo_zip->files ASSIGNING <ls_zipfile>.
+    LOOP AT lo_zip->files ASSIGNING <ls_zipfile> WHERE name <> c_toc_filename.
       CLEAR ls_data.
       lv_filename = <ls_zipfile>-name.
       REPLACE '.xml' IN lv_filename WITH ''.
-      SPLIT lv_filename AT '_' INTO ls_data-type ls_data-value.
+      REPLACE '.txt' IN lv_filename WITH ''.
+      IF lv_filename CP 'REPO_CS*'.
+        ls_data-type  = lv_filename(7).
+        ls_data-value = lv_filename+8(*).
+      ELSE.
+        SPLIT lv_filename AT '_' INTO ls_data-type ls_data-value.
+      ENDIF.
 
       " Validate DB key
       TRY.
@@ -511,8 +542,6 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
       WHEN c_action-restore.
         do_restore_db( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN c_action-back.
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
 
   ENDMETHOD.

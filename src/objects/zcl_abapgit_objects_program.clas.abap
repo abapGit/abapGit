@@ -375,6 +375,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         EXPORTING
           header                 = ls_dynpro-header
           suppress_exist_checks  = abap_true
+          suppress_generate      = ls_dynpro-header-no_execute
         TABLES
           containers             = ls_dynpro-containers
           fields_to_containers   = ls_dynpro-fields

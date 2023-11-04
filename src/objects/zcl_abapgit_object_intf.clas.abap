@@ -112,8 +112,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       iv_language = iv_language ).
     mi_object_oriented_object_fct = zcl_abapgit_oo_factory=>make( ms_item-obj_type ).
 
-    mv_aff_enabled = zcl_abapgit_persist_factory=>get_settings( )->read( )->is_feature_enabled(
-      zcl_abapgit_aff_registry=>c_aff_feature ).
+    mv_aff_enabled = zcl_abapgit_feature=>is_enabled( zcl_abapgit_abap_language_vers=>c_feature_flag ).
   ENDMETHOD.
 
 
