@@ -42,6 +42,11 @@ jobs:
       run: npm run unit
     - name: npm run coverage
       run: npm run coverage
+
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
     - name: start gitea
       working-directory: test/gitea/
       run: npm install && npm run gitea
