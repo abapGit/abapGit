@@ -285,7 +285,7 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
     APPEND `darkred` TO lt_labels.
     APPEND `yellow` TO lt_labels.
     APPEND `darkyellow` TO lt_labels.
-    APPEND `orrange` TO lt_labels.
+    APPEND `orange` TO lt_labels.
     APPEND `brown` TO lt_labels.
     APPEND `pink` TO lt_labels.
     APPEND `teal` TO lt_labels.
