@@ -276,7 +276,12 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
       lv_filename = <ls_zipfile>-name.
       REPLACE '.xml' IN lv_filename WITH ''.
       REPLACE '.txt' IN lv_filename WITH ''.
-      SPLIT lv_filename AT '_' INTO ls_data-type ls_data-value.
+      IF lv_filename CP 'REPO_CS*'.
+        ls_data-type  = lv_filename(7).
+        ls_data-value = lv_filename+8(*).
+      ELSE.
+        SPLIT lv_filename AT '_' INTO ls_data-type ls_data-value.
+      ENDIF.
 
       " Validate DB key
       TRY.
