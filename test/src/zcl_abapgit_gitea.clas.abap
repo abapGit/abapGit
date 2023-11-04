@@ -57,7 +57,9 @@ CLASS zcl_abapgit_gitea IMPLEMENTATION.
       iv_method  = 'POST'
       iv_payload = lv_json ).
 
-    WRITE / li_response->code( ).
+    IF li_response->code( ) <> 201.
+      zcx_abapgit_exception=>raise( |Error creating repository| ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
