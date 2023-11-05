@@ -95,7 +95,7 @@ CLASS zcl_abapgit_services_repo DEFINITION
       RAISING
         zcx_abapgit_cancel
         zcx_abapgit_exception .
-    CLASS-METHODS popup_overwrite
+    CLASS-METHODS popup_objects_overwrite
       CHANGING
         !ct_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
       RAISING
@@ -456,9 +456,6 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     ENDIF.
 
     " Ask user what to do
-    popup_overwrite( CHANGING ct_overwrite = lt_decision ).
-    popup_package_overwrite( CHANGING ct_overwrite = cs_checks-warning_package ).
-
     IF cs_checks-requirements-met = zif_abapgit_definitions=>c_no.
       lt_requirements = io_repo->get_dot_abapgit( )->get_data( )-requirements.
       zcl_abapgit_requirement_helper=>requirements_popup( lt_requirements ).
@@ -469,6 +466,9 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       lt_dependencies = io_repo->get_dot_apack( )->get_manifest_descriptor( )-dependencies.
       zcl_abapgit_apack_helper=>dependencies_popup( lt_dependencies ).
     ENDIF.
+
+    popup_objects_overwrite( CHANGING ct_overwrite = lt_decision ).
+    popup_package_overwrite( CHANGING ct_overwrite = cs_checks-warning_package ).
 
     IF cs_checks-transport-required = abap_true AND cs_checks-transport-transport IS INITIAL.
       cs_checks-transport-transport =
@@ -487,7 +487,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD popup_overwrite.
+  METHOD popup_objects_overwrite.
 
     DATA: lt_columns  TYPE zif_abapgit_popups=>ty_alv_column_tt,
           lt_selected LIKE ct_overwrite,
