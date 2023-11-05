@@ -389,6 +389,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
           it_remote  = ro_repo->get_files_remote( ) ).
       CATCH zcx_abapgit_exception INTO lx_error.
         zcl_abapgit_repo_srv=>get_instance( )->delete( ro_repo ).
+        COMMIT WORK.
         RAISE EXCEPTION lx_error.
     ENDTRY.
 
@@ -429,6 +430,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
           it_remote  = ro_repo->get_files_remote( ) ).
       CATCH zcx_abapgit_exception INTO lx_error.
         zcl_abapgit_repo_srv=>get_instance( )->delete( ro_repo ).
+        COMMIT WORK.
         RAISE EXCEPTION lx_error.
     ENDTRY.
 
