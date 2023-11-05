@@ -1,0 +1,8 @@
+https://docs.gitea.com/installation/install-with-docker-rootless
+
+docker-compose up -d
+docker-compose ps
+docker-compose logs
+docker-compose down
+
+http://localhost:3050

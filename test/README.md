@@ -8,7 +8,7 @@ Part of `/src/`
 
 Run manually on ABAP system
 
-Run locally on Node.js 14+ via `npm run unit`
+Run locally on Node.js 20+ via `npm run unit`
 
 Runs automatically for every push, not a required status check
 
@@ -31,6 +31,3 @@ webpack and mocked git/repos?
 
 ## Integration Testing - Object Serialization
 https://github.com/abapGit/CI
-
-## GitHub Actions Setup
-todo
