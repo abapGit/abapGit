@@ -71,14 +71,14 @@ CLASS zcl_abapgit_services_repo DEFINITION
         VALUE(rv_package)   TYPE devclass
       RAISING
         zcx_abapgit_exception.
-    CLASS-METHODS check_and_create_package
+  PROTECTED SECTION.
+  PRIVATE SECTION.
+    CLASS-METHODS check_package_exists
       IMPORTING
         !iv_package TYPE devclass
         !it_remote  TYPE zif_abapgit_git_definitions=>ty_files_tt
       RAISING
         zcx_abapgit_exception.
-  PROTECTED SECTION.
-  PRIVATE SECTION.
 
     CLASS-METHODS delete_unnecessary_objects
       IMPORTING
@@ -180,7 +180,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD check_and_create_package.
+  METHOD check_package_exists.
 
     IF zcl_abapgit_factory=>get_sap_package( iv_package )->exists( ) = abap_false.
       " Check if any package is included in remote
@@ -371,6 +371,10 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     check_package( is_repo_params ).
 
+    check_package_exists(
+      iv_package = is_repo_params-package
+      it_remote  = ro_repo->get_files_remote( ) ).
+
     " create new repo and add to favorites
     ro_repo ?= zcl_abapgit_repo_srv=>get_instance( )->new_offline(
       iv_url            = is_repo_params-url
@@ -380,10 +384,6 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       iv_ign_subpkg     = is_repo_params-ignore_subpackages
       iv_main_lang_only = is_repo_params-main_lang_only
       iv_abap_lang_vers = is_repo_params-abap_lang_vers ).
-
-    check_and_create_package(
-      iv_package = is_repo_params-package
-      it_remote  = ro_repo->get_files_remote( ) ).
 
     " Make sure there're no leftovers from previous repos
     ro_repo->zif_abapgit_repo~checksums( )->rebuild( ).
@@ -403,6 +403,10 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     check_package( is_repo_params ).
 
+    check_package_exists(
+      iv_package = is_repo_params-package
+      it_remote  = ro_repo->get_files_remote( ) ).
+
     ro_repo ?= zcl_abapgit_repo_srv=>get_instance( )->new_online(
       iv_url            = is_repo_params-url
       iv_branch_name    = is_repo_params-branch_name
@@ -413,10 +417,6 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       iv_ign_subpkg     = is_repo_params-ignore_subpackages
       iv_main_lang_only = is_repo_params-main_lang_only
       iv_abap_lang_vers = is_repo_params-abap_lang_vers ).
-
-    check_and_create_package(
-      iv_package = is_repo_params-package
-      it_remote  = ro_repo->get_files_remote( ) ).
 
     " Make sure there're no leftovers from previous repos
     ro_repo->zif_abapgit_repo~checksums( )->rebuild( ).
