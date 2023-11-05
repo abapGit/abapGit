@@ -209,15 +209,13 @@ div.log { color: var(--theme-greyscale-dark); }
   color: var(--theme-primary-font-color-reduced);
   background-color: var(--theme-container-background-color);
 }
-.dialog li.dialog-commands a {
-  border-color: #ccc;
-  background-color: var(--theme-greyscale-dark);
-}
+.dialog li.dialog-commands a,
 .dialog li.dialog-commands input[type="submit"] {
   border-color: #ccc;
   background-color: var(--theme-greyscale-dark);
   color: #fff;
 }
+.dialog li.dialog-commands a.main,
 .dialog li.dialog-commands input[type="submit"].main {
   background-color: #64a8ff;
   color: #fff;
