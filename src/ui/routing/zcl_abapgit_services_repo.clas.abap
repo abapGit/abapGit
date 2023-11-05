@@ -188,8 +188,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
         WITH KEY file
         COMPONENTS filename = zcl_abapgit_filename_logic=>c_package_file.
       IF sy-subrc <> 0.
-        " If not, prompt to create it
-        create_package( iv_package ).
+        " If not, give error
+        zcx_abapgit_exception=>raise( |Package { iv_package } does not exist| ).
       ENDIF.
     ENDIF.
 
