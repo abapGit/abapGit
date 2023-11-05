@@ -137,6 +137,7 @@ CLASS zcl_abapgit_html_form DEFINITION
         autofocus   TYPE string,
       END OF ty_attr .
 
+    DATA mv_webgui TYPE abap_bool.
     DATA mt_fields TYPE zif_abapgit_html_form=>ty_fields .
     DATA:
       mt_commands TYPE STANDARD TABLE OF zif_abapgit_html_form=>ty_command .
@@ -180,6 +181,10 @@ CLASS zcl_abapgit_html_form DEFINITION
       IMPORTING
         !ii_html TYPE REF TO zif_abapgit_html
         !is_cmd  TYPE zif_abapgit_html_form=>ty_command .
+    METHODS render_command_link
+      IMPORTING
+        !ii_html TYPE REF TO zif_abapgit_html
+        !is_cmd  TYPE zif_abapgit_html_form=>ty_command .
     METHODS render_field_hidden
       IMPORTING
         !ii_html  TYPE REF TO zif_abapgit_html
@@ -189,7 +194,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
+CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
 
   METHOD checkbox.
@@ -261,6 +266,8 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
       GET TIME STAMP FIELD lv_ts.
       ro_form->mv_form_id = |form_{ lv_ts }|.
     ENDIF.
+
+    ro_form->mv_webgui = zcl_abapgit_ui_factory=>get_frontend_services( )->is_webgui( ).
 
   ENDMETHOD.
 
@@ -451,13 +458,20 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
 
   METHOD render_command.
 
+    " HTML GUI supports only links for submitting forms
+    IF mv_webgui = abap_true.
+      render_command_link(
+        is_cmd  = is_cmd
+        ii_html = ii_html ).
+      RETURN.
+    ENDIF.
+
     CASE is_cmd-cmd_type.
       WHEN zif_abapgit_html_form=>c_cmd_type-link.
 
-        ii_html->add_a(
-          iv_txt   = is_cmd-label
-          iv_act   = is_cmd-action
-          iv_class = 'dialog-commands' ).
+        render_command_link(
+          is_cmd  = is_cmd
+          ii_html = ii_html ).
 
       WHEN zif_abapgit_html_form=>c_cmd_type-button.
 
@@ -476,6 +490,22 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
         ASSERT 0 = 1.
 
     ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD render_command_link.
+
+    DATA lv_class TYPE string VALUE 'dialog-commands'.
+
+    IF is_cmd-cmd_type = zif_abapgit_html_form=>c_cmd_type-input_main.
+      lv_class = lv_class && ' main'.
+    ENDIF.
+
+    ii_html->add_a(
+      iv_txt   = is_cmd-label
+      iv_act   = is_cmd-action
+      iv_class = lv_class ).
 
   ENDMETHOD.
 

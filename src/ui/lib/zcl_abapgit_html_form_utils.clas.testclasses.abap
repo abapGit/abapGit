@@ -105,6 +105,57 @@ CLASS ltcl_popups_mock IMPLEMENTATION.
 
 ENDCLASS.
 
+CLASS ltcl_sapgui_mock DEFINITION FINAL FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
+
+  PUBLIC SECTION.
+
+    INTERFACES:
+      zif_abapgit_frontend_services.
+
+ENDCLASS.
+
+CLASS ltcl_sapgui_mock IMPLEMENTATION.
+
+  METHOD zif_abapgit_frontend_services~clipboard_export.
+  ENDMETHOD.
+  METHOD zif_abapgit_frontend_services~directory_browse.
+  ENDMETHOD.
+  METHOD zif_abapgit_frontend_services~directory_create.
+  ENDMETHOD.
+  METHOD zif_abapgit_frontend_services~directory_exist.
+  ENDMETHOD.
+  METHOD zif_abapgit_frontend_services~execute.
+  ENDMETHOD.
+  METHOD zif_abapgit_frontend_services~file_download.
+  ENDMETHOD.
+  METHOD zif_abapgit_frontend_services~file_upload.
+  ENDMETHOD.
+  METHOD zif_abapgit_frontend_services~get_file_separator.
+  ENDMETHOD.
+  METHOD zif_abapgit_frontend_services~get_gui_version.
+  ENDMETHOD.
+  METHOD zif_abapgit_frontend_services~get_system_directory.
+  ENDMETHOD.
+  METHOD zif_abapgit_frontend_services~gui_is_available.
+  ENDMETHOD.
+  METHOD zif_abapgit_frontend_services~is_sapgui_for_java.
+  ENDMETHOD.
+  METHOD zif_abapgit_frontend_services~is_sapgui_for_windows.
+  ENDMETHOD.
+  METHOD zif_abapgit_frontend_services~is_webgui.
+    rv_is_webgui = abap_false.
+  ENDMETHOD.
+  METHOD zif_abapgit_frontend_services~open_ie_devtools.
+  ENDMETHOD.
+  METHOD zif_abapgit_frontend_services~show_file_open_dialog.
+  ENDMETHOD.
+  METHOD zif_abapgit_frontend_services~show_file_save_dialog.
+  ENDMETHOD.
+
+ENDCLASS.
+
 CLASS ltcl_test_form DEFINITION
   FOR TESTING
   RISK LEVEL HARMLESS
@@ -113,7 +164,8 @@ CLASS ltcl_test_form DEFINITION
 
   PRIVATE SECTION.
     DATA:
-      mo_popups_mock TYPE REF TO ltcl_popups_mock.
+      mo_popups_mock TYPE REF TO ltcl_popups_mock,
+      mo_sapgui_mock TYPE REF TO ltcl_sapgui_mock.
 
     METHODS setup.
     METHODS validate1 FOR TESTING RAISING zcx_abapgit_exception.
@@ -133,6 +185,9 @@ CLASS ltcl_test_form IMPLEMENTATION.
 
     CREATE OBJECT mo_popups_mock TYPE ltcl_popups_mock.
     zcl_abapgit_ui_injector=>set_popups( mo_popups_mock ).
+
+    CREATE OBJECT mo_sapgui_mock TYPE ltcl_sapgui_mock.
+    zcl_abapgit_ui_injector=>set_frontend_services( mo_sapgui_mock ).
 
   ENDMETHOD.
 
