@@ -389,7 +389,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
           it_remote  = ro_repo->get_files_remote( ) ).
       CATCH zcx_abapgit_exception INTO lx_error.
         zcl_abapgit_repo_srv=>get_instance( )->delete( ro_repo ).
-        RAISE lx_error.
+        RAISE EXCEPTION lx_error.
     ENDTRY.
 
     " Make sure there're no leftovers from previous repos
@@ -429,7 +429,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
           it_remote  = ro_repo->get_files_remote( ) ).
       CATCH zcx_abapgit_exception INTO lx_error.
         zcl_abapgit_repo_srv=>get_instance( )->delete( ro_repo ).
-        RAISE lx_error.
+        RAISE EXCEPTION lx_error.
     ENDTRY.
 
     " Make sure there're no leftovers from previous repos
