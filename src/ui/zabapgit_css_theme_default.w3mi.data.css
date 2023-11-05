@@ -459,14 +459,13 @@ table.settings_tab input:focus {
   border-color: #ccc;
   background-color: #f0f0f0;
 }
-.dialog li.dialog-commands a {
-  border-color: #ccc;
-  background-color: #ddd;
-}
+.dialog li.dialog-commands a,
 .dialog li.dialog-commands input[type="submit"] {
   border-color: #ccc;
   background-color: #ddd;
+  color: #000;
 }
+.dialog li.dialog-commands a.main,
 .dialog li.dialog-commands input[type="submit"].main {
   background-color: #64a8ff;
   color: #fff;
