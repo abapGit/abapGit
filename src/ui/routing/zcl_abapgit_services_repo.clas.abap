@@ -71,12 +71,6 @@ CLASS zcl_abapgit_services_repo DEFINITION
         VALUE(rv_package)   TYPE devclass
       RAISING
         zcx_abapgit_exception.
-    CLASS-METHODS check_and_create_package
-      IMPORTING
-        !iv_package TYPE devclass
-        !it_remote  TYPE zif_abapgit_git_definitions=>ty_files_tt
-      RAISING
-        zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -180,22 +174,6 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD check_and_create_package.
-
-    IF zcl_abapgit_factory=>get_sap_package( iv_package )->exists( ) = abap_false.
-      " Check if any package is included in remote
-      READ TABLE it_remote TRANSPORTING NO FIELDS
-        WITH KEY file
-        COMPONENTS filename = zcl_abapgit_filename_logic=>c_package_file.
-      IF sy-subrc <> 0.
-        " If not, prompt to create it
-        create_package( iv_package ).
-      ENDIF.
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD check_for_restart.
 
     CONSTANTS:
@@ -244,9 +222,12 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       IMPORTING
         ei_repo    = li_repo
         ev_reason  = lv_reason ).
-
     IF li_repo IS BOUND.
       zcx_abapgit_exception=>raise( lv_reason ).
+    ENDIF.
+
+    IF zcl_abapgit_factory=>get_sap_package( is_repo_params-package )->exists( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Package { is_repo_params-package } does not exist| ).
     ENDIF.
 
   ENDMETHOD.
@@ -381,10 +362,6 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       iv_main_lang_only = is_repo_params-main_lang_only
       iv_abap_lang_vers = is_repo_params-abap_lang_vers ).
 
-    check_and_create_package(
-      iv_package = is_repo_params-package
-      it_remote  = ro_repo->get_files_remote( ) ).
-
     " Make sure there're no leftovers from previous repos
     ro_repo->zif_abapgit_repo~checksums( )->rebuild( ).
 
@@ -413,10 +390,6 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       iv_ign_subpkg     = is_repo_params-ignore_subpackages
       iv_main_lang_only = is_repo_params-main_lang_only
       iv_abap_lang_vers = is_repo_params-abap_lang_vers ).
-
-    check_and_create_package(
-      iv_package = is_repo_params-package
-      it_remote  = ro_repo->get_files_remote( ) ).
 
     " Make sure there're no leftovers from previous repos
     ro_repo->zif_abapgit_repo~checksums( )->rebuild( ).
