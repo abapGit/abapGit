@@ -31,6 +31,12 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
       END OF c_action .
     DATA mt_features TYPE ty_features .
 
+    METHODS set_branch
+      IMPORTING
+        !iv_branch TYPE string
+        !iv_key    TYPE zif_abapgit_persistence=>ty_value
+      RAISING
+        zcx_abapgit_exception .
     METHODS render_table
       IMPORTING
         !iv_index      TYPE i
@@ -115,14 +121,30 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD set_branch.
+
+    DATA lv_branch TYPE string.
+    DATA lo_online TYPE REF TO zcl_abapgit_repo_online.
+
+    IF iv_branch IS NOT INITIAL.
+      lv_branch = 'refs/heads/' && iv_branch.
+      lo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+      IF lo_online->get_selected_branch( ) <> lv_branch.
+        lo_online->select_branch( lv_branch ).
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA lv_key     TYPE zif_abapgit_persistence=>ty_value.
     DATA lv_branch  TYPE string.
-    DATA lo_online  TYPE REF TO zcl_abapgit_repo_online.
     DATA lo_filter  TYPE REF TO lcl_filter.
     DATA lt_filter  TYPE zif_abapgit_definitions=>ty_tadir_tt.
     DATA lv_index   TYPE i.
+    DATA lo_online  TYPE REF TO zcl_abapgit_repo_online.
     DATA ls_feature LIKE LINE OF mt_features.
 
     FIELD-SYMBOLS <ls_object> LIKE LINE OF ls_feature-changed_objects.
@@ -136,13 +158,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-go_file_diff.
         lv_key = ii_event->query( )->get( 'KEY' ).
         lv_branch = ii_event->query( )->get( 'EXTRA' ).
-        IF lv_branch IS NOT INITIAL.
-          lv_branch = 'refs/heads/' && lv_branch.
-          lo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
-          IF lo_online->get_selected_branch( ) <> lv_branch.
-            lo_online->select_branch( lv_branch ).
-          ENDIF.
-        ENDIF.
+        set_branch(
+          iv_branch = lv_branch
+          iv_key    = lv_key ).
+* calling the page is done by the global router
       WHEN c_action-stage.
         lv_key = ii_event->query( )->get( 'KEY' ).
         lv_index = ii_event->query( )->get( 'INDEX' ).
@@ -159,11 +178,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
         ENDLOOP.
         CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
 
-        lv_branch = 'refs/heads/' && lv_branch.
-        lo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
-        IF lo_online->get_selected_branch( ) <> lv_branch.
-          lo_online->select_branch( lv_branch ).
-        ENDIF.
+        set_branch(
+          iv_branch = lv_branch
+          iv_key    = lv_key ).
 
         rs_handled-page = zcl_abapgit_gui_page_stage=>create(
           io_repo       = lo_online
