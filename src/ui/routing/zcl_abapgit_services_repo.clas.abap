@@ -483,6 +483,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     IF cs_checks-dependencies-met = zif_abapgit_definitions=>c_no.
       lt_dependencies = io_repo->get_dot_apack( )->get_manifest_descriptor( )-dependencies.
       zcl_abapgit_apack_helper=>dependencies_popup( lt_dependencies ).
+      cs_checks-dependencies-decision = zif_abapgit_definitions=>c_yes.
     ENDIF.
 
     popup_objects_overwrite( CHANGING ct_overwrite = lt_decision ).

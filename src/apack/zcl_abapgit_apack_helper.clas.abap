@@ -80,7 +80,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_APACK_HELPER IMPLEMENTATION.
+CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
 
 
   METHOD are_dependencies_met.
@@ -109,11 +109,20 @@ CLASS ZCL_ABAPGIT_APACK_HELPER IMPLEMENTATION.
 
   METHOD dependencies_popup.
 
-    DATA: lt_met_status TYPE ty_dependency_statuses.
+    DATA: lt_met_status TYPE ty_dependency_statuses,
+          lv_answer     TYPE c LENGTH 1.
 
     lt_met_status = get_dependencies_met_status( it_dependencies ).
 
     show_dependencies_popup( lt_met_status ).
+
+    lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
+      iv_titlebar      = 'Warning'
+      iv_text_question = 'The project has unmet dependencies. Do you want to continue?' ).
+
+    IF lv_answer <> '1'.
+      zcx_abapgit_exception=>raise( 'Cancelling because of unmet dependencies.' ).
+    ENDIF.
 
   ENDMETHOD.
 
