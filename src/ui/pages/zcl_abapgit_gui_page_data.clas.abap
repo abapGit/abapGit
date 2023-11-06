@@ -96,23 +96,19 @@ CLASS zcl_abapgit_gui_page_data IMPLEMENTATION.
 
   METHOD add_via_transport.
 
-    DATA lt_trkorr  TYPE trwbo_request_headers.
-    DATA ls_trkorr  LIKE LINE OF lt_trkorr.
+    DATA lv_trkorr  TYPE trkorr.
     DATA ls_request TYPE zif_abapgit_cts_api=>ty_transport_data.
     DATA ls_key     LIKE LINE OF ls_request-keys.
     DATA lv_where   TYPE string.
     DATA ls_config  TYPE zif_abapgit_data_config=>ty_config.
 
 
-    lt_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_transports( ).
-    IF lines( lt_trkorr ) <> 1.
+    lv_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_transport( ).
+    IF lv_trkorr IS INITIAL.
       RETURN.
     ENDIF.
 
-    READ TABLE lt_trkorr INDEX 1 INTO ls_trkorr.
-    ASSERT sy-subrc = 0.
-
-    ls_request = zcl_abapgit_factory=>get_cts_api( )->read( ls_trkorr-trkorr ).
+    ls_request = zcl_abapgit_factory=>get_cts_api( )->read( lv_trkorr ).
 
     IF lines( ls_request-keys ) = 0.
       zcx_abapgit_exception=>raise( |No keys found, select task| ).
