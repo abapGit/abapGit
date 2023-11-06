@@ -19,9 +19,10 @@ CLASS zcl_abapgit_aff_registry DEFINITION
       END OF ty_registry_entry.
 
     CLASS-DATA:
-      gt_registry TYPE HASHED TABLE OF ty_registry_entry WITH UNIQUE KEY obj_type.
+      gv_aff_enabled TYPE abap_bool,
+      gt_registry    TYPE HASHED TABLE OF ty_registry_entry WITH UNIQUE KEY obj_type.
 
-    METHODS initialize_registry_table.
+    CLASS-METHODS initialize_registry_table.
 
     CLASS-METHODS:
       register
@@ -66,12 +67,13 @@ CLASS zcl_abapgit_aff_registry IMPLEMENTATION.
 
     IF gt_registry IS INITIAL.
       initialize_registry_table( ).
+      gv_aff_enabled = zcl_abapgit_feature=>is_enabled( c_aff_feature ).
     ENDIF.
 
     READ TABLE gt_registry WITH TABLE KEY obj_type = iv_obj_type INTO ls_registry_entry.
     IF sy-subrc = 0 AND ls_registry_entry-experimental = abap_false.
       rv_result = abap_true.
-    ELSEIF sy-subrc = 0 AND zcl_abapgit_feature=>is_enabled( c_aff_feature ) = abap_true.
+    ELSEIF sy-subrc = 0 AND gv_aff_enabled = abap_true.
       rv_result = abap_true.
     ELSE.
       rv_result = abap_false.
