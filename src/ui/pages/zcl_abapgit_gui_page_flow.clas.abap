@@ -109,7 +109,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       iv_act = |{ c_action-pull }?index={ iv_index }&key={ is_feature-repo-key }| ) ).
     ri_html->add( ri_html->a(
       iv_txt = 'Stage'
-      iv_act = |{ c_action-stage }?index={ iv_index }&key={ is_feature-repo-key }| ) ).
+      iv_act = |{ c_action-stage }?index={ iv_index }&key={ is_feature-repo-key }&branch={ lv_branch }| ) ).
     ri_html->add( |<br>| ).
 
   ENDMETHOD.
@@ -146,6 +146,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       WHEN c_action-stage.
         lv_key = ii_event->query( )->get( 'KEY' ).
         lv_index = ii_event->query( )->get( 'INDEX' ).
+        lv_branch = ii_event->query( )->get( 'BRANCH' ).
         lo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
 
         READ TABLE mt_features INTO ls_feature INDEX lv_index.
@@ -157,6 +158,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
           <ls_filter>-obj_name = <ls_object>-obj_name.
         ENDLOOP.
         CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
+
+          lv_branch = 'refs/heads/' && lv_branch.
+          lo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+          IF lo_online->get_selected_branch( ) <> lv_branch.
+            lo_online->select_branch( lv_branch ).
+          ENDIF.
 
         rs_handled-page = zcl_abapgit_gui_page_stage=>create(
           io_repo       = lo_online
