@@ -102,9 +102,9 @@ INTERFACE zif_abapgit_popups
       VALUE(rs_transport_branch) TYPE zif_abapgit_definitions=>ty_transport_to_branch
     RAISING
       zcx_abapgit_exception .
-  METHODS popup_to_select_transports
+  METHODS popup_to_select_transport
     RETURNING
-      VALUE(rt_trkorr) TYPE trwbo_request_headers .
+      VALUE(rv_trkorr) TYPE trkorr .
   METHODS popup_to_select_from_list
     IMPORTING
       !it_list               TYPE STANDARD TABLE
