@@ -159,11 +159,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
         ENDLOOP.
         CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
 
-          lv_branch = 'refs/heads/' && lv_branch.
-          lo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
-          IF lo_online->get_selected_branch( ) <> lv_branch.
-            lo_online->select_branch( lv_branch ).
-          ENDIF.
+        lv_branch = 'refs/heads/' && lv_branch.
+        lo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+        IF lo_online->get_selected_branch( ) <> lv_branch.
+          lo_online->select_branch( lv_branch ).
+        ENDIF.
 
         rs_handled-page = zcl_abapgit_gui_page_stage=>create(
           io_repo       = lo_online
