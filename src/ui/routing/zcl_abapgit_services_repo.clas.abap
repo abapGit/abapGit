@@ -189,7 +189,9 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
         COMPONENTS filename = zcl_abapgit_filename_logic=>c_package_file.
       IF sy-subrc <> 0.
         " If not, give error
-        zcx_abapgit_exception=>raise( |Package { iv_package } does not exist| ).
+        zcx_abapgit_exception=>raise(
+          iv_text     = |Package { iv_package } does not exist and there's no package included in the repository|
+          iv_longtext = 'Either select an existing package, create a new one, or add a package to the repository' ).
       ENDIF.
     ENDIF.
 
