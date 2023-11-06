@@ -683,8 +683,8 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Requirements not met and undecided' ).
     ENDIF.
 
-    IF is_checks-dependencies-met = zif_abapgit_definitions=>c_no.
-      zcx_abapgit_exception=>raise( 'APACK dependencies not met' ).
+    IF is_checks-dependencies-met = zif_abapgit_definitions=>c_no AND is_checks-dependencies-decision IS INITIAL.
+      zcx_abapgit_exception=>raise( 'APACK dependencies not met and undecided' ).
     ENDIF.
 
     IF is_checks-transport-required = abap_true AND is_checks-transport-transport IS INITIAL.
