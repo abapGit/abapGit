@@ -9,6 +9,8 @@ CLASS zcl_abapgit_aff_registry DEFINITION
 
     CONSTANTS c_aff_feature TYPE string VALUE 'AFF'.
 
+    METHODS constructor.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -19,8 +21,9 @@ CLASS zcl_abapgit_aff_registry DEFINITION
       END OF ty_registry_entry.
 
     CLASS-DATA:
-      gv_aff_enabled TYPE abap_bool,
-      gt_registry    TYPE HASHED TABLE OF ty_registry_entry WITH UNIQUE KEY obj_type.
+      gt_registry TYPE HASHED TABLE OF ty_registry_entry WITH UNIQUE KEY obj_type.
+
+    DATA mv_aff_enabled TYPE abap_bool.
 
     CLASS-METHODS initialize_registry_table.
 
@@ -35,6 +38,11 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_aff_registry IMPLEMENTATION.
+
+
+  METHOD constructor.
+    mv_aff_enabled = zcl_abapgit_feature=>is_enabled( c_aff_feature ).
+  ENDMETHOD.
 
 
   METHOD initialize_registry_table.
@@ -67,13 +75,12 @@ CLASS zcl_abapgit_aff_registry IMPLEMENTATION.
 
     IF gt_registry IS INITIAL.
       initialize_registry_table( ).
-      gv_aff_enabled = zcl_abapgit_feature=>is_enabled( c_aff_feature ).
     ENDIF.
 
     READ TABLE gt_registry WITH TABLE KEY obj_type = iv_obj_type INTO ls_registry_entry.
     IF sy-subrc = 0 AND ls_registry_entry-experimental = abap_false.
       rv_result = abap_true.
-    ELSEIF sy-subrc = 0 AND gv_aff_enabled = abap_true.
+    ELSEIF sy-subrc = 0 AND mv_aff_enabled = abap_true.
       rv_result = abap_true.
     ELSE.
       rv_result = abap_false.
