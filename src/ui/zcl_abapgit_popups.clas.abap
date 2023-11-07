@@ -627,15 +627,14 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
   METHOD zif_abapgit_popups~popup_to_create_transp_branch.
     DATA: lt_fields             TYPE TABLE OF sval,
           lv_transports_as_text TYPE string,
-          lv_desc_as_text       TYPE string,
-          ls_transport_header   LIKE LINE OF it_transport_headers.
+          lv_desc_as_text       TYPE string.
     DATA: lv_branch_name        TYPE spo_value.
     DATA: lv_commit_text        TYPE spo_value.
 
     CLEAR: rs_transport_branch-branch_name, rs_transport_branch-commit_text.
 
     lv_transports_as_text = iv_trkorr.
-    lv_desc_as_text = zcl_abapgit_factory=>get_cts_api( )->read_description( ls_transport_header-trkorr ).
+    lv_desc_as_text = zcl_abapgit_factory=>get_cts_api( )->read_description( iv_trkorr ).
 
     add_field( EXPORTING iv_tabname   = 'TEXTL'
                          iv_fieldname = 'LINE'
