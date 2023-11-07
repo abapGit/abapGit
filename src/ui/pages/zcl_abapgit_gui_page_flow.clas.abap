@@ -31,6 +31,9 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
       END OF c_action .
     DATA mt_features TYPE ty_features .
 
+    METHODS refresh
+      RAISING
+        zcx_abapgit_exception .
     METHODS set_branch
       IMPORTING
         !iv_branch TYPE string
@@ -66,6 +69,22 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       iv_page_title         = 'Flow'
       ii_page_menu_provider = lo_component
       ii_child_component    = lo_component ).
+
+  ENDMETHOD.
+
+
+  METHOD refresh.
+
+    DATA ls_feature LIKE LINE OF mt_features.
+    DATA lo_online  TYPE REF TO zcl_abapgit_repo_online.
+
+
+    LOOP AT mt_features INTO ls_feature.
+      lo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( ls_feature-repo-key ).
+      lo_online->refresh( ).
+    ENDLOOP.
+
+    CLEAR mt_features.
 
   ENDMETHOD.
 
@@ -153,7 +172,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
     CASE ii_event->mv_action.
       WHEN c_action-refresh.
-        CLEAR mt_features.
+        refresh( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-go_file_diff.
         lv_key = ii_event->query( )->get( 'KEY' ).
