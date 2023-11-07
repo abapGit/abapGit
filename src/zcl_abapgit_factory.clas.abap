@@ -44,7 +44,7 @@ CLASS zcl_abapgit_factory DEFINITION
     CLASS-METHODS get_sap_report
       RETURNING
         VALUE(ri_report) TYPE REF TO zif_abapgit_sap_report.
-    CLASS-METHODS: get_function_module
+    CLASS-METHODS get_function_module
       RETURNING
         VALUE(ri_function_module) TYPE REF TO zif_abapgit_function_module.
   PROTECTED SECTION.
