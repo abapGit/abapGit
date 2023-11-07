@@ -2,9 +2,7 @@ INTERFACE zif_abapgit_popups
   PUBLIC .
 
 
-  TYPES:
-    ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY,
-    ty_rows    TYPE SORTED TABLE OF i WITH UNIQUE KEY table_line.
+  TYPES ty_rows TYPE SORTED TABLE OF i WITH UNIQUE KEY table_line.
 
   TYPES:
     BEGIN OF ty_alv_column,
@@ -97,7 +95,7 @@ INTERFACE zif_abapgit_popups
       zcx_abapgit_exception .
   METHODS popup_to_create_transp_branch
     IMPORTING
-      !it_transport_headers      TYPE trwbo_request_headers
+      !iv_trkorr                 TYPE trkorr
     RETURNING
       VALUE(rs_transport_branch) TYPE zif_abapgit_definitions=>ty_transport_to_branch
     RAISING
