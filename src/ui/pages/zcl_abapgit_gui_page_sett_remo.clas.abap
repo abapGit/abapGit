@@ -756,6 +756,9 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       IF lv_url CP 'http*'.
         lv_url = zcl_abapgit_url=>name( lv_url ).
         mo_form_data->set(
+          iv_key = c_id-url
+          iv_val = lv_url ).
+      ENDIF.
       mo_form_data->set(
         iv_key = c_id-repo_type
         iv_val = c_repo_type-offline ).
