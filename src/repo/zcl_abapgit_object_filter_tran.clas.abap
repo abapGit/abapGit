@@ -63,55 +63,6 @@ ENDCLASS.
 CLASS zcl_abapgit_object_filter_tran IMPLEMENTATION.
 
 
-  METHOD generate_local_filter.
-    DATA lt_e071_filter TYPE ty_e071_filter_tt.
-
-    SELECT DISTINCT pgmid
-                object
-                obj_name
-           INTO CORRESPONDING FIELDS OF TABLE lt_e071_filter
-           FROM e071
-      WHERE trkorr IN it_r_trkorr.
-    IF sy-subrc <> 0.
-      CLEAR lt_e071_filter.
-    ENDIF.
-    rt_filter = adjust_local_filter(
-      iv_package     = iv_package
-      it_e071_filter = lt_e071_filter ).
-  ENDMETHOD.
-
-
-  METHOD get_filter_values.
-    et_r_trkorr = mt_r_trkorr.
-    ev_package = mv_package.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object_filter~get_filter.
-    rt_filter = mt_filter.
-  ENDMETHOD.
-
-
-  METHOD init.
-    CLEAR mt_filter.
-    CLEAR mt_r_trkorr.
-    CLEAR mv_package.
-  ENDMETHOD.
-
-
-  METHOD set_filter_values.
-    init( ).
-    mt_r_trkorr = it_r_trkorr.
-    mv_package = iv_package.
-    IF it_r_trkorr IS NOT INITIAL.
-      mt_filter = generate_local_filter(
-        iv_package  = mv_package
-        it_r_trkorr = mt_r_trkorr ).
-
-    ENDIF.
-  ENDMETHOD.
-
-
   METHOD adjust_local_filter.
 
     DATA lt_e071_filter TYPE ty_e071_filter_tt.
@@ -178,6 +129,23 @@ CLASS zcl_abapgit_object_filter_tran IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD generate_local_filter.
+    DATA lt_e071_filter TYPE ty_e071_filter_tt.
+
+    SELECT DISTINCT pgmid object obj_name
+      INTO CORRESPONDING FIELDS OF TABLE lt_e071_filter
+      FROM e071
+      WHERE trkorr IN it_r_trkorr
+      ORDER BY pgmid object obj_name.
+    IF sy-subrc <> 0.
+      CLEAR lt_e071_filter.
+    ENDIF.
+    rt_filter = adjust_local_filter(
+      iv_package     = iv_package
+      it_e071_filter = lt_e071_filter ).
+  ENDMETHOD.
+
+
   METHOD get_all_sub_packages.
 
     DATA li_package TYPE REF TO zif_abapgit_sap_package.
@@ -194,5 +162,36 @@ CLASS zcl_abapgit_object_filter_tran IMPLEMENTATION.
       INSERT ls_filter INTO TABLE rt_filter.
     ENDLOOP.
 
+  ENDMETHOD.
+
+
+  METHOD get_filter_values.
+    et_r_trkorr = mt_r_trkorr.
+    ev_package = mv_package.
+  ENDMETHOD.
+
+
+  METHOD init.
+    CLEAR mt_filter.
+    CLEAR mt_r_trkorr.
+    CLEAR mv_package.
+  ENDMETHOD.
+
+
+  METHOD set_filter_values.
+    init( ).
+    mt_r_trkorr = it_r_trkorr.
+    mv_package = iv_package.
+    IF it_r_trkorr IS NOT INITIAL.
+      mt_filter = generate_local_filter(
+        iv_package  = mv_package
+        it_r_trkorr = mt_r_trkorr ).
+
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object_filter~get_filter.
+    rt_filter = mt_filter.
   ENDMETHOD.
 ENDCLASS.

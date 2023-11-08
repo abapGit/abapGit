@@ -71,7 +71,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
+CLASS zcl_abapgit_sotr_handler IMPLEMENTATION.
 
 
   METHOD create_sotr.
@@ -210,7 +210,7 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_sotr_head> LIKE LINE OF lt_sotr_head.
 
-    SELECT * FROM sotr_head INTO TABLE lt_sotr_head WHERE paket = iv_package.
+    SELECT * FROM sotr_head INTO TABLE lt_sotr_head WHERE paket = iv_package ORDER BY PRIMARY KEY.
 
     LOOP AT lt_sotr_head ASSIGNING <ls_sotr_head> WHERE concept IS NOT INITIAL.
 
@@ -233,7 +233,7 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
     ENDLOOP.
 
     " Nothing left, then delete SOTR from TADIR
-    SELECT * FROM sotr_head INTO TABLE lt_sotr_head WHERE paket = iv_package.
+    SELECT * FROM sotr_head INTO TABLE lt_sotr_head WHERE paket = iv_package ORDER BY PRIMARY KEY.
     IF sy-subrc <> 0.
       SELECT SINGLE obj_name FROM tadir INTO lv_obj_name
         WHERE pgmid = 'R3TR' AND object = 'SOTR' AND obj_name = iv_package.
