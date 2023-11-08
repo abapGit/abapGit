@@ -532,18 +532,17 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       iv_package    = iv_package
       iv_ign_subpkg = iv_ign_subpkg ).
 
-    IF iv_url IS INITIAL.
-      zcx_abapgit_exception=>raise( 'Missing display name for repo' ).
+    IF iv_name IS INITIAL.
+      zcx_abapgit_exception=>raise( 'Missing name for repository' ).
     ENDIF.
 
     " Repo Settings
     lo_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( ).
     lo_dot_abapgit->set_folder_logic( iv_folder_logic ).
+    lo_dot_abapgit->set_name( iv_name ).
     lo_dot_abapgit->set_abap_language_version( iv_abap_lang_vers ).
 
     lv_key = zcl_abapgit_persist_factory=>get_repo( )->add(
-      iv_url          = iv_url
-      iv_branch_name  = ''
       iv_package      = iv_package
       iv_offline      = abap_true
       is_dot_abapgit  = lo_dot_abapgit->get_data( ) ).
@@ -602,6 +601,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     " Repo Settings
     lo_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( ).
     lo_dot_abapgit->set_folder_logic( iv_folder_logic ).
+    lo_dot_abapgit->set_name( iv_name ).
     lo_dot_abapgit->set_abap_language_version( iv_abap_lang_vers ).
 
     lv_key = zcl_abapgit_persist_factory=>get_repo( )->add(
