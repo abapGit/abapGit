@@ -675,7 +675,6 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     DATA:
       lo_repo_online  TYPE REF TO zcl_abapgit_repo_online,
-      lo_repo_offline TYPE REF TO zcl_abapgit_repo_offline,
       ls_settings_new TYPE ty_remote_settings.
 
     ls_settings_new = get_remote_settings_from_form( mo_form_data ).
