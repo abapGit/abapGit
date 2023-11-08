@@ -247,7 +247,8 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
          AND tadir~object = 'CLAS'
          AND seometarel~version = '1'
          AND ( seometarel~refclsname = zif_abapgit_apack_definitions=>c_apack_interface_cust
-            OR seometarel~refclsname = zif_abapgit_apack_definitions=>c_apack_interface_sap ).
+            OR seometarel~refclsname = zif_abapgit_apack_definitions=>c_apack_interface_sap )
+      ORDER BY clsname devclass.
 
     LOOP AT lt_manifest_implementation INTO ls_manifest_implementation.
       CLEAR: lo_manifest_provider, lo_apack_reader.
