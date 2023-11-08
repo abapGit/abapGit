@@ -821,7 +821,6 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     DATA:
       lo_repository          TYPE REF TO zcl_abapgit_repo_online,
       lo_transport_to_branch TYPE REF TO zcl_abapgit_transport_2_branch,
-      lt_transport_headers   TYPE trwbo_request_headers,
       lt_transport_objects   TYPE zif_abapgit_definitions=>ty_tadir_tt,
       lv_trkorr              TYPE trkorr,
       ls_transport_to_branch TYPE zif_abapgit_definitions=>ty_transport_to_branch.
@@ -842,8 +841,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Canceled or List of objects is empty ' ).
     ENDIF.
 
-    ls_transport_to_branch = zcl_abapgit_ui_factory=>get_popups( )->popup_to_create_transp_branch(
-      lt_transport_headers ).
+    ls_transport_to_branch = zcl_abapgit_ui_factory=>get_popups( )->popup_to_create_transp_branch( lv_trkorr ).
 
     CREATE OBJECT lo_transport_to_branch.
     lo_transport_to_branch->create(
