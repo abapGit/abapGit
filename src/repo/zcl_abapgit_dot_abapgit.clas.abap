@@ -85,6 +85,12 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
     METHODS set_requirements
       IMPORTING
         !it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt .
+    METHODS get_name
+      RETURNING
+        VALUE(rv_name) TYPE string.
+    METHODS set_name
+      IMPORTING
+        !iv_name TYPE csequence.
     METHODS get_version_constant
       RETURNING
         VALUE(rv_version_constant) TYPE string .
@@ -118,7 +124,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
+CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
 
 
   METHOD add_ignore.
@@ -198,6 +204,11 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_abap_language_version.
+    rv_abap_language_version = ms_data-abap_language_version.
+  ENDMETHOD.
+
+
   METHOD get_data.
     rs_data = ms_data.
   ENDMETHOD.
@@ -215,6 +226,11 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
   METHOD get_main_language.
     rv_language = ms_data-master_language.
+  ENDMETHOD.
+
+
+  METHOD get_name.
+    rv_name = ms_data-name.
   ENDMETHOD.
 
 
@@ -307,6 +323,11 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD set_abap_language_version.
+    ms_data-abap_language_version = iv_abap_language_version.
+  ENDMETHOD.
+
+
   METHOD set_folder_logic.
     ms_data-folder_logic = iv_logic.
   ENDMETHOD.
@@ -314,6 +335,11 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
   METHOD set_i18n_languages.
     ms_data-i18n_languages = it_languages.
+  ENDMETHOD.
+
+
+  METHOD set_name.
+    ms_data-name = iv_name.
   ENDMETHOD.
 
 
@@ -366,15 +392,5 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
     rv_yes = ms_data-use_lxe.
 
-  ENDMETHOD.
-
-
-  METHOD get_abap_language_version.
-    rv_abap_language_version = ms_data-abap_language_version.
-  ENDMETHOD.
-
-
-  METHOD set_abap_language_version.
-    ms_data-abap_language_version = iv_abap_language_version.
   ENDMETHOD.
 ENDCLASS.

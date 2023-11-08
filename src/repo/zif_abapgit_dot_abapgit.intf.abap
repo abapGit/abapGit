@@ -11,6 +11,7 @@ INTERFACE zif_abapgit_dot_abapgit PUBLIC.
 
   TYPES:
     BEGIN OF ty_dot_abapgit,
+      name                  TYPE string,
       master_language       TYPE spras,
       i18n_languages        TYPE zif_abapgit_definitions=>ty_languages,
       use_lxe               TYPE abap_bool,
