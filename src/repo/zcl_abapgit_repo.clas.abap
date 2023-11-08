@@ -751,27 +751,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_repo~get_files_local_filtered.
-
-    DATA lo_serialize TYPE REF TO zcl_abapgit_serialize.
-    DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
-
-
-    CREATE OBJECT lo_serialize
-      EXPORTING
-        io_dot_abapgit    = get_dot_abapgit( )
-        is_local_settings = get_local_settings( ).
-
-    lt_filter = ii_obj_filter->get_filter( ).
-
-    rt_files = lo_serialize->files_local(
-      iv_package     = get_package( )
-      ii_data_config = get_data_config( )
-      ii_log         = ii_log
-      it_filter      = lt_filter ).
-
-  ENDMETHOD.
-
   METHOD zif_abapgit_repo~get_files_local.
 
     DATA lo_serialize TYPE REF TO zcl_abapgit_serialize.
@@ -794,6 +773,28 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     mt_local                 = rt_files.
     mv_request_local_refresh = abap_false. " Fulfill refresh
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo~get_files_local_filtered.
+
+    DATA lo_serialize TYPE REF TO zcl_abapgit_serialize.
+    DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
+
+
+    CREATE OBJECT lo_serialize
+      EXPORTING
+        io_dot_abapgit    = get_dot_abapgit( )
+        is_local_settings = get_local_settings( ).
+
+    lt_filter = ii_obj_filter->get_filter( ).
+
+    rt_files = lo_serialize->files_local(
+      iv_package     = get_package( )
+      ii_data_config = get_data_config( )
+      ii_log         = ii_log
+      it_filter      = lt_filter ).
 
   ENDMETHOD.
 
