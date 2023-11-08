@@ -38,6 +38,11 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
         switched_origin TYPE zif_abapgit_persistence=>ty_repo-switched_origin,
       END OF ty_remote_settings.
     CONSTANTS:
+      BEGIN OF c_repo_type,
+        online  TYPE string VALUE 'Online Repository',
+        offline TYPE string VALUE 'Offline Repository',
+      END OF c_repo_type.
+    CONSTANTS:
       BEGIN OF c_head_types,
         branch       TYPE ty_head_type VALUE 'B',
         tag          TYPE ty_head_type VALUE 'T',
@@ -616,9 +621,9 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     CREATE OBJECT ro_form_data.
 
     IF ms_settings_snapshot-offline = abap_true.
-      lv_type = 'Offline repository'.
+      lv_type = c_repo_type-offline.
     ELSE.
-      lv_type = 'Online repository'.
+      lv_type = c_repo_type-online.
     ENDIF.
 
     ro_form_data->set(
@@ -754,8 +759,13 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
           iv_key = c_id-url
           iv_val = lv_url ).
       ENDIF.
-
+      mo_form_data->set(
+        iv_key = c_id-repo_type
+        iv_val = c_repo_type-offline ).
     ELSE.
+      mo_form_data->set(
+        iv_key = c_id-repo_type
+        iv_val = c_repo_type-online ).
       IF mv_offline_switch_saved_url IS NOT INITIAL.
         mo_form_data->set(
           iv_key = c_id-url
