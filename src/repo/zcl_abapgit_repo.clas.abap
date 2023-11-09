@@ -35,6 +35,8 @@ CLASS zcl_abapgit_repo DEFINITION
       FOR zif_abapgit_repo~refresh .
     ALIASES set_dot_abapgit
       FOR zif_abapgit_repo~set_dot_abapgit .
+    ALIASES has_remote_source
+      FOR zif_abapgit_repo~has_remote_source .
 
     METHODS bind_listener
       IMPORTING
@@ -73,10 +75,6 @@ CLASS zcl_abapgit_repo DEFINITION
         VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_items_tt
       RAISING
         zcx_abapgit_exception .
-    METHODS has_remote_source
-      ABSTRACT
-      RETURNING
-        VALUE(rv_yes) TYPE abap_bool .
     METHODS refresh_local_object
       IMPORTING
         !iv_obj_type TYPE tadir-object
@@ -436,6 +434,11 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
+  ENDMETHOD.
+
+
+  METHOD has_remote_source.
+    rv_yes = boolc( lines( mt_remote ) > 0 ).
   ENDMETHOD.
 
 

@@ -78,4 +78,8 @@ INTERFACE zif_abapgit_repo
     RAISING
       zcx_abapgit_exception .
 
+  METHODS has_remote_source
+    RETURNING
+      VALUE(rv_yes) TYPE abap_bool .
+
 ENDINTERFACE.
