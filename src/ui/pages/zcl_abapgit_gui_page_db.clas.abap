@@ -454,6 +454,13 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
     READ TABLE ls_result-submatches INTO ls_match INDEX 1.
     IF sy-subrc = 0.
       rs_expl-value = is_data-data_str+ls_match-offset(ls_match-length).
+    ELSE.
+      FIND FIRST OCCURRENCE OF REGEX '<NAME>(.*)</NAME>'
+        IN is_data-data_str IGNORING CASE RESULTS ls_result.
+      READ TABLE ls_result-submatches INTO ls_match INDEX 1.
+      IF sy-subrc = 0.
+        rs_expl-value = is_data-data_str+ls_match-offset(ls_match-length).
+      ENDIF.
     ENDIF.
 
     IF rs_expl-value IS INITIAL.
