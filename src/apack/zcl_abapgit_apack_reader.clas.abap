@@ -199,6 +199,15 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
                seometarel~refclsname = zif_abapgit_apack_definitions=>c_apack_interface_sap
          ORDER BY clsname devclass.
 
+      SELECT seometarel~clsname tadir~devclass FROM seometarel "#EC CI_NOORDER
+         INNER JOIN tadir ON seometarel~clsname = tadir~obj_name "#EC CI_BUFFJOIN
+         APPENDING TABLE lt_manifest_implementation
+         WHERE tadir~pgmid = 'R3TR' AND
+               tadir~object = 'CLAS' AND
+               seometarel~version = '1' AND
+               seometarel~refclsname LIKE zif_abapgit_apack_definitions=>c_apack_interface_nspc
+         ORDER BY clsname devclass.
+
       LOOP AT lt_packages INTO lv_package.
         READ TABLE lt_manifest_implementation INTO ls_manifest_implementation WITH KEY devclass = lv_package.
         IF sy-subrc = 0.
