@@ -110,7 +110,8 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
       FROM tstc
       INTO TABLE lt_tcodes
       WHERE pgmna = sy-cprog
-        AND cinfo = lc_report_tcode_hex.
+        AND cinfo = lc_report_tcode_hex
+      ORDER BY tcode.
 
     IF lines( lt_tcodes ) > 0.
       READ TABLE lt_tcodes INDEX 1 INTO rv_tcode.
