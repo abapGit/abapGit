@@ -449,11 +449,9 @@
     "slow_parameter_passing": true,
     "double_space": true,
     "select_single_full_key": true,
-    "whitespace_end": true
-  },
-  "targetRules": {
     "select_add_order_by": {
       "skipForAllEntries": true
-    }
+    },
+    "whitespace_end": true
   }
 }

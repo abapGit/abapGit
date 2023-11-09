@@ -163,10 +163,10 @@ CLASS zcl_abapgit_data_deserializer IMPLEMENTATION.
     ASSIGN rr_data->* TO <lg_tab>.
 
     LOOP AT it_where INTO lv_where.
-      SELECT * FROM (iv_name) APPENDING TABLE <lg_tab> WHERE (lv_where).
+      SELECT * FROM (iv_name) APPENDING TABLE <lg_tab> WHERE (lv_where) ORDER BY PRIMARY KEY.
     ENDLOOP.
     IF lines( it_where ) = 0.
-      SELECT * FROM (iv_name) INTO TABLE <lg_tab>.
+      SELECT * FROM (iv_name) INTO TABLE <lg_tab> ORDER BY PRIMARY KEY.
     ENDIF.
 
   ENDMETHOD.
