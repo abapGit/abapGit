@@ -4,8 +4,8 @@ INTERFACE zif_abapgit_persist_repo
 
   METHODS add
     IMPORTING
-      !iv_url          TYPE string
-      !iv_branch_name  TYPE string
+      !iv_url          TYPE string OPTIONAL
+      !iv_branch_name  TYPE string OPTIONAL
       !iv_branch       TYPE zif_abapgit_git_definitions=>ty_sha1 OPTIONAL
       !iv_display_name TYPE string OPTIONAL
       !iv_package      TYPE devclass

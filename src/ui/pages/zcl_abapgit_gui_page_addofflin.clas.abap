@@ -24,7 +24,7 @@ CLASS zcl_abapgit_gui_page_addofflin DEFINITION
 
     CONSTANTS:
       BEGIN OF c_id,
-        url                TYPE string VALUE 'url',
+        name               TYPE string VALUE 'name',
         package            TYPE string VALUE 'package',
         folder_logic       TYPE string VALUE 'folder_logic',
         labels             TYPE string VALUE 'labels',
@@ -115,9 +115,9 @@ CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
                 iv_help_page = 'https://docs.abapgit.org/guide-offline-install.html' ).
 
     ro_form->text(
-      iv_name        = c_id-url
+      iv_name        = c_id-name
       iv_required    = abap_true
-      iv_label       = 'Repository Name'
+      iv_label       = 'Name'
       iv_hint        = 'Unique name for repository'
     )->text(
       iv_name        = c_id-package

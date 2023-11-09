@@ -28,6 +28,7 @@ CLASS zcl_abapgit_gui_page_sett_repo DEFINITION
     CONSTANTS:
       BEGIN OF c_id,
         dot              TYPE string VALUE 'dot',
+        name             TYPE string VALUE 'name',
         main_language    TYPE string VALUE 'main_language',
         i18n_langs       TYPE string VALUE 'i18n_langs',
         use_lxe          TYPE string VALUE 'use_lxe',
@@ -196,6 +197,10 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
     ENDIF.
 
     ro_form->text(
+      iv_name        = c_id-name
+      iv_label       = 'Name'
+      iv_hint        = 'Official name (can be overwritten by local display name)'
+    )->text(
       iv_name        = c_id-version_constant
       iv_label       = 'Version Constant'
       iv_placeholder = 'ZVERSION_CLASS=>VERSION_CONSTANT'
@@ -240,6 +245,9 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
       lv_language = 'Unknown language; Check your .abapgit.xml file'.
     ENDIF.
 
+    ro_form_data->set(
+      iv_key = c_id-name
+      iv_val = ls_dot-name ).
     ro_form_data->set(
       iv_key = c_id-main_language
       iv_val = |{ lv_main_lang } ({ lv_language })| ).
@@ -328,6 +336,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
 
     lo_dot = mo_repo->get_dot_abapgit( ).
 
+    lo_dot->set_name( mo_form_data->get( c_id-name ) ).
     lo_dot->set_folder_logic( mo_form_data->get( c_id-folder_logic ) ).
     lo_dot->set_starting_folder( mo_form_data->get( c_id-starting_folder ) ).
     lo_dot->set_version_constant( mo_form_data->get( c_id-version_constant ) ).
