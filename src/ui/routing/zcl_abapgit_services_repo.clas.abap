@@ -377,7 +377,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     " create new repo and add to favorites
     ro_repo ?= zcl_abapgit_repo_srv=>get_instance( )->new_offline(
-      iv_url            = is_repo_params-url
+      iv_name           = is_repo_params-name
       iv_package        = is_repo_params-package
       iv_folder_logic   = is_repo_params-folder_logic
       iv_labels         = is_repo_params-labels
@@ -418,6 +418,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     ro_repo ?= zcl_abapgit_repo_srv=>get_instance( )->new_online(
       iv_url            = is_repo_params-url
       iv_branch_name    = is_repo_params-branch_name
+      iv_name           = is_repo_params-name
       iv_package        = is_repo_params-package
       iv_display_name   = is_repo_params-display_name
       iv_folder_logic   = is_repo_params-folder_logic

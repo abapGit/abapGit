@@ -3,6 +3,7 @@ INTERFACE zif_abapgit_services_repo
 
   TYPES:
     BEGIN OF ty_repo_params,
+      name               TYPE string,
       url                TYPE string,
       package            TYPE devclass,
       branch_name        TYPE string,

@@ -839,7 +839,11 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
   METHOD zif_abapgit_repo~get_name.
 
+    " Local display name has priority over official name
     rv_name = ms_data-local_settings-display_name.
+    IF rv_name IS INITIAL.
+      rv_name = ms_data-dot_abapgit-name.
+    ENDIF.
 
   ENDMETHOD.
 

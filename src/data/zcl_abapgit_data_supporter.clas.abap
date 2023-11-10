@@ -40,7 +40,8 @@ CLASS zcl_abapgit_data_supporter IMPLEMENTATION.
         AND dd09l~tabart = 'APPL2'
         AND dd09l~as4user <> 'SAP'
         AND dd09l~as4local = 'A' "Only active tables
-        AND dd02l~contflag = 'C'. "Only customizing tables
+        AND dd02l~contflag = 'C' "Only customizing tables
+      ORDER BY dd02l~tabname.
 
     LOOP AT lt_tables INTO lv_tabname.
       ls_object-type = zif_abapgit_data_config=>c_data_type-tabu.

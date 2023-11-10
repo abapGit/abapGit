@@ -384,13 +384,10 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
   METHOD get_form_schema.
 
     DATA:
-      lv_button      TYPE string,
-      lv_label       TYPE string,
-      lv_icon        TYPE string,
-      lv_hint        TYPE string,
-      lv_placeholder TYPE string,
-      lv_offline     TYPE abap_bool,
-      lv_head_type   TYPE ty_head_type.
+      lv_button    TYPE string,
+      lv_icon      TYPE string,
+      lv_offline   TYPE abap_bool,
+      lv_head_type TYPE ty_head_type.
 
     IF io_existing_form_data IS BOUND AND io_existing_form_data->is_empty( ) = abap_false.
       lv_offline = io_existing_form_data->get( c_id-offline ).
@@ -407,15 +404,11 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       iv_help_page = 'https://docs.abapgit.org/settings-remote.html' ).
 
     IF lv_offline = abap_true.
-      lv_button      = 'Switch to Online'.
-      lv_icon        = 'plug/darkgrey'.
-      lv_label       = 'Repository Name'.
+      lv_button = 'Switch to Online'.
+      lv_icon   = 'plug/darkgrey'.
     ELSE.
-      lv_button      = 'Switch to Offline'.
-      lv_icon        = 'cloud-upload-alt/darkgrey'.
-      lv_label       = 'Git Repository URL'.
-      lv_hint        = 'URL of original repository'.
-      lv_placeholder = 'https://github.com/...git'.
+      lv_button = 'Switch to Offline'.
+      lv_icon   = 'cloud-upload-alt/darkgrey'.
     ENDIF.
 
     ro_form->start_group(
@@ -426,15 +419,16 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       iv_name        = c_id-repo_type
       iv_label       = |Type of Repository: { zcl_abapgit_html=>icon( lv_icon ) }|
       iv_readonly    = abap_true
-    )->hidden( c_id-offline
-    )->text(
-      iv_name        = c_id-url
-      iv_condense    = abap_true
-      iv_label       = lv_label
-      iv_hint        = lv_hint
-      iv_placeholder = lv_placeholder ).
+    )->hidden( c_id-offline ).
 
     IF lv_offline = abap_false.
+
+      ro_form->text(
+        iv_name        = c_id-url
+        iv_condense    = abap_true
+        iv_label       = 'Git Repository URL'
+        iv_hint        = 'URL of original repository'
+        iv_placeholder = 'https://github.com/...git' ).
 
       ro_form->start_group(
         iv_name  = c_id-head_group
@@ -509,10 +503,10 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
   METHOD get_remote_settings_from_form.
 
-    rs_settings-url = io_form_data->get( c_id-url ).
     rs_settings-offline = io_form_data->get( c_id-offline ).
 
     IF rs_settings-offline = abap_false.
+      rs_settings-url       = io_form_data->get( c_id-url ).
       rs_settings-head_type = io_form_data->get( c_id-head_type ).
 
       CASE rs_settings-head_type.
@@ -536,9 +530,8 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
   METHOD get_remote_settings_from_repo.
 
-    DATA: lo_repo_online  TYPE REF TO zcl_abapgit_repo_online,
-          lo_repo_offline TYPE REF TO zcl_abapgit_repo_offline,
-          lv_branch       TYPE ty_remote_settings-branch.
+    DATA: lo_repo_online TYPE REF TO zcl_abapgit_repo_online,
+          lv_branch      TYPE ty_remote_settings-branch.
 
     IF io_repo->is_offline( ) = abap_false.
       lo_repo_online ?= io_repo.
@@ -580,9 +573,6 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       ENDIF.
 
     ELSE.
-      lo_repo_offline ?= io_repo.
-
-      rs_settings-url = lo_repo_offline->get_name( ).
       rs_settings-offline = abap_true.
     ENDIF.
 
@@ -632,11 +622,12 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     ro_form_data->set(
       iv_key = c_id-repo_type
       iv_val = lv_type ).
-    ro_form_data->set(
-      iv_key = c_id-url
-      iv_val = ms_settings_snapshot-url ).
 
     IF ms_settings_snapshot-offline = abap_false.
+      ro_form_data->set(
+        iv_key = c_id-url
+        iv_val = ms_settings_snapshot-url ).
+
       ro_form_data->set(
         iv_key = c_id-head_type
         iv_val = ms_settings_snapshot-head_type ).
@@ -684,7 +675,6 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     DATA:
       lo_repo_online  TYPE REF TO zcl_abapgit_repo_online,
-      lo_repo_offline TYPE REF TO zcl_abapgit_repo_offline,
       ls_settings_new TYPE ty_remote_settings.
 
     ls_settings_new = get_remote_settings_from_form( mo_form_data ).
@@ -696,11 +686,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
       mo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
     ENDIF.
 
-    IF mo_repo->is_offline( ) = abap_true.
-      " Offline: Save repo name
-      lo_repo_offline ?= mo_repo.
-      lo_repo_offline->set_name( ls_settings_new-url ).
-    ELSE.
+    IF mo_repo->is_offline( ) = abap_false.
       " Online: Save url
       lo_repo_online ?= mo_repo.
       lo_repo_online->set_url( ls_settings_new-url ).
@@ -753,12 +739,9 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     IF lv_offline_new = abap_true.
       lv_url = mo_form_data->get( c_id-url ).
       mv_offline_switch_saved_url = lv_url.
-      IF lv_url CP 'http*'.
-        lv_url = zcl_abapgit_url=>name( lv_url ).
-        mo_form_data->set(
-          iv_key = c_id-url
-          iv_val = lv_url ).
-      ENDIF.
+      mo_form_data->set(
+        iv_key = c_id-url
+        iv_val = '' ).
       mo_form_data->set(
         iv_key = c_id-repo_type
         iv_val = c_repo_type-offline ).

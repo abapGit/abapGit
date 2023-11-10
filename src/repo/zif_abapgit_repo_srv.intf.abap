@@ -48,7 +48,7 @@ INTERFACE zif_abapgit_repo_srv
       zcx_abapgit_exception .
   METHODS new_offline
     IMPORTING
-      !iv_url            TYPE string
+      !iv_name           TYPE string
       !iv_package        TYPE devclass
       !iv_folder_logic   TYPE string DEFAULT zif_abapgit_dot_abapgit=>c_folder_logic-full
       !iv_labels         TYPE string OPTIONAL
@@ -64,6 +64,7 @@ INTERFACE zif_abapgit_repo_srv
       !iv_url            TYPE string
       !iv_branch_name    TYPE string OPTIONAL
       !iv_display_name   TYPE string OPTIONAL
+      !iv_name           TYPE string OPTIONAL
       !iv_package        TYPE devclass
       !iv_folder_logic   TYPE string DEFAULT zif_abapgit_dot_abapgit=>c_folder_logic-prefix
       !iv_labels         TYPE string OPTIONAL

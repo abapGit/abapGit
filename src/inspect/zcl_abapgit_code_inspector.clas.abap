@@ -81,7 +81,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
+CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
 
 
   METHOD cleanup.
@@ -334,7 +334,8 @@ CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
       ON scichkv_hd~checkvid = scichkv_tx~checkvid
       AND scichkv_hd~ciuser  = scichkv_tx~ciuser
       AND scichkv_tx~language = sy-langu
-      WHERE scichkv_hd~ciuser = space.
+      WHERE scichkv_hd~ciuser = space
+      ORDER BY name.
 
   ENDMETHOD.
 
