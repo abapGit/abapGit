@@ -20,11 +20,8 @@ INTERFACE zif_abapgit_repo
       VALUE(rs_settings) TYPE zif_abapgit_persistence=>ty_repo-local_settings .
 
   METHODS get_tadir_objects
-    IMPORTING
-      !iv_ignore_subpackages TYPE abap_bool OPTIONAL
-      !iv_only_local_objects TYPE abap_bool OPTIONAL
     RETURNING
-      VALUE(rt_tadir)        TYPE zif_abapgit_definitions=>ty_tadir_tt
+      VALUE(rt_tadir) TYPE zif_abapgit_definitions=>ty_tadir_tt
     RAISING
       zcx_abapgit_exception .
 

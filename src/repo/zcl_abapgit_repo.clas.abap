@@ -856,26 +856,10 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
   METHOD zif_abapgit_repo~get_tadir_objects.
 
-    DATA:
-      lv_ignore_subpackages TYPE abap_bool,
-      lv_only_local_objects TYPE abap_bool.
-
-    IF iv_ignore_subpackages IS SUPPLIED.
-      lv_ignore_subpackages = iv_ignore_subpackages.
-    ELSE.
-      lv_ignore_subpackages = get_local_settings( )-ignore_subpackages.
-    ENDIF.
-
-    IF iv_only_local_objects IS SUPPLIED.
-      lv_only_local_objects = iv_only_local_objects.
-    ELSE.
-      lv_only_local_objects = get_local_settings( )-only_local_objects.
-    ENDIF.
-
     rt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
       iv_package            = get_package( )
-      iv_ignore_subpackages = lv_ignore_subpackages
-      iv_only_local_objects = lv_only_local_objects
+      iv_ignore_subpackages = get_local_settings( )-ignore_subpackages
+      iv_only_local_objects = get_local_settings( )-only_local_objects
       io_dot                = get_dot_abapgit( ) ).
 
   ENDMETHOD.
