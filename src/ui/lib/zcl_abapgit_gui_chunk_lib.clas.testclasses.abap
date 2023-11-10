@@ -218,6 +218,10 @@ CLASS ltd_repo IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_repo~get_tadir_objects.
+
+  ENDMETHOD.
+
   METHOD zif_abapgit_repo~get_package.
 
   ENDMETHOD.
