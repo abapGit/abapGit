@@ -14,9 +14,10 @@ CLASS zcl_abapgit_repo_labels DEFINITION
 
     TYPES:
       BEGIN OF ty_color,
-        cls TYPE string,
-        fg TYPE string,
-        bg TYPE string,
+        cls    TYPE string,
+        fg     TYPE string,
+        bg     TYPE string,
+        border TYPE string,
       END OF ty_color.
 
     CONSTANTS c_allowed_chars TYPE string VALUE `-_. a-zA-Z0-9` ##NO_TEXT.
@@ -30,12 +31,12 @@ CLASS zcl_abapgit_repo_labels DEFINITION
         zcx_abapgit_exception.
     CLASS-METHODS split
       IMPORTING
-        !iv_labels TYPE string
+        !iv_labels       TYPE string
       RETURNING
         VALUE(rt_labels) TYPE string_table.
     CLASS-METHODS normalize
       IMPORTING
-        !iv_labels TYPE string
+        !iv_labels       TYPE string
       RETURNING
         VALUE(rv_labels) TYPE string.
 
@@ -46,23 +47,23 @@ CLASS zcl_abapgit_repo_labels DEFINITION
         zcx_abapgit_exception.
     CLASS-METHODS split_colors
       IMPORTING
-        !iv_config TYPE string
+        !iv_config             TYPE string
       RETURNING
         VALUE(rt_label_colors) TYPE ty_label_colors.
     CLASS-METHODS split_colors_into_map
       IMPORTING
-        !iv_config TYPE string
+        !iv_config    TYPE string
       RETURNING
         VALUE(ro_map) TYPE REF TO zcl_abapgit_string_map.
     CLASS-METHODS normalize_colors
       IMPORTING
-        !iv_config TYPE string
+        !iv_config       TYPE string
       RETURNING
         VALUE(rv_config) TYPE string.
 
     CLASS-METHODS parse_color
       IMPORTING
-        iv_color TYPE string
+        iv_color         TYPE string
       RETURNING
         VALUE(rs_parsed) TYPE ty_color.
 
@@ -72,7 +73,7 @@ CLASS zcl_abapgit_repo_labels DEFINITION
 
     CLASS-METHODS validate_one_label_color
       IMPORTING
-        !is_lc TYPE ty_label_color
+        !is_lc    TYPE ty_label_color
         !iv_index TYPE i DEFAULT 0
       RAISING
         zcx_abapgit_exception.
@@ -88,7 +89,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_LABELS IMPLEMENTATION.
+CLASS zcl_abapgit_repo_labels IMPLEMENTATION.
 
 
   METHOD class_constructor.
@@ -164,7 +165,7 @@ CLASS ZCL_ABAPGIT_REPO_LABELS IMPLEMENTATION.
 
     IF iv_color+0(1) = '#'.
       lv_tmp  = iv_color+1.
-      SPLIT lv_tmp AT '/' INTO rs_parsed-fg rs_parsed-bg.
+      SPLIT lv_tmp AT '/' INTO rs_parsed-fg rs_parsed-bg rs_parsed-border.
     ELSE.
       rs_parsed-cls = iv_color.
     ENDIF.
@@ -295,6 +296,9 @@ CLASS ZCL_ABAPGIT_REPO_LABELS IMPLEMENTATION.
     IF ls_parsed_color-bg IS NOT INITIAL.
       validate_rgb_color( ls_parsed_color-bg ).
     ENDIF.
+    IF ls_parsed_color-border IS NOT INITIAL.
+      validate_rgb_color( ls_parsed_color-border ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -310,7 +314,7 @@ CLASS ZCL_ABAPGIT_REPO_LABELS IMPLEMENTATION.
       ENDIF.
       lv_len = strlen( iv_color ).
       IF NOT ( lv_len = 3 OR lv_len = 6 ).
-        zcx_abapgit_exception=>raise( |Icorrect color in pair #{ iv_index }| ).
+        zcx_abapgit_exception=>raise( |Incorrect color in pair #{ iv_index }| ).
       ENDIF.
     ENDIF.
 
