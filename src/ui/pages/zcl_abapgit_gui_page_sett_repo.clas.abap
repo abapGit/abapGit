@@ -28,7 +28,10 @@ CLASS zcl_abapgit_gui_page_sett_repo DEFINITION
     CONSTANTS:
       BEGIN OF c_id,
         dot              TYPE string VALUE 'dot',
+        file_system      TYPE string VALUE 'file_system',
+        abap_system      TYPE string VALUE 'abap_system',
         name             TYPE string VALUE 'name',
+        i18n             TYPE string VALUE 'i18n',
         main_language    TYPE string VALUE 'main_language',
         i18n_langs       TYPE string VALUE 'i18n_langs',
         use_lxe          TYPE string VALUE 'use_lxe',
@@ -127,6 +130,21 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
       iv_label       = 'Repository Settings (.abapgit.xml)'
       iv_hint        = 'Settings stored in root folder in .abapgit.xml file'
     )->text(
+      iv_name        = c_id-name
+      iv_label       = 'Name'
+      iv_hint        = 'Official name (can be overwritten by local display name)'
+    )->text(
+      iv_name        = c_id-version_constant
+      iv_label       = 'Version Constant'
+      iv_placeholder = 'ZVERSION_CLASS=>VERSION_CONSTANT'
+    )->text(
+      iv_name        = c_id-version_value
+      iv_label       = 'Version Value'
+      iv_readonly    = abap_true
+    )->start_group(
+      iv_name        = c_id-i18n
+      iv_label       = 'Texts'
+    )->text(
       iv_name        = c_id-main_language
       iv_label       = 'Main Language'
       iv_hint        = 'Main language of repository (cannot be changed)'
@@ -139,6 +157,9 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
       iv_name        = c_id-use_lxe
       iv_label       = 'Use Experimental LXE Approach for Translations'
       iv_hint        = 'It''s mandatory to specify the list of languages above in addition to this setting'
+    )->start_group(
+      iv_name        = c_id-file_system
+      iv_label       = 'Files'
     )->radio(
       iv_name        = c_id-folder_logic
       iv_default_value = zif_abapgit_dot_abapgit=>c_folder_logic-prefix
@@ -161,6 +182,9 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
       iv_name        = c_id-ignore
       iv_label       = 'Ignore Files'
       iv_hint        = 'List of files in starting folder that shall not be serialized'
+    )->start_group(
+      iv_name        = c_id-abap_system
+      iv_label       = 'ABAP'
     )->table(
       iv_name        = c_id-requirements
       iv_label       = 'Requirements'
@@ -195,19 +219,6 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
         iv_label       = 'ABAP for Cloud Development'
         iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-cloud_development ).
     ENDIF.
-
-    ro_form->text(
-      iv_name        = c_id-name
-      iv_label       = 'Name'
-      iv_hint        = 'Official name (can be overwritten by local display name)'
-    )->text(
-      iv_name        = c_id-version_constant
-      iv_label       = 'Version Constant'
-      iv_placeholder = 'ZVERSION_CLASS=>VERSION_CONSTANT'
-    )->text(
-      iv_name        = c_id-version_value
-      iv_label       = 'Version Value'
-      iv_readonly    = abap_true ).
 
     ro_form->command(
       iv_label       = 'Save Settings'
