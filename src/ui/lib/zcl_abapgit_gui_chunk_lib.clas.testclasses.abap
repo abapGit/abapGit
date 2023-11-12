@@ -222,6 +222,10 @@ CLASS ltd_repo IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_repo~has_remote_source.
+
+  ENDMETHOD.
+
   METHOD zif_abapgit_repo~is_offline.
 
   ENDMETHOD.
