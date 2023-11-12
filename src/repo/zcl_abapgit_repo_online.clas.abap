@@ -37,8 +37,6 @@ CLASS zcl_abapgit_repo_online DEFINITION
         REDEFINITION .
     METHODS zif_abapgit_repo~get_name
         REDEFINITION .
-    METHODS has_remote_source
-        REDEFINITION .
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -145,11 +143,6 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
       set_dot_abapgit( lo_dot_abapgit ).
     ENDIF.
 
-  ENDMETHOD.
-
-
-  METHOD has_remote_source.
-    rv_yes = abap_true.
   ENDMETHOD.
 
 

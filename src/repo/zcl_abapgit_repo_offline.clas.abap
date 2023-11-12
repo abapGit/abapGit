@@ -5,9 +5,6 @@ CLASS zcl_abapgit_repo_offline DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-
-    METHODS has_remote_source
-        REDEFINITION .
   PROTECTED SECTION.
 
     METHODS reset_remote
@@ -18,11 +15,6 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_repo_offline IMPLEMENTATION.
-
-
-  METHOD has_remote_source.
-    rv_yes = boolc( lines( mt_remote ) > 0 ).
-  ENDMETHOD.
 
 
   METHOD reset_remote.
