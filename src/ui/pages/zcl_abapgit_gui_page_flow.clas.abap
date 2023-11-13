@@ -50,7 +50,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -131,7 +131,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 * todo: crossout if write protected
     ri_html->add( ri_html->a(
       iv_txt = 'Pull'
-      iv_act = |{ c_action-pull }?index={ iv_index }&key={ is_feature-repo-key }| ) ).
+      iv_act = |{ c_action-pull }?index={ iv_index }&key={ is_feature-repo-key }&branch={ lv_branch }| ) ).
     ri_html->add( ri_html->a(
       iv_txt = 'Stage'
       iv_act = |{ c_action-stage }?index={ iv_index }&key={ is_feature-repo-key }&branch={ lv_branch }| ) ).
@@ -211,16 +211,30 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
       WHEN c_action-pull.
         lv_key = ii_event->query( )->get( 'KEY' ).
         lv_index = ii_event->query( )->get( 'INDEX' ).
+        lv_branch = ii_event->query( )->get( 'BRANCH' ).
         lo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
 
         READ TABLE mt_features INTO ls_feature INDEX lv_index.
         ASSERT sy-subrc = 0.
 
-* todo: set filter,
-        zcl_abapgit_services_repo=>gui_deserialize( lo_online ).
+        LOOP AT ls_feature-changed_objects ASSIGNING <ls_object>.
+          APPEND INITIAL LINE TO lt_filter ASSIGNING <ls_filter>.
+          <ls_filter>-object = <ls_object>-obj_type.
+          <ls_filter>-obj_name = <ls_object>-obj_name.
+        ENDLOOP.
+        CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
+
+        set_branch(
+          iv_branch = lv_branch
+          iv_key    = lv_key ).
+
+        rs_handled-page = zcl_abapgit_gui_page_pull=>create(
+          io_repo       = lo_online
+          ii_obj_filter = lo_filter ).
+
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
         refresh( ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDCASE.
 
   ENDMETHOD.
