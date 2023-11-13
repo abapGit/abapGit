@@ -126,6 +126,9 @@ CLASS zcl_abapgit_serialize DEFINITION
         VALUE(rs_i18n_params)  TYPE zif_abapgit_definitions=>ty_i18n_params
       RAISING
         zcx_abapgit_exception.
+    METHODS is_parallelization_possible
+      RETURNING
+        VALUE(rv_result) TYPE abap_bool.
 
 ENDCLASS.
 
@@ -300,28 +303,14 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
 
   METHOD determine_max_processes.
-    DATA: lo_settings TYPE REF TO zcl_abapgit_settings,
-          li_exit     TYPE REF TO zif_abapgit_exit.
+    DATA: li_exit TYPE REF TO zif_abapgit_exit.
 
     IF iv_force_sequential = abap_true.
       rv_processes = 1.
       RETURN.
     ENDIF.
 
-    IF gv_max_processes IS INITIAL.
-      lo_settings = zcl_abapgit_persist_factory=>get_settings( )->read( ).
-
-      IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true
-          OR lo_settings->get_parallel_proc_disabled( ) = abap_true.
-        gv_max_processes = 1.
-      ENDIF.
-    ENDIF.
-
-    IF gv_max_processes IS INITIAL
-    AND mv_group IS NOT INITIAL
-    " The function module below should always exist here as is_merged evaluated to false above. It does however
-    " not exist in the transpiled version which then causes unit tests to fail. Therefore the check needs to stay.
-    AND zcl_abapgit_factory=>get_function_module( )->function_exists( 'Z_ABAPGIT_SERIALIZE_PARALLEL' ) = abap_true.
+    IF gv_max_processes IS INITIAL AND is_parallelization_possible( ) = abap_true.
 
       gv_max_processes = zcl_abapgit_factory=>get_environment( )->init_parallel_processing( mv_group ).
 
@@ -703,4 +692,19 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     lo_timer->end( abap_true ).
 
   ENDMETHOD.
+
+
+  METHOD is_parallelization_possible.
+
+    rv_result = boolc( zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_false
+                   AND zcl_abapgit_persist_factory=>get_settings( )->read( )->get_parallel_proc_disabled( ) = abap_false
+                   AND mv_group IS NOT INITIAL
+                   " The function module below should always exist here as is_merged evaluated to false above.
+                   " It does however not exist in the transpiled version which then causes unit tests to fail.
+                   " Therefore the check needs to stay.
+                   AND zcl_abapgit_factory=>get_function_module(
+                                         )->function_exists( 'Z_ABAPGIT_SERIALIZE_PARALLEL' ) = abap_true ).
+
+  ENDMETHOD.
+
 ENDCLASS.
