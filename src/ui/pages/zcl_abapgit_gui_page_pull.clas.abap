@@ -88,14 +88,44 @@ CLASS zcl_abapgit_gui_page_pull IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
     BREAK-POINT.
+* mo_repo->deserialize(
   ENDMETHOD.
 
   METHOD zif_abapgit_gui_renderable~render.
+
+    DATA ls_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks.
+
+    FIELD-SYMBOLS <ls_overwrite> LIKE LINE OF ls_checks-overwrite.
+
 
     register_handlers( ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     ri_html->add( '<div class="repo-overview">' ).
+
+    ls_checks = mo_repo->deserialize_checks( ).
+
+    IF lines( ls_checks-overwrite ) = 0.
+      zcx_abapgit_exception=>raise(
+        'There is nothing to pull. The local state completely matches the remote repository.' ).
+    ENDIF.
+
+    IF ls_checks-requirements-met = zif_abapgit_definitions=>c_no.
+      ri_html->add( 'todo, requirements not met' ).
+    ENDIF.
+
+    LOOP AT ls_checks-overwrite ASSIGNING <ls_overwrite>.
+      ri_html->add( 'todo, overwrite' ).
+    ENDLOOP.
+
+    LOOP AT ls_checks-warning_package ASSIGNING <ls_overwrite>.
+      ri_html->add( 'todo, warning package' ).
+    ENDLOOP.
+
+    IF ls_checks-transport-required = abap_true AND ls_checks-transport-transport IS INITIAL.
+      ri_html->add( 'todo, transport required' ).
+    ENDIF.
+
     ri_html->add( 'hello world' ).
     ri_html->add( '</div>' ).
 
