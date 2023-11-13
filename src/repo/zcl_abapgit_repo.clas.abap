@@ -15,6 +15,8 @@ CLASS zcl_abapgit_repo DEFINITION
       FOR zif_abapgit_repo~deserialize_checks .
     ALIASES get_dot_abapgit
       FOR zif_abapgit_repo~get_dot_abapgit .
+    ALIASES get_tadir_objects
+      FOR zif_abapgit_repo~get_tadir_objects .
     ALIASES get_files_local
       FOR zif_abapgit_repo~get_files_local .
     ALIASES get_files_local_filtered
@@ -418,11 +420,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_tadir>  LIKE LINE OF lt_tadir,
                    <ls_object> LIKE LINE OF rt_objects.
 
-    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
-                      iv_package            = ms_data-package
-                      iv_ignore_subpackages = ms_data-local_settings-ignore_subpackages
-                      iv_only_local_objects = ms_data-local_settings-only_local_objects
-                      io_dot                = get_dot_abapgit( ) ).
+    lt_tadir = get_tadir_objects( ).
 
     lt_supported_types = zcl_abapgit_objects=>supported_list( ).
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
@@ -474,9 +472,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       lt_new_local_files TYPE zif_abapgit_definitions=>ty_files_item_tt,
       lo_serialize       TYPE REF TO zcl_abapgit_serialize.
 
-    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
-                   iv_package = ms_data-package
-                   io_dot     = get_dot_abapgit( ) ).
+    lt_tadir = get_tadir_objects( ).
 
     DELETE mt_local WHERE item-obj_type = iv_obj_type
                       AND item-obj_name = iv_obj_name.
@@ -853,6 +849,17 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
   METHOD zif_abapgit_repo~get_package.
     rv_package = ms_data-package.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo~get_tadir_objects.
+
+    rt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
+      iv_package            = get_package( )
+      iv_ignore_subpackages = get_local_settings( )-ignore_subpackages
+      iv_only_local_objects = get_local_settings( )-only_local_objects
+      io_dot                = get_dot_abapgit( ) ).
+
   ENDMETHOD.
 
 
