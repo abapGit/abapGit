@@ -98,9 +98,14 @@ CLASS zcl_abapgit_gui_page_pull IMPLEMENTATION.
   METHOD zif_abapgit_gui_renderable~render.
 
     DATA ls_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks.
+    DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
     FIELD-SYMBOLS <ls_overwrite> LIKE LINE OF ls_checks-overwrite.
 
+
+    IF mi_obj_filter IS NOT INITIAL.
+      lt_filter = mi_obj_filter->get_filter( ).
+    ENDIF.
 
     register_handlers( ).
 
@@ -119,7 +124,14 @@ CLASS zcl_abapgit_gui_page_pull IMPLEMENTATION.
     ENDIF.
 
     LOOP AT ls_checks-overwrite ASSIGNING <ls_overwrite>.
-      ri_html->add( 'todo, overwrite<br>' ).
+      IF lines( lt_filter ) > 0.
+        READ TABLE lt_filter WITH KEY object = <ls_overwrite>-obj_type
+          obj_name = <ls_overwrite>-obj_name TRANSPORTING NO FIELDS.
+        IF sy-subrc <> 0.
+          CONTINUE.
+        ENDIF.
+      ENDIF.
+      ri_html->add( |todo, overwrite, <tt>{ <ls_overwrite>-obj_type } { <ls_overwrite>-obj_name }</tt><br>| ).
     ENDLOOP.
 
     LOOP AT ls_checks-warning_package ASSIGNING <ls_overwrite>.
