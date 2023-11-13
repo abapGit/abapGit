@@ -12,6 +12,7 @@ CLASS zcl_abapgit_gui_page_pull DEFINITION
 
     CONSTANTS: BEGIN OF c_action,
                  back    TYPE string VALUE 'back',
+                 pull    TYPE string VALUE 'pull',
                  refresh TYPE string VALUE 'refresh',
                END OF c_action.
 
@@ -71,10 +72,6 @@ CLASS zcl_abapgit_gui_page_pull IMPLEMENTATION.
       iv_txt = 'Back'
       iv_act = c_action-back ).
 
-    ro_toolbar->add(
-      iv_txt = zcl_abapgit_gui_buttons=>repo_list( )
-      iv_act = zif_abapgit_definitions=>c_action-abapgit_home ).
-
   ENDMETHOD.
 
   METHOD constructor.
@@ -87,8 +84,15 @@ CLASS zcl_abapgit_gui_page_pull IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
-    BREAK-POINT.
-* mo_repo->deserialize(
+
+    CASE ii_event->mv_action.
+      WHEN c_action-refresh.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_action-pull.
+      " mo_repo->deserialize(
+        BREAK-POINT.
+    ENDCASE.
+
   ENDMETHOD.
 
   METHOD zif_abapgit_gui_renderable~render.
@@ -111,22 +115,21 @@ CLASS zcl_abapgit_gui_page_pull IMPLEMENTATION.
     ENDIF.
 
     IF ls_checks-requirements-met = zif_abapgit_definitions=>c_no.
-      ri_html->add( 'todo, requirements not met' ).
+      ri_html->add( 'todo, requirements not met<br>' ).
     ENDIF.
 
     LOOP AT ls_checks-overwrite ASSIGNING <ls_overwrite>.
-      ri_html->add( 'todo, overwrite' ).
+      ri_html->add( 'todo, overwrite<br>' ).
     ENDLOOP.
 
     LOOP AT ls_checks-warning_package ASSIGNING <ls_overwrite>.
-      ri_html->add( 'todo, warning package' ).
+      ri_html->add( 'todo, warning package<br>' ).
     ENDLOOP.
 
     IF ls_checks-transport-required = abap_true AND ls_checks-transport-transport IS INITIAL.
-      ri_html->add( 'todo, transport required' ).
+      ri_html->add( 'todo, transport required<br>' ).
     ENDIF.
 
-    ri_html->add( 'hello world' ).
     ri_html->add( '</div>' ).
 
   ENDMETHOD.
