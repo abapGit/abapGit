@@ -45,7 +45,7 @@ CLASS zcl_abapgit_gui_page_pull IMPLEMENTATION.
 
   METHOD create.
 
-    DATA lo_component TYPE REF TO zcl_abapgit_gui_page_stage.
+    DATA lo_component TYPE REF TO zcl_abapgit_gui_page_pull.
 
     CREATE OBJECT lo_component
       EXPORTING
