@@ -174,11 +174,13 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
 
   METHOD setup.
 
-    CREATE OBJECT mo_environment_double.
-    CREATE OBJECT mo_function_module.
     CREATE OBJECT mo_settings_double.
     zcl_abapgit_persist_injector=>set_settings( mo_settings_double ).
+
+    CREATE OBJECT mo_environment_double.
     zcl_abapgit_injector=>set_environment( mo_environment_double ).
+
+    CREATE OBJECT mo_function_module.
     zcl_abapgit_injector=>set_function_module( mo_function_module ).
 
     TRY.
