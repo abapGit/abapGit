@@ -260,13 +260,13 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
 
     APPEND `<p style="margin-bottom: 0.3em">` TO lt_fragments.
     APPEND `Comma-separated list of <code>label:color</code> pairs.` TO lt_fragments.
-    APPEND ` <code>color</code> part can be either a css style (see below) or <code>#fg/bg</code> pair,`
-      TO lt_fragments.
-    APPEND ` where <code>fg</code> and <code>bg</code> are RGB color codes (3 or 6 long).` TO lt_fragments.
-    APPEND ` You can also specify just <code>fg</code> or <code>bg</code>` TO lt_fragments.
-    APPEND ` (defaults will be used for missing parts).` TO lt_fragments.
+    APPEND ` <code>color</code> part can be either a pre-defined style (see below), or` TO lt_fragments.
+    APPEND ` <code>#fg/bg/border</code> styles, where <code>fg</code>, ` TO lt_fragments.
+    APPEND ` <code>bg</code>, and <code>border</code> are RGB color codes (3 or 6 long).` TO lt_fragments.
+    APPEND ` You can also specify just <code>fg</code>, <code>bg</code>, or` TO lt_fragments.
+    APPEND ` <code>border</code> (defaults will be used for missing parts).` TO lt_fragments.
     APPEND ` E.g. <code>utils:brown, work:#ff0000/880000, client X:#ddd, client Y:#/333</code>` TO lt_fragments.
-    APPEND `<br>Available CSS styles:` TO lt_fragments.
+    APPEND `<br>Available styles:` TO lt_fragments.
     APPEND `</p>` TO lt_fragments.
 
     APPEND `white` TO lt_labels.
@@ -306,7 +306,7 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
       io_label_colors = lo_colors ) TO lt_fragments.
 
     APPEND
-      `<p style="margin-top: 0.3em">see also <code>rl-*</code> styles in common.css (styles, forgotten here)</p>`
+      `<p style="margin-top: 0.3em">see also <code>rl-*</code> styles in common.css</p>`
       TO lt_fragments.
 
     rv_html = zcl_abapgit_gui_chunk_lib=>render_help_hint( concat_lines_of( table = lt_fragments ) ).

@@ -247,6 +247,8 @@ CLASS lcl_repo_mock IMPLEMENTATION.
   ENDMETHOD.
   METHOD zif_abapgit_repo_srv~get_repo_from_url.
   ENDMETHOD.
+  METHOD zif_abapgit_repo~has_remote_source.
+  ENDMETHOD.
   METHOD zif_abapgit_repo~is_offline.
   ENDMETHOD.
   METHOD zif_abapgit_repo~deserialize.
@@ -256,6 +258,8 @@ CLASS lcl_repo_mock IMPLEMENTATION.
   METHOD zif_abapgit_repo~set_dot_abapgit.
   ENDMETHOD.
   METHOD zif_abapgit_repo~get_dot_abapgit.
+  ENDMETHOD.
+  METHOD zif_abapgit_repo~get_tadir_objects.
   ENDMETHOD.
   METHOD zif_abapgit_repo_srv~is_repo_installed.
   ENDMETHOD.

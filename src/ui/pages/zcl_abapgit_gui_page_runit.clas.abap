@@ -77,9 +77,7 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
     DATA ls_tadir LIKE LINE OF lt_tadir.
     DATA ls_row   LIKE LINE OF rt_tadir.
 
-    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
-      iv_package            = mo_repo->get_package( )
-      iv_only_local_objects = abap_true ).
+    lt_tadir = mo_repo->get_tadir_objects( ).
 
     LOOP AT lt_tadir INTO ls_tadir.
       CLEAR ls_row.
