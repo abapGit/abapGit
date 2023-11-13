@@ -11,7 +11,6 @@ CLASS zcl_abapgit_gui_page_pull DEFINITION
     INTERFACES zif_abapgit_gui_renderable.
 
     CONSTANTS: BEGIN OF c_action,
-                 back    TYPE string VALUE 'back',
                  pull    TYPE string VALUE 'pull',
                  refresh TYPE string VALUE 'refresh',
                END OF c_action.
@@ -70,7 +69,7 @@ CLASS zcl_abapgit_gui_page_pull IMPLEMENTATION.
 
     ro_toolbar->add(
       iv_txt = 'Back'
-      iv_act = c_action-back ).
+      iv_act = zif_abapgit_definitions=>c_action-go_back ).
 
   ENDMETHOD.
 
@@ -87,6 +86,7 @@ CLASS zcl_abapgit_gui_page_pull IMPLEMENTATION.
 
     CASE ii_event->mv_action.
       WHEN c_action-refresh.
+        mo_repo->refresh( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-pull.
       " mo_repo->deserialize(
