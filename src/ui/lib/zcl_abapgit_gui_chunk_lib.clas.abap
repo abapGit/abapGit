@@ -684,7 +684,11 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
         ENDIF.
         IF ls_parsed_color-bg IS NOT INITIAL.
           lv_style = lv_style && |background-color:#{ ls_parsed_color-bg };|.
-          lv_style = lv_style && |border-color:#{ ls_parsed_color-bg };|.
+          IF ls_parsed_color-border IS INITIAL.
+            lv_style = lv_style && |border-color:#{ ls_parsed_color-bg };|.
+          ELSE.
+            lv_style = lv_style && |border-color:#{ ls_parsed_color-border };|.
+          ENDIF.
         ENDIF.
         lv_style = lv_style && `"`.
       ENDIF.
