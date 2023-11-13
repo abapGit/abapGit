@@ -206,6 +206,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
           ii_obj_filter = lo_filter ).
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
+
+        refresh( ).
       WHEN c_action-pull.
         lv_key = ii_event->query( )->get( 'KEY' ).
         lv_index = ii_event->query( )->get( 'INDEX' ).
@@ -216,6 +218,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
 * todo: set filter,
         zcl_abapgit_services_repo=>gui_deserialize( lo_online ).
+
+        refresh( ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDCASE.
 
   ENDMETHOD.
