@@ -139,6 +139,13 @@ CLASS ltcl_determine_max_processes DEFINITION FOR TESTING DURATION SHORT RISK LE
     METHODS:
       setup,
 
+      determine_max_processes_free FOR TESTING RAISING zcx_abapgit_exception,
+      det_max_processes_not_free FOR TESTING RAISING zcx_abapgit_exception,
+      det_max_proc_amdahls_law FOR TESTING RAISING zcx_abapgit_exception,
+      determine_max_processes_no_pp FOR TESTING RAISING zcx_abapgit_exception,
+      determine_max_processes_merged FOR TESTING RAISING zcx_abapgit_exception,
+      force FOR TESTING RAISING zcx_abapgit_exception,
+
       teardown,
 
       given_parallel_proc_disabled
@@ -153,17 +160,12 @@ CLASS ltcl_determine_max_processes DEFINITION FOR TESTING DURATION SHORT RISK LE
         IMPORTING
           iv_free_work_processes TYPE i,
 
-      determine_max_processes_free FOR TESTING RAISING zcx_abapgit_exception,
-      det_max_processes_not_free FOR TESTING RAISING zcx_abapgit_exception,
-      det_max_proc_amdahls_law FOR TESTING RAISING zcx_abapgit_exception,
-      determine_max_processes_no_pp FOR TESTING RAISING zcx_abapgit_exception,
-      determine_max_processes_merged FOR TESTING RAISING zcx_abapgit_exception,
-      force FOR TESTING RAISING zcx_abapgit_exception,
       when_determine_max_processes
         IMPORTING
           iv_force_sequential TYPE abap_bool OPTIONAL
         RAISING
           zcx_abapgit_exception,
+
       then_we_shd_have_n_processes
         IMPORTING
           iv_exp_processes TYPE i.
