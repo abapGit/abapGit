@@ -67,8 +67,11 @@ CLASS ltd_environment DEFINITION FINAL FOR TESTING
       zif_abapgit_environment.
 
     METHODS:
-      set_is_merged IMPORTING i_mv_is_merged TYPE abap_bool,
-      set_free_work_processes IMPORTING i_mv_free_work_processes TYPE i.
+      set_is_merged
+        IMPORTING iv_is_merged TYPE abap_bool,
+
+      set_free_work_processes
+        IMPORTING iv_free_work_processes TYPE i.
 
   PRIVATE SECTION.
     DATA:
@@ -113,11 +116,11 @@ CLASS ltd_environment IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD set_is_merged.
-    me->mv_is_merged = i_mv_is_merged.
+    me->mv_is_merged = iv_is_merged.
   ENDMETHOD.
 
   METHOD set_free_work_processes.
-    me->mv_free_work_processes = i_mv_free_work_processes.
+    me->mv_free_work_processes = iv_free_work_processes.
   ENDMETHOD.
 
 ENDCLASS.
