@@ -130,11 +130,11 @@ CLASS ltcl_determine_max_processes DEFINITION FOR TESTING DURATION SHORT RISK LE
 
   PRIVATE SECTION.
     DATA:
-      mo_cut                TYPE REF TO zcl_abapgit_serialize,
-      mv_processes          TYPE i,
-      mo_environment_double TYPE REF TO ltd_environment,
-      mo_function_module    TYPE REF TO ltd_function_module,
-      mo_settings_double    TYPE REF TO ltd_settings.
+      mo_cut                    TYPE REF TO zcl_abapgit_serialize,
+      mv_act_processes          TYPE i,
+      mo_environment_double     TYPE REF TO ltd_environment,
+      mo_function_module_double TYPE REF TO ltd_function_module,
+      mo_settings_double        TYPE REF TO ltd_settings.
 
     METHODS:
       setup,
@@ -182,8 +182,8 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
     CREATE OBJECT mo_environment_double.
     zcl_abapgit_injector=>set_environment( mo_environment_double ).
 
-    CREATE OBJECT mo_function_module.
-    zcl_abapgit_injector=>set_function_module( mo_function_module ).
+    CREATE OBJECT mo_function_module_double.
+    zcl_abapgit_injector=>set_function_module( mo_function_module_double ).
 
     TRY.
         CREATE OBJECT mo_cut.
@@ -295,8 +295,9 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
 
   METHOD when_determine_max_processes.
 
-    mv_processes = mo_cut->determine_max_processes( iv_force_sequential = iv_force_sequential
-                                                    iv_package          = 'ZDUMMY' ).
+    mv_act_processes = mo_cut->determine_max_processes(
+                           iv_force_sequential = iv_force_sequential
+                           iv_package          = 'ZDUMMY' ).
 
   ENDMETHOD.
 
@@ -304,7 +305,7 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
   METHOD then_we_shd_have_n_processes.
 
     cl_abap_unit_assert=>assert_equals(
-      act = mv_processes
+      act = mv_act_processes
       exp = iv_exp_processes ).
 
   ENDMETHOD.
