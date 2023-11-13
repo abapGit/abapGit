@@ -19,6 +19,12 @@ INTERFACE zif_abapgit_repo
     RETURNING
       VALUE(rs_settings) TYPE zif_abapgit_persistence=>ty_repo-local_settings .
 
+  METHODS get_tadir_objects
+    RETURNING
+      VALUE(rt_tadir) TYPE zif_abapgit_definitions=>ty_tadir_tt
+    RAISING
+      zcx_abapgit_exception .
+
   METHODS get_files_local_filtered
     IMPORTING
       !ii_obj_filter  TYPE REF TO zif_abapgit_object_filter

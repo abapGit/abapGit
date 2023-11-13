@@ -656,7 +656,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Not authorized' ).
     ENDIF.
 
-    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read( ii_repo->get_package( ) ).
+    lt_tadir = lo_repo->get_tadir_objects( ).
 
     TRY.
         zcl_abapgit_objects=>delete( it_tadir  = lt_tadir
