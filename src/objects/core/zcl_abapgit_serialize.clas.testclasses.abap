@@ -10,29 +10,29 @@ CLASS ltd_settings DEFINITION FINAL FOR TESTING
       zif_abapgit_persist_settings.
 
     METHODS:
-      constructor
+      set_parallel_proc_disabled
         IMPORTING
           iv_parallel_proc_disabled TYPE abap_bool.
 
   PRIVATE SECTION.
     DATA:
-      ms_settings TYPE zif_abapgit_definitions=>ty_s_user_settings.
+      mv_parallel_proc_disabled TYPE zif_abapgit_definitions=>ty_s_user_settings-parallel_proc_disabled.
 
 ENDCLASS.
 
 
 CLASS ltd_settings IMPLEMENTATION.
 
-  METHOD constructor.
-    ms_settings-parallel_proc_disabled = iv_parallel_proc_disabled.
-  ENDMETHOD.
-
   METHOD zif_abapgit_persist_settings~modify.
   ENDMETHOD.
 
   METHOD zif_abapgit_persist_settings~read.
     CREATE OBJECT ro_settings.
-    ro_settings->set_parallel_proc_disabled( ms_settings-parallel_proc_disabled ).
+    ro_settings->set_parallel_proc_disabled( mv_parallel_proc_disabled ).
+  ENDMETHOD.
+
+  METHOD set_parallel_proc_disabled.
+    mv_parallel_proc_disabled = iv_parallel_proc_disabled.
   ENDMETHOD.
 
 ENDCLASS.
@@ -67,10 +67,8 @@ CLASS ltd_environment DEFINITION FINAL FOR TESTING
       zif_abapgit_environment.
 
     METHODS:
-      constructor
-        IMPORTING
-          iv_is_merged           TYPE abap_bool
-          iv_free_work_processes TYPE i.
+      set_is_merged IMPORTING i_mv_is_merged TYPE abap_bool,
+      set_free_work_processes IMPORTING i_mv_free_work_processes TYPE i.
 
   PRIVATE SECTION.
     DATA:
@@ -81,11 +79,6 @@ ENDCLASS.
 
 
 CLASS ltd_environment IMPLEMENTATION.
-
-  METHOD constructor.
-    mv_is_merged = iv_is_merged.
-    mv_free_work_processes = iv_free_work_processes.
-  ENDMETHOD.
 
   METHOD zif_abapgit_environment~compare_with_inactive.
   ENDMETHOD.
@@ -119,6 +112,14 @@ CLASS ltd_environment IMPLEMENTATION.
     rv_free_work_processes = mv_free_work_processes.
   ENDMETHOD.
 
+  METHOD set_is_merged.
+    me->mv_is_merged = i_mv_is_merged.
+  ENDMETHOD.
+
+  METHOD set_free_work_processes.
+    me->mv_free_work_processes = i_mv_free_work_processes.
+  ENDMETHOD.
+
 ENDCLASS.
 
 
@@ -126,12 +127,11 @@ CLASS ltcl_determine_max_processes DEFINITION FOR TESTING DURATION SHORT RISK LE
 
   PRIVATE SECTION.
     DATA:
-      mo_cut TYPE REF TO zcl_abapgit_serialize,
-      BEGIN OF ms_given,
-        is_merged           TYPE abap_bool,
-        free_work_processes TYPE i,
-      END OF ms_given,
-      mv_processes TYPE i.
+      mo_cut                TYPE REF TO zcl_abapgit_serialize,
+      mv_processes          TYPE i,
+      mo_environment_double TYPE REF TO ltd_environment,
+      mo_function_module    TYPE REF TO ltd_function_module,
+      mo_settings_double    TYPE REF TO ltd_settings.
 
     METHODS:
       setup,
@@ -161,7 +161,6 @@ CLASS ltcl_determine_max_processes DEFINITION FOR TESTING DURATION SHORT RISK LE
           iv_force_sequential TYPE abap_bool OPTIONAL
         RAISING
           zcx_abapgit_exception,
-      prepare_test_environment,
       then_we_shd_have_n_processes
         IMPORTING
           iv_exp_processes TYPE i.
@@ -171,11 +170,20 @@ ENDCLASS.
 CLASS ltcl_determine_max_processes IMPLEMENTATION.
 
   METHOD setup.
+
+    CREATE OBJECT mo_environment_double.
+    CREATE OBJECT mo_function_module.
+    CREATE OBJECT mo_settings_double.
+    zcl_abapgit_persist_injector=>set_settings( mo_settings_double ).
+    zcl_abapgit_injector=>set_environment( mo_environment_double ).
+    zcl_abapgit_injector=>set_function_module( mo_function_module ).
+
     TRY.
         CREATE OBJECT mo_cut.
       CATCH zcx_abapgit_exception.
         cl_abap_unit_assert=>fail( 'Error creating serializer' ).
     ENDTRY.
+
   ENDMETHOD.
 
   METHOD teardown.
@@ -259,58 +267,29 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
 
   METHOD given_parallel_proc_disabled.
 
-    DATA:
-      lo_settings_double TYPE REF TO ltd_settings.
-
-    CREATE OBJECT lo_settings_double
-      EXPORTING
-        iv_parallel_proc_disabled = iv_parallel_proc_disabled.
-
-    zcl_abapgit_persist_injector=>set_settings( lo_settings_double ).
+    mo_settings_double->set_parallel_proc_disabled( iv_parallel_proc_disabled ).
 
   ENDMETHOD.
 
 
   METHOD given_is_merged.
 
-    ms_given-is_merged = iv_is_merged.
+    mo_environment_double->set_is_merged( iv_is_merged ).
 
   ENDMETHOD.
 
 
   METHOD given_free_work_processes.
 
-    ms_given-free_work_processes = iv_free_work_processes.
+    mo_environment_double->set_free_work_processes( iv_free_work_processes ).
 
   ENDMETHOD.
 
 
   METHOD when_determine_max_processes.
 
-    prepare_test_environment( ).
-
     mv_processes = mo_cut->determine_max_processes( iv_force_sequential = iv_force_sequential
                                                     iv_package          = 'ZDUMMY' ).
-
-  ENDMETHOD.
-
-
-  METHOD prepare_test_environment.
-
-    DATA:
-      lo_environment_double TYPE REF TO ltd_environment,
-      lo_function_module    TYPE REF TO ltd_function_module.
-
-    CREATE OBJECT lo_environment_double
-      EXPORTING
-        iv_is_merged           = ms_given-is_merged
-        iv_free_work_processes = ms_given-free_work_processes.
-
-    zcl_abapgit_injector=>set_environment( lo_environment_double ).
-
-    CREATE OBJECT lo_function_module.
-
-    zcl_abapgit_injector=>set_function_module( lo_function_module ).
 
   ENDMETHOD.
 
