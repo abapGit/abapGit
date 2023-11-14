@@ -215,11 +215,15 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
 
   METHOD zif_abapgit_environment~init_parallel_processing.
 
+    DATA: lv_group TYPE rzlli_apcl.
+
+    lv_group = iv_group.
+
     " SPBT_INITIALIZE gives error PBT_ENV_ALREADY_INITIALIZED if called
     " multiple times in same session
     CALL FUNCTION 'SPBT_INITIALIZE'
       EXPORTING
-        group_name                     = iv_group
+        group_name                     = lv_group
       IMPORTING
         free_pbt_wps                   = rv_free_work_processes
       EXCEPTIONS

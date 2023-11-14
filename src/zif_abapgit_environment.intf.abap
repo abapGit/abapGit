@@ -36,7 +36,7 @@ INTERFACE zif_abapgit_environment
       VALUE(rv_is_variant_maintenance) TYPE abap_bool.
   METHODS init_parallel_processing
     IMPORTING
-      iv_group                      TYPE rzlli_apcl
+      iv_group                      TYPE clike
     RETURNING
       VALUE(rv_free_work_processes) TYPE i.
 
