@@ -126,15 +126,125 @@ CLASS ltd_environment IMPLEMENTATION.
 ENDCLASS.
 
 
+CLASS ltd_exit DEFINITION FINAL FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
+  PUBLIC SECTION.
+    INTERFACES:
+      zif_abapgit_exit.
+
+    METHODS:
+      set_max_parallel_processes
+        IMPORTING
+          iv_max_parallel_processes TYPE i.
+
+  PRIVATE SECTION.
+    DATA:
+      mv_max_parallel_processes TYPE i.
+
+ENDCLASS.
+
+
+CLASS ltd_exit IMPLEMENTATION.
+
+  METHOD zif_abapgit_exit~adjust_display_commit_url.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~adjust_display_filename.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~allow_sap_objects.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~change_local_host.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~change_max_parallel_processes.
+    IF mv_max_parallel_processes IS NOT INITIAL.
+      cv_max_processes = mv_max_parallel_processes.
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~change_proxy_authentication.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~change_proxy_port.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~change_proxy_url.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~change_rfc_server_group.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~change_supported_data_objects.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~change_supported_object_types.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~change_tadir.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~create_http_client.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~custom_serialize_abap_clif.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~deserialize_postprocess.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~determine_transport_request.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~enhance_repo_toolbar.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~get_ci_tests.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~get_ssl_id.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~http_client.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~on_event.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~pre_calculate_repo_status.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~serialize_postprocess.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~validate_before_push.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~wall_message_list.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_exit~wall_message_repo.
+  ENDMETHOD.
+
+  METHOD set_max_parallel_processes.
+    mv_max_parallel_processes = iv_max_parallel_processes.
+  ENDMETHOD.
+
+ENDCLASS.
+
+
 CLASS ltcl_determine_max_processes DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
 
   PRIVATE SECTION.
     DATA:
       mo_cut                    TYPE REF TO zcl_abapgit_serialize,
       mv_act_processes          TYPE i,
+      mo_settings_double        TYPE REF TO ltd_settings,
       mo_environment_double     TYPE REF TO ltd_environment,
       mo_function_module_double TYPE REF TO ltd_function_module,
-      mo_settings_double        TYPE REF TO ltd_settings.
+      mo_exit                   TYPE REF TO ltd_exit.
 
     METHODS:
       setup,
@@ -144,6 +254,7 @@ CLASS ltcl_determine_max_processes DEFINITION FOR TESTING DURATION SHORT RISK LE
       det_max_proc_amdahls_law FOR TESTING RAISING zcx_abapgit_exception,
       determine_max_processes_no_pp FOR TESTING RAISING zcx_abapgit_exception,
       determine_max_processes_merged FOR TESTING RAISING zcx_abapgit_exception,
+      determine_max_processes_exit FOR TESTING RAISING zcx_abapgit_exception,
       force FOR TESTING RAISING zcx_abapgit_exception,
 
       teardown,
@@ -168,7 +279,11 @@ CLASS ltcl_determine_max_processes DEFINITION FOR TESTING DURATION SHORT RISK LE
 
       then_we_shd_have_n_processes
         IMPORTING
-          iv_exp_processes TYPE i.
+          iv_exp_processes TYPE i,
+
+      given_exit_chg_max_processes
+        IMPORTING
+          iv_max_processes TYPE i.
 
 ENDCLASS.
 
@@ -185,6 +300,9 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
     CREATE OBJECT mo_function_module_double.
     zcl_abapgit_injector=>set_function_module( mo_function_module_double ).
 
+    CREATE OBJECT mo_exit.
+    zcl_abapgit_injector=>set_exit( mo_exit ).
+
     TRY.
         CREATE OBJECT mo_cut.
       CATCH zcx_abapgit_exception.
@@ -192,6 +310,7 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
+
 
   METHOD teardown.
 
@@ -263,6 +382,15 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD determine_max_processes_exit.
+
+    given_exit_chg_max_processes( 7 ).
+    when_determine_max_processes( ).
+    then_we_shd_have_n_processes( 7 ).
+
+  ENDMETHOD.
+
+
   METHOD force.
 
     when_determine_max_processes( abap_true ).
@@ -307,6 +435,13 @@ CLASS ltcl_determine_max_processes IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = mv_act_processes
       exp = iv_exp_processes ).
+
+  ENDMETHOD.
+
+
+  METHOD given_exit_chg_max_processes.
+
+    mo_exit->set_max_parallel_processes( iv_max_processes ).
 
   ENDMETHOD.
 
