@@ -100,8 +100,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( |<table>| ).
-    ri_html->add( |<tr><td><u>Filename</u></td><td><u>Remote</u></td>| &&
-                  |<td><u>Local</u></td><td></td></tr>| ).
+    ri_html->add( |<tr><td><u>Filename</u></td><td><u>Remote</u></td><td><u>Local</u></td><td></td></tr>| ).
 
     lv_branch = is_feature-branch-display_name.
     IF lv_branch IS INITIAL.
