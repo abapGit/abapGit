@@ -8,7 +8,7 @@ Legend
 + : added
 - : removed
 
-2023-11-11 v1.126.0
+2023-11-16 v1.126.0
 -------------------
 
 ! Add ABAP Language Version to repo settings (experimental feature) (#6476,#6484,#6486,#6487,#6488,#6525,#6603)
@@ -65,6 +65,7 @@ Legend
 * Fix text field when switching to offline (#6632)
 * Fix APACK for namespaces (#6639)
 * Fix deletion/uninstall when using local settings (#6640)
+* Fix APACK performance (#6649)
 
 2023-09-06 v1.125.0
 -------------------
