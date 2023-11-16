@@ -274,7 +274,8 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
       iv_label       = 'Only Serialize Main Language'
       iv_hint        = 'Ignore translations; serialize only main language of repository' ).
 
-    IF zcl_abapgit_feature=>is_enabled( 'FLOW' ) = abap_true.
+    IF zcl_abapgit_feature=>is_enabled( 'FLOW' ) = abap_true
+        AND li_package->are_changes_recorded_in_tr_req( ) = abap_true.
       ro_form->checkbox(
         iv_name  = c_id-flow
         iv_label = 'Enable Flow Page' ).

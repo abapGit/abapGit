@@ -92,6 +92,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
   METHOD render_table.
 
     DATA ls_path_name LIKE LINE OF is_feature-changed_files.
+    DATA lo_toolbar   TYPE REF TO zcl_abapgit_html_toolbar.
     DATA lv_status    TYPE string.
     DATA lv_branch    TYPE string.
     DATA lv_param     TYPE string.
@@ -100,8 +101,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( |<table>| ).
-    ri_html->add( |<tr><td><u>Filename</u></td><td><u>Remote SHA1</u></td>| &&
-                  |<td><u>Local SHA1</u></td><td></td></tr>| ).
+    ri_html->add( |<tr><td><u>Filename</u></td><td><u>Remote</u></td><td><u>Local</u></td><td></td></tr>| ).
 
     lv_branch = is_feature-branch-display_name.
     IF lv_branch IS INITIAL.
@@ -129,13 +129,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     ri_html->add( |</table>| ).
 
 * todo: crossout if write protected
-    ri_html->add( ri_html->a(
-      iv_txt = 'Pull'
-      iv_act = |{ c_action-pull }?index={ iv_index }&key={ is_feature-repo-key }| ) ).
-    ri_html->add( ri_html->a(
-      iv_txt = 'Stage'
-      iv_act = |{ c_action-stage }?index={ iv_index }&key={ is_feature-repo-key }&branch={ lv_branch }| ) ).
-    ri_html->add( |<br>| ).
+
+    CREATE OBJECT lo_toolbar EXPORTING iv_id = 'toolbar-flow'.
+    lo_toolbar->add( iv_txt = 'Pull'
+                     iv_act = |{ c_action-pull }?index={ iv_index }&key={ is_feature-repo-key }&branch={ lv_branch }|
+                     iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+    lo_toolbar->add( iv_txt = 'Stage'
+                     iv_act = |{ c_action-stage }?index={ iv_index }&key={ is_feature-repo-key }&branch={ lv_branch }|
+                     iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+    ri_html->add( lo_toolbar->render( ) ).
 
   ENDMETHOD.
 
@@ -205,17 +207,37 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
           io_repo       = lo_online
           ii_obj_filter = lo_filter ).
 
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
+
+        refresh( ).
       WHEN c_action-pull.
         lv_key = ii_event->query( )->get( 'KEY' ).
         lv_index = ii_event->query( )->get( 'INDEX' ).
+        lv_branch = ii_event->query( )->get( 'BRANCH' ).
         lo_online ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
 
         READ TABLE mt_features INTO ls_feature INDEX lv_index.
         ASSERT sy-subrc = 0.
 
-* todo: set filter,
-        zcl_abapgit_services_repo=>gui_deserialize( lo_online ).
+        LOOP AT ls_feature-changed_objects ASSIGNING <ls_object>.
+          APPEND INITIAL LINE TO lt_filter ASSIGNING <ls_filter>.
+          <ls_filter>-object = <ls_object>-obj_type.
+          <ls_filter>-obj_name = <ls_object>-obj_name.
+        ENDLOOP.
+        CREATE OBJECT lo_filter EXPORTING it_filter = lt_filter.
+
+        set_branch(
+          iv_branch = lv_branch
+          iv_key    = lv_key ).
+
+        rs_handled-page = zcl_abapgit_gui_page_pull=>create(
+          io_repo       = lo_online
+          iv_trkorr     = ls_feature-transport-trkorr
+          ii_obj_filter = lo_filter ).
+
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+
+        refresh( ).
     ENDCASE.
 
   ENDMETHOD.
