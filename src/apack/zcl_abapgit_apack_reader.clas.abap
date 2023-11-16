@@ -173,8 +173,9 @@ CLASS ZCL_ABAPGIT_APACK_READER IMPLEMENTATION.
           lt_packages                TYPE zif_abapgit_sap_package=>ty_devclass_tt,
           ls_manifest_implementation TYPE ty_s_manifest_declaration,
           lt_manifest_implementation TYPE STANDARD TABLE OF ty_s_manifest_declaration WITH DEFAULT KEY.
-    DATA lt_refclsname TYPE RANGE OF seometarel-refclsname.
+    DATA lt_refclsname TYPE RANGE OF abap_classname.
     DATA ls_refclsname LIKE LINE OF lt_refclsname.
+
 
     IF mv_package_name IS NOT INITIAL.
       lt_packages = zcl_abapgit_factory=>get_sap_package( mv_package_name )->list_subpackages( ).
