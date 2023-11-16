@@ -50,7 +50,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -100,8 +100,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( |<table>| ).
-    ri_html->add( |<tr><td><u>Filename</u></td><td><u>Remote SHA1</u></td>| &&
-                  |<td><u>Local SHA1</u></td><td></td></tr>| ).
+    ri_html->add( |<tr><td><u>Filename</u></td><td><u>Remote</u></td>| &&
+                  |<td><u>Local</u></td><td></td></tr>| ).
 
     lv_branch = is_feature-branch-display_name.
     IF lv_branch IS INITIAL.
@@ -230,6 +230,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
         rs_handled-page = zcl_abapgit_gui_page_pull=>create(
           io_repo       = lo_online
+          iv_trkorr     = ls_feature-transport-trkorr
           ii_obj_filter = lo_filter ).
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
