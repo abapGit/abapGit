@@ -41,7 +41,19 @@ CLASS zcl_abapgit_gui_page_pull DEFINITION
 ENDCLASS.
 
 
-CLASS zcl_abapgit_gui_page_pull IMPLEMENTATION.
+
+CLASS ZCL_ABAPGIT_GUI_PAGE_PULL IMPLEMENTATION.
+
+
+  METHOD constructor.
+
+    super->constructor( ).
+
+    mo_repo       = io_repo.
+    mi_obj_filter = ii_obj_filter.
+
+  ENDMETHOD.
+
 
   METHOD create.
 
@@ -59,6 +71,21 @@ CLASS zcl_abapgit_gui_page_pull IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_gui_event_handler~on_event.
+
+    CASE ii_event->mv_action.
+      WHEN c_action-refresh.
+        mo_repo->refresh( ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_action-pull.
+      " mo_repo->deserialize(
+        BREAK-POINT.
+    ENDCASE.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_menu_provider~get_menu.
 
     CREATE OBJECT ro_toolbar EXPORTING iv_id = 'toolbar-main'.
@@ -73,27 +100,6 @@ CLASS zcl_abapgit_gui_page_pull IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD constructor.
-
-    super->constructor( ).
-
-    mo_repo       = io_repo.
-    mi_obj_filter = ii_obj_filter.
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_gui_event_handler~on_event.
-
-    CASE ii_event->mv_action.
-      WHEN c_action-refresh.
-        mo_repo->refresh( ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN c_action-pull.
-      " mo_repo->deserialize(
-        BREAK-POINT.
-    ENDCASE.
-
-  ENDMETHOD.
 
   METHOD zif_abapgit_gui_renderable~render.
 
@@ -123,6 +129,9 @@ CLASS zcl_abapgit_gui_page_pull IMPLEMENTATION.
       ri_html->add( 'todo, requirements not met<br>' ).
     ENDIF.
 
+    IF lines( ls_checks-overwrite ) > 0.
+      ri_html->add( |<h2>Objects</h2>| ).
+    ENDIF.
     LOOP AT ls_checks-overwrite ASSIGNING <ls_overwrite>.
       IF lines( lt_filter ) > 0.
         READ TABLE lt_filter WITH KEY object = <ls_overwrite>-obj_type
@@ -131,19 +140,22 @@ CLASS zcl_abapgit_gui_page_pull IMPLEMENTATION.
           CONTINUE.
         ENDIF.
       ENDIF.
-      ri_html->add( |todo, overwrite, <tt>{ <ls_overwrite>-obj_type } { <ls_overwrite>-obj_name }</tt><br>| ).
+      ri_html->add( |<tt>{ <ls_overwrite>-obj_type } { <ls_overwrite>-obj_name }</tt><br>| ).
     ENDLOOP.
 
+    IF lines( ls_checks-warning_package ) > 0.
+      ri_html->add( |<h2>Package Warnings</h2>| ).
+    ENDIF.
     LOOP AT ls_checks-warning_package ASSIGNING <ls_overwrite>.
       ri_html->add( 'todo, warning package<br>' ).
     ENDLOOP.
 
     IF ls_checks-transport-required = abap_true AND ls_checks-transport-transport IS INITIAL.
+      ri_html->add( |<h2>Transport</h2>| ).
       ri_html->add( 'todo, transport required<br>' ).
     ENDIF.
 
     ri_html->add( '</div>' ).
 
   ENDMETHOD.
-
 ENDCLASS.
