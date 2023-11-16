@@ -38,6 +38,8 @@ CLASS lcl_environment IMPLEMENTATION.
   ENDMETHOD.
   METHOD zif_abapgit_environment~is_variant_maintenance.
   ENDMETHOD.
+  METHOD zif_abapgit_environment~init_parallel_processing.
+  ENDMETHOD.
 
 ENDCLASS.
 

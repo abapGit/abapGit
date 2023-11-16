@@ -140,7 +140,7 @@ CLASS zcl_abapgit_objects DEFINITION
         !ct_files     TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS deserialize_objects
+    CLASS-METHODS deserialize_step
       IMPORTING
         !is_step      TYPE zif_abapgit_objects=>ty_step_data
         !ii_log       TYPE REF TO zif_abapgit_log
@@ -823,7 +823,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD deserialize_objects.
+  METHOD deserialize_step.
 
     DATA: li_progress TYPE REF TO zif_abapgit_progress,
           li_exit     TYPE REF TO zif_abapgit_exit,
@@ -902,7 +902,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     FIELD-SYMBOLS <ls_step> LIKE LINE OF it_steps.
 
     LOOP AT it_steps ASSIGNING <ls_step>.
-      deserialize_objects(
+      deserialize_step(
         EXPORTING
           is_step      = <ls_step>
           ii_log       = ii_log

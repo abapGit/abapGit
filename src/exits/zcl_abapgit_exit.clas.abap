@@ -1,6 +1,7 @@
 CLASS zcl_abapgit_exit DEFINITION
   PUBLIC
-  CREATE PUBLIC.
+  CREATE PUBLIC
+  GLOBAL FRIENDS zcl_abapgit_injector.
 
   PUBLIC SECTION.
 
