@@ -92,6 +92,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
   METHOD render_table.
 
     DATA ls_path_name LIKE LINE OF is_feature-changed_files.
+    DATA lo_toolbar   TYPE REF TO zcl_abapgit_html_toolbar.
     DATA lv_status    TYPE string.
     DATA lv_branch    TYPE string.
     DATA lv_param     TYPE string.
@@ -128,12 +129,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     ri_html->add( |</table>| ).
 
 * todo: crossout if write protected
-    ri_html->add( ri_html->a(
-      iv_txt = 'Pull'
-      iv_act = |{ c_action-pull }?index={ iv_index }&key={ is_feature-repo-key }&branch={ lv_branch }| ) ).
-    ri_html->add( ri_html->a(
-      iv_txt = 'Stage'
-      iv_act = |{ c_action-stage }?index={ iv_index }&key={ is_feature-repo-key }&branch={ lv_branch }| ) ).
+
+    CREATE OBJECT lo_toolbar EXPORTING iv_id = 'toolbar-flow'.
+    lo_toolbar->add( iv_txt = 'Pull'
+                     iv_act = |{ c_action-pull }?index={ iv_index }&key={ is_feature-repo-key }&branch={ lv_branch }|
+                     iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+    lo_toolbar->add( iv_txt = 'Stage'
+                     iv_act = |{ c_action-stage }?index={ iv_index }&key={ is_feature-repo-key }&branch={ lv_branch }|
+                     iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+    ri_html->add( lo_toolbar->render( ) ).
+
     ri_html->add( |<br>| ).
 
   ENDMETHOD.
