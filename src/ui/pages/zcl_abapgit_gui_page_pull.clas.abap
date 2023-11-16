@@ -165,6 +165,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PULL IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
+    DATA lo_log TYPE REF TO zcl_abapgit_log.
+    DATA lv_value TYPE string.
+
+    FIELD-SYMBOLS <ls_overwrite> LIKE LINE OF ms_checks-overwrite.
+
+
+    mo_form_data = ii_event->form_data( ).
+
     CASE ii_event->mv_action.
       WHEN c_action-refresh.
         mo_repo->refresh( ).
@@ -173,8 +181,23 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PULL IMPLEMENTATION.
         choose_transport_request( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-pull.
-        " mo_repo->deserialize(
-        BREAK-POINT.
+        ms_checks-transport-transport = mo_form_data->get( c_id-transport_request ).
+
+        LOOP AT ms_checks-overwrite ASSIGNING <ls_overwrite>.
+          lv_value = mo_form_data->get( |{ <ls_overwrite>-obj_type }-{ <ls_overwrite>-obj_name }| ).
+          IF lv_value = 'on'.
+            <ls_overwrite>-decision = zif_abapgit_definitions=>c_yes.
+          ELSE.
+            <ls_overwrite>-decision = zif_abapgit_definitions=>c_no.
+          ENDIF.
+        ENDLOOP.
+
+* todo, show log?
+        CREATE OBJECT lo_log.
+        mo_repo->deserialize(
+          is_checks = ms_checks
+          ii_log    = lo_log ).
+
         rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
 
