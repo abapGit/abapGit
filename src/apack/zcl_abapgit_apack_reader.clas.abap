@@ -70,7 +70,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_APACK_READER IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -173,6 +173,8 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
           lt_packages                TYPE zif_abapgit_sap_package=>ty_devclass_tt,
           ls_manifest_implementation TYPE ty_s_manifest_declaration,
           lt_manifest_implementation TYPE STANDARD TABLE OF ty_s_manifest_declaration WITH DEFAULT KEY.
+    DATA lt_refclsname TYPE RANGE OF seometarel-refclsname.
+    DATA ls_refclsname LIKE LINE OF lt_refclsname.
 
     IF mv_package_name IS NOT INITIAL.
       lt_packages = zcl_abapgit_factory=>get_sap_package( mv_package_name )->list_subpackages( ).
@@ -180,16 +182,31 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
     ENDIF.
 
     IF mv_is_cached IS INITIAL AND lt_packages IS NOT INITIAL.
+      ls_refclsname-sign = 'I'.
+      ls_refclsname-option = 'EQ'.
+      ls_refclsname-low = zif_abapgit_apack_definitions=>c_apack_interface_cust.
+      INSERT ls_refclsname INTO TABLE lt_refclsname.
+
+      ls_refclsname-sign = 'I'.
+      ls_refclsname-option = 'EQ'.
+      ls_refclsname-low = zif_abapgit_apack_definitions=>c_apack_interface_sap.
+      INSERT ls_refclsname INTO TABLE lt_refclsname.
+
+      IF mv_package_name CA '/'.
+        ls_refclsname-sign = 'I'.
+        ls_refclsname-option = 'CP'.
+        ls_refclsname-low = zif_abapgit_apack_definitions=>c_apack_interface_nspc.
+        INSERT ls_refclsname INTO TABLE lt_refclsname.
+      ENDIF.
+
       " Find all classes that implement customer or SAP version of APACK interface
       SELECT seometarel~clsname tadir~devclass FROM seometarel "#EC CI_NOORDER
          INNER JOIN tadir ON seometarel~clsname = tadir~obj_name "#EC CI_BUFFJOIN
          INTO TABLE lt_manifest_implementation
          WHERE tadir~pgmid = 'R3TR' AND
                tadir~object = 'CLAS' AND
-               seometarel~version = '1' AND (
-               seometarel~refclsname = zif_abapgit_apack_definitions=>c_apack_interface_cust OR
-               seometarel~refclsname = zif_abapgit_apack_definitions=>c_apack_interface_sap OR
-               seometarel~refclsname LIKE zif_abapgit_apack_definitions=>c_apack_interface_nspc )
+               seometarel~version = '1' AND
+               seometarel~refclsname IN lt_refclsname
          ORDER BY clsname devclass.
 
       LOOP AT lt_packages INTO lv_package.
