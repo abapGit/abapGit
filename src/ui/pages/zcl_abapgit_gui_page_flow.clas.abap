@@ -139,8 +139,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
                      iv_opt = zif_abapgit_html=>c_html_opt-strong ).
     ri_html->add( lo_toolbar->render( ) ).
 
-    ri_html->add( |<br>| ).
-
   ENDMETHOD.
 
 
