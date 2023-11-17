@@ -761,8 +761,9 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     IF mt_all_labels IS NOT INITIAL.
       ii_html->td(
         iv_content = zcl_abapgit_gui_chunk_lib=>render_label_list(
-          it_labels = is_repo-labels
-          io_label_colors = mo_label_colors )
+          it_labels           = is_repo-labels
+          io_label_colors     = mo_label_colors
+          iv_clickable_action = c_action-label_filter )
         iv_class   = 'labels' ).
     ENDIF.
 
