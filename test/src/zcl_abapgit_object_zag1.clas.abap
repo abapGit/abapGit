@@ -13,7 +13,8 @@ ENDCLASS.
 CLASS zcl_abapgit_object_zag1 IMPLEMENTATION.
 
   METHOD create.
-    DATA ls_data TYPE zag1.
+    DATA ls_data  TYPE zag1.
+* todo,    DATA ls_tadir TYPE tadir.
 
     ASSERT sy-sysid = 'ABC'.
 
@@ -21,6 +22,8 @@ CLASS zcl_abapgit_object_zag1 IMPLEMENTATION.
     ls_data-value = iv_value.
     MODIFY zag1 FROM ls_data.
     ASSERT sy-subrc = 0.
+
+* todo,    MODIFY tadir FROM ls_tadir.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~serialize.
