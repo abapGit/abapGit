@@ -123,6 +123,9 @@ CLASS ltd_environment IMPLEMENTATION.
     me->mv_free_work_processes = iv_free_work_processes.
   ENDMETHOD.
 
+  METHOD zif_abapgit_environment~is_running_in_test_context.
+  ENDMETHOD.
+
 ENDCLASS.
 
 

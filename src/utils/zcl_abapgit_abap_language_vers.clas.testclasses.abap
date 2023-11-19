@@ -40,6 +40,8 @@ CLASS lcl_environment IMPLEMENTATION.
   ENDMETHOD.
   METHOD zif_abapgit_environment~init_parallel_processing.
   ENDMETHOD.
+  METHOD zif_abapgit_environment~is_running_in_test_context.
+  ENDMETHOD.
 
 ENDCLASS.
 
