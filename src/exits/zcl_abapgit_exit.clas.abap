@@ -26,7 +26,8 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
 
   METHOD get_instance.
 
-    DATA lv_class_name TYPE string.
+    DATA: lv_class_name  TYPE string,
+          li_environment TYPE REF TO zif_abapgit_environment.
 
     IF gi_global_exit IS NOT INITIAL.
       ri_exit = gi_global_exit.
@@ -34,16 +35,20 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
     ENDIF.
 
     lv_class_name = 'ZCL_ABAPGIT_USER_EXIT'.
+    li_environment = zcl_abapgit_factory=>get_environment( ).
 
-    IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true.
+    IF li_environment->is_merged( ) = abap_true.
       " Prevent accidental usage of exit handlers in the developer version
       lv_class_name = |\\PROGRAM={ sy-repid }\\CLASS={ lv_class_name }|.
     ENDIF.
 
-    TRY.
-        CREATE OBJECT gi_exit TYPE (lv_class_name).
-      CATCH cx_sy_create_object_error ##NO_HANDLER.
-    ENDTRY.
+    " Prevent non-mocked exit calls in unit tests
+    IF li_environment->is_running_in_test_context( ) = abap_false.
+      TRY.
+          CREATE OBJECT gi_exit TYPE (lv_class_name).
+        CATCH cx_sy_create_object_error ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
 
     CREATE OBJECT gi_global_exit TYPE zcl_abapgit_exit. " this class
 

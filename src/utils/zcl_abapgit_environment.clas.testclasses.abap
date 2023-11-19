@@ -15,7 +15,8 @@ CLASS ltcl_test DEFINITION FOR TESTING
       is_merged FOR TESTING,
       is_repo_object_changes_allowed FOR TESTING,
       compare_with_inactive FOR TESTING,
-      is_restart_required FOR TESTING.
+      is_restart_required FOR TESTING,
+      is_running_in_test_context FOR TESTING.
 
 ENDCLASS.
 
@@ -61,6 +62,10 @@ CLASS ltcl_test IMPLEMENTATION.
     mi_cut->is_restart_required( ).
 * no assertions, just make sure the dynamic code runs
 
+  ENDMETHOD.
+
+  METHOD is_running_in_test_context.
+    cl_abap_unit_assert=>assert_true( mi_cut->is_running_in_test_context( ) ).
   ENDMETHOD.
 
 ENDCLASS.
