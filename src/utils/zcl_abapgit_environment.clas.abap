@@ -243,10 +243,10 @@ CLASS zcl_abapgit_environment IMPLEMENTATION.
     " test context which should be fine as there are no unit tests delivered in it.
     cl_abap_typedescr=>describe_by_name(
       EXPORTING
-        p_name         = |\\PROGRAM={ sy-repid }\\CLASS={ 'LTCL_TEST' }|
+        p_name         = |\\PROGRAM={ sy-repid }\\CLASS=LTCL_TEST|
       EXCEPTIONS
         type_not_found = 1
-        others         = 2 ).
+        OTHERS         = 2 ).
     rv_running_in_test_context = boolc( sy-subrc = 0 ).
   ENDMETHOD.
 
