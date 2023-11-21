@@ -39,8 +39,5 @@ INTERFACE zif_abapgit_environment
       iv_group                      TYPE clike
     RETURNING
       VALUE(rv_free_work_processes) TYPE i.
-  METHODS is_running_in_test_context
-    RETURNING
-      VALUE(rv_running_in_test_context) TYPE abap_bool.
 
 ENDINTERFACE.
