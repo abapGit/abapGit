@@ -13,6 +13,8 @@ ENDCLASS.
 
 CLASS ltcl_test IMPLEMENTATION.
   METHOD is_running_in_test_context.
-    cl_abap_unit_assert=>assert_true( zcl_abapgit_exit=>is_running_in_test_context( ) ).
+    cl_abap_unit_assert=>assert_equals(
+      act = zcl_abapgit_exit=>is_running_in_test_context( )
+      exp = abap_true ).
   ENDMETHOD.
 ENDCLASS.
