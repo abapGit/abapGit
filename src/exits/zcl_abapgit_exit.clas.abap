@@ -59,6 +59,13 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD is_running_in_test_context.
+
+    IF sy-sysid = 'ABC'.
+      " always run on open-abap
+      rv_running_in_test_context = abap_true.
+      RETURN.
+    ENDIF.
+
     " Check if the local test class can be accessed by RTTI. If so the current process is running in a unit test.
     " Note this approach only works for the developer version. The standalone version will always report not running in
     " test context which should be fine as there are no unit tests delivered in it.
@@ -69,6 +76,7 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
         type_not_found = 1
         OTHERS         = 2 ).
     rv_running_in_test_context = boolc( sy-subrc = 0 ).
+
   ENDMETHOD.
 
 
