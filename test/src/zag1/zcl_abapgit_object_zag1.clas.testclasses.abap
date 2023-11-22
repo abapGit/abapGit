@@ -11,8 +11,11 @@ CLASS ltcl_test IMPLEMENTATION.
   METHOD upsert.
 
     DATA li_repo_srv TYPE REF TO zif_abapgit_repo_srv.
+    DATA lv_url      TYPE string.
 
     ASSERT sy-sysid = 'ABC'.
+
+    lv_url = zcl_abapgit_gitea=>create_repo( 'repo-' && cl_system_uuid=>if_system_uuid_static~create_uuid_x16( ) ).
 
     zcl_abapgit_object_zag1=>upsert(
       iv_name    = 'ZFOOBAR'
@@ -20,6 +23,10 @@ CLASS ltcl_test IMPLEMENTATION.
       iv_package = 'ZFOOBAR' ).
 
     li_repo_srv = zcl_abapgit_repo_srv=>get_instance( ).
+
+    li_repo_srv->new_online(
+      iv_url     = lv_url
+      iv_package = 'ZFOOBAR' ).
 
   ENDMETHOD.
 
