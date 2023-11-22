@@ -8,13 +8,14 @@ CLASS zcl_abapgit_object_zag1 DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         iv_value TYPE zag1-value.
   PROTECTED SECTION.
   PRIVATE SECTION.
+    CONSTANTS c_type TYPE tadir-object VALUE 'ZAG1'.
 ENDCLASS.
 
 CLASS zcl_abapgit_object_zag1 IMPLEMENTATION.
 
   METHOD create.
     DATA ls_data  TYPE zag1.
-* todo,    DATA ls_tadir TYPE tadir.
+    DATA ls_tadir TYPE tadir.
 
     ASSERT sy-sysid = 'ABC'.
 
@@ -23,7 +24,11 @@ CLASS zcl_abapgit_object_zag1 IMPLEMENTATION.
     MODIFY zag1 FROM ls_data.
     ASSERT sy-subrc = 0.
 
-* todo,    MODIFY tadir FROM ls_tadir.
+    ls_tadir-pgmid = 'R3TR'.
+    ls_tadir-object = c_type.
+    ls_tadir-obj_name = condense( to_upper( iv_name ) ).
+    MODIFY tadir FROM ls_tadir.
+    ASSERT sy-subrc = 0.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~serialize.
@@ -35,51 +40,54 @@ CLASS zcl_abapgit_object_zag1 IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
-    RETURN. " todo, implement method
+    DELETE FROM zag1 WHERE name = ms_item-obj_name.
+    DELETE FROM tadir WHERE pgmid = 'R3TR' AND object = c_type AND name = ms_item-obj_name.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~exists.
-    RETURN. " todo, implement method
+    DATA lv_name TYPE zag1-name.
+    SELECT SINGLE name FROM zag1 INTO lv_name WHERE name = ms_item-obj_name.
+    rv_bool = boolc( sy-subrc = 0 ).
   ENDMETHOD.
 
   METHOD zif_abapgit_object~is_locked.
-    RETURN. " todo, implement method
+    rv_is_locked = abap_false.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~is_active.
-    RETURN. " todo, implement method
+    rv_active = abap_true.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~changed_by.
-    RETURN. " todo, implement method
+    rv_user = sy-uname.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~jump.
-    RETURN. " todo, implement method
+    RETURN.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~get_metadata.
-    RETURN. " todo, implement method
+    RETURN.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~get_comparator.
-    RETURN. " todo, implement method
+    RETURN.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
-    RETURN. " todo, implement method
+    RETURN.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~get_deserialize_order.
-    RETURN. " todo, implement method
+    RETURN.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~map_filename_to_object.
-    RETURN. " todo, implement method
+    RETURN.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~map_object_to_filename.
-    RETURN. " todo, implement method
+    RETURN.
   ENDMETHOD.
 
 ENDCLASS.
