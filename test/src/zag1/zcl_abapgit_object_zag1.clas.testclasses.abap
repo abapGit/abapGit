@@ -17,7 +17,7 @@ CLASS ltcl_test IMPLEMENTATION.
   METHOD upsert.
 
     " todo, DATA lo_online   TYPE REF TO zcl_abapgit_repo_online.
-    DATA lv_url      TYPE string.
+    DATA lv_url TYPE string.
 
 
     ASSERT sy-sysid = 'ABC'.
