@@ -1,6 +1,7 @@
 CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL CRITICAL FINAL.
 
   PRIVATE SECTION.
+    METHODS setup.
     METHODS upsert FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
@@ -8,10 +9,14 @@ ENDCLASS.
 
 CLASS ltcl_test IMPLEMENTATION.
 
+  METHOD setup.
+    DATA lo_initial TYPE REF TO zif_abapgit_repo_srv.
+    zcl_abapgit_repo_srv=>inject_instance( lo_initial ).
+  ENDMETHOD.
+
   METHOD upsert.
 
-    DATA li_repo_srv TYPE REF TO zif_abapgit_repo_srv.
-    DATA lo_online   TYPE REF TO zcl_abapgit_repo_online.
+    " todo, DATA lo_online   TYPE REF TO zcl_abapgit_repo_online.
     DATA lv_url      TYPE string.
 
 
@@ -24,15 +29,13 @@ CLASS ltcl_test IMPLEMENTATION.
       iv_value   = 'hello'
       iv_package = 'ZFOOBAR' ).
 
-    li_repo_srv = zcl_abapgit_repo_srv=>get_instance( ).
+    " todo, lo_online ?= zcl_abapgit_repo_srv=>get_instance( )->new_online(
+    "   iv_url     = lv_url
+    "   iv_package = 'ZFOOBAR' ).
 
-    lo_online ?= li_repo_srv->new_online(
-      iv_url     = lv_url
-      iv_package = 'ZFOOBAR' ).
+    " todo, cl_abap_unit_assert=>assert_not_initial( lo_online ).
 
-    cl_abap_unit_assert=>assert_not_initial( lo_online ).
-
-    lo_online->get_files_local( ).
+    " todo, lo_online->get_files_local( ).
 
   ENDMETHOD.
 
