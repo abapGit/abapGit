@@ -2,10 +2,11 @@ CLASS zcl_abapgit_object_zag1 DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
 
-    CLASS-METHODS create
+    CLASS-METHODS upsert
       IMPORTING
         iv_name  TYPE zag1-name
         iv_value TYPE zag1-value.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS c_type TYPE tadir-object VALUE 'ZAG1'.
@@ -13,7 +14,7 @@ ENDCLASS.
 
 CLASS zcl_abapgit_object_zag1 IMPLEMENTATION.
 
-  METHOD create.
+  METHOD upsert.
     DATA ls_data  TYPE zag1.
     DATA ls_tadir TYPE tadir.
 
@@ -32,11 +33,28 @@ CLASS zcl_abapgit_object_zag1 IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~serialize.
-    RETURN. " todo, implement method
+
+    DATA ls_data TYPE zag1.
+
+    SELECT SINGLE * FROM zag1 INTO ls_data WHERE name = ms_item-obj_name.
+    ASSERT sy-subrc = 0.
+
+    io_xml->add( iv_name = 'DATA'
+                 ig_data = ls_data ).
+
   ENDMETHOD.
 
   METHOD zif_abapgit_object~deserialize.
-    RETURN. " todo, implement method
+
+    DATA ls_data TYPE zag1.
+
+    io_xml->read( EXPORTING iv_name = 'DATA'
+                  CHANGING  cg_data = ls_data ).
+
+    upsert(
+      iv_name  = ls_data-name
+      iv_value = ls_data-value ).
+
   ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
