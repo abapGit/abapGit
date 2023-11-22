@@ -11,8 +11,9 @@ CLASS ltcl_test IMPLEMENTATION.
   METHOD upsert.
 
     zcl_abapgit_object_zag1=>upsert(
-      iv_name  = 'ZFOOBAR'
-      iv_value = 'hello' ).
+      iv_name    = 'ZFOOBAR'
+      iv_value   = 'hello'
+      iv_package = 'ZFOOBAR' ).
 
   ENDMETHOD.
 

@@ -4,8 +4,9 @@ CLASS zcl_abapgit_object_zag1 DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     CLASS-METHODS upsert
       IMPORTING
-        iv_name  TYPE zag1-name
-        iv_value TYPE zag1-value.
+        iv_name    TYPE zag1-name
+        iv_value   TYPE zag1-value
+        iv_package TYPE tadir-devclass.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -28,6 +29,7 @@ CLASS zcl_abapgit_object_zag1 IMPLEMENTATION.
     ls_tadir-pgmid = 'R3TR'.
     ls_tadir-object = c_type.
     ls_tadir-obj_name = condense( to_upper( iv_name ) ).
+    ls_tadir-devclass = iv_package.
     MODIFY tadir FROM ls_tadir.
     ASSERT sy-subrc = 0.
   ENDMETHOD.
@@ -52,8 +54,9 @@ CLASS zcl_abapgit_object_zag1 IMPLEMENTATION.
                   CHANGING  cg_data = ls_data ).
 
     upsert(
-      iv_name  = ls_data-name
-      iv_value = ls_data-value ).
+      iv_name    = ls_data-name
+      iv_value   = ls_data-value
+      iv_package = iv_package ).
 
   ENDMETHOD.
 
