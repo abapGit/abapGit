@@ -23,6 +23,8 @@
     "zcl_abapgit_n",
     "zcl_abapgit_exit",
     "zcl_abapgit_object_intf",
+    "zag1",
+    "zcl_abapgit_object_zag",
     "zcl_abapgit_object_devc",
     "zcl_abapgit_objects_files",
     "zcl_abapgit_objects_program",
