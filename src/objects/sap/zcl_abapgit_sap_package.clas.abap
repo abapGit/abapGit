@@ -66,7 +66,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
 
     DATA: lv_err     TYPE string,
           li_package TYPE REF TO if_package,
-          ls_package LIKE is_package.
+          ls_package TYPE scompkdtln.
 
 
     ASSERT NOT is_package-devclass IS INITIAL.
@@ -86,7 +86,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    ls_package = is_package.
+    MOVE-CORRESPONDING is_package TO ls_package.
 
     " Set software component to 'HOME' if none is set at this point.
     " Otherwise SOFTWARE_COMPONENT_INVALID will be raised.
@@ -173,7 +173,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
   METHOD zif_abapgit_sap_package~create_child.
 
     DATA: li_parent TYPE REF TO if_package,
-          ls_child  TYPE scompkdtln.
+          ls_child  TYPE zif_abapgit_sap_package=>ty_create.
 
 
     cl_package_factory=>load_package(
@@ -206,7 +206,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
 
   METHOD zif_abapgit_sap_package~create_local.
 
-    DATA: ls_package TYPE scompkdtln.
+    DATA: ls_package TYPE zif_abapgit_sap_package=>ty_create.
 
 
     ls_package-devclass  = mv_package.
