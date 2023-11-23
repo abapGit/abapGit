@@ -104,10 +104,6 @@ CLASS ltcl_folder_logic_package IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
-  METHOD zif_abapgit_sap_package~get_transport_layer.
-    RETURN.
-  ENDMETHOD.
-
   METHOD zif_abapgit_sap_package~create.
     RETURN.
   ENDMETHOD.
@@ -196,10 +192,6 @@ CLASS ltcl_folder_logic IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_sap_package~get_transport_type.
-    RETURN.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_sap_package~get_transport_layer.
     RETURN.
   ENDMETHOD.
 
@@ -417,10 +409,6 @@ CLASS ltcl_folder_logic_namespaces IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
-  METHOD zif_abapgit_sap_package~get_transport_layer.
-    RETURN.
-  ENDMETHOD.
-
   METHOD zif_abapgit_sap_package~create.
     RETURN.
   ENDMETHOD.
@@ -557,10 +545,6 @@ CLASS ltcl_folder_logic_no_parent IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_sap_package~get_transport_type.
-    RETURN.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_sap_package~get_transport_layer.
     RETURN.
   ENDMETHOD.
 

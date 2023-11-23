@@ -320,10 +320,6 @@ CLASS ltcl_sap_package_mock IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_sap_package~get_transport_layer.
-
-  ENDMETHOD.
-
   METHOD zif_abapgit_sap_package~list_subpackages.
 
   ENDMETHOD.

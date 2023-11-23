@@ -109,10 +109,6 @@ CLASS ltcl_run_checks IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
-  METHOD zif_abapgit_sap_package~get_transport_layer.
-    RETURN.
-  ENDMETHOD.
-
   METHOD zif_abapgit_sap_package~create.
     RETURN.
   ENDMETHOD.
