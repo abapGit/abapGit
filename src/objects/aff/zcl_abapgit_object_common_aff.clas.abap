@@ -617,7 +617,10 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           RECEIVING
             result = lv_json_as_xstring.
 
-        lv_json_as_xstring_wo_alv = remove_abap_language_version( lv_json_as_xstring ).
+        " Only remove ABAP language version if repository is set to ignore it
+        IF ms_item-abap_language_version = zcl_abapgit_abap_language_vers=>c_no_abap_language_version.
+          lv_json_as_xstring_wo_alv = remove_abap_language_version( lv_json_as_xstring ).
+        ENDIF.
 
         zif_abapgit_object~mo_files->add_raw(
           iv_ext  = 'json'
