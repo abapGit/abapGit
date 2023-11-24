@@ -170,18 +170,19 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
 
     DATA: lv_length               TYPE i,
           lv_parent               TYPE devclass,
-          ls_package              TYPE scompkdtln,
+          ls_package              TYPE zif_abapgit_sap_package=>ty_create,
           lv_new                  TYPE string,
           lv_path                 TYPE string,
           lv_absolute_name        TYPE string,
           lv_folder_logic         TYPE string,
           lt_unique_package_names TYPE HASHED TABLE OF devclass WITH UNIQUE KEY table_line.
 
-    lv_length  = strlen( io_dot->get_starting_folder( ) ).
+    lv_length = strlen( io_dot->get_starting_folder( ) ).
     IF lv_length > strlen( iv_path ).
 * treat as not existing locally
       RETURN.
     ENDIF.
+
     lv_path    = iv_path+lv_length.
     lv_parent  = iv_top.
     rv_package = iv_top.

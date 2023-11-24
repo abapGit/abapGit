@@ -89,7 +89,7 @@ INTERFACE zif_abapgit_popups
       zcx_abapgit_exception .
   METHODS popup_to_create_package
     EXPORTING
-      !es_package_data TYPE scompkdtln
+      !es_package_data TYPE zif_abapgit_sap_package=>ty_create
       !ev_create       TYPE abap_bool
     RAISING
       zcx_abapgit_exception .
