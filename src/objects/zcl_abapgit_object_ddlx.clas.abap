@@ -226,7 +226,7 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
           <lg_package> = iv_package.
         ENDIF.
 
-        ASSIGN COMPONENT 'METADATA-CHANGED_BY' OF STRUCTURE <lg_data> to <lg_changed_by>.
+        ASSIGN COMPONENT 'METADATA-CHANGED_BY' OF STRUCTURE <lg_data> TO <lg_changed_by>.
         IF <lg_changed_by> IS ASSIGNED.
           <lg_changed_by> = sy-uname.
         ENDIF.
