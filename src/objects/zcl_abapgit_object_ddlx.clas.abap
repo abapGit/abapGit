@@ -20,7 +20,7 @@ CLASS zcl_abapgit_object_ddlx DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         !cg_metadata  TYPE any .
     METHODS get_timestamp
         RETURNING
-          VALUE(r_timestamp) TYPE xsddatetime_z.
+          VALUE(rv_timestamp) TYPE xsddatetime_z.
 ENDCLASS.
 
 
@@ -399,8 +399,8 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
             syst_date = sy-datum
             syst_time = sy-uzeit
           IMPORTING
-            utc_tstmp = r_timestamp ).
-      CATCH cx_parameter_invalid_range ##no_handler.
+            utc_tstmp = rv_timestamp ).
+      CATCH cx_parameter_invalid_range ##NO_HANDLER.
     ENDTRY.
   ENDMETHOD.
 ENDCLASS.
