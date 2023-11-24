@@ -230,7 +230,7 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
         IF <lg_changed_by> IS ASSIGNED.
           <lg_changed_by> = sy-uname.
         ENDIF.
-        ASSIGN COMPONENT 'METADATA-CHANGED_AT' OF STRUCTURE <lg_data> to <lg_changed_at>.
+        ASSIGN COMPONENT 'METADATA-CHANGED_AT' OF STRUCTURE <lg_data> TO <lg_changed_at>.
         IF <lg_changed_at> IS ASSIGNED.
           <lg_changed_at> = get_timestamp( ).
         ENDIF.
