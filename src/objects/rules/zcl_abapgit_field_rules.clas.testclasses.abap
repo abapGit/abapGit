@@ -126,8 +126,9 @@ CLASS ltcl_field_rules IMPLEMENTATION.
   METHOD apply_clear_logic.
 
     DATA:
-      ls_act TYPE ty_test,
-      lt_act TYPE STANDARD TABLE OF ty_test.
+      li_rules TYPE REF TO zif_abapgit_field_rules,
+      ls_act   TYPE ty_test,
+      lt_act   TYPE STANDARD TABLE OF ty_test.
 
     ls_act-key  = 1.
     ls_act-user = 'MARC'.
@@ -142,7 +143,9 @@ CLASS ltcl_field_rules IMPLEMENTATION.
     ls_act-time = '000001'.
     INSERT ls_act INTO TABLE lt_act.
 
-    get_rules( )->apply_clear_logic(
+    li_rules = get_rules( ).
+
+    li_rules->apply_clear_logic(
       EXPORTING
         iv_table = c_table
       CHANGING
@@ -175,9 +178,10 @@ CLASS ltcl_field_rules IMPLEMENTATION.
   METHOD apply_fill_logic.
 
     DATA:
-      ls_act TYPE ty_test,
-      lt_act TYPE STANDARD TABLE OF ty_test,
-      lv_ts  TYPE string.
+      li_rules TYPE REF TO zif_abapgit_field_rules,
+      ls_act   TYPE ty_test,
+      lt_act   TYPE STANDARD TABLE OF ty_test,
+      lv_ts    TYPE string.
 
     ls_act-key  = 1.
     INSERT ls_act INTO TABLE lt_act.
@@ -187,7 +191,9 @@ CLASS ltcl_field_rules IMPLEMENTATION.
     ls_act-time = '123456'.
     INSERT ls_act INTO TABLE lt_act.
 
-    get_rules( )->apply_fill_logic(
+    li_rules = get_rules( ).
+
+    li_rules->apply_fill_logic(
       EXPORTING
         iv_table   = c_table
         iv_package = c_package
