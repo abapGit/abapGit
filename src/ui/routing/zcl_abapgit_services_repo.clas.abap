@@ -112,7 +112,7 @@ CLASS zcl_abapgit_services_repo DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS raise_error_if_package_exists
       IMPORTING
-        iv_devclass TYPE scompkdtln-devclass
+        iv_devclass TYPE devclass
       RAISING
         zcx_abapgit_exception.
     CLASS-METHODS check_for_restart
@@ -256,7 +256,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
   METHOD create_package.
 
-    DATA ls_package_data TYPE scompkdtln.
+    DATA ls_package_data TYPE zif_abapgit_sap_package=>ty_create.
     DATA lv_create       TYPE abap_bool.
     DATA li_popup        TYPE REF TO zif_abapgit_popups.
 
