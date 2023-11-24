@@ -189,7 +189,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     lv_package = iv_package.
     TRANSLATE lv_package USING '/#'.
-    CONCATENATE lv_package '_' sy-datlo '_' sy-timlo INTO lv_default.
+    CONCATENATE lv_package '_' sy-datlo '_' sy-timlo '.zip' INTO lv_default.
 
     li_fe_serv = zcl_abapgit_ui_factory=>get_frontend_services( ).
 
