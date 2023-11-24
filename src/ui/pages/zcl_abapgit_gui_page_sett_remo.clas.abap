@@ -846,12 +846,6 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     lv_offline = io_form_data->get( c_id-offline ).
     lv_url = io_form_data->get( c_id-url ).
 
-    IF lv_offline = abap_true AND lv_url IS INITIAL.
-      ro_validation_log->set(
-        iv_key = c_id-url
-        iv_val = 'Enter a name for the repository and save' ).
-    ENDIF.
-
     IF lv_offline = abap_false AND lv_url NP 'http*'.
       ro_validation_log->set(
         iv_key = c_id-url
