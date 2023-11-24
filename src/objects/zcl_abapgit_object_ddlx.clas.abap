@@ -18,6 +18,9 @@ CLASS zcl_abapgit_object_ddlx DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         !iv_fieldname TYPE csequence
       CHANGING
         !cg_metadata  TYPE any .
+    METHODS get_timestamp
+        RETURNING
+          VALUE(r_timestamp) TYPE xsddatetime_z.
 ENDCLASS.
 
 
@@ -179,10 +182,12 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
           lr_data       TYPE REF TO data,
           lx_error      TYPE REF TO cx_root.
 
-    FIELD-SYMBOLS: <lg_data>    TYPE any,
-                   <lg_source>  TYPE data,
-                   <lg_version> TYPE data,
-                   <lg_package> TYPE data.
+    FIELD-SYMBOLS: <lg_data>       TYPE any,
+                   <lg_source>     TYPE data,
+                   <lg_version>    TYPE data,
+                   <lg_package>    TYPE data,
+                   <lg_changed_by> TYPE syuname,
+                   <lg_changed_at> TYPE xsddatetime_z.
 
     TRY.
         CREATE DATA lr_data
@@ -219,6 +224,15 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
         ASSIGN COMPONENT 'METADATA-PACKAGE_REF-NAME' OF STRUCTURE <lg_data> TO <lg_package>.
         IF <lg_package> IS ASSIGNED.
           <lg_package> = iv_package.
+        ENDIF.
+
+        ASSIGN COMPONENT 'METADATA-CHANGED_BY' OF STRUCTURE <lg_data> to <lg_changed_by>.
+        IF <lg_changed_by> IS ASSIGNED.
+          <lg_changed_by> = sy-uname.
+        ENDIF.
+        ASSIGN COMPONENT 'METADATA-CHANGED_AT' OF STRUCTURE <lg_data> to <lg_changed_at>.
+        IF <lg_changed_at> IS ASSIGNED.
+          <lg_changed_at> = get_timestamp( ).
         ENDIF.
 
         li_data_model->set_data( <lg_data> ).
@@ -374,5 +388,19 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
         zcx_abapgit_exception=>raise_with_text( lx_error ).
     ENDTRY.
 
+  ENDMETHOD.
+
+
+  METHOD get_timestamp.
+    GET TIME.
+    TRY.
+        cl_abap_tstmp=>systemtstmp_syst2utc(
+          EXPORTING
+            syst_date = sy-datum
+            syst_time = sy-uzeit
+          IMPORTING
+            utc_tstmp = r_timestamp ).
+      CATCH cx_parameter_invalid_range ##no_handler.
+    ENDTRY.
   ENDMETHOD.
 ENDCLASS.
