@@ -4,6 +4,8 @@ CLASS zcl_abapgit_git_transport DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+    INTERFACES:
+      zif_abapgit_git_transport.
 
 * remote to local
     CLASS-METHODS upload_pack_by_branch
@@ -37,13 +39,7 @@ CLASS zcl_abapgit_git_transport DEFINITION
         !iv_pack        TYPE xstring OPTIONAL
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS branches
-      IMPORTING
-        !iv_url               TYPE string
-      RETURNING
-        VALUE(ro_branch_list) TYPE REF TO zcl_abapgit_git_branch_list
-      RAISING
-        zcx_abapgit_exception .
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -102,7 +98,7 @@ ENDCLASS.
 CLASS zcl_abapgit_git_transport IMPLEMENTATION.
 
 
-  METHOD branches.
+  METHOD zif_abapgit_git_transport~branches.
 
     DATA: lo_client TYPE REF TO zcl_abapgit_http_client.
 

@@ -100,7 +100,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     rv_name = iv_name.
     IF rv_name IS INITIAL.
       ASSERT NOT iv_url IS INITIAL.
-      lo_branch_list = zcl_abapgit_git_transport=>branches( iv_url ).
+      lo_branch_list = zcl_abapgit_git_factory=>get_git_transport( )->branches( iv_url ).
       rv_name = lo_branch_list->get_head_symref( ).
     ELSEIF -1 = find(
         val = rv_name

@@ -34,7 +34,7 @@ CLASS ltcl_test IMPLEMENTATION.
     CREATE OBJECT li_memory.
     zcl_abapgit_persist_injector=>set_settings( li_memory ).
 
-    lv_ref = zcl_abapgit_git_transport=>branches( lc_url )->get_head_symref( ).
+    lv_ref = zcl_abapgit_git_factory=>get_git_transport( )->branches( lc_url )->get_head_symref( ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_ref
