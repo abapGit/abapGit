@@ -16,8 +16,8 @@ CLASS ltcl_test IMPLEMENTATION.
 
   METHOD upsert.
 
-    " todo, DATA lo_online   TYPE REF TO zcl_abapgit_repo_online.
-    DATA lv_url TYPE string.
+    DATA lo_online TYPE REF TO zcl_abapgit_repo_online.
+    DATA lv_url    TYPE string.
 
 
     ASSERT sy-sysid = 'ABC'.
@@ -29,11 +29,11 @@ CLASS ltcl_test IMPLEMENTATION.
       iv_value   = 'hello'
       iv_package = 'ZFOOBAR' ).
 
-    " todo, lo_online ?= zcl_abapgit_repo_srv=>get_instance( )->new_online(
-    "   iv_url     = lv_url
-    "   iv_package = 'ZFOOBAR' ).
+    lo_online ?= zcl_abapgit_repo_srv=>get_instance( )->new_online(
+      iv_url     = lv_url
+      iv_package = 'ZFOOBAR' ).
 
-    " todo, cl_abap_unit_assert=>assert_not_initial( lo_online ).
+    cl_abap_unit_assert=>assert_not_initial( lo_online ).
 
     " todo, lo_online->get_files_local( ).
 
