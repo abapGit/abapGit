@@ -170,17 +170,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PULL IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_overwrite> LIKE LINE OF ms_checks-overwrite.
 
+    mo_form_data->merge( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.
       WHEN c_action-refresh.
-        mo_form_data = ii_event->form_data( ).
         mo_repo->refresh( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-choose_tr.
         choose_transport_request( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_action-pull.
-        mo_form_data = ii_event->form_data( ).
         ms_checks-transport-transport = mo_form_data->get( c_id-transport_request ).
 
         LOOP AT ms_checks-overwrite ASSIGNING <ls_overwrite>.
