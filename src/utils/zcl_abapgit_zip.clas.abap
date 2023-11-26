@@ -78,7 +78,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
+CLASS zcl_abapgit_zip IMPLEMENTATION.
 
 
   METHOD encode_files.
@@ -210,7 +210,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
     lv_package_escaped = iv_package.
     REPLACE ALL OCCURRENCES OF '/' IN lv_package_escaped WITH '#'.
-    lv_default = |{ lv_package_escaped }_{ sy-datlo }_{ sy-timlo }|.
+    lv_default = |{ lv_package_escaped }_{ sy-datlo }_{ sy-timlo }.zip|.
 
     lv_zip_xstring = export(
      is_local_settings = ls_local_settings

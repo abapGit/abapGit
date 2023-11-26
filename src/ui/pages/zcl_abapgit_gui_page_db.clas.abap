@@ -172,7 +172,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
 
     lv_zip = lo_zip->save( ).
 
-    CONCATENATE 'abapGit_Backup_' sy-datlo '_' sy-timlo INTO lv_filename.
+    CONCATENATE 'abapGit_Backup_' sy-datlo '_' sy-timlo '.zip' INTO lv_filename.
 
     li_fe_serv = zcl_abapgit_ui_factory=>get_frontend_services( ).
 
