@@ -49,6 +49,8 @@ It is recommended to use SAP GUI for Windows, since there are known issues relat
 
 https://docs.abapgit.org
 
+[Join Slack channel](https://communityinviter.com/apps/abapgit/abap)
+
 ## Contributing
 
 You can find the contribution guidelines [here](CONTRIBUTING.md).
