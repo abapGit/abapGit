@@ -277,7 +277,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
     ro_form->checkbox(
       iv_name     = c_id-flow
       iv_readonly = boolc( li_package->are_changes_recorded_in_tr_req( ) = abap_false )
-      iv_label    = 'BETA, Enable abapGit flow for this repository (requires transported packages)' ).
+      iv_label    = 'BETA: Enable abapGit flow for this repository (requires transported packages)' ).
 
     ro_form->start_group(
       iv_name        = c_id-checks
