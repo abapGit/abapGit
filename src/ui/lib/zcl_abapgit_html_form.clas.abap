@@ -634,7 +634,8 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
   METHOD render_field_checkbox.
 
-    DATA lv_checked TYPE string.
+    DATA lv_checked  TYPE string.
+    DATA lv_disabled TYPE string.
 
     IF is_attr-error IS NOT INITIAL.
       ii_html->add( is_attr-error ).
@@ -645,8 +646,12 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       lv_checked = ' checked'.
     ENDIF.
 
+    IF is_attr-readonly IS NOT INITIAL.
+      lv_disabled = ' disabled'.
+    ENDIF.
+
     ii_html->add( |<input type="checkbox" name="{ is_field-name }" id="{ is_field-name }"| &&
-                  |{ lv_checked }{ is_attr-readonly }{ is_attr-autofocus }>| ).
+                  |{ lv_checked }{ lv_disabled }{ is_attr-autofocus }>| ).
     ii_html->add( |<label for="{ is_field-name }"{ is_attr-hint }>{ is_field-label }</label>| ).
 
   ENDMETHOD.
