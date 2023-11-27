@@ -337,13 +337,12 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
     ENDLOOP.
 
     IF lines( mt_features ) = 0.
-      ri_html->add( 'Empty, repositories must be favorite + flow enabled<br>' ).
+      ri_html->add( 'Empty, repositories must be favorite + flow enabled<br><br>' ).
 
       ri_html->add_a(
         iv_txt   = 'abapGit flow documentation'
         iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url=https://docs.abapgit.org/todo.html|
         iv_class = |url| ).
-
     ENDIF.
 
     ri_html->add( '</div>' ).
