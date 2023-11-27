@@ -280,9 +280,10 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
           iv_name  = c_id-flow
           iv_label = 'Enable abapGit flow for this repository' ).
       ELSE.
-        ro_form->text(
-          iv_name  = c_id-flow
-          iv_label = 'Flow is not available for repositories without transport request' ).
+        ro_form->checkbox(
+          iv_name     = c_id-flow
+          iv_readonly = abap_true
+          iv_label    = 'abapGit flow requires transported packages' ).
       ENDIF.
     ENDIF.
 

@@ -76,6 +76,7 @@ CLASS zcl_abapgit_html_form DEFINITION
         !iv_label      TYPE csequence
         !iv_name       TYPE csequence
         !iv_hint       TYPE csequence OPTIONAL
+        !iv_readonly   TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form .
     METHODS radio
@@ -201,10 +202,11 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     DATA ls_field LIKE LINE OF mt_fields.
 
-    ls_field-type  = zif_abapgit_html_form=>c_field_type-checkbox.
-    ls_field-name  = iv_name.
-    ls_field-label = iv_label.
-    ls_field-hint  = iv_hint.
+    ls_field-type     = zif_abapgit_html_form=>c_field_type-checkbox.
+    ls_field-name     = iv_name.
+    ls_field-label    = iv_label.
+    ls_field-hint     = iv_hint.
+    ls_field-readonly = iv_readonly.
 
     APPEND ls_field TO mt_fields.
 
