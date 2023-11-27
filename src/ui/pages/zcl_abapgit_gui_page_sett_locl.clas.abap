@@ -275,16 +275,10 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
       iv_hint        = 'Ignore translations; serialize only main language of repository' ).
 
     IF zcl_abapgit_feature=>is_enabled( 'FLOW' ) = abap_true.
-      IF li_package->are_changes_recorded_in_tr_req( ) = abap_true.
-        ro_form->checkbox(
-          iv_name  = c_id-flow
-          iv_label = 'Enable abapGit flow for this repository' ).
-      ELSE.
-        ro_form->checkbox(
-          iv_name     = c_id-flow
-          iv_readonly = abap_true
-          iv_label    = 'abapGit flow requires transported packages' ).
-      ENDIF.
+      ro_form->checkbox(
+        iv_name     = c_id-flow
+        iv_readonly = boolc( li_package->are_changes_recorded_in_tr_req( ) = abap_false )
+        iv_label    = 'Enable abapGit flow for this repository (requires transported packages)' ).
     ENDIF.
 
     ro_form->start_group(
