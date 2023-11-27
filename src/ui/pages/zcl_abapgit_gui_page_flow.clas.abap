@@ -50,7 +50,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -335,6 +335,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
       ri_html->add( '<br>' ).
     ENDLOOP.
+
+    IF lines( mt_features ) = 0.
+      ri_html->add( 'Empty, repositories must be favorite + flow enabled' ).
+    ENDIF.
 
     ri_html->add( '</div>' ).
 
