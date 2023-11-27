@@ -34,7 +34,8 @@ INTERFACE zif_abapgit_dot_abapgit PUBLIC.
       standard          TYPE string VALUE 'standard',
       key_user          TYPE string VALUE 'keyUser',
       cloud_development TYPE string VALUE 'cloudDevelopment',
-      undefined         TYPE string VALUE 'undefined',
+      ignore            TYPE string VALUE 'ignore',
+      undefined         TYPE string VALUE 'undefined', " any
     END OF c_abap_language_version.
 
 ENDINTERFACE.
