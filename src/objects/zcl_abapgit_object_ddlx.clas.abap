@@ -386,3 +386,4 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
+ENDCLASS.
