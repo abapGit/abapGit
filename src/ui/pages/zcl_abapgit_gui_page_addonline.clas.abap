@@ -180,6 +180,9 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
         iv_label       = 'Any'
         iv_value       = ''
       )->option(
+        iv_label       = 'Ignore'
+        iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-ignore
+      )->option(
         iv_label       = 'Standard'
         iv_value       = zif_abapgit_dot_abapgit=>c_abap_language_version-standard
       )->option(
