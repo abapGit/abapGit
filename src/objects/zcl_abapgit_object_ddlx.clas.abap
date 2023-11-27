@@ -18,9 +18,6 @@ CLASS zcl_abapgit_object_ddlx DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         !iv_fieldname TYPE csequence
       CHANGING
         !cg_metadata  TYPE any .
-    METHODS get_timestamp
-        RETURNING
-          VALUE(rv_timestamp) TYPE xsddatetime_z.
 ENDCLASS.
 
 
@@ -232,7 +229,7 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
         ENDIF.
         ASSIGN COMPONENT 'METADATA-CHANGED_AT' OF STRUCTURE <lg_data> TO <lg_changed_at>.
         IF <lg_changed_at> IS ASSIGNED.
-          <lg_changed_at> = get_timestamp( ).
+          GET TIME STAMP FIELD <lg_changed_at>.
         ENDIF.
 
         li_data_model->set_data( <lg_data> ).
@@ -389,18 +386,3 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
-
-
-  METHOD get_timestamp.
-    GET TIME.
-    TRY.
-        cl_abap_tstmp=>systemtstmp_syst2utc(
-          EXPORTING
-            syst_date = sy-datum
-            syst_time = sy-uzeit
-          IMPORTING
-            utc_tstmp = rv_timestamp ).
-      CATCH cx_parameter_invalid_range ##NO_HANDLER.
-    ENDTRY.
-  ENDMETHOD.
-ENDCLASS.
