@@ -341,7 +341,8 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
       ri_html->add_a(
         iv_txt   = 'abapGit flow documentation'
-        iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url=https://docs.abapgit.org/user-guide/reference/flow.html|
+        iv_act   = |{ zif_abapgit_definitions=>c_action-url
+          }?url=https://docs.abapgit.org/user-guide/reference/flow.html|
         iv_class = |url| ).
     ENDIF.
 
