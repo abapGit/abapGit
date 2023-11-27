@@ -1002,11 +1002,9 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     CREATE OBJECT ro_toolbar EXPORTING iv_id = 'toolbar-main'.
 
-    IF zcl_abapgit_feature=>is_enabled( 'FLOW' ) = abap_true.
-      ro_toolbar->add(
-        iv_txt = zcl_abapgit_gui_buttons=>flow( )
-        iv_act = zif_abapgit_definitions=>c_action-flow ).
-    ENDIF.
+    ro_toolbar->add(
+      iv_txt = zcl_abapgit_gui_buttons=>flow( )
+      iv_act = zif_abapgit_definitions=>c_action-flow ).
 
     ro_toolbar->add(
       iv_txt = zcl_abapgit_gui_buttons=>new_online( )
