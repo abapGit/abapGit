@@ -170,8 +170,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PULL IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_overwrite> LIKE LINE OF ms_checks-overwrite.
 
-
-    mo_form_data = ii_event->form_data( ).
+    mo_form_data->merge( ii_event->form_data( ) ).
 
     CASE ii_event->mv_action.
       WHEN c_action-refresh.
