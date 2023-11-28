@@ -145,8 +145,9 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
     ri_html->add( '<br><div>' ).
     ri_html->add_a(
       iv_txt = 'Contribution guidelines for abapGit'
-      iv_act = 'https://github.com/abapGit/abapGit/blob/main/CONTRIBUTING.md'
-      iv_typ = zif_abapgit_html=>c_action_type-url ).
+      iv_act = |{ zif_abapgit_definitions=>c_action-url
+        }?url=https://github.com/abapGit/abapGit/blob/main/CONTRIBUTING.md|
+        iv_class = |url| ).
     ri_html->add( '</div>' ).
 
     ls_release = zcl_abapgit_factory=>get_environment( )->get_basis_release( ).
@@ -297,8 +298,8 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
 
     rv_html = rv_html && li_html->a(
       iv_txt = 'Complete list of object types supported by abapGit'
-      iv_act = 'https://docs.abapgit.org/ref-supported.html'
-      iv_typ = zif_abapgit_html=>c_action_type-url ).
+      iv_act = |{ zif_abapgit_definitions=>c_action-url }?url=https://docs.abapgit.org/ref-supported.html|
+      iv_class = |url| ).
 
     rv_html = rv_html && |<br><br>Supported object types in <strong>this</strong> system:<br><br>|.
 
