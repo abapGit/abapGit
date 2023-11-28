@@ -79,15 +79,15 @@ CLASS ltcl_field_rules IMPLEMENTATION.
   METHOD fill2.
     fill_value(
       iv_rule = zif_abapgit_field_rules=>c_fill_rule-time
-      iv_len  = 4
-      iv_exp  = |{ sy-uzeit(4) }| ). " avoid comparing seconds
+      iv_len  = 2
+      iv_exp  = |{ sy-uzeit(2) }| ). " avoid comparing minutes
   ENDMETHOD.
 
   METHOD fill3.
     fill_value(
       iv_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp
-      iv_len  = 12
-      iv_exp  = |{ sy-datum }{ sy-uzeit(4) }| ). " avoid comparing seconds
+      iv_len  = 10
+      iv_exp  = |{ sy-datum }{ sy-uzeit(2) }| ). " avoid comparing minutes
   ENDMETHOD.
 
   METHOD fill4.
