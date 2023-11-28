@@ -3,43 +3,24 @@ CLASS zcl_abapgit_default_transport DEFINITION
   CREATE PRIVATE .
 
   PUBLIC SECTION.
+    INTERFACES zif_abapgit_default_transport.
+
     CLASS-METHODS:
       get_instance
         RETURNING
-          VALUE(ro_instance) TYPE REF TO zcl_abapgit_default_transport
+          VALUE(ro_instance) TYPE REF TO zif_abapgit_default_transport
         RAISING
           zcx_abapgit_exception.
 
-    TYPES: BEGIN OF ty_get,
-             trfunction TYPE c LENGTH 1,
-             ordernum   TYPE trkorr,
-           END OF ty_get.
-
-    METHODS:
+    METHODS
       constructor
         RAISING
-          zcx_abapgit_exception,
-
-      set
-        IMPORTING
-          iv_transport TYPE trkorr
-        RAISING
-          zcx_abapgit_exception,
-
-      reset
-        RAISING
-          zcx_abapgit_exception,
-      get
-        RETURNING
-          VALUE(rs_default_task) TYPE ty_get
-        RAISING
-          zcx_abapgit_exception .
-
+          zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CLASS-DATA go_instance TYPE REF TO zcl_abapgit_default_transport .
+    CLASS-DATA go_instance TYPE REF TO zif_abapgit_default_transport .
     DATA mv_is_set_by_abapgit TYPE abap_bool .
     DATA ms_save TYPE e070use .
 
@@ -93,7 +74,7 @@ CLASS zcl_abapgit_default_transport IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get.
+  METHOD zif_abapgit_default_transport~get.
 
     DATA lt_e070use TYPE STANDARD TABLE OF e070use WITH DEFAULT KEY.
     DATA ls_line    LIKE LINE OF lt_e070use.
@@ -121,7 +102,7 @@ CLASS zcl_abapgit_default_transport IMPLEMENTATION.
   METHOD get_instance.
 
     IF go_instance IS NOT BOUND.
-      CREATE OBJECT go_instance.
+      CREATE OBJECT go_instance TYPE zcl_abapgit_default_transport.
     ENDIF.
 
     ro_instance = go_instance.
@@ -129,7 +110,7 @@ CLASS zcl_abapgit_default_transport IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD reset.
+  METHOD zif_abapgit_default_transport~reset.
 
     DATA: ls_default_task TYPE e070use.
 
@@ -141,7 +122,7 @@ CLASS zcl_abapgit_default_transport IMPLEMENTATION.
 
     CLEAR mv_is_set_by_abapgit.
 
-    ls_default_task = get( ).
+    ls_default_task = zif_abapgit_default_transport~get( ).
 
     IF ls_default_task IS NOT INITIAL.
 
@@ -181,7 +162,7 @@ CLASS zcl_abapgit_default_transport IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD set.
+  METHOD zif_abapgit_default_transport~set.
 
     " checks whether object changes of the package are rerorded in transport
     " requests. If true then we set the default task, so that no annoying
@@ -228,7 +209,7 @@ CLASS zcl_abapgit_default_transport IMPLEMENTATION.
 
   METHOD store.
 
-    ms_save = get( ).
+    ms_save = zif_abapgit_default_transport~get( ).
 
   ENDMETHOD.
 ENDCLASS.

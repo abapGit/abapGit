@@ -787,7 +787,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     DATA: lt_e071    TYPE STANDARD TABLE OF e071,
           lt_e071k   TYPE STANDARD TABLE OF e071k,
           lv_order   TYPE trkorr,
-          ls_default TYPE zcl_abapgit_default_transport=>ty_get.
+          ls_default TYPE zif_abapgit_default_transport=>ty_get.
     DATA lv_category TYPE e070-korrdev.
 
     " If default transport is set and its type matches, then use it as default for the popup
