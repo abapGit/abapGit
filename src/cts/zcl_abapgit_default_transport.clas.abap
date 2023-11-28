@@ -10,6 +10,11 @@ CLASS zcl_abapgit_default_transport DEFINITION
         RAISING
           zcx_abapgit_exception.
 
+    TYPES: BEGIN OF ty_get,
+             trfunction TYPE c LENGTH 1,
+             ordernum   TYPE trkorr,
+           END OF ty_get.
+
     METHODS:
       constructor
         RAISING
@@ -26,7 +31,7 @@ CLASS zcl_abapgit_default_transport DEFINITION
           zcx_abapgit_exception,
       get
         RETURNING
-          VALUE(rs_default_task) TYPE e070use
+          VALUE(rs_default_task) TYPE ty_get
         RAISING
           zcx_abapgit_exception .
 
@@ -90,7 +95,8 @@ CLASS zcl_abapgit_default_transport IMPLEMENTATION.
 
   METHOD get.
 
-    DATA: lt_e070use TYPE STANDARD TABLE OF e070use.
+    DATA lt_e070use TYPE STANDARD TABLE OF e070use WITH DEFAULT KEY.
+    DATA ls_line    LIKE LINE OF lt_e070use.
 
     CALL FUNCTION 'TR_TASK_GET'
       TABLES
@@ -104,8 +110,10 @@ CLASS zcl_abapgit_default_transport IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    READ TABLE lt_e070use INTO rs_default_task
-                          INDEX 1.
+    READ TABLE lt_e070use INTO ls_line INDEX 1.
+    IF sy-subrc = 0.
+      MOVE-CORRESPONDING ls_line TO rs_default_task.
+    ENDIF.
 
   ENDMETHOD.
 
