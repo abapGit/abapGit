@@ -1,6 +1,6 @@
 CLASS zcl_abapgit_default_transport DEFINITION
   PUBLIC
-  CREATE PRIVATE .
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_default_transport.
@@ -35,7 +35,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_default_transport IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_DEFAULT_TRANSPORT IMPLEMENTATION.
 
 
   METHOD clear.
@@ -61,55 +61,6 @@ CLASS zcl_abapgit_default_transport IMPLEMENTATION.
   METHOD constructor.
 
     store( ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_default_transport~get.
-
-    DATA lt_e070use TYPE STANDARD TABLE OF e070use WITH DEFAULT KEY.
-    DATA ls_line    LIKE LINE OF lt_e070use.
-
-    CALL FUNCTION 'TR_TASK_GET'
-      TABLES
-        tt_e070use       = lt_e070use
-      EXCEPTIONS
-        invalid_username = 1
-        invalid_category = 2
-        invalid_client   = 3
-        OTHERS           = 4.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
-
-    READ TABLE lt_e070use INTO ls_line INDEX 1.
-    IF sy-subrc = 0.
-      MOVE-CORRESPONDING ls_line TO rs_default_task.
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_default_transport~reset.
-
-    DATA: ls_default_task TYPE e070use.
-
-    IF mv_is_set_by_abapgit = abap_false.
-      " if the default transport request task isn't set
-      " by us there is nothing to do.
-      RETURN.
-    ENDIF.
-
-    CLEAR mv_is_set_by_abapgit.
-
-    ls_default_task = zif_abapgit_default_transport~get( ).
-
-    IF ls_default_task IS NOT INITIAL.
-
-      clear( ls_default_task ).
-
-    ENDIF.
-
-    restore( ).
 
   ENDMETHOD.
 
@@ -141,29 +92,6 @@ CLASS zcl_abapgit_default_transport IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_default_transport~set.
-
-    " checks whether object changes of the package are rerorded in transport
-    " requests. If true then we set the default task, so that no annoying
-    " transport request popups are shown while deserializing.
-
-    IF mv_is_set_by_abapgit = abap_true.
-      " the default transport request task is already set by us
-      " -> no reason to do it again.
-      RETURN.
-    ENDIF.
-
-    IF iv_transport IS INITIAL.
-      zcx_abapgit_exception=>raise( |No transport request was supplied| ).
-    ENDIF.
-
-    set_internal( iv_transport ).
-
-    mv_is_set_by_abapgit = abap_true.
-
-  ENDMETHOD.
-
-
   METHOD set_internal.
 
     CALL FUNCTION 'TR_TASK_SET'
@@ -189,6 +117,79 @@ CLASS zcl_abapgit_default_transport IMPLEMENTATION.
   METHOD store.
 
     ms_save = zif_abapgit_default_transport~get( ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_default_transport~get.
+
+    DATA lt_e070use TYPE STANDARD TABLE OF e070use WITH DEFAULT KEY.
+    DATA ls_line    LIKE LINE OF lt_e070use.
+
+    CALL FUNCTION 'TR_TASK_GET'
+      TABLES
+        tt_e070use       = lt_e070use
+      EXCEPTIONS
+        invalid_username = 1
+        invalid_category = 2
+        invalid_client   = 3
+        OTHERS           = 4.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    READ TABLE lt_e070use INTO ls_line INDEX 1.
+    IF sy-subrc = 0.
+      MOVE-CORRESPONDING ls_line TO rs_default_task.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_default_transport~reset.
+
+    DATA: ls_default_task TYPE e070use.
+
+    IF mv_is_set_by_abapgit = abap_false.
+      " if the default transport request task isn't set
+      " by us there is nothing to do.
+      RETURN.
+    ENDIF.
+
+    CLEAR mv_is_set_by_abapgit.
+
+    ls_default_task = zif_abapgit_default_transport~get( ).
+
+    IF ls_default_task IS NOT INITIAL.
+
+      clear( ls_default_task ).
+
+    ENDIF.
+
+    restore( ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_default_transport~set.
+
+    " checks whether object changes of the package are rerorded in transport
+    " requests. If true then we set the default task, so that no annoying
+    " transport request popups are shown while deserializing.
+
+    IF mv_is_set_by_abapgit = abap_true.
+      " the default transport request task is already set by us
+      " -> no reason to do it again.
+      RETURN.
+    ENDIF.
+
+    IF iv_transport IS INITIAL.
+      zcx_abapgit_exception=>raise( |No transport request was supplied| ).
+    ENDIF.
+
+    set_internal( iv_transport ).
+
+    mv_is_set_by_abapgit = abap_true.
 
   ENDMETHOD.
 ENDCLASS.
