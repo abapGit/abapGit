@@ -207,6 +207,7 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
           li_iterator  TYPE REF TO if_ixml_node_iterator,
           li_items     TYPE REF TO if_ixml_node_iterator,
           lv_index     TYPE i,
+          lv_field     TYPE fieldname,
           ls_item      TYPE stxfobjt,
           lt_items     TYPE STANDARD TABLE OF stxfobjt.
 
@@ -229,7 +230,8 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
           CLEAR ls_item.
           li_field = li_item->get_first_child( ).
           WHILE NOT li_field IS INITIAL.
-            ASSIGN COMPONENT li_field->get_name( ) OF STRUCTURE ls_item TO <lv_field>.
+            lv_field = li_field->get_name( ).
+            ASSIGN COMPONENT lv_field OF STRUCTURE ls_item TO <lv_field>.
             ASSERT sy-subrc = 0.
             <lv_field> = li_field->get_value( ).
             li_field = li_field->get_next( ).
@@ -250,7 +252,8 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
           READ TABLE lt_items INTO ls_item INDEX lv_index.
           li_field = li_item->get_first_child( ).
           WHILE NOT li_field IS INITIAL.
-            ASSIGN COMPONENT li_field->get_name( ) OF STRUCTURE ls_item TO <lv_field>.
+            lv_field = li_field->get_name( ).
+            ASSIGN COMPONENT lv_field OF STRUCTURE ls_item TO <lv_field>.
             ASSERT sy-subrc = 0.
             li_field->set_value( |{ <lv_field> }| ).
             li_field = li_field->get_next( ).
