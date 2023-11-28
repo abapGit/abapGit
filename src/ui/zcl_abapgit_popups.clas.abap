@@ -791,7 +791,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     DATA lv_category TYPE e070-korrdev.
 
     " If default transport is set and its type matches, then use it as default for the popup
-    ls_default = zcl_abapgit_default_transport=>get_instance( )->get( ).
+    ls_default = zcl_abapgit_factory=>get_default_transport( )->get( ).
 
     IF ( ls_default-trfunction = is_transport_type-request OR ls_default-trfunction IS INITIAL )
       AND iv_use_default_transport = abap_true.

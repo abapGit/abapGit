@@ -350,7 +350,7 @@ CLASS zcl_abapgit_object_sod1 IMPLEMENTATION.
         lo_factory = get_wb_object_operator( is_object_type = ls_object_type
                                              iv_object_key  = lv_object_key ).
 
-        lv_transport_request = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
+        lv_transport_request = zcl_abapgit_factory=>get_default_transport( )->get( )-ordernum.
 
         IF zif_abapgit_object~exists( ) = abap_true.
 

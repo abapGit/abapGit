@@ -5,13 +5,6 @@ CLASS zcl_abapgit_default_transport DEFINITION
   PUBLIC SECTION.
     INTERFACES zif_abapgit_default_transport.
 
-    CLASS-METHODS:
-      get_instance
-        RETURNING
-          VALUE(ro_instance) TYPE REF TO zif_abapgit_default_transport
-        RAISING
-          zcx_abapgit_exception.
-
     METHODS
       constructor
         RAISING
@@ -19,8 +12,6 @@ CLASS zcl_abapgit_default_transport DEFINITION
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-
-    CLASS-DATA go_instance TYPE REF TO zif_abapgit_default_transport .
     DATA mv_is_set_by_abapgit TYPE abap_bool .
     DATA ms_save TYPE e070use .
 
@@ -97,18 +88,6 @@ CLASS zcl_abapgit_default_transport IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
-
-  METHOD get_instance.
-
-    IF go_instance IS NOT BOUND.
-      CREATE OBJECT go_instance TYPE zcl_abapgit_default_transport.
-    ENDIF.
-
-    ro_instance = go_instance.
-
-  ENDMETHOD.
-
 
   METHOD zif_abapgit_default_transport~reset.
 
