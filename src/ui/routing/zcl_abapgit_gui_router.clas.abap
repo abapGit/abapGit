@@ -144,7 +144,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     IF ii_event->mv_action = zif_abapgit_definitions=>c_action-abapgit_home.
       rs_handled-page  = zcl_abapgit_gui_page_repo_over=>create( ).
-      rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+      rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
     ENDIF.
 
   ENDMETHOD.
