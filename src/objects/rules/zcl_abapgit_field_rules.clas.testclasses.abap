@@ -26,7 +26,13 @@ CLASS ltcl_field_rules DEFINITION FOR TESTING RISK LEVEL HARMLESS
           iv_rule TYPE zif_abapgit_field_rules=>ty_fill_rule
           iv_exp  TYPE string
           iv_len  TYPE i OPTIONAL,
-      fill FOR TESTING,
+      fill1 FOR TESTING,
+      fill2 FOR TESTING,
+      fill3 FOR TESTING,
+      fill4 FOR TESTING,
+      fill5 FOR TESTING,
+      fill6 FOR TESTING,
+      fill7 FOR TESTING,
       get_rules
         RETURNING
           VALUE(ri_rules) TYPE REF TO zif_abapgit_field_rules,
@@ -64,38 +70,48 @@ CLASS ltcl_field_rules IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD fill.
-
+  METHOD fill1.
     fill_value(
       iv_rule = zif_abapgit_field_rules=>c_fill_rule-date
       iv_exp  = |{ sy-datum }| ).
+  ENDMETHOD.
 
+  METHOD fill2.
     fill_value(
       iv_rule = zif_abapgit_field_rules=>c_fill_rule-time
-      iv_len  = 4
-      iv_exp  = |{ sy-uzeit(4) }| ). " avoid comparing seconds
+      iv_len  = 2
+      iv_exp  = |{ sy-uzeit(2) }| ). " avoid comparing minutes
+  ENDMETHOD.
 
+  METHOD fill3.
     fill_value(
       iv_rule = zif_abapgit_field_rules=>c_fill_rule-timestamp
-      iv_len  = 12
-      iv_exp  = |{ sy-datum }{ sy-uzeit(4) }| ). " avoid comparing seconds
+      iv_len  = 10
+      iv_exp  = |{ sy-datum }{ sy-uzeit(2) }| ). " avoid comparing minutes
+  ENDMETHOD.
 
+  METHOD fill4.
     fill_value(
       iv_rule = zif_abapgit_field_rules=>c_fill_rule-user
       iv_exp  = |{ sy-uname }| ).
+  ENDMETHOD.
 
+  METHOD fill5.
     fill_value(
       iv_rule = zif_abapgit_field_rules=>c_fill_rule-client
       iv_exp  = |{ sy-mandt }| ).
+  ENDMETHOD.
 
+  METHOD fill6.
     fill_value(
       iv_rule = zif_abapgit_field_rules=>c_fill_rule-package
       iv_exp  = |{ c_package }| ).
+  ENDMETHOD.
 
+  METHOD fill7.
     fill_value(
       iv_rule = 'XY'
       iv_exp  = '' ).
-
   ENDMETHOD.
 
   METHOD get_rules.
