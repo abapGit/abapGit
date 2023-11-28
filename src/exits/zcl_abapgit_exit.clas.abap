@@ -25,7 +25,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_exit IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
 
 
   METHOD get_instance.
@@ -57,6 +57,7 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
     ri_exit = gi_global_exit.
 
   ENDMETHOD.
+
 
   METHOD is_running_in_test_context.
 

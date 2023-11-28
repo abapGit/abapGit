@@ -34,6 +34,9 @@ CLASS zcl_abapgit_http_client DEFINITION PUBLIC CREATE PUBLIC.
       RAISING
         zcx_abapgit_exception.
 
+  protected section.
+*"* protected components of class ZCL_ABAPGIT_HTTP_CLIENT
+*"* do not include other source files here!!!
   PRIVATE SECTION.
     DATA: mi_client TYPE REF TO if_http_client,
           mo_digest TYPE REF TO zcl_abapgit_http_digest.
@@ -42,7 +45,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_http_client IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_HTTP_CLIENT IMPLEMENTATION.
 
 
   METHOD check_http_200.
@@ -181,6 +184,7 @@ CLASS zcl_abapgit_http_client IMPLEMENTATION.
       name  = iv_key
       value = iv_value ).
   ENDMETHOD.
+
 
   METHOD set_headers.
 

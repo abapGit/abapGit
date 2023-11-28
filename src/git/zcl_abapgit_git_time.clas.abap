@@ -32,7 +32,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_git_time IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GIT_TIME IMPLEMENTATION.
 
 
   METHOD get_one_year_ago.
@@ -48,6 +48,7 @@ CLASS zcl_abapgit_git_time IMPLEMENTATION.
 
     rv_time = rv_time - 31536000.
   ENDMETHOD.
+
 
   METHOD get_unix.
 * returns seconds since unix epoch, including timezone indicator
