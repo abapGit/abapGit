@@ -134,6 +134,7 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
     zcl_abapgit_persist_injector=>set_settings( mi_persistency ).
 
     APPEND zif_abapgit_dot_abapgit=>c_abap_language_version-undefined TO mt_versions.
+    APPEND zif_abapgit_dot_abapgit=>c_abap_language_version-ignore TO mt_versions.
     APPEND zif_abapgit_dot_abapgit=>c_abap_language_version-standard TO mt_versions.
     APPEND zif_abapgit_dot_abapgit=>c_abap_language_version-key_user TO mt_versions.
     APPEND zif_abapgit_dot_abapgit=>c_abap_language_version-cloud_development TO mt_versions.
@@ -207,7 +208,8 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
     LOOP AT mt_versions INTO lv_version.
 
       CASE lv_version.
-        WHEN zif_abapgit_dot_abapgit=>c_abap_language_version-undefined.
+        WHEN zif_abapgit_dot_abapgit=>c_abap_language_version-undefined
+          OR zif_abapgit_dot_abapgit=>c_abap_language_version-ignore.
 
           repo_setting_test(
             iv_version = lv_version
@@ -315,7 +317,8 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
     LOOP AT mt_versions INTO lv_version.
 
       CASE lv_version.
-        WHEN zif_abapgit_dot_abapgit=>c_abap_language_version-undefined.
+        WHEN zif_abapgit_dot_abapgit=>c_abap_language_version-undefined
+          OR zif_abapgit_dot_abapgit=>c_abap_language_version-ignore.
 
           object_type_test(
             iv_version      = lv_version
@@ -387,7 +390,8 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
     LOOP AT mt_versions INTO lv_version.
 
       CASE lv_version.
-        WHEN zif_abapgit_dot_abapgit=>c_abap_language_version-undefined.
+        WHEN zif_abapgit_dot_abapgit=>c_abap_language_version-undefined
+          OR zif_abapgit_dot_abapgit=>c_abap_language_version-ignore.
 
           is_import_allowed_test(
             iv_version  = lv_version
