@@ -2,7 +2,6 @@ CLASS zcl_abapgit_frontend_services DEFINITION
   PUBLIC
   CREATE PRIVATE
   GLOBAL FRIENDS zcl_abapgit_ui_factory.
-
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_frontend_services.
@@ -11,11 +10,34 @@ CLASS zcl_abapgit_frontend_services DEFINITION
 
     CLASS-DATA gv_initial_folder TYPE string.
 
+    METHODS get_path_from_fullname
+      IMPORTING
+        iv_fullname    TYPE string
+      RETURNING
+        VALUE(rv_path) TYPE string.
+
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
+
+
+  METHOD get_path_from_fullname.
+
+    DATA lv_len TYPE i.
+
+    FIND FIRST OCCURRENCE OF REGEX '^/(.*/)?' IN iv_fullname MATCH LENGTH lv_len.
+    IF sy-subrc = 0.
+      rv_path = iv_fullname(lv_len).
+    ELSE.
+      FIND FIRST OCCURRENCE OF REGEX '^(.*\\)?' IN iv_fullname MATCH LENGTH lv_len.
+      IF sy-subrc = 0.
+        rv_path = iv_fullname(lv_len).
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_frontend_services~clipboard_export.
@@ -390,7 +412,6 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
       ls_file_table LIKE LINE OF lt_file_table,
       lv_filter     TYPE string,
       lv_action     TYPE i,
-      lv_len        TYPE i,
       lv_rc         TYPE i.
 
     IF iv_extension = 'zip'.
@@ -424,15 +445,7 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
     ASSERT sy-subrc = 0.
     rv_path = ls_file_table-filename.
 
-    FIND FIRST OCCURRENCE OF REGEX '^/(.*/)?' IN rv_path MATCH LENGTH lv_len.
-    IF sy-subrc = 0.
-      gv_initial_folder = rv_path(lv_len).
-    ELSE.
-      FIND FIRST OCCURRENCE OF REGEX '^(.*\\)?' IN rv_path MATCH LENGTH lv_len.
-      IF sy-subrc = 0.
-        gv_initial_folder = rv_path(lv_len).
-      ENDIF.
-    ENDIF.
+    gv_initial_folder = get_path_from_fullname( rv_path ).
 
   ENDMETHOD.
 
