@@ -30,9 +30,15 @@ CLASS zcl_abapgit_gui_event DEFINITION
 
     CLASS-DATA gv_non_breaking_space TYPE string .
 
+    TYPES: BEGIN OF ty_name_value,
+             name  TYPE string,
+             value TYPE string,
+           END OF ty_name_value.
+    TYPES ty_name_value_tt TYPE STANDARD TABLE OF ty_name_value WITH DEFAULT KEY.
+
     METHODS fields_to_map
       IMPORTING
-        it_fields            TYPE tihttpnvp
+        it_fields            TYPE ty_name_value_tt
       RETURNING
         VALUE(ro_string_map) TYPE REF TO zcl_abapgit_string_map
       RAISING
@@ -43,19 +49,19 @@ CLASS zcl_abapgit_gui_event DEFINITION
         !it_post_data    TYPE zif_abapgit_html_viewer=>ty_post_data
         !iv_upper_cased  TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(rt_fields) TYPE tihttpnvp .
+        VALUE(rt_fields) TYPE ty_name_value_tt .
     CLASS-METHODS parse_fields
       IMPORTING
         !iv_string       TYPE clike
         !iv_upper_cased  TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(rt_fields) TYPE tihttpnvp .
+        VALUE(rt_fields) TYPE ty_name_value_tt .
 
     CLASS-METHODS parse_fields_upper_case_name
       IMPORTING
         !iv_string       TYPE clike
       RETURNING
-        VALUE(rt_fields) TYPE tihttpnvp .
+        VALUE(rt_fields) TYPE ty_name_value_tt .
 
     CLASS-METHODS translate_postdata
       IMPORTING
@@ -65,7 +71,7 @@ CLASS zcl_abapgit_gui_event DEFINITION
 
     CLASS-METHODS field_keys_to_upper
       CHANGING
-        !ct_fields TYPE tihttpnvp .
+        !ct_fields TYPE ty_name_value_tt .
     CLASS-METHODS unescape
       IMPORTING
         !iv_string       TYPE string
