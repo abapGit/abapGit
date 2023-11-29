@@ -34,6 +34,7 @@ CLASS zcl_abapgit_http_client DEFINITION PUBLIC CREATE PUBLIC.
       RAISING
         zcx_abapgit_exception.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: mi_client TYPE REF TO if_http_client,
           mo_digest TYPE REF TO zcl_abapgit_http_digest.
@@ -181,6 +182,7 @@ CLASS zcl_abapgit_http_client IMPLEMENTATION.
       name  = iv_key
       value = iv_value ).
   ENDMETHOD.
+
 
   METHOD set_headers.
 
