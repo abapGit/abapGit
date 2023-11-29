@@ -58,6 +58,7 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD is_running_in_test_context.
 
     IF sy-sysid = 'ABC'.

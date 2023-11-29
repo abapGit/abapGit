@@ -7,10 +7,14 @@ CLASS zcl_abapgit_function_module DEFINITION
     INTERFACES:
       zif_abapgit_function_module.
 
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 ENDCLASS.
 
 
+
 CLASS zcl_abapgit_function_module IMPLEMENTATION.
+
 
   METHOD zif_abapgit_function_module~function_exists.
 
@@ -27,5 +31,4 @@ CLASS zcl_abapgit_function_module IMPLEMENTATION.
     rv_exists = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
-
 ENDCLASS.
