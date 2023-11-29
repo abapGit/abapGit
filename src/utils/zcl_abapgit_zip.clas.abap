@@ -167,9 +167,7 @@ CLASS zcl_abapgit_zip IMPLEMENTATION.
     ENDIF.
 
     lo_frontend_serv = zcl_abapgit_ui_factory=>get_frontend_services( ).
-    lo_frontend_serv->directory_browse(
-      CHANGING
-        cv_selected_folder = lv_folder ).
+    lo_frontend_serv->directory_browse( CHANGING cv_selected_folder = lv_folder ).
     IF lv_folder IS INITIAL.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
