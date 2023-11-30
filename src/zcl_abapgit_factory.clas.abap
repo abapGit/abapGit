@@ -26,6 +26,11 @@ CLASS zcl_abapgit_factory DEFINITION
     CLASS-METHODS get_cts_api
       RETURNING
         VALUE(ri_cts_api) TYPE REF TO zif_abapgit_cts_api .
+    CLASS-METHODS get_default_transport
+      RETURNING
+        VALUE(ri_default_transport) TYPE REF TO zif_abapgit_default_transport
+      RAISING
+        zcx_abapgit_exception.
     CLASS-METHODS get_environment
       RETURNING
         VALUE(ri_environment) TYPE REF TO zif_abapgit_environment .
@@ -79,11 +84,12 @@ CLASS zcl_abapgit_factory DEFINITION
     CLASS-DATA gi_sap_namespace TYPE REF TO zif_abapgit_sap_namespace .
     CLASS-DATA gi_sap_report TYPE REF TO zif_abapgit_sap_report.
     CLASS-DATA gi_function_module TYPE REF TO zif_abapgit_function_module.
+    CLASS-DATA gi_default_transport TYPE REF TO zif_abapgit_default_transport .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_factory IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_FACTORY IMPLEMENTATION.
 
 
   METHOD get_code_inspector.
@@ -117,6 +123,17 @@ CLASS zcl_abapgit_factory IMPLEMENTATION.
     ENDIF.
 
     ri_cts_api = gi_cts_api.
+  ENDMETHOD.
+
+
+  METHOD get_default_transport.
+
+    IF gi_default_transport IS NOT BOUND.
+      CREATE OBJECT gi_default_transport TYPE zcl_abapgit_default_transport.
+    ENDIF.
+
+    ri_default_transport = gi_default_transport.
+
   ENDMETHOD.
 
 
