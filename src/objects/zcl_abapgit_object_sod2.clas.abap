@@ -306,7 +306,6 @@ CLASS zcl_abapgit_object_sod2 IMPLEMENTATION.
           ls_data                  TYPE REF TO data,
           ls_object_type           TYPE wbobjtype,
           lv_object_key            TYPE seu_objkey,
-          lv_transport_request     TYPE trkorr,
           lo_logger                TYPE REF TO cl_wb_checklist,
           lx_create_error          TYPE REF TO cx_root,
           lx_error                 TYPE REF TO cx_root,
@@ -349,15 +348,13 @@ CLASS zcl_abapgit_object_sod2 IMPLEMENTATION.
         lo_factory = get_wb_object_operator( is_object_type = ls_object_type
                                              iv_object_key  = lv_object_key ).
 
-        lv_transport_request = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
-
         IF zif_abapgit_object~exists( ) = abap_true.
 
           CALL METHOD lo_factory->('IF_WB_OBJECT_OPERATOR~UPDATE')
             EXPORTING
               io_object_data    = lo_data_model
               version           = 'A'
-              transport_request = lv_transport_request.
+              transport_request = iv_transport.
 
         ELSE.
 
@@ -373,7 +370,7 @@ CLASS zcl_abapgit_object_sod2 IMPLEMENTATION.
                   version               = 'A'
                   package               = iv_package
                   abap_language_version = lv_abap_language_version
-                  transport_request     = lv_transport_request
+                  transport_request     = iv_transport
                 IMPORTING
                   logger                = lo_logger.
 
