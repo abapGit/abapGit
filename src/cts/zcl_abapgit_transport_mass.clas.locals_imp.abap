@@ -13,10 +13,6 @@ CLASS lcl_gui DEFINITION FINAL.
     CLASS-METHODS select_tr_requests
       RETURNING
         VALUE(rt_trkorr) TYPE trwbo_request_headers.
-
-  PRIVATE SECTION.
-    CLASS-DATA gv_last_folder TYPE string.
-
 ENDCLASS.
 
 CLASS lcl_gui IMPLEMENTATION.
@@ -32,12 +28,8 @@ CLASS lcl_gui IMPLEMENTATION.
     lo_fe_serv->directory_browse(
       EXPORTING
          iv_window_title   = lv_title
-         iv_initial_folder = gv_last_folder
       CHANGING
         cv_selected_folder = rv_folder ).
-
-    "Store the last directory for user friendly UI
-    gv_last_folder = rv_folder.
 
   ENDMETHOD.
 

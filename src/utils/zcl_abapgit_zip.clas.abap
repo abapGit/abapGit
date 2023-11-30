@@ -50,8 +50,6 @@ CLASS zcl_abapgit_zip DEFINITION
       RAISING
         zcx_abapgit_exception .
   PROTECTED SECTION.
-
-    CLASS-DATA gv_prev TYPE string .
   PRIVATE SECTION.
 
     CLASS-METHODS filename
@@ -169,16 +167,11 @@ CLASS zcl_abapgit_zip IMPLEMENTATION.
     ENDIF.
 
     lo_frontend_serv = zcl_abapgit_ui_factory=>get_frontend_services( ).
-    lo_frontend_serv->directory_browse(
-      EXPORTING
-        iv_initial_folder  = gv_prev
-      CHANGING
-        cv_selected_folder = lv_folder ).
+    lo_frontend_serv->directory_browse( CHANGING cv_selected_folder = lv_folder ).
     IF lv_folder IS INITIAL.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    gv_prev = lv_folder.
     lo_frontend_serv->get_file_separator( CHANGING cv_file_separator = lv_sep ).
 
     LOOP AT ls_files_item-files ASSIGNING <ls_file>.
