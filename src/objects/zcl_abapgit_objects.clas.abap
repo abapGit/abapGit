@@ -511,7 +511,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDIF.
 
     IF is_checks-transport-required = abap_true.
-      zcl_abapgit_default_transport=>get_instance( )->set( is_checks-transport-transport ).
+      zcl_abapgit_factory=>get_default_transport( )->set( is_checks-transport-transport ).
     ENDIF.
 
     TRY.
@@ -524,7 +524,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         check_objects_locked( lt_items ).
 
       CATCH zcx_abapgit_exception INTO lx_error.
-        zcl_abapgit_default_transport=>get_instance( )->reset( ).
+        zcl_abapgit_factory=>get_default_transport( )->reset( ).
         RAISE EXCEPTION lx_error.
     ENDTRY.
 
@@ -574,7 +574,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       ENDIF.
     ENDDO.
 
-    zcl_abapgit_default_transport=>get_instance( )->reset( ).
+    zcl_abapgit_factory=>get_default_transport( )->reset( ).
 
     IF lx_error IS BOUND AND lines( lt_tadir ) > 0.
       zcx_abapgit_exception=>raise( 'Error during uninstall. Check the log.' ).
@@ -632,7 +632,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     lv_package = io_repo->get_package( ).
 
     IF is_checks-transport-required = abap_true.
-      zcl_abapgit_default_transport=>get_instance( )->set( is_checks-transport-transport ).
+      zcl_abapgit_factory=>get_default_transport( )->set( is_checks-transport-transport ).
     ENDIF.
 
     zcl_abapgit_objects_activation=>clear( ).
@@ -809,7 +809,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     update_package_tree( io_repo->get_package( ) ).
 
-    zcl_abapgit_default_transport=>get_instance( )->reset( ).
+    zcl_abapgit_factory=>get_default_transport( )->reset( ).
 
     lo_timer->end( abap_true ).
 
