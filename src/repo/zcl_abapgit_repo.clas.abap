@@ -326,7 +326,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
           ii_log    = ii_log ).
       CATCH zcx_abapgit_exception INTO lx_error.
         " Ensure to reset default transport request task
-        zcl_abapgit_default_transport=>get_instance( )->reset( ).
+        zcl_abapgit_factory=>get_default_transport( )->reset( ).
         refresh( iv_drop_log = abap_false ).
         RAISE EXCEPTION lx_error.
     ENDTRY.
