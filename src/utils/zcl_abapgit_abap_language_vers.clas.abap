@@ -31,6 +31,13 @@ CLASS zcl_abapgit_abap_language_vers DEFINITION
       RETURNING
         VALUE(rv_allowed) TYPE abap_bool.
 
+    CLASS-METHODS check_abap_language_version
+      IMPORTING
+        !iv_abap_language_version TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version
+        !is_item                  TYPE zif_abapgit_definitions=>ty_item
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -55,6 +62,12 @@ CLASS zcl_abapgit_abap_language_vers DEFINITION
       RETURNING
         VALUE(rv_abap_language_version) TYPE string.
 
+    CLASS-METHODS get_description
+      IMPORTING
+        !iv_abap_language_version TYPE zif_abapgit_aff_types_v1=>ty_abap_language_version
+      RETURNING
+        VALUE(rv_description)     TYPE string.
+
 ENDCLASS.
 
 
@@ -62,14 +75,27 @@ ENDCLASS.
 CLASS zcl_abapgit_abap_language_vers IMPLEMENTATION.
 
 
+  METHOD check_abap_language_version.
+
+    " Check if ABAP language version matches repository setting
+    IF iv_abap_language_version <> is_item-abap_language_version.
+      zcx_abapgit_exception=>raise(
+        |Object { is_item-obj_type } { is_item-obj_name } has { get_description( iv_abap_language_version ) }| &&
+        | but repository is set to { get_description( is_item-abap_language_version ) }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD constructor.
 
     mo_dot_abapgit = io_dot_abapgit.
 
     IF zcl_abapgit_feature=>is_enabled( c_feature_flag ) = abap_false.
-      mv_has_abap_language_vers = abap_false.
-    ELSEIF get_abap_language_vers_by_repo( ) = zif_abapgit_dot_abapgit=>c_abap_language_version-undefined
-        OR get_abap_language_vers_by_repo( ) = zif_abapgit_dot_abapgit=>c_abap_language_version-ignore.
+      mv_has_abap_language_vers = abap_undefined.
+    ELSEIF get_abap_language_vers_by_repo( ) = zif_abapgit_dot_abapgit=>c_abap_language_version-undefined.
+      mv_has_abap_language_vers = abap_undefined.
+    ELSEIF get_abap_language_vers_by_repo( ) = zif_abapgit_dot_abapgit=>c_abap_language_version-ignore.
       mv_has_abap_language_vers = abap_false.
     ELSE.
       mv_has_abap_language_vers = abap_true.
@@ -87,7 +113,6 @@ CLASS zcl_abapgit_abap_language_vers IMPLEMENTATION.
     lv_class = 'CL_ABAP_LANGUAGE_VERSION_CFG'.
 
     TRY.
-
         CALL METHOD (lv_class)=>('GET_INSTANCE')
           RECEIVING
             ro_instance = lo_abap_language_version_cfg.
@@ -114,6 +139,7 @@ CLASS zcl_abapgit_abap_language_vers IMPLEMENTATION.
           WHEN OTHERS.
             rv_abap_language_version = zif_abapgit_dot_abapgit=>c_abap_language_version-undefined.
         ENDCASE.
+
       CATCH cx_root.
         rv_abap_language_version = zif_abapgit_dot_abapgit=>c_abap_language_version-undefined.
     ENDTRY.
@@ -126,29 +152,31 @@ CLASS zcl_abapgit_abap_language_vers IMPLEMENTATION.
     DATA lv_class TYPE string.
     DATA lo_abap_language_version TYPE REF TO object.
 
-    IF mv_has_abap_language_vers = abap_false.
+    IF mv_has_abap_language_vers = abap_undefined.
       rv_allowed_abap_langu_version = c_any_abap_language_version.
-      RETURN. ">>>
+    ELSEIF mv_has_abap_language_vers = abap_false.
+      rv_allowed_abap_langu_version = c_no_abap_language_version.
+    ELSE. " abap_true
+
+      lv_class = 'CL_ABAP_LANGUAGE_VERSION'.
+
+      TRY.
+          CALL METHOD (lv_class)=>('GET_INSTANCE')
+            RECEIVING
+              ro_version_handler = lo_abap_language_version.
+
+          CALL METHOD lo_abap_language_version->('IF_ABAP_LANGUAGE_VERSION~GET_DEFAULT_VERSION')
+            EXPORTING
+              iv_object_type     = iv_object_type
+              iv_package         = iv_package
+            RECEIVING
+              rv_default_version = rv_allowed_abap_langu_version.
+
+        CATCH cx_root.
+          rv_allowed_abap_langu_version = get_default_abap_language_vers( iv_object_type ).
+      ENDTRY.
+
     ENDIF.
-
-    lv_class = 'CL_ABAP_LANGUAGE_VERSION'.
-
-    TRY.
-
-        CALL METHOD (lv_class)=>('GET_INSTANCE')
-          RECEIVING
-            ro_version_handler = lo_abap_language_version.
-
-        CALL METHOD lo_abap_language_version->('IF_ABAP_LANGUAGE_VERSION~GET_DEFAULT_VERSION')
-          EXPORTING
-            iv_object_type     = iv_object_type
-            iv_package         = iv_package
-          RECEIVING
-            rv_default_version = rv_allowed_abap_langu_version.
-
-      CATCH cx_root.
-        rv_allowed_abap_langu_version = get_default_abap_language_vers( iv_object_type ).
-    ENDTRY.
 
   ENDMETHOD.
 
@@ -179,11 +207,32 @@ CLASS zcl_abapgit_abap_language_vers IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_description.
+
+    CASE iv_abap_language_version.
+      WHEN zif_abapgit_aff_types_v1=>co_abap_language_version-standard
+        OR zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
+        rv_description = 'Standard ABAP'.
+      WHEN zif_abapgit_aff_types_v1=>co_abap_language_version-key_user
+        OR zif_abapgit_aff_types_v1=>co_abap_language_version_src-key_user.
+        rv_description = 'ABAP for Key Users'.
+      WHEN zif_abapgit_aff_types_v1=>co_abap_language_version-cloud_development
+        OR zif_abapgit_aff_types_v1=>co_abap_language_version_src-cloud_development.
+        rv_description = 'ABAP for Cloud Development'.
+      WHEN OTHERS.
+        rv_description = 'Undefined'.
+    ENDCASE.
+
+    rv_description = |ABAP language version "{ rv_description }"|.
+
+  ENDMETHOD.
+
+
   METHOD get_repo_abap_language_version.
 
     DATA lv_abap_language_version TYPE string.
 
-    IF mv_has_abap_language_vers = abap_true.
+    IF mv_has_abap_language_vers <> abap_undefined. " abap_true or abap_false
       lv_abap_language_version = mo_dot_abapgit->get_abap_language_version( ).
     ENDIF.
 
