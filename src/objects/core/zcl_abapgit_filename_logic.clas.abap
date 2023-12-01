@@ -201,7 +201,11 @@ CLASS zcl_abapgit_filename_logic IMPLEMENTATION.
             iv_package  = iv_package
           CHANGING
             cs_item     = cs_item.
-      CATCH cx_sy_dyn_call_illegal_class ##NO_HANDLER.
+      CATCH cx_sy_dyn_call_illegal_class.
+        " Map data config to TABU object type
+        IF cs_item-obj_type = 'CONF'.
+          cs_item-obj_type = 'TABU'.
+        ENDIF.
     ENDTRY.
 
   ENDMETHOD.
