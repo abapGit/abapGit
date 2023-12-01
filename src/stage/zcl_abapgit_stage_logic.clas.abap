@@ -87,13 +87,15 @@ CLASS zcl_abapgit_stage_logic IMPLEMENTATION.
 
   METHOD zif_abapgit_stage_logic~get.
 
+    " Getting REMOTE before LOCAL is critical to ensure that DATA config is loaded first
+    rs_files-remote = io_repo->get_files_remote( ii_obj_filter ).
+
     IF ii_obj_filter IS INITIAL.
       rs_files-local  = io_repo->get_files_local( ).
     ELSE.
       rs_files-local  = io_repo->get_files_local_filtered( ii_obj_filter ).
     ENDIF.
 
-    rs_files-remote = io_repo->get_files_remote( ii_obj_filter ).
     rs_files-status = zcl_abapgit_repo_status=>calculate( io_repo = io_repo
                                                           ii_obj_filter = ii_obj_filter ).
 
