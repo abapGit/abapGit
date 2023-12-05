@@ -84,10 +84,14 @@ CLASS zcl_abapgit_objects_super DEFINITION
         zcx_abapgit_exception .
     METHODS set_abap_language_version
       CHANGING
-        !cv_abap_language_version TYPE uccheck.
+        !cv_abap_language_version TYPE uccheck
+      RAISING
+        zcx_abapgit_exception .
     METHODS clear_abap_language_version
       CHANGING
-        !cv_abap_language_version TYPE uccheck.
+        !cv_abap_language_version TYPE uccheck
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
 ENDCLASS.
 
@@ -99,9 +103,14 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
   METHOD clear_abap_language_version.
 
     " Used during serializing of objects
-    IF ms_item-abap_language_version <> zcl_abapgit_abap_language_vers=>c_any_abap_language_version.
-      " ABAP language version is defined in repo setting so there's no need to serialize it
+    IF ms_item-abap_language_version = zcl_abapgit_abap_language_vers=>c_no_abap_language_version.
+      " Ignore ABAP language version
       CLEAR cv_abap_language_version.
+    ELSEIF ms_item-abap_language_version <> zcl_abapgit_abap_language_vers=>c_any_abap_language_version.
+      " Check if ABAP language version matches repository setting
+      zcl_abapgit_abap_language_vers=>check_abap_language_version(
+        iv_abap_language_version = cv_abap_language_version
+        is_item                  = ms_item ).
     ENDIF.
 
   ENDMETHOD.
@@ -301,9 +310,14 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
   METHOD set_abap_language_version.
 
     " Used during deserializing of objects
-    IF ms_item-abap_language_version <> zcl_abapgit_abap_language_vers=>c_any_abap_language_version.
-      " ABAP language version is defined in repo setting so set it accordingly
+    IF ms_item-abap_language_version = zcl_abapgit_abap_language_vers=>c_no_abap_language_version.
+      " ABAP language version is derived from object type and target package (see zcl_abapgit_objects->deserialize)
       cv_abap_language_version = ms_item-abap_language_version.
+    ELSEIF ms_item-abap_language_version <> zcl_abapgit_abap_language_vers=>c_any_abap_language_version.
+      " Check if ABAP language version matches repository setting
+      zcl_abapgit_abap_language_vers=>check_abap_language_version(
+        iv_abap_language_version = cv_abap_language_version
+        is_item                  = ms_item ).
     ENDIF.
 
   ENDMETHOD.
