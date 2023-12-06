@@ -163,7 +163,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
           lt_descriptions          TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt,
           lt_descriptions_sub      TYPE zif_abapgit_oo_object_fnc=>ty_seosubcotx_tt,
           ls_class_key             TYPE seoclskey,
-          lt_attributes            TYPE zif_abapgit_definitions=>ty_obj_attribute_tt.
+          lt_attributes            TYPE zif_abapgit_oo_object_fnc=>ty_obj_attribute_tt.
 
 
     lt_source = zif_abapgit_object~mo_files->read_abap( ).
@@ -465,7 +465,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
   METHOD serialize_attr.
 
-    DATA: lt_attributes TYPE zif_abapgit_definitions=>ty_obj_attribute_tt.
+    DATA: lt_attributes TYPE zif_abapgit_oo_object_fnc=>ty_obj_attribute_tt.
 
     lt_attributes = mi_object_oriented_object_fct->read_attributes( iv_clsname ).
     IF lines( lt_attributes ) = 0.

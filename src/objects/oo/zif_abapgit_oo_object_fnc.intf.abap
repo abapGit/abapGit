@@ -18,12 +18,23 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
   TYPES:
     ty_seosubcotx_tt TYPE STANDARD TABLE OF seosubcotx WITH DEFAULT KEY .
 
+  TYPES:
+    BEGIN OF ty_obj_attribute,
+      cmpname   TYPE seocmpname,
+      attkeyfld TYPE seokeyfld,
+      attbusobj TYPE seobusobj,
+      exposure  TYPE seoexpose,
+    END OF ty_obj_attribute .
+  TYPES:
+    ty_obj_attribute_tt TYPE STANDARD TABLE OF ty_obj_attribute WITH DEFAULT KEY
+                             WITH NON-UNIQUE SORTED KEY cmpname COMPONENTS cmpname .
+
   METHODS:
     create
       IMPORTING
         iv_check      TYPE abap_bool
         iv_package    TYPE devclass
-        it_attributes TYPE zif_abapgit_definitions=>ty_obj_attribute_tt OPTIONAL
+        it_attributes TYPE ty_obj_attribute_tt OPTIONAL
       CHANGING
         cg_properties TYPE any
       RAISING
@@ -176,5 +187,5 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
       IMPORTING
         iv_object_name       TYPE seoclsname
       RETURNING
-        VALUE(rt_attributes) TYPE zif_abapgit_definitions=>ty_obj_attribute_tt.
+        VALUE(rt_attributes) TYPE ty_obj_attribute_tt.
 ENDINTERFACE.
