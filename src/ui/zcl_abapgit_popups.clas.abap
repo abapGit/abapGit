@@ -787,15 +787,15 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     DATA: lt_e071    TYPE STANDARD TABLE OF e071,
           lt_e071k   TYPE STANDARD TABLE OF e071k,
           lv_order   TYPE trkorr,
-          ls_e070use TYPE e070use.
+          ls_default TYPE zif_abapgit_default_transport=>ty_get.
     DATA lv_category TYPE e070-korrdev.
 
     " If default transport is set and its type matches, then use it as default for the popup
-    ls_e070use = zcl_abapgit_default_transport=>get_instance( )->get( ).
+    ls_default = zcl_abapgit_factory=>get_default_transport( )->get( ).
 
-    IF ( ls_e070use-trfunction = is_transport_type-request OR ls_e070use-trfunction IS INITIAL )
+    IF ( ls_default-trfunction = is_transport_type-request OR ls_default-trfunction IS INITIAL )
       AND iv_use_default_transport = abap_true.
-      lv_order = ls_e070use-ordernum.
+      lv_order = ls_default-ordernum.
     ENDIF.
 
     " Differentiate between customizing and WB requests

@@ -120,7 +120,9 @@ CLASS ltcl_abap_language_version DEFINITION FOR TESTING RISK LEVEL HARMLESS
       repo_setting_feature_on FOR TESTING,
       object_type_feature_off FOR TESTING,
       object_type_feature_on FOR TESTING,
-      is_import_allowed FOR TESTING.
+      is_import_allowed FOR TESTING,
+      check_abap_language_vers_same FOR TESTING RAISING zcx_abapgit_exception,
+      check_abap_language_vers_diff FOR TESTING.
 
 ENDCLASS.
 
@@ -134,6 +136,7 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
     zcl_abapgit_persist_injector=>set_settings( mi_persistency ).
 
     APPEND zif_abapgit_dot_abapgit=>c_abap_language_version-undefined TO mt_versions.
+    APPEND zif_abapgit_dot_abapgit=>c_abap_language_version-ignore TO mt_versions.
     APPEND zif_abapgit_dot_abapgit=>c_abap_language_version-standard TO mt_versions.
     APPEND zif_abapgit_dot_abapgit=>c_abap_language_version-key_user TO mt_versions.
     APPEND zif_abapgit_dot_abapgit=>c_abap_language_version-cloud_development TO mt_versions.
@@ -212,6 +215,12 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
           repo_setting_test(
             iv_version = lv_version
             iv_exp     = zcl_abapgit_abap_language_vers=>c_any_abap_language_version ).
+
+        WHEN zif_abapgit_dot_abapgit=>c_abap_language_version-ignore.
+
+          repo_setting_test(
+            iv_version = lv_version
+            iv_exp     = zcl_abapgit_abap_language_vers=>c_no_abap_language_version ).
 
         WHEN zif_abapgit_dot_abapgit=>c_abap_language_version-standard.
 
@@ -324,6 +333,15 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
             iv_cloud        = zcl_abapgit_abap_language_vers=>c_any_abap_language_version
             iv_cloud_src    = zcl_abapgit_abap_language_vers=>c_any_abap_language_version ).
 
+        WHEN zif_abapgit_dot_abapgit=>c_abap_language_version-ignore.
+
+          object_type_test(
+            iv_version      = lv_version
+            iv_standard     = zcl_abapgit_abap_language_vers=>c_no_abap_language_version
+            iv_standard_src = zcl_abapgit_abap_language_vers=>c_no_abap_language_version
+            iv_cloud        = zcl_abapgit_abap_language_vers=>c_no_abap_language_version
+            iv_cloud_src    = zcl_abapgit_abap_language_vers=>c_no_abap_language_version ).
+
         WHEN OTHERS.
 
           object_type_test(
@@ -387,7 +405,8 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
     LOOP AT mt_versions INTO lv_version.
 
       CASE lv_version.
-        WHEN zif_abapgit_dot_abapgit=>c_abap_language_version-undefined.
+        WHEN zif_abapgit_dot_abapgit=>c_abap_language_version-undefined
+          OR zif_abapgit_dot_abapgit=>c_abap_language_version-ignore.
 
           is_import_allowed_test(
             iv_version  = lv_version
@@ -422,6 +441,39 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
       ENDCASE.
 
     ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD check_abap_language_vers_same.
+
+    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
+
+    ls_item-obj_type              = 'CLAS'.
+    ls_item-obj_name              = 'ZCL_FOO_BAR'.
+    ls_item-abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version-standard.
+
+    " Does not throw
+    zcl_abapgit_abap_language_vers=>check_abap_language_version(
+      iv_abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version-standard
+      is_item                  = ls_item ).
+
+  ENDMETHOD.
+
+  METHOD check_abap_language_vers_diff.
+
+    DATA ls_item TYPE zif_abapgit_definitions=>ty_item.
+
+    ls_item-obj_type              = 'CLAS'.
+    ls_item-obj_name              = 'ZCL_FOO_BAR'.
+    ls_item-abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version-standard.
+
+    TRY.
+        zcl_abapgit_abap_language_vers=>check_abap_language_version(
+          iv_abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version-cloud_development
+          is_item                  = ls_item ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
+    ENDTRY.
 
   ENDMETHOD.
 

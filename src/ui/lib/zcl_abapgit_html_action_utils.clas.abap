@@ -37,23 +37,29 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
+    TYPES: BEGIN OF ty_name_value,
+             name  TYPE string,
+             value TYPE string,
+           END OF ty_name_value.
+    TYPES ty_name_value_tt TYPE STANDARD TABLE OF ty_name_value WITH DEFAULT KEY.
+
     CLASS-METHODS add_field
       IMPORTING
         !iv_name  TYPE string
         !ig_field TYPE any
       CHANGING
-        !ct_field TYPE tihttpnvp .
+        !ct_field TYPE ty_name_value_tt .
 
     CLASS-METHODS fields_to_string
       IMPORTING
-        !it_fields       TYPE tihttpnvp
+        !it_fields       TYPE ty_name_value_tt
       RETURNING
         VALUE(rv_string) TYPE string.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
+CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
 
 
   METHOD add_field.
@@ -82,7 +88,7 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
 
   METHOD dbkey_encode.
 
-    DATA lt_fields TYPE tihttpnvp.
+    DATA lt_fields TYPE ty_name_value_tt.
 
     add_field( EXPORTING iv_name = 'TYPE'
                          ig_field = is_key-type CHANGING ct_field = lt_fields ).
@@ -96,7 +102,7 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
 
   METHOD dir_encode.
 
-    DATA lt_fields TYPE tihttpnvp.
+    DATA lt_fields TYPE ty_name_value_tt.
     add_field( EXPORTING iv_name = 'PATH'
                          ig_field = iv_path CHANGING ct_field = lt_fields ).
     rv_string = fields_to_string( lt_fields ).
@@ -127,7 +133,7 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
 
   METHOD file_encode.
 
-    DATA lt_fields TYPE tihttpnvp.
+    DATA lt_fields TYPE ty_name_value_tt.
 
 
     add_field(
@@ -167,7 +173,7 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
 
   METHOD jump_encode.
 
-    DATA lt_fields TYPE tihttpnvp.
+    DATA lt_fields TYPE ty_name_value_tt.
 
 
     add_field( EXPORTING iv_name = 'TYPE'
@@ -187,7 +193,7 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
 
   METHOD obj_encode.
 
-    DATA lt_fields TYPE tihttpnvp.
+    DATA lt_fields TYPE ty_name_value_tt.
 
 
     add_field( EXPORTING iv_name = 'KEY'
