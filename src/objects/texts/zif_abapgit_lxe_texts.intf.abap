@@ -1,8 +1,17 @@
 INTERFACE zif_abapgit_lxe_texts
   PUBLIC .
 
-  TYPES:
-    ty_text_pairs TYPE STANDARD TABLE OF lxe_pcx_s1 WITH DEFAULT KEY.
+* type LXE_PCX_S1 inlined to be compatible with open-abap and ABAP Cloud
+  TYPES: BEGIN OF ty_text_pair,
+           textkey  TYPE c LENGTH 32,
+           s_text   TYPE c LENGTH 255,
+           t_text   TYPE c LENGTH 255,
+           unitmlt  TYPE i,
+           uppcase  TYPE c LENGTH 4,
+           texttype TYPE c LENGTH 1,
+         END OF ty_text_pair.
+
+  TYPES ty_text_pairs TYPE STANDARD TABLE OF ty_text_pair WITH DEFAULT KEY.
 
   METHODS serialize
     IMPORTING
