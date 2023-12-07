@@ -163,16 +163,7 @@ INTERFACE zif_abapgit_definitions
   TYPES: END OF ty_tpool .
   TYPES:
     ty_tpool_tt TYPE STANDARD TABLE OF ty_tpool WITH DEFAULT KEY .
-  TYPES:
-    BEGIN OF ty_obj_attribute,
-      cmpname   TYPE seocmpname,
-      attkeyfld TYPE seokeyfld,
-      attbusobj TYPE seobusobj,
-      exposure  TYPE seoexpose,
-    END OF ty_obj_attribute .
-  TYPES:
-    ty_obj_attribute_tt TYPE STANDARD TABLE OF ty_obj_attribute WITH DEFAULT KEY
-                             WITH NON-UNIQUE SORTED KEY cmpname COMPONENTS cmpname .
+
   TYPES:
     BEGIN OF ty_transport_to_branch,
       branch_name TYPE string,
