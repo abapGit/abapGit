@@ -9,7 +9,6 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
     CONSTANTS c_abapgit_homepage TYPE string VALUE 'https://www.abapgit.org' ##NO_TEXT.
     CONSTANTS c_abapgit_wikipage TYPE string VALUE 'https://docs.abapgit.org' ##NO_TEXT.
     CONSTANTS c_dotabap_homepage TYPE string VALUE 'https://dotabap.org' ##NO_TEXT.
-    CONSTANTS c_abapgit_class TYPE seoclsname VALUE `ZCX_ABAPGIT_EXCEPTION` ##NO_TEXT.
     CONSTANTS c_changelog_path TYPE string VALUE '/blob/main/changelog.txt' ##NO_TEXT.
 
     CLASS-METHODS open_abapgit_homepage
@@ -28,9 +27,6 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
     CLASS-METHODS open_abapgit_changelog
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS is_installed
-      RETURNING
-        VALUE(rv_devclass) TYPE tadir-devclass .
     CLASS-METHODS prepare_gui_startup
       RAISING
         zcx_abapgit_exception .
@@ -173,16 +169,6 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
         " Some problems with dynamic ADT access.
         " Let's ignore it for now and fail silently
     ENDTRY.
-
-  ENDMETHOD.
-
-
-  METHOD is_installed.
-
-    SELECT SINGLE devclass FROM tadir INTO rv_devclass
-      WHERE pgmid = 'R3TR'
-      AND object = 'CLAS'
-      AND obj_name = c_abapgit_class.
 
   ENDMETHOD.
 
