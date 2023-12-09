@@ -125,10 +125,10 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
           lr_context TYPE REF TO data,
           lt_fields  TYPE tihttpnvp.
 
-
     FIELD-SYMBOLS: <lg_context>    TYPE any,
                    <lv_parameters> TYPE string,
                    <ls_field>      LIKE LINE OF lt_fields.
+
 
     ls_item-obj_type = 'CLAS'.
     ls_item-obj_name = 'CL_ADT_GUI_INTEGRATION_CONTEXT'.
@@ -144,7 +144,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
         ASSIGN lr_context->* TO <lg_context>.
         ASSERT sy-subrc = 0.
 
-        CALL METHOD ('CL_ADT_GUI_INTEGRATION_CONTEXT')=>read_context
+        CALL METHOD (ls_item-obj_name)=>read_context
           RECEIVING
             result = <lg_context>.
 
@@ -163,7 +163,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
           " We want to open the repo just once. Therefore we delete the parameters
           " and initialize the ADT context.
           CLEAR <lv_parameters>.
-          CALL METHOD ('CL_ADT_GUI_INTEGRATION_CONTEXT')=>initialize_instance
+          CALL METHOD (ls_item-obj_name)=>initialize_instance
             EXPORTING
               context_info = <lg_context>.
 
