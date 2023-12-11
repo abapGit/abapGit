@@ -1091,6 +1091,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       serialize_texts( CHANGING cs_internal = ls_internal ).
     ENDIF.
 
+* todo: move this method call slowly to the end
     lcl_tabl_xml=>add(
       io_xml      = io_xml
       is_internal = ls_internal ).
