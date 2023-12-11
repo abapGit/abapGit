@@ -30,5 +30,13 @@ CLASS lcl_tabl_xml IMPLEMENTATION.
                  ig_data = is_internal-dd35v ).
     io_xml->add( iv_name = 'DD36M'
                  ig_data = is_internal-dd36m ).
+
+    IF lines( is_internal-i18n_langs ) > 0.
+      io_xml->add( iv_name = 'I18N_LANGS'
+                   ig_data = is_internal-i18n_langs ).
+
+      io_xml->add( iv_name = 'DD02_TEXTS'
+                   ig_data = is_internal-dd02_texts ).
+    ENDIF.
   ENDMETHOD.
 ENDCLASS.

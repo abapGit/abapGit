@@ -56,16 +56,6 @@ CLASS zcl_abapgit_object_tabl DEFINITION
     METHODS delete_idoc_segment RETURNING VALUE(rv_deleted) TYPE abap_bool
                                 RAISING   zcx_abapgit_exception.
   PRIVATE SECTION.
-
-
-    TYPES:
-      BEGIN OF ty_dd02_text,
-        ddlanguage TYPE dd02t-ddlanguage,
-        ddtext     TYPE dd02t-ddtext,
-      END OF ty_dd02_text .
-    TYPES:
-      ty_dd02_texts TYPE STANDARD TABLE OF ty_dd02_text .
-
     CONSTANTS c_longtext_id_tabl TYPE dokil-id VALUE 'TB' ##NO_TEXT.
     CONSTANTS:
       BEGIN OF c_s_dataname,
@@ -93,8 +83,8 @@ CLASS zcl_abapgit_object_tabl DEFINITION
       CHANGING
         !cs_dd03p TYPE dd03p .
     METHODS serialize_texts
-      IMPORTING
-        !ii_xml TYPE REF TO zif_abapgit_xml_output
+      CHANGING
+        !cs_internal TYPE ty_internal
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize_texts
@@ -112,7 +102,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
+CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
 
   METHOD clear_dd03p_fields.
@@ -602,8 +592,6 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
     DATA: lv_name            TYPE ddobjname,
           lv_index           TYPE i,
           ls_dd02v           TYPE dd02v,
-          lt_dd02_texts      TYPE ty_dd02_texts,
-          lt_i18n_langs      TYPE TABLE OF langu,
           lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
     FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
@@ -618,14 +606,14 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
     " Collect additional languages, skip main lang - it was serialized already
     lt_language_filter = mo_i18n_params->build_language_filter( ).
 
-    SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
+    SELECT DISTINCT ddlanguage AS langu INTO TABLE cs_internal-i18n_langs
       FROM dd02v
       WHERE tabname = lv_name
       AND ddlanguage IN lt_language_filter
       AND ddlanguage <> mv_language
       ORDER BY langu.                                     "#EC CI_SUBRC
 
-    LOOP AT lt_i18n_langs ASSIGNING <lv_lang>.
+    LOOP AT cs_internal-i18n_langs ASSIGNING <lv_lang>.
       lv_index = sy-tabix.
       CALL FUNCTION 'DDIF_TABL_GET'
         EXPORTING
@@ -637,25 +625,16 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
           illegal_input = 1
           OTHERS        = 2.
       IF sy-subrc <> 0 OR ls_dd02v-ddlanguage IS INITIAL.
-        DELETE lt_i18n_langs INDEX lv_index. " Don't save this lang
+        DELETE cs_internal-i18n_langs INDEX lv_index. " Don't save this lang
         CONTINUE.
       ENDIF.
 
-      APPEND INITIAL LINE TO lt_dd02_texts ASSIGNING <ls_dd02_text>.
+      APPEND INITIAL LINE TO cs_internal-dd02_texts ASSIGNING <ls_dd02_text>.
       MOVE-CORRESPONDING ls_dd02v TO <ls_dd02_text>.
-
     ENDLOOP.
 
-    SORT lt_i18n_langs ASCENDING.
-    SORT lt_dd02_texts BY ddlanguage ASCENDING.
-
-    IF lines( lt_i18n_langs ) > 0.
-      ii_xml->add( iv_name = 'I18N_LANGS'
-                   ig_data = lt_i18n_langs ).
-
-      ii_xml->add( iv_name = 'DD02_TEXTS'
-                   ig_data = lt_dd02_texts ).
-    ENDIF.
+    SORT cs_internal-i18n_langs ASCENDING.
+    SORT cs_internal-dd02_texts BY ddlanguage ASCENDING.
 
   ENDMETHOD.
 
@@ -1113,7 +1092,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
       is_internal = ls_internal ).
 
     IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
-      serialize_texts( io_xml ).
+      serialize_texts( CHANGING cs_internal = ls_internal ).
     ENDIF.
 
     serialize_longtexts( ii_xml         = io_xml
