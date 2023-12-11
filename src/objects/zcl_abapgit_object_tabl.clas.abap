@@ -112,7 +112,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
 
   METHOD clear_dd03p_fields.
@@ -1004,11 +1004,11 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
           lv_index    LIKE sy-index,
           ls_extras   TYPE ty_tabl_extras.
 
-    FIELD-SYMBOLS: <ls_dd12v>      LIKE LINE OF lt_dd12v,
-                   <ls_dd05m>      LIKE LINE OF lt_dd05m,
-                   <ls_dd08v>      LIKE LINE OF lt_dd08v,
-                   <ls_dd35v>      LIKE LINE OF lt_dd35v,
-                   <ls_dd36m>      LIKE LINE OF lt_dd36m,
+    FIELD-SYMBOLS: <ls_dd12v>      LIKE LINE OF ls_internal-dd12v,
+                   <ls_dd05m>      LIKE LINE OF ls_internal-dd05m,
+                   <ls_dd08v>      LIKE LINE OF ls_internal-dd08v,
+                   <ls_dd35v>      LIKE LINE OF ls_internal-dd35v,
+                   <ls_dd36m>      LIKE LINE OF ls_internal-dd36m,
                    <lg_roworcolst> TYPE any.
 
     lv_name = ms_item-obj_name.
