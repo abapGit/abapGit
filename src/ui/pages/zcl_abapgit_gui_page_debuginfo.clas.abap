@@ -137,7 +137,9 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
         iv_act = 'https://github.com/abapGit/abapGit'
         iv_typ = zif_abapgit_html=>c_action_type-url ) }).</div>| ).
     ELSE.
-      lv_devclass = zcl_abapgit_services_abapgit=>is_installed( ).
+      lv_devclass = zcl_abapgit_factory=>get_tadir( )->get_object_package(
+        iv_object   = 'CLAS'
+        iv_obj_name = 'ZCX_ABAPGIT_EXCEPTION' ).
       ri_html->add( '<h2>abapGit - Developer Version</h2>' ).
       ri_html->add( |<div>abapGit is installed in package { lv_devclass }</div>| ).
     ENDIF.
