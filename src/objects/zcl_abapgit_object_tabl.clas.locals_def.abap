@@ -3,7 +3,7 @@ TYPES: BEGIN OF ty_dd02_text,
          ddtext     TYPE dd02t-ddtext,
        END OF ty_dd02_text.
 
-TYPES ty_dd02_texts TYPE STANDARD TABLE OF ty_dd02_text.
+TYPES ty_dd02_texts TYPE STANDARD TABLE OF ty_dd02_text WITH DEFAULT KEY.
 
 TYPES ty_dd03p_tt TYPE STANDARD TABLE OF dd03p WITH DEFAULT KEY.
 
