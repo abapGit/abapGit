@@ -57,8 +57,7 @@ CLASS zcl_abapgit_object_tabl DEFINITION
                                 RAISING   zcx_abapgit_exception.
   PRIVATE SECTION.
 
-    TYPES:
-      ty_dd03p_tt TYPE STANDARD TABLE OF dd03p .
+
     TYPES:
       BEGIN OF ty_dd02_text,
         ddlanguage TYPE dd02t-ddlanguage,
@@ -999,19 +998,11 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: lv_name   TYPE ddobjname,
-          lv_state  TYPE ddgotstate,
-          ls_dd02v  TYPE dd02v,
-          ls_dd09l  TYPE dd09l,
-          lt_dd03p  TYPE ty_dd03p_tt,
-          lt_dd05m  TYPE TABLE OF dd05m,
-          lt_dd08v  TYPE TABLE OF dd08v,
-          lt_dd12v  TYPE dd12vtab,
-          lt_dd17v  TYPE dd17vtab,
-          lt_dd35v  TYPE TABLE OF dd35v,
-          lv_index  LIKE sy-index,
-          lt_dd36m  TYPE dd36mttyp,
-          ls_extras TYPE ty_tabl_extras.
+    DATA: lv_name     TYPE ddobjname,
+          lv_state    TYPE ddgotstate,
+          ls_internal TYPE ty_internal,
+          lv_index    LIKE sy-index,
+          ls_extras   TYPE ty_tabl_extras.
 
     FIELD-SYMBOLS: <ls_dd12v>      LIKE LINE OF lt_dd12v,
                    <ls_dd05m>      LIKE LINE OF lt_dd05m,
@@ -1028,16 +1019,16 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
         langu         = mv_language
       IMPORTING
         gotstate      = lv_state
-        dd02v_wa      = ls_dd02v
-        dd09l_wa      = ls_dd09l
+        dd02v_wa      = ls_internal-dd02v
+        dd09l_wa      = ls_internal-dd09l
       TABLES
-        dd03p_tab     = lt_dd03p
-        dd05m_tab     = lt_dd05m
-        dd08v_tab     = lt_dd08v
-        dd12v_tab     = lt_dd12v
-        dd17v_tab     = lt_dd17v
-        dd35v_tab     = lt_dd35v
-        dd36m_tab     = lt_dd36m
+        dd03p_tab     = ls_internal-dd03p
+        dd05m_tab     = ls_internal-dd05m
+        dd08v_tab     = ls_internal-dd08v
+        dd12v_tab     = ls_internal-dd12v
+        dd17v_tab     = ls_internal-dd17v
+        dd35v_tab     = ls_internal-dd35v
+        dd36m_tab     = ls_internal-dd36m
       EXCEPTIONS
         illegal_input = 1
         OTHERS        = 2.
@@ -1050,93 +1041,76 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    CLEAR: ls_dd02v-as4user,
-           ls_dd02v-as4date,
-           ls_dd02v-as4time.
+    CLEAR: ls_internal-dd02v-as4user,
+           ls_internal-dd02v-as4date,
+           ls_internal-dd02v-as4time.
 
 * reset numeric field, so XML does not crash
-    IF ls_dd02v-prozpuff = ''.
-      CLEAR ls_dd02v-prozpuff.
+    IF ls_internal-dd02v-prozpuff = ''.
+      CLEAR ls_internal-dd02v-prozpuff.
     ENDIF.
-    IF ls_dd02v-datmin = ''.
-      CLEAR ls_dd02v-datmin.
+    IF ls_internal-dd02v-datmin = ''.
+      CLEAR ls_internal-dd02v-datmin.
     ENDIF.
-    IF ls_dd02v-datmax = ''.
-      CLEAR ls_dd02v-datmax.
+    IF ls_internal-dd02v-datmax = ''.
+      CLEAR ls_internal-dd02v-datmax.
     ENDIF.
-    IF ls_dd02v-datavg = ''.
-      CLEAR ls_dd02v-datavg.
+    IF ls_internal-dd02v-datavg = ''.
+      CLEAR ls_internal-dd02v-datavg.
     ENDIF.
 
-    CLEAR: ls_dd09l-as4user,
-           ls_dd09l-as4date,
-           ls_dd09l-as4time.
+    CLEAR: ls_internal-dd09l-as4user,
+           ls_internal-dd09l-as4date,
+           ls_internal-dd09l-as4time.
 
-    ASSIGN COMPONENT 'ROWORCOLST' OF STRUCTURE ls_dd09l TO <lg_roworcolst>.
+    ASSIGN COMPONENT 'ROWORCOLST' OF STRUCTURE ls_internal-dd09l TO <lg_roworcolst>.
     IF sy-subrc = 0 AND <lg_roworcolst> = 'C'.
       CLEAR <lg_roworcolst>. "To avoid diff errors. This field doesn't exists in all releases
     ENDIF.
 
 
-    LOOP AT lt_dd12v ASSIGNING <ls_dd12v>.
+    LOOP AT ls_internal-dd12v ASSIGNING <ls_dd12v>.
       CLEAR: <ls_dd12v>-as4user,
              <ls_dd12v>-as4date,
              <ls_dd12v>-as4time,
              <ls_dd12v>-dbindex.
     ENDLOOP.
 
-    clear_dd03p_fields( CHANGING ct_dd03p = lt_dd03p ).
+    clear_dd03p_fields( CHANGING ct_dd03p = ls_internal-dd03p ).
 
 * remove foreign keys inherited from .INCLUDEs
-    DELETE lt_dd08v WHERE noinherit = 'N'.
-    LOOP AT lt_dd05m ASSIGNING <ls_dd05m>.
+    DELETE ls_internal-dd08v WHERE noinherit = 'N'.
+    LOOP AT ls_internal-dd05m ASSIGNING <ls_dd05m>.
       CLEAR <ls_dd05m>-tabname.
       CLEAR <ls_dd05m>-leng.
       lv_index = sy-tabix.
-      READ TABLE lt_dd08v WITH KEY fieldname = <ls_dd05m>-fieldname TRANSPORTING NO FIELDS.
+      READ TABLE ls_internal-dd08v WITH KEY fieldname = <ls_dd05m>-fieldname TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
-        DELETE lt_dd05m INDEX lv_index.
+        DELETE ls_internal-dd05m INDEX lv_index.
       ENDIF.
     ENDLOOP.
 
-    LOOP AT lt_dd08v ASSIGNING <ls_dd08v>.
+    LOOP AT ls_internal-dd08v ASSIGNING <ls_dd08v>.
       CLEAR: <ls_dd08v>-tabname, <ls_dd08v>-ddlanguage.
     ENDLOOP.
-    LOOP AT lt_dd35v ASSIGNING <ls_dd35v>.
+    LOOP AT ls_internal-dd35v ASSIGNING <ls_dd35v>.
       CLEAR <ls_dd35v>-tabname.
     ENDLOOP.
 
 * remove inherited search helps
-    DELETE lt_dd35v WHERE shlpinher = abap_true.
-    LOOP AT lt_dd36m ASSIGNING <ls_dd36m>.
+    DELETE ls_internal-dd35v WHERE shlpinher = abap_true.
+    LOOP AT ls_internal-dd36m ASSIGNING <ls_dd36m>.
       CLEAR <ls_dd36m>-tabname.
       lv_index = sy-tabix.
-      READ TABLE lt_dd35v WITH KEY fieldname = <ls_dd36m>-fieldname TRANSPORTING NO FIELDS.
+      READ TABLE ls_internal-dd35v WITH KEY fieldname = <ls_dd36m>-fieldname TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
-        DELETE lt_dd36m INDEX lv_index.
+        DELETE ls_internal-dd36m INDEX lv_index.
       ENDIF.
     ENDLOOP.
 
-    io_xml->add( iv_name = 'DD02V'
-                 ig_data = ls_dd02v ).
-    IF NOT ls_dd09l IS INITIAL.
-      io_xml->add( iv_name = 'DD09L'
-                   ig_data = ls_dd09l ).
-    ENDIF.
-    io_xml->add( iv_name = 'DD03P_TABLE'
-                 ig_data = lt_dd03p ).
-    io_xml->add( iv_name = 'DD05M_TABLE'
-                 ig_data = lt_dd05m ).
-    io_xml->add( iv_name = 'DD08V_TABLE'
-                 ig_data = lt_dd08v ).
-    io_xml->add( iv_name = 'DD12V'
-                 ig_data = lt_dd12v ).
-    io_xml->add( iv_name = 'DD17V'
-                 ig_data = lt_dd17v ).
-    io_xml->add( iv_name = 'DD35V_TALE'
-                 ig_data = lt_dd35v ).
-    io_xml->add( iv_name = 'DD36M'
-                 ig_data = lt_dd36m ).
+    lcl_tabl_xml=>add(
+      io_xml      = io_xml
+      is_internal = ls_internal ).
 
     IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       serialize_texts( io_xml ).
