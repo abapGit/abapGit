@@ -594,8 +594,8 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
           ls_dd02v           TYPE dd02v,
           lt_language_filter TYPE zif_abapgit_environment=>ty_system_language_filter.
 
-    FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
-                   <ls_dd02_text> LIKE LINE OF lt_dd02_texts.
+    FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF cs_internal-i18n_langs,
+                   <ls_dd02_text> LIKE LINE OF cs_internal-dd02_texts.
 
     IF mo_i18n_params->ms_params-main_language_only = abap_true.
       RETURN.
