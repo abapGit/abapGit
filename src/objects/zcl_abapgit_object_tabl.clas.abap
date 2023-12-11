@@ -1087,13 +1087,13 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    lcl_tabl_xml=>add(
-      io_xml      = io_xml
-      is_internal = ls_internal ).
-
     IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
       serialize_texts( CHANGING cs_internal = ls_internal ).
     ENDIF.
+
+    lcl_tabl_xml=>add(
+      io_xml      = io_xml
+      is_internal = ls_internal ).
 
     serialize_longtexts( ii_xml         = io_xml
                          iv_longtext_id = c_longtext_id_tabl ).
