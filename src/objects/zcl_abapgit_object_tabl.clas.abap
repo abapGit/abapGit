@@ -67,6 +67,10 @@ CLASS zcl_abapgit_object_tabl DEFINITION
     TYPES:
       ty_dd02_texts TYPE STANDARD TABLE OF ty_dd02_text .
 
+    TYPES: BEGIN OF ty_internal,
+             todo TYPE i,
+           END OF ty_internal.
+
     CONSTANTS c_longtext_id_tabl TYPE dokil-id VALUE 'TB' ##NO_TEXT.
     CONSTANTS:
       BEGIN OF c_s_dataname,
