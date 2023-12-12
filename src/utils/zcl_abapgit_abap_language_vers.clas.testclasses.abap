@@ -465,11 +465,11 @@ CLASS ltcl_abap_language_version IMPLEMENTATION.
 
     ls_item-obj_type              = 'CLAS'.
     ls_item-obj_name              = 'ZCL_FOO_BAR'.
-    ls_item-abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version-standard.
+    ls_item-abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
 
     TRY.
         zcl_abapgit_abap_language_vers=>check_abap_language_version(
-          iv_abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version-cloud_development
+          iv_abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-cloud_development
           is_item                  = ls_item ).
         cl_abap_unit_assert=>fail( ).
       CATCH zcx_abapgit_exception ##NO_HANDLER.
