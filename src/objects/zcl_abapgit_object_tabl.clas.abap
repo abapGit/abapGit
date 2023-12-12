@@ -8,16 +8,6 @@ CLASS zcl_abapgit_object_tabl DEFINITION
 
     INTERFACES zif_abapgit_object .
   PROTECTED SECTION.
-    TYPES: BEGIN OF ty_segment_definition,
-             segmentheader     TYPE edisegmhd,
-             segmentdefinition TYPE edisegmdef,
-             segmentstructures TYPE STANDARD TABLE OF edisegstru WITH DEFAULT KEY,
-           END OF ty_segment_definition.
-    TYPES: ty_segment_definitions TYPE STANDARD TABLE OF ty_segment_definition WITH DEFAULT KEY.
-
-    TYPES: BEGIN OF ty_tabl_extras,
-             tddat TYPE tddat,
-           END OF ty_tabl_extras.
 
     "! get additional data like table authorization group
     "! @parameter iv_tabname | name of the table
@@ -37,7 +27,7 @@ CLASS zcl_abapgit_object_tabl DEFINITION
     "! Serialize IDoc Segment type/definition if exits
     "! @parameter io_xml | XML writer
     "! @raising zcx_abapgit_exception | Exceptions
-    METHODS serialize_idoc_segment IMPORTING io_xml TYPE REF TO zif_abapgit_xml_output
+    METHODS serialize_idoc_segment CHANGING cs_internal TYPE ty_internal
                                    RAISING   zcx_abapgit_exception.
 
     "! Deserialize IDoc Segment type/definition if exits
@@ -57,11 +47,6 @@ CLASS zcl_abapgit_object_tabl DEFINITION
                                 RAISING   zcx_abapgit_exception.
   PRIVATE SECTION.
     CONSTANTS c_longtext_id_tabl TYPE dokil-id VALUE 'TB' ##NO_TEXT.
-    CONSTANTS:
-      BEGIN OF c_s_dataname,
-        segment_definition TYPE string VALUE 'SEGMENT_DEFINITION',
-        tabl_extras        TYPE string VALUE 'TABL_EXTRAS',
-      END OF c_s_dataname .
 
     METHODS deserialize_indexes
       IMPORTING
@@ -530,7 +515,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
     DATA lv_devclass            TYPE devclass.
     DATA lt_segmentdefinitions  TYPE STANDARD TABLE OF edisegmdef.
     DATA ls_segment_definition  TYPE ty_segment_definition.
-    DATA lt_segment_definitions TYPE ty_segment_definitions.
+
     FIELD-SYMBOLS: <ls_segemtndefinition> TYPE edisegmdef.
 
     IF is_idoc_segment( ) = abap_false.
@@ -578,11 +563,8 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       zcl_abapgit_object_idoc=>clear_idoc_segement_fields(
                                  CHANGING cg_structure = ls_segment_definition-segmentheader ).
 
-      APPEND ls_segment_definition TO lt_segment_definitions.
+      APPEND ls_segment_definition TO cs_internal-segment_definitions.
     ENDLOOP.
-
-    io_xml->add( iv_name = c_s_dataname-segment_definition
-                 ig_data = lt_segment_definitions ).
 
   ENDMETHOD.
 
@@ -980,8 +962,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
     DATA: lv_name     TYPE ddobjname,
           lv_state    TYPE ddgotstate,
           ls_internal TYPE ty_internal,
-          lv_index    LIKE sy-index,
-          ls_extras   TYPE ty_tabl_extras.
+          lv_index    LIKE sy-index.
 
     FIELD-SYMBOLS: <ls_dd12v>      LIKE LINE OF ls_internal-dd12v,
                    <ls_dd05m>      LIKE LINE OF ls_internal-dd05m,
@@ -1097,16 +1078,13 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       io_i18n_params = mo_i18n_params
       ii_xml         = io_xml ).
 
-* todo: move this method call slowly to the end
+    serialize_idoc_segment( CHANGING cs_internal = ls_internal ).
+
+    ls_internal-extras = read_extras( lv_name ).
+
     lcl_tabl_xml=>add(
       io_xml      = io_xml
       is_internal = ls_internal ).
-
-    serialize_idoc_segment( io_xml ).
-
-    ls_extras = read_extras( lv_name ).
-    io_xml->add( iv_name = c_s_dataname-tabl_extras
-                 ig_data = ls_extras ).
 
   ENDMETHOD.
 ENDCLASS.

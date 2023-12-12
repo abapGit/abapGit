@@ -42,5 +42,11 @@ CLASS lcl_tabl_xml IMPLEMENTATION.
     io_xml->add( iv_name = 'LONGTEXTS'
                  ig_data = is_internal-longtexts ).
 
+    io_xml->add( iv_name = c_s_dataname-segment_definition
+                 ig_data = is_internal-segment_definitions ).
+
+    io_xml->add( iv_name = c_s_dataname-tabl_extras
+                 ig_data = is_internal-extras ).
+
   ENDMETHOD.
 ENDCLASS.
