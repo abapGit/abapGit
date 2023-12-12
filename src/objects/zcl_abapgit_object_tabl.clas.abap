@@ -12,13 +12,13 @@ CLASS zcl_abapgit_object_tabl DEFINITION
     "! get additional data like table authorization group
     "! @parameter iv_tabname | name of the table
     METHODS read_extras IMPORTING iv_tabname            TYPE ddobjname
-                        RETURNING VALUE(rs_tabl_extras) TYPE ty_tabl_extras.
+                        RETURNING VALUE(rs_tabl_extras) TYPE zif_abapgit_object_tabl=>ty_tabl_extras.
 
     "! Update additional data
     "! @parameter iv_tabname | name of the table
     "! @parameter is_tabl_extras | additional table data
     METHODS update_extras IMPORTING iv_tabname     TYPE ddobjname
-                                    is_tabl_extras TYPE ty_tabl_extras.
+                                    is_tabl_extras TYPE zif_abapgit_object_tabl=>ty_tabl_extras.
 
     "! Delete additional data
     "! @parameter iv_tabname | name of the table
@@ -27,7 +27,7 @@ CLASS zcl_abapgit_object_tabl DEFINITION
     "! Serialize IDoc Segment type/definition if exits
     "! @parameter io_xml | XML writer
     "! @raising zcx_abapgit_exception | Exceptions
-    METHODS serialize_idoc_segment CHANGING cs_internal TYPE ty_internal
+    METHODS serialize_idoc_segment CHANGING cs_internal TYPE zif_abapgit_object_tabl=>ty_internal
                                    RAISING   zcx_abapgit_exception.
 
     "! Deserialize IDoc Segment type/definition if exits
@@ -55,7 +55,7 @@ CLASS zcl_abapgit_object_tabl DEFINITION
         zcx_abapgit_exception .
     METHODS clear_dd03p_fields
       CHANGING
-        !ct_dd03p TYPE ty_dd03p_tt .
+        !ct_dd03p TYPE zif_abapgit_object_tabl=>ty_dd03p_tt .
     "! Check if structure is an IDoc segment
     "! @parameter rv_is_idoc_segment | It's an IDoc segment or not
     METHODS is_idoc_segment
@@ -69,7 +69,7 @@ CLASS zcl_abapgit_object_tabl DEFINITION
         !cs_dd03p TYPE dd03p .
     METHODS serialize_texts
       CHANGING
-        !cs_internal TYPE ty_internal
+        !cs_internal TYPE zif_abapgit_object_tabl=>ty_internal
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize_texts
@@ -216,19 +216,19 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
   METHOD deserialize_idoc_segment.
 
     DATA lv_result              LIKE sy-subrc.
-    DATA lt_segment_definitions TYPE ty_segment_definitions.
+    DATA lt_segment_definitions TYPE zif_abapgit_object_tabl=>ty_segment_definitions.
     DATA lv_package             TYPE devclass.
     DATA lv_uname               TYPE sy-uname.
     DATA lv_transport           TYPE trkorr.
     DATA ls_edisdef             TYPE edisdef.
-    DATA ls_segment_definition  TYPE ty_segment_definition.
-    FIELD-SYMBOLS <ls_segment_definition> TYPE ty_segment_definition.
+    DATA ls_segment_definition  TYPE zif_abapgit_object_tabl=>ty_segment_definition.
+    FIELD-SYMBOLS <ls_segment_definition> TYPE zif_abapgit_object_tabl=>ty_segment_definition.
 
     rv_deserialized = abap_false.
 
     TRY.
 
-        io_xml->read( EXPORTING iv_name = c_s_dataname-segment_definition
+        io_xml->read( EXPORTING iv_name = zif_abapgit_object_tabl=>c_s_dataname-segment_definition
                       CHANGING  cg_data = lt_segment_definitions ).
 
       CATCH zcx_abapgit_exception.
@@ -430,7 +430,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
     DATA: lv_name       TYPE ddobjname,
           ls_dd02v_tmp  TYPE dd02v,
           lt_i18n_langs TYPE TABLE OF langu,
-          lt_dd02_texts TYPE ty_dd02_texts.
+          lt_dd02_texts TYPE zif_abapgit_object_tabl=>ty_dd02_texts.
 
     FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
                    <ls_dd02_text> LIKE LINE OF lt_dd02_texts.
@@ -514,7 +514,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
     DATA lv_result              LIKE sy-subrc.
     DATA lv_devclass            TYPE devclass.
     DATA lt_segmentdefinitions  TYPE STANDARD TABLE OF edisegmdef.
-    DATA ls_segment_definition  TYPE ty_segment_definition.
+    DATA ls_segment_definition  TYPE zif_abapgit_object_tabl=>ty_segment_definition.
 
     FIELD-SYMBOLS: <ls_segemtndefinition> TYPE edisegmdef.
 
@@ -749,7 +749,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
           lt_dd08v  TYPE TABLE OF dd08v,
           lt_dd35v  TYPE TABLE OF dd35v,
           lt_dd36m  TYPE dd36mttyp,
-          ls_extras TYPE ty_tabl_extras.
+          ls_extras TYPE zif_abapgit_object_tabl=>ty_tabl_extras.
 
     FIELD-SYMBOLS: <ls_dd03p>      TYPE dd03p,
                    <ls_dd05m>      TYPE dd05m,
@@ -859,7 +859,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       deserialize_longtexts( ii_xml         = io_xml
                              iv_longtext_id = c_longtext_id_tabl ).
 
-      io_xml->read( EXPORTING iv_name = c_s_dataname-tabl_extras
+      io_xml->read( EXPORTING iv_name = zif_abapgit_object_tabl=>c_s_dataname-tabl_extras
                     CHANGING cg_data = ls_extras ).
       update_extras( iv_tabname     = lv_name
                      is_tabl_extras = ls_extras ).
@@ -961,7 +961,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
     DATA: lv_name     TYPE ddobjname,
           lv_state    TYPE ddgotstate,
-          ls_internal TYPE ty_internal,
+          ls_internal TYPE zif_abapgit_object_tabl=>ty_internal,
           lv_index    LIKE sy-index.
 
     FIELD-SYMBOLS: <ls_dd12v>      LIKE LINE OF ls_internal-dd12v,

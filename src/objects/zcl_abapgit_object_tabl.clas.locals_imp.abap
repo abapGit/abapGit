@@ -3,7 +3,7 @@ CLASS lcl_tabl_xml DEFINITION FINAL.
     CLASS-METHODS add
       IMPORTING
         io_xml      TYPE REF TO zif_abapgit_xml_output
-        is_internal TYPE ty_internal
+        is_internal TYPE zif_abapgit_object_tabl=>ty_internal
       RAISING
         zcx_abapgit_exception.
 ENDCLASS.
@@ -42,10 +42,10 @@ CLASS lcl_tabl_xml IMPLEMENTATION.
     io_xml->add( iv_name = 'LONGTEXTS'
                  ig_data = is_internal-longtexts ).
 
-    io_xml->add( iv_name = c_s_dataname-segment_definition
+    io_xml->add( iv_name = zif_abapgit_object_tabl=>c_s_dataname-segment_definition
                  ig_data = is_internal-segment_definitions ).
 
-    io_xml->add( iv_name = c_s_dataname-tabl_extras
+    io_xml->add( iv_name = zif_abapgit_object_tabl=>c_s_dataname-tabl_extras
                  ig_data = is_internal-extras ).
 
   ENDMETHOD.
