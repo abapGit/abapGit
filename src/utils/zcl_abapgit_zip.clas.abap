@@ -155,6 +155,7 @@ CLASS zcl_abapgit_zip IMPLEMENTATION.
 
     ls_files_item-item-obj_type = ls_tadir-object.
     ls_files_item-item-obj_name = ls_tadir-obj_name.
+    ls_files_item-item-abap_language_version = '*'. "any
 
     ls_files_item = zcl_abapgit_objects=>serialize(
       is_item        = ls_files_item-item
