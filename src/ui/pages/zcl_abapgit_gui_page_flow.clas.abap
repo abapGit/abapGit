@@ -260,8 +260,9 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    DATA ls_feature LIKE LINE OF mt_features.
-    DATA lv_index   TYPE i.
+    DATA ls_feature  LIKE LINE OF mt_features.
+    DATA lv_index    TYPE i.
+    DATA lv_rendered TYPE abap_bool.
 
 
     register_handlers( ).
@@ -279,6 +280,7 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
 * no changes, eg. only files outside of starting folder changed
         CONTINUE.
       ENDIF.
+      lv_rendered = abap_true.
 
       ri_html->add( '<b><font size="+2">' && ls_feature-repo-name ).
       IF ls_feature-branch-display_name IS NOT INITIAL.
@@ -336,8 +338,10 @@ CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
       ri_html->add( '<br>' ).
     ENDLOOP.
 
-    IF lines( mt_features ) = 0.
+    IF lines( mt_features ) = 0 OR lv_rendered = abap_false.
       ri_html->add( 'Empty, repositories must be favorite + flow enabled<br><br>' ).
+
+      ri_html->add( 'Or nothing in progress<br><br>' ).
 
       ri_html->add_a(
         iv_txt   = 'abapGit flow documentation'
