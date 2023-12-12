@@ -19,4 +19,5 @@ TYPES: BEGIN OF ty_internal,
          dd36m      TYPE dd36mttyp,
          dd02_texts TYPE ty_dd02_texts,
          i18n_langs TYPE STANDARD TABLE OF langu WITH DEFAULT KEY,
+         longtexts  TYPE zif_abapgit_longtexts=>ty_longtexts,
        END OF ty_internal.

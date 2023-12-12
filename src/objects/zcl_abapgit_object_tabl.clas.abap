@@ -1091,13 +1091,16 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       serialize_texts( CHANGING cs_internal = ls_internal ).
     ENDIF.
 
+    ls_internal-longtexts = zcl_abapgit_factory=>get_longtexts( )->serialize(
+      iv_object_name = ms_item-obj_name
+      iv_longtext_id = c_longtext_id_tabl
+      io_i18n_params = mo_i18n_params
+      ii_xml         = io_xml ).
+
 * todo: move this method call slowly to the end
     lcl_tabl_xml=>add(
       io_xml      = io_xml
       is_internal = ls_internal ).
-
-    serialize_longtexts( ii_xml         = io_xml
-                         iv_longtext_id = c_longtext_id_tabl ).
 
     serialize_idoc_segment( io_xml ).
 

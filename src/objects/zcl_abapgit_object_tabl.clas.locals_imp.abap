@@ -38,5 +38,9 @@ CLASS lcl_tabl_xml IMPLEMENTATION.
       io_xml->add( iv_name = 'DD02_TEXTS'
                    ig_data = is_internal-dd02_texts ).
     ENDIF.
+
+    io_xml->add( iv_name = 'LONGTEXTS'
+                 ig_data = is_internal-longtexts ).
+
   ENDMETHOD.
 ENDCLASS.
