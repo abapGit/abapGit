@@ -25,7 +25,6 @@ CLASS zcl_abapgit_object_tabl DEFINITION
     METHODS delete_extras IMPORTING iv_tabname TYPE ddobjname.
 
     "! Serialize IDoc Segment type/definition if exits
-    "! @parameter io_xml | XML writer
     "! @raising zcx_abapgit_exception | Exceptions
     METHODS serialize_idoc_segment CHANGING cs_internal TYPE zif_abapgit_object_tabl=>ty_internal
                                    RAISING   zcx_abapgit_exception.
@@ -87,7 +86,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
 
   METHOD clear_dd03p_fields.
