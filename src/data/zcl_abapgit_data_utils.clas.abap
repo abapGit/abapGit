@@ -49,7 +49,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_data_utils IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_DATA_UTILS IMPLEMENTATION.
 
 
   METHOD build_config_filename.
@@ -166,7 +166,10 @@ CLASS zcl_abapgit_data_utils IMPLEMENTATION.
             ro_delivery_class = lo_delivery_class.
         ASSIGN lo_delivery_class->('VALUE') TO <ls_any>.
         lv_contflag = <ls_any>.
-      CATCH cx_sy_dyn_call_illegal_class.
+      CATCH cx_sy_dyn_call_illegal_class cx_no_check.
+        " Catching SAP standard exception CX_NO_CHECK,
+        " because of the expected exception CX_XCO_RUNTIME_EXCEPTION
+        " could not be used here directly to keep the indirect usage approach.
         SELECT SINGLE contflag FROM ('DD02L') INTO lv_contflag WHERE tabname = iv_name.
     ENDTRY.
 
