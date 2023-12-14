@@ -45,15 +45,20 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
 
 
   METHOD get_abapgit_tcode.
-    CONSTANTS: lc_report_tcode_hex TYPE x VALUE '80'.
-    DATA: lt_tcodes TYPE STANDARD TABLE OF tcode.
+    CONSTANTS lc_report_tcode_hex TYPE x VALUE '80'.
+    DATA lt_tcodes TYPE STANDARD TABLE OF tcode.
 
-    SELECT tcode
-      FROM tstc
-      INTO TABLE lt_tcodes
-      WHERE pgmna = sy-cprog
-        AND cinfo = lc_report_tcode_hex
-      ORDER BY tcode.
+    TRY.
+        SELECT tcode
+          FROM ('TSTC')
+          INTO TABLE lt_tcodes
+          WHERE pgmna = sy-cprog
+          AND cinfo = lc_report_tcode_hex
+          ORDER BY tcode.
+      CATCH cx_sy_dynamic_osql_error.
+* ABAP Cloud/Steampunk compatibility
+        RETURN.
+    ENDTRY.
 
     IF lines( lt_tcodes ) > 0.
       READ TABLE lt_tcodes INDEX 1 INTO rv_tcode.
