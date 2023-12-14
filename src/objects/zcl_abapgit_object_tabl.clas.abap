@@ -2,11 +2,11 @@ CLASS zcl_abapgit_object_tabl DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_objects_super
   FINAL
-  CREATE PUBLIC.
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_object.
+    INTERFACES zif_abapgit_object .
 
   PROTECTED SECTION.
     TYPES: BEGIN OF ty_segment_definition,
@@ -59,57 +59,57 @@ CLASS zcl_abapgit_object_tabl DEFINITION
   PRIVATE SECTION.
 
     TYPES:
-      ty_dd03p_tt TYPE STANDARD TABLE OF dd03p.
+      ty_dd03p_tt TYPE STANDARD TABLE OF dd03p .
     TYPES:
       BEGIN OF ty_dd02_text,
         ddlanguage TYPE dd02t-ddlanguage,
         ddtext     TYPE dd02t-ddtext,
-      END OF ty_dd02_text.
+      END OF ty_dd02_text .
     TYPES:
-      ty_dd02_texts TYPE STANDARD TABLE OF ty_dd02_text.
+      ty_dd02_texts TYPE STANDARD TABLE OF ty_dd02_text .
 
     CONSTANTS c_longtext_id_tabl TYPE dokil-id VALUE 'TB' ##NO_TEXT.
     CONSTANTS:
       BEGIN OF c_s_dataname,
         segment_definition TYPE string VALUE 'SEGMENT_DEFINITION',
         tabl_extras        TYPE string VALUE 'TABL_EXTRAS',
-      END OF c_s_dataname.
+      END OF c_s_dataname .
 
     METHODS deserialize_indexes
       IMPORTING
         !io_xml TYPE REF TO zif_abapgit_xml_input
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS clear_dd03p_fields
       CHANGING
-        !ct_dd03p TYPE ty_dd03p_tt.
+        !ct_dd03p TYPE ty_dd03p_tt .
     "! Check if structure is an IDoc segment
     "! @parameter rv_is_idoc_segment | It's an IDoc segment or not
     METHODS is_idoc_segment
       RETURNING
-        VALUE(rv_is_idoc_segment) TYPE abap_bool.
+        VALUE(rv_is_idoc_segment) TYPE abap_bool .
     METHODS clear_dd03p_fields_common
       CHANGING
-        !cs_dd03p TYPE dd03p.
+        !cs_dd03p TYPE dd03p .
     METHODS clear_dd03p_fields_dataelement
       CHANGING
-        !cs_dd03p TYPE dd03p.
+        !cs_dd03p TYPE dd03p .
     METHODS serialize_texts
       IMPORTING
         !ii_xml TYPE REF TO zif_abapgit_xml_output
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS deserialize_texts
       IMPORTING
         !ii_xml   TYPE REF TO zif_abapgit_xml_input
         !is_dd02v TYPE dd02v
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS is_db_table_category
       IMPORTING
         !iv_tabclass               TYPE dd02l-tabclass
       RETURNING
-        VALUE(rv_is_db_table_type) TYPE dd02l-tabclass.
+        VALUE(rv_is_db_table_type) TYPE dd02l-tabclass .
 ENDCLASS.
 
 
