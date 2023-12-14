@@ -63,7 +63,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_pull IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_PULL IMPLEMENTATION.
 
 
   METHOD choose_transport_request.
