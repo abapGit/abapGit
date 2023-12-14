@@ -7,7 +7,6 @@ CLASS zcl_abapgit_object_tabl DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_object .
-
   PROTECTED SECTION.
     TYPES: BEGIN OF ty_segment_definition,
              segmentheader     TYPE edisegmhd,
