@@ -10,8 +10,13 @@ CLASS zcl_abapgit_object_udmo DEFINITION
 
     METHODS constructor
       IMPORTING
-        !is_item     TYPE zif_abapgit_definitions=>ty_item
-        !iv_language TYPE spras .
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
 
     METHODS corr_insert
@@ -169,9 +174,11 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
 
   METHOD constructor.
 
-    super->constructor( is_item  = is_item
-                        iv_language = iv_language ).
-
+    super->constructor(
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
 
     " Conversion to Data model
     mv_data_model = is_item-obj_name.

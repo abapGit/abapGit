@@ -279,7 +279,7 @@ CLASS zcl_abapgit_object_wdca IMPLEMENTATION.
           iv_transport = iv_transport ).
 
     TRY.
-        lv_xml_string = zif_abapgit_object~mo_files->read_string(
+        lv_xml_string = mo_files->read_string(
           iv_extra = 'appl_config'
           iv_ext   = 'xml' ).
 
@@ -428,7 +428,7 @@ CLASS zcl_abapgit_object_wdca IMPLEMENTATION.
       ASSERT sy-subrc = 0.
     ENDIF.
 
-    zif_abapgit_object~mo_files->add_string(
+    mo_files->add_string(
       iv_extra  = 'appl_config'
       iv_ext    = 'xml'
       iv_string = lv_xml_string ).

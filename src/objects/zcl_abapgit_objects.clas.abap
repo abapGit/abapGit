@@ -151,12 +151,14 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS check_objects_locked
       IMPORTING
-        !it_items    TYPE zif_abapgit_definitions=>ty_items_tt
+        !it_items TYPE zif_abapgit_definitions=>ty_items_tt
       RAISING
         zcx_abapgit_exception .
+
     CLASS-METHODS create_object
       IMPORTING
         !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
         !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
         !is_metadata    TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
         !iv_native_only TYPE abap_bool DEFAULT abap_false
@@ -164,6 +166,7 @@ CLASS zcl_abapgit_objects DEFINITION
         VALUE(ri_obj)   TYPE REF TO zif_abapgit_object
       RAISING
         zcx_abapgit_exception .
+
     CLASS-METHODS map_tadir_to_items
       IMPORTING
         !it_tadir       TYPE zif_abapgit_definitions=>ty_tadir_tt
@@ -423,14 +426,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     DATA: lv_message            TYPE string,
           lv_class_name         TYPE string,
           ls_obj_serializer_map LIKE LINE OF gt_obj_serializer_map.
-    DATA lo_obj_base TYPE REF TO zcl_abapgit_objects_super.
-    DATA lo_i18n_params TYPE REF TO zcl_abapgit_i18n_params.
 
-    IF io_i18n_params IS BOUND.
-      lo_i18n_params = io_i18n_params.
-    ELSE.
-      lo_i18n_params = zcl_abapgit_i18n_params=>new( ). " All defaults
-    ENDIF.
+    ASSERT io_files IS BOUND AND io_i18n_params IS BOUND OR
+           io_files IS NOT BOUND AND io_i18n_params IS NOT BOUND.
 
     READ TABLE gt_obj_serializer_map
       INTO ls_obj_serializer_map WITH KEY item = is_item.
@@ -457,17 +455,34 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDIF.
 
     TRY.
-        CREATE OBJECT ri_obj TYPE (lv_class_name)
-          EXPORTING
-            is_item     = is_item
-            iv_language = lo_i18n_params->ms_params-main_language.
+        IF io_files IS BOUND AND io_i18n_params IS BOUND.
+          CREATE OBJECT ri_obj TYPE (lv_class_name)
+            EXPORTING
+              is_item        = is_item
+              iv_language    = io_i18n_params->ms_params-main_language
+              io_files       = io_files
+              io_i18n_params = io_i18n_params.
+        ELSE.
+          CREATE OBJECT ri_obj TYPE (lv_class_name)
+            EXPORTING
+              is_item     = is_item
+              iv_language = zif_abapgit_definitions=>c_english.
+        ENDIF.
       CATCH cx_sy_create_object_error.
         lv_message = |Object type { is_item-obj_type } is not supported by this system|.
         IF iv_native_only = abap_false.
           TRY. " 2nd step, try looking for plugins
-              CREATE OBJECT ri_obj TYPE zcl_abapgit_objects_bridge
-                EXPORTING
-                  is_item = is_item.
+              IF io_files IS BOUND AND io_i18n_params IS BOUND.
+                CREATE OBJECT ri_obj TYPE zcl_abapgit_objects_bridge
+                  EXPORTING
+                    is_item        = is_item
+                    io_files       = io_files
+                    io_i18n_params = io_i18n_params.
+              ELSE.
+                CREATE OBJECT ri_obj TYPE zcl_abapgit_objects_bridge
+                  EXPORTING
+                    is_item = is_item.
+              ENDIF.
             CATCH cx_sy_create_object_error.
               zcx_abapgit_exception=>raise( lv_message ).
           ENDTRY.
@@ -475,11 +490,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           zcx_abapgit_exception=>raise( lv_message ).
         ENDIF.
     ENDTRY.
-
-    IF ri_obj IS BOUND.
-      lo_obj_base ?= ri_obj.
-      lo_obj_base->mo_i18n_params = lo_i18n_params.
-    ENDIF.
 
   ENDMETHOD.
 
@@ -725,10 +735,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           ENDIF.
 
           " Create or update object
-          CREATE OBJECT lo_files
-            EXPORTING
-              is_item = ls_item
-              iv_path = lv_path.
+          lo_files = zcl_abapgit_objects_files=>new(
+            is_item = ls_item
+            iv_path = lv_path ).
 
           lo_files->set_files( lt_remote ).
 
@@ -744,6 +753,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           li_obj = create_object(
             is_item        = ls_item
             is_metadata    = ls_metadata
+            io_files       = lo_files
             io_i18n_params = lo_i18n_params ).
 
           compare_remote_to_local(
@@ -751,8 +761,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
             it_remote = lt_remote
             is_result = <ls_result>
             ii_log    = ii_log ).
-
-          li_obj->mo_files = lo_files.
 
           "get required steps for deserialize the object
           lt_steps_id = li_obj->get_deserialize_steps( ).
@@ -827,6 +835,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     DATA: li_progress TYPE REF TO zif_abapgit_progress,
           li_exit     TYPE REF TO zif_abapgit_exit,
+          lo_base     TYPE REF TO zcl_abapgit_objects_super,
           lx_exc      TYPE REF TO zcx_abapgit_exception.
 
     FIELD-SYMBOLS: <ls_obj> LIKE LINE OF is_step-objects.
@@ -850,7 +859,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
                                      iv_step      = is_step-step_id
                                      ii_log       = ii_log
                                      iv_transport = iv_transport ).
-          APPEND LINES OF <ls_obj>-obj->mo_files->get_accessed_files( ) TO ct_files.
+
+          lo_base ?= <ls_obj>-obj.
+          APPEND LINES OF lo_base->get_accessed_files( ) TO ct_files.
 
           ii_log->add_success( iv_msg = |Object { <ls_obj>-item-obj_name } imported|
                                is_item = <ls_obj>-item ).
@@ -1163,12 +1174,12 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         is_item-obj_name }| ).
     ENDIF.
 
+    lo_files = zcl_abapgit_objects_files=>new( is_item ).
+
     li_obj = create_object(
       is_item        = is_item
+      io_files       = lo_files
       io_i18n_params = io_i18n_params ).
-
-    CREATE OBJECT lo_files EXPORTING is_item = is_item.
-    li_obj->mo_files = lo_files. " TODO move into create_object
 
     CREATE OBJECT li_xml TYPE zcl_abapgit_xml_output.
 

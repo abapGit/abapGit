@@ -18,7 +18,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_ENHO IMPLEMENTATION.
+CLASS zcl_abapgit_object_enho IMPLEMENTATION.
 
 
   METHOD factory.
@@ -32,17 +32,17 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO IMPLEMENTATION.
         CREATE OBJECT ri_enho TYPE zcl_abapgit_object_enho_hook
           EXPORTING
             is_item  = ms_item
-            io_files = zif_abapgit_object~mo_files.
+            io_files = mo_files.
       WHEN cl_enh_tool_class=>tooltype.
         CREATE OBJECT ri_enho TYPE zcl_abapgit_object_enho_class
           EXPORTING
             is_item  = ms_item
-            io_files = zif_abapgit_object~mo_files.
+            io_files = mo_files.
       WHEN cl_enh_tool_intf=>tooltype.
         CREATE OBJECT ri_enho TYPE zcl_abapgit_object_enho_intf
           EXPORTING
             is_item  = ms_item
-            io_files = zif_abapgit_object~mo_files.
+            io_files = mo_files.
       WHEN cl_wdr_cfg_enhancement=>tooltype.
         CREATE OBJECT ri_enho TYPE zcl_abapgit_object_enho_wdyc
           EXPORTING
@@ -51,7 +51,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO IMPLEMENTATION.
         CREATE OBJECT ri_enho TYPE zcl_abapgit_object_enho_fugr
           EXPORTING
             is_item  = ms_item
-            io_files = zif_abapgit_object~mo_files.
+            io_files = mo_files.
       WHEN 'WDYENH'.
         CREATE OBJECT ri_enho TYPE zcl_abapgit_object_enho_wdyn
           EXPORTING

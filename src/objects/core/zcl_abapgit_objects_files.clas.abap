@@ -1,9 +1,15 @@
 CLASS zcl_abapgit_objects_files DEFINITION
   PUBLIC
-  CREATE PUBLIC .
+  CREATE PRIVATE.
 
   PUBLIC SECTION.
 
+    CLASS-METHODS new
+      IMPORTING
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_path        TYPE string OPTIONAL
+      RETURNING
+        VALUE(ro_files) TYPE REF TO zcl_abapgit_objects_files.
     METHODS constructor
       IMPORTING
         !is_item TYPE zif_abapgit_definitions=>ty_item
@@ -316,6 +322,14 @@ CLASS zcl_abapgit_objects_files IMPLEMENTATION.
       <ls_accessed>-sha1     = iv_sha1.
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD new.
+    CREATE OBJECT ro_files
+      EXPORTING
+        is_item = is_item
+        iv_path = iv_path.
   ENDMETHOD.
 
 

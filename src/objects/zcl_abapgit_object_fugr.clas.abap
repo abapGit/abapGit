@@ -227,7 +227,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
     LOOP AT it_functions ASSIGNING <ls_func>.
 
-      lt_source = zif_abapgit_object~mo_files->read_abap( iv_extra = <ls_func>-funcname ).
+      lt_source = mo_files->read_abap( iv_extra = <ls_func>-funcname ).
 
       lv_area = ms_item-obj_name.
 
@@ -383,9 +383,9 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       ENDIF.
 
       TRY.
-          lt_source = zif_abapgit_object~mo_files->read_abap( iv_extra = <lv_include> ).
+          lt_source = mo_files->read_abap( iv_extra = <lv_include> ).
 
-          lo_xml = zif_abapgit_object~mo_files->read_xml( <lv_include> ).
+          lo_xml = mo_files->read_xml( <lv_include> ).
 
           lo_xml->read( EXPORTING iv_name = 'PROGDIR'
                         CHANGING cg_data = ls_progdir ).
@@ -554,7 +554,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
     LOOP AT lt_includes ASSIGNING <lv_include>.
 
-      lo_xml = zif_abapgit_object~mo_files->read_xml( <lv_include> ).
+      lo_xml = mo_files->read_xml( <lv_include> ).
 
       lo_xml->read( EXPORTING iv_name = 'PROGDIR'
                     CHANGING cg_data = ls_progdir ).
@@ -895,12 +895,12 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
       IF NOT lt_new_source IS INITIAL.
         strip_generation_comments( CHANGING ct_source = lt_new_source ).
-        zif_abapgit_object~mo_files->add_abap(
+        mo_files->add_abap(
           iv_extra = <ls_func>-funcname
           it_abap  = lt_new_source ).
       ELSE.
         strip_generation_comments( CHANGING ct_source = lt_source ).
-        zif_abapgit_object~mo_files->add_abap(
+        mo_files->add_abap(
           iv_extra = <ls_func>-funcname
           it_abap  = lt_source ).
       ENDIF.
@@ -951,7 +951,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
 * todo, filename is not correct, a include can be used in several programs
       serialize_program( is_item    = ms_item
-                         io_files   = zif_abapgit_object~mo_files
+                         io_files   = mo_files
                          iv_program = <lv_include>
                          iv_extra   = <lv_include> ).
 

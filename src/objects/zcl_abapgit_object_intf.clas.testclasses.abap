@@ -112,12 +112,13 @@ CLASS ltcl_unit_test DEFINITION FINAL FOR TESTING DURATION SHORT RISK LEVEL HARM
   PRIVATE SECTION.
     DATA:
       mo_cut        TYPE REF TO zif_abapgit_object,
+      mo_files      TYPE REF TO zcl_abapgit_objects_files,
       mo_log        TYPE REF TO zcl_abapgit_log,
       mo_object_fnc TYPE REF TO lth_oo_object_fnc,
       ms_item       TYPE zif_abapgit_definitions=>ty_item.
 
     METHODS:
-      setup,
+      setup RAISING zcx_abapgit_exception,
 
       get_xml
         RETURNING VALUE(rv_xml) TYPE string,
@@ -136,14 +137,13 @@ CLASS ltcl_unit_test IMPLEMENTATION.
     ms_item-obj_type = 'INTF'.
     ms_item-abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
 
+    mo_files = zcl_abapgit_objects_files=>new( ms_item ).
+
     CREATE OBJECT lo_cut
       EXPORTING
         is_item     = ms_item
-        iv_language = 'E'.
-
-    CREATE OBJECT lo_cut->zif_abapgit_object~mo_files
-      EXPORTING
-        is_item = ms_item.
+        iv_language = 'E'
+        io_files    = mo_files.
 
     CREATE OBJECT mo_log.
 
@@ -167,7 +167,7 @@ CLASS ltcl_unit_test IMPLEMENTATION.
       EXPORTING
         iv_xml = get_xml( ).
 
-    mo_cut->mo_files->add_abap( get_source( ) ).
+    mo_files->add_abap( get_source( ) ).
 
     mo_cut->deserialize(
       iv_package   = 'MY_PACKAGE'

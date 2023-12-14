@@ -59,9 +59,9 @@ CLASS ltcl_objects_files IMPLEMENTATION.
     " object type and name are upper case
     ls_item-obj_type = 'PROG'.
     ls_item-obj_name = 'ZLF'.
-    CREATE OBJECT mo_cut
-      EXPORTING
-        is_item = ls_item.
+
+    mo_cut = zcl_abapgit_objects_files=>new( ls_item ).
+
     mo_cut->set_files( lt_files ).
 
   ENDMETHOD.
@@ -148,9 +148,7 @@ CLASS ltcl_objects_files IMPLEMENTATION.
     ls_item-obj_type = 'PROG'.
     ls_item-obj_name = '/TEST/ZLF'.
 
-    CREATE OBJECT mo_cut
-      EXPORTING
-        is_item = ls_item.
+    mo_cut = zcl_abapgit_objects_files=>new( ls_item ).
 
     " filenames are lower case
     cl_abap_unit_assert=>assert_equals(
@@ -168,9 +166,7 @@ CLASS ltcl_objects_files IMPLEMENTATION.
     ls_item-obj_type = 'CHKO'.
     ls_item-obj_name = 'Z_AFF_EXAMPLE_CHKO'.
 
-    CREATE OBJECT mo_cut
-      EXPORTING
-        is_item = ls_item.
+    mo_cut = zcl_abapgit_objects_files=>new( ls_item ).
 
     mo_cut->add_raw( iv_data = lv_data
                      iv_ext  = 'json' ).

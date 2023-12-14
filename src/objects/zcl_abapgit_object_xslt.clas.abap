@@ -118,7 +118,7 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
 
     ls_attributes-devclass = iv_package.
 
-    lv_source = zif_abapgit_object~mo_files->read_string(
+    lv_source = mo_files->read_string(
       iv_extra = 'source'
       iv_ext   = 'xml' ).
 
@@ -245,7 +245,7 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
 
     lv_source = lo_xslt->get_source_string( ).
 
-    zif_abapgit_object~mo_files->add_string(
+    mo_files->add_string(
       iv_extra  = 'source'
       iv_ext    = 'xml'
       iv_string = lv_source ).

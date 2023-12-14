@@ -131,7 +131,7 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'DDTEXT'
                   CHANGING cg_data = lv_ddtext ).
 
-    lt_source = zif_abapgit_object~mo_files->read_abap( ).
+    lt_source = mo_files->read_abap( ).
 
     IF zif_abapgit_object~exists( ) = abap_false.
       create( iv_ddtext   = lv_ddtext
@@ -230,7 +230,7 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
     io_xml->add( iv_name = 'DDTEXT'
                  ig_data = lv_ddtext ).
 
-    zif_abapgit_object~mo_files->add_abap( lt_source ).
+    mo_files->add_abap( lt_source ).
 
   ENDMETHOD.
 ENDCLASS.
