@@ -27,10 +27,9 @@ CLASS zcl_abapgit_object_tabl DEFINITION
     "! Serialize IDoc Segment type/definition if exits
     "! @raising zcx_abapgit_exception | Exceptions
     METHODS serialize_idoc_segment CHANGING cs_internal TYPE zif_abapgit_object_tabl=>ty_internal
-                                   RAISING   zcx_abapgit_exception.
+                                   RAISING  zcx_abapgit_exception.
 
     "! Deserialize IDoc Segment type/definition if exits
-    "! @parameter io_xml | XML writer
     "! @parameter iv_package | Target package
     "! @parameter rv_deserialized | It's a segment and was desserialized
     "! @raising zcx_abapgit_exception | Exceptions
@@ -72,8 +71,8 @@ CLASS zcl_abapgit_object_tabl DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize_texts
-      IMPORTING
-        !is_internal TYPE zif_abapgit_object_tabl=>ty_internal
+      CHANGING
+        !cs_internal TYPE zif_abapgit_object_tabl=>ty_internal
       RAISING
         zcx_abapgit_exception .
     METHODS is_db_table_category
@@ -85,7 +84,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
 
   METHOD clear_dd03p_fields.
@@ -334,9 +333,9 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       lv_name      TYPE ddobjname,
       lv_subrc     TYPE sy-subrc,
       lt_dd12v_db  TYPE dd12vtab,
-      ls_dd12v     LIKE LINE OF lt_dd12v,
-      ls_dd17v     LIKE LINE OF lt_dd17v,
-      lt_secondary LIKE lt_dd17v.
+      ls_dd12v     LIKE LINE OF is_internal-dd12v,
+      ls_dd17v     LIKE LINE OF is_internal-dd17v,
+      lt_secondary LIKE is_internal-dd17v.
 
     lv_name = ms_item-obj_name.
 
@@ -408,24 +407,24 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
   METHOD deserialize_texts.
 
-    DATA: lv_name       TYPE ddobjname,
-          ls_dd02v_tmp  TYPE dd02v.
+    DATA: lv_name      TYPE ddobjname,
+          ls_dd02v_tmp TYPE dd02v.
 
-    FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
-                   <ls_dd02_text> LIKE LINE OF lt_dd02_texts.
+    FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF cs_internal-i18n_langs,
+                   <ls_dd02_text> LIKE LINE OF cs_internal-dd02_texts.
 
     lv_name = ms_item-obj_name.
 
-    mo_i18n_params->trim_saplang_list( CHANGING ct_sap_langs = is_internal-i18n_langs ).
+    mo_i18n_params->trim_saplang_list( CHANGING ct_sap_langs = cs_internal-i18n_langs ).
 
-    SORT is_internal-i18n_langs.
-    SORT is_internal-dd02_texts BY ddlanguage. " Optimization
+    SORT cs_internal-i18n_langs.
+    SORT cs_internal-dd02_texts BY ddlanguage. " Optimization
 
-    LOOP AT is_internal-i18n_langs ASSIGNING <lv_lang>.
+    LOOP AT cs_internal-i18n_langs ASSIGNING <lv_lang>.
 
       " Table description
-      ls_dd02v_tmp = is_internal-dd02v.
-      READ TABLE is_internal-dd02_texts ASSIGNING <ls_dd02_text> WITH KEY ddlanguage = <lv_lang>.
+      ls_dd02v_tmp = cs_internal-dd02v.
+      READ TABLE cs_internal-dd02_texts ASSIGNING <ls_dd02_text> WITH KEY ddlanguage = <lv_lang>.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( |DD02_TEXTS cannot find lang { <lv_lang> } in XML| ).
       ENDIF.
@@ -801,10 +800,10 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
       zcl_abapgit_objects_activation=>add_item( ms_item ).
 
-      deserialize_indexes( io_xml ).
+      deserialize_indexes( ls_internal ).
 
       IF mo_i18n_params->is_lxe_applicable( ) = abap_false.
-        deserialize_texts( ls_internal ).
+        deserialize_texts( CHANGING cs_internal = ls_internal ).
       ENDIF.
 
       deserialize_longtexts( ii_xml         = io_xml
