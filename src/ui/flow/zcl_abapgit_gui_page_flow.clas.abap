@@ -40,6 +40,11 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         zcx_abapgit_exception .
     METHODS render_table
       IMPORTING
+        !is_feature    TYPE zif_abapgit_gui_page_flow=>ty_feature
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+    METHODS render_toolbar
+      IMPORTING
         !iv_index      TYPE i
         !is_feature    TYPE zif_abapgit_gui_page_flow=>ty_feature
       RETURNING
@@ -90,7 +95,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
   METHOD render_table.
 
     DATA ls_path_name LIKE LINE OF is_feature-changed_files.
-    DATA lo_toolbar   TYPE REF TO zcl_abapgit_html_toolbar.
     DATA lv_status    TYPE string.
     DATA lv_branch    TYPE string.
     DATA lv_param     TYPE string.
@@ -126,18 +130,31 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     ENDLOOP.
     ri_html->add( |</table>| ).
 
+  ENDMETHOD.
+
+
+  METHOD render_toolbar.
+
+    DATA lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
+
 * todo: crossout pull if write protected
 
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     CREATE OBJECT lo_toolbar EXPORTING iv_id = 'toolbar-flow'.
-    lo_toolbar->add( iv_txt = 'Pull'
-                     iv_act = |{ c_action-pull }?index={ iv_index }&key={ is_feature-repo-key }&branch={ lv_branch }|
-                     iv_opt = zif_abapgit_html=>c_html_opt-strong ).
-    lo_toolbar->add( iv_txt = 'Stage'
-                     iv_act = |{ c_action-stage }?index={ iv_index }&key={ is_feature-repo-key }&branch={ lv_branch }|
-                     iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+
+    IF is_feature-full_match = abap_false.
+      lo_toolbar->add( iv_txt = 'Pull'
+                       iv_act = |{ c_action-pull }?index={ iv_index }&key={ is_feature-repo-key }&branch={ is_feature-branch-display_name }|
+                       iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+      lo_toolbar->add( iv_txt = 'Stage'
+                       iv_act = |{ c_action-stage }?index={ iv_index }&key={ is_feature-repo-key }&branch={ is_feature-branch-display_name }|
+                       iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+    ENDIF.
+
     zcl_abapgit_flow_exit=>get_instance( )->toolbar_extras(
       io_toolbar = lo_toolbar
       is_feature = is_feature ).
+
     ri_html->add( lo_toolbar->render( ) ).
 
   ENDMETHOD.
@@ -324,12 +341,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
         CONTINUE.
       ENDIF.
 
+      ri_html->add( render_toolbar(
+        iv_index   = lv_index
+        is_feature = ls_feature ) ).
+
       IF ls_feature-full_match = abap_true.
         ri_html->add( |Full Match<br>| ).
       ELSE.
-        ri_html->add( render_table(
-          is_feature = ls_feature
-          iv_index   = lv_index ) ).
+        ri_html->add( render_table( ls_feature ) ).
       ENDIF.
 
 * todo      LOOP AT ls_feature-changed_objects INTO ls_item.
