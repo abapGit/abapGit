@@ -40,4 +40,18 @@ CLASS ZCL_ABAPGIT_FLOW_EXIT IMPLEMENTATION.
     ri_exit = gi_global_exit.
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_flow_exit~toolbar_extras.
+
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          gi_exit->toolbar_extras(
+            io_toolbar = io_toolbar
+            is_feature = is_feature ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
 ENDCLASS.

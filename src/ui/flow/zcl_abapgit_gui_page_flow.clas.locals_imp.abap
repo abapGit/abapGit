@@ -74,7 +74,7 @@ CLASS lcl_helper DEFINITION FINAL.
   PUBLIC SECTION.
     CLASS-METHODS get_information
       RETURNING
-        VALUE(rt_features) TYPE ty_features
+        VALUE(rt_features) TYPE zif_abapgit_gui_page_flow=>ty_features
       RAISING
         zcx_abapgit_exception.
 
@@ -95,11 +95,11 @@ CLASS lcl_helper DEFINITION FINAL.
       IMPORTING
         io_online      TYPE REF TO zif_abapgit_repo
       RETURNING
-        VALUE(rs_data) TYPE ty_feature-repo.
+        VALUE(rs_data) TYPE zif_abapgit_gui_page_flow=>ty_feature-repo.
 
     CLASS-METHODS map_files_to_objects
       IMPORTING
-        it_files                  TYPE ty_path_name_tt
+        it_files                  TYPE zif_abapgit_gui_page_flow=>ty_path_name_tt
         io_online                 TYPE REF TO zcl_abapgit_repo_online
       RETURNING
         VALUE(rt_changed_objects) TYPE zif_abapgit_definitions=>ty_items_ts
@@ -113,7 +113,7 @@ CLASS lcl_helper DEFINITION FINAL.
       EXPORTING
         et_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt
       CHANGING
-        ct_features      TYPE ty_features
+        ct_features      TYPE zif_abapgit_gui_page_flow=>ty_features
       RAISING
         zcx_abapgit_exception.
 
@@ -122,7 +122,7 @@ CLASS lcl_helper DEFINITION FINAL.
         ii_repo          TYPE REF TO zif_abapgit_repo
         it_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt
       CHANGING
-        ct_features      TYPE ty_features
+        ct_features      TYPE zif_abapgit_gui_page_flow=>ty_features
         ct_transports    TYPE ty_transports_tt
       RAISING
         zcx_abapgit_exception.
@@ -134,7 +134,7 @@ CLASS lcl_helper DEFINITION FINAL.
         it_transports    TYPE ty_transports_tt
         it_main_expanded TYPE zif_abapgit_git_definitions=>ty_expanded_tt
       CHANGING
-        cs_feature       TYPE ty_feature
+        cs_feature       TYPE zif_abapgit_gui_page_flow=>ty_feature
       RAISING
         zcx_abapgit_exception.
 
@@ -143,7 +143,7 @@ CLASS lcl_helper DEFINITION FINAL.
         iv_url      TYPE string
         it_branches TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt
       CHANGING
-        ct_features TYPE ty_features
+        ct_features TYPE zif_abapgit_gui_page_flow=>ty_features
       RAISING
         zcx_abapgit_exception.
 
@@ -151,7 +151,7 @@ CLASS lcl_helper DEFINITION FINAL.
       IMPORTING
         iv_url      TYPE string
       CHANGING
-        ct_features TYPE ty_features
+        ct_features TYPE zif_abapgit_gui_page_flow=>ty_features
       RAISING
         zcx_abapgit_exception.
 
@@ -159,7 +159,7 @@ CLASS lcl_helper DEFINITION FINAL.
       IMPORTING
         io_online   TYPE REF TO zcl_abapgit_repo_online
       CHANGING
-        ct_features TYPE ty_features
+        ct_features TYPE zif_abapgit_gui_page_flow=>ty_features
       RAISING
         zcx_abapgit_exception.
 
@@ -174,7 +174,7 @@ CLASS lcl_helper DEFINITION FINAL.
         it_expanded1    TYPE zif_abapgit_git_definitions=>ty_expanded_tt
         it_expanded2    TYPE zif_abapgit_git_definitions=>ty_expanded_tt
       RETURNING
-        VALUE(rt_files) TYPE ty_path_name_tt.
+        VALUE(rt_files) TYPE zif_abapgit_gui_page_flow=>ty_path_name_tt.
 ENDCLASS.
 
 CLASS lcl_helper IMPLEMENTATION.
@@ -592,7 +592,7 @@ CLASS lcl_helper IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_branch>       LIKE LINE OF ct_features.
     FIELD-SYMBOLS <ls_local>        LIKE LINE OF lt_local.
-    FIELD-SYMBOLS <ls_changed_file> TYPE ty_path_name.
+    FIELD-SYMBOLS <ls_changed_file> TYPE zif_abapgit_gui_page_flow=>ty_path_name.
     FIELD-SYMBOLS <ls_filter>       LIKE LINE OF lt_filter.
     FIELD-SYMBOLS <ls_object>       LIKE LINE OF <ls_branch>-changed_objects.
 

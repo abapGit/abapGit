@@ -27,7 +27,7 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
         pull    TYPE string VALUE 'pull',
         stage   TYPE string VALUE 'stage',
       END OF c_action .
-    DATA mt_features TYPE ty_features .
+    DATA mt_features TYPE zif_abapgit_gui_page_flow=>ty_features .
 
     METHODS refresh
       RAISING
@@ -41,7 +41,7 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
     METHODS render_table
       IMPORTING
         !iv_index      TYPE i
-        !is_feature    TYPE ty_feature
+        !is_feature    TYPE zif_abapgit_gui_page_flow=>ty_feature
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
 ENDCLASS.
@@ -126,7 +126,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     ENDLOOP.
     ri_html->add( |</table>| ).
 
-* todo: crossout if write protected
+* todo: crossout pull if write protected
 
     CREATE OBJECT lo_toolbar EXPORTING iv_id = 'toolbar-flow'.
     lo_toolbar->add( iv_txt = 'Pull'
@@ -135,6 +135,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     lo_toolbar->add( iv_txt = 'Stage'
                      iv_act = |{ c_action-stage }?index={ iv_index }&key={ is_feature-repo-key }&branch={ lv_branch }|
                      iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+    zcl_abapgit_flow_exit=>get_instance( )->toolbar_extras(
+      io_toolbar = lo_toolbar
+      is_feature = is_feature ).
     ri_html->add( lo_toolbar->render( ) ).
 
   ENDMETHOD.
