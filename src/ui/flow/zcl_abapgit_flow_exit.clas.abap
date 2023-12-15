@@ -48,6 +48,7 @@ CLASS ZCL_ABAPGIT_FLOW_EXIT IMPLEMENTATION.
       TRY.
           gi_exit->toolbar_extras(
             io_toolbar = io_toolbar
+            iv_index   = iv_index
             is_feature = is_feature ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.

@@ -153,6 +153,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
     zcl_abapgit_flow_exit=>get_instance( )->toolbar_extras(
       io_toolbar = lo_toolbar
+      iv_index   = iv_index
       is_feature = is_feature ).
 
     ri_html->add( lo_toolbar->render( ) ).
@@ -335,7 +336,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
         ri_html->add( |No corresponding transport found<br>| ).
       ENDIF.
 
-      ri_html->add( '<br>' ).
       IF ls_feature-branch IS NOT INITIAL AND ls_feature-branch-up_to_date = abap_false.
         ri_html->add( 'Branch not up to date<br><br>' ).
         CONTINUE.
