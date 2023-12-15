@@ -136,6 +136,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
   METHOD render_toolbar.
 
     DATA lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
+    DATA lv_extra TYPE string.
 
 * todo: crossout pull if write protected
 
@@ -143,11 +144,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     CREATE OBJECT lo_toolbar EXPORTING iv_id = 'toolbar-flow'.
 
     IF is_feature-full_match = abap_false.
+      lv_extra = |?index={ iv_index }&key={ is_feature-repo-key }&branch={ is_feature-branch-display_name }|.
       lo_toolbar->add( iv_txt = 'Pull'
-                       iv_act = |{ c_action-pull }?index={ iv_index }&key={ is_feature-repo-key }&branch={ is_feature-branch-display_name }|
+                       iv_act = |{ c_action-pull }{ lv_extra }|
                        iv_opt = zif_abapgit_html=>c_html_opt-strong ).
       lo_toolbar->add( iv_txt = 'Stage'
-                       iv_act = |{ c_action-stage }?index={ iv_index }&key={ is_feature-repo-key }&branch={ is_feature-branch-display_name }|
+                       iv_act = |{ c_action-stage }{ lv_extra }|
                        iv_opt = zif_abapgit_html=>c_html_opt-strong ).
     ENDIF.
 
