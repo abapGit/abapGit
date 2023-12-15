@@ -188,6 +188,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
     DATA lv_index   TYPE i.
     DATA lo_online  TYPE REF TO zcl_abapgit_repo_online.
     DATA ls_feature LIKE LINE OF mt_features.
+    DATA ls_event_result TYPE zif_abapgit_flow_exit=>ty_event_result.
 
     FIELD-SYMBOLS <ls_object> LIKE LINE OF ls_feature-changed_objects.
     FIELD-SYMBOLS <ls_filter> LIKE LINE OF lt_filter.
@@ -260,10 +261,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
         refresh( ).
       WHEN OTHERS.
-        rs_handled = zcl_abapgit_flow_exit=>get_instance( )->on_event(
-          ii_event    = ii_event
-          it_features = mt_features ).
-        refresh( ).
+        ls_event_result = zcl_abapgit_flow_exit=>get_instance( )->on_event(
+         ii_event    = ii_event
+         it_features = mt_features ).
+
+        rs_handled = ls_event_result-handled.
+
+        IF ls_event_result-refresh = abap_true.
+          refresh( ).
+        ENDIF.
     ENDCASE.
 
   ENDMETHOD.
