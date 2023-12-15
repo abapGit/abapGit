@@ -57,6 +57,12 @@ CLASS zcl_abapgit_services_repo DEFINITION
         !io_repo TYPE REF TO zcl_abapgit_repo
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS real_deserialize
+      IMPORTING
+        !io_repo   TYPE REF TO zcl_abapgit_repo
+        !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS activate_objects
       IMPORTING
         !iv_key       TYPE zif_abapgit_persistence=>ty_repo-key
@@ -321,10 +327,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
   METHOD gui_deserialize.
 
-    DATA:
-      lv_msg    TYPE string,
-      ls_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks,
-      li_log    TYPE REF TO zif_abapgit_log.
+    DATA ls_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks.
 
     " find troublesome objects
     ls_checks = io_repo->deserialize_checks( ).
@@ -346,17 +349,28 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
         RETURN.
     ENDTRY.
 
+    real_deserialize(
+      io_repo   = io_repo
+      is_checks = ls_checks ).
+
+  ENDMETHOD.
+
+  METHOD real_deserialize.
+
+    DATA li_log TYPE REF TO zif_abapgit_log.
+    DATA lv_msg TYPE string.
+
     li_log = io_repo->create_new_log( 'Pull Log' ).
 
     " pass decisions to delete
     delete_unnecessary_objects(
       io_repo   = io_repo
-      is_checks = ls_checks
+      is_checks = is_checks
       ii_log    = li_log ).
 
     " pass decisions to deserialize
     io_repo->deserialize(
-      is_checks = ls_checks
+      is_checks = is_checks
       ii_log    = li_log ).
 
     IF li_log->get_status( ) = zif_abapgit_log=>c_status-ok.
