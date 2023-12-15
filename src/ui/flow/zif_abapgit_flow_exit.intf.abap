@@ -11,6 +11,7 @@ INTERFACE zif_abapgit_flow_exit
   METHODS on_event
     IMPORTING
       ii_event          TYPE REF TO zif_abapgit_gui_event
+      it_features       TYPE zif_abapgit_gui_page_flow=>ty_features
     RETURNING
       VALUE(rs_handled) TYPE zif_abapgit_gui_event_handler=>ty_handling_result
     RAISING

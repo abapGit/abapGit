@@ -46,7 +46,9 @@ CLASS ZCL_ABAPGIT_FLOW_EXIT IMPLEMENTATION.
 
     IF gi_exit IS NOT INITIAL.
       TRY.
-          rs_handled = gi_exit->on_event( ii_event ).
+          rs_handled = gi_exit->on_event(
+           ii_event    = ii_event
+           it_features = it_features ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.
