@@ -165,7 +165,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PULL IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    DATA lo_log TYPE REF TO zcl_abapgit_log.
     DATA lv_value TYPE string.
 
     FIELD-SYMBOLS <ls_overwrite> LIKE LINE OF ms_checks-overwrite.
@@ -192,10 +191,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PULL IMPLEMENTATION.
         ENDLOOP.
 
 * todo, show log?
-        CREATE OBJECT lo_log.
-        mo_repo->deserialize(
+        zcl_abapgit_services_repo=>real_deserialize(
           is_checks = ms_checks
-          ii_log    = lo_log ).
+          io_repo   = mo_repo ).
 
         rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
