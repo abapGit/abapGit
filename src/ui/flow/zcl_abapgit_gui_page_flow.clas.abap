@@ -259,6 +259,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
         refresh( ).
+      WHEN OTHERS.
+        rs_handled = zcl_abapgit_flow_exit=>get_instance( )->on_event( ii_event ).
     ENDCASE.
 
   ENDMETHOD.

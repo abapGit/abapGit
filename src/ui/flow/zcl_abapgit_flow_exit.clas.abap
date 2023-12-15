@@ -42,6 +42,18 @@ CLASS ZCL_ABAPGIT_FLOW_EXIT IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_flow_exit~on_event.
+
+    IF gi_exit IS NOT INITIAL.
+      TRY.
+          rs_handled = gi_exit->on_event( ii_event ).
+        CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_flow_exit~toolbar_extras.
 
     IF gi_exit IS NOT INITIAL.
