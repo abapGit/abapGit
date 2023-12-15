@@ -2,24 +2,22 @@ CLASS zcl_abapgit_gui_page_flow DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_gui_component
   FINAL
-  CREATE PRIVATE.
+  CREATE PRIVATE .
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_gui_event_handler.
-    INTERFACES zif_abapgit_gui_renderable.
-    INTERFACES zif_abapgit_gui_menu_provider.
+    INTERFACES zif_abapgit_gui_event_handler .
+    INTERFACES zif_abapgit_gui_renderable .
+    INTERFACES zif_abapgit_gui_menu_provider .
 
     CLASS-METHODS create
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     METHODS constructor
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -50,7 +48,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_flow IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_FLOW IMPLEMENTATION.
 
 
   METHOD constructor.
