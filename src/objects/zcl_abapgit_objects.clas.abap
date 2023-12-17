@@ -427,6 +427,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           lv_class_name         TYPE string,
           ls_obj_serializer_map LIKE LINE OF gt_obj_serializer_map.
 
+    " serialize & deserialize require files and i18n parameters,
+    " other calls are good without them
     ASSERT io_files IS BOUND AND io_i18n_params IS BOUND OR
            io_files IS NOT BOUND AND io_i18n_params IS NOT BOUND.
 
