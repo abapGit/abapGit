@@ -51,7 +51,7 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
 
     lv_filename = build_filename( lv_filename ).
 
-    lt_files = zif_abapgit_object~mo_files->get_files( ).
+    lt_files = mo_files->get_files( ).
 
     READ TABLE lt_files ASSIGNING <ls_file>
         WITH KEY file
@@ -354,7 +354,7 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
       ls_file-filename = build_filename( lv_filename ).
       ls_file-path     = '/'.
       ls_file-data     = lv_content.
-      zif_abapgit_object~mo_files->add( ls_file ).
+      mo_files->add( ls_file ).
 
       SELECT SINGLE lo_class FROM smimloio INTO lv_class
         WHERE loio_id = lv_loio.                        "#EC CI_GENBUFF

@@ -121,7 +121,7 @@ CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
     li_fp_layout = li_fp_form->get_layout( ).
     lv_layout_data = li_fp_layout->get_layout_data( ).
 
-    zif_abapgit_object~mo_files->add_raw(
+    mo_files->add_raw(
       iv_ext  = c_layout_file_ext
       iv_data = lv_layout_data ).
 
@@ -230,8 +230,8 @@ CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
     TRY.
         li_form = cl_fp_helper=>convert_xstring_to_form( lv_xstr ).
 
-        IF zif_abapgit_object~mo_files->contains_file( c_layout_file_ext ) = abap_true.
-          lv_layout = zif_abapgit_object~mo_files->read_raw( c_layout_file_ext ).
+        IF mo_files->contains_file( c_layout_file_ext ) = abap_true.
+          lv_layout = mo_files->read_raw( c_layout_file_ext ).
           li_form->get_layout( )->set_layout_data( lv_layout ).
         ENDIF.
 

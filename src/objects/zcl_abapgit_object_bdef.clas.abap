@@ -3,13 +3,15 @@ CLASS zcl_abapgit_object_bdef DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
 
-    METHODS:
-      constructor
-        IMPORTING
-          is_item     TYPE zif_abapgit_definitions=>ty_item
-          iv_language TYPE spras
-        RAISING
-          zcx_abapgit_exception.
+    METHODS constructor
+      IMPORTING
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -194,8 +196,10 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
   METHOD constructor.
 
     super->constructor(
-        is_item     = is_item
-        iv_language = iv_language ).
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
 
     mv_behaviour_definition_key = ms_item-obj_name.
 
@@ -244,7 +248,7 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
     ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <lg_data> TO <lv_source>.
     ASSERT sy-subrc = 0.
 
-    <lv_source> = zif_abapgit_object~mo_files->read_string( 'asbdef' ).
+    <lv_source> = mo_files->read_string( 'asbdef' ).
 
     CREATE OBJECT ro_object_data TYPE ('CL_BLUE_SOURCE_OBJECT_DATA').
 
@@ -600,7 +604,7 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
         iv_name = 'BDEF'
         ig_data = <lv_metadata> ).
 
-    zif_abapgit_object~mo_files->add_string(
+    mo_files->add_string(
         iv_ext    = 'asbdef'
         iv_string = lv_source ).
 

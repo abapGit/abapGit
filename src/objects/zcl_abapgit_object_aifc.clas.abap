@@ -10,10 +10,13 @@ CLASS zcl_abapgit_object_aifc DEFINITION
 
     METHODS constructor
       IMPORTING
-        !iv_language TYPE spras
-        !is_item     TYPE zif_abapgit_definitions=>ty_item
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
       RAISING
         zcx_abapgit_exception.
+
   PROTECTED SECTION.
     TYPES:
       BEGIN OF ty_aif_key_s,
@@ -127,6 +130,22 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD clear_client.
+    DATA:
+      BEGIN OF ls_data_to_clear,
+        mandt  TYPE sy-mandt,
+        client TYPE sy-mandt,
+      END OF ls_data_to_clear.
+
+    FIELD-SYMBOLS:
+      <ls_data> TYPE any.
+
+    LOOP AT ct_data ASSIGNING <ls_data>.
+      MOVE-CORRESPONDING ls_data_to_clear TO <ls_data>.
+    ENDLOOP.
+  ENDMETHOD.
+
+
   METHOD compress_interface.
     DATA: lx_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
     DATA: lx_root TYPE REF TO cx_root.
@@ -150,8 +169,11 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
   METHOD constructor.
     DATA: lx_exc_ref TYPE REF TO cx_sy_dyn_call_error.
 
-    super->constructor( is_item     = is_item
-                        iv_language = iv_language ).
+    super->constructor(
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
 
     ms_icd_data_key = is_item-obj_name.
 
@@ -162,6 +184,68 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
 
       CATCH cx_sy_dyn_call_error INTO lx_exc_ref.
         zcx_abapgit_exception=>raise( 'AIFC not supported' ).
+    ENDTRY.
+  ENDMETHOD.
+
+
+  METHOD execute_checks.
+    DATA ls_ifkeys TYPE ty_aif_key_s.
+
+    DATA lr_tabledescr TYPE REF TO cl_abap_tabledescr.
+    DATA lr_structdescr TYPE REF TO cl_abap_structdescr.
+    DATA lr_table TYPE REF TO data.
+    FIELD-SYMBOLS <lt_table> TYPE STANDARD TABLE.
+    FIELD-SYMBOLS <ls_table> TYPE any.
+    FIELD-SYMBOLS: <lv_value> TYPE any.
+
+    DATA: lx_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
+    DATA: lx_root TYPE REF TO cx_root.
+
+    lr_structdescr ?= cl_abap_typedescr=>describe_by_name( p_name = '/AIF/T_FINF' ).
+    lr_tabledescr = cl_abap_tabledescr=>create( p_line_type = lr_structdescr ).
+
+    CREATE DATA lr_table TYPE HANDLE lr_tabledescr.
+    ASSIGN lr_table->* TO <lt_table>.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Fieldsymbol not assigned' ).
+    ENDIF.
+
+    TRY.
+        io_xml->read( EXPORTING
+                    iv_name = '/AIF/T_FINF'
+                  CHANGING
+                    cg_data = <lt_table> ).
+
+        READ TABLE <lt_table> ASSIGNING <ls_table> INDEX 1.
+        IF sy-subrc = 0.
+          ASSIGN COMPONENT 'NS' OF STRUCTURE <ls_table> TO <lv_value>.
+          IF sy-subrc = 0.
+            ls_ifkeys-ns = <lv_value>.
+          ENDIF.
+
+          ASSIGN COMPONENT 'IFNAME' OF STRUCTURE <ls_table> TO <lv_value>.
+          IF sy-subrc = 0.
+            ls_ifkeys-ifname = <lv_value>.
+          ENDIF.
+
+          ASSIGN COMPONENT 'IFVERSION' OF STRUCTURE <ls_table> TO <lv_value>.
+          IF sy-subrc = 0.
+            ls_ifkeys-ifver = <lv_value>.
+          ENDIF.
+
+          CALL METHOD mo_abapgit_util->('/AIF/IF_ABAPGIT_AIFC_UTIL~EXECUTE_CHECKS')
+            EXPORTING
+              is_ifkeys  = ls_ifkeys
+              is_finf    = <ls_table>
+            RECEIVING
+              rv_success = rv_success.
+        ENDIF.
+
+      CATCH cx_sy_dyn_call_error INTO lx_dyn_call_error.
+        zcx_abapgit_exception=>raise( iv_text = 'AIFC not supported'
+                                      ix_previous = lx_dyn_call_error ).
+      CATCH cx_root INTO lx_root.
+        zcx_abapgit_exception=>raise_with_text( lx_root ).
     ENDTRY.
   ENDMETHOD.
 
@@ -527,84 +611,6 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
       CATCH cx_root INTO lx_root.
         zcx_abapgit_exception=>raise( iv_text = 'Serialize not possible'
                                       ix_previous = lx_dyn_call_error ).
-    ENDTRY.
-  ENDMETHOD.
-
-
-  METHOD clear_client.
-    DATA:
-      BEGIN OF ls_data_to_clear,
-        mandt  TYPE sy-mandt,
-        client TYPE sy-mandt,
-      END OF ls_data_to_clear.
-
-    FIELD-SYMBOLS:
-      <ls_data> TYPE any.
-
-    LOOP AT ct_data ASSIGNING <ls_data>.
-      MOVE-CORRESPONDING ls_data_to_clear TO <ls_data>.
-    ENDLOOP.
-  ENDMETHOD.
-
-
-  METHOD execute_checks.
-    DATA ls_ifkeys TYPE ty_aif_key_s.
-
-    DATA lr_tabledescr TYPE REF TO cl_abap_tabledescr.
-    DATA lr_structdescr TYPE REF TO cl_abap_structdescr.
-    DATA lr_table TYPE REF TO data.
-    FIELD-SYMBOLS <lt_table> TYPE STANDARD TABLE.
-    FIELD-SYMBOLS <ls_table> TYPE any.
-    FIELD-SYMBOLS: <lv_value> TYPE any.
-
-    DATA: lx_dyn_call_error TYPE REF TO cx_sy_dyn_call_error.
-    DATA: lx_root TYPE REF TO cx_root.
-
-    lr_structdescr ?= cl_abap_typedescr=>describe_by_name( p_name = '/AIF/T_FINF' ).
-    lr_tabledescr = cl_abap_tabledescr=>create( p_line_type = lr_structdescr ).
-
-    CREATE DATA lr_table TYPE HANDLE lr_tabledescr.
-    ASSIGN lr_table->* TO <lt_table>.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Fieldsymbol not assigned' ).
-    ENDIF.
-
-    TRY.
-        io_xml->read( EXPORTING
-                    iv_name = '/AIF/T_FINF'
-                  CHANGING
-                    cg_data = <lt_table> ).
-
-        READ TABLE <lt_table> ASSIGNING <ls_table> INDEX 1.
-        IF sy-subrc = 0.
-          ASSIGN COMPONENT 'NS' OF STRUCTURE <ls_table> TO <lv_value>.
-          IF sy-subrc = 0.
-            ls_ifkeys-ns = <lv_value>.
-          ENDIF.
-
-          ASSIGN COMPONENT 'IFNAME' OF STRUCTURE <ls_table> TO <lv_value>.
-          IF sy-subrc = 0.
-            ls_ifkeys-ifname = <lv_value>.
-          ENDIF.
-
-          ASSIGN COMPONENT 'IFVERSION' OF STRUCTURE <ls_table> TO <lv_value>.
-          IF sy-subrc = 0.
-            ls_ifkeys-ifver = <lv_value>.
-          ENDIF.
-
-          CALL METHOD mo_abapgit_util->('/AIF/IF_ABAPGIT_AIFC_UTIL~EXECUTE_CHECKS')
-            EXPORTING
-              is_ifkeys  = ls_ifkeys
-              is_finf    = <ls_table>
-            RECEIVING
-              rv_success = rv_success.
-        ENDIF.
-
-      CATCH cx_sy_dyn_call_error INTO lx_dyn_call_error.
-        zcx_abapgit_exception=>raise( iv_text = 'AIFC not supported'
-                                      ix_previous = lx_dyn_call_error ).
-      CATCH cx_root INTO lx_root.
-        zcx_abapgit_exception=>raise_with_text( lx_root ).
     ENDTRY.
   ENDMETHOD.
 ENDCLASS.
