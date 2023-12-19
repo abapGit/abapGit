@@ -10,10 +10,13 @@ CLASS zcl_abapgit_object_srfc DEFINITION
 
     METHODS constructor
       IMPORTING
-        !is_item     TYPE zif_abapgit_definitions=>ty_item
-        !iv_language TYPE spras
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -28,8 +31,10 @@ CLASS zcl_abapgit_object_srfc IMPLEMENTATION.
     DATA li_srfc_persist TYPE REF TO if_wb_object_persist.
 
     super->constructor(
-      is_item     = is_item
-      iv_language = iv_language ).
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
 
     TRY.
         CREATE OBJECT li_srfc_persist TYPE ('CL_UCONRFC_OBJECT_PERSIST').

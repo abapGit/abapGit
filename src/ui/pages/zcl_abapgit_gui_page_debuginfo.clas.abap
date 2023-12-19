@@ -336,12 +336,12 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
 
           rv_html = rv_html && |<td>{ get_jump_object( lv_class ) }</td>|.
 
-        CATCH cx_sy_create_object_error.
+        CATCH cx_sy_create_object_error zcx_abapgit_exception.
           TRY. " 2nd step, try looking for plugins
               CREATE OBJECT li_object TYPE zcl_abapgit_objects_bridge
                 EXPORTING
                   is_item = ls_item.
-            CATCH cx_sy_create_object_error.
+            CATCH cx_sy_create_object_error zcx_abapgit_exception.
               rv_html = rv_html && |<td class="error" colspan="5">{ lv_class } - error instantiating class</td>|.
               CONTINUE.
           ENDTRY.

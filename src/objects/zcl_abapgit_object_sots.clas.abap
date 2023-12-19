@@ -275,7 +275,7 @@ CLASS zcl_abapgit_object_sots IMPLEMENTATION.
       LOOP AT <ls_sots>-entries ASSIGNING <ls_entry>.
 
         TRY.
-            <ls_entry>-text = zif_abapgit_object~mo_files->read_string(
+            <ls_entry>-text = mo_files->read_string(
               iv_extra = get_raw_text_filename( <ls_entry> )
               iv_ext   = 'txt' ).
 
@@ -380,7 +380,7 @@ CLASS zcl_abapgit_object_sots IMPLEMENTATION.
 
       LOOP AT <ls_sots>-entries ASSIGNING <ls_entry>.
 
-        zif_abapgit_object~mo_files->add_string(
+        mo_files->add_string(
           iv_extra  = get_raw_text_filename( <ls_entry> )
           iv_ext    = 'txt'
           iv_string = <ls_entry>-text ).

@@ -25,8 +25,10 @@ CLASS zcl_abapgit_object_common_aff DEFINITION
 
     METHODS constructor
       IMPORTING
-        !is_item     TYPE zif_abapgit_definitions=>ty_item
-        !iv_language TYPE spras
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
       RAISING
         zcx_abapgit_exception.
 
@@ -80,8 +82,10 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
       lo_handler      TYPE REF TO object.
 
     super->constructor(
-      is_item     = is_item
-      iv_language = iv_language ).
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
 
     " Check if AFF handler exists and if object type is registered and supported
     TRY.
@@ -263,7 +267,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
                    <ls_msg>                   TYPE symsg,
                    <ls_extension_mapper_pair> LIKE LINE OF ls_additional_extensions.
 
-    lv_json_as_xstring = zif_abapgit_object~mo_files->read_raw( 'json' ).
+    lv_json_as_xstring = mo_files->read_raw( 'json' ).
     lv_name = ms_item-obj_name.
 
     " beyond here there will be dragons....
@@ -319,7 +323,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
         LOOP AT ls_additional_extensions ASSIGNING <ls_extension_mapper_pair>.
 
-          lv_file_as_xstring = zif_abapgit_object~mo_files->read_raw( <ls_extension_mapper_pair>-extension ).
+          lv_file_as_xstring = mo_files->read_raw( <ls_extension_mapper_pair>-extension ).
 
           CALL METHOD <ls_extension_mapper_pair>-file_name_mapper->('IF_AFF_FILE_NAME_MAPPER~GET_FILE_NAME_FROM_OBJECT')
             EXPORTING
@@ -622,7 +626,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           lv_json_as_xstring_wo_alv = remove_abap_language_version( lv_json_as_xstring ).
         ENDIF.
 
-        zif_abapgit_object~mo_files->add_raw(
+        mo_files->add_raw(
           iv_ext  = 'json'
           iv_data = lv_json_as_xstring_wo_alv ).
 
@@ -646,7 +650,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
             RECEIVING
               result = lv_file_as_xstring.
 
-          zif_abapgit_object~mo_files->add_raw(
+          mo_files->add_raw(
             iv_ext  = <ls_extension_mapper_pair>-extension
             iv_data = lv_file_as_xstring ).
 

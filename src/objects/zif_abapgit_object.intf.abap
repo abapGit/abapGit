@@ -1,8 +1,6 @@
 INTERFACE zif_abapgit_object
   PUBLIC .
 
-  DATA mo_files TYPE REF TO zcl_abapgit_objects_files .
-
   CONSTANTS:
     BEGIN OF gc_step_id,
       early TYPE zif_abapgit_definitions=>ty_deserialization_step VALUE `EARLY`,

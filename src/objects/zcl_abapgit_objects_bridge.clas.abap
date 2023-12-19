@@ -3,8 +3,13 @@ CLASS zcl_abapgit_objects_bridge DEFINITION PUBLIC FINAL CREATE PUBLIC INHERITIN
   PUBLIC SECTION.
 
     METHODS constructor
-      IMPORTING is_item TYPE zif_abapgit_definitions=>ty_item
-      RAISING   cx_sy_create_object_error.
+      IMPORTING
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        cx_sy_create_object_error
+        zcx_abapgit_exception.
 
     INTERFACES zif_abapgit_object.
   PROTECTED SECTION.
@@ -38,6 +43,36 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_objects_bridge IMPLEMENTATION.
+
+
+  METHOD constructor.
+
+    DATA ls_objtype_map LIKE LINE OF gt_objtype_map.
+
+    super->constructor(
+      is_item        = is_item
+      iv_language    = zif_abapgit_definitions=>c_english
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
+
+    initialize( ).
+
+*    determine the responsible plugin
+    READ TABLE gt_objtype_map INTO ls_objtype_map
+      WITH TABLE KEY obj_typ = is_item-obj_type.
+    IF sy-subrc = 0.
+      CREATE OBJECT mo_plugin TYPE (ls_objtype_map-plugin_class).
+
+      CALL METHOD mo_plugin->('SET_ITEM')
+        EXPORTING
+          iv_obj_type = is_item-obj_type
+          iv_obj_name = is_item-obj_name.
+    ELSE.
+      RAISE EXCEPTION TYPE cx_sy_create_object_error
+        EXPORTING
+          classname = 'LCL_OBJECTS_BRIDGE'.
+    ENDIF.
+  ENDMETHOD.
 
 
   METHOD initialize.
@@ -103,33 +138,6 @@ CLASS zcl_abapgit_objects_bridge IMPLEMENTATION.
       ENDLOOP.
     ENDLOOP. "at plugins
 
-  ENDMETHOD.
-
-
-  METHOD constructor.
-
-    DATA ls_objtype_map LIKE LINE OF gt_objtype_map.
-
-    super->constructor( is_item = is_item
-                        iv_language = zif_abapgit_definitions=>c_english ).
-
-    initialize( ).
-
-*    determine the responsible plugin
-    READ TABLE gt_objtype_map INTO ls_objtype_map
-      WITH TABLE KEY obj_typ = is_item-obj_type.
-    IF sy-subrc = 0.
-      CREATE OBJECT mo_plugin TYPE (ls_objtype_map-plugin_class).
-
-      CALL METHOD mo_plugin->('SET_ITEM')
-        EXPORTING
-          iv_obj_type = is_item-obj_type
-          iv_obj_name = is_item-obj_name.
-    ELSE.
-      RAISE EXCEPTION TYPE cx_sy_create_object_error
-        EXPORTING
-          classname = 'LCL_OBJECTS_BRIDGE'.
-    ENDIF.
   ENDMETHOD.
 
 

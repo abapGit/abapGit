@@ -1,8 +1,7 @@
 CLASS zcl_abapgit_objects_super DEFINITION
   PUBLIC
   ABSTRACT
-  CREATE PUBLIC
-  GLOBAL FRIENDS zcl_abapgit_objects .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
@@ -10,13 +9,21 @@ CLASS zcl_abapgit_objects_super DEFINITION
 
     METHODS constructor
       IMPORTING
-        !is_item     TYPE zif_abapgit_definitions=>ty_item
-        !iv_language TYPE spras .
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL.
+
+    METHODS get_accessed_files
+      RETURNING
+        VALUE(rt_files) TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt.
   PROTECTED SECTION.
 
-    DATA ms_item TYPE zif_abapgit_definitions=>ty_item .
-    DATA mo_i18n_params TYPE REF TO zcl_abapgit_i18n_params .
-    DATA mv_language TYPE spras .
+    DATA:
+      ms_item        TYPE zif_abapgit_definitions=>ty_item,
+      mv_language    TYPE spras,
+      mo_files       TYPE REF TO zcl_abapgit_objects_files,
+      mo_i18n_params TYPE REF TO zcl_abapgit_i18n_params.
 
     METHODS get_metadata
       RETURNING
@@ -121,6 +128,19 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
     ASSERT NOT ms_item IS INITIAL.
     mv_language = iv_language.
     ASSERT NOT mv_language IS INITIAL.
+
+    IF io_files IS NOT INITIAL.
+      mo_files = io_files.
+    ELSE.
+      mo_files = zcl_abapgit_objects_files=>new( is_item ). " New file collection
+    ENDIF.
+
+    IF io_i18n_params IS NOT INITIAL.
+      mo_i18n_params = io_i18n_params.
+    ELSE.
+      mo_i18n_params = zcl_abapgit_i18n_params=>new( ). " All defaults
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -270,6 +290,11 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
       rv_exists_a_lock_entry = abap_true.
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD get_accessed_files.
+    rt_files = mo_files->get_accessed_files( ).
   ENDMETHOD.
 
 

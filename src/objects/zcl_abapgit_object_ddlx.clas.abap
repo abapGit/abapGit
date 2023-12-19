@@ -203,7 +203,7 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
         TRY.
             " If the file doesn't exist that's ok, because previously
             " the source code was stored in the xml. We are downward compatible.
-            <lg_source> = zif_abapgit_object~mo_files->read_string( 'asddlxs' ).
+            <lg_source> = mo_files->read_string( 'asddlxs' ).
           CATCH zcx_abapgit_exception ##NO_HANDLER.
         ENDTRY.
 
@@ -372,7 +372,7 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
         ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <lg_data> TO <lg_field>.
         ASSERT sy-subrc = 0.
 
-        zif_abapgit_object~mo_files->add_string(
+        mo_files->add_string(
           iv_ext    = 'asddlxs'
           iv_string = <lg_field> ).
 
