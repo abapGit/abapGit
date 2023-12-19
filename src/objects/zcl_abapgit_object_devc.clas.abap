@@ -6,9 +6,15 @@ CLASS zcl_abapgit_object_devc DEFINITION PUBLIC
     INTERFACES:
       zif_abapgit_object.
 
-    METHODS:
-      constructor IMPORTING is_item     TYPE zif_abapgit_definitions=>ty_item
-                            iv_language TYPE spras.
+    METHODS constructor
+      IMPORTING
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -66,13 +72,19 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
 
 
   METHOD constructor.
-    super->constructor( is_item     = is_item
-                        iv_language = iv_language ).
+
+    super->constructor(
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
+
     IF is_item-devclass IS NOT INITIAL.
       mv_local_devclass = is_item-devclass.
     ELSE.
       mv_local_devclass = is_item-obj_name.
     ENDIF.
+
   ENDMETHOD.
 
 

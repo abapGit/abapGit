@@ -18,8 +18,13 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
 
     METHODS constructor
       IMPORTING
-        is_item     TYPE zif_abapgit_definitions=>ty_item
-        iv_language TYPE spras.
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
     METHODS deserialize_proxy
       IMPORTING
@@ -111,8 +116,11 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     DATA li_aff_registry TYPE REF TO zif_abapgit_aff_registry.
 
     super->constructor(
-      is_item     = is_item
-      iv_language = iv_language ).
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
+
     mi_object_oriented_object_fct = zcl_abapgit_oo_factory=>make( ms_item-obj_type ).
 
     CREATE OBJECT li_aff_registry TYPE zcl_abapgit_aff_registry.
@@ -258,7 +266,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     DATA ls_intf_aff TYPE zif_abapgit_aff_intf_v1=>ty_main.
     DATA lo_aff_mapper TYPE REF TO zif_abapgit_aff_type_mapping.
 
-    lv_json_data = zif_abapgit_object~mo_files->read_raw( 'json' ).
+    lv_json_data = mo_files->read_raw( 'json' ).
     ls_intf_aff = lcl_aff_metadata_handler=>deserialize( lv_json_data ).
 
     CREATE OBJECT lo_aff_mapper TYPE lcl_aff_type_mapping.
@@ -412,8 +420,8 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     " HERE: switch with feature flag for XML or JSON file format
     IF mv_aff_enabled = abap_true.
       lv_serialized_data = lcl_aff_metadata_handler=>serialize( ls_intf ).
-      zif_abapgit_object~mo_files->add_raw( iv_ext  = 'json'
-                                            iv_data = lv_serialized_data ).
+      mo_files->add_raw( iv_ext  = 'json'
+                         iv_data = lv_serialized_data ).
 
     ELSE.
       io_xml->add( iv_name = 'VSEOINTERF'
@@ -531,7 +539,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
             cg_properties = ls_intf-vseointerf ).
 
         ls_clskey-clsname = ms_item-obj_name.
-        lt_source = zif_abapgit_object~mo_files->read_abap( ).
+        lt_source = mo_files->read_abap( ).
 
         mi_object_oriented_object_fct->deserialize_source(
           is_key     = ls_clskey
@@ -673,7 +681,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
     lt_source = mi_object_oriented_object_fct->serialize_abap( ls_interface_key ).
 
-    zif_abapgit_object~mo_files->add_abap( lt_source ).
+    mo_files->add_abap( lt_source ).
 
     serialize_xml( io_xml ).
 

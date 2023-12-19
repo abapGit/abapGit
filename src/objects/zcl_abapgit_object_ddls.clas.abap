@@ -5,10 +5,13 @@ CLASS zcl_abapgit_object_ddls DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     METHODS constructor
       IMPORTING
-        !is_item     TYPE zif_abapgit_definitions=>ty_item
-        !iv_language TYPE spras
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_files       TYPE REF TO zcl_abapgit_objects_files OPTIONAL
+        !io_i18n_params TYPE REF TO zcl_abapgit_i18n_params OPTIONAL
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
     METHODS open_adt_stob
       IMPORTING
@@ -38,8 +41,10 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
     DATA lo_ddl TYPE REF TO object.
 
     super->constructor(
-      is_item     = is_item
-      iv_language = iv_language ).
+      is_item        = is_item
+      iv_language    = iv_language
+      io_files       = io_files
+      io_i18n_params = io_i18n_params ).
 
     TRY.
         CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
@@ -162,7 +167,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
   METHOD read_baseinfo.
 
     TRY.
-        rv_baseinfo_string = zif_abapgit_object~mo_files->read_string( 'baseinfo' ).
+        rv_baseinfo_string = mo_files->read_string( 'baseinfo' ).
 
       CATCH zcx_abapgit_exception.
         " File not found. That's ok, as the object could have been created in a
@@ -278,7 +283,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
 
         ASSIGN COMPONENT 'SOURCE' OF STRUCTURE <lg_data> TO <lg_source>.
         ASSERT sy-subrc = 0.
-        <lg_source> = zif_abapgit_object~mo_files->read_string( 'asddls' ).
+        <lg_source> = mo_files->read_string( 'asddls' ).
 
         CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
           RECEIVING
@@ -474,7 +479,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
             IF <lg_ddlname> = ms_item-obj_name AND <lg_as4local> = 'A'.
               ASSIGN COMPONENT 'BASEINFO_STRING' OF STRUCTURE <lg_data_baseinfo> TO <lg_field>.
               ASSERT sy-subrc = 0.
-              zif_abapgit_object~mo_files->add_string(
+              mo_files->add_string(
                 iv_ext    = 'baseinfo'
                 iv_string = <lg_field> ).
               EXIT.
@@ -513,7 +518,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
 
     format_source_before_serialize( CHANGING cv_string = <lg_field> ).
 
-    zif_abapgit_object~mo_files->add_string(
+    mo_files->add_string(
       iv_ext    = 'asddls'
       iv_string = <lg_field> ).
 

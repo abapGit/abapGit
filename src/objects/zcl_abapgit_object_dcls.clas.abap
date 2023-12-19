@@ -89,7 +89,7 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
 
     ASSIGN COMPONENT 'SOURCE' OF STRUCTURE <lg_data> TO <lg_field>.
     ASSERT sy-subrc = 0.
-    <lg_field> = zif_abapgit_object~mo_files->read_string( 'asdcls' ).
+    <lg_field> = mo_files->read_string( 'asdcls' ).
 
     TRY.
         tadir_insert( iv_package ).
@@ -242,7 +242,7 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
         ASSIGN COMPONENT 'SOURCE' OF STRUCTURE <lg_data> TO <lg_field>.
         ASSERT sy-subrc = 0.
 
-        zif_abapgit_object~mo_files->add_string(
+        mo_files->add_string(
           iv_ext    = 'asdcls'
           iv_string = <lg_field> ).
 

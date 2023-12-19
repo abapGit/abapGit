@@ -331,7 +331,7 @@ CLASS zcl_abapgit_object_iamu IMPLEMENTATION.
     ls_internet_appl_comp_binary-attributes-devclass = iv_package.
 
     IF io_xml->get_metadata( )-version = 'v2.0.0'.
-      lv_xstring = zif_abapgit_object~mo_files->read_raw( ls_internet_appl_comp_binary-extension ).
+      lv_xstring = mo_files->read_raw( ls_internet_appl_comp_binary-extension ).
 
       zcl_abapgit_convert=>xstring_to_bintab(
         EXPORTING
@@ -430,7 +430,7 @@ CLASS zcl_abapgit_object_iamu IMPLEMENTATION.
       iv_name = ls_internet_appl_comp_binary-attributes-longname
       iv_data = lv_xstring ).
 
-    zif_abapgit_object~mo_files->add_raw(
+    mo_files->add_raw(
       iv_data = lv_xstring
       iv_ext  = ls_internet_appl_comp_binary-extension ).
 
