@@ -70,7 +70,7 @@ CLASS lcl_password_dialog IMPLEMENTATION.
     p_user     = cv_user.
     gv_confirm = abap_false.
 
-    p_cmnt = 'Press F1 for Help'.
+    p_cmnt = 'Press F1 for Help'    ##NO_TEXT.
 
     enrich_title_by_hostname( iv_repo_url ).
 
@@ -94,11 +94,11 @@ CLASS lcl_password_dialog IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD on_screen_init.
-    sc_title = 'Login'.
-    sc_url   = 'Repo URL'.
-    sc_user  = 'User'.
-    sc_pass  = 'Password or Token'.
-    sc_cmnt  = 'Note'.
+    sc_title = 'Login'              ##NO_TEXT.
+    sc_url   = 'Repo URL'           ##NO_TEXT.
+    sc_user  = 'User'               ##NO_TEXT.
+    sc_pass  = 'Password or Token'  ##NO_TEXT.
+    sc_cmnt  = 'Note'               ##NO_TEXT.
   ENDMETHOD.
 
   METHOD on_screen_output.
