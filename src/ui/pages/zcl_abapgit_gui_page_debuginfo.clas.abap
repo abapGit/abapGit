@@ -43,6 +43,7 @@ CLASS zcl_abapgit_gui_page_debuginfo DEFINITION
     METHODS render_exit_info_methods
       IMPORTING
         !it_source     TYPE string_table
+        !iv_clsname    TYPE seoclsname OPTIONAL
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
@@ -196,11 +197,25 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
       " Developer version
       TRY.
           ls_class_key-clsname = c_exit_class.
-          CREATE OBJECT lo_oo_serializer.
-          lt_source = lo_oo_serializer->serialize_abap_clif_source( ls_class_key ).
+          DO.
+            CREATE OBJECT lo_oo_serializer.
+            lt_source = lo_oo_serializer->serialize_abap_clif_source( ls_class_key ).
 
-          ri_html->add( |<div>User exits are active (class { get_jump_object( c_exit_class ) } found)</div><br>| ).
-          ri_html->add( render_exit_info_methods( lt_source ) ).
+            ri_html->add( '<div>' ).
+            ri_html->add( |User exits are active (class { get_jump_object( ls_class_key-clsname ) } found)| ).
+            ri_html->add( '</div><br>' ).
+            ri_html->add( render_exit_info_methods(
+                            it_source  = lt_source
+                            iv_clsname = ls_class_key-clsname ) ).
+
+            " Is there a super class of exit?
+            SELECT SINGLE refclsname FROM seometarel INTO ls_class_key-clsname
+              WHERE clsname = ls_class_key-clsname AND reltype = '2'.
+            IF sy-subrc <> 0.
+              EXIT.
+            ENDIF.
+            ri_html->add( '<br>' ).
+          ENDDO.
         CATCH cx_root.
           ri_html->add( |<div>No user exits implemented (class { c_exit_class } not found)</div><br>| ).
       ENDTRY.
@@ -217,6 +232,7 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
       lt_methods TYPE cl_oo_source_scanner_class=>type_method_implementations,
       lv_method  LIKE LINE OF lt_methods,
       lt_source  TYPE seop_source_string,
+      lv_count   TYPE i,
       lv_source  TYPE string,
       lv_rest    TYPE string.
 
@@ -228,7 +244,7 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
 
     TRY.
         lo_scanner = cl_oo_source_scanner_class=>create_class_scanner(
-          clif_name = c_exit_class
+          clif_name = iv_clsname
           source    = it_source ).
         lo_scanner->scan( ).
 
@@ -250,7 +266,12 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
             ri_html->add( '<strong>Yes</strong>' ).
           ENDIF.
           ri_html->add( |</td></tr>| ).
+          lv_count = lv_count + 1.
         ENDLOOP.
+
+        IF lv_count = 0.
+          ri_html->add( |<tr><td colspan="2">No exit methods implemented</td></tr>| ).
+        ENDIF.
 
       CATCH cx_root INTO lx_exc.
         ri_html->add( |<tr><td colspan="2">{ lx_exc->get_text( ) }</td></tr>| ).
