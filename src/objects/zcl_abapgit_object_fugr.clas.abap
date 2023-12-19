@@ -787,7 +787,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       ENDIF.
       IF sy-subrc = 0.
         CONCATENATE lv_namespace lv_area INTO ls_tadir-obj_name.
-        IF ls_tadir-obj_name <> ms_item-obj_name.
+        IF ls_tadir-obj_name <> ms_item-obj_name OR ls_tadir-object <> ms_item-obj_type.
           rv_belongs_to_other_fugr = abap_true.
         ENDIF.
       ENDIF.
