@@ -149,6 +149,20 @@ CLASS zcl_abapgit_objects DEFINITION
         !ct_files     TYPE zif_abapgit_git_definitions=>ty_file_signatures_tt
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS check_original_system
+      IMPORTING
+        !it_items TYPE zif_abapgit_definitions=>ty_items_tt
+        !ii_log   TYPE REF TO zif_abapgit_log
+        !io_dot   TYPE REF TO zcl_abapgit_dot_abapgit
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS update_original_system
+      IMPORTING
+        !it_items TYPE zif_abapgit_definitions=>ty_items_tt
+        !ii_log   TYPE REF TO zif_abapgit_log
+        !io_dot   TYPE REF TO zcl_abapgit_dot_abapgit
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS check_objects_locked
       IMPORTING
         !it_items TYPE zif_abapgit_definitions=>ty_items_tt
@@ -336,6 +350,33 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       ENDIF.
 
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD check_original_system.
+
+    DATA:
+      lv_srcsystem TYPE srcsystem,
+      lv_error     TYPE abap_bool.
+
+    FIELD-SYMBOLS <ls_item> LIKE LINE OF it_items.
+
+    lv_srcsystem = io_dot->get_original_system( ).
+    CHECK lv_srcsystem IS NOT INITIAL.
+
+    ii_log->add_info( |>> Checking original system| ).
+
+    LOOP AT it_items ASSIGNING <ls_item> WHERE srcsystem <> lv_srcsystem AND srcsystem IS NOT INITIAL.
+      ii_log->add_error(
+        iv_msg  = |Object belongs to system { <ls_item>-srcsystem }. Can't overwrite it from system { lv_srcsystem }|
+        is_item = <ls_item> ).
+      lv_error = abap_true.
+    ENDLOOP.
+
+    IF lv_error = abap_true.
+      zcx_abapgit_exception=>raise( 'Error trying to overwrite object from different system' ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -678,6 +719,13 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     check_objects_locked( lt_items ).
 
+    " Check the original system of all objects to prevent overwritting
+    check_original_system(
+      EXPORTING
+        it_items = lt_items
+        ii_log   = ii_log
+        io_dot   = io_repo->get_dot_abapgit( ) ).
+
     lo_i18n_params = zcl_abapgit_i18n_params=>new( is_params = determine_i18n_params(
       io_dot                = io_repo->get_dot_abapgit( )
       iv_main_language_only = io_repo->get_local_settings( )-main_language_only ) ).
@@ -792,7 +840,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
               io_files       = lo_files ).
           ENDIF.
 
-
         CATCH zcx_abapgit_exception INTO lx_exc.
           ii_log->add_exception( ix_exc = lx_exc
                                  is_item = ls_item ).
@@ -818,6 +865,13 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     " TODO: LXE translations (objects has been activated by now)
 
     update_package_tree( io_repo->get_package( ) ).
+
+    " Set the original system for all updated objects to what's defined in repo settings
+    update_original_system(
+      EXPORTING
+        it_items = lt_items
+        ii_log   = ii_log
+        io_dot   = io_repo->get_dot_abapgit( ) ).
 
     zcl_abapgit_factory=>get_default_transport( )->reset( ).
 
@@ -1134,9 +1188,11 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     LOOP AT it_results ASSIGNING <ls_result>.
 
-      ls_item-devclass = <ls_result>-package.
-      ls_item-obj_type = <ls_result>-obj_type.
-      ls_item-obj_name = <ls_result>-obj_name.
+      ls_item-devclass  = <ls_result>-package.
+      ls_item-obj_type  = <ls_result>-obj_type.
+      ls_item-obj_name  = <ls_result>-obj_name.
+      ls_item-srcsystem = <ls_result>-srcsystem.
+      ls_item-origlang  = <ls_result>-origlang.
       INSERT ls_item INTO TABLE rt_items.
 
     ENDLOOP.
@@ -1151,9 +1207,11 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     LOOP AT it_tadir ASSIGNING <ls_tadir>.
 
-      ls_item-devclass = <ls_tadir>-devclass.
-      ls_item-obj_type = <ls_tadir>-object.
-      ls_item-obj_name = <ls_tadir>-obj_name.
+      ls_item-devclass  = <ls_tadir>-devclass.
+      ls_item-obj_type  = <ls_tadir>-object.
+      ls_item-obj_name  = <ls_tadir>-obj_name.
+      ls_item-srcsystem = <ls_tadir>-srcsystem.
+      ls_item-origlang  = <ls_tadir>-masterlang.
       INSERT ls_item INTO TABLE rt_items.
 
     ENDLOOP.
@@ -1271,6 +1329,70 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDLOOP.
 
     gv_supported_obj_types_loaded = abap_true.
+
+  ENDMETHOD.
+
+
+  METHOD update_original_system.
+
+    DATA lv_srcsystem TYPE srcsystem.
+    DATA lv_msg TYPE string.
+
+    FIELD-SYMBOLS <ls_item> LIKE LINE OF it_items.
+
+    lv_srcsystem = io_dot->get_original_system( ).
+    CHECK lv_srcsystem IS NOT INITIAL.
+
+    ii_log->add_info( |>> Setting original system| ).
+
+    LOOP AT it_items ASSIGNING <ls_item>.
+      " Local packages are not stored in TADIR
+      IF <ls_item>-obj_type = 'DEVC' AND <ls_item>-obj_name(1) = '$'.
+        CONTINUE.
+      ENDIF.
+      IF exists( <ls_item> ) = abap_true.
+        CALL FUNCTION 'TR_TADIR_INTERFACE'
+          EXPORTING
+            wi_tadir_pgmid                 = 'R3TR'
+            wi_tadir_object                = <ls_item>-obj_type
+            wi_tadir_obj_name              = <ls_item>-obj_name
+            wi_tadir_srcsystem             = lv_srcsystem
+            wi_test_modus                  = abap_false
+          EXCEPTIONS
+            tadir_entry_not_existing       = 1
+            tadir_entry_ill_type           = 2
+            no_systemname                  = 3
+            no_systemtype                  = 4
+            original_system_conflict       = 5
+            object_reserved_for_devclass   = 6
+            object_exists_global           = 7
+            object_exists_local            = 8
+            object_is_distributed          = 9
+            obj_specification_not_unique   = 10
+            no_authorization_to_delete     = 11
+            devclass_not_existing          = 12
+            simultanious_set_remove_repair = 13
+            order_missing                  = 14
+            no_modification_of_head_syst   = 15
+            pgmid_object_not_allowed       = 16
+            masterlanguage_not_specified   = 17
+            devclass_not_specified         = 18
+            specify_owner_unique           = 19
+            loc_priv_objs_no_repair        = 20
+            gtadir_not_reached             = 21
+            object_locked_for_order        = 22
+            change_of_class_not_allowed    = 23
+            no_change_from_sap_to_tmp      = 24
+            OTHERS                         = 25.
+        IF sy-subrc <> 0.
+          MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4 INTO lv_msg.
+          ii_log->add_error(
+            iv_msg  = lv_msg
+            is_item = <ls_item> ).
+        ENDIF.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 

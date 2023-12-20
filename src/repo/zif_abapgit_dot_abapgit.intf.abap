@@ -21,6 +21,7 @@ INTERFACE zif_abapgit_dot_abapgit PUBLIC.
       requirements          TYPE ty_requirement_tt,
       version_constant      TYPE string,
       abap_language_version TYPE string,
+      original_system       TYPE srcsystem,
     END OF ty_dot_abapgit .
 
   CONSTANTS:
