@@ -723,10 +723,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     " Check the original system of all objects to prevent overwritting
     check_original_system(
-      EXPORTING
-        it_items = lt_items
-        ii_log   = ii_log
-        io_dot   = io_repo->get_dot_abapgit( ) ).
+      it_items = lt_items
+      ii_log   = ii_log
+      io_dot   = io_repo->get_dot_abapgit( ) ).
 
     lo_i18n_params = zcl_abapgit_i18n_params=>new( is_params = determine_i18n_params(
       io_dot                = io_repo->get_dot_abapgit( )
@@ -870,10 +869,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     " Set the original system for all updated objects to what's defined in repo settings
     update_original_system(
-      EXPORTING
-        it_items = lt_items
-        ii_log   = ii_log
-        io_dot   = io_repo->get_dot_abapgit( ) ).
+      it_items = lt_items
+      ii_log   = ii_log
+      io_dot   = io_repo->get_dot_abapgit( ) ).
 
     zcl_abapgit_factory=>get_default_transport( )->reset( ).
 
