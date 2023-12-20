@@ -215,7 +215,6 @@ CLASS ltcl_validate_form IMPLEMENTATION.
     CLEAR:
       mo_git_transport_mock,
       mo_frontend_services_mock.
-      
     zcl_abapgit_git_injector=>set_git_transport( mo_git_transport_mock ).
     zcl_abapgit_ui_injector=>set_frontend_services( mo_frontend_services_mock ).
 
