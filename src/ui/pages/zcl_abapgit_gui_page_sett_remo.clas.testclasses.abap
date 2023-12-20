@@ -188,13 +188,16 @@ CLASS ltcl_validate_form IMPLEMENTATION.
 
     DATA: ls_data TYPE zif_abapgit_persistence=>ty_repo.
 
+    CREATE OBJECT mo_git_transport_mock TYPE ltd_git_transport.
+    zcl_abapgit_git_injector=>set_git_transport( mo_git_transport_mock ).
+
+    CREATE OBJECT mo_frontend_services_mock TYPE ltd_frontend_services.
+    zcl_abapgit_ui_injector=>set_frontend_services( mo_frontend_services_mock ).
+
     ls_data-key = 1.
     ls_data-branch_name = 'main'.
 
     CREATE OBJECT mo_repo EXPORTING is_data = ls_data.
-
-    CREATE OBJECT mo_git_transport_mock TYPE ltd_git_transport.
-    zcl_abapgit_git_injector=>set_git_transport( mo_git_transport_mock ).
 
     CREATE OBJECT mo_given_form_data.
     mo_given_form_data->set(
@@ -202,9 +205,6 @@ CLASS ltcl_validate_form IMPLEMENTATION.
         iv_val = 'main' ).
 
     CREATE OBJECT mo_cut EXPORTING io_repo = mo_repo.
-
-    CREATE OBJECT mo_frontend_services_mock TYPE ltd_frontend_services.
-    zcl_abapgit_ui_injector=>set_frontend_services( mo_frontend_services_mock ).
 
   ENDMETHOD.
 
