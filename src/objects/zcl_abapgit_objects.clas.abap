@@ -363,7 +363,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     FIELD-SYMBOLS <ls_item> LIKE LINE OF it_items.
 
     lv_srcsystem = io_dot->get_original_system( ).
-    CHECK lv_srcsystem IS NOT INITIAL.
+    IF lv_srcsystem IS NOT INITIAL.
+      RETURN.
+    ENDIF.
 
     ii_log->add_info( |>> Checking original system| ).
 
@@ -1341,7 +1343,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     FIELD-SYMBOLS <ls_item> LIKE LINE OF it_items.
 
     lv_srcsystem = io_dot->get_original_system( ).
-    CHECK lv_srcsystem IS NOT INITIAL.
+    IF lv_srcsystem IS NOT INITIAL.
+      RETURN.
+    ENDIF.
 
     ii_log->add_info( |>> Setting original system| ).
 
