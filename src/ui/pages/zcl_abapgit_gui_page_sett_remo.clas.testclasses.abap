@@ -57,6 +57,7 @@ CLASS ltcl_validate_form DEFINITION FINAL FOR TESTING
 
     METHODS:
       setup RAISING cx_static_check,
+      teardown RAISING cx_static_check,
 
       switch_to_offline_no_error FOR TESTING RAISING cx_static_check,
       invalid_url FOR TESTING RAISING cx_static_check,
@@ -205,6 +206,15 @@ CLASS ltcl_validate_form IMPLEMENTATION.
         iv_val = 'main' ).
 
     CREATE OBJECT mo_cut EXPORTING io_repo = mo_repo.
+
+  ENDMETHOD.
+
+
+  METHOD teardown.
+
+    CLEAR:
+      mo_git_transport_mock,
+      mo_frontend_services_mock.
 
   ENDMETHOD.
 
