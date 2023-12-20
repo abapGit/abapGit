@@ -787,7 +787,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       ENDIF.
       IF sy-subrc = 0.
         CONCATENATE lv_namespace lv_function_group INTO ls_tadir-obj_name.
-        " compare complete tadir key of function group
+        " compare complete tadir key to distinguish between regular and exit function groups
         IF ls_tadir-obj_name <> ms_item-obj_name OR ls_tadir-object <> ms_item-obj_type.
           rv_belongs_to_other_fugr = abap_true.
         ENDIF.
