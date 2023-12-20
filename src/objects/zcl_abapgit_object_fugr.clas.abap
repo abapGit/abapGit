@@ -766,7 +766,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     " like in LSEAPFAP Form TADIR_MAINTENANCE
     DATA ls_tadir TYPE tadir.
     DATA lv_namespace TYPE rs38l-namespace.
-    DATA lv_area TYPE rs38l-area.
+    DATA lv_function_group TYPE rs38l-area.
     DATA lv_include TYPE rs38l-include.
 
     rv_belongs_to_other_fugr = abap_false.
@@ -777,17 +777,18 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
         IMPORTING
           namespace = lv_namespace
-          group     = lv_area
+          group     = lv_function_group
         CHANGING
           include   = lv_include
         EXCEPTIONS
           OTHERS    = 1.
-      IF lv_area(1) = 'X'.    " "EXIT"-function-module
+      IF lv_function_group(1) = 'X'.    " "EXIT"-function-module
         ls_tadir-object = 'FUGS'.
       ENDIF.
       IF sy-subrc = 0.
-        CONCATENATE lv_namespace lv_area INTO ls_tadir-obj_name.
-        IF ls_tadir-obj_name <> ms_item-obj_name.
+        CONCATENATE lv_namespace lv_function_group INTO ls_tadir-obj_name.
+        " compare complete tadir key to distinguish between regular and exit function groups
+        IF ls_tadir-obj_name <> ms_item-obj_name OR ls_tadir-object <> ms_item-obj_type.
           rv_belongs_to_other_fugr = abap_true.
         ENDIF.
       ENDIF.
