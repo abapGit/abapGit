@@ -177,6 +177,7 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
     DATA lt_source TYPE string_table.
     DATA ls_class_key TYPE seoclskey.
     DATA lo_oo_serializer TYPE REF TO zcl_abapgit_oo_serializer.
+    DATA lo_class TYPE REF TO cl_oo_class.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -209,9 +210,9 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
                             iv_clsname = ls_class_key-clsname ) ).
 
             " Is there a super class of exit?
-            SELECT SINGLE refclsname FROM seometarel INTO ls_class_key-clsname
-              WHERE clsname = ls_class_key-clsname AND reltype = '2'.
-            IF sy-subrc <> 0.
+            CREATE OBJECT lo_class EXPORTING clsname = ls_class_key-clsname.
+            ls_class_key-clsname = lo_class->get_superclass( ).
+            IF ls_class_key-clsname IS INITIAL.
               EXIT.
             ENDIF.
             ri_html->add( '<br>' ).
