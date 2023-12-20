@@ -449,7 +449,9 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     lv_new_branch_name = io_form_data->get( c_id-new_branch_name ).
     IF lv_new_branch_name IS NOT INITIAL.
       " check if branch already exists
-      lt_branches = zcl_abapgit_git_transport=>branches( mo_repo->get_url( ) )->get_branches_only( ).
+      lt_branches = zcl_abapgit_git_factory=>get_git_transport(
+                                          )->branches( mo_repo->get_url( )
+                                          )->get_branches_only( ).
       READ TABLE lt_branches TRANSPORTING NO FIELDS WITH TABLE KEY name_key
         COMPONENTS name = branch_name_to_internal( lv_new_branch_name ).
       IF sy-subrc = 0.

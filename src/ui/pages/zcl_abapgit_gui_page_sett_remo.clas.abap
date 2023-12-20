@@ -763,7 +763,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
               iv_val = c_head_types-branch ).
 
             IF lv_url CP 'http*'.
-              lv_branch = zcl_abapgit_git_transport=>branches( lv_url )->get_head_symref( ).
+              lv_branch = zcl_abapgit_git_factory=>get_git_transport( )->branches( lv_url )->get_head_symref( ).
               mo_form_data->set(
                 iv_key = c_id-branch
                 iv_val = lv_branch ).
@@ -903,7 +903,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
       TRY.
           IF lv_branch IS NOT INITIAL.
-            lo_branch_list = zcl_abapgit_git_transport=>branches( lv_url ).
+            lo_branch_list = zcl_abapgit_git_factory=>get_git_transport( )->branches( lv_url ).
             lo_branch_list->find_by_name( lv_branch ).
           ENDIF.
         CATCH zcx_abapgit_exception INTO lx_error.

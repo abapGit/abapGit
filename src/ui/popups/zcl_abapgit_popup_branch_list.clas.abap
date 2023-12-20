@@ -75,7 +75,7 @@ CLASS zcl_abapgit_popup_branch_list IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_branch> LIKE LINE OF rt_branches.
 
-    lo_branches    = zcl_abapgit_git_transport=>branches( mv_repo_url ).
+    lo_branches    = zcl_abapgit_git_factory=>get_git_transport( )->branches( mv_repo_url ).
     rt_branches    = lo_branches->get_branches_only( ).
     lv_head_symref = lo_branches->get_head_symref( ).
 

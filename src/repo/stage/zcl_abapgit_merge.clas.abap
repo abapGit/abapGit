@@ -252,7 +252,7 @@ CLASS zcl_abapgit_merge IMPLEMENTATION.
     DATA: lo_branch_list TYPE REF TO zcl_abapgit_git_branch_list,
           lt_upload      TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
 
-    lo_branch_list = zcl_abapgit_git_transport=>branches( ms_merge-repo->get_url( ) ).
+    lo_branch_list = zcl_abapgit_git_factory=>get_git_transport( )->branches( ms_merge-repo->get_url( ) ).
 
     ms_merge-source = lo_branch_list->find_by_name(
       zcl_abapgit_git_branch_list=>complete_heads_branch_name( mv_source_branch ) ).
