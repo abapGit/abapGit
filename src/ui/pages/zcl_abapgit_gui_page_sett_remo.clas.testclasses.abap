@@ -24,6 +24,19 @@ CLASS ltd_branch_list DEFINITION FINAL FOR TESTING INHERITING FROM zcl_abapgit_g
 ENDCLASS.
 
 
+CLASS ltd_frontend_services DEFINITION FINAL FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
+
+  PUBLIC SECTION.
+
+    INTERFACES:
+      zif_abapgit_frontend_services.
+
+ENDCLASS.
+
+
+
 CLASS ltcl_validate_form DEFINITION FINAL FOR TESTING
   DURATION SHORT
   RISK LEVEL HARMLESS.
@@ -33,11 +46,14 @@ CLASS ltcl_validate_form DEFINITION FINAL FOR TESTING
       c_git_repo_url TYPE string VALUE 'https://repo.com/demo.git'.
 
     DATA:
-      mo_repo            TYPE REF TO zcl_abapgit_repo_online,
-      mo_cut             TYPE REF TO zcl_abapgit_gui_page_sett_remo,
-      mo_given_form_data TYPE REF TO zcl_abapgit_string_map,
-      mo_validation_log  TYPE REF TO zcl_abapgit_string_map,
-      mo_git_transport   TYPE REF TO zif_abapgit_git_transport.
+      mo_cut                    TYPE REF TO zcl_abapgit_gui_page_sett_remo,
+
+      mo_repo                   TYPE REF TO zcl_abapgit_repo_online,
+      mo_given_form_data        TYPE REF TO zcl_abapgit_string_map,
+      mo_act_validation_log     TYPE REF TO zcl_abapgit_string_map,
+
+      mo_git_transport_mock     TYPE REF TO zif_abapgit_git_transport,
+      mo_frontend_services_mock TYPE REF TO zif_abapgit_frontend_services.
 
     METHODS:
       setup RAISING cx_static_check,
@@ -110,6 +126,62 @@ CLASS ltd_branch_list IMPLEMENTATION.
 ENDCLASS.
 
 
+CLASS ltd_frontend_services IMPLEMENTATION.
+
+  METHOD zif_abapgit_frontend_services~clipboard_export.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_frontend_services~directory_browse.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_frontend_services~directory_create.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_frontend_services~directory_exist.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_frontend_services~execute.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_frontend_services~file_download.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_frontend_services~file_upload.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_frontend_services~get_file_separator.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_frontend_services~get_gui_version.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_frontend_services~get_system_directory.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_frontend_services~gui_is_available.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_frontend_services~is_sapgui_for_java.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_frontend_services~is_sapgui_for_windows.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_frontend_services~is_webgui.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_frontend_services~open_ie_devtools.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_frontend_services~show_file_open_dialog.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_frontend_services~show_file_save_dialog.
+  ENDMETHOD.
+
+ENDCLASS.
+
+
 CLASS ltcl_validate_form IMPLEMENTATION.
 
   METHOD setup.
@@ -121,8 +193,8 @@ CLASS ltcl_validate_form IMPLEMENTATION.
 
     CREATE OBJECT mo_repo EXPORTING is_data = ls_data.
 
-    CREATE OBJECT mo_git_transport TYPE ltd_git_transport.
-    zcl_abapgit_git_injector=>set_git_transport( mo_git_transport ).
+    CREATE OBJECT mo_git_transport_mock TYPE ltd_git_transport.
+    zcl_abapgit_git_injector=>set_git_transport( mo_git_transport_mock ).
 
     CREATE OBJECT mo_given_form_data.
     mo_given_form_data->set(
@@ -130,6 +202,9 @@ CLASS ltcl_validate_form IMPLEMENTATION.
         iv_val = 'main' ).
 
     CREATE OBJECT mo_cut EXPORTING io_repo = mo_repo.
+
+    CREATE OBJECT mo_frontend_services_mock TYPE ltd_frontend_services.
+    zcl_abapgit_ui_injector=>set_frontend_services( mo_frontend_services_mock ).
 
   ENDMETHOD.
 
@@ -360,7 +435,7 @@ CLASS ltcl_validate_form IMPLEMENTATION.
 
   METHOD when_validate_form.
 
-    mo_validation_log = mo_cut->validate_form( mo_given_form_data ).
+    mo_act_validation_log = mo_cut->validate_form( mo_given_form_data ).
 
   ENDMETHOD.
 
@@ -369,14 +444,14 @@ CLASS ltcl_validate_form IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
         exp = abap_true
-        act = mo_validation_log->is_empty( ) ).
+        act = mo_act_validation_log->is_empty( ) ).
 
   ENDMETHOD.
 
 
   METHOD then_error_shd_occur.
 
-    cl_abap_unit_assert=>assert_not_initial( mo_validation_log->get( iv_exp_error_key ) ).
+    cl_abap_unit_assert=>assert_not_initial( mo_act_validation_log->get( iv_exp_error_key ) ).
 
   ENDMETHOD.
 
