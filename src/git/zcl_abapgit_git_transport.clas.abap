@@ -39,6 +39,13 @@ CLASS zcl_abapgit_git_transport DEFINITION
         !iv_pack        TYPE xstring OPTIONAL
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS branches
+      IMPORTING
+        iv_url                TYPE string
+      RETURNING
+        VALUE(ro_branch_list) TYPE REF TO zcl_abapgit_git_branch_list
+      RAISING
+        zcx_abapgit_exception .
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -435,4 +442,13 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
                               it_hashes       = lt_hashes ).
 
   ENDMETHOD.
+
+
+  METHOD branches.
+
+    " This method is kept for compatibility reasons
+    ro_branch_list = zcl_abapgit_git_factory=>get_git_transport( )->branches( iv_url ).
+
+  ENDMETHOD.
+
 ENDCLASS.
