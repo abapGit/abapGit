@@ -390,6 +390,8 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
     DATA: lr_tadir TYPE REF TO zif_abapgit_definitions=>ty_tadir.
     DATA: lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
+    ASSERT iv_package IS NOT INITIAL.
+
     " Start recursion
     " hmm, some problems here, should TADIR also build path?
     rt_tadir = build(
@@ -426,6 +428,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
     IF iv_check_exists = abap_true.
       rt_tadir = check_exists( rt_tadir ).
     ENDIF.
+
   ENDMETHOD.
 
 
