@@ -358,7 +358,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
       lt_tags     TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt.
 
     " For annotated tags, find the correct commit
-    lo_branches = zcl_abapgit_git_transport=>branches( iv_url ).
+    lo_branches = zcl_abapgit_git_factory=>get_git_transport( )->branches( iv_url ).
     lt_tags     = lo_branches->get_tags_only( ).
     lv_tag      = zcl_abapgit_git_tag=>remove_peel( is_tag-name ).
 
