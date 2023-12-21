@@ -357,13 +357,13 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
   METHOD check_original_system.
 
     DATA:
-      lv_srcsystem TYPE srcsystem,
+      lv_srcsystem TYPE tadir-srcsystem,
       lv_error     TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF it_items.
 
     lv_srcsystem = io_dot->get_original_system( ).
-    IF lv_srcsystem IS NOT INITIAL.
+    IF lv_srcsystem IS INITIAL.
       RETURN.
     ENDIF.
 
@@ -1335,13 +1335,13 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
   METHOD update_original_system.
 
-    DATA lv_srcsystem TYPE srcsystem.
+    DATA lv_srcsystem TYPE tadir-srcsystem.
     DATA lv_msg TYPE string.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF it_items.
 
     lv_srcsystem = io_dot->get_original_system( ).
-    IF lv_srcsystem IS NOT INITIAL.
+    IF lv_srcsystem IS INITIAL.
       RETURN.
     ENDIF.
 
