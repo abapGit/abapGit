@@ -66,6 +66,11 @@ INTERFACE zif_abapgit_repo
       !io_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit
     RAISING
       zcx_abapgit_exception .
+  METHODS find_remote_dot_abapgit
+    RETURNING
+      VALUE(ro_dot) TYPE REF TO zcl_abapgit_dot_abapgit
+    RAISING
+      zcx_abapgit_exception .
   METHODS deserialize
     IMPORTING
       !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks

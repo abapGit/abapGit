@@ -37,6 +37,8 @@ CLASS zcl_abapgit_repo DEFINITION
       FOR zif_abapgit_repo~refresh .
     ALIASES set_dot_abapgit
       FOR zif_abapgit_repo~set_dot_abapgit .
+    ALIASES find_remote_dot_abapgit
+      FOR zif_abapgit_repo~find_remote_dot_abapgit .
     ALIASES has_remote_source
       FOR zif_abapgit_repo~has_remote_source .
 
@@ -54,11 +56,6 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS delete_checks
       RETURNING
         VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_delete_checks
-      RAISING
-        zcx_abapgit_exception .
-    METHODS find_remote_dot_abapgit
-      RETURNING
-        VALUE(ro_dot) TYPE REF TO zcl_abapgit_dot_abapgit
       RAISING
         zcx_abapgit_exception .
     METHODS get_data_config
@@ -332,25 +329,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     ENDTRY.
 
     INSERT LINES OF lt_updated_files INTO TABLE ct_files.
-
-  ENDMETHOD.
-
-
-  METHOD find_remote_dot_abapgit.
-
-    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF mt_remote.
-
-    get_files_remote( ).
-
-    READ TABLE mt_remote ASSIGNING <ls_remote>
-      WITH KEY file_path
-      COMPONENTS path     = zif_abapgit_definitions=>c_root_dir
-                 filename = zif_abapgit_definitions=>c_dot_abapgit.
-    IF sy-subrc = 0.
-      ro_dot = zcl_abapgit_dot_abapgit=>deserialize( <ls_remote>-data ).
-      set_dot_abapgit( ro_dot ).
-      COMMIT WORK AND WAIT. " to release lock
-    ENDIF.
 
   ENDMETHOD.
 
@@ -739,6 +717,25 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     rs_checks-customizing = zcl_abapgit_data_factory=>get_deserializer( )->deserialize_check(
       io_repo   = me
       ii_config = get_data_config( ) ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo~find_remote_dot_abapgit.
+
+    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF mt_remote.
+
+    get_files_remote( ).
+
+    READ TABLE mt_remote ASSIGNING <ls_remote>
+      WITH KEY file_path
+      COMPONENTS path     = zif_abapgit_definitions=>c_root_dir
+                 filename = zif_abapgit_definitions=>c_dot_abapgit.
+    IF sy-subrc = 0.
+      ro_dot = zcl_abapgit_dot_abapgit=>deserialize( <ls_remote>-data ).
+      set_dot_abapgit( ro_dot ).
+      COMMIT WORK AND WAIT. " to release lock
+    ENDIF.
 
   ENDMETHOD.
 
