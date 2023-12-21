@@ -180,7 +180,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
                    <ls_branch> LIKE LINE OF lt_branches.
 
 
-    lo_branches    = zcl_abapgit_git_transport=>branches( iv_url ).
+    lo_branches    = zcl_abapgit_git_factory=>get_git_transport( )->branches( iv_url ).
     lt_branches    = lo_branches->get_branches_only( ).
     lv_head_suffix = | ({ zif_abapgit_git_definitions=>c_head_name })|.
     lv_head_symref = lo_branches->get_head_symref( ).
@@ -847,7 +847,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
                    <ls_tag> LIKE LINE OF lt_tags.
 
 
-    lo_branches = zcl_abapgit_git_transport=>branches( iv_url ).
+    lo_branches = zcl_abapgit_git_factory=>get_git_transport( )->branches( iv_url ).
     lt_tags     = lo_branches->get_tags_only( ).
 
     LOOP AT lt_tags ASSIGNING <ls_tag> WHERE name NP '*' && zif_abapgit_git_definitions=>c_git_branch-peel.
