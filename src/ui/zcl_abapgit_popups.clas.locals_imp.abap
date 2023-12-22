@@ -765,7 +765,8 @@ CLASS lcl_object_descision_list IMPLEMENTATION.
     lt_func_list = lo_functions->get_functions( ).
     LOOP AT lt_func_list INTO ls_func.
       lv_fn = ls_func-r_function->get_name( ).
-      IF lv_fn = 'OK' OR lv_fn = 'CANCEL'.
+      IF lv_fn = 'OK'   OR lv_fn = 'CANCEL'
+      OR lv_fn = 'O.K.' OR lv_fn = 'EABR'.
         ls_func-r_function->set_visible( abap_true ).
       ELSEIF iv_object_list = abap_true.
         ls_func-r_function->set_visible( abap_true ).
