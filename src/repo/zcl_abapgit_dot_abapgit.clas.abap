@@ -103,6 +103,13 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
     METHODS set_abap_language_version
       IMPORTING
         !iv_abap_language_version TYPE string .
+    METHODS get_original_system
+      RETURNING
+        VALUE(rv_original_system) TYPE string .
+    METHODS set_original_system
+      IMPORTING
+        !iv_original_system TYPE csequence .
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -234,6 +241,11 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_original_system.
+    rv_original_system = ms_data-original_system.
+  ENDMETHOD.
+
+
   METHOD get_requirements.
     rt_requirements = ms_data-requirements.
   ENDMETHOD.
@@ -340,6 +352,11 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
 
   METHOD set_name.
     ms_data-name = iv_name.
+  ENDMETHOD.
+
+
+  METHOD set_original_system.
+    ms_data-original_system = iv_original_system.
   ENDMETHOD.
 
 

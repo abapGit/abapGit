@@ -220,8 +220,8 @@ CLASS zcl_abapgit_repo_status IMPLEMENTATION.
       rs_result-obj_type  = ls_item-obj_type.
       rs_result-obj_name  = ls_item-obj_name.
       rs_result-package   = ls_item-devclass.
-      rs_result-srcsystem = sy-sysid.
-      rs_result-origlang  = sy-langu.
+      rs_result-srcsystem = ''.
+      rs_result-origlang  = ''.
 
       READ TABLE it_state_idx INTO ls_file_sig
         WITH KEY
