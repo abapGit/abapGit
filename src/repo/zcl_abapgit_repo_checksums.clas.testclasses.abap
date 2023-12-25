@@ -259,6 +259,8 @@ CLASS lcl_repo_mock IMPLEMENTATION.
   ENDMETHOD.
   METHOD zif_abapgit_repo~get_dot_abapgit.
   ENDMETHOD.
+  METHOD zif_abapgit_repo~find_remote_dot_abapgit.
+  ENDMETHOD.
   METHOD zif_abapgit_repo~get_tadir_objects.
   ENDMETHOD.
   METHOD zif_abapgit_repo_srv~is_repo_installed.

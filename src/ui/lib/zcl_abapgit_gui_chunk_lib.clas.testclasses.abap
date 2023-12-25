@@ -242,6 +242,8 @@ CLASS ltd_repo IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_repo~find_remote_dot_abapgit.
+  ENDMETHOD.
 ENDCLASS.
 
 
