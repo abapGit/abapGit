@@ -61,7 +61,7 @@ CLASS zcl_abapgit_popup_tag_list IMPLEMENTATION.
 
     DATA lo_branches  TYPE REF TO zcl_abapgit_git_branch_list.
 
-    lo_branches = zcl_abapgit_git_transport=>branches( mv_repo_url ).
+    lo_branches = zcl_abapgit_git_factory=>get_git_transport( )->branches( mv_repo_url ).
     rt_tags     = lo_branches->get_tags_only( ).
 
     DELETE rt_tags WHERE name CP '*' && zif_abapgit_git_definitions=>c_git_branch-peel.

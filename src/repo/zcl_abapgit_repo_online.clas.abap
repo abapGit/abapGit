@@ -152,7 +152,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
       lt_branches     TYPE zif_abapgit_git_definitions=>ty_git_branch_list_tt,
       lv_display_name TYPE string.
 
-    lt_branches = zcl_abapgit_git_transport=>branches( get_url( ) )->get_branches_only( ).
+    lt_branches = zcl_abapgit_git_factory=>get_git_transport( )->branches( get_url( ) )->get_branches_only( ).
 
     READ TABLE lt_branches WITH TABLE KEY name_key
                            COMPONENTS name = iv_name
@@ -181,7 +181,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     lv_branch = get_selected_branch( ).
 
     IF lv_branch IS NOT INITIAL.
-      lo_branch_list = zcl_abapgit_git_transport=>branches( get_url( ) ).
+      lo_branch_list = zcl_abapgit_git_factory=>get_git_transport( )->branches( get_url( ) ).
 
       TRY.
           lo_branch_list->find_by_name( lv_branch ).

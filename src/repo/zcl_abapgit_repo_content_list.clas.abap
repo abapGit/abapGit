@@ -123,7 +123,7 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
 
 
     lt_status = zcl_abapgit_repo_status=>calculate(
-      io_repo = mo_repo
+      ii_repo = mo_repo
       ii_log  = mi_log ).
 
     LOOP AT lt_status ASSIGNING <ls_status>.

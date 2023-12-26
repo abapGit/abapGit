@@ -300,7 +300,7 @@ CLASS zcl_abapgit_gui_page_tags IMPLEMENTATION.
 
     IF lv_new_tag_name IS NOT INITIAL.
       " Check if tag already exists
-      lt_tags = zcl_abapgit_git_transport=>branches( mo_repo->get_url( ) )->get_tags_only( ).
+      lt_tags = zcl_abapgit_git_factory=>get_git_transport( )->branches( mo_repo->get_url( ) )->get_tags_only( ).
 
       READ TABLE lt_tags TRANSPORTING NO FIELDS WITH TABLE KEY name_key
         COMPONENTS name = zcl_abapgit_git_tag=>add_tag_prefix( lv_new_tag_name ).

@@ -141,7 +141,7 @@ CLASS zcl_abapgit_gui_page_merge_sel IMPLEMENTATION.
 
     DATA lo_branches TYPE REF TO zcl_abapgit_git_branch_list.
 
-    lo_branches = zcl_abapgit_git_transport=>branches( mo_repo->get_url( ) ).
+    lo_branches = zcl_abapgit_git_factory=>get_git_transport( )->branches( mo_repo->get_url( ) ).
     mt_branches = lo_branches->get_branches_only( ).
 
     DELETE mt_branches WHERE name = zif_abapgit_git_definitions=>c_head_name.

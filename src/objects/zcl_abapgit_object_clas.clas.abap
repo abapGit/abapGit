@@ -337,6 +337,12 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     set_abap_language_version( CHANGING cv_abap_language_version = ls_vseoclass-unicode ).
 
+    IF ls_vseoclass-category = '40'.
+      " In lower releases, creating exception classes raise a popup asking for package
+      " To avoid this, we set the default package here
+      set_default_package( iv_package ).
+    ENDIF.
+
     mi_object_oriented_object_fct->create(
       EXPORTING
         iv_check      = abap_false
