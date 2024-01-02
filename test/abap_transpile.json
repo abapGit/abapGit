@@ -56,6 +56,7 @@
     "zif_abapgit_l",
     "zif_abapgit_m",
     "zif_abapgit_object",
+    "zcl_abapgit_object_tabl_ddl",
     "zif_abapgit_oo_object_fnc",
     "zif_abapgit_p",
     "zif_abapgit_r",
