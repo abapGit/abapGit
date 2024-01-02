@@ -413,11 +413,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD has_remote_source.
-    rv_yes = boolc( lines( mt_remote ) > 0 ).
-  ENDMETHOD.
-
-
   METHOD normalize_local_settings.
 
     cs_local_settings-labels = zcl_abapgit_repo_labels=>normalize( cs_local_settings-labels ).
@@ -857,6 +852,11 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       iv_only_local_objects = get_local_settings( )-only_local_objects
       io_dot                = get_dot_abapgit( ) ).
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo~has_remote_source.
+    rv_yes = boolc( lines( mt_remote ) > 0 ).
   ENDMETHOD.
 
 
