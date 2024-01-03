@@ -165,6 +165,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD object_not_in_local_files.
+
     given_the_transport_object(
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS' ).
@@ -345,6 +346,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD then_it_should_remove_at_stage.
+
     DATA: lt_staged_objects TYPE zif_abapgit_definitions=>ty_stage_tt.
 
     lt_staged_objects = mo_stage->get_all( ).
