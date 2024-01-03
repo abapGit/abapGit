@@ -152,7 +152,7 @@ CLASS zcl_abapgit_background IMPLEMENTATION.
 
       TRY.
           " Decrease memory usage for repositories already processed
-          lo_repo->refresh( iv_drop_cache = abap_true ).
+          lo_repo->refresh( abap_true ).
         CATCH zcx_abapgit_exception INTO lx_error.
           li_log->add_exception( lx_error ).
       ENDTRY.
