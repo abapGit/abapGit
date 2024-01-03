@@ -14,7 +14,7 @@ CLASS zcl_abapgit_transport_objects DEFINITION
         !is_stage_objects   TYPE zif_abapgit_definitions=>ty_stage_files
         !it_object_statuses TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
