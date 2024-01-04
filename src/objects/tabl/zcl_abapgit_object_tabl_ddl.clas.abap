@@ -511,9 +511,9 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       WHEN '0'.
         rv_ddl = rv_ddl && |@AbapCatalog.enhancementCategory : #NOT_CLASSIFIED\n|.
       WHEN '1'.
-        rv_ddl = rv_ddl && |@AbapCatalog.enhancementCategory : #EXTENSIBLE_CHARACTER\n|.
-      WHEN '2'.
         rv_ddl = rv_ddl && |@AbapCatalog.enhancementCategory : #NOT_EXTENSIBLE\n|.
+      WHEN '2'.
+        rv_ddl = rv_ddl && |@AbapCatalog.enhancementCategory : #EXTENSIBLE_CHARACTER\n|.
       WHEN '3'.
         rv_ddl = rv_ddl && |@AbapCatalog.enhancementCategory : #EXTENSIBLE_CHARACTER_NUMERIC\n|.
       WHEN '4'.
