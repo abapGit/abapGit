@@ -5,6 +5,11 @@ CLASS zcl_abapgit_object_tabl_ddl DEFINITION
 
   PUBLIC SECTION.
 
+    METHODS read_data
+      IMPORTING
+        !iv_name       TYPE tadir-obj_name
+      RETURNING
+        VALUE(rs_data) TYPE zif_abapgit_object_tabl=>ty_internal .
     METHODS serialize
       IMPORTING
         !is_data      TYPE zif_abapgit_object_tabl=>ty_internal
@@ -16,6 +21,8 @@ CLASS zcl_abapgit_object_tabl_ddl DEFINITION
       RETURNING
         VALUE(rs_data) TYPE zif_abapgit_object_tabl=>ty_internal .
     METHODS serialize_adt
+      IMPORTING
+        !iv_name      TYPE tadir-obj_name
       RETURNING
         VALUE(rv_ddl) TYPE string .
   PROTECTED SECTION.
@@ -305,6 +312,36 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
     ELSE.
       cs_dd03p-rollname = to_upper( lv_token ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD read_data.
+* temporary method for testing
+
+    DATA lv_name TYPE ddobjname.
+
+    lv_name = iv_name.
+
+    CALL FUNCTION 'DDIF_TABL_GET'
+      EXPORTING
+        name          = lv_name
+        langu         = 'E'
+      IMPORTING
+        dd02v_wa      = rs_data-dd02v
+        dd09l_wa      = rs_data-dd09l
+      TABLES
+        dd03p_tab     = rs_data-dd03p
+        dd05m_tab     = rs_data-dd05m
+        dd08v_tab     = rs_data-dd08v
+        dd12v_tab     = rs_data-dd12v
+        dd17v_tab     = rs_data-dd17v
+        dd35v_tab     = rs_data-dd35v
+        dd36m_tab     = rs_data-dd36m
+      EXCEPTIONS
+        illegal_input = 1
+        OTHERS        = 2.
+    ASSERT sy-subrc = 0.
 
   ENDMETHOD.
 
