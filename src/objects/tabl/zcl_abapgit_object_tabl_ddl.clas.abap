@@ -24,7 +24,9 @@ CLASS zcl_abapgit_object_tabl_ddl DEFINITION
       IMPORTING
         !iv_name      TYPE tadir-obj_name
       RETURNING
-        VALUE(rv_ddl) TYPE string .
+        VALUE(rv_ddl) TYPE string
+      RAISING
+        cx_static_check .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -466,14 +468,26 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
     ENDIF.
 
     IF ls_dd08v-cardleft = 'C' AND ls_dd08v-card = '1'.
-      lv_cardinality = |[1,0..1]|.
+      lv_cardinality = |[1,0..1] |.
+    ELSEIF ls_dd08v-cardleft = '1' AND ls_dd08v-card = 'C'.
+      lv_cardinality = |[0..1,1] |.
+    ELSEIF ls_dd08v-cardleft = '1' AND ls_dd08v-card = '1'.
+      lv_cardinality = |[1,1] |.
     ELSEIF ls_dd08v-cardleft = '1' AND ls_dd08v-card = 'N'.
-      lv_cardinality = |[1..*,1]|.
+      lv_cardinality = |[1..*,1] |.
+    ELSEIF ls_dd08v-cardleft = '1' AND ls_dd08v-card = 'CN'.
+      lv_cardinality = |[0..*,1] |.
+    ELSEIF ls_dd08v-cardleft = 'C' AND ls_dd08v-card = 'CN'.
+      lv_cardinality = |[0..*,0..1] |.
+    ELSEIF ls_dd08v-cardleft = 'C' AND ls_dd08v-card = 'C'.
+      lv_cardinality = |[0..1,0..1] |.
+    ELSEIF ls_dd08v-cardleft IS INITIAL or ls_dd08v-card IS INITIAL.
+      lv_cardinality = | |.
     ELSE.
       ASSERT 1 = 'todo'.
     ENDIF.
 
-    rv_ddl = rv_ddl && |\n    with foreign key { lv_cardinality } { to_lower( ls_dd08v-checktable ) }|.
+    rv_ddl = rv_ddl && |\n    with foreign key { lv_cardinality }{ to_lower( ls_dd08v-checktable ) }|.
 
 * assumption: dd05m table is sorted by PRIMPOS ascending
     LOOP AT is_data-dd05m INTO ls_dd05m WHERE fieldname = iv_fieldname.
@@ -494,8 +508,16 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
     rv_ddl = rv_ddl && |@EndUserText.label : { escape_string( is_data-dd02v-ddtext ) }\n|.
 
     CASE is_data-dd02v-exclass.
+      WHEN '0'.
+        rv_ddl = rv_ddl && |@AbapCatalog.enhancementCategory : #NOT_CLASSIFIED\n|.
       WHEN '1'.
+        rv_ddl = rv_ddl && |@AbapCatalog.enhancementCategory : #EXTENSIBLE_CHARACTER\n|.
+      WHEN '2'.
         rv_ddl = rv_ddl && |@AbapCatalog.enhancementCategory : #NOT_EXTENSIBLE\n|.
+      WHEN '3'.
+        rv_ddl = rv_ddl && |@AbapCatalog.enhancementCategory : #EXTENSIBLE_CHARACTER_NUMERIC\n|.
+      WHEN '4'.
+        rv_ddl = rv_ddl && |@AbapCatalog.enhancementCategory : #EXTENSIBLE_ANY\n|.
       WHEN OTHERS.
         ASSERT 1 = 'todo'.
     ENDCASE.
