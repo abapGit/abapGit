@@ -481,7 +481,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       lv_cardinality = |[0..*,0..1] |.
     ELSEIF ls_dd08v-cardleft = 'C' AND ls_dd08v-card = 'C'.
       lv_cardinality = |[0..1,0..1] |.
-    ELSEIF ls_dd08v-cardleft IS INITIAL or ls_dd08v-card IS INITIAL.
+    ELSEIF ls_dd08v-cardleft IS INITIAL OR ls_dd08v-card IS INITIAL.
       lv_cardinality = | |.
     ELSE.
       ASSERT 1 = 'todo'.
