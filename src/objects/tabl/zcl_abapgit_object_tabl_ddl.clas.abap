@@ -4,77 +4,74 @@ CLASS zcl_abapgit_object_tabl_ddl DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+
     METHODS serialize
       IMPORTING
-        is_data       TYPE zif_abapgit_object_tabl=>ty_internal
+        !is_data      TYPE zif_abapgit_object_tabl=>ty_internal
       RETURNING
-        VALUE(rv_ddl) TYPE string.
-
+        VALUE(rv_ddl) TYPE string .
     METHODS deserialize
       IMPORTING
-        iv_ddl         TYPE string
+        !iv_ddl        TYPE string
       RETURNING
-        VALUE(rs_data) TYPE zif_abapgit_object_tabl=>ty_internal.
-
+        VALUE(rs_data) TYPE zif_abapgit_object_tabl=>ty_internal .
+    METHODS serialize_adt
+      RETURNING
+        VALUE(rv_ddl) TYPE string .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
     METHODS parse_top_annotations
       CHANGING
-        cs_data TYPE zif_abapgit_object_tabl=>ty_internal
-        cv_ddl  TYPE string.
-
+        !cs_data TYPE zif_abapgit_object_tabl=>ty_internal
+        !cv_ddl  TYPE string .
     METHODS parse_field_annotations
       EXPORTING
-        es_dd08v TYPE dd08v
+        !es_dd08v TYPE dd08v
       CHANGING
-        cv_ddl   TYPE string.
-
+        !cv_ddl   TYPE string .
     METHODS parse_field
       IMPORTING
-        iv_field TYPE string
+        !iv_field TYPE string
       CHANGING
-        cs_data  TYPE zif_abapgit_object_tabl=>ty_internal.
-
+        !cs_data  TYPE zif_abapgit_object_tabl=>ty_internal .
     METHODS serialize_top
       IMPORTING
-        is_data       TYPE zif_abapgit_object_tabl=>ty_internal
+        !is_data      TYPE zif_abapgit_object_tabl=>ty_internal
       RETURNING
-        VALUE(rv_ddl) TYPE string.
-
+        VALUE(rv_ddl) TYPE string .
     METHODS serialize_field_annotations
       IMPORTING
-        iv_fieldname  TYPE clike
-        is_data       TYPE zif_abapgit_object_tabl=>ty_internal
+        !iv_fieldname TYPE clike
+        !is_data      TYPE zif_abapgit_object_tabl=>ty_internal
       RETURNING
-        VALUE(rv_ddl) TYPE string.
-
+        VALUE(rv_ddl) TYPE string .
     METHODS serialize_field_foreign_key
       IMPORTING
-        iv_fieldname  TYPE clike
-        is_data       TYPE zif_abapgit_object_tabl=>ty_internal
+        !iv_fieldname TYPE clike
+        !is_data      TYPE zif_abapgit_object_tabl=>ty_internal
       RETURNING
-        VALUE(rv_ddl) TYPE string.
-
+        VALUE(rv_ddl) TYPE string .
     METHODS escape_string
       IMPORTING
-        iv_string        TYPE clike
+        !iv_string       TYPE clike
       RETURNING
-        VALUE(rv_string) TYPE string.
-
+        VALUE(rv_string) TYPE string .
     METHODS unescape_string
       IMPORTING
-        iv_string        TYPE clike
+        !iv_string       TYPE clike
       RETURNING
-        VALUE(rv_string) TYPE string.
-
+        VALUE(rv_string) TYPE string .
     METHODS serialize_type
-      IMPORTING is_dd03p       TYPE dd03p
-      RETURNING VALUE(rv_type) TYPE string.
-
+      IMPORTING
+        !is_dd03p      TYPE dd03p
+      RETURNING
+        VALUE(rv_type) TYPE string .
     METHODS parse_type
-      IMPORTING iv_token TYPE string
-      CHANGING  cs_dd03p TYPE dd03p.
+      IMPORTING
+        !iv_token TYPE string
+      CHANGING
+        !cs_dd03p TYPE dd03p .
 ENDCLASS.
 
 
@@ -364,6 +361,38 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
     rv_ddl = rv_ddl && |\n|.
 
     rv_ddl = rv_ddl && |\}|.
+
+  ENDMETHOD.
+
+
+  METHOD serialize_adt.
+
+    DATA ls_object_type TYPE wbobjtype.
+    DATA lv_object_key  TYPE seu_objkey.
+    DATA li_object_data TYPE REF TO if_wb_object_data_model.
+    DATA lo_operator    TYPE REF TO object.
+
+
+    ls_object_type-objtype_tr = 'TABL'.
+    ls_object_type-subtype_wb = 'DT'.
+    lv_object_key = 'ZABAPGIT'.
+
+    CALL METHOD ('CL_WB_OBJECT_OPERATOR')=>('CREATE_INSTANCE')
+      EXPORTING
+        object_type = ls_object_type
+        object_key  = lv_object_key
+      RECEIVING
+        result      = lo_operator.
+
+    CALL METHOD lo_operator->('IF_WB_OBJECT_OPERATOR~READ')
+      EXPORTING
+        version        = 'A'
+      IMPORTING
+        eo_object_data = li_object_data.
+
+    CALL METHOD li_object_data->get_content
+      IMPORTING
+        p_data = rv_ddl.
 
   ENDMETHOD.
 
