@@ -390,9 +390,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       IMPORTING
         eo_object_data = li_object_data.
 
-    CALL METHOD li_object_data->get_content
-      IMPORTING
-        p_data = rv_ddl.
+    li_object_data->get_content( IMPORTING p_data = rv_ddl ).
 
   ENDMETHOD.
 
