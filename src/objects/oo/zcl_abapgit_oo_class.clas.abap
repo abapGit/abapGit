@@ -27,6 +27,8 @@ CLASS zcl_abapgit_oo_class DEFINITION
         REDEFINITION .
     METHODS zif_abapgit_oo_object_fnc~exists
         REDEFINITION .
+    METHODS zif_abapgit_oo_object_fnc~syntax_check
+        REDEFINITION .
   PROTECTED SECTION.
 
     TYPES:
@@ -968,4 +970,31 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
     lv_cp = cl_oo_classname_service=>get_classpool_name( iv_class_name ).
     READ TEXTPOOL lv_cp INTO rt_text_pool LANGUAGE iv_language. "#EC CI_READ_REP
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_oo_object_fnc~syntax_check.
+    DATA:
+      ls_clskey      TYPE seoclskey,
+      lv_syntaxerror TYPE seox_boolean.
+
+    ls_clskey-clsname = to_upper( iv_object_name ).
+
+    CALL FUNCTION 'SEO_CLASS_CHECK_CLASSPOOL'
+      EXPORTING
+        clskey                       = ls_clskey
+        suppress_error_popup         = abap_true
+      IMPORTING
+        syntaxerror                  = lv_syntaxerror
+      EXCEPTIONS
+        _internal_class_not_existing = 1
+        OTHERS                       = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    IF lv_syntaxerror = abap_true.
+      zcx_abapgit_exception=>raise( |Class { ls_clskey-clsname } has syntax errors | ).
+    ENDIF.
+  ENDMETHOD.
+
 ENDCLASS.
