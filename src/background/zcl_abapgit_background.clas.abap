@@ -114,7 +114,7 @@ CLASS zcl_abapgit_background IMPLEMENTATION.
     TRY.
         enqueue( ).
       CATCH zcx_abapgit_exception.
-        WRITE: / 'Another intance of the program is already running'.
+        WRITE: / 'Another instance of the program is already running'.
         RETURN.
     ENDTRY.
 
@@ -146,6 +146,13 @@ CLASS zcl_abapgit_background IMPLEMENTATION.
           " Clear auth buffer to allow different user/password per repository in background mode
           zcl_abapgit_login_manager=>clear( ).
 
+        CATCH zcx_abapgit_exception INTO lx_error.
+          li_log->add_exception( lx_error ).
+      ENDTRY.
+
+      TRY.
+          " Decrease memory usage for repositories already processed
+          lo_repo->refresh( abap_true ).
         CATCH zcx_abapgit_exception INTO lx_error.
           li_log->add_exception( lx_error ).
       ENDTRY.
