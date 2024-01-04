@@ -8,7 +8,7 @@ CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
 
     METHODS dump_xml
       IMPORTING
-        is_internal TYPE zcl_abapgit_object_tabl_ddl=>ty_internal
+        is_internal TYPE zif_abapgit_object_tabl=>ty_internal
       RETURNING
         VALUE(rv_xml) TYPE string.
 
@@ -23,8 +23,8 @@ CLASS ltcl_test IMPLEMENTATION.
   METHOD test.
 
     DATA lo_format       TYPE REF TO zcl_abapgit_object_tabl_ddl.
-    DATA ls_data         TYPE zcl_abapgit_object_tabl_ddl=>ty_internal.
-    DATA ls_deserialized TYPE zcl_abapgit_object_tabl_ddl=>ty_internal.
+    DATA ls_data         TYPE zif_abapgit_object_tabl=>ty_internal.
+    DATA ls_deserialized TYPE zif_abapgit_object_tabl=>ty_internal.
     DATA lv_ddl          TYPE string.
     DATA lv_xml          TYPE string.
 
@@ -36,9 +36,9 @@ CLASS ltcl_test IMPLEMENTATION.
       SOURCE XML iv_xml
       RESULT
       dd02v       = ls_data-dd02v
-      dd03p_table = ls_data-dd03p_table
-      dd05m_table = ls_data-dd05m_table
-      dd08v_table = ls_data-dd08v_table.
+      dd03p_table = ls_data-dd03p
+      dd05m_table = ls_data-dd05m
+      dd08v_table = ls_data-dd08v.
 
     lv_ddl = lo_format->serialize( ls_data ).
 
@@ -60,9 +60,9 @@ CLASS ltcl_test IMPLEMENTATION.
       OPTIONS initial_components = 'suppress'
       SOURCE
       dd02v       = is_internal-dd02v
-      dd03p_table = is_internal-dd03p_table
-      dd05m_table = is_internal-dd05m_table
-      dd08v_table = is_internal-dd08v_table
+      dd03p_table = is_internal-dd03p
+      dd05m_table = is_internal-dd05m
+      dd08v_table = is_internal-dd08v
       RESULT XML rv_xml.
 
   ENDMETHOD.
