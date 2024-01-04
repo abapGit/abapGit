@@ -412,7 +412,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
 
     ls_object_type-objtype_tr = 'TABL'.
     ls_object_type-subtype_wb = 'DT'.
-    lv_object_key = 'ZABAPGIT'.
+
+    lv_object_key = iv_name.
 
     CALL METHOD ('CL_WB_OBJECT_OPERATOR')=>('CREATE_INSTANCE')
       EXPORTING
