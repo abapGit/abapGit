@@ -622,10 +622,9 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
         ASSERT 1 = 'todo'.
     ENDCASE.
 
-    CASE is_data-dd02v-authclass.
-      WHEN '02'.
-        rv_ddl = rv_ddl && |@AbapCatalog.activationType : #ADAPT_C_STRUCTURES\n|.
-    ENDCASE.
+    IF is_data-dd02v-authclass = '02'.
+      rv_ddl = rv_ddl && |@AbapCatalog.activationType : #ADAPT_C_STRUCTURES\n|.
+    ENDIF.
 
     rv_ddl = rv_ddl && |@AbapCatalog.deliveryClass : #{ is_data-dd02v-contflag }\n|.
 
