@@ -596,15 +596,17 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       lv_decimals = is_dd03p-decimals.
       CASE is_dd03p-datatype.
         WHEN 'STRG'.
-          rv_type = |abap.string({ lv_leng })|.
+          rv_type = |abap.string({ lv_leng }){ lv_notnull }|.
         WHEN 'RSTR'.
-          rv_type = |abap.rawstring({ lv_leng })|.
+          rv_type = |abap.rawstring({ lv_leng }){ lv_notnull }|.
         WHEN 'INT4'.
-          rv_type = |abap.int4|.
+          rv_type = |abap.int4{ lv_notnull }|.
+        WHEN 'INT2'.
+          rv_type = |abap.int2{ lv_notnull }|.
         WHEN 'DATS'.
-          rv_type = |abap.dats|.
+          rv_type = |abap.dats{ lv_notnull }|.
         WHEN 'TIMS'.
-          rv_type = |abap.tims|.
+          rv_type = |abap.tims{ lv_notnull }|.
         WHEN 'DEC'.
           rv_type = |abap.dec({ lv_leng },{ lv_decimals }){ lv_notnull }|.
         WHEN OTHERS.
