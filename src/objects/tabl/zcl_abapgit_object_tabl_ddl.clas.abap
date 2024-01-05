@@ -570,7 +570,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       lv_int = is_dd03p-leng.
       CASE is_dd03p-datatype.
         WHEN 'STRG'.
-          rv_type = |abap.string(0)|.
+          rv_type = |abap.string({ lv_int })|.
         WHEN OTHERS.
           rv_type = |abap.{ to_lower( is_dd03p-datatype ) }({ lv_int }){ lv_notnull }|.
       ENDCASE.
