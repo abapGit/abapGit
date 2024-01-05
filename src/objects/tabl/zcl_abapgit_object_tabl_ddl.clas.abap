@@ -463,7 +463,12 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       ENDIF.
 
       IF ls_dd08v-frkart IS NOT INITIAL.
-        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.keyType : #{ ls_dd08v-frkart }\n|.
+        CASE ls_dd08v-frkart.
+          WHEN 'TEXT'.
+            rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.keyType : #TEXT_KEY\n|.
+          WHEN OTHERS.
+            rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.keyType : #{ ls_dd08v-frkart }\n|.
+        ENDCASE.
       ENDIF.
 
       rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.screenCheck : true\n|.
