@@ -61,6 +61,12 @@ CLASS zcl_abapgit_object_tabl_ddl DEFINITION
         !is_data      TYPE zif_abapgit_object_tabl=>ty_internal
       RETURNING
         VALUE(rv_ddl) TYPE string .
+    METHODS serialize_value_help
+      IMPORTING
+        !iv_fieldname TYPE clike
+        !is_data      TYPE zif_abapgit_object_tabl=>ty_internal
+      RETURNING
+        VALUE(rv_ddl) TYPE string .
     METHODS escape_string
       IMPORTING
         !iv_string       TYPE clike
@@ -397,6 +403,9 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       rv_ddl = rv_ddl && serialize_field_foreign_key(
         iv_fieldname = ls_dd03p-fieldname
         is_data      = is_data ).
+      rv_ddl = rv_ddl && serialize_value_help(
+        iv_fieldname = ls_dd03p-fieldname
+        is_data      = is_data ).
       rv_ddl = rv_ddl && |;\n|.
     ENDLOOP.
     rv_ddl = rv_ddl && |\n|.
@@ -594,6 +603,36 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
           rv_type = |abap.{ to_lower( is_dd03p-datatype ) }({ lv_leng }){ lv_notnull }|.
       ENDCASE.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD serialize_value_help.
+
+    DATA ls_dd35v       LIKE LINE OF is_data-dd35v.
+    DATA ls_dd36m       LIKE LINE OF is_data-dd36m.
+    DATA lv_pre         TYPE string.
+    DATA lv_cardinality TYPE string.
+
+    READ TABLE is_data-dd35v INTO ls_dd35v WITH KEY fieldname = iv_fieldname.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    rv_ddl = rv_ddl && |\n    with value help { to_lower( ls_dd35v-shlpname ) }|.
+
+* assumption: dd05m table is sorted by PRIMPOS ascending
+    LOOP AT is_data-dd36m INTO ls_dd36m
+        WHERE fieldname = iv_fieldname
+        AND shlpname = ls_dd35v-shlpname.
+      IF lv_pre IS INITIAL.
+        lv_pre = |\n      where |.
+      ELSE.
+        lv_pre = |\n        and |.
+      ENDIF.
+      rv_ddl = rv_ddl && |{ lv_pre }{ to_lower( ls_dd36m-shlpfield ) } = {
+        to_lower( ls_dd36m-shtable ) }.{ to_lower( ls_dd36m-shfield ) }|.
+    ENDLOOP.
 
   ENDMETHOD.
 
