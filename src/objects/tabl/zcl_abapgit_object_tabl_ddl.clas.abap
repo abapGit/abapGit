@@ -487,6 +487,16 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       IF ls_dd03p-languflag = abap_true.
         rv_ddl = rv_ddl && |  @AbapCatalog.textLanguage\n|.
       ENDIF.
+
+      IF ls_dd03p-reftable IS NOT INITIAL AND ls_dd03p-reffield IS NOT INITIAL.
+        IF ls_dd03p-datatype = 'CURR'.
+          rv_ddl = rv_ddl && |  @Semantics.amount.currencyCode : '{ to_lower( ls_dd03p-reftable ) }.{
+            to_lower( ls_dd03p-reffield ) }'\n|.
+        ELSEIF ls_dd03p-datatype = 'UNIT'.
+          rv_ddl = rv_ddl && |  @Semantics.quantity.unitOfMeasure : '{ to_lower( ls_dd03p-reftable ) }.{
+            to_lower( ls_dd03p-reffield ) }'\n|.
+        ENDIF.
+      ENDIF.
     ENDIF.
 
     READ TABLE is_data-dd08v INTO ls_dd08v WITH KEY fieldname = iv_fieldname.
@@ -504,7 +514,11 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
         ENDCASE.
       ENDIF.
 
-      rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.screenCheck : true\n|.
+      IF ls_dd08v-checkflag = abap_false.
+        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.screenCheck : true\n|.
+      ELSE.
+        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.screenCheck : false\n|.
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.
