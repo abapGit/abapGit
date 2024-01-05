@@ -568,11 +568,16 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
         ASSERT 1 = 'todo'.
     ENDCASE.
 
+    CASE is_data-dd02v-authclass.
+      WHEN '02'.
+        rv_ddl = rv_ddl && |@AbapCatalog.activationType : #ADAPT_C_STRUCTURES\n|.
+    ENDCASE.
+
     rv_ddl = rv_ddl && |@AbapCatalog.deliveryClass : #{ is_data-dd02v-contflag }\n|.
 
     IF is_data-dd02v-mainflag = abap_true.
       rv_ddl = rv_ddl && |@AbapCatalog.dataMaintenance : #ALLOWED\n|.
-    elseIF is_data-dd02v-mainflag = 'N'.
+    ELSEIF is_data-dd02v-mainflag = 'N'.
       rv_ddl = rv_ddl && |@AbapCatalog.dataMaintenance : #NOT_ALLOWED\n|.
     ELSE.
       rv_ddl = rv_ddl && |@AbapCatalog.dataMaintenance : #LIMITED\n|.
