@@ -346,7 +346,7 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
   METHOD zif_abapgit_oo_object_fnc~syntax_check.
     DATA:
       ls_intkey      TYPE seoclskey,
-      lv_syntaxerror TYPE seox_boolean.
+      lv_syntaxerror TYPE abap_bool.
 
     ls_intkey-clsname = to_upper( iv_object_name ).
 
