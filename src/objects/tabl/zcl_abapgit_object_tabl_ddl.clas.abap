@@ -358,13 +358,14 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
 
   METHOD serialize.
 
-    DATA ls_dd03p LIKE LINE OF is_data-dd03p.
-    DATA lv_key   TYPE string.
-    DATA lv_type  TYPE string.
-    DATA lv_pre   TYPE string.
-    DATA lv_int   TYPE i.
+    DATA ls_dd03p   LIKE LINE OF is_data-dd03p.
+    DATA lv_key     TYPE string.
+    DATA lv_type    TYPE string.
+    DATA lv_pre     TYPE string.
+    DATA lv_int     TYPE i.
+    DATA lv_suffix  TYPE string.
     DATA lv_notnull TYPE string.
-    DATA lv_colon TYPE i.
+    DATA lv_colon   TYPE i.
 
 
     rv_ddl = rv_ddl && serialize_top( is_data ).
@@ -406,14 +407,19 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
           occ = lv_colon - strlen( lv_pre ) ).
       ENDIF.
 
-      IF ls_dd03p-fieldname = '.INCLUDE'.
+      IF ls_dd03p-fieldname CP '.INCLU*'.
         IF ls_dd03p-notnull = abap_true.
           lv_notnull = | not null|.
         ENDIF.
+        CLEAR lv_suffix.
+        IF ls_dd03p-fieldname CA '-'.
+          SPLIT ls_dd03p-fieldname AT '-' INTO lv_suffix lv_suffix.
+          lv_suffix = | with suffix { to_lower( lv_suffix ) }|.
+        ENDIF.
         IF ls_dd03p-groupname IS INITIAL.
-          rv_ddl = rv_ddl && |  { lv_key }include { to_lower( ls_dd03p-precfield ) }{ lv_notnull };\n|.
+          rv_ddl = rv_ddl && |  { lv_key }include { to_lower( ls_dd03p-precfield ) }{ lv_suffix }{ lv_notnull };\n|.
         ELSE.
-          rv_ddl = rv_ddl && |  { lv_pre } : include { to_lower( ls_dd03p-precfield ) }{ lv_notnull };\n|.
+          rv_ddl = rv_ddl && |  { lv_pre } : include { to_lower( ls_dd03p-precfield ) }{ lv_suffix }{ lv_notnull };\n|.
         ENDIF.
         CONTINUE.
       ENDIF.
