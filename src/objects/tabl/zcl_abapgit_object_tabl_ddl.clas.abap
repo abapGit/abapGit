@@ -691,8 +691,13 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       ELSE.
         lv_pre = |\n        and |.
       ENDIF.
-      rv_ddl = rv_ddl && |{ lv_pre }{ to_lower( ls_dd36m-shlpfield ) } = {
-        to_lower( ls_dd36m-shtable ) }.{ to_lower( ls_dd36m-shfield ) }|.
+      IF ls_dd36m-shtype = 'C'.
+        rv_ddl = rv_ddl && |{ lv_pre }{ to_lower( ls_dd36m-shlpfield ) } = {
+          ls_dd36m-shtable }|.
+      ELSE.
+        rv_ddl = rv_ddl && |{ lv_pre }{ to_lower( ls_dd36m-shlpfield ) } = {
+          to_lower( ls_dd36m-shtable ) }.{ to_lower( ls_dd36m-shfield ) }|.
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.
