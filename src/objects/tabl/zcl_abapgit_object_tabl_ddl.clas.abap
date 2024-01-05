@@ -509,6 +509,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
         CASE ls_dd08v-frkart.
           WHEN 'TEXT'.
             rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.keyType : #TEXT_KEY\n|.
+          WHEN 'REF'.
+            rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.keyType : #NON_KEY\n|.
           WHEN OTHERS.
             rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.keyType : #{ ls_dd08v-frkart }\n|.
         ENDCASE.
@@ -518,6 +520,13 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
         rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.screenCheck : true\n|.
       ELSE.
         rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.screenCheck : false\n|.
+      ENDIF.
+
+      IF ls_dd08v-arbgb IS NOT INITIAL.
+        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.messageClass : '{ ls_dd08v-arbgb }'\n|.
+      ENDIF.
+      IF ls_dd08v-msgnr IS NOT INITIAL.
+        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.messageNumber : '{ ls_dd08v-msgnr }'\n|.
       ENDIF.
     ENDIF.
 
