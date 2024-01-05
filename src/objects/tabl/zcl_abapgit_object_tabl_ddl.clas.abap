@@ -610,6 +610,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
           rv_type = |abap.int4{ lv_notnull }|.
         WHEN 'INT2'.
           rv_type = |abap.int2{ lv_notnull }|.
+        WHEN 'INT1'.
+          rv_type = |abap.int1{ lv_notnull }|.
         WHEN 'DATS'.
           rv_type = |abap.dats{ lv_notnull }|.
         WHEN 'TIMS'.
@@ -637,10 +639,10 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
 
     rv_ddl = rv_ddl && |\n    with value help { to_lower( ls_dd35v-shlpname ) }|.
 
-* assumption: dd05m table is sorted by PRIMPOS ascending
     LOOP AT is_data-dd36m INTO ls_dd36m
         WHERE fieldname = iv_fieldname
-        AND shlpname = ls_dd35v-shlpname.
+        AND shlpname = ls_dd35v-shlpname
+        AND shtype <> 'G'.
       IF lv_pre IS INITIAL.
         lv_pre = |\n      where |.
       ELSE.
