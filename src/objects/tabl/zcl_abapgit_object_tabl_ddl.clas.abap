@@ -578,8 +578,13 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       ELSE.
         lv_pre = |\n        and |.
       ENDIF.
-      rv_ddl = rv_ddl && |{ lv_pre }{ to_lower( ls_dd05m-checkfield ) } = {
-        to_lower( ls_dd05m-fortable ) }.{ to_lower( ls_dd05m-forkey ) }|.
+      IF ls_dd05m-fortable(1) = |'|.
+        rv_ddl = rv_ddl && |{ lv_pre }{ to_lower( ls_dd05m-checkfield ) } = {
+          ls_dd05m-fortable }|.
+      ELSE.
+        rv_ddl = rv_ddl && |{ lv_pre }{ to_lower( ls_dd05m-checkfield ) } = {
+          to_lower( ls_dd05m-fortable ) }.{ to_lower( ls_dd05m-forkey ) }|.
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.
