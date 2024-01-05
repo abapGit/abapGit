@@ -372,13 +372,17 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
     rv_ddl = rv_ddl && |define table { to_lower( is_data-dd02v-tabname ) } \{\n|.
 
     LOOP AT is_data-dd03p INTO ls_dd03p
-        WHERE fieldname <> '.INCLUDE'
+        WHERE ( fieldname <> '.INCLUDE' OR groupname IS NOT INITIAL )
         AND adminfield = '0'.
       lv_int = 0.
       IF ls_dd03p-keyflag = abap_true.
         lv_int = 4.
       ENDIF.
-      lv_int = lv_int + strlen( ls_dd03p-fieldname ).
+      IF ls_dd03p-groupname IS INITIAL.
+        lv_int = lv_int + strlen( ls_dd03p-fieldname ).
+      ELSE.
+        lv_int = lv_int + strlen( ls_dd03p-groupname ).
+      ENDIF.
       IF lv_int > lv_colon.
         lv_colon = lv_int.
       ENDIF.
