@@ -132,8 +132,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
 
 
   METHOD escape_string.
-* todo
-    rv_string = |'{ iv_string }'|.
+    rv_string = |'{ replace( val = iv_string sub = |'| with = |''| occ = 0 ) }'|.
   ENDMETHOD.
 
 
@@ -438,19 +437,28 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
   METHOD serialize_field_annotations.
 
     DATA ls_dd08v LIKE LINE OF is_data-dd08v.
+    DATA ls_dd03p LIKE LINE OF is_data-dd03p.
+
+
+    READ TABLE is_data-dd03p INTO ls_dd03p WITH KEY fieldname = iv_fieldname.
+    IF sy-subrc = 0 AND ( ls_dd03p-rollname IS INITIAL AND ls_dd03p-precfield IS INITIAL
+        OR ls_dd03p-comptype = 'R' AND ls_dd03p-reftype = 'B' )
+        AND ls_dd03p-ddtext IS NOT INITIAL.
+      rv_ddl = rv_ddl && |  @EndUserText.label : { escape_string( ls_dd03p-ddtext ) }\n|.
+    ENDIF.
 
     READ TABLE is_data-dd08v INTO ls_dd08v WITH KEY fieldname = iv_fieldname.
-    IF sy-subrc <> 0.
-      RETURN.
+    IF sy-subrc = 0.
+      IF ls_dd08v-ddtext IS NOT INITIAL.
+        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.label : { escape_string( ls_dd08v-ddtext ) }\n|.
+      ENDIF.
+
+      IF ls_dd08v-frkart IS NOT INITIAL.
+        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.keyType : #{ ls_dd08v-frkart }\n|.
+      ENDIF.
+
+      rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.screenCheck : true\n|.
     ENDIF.
-
-    IF ls_dd08v-ddtext IS NOT INITIAL.
-      rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.label : { escape_string( ls_dd08v-ddtext ) }\n|.
-    ENDIF.
-
-    rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.keyType : #{ ls_dd08v-frkart }\n|.
-
-    rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.screenCheck : true\n|.
 
   ENDMETHOD.
 
@@ -472,26 +480,26 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
     ELSEIF ls_dd08v-cardleft = '1' AND ls_dd08v-card = 'C'.
       lv_cardinality = |[0..1,1] |.
     ELSEIF ls_dd08v-cardleft = '1' AND ls_dd08v-card = '1'.
-      lv_cardinality = |[1,1] |.
+      lv_cardinality = | [1,1] |.
     ELSEIF ls_dd08v-cardleft = '1' AND ls_dd08v-card = 'N'.
-      lv_cardinality = |[1..*,1] |.
+      lv_cardinality = | [1..*,1] |.
     ELSEIF ls_dd08v-cardleft = '1' AND ls_dd08v-card = 'CN'.
-      lv_cardinality = |[0..*,1] |.
+      lv_cardinality = | [0..*,1] |.
     ELSEIF ls_dd08v-cardleft = 'C' AND ls_dd08v-card = 'CN'.
-      lv_cardinality = |[0..*,0..1] |.
+      lv_cardinality = | [0..*,0..1] |.
     ELSEIF ls_dd08v-cardleft = 'C' AND ls_dd08v-card = 'C'.
-      lv_cardinality = |[0..1,0..1] |.
+      lv_cardinality = | [0..1,0..1] |.
     ELSEIF ls_dd08v-cardleft = 'N' AND ls_dd08v-card = 'N'.
-      lv_cardinality = |[1..*,] |.
+      lv_cardinality = | [1..*,] |.
     ELSEIF ls_dd08v-cardleft = 'C' AND ls_dd08v-card = 'N'.
-      lv_cardinality = |[1..*,0..1] |.
+      lv_cardinality = | [1..*,0..1] |.
     ELSEIF ls_dd08v-cardleft IS INITIAL OR ls_dd08v-card IS INITIAL.
       lv_cardinality = | |.
     ELSE.
       ASSERT 1 = 'todo'.
     ENDIF.
 
-    rv_ddl = rv_ddl && |\n    with foreign key { lv_cardinality }{ to_lower( ls_dd08v-checktable ) }|.
+    rv_ddl = rv_ddl && |\n    with foreign key{ lv_cardinality }{ to_lower( ls_dd08v-checktable ) }|.
 
 * assumption: dd05m table is sorted by PRIMPOS ascending
     LOOP AT is_data-dd05m INTO ls_dd05m WHERE fieldname = iv_fieldname AND fortable <> '*'.
@@ -572,5 +580,6 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
     rv_string = iv_string.
     REPLACE FIRST OCCURRENCE OF REGEX |^'| IN rv_string WITH ||.
     REPLACE FIRST OCCURRENCE OF REGEX |'$| IN rv_string WITH ||.
+    REPLACE ALL OCCURRENCES OF |''| IN rv_string WITH |'|.
   ENDMETHOD.
 ENDCLASS.
