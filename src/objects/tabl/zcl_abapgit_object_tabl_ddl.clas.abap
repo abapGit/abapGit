@@ -132,7 +132,10 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
 
 
   METHOD escape_string.
-    rv_string = |'{ replace( val = iv_string sub = |'| with = |''| occ = 0 ) }'|.
+    rv_string = |'{ replace( val  = iv_string
+                             sub  = |'|
+                             with = |''|
+                             occ  = 0 ) }'|.
   ENDMETHOD.
 
 
