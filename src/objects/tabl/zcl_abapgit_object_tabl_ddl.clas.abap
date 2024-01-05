@@ -494,7 +494,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
     rv_ddl = rv_ddl && |\n    with foreign key { lv_cardinality }{ to_lower( ls_dd08v-checktable ) }|.
 
 * assumption: dd05m table is sorted by PRIMPOS ascending
-    LOOP AT is_data-dd05m INTO ls_dd05m WHERE fieldname = iv_fieldname.
+    LOOP AT is_data-dd05m INTO ls_dd05m WHERE fieldname = iv_fieldname AND fortable <> '*'.
       IF lv_pre IS INITIAL.
         lv_pre = |\n      where |.
       ELSE.
