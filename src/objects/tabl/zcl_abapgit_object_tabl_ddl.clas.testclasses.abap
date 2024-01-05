@@ -1,3 +1,6 @@
+CLASS ltcl_test DEFINITION DEFERRED.
+CLASS zcl_abapgit_object_tabl_ddl DEFINITION LOCAL FRIENDS ltcl_test.
+
 CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
 
   PRIVATE SECTION.
@@ -8,10 +11,11 @@ CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
 
     METHODS dump_xml
       IMPORTING
-        is_internal TYPE zif_abapgit_object_tabl=>ty_internal
+        is_internal   TYPE zif_abapgit_object_tabl=>ty_internal
       RETURNING
         VALUE(rv_xml) TYPE string.
 
+    METHODS escape_string FOR TESTING RAISING cx_static_check.
     METHODS test1 FOR TESTING RAISING cx_static_check.
     METHODS test2 FOR TESTING RAISING cx_static_check.
 
@@ -19,6 +23,26 @@ ENDCLASS.
 
 
 CLASS ltcl_test IMPLEMENTATION.
+
+  METHOD escape_string.
+
+    DATA lv_text   TYPE c LENGTH 20.
+    DATA lo_cut    TYPE REF TO zcl_abapgit_object_tabl_ddl.
+    DATA lv_result TYPE string.
+
+    lv_text = |hello ' world|.
+    CREATE OBJECT lo_cut.
+    lv_result = lo_cut->escape_string( lv_text ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_result
+      exp = |'hello '' world'| ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->unescape_string( lv_result )
+      exp = lv_text ).
+
+  ENDMETHOD.
 
   METHOD test.
 
