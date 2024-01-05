@@ -612,7 +612,6 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
     DATA ls_dd35v       LIKE LINE OF is_data-dd35v.
     DATA ls_dd36m       LIKE LINE OF is_data-dd36m.
     DATA lv_pre         TYPE string.
-    DATA lv_cardinality TYPE string.
 
     READ TABLE is_data-dd35v INTO ls_dd35v WITH KEY fieldname = iv_fieldname.
     IF sy-subrc <> 0.
