@@ -444,10 +444,16 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
 
 
     READ TABLE is_data-dd03p INTO ls_dd03p WITH KEY fieldname = iv_fieldname.
-    IF sy-subrc = 0 AND ( ls_dd03p-rollname IS INITIAL AND ls_dd03p-precfield IS INITIAL
+    IF sy-subrc = 0.
+      IF ( ls_dd03p-rollname IS INITIAL AND ls_dd03p-precfield IS INITIAL
         OR ls_dd03p-comptype = 'R' AND ls_dd03p-reftype = 'B' )
         AND ls_dd03p-ddtext IS NOT INITIAL.
-      rv_ddl = rv_ddl && |  @EndUserText.label : { escape_string( ls_dd03p-ddtext ) }\n|.
+        rv_ddl = rv_ddl && |  @EndUserText.label : { escape_string( ls_dd03p-ddtext ) }\n|.
+      ENDIF.
+
+      IF ls_dd03p-languflag = abap_true.
+        rv_ddl = rv_ddl && |  @AbapCatalog.textLanguage\n|.
+      ENDIF.
     ENDIF.
 
     READ TABLE is_data-dd08v INTO ls_dd08v WITH KEY fieldname = iv_fieldname.
@@ -558,7 +564,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
   METHOD serialize_type.
 
     DATA lv_notnull TYPE string.
-    DATA lv_int TYPE i.
+    DATA lv_leng TYPE i.
+    DATA lv_decimals TYPE i.
 
     IF is_dd03p-notnull = abap_true.
       lv_notnull = | not null|.
@@ -567,12 +574,19 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
     IF is_dd03p-rollname IS NOT INITIAL.
       rv_type = |{ to_lower( is_dd03p-rollname ) }{ lv_notnull }|.
     ELSE.
-      lv_int = is_dd03p-leng.
+      lv_leng = is_dd03p-leng.
+      lv_decimals = is_dd03p-decimals.
       CASE is_dd03p-datatype.
         WHEN 'STRG'.
-          rv_type = |abap.string({ lv_int })|.
+          rv_type = |abap.string({ lv_leng })|.
+        WHEN 'RSTR'.
+          rv_type = |abap.rawstring({ lv_leng })|.
+        WHEN 'INT4'.
+          rv_type = |abap.int4|.
+        WHEN 'DEC'.
+          rv_type = |abap.dec({ lv_leng },{ lv_decimals }){ lv_notnull }|.
         WHEN OTHERS.
-          rv_type = |abap.{ to_lower( is_dd03p-datatype ) }({ lv_int }){ lv_notnull }|.
+          rv_type = |abap.{ to_lower( is_dd03p-datatype ) }({ lv_leng }){ lv_notnull }|.
       ENDCASE.
     ENDIF.
 
