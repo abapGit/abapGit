@@ -363,6 +363,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
     DATA lv_type  TYPE string.
     DATA lv_pre   TYPE string.
     DATA lv_int   TYPE i.
+    DATA lv_notnull TYPE string.
     DATA lv_colon TYPE i.
 
 
@@ -370,7 +371,9 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
 
     rv_ddl = rv_ddl && |define table { to_lower( is_data-dd02v-tabname ) } \{\n|.
 
-    LOOP AT is_data-dd03p INTO ls_dd03p.
+    LOOP AT is_data-dd03p INTO ls_dd03p
+        WHERE fieldname <> '.INCLUDE'
+        AND adminfield = '0'.
       lv_int = 0.
       IF ls_dd03p-keyflag = abap_true.
         lv_int = 4.
@@ -384,11 +387,31 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
 * ADMINFIELD: skip fields inside .INCLUDEs
     LOOP AT is_data-dd03p INTO ls_dd03p WHERE adminfield = '0'.
       CLEAR lv_key.
-      IF ls_dd03p-fieldname = '.INCLUDE'.
-        rv_ddl = rv_ddl && |  include { to_lower( ls_dd03p-precfield ) };\n|.
-        CONTINUE.
-      ELSEIF ls_dd03p-keyflag = abap_true.
+      CLEAR lv_notnull.
+      IF ls_dd03p-keyflag = abap_true.
         lv_key = |key |.
+      ENDIF.
+
+      lv_pre = |{ lv_key }{ to_lower( ls_dd03p-fieldname ) }|.
+      IF ls_dd03p-groupname IS NOT INITIAL.
+        lv_pre = |{ lv_key }{ to_lower( ls_dd03p-groupname ) }|.
+      ENDIF.
+      IF strlen( lv_pre ) < lv_colon.
+        lv_pre = lv_pre && repeat(
+          val = | |
+          occ = lv_colon - strlen( lv_pre ) ).
+      ENDIF.
+
+      IF ls_dd03p-fieldname = '.INCLUDE'.
+        IF ls_dd03p-notnull = abap_true.
+          lv_notnull = | not null|.
+        ENDIF.
+        IF ls_dd03p-groupname IS INITIAL.
+          rv_ddl = rv_ddl && |  { lv_key }include { to_lower( ls_dd03p-precfield ) }{ lv_notnull };\n|.
+        ELSE.
+          rv_ddl = rv_ddl && |  { lv_pre } : include { to_lower( ls_dd03p-precfield ) }{ lv_notnull };\n|.
+        ENDIF.
+        CONTINUE.
       ENDIF.
 
       rv_ddl = rv_ddl && serialize_field_annotations(
@@ -396,13 +419,6 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
         is_data      = is_data ).
 
       lv_type = serialize_type( ls_dd03p ).
-
-      lv_pre = |{ lv_key }{ to_lower( ls_dd03p-fieldname ) }|.
-      IF strlen( lv_pre ) < lv_colon.
-        lv_pre = lv_pre && repeat(
-          val = | |
-          occ = lv_colon - strlen( lv_pre ) ).
-      ENDIF.
       rv_ddl = rv_ddl && |  { lv_pre } : { lv_type }|.
       rv_ddl = rv_ddl && serialize_field_foreign_key(
         iv_fieldname = ls_dd03p-fieldname
