@@ -381,9 +381,13 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    LOOP AT is_data-dd03p INTO ls_dd03p.
+* ADMINFIELD: skip fields inside .INCLUDEs
+    LOOP AT is_data-dd03p INTO ls_dd03p WHERE adminfield = '0'.
       CLEAR lv_key.
-      IF ls_dd03p-keyflag = abap_true.
+      IF ls_dd03p-fieldname = '.INCLUDE'.
+        rv_ddl = rv_ddl && |  include { to_lower( ls_dd03p-precfield ) };\n|.
+        CONTINUE.
+      ELSEIF ls_dd03p-keyflag = abap_true.
         lv_key = |key |.
       ENDIF.
 
@@ -597,6 +601,10 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
           rv_type = |abap.rawstring({ lv_leng })|.
         WHEN 'INT4'.
           rv_type = |abap.int4|.
+        WHEN 'DATS'.
+          rv_type = |abap.dats|.
+        WHEN 'TIMS'.
+          rv_type = |abap.tims|.
         WHEN 'DEC'.
           rv_type = |abap.dec({ lv_leng },{ lv_decimals }){ lv_notnull }|.
         WHEN OTHERS.
