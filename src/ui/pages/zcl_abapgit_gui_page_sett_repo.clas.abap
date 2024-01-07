@@ -506,17 +506,17 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
 
     DATA: lv_version_class     TYPE seoclsname,
           lv_version_component TYPE string,
-          lt_tadir             TYPE zif_abapgit_definitions=>ty_tadir_tt.
+          lt_local             TYPE zif_abapgit_definitions=>ty_files_item_tt.
 
     SPLIT iv_version_constant AT '=>' INTO lv_version_class lv_version_component.
 
-    lt_tadir = mo_repo->get_tadir_objects( ).
+    lt_local = mo_repo->get_files_local( ).
 
-    READ TABLE lt_tadir TRANSPORTING NO FIELDS WITH KEY
-      pgmid = 'R3TR' object = 'CLAS' obj_name = lv_version_class.
+    READ TABLE lt_local TRANSPORTING NO FIELDS WITH KEY
+      item-obj_type = 'CLAS' item-obj_name = lv_version_class.
     IF sy-subrc <> 0.
-      READ TABLE lt_tadir TRANSPORTING NO FIELDS WITH KEY
-        pgmid = 'R3TR' object = 'INTF' obj_name = lv_version_class.
+      READ TABLE lt_local TRANSPORTING NO FIELDS WITH KEY
+        item-obj_type = 'INTF' item-obj_name = lv_version_class.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( |Object { lv_version_class } is not included in this repository| ).
       ENDIF.
