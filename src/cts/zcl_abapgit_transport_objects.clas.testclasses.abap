@@ -70,13 +70,13 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
     given_the_object_status(
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS'
-      iv_filename   = 'CL_FOO.abap'
+      iv_filename   = 'cl_foo.clas.abap'
       iv_lstate     = zif_abapgit_definitions=>c_state-added ).
 
     ls_local_file = given_the_local_file(
       iv_obj_name = 'CL_FOO'
       iv_obj_type = 'CLAS'
-      iv_filename = 'CL_FOO.abap'
+      iv_filename = 'cl_foo.clas.abap'
       iv_path     = '/path'
       iv_data     = 'data' ).
 
@@ -94,13 +94,13 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
     given_the_object_status(
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS'
-      iv_filename   = 'CL_FOO.abap'
+      iv_filename   = 'cl_foo.clas.abap'
       iv_lstate     = zif_abapgit_definitions=>c_state-modified ).
 
     ls_local_file = given_the_local_file(
       iv_obj_name = 'CL_FOO'
       iv_obj_type = 'CLAS'
-      iv_filename = 'CL_FOO.abap'
+      iv_filename = 'cl_foo.clas.abap'
       iv_path     = '/path'
       iv_data     = 'data' ).
 
@@ -121,26 +121,26 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
     given_the_object_status(
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS'
-      iv_filename   = 'CL_FOO.abap'
+      iv_filename   = 'cl_foo.clas.abap'
       iv_lstate     = zif_abapgit_definitions=>c_state-modified ).
 
     given_the_object_status(
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS'
-      iv_filename   = 'CL_FOO.xml'
+      iv_filename   = 'cl_foo.clas.xml'
       iv_lstate     = zif_abapgit_definitions=>c_state-modified ).
 
     ls_abap_local_file = given_the_local_file(
       iv_obj_name = 'CL_FOO'
       iv_obj_type = 'CLAS'
-      iv_filename = 'CL_FOO.abap'
+      iv_filename = 'cl_foo.clas.abap'
       iv_path     = '/path'
       iv_data     = 'data' ).
 
     ls_xml_local_file = given_the_local_file(
       iv_obj_name = 'CL_FOO'
       iv_obj_type = 'CLAS'
-      iv_filename = 'CL_FOO.xml'
+      iv_filename = 'cl_foo.clas.xml'
       iv_path     = '/path'
       iv_data     = 'data' ).
 
@@ -178,7 +178,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
     given_the_local_file(
       iv_obj_name = 'CL_ANOTHER_LOCAL_FILE'
       iv_obj_type = 'CLAS'
-      iv_filename = 'CL_FOO.abap'
+      iv_filename = 'cl_foo.clas.abap'
       iv_path     = '/path'
       iv_data     = 'data' ).
     then_it_should_raise_exception( 'Object CLAS CL_FOO not found in the local repository files' ).
@@ -221,14 +221,14 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
     given_the_object_status(
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS'
-      iv_filename   = 'CL_FOO.abap'
+      iv_filename   = 'cl_foo.clas.abap'
       iv_path       = '/a_path'
       iv_lstate     = zif_abapgit_definitions=>c_state-deleted ).
 
     when_staging( ).
 
     then_it_should_remove_at_stage(
-      iv_filename = 'CL_FOO.abap'
+      iv_filename = 'cl_foo.clas.abap'
       iv_path     = '/a_path' ).
   ENDMETHOD.
 
@@ -242,25 +242,25 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
     given_the_object_status(
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS'
-      iv_filename   = 'CL_FOO.abap'
+      iv_filename   = 'cl_foo.clas.abap'
       iv_path       = '/a_path'
       iv_lstate     = zif_abapgit_definitions=>c_state-deleted ).
 
     given_the_object_status(
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS'
-      iv_filename   = 'CL_FOO.xml'
+      iv_filename   = 'cl_foo.clas.xml'
       iv_path       = '/a_path'
       iv_lstate     = zif_abapgit_definitions=>c_state-deleted ).
 
     when_staging( ).
 
     then_it_should_remove_at_stage(
-      iv_filename = 'CL_FOO.abap'
+      iv_filename = 'cl_foo.clas.abap'
       iv_path     = '/a_path' ).
 
     then_it_should_remove_at_stage(
-      iv_filename = 'CL_FOO.xml'
+      iv_filename = 'cl_foo.clas.xml'
       iv_path     = '/a_path' ).
   ENDMETHOD.
 
@@ -273,7 +273,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
     given_the_object_status(
       iv_obj_name   = 'ZFOO'
       iv_obj_type   = 'CLAS'
-      iv_filename   = 'zfoo.CLAS.xml'
+      iv_filename   = 'zfoo.clas.xml'
       iv_path       = '/a_path'
       iv_lstate     = zif_abapgit_definitions=>c_state-deleted ).
 
