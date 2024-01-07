@@ -57,7 +57,7 @@ ENDCLASS.
 CLASS zcl_abapgit_repo_requirements IMPLEMENTATION.
 
 
-  METHOD GET_REQUIREMENT_MET_STATUS.
+  METHOD get_requirement_met_status.
 
     DATA: lt_installed TYPE STANDARD TABLE OF cvers_sdu.
 
@@ -102,7 +102,7 @@ CLASS zcl_abapgit_repo_requirements IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD IS_REQUIREMENTS_MET.
+  METHOD is_requirements_met.
 
     DATA: lt_met_status TYPE ty_requirement_status_tt.
 
@@ -118,7 +118,7 @@ CLASS zcl_abapgit_repo_requirements IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD IS_VERSION_GREATER_OR_EQUAL.
+  METHOD is_version_greater_or_equal.
 
     DATA:
       lv_installed_release TYPE n LENGTH 4,
@@ -151,7 +151,7 @@ CLASS zcl_abapgit_repo_requirements IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD REQUIREMENTS_POPUP.
+  METHOD requirements_popup.
 
     DATA: lt_met_status TYPE ty_requirement_status_tt,
           lv_answer     TYPE c LENGTH 1.
@@ -172,7 +172,7 @@ CLASS zcl_abapgit_repo_requirements IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD SHOW_REQUIREMENT_POPUP.
+  METHOD show_requirement_popup.
 
     TYPES: BEGIN OF ty_color_line,
              color TYPE lvc_t_scol.
