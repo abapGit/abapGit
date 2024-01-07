@@ -1,7 +1,7 @@
-CLASS zcl_abapgit_requirement_helper DEFINITION
+CLASS zcl_abapgit_repo_requirements DEFINITION
   PUBLIC
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
@@ -9,14 +9,14 @@ CLASS zcl_abapgit_requirement_helper DEFINITION
       IMPORTING
         !it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     CLASS-METHODS is_requirements_met
       IMPORTING
         !it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt
       RETURNING
         VALUE(rv_status) TYPE zif_abapgit_definitions=>ty_yes_no
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -54,10 +54,10 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
+CLASS zcl_abapgit_repo_requirements IMPLEMENTATION.
 
 
-  METHOD get_requirement_met_status.
+  METHOD GET_REQUIREMENT_MET_STATUS.
 
     DATA: lt_installed TYPE STANDARD TABLE OF cvers_sdu.
 
@@ -102,7 +102,7 @@ CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD is_requirements_met.
+  METHOD IS_REQUIREMENTS_MET.
 
     DATA: lt_met_status TYPE ty_requirement_status_tt.
 
@@ -118,7 +118,7 @@ CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD is_version_greater_or_equal.
+  METHOD IS_VERSION_GREATER_OR_EQUAL.
 
     DATA:
       lv_installed_release TYPE n LENGTH 4,
@@ -151,7 +151,7 @@ CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD requirements_popup.
+  METHOD REQUIREMENTS_POPUP.
 
     DATA: lt_met_status TYPE ty_requirement_status_tt,
           lv_answer     TYPE c LENGTH 1.
@@ -172,7 +172,7 @@ CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD show_requirement_popup.
+  METHOD SHOW_REQUIREMENT_POPUP.
 
     TYPES: BEGIN OF ty_color_line,
              color TYPE lvc_t_scol.
