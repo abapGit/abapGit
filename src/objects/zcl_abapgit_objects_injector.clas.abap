@@ -1,5 +1,6 @@
 CLASS zcl_abapgit_objects_injector DEFINITION
   PUBLIC
+  FOR TESTING
   CREATE PRIVATE .
 
   PUBLIC SECTION.
@@ -13,7 +14,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS_INJECTOR IMPLEMENTATION.
+CLASS zcl_abapgit_objects_injector IMPLEMENTATION.
 
 
   METHOD set_gui_jumper.
