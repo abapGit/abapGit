@@ -355,4 +355,10 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
     DELETE FROM seosubcotx WHERE clsname = is_key-clsname."#EC CI_SUBRC
     INSERT seosubcotx FROM TABLE lt_descriptions.         "#EC CI_SUBRC
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_oo_object_fnc~syntax_check.
+    ASSERT 0 = 1. "Subclass responsibility
+  ENDMETHOD.
+
 ENDCLASS.
