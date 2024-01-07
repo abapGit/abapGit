@@ -1,5 +1,6 @@
 CLASS zcl_abapgit_injector DEFINITION
   PUBLIC
+  FOR TESTING
   CREATE PRIVATE.
 
   PUBLIC SECTION.
@@ -45,7 +46,6 @@ CLASS zcl_abapgit_injector DEFINITION
     CLASS-METHODS set_exit
       IMPORTING
         ii_exit TYPE REF TO zif_abapgit_exit.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -85,6 +85,16 @@ CLASS zcl_abapgit_injector IMPLEMENTATION.
 
   METHOD set_environment.
     zcl_abapgit_factory=>gi_environment = ii_environment.
+  ENDMETHOD.
+
+
+  METHOD set_exit.
+    zcl_abapgit_exit=>gi_global_exit = ii_exit.
+  ENDMETHOD.
+
+
+  METHOD set_function_module.
+    zcl_abapgit_factory=>gi_function_module = ii_function_module.
   ENDMETHOD.
 
 
@@ -146,15 +156,4 @@ CLASS zcl_abapgit_injector IMPLEMENTATION.
   METHOD set_tadir.
     zcl_abapgit_factory=>gi_tadir = ii_tadir.
   ENDMETHOD.
-
-
-  METHOD set_function_module.
-    zcl_abapgit_factory=>gi_function_module = ii_function_module.
-  ENDMETHOD.
-
-
-  METHOD set_exit.
-    zcl_abapgit_exit=>gi_global_exit = ii_exit.
-  ENDMETHOD.
-
 ENDCLASS.
