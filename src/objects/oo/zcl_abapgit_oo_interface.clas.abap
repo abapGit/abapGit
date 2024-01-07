@@ -17,6 +17,8 @@ CLASS zcl_abapgit_oo_interface DEFINITION
         REDEFINITION .
     METHODS zif_abapgit_oo_object_fnc~exists
         REDEFINITION .
+    METHODS zif_abapgit_oo_object_fnc~syntax_check
+        REDEFINITION .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -339,4 +341,30 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
       rs_interface_properties-r3release,
       rs_interface_properties-version.
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_oo_object_fnc~syntax_check.
+    DATA:
+      ls_intkey      TYPE seoclskey,
+      lv_syntaxerror TYPE abap_bool.
+
+    ls_intkey-clsname = to_upper( iv_object_name ).
+
+    CALL FUNCTION 'SEO_INTERFACE_CHECK_POOL'
+      EXPORTING
+        intkey               = ls_intkey
+        suppress_error_popup = abap_true
+      IMPORTING
+        syntaxerror          = lv_syntaxerror
+      EXCEPTIONS
+        OTHERS               = 1.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    IF lv_syntaxerror = abap_true.
+      zcx_abapgit_exception=>raise( |Interface { ls_intkey-clsname } has syntax errors | ).
+    ENDIF.
+  ENDMETHOD.
+
 ENDCLASS.
