@@ -59,21 +59,16 @@ CLASS zcl_abapgit_repo_requirements IMPLEMENTATION.
 
   METHOD get_requirement_met_status.
 
-    DATA: lt_installed TYPE STANDARD TABLE OF cvers_sdu.
+    DATA: lt_installed TYPE STANDARD TABLE OF cvers.
 
     FIELD-SYMBOLS: <ls_requirement>    TYPE zif_abapgit_dot_abapgit=>ty_requirement,
                    <ls_status>         TYPE ty_requirement_status,
-                   <ls_installed_comp> TYPE cvers_sdu.
+                   <ls_installed_comp> TYPE cvers.
 
 
-    CALL FUNCTION 'DELIVERY_GET_INSTALLED_COMPS'
-      TABLES
-        tt_comptab       = lt_installed
-      EXCEPTIONS
-        no_release_found = 1
-        OTHERS           = 2.
+    SELECT * FROM cvers INTO TABLE lt_installed.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from DELIVERY_GET_INSTALLED_COMPS { sy-subrc }| ).
+      zcx_abapgit_exception=>raise( |Error reading installed components| ).
     ENDIF.
 
     LOOP AT it_requirements ASSIGNING <ls_requirement>.
@@ -88,8 +83,10 @@ CLASS zcl_abapgit_repo_requirements IMPLEMENTATION.
         " Component is installed, requirement is met if the installed version is greater or equal
         " to the required one.
         <ls_status>-installed_release = <ls_installed_comp>-release.
-        <ls_status>-installed_patch = <ls_installed_comp>-extrelease.
-        <ls_status>-description = <ls_installed_comp>-desc_text.
+        <ls_status>-installed_patch   = <ls_installed_comp>-extrelease.
+
+        SELECT SINGLE desc_text FROM cvers_ref INTO <ls_status>-description
+          WHERE component = <ls_installed_comp>-component AND langu = sy-langu ##SUBRC_OK.
         <ls_status>-met = is_version_greater_or_equal( <ls_status> ).
       ELSE.
         " Component is not installed at all
