@@ -355,7 +355,13 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
         intkey               = ls_intkey
         suppress_error_popup = abap_true
       IMPORTING
-        syntaxerror          = lv_syntaxerror.
+        syntaxerror          = lv_syntaxerror
+      EXCEPTIONS
+        OTHERS               = 1.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
     IF lv_syntaxerror = abap_true.
       zcx_abapgit_exception=>raise( |Interface { ls_intkey-clsname } has syntax errors | ).
     ENDIF.
