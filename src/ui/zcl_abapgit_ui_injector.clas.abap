@@ -1,5 +1,6 @@
 CLASS zcl_abapgit_ui_injector DEFINITION
   PUBLIC
+  FOR TESTING
   CREATE PRIVATE .
 
   PUBLIC SECTION.

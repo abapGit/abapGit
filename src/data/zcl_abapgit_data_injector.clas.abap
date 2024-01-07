@@ -1,5 +1,6 @@
 CLASS zcl_abapgit_data_injector DEFINITION
   PUBLIC
+  FOR TESTING
   CREATE PUBLIC .
 
   PUBLIC SECTION.
