@@ -398,7 +398,7 @@ CLASS ltcl_formats DEFINITION FINAL
       RAISING
         zcx_abapgit_exception.
 
-    METHODS higher_patch FOR TESTING
+    METHODS longer_patch FOR TESTING
       RAISING
         zcx_abapgit_exception.
 
@@ -419,7 +419,7 @@ CLASS ltcl_formats IMPLEMENTATION.
 
     ls_requirement-component   = ls_component-component.
     ls_requirement-min_release = ls_component-release.
-    ls_requirement-min_patch   = |{ ls_component-extrelease ALPHA = OUT }|.
+    ls_requirement-min_patch   = ls_component-extrelease. " len 4 to len 10
 
     APPEND ls_requirement TO lt_requirements.
 
@@ -430,7 +430,7 @@ CLASS ltcl_formats IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD higher_patch.
+  METHOD longer_patch.
 
     DATA:
       ls_component    TYPE cvers,
@@ -441,7 +441,7 @@ CLASS ltcl_formats IMPLEMENTATION.
 
     ls_requirement-component   = ls_component-component.
     ls_requirement-min_release = ls_component-release.
-    ls_requirement-min_patch   = |{ ls_component-extrelease ALPHA = IN }|.
+    ls_requirement-min_patch   = '0000000007'. " len 10 instead of len 4
 
     APPEND ls_requirement TO lt_requirements.
 
