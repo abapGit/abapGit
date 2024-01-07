@@ -104,6 +104,9 @@ CLASS lth_oo_object_fnc IMPLEMENTATION.
   METHOD zif_abapgit_oo_object_fnc~update_descriptions_sub.
   ENDMETHOD.
 
+  METHOD zif_abapgit_oo_object_fnc~syntax_check.
+  ENDMETHOD.
+
 ENDCLASS.
 
 

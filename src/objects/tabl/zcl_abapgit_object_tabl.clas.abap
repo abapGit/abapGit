@@ -84,7 +84,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
+CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
 
   METHOD clear_dd03p_fields.
@@ -332,7 +332,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
     DATA:
       lv_name      TYPE ddobjname,
       lv_subrc     TYPE sy-subrc,
-      lt_dd12v_db  TYPE dd12vtab,
+      lt_dd12v_db  LIKE is_internal-dd12v,
       ls_dd12v     LIKE LINE OF is_internal-dd12v,
       ls_dd17v     LIKE LINE OF is_internal-dd17v,
       lt_secondary LIKE is_internal-dd17v.

@@ -187,5 +187,10 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
       IMPORTING
         iv_object_name       TYPE seoclsname
       RETURNING
-        VALUE(rt_attributes) TYPE ty_obj_attribute_tt.
+        VALUE(rt_attributes) TYPE ty_obj_attribute_tt,
+    syntax_check
+      IMPORTING
+        iv_object_name                TYPE seoclsname
+      RAISING
+        zcx_abapgit_exception.
 ENDINTERFACE.
