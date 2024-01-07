@@ -66,16 +66,16 @@ CLASS zcl_abapgit_repo_requirements IMPLEMENTATION.
                    <ls_installed_comp> TYPE cvers.
 
 
-    SELECT * FROM cvers INTO TABLE lt_installed.
+    SELECT * FROM cvers INTO TABLE lt_installed ORDER BY PRIMARY KEY.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error reading installed components| ).
     ENDIF.
 
     LOOP AT it_requirements ASSIGNING <ls_requirement>.
       APPEND INITIAL LINE TO rt_status ASSIGNING <ls_status>.
-      <ls_status>-component = <ls_requirement>-component.
+      <ls_status>-component        = <ls_requirement>-component.
       <ls_status>-required_release = <ls_requirement>-min_release.
-      <ls_status>-required_patch = <ls_requirement>-min_patch.
+      <ls_status>-required_patch   = <ls_requirement>-min_patch.
 
       READ TABLE lt_installed WITH KEY component = <ls_requirement>-component
                               ASSIGNING <ls_installed_comp>.
@@ -87,6 +87,7 @@ CLASS zcl_abapgit_repo_requirements IMPLEMENTATION.
 
         SELECT SINGLE desc_text FROM cvers_ref INTO <ls_status>-description
           WHERE component = <ls_installed_comp>-component AND langu = sy-langu ##SUBRC_OK.
+
         <ls_status>-met = is_version_greater_or_equal( <ls_status> ).
       ELSE.
         " Component is not installed at all
