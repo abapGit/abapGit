@@ -1,7 +1,7 @@
-CLASS zcl_abapgit_item_state DEFINITION
+CLASS zcl_abapgit_repo_item_state DEFINITION
   PUBLIC
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
@@ -39,27 +39,27 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ITEM_STATE IMPLEMENTATION.
+CLASS zcl_abapgit_repo_item_state IMPLEMENTATION.
 
 
-  METHOD is_reassigned.
+  METHOD IS_REASSIGNED.
     rv_is_reassigned = mv_is_reassigned.
   ENDMETHOD.
 
 
-  METHOD is_unchanged.
+  METHOD IS_UNCHANGED.
     rv_is_unchanged = boolc( mv_is_reassigned = abap_false
       AND mv_lstate = zif_abapgit_definitions=>c_state-unchanged
       AND mv_rstate = zif_abapgit_definitions=>c_state-unchanged ).
   ENDMETHOD.
 
 
-  METHOD local.
+  METHOD LOCAL.
     rv_state = mv_lstate.
   ENDMETHOD.
 
 
-  METHOD reduce.
+  METHOD REDUCE.
 
     rv_new = iv_prev.
     IF rv_new = iv_cur OR iv_cur IS INITIAL.
@@ -73,12 +73,12 @@ CLASS ZCL_ABAPGIT_ITEM_STATE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD remote.
+  METHOD REMOTE.
     rv_state = mv_rstate.
   ENDMETHOD.
 
 
-  METHOD sum_with_repo_item.
+  METHOD SUM_WITH_REPO_ITEM.
 
     mv_lstate = reduce(
       iv_prev = mv_lstate
@@ -91,7 +91,7 @@ CLASS ZCL_ABAPGIT_ITEM_STATE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD sum_with_status_item.
+  METHOD SUM_WITH_STATUS_ITEM.
 
     mv_lstate = reduce(
       iv_prev = mv_lstate

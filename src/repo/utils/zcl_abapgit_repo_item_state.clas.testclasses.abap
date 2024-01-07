@@ -11,7 +11,7 @@ CLASS ltcl_state_test IMPLEMENTATION.
   METHOD test_sum_with_status.
 
     DATA ls_item TYPE zif_abapgit_definitions=>ty_result.
-    DATA lo_cut TYPE REF TO zcl_abapgit_item_state.
+    DATA lo_cut TYPE REF TO zcl_abapgit_repo_item_state.
 
     CREATE OBJECT lo_cut.
 
@@ -121,7 +121,7 @@ CLASS ltcl_state_test IMPLEMENTATION.
   METHOD test_sum_with_ritem.
 
     DATA ls_item TYPE zif_abapgit_definitions=>ty_repo_item.
-    DATA lo_cut TYPE REF TO zcl_abapgit_item_state.
+    DATA lo_cut TYPE REF TO zcl_abapgit_repo_item_state.
 
     CREATE OBJECT lo_cut.
 
