@@ -121,7 +121,7 @@ CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
       IF iv_disable_gui IS INITIAL.
         CREATE OBJECT gi_fe_services TYPE zcl_abapgit_frontend_services.
       ELSE.
-        CREATE OBJECT gi_fe_services TYPE lcl_frontend_services_no_gui.
+        CREATE OBJECT gi_fe_services TYPE zcl_abapgit_frontend_no_gui.
       ENDIF.
     ENDIF.
 
