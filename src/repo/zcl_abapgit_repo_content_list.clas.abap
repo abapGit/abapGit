@@ -63,7 +63,7 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
           ls_subitem  LIKE LINE OF ct_repo_items,
           ls_folder   LIKE LINE OF ct_repo_items.
 
-    DATA lo_state TYPE REF TO zcl_abapgit_item_state.
+    DATA lo_state TYPE REF TO zcl_abapgit_repo_item_state.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF ct_repo_items.
 
@@ -111,7 +111,7 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
   METHOD build_repo_items.
 
     DATA:
-      lo_state      TYPE REF TO zcl_abapgit_item_state,
+      lo_state      TYPE REF TO zcl_abapgit_repo_item_state,
       ls_file       TYPE zif_abapgit_definitions=>ty_repo_file,
       lt_status     TYPE zif_abapgit_definitions=>ty_results_tt,
       ls_item       TYPE zif_abapgit_definitions=>ty_item,

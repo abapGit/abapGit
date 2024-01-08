@@ -42,7 +42,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
   PRIVATE SECTION.
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
-    DATA mo_repo_aggregated_state TYPE REF TO zcl_abapgit_item_state.
+    DATA mo_repo_aggregated_state TYPE REF TO zcl_abapgit_repo_item_state.
     DATA mv_cur_dir TYPE string .
     DATA mv_hide_files TYPE abap_bool .
     DATA mv_max_lines TYPE i .
@@ -1215,7 +1215,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
           lv_add_str    TYPE string,
           li_log        TYPE REF TO zif_abapgit_log,
           lv_msg        TYPE string,
-          lo_news       TYPE REF TO zcl_abapgit_news.
+          lo_news       TYPE REF TO zcl_abapgit_repo_news.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
 
@@ -1234,7 +1234,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         mv_are_changes_recorded_in_tr = zcl_abapgit_factory=>get_sap_package( mo_repo->get_package( )
           )->are_changes_recorded_in_tr_req( ).
 
-        lo_news = zcl_abapgit_news=>create( mo_repo ).
+        lo_news = zcl_abapgit_repo_news=>create( mo_repo ).
 
         ri_html->add( |<div class="repo" id="repo{ mv_key }">| ).
         ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
