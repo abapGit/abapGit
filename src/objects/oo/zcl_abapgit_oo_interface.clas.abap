@@ -1,7 +1,7 @@
 CLASS zcl_abapgit_oo_interface DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_oo_base
-  CREATE PRIVATE
+  CREATE PUBLIC
   GLOBAL FRIENDS zcl_abapgit_oo_factory.
 
   PUBLIC SECTION.
