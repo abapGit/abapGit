@@ -65,7 +65,9 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
     METHODS get_dot_apack
       RETURNING
-        VALUE(ro_dot_apack) TYPE REF TO zcl_abapgit_apack_reader .
+        VALUE(ro_dot_apack) TYPE REF TO zcl_abapgit_apack_reader
+      RAISING
+        zcx_abapgit_exception.
     METHODS get_log
       RETURNING
         VALUE(ri_log) TYPE REF TO zif_abapgit_log .
@@ -877,6 +879,8 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     IF iv_drop_cache = abap_true.
       CLEAR mt_local.
     ENDIF.
+
+    get_dot_apack( )->refresh( ).
 
   ENDMETHOD.
 
