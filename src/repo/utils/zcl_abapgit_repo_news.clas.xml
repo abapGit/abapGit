@@ -3,9 +3,9 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOCLASS>
-    <CLSNAME>ZCL_ABAPGIT_REQUIREMENT_HELPER</CLSNAME>
+    <CLSNAME>ZCL_ABAPGIT_REPO_NEWS</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit - Requirement Helper</DESCRIPT>
+    <DESCRIPT>abapGit - Repository News</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

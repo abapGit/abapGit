@@ -1,7 +1,7 @@
-CLASS zcl_abapgit_requirement_helper DEFINITION
+CLASS zcl_abapgit_repo_requirements DEFINITION
   PUBLIC
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
@@ -9,14 +9,14 @@ CLASS zcl_abapgit_requirement_helper DEFINITION
       IMPORTING
         !it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     CLASS-METHODS is_requirements_met
       IMPORTING
         !it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt
       RETURNING
         VALUE(rv_status) TYPE zif_abapgit_definitions=>ty_yes_no
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -54,33 +54,28 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
+CLASS zcl_abapgit_repo_requirements IMPLEMENTATION.
 
 
   METHOD get_requirement_met_status.
 
-    DATA: lt_installed TYPE STANDARD TABLE OF cvers_sdu.
+    DATA: lt_installed TYPE STANDARD TABLE OF cvers.
 
     FIELD-SYMBOLS: <ls_requirement>    TYPE zif_abapgit_dot_abapgit=>ty_requirement,
                    <ls_status>         TYPE ty_requirement_status,
-                   <ls_installed_comp> TYPE cvers_sdu.
+                   <ls_installed_comp> TYPE cvers.
 
 
-    CALL FUNCTION 'DELIVERY_GET_INSTALLED_COMPS'
-      TABLES
-        tt_comptab       = lt_installed
-      EXCEPTIONS
-        no_release_found = 1
-        OTHERS           = 2.
+    SELECT * FROM cvers INTO TABLE lt_installed ORDER BY PRIMARY KEY.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from DELIVERY_GET_INSTALLED_COMPS { sy-subrc }| ).
+      zcx_abapgit_exception=>raise( |Error reading installed components| ).
     ENDIF.
 
     LOOP AT it_requirements ASSIGNING <ls_requirement>.
       APPEND INITIAL LINE TO rt_status ASSIGNING <ls_status>.
-      <ls_status>-component = <ls_requirement>-component.
+      <ls_status>-component        = <ls_requirement>-component.
       <ls_status>-required_release = <ls_requirement>-min_release.
-      <ls_status>-required_patch = <ls_requirement>-min_patch.
+      <ls_status>-required_patch   = <ls_requirement>-min_patch.
 
       READ TABLE lt_installed WITH KEY component = <ls_requirement>-component
                               ASSIGNING <ls_installed_comp>.
@@ -88,8 +83,11 @@ CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
         " Component is installed, requirement is met if the installed version is greater or equal
         " to the required one.
         <ls_status>-installed_release = <ls_installed_comp>-release.
-        <ls_status>-installed_patch = <ls_installed_comp>-extrelease.
-        <ls_status>-description = <ls_installed_comp>-desc_text.
+        <ls_status>-installed_patch   = <ls_installed_comp>-extrelease.
+
+        SELECT SINGLE desc_text FROM cvers_ref INTO <ls_status>-description
+          WHERE component = <ls_installed_comp>-component AND langu = sy-langu ##SUBRC_OK.
+
         <ls_status>-met = is_version_greater_or_equal( <ls_status> ).
       ELSE.
         " Component is not installed at all

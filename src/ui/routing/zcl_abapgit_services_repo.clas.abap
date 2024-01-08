@@ -355,33 +355,6 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD real_deserialize.
-
-    DATA li_log TYPE REF TO zif_abapgit_log.
-    DATA lv_msg TYPE string.
-
-    li_log = io_repo->create_new_log( 'Pull Log' ).
-
-    " pass decisions to delete
-    delete_unnecessary_objects(
-      io_repo   = io_repo
-      is_checks = is_checks
-      ii_log    = li_log ).
-
-    " pass decisions to deserialize
-    io_repo->deserialize(
-      is_checks = is_checks
-      ii_log    = li_log ).
-
-    IF li_log->get_status( ) = zif_abapgit_log=>c_status-ok.
-      lv_msg = |Repository { io_repo->get_name( ) } successfully pulled for package { io_repo->get_package( ) }|.
-      MESSAGE lv_msg TYPE 'S'.
-    ENDIF.
-
-    check_for_restart( io_repo ).
-
-  ENDMETHOD.
-
 
   METHOD new_offline.
 
@@ -491,7 +464,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     " Ask user what to do
     IF cs_checks-requirements-met = zif_abapgit_definitions=>c_no.
       lt_requirements = io_repo->get_dot_abapgit( )->get_data( )-requirements.
-      zcl_abapgit_requirement_helper=>requirements_popup( lt_requirements ).
+      zcl_abapgit_repo_requirements=>requirements_popup( lt_requirements ).
       cs_checks-requirements-decision = zif_abapgit_definitions=>c_yes.
     ENDIF.
 
@@ -728,6 +701,34 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     IF zcl_abapgit_factory=>get_sap_package( iv_devclass )->exists( ) = abap_true.
       zcx_abapgit_exception=>raise( |Package { iv_devclass } already exists| ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD real_deserialize.
+
+    DATA li_log TYPE REF TO zif_abapgit_log.
+    DATA lv_msg TYPE string.
+
+    li_log = io_repo->create_new_log( 'Pull Log' ).
+
+    " pass decisions to delete
+    delete_unnecessary_objects(
+      io_repo   = io_repo
+      is_checks = is_checks
+      ii_log    = li_log ).
+
+    " pass decisions to deserialize
+    io_repo->deserialize(
+      is_checks = is_checks
+      ii_log    = li_log ).
+
+    IF li_log->get_status( ) = zif_abapgit_log=>c_status-ok.
+      lv_msg = |Repository { io_repo->get_name( ) } successfully pulled for package { io_repo->get_package( ) }|.
+      MESSAGE lv_msg TYPE 'S'.
+    ENDIF.
+
+    check_for_restart( io_repo ).
 
   ENDMETHOD.
 
