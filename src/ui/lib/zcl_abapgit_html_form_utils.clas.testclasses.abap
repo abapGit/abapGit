@@ -126,6 +126,8 @@ CLASS ltcl_sapgui_mock IMPLEMENTATION.
   ENDMETHOD.
   METHOD zif_abapgit_frontend_services~directory_exist.
   ENDMETHOD.
+  METHOD zif_abapgit_frontend_services~disable_gui.
+  ENDMETHOD.
   METHOD zif_abapgit_frontend_services~execute.
   ENDMETHOD.
   METHOD zif_abapgit_frontend_services~file_download.

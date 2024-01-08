@@ -141,6 +141,9 @@ CLASS ltd_frontend_services IMPLEMENTATION.
   METHOD zif_abapgit_frontend_services~directory_exist.
   ENDMETHOD.
 
+  METHOD zif_abapgit_frontend_services~disable_gui.
+  ENDMETHOD.
+
   METHOD zif_abapgit_frontend_services~execute.
   ENDMETHOD.
 
