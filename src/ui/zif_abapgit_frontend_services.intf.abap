@@ -127,4 +127,6 @@ INTERFACE zif_abapgit_frontend_services PUBLIC.
     RAISING
       zcx_abapgit_exception.
 
+  METHODS disable_gui.
+
 ENDINTERFACE.
