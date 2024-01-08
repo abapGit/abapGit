@@ -121,7 +121,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       io_files       = io_files
       io_i18n_params = io_i18n_params ).
 
-    mi_object_oriented_object_fct = zcl_abapgit_oo_factory=>make( ms_item-obj_type ).
+    mi_object_oriented_object_fct = zcl_abapgit_oo_factory=>get_by_type( ms_item-obj_type ).
 
     CREATE OBJECT li_aff_registry TYPE zcl_abapgit_aff_registry.
 

@@ -2,13 +2,13 @@ CLASS zcl_abapgit_oo_factory DEFINITION PUBLIC.
 
   PUBLIC SECTION.
     CLASS-METHODS:
-      make
+      get_by_type
         IMPORTING
           iv_object_type                   TYPE tadir-object
         RETURNING
           VALUE(ri_object_oriented_object) TYPE REF TO zif_abapgit_oo_object_fnc,
 
-      make_by_name
+      get_by_name
         IMPORTING
           iv_object_name                   TYPE seoclsname
         RETURNING
@@ -16,21 +16,13 @@ CLASS zcl_abapgit_oo_factory DEFINITION PUBLIC.
         RAISING
           zcx_abapgit_exception.
 
-  PRIVATE SECTION.
-    CLASS-DATA gi_object_oriented_object TYPE REF TO zif_abapgit_oo_object_fnc .
-
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_oo_factory IMPLEMENTATION.
 
-
-  METHOD make.
-    IF gi_object_oriented_object IS BOUND.
-      ri_object_oriented_object = gi_object_oriented_object.
-      RETURN.
-    ENDIF.
+  METHOD get_by_type.
     IF iv_object_type = 'CLAS'.
       CREATE OBJECT ri_object_oriented_object TYPE zcl_abapgit_oo_class.
     ELSEIF iv_object_type = 'INTF'.
@@ -39,7 +31,7 @@ CLASS zcl_abapgit_oo_factory IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD make_by_name.
+  METHOD get_by_name.
 
     DATA:
       li_interface   TYPE REF TO zif_abapgit_oo_object_fnc,
@@ -63,4 +55,5 @@ CLASS zcl_abapgit_oo_factory IMPLEMENTATION.
     zcx_abapgit_exception=>raise( |{ iv_object_name } is neither a class nor an interface| ).
 
   ENDMETHOD.
+
 ENDCLASS.
