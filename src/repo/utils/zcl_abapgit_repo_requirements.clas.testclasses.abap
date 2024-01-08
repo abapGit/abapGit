@@ -3,7 +3,7 @@ CLASS lcl_helper DEFINITION FINAL.
   PUBLIC SECTION.
     CLASS-METHODS get_sap_basis_component
       RETURNING
-        VALUE(rs_result) TYPE cvers_sdu
+        VALUE(rs_result) TYPE cvers
       RAISING
         zcx_abapgit_exception.
 
@@ -15,24 +15,11 @@ CLASS lcl_helper IMPLEMENTATION.
 
   METHOD get_sap_basis_component.
 
-    DATA:
-      lt_installed TYPE STANDARD TABLE OF cvers_sdu.
-
-    CALL FUNCTION 'DELIVERY_GET_INSTALLED_COMPS'
-      TABLES
-        tt_comptab       = lt_installed
-      EXCEPTIONS
-        no_release_found = 1
-        OTHERS           = 2.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from DELIVERY_GET_INSTALLED_COMPS { sy-subrc }| ).
-    ENDIF.
-
-    READ TABLE lt_installed INTO rs_result
-      WITH KEY component = `SAP_BASIS`.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Component SAP_BASIS not found| ).
-    ENDIF.
+    " mock SAP_BASIS
+    rs_result-component  = 'SAP_BASIS'.
+    rs_result-release    = '754'.
+    rs_result-extrelease = '0007'.
+    rs_result-comp_type  = 'S'.
 
   ENDMETHOD.
 
@@ -74,7 +61,7 @@ CLASS ltcl_lower_release IMPLEMENTATION.
   METHOD empty_patch.
 
     DATA:
-      ls_component    TYPE cvers_sdu,
+      ls_component    TYPE cvers,
       lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
       ls_requirement  LIKE LINE OF lt_requirements.
 
@@ -86,7 +73,7 @@ CLASS ltcl_lower_release IMPLEMENTATION.
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-        act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
+        act = zcl_abapgit_repo_requirements=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_yes ).
 
   ENDMETHOD.
@@ -95,7 +82,7 @@ CLASS ltcl_lower_release IMPLEMENTATION.
   METHOD lower_patch.
 
     DATA:
-      ls_component    TYPE cvers_sdu,
+      ls_component    TYPE cvers,
       lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
       ls_requirement  LIKE LINE OF lt_requirements.
 
@@ -109,7 +96,7 @@ CLASS ltcl_lower_release IMPLEMENTATION.
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-        act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
+        act = zcl_abapgit_repo_requirements=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_yes ).
 
   ENDMETHOD.
@@ -118,7 +105,7 @@ CLASS ltcl_lower_release IMPLEMENTATION.
   METHOD same_patch.
 
     DATA:
-      ls_component    TYPE cvers_sdu,
+      ls_component    TYPE cvers,
       lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
       ls_requirement  LIKE LINE OF lt_requirements.
 
@@ -130,7 +117,7 @@ CLASS ltcl_lower_release IMPLEMENTATION.
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-        act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
+        act = zcl_abapgit_repo_requirements=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_yes ).
 
   ENDMETHOD.
@@ -139,7 +126,7 @@ CLASS ltcl_lower_release IMPLEMENTATION.
   METHOD higher_patch.
 
     DATA:
-      ls_component    TYPE cvers_sdu,
+      ls_component    TYPE cvers,
       lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
       ls_requirement  LIKE LINE OF lt_requirements.
 
@@ -151,7 +138,7 @@ CLASS ltcl_lower_release IMPLEMENTATION.
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-        act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
+        act = zcl_abapgit_repo_requirements=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_yes ).
 
   ENDMETHOD.
@@ -194,7 +181,7 @@ CLASS ltcl_same_release IMPLEMENTATION.
   METHOD empty_patch.
 
     DATA:
-      ls_component    TYPE cvers_sdu,
+      ls_component    TYPE cvers,
       lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
       ls_requirement  LIKE LINE OF lt_requirements.
 
@@ -206,7 +193,7 @@ CLASS ltcl_same_release IMPLEMENTATION.
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-        act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
+        act = zcl_abapgit_repo_requirements=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_yes ).
 
   ENDMETHOD.
@@ -215,7 +202,7 @@ CLASS ltcl_same_release IMPLEMENTATION.
   METHOD lower_patch.
 
     DATA:
-      ls_component    TYPE cvers_sdu,
+      ls_component    TYPE cvers,
       lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
       ls_requirement  LIKE LINE OF lt_requirements.
 
@@ -229,7 +216,7 @@ CLASS ltcl_same_release IMPLEMENTATION.
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-        act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
+        act = zcl_abapgit_repo_requirements=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_yes ).
 
   ENDMETHOD.
@@ -238,7 +225,7 @@ CLASS ltcl_same_release IMPLEMENTATION.
   METHOD same_patch.
 
     DATA:
-      ls_component    TYPE cvers_sdu,
+      ls_component    TYPE cvers,
       lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
       ls_requirement  LIKE LINE OF lt_requirements.
 
@@ -250,7 +237,7 @@ CLASS ltcl_same_release IMPLEMENTATION.
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-        act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
+        act = zcl_abapgit_repo_requirements=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_yes ).
 
   ENDMETHOD.
@@ -259,7 +246,7 @@ CLASS ltcl_same_release IMPLEMENTATION.
   METHOD higher_patch.
 
     DATA:
-      ls_component    TYPE cvers_sdu,
+      ls_component    TYPE cvers,
       lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
       ls_requirement  LIKE LINE OF lt_requirements.
 
@@ -271,7 +258,7 @@ CLASS ltcl_same_release IMPLEMENTATION.
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-        act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
+        act = zcl_abapgit_repo_requirements=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_no ).
 
   ENDMETHOD.
@@ -314,7 +301,7 @@ CLASS ltcl_higher_release IMPLEMENTATION.
   METHOD empty_patch.
 
     DATA:
-      ls_component    TYPE cvers_sdu,
+      ls_component    TYPE cvers,
       lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
       ls_requirement  LIKE LINE OF lt_requirements.
 
@@ -326,7 +313,7 @@ CLASS ltcl_higher_release IMPLEMENTATION.
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-        act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
+        act = zcl_abapgit_repo_requirements=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_no ).
 
   ENDMETHOD.
@@ -335,7 +322,7 @@ CLASS ltcl_higher_release IMPLEMENTATION.
   METHOD lower_patch.
 
     DATA:
-      ls_component    TYPE cvers_sdu,
+      ls_component    TYPE cvers,
       lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
       ls_requirement  LIKE LINE OF lt_requirements.
 
@@ -347,7 +334,7 @@ CLASS ltcl_higher_release IMPLEMENTATION.
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-        act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
+        act = zcl_abapgit_repo_requirements=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_no ).
 
   ENDMETHOD.
@@ -356,7 +343,7 @@ CLASS ltcl_higher_release IMPLEMENTATION.
   METHOD same_patch.
 
     DATA:
-      ls_component    TYPE cvers_sdu,
+      ls_component    TYPE cvers,
       lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
       ls_requirement  LIKE LINE OF lt_requirements.
 
@@ -368,7 +355,7 @@ CLASS ltcl_higher_release IMPLEMENTATION.
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-        act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
+        act = zcl_abapgit_repo_requirements=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_no ).
 
   ENDMETHOD.
@@ -377,7 +364,7 @@ CLASS ltcl_higher_release IMPLEMENTATION.
   METHOD higher_patch.
 
     DATA:
-      ls_component    TYPE cvers_sdu,
+      ls_component    TYPE cvers,
       lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
       ls_requirement  LIKE LINE OF lt_requirements.
 
@@ -389,7 +376,7 @@ CLASS ltcl_higher_release IMPLEMENTATION.
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-        act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
+        act = zcl_abapgit_repo_requirements=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_no ).
 
   ENDMETHOD.
@@ -411,7 +398,7 @@ CLASS ltcl_formats DEFINITION FINAL
       RAISING
         zcx_abapgit_exception.
 
-    METHODS higher_patch FOR TESTING
+    METHODS longer_patch FOR TESTING
       RAISING
         zcx_abapgit_exception.
 
@@ -424,7 +411,7 @@ CLASS ltcl_formats IMPLEMENTATION.
   METHOD shorter_patch.
 
     DATA:
-      ls_component    TYPE cvers_sdu,
+      ls_component    TYPE cvers,
       lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
       ls_requirement  LIKE LINE OF lt_requirements.
 
@@ -432,26 +419,21 @@ CLASS ltcl_formats IMPLEMENTATION.
 
     ls_requirement-component   = ls_component-component.
     ls_requirement-min_release = ls_component-release.
-
-    CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'
-      EXPORTING
-        input  = ls_component-extrelease
-      IMPORTING
-        output = ls_requirement-min_patch.
+    ls_requirement-min_patch   = ls_component-extrelease. " len 4 to len 10
 
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-        act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
+        act = zcl_abapgit_repo_requirements=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_yes ).
 
   ENDMETHOD.
 
 
-  METHOD higher_patch.
+  METHOD longer_patch.
 
     DATA:
-      ls_component    TYPE cvers_sdu,
+      ls_component    TYPE cvers,
       lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
       ls_requirement  LIKE LINE OF lt_requirements.
 
@@ -459,17 +441,12 @@ CLASS ltcl_formats IMPLEMENTATION.
 
     ls_requirement-component   = ls_component-component.
     ls_requirement-min_release = ls_component-release.
-
-    CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
-      EXPORTING
-        input  = ls_component-extrelease
-      IMPORTING
-        output = ls_requirement-min_patch.
+    ls_requirement-min_patch   = '0000000007'. " len 10 instead of len 4
 
     APPEND ls_requirement TO lt_requirements.
 
     cl_abap_unit_assert=>assert_equals(
-        act = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements )
+        act = zcl_abapgit_repo_requirements=>is_requirements_met( lt_requirements )
         exp = zif_abapgit_definitions=>c_yes ).
 
   ENDMETHOD.
