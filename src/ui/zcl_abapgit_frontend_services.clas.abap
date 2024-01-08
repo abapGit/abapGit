@@ -10,8 +10,6 @@ CLASS zcl_abapgit_frontend_services DEFINITION
 
     CLASS-DATA gv_initial_folder TYPE string.
 
-    DATA mv_disable_gui TYPE abap_bool.
-
     METHODS get_path_from_fullname
       IMPORTING
         iv_fullname    TYPE string
@@ -156,12 +154,6 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_frontend_services~disable_gui ##CALLED.
-    " Used by abapGit CI
-    mv_disable_gui = abap_true.
   ENDMETHOD.
 
 
@@ -359,10 +351,6 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
 
   METHOD zif_abapgit_frontend_services~gui_is_available.
 
-    IF mv_disable_gui = abap_true.
-      RETURN.
-    ENDIF.
-
     CALL FUNCTION 'GUI_IS_AVAILABLE'
       IMPORTING
         return = rv_gui_is_available.
@@ -371,10 +359,6 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
 
 
   METHOD zif_abapgit_frontend_services~is_sapgui_for_java.
-
-    IF mv_disable_gui = abap_true.
-      RETURN.
-    ENDIF.
 
     CALL FUNCTION 'GUI_HAS_JAVABEANS'
       IMPORTING
@@ -385,10 +369,6 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
 
   METHOD zif_abapgit_frontend_services~is_sapgui_for_windows.
 
-    IF mv_disable_gui = abap_true.
-      RETURN.
-    ENDIF.
-
     CALL FUNCTION 'GUI_HAS_ACTIVEX'
       IMPORTING
         return = rv_result.
@@ -397,10 +377,6 @@ CLASS zcl_abapgit_frontend_services IMPLEMENTATION.
 
 
   METHOD zif_abapgit_frontend_services~is_webgui.
-
-    IF mv_disable_gui = abap_true.
-      RETURN.
-    ENDIF.
 
     CALL FUNCTION 'GUI_IS_ITS'
       IMPORTING

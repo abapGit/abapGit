@@ -24,6 +24,8 @@ CLASS zcl_abapgit_ui_factory DEFINITION
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS get_frontend_services
+      IMPORTING
+        !iv_disable_gui   TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(ri_fe_serv) TYPE REF TO zif_abapgit_frontend_services .
     CLASS-METHODS get_html_viewer
@@ -116,7 +118,11 @@ CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
   METHOD get_frontend_services.
 
     IF gi_fe_services IS INITIAL.
-      CREATE OBJECT gi_fe_services TYPE zcl_abapgit_frontend_services.
+      IF iv_disable_gui IS INITIAL.
+        CREATE OBJECT gi_fe_services TYPE zcl_abapgit_frontend_services.
+      ELSE.
+        CREATE OBJECT gi_fe_services TYPE lcl_frontend_services_no_gui.
+      ENDIF.
     ENDIF.
 
     ri_fe_serv = gi_fe_services.
