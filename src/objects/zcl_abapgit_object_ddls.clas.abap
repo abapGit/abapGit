@@ -261,7 +261,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
       EXPORTING
         p_object_type = 'DF'
         p_object_name = ms_item-obj_name
-        p_operation   = swbm_c_op_delete
+        p_operation   = 'DELETE'
       EXCEPTIONS
         OTHERS        = 0.
   ENDMETHOD.
