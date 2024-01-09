@@ -1,7 +1,7 @@
-CLASS zcl_abapgit_news DEFINITION
+CLASS zcl_abapgit_repo_news DEFINITION
   PUBLIC
   FINAL
-  CREATE PRIVATE .
+  CREATE PRIVATE.
 
   PUBLIC SECTION.
 
@@ -12,9 +12,9 @@ CLASS zcl_abapgit_news DEFINITION
         is_header    TYPE abap_bool,
         is_important TYPE abap_bool,
         text         TYPE string,
-      END OF ty_log .
+      END OF ty_log.
     TYPES:
-      ty_logs TYPE STANDARD TABLE OF ty_log WITH DEFAULT KEY .
+      ty_logs TYPE STANDARD TABLE OF ty_log WITH DEFAULT KEY.
 
     CONSTANTS c_tail_length TYPE i VALUE 5 ##NO_TEXT.     " Number of versions to display if no updates
 
@@ -22,31 +22,31 @@ CLASS zcl_abapgit_news DEFINITION
       IMPORTING
         !io_repo           TYPE REF TO zcl_abapgit_repo
       RETURNING
-        VALUE(ro_instance) TYPE REF TO zcl_abapgit_news
+        VALUE(ro_instance) TYPE REF TO zcl_abapgit_repo_news
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS get_log
       RETURNING
-        VALUE(rt_log) TYPE ty_logs .
+        VALUE(rt_log) TYPE ty_logs.
     METHODS has_news
       RETURNING
-        VALUE(rv_boolean) TYPE abap_bool .
+        VALUE(rv_boolean) TYPE abap_bool.
     METHODS has_important
       RETURNING
-        VALUE(rv_boolean) TYPE abap_bool .
+        VALUE(rv_boolean) TYPE abap_bool.
     METHODS has_updates
       RETURNING
-        VALUE(rv_boolean) TYPE abap_bool .
+        VALUE(rv_boolean) TYPE abap_bool.
     METHODS has_unseen
       RETURNING
-        VALUE(rv_boolean) TYPE abap_bool .
+        VALUE(rv_boolean) TYPE abap_bool.
     METHODS constructor
       IMPORTING
         !iv_rawdata          TYPE xstring
         !iv_lastseen_version TYPE string
         !iv_current_version  TYPE string
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -74,7 +74,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_news IMPLEMENTATION.
+CLASS zcl_abapgit_repo_news IMPLEMENTATION.
 
 
   METHOD constructor.

@@ -216,7 +216,7 @@ CLASS zcl_abapgit_version IMPLEMENTATION.
 
     " You should remember that accessing a class or an interface with syntax errors
     " gives us a shortdump. Therefore we do a syntax check here.
-    zcl_abapgit_oo_factory=>make_by_name( lv_version_class )->syntax_check( lv_version_class ).
+    zcl_abapgit_oo_factory=>get_by_name( lv_version_class )->syntax_check( lv_version_class ).
 
     ASSIGN (lv_version_class)=>(lv_version_component) TO <lv_version>.
     IF sy-subrc = 0.

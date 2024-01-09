@@ -27,7 +27,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !iv_show_commit        TYPE abap_bool DEFAULT abap_true
         !iv_show_edit          TYPE abap_bool DEFAULT abap_false
         !iv_interactive_branch TYPE abap_bool DEFAULT abap_false
-        !io_news               TYPE REF TO zcl_abapgit_news OPTIONAL
+        !io_news               TYPE REF TO zcl_abapgit_repo_news OPTIONAL
       RETURNING
         VALUE(ri_html)         TYPE REF TO zif_abapgit_html
       RAISING
@@ -45,7 +45,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS render_news
       IMPORTING
-        !io_news       TYPE REF TO zcl_abapgit_news
+        !io_news       TYPE REF TO zcl_abapgit_repo_news
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
@@ -716,7 +716,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     DATA: lv_text TYPE string,
           lv_hint TYPE string,
           lv_ul   TYPE abap_bool,
-          lt_log  TYPE zcl_abapgit_news=>ty_logs.
+          lt_log  TYPE zcl_abapgit_repo_news=>ty_logs.
 
     FIELD-SYMBOLS: <ls_line> LIKE LINE OF lt_log.
 
