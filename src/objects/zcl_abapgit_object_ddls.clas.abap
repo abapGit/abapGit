@@ -256,6 +256,14 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
 
     corr_insert( iv_package ).
 
+    " rebuild object list to delete remaining TADIR entry
+    CALL FUNCTION 'WB_TREE_UPDATE_OBJECTLIST'
+      EXPORTING
+        p_object_type = 'DF'
+        p_object_name = ms_item-obj_name
+        p_operation   = swbm_c_op_delete
+      EXCEPTIONS
+        OTHERS        = 0.
   ENDMETHOD.
 
 
