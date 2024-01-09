@@ -17,7 +17,7 @@ ENDCLASS.
 
 CLASS lcl_log_entries DEFINITION FINAL.
   PUBLIC SECTION.
-    DATA mt_log_entries TYPE zcl_abapgit_news=>ty_logs.
+    DATA mt_log_entries TYPE zcl_abapgit_repo_news=>ty_logs.
     METHODS add
       IMPORTING
         iv_str TYPE string.
@@ -48,7 +48,7 @@ ENDCLASS.
 **********************************************************************
 
 CLASS ltcl_news DEFINITION DEFERRED.
-CLASS zcl_abapgit_news DEFINITION LOCAL FRIENDS ltcl_news.
+CLASS zcl_abapgit_repo_news DEFINITION LOCAL FRIENDS ltcl_news.
 
 *----------------------------------------------------------------------*
 *       CLASS ltcl_news DEFINITION
@@ -74,25 +74,25 @@ CLASS ltcl_news IMPLEMENTATION.
 
   METHOD parse_line.
 
-    DATA: ls_log TYPE zcl_abapgit_news=>ty_log.
+    DATA: ls_log TYPE zcl_abapgit_repo_news=>ty_log.
 
-    ls_log = zcl_abapgit_news=>parse_line(
+    ls_log = zcl_abapgit_repo_news=>parse_line(
       iv_line            = '======'
       iv_current_version = '1.26.01' ).
     cl_abap_unit_assert=>assert_initial( ls_log ).
 
-    ls_log = zcl_abapgit_news=>parse_line(
+    ls_log = zcl_abapgit_repo_news=>parse_line(
       iv_line            = ''
       iv_current_version = '1.26.01' ).
     cl_abap_unit_assert=>assert_initial( ls_log ).
 
-    ls_log = zcl_abapgit_news=>parse_line(
+    ls_log = zcl_abapgit_repo_news=>parse_line(
       iv_line            = '------'
       iv_current_version = '1.26.01' ).
     cl_abap_unit_assert=>assert_initial( ls_log ).
 
     CLEAR ls_log.
-    ls_log = zcl_abapgit_news=>parse_line(
+    ls_log = zcl_abapgit_repo_news=>parse_line(
       iv_line            = '2017-02-13 v1.28.0'
       iv_current_version = '1.26.01' ).
     cl_abap_unit_assert=>assert_equals( act = ls_log-version
@@ -103,7 +103,7 @@ CLASS ltcl_news IMPLEMENTATION.
                                         exp = 1 ).
 
     CLEAR ls_log.
-    ls_log = zcl_abapgit_news=>parse_line(
+    ls_log = zcl_abapgit_repo_news=>parse_line(
       iv_line            = '2017-02-13 v1.26.0'
       iv_current_version = '1.26.01' ).
     cl_abap_unit_assert=>assert_equals( act = ls_log-version
@@ -114,7 +114,7 @@ CLASS ltcl_news IMPLEMENTATION.
                                         exp = -1 ).
 
     CLEAR ls_log.
-    ls_log = zcl_abapgit_news=>parse_line(
+    ls_log = zcl_abapgit_repo_news=>parse_line(
       iv_line            = 'news'
       iv_current_version = '1.26.01' ).
     cl_abap_unit_assert=>assert_equals( act = ls_log-version
@@ -129,7 +129,7 @@ CLASS ltcl_news IMPLEMENTATION.
                                         exp = 'news' ).
 
     CLEAR ls_log.
-    ls_log = zcl_abapgit_news=>parse_line(
+    ls_log = zcl_abapgit_repo_news=>parse_line(
       iv_line            = ' ! important news'
       iv_current_version = '1.26.01' ).
     cl_abap_unit_assert=>assert_equals( act = ls_log-version
@@ -147,7 +147,7 @@ CLASS ltcl_news IMPLEMENTATION.
 
   METHOD parse.
 
-    DATA lt_log_act TYPE zcl_abapgit_news=>ty_logs.
+    DATA lt_log_act TYPE zcl_abapgit_repo_news=>ty_logs.
     DATA lo_src_text_buf TYPE REF TO lcl_string_buffer.
     DATA lo_log_entries TYPE REF TO lcl_log_entries.
 
@@ -177,7 +177,7 @@ CLASS ltcl_news IMPLEMENTATION.
     lo_log_entries->add( '1.27.0 /X   /   /1   /2017-01-25 v1.27.0' ).
     lo_log_entries->add( '1.27.0 /    /   /0   /+ Two factor authentication with github.com' ).
 
-    lt_log_act = zcl_abapgit_news=>parse(
+    lt_log_act = zcl_abapgit_repo_news=>parse(
       it_lines = lo_src_text_buf->mt_buffer
       iv_current_version = '1.26.01' ).
     cl_abap_unit_assert=>assert_equals(
@@ -193,7 +193,7 @@ CLASS ltcl_news IMPLEMENTATION.
     lo_log_entries->add( '1.28.0 /   /   /0   /+ Staging page redesigned' ).
     lo_log_entries->add( '1.28.0 /   /X  /0   /! Support for core data services' ).
 
-    lt_log_act = zcl_abapgit_news=>parse(
+    lt_log_act = zcl_abapgit_repo_news=>parse(
       it_lines = lo_src_text_buf->mt_buffer
       iv_current_version = '1.27.00' ).
     cl_abap_unit_assert=>assert_equals(
@@ -211,7 +211,7 @@ CLASS ltcl_news IMPLEMENTATION.
     lo_log_entries->add( '1.27.0 /   /   /0   /+ Two factor authentication with github.com' ).
     lo_log_entries->add( '1.26.0 /X  /   /-1  /2017-01-25 v1.26.0' ).
 
-    lt_log_act = zcl_abapgit_news=>parse(
+    lt_log_act = zcl_abapgit_repo_news=>parse(
       it_lines = lo_src_text_buf->mt_buffer
       iv_current_version = '1.28.00' ).
     cl_abap_unit_assert=>assert_equals(
