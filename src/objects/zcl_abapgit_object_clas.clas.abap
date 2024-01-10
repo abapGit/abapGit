@@ -154,7 +154,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       io_files       = io_files
       io_i18n_params = io_i18n_params ).
 
-    CREATE OBJECT mi_object_oriented_object_fct TYPE zcl_abapgit_oo_class.
+    mi_object_oriented_object_fct = zcl_abapgit_oo_factory=>get_by_type( ms_item-obj_type ).
 
     mv_classpool_name = cl_oo_classname_service=>get_classpool_name( |{ is_item-obj_name }| ).
 

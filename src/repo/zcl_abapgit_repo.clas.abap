@@ -65,7 +65,9 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
     METHODS get_dot_apack
       RETURNING
-        VALUE(ro_dot_apack) TYPE REF TO zcl_abapgit_apack_reader .
+        VALUE(ro_dot_apack) TYPE REF TO zcl_abapgit_apack_reader
+      RAISING
+        zcx_abapgit_exception.
     METHODS get_log
       RETURNING
         VALUE(ri_log) TYPE REF TO zif_abapgit_log .
@@ -413,11 +415,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD has_remote_source.
-    rv_yes = boolc( lines( mt_remote ) > 0 ).
-  ENDMETHOD.
-
-
   METHOD normalize_local_settings.
 
     cs_local_settings-labels = zcl_abapgit_repo_labels=>normalize( cs_local_settings-labels ).
@@ -709,7 +706,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     rs_checks = zcl_abapgit_objects=>deserialize_checks( me ).
 
     lt_requirements = get_dot_abapgit( )->get_data( )-requirements.
-    rs_checks-requirements-met = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements ).
+    rs_checks-requirements-met = zcl_abapgit_repo_requirements=>is_requirements_met( lt_requirements ).
 
     lt_dependencies = get_dot_apack( )->get_manifest_descriptor( )-dependencies.
     rs_checks-dependencies-met = zcl_abapgit_apack_helper=>are_dependencies_met( lt_dependencies ).
@@ -860,6 +857,11 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_repo~has_remote_source.
+    rv_yes = boolc( lines( mt_remote ) > 0 ).
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_repo~is_offline.
     rv_offline = ms_data-offline.
   ENDMETHOD.
@@ -877,6 +879,8 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     IF iv_drop_cache = abap_true.
       CLEAR mt_local.
     ENDIF.
+
+    get_dot_apack( )->refresh( ).
 
   ENDMETHOD.
 

@@ -1,7 +1,7 @@
-CLASS zcl_abapgit_item_state DEFINITION
+CLASS zcl_abapgit_repo_item_state DEFINITION
   PUBLIC
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
@@ -39,7 +39,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ITEM_STATE IMPLEMENTATION.
+CLASS zcl_abapgit_repo_item_state IMPLEMENTATION.
 
 
   METHOD is_reassigned.

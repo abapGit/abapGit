@@ -200,6 +200,34 @@ CLASS zcl_abapgit_version IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_version_constant_value.
+    DATA: lv_version_class     TYPE seoclsname,
+          lv_version_component TYPE string.
+    FIELD-SYMBOLS: <lv_version> TYPE string.
+
+    IF iv_version_constant NP '*=>*'.
+      zcx_abapgit_exception=>raise( 'Version constant needs to use the format CLASS/INTERFACE=>CONSTANT' ).
+    ENDIF.
+
+    SPLIT iv_version_constant AT '=>' INTO lv_version_class lv_version_component.
+    IF sy-subrc <> 0 OR lv_version_class IS INITIAL OR lv_version_component IS INITIAL.
+      zcx_abapgit_exception=>raise( 'Version constant cannot be parsed' ).
+    ENDIF.
+
+    " You should remember that accessing a class or an interface with syntax errors
+    " gives us a shortdump. Therefore we do a syntax check here.
+    zcl_abapgit_oo_factory=>get_by_name( lv_version_class )->syntax_check( lv_version_class ).
+
+    ASSIGN (lv_version_class)=>(lv_version_component) TO <lv_version>.
+    IF sy-subrc = 0.
+      rv_version = <lv_version>.
+    ELSE.
+      zcx_abapgit_exception=>raise( |Could not access version at class { lv_version_class } component | &&
+                                    |{ lv_version_component }| ).
+    ENDIF.
+  ENDMETHOD.
+
+
   METHOD normalize.
 
     " Internal program version should be in format "XXX.XXX.XXX" or "vXXX.XXX.XXX"
@@ -249,28 +277,4 @@ CLASS zcl_abapgit_version IMPLEMENTATION.
     rv_version = lv_major * 1000000 + lv_minor * 1000 + lv_release.
 
   ENDMETHOD.
-
-  METHOD get_version_constant_value.
-    DATA: lv_version_class     TYPE string,
-          lv_version_component TYPE string.
-    FIELD-SYMBOLS: <lv_version> TYPE string.
-
-    IF iv_version_constant NP '*=>*'.
-      zcx_abapgit_exception=>raise( 'Version constant needs to use the format CLASS=>CONSTANT' ).
-    ENDIF.
-
-    SPLIT iv_version_constant AT '=>' INTO lv_version_class lv_version_component.
-    IF sy-subrc <> 0 OR lv_version_class IS INITIAL OR lv_version_component IS INITIAL.
-      zcx_abapgit_exception=>raise( 'Version constant cannot be parsed' ).
-    ENDIF.
-
-    ASSIGN (lv_version_class)=>(lv_version_component) TO <lv_version>.
-    IF sy-subrc = 0.
-      rv_version = <lv_version>.
-    ELSE.
-      zcx_abapgit_exception=>raise( |Could not access version at class { lv_version_class } component | &&
-                                    |{ lv_version_component }| ).
-    ENDIF.
-  ENDMETHOD.
-
 ENDCLASS.

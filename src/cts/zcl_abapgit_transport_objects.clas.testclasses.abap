@@ -1,4 +1,3 @@
-
 CLASS ltcl_transport_objects DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
 
   PRIVATE SECTION.
@@ -10,12 +9,7 @@ CLASS ltcl_transport_objects DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HA
       cant_be_added_with_del_flag    FOR TESTING RAISING cx_static_check,
       cant_be_modified_with_del_flag FOR TESTING RAISING cx_static_check,
       deleted_to_removed_files       FOR TESTING RAISING cx_static_check,
-      should_remove_no_delflag_iwmo FOR TESTING RAISING cx_static_check,
-      should_remove_no_delflag_iwom FOR TESTING RAISING cx_static_check,
-      should_remove_no_delflag_iwsg FOR TESTING RAISING cx_static_check,
-      should_remove_no_delflag_iwsv FOR TESTING RAISING cx_static_check,
-      should_remove_no_delflag_susc FOR TESTING RAISING cx_static_check,
-      shouldnt_remove_no_delflag FOR TESTING RAISING cx_static_check,
+      should_remove_no_delflag FOR TESTING RAISING cx_static_check,
       should_add_all_local_files FOR TESTING RAISING cx_static_check,
       should_delete_all_related  FOR TESTING RAISING cx_static_check,
       setup,
@@ -76,13 +70,13 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
     given_the_object_status(
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS'
-      iv_filename   = 'CL_FOO.abap'
+      iv_filename   = 'cl_foo.clas.abap'
       iv_lstate     = zif_abapgit_definitions=>c_state-added ).
 
     ls_local_file = given_the_local_file(
       iv_obj_name = 'CL_FOO'
       iv_obj_type = 'CLAS'
-      iv_filename = 'CL_FOO.abap'
+      iv_filename = 'cl_foo.clas.abap'
       iv_path     = '/path'
       iv_data     = 'data' ).
 
@@ -90,6 +84,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
 
     then_file_should_be_added( ls_local_file ).
   ENDMETHOD.
+
   METHOD modified_to_new_local_files.
     DATA ls_local_file TYPE zif_abapgit_definitions=>ty_file_item.
     given_the_transport_object(
@@ -99,13 +94,13 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
     given_the_object_status(
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS'
-      iv_filename   = 'CL_FOO.abap'
+      iv_filename   = 'cl_foo.clas.abap'
       iv_lstate     = zif_abapgit_definitions=>c_state-modified ).
 
     ls_local_file = given_the_local_file(
       iv_obj_name = 'CL_FOO'
       iv_obj_type = 'CLAS'
-      iv_filename = 'CL_FOO.abap'
+      iv_filename = 'cl_foo.clas.abap'
       iv_path     = '/path'
       iv_data     = 'data' ).
 
@@ -113,6 +108,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
 
     then_file_should_be_added( ls_local_file ).
   ENDMETHOD.
+
   METHOD should_add_all_local_files.
     "Not only .abap, but also .xml and other includes
     DATA ls_abap_local_file TYPE zif_abapgit_definitions=>ty_file_item.
@@ -125,26 +121,26 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
     given_the_object_status(
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS'
-      iv_filename   = 'CL_FOO.abap'
+      iv_filename   = 'cl_foo.clas.abap'
       iv_lstate     = zif_abapgit_definitions=>c_state-modified ).
 
     given_the_object_status(
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS'
-      iv_filename   = 'CL_FOO.xml'
+      iv_filename   = 'cl_foo.clas.xml'
       iv_lstate     = zif_abapgit_definitions=>c_state-modified ).
 
     ls_abap_local_file = given_the_local_file(
       iv_obj_name = 'CL_FOO'
       iv_obj_type = 'CLAS'
-      iv_filename = 'CL_FOO.abap'
+      iv_filename = 'cl_foo.clas.abap'
       iv_path     = '/path'
       iv_data     = 'data' ).
 
     ls_xml_local_file = given_the_local_file(
       iv_obj_name = 'CL_FOO'
       iv_obj_type = 'CLAS'
-      iv_filename = 'CL_FOO.xml'
+      iv_filename = 'cl_foo.clas.xml'
       iv_path     = '/path'
       iv_data     = 'data' ).
 
@@ -153,6 +149,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
     then_file_should_be_added( ls_abap_local_file ).
     then_file_should_be_added( ls_xml_local_file ).
   ENDMETHOD.
+
   METHOD transport_not_in_repository.
     given_the_transport_object(
       iv_obj_name   = 'CL_A_CLASS_NOT_IN_REPO'
@@ -181,7 +178,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
     given_the_local_file(
       iv_obj_name = 'CL_ANOTHER_LOCAL_FILE'
       iv_obj_type = 'CLAS'
-      iv_filename = 'CL_FOO.abap'
+      iv_filename = 'cl_foo.clas.abap'
       iv_path     = '/path'
       iv_data     = 'data' ).
     then_it_should_raise_exception( 'Object CLAS CL_FOO not found in the local repository files' ).
@@ -224,14 +221,14 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
     given_the_object_status(
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS'
-      iv_filename   = 'CL_FOO.abap'
+      iv_filename   = 'cl_foo.clas.abap'
       iv_path       = '/a_path'
       iv_lstate     = zif_abapgit_definitions=>c_state-deleted ).
 
     when_staging( ).
 
     then_it_should_remove_at_stage(
-      iv_filename = 'CL_FOO.abap'
+      iv_filename = 'cl_foo.clas.abap'
       iv_path     = '/a_path' ).
   ENDMETHOD.
 
@@ -245,122 +242,42 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
     given_the_object_status(
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS'
-      iv_filename   = 'CL_FOO.abap'
+      iv_filename   = 'cl_foo.clas.abap'
       iv_path       = '/a_path'
       iv_lstate     = zif_abapgit_definitions=>c_state-deleted ).
 
     given_the_object_status(
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS'
-      iv_filename   = 'CL_FOO.xml'
+      iv_filename   = 'cl_foo.clas.xml'
       iv_path       = '/a_path'
       iv_lstate     = zif_abapgit_definitions=>c_state-deleted ).
 
     when_staging( ).
 
     then_it_should_remove_at_stage(
-      iv_filename = 'CL_FOO.abap'
+      iv_filename = 'cl_foo.clas.abap'
       iv_path     = '/a_path' ).
 
     then_it_should_remove_at_stage(
-      iv_filename = 'CL_FOO.xml'
+      iv_filename = 'cl_foo.clas.xml'
       iv_path     = '/a_path' ).
   ENDMETHOD.
 
-  METHOD should_remove_no_delflag_iwmo.
+  METHOD should_remove_no_delflag.
     given_the_transport_object(
        iv_obj_name   = 'ZFOO'
-       iv_obj_type   = 'IWMO'
-       iv_delflag    = abap_false ).
-
-    given_the_object_status(
-      iv_obj_name   = 'ZFOO'
-      iv_obj_type   = 'IWMO'
-      iv_filename   = 'zfoo.iwmo.xml'
-      iv_path       = '/a_path'
-      iv_lstate     = zif_abapgit_definitions=>c_state-deleted ).
-
-    then_it_should_not_raise_excpt( ).
-  ENDMETHOD.
-
-  METHOD should_remove_no_delflag_iwom.
-    given_the_transport_object(
-       iv_obj_name   = 'ZFOO'
-       iv_obj_type   = 'IWOM'
-       iv_delflag    = abap_false ).
-
-    given_the_object_status(
-      iv_obj_name   = 'ZFOO'
-      iv_obj_type   = 'IWOM'
-      iv_filename   = 'zfoo.iwom.xml'
-      iv_path       = '/a_path'
-      iv_lstate     = zif_abapgit_definitions=>c_state-deleted ).
-
-    then_it_should_not_raise_excpt( ).
-  ENDMETHOD.
-
-  METHOD should_remove_no_delflag_iwsg.
-    given_the_transport_object(
-       iv_obj_name   = 'ZFOO'
-       iv_obj_type   = 'IWSG'
-       iv_delflag    = abap_false ).
-
-    given_the_object_status(
-      iv_obj_name   = 'ZFOO'
-      iv_obj_type   = 'IWSG'
-      iv_filename   = 'zfoo.iwsg.xml'
-      iv_path       = '/a_path'
-      iv_lstate     = zif_abapgit_definitions=>c_state-deleted ).
-
-    then_it_should_not_raise_excpt( ).
-  ENDMETHOD.
-
-  METHOD should_remove_no_delflag_iwsv.
-    given_the_transport_object(
-       iv_obj_name   = 'ZFOO'
-       iv_obj_type   = 'IWSV'
-       iv_delflag    = abap_false ).
-
-    given_the_object_status(
-      iv_obj_name   = 'ZFOO'
-      iv_obj_type   = 'IWSV'
-      iv_filename   = 'zfoo.iwsv.xml'
-      iv_path       = '/a_path'
-      iv_lstate     = zif_abapgit_definitions=>c_state-deleted ).
-
-    then_it_should_not_raise_excpt( ).
-  ENDMETHOD.
-
-  METHOD should_remove_no_delflag_susc.
-    given_the_transport_object(
-       iv_obj_name   = 'ZFOO'
-       iv_obj_type   = 'SUSC'
-       iv_delflag    = abap_false ).
-
-    given_the_object_status(
-      iv_obj_name   = 'ZFOO'
-      iv_obj_type   = 'SUSC'
-      iv_filename   = 'zfoo.susc.xml'
-      iv_path       = '/a_path'
-      iv_lstate     = zif_abapgit_definitions=>c_state-deleted ).
-
-    then_it_should_not_raise_excpt( ).
-  ENDMETHOD.
-
-  METHOD shouldnt_remove_no_delflag.
-    given_the_transport_object(
-       iv_obj_name   = 'CL_FOO'
        iv_obj_type   = 'CLAS'
        iv_delflag    = abap_false ).
 
     given_the_object_status(
-      iv_obj_name   = 'CL_FOO'
+      iv_obj_name   = 'ZFOO'
       iv_obj_type   = 'CLAS'
-      iv_filename   = 'CL_FOO.abap'
+      iv_filename   = 'zfoo.clas.xml'
       iv_path       = '/a_path'
       iv_lstate     = zif_abapgit_definitions=>c_state-deleted ).
 
-    then_it_should_raise_exception( 'Object CLAS CL_FOO should be removed, but has NO deletion flag in transport' ).
+    then_it_should_not_raise_excpt( ).
   ENDMETHOD.
 
   METHOD given_the_transport_object.

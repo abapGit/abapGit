@@ -65,17 +65,6 @@ CLASS zcl_abapgit_transport_objects IMPLEMENTATION.
                 iv_data     = ls_local_file-file-data ).
             ENDIF.
           WHEN zif_abapgit_definitions=>c_state-deleted.
-* SUSC, see https://github.com/abapGit/abapGit/issues/2772
-            IF ls_transport_object-delflag = abap_false
-                AND ls_transport_object-object <> 'SUSC'
-                AND ls_transport_object-object <> 'IWOM'
-                AND ls_transport_object-object <> 'IWMO'
-                AND ls_transport_object-object <> 'IWSG'
-                AND ls_transport_object-object <> 'IWSV'.
-              zcx_abapgit_exception=>raise( |Object { ls_transport_object-object }|
-                && | { ls_transport_object-obj_name } should be removed,|
-                && | but has NO deletion flag in transport| ).
-            ENDIF.
             io_stage->rm(
               iv_path     = ls_object_status-path
               iv_filename = ls_object_status-filename ).

@@ -43,14 +43,18 @@ CLASS zcl_abapgit_apack_reader DEFINITION
     METHODS constructor
       IMPORTING
         !iv_package_name TYPE ty_package_name .
+    METHODS refresh.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
     TYPES:
-      BEGIN OF ty_s_manifest_declaration,
-        clsname  TYPE seoclsname,
-        devclass TYPE devclass,
-      END OF ty_s_manifest_declaration .
+      BEGIN OF ty_instance,
+        package  TYPE ty_package_name,
+        instance TYPE REF TO zcl_abapgit_apack_reader,
+      END OF ty_instance,
+      ty_instances TYPE HASHED TABLE OF ty_instance WITH UNIQUE KEY package.
+
+    CLASS-DATA gt_instances TYPE ty_instances.
 
     DATA mv_package_name TYPE ty_package_name .
     DATA ms_cached_descriptor TYPE zif_abapgit_apack_definitions=>ty_descriptor .
@@ -70,10 +74,11 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_APACK_READER IMPLEMENTATION.
+CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
 
 
   METHOD constructor.
+    ASSERT iv_package_name IS NOT INITIAL.
     mv_package_name = iv_package_name.
   ENDMETHOD.
 
@@ -117,9 +122,23 @@ CLASS ZCL_ABAPGIT_APACK_READER IMPLEMENTATION.
 
 
   METHOD create_instance.
-    CREATE OBJECT ro_manifest_reader
-      EXPORTING
-        iv_package_name = iv_package_name.
+
+    DATA ls_instance TYPE ty_instance.
+
+    " One instance per package
+    READ TABLE gt_instances INTO ls_instance WITH TABLE KEY package = iv_package_name.
+    IF sy-subrc <> 0.
+      ls_instance-package = iv_package_name.
+
+      CREATE OBJECT ls_instance-instance
+        EXPORTING
+          iv_package_name = iv_package_name.
+
+      INSERT ls_instance INTO TABLE gt_instances.
+    ENDIF.
+
+    ro_manifest_reader = ls_instance-instance.
+
   ENDMETHOD.
 
 
@@ -146,6 +165,7 @@ CLASS ZCL_ABAPGIT_APACK_READER IMPLEMENTATION.
     ms_cached_descriptor-sem_version = zcl_abapgit_version=>conv_str_to_version( ms_cached_descriptor-version ).
 
     LOOP AT ms_cached_descriptor-dependencies ASSIGNING <ls_dependency>.
+      TRANSLATE <ls_dependency>-version TO LOWER CASE.
       <ls_dependency>-sem_version = zcl_abapgit_version=>conv_str_to_version( <ls_dependency>-version ).
     ENDLOOP.
 
@@ -171,44 +191,15 @@ CLASS ZCL_ABAPGIT_APACK_READER IMPLEMENTATION.
     DATA: lo_manifest_provider       TYPE REF TO object,
           lv_package                 TYPE devclass,
           lt_packages                TYPE zif_abapgit_sap_package=>ty_devclass_tt,
-          ls_manifest_implementation TYPE ty_s_manifest_declaration,
-          lt_manifest_implementation TYPE STANDARD TABLE OF ty_s_manifest_declaration WITH DEFAULT KEY.
-    DATA lt_refclsname TYPE RANGE OF abap_classname.
-    DATA ls_refclsname LIKE LINE OF lt_refclsname.
+          ls_manifest_implementation TYPE zif_abapgit_apack_definitions=>ty_manifest_declaration,
+          lt_manifest_implementation TYPE zif_abapgit_apack_definitions=>ty_manifest_declarations.
 
+    IF mv_is_cached IS INITIAL.
 
-    IF mv_package_name IS NOT INITIAL.
       lt_packages = zcl_abapgit_factory=>get_sap_package( mv_package_name )->list_subpackages( ).
       INSERT mv_package_name INTO TABLE lt_packages.
-    ENDIF.
 
-    IF mv_is_cached IS INITIAL AND lt_packages IS NOT INITIAL.
-      ls_refclsname-sign = 'I'.
-      ls_refclsname-option = 'EQ'.
-      ls_refclsname-low = zif_abapgit_apack_definitions=>c_apack_interface_cust.
-      INSERT ls_refclsname INTO TABLE lt_refclsname.
-
-      ls_refclsname-sign = 'I'.
-      ls_refclsname-option = 'EQ'.
-      ls_refclsname-low = zif_abapgit_apack_definitions=>c_apack_interface_sap.
-      INSERT ls_refclsname INTO TABLE lt_refclsname.
-
-      IF mv_package_name CA '/'.
-        ls_refclsname-sign = 'I'.
-        ls_refclsname-option = 'CP'.
-        ls_refclsname-low = zif_abapgit_apack_definitions=>c_apack_interface_nspc.
-        INSERT ls_refclsname INTO TABLE lt_refclsname.
-      ENDIF.
-
-      " Find all classes that implement customer or SAP version of APACK interface
-      SELECT seometarel~clsname tadir~devclass FROM seometarel "#EC CI_NOORDER
-         INNER JOIN tadir ON seometarel~clsname = tadir~obj_name "#EC CI_BUFFJOIN
-         INTO TABLE lt_manifest_implementation
-         WHERE tadir~pgmid = 'R3TR' AND
-               tadir~object = 'CLAS' AND
-               seometarel~version = '1' AND
-               seometarel~refclsname IN lt_refclsname
-         ORDER BY clsname devclass.
+      lt_manifest_implementation = zcl_abapgit_apack_helper=>get_manifest_implementations( ).
 
       LOOP AT lt_packages INTO lv_package.
         READ TABLE lt_manifest_implementation INTO ls_manifest_implementation WITH KEY devclass = lv_package.
@@ -241,11 +232,13 @@ CLASS ZCL_ABAPGIT_APACK_READER IMPLEMENTATION.
 
     ls_returned_manifest = get_manifest_descriptor( ).
 
-    rv_has_manifest = abap_false.
-    IF ls_returned_manifest IS NOT INITIAL.
-      rv_has_manifest = abap_true.
-    ENDIF.
+    rv_has_manifest = boolc( ls_returned_manifest IS NOT INITIAL ).
 
+  ENDMETHOD.
+
+
+  METHOD refresh.
+    CLEAR: mv_is_cached, ms_cached_descriptor.
   ENDMETHOD.
 
 
