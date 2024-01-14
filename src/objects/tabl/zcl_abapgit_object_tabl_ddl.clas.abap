@@ -502,10 +502,9 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
     DATA lv_index  TYPE i.
     DATA ls_dd03p  LIKE LINE OF is_data-dd03p.
     DATA lt_fields TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
-    DATA lv_field LIKE LINE OF lt_fields.
+    DATA lv_field  LIKE LINE OF lt_fields.
     DATA ls_dd08v  LIKE LINE OF is_data-dd08v.
-    DATA ls_dd35v LIKE LINE OF is_data-dd35v.
-    DATA lv_extended TYPE abap_bool.
+    DATA ls_dd35v  LIKE LINE OF is_data-dd35v.
 
 
     READ TABLE is_data-dd03p TRANSPORTING NO FIELDS
