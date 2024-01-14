@@ -497,11 +497,6 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
 
   METHOD serialize_extend.
 
-* todo
-    BREAK-POINT.
-
-***********
-
     DATA lv_index TYPE i.
     DATA ls_dd03p LIKE LINE OF is_data-dd03p.
 
