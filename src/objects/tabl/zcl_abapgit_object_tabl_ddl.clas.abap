@@ -51,11 +51,17 @@ CLASS zcl_abapgit_object_tabl_ddl DEFINITION
         VALUE(rv_ddl) TYPE string .
     METHODS serialize_extend
       IMPORTING
-        !iv_fieldname TYPE clike
+        !is_dd03p     TYPE dd03p
         !is_data      TYPE zif_abapgit_object_tabl=>ty_internal
       RETURNING
         VALUE(rv_ddl) TYPE string .
     METHODS serialize_field_annotations
+      IMPORTING
+        !iv_fieldname TYPE clike
+        !is_data      TYPE zif_abapgit_object_tabl=>ty_internal
+      RETURNING
+        VALUE(rv_ddl) TYPE string .
+    METHODS serialize_fkey_annotations
       IMPORTING
         !iv_fieldname TYPE clike
         !is_data      TYPE zif_abapgit_object_tabl=>ty_internal
@@ -423,17 +429,21 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
           lv_suffix = | with suffix { to_lower( lv_suffix ) }|.
         ENDIF.
         IF ls_dd03p-groupname IS INITIAL.
-          rv_ddl = rv_ddl && |  { lv_key }include { to_lower( ls_dd03p-precfield ) }{ lv_suffix }{ lv_notnull };\n|.
+          rv_ddl = rv_ddl && |  { lv_key }include { to_lower( ls_dd03p-precfield ) }{ lv_suffix }{ lv_notnull }|.
         ELSE.
-          rv_ddl = rv_ddl && |  { lv_pre } : include { to_lower( ls_dd03p-precfield ) }{ lv_suffix }{ lv_notnull };\n|.
+          rv_ddl = rv_ddl && |  { lv_pre } : include { to_lower( ls_dd03p-precfield ) }{ lv_suffix }{ lv_notnull }|.
         ENDIF.
         rv_ddl = rv_ddl && serialize_extend(
-          iv_fieldname = ls_dd03p-fieldname
-          is_data      = is_data ).
+          is_dd03p = ls_dd03p
+          is_data  = is_data ).
+        rv_ddl = rv_ddl && |;\n|.
         CONTINUE.
       ENDIF.
 
       rv_ddl = rv_ddl && serialize_field_annotations(
+        iv_fieldname = ls_dd03p-fieldname
+        is_data      = is_data ).
+      rv_ddl = rv_ddl && serialize_fkey_annotations(
         iv_fieldname = ls_dd03p-fieldname
         is_data      = is_data ).
 
@@ -488,13 +498,49 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
   METHOD serialize_extend.
 
 * todo
+    BREAK-POINT.
+
+***********
+
+    DATA lv_index TYPE i.
+    DATA ls_dd03p LIKE LINE OF is_data-dd03p.
+
+    READ TABLE is_data-dd03p TRANSPORTING NO FIELDS
+      WITH KEY fieldname = is_dd03p-fieldname precfield = is_dd03p-precfield.
+    ASSERT sy-subrc = 0.
+    lv_index = sy-tabix + 1.
+
+    LOOP AT is_data-dd03p FROM lv_index INTO ls_dd03p.
+      IF ls_dd03p-adminfield <> '1'.
+        EXIT.
+      ENDIF.
+
+      READ TABLE is_data-dd08v TRANSPORTING NO FIELDS WITH KEY fieldname = ls_dd03p-fieldname.
+      IF sy-subrc <> 0.
+        CONTINUE.
+      ENDIF.
+
+      rv_ddl = rv_ddl && |\n|.
+
+      rv_ddl = rv_ddl && serialize_fkey_annotations(
+        iv_fieldname = ls_dd03p-fieldname
+        is_data      = is_data ).
+
+      rv_ddl = rv_ddl && |  extend id :|.
+
+      rv_ddl = rv_ddl && serialize_field_foreign_key(
+        iv_fieldname = ls_dd03p-fieldname
+        is_data      = is_data ).
+
+    ENDLOOP.
+
+    REPLACE ALL OCCURRENCES OF |\n  | IN rv_ddl WITH |\n    |.
 
   ENDMETHOD.
 
 
   METHOD serialize_field_annotations.
 
-    DATA ls_dd08v LIKE LINE OF is_data-dd08v.
     DATA ls_dd03p LIKE LINE OF is_data-dd03p.
 
 
@@ -518,37 +564,6 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
           rv_ddl = rv_ddl && |  @Semantics.quantity.unitOfMeasure : '{ to_lower( ls_dd03p-reftable ) }.{
             to_lower( ls_dd03p-reffield ) }'\n|.
         ENDIF.
-      ENDIF.
-    ENDIF.
-
-    READ TABLE is_data-dd08v INTO ls_dd08v WITH KEY fieldname = iv_fieldname.
-    IF sy-subrc = 0.
-      IF ls_dd08v-ddtext IS NOT INITIAL.
-        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.label : { escape_string( ls_dd08v-ddtext ) }\n|.
-      ENDIF.
-
-      IF ls_dd08v-frkart IS NOT INITIAL.
-        CASE ls_dd08v-frkart.
-          WHEN 'TEXT'.
-            rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.keyType : #TEXT_KEY\n|.
-          WHEN 'REF'.
-            rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.keyType : #NON_KEY\n|.
-          WHEN OTHERS.
-            rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.keyType : #{ ls_dd08v-frkart }\n|.
-        ENDCASE.
-      ENDIF.
-
-      IF ls_dd08v-checkflag = abap_false.
-        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.screenCheck : true\n|.
-      ELSE.
-        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.screenCheck : false\n|.
-      ENDIF.
-
-      IF ls_dd08v-arbgb IS NOT INITIAL.
-        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.messageClass : '{ ls_dd08v-arbgb }'\n|.
-      ENDIF.
-      IF ls_dd08v-msgnr IS NOT INITIAL.
-        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.messageNumber : '{ ls_dd08v-msgnr }'\n|.
       ENDIF.
     ENDIF.
 
@@ -608,6 +623,44 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
           to_lower( ls_dd05m-fortable ) }.{ to_lower( ls_dd05m-forkey ) }|.
       ENDIF.
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD serialize_fkey_annotations.
+
+    DATA ls_dd08v LIKE LINE OF is_data-dd08v.
+
+    READ TABLE is_data-dd08v INTO ls_dd08v WITH KEY fieldname = iv_fieldname.
+    IF sy-subrc = 0.
+      IF ls_dd08v-ddtext IS NOT INITIAL.
+        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.label : { escape_string( ls_dd08v-ddtext ) }\n|.
+      ENDIF.
+
+      IF ls_dd08v-frkart IS NOT INITIAL.
+        CASE ls_dd08v-frkart.
+          WHEN 'TEXT'.
+            rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.keyType : #TEXT_KEY\n|.
+          WHEN 'REF'.
+            rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.keyType : #NON_KEY\n|.
+          WHEN OTHERS.
+            rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.keyType : #{ ls_dd08v-frkart }\n|.
+        ENDCASE.
+      ENDIF.
+
+      IF ls_dd08v-checkflag = abap_false.
+        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.screenCheck : true\n|.
+      ELSE.
+        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.screenCheck : false\n|.
+      ENDIF.
+
+      IF ls_dd08v-arbgb IS NOT INITIAL.
+        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.messageClass : '{ ls_dd08v-arbgb }'\n|.
+      ENDIF.
+      IF ls_dd08v-msgnr IS NOT INITIAL.
+        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.messageNumber : '{ ls_dd08v-msgnr }'\n|.
+      ENDIF.
+    ENDIF.
 
   ENDMETHOD.
 
