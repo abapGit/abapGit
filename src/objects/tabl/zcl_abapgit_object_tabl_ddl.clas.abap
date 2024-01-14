@@ -49,6 +49,12 @@ CLASS zcl_abapgit_object_tabl_ddl DEFINITION
         !is_data      TYPE zif_abapgit_object_tabl=>ty_internal
       RETURNING
         VALUE(rv_ddl) TYPE string .
+    METHODS serialize_extend
+      IMPORTING
+        !iv_fieldname TYPE clike
+        !is_data      TYPE zif_abapgit_object_tabl=>ty_internal
+      RETURNING
+        VALUE(rv_ddl) TYPE string .
     METHODS serialize_field_annotations
       IMPORTING
         !iv_fieldname TYPE clike
@@ -421,6 +427,9 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
         ELSE.
           rv_ddl = rv_ddl && |  { lv_pre } : include { to_lower( ls_dd03p-precfield ) }{ lv_suffix }{ lv_notnull };\n|.
         ENDIF.
+        rv_ddl = rv_ddl && serialize_extend(
+          iv_fieldname = ls_dd03p-fieldname
+          is_data      = is_data ).
         CONTINUE.
       ENDIF.
 
@@ -472,6 +481,13 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
         eo_object_data = li_object_data.
 
     CALL METHOD li_object_data->('GET_CONTENT') IMPORTING p_data = rv_ddl.
+
+  ENDMETHOD.
+
+
+  METHOD serialize_extend.
+
+* todo
 
   ENDMETHOD.
 
