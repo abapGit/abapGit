@@ -612,6 +612,11 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
             to_lower( ls_dd03p-reffield ) }'\n|.
         ENDIF.
       ENDIF.
+
+      IF ls_dd03p-rollname IS INITIAL AND ( ls_dd03p-datatype(3) = 'D16' OR ls_dd03p-datatype(3) = 'D34' ).
+* ls_dd03p-outputstyle
+        rv_ddl = rv_ddl && |  @AbapCatalog.decfloat.outputStyle : #NORMAL\n|.
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.
@@ -754,6 +759,10 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       rv_ddl = rv_ddl && |@AbapCatalog.dataMaintenance : #LIMITED\n|.
     ENDIF.
 
+    IF is_data-dd02v-pk_is_invhash = abap_true.
+      rv_ddl = rv_ddl && |@AbapCatalog.primaryKey.invertedHashIndex : true\n|.
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -781,6 +790,20 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
           rv_type = |abap.int4{ lv_notnull }|.
         WHEN 'LANG'.
           rv_type = |abap.lang{ lv_notnull }|.
+        WHEN 'INT8'.
+          rv_type = |abap.int8{ lv_notnull }|.
+        WHEN 'D16D'.
+          rv_type = |abap.df16_dec({ lv_leng },{ lv_decimals }){ lv_notnull }|.
+        WHEN 'D16R'.
+          rv_type = |abap.df16_raw{ lv_notnull }|.
+        WHEN 'D16S'.
+          rv_type = |abap.df16_scl{ lv_notnull }|.
+        WHEN 'D34S'.
+          rv_type = |abap.df34_scl{ lv_notnull }|.
+        WHEN 'D34D'.
+          rv_type = |abap.df34_dec({ lv_leng },{ lv_decimals }){ lv_notnull }|.
+        WHEN 'D34R'.
+          rv_type = |abap.df34_raw{ lv_notnull }|.
         WHEN 'INT2'.
           rv_type = |abap.int2{ lv_notnull }|.
         WHEN 'INT1'.
