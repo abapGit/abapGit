@@ -110,12 +110,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
 
 * https://help.sap.com/doc/abapdocu_cp_index_htm/CLOUD/en-US/abenddicddl_define_table.htm
 
-* CL_DDL_PARSER, CL_SBD_STRUCTURE_OBJDATA serializer in local class?
-    " todo, NEW cl_sbd_structure_persist( )->get_source(
-    "   EXPORTING
-    "     i_object_key = 'ZABAPGIT'
-    "   IMPORTING
-    "     e_source = DATA(sdf) ).
+* CL_SBD_STRUCTURE_OBJDATA has serializer in local class
 
     DATA lv_ddl    TYPE string.
     DATA lv_fields TYPE string.
