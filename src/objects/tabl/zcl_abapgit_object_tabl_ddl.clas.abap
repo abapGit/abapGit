@@ -737,7 +737,11 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
 
     CASE is_data-dd02v-tabclass.
       WHEN 'TRANSP'.
-        rv_ddl = rv_ddl && |@AbapCatalog.tableCategory : #TRANSPARENT\n|.
+        IF is_data-dd02v-is_gtt = abap_true.
+          rv_ddl = rv_ddl && |@AbapCatalog.tableCategory : #GLOBAL_TEMPORARY\n|.
+        ELSE.
+          rv_ddl = rv_ddl && |@AbapCatalog.tableCategory : #TRANSPARENT\n|.
+        ENDIF.
       WHEN OTHERS.
         ASSERT 1 = 'todo'.
     ENDCASE.
@@ -754,8 +758,10 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       rv_ddl = rv_ddl && |@AbapCatalog.dataMaintenance : #ALLOWED\n|.
     ELSEIF is_data-dd02v-mainflag = 'N'.
       rv_ddl = rv_ddl && |@AbapCatalog.dataMaintenance : #NOT_ALLOWED\n|.
-    ELSE.
+    ELSEIF is_data-dd02v-mainflag IS INITIAL.
       rv_ddl = rv_ddl && |@AbapCatalog.dataMaintenance : #LIMITED\n|.
+    ELSE.
+      rv_ddl = rv_ddl && |@AbapCatalog.dataMaintenance : \n|.
     ENDIF.
 
     IF is_data-dd02v-pk_is_invhash = abap_true.
@@ -787,8 +793,16 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
           rv_type = |abap.rawstring({ lv_leng }){ lv_notnull }|.
         WHEN 'INT4'.
           rv_type = |abap.int4{ lv_notnull }|.
+        WHEN 'ACCP'.
+          rv_type = |abap.accp{ lv_notnull }|.
         WHEN 'LANG'.
           rv_type = |abap.lang{ lv_notnull }|.
+        WHEN 'DATN'.
+          rv_type = |abap.datn{ lv_notnull }|.
+        WHEN 'TIMN'.
+          rv_type = |abap.timn{ lv_notnull }|.
+        WHEN 'UTCL'.
+          rv_type = |abap.utcl{ lv_notnull }|.
         WHEN 'INT8'.
           rv_type = |abap.int8{ lv_notnull }|.
         WHEN 'D16D'.
@@ -797,12 +811,16 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
           rv_type = |abap.df16_raw{ lv_notnull }|.
         WHEN 'D16S'.
           rv_type = |abap.df16_scl{ lv_notnull }|.
+        WHEN 'D16N'.
+          rv_type = |abap.d16n{ lv_notnull }|.
         WHEN 'D34S'.
           rv_type = |abap.df34_scl{ lv_notnull }|.
         WHEN 'D34D'.
           rv_type = |abap.df34_dec({ lv_leng },{ lv_decimals }){ lv_notnull }|.
         WHEN 'D34R'.
           rv_type = |abap.df34_raw{ lv_notnull }|.
+        WHEN 'D34N'.
+          rv_type = |abap.d34n{ lv_notnull }|.
         WHEN 'INT2'.
           rv_type = |abap.int2{ lv_notnull }|.
         WHEN 'INT1'.
