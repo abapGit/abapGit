@@ -603,7 +603,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       ENDIF.
 
       IF ls_dd03p-reftable IS NOT INITIAL AND ls_dd03p-reffield IS NOT INITIAL.
-        IF ls_dd03p-datatype = 'CURR'.
+* this is not completely correct, it must lookup the type of the field in REFTABLE?
+        IF ls_dd03p-datatype = 'CURR' or ls_dd03p-reffield = 'WAERS'.
           rv_ddl = rv_ddl && |  @Semantics.amount.currencyCode : '{ to_lower( ls_dd03p-reftable ) }.{
             to_lower( ls_dd03p-reffield ) }'\n|.
         ELSE.
