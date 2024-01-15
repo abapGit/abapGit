@@ -766,9 +766,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       COMPONENT 'PK_IS_INVHASH'
       OF STRUCTURE is_data-dd02v
       TO <lv_pk_is_invhash>.
-    ASSERT sy-subrc = 0.
-
-    IF <lv_pk_is_invhash> = abap_true.
+    IF sy-subrc = 0 AND <lv_pk_is_invhash> = abap_true.
       rv_ddl = rv_ddl && |@AbapCatalog.primaryKey.invertedHashIndex : true\n|.
     ENDIF.
 
