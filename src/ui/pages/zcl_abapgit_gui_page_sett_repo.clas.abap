@@ -475,8 +475,8 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
         lv_version_constant = io_form_data->get( c_id-version_constant ).
         IF lv_version_constant IS NOT INITIAL.
           zcl_abapgit_version=>get_version_constant_value( lv_version_constant ).
+          validate_version_constant( lv_version_constant ).
         ENDIF.
-        validate_version_constant( lv_version_constant ).
       CATCH zcx_abapgit_exception INTO lx_exception.
         ro_validation_log->set(
           iv_key = c_id-version_constant
