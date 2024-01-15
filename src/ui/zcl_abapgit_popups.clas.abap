@@ -611,6 +611,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
     DATA ls_data TYPE scompkdtln.
 
+    MOVE-CORRESPONDING is_package_data TO ls_data.
+
     IF zcl_abapgit_factory=>get_function_module( )->function_exists( 'PB_POPUP_PACKAGE_CREATE' ) = abap_false.
 * looks like the function module used does not exist on all
 * versions since 702, so show an error
