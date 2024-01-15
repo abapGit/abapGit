@@ -49,7 +49,19 @@ CLASS zcl_abapgit_object_tabl_ddl DEFINITION
         !is_data      TYPE zif_abapgit_object_tabl=>ty_internal
       RETURNING
         VALUE(rv_ddl) TYPE string .
+    METHODS serialize_extend
+      IMPORTING
+        !is_dd03p     TYPE dd03p
+        !is_data      TYPE zif_abapgit_object_tabl=>ty_internal
+      RETURNING
+        VALUE(rv_ddl) TYPE string .
     METHODS serialize_field_annotations
+      IMPORTING
+        !iv_fieldname TYPE clike
+        !is_data      TYPE zif_abapgit_object_tabl=>ty_internal
+      RETURNING
+        VALUE(rv_ddl) TYPE string .
+    METHODS serialize_fkey_annotations
       IMPORTING
         !iv_fieldname TYPE clike
         !is_data      TYPE zif_abapgit_object_tabl=>ty_internal
@@ -98,12 +110,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
 
 * https://help.sap.com/doc/abapdocu_cp_index_htm/CLOUD/en-US/abenddicddl_define_table.htm
 
-* CL_DDL_PARSER, CL_SBD_STRUCTURE_OBJDATA serializer in local class?
-    " todo, NEW cl_sbd_structure_persist( )->get_source(
-    "   EXPORTING
-    "     i_object_key = 'ZABAPGIT'
-    "   IMPORTING
-    "     e_source = DATA(sdf) ).
+* CL_SBD_STRUCTURE_OBJDATA has serializer in local class
 
     DATA lv_ddl    TYPE string.
     DATA lv_fields TYPE string.
@@ -373,7 +380,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
     rv_ddl = rv_ddl && |define table { to_lower( is_data-dd02v-tabname ) } \{\n|.
 
     LOOP AT is_data-dd03p INTO ls_dd03p
-        WHERE ( fieldname <> '.INCLUDE' OR groupname IS NOT INITIAL )
+        WHERE ( fieldname NP '.INCLU*' OR groupname IS NOT INITIAL )
         AND adminfield = '0'.
       lv_int = 0.
       IF ls_dd03p-keyflag = abap_true.
@@ -407,7 +414,9 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
           occ = lv_colon - strlen( lv_pre ) ).
       ENDIF.
 
-      IF ls_dd03p-fieldname CP '.INCLU*'.
+      IF ls_dd03p-fieldname = '.INCLU--AP'.
+        CONTINUE.
+      ELSEIF ls_dd03p-fieldname CP '.INCLU*'.
         IF ls_dd03p-notnull = abap_true.
           lv_notnull = | not null|.
         ENDIF.
@@ -417,14 +426,21 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
           lv_suffix = | with suffix { to_lower( lv_suffix ) }|.
         ENDIF.
         IF ls_dd03p-groupname IS INITIAL.
-          rv_ddl = rv_ddl && |  { lv_key }include { to_lower( ls_dd03p-precfield ) }{ lv_suffix }{ lv_notnull };\n|.
+          rv_ddl = rv_ddl && |  { lv_key }include { to_lower( ls_dd03p-precfield ) }{ lv_suffix }{ lv_notnull }|.
         ELSE.
-          rv_ddl = rv_ddl && |  { lv_pre } : include { to_lower( ls_dd03p-precfield ) }{ lv_suffix }{ lv_notnull };\n|.
+          rv_ddl = rv_ddl && |  { lv_pre } : include { to_lower( ls_dd03p-precfield ) }{ lv_suffix }{ lv_notnull }|.
         ENDIF.
+        rv_ddl = rv_ddl && serialize_extend(
+          is_dd03p = ls_dd03p
+          is_data  = is_data ).
+        rv_ddl = rv_ddl && |;\n|.
         CONTINUE.
       ENDIF.
 
       rv_ddl = rv_ddl && serialize_field_annotations(
+        iv_fieldname = ls_dd03p-fieldname
+        is_data      = is_data ).
+      rv_ddl = rv_ddl && serialize_fkey_annotations(
         iv_fieldname = ls_dd03p-fieldname
         is_data      = is_data ).
 
@@ -476,9 +492,96 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD serialize_extend.
+
+    DATA lv_index  TYPE i.
+    DATA ls_dd03p  LIKE LINE OF is_data-dd03p.
+    DATA lt_fields TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
+    DATA lv_field  LIKE LINE OF lt_fields.
+    DATA ls_dd08v  LIKE LINE OF is_data-dd08v.
+    DATA ls_dd35v  LIKE LINE OF is_data-dd35v.
+
+
+    READ TABLE is_data-dd03p TRANSPORTING NO FIELDS
+      WITH KEY fieldname = is_dd03p-fieldname precfield = is_dd03p-precfield.
+    ASSERT sy-subrc = 0.
+    lv_index = sy-tabix + 1.
+
+* the extended keys are not sorted by the fieldname positions
+    LOOP AT is_data-dd03p FROM lv_index INTO ls_dd03p.
+      IF ls_dd03p-adminfield = '0'.
+        EXIT.
+      ENDIF.
+      APPEND ls_dd03p-fieldname TO lt_fields.
+    ENDLOOP.
+    CLEAR ls_dd03p.
+
+    LOOP AT is_data-dd08v INTO ls_dd08v
+        WHERE ( noinherit = 'Y' OR checktable = '*' ) AND noinherit <> 'N'.
+      READ TABLE lt_fields TRANSPORTING NO FIELDS
+        WITH KEY table_line = ls_dd08v-fieldname.
+      IF sy-subrc <> 0.
+        CONTINUE.
+      ENDIF.
+      DELETE lt_fields WHERE table_line = ls_dd08v-fieldname.
+
+      rv_ddl = rv_ddl && |\n|.
+
+      IF ls_dd08v-checktable <> '*'.
+        rv_ddl = rv_ddl && serialize_fkey_annotations(
+          iv_fieldname = ls_dd08v-fieldname
+          is_data      = is_data ).
+      ENDIF.
+
+      rv_ddl = rv_ddl && |  extend { to_lower( ls_dd08v-fieldname ) } :|.
+
+      IF ls_dd08v-checktable = '*'.
+        rv_ddl = rv_ddl && |\n    remove foreign key|.
+      ELSE.
+        rv_ddl = rv_ddl && serialize_field_foreign_key(
+          iv_fieldname = ls_dd08v-fieldname
+          is_data      = is_data ).
+      ENDIF.
+
+      READ TABLE is_data-dd35v INTO ls_dd35v WITH KEY fieldname = ls_dd08v-fieldname.
+      IF sy-subrc = 0.
+        IF ls_dd35v-shlpname = '*'.
+          rv_ddl = rv_ddl && |\n    remove value help|.
+        ELSEIF ls_dd35v-shlpinher <> abap_true.
+          rv_ddl = rv_ddl && serialize_value_help(
+            iv_fieldname = ls_dd08v-fieldname
+            is_data      = is_data ).
+        ENDIF.
+      ENDIF.
+    ENDLOOP.
+
+    LOOP AT is_data-dd35v INTO ls_dd35v.
+      READ TABLE lt_fields INTO lv_field
+        WITH KEY table_line = ls_dd35v-fieldname.
+      IF sy-subrc <> 0.
+        CONTINUE.
+      ENDIF.
+
+      IF ls_dd35v-shlpname = '*'.
+        rv_ddl = rv_ddl && |\n|.
+        rv_ddl = rv_ddl && |  extend { to_lower( lv_field ) } :|.
+        rv_ddl = rv_ddl && |\n    remove value help|.
+      ELSEIF ls_dd35v-shlpinher <> abap_true.
+        rv_ddl = rv_ddl && |\n|.
+        rv_ddl = rv_ddl && |  extend { to_lower( lv_field ) } :|.
+        rv_ddl = rv_ddl && serialize_value_help(
+          iv_fieldname = lv_field
+          is_data      = is_data ).
+      ENDIF.
+    ENDLOOP.
+
+    REPLACE ALL OCCURRENCES OF |\n  | IN rv_ddl WITH |\n    |.
+
+  ENDMETHOD.
+
+
   METHOD serialize_field_annotations.
 
-    DATA ls_dd08v LIKE LINE OF is_data-dd08v.
     DATA ls_dd03p LIKE LINE OF is_data-dd03p.
 
 
@@ -495,44 +598,19 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       ENDIF.
 
       IF ls_dd03p-reftable IS NOT INITIAL AND ls_dd03p-reffield IS NOT INITIAL.
-        IF ls_dd03p-datatype = 'CURR'.
+* this is not completely correct, it must lookup the type of the field in REFTABLE?
+        IF ls_dd03p-datatype = 'CURR' OR ls_dd03p-reffield = 'WAERS'.
           rv_ddl = rv_ddl && |  @Semantics.amount.currencyCode : '{ to_lower( ls_dd03p-reftable ) }.{
             to_lower( ls_dd03p-reffield ) }'\n|.
-        ELSEIF ls_dd03p-datatype = 'UNIT'.
+        ELSE.
           rv_ddl = rv_ddl && |  @Semantics.quantity.unitOfMeasure : '{ to_lower( ls_dd03p-reftable ) }.{
             to_lower( ls_dd03p-reffield ) }'\n|.
         ENDIF.
       ENDIF.
-    ENDIF.
 
-    READ TABLE is_data-dd08v INTO ls_dd08v WITH KEY fieldname = iv_fieldname.
-    IF sy-subrc = 0.
-      IF ls_dd08v-ddtext IS NOT INITIAL.
-        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.label : { escape_string( ls_dd08v-ddtext ) }\n|.
-      ENDIF.
-
-      IF ls_dd08v-frkart IS NOT INITIAL.
-        CASE ls_dd08v-frkart.
-          WHEN 'TEXT'.
-            rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.keyType : #TEXT_KEY\n|.
-          WHEN 'REF'.
-            rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.keyType : #NON_KEY\n|.
-          WHEN OTHERS.
-            rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.keyType : #{ ls_dd08v-frkart }\n|.
-        ENDCASE.
-      ENDIF.
-
-      IF ls_dd08v-checkflag = abap_false.
-        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.screenCheck : true\n|.
-      ELSE.
-        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.screenCheck : false\n|.
-      ENDIF.
-
-      IF ls_dd08v-arbgb IS NOT INITIAL.
-        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.messageClass : '{ ls_dd08v-arbgb }'\n|.
-      ENDIF.
-      IF ls_dd08v-msgnr IS NOT INITIAL.
-        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.messageNumber : '{ ls_dd08v-msgnr }'\n|.
+      IF ls_dd03p-rollname IS INITIAL AND ( ls_dd03p-datatype(3) = 'D16' OR ls_dd03p-datatype(3) = 'D34' ).
+* ls_dd03p-outputstyle
+        rv_ddl = rv_ddl && |  @AbapCatalog.decfloat.outputStyle : #NORMAL\n|.
       ENDIF.
     ENDIF.
 
@@ -596,6 +674,44 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD serialize_fkey_annotations.
+
+    DATA ls_dd08v LIKE LINE OF is_data-dd08v.
+
+    READ TABLE is_data-dd08v INTO ls_dd08v WITH KEY fieldname = iv_fieldname.
+    IF sy-subrc = 0.
+      IF ls_dd08v-ddtext IS NOT INITIAL.
+        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.label : { escape_string( ls_dd08v-ddtext ) }\n|.
+      ENDIF.
+
+      IF ls_dd08v-frkart IS NOT INITIAL.
+        CASE ls_dd08v-frkart.
+          WHEN 'TEXT'.
+            rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.keyType : #TEXT_KEY\n|.
+          WHEN 'REF'.
+            rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.keyType : #NON_KEY\n|.
+          WHEN OTHERS.
+            rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.keyType : #{ ls_dd08v-frkart }\n|.
+        ENDCASE.
+      ENDIF.
+
+      IF ls_dd08v-checkflag = abap_false OR ls_dd08v-checkflag = 'N'.
+        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.screenCheck : true\n|.
+      ELSE.
+        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.screenCheck : false\n|.
+      ENDIF.
+
+      IF ls_dd08v-arbgb IS NOT INITIAL.
+        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.messageClass : '{ ls_dd08v-arbgb }'\n|.
+      ENDIF.
+      IF ls_dd08v-msgnr IS NOT INITIAL.
+        rv_ddl = rv_ddl && |  @AbapCatalog.foreignKey.messageNumber : '{ ls_dd08v-msgnr }'\n|.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD serialize_top.
 
     rv_ddl = rv_ddl && |@EndUserText.label : { escape_string( is_data-dd02v-ddtext ) }\n|.
@@ -617,12 +733,18 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
 
     CASE is_data-dd02v-tabclass.
       WHEN 'TRANSP'.
-        rv_ddl = rv_ddl && |@AbapCatalog.tableCategory : #TRANSPARENT\n|.
+        IF is_data-dd02v-is_gtt = abap_true.
+          rv_ddl = rv_ddl && |@AbapCatalog.tableCategory : #GLOBAL_TEMPORARY\n|.
+        ELSE.
+          rv_ddl = rv_ddl && |@AbapCatalog.tableCategory : #TRANSPARENT\n|.
+        ENDIF.
       WHEN OTHERS.
         ASSERT 1 = 'todo'.
     ENDCASE.
 
-    IF is_data-dd02v-authclass = '02'.
+    IF is_data-dd02v-authclass = '01'.
+      rv_ddl = rv_ddl && |@AbapCatalog.activationType : #NAMETAB_GENERATION_OFFLINE\n|.
+    ELSEIF is_data-dd02v-authclass = '02'.
       rv_ddl = rv_ddl && |@AbapCatalog.activationType : #ADAPT_C_STRUCTURES\n|.
     ENDIF.
 
@@ -632,8 +754,14 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       rv_ddl = rv_ddl && |@AbapCatalog.dataMaintenance : #ALLOWED\n|.
     ELSEIF is_data-dd02v-mainflag = 'N'.
       rv_ddl = rv_ddl && |@AbapCatalog.dataMaintenance : #NOT_ALLOWED\n|.
-    ELSE.
+    ELSEIF is_data-dd02v-mainflag IS INITIAL.
       rv_ddl = rv_ddl && |@AbapCatalog.dataMaintenance : #LIMITED\n|.
+    ELSE.
+      rv_ddl = rv_ddl && |@AbapCatalog.dataMaintenance : \n|.
+    ENDIF.
+
+    IF is_data-dd02v-pk_is_invhash = abap_true.
+      rv_ddl = rv_ddl && |@AbapCatalog.primaryKey.invertedHashIndex : true\n|.
     ENDIF.
 
   ENDMETHOD.
@@ -661,14 +789,54 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
           rv_type = |abap.rawstring({ lv_leng }){ lv_notnull }|.
         WHEN 'INT4'.
           rv_type = |abap.int4{ lv_notnull }|.
+        WHEN 'ACCP'.
+          rv_type = |abap.accp{ lv_notnull }|.
+        WHEN 'LANG'.
+          rv_type = |abap.lang{ lv_notnull }|.
+        WHEN 'DATN'.
+          rv_type = |abap.datn{ lv_notnull }|.
+        WHEN 'TIMN'.
+          rv_type = |abap.timn{ lv_notnull }|.
+        WHEN 'UTCL'.
+          rv_type = |abap.utcl{ lv_notnull }|.
+        WHEN 'INT8'.
+          rv_type = |abap.int8{ lv_notnull }|.
+        WHEN 'D16D'.
+          rv_type = |abap.df16_dec({ lv_leng },{ lv_decimals }){ lv_notnull }|.
+        WHEN 'D16R'.
+          rv_type = |abap.df16_raw{ lv_notnull }|.
+        WHEN 'D16S'.
+          rv_type = |abap.df16_scl{ lv_notnull }|.
+        WHEN 'D16N'.
+          rv_type = |abap.d16n{ lv_notnull }|.
+        WHEN 'D34S'.
+          rv_type = |abap.df34_scl{ lv_notnull }|.
+        WHEN 'D34D'.
+          rv_type = |abap.df34_dec({ lv_leng },{ lv_decimals }){ lv_notnull }|.
+        WHEN 'D34R'.
+          rv_type = |abap.df34_raw{ lv_notnull }|.
+        WHEN 'D34N'.
+          rv_type = |abap.d34n{ lv_notnull }|.
         WHEN 'INT2'.
           rv_type = |abap.int2{ lv_notnull }|.
         WHEN 'INT1'.
           rv_type = |abap.int1{ lv_notnull }|.
+        WHEN 'CUKY'.
+          rv_type = |abap.cuky{ lv_notnull }|.
         WHEN 'DATS'.
           rv_type = |abap.dats{ lv_notnull }|.
         WHEN 'TIMS'.
           rv_type = |abap.tims{ lv_notnull }|.
+        WHEN 'FLTP'.
+          rv_type = |abap.fltp{ lv_notnull }|.
+        WHEN 'CLNT'.
+          rv_type = |abap.clnt{ lv_notnull }|.
+        WHEN 'SSTR'.
+          rv_type = |abap.sstring({ lv_leng }){ lv_notnull }|.
+        WHEN 'QUAN'.
+          rv_type = |abap.quan({ lv_leng },{ lv_decimals }){ lv_notnull }|.
+        WHEN 'CURR'.
+          rv_type = |abap.curr({ lv_leng },{ lv_decimals }){ lv_notnull }|.
         WHEN 'DEC'.
           rv_type = |abap.dec({ lv_leng },{ lv_decimals }){ lv_notnull }|.
         WHEN OTHERS.
