@@ -713,6 +713,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
 
 
   METHOD serialize_top.
+    FIELD-SYMBOLS: <lv_pk_is_invhash> TYPE c. " ddpk_is_invhash
 
     rv_ddl = rv_ddl && |@EndUserText.label : { escape_string( is_data-dd02v-ddtext ) }\n|.
 
@@ -760,7 +761,12 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
       rv_ddl = rv_ddl && |@AbapCatalog.dataMaintenance : \n|.
     ENDIF.
 
-    IF is_data-dd02v-pk_is_invhash = abap_true.
+    " doesn't exist on NW <= 750
+    ASSIGN
+      COMPONENT 'PK_IS_INVHASH'
+      OF STRUCTURE is_data-dd02v
+      TO <lv_pk_is_invhash>.
+    IF sy-subrc = 0 AND <lv_pk_is_invhash> = abap_true.
       rv_ddl = rv_ddl && |@AbapCatalog.primaryKey.invertedHashIndex : true\n|.
     ENDIF.
 

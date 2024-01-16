@@ -273,6 +273,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     li_popup = zcl_abapgit_ui_factory=>get_popups( ).
 
     li_popup->popup_to_create_package(
+      EXPORTING
+        is_package_data = ls_package_data
       IMPORTING
         es_package_data = ls_package_data
         ev_create       = lv_create ).
