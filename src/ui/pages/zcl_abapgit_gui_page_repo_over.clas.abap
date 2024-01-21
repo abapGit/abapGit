@@ -491,7 +491,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_li_class = |{ lc_action_class }| ).
 
     lo_toolbar->add(
-      iv_txt      = |Repository Settings|
+      iv_txt      = |Repo Settings|
       iv_act      = |{ zif_abapgit_definitions=>c_action-repo_settings }{ lc_dummy_key }|
       iv_class    = |{ lc_action_class }|
       iv_li_class = |{ lc_action_class }| ).
