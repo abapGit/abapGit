@@ -486,7 +486,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                      iv_act = |{ zif_abapgit_definitions=>c_action-repo_refresh }?key={ mv_key }|
                      iv_opt = zif_abapgit_html=>c_html_opt-strong ).
 
-    ro_toolbar->add( iv_txt   = 'Repository Settings'
+    ro_toolbar->add( iv_txt   = 'Repo Settings'
                      iv_act   = |{ zif_abapgit_definitions=>c_action-repo_settings }?key={ mv_key }|
                      iv_opt   = zif_abapgit_html=>c_html_opt-strong
                      iv_title = `Repository Settings` ).
