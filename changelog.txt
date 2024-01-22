@@ -11,6 +11,7 @@ Legend
 2024-01-xx v1.127.0
 -------------------
 
++ Flow Page (beta, https://docs.abapgit.org/user-guide/reference/flow.html)
 + Repo List: Make labels clickable (#6651)
 + Support short/long timestamps in field rules (#6666)
 + Add "Ignore" option for ABAP Language Version (#6663)
