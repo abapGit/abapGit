@@ -2421,6 +2421,11 @@ function enumerateUiActions() {
       });
     });
 
+  // Remove duplicate entries based on 'action' and 'title' properties
+  items = items.filter(function(item, index, self) {
+    return self.findIndex(i => i.action === item.action && i.title === item.title) === index;
+  });
+  
   return items;
 }
 
