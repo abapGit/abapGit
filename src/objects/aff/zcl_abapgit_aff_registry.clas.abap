@@ -50,6 +50,7 @@ CLASS zcl_abapgit_aff_registry IMPLEMENTATION.
     register( 'CHKO' ).
     register( 'CHKV' ).
     register( 'DRTY' ).
+    register( 'DTEB' ).
     register( 'EVTB' ).
     register( 'EEEC' ).
     register( 'GSMP' ).
