@@ -8,6 +8,46 @@ Legend
 + : added
 - : removed
 
+2024-01-24 v1.127.0
+-------------------
+
++ Flow Page (beta, https://docs.abapgit.org/user-guide/reference/flow.html)
++ Repo List: Make labels clickable (#6651)
++ Support short/long timestamps in field rules (#6666)
++ Add "Ignore" option for ABAP Language Version (#6663)
++ Add some stats for DB view (#6675)
++ Remember last used folder (#6677)
++ Debug info: Show exits coded in exit super class (#6708)
++ New feature: Original system (#6715)
+* Prevent calls to exit implementations in tests (#6653)
+* Disable superfluous check for offline repos (#6662)
+* Fix filename for export to ZIP (#6664, #6665)
+* DDLX: Set "Changed At" and "Changed By" (#6661)
+* Fix home and back again (#6670)
+* Debug page: open external links in new window (#6671)
+* Fix running multiple instances of abapGit (#6679)
+* CLAS: Fix deserializing child exception classes (#6682)
+* IOBJ: Fix uninstall (#6685)
+* TABU: Fix staging in background process (#6683)
+* TABU: Fix deserializing data config (#6684)
+* Check for ABAP language version during serialize (#6681)
+* TSTC select, ABAP Cloud/Steampunk compatibility (#6695)
+* Fix ABAP language version check (#6693)
+* CLAS: Avoid popups in lower releases (#6709)
+* FUGR: Fix check if include belong to function grp (#6711)
+* Add object type to error message (#6714)
+* Fix abapGit popups external call (#6716)
+* Refresh repository to reduce memory usage in background mode (#6728)
+* Remove exception when deleting files (#6729)
+* Do a syntax check before accessing version constant (#6733)
+* Avoid loss of log during background processing (#6736)
+* Fix APACK issues (#6743)
+* DDLS: deletes remaining TADIR entry during delete (#6745)
+* Fix: Cannot change repo settings without version constant (#6753)
+* Create package popup: Fix prefill package name (#6752)
+* BG: Ensure auth buffer is cleared even in error case (#6756)
+* Fix empty JSON file for AFF based objects (#6766)
+
 2023-11-16 v1.126.0
 -------------------
 
