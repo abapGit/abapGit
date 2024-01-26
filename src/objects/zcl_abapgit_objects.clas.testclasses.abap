@@ -55,6 +55,36 @@ CLASS ltcl_object_types IMPLEMENTATION.
 
 ENDCLASS.
 
+
+CLASS lcl_settings_with_features DEFINITION.
+  PUBLIC SECTION.
+    INTERFACES zif_abapgit_persist_settings.
+    methods: constructor
+    importing features type string.
+  PRIVATE SECTION.
+    DATA mv_features TYPE string.
+ENDCLASS.
+
+CLASS lcl_settings_with_features IMPLEMENTATION.
+  METHOD zif_abapgit_persist_settings~modify.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_persist_settings~read.
+
+    ro_settings = new zcl_abapgit_settings( ).
+    ro_settings->set_experimental_features( mv_features ).
+
+  ENDMETHOD.
+  METHOD constructor.
+    mv_features = features.
+  ENDMETHOD.
+
+ENDCLASS.
+
+
+
+
 *----------------------------------------------------------------------*
 *       CLASS ltcl_serialize DEFINITION
 *----------------------------------------------------------------------*
@@ -64,8 +94,7 @@ CLASS ltcl_serialize DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT F
 
   PRIVATE SECTION.
 
-    METHODS:
-      check
+    METHODS: check
         IMPORTING is_item TYPE zif_abapgit_definitions=>ty_item
         RAISING   zcx_abapgit_exception,
       serialize_tabl FOR TESTING RAISING zcx_abapgit_exception,
@@ -80,7 +109,8 @@ CLASS ltcl_serialize DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT F
       serialize_msag FOR TESTING RAISING zcx_abapgit_exception,
       serialize_prog FOR TESTING RAISING zcx_abapgit_exception,
       serialize_tran FOR TESTING RAISING zcx_abapgit_exception,
-      serialize_ttyp FOR TESTING RAISING zcx_abapgit_exception.
+      serialize_ttyp FOR TESTING RAISING zcx_abapgit_exception,
+      serialize_intf_aff_translate for testing raising cx_static_check.
 
 ENDCLASS.
 
@@ -159,6 +189,54 @@ CLASS ltcl_serialize IMPLEMENTATION.
     ls_item-obj_name = 'IF_BADI_TADIR_CHANGED'.
 
     check( ls_item ).
+
+  ENDMETHOD.
+
+
+  METHOD serialize_intf_aff_translate.
+
+    DATA: exp  TYPE zif_abapgit_definitions=>ty_item.
+
+    exp-obj_type = 'INTF'.
+    exp-obj_name = 'IF_BADI_TADIR_CHANGED'.
+
+
+    DATA(settings) = NEW lcl_settings_with_features( |{ zcl_abapgit_aff_registry=>c_aff_feature }, { zcl_abapgit_properties_file=>c_properties_feature }|  ).
+    zcl_abapgit_persist_injector=>set_settings( settings ).
+
+
+    DATA(act) = zcl_abapgit_objects=>serialize(
+      is_item        = exp
+      io_i18n_params = zcl_abapgit_i18n_params=>new( iv_main_language = zif_abapgit_definitions=>c_english
+                                                     it_translation_langs = VALUE #( ( 'DE' )  )
+                                                     iv_use_lxe = abap_true )  ).
+
+    cl_abap_unit_assert=>assert_not_initial( act-files ).
+    cl_abap_unit_assert=>assert_equals( act = act-item
+                                        exp = exp ).
+
+
+    DATA(translation_de) = VALUE #( act-files[ filename = 'if_badi_tadir_changed.intf.i18n.de.properties' ]  OPTIONAL ).
+    cl_abap_unit_assert=>assert_not_initial( translation_de ).
+
+
+
+    DATA(exp_table) = VALUE string_table(
+      ( `$.header.description=Interface zum BAdI: BADI_TADIR_CHANGED` )
+      ( `$.descriptions.methods[?(@.name=='AFTER_TADIR_CHANGED')].description=Objektkatalog geändert (insert,change,delete)` )
+      ( `$.descriptions.methods[?(@.name=='AFTER_TADIR_CHANGED')].parameters[?(@.name=='IM_SOBJ_NAME')].description=Objektname im Objektkatalog` )
+      ( `$.descriptions.methods[?(@.name=='AFTER_TADIR_CHANGED')].parameters[?(@.name=='IM_TROBJTYPE')].description=Objekttyp` )
+      ( `$.descriptions.methods[?(@.name=='BEFORE_TADIR_CHANGED')].description=Objektkatalog wird geändert (insert,change,delete)` )
+      ( `$.descriptions.methods[?(@.name=='BEFORE_TADIR_CHANGED')].parameters[?(@.name=='IM_SOBJ_NAME')].description=Objektname im Objektkatalog` )
+      ( `$.descriptions.methods[?(@.name=='BEFORE_TADIR_CHANGED')].parameters[?(@.name=='IM_TROBJTYPE')].description=Objekttyp` ) ) .
+
+    DATA(exp_string) = concat_lines_of( table = exp_table sep = cl_abap_char_utilities=>newline ).
+    DATA(bom) = cl_abap_codepage=>convert_from( CONV #( cl_abap_char_utilities=>byte_order_mark_utf8 ) ).
+    exp_string = bom && exp_string && cl_abap_char_utilities=>newline.
+
+    DATA(act_string) = zcl_abapgit_convert=>xstring_to_string_utf8_bom( translation_de-data ).
+
+    cl_abap_unit_assert=>assert_equals( exp = exp_string act = act_string ).
 
   ENDMETHOD.
 

@@ -102,9 +102,9 @@ CLASS lcl_aff_helper IMPLEMENTATION.
 
 
     rs_properties-attributes = get_attributes( lt_components ).
-    rs_properties-methods = get_methods( is_components = lt_components
+    rs_properties-methods = get_methods( is_components     = lt_components
                                          is_sub_components = lt_sub_components ).
-    rs_properties-events = get_events( is_components = lt_components
+    rs_properties-events = get_events( is_components     = lt_components
                                        is_sub_components = lt_sub_components ).
     rs_properties-types = get_types( lt_components ).
   ENDMETHOD.
@@ -133,7 +133,7 @@ CLASS lcl_aff_helper IMPLEMENTATION.
       ON component~cmpname = component_text~cmpname AND component~clsname    = component_text~clsname
                                                     AND component_text~langu = iv_language
       WHERE component~clsname = iv_clif_name
-      ORDER BY component~cmpname.          "#EC CI_BUFFJOIN
+      ORDER BY component~cmpname.                      "#EC CI_BUFFJOIN
 
     SELECT sub_component~cmpname sub_component~sconame sub_component_text~descript sub_component~scotype
       INTO TABLE lt_sub_components
@@ -152,9 +152,9 @@ CLASS lcl_aff_helper IMPLEMENTATION.
     ENDLOOP.
 
     rs_properties-attributes = get_attributes( lt_components_exp ).
-    rs_properties-methods = get_methods( is_components = lt_components_exp
+    rs_properties-methods = get_methods( is_components     = lt_components_exp
                                          is_sub_components = lt_sub_components ).
-    rs_properties-events = get_events( is_components = lt_components_exp
+    rs_properties-events = get_events( is_components     = lt_components_exp
                                        is_sub_components = lt_sub_components ).
     rs_properties-types = get_types( lt_components_exp ).
 
@@ -339,17 +339,17 @@ CLASS lcl_aff_helper IMPLEMENTATION.
 
   METHOD set_descriptions_compo_subco.
     set_attributes( is_properties = is_properties
-                    iv_clif_name = iv_clif_name
-                    iv_language = iv_language ).
+                    iv_clif_name  = iv_clif_name
+                    iv_language   = iv_language ).
     set_methods( is_properties = is_properties
-                 iv_clif_name = iv_clif_name
-                 iv_language = iv_language ).
+                 iv_clif_name  = iv_clif_name
+                 iv_language   = iv_language ).
     set_events( is_properties = is_properties
-                iv_clif_name = iv_clif_name
-                iv_language = iv_language ).
+                iv_clif_name  = iv_clif_name
+                iv_language   = iv_language ).
     set_types( is_properties = is_properties
-               iv_clif_name = iv_clif_name
-               iv_language = iv_language ).
+               iv_clif_name  = iv_clif_name
+               iv_language   = iv_language ).
   ENDMETHOD.
 
 ENDCLASS.
@@ -387,8 +387,8 @@ CLASS lcl_aff_type_mapping IMPLEMENTATION.
 
     " get descriptions
     ls_data_aff-descriptions = lcl_aff_helper=>get_descriptions_compo_subco(
-                              iv_language  = ls_data_aff-header-original_language
-                              iv_clif_name = ls_data_abapgit-vseointerf-clsname ).
+      iv_language  = ls_data_aff-header-original_language
+      iv_clif_name = ls_data_abapgit-vseointerf-clsname ).
 
     es_data = ls_data_aff.
   ENDMETHOD.
@@ -502,6 +502,11 @@ CLASS lcl_aff_metadata_handler DEFINITION.
       IMPORTING is_intf          TYPE zcl_abapgit_object_intf=>ty_intf
       RETURNING VALUE(rv_result) TYPE xstring
       RAISING   zcx_abapgit_exception.
+    CLASS-METHODS serialize_translation
+      IMPORTING is_intf          TYPE zcl_abapgit_object_intf=>ty_intf
+                io_i18n_params   TYPE REF TO zcl_abapgit_i18n_params
+      RETURNING VALUE(ro_result) TYPE REF TO zif_abapgit_i18n_file
+      RAISING   zcx_abapgit_exception.
     CLASS-METHODS deserialize
       IMPORTING iv_data          TYPE xstring
       RETURNING VALUE(rv_result) TYPE zif_abapgit_aff_intf_v1=>ty_main
@@ -609,16 +614,68 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
     CREATE OBJECT lo_ajson.
     TRY.
         lo_ajson->deserialize(
-           EXPORTING
-             iv_content = iv_data
-             iv_defaults = lt_values_for_initial
-             iv_enum_mappings = lt_enum_mappings
-           IMPORTING
-             ev_data    = rv_result ).
+          EXPORTING
+            iv_content       = iv_data
+            iv_defaults      = lt_values_for_initial
+            iv_enum_mappings = lt_enum_mappings
+          IMPORTING
+            ev_data          = rv_result ).
       CATCH cx_static_check INTO lx_exception.
         zcx_abapgit_exception=>raise_with_text( lx_exception ).
     ENDTRY.
 
   ENDMETHOD.
+
+  METHOD serialize_translation.
+    DATA: ls_data        TYPE zif_abapgit_aff_intf_v1=>ty_main,
+          lt_lang        TYPE laiso,
+          lo_ajson       TYPE REF TO zif_abapgit_ajson,
+          lo_json_path   TYPE REF TO zcl_abapgit_json_path,
+          lt_translation TYPE string_table,
+          lx_exception   TYPE REF TO zcx_abapgit_ajson_error,
+          lo_trans_file  TYPE REF TO zcl_abapgit_properties_file.
+
+    " todo: allow multiple languages
+    lt_lang = VALUE #( io_i18n_params->ms_params-translation_languages[ 1 ] OPTIONAL ).
+
+    " fill AFF type, do some DBs things to get values from SEOCLASSTX, SEOCOMPOTX, SEOSUBCOTX
+
+    ls_data-header-description = 'Interface zum BAdI: BADI_TADIR_CHANGED'.
+    ls_data-descriptions-methods = VALUE #(
+      ( name = 'AFTER_TADIR_CHANGED'
+        description = 'Objektkatalog geändert (insert,change,delete)'
+        parameters = VALUE #( ( name = `IM_SOBJ_NAME` description = `Objektname im Objektkatalog` )
+                              ( name = `IM_TROBJTYPE` description = `Objekttyp` ) ) )
+
+      ( name = 'BEFORE_TADIR_CHANGED' description = 'Objektkatalog wird geändert (insert,change,delete)'
+        parameters = VALUE #( ( name = `IM_SOBJ_NAME` description = `Objektname im Objektkatalog` )
+                              ( name = `IM_TROBJTYPE` description = `Objekttyp` ) ) ) ).
+
+
+    " convert AFF type to JSON
+    TRY.
+        lo_ajson = zcl_abapgit_ajson=>new( iv_keep_item_order = abap_true
+          )->set( iv_path = '/'
+                  iv_val  = ls_data
+          )->map( zcl_abapgit_ajson_mapping=>create_to_camel_case( )
+          )->filter( zcl_abapgit_ajson_filter_lib=>create_empty_filter( ) ).
+        " remove manually the non-primitive types that are initial or not relevant for translation
+        lo_ajson->delete( '/category/' ).
+        lo_ajson->delete( '/proxy/' ).
+      CATCH zcx_abapgit_ajson_error INTO lx_exception.
+        zcx_abapgit_exception=>raise_with_text( lx_exception ).
+    ENDTRY.
+
+
+    lo_json_path = NEW zcl_abapgit_json_path( ).
+    lt_translation = lo_json_path->serialize( lo_ajson->stringify( ) ).
+
+    lo_trans_file = NEW zcl_abapgit_properties_file( lt_lang ).
+    lo_trans_file->push_text_pairs( lt_translation ).
+
+    ro_result = lo_trans_file.
+
+  ENDMETHOD.
+
 
 ENDCLASS.
