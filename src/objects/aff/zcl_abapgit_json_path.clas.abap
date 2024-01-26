@@ -34,12 +34,6 @@ CLASS zcl_abapgit_json_path IMPLEMENTATION.
     lo_json_path->serialize_rec( EXPORTING io_reader     = lo_reader
                                            it_path       = VALUE #( ( lv_root_path ) )
                                  CHANGING  ct_json_paths = rt_result ).
-
-    LOOP AT rt_result ASSIGNING FIELD-SYMBOL(<lv_fs>).
-      REPLACE ALL OCCURRENCES OF `.[` IN <lv_fs> WITH `[`.
-    ENDLOOP.
-
-
   ENDMETHOD.
 
 ENDCLASS.
