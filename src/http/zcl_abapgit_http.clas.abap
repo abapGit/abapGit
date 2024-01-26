@@ -160,6 +160,7 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
             " a) SSL is setup properly in STRUST
             lv_text = 'HTTPS ARGUMENT_NOT_FOUND | STRUST/SSL Setup correct?'.
           WHEN OTHERS.
+            " Make sure ANONYM PSE exists in transaction STRUST, https://github.com/abapGit/abapGit/issues/6768
             lv_text = 'While creating HTTP Client'.
 
         ENDCASE.
