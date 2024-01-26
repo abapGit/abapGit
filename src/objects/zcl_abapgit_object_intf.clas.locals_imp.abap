@@ -504,7 +504,7 @@ CLASS lcl_aff_metadata_handler DEFINITION.
       RAISING   zcx_abapgit_exception.
     CLASS-METHODS serialize_translation
       IMPORTING is_intf          TYPE zcl_abapgit_object_intf=>ty_intf
-                it_language   TYPE zif_abapgit_definitions=>ty_languages
+                it_language      TYPE zif_abapgit_definitions=>ty_languages
       RETURNING VALUE(rt_result) TYPE zif_abapgit_i18n_file=>ty_table_of
       RAISING   zcx_abapgit_exception.
     CLASS-METHODS deserialize
@@ -643,7 +643,7 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
 
     LOOP AT it_language INTO lv_langu.
 
-      ls_data = fill_translation( iv_name = is_intf-vseointerf-clsname
+      ls_data = fill_translation( iv_name  = is_intf-vseointerf-clsname
                                   iv_langu = lv_langu ).
 
       " convert AFF type to JSON
@@ -674,19 +674,19 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
   ENDMETHOD.
 
 
-    METHOD fill_translation.
-      DATA: lv_langu_sap1  TYPE sylangu.
+  METHOD fill_translation.
+    DATA: lv_langu_sap1  TYPE sylangu.
 
-      lv_langu_sap1 = cl_i18n_languages=>sap2_to_sap1( iv_langu ).
+    lv_langu_sap1 = cl_i18n_languages=>sap2_to_sap1( iv_langu ).
 
-      rt_result-descriptions = lcl_aff_helper=>get_descriptions_compo_subco(
-        iv_clif_name = iv_name
-        iv_language  = lv_langu_sap1 ).
+    rt_result-descriptions = lcl_aff_helper=>get_descriptions_compo_subco(
+      iv_clif_name = iv_name
+      iv_language  = lv_langu_sap1 ).
 
-      SELECT SINGLE descript FROM seoclasstx INTO rt_result-header-description
-      WHERE clsname = lv_langu_sap1 AND
-            langu   = lv_langu_sap1.
+    SELECT SINGLE descript FROM seoclasstx INTO rt_result-header-description
+    WHERE clsname = lv_langu_sap1 AND
+          langu   = lv_langu_sap1.
 
-    ENDMETHOD.
+  ENDMETHOD.
 
 ENDCLASS.
