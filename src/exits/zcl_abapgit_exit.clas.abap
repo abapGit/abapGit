@@ -25,7 +25,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_exit IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
 
 
   METHOD get_instance.
@@ -248,10 +248,13 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
       TRY.
           gi_exit->change_tadir(
             EXPORTING
-              iv_package = iv_package
-              ii_log     = ii_log
+              iv_package            = iv_package
+              ii_log                = ii_log
+              io_dot                = io_dot
+              iv_ignore_subpackages = iv_ignore_subpackages
+              iv_only_local_objects = iv_only_local_objects
             CHANGING
-              ct_tadir   = ct_tadir ).
+              ct_tadir              = ct_tadir ).
         CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
       ENDTRY.
     ENDIF.

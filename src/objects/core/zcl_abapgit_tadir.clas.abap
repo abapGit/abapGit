@@ -77,7 +77,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_tadir IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
 
 
   METHOD add_local_packages.
@@ -403,10 +403,13 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
     li_exit = zcl_abapgit_exit=>get_instance( ).
     li_exit->change_tadir(
       EXPORTING
-        iv_package = iv_package
-        ii_log     = ii_log
+        iv_package            = iv_package
+        ii_log                = ii_log
+        io_dot                = io_dot
+        iv_ignore_subpackages = iv_ignore_subpackages
+        iv_only_local_objects = iv_only_local_objects
       CHANGING
-        ct_tadir   = rt_tadir ).
+        ct_tadir              = rt_tadir ).
 
     IF it_filter IS NOT INITIAL.
       "Apply filter manually instead of calling zcl_abapgit_repo_filter->apply,
