@@ -662,10 +662,12 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
       ENDTRY.
 
 
-      lo_json_path = NEW zcl_abapgit_json_path( ).
+      CREATE OBJECT lo_json_path.
       lt_translation = lo_json_path->serialize( lv_json ).
 
-      lo_trans_file = NEW zcl_abapgit_properties_file( lv_langu ).
+      CREATE OBJECT lo_trans_file
+        exporting iv_lang = lv_langu.
+
       lo_trans_file->push_text_pairs( lt_translation ).
 
       APPEND lo_trans_file TO rt_result.
@@ -675,7 +677,7 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
 
 
   METHOD fill_translation.
-    DATA: lv_langu_sap1  TYPE sylangu.
+    DATA: lv_langu_sap1 TYPE langu.
 
     lv_langu_sap1 = cl_i18n_languages=>sap2_to_sap1( iv_langu ).
 
