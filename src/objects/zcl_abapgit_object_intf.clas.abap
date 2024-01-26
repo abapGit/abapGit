@@ -424,11 +424,13 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       lv_serialized_data = lcl_aff_metadata_handler=>serialize( ls_intf ).
       mo_files->add_raw( iv_ext  = 'json'
                          iv_data = lv_serialized_data ).
-      lt_i18n_file = lcl_aff_metadata_handler=>serialize_translation( is_intf     = ls_intf
-                                                                      it_language = mo_i18n_params->ms_params-translation_languages ).
-      loop at lt_i18n_file into lo_i18n_file.
+      lt_i18n_file = lcl_aff_metadata_handler=>serialize_translation(
+        is_intf     = ls_intf
+        it_language = mo_i18n_params->ms_params-translation_languages ).
+
+      LOOP AT lt_i18n_file INTO lo_i18n_file.
         mo_files->add_i18n_file( lo_i18n_file ).
-      endloop.
+      ENDLOOP.
     ELSE.
       io_xml->add( iv_name = 'VSEOINTERF'
                    ig_data = ls_intf-vseointerf ).
