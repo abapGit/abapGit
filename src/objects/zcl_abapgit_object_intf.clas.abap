@@ -393,6 +393,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       ls_clskey           TYPE seoclskey,
       lv_serialized_data  TYPE xstring,
       lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus,
+      lt_i18n_file        TYPE zif_abapgit_i18n_file=>ty_table_of,
       lo_i18n_file        TYPE REF TO zif_abapgit_i18n_file.
 
     ls_clskey-clsname = ms_item-obj_name.
@@ -423,10 +424,11 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       lv_serialized_data = lcl_aff_metadata_handler=>serialize( ls_intf ).
       mo_files->add_raw( iv_ext  = 'json'
                          iv_data = lv_serialized_data ).
-      lo_i18n_file = lcl_aff_metadata_handler=>serialize_translation( is_intf        = ls_intf
-                                                                      io_i18n_params = mo_i18n_params ).
-      mo_files->add_i18n_file( lo_i18n_file ).
-
+      lt_i18n_file = lcl_aff_metadata_handler=>serialize_translation( is_intf     = ls_intf
+                                                                      it_language = mo_i18n_params->ms_params-translation_languages ).
+      loop at lt_i18n_file into lo_i18n_file.
+        mo_files->add_i18n_file( lo_i18n_file ).
+      endloop.
     ELSE.
       io_xml->add( iv_name = 'VSEOINTERF'
                    ig_data = ls_intf-vseointerf ).

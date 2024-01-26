@@ -504,8 +504,8 @@ CLASS lcl_aff_metadata_handler DEFINITION.
       RAISING   zcx_abapgit_exception.
     CLASS-METHODS serialize_translation
       IMPORTING is_intf          TYPE zcl_abapgit_object_intf=>ty_intf
-                io_i18n_params   TYPE REF TO zcl_abapgit_i18n_params
-      RETURNING VALUE(ro_result) TYPE REF TO zif_abapgit_i18n_file
+                it_language   TYPE zif_abapgit_definitions=>ty_languages
+      RETURNING VALUE(rt_result) TYPE zif_abapgit_i18n_file=>ty_table_of
       RAISING   zcx_abapgit_exception.
     CLASS-METHODS deserialize
       IMPORTING iv_data          TYPE xstring
@@ -628,52 +628,51 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
 
   METHOD serialize_translation.
     DATA: ls_data        TYPE zif_abapgit_aff_intf_v1=>ty_main,
-          lt_lang        TYPE laiso,
+          lv_langu       TYPE laiso,
+          lv_json        TYPE string,
+          lv_langu_sap1  TYPE sylangu,
           lo_ajson       TYPE REF TO zif_abapgit_ajson,
           lo_json_path   TYPE REF TO zcl_abapgit_json_path,
           lt_translation TYPE string_table,
           lx_exception   TYPE REF TO zcx_abapgit_ajson_error,
           lo_trans_file  TYPE REF TO zcl_abapgit_properties_file.
 
-    " todo: allow multiple languages
-    lt_lang = VALUE #( io_i18n_params->ms_params-translation_languages[ 1 ] OPTIONAL ).
+    loop at it_language into lv_langu.
+      lv_langu_sap1 = cl_i18n_languages=>sap2_to_sap1( lv_langu ).
 
-    " fill AFF type, do some DBs things to get values from SEOCLASSTX, SEOCOMPOTX, SEOSUBCOTX
+      ls_data-descriptions = lcl_aff_helper=>get_descriptions_compo_subco(
+        iv_clif_name = is_intf-vseointerf-clsname
+        iv_language  = lv_langu_sap1 ).
+      select single from seoclasstx fields descript
+        where clsname = @is_intf-vseointerf-clsname and langu = @lv_langu_sap1
+        into @ls_data-header-description.
 
-    ls_data-header-description = 'Interface zum BAdI: BADI_TADIR_CHANGED'.
-    ls_data-descriptions-methods = VALUE #(
-      ( name = 'AFTER_TADIR_CHANGED'
-        description = 'Objektkatalog geändert (insert,change,delete)'
-        parameters = VALUE #( ( name = `IM_SOBJ_NAME` description = `Objektname im Objektkatalog` )
-                              ( name = `IM_TROBJTYPE` description = `Objekttyp` ) ) )
+      " TODO add description of header!
 
-      ( name = 'BEFORE_TADIR_CHANGED' description = 'Objektkatalog wird geändert (insert,change,delete)'
-        parameters = VALUE #( ( name = `IM_SOBJ_NAME` description = `Objektname im Objektkatalog` )
-                              ( name = `IM_TROBJTYPE` description = `Objekttyp` ) ) ) ).
-
-
-    " convert AFF type to JSON
-    TRY.
-        lo_ajson = zcl_abapgit_ajson=>new( iv_keep_item_order = abap_true
-          )->set( iv_path = '/'
-                  iv_val  = ls_data
-          )->map( zcl_abapgit_ajson_mapping=>create_to_camel_case( )
-          )->filter( zcl_abapgit_ajson_filter_lib=>create_empty_filter( ) ).
-        " remove manually the non-primitive types that are initial or not relevant for translation
-        lo_ajson->delete( '/category/' ).
-        lo_ajson->delete( '/proxy/' ).
-      CATCH zcx_abapgit_ajson_error INTO lx_exception.
-        zcx_abapgit_exception=>raise_with_text( lx_exception ).
-    ENDTRY.
+      " convert AFF type to JSON
+      TRY.
+          lo_ajson = zcl_abapgit_ajson=>new( iv_keep_item_order = abap_true
+            )->set( iv_path = '/'
+                    iv_val  = ls_data
+            )->map( zcl_abapgit_ajson_mapping=>create_to_camel_case( )
+            )->filter( zcl_abapgit_ajson_filter_lib=>create_empty_filter( ) ).
+          " remove manually the non-primitive types that are initial or not relevant for translation
+          lo_ajson->delete( '/category/' ).
+          lo_ajson->delete( '/proxy/' ).
+          lv_json = lo_ajson->stringify( ).
+        CATCH zcx_abapgit_ajson_error INTO lx_exception.
+          zcx_abapgit_exception=>raise_with_text( lx_exception ).
+      ENDTRY.
 
 
-    lo_json_path = NEW zcl_abapgit_json_path( ).
-    lt_translation = lo_json_path->serialize( lo_ajson->stringify( ) ).
+      lo_json_path = NEW zcl_abapgit_json_path( ).
+      lt_translation = lo_json_path->serialize( lv_json ).
 
-    lo_trans_file = NEW zcl_abapgit_properties_file( lt_lang ).
-    lo_trans_file->push_text_pairs( lt_translation ).
+      lo_trans_file = NEW zcl_abapgit_properties_file( lv_langu ).
+      lo_trans_file->push_text_pairs( lt_translation ).
 
-    ro_result = lo_trans_file.
+      append lo_trans_file to rt_result.
+    endloop.
 
   ENDMETHOD.
 
