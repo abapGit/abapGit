@@ -520,7 +520,11 @@ CLASS lcl_aff_metadata_handler DEFINITION.
       "! For serialization
       "! @parameter rt_result | Paths that will not be serialized (depending on value)
       get_paths_to_skip
-        RETURNING VALUE(rt_result) TYPE zcl_abapgit_json_handler=>ty_skip_paths.
+        RETURNING VALUE(rt_result) TYPE zcl_abapgit_json_handler=>ty_skip_paths,
+      fill_translation
+        IMPORTING iv_name          TYPE seoclsname
+                  iv_langu         TYPE laiso
+        RETURNING VALUE(rt_result) TYPE zif_abapgit_aff_intf_v1=>ty_main.
 ENDCLASS.
 
 CLASS lcl_aff_metadata_handler IMPLEMENTATION.
@@ -630,24 +634,17 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
     DATA: ls_data        TYPE zif_abapgit_aff_intf_v1=>ty_main,
           lv_langu       TYPE laiso,
           lv_json        TYPE string,
-          lv_langu_sap1  TYPE sylangu,
           lo_ajson       TYPE REF TO zif_abapgit_ajson,
           lo_json_path   TYPE REF TO zcl_abapgit_json_path,
           lt_translation TYPE string_table,
           lx_exception   TYPE REF TO zcx_abapgit_ajson_error,
           lo_trans_file  TYPE REF TO zcl_abapgit_properties_file.
 
-    loop at it_language into lv_langu.
-      lv_langu_sap1 = cl_i18n_languages=>sap2_to_sap1( lv_langu ).
 
-      ls_data-descriptions = lcl_aff_helper=>get_descriptions_compo_subco(
-        iv_clif_name = is_intf-vseointerf-clsname
-        iv_language  = lv_langu_sap1 ).
-      select single from seoclasstx fields descript
-        where clsname = @is_intf-vseointerf-clsname and langu = @lv_langu_sap1
-        into @ls_data-header-description.
+    LOOP AT it_language INTO lv_langu.
 
-      " TODO add description of header!
+      ls_data = fill_translation( iv_name = is_intf-vseointerf-clsname
+                                  iv_langu = lv_langu ).
 
       " convert AFF type to JSON
       TRY.
@@ -671,10 +668,25 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
       lo_trans_file = NEW zcl_abapgit_properties_file( lv_langu ).
       lo_trans_file->push_text_pairs( lt_translation ).
 
-      append lo_trans_file to rt_result.
-    endloop.
+      APPEND lo_trans_file TO rt_result.
+    ENDLOOP.
 
   ENDMETHOD.
 
+
+    METHOD fill_translation.
+      DATA: lv_langu_sap1  TYPE sylangu.
+
+      lv_langu_sap1 = cl_i18n_languages=>sap2_to_sap1( iv_langu ).
+
+      rt_result-descriptions = lcl_aff_helper=>get_descriptions_compo_subco(
+        iv_clif_name = iv_name
+        iv_language  = lv_langu_sap1 ).
+
+      SELECT SINGLE descript FROM seoclasstx INTO rt_result-header-description
+      WHERE clsname = lv_langu_sap1 AND
+            langu   = lv_langu_sap1.
+
+    ENDMETHOD.
 
 ENDCLASS.
