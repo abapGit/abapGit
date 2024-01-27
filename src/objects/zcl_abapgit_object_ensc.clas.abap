@@ -55,7 +55,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENSC IMPLEMENTATION.
         ENDIF.
         li_spot_ref->if_enh_object~unlock( ).
       CATCH cx_enh_root INTO lx_root.
-        lv_message = `Error occured while deleting ENSC: `
+        lv_message = `Error occurred while deleting ENSC: `
           && lx_root->get_text( ).
         zcx_abapgit_exception=>raise( lv_message ).
     ENDTRY.
