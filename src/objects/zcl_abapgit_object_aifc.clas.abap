@@ -207,7 +207,7 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
     CREATE DATA lr_table TYPE HANDLE lr_tabledescr.
     ASSIGN lr_table->* TO <lt_table>.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Fieldsymbol not assigned' ).
+      zcx_abapgit_exception=>raise( 'Field Symbol not assigned' ).
     ENDIF.
 
     TRY.
@@ -394,7 +394,7 @@ CLASS zcl_abapgit_object_aifc IMPLEMENTATION.
           CREATE DATA lr_table TYPE HANDLE lr_tabledescr.
           ASSIGN lr_table->* TO <lt_table>.
           IF sy-subrc <> 0.
-            zcx_abapgit_exception=>raise( 'Fieldsymbol not assigned' ).
+            zcx_abapgit_exception=>raise( 'Field Symbol not assigned' ).
           ENDIF.
 
           io_xml->read( EXPORTING
