@@ -256,7 +256,7 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
         unlock( ).
 
       CATCH cx_swb_exception.
-        zcx_abapgit_exception=>raise( |Error occured while creating { ms_item-obj_type }| ).
+        zcx_abapgit_exception=>raise( |Error occurred while creating { ms_item-obj_type }| ).
     ENDTRY.
 
   ENDMETHOD.
