@@ -79,6 +79,6 @@ CLASS zcl_abapgit_gui_buttons IMPLEMENTATION.
 
 
   METHOD settings.
-    rv_html_string = zcl_abapgit_html=>icon( 'cog' ) && ' Settings'.
+    rv_html_string = zcl_abapgit_html=>icon( 'cog' ) && ' Global Settings'.
   ENDMETHOD.
 ENDCLASS.
