@@ -539,7 +539,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
         cs_rsstcd-s_local = c_true.
       ENDIF.
       RETURN.
-    ELSEIF cs_tstcp-param(1) = '@'.         " Transaktionsvariante
+    ELSEIF cs_tstcp-param(1) = '@'.         " Transaction variant
       cs_rsstcd-s_vari = c_true.
       IF cs_tstcp-param(2) = '@@'.
         cs_rsstcd-s_ind_vari = c_true.
