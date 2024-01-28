@@ -717,7 +717,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     COMMIT WORK AND WAIT.
 
-    MESSAGE 'Settings succesfully saved' TYPE 'S'.
+    MESSAGE 'Settings successfully saved' TYPE 'S'.
 
     mv_refresh_on_back = abap_true.
     ms_settings_snapshot = get_remote_settings_from_repo( mo_repo ).
