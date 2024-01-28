@@ -152,7 +152,7 @@ CLASS zcl_abapgit_http_client IMPLEMENTATION.
           code    = lv_code
           message = lv_message ).
 
-      lv_text = |HTTP error { lv_code } occured: { lv_message }|.
+      lv_text = |HTTP error { lv_code } occurred: { lv_message }|.
 
       zcx_abapgit_exception=>raise( lv_text ).
     ENDIF.

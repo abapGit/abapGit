@@ -457,7 +457,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         ENDIF.
       ELSE.
         zcx_abapgit_exception=>raise( |Deserialization for object { is_result-obj_name } | &
-                                      |(type { is_result-obj_type }) aborted, user descision required| ).
+                                      |(type { is_result-obj_type }) aborted, user decision required| ).
       ENDIF.
     ENDIF.
 

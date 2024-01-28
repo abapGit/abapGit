@@ -63,7 +63,7 @@ CLASS lcl_gui IMPLEMENTATION.
         iv_via_selscreen       = 'X'
         is_selection           = ls_selection
         iv_complete_projects   = space
-        iv_title               = 'ABAPGit Transport Mass Downloader'
+        iv_title               = 'abapGit Transport Mass Downloader'
         is_popup               = ls_popup
       IMPORTING
         et_requests            = rt_trkorr
