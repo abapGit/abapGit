@@ -713,7 +713,9 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
 
 
   METHOD serialize_top.
-    FIELD-SYMBOLS: <lv_pk_is_invhash> TYPE c. " ddpk_is_invhash
+    FIELD-SYMBOLS: <lv_pk_is_invhash> TYPE c, " ddpk_is_invhash
+                   <lv_is_gtt>        TYPE abap_bool.
+
 
     rv_ddl = rv_ddl && |@EndUserText.label : { escape_string( is_data-dd02v-ddtext ) }\n|.
 
@@ -734,7 +736,9 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_DDL IMPLEMENTATION.
 
     CASE is_data-dd02v-tabclass.
       WHEN 'TRANSP'.
-        IF is_data-dd02v-is_gtt = abap_true.
+        " doesn't exist on NW < 750
+        ASSIGN COMPONENT 'IS_GTT' OF STRUCTURE is_data-dd02v TO <lv_is_gtt>.
+        IF sy-subrc = 0 AND <lv_is_gtt> = abap_true.
           rv_ddl = rv_ddl && |@AbapCatalog.tableCategory : #GLOBAL_TEMPORARY\n|.
         ELSE.
           rv_ddl = rv_ddl && |@AbapCatalog.tableCategory : #TRANSPARENT\n|.
