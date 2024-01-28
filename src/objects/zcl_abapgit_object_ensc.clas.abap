@@ -124,7 +124,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENSC IMPLEMENTATION.
           io_xml     = io_xml ).
 
       CATCH cx_enh_root INTO lx_root.
-        lv_message = `Error occured while deserializing ENSC: `
+        lv_message = `Error occurred while deserializing ENSC: `
           && lx_root->get_text( ).
         zcx_abapgit_exception=>raise( lv_message ).
     ENDTRY.
