@@ -351,7 +351,7 @@ CLASS zcl_abapgit_ecatt_script_downl IMPLEMENTATION.
           ASSIGN lt_svars TO <lt_tab>.
       ENDCASE.
 
-      CALL FUNCTION 'SDIXML_DATA_TO_DOM'       "Ast generieren lassen
+      CALL FUNCTION 'SDIXML_DATA_TO_DOM'       "Generate branch
         EXPORTING
           name         = lv_name
           dataobject   = <lt_tab>
