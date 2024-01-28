@@ -136,7 +136,7 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
         OTHERS         = 3 ).
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error occured while locking { ms_item-obj_type } { lv_objname }| ).
+      zcx_abapgit_exception=>raise( |Error occurred while locking { ms_item-obj_type } { lv_objname }| ).
     ENDIF.
 
   ENDMETHOD.
@@ -209,7 +209,7 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
         unlock( ).
 
       CATCH cx_swb_exception.
-        zcx_abapgit_exception=>raise( |Error occured while deleting { ms_item-obj_type }| ).
+        zcx_abapgit_exception=>raise( |Error occurred while deleting { ms_item-obj_type }| ).
     ENDTRY.
 
     corr_insert( iv_package ).
@@ -256,7 +256,7 @@ CLASS zcl_abapgit_object_saxx_super IMPLEMENTATION.
         unlock( ).
 
       CATCH cx_swb_exception.
-        zcx_abapgit_exception=>raise( |Error occured while creating { ms_item-obj_type }| ).
+        zcx_abapgit_exception=>raise( |Error occurred while creating { ms_item-obj_type }| ).
     ENDTRY.
 
   ENDMETHOD.

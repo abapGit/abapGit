@@ -509,7 +509,7 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
         lo_sf->load( im_formname = lv_formname
                      im_language = '' ).
       CATCH cx_ssf_fb.
-* the smartform is not present in system, or other error occured
+* the smartform is not present in system, or other error occurred
         RETURN.
     ENDTRY.
 

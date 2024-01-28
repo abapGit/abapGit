@@ -67,7 +67,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CHAR IMPLEMENTATION.
             cx_pak_not_authorized
             cx_pak_invalid_state
             cx_pak_wb_object_locked.
-          zcx_abapgit_exception=>raise( |Could not aquire lock, CHAR { lv_name }| ).
+          zcx_abapgit_exception=>raise( |Could not acquire lock, CHAR { lv_name }| ).
       ENDTRY.
     ENDIF.
 
