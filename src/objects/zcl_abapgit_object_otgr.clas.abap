@@ -66,7 +66,7 @@ CLASS zcl_abapgit_object_otgr IMPLEMENTATION.
             cx_pak_not_authorized
             cx_pak_invalid_state
             cx_pak_wb_object_locked.
-          zcx_abapgit_exception=>raise( |OTGR { lv_name }: could not aquire lock| ).
+          zcx_abapgit_exception=>raise( |OTGR { lv_name }: could not acquire lock| ).
       ENDTRY.
     ENDIF.
   ENDMETHOD.
