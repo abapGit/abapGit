@@ -524,7 +524,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
     CLEAR cs_rsstcd-s_vari.
 
-    IF cs_tstcp-param(1) = '\'.             " OO-Transaktion ohne FR
+    IF cs_tstcp-param(1) = '\'.             " OO-Transaction without FR
       split_parameters_comp( EXPORTING ig_type = c_oo_program
                                        ig_param = cs_tstcp-param
                              CHANGING  cg_value = cs_tstc-pgmna ).
