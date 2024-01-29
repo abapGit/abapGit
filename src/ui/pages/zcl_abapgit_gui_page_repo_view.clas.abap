@@ -1072,7 +1072,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         rs_handled-page  = zcl_abapgit_gui_page_runit=>create( mo_repo ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
-      WHEN c_actions-toggle_hide_files. " Toggle file diplay
+      WHEN c_actions-toggle_hide_files. " Toggle file display
         mv_hide_files    = zcl_abapgit_persistence_user=>get_instance( )->toggle_hide_files( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
