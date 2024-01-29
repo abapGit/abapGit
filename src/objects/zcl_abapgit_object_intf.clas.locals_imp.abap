@@ -686,7 +686,7 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
       iv_language  = lv_langu_sap1 ).
 
     SELECT SINGLE descript FROM seoclasstx INTO rt_result-header-description
-    WHERE clsname = lv_langu_sap1 AND
+    WHERE clsname = iv_name AND
           langu   = lv_langu_sap1.
 
   ENDMETHOD.
