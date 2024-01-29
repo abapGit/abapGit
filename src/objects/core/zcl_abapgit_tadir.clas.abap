@@ -405,7 +405,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
       EXPORTING
         iv_package            = iv_package
         ii_log                = ii_log
-        is_dot_data           = io_dot->get_data( )
+        is_dot_abapgit        = io_dot->get_data( )
         iv_ignore_subpackages = iv_ignore_subpackages
         iv_only_local_objects = iv_only_local_objects
       CHANGING

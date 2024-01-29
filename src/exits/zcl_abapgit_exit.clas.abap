@@ -250,7 +250,7 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
             EXPORTING
               iv_package            = iv_package
               ii_log                = ii_log
-              is_dot_data           = is_dot_data
+              is_dot_abapgit        = is_dot_abapgit
               iv_ignore_subpackages = iv_ignore_subpackages
               iv_only_local_objects = iv_only_local_objects
             CHANGING
