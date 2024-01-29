@@ -583,7 +583,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     IF mo_popup_picklist IS BOUND AND
       ( mo_popup_picklist->is_fulfilled( ) = abap_true OR mo_popup_picklist->is_in_page( ) = abap_false ).
-      " Picklist is either fullfilled OR
+      " Picklist is either fulfilled OR
       " it was on its own page and user went back from it via F3/ESC and the picklist had no "graceful back" handler
       CASE mo_popup_picklist->id( ).
         WHEN c_event-choose_pull_request.
@@ -717,7 +717,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     COMMIT WORK AND WAIT.
 
-    MESSAGE 'Settings succesfully saved' TYPE 'S'.
+    MESSAGE 'Settings successfully saved' TYPE 'S'.
 
     mv_refresh_on_back = abap_true.
     ms_settings_snapshot = get_remote_settings_from_repo( mo_repo ).
@@ -989,7 +989,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
     IF mo_popup_picklist IS BOUND. " Uniform popup state handling
       " This should happen only for a new popup because
       " on the first re-render main component event handling is blocked
-      " and not called again until the popup distruction
+      " and not called again until the popup destruction
       IF mo_popup_picklist->is_in_page( ) = abap_true.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       ELSE.
