@@ -1289,7 +1289,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
     ls_view = ms_view.
 
     CASE ii_event->mv_action.
-      WHEN c_actions-toggle_unified. " Toggle file diplay
+      WHEN c_actions-toggle_unified. " Toggle file display
 
         mv_unified = zcl_abapgit_persistence_user=>get_instance( )->toggle_diff_unified( ).
 
