@@ -677,9 +677,9 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
 
 
   METHOD fill_translation.
-    DATA: lv_langu_sap1 TYPE langu.
+    DATA: lv_langu_sap1 TYPE syst_langu.
 
-    lv_langu_sap1 = cl_i18n_languages=>sap2_to_sap1( iv_langu ).
+    lv_langu_sap1 = zcl_abapgit_convert=>language_sap2_to_sap1( iv_langu ).
 
     rt_result-descriptions = lcl_aff_helper=>get_descriptions_compo_subco(
       iv_clif_name = iv_name

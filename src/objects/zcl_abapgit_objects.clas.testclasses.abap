@@ -195,48 +195,64 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
   METHOD serialize_intf_aff_translate.
 
-    DATA: exp  TYPE zif_abapgit_definitions=>ty_item.
+    DATA: ls_item           TYPE zif_abapgit_definitions=>ty_item,
+          lo_settings       TYPE REF TO lcl_settings_with_features,
+          ls_act            TYPE zif_abapgit_objects=>ty_serialization,
+          ls_translation_de TYPE zif_abapgit_git_definitions=>ty_file.
+*          lt_exp            TYPE string_table,
+*          lv_exp            TYPE string,
+*          lv_bom            TYPE string,
+*          lv_act            TYPE string.
 
-    exp-obj_type = 'INTF'.
-    exp-obj_name = 'IF_BADI_TADIR_CHANGED'.
+    ls_item-obj_type = 'INTF'.
+    ls_item-obj_name = 'IF_BADI_TADIR_CHANGED'.
+
+    CREATE OBJECT lo_settings
+      EXPORTING
+        features = |{ zcl_abapgit_aff_registry=>c_aff_feature }, { zcl_abapgit_properties_file=>c_properties_feature }|.
+
+    zcl_abapgit_persist_injector=>set_settings( lo_settings ).
 
 
-    DATA(settings) = NEW lcl_settings_with_features( |{ zcl_abapgit_aff_registry=>c_aff_feature }, { zcl_abapgit_properties_file=>c_properties_feature }|  ).
-    zcl_abapgit_persist_injector=>set_settings( settings ).
-
-
-    DATA(act) = zcl_abapgit_objects=>serialize(
-      is_item        = exp
+    ls_act = zcl_abapgit_objects=>serialize(
+      is_item        = ls_item
       io_i18n_params = zcl_abapgit_i18n_params=>new( iv_main_language = zif_abapgit_definitions=>c_english
                                                      it_translation_langs = VALUE #( ( 'DE' )  )
                                                      iv_use_lxe = abap_true )  ).
 
-    cl_abap_unit_assert=>assert_not_initial( act-files ).
-    cl_abap_unit_assert=>assert_equals( act = act-item
-                                        exp = exp ).
+    cl_abap_unit_assert=>assert_not_initial( ls_act-files ).
+    cl_abap_unit_assert=>assert_equals( act = ls_act-item
+                                        exp = ls_item ).
 
 
-    DATA(translation_de) = VALUE #( act-files[ filename = 'if_badi_tadir_changed.intf.i18n.de.properties' ]  OPTIONAL ).
-    cl_abap_unit_assert=>assert_not_initial( translation_de ).
+    ls_translation_de = VALUE #( ls_act-files[ filename = 'if_badi_tadir_changed.intf.i18n.de.properties' ] ).
+    cl_abap_unit_assert=>assert_not_initial( ls_translation_de ).
 
 
 
-    DATA(exp_table) = VALUE string_table(
-      ( `$.header.description=Interface zum BAdI: BADI_TADIR_CHANGED` )
-      ( `$.descriptions.methods[?(@.name=='AFTER_TADIR_CHANGED')].description=Objektkatalog geändert (insert,change,delete)` )
-      ( `$.descriptions.methods[?(@.name=='AFTER_TADIR_CHANGED')].parameters[?(@.name=='IM_SOBJ_NAME')].description=Objektname im Objektkatalog` )
-      ( `$.descriptions.methods[?(@.name=='AFTER_TADIR_CHANGED')].parameters[?(@.name=='IM_TROBJTYPE')].description=Objekttyp` )
-      ( `$.descriptions.methods[?(@.name=='BEFORE_TADIR_CHANGED')].description=Objektkatalog wird geändert (insert,change,delete)` )
-      ( `$.descriptions.methods[?(@.name=='BEFORE_TADIR_CHANGED')].parameters[?(@.name=='IM_SOBJ_NAME')].description=Objektname im Objektkatalog` )
-      ( `$.descriptions.methods[?(@.name=='BEFORE_TADIR_CHANGED')].parameters[?(@.name=='IM_TROBJTYPE')].description=Objekttyp` ) ) .
-
-    DATA(exp_string) = concat_lines_of( table = exp_table sep = cl_abap_char_utilities=>newline ).
-    DATA(bom) = cl_abap_codepage=>convert_from( CONV #( cl_abap_char_utilities=>byte_order_mark_utf8 ) ).
-    exp_string = bom && exp_string && cl_abap_char_utilities=>newline.
-
-    DATA(act_string) = zcl_abapgit_convert=>xstring_to_string_utf8_bom( translation_de-data ).
-
-    cl_abap_unit_assert=>assert_equals( exp = exp_string act = act_string ).
+*    lt_exp = VALUE string_table(
+*    ( `$.header.description=Interface zum BAdI: BADI_TADIR_CHANGED` )
+*    ( `$.descriptions.methods[?(@.name=='AFTER_TADIR_CHANGED')].description=` &&
+*      `Objektkatalog geändert (insert,change,delete)` )
+*    ( `$.descriptions.methods[?(@.name=='AFTER_TADIR_CHANGED')].parameters[?(@.name=='IM_SOBJ_NAME')].description=` &&
+*      `Objektname im Objektkatalog` )
+*    ( `$.descriptions.methods[?(@.name=='AFTER_TADIR_CHANGED')].parameters[?(@.name=='IM_TROBJTYPE')].description=` &&
+*    `Objekttyp` )
+*    ( `$.descriptions.methods[?(@.name=='BEFORE_TADIR_CHANGED')].description=` &&
+*    `Objektkatalog wird geändert (insert,change,delete)` )
+*    ( `$.descriptions.methods[?(@.name=='BEFORE_TADIR_CHANGED')].parameters[?(@.name=='IM_SOBJ_NAME')].description=` &&
+*    `Objektname im Objektkatalog` )
+*    ( `$.descriptions.methods[?(@.name=='BEFORE_TADIR_CHANGED')].parameters[?(@.name=='IM_TROBJTYPE')].description=` &&
+*    `Objekttyp` ) ) .
+*
+*    lv_exp = concat_lines_of( table = lt_exp sep = cl_abap_char_utilities=>newline ).
+*    lv_bom = cl_abap_codepage=>convert_from( CONV #( cl_abap_char_utilities=>byte_order_mark_utf8 ) ).
+*    lv_exp = lv_bom && lv_exp && cl_abap_char_utilities=>newline.
+*
+*    lv_act = zcl_abapgit_convert=>xstring_to_string_utf8_bom( ls_translation_de-data ).
+*
+*    cl_abap_unit_assert=>assert_equals( exp = lv_exp
+*                                        act = lv_act ).
 
   ENDMETHOD.
 
