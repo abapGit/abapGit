@@ -138,7 +138,7 @@ CLASS zcl_abapgit_syntax_highlighter IMPLEMENTATION.
 
     SORT ct_matches BY offset.
 
-    " Add entries refering to parts of text that should not be formatted
+    " Add entries referring to parts of text that should not be formatted
     LOOP AT ct_matches ASSIGNING <ls_match>.
       IF <ls_match>-offset > lv_last_pos.
         lv_length = <ls_match>-offset - lv_last_pos.
@@ -233,7 +233,7 @@ CLASS zcl_abapgit_syntax_highlighter IMPLEMENTATION.
           APPEND ls_match TO rt_matches.
         ELSE.
           READ TABLE <ls_result>-submatches ASSIGNING <ls_submatch> INDEX <ls_regex>-relevant_submatch.
-          "submatch might be empty if only discarted parts matched
+          "submatch might be empty if only discarded parts matched
           IF sy-subrc = 0 AND <ls_submatch>-offset >= 0 AND <ls_submatch>-length > 0.
             ls_match-token  = <ls_regex>-token.
             ls_match-offset = <ls_submatch>-offset.
