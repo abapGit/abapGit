@@ -467,7 +467,7 @@ CLASS zcl_abapgit_gui_page_sett_repo IMPLEMENTATION.
       ELSEIF lv_component IS NOT INITIAL AND lv_min_release IS INITIAL.
         ro_validation_log->set(
           iv_key = c_id-requirements
-          iv_val = |If you enter a software component, you must also enter a minumum release| ).
+          iv_val = |If you enter a software component, you must also enter a minimum release| ).
       ENDIF.
     ENDDO.
 
