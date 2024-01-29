@@ -28,10 +28,10 @@ CLASS ltcl_json_path IMPLEMENTATION.
 
 
     lo_ajson = zcl_abapgit_ajson=>new( iv_keep_item_order = abap_true
-    )->set( iv_path = '/'
-            iv_val  = data
-    )->map( zcl_abapgit_ajson_mapping=>create_to_camel_case( )
-    )->filter( zcl_abapgit_ajson_filter_lib=>create_empty_filter( ) ).
+      )->set( iv_path = '/'
+              iv_val  = data
+      )->map( zcl_abapgit_ajson_mapping=>create_to_camel_case( )
+      )->filter( zcl_abapgit_ajson_filter_lib=>create_empty_filter( ) ).
 
     lo_ajson->delete( '/category/' ).
     lo_ajson->delete( '/proxy/' ).
@@ -43,10 +43,10 @@ CLASS ltcl_json_path IMPLEMENTATION.
 
   METHOD flat_structure.
 
-    ms_data-header-description = 'Interface zum BAdI: BADI_TADIR_CHANGED'.
+    ms_data-header-description = 'Text'.
 
     mt_act = serialize( ms_data ).
-    mt_exp = VALUE string_table( ( `$.header.description=Interface zum BAdI: BADI_TADIR_CHANGED` ) ).
+    mt_exp = VALUE string_table( ( `$.header.description=Text` ) ).
 
     cl_abap_unit_assert=>assert_equals( exp = mt_exp
                                         act = mt_act ).
@@ -55,18 +55,19 @@ CLASS ltcl_json_path IMPLEMENTATION.
 
   METHOD array.
 
+    ms_data-header-description = 'Text'.
+    ms_data-descriptions-methods = VALUE #(
+      ( name = 'METH1'
+        description = 'Sonne' )
+      ( name = 'METH2'
+        description = 'Mond' ) ) .
 
-    ms_data-header-description = 'Interface zum BAdI: BADI_TADIR_CHANGED'.
-    ms_data-descriptions-methods = VALUE #( ( name = 'AFTER_TADIR_CHANGED'
-                                              description = 'Objektkatalog geändert (insert,change,delete)' )
-                                            ( name = 'BEFORE_TADIR_CHANGED'
-                                              description = 'Objektkatalog wird geändert (insert,change,delete)' ) ) .
 
     mt_act = serialize( ms_data ).
     mt_exp = VALUE string_table(
-      ( `$.header.description=Interface zum BAdI: BADI_TADIR_CHANGED` )
-      ( `$.descriptions.methods[?(@.name=='AFTER_TADIR_CHANGED')].description=Objektkatalog geändert (insert,change,delete)` )
-      ( `$.descriptions.methods[?(@.name=='BEFORE_TADIR_CHANGED')].description=Objektkatalog wird geändert (insert,change,delete)` ) ).
+      ( `$.header.description=Text` )
+      ( `$.descriptions.methods[?(@.name=='METH1')].description=Sonne` )
+      ( `$.descriptions.methods[?(@.name=='METH2')].description=mond` ) ).
 
     cl_abap_unit_assert=>assert_equals( exp = mt_exp
                                         act = mt_act ).
@@ -75,21 +76,22 @@ CLASS ltcl_json_path IMPLEMENTATION.
 
   METHOD array_nested.
 
-    ms_data-header-description = 'Interface zum BAdI: BADI_TADIR_CHANGED'.
-    ms_data-descriptions-methods = VALUE #( ( name = 'AFTER_TADIR_CHANGED'
-                                              description = 'Objektkatalog geändert (insert,change,delete)'
-                                              parameters = VALUE #( ( name = `IM_SOBJ_NAME` description = `Objektname im Objektkatalog` )
-                                                                    ( name = `IM_TROBJTYPE` description = `Objekttyp` ) ) )
-                                            ( name = 'BEFORE_TADIR_CHANGED'
-                                              description = 'Objektkatalog wird geändert (insert,change,delete)' ) ).
+    ms_data-header-description = 'Text'.
+    ms_data-descriptions-methods = VALUE #(
+      ( name = 'METH1'
+        description = 'Sonne'
+        parameters = VALUE #( ( name = `param1` description = `Parameter A` )
+                              ( name = `param2` description = `Parameter B` ) ) )
+      ( name = 'METH2'
+        description = 'Mond' ) ).
 
     mt_act = serialize( ms_data ).
     mt_exp = VALUE string_table(
-      ( `$.header.description=Interface zum BAdI: BADI_TADIR_CHANGED` )
-      ( `$.descriptions.methods[?(@.name=='AFTER_TADIR_CHANGED')].description=Objektkatalog geändert (insert,change,delete)` )
-      ( `$.descriptions.methods[?(@.name=='AFTER_TADIR_CHANGED')].parameters[?(@.name=='IM_SOBJ_NAME')].description=Objektname im Objektkatalog` )
-      ( `$.descriptions.methods[?(@.name=='AFTER_TADIR_CHANGED')].parameters[?(@.name=='IM_TROBJTYPE')].description=Objekttyp` )
-      ( `$.descriptions.methods[?(@.name=='BEFORE_TADIR_CHANGED')].description=Objektkatalog wird geändert (insert,change,delete)` ) ).
+    ( `$.header.description=Text` )
+    ( `$.descriptions.methods[?(@.name=='METH1')].description=Sonne` )
+    ( `$.descriptions.methods[?(@.name=='METH1')].parameters[?(@.name=='param1')].description=Parameter A` )
+    ( `$.descriptions.methods[?(@.name=='METH1')].parameters[?(@.name=='param2')].description=Objekttyp` )
+    ( `$.descriptions.methods[?(@.name=='METH2')].description=Mond` ) ).
 
     cl_abap_unit_assert=>assert_equals( exp = mt_exp
                                         act = mt_act ).
