@@ -71,7 +71,7 @@ INTERFACE zif_abapgit_exit
     IMPORTING
       !iv_package TYPE devclass
       !ii_log TYPE REF TO zif_abapgit_log
-      !io_dot TYPE REF TO zcl_abapgit_dot_abapgit
+      !is_dot_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit
       !iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
       !iv_only_local_objects TYPE abap_bool DEFAULT abap_false
     CHANGING

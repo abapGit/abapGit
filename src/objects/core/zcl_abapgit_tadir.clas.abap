@@ -77,7 +77,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
+CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
 
   METHOD add_local_packages.
@@ -405,7 +405,7 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
       EXPORTING
         iv_package            = iv_package
         ii_log                = ii_log
-        io_dot                = io_dot
+        is_dot_data           = io_dot->get_data( )
         iv_ignore_subpackages = iv_ignore_subpackages
         iv_only_local_objects = iv_only_local_objects
       CHANGING

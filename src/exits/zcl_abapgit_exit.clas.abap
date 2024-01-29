@@ -25,7 +25,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
+CLASS zcl_abapgit_exit IMPLEMENTATION.
 
 
   METHOD get_instance.
@@ -250,7 +250,7 @@ CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
             EXPORTING
               iv_package            = iv_package
               ii_log                = ii_log
-              io_dot                = io_dot
+              is_dot_data           = io_dot->get_data( )
               iv_ignore_subpackages = iv_ignore_subpackages
               iv_only_local_objects = iv_only_local_objects
             CHANGING
