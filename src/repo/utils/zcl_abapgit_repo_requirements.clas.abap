@@ -130,7 +130,7 @@ CLASS zcl_abapgit_repo_requirements IMPLEMENTATION.
                     is_status-required_release  TO lv_required_release,
                     is_status-required_patch    TO lv_required_patch.
       CATCH cx_sy_conversion_error.
-        " Cannot compare by number, assume requirement not fullfilled (user can force install
+        " Cannot compare by number, assume requirement not fulfilled (user can force install
         " anyways if this was an error)
         rv_true = abap_false.
         RETURN.
