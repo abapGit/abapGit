@@ -583,7 +583,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
     IF mo_popup_picklist IS BOUND AND
       ( mo_popup_picklist->is_fulfilled( ) = abap_true OR mo_popup_picklist->is_in_page( ) = abap_false ).
-      " Picklist is either fullfilled OR
+      " Picklist is either fulfilled OR
       " it was on its own page and user went back from it via F3/ESC and the picklist had no "graceful back" handler
       CASE mo_popup_picklist->id( ).
         WHEN c_event-choose_pull_request.
