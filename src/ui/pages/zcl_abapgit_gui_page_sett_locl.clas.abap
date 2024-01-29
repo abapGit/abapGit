@@ -522,7 +522,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
     IF mo_popup_picklist IS BOUND. " Uniform popup state handling
       " This should happen only for a new popup because
       " on the first re-render main component event handling is blocked
-      " and not called again until the popup distruction
+      " and not called again until the popup destruction
       IF mo_popup_picklist->is_in_page( ) = abap_true.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       ELSE.
