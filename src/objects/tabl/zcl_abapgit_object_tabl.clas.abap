@@ -31,7 +31,7 @@ CLASS zcl_abapgit_object_tabl DEFINITION
 
     "! Deserialize IDoc Segment type/definition if exits
     "! @parameter iv_package | Target package
-    "! @parameter rv_deserialized | It's a segment and was desserialized
+    "! @parameter rv_deserialized | It's a segment and was deserialized
     "! @raising zcx_abapgit_exception | Exceptions
     METHODS deserialize_idoc_segment IMPORTING is_internal            TYPE zif_abapgit_object_tabl=>ty_internal
                                                iv_transport           TYPE trkorr
