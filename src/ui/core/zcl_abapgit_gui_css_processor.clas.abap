@@ -158,7 +158,7 @@ CLASS ZCL_ABAPGIT_GUI_CSS_PROCESSOR IMPLEMENTATION.
         ENDIF.
       ENDDO.
     ELSE.
-      zcx_abapgit_exception=>raise( |CSS variable { iv_variable_name } not resolveable| ).
+      zcx_abapgit_exception=>raise( |CSS variable { iv_variable_name } not resolvable| ).
     ENDIF.
   ENDMETHOD.
 ENDCLASS.
