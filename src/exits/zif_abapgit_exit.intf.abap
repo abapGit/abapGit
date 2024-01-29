@@ -1,156 +1,156 @@
-interface ZIF_ABAPGIT_EXIT
-  public .
+INTERFACE zif_abapgit_exit
+  PUBLIC .
 
 
-  types:
+  TYPES:
     BEGIN OF ty_ci_repo,
       name      TYPE string,
       clone_url TYPE string,
     END OF ty_ci_repo .
-  types:
+  TYPES:
     ty_ci_repos TYPE TABLE OF ty_ci_repo .
-  types:
+  TYPES:
     ty_object_types TYPE STANDARD TABLE OF tadir-object WITH DEFAULT KEY .
-  types:
+  TYPES:
     BEGIN OF ty_class_key,
       clsname TYPE abap_classname,
     END OF ty_class_key .
 
-  methods ADJUST_DISPLAY_COMMIT_URL
-    importing
-      !IV_REPO_URL type CSEQUENCE
-      !IV_REPO_NAME type CSEQUENCE
-      !IV_REPO_KEY type CSEQUENCE
-      !IV_COMMIT_HASH type ZIF_ABAPGIT_GIT_DEFINITIONS=>TY_SHA1
-    changing
-      !CV_DISPLAY_URL type CSEQUENCE
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods ADJUST_DISPLAY_FILENAME
-    importing
-      !IS_REPO_META type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO
-      !IV_FILENAME type STRING
-    returning
-      value(RV_FILENAME) type STRING .
-  methods ALLOW_SAP_OBJECTS
-    returning
-      value(RV_ALLOWED) type ABAP_BOOL .
-  methods CHANGE_LOCAL_HOST
-    changing
-      !CT_HOSTS type ZIF_ABAPGIT_DEFINITIONS=>TY_STRING_TT .
-  methods CHANGE_MAX_PARALLEL_PROCESSES
-    importing
-      !IV_PACKAGE type DEVCLASS
-    changing
-      !CV_MAX_PROCESSES type I .
-  methods CHANGE_PROXY_AUTHENTICATION
-    importing
-      !IV_REPO_URL type CSEQUENCE
-    changing
-      !CV_PROXY_AUTHENTICATION type ABAP_BOOL .
-  methods CHANGE_PROXY_PORT
-    importing
-      !IV_REPO_URL type CSEQUENCE
-    changing
-      !CV_PROXY_PORT type STRING .
-  methods CHANGE_PROXY_URL
-    importing
-      !IV_REPO_URL type CSEQUENCE
-    changing
-      !CV_PROXY_URL type STRING .
-  methods CHANGE_RFC_SERVER_GROUP
-    changing
-      !CV_GROUP type RZLLI_APCL .
-  methods CHANGE_SUPPORTED_DATA_OBJECTS
-    changing
-      !CT_OBJECTS type ZIF_ABAPGIT_DATA_SUPPORTER=>TY_OBJECTS .
-  methods CHANGE_SUPPORTED_OBJECT_TYPES
-    changing
-      !CT_TYPES type TY_OBJECT_TYPES .
-  methods CHANGE_TADIR
-    importing
-      !IV_PACKAGE type DEVCLASS
-      !II_LOG type ref to ZIF_ABAPGIT_LOG
-      !IO_DOT type ref to ZCL_ABAPGIT_DOT_ABAPGIT
-      !IV_IGNORE_SUBPACKAGES type ABAP_BOOL default ABAP_FALSE
-      !IV_ONLY_LOCAL_OBJECTS type ABAP_BOOL default ABAP_FALSE
-    changing
-      !CT_TADIR type ZIF_ABAPGIT_DEFINITIONS=>TY_TADIR_TT .
-  methods CREATE_HTTP_CLIENT
-    importing
-      !IV_URL type STRING
-    returning
-      value(RI_CLIENT) type ref to IF_HTTP_CLIENT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods CUSTOM_SERIALIZE_ABAP_CLIF
-    importing
-      !IS_CLASS_KEY type TY_CLASS_KEY
-      !IT_SOURCE type ZIF_ABAPGIT_DEFINITIONS=>TY_STRING_TT optional
-    returning
-      value(RT_SOURCE) type ZIF_ABAPGIT_DEFINITIONS=>TY_STRING_TT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods DESERIALIZE_POSTPROCESS
-    importing
-      !IS_STEP type ZIF_ABAPGIT_OBJECTS=>TY_STEP_DATA
-      !II_LOG type ref to ZIF_ABAPGIT_LOG .
-  methods DETERMINE_TRANSPORT_REQUEST
-    importing
-      !IO_REPO type ref to ZCL_ABAPGIT_REPO
-      !IV_TRANSPORT_TYPE type ZIF_ABAPGIT_DEFINITIONS=>TY_TRANSPORT_TYPE
-    changing
-      !CV_TRANSPORT_REQUEST type TRKORR .
-  methods ENHANCE_REPO_TOOLBAR
-    importing
-      !IO_MENU type ref to ZCL_ABAPGIT_HTML_TOOLBAR
-      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_VALUE
-      !IV_ACT type STRING .
-  methods GET_CI_TESTS
-    importing
-      !IV_OBJECT type TADIR-OBJECT
-    changing
-      !CT_CI_REPOS type TY_CI_REPOS .
-  methods GET_SSL_ID
-    returning
-      value(RV_SSL_ID) type SSFAPPLSSL .
-  methods HTTP_CLIENT
-    importing
-      !IV_URL type STRING
-      !II_CLIENT type ref to IF_HTTP_CLIENT .
-  methods ON_EVENT
-    importing
-      !II_EVENT type ref to ZIF_ABAPGIT_GUI_EVENT
-    returning
-      value(RS_HANDLED) type ZIF_ABAPGIT_GUI_EVENT_HANDLER=>TY_HANDLING_RESULT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods PRE_CALCULATE_REPO_STATUS
-    importing
-      !IS_REPO_META type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO
-    changing
-      !CT_LOCAL type ZIF_ABAPGIT_DEFINITIONS=>TY_FILES_ITEM_TT
-      !CT_REMOTE type ZIF_ABAPGIT_GIT_DEFINITIONS=>TY_FILES_TT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods SERIALIZE_POSTPROCESS
-    importing
-      !IV_PACKAGE type DEVCLASS
-      !II_LOG type ref to ZIF_ABAPGIT_LOG
-    changing
-      !CT_FILES type ZIF_ABAPGIT_DEFINITIONS=>TY_FILES_ITEM_TT .
-  methods VALIDATE_BEFORE_PUSH
-    importing
-      !IS_COMMENT type ZIF_ABAPGIT_GIT_DEFINITIONS=>TY_COMMENT
-      !IO_STAGE type ref to ZCL_ABAPGIT_STAGE
-      !IO_REPO type ref to ZCL_ABAPGIT_REPO_ONLINE
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods WALL_MESSAGE_LIST
-    importing
-      !II_HTML type ref to ZIF_ABAPGIT_HTML .
-  methods WALL_MESSAGE_REPO
-    importing
-      !IS_REPO_META type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO
-      !II_HTML type ref to ZIF_ABAPGIT_HTML .
-endinterface.
+  METHODS adjust_display_commit_url
+    IMPORTING
+      !iv_repo_url TYPE csequence
+      !iv_repo_name TYPE csequence
+      !iv_repo_key TYPE csequence
+      !iv_commit_hash TYPE zif_abapgit_git_definitions=>ty_sha1
+    CHANGING
+      !cv_display_url TYPE csequence
+    RAISING
+      zcx_abapgit_exception .
+  METHODS adjust_display_filename
+    IMPORTING
+      !is_repo_meta TYPE zif_abapgit_persistence=>ty_repo
+      !iv_filename TYPE string
+    RETURNING
+      VALUE(rv_filename) TYPE string .
+  METHODS allow_sap_objects
+    RETURNING
+      VALUE(rv_allowed) TYPE abap_bool .
+  METHODS change_local_host
+    CHANGING
+      !ct_hosts TYPE zif_abapgit_definitions=>ty_string_tt .
+  METHODS change_max_parallel_processes
+    IMPORTING
+      !iv_package TYPE devclass
+    CHANGING
+      !cv_max_processes TYPE i .
+  METHODS change_proxy_authentication
+    IMPORTING
+      !iv_repo_url TYPE csequence
+    CHANGING
+      !cv_proxy_authentication TYPE abap_bool .
+  METHODS change_proxy_port
+    IMPORTING
+      !iv_repo_url TYPE csequence
+    CHANGING
+      !cv_proxy_port TYPE string .
+  METHODS change_proxy_url
+    IMPORTING
+      !iv_repo_url TYPE csequence
+    CHANGING
+      !cv_proxy_url TYPE string .
+  METHODS change_rfc_server_group
+    CHANGING
+      !cv_group TYPE rzlli_apcl .
+  METHODS change_supported_data_objects
+    CHANGING
+      !ct_objects TYPE zif_abapgit_data_supporter=>ty_objects .
+  METHODS change_supported_object_types
+    CHANGING
+      !ct_types TYPE ty_object_types .
+  METHODS change_tadir
+    IMPORTING
+      !iv_package TYPE devclass
+      !ii_log TYPE REF TO zif_abapgit_log
+      !io_dot TYPE REF TO zcl_abapgit_dot_abapgit
+      !iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
+      !iv_only_local_objects TYPE abap_bool DEFAULT abap_false
+    CHANGING
+      !ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt .
+  METHODS create_http_client
+    IMPORTING
+      !iv_url TYPE string
+    RETURNING
+      VALUE(ri_client) TYPE REF TO if_http_client
+    RAISING
+      zcx_abapgit_exception .
+  METHODS custom_serialize_abap_clif
+    IMPORTING
+      !is_class_key TYPE ty_class_key
+      !it_source TYPE zif_abapgit_definitions=>ty_string_tt OPTIONAL
+    RETURNING
+      VALUE(rt_source) TYPE zif_abapgit_definitions=>ty_string_tt
+    RAISING
+      zcx_abapgit_exception .
+  METHODS deserialize_postprocess
+    IMPORTING
+      !is_step TYPE zif_abapgit_objects=>ty_step_data
+      !ii_log TYPE REF TO zif_abapgit_log .
+  METHODS determine_transport_request
+    IMPORTING
+      !io_repo TYPE REF TO zcl_abapgit_repo
+      !iv_transport_type TYPE zif_abapgit_definitions=>ty_transport_type
+    CHANGING
+      !cv_transport_request TYPE trkorr .
+  METHODS enhance_repo_toolbar
+    IMPORTING
+      !io_menu TYPE REF TO zcl_abapgit_html_toolbar
+      !iv_key TYPE zif_abapgit_persistence=>ty_value
+      !iv_act TYPE string .
+  METHODS get_ci_tests
+    IMPORTING
+      !iv_object TYPE tadir-object
+    CHANGING
+      !ct_ci_repos TYPE ty_ci_repos .
+  METHODS get_ssl_id
+    RETURNING
+      VALUE(rv_ssl_id) TYPE ssfapplssl .
+  METHODS http_client
+    IMPORTING
+      !iv_url TYPE string
+      !ii_client TYPE REF TO if_http_client .
+  METHODS on_event
+    IMPORTING
+      !ii_event TYPE REF TO zif_abapgit_gui_event
+    RETURNING
+      VALUE(rs_handled) TYPE zif_abapgit_gui_event_handler=>ty_handling_result
+    RAISING
+      zcx_abapgit_exception .
+  METHODS pre_calculate_repo_status
+    IMPORTING
+      !is_repo_meta TYPE zif_abapgit_persistence=>ty_repo
+    CHANGING
+      !ct_local TYPE zif_abapgit_definitions=>ty_files_item_tt
+      !ct_remote TYPE zif_abapgit_git_definitions=>ty_files_tt
+    RAISING
+      zcx_abapgit_exception .
+  METHODS serialize_postprocess
+    IMPORTING
+      !iv_package TYPE devclass
+      !ii_log TYPE REF TO zif_abapgit_log
+    CHANGING
+      !ct_files TYPE zif_abapgit_definitions=>ty_files_item_tt .
+  METHODS validate_before_push
+    IMPORTING
+      !is_comment TYPE zif_abapgit_git_definitions=>ty_comment
+      !io_stage TYPE REF TO zcl_abapgit_stage
+      !io_repo TYPE REF TO zcl_abapgit_repo_online
+    RAISING
+      zcx_abapgit_exception .
+  METHODS wall_message_list
+    IMPORTING
+      !ii_html TYPE REF TO zif_abapgit_html .
+  METHODS wall_message_repo
+    IMPORTING
+      !is_repo_meta TYPE zif_abapgit_persistence=>ty_repo
+      !ii_html TYPE REF TO zif_abapgit_html .
+ENDINTERFACE.
