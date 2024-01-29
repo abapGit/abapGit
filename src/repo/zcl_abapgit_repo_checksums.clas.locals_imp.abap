@@ -52,7 +52,7 @@ CLASS lcl_checksum_serializer IMPLEMENTATION.
         SPLIT lv_buf AT c_splitter INTO <ls_file>-path <ls_file>-filename <ls_file>-sha1.
 
         IF <ls_file>-path IS INITIAL OR <ls_file>-filename IS INITIAL OR <ls_file>-sha1 IS INITIAL.
-          " Incorrect checksums struture, maybe raise, though it is not critical for execution
+          " Incorrect checksums structure, maybe raise, though it is not critical for execution
           RETURN.
         ENDIF.
       ELSEIF lv_buf = c_root. " Root
