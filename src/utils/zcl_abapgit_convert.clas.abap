@@ -142,7 +142,7 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
     DO lv_len TIMES.
 
       IF sy-index = 1.
-        "Intialize
+        "Initialize
         IF lv_bitbyte+lv_offset(1) = '1'.
           rv_int = 1.
         ENDIF.

@@ -403,10 +403,13 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
     li_exit = zcl_abapgit_exit=>get_instance( ).
     li_exit->change_tadir(
       EXPORTING
-        iv_package = iv_package
-        ii_log     = ii_log
+        iv_package            = iv_package
+        ii_log                = ii_log
+        is_dot_abapgit        = io_dot->get_data( )
+        iv_ignore_subpackages = iv_ignore_subpackages
+        iv_only_local_objects = iv_only_local_objects
       CHANGING
-        ct_tadir   = rt_tadir ).
+        ct_tadir              = rt_tadir ).
 
     IF it_filter IS NOT INITIAL.
       "Apply filter manually instead of calling zcl_abapgit_repo_filter->apply,

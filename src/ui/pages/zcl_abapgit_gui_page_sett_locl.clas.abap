@@ -264,7 +264,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
     )->checkbox(
       iv_name        = c_id-ignore_subpackages
       iv_label       = 'Ignore Subpackages'
-      iv_hint        = 'Syncronize root package only'
+      iv_hint        = 'Synchronize root package only'
     )->checkbox(
       iv_name        = c_id-only_local_objects
       iv_label       = 'Only Local Objects'
@@ -307,7 +307,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
 
     IF mo_popup_picklist IS BOUND AND
       ( mo_popup_picklist->is_fulfilled( ) = abap_true OR mo_popup_picklist->is_in_page( ) = abap_false ).
-      " Picklist is either fullfilled OR
+      " Picklist is either fulfilled OR
       " it was on its own page and user went back from it via F3/ESC and the picklist had no "graceful back" handler
       CASE mo_popup_picklist->id( ).
         WHEN c_event-choose_check_variant.
@@ -410,7 +410,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
 
     COMMIT WORK AND WAIT.
 
-    MESSAGE 'Settings succesfully saved' TYPE 'S'.
+    MESSAGE 'Settings successfully saved' TYPE 'S'.
 
     mo_form_data = read_settings( ).
 
@@ -522,7 +522,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
     IF mo_popup_picklist IS BOUND. " Uniform popup state handling
       " This should happen only for a new popup because
       " on the first re-render main component event handling is blocked
-      " and not called again until the popup distruction
+      " and not called again until the popup destruction
       IF mo_popup_picklist->is_in_page( ) = abap_true.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       ELSE.
