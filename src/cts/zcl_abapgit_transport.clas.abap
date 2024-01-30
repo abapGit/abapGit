@@ -103,7 +103,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
     " We used TR_REQUEST_CHOICE before, but it issues its error log with
     " write lists which are not compatible with abapGit.
     " There we user TRINT_REQUEST_CHOICE which returns the error log
-    " and display the log ourselve.
+    " and display the log ourselves.
     CALL FUNCTION 'TRINT_REQUEST_CHOICE'
       EXPORTING
         iv_request_types     = 'FTCOK'
