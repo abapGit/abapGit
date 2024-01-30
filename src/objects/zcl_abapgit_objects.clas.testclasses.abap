@@ -60,7 +60,7 @@ CLASS lcl_settings_with_features DEFINITION.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_persist_settings.
     METHODS: constructor
-      IMPORTING lv_features TYPE string.
+      IMPORTING iv_features TYPE string.
   PRIVATE SECTION.
     DATA mv_features TYPE string.
 ENDCLASS.
@@ -77,7 +77,7 @@ CLASS lcl_settings_with_features IMPLEMENTATION.
 
   ENDMETHOD.
   METHOD constructor.
-    mv_features = lv_features.
+    mv_features = iv_features.
   ENDMETHOD.
 
 ENDCLASS.
@@ -199,14 +199,17 @@ CLASS ltcl_serialize IMPLEMENTATION.
           ls_act            TYPE zif_abapgit_objects=>ty_serialization,
           ls_translation_de TYPE zif_abapgit_git_definitions=>ty_file,
           lt_target_langu   TYPE zif_abapgit_definitions=>ty_languages,
-          lo_i18n_params    TYPE REF TO zcl_abapgit_i18n_params.
+          lo_i18n_params    TYPE REF TO zcl_abapgit_i18n_params,
+          lv_features       TYPE string,
+          lv_filename       TYPE string.
 
     ls_item-obj_type = 'INTF'.
     ls_item-obj_name = 'IF_BADI_TADIR_CHANGED'.
 
+    lv_features = |{ zcl_abapgit_aff_registry=>c_aff_feature }, { zcl_abapgit_properties_file=>c_properties_feature }|.
     CREATE OBJECT lo_settings
       EXPORTING
-        lv_features = |{ zcl_abapgit_aff_registry=>c_aff_feature }, { zcl_abapgit_properties_file=>c_properties_feature }|.
+        iv_features = lv_features.
 
     zcl_abapgit_persist_injector=>set_settings( lo_settings ).
 
@@ -223,7 +226,9 @@ CLASS ltcl_serialize IMPLEMENTATION.
                                         exp = ls_item ).
 
 
-    ls_translation_de = ls_act-files[ filename = 'if_badi_tadir_changed.intf.i18n.de.properties' ].
+    lv_filename = 'if_badi_tadir_changed.intf.i18n.de.properties'.
+    READ TABLE ls_act-files WITH KEY filename = lv_filename INTO ls_translation_de.
+
     cl_abap_unit_assert=>assert_not_initial( ls_translation_de ).
 
   ENDMETHOD.

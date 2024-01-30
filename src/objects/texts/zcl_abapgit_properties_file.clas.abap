@@ -13,7 +13,7 @@ CLASS zcl_abapgit_properties_file DEFINITION
       IMPORTING iv_lang TYPE laiso.
 
     METHODS push_text_pairs
-      IMPORTING lt_translation TYPE string_table.
+      IMPORTING it_translation TYPE string_table.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -35,7 +35,7 @@ CLASS zcl_abapgit_properties_file IMPLEMENTATION.
 
 
   METHOD push_text_pairs.
-    mt_translation = lt_translation.
+    mt_translation = it_translation.
   ENDMETHOD.
 
 
