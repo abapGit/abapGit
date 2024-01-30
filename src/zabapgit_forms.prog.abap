@@ -288,7 +288,7 @@ FORM exit.
 
   " The exit logic should only be applied for our 'main' selection screen 1001.
   " All other selection-screens are called as popups and shouldn't influence
-  " the gui navigation as it would lead to inpredictable behaviour like dumps.
+  " the gui navigation as it would lead to unpredictable behaviour like dumps.
   IF sy-dynnr <> 1001.
     RETURN.
   ENDIF.
