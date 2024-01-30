@@ -182,7 +182,7 @@ CLASS zcl_abapgit_object_otgr IMPLEMENTATION.
         IF sy-subrc = 0.
           lo_otgr->set_description( <ls_groupt>-text ).
           " ELSE.
-          "   Do we want to clear the main language description if not present in the XML conent?
+          "   Do we want to clear the main language description if not present in the XML content?
           "   Main language is non-deterministic - it depends on sy-langu, so rather don't touch
           "   description if the main language is not present
           "   Perhaps, we can display some sort of a message but how?
