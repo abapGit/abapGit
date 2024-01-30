@@ -362,7 +362,7 @@ CLASS zcl_abapgit_objects_generic IMPLEMENTATION.
     ls_objkey_sub-num = cs_objkey-num.
     lv_objkey_sub_pos = 0.
 
-*    we want to fill the atribute values which are not covered by explicit key components yet
+*    we want to fill the attribute values which are not covered by explicit key components yet
     lv_count_components_covered = ls_objkey_sub-num - 1.
     DO lv_count_components_covered TIMES.
       DELETE lt_key_component_uncovered INDEX 1.
