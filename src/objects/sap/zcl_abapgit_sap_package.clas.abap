@@ -305,7 +305,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
           " Namespace with repair license requires repair task
           rs_transport_type-task = 'R'.
         ELSE.
-          " Otherweise use correction task
+          " Otherwise use correction task
           rs_transport_type-task = 'S'.
         ENDIF.
       WHEN OTHERS.
