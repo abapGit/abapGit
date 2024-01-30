@@ -498,7 +498,7 @@ CLASS zcl_abapgit_object_w3xx_super IMPLEMENTATION.
     io_xml->add( iv_name = 'PARAMS'
                  ig_data = lt_w3params ).
 
-    " Seriazation v2, separate data file. 'extra' added to prevent conflict with .xml
+    " Serialization v2, separate data file. 'extra' added to prevent conflict with .xml
     mo_files->add_raw( iv_data  = lv_xstring
                        iv_extra = 'data'
                        iv_ext   = get_ext( lt_w3params ) ).

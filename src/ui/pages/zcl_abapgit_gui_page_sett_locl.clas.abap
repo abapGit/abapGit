@@ -264,7 +264,7 @@ CLASS zcl_abapgit_gui_page_sett_locl IMPLEMENTATION.
     )->checkbox(
       iv_name        = c_id-ignore_subpackages
       iv_label       = 'Ignore Subpackages'
-      iv_hint        = 'Syncronize root package only'
+      iv_hint        = 'Synchronize root package only'
     )->checkbox(
       iv_name        = c_id-only_local_objects
       iv_label       = 'Only Local Objects'

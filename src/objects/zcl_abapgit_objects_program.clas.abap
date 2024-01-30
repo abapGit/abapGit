@@ -501,7 +501,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       ELSE.
         INSERT TEXTPOOL iv_program "In case of includes: Deletion of textpool in
           FROM it_tpool            "main language cannot be activated because
-          LANGUAGE lv_language     "this woul activate the deletion of the textpool
+          LANGUAGE lv_language     "this would activate the deletion of the textpool
           STATE lv_state.          "of the mail program -> insert empty textpool
       ENDIF.
     ELSE.

@@ -184,7 +184,7 @@ function errorStub(event) {
   alert("JS Error, please log an issue (@" + targetName + ")");
 }
 
-// Confirm JS initilization
+// Confirm JS initialization
 function confirmInitialized() {
   var errorBanner = document.getElementById("js-error-banner");
   if (errorBanner) {

@@ -418,7 +418,7 @@ CLASS zcl_abapgit_object_iamu IMPLEMENTATION.
 
     ls_internet_appl_comp_binary = read( ).
 
-    " Seriazation v2, separate data file
+    " Serialization v2, separate data file
     LOOP AT ls_internet_appl_comp_binary-source ASSIGNING <lv_data>.
       lv_xstring = lv_xstring && <lv_data>-line.
     ENDLOOP.
