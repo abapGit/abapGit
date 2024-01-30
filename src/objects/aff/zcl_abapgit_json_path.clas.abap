@@ -13,7 +13,7 @@ CLASS zcl_abapgit_json_path IMPLEMENTATION.
   METHOD serialize.
     DATA: lo_json_path    TYPE REF TO lcl_json_path,
           lv_json_xstring TYPE xstring,
-          lv_root_path    TYPE string,
+          lt_root_path    TYPE string_table,
           lo_reader       TYPE REF TO if_sxml_reader,
           lx_parse_error  TYPE REF TO cx_sxml_parse_error.
 
@@ -28,11 +28,11 @@ CLASS zcl_abapgit_json_path IMPLEMENTATION.
         zcx_abapgit_exception=>raise_with_text( lx_parse_error ).
     ENDTRY.
 
-    lv_root_path = `$`.
+    APPEND `$` TO lt_root_path.
 
     CREATE OBJECT lo_json_path.
     lo_json_path->serialize_rec( EXPORTING io_reader     = lo_reader
-                                           it_path       = VALUE #( ( lv_root_path ) )
+                                           it_path       = lt_root_path
                                  CHANGING  ct_json_paths = rt_result ).
   ENDMETHOD.
 
