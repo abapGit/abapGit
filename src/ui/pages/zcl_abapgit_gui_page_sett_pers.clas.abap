@@ -344,7 +344,7 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
 
     COMMIT WORK AND WAIT.
 
-    MESSAGE 'Settings succesfully saved' TYPE 'S'.
+    MESSAGE 'Settings successfully saved' TYPE 'S'.
 
     mo_form_data = read_settings( ).
 

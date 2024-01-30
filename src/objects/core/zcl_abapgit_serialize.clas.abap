@@ -658,14 +658,15 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       iv_count = lv_count )->start( ).
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-
-      li_progress->show(
-        iv_current = sy-tabix
-        iv_text    = |Serialize { <ls_tadir>-obj_name }, { lv_max } threads| ).
-
       IF lv_max = 1.
+        li_progress->show(
+          iv_current = sy-tabix
+          iv_text    = |Serialize { <ls_tadir>-obj_name }, { lv_max } thread| ).
         run_sequential( <ls_tadir> ).
       ELSE.
+        li_progress->show(
+          iv_current = sy-tabix
+          iv_text    = |Serialize { <ls_tadir>-obj_name }, { lv_max } threads| ).
         run_parallel(
           is_tadir = <ls_tadir>
           iv_task  = |{ sy-tabix }| ).
