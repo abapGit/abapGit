@@ -13,7 +13,7 @@ CLASS zcl_abapgit_properties_file DEFINITION
       IMPORTING iv_lang TYPE laiso.
 
     METHODS push_text_pairs
-      IMPORTING translation TYPE string_table..
+      IMPORTING lt_translation TYPE string_table.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -35,7 +35,7 @@ CLASS zcl_abapgit_properties_file IMPLEMENTATION.
 
 
   METHOD push_text_pairs.
-    mt_translation = translation.
+    mt_translation = lt_translation.
   ENDMETHOD.
 
 
@@ -50,12 +50,16 @@ CLASS zcl_abapgit_properties_file IMPLEMENTATION.
 
 
   METHOD zif_abapgit_i18n_file~render.
-    DATA(translation) = concat_lines_of( table = mt_translation sep = cl_abap_char_utilities=>newline ).
-    DATA(ro_buf) = NEW zcl_abapgit_string_buffer( ).
-    ro_buf->add( translation ).
+    DATA: lv_translation TYPE string,
+          lo_buf      TYPE REF TO zcl_abapgit_string_buffer,
+          lv_str      TYPE string.
 
-    DATA(lv_str) = ro_buf->join_w_newline_and_flush( )
-        && cl_abap_char_utilities=>newline.
+    lv_translation = concat_lines_of( table = mt_translation
+                                      sep   = cl_abap_char_utilities=>newline ).
+    CREATE OBJECT lo_buf.
+    lo_buf->add( lv_translation ).
+
+    lv_str = lo_buf->join_w_newline_and_flush( ) && cl_abap_char_utilities=>newline.
     rv_data = zcl_abapgit_convert=>string_to_xstring_utf8_bom( lv_str ).
 
   ENDMETHOD.

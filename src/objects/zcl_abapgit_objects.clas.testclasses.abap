@@ -60,7 +60,7 @@ CLASS lcl_settings_with_features DEFINITION.
   PUBLIC SECTION.
     INTERFACES zif_abapgit_persist_settings.
     METHODS: constructor
-      IMPORTING features TYPE string.
+      IMPORTING lv_features TYPE string.
   PRIVATE SECTION.
     DATA mv_features TYPE string.
 ENDCLASS.
@@ -72,17 +72,15 @@ CLASS lcl_settings_with_features IMPLEMENTATION.
 
   METHOD zif_abapgit_persist_settings~read.
 
-    ro_settings = NEW zcl_abapgit_settings( ).
+    CREATE OBJECT ro_settings.
     ro_settings->set_experimental_features( mv_features ).
 
   ENDMETHOD.
   METHOD constructor.
-    mv_features = features.
+    mv_features = lv_features.
   ENDMETHOD.
 
 ENDCLASS.
-
-
 
 
 *----------------------------------------------------------------------*
@@ -94,7 +92,8 @@ CLASS ltcl_serialize DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT F
 
   PRIVATE SECTION.
 
-    METHODS: check
+    METHODS:
+      check
         IMPORTING is_item TYPE zif_abapgit_definitions=>ty_item
         RAISING   zcx_abapgit_exception,
       serialize_tabl FOR TESTING RAISING zcx_abapgit_exception,
@@ -110,7 +109,7 @@ CLASS ltcl_serialize DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT F
       serialize_prog FOR TESTING RAISING zcx_abapgit_exception,
       serialize_tran FOR TESTING RAISING zcx_abapgit_exception,
       serialize_ttyp FOR TESTING RAISING zcx_abapgit_exception,
-      serialize_intf_aff_translate for testing raising cx_static_check.
+      serialize_intf_aff_translate FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
 
@@ -199,21 +198,22 @@ CLASS ltcl_serialize IMPLEMENTATION.
           lo_settings       TYPE REF TO lcl_settings_with_features,
           ls_act            TYPE zif_abapgit_objects=>ty_serialization,
           ls_translation_de TYPE zif_abapgit_git_definitions=>ty_file,
-          lo_i18n_params TYPE REF TO zcl_abapgit_i18n_params.
+          lt_target_langu   TYPE zif_abapgit_definitions=>ty_languages,
+          lo_i18n_params    TYPE REF TO zcl_abapgit_i18n_params.
 
     ls_item-obj_type = 'INTF'.
     ls_item-obj_name = 'IF_BADI_TADIR_CHANGED'.
 
     CREATE OBJECT lo_settings
       EXPORTING
-        features = |{ zcl_abapgit_aff_registry=>c_aff_feature }, { zcl_abapgit_properties_file=>c_properties_feature }|.
+        lv_features = |{ zcl_abapgit_aff_registry=>c_aff_feature }, { zcl_abapgit_properties_file=>c_properties_feature }|.
 
     zcl_abapgit_persist_injector=>set_settings( lo_settings ).
 
-
-    lo_i18n_params = zcl_abapgit_i18n_params=>new( iv_main_language = zif_abapgit_definitions=>c_english
-                                                   it_translation_langs = VALUE #( ( 'DE' ) )
-                                                   iv_use_lxe = abap_true ).
+    APPEND `DE` TO lt_target_langu.
+    lo_i18n_params = zcl_abapgit_i18n_params=>new( iv_main_language     = zif_abapgit_definitions=>c_english
+                                                   it_translation_langs = lt_target_langu
+                                                   iv_use_lxe           = abap_true ).
     ls_act = zcl_abapgit_objects=>serialize(
       is_item        = ls_item
       io_i18n_params = lo_i18n_params ).
@@ -223,7 +223,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
                                         exp = ls_item ).
 
 
-    ls_translation_de = VALUE #( ls_act-files[ filename = 'if_badi_tadir_changed.intf.i18n.de.properties' ] ).
+    ls_translation_de = ls_act-files[ filename = 'if_badi_tadir_changed.intf.i18n.de.properties' ].
     cl_abap_unit_assert=>assert_not_initial( ls_translation_de ).
 
   ENDMETHOD.
