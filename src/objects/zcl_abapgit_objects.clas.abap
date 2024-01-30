@@ -721,7 +721,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     check_objects_locked( lt_items ).
 
-    " Check the original system of all objects to prevent overwritting
+    " Check the original system of all objects to prevent overwriting
     check_original_system(
       it_items = lt_items
       ii_log   = ii_log

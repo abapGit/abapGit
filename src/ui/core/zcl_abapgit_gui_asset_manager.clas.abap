@@ -170,7 +170,7 @@ CLASS zcl_abapgit_gui_asset_manager IMPLEMENTATION.
     ENDIF.
 
     DELETE mt_asset_register WHERE url = iv_url.
-    " TODO: Maybe forbid averwriting cachable assets as they were probably already cached ... agrueable
+    " TODO: Maybe forbid overwriting cachable assets as they were probably already cached ... agrueable
     APPEND ls_asset TO mt_asset_register.
 
   ENDMETHOD.

@@ -180,7 +180,7 @@ CLASS zcl_abapgit_object_vcls IMPLEMENTATION.
     lv_argument       = ms_item-obj_name.
     lv_argument_langu = |@{ ms_item-obj_name }|.
 
-    "Check all relevant maintein tabeles for view clusters
+    "Check all relevant maintain tables for view clusters
     IF is_locked( iv_tabname = 'VCLDIR'
                   iv_argument = lv_argument ) = abap_true
         OR is_locked( iv_tabname = 'VCLDIRT'

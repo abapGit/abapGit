@@ -113,7 +113,7 @@ CLASS zcl_abapgit_objects_bridge IMPLEMENTATION.
       LOOP AT lt_plugin_obj_type INTO ls_objtype_map-obj_typ.
         INSERT ls_objtype_map INTO TABLE gt_objtype_map.
         IF sy-subrc <> 0.
-* No exception in class-contructor possible.
+* No exception in class-constructor possible.
 * Anyway, a shortdump is more appropriate in this case
           ASSERT 'There must not be' =
             |multiple abapGit-Plugins for the same object type {

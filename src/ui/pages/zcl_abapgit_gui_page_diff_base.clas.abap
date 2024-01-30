@@ -1289,7 +1289,7 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
     ls_view = ms_view.
 
     CASE ii_event->mv_action.
-      WHEN c_actions-toggle_unified. " Toggle file diplay
+      WHEN c_actions-toggle_unified. " Toggle file display
 
         mv_unified = zcl_abapgit_persistence_user=>get_instance( )->toggle_diff_unified( ).
 
@@ -1359,12 +1359,12 @@ CLASS zcl_abapgit_gui_page_diff_base IMPLEMENTATION.
     ls_hotkey_action-hotkey      = |a|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-description = |Toogle Split/Unified|.
+    ls_hotkey_action-description = |Toggle Split/Unified|.
     ls_hotkey_action-action      = c_actions-toggle_unified.
     ls_hotkey_action-hotkey      = |u|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-description = |Toogle Hidden Characters|.
+    ls_hotkey_action-description = |Toggle Hidden Characters|.
     ls_hotkey_action-action      = c_actions-toggle_hidden_chars.
     ls_hotkey_action-hotkey      = |h|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
