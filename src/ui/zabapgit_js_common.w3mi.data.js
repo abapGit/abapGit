@@ -2348,7 +2348,7 @@ function enumerateUiActions() {
   }
 
   // toolbars
-  [].slice.call(document.querySelectorAll("[id*=toolbar]"))
+  [].slice.call(document.querySelectorAll(".nav-container > ul[id*=toolbar]"))
     .filter(function(toolbar) {
       return (toolbar && toolbar.nodeName === "UL");
     }).forEach(function(toolbar) {
