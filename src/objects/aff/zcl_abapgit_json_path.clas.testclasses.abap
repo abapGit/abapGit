@@ -74,11 +74,11 @@ CLASS ltcl_json_path IMPLEMENTATION.
 
     ls_meth_desc-name = `METH1`.
     ls_meth_desc-description = `Sonne`.
-    append ls_meth_desc to ms_data-descriptions-methods.
-    clear ls_meth_desc.
+    APPEND ls_meth_desc TO ms_data-descriptions-methods.
+    CLEAR ls_meth_desc.
     ls_meth_desc-name = `METH2`.
     ls_meth_desc-description = `Mond`.
-    append ls_meth_desc to ms_data-descriptions-methods.
+    APPEND ls_meth_desc TO ms_data-descriptions-methods.
 
 
     mt_act = serialize( ms_data ).
@@ -94,6 +94,8 @@ CLASS ltcl_json_path IMPLEMENTATION.
     DATA lv_descr_meth_1_param_1 TYPE string.
     DATA lv_descr_meth_1_param_2 TYPE string.
     DATA lv_descr_meth_2 TYPE string.
+    DATA ls_meth_desc    TYPE zif_abapgit_aff_oo_types_v1=>ty_method.
+    DATA ls_meth_param   TYPE zif_abapgit_aff_oo_types_v1=>ty_component_description.
 
     lv_header_descr = `$.header.description=Text`.
     lv_descr_meth_1 = `$.descriptions.methods[?(@.name=='METH1')].description=Sonne`.
@@ -110,14 +112,23 @@ CLASS ltcl_json_path IMPLEMENTATION.
     APPEND lv_descr_meth_2 TO mt_exp.
 
 
+
+    ls_meth_param-name = 'param1'.
+    ls_meth_param-description = 'Parameter A'.
+    append ls_meth_param to ls_meth_desc-parameters.
+
+    ls_meth_param-name = 'param2'.
+    ls_meth_param-description = 'Parameter B'.
+    append ls_meth_param to ls_meth_desc-parameters.
+    ls_meth_desc-name = `METH1`.
+    ls_meth_desc-description = `Sonne`.
+    APPEND ls_meth_desc TO ms_data-descriptions-methods.
+
+    ls_meth_desc-name = `METH2`.
+    ls_meth_desc-description = `Mond`.
+    APPEND ls_meth_desc TO ms_data-descriptions-methods.
+
     ms_data-header-description = 'Text'.
-    ms_data-descriptions-methods = VALUE #(
-      ( name = 'METH1'
-        description = 'Sonne'
-        parameters = VALUE #( ( name = `param1` description = `Parameter A` )
-                              ( name = `param2` description = `Parameter B` ) ) )
-      ( name = 'METH2'
-        description = 'Mond' ) ).
 
     mt_act = serialize( ms_data ).
 

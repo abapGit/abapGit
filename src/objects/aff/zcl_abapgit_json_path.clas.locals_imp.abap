@@ -41,15 +41,15 @@ ENDCLASS.
 CLASS lcl_json_path IMPLEMENTATION.
 
   METHOD is_array.
-    rv_result = xsdbool( io_reader->name = 'array' ).
+    rv_result = boolc( io_reader->name = 'array' ).
   ENDMETHOD.
 
   METHOD is_string_open.
-    rv_result = xsdbool( io_reader->name = 'str' AND io_reader->node_type = if_sxml_node=>co_nt_element_open ).
+    rv_result = boolc( io_reader->name = 'str' AND io_reader->node_type = if_sxml_node=>co_nt_element_open ).
   ENDMETHOD.
 
   METHOD is_object.
-    rv_result = xsdbool( io_reader->name = 'object' ).
+    rv_result = boolc( io_reader->name = 'object' ).
   ENDMETHOD.
 
   METHOD serialize_rec.
@@ -68,7 +68,8 @@ CLASS lcl_json_path IMPLEMENTATION.
       lv_key = get_json_path( lt_new_path ).
 
       io_reader->read_next_node( ).
-      APPEND |{ lv_key }={ io_reader->value }| TO ct_json_paths.
+      lv_key = |{ lv_key }={ io_reader->value }|.
+      APPEND lv_key TO ct_json_paths.
 
       io_reader->read_next_node( ).
       DELETE lt_new_path INDEX lines( lt_new_path ).
@@ -91,7 +92,8 @@ CLASS lcl_json_path IMPLEMENTATION.
                                      it_path       = lt_new_path
                            CHANGING  ct_json_paths = ct_json_paths ).
 
-    ELSEIF ( is_object( io_reader ) = abap_true OR is_array( io_reader ) = abap_true ) AND io_reader->node_type = if_sxml_node=>co_nt_element_close.
+    ELSEIF ( is_object( io_reader ) = abap_true OR is_array( io_reader ) = abap_true )
+             AND io_reader->node_type = if_sxml_node=>co_nt_element_close.
 
       DELETE lt_new_path INDEX lines( lt_new_path ).
       serialize_rec( EXPORTING io_reader     = io_reader
@@ -120,7 +122,8 @@ CLASS lcl_json_path IMPLEMENTATION.
       lv_json_path = get_json_path( lt_new_path ).
 
       io_reader->read_next_node( ).
-      APPEND |{ lv_json_path }={ io_reader->value }| TO ct_json_paths.
+      lv_json_path = |{ lv_json_path }={ io_reader->value }|.
+      APPEND lv_json_path TO ct_json_paths.
       io_reader->read_next_node( ).
 
       serialize_rec( EXPORTING io_reader     = io_reader
@@ -132,7 +135,8 @@ CLASS lcl_json_path IMPLEMENTATION.
       io_reader->read_next_node( ).
       lv_array_key = io_reader->value.
       io_reader->read_next_node( ).
-      APPEND |[?(@.{ lv_array_key }=='{ io_reader->value }')]| TO lt_new_path.
+      lv_array_key = |[?(@.{ lv_array_key }=='{ io_reader->value }')]|.
+      APPEND lv_array_key TO lt_new_path.
       io_reader->read_next_node( ).
 
       io_reader->read_next_node( ).
@@ -140,7 +144,8 @@ CLASS lcl_json_path IMPLEMENTATION.
       lv_json_path = get_json_path( lt_new_path ).
 
       io_reader->read_next_node( ).
-      APPEND |{ lv_json_path }={ io_reader->value }| TO ct_json_paths.
+      lv_json_path = |{ lv_json_path }={ io_reader->value }|.
+      APPEND lv_json_path TO ct_json_paths.
       io_reader->read_next_node( ).
 
       DELETE lt_new_path INDEX lines( lt_new_path ).
@@ -155,7 +160,8 @@ CLASS lcl_json_path IMPLEMENTATION.
                                      it_path       = lt_new_path
                            CHANGING  ct_json_paths = ct_json_paths ).
 
-    ELSEIF ( is_object( io_reader ) = abap_true OR is_array( io_reader ) = abap_true ) AND io_reader->node_type = if_sxml_node=>co_nt_element_close.
+    ELSEIF ( is_object( io_reader ) = abap_true OR is_array( io_reader ) = abap_true )
+             AND io_reader->node_type = if_sxml_node=>co_nt_element_close.
 
       DELETE lt_new_path INDEX lines( lt_new_path ).
       serialize_rec_array( EXPORTING io_reader     = io_reader
