@@ -124,7 +124,7 @@ CLASS ltcl_json_path IMPLEMENTATION.
     ls_meth_desc-name = `METH1`.
     ls_meth_desc-description = `Sonne`.
     APPEND ls_meth_desc TO ms_data-descriptions-methods.
-    clear ls_meth_desc.
+    CLEAR ls_meth_desc.
 
     ls_meth_desc-name = `METH2`.
     ls_meth_desc-description = `Mond`.
