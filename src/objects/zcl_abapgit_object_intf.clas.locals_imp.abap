@@ -677,7 +677,7 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
 
 
   METHOD fill_translation.
-    DATA: lv_langu_sap1 TYPE syst_langu.
+    DATA: lv_langu_sap1 TYPE sy-langu.
 
     lv_langu_sap1 = zcl_abapgit_convert=>language_sap2_to_sap1( iv_langu ).
 
