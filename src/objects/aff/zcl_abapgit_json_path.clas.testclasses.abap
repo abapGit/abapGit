@@ -120,9 +120,11 @@ CLASS ltcl_json_path IMPLEMENTATION.
     ls_meth_param-name = 'param2'.
     ls_meth_param-description = 'Parameter B'.
     APPEND ls_meth_param TO ls_meth_desc-parameters.
+
     ls_meth_desc-name = `METH1`.
     ls_meth_desc-description = `Sonne`.
     APPEND ls_meth_desc TO ms_data-descriptions-methods.
+    clear ls_meth_desc.
 
     ls_meth_desc-name = `METH2`.
     ls_meth_desc-description = `Mond`.
