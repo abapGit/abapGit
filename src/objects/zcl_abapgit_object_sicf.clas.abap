@@ -453,7 +453,7 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
       iv_obj_name = ms_item-obj_name ).
 
     " Delete Application Customizing Data the hard way, as it isn't done by the API.
-    " If we wouldn't we would get errors from the API if entrys exist.
+    " If we wouldn't we would get errors from the API if entries exist.
     " Transaction SICF does the same.
     DELETE FROM icfapplcust
       WHERE icf_name = ls_icfservice-icf_name
