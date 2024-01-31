@@ -39,7 +39,7 @@ INTERFACE zif_abapgit_gui_asset_manager
     IMPORTING
       !iv_url       TYPE string
       !iv_type      TYPE string
-      !iv_cachable  TYPE abap_bool DEFAULT abap_true
+      !iv_cacheable TYPE abap_bool DEFAULT abap_true
       !iv_mime_name TYPE wwwdatatab-objid OPTIONAL
       !iv_base64    TYPE string OPTIONAL
       !iv_inline    TYPE string OPTIONAL
