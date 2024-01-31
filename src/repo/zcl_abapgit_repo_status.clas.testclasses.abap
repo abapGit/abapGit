@@ -867,7 +867,7 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
       iv_filename = 'ztest_deleted_remotel.prog.xml'
       iv_sha1     = '1011' ).
 
-* this remote has to be there, even tho its not related
+* this remote has to be there, even though its not related
 * SUBRC = 4 vs SUBRC = 8 during READ TABLE
     mo_helper->add_remote(
       iv_path     = '/'
