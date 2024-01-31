@@ -502,7 +502,7 @@ CLASS lcl_aff_metadata_handler DEFINITION.
       IMPORTING is_intf          TYPE zcl_abapgit_object_intf=>ty_intf
       RETURNING VALUE(rv_result) TYPE xstring
       RAISING   zcx_abapgit_exception.
-    CLASS-METHODS serialize_translation
+    CLASS-METHODS serialize_translations
       IMPORTING is_intf          TYPE zcl_abapgit_object_intf=>ty_intf
                 it_language      TYPE zif_abapgit_definitions=>ty_languages
       RETURNING VALUE(rt_result) TYPE zif_abapgit_i18n_file=>ty_table_of
@@ -523,7 +523,7 @@ CLASS lcl_aff_metadata_handler DEFINITION.
         RETURNING VALUE(rt_result) TYPE zcl_abapgit_json_handler=>ty_skip_paths,
       fill_translation
         IMPORTING iv_name          TYPE seoclsname
-                  iv_langu         TYPE laiso
+                  iv_language      TYPE laiso
         RETURNING VALUE(rt_result) TYPE zif_abapgit_aff_intf_v1=>ty_main.
 ENDCLASS.
 
@@ -630,7 +630,7 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD serialize_translation.
+  METHOD serialize_translations.
     DATA: ls_data        TYPE zif_abapgit_aff_intf_v1=>ty_main,
           lv_langu       TYPE laiso,
           lv_json        TYPE string,
@@ -644,7 +644,7 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
     LOOP AT it_language INTO lv_langu.
 
       ls_data = fill_translation( iv_name  = is_intf-vseointerf-clsname
-                                  iv_langu = lv_langu ).
+                                  iv_language = lv_langu ).
 
       " convert AFF type to JSON
       TRY.
@@ -679,7 +679,7 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
   METHOD fill_translation.
     DATA: lv_langu_sap1 TYPE sy-langu.
 
-    lv_langu_sap1 = zcl_abapgit_convert=>language_sap2_to_sap1( iv_langu ).
+    lv_langu_sap1 = zcl_abapgit_convert=>language_sap2_to_sap1( iv_language ).
 
     rt_result-descriptions = lcl_aff_helper=>get_descriptions_compo_subco(
       iv_clif_name = iv_name

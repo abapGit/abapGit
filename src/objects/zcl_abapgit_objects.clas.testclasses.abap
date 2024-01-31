@@ -66,6 +66,7 @@ CLASS lcl_settings_with_features DEFINITION.
 ENDCLASS.
 
 CLASS lcl_settings_with_features IMPLEMENTATION.
+
   METHOD zif_abapgit_persist_settings~modify.
     RETURN.
   ENDMETHOD.
@@ -76,6 +77,7 @@ CLASS lcl_settings_with_features IMPLEMENTATION.
     ro_settings->set_experimental_features( mv_features ).
 
   ENDMETHOD.
+
   METHOD constructor.
     mv_features = iv_features.
   ENDMETHOD.

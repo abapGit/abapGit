@@ -424,7 +424,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       lv_serialized_data = lcl_aff_metadata_handler=>serialize( ls_intf ).
       mo_files->add_raw( iv_ext  = 'json'
                          iv_data = lv_serialized_data ).
-      lt_i18n_file = lcl_aff_metadata_handler=>serialize_translation(
+      lt_i18n_file = lcl_aff_metadata_handler=>serialize_translations(
         is_intf     = ls_intf
         it_language = mo_i18n_params->ms_params-translation_languages ).
 
