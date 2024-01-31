@@ -69,7 +69,7 @@ CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
     li_asset_man->register_asset(
       iv_url       = 'css/theme-default.css'
       iv_type      = 'text/css'
-      iv_cachable = abap_false
+      iv_cacheable = abap_false
       iv_mime_name = 'ZABAPGIT_CSS_THEME_DEFAULT'
       iv_inline    = lo_buf->join_w_newline_and_flush( ) ).
 
@@ -77,7 +77,7 @@ CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
     li_asset_man->register_asset(
       iv_url       = 'css/theme-dark.css'
       iv_type      = 'text/css'
-      iv_cachable = abap_false
+      iv_cacheable = abap_false
       iv_mime_name = 'ZABAPGIT_CSS_THEME_DARK'
       iv_inline    = lo_buf->join_w_newline_and_flush( ) ).
 
@@ -85,7 +85,7 @@ CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
     li_asset_man->register_asset(
       iv_url       = 'css/theme-belize-blue.css'
       iv_type      = 'text/css'
-      iv_cachable = abap_false
+      iv_cacheable = abap_false
       iv_mime_name = 'ZABAPGIT_CSS_THEME_BELIZE_BLUE'
       iv_inline    = lo_buf->join_w_newline_and_flush( ) ).
 
