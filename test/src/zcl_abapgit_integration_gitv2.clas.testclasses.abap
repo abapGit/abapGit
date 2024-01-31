@@ -54,7 +54,7 @@ CLASS ltcl_test IMPLEMENTATION.
       iv_url  = 'https://github.com/abapGit/abapGit.git'
       it_sha1 = lt_sha1 ).
 
-* just check it doesnt throw an exception
+* just check it doesn't throw an exception
 
   ENDMETHOD.
 
