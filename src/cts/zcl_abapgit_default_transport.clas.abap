@@ -173,7 +173,7 @@ CLASS ZCL_ABAPGIT_DEFAULT_TRANSPORT IMPLEMENTATION.
 
   METHOD zif_abapgit_default_transport~set.
 
-    " checks whether object changes of the package are rerorded in transport
+    " checks whether object changes of the package are reordered in transport
     " requests. If true then we set the default task, so that no annoying
     " transport request popups are shown while deserializing.
 

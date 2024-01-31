@@ -381,7 +381,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
     io_checklist->get_error_messages( IMPORTING p_error_tab = lt_message ).
 
     LOOP AT lt_message ASSIGNING <ls_message> WHERE mtype = 'E'.
-      " When activting without popup, includes used in multiple main programs cause error
+      " When activating without popup, includes used in multiple main programs cause error
       " Run again WITH activation popup (see abapGit, Personal Settings)
       IF <ls_message>-message-msgid = 'EU' AND <ls_message>-message-msgno = '404'.
         rv_try_again = abap_true.
@@ -430,7 +430,7 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    " Only error messsages
+    " Only error messages
     DELETE lt_lines WHERE severity <> 'E'
                       AND severity <> 'W'.
     " Remove "Return code..." message

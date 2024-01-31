@@ -215,7 +215,7 @@ CLASS zcl_abapgit_object_ucsa IMPLEMENTATION.
 
         " Interface IF_UCON_SA_PERSIST and other objects are not present
         " in lower Netweaver realeses. Therefore we have to call them
-        " dynamically to be downward comapatible.
+        " dynamically to be downward compatible.
 
         CALL METHOD lo_persistence->('IF_UCON_SA_PERSIST~LOAD')
           EXPORTING
