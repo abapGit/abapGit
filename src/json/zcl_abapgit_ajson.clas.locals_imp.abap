@@ -803,7 +803,7 @@ CLASS lcl_json_to_abap IMPLEMENTATION.
           zcx_abapgit_ajson_error=>raise( |Unexpected parent type| ).
       ENDCASE.
 
-      rs_node_type-type_kind         = rs_node_type-dd->type_kind. " for caching and cleaner unintialized access
+      rs_node_type-type_kind         = rs_node_type-dd->type_kind. " for caching and cleaner uninitialized access
       IF rs_node_type-type_kind = lif_kind=>table.
         lo_tdescr ?= rs_node_type-dd.
         IF lo_tdescr->table_kind <> cl_abap_tabledescr=>tablekind_std.

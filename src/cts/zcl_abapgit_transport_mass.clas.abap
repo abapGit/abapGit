@@ -53,7 +53,7 @@ CLASS zcl_abapgit_transport_mass IMPLEMENTATION.
           lcl_gui=>open_folder_frontend( lo_transport_zipper->get_folder( ) ).
 
         ELSE.
-* No data found for the provided selection criterias
+* No data found for the provided selection criteria
           zcx_abapgit_exception=>raise( 'No transport requests selected' ).
         ENDIF.
 
