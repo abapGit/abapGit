@@ -485,7 +485,7 @@ CLASS zcl_abapgit_lxe_texts IMPLEMENTATION.
 
     " Returns a list of translation languages for serialization
     " If the setting is initial, no translations shall be serialized
-    " If the setting is `*`, all all installed system languages shall be serialized
+    " If the setting is `*`, all installed system languages shall be serialized
     " Else, the setting shall contain all languages to be serialized
 
     DATA lv_main_lang_laiso TYPE laiso.
