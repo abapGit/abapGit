@@ -216,7 +216,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ENDIF.
 
     " we want to preserve non-code and metadata files at the top,
-    " so we isolate them and and sort only the code artifacts
+    " so we isolate them and sort only the code artifacts
     LOOP AT ct_repo_items ASSIGNING <ls_repo_item>.
 
       IF <ls_repo_item>-obj_type IS INITIAL AND <ls_repo_item>-is_dir = abap_false.
