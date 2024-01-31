@@ -648,7 +648,7 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
 
         access_free( ).
 
-        zcx_abapgit_exception=>raise( 'Error in deserialisation of UDMO' ).
+        zcx_abapgit_exception=>raise( 'Error in deserialization of UDMO' ).
 
 
     ENDTRY.
