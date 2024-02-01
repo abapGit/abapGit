@@ -114,7 +114,7 @@ CLASS ltcl_remove_abap_lang_version IMPLEMENTATION.
                     |    "originalLanguage": "en",\n| &
                     |    "abapLanguageVersion": "cloudDevelopment"\n| &
                     |  \},\n| &
-                    |  "abapLanguageVersion": "someOtherConent"\n| &
+                    |  "abapLanguageVersion": "someOtherContent"\n| &
                     |\}|
       iv_json_exp = |\{\n| &
                     |  "formatVersion": "1",\n| &
@@ -122,7 +122,7 @@ CLASS ltcl_remove_abap_lang_version IMPLEMENTATION.
                     |    "description": "Category",\n| &
                     |    "originalLanguage": "en"\n| &
                     |  \},\n| &
-                    |  "abapLanguageVersion": "someOtherConent"\n| &
+                    |  "abapLanguageVersion": "someOtherContent"\n| &
                     |\}| ).
   ENDMETHOD.
 
@@ -134,7 +134,7 @@ CLASS ltcl_remove_abap_lang_version IMPLEMENTATION.
                     |    "description": "Category",\n| &
                     |    "originalLanguage": "en"\n| &
                     |  \},\n| &
-                    |  "abapLanguageVersion": "someOtherConent"\n| &
+                    |  "abapLanguageVersion": "someOtherContent"\n| &
                     |\}|
       iv_json_exp = |\{\n| &
                     |  "formatVersion": "1",\n| &
@@ -142,7 +142,7 @@ CLASS ltcl_remove_abap_lang_version IMPLEMENTATION.
                     |    "description": "Category",\n| &
                     |    "originalLanguage": "en"\n| &
                     |  \},\n| &
-                    |  "abapLanguageVersion": "someOtherConent"\n| &
+                    |  "abapLanguageVersion": "someOtherContent"\n| &
                     |\}| ).
   ENDMETHOD.
 
