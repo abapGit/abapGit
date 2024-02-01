@@ -162,7 +162,7 @@ CLASS ZCL_ABAPGIT_ECATT_SP_UPLOAD IMPLEMENTATION.
       CATCH cx_ecatt_apl INTO lx_ecatt.
         lv_exc_occ = 'X'.
     ENDTRY.
-* Devesh,C5129871  18.07.2011  Releasing enqueu after uploading
+* Devesh,C5129871  18.07.2011  Releasing enqueue after uploading
 *begin
     TRY.
         ecatt_object->close_object( im_suppress_events = 'X' ).

@@ -14,7 +14,7 @@ INTERFACE zif_abapgit_gui_services
     RAISING
       zcx_abapgit_exception .
   " Notes:
-  " - page_asset is supposed to be not cachable
+  " - page_asset is supposed to be not cacheable
   " - add mime64 if needed (supposedly won't be needed)
   METHODS register_page_asset
     IMPORTING

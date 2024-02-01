@@ -28,7 +28,7 @@ CLASS zcl_abapgit_utils IMPLEMENTATION.
 
     " Previously we did a simple char range test described here
     " stackoverflow.com/questions/277521/how-to-identify-the-file-content-as-ascii-or-binary
-    " but this is insufficient if the data contains german umlauts and other special characters.
+    " but this is insufficient if the data contains German umlauts and other special characters.
     " Therefore we adopted another algorithm, which is similarly used by AL11
     " RSWATCH0 / GUESS_FILE_TYPE
     " We count non-printable characters if there are more than XX% it's binary.
