@@ -76,7 +76,7 @@ CLASS zcl_abapgit_object_apis IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-* IF_ARS_API_ABAPGIT~DELETE_API_STATE dumps and checks fail, even tho I as a developer can delete it
+* IF_ARS_API_ABAPGIT~DELETE_API_STATE dumps and checks fail, even though I as a developer can delete it
 
     DATA lo_db   TYPE REF TO object.
     DATA lr_data TYPE REF TO data.

@@ -214,7 +214,7 @@ CLASS zcl_abapgit_object_ucsa IMPLEMENTATION.
         lo_persistence = get_persistence( lv_id ).
 
         " Interface IF_UCON_SA_PERSIST and other objects are not present
-        " in lower Netweaver realeses. Therefore we have to call them
+        " in lower NetWeaver releases. Therefore we have to call them
         " dynamically to be downward compatible.
 
         CALL METHOD lo_persistence->('IF_UCON_SA_PERSIST~LOAD')

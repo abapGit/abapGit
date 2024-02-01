@@ -280,7 +280,7 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
     lv_xstring = iv_data(lv_len).
     lv_sha1 = zcl_abapgit_hash=>sha1_raw( lv_xstring ).
     IF to_upper( lv_sha1 ) <> lv_data.
-      zcx_abapgit_exception=>raise( |SHA1 at end of pack doesnt match| ).
+      zcx_abapgit_exception=>raise( |SHA1 at end of pack doesn't match| ).
     ENDIF.
 
     decode_deltas( CHANGING ct_objects = rt_objects ).
