@@ -54,8 +54,8 @@ CLASS zcl_abapgit_object_common_aff DEFINITION
 
 
     METHODS create_aff_setting_deserialize FINAL
-      EXPORTING
-        eo_settings_deserialize TYPE REF TO object.
+      RETURNING
+        VALUE(ro_settings_deserialize) TYPE REF TO object.
 
   PRIVATE SECTION.
     METHODS is_file_empty
@@ -303,7 +303,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
           RECEIVING
             result = lv_file_name.
 
-        create_aff_setting_deserialize( IMPORTING eo_settings_deserialize = lo_settings ).
+        lo_settings = create_aff_setting_deserialize( ).
 
         CREATE OBJECT lo_object_json_file TYPE ('CL_AFF_FILE')
           EXPORTING
@@ -415,14 +415,14 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
   METHOD create_aff_setting_deserialize.
     IF ms_item-abap_language_version <> zcl_abapgit_abap_language_vers=>c_any_abap_language_version AND
        ms_item-abap_language_version <> zcl_abapgit_abap_language_vers=>c_no_abap_language_version.
-      CREATE OBJECT eo_settings_deserialize TYPE ('CL_AFF_SETTINGS_DESERIALIZE')
+      CREATE OBJECT ro_settings_deserialize TYPE ('CL_AFF_SETTINGS_DESERIALIZE')
         EXPORTING
           version               = 'A'
           language              = mv_language
           user                  = sy-uname
           abap_language_version = ms_item-abap_language_version.
     ELSE.
-      CREATE OBJECT eo_settings_deserialize TYPE ('CL_AFF_SETTINGS_DESERIALIZE')
+      CREATE OBJECT ro_settings_deserialize TYPE ('CL_AFF_SETTINGS_DESERIALIZE')
         EXPORTING
           version               = 'A'
           language              = mv_language
