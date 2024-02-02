@@ -172,7 +172,8 @@ ENDCLASS.
 CLASS ltcl_aff_settings_deserialize DEFINITION DEFERRED.
 
 "! Non-abstract stub of class under test
-CLASS ltcl_abapgit_object_common_aff DEFINITION INHERITING FROM zcl_abapgit_object_common_aff FINAL FOR TESTING FRIENDS ltcl_aff_settings_deserialize.
+CLASS ltcl_abapgit_object_common_aff DEFINITION INHERITING FROM zcl_abapgit_object_common_aff
+                                     FINAL FOR TESTING FRIENDS ltcl_aff_settings_deserialize.
   PUBLIC SECTION.
     METHODS: zif_abapgit_object~changed_by REDEFINITION.
 ENDCLASS.
@@ -194,8 +195,8 @@ CLASS ltcl_aff_settings_deserialize DEFINITION FINAL FOR TESTING DURATION SHORT 
           cx_static_check,
       abap_language_version_standard FOR TESTING RAISING cx_static_check,
       abap_language_version_cloud    FOR TESTING RAISING cx_static_check,
-    any_abap_language_version FOR TESTING RAISING cx_static_check,
-    no_abap_language_version FOR TESTING RAISING cx_static_check.
+      any_abap_language_version FOR TESTING RAISING cx_static_check,
+      no_abap_language_version FOR TESTING RAISING cx_static_check.
 ENDCLASS.
 
 
@@ -252,23 +253,27 @@ CLASS ltcl_aff_settings_deserialize IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD abap_language_version_standard.
-    assert_setting_creation_for( iv_abap_lv_repo_setting = zif_abapgit_aff_types_v1=>co_abap_language_version-standard
-                                 iv_exp_setting_abap_lv  = zif_abapgit_aff_types_v1=>co_abap_language_version-standard ).
+    assert_setting_creation_for(
+        iv_abap_lv_repo_setting = zif_abapgit_aff_types_v1=>co_abap_language_version-standard
+        iv_exp_setting_abap_lv  = zif_abapgit_aff_types_v1=>co_abap_language_version-standard ).
   ENDMETHOD.
 
   METHOD abap_language_version_cloud.
-    assert_setting_creation_for( iv_abap_lv_repo_setting = zif_abapgit_aff_types_v1=>co_abap_language_version-cloud_development
-                                 iv_exp_setting_abap_lv  = zif_abapgit_aff_types_v1=>co_abap_language_version-cloud_development ).
+    assert_setting_creation_for(
+        iv_abap_lv_repo_setting = zif_abapgit_aff_types_v1=>co_abap_language_version-cloud_development
+        iv_exp_setting_abap_lv  = zif_abapgit_aff_types_v1=>co_abap_language_version-cloud_development ).
   ENDMETHOD.
 
   METHOD any_abap_language_version.
-    assert_setting_creation_for( iv_abap_lv_repo_setting = zcl_abapgit_abap_language_vers=>c_any_abap_language_version
-                                 iv_exp_setting_abap_lv  = '-' ). "AFF: Not specified
+    assert_setting_creation_for(
+        iv_abap_lv_repo_setting = zcl_abapgit_abap_language_vers=>c_any_abap_language_version
+        iv_exp_setting_abap_lv  = '-' ). "AFF: Not specified
   ENDMETHOD.
 
   METHOD no_abap_language_version.
-    assert_setting_creation_for( iv_abap_lv_repo_setting = zcl_abapgit_abap_language_vers=>c_no_abap_language_version
-                                 iv_exp_setting_abap_lv  = '-' ). "AFF: Not specified
+    assert_setting_creation_for(
+        iv_abap_lv_repo_setting = zcl_abapgit_abap_language_vers=>c_no_abap_language_version
+        iv_exp_setting_abap_lv  = '-' ). "AFF: Not specified
   ENDMETHOD.
 
 ENDCLASS.

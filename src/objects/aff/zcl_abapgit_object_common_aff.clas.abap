@@ -413,7 +413,7 @@ CLASS zcl_abapgit_object_common_aff IMPLEMENTATION.
 
 
   METHOD create_aff_setting_deserialize.
-    IF ms_item-abap_language_version <> zcl_abapgit_abap_language_vers=>c_any_abap_language_version and
+    IF ms_item-abap_language_version <> zcl_abapgit_abap_language_vers=>c_any_abap_language_version AND
        ms_item-abap_language_version <> zcl_abapgit_abap_language_vers=>c_no_abap_language_version.
       CREATE OBJECT eo_settings_deserialize TYPE ('CL_AFF_SETTINGS_DESERIALIZE')
         EXPORTING
