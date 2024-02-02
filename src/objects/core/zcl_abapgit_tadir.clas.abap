@@ -386,9 +386,10 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
   METHOD zif_abapgit_tadir~read.
 
-    DATA: li_exit TYPE REF TO zif_abapgit_exit.
-    DATA: lr_tadir TYPE REF TO zif_abapgit_definitions=>ty_tadir.
-    DATA: lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA li_exit TYPE REF TO zif_abapgit_exit.
+    DATA lr_tadir TYPE REF TO zif_abapgit_definitions=>ty_tadir.
+    DATA lt_filter TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA ls_dot_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
 
     ASSERT iv_package IS NOT INITIAL.
 
@@ -400,12 +401,16 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
       iv_ignore_subpackages = iv_ignore_subpackages
       iv_only_local_objects = iv_only_local_objects ).
 
+    IF io_dot IS NOT INITIAL.
+      ls_dot_data = io_dot->get_data( ).
+    ENDIF.
+
     li_exit = zcl_abapgit_exit=>get_instance( ).
     li_exit->change_tadir(
       EXPORTING
         iv_package            = iv_package
         ii_log                = ii_log
-        is_dot_abapgit        = io_dot->get_data( )
+        is_dot_abapgit        = ls_dot_data
         iv_ignore_subpackages = iv_ignore_subpackages
         iv_only_local_objects = iv_only_local_objects
       CHANGING
