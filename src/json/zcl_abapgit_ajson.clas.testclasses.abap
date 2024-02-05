@@ -1459,7 +1459,9 @@ CLASS ltcl_json_to_abap DEFINITION
     METHODS to_abap_corresponding_pub_neg
       FOR TESTING
       RAISING zcx_abapgit_ajson_error.
-
+    METHODS to_abap_time
+      FOR TESTING
+      RAISING cx_static_check.
 ENDCLASS.
 
 CLASS zcl_abapgit_ajson DEFINITION LOCAL FRIENDS ltcl_json_to_abap.
@@ -1533,6 +1535,44 @@ CLASS ltcl_json_to_abap IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lv_mock
       exp = 0 ).
+
+  ENDMETHOD.
+
+  METHOD to_abap_time.
+
+    DATA lo_cut TYPE REF TO lcl_json_to_abap.
+    DATA lv_mock TYPE t.
+    DATA lo_nodes TYPE REF TO lcl_nodes_helper.
+
+    CREATE OBJECT lo_nodes.
+    lo_nodes->add( '       |           |str    |11:11:11| ' ).
+
+    CREATE OBJECT lo_cut.
+    lo_cut->to_abap(
+      EXPORTING
+        it_nodes    = lo_nodes->sorted( )
+      CHANGING
+        c_container = lv_mock ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_mock
+      exp = '111111' ).
+
+    DATA lv_mock_init TYPE t.
+
+    CREATE OBJECT lo_nodes.
+    lo_nodes->add( '       |           |str    || ' ).
+
+    CREATE OBJECT lo_cut.
+    lo_cut->to_abap(
+      EXPORTING
+        it_nodes    = lo_nodes->sorted( )
+      CHANGING
+        c_container = lv_mock_init ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_mock_init
+      exp = '000000' ).
 
   ENDMETHOD.
 
