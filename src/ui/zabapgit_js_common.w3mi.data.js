@@ -2416,7 +2416,7 @@ function enumerateUiActions() {
           if (anchor.href.includes("label")) {
             result = "Label: " + result;
           }
-          return result;
+          return result.trim();
         })()
       });
     });
