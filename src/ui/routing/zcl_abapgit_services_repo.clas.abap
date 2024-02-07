@@ -136,7 +136,6 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     DATA:
       lo_repo       TYPE REF TO zcl_abapgit_repo,
       lo_browser    TYPE REF TO zcl_abapgit_repo_content_list,
-      lx_error      TYPE REF TO zcx_abapgit_exception,
       lt_repo_items TYPE zif_abapgit_definitions=>ty_repo_item_tt,
       lv_wo_popup   TYPE abap_bool,
       lv_count      TYPE i,
@@ -184,11 +183,12 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
           EXIT.
 
-        CATCH zcx_abapgit_exception INTO lx_error.
-          " If error is due to includes then try again with Activation Popup
-          lv_message = lx_error->get_text( ).
-          IF lv_message CS 'Activation Popup'.
+        CATCH zcx_abapgit_exception.
+          IF lv_wo_popup = abap_true.
+            " Try again with Activation Popup turned on
             zcl_abapgit_persist_factory=>get_settings( )->read( )->set_activate_wo_popup( abap_false ).
+          ELSE.
+            EXIT.
           ENDIF.
       ENDTRY.
     ENDDO.
