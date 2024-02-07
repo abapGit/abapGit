@@ -121,6 +121,7 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
     METHODS validate_form
       IMPORTING
         io_form_data             TYPE REF TO zcl_abapgit_string_map
+        iv_connection_check      TYPE abap_bool DEFAULT abap_true
       RETURNING
         VALUE(ro_validation_log) TYPE REF TO zcl_abapgit_string_map
       RAISING
@@ -864,6 +865,10 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
             iv_key = c_id-url
             iv_val = lx_error->get_text( ) ).
       ENDTRY.
+
+      IF iv_connection_check = abap_true.
+        zcl_abapgit_http=>check_connection( lv_url ).
+      ENDIF.
     ENDIF.
 
     IF lv_offline = abap_false.

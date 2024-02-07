@@ -28,6 +28,12 @@ CLASS zcl_abapgit_http DEFINITION
         VALUE(ro_client) TYPE REF TO zcl_abapgit_http_client
       RAISING
         zcx_abapgit_exception .
+
+    CLASS-METHODS check_connection
+      IMPORTING
+        !iv_url TYPE string
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
 
     CLASS-METHODS check_auth_requested
@@ -123,16 +129,29 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD check_connection.
+    create_by_url(
+      iv_url     = iv_url
+      iv_service = 'receive' ).
+  ENDMETHOD.
+
+
   METHOD create_by_url.
+
+    CONSTANTS lc_docs TYPE string VALUE 'https://docs.abapgit.org/user-guide/setup/ssl-setup.html'.
 
     DATA: lv_uri                 TYPE string,
           lv_scheme              TYPE string,
           lv_authorization       TYPE string,
+          lv_host                TYPE string,
+          lv_ssl_id              TYPE ssfapplssl,
+          lv_proxy_host          TYPE string,
+          lv_proxy_service       TYPE string,
+          lv_longtext            TYPE string,
           li_client              TYPE REF TO if_http_client,
           ls_header              LIKE LINE OF it_headers,
           lo_proxy_configuration TYPE REF TO zcl_abapgit_proxy_config,
           lv_text                TYPE string.
-
 
     CREATE OBJECT lo_proxy_configuration.
 
@@ -140,31 +159,64 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
 
     IF li_client IS NOT BOUND.
 
+      lv_host          = zcl_abapgit_url=>host( iv_url ).
+      lv_ssl_id        = zcl_abapgit_exit=>get_instance( )->get_ssl_id( ).
+      lv_proxy_host    = lo_proxy_configuration->get_proxy_url( iv_url ).
+      lv_proxy_service = lo_proxy_configuration->get_proxy_port( iv_url ).
+
+      IF lv_proxy_host IS NOT INITIAL.
+        lv_text = | via proxy <b>{ lv_proxy_host }:{ lv_proxy_service }</b>|.
+      ENDIF.
+
+      lv_longtext = |abapGit is trying to connect to <b>{ lv_host }</b> |
+        && |using SSL certificates under <b>{ lv_ssl_id }</b>{ lv_text }. |
+        && |Check system parameters, SSL setup, and proxy configuration. |
+        && |For more information and troubleshooting, see the|
+        && zcl_abapgit_html=>create( )->a(
+          iv_txt   = 'abapGit documentation'
+          iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ lc_docs }|
+          iv_class = 'url' ) && '.'.
+
       cl_http_client=>create_by_url(
         EXPORTING
-          url                = zcl_abapgit_url=>host( iv_url )
-          ssl_id             = zcl_abapgit_exit=>get_instance( )->get_ssl_id( )
-          proxy_host         = lo_proxy_configuration->get_proxy_url( iv_url )
-          proxy_service      = lo_proxy_configuration->get_proxy_port( iv_url )
+          url                = lv_host
+          ssl_id             = lv_ssl_id
+          proxy_host         = lv_proxy_host
+          proxy_service      = lv_proxy_service
         IMPORTING
           client             = li_client
         EXCEPTIONS
           argument_not_found = 1
           plugin_not_active  = 2
           internal_error     = 3
-          OTHERS             = 4 ).
+          pse_not_found      = 4
+          pse_not_distrib    = 5
+          pse_errors         = 6
+          OTHERS             = 7 ).
       IF sy-subrc <> 0.
         CASE sy-subrc.
           WHEN 1.
-            " make sure:
-            " a) SSL is setup properly in STRUST
-            lv_text = 'HTTPS ARGUMENT_NOT_FOUND | STRUST/SSL Setup correct?'.
+            lv_text = 'ARGUMENT_NOT_FOUND'.
+          WHEN 2.
+            lv_text = 'PLUGIN_NOT_ACTIVE'.
+          WHEN 3.
+            lv_text = 'INTERNAL_ERROR'.
+          WHEN 4.
+            lv_text = 'PSE_NOT_FOUND'.
+          WHEN 5.
+            lv_text = 'PSE_NOT_DISTRIB'.
+          WHEN 6.
+            lv_text = 'PSE_ERRORS'.
           WHEN OTHERS.
-            " Make sure ANONYM PSE exists in transaction STRUST, https://github.com/abapGit/abapGit/issues/6768
-            lv_text = 'While creating HTTP Client'.
-
+            lv_text = |OAUTH_ERROR_{ sy-subrc }|.
         ENDCASE.
-        zcx_abapgit_exception=>raise( lv_text ).
+        IF sy-subrc BETWEEN 4 AND 6.
+          zcx_abapgit_exception=>raise_t100( iv_longtext = lv_longtext ).
+        ELSE.
+          zcx_abapgit_exception=>raise(
+            iv_text     = |Error { lv_text } creating HTTP connection. Check the configuration|
+            iv_longtext = lv_longtext ).
+        ENDIF.
       ENDIF.
 
     ENDIF.
