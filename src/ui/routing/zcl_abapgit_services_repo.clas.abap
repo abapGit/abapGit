@@ -136,7 +136,9 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     DATA:
       lo_repo       TYPE REF TO zcl_abapgit_repo,
       lo_browser    TYPE REF TO zcl_abapgit_repo_content_list,
+      lx_error      TYPE REF TO zcx_abapgit_exception,
       lt_repo_items TYPE zif_abapgit_definitions=>ty_repo_item_tt,
+      lv_wo_popup   TYPE abap_bool,
       lv_count      TYPE i,
       lv_message    TYPE string.
 
@@ -149,8 +151,6 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
         io_repo = lo_repo.
 
     lt_repo_items = lo_browser->list( '/' ).
-
-    ri_log = lo_repo->create_new_log( 'Activation Log' ).
 
     " Add all inactive objects to activation queue
     zcl_abapgit_objects_activation=>clear( ).
@@ -167,14 +167,33 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    " Activate DDIC + non-DDIC
-    zcl_abapgit_objects_activation=>activate(
-      iv_ddic = abap_true
-      ii_log  = ri_log ).
+    lv_wo_popup = zcl_abapgit_persist_factory=>get_settings( )->read( )->get_activate_wo_popup( ).
 
-    zcl_abapgit_objects_activation=>activate(
-      iv_ddic = abap_false
-      ii_log  = ri_log ).
+    DO 2 TIMES.
+      TRY.
+          ri_log = lo_repo->create_new_log( 'Activation Log' ).
+
+          " Activate DDIC + non-DDIC
+          zcl_abapgit_objects_activation=>activate(
+            iv_ddic = abap_true
+            ii_log  = ri_log ).
+
+          zcl_abapgit_objects_activation=>activate(
+            iv_ddic = abap_false
+            ii_log  = ri_log ).
+
+          EXIT.
+
+        CATCH zcx_abapgit_exception INTO lx_error.
+          " If error is due to includes then try again with Activation Popup
+          lv_message = lx_error->get_text( ).
+          IF lv_message CS 'Activation Popup'.
+            zcl_abapgit_persist_factory=>get_settings( )->read( )->set_activate_wo_popup( abap_false ).
+          ENDIF.
+      ENDTRY.
+    ENDDO.
+
+    zcl_abapgit_persist_factory=>get_settings( )->read( )->set_activate_wo_popup( lv_wo_popup ).
 
     IF ri_log->get_status( ) <> zif_abapgit_log=>c_status-error.
       lv_message = |Successfully activated { lv_count } objects|.

@@ -334,7 +334,8 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
               ii_log       = ii_log
               io_checklist = lo_checklist ).
             IF lv_try_again = abap_true.
-              lv_msg = 'Turn on "Activation Popup" in "Personal Settings" and try again'.
+              lv_msg = 'Use "Advanced > Activate Objects" or turn on "Activation Popup"'
+                    && ' in "Personal Settings" and try again'.
             ENDIF.
           ENDIF.
           zcx_abapgit_exception=>raise( |Activation cancelled. { lv_msg }| ).
