@@ -122,6 +122,8 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
       iv_extra = 'source'
       iv_ext   = 'xml' ).
 
+    zcl_abapgit_utils=>check_eol( lv_source ).
+
 * workaround: somewhere additional linefeeds are added
     lv_len = strlen( lv_source ) - 2.
     IF lv_source+lv_len(2) = cl_abap_char_utilities=>cr_lf.
