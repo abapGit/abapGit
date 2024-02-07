@@ -86,6 +86,9 @@ CLASS zcl_abapgit_object_dial IMPLEMENTATION.
 
     DATA: ls_dialog_module TYPE ty_dialog_module.
 
+    " Prefill popup asking for package
+    set_default_package( iv_package ).
+
     io_xml->read(
       EXPORTING
         iv_name = 'DIAL'
