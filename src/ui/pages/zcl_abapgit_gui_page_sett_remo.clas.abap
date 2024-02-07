@@ -951,13 +951,13 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
         mo_validation_log->clear( ).
 
       WHEN c_event-choose_branch.
-        choose_branch( ). " Unformly handle state below
+        choose_branch( ). " Uniformly handle state below
 
       WHEN c_event-choose_tag.
-        choose_tag( ). " Unformly handle state below
+        choose_tag( ). " Uniformly handle state below
 
       WHEN c_event-choose_pull_request.
-        choose_pr( ). " Unformly handle state below
+        choose_pr( ). " Uniformly handle state below
 
       WHEN c_event-choose_commit.
         lv_commit = choose_commit( ).

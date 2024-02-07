@@ -148,7 +148,7 @@ CLASS ZCL_ABAPGIT_GITV2_PORCELAIN IMPLEMENTATION.
       lv_argument = |want { lv_sha1 }|.
       APPEND lv_argument TO lt_arguments.
     ENDLOOP.
-* 'filter object:type=commit' doesnt work on github
+* 'filter object:type=commit' doesn't work on github
     APPEND 'filter blob:none' TO lt_arguments.
     APPEND 'no-progress' TO lt_arguments.
     APPEND 'done' TO lt_arguments.

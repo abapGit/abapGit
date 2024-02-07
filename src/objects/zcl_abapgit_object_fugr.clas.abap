@@ -249,7 +249,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
       IF zcl_abapgit_factory=>get_function_module( )->function_exists( <ls_func>-funcname ) = abap_true.
 * delete the function module to make sure the parameters are updated
-* havent found a nice way to update the paramters
+* haven't found a nice way to update the parameters
         CALL FUNCTION 'FUNCTION_DELETE'
           EXPORTING
             funcname                 = <ls_func>-funcname
