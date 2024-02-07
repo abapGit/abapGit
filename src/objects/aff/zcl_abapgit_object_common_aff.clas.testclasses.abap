@@ -218,7 +218,7 @@ CLASS ltcl_aff_settings_deserialize IMPLEMENTATION.
     ls_item-abap_language_version = iv_abap_lv_repo_setting.
 
     IF zcl_abapgit_objects=>is_supported( ls_item ) = abap_false.
-      EXIT.
+      RETURN.
     ENDIF.
 
     CREATE OBJECT lo_cut
