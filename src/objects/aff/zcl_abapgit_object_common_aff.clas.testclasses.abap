@@ -213,7 +213,6 @@ CLASS ltcl_aff_settings_deserialize IMPLEMENTATION.
       lv_act_setting_language TYPE spras,
       lv_act_setting_user     TYPE uname.
 
-
     ls_item-obj_type = 'CHKO'.
     ls_item-obj_name = 'Z_DUMMY'.
     ls_item-abap_language_version = iv_abap_lv_repo_setting.
