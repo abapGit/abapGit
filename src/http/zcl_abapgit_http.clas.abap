@@ -57,6 +57,14 @@ CLASS zcl_abapgit_http DEFINITION
         VALUE(rv_scheme) TYPE string
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS get_connection_longtext
+      IMPORTING
+        !iv_host           TYPE string
+        !iv_ssl_id         TYPE ssfapplssl
+        !iv_proxy_host     TYPE string
+        !iv_proxy_service  TYPE string
+      RETURNING
+        VALUE(rv_longtext) TYPE string.
   PRIVATE SECTION.
 ENDCLASS.
 
@@ -138,8 +146,6 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
 
   METHOD create_by_url.
 
-    CONSTANTS lc_docs TYPE string VALUE 'https://docs.abapgit.org/user-guide/setup/ssl-setup.html'.
-
     DATA: lv_uri                 TYPE string,
           lv_scheme              TYPE string,
           lv_authorization       TYPE string,
@@ -164,18 +170,11 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
       lv_proxy_host    = lo_proxy_configuration->get_proxy_url( iv_url ).
       lv_proxy_service = lo_proxy_configuration->get_proxy_port( iv_url ).
 
-      IF lv_proxy_host IS NOT INITIAL.
-        lv_text = | via proxy <b>{ lv_proxy_host }:{ lv_proxy_service }</b>|.
-      ENDIF.
-
-      lv_longtext = |abapGit is trying to connect to <b>{ lv_host }</b> |
-        && |using SSL certificates under <b>{ lv_ssl_id }</b>{ lv_text }. |
-        && |Check system parameters, SSL setup, and proxy configuration. |
-        && |For more information and troubleshooting, see the|
-        && zcl_abapgit_html=>create( )->a(
-          iv_txt   = 'abapGit documentation'
-          iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ lc_docs }|
-          iv_class = 'url' ) && '.'.
+      lv_longtext = get_connection_longtext(
+        iv_host          = lv_host
+        iv_ssl_id        = lv_ssl_id
+        iv_proxy_host    = lv_proxy_host
+        iv_proxy_service = lv_proxy_service ).
 
       cl_http_client=>create_by_url(
         EXPORTING
@@ -208,7 +207,7 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
           WHEN 6.
             lv_text = 'PSE_ERRORS'.
           WHEN OTHERS.
-            lv_text = |OAUTH_ERROR_{ sy-subrc }|.
+            lv_text = |OTHER_ERROR_{ sy-subrc }|.
         ENDCASE.
         IF sy-subrc BETWEEN 4 AND 6.
           zcx_abapgit_exception=>raise_t100( iv_longtext = lv_longtext ).
@@ -292,6 +291,42 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
 * bitbucket require agent prefix = "git/"
 * also see https://github.com/abapGit/abapGit/issues/1432
     rv_agent = |git/2.0 (abapGit { zif_abapgit_version=>c_abap_version })|.
+
+  ENDMETHOD.
+
+
+  METHOD get_connection_longtext.
+
+    CONSTANTS lc_docs TYPE string VALUE 'https://docs.abapgit.org/user-guide/setup/ssl-setup.html'.
+
+    DATA lv_proxy TYPE string.
+
+    IF iv_proxy_host IS NOT INITIAL.
+      lv_proxy = | via proxy <b>{ iv_proxy_host }:{ iv_proxy_service }</b>|.
+    ENDIF.
+
+    rv_longtext = |abapGit is trying to connect to <b>{ iv_host }</b> |
+      && |using SSL certificates under <b>{ iv_ssl_id }</b>{ lv_proxy }. |
+      && |Check system parameters |
+      && zcl_abapgit_html=>create( )->a(
+        iv_txt   = '(transaction RZ10)'
+        iv_act   = |{ zif_abapgit_definitions=>c_action-jump_transaction }?transaction=RZ10|
+        iv_class = 'no-pad' )
+      && |, SSL setup |
+      && zcl_abapgit_html=>create( )->a(
+        iv_txt   = '(transaction STRUST)'
+        iv_act   = |{ zif_abapgit_definitions=>c_action-jump_transaction }?transaction=STRUST|
+        iv_class = 'no-pad' )
+      && |, and proxy configuration |
+      && zcl_abapgit_html=>create( )->a(
+        iv_txt   = '(global settings)'
+        iv_act   = |{ zif_abapgit_definitions=>c_action-go_settings }|
+        iv_class = 'no-pad' ) && '.'
+      && |For more information and troubleshooting, see the |
+      && zcl_abapgit_html=>create( )->a(
+        iv_txt   = 'abapGit documentation'
+        iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ lc_docs }|
+        iv_class = 'no-pad' ) && '.'.
 
   ENDMETHOD.
 
