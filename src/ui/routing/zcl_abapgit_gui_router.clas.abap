@@ -176,7 +176,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         system_failure        = 2 MESSAGE lv_msg
         OTHERS                = 3.
     IF sy-subrc <> 0.
-      lv_msg =  |Error starting transaction { iv_tcode }: { lv_msg }|.
+      lv_msg = |Error starting transaction { iv_tcode }: { lv_msg }|.
       MESSAGE lv_msg TYPE 'I'.
     ELSE.
       lv_msg = |Transaction { iv_tcode } opened in a new window|.
