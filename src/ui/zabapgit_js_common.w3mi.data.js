@@ -2373,7 +2373,7 @@ function enumerateUiActions() {
   });
 
   // forms
-  [].slice.call(document.querySelectorAll("input[type='submit']"))
+  [].slice.call(document.querySelectorAll("input[type='submit'][value]:not([value='Submit Query'])"))
     .forEach(function(input) {
       items.push({
         action: function() {
