@@ -307,26 +307,41 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
 
     rv_longtext = |abapGit is trying to connect to <b>{ iv_host }</b> |
       && |using SSL certificates under <b>{ iv_ssl_id }</b>{ lv_proxy }. |
-      && |Check system parameters |
+      && |Check system parameters (transaction |
       && zcl_abapgit_html=>create( )->a(
-        iv_txt   = '(transaction RZ10)'
+        iv_txt   = 'RZ10'
         iv_act   = |{ zif_abapgit_definitions=>c_action-jump_transaction }?transaction=RZ10|
         iv_class = 'no-pad' )
-      && |, SSL setup |
+      && |), SSL setup (transaction |
       && zcl_abapgit_html=>create( )->a(
-        iv_txt   = '(transaction STRUST)'
+        iv_txt   = 'STRUST'
         iv_act   = |{ zif_abapgit_definitions=>c_action-jump_transaction }?transaction=STRUST|
         iv_class = 'no-pad' )
-      && |, and proxy configuration |
+      && |), Internet connection monitor (transaction |
       && zcl_abapgit_html=>create( )->a(
-        iv_txt   = '(global settings)'
-        iv_act   = |{ zif_abapgit_definitions=>c_action-go_settings }|
-        iv_class = 'no-pad' ) && '.'
+        iv_txt   = 'SMICM'
+        iv_act   = |{ zif_abapgit_definitions=>c_action-jump_transaction }?transaction=SMICM|
+        iv_class = 'no-pad' )
+      && |)|.
+  
+    IF lv_proxy IS NOT INITIAL.
+      rv_longtext = rv_longtext
+        && |, and proxy configuration (|
+        && zcl_abapgit_html=>create( )->a(
+          iv_txt   = 'global settings'
+          iv_act   = |{ zif_abapgit_definitions=>c_action-go_settings }|
+          iv_class = 'no-pad' ).
+        && ')'.
+    ENDIF.
+
+    rv_longtext = rv_longtext
+      && |. It's recommended to get your SAP Basis and network teams involved. |
       && |For more information and troubleshooting, see the |
       && zcl_abapgit_html=>create( )->a(
         iv_txt   = 'abapGit documentation'
         iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ lc_docs }|
-        iv_class = 'no-pad' ) && '.'.
+        iv_class = 'no-pad' ) 
+      && '.'.
 
   ENDMETHOD.
 
