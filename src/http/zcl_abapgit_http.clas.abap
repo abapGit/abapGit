@@ -340,7 +340,7 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
       && zcl_abapgit_html=>create( )->a(
         iv_txt   = 'abapGit documentation'
         iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ lc_docs }|
-        iv_class = 'no-pad' ) 
+        iv_class = 'no-pad' )
       && '.'.
 
   ENDMETHOD.
