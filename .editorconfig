@@ -12,6 +12,10 @@ trim_trailing_whitespace = true
 indent_style = space
 indent_size = 1
 
+# XSLT source code must have CR LF to be deserialized correctly by SAP code
+[*.xslt.source.xml]
+end_of_line = crlf
+
 # match the format used by abapGit
 [*.{abap,js,json,html,css}]
 charset = utf-8
