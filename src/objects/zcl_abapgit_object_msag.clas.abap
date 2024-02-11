@@ -295,7 +295,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
           lv_frozen     TYPE abap_bool,
           lv_message_id TYPE arbgb.
 
-* parameter SUPPRESS_DIALOG doesnt exist in all versions of FM RS_DELETE_MESSAGE_ID
+* parameter SUPPRESS_DIALOG doesn't exist in all versions of FM RS_DELETE_MESSAGE_ID
 * replaced with a copy
     lv_message_id = ms_item-obj_name.
     IF ms_item-obj_name = space.

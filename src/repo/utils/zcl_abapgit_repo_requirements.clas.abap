@@ -5,6 +5,8 @@ CLASS zcl_abapgit_repo_requirements DEFINITION
 
   PUBLIC SECTION.
 
+    TYPES ty_cvers TYPE STANDARD TABLE OF cvers WITH DEFAULT KEY.
+
     CLASS-METHODS requirements_popup
       IMPORTING
         !it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt
@@ -17,6 +19,11 @@ CLASS zcl_abapgit_repo_requirements DEFINITION
         VALUE(rv_status) TYPE zif_abapgit_definitions=>ty_yes_no
       RAISING
         zcx_abapgit_exception.
+
+    CLASS-METHODS inject_cvers
+      IMPORTING
+        !it_cvers TYPE ty_cvers.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -32,6 +39,14 @@ CLASS zcl_abapgit_repo_requirements DEFINITION
       END OF ty_requirement_status .
     TYPES:
       ty_requirement_status_tt TYPE STANDARD TABLE OF ty_requirement_status WITH DEFAULT KEY .
+
+    CLASS-DATA gt_cvers TYPE ty_cvers.
+
+    CLASS-METHODS get_cvers
+      RETURNING
+        VALUE(rt_cvers) TYPE ty_cvers
+      RAISING
+        zcx_abapgit_exception.
 
     CLASS-METHODS show_requirement_popup
       IMPORTING
@@ -57,19 +72,29 @@ ENDCLASS.
 CLASS zcl_abapgit_repo_requirements IMPLEMENTATION.
 
 
+  METHOD get_cvers.
+    IF gt_cvers IS NOT INITIAL.
+      rt_cvers = gt_cvers.
+      RETURN.
+    ENDIF.
+
+    SELECT * FROM cvers INTO TABLE rt_cvers ORDER BY PRIMARY KEY.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error reading installed components| ).
+    ENDIF.
+  ENDMETHOD.
+
+
   METHOD get_requirement_met_status.
 
-    DATA: lt_installed TYPE STANDARD TABLE OF cvers.
+    DATA: lt_installed TYPE ty_cvers.
 
     FIELD-SYMBOLS: <ls_requirement>    TYPE zif_abapgit_dot_abapgit=>ty_requirement,
                    <ls_status>         TYPE ty_requirement_status,
                    <ls_installed_comp> TYPE cvers.
 
 
-    SELECT * FROM cvers INTO TABLE lt_installed ORDER BY PRIMARY KEY.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error reading installed components| ).
-    ENDIF.
+    lt_installed = get_cvers( ).
 
     LOOP AT it_requirements ASSIGNING <ls_requirement>.
       APPEND INITIAL LINE TO rt_status ASSIGNING <ls_status>.
@@ -97,6 +122,12 @@ CLASS zcl_abapgit_repo_requirements IMPLEMENTATION.
       UNASSIGN <ls_installed_comp>.
     ENDLOOP.
 
+  ENDMETHOD.
+
+
+  METHOD inject_cvers.
+    " For testing only
+    gt_cvers = it_cvers.
   ENDMETHOD.
 
 

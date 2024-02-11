@@ -313,7 +313,7 @@ CLASS zcl_abapgit_syntax_css IMPLEMENTATION.
     insert_keywords( iv_keywords = lv_keywords
                      iv_token = c_token-at_rules ).
 
-    " 7) HTML tage
+    " 7) HTML tag
     lv_keywords =
     'doctyype|a|abbr|acronym|address|applet|area|b|base|basefont|bdo|bgsound|big|blink|blockquote|' &&
     'body|br|button|caption|center|cite|code|col|colgroup|dd|del|dfn|dir|div|dl|dt|em|embed|fieldset|' &&
