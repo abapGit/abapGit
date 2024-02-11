@@ -560,7 +560,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_name      = |filter|
       iv_label     = |Filter: { render_filter_help_hint( ) }|
       iv_value     = ms_list_settings-filter ) ).
-    ri_html->add( |<input type="submit" class="hidden-submit">| ).
+    ri_html->add( |<input type="submit" class="hidden-submit" title="Filter">| ).
     ri_html->add( |</form>| ).
 
     IF ms_list_settings-only_favorites = abap_true.
