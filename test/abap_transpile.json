@@ -101,21 +101,6 @@
 
       {"object": "ZCL_ABAPGIT_PERSIST_PACKAGES", "class": "ltcl_packages", "method": "test_package", "note": "ZABAPGIT table not existing, error cx_sy_dynamic_osql_semantics"},
 
-      {"object": "ZCL_ABAPGIT_REPO_REQUIREMENTS", "class": "ltcl_lower_release",  "method": "empty_patch",   "note": "Mock CVERS and CVERS_REF tables"},
-      {"object": "ZCL_ABAPGIT_REPO_REQUIREMENTS", "class": "ltcl_lower_release",  "method": "lower_patch",   "note": "Mock CVERS and CVERS_REF tables"},
-      {"object": "ZCL_ABAPGIT_REPO_REQUIREMENTS", "class": "ltcl_lower_release",  "method": "same_patch",    "note": "Mock CVERS and CVERS_REF tables"},
-      {"object": "ZCL_ABAPGIT_REPO_REQUIREMENTS", "class": "ltcl_lower_release",  "method": "higher_patch",  "note": "Mock CVERS and CVERS_REF tables"},
-      {"object": "ZCL_ABAPGIT_REPO_REQUIREMENTS", "class": "ltcl_same_release",   "method": "empty_patch",   "note": "Mock CVERS and CVERS_REF tables"},
-      {"object": "ZCL_ABAPGIT_REPO_REQUIREMENTS", "class": "ltcl_same_release",   "method": "lower_patch",   "note": "Mock CVERS and CVERS_REF tables"},
-      {"object": "ZCL_ABAPGIT_REPO_REQUIREMENTS", "class": "ltcl_same_release",   "method": "same_patch",    "note": "Mock CVERS and CVERS_REF tables"},
-      {"object": "ZCL_ABAPGIT_REPO_REQUIREMENTS", "class": "ltcl_same_release",   "method": "higher_patch",  "note": "Mock CVERS and CVERS_REF tables"},
-      {"object": "ZCL_ABAPGIT_REPO_REQUIREMENTS", "class": "ltcl_higher_release", "method": "empty_patch",   "note": "Mock CVERS and CVERS_REF tables"},
-      {"object": "ZCL_ABAPGIT_REPO_REQUIREMENTS", "class": "ltcl_higher_release", "method": "lower_patch",   "note": "Mock CVERS and CVERS_REF tables"},
-      {"object": "ZCL_ABAPGIT_REPO_REQUIREMENTS", "class": "ltcl_higher_release", "method": "same_patch",    "note": "Mock CVERS and CVERS_REF tables"},
-      {"object": "ZCL_ABAPGIT_REPO_REQUIREMENTS", "class": "ltcl_higher_release", "method": "higher_patch",  "note": "Mock CVERS and CVERS_REF tables"},
-      {"object": "ZCL_ABAPGIT_REPO_REQUIREMENTS", "class": "ltcl_formats",        "method": "shorter_patch", "note": "Mock CVERS and CVERS_REF tables"},
-      {"object": "ZCL_ABAPGIT_REPO_REQUIREMENTS", "class": "ltcl_formats",        "method": "longer_patch",  "note": "Mock CVERS and CVERS_REF tables"},
-
       {"object": "ZCL_ABAPGIT_XML", "class": "ltcl_xml", "method": "space_leading_trailing",          "note": "??"},
       {"object": "ZCL_ABAPGIT_XML", "class": "ltcl_xml", "method": "bad_xml_raises_exc",              "note": "handling of xml parser errors, cl_ixml, test method parse_negative"},
       {"object": "ZCL_ABAPGIT_XML_OUTPUT", "class": "ltcl_xml_output", "method": "render_xml_string", "note": "kernel_call_transformation.mi_writer.get(...).if_sxml_writer$open_element is not a function"},

@@ -15,14 +15,19 @@ CLASS lcl_helper IMPLEMENTATION.
 
   METHOD get_sap_basis_component.
 
+    DATA lt_cvers TYPE zcl_abapgit_repo_requirements=>ty_cvers.
+
     " mock SAP_BASIS
     rs_result-component  = 'SAP_BASIS'.
     rs_result-release    = '754'.
     rs_result-extrelease = '0007'.
     rs_result-comp_type  = 'S'.
 
-  ENDMETHOD.
+    INSERT rs_result INTO TABLE lt_cvers.
 
+    zcl_abapgit_repo_requirements=>inject_cvers( lt_cvers ).
+
+  ENDMETHOD.
 
 ENDCLASS.
 
