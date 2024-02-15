@@ -358,7 +358,8 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
       IMPORTING
         syntaxerror          = lv_syntaxerror
       EXCEPTIONS
-        OTHERS               = 1.
+        error_message        = 1 " suppress S-message
+        OTHERS               = 2.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
