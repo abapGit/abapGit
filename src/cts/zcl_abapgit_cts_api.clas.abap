@@ -82,7 +82,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
+CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
 
   METHOD get_current_transport_for_obj.
@@ -210,6 +210,56 @@ CLASS ZCL_ABAPGIT_CTS_API IMPLEMENTATION.
         pe_result = lv_type_check_result.
 
     rv_transportable = boolc( lv_type_check_result CA 'RTL' ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_cts_api~change_transport_type.
+
+    DATA ls_request_header TYPE trwbo_request_header.
+
+    CALL FUNCTION 'ENQUEUE_E_TRKORR'
+      EXPORTING
+        trkorr         = iv_transport_request
+      EXCEPTIONS
+        foreign_lock   = 1
+        system_failure = 2
+        OTHERS         = 3.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    CALL FUNCTION 'TRINT_READ_REQUEST_HEADER'
+      EXPORTING
+        iv_read_e070   = abap_true
+        iv_read_e070c  = abap_true
+      CHANGING
+        cs_request     = ls_request_header
+      EXCEPTIONS
+        empty_trkorr   = 1
+        not_exist_e070 = 2
+        OTHERS         = 3.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    CALL FUNCTION 'TRINT_CHANGE_TRFUNCTION'
+      EXPORTING
+        iv_new_trfunction      = iv_transport_type
+      CHANGING
+        cs_request_header      = ls_request_header
+      EXCEPTIONS
+        action_aborted_by_user = 1
+        change_not_allowed     = 2
+        db_access_error        = 3
+        OTHERS                 = 4.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    CALL FUNCTION 'DEQUEUE_E_TRKORR'
+      EXPORTING
+        trkorr = iv_transport_request.
+
   ENDMETHOD.
 
 

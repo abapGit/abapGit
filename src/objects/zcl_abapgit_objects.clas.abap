@@ -158,9 +158,10 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS update_original_system
       IMPORTING
-        !it_items TYPE zif_abapgit_definitions=>ty_items_tt
-        !ii_log   TYPE REF TO zif_abapgit_log
-        !io_dot   TYPE REF TO zcl_abapgit_dot_abapgit
+        !it_items     TYPE zif_abapgit_definitions=>ty_items_tt
+        !ii_log       TYPE REF TO zif_abapgit_log
+        !io_dot       TYPE REF TO zcl_abapgit_dot_abapgit
+        !iv_transport TYPE trkorr
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS check_objects_locked
@@ -869,9 +870,10 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     " Set the original system for all updated objects to what's defined in repo settings
     update_original_system(
-      it_items = lt_items
-      ii_log   = ii_log
-      io_dot   = io_repo->get_dot_abapgit( ) ).
+      it_items     = lt_items
+      ii_log       = ii_log
+      io_dot       = io_repo->get_dot_abapgit( )
+      iv_transport = is_checks-transport-transport ).
 
     zcl_abapgit_factory=>get_default_transport( )->reset( ).
 
@@ -1336,6 +1338,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
   METHOD update_original_system.
 
     DATA lv_srcsystem TYPE tadir-srcsystem.
+    DATA lv_errors TYPE abap_bool.
     DATA lv_msg TYPE string.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF it_items.
@@ -1392,9 +1395,17 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           ii_log->add_error(
             iv_msg  = lv_msg
             is_item = <ls_item> ).
+          lv_errors = abap_true.
         ENDIF.
       ENDIF.
     ENDLOOP.
+
+    IF lv_errors IS INITIAL.
+      " Since original system has changed, the type of transport request needs to be switched to "Repair"
+      zcl_abapgit_factory=>get_cts_api( )->change_transport_type(
+        iv_transport_request = iv_transport
+        iv_transport_type    = zif_abapgit_cts_api=>c_transport_type-wb_repair ).
+    ENDIF.
 
   ENDMETHOD.
 
