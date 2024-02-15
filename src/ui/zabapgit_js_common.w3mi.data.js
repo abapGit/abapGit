@@ -2383,7 +2383,7 @@ function enumerateUiActions() {
             submitSapeventForm({}, input.formAction, "post", input.form);
           }
         },
-        title: input.value + " " + input.title.replace(/\[.*\]/, "")
+        title: (input.value === "Submit Query" ? input.title : input.value + " " + input.title.replace(/\[.*\]/, ""))
       });
     });
 
