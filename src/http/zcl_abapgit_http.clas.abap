@@ -297,11 +297,11 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
       lv_proxy_service       TYPE string,
       lo_proxy_configuration TYPE REF TO zcl_abapgit_proxy_config.
 
+    CREATE OBJECT lo_proxy_configuration.
+
     ri_client = zcl_abapgit_exit=>get_instance( )->create_http_client( iv_url ).
 
     IF ri_client IS INITIAL.
-
-      CREATE OBJECT lo_proxy_configuration.
 
       lv_host          = zcl_abapgit_url=>host( iv_url ).
       lv_ssl_id        = zcl_abapgit_exit=>get_instance( )->get_ssl_id( ).
