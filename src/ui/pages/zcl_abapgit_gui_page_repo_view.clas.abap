@@ -1261,6 +1261,9 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
             iv_interactive_branch = abap_false ) ).
           ri_html->add( '</div>' ).
 
+          ri_html->add( render_head_line( ) ).
+
+          " Reset error flag to try connecting again next time
           CLEAR mv_connection_error.
           RETURN.
         ENDIF.
