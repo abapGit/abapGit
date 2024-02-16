@@ -21,9 +21,10 @@ CLASS zcl_abapgit_gui_page_ex_pckage DEFINITION
   PRIVATE SECTION.
     CONSTANTS:
       BEGIN OF c_id,
-        package        TYPE string VALUE 'package',
-        folder_logic   TYPE string VALUE 'folder_logic',
-        main_lang_only TYPE string VALUE 'main_lang_only',
+        package            TYPE string VALUE 'package',
+        folder_logic       TYPE string VALUE 'folder_logic',
+        ignore_subpackages TYPE string VALUE 'ignore_subpackages',
+        main_lang_only     TYPE string VALUE 'main_lang_only',
       END OF c_id.
 
     CONSTANTS:
@@ -74,16 +75,19 @@ CLASS zcl_abapgit_gui_page_ex_pckage IMPLEMENTATION.
   METHOD export_package.
     DATA lv_package TYPE devclass.
     DATA lv_folder_logic TYPE string.
+    DATA lv_ign_subpkg TYPE abap_bool.
     DATA lv_main_lang_only TYPE abap_bool.
 
     lv_package        = mo_form_data->get( c_id-package ).
     lv_folder_logic   = mo_form_data->get( c_id-folder_logic ).
+    lv_ign_subpkg     = mo_form_data->get( c_id-ignore_subpackages ).
     lv_main_lang_only = mo_form_data->get( c_id-main_lang_only ).
 
     zcl_abapgit_zip=>export_package(
-        iv_package        = lv_package
-        iv_folder_logic   = lv_folder_logic
-        iv_main_lang_only = lv_main_lang_only ).
+      iv_package        = lv_package
+      iv_folder_logic   = lv_folder_logic
+      iv_ign_subpkg     = lv_ign_subpkg
+      iv_main_lang_only = lv_main_lang_only ).
   ENDMETHOD.
 
 
@@ -111,9 +115,13 @@ CLASS zcl_abapgit_gui_page_ex_pckage IMPLEMENTATION.
       iv_label         = 'Mixed'
       iv_value         = zif_abapgit_dot_abapgit=>c_folder_logic-mixed
     )->checkbox(
+      iv_name          = c_id-ignore_subpackages
+      iv_label         = 'Ignore Subpackages'
+      iv_hint          = 'Export selected package only'
+    )->checkbox(
       iv_name          = c_id-main_lang_only
       iv_label         = 'Serialize Main Language Only'
-      iv_hint          = 'Ignore translations, serialize just main language'
+      iv_hint          = 'Ignore translations, export just main language'
     )->command(
       iv_label         = 'Export Package to ZIP'
       iv_action        = c_event-export_package

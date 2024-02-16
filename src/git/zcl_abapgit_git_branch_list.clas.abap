@@ -45,6 +45,11 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
         !iv_current_row_index TYPE sy-tabix OPTIONAL
       RETURNING
         VALUE(rv_type)        TYPE zif_abapgit_git_definitions=>ty_git_branch_type .
+    CLASS-METHODS get_description
+      IMPORTING
+        !iv_branch_name       TYPE clike
+      RETURNING
+        VALUE(rv_description) TYPE string.
     CLASS-METHODS complete_heads_branch_name
       IMPORTING
         !iv_branch_name TYPE clike
@@ -130,8 +135,7 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
         WITH TABLE KEY name_key
         COMPONENTS name = iv_branch_name.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Branch { get_display_name( iv_branch_name )
-          } not found. Use 'Branch' > 'Switch' to select a different branch| ).
+        zcx_abapgit_exception=>raise( |{ get_description( iv_branch_name ) } not found| ).
       ENDIF.
 
     ENDIF.
@@ -150,7 +154,7 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
         WITH TABLE KEY name_key
         COMPONENTS name = iv_branch_name.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'Branch not found' ).
+        zcx_abapgit_exception=>raise( |{ get_description( iv_branch_name ) } not found| ).
       ENDIF.
 
     ENDIF.
@@ -173,6 +177,24 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
         APPEND <ls_branch> TO rt_branches.
       ENDIF.
     ENDLOOP.
+  ENDMETHOD.
+
+
+  METHOD get_description.
+
+    CASE get_type( iv_branch_name ).
+      WHEN zif_abapgit_git_definitions=>c_git_branch_type-branch.
+        rv_description = 'Branch'.
+      WHEN zif_abapgit_git_definitions=>c_git_branch_type-lightweight_tag.
+        rv_description = 'Tag'.
+      WHEN zif_abapgit_git_definitions=>c_git_branch_type-annotated_tag.
+        rv_description = 'Annotated Tag'.
+      WHEN OTHERS.
+        rv_description = 'Branch'.
+    ENDCASE.
+
+    rv_description = |{ rv_description } "{ get_display_name( iv_branch_name ) }"|.
+
   ENDMETHOD.
 
 
