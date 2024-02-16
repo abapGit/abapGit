@@ -988,7 +988,8 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
         syntaxerror                  = lv_syntaxerror
       EXCEPTIONS
         _internal_class_not_existing = 1
-        OTHERS                       = 2.
+        error_message                = 2 " suppress S-message
+        OTHERS                       = 3.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
