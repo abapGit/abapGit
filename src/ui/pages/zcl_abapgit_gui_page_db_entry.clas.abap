@@ -32,7 +32,6 @@ CLASS zcl_abapgit_gui_page_db_entry DEFINITION
       BEGIN OF c_action,
         update      TYPE string VALUE 'update',
         switch_mode TYPE string VALUE 'switch_mode',
-        back        TYPE string VALUE 'back',
       END OF c_action .
 
     CONSTANTS c_edit_form_id TYPE string VALUE `db_form`.
@@ -111,7 +110,7 @@ CLASS zcl_abapgit_gui_page_db_entry IMPLEMENTATION.
     ENDIF.
 
     ro_toolbar->add(
-      iv_act = |{ c_action-back }|
+      iv_act = zif_abapgit_definitions=>c_action-go_back
       iv_txt = 'Back' ).
 
   ENDMETHOD.
