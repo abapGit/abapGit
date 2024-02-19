@@ -213,7 +213,7 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
     " Startup
     ro_form_data->set(
       iv_key = c_id-show_default_repo
-      iv_val = |{ ms_settings-show_default_repo }| ).
+      iv_val = boolc( ms_settings-show_default_repo = abap_true ) ) ##TYPE.
 
     " UI
     ro_form_data->set(
