@@ -2421,6 +2421,16 @@ function enumerateUiActions() {
       });
     });
 
+  // Check if the title already exists before adding to items array
+  var titlesAdded = {};
+  items = items.filter(function(item) {
+    if (!titlesAdded[item.title]) {
+      titlesAdded[item.title] = true;
+      return true;
+    }
+    return false;
+  });
+  
   return items;
 }
 
