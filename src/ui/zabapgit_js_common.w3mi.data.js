@@ -2430,7 +2430,7 @@ function enumerateUiActions() {
     }
     return false;
   });
-  
+
   return items;
 }
 
