@@ -270,9 +270,9 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     ls_intf_aff = lcl_aff_metadata_handler=>deserialize( lv_json_data ).
 
     CREATE OBJECT lo_aff_mapper TYPE lcl_aff_type_mapping.
-    lo_aff_mapper->to_abapgit( EXPORTING iv_data = ls_intf_aff
+    lo_aff_mapper->to_abapgit( EXPORTING iv_data        = ls_intf_aff
                                          iv_object_name = ms_item-obj_name
-                               IMPORTING es_data = rs_intf ).
+                               IMPORTING es_data        = rs_intf ).
   ENDMETHOD.
 
 
@@ -392,7 +392,9 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       ls_intf             TYPE ty_intf,
       ls_clskey           TYPE seoclskey,
       lv_serialized_data  TYPE xstring,
-      lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus.
+      lt_langu_additional TYPE zif_abapgit_lang_definitions=>ty_langus,
+      lt_i18n_file        TYPE zif_abapgit_i18n_file=>ty_table_of,
+      lo_i18n_file        TYPE REF TO zif_abapgit_i18n_file.
 
     ls_clskey-clsname = ms_item-obj_name.
 
@@ -422,7 +424,13 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       lv_serialized_data = lcl_aff_metadata_handler=>serialize( ls_intf ).
       mo_files->add_raw( iv_ext  = 'json'
                          iv_data = lv_serialized_data ).
+      lt_i18n_file = lcl_aff_metadata_handler=>serialize_translations(
+        is_intf     = ls_intf
+        it_language = mo_i18n_params->ms_params-translation_languages ).
 
+      LOOP AT lt_i18n_file INTO lo_i18n_file.
+        mo_files->add_i18n_file( lo_i18n_file ).
+      ENDLOOP.
     ELSE.
       io_xml->add( iv_name = 'VSEOINTERF'
                    ig_data = ls_intf-vseointerf ).
