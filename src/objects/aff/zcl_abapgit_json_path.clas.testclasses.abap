@@ -7,6 +7,8 @@ CLASS ltcl_json_path DEFINITION FINAL FOR TESTING
           mt_exp  TYPE string_table,
           ms_data TYPE zif_abapgit_aff_intf_v1=>ty_main.
     METHODS:
+      deserialize_simple FOR TESTING RAISING cx_static_check,
+      deserialize_nested_arrays FOR TESTING RAISING cx_static_check,
       flat_structure FOR TESTING RAISING cx_static_check,
       array          FOR TESTING RAISING cx_static_check,
       array_nested   FOR TESTING RAISING cx_static_check.
@@ -136,6 +138,58 @@ CLASS ltcl_json_path IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals( exp = mt_exp
                                         act = mt_act ).
+
+  ENDMETHOD.
+
+  METHOD deserialize_nested_arrays.
+    DATA: lt_file     TYPE string_table,
+          lo_cut      TYPE REF TO zcl_abapgit_json_path,
+          lv_act      TYPE string,
+          lv_exp      TYPE string,
+          lt_exp      TYPE string_table,
+          lv_is_equal TYPE abap_bool.
+
+    APPEND `$.header.description=Text` TO lt_file.
+    APPEND `$.descriptions.methods[?(@.name=='METH1')].description=Sonne` TO lt_file.
+    APPEND `$.descriptions.methods[?(@.name=='METH1')].parameters[?(@.name=='param2')].description=ABC` TO lt_file.
+
+    CREATE OBJECT lo_cut.
+    lv_act = lo_cut->deserialize( lt_file ).
+
+    APPEND `{  "header": { "description": "Text" } ,` TO lt_exp.
+    APPEND `"descriptions": {` TO lt_exp.
+    APPEND `"methods": [ ` TO lt_exp.
+    APPEND ` { "name": "METH1",` TO lt_exp.
+    APPEND `"description": "Sonne",` TO lt_exp.
+    APPEND `"parameters": [ { "name": "param2", "description": "ABC" } ]` TO lt_exp.
+    APPEND `}]}}` TO lt_exp.
+
+
+    lv_exp = concat_lines_of( table = lt_exp
+                              sep   = cl_abap_char_utilities=>newline ).
+
+    lv_is_equal = zcl_ajson_utilities=>new( )->is_equal( iv_json_a = lv_act
+                                                         iv_json_b = lv_exp ).
+
+    cl_abap_unit_assert=>assert_true( lv_is_equal ).
+
+  ENDMETHOD.
+
+  METHOD deserialize_simple.
+    DATA: lt_file  TYPE string_table,
+          lo_cut   TYPE REF TO zcl_abapgit_json_path,
+          lv_act   TYPE string,
+          is_equal TYPE abap_bool.
+
+    APPEND `$.header.description=Text` TO lt_file.
+
+    CREATE OBJECT lo_cut.
+    lv_act = lo_cut->deserialize( lt_file ).
+
+    is_equal = zcl_ajson_utilities=>new( )->is_equal( iv_json_a = lv_act
+                                                      iv_json_b = ` { "header": { "description": "Text" } } ` ).
+
+    cl_abap_unit_assert=>assert_true( is_equal ).
 
   ENDMETHOD.
 
