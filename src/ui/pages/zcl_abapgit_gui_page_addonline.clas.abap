@@ -229,6 +229,8 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
             iv_key = c_id-url
             iv_val = lx_err->get_text( ) ).
       ENDTRY.
+
+      zcl_abapgit_http=>check_connection( lv_url ).
     ENDIF.
 
     IF io_form_data->get( c_id-package ) IS NOT INITIAL.
