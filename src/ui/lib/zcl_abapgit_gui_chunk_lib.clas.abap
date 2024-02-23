@@ -467,6 +467,8 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
         lv_longtext = |{ lv_longtext }<p>{ <lv_longtext_paragraph> }</p>{ cl_abap_char_utilities=>newline }|.
       ENDLOOP.
+
+      lv_longtext = |{ lv_longtext }<br>|.
     ENDIF.
 
     ri_html->add( |<div id="message" class="message-panel">| ).
@@ -490,7 +492,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
         iv_msgno = ix_error->if_t100_message~t100key-msgno ).
 
       IF lv_title IS NOT INITIAL.
-        lv_text = |Message ({ ix_error->if_t100_message~t100key-msgid }/{ ix_error->if_t100_message~t100key-msgno })|.
+        lv_text = |Message E{ ix_error->if_t100_message~t100key-msgno }({ ix_error->if_t100_message~t100key-msgid })|.
 
         ri_html->add_a(
           iv_txt   = lv_text
