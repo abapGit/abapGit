@@ -153,4 +153,11 @@ INTERFACE zif_abapgit_cts_api
       !iv_transport_request TYPE trkorr
     RAISING
       zcx_abapgit_exception .
+
+  METHODS change_transport_type
+    IMPORTING
+      !iv_transport_request TYPE trkorr
+      !iv_transport_type    TYPE trfunction
+    RAISING
+      zcx_abapgit_exception.
 ENDINTERFACE.
