@@ -216,6 +216,11 @@ CLASS ltcl_aff_settings_deserialize IMPLEMENTATION.
     ls_item-obj_type = 'CHKO'.
     ls_item-obj_name = 'Z_DUMMY'.
     ls_item-abap_language_version = iv_abap_lv_repo_setting.
+
+    IF zcl_abapgit_objects=>is_supported( ls_item ) = abap_false.
+      RETURN.
+    ENDIF.
+
     CREATE OBJECT lo_cut
       EXPORTING
         is_item     = ls_item

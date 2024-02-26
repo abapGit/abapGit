@@ -121,6 +121,7 @@ CLASS zcl_abapgit_gui_page_sett_remo DEFINITION
     METHODS validate_form
       IMPORTING
         io_form_data             TYPE REF TO zcl_abapgit_string_map
+        iv_connection_check      TYPE abap_bool DEFAULT abap_true
       RETURNING
         VALUE(ro_validation_log) TYPE REF TO zcl_abapgit_string_map
       RAISING
@@ -864,6 +865,10 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
             iv_key = c_id-url
             iv_val = lx_error->get_text( ) ).
       ENDTRY.
+
+      IF iv_connection_check = abap_true.
+        zcl_abapgit_http=>check_connection( lv_url ).
+      ENDIF.
     ENDIF.
 
     IF lv_offline = abap_false.
@@ -890,7 +895,7 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
 
           " Cannot check for commit existence currently (needs API that doesn't rely on finding the first commit
           " in the branch), check format instead
-          IF lv_commit CN '0123456789abcdef'.
+          IF lv_commit CN '0123456789abcdef' AND ro_validation_log->get( c_id-commit ) IS INITIAL.
             ro_validation_log->set(
               iv_key = c_id-commit
               iv_val = 'Commit needs to be hexadecimal and in lowercase' ).
@@ -901,16 +906,19 @@ CLASS zcl_abapgit_gui_page_sett_remo IMPLEMENTATION.
             iv_val = 'Unknown head type' ).
       ENDCASE.
 
-      TRY.
-          IF lv_branch IS NOT INITIAL.
-            lo_branch_list = zcl_abapgit_git_factory=>get_git_transport( )->branches( lv_url ).
+      IF lv_branch IS NOT INITIAL.
+        " Problems with getting branches in general are raised to the page
+        lo_branch_list = zcl_abapgit_git_factory=>get_git_transport( )->branches( lv_url ).
+
+        TRY.
+            " Issues with finding a particular branch are shown next to corresponding field
             lo_branch_list->find_by_name( lv_branch ).
-          ENDIF.
-        CATCH zcx_abapgit_exception INTO lx_error.
-          ro_validation_log->set(
-            iv_key = lv_branch_check_error_id
-            iv_val = lx_error->get_text( ) ).
-      ENDTRY.
+          CATCH zcx_abapgit_exception INTO lx_error.
+            ro_validation_log->set(
+              iv_key = lv_branch_check_error_id
+              iv_val = lx_error->get_text( ) ).
+        ENDTRY.
+      ENDIF.
     ENDIF.
   ENDMETHOD.
 
