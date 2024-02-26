@@ -84,7 +84,7 @@ CLASS lcl_json_path IMPLEMENTATION.
       ro_result = zcl_abapgit_ajson=>parse( lv_json ).
     ELSE.
 
-      REPLACE FIRST OCCURRENCE OF '$.' IN lv_path WITH '/'.
+      REPLACE FIRST OCCURRENCE OF '$.' IN lv_path WITH ''.
       REPLACE '.' IN lv_path WITH '/'.
       ro_result = zcl_abapgit_ajson=>create_empty( iv_keep_item_order = abap_true ).
       ro_result->set( iv_path = lv_path
