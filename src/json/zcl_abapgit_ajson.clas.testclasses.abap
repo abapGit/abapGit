@@ -2198,6 +2198,7 @@ CLASS ltcl_writer_test DEFINITION FINAL
     METHODS read_only FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_array_obj FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS set_with_type FOR TESTING RAISING zcx_abapgit_ajson_error.
+    METHODS new_array_w_keep_order_touch FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS overwrite_w_keep_order_touch FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS overwrite_w_keep_order_set FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS setx FOR TESTING RAISING zcx_abapgit_ajson_error.
@@ -3268,6 +3269,37 @@ CLASS ltcl_writer_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = li_cut->stringify( )
       exp = '{"b":0,"a":1}' ). " still ordered after overwrite
+
+  ENDMETHOD.
+
+  METHOD new_array_w_keep_order_touch.
+
+    DATA li_cut TYPE REF TO zif_abapgit_ajson.
+
+    " default order adds new arrays at beginning of node (pos 0)
+    li_cut = zcl_abapgit_ajson=>create_empty(
+    )->set(
+      iv_path = '/b'
+      iv_val  = 1 ).
+
+    li_cut->touch_array( '/a' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = li_cut->stringify( )
+      exp = '{"a":[],"b":1}' ).
+
+    " with keep order, new array is created at end of node
+    li_cut = zcl_abapgit_ajson=>create_empty(
+    )->keep_item_order(
+    )->set(
+      iv_path = '/b'
+      iv_val  = 1 ).
+
+    li_cut->touch_array( '/a' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = li_cut->stringify( )
+      exp = '{"b":1,"a":[]}' ).
 
   ENDMETHOD.
 
