@@ -74,6 +74,7 @@ span.separator {
 .w40          { width: 40%; }
 .float-right  { float: right; }
 .pad-right    { padding-right: 6px; }
+.no-pad       { padding: 0px !important; }
 .inline       { display: inline; }
 .hidden       { visibility: hidden; }
 .nodisplay    { display: none }

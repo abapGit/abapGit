@@ -43,6 +43,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
     DATA mo_repo_aggregated_state TYPE REF TO zcl_abapgit_repo_item_state.
+    DATA mv_connection_error TYPE abap_bool.
     DATA mv_cur_dir TYPE string .
     DATA mv_hide_files TYPE abap_bool .
     DATA mv_max_lines TYPE i .
@@ -189,6 +190,10 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         VALUE(rv_crossout) LIKE zif_abapgit_html=>c_html_opt-crossout.
 
     METHODS check_branch
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS check_connection
       RAISING
         zcx_abapgit_exception.
 
@@ -572,6 +577,22 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       lo_repo ?= mo_repo.
       lo_repo->check_for_valid_branch( ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD check_connection.
+
+    DATA lo_repo TYPE REF TO zif_abapgit_repo_online.
+
+    mv_connection_error = abap_true.
+
+    IF mo_repo->is_offline( ) = abap_false.
+      lo_repo ?= mo_repo.
+      zcl_abapgit_http=>check_connection( lo_repo->get_url( ) ).
+    ENDIF.
+
+    mv_connection_error = abap_false.
 
   ENDMETHOD.
 
@@ -1229,6 +1250,26 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         " Reinit, for the case of type change
         mo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
 
+        IF mv_connection_error = abap_true.
+          " If connection doesn't work, render a minimal header
+          ri_html->add( |<div class="repo" id="repo{ mv_key }">| ).
+          ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
+            io_repo               = mo_repo
+            iv_show_edit          = abap_true
+            iv_show_branch        = abap_false
+            iv_show_commit        = abap_false
+            iv_interactive_branch = abap_false ) ).
+          ri_html->add( '</div>' ).
+
+          ri_html->add( render_head_line( ) ).
+
+          " Reset error flag to try connecting again next time
+          CLEAR mv_connection_error.
+          RETURN.
+        ENDIF.
+
+        check_connection( ).
+
         check_branch( ).
 
         mv_are_changes_recorded_in_tr = zcl_abapgit_factory=>get_sap_package( mo_repo->get_package( )
@@ -1346,11 +1387,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         " and allow troubleshooting of issue
         zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( || ).
 
-        ri_html->add( render_head_line( ) ).
-
-        ri_html->add( zcl_abapgit_gui_chunk_lib=>render_error(
-          iv_extra_style = 'repo_banner'
-          ix_error = lx_error ) ).
+        RAISE EXCEPTION lx_error.
     ENDTRY.
 
     register_deferred_script( render_scripts( ) ).
