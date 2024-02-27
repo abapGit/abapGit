@@ -103,8 +103,8 @@ CLASS lcl_json_path IMPLEMENTATION.
 
   METHOD path_contains_array.
     DATA lv_array_pattern TYPE string VALUE `.*(\[.*?\]).*`.
-    rv_result = xsdbool( matches( val = iv_path
-                                  pcre = lv_array_pattern ) ).
+    rv_result = boolc( matches( val = iv_path
+                                pcre = lv_array_pattern ) ).
   ENDMETHOD.
 
   METHOD build_json.
