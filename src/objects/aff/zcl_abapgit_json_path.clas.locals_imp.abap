@@ -127,45 +127,47 @@ CLASS lcl_json_path IMPLEMENTATION.
                             iv_value         = iv_value
                   CHANGING  cv_json_string   = cv_json_string ).
 
-    ELSEIF matches( val = lv_first_elem
+    ELSE.
+      IF matches( val = lv_first_elem
                     pcre = `^.\w+` ). " string start with .
 
-      lv_name = lv_first_elem.
-      cv_json_string = cv_json_string && | \{"{ lv_name+1 }": |.
+        lv_name = lv_first_elem.
+        cv_json_string = cv_json_string && | \{"{ lv_name+1 }": |.
 
-      DELETE lt_new_path_element INDEX 1.
-
-      build_json( EXPORTING it_path_elements = lt_new_path_element
-                            iv_value         = iv_value
-                  CHANGING  cv_json_string   = cv_json_string ).
-
-      cv_json_string = cv_json_string && ` }`.
-
-    ELSE. " is array
-
-      FIND PCRE `(\[.*?\])` IN lv_first_elem SUBMATCHES lv_sub_match.
-      FIND PCRE `(\w+)(?==='([^']*)')` IN lv_sub_match SUBMATCHES lv_key_name lv_key_value.
-      READ TABLE lt_new_path_element INTO lv_name INDEX 2.
-
-
-      DELETE lt_new_path_element INDEX 1.
-      DELETE lt_new_path_element INDEX 1.
-
-      IF lines( lt_new_path_element ) = 0.
-
-        cv_json_string = cv_json_string &&
-          |[ \{ "{ lv_key_name }": "{ lv_key_value }", "{ lv_name+1 }": "{ iv_value }"\} ]|.
-
-      ELSE.
-
-        cv_json_string = cv_json_string && |[ \{ "{ lv_key_name }": "{ lv_key_value }", "{ lv_name+1 }":|.
+        DELETE lt_new_path_element INDEX 1.
 
         build_json( EXPORTING it_path_elements = lt_new_path_element
                               iv_value         = iv_value
                     CHANGING  cv_json_string   = cv_json_string ).
 
-        cv_json_string = cv_json_string && `} ] `.
+        cv_json_string = cv_json_string && ` }`.
 
+      ELSE. " is array
+
+        FIND PCRE `(\[.*?\])` IN lv_first_elem SUBMATCHES lv_sub_match.
+        FIND PCRE `(\w+)(?==='([^']*)')` IN lv_sub_match SUBMATCHES lv_key_name lv_key_value.
+        READ TABLE lt_new_path_element INTO lv_name INDEX 2.
+
+
+        DELETE lt_new_path_element INDEX 1.
+        DELETE lt_new_path_element INDEX 1.
+
+        IF lines( lt_new_path_element ) = 0.
+
+          cv_json_string = cv_json_string &&
+            |[ \{ "{ lv_key_name }": "{ lv_key_value }", "{ lv_name+1 }": "{ iv_value }"\} ]|.
+
+        ELSE.
+
+          cv_json_string = cv_json_string && |[ \{ "{ lv_key_name }": "{ lv_key_value }", "{ lv_name+1 }":|.
+
+          build_json( EXPORTING it_path_elements = lt_new_path_element
+                                iv_value         = iv_value
+                      CHANGING  cv_json_string   = cv_json_string ).
+
+          cv_json_string = cv_json_string && `} ] `.
+
+        ENDIF.
       ENDIF.
     ENDIF.
 
