@@ -10,13 +10,11 @@ CLASS lcl_json_path DEFINITION CREATE PUBLIC.
         IMPORTING io_reader     TYPE REF TO if_sxml_reader
                   it_path       TYPE string_table
         CHANGING  ct_json_paths TYPE string_table.
-    CLASS-METHODS:
-      to_json
-        IMPORTING iv_json_path     TYPE string
-        RETURNING VALUE(ro_result) TYPE ref to zcl_abapgit_ajson
-        RAISING   zcx_abapgit_ajson_error
-                  cx_sy_regex
-                  cx_sy_matcher.
+
+    class-METHODS: deserialize
+      IMPORTING it_json_path     TYPE string_table
+      RETURNING VALUE(rv_result) TYPE string
+      RAISING   zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -54,6 +52,12 @@ CLASS lcl_json_path DEFINITION CREATE PUBLIC.
     CLASS-METHODS path_contains_array
       IMPORTING iv_path          TYPE string
       RETURNING VALUE(rv_result) TYPE abap_bool.
+    CLASS-METHODS: to_json
+        IMPORTING iv_json_path     TYPE string
+        RETURNING value(ro_result) TYPE REF TO zcl_abapgit_ajson
+        RAISING   zcx_abapgit_ajson_error
+                  cx_sy_regex
+                  cx_sy_matcher.
 
 ENDCLASS.
 
@@ -314,6 +318,43 @@ CLASS lcl_json_path IMPLEMENTATION.
                                  sep   = `.` ).
     REPLACE ALL OCCURRENCES OF `.[` IN rv_result WITH `[`.
 
+  ENDMETHOD.
+
+  METHOD deserialize.
+
+    DATA: lo_merged            TYPE REF TO zif_abapgit_ajson,
+          lv_json_path         TYPE string,
+          lo_deserialization_result TYPE ref to zif_abapgit_ajson,
+          lx_ajson             TYPE REF TO zcx_abapgit_ajson_error.
+
+    TRY.
+        lo_merged = zcl_abapgit_ajson=>parse( `` ).
+      CATCH zcx_abapgit_ajson_error INTO lx_ajson.
+        zcx_abapgit_exception=>raise_with_text( lx_ajson ).
+    ENDTRY.
+
+    LOOP AT it_json_path INTO lv_json_path.
+
+      TRY.
+          lo_deserialization_result = to_json( lv_json_path ).
+        CATCH zcx_abapgit_ajson_error cx_sy_regex cx_sy_matcher.
+          zcx_abapgit_exception=>raise( iv_text = `Failed to deserialize translation.` ).
+      ENDTRY.
+
+      TRY.
+          lo_merged = zcl_abapgit_ajson_utilities=>new( )->merge( io_json_a = lo_merged
+                                                                  io_json_b = lo_deserialization_result ).
+        CATCH zcx_abapgit_ajson_error INTO lx_ajson.
+          zcx_abapgit_exception=>raise_with_text( lx_ajson ).
+      ENDTRY.
+
+    ENDLOOP.
+
+    TRY.
+        rv_result = lo_merged->stringify( iv_indent = 2 ).
+      CATCH zcx_abapgit_ajson_error INTO lx_ajson.
+        zcx_abapgit_exception=>raise_with_text( lx_ajson ).
+    ENDTRY.
   ENDMETHOD.
 
 ENDCLASS.
