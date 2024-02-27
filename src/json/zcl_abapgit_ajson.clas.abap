@@ -924,8 +924,12 @@ CLASS zcl_abapgit_ajson IMPLEMENTATION.
       ls_new_node-name = ls_split_path-name.
       ls_new_node-type = zif_abapgit_ajson_types=>node_type-array.
 
-      IF ms_opts-keep_item_order = abap_true AND ls_deleted_node IS NOT INITIAL.
-        ls_new_node-order = ls_deleted_node-order.
+      IF ms_opts-keep_item_order = abap_true.
+        IF ls_deleted_node IS NOT INITIAL.
+          ls_new_node-order = ls_deleted_node-order.
+        ELSE.
+          ls_new_node-order = lr_parent->children.
+        ENDIF.
       ENDIF.
 
       INSERT ls_new_node INTO TABLE mt_json_tree.
