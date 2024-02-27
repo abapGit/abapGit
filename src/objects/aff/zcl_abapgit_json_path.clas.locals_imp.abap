@@ -109,7 +109,8 @@ CLASS lcl_json_path IMPLEMENTATION.
           lv_sub_match        TYPE string,
           lv_key_name         TYPE string,
           lv_key_value        TYPE string,
-          lv_name             TYPE string.
+          lv_name             TYPE string,
+          lv_first_elem       TYPE string.
 
     lt_new_path_element = it_path_elements.
 
@@ -117,16 +118,19 @@ CLASS lcl_json_path IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    IF lt_new_path_element[ 1 ] = `$`. " is root level
+    READ TABLE lt_new_path_element INTO lv_first_elem INDEX 1.
+
+    IF lv_first_elem = `$`. " is root level
 
       DELETE lt_new_path_element INDEX 1.
       build_json( EXPORTING it_path_elements = lt_new_path_element
                             iv_value         = iv_value
                   CHANGING  cv_json_string   = cv_json_string ).
 
-    ELSEIF matches( val = lt_new_path_element[ 1 ] pcre = `^.\w+` ). " string start with .
+    ELSEIF matches( val = lv_first_elem
+                    pcre = `^.\w+` ). " string start with .
 
-      lv_name = lt_new_path_element[ 1 ].
+      lv_name = lv_first_elem.
       cv_json_string = cv_json_string && | \{"{ lv_name+1 }": |.
 
       DELETE lt_new_path_element INDEX 1.
@@ -139,9 +143,10 @@ CLASS lcl_json_path IMPLEMENTATION.
 
     ELSE. " is array
 
-      FIND PCRE `(\[.*?\])` IN lt_new_path_element[ 1 ] SUBMATCHES lv_sub_match.
+      FIND PCRE `(\[.*?\])` IN lv_first_elem SUBMATCHES lv_sub_match.
       FIND PCRE `(\w+)(?==='([^']*)')` IN lv_sub_match SUBMATCHES lv_key_name lv_key_value.
-      lv_name = lt_new_path_element[ 2 ].
+      READ TABLE lt_new_path_element INTO lv_name INDEX 2.
+
 
       DELETE lt_new_path_element INDEX 1.
       DELETE lt_new_path_element INDEX 1.
@@ -344,7 +349,7 @@ CLASS lcl_json_path IMPLEMENTATION.
       TRY.
           lo_deserialization_result = to_json( lv_json_path ).
         CATCH zcx_abapgit_ajson_error cx_sy_regex cx_sy_matcher.
-          zcx_abapgit_exception=>raise( iv_text = `Failed to deserialize translation.` ).
+          zcx_abapgit_exception=>raise( `Failed to deserialize translation.` ).
       ENDTRY.
 
       TRY.
@@ -357,7 +362,7 @@ CLASS lcl_json_path IMPLEMENTATION.
     ENDLOOP.
 
     TRY.
-        rv_result = lo_merged->stringify( iv_indent = 2 ).
+        rv_result = lo_merged->stringify( 2 ).
       CATCH zcx_abapgit_ajson_error INTO lx_ajson.
         zcx_abapgit_exception=>raise_with_text( lx_ajson ).
     ENDTRY.

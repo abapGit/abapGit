@@ -168,8 +168,8 @@ CLASS ltcl_json_path IMPLEMENTATION.
     lv_exp = concat_lines_of( table = lt_exp
                               sep   = cl_abap_char_utilities=>newline ).
 
-    lv_is_equal = zcl_ajson_utilities=>new( )->is_equal( iv_json_a = lv_act
-                                                         iv_json_b = lv_exp ).
+    lv_is_equal = zcl_abapgit_ajson_utilities=>new( )->is_equal( iv_json_a = lv_act
+                                                                 iv_json_b = lv_exp ).
 
     cl_abap_unit_assert=>assert_true( lv_is_equal ).
 
@@ -179,15 +179,17 @@ CLASS ltcl_json_path IMPLEMENTATION.
     DATA: lt_file     TYPE string_table,
           lo_cut      TYPE REF TO zcl_abapgit_json_path,
           lv_act      TYPE string,
+          lv_exp      TYPE string,
           lv_is_equal TYPE abap_bool.
 
     APPEND `$.header.description=Text` TO lt_file.
+    lv_exp = ` { "header": { "description": "Text" } } `.
 
     CREATE OBJECT lo_cut.
     lv_act = lo_cut->deserialize( lt_file ).
 
-    lv_is_equal = zcl_ajson_utilities=>new( )->is_equal( iv_json_a = lv_act
-                                                      iv_json_b = ` { "header": { "description": "Text" } } ` ).
+    lv_is_equal = zcl_abapgit_ajson_utilities=>new( )->is_equal( iv_json_a = lv_act
+                                                                 iv_json_b = lv_exp ).
 
     cl_abap_unit_assert=>assert_true( lv_is_equal ).
 
