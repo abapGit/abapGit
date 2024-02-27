@@ -144,7 +144,7 @@ CLASS lcl_json_path IMPLEMENTATION.
 
     ELSE. " is array
 
-      FIND REGEX `([.*?])` IN lv_first_elem SUBMATCHES lv_sub_match.
+      FIND REGEX `\[(.*)\]` IN lv_first_elem SUBMATCHES lv_sub_match.
       FIND REGEX `(\w+)(?==='([^']*)')` IN lv_sub_match SUBMATCHES lv_key_name lv_key_value.
       READ TABLE lt_new_path_element INTO lv_name INDEX 2.
 
