@@ -11,7 +11,7 @@ CLASS lcl_json_path DEFINITION CREATE PUBLIC.
                   it_path       TYPE string_table
         CHANGING  ct_json_paths TYPE string_table.
 
-    class-METHODS: deserialize
+    CLASS-METHODS: deserialize
       IMPORTING it_json_path     TYPE string_table
       RETURNING VALUE(rv_result) TYPE string
       RAISING   zcx_abapgit_exception.
@@ -53,11 +53,11 @@ CLASS lcl_json_path DEFINITION CREATE PUBLIC.
       IMPORTING iv_path          TYPE string
       RETURNING VALUE(rv_result) TYPE abap_bool.
     CLASS-METHODS: to_json
-        IMPORTING iv_json_path     TYPE string
-        RETURNING value(ro_result) TYPE REF TO zcl_abapgit_ajson
-        RAISING   zcx_abapgit_ajson_error
-                  cx_sy_regex
-                  cx_sy_matcher.
+      IMPORTING iv_json_path     TYPE string
+      RETURNING VALUE(ro_result) TYPE REF TO zcl_abapgit_ajson
+      RAISING   zcx_abapgit_ajson_error
+                cx_sy_regex
+                cx_sy_matcher.
 
 ENDCLASS.
 
@@ -73,7 +73,7 @@ CLASS lcl_json_path IMPLEMENTATION.
 
     lo_matcher = cl_abap_regex=>create_pcre( `(.*)=(.*$)` )->create_matcher( text = iv_json_path ).
 
-    IF lo_matcher->match( ).
+    IF lo_matcher->match( ) = abap_true.
       lv_path  = lo_matcher->get_submatch( 1 ).
       lv_value = lo_matcher->get_submatch( 2 ).
     ENDIF.
@@ -99,15 +99,16 @@ CLASS lcl_json_path IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD path_contains_array.
-    data lv_array_pattern TYPE string VALUE `.*(\[.*?\]).*` ##NO_TEXT.
-    rv_result = xsdbool( matches( val = iv_path pcre = lv_array_pattern ) ).
+    DATA lv_array_pattern TYPE string VALUE `.*(\[.*?\]).*`.
+    rv_result = xsdbool( matches( val = iv_path
+                                  pcre = lv_array_pattern ) ).
   ENDMETHOD.
 
   METHOD build_json.
     DATA: lt_new_path_element TYPE string_table,
           lv_sub_match        TYPE string,
-          lv_key_name           TYPE string,
-          lv_key_value           TYPE string,
+          lv_key_name         TYPE string,
+          lv_key_value        TYPE string,
           lv_name             TYPE string.
 
     lt_new_path_element = it_path_elements.
@@ -147,7 +148,8 @@ CLASS lcl_json_path IMPLEMENTATION.
 
       IF lines( lt_new_path_element ) = 0.
 
-        cv_json_string = cv_json_string && |[ \{ "{ lv_key_name }": "{ lv_key_value }", "{ lv_name+1 }": "{ iv_value }"\} ]|.
+        cv_json_string = cv_json_string &&
+          |[ \{ "{ lv_key_name }": "{ lv_key_value }", "{ lv_name+1 }": "{ iv_value }"\} ]|.
 
       ELSE.
 
@@ -165,18 +167,22 @@ CLASS lcl_json_path IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD get_path_elements.
+    DATA: lv_pcre_pattern TYPE string,
+          lo_matcher TYPE REF TO cl_abap_matcher,
+          lt_match_result TYPE match_result_tab,
+          lv_match TYPE match_result,
+          lv_hit TYPE string.
 
-    DATA(pcre_pattern) = `(^\$)|(\.\w+)|(\[.*?\])|\.(\w+)`.
+    lv_pcre_pattern = `(^\$)|(\.\w+)|(\[.*?\])|\.(\w+)`.
 
-    DATA(matcher) = cl_abap_regex=>create_pcre( pcre_pattern )->create_matcher( text = iv_path ).
-    DATA(match_result) = matcher->find_all( ).
+    lo_matcher = cl_abap_regex=>create_pcre( lv_pcre_pattern )->create_matcher( text = iv_path ).
+    lt_match_result = lo_matcher->find_all( ).
 
-
-    LOOP AT match_result INTO DATA(match).
-      DATA(offset) = match-offset.
-      DATA(length) = match-length.
-      DATA(hit) = substring( val = iv_path off = offset len = length ).
-      APPEND hit TO rt_result.
+    LOOP AT lt_match_result INTO lv_match.
+      lv_hit = substring( val = iv_path
+                          off = lv_match-offset
+                          len = lv_match-length ).
+      APPEND lv_hit TO rt_result.
     ENDLOOP.
 
   ENDMETHOD.
@@ -322,10 +328,10 @@ CLASS lcl_json_path IMPLEMENTATION.
 
   METHOD deserialize.
 
-    DATA: lo_merged            TYPE REF TO zif_abapgit_ajson,
-          lv_json_path         TYPE string,
-          lo_deserialization_result TYPE ref to zif_abapgit_ajson,
-          lx_ajson             TYPE REF TO zcx_abapgit_ajson_error.
+    DATA: lo_merged                 TYPE REF TO zif_abapgit_ajson,
+          lv_json_path              TYPE string,
+          lo_deserialization_result TYPE REF TO zif_abapgit_ajson,
+          lx_ajson                  TYPE REF TO zcx_abapgit_ajson_error.
 
     TRY.
         lo_merged = zcl_abapgit_ajson=>parse( `` ).

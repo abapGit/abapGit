@@ -176,20 +176,20 @@ CLASS ltcl_json_path IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD deserialize_simple.
-    DATA: lt_file  TYPE string_table,
-          lo_cut   TYPE REF TO zcl_abapgit_json_path,
-          lv_act   TYPE string,
-          is_equal TYPE abap_bool.
+    DATA: lt_file     TYPE string_table,
+          lo_cut      TYPE REF TO zcl_abapgit_json_path,
+          lv_act      TYPE string,
+          lv_is_equal TYPE abap_bool.
 
     APPEND `$.header.description=Text` TO lt_file.
 
     CREATE OBJECT lo_cut.
     lv_act = lo_cut->deserialize( lt_file ).
 
-    is_equal = zcl_ajson_utilities=>new( )->is_equal( iv_json_a = lv_act
+    lv_is_equal = zcl_ajson_utilities=>new( )->is_equal( iv_json_a = lv_act
                                                       iv_json_b = ` { "header": { "description": "Text" } } ` ).
 
-    cl_abap_unit_assert=>assert_true( is_equal ).
+    cl_abap_unit_assert=>assert_true( lv_is_equal ).
 
   ENDMETHOD.
 
