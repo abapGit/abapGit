@@ -58,6 +58,9 @@ CLASS lcl_json_path DEFINITION CREATE PUBLIC.
       RAISING   zcx_abapgit_ajson_error
                 cx_sy_regex
                 cx_sy_matcher.
+    CLASS-METHODS: is_primitiv
+      IMPORTING iv_string        TYPE string
+      RETURNING VALUE(rv_result) TYPE abap_bool.
 
 ENDCLASS.
 
@@ -127,58 +130,63 @@ CLASS lcl_json_path IMPLEMENTATION.
                             iv_value         = iv_value
                   CHANGING  cv_json_string   = cv_json_string ).
 
-    ELSE.
-      IF matches( val = lv_first_elem
-                    pcre = `^.\w+` ). " string start with .
+    ELSEIF is_primitiv( lv_first_elem ) = abap_true.
 
-        lv_name = lv_first_elem.
-        cv_json_string = cv_json_string && | \{"{ lv_name+1 }": |.
+      cv_json_string = cv_json_string && | \{"{ lv_first_elem+1 }": |.
 
-        DELETE lt_new_path_element INDEX 1.
+      DELETE lt_new_path_element INDEX 1.
+
+      build_json( EXPORTING it_path_elements = lt_new_path_element
+                            iv_value         = iv_value
+                  CHANGING  cv_json_string   = cv_json_string ).
+
+      cv_json_string = cv_json_string && ` }`.
+
+    ELSE. " is array
+
+      FIND REGEX `([.*?])` IN lv_first_elem SUBMATCHES lv_sub_match.
+      FIND REGEX `(\w+)(?==='([^']*)')` IN lv_sub_match SUBMATCHES lv_key_name lv_key_value.
+      READ TABLE lt_new_path_element INTO lv_name INDEX 2.
+
+
+      DELETE lt_new_path_element INDEX 1.
+      DELETE lt_new_path_element INDEX 1.
+
+      IF lines( lt_new_path_element ) = 0.
+
+        cv_json_string = cv_json_string &&
+          |[ \{ "{ lv_key_name }": "{ lv_key_value }", "{ lv_name+1 }": "{ iv_value }"\} ]|.
+
+      ELSE.
+
+        cv_json_string = cv_json_string && |[ \{ "{ lv_key_name }": "{ lv_key_value }", "{ lv_name+1 }":|.
 
         build_json( EXPORTING it_path_elements = lt_new_path_element
                               iv_value         = iv_value
                     CHANGING  cv_json_string   = cv_json_string ).
 
-        cv_json_string = cv_json_string && ` }`.
+        cv_json_string = cv_json_string && `} ] `.
 
-      ELSE. " is array
-
-        FIND PCRE `(\[.*?\])` IN lv_first_elem SUBMATCHES lv_sub_match.
-        FIND PCRE `(\w+)(?==='([^']*)')` IN lv_sub_match SUBMATCHES lv_key_name lv_key_value.
-        READ TABLE lt_new_path_element INTO lv_name INDEX 2.
-
-
-        DELETE lt_new_path_element INDEX 1.
-        DELETE lt_new_path_element INDEX 1.
-
-        IF lines( lt_new_path_element ) = 0.
-
-          cv_json_string = cv_json_string &&
-            |[ \{ "{ lv_key_name }": "{ lv_key_value }", "{ lv_name+1 }": "{ iv_value }"\} ]|.
-
-        ELSE.
-
-          cv_json_string = cv_json_string && |[ \{ "{ lv_key_name }": "{ lv_key_value }", "{ lv_name+1 }":|.
-
-          build_json( EXPORTING it_path_elements = lt_new_path_element
-                                iv_value         = iv_value
-                      CHANGING  cv_json_string   = cv_json_string ).
-
-          cv_json_string = cv_json_string && `} ] `.
-
-        ENDIF.
       ENDIF.
     ENDIF.
 
   ENDMETHOD.
 
+  METHOD is_primitiv.
+
+    FIND REGEX `^.\w+` IN iv_string. " string start with .
+    rv_result = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.
+
+
+
   METHOD get_path_elements.
     DATA: lv_pcre_pattern TYPE string,
-          lo_matcher TYPE REF TO cl_abap_matcher,
+          lo_matcher      TYPE REF TO cl_abap_matcher,
           lt_match_result TYPE match_result_tab,
-          lv_match TYPE match_result,
-          lv_hit TYPE string.
+          lv_match        TYPE match_result,
+          lv_hit          TYPE string.
 
     lv_pcre_pattern = `(^\$)|(\.\w+)|(\[.*?\])|\.(\w+)`.
 
