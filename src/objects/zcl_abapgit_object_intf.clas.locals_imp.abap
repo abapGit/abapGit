@@ -511,6 +511,9 @@ CLASS lcl_aff_metadata_handler DEFINITION.
       IMPORTING iv_data          TYPE xstring
       RETURNING VALUE(rv_result) TYPE zif_abapgit_aff_intf_v1=>ty_main
       RAISING   zcx_abapgit_exception.
+    CLASS-METHODS deserialize_translation
+      IMPORTING it_files TYPE REF TO zcl_abapgit_objects_files
+      RAISING   zcx_abapgit_exception.
   PRIVATE SECTION.
     CLASS-METHODS:
       "! For serialization
@@ -688,6 +691,64 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
     SELECT SINGLE descript FROM seoclasstx INTO rt_result-header-description
     WHERE clsname = iv_name AND
           langu   = lv_langu_sap1.
+
+  ENDMETHOD.
+
+
+  METHOD deserialize_translation.
+    DATA: lt_data             TYPE string_table,
+          lv_data             TYPE string,
+          lv_xdata_with_bom   TYPE zif_abapgit_git_definitions=>ty_file-data,
+          lv_translation      TYPE string,
+          lv_xtranslation     TYPE xstring,
+          lo_ajson            TYPE REF TO zcl_abapgit_json_handler,
+          lx_exception        TYPE REF TO cx_static_check,
+          lv_langu_sap1       TYPE sy-langu,
+          lv_obj_name         TYPE seoclsname,
+          lv_langu            TYPE laiso,
+          lt_translation_file TYPE zif_abapgit_git_definitions=>ty_files_tt,
+          ls_translation_file TYPE zif_abapgit_git_definitions=>ty_file,
+          lo_json_path        TYPE REF TO zcl_abapgit_json_path,
+          ls_aff_data         TYPE zif_abapgit_aff_intf_v1=>ty_main.
+
+    lt_translation_file = it_files->get_i18n_properties_file( ).
+    CREATE OBJECT lo_json_path.
+
+    LOOP AT lt_translation_file INTO ls_translation_file.
+
+      " remove BOM
+      lv_xdata_with_bom = ls_translation_file-data.
+      ls_translation_file-data = lv_xdata_with_bom+3.
+
+      lv_data = zcl_abapgit_convert=>xstring_to_string_utf8( ls_translation_file-data ).
+      SPLIT lv_data AT cl_abap_char_utilities=>newline INTO TABLE lt_data.
+
+      lv_translation = lo_json_path->deserialize( lt_data ).
+
+      lv_xtranslation = zcl_abapgit_convert=>string_to_xstring_utf8( lv_translation ).
+
+
+      CREATE OBJECT lo_ajson.
+      TRY.
+          lo_ajson->deserialize(
+            EXPORTING
+              iv_content = lv_xtranslation
+            IMPORTING
+              ev_data    = ls_aff_data ).
+        CATCH cx_static_check INTO lx_exception.
+          zcx_abapgit_exception=>raise_with_text( lx_exception ).
+      ENDTRY.
+
+      FIND FIRST OCCURRENCE OF REGEX '^([\w]+).*\.i18n.([a-z]{2})\.'
+        IN ls_translation_file-filename SUBMATCHES lv_obj_name lv_langu.
+
+      lv_langu_sap1 = zcl_abapgit_convert=>language_sap2_to_sap1( to_upper( lv_langu ) ).
+
+      lcl_aff_helper=>set_descriptions_compo_subco( iv_clif_name  = to_upper( lv_obj_name )
+                                                    iv_language   = lv_langu_sap1
+                                                    is_properties = ls_aff_data-descriptions ).
+    ENDLOOP.
+
 
   ENDMETHOD.
 
