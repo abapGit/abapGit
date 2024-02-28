@@ -528,6 +528,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       " HERE: switch with feature flag between XML and JSON file format
       IF mv_aff_enabled = abap_true.
         ls_intf = read_json( ).
+        lcl_aff_metadata_handler=>deserialize_translation( mo_files ).
       ELSE.
         ls_intf = read_xml( io_xml ).
       ENDIF.
