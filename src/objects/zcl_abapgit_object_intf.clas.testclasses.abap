@@ -113,7 +113,6 @@ ENDCLASS.
 CLASS ltcl_unit_test DEFINITION FINAL FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
 
   PRIVATE SECTION.
-    CONSTANTS c_description TYPE string VALUE 'abc'.
     DATA:
       mo_cut        TYPE REF TO zif_abapgit_object,
       mo_files      TYPE REF TO zcl_abapgit_objects_files,
@@ -124,29 +123,24 @@ CLASS ltcl_unit_test DEFINITION FINAL FOR TESTING DURATION SHORT RISK LEVEL HARM
     METHODS:
       setup RAISING zcx_abapgit_exception,
 
-      get_json
+      get_xml
         RETURNING VALUE(rv_xml) TYPE string,
       get_source
         RETURNING VALUE(rt_source) TYPE rswsourcet,
 
-      deserializes FOR TESTING RAISING cx_static_check,
-      get_translation
-            RETURNING VALUE(ro_result) TYPE REF TO zcl_abapgit_properties_file.
+      deserializes FOR TESTING RAISING cx_static_check.
 ENDCLASS.
 
 CLASS ltcl_unit_test IMPLEMENTATION.
 
   METHOD setup.
-    DATA: lo_cut         TYPE REF TO zcl_abapgit_object_intf,
-          lv_data        TYPE string,
-          lv_xdata       TYPE xstring.
+    DATA lo_cut TYPE REF TO zcl_abapgit_object_intf.
 
-    ms_item-obj_name = 'zif_abapgit_test_intf'.
+    ms_item-obj_name = 'ZIF_ABAPGIT_TEST_INTF'.
     ms_item-obj_type = 'INTF'.
     ms_item-abap_language_version = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
-    mo_files = zcl_abapgit_objects_files=>new( ms_item ).
 
-    mo_files->add_i18n_file( get_translation( ) ).
+    mo_files = zcl_abapgit_objects_files=>new( ms_item ).
 
     CREATE OBJECT lo_cut
       EXPORTING
@@ -154,46 +148,27 @@ CLASS ltcl_unit_test IMPLEMENTATION.
         iv_language = 'E'
         io_files    = mo_files.
 
-    lv_data = get_json( ).
-    lv_xdata = zcl_abapgit_convert=>string_to_xstring( lv_data ).
-
-    mo_files->add_raw( iv_ext  = 'json'
-                        iv_data = lv_xdata ).
-
     CREATE OBJECT mo_log.
 
     CREATE OBJECT mo_object_fnc.
     lo_cut->mi_object_oriented_object_fct  = mo_object_fnc.
-    lo_cut->mv_aff_enabled = abap_true.
 
     mo_cut = lo_cut.
 
   ENDMETHOD.
 
-  METHOD get_translation.
-
-    DATA lt_translation TYPE string_table.
-    APPEND `$.header.description=Text` TO lt_translation.
-    APPEND `$.descriptions.methods[?(@.name=='METH1')].description=Sonne` TO lt_translation.
-    APPEND `$.descriptions.methods[?(@.name=='METH1')].parameters[?(@.name=='RESULT')].description=Mond`
-      TO lt_translation.
-
-    CREATE OBJECT ro_result
-      EXPORTING
-        iv_lang = 'DE'.
-
-    ro_result->push_text_pairs( lt_translation ).
-
-  ENDMETHOD.
-
-
-
   METHOD deserializes.
     DATA lo_xmlin TYPE REF TO zcl_abapgit_xml_input.
-    " DATA ls_expected_vseointerf TYPE vseointerf.
-    " DATA ls_expected_clskey TYPE seoclskey.
-    " DATA ls_expected_description TYPE seocompotx.
-    " DATA lt_expected_descriptions TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt.
+    DATA ls_expected_vseointerf TYPE vseointerf.
+    DATA ls_expected_clskey TYPE seoclskey.
+    DATA ls_expected_description TYPE seocompotx.
+    DATA lt_expected_descriptions TYPE zif_abapgit_oo_object_fnc=>ty_seocompotx_tt.
+    DATA ls_expected_docu_line TYPE tline.
+    DATA lt_expected_docu_lines TYPE tlinetab.
+
+    CREATE OBJECT lo_xmlin TYPE zcl_abapgit_xml_input
+      EXPORTING
+        iv_xml = get_xml( ).
 
     mo_files->add_abap( get_source( ) ).
 
@@ -204,70 +179,85 @@ CLASS ltcl_unit_test IMPLEMENTATION.
       ii_log       = mo_log
       iv_transport = 'XXX12345678' ).
 
+
     cl_abap_unit_assert=>assert_equals( exp = 'MY_PACKAGE'
                                         act = mo_object_fnc->mv_create_package ).
 
-*    ls_expected_vseointerf-clsname = 'ZIF_ABAPGIT_TEST_INTF'.
-*    ls_expected_vseointerf-langu = 'E'.
-*    ls_expected_vseointerf-descript = c_description.
-*    ls_expected_vseointerf-exposure = '2'.
-*    ls_expected_vseointerf-state = '1'.
-*    ls_expected_vseointerf-unicode = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
-*    " make the assert more meaningfull
-*    cl_abap_unit_assert=>assert_equals( exp = ls_expected_vseointerf-clsname
-*                                        act = mo_object_fnc->ms_create_vseointerf-clsname ).
-*    cl_abap_unit_assert=>assert_equals( exp = ls_expected_vseointerf-langu
-*                                        act = mo_object_fnc->ms_create_vseointerf-langu ).
-*    cl_abap_unit_assert=>assert_equals( exp = ls_expected_vseointerf-descript
-*                                        act = mo_object_fnc->ms_create_vseointerf-descript ).
-*    cl_abap_unit_assert=>assert_equals( exp = ls_expected_vseointerf-exposure
-*                                        act = mo_object_fnc->ms_create_vseointerf-exposure ).
-*    cl_abap_unit_assert=>assert_equals( exp = ls_expected_vseointerf-state
-*                                        act = mo_object_fnc->ms_create_vseointerf-state ).
-*    cl_abap_unit_assert=>assert_equals( exp = ls_expected_vseointerf-unicode
-*                                        act = mo_object_fnc->ms_create_vseointerf-unicode ).
-*
-*    ls_expected_clskey-clsname = 'ZIF_ABAPGIT_TEST_INTF'.
-*    cl_abap_unit_assert=>assert_equals( exp = ls_expected_clskey
-*                                        act = mo_object_fnc->ms_deserialize_key ).
-*
-*    cl_abap_unit_assert=>assert_equals( exp = ls_expected_clskey
-*                                        act = mo_object_fnc->ms_descriptions_key ).
-*    ls_expected_description-clsname = 'ZIF_ABAPGIT_TEST_INTF'.
-*    ls_expected_description-cmpname = 'ONE_METHOD'.
-*    ls_expected_description-langu = 'E'.
-*    ls_expected_description-descript = 'Sun'.
-*    APPEND ls_expected_description TO lt_expected_descriptions.
-*    cl_abap_unit_assert=>assert_equals( exp = lt_expected_descriptions
-*                                        act = mo_object_fnc->mt_descriptions ).
-*    cl_abap_unit_assert=>assert_equals( exp = ms_item
-*                                        act = mo_object_fnc->ms_activation_item ).
+    ls_expected_vseointerf-clsname = 'ZIF_ABAPGIT_TEST_INTF'.
+    ls_expected_vseointerf-langu = 'E'.
+    ls_expected_vseointerf-descript = 'Test interface for abap git'.
+    ls_expected_vseointerf-exposure = '2'.
+    ls_expected_vseointerf-state = '1'.
+    ls_expected_vseointerf-unicode = zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard.
+    cl_abap_unit_assert=>assert_equals( exp = ls_expected_vseointerf
+                                        act = mo_object_fnc->ms_create_vseointerf ).
 
+    ls_expected_clskey-clsname = 'ZIF_ABAPGIT_TEST_INTF'.
+    cl_abap_unit_assert=>assert_equals( exp = ls_expected_clskey
+                                        act = mo_object_fnc->ms_deserialize_key ).
+
+    cl_abap_unit_assert=>assert_equals( exp = ls_expected_clskey
+                                        act = mo_object_fnc->ms_descriptions_key ).
+    ls_expected_description-clsname = 'ZIF_ABAPGIT_TEST_INTF'.
+    ls_expected_description-cmpname = 'ONE_METHOD'.
+    ls_expected_description-langu = 'E'.
+    ls_expected_description-descript = 'Method One, one, one, one, ...'.
+    APPEND ls_expected_description TO lt_expected_descriptions.
+    cl_abap_unit_assert=>assert_equals( exp = lt_expected_descriptions
+                                        act = mo_object_fnc->mt_descriptions ).
+    cl_abap_unit_assert=>assert_equals( exp = ms_item
+                                        act = mo_object_fnc->ms_activation_item ).
+
+    ls_expected_docu_line-tdformat = 'U1'.
+    ls_expected_docu_line-tdline = '&MEANING&'.
+    APPEND ls_expected_docu_line TO lt_expected_docu_lines.
+    ls_expected_docu_line-tdformat = 'AS'.
+    ls_expected_docu_line-tdline = 'Interface for abap git unit tests.'.
+    APPEND ls_expected_docu_line TO lt_expected_docu_lines.
+    cl_abap_unit_assert=>assert_equals( exp = lt_expected_docu_lines
+                                        act = mo_object_fnc->mt_docu_lines ).
+    cl_abap_unit_assert=>assert_equals( exp = 'IF'
+                                        act = mo_object_fnc->mv_docu_id ).
+    cl_abap_unit_assert=>assert_equals( exp = 'E'
+                                        act = mo_object_fnc->mv_docu_langu ).
+    cl_abap_unit_assert=>assert_equals( exp = 'ZIF_ABAPGIT_TEST_INTF'
+                                        act = mo_object_fnc->mv_docu_object_name ).
   ENDMETHOD.
 
-  METHOD get_json.
+  METHOD get_xml.
     rv_xml =
-      `{` && cl_abap_char_utilities=>newline &&
-      `  "formatVersion": "1",` && cl_abap_char_utilities=>newline &&
-      `  "header": {` && cl_abap_char_utilities=>newline &&
-      `    "description": "` && c_description && `",` && cl_abap_char_utilities=>newline &&
-      `    "originalLanguage": "en"` && cl_abap_char_utilities=>newline &&
-      `  },` && cl_abap_char_utilities=>newline &&
-      `  "descriptions": {` && cl_abap_char_utilities=>newline &&
-      `    "methods": [` && cl_abap_char_utilities=>newline &&
-      `      {` && cl_abap_char_utilities=>newline &&
-      `        "name": "ONE_METHOD",` && cl_abap_char_utilities=>newline &&
-      `        "description": "Sun",` && cl_abap_char_utilities=>newline &&
-      `        "parameters": [` && cl_abap_char_utilities=>newline &&
-      `          {` && cl_abap_char_utilities=>newline &&
-      `            "name": "RV_VALUE",` && cl_abap_char_utilities=>newline &&
-      `            "description": "Moon"` && cl_abap_char_utilities=>newline &&
-      `          }` && cl_abap_char_utilities=>newline &&
-      `        ]` && cl_abap_char_utilities=>newline &&
-      `      }` && cl_abap_char_utilities=>newline &&
-      `    ]` && cl_abap_char_utilities=>newline &&
-      `  }` && cl_abap_char_utilities=>newline &&
-      `}` && cl_abap_char_utilities=>newline.
+    '<?xml version="1.0" encoding="UTF-8"?><abapGit version="v1.0.0">' &&
+    '  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">' &&
+    '    <asx:values>' &&
+    '      <VSEOINTERF>' &&
+    '        <CLSNAME>ZIF_ABAPGIT_TEST_INTF</CLSNAME>' &&
+    '        <LANGU>E</LANGU>' &&
+    '        <DESCRIPT>Test interface for abap git</DESCRIPT>' &&
+    '        <EXPOSURE>2</EXPOSURE>' &&
+    '        <STATE>1</STATE>' &&
+    '        <UNICODE>' && zif_abapgit_aff_types_v1=>co_abap_language_version_src-standard && '</UNICODE>' &&
+    '      </VSEOINTERF>' &&
+    '      <DESCRIPTIONS>' &&
+    '        <SEOCOMPOTX>' &&
+    '          <CLSNAME>ZIF_ABAPGIT_TEST_INTF</CLSNAME>' &&
+    '          <CMPNAME>ONE_METHOD</CMPNAME>' &&
+    '          <LANGU>E</LANGU>' &&
+    '          <DESCRIPT>Method One, one, one, one, ...</DESCRIPT>' &&
+    '        </SEOCOMPOTX>' &&
+    '      </DESCRIPTIONS>' &&
+    '      <LINES>' &&
+    '        <TLINE>' &&
+    '          <TDFORMAT>U1</TDFORMAT>' &&
+    '          <TDLINE>&amp;MEANING&amp;</TDLINE>' &&
+    '        </TLINE>' &&
+    '        <TLINE>' &&
+    '          <TDFORMAT>AS</TDFORMAT>' &&
+    '          <TDLINE>Interface for abap git unit tests.</TDLINE>' &&
+    '        </TLINE>' &&
+    '      </LINES>' &&
+    '    </asx:values>' &&
+    '  </asx:abap>' &&
+    '</abapGit>'.
   ENDMETHOD.
 
   METHOD get_source.
