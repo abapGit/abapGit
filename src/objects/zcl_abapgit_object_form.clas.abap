@@ -317,12 +317,19 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
+    DATA lv_lang TYPE sy-langu.
+
+* this will try to read the FORM in language EN
+* if it exists in other language, then "found" will be set to abap_false
+* so check the "olanguage" to see if the FORM exists
     CALL FUNCTION 'READ_FORM'
       EXPORTING
         form             = mv_form_name
         read_only_header = abap_true
       IMPORTING
-        found            = rv_bool.
+        olanguage        = lv_lang.
+
+    rv_bool = boolc( lv_lang IS NOT INITIAL ).
 
   ENDMETHOD.
 
