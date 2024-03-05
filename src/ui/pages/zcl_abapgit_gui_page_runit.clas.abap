@@ -175,9 +175,9 @@ CLASS zcl_abapgit_gui_page_runit IMPLEMENTATION.
     IF rv_text IS INITIAL.
       rv_text = |<span class="boxed green-filled-set">PASSED</span>|.
       IF lv_runtime > 100.
-        rv_text = rv_text && | <span class="red">{ lv_msec }</span>|.
+        rv_text = rv_text && | <span class="warning">{ lv_msec }</span>|.
       ELSE.
-        rv_text = rv_text && | { lv_msec }|.
+        rv_text = rv_text && | <span class="success">{ lv_msec }</span>|.
       ENDIF.
     ELSE.
       rv_text = |<span class="boxed red-filled-set">{ rv_text }</span>|.
