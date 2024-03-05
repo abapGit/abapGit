@@ -698,7 +698,6 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
   METHOD deserialize_translation.
     DATA: lt_data             TYPE string_table,
           lv_data             TYPE string,
-          lv_xdata_with_bom   TYPE zif_abapgit_git_definitions=>ty_file-data,
           lv_translation      TYPE string,
           lv_xtranslation     TYPE xstring,
           lo_ajson            TYPE REF TO zcl_abapgit_json_handler,
@@ -715,10 +714,6 @@ CLASS lcl_aff_metadata_handler IMPLEMENTATION.
     CREATE OBJECT lo_json_path.
 
     LOOP AT lt_translation_file INTO ls_translation_file.
-
-      " remove BOM
-      lv_xdata_with_bom = ls_translation_file-data.
-      ls_translation_file-data = lv_xdata_with_bom+3.
 
       lv_data = zcl_abapgit_convert=>xstring_to_string_utf8( ls_translation_file-data ).
       SPLIT lv_data AT cl_abap_char_utilities=>newline INTO TABLE lt_data.
