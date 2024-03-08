@@ -350,7 +350,7 @@ CLASS lcl_json_path IMPLEMENTATION.
           lv_json_path              TYPE string,
           lo_deserialization_result TYPE REF TO zif_abapgit_ajson,
           lx_ajson                  TYPE REF TO zcx_abapgit_ajson_error,
-          rv_result_as_string       TYPE string.
+          lv_result_as_string       TYPE string.
 
     TRY.
         lo_merged = zcl_abapgit_ajson=>parse( `` ).
@@ -359,7 +359,7 @@ CLASS lcl_json_path IMPLEMENTATION.
     ENDTRY.
 
     LOOP AT it_json_path INTO lv_json_path.
-      IF is_comment_or_empty_line( lv_json_path ) = abap_true.
+      IF is_comment_or_empty_line( lv_json_path ).
         CONTINUE.
       ENDIF.
 
@@ -380,8 +380,8 @@ CLASS lcl_json_path IMPLEMENTATION.
     ENDLOOP.
 
     TRY.
-        rv_result_as_string = lo_merged->stringify( 2 ).
-        rv_result = zcl_abapgit_convert=>string_to_xstring( rv_result_as_string ).
+        lv_result_as_string = lo_merged->stringify( 2 ).
+        rv_result = zcl_abapgit_convert=>string_to_xstring( lv_result_as_string ).
       CATCH zcx_abapgit_ajson_error INTO lx_ajson.
         zcx_abapgit_exception=>raise_with_text( lx_ajson ).
     ENDTRY.
@@ -396,13 +396,13 @@ CLASS lcl_json_path IMPLEMENTATION.
     ENDIF.
 
     FIND REGEX `^!` IN iv_line.
-    IF sy-subrc = 0 .
+    IF sy-subrc = 0.
       rv_result = abap_true.
       RETURN.
     ENDIF.
 
     FIND REGEX `^#` IN iv_line.
-    IF sy-subrc = 0 .
+    IF sy-subrc = 0.
       rv_result = abap_true.
       RETURN.
     ENDIF.
