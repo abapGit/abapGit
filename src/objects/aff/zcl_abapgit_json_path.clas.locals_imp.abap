@@ -360,8 +360,8 @@ CLASS lcl_json_path IMPLEMENTATION.
 
     LOOP AT it_json_path INTO lv_json_path.
       IF is_comment_or_empty_line( lv_json_path ).
-        continue.
-      endif.
+        CONTINUE.
+      ENDIF.
 
 
       TRY.
@@ -390,22 +390,22 @@ CLASS lcl_json_path IMPLEMENTATION.
 
   METHOD is_comment_or_empty_line.
 
-    IF iv_line is initial.
+    IF iv_line IS INITIAL.
       rv_result = abap_true.
-      return.
-    endif.
+      RETURN.
+    ENDIF.
 
     FIND REGEX `^!` IN iv_line.
-    if sy-subrc = 0 .
+    IF sy-subrc = 0 .
       rv_result = abap_true.
-      return.
-    endif.
+      RETURN.
+    ENDIF.
 
     FIND REGEX `^#` IN iv_line.
-    if sy-subrc = 0 .
+    IF sy-subrc = 0 .
       rv_result = abap_true.
-      return.
-    endif.
+      RETURN.
+    ENDIF.
 
   ENDMETHOD.
 
