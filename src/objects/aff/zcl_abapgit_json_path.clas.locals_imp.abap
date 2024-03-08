@@ -61,6 +61,9 @@ CLASS lcl_json_path DEFINITION CREATE PUBLIC.
     CLASS-METHODS: is_primitiv
       IMPORTING iv_string        TYPE string
       RETURNING VALUE(rv_result) TYPE abap_bool.
+    CLASS-METHODS: is_comment_or_empty_line
+      IMPORTING iv_line          TYPE string
+      RETURNING VALUE(rv_result) TYPE abap_bool.
 
 ENDCLASS.
 
@@ -356,6 +359,10 @@ CLASS lcl_json_path IMPLEMENTATION.
     ENDTRY.
 
     LOOP AT it_json_path INTO lv_json_path.
+      IF is_comment_or_empty_line( lv_json_path ).
+        continue.
+      endif.
+
 
       TRY.
           lo_deserialization_result = to_json( lv_json_path ).
@@ -378,6 +385,28 @@ CLASS lcl_json_path IMPLEMENTATION.
       CATCH zcx_abapgit_ajson_error INTO lx_ajson.
         zcx_abapgit_exception=>raise_with_text( lx_ajson ).
     ENDTRY.
+  ENDMETHOD.
+
+
+  METHOD is_comment_or_empty_line.
+
+    IF iv_line is initial.
+      rv_result = abap_true.
+      return.
+    endif.
+
+    FIND REGEX `^!` IN iv_line.
+    if sy-subrc = 0 .
+      rv_result = abap_true.
+      return.
+    endif.
+
+    FIND REGEX `^#` IN iv_line.
+    if sy-subrc = 0 .
+      rv_result = abap_true.
+      return.
+    endif.
+
   ENDMETHOD.
 
 ENDCLASS.

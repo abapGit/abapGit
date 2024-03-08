@@ -11,7 +11,8 @@ CLASS ltcl_json_path DEFINITION FINAL FOR TESTING
       deserialize_nested_arrays FOR TESTING RAISING cx_static_check,
       flat_structure FOR TESTING RAISING cx_static_check,
       array          FOR TESTING RAISING cx_static_check,
-      array_nested   FOR TESTING RAISING cx_static_check.
+      array_nested   FOR TESTING RAISING cx_static_check,
+      deserialize_with_comments FOR TESTING RAISING cx_static_check.
     METHODS:
       serialize
         IMPORTING is_data          TYPE zif_abapgit_aff_intf_v1=>ty_main
@@ -197,6 +198,27 @@ CLASS ltcl_json_path IMPLEMENTATION.
       iv_json_b = ` { "header": { "description": "Text" } } ` ).
 
     cl_abap_unit_assert=>assert_true( lv_is_equal ).
+
+  ENDMETHOD.
+
+  METHOD deserialize_with_comments.
+    DATA: lt_file     TYPE string_table,
+          lo_cut      TYPE REF TO zcl_abapgit_json_path,
+          lv_xact     TYPE xstring,
+
+          lv_act      TYPE string,
+          lv_is_equal TYPE abap_bool.
+
+    APPEND `# comment = abc` TO lt_file.
+    APPEND `!this is a comment [abc]` TO lt_file.
+    APPEND `` TO lt_file.
+
+    CREATE OBJECT lo_cut.
+    lv_xact = lo_cut->deserialize( lt_file ).
+    lv_act = zcl_abapgit_convert=>xstring_to_string_utf8( lv_xact ).
+
+
+    cl_abap_unit_assert=>assert_initial( lv_act ).
 
   ENDMETHOD.
 
