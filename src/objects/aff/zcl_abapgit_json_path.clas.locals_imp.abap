@@ -359,7 +359,7 @@ CLASS lcl_json_path IMPLEMENTATION.
     ENDTRY.
 
     LOOP AT it_json_path INTO lv_json_path.
-      IF is_comment_or_empty_line( lv_json_path ).
+      IF is_comment_or_empty_line( lv_json_path ) = abap_true.
         CONTINUE.
       ENDIF.
 
