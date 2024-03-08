@@ -13,7 +13,7 @@ CLASS lcl_json_path DEFINITION CREATE PUBLIC.
 
     CLASS-METHODS: deserialize
       IMPORTING it_json_path     TYPE string_table
-      RETURNING VALUE(rv_result) TYPE string
+      RETURNING VALUE(rv_result) TYPE xstring
       RAISING   zcx_abapgit_exception.
 
   PROTECTED SECTION.
@@ -346,7 +346,8 @@ CLASS lcl_json_path IMPLEMENTATION.
     DATA: lo_merged                 TYPE REF TO zif_abapgit_ajson,
           lv_json_path              TYPE string,
           lo_deserialization_result TYPE REF TO zif_abapgit_ajson,
-          lx_ajson                  TYPE REF TO zcx_abapgit_ajson_error.
+          lx_ajson                  TYPE REF TO zcx_abapgit_ajson_error,
+          rv_result_as_string       TYPE string.
 
     TRY.
         lo_merged = zcl_abapgit_ajson=>parse( `` ).
@@ -372,7 +373,8 @@ CLASS lcl_json_path IMPLEMENTATION.
     ENDLOOP.
 
     TRY.
-        rv_result = lo_merged->stringify( 2 ).
+        rv_result_as_string = lo_merged->stringify( 2 ).
+        rv_result = zcl_abapgit_convert=>string_to_xstring( rv_result_as_string ).
       CATCH zcx_abapgit_ajson_error INTO lx_ajson.
         zcx_abapgit_exception=>raise_with_text( lx_ajson ).
     ENDTRY.

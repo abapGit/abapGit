@@ -6,7 +6,7 @@ CLASS zcl_abapgit_json_path DEFINITION PUBLIC CREATE PUBLIC.
       RAISING   zcx_abapgit_exception.
     METHODS: deserialize
       IMPORTING it_json_path     TYPE string_table
-      RETURNING VALUE(rv_result) TYPE string
+      RETURNING VALUE(rv_result) TYPE xstring
       RAISING   zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
