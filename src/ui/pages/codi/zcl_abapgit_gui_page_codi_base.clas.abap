@@ -41,6 +41,14 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
       IMPORTING
         !ii_html   TYPE REF TO zif_abapgit_html
         !is_result TYPE zif_abapgit_code_inspector=>ty_result .
+    METHODS explain_include
+      IMPORTING
+        !is_result TYPE zif_abapgit_code_inspector=>ty_result
+      RETURNING
+        VALUE(rv_txt) TYPE string.
+    METHODS render_limit_warning
+      IMPORTING
+        !ii_html   TYPE REF TO zif_abapgit_html.
     METHODS build_nav_link
       IMPORTING
         !is_result     TYPE zif_abapgit_code_inspector=>ty_result
@@ -59,17 +67,18 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
   PRIVATE SECTION.
     CONSTANTS c_object_separator TYPE c LENGTH 1 VALUE '|'.
     CONSTANTS c_ci_sig TYPE string VALUE 'cinav:'.
+    CONSTANTS c_limit TYPE i VALUE 500.
+
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
 
 
   METHOD build_base_menu.
 
-    DATA:
-      lo_sort_menu TYPE REF TO zcl_abapgit_html_toolbar.
+    DATA lo_sort_menu TYPE REF TO zcl_abapgit_html_toolbar.
 
     CREATE OBJECT lo_sort_menu.
 
@@ -85,11 +94,13 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
 
     CREATE OBJECT ro_menu.
 
-    ro_menu->add( iv_txt = 'Sort'
-                  io_sub = lo_sort_menu ).
+    ro_menu->add(
+      iv_txt = 'Sort'
+      io_sub = lo_sort_menu ).
 
-    ro_menu->add( iv_txt = 'Re-Run'
-                  iv_act = c_actions-rerun ).
+    ro_menu->add(
+      iv_txt = 'Re-Run'
+      iv_act = c_actions-rerun ).
 
   ENDMETHOD.
 
@@ -100,6 +111,50 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
       |{ is_result-objtype }{ is_result-objname }| &&
       |{ c_object_separator }{ is_result-sobjtype }{ is_result-sobjname }| &&
       |{ c_object_separator }{ is_result-line }|.
+
+  ENDMETHOD.
+
+
+  METHOD explain_include.
+
+    DATA ls_mtdkey TYPE seocpdkey.
+
+    TRY.
+        CASE is_result-sobjname+30(*).
+          WHEN 'CCDEF'.
+            rv_txt = |CLAS { is_result-objname } : Local Definitions|.
+          WHEN 'CCIMP'.
+            rv_txt = |CLAS { is_result-objname } : Local Implementations|.
+          WHEN 'CCMAC'.
+            rv_txt = |CLAS { is_result-objname } : Macros|.
+          WHEN 'CCAU'.
+            rv_txt = |CLAS { is_result-objname } : Test Classes|.
+          WHEN 'CU'.
+            rv_txt = |CLAS { is_result-objname } : Public Section|.
+          WHEN 'CO'.
+            rv_txt = |CLAS { is_result-objname } : Protected Section|.
+          WHEN 'CI'.
+            rv_txt = |CLAS { is_result-objname } : Private Section|.
+          WHEN OTHERS.
+            cl_oo_classname_service=>get_method_by_include(
+              EXPORTING
+                incname             = is_result-sobjname
+              RECEIVING
+                mtdkey              = ls_mtdkey
+              EXCEPTIONS
+                class_not_existing  = 1
+                method_not_existing = 2
+                OTHERS              = 3 ).
+            IF sy-subrc = 0.
+              rv_txt = |CLAS { ls_mtdkey-clsname }->{ ls_mtdkey-cpdname }|.
+            ELSE.
+              rv_txt = |{ is_result-objtype } { is_result-sobjname }|.
+            ENDIF.
+
+        ENDCASE.
+      CATCH cx_root.
+        rv_txt = ''. "use default below
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -186,9 +241,10 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
           lv_line_number_s TYPE string,
           lv_line_number   TYPE i.
 
-    lv_temp = replace( val   = ii_event->mv_action
-                       regex = |^{ c_ci_sig }|
-                       with  = `` ).
+    lv_temp = replace(
+      val   = ii_event->mv_action
+      regex = |^{ c_ci_sig }|
+      with  = `` ).
 
     IF lv_temp <> ii_event->mv_action. " CI navigation request detected
 
@@ -228,26 +284,30 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
   ENDMETHOD.
 
 
+  method render_limit_warning.
+    ii_html->add( '<div class="dummydiv warning">' ).
+    ii_html->add( ii_html->icon( 'exclamation-triangle' ) ).
+    ii_html->add( |Only first { c_limit } findings shown in list!| ).
+    ii_html->add( '</div>' ).
+  endmethod.
+
+
   METHOD render_result.
 
-    CONSTANTS: lc_limit TYPE i VALUE 500.
-    FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_result.
+    FIELD-SYMBOLS <ls_result> LIKE LINE OF it_result.
 
     ii_html->add( '<div class="ci-result">' ).
 
-    LOOP AT it_result ASSIGNING <ls_result> TO lc_limit.
+    LOOP AT it_result ASSIGNING <ls_result> TO c_limit.
       render_result_line(
-        ii_html = ii_html
+        ii_html   = ii_html
         is_result = <ls_result> ).
     ENDLOOP.
 
     ii_html->add( '</div>' ).
 
-    IF lines( it_result ) > lc_limit.
-      ii_html->add( '<div class="dummydiv warning">' ).
-      ii_html->add( ii_html->icon( 'exclamation-triangle' ) ).
-      ii_html->add( |Only first { lc_limit } findings shown in list!| ).
-      ii_html->add( '</div>' ).
+    IF lines( it_result ) > c_limit.
+      render_limit_warning( ii_html ).
     ENDIF.
 
   ENDMETHOD.
@@ -258,8 +318,7 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
     DATA: lv_class   TYPE string,
           lv_obj_txt TYPE string,
           lv_msg     TYPE string,
-          lv_line    TYPE i,
-          ls_mtdkey  TYPE seocpdkey.
+          lv_line    TYPE i.
 
     CASE is_result-kind.
       WHEN 'E'.
@@ -270,8 +329,9 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
         lv_class = 'ci-info'.
     ENDCASE.
 
-    lv_msg = escape( val = is_result-text
-                     format = cl_abap_format=>e_html_attr ).
+    lv_msg = escape(
+      val    = is_result-text
+      format = cl_abap_format=>e_html_attr ).
 
     IF is_result-sobjname IS INITIAL OR
        ( is_result-sobjname = is_result-objname AND
@@ -279,47 +339,14 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
       lv_obj_txt = |{ is_result-objtype } { is_result-objname }|.
     ELSEIF is_result-objtype = 'CLAS' OR
          ( is_result-objtype = 'PROG' AND NOT is_result-sobjname+30(*) IS INITIAL ).
-      TRY.
-          CASE is_result-sobjname+30(*).
-            WHEN 'CCDEF'.
-              lv_obj_txt = |CLAS { is_result-objname } : Local Definitions|.
-            WHEN 'CCIMP'.
-              lv_obj_txt = |CLAS { is_result-objname } : Local Implementations|.
-            WHEN 'CCMAC'.
-              lv_obj_txt = |CLAS { is_result-objname } : Macros|.
-            WHEN 'CCAU'.
-              lv_obj_txt = |CLAS { is_result-objname } : Test Classes|.
-            WHEN 'CU'.
-              lv_obj_txt = |CLAS { is_result-objname } : Public Section|.
-            WHEN 'CO'.
-              lv_obj_txt = |CLAS { is_result-objname } : Protected Section|.
-            WHEN 'CI'.
-              lv_obj_txt = |CLAS { is_result-objname } : Private Section|.
-            WHEN OTHERS.
-              cl_oo_classname_service=>get_method_by_include(
-                EXPORTING
-                  incname             = is_result-sobjname
-                RECEIVING
-                  mtdkey              = ls_mtdkey
-                EXCEPTIONS
-                  class_not_existing  = 1
-                  method_not_existing = 2
-                  OTHERS              = 3 ).
-              IF sy-subrc = 0.
-                lv_obj_txt = |CLAS { ls_mtdkey-clsname }->{ ls_mtdkey-cpdname }|.
-              ELSE.
-                lv_obj_txt = |{ is_result-objtype } { is_result-sobjname }|.
-              ENDIF.
-
-          ENDCASE.
-        CATCH cx_root.
-          lv_obj_txt = ''. "use default below
-      ENDTRY.
+      lv_obj_txt = explain_include( is_result ).
     ENDIF.
+
     IF lv_obj_txt IS INITIAL.
       lv_obj_txt = |{ is_result-objtype } { is_result-objname } &gt; { is_result-sobjtype } { is_result-sobjname }|.
     ENDIF.
-    lv_line = is_result-line. " convert from numc to integer
+
+    lv_line    = is_result-line. " convert from numc to integer
     lv_obj_txt = |{ lv_obj_txt } [ @{ lv_line } ]|.
 
     ii_html->add( |<li class="{ lv_class }">| ).
@@ -335,12 +362,11 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
 
   METHOD render_variant.
 
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    ri_html->add( '<div class="ci-head">' ).
-    ri_html->add( |Code inspector check variant <span class="ci-variant">{ iv_variant }</span>|
-               && | completed ({ iv_summary })| ).
-    ri_html->add( `</div>` ).
+    ri_html = zcl_abapgit_html=>create( )->div(
+      iv_class = 'ci-head'
+      iv_content =
+        |Code inspector check variant <span class="ci-variant">{
+        iv_variant }</span> completed ({ iv_summary })| ).
 
   ENDMETHOD.
 ENDCLASS.

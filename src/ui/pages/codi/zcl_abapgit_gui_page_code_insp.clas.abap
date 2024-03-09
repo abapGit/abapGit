@@ -7,6 +7,7 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION
   PUBLIC SECTION.
 
     INTERFACES:
+      zif_abapgit_gui_page_title,
       zif_abapgit_gui_event_handler,
       zif_abapgit_gui_hotkeys,
       zif_abapgit_gui_menu_provider,
@@ -36,9 +37,8 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    DATA:
-      mo_stage         TYPE REF TO zcl_abapgit_stage,
-      mv_check_variant TYPE sci_chkv.
+    DATA mo_stage         TYPE REF TO zcl_abapgit_stage.
+    DATA mv_check_variant TYPE sci_chkv.
 
     METHODS:
       run_code_inspector
@@ -62,11 +62,20 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION
       determine_check_variant
         RAISING
           zcx_abapgit_exception.
+
+    METHODS status
+      RETURNING
+        VALUE(rv_status) TYPE zif_abapgit_definitions=>ty_sci_result.
+
+    METHODS render_success
+      IMPORTING
+        ii_html TYPE REF TO zif_abapgit_html.
+
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
 
   METHOD ask_user_for_check_variant.
@@ -81,6 +90,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
 
   METHOD constructor.
+
     super->constructor( ).
     mo_repo = io_repo.
     mo_stage = io_stage.
@@ -91,6 +101,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
     IF mt_result IS INITIAL AND iv_raise_when_no_results = abap_true.
       zcx_abapgit_exception=>raise( 'No results' ).
     ENDIF.
+
   ENDMETHOD.
 
 
@@ -105,10 +116,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
         iv_check_variant         = iv_check_variant
         iv_raise_when_no_results = iv_raise_when_no_results.
 
-    ri_page = zcl_abapgit_gui_page_hoc=>create(
-      iv_page_title         = 'Code Inspector'
-      ii_page_menu_provider = lo_component
-      ii_child_component    = lo_component ).
+    ri_page = zcl_abapgit_gui_page_hoc=>create( lo_component ).
 
   ENDMETHOD.
 
@@ -131,7 +139,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
   METHOD has_inspection_errors.
 
     READ TABLE mt_result TRANSPORTING NO FIELDS
-                         WITH KEY kind = 'E'.
+      WITH KEY kind = 'E'.
     rv_has_inspection_errors = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
@@ -139,15 +147,25 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
   METHOD is_stage_allowed.
 
-    rv_is_stage_allowed = boolc( NOT ( mo_repo->get_local_settings( )-block_commit = abap_true
-                                           AND has_inspection_errors( ) = abap_true ) ).
+    rv_is_stage_allowed = boolc( NOT (
+      mo_repo->get_local_settings( )-block_commit = abap_true AND has_inspection_errors( ) = abap_true ) ).
+
+  ENDMETHOD.
+
+
+  METHOD render_success.
+
+    ii_html->add( '<div class="dummydiv success">' ).
+    ii_html->add( ii_html->icon( 'check' ) ).
+    ii_html->add( 'No code inspector findings' ).
+    ii_html->add( '</div>' ).
 
   ENDMETHOD.
 
 
   METHOD run_code_inspector.
 
-    DATA: li_code_inspector TYPE REF TO zif_abapgit_code_inspector.
+    DATA li_code_inspector TYPE REF TO zif_abapgit_code_inspector.
 
     li_code_inspector = zcl_abapgit_factory=>get_code_inspector( mo_repo->get_package( ) ).
 
@@ -162,10 +180,26 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD status.
+
+    READ TABLE mt_result TRANSPORTING NO FIELDS WITH KEY kind = 'E'.
+    IF sy-subrc = 0.
+      rv_status = zif_abapgit_definitions=>c_sci_result-failed.
+    ELSE.
+      READ TABLE mt_result TRANSPORTING NO FIELDS WITH KEY kind = 'W'.
+      IF sy-subrc = 0.
+        rv_status = zif_abapgit_definitions=>c_sci_result-warning.
+      ELSE.
+        rv_status = zif_abapgit_definitions=>c_sci_result-passed.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
-    DATA lv_sci_result TYPE zif_abapgit_definitions=>ty_sci_result.
 
     CASE ii_event->mv_action.
       WHEN c_actions-stage.
@@ -173,24 +207,10 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
         lo_repo_online ?= mo_repo.
 
         IF is_stage_allowed( ) = abap_true.
-          " we need to refresh as the source might have changed
-          lo_repo_online->refresh( ).
-
-          READ TABLE mt_result TRANSPORTING NO FIELDS WITH KEY kind = 'E'.
-          IF sy-subrc = 0.
-            lv_sci_result = zif_abapgit_definitions=>c_sci_result-failed.
-          ELSE.
-            READ TABLE mt_result TRANSPORTING NO FIELDS WITH KEY kind = 'W'.
-            IF sy-subrc = 0.
-              lv_sci_result = zif_abapgit_definitions=>c_sci_result-warning.
-            ELSE.
-              lv_sci_result = zif_abapgit_definitions=>c_sci_result-passed.
-            ENDIF.
-          ENDIF.
 
           rs_handled-page   = zcl_abapgit_gui_page_stage=>create(
             io_repo       = lo_repo_online
-            iv_sci_result = lv_sci_result ).
+            iv_sci_result = status( ) ).
 
           rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
@@ -268,15 +288,17 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
       " Staging info already available, we can directly
       " offer to commit
 
-      ro_toolbar->add( iv_txt = 'Commit'
-                       iv_act = c_actions-commit
-                       iv_opt = lv_opt ).
+      ro_toolbar->add(
+        iv_txt = 'Commit'
+        iv_act = c_actions-commit
+        iv_opt = lv_opt ).
 
     ELSE.
 
-      ro_toolbar->add( iv_txt = 'Stage'
-                       iv_act = c_actions-stage
-                       iv_opt = lv_opt ).
+      ro_toolbar->add(
+        iv_txt = 'Stage'
+        iv_act = c_actions-stage
+        iv_opt = lv_opt ).
 
     ENDIF.
 
@@ -287,16 +309,22 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_gui_page_title~get_page_title.
+    rv_title = 'Code Inspector'.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_renderable~render.
 
     register_handlers( ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ri_html->add( `<div class="repo">` ).
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( io_repo        = mo_repo
-                                                              iv_show_commit = abap_false ) ).
-    ri_html->add( `</div>` ).
+    ri_html->div(
+      iv_class = 'repo'
+      ii_content = zcl_abapgit_gui_chunk_lib=>render_repo_top(
+        io_repo        = mo_repo
+        iv_show_commit = abap_false ) ).
 
     IF mv_check_variant IS INITIAL.
       ri_html->add( zcl_abapgit_gui_chunk_lib=>render_error( iv_error = 'No check variant supplied.' ) ).
@@ -308,10 +336,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
       iv_summary = mv_summary ) ).
 
     IF lines( mt_result ) = 0.
-      ri_html->add( '<div class="dummydiv success">' ).
-      ri_html->add( ri_html->icon( 'check' ) ).
-      ri_html->add( 'No code inspector findings' ).
-      ri_html->add( '</div>' ).
+      render_success( ri_html ).
     ELSE.
       render_result(
         ii_html   = ri_html
