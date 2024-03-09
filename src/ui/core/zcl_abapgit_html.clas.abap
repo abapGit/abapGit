@@ -77,7 +77,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_html IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
 
   METHOD checkbox.
@@ -459,6 +459,17 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
 
     ri_self = me.
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_html~div.
+    zif_abapgit_html~wrap(
+      iv_tag   = 'div'
+      iv_content = iv_content
+      ii_content = ii_content
+      iv_id    = iv_id
+      iv_class = iv_class ).
+    ri_self = me.
   ENDMETHOD.
 
 

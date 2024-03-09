@@ -131,4 +131,14 @@ INTERFACE zif_abapgit_html PUBLIC.
     RETURNING
       VALUE(ri_self) TYPE REF TO zif_abapgit_html.
 
+  METHODS div
+    IMPORTING
+      !iv_content TYPE string OPTIONAL
+      !ii_content TYPE REF TO zif_abapgit_html OPTIONAL
+      !iv_id      TYPE string OPTIONAL
+      !iv_class   TYPE string OPTIONAL
+      PREFERRED PARAMETER iv_content
+    RETURNING
+      VALUE(ri_self) TYPE REF TO zif_abapgit_html.
+
 ENDINTERFACE.
