@@ -3,6 +3,7 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
   INHERITING FROM zcl_abapgit_gui_component.
 
   PUBLIC SECTION.
+    INTERFACES zif_abapgit_html_table.
 
   PROTECTED SECTION.
 
@@ -36,19 +37,22 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
     METHODS render_result
       IMPORTING
         !ii_html   TYPE REF TO zif_abapgit_html
-        !it_result TYPE zif_abapgit_code_inspector=>ty_results .
+        !it_result TYPE zif_abapgit_code_inspector=>ty_results
+      RAISING
+        zcx_abapgit_exception.
     METHODS render_result_line
       IMPORTING
-        !ii_html   TYPE REF TO zif_abapgit_html
-        !is_result TYPE zif_abapgit_code_inspector=>ty_result .
+        is_result      TYPE zif_abapgit_code_inspector=>ty_result
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html.
     METHODS explain_include
       IMPORTING
-        !is_result TYPE zif_abapgit_code_inspector=>ty_result
+        !is_result    TYPE zif_abapgit_code_inspector=>ty_result
       RETURNING
         VALUE(rv_txt) TYPE string.
     METHODS render_limit_warning
       IMPORTING
-        !ii_html   TYPE REF TO zif_abapgit_html.
+        !ii_html TYPE REF TO zif_abapgit_html.
     METHODS build_nav_link
       IMPORTING
         !is_result     TYPE zif_abapgit_code_inspector=>ty_result
@@ -284,27 +288,39 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  method render_limit_warning.
+  METHOD render_limit_warning.
     ii_html->add( '<div class="dummydiv warning">' ).
     ii_html->add( ii_html->icon( 'exclamation-triangle' ) ).
     ii_html->add( |Only first { c_limit } findings shown in list!| ).
     ii_html->add( '</div>' ).
-  endmethod.
+  ENDMETHOD.
 
 
   METHOD render_result.
 
     FIELD-SYMBOLS <ls_result> LIKE LINE OF it_result.
 
-    ii_html->add( '<div class="ci-result">' ).
+    ii_html->div(
+      iv_class   = 'ci-result'
+      ii_content = zcl_abapgit_html_table=>create( me
+      )->define_column(
+        iv_column_id = 'text'
+        iv_column_title = 'Text'
+*      )->define_column(
+*        iv_column_id = 'value'
+*        iv_column_title = 'Key'
+*      )->define_column(
+*        iv_column_id = 'expl'
+*        iv_column_title = 'Data'
+*      )->define_column( 'cmd'
+      )->render( it_result ) ).
 
-    LOOP AT it_result ASSIGNING <ls_result> TO c_limit.
-      render_result_line(
-        ii_html   = ii_html
-        is_result = <ls_result> ).
-    ENDLOOP.
-
-    ii_html->add( '</div>' ).
+    " TODO
+    " - columns
+    " - status
+    " - sorting
+    " - filter
+    " - search
 
     IF lines( it_result ) > c_limit.
       render_limit_warning( ii_html ).
@@ -349,13 +365,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
     lv_line    = is_result-line. " convert from numc to integer
     lv_obj_txt = |{ lv_obj_txt } [ @{ lv_line } ]|.
 
-    ii_html->add( |<li class="{ lv_class }">| ).
-    ii_html->add_a(
-      iv_txt = lv_obj_txt
-      iv_act = build_nav_link( is_result )
-      iv_typ = zif_abapgit_html=>c_action_type-sapevent ).
-    ii_html->add( |<span>{ lv_msg }</span>| ).
-    ii_html->add( '</li>' ).
+    ri_html = zcl_abapgit_html=>create(
+      )->add( |<li class="{ lv_class }">|
+      )->add_a(
+        iv_txt = lv_obj_txt
+        iv_act = build_nav_link( is_result )
+        iv_typ = zif_abapgit_html=>c_action_type-sapevent
+      )->add( |<span>{ lv_msg }</span>|
+      )->add( '</li>' ).
 
   ENDMETHOD.
 
@@ -367,6 +384,21 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
       iv_content =
         |Code inspector check variant <span class="ci-variant">{
         iv_variant }</span> completed ({ iv_summary })| ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_html_table~get_row_attrs.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_html_table~render_cell.
+
+    FIELD-SYMBOLS <ls_item> LIKE LINE OF mt_result.
+
+    ASSIGN is_row TO <ls_item>.
+
+    rs_render-html = render_result_line( <ls_item> ).
 
   ENDMETHOD.
 ENDCLASS.
