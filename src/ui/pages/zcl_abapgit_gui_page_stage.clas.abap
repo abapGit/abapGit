@@ -135,7 +135,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
 
   METHOD check_selected.
@@ -183,6 +183,9 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     DATA lv_ts TYPE timestamp.
 
     super->constructor( ).
+
+    " force refresh on stage, to make sure the latest local and remote files are used
+    io_repo->refresh( ).
 
     mo_repo               = io_repo.
     mv_seed               = iv_seed.

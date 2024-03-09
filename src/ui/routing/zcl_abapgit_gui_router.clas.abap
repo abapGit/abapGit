@@ -142,7 +142,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_router IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
 
   METHOD abapgit_services_actions.
@@ -402,9 +402,6 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     ENDIF.
 
     IF ri_page IS INITIAL.
-      " force refresh on stage, to make sure the latest local and remote files are used
-      lo_repo->refresh( ).
-
       ri_page = zcl_abapgit_gui_page_stage=>create(
         io_repo       = lo_repo
         iv_seed       = lv_seed
