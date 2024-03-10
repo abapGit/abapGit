@@ -26,6 +26,7 @@ CLASS zcl_abapgit_html_table DEFINITION
       IMPORTING
         !iv_id         TYPE csequence OPTIONAL
         !iv_css_class  TYPE csequence OPTIONAL
+        !iv_with_cids  TYPE abap_bool DEFAULT abap_false
         !it_data       TYPE ANY TABLE
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
@@ -47,6 +48,8 @@ CLASS zcl_abapgit_html_table DEFINITION
     DATA mi_renderer TYPE REF TO zif_abapgit_html_table.
     DATA mt_columns TYPE ty_columns.
     DATA mi_html TYPE REF TO zif_abapgit_html.
+    DATA mv_with_cids TYPE abap_bool.
+    DATA mv_table_id TYPE string.
 
     METHODS render_thead
       RAISING
@@ -65,11 +68,25 @@ CLASS zcl_abapgit_html_table DEFINITION
       RAISING
         zcx_abapgit_exception .
 
+    CLASS-METHODS cid_attr
+      IMPORTING
+        iv_column_id TYPE string
+      RETURNING
+        VALUE(rs_data_attr) TYPE zif_abapgit_html=>ty_data_attr.
+
 ENDCLASS.
 
 
 
 CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
+
+
+  METHOD cid_attr.
+
+    rs_data_attr-name  = 'cid'.
+    rs_data_attr-value = iv_column_id.
+
+  ENDMETHOD.
 
 
   METHOD create.
@@ -98,6 +115,9 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
 
     DATA lv_attrs TYPE string.
 
+    mv_with_cids = iv_with_cids.
+    mv_table_id  = iv_id.
+
     IF iv_id IS NOT INITIAL.
       lv_attrs = lv_attrs && | id="{ iv_id }"|.
     ENDIF.
@@ -121,6 +141,7 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
 
     DATA ls_render TYPE zif_abapgit_html_table=>ty_cell_render.
     DATA lv_dummy TYPE string.
+    DATA ls_cid TYPE zif_abapgit_html=>ty_data_attr.
     FIELD-SYMBOLS <ls_col> LIKE LINE OF mt_columns.
     FIELD-SYMBOLS <lv_val> TYPE any.
 
@@ -140,14 +161,22 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
       ELSE.
         ASSIGN lv_dummy TO <lv_val>.
       ENDIF.
+
       ls_render = mi_renderer->render_cell(
+        iv_table_id  = mv_table_id
         iv_row_index = iv_row_index
         is_row       = is_row
         iv_column_id = <ls_col>-column_id
-        iv_value     = <lv_val> ).
+        iv_value     = |{ <lv_val> }| ).
+
+      IF mv_with_cids = abap_true.
+        ls_cid = cid_attr( <ls_col>-column_id ).
+      ENDIF.
+
       mi_html->td(
         iv_content = ls_render-content
         ii_content = ls_render-html
+        is_data_attr = ls_cid
         iv_class   = ls_render-css_class ).
     ENDLOOP.
 
@@ -167,11 +196,15 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
     LOOP AT it_data ASSIGNING <ls_i>.
       lv_index = sy-tabix.
       ls_row_attrs = mi_renderer->get_row_attrs(
+        iv_table_id  = mv_table_id
         iv_row_index = lv_index
         is_row       = <ls_i> ).
       CLEAR lv_row_attrs.
       IF ls_row_attrs-css_class IS NOT INITIAL.
         lv_row_attrs = lv_row_attrs && | class="{ ls_row_attrs-css_class }"|.
+      ENDIF.
+      IF ls_row_attrs-data IS NOT INITIAL.
+        lv_row_attrs = lv_row_attrs && | data-{ ls_row_attrs-data-name }="{ ls_row_attrs-data-value }"|.
       ENDIF.
       mi_html->add( |<tr{ lv_row_attrs }>| ).
       render_row(
@@ -188,12 +221,18 @@ CLASS ZCL_ABAPGIT_HTML_TABLE IMPLEMENTATION.
   METHOD render_thead.
 
     FIELD-SYMBOLS <ls_col> LIKE LINE OF mt_columns.
+    DATA ls_cid TYPE zif_abapgit_html=>ty_data_attr.
 
     mi_html->add( '<thead>' ).
     mi_html->add( '<tr>' ).
 
     LOOP AT mt_columns ASSIGNING <ls_col>.
-      mi_html->th( <ls_col>-column_title ).
+      IF mv_with_cids = abap_true.
+        ls_cid = cid_attr( <ls_col>-column_id ).
+      ENDIF.
+      mi_html->th(
+        iv_content   = <ls_col>-column_title
+        is_data_attr = ls_cid ).
     ENDLOOP.
 
     mi_html->add( '</tr>' ).
