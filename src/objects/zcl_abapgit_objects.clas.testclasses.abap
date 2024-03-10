@@ -229,7 +229,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
 
     lv_filename = 'if_badi_tadir_changed.intf.i18n.de.properties'.
-    READ TABLE ls_act-files WITH KEY filename = lv_filename INTO ls_translation_de.
+    READ TABLE ls_act-files WITH KEY file COMPONENTS filename = lv_filename INTO ls_translation_de.
 
     cl_abap_unit_assert=>assert_not_initial( ls_translation_de ).
 
