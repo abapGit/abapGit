@@ -40,11 +40,6 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
         !it_result TYPE zif_abapgit_code_inspector=>ty_results
       RAISING
         zcx_abapgit_exception.
-    METHODS render_result_line
-      IMPORTING
-        is_result      TYPE zif_abapgit_code_inspector=>ty_result
-      RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html.
     METHODS explain_include
       IMPORTING
         !is_result    TYPE zif_abapgit_code_inspector=>ty_result
@@ -72,6 +67,22 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
     CONSTANTS c_object_separator TYPE c LENGTH 1 VALUE '|'.
     CONSTANTS c_ci_sig TYPE string VALUE 'cinav:'.
     CONSTANTS c_limit TYPE i VALUE 500.
+
+    TYPES:
+      BEGIN OF ty_result_view,
+        kind     TYPE zif_abapgit_code_inspector=>ty_result-kind,
+        obj_type TYPE zif_abapgit_code_inspector=>ty_result-objtype,
+        location TYPE string,
+        text     TYPE string,
+        nav      TYPE string,
+      END OF ty_result_view,
+      ty_view_tab TYPE STANDARD TABLE OF ty_result_view WITH DEFAULT KEY.
+
+    METHODS convert_result_to_view
+      IMPORTING
+        it_result TYPE zif_abapgit_code_inspector=>ty_results
+      RETURNING
+        VALUE(rt_view) TYPE ty_view_tab.
 
 ENDCLASS.
 
@@ -119,6 +130,40 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD convert_result_to_view.
+
+    FIELD-SYMBOLS <ls_r> LIKE LINE OF it_result.
+    FIELD-SYMBOLS <ls_v> LIKE LINE OF rt_view.
+    DATA lv_line TYPE i.
+
+    LOOP AT it_result ASSIGNING <ls_r>.
+      APPEND INITIAL LINE TO rt_view ASSIGNING <ls_v>.
+      <ls_v>-kind     = <ls_r>-kind.
+      <ls_v>-obj_type = <ls_r>-objtype.
+      <ls_v>-nav      = build_nav_link( <ls_r> ).
+      <ls_v>-text     = <ls_r>-text.
+
+      IF <ls_r>-sobjname IS INITIAL OR
+         ( <ls_r>-sobjname = <ls_r>-objname AND
+           <ls_r>-sobjtype = <ls_r>-objtype ).
+        <ls_v>-location = <ls_r>-objname.
+      ELSEIF <ls_r>-objtype = 'CLAS' OR
+           ( <ls_r>-objtype = 'PROG' AND NOT <ls_r>-sobjname+30(*) IS INITIAL ).
+        <ls_v>-location = explain_include( <ls_r> ).
+      ENDIF.
+
+      IF <ls_v>-location IS INITIAL. " Fallback to a reasonable default
+        <ls_v>-location = |{ <ls_r>-objname } &gt; { <ls_r>-sobjtype } { <ls_r>-sobjname }|.
+      ENDIF.
+
+      lv_line         = <ls_r>-line. " convert from numc to integer
+      <ls_v>-location = |{ <ls_v>-location }&nbsp;@{ lv_line }|.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD explain_include.
 
     DATA ls_mtdkey TYPE seocpdkey.
@@ -126,19 +171,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
     TRY.
         CASE is_result-sobjname+30(*).
           WHEN 'CCDEF'.
-            rv_txt = |CLAS { is_result-objname } : Local Definitions|.
+            rv_txt = |{ is_result-objname }: Local Definitions|.
           WHEN 'CCIMP'.
-            rv_txt = |CLAS { is_result-objname } : Local Implementations|.
+            rv_txt = |{ is_result-objname }: Local Implementations|.
           WHEN 'CCMAC'.
-            rv_txt = |CLAS { is_result-objname } : Macros|.
+            rv_txt = |{ is_result-objname }: Macros|.
           WHEN 'CCAU'.
-            rv_txt = |CLAS { is_result-objname } : Test Classes|.
+            rv_txt = |{ is_result-objname }: Test Classes|.
           WHEN 'CU'.
-            rv_txt = |CLAS { is_result-objname } : Public Section|.
+            rv_txt = |{ is_result-objname }: Public Section|.
           WHEN 'CO'.
-            rv_txt = |CLAS { is_result-objname } : Protected Section|.
+            rv_txt = |{ is_result-objname }: Protected Section|.
           WHEN 'CI'.
-            rv_txt = |CLAS { is_result-objname } : Private Section|.
+            rv_txt = |{ is_result-objname }: Private Section|.
           WHEN OTHERS.
             cl_oo_classname_service=>get_method_by_include(
               EXPORTING
@@ -150,14 +195,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
                 method_not_existing = 2
                 OTHERS              = 3 ).
             IF sy-subrc = 0.
-              rv_txt = |CLAS { ls_mtdkey-clsname }->{ ls_mtdkey-cpdname }|.
+              rv_txt = |{ ls_mtdkey-clsname }->{ ls_mtdkey-cpdname }|.
             ELSE.
-              rv_txt = |{ is_result-objtype } { is_result-sobjname }|.
+              rv_txt = |{ is_result-sobjname }|.
             ENDIF.
 
         ENDCASE.
       CATCH cx_root.
-        rv_txt = ''. "use default below
+        " leave empty, fallback to default, defined elsewhere
     ENDTRY.
 
   ENDMETHOD.
@@ -298,26 +343,31 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
 
   METHOD render_result.
 
-    FIELD-SYMBOLS <ls_result> LIKE LINE OF it_result.
+    DATA li_table TYPE REF TO zcl_abapgit_html_table.
+
+    li_table = zcl_abapgit_html_table=>create( me
+      )->define_column(
+        iv_column_id    = 'kind'
+        iv_column_title = zcl_abapgit_html=>icon( 'exclamation-circle' )
+      )->define_column(
+        iv_column_id    = 'obj_type'
+        iv_column_title = 'Type'
+      )->define_column(
+        iv_column_id    = 'location'
+        iv_column_title = 'Obj. name / location'
+      )->define_column(
+        iv_column_id    = 'text'
+        iv_column_title = 'Text'
+      ).
 
     ii_html->div(
       iv_class   = 'ci-result'
-      ii_content = zcl_abapgit_html_table=>create( me
-      )->define_column(
-        iv_column_id = 'text'
-        iv_column_title = 'Text'
-*      )->define_column(
-*        iv_column_id = 'value'
-*        iv_column_title = 'Key'
-*      )->define_column(
-*        iv_column_id = 'expl'
-*        iv_column_title = 'Data'
-*      )->define_column( 'cmd'
-      )->render( it_result ) ).
+      ii_content = li_table->render(
+        iv_with_cids = abap_true
+        it_data      = convert_result_to_view( it_result ) ) ).
 
     " TODO
-    " - columns
-    " - status
+    " - status deisgn
     " - sorting
     " - filter
     " - search
@@ -325,54 +375,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
     IF lines( it_result ) > c_limit.
       render_limit_warning( ii_html ).
     ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD render_result_line.
-
-    DATA: lv_class   TYPE string,
-          lv_obj_txt TYPE string,
-          lv_msg     TYPE string,
-          lv_line    TYPE i.
-
-    CASE is_result-kind.
-      WHEN 'E'.
-        lv_class = 'ci-error'.
-      WHEN 'W'.
-        lv_class = 'ci-warning'.
-      WHEN OTHERS.
-        lv_class = 'ci-info'.
-    ENDCASE.
-
-    lv_msg = escape(
-      val    = is_result-text
-      format = cl_abap_format=>e_html_attr ).
-
-    IF is_result-sobjname IS INITIAL OR
-       ( is_result-sobjname = is_result-objname AND
-         is_result-sobjtype = is_result-objtype ).
-      lv_obj_txt = |{ is_result-objtype } { is_result-objname }|.
-    ELSEIF is_result-objtype = 'CLAS' OR
-         ( is_result-objtype = 'PROG' AND NOT is_result-sobjname+30(*) IS INITIAL ).
-      lv_obj_txt = explain_include( is_result ).
-    ENDIF.
-
-    IF lv_obj_txt IS INITIAL.
-      lv_obj_txt = |{ is_result-objtype } { is_result-objname } &gt; { is_result-sobjtype } { is_result-sobjname }|.
-    ENDIF.
-
-    lv_line    = is_result-line. " convert from numc to integer
-    lv_obj_txt = |{ lv_obj_txt } [ @{ lv_line } ]|.
-
-    ri_html = zcl_abapgit_html=>create(
-      )->add( |<li class="{ lv_class }">|
-      )->add_a(
-        iv_txt = lv_obj_txt
-        iv_act = build_nav_link( is_result )
-        iv_typ = zif_abapgit_html=>c_action_type-sapevent
-      )->add( |<span>{ lv_msg }</span>|
-      )->add( '</li>' ).
 
   ENDMETHOD.
 
@@ -389,16 +391,46 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
 
 
   METHOD zif_abapgit_html_table~get_row_attrs.
+
+    FIELD-SYMBOLS <ls_item> TYPE ty_result_view.
+    DATA lv_render_kind TYPE string.
+
+    ASSIGN is_row TO <ls_item>.
+    rs_attrs-data-name = 'kind'.
+
+    CASE <ls_item>-kind.
+      WHEN 'E'.
+        rs_attrs-data-value = 'error'.
+      WHEN 'W'.
+        rs_attrs-data-value = 'warning'.
+      WHEN OTHERS.
+        rs_attrs-data-value = 'info'.
+    ENDCASE.
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_html_table~render_cell.
 
-    FIELD-SYMBOLS <ls_item> LIKE LINE OF mt_result.
+    FIELD-SYMBOLS <ls_item> TYPE ty_result_view.
 
     ASSIGN is_row TO <ls_item>.
 
-    rs_render-html = render_result_line( <ls_item> ).
+    CASE iv_column_id.
+      WHEN 'kind'.
+        rs_render-content = <ls_item>-kind.
+      WHEN 'obj_type'.
+        rs_render-content = <ls_item>-obj_type.
+      WHEN 'location'.
+        rs_render-content = zcl_abapgit_html=>create( )->a(
+          iv_txt = <ls_item>-location
+          iv_act = <ls_item>-nav
+          iv_typ = zif_abapgit_html=>c_action_type-sapevent ).
+      WHEN 'text'.
+        rs_render-content = escape(
+          val    = <ls_item>-text
+          format = cl_abap_format=>e_html_attr ).
+    ENDCASE.
 
   ENDMETHOD.
 ENDCLASS.
