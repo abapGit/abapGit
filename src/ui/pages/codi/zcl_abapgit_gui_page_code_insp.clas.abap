@@ -24,15 +24,14 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-    METHODS:
-      constructor
-        IMPORTING
-          io_repo                  TYPE REF TO zcl_abapgit_repo
-          io_stage                 TYPE REF TO zcl_abapgit_stage OPTIONAL
-          iv_check_variant         TYPE sci_chkv OPTIONAL
-          iv_raise_when_no_results TYPE abap_bool DEFAULT abap_false
-        RAISING
-          zcx_abapgit_exception.
+    METHODS constructor
+      IMPORTING
+        io_repo                  TYPE REF TO zcl_abapgit_repo
+        io_stage                 TYPE REF TO zcl_abapgit_stage OPTIONAL
+        iv_check_variant         TYPE sci_chkv OPTIONAL
+        iv_raise_when_no_results TYPE abap_bool DEFAULT abap_false
+      RAISING
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -66,10 +65,6 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION
     METHODS status
       RETURNING
         VALUE(rv_status) TYPE zif_abapgit_definitions=>ty_sci_result.
-
-    METHODS render_success
-      IMPORTING
-        ii_html TYPE REF TO zif_abapgit_html.
 
 ENDCLASS.
 
@@ -138,8 +133,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
   METHOD has_inspection_errors.
 
-    READ TABLE mt_result TRANSPORTING NO FIELDS
-      WITH KEY kind = 'E'.
+    READ TABLE mt_result TRANSPORTING NO FIELDS WITH KEY kind = 'E'.
     rv_has_inspection_errors = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
@@ -149,16 +143,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
     rv_is_stage_allowed = boolc( NOT (
       mo_repo->get_local_settings( )-block_commit = abap_true AND has_inspection_errors( ) = abap_true ) ).
-
-  ENDMETHOD.
-
-
-  METHOD render_success.
-
-    ii_html->add( '<div class="dummydiv success">' ).
-    ii_html->add( ii_html->icon( 'check' ) ).
-    ii_html->add( 'No code inspector findings' ).
-    ii_html->add( '</div>' ).
 
   ENDMETHOD.
 
@@ -331,13 +315,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    ri_html->add( render_variant(
+    render_variant(
+      ii_html    = ri_html
       iv_variant = mv_check_variant
-      iv_summary = mv_summary ) ).
+      iv_summary = mv_summary ).
 
     IF lines( mt_result ) = 0.
-      render_success( ri_html ).
+      render_success(
+        ii_html    = ri_html
+        iv_message = 'No code inspector findings' ).
     ELSE.
+      render_stats(
+        ii_html   = ri_html
+        it_result = mt_result ).
       render_result(
         ii_html   = ri_html
         it_result = mt_result ).

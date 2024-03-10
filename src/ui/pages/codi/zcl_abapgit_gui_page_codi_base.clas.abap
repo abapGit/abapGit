@@ -15,7 +15,9 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
         sort_3 TYPE string VALUE 'sort_3',
         stage  TYPE string VALUE 'stage',
         commit TYPE string VALUE 'commit',
+        apply_filter TYPE string VALUE 'apply_filter',
       END OF c_actions .
+
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
     DATA mt_result TYPE zif_abapgit_code_inspector=>ty_results .
     DATA mv_summary TYPE string.
@@ -30,6 +32,7 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
 
     METHODS render_variant
       IMPORTING
+        !ii_html       TYPE REF TO zif_abapgit_html
         !iv_variant    TYPE sci_chkv
         !iv_summary    TYPE string
       RETURNING
@@ -40,6 +43,42 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
         !it_result TYPE zif_abapgit_code_inspector=>ty_results
       RAISING
         zcx_abapgit_exception.
+    METHODS render_stats
+      IMPORTING
+        !ii_html   TYPE REF TO zif_abapgit_html
+        !it_result TYPE zif_abapgit_code_inspector=>ty_results
+      RAISING
+        zcx_abapgit_exception.
+    METHODS render_success
+      IMPORTING
+        ii_html TYPE REF TO zif_abapgit_html
+        iv_message TYPE string.
+
+    METHODS build_base_menu
+      RETURNING
+        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
+
+  PRIVATE SECTION.
+    CONSTANTS c_object_separator TYPE c LENGTH 1 VALUE '|'.
+    CONSTANTS c_ci_sig TYPE string VALUE 'cinav:'.
+    CONSTANTS c_limit TYPE i VALUE 500.
+    DATA mv_filter TYPE string.
+
+    TYPES:
+      BEGIN OF ty_result_view,
+        kind     TYPE zif_abapgit_code_inspector=>ty_result-kind,
+        obj_type TYPE zif_abapgit_code_inspector=>ty_result-objtype,
+        location TYPE string,
+        text     TYPE string,
+        nav      TYPE string,
+      END OF ty_result_view,
+      ty_view_tab TYPE STANDARD TABLE OF ty_result_view WITH DEFAULT KEY.
+
+    METHODS convert_result_to_view
+      IMPORTING
+        it_result TYPE zif_abapgit_code_inspector=>ty_results
+      RETURNING
+        VALUE(rt_view) TYPE ty_view_tab.
     METHODS explain_include
       IMPORTING
         !is_result    TYPE zif_abapgit_code_inspector=>ty_result
@@ -60,30 +99,6 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION
         !iv_line_number TYPE i
       RAISING
         zcx_abapgit_exception .
-    METHODS build_base_menu
-      RETURNING
-        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
-  PRIVATE SECTION.
-    CONSTANTS c_object_separator TYPE c LENGTH 1 VALUE '|'.
-    CONSTANTS c_ci_sig TYPE string VALUE 'cinav:'.
-    CONSTANTS c_limit TYPE i VALUE 500.
-
-    TYPES:
-      BEGIN OF ty_result_view,
-        kind     TYPE zif_abapgit_code_inspector=>ty_result-kind,
-        obj_type TYPE zif_abapgit_code_inspector=>ty_result-objtype,
-        location TYPE string,
-        text     TYPE string,
-        nav      TYPE string,
-      END OF ty_result_view,
-      ty_view_tab TYPE STANDARD TABLE OF ty_result_view WITH DEFAULT KEY.
-
-    METHODS convert_result_to_view
-      IMPORTING
-        it_result TYPE zif_abapgit_code_inspector=>ty_results
-      RETURNING
-        VALUE(rt_view) TYPE ty_view_tab.
-
 ENDCLASS.
 
 
@@ -146,14 +161,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
       IF <ls_r>-sobjname IS INITIAL OR
          ( <ls_r>-sobjname = <ls_r>-objname AND
            <ls_r>-sobjtype = <ls_r>-objtype ).
-        <ls_v>-location = <ls_r>-objname.
+        <ls_v>-location = to_lower( <ls_r>-objname ).
       ELSEIF <ls_r>-objtype = 'CLAS' OR
            ( <ls_r>-objtype = 'PROG' AND NOT <ls_r>-sobjname+30(*) IS INITIAL ).
         <ls_v>-location = explain_include( <ls_r> ).
       ENDIF.
 
       IF <ls_v>-location IS INITIAL. " Fallback to a reasonable default
-        <ls_v>-location = |{ <ls_r>-objname } &gt; { <ls_r>-sobjtype } { <ls_r>-sobjname }|.
+        <ls_v>-location = to_lower( |{ <ls_r>-objname } &gt; { <ls_r>-sobjtype } { <ls_r>-sobjname }| ).
       ENDIF.
 
       lv_line         = <ls_r>-line. " convert from numc to integer
@@ -171,19 +186,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
     TRY.
         CASE is_result-sobjname+30(*).
           WHEN 'CCDEF'.
-            rv_txt = |{ is_result-objname }: Local Definitions|.
+            rv_txt = |{ to_lower( is_result-objname ) }: Local Definitions|.
           WHEN 'CCIMP'.
-            rv_txt = |{ is_result-objname }: Local Implementations|.
+            rv_txt = |{ to_lower( is_result-objname ) }: Local Implementations|.
           WHEN 'CCMAC'.
-            rv_txt = |{ is_result-objname }: Macros|.
+            rv_txt = |{ to_lower( is_result-objname ) }: Macros|.
           WHEN 'CCAU'.
-            rv_txt = |{ is_result-objname }: Test Classes|.
+            rv_txt = |{ to_lower( is_result-objname ) }: Test Classes|.
           WHEN 'CU'.
-            rv_txt = |{ is_result-objname }: Public Section|.
+            rv_txt = |{ to_lower( is_result-objname ) }: Public Section|.
           WHEN 'CO'.
-            rv_txt = |{ is_result-objname }: Protected Section|.
+            rv_txt = |{ to_lower( is_result-objname ) }: Protected Section|.
           WHEN 'CI'.
-            rv_txt = |{ is_result-objname }: Private Section|.
+            rv_txt = |{ to_lower( is_result-objname ) }: Private Section|.
           WHEN OTHERS.
             cl_oo_classname_service=>get_method_by_include(
               EXPORTING
@@ -195,9 +210,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
                 method_not_existing = 2
                 OTHERS              = 3 ).
             IF sy-subrc = 0.
-              rv_txt = |{ ls_mtdkey-clsname }->{ ls_mtdkey-cpdname }|.
+              rv_txt = to_lower( |{ ls_mtdkey-clsname }->{ ls_mtdkey-cpdname }| ).
             ELSE.
-              rv_txt = |{ is_result-sobjname }|.
+              rv_txt = to_lower( |{ is_result-sobjname }| ).
             ENDIF.
 
         ENDCASE.
@@ -367,7 +382,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
         it_data      = convert_result_to_view( it_result ) ) ).
 
     " TODO
-    " - status deisgn
+    " - status design
     " - sorting
     " - filter
     " - search
@@ -379,9 +394,62 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_stats.
+
+    FIELD-SYMBOLS <ls_i> LIKE LINE OF it_result.
+
+    DATA lv_errors TYPE i.
+    DATA lv_warnings TYPE i.
+    DATA lv_infos TYPE i.
+
+    LOOP AT it_result ASSIGNING <ls_i>.
+      CASE <ls_i>-kind.
+        WHEN 'E'.
+          lv_errors = lv_errors + 1.
+        WHEN 'W'.
+          lv_warnings = lv_warnings + 1.
+        WHEN OTHERS.
+          lv_infos = lv_infos + 1.
+      ENDCASE.
+    ENDLOOP.
+
+    ii_html->add( '<div class="ci-stats">' ).
+
+    ii_html->add( |<form class="inline" method="post" action="sapevent:{ c_actions-apply_filter }">| ).
+    ii_html->add( zcl_abapgit_gui_chunk_lib=>render_text_input(
+      iv_name      = 'filter'
+      iv_label     = 'Filter:'
+      iv_value     = mv_filter ) ). " TODO placeholder ?
+    ii_html->add( |<input type="submit" class="hidden-submit" title="Filter">| ).
+    ii_html->add( |</form>| ).
+
+    IF lv_errors > 0.
+      ii_html->add( |<span class="error-count">{ lv_errors } errors</span>| ).
+    ENDIF.
+    IF lv_warnings > 0.
+      ii_html->add( |<span class="warn-count">{ lv_warnings } warnings</span>| ).
+    ENDIF.
+    IF lv_infos > 0.
+      ii_html->add( |<span class="info-count">{ lv_infos } info</span>| ).
+    ENDIF.
+    ii_html->add( '</div>' ).
+
+  ENDMETHOD.
+
+
+  METHOD render_success.
+
+    ii_html->add( '<div class="dummydiv success">' ).
+    ii_html->add( ii_html->icon( 'check' ) ).
+    ii_html->add( iv_message ).
+    ii_html->add( '</div>' ).
+
+  ENDMETHOD.
+
+
   METHOD render_variant.
 
-    ri_html = zcl_abapgit_html=>create( )->div(
+    ii_html->div(
       iv_class = 'ci-head'
       iv_content =
         |Code inspector check variant <span class="ci-variant">{

@@ -21,12 +21,11 @@ CLASS zcl_abapgit_gui_page_syntax DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-    METHODS:
-      constructor
-        IMPORTING
-          io_repo TYPE REF TO zcl_abapgit_repo
-        RAISING
-          zcx_abapgit_exception.
+    METHODS constructor
+      IMPORTING
+        io_repo TYPE REF TO zcl_abapgit_repo
+      RAISING
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
 
@@ -37,9 +36,6 @@ CLASS zcl_abapgit_gui_page_syntax DEFINITION
     METHODS run_syntax_check
       RAISING
         zcx_abapgit_exception.
-    METHODS render_success
-      IMPORTING
-        ii_html TYPE REF TO zif_abapgit_html.
 
 ENDCLASS.
 
@@ -65,14 +61,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create( lo_component ).
 
-  ENDMETHOD.
-
-
-  METHOD render_success.
-    ii_html->add( '<div class="dummydiv success">' ).
-    ii_html->add( ii_html->icon( 'check' ) ).
-    ii_html->add( 'No syntax errors' ).
-    ii_html->add( '</div>' ).
   ENDMETHOD.
 
 
@@ -146,18 +134,24 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->div(
-      iv_class = 'repo'
+      iv_class   = 'repo'
       ii_content = zcl_abapgit_gui_chunk_lib=>render_repo_top(
         io_repo        = mo_repo
         iv_show_commit = abap_false ) ).
 
-    ri_html->add( render_variant(
+    render_variant(
+      ii_html    = ri_html
       iv_variant = c_variant
-      iv_summary = mv_summary ) ).
+      iv_summary = mv_summary ).
 
     IF lines( mt_result ) = 0.
-      render_success( ri_html ).
+      render_success(
+        ii_html    = ri_html
+        iv_message = 'No syntax errors' ).
     ELSE.
+      render_stats(
+        ii_html   = ri_html
+        it_result = mt_result ).
       render_result(
         ii_html   = ri_html
         it_result = mt_result ).
