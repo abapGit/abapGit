@@ -107,7 +107,7 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
 
     IF lv_class_name(1) = '/'.
       CREATE OBJECT lo_nspc.
-      ls_namespace = lo_nspc->zif_abapgit_sap_namespace~split_by_name( iv_obj_with_namespace = lv_class_name ).
+      ls_namespace = lo_nspc->zif_abapgit_sap_namespace~split_by_name( lv_class_name ).
       IF ls_namespace-namespace IS NOT INITIAL.
         lv_descriptor_cust = |{ ls_namespace-namespace }{ lv_descriptor_sap }|.
       ENDIF.
