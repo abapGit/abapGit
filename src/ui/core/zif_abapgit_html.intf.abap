@@ -1,5 +1,12 @@
 INTERFACE zif_abapgit_html PUBLIC.
 
+  TYPES:
+    BEGIN OF ty_data_attr,
+      name TYPE string,
+      value TYPE string,
+    END OF ty_data_attr,
+    ty_data_attr_tab TYPE STANDARD TABLE OF ty_data_attr WITH KEY name.
+
   CONSTANTS:
     BEGIN OF c_action_type,
       sapevent  TYPE c VALUE 'E',
@@ -104,6 +111,7 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_class   TYPE string OPTIONAL
       !iv_hint    TYPE string OPTIONAL
       !iv_format_single_line TYPE abap_bool DEFAULT abap_false
+      !is_data_attr TYPE ty_data_attr OPTIONAL
     RETURNING
       VALUE(ri_self) TYPE REF TO zif_abapgit_html.
 
@@ -115,6 +123,7 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_class   TYPE string OPTIONAL
       !iv_hint    TYPE string OPTIONAL
       !iv_format_single_line TYPE abap_bool DEFAULT abap_true
+      !is_data_attr TYPE ty_data_attr OPTIONAL
       PREFERRED PARAMETER iv_content
     RETURNING
       VALUE(ri_self) TYPE REF TO zif_abapgit_html.
@@ -127,6 +136,7 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_class   TYPE string OPTIONAL
       !iv_hint    TYPE string OPTIONAL
       !iv_format_single_line TYPE abap_bool DEFAULT abap_true
+      !is_data_attr TYPE ty_data_attr OPTIONAL
       PREFERRED PARAMETER iv_content
     RETURNING
       VALUE(ri_self) TYPE REF TO zif_abapgit_html.
@@ -137,6 +147,7 @@ INTERFACE zif_abapgit_html PUBLIC.
       !ii_content TYPE REF TO zif_abapgit_html OPTIONAL
       !iv_id      TYPE string OPTIONAL
       !iv_class   TYPE string OPTIONAL
+      !is_data_attr TYPE ty_data_attr OPTIONAL
       PREFERRED PARAMETER iv_content
     RETURNING
       VALUE(ri_self) TYPE REF TO zif_abapgit_html.

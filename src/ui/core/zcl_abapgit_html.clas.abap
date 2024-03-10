@@ -29,6 +29,11 @@ CLASS zcl_abapgit_html DEFINITION
         iv_checked     TYPE abap_bool OPTIONAL
       RETURNING
         VALUE(rv_html) TYPE string .
+    CLASS-METHODS data_attr
+      IMPORTING
+        iv_str         TYPE string OPTIONAL
+      RETURNING
+        VALUE(rs_data_attr) TYPE zif_abapgit_html=>ty_data_attr .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -122,6 +127,16 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     IF iv_initial_chunk IS NOT INITIAL.
       ri_instance->add( iv_initial_chunk ).
     ENDIF.
+  ENDMETHOD.
+
+
+  METHOD data_attr.
+
+    SPLIT iv_str AT '=' INTO rs_data_attr-name rs_data_attr-value.
+    IF rs_data_attr-name IS INITIAL.
+      CLEAR rs_data_attr.
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -523,6 +538,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       ii_content = ii_content
       iv_id    = iv_id
       iv_class = iv_class
+      is_data_attr = is_data_attr
       iv_hint  = iv_hint ).
     ri_self = me.
   ENDMETHOD.
@@ -536,6 +552,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       ii_content = ii_content
       iv_id    = iv_id
       iv_class = iv_class
+      is_data_attr = is_data_attr
       iv_hint  = iv_hint ).
     ri_self = me.
   ENDMETHOD.
@@ -548,6 +565,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
     DATA: lv_class TYPE string,
           lv_id    TYPE string,
+          lv_data_attr TYPE string,
           lv_title TYPE string.
 
     IF iv_id IS NOT INITIAL.
@@ -562,7 +580,11 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       lv_title = | title="{ iv_hint }"|.
     ENDIF.
 
-    lv_open_tag = |<{ iv_tag }{ lv_id }{ lv_class }{ lv_title }>|.
+    IF is_data_attr IS NOT INITIAL.
+      lv_data_attr = | data-{ is_data_attr-name }="{ is_data_attr-value }"|.
+    ENDIF.
+
+    lv_open_tag = |<{ iv_tag }{ lv_id }{ lv_class }{ lv_data_attr }{ lv_title }>|.
     lv_close_tag = |</{ iv_tag }>|.
 
     IF ii_content IS NOT BOUND AND iv_content IS INITIAL.
